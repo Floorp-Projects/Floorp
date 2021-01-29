@@ -1,28 +1,28 @@
 use core::fmt;
 use core::pin::Pin;
 use futures_core::future::Future;
+use futures_core::ready;
 use futures_core::stream::{FusedStream, Stream};
 use futures_core::task::{Context, Poll};
 #[cfg(feature = "sink")]
 use futures_sink::Sink;
-use pin_utils::{unsafe_pinned, unsafe_unpinned};
+use pin_project_lite::pin_project;
+use crate::fns::FnMut1;
 
-/// Stream for the [`filter`](super::StreamExt::filter) method.
-#[must_use = "streams do nothing unless polled"]
-pub struct Filter<St, Fut, F>
-    where St: Stream,
-{
-    stream: St,
-    f: F,
-    pending_fut: Option<Fut>,
-    pending_item: Option<St::Item>,
+pin_project! {
+    /// Stream for the [`filter`](super::StreamExt::filter) method.
+    #[must_use = "streams do nothing unless polled"]
+    pub struct Filter<St, Fut, F>
+        where St: Stream,
+    {
+        #[pin]
+        stream: St,
+        f: F,
+        #[pin]
+        pending_fut: Option<Fut>,
+        pending_item: Option<St::Item>,
+    }
 }
-
-impl<St, Fut, F> Unpin for Filter<St, Fut, F>
-where
-    St: Stream + Unpin,
-    Fut: Unpin,
-{}
 
 impl<St, Fut, F> fmt::Debug for Filter<St, Fut, F>
 where
@@ -39,18 +39,14 @@ where
     }
 }
 
+#[allow(single_use_lifetimes)] // https://github.com/rust-lang/rust/issues/55058
 impl<St, Fut, F> Filter<St, Fut, F>
 where St: Stream,
-      F: FnMut(&St::Item) -> Fut,
+      F: for<'a> FnMut1<&'a St::Item, Output=Fut>,
       Fut: Future<Output = bool>,
 {
-    unsafe_pinned!(stream: St);
-    unsafe_unpinned!(f: F);
-    unsafe_pinned!(pending_fut: Option<Fut>);
-    unsafe_unpinned!(pending_item: Option<St::Item>);
-
-    pub(super) fn new(stream: St, f: F) -> Filter<St, Fut, F> {
-        Filter {
+    pub(super) fn new(stream: St, f: F) -> Self {
+        Self {
             stream,
             f,
             pending_fut: None,
@@ -58,37 +54,7 @@ where St: Stream,
         }
     }
 
-    /// Acquires a reference to the underlying stream that this combinator is
-    /// pulling from.
-    pub fn get_ref(&self) -> &St {
-        &self.stream
-    }
-
-    /// Acquires a mutable reference to the underlying stream that this
-    /// combinator is pulling from.
-    ///
-    /// Note that care must be taken to avoid tampering with the state of the
-    /// stream which may otherwise confuse this combinator.
-    pub fn get_mut(&mut self) -> &mut St {
-        &mut self.stream
-    }
-
-    /// Acquires a pinned mutable reference to the underlying stream that this
-    /// combinator is pulling from.
-    ///
-    /// Note that care must be taken to avoid tampering with the state of the
-    /// stream which may otherwise confuse this combinator.
-    pub fn get_pin_mut(self: Pin<&mut Self>) -> Pin<&mut St> {
-        self.stream()
-    }
-
-    /// Consumes this combinator, returning the underlying stream.
-    ///
-    /// Note that this may discard intermediate state of this combinator, so
-    /// care should be taken to avoid losing resources when this is called.
-    pub fn into_inner(self) -> St {
-        self.stream
-    }
+    delegate_access_inner!(stream, St, ());
 }
 
 impl<St, Fut, F> FusedStream for Filter<St, Fut, F>
@@ -101,36 +67,34 @@ impl<St, Fut, F> FusedStream for Filter<St, Fut, F>
     }
 }
 
+#[allow(single_use_lifetimes)] // https://github.com/rust-lang/rust/issues/55058
 impl<St, Fut, F> Stream for Filter<St, Fut, F>
     where St: Stream,
-          F: FnMut(&St::Item) -> Fut,
+          F: for<'a> FnMut1<&'a St::Item, Output=Fut>,
           Fut: Future<Output = bool>,
 {
     type Item = St::Item;
 
     fn poll_next(
-        mut self: Pin<&mut Self>,
+        self: Pin<&mut Self>,
         cx: &mut Context<'_>,
     ) -> Poll<Option<St::Item>> {
-        loop {
-            if self.pending_fut.is_none() {
-                let item = match ready!(self.as_mut().stream().poll_next(cx)) {
-                    Some(e) => e,
-                    None => return Poll::Ready(None),
-                };
-                let fut = (self.as_mut().f())(&item);
-                self.as_mut().pending_fut().set(Some(fut));
-                *self.as_mut().pending_item() = Some(item);
+        let mut this = self.project();
+        Poll::Ready(loop {
+            if let Some(fut) = this.pending_fut.as_mut().as_pin_mut() {
+                let res = ready!(fut.poll(cx));
+                this.pending_fut.set(None);
+                if res {
+                    break this.pending_item.take();
+                }
+                *this.pending_item = None;
+            } else if let Some(item) = ready!(this.stream.as_mut().poll_next(cx)) {
+                this.pending_fut.set(Some(this.f.call_mut(&item)));
+                *this.pending_item = Some(item);
+            } else {
+                break None;
             }
-
-            let yield_item = ready!(self.as_mut().pending_fut().as_pin_mut().unwrap().poll(cx));
-            self.as_mut().pending_fut().set(None);
-            let item = self.as_mut().pending_item().take().unwrap();
-
-            if yield_item {
-                return Poll::Ready(Some(item));
-            }
-        }
+        })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {

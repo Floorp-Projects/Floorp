@@ -1,3 +1,4 @@
+use futures_core::ready;
 use futures_core::stream::Stream;
 use futures_core::task::{Context, Poll};
 use futures_io::AsyncBufRead;
@@ -5,18 +6,20 @@ use std::io;
 use std::mem;
 use std::pin::Pin;
 use super::read_line::read_line_internal;
+use pin_project_lite::pin_project;
 
-/// Stream for the [`lines`](super::AsyncBufReadExt::lines) method.
-#[derive(Debug)]
-#[must_use = "streams do nothing unless polled"]
-pub struct Lines<R> {
-    reader: R,
-    buf: String,
-    bytes: Vec<u8>,
-    read: usize,
+pin_project! {
+    /// Stream for the [`lines`](super::AsyncBufReadExt::lines) method.
+    #[derive(Debug)]
+    #[must_use = "streams do nothing unless polled"]
+    pub struct Lines<R> {
+        #[pin]
+        reader: R,
+        buf: String,
+        bytes: Vec<u8>,
+        read: usize,
+    }
 }
-
-impl<R: Unpin> Unpin for Lines<R> {}
 
 impl<R: AsyncBufRead> Lines<R> {
     pub(super) fn new(reader: R) -> Self {
@@ -33,18 +36,17 @@ impl<R: AsyncBufRead> Stream for Lines<R> {
     type Item = io::Result<String>;
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        let Self { reader, buf, bytes, read } = unsafe { self.get_unchecked_mut() };
-        let reader = unsafe { Pin::new_unchecked(reader) };
-        let n = ready!(read_line_internal(reader, cx, buf, bytes, read))?;
-        if n == 0 && buf.is_empty() {
+        let this = self.project();
+        let n = ready!(read_line_internal(this.reader, cx, this.buf, this.bytes, this.read))?;
+        if n == 0 && this.buf.is_empty() {
             return Poll::Ready(None)
         }
-        if buf.ends_with('\n') {
-            buf.pop();
-            if buf.ends_with('\r') {
-                buf.pop();
+        if this.buf.ends_with('\n') {
+            this.buf.pop();
+            if this.buf.ends_with('\r') {
+                this.buf.pop();
             }
         }
-        Poll::Ready(Some(Ok(mem::replace(buf, String::new()))))
+        Poll::Ready(Some(Ok(mem::replace(this.buf, String::new()))))
     }
 }

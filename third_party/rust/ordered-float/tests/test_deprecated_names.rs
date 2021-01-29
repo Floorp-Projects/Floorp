@@ -4,7 +4,11 @@ extern crate num_traits;
 extern crate ordered_float;
 
 pub use ordered_float::*;
-pub use num_traits::{Bounded, Float, FromPrimitive, Num, One, Signed, ToPrimitive, Zero};
+pub use num_traits::{Bounded, FromPrimitive, Num, One, Signed, ToPrimitive, Zero};
+#[cfg(feature = "std")]
+pub use num_traits::Float;
+#[cfg(not(feature = "std"))]
+pub use num_traits::float::FloatCore as Float;
 pub use std::cmp::Ordering::*;
 pub use std::{f32, f64, panic};
 

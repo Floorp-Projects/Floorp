@@ -6,6 +6,8 @@
 
 #include "AccessibleCaretManager.h"
 
+#include <utility>
+
 #include "AccessibleCaret.h"
 #include "AccessibleCaretEventHub.h"
 #include "AccessibleCaretLogger.h"
@@ -77,22 +79,22 @@ std::ostream& operator<<(
 #undef AC_PROCESS_ENUM_TO_STREAM
 
 AccessibleCaretManager::AccessibleCaretManager(PresShell* aPresShell)
-    : mPresShell(aPresShell) {
-  if (!mPresShell) {
-    return;
-  }
+    : AccessibleCaretManager{
+          aPresShell,
+          Carets{aPresShell ? MakeUnique<AccessibleCaret>(aPresShell) : nullptr,
+                 aPresShell ? MakeUnique<AccessibleCaret>(aPresShell)
+                            : nullptr}} {}
 
-  mFirstCaret = MakeUnique<AccessibleCaret>(mPresShell);
-  mSecondCaret = MakeUnique<AccessibleCaret>(mPresShell);
-}
+AccessibleCaretManager::AccessibleCaretManager(PresShell* aPresShell,
+                                               Carets aCarets)
+    : mPresShell{aPresShell}, mCarets{std::move(aCarets)} {}
 
 AccessibleCaretManager::LayoutFlusher::~LayoutFlusher() {
   MOZ_RELEASE_ASSERT(!mFlushing, "Going away in MaybeFlush? Bad!");
 }
 
 void AccessibleCaretManager::Terminate() {
-  mFirstCaret = nullptr;
-  mSecondCaret = nullptr;
+  mCarets.Terminate();
   mActiveCaret = nullptr;
   mPresShell = nullptr;
 }
@@ -120,9 +122,8 @@ nsresult AccessibleCaretManager::OnSelectionChanged(Document* aDoc,
       aReason == nsISelectionListener::JS_REASON) {
     auto mode = static_cast<ScriptUpdateMode>(
         StaticPrefs::layout_accessiblecaret_script_change_update_mode());
-    if (mode == kScriptAlwaysShow || (mode == kScriptUpdateVisible &&
-                                      (mFirstCaret->IsLogicallyVisible() ||
-                                       mSecondCaret->IsLogicallyVisible()))) {
+    if (mode == kScriptAlwaysShow ||
+        (mode == kScriptUpdateVisible && mCarets.HasLogicallyVisibleCaret())) {
       UpdateCarets();
       return NS_OK;
     }
@@ -172,10 +173,10 @@ nsresult AccessibleCaretManager::OnSelectionChanged(Document* aDoc,
 }
 
 void AccessibleCaretManager::HideCaretsAndDispatchCaretStateChangedEvent() {
-  if (mFirstCaret->IsLogicallyVisible() || mSecondCaret->IsLogicallyVisible()) {
+  if (mCarets.HasLogicallyVisibleCaret()) {
     AC_LOG("%s", __FUNCTION__);
-    mFirstCaret->SetAppearance(Appearance::None);
-    mSecondCaret->SetAppearance(Appearance::None);
+    mCarets.GetFirst()->SetAppearance(Appearance::None);
+    mCarets.GetSecond()->SetAppearance(Appearance::None);
     mIsCaretPositionChanged = false;
     DispatchCaretStateChangedEvent(CaretChangedReason::Visibilitychange);
   }
@@ -259,7 +260,7 @@ void AccessibleCaretManager::UpdateCaretsForCursorMode(
     return;
   }
 
-  PositionChangedResult result = mFirstCaret->SetPosition(frame, offset);
+  PositionChangedResult result = mCarets.GetFirst()->SetPosition(frame, offset);
 
   switch (result) {
     case PositionChangedResult::NotChanged:
@@ -267,15 +268,15 @@ void AccessibleCaretManager::UpdateCaretsForCursorMode(
     case PositionChangedResult::Zoom:
       if (!aHints.contains(UpdateCaretsHint::RespectOldAppearance)) {
         if (HasNonEmptyTextContent(GetEditingHostForFrame(frame))) {
-          mFirstCaret->SetAppearance(Appearance::Normal);
+          mCarets.GetFirst()->SetAppearance(Appearance::Normal);
         } else if (
             StaticPrefs::
                 layout_accessiblecaret_caret_shown_when_long_tapping_on_empty_content()) {
-          if (mFirstCaret->IsLogicallyVisible()) {
+          if (mCarets.GetFirst()->IsLogicallyVisible()) {
             // Possible cases are: 1) SelectWordOrShortcut() sets the
             // appearance to Normal. 2) When the caret is out of viewport and
             // now scrolling into viewport, it has appearance NormalNotShown.
-            mFirstCaret->SetAppearance(Appearance::Normal);
+            mCarets.GetFirst()->SetAppearance(Appearance::Normal);
           } else {
             // Possible cases are: a) Single tap on current empty content;
             // OnSelectionChanged() sets the appearance to None due to
@@ -287,17 +288,17 @@ void AccessibleCaretManager::UpdateCaretsForCursorMode(
             // to NormalNotShown here like the default update behavior.
           }
         } else {
-          mFirstCaret->SetAppearance(Appearance::NormalNotShown);
+          mCarets.GetFirst()->SetAppearance(Appearance::NormalNotShown);
         }
       }
       break;
 
     case PositionChangedResult::Invisible:
-      mFirstCaret->SetAppearance(Appearance::NormalNotShown);
+      mCarets.GetFirst()->SetAppearance(Appearance::NormalNotShown);
       break;
   }
 
-  mSecondCaret->SetAppearance(Appearance::None);
+  mCarets.GetSecond()->SetAppearance(Appearance::None);
 
   mIsCaretPositionChanged = (result == PositionChangedResult::Position);
 
@@ -345,9 +346,9 @@ void AccessibleCaretManager::UpdateCaretsForSelectionMode(
   };
 
   PositionChangedResult firstCaretResult =
-      updateSingleCaret(mFirstCaret.get(), startFrame, startOffset);
+      updateSingleCaret(mCarets.GetFirst(), startFrame, startOffset);
   PositionChangedResult secondCaretResult =
-      updateSingleCaret(mSecondCaret.get(), endFrame, endOffset);
+      updateSingleCaret(mCarets.GetSecond(), endFrame, endOffset);
 
   mIsCaretPositionChanged =
       firstCaretResult == PositionChangedResult::Position ||
@@ -399,17 +400,21 @@ void AccessibleCaretManager::DesiredAsyncPanZoomState::Update(
       mValue = Value::Enabled;
       break;
     case CaretMode::Cursor:
-      mValue = (aAccessibleCaretManager.mFirstCaret->IsVisuallyVisible() &&
-                aAccessibleCaretManager.mFirstCaret->IsInPositionFixedSubtree())
-                   ? Value::Disabled
-                   : Value::Enabled;
+      mValue =
+          (aAccessibleCaretManager.mCarets.GetFirst()->IsVisuallyVisible() &&
+           aAccessibleCaretManager.mCarets.GetFirst()
+               ->IsInPositionFixedSubtree())
+              ? Value::Disabled
+              : Value::Enabled;
       break;
     case CaretMode::Selection:
       mValue =
-          ((aAccessibleCaretManager.mFirstCaret->IsVisuallyVisible() &&
-            aAccessibleCaretManager.mFirstCaret->IsInPositionFixedSubtree()) ||
-           (aAccessibleCaretManager.mSecondCaret->IsVisuallyVisible() &&
-            aAccessibleCaretManager.mSecondCaret->IsInPositionFixedSubtree()))
+          ((aAccessibleCaretManager.mCarets.GetFirst()->IsVisuallyVisible() &&
+            aAccessibleCaretManager.mCarets.GetFirst()
+                ->IsInPositionFixedSubtree()) ||
+           (aAccessibleCaretManager.mCarets.GetSecond()->IsVisuallyVisible() &&
+            aAccessibleCaretManager.mCarets.GetSecond()
+                ->IsInPositionFixedSubtree()))
               ? Value::Disabled
               : Value::Enabled;
       break;
@@ -417,22 +422,24 @@ void AccessibleCaretManager::DesiredAsyncPanZoomState::Update(
 }
 
 bool AccessibleCaretManager::UpdateCaretsForOverlappingTilt() {
-  if (!mFirstCaret->IsVisuallyVisible() || !mSecondCaret->IsVisuallyVisible()) {
+  if (!mCarets.GetFirst()->IsVisuallyVisible() ||
+      !mCarets.GetSecond()->IsVisuallyVisible()) {
     return false;
   }
 
-  if (!mFirstCaret->Intersects(*mSecondCaret)) {
-    mFirstCaret->SetAppearance(Appearance::Normal);
-    mSecondCaret->SetAppearance(Appearance::Normal);
+  if (!mCarets.GetFirst()->Intersects(*mCarets.GetSecond())) {
+    mCarets.GetFirst()->SetAppearance(Appearance::Normal);
+    mCarets.GetSecond()->SetAppearance(Appearance::Normal);
     return false;
   }
 
-  if (mFirstCaret->LogicalPosition().x <= mSecondCaret->LogicalPosition().x) {
-    mFirstCaret->SetAppearance(Appearance::Left);
-    mSecondCaret->SetAppearance(Appearance::Right);
+  if (mCarets.GetFirst()->LogicalPosition().x <=
+      mCarets.GetSecond()->LogicalPosition().x) {
+    mCarets.GetFirst()->SetAppearance(Appearance::Left);
+    mCarets.GetSecond()->SetAppearance(Appearance::Right);
   } else {
-    mFirstCaret->SetAppearance(Appearance::Right);
-    mSecondCaret->SetAppearance(Appearance::Left);
+    mCarets.GetFirst()->SetAppearance(Appearance::Right);
+    mCarets.GetSecond()->SetAppearance(Appearance::Left);
   }
 
   return true;
@@ -446,15 +453,15 @@ void AccessibleCaretManager::UpdateCaretsForAlwaysTilt(
     return;
   }
 
-  if (mFirstCaret->IsVisuallyVisible()) {
+  if (mCarets.GetFirst()->IsVisuallyVisible()) {
     auto startFrameWritingMode = aStartFrame->GetWritingMode();
-    mFirstCaret->SetAppearance(startFrameWritingMode.IsBidiLTR()
-                                   ? Appearance::Left
-                                   : Appearance::Right);
+    mCarets.GetFirst()->SetAppearance(startFrameWritingMode.IsBidiLTR()
+                                          ? Appearance::Left
+                                          : Appearance::Right);
   }
-  if (mSecondCaret->IsVisuallyVisible()) {
+  if (mCarets.GetSecond()->IsVisuallyVisible()) {
     auto endFrameWritingMode = aEndFrame->GetWritingMode();
-    mSecondCaret->SetAppearance(
+    mCarets.GetSecond()->SetAppearance(
         endFrameWritingMode.IsBidiLTR() ? Appearance::Right : Appearance::Left);
   }
 }
@@ -478,11 +485,11 @@ nsresult AccessibleCaretManager::PressCaret(const nsPoint& aPoint,
   TouchArea touchArea =
       aEventClass == eMouseEventClass ? TouchArea::CaretImage : TouchArea::Full;
 
-  if (mFirstCaret->Contains(aPoint, touchArea)) {
-    mActiveCaret = mFirstCaret.get();
+  if (mCarets.GetFirst()->Contains(aPoint, touchArea)) {
+    mActiveCaret = mCarets.GetFirst();
     SetSelectionDirection(eDirPrevious);
-  } else if (mSecondCaret->Contains(aPoint, touchArea)) {
-    mActiveCaret = mSecondCaret.get();
+  } else if (mCarets.GetSecond()->Contains(aPoint, touchArea)) {
+    mActiveCaret = mCarets.GetSecond();
     SetSelectionDirection(eDirNext);
   }
 
@@ -598,7 +605,7 @@ nsresult AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint) {
 
     if (StaticPrefs::
             layout_accessiblecaret_caret_shown_when_long_tapping_on_empty_content()) {
-      mFirstCaret->SetAppearance(Appearance::Normal);
+      mCarets.GetFirst()->SetAppearance(Appearance::Normal);
     }
     // We need to update carets to get correct information before dispatching
     // CaretStateChangedEvent.
@@ -658,7 +665,7 @@ nsresult AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint) {
 
         if (StaticPrefs::
                 layout_accessiblecaret_caret_shown_when_long_tapping_on_empty_content()) {
-          mFirstCaret->SetAppearance(Appearance::Normal);
+          mCarets.GetFirst()->SetAppearance(Appearance::Normal);
         }
 
         UpdateCarets();
@@ -692,7 +699,7 @@ void AccessibleCaretManager::OnScrollStart() {
 
   mIsScrollStarted = true;
 
-  if (mFirstCaret->IsLogicallyVisible() || mSecondCaret->IsLogicallyVisible()) {
+  if (mCarets.HasLogicallyVisibleCaret()) {
     // Dispatch the event only if one of the carets is logically visible like in
     // HideCaretsAndDispatchCaretStateChangedEvent().
     DispatchCaretStateChangedEvent(CaretChangedReason::Scroll);
@@ -711,7 +718,7 @@ void AccessibleCaretManager::OnScrollEnd() {
   mIsScrollStarted = false;
 
   if (GetCaretMode() == CaretMode::Cursor) {
-    if (!mFirstCaret->IsLogicallyVisible()) {
+    if (!mCarets.GetFirst()->IsLogicallyVisible()) {
       // If the caret is hidden (Appearance::None) due to blur, no
       // need to update it.
       return;
@@ -739,7 +746,7 @@ void AccessibleCaretManager::OnScrollPositionChanged() {
     assert.emplace(*mPresShell);
   }
 
-  if (mFirstCaret->IsLogicallyVisible() || mSecondCaret->IsLogicallyVisible()) {
+  if (mCarets.HasLogicallyVisibleCaret()) {
     if (mIsScrollStarted) {
       // We don't want extra CaretStateChangedEvents dispatched when user is
       // scrolling the page.
@@ -763,7 +770,7 @@ void AccessibleCaretManager::OnReflow() {
     assert.emplace(*mPresShell);
   }
 
-  if (mFirstCaret->IsLogicallyVisible() || mSecondCaret->IsLogicallyVisible()) {
+  if (mCarets.HasLogicallyVisibleCaret()) {
     AC_LOG("%s: UpdateCarets(RespectOldAppearance)", __FUNCTION__);
     UpdateCarets(UpdateCaretsHint::RespectOldAppearance);
   }
@@ -782,8 +789,8 @@ void AccessibleCaretManager::OnKeyboardEvent() {
 }
 
 void AccessibleCaretManager::OnFrameReconstruction() {
-  mFirstCaret->EnsureApzAware();
-  mSecondCaret->EnsureApzAware();
+  mCarets.GetFirst()->EnsureApzAware();
+  mCarets.GetSecond()->EnsureApzAware();
 }
 
 void AccessibleCaretManager::SetLastInputSource(uint16_t aInputSource) {
@@ -1132,7 +1139,8 @@ bool AccessibleCaretManager::RestrictCaretDraggingOffsets(
 
   MOZ_ASSERT(GetCaretMode() == CaretMode::Selection);
 
-  nsDirection dir = mActiveCaret == mFirstCaret.get() ? eDirPrevious : eDirNext;
+  nsDirection dir =
+      mActiveCaret == mCarets.GetFirst() ? eDirPrevious : eDirNext;
   int32_t offset = 0;
   nsCOMPtr<nsIContent> content;
   int32_t contentOffset = 0;
@@ -1183,8 +1191,8 @@ bool AccessibleCaretManager::RestrictCaretDraggingOffsets(
 
   if (!StaticPrefs::
           layout_accessiblecaret_allow_dragging_across_other_caret()) {
-    if ((mActiveCaret == mFirstCaret.get() && *cmpToLimit == 1) ||
-        (mActiveCaret == mSecondCaret.get() && *cmpToLimit == -1)) {
+    if ((mActiveCaret == mCarets.GetFirst() && *cmpToLimit == 1) ||
+        (mActiveCaret == mCarets.GetSecond() && *cmpToLimit == -1)) {
       // The active caret's position is past the limit, which we don't allow
       // here. So set it to the limit, resulting in one character being
       // selected.
@@ -1199,17 +1207,17 @@ bool AccessibleCaretManager::RestrictCaretDraggingOffsets(
         SetOffsetsToLimit();
         break;
       case 1:
-        if (mActiveCaret == mFirstCaret.get()) {
+        if (mActiveCaret == mCarets.GetFirst()) {
           // First caret was moved across the second caret. After making change
           // to the selection, the user will drag the second caret.
-          mActiveCaret = mSecondCaret.get();
+          mActiveCaret = mCarets.GetSecond();
         }
         break;
       case -1:
-        if (mActiveCaret == mSecondCaret.get()) {
+        if (mActiveCaret == mCarets.GetSecond()) {
           // Second caret was moved across the first caret. After making change
           // to the selection, the user will drag the first caret.
-          mActiveCaret = mFirstCaret.get();
+          mActiveCaret = mCarets.GetFirst();
         }
         break;
     }
@@ -1356,13 +1364,13 @@ nsPoint AccessibleCaretManager::AdjustDragBoundary(
     // caret. Likewise, when dragging the first caret, the horizontal boundary
     // (upper bound) of its Y-coordinate is the logical position of the second
     // caret.
-    if (mActiveCaret == mFirstCaret.get()) {
-      nscoord dragDownBoundaryY = mSecondCaret->LogicalPosition().y;
+    if (mActiveCaret == mCarets.GetFirst()) {
+      nscoord dragDownBoundaryY = mCarets.GetSecond()->LogicalPosition().y;
       if (dragDownBoundaryY > 0 && adjustedPoint.y > dragDownBoundaryY) {
         adjustedPoint.y = dragDownBoundaryY;
       }
     } else {
-      nscoord dragUpBoundaryY = mFirstCaret->LogicalPosition().y;
+      nscoord dragUpBoundaryY = mCarets.GetFirst()->LogicalPosition().y;
       if (adjustedPoint.y < dragUpBoundaryY) {
         adjustedPoint.y = dragUpBoundaryY;
       }
@@ -1469,10 +1477,8 @@ void AccessibleCaretManager::DispatchCaretStateChangedEvent(
   init.mBoundingClientRect = domRect;
   init.mReason = aReason;
   init.mCollapsed = sel->IsCollapsed();
-  init.mCaretVisible =
-      mFirstCaret->IsLogicallyVisible() || mSecondCaret->IsLogicallyVisible();
-  init.mCaretVisuallyVisible =
-      mFirstCaret->IsVisuallyVisible() || mSecondCaret->IsVisuallyVisible();
+  init.mCaretVisible = mCarets.HasLogicallyVisibleCaret();
+  init.mCaretVisuallyVisible = mCarets.HasVisuallyVisibleCaret();
   init.mSelectedTextContent = StringifiedSelection();
 
   RefPtr<CaretStateChangedEvent> event = CaretStateChangedEvent::Constructor(
@@ -1487,5 +1493,10 @@ void AccessibleCaretManager::DispatchCaretStateChangedEvent(
 
   (new AsyncEventDispatcher(doc, event))->PostDOMEvent();
 }
+
+AccessibleCaretManager::Carets::Carets(UniquePtr<AccessibleCaret> aFirst,
+           UniquePtr<AccessibleCaret> aSecond)
+        : mFirst{std::move(aFirst)}, mSecond{std::move(aSecond)} {}
+
 
 }  // namespace mozilla

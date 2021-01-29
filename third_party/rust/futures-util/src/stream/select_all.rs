@@ -4,6 +4,7 @@ use core::fmt::{self, Debug};
 use core::iter::FromIterator;
 use core::pin::Pin;
 
+use futures_core::ready;
 use futures_core::stream::{Stream, FusedStream};
 use futures_core::task::{Context, Poll};
 
@@ -37,8 +38,8 @@ impl<St: Stream + Unpin> SelectAll<St> {
     ///
     /// The returned `SelectAll` does not contain any streams and, in this
     /// state, `SelectAll::poll` will return `Poll::Ready(None)`.
-    pub fn new() -> SelectAll<St> {
-        SelectAll { inner: FuturesUnordered::new() }
+    pub fn new() -> Self {
+        Self { inner: FuturesUnordered::new() }
     }
 
     /// Returns the number of streams contained in the set.
@@ -65,8 +66,8 @@ impl<St: Stream + Unpin> SelectAll<St> {
 }
 
 impl<St: Stream + Unpin> Default for SelectAll<St> {
-    fn default() -> SelectAll<St> {
-        SelectAll::new()
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -129,5 +130,13 @@ pub fn select_all<I>(streams: I) -> SelectAll<I::Item>
 impl<St: Stream + Unpin> FromIterator<St> for SelectAll<St> {
     fn from_iter<T: IntoIterator<Item = St>>(iter: T) -> Self {
         select_all(iter)
+    }
+}
+
+impl<St: Stream + Unpin> Extend<St> for SelectAll<St> {
+    fn extend<T: IntoIterator<Item = St>>(&mut self, iter: T) {
+        for st in iter {
+            self.push(st)
+        }
     }
 }

@@ -13,7 +13,7 @@ error[E0119]: conflicting implementations of trait `std::marker::Unpin` for type
 14 |   impl<T, U> Unpin for Foo<T, U> where T: Unpin {} // Conditional Unpin impl
    |   --------------------------------------------- first implementation here
    |
-   = note: this error originates in a macro outside of the current crate (in Nightly builds, run with -Z external-macro-backtrace for more info)
+   = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0119]: conflicting implementations of trait `std::marker::Unpin` for type `Bar<_, _>`:
   --> $DIR/conflict-unpin.rs:18:1
@@ -30,7 +30,7 @@ error[E0119]: conflicting implementations of trait `std::marker::Unpin` for type
 27 |   impl<T, U> Unpin for Bar<T, U> {} // Non-conditional Unpin impl
    |   ------------------------------ first implementation here
    |
-   = note: this error originates in a macro outside of the current crate (in Nightly builds, run with -Z external-macro-backtrace for more info)
+   = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0119]: conflicting implementations of trait `std::marker::Unpin` for type `Baz<_, _>`:
   --> $DIR/conflict-unpin.rs:29:1
@@ -47,4 +47,4 @@ error[E0119]: conflicting implementations of trait `std::marker::Unpin` for type
 38 |   impl<T: Unpin, U: Unpin> Unpin for Baz<T, U> {} // Conditional Unpin impl
    |   -------------------------------------------- first implementation here
    |
-   = note: this error originates in a macro outside of the current crate (in Nightly builds, run with -Z external-macro-backtrace for more info)
+   = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)

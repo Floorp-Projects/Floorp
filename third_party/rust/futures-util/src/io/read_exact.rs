@@ -1,4 +1,5 @@
 use crate::io::AsyncRead;
+use futures_core::ready;
 use futures_core::future::Future;
 use futures_core::task::{Context, Poll};
 use std::io;
@@ -17,7 +18,7 @@ impl<R: ?Sized + Unpin> Unpin for ReadExact<'_, R> {}
 
 impl<'a, R: AsyncRead + ?Sized + Unpin> ReadExact<'a, R> {
     pub(super) fn new(reader: &'a mut R, buf: &'a mut [u8]) -> Self {
-        ReadExact { reader, buf }
+        Self { reader, buf }
     }
 }
 

@@ -1,19 +1,32 @@
-use futures::executor::block_on;
-use futures::future::{Future, FutureExt};
-use futures::stream::{self, StreamExt, TryStreamExt};
-use futures::io::{AsyncBufReadExt, Cursor};
-use futures::task::Poll;
-use futures_test::io::AsyncReadTestExt;
-use futures_test::task::noop_context;
+mod util {
+    use futures::future::Future;
 
-macro_rules! block_on_next {
-    ($expr:expr) => {
-        block_on($expr.next()).unwrap().unwrap()
-    };
+    pub fn run<F: Future + Unpin>(mut f: F) -> F::Output {
+        use futures_test::task::noop_context;
+        use futures::task::Poll;
+        use futures::future::FutureExt;
+
+        let mut cx = noop_context();
+        loop {
+            if let Poll::Ready(x) = f.poll_unpin(&mut cx) {
+                return x;
+            }
+        }
+    }
 }
 
 #[test]
 fn lines() {
+    use futures::executor::block_on;
+    use futures::stream::StreamExt;
+    use futures::io::{AsyncBufReadExt, Cursor};
+
+    macro_rules! block_on_next {
+        ($expr:expr) => {
+            block_on($expr.next()).unwrap().unwrap()
+        };
+    }
+
     let buf = Cursor::new(&b"12\r"[..]);
     let mut s = buf.lines();
     assert_eq!(block_on_next!(s), "12\r".to_string());
@@ -26,23 +39,20 @@ fn lines() {
     assert!(block_on(s.next()).is_none());
 }
 
-fn run<F: Future + Unpin>(mut f: F) -> F::Output {
-    let mut cx = noop_context();
-    loop {
-        if let Poll::Ready(x) = f.poll_unpin(&mut cx) {
-            return x;
-        }
-    }
-}
-
-macro_rules! run_next {
-    ($expr:expr) => {
-        run($expr.next()).unwrap().unwrap()
-    };
-}
-
 #[test]
 fn maybe_pending() {
+    use futures::stream::{self, StreamExt, TryStreamExt};
+    use futures::io::AsyncBufReadExt;
+    use futures_test::io::AsyncReadTestExt;
+
+    use util::run;
+
+    macro_rules! run_next {
+        ($expr:expr) => {
+            run($expr.next()).unwrap().unwrap()
+        };
+    }
+
     let buf = stream::iter(vec![&b"12"[..], &b"\r"[..]])
         .map(Ok)
         .into_async_read()

@@ -42,8 +42,8 @@ impl<T> Cursor<T> {
     /// # fn force_inference(_: &Cursor<Vec<u8>>) {}
     /// # force_inference(&buff);
     /// ```
-    pub fn new(inner: T) -> Cursor<T> {
-        Cursor {
+    pub fn new(inner: T) -> Self {
+        Self {
             inner: io::Cursor::new(inner),
         }
     }
