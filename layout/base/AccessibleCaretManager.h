@@ -256,7 +256,7 @@ class AccessibleCaretManager {
   // Get the union of all the child frame scrollable overflow rects for aFrame,
   // which is used as a helper function to restrict the area where the caret can
   // be dragged. Returns the rect relative to aFrame.
-  nsRect GetAllChildFrameRectsUnion(nsIFrame* aFrame) const;
+  static nsRect GetAllChildFrameRectsUnion(nsIFrame* aFrame);
 
   // Restrict the active caret's dragging position based on
   // sCaretsAllowDraggingAcrossOtherCaret. If the active caret is the first
