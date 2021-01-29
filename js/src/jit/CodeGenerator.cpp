@@ -6728,7 +6728,10 @@ void CodeGenerator::visitNewTypedArray(LNewTypedArray* lir) {
   gc::InitialHeap initialHeap = lir->mir()->initialHeap();
 
   TypedArrayObject* ttemplate = &templateObject->as<TypedArrayObject>();
-  uint32_t n = ttemplate->length().deprecatedGetUint32();
+
+  size_t n = ttemplate->length().get();
+  MOZ_ASSERT(n <= INT32_MAX,
+             "Template objects are only created for int32 lengths");
 
   using Fn = TypedArrayObject* (*)(JSContext*, HandleObject, int32_t length);
   OutOfLineCode* ool = oolCallVM<Fn, NewTypedArrayWithTemplateAndLength>(
