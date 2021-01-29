@@ -9,9 +9,7 @@
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/dom/HTMLInputElement.h"
-#include "mozilla/LookAndFeel.h"
 #include "mozilla/PresShell.h"
-#include "nsDeviceContext.h"
 #include "nsIContent.h"
 #include "nsStyleConsts.h"
 
@@ -150,19 +148,4 @@ void nsCheckboxRadioFrame::GetCurrentCheckState(bool* aState) {
 nsresult nsCheckboxRadioFrame::SetFormProperty(nsAtom* aName,
                                                const nsAString& aValue) {
   return NS_OK;
-}
-
-// static
-nsRect nsCheckboxRadioFrame::GetUsableScreenRect(nsPresContext* aPresContext) {
-  nsRect screen;
-
-  nsDeviceContext* context = aPresContext->DeviceContext();
-  int32_t dropdownCanOverlapOSBar =
-      LookAndFeel::GetInt(LookAndFeel::IntID::MenusCanOverlapOSBar, 0);
-  if (dropdownCanOverlapOSBar)
-    context->GetRect(screen);
-  else
-    context->GetClientRect(screen);
-
-  return screen;
 }
