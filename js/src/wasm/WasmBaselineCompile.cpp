@@ -14130,7 +14130,34 @@ bool BaseCompiler::emitVectorShuffle() {
 
   RegV128 rd, rs;
   pop2xV128(&rd, &rs);
-  masm.shuffleInt8x16(shuffleMask.bytes, rs, rd);
+
+  bool emitShuffle = true;
+
+#  ifdef ENABLE_WASM_SIMD_WORMHOLE
+  if (moduleEnv_.features.simdWormhole && IsWormholeTrigger(shuffleMask)) {
+    emitShuffle = false;
+    switch (shuffleMask.bytes[15]) {
+      case 0:
+        masm.loadConstantSimd128(WormholeSignature(), rd);
+        break;
+#    if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+      case 1:
+        masm.vpmaddubsw(rs, rd, rd);
+        break;
+      case 2:
+        masm.vpmaddwd(Operand(rs), rd, rd);
+        break;
+#    endif
+      default:
+        return iter_.fail("Unrecognized wormhole opcode");
+    }
+  }
+#  endif
+
+  if (emitShuffle) {
+    masm.shuffleInt8x16(shuffleMask.bytes, rs, rd);
+  }
+
   freeV128(rs);
   pushV128(rd);
 
