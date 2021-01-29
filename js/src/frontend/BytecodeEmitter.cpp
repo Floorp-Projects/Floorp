@@ -9328,8 +9328,7 @@ bool BytecodeEmitter::emitPrivateMethodInitializers(ClassEmitter& ce,
         MOZ_CRASH("Invalid private method accessor type");
     }
     auto storedMethodAtom =
-        storedMethodName.finishParserAtom(compilationState.parserAtoms)
-            ->toIndex();
+        storedMethodName.finishParserAtom(compilationState.parserAtoms);
 
     // Emit the private method body and store it as a lexical var.
     if (!emitFunction(&propdef->as<ClassMethod>().method())) {
