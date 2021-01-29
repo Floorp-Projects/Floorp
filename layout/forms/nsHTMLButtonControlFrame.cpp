@@ -14,6 +14,7 @@
 #include "nsGkAtoms.h"
 #include "nsButtonFrameRenderer.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsCheckboxRadioFrame.h"
 #include "nsNameSpaceManager.h"
 #include "nsDisplayList.h"
 #include <algorithm>
@@ -34,6 +35,12 @@ nsHTMLButtonControlFrame::nsHTMLButtonControlFrame(ComputedStyle* aStyle,
     : nsContainerFrame(aStyle, aPresContext, aID) {}
 
 nsHTMLButtonControlFrame::~nsHTMLButtonControlFrame() = default;
+
+void nsHTMLButtonControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
+                                           PostDestroyData& aPostDestroyData) {
+  nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
+  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+}
 
 void nsHTMLButtonControlFrame::Init(nsIContent* aContent,
                                     nsContainerFrame* aParent,
@@ -152,6 +159,10 @@ void nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsHTMLButtonControlFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
+
+  if (mState & NS_FRAME_FIRST_REFLOW) {
+    nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), true);
+  }
 
   // Reflow the child
   nsIFrame* firstKid = mFrames.FirstChild();

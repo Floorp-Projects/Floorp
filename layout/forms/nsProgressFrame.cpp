@@ -16,6 +16,7 @@
 #include "nsNameSpaceManager.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsCheckboxRadioFrame.h"
 #include "nsFontMetrics.h"
 #include "nsCSSPseudoElements.h"
 #include "nsStyleConsts.h"
@@ -41,6 +42,7 @@ void nsProgressFrame::DestroyFrom(nsIFrame* aDestructRoot,
   NS_ASSERTION(!GetPrevContinuation(),
                "nsProgressFrame should not have continuations; if it does we "
                "need to call RegUnregAccessKey only for the first.");
+  nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   aPostDestroyData.AddAnonymousContent(mBarDiv.forget());
   nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
@@ -95,6 +97,10 @@ void nsProgressFrame::Reflow(nsPresContext* aPresContext,
   NS_ASSERTION(!GetPrevContinuation(),
                "nsProgressFrame should not have continuations; if it does we "
                "need to call RegUnregAccessKey only for the first.");
+
+  if (mState & NS_FRAME_FIRST_REFLOW) {
+    nsCheckboxRadioFrame::RegUnRegAccessKey(this, true);
+  }
 
   const auto wm = aReflowInput.GetWritingMode();
   aDesiredSize.SetSize(wm, aReflowInput.ComputedSizeWithBorderPadding(wm));

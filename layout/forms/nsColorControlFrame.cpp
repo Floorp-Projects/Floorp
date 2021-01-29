@@ -9,6 +9,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "nsCSSPseudoElements.h"
+#include "nsCheckboxRadioFrame.h"
 #include "nsGkAtoms.h"
 #include "nsIFormControl.h"
 #include "mozilla/PresShell.h"
@@ -40,6 +41,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsHTMLButtonControlFrame)
 
 void nsColorControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
                                       PostDestroyData& aPostDestroyData) {
+  nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   aPostDestroyData.AddAnonymousContent(mColorContent.forget());
   nsHTMLButtonControlFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
