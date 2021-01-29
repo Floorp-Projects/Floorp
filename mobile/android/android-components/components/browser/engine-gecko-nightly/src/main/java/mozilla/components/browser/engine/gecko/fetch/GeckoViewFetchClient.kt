@@ -54,14 +54,7 @@ class GeckoViewFetchClient(
         }
 
         return try {
-            var fetchFlags = 0
-            if (request.cookiePolicy == Request.CookiePolicy.OMIT) {
-                fetchFlags += GeckoWebExecutor.FETCH_FLAGS_ANONYMOUS
-            }
-            if (request.redirect == Request.Redirect.MANUAL) {
-                fetchFlags += GeckoWebExecutor.FETCH_FLAGS_NO_REDIRECTS
-            }
-            val webResponse = executor.fetch(webRequest, fetchFlags).poll(readTimeOutMillis)
+            val webResponse = executor.fetch(webRequest, request.fetchFlags).poll(readTimeOutMillis)
             webResponse?.toResponse() ?: throw IOException("Fetch failed with null response")
         } catch (e: TimeoutException) {
             throw SocketTimeoutException()
@@ -69,6 +62,21 @@ class GeckoViewFetchClient(
             throw IOException(e)
         }
     }
+
+    private val Request.fetchFlags: Int
+        get() {
+            var fetchFlags = 0
+            if (cookiePolicy == Request.CookiePolicy.OMIT) {
+                fetchFlags += GeckoWebExecutor.FETCH_FLAGS_ANONYMOUS
+            }
+            if (private) {
+                fetchFlags += GeckoWebExecutor.FETCH_FLAGS_PRIVATE
+            }
+            if (redirect == Request.Redirect.MANUAL) {
+                fetchFlags += GeckoWebExecutor.FETCH_FLAGS_NO_REDIRECTS
+            }
+            return fetchFlags
+        }
 
     companion object {
         const val MAX_READ_TIMEOUT_MINUTES = 5L

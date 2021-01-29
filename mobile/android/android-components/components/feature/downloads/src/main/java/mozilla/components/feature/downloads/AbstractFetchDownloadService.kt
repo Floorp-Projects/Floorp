@@ -643,14 +643,12 @@ abstract class AbstractFetchDownloadService : Service() {
             headers.append(RANGE, "bytes=${currentDownloadJobState.currentBytesCopied}-")
         }
 
-        val cookiePolicy = if (download.private) {
-            Request.CookiePolicy.OMIT
-        } else {
-            Request.CookiePolicy.INCLUDE
-        }
-
         var isUsingHttpClient = false
-        val request = Request(download.url.sanitizeURL(), headers = headers, cookiePolicy = cookiePolicy)
+        val request = Request(
+            download.url.sanitizeURL(),
+            headers = headers,
+            private = download.private
+        )
         // When resuming a download we need to use the httpClient as
         // download.response doesn't support adding headers.
         val response = if (isResumingDownload || useHttpClient || download.response == null) {
