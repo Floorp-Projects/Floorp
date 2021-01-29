@@ -37,7 +37,7 @@ FunctionEmitter::FunctionEmitter(BytecodeEmitter* bce, FunctionBox* funbox,
                                  IsHoisted isHoisted)
     : bce_(bce),
       funbox_(funbox),
-      name_(funbox_->explicitName()),
+      name_(funbox_->explicitNameIndex()),
       syntaxKind_(syntaxKind),
       isHoisted_(isHoisted) {}
 
@@ -121,14 +121,14 @@ bool FunctionEmitter::emitAgain() {
   //
   // In sloppy eval contexts, this location is dynamic.
   Maybe<NameLocation> lhsLoc =
-      bce_->locationOfNameBoundInScope(name_->toIndex(), bce_->varEmitterScope);
+      bce_->locationOfNameBoundInScope(name_, bce_->varEmitterScope);
 
   // If there are parameter expressions, the var name could be a
   // parameter.
   if (!lhsLoc && bce_->sc->isFunctionBox() &&
       bce_->sc->asFunctionBox()->functionHasExtraBodyVarScope()) {
     lhsLoc = bce_->locationOfNameBoundInScope(
-        name_->toIndex(), bce_->varEmitterScope->enclosingInFrame());
+        name_, bce_->varEmitterScope->enclosingInFrame());
   }
 
   if (!lhsLoc) {
@@ -140,14 +140,14 @@ bool FunctionEmitter::emitAgain() {
                 bce_->sc->asFunctionBox()->hasParameterExprs));
   }
 
-  NameOpEmitter noe(bce_, name_->toIndex(), *lhsLoc,
+  NameOpEmitter noe(bce_, name_, *lhsLoc,
                     NameOpEmitter::Kind::SimpleAssignment);
   if (!noe.prepareForRhs()) {
     //              [stack]
     return false;
   }
 
-  if (!bce_->emitGetName(name_->toIndex())) {
+  if (!bce_->emitGetName(name_)) {
     //              [stack] FUN
     return false;
   }
@@ -212,7 +212,7 @@ bool FunctionEmitter::emitFunction() {
     // In sloppy eval scripts, top-level functions are accessed dynamically.
     // In global and module scripts, top-level functions are those bound in
     // the var scope.
-    NameLocation loc = bce_->lookupName(name_->toIndex());
+    NameLocation loc = bce_->lookupName(name_);
     topLevelFunction = loc.kind() == NameLocation::Kind::Dynamic ||
                        loc.bindingKind() == BindingKind::Var;
   }
@@ -271,7 +271,7 @@ bool FunctionEmitter::emitHoisted(GCThingIndex index) {
   // For functions nested within functions and blocks, make a lambda and
   // initialize the binding name of the function in the current scope.
 
-  NameOpEmitter noe(bce_, name_->toIndex(), NameOpEmitter::Kind::Initialize);
+  NameOpEmitter noe(bce_, name_, NameOpEmitter::Kind::Initialize);
   if (!noe.prepareForRhs()) {
     //              [stack]
     return false;
@@ -687,7 +687,7 @@ FunctionParamsEmitter::FunctionParamsEmitter(BytecodeEmitter* bce,
       funbox_(funbox),
       functionEmitterScope_(bce_->innermostEmitterScope()) {}
 
-bool FunctionParamsEmitter::emitSimple(const ParserAtom* paramName) {
+bool FunctionParamsEmitter::emitSimple(TaggedParserAtomIndex paramName) {
   MOZ_ASSERT(state_ == State::Start);
 
   //                [stack]
@@ -724,7 +724,7 @@ bool FunctionParamsEmitter::prepareForDefault() {
   return true;
 }
 
-bool FunctionParamsEmitter::emitDefaultEnd(const ParserAtom* paramName) {
+bool FunctionParamsEmitter::emitDefaultEnd(TaggedParserAtomIndex paramName) {
   MOZ_ASSERT(state_ == State::Default);
 
   //                [stack] DEFAULT
@@ -830,7 +830,7 @@ bool FunctionParamsEmitter::emitDestructuringDefaultEnd() {
   return true;
 }
 
-bool FunctionParamsEmitter::emitRest(const ParserAtom* paramName) {
+bool FunctionParamsEmitter::emitRest(TaggedParserAtomIndex paramName) {
   MOZ_ASSERT(state_ == State::Start);
 
   //                [stack]
@@ -921,11 +921,11 @@ bool FunctionParamsEmitter::emitRestArray() {
   return true;
 }
 
-bool FunctionParamsEmitter::emitAssignment(const ParserAtom* paramName) {
+bool FunctionParamsEmitter::emitAssignment(TaggedParserAtomIndex paramName) {
   //                [stack] ARG
 
-  NameLocation paramLoc = *bce_->locationOfNameBoundInScope(
-      paramName->toIndex(), functionEmitterScope_);
+  NameLocation paramLoc =
+      *bce_->locationOfNameBoundInScope(paramName, functionEmitterScope_);
 
   // RHS is already pushed in the caller side.
   // Make sure prepareForRhs doesn't touch stack.
@@ -933,8 +933,7 @@ bool FunctionParamsEmitter::emitAssignment(const ParserAtom* paramName) {
              paramLoc.kind() == NameLocation::Kind::FrameSlot ||
              paramLoc.kind() == NameLocation::Kind::EnvironmentCoordinate);
 
-  NameOpEmitter noe(bce_, paramName->toIndex(), paramLoc,
-                    NameOpEmitter::Kind::Initialize);
+  NameOpEmitter noe(bce_, paramName, paramLoc, NameOpEmitter::Kind::Initialize);
   if (!noe.prepareForRhs()) {
     //              [stack] ARG
     return false;

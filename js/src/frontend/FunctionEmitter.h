@@ -15,7 +15,7 @@
 #include "frontend/DefaultEmitter.h"      // DefaultEmitter
 #include "frontend/EmitterScope.h"        // EmitterScope
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
-#include "frontend/ParserAtom.h"          // ParserAtom
+#include "frontend/ParserAtom.h"          // TaggedParserAtomIndex
 #include "frontend/SharedContext.h"       // FunctionBox, TopLevelFunction
 #include "frontend/TDZCheckCache.h"       // TDZCheckCache
 #include "gc/Rooting.h"                   // JS::Rooted, JS::Handle
@@ -73,7 +73,7 @@ class MOZ_STACK_CLASS FunctionEmitter {
   FunctionBox* funbox_;
 
   // Function's explicit name.
-  const ParserAtom* name_;
+  TaggedParserAtomIndex name_;
 
   FunctionSyntaxKind syntaxKind_;
   IsHoisted isHoisted_;
@@ -406,10 +406,10 @@ class MOZ_STACK_CLASS FunctionParamsEmitter {
 
   // paramName is used only when there's at least one expression in the
   // paramerters (funbox_->hasParameterExprs == true).
-  MOZ_MUST_USE bool emitSimple(const ParserAtom* paramName);
+  MOZ_MUST_USE bool emitSimple(TaggedParserAtomIndex paramName);
 
   MOZ_MUST_USE bool prepareForDefault();
-  MOZ_MUST_USE bool emitDefaultEnd(const ParserAtom* paramName);
+  MOZ_MUST_USE bool emitDefaultEnd(TaggedParserAtomIndex paramName);
 
   MOZ_MUST_USE bool prepareForDestructuring();
   MOZ_MUST_USE bool emitDestructuringEnd();
@@ -418,7 +418,7 @@ class MOZ_STACK_CLASS FunctionParamsEmitter {
   MOZ_MUST_USE bool prepareForDestructuringDefault();
   MOZ_MUST_USE bool emitDestructuringDefaultEnd();
 
-  MOZ_MUST_USE bool emitRest(const ParserAtom* paramName);
+  MOZ_MUST_USE bool emitRest(TaggedParserAtomIndex paramName);
 
   MOZ_MUST_USE bool prepareForDestructuringRest();
   MOZ_MUST_USE bool emitDestructuringRestEnd();
@@ -429,7 +429,7 @@ class MOZ_STACK_CLASS FunctionParamsEmitter {
 
   MOZ_MUST_USE bool emitRestArray();
 
-  MOZ_MUST_USE bool emitAssignment(const ParserAtom* paramName);
+  MOZ_MUST_USE bool emitAssignment(TaggedParserAtomIndex paramName);
 };
 
 } /* namespace frontend */
