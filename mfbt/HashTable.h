@@ -265,6 +265,13 @@ class HashMap {
                         std::forward<ValueInput>(aValue));
   }
 
+  template <typename KeyInput, typename ValueInput>
+  MOZ_MUST_USE bool putNew(const Lookup& aLookup, KeyInput&& aKey,
+                           ValueInput&& aValue) {
+    return mImpl.putNew(aLookup, std::forward<KeyInput>(aKey),
+                        std::forward<ValueInput>(aValue));
+  }
+
   // Like putNew(), but should be only used when the table is known to be big
   // enough for the insertion, and hashing cannot fail. Typically this is used
   // to populate an empty map with known-unique keys after reserving space with
