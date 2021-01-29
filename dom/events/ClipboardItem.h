@@ -23,7 +23,7 @@ class ClipboardItem final : public nsWrapperCache {
  public:
   struct ItemEntry {
     nsString mType;
-    RefPtr<Blob> mBlob;
+    OwningStringOrBlob mData;
   };
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(ClipboardItem)
@@ -34,7 +34,7 @@ class ClipboardItem final : public nsWrapperCache {
 
   static already_AddRefed<ClipboardItem> Constructor(
       const GlobalObject& aGlobal,
-      const Record<nsString, OwningNonNull<Blob>>& aItems,
+      const Record<nsString, OwningStringOrBlob>& aItems,
       const ClipboardItemOptions& aOptions, ErrorResult& aRv);
 
   dom::PresentationStyle PresentationStyle() const {
