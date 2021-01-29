@@ -4006,12 +4006,18 @@ sprint_double_type sprint_doubles[] =
 #endif
   {__LINE__, 9.978034352999867e+15,	"9.978034e+15", "%2.6e"},
   {__LINE__, 9.998315286730175e-30,	"9.998315e-30", "%6e"},
-  {__LINE__, 1.25,			"1.2", "%.1f"},
-  {__LINE__, 11.25,			"11.2", "%.1f"},
+// For ±(x + 0.25), we diverge from the glibc implementation in how the
+// rounding happens. Glibc uses "round to nearest, ties to even", which
+// rounds them to ±(x + 0.2), but we use double-conversion, which
+// implements the ECMAScript spec, which instead uses "round to nearest,
+// ties away from zero", which rounds them to ±(x + 0.3).
+// Both behaviors are valid.
+  {__LINE__, 1.25,			"1.3", "%.1f"},
+  {__LINE__, 11.25,			"11.3", "%.1f"},
   {__LINE__, 1.75,			"1.8", "%.1f"},
   {__LINE__, 11.75,			"11.8", "%.1f"},
-  {__LINE__, -1.25,			"-1.2", "%.1f"},
-  {__LINE__, -11.25,			"-11.2", "%.1f"},
+  {__LINE__, -1.25,			"-1.3", "%.1f"},
+  {__LINE__, -11.25,			"-11.3", "%.1f"},
   {__LINE__, -1.75,			"-1.8", "%.1f"},
   {__LINE__, -11.75,			"-11.8", "%.1f"},
   {__LINE__, 16,			"0x1.0p+4", "%.1a"},
