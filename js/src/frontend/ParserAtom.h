@@ -419,6 +419,7 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   template <typename CharT>
   bool equalsSeq(HashNumber hash, InflatedChar16Sequence<CharT> seq) const;
 
+ private:
   TaggedParserAtomIndex toIndex() const { return index_; }
 
   ParserAtomIndex toParserAtomIndex() const {
@@ -439,6 +440,7 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   bool isStaticParserString1() const { return index_.isStaticParserString1(); }
   bool isStaticParserString2() const { return index_.isStaticParserString2(); }
 
+ public:
   void setParserAtomIndex(ParserAtomIndex index) {
     index_ = TaggedParserAtomIndex(index);
   }
@@ -461,14 +463,12 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
  public:
   // Convert this entry to a js-atom.  The first time this method is called
   // the entry will cache the JSAtom pointer to return later.
-  JSAtom* toJSAtom(JSContext* cx, CompilationAtomCache& atomCache) const;
-
-  // Same as toJSAtom, but this is guaranteed to be instantiated.
-  JSAtom* toExistingJSAtom(JSContext* cx,
-                           CompilationAtomCache& atomCache) const;
+  JSAtom* toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
+                   CompilationAtomCache& atomCache) const;
 
   // Convert NotInstantiated and usedByStencil entry to a js-atom.
-  JSAtom* instantiate(JSContext* cx, CompilationAtomCache& atomCache) const;
+  JSAtom* instantiate(JSContext* cx, TaggedParserAtomIndex index,
+                      CompilationAtomCache& atomCache) const;
 
   // Convert this entry to a number.
   bool toNumber(JSContext* cx, double* result) const;
