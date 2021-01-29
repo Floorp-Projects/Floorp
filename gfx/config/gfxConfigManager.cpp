@@ -201,15 +201,7 @@ void gfxConfigManager::ConfigureWebRenderQualified() {
     // Disable WebRender if we don't have DirectComposition
     nsAutoString adapterVendorID;
     mGfxInfo->GetAdapterVendorID(adapterVendorID);
-    if (adapterVendorID == u"0x8086") {
-      bool mixed;
-      int32_t maxRefreshRate = mGfxInfo->GetMaxRefreshRate(&mixed);
-      if (maxRefreshRate > 75) {
-        mFeatureWrQualified->Disable(FeatureStatus::Blocked,
-                                     "Monitor refresh rate too high",
-                                     "REFRESH_RATE_TOO_HIGH"_ns);
-      }
-    } else if (adapterVendorID == u"0x10de") {
+    if (adapterVendorID == u"0x10de") {
       bool mixed = false;
       int32_t maxRefreshRate = mGfxInfo->GetMaxRefreshRate(&mixed);
       if (maxRefreshRate > 60 && mixed) {
