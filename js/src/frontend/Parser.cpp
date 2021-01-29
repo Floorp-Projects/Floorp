@@ -406,7 +406,7 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
  */
 bool ParserBase::isValidStrictBinding(TaggedParserAtomIndex name) {
   const ParserName* atom =
-      this->compilationState_.getParserAtomAt(cx_, name)->asName();
+      this->compilationState_.parserAtoms.getParserAtom(name)->asName();
   TokenKind tt = ReservedWordTokenKind(atom);
   if (tt == TokenKind::Name) {
     return name != TaggedParserAtomIndex::WellKnown::eval() &&
@@ -468,7 +468,8 @@ template <class ParseHandler, typename Unit>
 void GeneralParser<ParseHandler, Unit>::reportRedeclaration(
     TaggedParserAtomIndex name, DeclarationKind prevKind, TokenPos pos,
     uint32_t prevPos) {
-  const ParserAtom* atom = this->compilationState_.getParserAtomAt(cx_, name);
+  const ParserAtom* atom =
+      this->compilationState_.parserAtoms.getParserAtom(name);
   UniqueChars bytes = ParserAtomToPrintableString(cx_, atom);
   if (!bytes) {
     return;
@@ -531,7 +532,7 @@ bool GeneralParser<ParseHandler, Unit>::notePositionalFormalParameter(
     // 'true'.
     if (pc_->sc()->strict()) {
       const ParserAtom* atom =
-          this->compilationState_.getParserAtomAt(cx_, name);
+          this->compilationState_.parserAtoms.getParserAtom(name);
       UniqueChars bytes = ParserAtomToPrintableString(cx_, atom);
       if (!bytes) {
         return false;
@@ -1501,7 +1502,7 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
     // The unbound private names are sorted, so just grab the first one.
     UnboundPrivateName minimum = unboundPrivateNames[0];
     const ParserAtom* atom =
-        this->compilationState_.getParserAtomAt(cx_, minimum.atom);
+        this->compilationState_.parserAtoms.getParserAtom(minimum.atom);
     UniqueChars str = ParserAtomToPrintableString(cx_, atom);
     if (!str) {
       return false;
@@ -1517,7 +1518,7 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
                               HandleScope enclosingScope,
                               UnboundPrivateName unboundName) {
     const ParserAtom* unboundAtom =
-        parser->compilationState_.getParserAtomAt(cx, unboundName.atom);
+        parser->compilationState_.parserAtoms.getParserAtom(unboundName.atom);
 
     // Walk the enclosing scope chain looking for this private name;
     for (ScopeIter si(enclosingScope); si; si++) {
@@ -1793,7 +1794,7 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
     DeclaredNamePtr p = modulepc.varScope().lookupDeclaredName(entry.localName);
     if (!p) {
       const ParserAtom* nameId =
-          this->compilationState_.getParserAtomAt(cx_, entry.localName);
+          this->compilationState_.parserAtoms.getParserAtom(entry.localName);
       MOZ_ASSERT(nameId);
       UniqueChars str = ParserAtomToPrintableString(cx_, nameId);
       if (!str) {
@@ -5072,7 +5073,7 @@ bool Parser<FullParseHandler, Unit>::checkExportedName(
   }
 
   const ParserAtom* atom =
-      this->compilationState_.getParserAtomAt(cx_, exportName);
+      this->compilationState_.parserAtoms.getParserAtom(exportName);
   UniqueChars str = ParserAtomToPrintableString(cx_, atom);
   if (!str) {
     return false;
@@ -7771,7 +7772,8 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
     }
     if (maybeUnboundName) {
       const ParserAtom* atom =
-          this->compilationState_.getParserAtomAt(cx_, maybeUnboundName->atom);
+          this->compilationState_.parserAtoms.getParserAtom(
+              maybeUnboundName->atom);
       UniqueChars str = ParserAtomToPrintableString(cx_, atom);
       if (!str) {
         return null();
@@ -10226,7 +10228,7 @@ bool GeneralParser<ParseHandler, Unit>::checkLabelOrIdentifierReference(
     TaggedParserAtomIndex ident, uint32_t offset, YieldHandling yieldHandling,
     TokenKind hint /* = TokenKind::Limit */) {
   const ParserName* identAtom =
-      this->compilationState_.getParserAtomAt(cx_, ident)->asName();
+      this->compilationState_.parserAtoms.getParserAtom(ident)->asName();
   TokenKind tt;
   if (hint == TokenKind::Limit) {
     tt = ReservedWordTokenKind(identAtom);
