@@ -1,4 +1,5 @@
 use super::read_to_end::read_to_end_internal;
+use futures_core::ready;
 use futures_core::future::Future;
 use futures_core::task::{Context, Poll};
 use futures_io::AsyncRead;
@@ -23,7 +24,7 @@ impl<'a, R: AsyncRead + ?Sized + Unpin> ReadToString<'a, R> {
         let start_len = buf.len();
         Self {
             reader,
-            bytes: unsafe { mem::replace(buf.as_mut_vec(), Vec::new()) },
+            bytes: mem::replace(buf, String::new()).into_bytes(),
             buf,
             start_len,
         }
@@ -38,7 +39,7 @@ fn read_to_string_internal<R: AsyncRead + ?Sized>(
     start_len: usize,
 ) -> Poll<io::Result<usize>> {
     let ret = ready!(read_to_end_internal(reader, cx, bytes, start_len));
-    if str::from_utf8(&bytes).is_err() {
+    if str::from_utf8(bytes).is_err() {
         Poll::Ready(ret.and_then(|_| {
             Err(io::Error::new(
                 io::ErrorKind::InvalidData,

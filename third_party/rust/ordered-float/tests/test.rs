@@ -2,7 +2,12 @@ extern crate num_traits;
 extern crate ordered_float;
 
 pub use ordered_float::*;
-pub use num_traits::{Bounded, Float, FromPrimitive, Num, One, Signed, ToPrimitive, Zero};
+pub use num_traits::{Bounded, FromPrimitive, Num, One, Signed, ToPrimitive, Zero};
+#[cfg(feature = "std")]
+pub use num_traits::Float;
+#[cfg(not(feature = "std"))]
+pub use num_traits::float::FloatCore as Float;
+
 pub use std::cmp::Ordering::*;
 pub use std::{f32, f64, panic};
 
@@ -529,4 +534,63 @@ fn test_add_fails_on_nan() {
     let a = NotNan::new(std::f32::INFINITY).unwrap();
     let b = NotNan::new(std::f32::NEG_INFINITY).unwrap();
     let _c = a + b;
+}
+
+#[test]
+fn ordered_f32_neg() {
+    assert_eq!(OrderedFloat(-7.0f32), -OrderedFloat(7.0f32));
+}
+
+#[test]
+fn ordered_f64_neg() {
+    assert_eq!(OrderedFloat(-7.0f64), -OrderedFloat(7.0f64));
+}
+
+#[test]
+#[should_panic]
+fn test_sum_fails_on_nan() {
+    let a = NotNan::new(std::f32::INFINITY).unwrap();
+    let b = NotNan::new(std::f32::NEG_INFINITY).unwrap();
+    let _c: NotNan<_> = [a,b].iter().sum();
+}
+
+#[test]
+#[should_panic]
+fn test_product_fails_on_nan() {
+    let a = NotNan::new(std::f32::INFINITY).unwrap();
+    let b = NotNan::new(0f32).unwrap();
+    let _c: NotNan<_> = [a,b].iter().product();
+}
+
+#[test]
+fn not_nan64_sum_product() {
+    let a = NotNan::new(2138.1237).unwrap();
+    let b = NotNan::new(132f64).unwrap();
+    let c = NotNan::new(5.1).unwrap();
+
+    assert_eq!(std::iter::empty::<NotNan<f64>>().sum::<NotNan<_>>(), NotNan::new(0f64).unwrap());
+    assert_eq!([a].iter().sum::<NotNan<_>>(), a);
+    assert_eq!([a,b].iter().sum::<NotNan<_>>(), a + b);
+    assert_eq!([a,b,c].iter().sum::<NotNan<_>>(), a + b + c);
+
+    assert_eq!(std::iter::empty::<NotNan<f64>>().product::<NotNan<_>>(), NotNan::new(1f64).unwrap());
+    assert_eq!([a].iter().product::<NotNan<_>>(), a);
+    assert_eq!([a,b].iter().product::<NotNan<_>>(), a * b);
+    assert_eq!([a,b,c].iter().product::<NotNan<_>>(), a * b * c);
+
+}
+
+#[test]
+fn not_nan_panic_safety() {
+    let catch_op = |mut num, op: fn(&mut NotNan<_>)| {
+        let mut num_ref = panic::AssertUnwindSafe(&mut num);
+        let _ = panic::catch_unwind(move || op(*num_ref));
+        num
+    };
+
+    assert!(!catch_op(NotNan::from(f32::INFINITY), |a| *a += f32::NEG_INFINITY).is_nan());
+    assert!(!catch_op(NotNan::from(f32::INFINITY), |a| *a -= f32::INFINITY).is_nan());
+    assert!(!catch_op(NotNan::from(0.0), |a| *a *= f32::INFINITY).is_nan());
+    assert!(!catch_op(NotNan::from(0.0), |a| *a /= 0.0).is_nan());
+    assert!(!catch_op(NotNan::from(0.0), |a| *a %= 0.0).is_nan());
 }

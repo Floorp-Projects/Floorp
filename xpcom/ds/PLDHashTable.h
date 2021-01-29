@@ -15,6 +15,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/fallible.h"
 #include "nscore.h"
@@ -528,6 +529,74 @@ class PLDHashTable {
   static PLDHashNumber HashStringKey(const void* aKey);
   static bool MatchStringKey(const PLDHashEntryHdr* aEntry, const void* aKey);
 
+  class EntryHandle {
+   public:
+    EntryHandle(EntryHandle&& aOther) noexcept;
+    ~EntryHandle();
+
+    EntryHandle(const EntryHandle&) = delete;
+    EntryHandle& operator=(const EntryHandle&) = delete;
+    EntryHandle& operator=(EntryHandle&& aOther) = delete;
+
+    // Is this slot currently occupied?
+    bool HasEntry() const { return mSlot.IsLive(); }
+
+    explicit operator bool() const { return HasEntry(); }
+
+    // Get the entry stored in this slot. May not be called unless the slot is
+    // currently occupied.
+    PLDHashEntryHdr* Entry() {
+      MOZ_ASSERT(HasEntry());
+      return mSlot.ToEntry();
+    }
+
+    template <class F>
+    void Insert(F&& aInitEntry) {
+      MOZ_ASSERT(!HasEntry());
+      OccupySlot();
+      std::forward<F>(aInitEntry)(Entry());
+    }
+
+    // If the slot is currently vacant, the slot is occupied and `initEntry` is
+    // invoked to initialize the entry. Returns the entry stored in now-occupied
+    // slot.
+    template <class F>
+    PLDHashEntryHdr* OrInsert(F&& aInitEntry) {
+      if (!HasEntry()) {
+        Insert(std::forward<F>(aInitEntry));
+      }
+      return Entry();
+    }
+
+    void Remove();
+
+    void OrRemove();
+
+   private:
+    friend class PLDHashTable;
+
+    EntryHandle(PLDHashTable* aTable, PLDHashNumber aKeyHash, Slot aSlot);
+
+    void OccupySlot();
+
+    PLDHashTable* mTable;
+    PLDHashNumber mKeyHash;
+    Slot mSlot;
+  };
+
+  template <class F>
+  auto WithEntryHandle(const void* aKey, F&& aFunc)
+      -> std::invoke_result_t<F, EntryHandle&&> {
+    return std::forward<F>(aFunc)(MakeEntryHandle(aKey));
+  }
+
+  template <class F>
+  auto WithEntryHandle(const void* aKey, const mozilla::fallible_t& aFallible,
+                       F&& aFunc)
+      -> std::invoke_result_t<F, mozilla::Maybe<EntryHandle>&&> {
+    return std::forward<F>(aFunc)(MakeEntryHandle(aKey, aFallible));
+  }
+
   // This is an iterator for PLDHashtable. Assertions will detect some, but not
   // all, mid-iteration table modifications that might invalidate (e.g.
   // reallocate) the entry storage.
@@ -649,6 +718,11 @@ class PLDHashTable {
 
   void RawRemove(Slot& aSlot);
   void ShrinkIfAppropriate();
+
+  mozilla::Maybe<EntryHandle> MakeEntryHandle(const void* aKey,
+                                              const mozilla::fallible_t&);
+
+  EntryHandle MakeEntryHandle(const void* aKey);
 
   PLDHashTable(const PLDHashTable& aOther) = delete;
   PLDHashTable& operator=(const PLDHashTable& aOther) = delete;

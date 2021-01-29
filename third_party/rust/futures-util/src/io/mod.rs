@@ -1,23 +1,32 @@
-//! IO
+//! Asynchronous I/O.
 //!
-//! This module contains a number of functions for working with
-//! `AsyncRead`, `AsyncWrite`, `AsyncSeek`, and `AsyncBufRead` types, including
-//! the `AsyncReadExt`, `AsyncWriteExt`, `AsyncSeekExt`, and `AsyncBufReadExt`
-//! traits which add methods to the `AsyncRead`, `AsyncWrite`, `AsyncSeek`,
-//! and `AsyncBufRead` types.
+//! This module is the asynchronous version of `std::io`. It defines four
+//! traits, [`AsyncRead`], [`AsyncWrite`], [`AsyncSeek`], and [`AsyncBufRead`],
+//! which mirror the `Read`, `Write`, `Seek`, and `BufRead` traits of the
+//! standard library. However, these traits integrate with the asynchronous
+//! task system, so that if an I/O object isn't ready for reading (or writing),
+//! the thread is not blocked, and instead the current task is queued to be
+//! woken when I/O is ready.
 //!
-//! This module is only available when the `io` and `std` features of this
+//! In addition, the [`AsyncReadExt`], [`AsyncWriteExt`], [`AsyncSeekExt`], and
+//! [`AsyncBufReadExt`] extension traits offer a variety of useful combinators
+//! for operating with asynchronous I/O objects, including ways to work with
+//! them using futures, streams and sinks.
+//!
+//! This module is only available when the `std` feature of this
 //! library is activated, and it is activated by default.
 
 #[cfg(feature = "io-compat")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-compat")))]
 use crate::compat::Compat;
-use std::ptr;
+use std::{ptr, pin::Pin};
 
 pub use futures_io::{
     AsyncRead, AsyncWrite, AsyncSeek, AsyncBufRead, Error, ErrorKind,
     IoSlice, IoSliceMut, Result, SeekFrom,
 };
 #[cfg(feature = "read-initializer")]
+#[cfg_attr(docsrs, doc(cfg(feature = "read-initializer")))]
 pub use futures_io::Initializer;
 
 // used by `BufReader` and `BufWriter`
@@ -65,12 +74,17 @@ pub use self::cursor::Cursor;
 mod empty;
 pub use self::empty::{empty, Empty};
 
+mod fill_buf;
+pub use self::fill_buf::FillBuf;
+
 mod flush;
 pub use self::flush::Flush;
 
 #[cfg(feature = "sink")]
+#[cfg_attr(docsrs, doc(cfg(feature = "sink")))]
 mod into_sink;
 #[cfg(feature = "sink")]
+#[cfg_attr(docsrs, doc(cfg(feature = "sink")))]
 pub use self::into_sink::IntoSink;
 
 mod lines;
@@ -107,7 +121,7 @@ mod sink;
 pub use self::sink::{sink, Sink};
 
 mod split;
-pub use self::split::{ReadHalf, WriteHalf};
+pub use self::split::{ReadHalf, WriteHalf, ReuniteError};
 
 mod take;
 pub use self::take::Take;
@@ -123,6 +137,11 @@ pub use self::write_vectored::WriteVectored;
 
 mod write_all;
 pub use self::write_all::WriteAll;
+
+#[cfg(feature = "write-all-vectored")]
+mod write_all_vectored;
+#[cfg(feature = "write-all-vectored")]
+pub use self::write_all_vectored::WriteAllVectored;
 
 /// An extension trait which adds utility methods to `AsyncRead` types.
 pub trait AsyncReadExt: AsyncRead {
@@ -367,6 +386,7 @@ pub trait AsyncReadExt: AsyncRead {
     ///
     /// Requires the `io-compat` feature to enable.
     #[cfg(feature = "io-compat")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "io-compat")))]
     fn compat(self) -> Compat<Self>
         where Self: Sized + Unpin,
     {
@@ -460,16 +480,71 @@ pub trait AsyncWriteExt: AsyncWrite {
         WriteAll::new(self, buf)
     }
 
+    /// Attempts to write multiple buffers into this writer.
+    ///
+    /// Creates a future that will write the entire contents of `bufs` into this
+    /// `AsyncWrite` using [vectored writes].
+    ///
+    /// The returned future will not complete until all the data has been
+    /// written.
+    ///
+    /// [vectored writes]: std::io::Write::write_vectored
+    ///
+    /// # Notes
+    ///
+    /// Unlike `io::Write::write_vectored`, this takes a *mutable* reference to
+    /// a slice of `IoSlice`s, not an immutable one. That's because we need to
+    /// modify the slice to keep track of the bytes already written.
+    ///
+    /// Once this futures returns, the contents of `bufs` are unspecified, as
+    /// this depends on how many calls to `write_vectored` were necessary. It is
+    /// best to understand this function as taking ownership of `bufs` and to
+    /// not use `bufs` afterwards. The underlying buffers, to which the
+    /// `IoSlice`s point (but not the `IoSlice`s themselves), are unchanged and
+    /// can be reused.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # futures::executor::block_on(async {
+    /// use futures::io::AsyncWriteExt;
+    /// use futures_util::io::Cursor;
+    /// use std::io::IoSlice;
+    ///
+    /// let mut writer = Cursor::new(Vec::new());
+    /// let bufs = &mut [
+    ///     IoSlice::new(&[1]),
+    ///     IoSlice::new(&[2, 3]),
+    ///     IoSlice::new(&[4, 5, 6]),
+    /// ];
+    ///
+    /// writer.write_all_vectored(bufs).await?;
+    /// // Note: the contents of `bufs` is now unspecified, see the Notes section.
+    ///
+    /// assert_eq!(writer.into_inner(), &[1, 2, 3, 4, 5, 6]);
+    /// # Ok::<(), Box<dyn std::error::Error>>(()) }).unwrap();
+    /// ```
+    #[cfg(feature = "write-all-vectored")]
+    fn write_all_vectored<'a>(
+        &'a mut self,
+        bufs: &'a mut [IoSlice<'a>],
+    ) -> WriteAllVectored<'a, Self>
+    where
+        Self: Unpin,
+    {
+        WriteAllVectored::new(self, bufs)
+    }
+
     /// Wraps an [`AsyncWrite`] in a compatibility wrapper that allows it to be
     /// used as a futures 0.1 / tokio-io 0.1 `AsyncWrite`.
     /// Requires the `io-compat` feature to enable.
     #[cfg(feature = "io-compat")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "io-compat")))]
     fn compat_write(self) -> Compat<Self>
         where Self: Sized + Unpin,
     {
         Compat::new(self)
     }
-
 
     /// Allow using an [`AsyncWrite`] as a [`Sink`](futures_sink::Sink)`<Item: AsRef<[u8]>>`.
     ///
@@ -498,6 +573,7 @@ pub trait AsyncWriteExt: AsyncWrite {
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     #[cfg(feature = "sink")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "sink")))]
     fn into_sink<Item: AsRef<[u8]>>(self) -> IntoSink<Self, Item>
         where Self: Sized,
     {
@@ -525,6 +601,58 @@ impl<S: AsyncSeek + ?Sized> AsyncSeekExt for S {}
 
 /// An extension trait which adds utility methods to `AsyncBufRead` types.
 pub trait AsyncBufReadExt: AsyncBufRead {
+    /// Creates a future which will wait for a non-empty buffer to be available from this I/O
+    /// object or EOF to be reached.
+    ///
+    /// This method is the async equivalent to [`BufRead::fill_buf`](std::io::BufRead::fill_buf).
+    ///
+    /// ```rust
+    /// # futures::executor::block_on(async {
+    /// use futures::{io::AsyncBufReadExt as _, stream::{iter, TryStreamExt as _}};
+    ///
+    /// let mut stream = iter(vec![Ok(vec![1, 2, 3]), Ok(vec![4, 5, 6])]).into_async_read();
+    ///
+    /// assert_eq!(stream.fill_buf().await?, vec![1, 2, 3]);
+    /// stream.consume_unpin(2);
+    ///
+    /// assert_eq!(stream.fill_buf().await?, vec![3]);
+    /// stream.consume_unpin(1);
+    ///
+    /// assert_eq!(stream.fill_buf().await?, vec![4, 5, 6]);
+    /// stream.consume_unpin(3);
+    ///
+    /// assert_eq!(stream.fill_buf().await?, vec![]);
+    /// # Ok::<(), Box<dyn std::error::Error>>(()) }).unwrap();
+    /// ```
+    fn fill_buf(&mut self) -> FillBuf<'_, Self>
+        where Self: Unpin,
+    {
+        FillBuf::new(self)
+    }
+
+    /// A convenience for calling [`AsyncBufRead::consume`] on [`Unpin`] IO types.
+    ///
+    /// ```rust
+    /// # futures::executor::block_on(async {
+    /// use futures::{io::AsyncBufReadExt as _, stream::{iter, TryStreamExt as _}};
+    ///
+    /// let mut stream = iter(vec![Ok(vec![1, 2, 3])]).into_async_read();
+    ///
+    /// assert_eq!(stream.fill_buf().await?, vec![1, 2, 3]);
+    /// stream.consume_unpin(2);
+    ///
+    /// assert_eq!(stream.fill_buf().await?, vec![3]);
+    /// stream.consume_unpin(1);
+    ///
+    /// assert_eq!(stream.fill_buf().await?, vec![]);
+    /// # Ok::<(), Box<dyn std::error::Error>>(()) }).unwrap();
+    /// ```
+    fn consume_unpin(&mut self, amt: usize)
+        where Self: Unpin,
+    {
+        Pin::new(self).consume(amt)
+    }
+
     /// Creates a future which will read all the bytes associated with this I/O
     /// object into `buf` until the delimiter `byte` or EOF is reached.
     /// This method is the async equivalent to [`BufRead::read_until`](std::io::BufRead::read_until).

@@ -10,9 +10,20 @@ use futures_sink::Sink;
 #[derive(Debug, Clone)]
 pub enum Either<A, B> {
     /// First branch of the type
-    Left(A),
+    Left(/* #[pin] */ A),
     /// Second branch of the type
-    Right(B),
+    Right(/* #[pin] */ B),
+}
+
+impl<A, B> Either<A, B> {
+    fn project(self: Pin<&mut Self>) -> Either<Pin<&mut A>, Pin<&mut B>> {
+        unsafe {
+            match self.get_unchecked_mut() {
+                Either::Left(a) => Either::Left(Pin::new_unchecked(a)),
+                Either::Right(b) => Either::Right(Pin::new_unchecked(b)),
+            }
+        }
+    }
 }
 
 impl<A, B, T> Either<(T, A), (T, B)> {
@@ -56,12 +67,10 @@ where
 {
     type Output = A::Output;
 
-    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<A::Output> {
-        unsafe {
-            match self.get_unchecked_mut() {
-                Either::Left(x) => Pin::new_unchecked(x).poll(cx),
-                Either::Right(x) => Pin::new_unchecked(x).poll(cx),
-            }
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        match self.project() {
+            Either::Left(x) => x.poll(cx),
+            Either::Right(x) => x.poll(cx),
         }
     }
 }
@@ -86,12 +95,10 @@ where
 {
     type Item = A::Item;
 
-    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<A::Item>> {
-        unsafe {
-            match self.get_unchecked_mut() {
-                Either::Left(x) => Pin::new_unchecked(x).poll_next(cx),
-                Either::Right(x) => Pin::new_unchecked(x).poll_next(cx),
-            }
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        match self.project() {
+            Either::Left(x) => x.poll_next(cx),
+            Either::Right(x) => x.poll_next(cx),
         }
     }
 }
@@ -118,38 +125,30 @@ where
     type Error = A::Error;
 
     fn poll_ready(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        unsafe {
-            match self.get_unchecked_mut() {
-                Either::Left(x) => Pin::new_unchecked(x).poll_ready(cx),
-                Either::Right(x) => Pin::new_unchecked(x).poll_ready(cx),
-            }
+        match self.project() {
+            Either::Left(x) => x.poll_ready(cx),
+            Either::Right(x) => x.poll_ready(cx),
         }
     }
 
     fn start_send(self: Pin<&mut Self>, item: Item) -> Result<(), Self::Error> {
-        unsafe {
-            match self.get_unchecked_mut() {
-                Either::Left(x) => Pin::new_unchecked(x).start_send(item),
-                Either::Right(x) => Pin::new_unchecked(x).start_send(item),
-            }
+        match self.project() {
+            Either::Left(x) => x.start_send(item),
+            Either::Right(x) => x.start_send(item),
         }
     }
 
     fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        unsafe {
-            match self.get_unchecked_mut() {
-                Either::Left(x) => Pin::new_unchecked(x).poll_flush(cx),
-                Either::Right(x) => Pin::new_unchecked(x).poll_flush(cx),
-            }
+        match self.project() {
+            Either::Left(x) => x.poll_flush(cx),
+            Either::Right(x) => x.poll_flush(cx),
         }
     }
 
     fn poll_close(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        unsafe {
-            match self.get_unchecked_mut() {
-                Either::Left(x) => Pin::new_unchecked(x).poll_close(cx),
-                Either::Right(x) => Pin::new_unchecked(x).poll_close(cx),
-            }
+        match self.project() {
+            Either::Left(x) => x.poll_close(cx),
+            Either::Right(x) => x.poll_close(cx),
         }
     }
 }
@@ -157,7 +156,8 @@ where
 #[cfg(feature = "io")]
 #[cfg(feature = "std")]
 mod if_std {
-    use super::Either;
+    use super::*;
+
     use core::pin::Pin;
     use core::task::{Context, Poll};
     #[cfg(feature = "read-initializer")]
@@ -184,11 +184,9 @@ mod if_std {
             cx: &mut Context<'_>,
             buf: &mut [u8],
         ) -> Poll<Result<usize>> {
-            unsafe {
-                match self.get_unchecked_mut() {
-                    Either::Left(x) => Pin::new_unchecked(x).poll_read(cx, buf),
-                    Either::Right(x) => Pin::new_unchecked(x).poll_read(cx, buf),
-                }
+            match self.project() {
+                Either::Left(x) => x.poll_read(cx, buf),
+                Either::Right(x) => x.poll_read(cx, buf),
             }
         }
 
@@ -197,11 +195,9 @@ mod if_std {
             cx: &mut Context<'_>,
             bufs: &mut [IoSliceMut<'_>],
         ) -> Poll<Result<usize>> {
-            unsafe {
-                match self.get_unchecked_mut() {
-                    Either::Left(x) => Pin::new_unchecked(x).poll_read_vectored(cx, bufs),
-                    Either::Right(x) => Pin::new_unchecked(x).poll_read_vectored(cx, bufs),
-                }
+            match self.project() {
+                Either::Left(x) => x.poll_read_vectored(cx, bufs),
+                Either::Right(x) => x.poll_read_vectored(cx, bufs),
             }
         }
     }
@@ -216,11 +212,9 @@ mod if_std {
             cx: &mut Context<'_>,
             buf: &[u8],
         ) -> Poll<Result<usize>> {
-            unsafe {
-                match self.get_unchecked_mut() {
-                    Either::Left(x) => Pin::new_unchecked(x).poll_write(cx, buf),
-                    Either::Right(x) => Pin::new_unchecked(x).poll_write(cx, buf),
-                }
+            match self.project() {
+                Either::Left(x) => x.poll_write(cx, buf),
+                Either::Right(x) => x.poll_write(cx, buf),
             }
         }
 
@@ -229,29 +223,23 @@ mod if_std {
             cx: &mut Context<'_>,
             bufs: &[IoSlice<'_>],
         ) -> Poll<Result<usize>> {
-            unsafe {
-                match self.get_unchecked_mut() {
-                    Either::Left(x) => Pin::new_unchecked(x).poll_write_vectored(cx, bufs),
-                    Either::Right(x) => Pin::new_unchecked(x).poll_write_vectored(cx, bufs),
-                }
+            match self.project() {
+                Either::Left(x) => x.poll_write_vectored(cx, bufs),
+                Either::Right(x) => x.poll_write_vectored(cx, bufs),
             }
         }
 
         fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<()>> {
-            unsafe {
-                match self.get_unchecked_mut() {
-                    Either::Left(x) => Pin::new_unchecked(x).poll_flush(cx),
-                    Either::Right(x) => Pin::new_unchecked(x).poll_flush(cx),
-                }
+            match self.project() {
+                Either::Left(x) => x.poll_flush(cx),
+                Either::Right(x) => x.poll_flush(cx),
             }
         }
 
         fn poll_close(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<()>> {
-            unsafe {
-                match self.get_unchecked_mut() {
-                    Either::Left(x) => Pin::new_unchecked(x).poll_close(cx),
-                    Either::Right(x) => Pin::new_unchecked(x).poll_close(cx),
-                }
+            match self.project() {
+                Either::Left(x) => x.poll_close(cx),
+                Either::Right(x) => x.poll_close(cx),
             }
         }
     }
@@ -266,11 +254,9 @@ mod if_std {
             cx: &mut Context<'_>,
             pos: SeekFrom,
         ) -> Poll<Result<u64>> {
-            unsafe {
-                match self.get_unchecked_mut() {
-                    Either::Left(x) => Pin::new_unchecked(x).poll_seek(cx, pos),
-                    Either::Right(x) => Pin::new_unchecked(x).poll_seek(cx, pos),
-                }
+            match self.project() {
+                Either::Left(x) => x.poll_seek(cx, pos),
+                Either::Right(x) => x.poll_seek(cx, pos),
             }
         }
     }
@@ -280,24 +266,17 @@ mod if_std {
         A: AsyncBufRead,
         B: AsyncBufRead,
     {
-        fn poll_fill_buf(
-            self: Pin<&mut Self>,
-            cx: &mut Context<'_>,
-        ) -> Poll<Result<&[u8]>> {
-            unsafe {
-                match self.get_unchecked_mut() {
-                    Either::Left(x) => Pin::new_unchecked(x).poll_fill_buf(cx),
-                    Either::Right(x) => Pin::new_unchecked(x).poll_fill_buf(cx),
-                }
+        fn poll_fill_buf(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<&[u8]>> {
+            match self.project() {
+                Either::Left(x) => x.poll_fill_buf(cx),
+                Either::Right(x) => x.poll_fill_buf(cx),
             }
         }
 
         fn consume(self: Pin<&mut Self>, amt: usize) {
-            unsafe {
-                match self.get_unchecked_mut() {
-                    Either::Left(x) => Pin::new_unchecked(x).consume(amt),
-                    Either::Right(x) => Pin::new_unchecked(x).consume(amt),
-                }
+            match self.project() {
+                Either::Left(x) => x.consume(amt),
+                Either::Right(x) => x.consume(amt),
             }
         }
     }

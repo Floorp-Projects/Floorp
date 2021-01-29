@@ -38,3 +38,9 @@ impl<T> Stream for Empty<T> {
         (0, Some(0))
     }
 }
+
+impl<T> Clone for Empty<T> {
+    fn clone(&self) -> Self {
+        empty()
+    }
+}

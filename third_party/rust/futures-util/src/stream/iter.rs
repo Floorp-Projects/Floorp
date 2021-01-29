@@ -3,7 +3,7 @@ use futures_core::stream::Stream;
 use futures_core::task::{Context, Poll};
 
 /// Stream for the [`iter`] function.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[must_use = "streams do nothing unless polled"]
 pub struct Iter<I> {
     iter: I,

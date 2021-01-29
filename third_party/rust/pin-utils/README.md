@@ -2,7 +2,7 @@
 
 Utilities for pinning
 
-[![Build Status](https://travis-ci.org/rust-lang-nursery/pin-utils.svg?branch=master)](https://travis-ci.org/rust-lang-nursery/pin-utils)
+[![Build Status](https://travis-ci.com/rust-lang-nursery/pin-utils.svg?branch=master)](https://travis-ci.com/rust-lang-nursery/pin-utils)
 [![Crates.io](https://img.shields.io/crates/v/pin-utils.svg)](https://crates.io/crates/pin-utils)
 
 [Documentation](https://docs.rs/pin-utils)
@@ -13,7 +13,7 @@ First, add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-pin-utils = "0.1.0-alpha.3"
+pin-utils = "0.1.0-alpha.4"
 ```
 
 Now, you can use it:
@@ -21,6 +21,8 @@ Now, you can use it:
 ```rust
 use pin_utils::pin_mut; // And more...
 ```
+
+The current version of pin-utils requires Rust 1.33 or later.
 
 # License
 

@@ -40,6 +40,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/fallible.h"
+#include "mozilla/XorShift128PlusRNG.h"
 
 #include "nsBaseHashtable.h"
 #include "nsCOMPtr.h"
@@ -167,113 +168,6 @@ double nsRFPService::TimerResolution() {
   return prefValue;
 }
 
-/*
- * The below is a simple time-based Least Recently Used cache used to store the
- * result of a cryptographic hash function. It has LRU_CACHE_SIZE slots, and
- * will be used from multiple threads. It is thread-safe.
- */
-#define LRU_CACHE_SIZE (45)
-#define HASH_DIGEST_SIZE_BITS (256)
-#define HASH_DIGEST_SIZE_BYTES (HASH_DIGEST_SIZE_BITS / 8)
-
-class LRUCache final {
- public:
-  LRUCache() : mLock("mozilla.resistFingerprinting.LRUCache") {
-    this->cache.SetLength(LRU_CACHE_SIZE);
-  }
-
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(LRUCache)
-
-  bool Get(long long aKeyPart1, long long aKeyPart2, nsACString& aOutString) {
-    for (auto& cacheEntry : this->cache) {
-      // Read optimistically befor locking
-      if (cacheEntry.keyPart1 == aKeyPart1 &&
-          cacheEntry.keyPart2 == aKeyPart2) {
-        MutexAutoLock lock(mLock);
-
-        // Double check after we have a lock
-        if (MOZ_UNLIKELY(cacheEntry.keyPart1 != aKeyPart1 ||
-                         cacheEntry.keyPart2 != aKeyPart2)) {
-          // Got evicted in a race
-          long long tmp_keyPart1 = cacheEntry.keyPart1;
-          long long tmp_keyPart2 = cacheEntry.keyPart2;
-          MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
-                  ("LRU Cache HIT-MISS with %lli != %lli and %lli != %lli",
-                   aKeyPart1, tmp_keyPart1, aKeyPart2, tmp_keyPart2));
-          return false;
-        }
-
-        cacheEntry.accessTime = ++mTimeCounter;
-        MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
-                ("LRU Cache HIT with %lli %lli", aKeyPart1, aKeyPart2));
-        aOutString.Assign(cacheEntry.data, HASH_DIGEST_SIZE_BYTES);
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  void Store(long long aKeyPart1, long long aKeyPart2,
-             const Span<char>& aValue) {
-    MOZ_DIAGNOSTIC_ASSERT(aValue.Length() == HASH_DIGEST_SIZE_BYTES);
-    MutexAutoLock lock(mLock);
-
-    CacheEntry* lowestKey = &this->cache[0];
-    for (auto& cacheEntry : this->cache) {
-      if (MOZ_UNLIKELY(cacheEntry.keyPart1 == aKeyPart1 &&
-                       cacheEntry.keyPart2 == aKeyPart2)) {
-        // Another thread inserted before us, don't insert twice
-        MOZ_LOG(
-            gResistFingerprintingLog, LogLevel::Verbose,
-            ("LRU Cache DOUBLE STORE with %lli %lli", aKeyPart1, aKeyPart2));
-        return;
-      }
-      if (cacheEntry.accessTime < lowestKey->accessTime) {
-        lowestKey = &cacheEntry;
-      }
-    }
-
-    lowestKey->keyPart1 = aKeyPart1;
-    lowestKey->keyPart2 = aKeyPart2;
-    PodCopy(lowestKey->data, aValue.Elements(), HASH_DIGEST_SIZE_BYTES);
-    lowestKey->accessTime = ++mTimeCounter;
-    MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
-            ("LRU Cache STORE with %lli %lli", aKeyPart1, aKeyPart2));
-  }
-
- private:
-  ~LRUCache() = default;
-
-  struct CacheEntry {
-    Atomic<long long, Relaxed> keyPart1;
-    Atomic<long long, Relaxed> keyPart2;
-    uint64_t accessTime = 0;
-    char data[HASH_DIGEST_SIZE_BYTES];
-
-    CacheEntry() {
-      this->keyPart1 = 0xFFFFFFFFFFFFFFFF;
-      this->keyPart2 = 0xFFFFFFFFFFFFFFFF;
-      this->accessTime = 0;
-      PodArrayZero(this->data);
-    }
-    CacheEntry(const CacheEntry& obj) = delete;
-  };
-
-  AutoTArray<CacheEntry, LRU_CACHE_SIZE> cache;
-  mozilla::Mutex mLock;
-
-  // A reference "time" which is advanced with every access. We don't need
-  // actual timestamps, we only need to have a way to find the oldest item.
-  // Accessing and incrementing an integer is faster than getting the true
-  // system timestamp.
-  // Protected by mLock.
-  uint64_t mTimeCounter = 0;
-};
-
-// We make a single LRUCache
-static StaticRefPtr<LRUCache> sCache;
-
 /**
  * The purpose of this function is to deterministicly generate a random midpoint
  * between a lower clamped value and an upper clamped value. Assuming a clamping
@@ -349,145 +243,56 @@ nsresult nsRFPService::RandomMidpoint(long long aClampedTimeUSec,
                                       uint8_t* aSecretSeed /* = nullptr */) {
   nsresult rv;
   const int kSeedSize = 16;
-  const int kClampTimesPerDigest = HASH_DIGEST_SIZE_BITS / 32;
   static uint8_t* sSecretMidpointSeed = nullptr;
 
   if (MOZ_UNLIKELY(!aMidpointOut)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  RefPtr<LRUCache> cache;
-  {
-    StaticMutexAutoLock lock(sLock);
-    cache = sCache;
-  }
-
-  if (!cache) {
-    return NS_ERROR_FAILURE;
-  }
-
   /*
-   * Below, we will call a cryptographic hash function. That's expensive. We
-   * look for ways to make it more efficient.
+   * Below, we will use three different values to seed a fairly simple random
+   * number generator. On the first run we initiate the secret seed, which
+   * is mixed in with the time epoch and the context mix in to seed the RNG.
    *
-   * We only need as much output from the hash function as the maximum
-   * resolution we will ever support, because we will reduce the output modulo
-   * that value. The maximum resolution we think is likely is in the low seconds
-   * value, or about 1-10 million microseconds. 2**24 is 16 million, so we only
-   * need 24 bits of output. Practically speaking though, it's way easier to
-   * work with 32 bits.
-   *
-   * So we're using 32 bits of output and throwing away the other DIGEST_SIZE -
-   * 32 (in the case of SHA-256, DIGEST_SIZE is 256.)  That's a lot of waste.
-   *
-   * Instead of throwing it away, we're going to use all of it. We can handle
-   * DIGEST_SIZE / 32 Clamped Time's per hash function - call that , so we
-   * reduce aClampedTime to a multiple of kClampTimesPerDigest (just like we
-   * reduced the real time value to aClampedTime!)
-   *
-   * Then we hash _that_ value (assuming it's not in the cache) and index into
-   * the digest result the appropriate bit offset.
+   * This isn't the most secure method of generating a random midpoint but is
+   * reasonably performant and should be sufficient for our purposes.
    */
-  long long reducedResolution = aResolutionUSec * kClampTimesPerDigest;
-  long long extraClampedTime =
-      (aClampedTimeUSec / reducedResolution) * reducedResolution;
 
-  nsAutoCStringN<HASH_DIGEST_SIZE_BYTES + 1> hashResult;
-  bool foundCacheHit = cache->Get(extraClampedTime, aContextMixin, hashResult);
+  // If someone has pased in the testing-only parameter, replace our seed with
+  // it
+  if (aSecretSeed != nullptr) {
+    StaticMutexAutoLock lock(sLock);
 
-  if (!foundCacheHit) {  // Cache Miss =(
-    // If someone has pased in the testing-only parameter, replace our seed with
-    // it
-    if (aSecretSeed != nullptr) {
-      StaticMutexAutoLock lock(sLock);
+    delete[] sSecretMidpointSeed;
 
-      delete[] sSecretMidpointSeed;
+    sSecretMidpointSeed = new uint8_t[kSeedSize];
+    memcpy(sSecretMidpointSeed, aSecretSeed, kSeedSize);
+  }
 
-      sSecretMidpointSeed = new uint8_t[kSeedSize];
-      memcpy(sSecretMidpointSeed, aSecretSeed, kSeedSize);
+  // If we don't have a seed, we need to get one.
+  if (MOZ_UNLIKELY(!sSecretMidpointSeed)) {
+    nsCOMPtr<nsIRandomGenerator> randomGenerator =
+        do_GetService("@mozilla.org/security/random-generator;1", &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
 
-    // If we don't have a seed, we need to get one.
-    if (MOZ_UNLIKELY(!sSecretMidpointSeed)) {
-      nsCOMPtr<nsIRandomGenerator> randomGenerator =
-          do_GetService("@mozilla.org/security/random-generator;1", &rv);
+    if (MOZ_LIKELY(!sSecretMidpointSeed)) {
+      rv =
+          randomGenerator->GenerateRandomBytes(kSeedSize, &sSecretMidpointSeed);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-
-      StaticMutexAutoLock lock(sLock);
-      if (MOZ_LIKELY(!sSecretMidpointSeed)) {
-        rv = randomGenerator->GenerateRandomBytes(kSeedSize,
-                                                  &sSecretMidpointSeed);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-      }
     }
-
-    /*
-     * Use a cryptographicly secure hash function, but do _not_ use an HMAC.
-     * Obviously we're not using this data for authentication purposes, but
-     * even still an HMAC is a perfect fit here, as we're hashing a value
-     * using a seed that never changes, and an input that does. So why not
-     * use one?
-     *
-     * Basically - we don't need to, it's two invocations of the hash function,
-     * and speed really counts here.
-     *
-     * With authentication off the table, the properties we would get by
-     * using an HMAC here would be:
-     *  - Resistence to length extension
-     *  - Resistence to collision attacks on the underlying hash function
-     *  - Resistence to chosen prefix attacks
-     *
-     * There is no threat of length extension here. Nor is there any real
-     * practical threat of collision: not only are we using a good hash
-     * function (you may mock me in 10 years if it is broken) but we don't
-     * provide the attacker much control over the input. Nor do we let them
-     * have the prefix.
-     */
-
-    // Then hash extraClampedTime and store it in the cache
-    nsCOMPtr<nsICryptoHash> hasher =
-        do_CreateInstance("@mozilla.org/security/hash;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = hasher->Init(nsICryptoHash::SHA256);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = hasher->Update(sSecretMidpointSeed, kSeedSize);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = hasher->Update((const uint8_t*)&aContextMixin, sizeof(aContextMixin));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = hasher->Update((const uint8_t*)&extraClampedTime,
-                        sizeof(extraClampedTime));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsAutoCStringN<HASH_DIGEST_SIZE_BYTES + 1> derivedSecret;
-    rv = hasher->Finish(false, derivedSecret);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Finally, store it in the cache
-    cache->Store(extraClampedTime, aContextMixin, derivedSecret);
-    hashResult = derivedSecret;
   }
 
-  // Offset the appropriate index into the hash output, and then turn it into a
-  // random midpoint between 0 and aResolutionUSec. Sometimes out input time is
-  // negative, we ride the negative out to the end until we start doing pointer
-  // math. (We also triple check we're in bounds.)
-  int byteOffset =
-      abs(((aClampedTimeUSec - extraClampedTime) / aResolutionUSec) * 4);
-  if (MOZ_UNLIKELY(byteOffset > (HASH_DIGEST_SIZE_BYTES - 4))) {
-    byteOffset = 0;
-  }
-  uint32_t deterministiclyRandomValue =
-      *BitwiseCast<uint32_t*>(hashResult.get() + byteOffset);
-  deterministiclyRandomValue %= aResolutionUSec;
-  *aMidpointOut = deterministiclyRandomValue;
+  // Seed and create our random number generator.
+  non_crypto::XorShift128PlusRNG rng(
+      aContextMixin ^ *(uint64_t*)(sSecretMidpointSeed),
+      aClampedTimeUSec ^ *(uint64_t*)(sSecretMidpointSeed + 8));
+
+  // Retrieve the output midpoint value.
+  *aMidpointOut = rng.next() % aResolutionUSec;
 
   return NS_OK;
 }
@@ -843,12 +648,6 @@ nsresult nsRFPService::Init() {
   // Call Update here to cache the values of the prefs and set the timezone.
   UpdateRFPPref();
 
-  // Create the LRU Cache when we initialize, to avoid accidently trying to
-  // create it (and call ClearOnShutdown) on a non-main-thread
-  if (sCache == nullptr) {
-    sCache = new LRUCache();
-  }
-
   return rv;
 }
 
@@ -934,9 +733,6 @@ void nsRFPService::StartShutdown() {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-
-  StaticMutexAutoLock lock(sLock);
-  { sCache = nullptr; }
 
   if (obs) {
     obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);

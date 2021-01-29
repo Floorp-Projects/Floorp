@@ -1,8 +1,9 @@
 use core::pin::Pin;
 use futures_core::future::Future;
+use futures_core::ready;
 use futures_core::stream::{Stream, FusedStream};
 use futures_core::task::{Context, Poll};
-use pin_utils::unsafe_pinned;
+use pin_project_lite::pin_project;
 
 /// Creates a stream of a single element.
 ///
@@ -16,34 +17,36 @@ use pin_utils::unsafe_pinned;
 /// # });
 /// ```
 pub fn once<Fut: Future>(future: Fut) -> Once<Fut> {
-    Once { future: Some(future) }
+    Once::new(future)
 }
 
-/// A stream which emits single element and then EOF.
-///
-/// This stream will never block and is always ready.
-#[derive(Debug)]
-#[must_use = "streams do nothing unless polled"]
-pub struct Once<Fut> {
-    future: Option<Fut>
+pin_project! {
+    /// A stream which emits single element and then EOF.
+    #[derive(Debug)]
+    #[must_use = "streams do nothing unless polled"]
+    pub struct Once<Fut> {
+        #[pin]
+        future: Option<Fut>
+    }
 }
-
-impl<Fut: Unpin> Unpin for Once<Fut> {}
 
 impl<Fut> Once<Fut> {
-    unsafe_pinned!(future: Option<Fut>);
+    pub(crate) fn new(future: Fut) -> Self {
+        Self { future: Some(future) }
+    }
 }
 
 impl<Fut: Future> Stream for Once<Fut> {
     type Item = Fut::Output;
 
-    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        let v = match self.as_mut().future().as_pin_mut() {
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        let mut this = self.project();
+        let v = match this.future.as_mut().as_pin_mut() {
             Some(fut) => ready!(fut.poll(cx)),
             None => return Poll::Ready(None),
         };
 
-        self.as_mut().future().set(None);
+        this.future.set(None);
         Poll::Ready(Some(v))
     }
 

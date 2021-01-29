@@ -1,3 +1,4 @@
+use futures_core::ready;
 use futures_core::future::Future;
 use futures_core::task::{Context, Poll};
 use futures_io::AsyncBufRead;
@@ -23,7 +24,7 @@ impl<'a, R: AsyncBufRead + ?Sized + Unpin> ReadLine<'a, R> {
     pub(super) fn new(reader: &'a mut R, buf: &'a mut String) -> Self {
         Self {
             reader,
-            bytes: unsafe { mem::replace(buf.as_mut_vec(), Vec::new()) },
+            bytes: mem::replace(buf, String::new()).into_bytes(),
             buf,
             read: 0,
         }
@@ -38,7 +39,7 @@ pub(super) fn read_line_internal<R: AsyncBufRead + ?Sized>(
     read: &mut usize,
 ) -> Poll<io::Result<usize>> {
     let ret = ready!(read_until_internal(reader, cx, b'\n', bytes, read));
-    if str::from_utf8(&bytes).is_err() {
+    if str::from_utf8(bytes).is_err() {
         Poll::Ready(ret.and_then(|_| {
             Err(io::Error::new(io::ErrorKind::InvalidData, "stream did not contain valid UTF-8"))
         }))

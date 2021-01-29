@@ -42,8 +42,8 @@ unsafe fn remove_drop_lifetime<'a, T>(ptr: unsafe fn (*mut (dyn Future<Output = 
 impl<'a, T> LocalFutureObj<'a, T> {
     /// Create a `LocalFutureObj` from a custom trait object representation.
     #[inline]
-    pub fn new<F: UnsafeFutureObj<'a, T> + 'a>(f: F) -> LocalFutureObj<'a, T> {
-        LocalFutureObj {
+    pub fn new<F: UnsafeFutureObj<'a, T> + 'a>(f: F) -> Self {
+        Self {
             future: unsafe { remove_future_lifetime(f.into_raw()) },
             drop_fn: unsafe { remove_drop_lifetime(F::drop) },
             _marker: PhantomData,
@@ -72,7 +72,7 @@ impl<T> fmt::Debug for LocalFutureObj<'_, T> {
 
 impl<'a, T> From<FutureObj<'a, T>> for LocalFutureObj<'a, T> {
     #[inline]
-    fn from(f: FutureObj<'a, T>) -> LocalFutureObj<'a, T> {
+    fn from(f: FutureObj<'a, T>) -> Self {
         f.0
     }
 }
@@ -113,8 +113,8 @@ unsafe impl<T> Send for FutureObj<'_, T> {}
 impl<'a, T> FutureObj<'a, T> {
     /// Create a `FutureObj` from a custom trait object representation.
     #[inline]
-    pub fn new<F: UnsafeFutureObj<'a, T> + Send>(f: F) -> FutureObj<'a, T> {
-        FutureObj(LocalFutureObj::new(f))
+    pub fn new<F: UnsafeFutureObj<'a, T> + Send>(f: F) -> Self {
+        Self(LocalFutureObj::new(f))
     }
 }
 
@@ -296,49 +296,49 @@ mod if_alloc {
 
     impl<'a, F: Future<Output = ()> + Send + 'a> From<Box<F>> for FutureObj<'a, ()> {
         fn from(boxed: Box<F>) -> Self {
-            FutureObj::new(boxed)
+            Self::new(boxed)
         }
     }
 
     impl<'a> From<Box<dyn Future<Output = ()> + Send + 'a>> for FutureObj<'a, ()> {
         fn from(boxed: Box<dyn Future<Output = ()> + Send + 'a>) -> Self {
-            FutureObj::new(boxed)
+            Self::new(boxed)
         }
     }
 
     impl<'a, F: Future<Output = ()> + Send + 'a> From<Pin<Box<F>>> for FutureObj<'a, ()> {
         fn from(boxed: Pin<Box<F>>) -> Self {
-            FutureObj::new(boxed)
+            Self::new(boxed)
         }
     }
 
     impl<'a> From<Pin<Box<dyn Future<Output = ()> + Send + 'a>>> for FutureObj<'a, ()> {
         fn from(boxed: Pin<Box<dyn Future<Output = ()> + Send + 'a>>) -> Self {
-            FutureObj::new(boxed)
+            Self::new(boxed)
         }
     }
 
     impl<'a, F: Future<Output = ()> + 'a> From<Box<F>> for LocalFutureObj<'a, ()> {
         fn from(boxed: Box<F>) -> Self {
-            LocalFutureObj::new(boxed)
+            Self::new(boxed)
         }
     }
 
     impl<'a> From<Box<dyn Future<Output = ()> + 'a>> for LocalFutureObj<'a, ()> {
         fn from(boxed: Box<dyn Future<Output = ()> + 'a>) -> Self {
-            LocalFutureObj::new(boxed)
+            Self::new(boxed)
         }
     }
 
     impl<'a, F: Future<Output = ()> + 'a> From<Pin<Box<F>>> for LocalFutureObj<'a, ()> {
         fn from(boxed: Pin<Box<F>>) -> Self {
-            LocalFutureObj::new(boxed)
+            Self::new(boxed)
         }
     }
 
     impl<'a> From<Pin<Box<dyn Future<Output = ()> + 'a>>> for LocalFutureObj<'a, ()> {
         fn from(boxed: Pin<Box<dyn Future<Output = ()> + 'a>>) -> Self {
-            LocalFutureObj::new(boxed)
+            Self::new(boxed)
         }
     }
 }

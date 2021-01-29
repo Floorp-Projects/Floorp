@@ -2,8 +2,6 @@
 
 use proc_macro_hack::proc_macro_hack;
 
-#[doc(hidden)]
-#[macro_export]
 macro_rules! document_join_macro {
     ($join:item $try_join:item) => {
         /// Polls multiple futures simultaneously, returning a tuple
@@ -24,8 +22,13 @@ macro_rules! document_join_macro {
         ///
         /// let a = async { 1 };
         /// let b = async { 2 };
-        ///
         /// assert_eq!(join!(a, b), (1, 2));
+        ///
+        /// // `join!` is variadic, so you can pass any number of futures
+        /// let c = async { 3 };
+        /// let d = async { 4 };
+        /// let e = async { 5 };
+        /// assert_eq!(join!(c, d, e), (3, 4, 5));
         /// # });
         /// ```
         $join
@@ -50,9 +53,14 @@ macro_rules! document_join_macro {
         /// use futures::try_join;
         ///
         /// let a = async { Ok::<i32, i32>(1) };
-        /// let b = async { Ok::<u64, i32>(2) };
-        ///
+        /// let b = async { Ok::<i32, i32>(2) };
         /// assert_eq!(try_join!(a, b), Ok((1, 2)));
+        ///
+        /// // `try_join!` is variadic, so you can pass any number of futures
+        /// let c = async { Ok::<i32, i32>(3) };
+        /// let d = async { Ok::<i32, i32>(4) };
+        /// let e = async { Ok::<i32, i32>(5) };
+        /// assert_eq!(try_join!(c, d, e), Ok((3, 4, 5)));
         /// # });
         /// ```
         ///
@@ -73,10 +81,32 @@ macro_rules! document_join_macro {
     }
 }
 
-document_join_macro! {
-    #[proc_macro_hack(support_nested)]
-    pub use futures_macro::join;
+#[doc(hidden)]
+#[proc_macro_hack(support_nested, only_hack_old_rustc)]
+pub use futures_macro::join_internal;
 
-    #[proc_macro_hack(support_nested)]
-    pub use futures_macro::try_join;
+#[doc(hidden)]
+#[proc_macro_hack(support_nested, only_hack_old_rustc)]
+pub use futures_macro::try_join_internal;
+
+document_join_macro! {
+    #[macro_export]
+    macro_rules! join {
+        ($($tokens:tt)*) => {{
+            use $crate::__private as __futures_crate;
+            $crate::join_internal! {
+                $( $tokens )*
+            }
+        }}
+    }
+
+    #[macro_export]
+    macro_rules! try_join {
+        ($($tokens:tt)*) => {{
+            use $crate::__private as __futures_crate;
+            $crate::try_join_internal! {
+                $( $tokens )*
+            }
+        }}
+    }
 }

@@ -14,65 +14,122 @@ use futures_core::{
 #[cfg(feature = "sink")]
 use futures_sink::Sink;
 
+use crate::fns::{
+    inspect_err_fn, inspect_ok_fn, into_fn, map_err_fn, map_ok_fn, map_ok_or_else_fn,
+    unwrap_or_else_fn, InspectErrFn, InspectOkFn, IntoFn, MapErrFn, MapOkFn, MapOkOrElseFn,
+    UnwrapOrElseFn,
+};
+use crate::future::{assert_future, Inspect, Map};
+use crate::stream::assert_stream;
+
 // Combinators
-
-mod and_then;
-#[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
-pub use self::and_then::AndThen;
-
-mod err_into;
-#[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
-pub use self::err_into::ErrInto;
-
-#[cfg(feature = "sink")]
-mod flatten_sink;
-#[cfg(feature = "sink")]
-#[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
-pub use self::flatten_sink::FlattenSink;
-
-mod inspect_ok;
-#[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
-pub use self::inspect_ok::InspectOk;
-
-mod inspect_err;
-#[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
-pub use self::inspect_err::InspectErr;
-
 mod into_future;
+mod try_flatten;
+mod try_flatten_err;
+
+delegate_all!(
+    /// Future for the [`try_flatten`](TryFutureExt::try_flatten) method.
+    TryFlatten<Fut1, Fut2>(
+        try_flatten::TryFlatten<Fut1, Fut2>
+    ): Debug + Future + FusedFuture + New[|x: Fut1| try_flatten::TryFlatten::new(x)]
+);
+
+delegate_all!(
+    /// Future for the [`try_flatten_err`](TryFutureExt::try_flatten_err) method.
+    TryFlattenErr<Fut1, Fut2>(
+        try_flatten_err::TryFlattenErr<Fut1, Fut2>
+    ): Debug + Future + FusedFuture + New[|x: Fut1| try_flatten_err::TryFlattenErr::new(x)]
+);
+
+delegate_all!(
+    /// Future for the [`try_flatten_stream`](TryFutureExt::try_flatten_stream) method.
+    TryFlattenStream<Fut>(
+        try_flatten::TryFlatten<Fut, Fut::Ok>
+    ): Debug + Sink + Stream + FusedStream + New[|x: Fut| try_flatten::TryFlatten::new(x)]
+    where Fut: TryFuture
+);
+
+#[cfg(feature = "sink")]
+delegate_all!(
+    /// Sink for the [`flatten_sink`](TryFutureExt::flatten_sink) method.
+    #[cfg_attr(docsrs, doc(cfg(feature = "sink")))]
+    FlattenSink<Fut, Si>(
+        try_flatten::TryFlatten<Fut, Si>
+    ): Debug + Sink + Stream + FusedStream + New[|x: Fut| try_flatten::TryFlatten::new(x)]
+);
+
+delegate_all!(
+    /// Future for the [`and_then`](TryFutureExt::and_then) method.
+    AndThen<Fut1, Fut2, F>(
+        TryFlatten<MapOk<Fut1, F>, Fut2>
+    ): Debug + Future + FusedFuture + New[|x: Fut1, f: F| TryFlatten::new(MapOk::new(x, f))]
+);
+
+delegate_all!(
+    /// Future for the [`or_else`](TryFutureExt::or_else) method.
+    OrElse<Fut1, Fut2, F>(
+        TryFlattenErr<MapErr<Fut1, F>, Fut2>
+    ): Debug + Future + FusedFuture + New[|x: Fut1, f: F| TryFlattenErr::new(MapErr::new(x, f))]
+);
+
+delegate_all!(
+    /// Future for the [`err_into`](TryFutureExt::err_into) method.
+    ErrInto<Fut, E>(
+        MapErr<Fut, IntoFn<E>>
+    ): Debug + Future + FusedFuture + New[|x: Fut| MapErr::new(x, into_fn())]
+);
+
+delegate_all!(
+    /// Future for the [`ok_into`](TryFutureExt::ok_into) method.
+    OkInto<Fut, E>(
+        MapOk<Fut, IntoFn<E>>
+    ): Debug + Future + FusedFuture + New[|x: Fut| MapOk::new(x, into_fn())]
+);
+
+delegate_all!(
+    /// Future for the [`inspect_ok`](super::TryFutureExt::inspect_ok) method.
+    InspectOk<Fut, F>(
+        Inspect<IntoFuture<Fut>, InspectOkFn<F>>
+    ): Debug + Future + FusedFuture + New[|x: Fut, f: F| Inspect::new(IntoFuture::new(x), inspect_ok_fn(f))]
+);
+
+delegate_all!(
+    /// Future for the [`inspect_err`](super::TryFutureExt::inspect_err) method.
+    InspectErr<Fut, F>(
+        Inspect<IntoFuture<Fut>, InspectErrFn<F>>
+    ): Debug + Future + FusedFuture + New[|x: Fut, f: F| Inspect::new(IntoFuture::new(x), inspect_err_fn(f))]
+);
+
 #[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
 pub use self::into_future::IntoFuture;
 
-mod map_err;
-#[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
-pub use self::map_err::MapErr;
+delegate_all!(
+    /// Future for the [`map_ok`](TryFutureExt::map_ok) method.
+    MapOk<Fut, F>(
+        Map<IntoFuture<Fut>, MapOkFn<F>>
+    ): Debug + Future + FusedFuture + New[|x: Fut, f: F| Map::new(IntoFuture::new(x), map_ok_fn(f))]
+);
 
-mod map_ok;
-#[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
-pub use self::map_ok::MapOk;
+delegate_all!(
+    /// Future for the [`map_err`](TryFutureExt::map_err) method.
+    MapErr<Fut, F>(
+        Map<IntoFuture<Fut>, MapErrFn<F>>
+    ): Debug + Future + FusedFuture + New[|x: Fut, f: F| Map::new(IntoFuture::new(x), map_err_fn(f))]
+);
 
-mod map_ok_or_else;
-#[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
-pub use self::map_ok_or_else::MapOkOrElse;
+delegate_all!(
+    /// Future for the [`map_ok_or_else`](TryFutureExt::map_ok_or_else) method.
+    MapOkOrElse<Fut, F, G>(
+        Map<IntoFuture<Fut>, MapOkOrElseFn<F, G>>
+    ): Debug + Future + FusedFuture + New[|x: Fut, f: F, g: G| Map::new(IntoFuture::new(x), map_ok_or_else_fn(f, g))]
+);
 
-mod or_else;
-#[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
-pub use self::or_else::OrElse;
-
-mod try_flatten_stream;
-#[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
-pub use self::try_flatten_stream::TryFlattenStream;
-
-mod unwrap_or_else;
-#[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
-pub use self::unwrap_or_else::UnwrapOrElse;
-
-// Implementation details
-
-mod flatten_stream_sink;
-pub(crate) use self::flatten_stream_sink::FlattenStreamSink;
-
-mod try_chain;
-pub(crate) use self::try_chain::{TryChain, TryChainAction};
+delegate_all!(
+    /// Future for the [`unwrap_or_else`](TryFutureExt::unwrap_or_else) method.
+    UnwrapOrElse<Fut, F>(
+        Map<IntoFuture<Fut>, UnwrapOrElseFn<F>>
+    ): Debug + Future + FusedFuture + New[|x: Fut, f: F| Map::new(IntoFuture::new(x), unwrap_or_else_fn(f))]
+);
 
 impl<Fut: ?Sized + TryFuture> TryFutureExt for Fut {}
 
@@ -110,6 +167,7 @@ pub trait TryFutureExt: TryFuture {
     /// take_sink(fut.flatten_sink())
     /// ```
     #[cfg(feature = "sink")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "sink")))]
     fn flatten_sink<Item>(self) -> FlattenSink<Self, Self::Ok>
     where
         Self::Ok: Sink<Item, Error = Self::Error>,
@@ -161,7 +219,7 @@ pub trait TryFutureExt: TryFuture {
         F: FnOnce(Self::Ok) -> T,
         Self: Sized,
     {
-        MapOk::new(self, f)
+        assert_future::<Result<T, Self::Error>, _>(MapOk::new(self, f))
     }
 
     /// Maps this future's success value to a different value, and permits for error handling resulting in the same type.
@@ -172,7 +230,7 @@ pub trait TryFutureExt: TryFuture {
     /// The provided closure `f` will only be called if this future is resolved
     /// to an [`Ok`]. If it resolves to an [`Err`], panics, or is dropped, then
     /// the provided closure will never be invoked.
-    /// 
+    ///
     /// The provided closure `e` will only be called if this future is resolved
     /// to an [`Err`]. If it resolves to an [`Ok`], panics, or is dropped, then
     /// the provided closure will never be invoked.
@@ -189,20 +247,20 @@ pub trait TryFutureExt: TryFuture {
     /// let future = async { Ok::<i32, i32>(5) };
     /// let future = future.map_ok_or_else(|x| x * 2, |x| x + 3);
     /// assert_eq!(future.await, 8);
-    /// 
+    ///
     /// let future = async { Err::<i32, i32>(5) };
     /// let future = future.map_ok_or_else(|x| x * 2, |x| x + 3);
     /// assert_eq!(future.await, 10);
     /// # });
     /// ```
-    /// 
+    ///
     fn map_ok_or_else<T, E, F>(self, e: E, f: F) -> MapOkOrElse<Self, F, E>
     where
         F: FnOnce(Self::Ok) -> T,
         E: FnOnce(Self::Error) -> T,
         Self: Sized,
     {
-        MapOkOrElse::new(self, e, f)
+        assert_future::<T, _>(MapOkOrElse::new(self, f, e))
     }
 
     /// Maps this future's error value to a different value.
@@ -249,7 +307,7 @@ pub trait TryFutureExt: TryFuture {
         F: FnOnce(Self::Error) -> E,
         Self: Sized,
     {
-        MapErr::new(self, f)
+        assert_future::<Result<Self::Ok, E>, _>(MapErr::new(self, f))
     }
 
     /// Maps this future's [`Error`](TryFuture::Error) to a new error type
@@ -279,7 +337,17 @@ pub trait TryFutureExt: TryFuture {
         Self: Sized,
         Self::Error: Into<E>,
     {
-        ErrInto::new(self)
+        assert_future::<Result<Self::Ok, E>, _>(ErrInto::new(self))
+    }
+
+    /// Maps this future's [`Ok`](TryFuture::Ok) to a new type
+    /// using the [`Into`](std::convert::Into) trait.
+    fn ok_into<U>(self) -> OkInto<Self, U>
+    where
+        Self: Sized,
+        Self::Ok: Into<U>,
+    {
+        assert_future::<Result<U, Self::Error>, _>(OkInto::new(self))
     }
 
     /// Executes another future after this one resolves successfully. The
@@ -324,7 +392,7 @@ pub trait TryFutureExt: TryFuture {
         Fut: TryFuture<Error = Self::Error>,
         Self: Sized,
     {
-        AndThen::new(self, f)
+        assert_future::<Result<Fut::Ok, Fut::Error>, _>(AndThen::new(self, f))
     }
 
     /// Executes another future if this one resolves to an error. The
@@ -369,7 +437,7 @@ pub trait TryFutureExt: TryFuture {
         Fut: TryFuture<Ok = Self::Ok>,
         Self: Sized,
     {
-        OrElse::new(self, f)
+        assert_future::<Result<Fut::Ok, Fut::Error>, _>(OrElse::new(self, f))
     }
 
     /// Do something with the success value of a future before passing it on.
@@ -395,7 +463,7 @@ pub trait TryFutureExt: TryFuture {
         F: FnOnce(&Self::Ok),
         Self: Sized,
     {
-        InspectOk::new(self, f)
+        assert_future::<Result<Self::Ok, Self::Error>, _>(InspectOk::new(self, f))
     }
 
     /// Do something with the error value of a future before passing it on.
@@ -421,7 +489,19 @@ pub trait TryFutureExt: TryFuture {
         F: FnOnce(&Self::Error),
         Self: Sized,
     {
-        InspectErr::new(self, f)
+        assert_future::<Result<Self::Ok, Self::Error>, _>(InspectErr::new(self, f))
+    }
+
+    /// Flatten the execution of this future when the successful result of this
+    /// future is another future.
+    ///
+    /// This is equivalent to `future.and_then(|x| x)`.
+    fn try_flatten(self) -> TryFlatten<Self, Self::Ok>
+    where
+        Self::Ok: TryFuture<Error = Self::Error>,
+        Self: Sized,
+    {
+        TryFlatten::new(self)
     }
 
     /// Flatten the execution of this future when the successful result of this
@@ -454,7 +534,9 @@ pub trait TryFutureExt: TryFuture {
         Self::Ok: TryStream<Error = Self::Error>,
         Self: Sized,
     {
-        TryFlattenStream::new(self)
+        assert_stream::<Result<<Self::Ok as TryStream>::Ok, Self::Error>, _>(TryFlattenStream::new(
+            self,
+        ))
     }
 
     /// Unwraps this future's ouput, producing a future with this future's
@@ -484,12 +566,13 @@ pub trait TryFutureExt: TryFuture {
         Self: Sized,
         F: FnOnce(Self::Error) -> Self::Ok,
     {
-        UnwrapOrElse::new(self, f)
+        assert_future::<Self::Ok, _>(UnwrapOrElse::new(self, f))
     }
 
     /// Wraps a [`TryFuture`] into a future compatable with libraries using
     /// futures 0.1 future definitons. Requires the `compat` feature to enable.
     #[cfg(feature = "compat")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "compat")))]
     fn compat(self) -> Compat<Self>
     where
         Self: Sized + Unpin,
@@ -522,7 +605,7 @@ pub trait TryFutureExt: TryFuture {
     where
         Self: Sized,
     {
-        IntoFuture::new(self)
+        assert_future::<Result<Self::Ok, Self::Error>, _>(IntoFuture::new(self))
     }
 
     /// A convenience method for calling [`TryFuture::try_poll`] on [`Unpin`]

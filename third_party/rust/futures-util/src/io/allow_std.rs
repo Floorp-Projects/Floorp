@@ -41,7 +41,7 @@ macro_rules! try_with_interrupt {
 impl<T> AllowStdIo<T> {
     /// Creates a new `AllowStdIo` from an existing IO object.
     pub fn new(io: T) -> Self {
-        AllowStdIo(io)
+        Self(io)
     }
 
     /// Returns a reference to the contained IO object.

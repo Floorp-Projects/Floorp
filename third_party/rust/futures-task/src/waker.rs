@@ -18,7 +18,7 @@ pub(super) fn waker_vtable<W: ArcWake>() -> &'static RawWakerVTable {
 /// [`ArcWake.wake()`](ArcWake::wake) if awoken.
 pub fn waker<W>(wake: Arc<W>) -> Waker
 where
-    W: ArcWake,
+    W: ArcWake + 'static,
 {
     let ptr = Arc::into_raw(wake) as *const ();
 
