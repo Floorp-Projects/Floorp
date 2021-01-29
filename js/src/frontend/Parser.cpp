@@ -2446,12 +2446,7 @@ TaggedParserAtomIndex ParserBase::prefixAccessorName(
   const ParserAtom* atoms[2] = {
       prefix, this->compilationState_.parserAtoms.getParserAtom(propAtom)};
   auto atomsRange = mozilla::Range(atoms, 2);
-  auto result =
-      this->compilationState_.parserAtoms.concatAtoms(cx_, atomsRange);
-  if (!result) {
-    return TaggedParserAtomIndex::null();
-  }
-  return result->toIndex();
+  return this->compilationState_.parserAtoms.concatAtoms(cx_, atomsRange);
 }
 
 template <class ParseHandler, typename Unit>

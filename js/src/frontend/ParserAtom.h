@@ -789,8 +789,8 @@ class ParserAtomsTable {
   const ParserAtom* internJSAtom(JSContext* cx, CompilationStencil& stencil,
                                  JSAtom* atom);
 
-  const ParserAtom* concatAtoms(JSContext* cx,
-                                mozilla::Range<const ParserAtom*> atoms);
+  TaggedParserAtomIndex concatAtoms(JSContext* cx,
+                                    mozilla::Range<const ParserAtom*> atoms);
 
   const ParserAtom* getWellKnown(WellKnownAtomId atomId) const;
   const ParserAtom* getStatic1(StaticParserString1 s) const;

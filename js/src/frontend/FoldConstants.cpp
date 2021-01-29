@@ -1250,7 +1250,7 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
       // Replace with concatenation if we multiple nodes.
       if (accum.length() > 1) {
         // Construct the concatenated atom.
-        const ParserAtom* combination = info.parserAtoms.concatAtoms(
+        auto combination = info.parserAtoms.concatAtoms(
             info.cx, mozilla::Range(accum.begin(), accum.length()));
         if (!combination) {
           return false;
@@ -1258,7 +1258,7 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
 
         // Replace |current|'s string with the entire combination.
         MOZ_ASSERT((*current)->isKind(ParseNodeKind::StringExpr));
-        (*current)->as<NameNode>().setAtom(combination->toIndex());
+        (*current)->as<NameNode>().setAtom(combination);
       }
 
       // If we're out of nodes, we're done.
