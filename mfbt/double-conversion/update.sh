@@ -12,7 +12,6 @@ LOCAL_PATCHES=""
 
 LOCAL_PATCHES="$LOCAL_PATCHES add-mfbt-api-markers.patch"
 LOCAL_PATCHES="$LOCAL_PATCHES use-mozilla-assertions.patch"
-LOCAL_PATCHES="$LOCAL_PATCHES ToPrecision-exponential.patch"
 LOCAL_PATCHES="$LOCAL_PATCHES debug-only-functions.patch"
 
 TMPDIR=`mktemp --directory`
