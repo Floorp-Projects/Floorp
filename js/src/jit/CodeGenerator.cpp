@@ -1262,13 +1262,13 @@ void CodeGenerator::visitAdjustDataViewLength(LAdjustDataViewLength* lir) {
 
 #ifdef DEBUG
   Label ok;
-  masm.branchTest32(Assembler::NotSigned, output, output, &ok);
+  masm.branchTestPtr(Assembler::NotSigned, output, output, &ok);
   masm.assumeUnreachable("Unexpected negative value in LAdjustDataViewLength");
   masm.bind(&ok);
 #endif
 
   Label bail;
-  masm.branchSub32(Assembler::Signed, Imm32(byteSize - 1), output, &bail);
+  masm.branchSubPtr(Assembler::Signed, Imm32(byteSize - 1), output, &bail);
   bailoutFrom(&bail, lir->snapshot());
 }
 
@@ -7858,38 +7858,43 @@ void CodeGenerator::visitTypedArrayElementShift(LTypedArrayElementShift* lir) {
   masm.typedArrayElementShift(obj, out);
 }
 
-class OutOfLineTypedArrayIndexToInt32
+class OutOfLineGuardNumberToIntPtrIndex
     : public OutOfLineCodeBase<CodeGenerator> {
-  LTypedArrayIndexToInt32* lir_;
+  LGuardNumberToIntPtrIndex* lir_;
 
  public:
-  explicit OutOfLineTypedArrayIndexToInt32(LTypedArrayIndexToInt32* lir)
+  explicit OutOfLineGuardNumberToIntPtrIndex(LGuardNumberToIntPtrIndex* lir)
       : lir_(lir) {}
 
   void accept(CodeGenerator* codegen) override {
-    codegen->visitOutOfLineTypedArrayIndexToInt32(this);
+    codegen->visitOutOfLineGuardNumberToIntPtrIndex(this);
   }
-  LTypedArrayIndexToInt32* lir() const { return lir_; }
+  LGuardNumberToIntPtrIndex* lir() const { return lir_; }
 };
 
-void CodeGenerator::visitTypedArrayIndexToInt32(LTypedArrayIndexToInt32* lir) {
-  FloatRegister index = ToFloatRegister(lir->index());
+void CodeGenerator::visitGuardNumberToIntPtrIndex(
+    LGuardNumberToIntPtrIndex* lir) {
+  FloatRegister input = ToFloatRegister(lir->input());
   Register output = ToRegister(lir->output());
 
-  auto* ool = new (alloc()) OutOfLineTypedArrayIndexToInt32(lir);
+  if (!lir->mir()->supportOOB()) {
+    Label bail;
+    masm.convertDoubleToPtr(input, output, &bail, false);
+    bailoutFrom(&bail, lir->snapshot());
+    return;
+  }
+
+  auto* ool = new (alloc()) OutOfLineGuardNumberToIntPtrIndex(lir);
   addOutOfLineCode(ool, lir->mir());
 
-  MOZ_ASSERT(TypedArrayObject::maxByteLength() <= INT32_MAX,
-             "Double exceeding Int32 range can't be in-bounds array access");
-
-  masm.convertDoubleToInt32(index, output, ool->entry(), false);
+  masm.convertDoubleToPtr(input, output, ool->entry(), false);
   masm.bind(ool->rejoin());
 }
 
-void CodeGenerator::visitOutOfLineTypedArrayIndexToInt32(
-    OutOfLineTypedArrayIndexToInt32* ool) {
+void CodeGenerator::visitOutOfLineGuardNumberToIntPtrIndex(
+    OutOfLineGuardNumberToIntPtrIndex* ool) {
   // Substitute the invalid index with an arbitrary out-of-bounds index.
-  masm.move32(Imm32(-1), ToRegister(ool->lir()->output()));
+  masm.movePtr(ImmWord(-1), ToRegister(ool->lir()->output()));
   masm.jump(ool->rejoin());
 }
 
@@ -12531,11 +12536,11 @@ void CodeGenerator::visitLoadTypedArrayElementHole(
   Register scratch = out.scratchReg();
   Register scratch2 = ToRegister(lir->temp());
   Register index = ToRegister(lir->index());
-  masm.loadArrayBufferViewLengthInt32(object, scratch);
+  masm.loadArrayBufferViewLengthPtr(object, scratch);
 
   // Load undefined if index >= length.
   Label outOfBounds, done;
-  masm.spectreBoundsCheck32(index, scratch, scratch2, &outOfBounds);
+  masm.spectreBoundsCheckPtr(index, scratch, scratch2, &outOfBounds);
 
   // Load the elements vector.
   masm.loadPtr(Address(object, ArrayBufferViewObject::dataOffset()), scratch);
@@ -12576,11 +12581,11 @@ void CodeGenerator::visitLoadTypedArrayElementHoleBigInt(
   // Load the length.
   Register scratch = out.scratchReg();
   Register index = ToRegister(lir->index());
-  masm.loadArrayBufferViewLengthInt32(object, scratch);
+  masm.loadArrayBufferViewLengthPtr(object, scratch);
 
   // Load undefined if index >= length.
   Label outOfBounds, done;
-  masm.spectreBoundsCheck32(index, scratch, temp, &outOfBounds);
+  masm.spectreBoundsCheckPtr(index, scratch, temp, &outOfBounds);
 
   // Load the elements vector.
   masm.loadPtr(Address(object, ArrayBufferViewObject::dataOffset()), scratch);
@@ -12903,9 +12908,9 @@ void CodeGenerator::visitStoreTypedArrayElementHole(
 
   Label skip;
   if (length->isRegister()) {
-    masm.spectreBoundsCheck32(index, ToRegister(length), spectreTemp, &skip);
+    masm.spectreBoundsCheckPtr(index, ToRegister(length), spectreTemp, &skip);
   } else {
-    masm.spectreBoundsCheck32(index, ToAddress(length), spectreTemp, &skip);
+    masm.spectreBoundsCheckPtr(index, ToAddress(length), spectreTemp, &skip);
   }
 
   BaseIndex dest(elements, index, ScaleFromElemWidth(width));
@@ -12929,9 +12934,9 @@ void CodeGenerator::visitStoreTypedArrayElementHoleBigInt(
 
   Label skip;
   if (length->isRegister()) {
-    masm.spectreBoundsCheck32(index, ToRegister(length), spectreTemp, &skip);
+    masm.spectreBoundsCheckPtr(index, ToRegister(length), spectreTemp, &skip);
   } else {
-    masm.spectreBoundsCheck32(index, ToAddress(length), spectreTemp, &skip);
+    masm.spectreBoundsCheckPtr(index, ToAddress(length), spectreTemp, &skip);
   }
 
   masm.loadBigInt64(value, temp);

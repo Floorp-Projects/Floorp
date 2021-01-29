@@ -3664,9 +3664,9 @@ class MAdjustDataViewLength : public MUnaryInstruction,
 
   MAdjustDataViewLength(MDefinition* input, uint32_t byteSize)
       : MUnaryInstruction(classOpcode, input), byteSize_(byteSize) {
-    MOZ_ASSERT(input->type() == MIRType::Int32);
+    MOZ_ASSERT(input->type() == MIRType::IntPtr);
     MOZ_ASSERT(byteSize > 1);
-    setResultType(MIRType::Int32);
+    setResultType(MIRType::IntPtr);
     setMovable();
     setGuard();
   }
@@ -7438,32 +7438,47 @@ class MTypedArrayElementShift : public MUnaryInstruction,
   void computeRange(TempAllocator& alloc) override;
 };
 
-// Convert the input into an Int32 value for accessing a TypedArray element.
-// If the input is non-finite, not an integer, negative, or outside the Int32
-// range, produces a value which is known to trigger an out-of-bounds access.
-class MTypedArrayIndexToInt32 : public MUnaryInstruction,
-                                public TypedArrayIndexPolicy::Data {
-  explicit MTypedArrayIndexToInt32(MDefinition* def)
-      : MUnaryInstruction(classOpcode, def) {
-    MOZ_ASSERT(def->type() == MIRType::Int32 || def->type() == MIRType::Double);
-    setResultType(MIRType::Int32);
+// Convert a Double into an IntPtr value for accessing a TypedArray or DataView
+// element. If the input is non-finite, not an integer, negative, or outside the
+// IntPtr range, either bails out or produces a value which is known to trigger
+// an out-of-bounds access (this depends on the supportOOB flag).
+class MGuardNumberToIntPtrIndex : public MUnaryInstruction,
+                                  public DoublePolicy<0>::Data {
+  // If true, produce an out-of-bounds index for non-IntPtr doubles instead of
+  // bailing out.
+  const bool supportOOB_;
+
+  MGuardNumberToIntPtrIndex(MDefinition* def, bool supportOOB)
+      : MUnaryInstruction(classOpcode, def), supportOOB_(supportOOB) {
+    MOZ_ASSERT(def->type() == MIRType::Double);
+    setResultType(MIRType::IntPtr);
     setMovable();
-    specialization_ = def->type();
+    if (!supportOOB) {
+      setGuard();
+    }
   }
 
  public:
-  INSTRUCTION_HEADER(TypedArrayIndexToInt32)
+  INSTRUCTION_HEADER(GuardNumberToIntPtrIndex)
   TRIVIAL_NEW_WRAPPERS
+
+  bool supportOOB() const { return supportOOB_; }
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
 
   bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isGuardNumberToIntPtrIndex()) {
+      return false;
+    }
+    if (ins->toGuardNumberToIntPtrIndex()->supportOOB() != supportOOB()) {
+      return false;
+    }
     return congruentIfOperandsEqual(ins);
   }
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
-  ALLOW_CLONE(MTypedArrayIndexToInt32)
+  ALLOW_CLONE(MGuardNumberToIntPtrIndex)
 };
 
 class MKeepAliveObject : public MUnaryInstruction,
@@ -8006,7 +8021,7 @@ class MLoadUnboxedScalar : public MBinaryInstruction,
       setMovable();
     }
     MOZ_ASSERT(elements->type() == MIRType::Elements);
-    MOZ_ASSERT(index->type() == MIRType::Int32);
+    MOZ_ASSERT(index->type() == MIRType::IntPtr);
     MOZ_ASSERT(storageType >= 0 && storageType < Scalar::MaxTypedArrayViewType);
   }
 
@@ -8076,7 +8091,7 @@ class MLoadDataViewElement : public MTernaryInstruction,
     setResultType(MIRType::Value);
     setMovable();
     MOZ_ASSERT(elements->type() == MIRType::Elements);
-    MOZ_ASSERT(index->type() == MIRType::Int32);
+    MOZ_ASSERT(index->type() == MIRType::IntPtr);
     MOZ_ASSERT(littleEndian->type() == MIRType::Boolean);
     MOZ_ASSERT(storageType >= 0 && storageType < Scalar::MaxTypedArrayViewType);
     MOZ_ASSERT(Scalar::byteSize(storageType) > 1);
@@ -8133,7 +8148,7 @@ class MLoadTypedArrayElementHole : public MBinaryInstruction,
         allowDouble_(allowDouble) {
     setResultType(MIRType::Value);
     setMovable();
-    MOZ_ASSERT(index->type() == MIRType::Int32);
+    MOZ_ASSERT(index->type() == MIRType::IntPtr);
     MOZ_ASSERT(arrayType >= 0 && arrayType < Scalar::MaxTypedArrayViewType);
   }
 
@@ -8215,7 +8230,7 @@ class MStoreUnboxedScalar : public MTernaryInstruction,
       setGuard();  // Not removable or movable
     }
     MOZ_ASSERT(elements->type() == MIRType::Elements);
-    MOZ_ASSERT(index->type() == MIRType::Int32);
+    MOZ_ASSERT(index->type() == MIRType::IntPtr);
     MOZ_ASSERT(storageType >= 0 && storageType < Scalar::MaxTypedArrayViewType);
   }
 
@@ -8248,7 +8263,7 @@ class MStoreDataViewElement : public MQuaternaryInstruction,
                                littleEndian),
         StoreUnboxedScalarBase(storageType) {
     MOZ_ASSERT(elements->type() == MIRType::Elements);
-    MOZ_ASSERT(index->type() == MIRType::Int32);
+    MOZ_ASSERT(index->type() == MIRType::IntPtr);
     MOZ_ASSERT(storageType >= 0 && storageType < Scalar::MaxTypedArrayViewType);
     MOZ_ASSERT(Scalar::byteSize(storageType) > 1);
   }
@@ -8279,8 +8294,8 @@ class MStoreTypedArrayElementHole : public MQuaternaryInstruction,
       : MQuaternaryInstruction(classOpcode, elements, length, index, value),
         StoreUnboxedScalarBase(arrayType) {
     MOZ_ASSERT(elements->type() == MIRType::Elements);
-    MOZ_ASSERT(length->type() == MIRType::Int32);
-    MOZ_ASSERT(index->type() == MIRType::Int32);
+    MOZ_ASSERT(length->type() == MIRType::IntPtr);
+    MOZ_ASSERT(index->type() == MIRType::IntPtr);
     MOZ_ASSERT(arrayType >= 0 && arrayType < Scalar::MaxTypedArrayViewType);
   }
 
@@ -11517,7 +11532,7 @@ class MCompareExchangeTypedArrayElement
       : MQuaternaryInstruction(classOpcode, elements, index, oldval, newval),
         arrayType_(arrayType) {
     MOZ_ASSERT(elements->type() == MIRType::Elements);
-    MOZ_ASSERT(index->type() == MIRType::Int32);
+    MOZ_ASSERT(index->type() == MIRType::IntPtr);
     setGuard();  // Not removable
   }
 
@@ -11545,7 +11560,7 @@ class MAtomicExchangeTypedArrayElement : public MTernaryInstruction,
       : MTernaryInstruction(classOpcode, elements, index, value),
         arrayType_(arrayType) {
     MOZ_ASSERT(elements->type() == MIRType::Elements);
-    MOZ_ASSERT(index->type() == MIRType::Int32);
+    MOZ_ASSERT(index->type() == MIRType::IntPtr);
     MOZ_ASSERT(arrayType <= Scalar::Uint32);
     setGuard();  // Not removable
   }
@@ -11578,7 +11593,7 @@ class MAtomicTypedArrayElementBinop : public MTernaryInstruction,
         op_(op),
         arrayType_(arrayType) {
     MOZ_ASSERT(elements->type() == MIRType::Elements);
-    MOZ_ASSERT(index->type() == MIRType::Int32);
+    MOZ_ASSERT(index->type() == MIRType::IntPtr);
     setGuard();  // Not removable
   }
 

@@ -2254,7 +2254,7 @@ void LIRGenerator::visitInt32ToIntPtr(MInt32ToIntPtr* ins) {
 
 void LIRGenerator::visitAdjustDataViewLength(MAdjustDataViewLength* ins) {
   MDefinition* input = ins->input();
-  MOZ_ASSERT(input->type() == MIRType::Int32);
+  MOZ_ASSERT(input->type() == MIRType::IntPtr);
 
   auto* lir = new (alloc()) LAdjustDataViewLength(useRegisterAtStart(input));
   assignSnapshot(lir, ins->bailoutKind());
@@ -2974,14 +2974,16 @@ void LIRGenerator::visitTypedArrayElementShift(MTypedArrayElementShift* ins) {
          ins);
 }
 
-void LIRGenerator::visitTypedArrayIndexToInt32(MTypedArrayIndexToInt32* ins) {
+void LIRGenerator::visitGuardNumberToIntPtrIndex(
+    MGuardNumberToIntPtrIndex* ins) {
   MDefinition* input = ins->input();
-  if (input->type() == MIRType::Int32) {
-    redefine(ins, input);
-  } else {
-    MOZ_ASSERT(input->type() == MIRType::Double);
-    define(new (alloc()) LTypedArrayIndexToInt32(useRegister(input)), ins);
+  MOZ_ASSERT(input->type() == MIRType::Double);
+
+  auto* lir = new (alloc()) LGuardNumberToIntPtrIndex(useRegister(input));
+  if (!ins->supportOOB()) {
+    assignSnapshot(lir, ins->bailoutKind());
   }
+  define(lir, ins);
 }
 
 void LIRGenerator::visitInitializedLength(MInitializedLength* ins) {
@@ -3309,7 +3311,7 @@ void LIRGenerator::visitStringSplit(MStringSplit* ins) {
 
 void LIRGenerator::visitLoadUnboxedScalar(MLoadUnboxedScalar* ins) {
   MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
-  MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
+  MOZ_ASSERT(ins->index()->type() == MIRType::IntPtr);
 
   const LUse elements = useRegister(ins->elements());
   const LAllocation index = useRegisterOrIndexConstant(
@@ -3353,7 +3355,7 @@ void LIRGenerator::visitLoadUnboxedScalar(MLoadUnboxedScalar* ins) {
 
 void LIRGenerator::visitLoadDataViewElement(MLoadDataViewElement* ins) {
   MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
-  MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
+  MOZ_ASSERT(ins->index()->type() == MIRType::IntPtr);
 
   MOZ_ASSERT(IsNumericType(ins->type()));
 
@@ -3439,7 +3441,7 @@ void LIRGenerator::visitClampToUint8(MClampToUint8* ins) {
 void LIRGenerator::visitLoadTypedArrayElementHole(
     MLoadTypedArrayElementHole* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
-  MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
+  MOZ_ASSERT(ins->index()->type() == MIRType::IntPtr);
 
   MOZ_ASSERT(ins->type() == MIRType::Value);
 
@@ -3468,7 +3470,7 @@ void LIRGenerator::visitLoadTypedArrayElementHole(
 
 void LIRGenerator::visitStoreUnboxedScalar(MStoreUnboxedScalar* ins) {
   MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
-  MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
+  MOZ_ASSERT(ins->index()->type() == MIRType::IntPtr);
 
   if (ins->isFloatWrite()) {
     MOZ_ASSERT_IF(ins->writeType() == Scalar::Float32,
@@ -3518,7 +3520,7 @@ void LIRGenerator::visitStoreUnboxedScalar(MStoreUnboxedScalar* ins) {
 
 void LIRGenerator::visitStoreDataViewElement(MStoreDataViewElement* ins) {
   MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
-  MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
+  MOZ_ASSERT(ins->index()->type() == MIRType::IntPtr);
   MOZ_ASSERT(ins->littleEndian()->type() == MIRType::Boolean);
 
   if (ins->isFloatWrite()) {
@@ -3558,8 +3560,8 @@ void LIRGenerator::visitStoreDataViewElement(MStoreDataViewElement* ins) {
 void LIRGenerator::visitStoreTypedArrayElementHole(
     MStoreTypedArrayElementHole* ins) {
   MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
-  MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
-  MOZ_ASSERT(ins->length()->type() == MIRType::Int32);
+  MOZ_ASSERT(ins->index()->type() == MIRType::IntPtr);
+  MOZ_ASSERT(ins->length()->type() == MIRType::IntPtr);
 
   if (ins->isFloatWrite()) {
     MOZ_ASSERT_IF(ins->arrayType() == Scalar::Float32,
