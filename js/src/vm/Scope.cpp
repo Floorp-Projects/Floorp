@@ -981,9 +981,9 @@ bool FunctionScope::isSpecialName(JSContext* cx, JSAtom* name) {
 /* static */
 bool FunctionScope::isSpecialName(JSContext* cx,
                                   frontend::TaggedParserAtomIndex name) {
-  return name == frontend::TaggedParserAtomIndex::arguments() ||
-         name == frontend::TaggedParserAtomIndex::dotThis() ||
-         name == frontend::TaggedParserAtomIndex::dotGenerator();
+  return name == frontend::TaggedParserAtomIndex::WellKnown::arguments() ||
+         name == frontend::TaggedParserAtomIndex::WellKnown::dotThis() ||
+         name == frontend::TaggedParserAtomIndex::WellKnown::dotGenerator();
 }
 
 /* static */
