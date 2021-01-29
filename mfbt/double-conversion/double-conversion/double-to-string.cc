@@ -205,15 +205,11 @@ bool DoubleToStringConverter::ToShortestIeeeNumber(
 bool DoubleToStringConverter::ToFixed(double value,
                                       int requested_digits,
                                       StringBuilder* result_builder) const {
-  DOUBLE_CONVERSION_ASSERT(kMaxFixedDigitsBeforePoint == 60);
-  const double kFirstNonFixed = 1e60;
-
   if (Double(value).IsSpecial()) {
     return HandleSpecialValues(value, result_builder);
   }
 
   if (requested_digits > kMaxFixedDigitsAfterPoint) return false;
-  if (value >= kFirstNonFixed || value <= -kFirstNonFixed) return false;
 
   // Find a sufficiently precise decimal representation of n.
   int decimal_point;

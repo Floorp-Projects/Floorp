@@ -244,5 +244,14 @@ int main()
   TestGlibcPrintf(tllformat::sprint_ints, "tllformat.c", str_match);
   TestGlibcPrintf(tfformat::sprint_doubles, "tfformat.c", approx_match);
 
+  // %f is actually a not very useful formatting specifier, and if you give
+  // large numbers, it will print... large amounts of characters. Ensure
+  // that it does (which requires a patch to double-conversion).
+  mozilla::SmprintfPointer dbl_max = mozilla::Smprintf("%f", -DBL_MAX);
+  MOZ_RELEASE_ASSERT(dbl_max);
+  // Its length should be 309 digits before the dot, 6 after, plus the dot
+  // and the negative sign.
+  MOZ_RELEASE_ASSERT(strlen(dbl_max.get()) == 317);
+
   return 0;
 }
