@@ -1,1 +1,1 @@
-|jit-test| --enable-large-buffers; skip-if: (getBuildConfiguration()["pointer-byte-size"] === 4)
+|jit-test| --enable-large-buffers; skip-if: (getBuildConfiguration()["pointer-byte-size"] === 4 || getBuildConfiguration().tsan)
