@@ -8,7 +8,6 @@
 #include "vm/TypedArrayObject.h"
 
 #include "mozilla/Alignment.h"
-#include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TextUtils.h"
@@ -64,7 +63,6 @@ using namespace js;
 using JS::CanonicalizeNaN;
 using JS::ToInt32;
 using JS::ToUint32;
-using mozilla::CheckedUint32;
 using mozilla::IsAsciiDigit;
 
 /*
@@ -241,8 +239,6 @@ size_t TypedArrayObject::objectMoved(JSObject* obj, JSObject* old) {
     newObj->setInlineElements();
   } else {
     MOZ_ASSERT(!oldObj->hasInlineElements());
-    MOZ_ASSERT((CheckedUint32(nbytes) + sizeof(Value)).isValid(),
-               "RoundUp must not overflow");
 
     AutoEnterOOMUnsafeRegion oomUnsafe;
     nbytes = RoundUp(nbytes, sizeof(Value));
@@ -512,13 +508,15 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 
   static TypedArrayObject* makeTypedArrayWithTemplate(
       JSContext* cx, TypedArrayObject* templateObj, int32_t len) {
-    if (len < 0 || uint32_t(len) >= maxByteLength() / BYTES_PER_ELEMENT) {
+    if (len < 0 || size_t(len) >= maxByteLength() / BYTES_PER_ELEMENT) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_BAD_ARRAY_LENGTH);
       return nullptr;
     }
 
     size_t nbytes = size_t(len) * BYTES_PER_ELEMENT;
+    MOZ_ASSERT(nbytes <= maxByteLength());
+
     bool fitsInline = nbytes <= INLINE_BUFFER_LIMIT;
 
     AutoSetNewObjectMetadata metadata(cx);
@@ -539,8 +537,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     void* buf = nullptr;
     if (!fitsInline) {
       MOZ_ASSERT(len > 0);
-      MOZ_ASSERT((CheckedUint32(nbytes) + sizeof(Value)).isValid(),
-                 "RoundUp must not overflow");
 
       nbytes = RoundUp(nbytes, sizeof(Value));
       buf = cx->nursery().allocateZeroedBuffer(obj, nbytes,
