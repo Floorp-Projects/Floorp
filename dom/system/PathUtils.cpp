@@ -217,40 +217,6 @@ void PathUtils::CreateUniquePath(const GlobalObject&, const nsAString& aPath,
   MOZ_ALWAYS_SUCCEEDS(path->GetPath(aResult));
 }
 
-void PathUtils::ToExtendedWindowsPath(const GlobalObject&,
-                                      const nsAString& aPath, nsString& aResult,
-                                      ErrorResult& aErr) {
-#ifndef XP_WIN
-  aErr.ThrowNotAllowedError("Operation is windows specific"_ns);
-  return;
-#else
-  if (aPath.IsEmpty()) {
-    aErr.ThrowNotAllowedError(ERROR_EMPTY_PATH);
-    return;
-  }
-
-  const nsAString& str1 = Substring(aPath, 1, 1);
-  const nsAString& str2 = Substring(aPath, 2, aPath.Length() - 2);
-
-  bool isUNC = aPath.Length() >= 2 &&
-               (aPath.First() == '\\' || aPath.First() == '/') &&
-               (str1.EqualsLiteral("\\") || str1.EqualsLiteral("/"));
-
-  constexpr auto pathPrefix = u"\\\\?\\"_ns;
-  const nsAString& uncPath = pathPrefix + u"UNC\\"_ns + str2;
-  const nsAString& normalPath = pathPrefix + aPath;
-
-  nsCOMPtr<nsIFile> path = new nsLocalFile();
-  if (nsresult rv = path->InitWithPath(isUNC ? uncPath : normalPath);
-      NS_FAILED(rv)) {
-    ThrowError(aErr, rv, ERROR_INITIALIZE_PATH);
-    return;
-  }
-
-  MOZ_ALWAYS_SUCCEEDS(path->GetPath(aResult));
-#endif
-}
-
 void PathUtils::Normalize(const GlobalObject&, const nsAString& aPath,
                           nsString& aResult, ErrorResult& aErr) {
   if (aPath.IsEmpty()) {
