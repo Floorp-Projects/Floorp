@@ -17,7 +17,7 @@
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/NameAnalysisTypes.h"   // PrivateNameKind
 #include "frontend/ParseNode.h"
-#include "frontend/ParserAtom.h"  // ParserAtom, ParserName, TaggedParserAtomIndex
+#include "frontend/ParserAtom.h"  // TaggedParserAtomIndex
 #include "frontend/SharedContext.h"
 #include "frontend/Stencil.h"
 #include "vm/JSContext.h"
@@ -144,8 +144,7 @@ class FullParseHandler {
   // these assumptions.
   SourceKind sourceKind() const { return sourceKind_; }
 
-  NameNodeType newName(const ParserName* name, const TokenPos& pos,
-                       JSContext* cx) {
+  NameNodeType newName(TaggedParserAtomIndex name, const TokenPos& pos) {
     return new_<NameNode>(ParseNodeKind::Name, name, pos);
   }
 
@@ -165,12 +164,12 @@ class FullParseHandler {
     return node;
   }
 
-  NameNodeType newObjectLiteralPropertyName(const ParserAtom* atom,
+  NameNodeType newObjectLiteralPropertyName(TaggedParserAtomIndex atom,
                                             const TokenPos& pos) {
     return new_<NameNode>(ParseNodeKind::ObjectPropertyName, atom, pos);
   }
 
-  NameNodeType newPrivateName(const ParserAtom* atom, const TokenPos& pos) {
+  NameNodeType newPrivateName(TaggedParserAtomIndex atom, const TokenPos& pos) {
     return new_<NameNode>(ParseNodeKind::PrivateName, atom, pos);
   }
 
@@ -188,11 +187,12 @@ class FullParseHandler {
     return new_<BooleanLiteral>(cond, pos);
   }
 
-  NameNodeType newStringLiteral(const ParserAtom* atom, const TokenPos& pos) {
+  NameNodeType newStringLiteral(TaggedParserAtomIndex atom,
+                                const TokenPos& pos) {
     return new_<NameNode>(ParseNodeKind::StringExpr, atom, pos);
   }
 
-  NameNodeType newTemplateStringLiteral(const ParserAtom* atom,
+  NameNodeType newTemplateStringLiteral(TaggedParserAtomIndex atom,
                                         const TokenPos& pos) {
     return new_<NameNode>(ParseNodeKind::TemplateStringExpr, atom, pos);
   }
@@ -743,12 +743,12 @@ class FullParseHandler {
     return new_<CaseClause>(expr, body, begin);
   }
 
-  ContinueStatementType newContinueStatement(const ParserName* label,
+  ContinueStatementType newContinueStatement(TaggedParserAtomIndex label,
                                              const TokenPos& pos) {
     return new_<ContinueStatement>(label, pos);
   }
 
-  BreakStatementType newBreakStatement(const ParserName* label,
+  BreakStatementType newBreakStatement(TaggedParserAtomIndex label,
                                        const TokenPos& pos) {
     return new_<BreakStatement>(label, pos);
   }
@@ -768,8 +768,8 @@ class FullParseHandler {
                             TokenPos(begin, body->pn_pos.end), expr, body);
   }
 
-  LabeledStatementType newLabeledStatement(const ParserName* label, Node stmt,
-                                           uint32_t begin) {
+  LabeledStatementType newLabeledStatement(TaggedParserAtomIndex label,
+                                           Node stmt, uint32_t begin) {
     return new_<LabeledStatement>(label, stmt, begin);
   }
 
@@ -788,7 +788,8 @@ class FullParseHandler {
     return new_<DebuggerStatement>(pos);
   }
 
-  NameNodeType newPropertyName(const ParserName* name, const TokenPos& pos) {
+  NameNodeType newPropertyName(TaggedParserAtomIndex name,
+                               const TokenPos& pos) {
     return new_<NameNode>(ParseNodeKind::PropertyNameExpr, name, pos);
   }
 

@@ -1319,6 +1319,66 @@ void frontend::DumpTaggedParserAtomIndex(js::JSONPrinter& json,
   json.property("tag", "null");
 }
 
+void frontend::DumpTaggedParserAtomIndexNoQuote(
+    GenericPrinter& out, TaggedParserAtomIndex taggedIndex,
+    BaseCompilationStencil* stencil) {
+  if (taggedIndex.isParserAtomIndex()) {
+    auto index = taggedIndex.toParserAtomIndex();
+    if (stencil && stencil->parserAtomData[index]) {
+      stencil->parserAtomData[index]->dumpCharsNoQuote(out);
+    } else {
+      out.printf("AtomIndex#%zu", size_t(index));
+    }
+    return;
+  }
+
+  if (taggedIndex.isWellKnownAtomId()) {
+    auto index = taggedIndex.toWellKnownAtomId();
+    switch (index) {
+      case WellKnownAtomId::empty:
+        out.put("#<zero-length name>");
+        break;
+
+#  define CASE_(_, name, _2)                                 \
+    case WellKnownAtomId::name: {                            \
+      WellKnownParserAtoms::rom_.name.dumpCharsNoQuote(out); \
+      break;                                                 \
+    }
+        FOR_EACH_NONTINY_COMMON_PROPERTYNAME(CASE_)
+#  undef CASE_
+
+#  define CASE_(name, _)                                     \
+    case WellKnownAtomId::name: {                            \
+      WellKnownParserAtoms::rom_.name.dumpCharsNoQuote(out); \
+      break;                                                 \
+    }
+        JS_FOR_EACH_PROTOTYPE(CASE_)
+#  undef CASE_
+
+      default:
+        // This includes tiny WellKnownAtomId atoms, which is invalid.
+        out.printf("WellKnown#%zu", size_t(index));
+        break;
+    }
+    return;
+  }
+
+  if (taggedIndex.isStaticParserString1()) {
+    auto index = taggedIndex.toStaticParserString1();
+    WellKnownParserAtoms::getStatic1(index)->dumpCharsNoQuote(out);
+    return;
+  }
+
+  if (taggedIndex.isStaticParserString2()) {
+    auto index = taggedIndex.toStaticParserString2();
+    WellKnownParserAtoms::getStatic2(index)->dumpCharsNoQuote(out);
+    return;
+  }
+
+  MOZ_ASSERT(taggedIndex.isNull());
+  out.put("#<null name>");
+}
+
 void RegExpStencil::dump() {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
