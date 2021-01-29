@@ -907,15 +907,10 @@ class nsDisplayListBuilder {
 
   /**
    * Helper method to generate background painting flags based on the
-   * information available in the display list builder.
+   * information available in the display list builder. Currently only
+   * accounts for mSyncDecodeImages.
    */
   uint32_t GetBackgroundPaintFlags();
-
-  /**
-   * Helper method to generate nsImageRenderer flags based on the information
-   * available in the display list builder.
-   */
-  uint32_t GetImageRendererFlags() const;
 
   /**
    * Helper method to generate image decoding flags based on the

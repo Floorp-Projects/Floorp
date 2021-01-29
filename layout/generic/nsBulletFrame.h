@@ -12,10 +12,31 @@
 #include "mozilla/Attributes.h"
 #include "nsIFrame.h"
 
+#include "imgIContainer.h"
+#include "imgINotificationObserver.h"
+
 class imgIContainer;
+class imgRequestProxy;
+
 class nsBulletFrame;
 class BulletRenderer;
+
 class nsFontMetrics;
+
+class nsBulletListener final : public imgINotificationObserver {
+ public:
+  nsBulletListener();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_IMGINOTIFICATIONOBSERVER
+
+  void SetFrame(nsBulletFrame* frame) { mFrame = frame; }
+
+ private:
+  virtual ~nsBulletListener();
+
+  nsBulletFrame* mFrame;
+};
 
 /**
  * A simple class that manages the layout and rendering of html bullets.
@@ -31,26 +52,36 @@ class nsBulletFrame final : public nsIFrame {
 #endif
 
   explicit nsBulletFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
-      : nsIFrame(aStyle, aPresContext, kClassID), mPadding(GetWritingMode()) {}
+      : nsIFrame(aStyle, aPresContext, kClassID),
+        mPadding(GetWritingMode()),
+        mIntrinsicSize(GetWritingMode()),
+        mRequestRegistered(false) {}
 
   virtual ~nsBulletFrame();
 
+  void Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aData);
+
   // nsIFrame
-  void BuildDisplayList(nsDisplayListBuilder*,
-                        const nsDisplayListSet&) override;
-  void DidSetComputedStyle(ComputedStyle* aOldStyle) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot,
+                           PostDestroyData& aPostDestroyData) override;
+  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                                const nsDisplayListSet& aLists) override;
+  virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
 #ifdef DEBUG_FRAME_DUMP
-  nsresult GetFrameName(nsAString& aResult) const override;
+  virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  void Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
-              const ReflowInput&, nsReflowStatus&) override;
-  nscoord GetMinISize(gfxContext*) override;
-  nscoord GetPrefISize(gfxContext*) override;
-  void AddInlineMinISize(gfxContext*, nsIFrame::InlineMinISizeData*) override;
-  void AddInlinePrefISize(gfxContext*, nsIFrame::InlinePrefISizeData*) override;
+  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
+                      const ReflowInput& aReflowInput,
+                      nsReflowStatus& aStatus) override;
+  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
+  virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
+  void AddInlineMinISize(gfxContext* aRenderingContext,
+                         nsIFrame::InlineMinISizeData* aData) override;
+  void AddInlinePrefISize(gfxContext* aRenderingContext,
+                          nsIFrame::InlinePrefISizeData* aData) override;
 
-  bool IsFrameOfType(uint32_t aFlags) const override {
+  virtual bool IsFrameOfType(uint32_t aFlags) const override {
     if (aFlags & (eSupportsCSSTransforms | eSupportsContainLayoutAndPaint)) {
       return false;
     }
@@ -68,21 +99,20 @@ class nsBulletFrame final : public nsIFrame {
 #endif
 
   Maybe<BulletRenderer> CreateBulletRenderer(gfxContext& aRenderingContext,
-                                             nsDisplayListBuilder* aBuilder,
-                                             nsPoint aPt,
-                                             ImgDrawResult* aOutDrawResult);
-  ImgDrawResult PaintBullet(gfxContext& aRenderingContext,
-                            nsDisplayListBuilder* aBuilder, nsPoint aPt,
-                            const nsRect& aDirtyRect, bool aDisableSubpixelAA);
+                                             nsPoint aPt);
+  ImgDrawResult PaintBullet(gfxContext& aRenderingContext, nsPoint aPt,
+                            const nsRect& aDirtyRect, uint32_t aFlags,
+                            bool aDisableSubpixelAA);
 
-  bool IsEmpty() override;
-  bool IsSelfEmpty() override;
+  virtual bool IsEmpty() override;
+  virtual bool IsSelfEmpty() override;
 
   // XXXmats note that this method returns a non-standard baseline that includes
   // the ::marker block-start margin.  New code should probably use
   // GetNaturalBaselineBOffset instead, which returns a normal baseline offset
   // as documented in nsIFrame.h.
-  nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
+  virtual nscoord GetLogicalBaseline(
+      mozilla::WritingMode aWritingMode) const override;
 
   bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
                                  BaselineSharingGroup aBaselineGroup,
@@ -100,6 +130,8 @@ class nsBulletFrame final : public nsIFrame {
   already_AddRefed<imgIContainer> GetImage() const;
 
  protected:
+  void OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage);
+
   void AppendSpacingToPadding(nsFontMetrics* aFontMetrics,
                               mozilla::LogicalMargin* aPadding);
   void GetDesiredSize(nsPresContext* aPresContext,
@@ -107,14 +139,27 @@ class nsBulletFrame final : public nsIFrame {
                       float aFontSizeInflation,
                       mozilla::LogicalMargin* aPadding);
 
+  void GetLoadGroup(nsPresContext* aPresContext, nsILoadGroup** aLoadGroup);
+  mozilla::dom::Document* GetOurCurrentDoc() const;
+
   mozilla::LogicalMargin mPadding;
+  RefPtr<imgRequestProxy> mImageRequest;
+  RefPtr<nsBulletListener> mListener;
+
+  mozilla::LogicalSize mIntrinsicSize;
 
  private:
   mozilla::CounterStyle* ResolveCounterStyle();
   nscoord GetListStyleAscent() const;
+  void RegisterImageRequest(bool aKnownToBeAnimated);
+  void DeregisterAndCancelImageRequest();
 
   // Requires being set via SetOrdinal.
   int32_t mOrdinal = 0;
+
+  // This is a boolean flag indicating whether or not the current image request
+  // has been registered with the refresh driver.
+  bool mRequestRegistered : 1;
 };
 
 #endif /* nsBulletFrame_h___ */
