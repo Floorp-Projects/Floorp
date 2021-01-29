@@ -439,9 +439,9 @@ static bool InstantiateScriptStencils(JSContext* cx,
       // If the function was not referenced by enclosing script's bytecode, we
       // do not generate a BaseScript for it. For example, `(function(){});`.
       //
-      // `wasFunctionEmitted` is false also for standalone functions. They are
-      // handled in InstantiateTopLevel.
-      if (!scriptStencil.wasFunctionEmitted()) {
+      // `wasEmittedByEnclosingScript` is false also for standalone
+      // functions. They are handled in InstantiateTopLevel.
+      if (!scriptStencil.wasEmittedByEnclosingScript()) {
         continue;
       }
 
@@ -556,7 +556,7 @@ static void UpdateEmittedInnerFunctions(JSContext* cx, CompilationInput& input,
        CompilationStencil::functionScriptStencils(stencil, gcOutput)) {
     auto& scriptStencil = item.script;
     auto& fun = item.function;
-    if (!scriptStencil.wasFunctionEmitted()) {
+    if (!scriptStencil.wasEmittedByEnclosingScript()) {
       continue;
     }
 
@@ -1880,8 +1880,8 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json,
   }
 
   json.beginListProperty("flags");
-  if (flags_ & WasFunctionEmittedFlag) {
-    json.value("WasFunctionEmittedFlag");
+  if (flags_ & WasEmittedByEnclosingScriptFlag) {
+    json.value("WasEmittedByEnclosingScriptFlag");
   }
   if (flags_ & AllowRelazifyFlag) {
     json.value("AllowRelazifyFlag");

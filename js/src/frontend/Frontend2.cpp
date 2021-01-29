@@ -501,7 +501,7 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
           smooshScript.lazy_function_enclosing_scope_index.AsSome()));
     }
     if (smooshScript.was_function_emitted) {
-      script.setWasFunctionEmitted();
+      script.setWasEmittedByEnclosingScript();
     }
   }
 
