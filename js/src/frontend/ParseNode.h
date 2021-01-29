@@ -758,6 +758,7 @@ class ParseNode {
            kind <= ParseNodeKind::BinOpLast;
   }
   inline bool isName(const ParserName* name) const;
+  inline bool isName(TaggedParserAtomIndex name) const;
 
   /* Boolean attributes. */
   bool isInParens() const { return pn_parens; }
@@ -912,6 +913,10 @@ class NameNode : public ParseNode {
 
 inline bool ParseNode::isName(const ParserName* name) const {
   return getKind() == ParseNodeKind::Name && as<NameNode>().name() == name;
+}
+
+inline bool ParseNode::isName(TaggedParserAtomIndex name) const {
+  return getKind() == ParseNodeKind::Name && as<NameNode>().nameIndex() == name;
 }
 
 class UnaryNode : public ParseNode {
