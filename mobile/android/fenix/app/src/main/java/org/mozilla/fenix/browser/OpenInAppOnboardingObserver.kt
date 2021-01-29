@@ -22,6 +22,9 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.Event.BannerOpenInAppGoToSettings
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.utils.Settings
 
@@ -85,6 +88,7 @@ class OpenInAppOnboardingObserver(
             infoBanner?.showBanner()
             sessionDomainForDisplayedBanner = url.tryGetHostFromUrl()
             settings.shouldShowOpenInAppBanner = false
+            context.components.analytics.metrics.track(Event.BannerOpenInAppDisplayed)
         }
     }
 
@@ -95,12 +99,18 @@ class OpenInAppOnboardingObserver(
             message = context.getString(R.string.open_in_app_cfr_info_message),
             dismissText = context.getString(R.string.open_in_app_cfr_negative_button_text),
             actionText = context.getString(R.string.open_in_app_cfr_positive_button_text),
-            container = container
+            container = container,
+            dismissAction = ::dismissAction
         ) {
             val directions = BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment(
                 preferenceToScrollTo = context.getString(R.string.pref_key_open_links_in_external_app)
             )
+            context.components.analytics.metrics.track(BannerOpenInAppGoToSettings)
             navController.nav(R.id.browserFragment, directions)
         }
+    }
+
+    private fun dismissAction() {
+        context.components.analytics.metrics.track(Event.BannerOpenInAppDismissed)
     }
 }
