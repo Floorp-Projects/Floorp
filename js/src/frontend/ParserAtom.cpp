@@ -112,16 +112,16 @@ namespace js {
 namespace frontend {
 
 JSAtom* GetWellKnownAtom(JSContext* cx, WellKnownAtomId atomId) {
-#define ASSERT_OFFSET_(idpart, id, text)       \
-  static_assert(offsetof(JSAtomState, id) ==   \
-                int32_t(WellKnownAtomId::id) * \
+#define ASSERT_OFFSET_(_, NAME, _2)              \
+  static_assert(offsetof(JSAtomState, NAME) ==   \
+                int32_t(WellKnownAtomId::NAME) * \
                     sizeof(js::ImmutablePropertyNamePtr));
   FOR_EACH_COMMON_PROPERTYNAME(ASSERT_OFFSET_);
 #undef ASSERT_OFFSET_
 
-#define ASSERT_OFFSET_(name, clasp)              \
-  static_assert(offsetof(JSAtomState, name) ==   \
-                int32_t(WellKnownAtomId::name) * \
+#define ASSERT_OFFSET_(NAME, _)                  \
+  static_assert(offsetof(JSAtomState, NAME) ==   \
+                int32_t(WellKnownAtomId::NAME) * \
                     sizeof(js::ImmutablePropertyNamePtr));
   JS_FOR_EACH_PROTOTYPE(ASSERT_OFFSET_);
 #undef ASSERT_OFFSET_
@@ -586,15 +586,15 @@ TaggedParserAtomIndex ParserAtomsTable::concatAtoms(
 
 const ParserAtom* WellKnownParserAtoms::getWellKnown(
     WellKnownAtomId atomId) const {
-#define ASSERT_OFFSET_(idpart, id, text)              \
-  static_assert(offsetof(WellKnownParserAtoms, id) == \
-                int32_t(WellKnownAtomId::id) * sizeof(ParserAtom*));
+#define ASSERT_OFFSET_(_, NAME, _2)                     \
+  static_assert(offsetof(WellKnownParserAtoms, NAME) == \
+                int32_t(WellKnownAtomId::NAME) * sizeof(ParserAtom*));
   FOR_EACH_COMMON_PROPERTYNAME(ASSERT_OFFSET_);
 #undef ASSERT_OFFSET_
 
-#define ASSERT_OFFSET_(name, clasp)                     \
-  static_assert(offsetof(WellKnownParserAtoms, name) == \
-                int32_t(WellKnownAtomId::name) * sizeof(ParserAtom*));
+#define ASSERT_OFFSET_(NAME, _)                         \
+  static_assert(offsetof(WellKnownParserAtoms, NAME) == \
+                int32_t(WellKnownAtomId::NAME) * sizeof(ParserAtom*));
   JS_FOR_EACH_PROTOTYPE(ASSERT_OFFSET_);
 #undef ASSERT_OFFSET_
 
@@ -716,7 +716,8 @@ TaggedParserAtomIndex WellKnownParserAtoms::lookupChar16Seq(
 }
 
 bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserName** name,
-                                      const ParserAtomEntry& romEntry) {
+                                      const ParserAtomEntry& romEntry,
+                                      TaggedParserAtomIndex index) {
   MOZ_ASSERT(name != nullptr);
 
   unsigned int len = romEntry.length();
@@ -736,7 +737,7 @@ bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserName** name,
   SpecificParserAtomLookup<Latin1Char> lookup(seq, romEntry.hash());
 
   // Save name for returning after moving entry into set.
-  if (!wellKnownMap_.putNew(lookup, &romEntry, romEntry.toIndex())) {
+  if (!wellKnownMap_.putNew(lookup, &romEntry, index)) {
     js::ReportOutOfMemory(cx);
     return false;
   }
@@ -770,8 +771,8 @@ bool WellKnownParserAtoms::initTinyStringAlias(JSContext* cx,
 bool WellKnownParserAtoms::init(JSContext* cx) {
   // Tiny strings with a common name need a named alias to an entry in the
   // WellKnownParserAtoms_ROM.
-#define COMMON_NAME_INIT_(_, name, text)         \
-  if (!initTinyStringAlias(cx, &(name), text)) { \
+#define COMMON_NAME_INIT_(_, NAME, TEXT)         \
+  if (!initTinyStringAlias(cx, &(NAME), TEXT)) { \
     return false;                                \
   }
   FOR_EACH_TINY_PROPERTYNAME(COMMON_NAME_INIT_)
@@ -780,15 +781,17 @@ bool WellKnownParserAtoms::init(JSContext* cx) {
   // Initialize the named fields to point to entries in the ROM. This also adds
   // the atom to the lookup HashMap. The HashMap is used for dynamic lookups
   // later and does not change once this init method is complete.
-#define COMMON_NAME_INIT_(_, name, _2)       \
-  if (!initSingle(cx, &(name), rom_.name)) { \
-    return false;                            \
+#define COMMON_NAME_INIT_(_, NAME, _2)                         \
+  if (!initSingle(cx, &(NAME), rom_.NAME,                      \
+                  TaggedParserAtomIndex::WellKnown::NAME())) { \
+    return false;                                              \
   }
   FOR_EACH_NONTINY_COMMON_PROPERTYNAME(COMMON_NAME_INIT_)
 #undef COMMON_NAME_INIT_
-#define COMMON_NAME_INIT_(name, _)           \
-  if (!initSingle(cx, &(name), rom_.name)) { \
-    return false;                            \
+#define COMMON_NAME_INIT_(NAME, _)                             \
+  if (!initSingle(cx, &(NAME), rom_.NAME,                      \
+                  TaggedParserAtomIndex::WellKnown::NAME())) { \
+    return false;                                              \
   }
   JS_FOR_EACH_PROTOTYPE(COMMON_NAME_INIT_)
 #undef COMMON_NAME_INIT_
