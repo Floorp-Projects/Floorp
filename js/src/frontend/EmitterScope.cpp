@@ -459,10 +459,9 @@ void EmitterScope::dump(BytecodeEmitter* bce) {
   for (NameLocationMap::Range r = nameCache_->all(); !r.empty(); r.popFront()) {
     const NameLocation& l = r.front().value();
 
-    auto atomIndex = r.front().key();
-    const auto* atom =
-        bce->compilationState.parserAtoms.getParserAtom(atomIndex);
-    UniqueChars bytes = ParserAtomToPrintableString(bce->cx, atom);
+    auto atom = r.front().key();
+    UniqueChars bytes = ParserAtomToPrintableString(
+        bce->cx, bce->compilationState.parserAtoms, atom);
     if (!bytes) {
       return;
     }

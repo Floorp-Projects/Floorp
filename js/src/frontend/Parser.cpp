@@ -468,9 +468,8 @@ template <class ParseHandler, typename Unit>
 void GeneralParser<ParseHandler, Unit>::reportRedeclaration(
     TaggedParserAtomIndex name, DeclarationKind prevKind, TokenPos pos,
     uint32_t prevPos) {
-  const ParserAtom* atom =
-      this->compilationState_.parserAtoms.getParserAtom(name);
-  UniqueChars bytes = ParserAtomToPrintableString(cx_, atom);
+  UniqueChars bytes = ParserAtomToPrintableString(
+      cx_, this->compilationState_.parserAtoms, name);
   if (!bytes) {
     return;
   }
@@ -531,9 +530,8 @@ bool GeneralParser<ParseHandler, Unit>::notePositionalFormalParameter(
     // In such cases, report will queue up the potential error and return
     // 'true'.
     if (pc_->sc()->strict()) {
-      const ParserAtom* atom =
-          this->compilationState_.parserAtoms.getParserAtom(name);
-      UniqueChars bytes = ParserAtomToPrintableString(cx_, atom);
+      UniqueChars bytes = ParserAtomToPrintableString(
+          cx_, this->compilationState_.parserAtoms, name);
       if (!bytes) {
         return false;
       }
@@ -1501,9 +1499,8 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
   if (!evalSc) {
     // The unbound private names are sorted, so just grab the first one.
     UnboundPrivateName minimum = unboundPrivateNames[0];
-    const ParserAtom* atom =
-        this->compilationState_.parserAtoms.getParserAtom(minimum.atom);
-    UniqueChars str = ParserAtomToPrintableString(cx_, atom);
+    UniqueChars str = ParserAtomToPrintableString(
+        cx_, this->compilationState_.parserAtoms, minimum.atom);
     if (!str) {
       return false;
     }
@@ -1537,7 +1534,8 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
     }
 
     // Didn't find a matching binding, so issue an error.
-    UniqueChars str = ParserAtomToPrintableString(cx, unboundAtom);
+    UniqueChars str = ParserAtomToPrintableString(
+        cx, parser->compilationState_.parserAtoms, unboundName.atom);
     if (!str) {
       return false;
     }
@@ -1793,10 +1791,8 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   for (auto entry : moduleMetadata.localExportEntries) {
     DeclaredNamePtr p = modulepc.varScope().lookupDeclaredName(entry.localName);
     if (!p) {
-      const ParserAtom* nameId =
-          this->compilationState_.parserAtoms.getParserAtom(entry.localName);
-      MOZ_ASSERT(nameId);
-      UniqueChars str = ParserAtomToPrintableString(cx_, nameId);
+      UniqueChars str = ParserAtomToPrintableString(
+          cx_, this->compilationState_.parserAtoms, entry.localName);
       if (!str) {
         return null();
       }
@@ -5072,9 +5068,8 @@ bool Parser<FullParseHandler, Unit>::checkExportedName(
     return true;
   }
 
-  const ParserAtom* atom =
-      this->compilationState_.parserAtoms.getParserAtom(exportName);
-  UniqueChars str = ParserAtomToPrintableString(cx_, atom);
+  UniqueChars str = ParserAtomToPrintableString(
+      cx_, this->compilationState_.parserAtoms, exportName);
   if (!str) {
     return false;
   }
@@ -7771,10 +7766,8 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
       return null();
     }
     if (maybeUnboundName) {
-      const ParserAtom* atom =
-          this->compilationState_.parserAtoms.getParserAtom(
-              maybeUnboundName->atom);
-      UniqueChars str = ParserAtomToPrintableString(cx_, atom);
+      UniqueChars str = ParserAtomToPrintableString(
+          cx_, this->compilationState_.parserAtoms, maybeUnboundName->atom);
       if (!str) {
         return null();
       }
