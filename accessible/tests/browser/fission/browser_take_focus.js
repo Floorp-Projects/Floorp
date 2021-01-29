@@ -11,9 +11,15 @@ loadScripts(
 );
 
 addAccessibleTask(
-  `<input id="textbox" value="hello"/>`,
+  `<div role="group"><input id="textbox" value="hello"/></div>`,
   async function(browser, iframeDocAcc, contentDocAcc) {
     const textbox = findAccessibleChildByID(iframeDocAcc, "textbox");
+    const iframe = findAccessibleChildByID(contentDocAcc, "default-iframe-id");
+    const iframeDoc = findAccessibleChildByID(
+      contentDocAcc,
+      "default-iframe-body-id"
+    );
+
     testStates(textbox, STATE_FOCUSABLE, 0, STATE_FOCUSED);
 
     let onFocus = waitForEvent(EVENT_FOCUS, textbox);
@@ -21,6 +27,35 @@ addAccessibleTask(
     await onFocus;
 
     testStates(textbox, STATE_FOCUSABLE | STATE_FOCUSED, 0);
+
+    is(
+      getAccessibleDOMNodeID(contentDocAcc.focusedChild),
+      "textbox",
+      "correct focusedChild from top doc"
+    );
+
+    is(
+      getAccessibleDOMNodeID(iframeDocAcc.focusedChild),
+      "textbox",
+      "correct focusedChild from child doc"
+    );
+
+    ok(!iframe.focusedChild, "correct focusedChild from iframe (null)");
+
+    onFocus = waitForEvent(EVENT_FOCUS, iframeDoc);
+    iframeDoc.takeFocus();
+    await onFocus;
+
+    is(
+      getAccessibleDOMNodeID(contentDocAcc.focusedChild),
+      "default-iframe-body-id",
+      "correct focusedChild of child doc from top doc"
+    );
+    is(
+      getAccessibleDOMNodeID(iframe.focusedChild),
+      "default-iframe-body-id",
+      "correct focusedChild of child doc from iframe"
+    );
   },
   { topLevel: false, iframe: true, remoteIframe: true }
 );
