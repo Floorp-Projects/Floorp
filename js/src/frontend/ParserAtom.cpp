@@ -552,7 +552,7 @@ const ParserAtom* ParserAtomsTable::internJSAtom(JSContext* cx,
   return parserAtom;
 }
 
-const ParserAtom* ParserAtomsTable::concatAtoms(
+TaggedParserAtomIndex ParserAtomsTable::concatAtoms(
     JSContext* cx, mozilla::Range<const ParserAtom*> atoms) {
   MOZ_ASSERT(atoms.length() >= 2,
              "concatAtoms should only be used for multiple inputs");
@@ -567,7 +567,7 @@ const ParserAtom* ParserAtomsTable::concatAtoms(
     // Overflow check here, length
     if (atom->length() >= (ParserAtomEntry::MAX_LENGTH - catLen)) {
       js::ReportOutOfMemory(cx);
-      return nullptr;
+      return TaggedParserAtomIndex::null();
     }
     catLen += atom->length();
   }
@@ -581,7 +581,11 @@ const ParserAtom* ParserAtomsTable::concatAtoms(
       mozilla::PodCopy(buf + offset, atom->latin1Chars(), atom->length());
       offset += atom->length();
     }
-    return internLatin1(cx, buf, catLen);
+    const auto* result = internLatin1(cx, buf, catLen);
+    if (!result) {
+      return TaggedParserAtomIndex::null();
+    }
+    return result->toIndex();
   }
 
   // NOTE: We have ruled out Tiny and WellKnown atoms and can ignore below.
@@ -592,14 +596,18 @@ const ParserAtom* ParserAtomsTable::concatAtoms(
   // Check for existing atom.
   auto addPtr = entryMap_.lookupForAdd(lookup);
   if (addPtr) {
-    return addPtr->key()->asAtom();
+    return addPtr->value();
   }
 
   // Otherwise, add new entry.
-  return catLatin1 ? internChar16Seq<Latin1Char>(cx, addPtr, lookup.hash(), seq,
-                                                 catLen)
-                   : internChar16Seq<char16_t>(cx, addPtr, lookup.hash(), seq,
-                                               catLen);
+  const auto* result =
+      catLatin1
+          ? internChar16Seq<Latin1Char>(cx, addPtr, lookup.hash(), seq, catLen)
+          : internChar16Seq<char16_t>(cx, addPtr, lookup.hash(), seq, catLen);
+  if (!result) {
+    return TaggedParserAtomIndex::null();
+  }
+  return result->toIndex();
 }
 
 const ParserAtom* WellKnownParserAtoms::getWellKnown(
