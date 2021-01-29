@@ -18,6 +18,7 @@
 #include "frontend/CompilationInfo.h"  // CompilationStencil, CompilationStencilSet, CompilationGCOutput
 #include "frontend/SharedContext.h"
 #include "gc/AllocKind.h"    // gc::AllocKind
+#include "gc/Tracer.h"       // TraceNullableRoot
 #include "js/CallArgs.h"     // JSNative
 #include "js/RootingAPI.h"   // Rooted
 #include "js/Transcoding.h"  // JS::TranscodeBuffer
@@ -173,6 +174,35 @@ Scope* ScopeContext::determineEffectiveScope(Scope* scope,
   }
 
   return scope;
+}
+
+bool CompilationInput::initScriptSource(JSContext* cx) {
+  ScriptSource* ss = cx->new_<ScriptSource>();
+  if (!ss) {
+    return false;
+  }
+  setSource(ss);
+
+  return ss->initFromOptions(cx, options);
+}
+
+void CompilationInput::trace(JSTracer* trc) {
+  atomCache.trace(trc);
+  TraceNullableRoot(trc, &lazy, "compilation-input-lazy");
+  source_.trace(trc);
+  TraceNullableRoot(trc, &enclosingScope, "compilation-input-enclosing-scope");
+}
+
+void CompilationAtomCache::trace(JSTracer* trc) { atoms_.trace(trc); }
+
+void CompilationStencil::trace(JSTracer* trc) { input.trace(trc); }
+
+void CompilationGCOutput::trace(JSTracer* trc) {
+  TraceNullableRoot(trc, &script, "compilation-gc-output-script");
+  TraceNullableRoot(trc, &module, "compilation-gc-output-module");
+  TraceNullableRoot(trc, &sourceObject, "compilation-gc-output-source");
+  functions.trace(trc);
+  scopes.trace(trc);
 }
 
 AbstractScopePtr ScopeStencil::enclosing(
