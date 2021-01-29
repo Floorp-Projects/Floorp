@@ -414,6 +414,14 @@ class FunctionBox : public SuspendableContext {
   // False if this is part of delazification.
   bool isInitialCompilation : 1;
 
+  // True if this is standalone function
+  // (new Function() including generator/async, or event handler).
+  bool isStandalone : 1;
+
+  // Valid only if isStandalone is true.
+  // True if this standalone function has non-syntactic enclosing scope.
+  bool hasNonSyntacticEnclosingScopeForStandalone : 1;
+
   // End of fields.
 
   FunctionBox(JSContext* cx, SourceExtent extent, CompilationStencil& stencil,
@@ -445,11 +453,18 @@ class FunctionBox : public SuspendableContext {
     extraVarScopeBindings_ = bindings;
   }
 
-  void initFromLazyFunction(JSFunction* fun);
-
+  void initFromLazyFunction(JSFunction* fun, ScopeContext& scopeContext,
+                            FunctionFlags flags, FunctionSyntaxKind kind);
+  void initFromLazyFunctionToSkip(JSFunction* fun);
   void initStandalone(ScopeContext& scopeContext, FunctionFlags flags,
                       FunctionSyntaxKind kind);
 
+ private:
+  void initFromLazyFunctionShared(JSFunction* fun);
+  void initStandaloneOrLazy(ScopeContext& scopeContext, FunctionFlags flags,
+                            FunctionSyntaxKind kind);
+
+ public:
   void initWithEnclosingParseContext(ParseContext* enclosing,
                                      FunctionFlags flags,
                                      FunctionSyntaxKind kind);

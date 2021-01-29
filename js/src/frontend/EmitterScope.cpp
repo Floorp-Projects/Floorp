@@ -343,15 +343,9 @@ NameLocation EmitterScope::searchAndCache(BytecodeEmitter* bce,
       oomUnsafe.crash("EmitterScope::searchAndCache");
     }
 
-    // Outside of delazification, the enclosing scope will always be a
-    // GlobalScope (potentially NonSyntactic) with no bindings, and all names
-    // will be found on the scopes environment chain.
-    // TODO: We should set fallbackFreeNameLocation_.
-    MOZ_ASSERT_IF(!bce->stencil.input.lazy,
-                  bce->stencil.input.enclosingScope->is<GlobalScope>());
-    MOZ_ASSERT_IF(
-        !bce->stencil.input.lazy,
-        !bce->stencil.input.enclosingScope->as<GlobalScope>().hasBindings());
+    // Outside of delazification, we should set fallbackFreeNameLocation_,
+    // and lookupInCache should return the fallback location.
+    MOZ_ASSERT(bce->stencil.input.lazy);
 
     inCurrentScript = false;
     loc = Some(searchInEnclosingScope(jsname, bce->stencil.input.enclosingScope,
@@ -674,6 +668,14 @@ bool EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* funbox) {
   // we don't know if the name will become a 'var' binding due to direct eval.
   if (funbox->funHasExtensibleScope()) {
     fallbackFreeNameLocation_ = Some(NameLocation::Dynamic());
+  } else if (funbox->isStandalone) {
+    // If the function is standalone, the enclosing scope is either an empty
+    // global or non-syntactic scope, and there's no static bindings.
+    if (funbox->hasNonSyntacticEnclosingScopeForStandalone) {
+      fallbackFreeNameLocation_ = Some(NameLocation::Dynamic());
+    } else {
+      fallbackFreeNameLocation_ = Some(NameLocation::Global(BindingKind::Var));
+    }
   }
 
   // In case of parameter expressions, the parameters are lexical
