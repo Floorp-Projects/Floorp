@@ -299,7 +299,7 @@ decorate_task(
   AddonStudies.withStudies([
     factories.addonStudyFactory({ slug: "test-study" }),
   ]),
-  PreferenceRollouts.withTestMock,
+  PreferenceRollouts.withTestMock(),
   AddonRollouts.withTestMock,
   async function disablingTelemetryClearsEnrollmentIds(
     [prefExperiment],

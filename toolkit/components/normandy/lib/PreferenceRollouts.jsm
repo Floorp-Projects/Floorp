@@ -125,13 +125,20 @@ var PreferenceRollouts = {
   STATE_ROLLED_BACK: "rolled-back",
   STATE_GRADUATED: "graduated",
 
+  // A set of rollout slugs that are obsolete based the code in this build of
+  // Firefox. This may include things like the preference no longer being
+  // applicable, or the feature changing in such a way that Normandy's automatic
+  // graduation system cannot detect that the rollout should hand off to the
+  // built-in code.
+  GRADUATION_SET: new Set(),
+
   /**
    * Update the rollout database with changes that happened during early startup.
    * @param {object} rolloutPrefsChanged Map from pref name to previous pref value
    */
   async recordOriginalValues(originalPreferences) {
     for (const rollout of await this.getAllActive()) {
-      let changed = false;
+      let shouldSaveRollout = false;
 
       // Count the number of preferences in this rollout that are now redundant.
       let prefMatchingDefaultCount = 0;
@@ -146,28 +153,19 @@ var PreferenceRollouts = {
         // shut down), the correct value will be used.
         if (prefSpec.previousValue !== builtInDefault) {
           prefSpec.previousValue = builtInDefault;
-          changed = true;
+          shouldSaveRollout = true;
         }
       }
 
       if (prefMatchingDefaultCount === rollout.preferences.length) {
         // Firefox's builtin defaults have caught up to the rollout, making all
         // of the rollout's changes redundant, so graduate the rollout.
-        rollout.state = this.STATE_GRADUATED;
-        changed = true;
-        log.debug(`Graduating rollout: ${rollout.slug}`);
-        TelemetryEvents.sendEvent(
-          "graduate",
-          "preference_rollout",
-          rollout.slug,
-          {
-            enrollmentId:
-              rollout.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
-          }
-        );
+        await this.graduate(rollout, "all-prefs-match");
+        // `this.graduate` writes the rollout to the db, so we don't need to do it anymore.
+        shouldSaveRollout = false;
       }
 
-      if (changed) {
+      if (shouldSaveRollout) {
         const db = await getDatabase();
         await getStore(db, "readwrite").put(rollout);
       }
@@ -178,6 +176,10 @@ var PreferenceRollouts = {
     CleanupManager.addCleanupHandler(() => this.saveStartupPrefs());
 
     for (const rollout of await this.getAllActive()) {
+      if (this.GRADUATION_SET.has(rollout.slug)) {
+        await this.graduate(rollout, "in-graduation-set");
+        continue;
+      }
       TelemetryEnvironment.setExperimentActive(rollout.slug, rollout.state, {
         type: "normandy-prefrollout",
         enrollmentId:
@@ -199,19 +201,26 @@ var PreferenceRollouts = {
    * Test wrapper that temporarily replaces the stored rollout data with fake
    * data for testing.
    */
-  withTestMock(testFunction) {
-    return async function inner(...args) {
-      let db = await getDatabase();
-      const oldData = await getStore(db, "readonly").getAll();
-      await getStore(db, "readwrite").clear();
-      try {
-        await testFunction(...args);
-      } finally {
-        db = await getDatabase();
+  withTestMock({ graduationSet = new Set(), rollouts = [] } = {}) {
+    return testFunction => {
+      return async (...args) => {
+        let db = await getDatabase();
+        const oldData = await getStore(db, "readonly").getAll();
         await getStore(db, "readwrite").clear();
-        const store = getStore(db, "readwrite");
-        await Promise.all(oldData.map(d => store.add(d)));
-      }
+        await Promise.all(rollouts.map(r => this.add(r)));
+        const oldGraduationSet = this.GRADUATION_SET;
+        this.GRADUATION_SET = graduationSet;
+
+        try {
+          await testFunction(...args);
+        } finally {
+          this.GRADUATION_SET = oldGraduationSet;
+          db = await getDatabase();
+          await getStore(db, "readwrite").clear();
+          const store = getStore(db, "readwrite");
+          await Promise.all(oldData.map(d => store.add(d)));
+        }
+      };
     };
   },
 
@@ -327,5 +336,17 @@ var PreferenceRollouts = {
         );
       }
     }
+  },
+
+  async graduate(rollout, reason) {
+    log.debug(`Graduating rollout: ${rollout.slug}`);
+    rollout.state = this.STATE_GRADUATED;
+    const db = await getDatabase();
+    await getStore(db, "readwrite").put(rollout);
+    TelemetryEvents.sendEvent("graduate", "preference_rollout", rollout.slug, {
+      reason,
+      enrollmentId:
+        rollout.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+    });
   },
 };
