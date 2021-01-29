@@ -702,6 +702,7 @@ normandy:
     expiry_version: never
     extra_keys:
       enrollmentId: A unique ID for this enrollment that will be included in all related Telemetry.
+      reason: The reason the rollout graduated
 
   expose:
     objects: [

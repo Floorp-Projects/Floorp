@@ -325,10 +325,10 @@ this.studyEndObserved = function(recipeId) {
   );
 };
 
-this.withSendEventStub = function(testFunction) {
+this.withSendEventSpy = function(testFunction) {
   return async function wrappedTestFunction(...args) {
-    const stub = sinon.spy(TelemetryEvents, "sendEvent");
-    stub.assertEvents = expected => {
+    const spy = sinon.spy(TelemetryEvents, "sendEvent");
+    spy.assertEvents = expected => {
       expected = expected.map(event => ["normandy"].concat(event));
       TelemetryTestUtils.assertEvents(
         expected,
@@ -338,10 +338,10 @@ this.withSendEventStub = function(testFunction) {
     };
     Services.telemetry.clearEvents();
     try {
-      await testFunction(...args, stub);
+      await testFunction(...args, spy);
     } finally {
-      stub.restore();
-      Assert.ok(!stub.threw(), "Telemetry events should not fail");
+      spy.restore();
+      Assert.ok(!spy.threw(), "Telemetry events should not fail");
     }
   };
 };

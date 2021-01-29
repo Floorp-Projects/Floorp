@@ -14,7 +14,7 @@ decorate_task(
   ensureAddonCleanup,
   withMockNormandyApi,
   withStub(TelemetryEnvironment, "setExperimentActive"),
-  withSendEventStub,
+  withSendEventSpy,
   async function simple_recipe_enrollment(
     mockApi,
     setExperimentActiveStub,
@@ -92,7 +92,7 @@ decorate_task(
   AddonRollouts.withTestMock,
   ensureAddonCleanup,
   withMockNormandyApi,
-  withSendEventStub,
+  withSendEventSpy,
   async function update_rollout(mockApi, sendEventStub) {
     // first enrollment
     const recipe = {
@@ -184,7 +184,7 @@ decorate_task(
   AddonRollouts.withTestMock,
   ensureAddonCleanup,
   withMockNormandyApi,
-  withSendEventStub,
+  withSendEventSpy,
   async function rerun_recipe(mockApi, sendEventStub) {
     const recipe = {
       id: 1,
@@ -260,7 +260,7 @@ decorate_task(
   AddonRollouts.withTestMock,
   ensureAddonCleanup,
   withMockNormandyApi,
-  withSendEventStub,
+  withSendEventSpy,
   async function conflicting_rollout(mockApi, sendEventStub) {
     const recipe = {
       id: 1,
@@ -356,7 +356,7 @@ decorate_task(
   AddonRollouts.withTestMock,
   ensureAddonCleanup,
   withMockNormandyApi,
-  withSendEventStub,
+  withSendEventSpy,
   async function enroll_failed_addon_id_changed(mockApi, sendEventStub) {
     const recipe = {
       id: 1,
@@ -448,7 +448,7 @@ decorate_task(
   AddonRollouts.withTestMock,
   ensureAddonCleanup,
   withMockNormandyApi,
-  withSendEventStub,
+  withSendEventSpy,
   async function enroll_failed_upgrade_required(mockApi, sendEventStub) {
     const recipe = {
       id: 1,

@@ -15,7 +15,7 @@ decorate_task(
   ensureAddonCleanup,
   withMockNormandyApi,
   withStub(TelemetryEnvironment, "setExperimentInactive"),
-  withSendEventStub,
+  withSendEventSpy,
   async function simple_recipe_unenrollment(
     mockApi,
     setExperimentInactiveStub,
@@ -109,7 +109,7 @@ decorate_task(
   AddonRollouts.withTestMock,
   ensureAddonCleanup,
   withMockNormandyApi,
-  withSendEventStub,
+  withSendEventSpy,
   async function addon_already_uninstalled(mockApi, sendEventStub) {
     const rolloutRecipe = {
       id: 1,
@@ -192,7 +192,7 @@ decorate_task(
   AddonRollouts.withTestMock,
   ensureAddonCleanup,
   withMockNormandyApi,
-  withSendEventStub,
+  withSendEventSpy,
   async function already_rolled_back(mockApi, sendEventStub) {
     const rollout = {
       recipeId: 1,

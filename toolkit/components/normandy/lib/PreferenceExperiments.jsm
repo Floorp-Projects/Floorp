@@ -34,7 +34,6 @@
  *   Experiment branch that the user was matched to
  * @property {boolean} expired
  *   If false, the experiment is active.
- * @property {string} lastSeen
  *   ISO-formatted date string of when the experiment was last seen from the
  *   recipe server.
  * @property {string|null} temporaryErrorDeadline
