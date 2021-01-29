@@ -11,8 +11,8 @@
 #include "jsapi.h"
 
 #include "debugger/DebugAPI.h"
-#include "frontend/ParserAtom.h"
-#include "js/Object.h"  // JS::GetReservedSlot
+#include "frontend/ParserAtom.h"  // ParserAtomsTable, TaggedParserAtomIndex
+#include "js/Object.h"            // JS::GetReservedSlot
 #include "proxy/DeadObjectProxy.h"
 
 #include "vm/JSObject-inl.h"
@@ -102,12 +102,8 @@ RealmInstrumentation::getInstrumentationKindName(
     InstrumentationKind kind) {
   for (size_t i = 0; i < std::size(instrumentationNames); i++) {
     if (kind == (InstrumentationKind)(1 << i)) {
-      const frontend::ParserAtom* atom = parserAtoms.internAscii(
-          cx, instrumentationNames[i], strlen(instrumentationNames[i]));
-      if (!atom) {
-        return frontend::TaggedParserAtomIndex::null();
-      }
-      return atom->toIndex();
+      return parserAtoms.internAscii(cx, instrumentationNames[i],
+                                     strlen(instrumentationNames[i]));
     }
   }
   MOZ_CRASH("Unexpected instrumentation kind");

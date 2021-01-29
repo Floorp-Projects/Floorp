@@ -765,29 +765,31 @@ class ParserAtomsTable {
  private:
   // Internal APIs for interning to the table after well-known atoms cases have
   // been tested.
-  const ParserAtom* addEntry(JSContext* cx, EntryMap::AddPtr& addPtr,
-                             ParserAtomEntry* entry);
+  TaggedParserAtomIndex addEntry(JSContext* cx, EntryMap::AddPtr& addPtr,
+                                 ParserAtomEntry* entry);
   template <typename AtomCharT, typename SeqCharT>
-  const ParserAtom* internChar16Seq(JSContext* cx, EntryMap::AddPtr& addPtr,
-                                    HashNumber hash,
-                                    InflatedChar16Sequence<SeqCharT> seq,
-                                    uint32_t length);
+  TaggedParserAtomIndex internChar16Seq(JSContext* cx, EntryMap::AddPtr& addPtr,
+                                        HashNumber hash,
+                                        InflatedChar16Sequence<SeqCharT> seq,
+                                        uint32_t length);
 
  public:
-  const ParserAtom* internAscii(JSContext* cx, const char* asciiPtr,
-                                uint32_t length);
+  TaggedParserAtomIndex internAscii(JSContext* cx, const char* asciiPtr,
+                                    uint32_t length);
 
-  const ParserAtom* internLatin1(JSContext* cx, const JS::Latin1Char* latin1Ptr,
-                                 uint32_t length);
+  TaggedParserAtomIndex internLatin1(JSContext* cx,
+                                     const JS::Latin1Char* latin1Ptr,
+                                     uint32_t length);
 
-  const ParserAtom* internUtf8(JSContext* cx, const mozilla::Utf8Unit* utf8Ptr,
-                               uint32_t nbyte);
+  TaggedParserAtomIndex internUtf8(JSContext* cx,
+                                   const mozilla::Utf8Unit* utf8Ptr,
+                                   uint32_t nbyte);
 
-  const ParserAtom* internChar16(JSContext* cx, const char16_t* char16Ptr,
-                                 uint32_t length);
+  TaggedParserAtomIndex internChar16(JSContext* cx, const char16_t* char16Ptr,
+                                     uint32_t length);
 
-  const ParserAtom* internJSAtom(JSContext* cx, CompilationStencil& stencil,
-                                 JSAtom* atom);
+  TaggedParserAtomIndex internJSAtom(JSContext* cx, CompilationStencil& stencil,
+                                     JSAtom* atom);
 
   TaggedParserAtomIndex concatAtoms(JSContext* cx,
                                     mozilla::Range<const ParserAtom*> atoms);

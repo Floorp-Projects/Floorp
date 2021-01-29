@@ -21,8 +21,8 @@
 #include "frontend/BytecodeSection.h"   // EmitScriptThingsVector
 #include "frontend/CompilationInfo.h"   // CompilationState, CompilationStencil
 #include "frontend/Parser.h"  // NewEmptyLexicalScopeData, NewEmptyGlobalScopeData, NewEmptyVarScopeData, NewEmptyFunctionScopeData
-#include "frontend/ParserAtom.h"  // ParserAtom, ParserAtomsTable, TaggedParserAtomIndex
-#include "frontend/ScriptIndex.h"       // ScriptIndex
+#include "frontend/ParserAtom.h"   // ParserAtomsTable, TaggedParserAtomIndex
+#include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "frontend/smoosh_generated.h"  // CVec, Smoosh*, smoosh_*
 #include "frontend/SourceNotes.h"       // SrcNote
 #include "frontend/Stencil.h"           // ScopeStencil, RegExpIndex
@@ -65,14 +65,12 @@ bool ConvertAtoms(JSContext* cx, const SmooshResult& result,
     auto s = reinterpret_cast<const mozilla::Utf8Unit*>(
         smoosh_get_atom_at(result, i));
     auto len = smoosh_get_atom_len_at(result, i);
-    const ParserAtom* atom =
-        compilationState.parserAtoms.internUtf8(cx, s, len);
+    auto atom = compilationState.parserAtoms.internUtf8(cx, s, len);
     if (!atom) {
       return false;
     }
-    auto atomIndex = atom->toIndex();
-    compilationState.parserAtoms.markUsedByStencil(atomIndex);
-    allAtoms.infallibleAppend(atomIndex);
+    compilationState.parserAtoms.markUsedByStencil(atom);
+    allAtoms.infallibleAppend(atom);
   }
 
   return true;
@@ -329,16 +327,14 @@ bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
 
     const mozilla::Utf8Unit* sUtf8 =
         reinterpret_cast<const mozilla::Utf8Unit*>(s);
-    const ParserAtom* atom =
-        compilationState.parserAtoms.internUtf8(cx, sUtf8, len);
+    auto atom = compilationState.parserAtoms.internUtf8(cx, sUtf8, len);
     if (!atom) {
       return false;
     }
 
-    auto atomIndex = atom->toIndex();
-    compilationState.parserAtoms.markUsedByStencil(atomIndex);
+    compilationState.parserAtoms.markUsedByStencil(atom);
     new (mozilla::KnownNotNull, &stencil.regExpData[i])
-        RegExpStencil(atomIndex, JS::RegExpFlags(flags));
+        RegExpStencil(atom, JS::RegExpFlags(flags));
   }
 
   return true;
