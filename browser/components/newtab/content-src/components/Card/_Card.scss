@@ -1,3 +1,26 @@
+.outer-wrapper.newtab-experience {
+  .card-outer {
+    border-radius: $border-radius-new;
+
+    .card {
+      box-shadow: 0 3px 8px var(--newtab-card-first-shadow), 0 0 2px var(--newtab-card-second-shadow);
+      border-radius: $border-radius-new;
+    }
+
+    .card-preview-image-outer {
+      border-radius: $border-radius-new $border-radius-new 0 0;
+    }
+  }
+}
+
+.outer-wrapper:not(.newtab-experience) {
+  .card-outer {
+    &:is(:hover, :focus, .active):not(.placeholder) {
+      @include fade-in-card;
+    }
+  }
+}
+
 .card-outer {
   @include context-menu-button;
   background: var(--newtab-card-background-color);
@@ -47,7 +70,6 @@
   }
 
   &:is(:hover, :focus, .active):not(.placeholder) {
-    @include fade-in-card;
     @include context-menu-button-hover;
     outline: none;
 
