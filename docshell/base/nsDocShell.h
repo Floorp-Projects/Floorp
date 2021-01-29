@@ -1059,6 +1059,12 @@ class nsDocShell final : public nsDocLoader,
 
   void ActivenessMaybeChanged();
 
+  /**
+   * Returns true if `noopener` will be force-enabled by any attempt to create
+   * a popup window, even if rel="opener" is requested.
+   */
+  bool NoopenerForceEnabled();
+
  private:  // data members
   nsString mTitle;
   nsCString mOriginalUriString;

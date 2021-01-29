@@ -8437,6 +8437,19 @@ nsContentPolicyType nsDocShell::DetermineContentType() {
              : nsIContentPolicy::TYPE_INTERNAL_FRAME;
 }
 
+bool nsDocShell::NoopenerForceEnabled() {
+  // If current's top-level browsing context's active document's
+  // cross-origin-opener-policy is "same-origin" or "same-origin + COEP" then
+  // if currentDoc's origin is not same origin with currentDoc's top-level
+  // origin, noopener is force enabled, and name is cleared to "_blank".
+  auto topPolicy = mBrowsingContext->Top()->GetOpenerPolicy();
+  return (topPolicy == nsILoadInfo::OPENER_POLICY_SAME_ORIGIN ||
+          topPolicy ==
+              nsILoadInfo::
+                  OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP) &&
+         !mBrowsingContext->SameOriginWithTop();
+}
+
 nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState) {
   MOZ_ASSERT(aLoadState, "need a load state!");
   MOZ_ASSERT(!aLoadState->Target().IsEmpty(), "should have a target here!");
@@ -8550,17 +8563,18 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState) {
 
     // If we are a noopener load, we just hand the whole thing over to our
     // window.
-    if (aLoadState->HasInternalLoadFlags(INTERNAL_LOAD_FLAGS_NO_OPENER)) {
+    if (aLoadState->HasInternalLoadFlags(INTERNAL_LOAD_FLAGS_NO_OPENER) ||
+        NoopenerForceEnabled()) {
       // Various asserts that we know to hold because NO_OPENER loads can only
       // happen for links.
       MOZ_ASSERT(!aLoadState->LoadReplace());
       MOZ_ASSERT(aLoadState->PrincipalToInherit() ==
                  aLoadState->TriggeringPrincipal());
-      MOZ_ASSERT(aLoadState->InternalLoadFlags() ==
-                     INTERNAL_LOAD_FLAGS_NO_OPENER ||
-                 aLoadState->InternalLoadFlags() ==
-                     (INTERNAL_LOAD_FLAGS_NO_OPENER |
-                      INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER));
+      MOZ_ASSERT(!(aLoadState->InternalLoadFlags() &
+                   ~(INTERNAL_LOAD_FLAGS_NO_OPENER |
+                     INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER)),
+                 "Only INTERNAL_LOAD_FLAGS_NO_OPENER and "
+                 "INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER can be set");
       MOZ_ASSERT(!aLoadState->PostDataStream());
       MOZ_ASSERT(!aLoadState->HeadersStream());
       // If OnLinkClickSync was invoked inside the onload handler, the load
