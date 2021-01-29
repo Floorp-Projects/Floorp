@@ -810,7 +810,7 @@ class MOZ_RAII CacheIRCompiler {
                                                int32_t);
 
   [[nodiscard]] bool emitAtomicsReadModifyWriteResult(
-      ObjOperandId objId, Int32OperandId indexId, Int32OperandId valueId,
+      ObjOperandId objId, IntPtrOperandId indexId, Int32OperandId valueId,
       Scalar::Type elementType, AtomicsReadWriteModifyFn fn);
 
   CACHE_IR_COMPILER_SHARED_GENERATED

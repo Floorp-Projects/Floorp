@@ -528,15 +528,6 @@ class ClampPolicy final : public TypePolicy {
                                   MInstruction* ins) const override;
 };
 
-// Policy for MTypedArrayIndexToInt32. Operand is either Double or Int32.
-class TypedArrayIndexPolicy final : public TypePolicy {
- public:
-  constexpr TypedArrayIndexPolicy() = default;
-  SPECIALIZATION_DATA_;
-  [[nodiscard]] bool adjustInputs(TempAllocator& alloc,
-                                  MInstruction* def) const override;
-};
-
 #undef SPECIALIZATION_DATA_
 #undef INHERIT_DATA_
 #undef EMPTY_DATA_
