@@ -16,6 +16,7 @@
 #include "frontend/AbstractScopePtr.h"    // ScopeIndex
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/ParseNode.h"
+#include "frontend/ParserAtom.h"       // ParserAtom, TaggedParserAtomIndex
 #include "frontend/ScriptIndex.h"      // ScriptIndex
 #include "js/WasmModule.h"             // JS::WasmModule
 #include "vm/FunctionFlags.h"          // js::FunctionFlags
@@ -560,8 +561,15 @@ class FunctionBox : public SuspendableContext {
   bool hasGuessedAtom() const { return flags_.hasGuessedAtom(); }
 
   const ParserAtom* displayAtom() const { return atom_; }
+  TaggedParserAtomIndex displayAtomIndex() const {
+    return atom_ ? atom_->toIndex() : TaggedParserAtomIndex::null();
+  }
   const ParserAtom* explicitName() const {
     return (hasInferredName() || hasGuessedAtom()) ? nullptr : atom_;
+  }
+  TaggedParserAtomIndex explicitNameIndex() const {
+    const ParserAtom* name = explicitName();
+    return name ? name->toIndex() : TaggedParserAtomIndex::null();
   }
 
   // NOTE: We propagate to any existing functions for now. This handles both the
