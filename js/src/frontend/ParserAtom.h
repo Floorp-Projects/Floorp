@@ -289,6 +289,7 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   // Bit flags inside flags_.
   static constexpr uint32_t HasTwoByteCharsFlag = 1 << 0;
   static constexpr uint32_t UsedByStencilFlag = 1 << 1;
+  static constexpr uint32_t WellKnownOrStaticFlag = 1 << 2;
 
   // Helper routine to read some sequence of two-byte chars, and write them
   // into a target buffer of a particular character width.
@@ -407,7 +408,7 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
 
   bool isUsedByStencil() const { return flags_ & UsedByStencilFlag; }
   void markUsedByStencil() const {
-    if (isParserAtomIndex()) {
+    if (!isWellKnownOrStatic()) {
       // Use const method + const_cast here to avoid marking static strings'
       // field mutable.
       const_cast<ParserAtomEntry*>(this)->flags_ |= UsedByStencilFlag;
@@ -420,7 +421,10 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   bool equalsSeq(HashNumber hash, InflatedChar16Sequence<CharT> seq) const;
 
  private:
-  bool isParserAtomIndex() const { return index_.isParserAtomIndex(); }
+  bool isParserAtomIndex() const {
+    MOZ_ASSERT(index_.isParserAtomIndex() == !isWellKnownOrStatic());
+    return index_.isParserAtomIndex();
+  }
 
  public:
   void setParserAtomIndex(ParserAtomIndex index) {
@@ -428,14 +432,21 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   }
 
  private:
+  bool isWellKnownOrStatic() const { return flags_ & WellKnownOrStaticFlag; }
+
+  constexpr void setWellKnownOrStatic() { flags_ |= WellKnownOrStaticFlag; }
+
   constexpr void setWellKnownAtomId(WellKnownAtomId atomId) {
     index_ = TaggedParserAtomIndex(atomId);
+    setWellKnownOrStatic();
   }
   constexpr void setStaticParserString1(StaticParserString1 s) {
     index_ = TaggedParserAtomIndex(s);
+    setWellKnownOrStatic();
   }
   constexpr void setStaticParserString2(StaticParserString2 s) {
     index_ = TaggedParserAtomIndex(s);
+    setWellKnownOrStatic();
   }
   constexpr void setHashAndLength(HashNumber hash, uint32_t length) {
     hash_ = hash;
