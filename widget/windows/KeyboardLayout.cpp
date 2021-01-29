@@ -538,10 +538,6 @@ static const nsCString GetMessageName(UINT aMessage) {
       return "WM_DEADCHAR"_ns;
     case WM_SYSDEADCHAR:
       return "WM_SYSDEADCHAR"_ns;
-    case MOZ_WM_KEYDOWN:
-      return "MOZ_WM_KEYDOWN"_ns;
-    case MOZ_WM_KEYUP:
-      return "MOZ_WM_KEYUP"_ns;
     case WM_APPCOMMAND:
       return "WM_APPCOMMAND"_ns;
     case WM_QUIT:
@@ -746,8 +742,6 @@ static const nsCString ToString(const MSG& aMSG) {
     case WM_KEYUP:
     case WM_SYSKEYDOWN:
     case WM_SYSKEYUP:
-    case MOZ_WM_KEYDOWN:
-    case MOZ_WM_KEYUP:
       result.AppendPrintf(
           "virtual keycode=%s, repeat count=%d, "
           "scancode=0x%02X, extended key=%s, "
@@ -1368,7 +1362,6 @@ void NativeKey::InitIsSkippableForKeyOrChar(const MSG& aLastKeyMSG) {
   switch (mMsg.message) {
     case WM_KEYDOWN:
     case WM_SYSKEYDOWN:
-    case MOZ_WM_KEYDOWN:
     case WM_CHAR:
     case WM_SYSCHAR:
     case WM_DEADCHAR:
@@ -1381,7 +1374,6 @@ void NativeKey::InitIsSkippableForKeyOrChar(const MSG& aLastKeyMSG) {
       switch (aLastKeyMSG.message) {
         case WM_KEYDOWN:
         case WM_SYSKEYDOWN:
-        case MOZ_WM_KEYDOWN:
           if (aLastKeyMSG.wParam == VK_PACKET) {
             // If the last message was VK_PACKET, that means that a keyboard
             // utility tried to insert a character.  So, current message is
@@ -1419,9 +1411,7 @@ void NativeKey::InitWithKeyOrChar() {
     case WM_KEYDOWN:
     case WM_SYSKEYDOWN:
     case WM_KEYUP:
-    case WM_SYSKEYUP:
-    case MOZ_WM_KEYDOWN:
-    case MOZ_WM_KEYUP: {
+    case WM_SYSKEYUP: {
       // Modify sLastKeyMSG now since retrieving following char messages may
       // cause sending another key message if odd tool hooks GetMessage(),
       // PeekMessage().
@@ -2436,7 +2426,7 @@ bool NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const {
   }
 
   bool defaultPrevented = false;
-  if (mFakeCharMsgs || IsKeyMessageOnPlugin() ||
+  if (mFakeCharMsgs ||
       !RedirectedKeyDownMessageManager::IsRedirectedMessage(mMsg)) {
     nsresult rv = mDispatcher->BeginNativeInputTransaction();
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2454,16 +2444,14 @@ bool NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const {
              "event...",
              this));
 
-    EventMessage keyDownMessage =
-        IsKeyMessageOnPlugin() ? eKeyDownOnPlugin : eKeyDown;
-    WidgetKeyboardEvent keydownEvent(true, keyDownMessage, mWidget);
+    WidgetKeyboardEvent keydownEvent(true, eKeyDown, mWidget);
     nsEventStatus status = InitKeyEvent(keydownEvent, mModKeyState);
     MOZ_LOG(
         sNativeKeyLogger, LogLevel::Info,
         ("%p   NativeKey::HandleKeyDownMessage(), dispatching keydown event...",
          this));
     bool dispatched = mDispatcher->DispatchKeyboardEvent(
-        keyDownMessage, keydownEvent, status, const_cast<NativeKey*>(this));
+        eKeyDown, keydownEvent, status, const_cast<NativeKey*>(this));
     if (aEventDispatched) {
       *aEventDispatched = dispatched;
     }
@@ -2478,18 +2466,6 @@ bool NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const {
       return false;
     }
     defaultPrevented = status == nsEventStatus_eConsumeNoDefault;
-
-    // We don't need to handle key messages on plugin for eKeyPress since
-    // eKeyDownOnPlugin is handled as both eKeyDown and eKeyPress.
-    if (IsKeyMessageOnPlugin()) {
-      MOZ_LOG(
-          sNativeKeyLogger, LogLevel::Info,
-          ("%p   NativeKey::HandleKeyDownMessage(), doesn't dispatch keypress "
-           "event(s) because it's a keydown message on windowed plugin, "
-           "defaultPrevented=%s",
-           this, GetBoolName(defaultPrevented)));
-      return defaultPrevented;
-    }
 
     if (mWidget->Destroyed() || IsFocusedWindowChanged()) {
       MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
@@ -2514,8 +2490,7 @@ bool NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const {
     // application, we shouldn't redirect the message to it because the keydown
     // message is processed by us, so, nobody shouldn't process it.
     HWND focusedWnd = ::GetFocus();
-    if (!defaultPrevented && !mFakeCharMsgs && !IsKeyMessageOnPlugin() &&
-        focusedWnd && !isIMEEnabled &&
+    if (!defaultPrevented && !mFakeCharMsgs && focusedWnd && !isIMEEnabled &&
         WinUtils::IsIMEEnabled(mWidget->GetInputContext())) {
       RedirectedKeyDownMessageManager::RemoveNextCharMessage(focusedWnd);
 
@@ -2819,14 +2794,13 @@ bool NativeKey::HandleKeyUpMessage(bool* aEventDispatched) const {
   MOZ_LOG(sNativeKeyLogger, LogLevel::Debug,
           ("%p   NativeKey::HandleKeyUpMessage(), initializing keyup event...",
            this));
-  EventMessage keyUpMessage = IsKeyMessageOnPlugin() ? eKeyUpOnPlugin : eKeyUp;
-  WidgetKeyboardEvent keyupEvent(true, keyUpMessage, mWidget);
+  WidgetKeyboardEvent keyupEvent(true, eKeyUp, mWidget);
   nsEventStatus status = InitKeyEvent(keyupEvent, mModKeyState);
   MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
           ("%p   NativeKey::HandleKeyUpMessage(), dispatching keyup event...",
            this));
   bool dispatched = mDispatcher->DispatchKeyboardEvent(
-      keyUpMessage, keyupEvent, status, const_cast<NativeKey*>(this));
+      eKeyUp, keyupEvent, status, const_cast<NativeKey*>(this));
   if (aEventDispatched) {
     *aEventDispatched = dispatched;
   }
@@ -2847,13 +2821,6 @@ bool NativeKey::HandleKeyUpMessage(bool* aEventDispatched) const {
 
 bool NativeKey::NeedsToHandleWithoutFollowingCharMessages() const {
   MOZ_ASSERT(IsKeyDownMessage());
-
-  // We cannot know following char messages of key messages in a plugin
-  // process.  So, let's compute the character to be inputted with every
-  // printable key should be computed with the keyboard layout.
-  if (IsKeyMessageOnPlugin()) {
-    return true;
-  }
 
   // If the key combination is reserved by the system, the caller shouldn't
   // do anything with following WM_*CHAR messages.  So, let's return true here.
@@ -2962,7 +2929,6 @@ bool NativeKey::IsSamePhysicalKeyMessage(const MSG& aKeyOrCharMsg1,
 
 bool NativeKey::GetFollowingCharMessage(MSG& aCharMsg) {
   MOZ_ASSERT(IsKeyDownMessage());
-  MOZ_ASSERT(!IsKeyMessageOnPlugin());
 
   aCharMsg.message = WM_NULL;
 

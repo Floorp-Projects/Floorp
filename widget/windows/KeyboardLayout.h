@@ -622,12 +622,10 @@ class MOZ_STACK_CLASS NativeKey final {
   }
 
   bool IsKeyDownMessage() const {
-    return (mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN ||
-            mMsg.message == MOZ_WM_KEYDOWN);
+    return mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN;
   }
   bool IsKeyUpMessage() const {
-    return (mMsg.message == WM_KEYUP || mMsg.message == WM_SYSKEYUP ||
-            mMsg.message == MOZ_WM_KEYUP);
+    return mMsg.message == WM_KEYUP || mMsg.message == WM_SYSKEYUP;
   }
   bool IsSysKeyDownOrKeyUpMessage() const {
     return mMsg.message == WM_SYSKEYDOWN || mMsg.message == WM_SYSKEYUP;
@@ -662,9 +660,6 @@ class MOZ_STACK_CLASS NativeKey final {
   bool IsFollowedByPrintableCharMessage() const;
   bool IsFollowedByPrintableCharOrSysCharMessage() const;
   bool IsFollowedByDeadCharMessage() const;
-  bool IsKeyMessageOnPlugin() const {
-    return (mMsg.message == MOZ_WM_KEYDOWN || mMsg.message == MOZ_WM_KEYUP);
-  }
   bool IsPrintableCharMessage(const MSG& aMSG) const {
     return aMSG.message == WM_CHAR &&
            !IsControlChar(static_cast<char16_t>(aMSG.wParam));
