@@ -35,10 +35,10 @@ BEGIN_TEST(testParserAtom_empty) {
   CHECK(ref);
   auto refIndex = ref->toIndex();
   CHECK(refIndex);
-  CHECK(atomTable.internAscii(cx, ascii, 0) == ref);
-  CHECK(atomTable.internLatin1(cx, latin1, 0) == ref);
-  CHECK(atomTable.internUtf8(cx, utf8, 0) == ref);
-  CHECK(atomTable.internChar16(cx, char16, 0) == ref);
+  CHECK(atomTable.internAscii(cx, ascii, 0) == refIndex);
+  CHECK(atomTable.internLatin1(cx, latin1, 0) == refIndex);
+  CHECK(atomTable.internUtf8(cx, utf8, 0) == refIndex);
+  CHECK(atomTable.internChar16(cx, char16, 0) == refIndex);
 
   // Check concatenation works on empty atoms.
   const ParserAtom* concat[] = {
@@ -74,10 +74,10 @@ BEGIN_TEST(testParserAtom_tiny1) {
   CHECK(ref);
   auto refIndex = ref->toIndex();
   CHECK(refIndex);
-  CHECK(atomTable.internAscii(cx, ascii, 1) == ref);
-  CHECK(atomTable.internLatin1(cx, latin1, 1) == ref);
-  CHECK(atomTable.internUtf8(cx, utf8, 1) == ref);
-  CHECK(atomTable.internChar16(cx, char16, 1) == ref);
+  CHECK(atomTable.internAscii(cx, ascii, 1) == refIndex);
+  CHECK(atomTable.internLatin1(cx, latin1, 1) == refIndex);
+  CHECK(atomTable.internUtf8(cx, utf8, 1) == refIndex);
+  CHECK(atomTable.internChar16(cx, char16, 1) == refIndex);
 
   const ParserAtom* concat[] = {
       ref,
@@ -117,10 +117,10 @@ BEGIN_TEST(testParserAtom_tiny2) {
   CHECK(ref);
   auto refIndex = ref->toIndex();
   CHECK(refIndex);
-  CHECK(atomTable.internAscii(cx, ascii, 2) == ref);
-  CHECK(atomTable.internLatin1(cx, latin1, 2) == ref);
-  CHECK(atomTable.internUtf8(cx, utf8, 2) == ref);
-  CHECK(atomTable.internChar16(cx, char16, 2) == ref);
+  CHECK(atomTable.internAscii(cx, ascii, 2) == refIndex);
+  CHECK(atomTable.internLatin1(cx, latin1, 2) == refIndex);
+  CHECK(atomTable.internUtf8(cx, utf8, 2) == refIndex);
+  CHECK(atomTable.internChar16(cx, char16, 2) == refIndex);
 
   const ParserAtom* concat[] = {
       cx->parserNames().lookupTiny(ascii + 0, 1),
@@ -152,8 +152,8 @@ BEGIN_TEST(testParserAtom_concat) {
     std::vector<const ParserAtom*> inputs;
     for (const char16_t* arg : args) {
       size_t len = std::char_traits<char16_t>::length(arg);
-      const ParserAtom* atom = atomTable.internChar16(cx, arg, len);
-      inputs.push_back(atom);
+      auto index = atomTable.internChar16(cx, arg, len);
+      inputs.push_back(atomTable.getParserAtom(index));
     }
 
     // Concatenate twice to test new vs existing pathways.
@@ -164,8 +164,7 @@ BEGIN_TEST(testParserAtom_concat) {
     // Intern expected value literal _after_ the concat code to allow
     // allocation pathways a chance to be tested.
     size_t exp_len = std::char_traits<char16_t>::length(exp);
-    const ParserAtom* ref = atomTable.internChar16(cx, exp, exp_len);
-    auto refIndex = ref->toIndex();
+    auto refIndex = atomTable.internChar16(cx, exp, exp_len);
     CHECK(refIndex);
 
     return (once == refIndex) && (twice == refIndex);

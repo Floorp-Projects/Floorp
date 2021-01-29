@@ -853,14 +853,13 @@ bool PerHandlerParser<ParseHandler>::
       // TODO-Stencil
       //   After closed-over-bindings are snapshotted in the handler,
       //   remove this.
-      const ParserAtom* parserAtom =
-          this->compilationState_.parserAtoms.internJSAtom(cx_, this->stencil_,
-                                                           name);
+      auto parserAtom = this->compilationState_.parserAtoms.internJSAtom(
+          cx_, this->getCompilationStencil(), name);
       if (!parserAtom) {
         return false;
       }
 
-      scope.lookupDeclaredName(parserAtom->toIndex())->value()->setClosedOver();
+      scope.lookupDeclaredName(parserAtom)->value()->setClosedOver();
       MOZ_ASSERT(slotCount > 0);
       slotCount--;
     }
@@ -2790,12 +2789,11 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
   // TODO-Stencil: Consider for snapshotting.
   TaggedParserAtomIndex displayAtom;
   if (fun->displayAtom()) {
-    const ParserAtom* atom = this->compilationState_.parserAtoms.internJSAtom(
+    displayAtom = this->compilationState_.parserAtoms.internJSAtom(
         cx_, this->stencil_, fun->displayAtom());
-    if (!atom) {
+    if (!displayAtom) {
       return false;
     }
-    displayAtom = atom->toIndex();
   }
 
   FunctionBox* funbox = newFunctionBox(
@@ -3281,12 +3279,11 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
   // TODO-Stencil: Consider for snapshotting.
   TaggedParserAtomIndex displayAtom;
   if (fun->displayAtom()) {
-    const ParserAtom* atom = this->compilationState_.parserAtoms.internJSAtom(
+    displayAtom = this->compilationState_.parserAtoms.internJSAtom(
         cx_, this->stencil_, fun->displayAtom());
-    if (!atom) {
+    if (!displayAtom) {
       return null();
     }
-    displayAtom = atom->toIndex();
   }
 
   Directives directives(strict);
@@ -10452,19 +10449,19 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
     }
   }
 
-  const ParserAtom* atom = this->compilationState_.parserAtoms.internChar16(
+  auto atom = this->compilationState_.parserAtoms.internChar16(
       cx_, chars.begin(), chars.length());
   if (!atom) {
     return nullptr;
   }
-  atom->markUsedByStencil();
+  this->compilationState_.parserAtoms.markUsedByStencil(atom);
 
   RegExpIndex index(this->compilationState_.regExpData.length());
   if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
     ReportAllocationOverflow(cx_);
     return nullptr;
   }
-  if (!this->compilationState_.regExpData.emplaceBack(atom->toIndex(), flags)) {
+  if (!this->compilationState_.regExpData.emplaceBack(atom, flags)) {
     js::ReportOutOfMemory(cx_);
     return nullptr;
   }

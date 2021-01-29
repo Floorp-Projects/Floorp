@@ -12,7 +12,7 @@
 
 #include <algorithm>
 
-#include "frontend/ParserAtom.h"  // frontend::ParserAtom, frontend::ParserAtomsTable
+#include "frontend/ParserAtom.h"  // frontend::{ParserAtom, ParserAtomsTable, TaggedParserAtomIndex
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "vm/JSObject-inl.h"
 #include "vm/StringType-inl.h"
@@ -162,22 +162,14 @@ frontend::TaggedParserAtomIndex StringBuffer::finishParserAtom(
   }
 
   if (isLatin1()) {
-    const frontend::ParserAtom* result =
-        parserAtoms.internLatin1(cx_, latin1Chars().begin(), len);
-    if (!result) {
-      return frontend::TaggedParserAtomIndex::null();
-    }
+    auto result = parserAtoms.internLatin1(cx_, latin1Chars().begin(), len);
     latin1Chars().clear();
-    return result->toIndex();
+    return result;
   }
 
-  const frontend::ParserAtom* result =
-      parserAtoms.internChar16(cx_, twoByteChars().begin(), len);
-  if (!result) {
-    return frontend::TaggedParserAtomIndex::null();
-  }
+  auto result = parserAtoms.internChar16(cx_, twoByteChars().begin(), len);
   twoByteChars().clear();
-  return result->toIndex();
+  return result;
 }
 
 bool js::ValueToStringBufferSlow(JSContext* cx, const Value& arg,
