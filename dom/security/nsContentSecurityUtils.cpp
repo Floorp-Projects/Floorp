@@ -49,6 +49,8 @@ using namespace mozilla::dom;
 using namespace mozilla::Telemetry;
 
 extern mozilla::LazyLogModule sCSMLog;
+extern Atomic<bool, mozilla::Relaxed> sJSHacksChecked;
+extern Atomic<bool, mozilla::Relaxed> sJSHacksPresent;
 extern Atomic<bool, mozilla::Relaxed> sTelemetryEventEnabled;
 
 // Helper function for IsConsideredSameOriginForUIR which makes
@@ -474,16 +476,12 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
     return true;
   }
 
-  // We only perform a check of this preference on the Main Thread
+  // We can only perform the check of this preference on the Main Thread
   // (because a String-based preference check is only safe on Main Thread.)
-  // The consequence of this is that if a user is using userChromeJS _and_
-  // the scripts they use start a worker and that worker uses eval - we will
-  // enter this function, skip over this pref check that would normally cause
-  // us to allow the eval usage - and we will block it.
-  // While not ideal, we do not officially support userChromeJS, and hopefully
-  // the usage of workers and eval in workers is even lower that userChromeJS
-  // usage.
-  if (NS_IsMainThread()) {
+  // In theory, it would be possible that a separate thread could get here
+  // before the main thread, resulting in the other thread not being able to
+  // perform this check, but the odds of that are small (and probably zero.)
+  if (MOZ_UNLIKELY(!sJSHacksChecked) && NS_IsMainThread()) {
     // This preference is a file used for autoconfiguration of Firefox
     // by administrators. It has also been (ab)used by the userChromeJS
     // project to run legacy-style 'extensions', some of which use eval,
@@ -491,13 +489,28 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
     nsAutoString jsConfigPref;
     Preferences::GetString("general.config.filename", jsConfigPref);
     if (!jsConfigPref.IsEmpty()) {
-      MOZ_LOG(sCSMLog, LogLevel::Debug,
-              ("Allowing eval() %s because of "
-               "general.config.filename",
-               (aIsSystemPrincipal ? "with System Principal"
-                                   : "in parent process")));
-      return true;
+      sJSHacksPresent = true;
     }
+
+    // This preference is required by bootstrapLoader.xpi, which is an
+    // alternate way to load legacy-style extensions. It only works on
+    // DevEdition/Nightly.
+    bool xpinstallSignatures;
+    Preferences::GetBool("xpinstall.signatures.required", &xpinstallSignatures);
+    if (xpinstallSignatures) {
+      sJSHacksPresent = true;
+    }
+
+    sJSHacksChecked = true;
+  }
+
+  if (MOZ_UNLIKELY(sJSHacksPresent)) {
+    MOZ_LOG(
+        sCSMLog, LogLevel::Debug,
+        ("Allowing eval() %s because some "
+         "JS hacks may be present.",
+         (aIsSystemPrincipal ? "with System Principal" : "in parent process")));
+    return true;
   }
 
   if (XRE_IsE10sParentProcess() &&
@@ -977,7 +990,6 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
 /* static */
 bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
                                                     bool aIsSystemRealm) {
-  static Maybe<bool> sGeneralConfigFilenameSet;
   // If the pref is permissive, allow everything
   if (StaticPrefs::security_allow_parent_unrestricted_js_loads()) {
     return true;
@@ -988,30 +1000,40 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
     return true;
   }
 
-  // We only perform a check of this preference on the Main Thread
+  // We can only perform the check of this preference on the Main Thread
   // (because a String-based preference check is only safe on Main Thread.)
-  // The consequence of this is that if a user is using userChromeJS _and_
-  // the scripts they use start a worker - we will enter this function,
-  // skip over this pref check that would normally cause us to allow the
-  // load - and we will block it.
-  // While not ideal, we do not officially support userChromeJS, and hopefully
-  // the usage of workers is even lower than userChromeJS usage.
-  if (NS_IsMainThread()) {
+  // In theory, it would be possible that a separate thread could get here
+  // before the main thread, resulting in the other thread not being able to
+  // perform this check, but the odds of that are small (and probably zero.)
+  if (MOZ_UNLIKELY(!sJSHacksChecked) && NS_IsMainThread()) {
     // This preference is a file used for autoconfiguration of Firefox
-    // by administrators. It will also run in the parent process and throw
-    // assumptions about what can run where out of the window.
-    if (!sGeneralConfigFilenameSet.isSome()) {
-      nsAutoString jsConfigPref;
-      Preferences::GetString("general.config.filename", jsConfigPref);
-      sGeneralConfigFilenameSet.emplace(!jsConfigPref.IsEmpty());
+    // by administrators. It has also been (ab)used by the userChromeJS
+    // project to run legacy-style 'extensions', some of which use eval,
+    // all of which run in the System Principal context.
+    nsAutoString jsConfigPref;
+    Preferences::GetString("general.config.filename", jsConfigPref);
+    if (!jsConfigPref.IsEmpty()) {
+      sJSHacksPresent = true;
     }
-    if (sGeneralConfigFilenameSet.value()) {
-      MOZ_LOG(sCSMLog, LogLevel::Debug,
-              ("Allowing a javascript load of %s because "
-               "general.config.filename is set",
-               aFilename));
-      return true;
+
+    // This preference is required by bootstrapLoader.xpi, which is an
+    // alternate way to load legacy-style extensions. It only works on
+    // DevEdition/Nightly.
+    bool xpinstallSignatures;
+    Preferences::GetBool("xpinstall.signatures.required", &xpinstallSignatures);
+    if (xpinstallSignatures) {
+      sJSHacksPresent = true;
     }
+
+    sJSHacksChecked = true;
+  }
+
+  if (MOZ_UNLIKELY(sJSHacksPresent)) {
+    MOZ_LOG(sCSMLog, LogLevel::Debug,
+            ("Allowing a javascript load of %s because "
+             "some JS hacks may be present",
+             aFilename));
+    return true;
   }
 
   if (XRE_IsE10sParentProcess() &&
