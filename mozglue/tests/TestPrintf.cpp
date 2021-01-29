@@ -7,7 +7,30 @@
 #include "mozilla/Printf.h"
 
 #include <cfloat>
+#include <cmath>
 #include <stdarg.h>
+
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wc++11-narrowing"
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wnarrowing"
+#endif
+namespace tiformat {
+#include "glibc_printf_tests/tiformat.c"
+}
+namespace tllformat {
+#include "glibc_printf_tests/tllformat.c"
+}
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#  pragma GCC diagnostic pop
+#endif
+namespace tfformat {
+#include "glibc_printf_tests/tfformat.c"
+}
 
 // A simple implementation of PrintfTarget, just for testing
 // PrintfTarget::print.
@@ -42,16 +65,17 @@ static void TestPrintfTargetPrint() {
   checker.print("test string");
 }
 
-static bool MOZ_FORMAT_PRINTF(4, 5)
-    check_print(const char* file, int line, const char* expect, const char* fmt,
-                ...) {
+static bool MOZ_FORMAT_PRINTF(5, 6)
+    check_print(const char* file, int line,
+                bool (*cmp)(const char* a, const char* b), const char* expect,
+                const char* fmt, ...) {
   va_list ap;
 
   va_start(ap, fmt);
   mozilla::SmprintfPointer output = mozilla::Vsmprintf(fmt, ap);
   va_end(ap);
 
-  bool ret = output && !strcmp(output.get(), expect);
+  bool ret = output && cmp(output.get(), expect);
   if (!ret && strcmp(expect, "ignore") != 0) {
     fprintf(stderr, "(actual) \"%s\" != (expected) \"%s\" (%s:%d)\n",
             output.get(), expect, file, line);
@@ -59,7 +83,13 @@ static bool MOZ_FORMAT_PRINTF(4, 5)
   return ret;
 }
 
-#define print_one(...) check_print(__FILE__, __LINE__, __VA_ARGS__)
+bool str_match(const char* a, const char* b) { return !strcmp(a, b); }
+
+bool approx_match(const char* a, const char* b) {
+  return tfformat::matches(const_cast<char*>(a), b);
+}
+
+#define print_one(...) check_print(__FILE__, __LINE__, str_match, __VA_ARGS__)
 
 static const char* zero() { return nullptr; }
 
@@ -159,6 +189,49 @@ static void TestPrintfFormats() {
       print_one("7799 9977", "%2$zu %1$zu", (size_t)9977, (size_t)7799));
 }
 
+template <typename T, size_t N>
+static void TestGlibcPrintf(T (&test_cases)[N], const char* file,
+                            bool (*cmp)(const char* a, const char* b)) {
+  bool ok = true;
+  char fmt2[40];
+  for (auto& line : test_cases) {
+    // mozilla::PrintfTarget doesn't support the `#` flag character or the
+    // `a` conversion specifier.
+    if (!line.line || strchr(line.format_string, '#') ||
+        strchr(line.format_string, 'a')) {
+      continue;
+    }
+
+    // Derive the format string in the test case to add "2$" in the specifier
+    // (transforming e.g. "%f" into "%2$f"), and append "%1$.0d".
+    // The former will make the format string take the `line.value` as the
+    // second argument, and the latter will make the first argument formatted
+    // with no precision. We'll pass 0 as the first argument, such that the
+    // formatted value for it is "", which means the expected result string
+    // is still the same.
+    MOZ_RELEASE_ASSERT(sizeof(fmt2) > strlen(line.format_string) + 8);
+    const char* percent = strchr(line.format_string, '%');
+    MOZ_RELEASE_ASSERT(percent);
+    size_t percent_off = percent - line.format_string;
+    memcpy(fmt2, line.format_string, percent_off + 1);
+    memcpy(fmt2 + percent_off + 1, "2$", 2);
+    strcpy(fmt2 + percent_off + 3, percent + 1);
+    strcat(fmt2, "%1$.0d");
+
+    int l = line.line;
+    const char* res = line.result;
+    const char* fmt = line.format_string;
+    if (strchr(line.format_string, 'I')) {
+      ok = check_print(file, l, cmp, res, fmt, (size_t)line.value) && ok;
+      ok = check_print(file, l, cmp, res, fmt2, 0, (size_t)line.value) && ok;
+    } else {
+      ok = check_print(file, l, cmp, res, fmt, line.value) && ok;
+      ok = check_print(file, l, cmp, res, fmt2, 0, line.value) && ok;
+    }
+  }
+  MOZ_RELEASE_ASSERT(ok);
+}
+
 #if defined(XP_WIN)
 int wmain()
 #else
@@ -167,6 +240,9 @@ int main()
 {
   TestPrintfFormats();
   TestPrintfTargetPrint();
+  TestGlibcPrintf(tiformat::sprint_ints, "tiformat.c", str_match);
+  TestGlibcPrintf(tllformat::sprint_ints, "tllformat.c", str_match);
+  TestGlibcPrintf(tfformat::sprint_doubles, "tfformat.c", approx_match);
 
   return 0;
 }
