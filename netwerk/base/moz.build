@@ -172,7 +172,6 @@ EXPORTS.mozilla.net += [
     "RequestContextService.h",
     "SimpleChannelParent.h",
     "SSLTokensCache.h",
-    "TCPFastOpen.h",
     "ThrottleQueue.h",
 ]
 
@@ -241,7 +240,6 @@ UNIFIED_SOURCES += [
     "SimpleChannel.cpp",
     "SimpleChannelParent.cpp",
     "SSLTokensCache.cpp",
-    "TCPFastOpenLayer.cpp",
     "ThrottleQueue.cpp",
     "Tickler.cpp",
     "TLSServerSocket.cpp",
