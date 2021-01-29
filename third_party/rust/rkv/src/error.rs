@@ -11,95 +11,88 @@
 use std::{
     io,
     path::PathBuf,
-    str,
     sync,
     thread,
     thread::ThreadId,
 };
 
-use failure::Fail;
+use thiserror::Error;
 
 pub use crate::backend::SafeModeError;
 use crate::value::Type;
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 pub enum DataError {
-    #[fail(display = "unknown type tag: {}", _0)]
+    #[error("unknown type tag: {0}")]
     UnknownType(u8),
 
-    #[fail(display = "unexpected type tag: expected {}, got {}", expected, actual)]
+    #[error("unexpected type tag: expected {expected}, got {actual}")]
     UnexpectedType {
         expected: Type,
         actual: Type,
     },
 
-    #[fail(display = "empty data; expected tag")]
+    #[error("empty data; expected tag")]
     Empty,
 
-    #[fail(display = "invalid value for type {}: {}", value_type, err)]
+    #[error("invalid value for type {value_type}: {err}")]
     DecodingError {
         value_type: Type,
         err: Box<bincode::ErrorKind>,
     },
 
-    #[fail(display = "couldn't encode value: {}", _0)]
-    EncodingError(Box<bincode::ErrorKind>),
+    #[error("couldn't encode value: {0}")]
+    EncodingError(#[from] Box<bincode::ErrorKind>),
 
-    #[fail(display = "invalid uuid bytes")]
+    #[error("invalid uuid bytes")]
     InvalidUuid,
 }
 
-impl From<Box<bincode::ErrorKind>> for DataError {
-    fn from(e: Box<bincode::ErrorKind>) -> DataError {
-        DataError::EncodingError(e)
-    }
-}
-
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 pub enum StoreError {
-    #[fail(display = "manager poisoned")]
+    #[error("manager poisoned")]
     ManagerPoisonError,
 
-    #[fail(display = "database corrupted")]
+    #[error("database corrupted")]
     DatabaseCorrupted,
 
-    #[fail(display = "key/value pair not found")]
+    #[error("key/value pair not found")]
     KeyValuePairNotFound,
 
-    #[fail(display = "unsupported size of key/DB name/data")]
+    #[error("unsupported size of key/DB name/data")]
     KeyValuePairBadSize,
 
-    #[fail(display = "file is not a valid database")]
+    #[error("file is not a valid database")]
     FileInvalid,
 
-    #[fail(display = "environment mapsize reached")]
+    #[error("environment mapsize reached")]
     MapFull,
 
-    #[fail(display = "environment maxdbs reached")]
+    #[error("environment maxdbs reached")]
     DbsFull,
 
-    #[fail(display = "environment maxreaders reached")]
+    #[error("environment maxreaders reached")]
     ReadersFull,
 
-    #[fail(display = "I/O error: {:?}", _0)]
-    IoError(io::Error),
+    #[error("I/O error: {0:?}")]
+    IoError(#[from] io::Error),
 
-    #[fail(display = "environment path does not exist or not the right type: {:?}", _0)]
+    #[error("environment path does not exist or not the right type: {0:?}")]
     UnsuitableEnvironmentPath(PathBuf),
 
-    #[fail(display = "data error: {:?}", _0)]
-    DataError(DataError),
+    #[error("data error: {0:?}")]
+    DataError(#[from] DataError),
 
-    #[fail(display = "lmdb backend error: {}", _0)]
+    #[error("lmdb backend error: {0}")]
     LmdbError(lmdb::Error),
 
-    #[fail(display = "safe mode backend error: {}", _0)]
+    #[error("safe mode backend error: {0}")]
     SafeModeError(SafeModeError),
 
-    #[fail(display = "read transaction already exists in thread {:?}", _0)]
+    #[error("read transaction already exists in thread {0:?}")]
     ReadTransactionAlreadyExists(ThreadId),
 
-    #[fail(display = "attempted to open DB during transaction in thread {:?}", _0)]
+    #[error("attempted to open DB during transaction in thread {0:?}")]
     OpenAttemptedDuringTransaction(ThreadId),
 }
 
@@ -113,37 +106,25 @@ impl StoreError {
     }
 }
 
-impl From<DataError> for StoreError {
-    fn from(e: DataError) -> StoreError {
-        StoreError::DataError(e)
-    }
-}
-
-impl From<io::Error> for StoreError {
-    fn from(e: io::Error) -> StoreError {
-        StoreError::IoError(e)
-    }
-}
-
 impl<T> From<sync::PoisonError<T>> for StoreError {
     fn from(_: sync::PoisonError<T>) -> StoreError {
         StoreError::ManagerPoisonError
     }
 }
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 pub enum CloseError {
-    #[fail(display = "manager poisoned")]
+    #[error("manager poisoned")]
     ManagerPoisonError,
 
-    #[fail(display = "close attempted while manager has an environment still open")]
+    #[error("close attempted while manager has an environment still open")]
     EnvironmentStillOpen,
 
-    #[fail(display = "close attempted while an environment not known to the manager is still open")]
+    #[error("close attempted while an environment not known to the manager is still open")]
     UnknownEnvironmentStillOpen,
 
-    #[fail(display = "I/O error: {:?}", _0)]
-    IoError(io::Error),
+    #[error("I/O error: {0:?}")]
+    IoError(#[from] io::Error),
 }
 
 impl<T> From<sync::PoisonError<T>> for CloseError {
@@ -152,40 +133,22 @@ impl<T> From<sync::PoisonError<T>> for CloseError {
     }
 }
 
-impl From<io::Error> for CloseError {
-    fn from(e: io::Error) -> CloseError {
-        CloseError::IoError(e)
-    }
-}
-
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 pub enum MigrateError {
-    #[fail(display = "store error: {}", _0)]
-    StoreError(StoreError),
+    #[error("store error: {0}")]
+    StoreError(#[from] StoreError),
 
-    #[fail(display = "close error: {}", _0)]
-    CloseError(CloseError),
+    #[error("close error: {0}")]
+    CloseError(#[from] CloseError),
 
-    #[fail(display = "manager poisoned")]
+    #[error("manager poisoned")]
     ManagerPoisonError,
 
-    #[fail(display = "source is empty")]
+    #[error("source is empty")]
     SourceEmpty,
 
-    #[fail(display = "destination is not empty")]
+    #[error("destination is not empty")]
     DestinationNotEmpty,
-}
-
-impl From<StoreError> for MigrateError {
-    fn from(e: StoreError) -> MigrateError {
-        MigrateError::StoreError(e)
-    }
-}
-
-impl From<CloseError> for MigrateError {
-    fn from(e: CloseError) -> MigrateError {
-        MigrateError::CloseError(e)
-    }
 }
 
 impl<T> From<sync::PoisonError<T>> for MigrateError {

@@ -15,7 +15,6 @@
 //! It aims to achieve the following:
 //!
 //! - Avoid sharp edges (e.g., obscure error codes for common situations).
-//! - Report errors via [failure](https://docs.rs/failure/).
 //! - Correctly restrict access to one handle per process via a
 //!   [Manager](struct.Manager.html).
 //! - Use Rust's type system to make single-typed key stores safe and ergonomic.

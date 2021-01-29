@@ -2085,9 +2085,9 @@ dependencies = [
 
 [[package]]
 name = "glean"
-version = "33.10.2"
+version = "33.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71de6b7b89292c8b80a4706600aa6d3ceeaac43fb7c91f7bd10c63bc4079252a"
+checksum = "28d73a3c2543c7c54a7e6b8a376b72e94f43892065691093168557473d4194f8"
 dependencies = [
  "chrono",
  "crossbeam-channel",
@@ -2104,9 +2104,9 @@ dependencies = [
 
 [[package]]
 name = "glean-core"
-version = "33.10.2"
+version = "33.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1d724cc540f6ee8b8f4a7e2cdf357dd409fe585e453e2e6750c10bd92d5b64f"
+checksum = "470ffc8413e0b28b1f1e093af664aec05bf36303c4cefdeffa38f445385c8d41"
 dependencies = [
  "bincode",
  "chrono",
@@ -2709,7 +2709,6 @@ dependencies = [
  "atomic_refcell",
  "crossbeam-utils 0.6.5",
  "cstr",
- "failure",
  "lazy_static",
  "libc",
  "log",
@@ -2720,6 +2719,7 @@ dependencies = [
  "storage_variant",
  "tempfile",
  "thin-vec",
+ "thiserror",
  "xpcom",
 ]
 
@@ -4355,15 +4355,14 @@ checksum = "7c2b29d87cfbdce39849012bb5020fff88b8f01f4f5b55846a0b6ef360774eae"
 
 [[package]]
 name = "rkv"
-version = "0.16.1"
+version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "917d7a01f8c1ae46226e9d8dd24314279be7b04dfd0b24340d420e6927c2e687"
+checksum = "28e2e15d3fff125cfc4fb3f1b226ff83af057c4715061ded16193b7142beefc9"
 dependencies = [
  "arrayref",
  "bincode",
  "bitflags",
  "byteorder",
- "failure",
  "id-arena",
  "lazy_static",
  "lmdb-rkv",
@@ -4372,6 +4371,7 @@ dependencies = [
  "paste",
  "serde",
  "serde_derive",
+ "thiserror",
  "url",
  "uuid",
 ]
@@ -6139,7 +6139,6 @@ version = "0.1.0"
 dependencies = [
  "crossbeam-utils 0.6.5",
  "cstr",
- "failure",
  "libc",
  "log",
  "moz_task",
@@ -6149,6 +6148,7 @@ dependencies = [
  "rkv",
  "serde_json",
  "tempfile",
+ "thiserror",
  "xpcom",
 ]
 

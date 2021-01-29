@@ -6,8 +6,6 @@ extern crate atomic_refcell;
 extern crate crossbeam_utils;
 #[macro_use]
 extern crate cstr;
-#[macro_use]
-extern crate failure;
 extern crate libc;
 extern crate log;
 extern crate moz_task;
@@ -17,6 +15,7 @@ extern crate rkv;
 extern crate storage_variant;
 extern crate tempfile;
 extern crate thin_vec;
+extern crate thiserror;
 extern crate xpcom;
 
 mod error;

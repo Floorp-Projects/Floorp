@@ -9,49 +9,50 @@ use nserror::{
 use nsstring::nsCString;
 use rkv::{MigrateError, StoreError};
 use std::{io::Error as IoError, str::Utf8Error, string::FromUtf16Error, sync::PoisonError};
+use thiserror::Error;
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 pub enum KeyValueError {
-    #[fail(display = "error converting string: {:?}", _0)]
-    ConvertBytes(Utf8Error),
+    #[error("error converting string: {0:?}")]
+    ConvertBytes(#[from] Utf8Error),
 
-    #[fail(display = "error converting string: {:?}", _0)]
-    ConvertString(FromUtf16Error),
+    #[error("error converting string: {0:?}")]
+    ConvertString(#[from] FromUtf16Error),
 
-    #[fail(display = "I/O error: {:?}", _0)]
-    IoError(IoError),
+    #[error("I/O error: {0:?}")]
+    IoError(#[from] IoError),
 
-    #[fail(display = "migrate error: {:?}", _0)]
-    MigrateError(MigrateError),
+    #[error("migrate error: {0:?}")]
+    MigrateError(#[from] MigrateError),
 
-    #[fail(display = "no interface '{}'", _0)]
+    #[error("no interface '{0}'")]
     NoInterface(&'static str),
 
     // NB: We can avoid storing the nsCString error description
     // once nsresult is a real type with a Display implementation
     // per https://bugzilla.mozilla.org/show_bug.cgi?id=1513350.
-    #[fail(display = "error result {}", _0)]
+    #[error("error result {0}")]
     Nsresult(nsCString, nsresult),
 
-    #[fail(display = "arg is null")]
+    #[error("arg is null")]
     NullPointer,
 
-    #[fail(display = "poison error getting read/write lock")]
+    #[error("poison error getting read/write lock")]
     PoisonError,
 
-    #[fail(display = "error reading key/value pair")]
+    #[error("error reading key/value pair")]
     Read,
 
-    #[fail(display = "store error: {:?}", _0)]
-    StoreError(StoreError),
+    #[error("store error: {0:?}")]
+    StoreError(#[from] StoreError),
 
-    #[fail(display = "unsupported owned value type")]
+    #[error("unsupported owned value type")]
     UnsupportedOwned,
 
-    #[fail(display = "unexpected value")]
+    #[error("unexpected value")]
     UnexpectedValue,
 
-    #[fail(display = "unsupported variant type: {}", _0)]
+    #[error("unsupported variant type: {0}")]
     UnsupportedVariant(u16),
 }
 
@@ -78,36 +79,6 @@ impl From<KeyValueError> for nsresult {
             KeyValueError::UnexpectedValue => NS_ERROR_UNEXPECTED,
             KeyValueError::UnsupportedVariant(_) => NS_ERROR_NOT_IMPLEMENTED,
         }
-    }
-}
-
-impl From<IoError> for KeyValueError {
-    fn from(err: IoError) -> KeyValueError {
-        KeyValueError::IoError(err)
-    }
-}
-
-impl From<StoreError> for KeyValueError {
-    fn from(err: StoreError) -> KeyValueError {
-        KeyValueError::StoreError(err)
-    }
-}
-
-impl From<MigrateError> for KeyValueError {
-    fn from(err: MigrateError) -> KeyValueError {
-        KeyValueError::MigrateError(err)
-    }
-}
-
-impl From<Utf8Error> for KeyValueError {
-    fn from(err: Utf8Error) -> KeyValueError {
-        KeyValueError::ConvertBytes(err)
-    }
-}
-
-impl From<FromUtf16Error> for KeyValueError {
-    fn from(err: FromUtf16Error) -> KeyValueError {
-        KeyValueError::ConvertString(err)
     }
 }
 

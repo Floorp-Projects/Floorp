@@ -47,8 +47,6 @@ There are several features that you can opt-in and out of when using rkv:
 
 By default, `db-dup-sort` and `db-int-key` features offer high level database APIs which allow multiple values per key, and optimizations around integer-based keys respectively. Opt out of these default features when specifying the rkv dependency in your Cargo.toml file to disable them; doing so avoids a certain amount of overhead required to support them.
 
-If you specify the `backtrace` feature, backtraces will be enabled in "failure" errors. This feature is disabled by default.
-
 To aid fuzzing efforts, `with-asan`, `with-fuzzer`, and `with-fuzzer-no-link` configure the build scripts responsible with compiling the underlying backing engines (e.g. LMDB) to build with these LLMV features enabled. Please refer to the official LLVM/Clang documentation on them for more informatiuon. These features are also disabled by default.
 
 ## Test
