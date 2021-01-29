@@ -138,8 +138,9 @@ struct CompilationInput {
 
   ScriptSourceHolder source_;
 
-  //  * If we're compiling standalone function, the non-null enclosing scope of
-  //    the function
+  //  * If we're compiling standalone function, an empty global scope.
+  //  * If we're compiling standalone function in scope, the non-null enclosing
+  //    scope of the function
   //  * If we're compiling eval, the non-null enclosing scope of the `eval`.
   //  * If we're compiling module, null that means empty global scope
   //    (See EmitterScope::checkEnvironmentChainLength)
@@ -174,8 +175,16 @@ struct CompilationInput {
     return true;
   }
 
-  bool initForStandaloneFunction(JSContext* cx,
-                                 HandleScope functionEnclosingScope) {
+  bool initForStandaloneFunction(JSContext* cx) {
+    if (!initScriptSource(cx)) {
+      return false;
+    }
+    enclosingScope = &cx->global()->emptyGlobalScope();
+    return true;
+  }
+
+  bool initForStandaloneFunctionInNonSyntacticScope(
+      JSContext* cx, HandleScope functionEnclosingScope) {
     if (!initScriptSource(cx)) {
       return false;
     }

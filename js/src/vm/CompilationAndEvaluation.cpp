@@ -319,18 +319,18 @@ class FunctionCompiler {
     }
 
     RootedObject enclosingEnv(cx_);
-    RootedScope enclosingScope(cx_);
+    ScopeKind kind;
     if (envChain.empty()) {
       // A compiled function has a burned-in environment chain, so if no exotic
       // environment was requested, we can use the global lexical environment
       // directly and not need to worry about any potential non-syntactic scope.
       enclosingEnv.set(&cx_->global()->lexicalEnvironment());
-      enclosingScope.set(&cx_->global()->emptyGlobalScope());
+      kind = ScopeKind::Global;
     } else {
-      if (!CreateNonSyntacticEnvironmentChain(cx_, envChain, &enclosingEnv,
-                                              &enclosingScope)) {
+      if (!CreateNonSyntacticEnvironmentChain(cx_, envChain, &enclosingEnv)) {
         return nullptr;
       }
+      kind = ScopeKind::NonSyntactic;
     }
 
     cx_->check(enclosingEnv);
@@ -338,17 +338,28 @@ class FunctionCompiler {
     // Make sure the static scope chain matches up when we have a
     // non-syntactic scope.
     MOZ_ASSERT_IF(!IsGlobalLexicalEnvironment(enclosingEnv),
-                  enclosingScope->hasOnChain(ScopeKind::NonSyntactic));
+                  kind == ScopeKind::NonSyntactic);
 
     CompileOptions options(cx_, optionsArg);
-    options.setNonSyntacticScope(
-        enclosingScope->hasOnChain(ScopeKind::NonSyntactic));
+    options.setNonSyntacticScope(kind == ScopeKind::NonSyntactic);
 
     FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Statement;
-    RootedFunction fun(
-        cx_, js::frontend::CompileStandaloneFunction(
-                 cx_, options, newSrcBuf, mozilla::Some(parameterListEnd_),
-                 syntaxKind, enclosingScope));
+    RootedFunction fun(cx_);
+    if (kind == ScopeKind::NonSyntactic) {
+      RootedScope enclosingScope(
+          cx_, GlobalScope::createEmpty(cx_, ScopeKind::NonSyntactic));
+      if (!enclosingScope) {
+        return nullptr;
+      }
+
+      fun = js::frontend::CompileStandaloneFunctionInNonSyntacticScope(
+          cx_, options, newSrcBuf, mozilla::Some(parameterListEnd_), syntaxKind,
+          enclosingScope);
+    } else {
+      fun = js::frontend::CompileStandaloneFunction(
+          cx_, options, newSrcBuf, mozilla::Some(parameterListEnd_),
+          syntaxKind);
+    }
     if (!fun) {
       return nullptr;
     }
@@ -437,8 +448,7 @@ MOZ_NEVER_INLINE static bool ExecuteScript(JSContext* cx, HandleObject envChain,
 static bool ExecuteScript(JSContext* cx, HandleObjectVector envChain,
                           HandleScript script, MutableHandleValue rval) {
   RootedObject env(cx);
-  RootedScope dummy(cx);
-  if (!CreateNonSyntacticEnvironmentChain(cx, envChain, &env, &dummy)) {
+  if (!CreateNonSyntacticEnvironmentChain(cx, envChain, &env)) {
     return false;
   }
 
@@ -551,12 +561,12 @@ JS_PUBLIC_API bool JS::Evaluate(JSContext* cx, HandleObjectVector envChain,
                                 SourceText<char16_t>& srcBuf,
                                 MutableHandleValue rval) {
   RootedObject env(cx);
-  RootedScope scope(cx);
-  if (!CreateNonSyntacticEnvironmentChain(cx, envChain, &env, &scope)) {
+  if (!CreateNonSyntacticEnvironmentChain(cx, envChain, &env)) {
     return false;
   }
 
-  return EvaluateSourceBuffer(cx, scope->kind(), env, options, srcBuf, rval);
+  return EvaluateSourceBuffer(cx, ScopeKind::NonSyntactic, env, options, srcBuf,
+                              rval);
 }
 
 JS_PUBLIC_API bool JS::EvaluateUtf8Path(
