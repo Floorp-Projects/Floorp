@@ -632,7 +632,10 @@ if __name__ == "__main__":
         help="Skip tar packaging stage",
     )
     parser.add_argument(
-        "--skip-patch", required=False, action="store_true", help="Do not patch source",
+        "--skip-patch",
+        required=False,
+        action="store_true",
+        help="Do not patch source",
     )
 
     args = parser.parse_args()
