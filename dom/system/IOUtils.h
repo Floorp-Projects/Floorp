@@ -113,8 +113,7 @@ class IOUtils final {
 
   static already_AddRefed<Promise> SetPermissions(GlobalObject& aGlobal,
                                                   const nsAString& aPath,
-                                                  uint32_t aPermissions,
-                                                  const bool aHonorUmask);
+                                                  const uint32_t aPermissions);
 
   static already_AddRefed<Promise> Exists(GlobalObject& aGlobal,
                                           const nsAString& aPath);
