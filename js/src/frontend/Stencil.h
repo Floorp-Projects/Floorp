@@ -635,7 +635,7 @@ class TaggedScriptThingIndex {
   TaggedScriptThingIndex() : data_(NullTag) {}
 
   explicit TaggedScriptThingIndex(TaggedParserAtomIndex index)
-      : data_(*index.rawData()) {}
+      : data_(index.rawData()) {}
   explicit TaggedScriptThingIndex(BigIntIndex index)
       : data_(uint32_t(index) | BigIntTag) {
     MOZ_ASSERT(uint32_t(index) < IndexLimit);
@@ -689,7 +689,8 @@ class TaggedScriptThingIndex {
   ScopeIndex toScope() const { return ScopeIndex(data_ & IndexMask); }
   ScriptIndex toFunction() const { return ScriptIndex(data_ & IndexMask); }
 
-  uint32_t* rawData() { return &data_; }
+  uint32_t* rawDataRef() { return &data_; }
+  uint32_t rawData() const { return data_; }
 
   Kind tag() const { return Kind((data_ & TagMask) >> TagShift); }
 

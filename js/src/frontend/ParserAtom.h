@@ -193,7 +193,8 @@ class TaggedParserAtomIndex {
     return StaticParserString2(data_ & SmallIndexMask);
   }
 
-  uint32_t* rawData() { return &data_; }
+  uint32_t* rawDataRef() { return &data_; }
+  uint32_t rawData() const { return data_; }
 
   bool operator==(const TaggedParserAtomIndex& rhs) const {
     return data_ == rhs.data_;
