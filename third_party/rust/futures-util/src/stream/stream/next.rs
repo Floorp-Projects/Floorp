@@ -15,7 +15,7 @@ impl<St: ?Sized + Unpin> Unpin for Next<'_, St> {}
 
 impl<'a, St: ?Sized + Stream + Unpin> Next<'a, St> {
     pub(super) fn new(stream: &'a mut St) -> Self {
-        Next { stream }
+        Self { stream }
     }
 }
 

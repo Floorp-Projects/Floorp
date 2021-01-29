@@ -63,7 +63,7 @@ pub(super) enum PopResult<T> {
 
 #[derive(Debug)]
 struct Node<T> {
-    next: AtomicPtr<Node<T>>,
+    next: AtomicPtr<Self>,
     value: Option<T>,
 }
 
@@ -80,8 +80,8 @@ unsafe impl<T: Send> Send for Queue<T> { }
 unsafe impl<T: Send> Sync for Queue<T> { }
 
 impl<T> Node<T> {
-    unsafe fn new(v: Option<T>) -> *mut Node<T> {
-        Box::into_raw(Box::new(Node {
+    unsafe fn new(v: Option<T>) -> *mut Self {
+        Box::into_raw(Box::new(Self {
             next: AtomicPtr::new(ptr::null_mut()),
             value: v,
         }))
@@ -91,9 +91,9 @@ impl<T> Node<T> {
 impl<T> Queue<T> {
     /// Creates a new queue that is safe to share among multiple producers and
     /// one consumer.
-    pub(super) fn new() -> Queue<T> {
+    pub(super) fn new() -> Self {
         let stub = unsafe { Node::new(None) };
-        Queue {
+        Self {
             head: AtomicPtr::new(stub),
             tail: UnsafeCell::new(stub),
         }

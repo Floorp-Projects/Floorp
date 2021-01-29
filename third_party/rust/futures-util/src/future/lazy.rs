@@ -49,6 +49,6 @@ impl<F, R> Future for Lazy<F>
     type Output = R;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<R> {
-        Poll::Ready((self.f.take().unwrap())(cx))
+        Poll::Ready((self.f.take().expect("Lazy polled after completion"))(cx))
     }
 }

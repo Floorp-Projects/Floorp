@@ -256,6 +256,7 @@ fn stress_shared_bounded_hard() {
     t.join().unwrap();
 }
 
+#[allow(clippy::same_item_push)]
 #[test]
 fn stress_receiver_multi_task_bounded_hard() {
     const AMT: usize = 10_000;
@@ -394,6 +395,7 @@ async fn stress_poll_ready_sender(mut sender: mpsc::Sender<u32>, count: u32) {
 }
 
 /// Tests that after `poll_ready` indicates capacity a channel can always send without waiting.
+#[allow(clippy::same_item_push)]
 #[test]
 fn stress_poll_ready() {
     const AMT: u32 = 1000;
@@ -525,6 +527,17 @@ fn same_receiver() {
 
     assert!(!txa1.same_receiver(&txa2));
     assert!(txb1.same_receiver(&txb2));
+}
+
+#[test]
+fn is_connected_to() {
+    let (txa, rxa) = mpsc::channel::<i32>(1);
+    let (txb, rxb) = mpsc::channel::<i32>(1);
+
+    assert!(txa.is_connected_to(&rxa));
+    assert!(txb.is_connected_to(&rxb));
+    assert!(!txa.is_connected_to(&rxb));
+    assert!(!txb.is_connected_to(&rxa));
 }
 
 #[test]

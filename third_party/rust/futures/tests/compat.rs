@@ -1,5 +1,3 @@
-#![cfg(feature = "compat")]
-
 use tokio::timer::Delay;
 use tokio::runtime::Runtime;
 use std::time::Instant;

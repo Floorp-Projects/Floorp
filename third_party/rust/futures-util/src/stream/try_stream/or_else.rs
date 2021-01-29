@@ -1,21 +1,24 @@
 use core::fmt;
 use core::pin::Pin;
 use futures_core::future::TryFuture;
+use futures_core::ready;
 use futures_core::stream::{Stream, TryStream, FusedStream};
 use futures_core::task::{Context, Poll};
 #[cfg(feature = "sink")]
 use futures_sink::Sink;
-use pin_utils::{unsafe_pinned, unsafe_unpinned};
+use pin_project_lite::pin_project;
 
-/// Stream for the [`or_else`](super::TryStreamExt::or_else) method.
-#[must_use = "streams do nothing unless polled"]
-pub struct OrElse<St, Fut, F> {
-    stream: St,
-    future: Option<Fut>,
-    f: F,
+pin_project! {
+    /// Stream for the [`or_else`](super::TryStreamExt::or_else) method.
+    #[must_use = "streams do nothing unless polled"]
+    pub struct OrElse<St, Fut, F> {
+        #[pin]
+        stream: St,
+        #[pin]
+        future: Option<Fut>,
+        f: F,
+    }
 }
-
-impl<St: Unpin, Fut: Unpin, F> Unpin for OrElse<St, Fut, F> {}
 
 impl<St, Fut, F> fmt::Debug for OrElse<St, Fut, F>
 where
@@ -30,12 +33,6 @@ where
     }
 }
 
-impl<St, Fut, F> OrElse<St, Fut, F> {
-    unsafe_pinned!(stream: St);
-    unsafe_pinned!(future: Option<Fut>);
-    unsafe_unpinned!(f: F);
-}
-
 impl<St, Fut, F> OrElse<St, Fut, F>
     where St: TryStream,
           F: FnMut(St::Error) -> Fut,
@@ -45,37 +42,7 @@ impl<St, Fut, F> OrElse<St, Fut, F>
         Self { stream, future: None, f }
     }
 
-    /// Acquires a reference to the underlying stream that this combinator is
-    /// pulling from.
-    pub fn get_ref(&self) -> &St {
-        &self.stream
-    }
-
-    /// Acquires a mutable reference to the underlying stream that this
-    /// combinator is pulling from.
-    ///
-    /// Note that care must be taken to avoid tampering with the state of the
-    /// stream which may otherwise confuse this combinator.
-    pub fn get_mut(&mut self) -> &mut St {
-        &mut self.stream
-    }
-
-    /// Acquires a pinned mutable reference to the underlying stream that this
-    /// combinator is pulling from.
-    ///
-    /// Note that care must be taken to avoid tampering with the state of the
-    /// stream which may otherwise confuse this combinator.
-    pub fn get_pin_mut(self: Pin<&mut Self>) -> Pin<&mut St> {
-        self.stream()
-    }
-
-    /// Consumes this combinator, returning the underlying stream.
-    ///
-    /// Note that this may discard intermediate state of this combinator, so
-    /// care should be taken to avoid losing resources when this is called.
-    pub fn into_inner(self) -> St {
-        self.stream
-    }
+    delegate_access_inner!(stream, St, ());
 }
 
 impl<St, Fut, F> Stream for OrElse<St, Fut, F>
@@ -86,22 +53,26 @@ impl<St, Fut, F> Stream for OrElse<St, Fut, F>
     type Item = Result<St::Ok, Fut::Error>;
 
     fn poll_next(
-        mut self: Pin<&mut Self>,
+        self: Pin<&mut Self>,
         cx: &mut Context<'_>,
     ) -> Poll<Option<Self::Item>> {
-        if self.future.is_none() {
-            let item = match ready!(self.as_mut().stream().try_poll_next(cx)) {
-                None => return Poll::Ready(None),
-                Some(Ok(e)) => return Poll::Ready(Some(Ok(e))),
-                Some(Err(e)) => e,
-            };
-            let fut = (self.as_mut().f())(item);
-            self.as_mut().future().set(Some(fut));
-        }
+        let mut this = self.project();
 
-        let e = ready!(self.as_mut().future().as_pin_mut().unwrap().try_poll(cx));
-        self.as_mut().future().set(None);
-        Poll::Ready(Some(e))
+        Poll::Ready(loop {
+            if let Some(fut) = this.future.as_mut().as_pin_mut() {
+                let item = ready!(fut.try_poll(cx));
+                this.future.set(None);
+                break Some(item);
+            } else {
+                match ready!(this.stream.as_mut().try_poll_next(cx)) {
+                    Some(Ok(item)) => break Some(Ok(item)),
+                    Some(Err(e)) => {
+                        this.future.set(Some((this.f)(e)));
+                    },
+                    None => break None,
+                }
+            }
+        })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {

@@ -1,14 +1,14 @@
-use std::sync::atomic::AtomicUsize;
-use std::sync::atomic::Ordering;
-use std::sync::Arc;
-use std::thread;
-
-use futures::executor::block_on;
-use futures::future::poll_fn;
-use futures::task::{AtomicWaker, Poll};
-
 #[test]
 fn basic() {
+    use std::sync::atomic::AtomicUsize;
+    use std::sync::atomic::Ordering;
+    use std::sync::Arc;
+    use std::thread;
+
+    use futures::executor::block_on;
+    use futures::future::poll_fn;
+    use futures::task::{AtomicWaker, Poll};
+
     let atomic_waker = Arc::new(AtomicWaker::new());
     let atomic_waker_copy = atomic_waker.clone();
 

@@ -29,8 +29,8 @@ struct LockStream {
 }
 
 impl LockStream {
-    fn new(lock: BiLock<u32>) -> LockStream {
-        LockStream {
+    fn new(lock: BiLock<u32>) -> Self {
+        Self {
             lock: lock.lock()
         }
     }
