@@ -98,7 +98,7 @@ bool WebrtcAudioConduit::SetLocalSSRCs(const std::vector<uint32_t>& aSSRCs,
 }
 
 std::vector<uint32_t> WebrtcAudioConduit::GetLocalSSRCs() {
-  MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(NS_IsMainThread());
   return std::vector<uint32_t>(1, mRecvStreamConfig.rtp.local_ssrc);
 }
 
