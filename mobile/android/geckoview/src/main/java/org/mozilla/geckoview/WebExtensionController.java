@@ -1227,7 +1227,6 @@ public class WebExtensionController {
 
         final WebExtension.Action action = new WebExtension.Action(
                 actionType, message.bundle.getBundle("action"), extension);
-        final String popupUri = message.bundle.getString("popupUri");
 
         final WebExtension.ActionDelegate delegate = actionDelegateFor(extension, message.session);
         if (delegate == null) {
@@ -1235,7 +1234,7 @@ public class WebExtensionController {
         }
 
         final GeckoResult<GeckoSession> popup = delegate.onOpenPopup(extension, action);
-        action.openPopup(popup, popupUri);
+        action.openPopup(popup);
     }
 
     private WebExtension.ActionDelegate actionDelegateFor(final WebExtension extension,
