@@ -3330,6 +3330,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
 }
 
 void ParserBase::setFunctionEndFromCurrentToken(FunctionBox* funbox) const {
+  MOZ_ASSERT(anyChars.currentToken().type != TokenKind::Eof);
   funbox->setEnd(anyChars.currentToken().pos.end);
 }
 
@@ -9457,6 +9458,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::optionalExpr(
     }
 
     if (tt == TokenKind::Eof) {
+      anyChars.ungetToken();
       break;
     }
 
@@ -9895,6 +9897,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
       return null();
     }
     if (tt == TokenKind::Eof) {
+      anyChars.ungetToken();
       break;
     }
 
