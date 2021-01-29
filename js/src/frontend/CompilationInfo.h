@@ -130,6 +130,17 @@ struct CompilationAtomCache {
 
 // Input of the compilation, including source and enclosing context.
 struct CompilationInput {
+  enum class CompilationTarget {
+    Global,
+    SelfHosting,
+    StandaloneFunction,
+    StandaloneFunctionInNonSyntacticScope,
+    Eval,
+    Module,
+    Delazification,
+  };
+  CompilationTarget target = CompilationTarget::Global;
+
   const JS::ReadOnlyCompileOptions& options;
 
   CompilationAtomCache atomCache;
@@ -158,9 +169,13 @@ struct CompilationInput {
   bool initScriptSource(JSContext* cx);
 
  public:
-  bool initForGlobal(JSContext* cx) { return initScriptSource(cx); }
+  bool initForGlobal(JSContext* cx) {
+    target = CompilationTarget::Global;
+    return initScriptSource(cx);
+  }
 
   bool initForSelfHostingGlobal(JSContext* cx) {
+    target = CompilationTarget::SelfHosting;
     if (!initScriptSource(cx)) {
       return false;
     }
@@ -176,6 +191,7 @@ struct CompilationInput {
   }
 
   bool initForStandaloneFunction(JSContext* cx) {
+    target = CompilationTarget::StandaloneFunction;
     if (!initScriptSource(cx)) {
       return false;
     }
@@ -185,6 +201,7 @@ struct CompilationInput {
 
   bool initForStandaloneFunctionInNonSyntacticScope(
       JSContext* cx, HandleScope functionEnclosingScope) {
+    target = CompilationTarget::StandaloneFunctionInNonSyntacticScope;
     if (!initScriptSource(cx)) {
       return false;
     }
@@ -193,6 +210,7 @@ struct CompilationInput {
   }
 
   bool initForEval(JSContext* cx, HandleScope evalEnclosingScope) {
+    target = CompilationTarget::Eval;
     if (!initScriptSource(cx)) {
       return false;
     }
@@ -201,6 +219,7 @@ struct CompilationInput {
   }
 
   bool initForModule(JSContext* cx) {
+    target = CompilationTarget::Module;
     if (!initScriptSource(cx)) {
       return false;
     }
@@ -209,6 +228,7 @@ struct CompilationInput {
   }
 
   void initFromLazy(BaseScript* lazyScript) {
+    target = CompilationTarget::Delazification;
     lazy = lazyScript;
     enclosingScope = lazy->function()->enclosingScope();
   }
