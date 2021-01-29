@@ -1955,6 +1955,14 @@ impl Renderer {
                 let compositor = self.compositor_config.compositor().unwrap();
                 let surface_size = self.debug_overlay_state.current_size.unwrap();
 
+                // Ensure old surface is invalidated before binding
+                compositor.invalidate_tile(
+                    NativeTileId::DEBUG_OVERLAY,
+                    DeviceIntRect::new(
+                        DeviceIntPoint::zero(),
+                        surface_size,
+                    ),
+                );
                 // Bind the native surface
                 let surface_info = compositor.bind(
                     NativeTileId::DEBUG_OVERLAY,
