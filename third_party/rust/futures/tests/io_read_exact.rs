@@ -1,8 +1,8 @@
-use futures::executor::block_on;
-use futures::io::AsyncReadExt;
-
 #[test]
 fn read_exact() {
+    use futures::executor::block_on;
+    use futures::io::AsyncReadExt;
+
     let mut reader: &[u8] = &[1, 2, 3, 4, 5];
     let mut out = [0u8; 3];
 

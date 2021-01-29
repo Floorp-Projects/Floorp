@@ -15,6 +15,10 @@ NODEJS_PATH = None
 if "MOZ_FETCHES_DIR" in os.environ:
     NODEJS_PATH = os.path.join(os.environ["MOZ_FETCHES_DIR"], "node/node.exe")
 
+PYWIN32 = "pypiwin32==219"
+if sys.version_info > (3, 0):
+    PYWIN32 = "pywin32==300"
+
 XPCSHELL_NAME = "xpcshell.exe"
 EXE_SUFFIX = ".exe"
 DISABLE_SCREEN_SAVER = False
@@ -39,7 +43,7 @@ config = {
     "installer_path": INSTALLER_PATH,
     "binary_path": BINARY_PATH,
     "xpcshell_name": XPCSHELL_NAME,
-    "virtualenv_modules": ["pypiwin32==219", "six==1.13.0", "vcversioner==2.16.0.0"],
+    "virtualenv_modules": [PYWIN32, "six==1.13.0", "vcversioner==2.16.0.0"],
     "virtualenv_path": "venv",
     "exe_suffix": EXE_SUFFIX,
     "run_file_names": {

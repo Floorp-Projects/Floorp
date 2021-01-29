@@ -4,8 +4,8 @@
 #[macro_export]
 macro_rules! ready {
     ($e:expr $(,)?) => (match $e {
-        $crate::core_reexport::task::Poll::Ready(t) => t,
-        $crate::core_reexport::task::Poll::Pending =>
-            return $crate::core_reexport::task::Poll::Pending,
+        $crate::__private::Poll::Ready(t) => t,
+        $crate::__private::Poll::Pending =>
+            return $crate::__private::Poll::Pending,
     })
 }

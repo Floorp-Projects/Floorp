@@ -1,6 +1,8 @@
 /// Pins a value on the stack.
 ///
-/// ```
+/// # Example
+///
+/// ```rust
 /// # use pin_utils::pin_mut;
 /// # use core::pin::Pin;
 /// # struct Foo {}
@@ -10,7 +12,7 @@
 /// ```
 #[macro_export]
 macro_rules! pin_mut {
-    ($($x:ident),*) => { $(
+    ($($x:ident),* $(,)?) => { $(
         // Move the value to ensure that it is owned
         let mut $x = $x;
         // Shadow the original binding so that it can't be directly accessed

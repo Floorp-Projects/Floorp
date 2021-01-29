@@ -1,60 +1,77 @@
-use futures::task::{self, ArcWake, Waker};
-use std::sync::{Arc, Mutex};
+mod countingwaker {
+    use futures::task::{self, ArcWake, Waker};
+    use std::sync::{Arc, Mutex};
 
-struct CountingWaker {
-    nr_wake: Mutex<i32>,
-}
+    struct CountingWaker {
+        nr_wake: Mutex<i32>,
+    }
 
-impl CountingWaker {
-    fn new() -> CountingWaker {
-        CountingWaker {
-            nr_wake: Mutex::new(0),
+    impl CountingWaker {
+        fn new() -> Self {
+            Self {
+                nr_wake: Mutex::new(0),
+            }
+        }
+
+        fn wakes(&self) -> i32 {
+            *self.nr_wake.lock().unwrap()
         }
     }
 
-    fn wakes(&self) -> i32 {
-        *self.nr_wake.lock().unwrap()
+    impl ArcWake for CountingWaker {
+        fn wake_by_ref(arc_self: &Arc<Self>) {
+            let mut lock = arc_self.nr_wake.lock().unwrap();
+            *lock += 1;
+        }
     }
-}
 
-impl ArcWake for CountingWaker {
-    fn wake_by_ref(arc_self: &Arc<Self>) {
-        let mut lock = arc_self.nr_wake.lock().unwrap();
-        *lock += 1;
+    #[test]
+    fn create_from_arc() {
+        let some_w = Arc::new(CountingWaker::new());
+
+        let w1: Waker = task::waker(some_w.clone());
+        assert_eq!(2, Arc::strong_count(&some_w));
+        w1.wake_by_ref();
+        assert_eq!(1, some_w.wakes());
+
+        let w2 = w1.clone();
+        assert_eq!(3, Arc::strong_count(&some_w));
+
+        w2.wake_by_ref();
+        assert_eq!(2, some_w.wakes());
+
+        drop(w2);
+        assert_eq!(2, Arc::strong_count(&some_w));
+        drop(w1);
+        assert_eq!(1, Arc::strong_count(&some_w));
     }
-}
 
-#[test]
-fn create_waker_from_arc() {
-    let some_w = Arc::new(CountingWaker::new());
+    #[test]
+    fn ref_wake_same() {
+        let some_w = Arc::new(CountingWaker::new());
 
-    let w1: Waker = task::waker(some_w.clone());
-    assert_eq!(2, Arc::strong_count(&some_w));
-    w1.wake_by_ref();
-    assert_eq!(1, some_w.wakes());
+        let w1: Waker = task::waker(some_w.clone());
+        let w2 = task::waker_ref(&some_w);
+        let w3 = w2.clone();
 
-    let w2 = w1.clone();
-    assert_eq!(3, Arc::strong_count(&some_w));
-
-    w2.wake_by_ref();
-    assert_eq!(2, some_w.wakes());
-
-    drop(w2);
-    assert_eq!(2, Arc::strong_count(&some_w));
-    drop(w1);
-    assert_eq!(1, Arc::strong_count(&some_w));
-}
-
-struct PanicWaker;
-
-impl ArcWake for PanicWaker {
-    fn wake_by_ref(_arc_self: &Arc<Self>) {
-        panic!("WAKE UP");
+        assert!(w1.will_wake(&w2));
+        assert!(w2.will_wake(&w3));
     }
 }
 
 #[test]
 fn proper_refcount_on_wake_panic() {
+    use futures::task::{self, ArcWake, Waker};
+    use std::sync::Arc;
+
+    struct PanicWaker;
+
+    impl ArcWake for PanicWaker {
+        fn wake_by_ref(_arc_self: &Arc<Self>) {
+            panic!("WAKE UP");
+        }
+    }
+
     let some_w = Arc::new(PanicWaker);
 
     let w1: Waker = task::waker(some_w.clone());
@@ -62,16 +79,4 @@ fn proper_refcount_on_wake_panic() {
     assert_eq!(2, Arc::strong_count(&some_w)); // some_w + w1
     drop(w1);
     assert_eq!(1, Arc::strong_count(&some_w)); // some_w
-}
-
-#[test]
-fn waker_ref_wake_same() {
-    let some_w = Arc::new(CountingWaker::new());
-
-    let w1: Waker = task::waker(some_w.clone());
-    let w2 = task::waker_ref(&some_w);
-    let w3 = w2.clone();
-
-    assert!(w1.will_wake(&w2));
-    assert!(w2.will_wake(&w3));
 }

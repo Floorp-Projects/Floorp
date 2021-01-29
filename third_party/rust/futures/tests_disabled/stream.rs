@@ -66,8 +66,8 @@ fn map_err() {
 struct FromErrTest(u32);
 
 impl From<u32> for FromErrTest {
-    fn from(i: u32) -> FromErrTest {
-        FromErrTest(i)
+    fn from(i: u32) -> Self {
+        Self(i)
     }
 }
 

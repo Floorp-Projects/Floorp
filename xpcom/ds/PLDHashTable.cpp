@@ -500,86 +500,24 @@ PLDHashEntryHdr* PLDHashTable::Search(const void* aKey) const {
 }
 
 PLDHashEntryHdr* PLDHashTable::Add(const void* aKey,
-                                   const mozilla::fallible_t&) {
-#ifdef MOZ_HASH_TABLE_CHECKS_ENABLED
-  AutoWriteOp op(mChecker);
-#endif
-
-  // Allocate the entry storage if it hasn't already been allocated.
-  if (!mEntryStore.IsAllocated()) {
-    uint32_t nbytes;
-    // We already checked this in the constructor, so it must still be true.
-    MOZ_RELEASE_ASSERT(
-        SizeOfEntryStore(CapacityFromHashShift(), mEntrySize, &nbytes));
-    mEntryStore.Set((char*)calloc(1, nbytes), &mGeneration);
-    if (!mEntryStore.IsAllocated()) {
-      return nullptr;
-    }
+                                   const mozilla::fallible_t& aFallible) {
+  auto maybeEntryHandle = MakeEntryHandle(aKey, aFallible);
+  if (!maybeEntryHandle) {
+    return nullptr;
   }
-
-  // If alpha is >= .75, grow or compress the table. If aKey is already in the
-  // table, we may grow once more than necessary, but only if we are on the
-  // edge of being overloaded.
-  uint32_t capacity = Capacity();
-  if (mEntryCount + mRemovedCount >= MaxLoad(capacity)) {
-    // Compress if a quarter or more of all entries are removed.
-    int deltaLog2;
-    if (mRemovedCount >= capacity >> 2) {
-      deltaLog2 = 0;
-    } else {
-      deltaLog2 = 1;
-    }
-
-    // Grow or compress the table. If ChangeTable() fails, allow overloading up
-    // to the secondary max. Once we hit the secondary max, return null.
-    if (!ChangeTable(deltaLog2) &&
-        mEntryCount + mRemovedCount >= MaxLoadOnGrowthFailure(capacity)) {
-      return nullptr;
-    }
-  }
-
-  // Look for entry after possibly growing, so we don't have to add it,
-  // then skip it while growing the table and re-add it after.
-  PLDHashNumber keyHash = ComputeKeyHash(aKey);
-  Slot slot = SearchTable<ForAdd>(
-      aKey, keyHash, [&](Slot& found) -> Slot { return found; },
-      [&]() -> Slot {
-        MOZ_CRASH("Nope");
-        return Slot(nullptr, nullptr);
-      });
-  if (!slot.IsLive()) {
-    // Initialize the slot, indicating that it's no longer free.
-    if (slot.IsRemoved()) {
-      mRemovedCount--;
-      keyHash |= kCollisionFlag;
-    }
+  return maybeEntryHandle->OrInsert([&aKey, this](PLDHashEntryHdr* entry) {
     if (mOps->initEntry) {
-      mOps->initEntry(slot.ToEntry(), aKey);
+      mOps->initEntry(entry, aKey);
     }
-    slot.SetKeyHash(keyHash);
-    mEntryCount++;
-  }
-
-  return slot.ToEntry();
+  });
 }
 
 PLDHashEntryHdr* PLDHashTable::Add(const void* aKey) {
-  PLDHashEntryHdr* entry = Add(aKey, fallible);
-  if (!entry) {
-    if (!mEntryStore.IsAllocated()) {
-      // We OOM'd while allocating the initial entry storage.
-      uint32_t nbytes;
-      (void)SizeOfEntryStore(CapacityFromHashShift(), mEntrySize, &nbytes);
-      NS_ABORT_OOM(nbytes);
-    } else {
-      // We failed to resize the existing entry storage, either due to OOM or
-      // because we exceeded the maximum table capacity or size; report it as
-      // an OOM. The multiplication by 2 gets us the size we tried to allocate,
-      // which is double the current size.
-      NS_ABORT_OOM(2 * EntrySize() * EntryCount());
+  return MakeEntryHandle(aKey).OrInsert([&aKey, this](PLDHashEntryHdr* entry) {
+    if (mOps->initEntry) {
+      mOps->initEntry(entry, aKey);
     }
-  }
-  return entry;
+  });
 }
 
 void PLDHashTable::Remove(const void* aKey) {
@@ -669,6 +607,129 @@ size_t PLDHashTable::ShallowSizeOfExcludingThis(
 size_t PLDHashTable::ShallowSizeOfIncludingThis(
     MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this) + ShallowSizeOfExcludingThis(aMallocSizeOf);
+}
+
+mozilla::Maybe<PLDHashTable::EntryHandle> PLDHashTable::MakeEntryHandle(
+    const void* aKey, const mozilla::fallible_t&) {
+#ifdef MOZ_HASH_TABLE_CHECKS_ENABLED
+  mChecker.StartWriteOp();
+  auto endWriteOp = MakeScopeExit([&] { mChecker.EndWriteOp(); });
+#endif
+
+  // Allocate the entry storage if it hasn't already been allocated.
+  if (!mEntryStore.IsAllocated()) {
+    uint32_t nbytes;
+    // We already checked this in the constructor, so it must still be true.
+    MOZ_RELEASE_ASSERT(
+        SizeOfEntryStore(CapacityFromHashShift(), mEntrySize, &nbytes));
+    mEntryStore.Set((char*)calloc(1, nbytes), &mGeneration);
+    if (!mEntryStore.IsAllocated()) {
+      return Nothing();
+    }
+  }
+
+  // If alpha is >= .75, grow or compress the table. If aKey is already in the
+  // table, we may grow once more than necessary, but only if we are on the
+  // edge of being overloaded.
+  uint32_t capacity = Capacity();
+  if (mEntryCount + mRemovedCount >= MaxLoad(capacity)) {
+    // Compress if a quarter or more of all entries are removed.
+    int deltaLog2 = 1;
+    if (mRemovedCount >= capacity >> 2) {
+      deltaLog2 = 0;
+    }
+
+    // Grow or compress the table. If ChangeTable() fails, allow overloading up
+    // to the secondary max. Once we hit the secondary max, return null.
+    if (!ChangeTable(deltaLog2) &&
+        mEntryCount + mRemovedCount >= MaxLoadOnGrowthFailure(capacity)) {
+      return Nothing();
+    }
+  }
+
+  // Look for entry after possibly growing, so we don't have to add it,
+  // then skip it while growing the table and re-add it after.
+  PLDHashNumber keyHash = ComputeKeyHash(aKey);
+  Slot slot = SearchTable<ForAdd>(
+      aKey, keyHash, [](Slot& found) -> Slot { return found; },
+      []() -> Slot {
+        MOZ_CRASH("Nope");
+        return Slot(nullptr, nullptr);
+      });
+
+  // The `EntryHandle` will handle ending the write op when it is destroyed.
+#ifdef MOZ_HASH_TABLE_CHECKS_ENABLED
+  endWriteOp.release();
+#endif
+
+  return Some(EntryHandle{this, keyHash, slot});
+}
+
+PLDHashTable::EntryHandle PLDHashTable::MakeEntryHandle(const void* aKey) {
+  auto res = MakeEntryHandle(aKey, fallible);
+  if (!res) {
+    if (!mEntryStore.IsAllocated()) {
+      // We OOM'd while allocating the initial entry storage.
+      uint32_t nbytes;
+      (void)SizeOfEntryStore(CapacityFromHashShift(), mEntrySize, &nbytes);
+      NS_ABORT_OOM(nbytes);
+    } else {
+      // We failed to resize the existing entry storage, either due to OOM or
+      // because we exceeded the maximum table capacity or size; report it as
+      // an OOM. The multiplication by 2 gets us the size we tried to allocate,
+      // which is double the current size.
+      NS_ABORT_OOM(2 * EntrySize() * EntryCount());
+    }
+  }
+  return res.extract();
+}
+
+PLDHashTable::EntryHandle::EntryHandle(PLDHashTable* aTable,
+                                       PLDHashNumber aKeyHash, Slot aSlot)
+    : mTable(aTable), mKeyHash(aKeyHash), mSlot(aSlot) {}
+
+PLDHashTable::EntryHandle::EntryHandle(EntryHandle&& aOther) noexcept
+    : mTable(std::exchange(aOther.mTable, nullptr)),
+      mKeyHash(aOther.mKeyHash),
+      mSlot(aOther.mSlot) {}
+
+PLDHashTable::EntryHandle::~EntryHandle() {
+  if (!mTable) {
+    return;
+  }
+
+  // If our slot is empty when this `EntryHandle` is destroyed, we may want to
+  // resize our table, as we just removed an entry.
+  if (!HasEntry()) {
+    mTable->ShrinkIfAppropriate();
+  }
+#ifdef MOZ_HASH_TABLE_CHECKS_ENABLED
+  mTable->mChecker.EndWriteOp();
+#endif
+}
+
+void PLDHashTable::EntryHandle::Remove() {
+  MOZ_ASSERT(HasEntry());
+
+  mTable->RawRemove(mSlot);
+}
+
+void PLDHashTable::EntryHandle::OrRemove() {
+  if (HasEntry()) {
+    Remove();
+  }
+}
+
+void PLDHashTable::EntryHandle::OccupySlot() {
+  MOZ_ASSERT(!HasEntry());
+
+  PLDHashNumber keyHash = mKeyHash;
+  if (mSlot.IsRemoved()) {
+    mTable->mRemovedCount--;
+    keyHash |= kCollisionFlag;
+  }
+  mSlot.SetKeyHash(keyHash);
+  mTable->mEntryCount++;
 }
 
 PLDHashTable::Iterator::Iterator(Iterator&& aOther)

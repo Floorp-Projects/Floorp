@@ -1,8 +1,10 @@
 use futures_core::future::Future;
+use futures_core::ready;
 use futures_core::task::{Context, Poll};
 use futures_io::{AsyncBufRead, AsyncWrite};
 use std::io;
 use std::pin::Pin;
+use pin_project_lite::pin_project;
 
 /// Creates a future which copies all the bytes from one object to another.
 ///
@@ -41,23 +43,15 @@ where
     }
 }
 
-/// Future for the [`copy_buf()`] function.
-#[derive(Debug)]
-#[must_use = "futures do nothing unless you `.await` or poll them"]
-pub struct CopyBuf<'a, R, W: ?Sized> {
-    reader: R,
-    writer: &'a mut W,
-    amt: u64,
-}
-
-impl<R: Unpin, W: ?Sized> Unpin for CopyBuf<'_, R, W> {}
-
-impl<R, W: Unpin + ?Sized> CopyBuf<'_, R, W> {
-    fn project(self: Pin<&mut Self>) -> (Pin<&mut R>, Pin<&mut W>, &mut u64) {
-        unsafe {
-            let this = self.get_unchecked_mut();
-            (Pin::new_unchecked(&mut this.reader), Pin::new(&mut *this.writer), &mut this.amt)
-        }
+pin_project! {
+    /// Future for the [`copy_buf()`] function.
+    #[derive(Debug)]
+    #[must_use = "futures do nothing unless you `.await` or poll them"]
+    pub struct CopyBuf<'a, R, W: ?Sized> {
+        #[pin]
+        reader: R,
+        writer: &'a mut W,
+        amt: u64,
     }
 }
 
@@ -68,20 +62,20 @@ impl<R, W> Future for CopyBuf<'_, R, W>
     type Output = io::Result<u64>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        let (mut reader, mut writer, amt) = self.project();
+        let mut this = self.project();
         loop {
-            let buffer = ready!(reader.as_mut().poll_fill_buf(cx))?;
+            let buffer = ready!(this.reader.as_mut().poll_fill_buf(cx))?;
             if buffer.is_empty() {
-                ready!(writer.as_mut().poll_flush(cx))?;
-                return Poll::Ready(Ok(*amt));
+                ready!(Pin::new(&mut this.writer).poll_flush(cx))?;
+                return Poll::Ready(Ok(*this.amt));
             }
 
-            let i = ready!(writer.as_mut().poll_write(cx, buffer))?;
+            let i = ready!(Pin::new(&mut this.writer).poll_write(cx, buffer))?;
             if i == 0 {
                 return Poll::Ready(Err(io::ErrorKind::WriteZero.into()))
             }
-            *amt += i as u64;
-            reader.as_mut().consume(i);
+            *this.amt += i as u64;
+            this.reader.as_mut().consume(i);
         }
     }
 }

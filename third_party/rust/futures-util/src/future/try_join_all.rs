@@ -10,40 +10,7 @@ use core::task::{Context, Poll};
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 
-use super::TryFuture;
-
-#[derive(Debug)]
-enum ElemState<F>
-where
-    F: TryFuture,
-{
-    Pending(F),
-    Done(Option<F::Ok>),
-}
-
-impl<F> ElemState<F>
-where
-    F: TryFuture,
-{
-    fn pending_pin_mut(self: Pin<&mut Self>) -> Option<Pin<&mut F>> {
-        // Safety: Basic enum pin projection, no drop + optionally Unpin based
-        // on the type of this variant
-        match unsafe { self.get_unchecked_mut() } {
-            ElemState::Pending(f) => Some(unsafe { Pin::new_unchecked(f) }),
-            ElemState::Done(_) => None,
-        }
-    }
-
-    fn take_done(self: Pin<&mut Self>) -> Option<F::Ok> {
-        // Safety: Going from pin to a variant we never pin-project
-        match unsafe { self.get_unchecked_mut() } {
-            ElemState::Pending(_) => None,
-            ElemState::Done(output) => output.take(),
-        }
-    }
-}
-
-impl<F> Unpin for ElemState<F> where F: TryFuture + Unpin {}
+use super::{TryFuture, TryMaybeDone};
 
 fn iter_pin_mut<T>(slice: Pin<&mut [T]>) -> impl Iterator<Item = Pin<&mut T>> {
     // Safety: `std` _could_ make this unsound if it were to decide Pin's
@@ -66,7 +33,7 @@ pub struct TryJoinAll<F>
 where
     F: TryFuture,
 {
-    elems: Pin<Box<[ElemState<F>]>>,
+    elems: Pin<Box<[TryMaybeDone<F>]>>,
 }
 
 impl<F> fmt::Debug for TryJoinAll<F>
@@ -125,7 +92,7 @@ where
     I: IntoIterator,
     I::Item: TryFuture,
 {
-    let elems: Box<[_]> = i.into_iter().map(ElemState::Pending).collect();
+    let elems: Box<[_]> = i.into_iter().map(TryMaybeDone::Future).collect();
     TryJoinAll {
         elems: elems.into(),
     }
@@ -140,17 +107,13 @@ where
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let mut state = FinalState::AllDone;
 
-        for mut elem in iter_pin_mut(self.elems.as_mut()) {
-            if let Some(pending) = elem.as_mut().pending_pin_mut() {
-                match pending.try_poll(cx) {
-                    Poll::Pending => state = FinalState::Pending,
-                    Poll::Ready(output) => match output {
-                        Ok(item) => elem.set(ElemState::Done(Some(item))),
-                        Err(e) => {
-                            state = FinalState::Error(e);
-                            break;
-                        }
-                    }
+        for elem in iter_pin_mut(self.elems.as_mut()) {
+            match elem.try_poll(cx) {
+                Poll::Pending => state = FinalState::Pending,
+                Poll::Ready(Ok(())) => {},
+                Poll::Ready(Err(e)) => {
+                    state = FinalState::Error(e);
+                    break;
                 }
             }
         }
@@ -160,7 +123,7 @@ where
             FinalState::AllDone => {
                 let mut elems = mem::replace(&mut self.elems, Box::pin([]));
                 let results = iter_pin_mut(elems.as_mut())
-                    .map(|e| e.take_done().unwrap())
+                    .map(|e| e.take_output().unwrap())
                     .collect();
                 Poll::Ready(Ok(results))
             },

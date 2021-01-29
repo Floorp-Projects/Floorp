@@ -22,7 +22,7 @@ impl<'a> WakerRef<'a> {
         // copy the underlying (raw) waker without calling a clone,
         // as we won't call Waker::drop either.
         let waker = ManuallyDrop::new(unsafe { core::ptr::read(waker) });
-        WakerRef {
+        Self {
             waker,
             _marker: PhantomData,
         }
@@ -35,7 +35,7 @@ impl<'a> WakerRef<'a> {
     /// by the caller), and the [`Waker`] doesn't need to or must not be
     /// destroyed.
     pub fn new_unowned(waker: ManuallyDrop<Waker>) -> Self {
-        WakerRef {
+        Self {
             waker,
             _marker: PhantomData,
         }

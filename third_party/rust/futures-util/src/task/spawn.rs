@@ -69,6 +69,7 @@ pub trait SpawnExt: Spawn {
     /// assert_eq!(block_on(join_handle_fut), 1);
     /// ```
     #[cfg(feature = "channel")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "channel")))]
     #[cfg(feature = "std")]
     fn spawn_with_handle<Fut>(&self, future: Fut) -> Result<RemoteHandle<Fut::Output>, SpawnError>
     where
@@ -83,6 +84,7 @@ pub trait SpawnExt: Spawn {
     /// Wraps a [`Spawn`] and makes it usable as a futures 0.1 `Executor`.
     /// Requires the `compat` feature to enable.
     #[cfg(feature = "compat")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "compat")))]
     fn compat(self) -> Compat<Self>
     where
         Self: Sized,
@@ -145,6 +147,7 @@ pub trait LocalSpawnExt: LocalSpawn {
     /// assert_eq!(executor.run_until(join_handle_fut), 1);
     /// ```
     #[cfg(feature = "channel")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "channel")))]
     #[cfg(feature = "std")]
     fn spawn_local_with_handle<Fut>(
         &self,

@@ -1,9 +1,8 @@
 use futures::channel::oneshot::{self, Sender};
 use futures::executor::block_on;
-use futures::future::{Future, FutureExt, poll_fn};
+use futures::future::{FutureExt, poll_fn};
 use futures::task::{Context, Poll};
 use futures_test::task::panic_waker_ref;
-use std::pin::Pin;
 use std::sync::mpsc;
 use std::thread;
 
@@ -25,33 +24,21 @@ fn smoke_poll() {
 
 #[test]
 fn cancel_notifies() {
-    let (tx, rx) = oneshot::channel::<u32>();
+    let (mut tx, rx) = oneshot::channel::<u32>();
 
-    let t = thread::spawn(|| {
-        block_on(WaitForCancel { tx });
+    let t = thread::spawn(move || {
+        block_on(tx.cancellation());
     });
     drop(rx);
     t.join().unwrap();
-}
-
-struct WaitForCancel {
-    tx: Sender<u32>,
-}
-
-impl Future for WaitForCancel {
-    type Output = ();
-
-    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        self.tx.poll_canceled(cx)
-    }
 }
 
 #[test]
 fn cancel_lots() {
     let (tx, rx) = mpsc::channel::<(Sender<_>, mpsc::Sender<_>)>();
     let t = thread::spawn(move || {
-        for (tx, tx2) in rx {
-            block_on(WaitForCancel { tx });
+        for (mut tx, tx2) in rx {
+            block_on(tx.cancellation());
             tx2.send(()).unwrap();
         }
     });
@@ -93,13 +80,13 @@ fn close() {
 
 #[test]
 fn close_wakes() {
-    let (tx, mut rx) = oneshot::channel::<u32>();
+    let (mut tx, mut rx) = oneshot::channel::<u32>();
     let (tx2, rx2) = mpsc::channel();
     let t = thread::spawn(move || {
         rx.close();
         rx2.recv().unwrap();
     });
-    block_on(WaitForCancel { tx });
+    block_on(tx.cancellation());
     tx2.send(()).unwrap();
     t.join().unwrap();
 }

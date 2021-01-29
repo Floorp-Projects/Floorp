@@ -1,4 +1,5 @@
 use futures_core::future::Future;
+use futures_core::ready;
 use futures_core::task::{Context, Poll};
 use futures_io::AsyncWrite;
 use std::io;
@@ -17,7 +18,7 @@ impl<W: ?Sized + Unpin> Unpin for WriteAll<'_, W> {}
 
 impl<'a, W: AsyncWrite + ?Sized + Unpin> WriteAll<'a, W> {
     pub(super) fn new(writer: &'a mut W, buf: &'a [u8]) -> Self {
-        WriteAll { writer, buf }
+        Self { writer, buf }
     }
 }
 
@@ -33,7 +34,7 @@ impl<W: AsyncWrite + ?Sized + Unpin> Future for WriteAll<'_, W> {
                 this.buf = rest;
             }
             if n == 0 {
-                return Poll::Ready(Err(io::ErrorKind::WriteZero.into()))
+                return Poll::Ready(Err(io::ErrorKind::WriteZero.into()));
             }
         }
 

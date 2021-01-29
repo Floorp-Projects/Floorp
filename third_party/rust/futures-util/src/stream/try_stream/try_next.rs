@@ -15,7 +15,7 @@ impl<St: ?Sized + Unpin> Unpin for TryNext<'_, St> {}
 
 impl<'a, St: ?Sized + TryStream + Unpin> TryNext<'a, St> {
     pub(super) fn new(stream: &'a mut St) -> Self {
-        TryNext { stream }
+        Self { stream }
     }
 }
 
