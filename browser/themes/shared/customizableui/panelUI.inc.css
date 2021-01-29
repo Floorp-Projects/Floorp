@@ -184,6 +184,8 @@ panelmultiview[transitioning] > .panel-viewcontainer > .panel-viewstack > panelv
 #widget-overflow,
 #appMenu-popup,
 #customizationui-widget-panel,
+#identity-popup,
+#permission-popup,
 #protections-popup {
   margin-top: -6px;
 }
@@ -195,12 +197,6 @@ panelmultiview[transitioning] > .panel-viewcontainer > .panel-viewstack > panelv
 #editBookmarkPanel,
 .browser-extension-panel {
   margin-top: calc(var(--toolbarbutton-inner-padding) - var(--urlbar-icon-padding) - 6px)
-}
-
-/* The identity popup does not have any padding of its own,
-   otherwise would use the same formula as above. */
-#identity-popup {
-  margin-top: calc(var(--toolbarbutton-inner-padding) - 6px);
 }
 
 /* The bookmarks toolbar is too thin to have the panels overlap 6px. */
