@@ -1474,6 +1474,21 @@ void CodeGenerator::testValueTruthy(const ValueOperand& value,
   masm.jump(ifTruthy);
 }
 
+void CodeGenerator::visitTestBIAndBranch(LTestBIAndBranch* lir) {
+  Label* ifTrueLabel = getJumpLabelForBranch(lir->ifTrue());
+  Label* ifFalseLabel = getJumpLabelForBranch(lir->ifFalse());
+  Register input = ToRegister(lir->input());
+
+  if (isNextBlock(lir->ifFalse()->lir())) {
+    masm.branchIfBigIntIsNonZero(input, ifTrueLabel);
+  } else if (isNextBlock(lir->ifTrue()->lir())) {
+    masm.branchIfBigIntIsZero(input, ifFalseLabel);
+  } else {
+    masm.branchIfBigIntIsZero(input, ifFalseLabel);
+    jumpToBlock(lir->ifTrue());
+  }
+}
+
 void CodeGenerator::visitTestOAndBranch(LTestOAndBranch* lir) {
   Label* truthy = getJumpLabelForBranch(lir->ifTruthy());
   Label* falsy = getJumpLabelForBranch(lir->ifFalsy());
@@ -10246,6 +10261,14 @@ void CodeGenerator::visitSetInitializedLength(LSetInitializedLength* lir) {
   Address initLength(ToRegister(lir->elements()),
                      ObjectElements::offsetOfInitializedLength());
   SetLengthFromIndex(masm, lir->index(), initLength);
+}
+
+void CodeGenerator::visitNotBI(LNotBI* lir) {
+  Register input = ToRegister(lir->input());
+  Register output = ToRegister(lir->output());
+
+  masm.cmp32Set(Assembler::Equal, Address(input, BigInt::offsetOfLength()),
+                Imm32(0), output);
 }
 
 void CodeGenerator::visitNotO(LNotO* lir) {

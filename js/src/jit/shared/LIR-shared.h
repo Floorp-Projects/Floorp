@@ -1355,7 +1355,7 @@ class LTestI64AndBranch : public LControlInstructionHelper<2, INT64_PIECES, 0> {
   MBasicBlock* ifFalse() const { return getSuccessor(1); }
 };
 
-// Takes in either an integer or boolean input and tests it for truthiness.
+// Takes in a double input and tests it for truthiness.
 class LTestDAndBranch : public LControlInstructionHelper<2, 1, 0> {
  public:
   LIR_HEADER(TestDAndBranch)
@@ -1372,7 +1372,7 @@ class LTestDAndBranch : public LControlInstructionHelper<2, 1, 0> {
   MBasicBlock* ifFalse() const { return getSuccessor(1); }
 };
 
-// Takes in either an integer or boolean input and tests it for truthiness.
+// Takes in a float32 input and tests it for truthiness.
 class LTestFAndBranch : public LControlInstructionHelper<2, 1, 0> {
  public:
   LIR_HEADER(TestFAndBranch)
@@ -1387,6 +1387,23 @@ class LTestFAndBranch : public LControlInstructionHelper<2, 1, 0> {
 
   MBasicBlock* ifTrue() const { return getSuccessor(0); }
   MBasicBlock* ifFalse() const { return getSuccessor(1); }
+};
+
+// Takes in a bigint input and tests it for truthiness.
+class LTestBIAndBranch : public LControlInstructionHelper<2, 1, 0> {
+ public:
+  LIR_HEADER(TestBIAndBranch)
+
+  LTestBIAndBranch(const LAllocation& in, MBasicBlock* ifTrue,
+                   MBasicBlock* ifFalse)
+      : LControlInstructionHelper(classOpcode) {
+    setOperand(0, in);
+    setSuccessor(0, ifTrue);
+    setSuccessor(1, ifFalse);
+  }
+
+  MBasicBlock* ifTrue() { return getSuccessor(0); }
+  MBasicBlock* ifFalse() { return getSuccessor(1); }
 };
 
 // Takes an object and tests it for truthiness.  An object is falsy iff it
@@ -1878,6 +1895,18 @@ class LNotF : public LInstructionHelper<1, 1, 0> {
   LIR_HEADER(NotF)
 
   explicit LNotF(const LAllocation& input) : LInstructionHelper(classOpcode) {
+    setOperand(0, input);
+  }
+
+  MNot* mir() { return mir_->toNot(); }
+};
+
+// Not operation on a BigInt.
+class LNotBI : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(NotBI)
+
+  explicit LNotBI(const LAllocation& input) : LInstructionHelper(classOpcode) {
     setOperand(0, input);
   }
 
