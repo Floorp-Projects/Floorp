@@ -2191,7 +2191,14 @@ void MediaFormatReader::Update(TrackType aTrack) {
 #endif
       }
     } else if (decoder.HasFatalError()) {
-      LOG("Rejecting %s promise: DECODE_ERROR", TrackTypeToStr(aTrack));
+      nsCString mimeType = decoder.GetCurrentInfo()->mMimeType;
+      if (!mimeType.IsEmpty()) {
+        Telemetry::ScalarAdd(
+            Telemetry::ScalarID::MEDIA_DECODE_ERROR_PER_MIME_TYPE,
+            NS_ConvertUTF8toUTF16(mimeType), 1 /* error count */);
+      }
+      LOG("Rejecting %s promise for %s : DECODE_ERROR", TrackTypeToStr(aTrack),
+          mimeType.get());
       decoder.RejectPromise(decoder.mError.ref(), __func__);
       return;
     } else if (decoder.HasCompletedDrain()) {
