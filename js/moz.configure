@@ -837,13 +837,12 @@ def wasm_simd_experimental(value, wasm_simd):
 set_config("ENABLE_WASM_SIMD_EXPERIMENTAL", wasm_simd_experimental)
 set_define("ENABLE_WASM_SIMD_EXPERIMENTAL", wasm_simd_experimental)
 
-# Wormhole opcodes are Intel-only.  They are private to Firefox, but we need them for some
-# experiments on release and so they ride the trains.
+# Wormhole opcodes are experimental *and* x64-only
 
 
-@depends("--enable-simulator", target)
-def default_wasm_simd_wormhole(simulator, target):
-    if target.cpu in ("x86", "x86_64") and not simulator:
+@depends("--enable-wasm-simd-experimental", target)
+def default_wasm_simd_wormhole(wasm_simd_experimental, target):
+    if wasm_simd_experimental and target.cpu == "x86_64":
         return True
 
 
@@ -854,12 +853,18 @@ option(
 )
 
 
-@depends("--enable-wasm-simd-wormhole", "--enable-simulator", target)
-def wasm_simd_wormhole(value, simulator, target):
-    if value and target.cpu in ("x86", "x86_64") and not simulator:
-        return True
+@depends("--enable-wasm-simd-wormhole", "--enable-wasm-simd-experimental", target)
+def wasm_simd_wormhole(value, wasm_simd_experimental, target):
+    if not value:
+        return
 
-    die("SIMD wormhole currently supported on native x86/x64 only")
+    if not wasm_simd_experimental:
+        die("SIMD wormhole also requires --enable-wasm-simd-experimental.")
+
+    if target.cpu != "x86_64":
+        die("SIMD wormhole is only available on x86_64.")
+
+    return True
 
 
 set_config("ENABLE_WASM_SIMD_WORMHOLE", wasm_simd_wormhole)
