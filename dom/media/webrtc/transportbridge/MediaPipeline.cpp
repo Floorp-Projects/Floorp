@@ -1430,7 +1430,8 @@ class MediaPipelineReceiveAudio::PipelineListener
                  mSource->TrackTimeToSeconds(aDesiredTime)));
         mAudioFrame->UpdateFrame(
             mAudioFrame->timestamp_, nullptr, samplesPer10ms, mRate,
-            mAudioFrame->speech_type_, mAudioFrame->vad_activity_, 1);
+            mAudioFrame->speech_type_, mAudioFrame->vad_activity_,
+            std::max(1UL, mAudioFrame->num_channels()));
       }
 
       MOZ_LOG(
