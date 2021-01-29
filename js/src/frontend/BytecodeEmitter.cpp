@@ -3275,7 +3275,7 @@ bool BytecodeEmitter::setFunName(FunctionBox* funbox,
   // time.
   if (funbox->hasInferredName()) {
     MOZ_ASSERT(!funbox->emitBytecode);
-    MOZ_ASSERT(funbox->displayAtomIndex() == name);
+    MOZ_ASSERT(funbox->displayAtom() == name);
 
     return true;
   }

@@ -3472,14 +3472,13 @@ bool GeneralParser<ParseHandler, Unit>::functionFormalParametersAndBody(
   // Revalidate the function name when we transitioned to strict mode.
   if ((kind == FunctionSyntaxKind::Statement ||
        kind == FunctionSyntaxKind::Expression) &&
-      funbox->explicitNameIndex() && !inheritedStrict && pc_->sc()->strict()) {
+      funbox->explicitName() && !inheritedStrict && pc_->sc()->strict()) {
     MOZ_ASSERT(pc_->sc()->hasExplicitUseStrict(),
                "strict mode should only change when a 'use strict' directive "
                "is present");
 
     const ParserName* propertyName =
-        this->compilationState_
-            .getParserAtomAt(cx_, funbox->explicitNameIndex())
+        this->compilationState_.getParserAtomAt(cx_, funbox->explicitName())
             ->asName();
     YieldHandling nameYieldHandling;
     if (kind == FunctionSyntaxKind::Expression) {
@@ -5283,7 +5282,7 @@ inline bool GeneralParser<ParseHandler, Unit>::checkExportedNameForClause(
 template <typename Unit>
 bool Parser<FullParseHandler, Unit>::checkExportedNameForFunction(
     FunctionNode* funNode) {
-  return checkExportedName(funNode->funbox()->explicitNameIndex());
+  return checkExportedName(funNode->funbox()->explicitName());
 }
 
 template <typename Unit>

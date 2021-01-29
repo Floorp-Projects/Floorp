@@ -580,7 +580,7 @@ static ParseNode* ElemIndex(ParseNode* pn) {
 }
 
 static inline TaggedParserAtomIndex FunctionName(FunctionNode* funNode) {
-  if (auto name = funNode->funbox()->explicitNameIndex()) {
+  if (auto name = funNode->funbox()->explicitName()) {
     return name;
   }
   return TaggedParserAtomIndex::null();

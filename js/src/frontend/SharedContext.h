@@ -543,9 +543,7 @@ class FunctionBox : public SuspendableContext {
     hasExprBody_ = true;
   }
 
-  bool isNamedLambda() const {
-    return flags_.isNamedLambda(!!explicitNameIndex());
-  }
+  bool isNamedLambda() const { return flags_.isNamedLambda(!!explicitName()); }
   bool isGetter() const { return flags_.isGetter(); }
   bool isSetter() const { return flags_.isSetter(); }
   bool isMethod() const { return flags_.isMethod(); }
@@ -558,8 +556,8 @@ class FunctionBox : public SuspendableContext {
   bool hasInferredName() const { return flags_.hasInferredName(); }
   bool hasGuessedAtom() const { return flags_.hasGuessedAtom(); }
 
-  TaggedParserAtomIndex displayAtomIndex() const { return atom_; }
-  TaggedParserAtomIndex explicitNameIndex() const {
+  TaggedParserAtomIndex displayAtom() const { return atom_; }
+  TaggedParserAtomIndex explicitName() const {
     return (hasInferredName() || hasGuessedAtom())
                ? TaggedParserAtomIndex::null()
                : atom_;
