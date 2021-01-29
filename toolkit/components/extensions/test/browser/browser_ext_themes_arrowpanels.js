@@ -7,7 +7,7 @@ function openIdentityPopup() {
     true,
     event => event.target == gIdentityHandler._identityPopup
   );
-  gIdentityHandler._identityBox.click();
+  gIdentityHandler._identityIconBox.click();
   return promise;
 }
 
