@@ -7,15 +7,11 @@
 #ifndef vm_Instrumentation_h
 #define vm_Instrumentation_h
 
+#include "frontend/ParserAtom.h"  // ParserAtomsTable, TaggedParserAtomIndex
 #include "js/UniquePtr.h"
 #include "vm/GlobalObject.h"
 
 namespace js {
-
-namespace frontend {
-class ParserAtom;
-class ParserAtomsTable;
-}  // namespace frontend
 
 // Logic related to instrumentation which can be performed in a realm.
 
@@ -69,7 +65,7 @@ class RealmInstrumentation {
   static uint32_t getInstrumentationKinds(GlobalObject* global);
 
   // Get the string name of an instrumentation kind.
-  static const frontend::ParserAtom* getInstrumentationKindName(
+  static frontend::TaggedParserAtomIndex getInstrumentationKindName(
       JSContext* cx, frontend::ParserAtomsTable& parserAtoms,
       InstrumentationKind kind);
 
