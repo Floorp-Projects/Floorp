@@ -1135,6 +1135,9 @@ Result<Ok, IOUtils::IOError> IOUtils::CopyOrMoveSync(CopyOrMoveFn aMethod,
   MOZ_TRY(aDest->GetLeafName(destName));
   MOZ_TRY(aDest->GetParent(getter_AddRefs(destDir)));
 
+  // We know `destName` is a file and therefore must have a parent directory.
+  MOZ_RELEASE_ASSERT(destDir);
+
   // NB: if destDir doesn't exist, then |CopyToFollowingLinks| or
   // |MoveToFollowingLinks| will create it.
   rv = (aSource->*aMethod)(destDir, destName);
@@ -1189,15 +1192,21 @@ Result<Ok, IOUtils::IOError> IOUtils::MakeDirectorySync(nsIFile* aFile,
   if (!aCreateAncestors) {
     nsCOMPtr<nsIFile> parent;
     MOZ_TRY(aFile->GetParent(getter_AddRefs(parent)));
-    bool parentExists = false;
-    MOZ_TRY(parent->Exists(&parentExists));
-    if (!parentExists) {
-      return Err(IOError(NS_ERROR_FILE_NOT_FOUND)
-                     .WithMessage("Could not create directory at %s because "
-                                  "the path has missing "
-                                  "ancestor components",
-                                  aFile->HumanReadablePath().get()));
+    if (parent) {
+      bool parentExists = false;
+      MOZ_TRY(parent->Exists(&parentExists));
+      if (!parentExists) {
+        return Err(IOError(NS_ERROR_FILE_NOT_FOUND)
+                       .WithMessage("Could not create directory at %s because "
+                                    "the path has missing "
+                                    "ancestor components",
+                                    aFile->HumanReadablePath().get()));
+      }
     }
+    // If we don't have a parent directory, which means this was called with a
+    // root directory. If the directory doesn't already exist (e.g., asking for
+    // a drive on Windows that does not exist), we will not be able to create
+    // it. We can fall through here and let the Create() call handle this.
   }
 
   nsresult rv = aFile->Create(nsIFile::DIRECTORY_TYPE, aMode);
