@@ -896,6 +896,11 @@ metaZones:table(nofallback){
             {
                 "Africa_Eastern",
                 "2000-01-15 10:00",
+                "2021-01-31 21:00",
+            }
+            {
+                "Africa_Central",
+                "2021-01-31 21:00",
                 "9999-12-31 23:59",
             }
         }
