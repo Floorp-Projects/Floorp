@@ -1107,6 +1107,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Emopotĩ pa’ũ ñembyatyha</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Tenda ñemoneĩ</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Ñemboguejy</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Emboguete kundahára mba’ekuaarã</string>
     <!-- Title for the Delete browsing data on quit preference -->
@@ -1230,8 +1232,7 @@
 
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">Romoha’ãngáma %s eñangareko hag̃ua umi emoherakuãva rehe
-        ñandutípe ha emoherakuã orendive.</string>
+    <string name="onboarding_privacy_notice_description2">Rojapo %s eñangareko hag̃ua emoherakuãva ñandutípe rehe ha emoherakuãva orendive avei.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Emoñe’ẽ ore marandu’i ñemigua</string>
 

@@ -363,6 +363,12 @@
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Colleccion de moduls complementaris modificada. Tampadura de l’aplicacion per aplicar las modificacions…</string>
 
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Lo modul complementari es pas pres en carga</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Lo modul complementari es ja installat</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sincronizar ara</string>
@@ -727,6 +733,8 @@
     <string name="download_delete_multiple_items_snackbar_1">Telecargament suprimits</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
     <string name="download_delete_single_item_snackbar">%1$s suprimit</string>
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message_1">Cap de fichièr pas telecargat</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d seleccionats</string>
@@ -1091,6 +1099,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Libèra d’espaci d’emmagazinatge</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Permissions dels sites</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Telecargaments</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Suprimir las donadas de navegacion</string>
     <!-- Title for the Delete browsing data on quit preference -->
