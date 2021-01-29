@@ -207,7 +207,7 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
   mRedirectResolver = std::move(aResolve);
 
   nsCOMPtr<nsIChannel> newChannel;
-  MOZ_ASSERT((aArgs.loadStateLoadFlags() &
+  MOZ_ASSERT((aArgs.loadStateInternalLoadFlags() &
               nsDocShell::InternalLoad::INTERNAL_LOAD_FLAGS_IS_SRCDOC) ||
              aArgs.srcdocData().IsVoid());
   nsresult rv = nsDocShell::CreateRealChannelForDocument(

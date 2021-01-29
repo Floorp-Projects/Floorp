@@ -752,6 +752,10 @@ nsresult nsDocShell::LoadURI(nsDocShellLoadState* aLoadState,
                              bool aSetNavigating,
                              bool aContinueHandlingSubframeHistory) {
   MOZ_ASSERT(aLoadState, "Must have a valid load state!");
+  // NOTE: This comparison between what appears to be internal/external load
+  // flags is intentional, as it's ensuring that the caller isn't using any of
+  // the flags reserved for implementations by the `nsIWebNavigation` interface.
+  // In the future, this check may be dropped.
   MOZ_ASSERT(
       (aLoadState->LoadFlags() & INTERNAL_LOAD_FLAGS_LOADURI_SETUP_FLAGS) == 0,
       "Should not have these flags set");
@@ -771,7 +775,7 @@ nsresult nsDocShell::LoadURI(nsDocShellLoadState* aLoadState,
   }
 
   PopupBlocker::PopupControlState popupState;
-  if (aLoadState->LoadFlags() & LOAD_FLAGS_ALLOW_POPUPS) {
+  if (aLoadState->HasLoadFlags(LOAD_FLAGS_ALLOW_POPUPS)) {
     popupState = PopupBlocker::openAllowed;
   } else {
     popupState = PopupBlocker::openOverridden;
@@ -793,9 +797,9 @@ nsresult nsDocShell::LoadURI(nsDocShellLoadState* aLoadState,
   }
 
   nsLoadFlags defaultLoadFlags = mBrowsingContext->GetDefaultLoadFlags();
-  if (aLoadState->LoadFlags() & LOAD_FLAGS_FORCE_TRR) {
+  if (aLoadState->HasLoadFlags(LOAD_FLAGS_FORCE_TRR)) {
     defaultLoadFlags |= nsIRequest::LOAD_TRR_ONLY_MODE;
-  } else if (aLoadState->LoadFlags() & LOAD_FLAGS_DISABLE_TRR) {
+  } else if (aLoadState->HasLoadFlags(LOAD_FLAGS_DISABLE_TRR)) {
     defaultLoadFlags |= nsIRequest::LOAD_TRR_DISABLED_MODE;
   }
 
@@ -4249,7 +4253,7 @@ nsresult nsDocShell::ReloadDocument(nsDocShell* aDocShell, Document* aDocument,
   loadState->SetTriggeringSandboxFlags(triggeringSandboxFlags);
   loadState->SetPrincipalToInherit(triggeringPrincipal);
   loadState->SetCsp(csp);
-  loadState->SetLoadFlags(flags);
+  loadState->SetInternalLoadFlags(flags);
   loadState->SetTypeHint(NS_ConvertUTF16toUTF8(contentTypeHint));
   loadState->SetLoadType(aLoadType);
   loadState->SetFirstParty(true);
@@ -8447,8 +8451,8 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState) {
   // have to be careful to not apply that to the noreferrer case.  See bug
   // 1358469.
   bool allowNamedTarget =
-      !aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_NO_OPENER) ||
-      aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER);
+      !aLoadState->HasInternalLoadFlags(INTERNAL_LOAD_FLAGS_NO_OPENER) ||
+      aLoadState->HasInternalLoadFlags(INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER);
   if (allowNamedTarget ||
       aLoadState->Target().LowerCaseEqualsLiteral("_self") ||
       aLoadState->Target().LowerCaseEqualsLiteral("_parent") ||
@@ -8522,7 +8526,7 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState) {
   // We've already done our owner-inheriting.  Mask out that bit, so we
   // don't try inheriting an owner from the target window if we came up
   // with a null owner above.
-  aLoadState->UnsetLoadFlag(INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL);
+  aLoadState->UnsetInternalLoadFlag(INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL);
 
   if (!targetContext) {
     // If the docshell's document is sandboxed, only open a new window
@@ -8547,14 +8551,15 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState) {
 
     // If we are a noopener load, we just hand the whole thing over to our
     // window.
-    if (aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_NO_OPENER)) {
+    if (aLoadState->HasInternalLoadFlags(INTERNAL_LOAD_FLAGS_NO_OPENER)) {
       // Various asserts that we know to hold because NO_OPENER loads can only
       // happen for links.
       MOZ_ASSERT(!aLoadState->LoadReplace());
       MOZ_ASSERT(aLoadState->PrincipalToInherit() ==
                  aLoadState->TriggeringPrincipal());
-      MOZ_ASSERT(aLoadState->LoadFlags() == INTERNAL_LOAD_FLAGS_NO_OPENER ||
-                 aLoadState->LoadFlags() ==
+      MOZ_ASSERT(aLoadState->InternalLoadFlags() ==
+                     INTERNAL_LOAD_FLAGS_NO_OPENER ||
+                 aLoadState->InternalLoadFlags() ==
                      (INTERNAL_LOAD_FLAGS_NO_OPENER |
                       INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER));
       MOZ_ASSERT(!aLoadState->PostDataStream());
@@ -8587,14 +8592,14 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState) {
       loadState->SetTriggeringSandboxFlags(
           aLoadState->TriggeringSandboxFlags());
       loadState->SetCsp(aLoadState->Csp());
-      loadState->SetInheritPrincipal(
-          aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL));
+      loadState->SetInheritPrincipal(aLoadState->HasInternalLoadFlags(
+          INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL));
       // Explicit principal because we do not want any guesses as to what the
       // principal to inherit is: it should be aTriggeringPrincipal.
       loadState->SetPrincipalIsExplicit(true);
       loadState->SetLoadType(LOAD_LINK);
-      loadState->SetForceAllowDataURI(
-          aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI));
+      loadState->SetForceAllowDataURI(aLoadState->HasInternalLoadFlags(
+          INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI));
 
       loadState->SetHasValidUserGestureActivation(
           aLoadState->HasValidUserGestureActivation());
@@ -8622,7 +8627,7 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState) {
     if (piNewWin) {
       RefPtr<Document> newDoc = piNewWin->GetExtantDoc();
       if (!newDoc || newDoc->IsInitialDocument()) {
-        aLoadState->SetLoadFlag(INTERNAL_LOAD_FLAGS_FIRST_LOAD);
+        aLoadState->SetInternalLoadFlag(INTERNAL_LOAD_FLAGS_FIRST_LOAD);
       }
     }
 
@@ -9225,7 +9230,8 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
 
     if (aLoadState->LoadType() != LOAD_NORMAL_EXTERNAL &&
         !aLoadState->PrincipalToInherit() &&
-        (aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL)) &&
+        (aLoadState->HasInternalLoadFlags(
+            INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL)) &&
         NS_SUCCEEDED(nsContentUtils::URIInheritsSecurityContext(
             aLoadState->URI(), &inherits)) &&
         inherits) {
@@ -9265,8 +9271,8 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     aLoadState->SetLoadType(LOAD_NORMAL);
   }
 
-  mAllowKeywordFixup =
-      aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP);
+  mAllowKeywordFixup = aLoadState->HasInternalLoadFlags(
+      INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP);
   mURIResultedInDocument = false;  // reset the clock...
 
   // See if this is actually a load between two history entries for the same
@@ -9490,6 +9496,8 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     nsCOMPtr<nsIChannel> chan(do_QueryInterface(req));
     UnblockEmbedderLoadEventForFailure();
     if (DisplayLoadError(rv, aLoadState->URI(), nullptr, chan) &&
+        // FIXME: At this point code was using internal load flags, but checking
+        // non-internal load flags?
         aLoadState->HasLoadFlags(LOAD_FLAGS_ERROR_LOAD_CHANGES_RV)) {
       return NS_ERROR_LOAD_SHOWED_ERRORPAGE;
     }
@@ -9670,7 +9678,8 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
   MOZ_ASSERT(aLoadInfo);
 
   nsString srcdoc = VoidString();
-  bool isSrcdoc = aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC);
+  bool isSrcdoc =
+      aLoadState->HasInternalLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC);
   if (isSrcdoc) {
     srcdoc = aLoadState->SrcdocData();
   }
@@ -9680,10 +9689,10 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
   }
   aLoadInfo->SetLoadTriggeredFromExternal(aLoadState->LoadType() ==
                                           LOAD_NORMAL_EXTERNAL);
-  aLoadInfo->SetForceAllowDataURI(
-      aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI));
+  aLoadInfo->SetForceAllowDataURI(aLoadState->HasInternalLoadFlags(
+      INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI));
   aLoadInfo->SetOriginalFrameSrcLoad(
-      aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_ORIGINAL_FRAME_SRC));
+      aLoadState->HasInternalLoadFlags(INTERNAL_LOAD_FLAGS_ORIGINAL_FRAME_SRC));
 
   bool inheritAttrs = false;
   if (aLoadState->PrincipalToInherit()) {
@@ -9776,7 +9785,8 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
     referrerInfo->GetOriginalReferrer(getter_AddRefs(referrer));
   }
   if (httpChannelInternal) {
-    if (aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES)) {
+    if (aLoadState->HasInternalLoadFlags(
+            INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES)) {
       aRv = httpChannelInternal->SetThirdPartyFlags(
           nsIHttpChannelInternal::THIRD_PARTY_FORCE_ALLOW);
       MOZ_ASSERT(NS_SUCCEEDED(aRv));
@@ -9842,7 +9852,7 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
     // Currently only http and ftp channels support this.
     props->SetPropertyAsInterface(u"docshell.internalReferrer"_ns, referrer);
 
-    if (aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_FIRST_LOAD)) {
+    if (aLoadState->HasInternalLoadFlags(INTERNAL_LOAD_FLAGS_FIRST_LOAD)) {
       props->SetPropertyAsBool(u"docshell.newWindowTarget"_ns, true);
     }
   }
@@ -10226,7 +10236,8 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   bool inheritPrincipal = false;
 
   if (aLoadState->PrincipalToInherit()) {
-    bool isSrcdoc = aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC);
+    bool isSrcdoc =
+        aLoadState->HasInternalLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC);
     bool inheritAttrs = nsContentUtils::ChannelShouldInheritPrincipal(
         aLoadState->PrincipalToInherit(), aLoadState->URI(),
         true,  // aInheritForAboutBlank
@@ -10276,6 +10287,8 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   // or also the load originates from external, then we pass that information on
   // to the loadinfo, which allows e.g. setting Sec-Fetch-User request headers.
   if (aLoadState->HasValidUserGestureActivation() ||
+      // FIXME: This code was reading an external load flag value from the
+      // internal load flag state!
       aLoadState->HasLoadFlags(LOAD_FLAGS_FROM_EXTERNAL)) {
     loadInfo->SetHasValidUserGestureActivation(true);
   }
@@ -12784,7 +12797,7 @@ nsresult nsDocShell::OnLinkClickSync(nsIContent* aContent,
 
   aLoadState->SetTriggeringSandboxFlags(triggeringSandboxFlags);
   aLoadState->SetReferrerInfo(referrerInfo);
-  aLoadState->SetLoadFlags(flags);
+  aLoadState->SetInternalLoadFlags(flags);
   aLoadState->SetTypeHint(NS_ConvertUTF16toUTF8(typeHint));
   aLoadState->SetLoadType(loadType);
   aLoadState->SetSourceBrowsingContext(mBrowsingContext);

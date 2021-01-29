@@ -91,8 +91,8 @@ static auto SecurityFlagsForLoadInfo(nsDocShellLoadState* aLoadState)
   }
 
   if (aLoadState->PrincipalToInherit()) {
-    bool isSrcdoc =
-        aLoadState->HasLoadFlags(nsDocShell::INTERNAL_LOAD_FLAGS_IS_SRCDOC);
+    bool isSrcdoc = aLoadState->HasInternalLoadFlags(
+        nsDocShell::INTERNAL_LOAD_FLAGS_IS_SRCDOC);
     bool inheritAttrs = nsContentUtils::ChannelShouldInheritPrincipal(
         aLoadState->PrincipalToInherit(), aLoadState->URI(),
         true,  // aInheritForAboutBlank
@@ -569,7 +569,7 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
 #ifdef ANDROID
   RefPtr<MozPromise<bool, bool, false>> promise;
   if (documentContext && aLoadState->LoadType() != LOAD_ERROR_PAGE &&
-      !(aLoadState->HasLoadFlags(
+      !(aLoadState->HasInternalLoadFlags(
           nsDocShell::INTERNAL_LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE)) &&
       !(aLoadState->LoadType() & LOAD_HISTORY)) {
     nsCOMPtr<nsIWidget> widget =
@@ -579,7 +579,7 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
     if (window) {
       promise = window->OnLoadRequest(
           aLoadState->URI(), nsIBrowserDOMWindow::OPEN_CURRENTWINDOW,
-          aLoadState->LoadFlags(), aLoadState->TriggeringPrincipal(),
+          aLoadState->InternalLoadFlags(), aLoadState->TriggeringPrincipal(),
           aLoadState->HasValidUserGestureActivation(),
           documentContext->IsTopContent());
     }
@@ -626,7 +626,8 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
 
   mOtherPid = aPid;
   mChannelCreationURI = aLoadState->URI();
-  mLoadStateLoadFlags = aLoadState->LoadFlags();
+  mLoadStateExternalLoadFlags = aLoadState->LoadFlags();
+  mLoadStateInternalLoadFlags = aLoadState->InternalLoadFlags();
   mLoadStateLoadType = aLoadState->LoadType();
   mTiming = aTiming;
   mSrcdocData = aLoadState->SrcdocData();
@@ -1341,7 +1342,8 @@ void DocumentLoadListener::SerializeRedirectData(
   aArgs.properties() = do_QueryObject(mChannel);
   aArgs.srcdocData() = mSrcdocData;
   aArgs.baseUri() = mBaseURI;
-  aArgs.loadStateLoadFlags() = mLoadStateLoadFlags;
+  aArgs.loadStateExternalLoadFlags() = mLoadStateExternalLoadFlags;
+  aArgs.loadStateInternalLoadFlags() = mLoadStateInternalLoadFlags;
   aArgs.loadStateLoadType() = mLoadStateLoadType;
   aArgs.originalUriString() = mOriginalUriString;
   if (mLoadingSessionHistoryInfo) {
@@ -1735,7 +1737,8 @@ DocumentLoadListener::RedirectToParentProcess(uint32_t aRedirectFlags,
   nsDocShellLoadState::CreateFromPendingChannel(
       mChannel, mLoadIdentifier, mRedirectChannelId, getter_AddRefs(loadState));
 
-  loadState->SetLoadFlags(mLoadStateLoadFlags);
+  loadState->SetLoadFlags(mLoadStateExternalLoadFlags);
+  loadState->SetInternalLoadFlags(mLoadStateInternalLoadFlags);
   loadState->SetLoadType(mLoadStateLoadType);
   if (mLoadingSessionHistoryInfo) {
     loadState->SetLoadingSessionHistoryInfo(*mLoadingSessionHistoryInfo);
@@ -2030,7 +2033,7 @@ bool DocumentLoadListener::MaybeHandleLoadErrorWithURIFixup(nsresult aStatus) {
   nsCOMPtr<nsIInputStream> newPostData;
   nsCOMPtr<nsIURI> newURI = nsDocShell::AttemptURIFixup(
       mChannel, aStatus, mOriginalUriString, mLoadStateLoadType, bc->IsTop(),
-      mLoadStateLoadFlags &
+      mLoadStateInternalLoadFlags &
           nsDocShell::INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
       bc->UsePrivateBrowsing(), true, getter_AddRefs(newPostData));
   if (!newURI) {
