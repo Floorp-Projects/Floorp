@@ -178,7 +178,7 @@ struct ObjLiteralKey {
   ObjLiteralKey(const ObjLiteralKey& other) = default;
 
   static ObjLiteralKey fromPropName(frontend::TaggedParserAtomIndex atomIndex) {
-    return ObjLiteralKey(*atomIndex.rawData(), false);
+    return ObjLiteralKey(atomIndex.rawData(), false);
   }
   static ObjLiteralKey fromArrayIndex(uint32_t index) {
     return ObjLiteralKey(index, true);
@@ -266,7 +266,7 @@ struct ObjLiteralWriterBase {
 
   MOZ_MUST_USE bool pushAtomArg(JSContext* cx,
                                 frontend::TaggedParserAtomIndex atomIndex) {
-    return pushRawData(cx, *atomIndex.rawData());
+    return pushRawData(cx, atomIndex.rawData());
   }
 };
 
@@ -415,7 +415,7 @@ struct ObjLiteralReaderBase {
   }
 
   MOZ_MUST_USE bool readAtomArg(frontend::TaggedParserAtomIndex* atomIndex) {
-    return readRawData(atomIndex->rawData());
+    return readRawData(atomIndex->rawDataRef());
   }
 };
 
