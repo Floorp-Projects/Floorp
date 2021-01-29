@@ -1538,7 +1538,7 @@ bool ModuleBuilder::processImport(frontend::BinaryNode* importNode) {
   NameNode* moduleSpec = &importNode->right()->as<NameNode>();
   MOZ_ASSERT(moduleSpec->isKind(ParseNodeKind::StringExpr));
 
-  auto module = moduleSpec->atomIndex();
+  auto module = moduleSpec->atom();
   if (!maybeAppendRequestedModule(module, moduleSpec)) {
     return false;
   }
@@ -1550,8 +1550,8 @@ bool ModuleBuilder::processImport(frontend::BinaryNode* importNode) {
     NameNode* importNameNode = &spec->left()->as<NameNode>();
     NameNode* localNameNode = &spec->right()->as<NameNode>();
 
-    auto importName = importNameNode->atomIndex();
-    auto localName = localNameNode->atomIndex();
+    auto importName = importNameNode->atom();
+    auto localName = localNameNode->atom();
 
     uint32_t line;
     uint32_t column;
@@ -1598,8 +1598,8 @@ bool ModuleBuilder::processExport(frontend::ParseNode* exportNode) {
         NameNode* localNameNode = &spec->left()->as<NameNode>();
         NameNode* exportNameNode = &spec->right()->as<NameNode>();
 
-        auto localName = localNameNode->atomIndex();
-        auto exportName = exportNameNode->atomIndex();
+        auto localName = localNameNode->atom();
+        auto exportName = exportNameNode->atom();
 
         if (!appendExportEntry(exportName, localName, spec)) {
           return false;
@@ -1611,7 +1611,7 @@ bool ModuleBuilder::processExport(frontend::ParseNode* exportNode) {
     case ParseNodeKind::ClassDecl: {
       const ClassNode& cls = kid->as<ClassNode>();
       MOZ_ASSERT(cls.names());
-      auto localName = cls.names()->innerBinding()->atomIndex();
+      auto localName = cls.names()->innerBinding()->atom();
       auto exportName =
           isDefault ? TaggedParserAtomIndex::WellKnown::default_() : localName;
       if (!appendExportEntry(exportName, localName)) {
@@ -1631,7 +1631,7 @@ bool ModuleBuilder::processExport(frontend::ParseNode* exportNode) {
         }
 
         if (binding->isKind(ParseNodeKind::Name)) {
-          auto localName = binding->as<NameNode>().atomIndex();
+          auto localName = binding->as<NameNode>().atom();
           auto exportName = isDefault
                                 ? TaggedParserAtomIndex::WellKnown::default_()
                                 : localName;
@@ -1675,7 +1675,7 @@ bool ModuleBuilder::processExportBinding(frontend::ParseNode* binding) {
   using namespace js::frontend;
 
   if (binding->isKind(ParseNodeKind::Name)) {
-    auto name = binding->as<NameNode>().atomIndex();
+    auto name = binding->as<NameNode>().atom();
     return appendExportEntry(name, name);
   }
 
@@ -1756,7 +1756,7 @@ bool ModuleBuilder::processExportFrom(frontend::BinaryNode* exportNode) {
   NameNode* moduleSpec = &exportNode->right()->as<NameNode>();
   MOZ_ASSERT(moduleSpec->isKind(ParseNodeKind::StringExpr));
 
-  auto module = moduleSpec->atomIndex();
+  auto module = moduleSpec->atom();
 
   if (!maybeAppendRequestedModule(module, moduleSpec)) {
     return false;
@@ -1768,8 +1768,8 @@ bool ModuleBuilder::processExportFrom(frontend::BinaryNode* exportNode) {
       NameNode* exportNameNode =
           &spec->as<BinaryNode>().right()->as<NameNode>();
 
-      auto bindingName = localNameNode->atomIndex();
-      auto exportName = exportNameNode->atomIndex();
+      auto bindingName = localNameNode->atom();
+      auto exportName = exportNameNode->atom();
 
       if (!appendExportFromEntry(exportName, module, bindingName,
                                  localNameNode)) {

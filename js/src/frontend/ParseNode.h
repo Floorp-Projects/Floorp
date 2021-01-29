@@ -887,9 +887,9 @@ class NameNode : public ParseNode {
   void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
 #endif
 
-  TaggedParserAtomIndex atomIndex() const { return atom_; }
+  TaggedParserAtomIndex atom() const { return atom_; }
 
-  TaggedParserAtomIndex nameIndex() const {
+  TaggedParserAtomIndex name() const {
     MOZ_ASSERT(isKind(ParseNodeKind::Name) ||
                isKind(ParseNodeKind::PrivateName));
     return atom_;
@@ -905,7 +905,7 @@ class NameNode : public ParseNode {
 };
 
 inline bool ParseNode::isName(TaggedParserAtomIndex name) const {
-  return getKind() == ParseNodeKind::Name && as<NameNode>().nameIndex() == name;
+  return getKind() == ParseNodeKind::Name && as<NameNode>().name() == name;
 }
 
 class UnaryNode : public ParseNode {
@@ -956,7 +956,7 @@ class UnaryNode : public ParseNode {
   TaggedParserAtomIndex isStringExprStatement() const {
     if (isKind(ParseNodeKind::ExpressionStmt)) {
       if (kid()->isKind(ParseNodeKind::StringExpr) && !kid()->isInParens()) {
-        return kid()->as<NameNode>().atomIndex();
+        return kid()->as<NameNode>().atom();
       }
     }
     return TaggedParserAtomIndex::null();
@@ -1662,7 +1662,7 @@ class LabeledStatement : public NameNode {
                  TokenPos(begin, stmt->pn_pos.end)),
         statement_(stmt) {}
 
-  TaggedParserAtomIndex labelIndex() const { return atomIndex(); }
+  TaggedParserAtomIndex label() const { return atom(); }
 
   ParseNode* statement() const { return statement_; }
 
@@ -1721,7 +1721,7 @@ class LoopControlStatement : public ParseNode {
 
  public:
   /* Label associated with this break/continue statement, if any. */
-  TaggedParserAtomIndex labelIndex() const { return label_; }
+  TaggedParserAtomIndex label() const { return label_; }
 
 #ifdef DEBUG
   void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
@@ -1943,9 +1943,7 @@ class PropertyAccessBase : public BinaryNode {
 
   void setExpression(ParseNode* pn) { *unsafeLeftReference() = pn; }
 
-  TaggedParserAtomIndex nameIndex() const {
-    return right()->as<NameNode>().atomIndex();
-  }
+  TaggedParserAtomIndex name() const { return right()->as<NameNode>().atom(); }
 };
 
 class PropertyAccess : public PropertyAccessBase {
@@ -2206,8 +2204,8 @@ class ClassNames : public BinaryNode {
       : BinaryNode(ParseNodeKind::ClassNames, pos, outerBinding, innerBinding) {
     MOZ_ASSERT_IF(outerBinding, outerBinding->isKind(ParseNodeKind::Name));
     MOZ_ASSERT(innerBinding->isKind(ParseNodeKind::Name));
-    MOZ_ASSERT_IF(outerBinding, innerBinding->as<NameNode>().atomIndex() ==
-                                    outerBinding->as<NameNode>().atomIndex());
+    MOZ_ASSERT_IF(outerBinding, innerBinding->as<NameNode>().atom() ==
+                                    outerBinding->as<NameNode>().atom());
   }
 
   static bool test(const ParseNode& node) {

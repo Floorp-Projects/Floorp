@@ -466,7 +466,7 @@ static bool FoldType(FoldInfo info, ParseNode** pnp, ParseNodeKind kind) {
         if (pn->isKind(ParseNodeKind::StringExpr)) {
           double d;
           const ParserAtom* atom =
-              info.parserAtoms.getParserAtom(pn->as<NameNode>().atomIndex());
+              info.parserAtoms.getParserAtom(pn->as<NameNode>().atom());
           if (!atom->toNumber(info.cx, &d)) {
             return false;
           }
@@ -525,7 +525,7 @@ static Truthiness Boolish(ParseNode* pn) {
 
     case ParseNodeKind::StringExpr:
     case ParseNodeKind::TemplateStringExpr:
-      return (pn->as<NameNode>().atomIndex() ==
+      return (pn->as<NameNode>().atom() ==
               TaggedParserAtomIndex::WellKnown::empty())
                  ? Falsy
                  : Truthy;
@@ -1092,7 +1092,7 @@ static bool FoldElement(FoldInfo info, ParseNode** nodePtr) {
   ParseNode* key = &elem->key();
   TaggedParserAtomIndex name;
   if (key->isKind(ParseNodeKind::StringExpr)) {
-    auto keyIndex = key->as<NameNode>().atomIndex();
+    auto keyIndex = key->as<NameNode>().atom();
     const ParserAtom* atom = info.parserAtoms.getParserAtom(keyIndex);
     uint32_t index;
 
@@ -1217,8 +1217,8 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
       MOZ_ASSERT((*current)->isKind(ParseNodeKind::StringExpr));
 
       accum.clear();
-      const auto* atom = info.parserAtoms.getParserAtom(
-          (*current)->as<NameNode>().atomIndex());
+      const auto* atom =
+          info.parserAtoms.getParserAtom((*current)->as<NameNode>().atom());
       if (!accum.append(atom)) {
         return false;
       }
@@ -1236,7 +1236,7 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
 
         // Add this string to the accumulator and remove the node.
         const auto* nextAtom =
-            info.parserAtoms.getParserAtom((*next)->as<NameNode>().atomIndex());
+            info.parserAtoms.getParserAtom((*next)->as<NameNode>().atom());
         if (!accum.append(nextAtom)) {
           return false;
         }
