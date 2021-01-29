@@ -566,16 +566,18 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
     // unless the service is in a TRR=enabled mode.
     if (mMode == nsIDNSService::MODE_TRRFIRST ||
         mMode == nsIDNSService::MODE_TRRONLY) {
-      if (!mCaptiveIsPassed) {
-        if (mConfirmationState != CONFIRM_OK) {
-          mConfirmationState = CONFIRM_TRYING;
-          MaybeConfirm();
-        }
-      } else {
-        LOG(("TRRservice CP clear when already up!\n"));
+      if (mRetryConfirmTimer) {
+        mRetryConfirmTimer->Cancel();
+        mRetryConfirmTimer = nullptr;
       }
-      mCaptiveIsPassed = true;
+      mRetryConfirmInterval = StaticPrefs::network_trr_retry_timeout_ms();
+      if (mConfirmationState != CONFIRM_OK) {
+        mConfirmationState = CONFIRM_TRYING;
+        MaybeConfirm();
+      }
     }
+
+    mCaptiveIsPassed = true;
 
   } else if (!strcmp(aTopic, kClearPrivateData) || !strcmp(aTopic, kPurge)) {
     // flush the TRR blocklist
