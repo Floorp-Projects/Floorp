@@ -481,11 +481,8 @@ class MOZ_STACK_CLASS frontend::ModuleCompiler final
   explicit ModuleCompiler(JSContext* cx, LifoAllocScope& allocScope,
                           const JS::ReadOnlyCompileOptions& options,
                           CompilationStencil& stencil,
-                          SourceText<Unit>& sourceBuffer,
-                          js::Scope* enclosingScope = nullptr,
-                          JSObject* enclosingEnv = nullptr)
-      : Base(cx, allocScope, options, stencil, sourceBuffer, InheritThis::No,
-             enclosingScope, enclosingEnv) {}
+                          SourceText<Unit>& sourceBuffer)
+      : Base(cx, allocScope, options, stencil, sourceBuffer, InheritThis::No) {}
 
   bool compile(JSContext* cx, CompilationStencil& stencil);
 };
