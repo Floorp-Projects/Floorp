@@ -54,6 +54,17 @@ struct ScopeContext {
   //       actual scope passed to the compile.
   JS::Rooted<Scope*> effectiveScope;
 
+  // Class field initializer info if we are nested within a class constructor.
+  // We may be an combination of arrow and eval context within the constructor.
+  mozilla::Maybe<MemberInitializers> memberInitializers = {};
+
+  // Eval and arrow scripts also inherit the "this" environment -- used by
+  // `super` expressions -- from their enclosing script. We count the number of
+  // environment hops needed to get from enclosing scope to the nearest
+  // appropriate environment. This value is undefined if the script we are
+  // compiling is not an eval or arrow-function.
+  uint32_t enclosingThisEnvironmentHops = 0;
+
   // The type of binding required for `this` of the top level context, as
   // indicated by the enclosing scopes of this parse.
   //
@@ -66,17 +77,6 @@ struct ScopeContext {
   bool allowSuperProperty = false;
   bool allowSuperCall = false;
   bool allowArguments = true;
-
-  // Eval and arrow scripts also inherit the "this" environment -- used by
-  // `super` expressions -- from their enclosing script. We count the number of
-  // environment hops needed to get from enclosing scope to the nearest
-  // appropriate environment. This value is undefined if the script we are
-  // compiling is not an eval or arrow-function.
-  uint32_t enclosingThisEnvironmentHops = 0;
-
-  // Class field initializer info if we are nested within a class constructor.
-  // We may be an combination of arrow and eval context within the constructor.
-  mozilla::Maybe<MemberInitializers> memberInitializers = {};
 
   // Indicates there is a 'class' or 'with' scope on enclosing scope chain.
   bool inClass = false;
