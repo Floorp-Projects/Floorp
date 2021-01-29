@@ -493,17 +493,6 @@ async function navigateTo(uri, { isErrorPage = false } = {}) {
   const switchedToAnotherProcess =
     currentPID !== browser.browsingContext.currentWindowGlobal.osPid;
 
-  // If we switched to another process and the target switching pref is false,
-  // the toolbox will close and reopen.
-  // For now, this helper doesn't support this case
-  if (switchedToAnotherProcess && !isTargetSwitchingEnabled()) {
-    ok(
-      false,
-      `navigateTo(${uri}) navigated to another process, but the target switching is disabled`
-    );
-    return;
-  }
-
   if (onPanelReloaded) {
     info(`Waiting for ${toolbox.currentToolId} to be reloaded…`);
     await onPanelReloaded();
@@ -560,10 +549,6 @@ function waitForPanelReload(currentToolId, target, panel) {
 
 function isFissionEnabled() {
   return SpecialPowers.useRemoteSubframes;
-}
-
-function isTargetSwitchingEnabled() {
-  return Services.prefs.getBoolPref("devtools.target-switching.enabled", false);
 }
 
 /**

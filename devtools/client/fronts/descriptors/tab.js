@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Services = require("Services");
 const { tabDescriptorSpec } = require("devtools/shared/specs/descriptors/tab");
 
 loader.lazyRequireGetter(
@@ -16,12 +15,6 @@ loader.lazyRequireGetter(
   this,
   "BrowsingContextTargetFront",
   "devtools/client/fronts/targets/browsing-context",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "TargetFactory",
-  "devtools/client/framework/target",
   true
 );
 const {
@@ -232,30 +225,9 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
       return;
     }
 
-    const toolbox = gDevTools.getToolbox(this._targetFront);
-
-    const targetSwitchingEnabled = Services.prefs.getBoolPref(
-      "devtools.target-switching.enabled",
-      false
-    );
-
-    // When target switching is enabled, everything is handled by the TargetList
     // In a near future, this client side code should be replaced by actor code,
     // notifying about new tab targets.
-    if (targetSwitchingEnabled) {
-      this.emit("remoteness-change", this._targetFront);
-      return;
-    }
-
-    // Otherwise, if we don't support target switching, ensure the toolbox is destroyed.
-    // We need to wait for the toolbox destruction because the TargetFactory memoized the targets,
-    // and only cleans up the cache after the target is destroyed via toolbox destruction.
-    await toolbox.destroy();
-
-    // Fetch the new target for this tab
-    const newTarget = await TargetFactory.forTab(this.localTab, null);
-
-    gDevTools.showToolbox(newTarget);
+    this.emit("remoteness-change", this._targetFront);
   }
 }
 
