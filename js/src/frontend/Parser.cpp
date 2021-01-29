@@ -2792,7 +2792,7 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
   }
 
   ScriptStencil& script = funbox->functionStencil();
-  funbox->initFromLazyFunction(fun);
+  funbox->initFromLazyFunctionToSkip(fun);
   funbox->copyFunctionFields(script);
 
   MOZ_ASSERT_IF(pc_->isFunctionBox(),
@@ -3278,9 +3278,8 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
   if (!funbox) {
     return null();
   }
-  funbox->initFromLazyFunction(fun);
-  funbox->initStandalone(this->compilationState_.scopeContext, fun->flags(),
-                         syntaxKind);
+  funbox->initFromLazyFunction(fun, this->compilationState_.scopeContext,
+                               fun->flags(), syntaxKind);
   if (funbox->useMemberInitializers()) {
     funbox->setMemberInitializers(fun->baseScript()->getMemberInitializers());
   }
