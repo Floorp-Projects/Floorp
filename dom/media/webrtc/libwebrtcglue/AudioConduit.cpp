@@ -549,30 +549,20 @@ MediaConduitErrorCode WebrtcAudioConduit::SetLocalRTPExtensions(
 }
 
 MediaConduitErrorCode WebrtcAudioConduit::SendAudioFrame(
-    const int16_t audio_data[],
-    int32_t lengthSamples,  // per channel
-    int32_t samplingFreqHz, uint32_t channels, int32_t capture_delay) {
+    std::unique_ptr<webrtc::AudioFrame> frame) {
   CSFLogDebug(LOGTAG, "%s ", __FUNCTION__);
   // Following checks need to be performed
-  // 1. Non null audio buffer pointer,
-  // 2. invalid sampling frequency -  less than 0 or unsupported ones
-  // 3. Appropriate Sample Length for 10 ms audio-frame. This represents
-  //    block size the VoiceEngine feeds into encoder for passed in audio-frame
-  //    Ex: for 16000 sampling rate , valid block-length is 160
-  //    Similarly for 32000 sampling rate, valid block length is 320
-  //    We do the check by the verify modular operator below to be zero
+  // 1. Non null audio buffer pointer, and
+  // 2. Valid sample rate, and
+  // 3. Appropriate Sample Length for 10 ms audio-frame. This represents the
+  //    block size used upstream for processing.
+  //    Ex: for 16000 sample rate , valid block-length is 160.
+  //    Similarly for 32000 sample rate, valid block length is 320.
 
-  if (!audio_data || (lengthSamples <= 0) ||
-      (IsSamplingFreqSupported(samplingFreqHz) == false) ||
-      ((lengthSamples % (samplingFreqHz / 100) != 0))) {
+  if (!frame->data() ||
+      (IsSamplingFreqSupported(frame->sample_rate_hz()) == false) ||
+      ((frame->samples_per_channel() % (frame->sample_rate_hz() / 100) != 0))) {
     CSFLogError(LOGTAG, "%s Invalid Parameters ", __FUNCTION__);
-    MOZ_ASSERT(PR_FALSE);
-    return kMediaConduitMalformedArgument;
-  }
-
-  // validate capture time
-  if (capture_delay < 0) {
-    CSFLogError(LOGTAG, "%s Invalid Capture Delay ", __FUNCTION__);
     MOZ_ASSERT(PR_FALSE);
     return kMediaConduitMalformedArgument;
   }
@@ -583,14 +573,7 @@ MediaConduitErrorCode WebrtcAudioConduit::SendAudioFrame(
     return kMediaConduitSessionNotInited;
   }
 
-  // Insert the samples
-  /*
-    mPtrVoEBase->audio_transport()->PushCaptureData(
-        mSendChannel, audio_data,
-        sizeof(audio_data[0]) * 8,  // bits
-        samplingFreqHz, channels, lengthSamples);
-  */
-  // we should be good here
+  mSendStream->SendAudioData(std::move(frame));
   return kMediaConduitNoError;
 }
 
