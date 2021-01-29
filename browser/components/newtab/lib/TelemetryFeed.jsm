@@ -88,6 +88,7 @@ const USER_PREFS_ENCODING = {
   showSponsored: 1 << 5,
   "asrouter.userprefs.cfr.addons": 1 << 6,
   "asrouter.userprefs.cfr.features": 1 << 7,
+  showSponsoredTopSites: 1 << 8,
 };
 
 const PREF_IMPRESSION_ID = "impressionId";
