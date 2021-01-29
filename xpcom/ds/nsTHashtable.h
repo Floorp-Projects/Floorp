@@ -18,6 +18,7 @@
 #include "PLDHashTable.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/PodOperations.h"
@@ -224,8 +225,9 @@ class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable {
    * @return    pointer to the entry retrieved; never nullptr
    */
   EntryType* PutEntry(KeyType aKey) {
-    // infallible add
-    return static_cast<EntryType*>(mTable.Add(EntryType::KeyToPointer(aKey)));
+    // Infallible WithEntryHandle.
+    return WithEntryHandle(
+        aKey, [](auto entryHandle) { return entryHandle.OrInsert(); });
   }
 
   /**
@@ -234,9 +236,10 @@ class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable {
    * @return    pointer to the entry retrieved; nullptr only if memory can't
    *            be allocated
    */
-  [[nodiscard]] EntryType* PutEntry(KeyType aKey, const fallible_t&) {
-    return static_cast<EntryType*>(
-        mTable.Add(EntryType::KeyToPointer(aKey), mozilla::fallible));
+  [[nodiscard]] EntryType* PutEntry(KeyType aKey, const fallible_t& aFallible) {
+    return WithEntryHandle(aKey, aFallible, [](auto maybeEntryHandle) {
+      return maybeEntryHandle ? maybeEntryHandle->OrInsert() : nullptr;
+    });
   }
 
   /**
@@ -297,6 +300,81 @@ class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable {
    */
   void RawRemoveEntry(EntryType* aEntry) { mTable.RawRemove(aEntry); }
 
+ protected:
+  class EntryHandle {
+   public:
+    EntryHandle(EntryHandle&& aOther) = default;
+    ~EntryHandle() = default;
+
+    EntryHandle(const EntryHandle&) = delete;
+    EntryHandle& operator=(const EntryHandle&) = delete;
+    EntryHandle& operator=(const EntryHandle&&) = delete;
+
+    KeyType Key() const { return mKey; }
+
+    bool HasEntry() const { return mEntryHandle.HasEntry(); }
+
+    explicit operator bool() const { return mEntryHandle.operator bool(); }
+
+    EntryType* Entry() { return static_cast<EntryType*>(mEntryHandle.Entry()); }
+
+    void Insert() { InsertInternal(); }
+
+    EntryType* OrInsert() {
+      if (!HasEntry()) {
+        Insert();
+      }
+      return Entry();
+    }
+
+    void Remove() { mEntryHandle.Remove(); }
+
+    void OrRemove() { mEntryHandle.OrRemove(); }
+
+   protected:
+    template <typename... Args>
+    void InsertInternal(Args&&... aArgs) {
+      mEntryHandle.Insert([&](PLDHashEntryHdr* entry) {
+        new (mozilla::KnownNotNull, entry) EntryType(
+            EntryType::KeyToPointer(mKey), std::forward<Args>(aArgs)...);
+      });
+    }
+
+   private:
+    friend class nsTHashtable;
+
+    EntryHandle(KeyType aKey, PLDHashTable::EntryHandle&& aEntryHandle)
+        : mKey(aKey), mEntryHandle(std::move(aEntryHandle)) {}
+
+    KeyType mKey;
+    PLDHashTable::EntryHandle mEntryHandle;
+  };
+
+  template <class F>
+  auto WithEntryHandle(KeyType aKey, F&& aFunc)
+      -> std::invoke_result_t<F, EntryHandle&&> {
+    return this->mTable.WithEntryHandle(
+        EntryType::KeyToPointer(aKey), [&aKey, &aFunc](auto entryHandle) {
+          return std::forward<F>(aFunc)(
+              EntryHandle{aKey, std::move(entryHandle)});
+        });
+  }
+
+  template <class F>
+  auto WithEntryHandle(KeyType aKey, const mozilla::fallible_t& aFallible,
+                       F&& aFunc)
+      -> std::invoke_result_t<F, mozilla::Maybe<EntryHandle>&&> {
+    return this->mTable.WithEntryHandle(
+        EntryType::KeyToPointer(aKey), aFallible,
+        [&aKey, &aFunc](auto maybeEntryHandle) {
+          return std::forward<F>(aFunc)(
+              maybeEntryHandle
+                  ? mozilla::Some(EntryHandle{aKey, maybeEntryHandle.extract()})
+                  : mozilla::Nothing());
+        });
+  }
+
+ public:
   // This is an iterator that also allows entry removal. Example usage:
   //
   //   for (auto iter = table.Iter(); !iter.Done(); iter.Next()) {
@@ -418,8 +496,6 @@ class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable {
 
   static void s_ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 
-  static void s_InitEntry(PLDHashEntryHdr* aEntry, const void* aKey);
-
  private:
   // copy constructor, not implemented
   nsTHashtable(nsTHashtable<EntryType>& aToCopy) = delete;
@@ -477,7 +553,11 @@ template <class EntryType>
       EntryType::ALLOW_MEMMOVE
           ? mozilla::detail::FixedSizeEntryMover<sizeof(EntryType)>
           : s_CopyEntry,
-      s_ClearEntry, s_InitEntry};
+      // We don't use a generic initEntry hook because we want to allow
+      // initialization of data members defined in derived classes directly
+      // in the entry constructor (for example when a member can't be default
+      // constructed).
+      s_ClearEntry, nullptr};
   return &sOps;
 }
 
@@ -511,13 +591,6 @@ template <class EntryType>
 void nsTHashtable<EntryType>::s_ClearEntry(PLDHashTable* aTable,
                                            PLDHashEntryHdr* aEntry) {
   static_cast<EntryType*>(aEntry)->~EntryType();
-}
-
-template <class EntryType>
-void nsTHashtable<EntryType>::s_InitEntry(PLDHashEntryHdr* aEntry,
-                                          const void* aKey) {
-  new (mozilla::KnownNotNull, aEntry)
-      EntryType(static_cast<KeyTypePointer>(aKey));
 }
 
 class nsCycleCollectionTraversalCallback;
@@ -612,9 +685,9 @@ class nsTHashtable<nsPtrHashKey<T>>
     return reinterpret_cast<EntryType*>(Base::PutEntry(aKey));
   }
 
-  [[nodiscard]] EntryType* PutEntry(T* aKey, const mozilla::fallible_t&) {
-    return reinterpret_cast<EntryType*>(
-        Base::PutEntry(aKey, mozilla::fallible));
+  [[nodiscard]] EntryType* PutEntry(T* aKey,
+                                    const mozilla::fallible_t& aFallible) {
+    return reinterpret_cast<EntryType*>(Base::PutEntry(aKey, aFallible));
   }
 
   [[nodiscard]] bool EnsureInserted(T* aKey, EntryType** aEntry = nullptr) {
@@ -634,6 +707,66 @@ class nsTHashtable<nsPtrHashKey<T>>
     Base::RawRemoveEntry(reinterpret_cast<::detail::VoidPtrHashKey*>(aEntry));
   }
 
+ protected:
+  class EntryHandle : protected Base::EntryHandle {
+   public:
+    using Base = nsTHashtable::Base::EntryHandle;
+
+    EntryHandle(EntryHandle&& aOther) = default;
+    ~EntryHandle() = default;
+
+    EntryHandle(const EntryHandle&) = delete;
+    EntryHandle& operator=(const EntryHandle&) = delete;
+    EntryHandle& operator=(const EntryHandle&&) = delete;
+
+    using Base::Key;
+
+    using Base::HasEntry;
+
+    using Base::operator bool;
+
+    EntryType* Entry() { return reinterpret_cast<EntryType*>(Base::Entry()); }
+
+    using Base::Insert;
+
+    EntryType* OrInsert() {
+      if (!HasEntry()) {
+        Insert();
+      }
+      return Entry();
+    }
+
+    using Base::Remove;
+
+    using Base::OrRemove;
+
+   private:
+    friend class nsTHashtable;
+
+    explicit EntryHandle(Base&& aBase) : Base(std::move(aBase)) {}
+  };
+
+  template <class F>
+  auto WithEntryHandle(KeyType aKey, F aFunc)
+      -> std::invoke_result_t<F, EntryHandle&&> {
+    return Base::WithEntryHandle(aKey, [&aFunc](auto entryHandle) {
+      return aFunc(EntryHandle{std::move(entryHandle)});
+    });
+  }
+
+  template <class F>
+  auto WithEntryHandle(KeyType aKey, const mozilla::fallible_t& aFallible,
+                       F aFunc)
+      -> std::invoke_result_t<F, mozilla::Maybe<EntryHandle>&&> {
+    return Base::WithEntryHandle(
+        aKey, aFallible, [&aFunc](auto maybeEntryHandle) {
+          return aFunc(maybeEntryHandle ? mozilla::Some(EntryHandle{
+                                              maybeEntryHandle.extract()})
+                                        : mozilla::Nothing());
+        });
+  }
+
+ public:
   class Iterator : public Base::Iterator {
    public:
     typedef nsTHashtable::Base::Iterator Base;
