@@ -150,6 +150,8 @@ class MediaPipeline : public sigslot::has_slots<> {
   int32_t RtpPacketsReceived() const { return mRtpPacketsReceived; }
   int64_t RtpBytesReceived() const { return mRtpBytesReceived; }
   int32_t RtcpPacketsReceived() const { return mRtcpPacketsReceived; }
+  Maybe<uint32_t> RtpSendBaseSeq() const { return mRtpSendBaseSeq; }
+
   // Gets the current time as a DOMHighResTimeStamp
   DOMHighResTimeStamp GetNow() const;
 
@@ -187,7 +189,7 @@ class MediaPipeline : public sigslot::has_slots<> {
   // The transport is ready
   virtual void TransportReady_s() {}
 
-  void IncrementRtpPacketsSent(int aBytes);
+  void IncrementRtpPacketsSent(const MediaPacket& aPacket);
   void IncrementRtcpPacketsSent();
   void IncrementRtpPacketsReceived(int aBytes);
   virtual void OnRtpPacketReceived() {}
@@ -241,6 +243,7 @@ class MediaPipeline : public sigslot::has_slots<> {
   int32_t mRtcpPacketsReceived;
   int64_t mRtpBytesSent;
   int64_t mRtpBytesReceived;
+  Maybe<uint32_t> mRtpSendBaseSeq;
 
   // Only safe to access from STS thread.
   std::map<uint32_t, RtpCSRCStats> mCsrcStats;
