@@ -691,7 +691,7 @@ void LIRGenerator::visitTest(MTest* test) {
           comp->compareType() == MCompare::Compare_UIntPtr) {
         rhs = useAnyOrInt32Constant(right);
       } else {
-        rhs = useRegister(right);
+        rhs = useAny(right);
       }
       LCompareAndBranch* lir =
           new (alloc()) LCompareAndBranch(comp, op, lhs, rhs, ifTrue, ifFalse);
@@ -942,7 +942,7 @@ void LIRGenerator::visitCompare(MCompare* comp) {
         comp->compareType() == MCompare::Compare_UIntPtr) {
       rhs = useAnyOrInt32Constant(right);
     } else {
-      rhs = useRegister(right);
+      rhs = useAny(right);
     }
     define(new (alloc()) LCompare(op, lhs, rhs), comp);
     return;
