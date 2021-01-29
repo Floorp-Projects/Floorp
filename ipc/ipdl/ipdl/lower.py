@@ -5510,6 +5510,20 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     StmtBlock(
                         [
                             StmtExpr(
+                                ExprCall(
+                                    ExprVar("AUTO_PROFILER_TRACING_MARKER"),
+                                    [
+                                        ExprLiteral.String("Sync IPC"),
+                                        ExprLiteral.String(
+                                            self.protocol.name
+                                            + "::"
+                                            + md.prettyMsgName()
+                                        ),
+                                        ExprVar("IPC"),
+                                    ],
+                                )
+                            ),
+                            StmtExpr(
                                 ExprAssn(
                                     sendok,
                                     ExprCall(

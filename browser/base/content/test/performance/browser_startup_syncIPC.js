@@ -316,6 +316,7 @@ add_task(async function() {
   {
     const nameCol = profile.markers.schema.name;
     const dataCol = profile.markers.schema.data;
+    const startTimeCol = profile.markers.schema.startTime;
 
     let markersForCurrentPhase = [];
     for (let m of profile.markers.data) {
@@ -331,14 +332,13 @@ add_task(async function() {
       let markerData = m[dataCol];
       if (
         !markerData ||
-        markerData.type != "IPC" ||
-        !markerData.sync ||
-        markerData.direction != "sending"
+        markerData.category != "Sync IPC" ||
+        !m[startTimeCol]
       ) {
         continue;
       }
 
-      markersForCurrentPhase.push(markerData.messageType);
+      markersForCurrentPhase.push(markerName);
     }
   }
 
