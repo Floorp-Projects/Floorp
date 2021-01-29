@@ -257,7 +257,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     }
 
     GCThingIndex index;
-    if (!perScriptData().gcThingList().append(atom, &index)) {
+    if (!perScriptData().gcThingList().append(atom->toIndex(), &index)) {
       return false;
     }
 
