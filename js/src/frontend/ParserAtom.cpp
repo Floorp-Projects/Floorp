@@ -339,7 +339,7 @@ ParserAtomsTable::ParserAtomsTable(JSRuntime* rt, LifoAlloc& alloc)
     : wellKnownTable_(*rt->commonParserNames), alloc_(alloc) {}
 
 const ParserAtom* ParserAtomsTable::addEntry(JSContext* cx,
-                                             EntrySet::AddPtr& addPtr,
+                                             EntryMap::AddPtr& addPtr,
                                              ParserAtomEntry* entry) {
   MOZ_ASSERT(!addPtr);
   ParserAtomIndex index = ParserAtomIndex(entries_.length());
@@ -352,7 +352,7 @@ const ParserAtom* ParserAtomsTable::addEntry(JSContext* cx,
     return nullptr;
   }
   entry->setParserAtomIndex(index);
-  if (!entrySet_.add(addPtr, entry)) {
+  if (!entryMap_.add(addPtr, entry, TaggedParserAtomIndex(index))) {
     js::ReportOutOfMemory(cx);
     return nullptr;
   }
@@ -361,7 +361,7 @@ const ParserAtom* ParserAtomsTable::addEntry(JSContext* cx,
 
 template <typename AtomCharT, typename SeqCharT>
 const ParserAtom* ParserAtomsTable::internChar16Seq(
-    JSContext* cx, EntrySet::AddPtr& addPtr, HashNumber hash,
+    JSContext* cx, EntryMap::AddPtr& addPtr, HashNumber hash,
     InflatedChar16Sequence<SeqCharT> seq, uint32_t length) {
   MOZ_ASSERT(!addPtr);
 
@@ -399,9 +399,9 @@ const ParserAtom* ParserAtomsTable::internLatin1(JSContext* cx,
   }
 
   // Check for existing atom.
-  auto addPtr = entrySet_.lookupForAdd(lookup);
+  auto addPtr = entryMap_.lookupForAdd(lookup);
   if (addPtr) {
-    return (*addPtr)->asAtom();
+    return addPtr->key()->asAtom();
   }
 
   return internChar16Seq<Latin1Char>(cx, addPtr, lookup.hash(), seq, length);
@@ -458,9 +458,9 @@ const ParserAtom* ParserAtomsTable::internUtf8(JSContext* cx,
   InflatedChar16Sequence<mozilla::Utf8Unit> seq(utf8Ptr, nbyte);
   SpecificParserAtomLookup<mozilla::Utf8Unit> lookup(seq);
   MOZ_ASSERT(wellKnownTable_.lookupChar16Seq(lookup) == nullptr);
-  EntrySet::AddPtr addPtr = entrySet_.lookupForAdd(lookup);
+  EntryMap::AddPtr addPtr = entryMap_.lookupForAdd(lookup);
   if (addPtr) {
-    return (*addPtr)->asAtom();
+    return addPtr->key()->asAtom();
   }
 
   // Compute length in code-points.
@@ -495,9 +495,9 @@ const ParserAtom* ParserAtomsTable::internChar16(JSContext* cx,
   }
 
   // Check for existing atom.
-  EntrySet::AddPtr addPtr = entrySet_.lookupForAdd(lookup);
+  EntryMap::AddPtr addPtr = entryMap_.lookupForAdd(lookup);
   if (addPtr) {
-    return (*addPtr)->asAtom();
+    return addPtr->key()->asAtom();
   }
 
   // Compute the target encoding.
@@ -590,9 +590,9 @@ const ParserAtom* ParserAtomsTable::concatAtoms(
   SpecificParserAtomLookup<const ParserAtom*> lookup(seq);
 
   // Check for existing atom.
-  auto addPtr = entrySet_.lookupForAdd(lookup);
+  auto addPtr = entryMap_.lookupForAdd(lookup);
   if (addPtr) {
-    return (*addPtr)->asAtom();
+    return addPtr->key()->asAtom();
   }
 
   // Otherwise, add new entry.
@@ -723,9 +723,9 @@ bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
 template <typename CharT>
 const ParserAtom* WellKnownParserAtoms::lookupChar16Seq(
     const SpecificParserAtomLookup<CharT>& lookup) const {
-  EntrySet::Ptr get = wellKnownSet_.readonlyThreadsafeLookup(lookup);
-  if (get) {
-    return (*get)->asAtom();
+  EntryMap::Ptr ptr = wellKnownMap_.readonlyThreadsafeLookup(lookup);
+  if (ptr) {
+    return ptr->key()->asAtom();
   }
   return nullptr;
 }
@@ -751,7 +751,7 @@ bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserName** name,
   SpecificParserAtomLookup<Latin1Char> lookup(seq, romEntry.hash());
 
   // Save name for returning after moving entry into set.
-  if (!wellKnownSet_.putNew(lookup, &romEntry)) {
+  if (!wellKnownMap_.putNew(lookup, &romEntry, romEntry.toIndex())) {
     js::ReportOutOfMemory(cx);
     return false;
   }
@@ -793,7 +793,7 @@ bool WellKnownParserAtoms::init(JSContext* cx) {
 #undef COMMON_NAME_INIT_
 
   // Initialize the named fields to point to entries in the ROM. This also adds
-  // the atom to the lookup HashSet. The HashSet is used for dynamic lookups
+  // the atom to the lookup HashMap. The HashMap is used for dynamic lookups
   // later and does not change once this init method is complete.
 #define COMMON_NAME_INIT_(_, name, _2)       \
   if (!initSingle(cx, &(name), rom_.name)) { \
