@@ -387,10 +387,6 @@ void js::gc::AssertRootMarkingPhase(JSTracer* trc) {
 /*** Tracing Interface ******************************************************/
 
 template <typename T>
-bool DoCallback(GenericTracer* trc, T** thingp, const char* name);
-template <typename T>
-bool DoCallback(GenericTracer* trc, T* thingp, const char* name);
-template <typename T>
 void DoMarking(GCMarker* gcmarker, T* thing);
 template <typename T>
 void DoMarking(GCMarker* gcmarker, const T& thing);
@@ -587,14 +583,17 @@ void js::TraceProcessGlobalRoot(JSTracer* trc, T* thing, const char* name) {
   // them. Fortunately, atoms (permanent and non) cannot refer to other GC
   // things so they do not need to go through the mark stack and may simply
   // be marked directly.  Moreover, well-known symbols can refer only to
-  // permanent atoms, so likewise require no subsquent marking.
-  CheckTracedThing(trc, *ConvertToBase(&thing));
-  AutoClearTracingSource acts(trc);
+  // permanent atoms, so likewise require no subsequent marking.
   if (trc->isMarkingTracer()) {
+    CheckTracedThing(trc, *ConvertToBase(&thing));
+    AutoClearTracingSource acts(trc);
     thing->asTenured().markIfUnmarked(gc::MarkColor::Black);
-  } else {
-    DoCallback(trc->asCallbackTracer(), ConvertToBase(&thing), name);
+    return;
   }
+
+  T* tmp = thing;
+  TraceEdgeInternal(trc, ConvertToBase(&tmp), name);
+  MOZ_ASSERT(tmp == thing);  // We shouldn't move process global roots.
 }
 template void js::TraceProcessGlobalRoot<JSAtom>(JSTracer*, JSAtom*,
                                                  const char*);
@@ -658,6 +657,48 @@ void js::TraceGCCellPtrRoot(JSTracer* trc, JS::GCCellPtr* thingp,
   } else if (traced != thingp->asCell()) {
     *thingp = JS::GCCellPtr(traced, thingp->kind());
   }
+}
+
+template <typename T>
+inline bool DoCallback(GenericTracer* trc, T** thingp, const char* name) {
+  CheckTracedThing(trc, *thingp);
+  JS::AutoTracingName ctx(trc, name);
+
+  T* thing = *thingp;
+  T* post = DispatchToOnEdge(trc, thing);
+  if (post != thing) {
+    *thingp = post;
+  }
+
+  return post;
+}
+
+template <typename T>
+inline bool DoCallback(GenericTracer* trc, T* thingp, const char* name) {
+  JS::AutoTracingName ctx(trc, name);
+
+  // Return true by default. For some types the lambda below won't be called.
+  bool ret = true;
+  auto thing = MapGCThingTyped(*thingp, [trc, &ret](auto thing) {
+    CheckTracedThing(trc, thing);
+
+    auto* post = DispatchToOnEdge(trc, thing);
+    if (!post) {
+      ret = false;
+      return TaggedPtr<T>::empty();
+    }
+
+    return TaggedPtr<T>::wrap(post);
+  });
+
+  // Only update *thingp if the value changed, to avoid TSan false positives for
+  // template objects when using DumpHeapTracer or UbiNode tracers while Ion
+  // compiling off-thread.
+  if (thing.isSome() && thing.value() != *thingp) {
+    *thingp = thing.value();
+  }
+
+  return ret;
 }
 
 // This method is responsible for dynamic dispatch to the real tracer
