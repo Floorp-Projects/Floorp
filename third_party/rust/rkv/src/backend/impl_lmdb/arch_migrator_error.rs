@@ -14,78 +14,60 @@ use std::{
     str,
 };
 
-use failure::Fail;
+use thiserror::Error;
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 pub enum MigrateError {
-    #[fail(display = "database not found: {:?}", _0)]
+    #[error("database not found: {0:?}")]
     DatabaseNotFound(String),
 
-    #[fail(display = "{}", _0)]
+    #[error("{0}")]
     FromString(String),
 
-    #[fail(display = "couldn't determine bit depth")]
+    #[error("couldn't determine bit depth")]
     IndeterminateBitDepth,
 
-    #[fail(display = "I/O error: {:?}", _0)]
-    IoError(io::Error),
+    #[error("I/O error: {0:?}")]
+    IoError(#[from] io::Error),
 
-    #[fail(display = "invalid DatabaseFlags bits")]
+    #[error("invalid DatabaseFlags bits")]
     InvalidDatabaseBits,
 
-    #[fail(display = "invalid data version")]
+    #[error("invalid data version")]
     InvalidDataVersion,
 
-    #[fail(display = "invalid magic number")]
+    #[error("invalid magic number")]
     InvalidMagicNum,
 
-    #[fail(display = "invalid NodeFlags bits")]
+    #[error("invalid NodeFlags bits")]
     InvalidNodeBits,
 
-    #[fail(display = "invalid PageFlags bits")]
+    #[error("invalid PageFlags bits")]
     InvalidPageBits,
 
-    #[fail(display = "invalid page number")]
+    #[error("invalid page number")]
     InvalidPageNum,
 
-    #[fail(display = "lmdb backend error: {}", _0)]
-    LmdbError(lmdb::Error),
+    #[error("lmdb backend error: {0}")]
+    LmdbError(#[from] lmdb::Error),
 
-    #[fail(display = "string conversion error")]
+    #[error("string conversion error")]
     StringConversionError,
 
-    #[fail(display = "TryFromInt error: {:?}", _0)]
-    TryFromIntError(num::TryFromIntError),
+    #[error("TryFromInt error: {0:?}")]
+    TryFromIntError(#[from] num::TryFromIntError),
 
-    #[fail(display = "unexpected Page variant")]
+    #[error("unexpected Page variant")]
     UnexpectedPageVariant,
 
-    #[fail(display = "unexpected PageHeader variant")]
+    #[error("unexpected PageHeader variant")]
     UnexpectedPageHeaderVariant,
 
-    #[fail(display = "unsupported PageHeader variant")]
+    #[error("unsupported PageHeader variant")]
     UnsupportedPageHeaderVariant,
 
-    #[fail(display = "UTF8 error: {:?}", _0)]
-    Utf8Error(str::Utf8Error),
-}
-
-impl From<io::Error> for MigrateError {
-    fn from(e: io::Error) -> MigrateError {
-        MigrateError::IoError(e)
-    }
-}
-
-impl From<str::Utf8Error> for MigrateError {
-    fn from(e: str::Utf8Error) -> MigrateError {
-        MigrateError::Utf8Error(e)
-    }
-}
-
-impl From<num::TryFromIntError> for MigrateError {
-    fn from(e: num::TryFromIntError) -> MigrateError {
-        MigrateError::TryFromIntError(e)
-    }
+    #[error("UTF8 error: {0:?}")]
+    Utf8Error(#[from] str::Utf8Error),
 }
 
 impl From<&str> for MigrateError {
@@ -97,11 +79,5 @@ impl From<&str> for MigrateError {
 impl From<String> for MigrateError {
     fn from(e: String) -> MigrateError {
         MigrateError::FromString(e)
-    }
-}
-
-impl From<lmdb::Error> for MigrateError {
-    fn from(e: lmdb::Error) -> MigrateError {
-        MigrateError::LmdbError(e)
     }
 }

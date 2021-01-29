@@ -8,48 +8,49 @@ use nserror::{
 use rkv::{MigrateError as RkvMigrateError, StoreError as RkvStoreError};
 use serde_json::Error as SerdeJsonError;
 use std::{io::Error as IoError, str::Utf8Error, string::FromUtf16Error, sync::PoisonError};
+use thiserror::Error;
 
 pub(crate) type XULStoreResult<T> = Result<T, XULStoreError>;
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 pub(crate) enum XULStoreError {
-    #[fail(display = "error converting bytes: {:?}", _0)]
-    ConvertBytes(Utf8Error),
+    #[error("error converting bytes: {0:?}")]
+    ConvertBytes(#[from] Utf8Error),
 
-    #[fail(display = "error converting string: {:?}", _0)]
-    ConvertString(FromUtf16Error),
+    #[error("error converting string: {0:?}")]
+    ConvertString(#[from] FromUtf16Error),
 
-    #[fail(display = "I/O error: {:?}", _0)]
-    IoError(IoError),
+    #[error("I/O error: {0:?}")]
+    IoError(#[from] IoError),
 
-    #[fail(display = "iteration is finished")]
+    #[error("iteration is finished")]
     IterationFinished,
 
-    #[fail(display = "JSON error: {}", _0)]
-    JsonError(SerdeJsonError),
+    #[error("JSON error: {0}")]
+    JsonError(#[from] SerdeJsonError),
 
-    #[fail(display = "error result {}", _0)]
-    NsResult(nsresult),
+    #[error("error result {0}")]
+    NsResult(#[from] nsresult),
 
-    #[fail(display = "poison error getting read/write lock")]
+    #[error("poison error getting read/write lock")]
     PoisonError,
 
-    #[fail(display = "migrate error: {:?}", _0)]
-    RkvMigrateError(RkvMigrateError),
+    #[error("migrate error: {0:?}")]
+    RkvMigrateError(#[from] RkvMigrateError),
 
-    #[fail(display = "store error: {:?}", _0)]
-    RkvStoreError(RkvStoreError),
+    #[error("store error: {0:?}")]
+    RkvStoreError(#[from] RkvStoreError),
 
-    #[fail(display = "id or attribute name too long")]
+    #[error("id or attribute name too long")]
     IdAttrNameTooLong,
 
-    #[fail(display = "unavailable")]
+    #[error("unavailable")]
     Unavailable,
 
-    #[fail(display = "unexpected key: {:?}", _0)]
+    #[error("unexpected key: {0:?}")]
     UnexpectedKey(String),
 
-    #[fail(display = "unexpected value")]
+    #[error("unexpected value")]
     UnexpectedValue,
 }
 
@@ -73,50 +74,8 @@ impl From<XULStoreError> for nsresult {
     }
 }
 
-impl From<FromUtf16Error> for XULStoreError {
-    fn from(err: FromUtf16Error) -> XULStoreError {
-        XULStoreError::ConvertString(err)
-    }
-}
-
-impl From<nsresult> for XULStoreError {
-    fn from(result: nsresult) -> XULStoreError {
-        XULStoreError::NsResult(result)
-    }
-}
-
 impl<T> From<PoisonError<T>> for XULStoreError {
     fn from(_: PoisonError<T>) -> XULStoreError {
         XULStoreError::PoisonError
-    }
-}
-
-impl From<RkvMigrateError> for XULStoreError {
-    fn from(err: RkvMigrateError) -> XULStoreError {
-        XULStoreError::RkvMigrateError(err)
-    }
-}
-
-impl From<RkvStoreError> for XULStoreError {
-    fn from(err: RkvStoreError) -> XULStoreError {
-        XULStoreError::RkvStoreError(err)
-    }
-}
-
-impl From<Utf8Error> for XULStoreError {
-    fn from(err: Utf8Error) -> XULStoreError {
-        XULStoreError::ConvertBytes(err)
-    }
-}
-
-impl From<IoError> for XULStoreError {
-    fn from(err: IoError) -> XULStoreError {
-        XULStoreError::IoError(err)
-    }
-}
-
-impl From<SerdeJsonError> for XULStoreError {
-    fn from(err: SerdeJsonError) -> XULStoreError {
-        XULStoreError::JsonError(err)
     }
 }
