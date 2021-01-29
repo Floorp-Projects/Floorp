@@ -9,7 +9,6 @@
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/dom/HTMLInputElement.h"
-#include "mozilla/EventStateManager.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/PresShell.h"
 #include "nsDeviceContext.h"
@@ -33,13 +32,6 @@ nsCheckboxRadioFrame::nsCheckboxRadioFrame(ComputedStyle* aStyle,
     : nsAtomicContainerFrame(aStyle, aPresContext, kClassID) {}
 
 nsCheckboxRadioFrame::~nsCheckboxRadioFrame() = default;
-
-void nsCheckboxRadioFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                       PostDestroyData& aPostDestroyData) {
-  // Unregister the access key registered in reflow
-  nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
-  nsAtomicContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
-}
 
 NS_IMPL_FRAMEARENA_HELPERS(nsCheckboxRadioFrame)
 
@@ -118,10 +110,6 @@ void nsCheckboxRadioFrame::Reflow(nsPresContext* aPresContext,
       ("enter nsCheckboxRadioFrame::Reflow: aMaxSize=%d,%d",
        aReflowInput.AvailableWidth(), aReflowInput.AvailableHeight()));
 
-  if (mState & NS_FRAME_FIRST_REFLOW) {
-    RegUnRegAccessKey(static_cast<nsIFrame*>(this), true);
-  }
-
   const auto wm = aReflowInput.GetWritingMode();
   aDesiredSize.SetSize(wm, aReflowInput.ComputedSizeWithBorderPadding(wm));
 
@@ -138,30 +126,6 @@ void nsCheckboxRadioFrame::Reflow(nsPresContext* aPresContext,
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();
   FinishAndStoreOverflow(&aDesiredSize);
-}
-
-nsresult nsCheckboxRadioFrame::RegUnRegAccessKey(nsIFrame* aFrame,
-                                                 bool aDoReg) {
-  NS_ENSURE_ARG_POINTER(aFrame);
-
-  nsPresContext* presContext = aFrame->PresContext();
-
-  NS_ASSERTION(presContext, "aPresContext is NULL in RegUnRegAccessKey!");
-
-  nsAutoString accessKey;
-
-  Element* content = aFrame->GetContent()->AsElement();
-  content->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accessKey);
-  if (!accessKey.IsEmpty()) {
-    EventStateManager* stateManager = presContext->EventStateManager();
-    if (aDoReg) {
-      stateManager->RegisterAccessKey(content, (uint32_t)accessKey.First());
-    } else {
-      stateManager->UnregisterAccessKey(content, (uint32_t)accessKey.First());
-    }
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
 }
 
 void nsCheckboxRadioFrame::SetFocus(bool aOn, bool aRepaint) {}
