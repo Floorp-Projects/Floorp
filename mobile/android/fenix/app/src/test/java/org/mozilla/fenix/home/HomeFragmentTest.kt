@@ -8,7 +8,9 @@ import android.content.Context
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import mozilla.components.browser.menu.view.MenuButton
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
@@ -64,5 +66,14 @@ class HomeFragmentTest {
         val topSitesConfig = homeFragment.getTopSitesConfig()
 
         Assert.assertEquals(topSitesMaxLimit, topSitesConfig.totalSites)
+    }
+
+    @Test
+    fun `WHEN configuration changed menu is dismissed`() {
+        val menuButton: MenuButton = mockk(relaxed = true)
+        homeFragment.getMenuButton = { menuButton }
+        homeFragment.onConfigurationChanged(mockk(relaxed = true))
+
+        verify(exactly = 1) { menuButton.dismissMenu() }
     }
 }

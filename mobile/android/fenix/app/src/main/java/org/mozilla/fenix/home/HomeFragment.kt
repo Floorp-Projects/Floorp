@@ -7,6 +7,7 @@ package org.mozilla.fenix.home
 import android.animation.Animator
 import android.content.Context
 import android.content.DialogInterface
+import android.content.res.Configuration
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -168,6 +169,9 @@ class HomeFragment : Fragment() {
 
     private val topSitesFeature = ViewBoundFeatureWrapper<TopSitesFeature>()
 
+    @VisibleForTesting
+    internal var getMenuButton: () -> MenuButton? = { menuButton }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -272,6 +276,12 @@ class HomeFragment : Fragment() {
 
         activity.themeManager.applyStatusBarTheme(activity)
         return view
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        getMenuButton()?.dismissMenu()
     }
 
     private fun dismissTip(tip: Tip) {

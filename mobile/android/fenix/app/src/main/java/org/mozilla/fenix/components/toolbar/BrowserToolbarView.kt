@@ -235,6 +235,10 @@ class BrowserToolbarView(
         }
     }
 
+    fun dismissMenu() {
+        view.dismissMenu()
+    }
+
     /**
      * Dynamically sets scroll flags for the toolbar when the user does not have a screen reader enabled
      * Note that the toolbar will have the flags set and be able to be hidden

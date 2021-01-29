@@ -6,6 +6,7 @@ package org.mozilla.fenix.browser
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
@@ -1315,6 +1316,12 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
         if (_browserToolbarView != null) {
             browserToolbarView.setScrollFlags(enabled)
         }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        _browserToolbarView?.dismissMenu()
     }
 
     // This method is called in response to native web extension messages from

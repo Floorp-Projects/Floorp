@@ -346,6 +346,17 @@ class BrowserFragmentTest {
         verify(exactly = 1) { toolbarIntegration.invalidateMenu() }
     }
 
+    @Test
+    fun `WHEN fragment configuration changed THEN menu is dismissed`() {
+        val browserToolbarView: BrowserToolbarView = mockk(relaxed = true)
+        every { browserFragment.context } returns null
+        browserFragment._browserToolbarView = browserToolbarView
+
+        browserFragment.onConfigurationChanged(mockk(relaxed = true))
+
+        verify(exactly = 1) { browserToolbarView.dismissMenu() }
+    }
+
     private fun addAndSelectTab(tab: TabSessionState) {
         store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
         store.dispatch(TabListAction.SelectTabAction(tab.id)).joinBlocking()
