@@ -24,17 +24,18 @@
 #include "frontend/NameCollections.h"  // AtomIndexMap, PooledMapPtr
 #include "frontend/ObjLiteral.h"       // ObjLiteralStencil
 #include "frontend/ParseNode.h"        // BigIntLiteral
-#include "frontend/SourceNotes.h"      // SrcNote
-#include "frontend/Stencil.h"          // Stencils
-#include "gc/Rooting.h"                // JS::Rooted
-#include "js/GCVariant.h"              // GCPolicy<mozilla::Variant>
-#include "js/GCVector.h"               // GCVector
-#include "js/TypeDecls.h"              // jsbytecode, JSContext
-#include "js/Value.h"                  // JS::Vector
-#include "js/Vector.h"                 // Vector
-#include "vm/Opcodes.h"                // JSOpLength_JumpTarget
-#include "vm/SharedStencil.h"          // TryNote, ScopeNote, GCThingIndex
-#include "vm/StencilEnums.h"           // TryNoteKind
+#include "frontend/ParserAtom.h"   // ParserAtomsTable, TaggedParserAtomIndex
+#include "frontend/SourceNotes.h"  // SrcNote
+#include "frontend/Stencil.h"      // Stencils
+#include "gc/Rooting.h"            // JS::Rooted
+#include "js/GCVariant.h"          // GCPolicy<mozilla::Variant>
+#include "js/GCVector.h"           // GCVector
+#include "js/TypeDecls.h"          // jsbytecode, JSContext
+#include "js/Value.h"              // JS::Vector
+#include "js/Vector.h"             // Vector
+#include "vm/Opcodes.h"            // JSOpLength_JumpTarget
+#include "vm/SharedStencil.h"      // TryNote, ScopeNote, GCThingIndex
+#include "vm/StencilEnums.h"       // TryNoteKind
 
 namespace js {
 
@@ -58,10 +59,10 @@ struct MOZ_STACK_CLASS GCThingList {
   explicit GCThingList(JSContext* cx, CompilationState& compilationState)
       : compilationState(compilationState), vector(cx) {}
 
-  MOZ_MUST_USE bool append(const ParserAtom* atom, GCThingIndex* index) {
+  MOZ_MUST_USE bool append(TaggedParserAtomIndex atom, GCThingIndex* index) {
     *index = GCThingIndex(vector.length());
-    atom->markUsedByStencil();
-    if (!vector.emplaceBack(atom->toIndex())) {
+    compilationState.parserAtoms.markUsedByStencil(atom);
+    if (!vector.emplaceBack(atom)) {
       return false;
     }
     return true;

@@ -730,6 +730,8 @@ class ParserAtomsTable {
   const ParserAtom* getParserAtom(ParserAtomIndex index) const;
   const ParserAtom* getParserAtom(TaggedParserAtomIndex index) const;
 
+  void markUsedByStencil(TaggedParserAtomIndex index) const;
+
   const ParserAtomVector& entries() const { return entries_; }
 };
 
