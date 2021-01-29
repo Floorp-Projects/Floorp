@@ -1164,7 +1164,27 @@ bool TrackBuffersManager::IsRepeatInitData(
     }
   }
 
-  // TODO(bryce): handle video only and audio + video case.
+  bool videoInfoIsRepeat = false;
+  if (aNewMediaInfo.HasVideo()) {
+    if (!mVideoTracks.mLastInfo) {
+      // There is no old video info, so this can't be a repeat.
+      return false;
+    }
+    videoInfoIsRepeat =
+        *mVideoTracks.mLastInfo->GetAsVideoInfo() == aNewMediaInfo.mVideo;
+    if (!aNewMediaInfo.HasAudio()) {
+      // Only have video.
+      return videoInfoIsRepeat;
+    }
+  }
+
+  if (audioInfoIsRepeat && videoInfoIsRepeat) {
+    MOZ_DIAGNOSTIC_ASSERT(
+        aNewMediaInfo.HasVideo() && aNewMediaInfo.HasAudio(),
+        "This should only be reachable if audio and video are present");
+    // Video + audio are present and both have the same init data.
+    return true;
+  }
 
   return false;
 }
