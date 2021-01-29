@@ -16,7 +16,6 @@
 #include "nsNameSpaceManager.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
-#include "nsCheckboxRadioFrame.h"
 #include "nsFontMetrics.h"
 #include "nsCSSPseudoElements.h"
 #include "nsStyleConsts.h"
@@ -43,7 +42,6 @@ void nsMeterFrame::DestroyFrom(nsIFrame* aDestructRoot,
   NS_ASSERTION(!GetPrevContinuation(),
                "nsMeterFrame should not have continuations; if it does we "
                "need to call RegUnregAccessKey only for the first.");
-  nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   aPostDestroyData.AddAnonymousContent(mBarDiv.forget());
   nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
@@ -89,10 +87,6 @@ void nsMeterFrame::Reflow(nsPresContext* aPresContext,
   NS_ASSERTION(!GetPrevContinuation(),
                "nsMeterFrame should not have continuations; if it does we "
                "need to call RegUnregAccessKey only for the first.");
-
-  if (mState & NS_FRAME_FIRST_REFLOW) {
-    nsCheckboxRadioFrame::RegUnRegAccessKey(this, true);
-  }
 
   nsIFrame* barFrame = mBarDiv->GetPrimaryFrame();
   NS_ASSERTION(barFrame, "The meter frame should have a child with a frame!");

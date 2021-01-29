@@ -8,7 +8,6 @@
 #include "nsCOMPtr.h"
 #include "nsUnicharUtils.h"
 #include "nsListControlFrame.h"
-#include "nsCheckboxRadioFrame.h"  // for COMPARE macro
 #include "nsGkAtoms.h"
 #include "nsComboboxControlFrame.h"
 #include "nsFontMetrics.h"
@@ -141,7 +140,6 @@ void nsListControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
                                  CanBubble::eYes, ChromeOnlyDispatch::eYes));
   }
 
-  nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   nsHTMLScrollFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
@@ -354,10 +352,6 @@ void nsListControlFrame::Reflow(nsPresContext* aPresContext,
     if (mIsAllFramesHere && !mHasBeenInitialized) {
       mHasBeenInitialized = true;
     }
-  }
-
-  if (HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
-    nsCheckboxRadioFrame::RegUnRegAccessKey(this, true);
   }
 
   if (IsInDropDownMode()) {
