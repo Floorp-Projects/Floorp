@@ -858,15 +858,27 @@ void ScriptPreloader::NoteScript(const nsCString& url,
 /* static */
 void ScriptPreloader::FillCompileOptionsForCachedScript(
     JS::CompileOptions& options) {
-  // See IsMultiDecodeCompileOptionsMatching in js/src/vm/JSScript.cpp.
+  // Users of the cache do not require return values, so inform the JS parser in
+  // order for it to generate simpler bytecode.
   options.setNoScriptRval(true);
-  MOZ_ASSERT(!options.selfHostingMode);
-  MOZ_ASSERT(!options.isRunOnce);
+
+  // The ScriptPreloader trades off having bytecode available but not source
+  // text. This means the JS syntax-only parser is not used. If `toString` is
+  // called on functions in these scripts, the source-hook will fetch it over,
+  // so using `toString` of functions should be avoided in chrome js.
+  options.setSourceIsLazy(true);
 }
 
 JSScript* ScriptPreloader::GetCachedScript(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     const nsCString& path) {
+  // Users of ScriptPreloader must agree on a standard set of compile options so
+  // that bytecode data can safely saved from one context and loaded in another.
+  MOZ_ASSERT(options.noScriptRval);
+  MOZ_ASSERT(!options.selfHostingMode);
+  MOZ_ASSERT(!options.isRunOnce);
+  MOZ_ASSERT(options.sourceIsLazy);
+
   // If a script is used by both the parent and the child, it's stored only
   // in the child cache.
   if (mChildCache) {
@@ -1088,7 +1100,6 @@ void ScriptPreloader::DecodeNextBatch(size_t chunkSize,
 
   JS::CompileOptions options(cx);
   FillCompileOptionsForCachedScript(options);
-  options.setSourceIsLazy(true);
 
   if (!JS::CanCompileOffThread(cx, options, size) ||
       !JS::DecodeMultiOffThreadScripts(cx, options, mParsingSources,
