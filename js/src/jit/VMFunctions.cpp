@@ -2234,7 +2234,7 @@ void AllocateAndInitTypedArrayBuffer(JSContext* cx, TypedArrayObject* obj,
   // raise an invalid argument exception or create a correct object with zero
   // elements.
   const size_t maxByteLength = TypedArrayObject::maxByteLength();
-  if (count <= 0 || size_t(count) >= maxByteLength / obj->bytesPerElement()) {
+  if (count <= 0 || size_t(count) > maxByteLength / obj->bytesPerElement()) {
     obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, PrivateValue(size_t(0)));
     return;
   }
