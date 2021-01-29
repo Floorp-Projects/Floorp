@@ -116,13 +116,17 @@ static JSObject* InterpretObjLiteralArray(
                              NewObjectKind::TenuredObject);
 }
 
-JSObject* InterpretObjLiteral(JSContext* cx,
-                              const frontend::CompilationAtomCache& atomCache,
-                              const mozilla::Span<const uint8_t> literalInsns,
-                              ObjLiteralFlags flags) {
+static JSObject* InterpretObjLiteral(
+    JSContext* cx, const frontend::CompilationAtomCache& atomCache,
+    const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags) {
   return flags.contains(ObjLiteralFlag::Array)
              ? InterpretObjLiteralArray(cx, atomCache, literalInsns, flags)
              : InterpretObjLiteralObj(cx, atomCache, literalInsns, flags);
+}
+
+JSObject* ObjLiteralStencil::create(
+    JSContext* cx, const frontend::CompilationAtomCache& atomCache) const {
+  return InterpretObjLiteral(cx, atomCache, code_, flags_);
 }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
