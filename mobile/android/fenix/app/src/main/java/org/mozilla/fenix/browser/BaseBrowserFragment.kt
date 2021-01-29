@@ -81,6 +81,7 @@ import mozilla.components.support.ktx.android.view.exitImmersiveModeIfNeeded
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
+import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
@@ -125,6 +126,7 @@ import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.wifi.SitePermissionsWifiIntegration
 import java.lang.ref.WeakReference
 import mozilla.components.feature.media.fullscreen.MediaFullscreenOrientationFeature
+import mozilla.components.feature.webauthn.WebAuthnFeature
 import org.mozilla.fenix.FeatureFlags.newMediaSessionApi
 
 /**
@@ -643,7 +645,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
             view = view
         )
 
-        if (FeatureFlags.webAuthFeature) {
+        // This component feature only works on Fenix when built on Mozilla infrastructure.
+        if (FeatureFlags.webAuthFeature && BuildConfig.MOZILLA_OFFICIAL) {
             webAuthnFeature.set(
                 feature = WebAuthnFeature(
                     engine = requireComponents.core.engine,

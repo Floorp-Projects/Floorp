@@ -479,6 +479,7 @@ dependencies {
     implementation Deps.mozilla_feature_top_sites
     implementation Deps.mozilla_feature_share
     implementation Deps.mozilla_feature_accounts_push
+    implementation Deps.mozilla_feature_webauthn
     implementation Deps.mozilla_feature_webcompat
     implementation Deps.mozilla_feature_webnotifications
     implementation Deps.mozilla_feature_webcompat_reporter

@@ -48,7 +48,7 @@ object FeatureFlags {
     val newMediaSessionApi = true
 
     /**
-     * Enables experimental WebAuthn support. This implementation should never reach release!
+     * Enables WebAuthn support.
      */
     val webAuthFeature = Config.channel.isNightlyOrDebug
 }
