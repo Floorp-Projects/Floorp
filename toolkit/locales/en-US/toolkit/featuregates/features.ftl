@@ -29,14 +29,6 @@ experimental-features-web-api-inputmode-description = Our implementation of the 
 
 # The title of the experiment should be kept in English as it may be referenced
 # by various online articles and is technical in nature.
-experimental-features-web-api-beforeinput =
-    .label = Web API: beforeinput Event
-# The terms "beforeinput", "input", "textarea", and "contenteditable" are technical terms
-# and shouldn't be translated.
-experimental-features-web-api-beforeinput-description = The global <a data-l10n-name="mdn-beforeinput">beforeinput</a> event is fired on an <a data-l10n-name="mdn-input">&lt;input&gt;</a> and <a data-l10n-name="mdn-textarea">&lt;textarea&gt;</a> elements, or any element whose <a data-l10n-name="mdn-contenteditable">contenteditable</a> attribute is enabled, immediately before the element’s value changes. The event allows web apps to override the browser’s default behavior for user interaction, e.g., web apps can cancel user input only for specific characters or can modify pasting styled text only with approved styles.
-
-# The title of the experiment should be kept in English as it may be referenced
-# by various online articles and is technical in nature.
 experimental-features-css-constructable-stylesheets =
     .label = CSS: Constructable Stylesheets
 experimental-features-css-constructable-stylesheets-description = The addition of a constructor to the <a data-l10n-name="mdn-cssstylesheet">CSSStyleSheet</a> interface as well as a variety of related changes makes it possible to directly create new stylesheets without having to add the sheet to the HTML. This makes it much easier to create reusable stylesheets for use with <a data-l10n-name="mdn-shadowdom">Shadow DOM</a>. See <a data-l10n-name="bugzilla">bug 1520690</a> for more details.
