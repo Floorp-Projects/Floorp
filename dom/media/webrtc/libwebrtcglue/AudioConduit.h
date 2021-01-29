@@ -184,17 +184,11 @@ class WebrtcAudioConduit : public AudioSessionConduit,
         mRecvSSRC(0),
         mEngineTransmitting(false),
         mEngineReceiving(false),
-        mRecvChannel(-1),
-        mSendChannel(-1),
         mDtmfEnabled(false),
         mMutex("WebrtcAudioConduit::mMutex"),
         mStsThread(aStsThread) {}
 
   virtual ~WebrtcAudioConduit();
-
-  virtual MediaConduitErrorCode Init();
-
-  int GetRecvChannel() { return mRecvChannel; }
 
   /* Set Local SSRC list.
    * Note: Until the refactor of the VoE into the call API is complete
@@ -244,20 +238,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
 
   bool IsSamplingFreqSupported(int freq) const override;
 
- protected:
-  /*
-    // These are protected so they can be accessed by unit tests
-    // Written only on main thread. Accessed from audio thread.
-    // Accessed from mStsThread during stats calls.
-    // This is safe, provided audio and stats calls stop before we
-    // destroy the AudioConduit.
-    std::unique_ptr<webrtc::voe::ChannelProxy> mRecvChannelProxy = nullptr;
-
-    // Written only on main thread. Accessed from mStsThread during stats calls.
-    // This is safe, provided stats calls stop before we destroy the
-    // AudioConduit.
-    std::unique_ptr<webrtc::voe::ChannelProxy> mSendChannelProxy = nullptr;
-  */
  private:
   WebrtcAudioConduit(const WebrtcAudioConduit& other) = delete;
   void operator=(const WebrtcAudioConduit& other) = delete;
@@ -281,9 +261,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   bool RecreateSendStreamIfExists();
   bool RecreateRecvStreamIfExists();
 
-  MediaConduitErrorCode CreateChannels();
-  virtual void DeleteChannels();
-
   mozilla::ReentrantMonitor mTransportMonitor;
 
   // Accessed on any thread under mTransportMonitor.
@@ -291,12 +268,7 @@ class WebrtcAudioConduit : public AudioSessionConduit,
 
   // Accessed on any thread under mTransportMonitor.
   RefPtr<TransportInterface> mReceiverTransport;
-  /*
-    // Accessed from main thread and audio threads. Used to create and destroy
-    // channels and to send audio data. Access to channels is protected by
-    // locking in channel.cc.
-    ScopedCustomReleasePtr<webrtc::VoEBase> mPtrVoEBase;
-  */
+
   // Const so can be accessed on any thread. Most methods are called on
   // main thread.
   const RefPtr<WebRtcCallWrapper> mCall;
@@ -327,13 +299,9 @@ class WebrtcAudioConduit : public AudioSessionConduit,
                          // and playout is enabled
 
   // Accessed only on main thread.
-  int mRecvChannel;
-
-  // Accessed on main thread and from audio thread.
-  int mSendChannel;
-
-  // Accessed only on main thread.
   bool mDtmfEnabled;
+  int mDtmfPayloadType = -1;
+  int mDtmfPayloadFrequency = -1;
 
   Mutex mMutex;
 
