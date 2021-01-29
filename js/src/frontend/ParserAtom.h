@@ -15,7 +15,7 @@
 
 #include "ds/LifoAlloc.h"         // LifoAlloc
 #include "frontend/TypedIndex.h"  // TypedIndex
-#include "js/HashTable.h"         // HashSet
+#include "js/HashTable.h"         // HashMap
 #include "js/UniquePtr.h"         // js::UniquePtr
 #include "js/Vector.h"            // Vector
 #include "vm/CommonPropertyNames.h"
@@ -710,9 +710,9 @@ class WellKnownParserAtoms {
 
   // Common property and prototype names are tracked in a hash table. This table
   // does not key for any items already in a direct-indexing tiny atom table.
-  using EntrySet = HashSet<const ParserAtomEntry*, ParserAtomLookupHasher,
-                           js::SystemAllocPolicy>;
-  EntrySet wellKnownSet_;
+  using EntryMap = HashMap<const ParserAtomEntry*, TaggedParserAtomIndex,
+                           ParserAtomLookupHasher, js::SystemAllocPolicy>;
+  EntryMap wellKnownMap_;
 
   bool initTinyStringAlias(JSContext* cx, const ParserName** name,
                            const char* str);
@@ -753,9 +753,9 @@ class ParserAtomsTable {
   LifoAlloc& alloc_;
 
   // The ParserAtomEntry are owned by the LifoAlloc.
-  using EntrySet = HashSet<const ParserAtomEntry*, ParserAtomLookupHasher,
-                           js::SystemAllocPolicy>;
-  EntrySet entrySet_;
+  using EntryMap = HashMap<const ParserAtomEntry*, TaggedParserAtomIndex,
+                           ParserAtomLookupHasher, js::SystemAllocPolicy>;
+  EntryMap entryMap_;
   ParserAtomVector entries_;
 
  public:
@@ -765,10 +765,10 @@ class ParserAtomsTable {
  private:
   // Internal APIs for interning to the table after well-known atoms cases have
   // been tested.
-  const ParserAtom* addEntry(JSContext* cx, EntrySet::AddPtr& addPtr,
+  const ParserAtom* addEntry(JSContext* cx, EntryMap::AddPtr& addPtr,
                              ParserAtomEntry* entry);
   template <typename AtomCharT, typename SeqCharT>
-  const ParserAtom* internChar16Seq(JSContext* cx, EntrySet::AddPtr& addPtr,
+  const ParserAtom* internChar16Seq(JSContext* cx, EntryMap::AddPtr& addPtr,
                                     HashNumber hash,
                                     InflatedChar16Sequence<SeqCharT> seq,
                                     uint32_t length);
