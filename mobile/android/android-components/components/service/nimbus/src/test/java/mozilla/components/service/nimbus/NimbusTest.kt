@@ -51,6 +51,7 @@ class NimbusTest {
 
         // Create a list of experiments to test the telemetry enrollment recording
         val enrolledExperiments = listOf(EnrolledExperiment(
+            enrollmentId = "enrollment-id",
             slug = "test-experiment",
             branchSlug = "test-branch",
             userFacingDescription = "A test experiment for testing experiments",
@@ -72,7 +73,8 @@ class NimbusTest {
     @Test
     fun `NimbusDisabled is empty`() {
         val nimbus: NimbusApi = NimbusDisabled()
-        nimbus.updateExperiments()
+        nimbus.fetchExperiments()
+        nimbus.applyPendingExperiments()
         assertTrue("getActiveExperiments should be empty", nimbus.getActiveExperiments().isEmpty())
         assertEquals(null, nimbus.getExperimentBranch("test-experiment"))
     }

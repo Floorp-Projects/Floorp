@@ -5,6 +5,7 @@
 package org.mozilla.samples.glean
 
 import android.app.Application
+import android.content.Context
 import android.net.Uri
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.glean.Glean
@@ -26,12 +27,18 @@ class GleanApplication : Application() {
 
     companion object {
         lateinit var nimbus: NimbusApi
+
+        const val SAMPLE_GLEAN_PREFERENCES = "sample_glean_preferences"
+        const val PREF_IS_FIRST_RUN = "isFirstRun"
     }
 
     override fun onCreate() {
         super.onCreate()
+        val settings = applicationContext.getSharedPreferences(SAMPLE_GLEAN_PREFERENCES, Context.MODE_PRIVATE)
+        val isFirstRun = settings.getBoolean(PREF_IS_FIRST_RUN, true)
 
         // We want the log messages of all builds to go to Android logcat
+
         Log.addSink(AndroidLogSink())
 
         // Register the sample application's custom pings.
@@ -45,7 +52,7 @@ class GleanApplication : Application() {
         Glean.initialize(applicationContext, uploadEnabled = true, configuration = config)
 
         /** Begin Nimbus component specific code. Note: this is not relevant to Glean */
-        initNimbus()
+        initNimbus(isFirstRun)
         /** End Nimbus specific code. */
 
         Test.timespan.start()
@@ -54,20 +61,42 @@ class GleanApplication : Application() {
 
         // Set a sample value for a metric.
         Basic.os.set("Android")
+
+        settings
+            .edit()
+            .putBoolean(PREF_IS_FIRST_RUN, false)
+            .apply()
     }
 
     /**
      * Initialize the Nimbus experiments library. This is only relevant to the Nimbus library, aside
      * from recording the experiment in Glean.
      */
-    private fun initNimbus() {
+    private fun initNimbus(isFirstRun: Boolean) {
         RustLog.enable()
         RustHttpConfig.setClient(lazy { HttpURLConnectionClient() })
         val url = Uri.parse(getString(R.string.nimbus_default_endpoint))
         nimbus = Nimbus(this,
             NimbusServerSettings(url)
         ).also { nimbus ->
-            nimbus.updateExperiments()
+            if (isFirstRun) {
+                // This file is bundled with the app, but derived from the server at build time.
+                // We'll use it now, on first run.
+                nimbus.setExperimentsLocally(R.raw.initial_experiments)
+            }
+            // Apply the experiments downloaded on last run, but on first run, it will
+            // use the contents of `R.raw.initial_experiments`.
+            nimbus.applyPendingExperiments()
+
+            // In a real application, we might want to fetchExperiments() here.
+            //
+            // We won't do that in this app because:
+            //   * the server's experiments will overwrite the current ones
+            //   * it's not clear that the server will have a `test-color` experiment
+            //     by the time you run this
+            //   * an update experiments button is in `MainActivity`
+            //
+            // nimbus.fetchExperiments()
         }
     }
 }

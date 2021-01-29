@@ -6,6 +6,7 @@ package org.mozilla.samples.glean
 
 import android.graphics.Color
 import android.os.Bundle
+import androidx.annotation.MainThread
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import mozilla.components.service.nimbus.NimbusApi
@@ -66,12 +67,17 @@ open class MainActivity : AppCompatActivity(), NimbusApi.Observer {
      * button. This is not relevant to the Glean SDK, but to the Nimbus experiments library.
      */
     private fun setupNimbusExperiments() {
-        // Attach the click listener for the experiments button to the updateExperiments function
-        buttonCheckExperiments.setOnClickListener {
-            GleanApplication.nimbus.updateExperiments()
-        }
         // Register the main activity as a Nimbus observer
         GleanApplication.nimbus.register(this)
+
+        // Attach the click listener for the experiments button to the updateExperiments function
+        buttonCheckExperiments.setOnClickListener {
+            // Once the experiments are fetched, then the activity's (a Nimbus observer)
+            // `onExperimentFetched()` method is called.
+            GleanApplication.nimbus.fetchExperiments()
+        }
+
+        configureButton()
     }
 
     /**
@@ -79,6 +85,7 @@ open class MainActivity : AppCompatActivity(), NimbusApi.Observer {
      */
     override fun onExperimentsFetched() {
         println("Experiments fetched")
+        GleanApplication.nimbus.applyPendingExperiments()
     }
 
     /**
@@ -86,22 +93,29 @@ open class MainActivity : AppCompatActivity(), NimbusApi.Observer {
      * shouldn't care to observe this and rather rely on `onExperimentsFetched` and `withExperiment`
      */
     override fun onUpdatesApplied(updated: List<EnrolledExperiment>) {
-        GleanApplication.nimbus.getExperimentBranch("test-color")?.let { branch ->
-            val color = when (branch) {
-                "blue" -> Color.BLUE
-                "red" -> Color.RED
-                "control" -> Color.DKGRAY
-                else -> Color.WHITE
-            }
-
-            // Dispatch the UI work back to the appropriate thread
-            this@MainActivity.runOnUiThread {
-                textViewExperimentStatus.setBackgroundColor(color)
-                textViewExperimentStatus.text = getString(
-                    R.string.experiment_active_branch,
-                    "Experiment Branch: $branch")
-            }
+        runOnUiThread {
+            configureButton()
         }
+    }
+
+    @MainThread
+    private fun configureButton() {
+        val nimbus = GleanApplication.nimbus
+        val branch = nimbus.getExperimentBranch("test-color")
+
+        val color = when (branch) {
+            "blue" -> Color.BLUE
+            "red" -> Color.RED
+            "control" -> Color.DKGRAY
+            else -> Color.WHITE
+        }
+        val text = when (branch) {
+            null -> getString(R.string.experiment_not_active)
+            else -> getString(R.string.experiment_active_branch, branch)
+        }
+
+        textViewExperimentStatus.setBackgroundColor(color)
+        textViewExperimentStatus.text = text
     }
 
     /** End Nimbus component functions */

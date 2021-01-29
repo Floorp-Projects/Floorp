@@ -9,7 +9,10 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import androidx.annotation.AnyThread
+import androidx.annotation.RawRes
 import androidx.annotation.VisibleForTesting
+import androidx.annotation.WorkerThread
 import androidx.core.content.pm.PackageInfoCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -53,13 +56,67 @@ interface NimbusApi : Observable<NimbusApi.Observer> {
      *
      * @return A String representing the branch-id or "slug"
      */
+    @AnyThread
     fun getExperimentBranch(experimentId: String): String? = null
 
     /**
      * Refreshes the experiments from the endpoint. Should be called at least once after
      * initialization
      */
+    @Deprecated("Use fetchExperiments() and applyPendingExperiments()")
     fun updateExperiments() = Unit
+
+    /**
+     * Open the database and populate the SDK so as make it usable by feature developers.
+     *
+     * This performs the minimum amount of I/O needed to ensure `getExperimentBranch()` is usable.
+     *
+     * It will not take in to consideration previously fetched experiments: `applyPendingExperiments()`
+     * is more suitable for that use case.
+     *
+     * This method uses the single threaded worker scope, so callers can safely sequence calls to
+     * `initialize` and `setExperimentsLocally`, `applyPendingExperiments`.
+     */
+    fun initialize() = Unit
+
+    /**
+     * Fetches experiments from the RemoteSettings server.
+     *
+     * This is performed on a background thread.
+     *
+     * Notifies `onExperimentsFetched` to observers once the experiments has been fetched from the
+     * server.
+     *
+     * Notes:
+     * * this does not affect experiment enrolment, until `applyPendingExperiments` is called.
+     * * this will overwrite pending experiments previously fetched with this method, or set with
+     *   `setExperimentsLocally`.
+     */
+    fun fetchExperiments() = Unit
+
+    /**
+     * Calculates the experiment enrolment from experiments from the last `fetchExperiments` or
+     * `setExperimentsLocally`, and then informs Glean of new experiment enrolment.
+     *
+     * Notifies `onUpdatesApplied` once enrolments are recalculated.
+     */
+    fun applyPendingExperiments() = Unit
+
+    /**
+     * Set the experiments as the passed string, just as `fetchExperiments` gets the string from
+     * the server. Like `fetchExperiments`, this requires `applyPendingExperiments` to be called
+     * before enrolments are affected.
+     *
+     * The string should be in the same JSON format that is delivered from the server.
+     *
+     * This is performed on a background thread.
+     */
+    fun setExperimentsLocally(payload: String) = Unit
+
+    /**
+     * A utility method to load a file from resources and pass it to `setExperimentsLocally(String)`.
+     */
+    fun setExperimentsLocally(@RawRes file: Int) = Unit
 
     /**
      * Opt out of a specific experiment
@@ -82,14 +139,14 @@ interface NimbusApi : Observable<NimbusApi.Observer> {
         /**
          * Event to indicate that the experiments have been fetched from the endpoint
          */
-        fun onExperimentsFetched()
+        fun onExperimentsFetched() = Unit
 
         /**
          * Event to indicate that the experiment enrollments have been applied. Multiple calls to
          * get the active experiments will return the same value so this has limited usefulness for
          * most feature developers
          */
-        fun onUpdatesApplied(updated: List<EnrolledExperiment>)
+        fun onUpdatesApplied(updated: List<EnrolledExperiment>) = Unit
     }
 }
 
@@ -105,14 +162,20 @@ data class NimbusServerSettings(
 /**
  * A implementation of the [NimbusApi] interface backed by the Nimbus SDK.
  */
+@Suppress("TooManyFunctions")
 class Nimbus(
-    context: Context,
+    private val context: Context,
     server: NimbusServerSettings?,
     private val delegate: Observable<NimbusApi.Observer> = ObserverRegistry()
 ) : NimbusApi, Observable<NimbusApi.Observer> by delegate {
 
-    // Using a single threaded executor here to enforce synchronization where needed.
-    private val scope: CoroutineScope =
+    // Using two single threaded executors here to enforce synchronization where needed:
+    // An I/O scope is used for reading or writing from the Nimbus's RKV database.
+    private val dbScope: CoroutineScope =
+        CoroutineScope(Executors.newSingleThreadExecutor().asCoroutineDispatcher())
+
+    // An I/O scope is used for getting experiments from the network.
+    private val fetchScope: CoroutineScope =
         CoroutineScope(Executors.newSingleThreadExecutor().asCoroutineDispatcher())
 
     private var nimbus: NimbusClientInterface
@@ -121,7 +184,14 @@ class Nimbus(
 
     override var globalUserParticipation: Boolean
         get() = nimbus.getGlobalUserParticipation()
-        set(active) = nimbus.setGlobalUserParticipation(active)
+        set(active) {
+            dbScope.launch {
+                val enrolmentChanges = nimbus.setGlobalUserParticipation(active)
+                if (enrolmentChanges.isNotEmpty()) {
+                    postEnrolmentCalculation()
+                }
+            }
+        }
 
     init {
         // Set the name of the native library so that we use
@@ -147,14 +217,6 @@ class Nimbus(
                 collectionName = EXPERIMENT_COLLECTION_NAME
             )
         }
-        // We'll temporarily use this until the Nimbus SDK supports null servers
-        // https://github.com/mozilla/nimbus-sdk/pull/66 is landed, so this is the next release of
-        // Nimbus SDK.
-        ?: RemoteSettingsConfig(
-            serverUrl = "https://settings.stage.mozaws.net",
-            bucketName = EXPERIMENT_BUCKET_NAME,
-            collectionName = EXPERIMENT_COLLECTION_NAME
-        )
 
         nimbus = NimbusClient(
             experimentContext,
@@ -173,38 +235,108 @@ class Nimbus(
         nimbus.getExperimentBranch(experimentId)
 
     override fun updateExperiments() {
-        scope.launch {
-            try {
-                nimbus.updateExperiments()
+        fetchScope.launch {
+            fetchExperimentsOnThisThread()
+            applyPendingExperimentsOnThisThread()
+        }
+    }
 
-                // Get the experiments to record in telemetry
-                nimbus.getActiveExperiments().let {
-                    if (it.any()) {
-                        recordExperimentTelemetry(it)
-                        // The current plan is to have the nimbus-sdk updateExperiments() function
-                        // return a diff of the experiments that have been received, at which point we
-                        // can emit the appropriate telemetry events and notify observers of just the
-                        // diff
-                        notifyObservers { onUpdatesApplied(it) }
-                    }
-                }
-            } catch (e: ErrorException.RequestError) {
-                logger.info("Error fetching experiments from endpoint: $e")
-            } catch (e: ErrorException.InvalidExperimentResponse) {
-                logger.info("Invalid experiment response: $e")
+    override fun initialize() {
+        dbScope.launch {
+            initializeOnThisThread()
+        }
+    }
+
+    @WorkerThread
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    private fun initializeOnThisThread() {
+        nimbus.initialize()
+    }
+
+    override fun fetchExperiments() {
+        fetchScope.launch {
+            fetchExperimentsOnThisThread()
+        }
+    }
+
+    @WorkerThread
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    private fun fetchExperimentsOnThisThread() {
+        try {
+            nimbus.fetchExperiments()
+            notifyObservers { onExperimentsFetched() }
+        } catch (e: ErrorException.RequestError) {
+            logger.info("Error fetching experiments from endpoint: $e")
+        }
+    }
+
+    override fun applyPendingExperiments() {
+        dbScope.launch {
+            applyPendingExperimentsOnThisThread()
+        }
+    }
+
+    @WorkerThread
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    private fun applyPendingExperimentsOnThisThread() {
+        try {
+            nimbus.applyPendingExperiments()
+            // Get the experiments to record in telemetry
+            postEnrolmentCalculation()
+        } catch (e: ErrorException.InvalidExperimentFormat) {
+            logger.info("Invalid experiment format: $e")
+        }
+    }
+
+    private fun postEnrolmentCalculation() {
+        nimbus.getActiveExperiments().let {
+            if (it.any()) {
+                recordExperimentTelemetry(it)
+                // The current plan is to have the nimbus-sdk updateExperiments() function
+                // return a diff of the experiments that have been received, at which point we
+                // can emit the appropriate telemetry events and notify observers of just the
+                // diff. See also:
+                // https://github.com/mozilla/experimenter/issues/3588 and
+                // https://jira.mozilla.com/browse/SDK-6
+                notifyObservers { onUpdatesApplied(it) }
             }
         }
     }
 
+    override fun setExperimentsLocally(@RawRes file: Int) {
+        dbScope.launch {
+            val payload = context.resources.openRawResource(file).use {
+                it.bufferedReader().readText()
+            }
+            setExperimentsLocallyOnThisThread(payload)
+        }
+    }
+
+    override fun setExperimentsLocally(payload: String) {
+        dbScope.launch {
+            setExperimentsLocallyOnThisThread(payload)
+        }
+    }
+
+    @WorkerThread
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    private fun setExperimentsLocallyOnThisThread(payload: String) {
+        nimbus.setExperimentsLocally(payload)
+    }
+
     override fun optOut(experimentId: String) {
-        nimbus.optOut(experimentId)
+        dbScope.launch {
+            nimbus.optOut(experimentId)
+        }
     }
 
     // This function shouldn't be exposed to the public API, but is meant for testing purposes to
     // force an experiment/branch enrollment.
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     internal fun optInWithBranch(experiment: String, branch: String) {
-        nimbus.optInWithBranch(experiment, branch)
+        dbScope.launch {
+            nimbus.optInWithBranch(experiment, branch)
+        }
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
