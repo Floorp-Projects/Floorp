@@ -3240,7 +3240,8 @@ bool GeneralParser<ParseHandler, Unit>::appendToCallSiteObj(
   if (!atom) {
     return false;
   }
-  NameNodeType rawNode = handler_.newTemplateStringLiteral(atom, pos());
+  NameNodeType rawNode =
+      handler_.newTemplateStringLiteral(atom->toIndex(), pos());
   if (!rawNode) {
     return false;
   }
@@ -6690,7 +6691,8 @@ GeneralParser<ParseHandler, Unit>::continueStatement(
     return null();
   }
 
-  return handler_.newContinueStatement(label, TokenPos(begin, pos().end));
+  auto labelIndex = label ? label->toIndex() : TaggedParserAtomIndex::null();
+  return handler_.newContinueStatement(labelIndex, TokenPos(begin, pos().end));
 }
 
 template <class ParseHandler, typename Unit>
@@ -6720,7 +6722,8 @@ GeneralParser<ParseHandler, Unit>::breakStatement(YieldHandling yieldHandling) {
     return null();
   }
 
-  return handler_.newBreakStatement(label, TokenPos(begin, pos().end));
+  auto labelIndex = label ? label->toIndex() : TaggedParserAtomIndex::null();
+  return handler_.newBreakStatement(labelIndex, TokenPos(begin, pos().end));
 }
 
 template <class ParseHandler, typename Unit>
@@ -6919,7 +6922,7 @@ GeneralParser<ParseHandler, Unit>::labeledStatement(
     return null();
   }
 
-  return handler_.newLabeledStatement(label, pn, begin);
+  return handler_.newLabeledStatement(label->toIndex(), pn, begin);
 }
 
 template <class ParseHandler, typename Unit>
@@ -7544,7 +7547,7 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
     // Note: the *function* has the name of the class, but the *property*
     // containing the function has the name "constructor"
     Node constructorNameNode = handler_.newObjectLiteralPropertyName(
-        cx_->parserNames().constructor, pos());
+        TaggedParserAtomIndex::WellKnown::constructor(), pos());
     if (!constructorNameNode) {
       return false;
     }
@@ -8216,8 +8219,8 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
       return null();
     }
   } else {
-    NameNodeType propAssignName =
-        handler_.newPropertyName(propAtom->asName(), wholeInitializerPos);
+    NameNodeType propAssignName = handler_.newPropertyName(
+        propAtom->asName()->toIndex(), wholeInitializerPos);
     if (!propAssignName) {
       return null();
     }
@@ -10015,13 +10018,13 @@ PerHandlerParser<ParseHandler>::newName(const ParserName* name) {
 template <class ParseHandler>
 inline typename ParseHandler::NameNodeType
 PerHandlerParser<ParseHandler>::newName(const ParserName* name, TokenPos pos) {
-  return handler_.newName(name, pos, cx_);
+  return handler_.newName(name->toIndex(), pos);
 }
 
 template <class ParseHandler>
 inline typename ParseHandler::NameNodeType
 PerHandlerParser<ParseHandler>::newPrivateName(const ParserName* name) {
-  return handler_.newPrivateName(name, pos());
+  return handler_.newPrivateName(name->toIndex(), pos());
 }
 
 template <class ParseHandler, typename Unit>
@@ -10036,7 +10039,7 @@ GeneralParser<ParseHandler, Unit>::memberPropertyAccess(
     return null();
   }
 
-  NameNodeType name = handler_.newPropertyName(field, pos());
+  NameNodeType name = handler_.newPropertyName(field->toIndex(), pos());
   if (!name) {
     return null();
   }
@@ -10391,7 +10394,8 @@ PerHandlerParser<ParseHandler>::privateNameReference(const ParserName* name) {
 template <class ParseHandler>
 typename ParseHandler::NameNodeType
 PerHandlerParser<ParseHandler>::stringLiteral() {
-  return handler_.newStringLiteral(anyChars.currentToken().atom(), pos());
+  return handler_.newStringLiteral(anyChars.currentToken().atom()->toIndex(),
+                                   pos());
 }
 
 template <class ParseHandler>
@@ -10402,8 +10406,8 @@ PerHandlerParser<ParseHandler>::noSubstitutionTaggedTemplate() {
     return handler_.newRawUndefinedLiteral(pos());
   }
 
-  return handler_.newTemplateStringLiteral(anyChars.currentToken().atom(),
-                                           pos());
+  return handler_.newTemplateStringLiteral(
+      anyChars.currentToken().atom()->toIndex(), pos());
 }
 
 template <class ParseHandler, typename Unit>
@@ -10413,8 +10417,8 @@ GeneralParser<ParseHandler, Unit>::noSubstitutionUntaggedTemplate() {
     return null();
   }
 
-  return handler_.newTemplateStringLiteral(anyChars.currentToken().atom(),
-                                           pos());
+  return handler_.newTemplateStringLiteral(
+      anyChars.currentToken().atom()->toIndex(), pos());
 }
 
 template <typename Unit>
@@ -10850,7 +10854,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
       }
 
       *propAtomOut = anyChars.currentName();
-      return handler_.newObjectLiteralPropertyName(*propAtomOut, pos());
+      return handler_.newObjectLiteralPropertyName((*propAtomOut)->toIndex(),
+                                                   pos());
     }
   }
 }

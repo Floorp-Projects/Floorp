@@ -868,6 +868,10 @@ class ScriptStencilExtra {
 void DumpTaggedParserAtomIndex(js::JSONPrinter& json,
                                TaggedParserAtomIndex taggedIndex,
                                BaseCompilationStencil* stencil);
+
+void DumpTaggedParserAtomIndexNoQuote(GenericPrinter& out,
+                                      TaggedParserAtomIndex taggedIndex,
+                                      BaseCompilationStencil* stencil);
 #endif
 
 } /* namespace frontend */

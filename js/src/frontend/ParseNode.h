@@ -19,7 +19,7 @@
 
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/NameAnalysisTypes.h"   // PrivateNameKind
-#include "frontend/ParserAtom.h"          // ParserAtom, TaggedParserAtomIndex
+#include "frontend/ParserAtom.h"          // TaggedParserAtomIndex
 #include "frontend/Stencil.h"             // BigIntStencil
 #include "frontend/Token.h"
 #include "js/RootingAPI.h"
@@ -58,6 +58,7 @@ class RegExpObject;
 
 namespace frontend {
 
+class ParserBase;
 class ParseContext;
 class ParserAtomsTable;
 struct BaseCompilationStencil;
@@ -817,8 +818,9 @@ class ParseNode {
 #ifdef DEBUG
   // Debugger-friendly stderr printer.
   void dump();
-  void dump(GenericPrinter& out);
-  void dump(GenericPrinter& out, int indent);
+  void dump(ParserBase* parser);
+  void dump(ParserBase* parser, GenericPrinter& out);
+  void dump(ParserBase* parser, GenericPrinter& out, int indent);
 
   // The size of this node, in bytes.
   size_t size() const { return sizeTable[getKindAsIndex()]; }
@@ -855,21 +857,16 @@ class NullaryNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(GenericPrinter& out, int indent);
+  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
 #endif
 };
 
 class NameNode : public ParseNode {
-  const ParserAtom* atom_; /* lexical name or label atom */
+  TaggedParserAtomIndex atom_; /* lexical name or label atom */
   PrivateNameKind privateNameKind_ = PrivateNameKind::None;
 
- protected:
-  // Provide accessor to subclasses until we replace atom_ with
-  // TaggedParserAtomIndex.
-  const ParserAtom* atom() const { return atom_; }
-
  public:
-  NameNode(ParseNodeKind kind, const ParserAtom* atom, const TokenPos& pos)
+  NameNode(ParseNodeKind kind, TaggedParserAtomIndex atom, const TokenPos& pos)
       : ParseNode(kind, pos), atom_(atom) {
     MOZ_ASSERT(atom);
     MOZ_ASSERT(is<NameNode>());
@@ -887,18 +884,18 @@ class NameNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(GenericPrinter& out, int indent);
+  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
 #endif
 
-  TaggedParserAtomIndex atomIndex() const { return atom_->toIndex(); }
+  TaggedParserAtomIndex atomIndex() const { return atom_; }
 
   TaggedParserAtomIndex nameIndex() const {
     MOZ_ASSERT(isKind(ParseNodeKind::Name) ||
                isKind(ParseNodeKind::PrivateName));
-    return atom_->asName()->toIndex();
+    return atom_;
   }
 
-  void setAtom(const ParserAtom* atom) { atom_ = atom; }
+  void setAtom(TaggedParserAtomIndex atom) { atom_ = atom; }
 
   void setPrivateNameKind(PrivateNameKind privateNameKind) {
     privateNameKind_ = privateNameKind;
@@ -937,7 +934,7 @@ class UnaryNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(GenericPrinter& out, int indent);
+  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
 #endif
 
   ParseNode* kid() const { return kid_; }
@@ -1015,7 +1012,7 @@ class BinaryNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(GenericPrinter& out, int indent);
+  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
 #endif
 
   ParseNode* left() const { return left_; }
@@ -1121,7 +1118,7 @@ class TernaryNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(GenericPrinter& out, int indent);
+  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
 #endif
 
   ParseNode* kid1() const { return kid1_; }
@@ -1211,7 +1208,7 @@ class ListNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(GenericPrinter& out, int indent);
+  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
 #endif
 
   ParseNode* head() const { return head_; }
@@ -1498,7 +1495,7 @@ class FunctionNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(GenericPrinter& out, int indent);
+  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
 #endif
 
   FunctionBox* funbox() const { return funbox_; }
@@ -1538,7 +1535,7 @@ class ModuleNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(GenericPrinter& out, int indent);
+  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
 #endif
 
   ListNode* body() const { return &body_->as<ListNode>(); }
@@ -1568,7 +1565,7 @@ class NumericLiteral : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(GenericPrinter& out, int indent);
+  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
 #endif
 
   double value() const { return value_; }
@@ -1580,7 +1577,8 @@ class NumericLiteral : public ParseNode {
   void setDecimalPoint(DecimalPoint d) { decimalPoint_ = d; }
 
   // Return the decimal string representation of this numeric literal.
-  const ParserAtom* toAtom(JSContext* cx, ParserAtomsTable& parserAtoms) const;
+  TaggedParserAtomIndex toAtom(JSContext* cx,
+                               ParserAtomsTable& parserAtoms) const;
 };
 
 class BigIntLiteral : public ParseNode {
@@ -1605,7 +1603,7 @@ class BigIntLiteral : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(GenericPrinter& out, int indent);
+  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
 #endif
 
   BigIntIndex index() { return index_; }
@@ -1638,7 +1636,7 @@ class LexicalScopeNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(GenericPrinter& out, int indent);
+  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
 #endif
 
   LexicalScope::ParserData* scopeBindings() const {
@@ -1659,7 +1657,7 @@ class LabeledStatement : public NameNode {
   ParseNode* statement_;
 
  public:
-  LabeledStatement(const ParserName* label, ParseNode* stmt, uint32_t begin)
+  LabeledStatement(TaggedParserAtomIndex label, ParseNode* stmt, uint32_t begin)
       : NameNode(ParseNodeKind::LabelStmt, label,
                  TokenPos(begin, stmt->pn_pos.end)),
         statement_(stmt) {}
@@ -1683,7 +1681,7 @@ class LabeledStatement : public NameNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(GenericPrinter& out, int indent);
+  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
 #endif
 };
 
@@ -1710,10 +1708,10 @@ class CaseClause : public BinaryNode {
 };
 
 class LoopControlStatement : public ParseNode {
-  const ParserName* label_; /* target of break/continue statement */
+  TaggedParserAtomIndex label_; /* target of break/continue statement */
 
  protected:
-  LoopControlStatement(ParseNodeKind kind, const ParserName* label,
+  LoopControlStatement(ParseNodeKind kind, TaggedParserAtomIndex label,
                        const TokenPos& pos)
       : ParseNode(kind, pos), label_(label) {
     MOZ_ASSERT(kind == ParseNodeKind::BreakStmt ||
@@ -1723,12 +1721,10 @@ class LoopControlStatement : public ParseNode {
 
  public:
   /* Label associated with this break/continue statement, if any. */
-  TaggedParserAtomIndex labelIndex() const {
-    return label_ ? label_->toIndex() : TaggedParserAtomIndex::null();
-  }
+  TaggedParserAtomIndex labelIndex() const { return label_; }
 
 #ifdef DEBUG
-  void dumpImpl(GenericPrinter& out, int indent);
+  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
 #endif
 
   static bool test(const ParseNode& node) {
@@ -1746,7 +1742,7 @@ class LoopControlStatement : public ParseNode {
 
 class BreakStatement : public LoopControlStatement {
  public:
-  BreakStatement(const ParserName* label, const TokenPos& pos)
+  BreakStatement(TaggedParserAtomIndex label, const TokenPos& pos)
       : LoopControlStatement(ParseNodeKind::BreakStmt, label, pos) {}
 
   static bool test(const ParseNode& node) {
@@ -1758,7 +1754,7 @@ class BreakStatement : public LoopControlStatement {
 
 class ContinueStatement : public LoopControlStatement {
  public:
-  ContinueStatement(const ParserName* label, const TokenPos& pos)
+  ContinueStatement(TaggedParserAtomIndex label, const TokenPos& pos)
       : LoopControlStatement(ParseNodeKind::ContinueStmt, label, pos) {}
 
   static bool test(const ParseNode& node) {
@@ -1897,7 +1893,7 @@ class RegExpLiteral : public ParseNode {
                        BaseCompilationStencil& stencil) const;
 
 #ifdef DEBUG
-  void dumpImpl(GenericPrinter& out, int indent);
+  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
 #endif
 
   static bool test(const ParseNode& node) {
@@ -2286,7 +2282,8 @@ class ClassNode : public TernaryNode {
 };
 
 #ifdef DEBUG
-void DumpParseTree(ParseNode* pn, GenericPrinter& out, int indent = 0);
+void DumpParseTree(ParserBase* parser, ParseNode* pn, GenericPrinter& out,
+                   int indent = 0);
 #endif
 
 class ParseNodeAllocator {
