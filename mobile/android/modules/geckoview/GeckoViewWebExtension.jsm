@@ -665,29 +665,29 @@ var GeckoViewWebExtension = {
   async browserActionClick(aId) {
     const policy = WebExtensionPolicy.getByID(aId);
     if (!policy) {
-      return;
+      return undefined;
     }
 
     const browserAction = this.browserActions.get(policy.extension);
     if (!browserAction) {
-      return;
+      return undefined;
     }
 
-    browserAction.click();
+    return browserAction.triggerClickOrPopup();
   },
 
   async pageActionClick(aId) {
     const policy = WebExtensionPolicy.getByID(aId);
     if (!policy) {
-      return;
+      return undefined;
     }
 
     const pageAction = this.pageActions.get(policy.extension);
     if (!pageAction) {
-      return;
+      return undefined;
     }
 
-    pageAction.click();
+    return pageAction.triggerClickOrPopup();
   },
 
   async actionDelegateAttached(aId) {
@@ -802,11 +802,13 @@ var GeckoViewWebExtension = {
 
     switch (aEvent) {
       case "GeckoView:BrowserAction:Click": {
-        this.browserActionClick(aData.extensionId);
+        const popupUrl = await this.browserActionClick(aData.extensionId);
+        aCallback.onSuccess(popupUrl);
         break;
       }
       case "GeckoView:PageAction:Click": {
-        this.pageActionClick(aData.extensionId);
+        const popupUrl = await this.pageActionClick(aData.extensionId);
+        aCallback.onSuccess(popupUrl);
         break;
       }
       case "GeckoView:WebExtension:MenuClick": {
