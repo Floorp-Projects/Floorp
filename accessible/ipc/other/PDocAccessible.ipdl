@@ -310,7 +310,7 @@ child:
 
   async TakeFocus(uint64_t aID);
   nested(inside_sync) sync FocusedChild(uint64_t aID)
-    returns(uint64_t aChild, bool aOk);
+    returns(nullable PDocAccessible aResultDoc, uint64_t aResultID);
 
   nested(inside_sync) sync Language(uint64_t aID) returns(nsString aLocale);
   nested(inside_sync) sync DocType(uint64_t aID) returns(nsString aType);
