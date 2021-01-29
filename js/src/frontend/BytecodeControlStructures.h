@@ -16,7 +16,7 @@
 #include "ds/Nestable.h"               // Nestable
 #include "frontend/BytecodeSection.h"  // BytecodeOffset
 #include "frontend/JumpList.h"         // JumpList, JumpTarget
-#include "frontend/ParserAtom.h"       // ParserAtom
+#include "frontend/ParserAtom.h"       // TaggedParserAtomIndex
 #include "frontend/SharedContext.h"  // StatementKind, StatementKindIsLoop, StatementKindIsUnlabeledBreakTarget
 #include "frontend/TDZCheckCache.h"  // TDZCheckCache
 #include "vm/StencilEnums.h"         // TryNoteKind
@@ -70,16 +70,16 @@ inline bool NestableControl::is<BreakableControl>() const {
 }
 
 class LabelControl : public BreakableControl {
-  const ParserAtom* label_;
+  TaggedParserAtomIndex label_;
 
   // The code offset when this was pushed. Used for effectfulness checking.
   BytecodeOffset startOffset_;
 
  public:
-  LabelControl(BytecodeEmitter* bce, const ParserAtom* label,
+  LabelControl(BytecodeEmitter* bce, TaggedParserAtomIndex label,
                BytecodeOffset startOffset);
 
-  const ParserAtom* label() const { return label_; }
+  TaggedParserAtomIndex label() const { return label_; }
 
   BytecodeOffset startOffset() const { return startOffset_; }
 };

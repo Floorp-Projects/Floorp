@@ -16,7 +16,7 @@ using namespace js::frontend;
 void LabelEmitter::emitLabel(const ParserAtom* name) {
   MOZ_ASSERT(state_ == State::Start);
 
-  controlInfo_.emplace(bce_, name, bce_->bytecodeSection().offset());
+  controlInfo_.emplace(bce_, name->toIndex(), bce_->bytecodeSection().offset());
 
 #ifdef DEBUG
   state_ = State::Label;

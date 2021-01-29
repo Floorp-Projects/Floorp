@@ -5943,7 +5943,7 @@ bool BytecodeEmitter::emitWhile(BinaryNode* whileNode) {
   return true;
 }
 
-bool BytecodeEmitter::emitBreak(const ParserName* label) {
+bool BytecodeEmitter::emitBreak(TaggedParserAtomIndex label) {
   BreakableControl* target;
   if (label) {
     // Any statement with the matching label may be the break target.
@@ -5961,7 +5961,7 @@ bool BytecodeEmitter::emitBreak(const ParserName* label) {
   return emitGoto(target, &target->breaks, GotoKind::Break);
 }
 
-bool BytecodeEmitter::emitContinue(const ParserName* label) {
+bool BytecodeEmitter::emitContinue(TaggedParserAtomIndex label) {
   LoopControl* target = nullptr;
   if (label) {
     // Find the loop statement enclosed by the matching label.
@@ -10628,7 +10628,7 @@ bool BytecodeEmitter::emitTree(
         return false;
       }
 
-      if (!emitBreak(pn->as<BreakStatement>().label())) {
+      if (!emitBreak(pn->as<BreakStatement>().labelIndex())) {
         return false;
       }
       break;
@@ -10642,7 +10642,7 @@ bool BytecodeEmitter::emitTree(
         return false;
       }
 
-      if (!emitContinue(pn->as<ContinueStatement>().label())) {
+      if (!emitContinue(pn->as<ContinueStatement>().labelIndex())) {
         return false;
       }
       break;
