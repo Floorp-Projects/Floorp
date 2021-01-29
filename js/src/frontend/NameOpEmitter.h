@@ -12,6 +12,7 @@
 #include <stdint.h>
 
 #include "frontend/NameAnalysisTypes.h"
+#include "frontend/ParserAtom.h"  // ParserAtom
 #include "js/TypeDecls.h"
 #include "vm/SharedStencil.h"  // GCThingIndex
 

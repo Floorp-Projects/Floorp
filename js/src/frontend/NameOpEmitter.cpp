@@ -19,7 +19,10 @@ using namespace js::frontend;
 
 NameOpEmitter::NameOpEmitter(BytecodeEmitter* bce, const ParserAtom* name,
                              Kind kind)
-    : bce_(bce), kind_(kind), name_(name), loc_(bce_->lookupName(name_)) {}
+    : bce_(bce),
+      kind_(kind),
+      name_(name),
+      loc_(bce_->lookupName(name_->toIndex())) {}
 
 NameOpEmitter::NameOpEmitter(BytecodeEmitter* bce, const ParserAtom* name,
                              const NameLocation& loc, Kind kind)
