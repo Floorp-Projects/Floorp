@@ -15,6 +15,7 @@
 #include "frontend/DefaultEmitter.h"      // DefaultEmitter
 #include "frontend/EmitterScope.h"        // EmitterScope
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
+#include "frontend/ParserAtom.h"          // ParserAtom
 #include "frontend/SharedContext.h"       // FunctionBox, TopLevelFunction
 #include "frontend/TDZCheckCache.h"       // TDZCheckCache
 #include "gc/Rooting.h"                   // JS::Rooted, JS::Handle

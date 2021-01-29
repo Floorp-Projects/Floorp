@@ -179,18 +179,18 @@ T* BytecodeEmitter::findInnermostNestableControl(Predicate predicate) const {
   return NestableControl::findNearest<T>(innermostNestableControl, predicate);
 }
 
-NameLocation BytecodeEmitter::lookupName(const ParserAtom* name) {
+NameLocation BytecodeEmitter::lookupName(TaggedParserAtomIndex name) {
   return innermostEmitterScope()->lookup(this, name);
 }
 
 Maybe<NameLocation> BytecodeEmitter::locationOfNameBoundInScope(
-    const ParserAtom* name, EmitterScope* target) {
+    TaggedParserAtomIndex name, EmitterScope* target) {
   return innermostEmitterScope()->locationBoundInScope(name, target);
 }
 
 template <typename T>
 Maybe<NameLocation> BytecodeEmitter::locationOfNameBoundInScopeType(
-    const ParserAtom* name, EmitterScope* source) {
+    TaggedParserAtomIndex name, EmitterScope* source) {
   EmitterScope* aScope = source;
   while (!aScope->scope(this).is<T>()) {
     aScope = aScope->enclosingInFrame();
@@ -1747,7 +1747,7 @@ bool BytecodeEmitter::emitGetPrivateName(NameNode* name) {
 
 bool BytecodeEmitter::emitGetPrivateName(const ParserAtom* nameAtom) {
   // The parser ensures the private name is present on the environment chain.
-  NameLocation location = lookupName(nameAtom);
+  NameLocation location = lookupName(nameAtom->toIndex());
   MOZ_ASSERT(location.kind() == NameLocation::Kind::FrameSlot ||
              location.kind() == NameLocation::Kind::EnvironmentCoordinate ||
              location.kind() == NameLocation::Kind::Dynamic);
@@ -1765,7 +1765,7 @@ bool BytecodeEmitter::emitTDZCheckIfNeeded(TaggedParserAtomIndex name,
 
   // Private names are implemented as lexical bindings, but it's just an
   // implementation detail. Per spec there's no TDZ check when using them.
-  if (name->isPrivateName()) {
+  if (compilationState.parserAtoms.getParserAtom(name)->isPrivateName()) {
     return true;
   }
 
@@ -2343,7 +2343,7 @@ bool BytecodeEmitter::emitSetThis(BinaryNode* setThisNode) {
 
   // The 'this' binding is not lexical, but due to super() semantics this
   // initialization needs to be treated as a lexical one.
-  NameLocation loc = lookupName(name);
+  NameLocation loc = lookupName(name->toIndex());
   NameLocation lexicalLoc;
   if (loc.kind() == NameLocation::Kind::FrameSlot) {
     lexicalLoc = NameLocation::FrameSlot(BindingKind::Let, loc.frameSlot());
@@ -2819,7 +2819,7 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
     switch (target->getKind()) {
       case ParseNodeKind::Name: {
         const ParserAtom* name = target->as<NameNode>().name();
-        NameLocation loc = lookupName(name);
+        NameLocation loc = lookupName(name->toIndex());
         NameOpEmitter::Kind kind;
         switch (flav) {
           case DestructuringFlavor::Declaration:
@@ -6033,7 +6033,8 @@ bool BytecodeEmitter::emitThisLiteral(ThisLiteral* pn) {
 }
 
 bool BytecodeEmitter::emitCheckDerivedClassConstructorReturn() {
-  MOZ_ASSERT(lookupName(cx->parserNames().dotThis).hasKnownSlot());
+  MOZ_ASSERT(
+      lookupName(TaggedParserAtomIndex::WellKnown::dotThis()).hasKnownSlot());
   if (!emitGetName(cx->parserNames().dotThis)) {
     return false;
   }
@@ -6137,7 +6138,7 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
     // We know that .generator is on the function scope, as we just exited
     // all nested scopes.
     NameLocation loc = *locationOfNameBoundInScopeType<FunctionScope>(
-        cx->parserNames().dotGenerator, varEmitterScope);
+        TaggedParserAtomIndex::WellKnown::dotGenerator(), varEmitterScope);
 
     // Resolve the return value before emitting the final yield.
     if (sc->asFunctionBox()->needsPromiseResult()) {
@@ -6189,11 +6190,11 @@ bool BytecodeEmitter::emitGetDotGeneratorInScope(EmitterScope& currentScope) {
   if (!sc->isFunction() && sc->isModuleContext() &&
       sc->asModuleContext()->isAsync()) {
     NameLocation loc = *locationOfNameBoundInScopeType<ModuleScope>(
-        cx->parserNames().dotGenerator, &currentScope);
+        TaggedParserAtomIndex::WellKnown::dotGenerator(), &currentScope);
     return emitGetNameAtLocation(cx->parserNames().dotGenerator, loc);
   }
   NameLocation loc = *locationOfNameBoundInScopeType<FunctionScope>(
-      cx->parserNames().dotGenerator, &currentScope);
+      TaggedParserAtomIndex::WellKnown::dotGenerator(), &currentScope);
   return emitGetNameAtLocation(cx->parserNames().dotGenerator, loc);
 }
 
@@ -10059,7 +10060,7 @@ bool BytecodeEmitter::emitInitializeFunctionSpecialNames() {
                                               const ParserName* name, JSOp op) {
     // A special name must be slotful, either on the frame or on the
     // call environment.
-    MOZ_ASSERT(bce->lookupName(name).hasKnownSlot());
+    MOZ_ASSERT(bce->lookupName(name->toIndex()).hasKnownSlot());
 
     NameOpEmitter noe(bce, name, NameOpEmitter::Kind::Initialize);
     if (!noe.prepareForRhs()) {

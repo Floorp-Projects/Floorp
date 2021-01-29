@@ -121,14 +121,14 @@ bool FunctionEmitter::emitAgain() {
   //
   // In sloppy eval contexts, this location is dynamic.
   Maybe<NameLocation> lhsLoc =
-      bce_->locationOfNameBoundInScope(name_, bce_->varEmitterScope);
+      bce_->locationOfNameBoundInScope(name_->toIndex(), bce_->varEmitterScope);
 
   // If there are parameter expressions, the var name could be a
   // parameter.
   if (!lhsLoc && bce_->sc->isFunctionBox() &&
       bce_->sc->asFunctionBox()->functionHasExtraBodyVarScope()) {
     lhsLoc = bce_->locationOfNameBoundInScope(
-        name_, bce_->varEmitterScope->enclosingInFrame());
+        name_->toIndex(), bce_->varEmitterScope->enclosingInFrame());
   }
 
   if (!lhsLoc) {
@@ -212,7 +212,7 @@ bool FunctionEmitter::emitFunction() {
     // In sloppy eval scripts, top-level functions are accessed dynamically.
     // In global and module scripts, top-level functions are those bound in
     // the var scope.
-    NameLocation loc = bce_->lookupName(name_);
+    NameLocation loc = bce_->lookupName(name_->toIndex());
     topLevelFunction = loc.kind() == NameLocation::Kind::Dynamic ||
                        loc.bindingKind() == BindingKind::Var;
   }
@@ -484,7 +484,7 @@ bool FunctionScriptEmitter::emitExtraBodyVarScope() {
     name = bce_->compilationState.getParserAtomAt(bce_->cx, bi.name());
 
     // There may not be a var binding of the same name.
-    if (!bce_->locationOfNameBoundInScope(name,
+    if (!bce_->locationOfNameBoundInScope(name->toIndex(),
                                           extraBodyVarEmitterScope_.ptr())) {
       continue;
     }
@@ -501,8 +501,8 @@ bool FunctionScriptEmitter::emitExtraBodyVarScope() {
       return false;
     }
 
-    NameLocation paramLoc =
-        *bce_->locationOfNameBoundInScope(name, functionEmitterScope_.ptr());
+    NameLocation paramLoc = *bce_->locationOfNameBoundInScope(
+        name->toIndex(), functionEmitterScope_.ptr());
     if (!bce_->emitGetNameAtLocation(name, paramLoc)) {
       //            [stack] VAL
       return false;
@@ -925,8 +925,8 @@ bool FunctionParamsEmitter::emitRestArray() {
 bool FunctionParamsEmitter::emitAssignment(const ParserAtom* paramName) {
   //                [stack] ARG
 
-  NameLocation paramLoc =
-      *bce_->locationOfNameBoundInScope(paramName, functionEmitterScope_);
+  NameLocation paramLoc = *bce_->locationOfNameBoundInScope(
+      paramName->toIndex(), functionEmitterScope_);
 
   // RHS is already pushed in the caller side.
   // Make sure prepareForRhs doesn't touch stack.

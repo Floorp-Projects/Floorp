@@ -300,14 +300,14 @@ NameLocation EmitterScope::searchInEnclosingScope(JSAtom* name, Scope* scope,
 }
 
 NameLocation EmitterScope::searchAndCache(BytecodeEmitter* bce,
-                                          const ParserAtom* name) {
+                                          TaggedParserAtomIndex name) {
   Maybe<NameLocation> loc;
   uint8_t hops = hasEnvironment() ? 1 : 0;
   DebugOnly<bool> inCurrentScript = enclosingInFrame();
 
   // Start searching in the current compilation.
   for (EmitterScope* es = enclosing(&bce); es; es = es->enclosing(&bce)) {
-    loc = es->lookupInCache(bce, name->toIndex());
+    loc = es->lookupInCache(bce, name);
     if (loc) {
       if (loc->kind() == NameLocation::Kind::EnvironmentCoordinate) {
         *loc = loc->addHops(hops);
@@ -340,7 +340,9 @@ NameLocation EmitterScope::searchAndCache(BytecodeEmitter* bce,
     //
     //   See bug 1660275.
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    JSAtom* jsname = name->toJSAtom(bce->cx, bce->stencil.input.atomCache);
+    const ParserAtom* atom =
+        bce->compilationState.getParserAtomAt(bce->cx, name);
+    JSAtom* jsname = atom->toJSAtom(bce->cx, bce->stencil.input.atomCache);
     if (!jsname) {
       oomUnsafe.crash("EmitterScope::searchAndCache");
     }
@@ -362,7 +364,7 @@ NameLocation EmitterScope::searchAndCache(BytecodeEmitter* bce,
 
   // It is always correct to not cache the location. Ignore OOMs to make
   // lookups infallible.
-  if (!putNameInCache(bce, name->toIndex(), *loc)) {
+  if (!putNameInCache(bce, name, *loc)) {
     bce->cx->recoverFromOutOfMemory();
   }
 
@@ -1088,15 +1090,15 @@ mozilla::Maybe<ScopeIndex> EmitterScope::scopeIndex(
 }
 
 NameLocation EmitterScope::lookup(BytecodeEmitter* bce,
-                                  const ParserAtom* name) {
-  if (Maybe<NameLocation> loc = lookupInCache(bce, name->toIndex())) {
+                                  TaggedParserAtomIndex name) {
+  if (Maybe<NameLocation> loc = lookupInCache(bce, name)) {
     return *loc;
   }
   return searchAndCache(bce, name);
 }
 
-Maybe<NameLocation> EmitterScope::locationBoundInScope(const ParserAtom* name,
-                                                       EmitterScope* target) {
+Maybe<NameLocation> EmitterScope::locationBoundInScope(
+    TaggedParserAtomIndex name, EmitterScope* target) {
   // The target scope must be an intra-frame enclosing scope of this
   // one. Count the number of extra hops to reach it.
   uint8_t extraHops = 0;
@@ -1110,7 +1112,7 @@ Maybe<NameLocation> EmitterScope::locationBoundInScope(const ParserAtom* name,
   // particular scope, it must already be in the cache. Furthermore, don't
   // consult the fallback location as we only care about binding names.
   Maybe<NameLocation> loc;
-  if (NameLocationMap::Ptr p = target->nameCache_->lookup(name->toIndex())) {
+  if (NameLocationMap::Ptr p = target->nameCache_->lookup(name)) {
     NameLocation l = p->value().wrapped;
     if (l.kind() == NameLocation::Kind::EnvironmentCoordinate) {
       loc = Some(l.addHops(extraHops));

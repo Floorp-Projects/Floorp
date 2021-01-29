@@ -10,6 +10,7 @@
 
 #include "frontend/BytecodeEmitter.h"     // BytecodeEmitter
 #include "frontend/NameOpEmitter.h"       // NameOpEmitter
+#include "frontend/ParserAtom.h"          // TaggedParserAtomIndex
 #include "vm/AsyncFunctionResolveKind.h"  // AsyncFunctionResolveKind
 #include "vm/Opcodes.h"                   // JSOp
 
@@ -63,8 +64,8 @@ bool AsyncEmitter::prepareForModule() {
   // modules, we need to emit a
   // |.generator| which we can use to pause and resume execution.
   MOZ_ASSERT(state_ == State::Start);
-  MOZ_ASSERT(
-      bce_->lookupName(bce_->cx->parserNames().dotGenerator).hasKnownSlot());
+  MOZ_ASSERT(bce_->lookupName(TaggedParserAtomIndex::WellKnown::dotGenerator())
+                 .hasKnownSlot());
 
   NameOpEmitter noe(bce_, bce_->cx->parserNames().dotGenerator,
                     NameOpEmitter::Kind::Initialize);
