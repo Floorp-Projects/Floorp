@@ -859,6 +859,9 @@ class WidgetEvent : public WidgetEventTime {
    */
   void SetDefaultComposed() {
     switch (mClass) {
+      case eClipboardEventClass:
+        mFlags.mComposed = true;
+        break;
       case eCompositionEventClass:
         mFlags.mComposed =
             mMessage == eCompositionStart || mMessage == eCompositionUpdate ||
