@@ -55,7 +55,15 @@ class PreferenceRolloutAction extends BaseAction {
   async _run(recipe) {
     const args = recipe.arguments;
 
-    // First determine which preferences are already being managed, to avoid
+    // Check if the rollout is on the list of rollouts to stop applying.
+    if (PreferenceRollouts.GRADUATION_SET.has(args.slug)) {
+      this.log.debug(
+        `Skipping rollout "${args.slug}" because it is in the graduation set.`
+      );
+      return;
+    }
+
+    // Determine which preferences are already being managed, to avoid
     // conflicts between recipes. This will throw if there is a problem.
     await this._verifyRolloutPrefs(args);
 

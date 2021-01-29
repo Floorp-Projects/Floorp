@@ -81,7 +81,7 @@ decorate_task(
   ensureAddonCleanup,
   withMockNormandyApi,
   AddonStudies.withStudies([branchedAddonStudyFactory()]),
-  withSendEventStub,
+  withSendEventSpy,
   withInstalledWebExtensionSafe({ id: FIXTURE_ADDON_ID, version: "1.0" }),
   async function enrollTwiceFail(
     mockApi,
@@ -114,7 +114,7 @@ decorate_task(
   withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
-  withSendEventStub,
+  withSendEventSpy,
   AddonStudies.withStudies(),
   async function enrollDownloadFail(mockApi, sendEventStub) {
     const recipe = branchedAddonStudyRecipeFactory({
@@ -155,7 +155,7 @@ decorate_task(
   withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
-  withSendEventStub,
+  withSendEventSpy,
   AddonStudies.withStudies(),
   async function enrollHashCheckFails(mockApi, sendEventStub) {
     const recipe = branchedAddonStudyRecipeFactory();
@@ -193,7 +193,7 @@ decorate_task(
   withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
-  withSendEventStub,
+  withSendEventSpy,
   AddonStudies.withStudies(),
   async function enrollFailsMetadataMismatch(mockApi, sendEventStub) {
     const recipe = branchedAddonStudyRecipeFactory();
@@ -231,7 +231,7 @@ decorate_task(
   withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
-  withSendEventStub,
+  withSendEventSpy,
   withInstalledWebExtensionSafe({ version: "0.1", id: FIXTURE_ADDON_ID }),
   AddonStudies.withStudies(),
   async function conflictingEnrollment(
@@ -290,7 +290,7 @@ decorate_task(
       addonVersion: "1.0",
     }),
   ]),
-  withSendEventStub,
+  withSendEventSpy,
   withInstalledWebExtensionSafe({ id: FIXTURE_ADDON_ID, version: "1.0" }),
   async function successfulUpdate(
     mockApi,
@@ -368,7 +368,7 @@ decorate_task(
       addonVersion: "0.1",
     }),
   ]),
-  withSendEventStub,
+  withSendEventSpy,
   withInstalledWebExtensionSafe({ id: FIXTURE_ADDON_ID, version: "0.1" }),
   async function updateFailsAddonIdMismatch(
     mockApi,
@@ -422,7 +422,7 @@ decorate_task(
       addonVersion: "0.1",
     }),
   ]),
-  withSendEventStub,
+  withSendEventSpy,
   withInstalledWebExtensionSafe({ id: "test@example.com", version: "0.1" }),
   async function updateFailsAddonDoesNotExist(
     mockApi,
@@ -480,7 +480,7 @@ decorate_task(
       addonVersion: "0.1",
     }),
   ]),
-  withSendEventStub,
+  withSendEventSpy,
   withInstalledWebExtensionSafe({ id: FIXTURE_ADDON_ID, version: "0.1" }),
   async function updateDownloadFailure(
     mockApi,
@@ -536,7 +536,7 @@ decorate_task(
       addonVersion: "0.1",
     }),
   ]),
-  withSendEventStub,
+  withSendEventSpy,
   withInstalledWebExtensionSafe({ id: FIXTURE_ADDON_ID, version: "0.1" }),
   async function updateFailsHashCheckFail(
     mockApi,
@@ -593,7 +593,7 @@ decorate_task(
       addonVersion: "2.0",
     }),
   ]),
-  withSendEventStub,
+  withSendEventSpy,
   withInstalledWebExtensionSafe({ id: FIXTURE_ADDON_ID, version: "2.0" }),
   async function upgradeFailsNoDowngrades(
     mockApi,
@@ -649,7 +649,7 @@ decorate_task(
       addonVersion: "1.0",
     }),
   ]),
-  withSendEventStub,
+  withSendEventSpy,
   withInstalledWebExtensionFromURL(
     FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url
   ),
@@ -726,7 +726,7 @@ decorate_task(
   withStudiesEnabled,
   ensureAddonCleanup,
   AddonStudies.withStudies([branchedAddonStudyFactory({ active: false })]),
-  withSendEventStub,
+  withSendEventSpy,
   async ([study], sendEventStub) => {
     const action = new BranchedAddonStudyAction();
     await Assert.rejects(
@@ -750,7 +750,7 @@ decorate_task(
     }),
   ]),
   withInstalledWebExtension({ id: testStopId }, /* expectUninstall: */ true),
-  withSendEventStub,
+  withSendEventSpy,
   withStub(TelemetryEnvironment, "setExperimentInactive"),
   async function unenrollTest(
     [study],
@@ -803,7 +803,7 @@ decorate_task(
       addonId: "missingAddon@example.com",
     }),
   ]),
-  withSendEventStub,
+  withSendEventSpy,
   async function unenrollMissingAddonTest([study], sendEventStub) {
     const action = new BranchedAddonStudyAction();
 
@@ -832,7 +832,7 @@ decorate_task(
   withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
-  withSendEventStub,
+  withSendEventSpy,
   withMockPreferences,
   AddonStudies.withStudies(),
   async function testOptOut(mockApi, sendEventStub, mockPreferences) {
@@ -868,7 +868,7 @@ decorate_task(
   withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
-  withSendEventStub,
+  withSendEventSpy,
   AddonStudies.withStudies(),
   async function testEnrollmentPaused(mockApi, sendEventStub) {
     const action = new BranchedAddonStudyAction();
@@ -908,7 +908,7 @@ decorate_task(
       addonVersion: "1.0",
     }),
   ]),
-  withSendEventStub,
+  withSendEventSpy,
   withInstalledWebExtensionSafe({ id: FIXTURE_ADDON_ID, version: "1.0" }),
   async function testUpdateEnrollmentPaused(
     mockApi,
@@ -978,7 +978,7 @@ const successEnrollBranchedTest = decorate(
   withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
-  withSendEventStub,
+  withSendEventSpy,
   withStub(TelemetryEnvironment, "setExperimentActive"),
   AddonStudies.withStudies(),
   async function(branch, mockApi, sendEventStub, setExperimentActiveStub) {
@@ -1117,7 +1117,7 @@ decorate_task(
   ensureAddonCleanup,
   withMockNormandyApi,
   AddonStudies.withStudies([branchedAddonStudyFactory()]),
-  withSendEventStub,
+  withSendEventSpy,
   withInstalledWebExtensionSafe(
     { id: FIXTURE_ADDON_ID, version: "1.0" },
     /* expectUninstall: */ true
@@ -1190,7 +1190,7 @@ decorate_task(
   withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
-  withSendEventStub,
+  withSendEventSpy,
   AddonStudies.withStudies(),
   async function noAddonBranches(mockApi, sendEventStub) {
     const initialAddonIds = (await AddonManager.getAllAddons()).map(

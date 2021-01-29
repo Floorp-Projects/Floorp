@@ -208,7 +208,7 @@ decorate_task(
   }
 );
 
-decorate_task(PreferenceRollouts.withTestMock, async function testRollouts() {
+decorate_task(PreferenceRollouts.withTestMock(), async function testRollouts() {
   const prefRollout = {
     slug: "test-rollout",
     preference: [],

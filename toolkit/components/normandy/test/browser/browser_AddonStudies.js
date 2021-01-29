@@ -108,7 +108,7 @@ decorate_task(
       studyEndDate: new Date(2012, 1),
     }),
   ]),
-  withSendEventStub,
+  withSendEventSpy,
   withInstalledWebExtension(
     { id: "installed@example.com" },
     /* expectUninstall: */ true

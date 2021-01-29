@@ -320,7 +320,7 @@ decorate_task(
 // start should throw if an experiment with the given name already exists
 decorate_task(
   withMockExperiments([preferenceStudyFactory({ slug: "test" })]),
-  withSendEventStub,
+  withSendEventSpy,
   async function(experiments, sendEventStub) {
     await Assert.rejects(
       PreferenceExperiments.start({
@@ -354,7 +354,7 @@ decorate_task(
       preferences: { "fake.preferenceinteger": {} },
     }),
   ]),
-  withSendEventStub,
+  withSendEventSpy,
   async function(experiments, sendEventStub) {
     await Assert.rejects(
       PreferenceExperiments.start({
@@ -390,7 +390,7 @@ decorate_task(
 );
 
 // start should throw if an invalid preferenceBranchType is given
-decorate_task(withMockExperiments(), withSendEventStub, async function(
+decorate_task(withMockExperiments(), withSendEventSpy, async function(
   experiments,
   sendEventStub
 ) {
@@ -422,7 +422,7 @@ decorate_task(
   withMockExperiments(),
   withMockPreferences,
   withStub(PreferenceExperiments, "startObserver"),
-  withSendEventStub,
+  withSendEventSpy,
   async function testStart(
     experiments,
     mockPreferences,
@@ -587,7 +587,7 @@ decorate_task(
 );
 
 // start should detect if a new preference value type matches the previous value type
-decorate_task(withMockPreferences, withSendEventStub, async function(
+decorate_task(withMockPreferences, withSendEventSpy, async function(
   mockPreferences,
   sendEventStub
 ) {
@@ -856,7 +856,7 @@ decorate_task(
 );
 
 // stop should throw if an experiment with the given name doesn't exist
-decorate_task(withMockExperiments(), withSendEventStub, async function(
+decorate_task(withMockExperiments(), withSendEventSpy, async function(
   experiments,
   sendEventStub
 ) {
@@ -881,7 +881,7 @@ decorate_task(
   withMockExperiments([
     preferenceStudyFactory({ slug: "test", expired: true }),
   ]),
-  withSendEventStub,
+  withSendEventSpy,
   async function(experiments, sendEventStub) {
     await Assert.rejects(
       PreferenceExperiments.stop("test"),
@@ -920,7 +920,7 @@ decorate_task(
   ]),
   withMockPreferences,
   withSpy(PreferenceExperiments, "stopObserver"),
-  withSendEventStub,
+  withSendEventSpy,
   async function testStop(
     experiments,
     mockPreferences,
@@ -1074,7 +1074,7 @@ decorate_task(
   ]),
   withMockPreferences,
   withStub(PreferenceExperiments, "stopObserver"),
-  withSendEventStub,
+  withSendEventSpy,
   async function testStopReset(
     experiments,
     mockPreferences,
@@ -1289,7 +1289,7 @@ decorate_task(
   withMockExperiments(),
   withStub(TelemetryEnvironment, "setExperimentActive"),
   withStub(TelemetryEnvironment, "setExperimentInactive"),
-  withSendEventStub,
+  withSendEventSpy,
   async function testStartAndStopTelemetry(
     experiments,
     setActiveStub,
@@ -1357,7 +1357,7 @@ decorate_task(
   withMockExperiments(),
   withStub(TelemetryEnvironment, "setExperimentActive"),
   withStub(TelemetryEnvironment, "setExperimentInactive"),
-  withSendEventStub,
+  withSendEventSpy,
   async function testInitTelemetryExperimentType(
     experiments,
     setActiveStub,
@@ -1766,7 +1766,7 @@ decorate_task(
   ]),
   withMockPreferences,
   withStub(PreferenceExperiments, "stopObserver"),
-  withSendEventStub,
+  withSendEventSpy,
   async function testStopUnknownReason(
     experiments,
     mockPreferences,
@@ -1807,7 +1807,7 @@ decorate_task(
   ]),
   withMockPreferences,
   withStub(PreferenceExperiments, "stopObserver"),
-  withSendEventStub,
+  withSendEventSpy,
   async function testStopResetValue(
     experiments,
     mockPreferences,
@@ -1838,7 +1838,7 @@ decorate_task(
 // the user changed preferences during a browser run.
 decorate_task(
   withMockPreferences,
-  withSendEventStub,
+  withSendEventSpy,
   withMockExperiments([
     preferenceStudyFactory({
       slug: "test",
