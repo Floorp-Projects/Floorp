@@ -435,9 +435,15 @@ void MediaPipeline::SendPacket(MediaPacket&& packet) {
   mTransportHandler->SendPacket(mTransportId, std::move(packet));
 }
 
-void MediaPipeline::IncrementRtpPacketsSent(int32_t aBytes) {
+void MediaPipeline::IncrementRtpPacketsSent(const MediaPacket& aPacket) {
   ++mRtpPacketsSent;
-  mRtpBytesSent += aBytes;
+  mRtpBytesSent += aPacket.len();
+
+  if (!mRtpSendBaseSeq) {
+    MOZ_ASSERT(aPacket.len() >= 4);
+    // Parse the sequence number of the first rtp packet as base_seq.
+    mRtpSendBaseSeq.emplace((aPacket.data()[2] << 8) | aPacket.data()[3]);
+  }
 
   if (!(mRtpPacketsSent % 100)) {
     MOZ_LOG(gMediaPipelineLog, LogLevel::Info,
@@ -1082,7 +1088,7 @@ void MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
     mPipeline->mPacketDumper->Dump(mPipeline->Level(),
                                    dom::mozPacketDumpType::Rtp, true,
                                    aPacket.data(), aPacket.len());
-    mPipeline->IncrementRtpPacketsSent(aPacket.len());
+    mPipeline->IncrementRtpPacketsSent(aPacket);
   } else {
     mPipeline->mPacketDumper->Dump(mPipeline->Level(),
                                    dom::mozPacketDumpType::Rtcp, true,
