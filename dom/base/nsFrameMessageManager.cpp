@@ -1260,7 +1260,6 @@ void nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
   ScriptPreloader::FillCompileOptionsForCachedScript(options);
   options.setFileAndLine(url.get(), 1);
   options.setNonSyntacticScope(true);
-  options.setSourceIsLazy(true);
 
   JS::Rooted<JSScript*> script(cx);
   script =
