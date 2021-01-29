@@ -520,32 +520,22 @@ class AudioSessionConduit : public MediaSessionConduit {
       std::unique_ptr<webrtc::AudioFrame> frame) = 0;
 
   /**
-   * Function to grab a decoded audio-sample from the media engine for rendering
-   * / playoutof length 10 milliseconds.
+   * Function to grab a decoded audio-sample from the media engine for
+   * rendering / playout of length 10 milliseconds.
    *
-   * @param speechData [in]: Pointer to a array to which a 10ms frame of audio
-   *                         will be copied
    * @param samplingFreqHz [in]: Frequency of the sampling for playback in
    *                             Hertz (16000, 32000,..)
-   * @param capture_delay [in]: Estimated Time between reading of the samples
-   *                            to rendering/playback
-   * @param numChannels [out]: Number of channels in the audio frame,
-   *                           guaranteed to be non-zero.
-   * @param lengthSamples [out]: Will contain length of the audio frame in
-   *                             samples at return.
-   *                             Ex: A value of 160 implies 160 samples each of
-   *                                 16-bits was copied into speechData
+   * @param frame [in/out]: Pointer to an AudioFrame to which audio data will be
+   *                        copied
    * NOTE: This function should be invoked every 10 milliseconds for the best
-   * peformance
+   *       performance
    * NOTE: ConfigureRecvMediaCodec() SHOULD be called before this function can
-   * be invoked. This ensures the decoded samples are ready for reading.
-   *
+   *       be invoked
+   * This ensures the decoded samples are ready for reading and playout is
+   * enabled.
    */
-  virtual MediaConduitErrorCode GetAudioFrame(int16_t speechData[],
-                                              int32_t samplingFreqHz,
-                                              int32_t capture_delay,
-                                              size_t& numChannels,
-                                              size_t& lengthSamples) = 0;
+  virtual MediaConduitErrorCode GetAudioFrame(int32_t samplingFreqHz,
+                                              webrtc::AudioFrame* frame) = 0;
 
   /**
    * Checks if given sampling frequency is supported

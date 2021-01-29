@@ -577,15 +577,12 @@ MediaConduitErrorCode WebrtcAudioConduit::SendAudioFrame(
   return kMediaConduitNoError;
 }
 
-MediaConduitErrorCode WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
-                                                        int32_t samplingFreqHz,
-                                                        int32_t capture_delay,
-                                                        size_t& numChannels,
-                                                        size_t& lengthSamples) {
+MediaConduitErrorCode WebrtcAudioConduit::GetAudioFrame(
+    int32_t samplingFreqHz, webrtc::AudioFrame* frame) {
   CSFLogDebug(LOGTAG, "%s ", __FUNCTION__);
 
   // validate params
-  if (!speechData) {
+  if (!frame) {
     CSFLogError(LOGTAG, "%s Null Audio Buffer Pointer", __FUNCTION__);
     MOZ_ASSERT(PR_FALSE);
     return kMediaConduitMalformedArgument;
@@ -598,13 +595,6 @@ MediaConduitErrorCode WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
     return kMediaConduitMalformedArgument;
   }
 
-  // validate capture time
-  if (capture_delay < 0) {
-    CSFLogError(LOGTAG, "%s Invalid Capture Delay ", __FUNCTION__);
-    MOZ_ASSERT(PR_FALSE);
-    return kMediaConduitMalformedArgument;
-  }
-
   // Conduit should have reception enabled before we ask for decoded
   // samples
   if (!mEngineReceiving) {
@@ -612,25 +602,20 @@ MediaConduitErrorCode WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
     return kMediaConduitSessionNotInited;
   }
 
-  size_t lengthSamplesAllowed = lengthSamples;
-  lengthSamples = 0;  // output paramter
-                      /*
-                        mRecvChannelProxy->GetAudioFrameWithInfo(samplingFreqHz, &mAudioFrame);
-                      */
-  numChannels = mAudioFrame.num_channels_;
+  // Unfortunate to have to cast to an internal class, but that looks like the
+  // only way short of interfacing with a layer above (which mixes all streams,
+  // which we don't want) or a layer below (which we try to avoid because it is
+  // less stable).
+  auto info = static_cast<webrtc::internal::AudioReceiveStream*>(mRecvStream)
+                  ->GetAudioFrameWithInfo(samplingFreqHz, frame);
 
-  if (numChannels == 0) {
-    CSFLogError(LOGTAG, "%s Audio frame has zero channels", __FUNCTION__);
+  if (info == webrtc::AudioMixer::Source::AudioFrameInfo::kError) {
+    CSFLogError(LOGTAG, "%s Getting audio frame failed", __FUNCTION__);
     return kMediaConduitPlayoutError;
   }
 
-  // XXX Annoying, have to copy to our buffers -- refactor?
-  lengthSamples = mAudioFrame.samples_per_channel_ * mAudioFrame.num_channels_;
-  MOZ_RELEASE_ASSERT(lengthSamples <= lengthSamplesAllowed);
-  PodCopy(speechData, mAudioFrame.data(), lengthSamples);
-
-  CSFLogDebug(LOGTAG, "%s GetAudioFrame:Got samples: length %zu ", __FUNCTION__,
-              lengthSamples);
+  CSFLogDebug(LOGTAG, "%s Got %zu channels of %zu samples", __FUNCTION__,
+              frame->num_channels(), frame->samples_per_channel());
   return kMediaConduitNoError;
 }
 

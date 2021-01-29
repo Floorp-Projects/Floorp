@@ -108,33 +108,21 @@ class WebrtcAudioConduit : public AudioSessionConduit,
 
   /**
    * Function to grab a decoded audio-sample from the media engine for
-   * rendering / playoutof length 10 milliseconds.
+   * rendering / playout of length 10 milliseconds.
    *
-   * @param speechData [in]: Pointer to a array to which a 10ms frame of audio
-   *                         will be copied
    * @param samplingFreqHz [in]: Frequency of the sampling for playback in
    *                             Hertz (16000, 32000,..)
-   * @param capture_delay [in]: Estimated Time between reading of the samples
-   *                            to rendering/playback
-   * @param lengthSamples [in]: Contain maximum length of speechData array.
-   * @param numChannels [out]: Number of channels in the audio frame,
-   *                           guaranteed to be non-zero.
-   * @param lengthSamples [out]: Will contain length of the audio frame in
-   *                             samples at return.
-   *                             Ex: A value of 160 implies 160 samples each of
-   *                             16-bits was copied into speechData
+   * @param frame [in/out]: Pointer to an AudioFrame to which audio data will be
+   *                        copied
    * NOTE: This function should be invoked every 10 milliseconds for the best
-   * peformance
+   *       performance
    * NOTE: ConfigureRecvMediaCodec() SHOULD be called before this function can
-   * be invoked
+   *       be invoked
    * This ensures the decoded samples are ready for reading and playout is
    * enabled.
    */
-  MediaConduitErrorCode GetAudioFrame(int16_t speechData[],
-                                      int32_t samplingFreqHz,
-                                      int32_t capture_delay,
-                                      size_t& numChannels,
-                                      size_t& lengthSamples) override;
+  MediaConduitErrorCode GetAudioFrame(int32_t samplingFreqHz,
+                                      webrtc::AudioFrame* frame) override;
 
   /**
    * Webrtc transport implementation to send and receive RTP packet.
@@ -290,9 +278,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   int mDtmfPayloadFrequency = -1;
 
   Mutex mMutex;
-
-  // Accessed from audio thread.
-  webrtc::AudioFrame mAudioFrame;  // for output pulls
 
   // Socket transport service thread. Any thread.
   const nsCOMPtr<nsISerialEventTarget> mStsThread;
