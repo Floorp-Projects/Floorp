@@ -3686,20 +3686,24 @@ GeneralParser<ParseHandler, Unit>::functionExpr(uint32_t toStringStart,
 }
 
 /*
- * Return true if this node, known to be an unparenthesized string literal,
- * could be the string of a directive in a Directive Prologue. Directive
- * strings never contain escape sequences or line continuations.
- * isEscapeFreeStringLiteral, below, checks whether the node itself could be
- * a directive.
+ * Return true if this node, known to be an unparenthesized string literal
+ * that never contain escape sequences, could be the string of a directive in a
+ * Directive Prologue. Directive strings never contain escape sequences or line
+ * continuations.
  */
-static inline bool IsEscapeFreeStringLiteral(const TokenPos& pos,
-                                             const ParserAtom* atom) {
-  /*
-   * If the string's length in the source code is its length as a value,
-   * accounting for the quotes, then it must not contain any escape
-   * sequences or line continuations.
-   */
-  return pos.begin + atom->length() + 2 == pos.end;
+static inline bool IsUseStrictDirective(const TokenPos& pos,
+                                        TaggedParserAtomIndex atom) {
+  // the length of "use strict", including quotation.
+  static constexpr size_t useStrictLength = 12;
+  return atom == TaggedParserAtomIndex::WellKnown::useStrict() &&
+         pos.begin + useStrictLength == pos.end;
+}
+static inline bool IsUseAsmDirective(const TokenPos& pos,
+                                     TaggedParserAtomIndex atom) {
+  // the length of "use asm", including quotation.
+  static constexpr size_t useAsmLength = 9;
+  return atom == TaggedParserAtomIndex::WellKnown::useAsm() &&
+         pos.begin + useAsmLength == pos.end;
 }
 
 template <typename Unit>
@@ -3789,7 +3793,7 @@ template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::maybeParseDirective(
     ListNodeType list, Node possibleDirective, bool* cont) {
   TokenPos directivePos;
-  const ParserAtom* directive =
+  TaggedParserAtomIndex directive =
       handler_.isStringExprStatement(possibleDirective, &directivePos);
 
   *cont = !!directive;
@@ -3797,43 +3801,41 @@ bool GeneralParser<ParseHandler, Unit>::maybeParseDirective(
     return true;
   }
 
-  if (IsEscapeFreeStringLiteral(directivePos, directive)) {
-    if (directive == cx_->parserNames().useStrict) {
-      // Functions with non-simple parameter lists (destructuring,
-      // default or rest parameters) must not contain a "use strict"
-      // directive.
-      if (pc_->isFunctionBox()) {
-        FunctionBox* funbox = pc_->functionBox();
-        if (!funbox->hasSimpleParameterList()) {
-          const char* parameterKind = funbox->hasDestructuringArgs
-                                          ? "destructuring"
-                                      : funbox->hasParameterExprs ? "default"
-                                                                  : "rest";
-          errorAt(directivePos.begin, JSMSG_STRICT_NON_SIMPLE_PARAMS,
-                  parameterKind);
-          return false;
-        }
+  if (IsUseStrictDirective(directivePos, directive)) {
+    // Functions with non-simple parameter lists (destructuring,
+    // default or rest parameters) must not contain a "use strict"
+    // directive.
+    if (pc_->isFunctionBox()) {
+      FunctionBox* funbox = pc_->functionBox();
+      if (!funbox->hasSimpleParameterList()) {
+        const char* parameterKind = funbox->hasDestructuringArgs
+                                        ? "destructuring"
+                                    : funbox->hasParameterExprs ? "default"
+                                                                : "rest";
+        errorAt(directivePos.begin, JSMSG_STRICT_NON_SIMPLE_PARAMS,
+                parameterKind);
+        return false;
       }
-
-      // We're going to be in strict mode. Note that this scope explicitly
-      // had "use strict";
-      pc_->sc()->setExplicitUseStrict();
-      if (!pc_->sc()->strict()) {
-        // We keep track of the possible strict violations that could occur in
-        // the directive prologue -- deprecated octal syntax -- and
-        // complain now.
-        if (anyChars.sawDeprecatedOctal()) {
-          error(JSMSG_DEPRECATED_OCTAL);
-          return false;
-        }
-        pc_->sc()->setStrictScript();
-      }
-    } else if (directive == cx_->parserNames().useAsm) {
-      if (pc_->isFunctionBox()) {
-        return asmJS(list);
-      }
-      return warningAt(directivePos.begin, JSMSG_USE_ASM_DIRECTIVE_FAIL);
     }
+
+    // We're going to be in strict mode. Note that this scope explicitly
+    // had "use strict";
+    pc_->sc()->setExplicitUseStrict();
+    if (!pc_->sc()->strict()) {
+      // We keep track of the possible strict violations that could occur in
+      // the directive prologue -- deprecated octal syntax -- and
+      // complain now.
+      if (anyChars.sawDeprecatedOctal()) {
+        error(JSMSG_DEPRECATED_OCTAL);
+        return false;
+      }
+      pc_->sc()->setStrictScript();
+    }
+  } else if (IsUseAsmDirective(directivePos, directive)) {
+    if (pc_->isFunctionBox()) {
+      return asmJS(list);
+    }
+    return warningAt(directivePos.begin, JSMSG_USE_ASM_DIRECTIVE_FAIL);
   }
   return true;
 }
@@ -5068,13 +5070,14 @@ GeneralParser<ParseHandler, Unit>::importDeclarationOrImportExpr(
 
 template <typename Unit>
 bool Parser<FullParseHandler, Unit>::checkExportedName(
-    const ParserAtom* exportName) {
-  if (!pc_->sc()->asModuleContext()->builder.hasExportedName(
-          exportName->toIndex())) {
+    TaggedParserAtomIndex exportName) {
+  if (!pc_->sc()->asModuleContext()->builder.hasExportedName(exportName)) {
     return true;
   }
 
-  UniqueChars str = ParserAtomToPrintableString(cx_, exportName);
+  const ParserAtom* atom =
+      this->compilationState_.getParserAtomAt(cx_, exportName);
+  UniqueChars str = ParserAtomToPrintableString(cx_, atom);
   if (!str) {
     return false;
   }
@@ -5085,14 +5088,14 @@ bool Parser<FullParseHandler, Unit>::checkExportedName(
 
 template <typename Unit>
 inline bool Parser<SyntaxParseHandler, Unit>::checkExportedName(
-    const ParserAtom* exportName) {
+    TaggedParserAtomIndex exportName) {
   MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
   return false;
 }
 
 template <class ParseHandler, typename Unit>
 inline bool GeneralParser<ParseHandler, Unit>::checkExportedName(
-    const ParserAtom* exportName) {
+    TaggedParserAtomIndex exportName) {
   return asFinalParser()->checkExportedName(exportName);
 }
 
@@ -5189,7 +5192,7 @@ template <typename Unit>
 bool Parser<FullParseHandler, Unit>::checkExportedNamesForDeclaration(
     ParseNode* node) {
   if (node->isKind(ParseNodeKind::Name)) {
-    if (!checkExportedName(node->as<NameNode>().atom())) {
+    if (!checkExportedName(node->as<NameNode>().atomIndex())) {
       return false;
     }
   } else if (node->isKind(ParseNodeKind::ArrayExpr)) {
@@ -5255,7 +5258,7 @@ GeneralParser<ParseHandler, Unit>::checkExportedNamesForDeclarationList(
 template <typename Unit>
 inline bool Parser<FullParseHandler, Unit>::checkExportedNameForClause(
     NameNode* nameNode) {
-  return checkExportedName(nameNode->atom());
+  return checkExportedName(nameNode->atomIndex());
 }
 
 template <typename Unit>
@@ -5274,7 +5277,7 @@ inline bool GeneralParser<ParseHandler, Unit>::checkExportedNameForClause(
 template <typename Unit>
 bool Parser<FullParseHandler, Unit>::checkExportedNameForFunction(
     FunctionNode* funNode) {
-  return checkExportedName(funNode->funbox()->explicitName());
+  return checkExportedName(funNode->funbox()->explicitNameIndex());
 }
 
 template <typename Unit>
@@ -5294,7 +5297,7 @@ template <typename Unit>
 bool Parser<FullParseHandler, Unit>::checkExportedNameForClass(
     ClassNode* classNode) {
   MOZ_ASSERT(classNode->names());
-  return checkExportedName(classNode->names()->innerBinding()->atom());
+  return checkExportedName(classNode->names()->innerBinding()->atomIndex());
 }
 
 template <typename Unit>
@@ -5443,7 +5446,10 @@ bool Parser<FullParseHandler, Unit>::checkLocalExportNames(ListNode* node) {
     ParseNode* name = next->as<BinaryNode>().left();
     MOZ_ASSERT(name->isKind(ParseNodeKind::Name));
 
-    const ParserName* ident = name->as<NameNode>().atom()->asName();
+    const ParserName* ident =
+        this->compilationState_
+            .getParserAtomAt(cx_, name->as<NameNode>().atomIndex())
+            ->asName();
     if (!checkLocalExportName(ident, name->pn_pos.begin)) {
       return false;
     }
@@ -5832,7 +5838,7 @@ GeneralParser<ParseHandler, Unit>::exportDefault(uint32_t begin) {
     return null();
   }
 
-  if (!checkExportedName(cx_->parserNames().default_)) {
+  if (!checkExportedName(TaggedParserAtomIndex::WellKnown::default_())) {
     return null();
   }
 
@@ -8591,7 +8597,8 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
     // function in a default, not split up this way.
     case TokenKind::String:
       if (!canHaveDirectives &&
-          anyChars.currentToken().atom() == cx_->parserNames().useAsm) {
+          anyChars.currentToken().atomIndex() ==
+              TaggedParserAtomIndex::WellKnown::useAsm()) {
         if (!warning(JSMSG_USE_ASM_DIRECTIVE_FAIL)) {
           return null();
         }
@@ -10134,12 +10141,12 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberCall(
 
   JSOp op = JSOp::Call;
   bool maybeAsyncArrow = false;
-  if (const ParserName* prop = handler_.maybeDottedProperty(lhs)) {
+  if (auto prop = handler_.maybeDottedProperty(lhs)) {
     // Use the JSOp::Fun{Apply,Call} optimizations given the right
     // syntax.
-    if (prop == cx_->parserNames().apply) {
+    if (prop == TaggedParserAtomIndex::WellKnown::apply()) {
       op = JSOp::FunApply;
-    } else if (prop == cx_->parserNames().call) {
+    } else if (prop == TaggedParserAtomIndex::WellKnown::call()) {
       op = JSOp::FunCall;
     }
   } else if (tt == TokenKind::LeftParen &&

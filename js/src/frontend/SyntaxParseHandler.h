@@ -16,6 +16,7 @@
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/NameAnalysisTypes.h"   // PrivateNameKind
 #include "frontend/ParseNode.h"
+#include "frontend/ParserAtom.h"  // ParserAtom, ParserName, TaggedParserAtomIndex
 #include "frontend/TokenStream.h"
 #include "js/GCAnnotations.h"
 #include "vm/JSContext.h"
@@ -36,7 +37,7 @@ namespace frontend {
 // amounts of code that never executes (which happens often).
 class SyntaxParseHandler {
   // Remember the last encountered name or string literal during syntax parses.
-  const ParserAtom* lastAtom;
+  TaggedParserAtomIndex lastAtom;
   TokenPos lastStringPos;
 
  public:
@@ -171,8 +172,7 @@ class SyntaxParseHandler {
 
  public:
   SyntaxParseHandler(JSContext* cx, LifoAlloc& alloc,
-                     BaseScript* lazyOuterFunction)
-      : lastAtom(nullptr) {}
+                     BaseScript* lazyOuterFunction) {}
 
   static NullNode null() { return NodeFailure; }
 
@@ -183,7 +183,7 @@ class SyntaxParseHandler {
 
   NameNodeType newName(const ParserName* name, const TokenPos& pos,
                        JSContext* cx) {
-    lastAtom = name;
+    lastAtom = name->toIndex();
     if (name == cx->parserNames().arguments) {
       return NodeArgumentsName;
     }
@@ -227,7 +227,7 @@ class SyntaxParseHandler {
   }
 
   NameNodeType newStringLiteral(const ParserAtom* atom, const TokenPos& pos) {
-    lastAtom = atom;
+    lastAtom = atom->toIndex();
     lastStringPos = pos;
     return NodeUnparenthesizedString;
   }
@@ -489,7 +489,7 @@ class SyntaxParseHandler {
   }
 
   NameNodeType newPropertyName(const ParserName* name, const TokenPos& pos) {
-    lastAtom = name;
+    lastAtom = name->toIndex();
     return NodeGeneric;
   }
 
@@ -697,24 +697,24 @@ class SyntaxParseHandler {
   bool isPrivateName(Node node) { return node == NodePrivateName; }
   bool isPrivateField(Node node) { return node == NodePrivateElement; }
 
-  const ParserName* maybeDottedProperty(Node node) {
+  TaggedParserAtomIndex maybeDottedProperty(Node node) {
     // Note: |super.apply(...)| is a special form that calls an "apply"
     // method retrieved from one value, but using a *different* value as
     // |this|.  It's not really eligible for the funapply/funcall
     // optimizations as they're currently implemented (assuming a single
     // value is used for both retrieval and |this|).
     if (node != NodeDottedProperty && node != NodeOptionalDottedProperty) {
-      return nullptr;
+      return TaggedParserAtomIndex::null();
     }
-    return lastAtom->asName();
+    return lastAtom;
   }
 
-  const ParserAtom* isStringExprStatement(Node pn, TokenPos* pos) {
+  TaggedParserAtomIndex isStringExprStatement(Node pn, TokenPos* pos) {
     if (pn == NodeStringExprStatement) {
       *pos = lastStringPos;
       return lastAtom;
     }
-    return nullptr;
+    return TaggedParserAtomIndex::null();
   }
 
   bool canSkipLazyInnerFunctions() { return false; }

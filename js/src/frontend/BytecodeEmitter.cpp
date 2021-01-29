@@ -1689,14 +1689,15 @@ bool BytecodeEmitter::iteratorResultShape(GCThingIndex* outShape) {
   ObjLiteralWriter writer;
   writer.beginObject(flags);
 
-  using WellKnownName = js::frontend::WellKnownParserAtoms;
-  for (auto name : {&WellKnownName::value, &WellKnownName::done}) {
-    const ParserAtom* propName = cx->parserNames().*name;
-    writer.setPropName(propName);
-
-    if (!writer.propWithUndefinedValue(cx)) {
-      return false;
-    }
+  writer.setPropName(compilationState.parserAtoms,
+                     TaggedParserAtomIndex::WellKnown::value());
+  if (!writer.propWithUndefinedValue(cx)) {
+    return false;
+  }
+  writer.setPropName(compilationState.parserAtoms,
+                     TaggedParserAtomIndex::WellKnown::done());
+  if (!writer.propWithUndefinedValue(cx)) {
+    return false;
   }
 
   return addObjLiteralData(writer, outShape);
@@ -4037,7 +4038,8 @@ bool BytecodeEmitter::emitTemplateString(ListNode* templateString) {
     // Skip empty strings. These are very common: a template string like
     // `${a}${b}` has three empty strings and without this optimization
     // we'd emit four JSOp::Add operations instead of just one.
-    if (isString && item->as<NameNode>().atom()->length() == 0) {
+    if (isString && item->as<NameNode>().atomIndex() ==
+                        TaggedParserAtomIndex::WellKnown::empty()) {
       continue;
     }
 
@@ -5984,7 +5986,7 @@ bool BytecodeEmitter::emitContinue(TaggedParserAtomIndex label) {
 
 bool BytecodeEmitter::emitGetFunctionThis(NameNode* thisName) {
   MOZ_ASSERT(sc->hasFunctionThisBinding());
-  MOZ_ASSERT(thisName->isName(cx->parserNames().dotThis));
+  MOZ_ASSERT(thisName->isName(TaggedParserAtomIndex::WellKnown::dotThis()));
 
   return emitGetFunctionThis(Some(thisName->pn_pos.begin));
 }
@@ -7206,11 +7208,13 @@ bool BytecodeEmitter::emitSelfHostedCallFunction(CallNode* callNode) {
   }
 
   bool constructing =
-      calleeNode->name() == cx->parserNames().constructContentFunction;
+      calleeNode->nameIndex() ==
+      TaggedParserAtomIndex::WellKnown::constructContentFunction();
   ParseNode* funNode = argsList->head();
   if (constructing) {
     callOp = JSOp::New;
-  } else if (funNode->isName(cx->parserNames().std_Function_apply)) {
+  } else if (funNode->isName(
+                 TaggedParserAtomIndex::WellKnown::std_Function_apply())) {
     callOp = JSOp::FunApply;
   }
 
@@ -7220,7 +7224,8 @@ bool BytecodeEmitter::emitSelfHostedCallFunction(CallNode* callNode) {
 
 #ifdef DEBUG
   if (emitterMode == BytecodeEmitter::SelfHosting &&
-      calleeNode->name() == cx->parserNames().callFunction) {
+      calleeNode->nameIndex() ==
+          TaggedParserAtomIndex::WellKnown::callFunction()) {
     if (!emit1(JSOp::DebugCheckSelfHosted)) {
       return false;
     }
@@ -7286,7 +7291,7 @@ bool BytecodeEmitter::emitSelfHostedResumeGenerator(BinaryNode* callNode) {
   ParseNode* kindNode = valNode->pn_next;
   MOZ_ASSERT(kindNode->isKind(ParseNodeKind::StringExpr));
   GeneratorResumeKind kind =
-      ParserAtomToResumeKind(cx, kindNode->as<NameNode>().atom());
+      ParserAtomToResumeKind(cx, kindNode->as<NameNode>().atomIndex());
   MOZ_ASSERT(!kindNode->pn_next);
 
   if (!emitPushResumeKind(kind)) {
@@ -7457,13 +7462,13 @@ bool BytecodeEmitter::emitSelfHostedGetBuiltinConstructorOrPrototype(
     return false;
   }
 
-  const ParserAtom* name = argNode->as<NameNode>().atom();
+  auto name = argNode->as<NameNode>().atomIndex();
 
   BuiltinObjectKind kind;
   if (isConstructor) {
-    kind = BuiltinConstructorForName(cx, name);
+    kind = BuiltinConstructorForName(name);
   } else {
-    kind = BuiltinPrototypeForName(cx, name);
+    kind = BuiltinPrototypeForName(name);
   }
 
   if (kind == BuiltinObjectKind::None) {
@@ -8846,7 +8851,8 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
 
       // emitClass took care of constructor already.
       if (type == ClassBody &&
-          key->as<NameNode>().atom() == cx->parserNames().constructor &&
+          key->as<NameNode>().atomIndex() ==
+              TaggedParserAtomIndex::WellKnown::constructor() &&
           !propdef->as<ClassMethod>().isStatic()) {
         continue;
       }
@@ -8937,7 +8943,8 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
     ParseNode* key = prop->left();
 
     if (key->is<NameNode>()) {
-      writer.setPropName(key->as<NameNode>().atom());
+      writer.setPropName(compilationState.parserAtoms,
+                         key->as<NameNode>().atomIndex());
     } else {
       double numValue = key->as<NumericLiteral>().value();
       int32_t i = 0;
@@ -8992,15 +8999,15 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
       break;
     }
 
-    const ParserAtom* atom = nullptr;
+    TaggedParserAtomIndex atom;
     if (member->isKind(ParseNodeKind::MutateProto)) {
-      atom = cx->parserNames().proto;
+      atom = TaggedParserAtomIndex::WellKnown::proto();
     } else {
       ParseNode* key = member->as<BinaryNode>().left();
-      atom = key->as<NameNode>().atom();
+      atom = key->as<NameNode>().atomIndex();
     }
 
-    writer.setPropName(atom);
+    writer.setPropName(compilationState.parserAtoms, atom);
 
     if (!writer.propWithUndefinedValue(cx)) {
       return false;
@@ -9097,7 +9104,8 @@ bool BytecodeEmitter::emitObjLiteralValue(ObjLiteralWriter& writer,
     }
   } else if (value->isKind(ParseNodeKind::StringExpr) ||
              value->isKind(ParseNodeKind::TemplateStringExpr)) {
-    if (!writer.propWithAtomValue(cx, value->as<NameNode>().atom())) {
+    if (!writer.propWithAtomValue(cx, compilationState.parserAtoms,
+                                  value->as<NameNode>().atomIndex())) {
       return false;
     }
   } else {
@@ -9297,7 +9305,9 @@ bool BytecodeEmitter::emitPrivateMethodInitializers(ClassEmitter& ce,
     // Synthesize a name for the lexical variable that will store the
     // private method body.
     StringBuffer storedMethodName(cx);
-    if (!storedMethodName.append(propName->as<NameNode>().atom())) {
+    const ParserAtom* prop = compilationState.getParserAtomAt(
+        cx, propName->as<NameNode>().atomIndex());
+    if (!storedMethodName.append(prop)) {
       return false;
     }
     AccessorType accessorType = propdef->as<ClassMethod>().accessorType();
@@ -10178,7 +10188,8 @@ static MOZ_ALWAYS_INLINE ParseNode* FindConstructor(JSContext* cx,
       if (!method.isStatic() &&
           (methodName.isKind(ParseNodeKind::ObjectPropertyName) ||
            methodName.isKind(ParseNodeKind::StringExpr)) &&
-          methodName.as<NameNode>().atom() == cx->parserNames().constructor) {
+          methodName.as<NameNode>().atomIndex() ==
+              TaggedParserAtomIndex::WellKnown::constructor()) {
         return classElement;
       }
     }
@@ -11314,5 +11325,5 @@ bool BytecodeEmitter::allowSelfHostedIter(ParseNode* parseNode) {
   return emitterMode == BytecodeEmitter::SelfHosting &&
          parseNode->isKind(ParseNodeKind::CallExpr) &&
          parseNode->as<BinaryNode>().left()->isName(
-             cx->parserNames().allowContentIter);
+             TaggedParserAtomIndex::WellKnown::allowContentIter());
 }

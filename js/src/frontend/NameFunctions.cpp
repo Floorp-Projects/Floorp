@@ -13,7 +13,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/ParseNode.h"
 #include "frontend/ParseNodeVisitor.h"
-#include "frontend/ParserAtom.h"
+#include "frontend/ParserAtom.h"  // ParserAtom, ParserAtomsTable
 #include "frontend/SharedContext.h"
 #include "util/Poison.h"
 #include "util/StringBuffer.h"
@@ -98,13 +98,18 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
         if (!*foundName) {
           return true;
         }
-        return appendPropertyReference(prop->right()->as<NameNode>().atom());
+        const auto* name = parserAtoms_.getParserAtom(
+            prop->right()->as<NameNode>().atomIndex());
+        return appendPropertyReference(name);
       }
 
       case ParseNodeKind::Name:
-      case ParseNodeKind::PrivateName:
+      case ParseNodeKind::PrivateName: {
         *foundName = true;
-        return buf_.append(n->as<NameNode>().atom());
+        const auto* name =
+            parserAtoms_.getParserAtom(n->as<NameNode>().atomIndex());
+        return buf_.append(name);
+      }
 
       case ParseNodeKind::ThisExpr:
         *foundName = true;
@@ -281,7 +286,9 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
         ParseNode* left = node->as<BinaryNode>().left();
         if (left->isKind(ParseNodeKind::ObjectPropertyName) ||
             left->isKind(ParseNodeKind::StringExpr)) {
-          if (!appendPropertyReference(left->as<NameNode>().atom())) {
+          const auto* name =
+              parserAtoms_.getParserAtom(left->as<NameNode>().atomIndex());
+          if (!appendPropertyReference(name)) {
             return false;
           }
         } else if (left->isKind(ParseNodeKind::NumberExpr)) {
