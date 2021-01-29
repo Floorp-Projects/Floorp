@@ -328,7 +328,7 @@ add_task(async function testCookiesSubViewAllowed() {
   );
 
   let button = listItem.querySelector(
-    ".identity-popup-permission-remove-button"
+    ".permission-popup-permission-remove-button"
   );
   ok(
     BrowserTestUtils.is_visible(button),
@@ -431,7 +431,7 @@ add_task(async function testCookiesSubViewAllowedHeuristic() {
   );
 
   let button = listItem.querySelector(
-    ".identity-popup-permission-remove-button"
+    ".permission-popup-permission-remove-button"
   );
   ok(
     BrowserTestUtils.is_visible(button),
@@ -501,7 +501,7 @@ add_task(async function testCookiesSubViewBlockedDoublyNested() {
   );
 
   let button = listItem.querySelector(
-    ".identity-popup-permission-remove-button"
+    ".permission-popup-permission-remove-button"
   );
   ok(!button, "Permission remove button doesn't exist");
 
