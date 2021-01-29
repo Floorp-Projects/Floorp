@@ -103,11 +103,10 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
                                CompilationStencil& stencil,
                                SourceText<Unit>& sourceBuffer,
                                InheritThis inheritThis = InheritThis::No,
-                               js::Scope* enclosingScope = nullptr,
                                JSObject* enclosingEnv = nullptr)
       : sourceBuffer_(sourceBuffer),
         compilationState_(cx, allocScope, options, stencil, inheritThis,
-                          enclosingScope, enclosingEnv) {
+                          enclosingEnv) {
     MOZ_ASSERT(sourceBuffer_.get() != nullptr);
   }
 
@@ -165,10 +164,9 @@ class MOZ_STACK_CLASS frontend::ScriptCompiler
                           CompilationStencil& stencil,
                           SourceText<Unit>& sourceBuffer,
                           InheritThis inheritThis = InheritThis::No,
-                          js::Scope* enclosingScope = nullptr,
                           JSObject* enclosingEnv = nullptr)
       : Base(cx, allocScope, options, stencil, sourceBuffer, inheritThis,
-             enclosingScope, enclosingEnv) {}
+             enclosingEnv) {}
 
   using Base::createSourceAndParser;
 
@@ -433,7 +431,7 @@ static JSScript* CompileEvalScriptImpl(
 
   frontend::ScriptCompiler<Unit> compiler(
       cx, allocScope, stencil.get().input.options, stencil.get(), srcBuf,
-      InheritThis::Yes, enclosingScope, enclosingEnv);
+      InheritThis::Yes, enclosingEnv);
   if (!compiler.createSourceAndParser(cx, stencil.get())) {
     return nullptr;
   }
@@ -507,10 +505,8 @@ class MOZ_STACK_CLASS frontend::StandaloneFunctionCompiler final
                                       const JS::ReadOnlyCompileOptions& options,
                                       CompilationStencil& stencil,
                                       SourceText<Unit>& sourceBuffer,
-                                      InheritThis inheritThis = InheritThis::No,
-                                      js::Scope* enclosingScope = nullptr)
-      : Base(cx, allocScope, options, stencil, sourceBuffer, inheritThis,
-             enclosingScope) {}
+                                      InheritThis inheritThis = InheritThis::No)
+      : Base(cx, allocScope, options, stencil, sourceBuffer, inheritThis) {}
 
   using Base::createSourceAndParser;
 
@@ -1017,8 +1013,7 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::CompilationState compilationState(
-      cx, allocScope, stencil.input.options, stencil, inheritThis,
-      fun->enclosingScope());
+      cx, allocScope, stencil.input.options, stencil, inheritThis);
 
   Parser<FullParseHandler, Unit> parser(
       cx, stencil.input.options, units, length,
@@ -1124,7 +1119,7 @@ static JSFunction* CompileStandaloneFunction(
                                 : InheritThis::No;
   StandaloneFunctionCompiler<char16_t> compiler(
       cx, allocScope, stencil.get().input.options, stencil.get(), srcBuf,
-      inheritThis, enclosingScope);
+      inheritThis);
   if (!compiler.createSourceAndParser(cx, stencil.get())) {
     return nullptr;
   }
