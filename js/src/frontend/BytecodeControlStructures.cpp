@@ -29,7 +29,7 @@ bool BreakableControl::patchBreaks(BytecodeEmitter* bce) {
   return bce->emitJumpTargetAndPatch(breaks);
 }
 
-LabelControl::LabelControl(BytecodeEmitter* bce, const ParserAtom* label,
+LabelControl::LabelControl(BytecodeEmitter* bce, TaggedParserAtomIndex label,
                            BytecodeOffset startOffset)
     : BreakableControl(bce, StatementKind::Label),
       label_(label),
