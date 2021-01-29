@@ -11684,20 +11684,4 @@ template class Parser<SyntaxParseHandler, Utf8Unit>;
 template class Parser<FullParseHandler, char16_t>;
 template class Parser<SyntaxParseHandler, char16_t>;
 
-CompilationStencil::RewindToken CompilationStencil::getRewindToken(
-    CompilationState& state) {
-  return RewindToken{state.scriptData.length(), asmJS.count()};
-}
-
-void CompilationStencil::rewind(CompilationState& state,
-                                const CompilationStencil::RewindToken& pos) {
-  if (asmJS.count() != pos.asmJSCount) {
-    for (size_t i = pos.scriptDataLength; i < state.scriptData.length(); i++) {
-      asmJS.remove(ScriptIndex(i));
-    }
-    MOZ_ASSERT(asmJS.count() == pos.asmJSCount);
-  }
-  state.scriptData.shrinkTo(pos.scriptDataLength);
-}
-
 }  // namespace js::frontend
