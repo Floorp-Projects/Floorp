@@ -1272,6 +1272,17 @@ public class WebExtension {
          */
         final public @Nullable Image icon;
         /**
+         * URI of the Popup to display when the user taps on the icon for this
+         * Action.
+         *
+         * See also:
+         * <a target=_blank href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/pageAction/getPopup">
+         *     pageAction/getPopup</a>,
+         * <a target=_blank href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/browserAction/getPopup">
+         *     browserAction/getPopup</a>
+         */
+        final private @Nullable String mPopupUri;
+        /**
          * Whether this action is enabled and should be visible.
          *
          * Note: for page action, this is <code>true</code> when the extension calls
@@ -1331,6 +1342,7 @@ public class WebExtension {
         /* package */ Action(final @ActionType int type,
                              final GeckoBundle bundle, final WebExtension extension) {
             mExtension = extension;
+            mPopupUri = bundle.getString("popup");
 
             this.type = type;
 
@@ -1370,6 +1382,7 @@ public class WebExtension {
             return "Action {\n"
                     + "\ttitle: " + this.title + ",\n"
                     + "\ticon: " + this.icon + ",\n"
+                    + "\tpopupUri: " + this.mPopupUri + ",\n"
                     + "\tenabled: " + this.enabled + ",\n"
                     + "\tbadgeText: " + this.badgeText + ",\n"
                     + "\tbadgeTextColor: " + this.badgeTextColor + ",\n"
@@ -1381,6 +1394,7 @@ public class WebExtension {
         protected Action() {
             type = TYPE_BROWSER_ACTION;
             mExtension = null;
+            mPopupUri = null;
             title = null;
             icon = null;
             enabled = null;
@@ -1420,6 +1434,7 @@ public class WebExtension {
 
             title = source.title != null ? source.title : defaultValue.title;
             icon = source.icon != null ? source.icon : defaultValue.icon;
+            mPopupUri = source.mPopupUri != null ? source.mPopupUri : defaultValue.mPopupUri;
             enabled = source.enabled != null  ? source.enabled : defaultValue.enabled;
             badgeText = source.badgeText != null ? source.badgeText : defaultValue.badgeText;
             badgeTextColor = source.badgeTextColor != null
@@ -1433,39 +1448,34 @@ public class WebExtension {
          */
         @UiThread
         public void click() {
-            final GeckoBundle bundle = new GeckoBundle(1);
-            bundle.putString("extensionId", mExtension.id);
-
-            // The click event will return the popup uri if we should open a popup in
-            // response to clicking on the action button.
-            final GeckoResult<String> popupUri;
-            if (type == TYPE_BROWSER_ACTION) {
-                popupUri = EventDispatcher.getInstance()
-                        .queryString("GeckoView:BrowserAction:Click", bundle);
-            } else if (type == TYPE_PAGE_ACTION) {
-                popupUri = EventDispatcher.getInstance()
-                        .queryString("GeckoView:PageAction:Click", bundle);
-            } else {
-                throw new IllegalStateException("Unknown Action type");
-            }
-
-            popupUri.accept(uri -> {
-                if (uri == null || uri.isEmpty()) {
-                    return;
-                }
-
+            if (mPopupUri != null && !mPopupUri.isEmpty()) {
                 final ActionDelegate delegate = mExtension.mDelegateController.getActionDelegate();
                 if (delegate == null) {
                     return;
                 }
 
                 GeckoResult<GeckoSession> popup = delegate.onTogglePopup(mExtension, this);
-                openPopup(popup, uri);
-            });
+                openPopup(popup);
+
+                // When popupUri is specified, the extension doesn't get a callback
+                return;
+            }
+
+            final GeckoBundle bundle = new GeckoBundle(1);
+            bundle.putString("extensionId", mExtension.id);
+
+            if (type == TYPE_BROWSER_ACTION) {
+                EventDispatcher.getInstance().dispatch(
+                        "GeckoView:BrowserAction:Click", bundle);
+            } else if (type == TYPE_PAGE_ACTION) {
+                EventDispatcher.getInstance().dispatch(
+                        "GeckoView:PageAction:Click", bundle);
+            } else {
+                throw new IllegalStateException("Unknown Action type");
+            }
         }
 
-        /* package */ void openPopup(final GeckoResult<GeckoSession> popup,
-                                     final String popupUri) {
+        /* package */ void openPopup(final GeckoResult<GeckoSession> popup) {
             if (popup == null) {
                 return;
             }
@@ -1476,7 +1486,7 @@ public class WebExtension {
                 }
 
                 session.getSettings().setIsPopup(true);
-                session.loadUri(popupUri);
+                session.loadUri(mPopupUri);
             });
         }
     }

@@ -63,7 +63,7 @@ add_task(async function testBrowserActionClickCanceled() {
 
   is(browserAction.pendingPopupTimeout, null, "Have no pending popup timeout");
 
-  is(browserAction.action.activeTabForPreload, tab, "Tab to revoke was saved");
+  is(browserAction.tabToRevokeDuringClearPopup, tab, "Tab to revoke was saved");
   is(
     browserAction.tabManager.hasActiveTabPermission(tab),
     true,
@@ -80,7 +80,7 @@ add_task(async function testBrowserActionClickCanceled() {
   is(browserAction.pendingPopupTimeout, null, "Have no pending popup timeout");
 
   is(
-    browserAction.action.activeTabForPreload,
+    browserAction.tabToRevokeDuringClearPopup,
     null,
     "Tab to revoke was removed"
   );

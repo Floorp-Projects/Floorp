@@ -46,9 +46,7 @@ function makeExtension(background) {
   }
 
   return ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
     manifest: {
-      applications: { gecko: { id: `active-tab@tests.mozilla.org` } },
       permissions: ["activeTab", "webNavigation"],
     },
     background: `${awaitLoad}\n${gatherFrameSources}\n${ExtensionTestCommon.serializeScript(background)}`,
