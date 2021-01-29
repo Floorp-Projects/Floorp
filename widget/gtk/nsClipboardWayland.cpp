@@ -842,7 +842,8 @@ struct FastTrackClipboard {
 
 static void wayland_clipboard_contents_received(
     GtkClipboard* clipboard, GtkSelectionData* selection_data, gpointer data) {
-  LOGCLIP(("wayland_clipboard_contents_received() callback\n"));
+  LOGCLIP(("wayland_clipboard_contents_received() selection_data = %p\n",
+           selection_data));
   FastTrackClipboard* fastTrack = static_cast<FastTrackClipboard*>(data);
   fastTrack->mRetrievalContex->TransferFastTrackClipboard(
       fastTrack->mClipboardRequestNumber, selection_data);
@@ -851,24 +852,34 @@ static void wayland_clipboard_contents_received(
 
 void nsRetrievalContextWayland::TransferFastTrackClipboard(
     int aClipboardRequestNumber, GtkSelectionData* aSelectionData) {
-  LOGCLIP(("nsRetrievalContextWayland::TransferFastTrackClipboard()\n"));
+  LOGCLIP(
+      ("nsRetrievalContextWayland::TransferFastTrackClipboard(), "
+       "aSelectionData = %p\n",
+       aSelectionData));
+
+  int dataLength = gtk_selection_data_get_length(aSelectionData);
+  if (dataLength < 0) {
+    LOGCLIP(
+        ("    gtk_clipboard_request_contents() failed to get clipboard "
+         "data!\n"));
+    ReleaseClipboardData(mClipboardData);
+    return;
+  }
 
   if (mClipboardRequestNumber == aClipboardRequestNumber) {
     LOGCLIP(("    request number matches\n"));
-    int dataLength = gtk_selection_data_get_length(aSelectionData);
-    if (!dataLength) {
-      LOGCLIP(
-          ("    gtk_selection_data_get_length() returned 0 data length!\n"));
-      return;
-    }
     LOGCLIP(("    fastracking %d bytes of data.\n", dataLength));
     mClipboardDataLength = dataLength;
-    mClipboardData = reinterpret_cast<char*>(
-        g_malloc(sizeof(char) * (mClipboardDataLength + 1)));
-    memcpy(mClipboardData, gtk_selection_data_get_data(aSelectionData),
-           sizeof(char) * mClipboardDataLength);
-    mClipboardData[mClipboardDataLength] = '\0';
-    LOGCLIP(("    done, mClipboardData = %p\n", mClipboardData));
+    if (dataLength > 0) {
+      mClipboardData = reinterpret_cast<char*>(
+          g_malloc(sizeof(char) * (mClipboardDataLength + 1)));
+      memcpy(mClipboardData, gtk_selection_data_get_data(aSelectionData),
+             sizeof(char) * mClipboardDataLength);
+      mClipboardData[mClipboardDataLength] = '\0';
+      LOGCLIP(("    done, mClipboardData = %p\n", mClipboardData));
+    } else {
+      ReleaseClipboardData(mClipboardData);
+    }
   } else {
     LOGCLIP(("    request number does not match!\n"));
     NS_WARNING("Received obsoleted clipboard data!");
@@ -952,11 +963,10 @@ void nsRetrievalContextWayland::ReleaseClipboardData(
     const char* aClipboardData) {
   LOGCLIP(("nsRetrievalContextWayland::ReleaseClipboardData [%p]\n",
            aClipboardData));
-
-  NS_ASSERTION(aClipboardData == mClipboardData,
-               "Releasing unknown clipboard data!");
-  g_free((void*)aClipboardData);
-
-  mClipboardData = nullptr;
+  if (aClipboardData != mClipboardData) {
+    NS_WARNING("Wayland clipboard: Releasing unknown clipboard data!");
+  }
+  g_free((void*)mClipboardData);
   mClipboardDataLength = 0;
+  mClipboardData = nullptr;
 }
