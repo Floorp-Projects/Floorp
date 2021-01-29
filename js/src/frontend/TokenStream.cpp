@@ -2317,10 +2317,10 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::identifierName(
 
   noteBadToken.release();
   if (visibility == NameVisibility::Private) {
-    newPrivateNameToken(atom->asName(), start, modifier, out);
+    newPrivateNameToken(atom->asName()->toIndex(), start, modifier, out);
     return true;
   }
-  newNameToken(atom->asName(), start, modifier, out);
+  newNameToken(atom->asName()->toIndex(), start, modifier, out);
   return true;
 }
 
@@ -3743,7 +3743,7 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(
   TokenKind kind = !parsingTemplate ? TokenKind::String
                    : templateHead   ? TokenKind::TemplateHead
                                     : TokenKind::NoSubsTemplate;
-  newAtomToken(kind, atom, start, modifier, out);
+  newAtomToken(kind, atom->toIndex(), start, modifier, out);
   return true;
 }
 

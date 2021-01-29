@@ -3109,8 +3109,8 @@ static bool CheckModuleProcessingDirectives(ModuleValidator<Unit>& m) {
       return true;
     }
 
-    if (!IsIgnoredDirectiveName(
-            m.cx(), ts.anyCharsAccess().currentToken().atomIndex())) {
+    if (!IsIgnoredDirectiveName(m.cx(),
+                                ts.anyCharsAccess().currentToken().atom())) {
       return m.failCurrentOffset("unsupported processing directive");
     }
 

@@ -204,7 +204,7 @@
 #include "jspubtd.h"
 
 #include "frontend/ErrorReporter.h"
-#include "frontend/ParserAtom.h"
+#include "frontend/ParserAtom.h"  // ParserAtom, ParserName, ParserAtomsTable, TaggedParserAtomIndex
 #include "frontend/Token.h"
 #include "frontend/TokenKind.h"
 #include "js/CompileOptions.h"
@@ -734,21 +734,21 @@ class TokenStreamAnyChars : public TokenStreamShared {
   const ParserName* reservedWordToPropertyName(TokenKind tt) const;
 
  public:
-  const ParserName* currentName() const {
+  const ParserName* currentName(ParserAtomsTable& parserAtoms) const {
     if (isCurrentTokenType(TokenKind::Name) ||
         isCurrentTokenType(TokenKind::PrivateName)) {
-      return currentToken().name();
+      return parserAtoms.getParserAtom(currentToken().name())->asName();
     }
 
     MOZ_ASSERT(TokenKindIsPossibleIdentifierName(currentToken().type));
     return reservedWordToPropertyName(currentToken().type);
   }
 
-  bool currentNameHasEscapes() const {
+  bool currentNameHasEscapes(ParserAtomsTable& parserAtoms) const {
     if (isCurrentTokenType(TokenKind::Name) ||
         isCurrentTokenType(TokenKind::PrivateName)) {
       TokenPos pos = currentToken().pos;
-      const ParserAtom* name = currentToken().name();
+      const ParserAtom* name = parserAtoms.getParserAtom(currentToken().name());
       return (pos.end - pos.begin) != name->length();
     }
 
@@ -2013,8 +2013,9 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
     newToken(TokenKind::BigInt, start, modifier, out);
   }
 
-  void newAtomToken(TokenKind kind, const ParserAtom* atom, TokenStart start,
-                    TokenStreamShared::Modifier modifier, TokenKind* out) {
+  void newAtomToken(TokenKind kind, TaggedParserAtomIndex atom,
+                    TokenStart start, TokenStreamShared::Modifier modifier,
+                    TokenKind* out) {
     MOZ_ASSERT(kind == TokenKind::String || kind == TokenKind::TemplateHead ||
                kind == TokenKind::NoSubsTemplate);
 
@@ -2022,13 +2023,13 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
     token->setAtom(atom);
   }
 
-  void newNameToken(const ParserName* name, TokenStart start,
+  void newNameToken(TaggedParserAtomIndex name, TokenStart start,
                     TokenStreamShared::Modifier modifier, TokenKind* out) {
     Token* token = newToken(TokenKind::Name, start, modifier, out);
     token->setName(name);
   }
 
-  void newPrivateNameToken(const ParserName* name, TokenStart start,
+  void newPrivateNameToken(TaggedParserAtomIndex name, TokenStart start,
                            TokenStreamShared::Modifier modifier,
                            TokenKind* out) {
     Token* token = newToken(TokenKind::PrivateName, start, modifier, out);
