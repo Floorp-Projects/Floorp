@@ -739,7 +739,7 @@ class ScriptStencil {
 
   // This is set by the BytecodeEmitter of the enclosing script when a reference
   // to this function is generated.
-  static constexpr uint16_t WasFunctionEmittedFlag = 1 << 0;
+  static constexpr uint16_t WasEmittedByEnclosingScriptFlag = 1 << 0;
 
   // If this is for the root of delazification, this represents
   // MutableScriptFlagsEnum::AllowRelazify value of the script *after*
@@ -773,9 +773,13 @@ class ScriptStencil {
   mozilla::Span<TaggedScriptThingIndex> gcthings(
       const BaseCompilationStencil& stencil) const;
 
-  bool wasFunctionEmitted() const { return flags_ & WasFunctionEmittedFlag; }
+  bool wasEmittedByEnclosingScript() const {
+    return flags_ & WasEmittedByEnclosingScriptFlag;
+  }
 
-  void setWasFunctionEmitted() { flags_ |= WasFunctionEmittedFlag; }
+  void setWasEmittedByEnclosingScript() {
+    flags_ |= WasEmittedByEnclosingScriptFlag;
+  }
 
   bool allowRelazify() const { return flags_ & AllowRelazifyFlag; }
 

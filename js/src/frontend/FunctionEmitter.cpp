@@ -46,11 +46,11 @@ bool FunctionEmitter::prepareForNonLazy() {
 
   MOZ_ASSERT(funbox_->isInterpreted());
   MOZ_ASSERT(funbox_->emitBytecode);
-  MOZ_ASSERT(!funbox_->wasEmitted());
+  MOZ_ASSERT(!funbox_->wasEmittedByEnclosingScript());
 
   //                [stack]
 
-  funbox_->setWasEmitted(true);
+  funbox_->setWasEmittedByEnclosingScript(true);
 
 #ifdef DEBUG
   state_ = State::NonLazy;
@@ -79,11 +79,11 @@ bool FunctionEmitter::emitLazy() {
 
   MOZ_ASSERT(funbox_->isInterpreted());
   MOZ_ASSERT(!funbox_->emitBytecode);
-  MOZ_ASSERT(!funbox_->wasEmitted());
+  MOZ_ASSERT(!funbox_->wasEmittedByEnclosingScript());
 
   //                [stack]
 
-  funbox_->setWasEmitted(true);
+  funbox_->setWasEmittedByEnclosingScript(true);
 
   // Prepare to update the inner lazy script now that it's parent is fully
   // compiled. These updates will be applied in UpdateEmittedInnerFunctions().
@@ -102,7 +102,7 @@ bool FunctionEmitter::emitLazy() {
 
 bool FunctionEmitter::emitAgain() {
   MOZ_ASSERT(state_ == State::Start);
-  MOZ_ASSERT(funbox_->wasEmitted());
+  MOZ_ASSERT(funbox_->wasEmittedByEnclosingScript());
 
   //                [stack]
 
@@ -171,12 +171,12 @@ bool FunctionEmitter::emitAgain() {
 bool FunctionEmitter::emitAsmJSModule() {
   MOZ_ASSERT(state_ == State::Start);
 
-  MOZ_ASSERT(!funbox_->wasEmitted());
+  MOZ_ASSERT(!funbox_->wasEmittedByEnclosingScript());
   MOZ_ASSERT(funbox_->isAsmJSModule());
 
   //                [stack]
 
-  funbox_->setWasEmitted(true);
+  funbox_->setWasEmittedByEnclosingScript(true);
 
   if (!emitFunction()) {
     //              [stack]

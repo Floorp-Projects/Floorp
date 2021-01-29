@@ -235,7 +235,7 @@ FunctionBox::FunctionBox(JSContext* cx, SourceExtent extent,
       funcDataIndex_(index),
       flags_(FunctionFlags::clearMutableflags(flags)),
       emitBytecode(false),
-      wasEmitted_(false),
+      wasEmittedByEnclosingScript_(false),
       isAnnexB(false),
       useAsm(false),
       hasParameterExprs(false),
@@ -447,8 +447,8 @@ void FunctionBox::copyFunctionFields(ScriptStencil& script) {
   if (enclosingScopeIndex_) {
     script.setLazyFunctionEnclosingScopeIndex(*enclosingScopeIndex_);
   }
-  if (wasEmitted_) {
-    script.setWasFunctionEmitted();
+  if (wasEmittedByEnclosingScript_) {
+    script.setWasEmittedByEnclosingScript();
   }
 
   isFunctionFieldCopiedToStencil = true;
@@ -503,8 +503,8 @@ void FunctionBox::copyUpdatedAtomAndFlags() {
 
 void FunctionBox::copyUpdatedWasEmitted() {
   ScriptStencil& script = functionStencil();
-  if (wasEmitted_) {
-    script.setWasFunctionEmitted();
+  if (wasEmittedByEnclosingScript_) {
+    script.setWasEmittedByEnclosingScript();
   }
 }
 
