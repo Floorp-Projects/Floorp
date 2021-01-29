@@ -1341,6 +1341,7 @@ class MediaPipelineReceiveAudio::PipelineListener
             new TaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
                           "AudioPipelineListener")),
         mPlayedTicks(0),
+        mAudioFrame(std::make_unique<webrtc::AudioFrame>()),
         mPrincipalHandle(aPrincipalHandle),
         mForceSilence(false) {}
 
@@ -1409,20 +1410,10 @@ class MediaPipelineReceiveAudio::PipelineListener
     // in the graph rate.
 
     while (mPlayedTicks < aDesiredTime) {
-      constexpr size_t scratchBufferLength =
-          AUDIO_SAMPLE_BUFFER_MAX_BYTES / sizeof(int16_t);
-      int16_t scratchBuffer[scratchBufferLength];
-
-      size_t channelCount = 0;
-      size_t samplesLength = scratchBufferLength;
-
       // This fetches 10ms of data, either mono or stereo
       MediaConduitErrorCode err =
           static_cast<AudioSessionConduit*>(mConduit.get())
-              ->GetAudioFrame(scratchBuffer, mRate,
-                              0,  // TODO(ekr@rtfm.com): better estimate of
-                                  // "capture" (really playout) delay
-                              channelCount, samplesLength);
+              ->GetAudioFrame(mRate, mAudioFrame.get());
 
       if (err != kMediaConduitNoError) {
         // Insert silence on conduit/GIPS failure (extremely unlikely)
@@ -1431,43 +1422,44 @@ class MediaPipelineReceiveAudio::PipelineListener
                  " (desired %" PRId64 " -> %f)",
                  err, mPlayedTicks, aDesiredTime,
                  mSource->TrackTimeToSeconds(aDesiredTime)));
-        channelCount = 1;
-        // if this is not enough we'll loop and provide more
-        samplesLength = samplesPer10ms;
-        PodArrayZero(scratchBuffer);
+        mAudioFrame->UpdateFrame(
+            mAudioFrame->timestamp_, nullptr, samplesPer10ms, mRate,
+            mAudioFrame->speech_type_, mAudioFrame->vad_activity_, 1);
       }
 
-      MOZ_RELEASE_ASSERT(samplesLength <= scratchBufferLength);
+      MOZ_LOG(
+          gMediaPipelineLog, LogLevel::Debug,
+          ("Audio conduit returned buffer for %zu channels, %zu frames",
+           mAudioFrame->num_channels(), mAudioFrame->samples_per_channel()));
 
-      MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
-              ("Audio conduit returned buffer of length %zu", samplesLength));
-
-      CheckedInt<size_t> bufferSize(sizeof(uint16_t));
-      bufferSize *= samplesLength;
-      RefPtr<SharedBuffer> samples = SharedBuffer::Create(bufferSize);
-      int16_t* samplesData = static_cast<int16_t*>(samples->Data());
       AudioSegment segment;
-      size_t frames = samplesLength / channelCount;
-      if (mForceSilence) {
-        segment.AppendNullData(frames);
+      if (mForceSilence || mAudioFrame->muted()) {
+        segment.AppendNullData(mAudioFrame->samples_per_channel());
       } else {
+        CheckedInt<size_t> bufferSize(sizeof(uint16_t));
+        bufferSize *= mAudioFrame->samples_per_channel();
+        bufferSize *= mAudioFrame->num_channels();
+        RefPtr<SharedBuffer> samples = SharedBuffer::Create(bufferSize);
+        int16_t* samplesData = static_cast<int16_t*>(samples->Data());
         AutoTArray<int16_t*, 2> channels;
         AutoTArray<const int16_t*, 2> outputChannels;
 
-        channels.SetLength(channelCount);
+        channels.SetLength(mAudioFrame->num_channels());
 
         size_t offset = 0;
-        for (size_t i = 0; i < channelCount; i++) {
+        for (size_t i = 0; i < mAudioFrame->num_channels(); i++) {
           channels[i] = samplesData + offset;
-          offset += frames;
+          offset += mAudioFrame->samples_per_channel();
         }
 
-        DeinterleaveAndConvertBuffer(scratchBuffer, frames, channelCount,
-                                     channels.Elements());
+        DeinterleaveAndConvertBuffer(
+            mAudioFrame->data(), mAudioFrame->samples_per_channel(),
+            mAudioFrame->num_channels(), channels.Elements());
 
         outputChannels.AppendElements(channels);
 
-        segment.AppendFrames(samples.forget(), outputChannels, frames,
+        segment.AppendFrames(samples.forget(), outputChannels,
+                             mAudioFrame->samples_per_channel(),
                              mPrincipalHandle);
       }
 
@@ -1493,6 +1485,9 @@ class MediaPipelineReceiveAudio::PipelineListener
   // Number of frames of data that has been added to the SourceMediaTrack in
   // the graph's rate. Graph thread only.
   TrackTicks mPlayedTicks;
+  // Allocation of an audio frame used as a scratch buffer when reading data out
+  // of libwebrtc for forwarding into the graph. Graph thread only.
+  std::unique_ptr<webrtc::AudioFrame> mAudioFrame;
   // Principal handle used when appending data to the SourceMediaTrack. Graph
   // thread only.
   PrincipalHandle mPrincipalHandle;
