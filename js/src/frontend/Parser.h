@@ -274,7 +274,7 @@ class MOZ_STACK_CLASS ParserSharedBase {
 
   JSAtom* liftParserAtomToJSAtom(TaggedParserAtomIndex index) {
     const auto* atom = compilationState_.parserAtoms.getParserAtom(index);
-    return atom->toJSAtom(cx_, stencil_.input.atomCache);
+    return atom->toJSAtom(cx_, index, stencil_.input.atomCache);
   }
 };
 
