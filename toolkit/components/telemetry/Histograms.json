@@ -4768,6 +4768,66 @@
     "releaseChannelCollection": "opt-out",
     "description": "Number of tabs opened across all windows, collected at most every 5 minutes whenever the user interacts with the browser in the following ways: open tab/window, page load."
   },
+  "LAZYLOAD_IMAGE_TOTAL": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["sefeng@mozilla.com"],
+    "bug_numbers": [1687358],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 2000,
+    "n_buckets": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "The amount of images that have `loading='lazy'` on the page or have loaded lazily already."
+  },
+  "LAZYLOAD_IMAGE_STARTED": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["sefeng@mozilla.com"],
+    "bug_numbers": [1687358],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 2000,
+    "n_buckets": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of lazy-loaded images that we've started loading as a result of triggering the lazy-load observer threshold."
+  },
+  "LAZYLOAD_IMAGE_NOT_VIEWPORT": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["sefeng@mozilla.com"],
+    "bug_numbers": [1687358],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 2000,
+    "n_buckets": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of lazy-loaded images that were started to load but didn't reach to the viewport eventually"
+  },
+  "LAZYLOAD_IMAGE_VIEWPORT_LOADING": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["sefeng@mozilla.com"],
+    "bug_numbers": [1687358],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 2000,
+    "n_buckets": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of lazy-loaded images that reached the viewport which were not done loading when they did so."
+  },
+  "LAZYLOAD_IMAGE_VIEWPORT_LOADED": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["sefeng@mozilla.com"],
+    "bug_numbers": [1687358],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 2000,
+    "n_buckets": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of lazy-loaded images that reached the viewport and were done loading when they did so."
+  },
   "LOADED_TAB_COUNT": {
     "record_in_processes": ["main"],
     "products": ["firefox"],

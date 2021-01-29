@@ -127,6 +127,8 @@ class DOMIntersectionObserver final : public nsISupports,
 
   static already_AddRefed<DOMIntersectionObserver> CreateLazyLoadObserver(
       Document&);
+  static already_AddRefed<DOMIntersectionObserver>
+  CreateLazyLoadObserverViewport(Document&);
 
  protected:
   void Connect();
