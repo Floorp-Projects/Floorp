@@ -1202,32 +1202,3 @@ JSFunction* frontend::CompileStandaloneFunctionInNonSyntacticScope(
                                    FunctionAsyncKind::SyncFunction,
                                    enclosingScope);
 }
-
-bool frontend::CompilationInput::initScriptSource(JSContext* cx) {
-  ScriptSource* ss = cx->new_<ScriptSource>();
-  if (!ss) {
-    return false;
-  }
-  setSource(ss);
-
-  return ss->initFromOptions(cx, options);
-}
-
-void CompilationInput::trace(JSTracer* trc) {
-  atomCache.trace(trc);
-  TraceNullableRoot(trc, &lazy, "compilation-input-lazy");
-  source_.trace(trc);
-  TraceNullableRoot(trc, &enclosingScope, "compilation-input-enclosing-scope");
-}
-
-void CompilationAtomCache::trace(JSTracer* trc) { atoms_.trace(trc); }
-
-void CompilationStencil::trace(JSTracer* trc) { input.trace(trc); }
-
-void CompilationGCOutput::trace(JSTracer* trc) {
-  TraceNullableRoot(trc, &script, "compilation-gc-output-script");
-  TraceNullableRoot(trc, &module, "compilation-gc-output-module");
-  TraceNullableRoot(trc, &sourceObject, "compilation-gc-output-source");
-  functions.trace(trc);
-  scopes.trace(trc);
-}
