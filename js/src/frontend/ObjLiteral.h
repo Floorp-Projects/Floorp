@@ -532,11 +532,6 @@ struct ObjLiteralReader : private ObjLiteralReaderBase {
   }
 };
 
-JSObject* InterpretObjLiteral(JSContext* cx,
-                              const frontend::CompilationAtomCache& atomCache,
-                              const mozilla::Span<const uint8_t> insns,
-                              ObjLiteralFlags flags);
-
 class ObjLiteralStencil {
   friend class frontend::StencilXDR;
 
