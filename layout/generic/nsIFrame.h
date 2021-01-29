@@ -2378,11 +2378,6 @@ class nsIFrame : public nsQueryFrame {
   bool IsPrimaryFrameOfRootOrBodyElement() const;
 
   /**
-   * @return true if this frame is used as a fieldset's rendered legend.
-   */
-  bool IsRenderedLegend() const;
-
-  /**
    * This call is invoked on the primary frame for a character data content
    * node, when it is changed in the content tree.
    */

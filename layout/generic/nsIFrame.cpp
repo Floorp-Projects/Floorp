@@ -38,7 +38,6 @@
 #include "mozilla/ViewportUtils.h"
 
 #include "nsCOMPtr.h"
-#include "nsFieldSetFrame.h"
 #include "nsFlexContainerFrame.h"
 #include "nsFrameList.h"
 #include "nsPlaceholderFrame.h"
@@ -628,13 +627,6 @@ bool nsIFrame::IsPrimaryFrameOfRootOrBodyElement() const {
   Document* document = content->OwnerDoc();
   return content == document->GetRootElement() ||
          content == document->GetBodyElement();
-}
-
-bool nsIFrame::IsRenderedLegend() const {
-  if (auto* parent = GetParent(); parent && parent->IsFieldSetFrame()) {
-    return static_cast<nsFieldSetFrame*>(parent)->GetLegend() == this;
-  }
-  return false;
 }
 
 void nsIFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,

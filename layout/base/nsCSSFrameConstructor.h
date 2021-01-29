@@ -375,8 +375,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
     AllowTextPathChild,
     // The item is content created by an nsIAnonymousContentCreator frame.
     IsAnonymousContentCreatorContent,
-    // The item will be the rendered legend of a <fieldset>.
-    IsForRenderedLegend,
   };
 
   using ItemFlags = mozilla::EnumSet<ItemFlag>;
@@ -1088,8 +1086,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
           mIsAllInline(false),
           mIsBlock(false),
           mIsPopup(false),
-          mIsLineParticipant(false),
-          mIsRenderedLegend(false) {
+          mIsLineParticipant(false) {
       MOZ_COUNT_CTOR(FrameConstructionItem);
     }
 
@@ -1163,8 +1160,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
     bool mIsPopup : 1;
     // Whether this item should be treated as a line participant
     bool mIsLineParticipant : 1;
-    // Whether this item is the rendered legend of a <fieldset>
-    bool mIsRenderedLegend : 1;
 
    private:
     // Not allocated from the general heap - instead, use the new/Delete APIs

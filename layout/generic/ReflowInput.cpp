@@ -2314,9 +2314,17 @@ void ReflowInput::InitConstraints(
           mComputeSizeFlags += ComputeSizeFlag::ShrinkWrap;
         }
       } else {
-        // Shrink-wrap blocks that are orthogonal to their container.
-        if (isBlockLevel && mCBReflowInput &&
-            mCBReflowInput->GetWritingMode().IsOrthogonalTo(mWritingMode)) {
+        // Make sure legend frames with display:block and width:auto still
+        // shrink-wrap.
+        // Also shrink-wrap blocks that are orthogonal to their container.
+        if (isBlockLevel &&
+            ((aFrameType == LayoutFrameType::Legend &&
+              mFrame->Style()->GetPseudoType() !=
+                  PseudoStyleType::scrolledContent) ||
+             (aFrameType == LayoutFrameType::Scroll &&
+              mFrame->GetContentInsertionFrame()->IsLegendFrame()) ||
+             (mCBReflowInput &&
+              mCBReflowInput->GetWritingMode().IsOrthogonalTo(mWritingMode)))) {
           mComputeSizeFlags += ComputeSizeFlag::ShrinkWrap;
         }
 
