@@ -42,9 +42,6 @@ static const char* acLogTag = "WebrtcAudioSessionConduit";
 #endif
 #define LOGTAG acLogTag
 
-// 32 bytes is what WebRTC CodecInst expects
-const unsigned int WebrtcAudioConduit::CODEC_PLNAME_SIZE = 32;
-
 using LocalDirection = MediaSessionConduitLocalDirection;
 /**
  * Factory Method for AudioConduit
@@ -1035,9 +1032,8 @@ MediaConduitErrorCode WebrtcAudioConduit::ValidateCodecConfig(
     return kMediaConduitMalformedArgument;
   }
 
-  if ((codecInfo->mName.empty()) ||
-      (codecInfo->mName.length() >= CODEC_PLNAME_SIZE)) {
-    CSFLogError(LOGTAG, "%s Invalid Payload Name Length ", __FUNCTION__);
+  if (codecInfo->mName.empty()) {
+    CSFLogError(LOGTAG, "%s Empty Payload Name ", __FUNCTION__);
     return kMediaConduitMalformedArgument;
   }
 

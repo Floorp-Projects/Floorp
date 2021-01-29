@@ -69,9 +69,6 @@ class WebrtcVideoConduit
       public rtc::VideoSinkInterface<webrtc::VideoFrame>,
       public rtc::VideoSourceInterface<webrtc::VideoFrame> {
  public:
-  // VoiceEngine defined constant for Payload Name Size.
-  static const unsigned int CODEC_PLNAME_SIZE;
-
   // Returns true when both encoder and decoder are HW accelerated.
   static bool HasH264Hardware();
 
