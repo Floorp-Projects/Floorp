@@ -884,23 +884,28 @@ nsresult ContentChild::ProvideWindowCommon(
     parentSandboxFlags = doc->GetSandboxFlags();
   }
 
-  bool sandboxFlagsPropagate =
-      parentSandboxFlags & SANDBOX_PROPAGATES_TO_AUXILIARY_BROWSING_CONTEXTS;
-
-  // Check if we should load in a different process. Under Fission, we never
-  // want to do this, since the Fission process selection logic will handle
-  // everything for us. Outside of Fission, we always want to load in a
-  // different process if we have noopener set, but we also might if we can't
-  // load in the current process.
-  bool loadInDifferentProcess =
-      aForceNoOpener && StaticPrefs::dom_noopener_newprocess_enabled() &&
-      !useRemoteSubframes && !sandboxFlagsPropagate &&
-      !aOpenWindowInfo->GetIsForPrinting();
-  if (!loadInDifferentProcess && aURI) {
-    // Only special-case cross-process loads if Fission is disabled. With
-    // Fission enabled, the initial in-process load will automatically be
-    // retargeted to the correct process.
-    if (!(parent && parent->UseRemoteSubframes())) {
+  // Certain conditions complicate the process of creating the new
+  // BrowsingContext, and prevent us from using the
+  // "CreateWindowInDifferentProcess" codepath.
+  //  * With Fission enabled, process selection will happen during the load, so
+  //    switching processes eagerly will not provide a benefit.
+  //  * Windows created for printing must be created within the current process
+  //    so that a static clone of the source document can be created.
+  //  * Sandboxed popups require the full window creation codepath.
+  //  * Loads with form or POST data require the full window creation codepath.
+  bool cannotLoadInDifferentProcess =
+      useRemoteSubframes || aOpenWindowInfo->GetIsForPrinting() ||
+      (parentSandboxFlags &
+       SANDBOX_PROPAGATES_TO_AUXILIARY_BROWSING_CONTEXTS) ||
+      (aLoadState &&
+       (aLoadState->IsFormSubmission() || aLoadState->PostDataStream()));
+  if (!cannotLoadInDifferentProcess) {
+    // Check if we should load in a different process. If we have the noopener
+    // flag set, we can do so, but we may also want to do so eagerly if the load
+    // cannot be completed within the current process.
+    bool loadInDifferentProcess =
+        aForceNoOpener && StaticPrefs::dom_noopener_newprocess_enabled();
+    if (!loadInDifferentProcess && aURI) {
       nsCOMPtr<nsIWebBrowserChrome3> browserChrome3;
       rv = aTabOpener->GetWebBrowserChrome(getter_AddRefs(browserChrome3));
       if (NS_SUCCEEDED(rv) && browserChrome3) {
@@ -909,37 +914,37 @@ nsresult ContentChild::ProvideWindowCommon(
         loadInDifferentProcess = NS_SUCCEEDED(rv) && !shouldLoad;
       }
     }
-  }
 
-  // If we're in a content process and we have noopener set, there's no reason
-  // to load in our process, so let's load it elsewhere!
-  if (loadInDifferentProcess && !sandboxFlagsPropagate) {
-    float fullZoom;
-    nsCOMPtr<nsIPrincipal> triggeringPrincipal;
-    nsCOMPtr<nsIContentSecurityPolicy> csp;
-    nsCOMPtr<nsIReferrerInfo> referrerInfo;
-    rv = GetCreateWindowParams(aOpenWindowInfo, aLoadState, aForceNoReferrer,
-                               &fullZoom, getter_AddRefs(referrerInfo),
-                               getter_AddRefs(triggeringPrincipal),
-                               getter_AddRefs(csp));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    // If we're in a content process and we have noopener set, there's no reason
+    // to load in our process, so let's load it elsewhere!
+    if (loadInDifferentProcess) {
+      float fullZoom;
+      nsCOMPtr<nsIPrincipal> triggeringPrincipal;
+      nsCOMPtr<nsIContentSecurityPolicy> csp;
+      nsCOMPtr<nsIReferrerInfo> referrerInfo;
+      rv = GetCreateWindowParams(aOpenWindowInfo, aLoadState, aForceNoReferrer,
+                                 &fullZoom, getter_AddRefs(referrerInfo),
+                                 getter_AddRefs(triggeringPrincipal),
+                                 getter_AddRefs(csp));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      if (name.LowerCaseEqualsLiteral("_blank")) {
+        name.Truncate();
+      }
+
+      MOZ_DIAGNOSTIC_ASSERT(!nsContentUtils::IsSpecialName(name));
+
+      Unused << SendCreateWindowInDifferentProcess(
+          aTabOpener, parent, aChromeFlags, aCalledFromJS, aWidthSpecified,
+          aURI, features, fullZoom, name, triggeringPrincipal, csp,
+          referrerInfo, aOpenWindowInfo->GetOriginAttributes());
+
+      // We return NS_ERROR_ABORT, so that the caller knows that we've abandoned
+      // the window open as far as it is concerned.
+      return NS_ERROR_ABORT;
     }
-
-    if (name.LowerCaseEqualsLiteral("_blank")) {
-      name.Truncate();
-    }
-
-    MOZ_DIAGNOSTIC_ASSERT(!nsContentUtils::IsSpecialName(name));
-
-    Unused << SendCreateWindowInDifferentProcess(
-        aTabOpener, parent, aChromeFlags, aCalledFromJS, aWidthSpecified, aURI,
-        features, fullZoom, name, triggeringPrincipal, csp, referrerInfo,
-        aOpenWindowInfo->GetOriginAttributes());
-
-    // We return NS_ERROR_ABORT, so that the caller knows that we've abandoned
-    // the window open as far as it is concerned.
-    return NS_ERROR_ABORT;
   }
 
   TabId tabId(nsContentUtils::GenerateTabId());
