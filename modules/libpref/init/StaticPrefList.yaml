@@ -1978,7 +1978,7 @@
 
 - name: dom.input_events.beforeinput.enabled
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Whether innerWidth / innerHeight return rounded or fractional sizes.

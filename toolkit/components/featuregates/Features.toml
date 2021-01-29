@@ -28,16 +28,6 @@ type = "boolean"
 bug-numbers = [1205133]
 is-public = {default = false, nightly = true}
 
-[web-api-beforeinput]
-title = "experimental-features-web-api-beforeinput"
-description = "experimental-features-web-api-beforeinput-description"
-description-links = {mdn-beforeinput = "https://developer.mozilla.org/docs/Web/API/HTMLElement/beforeinput_event", mdn-input = "https://developer.mozilla.org/docs/Web/HTML/Element/input", mdn-textarea = "https://developer.mozilla.org/docs/Web/HTML/Element/textarea", mdn-contenteditable = "https://developer.mozilla.org/docs/Web/HTML/Global_attributes#attr-contenteditable"}
-restart-required = false
-preference = "dom.input_events.beforeinput.enabled"
-type = "boolean"
-bug-numbers = [1609291]
-is-public = {default = false, nightly = true}
-
 [css-constructable-stylesheets]
 title = "experimental-features-css-constructable-stylesheets"
 description = "experimental-features-css-constructable-stylesheets-description"
