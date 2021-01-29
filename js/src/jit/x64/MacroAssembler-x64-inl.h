@@ -18,7 +18,8 @@ namespace jit {
 // ===============================================================
 
 void MacroAssembler::move64(Imm64 imm, Register64 dest) {
-  movq(ImmWord(imm.value), dest.reg);
+  // Use mov instead of movq because it has special optimizations for imm == 0.
+  mov(ImmWord(imm.value), dest.reg);
 }
 
 void MacroAssembler::move64(Register64 src, Register64 dest) {
