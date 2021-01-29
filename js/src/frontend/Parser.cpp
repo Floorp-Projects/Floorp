@@ -2183,7 +2183,8 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   // Skip function name, if present.
   const ParserAtom* explicitName = nullptr;
   if (TokenKindIsPossibleIdentifierName(tt)) {
-    explicitName = anyChars.currentName(this->compilationState_.parserAtoms);
+    explicitName = this->compilationState_.parserAtoms.getParserAtom(
+        anyChars.currentName());
   } else {
     anyChars.ungetToken();
   }
@@ -3238,12 +3239,11 @@ bool GeneralParser<ParseHandler, Unit>::appendToCallSiteObj(
     return false;
   }
 
-  const ParserAtom* atom = tokenStream.getRawTemplateStringAtom();
+  auto atom = tokenStream.getRawTemplateStringAtom();
   if (!atom) {
     return false;
   }
-  NameNodeType rawNode =
-      handler_.newTemplateStringLiteral(atom->toIndex(), pos());
+  NameNodeType rawNode = handler_.newTemplateStringLiteral(atom, pos());
   if (!rawNode) {
     return false;
   }
@@ -4808,8 +4808,9 @@ bool Parser<FullParseHandler, Unit>::namedImportsOrNamespaceImport(
         return false;
       }
 
-      const ParserName* importName =
-          anyChars.currentName(this->compilationState_.parserAtoms);
+      const ParserName* importName = this->compilationState_.parserAtoms
+                                         .getParserAtom(anyChars.currentName())
+                                         ->asName();
       TokenPos importNamePos = pos();
 
       bool matched;
@@ -5407,8 +5408,9 @@ GeneralParser<ParseHandler, Unit>::exportBatch(uint32_t begin) {
       return null();
     }
 
-    NameNodeType exportName =
-        newName(anyChars.currentName(this->compilationState_.parserAtoms));
+    NameNodeType exportName = newName(this->compilationState_.parserAtoms
+                                          .getParserAtom(anyChars.currentName())
+                                          ->asName());
     if (!exportName) {
       return null();
     }
@@ -5510,7 +5512,9 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::exportClause(
     }
 
     NameNodeType bindingName =
-        newName(anyChars.currentName(this->compilationState_.parserAtoms));
+        newName(this->compilationState_.parserAtoms
+                    .getParserAtom(anyChars.currentName())
+                    ->asName());
     if (!bindingName) {
       return null();
     }
@@ -5526,8 +5530,9 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::exportClause(
       }
     }
 
-    NameNodeType exportName =
-        newName(anyChars.currentName(this->compilationState_.parserAtoms));
+    NameNodeType exportName = newName(this->compilationState_.parserAtoms
+                                          .getParserAtom(anyChars.currentName())
+                                          ->asName());
     if (!exportName) {
       return null();
     }
@@ -10042,7 +10047,8 @@ GeneralParser<ParseHandler, Unit>::memberPropertyAccess(
   MOZ_ASSERT(TokenKindIsPossibleIdentifierName(anyChars.currentToken().type) ||
              anyChars.currentToken().type == TokenKind::PrivateName);
   const ParserName* field =
-      anyChars.currentName(this->compilationState_.parserAtoms);
+      this->compilationState_.parserAtoms.getParserAtom(anyChars.currentName())
+          ->asName();
   if (handler_.isSuperBase(lhs) && !checkAndMarkSuperScope()) {
     error(JSMSG_BAD_SUPERPROP, "property");
     return null();
@@ -10067,7 +10073,8 @@ GeneralParser<ParseHandler, Unit>::memberPrivateAccess(
   MOZ_ASSERT(anyChars.currentToken().type == TokenKind::PrivateName);
 
   const ParserName* field =
-      anyChars.currentName(this->compilationState_.parserAtoms);
+      this->compilationState_.parserAtoms.getParserAtom(anyChars.currentName())
+          ->asName();
   // Cannot access private fields on super.
   if (handler_.isSuperBase(lhs)) {
     error(JSMSG_BAD_SUPERPRIVATE);
@@ -10352,7 +10359,8 @@ const ParserName* GeneralParser<ParseHandler, Unit>::labelOrIdentifierReference(
           ? anyChars.currentToken().type
           : TokenKind::Limit;
   const ParserName* ident =
-      anyChars.currentName(this->compilationState_.parserAtoms);
+      this->compilationState_.parserAtoms.getParserAtom(anyChars.currentName())
+          ->asName();
   if (!checkLabelOrIdentifierReference(ident, pos().begin, yieldHandling,
                                        hint)) {
     return nullptr;
@@ -10368,7 +10376,8 @@ const ParserName* GeneralParser<ParseHandler, Unit>::bindingIdentifier(
           ? anyChars.currentToken().type
           : TokenKind::Limit;
   const ParserName* ident =
-      anyChars.currentName(this->compilationState_.parserAtoms);
+      this->compilationState_.parserAtoms.getParserAtom(anyChars.currentName())
+          ->asName();
   if (!checkBindingIdentifier(ident, pos().begin, yieldHandling, hint)) {
     return nullptr;
   }
@@ -10856,8 +10865,9 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
         return null();
       }
 
-      const ParserName* propName =
-          anyChars.currentName(this->compilationState_.parserAtoms)->asName();
+      const ParserName* propName = this->compilationState_.parserAtoms
+                                       .getParserAtom(anyChars.currentName())
+                                       ->asName();
       *propAtomOut = propName;
       return privateNameReference(propName);
     }
@@ -10868,7 +10878,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
         return null();
       }
 
-      *propAtomOut = anyChars.currentName(this->compilationState_.parserAtoms);
+      *propAtomOut = this->compilationState_.parserAtoms.getParserAtom(
+          anyChars.currentName());
       return handler_.newObjectLiteralPropertyName((*propAtomOut)->toIndex(),
                                                    pos());
     }
