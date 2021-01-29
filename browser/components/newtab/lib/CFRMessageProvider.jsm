@@ -913,7 +913,7 @@ const CFR_MESSAGES = [
       anchor_id: "tracking-protection-icon-box",
       skip_address_bar_notifier: true,
       bucket_id: "CFR_MILESTONE_MESSAGE",
-      heading_text: { string_id: "cfr-doorhanger-milestone-heading" },
+      heading_text: { string_id: "cfr-doorhanger-milestone-heading2" },
       notification_text: "",
       text: "",
       buttons: {
