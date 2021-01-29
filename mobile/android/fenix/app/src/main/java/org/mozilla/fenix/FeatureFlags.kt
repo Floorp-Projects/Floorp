@@ -35,13 +35,6 @@ object FeatureFlags {
     const val nimbusExperiments = false
 
     /**
-     * Enables an intentional regression to validate perftest alerting. See
-     * https://github.com/mozilla-mobile/fenix/issues/17447 for details. This
-     * is expected to be removed within several days.
-     */
-    val intentionalRegressionToValidatePerfTestAlerting = Config.channel.isNightlyOrDebug
-
-    /**
      * Enables the new MediaSession API.
      */
     @Suppress("MayBeConst")
