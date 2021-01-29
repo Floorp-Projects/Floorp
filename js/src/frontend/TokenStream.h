@@ -731,13 +731,13 @@ class TokenStreamAnyChars : public TokenStreamShared {
   MOZ_MUST_USE bool checkOptions();
 
  private:
-  const ParserName* reservedWordToPropertyName(TokenKind tt) const;
+  TaggedParserAtomIndex reservedWordToPropertyName(TokenKind tt) const;
 
  public:
-  const ParserName* currentName(ParserAtomsTable& parserAtoms) const {
+  TaggedParserAtomIndex currentName() const {
     if (isCurrentTokenType(TokenKind::Name) ||
         isCurrentTokenType(TokenKind::PrivateName)) {
-      return parserAtoms.getParserAtom(currentToken().name())->asName();
+      return currentToken().name();
     }
 
     MOZ_ASSERT(TokenKindIsPossibleIdentifierName(currentToken().type));
@@ -1571,16 +1571,16 @@ class TokenStreamCharsShared {
     return mozilla::IsAscii(static_cast<char32_t>(unit));
   }
 
-  const ParserAtom* drainCharBufferIntoAtom() {
+  TaggedParserAtomIndex drainCharBufferIntoAtom() {
     // Add to parser atoms table.
     const ParserAtom* atom = this->parserAtoms->internChar16(
         cx, charBuffer.begin(), charBuffer.length());
     if (!atom) {
-      return nullptr;
+      return TaggedParserAtomIndex::null();
     }
 
     charBuffer.clear();
-    return atom;
+    return atom->toIndex();
   }
 
  protected:
@@ -1641,8 +1641,8 @@ class TokenStreamCharsBase : public TokenStreamCharsShared {
     sourceUnits.ungetCodeUnit();
   }
 
-  MOZ_ALWAYS_INLINE const ParserAtom* atomizeSourceChars(
-      mozilla::Span<const Unit> units);
+  MOZ_ALWAYS_INLINE TaggedParserAtomIndex
+  atomizeSourceChars(mozilla::Span<const Unit> units);
 
   /**
    * Try to match a non-LineTerminator ASCII code point.  Return true iff it
@@ -1720,17 +1720,27 @@ inline void TokenStreamCharsBase<Unit>::consumeKnownCodeUnit(int32_t unit) {
 }
 
 template <>
-MOZ_ALWAYS_INLINE const ParserAtom*
+MOZ_ALWAYS_INLINE TaggedParserAtomIndex
 TokenStreamCharsBase<char16_t>::atomizeSourceChars(
     mozilla::Span<const char16_t> units) {
-  return this->parserAtoms->internChar16(cx, units.data(), units.size());
+  const ParserAtom* atom =
+      this->parserAtoms->internChar16(cx, units.data(), units.size());
+  if (!atom) {
+    return TaggedParserAtomIndex::null();
+  }
+  return atom->toIndex();
 }
 
 template <>
-/* static */ MOZ_ALWAYS_INLINE const ParserAtom*
+/* static */ MOZ_ALWAYS_INLINE TaggedParserAtomIndex
 TokenStreamCharsBase<mozilla::Utf8Unit>::atomizeSourceChars(
     mozilla::Span<const mozilla::Utf8Unit> units) {
-  return this->parserAtoms->internUtf8(cx, units.data(), units.size());
+  const ParserAtom* atom =
+      this->parserAtoms->internUtf8(cx, units.data(), units.size());
+  if (!atom) {
+    return TaggedParserAtomIndex::null();
+  }
+  return atom->toIndex();
 }
 
 template <typename Unit>
@@ -2142,7 +2152,7 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
    */
   void consumeOptionalHashbangComment();
 
-  const ParserAtom* getRawTemplateStringAtom() {
+  TaggedParserAtomIndex getRawTemplateStringAtom() {
     TokenStreamAnyChars& anyChars = anyCharsAccess();
 
     MOZ_ASSERT(anyChars.currentToken().type == TokenKind::TemplateHead ||
@@ -2169,7 +2179,7 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
     // https://tc39.github.io/ecma262/#sec-static-semantics-tv-and-trv
     if (!FillCharBufferFromSourceNormalizingAsciiLineBreaks(this->charBuffer,
                                                             cur, end)) {
-      return nullptr;
+      return TaggedParserAtomIndex::null();
     }
 
     return drainCharBufferIntoAtom();

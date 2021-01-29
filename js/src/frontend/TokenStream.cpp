@@ -374,19 +374,19 @@ const char* ReservedWordToCharZ(TokenKind tt) {
   return nullptr;
 }
 
-const ParserName* TokenStreamAnyChars::reservedWordToPropertyName(
+TaggedParserAtomIndex TokenStreamAnyChars::reservedWordToPropertyName(
     TokenKind tt) const {
   MOZ_ASSERT(tt != TokenKind::Name);
   switch (tt) {
 #define EMIT_CASE(word, name, type) \
   case type:                        \
-    return cx->parserNames().name;
+    return TaggedParserAtomIndex::WellKnown::name();
     FOR_EACH_JAVASCRIPT_RESERVED_WORD(EMIT_CASE)
 #undef EMIT_CASE
     default:
       MOZ_ASSERT_UNREACHABLE("Not a reserved word TokenKind.");
   }
-  return nullptr;
+  return TaggedParserAtomIndex::null();
 }
 
 SourceCoords::SourceCoords(JSContext* cx, uint32_t initialLineNumber,
@@ -2285,7 +2285,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::identifierName(
     }
   }
 
-  const ParserAtom* atom = nullptr;
+  TaggedParserAtomIndex atom;
   if (MOZ_UNLIKELY(escaping == IdentifierEscapes::SawUnicodeEscape)) {
     // Identifiers containing Unicode escapes have to be converted into
     // tokenbuf before atomizing.
@@ -2317,10 +2317,10 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::identifierName(
 
   noteBadToken.release();
   if (visibility == NameVisibility::Private) {
-    newPrivateNameToken(atom->asName()->toIndex(), start, modifier, out);
+    newPrivateNameToken(atom, start, modifier, out);
     return true;
   }
-  newNameToken(atom->asName()->toIndex(), start, modifier, out);
+  newNameToken(atom, start, modifier, out);
   return true;
 }
 
@@ -3731,7 +3731,7 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(
     }
   }
 
-  const ParserAtom* atom = drainCharBufferIntoAtom();
+  TaggedParserAtomIndex atom = drainCharBufferIntoAtom();
   if (!atom) {
     return false;
   }
@@ -3743,7 +3743,7 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(
   TokenKind kind = !parsingTemplate ? TokenKind::String
                    : templateHead   ? TokenKind::TemplateHead
                                     : TokenKind::NoSubsTemplate;
-  newAtomToken(kind, atom->toIndex(), start, modifier, out);
+  newAtomToken(kind, atom, start, modifier, out);
   return true;
 }
 
