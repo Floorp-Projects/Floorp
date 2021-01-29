@@ -10818,13 +10818,13 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
   *propAtomOut = TaggedParserAtomIndex::null();
   switch (ltok) {
     case TokenKind::Number: {
-      const ParserAtom* numAtom =
+      auto numAtom =
           NumberToParserAtom(cx_, this->compilationState_.parserAtoms,
                              anyChars.currentToken().number());
       if (!numAtom) {
         return null();
       }
-      *propAtomOut = numAtom->toIndex();
+      *propAtomOut = numAtom;
       return newNumber(anyChars.currentToken());
     }
 
