@@ -224,6 +224,49 @@ class TaggedParserAtomIndex {
   bool operator==(const TaggedParserAtomIndex& rhs) const {
     return data_ == rhs.data_;
   }
+  bool operator!=(const TaggedParserAtomIndex& rhs) const {
+    return data_ != rhs.data_;
+  }
+
+  explicit operator bool() const { return !isNull(); }
+};
+
+// Trivial variant of TaggedParserAtomIndex, to use in collection that requires
+// trivial type.
+// Provides minimal set of methods to use in collection.
+class TrivialTaggedParserAtomIndex {
+  uint32_t data_;
+
+ public:
+  static TrivialTaggedParserAtomIndex from(TaggedParserAtomIndex index) {
+    TrivialTaggedParserAtomIndex result;
+    result.data_ = index.rawData();
+    return result;
+  }
+
+  operator TaggedParserAtomIndex() const {
+    return TaggedParserAtomIndex::fromRaw(data_);
+  }
+
+  static TrivialTaggedParserAtomIndex null() {
+    TrivialTaggedParserAtomIndex result;
+    result.data_ = 0;
+    return result;
+  }
+
+  bool isNull() const {
+    static_assert(TaggedParserAtomIndex::NullTag == 0);
+    return data_ == 0;
+  }
+
+  uint32_t rawData() const { return data_; }
+
+  bool operator==(const TrivialTaggedParserAtomIndex& rhs) const {
+    return data_ == rhs.data_;
+  }
+  bool operator!=(const TrivialTaggedParserAtomIndex& rhs) const {
+    return data_ != rhs.data_;
+  }
 
   explicit operator bool() const { return !isNull(); }
 };
