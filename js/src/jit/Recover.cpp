@@ -1542,8 +1542,10 @@ bool RNewTypedArray::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedObject templateObject(cx, &iter.read().toObject());
   RootedValue result(cx);
 
-  uint32_t length =
-      templateObject.as<TypedArrayObject>()->length().deprecatedGetUint32();
+  size_t length = templateObject.as<TypedArrayObject>()->length().get();
+  MOZ_ASSERT(length <= INT32_MAX,
+             "Template objects are only created for int32 lengths");
+
   JSObject* resultObject =
       NewTypedArrayWithTemplateAndLength(cx, templateObject, length);
   if (!resultObject) {

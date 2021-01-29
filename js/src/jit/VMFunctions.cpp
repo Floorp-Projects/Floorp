@@ -6,7 +6,6 @@
 
 #include "jit/VMFunctions.h"
 
-#include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 
 #include "builtin/String.h"
@@ -2228,25 +2227,24 @@ void* AllocateBigIntNoGC(JSContext* cx, bool requestMinorGC) {
 void AllocateAndInitTypedArrayBuffer(JSContext* cx, TypedArrayObject* obj,
                                      int32_t count) {
   AutoUnsafeCallWithABI unsafe;
-  using mozilla::CheckedUint32;
 
   obj->initPrivate(nullptr);
 
   // Negative numbers or zero will bail out to the slow path, which in turn will
   // raise an invalid argument exception or create a correct object with zero
   // elements.
-  if (count <= 0 || uint32_t(count) >= INT32_MAX / obj->bytesPerElement()) {
+  const size_t maxByteLength = TypedArrayObject::maxByteLength();
+  if (count <= 0 || size_t(count) >= maxByteLength / obj->bytesPerElement()) {
     obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, PrivateValue(size_t(0)));
     return;
   }
 
   obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, PrivateValue(count));
 
-  size_t nbytes = count * obj->bytesPerElement();
-  MOZ_ASSERT((CheckedUint32(nbytes) + sizeof(Value)).isValid(),
-             "RoundUp must not overflow");
-
+  size_t nbytes = size_t(count) * obj->bytesPerElement();
+  MOZ_ASSERT(nbytes <= maxByteLength);
   nbytes = RoundUp(nbytes, sizeof(Value));
+
   void* buf = cx->nursery().allocateZeroedBuffer(obj, nbytes,
                                                  js::ArrayBufferContentsArena);
   if (buf) {
