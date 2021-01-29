@@ -3417,7 +3417,7 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
   }
 
   nsCOMPtr<nsIChannel> newChannel;
-  MOZ_ASSERT((aArgs.loadStateLoadFlags() &
+  MOZ_ASSERT((aArgs.loadStateInternalLoadFlags() &
               nsDocShell::InternalLoad::INTERNAL_LOAD_FLAGS_IS_SRCDOC) ||
              aArgs.srcdocData().IsVoid());
   rv = nsDocShell::CreateRealChannelForDocument(
@@ -3491,7 +3491,8 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return IPC_OK();
   }
-  loadState->SetLoadFlags(aArgs.loadStateLoadFlags());
+  loadState->SetLoadFlags(aArgs.loadStateExternalLoadFlags());
+  loadState->SetInternalLoadFlags(aArgs.loadStateInternalLoadFlags());
   if (IsValidLoadType(aArgs.loadStateLoadType())) {
     loadState->SetLoadType(aArgs.loadStateLoadType());
   }
