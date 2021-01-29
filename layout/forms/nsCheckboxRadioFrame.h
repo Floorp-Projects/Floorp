@@ -83,12 +83,6 @@ class nsCheckboxRadioFrame final : public nsAtomicContainerFrame,
   virtual nsresult SetFormProperty(nsAtom* aName,
                                    const nsAString& aValue) override;
 
-  /**
-   * Returns the usable screen rect in app units, eg the rect where we can
-   * draw dropdowns.
-   */
-  static nsRect GetUsableScreenRect(nsPresContext* aPresContext);
-
  protected:
   virtual ~nsCheckboxRadioFrame();
 
