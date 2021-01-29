@@ -55,6 +55,7 @@ nsDocShellLoadState::nsDocShellLoadState(
   mTarget = aLoadState.Target();
   mTargetBrowsingContext = aLoadState.TargetBrowsingContext();
   mLoadFlags = aLoadState.LoadFlags();
+  mInternalLoadFlags = aLoadState.InternalLoadFlags();
   mFirstParty = aLoadState.FirstParty();
   mHasValidUserGestureActivation = aLoadState.HasValidUserGestureActivation();
   mTypeHint = aLoadState.TypeHint();
@@ -112,6 +113,7 @@ nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
       mSourceBrowsingContext(aOther.mSourceBrowsingContext),
       mBaseURI(aOther.mBaseURI),
       mLoadFlags(aOther.mLoadFlags),
+      mInternalLoadFlags(aOther.mInternalLoadFlags),
       mFirstParty(aOther.mFirstParty),
       mHasValidUserGestureActivation(aOther.mHasValidUserGestureActivation),
       mTypeHint(aOther.mTypeHint),
@@ -144,6 +146,7 @@ nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI, uint64_t aLoadIdentifier)
       mTarget(),
       mSrcdocData(VoidString()),
       mLoadFlags(0),
+      mInternalLoadFlags(0),
       mFirstParty(false),
       mHasValidUserGestureActivation(false),
       mTypeHint(VoidCString()),
@@ -634,6 +637,26 @@ bool nsDocShellLoadState::HasLoadFlags(uint32_t aFlags) {
   return (mLoadFlags & aFlags) == aFlags;
 }
 
+uint32_t nsDocShellLoadState::InternalLoadFlags() const {
+  return mInternalLoadFlags;
+}
+
+void nsDocShellLoadState::SetInternalLoadFlags(uint32_t aLoadFlags) {
+  mInternalLoadFlags = aLoadFlags;
+}
+
+void nsDocShellLoadState::SetInternalLoadFlag(uint32_t aFlag) {
+  mInternalLoadFlags |= aFlag;
+}
+
+void nsDocShellLoadState::UnsetInternalLoadFlag(uint32_t aFlag) {
+  mInternalLoadFlags &= ~aFlag;
+}
+
+bool nsDocShellLoadState::HasInternalLoadFlags(uint32_t aFlags) {
+  return (mInternalLoadFlags & aFlags) == aFlags;
+}
+
 bool nsDocShellLoadState::FirstParty() const { return mFirstParty; }
 
 void nsDocShellLoadState::SetFirstParty(bool aFirstParty) {
@@ -760,49 +783,48 @@ nsresult nsDocShellLoadState::SetupTriggeringPrincipal(
 }
 
 void nsDocShellLoadState::CalculateLoadURIFlags() {
-  uint32_t oldLoadFlags = mLoadFlags;
-  mLoadFlags = 0;
-
   if (mInheritPrincipal) {
     MOZ_ASSERT(
         !mPrincipalToInherit || !mPrincipalToInherit->IsSystemPrincipal(),
         "Should not inherit SystemPrincipal");
-    mLoadFlags |= nsDocShell::INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL;
+    mInternalLoadFlags |= nsDocShell::INTERNAL_LOAD_FLAGS_INHERIT_PRINCIPAL;
   }
 
   if (mReferrerInfo && !mReferrerInfo->GetSendReferrer()) {
-    mLoadFlags |= nsDocShell::INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER;
+    mInternalLoadFlags |= nsDocShell::INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER;
   }
-  if (oldLoadFlags & nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
-    mLoadFlags |= nsDocShell::INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-  }
-
-  if (oldLoadFlags & nsIWebNavigation::LOAD_FLAGS_FIRST_LOAD) {
-    mLoadFlags |= nsDocShell::INTERNAL_LOAD_FLAGS_FIRST_LOAD;
+  if (mLoadFlags & nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
+    mInternalLoadFlags |=
+        nsDocShell::INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
   }
 
-  if (oldLoadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CLASSIFIER) {
-    mLoadFlags |= nsDocShell::INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER;
+  if (mLoadFlags & nsIWebNavigation::LOAD_FLAGS_FIRST_LOAD) {
+    mInternalLoadFlags |= nsDocShell::INTERNAL_LOAD_FLAGS_FIRST_LOAD;
   }
 
-  if (oldLoadFlags & nsIWebNavigation::LOAD_FLAGS_FORCE_ALLOW_COOKIES) {
-    mLoadFlags |= nsDocShell::INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES;
+  if (mLoadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CLASSIFIER) {
+    mInternalLoadFlags |= nsDocShell::INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER;
   }
 
-  if (oldLoadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE) {
-    mLoadFlags |= nsDocShell::INTERNAL_LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE;
+  if (mLoadFlags & nsIWebNavigation::LOAD_FLAGS_FORCE_ALLOW_COOKIES) {
+    mInternalLoadFlags |= nsDocShell::INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES;
+  }
+
+  if (mLoadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE) {
+    mInternalLoadFlags |=
+        nsDocShell::INTERNAL_LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE;
   }
 
   if (!mSrcdocData.IsVoid()) {
-    mLoadFlags |= nsDocShell::INTERNAL_LOAD_FLAGS_IS_SRCDOC;
+    mInternalLoadFlags |= nsDocShell::INTERNAL_LOAD_FLAGS_IS_SRCDOC;
   }
 
   if (mForceAllowDataURI) {
-    mLoadFlags |= nsDocShell::INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
+    mInternalLoadFlags |= nsDocShell::INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
   }
 
   if (mOriginalFrameSrc) {
-    mLoadFlags |= nsDocShell::INTERNAL_LOAD_FLAGS_ORIGINAL_FRAME_SRC;
+    mInternalLoadFlags |= nsDocShell::INTERNAL_LOAD_FLAGS_ORIGINAL_FRAME_SRC;
   }
 }
 
@@ -894,7 +916,7 @@ nsLoadFlags nsDocShellLoadState::CalculateChannelLoadFlags(
       break;
   }
 
-  if (HasLoadFlags(nsDocShell::INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER)) {
+  if (HasInternalLoadFlags(nsDocShell::INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER)) {
     loadFlags |= nsIChannel::LOAD_BYPASS_URL_CLASSIFIER;
   }
 
@@ -922,6 +944,7 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   loadState.Target() = mTarget;
   loadState.TargetBrowsingContext() = mTargetBrowsingContext;
   loadState.LoadFlags() = mLoadFlags;
+  loadState.InternalLoadFlags() = mInternalLoadFlags;
   loadState.FirstParty() = mFirstParty;
   loadState.HasValidUserGestureActivation() = mHasValidUserGestureActivation;
   loadState.TypeHint() = mTypeHint;

@@ -256,6 +256,7 @@ struct DocShellLoadStateInit
   nsString Target;
   nsIURI BaseURI;
   uint32_t LoadFlags;
+  uint32_t InternalLoadFlags;
   bool FirstParty;
   bool HasValidUserGestureActivation;
   nsCString TypeHint;

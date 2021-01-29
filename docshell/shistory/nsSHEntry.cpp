@@ -915,7 +915,7 @@ nsSHEntry::CreateLoadInfo(nsDocShellLoadState** aLoadState) {
   }
   loadState->SetSrcdocData(srcdoc);
   loadState->SetBaseURI(baseURI);
-  loadState->SetLoadFlags(flags);
+  loadState->SetInternalLoadFlags(flags);
 
   loadState->SetFirstParty(true);
   loadState->SetSHEntry(this);

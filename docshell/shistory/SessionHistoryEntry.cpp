@@ -226,7 +226,7 @@ void SessionHistoryInfo::FillLoadInfo(nsDocShellLoadState& aLoadState) const {
   }
   aLoadState.SetSrcdocData(srcdoc);
   aLoadState.SetBaseURI(baseURI);
-  aLoadState.SetLoadFlags(flags);
+  aLoadState.SetInternalLoadFlags(flags);
 
   aLoadState.SetFirstParty(true);
 }
