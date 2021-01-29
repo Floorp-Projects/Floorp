@@ -11,6 +11,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "nsCOMPtr.h"
+#include "nsDeviceContext.h"
 #include "nsFocusManager.h"
 #include "nsCheckboxRadioFrame.h"
 #include "nsGkAtoms.h"
@@ -534,6 +535,22 @@ class nsAsyncResize : public Runnable {
   WeakFrame mFrame;
 };
 
+// Returns the usable screen rect in app units, the rect where we can
+// draw the dropdown.
+static nsRect GetUsableScreenRect(nsPresContext* aPresContext) {
+  nsRect screen;
+
+  nsDeviceContext* context = aPresContext->DeviceContext();
+  int32_t dropdownCanOverlapOSBar =
+      LookAndFeel::GetInt(LookAndFeel::IntID::MenusCanOverlapOSBar, 0);
+  if (dropdownCanOverlapOSBar) {
+    context->GetRect(screen);
+  } else {
+    context->GetClientRect(screen);
+  }
+  return screen;
+}
+
 void nsComboboxControlFrame::GetAvailableDropdownSpace(
     WritingMode aWM, nscoord* aBefore, nscoord* aAfter,
     LogicalPoint* aTranslation) {
@@ -558,7 +575,7 @@ void nsComboboxControlFrame::GetAvailableDropdownSpace(
   *aBefore = 0;
   *aAfter = 0;
 
-  nsRect screen = nsCheckboxRadioFrame::GetUsableScreenRect(PresContext());
+  nsRect screen = ::GetUsableScreenRect(PresContext());
   nsSize containerSize = screen.Size();
   LogicalRect logicalScreen(aWM, screen, containerSize);
   if (mLastDropDownAfterScreenBCoord == nscoord_MIN) {
