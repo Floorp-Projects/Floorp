@@ -32,9 +32,6 @@ DOMHighResTimeStamp NTPtoDOMHighResTimeStamp(uint32_t ntpHigh, uint32_t ntpLow);
 class WebrtcAudioConduit : public AudioSessionConduit,
                            public webrtc::Transport {
  public:
-  // VoiceEngine defined constant for Payload Name Size.
-  static const unsigned int CODEC_PLNAME_SIZE;
-
   /**
    * APIs used by the registered external transport to this Conduit to
    * feed in received RTP Frames to the VoiceEngine for decoding
