@@ -5193,7 +5193,7 @@ template <typename Unit>
 bool Parser<FullParseHandler, Unit>::checkExportedNamesForDeclaration(
     ParseNode* node) {
   if (node->isKind(ParseNodeKind::Name)) {
-    if (!checkExportedName(node->as<NameNode>().atomIndex())) {
+    if (!checkExportedName(node->as<NameNode>().atom())) {
       return false;
     }
   } else if (node->isKind(ParseNodeKind::ArrayExpr)) {
@@ -5259,7 +5259,7 @@ GeneralParser<ParseHandler, Unit>::checkExportedNamesForDeclarationList(
 template <typename Unit>
 inline bool Parser<FullParseHandler, Unit>::checkExportedNameForClause(
     NameNode* nameNode) {
-  return checkExportedName(nameNode->atomIndex());
+  return checkExportedName(nameNode->atom());
 }
 
 template <typename Unit>
@@ -5298,7 +5298,7 @@ template <typename Unit>
 bool Parser<FullParseHandler, Unit>::checkExportedNameForClass(
     ClassNode* classNode) {
   MOZ_ASSERT(classNode->names());
-  return checkExportedName(classNode->names()->innerBinding()->atomIndex());
+  return checkExportedName(classNode->names()->innerBinding()->atom());
 }
 
 template <typename Unit>
@@ -5449,7 +5449,7 @@ bool Parser<FullParseHandler, Unit>::checkLocalExportNames(ListNode* node) {
 
     const ParserName* ident =
         this->compilationState_
-            .getParserAtomAt(cx_, name->as<NameNode>().atomIndex())
+            .getParserAtomAt(cx_, name->as<NameNode>().atom())
             ->asName();
     if (!checkLocalExportName(ident, name->pn_pos.begin)) {
       return false;

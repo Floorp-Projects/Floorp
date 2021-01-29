@@ -98,16 +98,15 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
         if (!*foundName) {
           return true;
         }
-        const auto* name = parserAtoms_.getParserAtom(
-            prop->right()->as<NameNode>().atomIndex());
+        const auto* name =
+            parserAtoms_.getParserAtom(prop->right()->as<NameNode>().atom());
         return appendPropertyReference(name);
       }
 
       case ParseNodeKind::Name:
       case ParseNodeKind::PrivateName: {
         *foundName = true;
-        const auto* name =
-            parserAtoms_.getParserAtom(n->as<NameNode>().atomIndex());
+        const auto* name = parserAtoms_.getParserAtom(n->as<NameNode>().atom());
         return buf_.append(name);
       }
 
@@ -287,7 +286,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
         if (left->isKind(ParseNodeKind::ObjectPropertyName) ||
             left->isKind(ParseNodeKind::StringExpr)) {
           const auto* name =
-              parserAtoms_.getParserAtom(left->as<NameNode>().atomIndex());
+              parserAtoms_.getParserAtom(left->as<NameNode>().atom());
           if (!appendPropertyReference(name)) {
             return false;
           }
