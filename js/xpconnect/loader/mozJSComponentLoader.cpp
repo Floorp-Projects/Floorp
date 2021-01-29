@@ -731,10 +731,9 @@ nsresult mozJSComponentLoader::ObjectForLocation(
 
   CompileOptions options(cx);
   ScriptPreloader::FillCompileOptionsForCachedScript(options);
-  options.setForceStrictMode()
-      .setFileAndLine(nativePath.get(), 1)
-      .setSourceIsLazy(true)
-      .setNonSyntacticScope(true);
+  options.setFileAndLine(nativePath.get(), 1);
+  options.setForceStrictMode();
+  options.setNonSyntacticScope(true);
 
   script =
       ScriptPreloader::GetSingleton().GetCachedScript(cx, options, cachePath);

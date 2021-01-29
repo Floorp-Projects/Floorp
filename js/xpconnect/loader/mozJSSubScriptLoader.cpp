@@ -121,25 +121,6 @@ static void ReportError(JSContext* cx, const char* origMsg, nsIURI* uri) {
   ReportError(cx, msg);
 }
 
-static void FillCompileOptions(JS::CompileOptions& options, const char* uriStr,
-                               bool wantGlobalScript, bool wantReturnValue) {
-  options.setFileAndLine(uriStr, 1).setNoScriptRval(!wantReturnValue);
-
-  // This presumes that no one else might be compiling a script for this
-  // (URL, syntactic-or-not) key *not* using UTF-8.  Seeing as JS source can
-  // only be compiled as UTF-8 or UTF-16 now -- there isn't a JSAPI function to
-  // compile Latin-1 now -- this presumption seems relatively safe.
-  //
-  // This also presumes that lazy parsing is disabled, for the sake of the
-  // startup cache.  If lazy parsing is ever enabled for pertinent scripts that
-  // pass through here, we may need to disable lazy source for them.
-  options.setSourceIsLazy(true);
-
-  if (!wantGlobalScript) {
-    options.setNonSyntacticScope(true);
-  }
-}
-
 static JSScript* PrepareScript(nsIURI* uri, JSContext* cx,
                                const JS::ReadOnlyCompileOptions& options,
                                const char* buf, int64_t len) {
@@ -472,12 +453,18 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
   SubscriptCachePath(cx, uri, targetObj, cachePath);
 
   JS::CompileOptions compileOptions(cx);
-  FillCompileOptions(compileOptions, uriStr.get(), JS_IsGlobalObject(targetObj),
-                     options.wantReturnValue);
+  ScriptPreloader::FillCompileOptionsForCachedScript(compileOptions);
+  compileOptions.setFileAndLine(uriStr.get(), 1);
+  compileOptions.setNonSyntacticScope(!JS_IsGlobalObject(targetObj));
+
+  if (options.wantReturnValue) {
+    compileOptions.setNoScriptRval(false);
+  }
 
   RootedScript script(cx);
   if (!options.ignoreCache) {
     if (!options.wantReturnValue) {
+      // NOTE: If we need the return value, we cannot use ScriptPreloader.
       script = ScriptPreloader::GetSingleton().GetCachedScript(
           cx, compileOptions, cachePath);
     }
