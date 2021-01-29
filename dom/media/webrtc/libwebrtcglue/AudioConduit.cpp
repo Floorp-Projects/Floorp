@@ -115,16 +115,11 @@ bool WebrtcAudioConduit::SetRemoteSSRC(uint32_t ssrc, uint32_t rtxSsrc) {
 }
 
 bool WebrtcAudioConduit::GetRemoteSSRC(uint32_t* ssrc) {
-  {
-    MutexAutoLock lock(mMutex);
-    if (!mRecvStream) {
-      return false;
-    }
-
-    const webrtc::AudioReceiveStream::Stats& stats = mRecvStream->GetStats();
-    *ssrc = stats.remote_ssrc;
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mRecvStream) {
+    return false;
   }
-
+  *ssrc = mRecvStreamConfig.rtp.remote_ssrc;
   return true;
 }
 
