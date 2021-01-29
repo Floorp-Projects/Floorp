@@ -757,7 +757,6 @@ class ParseNode {
     return ParseNodeKind::BinOpFirst <= kind &&
            kind <= ParseNodeKind::BinOpLast;
   }
-  inline bool isName(const ParserName* name) const;
   inline bool isName(TaggedParserAtomIndex name) const;
 
   /* Boolean attributes. */
@@ -864,6 +863,11 @@ class NameNode : public ParseNode {
   const ParserAtom* atom_; /* lexical name or label atom */
   PrivateNameKind privateNameKind_ = PrivateNameKind::None;
 
+ protected:
+  // Provide accessor to subclasses until we replace atom_ with
+  // TaggedParserAtomIndex.
+  const ParserAtom* atom() const { return atom_; }
+
  public:
   NameNode(ParseNodeKind kind, const ParserAtom* atom, const TokenPos& pos)
       : ParseNode(kind, pos), atom_(atom) {
@@ -886,20 +890,12 @@ class NameNode : public ParseNode {
   void dumpImpl(GenericPrinter& out, int indent);
 #endif
 
-  const ParserAtom* atom() const { return atom_; }
-
   TaggedParserAtomIndex atomIndex() const { return atom_->toIndex(); }
-
-  const ParserName* name() const {
-    MOZ_ASSERT(isKind(ParseNodeKind::Name) ||
-               isKind(ParseNodeKind::PrivateName));
-    return atom()->asName();
-  }
 
   TaggedParserAtomIndex nameIndex() const {
     MOZ_ASSERT(isKind(ParseNodeKind::Name) ||
                isKind(ParseNodeKind::PrivateName));
-    return atom()->asName()->toIndex();
+    return atom_->asName()->toIndex();
   }
 
   void setAtom(const ParserAtom* atom) { atom_ = atom; }
@@ -910,10 +906,6 @@ class NameNode : public ParseNode {
 
   PrivateNameKind privateNameKind() { return privateNameKind_; }
 };
-
-inline bool ParseNode::isName(const ParserName* name) const {
-  return getKind() == ParseNodeKind::Name && as<NameNode>().name() == name;
-}
 
 inline bool ParseNode::isName(TaggedParserAtomIndex name) const {
   return getKind() == ParseNodeKind::Name && as<NameNode>().nameIndex() == name;
@@ -964,13 +956,13 @@ class UnaryNode : public ParseNode {
    * or escaped newlines, say). This member function returns true for such
    * nodes; we use it to determine the extent of the prologue.
    */
-  const ParserAtom* isStringExprStatement() const {
+  TaggedParserAtomIndex isStringExprStatement() const {
     if (isKind(ParseNodeKind::ExpressionStmt)) {
       if (kid()->isKind(ParseNodeKind::StringExpr) && !kid()->isInParens()) {
-        return kid()->as<NameNode>().atom();
+        return kid()->as<NameNode>().atomIndex();
       }
     }
-    return nullptr;
+    return TaggedParserAtomIndex::null();
   }
 
   // Methods used by FoldConstants.cpp.
@@ -1672,9 +1664,7 @@ class LabeledStatement : public NameNode {
                  TokenPos(begin, stmt->pn_pos.end)),
         statement_(stmt) {}
 
-  const ParserName* label() const { return atom()->asName(); }
-
-  TaggedParserAtomIndex labelIndex() const { return label()->toIndex(); }
+  TaggedParserAtomIndex labelIndex() const { return atomIndex(); }
 
   ParseNode* statement() const { return statement_; }
 
@@ -1733,8 +1723,6 @@ class LoopControlStatement : public ParseNode {
 
  public:
   /* Label associated with this break/continue statement, if any. */
-  const ParserName* label() const { return label_; }
-
   TaggedParserAtomIndex labelIndex() const {
     return label_ ? label_->toIndex() : TaggedParserAtomIndex::null();
   }
@@ -1959,11 +1947,9 @@ class PropertyAccessBase : public BinaryNode {
 
   void setExpression(ParseNode* pn) { *unsafeLeftReference() = pn; }
 
-  const ParserName* name() const {
-    return right()->as<NameNode>().atom()->asName();
+  TaggedParserAtomIndex nameIndex() const {
+    return right()->as<NameNode>().atomIndex();
   }
-
-  TaggedParserAtomIndex nameIndex() const { return name()->toIndex(); }
 };
 
 class PropertyAccess : public PropertyAccessBase {
@@ -2224,8 +2210,8 @@ class ClassNames : public BinaryNode {
       : BinaryNode(ParseNodeKind::ClassNames, pos, outerBinding, innerBinding) {
     MOZ_ASSERT_IF(outerBinding, outerBinding->isKind(ParseNodeKind::Name));
     MOZ_ASSERT(innerBinding->isKind(ParseNodeKind::Name));
-    MOZ_ASSERT_IF(outerBinding, innerBinding->as<NameNode>().atom() ==
-                                    outerBinding->as<NameNode>().atom());
+    MOZ_ASSERT_IF(outerBinding, innerBinding->as<NameNode>().atomIndex() ==
+                                    outerBinding->as<NameNode>().atomIndex());
   }
 
   static bool test(const ParseNode& node) {

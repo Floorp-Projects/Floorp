@@ -7,6 +7,7 @@
 #ifndef vm_GeneratorObject_h
 #define vm_GeneratorObject_h
 
+#include "frontend/ParserAtom.h"  // frontend::TaggedParserAtomIndex
 #include "js/Class.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ArrayObject.h"
@@ -17,10 +18,6 @@
 #include "vm/Stack.h"
 
 namespace js {
-
-namespace frontend {
-class ParserAtom;
-}  // namespace frontend
 
 extern const JSClass GeneratorFunctionClass;
 
@@ -255,8 +252,8 @@ AbstractGeneratorObject* GetGeneratorObjectForFrame(JSContext* cx,
 AbstractGeneratorObject* GetGeneratorObjectForEnvironment(JSContext* cx,
                                                           HandleObject env);
 
-GeneratorResumeKind ParserAtomToResumeKind(JSContext* cx,
-                                           const frontend::ParserAtom* atom);
+GeneratorResumeKind ParserAtomToResumeKind(
+    JSContext* cx, frontend::TaggedParserAtomIndex atom);
 JSAtom* ResumeKindToAtom(JSContext* cx, GeneratorResumeKind kind);
 
 }  // namespace js

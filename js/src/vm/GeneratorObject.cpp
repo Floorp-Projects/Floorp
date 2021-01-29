@@ -491,14 +491,14 @@ bool JSObject::is<js::AbstractGeneratorObject>() const {
 }
 
 GeneratorResumeKind js::ParserAtomToResumeKind(
-    JSContext* cx, const frontend::ParserAtom* atom) {
-  if (atom == cx->parserNames().next) {
+    JSContext* cx, frontend::TaggedParserAtomIndex atom) {
+  if (atom == frontend::TaggedParserAtomIndex::WellKnown::next()) {
     return GeneratorResumeKind::Next;
   }
-  if (atom == cx->parserNames().throw_) {
+  if (atom == frontend::TaggedParserAtomIndex::WellKnown::throw_()) {
     return GeneratorResumeKind::Throw;
   }
-  MOZ_ASSERT(atom == cx->parserNames().return_);
+  MOZ_ASSERT(atom == frontend::TaggedParserAtomIndex::WellKnown::return_());
   return GeneratorResumeKind::Return;
 }
 

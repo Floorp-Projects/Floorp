@@ -16,6 +16,7 @@
 #include "frontend/ParseNode.h"
 #include "frontend/ParseNodeVisitor.h"
 #include "frontend/Parser.h"
+#include "frontend/ParserAtom.h"  // ParserAtom, ParserName, ParserAtomsTable, TaggedParserAtomIndex
 #include "js/Conversions.h"
 #include "js/friend/StackLimits.h"  // js::CheckRecursionLimit
 #include "js/Vector.h"
@@ -464,7 +465,9 @@ static bool FoldType(FoldInfo info, ParseNode** pnp, ParseNodeKind kind) {
       case ParseNodeKind::NumberExpr:
         if (pn->isKind(ParseNodeKind::StringExpr)) {
           double d;
-          if (!pn->as<NameNode>().atom()->toNumber(info.cx, &d)) {
+          const ParserAtom* atom =
+              info.parserAtoms.getParserAtom(pn->as<NameNode>().atomIndex());
+          if (!atom->toNumber(info.cx, &d)) {
             return false;
           }
           if (!TryReplaceNode(
@@ -522,7 +525,10 @@ static Truthiness Boolish(ParseNode* pn) {
 
     case ParseNodeKind::StringExpr:
     case ParseNodeKind::TemplateStringExpr:
-      return (pn->as<NameNode>().atom()->length() > 0) ? Truthy : Falsy;
+      return (pn->as<NameNode>().atomIndex() ==
+              TaggedParserAtomIndex::WellKnown::empty())
+                 ? Falsy
+                 : Truthy;
 
     case ParseNodeKind::TrueExpr:
     case ParseNodeKind::Function:
@@ -1086,7 +1092,8 @@ static bool FoldElement(FoldInfo info, ParseNode** nodePtr) {
   ParseNode* key = &elem->key();
   const ParserName* name = nullptr;
   if (key->isKind(ParseNodeKind::StringExpr)) {
-    const ParserAtom* atom = key->as<NameNode>().atom();
+    const ParserAtom* atom =
+        info.parserAtoms.getParserAtom(key->as<NameNode>().atomIndex());
     uint32_t index;
 
     if (atom->isIndex(&index)) {
@@ -1211,7 +1218,8 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
       MOZ_ASSERT((*current)->isKind(ParseNodeKind::StringExpr));
 
       accum.clear();
-      const ParserAtom* atom = (*current)->as<NameNode>().atom();
+      const auto* atom = info.parserAtoms.getParserAtom(
+          (*current)->as<NameNode>().atomIndex());
       if (!accum.append(atom)) {
         return false;
       }
@@ -1228,7 +1236,8 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
         }
 
         // Add this string to the accumulator and remove the node.
-        const ParserAtom* nextAtom = (*next)->as<NameNode>().atom();
+        const auto* nextAtom =
+            info.parserAtoms.getParserAtom((*next)->as<NameNode>().atomIndex());
         if (!accum.append(nextAtom)) {
           return false;
         }
