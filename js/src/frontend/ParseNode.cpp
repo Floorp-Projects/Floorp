@@ -382,12 +382,12 @@ void LabeledStatement::dumpImpl(ParserBase* parser, GenericPrinter& out,
                                 int indent) {
   const char* name = parseNodeNames[getKindAsIndex()];
   out.printf("(%s ", name);
-  DumpCharsNoNewline(parser, labelIndex(), out);
+  DumpCharsNoNewline(parser, label(), out);
   out.printf(" ");
   indent += strlen(name) + 3;
   if (parser) {
     const auto* labelAtom =
-        parser->getCompilationState().parserAtoms.getParserAtom(labelIndex());
+        parser->getCompilationState().parserAtoms.getParserAtom(label());
     indent += labelAtom->length();
   }
   DumpParseTree(parser, statement(), out, indent);

@@ -450,7 +450,7 @@ class FullParseHandler {
     MOZ_ASSERT(literal->isKind(ParseNodeKind::ObjectExpr));
     MOZ_ASSERT(name->isKind(ParseNodeKind::ObjectPropertyName));
     MOZ_ASSERT(expr->isKind(ParseNodeKind::Name));
-    MOZ_ASSERT(name->atomIndex() == expr->atomIndex());
+    MOZ_ASSERT(name->atom() == expr->atom());
 
     literal->setHasNonConstInitializer();
     BinaryNode* propdef = newBinary(ParseNodeKind::Shorthand, name, expr);
@@ -1042,20 +1042,20 @@ class FullParseHandler {
 
   bool isArgumentsName(Node node, JSContext* cx) {
     return node->isKind(ParseNodeKind::Name) &&
-           node->as<NameNode>().atomIndex() ==
+           node->as<NameNode>().atom() ==
                TaggedParserAtomIndex::WellKnown::arguments();
   }
 
   bool isEvalName(Node node, JSContext* cx) {
     return node->isKind(ParseNodeKind::Name) &&
-           node->as<NameNode>().atomIndex() ==
+           node->as<NameNode>().atom() ==
                TaggedParserAtomIndex::WellKnown::eval();
   }
 
   bool isAsyncKeyword(Node node, JSContext* cx) {
     return node->isKind(ParseNodeKind::Name) &&
            node->pn_pos.begin + strlen("async") == node->pn_pos.end &&
-           node->as<NameNode>().atomIndex() ==
+           node->as<NameNode>().atom() ==
                TaggedParserAtomIndex::WellKnown::async();
   }
 
@@ -1078,9 +1078,8 @@ class FullParseHandler {
   }
 
   TaggedParserAtomIndex maybeDottedProperty(Node pn) {
-    return pn->is<PropertyAccessBase>()
-               ? pn->as<PropertyAccessBase>().nameIndex()
-               : TaggedParserAtomIndex::null();
+    return pn->is<PropertyAccessBase>() ? pn->as<PropertyAccessBase>().name()
+                                        : TaggedParserAtomIndex::null();
   }
   TaggedParserAtomIndex isStringExprStatement(Node pn, TokenPos* pos) {
     if (pn->is<UnaryNode>()) {

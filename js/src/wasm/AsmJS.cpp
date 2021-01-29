@@ -544,11 +544,11 @@ static inline ParseNode* ExpressionStatementExpr(ParseNode* pn) {
 static inline TaggedParserAtomIndex LoopControlMaybeLabel(ParseNode* pn) {
   MOZ_ASSERT(pn->isKind(ParseNodeKind::BreakStmt) ||
              pn->isKind(ParseNodeKind::ContinueStmt));
-  return pn->as<LoopControlStatement>().labelIndex();
+  return pn->as<LoopControlStatement>().label();
 }
 
 static inline TaggedParserAtomIndex LabeledStatementLabel(ParseNode* pn) {
-  return pn->as<LabeledStatement>().labelIndex();
+  return pn->as<LabeledStatement>().label();
 }
 
 static inline ParseNode* LabeledStatementStatement(ParseNode* pn) {
@@ -568,7 +568,7 @@ static ParseNode* DotBase(ParseNode* pn) {
 }
 
 static TaggedParserAtomIndex DotMember(ParseNode* pn) {
-  return pn->as<PropertyAccess>().nameIndex();
+  return pn->as<PropertyAccess>().name();
 }
 
 static ParseNode* ElemBase(ParseNode* pn) {
@@ -605,7 +605,7 @@ static inline bool IsNormalObjectField(ParseNode* pn) {
 static inline TaggedParserAtomIndex ObjectNormalFieldName(ParseNode* pn) {
   MOZ_ASSERT(IsNormalObjectField(pn));
   MOZ_ASSERT(BinaryLeft(pn)->isKind(ParseNodeKind::ObjectPropertyName));
-  return BinaryLeft(pn)->as<NameNode>().atomIndex();
+  return BinaryLeft(pn)->as<NameNode>().atom();
 }
 
 static inline ParseNode* ObjectNormalFieldInitializer(ParseNode* pn) {
@@ -625,7 +625,7 @@ static inline bool IsIgnoredDirectiveName(JSContext* cx,
 static inline bool IsIgnoredDirective(JSContext* cx, ParseNode* pn) {
   return pn->isKind(ParseNodeKind::ExpressionStmt) &&
          UnaryKid(pn)->isKind(ParseNodeKind::StringExpr) &&
-         IsIgnoredDirectiveName(cx, UnaryKid(pn)->as<NameNode>().atomIndex());
+         IsIgnoredDirectiveName(cx, UnaryKid(pn)->as<NameNode>().atom());
 }
 
 static inline bool IsEmptyStatement(ParseNode* pn) {
@@ -2200,7 +2200,7 @@ static bool IsCallToGlobal(ModuleValidatorShared& m, ParseNode* pn,
     return false;
   }
 
-  *global = m.lookupGlobal(callee->as<NameNode>().nameIndex());
+  *global = m.lookupGlobal(callee->as<NameNode>().name());
   return !!*global;
 }
 
@@ -2712,7 +2712,7 @@ static bool CheckArgument(ModuleValidatorShared& m, ParseNode* arg,
     return m.fail(arg, "argument is not a plain name");
   }
 
-  TaggedParserAtomIndex argName = arg->as<NameNode>().nameIndex();
+  TaggedParserAtomIndex argName = arg->as<NameNode>().name();
   if (!CheckIdentifier(m, arg, argName)) {
     return false;
   }
@@ -2951,7 +2951,7 @@ static bool CheckNewArrayView(ModuleValidatorShared& m,
                     "expecting name of imported array view constructor");
     }
 
-    TaggedParserAtomIndex globalName = ctorExpr->as<NameNode>().nameIndex();
+    TaggedParserAtomIndex globalName = ctorExpr->as<NameNode>().name();
     const ModuleValidatorShared::Global* global = m.lookupGlobal(globalName);
     if (!global) {
       return m.failName(ctorExpr, "%s not found in module global scope",
@@ -3030,7 +3030,7 @@ static bool CheckGlobalDotImport(ModuleValidatorShared& m,
     return m.fail(base, "expected name of variable or parameter");
   }
 
-  auto baseName = base->as<NameNode>().nameIndex();
+  auto baseName = base->as<NameNode>().name();
   if (baseName == m.globalArgumentName()) {
     if (field == TaggedParserAtomIndex::WellKnown::NaN()) {
       return m.addGlobalConstant(varName, GenericNaN(), field);
@@ -3068,7 +3068,7 @@ static bool CheckModuleGlobal(ModuleValidatorShared& m, ParseNode* decl,
     return m.fail(var, "import variable is not a plain name");
   }
 
-  TaggedParserAtomIndex varName = var->as<NameNode>().nameIndex();
+  TaggedParserAtomIndex varName = var->as<NameNode>().name();
   if (!CheckModuleLevelName(m, var, varName)) {
     return false;
   }
@@ -3235,7 +3235,7 @@ static bool IsLiteralOrConst(FunctionValidatorShared& f, ParseNode* pn,
                              NumLit* lit) {
   if (pn->isKind(ParseNodeKind::Name)) {
     const ModuleValidatorShared::Global* global =
-        f.lookupGlobal(pn->as<NameNode>().nameIndex());
+        f.lookupGlobal(pn->as<NameNode>().name());
     if (!global ||
         global->which() != ModuleValidatorShared::Global::ConstantLiteral) {
       return false;
@@ -3278,7 +3278,7 @@ static bool CheckVariable(FunctionValidatorShared& f, ParseNode* decl,
   if (!decl->isKind(ParseNodeKind::AssignExpr)) {
     return f.failName(
         decl, "var '%s' needs explicit type declaration via an initial value",
-        decl->as<NameNode>().nameIndex());
+        decl->as<NameNode>().name());
   }
   AssignmentNode* assignNode = &decl->as<AssignmentNode>();
 
@@ -3288,7 +3288,7 @@ static bool CheckVariable(FunctionValidatorShared& f, ParseNode* decl,
     return f.fail(var, "local variable is not a plain name");
   }
 
-  TaggedParserAtomIndex name = var->as<NameNode>().nameIndex();
+  TaggedParserAtomIndex name = var->as<NameNode>().name();
 
   if (!CheckIdentifier(f.m(), var, name)) {
     return false;
@@ -3371,7 +3371,7 @@ static bool CheckNumericLiteral(FunctionValidator<Unit>& f, ParseNode* num,
 
 static bool CheckVarRef(FunctionValidatorShared& f, ParseNode* varRef,
                         Type* type) {
-  TaggedParserAtomIndex name = varRef->as<NameNode>().nameIndex();
+  TaggedParserAtomIndex name = varRef->as<NameNode>().name();
 
   if (const FunctionValidatorShared::Local* local = f.lookupLocal(name)) {
     if (!f.encoder().writeOp(Op::GetLocal)) {
@@ -3432,7 +3432,7 @@ static bool CheckArrayAccess(FunctionValidator<Unit>& f, ParseNode* viewName,
   }
 
   const ModuleValidatorShared::Global* global =
-      f.lookupGlobal(viewName->as<NameNode>().nameIndex());
+      f.lookupGlobal(viewName->as<NameNode>().name());
   if (!global || global->which() != ModuleValidatorShared::Global::ArrayView) {
     return f.fail(viewName,
                   "base of array access must be a typed array view name");
@@ -3687,7 +3687,7 @@ static bool CheckStoreArray(FunctionValidator<Unit>& f, ParseNode* lhs,
 template <typename Unit>
 static bool CheckAssignName(FunctionValidator<Unit>& f, ParseNode* lhs,
                             ParseNode* rhs, Type* type) {
-  TaggedParserAtomIndex name = lhs->as<NameNode>().nameIndex();
+  TaggedParserAtomIndex name = lhs->as<NameNode>().name();
 
   if (const FunctionValidatorShared::Local* lhsVar = f.lookupLocal(name)) {
     Type rhsType;
@@ -4090,7 +4090,7 @@ static bool CheckFuncPtrCall(FunctionValidator<Unit>& f, ParseNode* callNode,
     return f.fail(tableNode, "expecting name of function-pointer array");
   }
 
-  TaggedParserAtomIndex name = tableNode->as<NameNode>().nameIndex();
+  TaggedParserAtomIndex name = tableNode->as<NameNode>().name();
   if (const ModuleValidatorShared::Global* existing = f.lookupGlobal(name)) {
     if (existing->which() != ModuleValidatorShared::Global::Table) {
       return f.failName(
@@ -4170,7 +4170,7 @@ static bool CheckFFICall(FunctionValidator<Unit>& f, ParseNode* callNode,
   MOZ_ASSERT(ret.isCanonical());
 
   TaggedParserAtomIndex calleeName =
-      CallCallee(callNode)->as<NameNode>().nameIndex();
+      CallCallee(callNode)->as<NameNode>().name();
 
   if (ret.isFloat()) {
     return f.fail(callNode, "FFI calls can't return float");
@@ -4537,7 +4537,7 @@ static bool CheckCoercedCall(FunctionValidator<Unit>& f, ParseNode* call,
     return f.fail(callee, "unexpected callee expression type");
   }
 
-  TaggedParserAtomIndex calleeName = callee->as<NameNode>().nameIndex();
+  TaggedParserAtomIndex calleeName = callee->as<NameNode>().name();
 
   if (const ModuleValidatorShared::Global* global =
           f.lookupGlobal(calleeName)) {
@@ -6221,7 +6221,7 @@ static bool CheckFuncPtrTable(ModuleValidator<Unit>& m, ParseNode* decl) {
           elem, "function-pointer table's elements must be names of functions");
     }
 
-    TaggedParserAtomIndex funcName = elem->as<NameNode>().nameIndex();
+    TaggedParserAtomIndex funcName = elem->as<NameNode>().name();
     const ModuleValidatorShared::Func* func = m.lookupFuncDef(funcName);
     if (!func) {
       return m.fail(
@@ -6248,7 +6248,7 @@ static bool CheckFuncPtrTable(ModuleValidator<Unit>& m, ParseNode* decl) {
   }
 
   uint32_t tableIndex;
-  if (!CheckFuncPtrTableAgainstExisting(m, var, var->as<NameNode>().nameIndex(),
+  if (!CheckFuncPtrTableAgainstExisting(m, var, var->as<NameNode>().name(),
                                         std::move(copy), mask, &tableIndex)) {
     return false;
   }
@@ -6296,7 +6296,7 @@ static bool CheckModuleExportFunction(
     return m.fail(pn, "expected name of exported function");
   }
 
-  TaggedParserAtomIndex funcName = pn->as<NameNode>().nameIndex();
+  TaggedParserAtomIndex funcName = pn->as<NameNode>().name();
   const ModuleValidatorShared::Func* func = m.lookupFuncDef(funcName);
   if (!func) {
     return m.failName(pn, "function '%s' not found", funcName);
