@@ -1246,6 +1246,9 @@ class MOZ_RAII IRGenerator {
   bool maybeGuardInt32Index(const Value& index, ValOperandId indexId,
                             uint32_t* int32Index, Int32OperandId* int32IndexId);
 
+  IntPtrOperandId guardToIntPtrIndex(const Value& index, ValOperandId indexId,
+                                     bool supportOOB);
+
   ObjOperandId guardDOMProxyExpandoObjectAndShape(JSObject* obj,
                                                   ObjOperandId objId,
                                                   const Value& expandoVal,
@@ -1326,10 +1329,7 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
   AttachDecision tryAttachSparseElement(HandleObject obj, ObjOperandId objId,
                                         uint32_t index, Int32OperandId indexId);
   AttachDecision tryAttachTypedArrayElement(HandleObject obj,
-                                            ObjOperandId objId, uint32_t index,
-                                            Int32OperandId indexId);
-  AttachDecision tryAttachTypedArrayNonInt32Index(HandleObject obj,
-                                                  ObjOperandId objId);
+                                            ObjOperandId objId);
 
   AttachDecision tryAttachGenericElement(HandleObject obj, ObjOperandId objId,
                                          uint32_t index,
@@ -1455,12 +1455,7 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator {
                                           ValOperandId rhsId);
   AttachDecision tryAttachSetTypedArrayElement(HandleObject obj,
                                                ObjOperandId objId,
-                                               uint32_t index,
-                                               Int32OperandId indexId,
                                                ValOperandId rhsId);
-  AttachDecision tryAttachSetTypedArrayElementNonInt32Index(HandleObject obj,
-                                                            ObjOperandId objId,
-                                                            ValOperandId rhsId);
 
   AttachDecision tryAttachSetDenseElementHole(HandleObject obj,
                                               ObjOperandId objId,
@@ -1517,10 +1512,7 @@ class MOZ_RAII HasPropIRGenerator : public IRGenerator {
   AttachDecision tryAttachDenseHole(HandleObject obj, ObjOperandId objId,
                                     uint32_t index, Int32OperandId indexId);
   AttachDecision tryAttachTypedArray(HandleObject obj, ObjOperandId objId,
-                                     Int32OperandId indexId);
-  AttachDecision tryAttachTypedArrayNonInt32Index(HandleObject obj,
-                                                  ObjOperandId objId,
-                                                  ValOperandId keyId);
+                                     ValOperandId keyId);
   AttachDecision tryAttachSparse(HandleObject obj, ObjOperandId objId,
                                  Int32OperandId indexId);
   AttachDecision tryAttachNamedProp(HandleObject obj, ObjOperandId objId,
@@ -1644,7 +1636,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
 
   struct AtomicsReadWriteModifyOperands {
     ObjOperandId objId;
-    Int32OperandId int32IndexId;
+    IntPtrOperandId intPtrIndexId;
     Int32OperandId int32ValueId;
   };
 

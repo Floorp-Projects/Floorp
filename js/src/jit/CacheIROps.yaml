@@ -181,13 +181,22 @@
     input: ValId
     result: Int32Id
 
-- name: GuardToTypedArrayIndex
+- name: Int32ToIntPtr
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    input: Int32Id
+    result: IntPtrId
+
+- name: GuardNumberToIntPtrIndex
   shared: true
   transpile: true
   cost_estimate: 2
   args:
-    input: ValId
-    result: Int32Id
+    input: NumberId
+    supportOOB: BoolImm
+    result: IntPtrId
 
 - name: GuardToInt32ModUint32
   shared: true
@@ -1310,7 +1319,7 @@
   args:
     obj: ObjId
     elementType: ScalarTypeImm
-    index: Int32Id
+    index: IntPtrId
     rhs: RawId
     handleOOB: BoolImm
 
@@ -1320,7 +1329,7 @@
   cost_estimate: 4
   args:
     obj: ObjId
-    index: Int32Id
+    index: IntPtrId
     expected: Int32Id
     replacement: Int32Id
     elementType: ScalarTypeImm
@@ -1331,7 +1340,7 @@
   cost_estimate: 4
   args:
     obj: ObjId
-    index: Int32Id
+    index: IntPtrId
     value: Int32Id
     elementType: ScalarTypeImm
 
@@ -1341,7 +1350,7 @@
   cost_estimate: 4
   args:
     obj: ObjId
-    index: Int32Id
+    index: IntPtrId
     value: Int32Id
     elementType: ScalarTypeImm
 
@@ -1351,7 +1360,7 @@
   cost_estimate: 4
   args:
     obj: ObjId
-    index: Int32Id
+    index: IntPtrId
     value: Int32Id
     elementType: ScalarTypeImm
 
@@ -1361,7 +1370,7 @@
   cost_estimate: 4
   args:
     obj: ObjId
-    index: Int32Id
+    index: IntPtrId
     value: Int32Id
     elementType: ScalarTypeImm
 
@@ -1371,7 +1380,7 @@
   cost_estimate: 4
   args:
     obj: ObjId
-    index: Int32Id
+    index: IntPtrId
     value: Int32Id
     elementType: ScalarTypeImm
 
@@ -1381,7 +1390,7 @@
   cost_estimate: 4
   args:
     obj: ObjId
-    index: Int32Id
+    index: IntPtrId
     value: Int32Id
     elementType: ScalarTypeImm
 
@@ -1391,7 +1400,7 @@
   cost_estimate: 2
   args:
     obj: ObjId
-    index: Int32Id
+    index: IntPtrId
     elementType: ScalarTypeImm
 
 - name: AtomicsStoreResult
@@ -1400,7 +1409,7 @@
   cost_estimate: 2
   args:
     obj: ObjId
-    index: Int32Id
+    index: IntPtrId
     value: Int32Id
     elementType: ScalarTypeImm
 
@@ -1674,7 +1683,7 @@
   cost_estimate: 2
   args:
     obj: ObjId
-    index: Int32Id
+    index: IntPtrId
 
 - name: LoadDenseElementHoleExistsResult
   shared: true
@@ -1690,7 +1699,7 @@
   cost_estimate: 4
   args:
     obj: ObjId
-    index: Int32Id
+    index: IntPtrId
     elementType: ScalarTypeImm
     handleOOB: BoolImm
     allowDoubleForUint32: BoolImm
@@ -1701,7 +1710,7 @@
   cost_estimate: 4
   args:
     obj: ObjId
-    offset: Int32Id
+    offset: IntPtrId
     littleEndian: BooleanId
     elementType: ScalarTypeImm
     allowDoubleForUint32: BoolImm
@@ -1712,7 +1721,7 @@
   cost_estimate: 4
   args:
     obj: ObjId
-    offset: Int32Id
+    offset: IntPtrId
     value: RawId
     littleEndian: BooleanId
     elementType: ScalarTypeImm

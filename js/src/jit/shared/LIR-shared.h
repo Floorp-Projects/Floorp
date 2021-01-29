@@ -4077,21 +4077,21 @@ class LTypedArrayElementShift : public LInstructionHelper<1, 1, 0> {
   const LAllocation* object() { return getOperand(0); }
 };
 
-// Double to Int32, eligible for accessing into a TypedArray. If the index isn't
-// exactly representable as an Int32, produce any Int32 which is equivalent to
-// an OOB access into a TypedArray.
-class LTypedArrayIndexToInt32 : public LInstructionHelper<1, 1, 0> {
+// Double to IntPtr, eligible for accessing into a TypedArray or DataView. If
+// the index isn't exactly representable as an IntPtr, depending on the
+// supportOOB flag on the MIR instruction, either bail out or produce an IntPtr
+// which is equivalent to an OOB access.
+class LGuardNumberToIntPtrIndex : public LInstructionHelper<1, 1, 0> {
  public:
-  LIR_HEADER(TypedArrayIndexToInt32)
+  LIR_HEADER(GuardNumberToIntPtrIndex)
 
-  explicit LTypedArrayIndexToInt32(const LAllocation& obj)
+  explicit LGuardNumberToIntPtrIndex(const LAllocation& obj)
       : LInstructionHelper(classOpcode) {
     setOperand(0, obj);
   }
 
-  const LAllocation* index() { return getOperand(0); }
-  const MTypedArrayIndexToInt32* mir() const {
-    return mir_->toTypedArrayIndexToInt32();
+  const MGuardNumberToIntPtrIndex* mir() const {
+    return mir_->toGuardNumberToIntPtrIndex();
   }
 };
 

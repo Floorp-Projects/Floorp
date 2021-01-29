@@ -2,9 +2,8 @@ function f(n) {
   const ta = new Int32Array(n);
 
   // When the TypedArray has a zero length, accessing the element at index 0
-  // should return undefined. That'll lead to including undefined in the
-  // typeset of |ta[k]|, which in turn triggers to use MTypedArrayIndexToInt32
-  // for the TypedArray index conversion.
+  // should return undefined. That'll lead to using MGuardNumberToIntPtrIndex
+  // with supportOOB for the TypedArray index conversion.
   const r = n === 0 ? undefined : 0;
 
   // numberToDouble always returns a double number.
