@@ -5,8 +5,6 @@
 extern crate crossbeam_utils;
 #[macro_use]
 extern crate cstr;
-#[macro_use]
-extern crate failure;
 extern crate libc;
 #[macro_use]
 extern crate log;
@@ -17,6 +15,7 @@ extern crate once_cell;
 extern crate rkv;
 extern crate serde_json;
 extern crate tempfile;
+extern crate thiserror;
 #[macro_use]
 extern crate xpcom;
 
