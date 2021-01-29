@@ -225,43 +225,60 @@ Fragment brush_fs() {
     // Return yellow if none of the branches match (shouldn't happen).
     vec4 result = vec4(1.0, 1.0, 0.0, 1.0);
 
-    if (v_op == MixBlendMode_Multiply) {
-        result.rgb = Multiply(Cb.rgb, Cs.rgb);
-    } else if (v_op == MixBlendMode_Screen) {
-        result.rgb = Screen(Cb.rgb, Cs.rgb);
-    } else if (v_op == MixBlendMode_Overlay) {
-        // Overlay is inverse of Hardlight
-        result.rgb = HardLight(Cs.rgb, Cb.rgb);
-    } else if (v_op == MixBlendMode_Darken) {
-        result.rgb = min(Cs.rgb, Cb.rgb);
-    } else if (v_op == MixBlendMode_Lighten) {
-        result.rgb = max(Cs.rgb, Cb.rgb);
-    } else if (v_op == MixBlendMode_ColorDodge) {
-        result.r = ColorDodge(Cb.r, Cs.r);
-        result.g = ColorDodge(Cb.g, Cs.g);
-        result.b = ColorDodge(Cb.b, Cs.b);
-    } else if (v_op == MixBlendMode_ColorBurn) {
-        result.r = ColorBurn(Cb.r, Cs.r);
-        result.g = ColorBurn(Cb.g, Cs.g);
-        result.b = ColorBurn(Cb.b, Cs.b);
-    } else if (v_op == MixBlendMode_HardLight) {
-        result.rgb = HardLight(Cb.rgb, Cs.rgb);
-    } else if (v_op == MixBlendMode_SoftLight) {
-        result.r = SoftLight(Cb.r, Cs.r);
-        result.g = SoftLight(Cb.g, Cs.g);
-        result.b = SoftLight(Cb.b, Cs.b);
-    } else if (v_op == MixBlendMode_Difference) {
-        result.rgb = Difference(Cb.rgb, Cs.rgb);
-    } else if (v_op == MixBlendMode_Exclusion) {
-        result.rgb = Exclusion(Cb.rgb, Cs.rgb);
-    } else if (v_op == MixBlendMode_Hue) {
-        result.rgb = Hue(Cb.rgb, Cs.rgb);
-    } else if (v_op == MixBlendMode_Saturation) {
-        result.rgb = Saturation(Cb.rgb, Cs.rgb);
-    } else if (v_op == MixBlendMode_Color) {
-        result.rgb = Color(Cb.rgb, Cs.rgb);
-    } else if (v_op == MixBlendMode_Luminosity) {
-        result.rgb = Luminosity(Cb.rgb, Cs.rgb);
+    switch (v_op) {
+        case MixBlendMode_Multiply:
+            result.rgb = Multiply(Cb.rgb, Cs.rgb);
+            break;
+        case MixBlendMode_Screen:
+            result.rgb = Screen(Cb.rgb, Cs.rgb);
+            break;
+        case MixBlendMode_Overlay:
+            // Overlay is inverse of Hardlight
+            result.rgb = HardLight(Cs.rgb, Cb.rgb);
+            break;
+        case MixBlendMode_Darken:
+            result.rgb = min(Cs.rgb, Cb.rgb);
+            break;
+        case MixBlendMode_Lighten:
+            result.rgb = max(Cs.rgb, Cb.rgb);
+            break;
+        case MixBlendMode_ColorDodge:
+            result.r = ColorDodge(Cb.r, Cs.r);
+            result.g = ColorDodge(Cb.g, Cs.g);
+            result.b = ColorDodge(Cb.b, Cs.b);
+            break;
+        case MixBlendMode_ColorBurn:
+            result.r = ColorBurn(Cb.r, Cs.r);
+            result.g = ColorBurn(Cb.g, Cs.g);
+            result.b = ColorBurn(Cb.b, Cs.b);
+            break;
+        case MixBlendMode_HardLight:
+            result.rgb = HardLight(Cb.rgb, Cs.rgb);
+            break;
+        case MixBlendMode_SoftLight:
+            result.r = SoftLight(Cb.r, Cs.r);
+            result.g = SoftLight(Cb.g, Cs.g);
+            result.b = SoftLight(Cb.b, Cs.b);
+            break;
+        case MixBlendMode_Difference:
+            result.rgb = Difference(Cb.rgb, Cs.rgb);
+            break;
+        case MixBlendMode_Exclusion:
+            result.rgb = Exclusion(Cb.rgb, Cs.rgb);
+            break;
+        case MixBlendMode_Hue:
+            result.rgb = Hue(Cb.rgb, Cs.rgb);
+            break;
+        case MixBlendMode_Saturation:
+            result.rgb = Saturation(Cb.rgb, Cs.rgb);
+            break;
+        case MixBlendMode_Color:
+            result.rgb = Color(Cb.rgb, Cs.rgb);
+            break;
+        case MixBlendMode_Luminosity:
+            result.rgb = Luminosity(Cb.rgb, Cs.rgb);
+            break;
+        default: break;
     }
 
     result.rgb = (1.0 - Cb.a) * Cs.rgb + Cb.a * result.rgb;

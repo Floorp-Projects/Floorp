@@ -89,12 +89,15 @@ void main(void) {
         vGaussCoefficients = vec2(1.0, 1.0);
     }
 
-    if (aBlurDirection == DIR_HORIZONTAL) {
-        vOffsetScale = vec2(1.0 / texture_size.x, 0.0);
-    } else if (aBlurDirection == DIR_VERTICAL) {
-        vOffsetScale = vec2(0.0, 1.0 / texture_size.y);
-    } else {
-        vOffsetScale = vec2(0.0);
+    switch (aBlurDirection) {
+        case DIR_HORIZONTAL:
+            vOffsetScale = vec2(1.0 / texture_size.x, 0.0);
+            break;
+        case DIR_VERTICAL:
+            vOffsetScale = vec2(0.0, 1.0 / texture_size.y);
+            break;
+        default:
+            vOffsetScale = vec2(0.0);
     }
 
     vUvRect = vec4(src_rect.p0 + vec2(0.5),

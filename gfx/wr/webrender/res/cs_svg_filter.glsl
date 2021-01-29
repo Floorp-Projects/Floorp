@@ -119,33 +119,44 @@ void main(void) {
     vFuncs[2] = (aFilterGenericInt >> 4)  & 0xf; // B
     vFuncs[3] = (aFilterGenericInt)       & 0xf; // A
 
-    if (aFilterKind == FILTER_BLEND) {
-        vData = ivec4(aFilterGenericInt, 0, 0, 0);
-    } else if (vFilterKind == FILTER_FLOOD) {
-        vFilterData0 = fetch_from_gpu_cache_1_direct(aFilterExtraDataAddress);
-    } else if (vFilterKind == FILTER_OPACITY) {
-        vFloat0 = filter_task.user_data.x;
-    } else if (vFilterKind == FILTER_COLOR_MATRIX) {
-        vec4 mat_data[4] = fetch_from_gpu_cache_4_direct(aFilterExtraDataAddress);
-        vColorMat = mat4(mat_data[0], mat_data[1], mat_data[2], mat_data[3]);
-        vFilterData0 = fetch_from_gpu_cache_1_direct(aFilterExtraDataAddress + ivec2(4, 0));
-    } else if (vFilterKind == FILTER_DROP_SHADOW) {
-        vFilterData0 = fetch_from_gpu_cache_1_direct(aFilterExtraDataAddress);
-    } else if (vFilterKind == FILTER_OFFSET) {
-        vec2 texture_size = vec2(textureSize(sColor0, 0).xy);
-        vFilterData0 = vec4(-filter_task.user_data.xy / texture_size, vec2(0.0));
-
-        RectWithSize task_rect = input_1_task.task_rect;
-        vec4 clipRect = vec4(task_rect.p0, task_rect.p0 + task_rect.size);
-        clipRect /= texture_size.xyxy;
-        vFilterData1 = clipRect;
-    } else if (vFilterKind == FILTER_COMPONENT_TRANSFER) {
-        vData = ivec4(aFilterExtraDataAddress, 0, 0);
-    } else if (vFilterKind == FILTER_COMPOSITE) {
-        vData = ivec4(aFilterGenericInt, 0, 0, 0);
-        if (aFilterGenericInt == COMPOSITE_ARITHMETIC) {
+    switch (aFilterKind) {
+        case FILTER_BLEND:
+            vData = ivec4(aFilterGenericInt, 0, 0, 0);
+            break;
+        case FILTER_FLOOD:
             vFilterData0 = fetch_from_gpu_cache_1_direct(aFilterExtraDataAddress);
-        }
+            break;
+        case FILTER_OPACITY:
+            vFloat0 = filter_task.user_data.x;
+            break;
+        case FILTER_COLOR_MATRIX:
+            vec4 mat_data[4] = fetch_from_gpu_cache_4_direct(aFilterExtraDataAddress);
+            vColorMat = mat4(mat_data[0], mat_data[1], mat_data[2], mat_data[3]);
+            vFilterData0 = fetch_from_gpu_cache_1_direct(aFilterExtraDataAddress + ivec2(4, 0));
+            break;
+        case FILTER_DROP_SHADOW:
+            vFilterData0 = fetch_from_gpu_cache_1_direct(aFilterExtraDataAddress);
+            break;
+        case FILTER_OFFSET:
+            vec2 texture_size = vec2(textureSize(sColor0, 0).xy);
+            vFilterData0 = vec4(-filter_task.user_data.xy / texture_size, vec2(0.0));
+
+            RectWithSize task_rect = input_1_task.task_rect;
+            vec4 clipRect = vec4(task_rect.p0, task_rect.p0 + task_rect.size);
+            clipRect /= texture_size.xyxy;
+            vFilterData1 = clipRect;
+            break;
+        case FILTER_COMPONENT_TRANSFER:
+            vData = ivec4(aFilterExtraDataAddress, 0, 0);
+            break;
+        case FILTER_COMPOSITE:
+            vData = ivec4(aFilterGenericInt, 0, 0, 0);
+            if (aFilterGenericInt == COMPOSITE_ARITHMETIC) {
+              vFilterData0 = fetch_from_gpu_cache_1_direct(aFilterExtraDataAddress);
+            }
+            break;
+        default:
+            break;
     }
 
     gl_Position = uTransform * vec4(pos, 0.0, 1.0);
@@ -321,45 +332,63 @@ const int BlendMode_Luminosity  = 15;
 vec4 blend(vec4 Cs, vec4 Cb, int mode) {
     vec4 result = vec4(1.0, 0.0, 0.0, 1.0);
 
-    if (mode == BlendMode_Normal) {
-        result.rgb = Cs.rgb;
-    } else if (mode == BlendMode_Multiply) {
-        result.rgb = Multiply(Cb.rgb, Cs.rgb);
-    } else if (mode == BlendMode_Screen) {
-        result.rgb = Screen(Cb.rgb, Cs.rgb);
-    } else if (mode == BlendMode_Overlay) {
-        // Overlay is inverse of Hardlight
-        result.rgb = HardLight(Cs.rgb, Cb.rgb);
-    } else if (mode == BlendMode_Darken) {
-        result.rgb = min(Cs.rgb, Cb.rgb);
-    } else if (mode == BlendMode_Lighten) {
-        result.rgb = max(Cs.rgb, Cb.rgb);
-    } else if (mode == BlendMode_ColorDodge) {
-        result.r = ColorDodge(Cb.r, Cs.r);
-        result.g = ColorDodge(Cb.g, Cs.g);
-        result.b = ColorDodge(Cb.b, Cs.b);
-    } else if (mode == BlendMode_ColorBurn) {
-        result.r = ColorBurn(Cb.r, Cs.r);
-        result.g = ColorBurn(Cb.g, Cs.g);
-        result.b = ColorBurn(Cb.b, Cs.b);
-    } else if (mode == BlendMode_HardLight) {
-        result.rgb = HardLight(Cb.rgb, Cs.rgb);
-    } else if (mode == BlendMode_SoftLight) {
-        result.r = SoftLight(Cb.r, Cs.r);
-        result.g = SoftLight(Cb.g, Cs.g);
-        result.b = SoftLight(Cb.b, Cs.b);
-    } else if (mode == BlendMode_Difference) {
-        result.rgb = Difference(Cb.rgb, Cs.rgb);
-    } else if (mode == BlendMode_Exclusion) {
-        result.rgb = Exclusion(Cb.rgb, Cs.rgb);
-    } else if (mode == BlendMode_Hue) {
-        result.rgb = Hue(Cb.rgb, Cs.rgb);
-    } else if (mode == BlendMode_Saturation) {
-        result.rgb = Saturation(Cb.rgb, Cs.rgb);
-    } else if (mode == BlendMode_Color) {
-        result.rgb = Color(Cb.rgb, Cs.rgb);
-    } else if (mode == BlendMode_Luminosity) {
-        result.rgb = Luminosity(Cb.rgb, Cs.rgb);
+    switch (mode) {
+        case BlendMode_Normal:
+            result.rgb = Cs.rgb;
+            break;
+        case BlendMode_Multiply:
+            result.rgb = Multiply(Cb.rgb, Cs.rgb);
+            break;
+        case BlendMode_Screen:
+            result.rgb = Screen(Cb.rgb, Cs.rgb);
+            break;
+        case BlendMode_Overlay:
+            // Overlay is inverse of Hardlight
+            result.rgb = HardLight(Cs.rgb, Cb.rgb);
+            break;
+        case BlendMode_Darken:
+            result.rgb = min(Cs.rgb, Cb.rgb);
+            break;
+        case BlendMode_Lighten:
+            result.rgb = max(Cs.rgb, Cb.rgb);
+            break;
+        case BlendMode_ColorDodge:
+            result.r = ColorDodge(Cb.r, Cs.r);
+            result.g = ColorDodge(Cb.g, Cs.g);
+            result.b = ColorDodge(Cb.b, Cs.b);
+            break;
+        case BlendMode_ColorBurn:
+            result.r = ColorBurn(Cb.r, Cs.r);
+            result.g = ColorBurn(Cb.g, Cs.g);
+            result.b = ColorBurn(Cb.b, Cs.b);
+            break;
+        case BlendMode_HardLight:
+            result.rgb = HardLight(Cb.rgb, Cs.rgb);
+            break;
+        case BlendMode_SoftLight:
+            result.r = SoftLight(Cb.r, Cs.r);
+            result.g = SoftLight(Cb.g, Cs.g);
+            result.b = SoftLight(Cb.b, Cs.b);
+            break;
+        case BlendMode_Difference:
+            result.rgb = Difference(Cb.rgb, Cs.rgb);
+            break;
+        case BlendMode_Exclusion:
+            result.rgb = Exclusion(Cb.rgb, Cs.rgb);
+            break;
+        case BlendMode_Hue:
+            result.rgb = Hue(Cb.rgb, Cs.rgb);
+            break;
+        case BlendMode_Saturation:
+            result.rgb = Saturation(Cb.rgb, Cs.rgb);
+            break;
+        case BlendMode_Color:
+            result.rgb = Color(Cb.rgb, Cs.rgb);
+            break;
+        case BlendMode_Luminosity:
+            result.rgb = Luminosity(Cb.rgb, Cs.rgb);
+            break;
+        default: break;
     }
     vec3 rgb = (1.0 - Cb.a) * Cs.rgb + Cb.a * result.rgb;
     result = mix(vec4(Cb.rgb * Cb.a, Cb.a), vec4(rgb, 1.0), Cs.a);
@@ -403,27 +432,35 @@ vec4 ComponentTransfer(vec4 colora) {
     int k;
 
     for (int i = 0; i < 4; i++) {
-        if (vFuncs[i] == COMPONENT_TRANSFER_IDENTITY) {
-        } else if (vFuncs[i] == COMPONENT_TRANSFER_TABLE ||
-                   vFuncs[i] == COMPONENT_TRANSFER_DISCRETE) {
-            // fetch value from lookup table
-            k = int(floor(colora[i]*255.0));
-            texel = fetch_from_gpu_cache_1_direct(vData.xy + ivec2(offset + k/4, 0));
-            colora[i] = clamp(texel[k % 4], 0.0, 1.0);
-            // offset plus 256/4 blocks
-            offset = offset + 64;
-        } else if (vFuncs[i] == COMPONENT_TRANSFER_LINEAR) {
-            // fetch the two values for use in the linear equation
-            texel = fetch_from_gpu_cache_1_direct(vData.xy + ivec2(offset, 0));
-            colora[i] = clamp(texel[0] * colora[i] + texel[1], 0.0, 1.0);
-            // offset plus 1 block
-            offset = offset + 1;
-        } else if (vFuncs[i] == COMPONENT_TRANSFER_GAMMA) {
-            // fetch the three values for use in the gamma equation
-            texel = fetch_from_gpu_cache_1_direct(vData.xy + ivec2(offset, 0));
-            colora[i] = clamp(texel[0] * pow(colora[i], texel[1]) + texel[2], 0.0, 1.0);
-            // offset plus 1 block
-            offset = offset + 1;
+        switch (vFuncs[i]) {
+            case COMPONENT_TRANSFER_IDENTITY:
+                break;
+            case COMPONENT_TRANSFER_TABLE:
+            case COMPONENT_TRANSFER_DISCRETE:
+                // fetch value from lookup table
+                k = int(floor(colora[i]*255.0));
+                texel = fetch_from_gpu_cache_1_direct(vData.xy + ivec2(offset + k/4, 0));
+                colora[i] = clamp(texel[k % 4], 0.0, 1.0);
+                // offset plus 256/4 blocks
+                offset = offset + 64;
+                break;
+            case COMPONENT_TRANSFER_LINEAR:
+                // fetch the two values for use in the linear equation
+                texel = fetch_from_gpu_cache_1_direct(vData.xy + ivec2(offset, 0));
+                colora[i] = clamp(texel[0] * colora[i] + texel[1], 0.0, 1.0);
+                // offset plus 1 block
+                offset = offset + 1;
+                break;
+            case COMPONENT_TRANSFER_GAMMA:
+                // fetch the three values for use in the gamma equation
+                texel = fetch_from_gpu_cache_1_direct(vData.xy + ivec2(offset, 0));
+                colora[i] = clamp(texel[0] * pow(colora[i], texel[1]) + texel[2], 0.0, 1.0);
+                // offset plus 1 block
+                offset = offset + 1;
+                break;
+            default:
+                // shouldn't happen
+                break;
         }
     }
     return colora;
@@ -433,28 +470,38 @@ vec4 ComponentTransfer(vec4 colora) {
 
 vec4 composite(vec4 Cs, vec4 Cb, int mode) {
     vec4 Cr = vec4(0.0, 1.0, 0.0, 1.0);
-    if (mode == COMPOSITE_OVER) {
-        Cr.rgb = Cs.a * Cs.rgb + Cb.a * Cb.rgb * (1.0 - Cs.a);
-        Cr.a = Cs.a + Cb.a * (1.0 - Cs.a);
-    } else if (mode == COMPOSITE_IN) {
-        Cr.rgb = Cs.a * Cs.rgb * Cb.a;
-        Cr.a = Cs.a * Cb.a;
-    } else if (mode == COMPOSITE_OUT) {
-        Cr.rgb = Cs.a * Cs.rgb * (1.0 - Cb.a);
-        Cr.a = Cs.a * (1.0 - Cb.a);
-    } else if (mode == COMPOSITE_ATOP) {
-        Cr.rgb = Cs.a * Cs.rgb * Cb.a + Cb.a * Cb.rgb * (1.0 - Cs.a);
-        Cr.a = Cs.a * Cb.a + Cb.a * (1.0 - Cs.a);
-    } else if (mode == COMPOSITE_XOR) {
-        Cr.rgb = Cs.a * Cs.rgb * (1.0 - Cb.a) + Cb.a * Cb.rgb * (1.0 - Cs.a);
-        Cr.a = Cs.a * (1.0 - Cb.a) + Cb.a * (1.0 - Cs.a);
-    } else if (mode == COMPOSITE_LIGHTER) {
-        Cr.rgb = Cs.a * Cs.rgb + Cb.a * Cb.rgb;
-        Cr.a = Cs.a + Cb.a;
-        Cr = clamp(Cr, vec4(0.0), vec4(1.0));
-    } else if (mode == COMPOSITE_ARITHMETIC) {
-        Cr = vec4(vFilterData0.x) * Cs * Cb + vec4(vFilterData0.y) * Cs + vec4(vFilterData0.z) * Cb + vec4(vFilterData0.w);
-        Cr = clamp(Cr, vec4(0.0), vec4(1.0));
+    switch (mode) {
+        case COMPOSITE_OVER:
+            Cr.rgb = Cs.a * Cs.rgb + Cb.a * Cb.rgb * (1.0 - Cs.a);
+            Cr.a = Cs.a + Cb.a * (1.0 - Cs.a);
+            break;
+        case COMPOSITE_IN:
+            Cr.rgb = Cs.a * Cs.rgb * Cb.a;
+            Cr.a = Cs.a * Cb.a;
+            break;
+        case COMPOSITE_OUT:
+            Cr.rgb = Cs.a * Cs.rgb * (1.0 - Cb.a);
+            Cr.a = Cs.a * (1.0 - Cb.a);
+            break;
+        case COMPOSITE_ATOP:
+            Cr.rgb = Cs.a * Cs.rgb * Cb.a + Cb.a * Cb.rgb * (1.0 - Cs.a);
+            Cr.a = Cs.a * Cb.a + Cb.a * (1.0 - Cs.a);
+            break;
+        case COMPOSITE_XOR:
+            Cr.rgb = Cs.a * Cs.rgb * (1.0 - Cb.a) + Cb.a * Cb.rgb * (1.0 - Cs.a);
+            Cr.a = Cs.a * (1.0 - Cb.a) + Cb.a * (1.0 - Cs.a);
+            break;
+        case COMPOSITE_LIGHTER:
+            Cr.rgb = Cs.a * Cs.rgb + Cb.a * Cb.rgb;
+            Cr.a = Cs.a + Cb.a;
+            Cr = clamp(Cr, vec4(0.0), vec4(1.0));
+            break;
+        case COMPOSITE_ARITHMETIC:
+            Cr = vec4(vFilterData0.x) * Cs * Cb + vec4(vFilterData0.y) * Cs + vec4(vFilterData0.z) * Cb + vec4(vFilterData0.w);
+            Cr = clamp(Cr, vec4(0.0), vec4(1.0));
+            break;
+        default:
+            break;
     }
     return Cr;
 }
@@ -484,41 +531,54 @@ void main(void) {
 
     bool needsPremul = true;
 
-    if (vFilterKind == FILTER_BLEND) {
-        result = blend(Ca, Cb, vData.x);
-        needsPremul = false;
-    } else if (vFilterKind == FILTER_FLOOD) {
-        result = vFilterData0;
-        needsPremul = false;
-    } else if (vFilterKind == FILTER_LINEAR_TO_SRGB) {
-        result.rgb = LinearToSrgb(Ca.rgb);
-        result.a = Ca.a;
-    } else if (vFilterKind == FILTER_SRGB_TO_LINEAR) {
-        result.rgb = SrgbToLinear(Ca.rgb);
-        result.a = Ca.a;
-    } else if (vFilterKind == FILTER_OPACITY) {
-        result.rgb = Ca.rgb;
-        result.a = Ca.a * vFloat0;
-    } else if (vFilterKind == FILTER_COLOR_MATRIX) {
-        result = vColorMat * Ca + vFilterData0;
-        result = clamp(result, vec4(0.0), vec4(1.0));
-    } else if (vFilterKind == FILTER_DROP_SHADOW) {
-        vec4 shadow = vec4(vFilterData0.rgb, Cb.a * vFilterData0.a);
-        // Normal blend + source-over coposite
-        result = blend(Ca, shadow, BlendMode_Normal);
-        needsPremul = false;
-    } else if (vFilterKind == FILTER_OFFSET) {
-        vec2 offsetUv = vInput1Uv + vFilterData0.xy;
-        result = sampleInUvRect(sColor0, offsetUv, vInput1UvRect);
-        result *= point_inside_rect(offsetUv, vFilterData1.xy, vFilterData1.zw);
-        needsPremul = false;
-    } else if (vFilterKind == FILTER_COMPONENT_TRANSFER) {
-        result = ComponentTransfer(Ca);
-    } else if (vFilterKind == FILTER_IDENTITY) {
-        result = Ca;
-    } else if (vFilterKind == FILTER_COMPOSITE) {
-        result = composite(Ca, Cb, vData.x);
-        needsPremul = false;
+    switch (vFilterKind) {
+        case FILTER_BLEND:
+            result = blend(Ca, Cb, vData.x);
+            needsPremul = false;
+            break;
+        case FILTER_FLOOD:
+            result = vFilterData0;
+            needsPremul = false;
+            break;
+        case FILTER_LINEAR_TO_SRGB:
+            result.rgb = LinearToSrgb(Ca.rgb);
+            result.a = Ca.a;
+            break;
+        case FILTER_SRGB_TO_LINEAR:
+            result.rgb = SrgbToLinear(Ca.rgb);
+            result.a = Ca.a;
+            break;
+        case FILTER_OPACITY:
+            result.rgb = Ca.rgb;
+            result.a = Ca.a * vFloat0;
+            break;
+        case FILTER_COLOR_MATRIX:
+            result = vColorMat * Ca + vFilterData0;
+            result = clamp(result, vec4(0.0), vec4(1.0));
+            break;
+        case FILTER_DROP_SHADOW:
+            vec4 shadow = vec4(vFilterData0.rgb, Cb.a * vFilterData0.a);
+            // Normal blend + source-over coposite
+            result = blend(Ca, shadow, BlendMode_Normal);
+            needsPremul = false;
+            break;
+        case FILTER_OFFSET:
+            vec2 offsetUv = vInput1Uv + vFilterData0.xy;
+            result = sampleInUvRect(sColor0, offsetUv, vInput1UvRect);
+            result *= point_inside_rect(offsetUv, vFilterData1.xy, vFilterData1.zw);
+            needsPremul = false;
+            break;
+        case FILTER_COMPONENT_TRANSFER:
+            result = ComponentTransfer(Ca);
+            break;
+        case FILTER_IDENTITY:
+            result = Ca;
+            break;
+        case FILTER_COMPOSITE:
+            result = composite(Ca, Cb, vData.x);
+            needsPremul = false;
+        default:
+            break;
     }
 
     if (needsPremul) {
