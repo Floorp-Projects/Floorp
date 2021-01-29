@@ -821,7 +821,7 @@ class GeckoEngineSession(
                     onExternalResource(
                             url = url,
                             contentLength = contentLength,
-                            contentType = contentType,
+                            contentType = DownloadUtils.sanitizeMimeType(contentType),
                             fileName = fileName.sanitizeFileName(),
                             response = response,
                             isPrivate = privateMode

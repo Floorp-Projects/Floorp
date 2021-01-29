@@ -9,6 +9,7 @@ import android.app.DownloadManager.EXTRA_DOWNLOAD_ID
 import android.app.Notification
 import android.app.NotificationManager
 import android.app.Service
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -1681,5 +1682,46 @@ class AbstractFetchDownloadServiceTest {
 
         assertEquals(15, downloadJobState.currentBytesCopied)
         assertEquals(AbstractFetchDownloadService.CopyInChuckStatus.COMPLETED, status)
+    }
+
+    @Test
+    fun `getSafeContentType - WHEN the file content type is available THEN use it`() {
+        val contentTypeFromFile = "application/pdf; qs=0.001"
+        val spyContext = spy(testContext)
+        val contentResolver = mock<ContentResolver>()
+
+        doReturn(contentTypeFromFile).`when`(contentResolver).getType(any())
+        doReturn(contentResolver).`when`(spyContext).contentResolver
+
+        val result = AbstractFetchDownloadService.getSafeContentType(spyContext, mock(), "any")
+
+        assertEquals("application/pdf", result)
+    }
+
+    @Test
+    fun `getSafeContentType - WHEN the file content type is not available THEN use the provided content type`() {
+        val contentType = " application/pdf "
+        val spyContext = spy(testContext)
+        val contentResolver = mock<ContentResolver>()
+
+        doReturn(null).`when`(contentResolver).getType(any())
+        doReturn(contentResolver).`when`(spyContext).contentResolver
+
+        val result = AbstractFetchDownloadService.getSafeContentType(spyContext, mock(), contentType)
+
+        assertEquals("application/pdf", result)
+    }
+
+    @Test
+    fun `getSafeContentType - WHEN none of the provided content types are available THEN return a generic content type`() {
+        val spyContext = spy(testContext)
+        val contentResolver = mock<ContentResolver>()
+
+        doReturn(null).`when`(contentResolver).getType(any())
+        doReturn(contentResolver).`when`(spyContext).contentResolver
+
+        val result = AbstractFetchDownloadService.getSafeContentType(spyContext, mock(), null)
+
+        assertEquals("*/*", result)
     }
 }

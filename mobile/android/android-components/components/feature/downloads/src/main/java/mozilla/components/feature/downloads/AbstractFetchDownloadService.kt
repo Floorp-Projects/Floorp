@@ -934,7 +934,7 @@ abstract class AbstractFetchDownloadService : Service() {
             )
 
             val newIntent = Intent(ACTION_VIEW).apply {
-                setDataAndType(constructedFilePath, contentType ?: "*/*")
+                setDataAndType(constructedFilePath, getSafeContentType(context, constructedFilePath, contentType))
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
             }
 
@@ -944,6 +944,21 @@ abstract class AbstractFetchDownloadService : Service() {
             } catch (error: ActivityNotFoundException) {
                 false
             }
+        }
+
+        @VisibleForTesting
+        internal fun getSafeContentType(context: Context, constructedFilePath: Uri, contentType: String?): String {
+            val contentTypeFromFile = context.contentResolver.getType(constructedFilePath)
+            val resultContentType = if (!contentTypeFromFile.isNullOrEmpty()) {
+                contentTypeFromFile
+            } else {
+                if (!contentType.isNullOrEmpty()) {
+                    contentType
+                } else {
+                    "*/*"
+                }
+            }
+            return (DownloadUtils.sanitizeMimeType(resultContentType) ?: "*/*")
         }
 
         private const val FILE_PROVIDER_EXTENSION = ".feature.downloads.fileprovider"

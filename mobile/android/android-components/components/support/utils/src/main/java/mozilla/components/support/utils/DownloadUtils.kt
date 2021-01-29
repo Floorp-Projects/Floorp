@@ -7,7 +7,6 @@ package mozilla.components.support.utils
 import android.net.Uri
 import android.os.Environment
 import android.webkit.MimeTypeMap
-import androidx.annotation.VisibleForTesting
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.UnsupportedEncodingException
@@ -172,9 +171,8 @@ object DownloadUtils {
 
     // Some site add extra information after the mimetype, for example 'application/pdf; qs=0.001'
     // we just want to extract the mimeType and ignore the rest.
-    @VisibleForTesting
-    internal fun sanitizeMimeType(mimeType: String?): String? {
-        return if (mimeType != null) {
+    fun sanitizeMimeType(mimeType: String?): String? {
+        return (if (mimeType != null) {
             if (mimeType.contains(";")) {
                 mimeType.substringBefore(";")
             } else {
@@ -182,7 +180,7 @@ object DownloadUtils {
             }
         } else {
             null
-        }
+        })?.trim()
     }
 
     /**
