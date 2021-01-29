@@ -30,8 +30,17 @@ struct CompilationGCOutput;
 class ScopeStencil;
 }  // namespace frontend
 
-using ScopeIndex = frontend::TypedIndex<Scope>;
-using HeapPtrScope = HeapPtr<Scope*>;
+class ScopeIndex : public frontend::TypedIndex<Scope> {
+  // Delegate constructors;
+  using Base = frontend::TypedIndex<Scope>;
+  using Base::Base;
+
+  static constexpr uint32_t InvalidIndex = UINT32_MAX;
+
+ public:
+  static constexpr ScopeIndex invalid() { return ScopeIndex(InvalidIndex); }
+  bool isValid() const { return index != InvalidIndex; }
+};
 
 // An interface class to support Scope queries in the frontend without requiring
 // a GC Allocated scope to necessarily exist.
@@ -39,65 +48,38 @@ using HeapPtrScope = HeapPtr<Scope*>;
 // This abstracts Scope* and a ScopeStencil type used within the frontend before
 // the Scope is allocated.
 //
-// Because a AbstractScopePtr may hold onto a Scope, it must be rooted if a GC
-// may occur to ensure that the scope is traced.
+// Queries to GC Scope should be pre-calculated and stored into ScopeContext.
 class AbstractScopePtr {
- public:
-  // Used to hold index and the compilationState together to avoid having a
-  // potentially nullable compilationState.
-  struct Deferred {
-    ScopeIndex index;
-    frontend::CompilationState& compilationState;
-  };
-
-  // To make writing code and managing invariants easier, we require that
-  // any nullptr scopes be stored on the HeapPtrScope arm of the variant.
-  using ScopeType = mozilla::Variant<HeapPtrScope, Deferred>;
-
  private:
-  ScopeType scope_ = ScopeType(HeapPtrScope());
+  // ScopeIndex::invalid() if this points CompilationInput.enclosingScope.
+  ScopeIndex index_;
 
-  Scope* scope() const { return scope_.as<HeapPtrScope>(); }
+  frontend::CompilationState& compilationState_;
 
  public:
   friend class js::Scope;
 
-  AbstractScopePtr() = default;
-
-  explicit AbstractScopePtr(Scope* scope) : scope_(HeapPtrScope(scope)) {}
-
   AbstractScopePtr(frontend::CompilationState& compilationState,
-                   ScopeIndex scope)
-      : scope_(Deferred{scope, compilationState}) {}
+                   ScopeIndex index)
+      : index_(index), compilationState_(compilationState) {}
 
-  bool isNullptr() const {
-    if (isScopeStencil()) {
-      return false;
-    }
-    return scope_.as<HeapPtrScope>() == nullptr;
+  static AbstractScopePtr compilationEnclosingScope(
+      frontend::CompilationState& compilationState) {
+    return AbstractScopePtr(compilationState, ScopeIndex::invalid());
   }
 
-  // Return true if this AbstractScopePtr represents a Scope, either existant
-  // or to be reified. This indicates that queries can be executed on this
-  // scope data. Returning false is the equivalent to a nullptr, and usually
-  // indicates the end of the scope chain.
-  explicit operator bool() const { return !isNullptr(); }
+ private:
+  bool isScopeStencil() const { return index_.isValid(); }
 
-  bool isScopeStencil() const { return scope_.is<Deferred>(); }
-
-  // Note: this handle is rooted in the CompilationState.
   frontend::ScopeStencil& scopeData() const;
-  frontend::CompilationState& compilationState() const;
 
+ public:
   // This allows us to check whether or not this provider wraps
   // or otherwise would reify to a particular scope type.
   template <typename T>
   bool is() const {
     static_assert(std::is_base_of_v<Scope, T>,
                   "Trying to ask about non-Scope type");
-    if (isNullptr()) {
-      return false;
-    }
     return kind() == T::classScopeKind_;
   }
 
@@ -107,37 +89,22 @@ class AbstractScopePtr {
   // Valid iff is<FunctionScope>
   bool isArrow() const;
 
-  bool hasOnChain(ScopeKind kind) const {
-    for (AbstractScopePtr it = *this; it; it = it.enclosing()) {
-      if (it.kind() == kind) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  void trace(JSTracer* trc);
+#ifdef DEBUG
+  bool hasNonSyntacticScopeOnChain() const;
+#endif
 };
 
 // Specializations of AbstractScopePtr::is
 template <>
 inline bool AbstractScopePtr::is<GlobalScope>() const {
-  return !isNullptr() &&
-         (kind() == ScopeKind::Global || kind() == ScopeKind::NonSyntactic);
+  return kind() == ScopeKind::Global || kind() == ScopeKind::NonSyntactic;
 }
 
 template <>
 inline bool AbstractScopePtr::is<EvalScope>() const {
-  return !isNullptr() &&
-         (kind() == ScopeKind::Eval || kind() == ScopeKind::StrictEval);
+  return kind() == ScopeKind::Eval || kind() == ScopeKind::StrictEval;
 }
 
 }  // namespace js
-
-namespace JS {
-template <>
-struct GCPolicy<js::AbstractScopePtr::Deferred>
-    : JS::IgnoreGCPolicy<js::AbstractScopePtr::Deferred> {};
-}  // namespace JS
 
 #endif  // frontend_AbstractScopePtr_h

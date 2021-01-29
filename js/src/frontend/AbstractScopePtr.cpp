@@ -17,50 +17,45 @@ using namespace js;
 using namespace js::frontend;
 
 ScopeStencil& AbstractScopePtr::scopeData() const {
-  const Deferred& data = scope_.as<Deferred>();
-  return data.compilationState.scopeData[data.index];
-}
-
-CompilationState& AbstractScopePtr::compilationState() const {
-  const Deferred& data = scope_.as<Deferred>();
-  return data.compilationState;
+  MOZ_ASSERT(isScopeStencil());
+  return compilationState_.scopeData[index_];
 }
 
 ScopeKind AbstractScopePtr::kind() const {
-  MOZ_ASSERT(!isNullptr());
   if (isScopeStencil()) {
     return scopeData().kind();
   }
-  return scope()->kind();
+  return compilationState_.scopeContext.enclosingScopeKind;
 }
 
 AbstractScopePtr AbstractScopePtr::enclosing() const {
-  MOZ_ASSERT(!isNullptr());
-  if (isScopeStencil()) {
-    return scopeData().enclosing(compilationState());
-  }
-  return AbstractScopePtr(scope()->enclosing());
+  MOZ_ASSERT(isScopeStencil());
+  return scopeData().enclosing(compilationState_);
 }
 
 bool AbstractScopePtr::hasEnvironment() const {
-  MOZ_ASSERT(!isNullptr());
   if (isScopeStencil()) {
     return scopeData().hasEnvironment();
   }
-  return scope()->hasEnvironment();
+  return compilationState_.scopeContext.enclosingScopeHasEnvironment;
 }
 
 bool AbstractScopePtr::isArrow() const {
-  // nullptr will also fail the below assert, so effectively also checking
-  // !isNullptr()
   MOZ_ASSERT(is<FunctionScope>());
   if (isScopeStencil()) {
     return scopeData().isArrow();
   }
-  MOZ_ASSERT(scope()->as<FunctionScope>().canonicalFunction());
-  return scope()->as<FunctionScope>().canonicalFunction()->isArrow();
+  return compilationState_.scopeContext.enclosingScopeIsArrow;
 }
 
-void AbstractScopePtr::trace(JSTracer* trc) {
-  JS::GCPolicy<ScopeType>::trace(trc, &scope_, "AbstractScopePtr");
+#ifdef DEBUG
+bool AbstractScopePtr::hasNonSyntacticScopeOnChain() const {
+  if (isScopeStencil()) {
+    if (kind() == ScopeKind::NonSyntactic) {
+      return true;
+    }
+    return enclosing().hasNonSyntacticScopeOnChain();
+  }
+  return compilationState_.scopeContext.hasNonSyntacticScopeOnChain;
 }
+#endif

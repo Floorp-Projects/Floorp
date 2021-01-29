@@ -124,7 +124,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
       cx(sc->cx_),
       parent(parent),
       bytecodeSection_(cx, sc->extent().lineno, sc->extent().column),
-      perScriptData_(cx, stencil, compilationState),
+      perScriptData_(cx, compilationState),
       stencil(stencil),
       compilationState(compilationState),
       emitterMode(emitterMode) {}
@@ -11239,7 +11239,7 @@ bool BytecodeEmitter::intoScriptStencil(ScriptIndex scriptIndex) {
     return false;
   }
 
-  MOZ_ASSERT(outermostScope().hasOnChain(ScopeKind::NonSyntactic) ==
+  MOZ_ASSERT(outermostScope().hasNonSyntacticScopeOnChain() ==
              sc->hasNonSyntacticScope());
 
   auto& things = perScriptData().gcThingList().objects();
