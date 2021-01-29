@@ -1755,7 +1755,7 @@ bool BytecodeEmitter::emitGetPrivateName(const ParserAtom* nameAtom) {
   return emitGetNameAtLocation(nameAtom, location);
 }
 
-bool BytecodeEmitter::emitTDZCheckIfNeeded(const ParserAtom* name,
+bool BytecodeEmitter::emitTDZCheckIfNeeded(TaggedParserAtomIndex name,
                                            const NameLocation& loc,
                                            ValueIsOnStack isOnStack) {
   // Dynamic accesses have TDZ checks built into their VM code and should

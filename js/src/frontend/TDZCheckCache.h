@@ -12,6 +12,7 @@
 
 #include "ds/Nestable.h"
 #include "frontend/NameCollections.h"
+#include "frontend/ParserAtom.h"  // TaggedParserAtomIndex
 #include "js/TypeDecls.h"
 #include "vm/Stack.h"
 
@@ -47,8 +48,9 @@ class TDZCheckCache : public Nestable<TDZCheckCache> {
   explicit TDZCheckCache(BytecodeEmitter* bce);
 
   mozilla::Maybe<MaybeCheckTDZ> needsTDZCheck(BytecodeEmitter* bce,
-                                              const ParserAtom* name);
-  MOZ_MUST_USE bool noteTDZCheck(BytecodeEmitter* bce, const ParserAtom* name,
+                                              TaggedParserAtomIndex name);
+  MOZ_MUST_USE bool noteTDZCheck(BytecodeEmitter* bce,
+                                 TaggedParserAtomIndex name,
                                  MaybeCheckTDZ check);
 };
 

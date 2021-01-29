@@ -14,10 +14,11 @@
 #include "frontend/EitherParser.h"  // js::frontend::EitherParser
 #include "frontend/ParserAtom.h"  // js::frontend::{ParserAtom, TaggedParserAtomIndex}
 #include "frontend/Stencil.h"  // js::frontend::StencilModuleEntry
-#include "js/GCHashTable.h"    // JS::GCHash{Map,Set}
-#include "js/GCVector.h"       // JS::GCVector
-#include "js/RootingAPI.h"     // JS::{Handle,Rooted}
-#include "vm/AtomsTable.h"     // js::AtomSet
+#include "frontend/TaggedParserAtomIndexHasher.h"  // frontend::TaggedParserAtomIndexHasher
+#include "js/GCHashTable.h"                        // JS::GCHash{Map,Set}
+#include "js/GCVector.h"                           // JS::GCVector
+#include "js/RootingAPI.h"                         // JS::{Handle,Rooted}
+#include "vm/AtomsTable.h"                         // js::AtomSet
 
 struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSAtom;
@@ -31,19 +32,6 @@ class ListNode;
 class ParseNode;
 
 }  // namespace frontend
-
-class TaggedParserAtomIndexHasher {
- public:
-  using Lookup = frontend::TaggedParserAtomIndex;
-
-  static inline HashNumber hash(const Lookup& l) {
-    return HashNumber(l.rawData());
-  }
-  static inline bool match(frontend::TaggedParserAtomIndex entry,
-                           const Lookup& l) {
-    return l == entry;
-  }
-};
 
 // Process a module's parse tree to collate the import and export data used when
 // creating a ModuleObject.
@@ -78,7 +66,7 @@ class MOZ_STACK_CLASS ModuleBuilder {
   using ExportEntryVector = Vector<frontend::StencilModuleEntry>;
   using ImportEntryMap =
       HashMap<frontend::TaggedParserAtomIndex, frontend::StencilModuleEntry,
-              TaggedParserAtomIndexHasher>;
+              frontend::TaggedParserAtomIndexHasher>;
 
   JSContext* cx_;
   frontend::EitherParser eitherParser_;

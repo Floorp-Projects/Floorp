@@ -36,26 +36,27 @@
 #include "frontend/NameCollections.h"      // AtomIndexMap
 #include "frontend/ParseNode.h"            // ParseNode and subclasses
 #include "frontend/Parser.h"               // Parser, PropListType
-#include "frontend/ScriptIndex.h"          // ScriptIndex
-#include "frontend/SharedContext.h"        // SharedContext, TopLevelFunction
-#include "frontend/SourceNotes.h"          // SrcNoteType
-#include "frontend/TokenStream.h"          // TokenPos
-#include "frontend/ValueUsage.h"           // ValueUsage
-#include "js/RootingAPI.h"                 // JS::Rooted, JS::Handle
-#include "js/TypeDecls.h"                  // jsbytecode
-#include "vm/BuiltinObjectKind.h"          // BuiltinObjectKind
-#include "vm/BytecodeUtil.h"               // JSOp
-#include "vm/CheckIsObjectKind.h"          // CheckIsObjectKind
-#include "vm/FunctionPrefixKind.h"         // FunctionPrefixKind
-#include "vm/GeneratorResumeKind.h"        // GeneratorResumeKind
-#include "vm/Instrumentation.h"            // InstrumentationKind
-#include "vm/JSFunction.h"                 // JSFunction
-#include "vm/JSScript.h"       // JSScript, BaseScript, MemberInitializers
-#include "vm/Runtime.h"        // ReportOutOfMemory
-#include "vm/SharedStencil.h"  // GCThingIndex
-#include "vm/StencilEnums.h"   // TryNoteKind
-#include "vm/StringType.h"     // JSAtom
-#include "vm/ThrowMsgKind.h"   // ThrowMsgKind, ThrowCondition
+#include "frontend/ParserAtom.h"  // ParserAtom, ParserName, ParserAtomsTable, TaggedParserAtomIndex
+#include "frontend/ScriptIndex.h"    // ScriptIndex
+#include "frontend/SharedContext.h"  // SharedContext, TopLevelFunction
+#include "frontend/SourceNotes.h"    // SrcNoteType
+#include "frontend/TokenStream.h"    // TokenPos
+#include "frontend/ValueUsage.h"     // ValueUsage
+#include "js/RootingAPI.h"           // JS::Rooted, JS::Handle
+#include "js/TypeDecls.h"            // jsbytecode
+#include "vm/BuiltinObjectKind.h"    // BuiltinObjectKind
+#include "vm/BytecodeUtil.h"         // JSOp
+#include "vm/CheckIsObjectKind.h"    // CheckIsObjectKind
+#include "vm/FunctionPrefixKind.h"   // FunctionPrefixKind
+#include "vm/GeneratorResumeKind.h"  // GeneratorResumeKind
+#include "vm/Instrumentation.h"      // InstrumentationKind
+#include "vm/JSFunction.h"           // JSFunction
+#include "vm/JSScript.h"             // JSScript, BaseScript, MemberInitializers
+#include "vm/Runtime.h"              // ReportOutOfMemory
+#include "vm/SharedStencil.h"        // GCThingIndex
+#include "vm/StencilEnums.h"         // TryNoteKind
+#include "vm/StringType.h"           // JSAtom
+#include "vm/ThrowMsgKind.h"         // ThrowMsgKind, ThrowCondition
 
 namespace js {
 namespace frontend {
@@ -250,7 +251,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_ALWAYS_INLINE MOZ_MUST_USE bool makeAtomIndex(const ParserAtom* atom,
                                                     GCThingIndex* indexp) {
     MOZ_ASSERT(perScriptData().atomIndices());
-    AtomIndexMap::AddPtr p = perScriptData().atomIndices()->lookupForAdd(atom);
+    AtomIndexMap::AddPtr p =
+        perScriptData().atomIndices()->lookupForAdd(atom->toIndex());
     if (p) {
       *indexp = GCThingIndex(p->value());
       return true;
@@ -263,7 +265,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
     // `atomIndices()` uses uint32_t instead of GCThingIndex, because
     // GCThingIndex isn't trivial type.
-    if (!perScriptData().atomIndices()->add(p, atom, index.index)) {
+    if (!perScriptData().atomIndices()->add(p, atom->toIndex(), index.index)) {
       ReportOutOfMemory(cx);
       return false;
     }
@@ -543,7 +545,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitGetPrivateName(NameNode* name);
   MOZ_MUST_USE bool emitGetPrivateName(const ParserAtom* name);
 
-  MOZ_MUST_USE bool emitTDZCheckIfNeeded(const ParserAtom* name,
+  MOZ_MUST_USE bool emitTDZCheckIfNeeded(TaggedParserAtomIndex name,
                                          const NameLocation& loc,
                                          ValueIsOnStack isOnStack);
 

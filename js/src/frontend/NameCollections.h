@@ -9,11 +9,34 @@
 
 #include <type_traits>
 
-#include "ds/InlineTable.h"
+#include "ds/InlineTable.h"  // InlineMap, DefaultKeyPolicy
 #include "frontend/NameAnalysisTypes.h"
+#include "frontend/ParserAtom.h"  // TaggedParserAtomIndex, TrivialTaggedParserAtomIndex
+#include "frontend/TaggedParserAtomIndexHasher.h"  // TrivialTaggedParserAtomIndexHasher
 #include "js/Vector.h"
 
 namespace js {
+
+namespace detail {
+
+// For InlineMap<TrivialTaggedParserAtomIndex>.
+// See DefaultKeyPolicy definition in InlineTable.h for more details.
+template <>
+class DefaultKeyPolicy<frontend::TrivialTaggedParserAtomIndex> {
+ public:
+  DefaultKeyPolicy() = delete;
+  DefaultKeyPolicy(const frontend::TrivialTaggedParserAtomIndex&) = delete;
+
+  static bool isTombstone(const frontend::TrivialTaggedParserAtomIndex& atom) {
+    return atom.isNull();
+  }
+  static void setToTombstone(frontend::TrivialTaggedParserAtomIndex& atom) {
+    atom = frontend::TrivialTaggedParserAtomIndex::null();
+  }
+};
+
+}  // namespace detail
+
 namespace frontend {
 
 class FunctionBox;
@@ -134,21 +157,36 @@ struct RecyclableAtomMapValueWrapper {
   const Wrapped* operator->() const { return &wrapped; }
 };
 
-struct NameMapHasher : public DefaultHasher<const ParserAtom*> {
-  static inline HashNumber hash(const Lookup& l) {
-    // Name maps use the atom's precomputed hash code, which is based on
-    // the atom's contents rather than its pointer value. This is necessary
-    // to preserve iteration order while recording/replaying: iteration can
-    // affect generated script bytecode and the order in which e.g. lookup
-    // property hooks are performed on the associated global.
-    return l->hash();
+template <typename MapValue>
+using RecyclableNameMapBase =
+    InlineMap<TrivialTaggedParserAtomIndex,
+              RecyclableAtomMapValueWrapper<MapValue>, 24,
+              TrivialTaggedParserAtomIndexHasher, SystemAllocPolicy>;
+
+// Define wrapper methods to accept TaggedParserAtomIndex.
+template <typename MapValue>
+class RecyclableNameMap : public RecyclableNameMapBase<MapValue> {
+  using Base = RecyclableNameMapBase<MapValue>;
+
+ public:
+  template <typename... Args>
+  MOZ_ALWAYS_INLINE MOZ_MUST_USE bool add(typename Base::AddPtr& p,
+                                          const TaggedParserAtomIndex& key,
+                                          Args&&... args) {
+    return Base::add(p, TrivialTaggedParserAtomIndex::from(key),
+                     std::forward<Args>(args)...);
+  }
+
+  MOZ_ALWAYS_INLINE
+  typename Base::Ptr lookup(const TaggedParserAtomIndex& l) {
+    return Base::lookup(TrivialTaggedParserAtomIndex::from(l));
+  }
+
+  MOZ_ALWAYS_INLINE
+  typename Base::AddPtr lookupForAdd(const TaggedParserAtomIndex& l) {
+    return Base::lookupForAdd(TrivialTaggedParserAtomIndex::from(l));
   }
 };
-
-template <typename MapValue>
-using RecyclableNameMap =
-    InlineMap<const ParserAtom*, RecyclableAtomMapValueWrapper<MapValue>, 24,
-              NameMapHasher, SystemAllocPolicy>;
 
 using DeclaredNameMap = RecyclableNameMap<DeclaredNameInfo>;
 using NameLocationMap = RecyclableNameMap<NameLocation>;

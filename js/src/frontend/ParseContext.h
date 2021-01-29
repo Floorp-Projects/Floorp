@@ -14,6 +14,7 @@
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/NameAnalysisTypes.h"  // DeclaredNameInfo
 #include "frontend/NameCollections.h"
+#include "frontend/ParserAtom.h"  // ParserAtom, ParserName, TaggedParserAtomIndex
 #include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "frontend/SharedContext.h"
 #include "frontend/UsedNameTracker.h"
@@ -137,7 +138,7 @@ class ParseContext : public Nestable<ParseContext> {
     explicit inline Scope(JSContext* cx, ParseContext* pc,
                           UsedNameTracker& usedNames);
 
-    void dump(ParseContext* pc);
+    void dump(ParseContext* pc, ParserBase* parser);
 
     uint32_t id() const { return id_; }
 
@@ -158,16 +159,16 @@ class ParseContext : public Nestable<ParseContext> {
       return uint32_t(count);
     }
 
-    DeclaredNamePtr lookupDeclaredName(const ParserAtom* name) {
+    DeclaredNamePtr lookupDeclaredName(TaggedParserAtomIndex name) {
       return declared_->lookup(name);
     }
 
-    AddDeclaredNamePtr lookupDeclaredNameForAdd(const ParserAtom* name) {
+    AddDeclaredNamePtr lookupDeclaredNameForAdd(TaggedParserAtomIndex name) {
       return declared_->lookupForAdd(name);
     }
 
     MOZ_MUST_USE bool addDeclaredName(ParseContext* pc, AddDeclaredNamePtr& p,
-                                      const ParserAtom* name,
+                                      TaggedParserAtomIndex name,
                                       DeclarationKind kind, uint32_t pos,
                                       ClosedOver closedOver = ClosedOver::No) {
       return maybeReportOOM(
@@ -260,7 +261,7 @@ class ParseContext : public Nestable<ParseContext> {
 
       explicit operator bool() const { return !done(); }
 
-      const ParserAtom* name() {
+      TaggedParserAtomIndex name() {
         MOZ_ASSERT(!done());
         return declaredRange_.front().key();
       }
@@ -558,9 +559,10 @@ class ParseContext : public Nestable<ParseContext> {
                      mozilla::Maybe<DeclarationKind>* redeclaredKind,
                      uint32_t* prevPos);
 
-  bool hasUsedName(const UsedNameTracker& usedNames, const ParserName* name);
+  bool hasUsedName(const UsedNameTracker& usedNames,
+                   TaggedParserAtomIndex name);
   bool hasUsedFunctionSpecialName(const UsedNameTracker& usedNames,
-                                  const ParserName* name);
+                                  TaggedParserAtomIndex name);
 
   bool declareFunctionThis(const UsedNameTracker& usedNames,
                            bool canSkipLazyClosedOverBindings);
