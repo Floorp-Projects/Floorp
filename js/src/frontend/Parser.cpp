@@ -5069,7 +5069,8 @@ GeneralParser<ParseHandler, Unit>::importDeclarationOrImportExpr(
 template <typename Unit>
 bool Parser<FullParseHandler, Unit>::checkExportedName(
     const ParserAtom* exportName) {
-  if (!pc_->sc()->asModuleContext()->builder.hasExportedName(exportName)) {
+  if (!pc_->sc()->asModuleContext()->builder.hasExportedName(
+          exportName->toIndex())) {
     return true;
   }
 

@@ -268,6 +268,7 @@ class MOZ_STACK_CLASS ParserSharedBase {
 
  public:
   CompilationStencil& getCompilationStencil() { return stencil_; }
+  CompilationState& getCompilationState() { return compilationState_; }
 
   LifoAlloc& stencilAlloc() { return stencil_.alloc; }
 
