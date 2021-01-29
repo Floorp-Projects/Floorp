@@ -35,8 +35,8 @@
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
-#include "frontend/ParserAtom.h"  // ParserAtom, ParserAtomsTable, TaggedParserAtomIndex
-#include "frontend/SharedContext.h"                // TopLevelFunction
+#include "frontend/ParserAtom.h"     // ParserAtomsTable, TaggedParserAtomIndex
+#include "frontend/SharedContext.h"  // TopLevelFunction
 #include "frontend/TaggedParserAtomIndexHasher.h"  // TaggedParserAtomIndexHasher
 #include "gc/Policy.h"
 #include "js/BuildId.h"               // JS::BuildIdCharVector
@@ -1395,13 +1395,12 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
 
     auto AddMathFunction = [this](const char* name,
                                   AsmJSMathBuiltinFunction func) {
-      const ParserAtom* atom =
-          parserAtoms_.internAscii(cx_, name, strlen(name));
+      auto atom = parserAtoms_.internAscii(cx_, name, strlen(name));
       if (!atom) {
         return false;
       }
       MathBuiltin builtin(func);
-      return this->standardLibraryMathNames_.putNew(atom->toIndex(), builtin);
+      return this->standardLibraryMathNames_.putNew(atom, builtin);
     };
 
     for (const auto& info : functions) {
@@ -1425,13 +1424,12 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
     };
 
     auto AddMathConstant = [this](const char* name, double cst) {
-      const ParserAtom* atom =
-          parserAtoms_.internAscii(cx_, name, strlen(name));
+      auto atom = parserAtoms_.internAscii(cx_, name, strlen(name));
       if (!atom) {
         return false;
       }
       MathBuiltin builtin(cst);
-      return this->standardLibraryMathNames_.putNew(atom->toIndex(), builtin);
+      return this->standardLibraryMathNames_.putNew(atom, builtin);
     };
 
     for (const auto& info : constants) {
