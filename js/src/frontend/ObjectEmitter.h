@@ -17,7 +17,7 @@
 #include "frontend/EmitterScope.h"    // EmitterScope
 #include "frontend/NameOpEmitter.h"   // NameOpEmitter
 #include "frontend/ParseNode.h"       // AccessorType
-#include "frontend/ParserAtom.h"      // ParserAtom, TaggedParserAtomIndex
+#include "frontend/ParserAtom.h"      // TaggedParserAtomIndex
 #include "frontend/TDZCheckCache.h"   // TDZCheckCache
 #include "vm/BytecodeUtil.h"          // JSOp
 #include "vm/NativeObject.h"          // PlainObject
@@ -234,7 +234,8 @@ class MOZ_STACK_CLASS PropertyEmitter {
 
   // @param key
   //        Property key
-  MOZ_MUST_USE bool emitInit(AccessorType accessorType, const ParserAtom* key);
+  MOZ_MUST_USE bool emitInit(AccessorType accessorType,
+                             TaggedParserAtomIndex key);
 
   MOZ_MUST_USE bool emitInitIndexOrComputed(AccessorType accessorType);
 
@@ -246,7 +247,7 @@ class MOZ_STACK_CLASS PropertyEmitter {
   //        Opcode for initializing property
   // @param key
   //        Atom of the property if the property key is not computed
-  MOZ_MUST_USE bool emitInit(JSOp op, const ParserAtom* key);
+  MOZ_MUST_USE bool emitInit(JSOp op, TaggedParserAtomIndex key);
   MOZ_MUST_USE bool emitInitIndexOrComputed(JSOp op);
 
   MOZ_MUST_USE bool emitPopClassConstructor();

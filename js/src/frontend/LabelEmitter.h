@@ -13,7 +13,7 @@
 #include "frontend/BytecodeControlStructures.h"  // LabelControl
 #include "frontend/BytecodeOffset.h"             // BytecodeOffset
 #include "frontend/JumpList.h"                   // JumpList
-#include "frontend/ParserAtom.h"                 // ParserAtom
+#include "frontend/ParserAtom.h"                 // TaggedParserAtomIndex
 #include "js/TypeDecls.h"                        // JSAtom
 
 namespace js {
@@ -58,7 +58,7 @@ class MOZ_STACK_CLASS LabelEmitter {
  public:
   explicit LabelEmitter(BytecodeEmitter* bce) : bce_(bce) {}
 
-  void emitLabel(const ParserAtom* name);
+  void emitLabel(TaggedParserAtomIndex name);
   MOZ_MUST_USE bool emitEnd();
 };
 

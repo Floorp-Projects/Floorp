@@ -14,7 +14,7 @@
 
 #include "frontend/ElemOpEmitter.h"
 #include "frontend/IfEmitter.h"
-#include "frontend/ParserAtom.h"  // ParserAtom
+#include "frontend/ParserAtom.h"  // TaggedParserAtomIndex
 #include "frontend/PropOpEmitter.h"
 #include "frontend/ValueUsage.h"
 #include "js/TypeDecls.h"
@@ -265,7 +265,7 @@ class MOZ_STACK_CLASS CallOrNewEmitter {
   }
 
  public:
-  MOZ_MUST_USE bool emitNameCallee(const ParserAtom* name);
+  MOZ_MUST_USE bool emitNameCallee(TaggedParserAtomIndex name);
   MOZ_MUST_USE PropOpEmitter& prepareForPropCallee(bool isSuperProp);
   MOZ_MUST_USE ElemOpEmitter& prepareForElemCallee(bool isSuperElem,
                                                    bool isPrivateElem);
