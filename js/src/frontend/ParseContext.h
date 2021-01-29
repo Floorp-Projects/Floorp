@@ -14,7 +14,7 @@
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/NameAnalysisTypes.h"  // DeclaredNameInfo, FunctionBoxVector
 #include "frontend/NameCollections.h"
-#include "frontend/ParserAtom.h"  // ParserAtom, ParserName, TaggedParserAtomIndex
+#include "frontend/ParserAtom.h"   // TaggedParserAtomIndex
 #include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "frontend/SharedContext.h"
 #include "frontend/UsedNameTracker.h"
@@ -75,13 +75,13 @@ class ParseContext : public Nestable<ParseContext> {
   };
 
   class LabelStatement : public Statement {
-    const ParserAtom* label_;
+    TaggedParserAtomIndex label_;
 
    public:
-    LabelStatement(ParseContext* pc, const ParserAtom* label)
+    LabelStatement(ParseContext* pc, TaggedParserAtomIndex label)
         : Statement(pc, StatementKind::Label), label_(label) {}
 
-    const ParserAtom* label() const { return label_; }
+    TaggedParserAtomIndex label() const { return label_; }
   };
 
   struct ClassStatement : public Statement {
@@ -451,14 +451,14 @@ class ParseContext : public Nestable<ParseContext> {
   // Return Err(true) if we have encountered at least one loop,
   // Err(false) otherwise.
   MOZ_MUST_USE inline JS::Result<Ok, BreakStatementError> checkBreakStatement(
-      const ParserName* label);
+      TaggedParserAtomIndex label);
 
   enum class ContinueStatementError {
     NotInALoop,
     LabelNotFound,
   };
   MOZ_MUST_USE inline JS::Result<Ok, ContinueStatementError>
-  checkContinueStatement(const ParserName* label);
+  checkContinueStatement(TaggedParserAtomIndex label);
 
   // True if we are at the topmost level of a entire script or function body.
   // For example, while parsing this code we would encounter f1 and f2 at
@@ -554,8 +554,8 @@ class ParseContext : public Nestable<ParseContext> {
   bool computeAnnexBAppliesToLexicalFunctionInInnermostScope(
       FunctionBox* funbox, ParserBase* parser, bool* annexBApplies);
 
-  bool tryDeclareVar(const ParserName* name, DeclarationKind kind,
-                     uint32_t beginPos,
+  bool tryDeclareVar(TaggedParserAtomIndex name, ParserBase* parser,
+                     DeclarationKind kind, uint32_t beginPos,
                      mozilla::Maybe<DeclarationKind>* redeclaredKind,
                      uint32_t* prevPos);
 
@@ -573,17 +573,18 @@ class ParseContext : public Nestable<ParseContext> {
 
  private:
   MOZ_MUST_USE bool isVarRedeclaredInInnermostScope(
-      const ParserName* name, DeclarationKind kind,
+      TaggedParserAtomIndex name, ParserBase* parser, DeclarationKind kind,
       mozilla::Maybe<DeclarationKind>* out);
 
-  MOZ_MUST_USE bool isVarRedeclaredInEval(const ParserName* name,
+  MOZ_MUST_USE bool isVarRedeclaredInEval(TaggedParserAtomIndex name,
+                                          ParserBase* parser,
                                           DeclarationKind kind,
                                           mozilla::Maybe<DeclarationKind>* out);
 
   enum DryRunOption { NotDryRun, DryRunInnermostScopeOnly };
   template <DryRunOption dryRunOption>
-  bool tryDeclareVarHelper(const ParserName* name, DeclarationKind kind,
-                           uint32_t beginPos,
+  bool tryDeclareVarHelper(TaggedParserAtomIndex name, ParserBase* parser,
+                           DeclarationKind kind, uint32_t beginPos,
                            mozilla::Maybe<DeclarationKind>* redeclaredKind,
                            uint32_t* prevPos);
 };
