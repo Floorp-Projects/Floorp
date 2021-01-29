@@ -96,13 +96,18 @@ static bool StringToInstrumentationKind(JSContext* cx, HandleString str,
 }
 
 /* static */
-const frontend::ParserAtom* RealmInstrumentation::getInstrumentationKindName(
+frontend::TaggedParserAtomIndex
+RealmInstrumentation::getInstrumentationKindName(
     JSContext* cx, frontend::ParserAtomsTable& parserAtoms,
     InstrumentationKind kind) {
   for (size_t i = 0; i < std::size(instrumentationNames); i++) {
     if (kind == (InstrumentationKind)(1 << i)) {
-      return parserAtoms.internAscii(cx, instrumentationNames[i],
-                                     strlen(instrumentationNames[i]));
+      const frontend::ParserAtom* atom = parserAtoms.internAscii(
+          cx, instrumentationNames[i], strlen(instrumentationNames[i]));
+      if (!atom) {
+        return frontend::TaggedParserAtomIndex::null();
+      }
+      return atom->toIndex();
     }
   }
   MOZ_CRASH("Unexpected instrumentation kind");

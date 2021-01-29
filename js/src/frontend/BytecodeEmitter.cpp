@@ -10519,13 +10519,13 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitInstrumentationSlow(
   }
   //            [stack] CALLBACK UNDEFINED
 
-  const ParserAtom* atom = RealmInstrumentation::getInstrumentationKindName(
+  auto atom = RealmInstrumentation::getInstrumentationKindName(
       cx, compilationState.parserAtoms, kind);
   if (!atom) {
     return false;
   }
 
-  if (!emitAtomOp(JSOp::String, atom->toIndex())) {
+  if (!emitAtomOp(JSOp::String, atom)) {
     return false;
   }
   //            [stack] CALLBACK UNDEFINED KIND
