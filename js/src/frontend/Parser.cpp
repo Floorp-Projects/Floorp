@@ -7473,12 +7473,11 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
         default:
           MOZ_CRASH("Invalid private method accessor type");
       }
-      const ParserAtom* storedMethodAtom = storedMethodName.finishParserAtom(
+      auto storedMethodProp = storedMethodName.finishParserAtom(
           this->compilationState_.parserAtoms);
-      if (!storedMethodAtom) {
+      if (!storedMethodProp) {
         return false;
       }
-      TaggedParserAtomIndex storedMethodProp = storedMethodAtom->toIndex();
       if (!noteDeclaredName(storedMethodProp, DeclarationKind::Const, pos())) {
         return false;
       }

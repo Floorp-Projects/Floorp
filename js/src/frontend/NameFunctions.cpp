@@ -224,7 +224,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
    * assign to the function's displayAtom field.
    */
   MOZ_MUST_USE bool resolveFun(FunctionNode* funNode,
-                               const ParserAtom** retId) {
+                               TaggedParserAtomIndex* retId) {
     MOZ_ASSERT(funNode != nullptr);
 
     FunctionBox* funbox = funNode->funbox();
@@ -232,12 +232,12 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
     MOZ_ASSERT(buf_.empty());
     auto resetBuf = mozilla::MakeScopeExit([&] { buf_.clear(); });
 
-    *retId = nullptr;
+    *retId = TaggedParserAtomIndex::null();
 
     // If the function already has a name, use that.
     if (funbox->displayAtom()) {
       if (!prefix_) {
-        *retId = parserAtoms_.getParserAtom(funbox->displayAtom());
+        *retId = funbox->displayAtom();
         return true;
       }
       if (!buf_.append(prefix_) || !buf_.append('/') ||
@@ -329,7 +329,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
     // Skip assigning the guessed name if the function has a (dynamically)
     // computed inferred name.
     if (!funNode->isDirectRHSAnonFunction()) {
-      funbox->setGuessedAtom((*retId)->toIndex());
+      funbox->setGuessedAtom(*retId);
     }
     return true;
   }
@@ -347,7 +347,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
  public:
   MOZ_MUST_USE bool visitFunction(FunctionNode* pn) {
     const ParserAtom* savedPrefix = prefix_;
-    const ParserAtom* newPrefix = nullptr;
+    TaggedParserAtomIndex newPrefix;
     if (!resolveFun(pn, &newPrefix)) {
       return false;
     }
@@ -357,7 +357,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
     // contribute anything to the namespace, so don't bother updating
     // the prefix to whatever was returned.
     if (!isDirectCall(nparents_ - 2, pn)) {
-      prefix_ = newPrefix;
+      prefix_ = parserAtoms_.getParserAtom(newPrefix);
     }
 
     bool ok = Base::visitFunction(pn);

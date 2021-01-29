@@ -154,30 +154,30 @@ JSAtom* StringBuffer::finishAtom() {
   return atom;
 }
 
-const frontend::ParserAtom* StringBuffer::finishParserAtom(
+frontend::TaggedParserAtomIndex StringBuffer::finishParserAtom(
     frontend::ParserAtomsTable& parserAtoms) {
   size_t len = length();
   if (len == 0) {
-    return cx_->parserNames().empty;
+    return frontend::TaggedParserAtomIndex::WellKnown::empty();
   }
 
   if (isLatin1()) {
     const frontend::ParserAtom* result =
         parserAtoms.internLatin1(cx_, latin1Chars().begin(), len);
     if (!result) {
-      return nullptr;
+      return frontend::TaggedParserAtomIndex::null();
     }
     latin1Chars().clear();
-    return result;
+    return result->toIndex();
   }
 
   const frontend::ParserAtom* result =
       parserAtoms.internChar16(cx_, twoByteChars().begin(), len);
   if (!result) {
-    return nullptr;
+    return frontend::TaggedParserAtomIndex::null();
   }
   twoByteChars().clear();
-  return result;
+  return result->toIndex();
 }
 
 bool js::ValueToStringBufferSlow(JSContext* cx, const Value& arg,
