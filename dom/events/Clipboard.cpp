@@ -22,6 +22,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "nsStringStream.h"
 #include "nsITransferable.h"
 #include "nsArrayUtils.h"
 #include "nsNetUtil.h"
@@ -160,17 +161,22 @@ NS_IMPL_ISUPPORTS0(BlobTextHandler)
 
 RefPtr<NativeEntryPromise> GetStringNativeEntry(
     const ClipboardItem::ItemEntry& entry) {
-  RefPtr<BlobTextHandler> handler = new BlobTextHandler(entry.mType);
+  if (entry.mData.IsString()) {
+    RefPtr<nsVariantCC> variant = new nsVariantCC();
+    variant->SetAsAString(entry.mData.GetAsString());
+    NativeEntry native(entry.mType, variant);
+    return NativeEntryPromise::CreateAndResolve(native, __func__);
+  }
 
+  RefPtr<BlobTextHandler> handler = new BlobTextHandler(entry.mType);
   IgnoredErrorResult ignored;
-  RefPtr<Promise> promise = entry.mBlob->Text(ignored);
+  RefPtr<Promise> promise = entry.mData.GetAsBlob()->Text(ignored);
   if (ignored.Failed()) {
     CopyableErrorResult rv;
     rv.ThrowUnknownError("Unable to read blob as text");
     return NativeEntryPromise::CreateAndReject(rv, __func__);
   }
   promise->AppendNativeHandler(handler);
-
   return handler->Promise();
 }
 
@@ -209,9 +215,15 @@ NS_IMPL_ISUPPORTS(ImageDecodeCallback, imgIContainerCallback)
 
 RefPtr<NativeEntryPromise> GetImageNativeEntry(
     const ClipboardItem::ItemEntry& entry) {
+  if (entry.mData.IsString()) {
+    CopyableErrorResult rv;
+    rv.ThrowTypeError("Can not use string for image data");
+    return NativeEntryPromise::CreateAndReject(rv, __func__);
+  }
+
   IgnoredErrorResult ignored;
   nsCOMPtr<nsIInputStream> stream;
-  entry.mBlob->CreateInputStream(getter_AddRefs(stream), ignored);
+  entry.mData.GetAsBlob()->CreateInputStream(getter_AddRefs(stream), ignored);
   if (ignored.Failed()) {
     CopyableErrorResult rv;
     rv.ThrowUnknownError("Unable to read blob as image");
@@ -219,11 +231,9 @@ RefPtr<NativeEntryPromise> GetImageNativeEntry(
   }
 
   RefPtr<ImageDecodeCallback> callback = new ImageDecodeCallback();
-
   nsCOMPtr<imgITools> imgtool = do_CreateInstance("@mozilla.org/image/tools;1");
   imgtool->DecodeImageAsync(stream, NS_ConvertUTF16toUTF8(entry.mType),
                             callback, GetMainThreadSerialEventTarget());
-
   return callback->Promise();
 }
 
@@ -363,8 +373,7 @@ already_AddRefed<Promise> Clipboard::WriteText(const nsAString& aData,
   nsTArray<ClipboardItem::ItemEntry> items;
   ClipboardItem::ItemEntry* entry = items.AppendElement();
   entry->mType = NS_LITERAL_STRING_FROM_CSTRING(kTextMime);
-  entry->mBlob = Blob::CreateStringBlob(
-      GetOwnerGlobal(), NS_ConvertUTF16toUTF8(aData), entry->mType);
+  entry->mData.SetAsString() = aData;
 
   nsTArray<OwningNonNull<ClipboardItem>> sequence;
   RefPtr<ClipboardItem> item = new ClipboardItem(

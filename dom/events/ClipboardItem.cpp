@@ -13,11 +13,11 @@ namespace mozilla::dom {
 void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                                  ClipboardItem::ItemEntry& aField,
                                  const char* aName, uint32_t aFlags = 0) {
-  ImplCycleCollectionTraverse(aCallback, aField.mBlob, aName, aFlags);
+  ImplCycleCollectionTraverse(aCallback, aField.mData, aName, aFlags);
 }
 
 void ImplCycleCollectionUnlink(ClipboardItem::ItemEntry& aField) {
-  ImplCycleCollectionUnlink(aField.mBlob);
+  ImplCycleCollectionUnlink(aField.mData);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ClipboardItem, mOwner, mItems)
@@ -34,7 +34,7 @@ ClipboardItem::ClipboardItem(nsISupports* aOwner,
 // static
 already_AddRefed<ClipboardItem> ClipboardItem::Constructor(
     const GlobalObject& aGlobal,
-    const Record<nsString, OwningNonNull<Blob>>& aItems,
+    const Record<nsString, OwningStringOrBlob>& aItems,
     const ClipboardItemOptions& aOptions, ErrorResult& aRv) {
   if (aItems.Entries().IsEmpty()) {
     aRv.ThrowTypeError("At least one entry required");
@@ -45,7 +45,7 @@ already_AddRefed<ClipboardItem> ClipboardItem::Constructor(
   for (const auto& entry : aItems.Entries()) {
     ItemEntry* item = items.AppendElement();
     item->mType = entry.mKey;
-    item->mBlob = entry.mValue;
+    item->mData = entry.mValue;
   }
 
   RefPtr<ClipboardItem> item = new ClipboardItem(
@@ -69,7 +69,13 @@ already_AddRefed<Promise> ClipboardItem::GetType(const nsAString& aType,
 
   for (const auto& item : mItems) {
     if (item.mType == aType) {
-      p->MaybeResolve(item.mBlob);
+      if (item.mData.IsBlob()) {
+        p->MaybeResolve(item.mData);
+      } else {
+        NS_ConvertUTF16toUTF8 string(item.mData.GetAsString());
+        RefPtr<Blob> blob = Blob::CreateStringBlob(global, string, item.mType);
+        p->MaybeResolve(blob);
+      }
       return p.forget();
     }
   }
