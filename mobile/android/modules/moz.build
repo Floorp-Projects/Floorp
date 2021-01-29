@@ -8,10 +8,7 @@
 with Files("**"):
     BUG_COMPONENT = ("GeckoView", "General")
 
-DIRS += [
-    "geckoview",
-    "test",
-]
+DIRS += ["geckoview"]
 
 EXTRA_JS_MODULES += [
     "dbg-browser-actors.js",
