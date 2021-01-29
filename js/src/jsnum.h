@@ -13,19 +13,13 @@
 
 #include "NamespaceImports.h"
 
+#include "frontend/ParserAtom.h"  // ParserAtomsTable, TaggedParserAtomIndex
 #include "js/Conversions.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 
 #include "vm/StringType.h"
 
 namespace js {
-
-namespace frontend {
-
-class ParserAtomsTable;
-class ParserAtom;
-
-}  // namespace frontend
 
 class GlobalObject;
 class StringBuffer;
@@ -50,7 +44,7 @@ extern JSString* NumberToStringPure(JSContext* cx, double d);
 
 extern JSAtom* NumberToAtom(JSContext* cx, double d);
 
-const frontend::ParserAtom* NumberToParserAtom(
+frontend::TaggedParserAtomIndex NumberToParserAtom(
     JSContext* cx, frontend::ParserAtomsTable& parserAtoms, double d);
 
 template <AllowGC allowGC>
@@ -60,7 +54,7 @@ extern JSLinearString* Int32ToStringPure(JSContext* cx, int32_t i);
 
 extern JSAtom* Int32ToAtom(JSContext* cx, int32_t si);
 
-const frontend::ParserAtom* Int32ToParserAtom(
+frontend::TaggedParserAtomIndex Int32ToParserAtom(
     JSContext* cx, frontend::ParserAtomsTable& parserAtoms, int32_t si);
 
 // ES6 15.7.3.12

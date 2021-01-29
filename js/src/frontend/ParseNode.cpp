@@ -429,8 +429,7 @@ void LexicalScopeNode::dumpImpl(ParserBase* parser, GenericPrinter& out,
 
 TaggedParserAtomIndex NumericLiteral::toAtom(
     JSContext* cx, ParserAtomsTable& parserAtoms) const {
-  const auto* atom = NumberToParserAtom(cx, parserAtoms, value());
-  return atom ? atom->toIndex() : TaggedParserAtomIndex::null();
+  return NumberToParserAtom(cx, parserAtoms, value());
 }
 
 RegExpObject* RegExpStencil::createRegExp(

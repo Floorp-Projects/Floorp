@@ -26,7 +26,7 @@
 #include "jstypes.h"
 
 #include "double-conversion/double-conversion.h"
-#include "frontend/ParserAtom.h"  // frontend::ParserAtom, frontend::ParserAtomsTable
+#include "frontend/ParserAtom.h"  // frontend::{ParserAtom, ParserAtomsTable, TaggedParserAtomIndex}
 #include "jit/InlinableNatives.h"
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
@@ -861,7 +861,7 @@ JSAtom* js::Int32ToAtom(JSContext* cx, int32_t si) {
   return atom;
 }
 
-const frontend::ParserAtom* js::Int32ToParserAtom(
+frontend::TaggedParserAtomIndex js::Int32ToParserAtom(
     JSContext* cx, frontend::ParserAtomsTable& parserAtoms, int32_t si) {
   char buffer[JSFatInlineString::MAX_LENGTH_TWO_BYTE + 1];
   size_t length;
@@ -873,7 +873,11 @@ const frontend::ParserAtom* js::Int32ToParserAtom(
     indexValue.emplace(si);
   }
 
-  return parserAtoms.internAscii(cx, start, length);
+  const auto* atom = parserAtoms.internAscii(cx, start, length);
+  if (!atom) {
+    return frontend::TaggedParserAtomIndex::null();
+  }
+  return atom->toIndex();
 }
 
 /* Returns a non-nullptr pointer to inside cbuf.  */
@@ -1669,7 +1673,7 @@ JSAtom* js::NumberToAtom(JSContext* cx, double d) {
   return atom;
 }
 
-const frontend::ParserAtom* js::NumberToParserAtom(
+frontend::TaggedParserAtomIndex js::NumberToParserAtom(
     JSContext* cx, frontend::ParserAtomsTable& parserAtoms, double d) {
   int32_t si;
   if (NumberEqualsInt32(d, &si)) {
@@ -1680,13 +1684,17 @@ const frontend::ParserAtom* js::NumberToParserAtom(
   char* numStr = FracNumberToCString(cx, &cbuf, d);
   if (!numStr) {
     ReportOutOfMemory(cx);
-    return nullptr;
+    return frontend::TaggedParserAtomIndex::null();
   }
   MOZ_ASSERT(!cbuf.dbuf && numStr >= cbuf.sbuf &&
              numStr < cbuf.sbuf + cbuf.sbufSize);
 
   size_t length = strlen(numStr);
-  return parserAtoms.internAscii(cx, numStr, length);
+  const auto* atom = parserAtoms.internAscii(cx, numStr, length);
+  if (!atom) {
+    return frontend::TaggedParserAtomIndex::null();
+  }
+  return atom->toIndex();
 }
 
 JSLinearString* js::IndexToString(JSContext* cx, uint32_t index) {
