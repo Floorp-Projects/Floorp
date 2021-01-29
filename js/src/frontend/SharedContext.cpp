@@ -240,8 +240,9 @@ FunctionBox::FunctionBox(JSContext* cx, SourceExtent extent,
                          CompilationStencil& stencil,
                          CompilationState& compilationState,
                          Directives directives, GeneratorKind generatorKind,
-                         FunctionAsyncKind asyncKind, const ParserAtom* atom,
-                         FunctionFlags flags, ScriptIndex index)
+                         FunctionAsyncKind asyncKind,
+                         TaggedParserAtomIndex atom, FunctionFlags flags,
+                         ScriptIndex index)
     : SuspendableContext(cx, Kind::FunctionBox, stencil, directives, extent,
                          generatorKind == GeneratorKind::Generator,
                          asyncKind == FunctionAsyncKind::AsyncFunction),
@@ -455,8 +456,8 @@ void FunctionBox::copyFunctionFields(ScriptStencil& script) {
   MOZ_ASSERT(!isFunctionFieldCopiedToStencil);
 
   if (atom_) {
-    atom_->markUsedByStencil();
-    script.functionAtom = atom_->toIndex();
+    compilationState_.parserAtoms.markUsedByStencil(atom_);
+    script.functionAtom = atom_;
   }
   script.functionFlags = flags_;
   if (enclosingScopeIndex_) {
@@ -510,8 +511,8 @@ void FunctionBox::copyUpdatedEnclosingScopeIndex() {
 void FunctionBox::copyUpdatedAtomAndFlags() {
   ScriptStencil& script = functionStencil();
   if (atom_) {
-    atom_->markUsedByStencil();
-    script.functionAtom = atom_->toIndex();
+    compilationState_.parserAtoms.markUsedByStencil(atom_);
+    script.functionAtom = atom_;
   }
   script.functionFlags = flags_;
 }

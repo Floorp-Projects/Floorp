@@ -180,7 +180,8 @@ class ParseContext : public Nestable<ParseContext> {
 
     // Check if the candidate function boxes for Annex B.3.3 should in
     // fact get Annex B semantics. Checked on Scope exit.
-    MOZ_MUST_USE bool propagateAndMarkAnnexBFunctionBoxes(ParseContext* pc);
+    MOZ_MUST_USE bool propagateAndMarkAnnexBFunctionBoxes(ParseContext* pc,
+                                                          ParserBase* parser);
 
     // Add and remove catch parameter names. Used to implement the odd
     // semantics of catch bodies.
@@ -551,7 +552,7 @@ class ParseContext : public Nestable<ParseContext> {
   uint32_t scriptId() const { return scriptId_; }
 
   bool computeAnnexBAppliesToLexicalFunctionInInnermostScope(
-      FunctionBox* funbox, bool* annexBApplies);
+      FunctionBox* funbox, ParserBase* parser, bool* annexBApplies);
 
   bool tryDeclareVar(const ParserName* name, DeclarationKind kind,
                      uint32_t beginPos,

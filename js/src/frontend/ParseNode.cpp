@@ -465,7 +465,7 @@ bool js::frontend::IsAnonymousFunctionDefinition(ParseNode* pn) {
   // 14.4.8 (Generatoression).
   // 14.6.8 (AsyncFunctionExpression)
   if (pn->is<FunctionNode>() &&
-      !pn->as<FunctionNode>().funbox()->explicitName()) {
+      !pn->as<FunctionNode>().funbox()->explicitNameIndex()) {
     return true;
   }
 
