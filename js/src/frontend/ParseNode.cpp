@@ -443,7 +443,7 @@ RegExpObject* RegExpStencil::createRegExpAndEnsureAtom(
     BaseCompilationStencil& stencil) const {
   const ParserAtom* parserAtom = stencil.getParserAtomAt(cx, atom_);
   MOZ_ASSERT(parserAtom);
-  RootedAtom atom(cx, parserAtom->toJSAtom(cx, atomCache));
+  RootedAtom atom(cx, parserAtom->toJSAtom(cx, atom_, atomCache));
   if (!atom) {
     return nullptr;
   }
