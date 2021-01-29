@@ -243,10 +243,8 @@ bool ParserAtomEntry::isIndex(uint32_t* indexp) const {
 }
 
 bool ParserAtomEntry::isPrivateName() const {
-  return length() > 0 &&
-         (hasLatin1Chars()
-             ? latin1Chars()[0] == '#'
-             : twoByteChars()[0] == '#');
+  return length() > 0 && (hasLatin1Chars() ? latin1Chars()[0] == '#'
+                                           : twoByteChars()[0] == '#');
 }
 
 JSAtom* ParserAtomEntry::toJSAtom(JSContext* cx,
@@ -700,6 +698,10 @@ const ParserAtom* ParserAtomsTable::getParserAtom(ParserAtomIndex index) const {
 const ParserAtom* ParserAtomsTable::getParserAtom(
     TaggedParserAtomIndex index) const {
   return GetParserAtom(this, index);
+}
+
+void ParserAtomsTable::markUsedByStencil(TaggedParserAtomIndex index) const {
+  GetParserAtom(this, index)->markUsedByStencil();
 }
 
 bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
