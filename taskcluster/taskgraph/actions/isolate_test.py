@@ -253,7 +253,7 @@ def isolate_test_failures(parameters, graph_config, input, task_group_id, task_i
     }
 
     task_definition = resolve_task_references(
-        pre_task.label, pre_task.task, dependencies
+        pre_task.label, pre_task.task, task_id, decision_task_id, dependencies
     )
     task_definition.setdefault("dependencies", []).extend(six.itervalues(dependencies))
 

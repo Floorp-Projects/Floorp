@@ -136,7 +136,7 @@ def handle_custom_retrigger(parameters, graph_config, input, task_group_id, task
         for name, label in six.iteritems(pre_task.dependencies)
     }
     new_task_definition = resolve_task_references(
-        pre_task.label, pre_task.task, dependencies
+        pre_task.label, pre_task.task, task_id, decision_task_id, dependencies
     )
     new_task_definition.setdefault("dependencies", []).extend(
         six.itervalues(dependencies)
