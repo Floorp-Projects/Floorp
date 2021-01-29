@@ -226,7 +226,7 @@ bool ParseContext::Scope::propagateAndMarkAnnexBFunctionBoxes(
       if (annexBApplies) {
         const ParserName* name =
             parser->getCompilationState()
-                .parserAtoms.getParserAtom(funbox->explicitNameIndex())
+                .parserAtoms.getParserAtom(funbox->explicitName())
                 ->asName();
         if (!pc->tryDeclareVar(
                 name, DeclarationKind::VarForAnnexBLexicalFunction,
@@ -352,11 +352,11 @@ bool ParseContext::init() {
         return false;
       }
       AddDeclaredNamePtr p = namedLambdaScope_->lookupDeclaredNameForAdd(
-          functionBox()->explicitNameIndex());
+          functionBox()->explicitName());
       MOZ_ASSERT(!p);
       if (!namedLambdaScope_->addDeclaredName(
-              this, p, functionBox()->explicitNameIndex(),
-              DeclarationKind::Const, DeclaredNameInfo::npos)) {
+              this, p, functionBox()->explicitName(), DeclarationKind::Const,
+              DeclaredNameInfo::npos)) {
         return false;
       }
     }
@@ -383,7 +383,7 @@ bool ParseContext::computeAnnexBAppliesToLexicalFunctionInInnermostScope(
 
   const ParserName* name =
       parser->getCompilationState()
-          .parserAtoms.getParserAtom(funbox->explicitNameIndex())
+          .parserAtoms.getParserAtom(funbox->explicitName())
           ->asName();
   Maybe<DeclarationKind> redeclaredKind;
   if (!isVarRedeclaredInInnermostScope(

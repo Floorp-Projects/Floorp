@@ -3468,8 +3468,8 @@ bool ASTSerializer::function(FunctionNode* funNode, ASTType type,
 
   RootedValue id(cx);
   RootedAtom funcAtom(cx);
-  if (funbox->explicitNameIndex()) {
-    funcAtom.set(parser->liftParserAtomToJSAtom(funbox->explicitNameIndex()));
+  if (funbox->explicitName()) {
+    funcAtom.set(parser->liftParserAtomToJSAtom(funbox->explicitName()));
     if (!funcAtom) {
       return false;
     }
