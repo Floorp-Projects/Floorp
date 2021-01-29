@@ -2261,14 +2261,14 @@ inline MarkStack::SlotsOrElementsRange MarkStack::popSlotsOrElementsRange() {
 }
 
 inline bool MarkStack::ensureSpace(size_t count) {
-  if ((topIndex_ + count) <= capacity()) {
+  if (MOZ_LIKELY((topIndex_ + count) <= capacity())) {
     return !js::oom::ShouldFailWithOOM();
   }
 
   return enlarge(count);
 }
 
-bool MarkStack::enlarge(size_t count) {
+MOZ_NEVER_INLINE bool MarkStack::enlarge(size_t count) {
   size_t newCapacity = std::min(maxCapacity_.ref(), capacity() * 2);
   if (newCapacity < capacity() + count) {
     return false;
@@ -2476,10 +2476,10 @@ void GCMarker::setMainStackColor(gc::MarkColor newColor) {
 }
 
 template <typename T>
-void GCMarker::pushTaggedPtr(T* ptr) {
+inline void GCMarker::pushTaggedPtr(T* ptr) {
   checkZone(ptr);
   if (!currentStack().push(ptr)) {
-    delayMarkingChildren(ptr);
+    delayMarkingChildrenOnOOM(ptr);
   }
 }
 
@@ -2494,7 +2494,7 @@ void GCMarker::pushValueRange(JSObject* obj, SlotsOrElementsKind kind,
   }
 
   if (!currentStack().push(obj, kind, start)) {
-    delayMarkingChildren(obj);
+    delayMarkingChildrenOnOOM(obj);
   }
 }
 
@@ -2622,6 +2622,10 @@ void GCMarker::leaveWeakMarkingMode() {
 
   // The gcWeakKeys table is still populated and may be used during a future
   // weak marking mode within this GC.
+}
+
+MOZ_NEVER_INLINE void GCMarker::delayMarkingChildrenOnOOM(Cell* cell) {
+  delayMarkingChildren(cell);
 }
 
 void GCMarker::delayMarkingChildren(Cell* cell) {
