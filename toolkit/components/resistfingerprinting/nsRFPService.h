@@ -62,9 +62,6 @@ struct JSContext;
 template <class KeyClass, class DataType>
 class nsDataHashtable;
 
-// Forward declare LRUCache, defined in nsRFPService.cpp
-class LRUCache;
-
 namespace mozilla {
 class WidgetKeyboardEvent;
 namespace dom {
