@@ -219,7 +219,10 @@ UniqueChars ToPrintableStringImpl(JSContext* cx, mozilla::Range<CharT> str) {
   return sprinter.release();
 }
 
-UniqueChars ParserAtomToPrintableString(JSContext* cx, const ParserAtom* atom) {
+UniqueChars ParserAtomToPrintableString(JSContext* cx,
+                                        ParserAtomsTable& parserAtoms,
+                                        TaggedParserAtomIndex atomIndex) {
+  const ParserAtom* atom = parserAtoms.getParserAtom(atomIndex);
   size_t length = atom->length();
 
   return atom->hasLatin1Chars()

@@ -457,7 +457,9 @@ class ParserName : public ParserAtom {
   ParserName(const ParserName&) = delete;
 };
 
-UniqueChars ParserAtomToPrintableString(JSContext* cx, const ParserAtom* atom);
+UniqueChars ParserAtomToPrintableString(JSContext* cx,
+                                        ParserAtomsTable& parserAtoms,
+                                        TaggedParserAtomIndex atomIndex);
 
 inline ParserName* ParserAtomEntry::asName() {
   MOZ_ASSERT(!isIndex());

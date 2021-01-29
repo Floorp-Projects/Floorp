@@ -1810,8 +1810,8 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
                       TaggedParserAtomIndex name) {
     // This function is invoked without the caller properly rooting its locals.
     gc::AutoSuppressGC suppress(cx_);
-    if (UniqueChars bytes = ParserAtomToPrintableString(
-            cx_, parserAtoms_.getParserAtom(name))) {
+    if (UniqueChars bytes =
+            ParserAtomToPrintableString(cx_, parserAtoms_, name)) {
       failfOffset(offset, fmt, bytes.get());
     }
     return false;
