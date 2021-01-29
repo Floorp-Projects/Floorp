@@ -78,6 +78,13 @@ function createScreenshotDataURL(document, args) {
     ({ top, left, width, height } = getRect(window, args.rawNode, window));
   } else if (args.selector) {
     const node = window.document.querySelector(args.selector);
+    if (!node) {
+      logWarningInPage(
+        L10N.getFormatStr("screenshotNoSelectorMatchWarning", args.selector),
+        window
+      );
+      return Promise.resolve({ data: null });
+    }
     ({ top, left, width, height } = getRect(window, node, window));
   } else {
     left = window.scrollX;
