@@ -233,6 +233,23 @@ struct CompilationInput {
     enclosingScope = lazy->function()->enclosingScope();
   }
 
+  // Returns true if enclosingScope field is provided to init* function,
+  // instead of setting to empty global internally.
+  bool hasNonDefaultEnclosingScope() const {
+    return target == CompilationTarget::StandaloneFunctionInNonSyntacticScope ||
+           target == CompilationTarget::Eval ||
+           target == CompilationTarget::Delazification;
+  }
+
+  // Returns the enclosing scope provided to init* function.
+  // nullptr otherwise.
+  Scope* maybeNonDefaultEnclosingScope() const {
+    if (hasNonDefaultEnclosingScope()) {
+      return enclosingScope;
+    }
+    return nullptr;
+  }
+
   ScriptSource* source() { return source_.get(); }
 
   void setSource(ScriptSource* ss) { return source_.reset(ss); }
@@ -287,7 +304,6 @@ struct MOZ_RAII CompilationState {
                    const JS::ReadOnlyCompileOptions& options,
                    CompilationStencil& stencil,
                    InheritThis inheritThis = InheritThis::No,
-                   Scope* enclosingScope = nullptr,
                    JSObject* enclosingEnv = nullptr);
 
   bool finish(JSContext* cx, CompilationStencil& stencil);
