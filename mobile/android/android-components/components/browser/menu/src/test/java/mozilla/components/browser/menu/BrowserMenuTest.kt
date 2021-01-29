@@ -20,17 +20,14 @@ import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.menu.view.DynamicWidthRecyclerView
 import mozilla.components.concept.menu.MenuStyle
 import mozilla.components.support.test.any
-import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.doNothing
@@ -381,126 +378,6 @@ class BrowserMenuTest {
         verify(popupWindow).showAsDropDown(anchor, 0, screenHeight - contentHeight)
     }
 
-    @Config(qualifiers = "ldltr")
-    @Test
-    fun `showAnchorAtLocation should show the menu with Gravity_START if LTR`() {
-        val containerView = createMockViewWith(y = 0)
-        val anchor = createMockViewWith(y = 0)
-        val popupWindow = spy(PopupWindow())
-        doReturn(Int.MAX_VALUE).`when`(containerView).measuredHeight
-        val captor = argumentCaptor<Int>()
-
-        popupWindow.displayPopup(containerView, anchor, BrowserMenu.Orientation.DOWN)
-
-        verify(popupWindow).showAtLocation(any(), captor.capture(), ArgumentMatchers.anyInt(), ArgumentMatchers.anyInt())
-        assertNotEquals(0, captor.value and Gravity.START)
-    }
-
-    @Config(qualifiers = "ldrtl")
-    @Test
-    fun `showAnchorAtLocation should show the menu with Gravity_END if RTL`() {
-        val containerView = createMockViewWith(y = 0)
-        val anchor = createMockViewWith(y = 0)
-        val popupWindow = spy(PopupWindow())
-        doReturn(Int.MAX_VALUE).`when`(containerView).measuredHeight
-        val captor = argumentCaptor<Int>()
-
-        popupWindow.displayPopup(containerView, anchor, BrowserMenu.Orientation.DOWN)
-
-        verify(popupWindow).showAtLocation(any(), captor.capture(), ArgumentMatchers.anyInt(), ArgumentMatchers.anyInt())
-        assertNotEquals(0, captor.value and Gravity.END)
-    }
-
-    @Test
-    fun `showAnchorAtLocation should show the menu with Gravity_BOTTOM if the menu should be closer to the bottom`() {
-        val containerView = createMockViewWith(y = 0)
-        val anchor = createMockViewWith(y = 0)
-        val popupWindow = spy(PopupWindow())
-        val captor = argumentCaptor<Int>()
-        doReturn(Int.MAX_VALUE).`when`(containerView).measuredHeight
-        // Makes the availableHeightToBottom bigger than the availableHeightToTop
-        setScreenHeight(0)
-        doReturn(10).`when`(anchor).height
-
-        popupWindow.displayPopup(containerView, anchor, BrowserMenu.Orientation.DOWN)
-
-        verify(popupWindow).showAtLocation(any(), captor.capture(), ArgumentMatchers.anyInt(), ArgumentMatchers.anyInt())
-        assertNotEquals(0, captor.value and Gravity.BOTTOM)
-    }
-
-    @Test
-    fun `showAnchorAtLocation should show the menu with Gravity_TOP if the menu should be closer to the top`() {
-        val containerView = createMockViewWith(y = 0)
-        val anchor = createMockViewWith(y = 0)
-        val popupWindow = spy(PopupWindow())
-        val captor = argumentCaptor<Int>()
-        doReturn(Int.MAX_VALUE).`when`(containerView).measuredHeight
-        // Makes the availableHeightToBottom smaller than the availableHeightToTop
-        setScreenHeight(0)
-        doReturn(-10).`when`(anchor).height
-
-        popupWindow.displayPopup(containerView, anchor, BrowserMenu.Orientation.UP)
-
-        verify(popupWindow).showAtLocation(any(), captor.capture(), ArgumentMatchers.anyInt(), ArgumentMatchers.anyInt())
-        assertNotEquals(0, captor.value and Gravity.TOP)
-    }
-
-    @Test
-    fun `showAnchorAtLocation should use the OverflowMenuTop animation if the menu should be shown at the top`() {
-        val containerView = createMockViewWith(y = 0)
-        val anchor = createMockViewWith(y = 0)
-        val popupWindow = spy(PopupWindow())
-        doReturn(Int.MAX_VALUE).`when`(containerView).measuredHeight
-        // Makes the availableHeightToBottom smaller than the availableHeightToTop
-        setScreenHeight(0)
-        doReturn(-10).`when`(anchor).height
-
-        popupWindow.displayPopup(containerView, anchor, BrowserMenu.Orientation.UP)
-
-        assertEquals(popupWindow.animationStyle, R.style.Mozac_Browser_Menu_Animation_OverflowMenuTop)
-    }
-
-    @Test
-    fun `showAnchorAtLocation should use the OverflowMenuBottom animation if the menu should be shown at the bottom`() {
-        val containerView = createMockViewWith(y = 0)
-        val anchor = createMockViewWith(y = 0)
-        val popupWindow = spy(PopupWindow())
-        doReturn(Int.MAX_VALUE).`when`(containerView).measuredHeight
-        // Makes the availableHeightToBottom bigger than the availableHeightToTop
-        setScreenHeight(0)
-        doReturn(10).`when`(anchor).height
-
-        popupWindow.displayPopup(containerView, anchor, BrowserMenu.Orientation.DOWN)
-
-        assertEquals(popupWindow.animationStyle, R.style.Mozac_Browser_Menu_Animation_OverflowMenuBottom)
-    }
-
-    @Config(sdk = [Build.VERSION_CODES.LOLLIPOP, Build.VERSION_CODES.LOLLIPOP_MR1, Build.VERSION_CODES.M])
-    @Test
-    fun `displayPopup on lower Android versions should directly call showAtAnchorLocation even if it fits`() {
-        // Constructing the test the same as the above one.
-        // The only difference is the Android SDK based on which another PopupWindow method should be used.
-
-        val containerView = createMockViewWith(y = 0)
-        // Makes the availableHeightToTop 10
-        val anchor = createMockViewWith(y = 10)
-        val popupWindow = spy(PopupWindow())
-        val screenHeight = -1
-        val contentHeight = -9
-
-        // Makes the availableHeightToBottom smaller than the availableHeightToTop
-        setScreenHeight(screenHeight)
-        doReturn(-10).`when`(anchor).height
-
-        // Makes the content of the menu smaller than the availableHeightToTop
-        doReturn(contentHeight).`when`(containerView).measuredHeight
-
-        popupWindow.displayPopup(containerView, anchor, BrowserMenu.Orientation.UP)
-
-        assertEquals(popupWindow.animationStyle, R.style.Mozac_Browser_Menu_Animation_OverflowMenuBottom)
-        verify(popupWindow).showAtLocation(anchor, Gravity.END or Gravity.BOTTOM, 0, 0)
-    }
-
     @Test
     fun `displayPopup that don't fitUp neither fitDown`() {
         val containerView = createMockViewWith(y = 0)
@@ -509,7 +386,7 @@ class BrowserMenuTest {
         doReturn(Int.MAX_VALUE).`when`(containerView).measuredHeight
 
         popupWindow.displayPopup(containerView, anchor, BrowserMenu.Orientation.DOWN)
-        verify(popupWindow).showAtLocation(anchor, Gravity.END or Gravity.TOP, 0, 0)
+        verify(popupWindow).showAtLocation(anchor, Gravity.START or Gravity.TOP, 0, 0)
     }
 
     @Test

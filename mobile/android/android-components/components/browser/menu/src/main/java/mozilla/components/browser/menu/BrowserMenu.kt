@@ -17,6 +17,7 @@ import android.widget.PopupWindow
 import androidx.annotation.VisibleForTesting
 import androidx.cardview.widget.CardView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.widget.PopupWindowCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.menu.BrowserMenu.Orientation.DOWN
@@ -186,13 +187,6 @@ internal fun PopupWindow.displayPopup(
     val fitsUp = availableHeightToTop >= containerHeight
     val fitsDown = availableHeightToBottom >= containerHeight
 
-    // On specific Android versions the PopupWindow would get placed at the wrong location
-    // if using `showAsDropDown`. Force using `showAtLocation` in this cases.
-    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
-        showAtAnchorLocation(anchor, availableHeightToTop < availableHeightToBottom)
-        return
-    }
-
     // Try to use the preferred orientation, if doesn't fit fallback to the best fit.
     when {
         preferredOrientation == DOWN && fitsDown -> {
@@ -258,15 +252,19 @@ private fun PopupWindow.showPopupWithDownOrientation(anchor: View) {
 }
 
 private fun PopupWindow.showAtAnchorLocation(anchor: View, isCloserToTop: Boolean) {
-    val horizontalLayoutGravity = if (anchor.isRTL) { Gravity.START } else { Gravity.END }
+    val anchorPosition = IntArray(2)
 
-    if (isCloserToTop) {
-        animationStyle = R.style.Mozac_Browser_Menu_Animation_OverflowMenuTop
-        showAtLocation(anchor, horizontalLayoutGravity or Gravity.TOP, 0, 0)
+    // Apply the best fit animation style based on positioning
+    animationStyle = if (isCloserToTop) {
+        R.style.Mozac_Browser_Menu_Animation_OverflowMenuTop
     } else {
-        animationStyle = R.style.Mozac_Browser_Menu_Animation_OverflowMenuBottom
-        showAtLocation(anchor, horizontalLayoutGravity or Gravity.BOTTOM, 0, 0)
+        R.style.Mozac_Browser_Menu_Animation_OverflowMenuBottom
     }
+
+    anchor.getLocationOnScreen(anchorPosition)
+    val (x, y) = anchorPosition
+    PopupWindowCompat.setOverlapAnchor(this, true)
+    showAtLocation(anchor, Gravity.START or Gravity.TOP, x, y)
 }
 
 private fun getMaxAvailableHeightToTopAndBottom(anchor: View): Pair<Int, Int> {
