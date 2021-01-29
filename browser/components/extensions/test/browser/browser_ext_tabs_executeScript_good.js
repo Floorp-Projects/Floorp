@@ -69,6 +69,21 @@ add_task(async function testGoodPermissions() {
     true
   );
 
+  info("Test explicit host permission");
+  await testHasPermission({
+    manifest: { permissions: ["http://mochi.test/"] },
+  });
+
+  info("Test explicit host subdomain permission");
+  await testHasPermission({
+    manifest: { permissions: ["http://*.mochi.test/"] },
+  });
+
+  info("Test explicit <all_urls> permission");
+  await testHasPermission({
+    manifest: { permissions: ["<all_urls>"] },
+  });
+
   info("Test activeTab permission with a command key press");
   await testHasPermission({
     manifest: {
@@ -147,6 +162,69 @@ add_task(async function testGoodPermissions() {
       await EventUtils.synthesizeKey("k", { altKey: true, shiftKey: true });
       await extension.awaitMessage("tabs-command-key-pressed");
     },
+  });
+
+  info("Test activeTab permission with a browser action click");
+  await testHasPermission({
+    manifest: {
+      permissions: ["activeTab"],
+      browser_action: {},
+    },
+    contentSetup: function() {
+      browser.browserAction.onClicked.addListener(() => {
+        browser.test.log("Clicked.");
+      });
+      return Promise.resolve();
+    },
+    setup: clickBrowserAction,
+    tearDown: closeBrowserAction,
+  });
+
+  info("Test activeTab permission with a page action click");
+  await testHasPermission({
+    manifest: {
+      permissions: ["activeTab"],
+      page_action: {},
+    },
+    contentSetup: async () => {
+      let [tab] = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      await browser.pageAction.show(tab.id);
+    },
+    setup: clickPageAction,
+    tearDown: closePageAction,
+  });
+
+  info("Test activeTab permission with a browser action w/popup click");
+  await testHasPermission({
+    manifest: {
+      permissions: ["activeTab"],
+      browser_action: { default_popup: "panel.html" },
+    },
+    setup: async extension => {
+      await clickBrowserAction(extension);
+      return awaitExtensionPanel(extension, window, "panel.html");
+    },
+    tearDown: closeBrowserAction,
+  });
+
+  info("Test activeTab permission with a page action w/popup click");
+  await testHasPermission({
+    manifest: {
+      permissions: ["activeTab"],
+      page_action: { default_popup: "panel.html" },
+    },
+    contentSetup: async () => {
+      let [tab] = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      await browser.pageAction.show(tab.id);
+    },
+    setup: clickPageAction,
+    tearDown: closePageAction,
   });
 
   info("Test activeTab permission with a context menu click");
