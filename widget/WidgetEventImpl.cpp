@@ -1197,7 +1197,7 @@ uint32_t WidgetKeyboardEvent::GetFallbackKeyCodeOfPunctuationKey(
 /* static */ const char* WidgetKeyboardEvent::GetCommandStr(Command aCommand) {
 #define NS_DEFINE_COMMAND(aName, aCommandStr) , #aCommandStr
 #define NS_DEFINE_COMMAND_WITH_PARAM(aName, aCommandStr, aParam) , #aCommandStr
-#define NS_DEFINE_COMMAND_NO_EXEC_COMMAND(aName)
+#define NS_DEFINE_COMMAND_NO_EXEC_COMMAND(aName) , ""
   static const char* const kCommands[] = {
       ""  // DoNothing
 #include "mozilla/CommandList.h"
