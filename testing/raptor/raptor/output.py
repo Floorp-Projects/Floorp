@@ -23,10 +23,11 @@ LOG = RaptorLogger(component="perftest-output")
 class PerftestOutput(object):
     """Abstract base class to handle output of perftest results"""
 
-    def __init__(self, results, supporting_data, subtest_alert_on):
+    def __init__(self, results, supporting_data, subtest_alert_on, app):
         """
         - results : list of RaptorTestResult instances
         """
+        self.app = app
         self.results = results
         self.summarized_results = {}
         self.supporting_data = supporting_data
@@ -1521,7 +1522,9 @@ class BrowsertimeOutput(PerftestOutput):
                     "subtests": {},
                 },
             )
-
+            # Setting shouldAlert to False whenever self.app is either chrome, chrome-m, chromium
+            if self.app in ("chrome", "chrome-m", "chromium"):
+                suite["shouldAlert"] = False
             # Check if the test has set optional properties
             if "alert_change_type" in test and "alertChangeType" not in suite:
                 suite["alertChangeType"] = test["alert_change_type"]
@@ -1544,6 +1547,8 @@ class BrowsertimeOutput(PerftestOutput):
                                     % measurement_name
                                 )
                                 subtest["shouldAlert"] = True
+                                if self.app in ("chrome", "chrome-m", "chromium"):
+                                    subtest["shouldAlert"] = False
                         subtest["replicates"] = []
                         suite["subtests"][measurement_name] = subtest
                     else:
