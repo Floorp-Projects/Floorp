@@ -177,6 +177,7 @@ include = [
   "ComputedUrl",
   "ComputedImageUrl",
   "UrlOrNone",
+  "ImageUrlOrNone",
   "Filter",
   "Gradient",
   "GridTemplateAreas",
