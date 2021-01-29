@@ -6,8 +6,8 @@
 
 #include "frontend/ParseContext-inl.h"
 
+#include "frontend/Parser.h"          // ParserBase
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
-
 #include "vm/EnvironmentObject-inl.h"
 
 using mozilla::Maybe;
@@ -205,7 +205,7 @@ bool ParseContext::Scope::addPossibleAnnexBFunctionBox(ParseContext* pc,
 }
 
 bool ParseContext::Scope::propagateAndMarkAnnexBFunctionBoxes(
-    ParseContext* pc) {
+    ParseContext* pc, ParserBase* parser) {
   // Strict mode doesn't have wack Annex B function semantics.
   if (pc->sc()->strict() || !possibleAnnexBFunctionBoxes_ ||
       possibleAnnexBFunctionBoxes_->empty()) {
@@ -220,11 +220,14 @@ bool ParseContext::Scope::propagateAndMarkAnnexBFunctionBoxes(
     for (FunctionBox* funbox : *possibleAnnexBFunctionBoxes_) {
       bool annexBApplies;
       if (!pc->computeAnnexBAppliesToLexicalFunctionInInnermostScope(
-              funbox, &annexBApplies)) {
+              funbox, parser, &annexBApplies)) {
         return false;
       }
       if (annexBApplies) {
-        const ParserName* name = funbox->explicitName()->asName();
+        const ParserName* name =
+            parser->getCompilationState()
+                .parserAtoms.getParserAtom(funbox->explicitNameIndex())
+                ->asName();
         if (!pc->tryDeclareVar(
                 name, DeclarationKind::VarForAnnexBLexicalFunction,
                 DeclaredNameInfo::npos, &redeclaredKind, &unused)) {
@@ -241,7 +244,7 @@ bool ParseContext::Scope::propagateAndMarkAnnexBFunctionBoxes(
     for (FunctionBox* funbox : *possibleAnnexBFunctionBoxes_) {
       bool annexBApplies;
       if (!pc->computeAnnexBAppliesToLexicalFunctionInInnermostScope(
-              funbox, &annexBApplies)) {
+              funbox, parser, &annexBApplies)) {
         return false;
       }
       if (annexBApplies) {
@@ -375,10 +378,13 @@ bool ParseContext::init() {
 }
 
 bool ParseContext::computeAnnexBAppliesToLexicalFunctionInInnermostScope(
-    FunctionBox* funbox, bool* annexBApplies) {
+    FunctionBox* funbox, ParserBase* parser, bool* annexBApplies) {
   MOZ_ASSERT(!sc()->strict());
 
-  const ParserName* name = funbox->explicitName()->asName();
+  const ParserName* name =
+      parser->getCompilationState()
+          .parserAtoms.getParserAtom(funbox->explicitNameIndex())
+          ->asName();
   Maybe<DeclarationKind> redeclaredKind;
   if (!isVarRedeclaredInInnermostScope(
           name, DeclarationKind::VarForAnnexBLexicalFunction,

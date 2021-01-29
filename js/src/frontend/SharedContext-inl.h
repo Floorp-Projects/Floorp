@@ -16,11 +16,6 @@ namespace frontend {
 inline Directives::Directives(ParseContext* parent)
     : strict_(parent->sc()->strict()), asmJS_(parent->useAsmOrInsideUseAsm()) {}
 
-inline JSAtom* SharedContext::liftParserAtomToJSAtom(JSContext* cx,
-                                                     const ParserAtom* atomId) {
-  return atomId->toJSAtom(cx, stencil_.input.atomCache);
-}
-
 }  // namespace frontend
 
 }  // namespace js
