@@ -224,13 +224,10 @@ bool ParseContext::Scope::propagateAndMarkAnnexBFunctionBoxes(
         return false;
       }
       if (annexBApplies) {
-        const ParserName* name =
-            parser->getCompilationState()
-                .parserAtoms.getParserAtom(funbox->explicitName())
-                ->asName();
-        if (!pc->tryDeclareVar(
-                name, DeclarationKind::VarForAnnexBLexicalFunction,
-                DeclaredNameInfo::npos, &redeclaredKind, &unused)) {
+        if (!pc->tryDeclareVar(funbox->explicitName(), parser,
+                               DeclarationKind::VarForAnnexBLexicalFunction,
+                               DeclaredNameInfo::npos, &redeclaredKind,
+                               &unused)) {
           return false;
         }
 
@@ -381,13 +378,10 @@ bool ParseContext::computeAnnexBAppliesToLexicalFunctionInInnermostScope(
     FunctionBox* funbox, ParserBase* parser, bool* annexBApplies) {
   MOZ_ASSERT(!sc()->strict());
 
-  const ParserName* name =
-      parser->getCompilationState()
-          .parserAtoms.getParserAtom(funbox->explicitName())
-          ->asName();
+  TaggedParserAtomIndex name = funbox->explicitName();
   Maybe<DeclarationKind> redeclaredKind;
   if (!isVarRedeclaredInInnermostScope(
-          name, DeclarationKind::VarForAnnexBLexicalFunction,
+          name, parser, DeclarationKind::VarForAnnexBLexicalFunction,
           &redeclaredKind)) {
     return false;
   }
@@ -400,12 +394,12 @@ bool ParseContext::computeAnnexBAppliesToLexicalFunctionInInnermostScope(
       // function scope, which encloses the var scope. This means the
       // isVarRedeclaredInInnermostScope call above would not catch this
       // case, so test it manually.
-      if (DeclaredNamePtr p = funScope.lookupDeclaredName(name->toIndex())) {
+      if (DeclaredNamePtr p = funScope.lookupDeclaredName(name)) {
         DeclarationKind declaredKind = p->value()->kind();
         if (DeclarationKindIsParameter(declaredKind)) {
           redeclaredKind = Some(declaredKind);
         } else {
-          MOZ_ASSERT(FunctionScope::isSpecialName(sc()->cx_, name->toIndex()));
+          MOZ_ASSERT(FunctionScope::isSpecialName(sc()->cx_, name));
         }
       }
     }
@@ -418,14 +412,15 @@ bool ParseContext::computeAnnexBAppliesToLexicalFunctionInInnermostScope(
 }
 
 bool ParseContext::isVarRedeclaredInInnermostScope(
-    const ParserName* name, DeclarationKind kind,
+    TaggedParserAtomIndex name, ParserBase* parser, DeclarationKind kind,
     mozilla::Maybe<DeclarationKind>* out) {
   uint32_t unused;
   return tryDeclareVarHelper<DryRunInnermostScopeOnly>(
-      name, kind, DeclaredNameInfo::npos, out, &unused);
+      name, parser, kind, DeclaredNameInfo::npos, out, &unused);
 }
 
-bool ParseContext::isVarRedeclaredInEval(const ParserName* name,
+bool ParseContext::isVarRedeclaredInEval(TaggedParserAtomIndex name,
+                                         ParserBase* parser,
                                          DeclarationKind kind,
                                          Maybe<DeclarationKind>* out) {
   MOZ_ASSERT(out);
@@ -433,7 +428,9 @@ bool ParseContext::isVarRedeclaredInEval(const ParserName* name,
   MOZ_ASSERT(sc()->isEvalContext());
 
   // TODO-Stencil: After scope snapshotting, this can be done away with.
-  JSAtom* nameAtom = name->toJSAtom(sc()->cx_, sc()->stencil().input.atomCache);
+  const ParserAtom* atom =
+      parser->getCompilationState().parserAtoms.getParserAtom(name);
+  JSAtom* nameAtom = atom->toJSAtom(sc()->cx_, sc()->stencil().input.atomCache);
   if (!nameAtom) {
     return false;
   }
@@ -484,17 +481,18 @@ bool ParseContext::isVarRedeclaredInEval(const ParserName* name,
   return true;
 }
 
-bool ParseContext::tryDeclareVar(const ParserName* name, DeclarationKind kind,
-                                 uint32_t beginPos,
+bool ParseContext::tryDeclareVar(TaggedParserAtomIndex name, ParserBase* parser,
+                                 DeclarationKind kind, uint32_t beginPos,
                                  Maybe<DeclarationKind>* redeclaredKind,
                                  uint32_t* prevPos) {
-  return tryDeclareVarHelper<NotDryRun>(name, kind, beginPos, redeclaredKind,
-                                        prevPos);
+  return tryDeclareVarHelper<NotDryRun>(name, parser, kind, beginPos,
+                                        redeclaredKind, prevPos);
 }
 
 template <ParseContext::DryRunOption dryRunOption>
-bool ParseContext::tryDeclareVarHelper(const ParserName* name,
-                                       DeclarationKind kind, uint32_t beginPos,
+bool ParseContext::tryDeclareVarHelper(TaggedParserAtomIndex name,
+                                       ParserBase* parser, DeclarationKind kind,
+                                       uint32_t beginPos,
                                        Maybe<DeclarationKind>* redeclaredKind,
                                        uint32_t* prevPos) {
   MOZ_ASSERT(DeclarationKindIsVar(kind));
@@ -513,8 +511,7 @@ bool ParseContext::tryDeclareVarHelper(const ParserName* name,
 
   for (ParseContext::Scope* scope = innermostScope();
        scope != varScope().enclosing(); scope = scope->enclosing()) {
-    if (AddDeclaredNamePtr p =
-            scope->lookupDeclaredNameForAdd(name->toIndex())) {
+    if (AddDeclaredNamePtr p = scope->lookupDeclaredNameForAdd(name)) {
       DeclarationKind declaredKind = p->value()->kind();
       if (DeclarationKindIsVar(declaredKind)) {
         if (dryRunOption == NotDryRun) {
@@ -547,7 +544,7 @@ bool ParseContext::tryDeclareVarHelper(const ParserName* name,
         return true;
       }
     } else if (dryRunOption == NotDryRun) {
-      if (!scope->addDeclaredName(this, p, name->toIndex(), kind, beginPos)) {
+      if (!scope->addDeclaredName(this, p, name, kind, beginPos)) {
         return false;
       }
     }
@@ -564,7 +561,7 @@ bool ParseContext::tryDeclareVarHelper(const ParserName* name,
 
   if (!sc()->strict() && sc()->isEvalContext() &&
       (dryRunOption == NotDryRun || innermostScope() == &varScope())) {
-    if (!isVarRedeclaredInEval(name, kind, redeclaredKind)) {
+    if (!isVarRedeclaredInEval(name, parser, kind, redeclaredKind)) {
       return false;
     }
     // We don't have position information at runtime.
