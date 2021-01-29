@@ -191,15 +191,27 @@ def create_isolate_failure_tasks(task_definition, failures, level, times):
         else:
             task_definition["payload"]["command"] = command
 
+        # saved_command is a saved version of the
+        # task_definition['payload']['command'] with the repeat
+        # arguments. We need to save it since
+        # task_definition['payload']['command'] will be modified in the failure_path loop
+        # when we are isolating web-platform-tests.
+
+        saved_command = copy.deepcopy(task_definition["payload"]["command"])
+
         for failure_path in failures[failure_group]:
             th_dict["symbol"] = symbol + failure_group_suffix
-            if is_wpt:
-                failure_path = "testing/web-platform/tests" + failure_path
-            if is_windows:
+            if is_windows and not is_wpt:
                 failure_path = "\\".join(failure_path.split("/"))
-            task_definition["payload"]["env"][
-                "MOZHARNESS_TEST_PATHS"
-            ] = six.ensure_text(json.dumps({suite: [failure_path]}, sort_keys=True))
+            if is_wpt:
+                include_args = ["--include={}".format(failure_path)]
+                task_definition["payload"]["command"] = add_args_to_command(
+                    saved_command, extra_args=include_args
+                )
+            else:
+                task_definition["payload"]["env"][
+                    "MOZHARNESS_TEST_PATHS"
+                ] = six.ensure_text(json.dumps({suite: [failure_path]}, sort_keys=True))
 
             logger.info(
                 "Creating task for path {} with command {}".format(
