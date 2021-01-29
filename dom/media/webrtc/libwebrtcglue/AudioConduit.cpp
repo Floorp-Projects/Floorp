@@ -52,14 +52,7 @@ RefPtr<AudioSessionConduit> AudioSessionConduit::Create(
   CSFLogDebug(LOGTAG, "%s ", __FUNCTION__);
   MOZ_ASSERT(NS_IsMainThread());
 
-  WebrtcAudioConduit* obj = new WebrtcAudioConduit(aCall, aStsThread);
-  if (obj->Init() != kMediaConduitNoError) {
-    CSFLogError(LOGTAG, "%s AudioConduit Init Failed ", __FUNCTION__);
-    delete obj;
-    return nullptr;
-  }
-  CSFLogDebug(LOGTAG, "%s Successfully created AudioConduit ", __FUNCTION__);
-  return obj;
+  return MakeRefPtr<WebrtcAudioConduit>(aCall, aStsThread);
 }
 
 /**
@@ -68,18 +61,9 @@ RefPtr<AudioSessionConduit> AudioSessionConduit::Create(
 WebrtcAudioConduit::~WebrtcAudioConduit() {
   CSFLogDebug(LOGTAG, "%s ", __FUNCTION__);
   MOZ_ASSERT(NS_IsMainThread());
-
   MutexAutoLock lock(mMutex);
   DeleteSendStream();
   DeleteRecvStream();
-
-  DeleteChannels();
-  /*
-    // We don't Terminate() the VoEBase here, because the Call (owned by
-    // PeerConnectionMedia) actually owns the (shared) VoEBase/VoiceEngine
-    // here
-    mPtrVoEBase = nullptr;
-  */
 }
 
 bool WebrtcAudioConduit::SetLocalSSRCs(const std::vector<uint32_t>& aSSRCs,
@@ -105,9 +89,10 @@ bool WebrtcAudioConduit::SetLocalSSRCs(const std::vector<uint32_t>& aSSRCs,
   }
 
   mSendStreamConfig.rtp.ssrc = aSSRCs[0];
-  /*
-    mRecvChannelProxy->SetLocalSSRC(aSSRCs[0]);
-  */
+
+  if (!RecreateRecvStreamIfExists()) {
+    return false;
+  }
 
   return RecreateSendStreamIfExists();
 }
@@ -145,17 +130,13 @@ bool WebrtcAudioConduit::GetRemoteSSRC(uint32_t* ssrc) {
 
 bool WebrtcAudioConduit::SetLocalCNAME(const char* cname) {
   MOZ_ASSERT(NS_IsMainThread());
-  /*
-    mSendChannelProxy->SetRTCP_CNAME(cname);
-  */
+  mSendStreamConfig.rtp.c_name = cname;
   return true;
 }
 
 bool WebrtcAudioConduit::SetLocalMID(const std::string& mid) {
   MOZ_ASSERT(NS_IsMainThread());
-  /*
-    mSendChannelProxy->SetLocalMID(mid.c_str());
-  */
+  mSendStreamConfig.rtp.mid = mid;
   return true;
 }
 
@@ -287,14 +268,9 @@ WebrtcAudioConduit::GetBandwidthEstimation() {
 bool WebrtcAudioConduit::SetDtmfPayloadType(unsigned char type, int freq) {
   CSFLogInfo(LOGTAG, "%s : setting dtmf payload %d", __FUNCTION__, (int)type);
   MOZ_ASSERT(NS_IsMainThread());
-  /*
-    bool result = mSendChannelProxy->SetSendTelephoneEventPayloadType(type,
-    freq); if (!result) { CSFLogError(LOGTAG,
-                  "%s Failed call to SetSendTelephoneEventPayloadType(%u, %d)",
-                  __FUNCTION__, type, freq);
-    }
-    return result;
-  */
+  mDtmfPayloadType = type;
+  mDtmfPayloadFrequency = freq;
+
   return false;
 }
 
@@ -302,14 +278,14 @@ bool WebrtcAudioConduit::InsertDTMFTone(int channel, int eventCode,
                                         bool outOfBand, int lengthMs,
                                         int attenuationDb) {
   MOZ_ASSERT(NS_IsMainThread());
-  /*
-    if (!mSendChannelProxy || !mDtmfEnabled || !outOfBand) {
-      return false;
-    }
+  if (!mSendStream || !mDtmfEnabled || !outOfBand) {
+    return false;
+  }
 
-    return mSendChannelProxy->SendTelephoneEventOutband(eventCode, lengthMs);
-  */
-  return false;
+  MOZ_DIAGNOSTIC_ASSERT(mDtmfPayloadType != -1);
+  MOZ_DIAGNOSTIC_ASSERT(mDtmfPayloadFrequency != -1);
+  return mSendStream->SendTelephoneEvent(
+      mDtmfPayloadType, mDtmfPayloadFrequency, eventCode, lengthMs);
 }
 
 void WebrtcAudioConduit::SetRtcpEventObserver(
@@ -371,25 +347,6 @@ void WebrtcAudioConduit::InsertAudioLevelForContributingSource(
       absl::nullopt, aTimestamp)});
 
   mRecvStream->InsertAudioLevelForContributingSource(infos);
-}
-
-/*
- * WebRTCAudioConduit Implementation
- */
-MediaConduitErrorCode WebrtcAudioConduit::Init() {
-  CSFLogDebug(LOGTAG, "%s this=%p", __FUNCTION__, this);
-  MOZ_ASSERT(NS_IsMainThread());
-  /*
-    if (!(mPtrVoEBase = webrtc::VoEBase::GetInterface(GetVoiceEngine()))) {
-      CSFLogError(LOGTAG, "%s Unable to initialize VoEBase", __FUNCTION__);
-      return kMediaConduitSessionNotInited;
-    }
-  */
-  CreateChannels();
-
-  CSFLogDebug(LOGTAG, "%s AudioSessionConduit Initialization Done (%p)",
-              __FUNCTION__, this);
-  return kMediaConduitNoError;
 }
 
 // AudioSessionConduit Implementation
@@ -510,9 +467,6 @@ MediaConduitErrorCode WebrtcAudioConduit::ConfigureRecvMediaCodecs(
     webrtc::SdpAudioFormat format(codec->mName, codec->mFreq, codec->mChannels,
                                   parameters);
     mRecvStreamConfig.decoder_map.emplace(codec->mType, format);
-    /*
-        mRecvStreamConfig.voe_channel_id = mRecvChannel;
-    */
     success = true;
   }  // end for
 
@@ -545,14 +499,9 @@ MediaConduitErrorCode WebrtcAudioConduit::SetLocalRTPExtensions(
   bool isSend = aDirection == LocalDirection::kSend;
   RtpExtList filteredExtensions;
 
-  int ssrcAudioLevelId = -1;
-  int csrcAudioLevelId = -1;
-  int midId = -1;
-
   for (const auto& extension : extensions) {
     // ssrc-audio-level RTP header extension
     if (extension.uri == webrtc::RtpExtension::kAudioLevelUri) {
-      ssrcAudioLevelId = extension.id;
       filteredExtensions.push_back(
           webrtc::RtpExtension(extension.uri, extension.id));
     }
@@ -566,7 +515,6 @@ MediaConduitErrorCode WebrtcAudioConduit::SetLocalRTPExtensions(
                     __FUNCTION__);
         return kMediaConduitMalformedArgument;
       }
-      csrcAudioLevelId = extension.id;
       filteredExtensions.push_back(
           webrtc::RtpExtension(extension.uri, extension.id));
     }
@@ -574,11 +522,10 @@ MediaConduitErrorCode WebrtcAudioConduit::SetLocalRTPExtensions(
     // MID RTP header extension
     if (extension.uri == webrtc::RtpExtension::kMidUri) {
       if (!isSend) {
-        // TODO(bug 1405495): Why do we error out for csrc-audio-level, but not
-        // mid?
+        // TODO: Why do we error out for csrc-audio-level, but not mid?
+        // TODO: recv mid support
         continue;
       }
-      midId = extension.id;
       filteredExtensions.push_back(
           webrtc::RtpExtension(extension.uri, extension.id));
     }
@@ -591,17 +538,7 @@ MediaConduitErrorCode WebrtcAudioConduit::SetLocalRTPExtensions(
   }
 
   currentExtensions = filteredExtensions;
-  /*
-    if (isSend) {
-      mSendChannelProxy->SetSendAudioLevelIndicationStatus(ssrcAudioLevelId !=
-    -1, ssrcAudioLevelId); mSendChannelProxy->SetSendMIDStatus(midId != -1,
-    midId); } else { mRecvChannelProxy->SetReceiveAudioLevelIndicationStatus(
-          ssrcAudioLevelId != -1, ssrcAudioLevelId);
-      mRecvChannelProxy->SetReceiveCsrcAudioLevelIndicationStatus(
-          csrcAudioLevelId != -1, csrcAudioLevelId);
-      // TODO(bug 1405495): recv mid support
-    }
-  */
+
   if (isSend) {
     RecreateSendStreamIfExists();
   } else {
@@ -786,7 +723,7 @@ MediaConduitErrorCode WebrtcAudioConduit::ReceivedRTPPacket(
 
 MediaConduitErrorCode WebrtcAudioConduit::ReceivedRTCPPacket(const void* data,
                                                              int len) {
-  CSFLogDebug(LOGTAG, "%s : channel %d", __FUNCTION__, mRecvChannel);
+  CSFLogDebug(LOGTAG, "%s", __FUNCTION__);
   ASSERT_ON_THREAD(mStsThread);
 
   if (DeliverPacket(data, len) != kMediaConduitNoError) {
@@ -1055,10 +992,6 @@ void WebrtcAudioConduit::DeleteSendStream() {
     mCall->Call()->DestroyAudioSendStream(mSendStream);
     mSendStream = nullptr;
   }
-  // Destroying the stream unregisters the transport
-  /*
-    mSendChannelProxy->RegisterTransport(nullptr);
-  */
 }
 
 MediaConduitErrorCode WebrtcAudioConduit::CreateSendStream() {
@@ -1082,10 +1015,6 @@ void WebrtcAudioConduit::DeleteRecvStream() {
     mCall->Call()->DestroyAudioReceiveStream(mRecvStream);
     mRecvStream = nullptr;
   }
-  // Destroying the stream unregisters the transport
-  /*
-    mRecvChannelProxy->RegisterTransport(nullptr);
-  */
 }
 
 MediaConduitErrorCode WebrtcAudioConduit::CreateRecvStream() {
@@ -1151,67 +1080,6 @@ MediaConduitErrorCode WebrtcAudioConduit::DeliverPacket(const void* data,
   }
 
   return kMediaConduitNoError;
-}
-
-MediaConduitErrorCode WebrtcAudioConduit::CreateChannels() {
-  MOZ_ASSERT(NS_IsMainThread());
-  /*
-    if ((mRecvChannel = mPtrVoEBase->CreateChannel()) == -1) {
-      CSFLogError(LOGTAG, "%s VoiceEngine Channel creation failed",
-    __FUNCTION__); return kMediaConduitChannelError;
-    }
-    mRecvStreamConfig.voe_channel_id = mRecvChannel;
-
-    if ((mSendChannel = mPtrVoEBase->CreateChannel()) == -1) {
-      CSFLogError(LOGTAG, "%s VoiceEngine Channel creation failed",
-    __FUNCTION__); return kMediaConduitChannelError;
-    }
-    mSendStreamConfig.voe_channel_id = mSendChannel;
-
-    webrtc::VoiceEngineImpl* vei;
-    vei = static_cast<webrtc::VoiceEngineImpl*>(GetVoiceEngine());
-    mRecvChannelProxy = vei->GetChannelProxy(mRecvChannel);
-    if (!mRecvChannelProxy) {
-      CSFLogError(LOGTAG, "%s VoiceEngine Send ChannelProxy creation failed",
-                  __FUNCTION__);
-      return kMediaConduitChannelError;
-    }
-
-    mRecvChannelProxy->SetRtpPacketObserver(this);
-    mRecvChannelProxy->SetRtcpEventObserver(this);
-    mRecvChannelProxy->RegisterTransport(this);
-
-    mSendChannelProxy = vei->GetChannelProxy(mSendChannel);
-    if (!mSendChannelProxy) {
-      CSFLogError(LOGTAG, "%s VoiceEngine ChannelProxy creation failed",
-                  __FUNCTION__);
-      return kMediaConduitChannelError;
-    }
-    mSendChannelProxy->SetRtpPacketObserver(this);
-    mSendChannelProxy->RegisterTransport(this);
-  */
-  return kMediaConduitNoError;
-}
-
-void WebrtcAudioConduit::DeleteChannels() {
-  MOZ_ASSERT(NS_IsMainThread());
-  mMutex.AssertCurrentThreadOwns();
-
-  if (mSendChannel != -1) {
-    /*
-        mSendChannelProxy = nullptr;
-        mPtrVoEBase->DeleteChannel(mSendChannel);
-    */
-    mSendChannel = -1;
-  }
-
-  if (mRecvChannel != -1) {
-    /*
-        mRecvChannelProxy = nullptr;
-        mPtrVoEBase->DeleteChannel(mRecvChannel);
-    */
-    mRecvChannel = -1;
-  }
 }
 
 }  // namespace mozilla
