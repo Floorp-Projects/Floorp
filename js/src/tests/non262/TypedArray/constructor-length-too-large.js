@@ -2,14 +2,16 @@
 // attempting to create a too large array.
 
 // The maximum typed array length is (currently) limited to
-// `(INT32_MAX / BYTES_PER_ELEMENT) - 1`.
+// `(INT32_MAX / BYTES_PER_ELEMENT)`.
 
 const INT32_MAX = 2**31 - 1;
+const tooLarge = INT32_MAX + 1;
 
 // 22.2.4.2 TypedArray ( length )
 for (let TA of typedArrayConstructors) {
-    assertThrowsInstanceOf(() => new TA(INT32_MAX), RangeError);
-    assertThrowsInstanceOf(() => new TA(INT32_MAX >> Math.log2(TA.BYTES_PER_ELEMENT)), RangeError);
+    assertThrowsInstanceOf(() => new TA(tooLarge), RangeError);
+    assertEq(tooLarge % TA.BYTES_PER_ELEMENT, 0);
+    assertThrowsInstanceOf(() => new TA(tooLarge / TA.BYTES_PER_ELEMENT), RangeError);
 }
 
 // Test disabled because allocating a 2**30 Int8Array easily leads to OOMs.
@@ -22,8 +24,8 @@ for (let TA of typedArrayConstructors) {
 
 // 22.2.4.4 TypedArray ( object )
 for (let TA of typedArrayConstructors) {
-    assertThrowsInstanceOf(() => new TA({length: INT32_MAX}), RangeError);
-    assertThrowsInstanceOf(() => new TA({length: INT32_MAX >> Math.log2(TA.BYTES_PER_ELEMENT)}), RangeError);
+    assertThrowsInstanceOf(() => new TA({length: tooLarge}), RangeError);
+    assertThrowsInstanceOf(() => new TA({length: tooLarge / TA.BYTES_PER_ELEMENT}), RangeError);
 }
 
 if (typeof reportCompare === "function")
