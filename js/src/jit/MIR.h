@@ -2745,9 +2745,6 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
 
     // Wasm Ref/AnyRef/NullRef compared to Ref/AnyRef/NullRef
     Compare_RefOrNull,
-
-    // All other possible compares
-    Compare_Unknown
   };
 
  private:
