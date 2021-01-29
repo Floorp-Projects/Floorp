@@ -13,6 +13,7 @@ LOCAL_PATCHES=""
 LOCAL_PATCHES="$LOCAL_PATCHES add-mfbt-api-markers.patch"
 LOCAL_PATCHES="$LOCAL_PATCHES use-mozilla-assertions.patch"
 LOCAL_PATCHES="$LOCAL_PATCHES debug-only-functions.patch"
+LOCAL_PATCHES="$LOCAL_PATCHES to-fixed-dbl-max.patch"
 
 TMPDIR=`mktemp --directory`
 LOCAL_CLONE="$TMPDIR/new-double-conversion"
