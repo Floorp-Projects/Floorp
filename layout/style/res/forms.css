@@ -55,6 +55,10 @@
 
 /* Miscellaneous form elements */
 
+fieldset > legend {
+  inline-size: -moz-fit-content;
+}
+
 legend {
   display: block;
   padding-inline: 2px;

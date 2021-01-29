@@ -57,16 +57,6 @@ class HTMLLegendElement final : public nsGenericHTMLElement {
     InlineStart,
     InlineEnd,
   };
-
-  /**
-   * Return the align value to use for the given fieldset writing-mode.
-   * (This method resolves Left/Right to the appropriate InlineStart/InlineEnd).
-   * @param aCBWM the fieldset writing-mode
-   * @note we only parse left/right/center, so this method returns Center,
-   * InlineStart or InlineEnd.
-   */
-  LegendAlignValue LogicalAlign(mozilla::WritingMode aCBWM) const;
-
   /**
    * WebIDL Interface
    */
