@@ -153,6 +153,11 @@ $searchbar-width-small: $grid-unit * 2 + $base-gutter * 1;
 $searchbar-width-medium: $grid-unit * 4 + $base-gutter * 3;
 $searchbar-width-large: $grid-unit * 6 + $base-gutter * 5;
 
+$searchbar-width-small-new: ($grid-unit * 2 + $base-gutter * 1) - 24px;
+$searchbar-width-medium-new: ($grid-unit * 4 + $base-gutter * 3) - 120px;
+$searchbar-width-large-new: ($grid-unit * 6 + $base-gutter * 5) - 136px;
+$searchbar-width-largest-new: ($grid-unit * 6 + $base-gutter * 5) - 16px;
+
 $wrapper-default-width: $grid-unit * 2 + $base-gutter * 1 + $section-horizontal-padding * 2; // 2 top sites
 $wrapper-max-width-medium: $grid-unit * 4 + $base-gutter * 3 + $section-horizontal-padding * 2; // 4 top sites
 $wrapper-max-width-large: $grid-unit * 6 + $base-gutter * 5 + $section-horizontal-padding * 2; // 6 top sites
