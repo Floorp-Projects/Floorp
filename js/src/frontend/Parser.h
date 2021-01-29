@@ -570,7 +570,7 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
 
  public:
   NameNodeType newPropertyName(const ParserName* key, const TokenPos& pos) {
-    return handler_.newPropertyName(key, pos);
+    return handler_.newPropertyName(key->toIndex(), pos);
   }
 
   PropertyAccessType newPropertyAccess(Node expr, NameNodeType key) {
