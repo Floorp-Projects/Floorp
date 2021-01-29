@@ -273,13 +273,13 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   // main thread.
   const RefPtr<WebRtcCallWrapper> mCall;
 
-  // Written only on main thread. Guarded by mMutex, except for reads on main.
+  // Accessed only on main thread.
   webrtc::AudioReceiveStream::Config mRecvStreamConfig;
 
   // Written only on main thread. Guarded by mMutex, except for reads on main.
   webrtc::AudioReceiveStream* mRecvStream;
 
-  // Written only on main thread. Guarded by mMutex, except for reads on main.
+  // Accessed only on main thread.
   webrtc::AudioSendStream::Config mSendStreamConfig;
 
   // Written only on main thread. Guarded by mMutex, except for reads on main.
