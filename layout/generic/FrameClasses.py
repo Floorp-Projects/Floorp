@@ -45,7 +45,6 @@ FRAME_CLASSES = [
     Frame("nsImageFrame", "Image", LEAF),
     Frame("nsInlineFrame", "Inline", NOT_LEAF),
     Frame("nsLeafBoxFrame", "LeafBox", LEAF),
-    Frame("nsLegendFrame", "Legend", NOT_LEAF),
     Frame("nsListControlFrame", "ListControl", NOT_LEAF),
     Frame("nsMathMLFrame", "None", NOT_LEAF),
     Frame("nsMathMLmactionFrame", "None", NOT_LEAF),
