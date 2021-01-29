@@ -114,6 +114,19 @@ add_task(async function() {
       "The top-left corner has the expected color, matching the span inside the iframe",
   });
 
+  info(
+    "Check that using a selector that doesn't match any element displays a warning in console"
+  );
+  await executeAndWaitForMessage(
+    hud,
+    `:screenshot --selector #this-element-does-not-exist`,
+    `The ‘#this-element-does-not-exist’ selector does not match any element on the page.`
+  );
+  ok(
+    true,
+    "A warning message is emitted when the passed selector doesn't match any element"
+  );
+
   // Remove the downloaded screenshot file and cleanup downloads
   await OS.File.remove(remoteIframeSpanScreenshot.path);
   await resetDownloads();
