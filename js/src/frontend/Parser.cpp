@@ -594,8 +594,8 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredName(const ParserName* name,
     case DeclarationKind::BodyLevelFunction: {
       Maybe<DeclarationKind> redeclaredKind;
       uint32_t prevPos;
-      if (!pc_->tryDeclareVar(name, kind, pos.begin, &redeclaredKind,
-                              &prevPos)) {
+      if (!pc_->tryDeclareVar(name->toIndex(), this, kind, pos.begin,
+                              &redeclaredKind, &prevPos)) {
         return false;
       }
 
@@ -6687,7 +6687,8 @@ GeneralParser<ParseHandler, Unit>::continueStatement(
     return null();
   }
 
-  auto validity = pc_->checkContinueStatement(label);
+  auto validity = pc_->checkContinueStatement(
+      label ? label->toIndex() : TaggedParserAtomIndex::null());
   if (validity.isErr()) {
     switch (validity.unwrapErr()) {
       case ParseContext::ContinueStatementError::NotInALoop:
@@ -6719,7 +6720,8 @@ GeneralParser<ParseHandler, Unit>::breakStatement(YieldHandling yieldHandling) {
     return null();
   }
 
-  auto validity = pc_->checkBreakStatement(label);
+  auto validity = pc_->checkBreakStatement(
+      label ? label->toIndex() : TaggedParserAtomIndex::null());
   if (validity.isErr()) {
     switch (validity.unwrapErr()) {
       case ParseContext::BreakStatementError::ToughBreak:
@@ -6915,7 +6917,7 @@ GeneralParser<ParseHandler, Unit>::labeledStatement(
   }
 
   auto hasSameLabel = [&label](ParseContext::LabelStatement* stmt) {
-    return stmt->label() == label;
+    return stmt->label() == label->toIndex();
   };
 
   uint32_t begin = pos().begin;
@@ -6929,7 +6931,7 @@ GeneralParser<ParseHandler, Unit>::labeledStatement(
   tokenStream.consumeKnownToken(TokenKind::Colon);
 
   /* Push a label struct and parse the statement. */
-  ParseContext::LabelStatement stmt(pc_, label);
+  ParseContext::LabelStatement stmt(pc_, label->toIndex());
   Node pn = labeledItem(yieldHandling);
   if (!pn) {
     return null();
