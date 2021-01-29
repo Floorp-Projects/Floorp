@@ -249,8 +249,6 @@ bool ParserAtomEntry::isPrivateName() const {
 
 JSAtom* ParserAtomEntry::toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
                                   CompilationAtomCache& atomCache) const {
-  MOZ_ASSERT(index_ == index);
-
   if (index.isParserAtomIndex()) {
     JSAtom* atom = atomCache.getAtomAt(index.toParserAtomIndex());
     if (atom) {
@@ -276,7 +274,6 @@ JSAtom* ParserAtomEntry::toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
 
 JSAtom* ParserAtomEntry::instantiate(JSContext* cx, TaggedParserAtomIndex index,
                                      CompilationAtomCache& atomCache) const {
-  MOZ_ASSERT(index_ == index);
   MOZ_ASSERT(index.isParserAtomIndex());
 
   JSAtom* atom;
@@ -334,7 +331,6 @@ TaggedParserAtomIndex ParserAtomsTable::addEntry(JSContext* cx,
     js::ReportOutOfMemory(cx);
     return TaggedParserAtomIndex::null();
   }
-  entry->setParserAtomIndex(index);
   auto taggedIndex = TaggedParserAtomIndex(index);
   if (!entryMap_.add(addPtr, entry, taggedIndex)) {
     js::ReportOutOfMemory(cx);

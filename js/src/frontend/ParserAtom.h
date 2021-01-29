@@ -320,8 +320,6 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   // The length of the buffer in chars_.
   uint32_t length_ = 0;
 
-  TaggedParserAtomIndex index_;
-
   uint32_t flags_ = 0;
 
   // End of fields.
@@ -421,33 +419,10 @@ class alignas(alignof(uint32_t)) ParserAtomEntry {
   bool equalsSeq(HashNumber hash, InflatedChar16Sequence<CharT> seq) const;
 
  private:
-  bool isParserAtomIndex() const {
-    MOZ_ASSERT(index_.isParserAtomIndex() == !isWellKnownOrStatic());
-    return index_.isParserAtomIndex();
-  }
-
- public:
-  void setParserAtomIndex(ParserAtomIndex index) {
-    index_ = TaggedParserAtomIndex(index);
-  }
-
- private:
   bool isWellKnownOrStatic() const { return flags_ & WellKnownOrStaticFlag; }
 
   constexpr void setWellKnownOrStatic() { flags_ |= WellKnownOrStaticFlag; }
 
-  constexpr void setWellKnownAtomId(WellKnownAtomId atomId) {
-    index_ = TaggedParserAtomIndex(atomId);
-    setWellKnownOrStatic();
-  }
-  constexpr void setStaticParserString1(StaticParserString1 s) {
-    index_ = TaggedParserAtomIndex(s);
-    setWellKnownOrStatic();
-  }
-  constexpr void setStaticParserString2(StaticParserString2 s) {
-    index_ = TaggedParserAtomIndex(s);
-    setWellKnownOrStatic();
-  }
   constexpr void setHashAndLength(HashNumber hash, uint32_t length) {
     hash_ = hash;
     length_ = length;
@@ -575,7 +550,7 @@ class WellKnownParserAtoms_ROM {
   constexpr WellKnownParserAtoms_ROM() {
     // Empty atom
     emptyAtom.setHashAndLength(mozilla::HashString(u""), 0);
-    emptyAtom.setWellKnownAtomId(WellKnownAtomId::empty);
+    emptyAtom.setWellKnownOrStatic();
 
     // Length-1 static atoms
     for (size_t i = 0; i < ASCII_STATIC_LIMIT; ++i) {
@@ -607,7 +582,7 @@ class WellKnownParserAtoms_ROM {
     char16_t buf[] = {static_cast<char16_t>(i),
                       /* null-terminator */ 0};
     entry.setHashAndLength(mozilla::HashString(buf), len);
-    entry.setStaticParserString1(StaticParserString1(i));
+    entry.setWellKnownOrStatic();
     entry.storage()[0] = buf[0];
   }
 
@@ -617,7 +592,7 @@ class WellKnownParserAtoms_ROM {
                       StaticStrings::fromSmallChar(i & 0x003F),
                       /* null-terminator */ 0};
     entry.setHashAndLength(mozilla::HashString(buf), len);
-    entry.setStaticParserString2(StaticParserString2(i));
+    entry.setWellKnownOrStatic();
     entry.storage()[0] = buf[0];
     entry.storage()[1] = buf[1];
   }
@@ -626,7 +601,7 @@ class WellKnownParserAtoms_ROM {
                              const char16_t* text, WellKnownAtomId id) {
     size_t len = Char16Traits::length(text);
     entry.setHashAndLength(mozilla::HashString(text), len);
-    entry.setWellKnownAtomId(id);
+    entry.setWellKnownOrStatic();
     for (size_t i = 0; i < len; ++i) {
       storage[i] = text[i];
     }
