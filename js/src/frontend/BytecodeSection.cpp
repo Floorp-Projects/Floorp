@@ -156,11 +156,6 @@ void CGScopeNoteList::recordEndImpl(uint32_t index, uint32_t offset) {
   list[index].length = offset - list[index].start;
 }
 
-JSObject* ObjLiteralStencil::create(
-    JSContext* cx, const CompilationAtomCache& atomCache) const {
-  return InterpretObjLiteral(cx, atomCache, code_, flags_);
-}
-
 BytecodeSection::BytecodeSection(JSContext* cx, uint32_t lineNum,
                                  uint32_t column)
     : code_(cx),
