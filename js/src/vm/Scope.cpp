@@ -1982,7 +1982,7 @@ template <typename... Args>
 /* static */ bool ScopeStencil::appendScopeStencilAndData(
     JSContext* cx, CompilationState& compilationState,
     BaseParserScopeData* data, ScopeIndex* indexOut, Args&&... args) {
-  *indexOut = compilationState.scopeData.length();
+  *indexOut = ScopeIndex(compilationState.scopeData.length());
   if (uint32_t(*indexOut) >= TaggedScriptThingIndex::IndexLimit) {
     ReportAllocationOverflow(cx);
     return false;

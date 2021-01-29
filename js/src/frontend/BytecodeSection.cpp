@@ -36,9 +36,7 @@ AbstractScopePtr GCThingList::getScope(size_t index) const {
   if (elem.isEmptyGlobalScope()) {
     // The empty enclosing scope should be stored by
     // CompilationInput::initForSelfHostingGlobal.
-    MOZ_ASSERT(stencil.input.enclosingScope);
-    MOZ_ASSERT(!stencil.input.enclosingScope->as<GlobalScope>().hasBindings());
-    return AbstractScopePtr(stencil.input.enclosingScope);
+    return AbstractScopePtr::compilationEnclosingScope(compilationState);
   }
   return AbstractScopePtr(compilationState, elem.toScope());
 }
@@ -190,9 +188,8 @@ void BytecodeSection::updateDepth(BytecodeOffset target) {
 }
 
 PerScriptData::PerScriptData(JSContext* cx,
-                             frontend::CompilationStencil& stencil,
                              frontend::CompilationState& compilationState)
-    : gcThingList_(cx, stencil, compilationState),
+    : gcThingList_(cx, compilationState),
       atomIndices_(cx->frontendCollectionPool()) {}
 
 bool PerScriptData::init(JSContext* cx) { return atomIndices_.acquire(cx); }

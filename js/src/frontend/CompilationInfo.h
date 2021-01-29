@@ -32,6 +32,7 @@
 #include "vm/JSFunction.h"  // JSFunction
 #include "vm/JSScript.h"    // SourceExtent
 #include "vm/Realm.h"
+#include "vm/ScopeKind.h"      // ScopeKind
 #include "vm/SharedStencil.h"  // SharedImmutableScriptData
 
 namespace js {
@@ -65,6 +66,11 @@ struct ScopeContext {
   // compiling is not an eval or arrow-function.
   uint32_t enclosingThisEnvironmentHops = 0;
 
+  // If non-null enclosingScope is passed to constructor, the kind of the scope.
+  // If null enclosingScope is passed instead, the compilation should use
+  // empty global scope.
+  ScopeKind enclosingScopeKind = ScopeKind::Global;
+
   // The type of binding required for `this` of the top level context, as
   // indicated by the enclosing scopes of this parse.
   //
@@ -82,20 +88,32 @@ struct ScopeContext {
   bool inClass = false;
   bool inWith = false;
 
-  explicit ScopeContext(JSContext* cx, InheritThis inheritThis, Scope* scope,
-                        JSObject* enclosingEnv = nullptr)
-      : effectiveScope(cx, determineEffectiveScope(scope, enclosingEnv)) {
+  // True if the passed enclosingScope is for FunctionScope of arrow function.
+  bool enclosingScopeIsArrow = false;
+
+  // True if the passed enclosingScope has environment.
+  bool enclosingScopeHasEnvironment = false;
+
+#ifdef DEBUG
+  // True if the passed enclosingScope has non-syntactic scope on chain.
+  bool hasNonSyntacticScopeOnChain = false;
+#endif
+
+  explicit ScopeContext(JSContext* cx, InheritThis inheritThis,
+                        Scope* enclosingScope, JSObject* enclosingEnv = nullptr)
+      : effectiveScope(cx,
+                       determineEffectiveScope(enclosingScope, enclosingEnv)) {
     if (inheritThis == InheritThis::Yes) {
       computeThisBinding(effectiveScope);
-      computeThisEnvironment(scope);
+      computeThisEnvironment(enclosingScope);
     }
-    computeInScope(scope);
+    computeInScope(enclosingScope);
   }
 
  private:
   void computeThisBinding(Scope* scope);
-  void computeThisEnvironment(Scope* scope);
-  void computeInScope(Scope* scope);
+  void computeThisEnvironment(Scope* enclosingScope);
+  void computeInScope(Scope* enclosingScope);
 
   static Scope* determineEffectiveScope(Scope* scope, JSObject* environment);
 };
