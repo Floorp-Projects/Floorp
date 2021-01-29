@@ -326,9 +326,6 @@ struct MOZ_RAII CompilationState {
 
   bool finish(JSContext* cx, CompilationStencil& stencil);
 
-  const ParserAtom* getParserAtomAt(JSContext* cx,
-                                    TaggedParserAtomIndex taggedIndex) const;
-
   // Allocate space for `length` gcthings, and return the address of the
   // first element to `cursor` to initialize on the caller.
   bool allocateGCThingsUninitialized(JSContext* cx, ScriptIndex scriptIndex,

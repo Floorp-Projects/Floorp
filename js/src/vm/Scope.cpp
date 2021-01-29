@@ -225,7 +225,7 @@ static void MarkParserScopeData(JSContext* cx,
     if (!index) {
       continue;
     }
-    compilationState.getParserAtomAt(cx, index)->markUsedByStencil();
+    compilationState.parserAtoms.markUsedByStencil(index);
   }
 }
 

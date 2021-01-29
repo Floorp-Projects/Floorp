@@ -2270,17 +2270,6 @@ const ParserAtom* GetWellKnownParserAtomAt(JSContext* cx,
   return WellKnownParserAtoms::getStatic2(index);
 }
 
-const ParserAtom* CompilationState::getParserAtomAt(
-    JSContext* cx, TaggedParserAtomIndex taggedIndex) const {
-  if (taggedIndex.isParserAtomIndex()) {
-    auto index = taggedIndex.toParserAtomIndex();
-    MOZ_ASSERT(index < parserAtoms.entries().length());
-    return parserAtoms.entries()[index]->asAtom();
-  }
-
-  return GetWellKnownParserAtomAt(cx, taggedIndex);
-}
-
 bool CompilationState::allocateGCThingsUninitialized(
     JSContext* cx, ScriptIndex scriptIndex, size_t length,
     TaggedScriptThingIndex** cursor) {
