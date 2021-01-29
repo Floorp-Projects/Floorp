@@ -31,6 +31,7 @@ internal class GeckoMediaSessionDelegate(
         }
     }
 
+    @Suppress("TooGenericExceptionCaught")
     override fun onMetadata(
         session: GeckoSession,
         mediaSession: GeckoViewMediaSession,
@@ -42,7 +43,8 @@ internal class GeckoMediaSessionDelegate(
                     withTimeoutOrNull(ARTWORK_RETRIEVE_TIMEOUT) {
                         it.getBitmap(ARTWORK_IMAGE_SIZE).await()
                     }
-                } catch (e: IllegalArgumentException) {
+                } catch (e: RuntimeException) {
+                    // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1689745
                     null
                 }
             }
