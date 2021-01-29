@@ -35,7 +35,7 @@
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
-#include "frontend/ParserAtom.h"  // ParserAtom, ParserName, ParserAtomsTable, TaggedParserAtomIndex
+#include "frontend/ParserAtom.h"  // ParserAtom, ParserAtomsTable, TaggedParserAtomIndex
 #include "frontend/SharedContext.h"                // TopLevelFunction
 #include "frontend/TaggedParserAtomIndexHasher.h"  // TaggedParserAtomIndexHasher
 #include "gc/Policy.h"
@@ -6034,7 +6034,7 @@ static bool ParseFunction(ModuleValidator<Unit>& m, FunctionNode** funNodeOut,
                    // m.fail.
   }
 
-  const ParserName* name = m.parser().bindingIdentifier(YieldIsName);
+  TaggedParserAtomIndex name = m.parser().bindingIdentifier(YieldIsName);
   if (!name) {
     return false;
   }
