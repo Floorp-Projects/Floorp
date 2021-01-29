@@ -19,8 +19,8 @@
 
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/NameAnalysisTypes.h"   // PrivateNameKind
-#include "frontend/ParserAtom.h"
-#include "frontend/Stencil.h"  // BigIntStencil
+#include "frontend/ParserAtom.h"          // ParserAtom, TaggedParserAtomIndex
+#include "frontend/Stencil.h"             // BigIntStencil
 #include "frontend/Token.h"
 #include "js/RootingAPI.h"
 #include "vm/BytecodeUtil.h"
@@ -866,6 +866,7 @@ class NameNode : public ParseNode {
  public:
   NameNode(ParseNodeKind kind, const ParserAtom* atom, const TokenPos& pos)
       : ParseNode(kind, pos), atom_(atom) {
+    MOZ_ASSERT(atom);
     MOZ_ASSERT(is<NameNode>());
   }
 
@@ -886,10 +887,18 @@ class NameNode : public ParseNode {
 
   const ParserAtom* atom() const { return atom_; }
 
+  TaggedParserAtomIndex atomIndex() const { return atom_->toIndex(); }
+
   const ParserName* name() const {
     MOZ_ASSERT(isKind(ParseNodeKind::Name) ||
                isKind(ParseNodeKind::PrivateName));
     return atom()->asName();
+  }
+
+  TaggedParserAtomIndex nameIndex() const {
+    MOZ_ASSERT(isKind(ParseNodeKind::Name) ||
+               isKind(ParseNodeKind::PrivateName));
+    return atom()->asName()->toIndex();
   }
 
   void setAtom(const ParserAtom* atom) { atom_ = atom; }
@@ -1660,6 +1669,8 @@ class LabeledStatement : public NameNode {
 
   const ParserName* label() const { return atom()->asName(); }
 
+  TaggedParserAtomIndex labelIndex() const { return label()->toIndex(); }
+
   ParseNode* statement() const { return statement_; }
 
   static bool test(const ParseNode& node) {
@@ -1718,6 +1729,10 @@ class LoopControlStatement : public ParseNode {
  public:
   /* Label associated with this break/continue statement, if any. */
   const ParserName* label() const { return label_; }
+
+  TaggedParserAtomIndex labelIndex() const {
+    return label_ ? label_->toIndex() : TaggedParserAtomIndex::null();
+  }
 
 #ifdef DEBUG
   void dumpImpl(GenericPrinter& out, int indent);
@@ -1942,6 +1957,8 @@ class PropertyAccessBase : public BinaryNode {
   const ParserName* name() const {
     return right()->as<NameNode>().atom()->asName();
   }
+
+  TaggedParserAtomIndex nameIndex() const { return name()->toIndex(); }
 };
 
 class PropertyAccess : public PropertyAccessBase {
