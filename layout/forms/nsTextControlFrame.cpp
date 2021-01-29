@@ -16,6 +16,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsTextFragment.h"
 #include "nsNameSpaceManager.h"
+#include "nsCheckboxRadioFrame.h"  //for registering accesskeys
 
 #include "nsIContent.h"
 #include "nsPresContext.h"
@@ -141,6 +142,8 @@ void nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
       TextControlElement::FromNode(GetContent());
   MOZ_ASSERT(textControlElement);
   textControlElement->UnbindFromFrame(this);
+
+  nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
 
   if (mMutationObserver) {
     mRootNode->RemoveMutationObserver(mMutationObserver);
@@ -625,6 +628,11 @@ void nsTextControlFrame::Reflow(nsPresContext* aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsTextControlFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
+
+  // make sure that the form registers itself on the initial/first reflow
+  if (mState & NS_FRAME_FIRST_REFLOW) {
+    nsCheckboxRadioFrame::RegUnRegAccessKey(this, true);
+  }
 
   // set values of reflow's out parameters
   WritingMode wm = aReflowInput.GetWritingMode();
