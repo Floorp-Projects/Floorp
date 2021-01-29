@@ -187,11 +187,15 @@ namespace IOUtils {
    *
    * @param path        An absolute file path
    * @param permissions The UNIX file mode representing the permissions.
+   * @param honorUmask  If omitted or true, any UNIX file mode value is
+   *                    modified by the process umask. If false, the exact value
+   *                    of UNIX file mode will be applied. This value has no effect
+   *                    on Windows.
    *
    * @return Resolves if the permissions were set successfully, otherwise
    *         rejects with a DOMException.
    */
-  Promise<void> setPermissions(DOMString path, unsigned long permissions);
+  Promise<void> setPermissions(DOMString path, unsigned long permissions, optional boolean honorUmask = true);
   /**
    * Return whether or not the file exists at the given path.
    *

@@ -47,6 +47,10 @@
 #include "prtime.h"
 #include "prtypes.h"
 
+#ifndef ANDROID
+#  include "nsSystemInfo.h"
+#endif
+
 #define REJECT_IF_SHUTTING_DOWN(aJSPromise)                       \
   do {                                                            \
     if (sShutdownStarted) {                                       \
@@ -588,7 +592,8 @@ already_AddRefed<Promise> IOUtils::GetChildren(GlobalObject& aGlobal,
 /* static */
 already_AddRefed<Promise> IOUtils::SetPermissions(GlobalObject& aGlobal,
                                                   const nsAString& aPath,
-                                                  const uint32_t aPermissions) {
+                                                  uint32_t aPermissions,
+                                                  const bool aHonorUmask) {
   MOZ_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   if (!promise) {
@@ -597,6 +602,12 @@ already_AddRefed<Promise> IOUtils::SetPermissions(GlobalObject& aGlobal,
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
   REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+
+#if defined(XP_UNIX) && !defined(ANDROID)
+  if (aHonorUmask) {
+    aPermissions &= ~nsSystemInfo::gUserUmask;
+  }
+#endif
 
   RunOnBackgroundThreadAndResolve<Ok>(
       promise, [file = std::move(file), permissions = aPermissions]() {
