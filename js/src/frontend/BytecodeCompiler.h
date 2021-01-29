@@ -150,8 +150,7 @@ MOZ_MUST_USE JSFunction* CompileStandaloneFunction(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<char16_t>& srcBuf,
     const mozilla::Maybe<uint32_t>& parameterListEnd,
-    frontend::FunctionSyntaxKind syntaxKind,
-    HandleScope enclosingScope = nullptr);
+    frontend::FunctionSyntaxKind syntaxKind);
 
 MOZ_MUST_USE JSFunction* CompileStandaloneGenerator(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
@@ -170,6 +169,13 @@ MOZ_MUST_USE JSFunction* CompileStandaloneAsyncGenerator(
     JS::SourceText<char16_t>& srcBuf,
     const mozilla::Maybe<uint32_t>& parameterListEnd,
     frontend::FunctionSyntaxKind syntaxKind);
+
+// Compile a single function in given enclosing non-syntactic scope.
+MOZ_MUST_USE JSFunction* CompileStandaloneFunctionInNonSyntacticScope(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JS::SourceText<char16_t>& srcBuf,
+    const mozilla::Maybe<uint32_t>& parameterListEnd,
+    frontend::FunctionSyntaxKind syntaxKind, HandleScope enclosingScope);
 
 /*
  * True if str consists of an IdentifierStart character, followed by one or
