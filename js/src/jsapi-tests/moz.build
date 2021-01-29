@@ -47,6 +47,7 @@ UNIFIED_SOURCES += [
     "testForwardSetProperty.cpp",
     "testFreshGlobalEvalRedefinition.cpp",
     "testFunctionBinding.cpp",
+    "testFunctionNonSyntactic.cpp",
     "testFunctionProperties.cpp",
     "testGCAllocator.cpp",
     "testGCCellPtr.cpp",
