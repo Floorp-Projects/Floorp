@@ -322,20 +322,22 @@ This encoding mapping was defined in `system-addon/lib/TelemetryFeed.jsm`
 +-------------------+------------------------+
 | `showCFRFeatures` | 128 (10000000)         |
 +-------------------+------------------------+
+| `showSponsoredTopSites` | 256 (100000000)   |
++-------------------+------------------------+
 ```
 
 Each item above could be combined with other items through bitwise OR (`|`) operation.
 
 Examples:
 
-* Everything is on, `user_prefs = 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128 = 255`
+* Everything is on, `user_prefs = 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128 | 256 = 511`
 * Everything is off, `user_prefs = 0`
 * Only show search and Top Stories, `user_prefs = 1 | 4 = 5`
-* Everything except Highlights, `user_prefs = 1 | 2 | 4 | 16 | 32 | 64 | 128 = 247`
+* Everything except Highlights, `user_prefs = 1 | 2 | 4 | 16 | 32 | 64 | 128 | 256 = 503`
 
 Likewise, one can use bitwise AND (`&`) for decoding.
 
-* Check if everything is shown, `user_prefs & (1 | 2 | 4 | 8 | 16 | 32 | 64 | 128)` or `user_prefs == 255`
+* Check if everything is shown, `user_prefs & (1 | 2 | 4 | 8 | 16 | 32 | 64 | 128 | 256)` or `user_prefs == 511`
 * Check if everything is off, `user_prefs == 0`
 * Check if search is shown, `user_prefs & 1`
 * Check if both Top Sites and Top Stories are shown, `(user_prefs & 2) && (user_prefs & 4)`, or  `(user_prefs & (2 | 4)) == (2 | 4)`
