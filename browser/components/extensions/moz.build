@@ -19,10 +19,6 @@ EXTRA_JS_MODULES += [
     "ExtensionPopups.jsm",
 ]
 
-TESTING_JS_MODULES += [
-    "test/AppUiTestDelegate.jsm",
-]
-
 DIRS += ["schemas"]
 
 BROWSER_CHROME_MANIFESTS += [

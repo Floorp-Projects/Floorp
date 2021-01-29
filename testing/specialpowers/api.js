@@ -47,26 +47,10 @@ this.specialpowers = class extends ExtensionAPI {
         moduleURI: "resource://specialpowers/SpecialPowersParent.jsm",
       },
     });
-
-    ChromeUtils.registerWindowActor("AppTestDelegate", {
-      parent: {
-        moduleURI: "resource://specialpowers/AppTestDelegateParent.jsm",
-      },
-      child: {
-        moduleURI: "resource://specialpowers/AppTestDelegateChild.jsm",
-        events: {
-          DOMContentLoaded: { capture: true },
-          load: { capture: true },
-        },
-      },
-      allFrames: true,
-      includeChrome: true,
-    });
   }
 
   onShutdown() {
     ChromeUtils.unregisterWindowActor("SpecialPowers");
-    ChromeUtils.unregisterWindowActor("AppTestDelegate");
     resProto.setSubstitution("specialpowers", null);
   }
 };
