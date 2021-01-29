@@ -114,4 +114,19 @@ The ``--fix`` and ``--edit`` arguments can be combined, in which case any
 errors that can be fixed automatically will be, and the rest will be opened
 with your $EDITOR.
 
+Editor Integration
+==================
+
+Editor integrations are highly recommended for linters, as they let you see
+errors in real time, and can help you fix issues before you compile or run tests.
+
+Although mozilla-central does not currently have an integration available for
+`./mach lint`, there are various integrations available for some of the major
+linting tools that we use:
+
+* `ESLint`_
+* `Black (Python)`_
+
 .. _quickfix list: http://vimdoc.sourceforge.net/htmldoc/quickfix.html
+.. _ESLint: https://eslint.org/docs/user-guide/integrations#editors
+.. _Black (Python): https://black.readthedocs.io/en/stable/editor_integration.html
