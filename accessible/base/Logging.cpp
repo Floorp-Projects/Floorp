@@ -235,9 +235,6 @@ static void LogShellLoadType(nsIDocShell* aDocShell) {
     case LOAD_NORMAL_REPLACE:
       printf("normal replace; ");
       break;
-    case LOAD_NORMAL_EXTERNAL:
-      printf("normal external; ");
-      break;
     case LOAD_HISTORY:
       printf("history; ");
       break;

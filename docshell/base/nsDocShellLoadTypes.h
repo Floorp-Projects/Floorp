@@ -28,8 +28,9 @@
  * above 0xffff (e.g. LOAD_FLAGS_BYPASS_CLASSIFIER), since MAKE_LOAD_TYPE would
  * just shift them out anyway.
  */
-#  define EXTRA_LOAD_FLAGS                     \
-    (nsIWebNavigation::LOAD_FLAGS_FIRST_LOAD | \
+#  define EXTRA_LOAD_FLAGS                        \
+    (nsIWebNavigation::LOAD_FLAGS_FROM_EXTERNAL | \
+     nsIWebNavigation::LOAD_FLAGS_FIRST_LOAD |    \
      nsIWebNavigation::LOAD_FLAGS_ALLOW_POPUPS | 0xffff0000)
 
 /* load types are legal combinations of load commands and flags
@@ -44,8 +45,6 @@ enum LoadType : uint32_t {
   LOAD_NORMAL_REPLACE =
       MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL,
                      nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY),
-  LOAD_NORMAL_EXTERNAL = MAKE_LOAD_TYPE(
-      nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_FROM_EXTERNAL),
   LOAD_HISTORY = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_HISTORY,
                                 nsIWebNavigation::LOAD_FLAGS_NONE),
   LOAD_NORMAL_BYPASS_CACHE = MAKE_LOAD_TYPE(
@@ -131,7 +130,6 @@ static inline bool IsValidLoadType(uint32_t aLoadType) {
   switch (aLoadType) {
     case LOAD_NORMAL:
     case LOAD_NORMAL_REPLACE:
-    case LOAD_NORMAL_EXTERNAL:
     case LOAD_NORMAL_BYPASS_CACHE:
     case LOAD_NORMAL_BYPASS_PROXY:
     case LOAD_NORMAL_BYPASS_PROXY_AND_CACHE:
@@ -168,7 +166,6 @@ static inline nsDOMNavigationTiming::Type ConvertLoadTypeToNavigationType(
   auto result = nsDOMNavigationTiming::TYPE_RESERVED;
   switch (aLoadType) {
     case LOAD_NORMAL:
-    case LOAD_NORMAL_EXTERNAL:
     case LOAD_NORMAL_BYPASS_CACHE:
     case LOAD_NORMAL_BYPASS_PROXY:
     case LOAD_NORMAL_BYPASS_PROXY_AND_CACHE:
