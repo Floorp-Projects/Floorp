@@ -37,8 +37,7 @@ class TaggedParserAtomIndexHasher {
   using Lookup = frontend::TaggedParserAtomIndex;
 
   static inline HashNumber hash(const Lookup& l) {
-    return HashNumber(
-        *const_cast<frontend::TaggedParserAtomIndex&>(l).rawData());
+    return HashNumber(l.rawData());
   }
   static inline bool match(frontend::TaggedParserAtomIndex entry,
                            const Lookup& l) {
