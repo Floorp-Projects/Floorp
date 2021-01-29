@@ -14,8 +14,8 @@
 
 /**
  * nsCheckboxRadioFrame is used for radio buttons and checkboxes.
- * It also has two static methods (RegUnRegAccessKey and
- * GetScreenHeight) that are used by other form controls.
+ * It also has a static method (GetUsableScreenRect) that is used by
+ * other form controls.
  */
 class nsCheckboxRadioFrame final : public nsAtomicContainerFrame,
                                    public nsIFormControlFrame {
@@ -75,9 +75,6 @@ class nsCheckboxRadioFrame final : public nsAtomicContainerFrame,
                       const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot,
-                           PostDestroyData& aPostDestroyData) override;
-
   // new behavior
 
   virtual void SetFocus(bool aOn = true, bool aRepaint = false) override;
@@ -85,9 +82,6 @@ class nsCheckboxRadioFrame final : public nsAtomicContainerFrame,
   // nsIFormControlFrame
   virtual nsresult SetFormProperty(nsAtom* aName,
                                    const nsAString& aValue) override;
-
-  // AccessKey Helper function
-  static nsresult RegUnRegAccessKey(nsIFrame* aFrame, bool aDoReg);
 
   /**
    * Returns the usable screen rect in app units, eg the rect where we can
