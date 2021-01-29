@@ -37,7 +37,7 @@ FunctionEmitter::FunctionEmitter(BytecodeEmitter* bce, FunctionBox* funbox,
                                  IsHoisted isHoisted)
     : bce_(bce),
       funbox_(funbox),
-      name_(funbox_->explicitNameIndex()),
+      name_(funbox_->explicitName()),
       syntaxKind_(syntaxKind),
       isHoisted_(isHoisted) {}
 

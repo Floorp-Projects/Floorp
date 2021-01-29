@@ -235,14 +235,13 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
     *retId = nullptr;
 
     // If the function already has a name, use that.
-    if (funbox->displayAtomIndex()) {
+    if (funbox->displayAtom()) {
       if (!prefix_) {
-        *retId = parserAtoms_.getParserAtom(funbox->displayAtomIndex());
+        *retId = parserAtoms_.getParserAtom(funbox->displayAtom());
         return true;
       }
       if (!buf_.append(prefix_) || !buf_.append('/') ||
-          !buf_.append(
-              parserAtoms_.getParserAtom(funbox->displayAtomIndex()))) {
+          !buf_.append(parserAtoms_.getParserAtom(funbox->displayAtom()))) {
         return false;
       }
       *retId = buf_.finishParserAtom(parserAtoms_);

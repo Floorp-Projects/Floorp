@@ -1655,7 +1655,7 @@ bool ModuleBuilder::processExport(frontend::ParseNode* exportNode) {
     case ParseNodeKind::Function: {
       FunctionBox* box = kid->as<FunctionNode>().funbox();
       MOZ_ASSERT(!box->isArrow());
-      auto localName = box->explicitNameIndex();
+      auto localName = box->explicitName();
       auto exportName =
           isDefault ? TaggedParserAtomIndex::WellKnown::default_() : localName;
       if (!appendExportEntry(exportName, localName)) {
