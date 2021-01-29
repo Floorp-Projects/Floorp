@@ -521,17 +521,8 @@ class PageAction {
 
     let { content, id } = message;
     let { primary, secondary } = content.buttons;
-
-    let dateFormat = new Services.intl.DateTimeFormat(
-      this.window.gBrowser.ownerGlobal.navigator.language,
-      {
-        month: "long",
-        year: "numeric",
-      }
-    ).format;
-
     let earliestDate = await TrackingDBService.getEarliestRecordedDate();
-    let monthName = dateFormat(new Date(earliestDate));
+    let timestamp = new Date().getTime(earliestDate);
     let panelTitle = "";
     let headerLabel = this.window.document.getElementById(
       "cfr-notification-header-label"
@@ -551,7 +542,7 @@ class PageAction {
         content: message.content.heading_text,
         attributes: {
           blockedCount: reachedMilestone,
-          date: monthName,
+          date: timestamp,
         },
       })
     );
