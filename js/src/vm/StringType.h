@@ -15,6 +15,7 @@
 #include <type_traits>  // std::is_same
 
 #include "jsapi.h"
+#include "jstypes.h"  // js::Bit
 
 #include "gc/Allocator.h"
 #include "gc/Barrier.h"
@@ -49,6 +50,7 @@ namespace frontend {
 
 class ParserAtom;
 class ParserAtomEntry;
+class TaggedParserAtomIndex;
 class WellKnownParserAtoms_ROM;
 struct CompilationAtomCache;
 
@@ -1261,13 +1263,17 @@ class StaticStrings {
   // NOTE: The WellKnownParserAtoms rely on these tables and may need to be
   //       update if these tables are changed.
   friend class js::frontend::ParserAtomEntry;
+  friend class js::frontend::TaggedParserAtomIndex;
   friend class js::frontend::WellKnownParserAtoms_ROM;
   friend struct js::frontend::CompilationAtomCache;
 
  private:
+  static constexpr size_t SMALL_CHAR_BITS = 6;
+  static constexpr size_t SMALL_CHAR_MASK = js::BitMask(SMALL_CHAR_BITS);
+
   /* Bigger chars cannot be in a length-2 string. */
-  static const size_t SMALL_CHAR_LIMIT = 128U;
-  static const size_t NUM_SMALL_CHARS = 64U;
+  static constexpr size_t SMALL_CHAR_LIMIT = 128U;
+  static constexpr size_t NUM_SMALL_CHARS = js::Bit(SMALL_CHAR_BITS);
 
   JSAtom* length2StaticTable[NUM_SMALL_CHARS * NUM_SMALL_CHARS] = {};  // zeroes
 
@@ -1403,7 +1409,15 @@ class StaticStrings {
   static MOZ_ALWAYS_INLINE size_t getLength2Index(char16_t c1, char16_t c2) {
     MOZ_ASSERT(fitsInSmallChar(c1));
     MOZ_ASSERT(fitsInSmallChar(c2));
-    return (size_t(toSmallCharArray[c1]) << 6) + toSmallCharArray[c2];
+    return (size_t(toSmallCharArray[c1]) << SMALL_CHAR_BITS) +
+           toSmallCharArray[c2];
+  }
+
+  // Same as getLength2Index, but withtout runtime assertion,
+  // this should be used only for known static string.
+  static constexpr size_t getLength2IndexStatic(char c1, char c2) {
+    return (size_t(toSmallCharArray[c1]) << SMALL_CHAR_BITS) +
+           toSmallCharArray[c2];
   }
 
   MOZ_ALWAYS_INLINE JSAtom* getLength2FromIndex(size_t index) {

@@ -132,18 +132,43 @@ class TaggedParserAtomIndex {
   explicit constexpr TaggedParserAtomIndex(StaticParserString2 index)
       : data_(uint32_t(index) | WellKnownTag | Static2SubTag) {}
 
-  static TaggedParserAtomIndex star() {
-    return TaggedParserAtomIndex(StaticParserString1('*'));
+  class WellKnown {
+   public:
+#define METHOD_(_, name, _2)                             \
+  static constexpr TaggedParserAtomIndex name() {        \
+    return TaggedParserAtomIndex(WellKnownAtomId::name); \
   }
-  static TaggedParserAtomIndex arguments() {
-    return TaggedParserAtomIndex(WellKnownAtomId::arguments);
+    FOR_EACH_NONTINY_COMMON_PROPERTYNAME(METHOD_)
+#undef METHOD_
+
+#define METHOD_(name, _)                                 \
+  static constexpr TaggedParserAtomIndex name() {        \
+    return TaggedParserAtomIndex(WellKnownAtomId::name); \
   }
-  static TaggedParserAtomIndex dotThis() {
-    return TaggedParserAtomIndex(WellKnownAtomId::dotThis);
+    JS_FOR_EACH_PROTOTYPE(METHOD_)
+#undef METHOD_
+
+#define METHOD_(_, name, str)                                    \
+  static constexpr TaggedParserAtomIndex name() {                \
+    return TaggedParserAtomIndex(StaticParserString1((str)[0])); \
   }
-  static TaggedParserAtomIndex dotGenerator() {
-    return TaggedParserAtomIndex(WellKnownAtomId::dotGenerator);
+    FOR_EACH_LENGTH1_PROPERTYNAME(METHOD_)
+#undef METHOD_
+
+#define METHOD_(_, name, str)                                         \
+  static constexpr TaggedParserAtomIndex name() {                     \
+    return TaggedParserAtomIndex(StaticParserString2(                 \
+        (StaticStrings::getLength2IndexStatic((str)[0], (str)[1])))); \
   }
+    FOR_EACH_LENGTH2_PROPERTYNAME(METHOD_)
+#undef METHOD_
+
+    static constexpr TaggedParserAtomIndex empty() {
+      return TaggedParserAtomIndex(WellKnownAtomId::empty);
+    }
+  };
+
+  // NOTE: this is not well-known "null".
   static TaggedParserAtomIndex null() { return TaggedParserAtomIndex(); }
 
 #ifdef DEBUG
