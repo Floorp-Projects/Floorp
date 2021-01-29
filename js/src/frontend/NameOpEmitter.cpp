@@ -71,7 +71,8 @@ bool NameOpEmitter::emitGet() {
         return false;
       }
       if (loc_.isLexical()) {
-        if (!bce_->emitTDZCheckIfNeeded(name_, loc_, ValueIsOnStack::Yes)) {
+        if (!bce_->emitTDZCheckIfNeeded(name_->toIndex(), loc_,
+                                        ValueIsOnStack::Yes)) {
           //        [stack] VAL
           return false;
         }
@@ -84,7 +85,8 @@ bool NameOpEmitter::emitGet() {
         return false;
       }
       if (loc_.isLexical()) {
-        if (!bce_->emitTDZCheckIfNeeded(name_, loc_, ValueIsOnStack::Yes)) {
+        if (!bce_->emitTDZCheckIfNeeded(name_->toIndex(), loc_,
+                                        ValueIsOnStack::Yes)) {
           //        [stack] VAL
           return false;
         }
@@ -281,7 +283,8 @@ bool NameOpEmitter::emitAssignment() {
           if (loc_.isConst()) {
             op = JSOp::ThrowSetConst;
           }
-          if (!bce_->emitTDZCheckIfNeeded(name_, loc_, ValueIsOnStack::No)) {
+          if (!bce_->emitTDZCheckIfNeeded(name_->toIndex(), loc_,
+                                          ValueIsOnStack::No)) {
             return false;
           }
         }
@@ -296,7 +299,7 @@ bool NameOpEmitter::emitAssignment() {
         }
       }
       if (op == JSOp::InitLexical) {
-        if (!bce_->innermostTDZCheckCache->noteTDZCheck(bce_, name_,
+        if (!bce_->innermostTDZCheckCache->noteTDZCheck(bce_, name_->toIndex(),
                                                         DontCheckTDZ)) {
           return false;
         }
@@ -312,7 +315,8 @@ bool NameOpEmitter::emitAssignment() {
           if (loc_.isConst()) {
             op = JSOp::ThrowSetConst;
           }
-          if (!bce_->emitTDZCheckIfNeeded(name_, loc_, ValueIsOnStack::No)) {
+          if (!bce_->emitTDZCheckIfNeeded(name_->toIndex(), loc_,
+                                          ValueIsOnStack::No)) {
             return false;
           }
         }
@@ -338,7 +342,7 @@ bool NameOpEmitter::emitAssignment() {
         }
       }
       if (op == JSOp::InitAliasedLexical) {
-        if (!bce_->innermostTDZCheckCache->noteTDZCheck(bce_, name_,
+        if (!bce_->innermostTDZCheckCache->noteTDZCheck(bce_, name_->toIndex(),
                                                         DontCheckTDZ)) {
           return false;
         }

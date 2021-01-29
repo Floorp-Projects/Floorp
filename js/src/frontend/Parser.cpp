@@ -516,7 +516,7 @@ bool GeneralParser<ParseHandler, Unit>::notePositionalFormalParameter(
     FunctionNodeType funNode, const ParserName* name, uint32_t beginPos,
     bool disallowDuplicateParams, bool* duplicatedParam) {
   if (AddDeclaredNamePtr p =
-          pc_->functionScope().lookupDeclaredNameForAdd(name)) {
+          pc_->functionScope().lookupDeclaredNameForAdd(name->toIndex())) {
     if (disallowDuplicateParams) {
       error(JSMSG_BAD_DUP_ARGS);
       return false;
@@ -539,7 +539,8 @@ bool GeneralParser<ParseHandler, Unit>::notePositionalFormalParameter(
     *duplicatedParam = true;
   } else {
     DeclarationKind kind = DeclarationKind::PositionalFormalParameter;
-    if (!pc_->functionScope().addDeclaredName(pc_, p, name, kind, beginPos)) {
+    if (!pc_->functionScope().addDeclaredName(pc_, p, name->toIndex(), kind,
+                                              beginPos)) {
       return false;
     }
   }
@@ -603,18 +604,23 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredName(const ParserName* name,
     case DeclarationKind::ModuleBodyLevelFunction: {
       MOZ_ASSERT(pc_->atModuleLevel());
 
-      AddDeclaredNamePtr p = pc_->varScope().lookupDeclaredNameForAdd(name);
+      AddDeclaredNamePtr p =
+          pc_->varScope().lookupDeclaredNameForAdd(name->toIndex());
       if (p) {
         reportRedeclaration(name, p->value()->kind(), pos, p->value()->pos());
         return false;
       }
 
-      if (!pc_->varScope().addDeclaredName(pc_, p, name, kind, pos.begin)) {
+      if (!pc_->varScope().addDeclaredName(pc_, p, name->toIndex(), kind,
+                                           pos.begin)) {
         return false;
       }
 
       // Body-level functions in modules are always closed over.
-      pc_->varScope().lookupDeclaredName(name)->value()->setClosedOver();
+      pc_->varScope()
+          .lookupDeclaredName(name->toIndex())
+          ->value()
+          ->setClosedOver();
 
       break;
     }
@@ -624,13 +630,13 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredName(const ParserName* name,
       // (e.g., destructuring formal parameter) is duplicated.
 
       AddDeclaredNamePtr p =
-          pc_->functionScope().lookupDeclaredNameForAdd(name);
+          pc_->functionScope().lookupDeclaredNameForAdd(name->toIndex());
       if (p) {
         error(JSMSG_BAD_DUP_ARGS);
         return false;
       }
 
-      if (!pc_->functionScope().addDeclaredName(pc_, p, name, kind,
+      if (!pc_->functionScope().addDeclaredName(pc_, p, name->toIndex(), kind,
                                                 pos.begin)) {
         return false;
       }
@@ -641,13 +647,13 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredName(const ParserName* name,
     case DeclarationKind::LexicalFunction:
     case DeclarationKind::PrivateName: {
       ParseContext::Scope* scope = pc_->innermostScope();
-      AddDeclaredNamePtr p = scope->lookupDeclaredNameForAdd(name);
+      AddDeclaredNamePtr p = scope->lookupDeclaredNameForAdd(name->toIndex());
       if (p) {
         reportRedeclaration(name, p->value()->kind(), pos, p->value()->pos());
         return false;
       }
 
-      if (!scope->addDeclaredName(pc_, p, name, kind, pos.begin)) {
+      if (!scope->addDeclaredName(pc_, p, name->toIndex(), kind, pos.begin)) {
         return false;
       }
 
@@ -661,7 +667,8 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredName(const ParserName* name,
       // Block and are done in checkFunctionDefinition.
 
       ParseContext::Scope* scope = pc_->innermostScope();
-      if (AddDeclaredNamePtr p = scope->lookupDeclaredNameForAdd(name)) {
+      if (AddDeclaredNamePtr p =
+              scope->lookupDeclaredNameForAdd(name->toIndex())) {
         // It is usually an early error if there is another declaration
         // with the same name in the same scope.
         //
@@ -672,7 +679,7 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredName(const ParserName* name,
           return false;
         }
       } else {
-        if (!scope->addDeclaredName(pc_, p, name, kind, pos.begin)) {
+        if (!scope->addDeclaredName(pc_, p, name->toIndex(), kind, pos.begin)) {
           return false;
         }
       }
@@ -696,7 +703,8 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredName(const ParserName* name,
       // needs a special check if there is an extra var scope due to
       // parameter expressions.
       if (pc_->isFunctionExtraBodyVarScopeInnermost()) {
-        DeclaredNamePtr p = pc_->functionScope().lookupDeclaredName(name);
+        DeclaredNamePtr p =
+            pc_->functionScope().lookupDeclaredName(name->toIndex());
         if (p && DeclarationKindIsParameter(p->value()->kind())) {
           reportRedeclaration(name, p->value()->kind(), pos, p->value()->pos());
           return false;
@@ -717,13 +725,13 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredName(const ParserName* name,
 
       // It is an early error if there is another declaration with the same
       // name in the same scope.
-      AddDeclaredNamePtr p = scope->lookupDeclaredNameForAdd(name);
+      AddDeclaredNamePtr p = scope->lookupDeclaredNameForAdd(name->toIndex());
       if (p) {
         reportRedeclaration(name, p->value()->kind(), pos, p->value()->pos());
         return false;
       }
 
-      if (!scope->addDeclaredName(pc_, p, name, kind, pos.begin)) {
+      if (!scope->addDeclaredName(pc_, p, name->toIndex(), kind, pos.begin)) {
         return false;
       }
 
@@ -755,7 +763,7 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredPrivateName(
     Node nameNode, const ParserName* name, PropertyType propType,
     TokenPos pos) {
   ParseContext::Scope* scope = pc_->innermostScope();
-  AddDeclaredNamePtr p = scope->lookupDeclaredNameForAdd(name);
+  AddDeclaredNamePtr p = scope->lookupDeclaredNameForAdd(name->toIndex());
 
   PrivateNameKind kind;
   switch (propType) {
@@ -793,17 +801,17 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredPrivateName(
     return false;
   }
 
-  if (!scope->addDeclaredName(pc_, p, name, DeclarationKind::PrivateName,
-                              pos.begin)) {
+  if (!scope->addDeclaredName(pc_, p, name->toIndex(),
+                              DeclarationKind::PrivateName, pos.begin)) {
     return false;
   }
-  scope->lookupDeclaredName(name)->value()->setPrivateNameKind(kind);
+  scope->lookupDeclaredName(name->toIndex())->value()->setPrivateNameKind(kind);
   handler_.setPrivateNameKind(nameNode, kind);
 
   return true;
 }
 
-bool ParserBase::noteUsedNameInternal(const ParserName* name,
+bool ParserBase::noteUsedNameInternal(TaggedParserAtomIndex name,
                                       NameVisibility visibility,
                                       mozilla::Maybe<TokenPos> tokenPosition) {
   // The asm.js validator does all its own symbol-table management so, as an
@@ -854,7 +862,7 @@ bool PerHandlerParser<ParseHandler>::
         return false;
       }
 
-      scope.lookupDeclaredName(parserAtom->asName())->value()->setClosedOver();
+      scope.lookupDeclaredName(parserAtom->toIndex())->value()->setClosedOver();
       MOZ_ASSERT(slotCount > 0);
       slotCount--;
     }
@@ -879,7 +887,9 @@ bool PerHandlerParser<ParseHandler>::
         bi.setClosedOver();
 
         if constexpr (isSyntaxParser) {
-          if (!pc_->closedOverBindingsForLazy().append(bi.name())) {
+          const ParserAtom* atom =
+              this->compilationState_.getParserAtomAt(cx_, bi.name());
+          if (!pc_->closedOverBindingsForLazy().append(atom)) {
             ReportOutOfMemory(cx_);
             return false;
           }
@@ -1029,22 +1039,21 @@ Maybe<GlobalScope::ParserData*> NewGlobalScopeData(JSContext* cx,
         bool isTopLevelFunction =
             bi.declarationKind() == DeclarationKind::BodyLevelFunction;
 
-        ParserBindingName binding(bi.name()->toIndex(), closedOver,
-                                  isTopLevelFunction);
+        ParserBindingName binding(bi.name(), closedOver, isTopLevelFunction);
         if (!vars.append(binding)) {
           return Nothing();
         }
         break;
       }
       case BindingKind::Let: {
-        ParserBindingName binding(bi.name()->toIndex(), closedOver);
+        ParserBindingName binding(bi.name(), closedOver);
         if (!lets.append(binding)) {
           return Nothing();
         }
         break;
       }
       case BindingKind::Const: {
-        ParserBindingName binding(bi.name()->toIndex(), closedOver);
+        ParserBindingName binding(bi.name(), closedOver);
         if (!consts.append(binding)) {
           return Nothing();
         }
@@ -1090,7 +1099,7 @@ Maybe<ModuleScope::ParserData*> NewModuleScopeData(JSContext* cx,
   bool allBindingsClosedOver = pc->sc()->allBindingsClosedOver();
   for (BindingIter bi = scope.bindings(pc); bi; bi++) {
     // Imports are indirect bindings and must not be given known slots.
-    ParserBindingName binding(bi.name()->toIndex(),
+    ParserBindingName binding(bi.name(),
                               (allBindingsClosedOver || bi.closedOver()) &&
                                   bi.kind() != BindingKind::Import);
     switch (bi.kind()) {
@@ -1157,7 +1166,7 @@ Maybe<EvalScope::ParserData*> NewEvalScopeData(JSContext* cx,
     bool isTopLevelFunction =
         bi.declarationKind() == DeclarationKind::BodyLevelFunction;
 
-    ParserBindingName binding(bi.name()->toIndex(), true, isTopLevelFunction);
+    ParserBindingName binding(bi.name(), true, isTopLevelFunction);
     if (!vars.append(binding)) {
       return Nothing();
     }
@@ -1203,7 +1212,7 @@ Maybe<FunctionScope::ParserData*> NewFunctionScopeData(
 
     ParserBindingName bindName;
     if (name) {
-      DeclaredNamePtr p = scope.lookupDeclaredName(name);
+      DeclaredNamePtr p = scope.lookupDeclaredName(name->toIndex());
 
       // Do not consider any positional formal parameters closed over if
       // there are parameter defaults. It is the binding in the defaults
@@ -1233,7 +1242,7 @@ Maybe<FunctionScope::ParserData*> NewFunctionScopeData(
   }
 
   for (BindingIter bi = scope.bindings(pc); bi; bi++) {
-    ParserBindingName binding(bi.name()->toIndex(),
+    ParserBindingName binding(bi.name(),
                               allBindingsClosedOver || bi.closedOver());
     switch (bi.kind()) {
       case BindingKind::FormalParameter:
@@ -1249,7 +1258,7 @@ Maybe<FunctionScope::ParserData*> NewFunctionScopeData(
         // exprs, which induces a separate var environment, should be the
         // special bindings.
         MOZ_ASSERT_IF(hasParameterExprs,
-                      FunctionScope::isSpecialName(cx, bi.name()->toIndex()));
+                      FunctionScope::isSpecialName(cx, bi.name()));
         if (!vars.append(binding)) {
           return Nothing();
         }
@@ -1325,7 +1334,7 @@ Maybe<VarScope::ParserData*> NewVarScopeData(JSContext* cx,
 
   for (BindingIter bi = scope.bindings(pc); bi; bi++) {
     if (bi.kind() == BindingKind::Var) {
-      ParserBindingName binding(bi.name()->toIndex(),
+      ParserBindingName binding(bi.name(),
                                 allBindingsClosedOver || bi.closedOver());
       if (!vars.append(binding)) {
         return Nothing();
@@ -1376,7 +1385,7 @@ Maybe<LexicalScope::ParserData*> NewLexicalScopeData(JSContext* cx,
       pc->sc()->allBindingsClosedOver() || scope.tooBigToOptimize();
 
   for (BindingIter bi = scope.bindings(pc); bi; bi++) {
-    ParserBindingName binding(bi.name()->toIndex(),
+    ParserBindingName binding(bi.name(),
                               allBindingsClosedOver || bi.closedOver());
     switch (bi.kind()) {
       case BindingKind::Let:
@@ -1493,7 +1502,9 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
   if (!evalSc) {
     // The unbound private names are sorted, so just grab the first one.
     UnboundPrivateName minimum = unboundPrivateNames[0];
-    UniqueChars str = ParserAtomToPrintableString(cx_, minimum.atom);
+    const ParserAtom* atom =
+        this->compilationState_.getParserAtomAt(cx_, minimum.atom);
+    UniqueChars str = ParserAtomToPrintableString(cx_, atom);
     if (!str) {
       return false;
     }
@@ -1507,6 +1518,9 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
   auto verifyPrivateName = [](JSContext* cx, auto* parser,
                               HandleScope enclosingScope,
                               UnboundPrivateName unboundName) {
+    const ParserAtom* unboundAtom =
+        parser->compilationState_.getParserAtomAt(cx, unboundName.atom);
+
     // Walk the enclosing scope chain looking for this private name;
     for (ScopeIter si(enclosingScope); si; si++) {
       // Private names are only found within class body scopes.
@@ -1516,7 +1530,7 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
 
       // Look for a matching binding.
       for (js::BindingIter bi(si.scope()); bi; bi++) {
-        if (unboundName.atom->equalsJSAtom(bi.name())) {
+        if (unboundAtom->equalsJSAtom(bi.name())) {
           // Awesome. We found it, we're done here!
           return true;
         }
@@ -1524,7 +1538,7 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
     }
 
     // Didn't find a matching binding, so issue an error.
-    UniqueChars str = ParserAtomToPrintableString(cx, unboundName.atom);
+    UniqueChars str = ParserAtomToPrintableString(cx, unboundAtom);
     if (!str) {
       return false;
     }
@@ -1746,7 +1760,7 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   moduleNode->setBody(&stmtList->as<ListNode>());
 
   if (pc_->isAsync()) {
-    if (!noteUsedName(cx_->parserNames().dotGenerator)) {
+    if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dotGenerator())) {
       return null();
     }
 
@@ -1778,12 +1792,11 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   // Check exported local bindings exist and mark them as closed over.
   StencilModuleMetadata& moduleMetadata = *this->stencil_.moduleMetadata;
   for (auto entry : moduleMetadata.localExportEntries) {
-    const ParserAtom* nameId =
-        this->compilationState_.getParserAtomAt(cx_, entry.localName);
-    MOZ_ASSERT(nameId);
-
-    DeclaredNamePtr p = modulepc.varScope().lookupDeclaredName(nameId);
+    DeclaredNamePtr p = modulepc.varScope().lookupDeclaredName(entry.localName);
     if (!p) {
+      const ParserAtom* nameId =
+          this->compilationState_.getParserAtomAt(cx_, entry.localName);
+      MOZ_ASSERT(nameId);
       UniqueChars str = ParserAtomToPrintableString(cx_, nameId);
       if (!str) {
         return null();
@@ -1803,7 +1816,7 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
     return nullptr;
   }
   modulepc.varScope()
-      .lookupDeclaredName(cx_->parserNames().starNamespaceStar)
+      .lookupDeclaredName(TaggedParserAtomIndex::WellKnown::starNamespaceStar())
       ->value()
       ->setClosedOver();
 
@@ -1859,7 +1872,7 @@ PerHandlerParser<ParseHandler>::newInternalDotName(const ParserName* name) {
   if (!nameNode) {
     return null();
   }
-  if (!noteUsedName(name)) {
+  if (!noteUsedName(name->toIndex())) {
     return null();
   }
   return nameNode;
@@ -3348,7 +3361,7 @@ bool GeneralParser<ParseHandler, Unit>::functionFormalParametersAndBody(
 
   if (kind == FunctionSyntaxKind::ClassConstructor ||
       kind == FunctionSyntaxKind::DerivedClassConstructor) {
-    if (!noteUsedName(cx_->parserNames().dotInitializers)) {
+    if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dotInitializers())) {
       return false;
     }
   }
@@ -4885,7 +4898,10 @@ bool Parser<FullParseHandler, Unit>::namedImportsOrNamespaceImport(
 
     // The namespace import name is currently required to live on the
     // environment.
-    pc_->varScope().lookupDeclaredName(bindingName)->value()->setClosedOver();
+    pc_->varScope()
+        .lookupDeclaredName(bindingName->toIndex())
+        ->value()
+        ->setClosedOver();
 
     BinaryNodeType importSpec =
         handler_.newImportSpec(importName, bindingNameNode);
@@ -7742,8 +7758,9 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
       return null();
     }
     if (maybeUnboundName) {
-      UniqueChars str =
-          ParserAtomToPrintableString(cx_, maybeUnboundName->atom);
+      const ParserAtom* atom =
+          this->compilationState_.getParserAtomAt(cx_, maybeUnboundName->atom);
+      UniqueChars str = ParserAtomToPrintableString(cx_, atom);
       if (!str) {
         return null();
       }
@@ -7831,11 +7848,11 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
     return null();
   }
 
-  if (!noteUsedName(cx_->parserNames().dotThis)) {
+  if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dotThis())) {
     return null();
   }
 
-  if (!noteUsedName(cx_->parserNames().dotInitializers)) {
+  if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dotInitializers())) {
     return null();
   }
 
@@ -7866,7 +7883,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
     if (!argsNameNode) {
       return null();
     }
-    if (!noteUsedName(cx_->parserNames().args)) {
+    if (!noteUsedName(TaggedParserAtomIndex::WellKnown::args())) {
       return null();
     }
 
@@ -7972,7 +7989,7 @@ GeneralParser<ParseHandler, Unit>::privateMethodInitializer(
   // used in the initializer. They will be emitted into the method body in the
   // BCE.
   const ParserName* storedMethodName = storedMethodAtom->asName();
-  if (!noteUsedName(storedMethodName)) {
+  if (!noteUsedName(storedMethodName->toIndex())) {
     return null();
   }
   const ParserName* privateName = propAtom->asName();
@@ -9945,7 +9962,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
           return null();
         }
 
-        if (!noteUsedName(cx_->parserNames().dotInitializers)) {
+        if (!noteUsedName(
+                TaggedParserAtomIndex::WellKnown::dotInitializers())) {
           return null();
         }
       } else {
@@ -10333,7 +10351,7 @@ PerHandlerParser<ParseHandler>::identifierReference(const ParserName* name) {
     return null();
   }
 
-  if (!noteUsedName(name)) {
+  if (!noteUsedName(name->toIndex())) {
     return null();
   }
 
@@ -10348,7 +10366,7 @@ PerHandlerParser<ParseHandler>::privateNameReference(const ParserName* name) {
     return null();
   }
 
-  if (!noteUsedName(name, NameVisibility::Private, Some(pos()))) {
+  if (!noteUsedName(name->toIndex(), NameVisibility::Private, Some(pos()))) {
     return null();
   }
 

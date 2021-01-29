@@ -17,6 +17,7 @@
 #include "frontend/NameAnalysisTypes.h"
 #include "frontend/NameCollections.h"
 #include "frontend/ParseContext.h"
+#include "frontend/ParserAtom.h"  // ParserAtom, TaggedParserAtomIndex
 #include "frontend/SharedContext.h"
 #include "js/TypeDecls.h"
 #include "vm/BytecodeUtil.h"   // JSOp
@@ -73,17 +74,18 @@ class EmitterScope : public Nestable<EmitterScope> {
 
   void updateFrameFixedSlots(BytecodeEmitter* bce, const ParserBindingIter& bi);
 
-  MOZ_MUST_USE bool putNameInCache(BytecodeEmitter* bce, const ParserAtom* name,
+  MOZ_MUST_USE bool putNameInCache(BytecodeEmitter* bce,
+                                   TaggedParserAtomIndex name,
                                    NameLocation loc);
 
   mozilla::Maybe<NameLocation> lookupInCache(BytecodeEmitter* bce,
-                                             const ParserAtom* name);
+                                             TaggedParserAtomIndex name);
 
   EmitterScope* enclosing(BytecodeEmitter** bce) const;
 
   mozilla::Maybe<ScopeIndex> enclosingScopeIndex(BytecodeEmitter* bce) const;
 
-  static bool nameCanBeFree(BytecodeEmitter* bce, const ParserAtom* name);
+  static bool nameCanBeFree(BytecodeEmitter* bce, TaggedParserAtomIndex name);
 
   static NameLocation searchInEnclosingScope(JSAtom* name, Scope* scope,
                                              uint8_t hops);
