@@ -1,6 +1,28 @@
 $col4-header-line-height: 20;
 $col4-header-font-size: 14;
 
+.outer-wrapper.newtab-experience {
+  .ds-card-grid {
+    &.ds-card-grid-border {
+      .ds-card:not(.placeholder) {
+        border-radius: $border-radius-new;
+        box-shadow: 0 3px 8px var(--newtab-card-first-shadow), 0 0 2px var(--newtab-card-second-shadow);
+
+        .img-wrapper .img img {
+          border-radius: $border-radius-new $border-radius-new 0 0;
+        }
+      }
+    }
+
+    .ds-card-link:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--newtab-focus-outline);
+      border: 1px solid var(--newtab-focus-border);
+      border-radius: $border-radius-new;
+    }
+  }
+}
+
 .ds-card-grid {
   display: grid;
   grid-gap: 24px;
@@ -75,11 +97,6 @@ $col4-header-font-size: 14;
         min-height: 222px;
       }
     }
-  }
-
-
-  .ds-card-link:focus {
-    @include ds-fade-in;
   }
 
   &.ds-card-grid-border {
