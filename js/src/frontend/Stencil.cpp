@@ -50,7 +50,7 @@ AbstractScopePtr ScopeStencil::enclosing(
     return AbstractScopePtr(compilationState, enclosing());
   }
 
-  return AbstractScopePtr(compilationState.input.enclosingScope);
+  return AbstractScopePtr::compilationEnclosingScope(compilationState);
 }
 
 Scope* ScopeStencil::enclosingExistingScope(

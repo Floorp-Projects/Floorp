@@ -70,9 +70,9 @@ SharedContext::SharedContext(JSContext* cx, Kind kind,
   setFlag(ImmutableFlags::Strict, directives.strict());
 }
 
-void ScopeContext::computeThisEnvironment(Scope* scope) {
+void ScopeContext::computeThisEnvironment(Scope* enclosingScope) {
   uint32_t envCount = 0;
-  for (ScopeIter si(scope); si; si++) {
+  for (ScopeIter si(enclosingScope); si; si++) {
     if (si.kind() == ScopeKind::Function) {
       JSFunction* fun = si.scope()->as<FunctionScope>().canonicalFunction();
 
@@ -145,8 +145,23 @@ void ScopeContext::computeThisBinding(Scope* scope) {
   thisBinding = ThisBinding::Global;
 }
 
-void ScopeContext::computeInScope(Scope* scope) {
-  for (ScopeIter si(scope); si; si++) {
+void ScopeContext::computeInScope(Scope* enclosingScope) {
+  if (enclosingScope) {
+    enclosingScopeKind = enclosingScope->kind();
+    if (enclosingScope->is<FunctionScope>()) {
+      MOZ_ASSERT(enclosingScope->as<FunctionScope>().canonicalFunction());
+      enclosingScopeIsArrow =
+          enclosingScope->as<FunctionScope>().canonicalFunction()->isArrow();
+    }
+    enclosingScopeHasEnvironment = enclosingScope->hasEnvironment();
+
+#ifdef DEBUG
+    hasNonSyntacticScopeOnChain =
+        enclosingScope->hasOnChain(ScopeKind::NonSyntactic);
+#endif
+  }
+
+  for (ScopeIter si(enclosingScope); si; si++) {
     if (si.kind() == ScopeKind::ClassBody) {
       inClass = true;
     }
