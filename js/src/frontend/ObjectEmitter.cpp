@@ -305,7 +305,7 @@ bool PropertyEmitter::emitInit(JSOp op, const ParserAtom* key) {
 
   //                [stack] CTOR? OBJ CTOR? VAL
 
-  if (!bce_->emitAtomOp(op, key)) {
+  if (!bce_->emitAtomOp(op, key->toIndex())) {
     //              [stack] CTOR? OBJ CTOR?
     return false;
   }
@@ -421,10 +421,7 @@ void AutoSaveLocalStrictMode::restore() {
 }
 
 ClassEmitter::ClassEmitter(BytecodeEmitter* bce)
-    : PropertyEmitter(bce),
-      strictMode_(bce->sc),
-      name_(nullptr),
-      nameForAnonymousClass_(nullptr) {
+    : PropertyEmitter(bce), strictMode_(bce->sc) {
   isClass_ = true;
 }
 
@@ -465,8 +462,8 @@ bool ClassEmitter::emitBodyScope(LexicalScope::ParserData* scopeBindings) {
   return true;
 }
 
-bool ClassEmitter::emitClass(const ParserAtom* name,
-                             const ParserAtom* nameForAnonymousClass,
+bool ClassEmitter::emitClass(TaggedParserAtomIndex name,
+                             TaggedParserAtomIndex nameForAnonymousClass,
                              bool hasNameOnStack) {
   MOZ_ASSERT(propertyState_ == PropertyState::Start);
   MOZ_ASSERT(classState_ == ClassState::Start ||
@@ -493,8 +490,8 @@ bool ClassEmitter::emitClass(const ParserAtom* name,
   return true;
 }
 
-bool ClassEmitter::emitDerivedClass(const ParserAtom* name,
-                                    const ParserAtom* nameForAnonymousClass,
+bool ClassEmitter::emitDerivedClass(TaggedParserAtomIndex name,
+                                    TaggedParserAtomIndex nameForAnonymousClass,
                                     bool hasNameOnStack) {
   MOZ_ASSERT(propertyState_ == PropertyState::Start);
   MOZ_ASSERT(classState_ == ClassState::Start ||
@@ -540,7 +537,8 @@ bool ClassEmitter::emitDerivedClass(const ParserAtom* name,
     //              [stack] HERITAGE HERITAGE
     return false;
   }
-  if (!bce_->emitAtomOp(JSOp::GetProp, bce_->cx->parserNames().prototype)) {
+  if (!bce_->emitAtomOp(JSOp::GetProp,
+                        TaggedParserAtomIndex::WellKnown::prototype())) {
     //              [stack] HERITAGE PROTO
     return false;
   }
@@ -616,12 +614,12 @@ bool ClassEmitter::emitInitDefaultConstructor(uint32_t classStart,
   MOZ_ASSERT(propertyState_ == PropertyState::Start);
   MOZ_ASSERT(classState_ == ClassState::Class);
 
-  const ParserAtom* className = name_;
+  TaggedParserAtomIndex className = name_;
   if (!className) {
     if (nameForAnonymousClass_) {
       className = nameForAnonymousClass_;
     } else {
-      className = bce_->cx->parserNames().empty;
+      className = TaggedParserAtomIndex::WellKnown::empty();
     }
   }
 
@@ -691,12 +689,12 @@ bool ClassEmitter::initProtoAndCtor() {
     return false;
   }
   if (!bce_->emitAtomOp(JSOp::InitLockedProp,
-                        bce_->cx->parserNames().prototype)) {
+                        TaggedParserAtomIndex::WellKnown::prototype())) {
     //              [stack] NAME? CTOR HOMEOBJ CTOR
     return false;
   }
   if (!bce_->emitAtomOp(JSOp::InitHiddenProp,
-                        bce_->cx->parserNames().constructor)) {
+                        TaggedParserAtomIndex::WellKnown::constructor())) {
     //              [stack] NAME? CTOR HOMEOBJ
     return false;
   }
@@ -713,9 +711,9 @@ bool ClassEmitter::prepareForMemberInitializers(size_t numInitializers,
   // .initializers is a variable that stores an array of lambdas containing
   // code (the initializer) for each field. Upon an object's construction,
   // these lambdas will be called, defining the values.
-  const ParserName* initializers =
-      isStatic ? bce_->cx->parserNames().dotStaticInitializers
-               : bce_->cx->parserNames().dotInitializers;
+  auto initializers =
+      isStatic ? TaggedParserAtomIndex::WellKnown::dotStaticInitializers()
+               : TaggedParserAtomIndex::WellKnown::dotInitializers();
   initializersAssignment_.emplace(bce_, initializers,
                                   NameOpEmitter::Kind::Initialize);
   if (!initializersAssignment_->prepareForRhs()) {

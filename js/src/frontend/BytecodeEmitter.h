@@ -36,27 +36,27 @@
 #include "frontend/NameCollections.h"      // AtomIndexMap
 #include "frontend/ParseNode.h"            // ParseNode and subclasses
 #include "frontend/Parser.h"               // Parser, PropListType
-#include "frontend/ParserAtom.h"  // ParserAtom, ParserName, ParserAtomsTable, TaggedParserAtomIndex
-#include "frontend/ScriptIndex.h"    // ScriptIndex
-#include "frontend/SharedContext.h"  // SharedContext, TopLevelFunction
-#include "frontend/SourceNotes.h"    // SrcNoteType
-#include "frontend/TokenStream.h"    // TokenPos
-#include "frontend/ValueUsage.h"     // ValueUsage
-#include "js/RootingAPI.h"           // JS::Rooted, JS::Handle
-#include "js/TypeDecls.h"            // jsbytecode
-#include "vm/BuiltinObjectKind.h"    // BuiltinObjectKind
-#include "vm/BytecodeUtil.h"         // JSOp
-#include "vm/CheckIsObjectKind.h"    // CheckIsObjectKind
-#include "vm/FunctionPrefixKind.h"   // FunctionPrefixKind
-#include "vm/GeneratorResumeKind.h"  // GeneratorResumeKind
-#include "vm/Instrumentation.h"      // InstrumentationKind
-#include "vm/JSFunction.h"           // JSFunction
-#include "vm/JSScript.h"             // JSScript, BaseScript, MemberInitializers
-#include "vm/Runtime.h"              // ReportOutOfMemory
-#include "vm/SharedStencil.h"        // GCThingIndex
-#include "vm/StencilEnums.h"         // TryNoteKind
-#include "vm/StringType.h"           // JSAtom
-#include "vm/ThrowMsgKind.h"         // ThrowMsgKind, ThrowCondition
+#include "frontend/ParserAtom.h"           // TaggedParserAtomIndex
+#include "frontend/ScriptIndex.h"          // ScriptIndex
+#include "frontend/SharedContext.h"        // SharedContext, TopLevelFunction
+#include "frontend/SourceNotes.h"          // SrcNoteType
+#include "frontend/TokenStream.h"          // TokenPos
+#include "frontend/ValueUsage.h"           // ValueUsage
+#include "js/RootingAPI.h"                 // JS::Rooted, JS::Handle
+#include "js/TypeDecls.h"                  // jsbytecode
+#include "vm/BuiltinObjectKind.h"          // BuiltinObjectKind
+#include "vm/BytecodeUtil.h"               // JSOp
+#include "vm/CheckIsObjectKind.h"          // CheckIsObjectKind
+#include "vm/FunctionPrefixKind.h"         // FunctionPrefixKind
+#include "vm/GeneratorResumeKind.h"        // GeneratorResumeKind
+#include "vm/Instrumentation.h"            // InstrumentationKind
+#include "vm/JSFunction.h"                 // JSFunction
+#include "vm/JSScript.h"       // JSScript, BaseScript, MemberInitializers
+#include "vm/Runtime.h"        // ReportOutOfMemory
+#include "vm/SharedStencil.h"  // GCThingIndex
+#include "vm/StencilEnums.h"   // TryNoteKind
+#include "vm/StringType.h"     // JSAtom
+#include "vm/ThrowMsgKind.h"   // ThrowMsgKind, ThrowCondition
 
 namespace js {
 namespace frontend {
@@ -248,24 +248,23 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   AbstractScopePtr innermostScope() const;
   ScopeIndex innermostScopeIndex() const;
 
-  MOZ_ALWAYS_INLINE MOZ_MUST_USE bool makeAtomIndex(const ParserAtom* atom,
+  MOZ_ALWAYS_INLINE MOZ_MUST_USE bool makeAtomIndex(TaggedParserAtomIndex atom,
                                                     GCThingIndex* indexp) {
     MOZ_ASSERT(perScriptData().atomIndices());
-    AtomIndexMap::AddPtr p =
-        perScriptData().atomIndices()->lookupForAdd(atom->toIndex());
+    AtomIndexMap::AddPtr p = perScriptData().atomIndices()->lookupForAdd(atom);
     if (p) {
       *indexp = GCThingIndex(p->value());
       return true;
     }
 
     GCThingIndex index;
-    if (!perScriptData().gcThingList().append(atom->toIndex(), &index)) {
+    if (!perScriptData().gcThingList().append(atom, &index)) {
       return false;
     }
 
     // `atomIndices()` uses uint32_t instead of GCThingIndex, because
     // GCThingIndex isn't trivial type.
-    if (!perScriptData().atomIndices()->add(p, atom->toIndex(), index.index)) {
+    if (!perScriptData().atomIndices()->add(p, atom, index.index)) {
       ReportOutOfMemory(cx);
       return false;
     }
@@ -462,7 +461,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitGCIndexOp(JSOp op, GCThingIndex index);
 
   MOZ_MUST_USE bool emitAtomOp(
-      JSOp op, const ParserAtom* atom,
+      JSOp op, TaggedParserAtomIndex atom,
       ShouldInstrument shouldInstrument = ShouldInstrument::No);
   MOZ_MUST_USE bool emitAtomOp(
       JSOp op, GCThingIndex atomIndex,
@@ -524,7 +523,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                                                   ListNode* obj);
   MOZ_MUST_USE bool emitPrivateMethodInitializer(
       ClassEmitter& ce, ParseNode* prop, ParseNode* propName,
-      const ParserAtom* storedMethodAtom, AccessorType accessorType);
+      TaggedParserAtomIndex storedMethodAtom, AccessorType accessorType);
 
   // To catch accidental misuse, emitUint16Operand/emit3 assert that they are
   // not used to unconditionally emit JSOp::GetLocal. Variable access should
@@ -536,14 +535,14 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitArgOp(JSOp op, uint16_t slot);
   MOZ_MUST_USE bool emitEnvCoordOp(JSOp op, EnvironmentCoordinate ec);
 
-  MOZ_MUST_USE bool emitGetNameAtLocation(const ParserAtom* name,
+  MOZ_MUST_USE bool emitGetNameAtLocation(TaggedParserAtomIndex name,
                                           const NameLocation& loc);
-  MOZ_MUST_USE bool emitGetName(const ParserAtom* name) {
-    return emitGetNameAtLocation(name, lookupName(name->toIndex()));
+  MOZ_MUST_USE bool emitGetName(TaggedParserAtomIndex name) {
+    return emitGetNameAtLocation(name, lookupName(name));
   }
   MOZ_MUST_USE bool emitGetName(NameNode* name);
   MOZ_MUST_USE bool emitGetPrivateName(NameNode* name);
-  MOZ_MUST_USE bool emitGetPrivateName(const ParserAtom* name);
+  MOZ_MUST_USE bool emitGetPrivateName(TaggedParserAtomIndex name);
 
   MOZ_MUST_USE bool emitTDZCheckIfNeeded(TaggedParserAtomIndex name,
                                          const NameLocation& loc,
@@ -555,7 +554,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitSingleDeclaration(ListNode* declList, NameNode* decl,
                                           ParseNode* initializer);
   MOZ_MUST_USE bool emitAssignmentRhs(ParseNode* rhs,
-                                      const ParserAtom* anonFunctionName);
+                                      TaggedParserAtomIndex anonFunctionName);
   MOZ_MUST_USE bool emitAssignmentRhs(uint8_t offset);
 
   MOZ_MUST_USE bool emitPrepareIteratorResult();
@@ -696,12 +695,12 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitDefault(ParseNode* defaultExpr, ParseNode* pattern);
 
   MOZ_MUST_USE bool emitAnonymousFunctionWithName(ParseNode* node,
-                                                  const ParserAtom* name);
+                                                  TaggedParserAtomIndex name);
 
   MOZ_MUST_USE bool emitAnonymousFunctionWithComputedName(
       ParseNode* node, FunctionPrefixKind prefixKind);
 
-  MOZ_MUST_USE bool setFunName(FunctionBox* fun, const ParserAtom* name);
+  MOZ_MUST_USE bool setFunName(FunctionBox* fun, TaggedParserAtomIndex name);
   MOZ_MUST_USE bool emitInitializer(ParseNode* initializer, ParseNode* pattern);
 
   MOZ_MUST_USE bool emitCallSiteObjectArray(ListNode* cookedOrRaw,
@@ -805,7 +804,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitFunctionFormalParameters(ListNode* paramsBody);
   MOZ_MUST_USE bool emitInitializeFunctionSpecialNames();
   MOZ_MUST_USE bool emitLexicalInitialization(NameNode* name);
-  MOZ_MUST_USE bool emitLexicalInitialization(const ParserAtom* name);
+  MOZ_MUST_USE bool emitLexicalInitialization(TaggedParserAtomIndex name);
 
   // Emit bytecode for the spread operator.
   //
@@ -830,7 +829,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   MOZ_MUST_USE bool emitClass(
       ClassNode* classNode, ClassNameKind nameKind = ClassNameKind::BindingName,
-      const ParserAtom* nameForAnonymousClass = nullptr);
+      TaggedParserAtomIndex nameForAnonymousClass =
+          TaggedParserAtomIndex::null());
 
   MOZ_MUST_USE bool emitSuperElemOperands(
       PropertyByValue* elem, EmitElemOption opts = EmitElemOption::Get);
