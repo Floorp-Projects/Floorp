@@ -12,7 +12,7 @@
 #include "mozilla/EnumSet.h"
 #include "mozilla/Span.h"
 
-#include "frontend/ParserAtom.h"
+#include "frontend/ParserAtom.h"  // ParserAtomsTable, TaggedParserAtomIndex
 #include "js/AllocPolicy.h"
 #include "js/GCPolicyAPI.h"
 #include "js/Value.h"
@@ -287,11 +287,12 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
   ObjLiteralFlags getFlags() const { return flags_; }
 
   void beginObject(ObjLiteralFlags flags) { flags_ = flags; }
-  void setPropName(const frontend::ParserAtom* propName) {
+  void setPropName(frontend::ParserAtomsTable& parserAtoms,
+                   const frontend::TaggedParserAtomIndex propName) {
     // Only valid in object-mode.
     MOZ_ASSERT(!flags_.contains(ObjLiteralFlag::Array));
-    propName->markUsedByStencil();
-    nextKey_ = ObjLiteralKey::fromPropName(propName->toIndex());
+    parserAtoms.markUsedByStencil(propName);
+    nextKey_ = ObjLiteralKey::fromPropName(propName);
   }
   void setPropIndex(uint32_t propIndex) {
     // Only valid in object-mode.
@@ -313,11 +314,12 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
     return pushOpAndName(cx, ObjLiteralOpcode::ConstValue, nextKey_) &&
            pushValueArg(cx, value);
   }
-  MOZ_MUST_USE bool propWithAtomValue(JSContext* cx,
-                                      const frontend::ParserAtom* value) {
-    value->markUsedByStencil();
+  MOZ_MUST_USE bool propWithAtomValue(
+      JSContext* cx, frontend::ParserAtomsTable& parserAtoms,
+      const frontend::TaggedParserAtomIndex value) {
+    parserAtoms.markUsedByStencil(value);
     return pushOpAndName(cx, ObjLiteralOpcode::ConstAtom, nextKey_) &&
-           pushAtomArg(cx, value->toIndex());
+           pushAtomArg(cx, value);
   }
   MOZ_MUST_USE bool propWithNullValue(JSContext* cx) {
     return pushOpAndName(cx, ObjLiteralOpcode::Null, nextKey_);

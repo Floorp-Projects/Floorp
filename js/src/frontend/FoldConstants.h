@@ -15,6 +15,7 @@ namespace frontend {
 class FullParseHandler;
 template <class ParseHandler>
 class PerHandlerParser;
+class ParserAtomsTable;
 
 // Perform constant folding on the given AST. For example, the program
 // `print(2 + 2)` would become `print(4)`.

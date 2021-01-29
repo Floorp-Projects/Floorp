@@ -275,6 +275,10 @@ class MOZ_STACK_CLASS ParserSharedBase {
   JSAtom* liftParserAtomToJSAtom(const ParserAtom* parserAtom) {
     return parserAtom->toJSAtom(cx_, stencil_.input.atomCache);
   }
+  JSAtom* liftParserAtomToJSAtom(TaggedParserAtomIndex index) {
+    const auto* atom = compilationState_.parserAtoms.getParserAtom(index);
+    return atom->toJSAtom(cx_, stencil_.input.atomCache);
+  }
 };
 
 class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
@@ -1228,7 +1232,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                                                    YieldHandling yieldHandling,
                                                    TokenKind tt);
 
-  inline bool checkExportedName(const ParserAtom* exportName);
+  inline bool checkExportedName(TaggedParserAtomIndex exportName);
   inline bool checkExportedNamesForArrayBinding(ListNodeType array);
   inline bool checkExportedNamesForObjectBinding(ListNodeType obj);
   inline bool checkExportedNamesForDeclaration(Node node);
@@ -1539,7 +1543,7 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
 
   inline BinaryNodeType importDeclaration();
   inline bool checkLocalExportNames(ListNodeType node);
-  inline bool checkExportedName(const ParserAtom* exportName);
+  inline bool checkExportedName(TaggedParserAtomIndex exportName);
   inline bool checkExportedNamesForArrayBinding(ListNodeType array);
   inline bool checkExportedNamesForObjectBinding(ListNodeType obj);
   inline bool checkExportedNamesForDeclaration(Node node);
@@ -1684,7 +1688,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
 
   BinaryNodeType importDeclaration();
   bool checkLocalExportNames(ListNodeType node);
-  bool checkExportedName(const ParserAtom* exportName);
+  bool checkExportedName(TaggedParserAtomIndex exportName);
   bool checkExportedNamesForArrayBinding(ListNodeType array);
   bool checkExportedNamesForObjectBinding(ListNodeType obj);
   bool checkExportedNamesForDeclaration(Node node);

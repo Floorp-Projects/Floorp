@@ -17,6 +17,7 @@
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/NameAnalysisTypes.h"   // PrivateNameKind
 #include "frontend/ParseNode.h"
+#include "frontend/ParserAtom.h"  // ParserAtom, ParserName, TaggedParserAtomIndex
 #include "frontend/SharedContext.h"
 #include "frontend/Stencil.h"
 #include "vm/JSContext.h"
@@ -449,7 +450,7 @@ class FullParseHandler {
     MOZ_ASSERT(literal->isKind(ParseNodeKind::ObjectExpr));
     MOZ_ASSERT(name->isKind(ParseNodeKind::ObjectPropertyName));
     MOZ_ASSERT(expr->isKind(ParseNodeKind::Name));
-    MOZ_ASSERT(name->atom() == expr->atom());
+    MOZ_ASSERT(name->atomIndex() == expr->atomIndex());
 
     literal->setHasNonConstInitializer();
     BinaryNode* propdef = newBinary(ParseNodeKind::Shorthand, name, expr);
@@ -1040,18 +1041,21 @@ class FullParseHandler {
 
   bool isArgumentsName(Node node, JSContext* cx) {
     return node->isKind(ParseNodeKind::Name) &&
-           node->as<NameNode>().atom() == cx->parserNames().arguments;
+           node->as<NameNode>().atomIndex() ==
+               TaggedParserAtomIndex::WellKnown::arguments();
   }
 
   bool isEvalName(Node node, JSContext* cx) {
     return node->isKind(ParseNodeKind::Name) &&
-           node->as<NameNode>().atom() == cx->parserNames().eval;
+           node->as<NameNode>().atomIndex() ==
+               TaggedParserAtomIndex::WellKnown::eval();
   }
 
   bool isAsyncKeyword(Node node, JSContext* cx) {
     return node->isKind(ParseNodeKind::Name) &&
            node->pn_pos.begin + strlen("async") == node->pn_pos.end &&
-           node->as<NameNode>().atom() == cx->parserNames().async;
+           node->as<NameNode>().atomIndex() ==
+               TaggedParserAtomIndex::WellKnown::async();
   }
 
   bool isPrivateName(Node node) {
@@ -1072,19 +1076,20 @@ class FullParseHandler {
     return false;
   }
 
-  const ParserName* maybeDottedProperty(Node pn) {
-    return pn->is<PropertyAccessBase>() ? pn->as<PropertyAccessBase>().name()
-                                        : nullptr;
+  TaggedParserAtomIndex maybeDottedProperty(Node pn) {
+    return pn->is<PropertyAccessBase>()
+               ? pn->as<PropertyAccessBase>().nameIndex()
+               : TaggedParserAtomIndex::null();
   }
-  const ParserAtom* isStringExprStatement(Node pn, TokenPos* pos) {
+  TaggedParserAtomIndex isStringExprStatement(Node pn, TokenPos* pos) {
     if (pn->is<UnaryNode>()) {
       UnaryNode* unary = &pn->as<UnaryNode>();
-      if (const ParserAtom* atom = unary->isStringExprStatement()) {
+      if (auto atom = unary->isStringExprStatement()) {
         *pos = unary->kid()->pn_pos;
         return atom;
       }
     }
-    return nullptr;
+    return TaggedParserAtomIndex::null();
   }
 
   bool canSkipLazyInnerFunctions() { return !!lazyOuterFunction_; }

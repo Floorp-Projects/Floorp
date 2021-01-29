@@ -2477,8 +2477,8 @@ bool ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst) {
       LoopControlStatement* node = &pn->as<LoopControlStatement>();
       RootedValue label(cx);
       RootedAtom pnAtom(cx);
-      if (node->label()) {
-        pnAtom.set(parser->liftParserAtomToJSAtom(node->label()));
+      if (node->labelIndex()) {
+        pnAtom.set(parser->liftParserAtomToJSAtom(node->labelIndex()));
         if (!pnAtom) {
           return false;
         }
@@ -2495,7 +2495,8 @@ bool ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst) {
       MOZ_ASSERT(labelNode->pn_pos.encloses(stmtNode->pn_pos));
 
       RootedValue label(cx), stmt(cx);
-      RootedAtom pnAtom(cx, parser->liftParserAtomToJSAtom(labelNode->label()));
+      RootedAtom pnAtom(
+          cx, parser->liftParserAtomToJSAtom(labelNode->labelIndex()));
       if (!pnAtom.get()) {
         return false;
       }
@@ -2931,7 +2932,8 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
 
       RootedValue expr(cx);
       RootedValue propname(cx);
-      RootedAtom pnAtom(cx, parser->liftParserAtomToJSAtom(prop->key().atom()));
+      RootedAtom pnAtom(
+          cx, parser->liftParserAtomToJSAtom(prop->key().atomIndex()));
       if (!pnAtom.get()) {
         return false;
       }
@@ -2992,7 +2994,7 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
         NameNode* rawItem = &item->as<NameNode>();
         MOZ_ASSERT(callSiteObj->pn_pos.encloses(rawItem->pn_pos));
 
-        JSAtom* exprAtom = parser->liftParserAtomToJSAtom(rawItem->atom());
+        JSAtom* exprAtom = parser->liftParserAtomToJSAtom(rawItem->atomIndex());
         if (!exprAtom) {
           return false;
         }
@@ -3014,8 +3016,8 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
           expr.setUndefined();
         } else {
           MOZ_ASSERT(cookedItem->isKind(ParseNodeKind::TemplateStringExpr));
-          JSAtom* exprAtom =
-              parser->liftParserAtomToJSAtom(cookedItem->as<NameNode>().atom());
+          JSAtom* exprAtom = parser->liftParserAtomToJSAtom(
+              cookedItem->as<NameNode>().atomIndex());
           if (!exprAtom) {
             return false;
           }
@@ -3278,7 +3280,7 @@ bool ASTSerializer::literal(ParseNode* pn, MutableHandleValue dst) {
     case ParseNodeKind::TemplateStringExpr:
     case ParseNodeKind::StringExpr: {
       JSAtom* exprAtom =
-          parser->liftParserAtomToJSAtom(pn->as<NameNode>().atom());
+          parser->liftParserAtomToJSAtom(pn->as<NameNode>().atomIndex());
       if (!exprAtom) {
         return false;
       }
@@ -3447,9 +3449,9 @@ bool ASTSerializer::identifier(HandleAtom atom, TokenPos* pos,
 }
 
 bool ASTSerializer::identifier(NameNode* id, MutableHandleValue dst) {
-  LOCAL_ASSERT(id->atom());
+  LOCAL_ASSERT(id->atomIndex());
 
-  RootedAtom pnAtom(cx, parser->liftParserAtomToJSAtom(id->atom()));
+  RootedAtom pnAtom(cx, parser->liftParserAtomToJSAtom(id->atomIndex()));
   if (!pnAtom.get()) {
     return false;
   }

@@ -213,9 +213,9 @@ static void DumpCharsNoNewline(const ParserAtom* atom,
 void LoopControlStatement::dumpImpl(GenericPrinter& out, int indent) {
   const char* name = parseNodeNames[getKindAsIndex()];
   out.printf("(%s", name);
-  if (label()) {
+  if (label_) {
     out.printf(" ");
-    DumpCharsNoNewline(label(), out);
+    DumpCharsNoNewline(label_, out);
   }
   out.printf(")");
 }
