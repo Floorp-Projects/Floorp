@@ -1,23 +1,26 @@
 use core::fmt;
 use core::pin::Pin;
 use futures_core::future::Future;
+use futures_core::ready;
 use futures_core::stream::{Stream, FusedStream};
 use futures_core::task::{Context, Poll};
 #[cfg(feature = "sink")]
 use futures_sink::Sink;
-use pin_utils::{unsafe_pinned, unsafe_unpinned};
+use pin_project_lite::pin_project;
 
-/// Stream for the [`take_while`](super::StreamExt::take_while) method.
-#[must_use = "streams do nothing unless polled"]
-pub struct TakeWhile<St: Stream , Fut, F> {
-    stream: St,
-    f: F,
-    pending_fut: Option<Fut>,
-    pending_item: Option<St::Item>,
-    done_taking: bool,
+pin_project! {
+    /// Stream for the [`take_while`](super::StreamExt::take_while) method.
+    #[must_use = "streams do nothing unless polled"]
+    pub struct TakeWhile<St: Stream, Fut, F> {
+        #[pin]
+        stream: St,
+        f: F,
+        #[pin]
+        pending_fut: Option<Fut>,
+        pending_item: Option<St::Item>,
+        done_taking: bool,
+    }
 }
-
-impl<St: Unpin + Stream, Fut: Unpin, F> Unpin for TakeWhile<St, Fut, F> {}
 
 impl<St, Fut, F> fmt::Debug for TakeWhile<St, Fut, F>
 where
@@ -35,21 +38,13 @@ where
     }
 }
 
-impl<St: Stream, Fut, F> TakeWhile<St, Fut, F> {
-    unsafe_pinned!(stream: St);
-    unsafe_unpinned!(f: F);
-    unsafe_pinned!(pending_fut: Option<Fut>);
-    unsafe_unpinned!(pending_item: Option<St::Item>);
-    unsafe_unpinned!(done_taking: bool);
-}
-
 impl<St, Fut, F> TakeWhile<St, Fut, F>
     where St: Stream,
           F: FnMut(&St::Item) -> Fut,
           Fut: Future<Output = bool>,
 {
-    pub(super) fn new(stream: St, f: F) -> TakeWhile<St, Fut, F> {
-        TakeWhile {
+    pub(super) fn new(stream: St, f: F) -> Self {
+        Self {
             stream,
             f,
             pending_fut: None,
@@ -58,37 +53,7 @@ impl<St, Fut, F> TakeWhile<St, Fut, F>
         }
     }
 
-    /// Acquires a reference to the underlying stream that this combinator is
-    /// pulling from.
-    pub fn get_ref(&self) -> &St {
-        &self.stream
-    }
-
-    /// Acquires a mutable reference to the underlying stream that this
-    /// combinator is pulling from.
-    ///
-    /// Note that care must be taken to avoid tampering with the state of the
-    /// stream which may otherwise confuse this combinator.
-    pub fn get_mut(&mut self) -> &mut St {
-        &mut self.stream
-    }
-
-    /// Acquires a pinned mutable reference to the underlying stream that this
-    /// combinator is pulling from.
-    ///
-    /// Note that care must be taken to avoid tampering with the state of the
-    /// stream which may otherwise confuse this combinator.
-    pub fn get_pin_mut(self: Pin<&mut Self>) -> Pin<&mut St> {
-        self.stream()
-    }
-
-    /// Consumes this combinator, returning the underlying stream.
-    ///
-    /// Note that this may discard intermediate state of this combinator, so
-    /// care should be taken to avoid losing resources when this is called.
-    pub fn into_inner(self) -> St {
-        self.stream
-    }
+    delegate_access_inner!(stream, St, ());
 }
 
 impl<St, Fut, F> Stream for TakeWhile<St, Fut, F>
@@ -99,33 +64,33 @@ impl<St, Fut, F> Stream for TakeWhile<St, Fut, F>
     type Item = St::Item;
 
     fn poll_next(
-        mut self: Pin<&mut Self>,
+        self: Pin<&mut Self>,
         cx: &mut Context<'_>,
     ) -> Poll<Option<St::Item>> {
         if self.done_taking {
             return Poll::Ready(None);
         }
 
-        if self.pending_item.is_none() {
-            let item = match ready!(self.as_mut().stream().poll_next(cx)) {
-                Some(e) => e,
-                None => return Poll::Ready(None),
-            };
-            let fut = (self.as_mut().f())(&item);
-            self.as_mut().pending_fut().set(Some(fut));
-            *self.as_mut().pending_item() = Some(item);
-        }
+        let mut this = self.project();
 
-        let take = ready!(self.as_mut().pending_fut().as_pin_mut().unwrap().poll(cx));
-        self.as_mut().pending_fut().set(None);
-        let item = self.as_mut().pending_item().take().unwrap();
-
-        if take {
-            Poll::Ready(Some(item))
-        } else {
-            *self.as_mut().done_taking() = true;
-            Poll::Ready(None)
-        }
+        Poll::Ready(loop {
+            if let Some(fut) = this.pending_fut.as_mut().as_pin_mut() {
+                let take = ready!(fut.poll(cx));
+                let item = this.pending_item.take();
+                this.pending_fut.set(None);
+                if take {
+                    break item;
+                } else {
+                    *this.done_taking = true;
+                    break None;
+                }
+            } else if let Some(item) = ready!(this.stream.as_mut().poll_next(cx)) {
+                this.pending_fut.set(Some((this.f)(&item)));
+                *this.pending_item = Some(item);
+            } else {
+                break None;
+            }
+        })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {

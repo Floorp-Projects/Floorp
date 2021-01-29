@@ -50,11 +50,19 @@ pub trait Stream {
     ///
     /// # Panics
     ///
-    /// Once a stream is finished, i.e. `Ready(None)` has been returned, further
-    /// calls to `poll_next` may result in a panic or other "bad behavior".  If
-    /// this is difficult to guard against then the `fuse` adapter can be used
+    /// Once a stream has finished (returned `Ready(None)` from `poll_next`), calling its
+    /// `poll_next` method again may panic, block forever, or cause other kinds of
+    /// problems; the `Stream` trait places no requirements on the effects of
+    /// such a call. However, as the `poll_next` method is not marked `unsafe`,
+    /// Rust's usual rules apply: calls must never cause undefined behavior
+    /// (memory corruption, incorrect use of `unsafe` functions, or the like),
+    /// regardless of the stream's state.
+    ///
+    /// If this is difficult to guard against then the [`fuse`] adapter can be used
     /// to ensure that `poll_next` always returns `Ready(None)` in subsequent
     /// calls.
+    ///
+    /// [`fuse`]: https://docs.rs/futures/0.3/futures/stream/trait.StreamExt.html#method.fuse
     fn poll_next(
         self: Pin<&mut Self>,
         cx: &mut Context<'_>,

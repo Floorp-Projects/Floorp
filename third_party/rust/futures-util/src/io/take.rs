@@ -1,26 +1,25 @@
+use futures_core::ready;
 use futures_core::task::{Context, Poll};
 #[cfg(feature = "read-initializer")]
 use futures_io::Initializer;
 use futures_io::{AsyncRead, AsyncBufRead};
-use pin_utils::{unsafe_pinned, unsafe_unpinned};
+use pin_project_lite::pin_project;
 use std::{cmp, io};
 use std::pin::Pin;
 
-/// Reader for the [`take`](super::AsyncReadExt::take) method.
-#[derive(Debug)]
-#[must_use = "readers do nothing unless you `.await` or poll them"]
-pub struct Take<R> {
-    inner: R,
-    // Add '_' to avoid conflicts with `limit` method.
-    limit_: u64,
+pin_project! {
+    /// Reader for the [`take`](super::AsyncReadExt::take) method.
+    #[derive(Debug)]
+    #[must_use = "readers do nothing unless you `.await` or poll them"]
+    pub struct Take<R> {
+        #[pin]
+        inner: R,
+        // Add '_' to avoid conflicts with `limit` method.
+        limit_: u64,
+    }
 }
 
-impl<R: Unpin> Unpin for Take<R> { }
-
 impl<R: AsyncRead> Take<R> {
-    unsafe_pinned!(inner: R);
-    unsafe_unpinned!(limit_: u64);
-
     pub(super) fn new(inner: R, limit: u64) -> Self {
         Self { inner, limit_: limit }
     }
@@ -82,101 +81,24 @@ impl<R: AsyncRead> Take<R> {
         self.limit_ = limit
     }
 
-    /// Gets a reference to the underlying reader.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # futures::executor::block_on(async {
-    /// use futures::io::{AsyncReadExt, Cursor};
-    ///
-    /// let reader = Cursor::new(&b"12345678"[..]);
-    /// let mut buffer = [0; 4];
-    ///
-    /// let mut take = reader.take(4);
-    /// let n = take.read(&mut buffer).await?;
-    ///
-    /// let cursor_ref = take.get_ref();
-    /// assert_eq!(cursor_ref.position(), 4);
-    ///
-    /// # Ok::<(), Box<dyn std::error::Error>>(()) }).unwrap();
-    /// ```
-    pub fn get_ref(&self) -> &R {
-        &self.inner
-    }
-
-    /// Gets a mutable reference to the underlying reader.
-    ///
-    /// Care should be taken to avoid modifying the internal I/O state of the
-    /// underlying reader as doing so may corrupt the internal limit of this
-    /// `Take`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # futures::executor::block_on(async {
-    /// use futures::io::{AsyncReadExt, Cursor};
-    ///
-    /// let reader = Cursor::new(&b"12345678"[..]);
-    /// let mut buffer = [0; 4];
-    ///
-    /// let mut take = reader.take(4);
-    /// let n = take.read(&mut buffer).await?;
-    ///
-    /// let cursor_mut = take.get_mut();
-    ///
-    /// # Ok::<(), Box<dyn std::error::Error>>(()) }).unwrap();
-    /// ```
-    pub fn get_mut(&mut self) -> &mut R {
-        &mut self.inner
-    }
-
-    /// Gets a pinned mutable reference to the underlying reader.
-    ///
-    /// Care should be taken to avoid modifying the internal I/O state of the
-    /// underlying reader as doing so may corrupt the internal limit of this
-    /// `Take`.
-    pub fn get_pin_mut(self: Pin<&mut Self>) -> Pin<&mut R> {
-        self.inner()
-    }
-
-    /// Consumes the `Take`, returning the wrapped reader.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # futures::executor::block_on(async {
-    /// use futures::io::{AsyncReadExt, Cursor};
-    ///
-    /// let reader = Cursor::new(&b"12345678"[..]);
-    /// let mut buffer = [0; 4];
-    ///
-    /// let mut take = reader.take(4);
-    /// let n = take.read(&mut buffer).await?;
-    ///
-    /// let cursor = take.into_inner();
-    /// assert_eq!(cursor.position(), 4);
-    ///
-    /// # Ok::<(), Box<dyn std::error::Error>>(()) }).unwrap();
-    /// ```
-    pub fn into_inner(self) -> R {
-        self.inner
-    }
+    delegate_access_inner!(inner, R, ());
 }
 
 impl<R: AsyncRead> AsyncRead for Take<R> {
     fn poll_read(
-        mut self: Pin<&mut Self>,
+        self: Pin<&mut Self>,
         cx: &mut Context<'_>,
         buf: &mut [u8],
     ) -> Poll<Result<usize, io::Error>> {
-        if self.limit_ == 0 {
+        let this = self.project();
+
+        if *this.limit_ == 0 {
             return Poll::Ready(Ok(0));
         }
 
-        let max = std::cmp::min(buf.len() as u64, self.limit_) as usize;
-        let n = ready!(self.as_mut().inner().poll_read(cx, &mut buf[..max]))?;
-        *self.as_mut().limit_() -= n as u64;
+        let max = cmp::min(buf.len() as u64, *this.limit_) as usize;
+        let n = ready!(this.inner.poll_read(cx, &mut buf[..max]))?;
+        *this.limit_ -= n as u64;
         Poll::Ready(Ok(n))
     }
 
@@ -188,23 +110,24 @@ impl<R: AsyncRead> AsyncRead for Take<R> {
 
 impl<R: AsyncBufRead> AsyncBufRead for Take<R> {
     fn poll_fill_buf(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<&[u8]>> {
-        let Self { inner, limit_ } = unsafe { self.get_unchecked_mut() };
-        let inner = unsafe { Pin::new_unchecked(inner) };
+        let this = self.project();
 
         // Don't call into inner reader at all at EOF because it may still block
-        if *limit_ == 0 {
+        if *this.limit_ == 0 {
             return Poll::Ready(Ok(&[]));
         }
 
-        let buf = ready!(inner.poll_fill_buf(cx)?);
-        let cap = cmp::min(buf.len() as u64, *limit_) as usize;
+        let buf = ready!(this.inner.poll_fill_buf(cx)?);
+        let cap = cmp::min(buf.len() as u64, *this.limit_) as usize;
         Poll::Ready(Ok(&buf[..cap]))
     }
 
-    fn consume(mut self: Pin<&mut Self>, amt: usize) {
+    fn consume(self: Pin<&mut Self>, amt: usize) {
+        let this = self.project();
+
         // Don't let callers reset the limit by passing an overlarge value
-        let amt = cmp::min(amt as u64, self.limit_) as usize;
-        *self.as_mut().limit_() -= amt as u64;
-        self.inner().consume(amt);
+        let amt = cmp::min(amt as u64, *this.limit_) as usize;
+        *this.limit_ -= amt as u64;
+        this.inner.consume(amt);
     }
 }

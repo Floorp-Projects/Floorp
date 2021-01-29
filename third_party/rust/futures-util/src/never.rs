@@ -1,5 +1,6 @@
-//! Definition of the `Never` type,
-//! a stand-in for the `!` type until it becomes stable.
+//! This module contains the `Never` type.
+//!
+//! Values of this type can never be created and will never exist.
 
 /// A type with no possible values.
 ///

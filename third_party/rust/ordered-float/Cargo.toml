@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "ordered-float"
-version = "1.0.1"
+version = "1.1.1"
 authors = ["Jonathan Reem <jonathan.reem@gmail.com>", "Matt Brubeck <mbrubeck@limpet.net>"]
 description = "Wrappers for total ordering on floats"
 readme = "README.md"
@@ -21,7 +21,8 @@ categories = ["science", "rust-patterns", "no-std"]
 license = "MIT"
 repository = "https://github.com/reem/rust-ordered-float"
 [dependencies.num-traits]
-version = "0.2"
+version = "0.2.1"
+default-features = false
 
 [dependencies.serde]
 version = "1.0"
@@ -32,4 +33,4 @@ version = "1.0"
 
 [features]
 default = ["std"]
-std = []
+std = ["num-traits/std"]

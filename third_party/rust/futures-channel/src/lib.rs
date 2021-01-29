@@ -1,9 +1,14 @@
 //! Asynchronous channels.
 //!
-//! This crate provides channels that can be used to communicate between
-//! asynchronous tasks.
+//! Like threads, concurrent tasks sometimes need to communicate with each
+//! other. This module contains two basic abstractions for doing so:
 //!
-//! All items of this library are only available when the `std` or `alloc` feature of this
+//! - [oneshot], a way of sending a single value from one task to another.
+//! - [mpsc], a multi-producer, single-consumer channel for sending values
+//!   between tasks, analogous to the similarly-named structure in the standard
+//!   library.
+//!
+//! All items are only available when the `std` or `alloc` feature of this
 //! library is activated, and it is activated by default.
 
 #![cfg_attr(feature = "cfg-target-has-atomic", feature(cfg_target_has_atomic))]
@@ -14,10 +19,7 @@
 // It cannot be included in the published code because this lints have false positives in the minimum required version.
 #![cfg_attr(test, warn(single_use_lifetimes))]
 #![warn(clippy::all)]
-
 #![doc(test(attr(deny(warnings), allow(dead_code, unused_assignments, unused_variables))))]
-
-#![doc(html_root_url = "https://docs.rs/futures-channel/0.3.0")]
 
 #[cfg(all(feature = "cfg-target-has-atomic", not(feature = "unstable")))]
 compile_error!("The `cfg-target-has-atomic` feature requires the `unstable` feature as an explicit opt-in to unstable features");

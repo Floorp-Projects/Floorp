@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "pin-utils"
-version = "0.1.0-alpha.4"
+version = "0.1.0"
 authors = ["Josef Brandl <mail@josefbrandl.de>"]
 description = "Utilities for pinning\n"
 documentation = "https://docs.rs/pin-utils"

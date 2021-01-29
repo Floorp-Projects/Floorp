@@ -1,13 +1,13 @@
-use futures::channel::{oneshot, mpsc};
-use futures::executor::{block_on, block_on_stream};
-use futures::sink::SinkExt;
-use futures::stream::StreamExt;
-use std::sync::mpsc as std_mpsc;
-use std::thread;
-
 #[test]
 #[ignore] // FIXME: https://github.com/rust-lang/futures-rs/issues/1790
 fn works() {
+    use futures::channel::{oneshot, mpsc};
+    use futures::executor::{block_on, block_on_stream};
+    use futures::sink::SinkExt;
+    use futures::stream::StreamExt;
+    use std::sync::mpsc as std_mpsc;
+    use std::thread;
+
     const N: usize = 4;
 
     let (mut tx, rx) = mpsc::channel(1);
