@@ -21,7 +21,9 @@ add_task(async function test_identityPopupCausesFSExit() {
     BrowserTestUtils.loadURI(browser, url);
     await loaded;
 
-    let identityBox = document.getElementById("identity-box");
+    let identityPermissionBox = document.getElementById(
+      "identity-permission-box"
+    );
 
     info("Entering DOM fullscreen");
     await changeFullscreen(browser, true);
@@ -30,16 +32,16 @@ add_task(async function test_identityPopupCausesFSExit() {
       window,
       "popupshown",
       true,
-      event => event.target == document.getElementById("identity-popup")
+      event => event.target == document.getElementById("permission-popup")
     );
     let fsExit = waitForFullScreenState(browser, false);
 
-    identityBox.click();
+    identityPermissionBox.click();
 
-    info("Waiting for fullscreen exit and identity popup to show");
+    info("Waiting for fullscreen exit and permission popup to show");
     await Promise.all([fsExit, popupShown]);
 
-    let identityPopup = document.getElementById("identity-popup");
+    let identityPopup = document.getElementById("permission-popup");
     ok(
       identityPopup.hasAttribute("panelopen"),
       "Identity popup should be open"

@@ -715,10 +715,10 @@ var gTests = [
   },
 
   {
-    desc: "test showControlCenter",
-    run: async function checkShowControlCenter() {
+    desc: "test showPermissionPanel",
+    run: async function checkShowPermissionPanel() {
       if (!USING_LEGACY_INDICATOR) {
-        // The indicator only links to the control center for the
+        // The indicator only links to the permission panel for the
         // legacy indicator.
         return;
       }
@@ -749,7 +749,7 @@ var gTests = [
       await indicator;
       await checkSharingUI({ video: true });
 
-      ok(identityPopupHidden(), "control center should be hidden");
+      ok(permissionPopupHidden(), "permission panel should be hidden");
       if (IS_MAC) {
         let activeStreams = webrtcUI.getActiveStreams(true, false, false);
         webrtcUI.showSharingDoorhanger(activeStreams[0]);
@@ -763,12 +763,12 @@ var gTests = [
       }
 
       await TestUtils.waitForCondition(
-        () => !identityPopupHidden(),
-        "wait for control center to open"
+        () => !permissionPopupHidden(),
+        "wait for permission panel to open"
       );
-      ok(!identityPopupHidden(), "control center should be open");
+      ok(!permissionPopupHidden(), "permission panel should be open");
 
-      gIdentityHandler._identityPopup.hidePopup();
+      gPermissionPanel._permissionPopup.hidePopup();
 
       await closeStream();
     },
