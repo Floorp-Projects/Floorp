@@ -13,22 +13,20 @@
 #include "mozilla/CORSMode.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
-#include "nsRect.h"
+#include "nsIFrame.h"
+#include "nsIReflowCallback.h"
 #include "nsTArray.h"
+#include "imgIRequest.h"
+#include "imgINotificationObserver.h"
 #include "mozilla/Attributes.h"
 
-class nsIFrame;
 class imgIContainer;
-class imgIRequest;
-class imgRequestProxy;
 class nsPresContext;
 class nsIURI;
 class nsIPrincipal;
-class nsIRequest;
 
 namespace mozilla {
 struct MediaFeatureChange;
-struct StyleComputedUrl;
 namespace dom {
 class Document;
 }
@@ -46,15 +44,10 @@ class ImageLoader final {
 
   // We also associate flags alongside frames in the request-to-frames hashmap.
   // These are used for special handling of events for requests.
-  enum class Flags : uint32_t {
-    // Used for bullets.
-    RequiresReflowOnSizeAvailable = 1u << 0,
-
-    // Used for shapes.
-    RequiresReflowOnFirstFrameCompleteAndLoadEventBlocking = 1u << 1,
-
-    // Internal flag, shouldn't be used by callers.
-    IsBlockingLoadEvent = 1u << 2,
+  typedef uint32_t FrameFlags;
+  enum {
+    REQUEST_REQUIRES_REFLOW = 1u << 0,
+    REQUEST_HAS_BLOCKED_ONLOAD = 1u << 1,
   };
 
   explicit ImageLoader(dom::Document* aDocument) : mDocument(aDocument) {
@@ -65,9 +58,12 @@ class ImageLoader final {
 
   void DropDocumentReference();
 
-  void AssociateRequestToFrame(imgIRequest*, nsIFrame*, Flags = Flags(0));
-  void DisassociateRequestFromFrame(imgIRequest*, nsIFrame*);
-  void DropRequestsForFrame(nsIFrame*);
+  void AssociateRequestToFrame(imgIRequest* aRequest, nsIFrame* aFrame,
+                               FrameFlags aFlags);
+
+  void DisassociateRequestFromFrame(imgIRequest* aRequest, nsIFrame* aFrame);
+
+  void DropRequestsForFrame(nsIFrame* aFrame);
 
   void SetAnimationMode(uint16_t aMode);
 
@@ -77,8 +73,8 @@ class ImageLoader final {
   void ClearFrames(nsPresContext* aPresContext);
 
   // Triggers an image load.
-  static already_AddRefed<imgRequestProxy> LoadImage(const StyleComputedUrl&,
-                                                     dom::Document&);
+  static already_AddRefed<imgRequestProxy> LoadImage(
+      const StyleComputedImageUrl&, dom::Document&);
 
   // Usually, only one style value owns a given proxy. However, we have a hack
   // to share image proxies in chrome documents under some circumstances. We
@@ -98,7 +94,21 @@ class ImageLoader final {
  private:
   // Called when we stop caring about a given request.
   void DeregisterImageRequest(imgIRequest*, nsPresContext*);
-  struct ImageReflowCallback;
+
+  // This callback is used to unblock document onload after a reflow
+  // triggered from an image load.
+  struct ImageReflowCallback final : public nsIReflowCallback {
+    RefPtr<ImageLoader> mLoader;
+    WeakFrame mFrame;
+    nsCOMPtr<imgIRequest> const mRequest;
+
+    ImageReflowCallback(ImageLoader* aLoader, nsIFrame* aFrame,
+                        imgIRequest* aRequest)
+        : mLoader(aLoader), mFrame(aFrame), mRequest(aRequest) {}
+
+    bool ReflowFinished() override;
+    void ReflowCallbackCanceled() override;
+  };
 
   ~ImageLoader() = default;
 
@@ -108,11 +118,11 @@ class ImageLoader final {
   // should always be in sync.
 
   struct FrameWithFlags {
-    explicit FrameWithFlags(nsIFrame* aFrame) : mFrame(aFrame) {
+    explicit FrameWithFlags(nsIFrame* aFrame) : mFrame(aFrame), mFlags(0) {
       MOZ_ASSERT(mFrame);
     }
     nsIFrame* const mFrame;
-    Flags mFlags{0};
+    FrameFlags mFlags;
   };
 
   // A helper class to compare FrameWithFlags by comparing mFrame and
@@ -138,9 +148,11 @@ class ImageLoader final {
 
   nsPresContext* GetPresContext();
 
-  void ImageFrameChanged(imgIRequest*, bool aFirstFrame);
-  void UnblockOnloadIfNeeded(nsIFrame*, imgIRequest*);
-  void UnblockOnloadIfNeeded(FrameWithFlags&);
+  void RequestPaintIfNeeded(FrameSet* aFrameSet, imgIRequest* aRequest,
+                            bool aForcePaint);
+  void UnblockOnloadIfNeeded(nsIFrame* aFrame, imgIRequest* aRequest);
+  void RequestReflowIfNeeded(FrameSet* aFrameSet, imgIRequest* aRequest);
+  void RequestReflowOnFrame(FrameWithFlags* aFwf, imgIRequest* aRequest);
 
   void OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage);
   void OnFrameComplete(imgIRequest* aRequest);
@@ -161,8 +173,6 @@ class ImageLoader final {
   // A weak pointer to our document. Nulled out by DropDocumentReference.
   dom::Document* mDocument;
 };
-
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ImageLoader::Flags)
 
 }  // namespace css
 }  // namespace mozilla
