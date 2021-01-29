@@ -4806,9 +4806,7 @@ bool Parser<FullParseHandler, Unit>::namedImportsOrNamespaceImport(
         return false;
       }
 
-      const ParserName* importName = this->compilationState_.parserAtoms
-                                         .getParserAtom(anyChars.currentName())
-                                         ->asName();
+      auto importName = anyChars.currentName();
       TokenPos importNamePos = pos();
 
       bool matched;
@@ -4831,8 +4829,11 @@ bool Parser<FullParseHandler, Unit>::namedImportsOrNamespaceImport(
         // that is a keyword is a syntax error if it is not followed
         // by the keyword 'as'.
         // See the ImportSpecifier production in ES6 section 15.2.2.
-        if (IsKeyword(importName)) {
-          error(JSMSG_AS_AFTER_RESERVED_WORD, ReservedWordToCharZ(importName));
+        const ParserName* name =
+            this->compilationState_.parserAtoms.getParserAtom(importName)
+                ->asName();
+        if (IsKeyword(name)) {
+          error(JSMSG_AS_AFTER_RESERVED_WORD, ReservedWordToCharZ(name));
           return false;
         }
       }
@@ -4850,8 +4851,7 @@ bool Parser<FullParseHandler, Unit>::namedImportsOrNamespaceImport(
         return false;
       }
 
-      NameNodeType importNameNode =
-          newName(importName->toIndex(), importNamePos);
+      NameNodeType importNameNode = newName(importName, importNamePos);
       if (!importNameNode) {
         return false;
       }
