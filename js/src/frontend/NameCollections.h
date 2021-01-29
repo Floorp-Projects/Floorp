@@ -7,13 +7,23 @@
 #ifndef frontend_NameCollections_h
 #define frontend_NameCollections_h
 
-#include <type_traits>
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Attributes.h"  // MOZ_IMPLICIT
 
-#include "ds/InlineTable.h"  // InlineMap, DefaultKeyPolicy
-#include "frontend/NameAnalysisTypes.h"
+#include <stddef.h>     // size_t
+#include <stdint.h>     // uint32_t, uint64_t
+#include <type_traits>  // std::{true_type, false_type, is_trivial_v, is_trivially_copyable_v, is_trivially_destructible_v}
+#include <utility>      // std::forward
+
+#include "ds/InlineTable.h"              // InlineMap, DefaultKeyPolicy
+#include "frontend/NameAnalysisTypes.h"  // AtomVector, FunctionBoxVector
 #include "frontend/ParserAtom.h"  // TaggedParserAtomIndex, TrivialTaggedParserAtomIndex
 #include "frontend/TaggedParserAtomIndexHasher.h"  // TrivialTaggedParserAtomIndexHasher
-#include "js/Vector.h"
+#include "js/AllocPolicy.h"  // SystemAllocPolicy, ReportOutOfMemory
+#include "js/Utility.h"      // js_new, js_delete
+#include "js/Vector.h"       // Vector
+
+struct JSContext;
 
 namespace js {
 
@@ -270,7 +280,8 @@ class VectorPool : public CollectionPool<RepresentativeVector,
 
 class NameCollectionPool {
   InlineTablePool<AtomIndexMap> mapPool_;
-  VectorPool<AtomVector> vectorPool_;
+  VectorPool<AtomVector> atomVectorPool_;
+  VectorPool<FunctionBoxVector> functionBoxVectorPool_;
   uint32_t activeCompilations_;
 
  public:
@@ -301,27 +312,52 @@ class NameCollectionPool {
   }
 
   template <typename Vector>
-  Vector* acquireVector(JSContext* cx) {
-    MOZ_ASSERT(hasActiveCompilation());
-    return vectorPool_.acquire<Vector>(cx);
-  }
+  inline Vector* acquireVector(JSContext* cx);
 
   template <typename Vector>
-  void releaseVector(Vector** vec) {
-    MOZ_ASSERT(hasActiveCompilation());
-    MOZ_ASSERT(vec);
-    if (*vec) {
-      vectorPool_.release(vec);
-    }
-  }
+  inline void releaseVector(Vector** vec);
 
   void purge() {
     if (!hasActiveCompilation()) {
       mapPool_.purgeAll();
-      vectorPool_.purgeAll();
+      atomVectorPool_.purgeAll();
+      functionBoxVectorPool_.purgeAll();
     }
   }
 };
+
+template <>
+inline AtomVector* NameCollectionPool::acquireVector<AtomVector>(
+    JSContext* cx) {
+  MOZ_ASSERT(hasActiveCompilation());
+  return atomVectorPool_.acquire<AtomVector>(cx);
+}
+
+template <>
+inline void NameCollectionPool::releaseVector<AtomVector>(AtomVector** vec) {
+  MOZ_ASSERT(hasActiveCompilation());
+  MOZ_ASSERT(vec);
+  if (*vec) {
+    atomVectorPool_.release(vec);
+  }
+}
+
+template <>
+inline FunctionBoxVector* NameCollectionPool::acquireVector<FunctionBoxVector>(
+    JSContext* cx) {
+  MOZ_ASSERT(hasActiveCompilation());
+  return functionBoxVectorPool_.acquire<FunctionBoxVector>(cx);
+}
+
+template <>
+inline void NameCollectionPool::releaseVector<FunctionBoxVector>(
+    FunctionBoxVector** vec) {
+  MOZ_ASSERT(hasActiveCompilation());
+  MOZ_ASSERT(vec);
+  if (*vec) {
+    functionBoxVectorPool_.release(vec);
+  }
+}
 
 template <typename T, template <typename> typename Impl>
 class PooledCollectionPtr {
