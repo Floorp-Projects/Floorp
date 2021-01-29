@@ -1344,7 +1344,7 @@ bool ModuleBuilder::buildTables(frontend::StencilModuleMetadata& metadata) {
         }
       } else {
         if (importEntry->importName ==
-            frontend::TaggedParserAtomIndex::star()) {
+            frontend::TaggedParserAtomIndex::WellKnown::star()) {
           if (!metadata.localExportEntries.append(exp)) {
             js::ReportOutOfMemory(cx_);
             return false;
@@ -1360,7 +1360,8 @@ bool ModuleBuilder::buildTables(frontend::StencilModuleMetadata& metadata) {
           }
         }
       }
-    } else if (exp.importName == frontend::TaggedParserAtomIndex::star() &&
+    } else if (exp.importName ==
+                   frontend::TaggedParserAtomIndex::WellKnown::star() &&
                !exp.exportName) {
       if (!metadata.starExportEntries.append(exp)) {
         js::ReportOutOfMemory(cx_);
