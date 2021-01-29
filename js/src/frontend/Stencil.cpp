@@ -2501,3 +2501,19 @@ const ParserAtom* BaseCompilationStencil::getParserAtomAt(
 
   return GetWellKnownParserAtomAt(cx, taggedIndex);
 }
+
+CompilationStencil::RewindToken CompilationStencil::getRewindToken(
+    CompilationState& state) {
+  return RewindToken{state.scriptData.length(), asmJS.count()};
+}
+
+void CompilationStencil::rewind(CompilationState& state,
+                                const CompilationStencil::RewindToken& pos) {
+  if (asmJS.count() != pos.asmJSCount) {
+    for (size_t i = pos.scriptDataLength; i < state.scriptData.length(); i++) {
+      asmJS.remove(ScriptIndex(i));
+    }
+    MOZ_ASSERT(asmJS.count() == pos.asmJSCount);
+  }
+  state.scriptData.shrinkTo(pos.scriptDataLength);
+}
