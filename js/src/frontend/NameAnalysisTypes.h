@@ -13,7 +13,7 @@
 #include <stdint.h>  // uint8_t, uint16_t, uint32_t
 #include <type_traits>
 
-#include "frontend/ParserAtom.h"     // ParserAtom
+#include "frontend/ParserAtom.h"     // TrivialTaggedParserAtomIndex
 #include "js/AllocPolicy.h"          // SystemAllocPolicy
 #include "js/Vector.h"               // Vector
 #include "vm/BindingKind.h"          // BindingKind, BindingLocation
@@ -364,12 +364,12 @@ class NameLocation {
 };
 
 // These types are declared here for BaseScript::CreateLazy.
-using AtomVector = Vector<const ParserAtom*, 24, SystemAllocPolicy>;
+using AtomVector = Vector<TrivialTaggedParserAtomIndex, 24, SystemAllocPolicy>;
 
 class FunctionBox;
 // FunctionBoxes stored in this type are required to be rooted
 // by the parser
-using FunctionBoxVector = Vector<const FunctionBox*, 8>;
+using FunctionBoxVector = Vector<FunctionBox*, 24, SystemAllocPolicy>;
 
 }  // namespace frontend
 }  // namespace js

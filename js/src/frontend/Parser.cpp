@@ -426,7 +426,9 @@ bool ParserBase::hasValidSimpleStrictParameterNames() {
     return false;
   }
 
-  for (auto name : pc_->positionalFormalParameterNames()) {
+  for (auto index : pc_->positionalFormalParameterNames()) {
+    const ParserAtom* name =
+        this->compilationState_.getParserAtomAt(cx_, index);
     MOZ_ASSERT(name);
     if (!isValidStrictBinding(name->asName())) {
       return false;
@@ -545,7 +547,8 @@ bool GeneralParser<ParseHandler, Unit>::notePositionalFormalParameter(
     }
   }
 
-  if (!pc_->positionalFormalParameterNames().append(name)) {
+  if (!pc_->positionalFormalParameterNames().append(
+          TrivialTaggedParserAtomIndex::from(name->toIndex()))) {
     ReportOutOfMemory(cx_);
     return false;
   }
@@ -564,7 +567,8 @@ bool PerHandlerParser<ParseHandler>::noteDestructuredPositionalFormalParameter(
     FunctionNodeType funNode, Node destruct) {
   // Append an empty name to the positional formals vector to keep track of
   // argument slots when making FunctionScope::ParserData.
-  if (!pc_->positionalFormalParameterNames().append(nullptr)) {
+  if (!pc_->positionalFormalParameterNames().append(
+          TrivialTaggedParserAtomIndex::null())) {
     ReportOutOfMemory(cx_);
     return false;
   }
@@ -887,9 +891,8 @@ bool PerHandlerParser<ParseHandler>::
         bi.setClosedOver();
 
         if constexpr (isSyntaxParser) {
-          const ParserAtom* atom =
-              this->compilationState_.getParserAtomAt(cx_, bi.name());
-          if (!pc_->closedOverBindingsForLazy().append(atom)) {
+          if (!pc_->closedOverBindingsForLazy().append(
+                  TrivialTaggedParserAtomIndex::from(bi.name()))) {
             ReportOutOfMemory(cx_);
             return false;
           }
@@ -911,7 +914,8 @@ bool PerHandlerParser<ParseHandler>::
 
   // Append a nullptr to denote end-of-scope.
   if constexpr (isSyntaxParser) {
-    if (!pc_->closedOverBindingsForLazy().append(nullptr)) {
+    if (!pc_->closedOverBindingsForLazy().append(
+            TrivialTaggedParserAtomIndex::null())) {
       ReportOutOfMemory(cx_);
       return false;
     }
@@ -1208,11 +1212,11 @@ Maybe<FunctionScope::ParserData*> NewFunctionScopeData(
   // Positional parameter names must be added in order of appearance as they are
   // referenced using argument slots.
   for (size_t i = 0; i < pc->positionalFormalParameterNames().length(); i++) {
-    const ParserAtom* name = pc->positionalFormalParameterNames()[i];
+    TaggedParserAtomIndex name = pc->positionalFormalParameterNames()[i];
 
     ParserBindingName bindName;
     if (name) {
-      DeclaredNamePtr p = scope.lookupDeclaredName(name->toIndex());
+      DeclaredNamePtr p = scope.lookupDeclaredName(name);
 
       // Do not consider any positional formal parameters closed over if
       // there are parameter defaults. It is the binding in the defaults
@@ -1226,14 +1230,15 @@ Maybe<FunctionScope::ParserData*> NewFunctionScopeData(
       if (hasDuplicateParams) {
         for (size_t j = pc->positionalFormalParameterNames().length() - 1;
              j > i; j--) {
-          if (pc->positionalFormalParameterNames()[j] == name) {
+          if (TaggedParserAtomIndex(pc->positionalFormalParameterNames()[j]) ==
+              name) {
             closedOver = false;
             break;
           }
         }
       }
 
-      bindName = ParserBindingName(name->toIndex(), closedOver);
+      bindName = ParserBindingName(name, closedOver);
     }
 
     if (!positionalFormals.append(bindName)) {
@@ -2054,9 +2059,11 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
     void* raw = &(*cursor++);
     new (raw) TaggedScriptThingIndex(index);
   }
-  for (const ParserAtom* binding : pc_->closedOverBindingsForLazy()) {
+  for (auto bindingIndex : pc_->closedOverBindingsForLazy()) {
     void* raw = &(*cursor++);
-    if (binding) {
+    if (bindingIndex) {
+      const ParserAtom* binding =
+          this->compilationState_.getParserAtomAt(cx_, bindingIndex);
       binding->markUsedByStencil();
       new (raw) TaggedScriptThingIndex(binding->toIndex());
     } else {
