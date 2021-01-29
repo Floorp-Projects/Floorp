@@ -14,16 +14,11 @@
 #include "common/MediaEngineWrapper.h"
 #include "RtpPacketQueue.h"
 
-// Audio Engine Includes
-#include "modules/audio_device/include/fake_audio_device.h"
-
-/** This file hosts several structures identifying different aspects
- * of a RTP Session.
+/**
+ * This file hosts several structures identifying different aspects of a RTP
+ * Session.
  */
 namespace mozilla {
-// Helper function
-
-DOMHighResTimeStamp NTPtoDOMHighResTimeStamp(uint32_t ntpHigh, uint32_t ntpLow);
 
 /**
  * Concrete class for Audio session. Hooks up
@@ -34,14 +29,14 @@ class WebrtcAudioConduit : public AudioSessionConduit,
  public:
   /**
    * APIs used by the registered external transport to this Conduit to
-   * feed in received RTP Frames to the VoiceEngine for decoding
+   * feed in received RTP Frames to the Receiver for decoding.
    */
   MediaConduitErrorCode ReceivedRTPPacket(const void* data, int len,
                                           webrtc::RTPHeader& header) override;
 
   /**
    * APIs used by the registered external transport to this Conduit to
-   * feed in received RTCP Frames to the VoiceEngine for decoding
+   * feed in received RTCP Frames to the Receiver for decoding.
    */
   MediaConduitErrorCode ReceivedRTCPPacket(const void* data, int len) override;
   Maybe<DOMHighResTimeStamp> LastRtcpReceived() const override;
@@ -61,9 +56,10 @@ class WebrtcAudioConduit : public AudioSessionConduit,
    * Function to configure send codec for the audio session
    * @param sendSessionConfig: CodecConfiguration
    * @result: On Success, the audio engine is configured with passed in codec
-   * for send On failure, audio engine transmit functionality is disabled. NOTE:
-   * This API can be invoked multiple time. Invoking this API may involve
-   * restarting transmission sub-system on the engine.
+   *                      for send.
+   *          On failure, audio engine transmit functionality is disabled.
+   * NOTE: This API can be invoked multiple times. Invoking this API may involve
+   *       restarting transmission sub-system on the engine.
    */
   MediaConduitErrorCode ConfigureSendMediaCodec(
       const AudioCodecConfig* codecConfig) override;
@@ -71,10 +67,11 @@ class WebrtcAudioConduit : public AudioSessionConduit,
    * Function to configure list of receive codecs for the audio session
    * @param sendSessionConfig: CodecConfiguration
    * @result: On Success, the audio engine is configured with passed in codec
-   * for send Also the playout is enabled. On failure, audio engine transmit
-   * functionality is disabled. NOTE: This API can be invoked multiple time.
-   * Invoking this API may involve restarting transmission sub-system on the
-   * engine.
+   *                      for receive. Also the playout is enabled.
+   *          On failure, audio engine transmit functionality is disabled.
+   *
+   * NOTE: This API can be invoked multiple times. Invoking this API may involve
+   *       restarting transmission sub-system on the engine.
    */
   MediaConduitErrorCode ConfigureRecvMediaCodecs(
       const std::vector<UniquePtr<AudioCodecConfig>>& codecConfigList) override;
@@ -126,14 +123,12 @@ class WebrtcAudioConduit : public AudioSessionConduit,
 
   /**
    * Webrtc transport implementation to send and receive RTP packet.
-   * AudioConduit registers itself as ExternalTransport to the VoiceEngine
    */
   bool SendRtp(const uint8_t* data, size_t len,
                const webrtc::PacketOptions& options) override;
 
   /**
    * Webrtc transport implementation to send and receive RTCP packet.
-   * AudioConduit registers itself as ExternalTransport to the VoiceEngine
    */
   bool SendRtcp(const uint8_t* data, size_t len) override;
 
@@ -156,17 +151,18 @@ class WebrtcAudioConduit : public AudioSessionConduit,
         ,
         mSendStream(nullptr),
         mRecvSSRC(0),
-        mEngineTransmitting(false),
-        mEngineReceiving(false),
+        mSendStreamRunning(false),
+        mRecvStreamRunning(false),
         mDtmfEnabled(false),
         mMutex("WebrtcAudioConduit::mMutex"),
         mStsThread(aStsThread) {}
 
   virtual ~WebrtcAudioConduit();
 
-  /* Set Local SSRC list.
-   * Note: Until the refactor of the VoE into the call API is complete
-   *   this list should contain only a single ssrc.
+  /**
+   * Set Local SSRC list.
+   *
+   * This list should contain only a single ssrc.
    */
   bool SetLocalSSRCs(const std::vector<uint32_t>& aSSRCs,
                      const std::vector<uint32_t>& aRtxSSRCs) override;
@@ -208,7 +204,7 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   bool CodecConfigToWebRTCCodec(const AudioCodecConfig* codecInfo,
                                 webrtc::AudioSendStream::Config& config);
 
-  // Generate block size in sample lenght for a given sampling frequency
+  // Generate block size in sample length for a given sampling frequency
   unsigned int GetNum10msSamplesForFrequency(int samplingFreqHz) const;
 
   // Checks the codec to be applied
@@ -253,12 +249,12 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   // Accessed only on mStsThread.
   RtpPacketQueue mRtpPacketQueue;
 
-  // engine states of our interets
-  mozilla::Atomic<bool>
-      mEngineTransmitting;  // If true => VoiceEngine Send-subsystem is up
-  mozilla::Atomic<bool>
-      mEngineReceiving;  // If true => VoiceEngine Receive-subsystem is up
-                         // and playout is enabled
+  // If true => mSendStream started and not stopped
+  // Written only on main thread. Guarded by mMutex, except for reads on main.
+  bool mSendStreamRunning;
+  // If true => mRecvStream started and not stopped
+  // Written only on main thread. Guarded by mMutex, except for reads on main.
+  bool mRecvStreamRunning;
 
   // Accessed only on main thread.
   bool mDtmfEnabled;

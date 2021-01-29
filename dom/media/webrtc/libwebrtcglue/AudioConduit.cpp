@@ -472,7 +472,7 @@ MediaConduitErrorCode WebrtcAudioConduit::SendAudioFrame(
   }
 
   // if transmission is not started .. conduit cannot insert frames
-  if (!mEngineTransmitting) {
+  if (!mSendStreamRunning) {
     CSFLogError(LOGTAG, "%s Engine not transmitting ", __FUNCTION__);
     return kMediaConduitSessionNotInited;
   }
@@ -501,7 +501,7 @@ MediaConduitErrorCode WebrtcAudioConduit::GetAudioFrame(
 
   // Conduit should have reception enabled before we ask for decoded
   // samples
-  if (!mEngineReceiving) {
+  if (!mRecvStreamRunning) {
     CSFLogError(LOGTAG, "%s Engine not Receiving ", __FUNCTION__);
     return kMediaConduitSessionNotInited;
   }
@@ -648,12 +648,12 @@ MediaConduitErrorCode WebrtcAudioConduit::StopTransmittingLocked() {
   MOZ_ASSERT(NS_IsMainThread());
   mMutex.AssertCurrentThreadOwns();
 
-  if (mEngineTransmitting) {
+  if (mSendStreamRunning) {
     MOZ_ASSERT(mSendStream);
     CSFLogDebug(LOGTAG, "%s Engine Already Sending. Attemping to Stop ",
                 __FUNCTION__);
     mSendStream->Stop();
-    mEngineTransmitting = false;
+    mSendStreamRunning = false;
   }
 
   return kMediaConduitNoError;
@@ -663,7 +663,7 @@ MediaConduitErrorCode WebrtcAudioConduit::StartTransmittingLocked() {
   MOZ_ASSERT(NS_IsMainThread());
   mMutex.AssertCurrentThreadOwns();
 
-  if (mEngineTransmitting) {
+  if (mSendStreamRunning) {
     return kMediaConduitNoError;
   }
 
@@ -674,7 +674,7 @@ MediaConduitErrorCode WebrtcAudioConduit::StartTransmittingLocked() {
   mCall->Call()->SignalChannelNetworkState(webrtc::MediaType::AUDIO,
                                            webrtc::kNetworkUp);
   mSendStream->Start();
-  mEngineTransmitting = true;
+  mSendStreamRunning = true;
 
   return kMediaConduitNoError;
 }
@@ -683,10 +683,10 @@ MediaConduitErrorCode WebrtcAudioConduit::StopReceivingLocked() {
   MOZ_ASSERT(NS_IsMainThread());
   mMutex.AssertCurrentThreadOwns();
 
-  if (mEngineReceiving) {
+  if (mRecvStreamRunning) {
     MOZ_ASSERT(mRecvStream);
     mRecvStream->Stop();
-    mEngineReceiving = false;
+    mRecvStreamRunning = false;
   }
 
   return kMediaConduitNoError;
@@ -696,7 +696,7 @@ MediaConduitErrorCode WebrtcAudioConduit::StartReceivingLocked() {
   MOZ_ASSERT(NS_IsMainThread());
   mMutex.AssertCurrentThreadOwns();
 
-  if (mEngineReceiving) {
+  if (mRecvStreamRunning) {
     return kMediaConduitNoError;
   }
 
@@ -707,7 +707,7 @@ MediaConduitErrorCode WebrtcAudioConduit::StartReceivingLocked() {
   mCall->Call()->SignalChannelNetworkState(webrtc::MediaType::AUDIO,
                                            webrtc::kNetworkUp);
   mRecvStream->Start();
-  mEngineReceiving = true;
+  mRecvStreamRunning = true;
 
   return kMediaConduitNoError;
 }
@@ -860,7 +860,7 @@ void WebrtcAudioConduit::DeleteSendStream() {
   mMutex.AssertCurrentThreadOwns();
   if (mSendStream) {
     mSendStream->Stop();
-    mEngineTransmitting = false;
+    mSendStreamRunning = false;
     mCall->Call()->DestroyAudioSendStream(mSendStream);
     mSendStream = nullptr;
   }
@@ -883,7 +883,7 @@ void WebrtcAudioConduit::DeleteRecvStream() {
   mMutex.AssertCurrentThreadOwns();
   if (mRecvStream) {
     mRecvStream->Stop();
-    mEngineReceiving = false;
+    mRecvStreamRunning = false;
     mCall->Call()->DestroyAudioReceiveStream(mRecvStream);
     mRecvStream = nullptr;
   }
@@ -904,7 +904,7 @@ MediaConduitErrorCode WebrtcAudioConduit::CreateRecvStream() {
 
 bool WebrtcAudioConduit::RecreateSendStreamIfExists() {
   MutexAutoLock lock(mMutex);
-  bool wasTransmitting = mEngineTransmitting;
+  bool wasTransmitting = mSendStreamRunning;
   bool hadSendStream = mSendStream;
   DeleteSendStream();
 
@@ -921,8 +921,9 @@ bool WebrtcAudioConduit::RecreateSendStreamIfExists() {
 }
 
 bool WebrtcAudioConduit::RecreateRecvStreamIfExists() {
+  MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(mMutex);
-  bool wasReceiving = mEngineReceiving;
+  bool wasReceiving = mRecvStreamRunning;
   bool hadRecvStream = mRecvStream;
   DeleteRecvStream();
 
