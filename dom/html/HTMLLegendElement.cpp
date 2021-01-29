@@ -103,26 +103,6 @@ bool HTMLLegendElement::PerformAccesskey(bool aKeyCausesActivation,
   return NS_SUCCEEDED(rv.StealNSResult());
 }
 
-HTMLLegendElement::LegendAlignValue HTMLLegendElement::LogicalAlign(
-    mozilla::WritingMode aCBWM) const {
-  const nsAttrValue* attr = GetParsedAttr(nsGkAtoms::align);
-  if (!attr || attr->Type() != nsAttrValue::eEnum) {
-    return LegendAlignValue::InlineStart;
-  }
-
-  auto value = static_cast<LegendAlignValue>(attr->GetEnumValue());
-  switch (value) {
-    case LegendAlignValue::Left:
-      return aCBWM.IsBidiLTR() ? LegendAlignValue::InlineStart
-                               : LegendAlignValue::InlineEnd;
-    case LegendAlignValue::Right:
-      return aCBWM.IsBidiLTR() ? LegendAlignValue::InlineEnd
-                               : LegendAlignValue::InlineStart;
-    default:
-      return value;
-  }
-}
-
 already_AddRefed<HTMLFormElement> HTMLLegendElement::GetForm() {
   return do_AddRef(GetFormElement());
 }
