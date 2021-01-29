@@ -5,7 +5,7 @@
 %endif
 
 .popup-notification-icon,
-.identity-popup-permission-icon {
+.permission-popup-permission-icon {
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.6;
@@ -14,7 +14,6 @@
 #notification-popup-box {
   padding: 5px 0;
   margin: -5px 0;
-  margin-inline-end: -5px;
   padding-inline-end: 5px;
 }
 
@@ -259,8 +258,8 @@ html|*#webRTC-previewVideo {
   transform: scaleX(-1);
 }
 
-#identity-popup-popup-menulist,
-#identity-popup-popup-menulist > menupopup {
+#permission-popup-menulist,
+#permission-popup-menulist > menupopup {
   min-width: 6.5em;
 }
 

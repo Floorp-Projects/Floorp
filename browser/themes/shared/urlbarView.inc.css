@@ -6,7 +6,7 @@
 
 %filter substitution
 %define urlbarViewPadding 4px
-%define urlbarViewIconMarginEnd (@identityBoxPaddingInline@ + @identityBoxMarginInlineEnd@)
+%define urlbarViewIconMarginEnd (@identityBoxPaddingInline@ + @identityBoxMarginInline@)
 %define urlbarViewMarginInline 7px
 %define urlbarViewItemInlinePadding 6px
 %define urlbarViewFaviconWidth 16px
@@ -143,10 +143,10 @@
   }
   /* urlbarView-url is forced to be LTR for RTL locales, so set the padding based on the browser's directionality. */
   .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-url:-moz-locale-dir(ltr) {
-    padding-left: calc(@urlbarViewItemInlinePadding@ + @identityBoxMarginInlineEnd@ + @urlbarViewFaviconWidth@);
+    padding-left: calc(@urlbarViewItemInlinePadding@ + @identityBoxMarginInline@ + @urlbarViewFaviconWidth@);
   }
   .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-url:-moz-locale-dir(rtl) {
-    padding-right: calc(@urlbarViewItemInlinePadding@ + @identityBoxMarginInlineEnd@ + @urlbarViewFaviconWidth@);
+    padding-right: calc(@urlbarViewItemInlinePadding@ + @identityBoxMarginInline@ + @urlbarViewFaviconWidth@);
   }
   /* Note: switchtab entries show the url only in override mode,
      remotetab and sponsored ones only when selected or :hover. */
@@ -161,7 +161,7 @@
   }
   .urlbarView-results[wrap] > .urlbarView-row[type=tabtosearch] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
     flex-basis: 100%;
-    margin-inline-start: calc(@urlbarViewItemInlinePadding@ + @identityBoxMarginInlineEnd@ + @urlbarViewFaviconWidth@);
+    margin-inline-start: calc(@urlbarViewItemInlinePadding@ + @identityBoxMarginInline@ + @urlbarViewFaviconWidth@);
   }
 }
 
