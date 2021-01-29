@@ -25,7 +25,7 @@ DevToolsModules(
 
 ### `require()`
 
-Most DevTools JS code is in the form of CommonJS modules that loaded with `require()`.
+Most DevTools JS code is in the form of CommonJS modules that are loaded with `require()`.
 
 To `require()` a file, the module ID is exactly its source tree path.
 
