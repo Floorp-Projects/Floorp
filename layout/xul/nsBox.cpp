@@ -408,10 +408,10 @@ bool nsIFrame::AddXULMinSize(nsIFrame* aBox, nsSize& aSize, bool& aWidthSet,
               pc, style->StyleUIReset()->mScrollbarWidth,
               nsITheme::Overlay::No);
           if (appearance == StyleAppearance::ScrollbarVertical) {
-            aSize.width = sizes.mVertical;
+            aSize.width = pc->DevPixelsToAppUnits(sizes.mVertical);
             aWidthSet = true;
           } else {
-            aSize.height = sizes.mHorizontal;
+            aSize.height = pc->DevPixelsToAppUnits(sizes.mHorizontal);
             aHeightSet = true;
           }
           break;
