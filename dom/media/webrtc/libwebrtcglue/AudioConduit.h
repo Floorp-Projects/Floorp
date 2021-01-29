@@ -97,28 +97,14 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   /**
    * Function to deliver externally captured audio sample for encoding and
    * transport
-   * @param audioData [in]: Pointer to array containing a frame of audio
-   * @param lengthSamples [in]: Length of audio frame in samples in multiple of
-   *                             10 milliseconds
-   *                             Ex: Frame length is 160, 320, 440 for 16, 32,
-   *                             44 kHz sampling rates respectively.
-   *                             audioData[] should be of lengthSamples in
-   *                             size say, for 16kz sampling rate,
-   *                             audioData[] should contain 160 samples of
-   *                             16-bits each for a 10m audio frame.
-   * @param samplingFreqHz [in]: Frequency/rate of the sampling in Hz
-   *                             ( 16000, 32000 ...)
-   * @param capture_delay [in]:  Approx Delay from recording until it is
-   *                             delivered to VoiceEngine in milliseconds.
+   * @param frame [in]: AudioFrame in upstream's format for forwarding to the
+   *                    send stream. Ownership is passed along.
    * NOTE: ConfigureSendMediaCodec() SHOULD be called before this function can
    * be invoked. This ensures the inserted audio-samples can be transmitted by
-   * the conduit
+   * the conduit.
    */
-  MediaConduitErrorCode SendAudioFrame(const int16_t speechData[],
-                                       int32_t lengthSamples,
-                                       int32_t samplingFreqHz,
-                                       uint32_t channels,
-                                       int32_t capture_time) override;
+  MediaConduitErrorCode SendAudioFrame(
+      std::unique_ptr<webrtc::AudioFrame> frame) override;
 
   /**
    * Function to grab a decoded audio-sample from the media engine for

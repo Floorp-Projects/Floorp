@@ -201,8 +201,12 @@ class AudioProxyThread {
 
     while (mPacketizer->PacketsAvailable()) {
       mPacketizer->Output(mPacket.get());
-      mConduit->SendAudioFrame(mPacket.get(), mPacketizer->mPacketSize, aRate,
-                               mPacketizer->mChannels, 0);
+      auto frame = std::make_unique<webrtc::AudioFrame>();
+      // UpdateFrame makes a copy of the audio data.
+      frame->UpdateFrame(frame->timestamp_, mPacket.get(),
+                         mPacketizer->mPacketSize, aRate, frame->speech_type_,
+                         frame->vad_activity_, mPacketizer->mChannels);
+      mConduit->SendAudioFrame(std::move(frame));
     }
   }
 
