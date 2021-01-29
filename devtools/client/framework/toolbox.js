@@ -701,11 +701,13 @@ Toolbox.prototype = {
       targetFront.on("navigate", this._onNavigate);
       targetFront.on("frame-update", this._updateFrames);
       targetFront.on("inspect-object", this._onInspectObject);
-
-      targetFront.watchFronts("inspector", async inspectorFront => {
-        registerWalkerListeners(this.store, inspectorFront.walker);
-      });
     }
+
+    // Walker listeners allow to monitor DOM Mutation breakpoint updates.
+    // All targets should be monitored.
+    targetFront.watchFronts("inspector", async inspectorFront => {
+      registerWalkerListeners(this.store, inspectorFront.walker);
+    });
 
     const { threadFront } = targetFront;
     if (threadFront) {
