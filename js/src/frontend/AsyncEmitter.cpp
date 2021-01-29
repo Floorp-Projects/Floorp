@@ -67,7 +67,7 @@ bool AsyncEmitter::prepareForModule() {
   MOZ_ASSERT(bce_->lookupName(TaggedParserAtomIndex::WellKnown::dotGenerator())
                  .hasKnownSlot());
 
-  NameOpEmitter noe(bce_, bce_->cx->parserNames().dotGenerator,
+  NameOpEmitter noe(bce_, TaggedParserAtomIndex::WellKnown::dotGenerator(),
                     NameOpEmitter::Kind::Initialize);
   if (!noe.prepareForRhs()) {
     //        [stack]

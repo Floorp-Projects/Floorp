@@ -17,14 +17,11 @@
 using namespace js;
 using namespace js::frontend;
 
-NameOpEmitter::NameOpEmitter(BytecodeEmitter* bce, const ParserAtom* name,
+NameOpEmitter::NameOpEmitter(BytecodeEmitter* bce, TaggedParserAtomIndex name,
                              Kind kind)
-    : bce_(bce),
-      kind_(kind),
-      name_(name),
-      loc_(bce_->lookupName(name_->toIndex())) {}
+    : bce_(bce), kind_(kind), name_(name), loc_(bce_->lookupName(name_)) {}
 
-NameOpEmitter::NameOpEmitter(BytecodeEmitter* bce, const ParserAtom* name,
+NameOpEmitter::NameOpEmitter(BytecodeEmitter* bce, TaggedParserAtomIndex name,
                              const NameLocation& loc, Kind kind)
     : bce_(bce), kind_(kind), name_(name), loc_(loc) {}
 
@@ -74,8 +71,7 @@ bool NameOpEmitter::emitGet() {
         return false;
       }
       if (loc_.isLexical()) {
-        if (!bce_->emitTDZCheckIfNeeded(name_->toIndex(), loc_,
-                                        ValueIsOnStack::Yes)) {
+        if (!bce_->emitTDZCheckIfNeeded(name_, loc_, ValueIsOnStack::Yes)) {
           //        [stack] VAL
           return false;
         }
@@ -88,8 +84,7 @@ bool NameOpEmitter::emitGet() {
         return false;
       }
       if (loc_.isLexical()) {
-        if (!bce_->emitTDZCheckIfNeeded(name_->toIndex(), loc_,
-                                        ValueIsOnStack::Yes)) {
+        if (!bce_->emitTDZCheckIfNeeded(name_, loc_, ValueIsOnStack::Yes)) {
           //        [stack] VAL
           return false;
         }
@@ -286,8 +281,7 @@ bool NameOpEmitter::emitAssignment() {
           if (loc_.isConst()) {
             op = JSOp::ThrowSetConst;
           }
-          if (!bce_->emitTDZCheckIfNeeded(name_->toIndex(), loc_,
-                                          ValueIsOnStack::No)) {
+          if (!bce_->emitTDZCheckIfNeeded(name_, loc_, ValueIsOnStack::No)) {
             return false;
           }
         }
@@ -302,7 +296,7 @@ bool NameOpEmitter::emitAssignment() {
         }
       }
       if (op == JSOp::InitLexical) {
-        if (!bce_->innermostTDZCheckCache->noteTDZCheck(bce_, name_->toIndex(),
+        if (!bce_->innermostTDZCheckCache->noteTDZCheck(bce_, name_,
                                                         DontCheckTDZ)) {
           return false;
         }
@@ -318,8 +312,7 @@ bool NameOpEmitter::emitAssignment() {
           if (loc_.isConst()) {
             op = JSOp::ThrowSetConst;
           }
-          if (!bce_->emitTDZCheckIfNeeded(name_->toIndex(), loc_,
-                                          ValueIsOnStack::No)) {
+          if (!bce_->emitTDZCheckIfNeeded(name_, loc_, ValueIsOnStack::No)) {
             return false;
           }
         }
@@ -345,7 +338,7 @@ bool NameOpEmitter::emitAssignment() {
         }
       }
       if (op == JSOp::InitAliasedLexical) {
-        if (!bce_->innermostTDZCheckCache->noteTDZCheck(bce_, name_->toIndex(),
+        if (!bce_->innermostTDZCheckCache->noteTDZCheck(bce_, name_,
                                                         DontCheckTDZ)) {
           return false;
         }
