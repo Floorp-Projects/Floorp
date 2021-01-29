@@ -352,7 +352,7 @@ nsresult HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                static_cast<HTMLImageElement::Loading>(
                    aOldValue->GetEnumValue()) == Loading::Lazy &&
                !ImageState().HasState(NS_EVENT_STATE_LOADING)) {
-      StopLazyLoadingAndStartLoadIfNeeded();
+      StopLazyLoadingAndStartLoadIfNeeded(false);
     }
   } else if (aName == nsGkAtoms::src && !aValue) {
     // NOTE: regular src value changes are handled in AfterMaybeChangeAttr, so
@@ -653,8 +653,18 @@ EventStates HTMLImageElement::IntrinsicState() const {
 void HTMLImageElement::NodeInfoChanged(Document* aOldDoc) {
   nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
 
+  // Unlike the LazyLoadImageObserver, the intersection observer
+  // for the viewport could contain the element even if
+  // it's not lazy-loading. For instance, the element has
+  // started to load, but haven't reached to the viewport.
+  // So here we always try to unobserve it.
+  if (auto* observer = aOldDoc->GetLazyLoadImageObserverViewport()) {
+    observer->Unobserve(*this);
+  }
+
   if (mLazyLoading) {
     aOldDoc->GetLazyLoadImageObserver()->Unobserve(*this);
+    aOldDoc->DecLazyLoadImageCount();
     mLazyLoading = false;
     SetLazyLoading();
   }
@@ -1256,10 +1266,9 @@ void HTMLImageElement::SetLazyLoading() {
     return;
   }
 
-  // There (maybe) is a race condition that we have no LazyLoadImageObserver
-  // when the root document has been removed from the docshell.
-  // In the case we don't need to worry about lazy-loading.
-  OwnerDoc()->EnsureLazyLoadImageObserver().Observe(*this);
+  doc->EnsureLazyLoadImageObserver().Observe(*this);
+  doc->EnsureLazyLoadImageObserverViewport().Observe(*this);
+  doc->IncLazyLoadImageCount();
   mLazyLoading = true;
   UpdateImageState(true);
 }
@@ -1279,13 +1288,28 @@ void HTMLImageElement::StartLoadingIfNeeded() {
   }
 }
 
-void HTMLImageElement::StopLazyLoadingAndStartLoadIfNeeded() {
+void HTMLImageElement::StopLazyLoadingAndStartLoadIfNeeded(
+    bool aFromIntersectionObserver) {
   if (!mLazyLoading) {
     return;
   }
   mLazyLoading = false;
-  OwnerDoc()->GetLazyLoadImageObserver()->Unobserve(*this);
+  Document* doc = OwnerDoc();
+  doc->GetLazyLoadImageObserver()->Unobserve(*this);
   StartLoadingIfNeeded();
+
+  if (aFromIntersectionObserver) {
+    doc->IncLazyLoadImageStarted();
+  } else {
+    doc->DecLazyLoadImageCount();
+    doc->GetLazyLoadImageObserverViewport()->Unobserve(*this);
+  }
+}
+
+void HTMLImageElement::LazyLoadImageReachedViewport() {
+  Document* doc = OwnerDoc();
+  doc->GetLazyLoadImageObserverViewport()->Unobserve(*this);
+  doc->IncLazyLoadImageReachViewport(!Complete());
 }
 
 }  // namespace mozilla::dom
