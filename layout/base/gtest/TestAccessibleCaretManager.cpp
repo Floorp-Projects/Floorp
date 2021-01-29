@@ -63,17 +63,17 @@ class AccessibleCaretManagerTester : public ::testing::Test {
     using AccessibleCaretManager::HideCaretsAndDispatchCaretStateChangedEvent;
     using AccessibleCaretManager::UpdateCarets;
 
-    MockAccessibleCaretManager() : AccessibleCaretManager(nullptr) {
-      mCarets.mFirst = MakeUnique<MockAccessibleCaret>();
-      mCarets.mSecond = MakeUnique<MockAccessibleCaret>();
-    }
+    MockAccessibleCaretManager()
+        : AccessibleCaretManager(nullptr,
+                                 Carets{MakeUnique<MockAccessibleCaret>(),
+                                        MakeUnique<MockAccessibleCaret>()}) {}
 
     MockAccessibleCaret& FirstCaret() {
-      return static_cast<MockAccessibleCaret&>(*mCarets.mFirst);
+      return static_cast<MockAccessibleCaret&>(*mCarets.GetFirst());
     }
 
     MockAccessibleCaret& SecondCaret() {
-      return static_cast<MockAccessibleCaret&>(*mCarets.mSecond);
+      return static_cast<MockAccessibleCaret&>(*mCarets.GetSecond());
     }
 
     bool CompareTreePosition(nsIFrame* aStartFrame,
@@ -91,11 +91,11 @@ class AccessibleCaretManagerTester : public ::testing::Test {
 
     void UpdateCaretsForAlwaysTilt(const nsIFrame* aStartFrame,
                                    const nsIFrame* aEndFrame) override {
-      if (mCarets.mFirst->IsVisuallyVisible()) {
-        mCarets.mFirst->SetAppearance(Appearance::Left);
+      if (mCarets.GetFirst()->IsVisuallyVisible()) {
+        mCarets.GetFirst()->SetAppearance(Appearance::Left);
       }
-      if (mCarets.mSecond->IsVisuallyVisible()) {
-        mCarets.mSecond->SetAppearance(Appearance::Right);
+      if (mCarets.GetSecond()->IsVisuallyVisible()) {
+        mCarets.GetSecond()->SetAppearance(Appearance::Right);
       }
     }
 

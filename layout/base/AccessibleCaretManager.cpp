@@ -6,6 +6,8 @@
 
 #include "AccessibleCaretManager.h"
 
+#include <utility>
+
 #include "AccessibleCaret.h"
 #include "AccessibleCaretEventHub.h"
 #include "AccessibleCaretLogger.h"
@@ -77,22 +79,22 @@ std::ostream& operator<<(
 #undef AC_PROCESS_ENUM_TO_STREAM
 
 AccessibleCaretManager::AccessibleCaretManager(PresShell* aPresShell)
-    : mPresShell(aPresShell) {
-  if (!mPresShell) {
-    return;
-  }
+    : AccessibleCaretManager{
+          aPresShell,
+          Carets{aPresShell ? MakeUnique<AccessibleCaret>(aPresShell) : nullptr,
+                 aPresShell ? MakeUnique<AccessibleCaret>(aPresShell)
+                            : nullptr}} {}
 
-  mCarets.mFirst = MakeUnique<AccessibleCaret>(mPresShell);
-  mCarets.mSecond = MakeUnique<AccessibleCaret>(mPresShell);
-}
+AccessibleCaretManager::AccessibleCaretManager(PresShell* aPresShell,
+                                               Carets aCarets)
+    : mPresShell{aPresShell}, mCarets{std::move(aCarets)} {}
 
 AccessibleCaretManager::LayoutFlusher::~LayoutFlusher() {
   MOZ_RELEASE_ASSERT(!mFlushing, "Going away in MaybeFlush? Bad!");
 }
 
 void AccessibleCaretManager::Terminate() {
-  mCarets.mFirst = nullptr;
-  mCarets.mSecond = nullptr;
+  mCarets.Terminate();
   mActiveCaret = nullptr;
   mPresShell = nullptr;
 }
@@ -1491,5 +1493,10 @@ void AccessibleCaretManager::DispatchCaretStateChangedEvent(
 
   (new AsyncEventDispatcher(doc, event))->PostDOMEvent();
 }
+
+AccessibleCaretManager::Carets::Carets(UniquePtr<AccessibleCaret> aFirst,
+           UniquePtr<AccessibleCaret> aSecond)
+        : mFirst{std::move(aFirst)}, mSecond{std::move(aSecond)} {}
+
 
 }  // namespace mozilla

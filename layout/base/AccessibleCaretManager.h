@@ -127,6 +127,11 @@ class AccessibleCaretManager {
   bool ShouldDisableApz() const;
 
  protected:
+  class Carets;
+
+  // @param aPresShell may be nullptr for testing.
+  AccessibleCaretManager(PresShell* aPresShell, Carets aCarets);
+
   // This enum representing the number of AccessibleCarets on the screen.
   enum class CaretMode : uint8_t {
     // No caret on the screen.
@@ -314,7 +319,15 @@ class AccessibleCaretManager {
   // nullptr either we are in gtest or PresShell::IsDestroying() is true.
   PresShell* MOZ_NON_OWNING_REF mPresShell = nullptr;
 
-  struct Carets {
+  class Carets {
+   public:
+    Carets(UniquePtr<AccessibleCaret> aFirst,
+           UniquePtr<AccessibleCaret> aSecond);
+
+    Carets(Carets&&) = default;
+    Carets(const Carets&) = delete;
+    Carets& operator=(const Carets&) = delete;
+
     AccessibleCaret* GetFirst() const { return mFirst.get(); }
 
     AccessibleCaret* GetSecond() const { return mSecond.get(); }
@@ -327,6 +340,12 @@ class AccessibleCaretManager {
       return mFirst->IsVisuallyVisible() || mSecond->IsVisuallyVisible();
     }
 
+    void Terminate() {
+      mFirst = nullptr;
+      mSecond = nullptr;
+    }
+
+   private:
     // First caret is attached to nsCaret in cursor mode, and is attached to
     // selection highlight as the left caret in selection mode.
     UniquePtr<AccessibleCaret> mFirst;
