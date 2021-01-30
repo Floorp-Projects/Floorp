@@ -1846,10 +1846,6 @@ JS_PUBLIC_API void* JS::StealArrayBufferContents(JSContext* cx,
   return ArrayBufferObject::stealMallocedContents(cx, unwrappedBuffer);
 }
 
-JS_PUBLIC_API void JS::SetLargeArrayBuffersEnabled(bool enable) {
-  ArrayBufferObject::supportLargeBuffers = enable;
-}
-
 JS_PUBLIC_API JSObject* JS::NewMappedArrayBufferWithContents(JSContext* cx,
                                                              size_t nbytes,
                                                              void* data) {
