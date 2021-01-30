@@ -126,6 +126,10 @@ void GtkCompositorWidget::SetEGLNativeWindowSize(
 #endif
 
 LayoutDeviceIntRegion GtkCompositorWidget::GetTransparentRegion() {
+  if (!mWidget) {
+    return LayoutDeviceIntRect();
+  }
+
   // We need to clear target buffer alpha values of popup windows as
   // SW-WR paints with alpha blending (see Bug 1674473).
   if (mWidget->IsPopup()) {
