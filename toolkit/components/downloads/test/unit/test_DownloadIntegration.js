@@ -83,25 +83,25 @@ add_task(async function test_getSystemDownloadsDirectory_exists_or_creates() {
   ) {
     downloadDir = await DownloadIntegration.getSystemDownloadsDirectory();
     Assert.equal(downloadDir, tempDir.path);
-    Assert.ok(await IOUtils.exists(downloadDir));
+    Assert.ok(await OS.File.exists(downloadDir));
 
-    let info = await IOUtils.stat(downloadDir);
-    Assert.equal(info.type, "directory");
+    let info = await OS.File.stat(downloadDir);
+    Assert.ok(info.isDir);
   } else {
-    let targetPath = PathUtils.join(
+    let targetPath = OS.Path.join(
       tempDir.path,
       gStringBundle.GetStringFromName("downloadsFolder")
     );
     try {
-      await IOUtils.remove(targetPath);
+      await OS.File.removeEmptyDir(targetPath);
     } catch (e) {}
     downloadDir = await DownloadIntegration.getSystemDownloadsDirectory();
     Assert.equal(downloadDir, targetPath);
-    Assert.ok(await IOUtils.exists(downloadDir));
+    Assert.ok(await OS.File.exists(downloadDir));
 
-    let info = await IOUtils.stat(downloadDir);
-    Assert.equal(info.type, "directory");
-    await IOUtils.remove(targetPath);
+    let info = await OS.File.stat(downloadDir);
+    Assert.ok(info.isDir);
+    await OS.File.removeEmptyDir(targetPath);
   }
 });
 
@@ -163,8 +163,8 @@ add_task(async function test_getPreferredDownloadsDirectory() {
   downloadDir = await DownloadIntegration.getPreferredDownloadsDirectory();
   Assert.notEqual(downloadDir, "");
   Assert.equal(downloadDir, tempDir.path);
-  Assert.ok(await IOUtils.exists(downloadDir));
-  await IOUtils.remove(tempDir.path);
+  Assert.ok(await OS.File.exists(downloadDir));
+  await OS.File.removeEmptyDir(tempDir.path);
 
   // Should return the system downloads directory beacause the path is invalid
   // in the dir preference.
