@@ -5601,18 +5601,14 @@ bool BaselineCodeGen<Handler>::emitSuspend(JSOp op) {
                   GET_RESUMEINDEX(handler.maybePC()) == 0);
     Address resumeIndexSlot(genObj,
                             AbstractGeneratorObject::offsetOfResumeIndexSlot());
-    Address lastOpcodeSlot(genObj,
-                           AbstractGeneratorObject::offsetOfLastOpcodeSlot());
     Register temp = R1.scratchReg();
     if (op == JSOp::InitialYield) {
       masm.storeValue(Int32Value(0), resumeIndexSlot);
-      masm.storeValue(Int32Value(static_cast<uint8_t>(op)), lastOpcodeSlot);
     } else {
       jsbytecode* pc = handler.maybePC();
       MOZ_ASSERT(pc, "compiler-only code never has a null pc");
       masm.move32(Imm32(GET_RESUMEINDEX(pc)), temp);
       masm.storeValue(JSVAL_TYPE_INT32, temp, resumeIndexSlot);
-      masm.storeValue(Int32Value(static_cast<uint8_t>(op)), lastOpcodeSlot);
     }
 
     Register envObj = R0.scratchReg();
