@@ -364,6 +364,17 @@
         "IOUtils::readUTF8 fails to read corrupt LZ4 contents with a correct header"
       );
 
+      info("Testing decompression of an empty file (no header)");
+      {
+        const n = await IOUtils.writeUTF8(tmpFileName, "");
+        ok(n === 0, "Overwrote with empty file");
+      }
+      await Assert.rejects(
+        IOUtils.readUTF8(tmpFileName, { decompress: true }),
+        /Could not decompress file because the buffer is too short/,
+        "IOUtils::readUTF8 fails to decompress empty files"
+      );
+
       await cleanup(tmpFileName);
     });
   </script>
