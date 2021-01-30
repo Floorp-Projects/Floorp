@@ -999,7 +999,7 @@ var ThirdPartyCookies = {
       }
 
       let removeException = document.createXULElement("button");
-      removeException.className = "permission-popup-permission-remove-button";
+      removeException.className = "identity-popup-permission-remove-button";
       removeException.tooltipText = gNavigatorBundle.getFormattedString(
         "contentBlocking.cookiesView.removeButton.tooltip",
         [origin]

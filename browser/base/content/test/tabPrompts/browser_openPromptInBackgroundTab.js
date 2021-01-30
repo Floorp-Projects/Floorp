@@ -85,25 +85,21 @@ add_task(async function test_old_modal_ui() {
     window,
     "popupshown",
     true,
-    event => event.target == gPermissionPanel._permissionPopup
+    event => event.target == gIdentityHandler._identityPopup
   );
-  gPermissionPanel._identityPermissionBox.click();
+  gIdentityHandler._identityBox.click();
   await shown;
   let labelText = SitePermissions.getPermissionLabel("focus-tab-by-prompt");
   let permissionsList = document.getElementById(
-    "permission-popup-permission-list"
+    "identity-popup-permission-list"
   );
-  let label = permissionsList.querySelector(
-    ".permission-popup-permission-label"
-  );
+  let label = permissionsList.querySelector(".identity-popup-permission-label");
   is(label.textContent, labelText);
-  gPermissionPanel._permissionPopup.hidePopup();
+  gIdentityHandler._identityPopup.hidePopup();
 
   // Check if the identity icon signals granted permission.
   ok(
-    gPermissionPanel._identityPermissionBox.hasAttribute(
-      "hasGrantedPermissions"
-    ),
+    gIdentityHandler._identityBox.classList.contains("grantedPermissions"),
     "identity-box signals granted permissions"
   );
 

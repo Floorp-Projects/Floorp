@@ -25,7 +25,7 @@ add_task(async function() {
 
   let widgetOverflowPanel = document.getElementById("widget-overflow");
   let panelShownPromise = promisePanelElementShown(window, widgetOverflowPanel);
-  let identityBox = document.getElementById("identity-icon-box");
+  let identityBox = document.getElementById("identity-box");
   let overflowChevron = document.getElementById("nav-bar-overflow-button");
 
   // Listen for hiding immediately so we don't miss the event because of the
