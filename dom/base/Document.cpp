@@ -16721,27 +16721,27 @@ nsAtom* Document::CJKFromTLD() {
       return nsGkAtoms::ko;
     }
   } else if (StringBeginsWith(tld, "xn--"_ns)) {
-    if (tld.EqualsLiteral("xn--fiqs8S") ||     // 中国
-        tld.EqualsLiteral("xn--fiqz9S") ||     // 中國
-        tld.EqualsLiteral("xn--yfro4i67o") ||  // 新加坡
-        tld.EqualsLiteral("xn--clchc0ea0b2g2a9gcd")) {  // சிங்கப்பூர்
+    if (tld.EqualsLiteral("xn--clchc0ea0b2g2a9gcd") ||
+        tld.EqualsLiteral("xn--fiqs8S") || tld.EqualsLiteral("xn--fiqz9S") ||
+        tld.EqualsLiteral("xn--yfro4i67o") ||
+        tld.EqualsLiteral("xn--clchc0ea0b2g2a9gcd") ||
+        tld.EqualsLiteral("xn--yfro4i67o")) {
       return nsGkAtoms::Chinese;
     }
 
-    if (tld.EqualsLiteral("xn--kpry57d") ||  // 台灣
-        tld.EqualsLiteral("xn--kprw13d")) {  // 台湾
+    if (tld.EqualsLiteral("xn--kprw13d") || tld.EqualsLiteral("xn--kpry57d")) {
       return nsGkAtoms::Taiwanese;
     }
 
-    if (tld.EqualsLiteral("xn--j6w193g") ||  // 香港
-        tld.EqualsLiteral("xn--mix891f")) {  // 澳門
+    if (tld.EqualsLiteral("xn--j6w193g") || tld.EqualsLiteral("xn--mix891f")) {
       return nsGkAtoms::HongKongChinese;
     }
 
-    if (tld.EqualsLiteral("xn--3e0b707e")) {  // 한국
+    if (tld.EqualsLiteral("xn--3e0b707e")) {
       return nsGkAtoms::ko;
     }
   }
+
   return nsGkAtoms::Unicode;
 }
 
