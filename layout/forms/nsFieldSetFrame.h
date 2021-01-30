@@ -49,11 +49,11 @@ class nsFieldSetFrame final : public nsContainerFrame {
                             gfxContext& aRenderingContext, nsPoint aPt,
                             const nsRect& aDirtyRect);
 
-#ifdef DEBUG
   virtual void SetInitialChildList(ChildListID aListID,
                                    nsFrameList& aChildList) override;
   virtual void AppendFrames(ChildListID aListID,
                             nsFrameList& aFrameList) override;
+#ifdef DEBUG
   virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                             const nsLineList::iterator* aPrevFrameLine,
                             nsFrameList& aFrameList) override;
@@ -92,9 +92,8 @@ class nsFieldSetFrame final : public nsContainerFrame {
   nsContainerFrame* GetInner() const;
 
   /**
-   * Return the frame that represents the legend if any.  This may be
-   * a nsLegendFrame or a nsHTMLScrollFrame with the nsLegendFrame as the
-   * scrolled frame (aka content insertion frame).
+   * Return the frame that represents the rendered legend if any.
+   * https://html.spec.whatwg.org/multipage/rendering.html#rendered-legend
    */
   nsIFrame* GetLegend() const;
 
