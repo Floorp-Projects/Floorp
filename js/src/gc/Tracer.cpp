@@ -30,59 +30,6 @@ using namespace js;
 using namespace js::gc;
 using mozilla::DebugOnly;
 
-/*** Callback Tracer Dispatch ***********************************************/
-
-template <typename T>
-bool DoCallback(GenericTracer* trc, T** thingp, const char* name) {
-  CheckTracedThing(trc, *thingp);
-  JS::AutoTracingName ctx(trc, name);
-
-  T* thing = *thingp;
-  T* post = DispatchToOnEdge(trc, thing);
-  if (post != thing) {
-    *thingp = post;
-  }
-
-  return post;
-}
-#define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(name, type, _, _1) \
-  template bool DoCallback<type>(GenericTracer*, type**, const char*);
-JS_FOR_EACH_TRACEKIND(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS);
-#undef INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS
-
-template <typename T>
-bool DoCallback(GenericTracer* trc, T* thingp, const char* name) {
-  JS::AutoTracingName ctx(trc, name);
-
-  // Return true by default. For some types the lambda below won't be called.
-  bool ret = true;
-  auto thing = MapGCThingTyped(*thingp, [trc, &ret](auto thing) {
-    CheckTracedThing(trc, thing);
-
-    auto* post = DispatchToOnEdge(trc, thing);
-    if (!post) {
-      ret = false;
-      return TaggedPtr<T>::empty();
-    }
-
-    return TaggedPtr<T>::wrap(post);
-  });
-
-  // Only update *thingp if the value changed, to avoid TSan false positives for
-  // template objects when using DumpHeapTracer or UbiNode tracers while Ion
-  // compiling off-thread.
-  if (thing.isSome() && thing.value() != *thingp) {
-    *thingp = thing.value();
-  }
-
-  return ret;
-}
-template bool DoCallback<JS::Value>(GenericTracer*, JS::Value*, const char*);
-template bool DoCallback<JS::PropertyKey>(GenericTracer*, JS::PropertyKey*,
-                                          const char*);
-template bool DoCallback<TaggedProto>(GenericTracer*, TaggedProto*,
-                                      const char*);
-
 void JS::TracingContext::getEdgeName(char* buffer, size_t bufferSize) {
   MOZ_ASSERT(bufferSize > 0);
   if (functor_) {
@@ -156,13 +103,13 @@ void gc::TraceCycleCollectorChildren(JS::CallbackTracer* trc, Shape* shape) {
 
     if (shape->hasGetterObject()) {
       JSObject* tmp = shape->getterObject();
-      DoCallback(trc, &tmp, "getter");
+      TraceEdgeInternal(trc, &tmp, "getter");
       MOZ_ASSERT(tmp == shape->getterObject());
     }
 
     if (shape->hasSetterObject()) {
       JSObject* tmp = shape->setterObject();
-      DoCallback(trc, &tmp, "setter");
+      TraceEdgeInternal(trc, &tmp, "setter");
       MOZ_ASSERT(tmp == shape->setterObject());
     }
 

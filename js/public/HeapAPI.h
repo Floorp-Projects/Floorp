@@ -367,9 +367,9 @@ class JS_FRIEND_API GCCellPtr {
   explicit GCCellPtr(const Value& v);
 
   JS::TraceKind kind() const {
-    JS::TraceKind traceKind = JS::TraceKind(ptr & OutOfLineTraceKindMask);
-    if (uintptr_t(traceKind) != OutOfLineTraceKindMask) {
-      return traceKind;
+    uintptr_t kindBits = ptr & OutOfLineTraceKindMask;
+    if (kindBits != OutOfLineTraceKindMask) {
+      return JS::TraceKind(kindBits);
     }
     return outOfLineKind();
   }
@@ -430,12 +430,12 @@ class JS_FRIEND_API GCCellPtr {
     auto* cell = static_cast<js::gc::Cell*>(p);
     MOZ_ASSERT((uintptr_t(p) & OutOfLineTraceKindMask) == 0);
     AssertGCThingHasType(cell, traceKind);
-    // Note: the OutOfLineTraceKindMask bits are set on all out-of-line kinds
-    // so that we can mask instead of branching.
-    MOZ_ASSERT_IF(uintptr_t(traceKind) >= OutOfLineTraceKindMask,
-                  (uintptr_t(traceKind) & OutOfLineTraceKindMask) ==
-                      OutOfLineTraceKindMask);
-    return uintptr_t(p) | (uintptr_t(traceKind) & OutOfLineTraceKindMask);
+    // Store trace in the bottom bits of pointer for common kinds.
+    uintptr_t kindBits = uintptr_t(traceKind);
+    if (kindBits >= OutOfLineTraceKindMask) {
+      kindBits = OutOfLineTraceKindMask;
+    }
+    return uintptr_t(p) | kindBits;
   }
 
   JS::TraceKind outOfLineKind() const;

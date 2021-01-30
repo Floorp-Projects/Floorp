@@ -57,24 +57,18 @@ enum class TraceKind {
   Null = 0x06,
 
   // The following kinds do not have an exposed C++ idiom.
-  BaseShape = 0x0F,
-  JitCode = 0x1F,
-  Script = 0x2F,
-  Scope = 0x3F,
-  RegExpShared = 0x4F
+  BaseShape,
+  JitCode,
+  Script,
+  Scope,
+  RegExpShared
 };
-const static uintptr_t OutOfLineTraceKindMask = 0x07;
 
-#define ASSERT_TRACE_KIND(tk)                                             \
-  static_assert(                                                          \
-      (uintptr_t(tk) & OutOfLineTraceKindMask) == OutOfLineTraceKindMask, \
-      "mask bits are set")
-ASSERT_TRACE_KIND(JS::TraceKind::BaseShape);
-ASSERT_TRACE_KIND(JS::TraceKind::JitCode);
-ASSERT_TRACE_KIND(JS::TraceKind::Script);
-ASSERT_TRACE_KIND(JS::TraceKind::Scope);
-ASSERT_TRACE_KIND(JS::TraceKind::RegExpShared);
-#undef ASSERT_TRACE_KIND
+// GCCellPtr packs the trace kind into the low bits of the pointer for common
+// kinds.
+const static uintptr_t OutOfLineTraceKindMask = 0x07;
+static_assert(uintptr_t(JS::TraceKind::Null) < OutOfLineTraceKindMask,
+              "GCCellPtr requires an inline representation for nullptr");
 
 // When this header is imported inside SpiderMonkey, the class definitions are
 // available and we can query those definitions to find the correct kind
