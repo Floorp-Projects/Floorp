@@ -1380,8 +1380,6 @@ pref("browser.newtabpage.activity-stream.newNewtabExperience.colors", "#0090ED,#
   pref("browser.newtabpage.activity-stream.debug", false);
 #endif
 
-pref("browser.library.activity-stream.enabled", true);
-
 // The remote FxA root content URL for the Activity Stream firstrun page.
 pref("browser.newtabpage.activity-stream.fxaccounts.endpoint", "https://accounts.firefox.com/");
 

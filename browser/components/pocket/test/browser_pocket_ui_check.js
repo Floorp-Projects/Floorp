@@ -17,19 +17,6 @@ add_task(async function test_setup() {
 add_task(async function() {
   await promisePocketEnabled();
 
-  let libraryButton = document.getElementById("library-button");
-  libraryButton.click();
-
-  let libraryView = document.getElementById("appMenu-libraryView");
-  let popupShown = BrowserTestUtils.waitForEvent(libraryView, "ViewShown");
-  await popupShown;
-
-  checkElementsShown(true, ["appMenu-library-pocket-button"]);
-
-  // Close the Library panel.
-  let popupHidden = BrowserTestUtils.waitForEvent(document, "popuphidden");
-  libraryView.closest("panel").hidePopup();
-
   // check context menu exists
   info("checking content context menu");
   let tab = await BrowserTestUtils.openNewForegroundTab(
@@ -38,8 +25,8 @@ add_task(async function() {
   );
 
   let contextMenu = document.getElementById("contentAreaContextMenu");
-  popupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
-  popupHidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
+  let popupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
+  let popupHidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
   await BrowserTestUtils.synthesizeMouseAtCenter(
     "body",
     {
@@ -77,34 +64,8 @@ add_task(async function() {
   checkElementsShown(false, [
     "context-pocket",
     "context-savelinktopocket",
-    "appMenu-library-pocket-button",
     "pocket-button",
   ]);
-
-  let newWin = await BrowserTestUtils.openNewBrowserWindow();
-  libraryButton = newWin.document.getElementById("library-button");
-  libraryButton.click();
-
-  libraryView = newWin.document.getElementById("appMenu-libraryView");
-  popupShown = BrowserTestUtils.waitForEvent(libraryView, "ViewShown");
-  await popupShown;
-
-  checkElementsShown(
-    false,
-    [
-      "context-pocket",
-      "context-savelinktopocket",
-      "appMenu-library-pocket-button",
-      "pocket-button",
-    ],
-    newWin
-  );
-
-  // Close the Library panel.
-  popupHidden = BrowserTestUtils.waitForEvent(newWin.document, "popuphidden");
-  libraryView.closest("panel").hidePopup();
-
-  await BrowserTestUtils.closeWindow(newWin);
 
   await promisePocketReset();
 });
