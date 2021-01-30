@@ -259,12 +259,6 @@ extern JS_PUBLIC_API bool DetachArrayBuffer(JSContext* cx,
 extern JS_PUBLIC_API void* StealArrayBufferContents(JSContext* cx,
                                                     Handle<JSObject*> obj);
 
-/**
- * Enable or disable support for large (>= 2 GB) ArrayBuffers on 64-bit builds.
- * Has no effect on 32-bit builds.
- */
-extern JS_PUBLIC_API void SetLargeArrayBuffersEnabled(bool enable);
-
 }  // namespace JS
 
 #endif /* js_ArrayBuffer_h */
