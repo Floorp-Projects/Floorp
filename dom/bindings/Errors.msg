@@ -72,7 +72,6 @@ MSG_DEF(MSG_IS_NOT_PROMISE, 1, true, JSEXN_TYPEERR, "{0}Argument is not a Promis
 MSG_DEF(MSG_SW_INSTALL_ERROR, 3, true, JSEXN_TYPEERR, "{0}ServiceWorker script at {1} for scope {2} encountered an error during installation.")
 MSG_DEF(MSG_SW_SCRIPT_THREW, 3, true, JSEXN_TYPEERR, "{0}ServiceWorker script at {1} for scope {2} threw an exception during script evaluation.")
 MSG_DEF(MSG_TYPEDARRAY_IS_SHARED, 2, true, JSEXN_TYPEERR, "{0}{1} can't be a SharedArrayBuffer or an ArrayBufferView backed by a SharedArrayBuffer")
-MSG_DEF(MSG_TYPEDARRAY_IS_LARGE, 2, true, JSEXN_TYPEERR, "{0}{1} can't be an ArrayBuffer or an ArrayBufferView larger than 2 GB")
 MSG_DEF(MSG_CACHE_ADD_FAILED_RESPONSE, 4, true, JSEXN_TYPEERR, "{0}Cache got {1} response with bad status {2} while trying to add request {3}")
 MSG_DEF(MSG_SW_UPDATE_BAD_REGISTRATION, 3, true, JSEXN_TYPEERR, "{0}Failed to update the ServiceWorker for scope {1} because the registration has been {2} since the update was scheduled.")
 MSG_DEF(MSG_INVALID_DURATION_ERROR, 2, true, JSEXN_TYPEERR, "{0}Invalid duration '{1}'.")

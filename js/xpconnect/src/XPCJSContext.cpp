@@ -38,7 +38,6 @@
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsCycleCollector.h"
 #include "jsapi.h"
-#include "js/ArrayBuffer.h"
 #include "js/ContextOptions.h"
 #include "js/MemoryMetrics.h"
 #include "js/OffThreadScriptCompilation.h"
@@ -942,9 +941,6 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
   }
 
   JS::SetUseOffThreadParseGlobal(useOffThreadParseGlobal);
-
-  JS::SetLargeArrayBuffersEnabled(
-      StaticPrefs::javascript_options_large_arraybuffers());
 }
 
 static void ReloadPrefsCallback(const char* pref, void* aXpccx) {

@@ -296,18 +296,3 @@ JS_PUBLIC_API bool JS::IsArrayBufferViewShared(JSObject* obj) {
   }
   return view->isSharedMemory();
 }
-
-JS_FRIEND_API bool JS::IsLargeArrayBufferView(JSObject* obj) {
-#ifdef JS_64BIT
-  obj = &obj->unwrapAs<ArrayBufferViewObject>();
-  BufferSize len = obj->is<DataViewObject>()
-                       ? obj->as<DataViewObject>().byteLength()
-                       : obj->as<TypedArrayObject>().byteLength();
-  return len.get() > ArrayBufferObject::MaxByteLengthForSmallBuffer;
-#else
-  // Large ArrayBuffers are not supported on 32-bit.
-  MOZ_ASSERT(ArrayBufferObject::maxBufferByteLength() ==
-             ArrayBufferObject::MaxByteLengthForSmallBuffer);
-  return false;
-#endif
-}

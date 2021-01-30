@@ -10852,7 +10852,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   }
 
   if (op.getBoolOption("enable-large-buffers")) {
-    JS::SetLargeArrayBuffersEnabled(true);
+    ArrayBufferObject::supportLargeBuffers = true;
   }
 
   if (op.getBoolOption("disable-bailout-loop-check")) {

@@ -419,16 +419,4 @@ JS_FRIEND_API JSObject* JS_NewDataView(JSContext* cx,
                                        JS::Handle<JSObject*> buffer,
                                        size_t byteOffset, size_t byteLength);
 
-namespace JS {
-
-/*
- * Returns whether the passed array buffer view is 'large': its byteLength >= 2
- * GB. See also SetLargeArrayBuffersEnabled.
- *
- * |obj| must pass a JS_IsArrayBufferViewObject test.
- */
-JS_FRIEND_API bool IsLargeArrayBufferView(JSObject* obj);
-
-}  // namespace JS
-
 #endif  // js_experimental_TypedData_h
