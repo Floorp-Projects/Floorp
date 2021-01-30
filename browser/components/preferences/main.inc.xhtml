@@ -42,8 +42,8 @@
     <checkbox id="alwaysCheckDefault" preference="browser.shell.checkDefaultBrowser"
               disabled="true"
               data-l10n-id="always-check-default"/>
-    <deck id="setDefaultPane">
-      <hbox align="center" class="indent">
+    <stack id="setDefaultPane">
+      <hbox id="isNotDefaultPane" align="center" class="indent">
         <image class="face-sad"/>
         <label id="isNotDefaultLabel" flex="1" data-l10n-id="is-not-default"/>
         <button id="setDefaultButton"
@@ -52,11 +52,11 @@
                 data-l10n-id="set-as-my-default-browser"
                 preference="pref.general.disable_button.default_browser"/>
       </hbox>
-      <hbox align="center" class="indent">
+      <hbox id="isDefaultPane" align="center" class="indent">
         <image class="face-smile"/>
         <label id="isDefaultLabel" flex="1" data-l10n-id="is-default"/>
       </hbox>
-    </deck>
+    </stack>
   </vbox>
 #endif
 
