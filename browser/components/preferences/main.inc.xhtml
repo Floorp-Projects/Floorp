@@ -441,7 +441,7 @@
   </hbox>
 #ifdef MOZ_UPDATER
   <vbox id="updateBox">
-    <deck id="updateDeck" orient="vertical">
+    <stack id="updateDeck" orient="vertical">
       <hbox id="checkForUpdates" align="start">
         <spacer flex="1"/>
         <button id="checkForUpdatesButton"
@@ -533,7 +533,7 @@
                 is="highlightable-button"
                 disabled="true"/>
       </hbox>
-    </deck>
+    </stack>
   </vbox>
 #endif
 
