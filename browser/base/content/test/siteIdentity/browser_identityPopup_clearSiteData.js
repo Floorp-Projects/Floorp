@@ -56,7 +56,7 @@ async function testClearing(
       true,
       event => event.target == gIdentityHandler._identityPopup
     );
-    gIdentityHandler._identityIconBox.click();
+    gIdentityHandler._identityBox.click();
     await promisePanelOpen;
 
     let clearFooter = document.getElementById(
@@ -139,7 +139,7 @@ async function testClearing(
       gIdentityHandler._identityPopup,
       "popupshown"
     );
-    gIdentityHandler._identityIconBox.click();
+    gIdentityHandler._identityBox.click();
     await promisePanelOpen;
 
     // Wait for a second to see if the button is shown.

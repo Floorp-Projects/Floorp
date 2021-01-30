@@ -5,12 +5,12 @@
 %include ../../shared/controlcenter/panel.inc.css
 
 .identity-popup-expander > .button-box,
-.permission-popup-permission-remove-button > .button-box {
+.identity-popup-permission-remove-button > .button-box {
   appearance: none;
 }
 
 .identity-popup-expander:-moz-focusring,
-.permission-popup-permission-remove-button:-moz-focusring {
+.identity-popup-permission-remove-button:-moz-focusring {
   outline: 1px -moz-dialogtext dotted;
   outline-offset: -1px;
 }

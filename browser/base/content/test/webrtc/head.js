@@ -552,8 +552,8 @@ async function stopSharing(
     1,
     aFrameBC
   );
-  aWindow.gPermissionPanel._identityPermissionBox.click();
-  let popup = aWindow.gPermissionPanel._permissionPopup;
+  aWindow.gIdentityHandler._identityBox.click();
+  let popup = aWindow.gIdentityHandler._identityPopup;
   // If the popup gets hidden before being shown, by stray focus/activate
   // events, don't bother failing the test. It's enough to know that we
   // started showing the popup.
@@ -561,12 +561,12 @@ async function stopSharing(
   let shownEvent = BrowserTestUtils.waitForEvent(popup, "popupshown");
   await Promise.race([hiddenEvent, shownEvent]);
   let doc = aWindow.document;
-  let permissions = doc.getElementById("permission-popup-permission-list");
+  let permissions = doc.getElementById("identity-popup-permission-list");
   let cancelButton = permissions.querySelector(
-    ".permission-popup-permission-icon." +
+    ".identity-popup-permission-icon." +
       aType +
       "-icon ~ " +
-      ".permission-popup-permission-remove-button"
+      ".identity-popup-permission-remove-button"
   );
   let observerPromise1 = expectObserverCalled(
     "getUserMedia:revoke",
@@ -773,7 +773,7 @@ async function checkSharingUI(
 
   let doc = aWin.document;
   // First check the icon above the control center (i) icon.
-  let permissionBox = doc.getElementById("identity-permission-box");
+  let identityBox = doc.getElementById("identity-box");
   let webrtcSharingIcon = doc.getElementById("webrtc-sharing-icon");
   ok(webrtcSharingIcon.hasAttribute("sharing"), "sharing attribute is set");
   let sharing = webrtcSharingIcon.getAttribute("sharing");
@@ -796,16 +796,16 @@ async function checkSharingUI(
     "sharing icon(s) should be in paused state when paused"
   );
 
-  // Then check the sharing indicators inside the permission popup.
-  permissionBox.click();
-  let popup = aWin.gPermissionPanel._permissionPopup;
+  // Then check the sharing indicators inside the control center panel.
+  identityBox.click();
+  let popup = aWin.gIdentityHandler._identityPopup;
   // If the popup gets hidden before being shown, by stray focus/activate
   // events, don't bother failing the test. It's enough to know that we
   // started showing the popup.
   let hiddenEvent = BrowserTestUtils.waitForEvent(popup, "popuphidden");
   let shownEvent = BrowserTestUtils.waitForEvent(popup, "popupshown");
   await Promise.race([hiddenEvent, shownEvent]);
-  let permissions = doc.getElementById("permission-popup-permission-list");
+  let permissions = doc.getElementById("identity-popup-permission-list");
   for (let id of ["microphone", "camera", "screen"]) {
     let convertId = idToConvert => {
       if (idToConvert == "camera") {
@@ -818,22 +818,22 @@ async function checkSharingUI(
     };
     let expected = aExpected[convertId(id)];
     is(
-      !!aWin.gPermissionPanel._sharingState.webRTC[id],
+      !!aWin.gIdentityHandler._sharingState.webRTC[id],
       !!expected,
       "sharing state for " + id + " as expected"
     );
     let icon = permissions.querySelectorAll(
-      ".permission-popup-permission-icon." + id + "-icon"
+      ".identity-popup-permission-icon." + id + "-icon"
     );
     if (expected) {
-      is(icon.length, 1, "should show " + id + " icon in permission panel");
+      is(icon.length, 1, "should show " + id + " icon in control center panel");
       is(
         icon[0].classList.contains("in-use"),
         expected && !isPaused(expected),
         "icon should have the in-use class, unless paused"
       );
     } else if (!icon.length) {
-      ok(true, "should not show " + id + " icon in the permission panel");
+      ok(true, "should not show " + id + " icon in the control center panel");
     } else {
       // This will happen if there are persistent permissions set.
       ok(
@@ -843,9 +843,9 @@ async function checkSharingUI(
       is(icon.length, 1, "should not show more than 1 " + id + " icon");
     }
   }
-  aWin.gPermissionPanel._permissionPopup.hidePopup();
+  aWin.gIdentityHandler._identityPopup.hidePopup();
   await TestUtils.waitForCondition(
-    () => permissionPopupHidden(aWin),
+    () => identityPopupHidden(aWin),
     "identity popup should be hidden"
   );
 
@@ -967,8 +967,8 @@ async function disableObserverVerification() {
   }
 }
 
-function permissionPopupHidden(win = window) {
-  let popup = win.gPermissionPanel._permissionPopup;
+function identityPopupHidden(win = window) {
+  let popup = win.gIdentityHandler._identityPopup;
   return !popup || popup.state == "closed";
 }
 
@@ -981,8 +981,8 @@ async function runTests(tests, options = {}) {
     "should start the test without any prior popup notification"
   );
   ok(
-    permissionPopupHidden(),
-    "should start the test with the permission panel hidden"
+    identityPopupHidden(),
+    "should start the test with the control center hidden"
   );
 
   // Set prefs so that permissions prompts are shown and loopback devices

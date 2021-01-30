@@ -6,15 +6,7 @@ function openIdentityPopup() {
   gIdentityHandler._initializePopup();
   let mainView = document.getElementById("identity-popup-mainView");
   let viewShown = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
-  gIdentityHandler._identityIconBox.click();
-  return viewShown;
-}
-
-function openPermissionPopup() {
-  gPermissionPanel._initializePopup();
-  let mainView = document.getElementById("permission-popup-mainView");
-  let viewShown = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
-  gPermissionPanel._openPopup();
+  gIdentityHandler._identityBox.click();
   return viewShown;
 }
 
@@ -255,7 +247,7 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
     true,
     event => event.target == gIdentityHandler._identityPopup
   );
-  gIdentityHandler._identityIconBox.click();
+  gIdentityHandler._identityBox.click();
   await promisePanelOpen;
   let popupAttr = doc
     .getElementById("identity-popup")

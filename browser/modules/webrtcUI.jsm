@@ -672,15 +672,13 @@ var webrtcUI = {
       aActiveStream.browser.focus();
     }
     browserWindow.focus();
-    let permissionBox = browserWindow.document.getElementById(
-      "identity-permission-box"
-    );
+    let identityBox = browserWindow.document.getElementById("identity-box");
     if (AppConstants.platform == "macosx" && !Services.focus.activeWindow) {
       browserWindow.addEventListener(
         "activate",
         function() {
           Services.tm.dispatchToMainThread(function() {
-            permissionBox.click();
+            identityBox.click();
           });
         },
         { once: true }
@@ -690,7 +688,7 @@ var webrtcUI = {
         .activateApplication(true);
       return;
     }
-    permissionBox.click();
+    identityBox.click();
   },
 
   updateWarningLabel(aMenuList) {

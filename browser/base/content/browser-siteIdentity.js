@@ -206,12 +206,6 @@ var gIdentityHandler = {
     delete this._identityBox;
     return (this._identityBox = document.getElementById("identity-box"));
   },
-  get _identityIconBox() {
-    delete this._identityIconBox;
-    return (this._identityIconBox = document.getElementById(
-      "identity-icon-box"
-    ));
-  },
   get _identityPopupMultiView() {
     delete this._identityPopupMultiView;
     return (this._identityPopupMultiView = document.getElementById(
@@ -301,6 +295,30 @@ var gIdentityHandler = {
     delete this._identityIcon;
     return (this._identityIcon = document.getElementById("identity-icon"));
   },
+  get _permissionList() {
+    delete this._permissionList;
+    return (this._permissionList = document.getElementById(
+      "identity-popup-permission-list"
+    ));
+  },
+  get _defaultPermissionAnchor() {
+    delete this._defaultPermissionAnchor;
+    return (this._defaultPermissionAnchor = document.getElementById(
+      "identity-popup-permission-list-default-anchor"
+    ));
+  },
+  get _permissionEmptyHint() {
+    delete this._permissionEmptyHint;
+    return (this._permissionEmptyHint = document.getElementById(
+      "identity-popup-permission-empty-hint"
+    ));
+  },
+  get _permissionReloadHint() {
+    delete this._permissionReloadHint;
+    return (this._permissionReloadHint = document.getElementById(
+      "identity-popup-permission-reload-hint"
+    ));
+  },
   get _popupExpander() {
     delete this._popupExpander;
     return (this._popupExpander = document.getElementById(
@@ -311,6 +329,32 @@ var gIdentityHandler = {
     delete this._clearSiteDataFooter;
     return (this._clearSiteDataFooter = document.getElementById(
       "identity-popup-clear-sitedata-footer"
+    ));
+  },
+  get _permissionAnchors() {
+    delete this._permissionAnchors;
+    let permissionAnchors = {};
+    for (let anchor of document.getElementById("blocked-permissions-container")
+      .children) {
+      permissionAnchors[anchor.getAttribute("data-permission-id")] = anchor;
+    }
+    return (this._permissionAnchors = permissionAnchors);
+  },
+
+  get _geoSharingIcon() {
+    delete this._geoSharingIcon;
+    return (this._geoSharingIcon = document.getElementById("geo-sharing-icon"));
+  },
+
+  get _xrSharingIcon() {
+    delete this._xrSharingIcon;
+    return (this._xrSharingIcon = document.getElementById("xr-sharing-icon"));
+  },
+
+  get _webRTCSharingIcon() {
+    delete this._webRTCSharingIcon;
+    return (this._webRTCSharingIcon = document.getElementById(
+      "webrtc-sharing-icon"
     ));
   },
 
@@ -419,6 +463,10 @@ var gIdentityHandler = {
     }
 
     event.stopPropagation();
+  },
+
+  openPermissionPreferences() {
+    openPreferences("privacy-permissions");
   },
 
   /**
@@ -651,9 +699,8 @@ var gIdentityHandler = {
     this.refreshIdentityBlock();
     // Handle a location change while the Control Center is focused
     // by closing the popup (bug 1207542)
-    if (shouldHidePopup) {
-      this.hidePopup();
-      gPermissionPanel.hidePopup();
+    if (shouldHidePopup && this._popupInitialized) {
+      PanelMultiView.hidePopup(this._identityPopup);
     }
 
     // NOTE: We do NOT update the identity popup (the control center) when
@@ -683,6 +730,46 @@ var gIdentityHandler = {
         windowId
       );
       Services.console.logMessage(consoleMsg);
+    }
+  },
+
+  updateSharingIndicator() {
+    let tab = gBrowser.selectedTab;
+    this._sharingState = tab._sharingState;
+
+    this._webRTCSharingIcon.removeAttribute("paused");
+    this._webRTCSharingIcon.removeAttribute("sharing");
+    this._geoSharingIcon.removeAttribute("sharing");
+    this._xrSharingIcon.removeAttribute("sharing");
+
+    if (this._sharingState) {
+      if (
+        this._sharingState &&
+        this._sharingState.webRTC &&
+        this._sharingState.webRTC.sharing
+      ) {
+        this._webRTCSharingIcon.setAttribute(
+          "sharing",
+          this._sharingState.webRTC.sharing
+        );
+
+        if (this._sharingState.webRTC.paused) {
+          this._webRTCSharingIcon.setAttribute("paused", "true");
+        }
+      }
+      if (this._sharingState.geo) {
+        this._geoSharingIcon.setAttribute("sharing", this._sharingState.geo);
+      }
+      if (this._sharingState.xr) {
+        this._xrSharingIcon.setAttribute("sharing", this._sharingState.xr);
+      }
+    }
+
+    if (this._popupInitialized && this._identityPopup.state != "closed") {
+      this.updateSitePermissions();
+      PanelView.forNode(
+        this._identityPopupMainView
+      ).descriptionHeightWorkaround();
     }
   },
 
@@ -900,6 +987,50 @@ var gIdentityHandler = {
   },
 
   /**
+   * Updates the permissions block in the identity block.
+   */
+  _refreshPermissionIcons() {
+    let permissionAnchors = this._permissionAnchors;
+
+    // hide all permission icons
+    for (let icon of Object.values(permissionAnchors)) {
+      icon.removeAttribute("showing");
+    }
+
+    // keeps track if we should show an indicator that there are active permissions
+    let hasGrantedPermissions = false;
+
+    // show permission icons
+    let permissions = SitePermissions.getAllForBrowser(
+      gBrowser.selectedBrowser
+    );
+    for (let permission of permissions) {
+      if (
+        permission.state == SitePermissions.BLOCK ||
+        permission.state == SitePermissions.AUTOPLAY_BLOCKED_ALL
+      ) {
+        let icon = permissionAnchors[permission.id];
+        if (icon) {
+          icon.setAttribute("showing", "true");
+        }
+      } else if (permission.state != SitePermissions.UNKNOWN) {
+        hasGrantedPermissions = true;
+      }
+    }
+
+    if (hasGrantedPermissions) {
+      this._identityBox.classList.add("grantedPermissions");
+    }
+
+    // Show blocked popup icon in the identity-box if popups are blocked
+    // irrespective of popup permission capability value.
+    if (gBrowser.selectedBrowser.popupBlocker.getBlockedPopupCount()) {
+      let icon = permissionAnchors.popup;
+      icon.setAttribute("showing", "true");
+    }
+  },
+
+  /**
    * Updates the identity block user interface with the data from this object.
    */
   refreshIdentityBlock() {
@@ -914,13 +1045,12 @@ var gIdentityHandler = {
     // This will also filter out intermediate about:blank loads to avoid
     // flickering the identity block and doing unnecessary work.
     if (this._hasInvalidPageProxyState()) {
-      gPermissionPanel.hidePermissionIcons();
       return;
     }
 
     this._refreshIdentityIcons();
 
-    gPermissionPanel.refreshPermissionIcons();
+    this._refreshPermissionIcons();
 
     // Hide the shield icon if it is a chrome page.
     gProtectionsHandler._trackingProtectionIconContainer.classList.toggle(
@@ -1122,6 +1252,9 @@ var gIdentityHandler = {
     this._identityPopupContentOwner.textContent = owner;
     this._identityPopupContentSupp.textContent = supplemental;
     this._identityPopupContentVerif.textContent = verifier;
+
+    // Update per-site permissions section.
+    this.updateSitePermissions();
   },
 
   setURI(uri) {
@@ -1176,11 +1309,39 @@ var gIdentityHandler = {
       return; // Left click, space or enter only
     }
 
-    // Don't allow left click, space or enter if the location has been modified.
-    if (gURLBar.getAttribute("pageproxystate") != "valid") {
+    // Don't allow left click, space or enter if the location has been modified,
+    // so long as we're not sharing any devices.
+    // If we are sharing a device, the identity block is prevented by CSS from
+    // being focused (and therefore, interacted with) by the user. However, we
+    // want to allow opening the identity popup from the device control menu,
+    // which calls click() on the identity button, so we don't return early.
+    if (
+      !this._sharingState &&
+      gURLBar.getAttribute("pageproxystate") != "valid"
+    ) {
       return;
     }
 
+    // If we are in DOM full-screen, exit it before showing the identity popup
+    // (see bug 1557041)
+    if (document.fullscreen) {
+      // Open the identity popup after DOM full-screen exit
+      // We need to wait for the exit event and after that wait for the fullscreen exit transition to complete
+      // If we call _openPopup before the full-screen transition ends it can get cancelled
+      // Only waiting for painted is not sufficient because we could still be in the full-screen enter transition.
+      this._exitedEventReceived = false;
+      this._event = event;
+      Services.obs.addObserver(this, "fullscreen-painted");
+      window.addEventListener(
+        "MozDOMFullscreen:Exited",
+        () => {
+          this._exitedEventReceived = true;
+        },
+        { once: true }
+      );
+      document.exitFullscreen();
+      return;
+    }
     this._openPopup(event);
   },
 
@@ -1188,11 +1349,14 @@ var gIdentityHandler = {
     // Make the popup available.
     this._initializePopup();
 
+    // Remove the reload hint that we show after a user has cleared a permission.
+    this._permissionReloadHint.setAttribute("hidden", "true");
+
     // Update the popup strings
     this.refreshIdentityPopup();
 
     // Add the "open" attribute to the identity box for styling
-    this._identityIconBox.setAttribute("open", "true");
+    this._identityBox.setAttribute("open", "true");
 
     // Check the panel state of other panels. Hide them if needed.
     let openPanels = Array.from(document.querySelectorAll("panel[openpanel]"));
@@ -1201,7 +1365,7 @@ var gIdentityHandler = {
     }
 
     // Now open the popup, anchored off the primary chrome element
-    PanelMultiView.openPopup(this._identityPopup, this._identityIconBox, {
+    PanelMultiView.openPopup(this._identityPopup, this._identityIcon, {
       position: "bottomcenter topleft",
       triggerEvent: event,
     }).catch(Cu.reportError);
@@ -1216,7 +1380,7 @@ var gIdentityHandler = {
   onPopupHidden(event) {
     if (event.target == this._identityPopup) {
       window.removeEventListener("focus", this, true);
-      this._identityIconBox.removeAttribute("open");
+      this._identityBox.removeAttribute("open");
     }
   },
 
@@ -1250,6 +1414,15 @@ var gIdentityHandler = {
         if (SitePermissions.isSitePermission(type)) {
           this.refreshIdentityBlock();
         }
+        break;
+      }
+      case "fullscreen-painted": {
+        if (subject != window || !this._exitedEventReceived) {
+          return;
+        }
+        Services.obs.removeObserver(this, "fullscreen-painted");
+        this._openPopup(this._event);
+        delete this._event;
         break;
       }
     }
@@ -1327,11 +1500,615 @@ var gIdentityHandler = {
     gURLBar.view.close();
   },
 
+  onLocationChange() {
+    if (this._popupInitialized && this._identityPopup.state != "closed") {
+      this._permissionReloadHint.setAttribute("hidden", "true");
+
+      if (this._isPermissionListEmpty()) {
+        this._permissionEmptyHint.removeAttribute("hidden");
+      }
+    }
+  },
+
   _updateAttribute(elem, attr, value) {
     if (value) {
       elem.setAttribute(attr, value);
     } else {
       elem.removeAttribute(attr);
     }
+  },
+
+  _isPermissionListEmpty() {
+    return !this._permissionList.querySelectorAll(
+      ".identity-popup-permission-item"
+    ).length;
+  },
+
+  updateSitePermissions() {
+    let permissionItemSelector = [
+      ".identity-popup-permission-item, .identity-popup-permission-item-container",
+    ];
+    this._permissionList
+      .querySelectorAll(permissionItemSelector)
+      .forEach(e => e.remove());
+
+    let permissions = SitePermissions.getAllPermissionDetailsForBrowser(
+      gBrowser.selectedBrowser
+    );
+
+    if (this._sharingState && this._sharingState.geo) {
+      let geoPermission = permissions.find(perm => perm.id === "geo");
+      if (geoPermission) {
+        geoPermission.sharingState = true;
+      } else {
+        permissions.push({
+          id: "geo",
+          state: SitePermissions.ALLOW,
+          scope: SitePermissions.SCOPE_REQUEST,
+          sharingState: true,
+        });
+      }
+    }
+
+    if (this._sharingState && this._sharingState.xr) {
+      let xrPermission = permissions.find(perm => perm.id === "xr");
+      if (xrPermission) {
+        xrPermission.sharingState = true;
+      } else {
+        permissions.push({
+          id: "xr",
+          state: SitePermissions.ALLOW,
+          scope: SitePermissions.SCOPE_REQUEST,
+          sharingState: true,
+        });
+      }
+    }
+
+    if (this._sharingState && this._sharingState.webRTC) {
+      let webrtcState = this._sharingState.webRTC;
+      // If WebRTC device or screen permissions are in use, we need to find
+      // the associated permission item to set the sharingState field.
+      for (let id of ["camera", "microphone", "screen"]) {
+        if (webrtcState[id]) {
+          let found = false;
+          for (let permission of permissions) {
+            if (permission.id != id) {
+              continue;
+            }
+            found = true;
+            permission.sharingState = webrtcState[id];
+            break;
+          }
+          if (!found) {
+            // If the permission item we were looking for doesn't exist,
+            // the user has temporarily allowed sharing and we need to add
+            // an item in the permissions array to reflect this.
+            permissions.push({
+              id,
+              state: SitePermissions.ALLOW,
+              scope: SitePermissions.SCOPE_REQUEST,
+              sharingState: webrtcState[id],
+            });
+          }
+        }
+      }
+    }
+
+    let totalBlockedPopups = gBrowser.selectedBrowser.popupBlocker.getBlockedPopupCount();
+    let hasBlockedPopupIndicator = false;
+    for (let permission of permissions) {
+      let [id, key] = permission.id.split(SitePermissions.PERM_KEY_DELIMITER);
+
+      if (id == "storage-access") {
+        // Ignore storage access permissions here, they are made visible inside
+        // the Content Blocking UI.
+        continue;
+      }
+
+      let item;
+      let anchor =
+        this._permissionList.querySelector(`[anchorfor="${id}"]`) ||
+        this._defaultPermissionAnchor;
+
+      if (id == "open-protocol-handler") {
+        let permContainer = this._createProtocolHandlerPermissionItem(
+          permission,
+          key
+        );
+        if (permContainer) {
+          anchor.appendChild(permContainer);
+        }
+      } else {
+        item = this._createPermissionItem({
+          permission,
+          isContainer: id == "geo" || id == "xr",
+          nowrapLabel: id == "3rdPartyStorage",
+        });
+
+        if (!item) {
+          continue;
+        }
+        anchor.appendChild(item);
+      }
+
+      if (id == "popup" && totalBlockedPopups) {
+        this._createBlockedPopupIndicator(totalBlockedPopups);
+        hasBlockedPopupIndicator = true;
+      } else if (id == "geo" && permission.state === SitePermissions.ALLOW) {
+        this._createGeoLocationLastAccessIndicator();
+      }
+    }
+
+    if (totalBlockedPopups && !hasBlockedPopupIndicator) {
+      let permission = {
+        id: "popup",
+        state: SitePermissions.getDefault("popup"),
+        scope: SitePermissions.SCOPE_PERSISTENT,
+      };
+      let item = this._createPermissionItem({ permission });
+      this._defaultPermissionAnchor.appendChild(item);
+      this._createBlockedPopupIndicator(totalBlockedPopups);
+    }
+
+    // Show a placeholder text if there's no permission and no reload hint.
+    if (
+      this._isPermissionListEmpty() &&
+      this._permissionReloadHint.hasAttribute("hidden")
+    ) {
+      this._permissionEmptyHint.removeAttribute("hidden");
+    } else {
+      this._permissionEmptyHint.setAttribute("hidden", "true");
+    }
+  },
+
+  /**
+   * Creates a permission item based on the supplied options and returns it.
+   * It is up to the caller to actually insert the element somewhere.
+   *
+   * @param permission - An object containing information representing the
+   *                     permission, typically obtained via SitePermissions.jsm
+   * @param isContainer - If true, the permission item will be added to a vbox
+   *                      and the vbox will be returned.
+   * @param permClearButton - Whether to show an "x" button to clear the permission
+   * @param showStateLabel - Whether to show a label indicating the current status
+   *                         of the permission e.g. "Temporary Allowed"
+   * @param idNoSuffix - Some permission types have additional information suffixed
+   *                     to the ID - callers can pass the unsuffixed ID via this
+   *                     parameter to indicate the permission type manually.
+   * @param nowrapLabel - Whether to prevent the permission item's label from
+   *                      wrapping its text content. This allows styling text-overflow
+   *                      and is useful for e.g. 3rdPartyStorage permissions whose
+   *                      labels are origins - which could be of any length.
+   */
+  _createPermissionItem({
+    permission,
+    isContainer = false,
+    permClearButton = true,
+    showStateLabel = true,
+    idNoSuffix = permission.id,
+    nowrapLabel = false,
+  }) {
+    let container = document.createXULElement("hbox");
+    container.setAttribute("class", "identity-popup-permission-item");
+    container.setAttribute("align", "center");
+    container.setAttribute("role", "group");
+
+    let img = document.createXULElement("image");
+    img.classList.add("identity-popup-permission-icon", idNoSuffix + "-icon");
+    if (
+      permission.state == SitePermissions.BLOCK ||
+      permission.state == SitePermissions.AUTOPLAY_BLOCKED_ALL
+    ) {
+      img.classList.add("blocked-permission-icon");
+    }
+
+    if (
+      permission.sharingState ==
+        Ci.nsIMediaManagerService.STATE_CAPTURE_ENABLED ||
+      (idNoSuffix == "screen" &&
+        permission.sharingState &&
+        !permission.sharingState.includes("Paused"))
+    ) {
+      img.classList.add("in-use");
+
+      // Synchronize control center and identity block blinking animations.
+      window
+        .promiseDocumentFlushed(() => {
+          let sharingIconBlink = this._webRTCSharingIcon.getAnimations()[0];
+          let imgBlink = img.getAnimations()[0];
+          return [sharingIconBlink, imgBlink];
+        })
+        .then(([sharingIconBlink, imgBlink]) => {
+          if (sharingIconBlink && imgBlink) {
+            imgBlink.startTime = sharingIconBlink.startTime;
+          }
+        });
+    }
+
+    let nameLabel = document.createXULElement("label");
+    nameLabel.setAttribute("flex", "1");
+    nameLabel.setAttribute("class", "identity-popup-permission-label");
+    let label = SitePermissions.getPermissionLabel(idNoSuffix);
+    if (label === null) {
+      return null;
+    }
+    if (nowrapLabel) {
+      nameLabel.setAttribute("value", label);
+      nameLabel.setAttribute("tooltiptext", label);
+      nameLabel.setAttribute("crop", "end");
+    } else {
+      nameLabel.textContent = label;
+    }
+    let nameLabelId = "identity-popup-permission-label-" + idNoSuffix;
+    nameLabel.setAttribute("id", nameLabelId);
+
+    let isPolicyPermission = [
+      SitePermissions.SCOPE_POLICY,
+      SitePermissions.SCOPE_GLOBAL,
+    ].includes(permission.scope);
+
+    if (
+      (idNoSuffix == "popup" && !isPolicyPermission) ||
+      idNoSuffix == "autoplay-media"
+    ) {
+      let menulist = document.createXULElement("menulist");
+      let menupopup = document.createXULElement("menupopup");
+      let block = document.createXULElement("vbox");
+      block.setAttribute("id", "identity-popup-popup-container");
+      block.setAttribute("class", "identity-popup-permission-item-container");
+      menulist.setAttribute("sizetopopup", "none");
+      menulist.setAttribute("id", "identity-popup-popup-menulist");
+
+      for (let state of SitePermissions.getAvailableStates(idNoSuffix)) {
+        let menuitem = document.createXULElement("menuitem");
+        // We need to correctly display the default/unknown state, which has its
+        // own integer value (0) but represents one of the other states.
+        if (state == SitePermissions.getDefault(idNoSuffix)) {
+          menuitem.setAttribute("value", "0");
+        } else {
+          menuitem.setAttribute("value", state);
+        }
+
+        menuitem.setAttribute(
+          "label",
+          SitePermissions.getMultichoiceStateLabel(idNoSuffix, state)
+        );
+        menupopup.appendChild(menuitem);
+      }
+
+      menulist.appendChild(menupopup);
+
+      if (permission.state == SitePermissions.getDefault(idNoSuffix)) {
+        menulist.value = "0";
+      } else {
+        menulist.value = permission.state;
+      }
+
+      // Avoiding listening to the "select" event on purpose. See Bug 1404262.
+      menulist.addEventListener("command", () => {
+        SitePermissions.setForPrincipal(
+          gBrowser.contentPrincipal,
+          idNoSuffix,
+          menulist.selectedItem.value
+        );
+      });
+
+      container.appendChild(img);
+      container.appendChild(nameLabel);
+      container.appendChild(menulist);
+      container.setAttribute("aria-labelledby", nameLabelId);
+      block.appendChild(container);
+
+      return block;
+    }
+
+    container.appendChild(img);
+    container.appendChild(nameLabel);
+    let labelledBy = nameLabelId;
+
+    if (showStateLabel) {
+      let stateLabel = this._createStateLabel(permission, idNoSuffix);
+      container.appendChild(stateLabel);
+      labelledBy += " " + stateLabel.id;
+    }
+
+    container.setAttribute("aria-labelledby", labelledBy);
+
+    /* We return the permission item here without a remove button if the permission is a
+       SCOPE_POLICY or SCOPE_GLOBAL permission. Policy permissions cannot be
+       removed/changed for the duration of the browser session. */
+    if (isPolicyPermission) {
+      return container;
+    }
+
+    if (isContainer) {
+      let block = document.createXULElement("vbox");
+      block.setAttribute("id", "identity-popup-" + idNoSuffix + "-container");
+      block.setAttribute("class", "identity-popup-permission-item-container");
+
+      if (permClearButton) {
+        let button = this._createPermissionClearButton(permission, block);
+        container.appendChild(button);
+      }
+
+      block.appendChild(container);
+      return block;
+    }
+
+    if (permClearButton) {
+      let button = this._createPermissionClearButton(permission, container);
+      container.appendChild(button);
+    }
+
+    return container;
+  },
+
+  _createStateLabel(aPermission, idNoSuffix) {
+    let label = document.createXULElement("label");
+    label.setAttribute("flex", "1");
+    label.setAttribute("class", "identity-popup-permission-state-label");
+    let labelId = "identity-popup-permission-state-label-" + idNoSuffix;
+    label.setAttribute("id", labelId);
+    let { state, scope } = aPermission;
+    // If the user did not permanently allow this device but it is currently
+    // used, set the variables to display a "temporarily allowed" info.
+    if (state != SitePermissions.ALLOW && aPermission.sharingState) {
+      state = SitePermissions.ALLOW;
+      scope = SitePermissions.SCOPE_REQUEST;
+    }
+    label.textContent = SitePermissions.getCurrentStateLabel(
+      state,
+      idNoSuffix,
+      scope
+    );
+    return label;
+  },
+
+  _removePermPersistentAllow(principal, id) {
+    let perm = SitePermissions.getForPrincipal(principal, id);
+    if (
+      perm.state == SitePermissions.ALLOW &&
+      perm.scope == SitePermissions.SCOPE_PERSISTENT
+    ) {
+      SitePermissions.removeFromPrincipal(principal, id);
+    }
+  },
+
+  _createPermissionClearButton(
+    aPermission,
+    container,
+    clearCallback = () => {}
+  ) {
+    let button = document.createXULElement("button");
+    button.setAttribute("class", "identity-popup-permission-remove-button");
+    let tooltiptext = gNavigatorBundle.getString("permissions.remove.tooltip");
+    button.setAttribute("tooltiptext", tooltiptext);
+    button.addEventListener("command", () => {
+      let browser = gBrowser.selectedBrowser;
+      container.remove();
+      if (aPermission.sharingState) {
+        if (aPermission.id === "geo" || aPermission.id === "xr") {
+          let origins = browser.getDevicePermissionOrigins(aPermission.id);
+          for (let origin of origins) {
+            let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+              origin
+            );
+            this._removePermPersistentAllow(principal, aPermission.id);
+          }
+          origins.clear();
+        } else if (
+          ["camera", "microphone", "screen"].includes(aPermission.id)
+        ) {
+          let windowId = this._sharingState.webRTC.windowId;
+          if (aPermission.id == "screen") {
+            windowId = "screen:" + windowId;
+          } else {
+            // If we set persistent permissions or the sharing has
+            // started due to existing persistent permissions, we need
+            // to handle removing these even for frames with different hostnames.
+            let origins = browser.getDevicePermissionOrigins("webrtc");
+            for (let origin of origins) {
+              // It's not possible to stop sharing one of camera/microphone
+              // without the other.
+              let principal;
+              for (let id of ["camera", "microphone"]) {
+                if (this._sharingState.webRTC[id]) {
+                  if (!principal) {
+                    principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+                      origin
+                    );
+                  }
+                  this._removePermPersistentAllow(principal, id);
+                }
+              }
+            }
+          }
+
+          let bc = this._sharingState.webRTC.browsingContext;
+          bc.currentWindowGlobal
+            .getActor("WebRTC")
+            .sendAsyncMessage("webrtc:StopSharing", windowId);
+          webrtcUI.forgetActivePermissionsFromBrowser(gBrowser.selectedBrowser);
+        }
+      }
+      SitePermissions.removeFromPrincipal(
+        gBrowser.contentPrincipal,
+        aPermission.id,
+        browser
+      );
+
+      this._permissionReloadHint.removeAttribute("hidden");
+      PanelView.forNode(
+        this._identityPopupMainView
+      ).descriptionHeightWorkaround();
+
+      if (aPermission.id === "geo") {
+        gBrowser.updateBrowserSharing(browser, { geo: false });
+      } else if (aPermission.id === "xr") {
+        gBrowser.updateBrowserSharing(browser, { xr: false });
+      }
+
+      clearCallback();
+    });
+
+    return button;
+  },
+
+  _getGeoLocationLastAccess() {
+    return new Promise(resolve => {
+      let lastAccess = null;
+      ContentPrefService2.getByDomainAndName(
+        gBrowser.currentURI.spec,
+        "permissions.geoLocation.lastAccess",
+        gBrowser.selectedBrowser.loadContext,
+        {
+          handleResult(pref) {
+            lastAccess = pref.value;
+          },
+          handleCompletion() {
+            resolve(lastAccess);
+          },
+        }
+      );
+    });
+  },
+
+  async _createGeoLocationLastAccessIndicator() {
+    let lastAccessStr = await this._getGeoLocationLastAccess();
+    let geoContainer = document.getElementById("identity-popup-geo-container");
+
+    // Check whether geoContainer still exists.
+    // We are async, the identity popup could have been closed already.
+    // Also check if it is already populated with a time label.
+    // This can happen if we update the permission panel multiple times in a
+    // short timeframe.
+    if (
+      lastAccessStr == null ||
+      !geoContainer ||
+      document.getElementById("geo-access-indicator-item")
+    ) {
+      return;
+    }
+    let lastAccess = new Date(lastAccessStr);
+    if (isNaN(lastAccess)) {
+      Cu.reportError("Invalid timestamp for last geolocation access");
+      return;
+    }
+
+    let icon = document.createXULElement("image");
+    icon.setAttribute("class", "popup-subitem");
+
+    let indicator = document.createXULElement("hbox");
+    indicator.setAttribute("class", "identity-popup-permission-item");
+    indicator.setAttribute("align", "center");
+    indicator.setAttribute("id", "geo-access-indicator-item");
+
+    let timeFormat = new Services.intl.RelativeTimeFormat(undefined, {});
+
+    let text = document.createXULElement("label");
+    text.setAttribute("flex", "1");
+    text.setAttribute("class", "identity-popup-permission-label");
+
+    text.textContent = gNavigatorBundle.getFormattedString(
+      "geolocationLastAccessIndicatorText",
+      [timeFormat.formatBestUnit(lastAccess)]
+    );
+
+    indicator.appendChild(icon);
+    indicator.appendChild(text);
+
+    geoContainer.appendChild(indicator);
+  },
+
+  _createProtocolHandlerPermissionItem(permission, key) {
+    let container = document.getElementById(
+      "identity-popup-open-protocol-handler-container"
+    );
+    let initialCall;
+
+    if (!container) {
+      // First open-protocol-handler permission, create container.
+      container = this._createPermissionItem({
+        permission,
+        isContainer: true,
+        permClearButton: false,
+        showStateLabel: false,
+        idNoSuffix: "open-protocol-handler",
+      });
+      initialCall = true;
+    }
+
+    let icon = document.createXULElement("image");
+    icon.setAttribute("class", "popup-subitem-no-arrow");
+
+    let item = document.createXULElement("hbox");
+    item.setAttribute("class", "identity-popup-permission-item");
+    item.setAttribute("align", "center");
+
+    let text = document.createXULElement("label");
+    text.setAttribute("flex", "1");
+    text.setAttribute("class", "identity-popup-permission-label-subitem");
+
+    text.textContent = gNavigatorBundle.getFormattedString(
+      "openProtocolHandlerPermissionEntryLabel",
+      [key]
+    );
+
+    let stateLabel = this._createStateLabel(
+      permission,
+      "open-protocol-handler"
+    );
+
+    item.appendChild(text);
+    item.appendChild(stateLabel);
+
+    let button = this._createPermissionClearButton(permission, item, () => {
+      // When we're clearing the last open-protocol-handler permission, clean up
+      // the empty container.
+      // (<= 1 because the heading item is also a child of the container)
+      if (container.childElementCount <= 1) {
+        container.remove();
+      }
+    });
+    item.appendChild(button);
+
+    container.appendChild(item);
+
+    // If container already exists in permission list, don't return it again.
+    return initialCall && container;
+  },
+
+  _createBlockedPopupIndicator(aTotalBlockedPopups) {
+    let indicator = document.createXULElement("hbox");
+    indicator.setAttribute("class", "identity-popup-permission-item");
+    indicator.setAttribute("align", "center");
+    indicator.setAttribute("id", "blocked-popup-indicator-item");
+
+    let icon = document.createXULElement("image");
+    icon.setAttribute("class", "popup-subitem");
+
+    let text = document.createXULElement("label", { is: "text-link" });
+    text.setAttribute("flex", "1");
+    text.setAttribute("class", "identity-popup-permission-label");
+
+    let messageBase = gNavigatorBundle.getString(
+      "popupShowBlockedPopupsIndicatorText"
+    );
+    let message = PluralForm.get(aTotalBlockedPopups, messageBase).replace(
+      "#1",
+      aTotalBlockedPopups
+    );
+    text.textContent = message;
+
+    text.addEventListener("click", () => {
+      gBrowser.selectedBrowser.popupBlocker.unblockAllPopups();
+    });
+
+    indicator.appendChild(icon);
+    indicator.appendChild(text);
+
+    document
+      .getElementById("identity-popup-popup-container")
+      .appendChild(indicator);
   },
 };

@@ -738,7 +738,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   min-width: 280px;
 }
 
-#identity-icon-box {
+#identity-box {
   max-width: calc(30px + 10em);
 }
 
@@ -752,7 +752,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   :root[customizing] #urlbar-container {
     min-width: 245px;
   }
-  #identity-icon-box {
+  #identity-box {
     max-width: 80px;
   }
   /* Contenxtual identity labels are user-customizable and can be very long,
@@ -779,7 +779,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   #nav-bar[downloadsbuttonshown] #urlbar-container {
     min-width: 225px;
   }
-  #identity-icon-box {
+  #identity-box {
     max-width: 70px;
   }
   #urlbar-zoom-button {

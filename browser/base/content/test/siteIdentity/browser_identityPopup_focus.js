@@ -6,7 +6,7 @@ async function focusIdentityBox() {
   gURLBar.inputField.focus();
   is(document.activeElement, gURLBar.inputField, "urlbar should be focused");
   const focused = BrowserTestUtils.waitForEvent(
-    gIdentityHandler._identityIconBox,
+    gIdentityHandler._identityBox,
     "focus"
   );
   EventUtils.synthesizeKey("VK_TAB", { shiftKey: true });
@@ -24,7 +24,7 @@ add_task(async function testIdentityPopupFocusClick() {
       true,
       event => event.target == gIdentityHandler._identityPopup
     );
-    EventUtils.synthesizeMouseAtCenter(gIdentityHandler._identityIconBox, {});
+    EventUtils.synthesizeMouseAtCenter(gIdentityHandler._identityBox, {});
     await shown;
     isnot(
       Services.focus.focusedElement,

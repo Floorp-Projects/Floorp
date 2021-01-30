@@ -24,7 +24,7 @@ async function test() {
   gURLBar.setPageProxyState("valid");
   let result = await EventUtils.synthesizePlainDragAndCancel(
     {
-      srcElement: document.getElementById("identity-icon-box"),
+      srcElement: document.getElementById("identity-box"),
     },
     expected
   );

@@ -48,21 +48,21 @@ var gTests = [
 
       // Clicking the global sharing indicator should open the control center in
       // the second window.
-      ok(permissionPopupHidden(win), "control center should be hidden");
+      ok(identityPopupHidden(win), "control center should be hidden");
       let activeStreams = webrtcUI.getActiveStreams(true, false, false);
       webrtcUI.showSharingDoorhanger(activeStreams[0], "Devices");
       // If the popup gets hidden before being shown, by stray focus/activate
       // events, don't bother failing the test. It's enough to know that we
       // started showing the popup.
-      let popup = win.gPermissionPanel._permissionPopup;
+      let popup = win.gIdentityHandler._identityPopup;
       let hiddenEvent = BrowserTestUtils.waitForEvent(popup, "popuphidden");
       let shownEvent = BrowserTestUtils.waitForEvent(popup, "popupshown");
       let ev = await Promise.race([hiddenEvent, shownEvent]);
       ok(ev.type, "Tried to show popup");
-      win.gPermissionPanel._permissionPopup.hidePopup();
+      win.gIdentityHandler._identityPopup.hidePopup();
 
       ok(
-        permissionPopupHidden(window),
+        identityPopupHidden(window),
         "control center should be hidden in the first window"
       );
 
