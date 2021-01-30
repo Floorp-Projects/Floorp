@@ -4025,6 +4025,16 @@ pub extern "C" fn Servo_ComputedValues_EqualForCachedAnonymousContentStyle(
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_ComputedValues_BlockifiedDisplay(
+    style: &ComputedValues,
+    is_root_element : bool,
+) -> u16 {
+    let display = style.get_box().clone_display();
+    let blockified_display = display.equivalent_block_display(is_root_element);
+    blockified_display.to_u16()
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_StyleSet_Init(doc: &structs::Document) -> *mut RawServoStyleSet {
     let data = Box::new(PerDocumentStyleData::new(doc));
 

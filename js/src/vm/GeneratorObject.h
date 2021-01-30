@@ -33,7 +33,6 @@ class AbstractGeneratorObject : public NativeObject {
     ARGS_OBJ_SLOT,
     STACK_STORAGE_SLOT,
     RESUME_INDEX_SLOT,
-    LAST_OPCODE_SLOT,
     RESERVED_SLOTS
   };
 
@@ -156,14 +155,6 @@ class AbstractGeneratorObject : public NativeObject {
     MOZ_ASSERT(isSuspended());
     return getFixedSlot(RESUME_INDEX_SLOT).toInt32();
   }
-  void setLastOpcode(JSOp lastOp) {
-    return setFixedSlot(LAST_OPCODE_SLOT,
-                        Int32Value(static_cast<uint8_t>(lastOp)));
-  }
-  JSOp lastOpcode() const {
-    MOZ_ASSERT(isSuspended());
-    return (JSOp)getFixedSlot(LAST_OPCODE_SLOT).toInt32();
-  }
   bool isClosed() const { return getFixedSlot(CALLEE_SLOT).isNull(); }
   void setClosed() {
     setFixedSlot(CALLEE_SLOT, NullValue());
@@ -192,9 +183,6 @@ class AbstractGeneratorObject : public NativeObject {
   static size_t offsetOfResumeIndexSlot() {
     return getFixedSlotOffset(RESUME_INDEX_SLOT);
   }
-  static size_t offsetOfLastOpcodeSlot() {
-    return getFixedSlotOffset(LAST_OPCODE_SLOT);
-  }
   static size_t offsetOfStackStorageSlot() {
     return getFixedSlotOffset(STACK_STORAGE_SLOT);
   }
@@ -204,7 +192,6 @@ class AbstractGeneratorObject : public NativeObject {
   static size_t argsObjectSlot() { return ARGS_OBJ_SLOT; }
   static size_t stackStorageSlot() { return STACK_STORAGE_SLOT; }
   static size_t resumeIndexSlot() { return RESUME_INDEX_SLOT; }
-  static size_t lastOpcodeSlot() { return LAST_OPCODE_SLOT; }
 
 #ifdef DEBUG
   void dump() const;
