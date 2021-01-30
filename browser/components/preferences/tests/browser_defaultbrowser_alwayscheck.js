@@ -8,12 +8,25 @@ add_task(async function clicking_make_default_checks_alwaysCheck_checkbox() {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences");
 
   await test_with_mock_shellservice({ isDefault: false }, async function() {
-    let setDefaultPane = content.document.getElementById("setDefaultPane");
-    Assert.equal(
-      setDefaultPane.selectedIndex,
-      "0",
-      "The 'make default' pane should be visible when not default"
-    );
+    let checkDefaultBrowserState = isDefault => {
+      let isDefaultPane = content.document.getElementById("isDefaultPane");
+      let isNotDefaultPane = content.document.getElementById(
+        "isNotDefaultPane"
+      );
+      Assert.equal(
+        ContentTaskUtils.is_hidden(isDefaultPane),
+        !isDefault,
+        "The 'browser is default' pane should be hidden when browser is not default"
+      );
+      Assert.equal(
+        ContentTaskUtils.is_hidden(isNotDefaultPane),
+        isDefault,
+        "The 'make default' pane should be hidden when browser is default"
+      );
+    };
+
+    checkDefaultBrowserState(false);
+
     let alwaysCheck = content.document.getElementById("alwaysCheckDefault");
     Assert.ok(!alwaysCheck.checked, "Always Check is unchecked by default");
     Assert.ok(
@@ -42,11 +55,7 @@ add_task(async function clicking_make_default_checks_alwaysCheck_checkbox() {
       alwaysCheck.disabled,
       "'Always Check' checkbox is locked with default browser and alwaysCheck=true"
     );
-    Assert.equal(
-      setDefaultPane.selectedIndex,
-      "1",
-      "The 'make default' pane should not be visible when default"
-    );
+    checkDefaultBrowserState(true);
     Assert.ok(
       Services.prefs.getBoolPref("browser.shell.checkDefaultBrowser"),
       "checkDefaultBrowser pref is now enabled"
@@ -62,12 +71,17 @@ add_task(async function clicking_make_default_checks_alwaysCheck_checkbox() {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences");
 
   await test_with_mock_shellservice({ isDefault: false }, async function() {
-    let setDefaultPane = content.document.getElementById("setDefaultPane");
-    Assert.equal(
-      setDefaultPane.selectedIndex,
-      "0",
+    let isDefaultPane = content.document.getElementById("isDefaultPane");
+    let isNotDefaultPane = content.document.getElementById("isNotDefaultPane");
+    Assert.ok(
+      ContentTaskUtils.is_hidden(isDefaultPane),
+      "The 'browser is default' pane should be hidden when not default"
+    );
+    Assert.ok(
+      ContentTaskUtils.is_visible(isNotDefaultPane),
       "The 'make default' pane should be visible when not default"
     );
+
     let alwaysCheck = content.document.getElementById("alwaysCheckDefault");
     Assert.ok(alwaysCheck.disabled, "Always Check is disabled when locked");
     Assert.ok(
@@ -84,7 +98,7 @@ add_task(async function clicking_make_default_checks_alwaysCheck_checkbox() {
     content.window.gMainPane.updateSetDefaultBrowser();
 
     await ContentTaskUtils.waitForCondition(
-      () => setDefaultPane.selectedIndex == "1",
+      () => ContentTaskUtils.is_visible(isDefaultPane),
       "Browser is now default"
     );
 

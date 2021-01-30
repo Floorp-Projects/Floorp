@@ -245,6 +245,11 @@ button > hbox > label {
 
 /* General Pane */
 
+.is-default > #isNotDefaultPane,
+:not(.is-default) > #isDefaultPane {
+  visibility: hidden;
+}
+
 #isDefaultLabel,
 #isNotDefaultLabel {
   font-weight: 600;
