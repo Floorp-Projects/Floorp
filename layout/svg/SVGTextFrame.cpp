@@ -4663,7 +4663,8 @@ void SVGTextFrame::DoTextPathLayout() {
     bool skippedEndOfTextPath = false;
 
     // Loop for each character in the text path.
-    while (!it.AtEnd() && it.TextPathFrame()) {
+    while (!it.AtEnd() && it.TextPathFrame() &&
+           it.TextPathFrame()->GetContent() == textPath) {
       // The index of the cluster or ligature group's first character.
       uint32_t i = it.TextElementCharIndex();
 
