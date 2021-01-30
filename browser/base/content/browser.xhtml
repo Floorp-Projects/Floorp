@@ -619,12 +619,12 @@
     <tooltip id="tabbrowser-tab-tooltip" onpopupshowing="gBrowser.createTooltip(event);"/>
 
     <tooltip id="back-button-tooltip">
-      <description id="back-button-tooltip-description" class="tooltip-label"/>
+      <description class="tooltip-label" data-l10n-id="navbar-tooltip-back"/>
       <description class="tooltip-label" data-l10n-id="navbar-tooltip-instruction"/>
     </tooltip>
 
     <tooltip id="forward-button-tooltip">
-      <description id="forward-button-tooltip-description" class="tooltip-label"/>
+      <description class="tooltip-label" data-l10n-id="navbar-tooltip-forward"/>
       <description class="tooltip-label" data-l10n-id="navbar-tooltip-instruction"/>
     </tooltip>
 
@@ -1761,7 +1761,7 @@
       <toolbartabstop/>
       <hbox id="nav-bar-customization-target" flex="1">
         <toolbarbutton id="back-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       data-l10n-id="toolbar-button-back-2"
+                       data-l10n-id="toolbar-button-back"
                        removable="false" overflows="false"
                        keepbroadcastattributeswhencustomizing="true"
                        command="Browser:BackOrBackDuplicate"
@@ -1769,7 +1769,7 @@
                        tooltip="back-button-tooltip"
                        context="backForwardMenu"/>
         <toolbarbutton id="forward-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       data-l10n-id="toolbar-button-forward-2"
+                       data-l10n-id="toolbar-button-forward"
                        removable="false" overflows="false"
                        keepbroadcastattributeswhencustomizing="true"
                        command="Browser:ForwardOrForwardDuplicate"
