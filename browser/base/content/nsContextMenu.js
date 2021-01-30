@@ -431,26 +431,6 @@ class nsContextMenu {
 
     this.showItem("context-reload", stopReloadItem == "reload");
     this.showItem("context-stop", stopReloadItem == "stop");
-
-    function initBackForwardMenuItemTooltip(menuItemId, l10nId, shortcutId) {
-      let shortcut = document.getElementById(shortcutId);
-      shortcut = ShortcutUtils.prettifyShortcut(shortcut);
-
-      let menuItem = document.getElementById(menuItemId);
-      document.l10n.setAttributes(menuItem, l10nId, { shortcut });
-    }
-
-    initBackForwardMenuItemTooltip(
-      "context-back",
-      "main-context-menu-back-2",
-      "goBackKb"
-    );
-
-    initBackForwardMenuItemTooltip(
-      "context-forward",
-      "main-context-menu-forward-2",
-      "goForwardKb"
-    );
   }
 
   initLeaveDOMFullScreenItems() {

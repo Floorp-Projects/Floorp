@@ -5,14 +5,12 @@
 
       <menugroup id="context-navigation">
         <menuitem id="context-back"
-                  data-l10n-id="main-context-menu-back-2"
-                  data-l10n-args='{"shortcut":""}'
+                  data-l10n-id="main-context-menu-back"
                   class="menuitem-iconic"
                   command="Browser:BackOrBackDuplicate"
                   onclick="checkForMiddleClick(this, event);"/>
         <menuitem id="context-forward"
-                  data-l10n-id="main-context-menu-forward-2"
-                  data-l10n-args='{"shortcut":""}'
+                  data-l10n-id="main-context-menu-forward"
                   class="menuitem-iconic"
                   command="Browser:ForwardOrForwardDuplicate"
                   onclick="checkForMiddleClick(this, event);"/>
