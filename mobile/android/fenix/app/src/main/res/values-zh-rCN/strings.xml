@@ -531,7 +531,7 @@
     <!-- Option in Library to open Screenshots page -->
     <string name="library_screenshots">屏幕截图</string>
     <!-- Option in Library to open Downloads page -->
-    <string name="library_downloads">下载项</string>
+    <string name="library_downloads">下载</string>
     <!-- Option in library to open Bookmarks page -->
     <string name="library_bookmarks">书签</string>
     <!-- Option in library to open Desktop Bookmarks root page -->
@@ -738,11 +738,11 @@
 
     <!-- Downloads -->
     <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">删除下载项</string>
+    <string name="download_delete_all">清除下载记录</string>
     <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">您确定要清除下载项吗？</string>
+    <string name="download_delete_all_dialog">您确定要清除下载记录吗？</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
-    <string name="download_delete_multiple_items_snackbar_1">下载项已移除</string>
+    <string name="download_delete_multiple_items_snackbar_1">下载记录已清除</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
     <string name="download_delete_single_item_snackbar">已移除 %1$s</string>
     <!-- Text shown when no download exists -->
