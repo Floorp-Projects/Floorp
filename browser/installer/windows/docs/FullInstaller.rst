@@ -8,5 +8,7 @@ The full installer's main script is `installer.nsi <https://searchfox.org/mozill
 
 If it was not launched by the :doc:`StubInstaller`, an :ref:`Install Ping` is sent when the installer exits.
 
+The installer writes ``installation_telemetry.json`` to the install location, this is read by Firefox in order to send a telemetry event, see the event definition in `Events.yaml <https://searchfox.org/mozilla-central/source/toolkit/components/telemetry/Events.yaml>`_ (category ``installation``, event name ``first_seen``) for a description of the properties. There is also an ``install_timestamp`` property, which is saved in the profile to determine whether there has been a new installation; this is not sent as part of the ping.
+
 .. toctree::
    FullConfig
