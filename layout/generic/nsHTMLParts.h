@@ -138,8 +138,6 @@ nsIFrame* NS_NewFileControlFrame(mozilla::PresShell* aPresShell,
                                  mozilla::ComputedStyle* aStyle);
 nsIFrame* NS_NewColorControlFrame(mozilla::PresShell* aPresShell,
                                   mozilla::ComputedStyle* aStyle);
-nsIFrame* NS_NewLegendFrame(mozilla::PresShell* aPresShell,
-                            mozilla::ComputedStyle* aStyle);
 nsIFrame* NS_NewTextControlFrame(mozilla::PresShell* aPresShell,
                                  mozilla::ComputedStyle* aStyle);
 nsContainerFrame* NS_NewListControlFrame(mozilla::PresShell* aPresShell,
