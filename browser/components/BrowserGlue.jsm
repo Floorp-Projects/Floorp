@@ -2761,6 +2761,8 @@ BrowserGlue.prototype = {
       () => OsEnvironment.reportAllowedAppSources(),
 
       () => Services.search.checkWebExtensionEngines(),
+
+      () => BrowserUsageTelemetry.reportInstallationTelemetry(),
     ];
 
     for (let task of idleTasks) {

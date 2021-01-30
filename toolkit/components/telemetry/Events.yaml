@@ -2603,3 +2603,32 @@ dom.quota.try:
       seq: Sequence number.
       source_file: The name of the source code file where the error occured.
       source_line: The line within source_file where the error occured.
+
+installation:
+  first_seen:
+    description: >
+      Recorded after the application has been installed or reinstalled, the first time that
+      a profile sees that there was a new installation. This includes information about how
+      the installer was run.
+    objects:
+      - full # if the full installer was run directly
+      - stub # if the stub installer was used
+    release_channel_collection: opt-out
+    record_in_processes: ["main"]
+    products: ["firefox"]
+    operating_systems: ["windows"]
+    extra_keys:
+      version: The application version installed by the installer (not necessarily the current version)
+      build_id: The build ID of the application installed by the installer (not necessarily the current version)
+      admin_user: Whether the installer is running from an elevated admin user
+      install_existed: Whether there was already an install in this location
+      profdir_existed: Whether the top-level profile directory existed
+      silent: '(optional, present if object is "full") Whether this was a silent install'
+      from_msi: '(optional, present if object is "full") Whether this was an MSI install'
+      default_path: '(optional, present if object is "full") Whether the default path was used'
+    bug_numbers: [1660198]
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+      - agashlin@mozilla.com
+      - rtestard@mozilla.com
+    expiry_version: "94"
