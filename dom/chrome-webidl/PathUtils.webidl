@@ -59,6 +59,15 @@ namespace PathUtils {
   DOMString createUniquePath(DOMString path);
 
   /**
+   * Creates an adjusted path using a path whose length is already close
+   * to MAX_PATH. For windows only.
+   *
+   * @param path An absolute path.
+   */
+  [Throws]
+  DOMString toExtendedWindowsPath(DOMString path);
+
+  /**
    * Normalize a path by removing multiple separators and `..` and `.`
    * directories.
    *
