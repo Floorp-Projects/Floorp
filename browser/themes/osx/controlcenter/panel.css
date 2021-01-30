@@ -5,7 +5,7 @@
 %include ../../shared/controlcenter/panel.inc.css
 
 .identity-popup-expander:-moz-focusring,
-.permission-popup-permission-remove-button:-moz-focusring {
+.identity-popup-permission-remove-button:-moz-focusring {
   box-shadow: var(--focus-ring-box-shadow);
 }
 

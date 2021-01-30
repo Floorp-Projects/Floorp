@@ -220,28 +220,28 @@ async function testDoorHanger(
     await Promise.all([ct, permChanged]);
   }
   if (choice != BLOCK) {
-    let permissionPopupPromise = BrowserTestUtils.waitForEvent(
+    let identityPopupPromise = BrowserTestUtils.waitForEvent(
       window,
       "popupshown",
       true,
-      event => event.target == gPermissionPanel._permissionPopup
+      event => event.target == gIdentityHandler._identityPopup
     );
-    gPermissionPanel._identityPermissionBox.click();
-    await permissionPopupPromise;
+    gIdentityHandler._identityBox.click();
+    await identityPopupPromise;
     let permissionItem = document.getElementById(
-      `permission-popup-permission-label-3rdPartyStorage^https://tracking.example.org`
+      `identity-popup-permission-label-3rdPartyStorage^https://tracking.example.org`
     );
     ok(permissionItem, "Permission item exists");
     ok(
       BrowserTestUtils.is_visible(permissionItem),
       "Permission item visible in the identity panel"
     );
-    permissionPopupPromise = BrowserTestUtils.waitForEvent(
-      gPermissionPanel._permissionPopup,
+    identityPopupPromise = BrowserTestUtils.waitForEvent(
+      gIdentityHandler._identityPopup,
       "popuphidden"
     );
-    gPermissionPanel._permissionPopup.hidePopup();
-    await permissionPopupPromise;
+    gIdentityHandler._identityPopup.hidePopup();
+    await identityPopupPromise;
   }
 
   BrowserTestUtils.removeTab(tab);

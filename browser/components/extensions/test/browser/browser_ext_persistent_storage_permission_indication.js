@@ -6,49 +6,35 @@ const { PermissionTestUtils } = ChromeUtils.import(
   "resource://testing-common/PermissionTestUtils.jsm"
 );
 
-function openPermissionPopup() {
+function openIdentityPopup() {
   let promise = BrowserTestUtils.waitForEvent(
     window,
     "popupshown",
     true,
-    event => event.target == gPermissionPanel._permissionPopup
+    event => event.target == gIdentityHandler._identityPopup
   );
-  gPermissionPanel._identityPermissionBox.click();
+  gIdentityHandler._identityBox.click();
   return promise;
 }
 
-function closePermissionPopup() {
+function closeIdentityPopup() {
   let promise = BrowserTestUtils.waitForEvent(
-    gPermissionPanel._permissionPopup,
+    gIdentityHandler._identityPopup,
     "popuphidden"
   );
-  gPermissionPanel._permissionPopup.hidePopup();
+  gIdentityHandler._identityPopup.hidePopup();
   return promise;
 }
 
-async function testPermissionPopup({ expectPermissionHidden }) {
-  await openPermissionPopup();
+async function testIdentityPopup({ expectPermissionHidden }) {
+  await openIdentityPopup();
 
-  if (expectPermissionHidden) {
-    let permissionsList = document.getElementById(
-      "permission-popup-permission-list"
-    );
-    is(
-      permissionsList.querySelectorAll(
-        ".permission-popup-permission-label-persistent-storage"
-      ).length,
-      0,
-      "Persistent storage Permission should be hidden"
-    );
-  }
-
-  await closePermissionPopup();
-
-  // We need to test this after the popup has been closed.
-  // The permission icon will be shown as long as the popup is open, event if
-  // no permissions are set.
   let permissionsGrantedIcon = document.getElementById(
     "permissions-granted-icon"
+  );
+
+  let permissionsList = document.getElementById(
+    "identity-popup-permission-list"
   );
 
   if (expectPermissionHidden) {
@@ -56,12 +42,22 @@ async function testPermissionPopup({ expectPermissionHidden }) {
       BrowserTestUtils.is_hidden(permissionsGrantedIcon),
       "Permission Granted Icon is hidden"
     );
+
+    is(
+      permissionsList.querySelectorAll(
+        ".identity-popup-permission-label-persistent-storage"
+      ).length,
+      0,
+      "Persistent storage Permission should be hidden"
+    );
   } else {
     ok(
       BrowserTestUtils.is_visible(permissionsGrantedIcon),
       "Permission Granted Icon is visible"
     );
   }
+
+  await closeIdentityPopup();
 }
 
 add_task(async function testPersistentStoragePermissionHidden() {
@@ -82,7 +78,7 @@ add_task(async function testPersistentStoragePermissionHidden() {
 
   let url = await extension.awaitMessage("url");
   await BrowserTestUtils.withNewTab({ gBrowser, url }, async function() {
-    await testPermissionPopup({ expectPermissionHidden: true });
+    await testIdentityPopup({ expectPermissionHidden: true });
   });
 
   await extension.unload();
@@ -114,7 +110,7 @@ add_task(async function testPersistentStoragePermissionVisible() {
   );
 
   await BrowserTestUtils.withNewTab({ gBrowser, url }, async function() {
-    await testPermissionPopup({ expectPermissionHidden: false });
+    await testIdentityPopup({ expectPermissionHidden: false });
   });
 
   await extension.unload();
