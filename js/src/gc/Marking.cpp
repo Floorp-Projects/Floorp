@@ -387,10 +387,6 @@ void js::gc::AssertRootMarkingPhase(JSTracer* trc) {
 /*** Tracing Interface ******************************************************/
 
 template <typename T>
-bool DoCallback(GenericTracer* trc, T** thingp, const char* name);
-template <typename T>
-bool DoCallback(GenericTracer* trc, T* thingp, const char* name);
-template <typename T>
 void DoMarking(GCMarker* gcmarker, T* thing);
 template <typename T>
 void DoMarking(GCMarker* gcmarker, const T& thing);
@@ -587,14 +583,17 @@ void js::TraceProcessGlobalRoot(JSTracer* trc, T* thing, const char* name) {
   // them. Fortunately, atoms (permanent and non) cannot refer to other GC
   // things so they do not need to go through the mark stack and may simply
   // be marked directly.  Moreover, well-known symbols can refer only to
-  // permanent atoms, so likewise require no subsquent marking.
-  CheckTracedThing(trc, *ConvertToBase(&thing));
-  AutoClearTracingSource acts(trc);
+  // permanent atoms, so likewise require no subsequent marking.
   if (trc->isMarkingTracer()) {
+    CheckTracedThing(trc, *ConvertToBase(&thing));
+    AutoClearTracingSource acts(trc);
     thing->asTenured().markIfUnmarked(gc::MarkColor::Black);
-  } else {
-    DoCallback(trc->asCallbackTracer(), ConvertToBase(&thing), name);
+    return;
   }
+
+  T* tmp = thing;
+  TraceEdgeInternal(trc, ConvertToBase(&tmp), name);
+  MOZ_ASSERT(tmp == thing);  // We shouldn't move process global roots.
 }
 template void js::TraceProcessGlobalRoot<JSAtom>(JSTracer*, JSAtom*,
                                                  const char*);
@@ -658,6 +657,48 @@ void js::TraceGCCellPtrRoot(JSTracer* trc, JS::GCCellPtr* thingp,
   } else if (traced != thingp->asCell()) {
     *thingp = JS::GCCellPtr(traced, thingp->kind());
   }
+}
+
+template <typename T>
+inline bool DoCallback(GenericTracer* trc, T** thingp, const char* name) {
+  CheckTracedThing(trc, *thingp);
+  JS::AutoTracingName ctx(trc, name);
+
+  T* thing = *thingp;
+  T* post = DispatchToOnEdge(trc, thing);
+  if (post != thing) {
+    *thingp = post;
+  }
+
+  return post;
+}
+
+template <typename T>
+inline bool DoCallback(GenericTracer* trc, T* thingp, const char* name) {
+  JS::AutoTracingName ctx(trc, name);
+
+  // Return true by default. For some types the lambda below won't be called.
+  bool ret = true;
+  auto thing = MapGCThingTyped(*thingp, [trc, &ret](auto thing) {
+    CheckTracedThing(trc, thing);
+
+    auto* post = DispatchToOnEdge(trc, thing);
+    if (!post) {
+      ret = false;
+      return TaggedPtr<T>::empty();
+    }
+
+    return TaggedPtr<T>::wrap(post);
+  });
+
+  // Only update *thingp if the value changed, to avoid TSan false positives for
+  // template objects when using DumpHeapTracer or UbiNode tracers while Ion
+  // compiling off-thread.
+  if (thing.isSome() && thing.value() != *thingp) {
+    *thingp = thing.value();
+  }
+
+  return ret;
 }
 
 // This method is responsible for dynamic dispatch to the real tracer
@@ -2220,14 +2261,14 @@ inline MarkStack::SlotsOrElementsRange MarkStack::popSlotsOrElementsRange() {
 }
 
 inline bool MarkStack::ensureSpace(size_t count) {
-  if ((topIndex_ + count) <= capacity()) {
+  if (MOZ_LIKELY((topIndex_ + count) <= capacity())) {
     return !js::oom::ShouldFailWithOOM();
   }
 
   return enlarge(count);
 }
 
-bool MarkStack::enlarge(size_t count) {
+MOZ_NEVER_INLINE bool MarkStack::enlarge(size_t count) {
   size_t newCapacity = std::min(maxCapacity_.ref(), capacity() * 2);
   if (newCapacity < capacity() + count) {
     return false;
@@ -2435,10 +2476,10 @@ void GCMarker::setMainStackColor(gc::MarkColor newColor) {
 }
 
 template <typename T>
-void GCMarker::pushTaggedPtr(T* ptr) {
+inline void GCMarker::pushTaggedPtr(T* ptr) {
   checkZone(ptr);
   if (!currentStack().push(ptr)) {
-    delayMarkingChildren(ptr);
+    delayMarkingChildrenOnOOM(ptr);
   }
 }
 
@@ -2453,7 +2494,7 @@ void GCMarker::pushValueRange(JSObject* obj, SlotsOrElementsKind kind,
   }
 
   if (!currentStack().push(obj, kind, start)) {
-    delayMarkingChildren(obj);
+    delayMarkingChildrenOnOOM(obj);
   }
 }
 
@@ -2581,6 +2622,10 @@ void GCMarker::leaveWeakMarkingMode() {
 
   // The gcWeakKeys table is still populated and may be used during a future
   // weak marking mode within this GC.
+}
+
+MOZ_NEVER_INLINE void GCMarker::delayMarkingChildrenOnOOM(Cell* cell) {
+  delayMarkingChildren(cell);
 }
 
 void GCMarker::delayMarkingChildren(Cell* cell) {

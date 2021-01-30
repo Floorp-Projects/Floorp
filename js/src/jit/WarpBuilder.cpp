@@ -2161,7 +2161,6 @@ bool WarpBuilder::build_FinalYieldRval(BytecodeLocation loc) {
   setSlotNull(AbstractGeneratorObject::argsObjectSlot());
   setSlotNull(AbstractGeneratorObject::stackStorageSlot());
   setSlotNull(AbstractGeneratorObject::resumeIndexSlot());
-  setSlotNull(AbstractGeneratorObject::lastOpcodeSlot());
 
   // Return
   return build_RetRval(loc);
@@ -2304,9 +2303,6 @@ bool WarpBuilder::buildSuspend(BytecodeLocation loc, MDefinition* gen,
   current->add(MStoreFixedSlot::NewUnbarriered(
       alloc(), genObj, AbstractGeneratorObject::resumeIndexSlot(),
       constant(Int32Value(resumeIndex))));
-  current->add(MStoreFixedSlot::NewUnbarriered(
-      alloc(), genObj, AbstractGeneratorObject::lastOpcodeSlot(),
-      constant(Int32Value(static_cast<uint8_t>(loc.getOp())))));
 
   // This store is barriered because it stores an object value.
   current->add(MStoreFixedSlot::NewBarriered(

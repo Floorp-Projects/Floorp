@@ -3882,7 +3882,6 @@ class Document : public nsINode,
 
  private:
   void DoCacheAllKnownLangPrefs();
-  nsAtom* CJKFromTLD();
   void RecomputeLanguageFromCharset();
   bool GetSHEntryHasUserInteraction();
 

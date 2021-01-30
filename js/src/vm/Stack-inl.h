@@ -306,10 +306,7 @@ MOZ_ALWAYS_INLINE bool InterpreterStack::resumeGeneratorCallFrame(
     JSContext* cx, InterpreterRegs& regs, HandleFunction callee,
     HandleObject envChain) {
   MOZ_ASSERT(callee->isGenerator() || callee->isAsync());
-  RootedScript script(cx, JSFunction::getOrCreateScript(cx, callee));
-  if (!script) {
-    return false;
-  }
+  RootedScript script(cx, callee->nonLazyScript());
   InterpreterFrame* prev = regs.fp();
   jsbytecode* prevpc = regs.pc;
   Value* prevsp = regs.sp;

@@ -238,8 +238,7 @@ DebuggerFrame* DebuggerFrame::create(
     JSContext* cx, HandleObject proto, HandleNativeObject debugger,
     const FrameIter* maybeIter,
     Handle<AbstractGeneratorObject*> maybeGenerator) {
-  RootedDebuggerFrame frame(cx,
-                            NewObjectWithGivenProto<DebuggerFrame>(cx, proto));
+  DebuggerFrame* frame = NewObjectWithGivenProto<DebuggerFrame>(cx, proto);
   if (!frame) {
     return nullptr;
   }
@@ -256,7 +255,7 @@ DebuggerFrame* DebuggerFrame::create(
   }
 
   if (maybeGenerator) {
-    if (!setGeneratorInfo(cx, frame, maybeGenerator)) {
+    if (!frame->setGeneratorInfo(cx, maybeGenerator)) {
       frame->freeFrameIterData(cx->runtime()->defaultFreeOp());
       return nullptr;
     }
@@ -350,20 +349,19 @@ JSScript* js::DebuggerFrame::generatorScript() const {
 }
 #endif
 
-/* static */
-bool DebuggerFrame::setGeneratorInfo(JSContext* cx, HandleDebuggerFrame frame,
+bool DebuggerFrame::setGeneratorInfo(JSContext* cx,
                                      Handle<AbstractGeneratorObject*> genObj) {
-  cx->check(frame);
+  cx->check(this);
 
-  MOZ_ASSERT(!frame->hasGeneratorInfo());
+  MOZ_ASSERT(!hasGeneratorInfo());
   MOZ_ASSERT(!genObj->isClosed());
 
   // When we initialize the generator information, we do not need to adjust
   // the stepper increment, because either it was already incremented when
   // the step hook was added, or we're setting this into on a new DebuggerFrame
   // that has not yet had the chance for a hook to be added to it.
-  MOZ_ASSERT_IF(frame->onStepHandler(), frame->frameIterData());
-  MOZ_ASSERT_IF(!frame->frameIterData(), !frame->onStepHandler());
+  MOZ_ASSERT_IF(onStepHandler(), frameIterData());
+  MOZ_ASSERT_IF(!frameIterData(), !onStepHandler());
 
   // There are two relations we must establish:
   //
@@ -371,11 +369,7 @@ bool DebuggerFrame::setGeneratorInfo(JSContext* cx, HandleDebuggerFrame frame,
   //
   // 2) The generator's script's observer count must be bumped.
 
-  RootedFunction callee(cx, &genObj->callee());
-  RootedScript script(cx, JSFunction::getOrCreateScript(cx, callee));
-  if (!script) {
-    return false;
-  }
+  RootedScript script(cx, genObj->callee().nonLazyScript());
   auto info = cx->make_unique<GeneratorInfo>(genObj, script);
   if (!info) {
     return false;
@@ -395,7 +389,7 @@ bool DebuggerFrame::setGeneratorInfo(JSContext* cx, HandleDebuggerFrame frame,
     return false;
   }
 
-  InitReservedSlot(frame, GENERATOR_INFO_SLOT, info.release(),
+  InitReservedSlot(this, GENERATOR_INFO_SLOT, info.release(),
                    MemoryUse::DebuggerFrameGeneratorInfo);
   return true;
 }
