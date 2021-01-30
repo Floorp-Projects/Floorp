@@ -1294,9 +1294,9 @@ var gMainPane = {
         defaultBrowserBox.hidden = true;
         return;
       }
-      let setDefaultPane = document.getElementById("setDefaultPane");
       let isDefault = shellSvc.isDefaultBrowser(false, true);
-      setDefaultPane.selectedIndex = isDefault ? 1 : 0;
+      let setDefaultPane = document.getElementById("setDefaultPane");
+      setDefaultPane.classList.toggle("is-default", isDefault);
       let alwaysCheck = document.getElementById("alwaysCheckDefault");
       let alwaysCheckPref = Preferences.get(
         "browser.shell.checkDefaultBrowser"
@@ -1329,8 +1329,9 @@ var gMainPane = {
         return;
       }
 
-      let selectedIndex = shellSvc.isDefaultBrowser(false, true) ? 1 : 0;
-      document.getElementById("setDefaultPane").selectedIndex = selectedIndex;
+      let isDefault = shellSvc.isDefaultBrowser(false, true);
+      let setDefaultPane = document.getElementById("setDefaultPane");
+      setDefaultPane.classList.toggle("is-default", isDefault);
     }
   },
 
