@@ -70,6 +70,10 @@ appUpdater.prototype = {
     return this._appUpdater.update;
   },
 
+  get selectedPanel() {
+    return this.updateDeck.querySelector(".selected");
+  },
+
   _onAppUpdateStatus(status, ...args) {
     switch (status) {
       case AppUpdater.STATUS.UPDATE_DISABLED_BY_POLICY:
@@ -176,7 +180,8 @@ appUpdater.prototype = {
           "update.downloadAndInstallButton.accesskey"
         );
       }
-      this.updateDeck.selectedPanel = panel;
+      this.selectedPanel?.classList.remove("selected");
+      panel.classList.add("selected");
       if (
         this.options.buttonAutoFocus &&
         (!document.commandDispatcher.focusedElement || // don't steal the focus
@@ -186,7 +191,8 @@ appUpdater.prototype = {
         button.focus();
       }
     } else {
-      this.updateDeck.selectedPanel = panel;
+      this.selectedPanel?.classList.remove("selected");
+      panel.classList.add("selected");
     }
   },
 

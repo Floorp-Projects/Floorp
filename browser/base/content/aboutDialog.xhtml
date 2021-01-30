@@ -71,7 +71,7 @@
               <html:img class="icon apply" src="chrome://global/skin/icons/icon-refresh.svg" role="presentation"/>
             </html:div>
             <vbox>
-              <deck id="updateDeck" orient="vertical">
+              <stack id="updateDeck" orient="vertical">
                 <hbox id="checkForUpdates" align="center">
                   <button id="checkForUpdatesButton" align="start"
                           data-l10n-id="update-checkForUpdatesButton"
@@ -120,7 +120,7 @@
                 <hbox id="restarting" align="center">
                   <label data-l10n-id="update-restarting"/>
                 </hbox>
-              </deck>
+              </stack>
               <!-- This HBOX is duplicated above without class="update" -->
               <hbox align="baseline">
                 <label id="version" class="update"/>
