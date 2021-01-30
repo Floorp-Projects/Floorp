@@ -32,9 +32,8 @@ add_task(async function aboutDialog_backgroundCheck_downloaded_staging() {
         return readStatusFile() == STATE_APPLIED;
       });
 
-      let updateDeck = aboutDialog.document.getElementById("updateDeck");
       is(
-        updateDeck.selectedPanel.id,
+        aboutDialog.gAppUpdater.selectedPanel.id,
         "applying",
         "UI should still show as applying."
       );

@@ -51,9 +51,8 @@ add_task(async function aboutDialog_backgroundCheck_downloading() {
         return readStatusFile() == STATE_PENDING;
       });
 
-      let updateDeck = aboutDialog.document.getElementById("updateDeck");
       is(
-        updateDeck.selectedPanel.id,
+        aboutDialog.gAppUpdater.selectedPanel.id,
         "downloading",
         "UI should still show as downloading."
       );

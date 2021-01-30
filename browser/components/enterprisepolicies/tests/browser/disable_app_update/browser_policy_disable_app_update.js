@@ -44,13 +44,12 @@ add_task(async function test_update_about_ui() {
 
   await BrowserTestUtils.waitForCondition(
     () =>
-      aboutDialog.document.getElementById("updateDeck").selectedPanel &&
-      aboutDialog.document.getElementById("updateDeck").selectedPanel.id ==
-        panelId,
+      aboutDialog.gAppUpdater.selectedPanel &&
+      aboutDialog.gAppUpdater.selectedPanel.id == panelId,
     'Waiting for expected panel ID - expected "' + panelId + '"'
   );
   is(
-    aboutDialog.document.getElementById("updateDeck").selectedPanel.id,
+    aboutDialog.gAppUpdater.selectedPanel.id,
     panelId,
     "The About Dialog panel Id should equal " + panelId
   );

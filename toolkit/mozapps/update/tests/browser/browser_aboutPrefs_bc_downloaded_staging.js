@@ -36,7 +36,7 @@ add_task(async function aboutPrefs_backgroundCheck_downloaded_staged() {
         tab.linkedBrowser,
         [],
         () => {
-          return content.document.getElementById("updateDeck").selectedPanel.id;
+          return content.gAppUpdater.selectedPanel.id;
         }
       );
 

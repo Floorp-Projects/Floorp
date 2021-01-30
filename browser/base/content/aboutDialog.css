@@ -65,6 +65,10 @@
   padding-inline-start: 0;
 }
 
+#updateDeck > *:not(.selected) {
+  visibility: hidden;
+}
+
 #updateButton,
 #updateDeck > hbox > label {
   margin-inline-start: 0;
