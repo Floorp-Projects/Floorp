@@ -39,9 +39,6 @@ class PathUtils final {
   static void CreateUniquePath(const GlobalObject&, const nsAString& aPath,
                                nsString& aResult, ErrorResult& aErr);
 
-  static void ToExtendedWindowsPath(const GlobalObject&, const nsAString& aPath,
-                                    nsString& aResult, ErrorResult& aErr);
-
   static void Normalize(const GlobalObject&, const nsAString& aPath,
                         nsString& aResult, ErrorResult& aErr);
 
