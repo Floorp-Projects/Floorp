@@ -1188,6 +1188,82 @@ let BrowserUsageTelemetry = {
   },
 
   /**
+   * Check if this is the first run of this profile since installation,
+   * if so then send installation telemetry.
+   *
+   * @param {nsIFile} [dataPathOverride] Optional, full data file path, for tests.
+   * @return {Promise}
+   * @resolves When the event has been recorded, or if the data file was not found.
+   * @rejects JavaScript exception on any failure.
+   */
+  async reportInstallationTelemetry(dataPathOverride) {
+    if (AppConstants.platform != "win") {
+      // This is a windows-only feature.
+      return;
+    }
+
+    let dataPath = dataPathOverride;
+    if (!dataPath) {
+      dataPath = Services.dirsvc.get("GreD", Ci.nsIFile);
+      dataPath.append("installation_telemetry.json");
+    }
+
+    let dataBytes;
+    try {
+      dataBytes = await IOUtils.read(dataPath.path);
+    } catch (ex) {
+      if (ex.name == "NotFoundError") {
+        // Many systems will not have the data file, return silently if not found as
+        // there is nothing to record.
+        return;
+      }
+      throw ex;
+    }
+    const dataString = new TextDecoder("utf-16").decode(dataBytes);
+    const data = JSON.parse(dataString);
+
+    const TIMESTAMP_PREF = "app.installation.timestamp";
+    const lastInstallTime = Services.prefs.getStringPref(TIMESTAMP_PREF, null);
+
+    if (lastInstallTime && data.install_timestamp == lastInstallTime) {
+      // We've already seen this install
+      return;
+    }
+
+    // First time seeing this install, record the timestamp.
+    Services.prefs.setStringPref(TIMESTAMP_PREF, data.install_timestamp);
+
+    // Installation timestamp is not intended to be sent with telemetry,
+    // remove it to emphasize this point.
+    delete data.install_timestamp;
+
+    // Build the extra event data
+    let extra = {
+      version: data.version,
+      build_id: data.build_id,
+      admin_user: data.admin_user.toString(),
+      install_existed: data.install_existed.toString(),
+      profdir_existed: data.profdir_existed.toString(),
+    };
+
+    if (data.installer_type == "full") {
+      extra.silent = data.silent.toString();
+      extra.from_msi = data.from_msi.toString();
+      extra.default_path = data.default_path.toString();
+    }
+
+    // Record the event
+    Services.telemetry.setEventRecordingEnabled("installation", true);
+    Services.telemetry.recordEvent(
+      "installation",
+      "first_seen",
+      data.installer_type,
+      null,
+      extra
+    );
+  },
+
+  /**
    * Record telemetry about the ratio of number of site origins per number of
    * loaded tabs.
    *
