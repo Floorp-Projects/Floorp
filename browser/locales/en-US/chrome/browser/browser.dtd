@@ -121,8 +121,6 @@ this container is a toolbar. This avoids double-speaking. -->
 <!ENTITY appMenuRemoteTabs.hidesidebar.label "Hide Synced Tabs Sidebar">
 <!ENTITY appMenuRemoteTabs.connectdevice.label "Connect Another Device">
 
-<!ENTITY appMenuRecentHighlights.label "Recent Highlights">
-
 <!ENTITY customizeMenu.addToToolbar.label "Add to Toolbar">
 <!ENTITY customizeMenu.addToToolbar.accesskey "A">
 <!-- LOCALIZATION NOTE (customizeMenu.addToOverflowMenu.label,
@@ -151,10 +149,6 @@ this container is a toolbar. This avoids double-speaking. -->
 <!ENTITY searchIcon.tooltip           "Search">
 
 <!ENTITY openLinkCmdInTab.accesskey   "T">
-
-<!-- LOCALIZATION NOTE(pocket-button.tooltiptext, saveToPocketCmd.label, saveLinkToPocketCmd.label, pocketMenuitem.label):
-  "Pocket" is a brand name. -->
-<!ENTITY pocketMenuitem.label         "View Pocket List">
 
 <!ENTITY fullZoom.label                 "Zoom">
 

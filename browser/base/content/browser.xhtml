@@ -1586,37 +1586,15 @@
                        data-l10n-id="library-bookmarks-menu"
                        closemenu="none"
                        oncommand="BookmarkingUI.showSubView(this);"/>
-        <toolbarbutton id="appMenu-library-pocket-button"
-                       class="subviewbutton subviewbutton-iconic"
-                       label="&pocketMenuitem.label;"
-                       oncommand="Pocket.openList(event)"/>
         <toolbarbutton id="appMenu-library-history-button"
                        class="subviewbutton subviewbutton-iconic subviewbutton-nav"
                        label="&historyMenu.label;"
                        closemenu="none"
                        oncommand="PanelUI.showSubView('PanelUI-history', this)"/>
         <toolbarbutton id="appMenu-library-downloads-button"
-                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       class="subviewbutton subviewbutton-iconic"
                        label="&libraryDownloads.label;"
-                       closemenu="none"
-                       oncommand="DownloadsSubview.show(this);"/>
-        <toolbarbutton id="appMenu-library-remotetabs-button"
-                       class="subviewbutton subviewbutton-iconic subviewbutton-nav sync-ui-item"
-                       label="&appMenuRemoteTabs.label;"
-                       closemenu="none"
-                       oncommand="PanelUI.showSubView('PanelUI-remotetabs', this)"/>
-        <toolbarseparator hidden="true"/>
-        <label value="&appMenuRecentHighlights.label;"
-               hidden="true"
-               class="subview-subheader"/>
-        <toolbaritem id="appMenu-library-recentHighlights"
-                     hidden="true"
-                     orient="vertical"
-                     smoothscroll="false"
-                     flatList="true"
-                     tooltip="bhTooltip">
-          <!-- Recent Highlights will go here -->
-        </toolbaritem>
+                       oncommand="DownloadsPanel.showDownloadsHistory();"/>
       </vbox>
     </panelview>
 

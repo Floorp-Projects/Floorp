@@ -200,7 +200,6 @@ XPCOMUtils.defineLazyScriptGetter(
   [
     "DownloadsPanel",
     "DownloadsOverlayLoader",
-    "DownloadsSubview",
     "DownloadsView",
     "DownloadsViewUI",
     "DownloadsViewController",

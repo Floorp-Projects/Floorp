@@ -105,8 +105,7 @@
 }
 
 #PanelUI-fxa-menu-remotetabs-button,
-#appMenuRecentlyClosedTabs,
-#appMenu-library-remotetabs-button {
+#appMenuRecentlyClosedTabs {
   list-style-image: url("chrome://browser/skin/tab.svg");
 }
 

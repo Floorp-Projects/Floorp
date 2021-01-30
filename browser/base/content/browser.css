@@ -868,8 +868,7 @@ menupopup[emptyplacesresult="true"] > .hide-if-empty-places-result {
 
 /* Pocket */
 :root[pocketdisabled=true] #context-pocket,
-:root[pocketdisabled=true] #context-savelinktopocket,
-:root[pocketdisabled=true] #appMenu-library-pocket-button {
+:root[pocketdisabled=true] #context-savelinktopocket {
   display: none;
 }
 

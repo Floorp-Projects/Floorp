@@ -22,16 +22,6 @@ var Pocket = {
     return "https://" + Pocket.site + "/firefox_learnmore?src=ff_library";
   },
 
-  openList(event) {
-    let win = event.view;
-    let where = win.whereToOpenLink(event);
-    // Never override the current tab unless it's blank:
-    if (where == "current" && !win.gBrowser.selectedTab.isEmpty) {
-      where = "tab";
-    }
-    win.openTrustedLinkIn(this.listURL, where);
-  },
-
   /**
    * Functions related to the Pocket panel UI.
    */
