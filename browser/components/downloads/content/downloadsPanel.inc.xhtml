@@ -184,29 +184,6 @@
                 flex="1"/>
       </hbox>
     </panelview>
-
-    <panelview id="PanelUI-downloads" class="PanelUI-subView">
-      <vbox class="panel-subview-body">
-        <toolbarbutton id="appMenu-library-downloads-show-button"
-                       data-l10n-id="downloads-cmd-show-downloads"
-                       class="subviewbutton subviewbutton-iconic"
-                       closemenu="none"
-                       oncommand="DownloadsSubview.onShowDownloads(this);"/>
-        <toolbarseparator/>
-        <toolbaritem id="panelMenu_downloadsMenu"
-                     orient="vertical"
-                     smoothscroll="false"
-                     flatList="true"
-                     tooltip="bhTooltip">
-          <!-- downloads menu items will go here -->
-        </toolbaritem>
-      </vbox>
-      <toolbarbutton id="PanelUI-downloadsMore"
-                     data-l10n-id="downloads-history"
-                     class="panel-subview-footer subviewbutton"
-                     oncommand="BrowserDownloadsUI(); CustomizableUI.hidePanelForNode(this);"/>
-    </panelview>
-
   </panelmultiview>
 
 </panel>
