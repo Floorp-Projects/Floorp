@@ -58,6 +58,7 @@ ChromeUtils.defineModuleGetter(
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm"
 );
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
   this,
   "PlacesUtils",
@@ -263,7 +264,7 @@ var DownloadIntegration = {
 
     this._store = new DownloadStore(
       list,
-      PathUtils.join(await PathUtils.getProfileDir(), "downloads.json")
+      OS.Path.join(OS.Constants.Path.profileDir, "downloads.json")
     );
     this._store.onsaveitem = this.shouldPersistDownload.bind(this);
 
@@ -370,9 +371,7 @@ var DownloadIntegration = {
             Ci.nsIFile
           );
           directoryPath = directory.path;
-          await IOUtils.makeDirectory(directoryPath, {
-            createAncestors: false,
-          });
+          await OS.File.makeDir(directoryPath, { ignoreExisting: true });
         } catch (ex) {
           // Either the preference isn't set or the directory cannot be created.
           directoryPath = await this.getSystemDownloadsDirectory();
@@ -498,7 +497,7 @@ var DownloadIntegration = {
           referrerInfo: aDownload.source.referrerInfo,
           fileSize: aDownload.currentBytes,
           sha256Hash: hash,
-          suggestedFileName: PathUtils.filename(aDownload.target.path),
+          suggestedFileName: OS.Path.basename(aDownload.target.path),
           signatureInfo: sigInfo,
           redirects: channelRedirects,
         },
@@ -605,30 +604,40 @@ var DownloadIntegration = {
         // whatever reason.
         zone = Ci.mozIDownloadPlatform.ZONE_INTERNET;
       }
-      // Don't write zone IDs for Local, Intranet, or Trusted sites
-      // to match Windows behavior.
-      if (zone >= Ci.mozIDownloadPlatform.ZONE_INTERNET) {
-        let path = aDownload.target.path + ":Zone.Identifier";
-        try {
-          let zoneId = "[ZoneTransfer]\r\nZoneId=" + zone + "\r\n";
-          let { url, isPrivate, referrerInfo } = aDownload.source;
-          if (!isPrivate) {
-            let referrer = referrerInfo
-              ? referrerInfo.computedReferrerSpec
-              : "";
-            zoneId +=
-              this._zoneIdKey("ReferrerUrl", referrer) +
-              this._zoneIdKey("HostUrl", url, "about:internet");
-          }
-          await IOUtils.writeUTF8(
-            PathUtils.toExtendedWindowsPath(path),
-            zoneId
+      try {
+        // Don't write zone IDs for Local, Intranet, or Trusted sites
+        // to match Windows behavior.
+        if (zone >= Ci.mozIDownloadPlatform.ZONE_INTERNET) {
+          let streamPath = aDownload.target.path + ":Zone.Identifier";
+          let stream = await OS.File.open(
+            streamPath,
+            { create: true },
+            { winAllowLengthBeyondMaxPathWithCaveats: true }
           );
-        } catch (ex) {
-          // If writing to the file fails, we ignore the error and continue.
-          if (!(ex instanceof DOMException)) {
-            Cu.reportError(ex);
+          try {
+            let zoneId = "[ZoneTransfer]\r\nZoneId=" + zone + "\r\n";
+            let { url, isPrivate, referrerInfo } = aDownload.source;
+            if (!isPrivate) {
+              let referrer = referrerInfo
+                ? referrerInfo.computedReferrerSpec
+                : "";
+              zoneId +=
+                this._zoneIdKey("ReferrerUrl", referrer) +
+                this._zoneIdKey("HostUrl", url, "about:internet");
+            }
+            await stream.write(new TextEncoder().encode(zoneId));
+          } finally {
+            await stream.close();
           }
+        }
+      } catch (ex) {
+        // If writing to the stream fails, we ignore the error and continue.
+        // The Windows API error 123 (ERROR_INVALID_NAME) is expected to
+        // occur when working on a file system that does not support
+        // Alternate Data Streams, like FAT32, thus we don't report this
+        // specific error.
+        if (!(ex instanceof OS.File.Error) || ex.winLastError != 123) {
+          Cu.reportError(ex);
         }
       }
     }
@@ -651,19 +660,26 @@ var DownloadIntegration = {
           ));
       // Permanently downloaded files are made accessible by other users on
       // this system, while temporary downloads are marked as read-only.
-      let unixMode;
+      let options = {};
       if (isTemporaryDownload) {
-        unixMode = 0o400;
+        options.unixMode = 0o400;
+        options.winAttributes = { readOnly: true };
       } else {
-        unixMode = 0o666;
+        options.unixMode = 0o666;
       }
       // On Unix, the umask of the process is respected.
-      await IOUtils.setPermissions(aDownload.target.path, unixMode);
+      await OS.File.setPermissions(aDownload.target.path, options);
     } catch (ex) {
       // We should report errors with making the permissions less restrictive
       // or marking the file as read-only on Unix and Mac, but this should not
       // prevent the download from completing.
-      if (!(ex instanceof DOMException)) {
+      // The setPermissions API error EPERM is expected to occur when working
+      // on a file system that does not support file permissions, like FAT32,
+      // thus we don't report this error.
+      if (
+        !(ex instanceof OS.File.Error) ||
+        ex.unixErrno != OS.Constants.libc.EPERM
+      ) {
         Cu.reportError(ex);
       }
     }
@@ -942,15 +958,15 @@ var DownloadIntegration = {
     // We read the name of the directory from the list of translated strings
     // that is kept by the UI helper module, even if this string is not strictly
     // displayed in the user interface.
-    let directoryPath = PathUtils.join(
+    let directoryPath = OS.Path.join(
       this._getDirectory(aName),
       DownloadUIHelper.strings.downloadsFolder
     );
 
     // Create the Downloads folder and ignore if it already exists.
-    return IOUtils.makeDirectory(directoryPath, {
-      createAncestors: false,
-    }).then(() => directoryPath);
+    return OS.File.makeDir(directoryPath, { ignoreExisting: true }).then(
+      () => directoryPath
+    );
   },
 
   /**

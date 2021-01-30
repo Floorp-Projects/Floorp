@@ -101,32 +101,6 @@
 
       await cleanup(newDir);
     });
-
-    add_task(async function test_make_directory_root() {
-      if (Services.appinfo.OS === "WINNT") {
-        // We don't actually know the root drive, but we can find the root drive
-        // of the profile directory.
-        const profileDir = await PathUtils.getProfileDir();
-        let current = profileDir;
-        let parent = PathUtils.parent(current);
-        while (parent !== null) {
-          current = parent;
-          parent = PathUtils.parent(current);
-        }
-        // `current` will now be a valid root directory.
-        ok(await IOUtils.exists(current), "Root directory should exist");
-
-        const DRIVE_RE = /^[A-Z]:$/;
-        ok(
-          current.startsWith("\\\\") || DRIVE_RE.test(current),
-          `Root directory (${current}) should be a UNC path or drive`,
-        );
-        await IOUtils.makeDirectory(current, {createAncestors: false});
-      } else {
-        ok(await IOUtils.exists("/"), "Root directory should exist");
-        await IOUtils.makeDirectory("/", {createAncestors: false});
-      }
-    });
   </script>
 </head>
 
