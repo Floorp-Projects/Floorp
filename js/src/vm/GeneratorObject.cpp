@@ -155,7 +155,6 @@ bool AbstractGeneratorObject::suspend(JSContext* cx, HandleObject obj,
   }
 
   genObj->setResumeIndex(pc);
-  genObj->setLastOpcode(JSOp(*pc));
   genObj->setEnvironmentChain(*frame.environmentChain());
   return true;
 }
@@ -294,10 +293,7 @@ bool AbstractGeneratorObject::resume(JSContext* cx,
     storage->setDenseInitializedLength(0);
   }
 
-  JSScript* script = JSFunction::getOrCreateScript(cx, callee);
-  if (!script) {
-    return false;
-  }
+  JSScript* script = callee->nonLazyScript();
   uint32_t offset = script->resumeOffsets()[genObj->resumeIndex()];
   activation.regs().pc = script->offsetToPC(offset);
 
@@ -481,7 +477,24 @@ bool AbstractGeneratorObject::isAfterYieldOrAwait(JSOp op) {
     return false;
   }
 
-  return lastOpcode() == op;
+  JSScript* script = callee().nonLazyScript();
+  jsbytecode* code = script->code();
+  uint32_t nextOffset = script->resumeOffsets()[resumeIndex()];
+  if (JSOp(code[nextOffset]) != JSOp::AfterYield) {
+    return false;
+  }
+
+  static_assert(JSOpLength_Yield == JSOpLength_InitialYield,
+                "JSOp::Yield and JSOp::InitialYield must have the same length");
+  static_assert(JSOpLength_Yield == JSOpLength_Await,
+                "JSOp::Yield and JSOp::Await must have the same length");
+
+  uint32_t offset = nextOffset - JSOpLength_Yield;
+  JSOp prevOp = JSOp(code[offset]);
+  MOZ_ASSERT(prevOp == JSOp::InitialYield || prevOp == JSOp::Yield ||
+             prevOp == JSOp::Await);
+
+  return prevOp == op;
 }
 
 template <>
