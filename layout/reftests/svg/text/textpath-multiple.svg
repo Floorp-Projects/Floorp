@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+  <defs>
+    <path id="path1" d="M100,100 H300"/>
+    <path id="path2" d="M200,100 H300"/>
+  </defs>
+  <rect width="100%" height="100%" fill="lime"/>
+  <g font-size="50px">
+    <text fill="red"><textPath href="#path1">Text</textPath> <textPath href="#path2">Text</textPath></text>
+    <text fill="lime" stroke="lime" stroke-width="4px"><textPath href="#path1">Text</textPath><textPath href="#path2">Text</textPath></text>
+  </g>
+</svg>
+
+

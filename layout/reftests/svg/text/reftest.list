@@ -119,6 +119,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-invalid-parent.
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-multiline.svg textpath-multiline-ref.svg # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-multiline-2.svg textpath-multiline-2-ref.svg # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-after.svg textpath-after-ref.svg # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-multiple.svg ../pass.svg # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-after-anchor-end.svg textpath-after-anchor-end-ref.svg # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-reset-position.svg textpath-reset-position-ref.svg # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-inherit-position.svg textpath-inherit-position-ref.svg # Bug 1392106
