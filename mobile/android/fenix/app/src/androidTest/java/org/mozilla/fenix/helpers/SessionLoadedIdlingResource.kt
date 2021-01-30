@@ -5,6 +5,7 @@ package org.mozilla.fenix.helpers
 
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.IdlingResource
+import mozilla.components.browser.state.selector.selectedTab
 import org.mozilla.fenix.FenixApplication
 
 /**
@@ -21,13 +22,12 @@ class SessionLoadedIdlingResource : IdlingResource {
 
     override fun isIdleNow(): Boolean {
         val context = ApplicationProvider.getApplicationContext<FenixApplication>()
-        val sessionManager = context.components.core.sessionManager
-        val session = sessionManager.selectedSession
+        val selectedTab = context.components.core.store.state.selectedTab
 
-        return if (session?.loading == true) {
+        return if (selectedTab?.content?.loading == true) {
             false
         } else {
-            if (session?.progress == 100) {
+            if (selectedTab?.content?.progress == 100) {
                 invokeCallback()
                 true
             } else {
