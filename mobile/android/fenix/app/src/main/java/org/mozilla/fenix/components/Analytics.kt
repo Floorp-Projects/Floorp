@@ -133,6 +133,7 @@ class Analytics(
 
                 // Nimbus should look after downloading experiment definitions from remote settings
                 // on another thread, and making sure we don't hit the server each time we start.
+                @Suppress("Deprecation")
                 updateExperiments()
             }
         } else {
