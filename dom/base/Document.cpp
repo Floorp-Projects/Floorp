@@ -16674,85 +16674,11 @@ void Document::DoCacheAllKnownLangPrefs() {
   mMayNeedFontPrefsUpdate = false;
 }
 
-nsAtom* Document::CJKFromTLD() {
-  // Using mOriginalURI instead of mBaseDomain, because the former
-  // does not change over time.
-  if (!mOriginalURI) {
-    return nsGkAtoms::Unicode;
-  }
-  nsCOMPtr<nsIURI> innermost = NS_GetInnermostURI(mOriginalURI);
-  nsAutoCString tld;
-  nsAutoCString host;
-  innermost->GetAsciiHost(host);
-  if (host.IsEmpty()) {
-    return nsGkAtoms::Unicode;
-  }
-  // First let's see if the host is DNS-absolute and ends with a
-  // dot and get rid of that one.
-  if (host.Last() == '.') {
-    host.SetLength(host.Length() - 1);
-  }
-  int32_t index = host.RFindChar('.');
-  if (index == kNotFound) {
-    return nsGkAtoms::Unicode;
-  }
-  // We tolerate an IPv4 component as generic "TLD", so don't
-  // bother checking.
-  ToLowerCase(Substring(host, index + 1, host.Length() - (index + 1)), tld);
-
-  if (tld.Length() == 2) {
-    if (tld.EqualsLiteral("cn") || tld.EqualsLiteral("sg")) {
-      return nsGkAtoms::Chinese;
-    }
-
-    if (tld.EqualsLiteral("tw")) {
-      return nsGkAtoms::Taiwanese;
-    }
-
-    if (tld.EqualsLiteral("hk") || tld.EqualsLiteral("mo")) {
-      return nsGkAtoms::HongKongChinese;
-    }
-
-    if (tld.EqualsLiteral("jp")) {
-      return nsGkAtoms::Japanese;
-    }
-
-    if (tld.EqualsLiteral("kr") || tld.EqualsLiteral("kp")) {
-      return nsGkAtoms::ko;
-    }
-  } else if (StringBeginsWith(tld, "xn--"_ns)) {
-    if (tld.EqualsLiteral("xn--clchc0ea0b2g2a9gcd") ||
-        tld.EqualsLiteral("xn--fiqs8S") || tld.EqualsLiteral("xn--fiqz9S") ||
-        tld.EqualsLiteral("xn--yfro4i67o") ||
-        tld.EqualsLiteral("xn--clchc0ea0b2g2a9gcd") ||
-        tld.EqualsLiteral("xn--yfro4i67o")) {
-      return nsGkAtoms::Chinese;
-    }
-
-    if (tld.EqualsLiteral("xn--kprw13d") || tld.EqualsLiteral("xn--kpry57d")) {
-      return nsGkAtoms::Taiwanese;
-    }
-
-    if (tld.EqualsLiteral("xn--j6w193g") || tld.EqualsLiteral("xn--mix891f")) {
-      return nsGkAtoms::HongKongChinese;
-    }
-
-    if (tld.EqualsLiteral("xn--3e0b707e")) {
-      return nsGkAtoms::ko;
-    }
-  }
-
-  return nsGkAtoms::Unicode;
-}
-
 void Document::RecomputeLanguageFromCharset() {
   nsLanguageAtomService* service = nsLanguageAtomService::GetService();
   RefPtr<nsAtom> language = service->LookupCharSet(mCharacterSet);
   if (language == nsGkAtoms::Unicode) {
-    language = CJKFromTLD();
-    if (language == nsGkAtoms::Unicode) {
-      language = service->GetLocaleLanguage();
-    }
+    language = service->GetLocaleLanguage();
   }
 
   if (language == mLanguageFromCharset) {
