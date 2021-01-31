@@ -107,7 +107,6 @@ use std::{
     f32,
     mem,
     num::NonZeroUsize,
-    os::raw::c_void,
     path::PathBuf,
     rc::Rc,
     sync::Arc,
@@ -5289,8 +5288,8 @@ impl Renderer {
     }
 
     fn size_of<T>(&self, ptr: *const T) -> usize {
-        let op = self.size_of_ops.as_ref().unwrap().size_of_op;
-        unsafe { op(ptr as *const c_void) }
+        let ops = self.size_of_ops.as_ref().unwrap();
+        unsafe { ops.malloc_size_of(ptr) }
     }
 
     /// Collects a memory report.
