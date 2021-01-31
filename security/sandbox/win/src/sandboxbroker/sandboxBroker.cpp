@@ -653,6 +653,10 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
     }
   }
 
+  if (StaticPrefs::security_sandbox_content_shadow_stacks_strict()) {
+    mitigations |= sandbox::MITIGATION_CET_STRICT_MODE;
+  }
+
   result = mPolicy->SetProcessMitigations(mitigations);
   MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
                      "Invalid flags for SetProcessMitigations.");
@@ -836,6 +840,10 @@ void SandboxBroker::SetSecurityLevelForGPUProcess(
       sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_DEP_NO_ATL_THUNK |
       sandbox::MITIGATION_DEP;
 
+  if (StaticPrefs::security_sandbox_gpu_shadow_stacks_strict()) {
+    mitigations |= sandbox::MITIGATION_CET_STRICT_MODE;
+  }
+
   result = mPolicy->SetProcessMitigations(mitigations);
   MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
                      "Invalid flags for SetProcessMitigations.");
@@ -982,6 +990,10 @@ bool SandboxBroker::SetSecurityLevelForRDDProcess() {
     mitigations |= sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
   }
 
+  if (StaticPrefs::security_sandbox_rdd_shadow_stacks_strict()) {
+    mitigations |= sandbox::MITIGATION_CET_STRICT_MODE;
+  }
+
   result = mPolicy->SetProcessMitigations(mitigations);
   SANDBOX_ENSURE_SUCCESS(result, "Invalid flags for SetProcessMitigations.");
 
@@ -1084,6 +1096,10 @@ bool SandboxBroker::SetSecurityLevelForSocketProcess() {
       sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
       sandbox::MITIGATION_DEP_NO_ATL_THUNK | sandbox::MITIGATION_DEP |
       sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32;
+
+  if (StaticPrefs::security_sandbox_socket_shadow_stacks_strict()) {
+    mitigations |= sandbox::MITIGATION_CET_STRICT_MODE;
+  }
 
   result = mPolicy->SetProcessMitigations(mitigations);
   SANDBOX_ENSURE_SUCCESS(result, "Invalid flags for SetProcessMitigations.");
@@ -1339,6 +1355,10 @@ bool SandboxBroker::SetSecurityLevelForGMPlugin(SandboxLevel aLevel,
       sandbox::MITIGATION_BOTTOM_UP_ASLR | sandbox::MITIGATION_HEAP_TERMINATE |
       sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
       sandbox::MITIGATION_DEP_NO_ATL_THUNK | sandbox::MITIGATION_DEP;
+
+  if (StaticPrefs::security_sandbox_gmp_shadow_stacks_strict()) {
+    mitigations |= sandbox::MITIGATION_CET_STRICT_MODE;
+  }
 
   result = mPolicy->SetProcessMitigations(mitigations);
   SANDBOX_ENSURE_SUCCESS(result, "Invalid flags for SetProcessMitigations.");
