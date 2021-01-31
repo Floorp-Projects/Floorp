@@ -677,7 +677,7 @@ bool IsDebugBuild() {
 }
 
 #define JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Type, type)                    \
-  void Get##Type##ArrayLengthAndData(JSObject* obj, uint32_t* length,     \
+  void Get##Type##ArrayLengthAndData(JSObject* obj, size_t* length,       \
                                      bool* isSharedMemory, type** data) { \
     js::Get##Type##ArrayLengthAndData(obj, length, isSharedMemory, data); \
   }

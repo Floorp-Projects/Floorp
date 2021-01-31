@@ -27,17 +27,17 @@ JS_PUBLIC_API JSObject* JS::UnwrapArrayBufferMaybeShared(JSObject* obj) {
 }
 
 JS_PUBLIC_API void JS::GetArrayBufferMaybeSharedLengthAndData(
-    JSObject* obj, uint32_t* length, bool* isSharedMemory, uint8_t** data) {
+    JSObject* obj, size_t* length, bool* isSharedMemory, uint8_t** data) {
   MOZ_ASSERT(obj->is<ArrayBufferObjectMaybeShared>());
 
   if (obj->is<SharedArrayBufferObject>()) {
     auto* buffer = &obj->as<SharedArrayBufferObject>();
-    *length = buffer->byteLength().deprecatedGetUint32();
+    *length = buffer->byteLength().get();
     *data = buffer->dataPointerShared().unwrap();
     *isSharedMemory = true;
   } else {
     auto* buffer = &obj->as<ArrayBufferObject>();
-    *length = buffer->byteLength().deprecatedGetUint32();
+    *length = buffer->byteLength().get();
     *data = buffer->dataPointer();
     *isSharedMemory = false;
   }

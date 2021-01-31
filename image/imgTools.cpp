@@ -306,11 +306,17 @@ imgTools::DecodeImageFromArrayBuffer(JS::Handle<JS::Value> aArrayBuffer,
   }
 
   uint8_t* bufferData = nullptr;
-  uint32_t bufferLength = 0;
+  size_t bufferLength = 0;
   bool isSharedMemory = false;
 
   JS::GetArrayBufferLengthAndData(obj, &bufferLength, &isSharedMemory,
                                   &bufferData);
+
+  // Throw for large ArrayBuffers to prevent truncation.
+  if (bufferLength > INT32_MAX) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
   return DecodeImageFromBuffer((char*)bufferData, bufferLength, aMimeType,
                                aContainer);
 }

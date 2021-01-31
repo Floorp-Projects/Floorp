@@ -114,7 +114,7 @@ static JSObject* ExpectArrayObject(JSContext* const aContext,
 static void CheckArrayBuffer(const nsCString& aExpected,
                              const JS::Value& aActual) {
   auto obj = ExpectArrayBufferObject(aActual);
-  uint32_t length;
+  size_t length;
   bool isSharedMemory;
   uint8_t* data;
   JS::GetArrayBufferLengthAndData(obj, &length, &isSharedMemory, &data);
