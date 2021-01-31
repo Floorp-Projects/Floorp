@@ -56,7 +56,7 @@ add_task(async () => {
 
   // Wait for APZ state stable so that mouse event handling APZ works properly
   // in out-of-process iframes.
-  await new Promise(resolve => waitForApzFlushedRepaints(resolve));
+  await promiseApzFlushedRepaints();
 
   // NOTE: synthesizeMouseAtCenter doesn't work for OOP iframes (bug 1528935),
   // so we use synthesizeNativeMouseClick instead.

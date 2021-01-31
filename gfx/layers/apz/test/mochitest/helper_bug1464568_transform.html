@@ -48,7 +48,7 @@ async function test_transform() {
 
   utils.setAsyncScrollOffset(document.documentElement, 0, 300);
 
-  await new Promise(resolve => waitForApzFlushedRepaints(resolve));
+  await promiseApzFlushedRepaints();
 
   transform = parseTransform(utils.getOMTCTransform(anim));
   isTransformClose(transform, [1, 0, 0, 1, 200 * dpr, -300 * dpr],
