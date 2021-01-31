@@ -62,7 +62,7 @@ async function test() {
   // visible; that's where the checkerboarding happens.
   document.scrollingElement.scrollTop = document.scrollingElement.scrollTopMax;
 
-  // After the first call to waitForApzFlushedRepaints, the scroller will have
+  // After the first call to promiseApzFlushedRepaints, the scroller will have
   // zero displayport margins (because it's inside an SVG filter, and so takes
   // the "scroll info layer" codepath in APZ's CalculatePendingDisplayPort
   // function. The main-thread then computes a displayport using those zero
