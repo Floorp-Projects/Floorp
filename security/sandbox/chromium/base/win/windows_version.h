@@ -50,6 +50,7 @@ enum class Version {
   WIN10_RS4 = 12,   // Redstone 4: Version 1803, Build 17134.
   WIN10_RS5 = 13,   // Redstone 5: Version 1809, Build 17763.
   WIN10_19H1 = 14,  // 19H1: Version 1903, Build 18362.
+  WIN10_20H1 = 15,  // 20H1: Version 2004, Build 19041.
   // On edit, update tools\metrics\histograms\enums.xml "WindowsVersion" and
   // "GpuBlacklistFeatureTestResultsWindows2".
   WIN_LAST,  // Indicates error condition.
