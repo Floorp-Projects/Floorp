@@ -302,6 +302,17 @@ DeriveAppContainerSidFromAppContainerName(
 #define PROCESS_CREATION_MITIGATION_POLICY2_RESTRICT_INDIRECT_BRANCH_PREDICTION_RESERVED    (0x00000003ui64 << 16)
 
 //
+// Define the user-mode shadow stack mitigation policy options.
+//
+
+#define PROCESS_CREATION_MITIGATION_POLICY2_CET_USER_SHADOW_STACKS_MASK                    (0x00000003ui64 << 28)
+#define PROCESS_CREATION_MITIGATION_POLICY2_CET_USER_SHADOW_STACKS_DEFER                   (0x00000000ui64 << 28)
+#define PROCESS_CREATION_MITIGATION_POLICY2_CET_USER_SHADOW_STACKS_ALWAYS_ON               (0x00000001ui64 << 28)
+#define PROCESS_CREATION_MITIGATION_POLICY2_CET_USER_SHADOW_STACKS_ALWAYS_OFF              (0x00000002ui64 << 28)
+#define PROCESS_CREATION_MITIGATION_POLICY2_CET_USER_SHADOW_STACKS_RESERVED                (0x00000003ui64 << 28)
+#define PROCESS_CREATION_MITIGATION_POLICY2_CET_USER_SHADOW_STACKS_STRICT_MODE             (0x00000003ui64 << 28)
+
+//
 // Define Attribute to disable creation of child process
 //
 
@@ -342,6 +353,15 @@ IsWow64Process2(
     _Out_ USHORT* pProcessMachine,
     _Out_opt_ USHORT* pNativeMachine
     );
+
+WINBASEAPI
+BOOL
+WINAPI
+IsUserCetAvailableInEnvironment(
+    _In_ DWORD UserCetEnvironment
+    );
+
+#define USER_CET_ENVIRONMENT_WIN32_PROCESS        0x00000000
 
 #endif // (_WIN32_WINNT < 0x0A00)
 

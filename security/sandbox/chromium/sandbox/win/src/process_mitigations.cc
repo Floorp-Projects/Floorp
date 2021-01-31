@@ -85,6 +85,27 @@ bool IsRunning32bitEmulatedOnArm64() {
   return false;
 }
 
+// Returns true if user-mode Hardware-enforced Stack Protection is available for
+// the Win32 environment.
+bool IsUserCetWin32Available() {
+  static bool cetAvailable = []() -> bool {
+    using IsUserCetAvailableInEnvironmentFunction =
+      decltype(&IsUserCetAvailableInEnvironment);
+
+    IsUserCetAvailableInEnvironmentFunction is_user_cet_available =
+        reinterpret_cast<IsUserCetAvailableInEnvironmentFunction>(
+            ::GetProcAddress(::GetModuleHandleW(L"kernel32.dll"),
+                             "IsUserCetAvailableInEnvironment"));
+    if (!is_user_cet_available) {
+      return false;
+    }
+
+    return is_user_cet_available(USER_CET_ENVIRONMENT_WIN32_PROCESS);
+  }();
+
+  return cetAvailable;
+}
+
 }  // namespace
 
 namespace sandbox {
@@ -489,6 +510,15 @@ void ConvertProcessMitigationsToPolicy(MitigationFlags flags,
     if (flags & MITIGATION_RESTRICT_INDIRECT_BRANCH_PREDICTION) {
       *policy_value_2 |=
           PROCESS_CREATION_MITIGATION_POLICY2_RESTRICT_INDIRECT_BRANCH_PREDICTION_ALWAYS_ON;
+    }
+  }
+
+  // Mitigations >= Win10 20H1
+  //----------------------------------------------------------------------------
+  if (version >= base::win::Version::WIN10_20H1) {
+    if (flags & MITIGATION_CET_STRICT_MODE && IsUserCetWin32Available()) {
+      *policy_value_2 |=
+          PROCESS_CREATION_MITIGATION_POLICY2_CET_USER_SHADOW_STACKS_STRICT_MODE;
     }
   }
 
