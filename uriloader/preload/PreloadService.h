@@ -22,7 +22,6 @@ namespace dom {
 class HTMLLinkElement;
 class Document;
 enum class ReferrerPolicy : uint8_t;
-enum class SheetPreloadStatus : uint8_t;
 
 }  // namespace dom
 
@@ -78,11 +77,6 @@ class PreloadService {
                      const nsAString& aCharset, const nsAString& aCrossOrigin,
                      const nsAString& aReferrerPolicy,
                      const nsAString& aIntegrity, bool aScriptFromHead);
-
-  dom::SheetPreloadStatus PreloadStyle(nsIURI* aURI, const nsAString& aCharset,
-                                       const nsAString& aCrossOrigin,
-                                       const nsAString& aReferrerPolicy,
-                                       const nsAString& aIntegrity);
 
   void PreloadImage(nsIURI* aURI, const nsAString& aCrossOrigin,
                     const nsAString& aImageReferrerPolicy, bool aIsImgSet);
