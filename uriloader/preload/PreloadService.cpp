@@ -180,7 +180,10 @@ PreloadService::PreloadOrCoalesceResult PreloadService::PreloadOrCoalesce(
     PreloadScript(uri, aType, aCharset, aCORS, aReferrerPolicy, aIntegrity,
                   true /* isInHead - TODO */);
   } else if (aAs.LowerCaseEqualsASCII("style")) {
-    switch (PreloadStyle(uri, aCharset, aCORS, aReferrerPolicy, aIntegrity)) {
+    auto status = mDocument->PreloadStyle(
+        aURI, Encoding::ForLabel(aCharset), aCORS,
+        PreloadReferrerPolicy(aReferrerPolicy), aIntegrity, true);
+    switch (status) {
       case dom::SheetPreloadStatus::AlreadyComplete:
         return {nullptr, /* already_complete = */ true};
       case dom::SheetPreloadStatus::Errored:
@@ -207,14 +210,6 @@ void PreloadService::PreloadScript(nsIURI* aURI, const nsAString& aType,
   mDocument->ScriptLoader()->PreloadURI(
       aURI, aCharset, aType, aCrossOrigin, aIntegrity, aScriptFromHead, false,
       false, false, true, PreloadReferrerPolicy(aReferrerPolicy));
-}
-
-dom::SheetPreloadStatus PreloadService::PreloadStyle(
-    nsIURI* aURI, const nsAString& aCharset, const nsAString& aCrossOrigin,
-    const nsAString& aReferrerPolicy, const nsAString& aIntegrity) {
-  return mDocument->PreloadStyle(
-      aURI, Encoding::ForLabel(aCharset), aCrossOrigin,
-      PreloadReferrerPolicy(aReferrerPolicy), aIntegrity, true);
 }
 
 void PreloadService::PreloadImage(nsIURI* aURI, const nsAString& aCrossOrigin,
