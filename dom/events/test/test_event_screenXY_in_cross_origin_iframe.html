@@ -61,7 +61,7 @@ add_task(async () => {
 
   // Wait for APZ state stable so that mouse event handling APZ works properly
   // in out-of-process iframes.
-  await new Promise(resolve => waitForApzFlushedRepaints(resolve));
+  await promiseApzFlushedRepaints();
 
   const promiseForSameOrigin = new Promise(resolve => {
     window.addEventListener("message", event => {
