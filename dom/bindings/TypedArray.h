@@ -132,7 +132,11 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
   inline void ComputeState() const {
     MOZ_ASSERT(inited());
     MOZ_ASSERT(!mComputed);
-    GetLengthAndDataAndSharedness(mImplObj, &mLength, &mShared, &mData);
+    uint32_t length;
+    GetLengthAndDataAndSharedness(mImplObj, &length, &mShared, &mData);
+    MOZ_RELEASE_ASSERT(length <= INT32_MAX,
+                       "Bindings must have checked ArrayBuffer{View} length");
+    mLength = length;
     mComputed = true;
   }
 

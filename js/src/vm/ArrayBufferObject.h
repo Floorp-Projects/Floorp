@@ -184,6 +184,8 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   static bool supportLargeBuffers;
 
+  static constexpr size_t MaxByteLengthForSmallBuffer = INT32_MAX;
+
   // The length of an ArrayBuffer or SharedArrayBuffer can be at most
   // INT32_MAX. Allow a larger limit on 64-bit platforms if the experimental
   // large-buffers flag is used.
@@ -193,7 +195,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
       return size_t(8) * 1024 * 1024 * 1024;  // 8 GB.
     }
 #endif
-    return INT32_MAX;
+    return MaxByteLengthForSmallBuffer;
   }
 
   /** The largest number of bytes that can be stored inline. */
