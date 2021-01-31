@@ -10,19 +10,17 @@
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
-function startTest() {
+async function test() {
   if (SpecialPowers.getBoolPref("apz.force_disable_desktop_zooming_scrollbars") ||
       getPlatform() == "android") {
-    setTimeout(subtestDone,0);
     return;
   }
 
-  if (window.scrollY == 0) {
-    // the scrollframe is not yet marked as APZ-scrollable. Mark it so and
-    // start over.
+  while (window.scrollY == 0) {
+    // the scrollframe is not yet marked as APZ-scrollable. Mark it so before
+    // continuing.
     window.scrollTo(0, 1000);
-    waitForApzFlushedRepaints(startTest);
-    return;
+    await promiseApzFlushedRepaints();
   }
 
   window.synthesizeKey("KEY_ArrowDown");
@@ -47,9 +45,14 @@ function startTest() {
   // that the refresh driver tick after the scroll event does not do any
   // display list building. We again use a setTimeout from a rAF to run right
   // after the paint and check that there was no display list building.
-  window.requestAnimationFrame(() => { setTimeout(next, 0); });
+  await new Promise(resolve => {
+    window.requestAnimationFrame(() => {
+      setTimeout(checkNoDisplayListRebuild, 0, resolve);
+    });
+  });
 }
-function next() {
+
+function checkNoDisplayListRebuild(resolve) {
   var utils = window.opener.SpecialPowers.getDOMWindowUtils(window);
   var elem = document.documentElement;
   utils.checkAndClearDisplayListState(elem);
@@ -57,13 +60,15 @@ function next() {
     window.requestAnimationFrame(() => {
       setTimeout(function() {
         is(utils.checkAndClearDisplayListState(elem), false, "Document element didn't get display list");
-        setTimeout(subtestDone,0);
+        resolve();
       },0);
     });
   }, {once: true});
 }
 
-waitUntilApzStable().then(startTest);
+waitUntilApzStable()
+  .then(test)
+  .then(subtestDone, subtestFailed);
 
   </script>
 </head>
