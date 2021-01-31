@@ -58,3 +58,19 @@ JS_PUBLIC_API uint8_t* JS::GetArrayBufferMaybeSharedData(
 
   return nullptr;
 }
+
+JS_PUBLIC_API bool JS::IsLargeArrayBufferMaybeShared(JSObject* obj) {
+#ifdef JS_64BIT
+  obj = UnwrapArrayBufferMaybeShared(obj);
+  MOZ_ASSERT(obj);
+  size_t len = obj->is<ArrayBufferObject>()
+                   ? obj->as<ArrayBufferObject>().byteLength().get()
+                   : obj->as<SharedArrayBufferObject>().byteLength().get();
+  return len > ArrayBufferObject::MaxByteLengthForSmallBuffer;
+#else
+  // Large ArrayBuffers are not supported on 32-bit.
+  MOZ_ASSERT(ArrayBufferObject::maxBufferByteLength() ==
+             ArrayBufferObject::MaxByteLengthForSmallBuffer);
+  return false;
+#endif
+}
