@@ -81,3 +81,7 @@ add_task(async function test_obsolete_langpack_engine() {
     "Langpack"
   );
 });
+
+add_task(async function test_obsolete_app_engine() {
+  await checkLoadSettingProperties("data/search-obsolete-app.json", "App");
+});
