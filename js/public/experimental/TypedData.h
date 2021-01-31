@@ -208,15 +208,15 @@ const size_t TypedArrayLengthSlot = 1;
 
 }  // namespace detail
 
-#define JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Type, type)                      \
-  inline void Get##Type##ArrayLengthAndData(                                \
-      JSObject* obj, uint32_t* length, bool* isSharedMemory, type** data) { \
-    MOZ_ASSERT(JS::GetClass(obj) == detail::Type##ArrayClassPtr);           \
-    const JS::Value& lenSlot =                                              \
-        JS::GetReservedSlot(obj, detail::TypedArrayLengthSlot);             \
-    *length = mozilla::AssertedCast<uint32_t>(size_t(lenSlot.toPrivate())); \
-    *isSharedMemory = JS_GetTypedArraySharedness(obj);                      \
-    *data = static_cast<type*>(JS::GetPrivate(obj));                        \
+#define JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Type, type)                    \
+  inline void Get##Type##ArrayLengthAndData(                              \
+      JSObject* obj, size_t* length, bool* isSharedMemory, type** data) { \
+    MOZ_ASSERT(JS::GetClass(obj) == detail::Type##ArrayClassPtr);         \
+    const JS::Value& lenSlot =                                            \
+        JS::GetReservedSlot(obj, detail::TypedArrayLengthSlot);           \
+    *length = size_t(lenSlot.toPrivate());                                \
+    *isSharedMemory = JS_GetTypedArraySharedness(obj);                    \
+    *data = static_cast<type*>(JS::GetPrivate(obj));                      \
   }
 
 JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Int8, int8_t)
@@ -234,7 +234,7 @@ JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Float64, double)
 // This one isn't inlined because it's rather tricky (by dint of having to deal
 // with a dozen-plus classes and varying slot layouts.
 extern JS_FRIEND_API void GetArrayBufferViewLengthAndData(JSObject* obj,
-                                                          uint32_t* length,
+                                                          size_t* length,
                                                           bool* isSharedMemory,
                                                           uint8_t** data);
 

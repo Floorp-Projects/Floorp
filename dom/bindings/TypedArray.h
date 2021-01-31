@@ -31,7 +31,7 @@ namespace dom {
  * or array buffer object.
  */
 template <typename T, JSObject* UnwrapArray(JSObject*),
-          void GetLengthAndDataAndSharedness(JSObject*, uint32_t*, bool*, T**)>
+          void GetLengthAndDataAndSharedness(JSObject*, size_t*, bool*, T**)>
 struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
                          AllTypedArraysBase {
   typedef T element_type;
@@ -132,7 +132,7 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
   inline void ComputeState() const {
     MOZ_ASSERT(inited());
     MOZ_ASSERT(!mComputed);
-    uint32_t length;
+    size_t length;
     GetLengthAndDataAndSharedness(mImplObj, &length, &mShared, &mData);
     MOZ_RELEASE_ASSERT(length <= INT32_MAX,
                        "Bindings must have checked ArrayBuffer{View} length");
@@ -156,7 +156,7 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
 
 template <typename T, JSObject* UnwrapArray(JSObject*),
           T* GetData(JSObject*, bool* isShared, const JS::AutoRequireNoGC&),
-          void GetLengthAndDataAndSharedness(JSObject*, uint32_t*, bool*, T**),
+          void GetLengthAndDataAndSharedness(JSObject*, size_t*, bool*, T**),
           JSObject* CreateNew(JSContext*, size_t)>
 struct TypedArray
     : public TypedArray_base<T, UnwrapArray, GetLengthAndDataAndSharedness> {
@@ -226,7 +226,7 @@ struct TypedArray
 };
 
 template <JSObject* UnwrapArray(JSObject*),
-          void GetLengthAndDataAndSharedness(JSObject*, uint32_t*, bool*,
+          void GetLengthAndDataAndSharedness(JSObject*, size_t*, bool*,
                                              uint8_t**),
           js::Scalar::Type GetViewType(JSObject*)>
 struct ArrayBufferView_base

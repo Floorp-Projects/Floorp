@@ -394,55 +394,55 @@ extern "C" {
 
     pub fn GetInt8ArrayLengthAndData(
         obj: *mut JSObject,
-        length: *mut u32,
+        length: *mut usize,
         isSharedMemory: *mut bool,
         data: *mut *mut i8,
     );
     pub fn GetUint8ArrayLengthAndData(
         obj: *mut JSObject,
-        length: *mut u32,
+        length: *mut usize,
         isSharedMemory: *mut bool,
         data: *mut *mut u8,
     );
     pub fn GetUint8ClampedArrayLengthAndData(
         obj: *mut JSObject,
-        length: *mut u32,
+        length: *mut usize,
         isSharedMemory: *mut bool,
         data: *mut *mut u8,
     );
     pub fn GetInt16ArrayLengthAndData(
         obj: *mut JSObject,
-        length: *mut u32,
+        length: *mut usize,
         isSharedMemory: *mut bool,
         data: *mut *mut i16,
     );
     pub fn GetUint16ArrayLengthAndData(
         obj: *mut JSObject,
-        length: *mut u32,
+        length: *mut usize,
         isSharedMemory: *mut bool,
         data: *mut *mut u16,
     );
     pub fn GetInt32ArrayLengthAndData(
         obj: *mut JSObject,
-        length: *mut u32,
+        length: *mut usize,
         isSharedMemory: *mut bool,
         data: *mut *mut i32,
     );
     pub fn GetUint32ArrayLengthAndData(
         obj: *mut JSObject,
-        length: *mut u32,
+        length: *mut usize,
         isSharedMemory: *mut bool,
         data: *mut *mut u32,
     );
     pub fn GetFloat32ArrayLengthAndData(
         obj: *mut JSObject,
-        length: *mut u32,
+        length: *mut usize,
         isSharedMemory: *mut bool,
         data: *mut *mut f32,
     );
     pub fn GetFloat64ArrayLengthAndData(
         obj: *mut JSObject,
-        length: *mut u32,
+        length: *mut usize,
         isSharedMemory: *mut bool,
         data: *mut *mut f64,
     );

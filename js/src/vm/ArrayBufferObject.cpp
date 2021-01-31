@@ -1898,11 +1898,11 @@ JS_FRIEND_API JSObject* JS::GetObjectAsArrayBuffer(JSObject* obj,
 }
 
 JS_FRIEND_API void JS::GetArrayBufferLengthAndData(JSObject* obj,
-                                                   uint32_t* length,
+                                                   size_t* length,
                                                    bool* isSharedMemory,
                                                    uint8_t** data) {
   MOZ_ASSERT(IsArrayBuffer(obj));
-  *length = AsArrayBuffer(obj).byteLength().deprecatedGetUint32();
+  *length = AsArrayBuffer(obj).byteLength().get();
   *data = AsArrayBuffer(obj).dataPointer();
   *isSharedMemory = false;
 }

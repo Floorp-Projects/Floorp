@@ -3574,7 +3574,7 @@ class CloneBufferObject : public NativeObject {
 
     const char* data = nullptr;
     UniqueChars dataOwner;
-    uint32_t nbytes;
+    size_t nbytes;
 
     if (args.get(0).isObject() && args[0].toObject().is<ArrayBufferObject>()) {
       ArrayBufferObject* buffer = &args[0].toObject().as<ArrayBufferObject>();

@@ -215,7 +215,7 @@ extern JS_PUBLIC_API uint32_t GetArrayBufferByteLength(JSObject* obj);
 // There is an isShared out argument for API consistency (eases use from DOM).
 // It will always be set to false.
 extern JS_PUBLIC_API void GetArrayBufferLengthAndData(JSObject* obj,
-                                                      uint32_t* length,
+                                                      size_t* length,
                                                       bool* isSharedMemory,
                                                       uint8_t** data);
 
