@@ -63,7 +63,7 @@ extern JS_PUBLIC_API JSObject* UnwrapArrayBufferMaybeShared(JSObject* obj);
  * |*data| will be set to a pointer to the bytes in the buffer.
  */
 extern JS_PUBLIC_API void GetArrayBufferMaybeSharedLengthAndData(
-    JSObject* obj, uint32_t* length, bool* isSharedMemory, uint8_t** data);
+    JSObject* obj, size_t* length, bool* isSharedMemory, uint8_t** data);
 
 /**
  * Return a pointer to the start of the array buffer's data, and indicate
