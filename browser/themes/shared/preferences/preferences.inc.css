@@ -340,6 +340,10 @@ button > hbox > label {
   margin-block: 4px 32px;
 }
 
+#updateDeck > *:not(.selected) {
+  visibility: hidden;
+}
+
 #updateDeck > hbox > button {
   margin-block: 0;
   margin-inline-end: 0;
