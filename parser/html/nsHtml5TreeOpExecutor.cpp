@@ -43,10 +43,9 @@
 
 using namespace mozilla;
 
-static mozilla::LazyLogModule gCharsetMenuLog("Chardetng");
+static LazyLogModule gCharsetMenuLog("Chardetng");
 
-#define LOGCHARDETNG(args) \
-  MOZ_LOG(gCharsetMenuLog, mozilla::LogLevel::Debug, args)
+#define LOGCHARDETNG(args) MOZ_LOG(gCharsetMenuLog, LogLevel::Debug, args)
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(nsHtml5TreeOpExecutor,
                                              nsHtml5DocumentBuilder,
@@ -58,9 +57,9 @@ class nsHtml5ExecutorReflusher : public Runnable {
 
  public:
   explicit nsHtml5ExecutorReflusher(nsHtml5TreeOpExecutor* aExecutor)
-      : mozilla::Runnable("nsHtml5ExecutorReflusher"), mExecutor(aExecutor) {}
+      : Runnable("nsHtml5ExecutorReflusher"), mExecutor(aExecutor) {}
   NS_IMETHOD Run() override {
-    Document* doc = mExecutor->GetDocument();
+    dom::Document* doc = mExecutor->GetDocument();
     if (XRE_IsContentProcess() &&
         nsContentUtils::
             HighPriorityEventPendingForTopLevelDocumentBeforeContentfulPaint(
@@ -111,8 +110,7 @@ class MOZ_RAII nsHtml5AutoFlush final {
   }
 };
 
-static mozilla::LinkedList<nsHtml5TreeOpExecutor>* gBackgroundFlushList =
-    nullptr;
+static LinkedList<nsHtml5TreeOpExecutor>* gBackgroundFlushList = nullptr;
 StaticRefPtr<IdleTaskRunner> gBackgroundFlushRunner;
 
 nsHtml5TreeOpExecutor::nsHtml5TreeOpExecutor()
@@ -422,7 +420,7 @@ void nsHtml5TreeOpExecutor::ContinueInterruptedParsingAsync() {
     }
   } else {
     if (!gBackgroundFlushList) {
-      gBackgroundFlushList = new mozilla::LinkedList<nsHtml5TreeOpExecutor>();
+      gBackgroundFlushList = new LinkedList<nsHtml5TreeOpExecutor>();
     }
     if (!isInList()) {
       gBackgroundFlushList->insertBack(this);
@@ -506,8 +504,7 @@ void nsHtml5TreeOpExecutor::RunFlushLoop() {
   if (mParser) {
     streamParserGrip = GetParser()->GetStreamParser();
   }
-  mozilla::Unused
-      << streamParserGrip;  // Intentionally not used within function
+  Unused << streamParserGrip;  // Intentionally not used within function
 
   // Remember the entry time
   (void)nsContentSink::WillParseImpl();
@@ -696,14 +693,12 @@ nsresult nsHtml5TreeOpExecutor::FlushDocumentWrite() {
   // avoid crashing near EOF
   RefPtr<nsHtml5TreeOpExecutor> kungFuDeathGrip(this);
   RefPtr<nsParserBase> parserKungFuDeathGrip(mParser);
-  mozilla::Unused
-      << parserKungFuDeathGrip;  // Intentionally not used within function
+  Unused << parserKungFuDeathGrip;  // Intentionally not used within function
   RefPtr<nsHtml5StreamParser> streamParserGrip;
   if (mParser) {
     streamParserGrip = GetParser()->GetStreamParser();
   }
-  mozilla::Unused
-      << streamParserGrip;  // Intentionally not used within function
+  Unused << streamParserGrip;  // Intentionally not used within function
 
   MOZ_RELEASE_ASSERT(!mReadingFromStage,
                      "Got doc write flush when reading from stage");
@@ -930,7 +925,7 @@ void nsHtml5TreeOpExecutor::MaybeComplainAboutCharset(const char* aMsgId,
   // the embedded different-origin pages anyway and can't fix problems even
   // if alerted about them.
   if (!strcmp(aMsgId, "EncNoDeclaration") && mDocShell) {
-    BrowsingContext* const bc = mDocShell->GetBrowsingContext();
+    dom::BrowsingContext* const bc = mDocShell->GetBrowsingContext();
     if (bc && bc->GetParent()) {
       return;
     }
