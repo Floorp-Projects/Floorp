@@ -124,13 +124,13 @@ void PreloaderBase::AddLoadBackgroundFlag(nsIChannel* aChannel) {
 
 void PreloaderBase::NotifyOpen(const PreloadHashKey& aKey,
                                dom::Document* aDocument, bool aIsPreload) {
-  if (aDocument && !aDocument->Preloads().RegisterPreload(aKey, this)) {
+  if (aDocument) {
+    DebugOnly<bool> alreadyRegistered =
+        aDocument->Preloads().RegisterPreload(aKey, this);
     // This means there is already a preload registered under this key in this
     // document.  We only allow replacement when this is a regular load.
     // Otherwise, this should never happen and is a suspected misuse of the API.
-    MOZ_ASSERT(!aIsPreload);
-    aDocument->Preloads().DeregisterPreload(aKey);
-    aDocument->Preloads().RegisterPreload(aKey, this);
+    MOZ_ASSERT_IF(alreadyRegistered, !aIsPreload);
   }
 
   mKey = aKey;
