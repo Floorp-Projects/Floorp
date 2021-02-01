@@ -69,7 +69,7 @@ const ExperimentAPI = {
         slug: experimentData.slug,
         active: experimentData.active,
         exposurePingSent: experimentData.exposurePingSent,
-        branch: this.getFeatureBranch({ featureId, sendExposurePing }),
+        branch: this.activateBranch({ featureId, sendExposurePing }),
       };
     }
 
@@ -106,6 +106,33 @@ const ExperimentAPI = {
   },
 
   /**
+   * Return FeatureConfig from first active experiment where it can be found
+   * @param {{slug: string, featureId: string, sendExposurePing: bool}}
+   * @returns {Branch | null}
+   */
+  activateBranch({ slug, featureId, sendExposurePing = true }) {
+    for (let experiment of this._store.getAllActive()) {
+      if (
+        experiment?.branch.feature.featureId === featureId ||
+        experiment.slug === slug
+      ) {
+        if (sendExposurePing) {
+          this._store._emitExperimentExposure({
+            experimentSlug: experiment.slug,
+            branchSlug: experiment.branch.slug,
+            featureId,
+          });
+        }
+        // Default to null for feature-less experiments where we're only
+        // interested in exposure.
+        return experiment?.branch || null;
+      }
+    }
+
+    return null;
+  },
+
+  /**
    * Lookup feature in active experiments and return status.
    * Sends exposure ping
    * @param {string} featureId Feature to lookup
@@ -114,7 +141,7 @@ const ExperimentAPI = {
    * @returns {boolean}
    */
   isFeatureEnabled(featureId, defaultValue, { sendExposurePing = true } = {}) {
-    const branch = this.getFeatureBranch({ featureId, sendExposurePing });
+    const branch = this.activateBranch({ featureId, sendExposurePing });
     if (branch?.feature.enabled !== undefined) {
       return branch.feature.enabled;
     }
@@ -128,17 +155,7 @@ const ExperimentAPI = {
    * @returns {obj} The feature value
    */
   getFeatureValue(options) {
-    return this._store.activateBranch(options)?.feature.value;
-  },
-
-  /**
-   * Lookup feature in active experiments and returns the entire branch.
-   * By default, this will send an exposure event.
-   * @param {{featureId: string, sendExposurePing: boolean}} options
-   * @returns {Branch}
-   */
-  getFeatureBranch(options) {
-    return this._store.activateBranch(options);
+    return this.activateBranch(options)?.feature.value;
   },
 
   /**
