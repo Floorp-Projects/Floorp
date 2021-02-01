@@ -12205,8 +12205,8 @@ nsresult FileManager::Init(nsIFile* aDirectory,
         // object alive.
         MOZ_ASSERT(dbRefCnt > 0);
         mFileInfos.Put(
-            id, new FileInfo(FileManagerGuard{}, SafeRefPtrFromThis(), id,
-                             static_cast<nsrefcnt>(dbRefCnt)));
+            id, MakeNotNull<FileInfo*>(FileManagerGuard{}, SafeRefPtrFromThis(),
+                                       id, static_cast<nsrefcnt>(dbRefCnt)));
 
         mLastFileId = std::max(id, mLastFileId);
 
