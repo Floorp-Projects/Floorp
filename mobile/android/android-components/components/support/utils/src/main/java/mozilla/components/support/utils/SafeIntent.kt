@@ -65,7 +65,7 @@ class SafeIntent(val unsafe: Intent) {
     }
 
     fun <T : Parcelable> getParcelableExtra(name: String): T? = safeAccess {
-        unsafe.getParcelableExtra(name) as T
+        unsafe.getParcelableExtra(name) as? T
     }
 
     fun <T : Parcelable> getParcelableArrayListExtra(name: String): ArrayList<T>? {

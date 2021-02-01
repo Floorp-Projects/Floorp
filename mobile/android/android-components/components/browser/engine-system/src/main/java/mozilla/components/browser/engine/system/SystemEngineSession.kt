@@ -139,7 +139,7 @@ class SystemEngineSession(
             throw IllegalArgumentException("Can only restore from SystemEngineSessionState")
         }
 
-        return webView.restoreState(state.bundle) != null
+        return state.bundle?.let { webView.restoreState(it) } != null
     }
 
     /**
@@ -251,22 +251,22 @@ class SystemEngineSession(
     }
 
     private fun initSettings() {
-        webView.settings?.let { webSettings ->
+        webView.settings.apply {
             // Explicitly set global defaults.
-            webSettings.setAppCacheEnabled(false)
-            webSettings.databaseEnabled = false
+            setAppCacheEnabled(false)
+            databaseEnabled = false
 
-            setDeprecatedWebSettings(webSettings)
+            setDeprecatedWebSettings(this)
 
             // We currently don't implement the callback to support turning this on.
-            webSettings.setGeolocationEnabled(false)
+            setGeolocationEnabled(false)
 
             // webViewSettings built-in zoom controls are the only supported ones,
             // so they should be turned on but hidden.
-            webSettings.builtInZoomControls = true
-            webSettings.displayZoomControls = false
+            builtInZoomControls = true
+            displayZoomControls = false
 
-            initSettings(webView, webSettings)
+            initSettings(webView, this)
         }
     }
 

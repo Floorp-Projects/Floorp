@@ -53,7 +53,7 @@ class AppLinksUseCases(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun findActivities(intent: Intent): List<ResolveInfo> {
         return context.packageManager
-            .queryIntentActivities(intent, PackageManager.GET_RESOLVED_FILTER) ?: emptyList()
+            .queryIntentActivities(intent, PackageManager.GET_RESOLVED_FILTER)
     }
 
     private fun findDefaultActivity(intent: Intent): ResolveInfo? {

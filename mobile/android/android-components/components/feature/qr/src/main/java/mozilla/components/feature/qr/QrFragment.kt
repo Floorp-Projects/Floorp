@@ -453,7 +453,7 @@ class QrFragment : Fragment() {
 
         val size = previewSize as Size
         // We configure the size of default buffer to be the size of camera preview we want.
-        texture.setDefaultBufferSize(size.width, size.height)
+        texture?.setDefaultBufferSize(size.width, size.height)
 
         val surface = Surface(texture)
         val mImageSurface = imageReader?.surface
