@@ -562,6 +562,7 @@ class MediaPipelineTest : public ::testing::Test {
   }
 
  protected:
+  const TaskQueueWrapper::MainAsCurrent main_as_current_;
   const rtc::scoped_refptr<webrtc::SharedModuleThread> module_thread_;
   const webrtc::AudioState::Config audio_state_config_;
   const RefPtr<webrtc::AudioDecoderFactory> audio_decoder_factory_;
