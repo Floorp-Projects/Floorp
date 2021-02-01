@@ -6424,8 +6424,8 @@ QuotaManager::EnsurePersistentOriginIsInitialized(const QuotaInfo& aQuotaInfo) {
     return std::pair(std::move(directory), created);
   }();
 
-  auto& info = mOriginInitializationInfos.GetOrInsert(aQuotaInfo.mOrigin);
-  if (!info.mPersistentOriginAttempted) {
+  if (auto& info = mOriginInitializationInfos.GetOrInsert(aQuotaInfo.mOrigin);
+      !info.mPersistentOriginAttempted) {
     Telemetry::Accumulate(Telemetry::QM_FIRST_INITIALIZATION_ATTEMPT,
                           kPersistentOriginTelemetryKey,
                           static_cast<uint32_t>(res.isOk()));
@@ -7025,8 +7025,8 @@ void QuotaManager::LockedRemoveQuotaForOrigin(
 
   MOZ_ASSERT(pair);
 
-  RefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(aPersistenceType);
-  if (groupInfo) {
+  if (RefPtr<GroupInfo> groupInfo =
+          pair->LockedGetGroupInfo(aPersistenceType)) {
     groupInfo->LockedRemoveOriginInfo(aGroupAndOrigin.mOrigin);
 
     if (!groupInfo->LockedHasOriginInfos()) {
@@ -7350,8 +7350,8 @@ bool QuotaManager::IsSanitizedOriginValid(const nsACString& aSanitizedOrigin) {
 int64_t QuotaManager::GenerateDirectoryLockId() {
   const int64_t directorylockId = mNextDirectoryLockId;
 
-  CheckedInt64 result = CheckedInt64(mNextDirectoryLockId) + 1;
-  if (result.isValid()) {
+  if (CheckedInt64 result = CheckedInt64(mNextDirectoryLockId) + 1;
+      result.isValid()) {
     mNextDirectoryLockId = result.value();
   } else {
     NS_WARNING("Quota manager has run out of ids for directory locks!");
