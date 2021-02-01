@@ -1191,9 +1191,8 @@ static const MediaTrackConstraints& GetInvariant(
 }
 
 /**
- * Creates a MediaTrack, attaches a listener and fires off a success callback
- * to the DOM with the stream. We also pass in the error callback so it can
- * be released correctly.
+ * Creates a MediaTrack, attaches a listener and resolves a MozPromise to
+ * provide the stream to the DOM.
  *
  * All of this must be done on the main thread!
  *
@@ -1529,8 +1528,7 @@ RefPtr<MediaManager::BadConstraintsPromise> MediaManager::SelectSettings(
  * Depending on whether a picture or stream was asked for, either
  * ProcessGetUserMedia is called, and the results are sent back to the DOM.
  *
- * Do not run this on the main thread. The success and error callbacks *MUST*
- * be dispatched on the main thread!
+ * Do not run this on the main thread.
  */
 class GetUserMediaTask : public Runnable {
  public:
