@@ -68,6 +68,7 @@ class ExperimentStore extends SharedDataMap {
   /**
    * Given a feature identifier, find an active experiment that matches that feature identifier.
    * This assumes, for now, that there is only one active experiment per feature per browser.
+   * Does not activate the experiment (send an exposure event)
    *
    * @param {string} featureId
    * @returns {Enrollment|undefined} An active experiment if it exists
@@ -75,39 +76,16 @@ class ExperimentStore extends SharedDataMap {
    */
   getExperimentForFeature(featureId) {
     return this.getAllActive().find(
-      experiment => experiment.branch.feature?.featureId === featureId
+      experiment =>
+        experiment.featureIds?.includes(featureId) ||
+        // Supports <v1.3.0, which was when .featureIds was added
+        experiment.branch?.feature?.featureId === featureId
     );
   }
 
   /**
-   * Return FeatureConfig from first active experiment where it can be found
-   * @param {{slug: string, featureId: string, sendExposurePing: bool}}
-   * @returns {Branch | null}
-   */
-  activateBranch({ slug, featureId, sendExposurePing = true }) {
-    for (let experiment of this.getAllActive()) {
-      if (
-        experiment?.branch.feature.featureId === featureId ||
-        experiment.slug === slug
-      ) {
-        if (sendExposurePing) {
-          this._emitExperimentExposure({
-            experimentSlug: experiment.slug,
-            branchSlug: experiment.branch.slug,
-            featureId,
-          });
-        }
-        // Default to null for feature-less experiments where we're only
-        // interested in exposure.
-        return experiment?.branch || null;
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Check if an active experiment already exists for a feature
+   * Check if an active experiment already exists for a feature.
+   * Does not activate the experiment (send an exposure event)
    *
    * @param {string} featureId
    * @returns {boolean} Does an active experiment exist for that feature?
@@ -117,10 +95,7 @@ class ExperimentStore extends SharedDataMap {
     if (!featureId) {
       return false;
     }
-    if (this.activateBranch({ featureId })?.feature.featureId === featureId) {
-      return true;
-    }
-    return false;
+    return !!this.getExperimentForFeature(featureId);
   }
 
   /**
