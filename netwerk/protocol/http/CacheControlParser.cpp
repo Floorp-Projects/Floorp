@@ -31,38 +31,37 @@ CacheControlParser::CacheControlParser(nsACString const& aHeader)
 }
 
 void CacheControlParser::Directive() {
-  if (CheckWord("no-cache")) {
-    mNoCache = true;
-    IgnoreDirective();  // ignore any optionally added values
-  } else if (CheckWord("no-store")) {
-    mNoStore = true;
-  } else if (CheckWord("max-age")) {
-    mMaxAgeSet = SecondsValue(&mMaxAge);
-  } else if (CheckWord("max-stale")) {
-    mMaxStaleSet = SecondsValue(&mMaxStale, PR_UINT32_MAX);
-  } else if (CheckWord("min-fresh")) {
-    mMinFreshSet = SecondsValue(&mMinFresh);
-  } else if (CheckWord("stale-while-revalidate")) {
-    mStaleWhileRevalidateSet = SecondsValue(&mStaleWhileRevalidate);
-  } else if (CheckWord("public")) {
-    mPublic = true;
-  } else if (CheckWord("private")) {
-    mPrivate = true;
-  } else if (CheckWord("immutable")) {
-    mImmutable = true;
-  } else {
-    IgnoreDirective();
-  }
-
-  SkipWhites();
-  if (CheckEOF()) {
-    return;
-  }
-  if (CheckChar(',')) {
+  do {
     SkipWhites();
-    Directive();
-    return;
-  }
+    if (CheckWord("no-cache")) {
+      mNoCache = true;
+      IgnoreDirective();  // ignore any optionally added values
+    } else if (CheckWord("no-store")) {
+      mNoStore = true;
+    } else if (CheckWord("max-age")) {
+      mMaxAgeSet = SecondsValue(&mMaxAge);
+    } else if (CheckWord("max-stale")) {
+      mMaxStaleSet = SecondsValue(&mMaxStale, PR_UINT32_MAX);
+    } else if (CheckWord("min-fresh")) {
+      mMinFreshSet = SecondsValue(&mMinFresh);
+    } else if (CheckWord("stale-while-revalidate")) {
+      mStaleWhileRevalidateSet = SecondsValue(&mStaleWhileRevalidate);
+    } else if (CheckWord("public")) {
+      mPublic = true;
+    } else if (CheckWord("private")) {
+      mPrivate = true;
+    } else if (CheckWord("immutable")) {
+      mImmutable = true;
+    } else {
+      IgnoreDirective();
+    }
+
+    SkipWhites();
+    if (CheckEOF()) {
+      return;
+    }
+
+  } while (CheckChar(','));
 
   NS_WARNING("Unexpected input in Cache-control header value");
 }
