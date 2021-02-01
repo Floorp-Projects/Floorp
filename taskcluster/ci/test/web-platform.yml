@@ -178,7 +178,8 @@ web-platform-tests-wdspec:
             - --setpref=toolkit.asyncshutdown.log=true
     run-on-projects:
         by-test-platform:
-            .*-qr/.*: ['release']
+            linux.*-qr/.*: ['release']  # skip on integration branches due to high load
+            windows.*-qr/.*: ['release']  # skip on integration branches due to high load
             default: built-projects
     tier:
         by-test-platform:
@@ -273,7 +274,8 @@ web-platform-tests-crashtest:
             - --test-type=crashtest
     run-on-projects:
         by-test-platform:
-            .*-qr/.*: ['release']
+            linux.*-qr/.*: ['release']  # skip on integration branches due to high load
+            windows.*-qr/.*: ['release']  # skip on integration branches due to high load
             default: built-projects
     tier:
         by-test-platform:
