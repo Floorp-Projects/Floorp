@@ -293,10 +293,10 @@ class MOZ_NON_AUTOABLE MovingNotNull {
  public:
   MovingNotNull() = delete;
 
-  MOZ_IMPLICIT MovingNotNull(const NotNull<T>& aSrc) : mBasePtr(aSrc) {}
+  MOZ_IMPLICIT MovingNotNull(const NotNull<T>& aSrc) : mBasePtr(aSrc.get()) {}
 
   template <typename U>
-  MOZ_IMPLICIT MovingNotNull(const NotNull<U>& aSrc) : mBasePtr(aSrc) {}
+  MOZ_IMPLICIT MovingNotNull(const NotNull<U>& aSrc) : mBasePtr(aSrc.get()) {}
 
   template <typename U>
   MOZ_IMPLICIT MovingNotNull(MovingNotNull<U>&& aSrc)
