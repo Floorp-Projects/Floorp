@@ -22,17 +22,9 @@ object FeatureFlags {
     val syncedTabsInTabsTray = Config.channel.isNightlyOrDebug
 
     /**
-     * Enables the Nimbus experiments library, especially the settings toggle to opt-out of
-     * all experiments.
+     * Enables the Nimbus experiments library.
      */
-    // IMPORTANT: Only turn this back on once the following issues are resolved:
-    // - https://github.com/mozilla-mobile/fenix/issues/17086: Calls to
-    // getExperimentBranch seem to block on updateExperiments causing a
-    // large performance regression loading the home screen.
-    // - https://github.com/mozilla-mobile/fenix/issues/17143: Despite
-    // having wrapped getExperimentBranch/withExperiments in a catch-all
-    // users are still experiencing crashes.
-    const val nimbusExperiments = false
+    val nimbusExperiments = Config.channel.isNightlyOrDebug
 
     /**
      * Enables the new MediaSession API.

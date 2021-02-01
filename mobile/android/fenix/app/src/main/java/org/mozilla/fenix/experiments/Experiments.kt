@@ -6,7 +6,7 @@ package org.mozilla.fenix.experiments
 
 class Experiments {
     companion object {
-        const val A_A_NIMBUS_VALIDATION = "fenix-nimbus-validation"
+        const val A_A_NIMBUS_VALIDATION = "fenix-nimbus-validation-v2"
         const val BOOKMARK_ICON = "fenix-bookmark-list-icon"
     }
 }
@@ -15,7 +15,7 @@ class ExperimentBranch {
     companion object {
         const val TREATMENT = "treatment"
         const val CONTROL = "control"
-        const val A1 = "A1"
-        const val A2 = "A2"
+        const val A1 = "a1"
+        const val A2 = "a2"
     }
 }
