@@ -123,7 +123,7 @@ textarea {
   resize: both;
   white-space: pre-wrap;
   word-wrap: break-word;
-  overflow-clip-box: content-box;
+  overflow-clip-box: padding-box content-box;
 }
 
 /* A few properties that we don't want to inherit by default: */
