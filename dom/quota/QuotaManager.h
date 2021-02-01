@@ -560,7 +560,20 @@ class QuotaManager final : public BackgroundThreadObject {
                             int64_t aAccessTime, bool aPersisted,
                             nsIFile* aDirectory);
 
-  void CheckTemporaryStorageLimits();
+  using OriginInfosFlatTraversable =
+      nsTArray<NotNull<RefPtr<const OriginInfo>>>;
+
+  OriginInfosFlatTraversable LockedGetOriginInfosExceedingGroupLimit() const;
+
+  OriginInfosFlatTraversable LockedGetOriginInfosExceedingGlobalLimit(
+      const OriginInfosFlatTraversable& aAlreadyDoomedOriginInfos,
+      uint64_t aAlreadyDoomedUsage) const;
+
+  OriginInfosFlatTraversable GetOriginInfosExceedingLimits() const;
+
+  void ClearOrigins(const OriginInfosFlatTraversable& aDoomedOriginInfos);
+
+  void CleanupTemporaryStorage();
 
   void DeleteFilesForOrigin(PersistenceType aPersistenceType,
                             const nsACString& aOrigin);
@@ -599,7 +612,7 @@ class QuotaManager final : public BackgroundThreadObject {
   // Accesses to mQuotaManagerShutdownSteps must be protected by mQuotaMutex.
   nsCString mQuotaManagerShutdownSteps;
 
-  mozilla::Mutex mQuotaMutex;
+  mutable mozilla::Mutex mQuotaMutex;
 
   nsClassHashtable<nsCStringHashKey, GroupInfoPair> mGroupInfoPairs;
 
