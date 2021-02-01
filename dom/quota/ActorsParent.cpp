@@ -3658,13 +3658,13 @@ auto QuotaManager::CreateDirectoryLockForEviction(
 void QuotaManager::RegisterDirectoryLock(DirectoryLockImpl& aLock) {
   AssertIsOnOwningThread();
 
-  mDirectoryLocks.AppendElement(&aLock);
+  mDirectoryLocks.AppendElement(WrapNotNullUnchecked(&aLock));
 
   if (aLock.ShouldUpdateLockIdTable()) {
     MutexAutoLock lock(mQuotaMutex);
 
-    MOZ_DIAGNOSTIC_ASSERT(!mDirectoryLockIdTable.Get(aLock.Id()));
-    mDirectoryLockIdTable.Put(aLock.Id(), &aLock);
+    MOZ_DIAGNOSTIC_ASSERT(!mDirectoryLockIdTable.Contains(aLock.Id()));
+    mDirectoryLockIdTable.Put(aLock.Id(), WrapNotNullUnchecked(&aLock));
   }
 
   if (aLock.ShouldUpdateLockTable()) {
@@ -3699,7 +3699,7 @@ void QuotaManager::UnregisterDirectoryLock(DirectoryLockImpl& aLock) {
   if (aLock.ShouldUpdateLockIdTable()) {
     MutexAutoLock lock(mQuotaMutex);
 
-    MOZ_DIAGNOSTIC_ASSERT(mDirectoryLockIdTable.Get(aLock.Id()));
+    MOZ_DIAGNOSTIC_ASSERT(mDirectoryLockIdTable.Contains(aLock.Id()));
     mDirectoryLockIdTable.Remove(aLock.Id());
   }
 
@@ -3738,7 +3738,7 @@ uint64_t QuotaManager::CollectOriginsForEviction(
   struct MOZ_STACK_CLASS Helper final {
     static void GetInactiveOriginInfos(
         const nsTArray<NotNull<RefPtr<OriginInfo>>>& aOriginInfos,
-        const nsTArray<DirectoryLockImpl*>& aLocks,
+        const nsTArray<NotNull<DirectoryLockImpl*>>& aLocks,
         nsTArray<NotNull<RefPtr<OriginInfo>>>& aInactiveOriginInfos) {
       for (const NotNull<RefPtr<OriginInfo>>& originInfo : aOriginInfos) {
         MOZ_ASSERT(originInfo->mGroupInfo->mPersistenceType !=
@@ -3768,9 +3768,9 @@ uint64_t QuotaManager::CollectOriginsForEviction(
 
   // Split locks into separate arrays and filter out locks for persistent
   // storage, they can't block us.
-  nsTArray<DirectoryLockImpl*> temporaryStorageLocks;
-  nsTArray<DirectoryLockImpl*> defaultStorageLocks;
-  for (DirectoryLockImpl* lock : mDirectoryLocks) {
+  nsTArray<NotNull<DirectoryLockImpl*>> temporaryStorageLocks;
+  nsTArray<NotNull<DirectoryLockImpl*>> defaultStorageLocks;
+  for (const NotNull<DirectoryLockImpl*>& lock : mDirectoryLocks) {
     const Nullable<PersistenceType>& persistenceType =
         lock->NullablePersistenceType();
 
@@ -4761,20 +4761,21 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
     lock.emplace(mQuotaMutex);
   }
 
-  DirectoryLockImpl* directoryLock;
-  if (!mDirectoryLockIdTable.Get(aDirectoryLockId, &directoryLock)) {
-    MOZ_CRASH("Getting quota object for an unregistered directory lock?");
+  if (auto maybeDirectoryLock =
+          mDirectoryLockIdTable.MaybeGet(aDirectoryLockId)) {
+    const auto& directoryLock = *maybeDirectoryLock;
+    MOZ_DIAGNOSTIC_ASSERT(directoryLock->ShouldUpdateLockIdTable());
+
+    const PersistenceType persistenceType = directoryLock->GetPersistenceType();
+    const GroupAndOrigin& groupAndOrigin = directoryLock->GroupAndOrigin();
+    const Client::Type clientType = directoryLock->ClientType();
+
+    lock.reset();
+
+    return GetQuotaObject(persistenceType, groupAndOrigin, clientType, aPath);
   }
-  MOZ_DIAGNOSTIC_ASSERT(directoryLock);
-  MOZ_DIAGNOSTIC_ASSERT(directoryLock->ShouldUpdateLockIdTable());
 
-  const PersistenceType persistenceType = directoryLock->GetPersistenceType();
-  const GroupAndOrigin& groupAndOrigin = directoryLock->GroupAndOrigin();
-  const Client::Type clientType = directoryLock->ClientType();
-
-  lock.reset();
-
-  return GetQuotaObject(persistenceType, groupAndOrigin, clientType, aPath);
+  MOZ_CRASH("Getting quota object for an unregistered directory lock?");
 }
 
 Nullable<bool> QuotaManager::OriginPersisted(
