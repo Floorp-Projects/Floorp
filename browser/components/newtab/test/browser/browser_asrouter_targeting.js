@@ -912,7 +912,7 @@ add_task(async function checkPatternMatches() {
 
 add_task(async function checkPatternsValid() {
   const messages = (await CFRMessageProvider.getMessages()).filter(
-    m => m.trigger?.patterns
+    m => m.trigger.patterns
   );
 
   for (const message of messages) {

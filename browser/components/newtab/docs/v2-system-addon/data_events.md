@@ -966,30 +966,6 @@ as other CFR messages.
 }
 ```
 
-## InfoBar pings
-
-This reports when the user interacts with the browser infobar (messaging area
-located at the top of the content area). Similar policy applied as for the
-What's New panel client_id is reported in all the channels.
-
-```
-{
-  "experiments" : {
-    "exp1" : {
-      "branch" : "treatment-a"
-    }
-  },
-  "addon_version" : "20210115035053",
-  "release_channel" : "release",
-  "locale" : "en-US",
-  "event" : ["IMPRESSION", "CLICK_PRIMARY_BUTTON", "CLICK_SECONDARY_BUTTON", "DISMISSED"],
-  "client_id" : "c4beb4bf-4feb-9c4e-9587-9323b28c2e50",
-  "version" : "86",
-  "message_id" : "INFOBAR_ACTION_86",
-  "browser_session_id" : "93714e76-9919-ca49-b697-5e7c09a1394f"
-}
-```
-
 ## Messaging-experiments pings
 
 As the new experiment platform, the Messaging experiment manager is now managing & operating all the experiments of Firefox Messaging System, including the first-run experience (about:welcome), CFR, Whats-new-panel, Moments Page, and Snippets.
