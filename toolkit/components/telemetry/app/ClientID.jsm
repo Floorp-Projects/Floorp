@@ -216,6 +216,22 @@ var ClientIDImpl = {
         this._wasCanary = state.wasCanary;
       }
       if (state) {
+        try {
+          if (Services.prefs.prefHasUserValue(PREF_CACHED_CLIENTID)) {
+            let cachedID = Services.prefs.getStringPref(
+              PREF_CACHED_CLIENTID,
+              null
+            );
+            if (cachedID && cachedID != state.clientID) {
+              Services.telemetry.scalarAdd(
+                "telemetry.loaded_client_id_doesnt_match_pref",
+                1
+              );
+            }
+          }
+        } catch (e) {
+          // This data collection's not that important.
+        }
         hasCurrentClientID = this.updateClientID(state.clientID);
         hasCurrentEcosystemClientID = this.updateEcosystemClientID(
           state.ecosystemClientID
@@ -234,6 +250,7 @@ var ClientIDImpl = {
 
     // We're missing one or both IDs from the DRS state file, generate new ones.
     if (!hasCurrentClientID) {
+      Services.telemetry.scalarSet("telemetry.generated_new_client_id", true);
       this.updateClientID(CommonUtils.generateUUID());
     }
     if (!hasCurrentEcosystemClientID) {
@@ -260,24 +277,29 @@ var ClientIDImpl = {
    * @return {Promise} A promise resolved when the client ID is saved to disk.
    */
   async _saveClientIDs() {
-    this._log.trace(`_saveClientIDs`);
-    let obj = {
-      clientID: this._clientID,
-      ecosystemClientID: this._ecosystemClientID,
-    };
-    // We detected a canary client ID when resetting, storing this as a flag
-    if (AppConstants.platform == "android" && this._wasCanary) {
-      obj.wasCanary = true;
-    }
     try {
-      await IOUtils.makeDirectory(gDatareportingPath);
-    } catch (ex) {
-      if (ex.name != "NotAllowedError") {
-        throw ex;
+      this._log.trace(`_saveClientIDs`);
+      let obj = {
+        clientID: this._clientID,
+        ecosystemClientID: this._ecosystemClientID,
+      };
+      // We detected a canary client ID when resetting, storing this as a flag
+      if (AppConstants.platform == "android" && this._wasCanary) {
+        obj.wasCanary = true;
       }
+      try {
+        await IOUtils.makeDirectory(gDatareportingPath);
+      } catch (ex) {
+        if (ex.name != "NotAllowedError") {
+          throw ex;
+        }
+      }
+      await CommonUtils.writeJSON(obj, gStateFilePath);
+      this._saveClientIdsTask = null;
+    } catch (ex) {
+      Services.telemetry.scalarAdd("telemetry.state_file_save_errors", 1);
+      throw ex;
     }
-    await CommonUtils.writeJSON(obj, gStateFilePath);
-    this._saveClientIdsTask = null;
   },
 
   /**
