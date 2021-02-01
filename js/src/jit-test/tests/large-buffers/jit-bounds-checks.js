@@ -76,10 +76,6 @@ function test(u8arr) {
         for (var i = 0; i < 1500; i++) {
             var idx = (length - 500) + i;
             assertEq(idx in u8arr, idx < length);
-            assertEq(-1 in u8arr, false);
-            assertEq(10737418240 in u8arr, false);
-            assertEq(0x7fff_ffff in u8arr, true);
-            assertEq(0xffff_ffff in u8arr, true);
         }
     }
     testHasElement1();
@@ -93,22 +89,6 @@ function test(u8arr) {
             } else {
                 assertEq(idx >= length, true);
             }
-            var count = 0;
-            if (-1 in u8arr) {
-                count++;
-            }
-            if (10737418240 in u8arr) {
-                count++;
-            }
-            if (0x7fff_ffff in u8arr) {
-            } else {
-                count++;
-            }
-            if (0xffff_ffff in u8arr) {
-            } else {
-                count++;
-            }
-            assertEq(count, 0);
         }
     }
     testHasElement2();
