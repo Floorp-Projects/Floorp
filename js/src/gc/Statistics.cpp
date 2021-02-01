@@ -133,6 +133,7 @@ static FILE* MaybeOpenFileFromEnv(const char* env) {
 struct PhaseKindInfo {
   Phase firstPhase;
   uint8_t telemetryBucket;
+  const char* name;
 };
 
 // PhaseInfo objects form a tree.
@@ -201,6 +202,14 @@ static Phase LookupPhaseWithParent(PhaseKind phaseKind, Phase parentPhase) {
   return Phase::NONE;
 }
 
+static const char* PhaseKindName(PhaseKind kind) {
+  if (kind == PhaseKind::NONE) {
+    return "NONE";
+  }
+
+  return phaseKinds[kind].name;
+}
+
 Phase Statistics::lookupChildPhase(PhaseKind phaseKind) const {
   if (phaseKind == PhaseKind::IMPLICIT_SUSPENSION) {
     return Phase::IMPLICIT_SUSPENSION;
@@ -217,8 +226,8 @@ Phase Statistics::lookupChildPhase(PhaseKind phaseKind) const {
 
   if (phase == Phase::NONE) {
     MOZ_CRASH_UNSAFE_PRINTF(
-        "Child phase kind %u not found under current phase kind %u",
-        unsigned(phaseKind), unsigned(currentPhaseKind()));
+        "Child phase kind %s not found under current phase kind %s",
+        PhaseKindName(phaseKind), PhaseKindName(currentPhaseKind()));
   }
 
   return phase;

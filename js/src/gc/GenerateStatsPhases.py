@@ -372,8 +372,8 @@ def generateCpp(out):
     for phaseKind in AllPhaseKinds:
         phase = PhasesForPhaseKind[phaseKind][0]
         out.write(
-            "    /* PhaseKind::%s */ PhaseKindInfo { Phase::%s, %d },\n"
-            % (phaseKind.name, phase.name, phaseKind.bucket)
+            '    /* PhaseKind::%s */ PhaseKindInfo { Phase::%s, %d, "%s" },\n'
+            % (phaseKind.name, phase.name, phaseKind.bucket, phaseKind.name)
         )
     out.write("};\n")
     out.write("\n")
