@@ -31,7 +31,7 @@ var innerStartScrollOffset = innerScrollOffset();
 
 var step = 0;
 var wheelAndPaintDone = false;
-function doneScroll() {
+async function doneScroll() {
   ++step;
   switch (step) {
   case 1:
@@ -42,15 +42,14 @@ function doneScroll() {
     break;
   case 2:
     // wait until APZ is ready to handle the wheel event, then send it
-    waitForApzFlushedRepaints(() => {
-      // Wait for paints to flush, so APZ is notified of the new scroll offset.
-      sendWheelAndPaint(inner, 4, 4,
-        { deltaMode: WheelEvent.DOM_DELTA_LINE, deltaY: 1 },
-        function() {
-            wheelAndPaintDone = true;
-            doneTest();
-        });
-    });
+    await promiseApzFlushedRepaints();
+    // Wait for paints to flush, so APZ is notified of the new scroll offset.
+    sendWheelAndPaint(inner, 4, 4,
+      { deltaMode: WheelEvent.DOM_DELTA_LINE, deltaY: 1 },
+      function() {
+          wheelAndPaintDone = true;
+          doneTest();
+      });
     break;
   case 3:
     is(innerScrollOffset(), innerStartScrollOffset, "Inner element should not have scrolled down");
