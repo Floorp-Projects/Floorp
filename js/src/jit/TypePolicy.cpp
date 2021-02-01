@@ -291,7 +291,9 @@ bool TestPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
     }
 
     default:
-      MOZ_CRASH("Unexpected MIRType.");
+      MOZ_ASSERT(IsMagicType(op->type()));
+      ins->replaceOperand(0, BoxAt(alloc, ins, op));
+      break;
   }
   return true;
 }
