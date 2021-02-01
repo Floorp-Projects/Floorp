@@ -75,8 +75,12 @@ add_task(async function test_client_id() {
     ["3d1e1560-682a-4043-8cf2-aaaaaaaaaaaZ", "setStringPref"],
   ];
 
+  // Clear the scalar snapshot from previous tests.
+  Services.telemetry.getSnapshotForScalars("main", true);
+
   // If there is no DRS file, we should get a new client ID.
   await ClientID._reset();
+  await OS.File.remove(drsPath, { ignoreAbsent: true });
   let clientID = await ClientID.getClientID();
   Assert.equal(typeof clientID, "string");
   Assert.ok(uuidRegex.test(clientID));
@@ -88,6 +92,10 @@ add_task(async function test_client_id() {
       clientID
     );
   }
+  let snapshot = Services.telemetry.getSnapshotForScalars("main", true).parent;
+  Assert.equal(snapshot["telemetry.generated_new_client_id"], true);
+  // No file to read means no value to mismatch with pref.
+  Assert.ok(!("telemetry.loaded_client_id_doesnt_match_pref" in snapshot));
 
   // We should be guarded against invalid DRS json.
   await ClientID._reset();
@@ -106,6 +114,10 @@ add_task(async function test_client_id() {
       clientID
     );
   }
+  snapshot = Services.telemetry.getSnapshotForScalars("main", true).parent;
+  Assert.equal(snapshot["telemetry.generated_new_client_id"], true);
+  // Invalid file means no value to mismatch with pref.
+  Assert.ok(!("telemetry.loaded_client_id_doesnt_match_pref" in snapshot));
 
   // If the DRS data is broken, we should end up with a new client ID.
   for (let [invalidID] of invalidIDs) {
@@ -122,7 +134,46 @@ add_task(async function test_client_id() {
         clientID
       );
     }
+    snapshot = Services.telemetry.getSnapshotForScalars("main", true).parent;
+    Assert.equal(snapshot["telemetry.generated_new_client_id"], true);
+    Assert.equal(snapshot["telemetry.loaded_client_id_doesnt_match_pref"], 1);
   }
+
+  // Test that valid DRS actually works.
+  const validClientID = "5afebd62-a33c-416c-b519-5c60fb988e8e";
+  await ClientID._reset();
+  await CommonUtils.writeJSON({ clientID: validClientID }, drsPath);
+  clientID = await ClientID.getClientID();
+  Assert.equal(clientID, validClientID);
+  if (AppConstants.MOZ_GLEAN) {
+    Assert.equal(
+      Glean.fogValidation.legacyTelemetryClientId.testGetValue(
+        "fog-validation"
+      ),
+      clientID
+    );
+  }
+  snapshot = Services.telemetry.getSnapshotForScalars("main", true).parent;
+  Assert.ok(!("telemetry.generated_new_client_id" in snapshot));
+  Assert.equal(snapshot["telemetry.loaded_client_id_doesnt_match_pref"], 1);
+
+  // Test that reloading a valid DRS works.
+  await ClientID._reset();
+  clientID = await ClientID.getClientID();
+  Assert.equal(clientID, validClientID);
+  if (AppConstants.MOZ_GLEAN) {
+    Assert.equal(
+      Glean.fogValidation.legacyTelemetryClientId.testGetValue(
+        "fog-validation"
+      ),
+      clientID
+    );
+  }
+  // snapshot may be empty if no other scalars are recorded.
+  snapshot =
+    Services.telemetry.getSnapshotForScalars("main", true).parent || {};
+  Assert.ok(!("telemetry.generated_new_client_id" in snapshot));
+  Assert.ok(!("telemetry.loaded_client_id_doesnt_match_pref" in snapshot));
 
   // Assure that cached IDs are being checked for validity.
   for (let [invalidID, prefFunc] of invalidIDs) {
