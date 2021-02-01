@@ -199,7 +199,6 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   static DPIRatio GetDPIRatio(nsIFrame* aFrame, StyleAppearance);
   static bool IsDateTimeResetButton(nsIFrame* aFrame);
   static bool IsColorPickerButton(nsIFrame* aFrame);
-  static bool IsRootScrollbar(nsIFrame* aFrame);
   static LayoutDeviceRect FixAspectRatio(const LayoutDeviceRect& aRect);
 
   virtual std::pair<sRGBColor, sRGBColor> ComputeCheckboxColors(
@@ -228,7 +227,7 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   virtual std::array<sRGBColor, 3> ComputeFocusRectColors();
   virtual std::pair<sRGBColor, sRGBColor> ComputeScrollbarColors(
       nsIFrame* aFrame, const ComputedStyle& aStyle,
-      const EventStates& aDocumentState, bool aIsRoot);
+      const EventStates& aDocumentState);
   virtual sRGBColor ComputeScrollbarThumbColor(
       nsIFrame* aFrame, const ComputedStyle& aStyle,
       const EventStates& aElementState, const EventStates& aDocumentState);
@@ -305,18 +304,18 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                               const LayoutDeviceRect& aRect, bool aHorizontal,
                               nsIFrame* aFrame, const ComputedStyle& aStyle,
                               const EventStates& aDocumentState,
-                              DPIRatio aDpiRatio, bool aIsRoot);
+                              DPIRatio aDpiRatio);
   virtual void PaintScrollbarTrack(DrawTarget* aDrawTarget,
                                    const LayoutDeviceRect& aRect,
                                    bool aHorizontal, nsIFrame* aFrame,
                                    const ComputedStyle& aStyle,
                                    const EventStates& aDocumentState,
-                                   DPIRatio aDpiRatio, bool aIsRoot);
+                                   DPIRatio aDpiRatio);
   virtual void PaintScrollCorner(DrawTarget* aDrawTarget,
                                  const LayoutDeviceRect& aRect,
                                  nsIFrame* aFrame, const ComputedStyle& aStyle,
                                  const EventStates& aDocumentState,
-                                 DPIRatio aDpiRatio, bool aIsRoot);
+                                 DPIRatio aDpiRatio);
   virtual void PaintScrollbarButton(
       DrawTarget* aDrawTarget, StyleAppearance aAppearance,
       const LayoutDeviceRect& aRect, nsIFrame* aFrame,

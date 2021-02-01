@@ -221,7 +221,7 @@ std::array<sRGBColor, 3> nsNativeBasicThemeWin::ComputeFocusRectColors() {
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicThemeWin::ComputeScrollbarColors(
     nsIFrame* aFrame, const ComputedStyle& aStyle,
-    const EventStates& aDocumentState, bool aIsRoot) {
+    const EventStates& aDocumentState) {
   if (!LookAndFeel::GetInt(LookAndFeel::IntID::UseAccessibilityTheme, 0)) {
     nscolor trackColor = ScrollbarUtil::GetScrollbarTrackColor(aFrame);
     sRGBColor color = sRGBColor::FromABGR(trackColor);

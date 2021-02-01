@@ -63,7 +63,7 @@ void nsNativeBasicThemeCocoa::PaintScrollbarThumb(
 void nsNativeBasicThemeCocoa::PaintScrollbarTrack(
     DrawTarget* aDrawTarget, const LayoutDeviceRect& aRect, bool aHorizontal,
     nsIFrame* aFrame, const ComputedStyle& aStyle,
-    const EventStates& aDocumentState, DPIRatio aDpiRatio, bool aIsRoot) {
+    const EventStates& aDocumentState, DPIRatio aDpiRatio) {
   ScrollbarParams params =
       ScrollbarDrawingMac::ComputeScrollbarParams(aFrame, aStyle, aHorizontal);
   auto rect = aRect.ToUnknownRect();
@@ -82,14 +82,14 @@ void nsNativeBasicThemeCocoa::PaintScrollbar(DrawTarget* aDrawTarget,
                                              bool aHorizontal, nsIFrame* aFrame,
                                              const ComputedStyle& aStyle,
                                              const EventStates& aDocumentState,
-                                             DPIRatio aDpiRatio, bool aIsRoot) {
+                                             DPIRatio aDpiRatio) {
   // Draw nothing; the scrollbar track is drawn in PaintScrollbarTrack.
 }
 
 void nsNativeBasicThemeCocoa::PaintScrollCorner(
     DrawTarget* aDrawTarget, const LayoutDeviceRect& aRect, nsIFrame* aFrame,
     const ComputedStyle& aStyle, const EventStates& aDocumentState,
-    DPIRatio aDpiRatio, bool aIsRoot) {
+    DPIRatio aDpiRatio) {
   ScrollbarParams params =
       ScrollbarDrawingMac::ComputeScrollbarParams(aFrame, aStyle, false);
   if (aDpiRatio.scale >= 2.0f) {

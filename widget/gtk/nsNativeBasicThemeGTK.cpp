@@ -6,6 +6,7 @@
 #include "nsNativeBasicThemeGTK.h"
 
 #include "nsLayoutUtils.h"
+#include "mozilla/dom/Document.h"
 
 using namespace mozilla;
 
@@ -24,15 +25,15 @@ already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly() {
 
 nsITheme::Transparency nsNativeBasicThemeGTK::GetWidgetTransparency(
     nsIFrame* aFrame, StyleAppearance aAppearance) {
-  switch (aAppearance) {
-    case StyleAppearance::ScrollbarVertical:
-    case StyleAppearance::ScrollbarHorizontal:
-      // Make scrollbar tracks opaque on the window's scroll frame to prevent
-      // leaf layers from overlapping. See bug 1179780.
-      return IsRootScrollbar(aFrame) ? eOpaque : eTransparent;
-    default:
-      return nsNativeBasicTheme::GetWidgetTransparency(aFrame, aAppearance);
+  if (aAppearance == StyleAppearance::ScrollbarVertical ||
+      aAppearance == StyleAppearance::ScrollbarHorizontal) {
+    auto docState = aFrame->PresContext()->Document()->GetDocumentState();
+    const auto* style = nsLayoutUtils::StyleForScrollbar(aFrame);
+    auto [trackColor, borderColor] =
+        ComputeScrollbarColors(aFrame, *style, docState);
+    return trackColor.a == 1.0 ? eOpaque : eTransparent;
   }
+  return nsNativeBasicTheme::GetWidgetTransparency(aFrame, aAppearance);
 }
 
 auto nsNativeBasicThemeGTK::GetScrollbarSizes(nsPresContext* aPresContext,
@@ -101,9 +102,9 @@ void nsNativeBasicThemeGTK::PaintScrollbar(DrawTarget* aDrawTarget,
                                            bool aHorizontal, nsIFrame* aFrame,
                                            const ComputedStyle& aStyle,
                                            const EventStates& aDocumentState,
-                                           DPIRatio aDpiRatio, bool aIsRoot) {
+                                           DPIRatio aDpiRatio) {
   auto [trackColor, borderColor] =
-      ComputeScrollbarColors(aFrame, aStyle, aDocumentState, aIsRoot);
+      ComputeScrollbarColors(aFrame, aStyle, aDocumentState);
   Unused << borderColor;
   aDrawTarget->FillRect(aRect.ToUnknownRect(),
                         gfx::ColorPattern(ToDeviceColor(trackColor)));
@@ -112,9 +113,9 @@ void nsNativeBasicThemeGTK::PaintScrollbar(DrawTarget* aDrawTarget,
 void nsNativeBasicThemeGTK::PaintScrollCorner(
     DrawTarget* aDrawTarget, const LayoutDeviceRect& aRect, nsIFrame* aFrame,
     const ComputedStyle& aStyle, const EventStates& aDocumentState,
-    DPIRatio aDpiRatio, bool aIsRoot) {
+    DPIRatio aDpiRatio) {
   auto [trackColor, borderColor] =
-      ComputeScrollbarColors(aFrame, aStyle, aDocumentState, aIsRoot);
+      ComputeScrollbarColors(aFrame, aStyle, aDocumentState);
   Unused << borderColor;
   aDrawTarget->FillRect(aRect.ToUnknownRect(),
                         gfx::ColorPattern(ToDeviceColor(trackColor)));
