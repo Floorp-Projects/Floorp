@@ -108,3 +108,14 @@ ANDing the various STATE_BLOCKED_* flags.
 let event: ContentBlockingEventFlag;
 let pageLoad = number;
 ```
+
+### `defaultBrowserCheck`
+
+Happens at startup, when opening a newtab and when navigating to about:home.
+At startup it provides the result of running `DefaultBrowserCheck.willCheckDefaultBrowser` to follow existing behaviour if needed.
+On the newtab/homepage it reports the `source` as `newtab`.
+
+```typescript
+let source = "newtab" | undefined;
+let willShowDefaultPrompt = boolean;
+```

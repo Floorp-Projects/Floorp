@@ -158,6 +158,33 @@
           ],
           "additionalProperties": false,
           "description": "Happens every time Firefox blocks the loading of a page script/asset/resource that matches the one of the tracking behaviours specifid through params. See https://searchfox.org/mozilla-central/rev/8ccea36c4fb09412609fb738c722830d7098602b/uriloader/base/nsIWebProgressListener.idl#336"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "enum": ["defaultBrowserCheck"]
+            },
+            "context": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string",
+                  "enum": ["newtab"],
+                  "description": "When the source of the trigger is home/newtab"
+                },
+                "willShowDefaultPrompt": {
+                  "type": "boolean",
+                  "description": "When the source of the trigger is startup"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false,
+          "required": ["id"],
+          "description": "Happens when starting the browser or navigating to about:home/newtab"
         }
       ]
     }

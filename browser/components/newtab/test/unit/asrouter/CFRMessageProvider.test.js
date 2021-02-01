@@ -14,8 +14,8 @@ describe("CFRMessageProvider", () => {
   beforeEach(async () => {
     messages = await CFRMessageProvider.getMessages();
   });
-  it("should have a total of 13 messages", () => {
-    assert.lengthOf(messages, 13);
+  it("should have a total of 14 messages", () => {
+    assert.lengthOf(messages, 14);
   });
   it("should have one message each for the three regular addons", () => {
     for (const id of REGULAR_IDS) {
@@ -27,21 +27,6 @@ describe("CFRMessageProvider", () => {
         "three day cohort has the right frequency cap"
       );
       assert.notInclude(cohort3.targeting, `providerCohorts.cfr`);
-    }
-  });
-  it("should always have xpinstallEnabled as targeting if it is an addon", () => {
-    for (const message of messages) {
-      // Ensure that the CFR messages that are recommending an addon have this targeting.
-      // In the future when we can do targeting based on category, this test will change.
-      // See bug 1494778 and 1497653
-      if (!message.content.layout) {
-        assert.include(message.targeting, `(xpinstallEnabled == true)`);
-      }
-    }
-  });
-  it("should restrict all messages to `en` locale for now (PIN TAB is handled separately)", () => {
-    for (const message of messages.filter(m => !m.content.layout)) {
-      assert.include(message.targeting, `localeLanguageCode == "en"`);
     }
   });
   it("should restrict locale for PIN_TAB message", () => {
