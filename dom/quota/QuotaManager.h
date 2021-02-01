@@ -608,13 +608,14 @@ class QuotaManager final : public BackgroundThreadObject {
 
   // Maintains a list of directory locks that are acquired or queued. It can be
   // accessed on the owning (PBackground) thread only.
-  nsTArray<DirectoryLockImpl*> mDirectoryLocks;
+  nsTArray<NotNull<DirectoryLockImpl*>> mDirectoryLocks;
 
   // Only modifed on the owning thread, but read on multiple threads. Therefore
   // all modifications (including those on the owning thread) and all reads off
   // the owning thread must be protected by mQuotaMutex. In other words, only
   // reads on the owning thread don't have to be protected by mQuotaMutex.
-  nsDataHashtable<nsUint64HashKey, DirectoryLockImpl*> mDirectoryLockIdTable;
+  nsDataHashtable<nsUint64HashKey, NotNull<DirectoryLockImpl*>>
+      mDirectoryLockIdTable;
 
   // Directory lock tables that are used to update origin access time.
   DirectoryLockTable mTemporaryDirectoryLockTable;
