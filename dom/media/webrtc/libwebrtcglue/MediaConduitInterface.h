@@ -254,6 +254,7 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
   static RefPtr<WebRtcCallWrapper> Create(
       const dom::RTCStatsTimestampMaker& aTimestampMaker,
       SharedWebrtcState* aSharedState, webrtc::WebRtcKeyValueConfig* aTrials) {
+    auto current = TaskQueueWrapper::MainAsCurrent();
     return Create(aTimestampMaker, aSharedState->GetModuleThread(),
                   aSharedState->mAudioStateConfig,
                   aSharedState->mAudioDecoderFactory, aTrials);
@@ -265,6 +266,7 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
       const webrtc::AudioState::Config& aAudioStateConfig,
       webrtc::AudioDecoderFactory* aAudioDecoderFactory,
       webrtc::WebRtcKeyValueConfig* aTrials) {
+    auto current = TaskQueueWrapper::MainAsCurrent();
     auto eventLog = MakeUnique<webrtc::RtcEventLogNull>();
     webrtc::Call::Config config(eventLog.get());
     config.audio_state = webrtc::AudioState::Create(aAudioStateConfig);
