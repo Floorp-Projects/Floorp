@@ -687,8 +687,9 @@ void LIRGenerator::visitTest(MTest* test) {
       LAllocation lhs = useRegister(left);
       LAllocation rhs;
       if (comp->isInt32Comparison() ||
-          comp->compareType() == MCompare::Compare_UInt32) {
-        rhs = useAnyOrConstant(right);
+          comp->compareType() == MCompare::Compare_UInt32 ||
+          comp->compareType() == MCompare::Compare_UIntPtr) {
+        rhs = useAnyOrInt32Constant(right);
       } else {
         rhs = useRegister(right);
       }
@@ -937,8 +938,9 @@ void LIRGenerator::visitCompare(MCompare* comp) {
     LAllocation lhs = useRegister(left);
     LAllocation rhs;
     if (comp->isInt32Comparison() ||
-        comp->compareType() == MCompare::Compare_UInt32) {
-      rhs = useAnyOrConstant(right);
+        comp->compareType() == MCompare::Compare_UInt32 ||
+        comp->compareType() == MCompare::Compare_UIntPtr) {
+      rhs = useAnyOrInt32Constant(right);
     } else {
       rhs = useRegister(right);
     }
