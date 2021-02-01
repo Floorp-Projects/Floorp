@@ -45,7 +45,7 @@ puppeteer:
         command: >
             cd $GECKO_PATH/ &&
             $MOZ_FETCHES_DIR/firefox/firefox --screenshot http://example.org &&
-            ./mach puppeteer-test -vv --binary $MOZ_FETCHES_DIR/firefox/firefox --headless --write-results /builds/worker/results.json --log-tbpl - --log-errorsummary /builds/worker/pup_errorsummary.json --log-raw /builds/worker/pup_raw.log
+            ./mach puppeteer-test --ci -vv --binary $MOZ_FETCHES_DIR/firefox/firefox --headless --write-results /builds/worker/results.json --log-tbpl - --log-errorsummary /builds/worker/pup_errorsummary.json --log-raw /builds/worker/pup_raw.log
 
 puppeteer-fis:
     description: Puppeteer tests against Firefox CDP-based remote protocol with Fission (site isolation) turned on
@@ -56,4 +56,4 @@ puppeteer-fis:
         using: run-task
         command: >
             cd $GECKO_PATH/ &&
-            ./mach puppeteer-test -vv --binary $MOZ_FETCHES_DIR/firefox/firefox --headless --enable-fission --write-results /builds/worker/results.json --log-tbpl - --log-errorsummary /builds/worker/pup_errorsummary.json --log-raw /builds/worker/pup_raw.log
+            ./mach puppeteer-test --ci -vv --binary $MOZ_FETCHES_DIR/firefox/firefox --headless --enable-fission --write-results /builds/worker/results.json --log-tbpl - --log-errorsummary /builds/worker/pup_errorsummary.json --log-raw /builds/worker/pup_raw.log
