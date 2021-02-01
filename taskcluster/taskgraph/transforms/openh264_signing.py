@@ -56,24 +56,32 @@ def make_signing_description(config, jobs):
         )
 
         scopes = [signing_cert_scope]
+        worker_type = "linux-signing"
+        worker = {
+            "implementation": "scriptworker-signing",
+            "max-run-time": 3600,
+        }
+        rev = attributes["openh264_rev"]
+        upstream_artifact = {
+            "taskId": {"task-reference": "<openh264>"},
+            "taskType": "build",
+        }
 
         if "win" in build_platform:
             # job['primary-dependency'].task['payload']['command']
-            formats = ["autograph_authenticode"]
+            upstream_artifact["formats"] = ["autograph_authenticode"]
+        elif "mac" in build_platform:
+            upstream_artifact["formats"] = ["mac_single_file"]
+            upstream_artifact["singleFileGlobs"] = ["libgmpopenh264.dylib"]
+            worker_type = "mac-signing"
+            worker["mac-behavior"] = "mac_single_file"
         else:
-            formats = ["autograph_gpg"]
+            upstream_artifact["formats"] = ["autograph_gpg"]
 
-        rev = attributes["openh264_rev"]
-        upstream_artifacts = [
-            {
-                "taskId": {"task-reference": "<openh264>"},
-                "taskType": "build",
-                "paths": [
-                    "private/openh264/openh264-{}-{}.zip".format(build_platform, rev),
-                ],
-                "formats": formats,
-            }
+        upstream_artifact["paths"] = [
+            "private/openh264/openh264-{}-{}.zip".format(build_platform, rev),
         ]
+        worker["upstream-artifacts"] = [upstream_artifact]
 
         treeherder = inherit_treeherder_from_dep(job, dep_job)
         treeherder.setdefault(
@@ -86,12 +94,8 @@ def make_signing_description(config, jobs):
         task = {
             "label": job["label"],
             "description": description,
-            "worker-type": "linux-signing",
-            "worker": {
-                "implementation": "scriptworker-signing",
-                "upstream-artifacts": upstream_artifacts,
-                "max-run-time": 3600,
-            },
+            "worker-type": worker_type,
+            "worker": worker,
             "scopes": scopes,
             "dependencies": dependencies,
             "attributes": my_attributes,
