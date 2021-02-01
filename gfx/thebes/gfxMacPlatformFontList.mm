@@ -809,7 +809,14 @@ void gfxSingleFaceMacFontFamily::ReadOtherFamilyNames(gfxPlatformFontList* aPlat
 // "Language Support" directory, and don't show up in the standard font
 // list returned by CTFontManagerCopyAvailableFontFamilyNames unless
 // we explicitly activate them.
-#define LANG_FONTS_DIR "/Library/Application Support/Apple/Fonts/Language Support"
+//
+// On macOS Big Sur, the various Noto fonts etc have moved to a new location
+// under /System/Fonts. Whether they're exposed in the font list by default
+// depends on the SDK used; when built with SDK 10.15, they're absent. So
+// we explicitly activate them to be sure they'll be available.
+static const nsLiteralCString kLangFontsDirs[] = {
+    "/Library/Application Support/Apple/Fonts/Language Support"_ns,
+    "/System/Library/Fonts/Supplemental"_ns};
 
 gfxMacPlatformFontList::gfxMacPlatformFontList()
     : gfxPlatformFontList(false), mDefaultFont(nullptr), mUseSizeSensitiveSystemFont(false) {
@@ -823,12 +830,14 @@ gfxMacPlatformFontList::gfxMacPlatformFontList()
   }
 #endif
 
-  nsresult rv;
-  nsCOMPtr<nsIFile> langFonts(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    rv = langFonts->InitWithNativePath(nsLiteralCString(LANG_FONTS_DIR));
+  for (const auto& dir : kLangFontsDirs) {
+    nsresult rv;
+    nsCOMPtr<nsIFile> langFonts(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv)) {
-      ActivateFontsFromDir(langFonts);
+      rv = langFonts->InitWithNativePath(dir);
+      if (NS_SUCCEEDED(rv)) {
+        ActivateFontsFromDir(langFonts);
+      }
     }
   }
 
