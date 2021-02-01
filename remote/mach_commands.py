@@ -508,6 +508,11 @@ def create_parser_puppeteer():
         help="Path to browser binary.  Defaults to local Firefox build.",
     )
     p.add_argument(
+        "--ci",
+        action="store_true",
+        help="Flag that indicates that tests run in a CI environment.",
+    )
+    p.add_argument(
         "--enable-fission",
         action="store_true",
         help="Enable Fission (site isolation) in Gecko.",
@@ -571,6 +576,7 @@ class PuppeteerTest(MachCommandBase):
     def puppeteer_test(
         self,
         binary=None,
+        ci=False,
         enable_fission=False,
         headless=False,
         extra_prefs=None,
@@ -582,6 +588,8 @@ class PuppeteerTest(MachCommandBase):
         subset=False,
         **kwargs
     ):
+
+        self.ci = ci
 
         logger = mozlog.commandline.setup_logging(
             "puppeteer-test", kwargs, {"mach": sys.stdout}
@@ -669,7 +677,9 @@ class PuppeteerTest(MachCommandBase):
         if changed_files and os.path.isdir(lib_dir):
             # clobber lib to force `tsc compile` step
             shutil.rmtree(lib_dir)
-        npm("ci", cwd=os.path.join(self.topsrcdir, puppeteer_dir), env=env)
+
+        command = "ci" if self.ci else "install"
+        npm(command, cwd=os.path.join(self.topsrcdir, puppeteer_dir), env=env)
 
 
 def exit(code, error=None):
