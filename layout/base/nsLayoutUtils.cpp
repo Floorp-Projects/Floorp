@@ -9523,13 +9523,20 @@ nsSize nsLayoutUtils::ExpandHeightForViewportUnits(nsPresContext* aPresContext,
 template <typename SizeType>
 /* static */ SizeType ExpandHeightForDynamicToolbarImpl(
     const nsPresContext* aPresContext, const SizeType& aSize) {
-  RefPtr<MobileViewportManager> MVM =
-      aPresContext->PresShell()->GetMobileViewportManager();
-  MOZ_ASSERT(MVM);
+  MOZ_ASSERT(aPresContext);
+
+  LayoutDeviceIntSize displaySize;
+  if (RefPtr<MobileViewportManager> MVM =
+          aPresContext->PresShell()->GetMobileViewportManager()) {
+    displaySize = MVM->DisplaySize();
+  } else if (!nsLayoutUtils::GetContentViewerSize(aPresContext, displaySize)) {
+    return aSize;
+  }
+
   float toolbarHeightRatio =
       mozilla::ScreenCoord(aPresContext->GetDynamicToolbarMaxHeight()) /
       mozilla::ViewAs<mozilla::ScreenPixel>(
-          MVM->DisplaySize(),
+          displaySize,
           mozilla::PixelCastJustification::LayoutDeviceIsScreenForBounds)
           .height;
 
