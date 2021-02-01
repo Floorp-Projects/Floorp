@@ -343,7 +343,7 @@ std::array<sRGBColor, 3> nsNativeBasicTheme::ComputeFocusRectColors() {
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeScrollbarColors(
     nsIFrame* aFrame, const ComputedStyle& aStyle,
-    const EventStates& aDocumentState, bool aIsRoot) {
+    const EventStates& aDocumentState) {
   const nsStyleUI* ui = aStyle.StyleUI();
   nscolor color;
   if (ui->mScrollbarColor.IsColors()) {
@@ -354,12 +354,6 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeScrollbarColors(
   } else {
     color = LookAndFeel::GetColor(LookAndFeel::ColorID::ThemedScrollbar,
                                   sScrollbarColor.ToABGR());
-  }
-  if (aIsRoot) {
-    // Root scrollbars must be opaque.
-    nscolor bg = LookAndFeel::GetColor(LookAndFeel::ColorID::WindowBackground,
-                                       NS_RGB(0xff, 0xff, 0xff));
-    color = NS_ComposeColors(bg, color);
   }
   return std::make_pair(gfx::sRGBColor::FromABGR(color), sScrollbarBorderColor);
 }
@@ -988,7 +982,7 @@ void nsNativeBasicTheme::PaintScrollbarTrack(DrawTarget* aDrawTarget,
                                              bool aHorizontal, nsIFrame* aFrame,
                                              const ComputedStyle& aStyle,
                                              const EventStates& aDocumentState,
-                                             DPIRatio aDpiRatio, bool aIsRoot) {
+                                             DPIRatio aDpiRatio) {
   // Draw nothing by default. Subclasses can override this.
 }
 
@@ -997,9 +991,9 @@ void nsNativeBasicTheme::PaintScrollbar(DrawTarget* aDrawTarget,
                                         bool aHorizontal, nsIFrame* aFrame,
                                         const ComputedStyle& aStyle,
                                         const EventStates& aDocumentState,
-                                        DPIRatio aDpiRatio, bool aIsRoot) {
+                                        DPIRatio aDpiRatio) {
   auto [scrollbarColor, borderColor] =
-      ComputeScrollbarColors(aFrame, aStyle, aDocumentState, aIsRoot);
+      ComputeScrollbarColors(aFrame, aStyle, aDocumentState);
   aDrawTarget->FillRect(aRect.ToUnknownRect(),
                         ColorPattern(ToDeviceColor(scrollbarColor)));
   // FIXME(heycam): We should probably derive the border color when custom
@@ -1024,9 +1018,9 @@ void nsNativeBasicTheme::PaintScrollCorner(DrawTarget* aDrawTarget,
                                            nsIFrame* aFrame,
                                            const ComputedStyle& aStyle,
                                            const EventStates& aDocumentState,
-                                           DPIRatio aDpiRatio, bool aIsRoot) {
+                                           DPIRatio aDpiRatio) {
   auto [scrollbarColor, borderColor] =
-      ComputeScrollbarColors(aFrame, aStyle, aDocumentState, aIsRoot);
+      ComputeScrollbarColors(aFrame, aStyle, aDocumentState);
   Unused << borderColor;
   aDrawTarget->FillRect(aRect.ToUnknownRect(),
                         ColorPattern(ToDeviceColor(scrollbarColor)));
@@ -1095,15 +1089,6 @@ void nsNativeBasicTheme::PaintScrollbarButton(
   }
 }
 
-// Checks whether the frame is for a root <scrollbar> or <scrollcorner>, which
-// influences some platforms' scrollbar rendering.
-bool nsNativeBasicTheme::IsRootScrollbar(nsIFrame* aFrame) {
-  return CheckBooleanAttr(aFrame, nsGkAtoms::root_) &&
-         aFrame->PresContext()->IsRootContentDocument() &&
-         aFrame->GetContent() &&
-         aFrame->GetContent()->IsInNamespace(kNameSpaceID_XUL);
-}
-
 NS_IMETHODIMP
 nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                          StyleAppearance aAppearance,
@@ -1112,7 +1097,7 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
   DrawTarget* dt = aContext->GetDrawTarget();
   const nscoord twipsPerPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
   EventStates eventState = GetContentState(aFrame, aAppearance);
-  EventStates docState = aFrame->GetContent()->OwnerDoc()->GetDocumentState();
+  EventStates docState = aFrame->PresContext()->Document()->GetDocumentState();
   auto devPxRect = LayoutDeviceRect::FromUnknownRect(
       NSRectToSnappedRect(aRect, twipsPerPixel, *dt));
 
@@ -1220,7 +1205,7 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
           aAppearance == StyleAppearance::ScrollbartrackHorizontal;
       PaintScrollbarTrack(dt, devPxRect, isHorizontal, aFrame,
                           *nsLayoutUtils::StyleForScrollbar(aFrame), docState,
-                          dpiRatio, IsRootScrollbar(aFrame));
+                          dpiRatio);
       break;
     }
     case StyleAppearance::ScrollbarHorizontal:
@@ -1228,13 +1213,13 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
       bool isHorizontal = aAppearance == StyleAppearance::ScrollbarHorizontal;
       PaintScrollbar(dt, devPxRect, isHorizontal, aFrame,
                      *nsLayoutUtils::StyleForScrollbar(aFrame), docState,
-                     dpiRatio, IsRootScrollbar(aFrame));
+                     dpiRatio);
       break;
     }
     case StyleAppearance::Scrollcorner:
       PaintScrollCorner(dt, devPxRect, aFrame,
                         *nsLayoutUtils::StyleForScrollbar(aFrame), docState,
-                        dpiRatio, IsRootScrollbar(aFrame));
+                        dpiRatio);
       break;
     case StyleAppearance::ScrollbarbuttonUp:
     case StyleAppearance::ScrollbarbuttonDown:

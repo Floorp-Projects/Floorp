@@ -44,7 +44,7 @@ class nsNativeBasicThemeWin : public nsNativeBasicTheme {
   std::array<sRGBColor, 3> ComputeFocusRectColors() override;
   std::pair<sRGBColor, sRGBColor> ComputeScrollbarColors(
       nsIFrame* aFrame, const ComputedStyle& aStyle,
-      const EventStates& aDocumentState, bool aIsRoot) override;
+      const EventStates& aDocumentState) override;
   sRGBColor ComputeScrollbarThumbColor(
       nsIFrame* aFrame, const ComputedStyle& aStyle,
       const EventStates& aElementState,
