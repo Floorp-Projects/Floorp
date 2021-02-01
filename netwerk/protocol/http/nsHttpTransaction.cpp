@@ -1744,6 +1744,15 @@ bool nsHttpTransaction::ResponseTimeoutEnabled() const {
 // nsHttpTransaction <private>
 //-----------------------------------------------------------------------------
 
+static inline void RemoveAlternateServiceUsedHeader(
+    nsHttpRequestHead* aRequestHead) {
+  if (aRequestHead) {
+    DebugOnly<nsresult> rv =
+        aRequestHead->SetHeader(nsHttp::Alternate_Service_Used, "0"_ns);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  }
+}
+
 nsresult nsHttpTransaction::Restart() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
@@ -1794,11 +1803,7 @@ nsresult nsHttpTransaction::Restart() {
     RefPtr<nsHttpConnectionInfo> ci;
     mConnInfo->CloneAsDirectRoute(getter_AddRefs(ci));
     mConnInfo = ci;
-    if (mRequestHead) {
-      DebugOnly<nsresult> rv =
-          mRequestHead->SetHeader(nsHttp::Alternate_Service_Used, "0"_ns);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
+    RemoveAlternateServiceUsedHeader(mRequestHead);
   }
 
   // Reset mDoNotRemoveAltSvc for the next try.
@@ -2536,11 +2541,7 @@ void nsHttpTransaction::DisableHttp3() {
     // After CloneAsDirectRoute(), http3 will be disabled.
     RefPtr<nsHttpConnectionInfo> connInfo;
     mConnInfo->CloneAsDirectRoute(getter_AddRefs(connInfo));
-    if (mRequestHead) {
-      DebugOnly<nsresult> rv =
-          mRequestHead->SetHeader(nsHttp::Alternate_Service_Used, "0"_ns);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
+    RemoveAlternateServiceUsedHeader(mRequestHead);
     MOZ_ASSERT(!connInfo->IsHttp3());
     mConnInfo.swap(connInfo);
   }
@@ -2936,11 +2937,7 @@ nsresult nsHttpTransaction::RestartOnFastOpenError() {
     RefPtr<nsHttpConnectionInfo> ci;
     mConnInfo->CloneAsDirectRoute(getter_AddRefs(ci));
     mConnInfo = ci;
-    if (mRequestHead) {
-      DebugOnly<nsresult> rv =
-          mRequestHead->SetHeader(nsHttp::Alternate_Service_Used, "0"_ns);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
+    RemoveAlternateServiceUsedHeader(mRequestHead);
   }
   mEarlyDataDisposition = EARLY_NONE;
   m0RTTInProgress = false;
@@ -3226,16 +3223,14 @@ void nsHttpTransaction::MaybeCancelFallbackTimer() {
 void nsHttpTransaction::OnBackupConnectionReady() {
   LOG(("nsHttpTransaction::OnBackupConnectionReady [%p] mConnected=%d", this,
        mConnected));
-  if (mConnected || mClosed) {
+  if (mConnected || mClosed || mRestarted) {
     return;
   }
 
   HandleFallback(mBackupConnInfo);
 
   mCaps |= NS_HTTP_DISALLOW_HTTP3;
-  DebugOnly<nsresult> rv =
-      mRequestHead->SetHeader(nsHttp::Alternate_Service_Used, "0"_ns);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  RemoveAlternateServiceUsedHeader(mRequestHead);
 }
 
 void nsHttpTransaction::OnHttp3BackupTimer() {

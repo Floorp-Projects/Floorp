@@ -63,7 +63,8 @@ nsHttpConnectionInfo::nsHttpConnectionInfo(
   mEndToEndSSL = true;  // so DefaultPort() works
   mRoutedPort = routedPort == -1 ? DefaultPort() : routedPort;
 
-  if (!originHost.Equals(routedHost) || (originPort != routedPort)) {
+  if (!originHost.Equals(routedHost) || (originPort != routedPort) ||
+      aIsHttp3) {
     mRoutedHost = routedHost;
   }
   Init(originHost, originPort, npnToken, username, proxyInfo, originAttributes,
@@ -440,18 +441,12 @@ nsHttpConnectionInfo::DeserializeHttpConnectionInfoCloneArgs(
 }
 
 void nsHttpConnectionInfo::CloneAsDirectRoute(nsHttpConnectionInfo** outCI) {
-  if (mRoutedHost.IsEmpty()) {
-    RefPtr<nsHttpConnectionInfo> clone = Clone();
-    // Explicitly set mIsHttp3 to false, since CloneAsDirectRoute() is used to
-    // create a non-http3 connection info.
-    clone->mIsHttp3 = false;
-    clone.forget(outCI);
-    return;
-  }
-
-  RefPtr<nsHttpConnectionInfo> clone =
-      new nsHttpConnectionInfo(mOrigin, mOriginPort, ""_ns, mUsername,
-                               mProxyInfo, mOriginAttributes, mEndToEndSSL);
+  // Explicitly use an empty npnToken when |mIsHttp3| is true, since we want to
+  // create a non-http3 connection info.
+  RefPtr<nsHttpConnectionInfo> clone = new nsHttpConnectionInfo(
+      mOrigin, mOriginPort,
+      (mRoutedHost.IsEmpty() && !mIsHttp3) ? mNPNToken : ""_ns, mUsername,
+      mProxyInfo, mOriginAttributes, mEndToEndSSL);
   // Make sure the anonymous, insecure-scheme, and private flags are transferred
   clone->SetAnonymous(GetAnonymous());
   clone->SetPrivate(GetPrivate());
