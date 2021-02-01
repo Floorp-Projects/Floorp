@@ -64,6 +64,7 @@ describe("RemoteL10n", () => {
         "browser/branding/brandings.ftl",
         "browser/branding/sync-brand.ftl",
         "branding/brand.ftl",
+        "browser/defaultBrowserNotification.ftl",
       ]);
       assert.isFalse(args[1]);
       assert.isFunction(args[2].generateBundles);
@@ -82,6 +83,7 @@ describe("RemoteL10n", () => {
         "browser/branding/brandings.ftl",
         "browser/branding/sync-brand.ftl",
         "branding/brand.ftl",
+        "browser/defaultBrowserNotification.ftl",
       ]);
       assert.isFalse(args[1]);
       assert.isEmpty(args[2]);
