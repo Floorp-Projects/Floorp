@@ -3242,10 +3242,7 @@ class MReturnFromCtor : public MBinaryInstruction,
 class MToFPInstruction : public MUnaryInstruction, public ToDoublePolicy::Data {
  public:
   // Types of values which can be converted.
-  enum ConversionKind {
-    NonStringPrimitives,
-    NumbersOnly
-  };
+  enum ConversionKind { NonStringPrimitives, NumbersOnly };
 
  private:
   ConversionKind conversion_;
@@ -5048,8 +5045,6 @@ class MSub : public MBinaryArithInstruction {
     }
     return ret;
   }
-
-  MDefinition* foldsTo(TempAllocator& alloc) override;
 
   double getIdentity() override { return 0; }
 
