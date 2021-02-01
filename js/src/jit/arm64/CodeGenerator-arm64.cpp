@@ -98,12 +98,7 @@ void CodeGenerator::visitCompare(LCompare* comp) {
 
   if (type == MCompare::Compare_Object || type == MCompare::Compare_Symbol ||
       type == MCompare::Compare_UIntPtr) {
-    if (right->isConstant()) {
-      MOZ_ASSERT(type == MCompare::Compare_UIntPtr);
-      masm.cmpPtrSet(cond, leftreg, Imm32(ToInt32(right)), defreg);
-    } else {
-      masm.cmpPtrSet(cond, leftreg, ToRegister(right), defreg);
-    }
+    masm.cmpPtrSet(cond, leftreg, ToRegister(right), defreg);
     return;
   }
 
@@ -122,12 +117,7 @@ void CodeGenerator::visitCompareAndBranch(LCompareAndBranch* comp) {
 
   if (type == MCompare::Compare_Object || type == MCompare::Compare_Symbol ||
       type == MCompare::Compare_UIntPtr) {
-    if (right->isConstant()) {
-      MOZ_ASSERT(type == MCompare::Compare_UIntPtr);
-      masm.cmpPtr(ToRegister(left), Imm32(ToInt32(right)));
-    } else {
-      masm.cmpPtr(ToRegister(left), ToRegister(right));
-    }
+    masm.cmpPtr(ToRegister(left), ToRegister(right));
   } else if (right->isConstant()) {
     masm.cmp32(ToRegister(left), Imm32(ToInt32(right)));
   } else {

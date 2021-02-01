@@ -1609,17 +1609,10 @@ bool WarpCacheIRTranspiler::emitLoadTypedArrayLengthInt32Result(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
 
-  // Use a separate instruction for converting the length to Int32, so that we
-  // can fold the MArrayBufferViewLength instruction with length instructions
-  // added for bounds checks.
-
-  auto* length = MArrayBufferViewLength::New(alloc(), obj);
+  auto* length = MArrayBufferViewLength::New(alloc(), obj, MIRType::Int32);
   add(length);
 
-  auto* lengthInt32 = MNonNegativeIntPtrToInt32::New(alloc(), length);
-  add(lengthInt32);
-
-  pushResult(lengthInt32);
+  pushResult(length);
   return true;
 }
 
@@ -1788,7 +1781,7 @@ bool WarpCacheIRTranspiler::emitLoadTypedArrayElementExistsResult(
   MDefinition* obj = getOperand(objId);
   MDefinition* index = getOperand(indexId);
 
-  auto* length = MArrayBufferViewLength::New(alloc(), obj);
+  auto* length = MArrayBufferViewLength::New(alloc(), obj, MIRType::IntPtr);
   add(length);
 
   // Unsigned comparison to catch negative indices.
@@ -1815,7 +1808,7 @@ bool WarpCacheIRTranspiler::emitLoadTypedArrayElementResult(
     return true;
   }
 
-  auto* length = MArrayBufferViewLength::New(alloc(), obj);
+  auto* length = MArrayBufferViewLength::New(alloc(), obj, MIRType::IntPtr);
   add(length);
 
   index = addBoundsCheck(index, length);
@@ -2110,7 +2103,7 @@ bool WarpCacheIRTranspiler::emitStoreTypedArrayElement(ObjOperandId objId,
   MDefinition* index = getOperand(indexId);
   MDefinition* rhs = getOperand(ValOperandId(rhsId));
 
-  auto* length = MArrayBufferViewLength::New(alloc(), obj);
+  auto* length = MArrayBufferViewLength::New(alloc(), obj, MIRType::IntPtr);
   add(length);
 
   if (!handleOOB) {
@@ -2136,7 +2129,8 @@ bool WarpCacheIRTranspiler::emitStoreTypedArrayElement(ObjOperandId objId,
 void WarpCacheIRTranspiler::addDataViewData(MDefinition* obj, Scalar::Type type,
                                             MDefinition** offset,
                                             MInstruction** elements) {
-  MInstruction* length = MArrayBufferViewLength::New(alloc(), obj);
+  MInstruction* length =
+      MArrayBufferViewLength::New(alloc(), obj, MIRType::IntPtr);
   add(length);
 
   // Adjust the length to account for accesses near the end of the dataview.
@@ -3530,7 +3524,7 @@ bool WarpCacheIRTranspiler::emitAtomicsCompareExchangeResult(
   MDefinition* expected = getOperand(expectedId);
   MDefinition* replacement = getOperand(replacementId);
 
-  auto* length = MArrayBufferViewLength::New(alloc(), obj);
+  auto* length = MArrayBufferViewLength::New(alloc(), obj, MIRType::IntPtr);
   add(length);
 
   index = addBoundsCheck(index, length);
@@ -3558,7 +3552,7 @@ bool WarpCacheIRTranspiler::emitAtomicsExchangeResult(
   MDefinition* index = getOperand(indexId);
   MDefinition* value = getOperand(valueId);
 
-  auto* length = MArrayBufferViewLength::New(alloc(), obj);
+  auto* length = MArrayBufferViewLength::New(alloc(), obj, MIRType::IntPtr);
   add(length);
 
   index = addBoundsCheck(index, length);
@@ -3588,7 +3582,7 @@ bool WarpCacheIRTranspiler::emitAtomicsBinaryOp(ObjOperandId objId,
   MDefinition* index = getOperand(indexId);
   MDefinition* value = getOperand(valueId);
 
-  auto* length = MArrayBufferViewLength::New(alloc(), obj);
+  auto* length = MArrayBufferViewLength::New(alloc(), obj, MIRType::IntPtr);
   add(length);
 
   index = addBoundsCheck(index, length);
@@ -3655,7 +3649,7 @@ bool WarpCacheIRTranspiler::emitAtomicsLoadResult(ObjOperandId objId,
   MDefinition* obj = getOperand(objId);
   MDefinition* index = getOperand(indexId);
 
-  auto* length = MArrayBufferViewLength::New(alloc(), obj);
+  auto* length = MArrayBufferViewLength::New(alloc(), obj, MIRType::IntPtr);
   add(length);
 
   index = addBoundsCheck(index, length);
@@ -3684,7 +3678,7 @@ bool WarpCacheIRTranspiler::emitAtomicsStoreResult(ObjOperandId objId,
   MDefinition* index = getOperand(indexId);
   MDefinition* value = getOperand(valueId);
 
-  auto* length = MArrayBufferViewLength::New(alloc(), obj);
+  auto* length = MArrayBufferViewLength::New(alloc(), obj, MIRType::IntPtr);
   add(length);
 
   index = addBoundsCheck(index, length);

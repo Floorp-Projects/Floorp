@@ -5648,16 +5648,6 @@ class LInt32ToIntPtr : public LInstructionHelper<1, 1, 0> {
   MInt32ToIntPtr* mir() const { return mir_->toInt32ToIntPtr(); }
 };
 
-class LNonNegativeIntPtrToInt32 : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(NonNegativeIntPtrToInt32)
-
-  explicit LNonNegativeIntPtrToInt32(const LAllocation& input)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, input);
-  }
-};
-
 class LAdjustDataViewLength : public LInstructionHelper<1, 1, 0> {
  public:
   LIR_HEADER(AdjustDataViewLength)
