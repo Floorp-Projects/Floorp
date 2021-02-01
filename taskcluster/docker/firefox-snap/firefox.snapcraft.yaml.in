@@ -13,7 +13,6 @@ apps:
     desktop: distribution/firefox.desktop
     extensions: [gnome-3-34]
     environment:
-      DISABLE_WAYLAND: 1
       HOME: "$SNAP_USER_COMMON"
       GTK_USE_PORTAL: 1
     slots:
