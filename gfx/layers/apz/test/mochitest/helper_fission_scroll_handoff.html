@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>scroll handoff</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="helper_fission_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script>
+
+fission_subtest_init();
+
+FissionTestHelper.startTestPromise
+  .then(waitUntilApzStable)
+  .then(loadOOPIFrame("testframe", "helper_fission_empty.html"))
+  .then(waitUntilApzStable)
+  .then(test)
+  .then(FissionTestHelper.subtestDone, FissionTestHelper.subtestFailed);
+
+async function test() {
+  let scrollEventPromise = new Promise(resolve => {
+    window.addEventListener("scroll", resolve, { once: true });
+  });
+
+  let iframe = document.getElementById("testframe");
+
+  synthesizeNativeWheel(iframe, 100, 100, 0, -50);
+  await scrollEventPromise;
+
+  ok(window.scrollY > 0,
+     "Mouse wheel scrolling on OOP iframes in position:fixed subtree " +
+     "should be handed off to the parent");
+}
+
+  </script>
+</head>
+<style>
+iframe {
+    position: fixed;
+    width: 500px;
+    height: 500px;
+}
+</style>
+<body>
+<iframe id="testframe"></iframe>
+<div style="height:1000vh"></div>
+</body>
+</html>
