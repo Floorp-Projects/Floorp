@@ -1736,7 +1736,7 @@ class IDLParser(object):
             # forward-declared interface... must not have attributes!
             if len(attlist) != 0:
                 raise IDLError(
-                    "Forward-declared interface must not have attributes", list[0][3]
+                    "Forward-declared interface must not have attributes", loc()
                 )
 
             if base is not None:
