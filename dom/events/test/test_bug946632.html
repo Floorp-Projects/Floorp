@@ -139,8 +139,8 @@ async function runTests()
     reset();
     await promiseApzFlushedRepaints();
     let testEndPromise = prepare(test.check);
-    sendWheelAndPaint(input, 8, 6, test.event, function() {
-      // Do nothing - we wait for the scroll event below.
+    await new Promise(resolve => {
+      sendWheelAndPaint(input, 8, 6, test.event, resolve);
     });
     await testEndPromise;
   }
