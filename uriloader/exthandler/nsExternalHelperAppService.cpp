@@ -1367,11 +1367,10 @@ bool nsExternalAppHandler::ShouldForceExtension(const nsString& aFileExt) {
         break;
       }
     }
+    if (!canForce) {
+      return false;
+    }
   }
-  if (!canForce) {
-    return false;
-  }
-
   // If we get here, we know for sure the mimetype allows us to overwrite the
   // existing extension, if it's wrong. Return whether the extension is wrong:
 
