@@ -48,7 +48,8 @@ Please note that some targeting attributes require stricter controls on the tele
 * [profileRestartCount](#profilerestartcount)
 * [homePageSettings](#homepagesettings)
 * [newtabSettings](#newtabsettings)
-* [isFissionExperimentEnabled](#isFissionExperimentEnabled)
+* [isFissionExperimentEnabled](#isfissionexperimentenabled)
+* [activeNotifications](#activenotifications)
 
 ## Detailed usage
 
@@ -820,3 +821,8 @@ Object {
 ### `isFissionExperimentEnabled`
 
 A boolean. `true` if we're running Fission experiment, `false` otherwise.
+
+### `activeNotifications`
+
+True when an infobar style message is displayed or when the awesomebar is
+expanded to show a message (for example onboarding tips).
