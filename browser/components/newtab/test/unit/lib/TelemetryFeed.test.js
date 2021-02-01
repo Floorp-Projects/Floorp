@@ -766,6 +766,14 @@ describe("TelemetryFeed", () => {
       assert.equal(pingType, "whats-new-panel");
     });
   });
+  describe("#applyInfoBarPolicy", () => {
+    it("should set client_id and set pingType", async () => {
+      const { ping, pingType } = await instance.applyInfoBarPolicy({});
+
+      assert.propertyVal(ping, "client_id", FAKE_TELEMETRY_ID);
+      assert.equal(pingType, "infobar");
+    });
+  });
   describe("#applyMomentsPolicy", () => {
     it("should use client_id and message_id in prerelease", async () => {
       globals.set("UpdateUtils", {
