@@ -1254,25 +1254,6 @@ void CodeGenerator::visitInt32ToIntPtr(LInt32ToIntPtr* lir) {
   }
 }
 
-void CodeGenerator::visitNonNegativeIntPtrToInt32(
-    LNonNegativeIntPtrToInt32* lir) {
-  Register output = ToRegister(lir->output());
-  MOZ_ASSERT(ToRegister(lir->input()) == output);
-
-#ifdef DEBUG
-  Label ok;
-  masm.branchPtr(Assembler::NotSigned, output, output, &ok);
-  masm.assumeUnreachable("Unexpected negative value");
-  masm.bind(&ok);
-#endif
-
-#ifdef JS_64BIT
-  Label bail;
-  masm.branchPtr(Assembler::Above, output, Imm32(INT32_MAX), &bail);
-  bailoutFrom(&bail, lir->snapshot());
-#endif
-}
-
 void CodeGenerator::visitAdjustDataViewLength(LAdjustDataViewLength* lir) {
   Register output = ToRegister(lir->output());
   MOZ_ASSERT(ToRegister(lir->input()) == output);
@@ -7856,7 +7837,17 @@ void CodeGenerator::visitArrayBufferByteLengthInt32(
 void CodeGenerator::visitArrayBufferViewLength(LArrayBufferViewLength* lir) {
   Register obj = ToRegister(lir->object());
   Register out = ToRegister(lir->output());
-  masm.loadArrayBufferViewLengthPtr(obj, out);
+
+  if (lir->mir()->type() == MIRType::Int32) {
+    Label bail;
+    masm.loadArrayBufferViewLengthInt32(obj, out, &bail);
+    if (bail.used()) {
+      bailoutFrom(&bail, lir->snapshot());
+    }
+  } else {
+    MOZ_ASSERT(lir->mir()->type() == MIRType::IntPtr);
+    masm.loadArrayBufferViewLengthPtr(obj, out);
+  }
 }
 
 void CodeGenerator::visitArrayBufferViewByteOffset(
@@ -13811,19 +13802,12 @@ void CodeGenerator::visitWasmReturnVoid(LWasmReturnVoid* lir) {
   }
 }
 
-void CodeGenerator::emitAssertRangeI(MIRType type, const Range* r,
-                                     Register input) {
+void CodeGenerator::emitAssertRangeI(const Range* r, Register input) {
   // Check the lower bound.
   if (r->hasInt32LowerBound() && r->lower() > INT32_MIN) {
     Label success;
-    if (type == MIRType::Int32 || type == MIRType::Boolean) {
-      masm.branch32(Assembler::GreaterThanOrEqual, input, Imm32(r->lower()),
-                    &success);
-    } else {
-      MOZ_ASSERT(type == MIRType::IntPtr);
-      masm.branchPtr(Assembler::GreaterThanOrEqual, input, Imm32(r->lower()),
-                     &success);
-    }
+    masm.branch32(Assembler::GreaterThanOrEqual, input, Imm32(r->lower()),
+                  &success);
     masm.assumeUnreachable(
         "Integer input should be equal or higher than Lowerbound.");
     masm.bind(&success);
@@ -13832,14 +13816,8 @@ void CodeGenerator::emitAssertRangeI(MIRType type, const Range* r,
   // Check the upper bound.
   if (r->hasInt32UpperBound() && r->upper() < INT32_MAX) {
     Label success;
-    if (type == MIRType::Int32 || type == MIRType::Boolean) {
-      masm.branch32(Assembler::LessThanOrEqual, input, Imm32(r->upper()),
-                    &success);
-    } else {
-      MOZ_ASSERT(type == MIRType::IntPtr);
-      masm.branchPtr(Assembler::LessThanOrEqual, input, Imm32(r->upper()),
-                     &success);
-    }
+    masm.branch32(Assembler::LessThanOrEqual, input, Imm32(r->upper()),
+                  &success);
     masm.assumeUnreachable(
         "Integer input should be lower or equal than Upperbound.");
     masm.bind(&success);
@@ -13986,7 +13964,7 @@ void CodeGenerator::visitAssertRangeI(LAssertRangeI* ins) {
   Register input = ToRegister(ins->input());
   const Range* r = ins->range();
 
-  emitAssertRangeI(ins->mir()->input()->type(), r, input);
+  emitAssertRangeI(r, input);
 }
 
 void CodeGenerator::visitAssertRangeD(LAssertRangeD* ins) {
@@ -14024,7 +14002,7 @@ void CodeGenerator::visitAssertRangeV(LAssertRangeV* ins) {
         ScratchTagScopeRelease _(&tag);
         Register unboxInt32 = ToTempUnboxRegister(ins->temp());
         Register input = masm.extractInt32(value, unboxInt32);
-        emitAssertRangeI(MIRType::Int32, r, input);
+        emitAssertRangeI(r, input);
         masm.jump(&done);
       }
       masm.bind(&isNotInt32);
