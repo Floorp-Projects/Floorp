@@ -159,6 +159,9 @@
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/PCookieServiceParent.h"
 #include "mozilla/plugins/PluginBridge.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/TelemetryComms.h"
+#include "mozilla/TelemetryEventEnums.h"
 #include "mozilla/RemoteLazyInputStreamParent.h"
 #include "mozilla/widget/RemoteLookAndFeel.h"
 #include "mozilla/widget/ScreenManager.h"
@@ -344,6 +347,7 @@ using namespace mozilla::layout;
 using namespace mozilla::net;
 using namespace mozilla::psm;
 using namespace mozilla::widget;
+using namespace mozilla::Telemetry;
 using mozilla::loader::PScriptCacheParent;
 using mozilla::Telemetry::ProcessID;
 
@@ -1304,25 +1308,50 @@ mozilla::ipc::IPCResult ContentParent::RecvUngrabPointer(
 #endif
 }
 
+Atomic<bool, mozilla::Relaxed> sContentParentTelemetryEventEnabled(false);
+
 static void LogFailedPrincipalValidationInfo(nsIPrincipal* aPrincipal,
                                              const char* aMethod) {
-  // no need to do the dance if logging is disabled
-  if (MOZ_LOG_TEST(ContentParent::GetLog(), LogLevel::Error)) {
-    nsAutoCString spec;
-    if (!aPrincipal) {
-      spec.AssignLiteral("NullPtr");
-    } else if (aPrincipal->IsSystemPrincipal()) {
-      spec.AssignLiteral("SystemPrincipal");
-    } else if (aPrincipal->GetIsExpandedPrincipal()) {
-      spec.AssignLiteral("ExpandedPrincipal");
-    } else if (aPrincipal->GetIsContentPrincipal()) {
-      aPrincipal->GetSpec(spec);
-    }
-
-    MOZ_LOG(ContentParent::GetLog(), LogLevel::Error,
-            ("  Receiving unexpected Principal (%s) within %s", spec.get(),
-             aMethod));
+  // nsContentSecurityManager may also enable this same event, but that's okay
+  if (!sContentParentTelemetryEventEnabled.exchange(true)) {
+    sContentParentTelemetryEventEnabled = true;
+    Telemetry::SetEventRecordingEnabled("security"_ns, true);
   }
+
+  // Send Telemetry
+  nsAutoCString principalScheme, principalType, spec;
+  CopyableTArray<EventExtraEntry> extra(2);
+
+  if (!aPrincipal) {
+    principalType.AssignLiteral("NullPtr");
+  } else if (aPrincipal->IsSystemPrincipal()) {
+    principalType.AssignLiteral("SystemPrincipal");
+  } else if (aPrincipal->GetIsExpandedPrincipal()) {
+    principalType.AssignLiteral("ExpandedPrincipal");
+  } else if (aPrincipal->GetIsContentPrincipal()) {
+    principalType.AssignLiteral("ContentPrincipal");
+    aPrincipal->GetSpec(spec);
+    aPrincipal->GetScheme(principalScheme);
+
+    extra.AppendElement(EventExtraEntry{"scheme"_ns, principalScheme});
+  } else {
+    principalType.AssignLiteral("Unknown");
+  }
+
+  extra.AppendElement(EventExtraEntry{"principalType"_ns, principalType});
+
+  Telemetry::EventID eventType =
+      Telemetry::EventID::Security_Fissionprincipals_Contentparent;
+  Telemetry::RecordEvent(eventType, mozilla::Some(aMethod),
+                         mozilla::Some(extra));
+
+  // And log it
+  MOZ_LOG(
+      ContentParent::GetLog(), LogLevel::Error,
+      ("  Receiving unexpected Principal (%s) within %s",
+       aPrincipal && aPrincipal->GetIsContentPrincipal() ? spec.get()
+                                                         : principalType.get(),
+       aMethod));
 }
 
 bool ContentParent::ValidatePrincipal(
