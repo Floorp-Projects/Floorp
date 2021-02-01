@@ -234,9 +234,8 @@ void RenderThread::RemoveRenderer(wr::WindowId aWindowId) {
 
   mRenderers.erase(aWindowId);
 
-  if (mRenderers.empty()) {
+  if (mRenderers.size() == 0 && mHandlingDeviceReset) {
     mHandlingDeviceReset = false;
-    mHandlingWebRenderError = false;
   }
 
   auto windows = mWindowInfos.Lock();

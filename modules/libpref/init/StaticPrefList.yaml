@@ -4684,26 +4684,6 @@
   value: true
   mirror: once
 
-# Whether or not to fallback from WebRender/WebRender Software to Basic.
-- name: gfx.webrender.fallback.basic
-  type: bool
-  value: true
-  mirror: once
-
-# Whether or not to fallback from WebRender to Software WebRender.
-- name: gfx.webrender.fallback.software
-  type: bool
-  value: @IS_NIGHTLY_BUILD@
-  mirror: once
-
-#ifdef XP_WIN
-  # Whether or not to fallback from WebRender to Software WebRender + D3D11.
--   name: gfx.webrender.fallback.software-d3d11
-    type: bool
-    value: @IS_NIGHTLY_BUILD@
-    mirror: once
-#endif
-
 - name: gfx.webrender.use-optimized-shaders
   type: bool
   value: true
