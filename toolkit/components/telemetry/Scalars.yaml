@@ -3300,52 +3300,6 @@ telemetry:
     record_in_processes:
       - main
 
-  state_file_save_errors:
-    bug_numbers:
-      - 1689438
-    description: >
-      How many times we errored out trying to save state.json
-    expires: "90"
-    kind: uint
-    notification_emails:
-      - chutten@mozilla.com
-    products:
-      - 'firefox'
-    release_channel_collection: opt-out
-    record_in_processes:
-      - main
-
-  generated_new_client_id:
-    bug_numbers:
-      - 1689438
-    description: >
-      Whether we generated a new client id this subsession.
-    expires: "90"
-    kind: boolean
-    notification_emails:
-      - chutten@mozilla.com
-    products:
-      - 'firefox'
-    release_channel_collection: opt-out
-    record_in_processes:
-      - main
-
-  loaded_client_id_doesnt_match_pref:
-    bug_numbers:
-      - 1689438
-    description: >
-      How often we loaded a client_id from disk that doesn't match
-      what's cached in the pref.
-    expires: "90"
-    kind: uint
-    notification_emails:
-      - chutten@mozilla.com
-    products:
-      - 'firefox'
-    release_channel_collection: opt-out
-    record_in_processes:
-      - main
-
 telemetry.discarded:
   accumulations:
     bug_numbers:
