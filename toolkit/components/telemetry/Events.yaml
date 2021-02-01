@@ -2107,6 +2107,32 @@ network.jar.channel:
       spec: The path of the file being loaded.
 
 security:
+  fissionPrincipals:
+    objects: ["contentParent"]
+    bug_numbers:
+      - 1687891
+    description: >
+      When running with Fission, we received an unexpected principal from the content process.
+      Expected values for this telemetry event are the method names in ContentParent that
+      received the unexpected principal.
+    notification_emails:
+      - tom@mozilla.com
+      - ckerschb@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - firefox
+    expiry_version: "never"
+    record_in_processes:
+      - main
+    extra_keys:
+      principalType: >
+        The type of principal that was received. Expected values for this field are
+          NullPtr
+          SystemPrincipal
+          ExpandedPrincipal
+          ContentPrincipal
+          Unknown
+      scheme: If the principal is a ContentPrincipal, we also collect the scheme
   evalUsage:
     objects: ["systemContext", "parentProcess"]
     bug_numbers:
