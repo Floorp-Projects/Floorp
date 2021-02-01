@@ -733,7 +733,7 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
    */
   static bool PerfWarnings();
 
-  static void DisableGPUProcess();
+  static void NotifyGPUProcessDisabled();
 
   void NotifyCompositorCreated(mozilla::layers::LayersBackend aBackend);
   mozilla::layers::LayersBackend GetCompositorBackend() const {
@@ -791,10 +791,9 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
 
   static const char* WebRenderResourcePathOverride();
 
-  // Returns true if we would like to keep the GPU process if possible.
-  static bool FallbackFromAcceleration(mozilla::gfx::FeatureStatus aStatus,
-                                       const char* aMessage,
-                                       const nsACString& aFailureId);
+  static void DisableWebRender(mozilla::gfx::FeatureStatus aStatus,
+                               const char* aMessage,
+                               const nsACString& aFailureId);
 
   void NotifyFrameStats(nsTArray<mozilla::layers::FrameStats>&& aFrameStats);
 

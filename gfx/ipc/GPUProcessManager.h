@@ -239,11 +239,6 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   // Permanently disable the GPU process and record a message why.
   void DisableGPUProcess(const char* aMessage);
 
-  // May permanently disable the GPU process and record a message why. May
-  // return false if the fallback process decided we should retry the GPU
-  // process, but only if aAllowRestart is also true.
-  bool MaybeDisableGPUProcess(const char* aMessage, bool aAllowRestart);
-
   // Shutdown the GPU process.
   void CleanShutdown();
   void DestroyProcess();
