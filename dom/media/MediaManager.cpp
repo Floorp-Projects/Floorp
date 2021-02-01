@@ -2816,7 +2816,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
             nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
             if (!askPermission) {
               obs->NotifyObservers(devicesCopy, "getUserMedia:privileged:allow",
-                                   callID.BeginReading());
+                                   callID.get());
             } else {
               auto req = MakeRefPtr<GetUserMediaRequest>(
                   window, callID, c, isSecure, isHandlingUserInput);
