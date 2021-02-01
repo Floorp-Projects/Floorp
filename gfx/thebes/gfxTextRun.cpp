@@ -1872,9 +1872,6 @@ void gfxFontGroup::BuildFontList() {
         MOZ_ASSERT_UNREACHABLE("broken FontFamilyName, no atom!");
       }
     } else {
-      if (mFirstGeneric == StyleGenericFontFamily::None) {
-        mFirstGeneric = name.mGeneric;
-      }
       pfl->AddGenericFonts(name.mGeneric, mLanguage, fonts);
       if (mTextPerf) {
         mTextPerf->current.genericLookups++;
@@ -3675,15 +3672,9 @@ gfxFont* gfxFontGroup::WhichPrefFontSupportsChar(
 
   for (i = 0; i < numLangs; i++) {
     eFontPrefLang currentLang = prefLangs[i];
-    gfxPlatformFontList::PrefFontList* families = nullptr;
-    if (mFirstGeneric != StyleGenericFontFamily::None) {
-      families = pfl->GetPrefFontsLangGroup(mFirstGeneric, currentLang);
-    }
-    if (!families) {
-      StyleGenericFontFamily defaultGeneric =
-          pfl->GetDefaultGeneric(currentLang);
-      families = pfl->GetPrefFontsLangGroup(defaultGeneric, currentLang);
-    }
+    StyleGenericFontFamily defaultGeneric = pfl->GetDefaultGeneric(currentLang);
+    gfxPlatformFontList::PrefFontList* families =
+        pfl->GetPrefFontsLangGroup(defaultGeneric, currentLang);
     NS_ASSERTION(families, "no pref font families found");
 
     // find the first pref font that includes the character

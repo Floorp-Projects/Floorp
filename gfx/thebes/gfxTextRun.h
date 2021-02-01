@@ -1412,11 +1412,6 @@ class gfxFontGroup final : public gfxTextRunFactory {
 
   bool mExplicitLanguage;  // Does mLanguage come from an explicit attribute?
 
-  // First CSS generic in the list, if any (used to select among font prefs
-  // during fallback)
-  mozilla::StyleGenericFontFamily mFirstGeneric =
-      mozilla::StyleGenericFontFamily::None;
-
   uint32_t mFontListGeneration = 0;  // platform font list generation for this
                                      // fontgroup
 
