@@ -706,7 +706,7 @@ already_AddRefed<dom::Promise> StyleSheet::Replace(const nsACString& aText,
   auto* loader = mConstructorDocument->CSSLoader();
   auto loadData = MakeRefPtr<css::SheetLoadData>(
       loader, nullptr, this, /* aSyncLoad */ false,
-      css::Loader::UseSystemPrincipal::No, css::Loader::IsPreload::No,
+      css::Loader::UseSystemPrincipal::No, css::StylePreloadKind::None,
       /* aPreloadEncoding */ nullptr,
       /* aObserver */ nullptr, mConstructorDocument->NodePrincipal(),
       GetReferrerInfo(),
@@ -1216,8 +1216,15 @@ void StyleSheet::ParseSheetSync(
     css::Loader* aLoader, const nsACString& aBytes,
     css::SheetLoadData* aLoadData, uint32_t aLineNumber,
     css::LoaderReusableStyleSheets* aReusableSheets) {
-  nsCompatibility compatMode =
-      aLoader ? aLoader->GetCompatibilityMode() : eCompatibility_FullStandards;
+  const nsCompatibility compatMode = [&] {
+    if (aLoadData) {
+      return aLoadData->mCompatMode;
+    }
+    if (aLoader) {
+      return aLoader->CompatMode(css::StylePreloadKind::None);
+    }
+    return eCompatibility_FullStandards;
+  }();
 
   const StyleUseCounters* useCounters =
       aLoader && aLoader->GetDocument()

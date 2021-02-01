@@ -14,6 +14,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/CORSMode.h"
+#include "mozilla/css/StylePreloadKind.h"
 #include "mozilla/dom/LinkStyle.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/UniquePtr.h"
@@ -47,16 +48,6 @@ class Element;
 // This must contain all the state that affects CSS parsing.
 class SheetLoadDataHashKey : public PLDHashEntryHdr {
  public:
-  enum class IsPreload : uint8_t {
-    No,
-    // This is a speculative load initiated by a <link rel=stylesheet> tag
-    // scanned by the parser, or @import rules found in a <style> tag.
-    FromParser,
-    // This is a speculative load as well, but initiated by
-    // <link rel="preload" as="style">
-    FromLink,
-  };
-
   using KeyType = const SheetLoadDataHashKey&;
   using KeyTypePointer = const SheetLoadDataHashKey*;
 
@@ -70,7 +61,7 @@ class SheetLoadDataHashKey : public PLDHashEntryHdr {
         mParsingMode(aKey->mParsingMode),
         mCompatMode(aKey->mCompatMode),
         mSRIMetadata(aKey->mSRIMetadata),
-        mIsLinkPreload(aKey->mIsLinkPreload) {
+        mIsLinkRelPreload(aKey->mIsLinkRelPreload) {
     MOZ_COUNT_CTOR(SheetLoadDataHashKey);
   }
 
@@ -81,7 +72,7 @@ class SheetLoadDataHashKey : public PLDHashEntryHdr {
                        CORSMode aCORSMode, css::SheetParsingMode aParsingMode,
                        nsCompatibility aCompatMode,
                        const dom::SRIMetadata& aSRIMetadata,
-                       IsPreload aIsPreload)
+                       css::StylePreloadKind aPreloadKind)
       : mURI(aURI),
         mPrincipal(aPrincipal),
         mLoaderPrincipal(aLoaderPrincipal),
@@ -91,7 +82,7 @@ class SheetLoadDataHashKey : public PLDHashEntryHdr {
         mParsingMode(aParsingMode),
         mCompatMode(aCompatMode),
         mSRIMetadata(aSRIMetadata),
-        mIsLinkPreload(aIsPreload == IsPreload::FromLink) {
+        mIsLinkRelPreload(IsLinkRelPreload(aPreloadKind)) {
     MOZ_ASSERT(aURI);
     MOZ_ASSERT(aPrincipal);
     MOZ_ASSERT(aLoaderPrincipal);
@@ -108,7 +99,7 @@ class SheetLoadDataHashKey : public PLDHashEntryHdr {
         mParsingMode(std::move(toMove.mParsingMode)),
         mCompatMode(std::move(toMove.mCompatMode)),
         mSRIMetadata(std::move(toMove.mSRIMetadata)),
-        mIsLinkPreload(std::move(toMove.mIsLinkPreload)) {
+        mIsLinkRelPreload(std::move(toMove.mIsLinkRelPreload)) {
     MOZ_COUNT_CTOR(SheetLoadDataHashKey);
   }
 
@@ -156,7 +147,7 @@ class SheetLoadDataHashKey : public PLDHashEntryHdr {
   const css::SheetParsingMode mParsingMode;
   const nsCompatibility mCompatMode;
   dom::SRIMetadata mSRIMetadata;
-  const bool mIsLinkPreload;
+  const bool mIsLinkRelPreload;
 };
 
 namespace css {
@@ -237,9 +228,22 @@ class Loader final {
   void RegisterInSheetCache();
 
   void SetCompatibilityMode(nsCompatibility aCompatMode) {
-    mCompatMode = aCompatMode;
+    mDocumentCompatMode = aCompatMode;
   }
-  nsCompatibility GetCompatibilityMode() { return mCompatMode; }
+
+  using StylePreloadKind = css::StylePreloadKind;
+
+  nsCompatibility CompatMode(StylePreloadKind aPreloadKind) const {
+    // For Link header preload, we guess non-quirks, because otherwise it is
+    // useless for modern pages.
+    //
+    // Link element preload is generally good because the speculative html
+    // parser deals with quirks mode properly.
+    if (aPreloadKind == StylePreloadKind::FromLinkRelPreloadHeader) {
+      return eCompatibility_FullStandards;
+    }
+    return mDocumentCompatMode;
+  }
 
   // TODO(emilio): Is the complexity of this method and carrying the titles
   // around worth it? The alternate sheets will load anyhow eventually...
@@ -332,8 +336,6 @@ class Loader final {
       nsIURI*, SheetParsingMode = eAuthorSheetFeatures,
       UseSystemPrincipal = UseSystemPrincipal::No);
 
-  using IsPreload = SheetLoadDataHashKey::IsPreload;
-
   /**
    * Asynchronously load the stylesheet at aURL.  If a successful result is
    * returned, aObserver is guaranteed to be notified asynchronously once the
@@ -356,7 +358,7 @@ class Loader final {
    * non-UTF8 sheets being treated as UTF-8 by this method.
    */
   Result<RefPtr<StyleSheet>, nsresult> LoadSheet(
-      nsIURI* aURI, IsPreload, const Encoding* aPreloadEncoding,
+      nsIURI* aURI, StylePreloadKind, const Encoding* aPreloadEncoding,
       nsIReferrerInfo* aReferrerInfo, nsICSSLoaderObserver* aObserver,
       CORSMode = CORS_NONE, const nsAString& aIntegrity = u""_ns);
 
@@ -483,18 +485,18 @@ class Loader final {
   nsresult CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
                               nsIPrincipal* aTriggeringPrincipal,
                               nsIURI* aTargetURI, nsINode* aRequestingNode,
-                              const nsAString& aNonce, IsPreload);
+                              const nsAString& aNonce, StylePreloadKind);
 
   std::tuple<RefPtr<StyleSheet>, SheetState> CreateSheet(
       const SheetInfo& aInfo, css::SheetParsingMode aParsingMode,
-      bool aSyncLoad, IsPreload aIsPreload) {
+      bool aSyncLoad, css::StylePreloadKind aPreloadKind) {
     nsIPrincipal* triggeringPrincipal = aInfo.mTriggeringPrincipal
                                             ? aInfo.mTriggeringPrincipal.get()
                                             : LoaderPrincipal();
     return CreateSheet(aInfo.mURI, aInfo.mContent, triggeringPrincipal,
                        aParsingMode, aInfo.mCORSMode,
                        /* aPreloadOrParentDataEncoding = */ nullptr,
-                       aInfo.mIntegrity, aSyncLoad, aIsPreload);
+                       aInfo.mIntegrity, aSyncLoad, aPreloadKind);
   }
 
   // For inline style, the aURI param is null, but the aLinkingContent
@@ -504,7 +506,7 @@ class Loader final {
       nsIURI* aURI, nsIContent* aLinkingContent,
       nsIPrincipal* aTriggeringPrincipal, css::SheetParsingMode, CORSMode,
       const Encoding* aPreloadOrParentDataEncoding, const nsAString& aIntegrity,
-      bool aSyncLoad, IsPreload aIsPreload);
+      bool aSyncLoad, StylePreloadKind);
 
   // Pass in either a media string or the MediaList from the CSSParser.  Don't
   // pass both.
@@ -520,7 +522,7 @@ class Loader final {
   void InsertChildSheet(StyleSheet& aSheet, StyleSheet& aParentSheet);
 
   Result<RefPtr<StyleSheet>, nsresult> InternalLoadNonDocumentSheet(
-      nsIURI* aURL, IsPreload, SheetParsingMode aParsingMode,
+      nsIURI* aURL, StylePreloadKind, SheetParsingMode aParsingMode,
       UseSystemPrincipal, const Encoding* aPreloadEncoding,
       nsIReferrerInfo* aReferrerInfo, nsICSSLoaderObserver* aObserver,
       CORSMode aCORSMode, const nsAString& aIntegrity);
@@ -601,7 +603,7 @@ class Loader final {
   // For dispatching events via DocGroup::Dispatch() when mDocument is nullptr.
   RefPtr<dom::DocGroup> mDocGroup;
 
-  nsCompatibility mCompatMode;
+  nsCompatibility mDocumentCompatMode;
 
   nsCOMPtr<nsIConsoleReportCollector> mReporter;
 
