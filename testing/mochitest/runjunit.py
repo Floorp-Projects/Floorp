@@ -107,10 +107,7 @@ class JUnitTestRunner(MochitestDesktop):
         self.websocketProcessBridge = None
         self.SERVER_STARTUP_TIMEOUT = 180 if mozinfo.info.get("debug") else 90
         if self.options.remoteWebServer is None:
-            if os.name != "nt":
-                self.options.remoteWebServer = moznetwork.get_ip()
-            else:
-                raise UserError("--remote-webserver must be specified")
+            self.options.remoteWebServer = moznetwork.get_ip()
         self.options.webServer = self.options.remoteWebServer
         self.options.webSocketPort = "9988"
         self.options.httpdPath = None

@@ -1286,10 +1286,7 @@ class AndroidArguments(ArgumentContainer):
                 ]
 
         if options.remoteWebServer is None:
-            if os.name != "nt":
-                options.remoteWebServer = moznetwork.get_ip()
-            else:
-                parser.error("you must specify a --remote-webserver=<ip address>")
+            options.remoteWebServer = moznetwork.get_ip()
 
         options.webServer = options.remoteWebServer
 
