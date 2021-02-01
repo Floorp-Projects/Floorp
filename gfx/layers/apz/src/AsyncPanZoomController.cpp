@@ -4737,8 +4737,18 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       sampledState.UpdateZoomProperties(Metrics());
     }
 
-    // Make sure we have an up-to-date set of displayport margins.
-    needContentRepaint = true;
+    if (aLayerMetrics.HasNonZeroDisplayPortMargins()) {
+      // A non-zero display port margin here indicates a displayport has
+      // been set by a previous APZC for the content at this guid. The
+      // scrollable rect may have changed since then, making the margins
+      // wrong, so we need to calculate a new display port.
+      // It is important that we request a repaint here only when we need to
+      // otherwise we will end up setting a display port on every frame that
+      // gets a view id.
+      APZC_LOG("%p detected non-empty margins which probably need updating\n",
+               this);
+      needContentRepaint = true;
+    }
   } else {
     // If we're not taking the aLayerMetrics wholesale we still need to pull
     // in some things into our local Metrics() because these things are
@@ -4832,6 +4842,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     mScrollMetadata.SetIsAutoDirRootContentRTL(
         aScrollMetadata.IsAutoDirRootContentRTL());
     Metrics().SetIsScrollInfoLayer(aLayerMetrics.IsScrollInfoLayer());
+    Metrics().SetHasNonZeroDisplayPortMargins(
+        aLayerMetrics.HasNonZeroDisplayPortMargins());
     mScrollMetadata.SetForceDisableApz(aScrollMetadata.IsApzForceDisabled());
     mScrollMetadata.SetIsRDMTouchSimulationActive(
         aScrollMetadata.GetIsRDMTouchSimulationActive());

@@ -8269,6 +8269,15 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
       metrics.SetCriticalDisplayPort(CSSRect::FromAppUnits(dp));
     }
 
+    metrics.SetHasNonZeroDisplayPortMargins(false);
+    if (DisplayPortMarginsPropertyData* currentData =
+            static_cast<DisplayPortMarginsPropertyData*>(
+                aContent->GetProperty(nsGkAtoms::DisplayPortMargins))) {
+      if (currentData->mMargins.mMargins != ScreenMargin()) {
+        metrics.SetHasNonZeroDisplayPortMargins(true);
+      }
+    }
+
     // Log the high-resolution display port (which is either the displayport
     // or the critical displayport) for test purposes.
     if (IsAPZTestLoggingEnabled()) {
