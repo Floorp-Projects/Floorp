@@ -20,7 +20,6 @@ RenderBufferTextureHostSWGL::RenderBufferTextureHostSWGL(
   switch (mDescriptor.type()) {
     case layers::BufferDescriptor::TYCbCrDescriptor:
     case layers::BufferDescriptor::TRGBDescriptor:
-      MOZ_RELEASE_ASSERT(mBuffer != nullptr);
       break;
     default:
       gfxCriticalError() << "Bad buffer host descriptor "
@@ -72,6 +71,12 @@ gfx::YUVColorSpace RenderBufferTextureHostSWGL::GetYUVColorSpace() const {
 bool RenderBufferTextureHostSWGL::MapPlane(RenderCompositor* aCompositor,
                                            uint8_t aChannelIndex,
                                            PlaneInfo& aPlaneInfo) {
+  if (!mBuffer) {
+    // We hit some problems to get the shmem.
+    gfxCriticalNote << "GetBuffer Failed";
+    return false;
+  }
+
   switch (mDescriptor.type()) {
     case layers::BufferDescriptor::TYCbCrDescriptor: {
       const layers::YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
