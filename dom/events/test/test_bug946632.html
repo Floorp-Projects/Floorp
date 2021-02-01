@@ -60,15 +60,17 @@ function reset()
 
 function prepare(check)
 {
-  container.style.display='';
-  container.getBoundingClientRect();
-  scrollHandler = function(event) {
-    window.removeEventListener("scroll", arguments.callee, true);
-    event.stopPropagation();
-    check(event)
-    setTimeout(nextTest,0);
-  };
-  window.addEventListener("scroll", scrollHandler, true);
+  return new Promise(resolve => {
+    container.style.display='';
+    container.getBoundingClientRect();
+    scrollHandler = function(event) {
+      window.removeEventListener("scroll", arguments.callee, true);
+      event.stopPropagation();
+      check(event)
+      resolve();
+    };
+    window.addEventListener("scroll", scrollHandler, true);
+  });
 }
 
 var tests = [
@@ -130,30 +132,21 @@ var tests = [
   },
 ];
 
-var i = 0;
-function nextTest()
+async function runTests()
 {
-  if (i == tests.length) {
-    SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
-    SimpleTest.finish();
-    return;
-  }
-  var test = tests[i];
-  ++i;
-  reset();
-
-  waitForApzFlushedRepaints(function() {
-    prepare(test.check);
-
+  for (var i = 0; i < tests.length; i++) {
+    var test = tests[i];
+    reset();
+    await promiseApzFlushedRepaints();
+    let testEndPromise = prepare(test.check);
     sendWheelAndPaint(input, 8, 6, test.event, function() {
-      // Do nothing - we wait for the scroll event.
+      // Do nothing - we wait for the scroll event below.
     });
-  });
-}
+    await testEndPromise;
+  }
 
-function runTests()
-{
-  nextTest();
+  SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+  SimpleTest.finish();
 }
 
 </script>
