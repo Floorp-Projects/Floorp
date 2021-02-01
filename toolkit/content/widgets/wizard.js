@@ -69,16 +69,13 @@
         <html:link rel="stylesheet" href="chrome://global/skin/button.css"/>
         <html:link rel="stylesheet" href="chrome://global/skin/wizard.css"/>
         <hbox class="wizard-header"></hbox>
-        <deck class="wizard-page-box" flex="1">
-          <html:slot name="wizardpage"/>
-        </deck>
+        <html:slot name="wizardpage" class="wizard-page-box" style="display: grid; -moz-box-flex: 1;"/>
         <html:slot/>
         <wizard-buttons class="wizard-buttons"></wizard-buttons>
     `)
       );
       this.initializeAttributeInheritance();
 
-      this._deck = this.shadowRoot.querySelector(".wizard-page-box");
       this._wizardButtons = this.shadowRoot.querySelector(".wizard-buttons");
 
       this._wizardHeader = this.shadowRoot.querySelector(".wizard-header");
@@ -183,6 +180,9 @@
         return;
       }
 
+      this._currentPage?.classList.remove("selected");
+      val.classList.add("selected");
+
       this._currentPage = val;
 
       // Setting this attribute allows wizard's clients to dynamically
@@ -191,7 +191,6 @@
 
       this._initCurrentPage();
 
-      this._deck.setAttribute("selectedIndex", val.pageIndex);
       this._advanceFocusToPage(val);
 
       this._fireEvent(val, "pageshow");
