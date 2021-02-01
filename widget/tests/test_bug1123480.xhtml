@@ -109,7 +109,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
       Suppstr.data = Ipsum;
       Transfer.init(Loadctx);
       Transfer.addDataFlavor("text/unicode");
-      Transfer.setTransferData("text/unicode", Suppstr, IpsumByteLength);
+      Transfer.setTransferData("text/unicode", Suppstr);
 
       // Enabled private browsing mode should not cache any selection to disk; disabled should
       if (private) {
@@ -129,7 +129,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
       // Sanitize the environment.
       Suppstr = nsSupportsString();
       Suppstr.data = SHORT_STRING_NO_CACHE;
-      Transfer.setTransferData("text/unicode", Suppstr, SHORT_STRING_NO_CACHE.length * 2);
+      Transfer.setTransferData("text/unicode", Suppstr);
       is(getClipboardCacheFDCount(), initialFdCount, "should drop the cache file, if any.");
 
       Services.clipboard.setData(Transfer, null, Services.clipboard.kGlobalClipboard);

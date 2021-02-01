@@ -73,9 +73,7 @@ this.clipboard = class extends ExtensionAPI {
           // are read from the clipboard (on all platforms, not just macOS).
           // This forces nsClipboard::GetNativeClipboardData to fall back to
           // the native clipboard, and return the image as a nsITransferable.
-
-          // The length should not be zero. (Bug 1493292)
-          transferable.setTransferData(kNativeImageMime, img, 1);
+          transferable.setTransferData(kNativeImageMime, img);
 
           Services.clipboard.setData(
             transferable,

@@ -1439,11 +1439,7 @@ var PlacesUIUtils = {
 
           function addData(type, data) {
             xferable.addDataFlavor(type);
-            xferable.setTransferData(
-              type,
-              PlacesUtils.toISupportsString(data),
-              data.length * 2
-            );
+            xferable.setTransferData(type, PlacesUtils.toISupportsString(data));
           }
 
           contents.forEach(function(content) {
