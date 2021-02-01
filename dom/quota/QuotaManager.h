@@ -560,23 +560,7 @@ class QuotaManager final : public BackgroundThreadObject {
                             int64_t aAccessTime, bool aPersisted,
                             nsIFile* aDirectory);
 
-  using OriginInfosFlatTraversable =
-      nsTArray<NotNull<RefPtr<const OriginInfo>>>;
-
-  using OriginInfosNestedTraversable =
-      nsTArray<nsTArray<NotNull<RefPtr<const OriginInfo>>>>;
-
-  OriginInfosNestedTraversable LockedGetOriginInfosExceedingGroupLimit() const;
-
-  OriginInfosFlatTraversable LockedGetOriginInfosExceedingGlobalLimit(
-      const OriginInfosNestedTraversable& aAlreadyDoomedOriginInfos,
-      uint64_t aAlreadyDoomedUsage) const;
-
-  OriginInfosNestedTraversable GetOriginInfosExceedingLimits() const;
-
-  void ClearOrigins(const OriginInfosNestedTraversable& aDoomedOriginInfos);
-
-  void CleanupTemporaryStorage();
+  void CheckTemporaryStorageLimits();
 
   void DeleteFilesForOrigin(PersistenceType aPersistenceType,
                             const nsACString& aOrigin);
@@ -600,15 +584,6 @@ class QuotaManager final : public BackgroundThreadObject {
   void MaybeRecordShutdownStep(Maybe<Client::Type> aClientType,
                                const nsACString& aStepDescription);
 
-  template <typename Iterator, typename Pred>
-  static void MaybeInsertOriginInfos(
-      Iterator aDest, const RefPtr<GroupInfo>& aTemporaryGroupInfo,
-      const RefPtr<GroupInfo>& aDefaultGroupInfo, Pred&& aPred);
-
-  template <typename Collect, typename Pred>
-  static OriginInfosFlatTraversable CollectLRUOriginInfosUntil(
-      Collect&& aCollect, Pred&& aPred);
-
   // Thread on which IO is performed.
   LazyInitializedOnceNotNull<const nsCOMPtr<nsIThread>> mIOThread;
 
@@ -624,7 +599,7 @@ class QuotaManager final : public BackgroundThreadObject {
   // Accesses to mQuotaManagerShutdownSteps must be protected by mQuotaMutex.
   nsCString mQuotaManagerShutdownSteps;
 
-  mutable mozilla::Mutex mQuotaMutex;
+  mozilla::Mutex mQuotaMutex;
 
   nsClassHashtable<nsCStringHashKey, GroupInfoPair> mGroupInfoPairs;
 
