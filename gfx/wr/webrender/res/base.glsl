@@ -32,7 +32,12 @@
 #else
     #define HIGHP_SAMPLER_FLOAT
     #define HIGHP_FS_ADDRESS
-    #define TEXEL_FETCH(sampler, position, lod, offset) texelFetchOffset(sampler, position, lod, offset)
+    #if defined(PLATFORM_MACOS) && !defined(SWGL)
+        // texelFetchOffset introduces a variety of shader compilation bugs on macOS Intel so avoid it.
+        #define TEXEL_FETCH(sampler, position, lod, offset) texelFetch(sampler, position + offset, lod)
+    #else
+        #define TEXEL_FETCH(sampler, position, lod, offset) texelFetchOffset(sampler, position, lod, offset)
+    #endif
 #endif
 
 #ifdef WR_VERTEX_SHADER
