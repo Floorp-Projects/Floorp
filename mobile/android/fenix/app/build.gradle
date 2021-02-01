@@ -41,6 +41,18 @@ android {
         buildConfigField "String", "AMO_BASE_URL", "\"https://addons.mozilla.org\""
         buildConfigField "String", "AMO_COLLECTION_NAME", "\"7dfae8669acc4312a65e8ba5553036\""
         buildConfigField "String", "AMO_COLLECTION_USER", "\"mozilla\""
+        // These add-ons should be excluded for Mozilla Online builds.
+        buildConfigField "String[]", "MOZILLA_ONLINE_ADDON_EXCLUSIONS",
+                "{" +
+                        "\"uBlock0@raymondhill.net\"," +
+                        "\"firefox@ghostery.com\"," +
+                        "\"jid1-MnnxcxisBPnSXQ@jetpack\"," +
+                        "\"adguardadblocker@adguard.com\"," +
+                        "\"foxyproxy@eric.h.jung\"," +
+                        "\"{73a6fe31-595d-460b-a920-fcc0f8843232}\"," +
+                        "\"jid1-BoFifL9Vbdl2zQ@jetpack\"," +
+                        "\"woop-NoopscooPsnSXQ@jetpack\"" +
+                "}"
         // This should be the base URL used to call the AMO API.
         buildConfigField "String", "AMO_SERVER_URL", "\"https://services.addons.mozilla.org\""
         def deepLinkSchemeValue = "fenix-dev"
