@@ -868,9 +868,9 @@ nsresult GfxInfo::Init() {
 
   // Get monitor information
   for (int deviceIndex = 0;; deviceIndex++) {
-    DISPLAY_DEVICEA device;
+    DISPLAY_DEVICEW device;
     device.cb = sizeof(device);
-    if (!::EnumDisplayDevicesA(nullptr, deviceIndex, &device, 0)) {
+    if (!::EnumDisplayDevicesW(nullptr, deviceIndex, &device, 0)) {
       break;
     }
 
@@ -878,10 +878,10 @@ nsresult GfxInfo::Init() {
       continue;
     }
 
-    DEVMODEA mode;
+    DEVMODEW mode;
     mode.dmSize = sizeof(mode);
     mode.dmDriverExtra = 0;
-    if (!::EnumDisplaySettingsA(device.DeviceName, ENUM_CURRENT_SETTINGS,
+    if (!::EnumDisplaySettingsW(device.DeviceName, ENUM_CURRENT_SETTINGS,
                                 &mode)) {
       continue;
     }
@@ -893,6 +893,7 @@ nsresult GfxInfo::Init() {
     displayInfo.mRefreshRate = mode.dmDisplayFrequency;
     displayInfo.mIsPseudoDisplay =
         !!(device.StateFlags & DISPLAY_DEVICE_MIRRORING_DRIVER);
+    displayInfo.mDeviceString = device.DeviceString;
 
     mDisplayInfo.AppendElement(displayInfo);
   }
@@ -1071,9 +1072,10 @@ NS_IMETHODIMP
 GfxInfo::GetDisplayInfo(nsTArray<nsString>& aDisplayInfo) {
   for (auto displayInfo : mDisplayInfo) {
     nsString value;
-    value.AppendPrintf("%dx%d@%dHz %s", displayInfo.mScreenWidth,
+    value.AppendPrintf("%dx%d@%dHz %s %s", displayInfo.mScreenWidth,
                        displayInfo.mScreenHeight, displayInfo.mRefreshRate,
-                       displayInfo.mIsPseudoDisplay ? "Pseudo Display" : "");
+                       displayInfo.mIsPseudoDisplay ? "Pseudo Display :" : ":",
+                       NS_ConvertUTF16toUTF8(displayInfo.mDeviceString).get());
 
     aDisplayInfo.AppendElement(value);
   }

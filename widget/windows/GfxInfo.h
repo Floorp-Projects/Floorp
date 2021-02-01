@@ -86,6 +86,7 @@ class GfxInfo : public GfxInfoBase {
     uint32_t mScreenHeight;
     uint32_t mRefreshRate;
     bool mIsPseudoDisplay;
+    nsString mDeviceString;
   };
 
  private:
