@@ -2,15 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.browser
+package org.mozilla.fenix.browser.infobanner
 
 import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View.GONE
 import android.view.ViewGroup
-import android.view.ViewGroup.LayoutParams.MATCH_PARENT
-import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import androidx.annotation.VisibleForTesting
 import kotlinx.android.synthetic.main.info_banner.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
@@ -27,7 +26,7 @@ import org.mozilla.fenix.ext.settings
  * @param actionToPerform - The action to be performed on action button press
  */
 @SuppressWarnings("LongParameterList")
-class InfoBanner(
+open class InfoBanner(
     private val context: Context,
     private val container: ViewGroup,
     private val message: String,
@@ -38,10 +37,11 @@ class InfoBanner(
     private val actionToPerform: (() -> Unit)? = null
 ) {
     @SuppressLint("InflateParams")
-    private val bannerLayout = LayoutInflater.from(context)
+    @VisibleForTesting
+    internal val bannerLayout = LayoutInflater.from(context)
         .inflate(R.layout.info_banner, null)
 
-    internal fun showBanner() {
+    internal open fun showBanner() {
         bannerLayout.banner_info_message.text = message
         bannerLayout.dismiss.text = dismissText
 
@@ -52,10 +52,6 @@ class InfoBanner(
         }
 
         container.addView(bannerLayout)
-
-        val params = bannerLayout.layoutParams as ViewGroup.LayoutParams
-        params.height = WRAP_CONTENT
-        params.width = MATCH_PARENT
 
         bannerLayout.dismiss.setOnClickListener {
             dismissAction?.invoke()

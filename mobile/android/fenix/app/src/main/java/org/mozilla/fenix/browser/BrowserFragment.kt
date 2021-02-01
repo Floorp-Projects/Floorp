@@ -137,7 +137,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                     navController = findNavController(),
                     settings = context.settings(),
                     appLinksUseCases = context.components.useCases.appLinksUseCases,
-                    container = browserLayout as ViewGroup
+                    container = browserLayout as ViewGroup,
+                    shouldScrollWithTopToolbar = !context.settings().shouldUseBottomToolbar
                 ),
                 owner = this,
                 view = view

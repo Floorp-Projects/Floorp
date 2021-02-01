@@ -22,6 +22,8 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.infobanner.DynamicInfoBanner
+import org.mozilla.fenix.browser.infobanner.InfoBanner
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.Event.BannerOpenInAppGoToSettings
 import org.mozilla.fenix.ext.components
@@ -40,7 +42,9 @@ class OpenInAppOnboardingObserver(
     private val navController: NavController,
     private val settings: Settings,
     private val appLinksUseCases: AppLinksUseCases,
-    private val container: ViewGroup
+    private val container: ViewGroup,
+    @VisibleForTesting
+    internal val shouldScrollWithTopToolbar: Boolean = false
 ) : LifecycleAwareFeature {
     private var scope: CoroutineScope? = null
     private var currentUrl: String? = null
@@ -93,13 +97,14 @@ class OpenInAppOnboardingObserver(
     }
 
     @VisibleForTesting
-    internal fun createInfoBanner(): InfoBanner {
-        return InfoBanner(
+    internal fun createInfoBanner(): DynamicInfoBanner {
+        return DynamicInfoBanner(
             context = context,
             message = context.getString(R.string.open_in_app_cfr_info_message),
             dismissText = context.getString(R.string.open_in_app_cfr_negative_button_text),
             actionText = context.getString(R.string.open_in_app_cfr_positive_button_text),
             container = container,
+            shouldScrollWithTopToolbar = shouldScrollWithTopToolbar,
             dismissAction = ::dismissAction
         ) {
             val directions = BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment(

@@ -46,10 +46,10 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.ui.tabcounter.TabCounter.Companion.INFINITE_CHAR_PADDING_BOTTOM
 import org.mozilla.fenix.R
-import org.mozilla.fenix.browser.InfoBanner
 import org.mozilla.fenix.components.metrics.Event
 import mozilla.components.ui.tabcounter.TabCounter.Companion.MAX_VISIBLE_TABS
 import mozilla.components.ui.tabcounter.TabCounter.Companion.SO_MANY_TABS_OPEN
+import org.mozilla.fenix.browser.infobanner.InfoBanner
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.updateAccessibilityCollectionInfo

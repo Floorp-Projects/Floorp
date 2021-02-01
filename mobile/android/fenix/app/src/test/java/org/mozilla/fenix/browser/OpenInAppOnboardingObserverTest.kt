@@ -24,12 +24,16 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.browser.infobanner.DynamicInfoBanner
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
@@ -46,7 +50,7 @@ class OpenInAppOnboardingObserverTest {
     private lateinit var appLinksUseCases: AppLinksUseCases
     private lateinit var context: Context
     private lateinit var container: ViewGroup
-    private lateinit var infoBanner: InfoBanner
+    private lateinit var infoBanner: DynamicInfoBanner
 
     private val testDispatcher = TestCoroutineDispatcher()
 
@@ -76,7 +80,8 @@ class OpenInAppOnboardingObserverTest {
             navController = navigationController,
             settings = settings,
             appLinksUseCases = appLinksUseCases,
-            container = container
+            container = container,
+            shouldScrollWithTopToolbar = true
         ))
         every { openInAppOnboardingObserver.createInfoBanner() } returns infoBanner
     }
@@ -155,6 +160,24 @@ class OpenInAppOnboardingObserverTest {
 
         store.dispatch(ContentAction.UpdateUrlAction("1", "https://www.firefox.com")).joinBlocking()
         verify(exactly = 1) { infoBanner.dismiss() }
+    }
+
+    @Test
+    fun `GIVEN a observer WHEN createInfoBanner() THEN the scrollWithTopToolbar is passed to the DynamicInfoBanner`() {
+        // Mockk currently doesn't support verifying constructor parameters
+        // But we can check the values found in the constructed objects
+
+        openInAppOnboardingObserver = spyk(OpenInAppOnboardingObserver(
+            testContext, mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), shouldScrollWithTopToolbar = true
+        ))
+        val banner1 = openInAppOnboardingObserver.createInfoBanner()
+        assertTrue(banner1.shouldScrollWithTopToolbar)
+
+        openInAppOnboardingObserver = spyk(OpenInAppOnboardingObserver(
+            testContext, mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), shouldScrollWithTopToolbar = false
+        ))
+        val banner2 = openInAppOnboardingObserver.createInfoBanner()
+        assertFalse(banner2.shouldScrollWithTopToolbar)
     }
 
     internal class MockedLifecycleOwner(initialState: Lifecycle.State) : LifecycleOwner {
