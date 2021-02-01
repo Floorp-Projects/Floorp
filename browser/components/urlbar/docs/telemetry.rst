@@ -102,15 +102,6 @@ urlbar.tips
     Incremented when the user picks the update_web search intervention.
   - ``intervention_update_web-shown``
     Incremented when the update_web search intervention is shown.
-  - ``tabtosearch-shown``
-    Increment when a non-onboarding tab-to-search result is shown, once per
-    engine per engagement. Please note that the number of times non-onboarding
-    tab-to-search results are picked is the sum of all keys in
-    ``urlbar.searchmode.tabtosearch``. Please also note that more detailed
-    telemetry is recorded about both onboarding and non-onboarding tab-to-search
-    results in urlbar.tabtosearch.*. These probes in ``urlbar.tips`` are still
-    recorded because ``urlbar.tabtosearch.*`` is not currently recorded
-    in Release.
   - ``tabtosearch_onboard-shown``
     Incremented when a tab-to-search onboarding result is shown, once per engine
     per engagement. Please note that the number of times tab-to-search
@@ -243,22 +234,6 @@ urlbar.picked.searchmode.*
     example, if the user enters search mode by clicking a one-off then selects
     a Google search suggestion at index 2, we would record in **both**
     ``urlbar.picked.searchsuggestion`` and ``urlbar.picked.searchmode.oneoff``.
-
-urlbar.tabtosearch.*
-  This is a set of keyed scalars whose values are uints incremented when a
-  tab-to-search result is shown, once per engine per engagement. There are two
-  sub-probes: ``urlbar.tabtosearch.impressions`` and
-  ``urlbar.tabtosearch.impressions_onboarding``. The former records impressions
-  of regular tab-to-search results and the latter records impressions of
-  onboarding tab-to-search results. The key values are identical to those of the
-  ``urlbar.searchmode.*`` probes: they are the names of the engines shown in the
-  tab-to-search results. Engines that are not built in are grouped under the
-  key ``other``.
-
-  .. note::
-    Due to the potentially sensitive nature of these data, they are currently
-    collected only on pre-release version of Firefox. See bug 1686330.
-
 
 
 Event Telemetry

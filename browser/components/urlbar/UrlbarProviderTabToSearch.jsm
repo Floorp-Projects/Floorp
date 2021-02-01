@@ -103,10 +103,7 @@ function initializeDynamicResult() {
 class ProviderTabToSearch extends UrlbarProvider {
   constructor() {
     super();
-    this.enginesShown = {
-      onboarding: new Set(),
-      regular: new Set(),
-    };
+    this.onboardingEnginesShown = new Set();
   }
 
   /**
@@ -249,59 +246,28 @@ class ProviderTabToSearch extends UrlbarProvider {
 
   /**
    * Called when the user starts and ends an engagement with the urlbar. We
-   * clear enginesShown on engagement because we want to record in urlbar.tips
-   * and urlbar.tabtosearch once per engagement per engine. This has the
-   * unfortunate side effect of recording again when the user re-opens a view
-   * with a retained tab-to-search result. This is an acceptable tradeoff for
-   * not recording multiple times if the user backspaces autofill but then
-   * retypes the engine hostname, yielding the same tab-to-search result.
+   * clear onboardingEnginesShown on engagement because we want to record in
+   * urlbar.tips once per engagement per engine. This has the unfortunate side
+   * effect of recording again when the user re-opens a view with a retained
+   * tab-to-search result. This is an acceptable tradeoff for not recording
+   * multiple times if the user backspaces autofill but then retypes the engine
+   * hostname, yielding the same tab-to-search result.
    *
    * @param {boolean} isPrivate True if the engagement is in a private context.
    * @param {string} state The state of the engagement, one of: start,
    *        engagement, abandonment, discard.
    */
   onEngagement(isPrivate, state) {
-    if (!this.enginesShown.regular.size && !this.enginesShown.onboarding.size) {
+    if (!this.onboardingEnginesShown.size) {
       return;
     }
 
-    // urlbar.tabtosearch.* is prerelease-only/opt-in for now. See bug 1686330.
-    for (let engine of this.enginesShown.regular) {
-      let scalarKey = UrlbarSearchUtils.getSearchModeScalarKey({
-        engineName: engine,
-      });
-      Services.telemetry.keyedScalarAdd(
-        "urlbar.tabtosearch.impressions",
-        scalarKey,
-        1
-      );
-    }
-    for (let engine of this.enginesShown.onboarding) {
-      let scalarKey = UrlbarSearchUtils.getSearchModeScalarKey({
-        engineName: engine,
-      });
-      Services.telemetry.keyedScalarAdd(
-        "urlbar.tabtosearch.impressions_onboarding",
-        scalarKey,
-        1
-      );
-    }
-
-    // We also record in urlbar.tips because only it has been approved for use
-    // in release channels.
-    Services.telemetry.keyedScalarAdd(
-      "urlbar.tips",
-      "tabtosearch-shown",
-      this.enginesShown.regular.size
-    );
     Services.telemetry.keyedScalarAdd(
       "urlbar.tips",
       "tabtosearch_onboard-shown",
-      this.enginesShown.onboarding.size
+      this.onboardingEnginesShown.size
     );
-
-    this.enginesShown.regular.clear();
-    this.enginesShown.onboarding.clear();
+    this.onboardingEnginesShown.clear();
   }
 
   /**
