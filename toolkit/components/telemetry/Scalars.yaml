@@ -3197,40 +3197,6 @@ telemetry:
     record_in_processes:
       - 'all'
 
-  profile_directory_scans:
-    bug_numbers:
-      - 1458574
-    description: >
-      The number of times a profile directory scan was initiated in ProfileAge.jsm
-    expires: "65"
-    kind: uint
-    notification_emails:
-      - jrediger@mozilla.com
-      - telemetry-client-dev@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-    record_in_processes:
-      - 'all'
-
-  profile_directory_scan_date:
-    bug_numbers:
-      - 1466518
-    description: >
-      The date of the profile scan to determine the profile creation date from the oldest file, in days since UNIX epoch.
-    expires: "65"
-    kind: uint
-    notification_emails:
-      - jrediger@mozilla.com
-      - telemetry-client-dev@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-    record_in_processes:
-      - 'main'
-
   data_upload_optin:
     bug_numbers:
       - 1445921
