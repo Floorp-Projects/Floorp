@@ -59,8 +59,9 @@ class TestFileManager final : public FileManagerBase<TestFileManager>,
     for (const auto id : kDBOnlyFileInfoIds) {
       // Copied from within FileManager::Init.
 
-      mFileInfos.Put(id, new FileInfo(FileManagerGuard{}, SafeRefPtrFromThis(),
-                                      id, static_cast<nsrefcnt>(1)));
+      mFileInfos.Put(
+          id, MakeNotNull<FileInfo*>(FileManagerGuard{}, SafeRefPtrFromThis(),
+                                     id, static_cast<nsrefcnt>(1)));
 
       mLastFileId = std::max(id, mLastFileId);
     }

@@ -28,21 +28,21 @@ class FileManagerBase {
   using AutoLock = mozilla::detail::BaseAutoLock<MutexType&>;
 
   [[nodiscard]] SafeRefPtr<FileInfo> GetFileInfo(int64_t aId) const {
-    return AcquireFileInfo([this, aId] { return mFileInfos.Get(aId); });
+    return AcquireFileInfo([this, aId] { return mFileInfos.MaybeGet(aId); });
   }
 
   [[nodiscard]] SafeRefPtr<FileInfo> CreateFileInfo() {
     return AcquireFileInfo([this] {
       const int64_t id = ++mLastFileId;
 
-      FileInfo* fileInfo =
-          new FileInfo(FileManagerGuard{},
-                       SafeRefPtr{static_cast<FileManager*>(this),
-                                  AcquireStrongRefFromRawPtr{}},
-                       id);
+      auto fileInfo =
+          MakeNotNull<FileInfo*>(FileManagerGuard{},
+                                 SafeRefPtr{static_cast<FileManager*>(this),
+                                            AcquireStrongRefFromRawPtr{}},
+                                 id);
 
       mFileInfos.Put(id, fileInfo);
-      return fileInfo;
+      return Some(fileInfo);
     });
   }
 
@@ -88,16 +88,20 @@ class FileManagerBase {
 
     // We cannot simply change this to SafeRefPtr<FileInfo>, because
     // FileInfo::AddRef also acquires the FileManager::Mutex.
-    already_AddRefed<FileInfo> fileInfo = [&aFileInfoTableOp] {
+    auto fileInfo = [&aFileInfoTableOp]() -> RefPtr<FileInfo> {
       AutoLock lock(FileManager::Mutex());
-      FileInfo* fileInfo = aFileInfoTableOp();
-      if (fileInfo) {
+
+      const auto maybeFileInfo = aFileInfoTableOp();
+      if (maybeFileInfo) {
+        const auto& fileInfo = maybeFileInfo.ref();
         fileInfo->LockedAddRef();
+        return dont_AddRef(fileInfo.get());
       }
-      return dont_AddRef(fileInfo);
+
+      return {};
     }();
 
-    return SafeRefPtr{RefPtr<FileInfo>{fileInfo}};
+    return SafeRefPtr{std::move(fileInfo)};
   }
 
  protected:
@@ -119,7 +123,7 @@ class FileManagerBase {
   // Access to the following fields must be protected by
   // FileManager::Mutex()
   int64_t mLastFileId = 0;
-  nsDataHashtable<nsUint64HashKey, FileInfo*> mFileInfos;
+  nsDataHashtable<nsUint64HashKey, NotNull<FileInfo*>> mFileInfos;
 
   FlippedOnce<false> mInvalidated;
 };
