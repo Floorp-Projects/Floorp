@@ -3367,27 +3367,93 @@ void gfxPlatform::NotifyCompositorCreated(LayersBackend aBackend) {
 }
 
 /* static */
-void gfxPlatform::DisableWebRender(FeatureStatus aStatus, const char* aMessage,
-                                   const nsACString& aFailureId) {
+bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
+                                           const char* aMessage,
+                                           const nsACString& aFailureId) {
+  // We always want to ensure (Hardware) WebRender is disabled.
   if (gfxConfig::IsEnabled(Feature::WEBRENDER)) {
     gfxConfig::GetFeature(Feature::WEBRENDER)
         .ForceDisable(aStatus, aMessage, aFailureId);
   }
-  // TODO(aosmond): When WebRender Software replaces Basic, we must not disable
-  // it because of GPU process crashes, etc.
-  if (gfxConfig::IsEnabled(Feature::WEBRENDER_SOFTWARE)) {
-    gfxConfig::GetFeature(Feature::WEBRENDER_SOFTWARE)
+
+#ifdef XP_WIN
+  // Before we disable D3D11 and HW_COMPOSITING, we should check if we can
+  // fallback from WebRender to Software WebRender + D3D11 compositing.
+  if (StaticPrefs::gfx_webrender_fallback_software_d3d11_AtStartup() &&
+      gfxConfig::IsEnabled(Feature::WEBRENDER_SOFTWARE) &&
+      gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING) &&
+      gfxVars::UseWebRender() && !gfxVars::UseSoftwareWebRender()) {
+    // Fallback to Software WebRender + D3D11 compositing.
+    gfxCriticalNote << "Fallback WR to SW-WR + D3D11";
+    gfxVars::SetUseSoftwareWebRender(true);
+    return true;
+  }
+
+  // We aren't using Software WebRender + D3D11 compositing, so turn off the
+  // D3D11 and D2D.
+  if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
+    gfxConfig::GetFeature(Feature::D3D11_COMPOSITING)
         .ForceDisable(aStatus, aMessage, aFailureId);
   }
-  gfxVars::SetUseWebRender(false);
-  gfxVars::SetUseSoftwareWebRender(false);
+  if (gfxConfig::IsEnabled(Feature::DIRECT2D)) {
+    gfxConfig::GetFeature(Feature::DIRECT2D)
+        .ForceDisable(aStatus, aMessage, aFailureId);
+  }
+#endif
+
+#ifndef MOZ_WIDGET_ANDROID
+  // Non-Android wants to fallback to Software WebRender or Basic. Android wants
+  // to fallback to OpenGL.
+  if (gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
+    gfxConfig::GetFeature(Feature::HW_COMPOSITING)
+        .ForceDisable(aStatus, aMessage, aFailureId);
+  }
+#endif
+
+  if (!gfxVars::UseWebRender()) {
+    // We were not using WebRender in the first place, and we have disabled
+    // all forms of accelerated compositing.
+    return false;
+  }
+
+  if (StaticPrefs::gfx_webrender_fallback_software_AtStartup() &&
+      gfxConfig::IsEnabled(Feature::WEBRENDER_SOFTWARE) &&
+      !gfxVars::UseSoftwareWebRender()) {
+    // Fallback from WebRender to Software WebRender.
+    gfxCriticalNote << "Fallback WR to SW-WR";
+    gfxVars::SetUseSoftwareWebRender(true);
+    return true;
+  }
+
+  if (StaticPrefs::gfx_webrender_fallback_basic_AtStartup()) {
+    // Fallback from WebRender or Software WebRender to Basic.
+    gfxCriticalNote << "Fallback (SW-)WR to Basic";
+    if (gfxConfig::IsEnabled(Feature::WEBRENDER_SOFTWARE)) {
+      gfxConfig::GetFeature(Feature::WEBRENDER_SOFTWARE)
+          .ForceDisable(aStatus, aMessage, aFailureId);
+    }
+    gfxVars::SetUseWebRender(false);
+    gfxVars::SetUseSoftwareWebRender(false);
+    return false;
+  }
+
+  // Continue using Software WebRender.
+  gfxCriticalNoteOnce << "Fallback remains SW-WR";
+  MOZ_ASSERT(gfxVars::UseWebRender());
+  MOZ_ASSERT(gfxVars::UseSoftwareWebRender());
+  return false;
 }
 
 /* static */
-void gfxPlatform::NotifyGPUProcessDisabled() {
-  DisableWebRender(FeatureStatus::Unavailable, "GPU Process is disabled",
-                   "FEATURE_FAILURE_GPU_PROCESS_DISABLED"_ns);
+void gfxPlatform::DisableGPUProcess() {
   gfxVars::SetRemoteCanvasEnabled(false);
+
+  if (gfxVars::UseWebRender()) {
+    // We need to initialize the parent process to prepare for WebRender if we
+    // did not end up disabling it, despite losing the GPU process.
+    wr::RenderThread::Start();
+    image::ImageMemoryReporter::InitForWebRender();
+  }
 }
 
 void gfxPlatform::FetchAndImportContentDeviceData() {
