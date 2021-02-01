@@ -942,15 +942,15 @@ class OriginInfo final {
   bool mDirectoryExists;
 };
 
-class OriginInfoAccessTimeComparator {
+class OriginInfoLRUComparator {
  public:
-  bool Equals(const NotNull<RefPtr<const OriginInfo>>& a,
-              const NotNull<RefPtr<const OriginInfo>>& b) const {
+  bool Equals(const NotNull<RefPtr<OriginInfo>>& a,
+              const NotNull<RefPtr<OriginInfo>>& b) const {
     return a->LockedAccessTime() == b->LockedAccessTime();
   }
 
-  bool LessThan(const NotNull<RefPtr<const OriginInfo>>& a,
-                const NotNull<RefPtr<const OriginInfo>>& b) const {
+  bool LessThan(const NotNull<RefPtr<OriginInfo>>& a,
+                const NotNull<RefPtr<OriginInfo>>& b) const {
     return a->LockedAccessTime() < b->LockedAccessTime();
   }
 };
@@ -1015,11 +1015,14 @@ class GroupInfoPair {
   MOZ_COUNTED_DTOR(GroupInfoPair)
 
  private:
-  RefPtr<GroupInfo> LockedGetGroupInfo(PersistenceType aPersistenceType) {
+  already_AddRefed<GroupInfo> LockedGetGroupInfo(
+      PersistenceType aPersistenceType) {
     AssertCurrentThreadOwnsQuotaMutex();
     MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
 
-    return GetGroupInfoForPersistenceType(aPersistenceType);
+    RefPtr<GroupInfo> groupInfo =
+        GetGroupInfoForPersistenceType(aPersistenceType);
+    return groupInfo.forget();
   }
 
   void LockedSetGroupInfo(PersistenceType aPersistenceType,
@@ -3736,8 +3739,8 @@ uint64_t QuotaManager::CollectOriginsForEviction(
     static void GetInactiveOriginInfos(
         const nsTArray<NotNull<RefPtr<OriginInfo>>>& aOriginInfos,
         const nsTArray<NotNull<DirectoryLockImpl*>>& aLocks,
-        OriginInfosFlatTraversable& aInactiveOriginInfos) {
-      for (const auto& originInfo : aOriginInfos) {
+        nsTArray<NotNull<RefPtr<OriginInfo>>>& aInactiveOriginInfos) {
+      for (const NotNull<RefPtr<OriginInfo>>& originInfo : aOriginInfos) {
         MOZ_ASSERT(originInfo->mGroupInfo->mPersistenceType !=
                    PERSISTENCE_TYPE_PERSISTENT);
 
@@ -3756,8 +3759,8 @@ uint64_t QuotaManager::CollectOriginsForEviction(
         if (!match) {
           MOZ_ASSERT(!originInfo->mQuotaObjects.Count(),
                      "Inactive origin shouldn't have open files!");
-          aInactiveOriginInfos.InsertElementSorted(
-              originInfo, OriginInfoAccessTimeComparator());
+          aInactiveOriginInfos.InsertElementSorted(originInfo,
+                                                   OriginInfoLRUComparator());
         }
       }
     }
@@ -3785,7 +3788,7 @@ uint64_t QuotaManager::CollectOriginsForEviction(
     }
   }
 
-  OriginInfosFlatTraversable inactiveOrigins;
+  nsTArray<NotNull<RefPtr<OriginInfo>>> inactiveOrigins;
 
   // Enumerate and process inactive origins. This must be protected by the
   // mutex.
@@ -6533,7 +6536,7 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
   mTemporaryStorageLimit = GetTemporaryStorageLimit(
       /* aAvailableSpaceBytes */ diskSpaceAvailable + mTemporaryStorageUsage);
 
-  CleanupTemporaryStorage();
+  CheckTemporaryStorageLimits();
 
   return NS_OK;
 }
@@ -7075,197 +7078,150 @@ already_AddRefed<OriginInfo> QuotaManager::LockedGetOriginInfo(
   return nullptr;
 }
 
-template <typename Iterator, typename Pred>
-void QuotaManager::MaybeInsertOriginInfos(
-    Iterator aDest, const RefPtr<GroupInfo>& aTemporaryGroupInfo,
-    const RefPtr<GroupInfo>& aDefaultGroupInfo, Pred&& aPred) {
-  const auto copy = [&aDest, &aPred](const GroupInfo& groupInfo) {
-    std::copy_if(groupInfo.mOriginInfos.cbegin(), groupInfo.mOriginInfos.cend(),
-                 aDest, aPred);
-  };
+void QuotaManager::CheckTemporaryStorageLimits() {
+  AssertIsOnIOThread();
 
-  if (aTemporaryGroupInfo) {
-    MOZ_ASSERT(PERSISTENCE_TYPE_TEMPORARY ==
-               aTemporaryGroupInfo->GetPersistenceType());
+  const auto doomedOrigins = [this] {
+    const auto doomedOriginInfos = [this] {
+      nsTArray<NotNull<RefPtr<OriginInfo>>> doomedOriginInfos;
+      MutexAutoLock lock(mQuotaMutex);
 
-    copy(*aTemporaryGroupInfo);
-  }
-  if (aDefaultGroupInfo) {
-    MOZ_ASSERT(PERSISTENCE_TYPE_DEFAULT ==
-               aDefaultGroupInfo->GetPersistenceType());
+      for (const auto& entry : mGroupInfoPairs) {
+        const auto& pair = entry.GetData();
 
-    copy(*aDefaultGroupInfo);
-  }
-}
+        MOZ_ASSERT(!entry.GetKey().IsEmpty());
+        MOZ_ASSERT(pair);
 
-template <typename Collect, typename Pred>
-QuotaManager::OriginInfosFlatTraversable
-QuotaManager::CollectLRUOriginInfosUntil(Collect&& aCollect, Pred&& aPred) {
-  OriginInfosFlatTraversable originInfos;
+        uint64_t groupUsage = 0;
 
-  std::forward<Collect>(aCollect)(MakeBackInserter(originInfos));
+        RefPtr<GroupInfo> temporaryGroupInfo =
+            pair->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY);
+        if (temporaryGroupInfo) {
+          groupUsage += temporaryGroupInfo->mUsage;
+        }
 
-  originInfos.Sort(OriginInfoAccessTimeComparator());
+        RefPtr<GroupInfo> defaultGroupInfo =
+            pair->LockedGetGroupInfo(PERSISTENCE_TYPE_DEFAULT);
+        if (defaultGroupInfo) {
+          groupUsage += defaultGroupInfo->mUsage;
+        }
 
-  const auto foundIt = std::find_if(originInfos.cbegin(), originInfos.cend(),
-                                    std::forward<Pred>(aPred));
+        if (groupUsage > 0) {
+          QuotaManager* quotaManager = QuotaManager::Get();
+          MOZ_ASSERT(quotaManager, "Shouldn't be null!");
 
-  originInfos.TruncateLength(foundIt - originInfos.cbegin());
+          if (groupUsage > quotaManager->GetGroupLimit()) {
+            nsTArray<NotNull<RefPtr<OriginInfo>>> originInfos;
+            if (temporaryGroupInfo) {
+              originInfos.AppendElements(temporaryGroupInfo->mOriginInfos);
+            }
+            if (defaultGroupInfo) {
+              originInfos.AppendElements(defaultGroupInfo->mOriginInfos);
+            }
+            originInfos.Sort(OriginInfoLRUComparator());
 
-  return originInfos;
-}
+            for (uint32_t i = 0; i < originInfos.Length(); i++) {
+              const NotNull<RefPtr<OriginInfo>>& originInfo = originInfos[i];
+              if (originInfo->LockedPersisted()) {
+                continue;
+              }
 
-QuotaManager::OriginInfosFlatTraversable
-QuotaManager::LockedGetOriginInfosExceedingGroupLimit() const {
-  mQuotaMutex.AssertCurrentThreadOwns();
-
-  OriginInfosFlatTraversable originInfos;
-
-  for (const auto& entry : mGroupInfoPairs) {
-    const auto& pair = entry.GetData();
-
-    MOZ_ASSERT(!entry.GetKey().IsEmpty());
-    MOZ_ASSERT(pair);
-
-    uint64_t groupUsage = 0;
-
-    const RefPtr<GroupInfo> temporaryGroupInfo =
-        pair->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY);
-    if (temporaryGroupInfo) {
-      groupUsage += temporaryGroupInfo->mUsage;
-    }
-
-    const RefPtr<GroupInfo> defaultGroupInfo =
-        pair->LockedGetGroupInfo(PERSISTENCE_TYPE_DEFAULT);
-    if (defaultGroupInfo) {
-      groupUsage += defaultGroupInfo->mUsage;
-    }
-
-    if (groupUsage > 0) {
-      QuotaManager* quotaManager = QuotaManager::Get();
-      MOZ_ASSERT(quotaManager, "Shouldn't be null!");
-
-      if (groupUsage > quotaManager->GetGroupLimit()) {
-        // XXX Instead of appending into a flat array, return an array of
-        // arrays.
-        originInfos.AppendElements(CollectLRUOriginInfosUntil(
-            [&temporaryGroupInfo, &defaultGroupInfo](auto inserter) {
-              MaybeInsertOriginInfos(std::move(inserter), temporaryGroupInfo,
-                                     defaultGroupInfo,
-                                     [](const auto& originInfo) {
-                                       return !originInfo->LockedPersisted();
-                                     });
-            },
-            [&groupUsage, quotaManager](const auto& originInfo) {
+              doomedOriginInfos.AppendElement(originInfo);
               groupUsage -= originInfo->LockedUsage();
 
-              return groupUsage <= quotaManager->GetGroupLimit();
-            }));
+              if (groupUsage <= quotaManager->GetGroupLimit()) {
+                break;
+              }
+            }
+          }
+        }
       }
-    }
-  }
 
-  return originInfos;
-}
+      uint64_t usage = std::accumulate(
+          doomedOriginInfos.cbegin(), doomedOriginInfos.cend(), uint64_t(0),
+          [](uint64_t oldValue, const auto& originInfo) {
+            return oldValue + originInfo->LockedUsage();
+          });
 
-QuotaManager::OriginInfosFlatTraversable
-QuotaManager::LockedGetOriginInfosExceedingGlobalLimit(
-    const OriginInfosFlatTraversable& aAlreadyDoomedOriginInfos,
-    const uint64_t aAlreadyDoomedUsage) const {
-  mQuotaMutex.AssertCurrentThreadOwns();
+      if (mTemporaryStorageUsage - usage > mTemporaryStorageLimit) {
+        nsTArray<NotNull<RefPtr<OriginInfo>>> originInfos;
 
-  return CollectLRUOriginInfosUntil(
-      [this, &aAlreadyDoomedOriginInfos](auto inserter) {
         for (const auto& entry : mGroupInfoPairs) {
           const auto& pair = entry.GetData();
 
           MOZ_ASSERT(!entry.GetKey().IsEmpty());
           MOZ_ASSERT(pair);
 
-          MaybeInsertOriginInfos(
-              inserter, pair->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY),
-              pair->LockedGetGroupInfo(PERSISTENCE_TYPE_DEFAULT),
-              [&aAlreadyDoomedOriginInfos](const auto& originInfo) {
-                return !aAlreadyDoomedOriginInfos.Contains(originInfo) &&
-                       !originInfo->LockedPersisted();
-              });
-        }
-      },
-      [temporaryStorageUsage = mTemporaryStorageUsage - aAlreadyDoomedUsage,
-       temporaryStorageLimit = mTemporaryStorageLimit,
-       doomedUsage = uint64_t{0}](const auto& originInfo) mutable {
-        if (temporaryStorageUsage - doomedUsage <= temporaryStorageLimit) {
-          return true;
+          RefPtr<GroupInfo> groupInfo =
+              pair->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY);
+          if (groupInfo) {
+            originInfos.AppendElements(groupInfo->mOriginInfos);
+          }
+
+          groupInfo = pair->LockedGetGroupInfo(PERSISTENCE_TYPE_DEFAULT);
+          if (groupInfo) {
+            originInfos.AppendElements(groupInfo->mOriginInfos);
+          }
         }
 
-        doomedUsage += originInfo->LockedUsage();
-        return false;
-      });
-}
+        originInfos.RemoveElementsBy(
+            [&doomedOriginInfos](const auto& originInfo) {
+              return doomedOriginInfos.Contains(originInfo) ||
+                     originInfo->LockedPersisted();
+            });
 
-QuotaManager::OriginInfosFlatTraversable
-QuotaManager::GetOriginInfosExceedingLimits() const {
-  MutexAutoLock lock(mQuotaMutex);
+        originInfos.Sort(OriginInfoLRUComparator());
 
-  auto originInfos = LockedGetOriginInfosExceedingGroupLimit();
+        for (uint32_t i = 0; i < originInfos.Length(); i++) {
+          if (mTemporaryStorageUsage - usage <= mTemporaryStorageLimit) {
+            originInfos.TruncateLength(i);
+            break;
+          }
 
-  const uint64_t doomedUsage =
-      std::accumulate(originInfos.cbegin(), originInfos.cend(), uint64_t(0),
-                      [](uint64_t oldValue, const auto& originInfo) {
-                        return oldValue + originInfo->LockedUsage();
-                      });
+          usage += originInfos[i]->LockedUsage();
+        }
 
-  // Evicting origins that exceed their group limit also affects the global
-  // temporary storage usage. If the global temporary storage limit would still
-  // be exceeded after evicting the origins that were already selected, we need
-  // to specifically evict origins to get below the global limit.
-  if (mTemporaryStorageUsage - doomedUsage > mTemporaryStorageLimit) {
-    originInfos.AppendElements(
-        LockedGetOriginInfosExceedingGlobalLimit(originInfos, doomedUsage));
-  }
+        doomedOriginInfos.AppendElements(originInfos);
+      }
 
-  return originInfos;
-}
+      return doomedOriginInfos;
+    }();
 
-void QuotaManager::ClearOrigins(
-    const OriginInfosFlatTraversable& aDoomedOriginInfos) {
-  AssertIsOnIOThread();
-
-  // XXX Does this need to be done a) in order and/or b) sequentially?
-  // XXX We don't need to concatenate the results of the two steps. It would be
-  // sufficient to chain the ranges for iteration.
-  for (const auto& doomedOriginInfo : aDoomedOriginInfos) {
+    for (const auto& doomedOriginInfo : doomedOriginInfos) {
 #ifdef DEBUG
-    {
-      MutexAutoLock lock(mQuotaMutex);
-      MOZ_ASSERT(!doomedOriginInfo->LockedPersisted());
-    }
+      {
+        MutexAutoLock lock(mQuotaMutex);
+        MOZ_ASSERT(!doomedOriginInfo->LockedPersisted());
+      }
 #endif
 
-    DeleteFilesForOrigin(doomedOriginInfo->mGroupInfo->mPersistenceType,
-                         doomedOriginInfo->mOrigin);
-  }
-
-  {
-    MutexAutoLock lock(mQuotaMutex);
-
-    for (const auto& doomedOriginInfo : aDoomedOriginInfos) {
-      LockedRemoveQuotaForOrigin(
-          doomedOriginInfo->mGroupInfo->mPersistenceType,
-          {doomedOriginInfo->mGroupInfo->mGroup, doomedOriginInfo->mOrigin});
+      DeleteFilesForOrigin(doomedOriginInfo->mGroupInfo->mPersistenceType,
+                           doomedOriginInfo->mOrigin);
     }
+
+    nsTArray<OriginParams> doomedOrigins;
+    {
+      MutexAutoLock lock(mQuotaMutex);
+
+      for (const auto& doomedOriginInfo : doomedOriginInfos) {
+        PersistenceType persistenceType =
+            doomedOriginInfo->mGroupInfo->mPersistenceType;
+        const GroupAndOrigin groupAndOrigin = {
+            doomedOriginInfo->mGroupInfo->mGroup, doomedOriginInfo->mOrigin};
+        LockedRemoveQuotaForOrigin(persistenceType, groupAndOrigin);
+
+        doomedOrigins.EmplaceBack(
+            OriginParams(persistenceType, groupAndOrigin.mOrigin));
+      }
+    }
+
+    return doomedOrigins;
+  }();
+
+  for (const OriginParams& doomedOrigin : doomedOrigins) {
+    OriginClearCompleted(doomedOrigin.mPersistenceType, doomedOrigin.mOrigin,
+                         Nullable<Client::Type>());
   }
-
-  for (const auto& doomedOriginInfo : aDoomedOriginInfos) {
-    OriginClearCompleted(doomedOriginInfo->mGroupInfo->mPersistenceType,
-                         doomedOriginInfo->mOrigin, Nullable<Client::Type>());
-  }
-}
-
-void QuotaManager::CleanupTemporaryStorage() {
-  AssertIsOnIOThread();
-
-  ClearOrigins(GetOriginInfosExceedingLimits());
 
   if (mTemporaryStorageUsage > mTemporaryStorageLimit) {
     // If disk space is still low after origin clear, notify storage pressure.
