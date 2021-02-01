@@ -43,7 +43,7 @@ function copyToClipboard(txt)
     Cc['@mozilla.org/supports-string;1'].createInstance(Ci.nsISupportsString);
   var copytext = txt;
   str.data = copytext;
-  trans.setTransferData("text/html",str,copytext.length*2);
+  trans.setTransferData("text/html",str);
   if (!clip)
     return false;
   clip.setData(trans,null,clipid.kGlobalClipboard);

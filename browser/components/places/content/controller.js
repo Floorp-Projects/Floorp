@@ -1090,7 +1090,7 @@ PlacesController.prototype = {
     // Empty transferables may cause crashes, so just add an unknown type.
     const TYPE = "text/x-moz-place-empty";
     xferable.addDataFlavor(TYPE);
-    xferable.setTransferData(TYPE, PlacesUtils.toISupportsString(""), 0);
+    xferable.setTransferData(TYPE, PlacesUtils.toISupportsString(""));
     this.clipboard.setData(xferable, null, Ci.nsIClipboard.kGlobalClipboard);
   },
 
@@ -1122,11 +1122,7 @@ PlacesController.prototype = {
 
     function addData(type, data) {
       xferable.addDataFlavor(type);
-      xferable.setTransferData(
-        type,
-        PlacesUtils.toISupportsString(data),
-        data.length * 2
-      );
+      xferable.setTransferData(type, PlacesUtils.toISupportsString(data));
     }
 
     let xferable = Cc["@mozilla.org/widget/transferable;1"].createInstance(

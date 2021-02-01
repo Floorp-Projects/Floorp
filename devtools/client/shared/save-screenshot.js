@@ -204,7 +204,7 @@ function saveToClipboard(base64URI) {
     ].createInstance(Ci.nsITransferable);
     transferable.init(null);
     transferable.addDataFlavor("image/png");
-    transferable.setTransferData("image/png", img, -1);
+    transferable.setTransferData("image/png", img);
 
     Services.clipboard.setData(
       transferable,
