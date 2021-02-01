@@ -1784,7 +1784,8 @@ void gfxPlatformFontList::GetFontFamiliesFromGenericFamilies(
 
 gfxPlatformFontList::PrefFontList* gfxPlatformFontList::GetPrefFontsLangGroup(
     StyleGenericFontFamily aGenericType, eFontPrefLang aPrefLang) {
-  if (aGenericType == StyleGenericFontFamily::MozEmoji) {
+  if (aGenericType == StyleGenericFontFamily::MozEmoji ||
+      aPrefLang == eFontPrefLang_Emoji) {
     // Emoji font has no lang
     PrefFontList* prefFonts = mEmojiPrefFont.get();
     if (MOZ_UNLIKELY(!prefFonts)) {
