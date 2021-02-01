@@ -270,6 +270,9 @@ private fun assertSearchEngineList() {
 }
 
 private fun assertEngineListShortcutContains(searchEngineName: String) {
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/awesome_bar"))
+        .waitForExists(waitingTime)
+
     onView(withId(R.id.awesome_bar))
         .perform(swipeDown())
         .check(matches(hasDescendant(withText(searchEngineName))))
