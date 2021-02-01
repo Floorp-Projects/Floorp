@@ -233,6 +233,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.mCompositionSizeWithoutDynamicToolbar);
     WriteParam(aMsg, aParam.mIsRootContent);
     WriteParam(aMsg, aParam.mIsScrollInfoLayer);
+    WriteParam(aMsg, aParam.mHasNonZeroDisplayPortMargins);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
@@ -261,7 +262,9 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
             ReadBoolForBitfield(aMsg, aIter, aResult,
                                 &paramType::SetIsRootContent) &&
             ReadBoolForBitfield(aMsg, aIter, aResult,
-                                &paramType::SetIsScrollInfoLayer));
+                                &paramType::SetIsScrollInfoLayer) &&
+            ReadBoolForBitfield(aMsg, aIter, aResult,
+                                &paramType::SetHasNonZeroDisplayPortMargins));
   }
 };
 
