@@ -11918,19 +11918,18 @@ NS_IMPL_ISUPPORTS(StubCSSLoaderObserver, nsICSSLoaderObserver)
 SheetPreloadStatus Document::PreloadStyle(
     nsIURI* uri, const Encoding* aEncoding, const nsAString& aCrossOriginAttr,
     const enum ReferrerPolicy aReferrerPolicy, const nsAString& aIntegrity,
-    bool aIsLinkPreload) {
+    css::StylePreloadKind aKind) {
+  MOZ_ASSERT(aKind != css::StylePreloadKind::None);
+
   // The CSSLoader will retain this object after we return.
   nsCOMPtr<nsICSSLoaderObserver> obs = new StubCSSLoaderObserver();
 
   nsCOMPtr<nsIReferrerInfo> referrerInfo =
       ReferrerInfo::CreateFromDocumentAndPolicyOverride(this, aReferrerPolicy);
 
-  auto preloadType = aIsLinkPreload ? css::Loader::IsPreload::FromLink
-                                    : css::Loader::IsPreload::FromParser;
-
   // Charset names are always ASCII.
   auto result = CSSLoader()->LoadSheet(
-      uri, preloadType, aEncoding, referrerInfo, obs,
+      uri, aKind, aEncoding, referrerInfo, obs,
       Element::StringToCORSMode(aCrossOriginAttr), aIntegrity);
   if (result.isErr()) {
     return SheetPreloadStatus::Errored;

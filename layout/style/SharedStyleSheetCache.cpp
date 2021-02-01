@@ -346,7 +346,7 @@ void SharedStyleSheetCache::LoadCompletedInternal(
           // Not a document load, nothing to do.
           return false;
         }
-        if (data->mIsPreload != css::Loader::IsPreload::No) {
+        if (data->IsPreload()) {
           // Preloads are not supposed to be observable.
           return false;
         }

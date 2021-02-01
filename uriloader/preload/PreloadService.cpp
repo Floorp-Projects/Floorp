@@ -93,9 +93,9 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
   aLinkElement->GetReferrerPolicy(referrerPolicy);
   aLinkElement->GetType(type);
 
-  auto result =
-      PreloadOrCoalesce(uri, url, aPolicyType, as, type, charset, srcset, sizes,
-                        integrity, crossOrigin, referrerPolicy);
+  auto result = PreloadOrCoalesce(uri, url, aPolicyType, as, type, charset,
+                                  srcset, sizes, integrity, crossOrigin,
+                                  referrerPolicy, /* aFromHeader = */ false);
 
   if (!result.mPreloader) {
     NotifyNodeEvent(aLinkElement, result.mAlreadyComplete);
@@ -129,7 +129,8 @@ void PreloadService::PreloadLinkHeader(
   }
 
   PreloadOrCoalesce(aURI, aURL, aPolicyType, aAs, aType, u""_ns, aSrcset,
-                    aSizes, aIntegrity, aCORS, aReferrerPolicy);
+                    aSizes, aIntegrity, aCORS, aReferrerPolicy,
+                    /* aFromHeader = */ true);
 }
 
 PreloadService::PreloadOrCoalesceResult PreloadService::PreloadOrCoalesce(
@@ -137,7 +138,7 @@ PreloadService::PreloadOrCoalesceResult PreloadService::PreloadOrCoalesce(
     const nsAString& aAs, const nsAString& aType, const nsAString& aCharset,
     const nsAString& aSrcset, const nsAString& aSizes,
     const nsAString& aIntegrity, const nsAString& aCORS,
-    const nsAString& aReferrerPolicy) {
+    const nsAString& aReferrerPolicy, bool aFromHeader) {
   if (!aURI) {
     MOZ_ASSERT_UNREACHABLE("Should not pass null nsIURI");
     return {nullptr, false};
@@ -182,7 +183,9 @@ PreloadService::PreloadOrCoalesceResult PreloadService::PreloadOrCoalesce(
   } else if (aAs.LowerCaseEqualsASCII("style")) {
     auto status = mDocument->PreloadStyle(
         aURI, Encoding::ForLabel(aCharset), aCORS,
-        PreloadReferrerPolicy(aReferrerPolicy), aIntegrity, true);
+        PreloadReferrerPolicy(aReferrerPolicy), aIntegrity,
+        aFromHeader ? css::StylePreloadKind::FromLinkRelPreloadHeader
+                    : css::StylePreloadKind::FromLinkRelPreloadElement);
     switch (status) {
       case dom::SheetPreloadStatus::AlreadyComplete:
         return {nullptr, /* already_complete = */ true};
