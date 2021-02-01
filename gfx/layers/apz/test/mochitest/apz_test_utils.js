@@ -282,23 +282,6 @@ function flushApzRepaints(aCallback, aWindow = window) {
 // specific times, this method is the way to go. Even if in doubt, this is the
 // preferred method as the extra step is "safe" and shouldn't interfere with
 // most tests.
-function waitForApzFlushedRepaints(aCallback) {
-  // First flush the main-thread paints and send transactions to the APZ
-  promiseAllPaintsDone()
-    // Then flush the APZ to make sure any repaint requests have been sent
-    // back to the main thread. Note that we need a wrapper function around
-    // promiseApzRepaintsFlushed otherwise the rect produced by
-    // promiseAllPaintsDone gets passed to it as the window parameter.
-    .then(() => promiseApzRepaintsFlushed())
-    // Then flush the main-thread again to process the repaint requests.
-    // Once this is done, we should be in a stable state with nothing
-    // pending, so we can trigger the callback.
-    .then(promiseAllPaintsDone)
-    // Then allow the callback to be triggered.
-    .then(aCallback);
-}
-
-// Same as waitForApzFlushedRepaints, but in async form.
 async function promiseApzFlushedRepaints() {
   await promiseAllPaintsDone();
   await promiseApzRepaintsFlushed();
