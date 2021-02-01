@@ -556,6 +556,15 @@ wizard {
   height: 30em;
 }
 
+wizard > wizardpage {
+  grid-area: 1 / 1;
+  min-height: 0;
+}
+
+wizard > wizardpage:not(.selected) {
+  visibility: hidden;
+}
+
 wizardpage {
   -moz-box-orient: vertical;
   overflow: auto;

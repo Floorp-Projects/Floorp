@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
 
 :host {
   padding: 14px;
@@ -39,7 +40,7 @@
   height: 48px;
 }
 
-.wizard-page-box {
+html|*.wizard-page-box {
   padding: 15px 23px;
   appearance: auto;
   -moz-default-appearance: dialog;
