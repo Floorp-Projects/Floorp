@@ -604,9 +604,6 @@ this.TelemetryFeed = class TelemetryFeed {
       case "whats-new-panel_user_event":
         event = await this.applyWhatsNewPolicy(event);
         break;
-      case "infobar_user_event":
-        event = await this.applyInfoBarPolicy(event);
-        break;
       case "moments_user_event":
         event = await this.applyMomentsPolicy(event);
         break;
@@ -653,13 +650,6 @@ this.TelemetryFeed = class TelemetryFeed {
     // Attach page info to `event_context` if there is a session associated with this ping
     delete ping.action;
     return { ping, pingType: "whats-new-panel" };
-  }
-
-  async applyInfoBarPolicy(ping) {
-    ping.client_id = await this.telemetryClientId;
-    ping.browser_session_id = browserSessionId;
-    delete ping.action;
-    return { ping, pingType: "infobar" };
   }
 
   /**
@@ -954,8 +944,6 @@ this.TelemetryFeed = class TelemetryFeed {
       case msg.MOMENTS_PAGE_TELEMETRY:
       // Intentional fall-through
       case msg.DOORHANGER_TELEMETRY:
-      // Intentional fall-through
-      case msg.INFOBAR_TELEMETRY:
       // Intentional fall-through
       case at.AS_ROUTER_TELEMETRY_USER_EVENT:
         this.handleASRouterUserEvent(action);

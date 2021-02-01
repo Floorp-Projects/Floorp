@@ -218,7 +218,6 @@ class _RemoteL10n {
         "browser/branding/brandings.ftl",
         "browser/branding/sync-brand.ftl",
         "branding/brand.ftl",
-        "browser/defaultBrowserNotification.ftl",
       ],
       false,
       Services.prefs.getBoolPref(USE_REMOTE_L10N_PREF, true)
