@@ -7,6 +7,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/MediaList.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/nsCSPService.h"
@@ -1041,6 +1042,30 @@ nsIURI* nsHtml5TreeOpExecutor::BaseURIForPreload() {
              : documentBaseURI;
 }
 
+already_AddRefed<nsIURI>
+nsHtml5TreeOpExecutor::ConvertIfNotPreloadedYetAndMediaApplies(
+    const nsAString& aURL, const nsAString& aMedia) {
+  nsCOMPtr<nsIURI> uri = ConvertIfNotPreloadedYet(aURL);
+  if (!uri) {
+    return nullptr;
+  }
+
+  if (!MediaApplies(aMedia)) {
+    return nullptr;
+  }
+  return uri.forget();
+}
+
+bool nsHtml5TreeOpExecutor::MediaApplies(const nsAString& aMedia) {
+  using dom::MediaList;
+
+  if (aMedia.IsEmpty()) {
+    return true;
+  }
+  RefPtr<MediaList> media = MediaList::Create(NS_ConvertUTF16toUTF8(aMedia));
+  return media->Matches(*mDocument);
+}
+
 already_AddRefed<nsIURI> nsHtml5TreeOpExecutor::ConvertIfNotPreloadedYet(
     const nsAString& aURL) {
   if (aURL.IsEmpty()) {
@@ -1088,10 +1113,11 @@ dom::ReferrerPolicy nsHtml5TreeOpExecutor::GetPreloadReferrerPolicy(
 
 void nsHtml5TreeOpExecutor::PreloadScript(
     const nsAString& aURL, const nsAString& aCharset, const nsAString& aType,
-    const nsAString& aCrossOrigin, const nsAString& aIntegrity,
-    dom::ReferrerPolicy aReferrerPolicy, bool aScriptFromHead, bool aAsync,
-    bool aDefer, bool aNoModule, bool aLinkPreload) {
-  nsCOMPtr<nsIURI> uri = ConvertIfNotPreloadedYet(aURL);
+    const nsAString& aCrossOrigin, const nsAString& aMedia,
+    const nsAString& aIntegrity, dom::ReferrerPolicy aReferrerPolicy,
+    bool aScriptFromHead, bool aAsync, bool aDefer, bool aNoModule,
+    bool aLinkPreload) {
+  nsCOMPtr<nsIURI> uri = ConvertIfNotPreloadedYetAndMediaApplies(aURL, aMedia);
   if (!uri) {
     return;
   }
@@ -1104,10 +1130,11 @@ void nsHtml5TreeOpExecutor::PreloadScript(
 void nsHtml5TreeOpExecutor::PreloadStyle(const nsAString& aURL,
                                          const nsAString& aCharset,
                                          const nsAString& aCrossOrigin,
+                                         const nsAString& aMedia,
                                          const nsAString& aReferrerPolicy,
                                          const nsAString& aIntegrity,
                                          bool aLinkPreload) {
-  nsCOMPtr<nsIURI> uri = ConvertIfNotPreloadedYet(aURL);
+  nsCOMPtr<nsIURI> uri = ConvertIfNotPreloadedYetAndMediaApplies(aURL, aMedia);
   if (!uri) {
     return;
   }
@@ -1117,17 +1144,15 @@ void nsHtml5TreeOpExecutor::PreloadStyle(const nsAString& aURL,
                           aLinkPreload);
 }
 
-void nsHtml5TreeOpExecutor::PreloadImage(const nsAString& aURL,
-                                         const nsAString& aCrossOrigin,
-                                         const nsAString& aSrcset,
-                                         const nsAString& aSizes,
-                                         const nsAString& aImageReferrerPolicy,
-                                         bool aLinkPreload) {
+void nsHtml5TreeOpExecutor::PreloadImage(
+    const nsAString& aURL, const nsAString& aCrossOrigin,
+    const nsAString& aMedia, const nsAString& aSrcset, const nsAString& aSizes,
+    const nsAString& aImageReferrerPolicy, bool aLinkPreload) {
   nsCOMPtr<nsIURI> baseURI = BaseURIForPreload();
   bool isImgSet = false;
   nsCOMPtr<nsIURI> uri =
       mDocument->ResolvePreloadImage(baseURI, aURL, aSrcset, aSizes, &isImgSet);
-  if (uri && ShouldPreloadURI(uri)) {
+  if (uri && ShouldPreloadURI(uri) && MediaApplies(aMedia)) {
     // use document wide referrer policy
     mDocument->MaybePreLoadImage(uri, aCrossOrigin,
                                  GetPreloadReferrerPolicy(aImageReferrerPolicy),
@@ -1146,8 +1171,9 @@ void nsHtml5TreeOpExecutor::PreloadPictureSource(const nsAString& aSrcset,
 
 void nsHtml5TreeOpExecutor::PreloadFont(const nsAString& aURL,
                                         const nsAString& aCrossOrigin,
+                                        const nsAString& aMedia,
                                         const nsAString& aReferrerPolicy) {
-  nsCOMPtr<nsIURI> uri = ConvertIfNotPreloadedYet(aURL);
+  nsCOMPtr<nsIURI> uri = ConvertIfNotPreloadedYetAndMediaApplies(aURL, aMedia);
   if (!uri) {
     return;
   }
@@ -1157,8 +1183,9 @@ void nsHtml5TreeOpExecutor::PreloadFont(const nsAString& aURL,
 
 void nsHtml5TreeOpExecutor::PreloadFetch(const nsAString& aURL,
                                          const nsAString& aCrossOrigin,
+                                         const nsAString& aMedia,
                                          const nsAString& aReferrerPolicy) {
-  nsCOMPtr<nsIURI> uri = ConvertIfNotPreloadedYet(aURL);
+  nsCOMPtr<nsIURI> uri = ConvertIfNotPreloadedYetAndMediaApplies(aURL, aMedia);
   if (!uri) {
     return;
   }
