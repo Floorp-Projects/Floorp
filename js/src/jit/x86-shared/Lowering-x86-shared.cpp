@@ -796,6 +796,9 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
   MOZ_ASSERT(rhs->type() == MIRType::Simd128);
   MOZ_ASSERT(ins->type() == MIRType::Simd128);
 
+  // Note MWasmBinarySimd128::foldsTo has already specialized operations that
+  // have a constant operand, so this takes care of more general cases of
+  // reordering, see ReorderCommutative.
   if (ins->isCommutative()) {
     ReorderCommutative(&lhs, &rhs, ins);
   }
