@@ -768,10 +768,6 @@ nsThreadManager::GetMainThreadEventTarget(nsIEventTarget** aTarget) {
   return NS_OK;
 }
 
-uint32_t nsThreadManager::GetHighestNumberOfThreads() {
-  return nsThread::MaxActiveThreads();
-}
-
 NS_IMETHODIMP
 nsThreadManager::DispatchToMainThread(nsIRunnable* aEvent, uint32_t aPriority,
                                       uint8_t aArgc) {
