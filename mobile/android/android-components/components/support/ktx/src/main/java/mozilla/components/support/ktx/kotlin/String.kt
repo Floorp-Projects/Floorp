@@ -179,3 +179,15 @@ fun String.urlEncode(): String {
 fun String.takeOrReplace(maximumLength: Int, replacement: String): String {
     return if (this.length > maximumLength) replacement else this
 }
+
+/**
+ * Returns the extension (without ".") declared in the mime type of this data url.
+ * In the event that this data url does not contain a mime type or image extension could be read
+ * for any reason [defaultExtension] will be returned
+ *
+ * @param defaultExtension default extension if one could not be read from the mime type. Default is "jpg".
+ */
+fun String.getDataUrlImageExtension(defaultExtension: String = "jpg"): String {
+    return ("data:image\\/([a-zA-Z0-9-.+]+).*").toRegex()
+        .find(this)?.groups?.get(1)?.value ?: defaultExtension
+}

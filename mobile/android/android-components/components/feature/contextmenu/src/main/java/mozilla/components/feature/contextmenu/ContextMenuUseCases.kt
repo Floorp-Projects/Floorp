@@ -5,7 +5,9 @@
 package mozilla.components.feature.contextmenu
 
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.ShareInternetResourceAction
 import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.browser.state.state.content.ShareInternetResourceState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.HitResult
 
@@ -44,6 +46,21 @@ class ContextMenuUseCases(
         }
     }
 
+    /**
+     * Usecase allowing adding a new [ShareInternetResourceState] to the [BrowserStore]
+     */
+    class InjectShareInternetResourceUseCase(
+        private val store: BrowserStore
+    ) {
+        /**
+         * Adds a specific [ShareInternetResourceState] to the [BrowserStore].
+         */
+        operator fun invoke(tabId: String, internetResource: ShareInternetResourceState) {
+            store.dispatch(ShareInternetResourceAction.AddShareAction(tabId, internetResource))
+        }
+    }
+
     val consumeHitResult = ConsumeHitResultUseCase(store)
     val injectDownload = InjectDownloadUseCase(store)
+    val injectShareFromInternet = InjectShareInternetResourceUseCase(store)
 }

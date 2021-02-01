@@ -12,10 +12,11 @@ import android.view.View
 import com.google.android.material.snackbar.Snackbar
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.browser.state.state.content.ShareInternetResourceState
 import mozilla.components.concept.engine.HitResult
-import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuCandidate.Companion.MAX_TITLE_LENGTH
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.android.content.addContact
 import mozilla.components.support.ktx.android.content.share
 import mozilla.components.support.ktx.kotlin.stripMailToProtocol
@@ -69,7 +70,7 @@ data class ContextMenuCandidate(
             createCopyLinkCandidate(context, snackBarParentView, snackbarDelegate),
             createDownloadLinkCandidate(context, contextMenuUseCases),
             createShareLinkCandidate(context),
-            createShareImageCandidate(context),
+            createShareImageCandidate(context, contextMenuUseCases),
             createOpenImageInNewTabCandidate(
                 context,
                 tabsUseCases,
@@ -335,12 +336,20 @@ data class ContextMenuCandidate(
          */
         fun createShareImageCandidate(
             context: Context,
-            action: (SessionState, HitResult) -> Unit = { _, hitResult -> context.share(hitResult.src) }
+            contextMenuUseCases: ContextMenuUseCases
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.share_image",
             label = context.getString(R.string.mozac_feature_contextmenu_share_image),
             showFor = { _, hitResult -> hitResult.isImage() },
-            action = action
+            action = { tab, hitResult ->
+                contextMenuUseCases.injectShareFromInternet(
+                    tab.id,
+                    ShareInternetResourceState(
+                        url = hitResult.src,
+                        private = tab.content.private
+                    )
+                )
+            }
         )
 
         /**

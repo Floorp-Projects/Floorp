@@ -17,6 +17,7 @@ import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.content.ShareInternetResourceState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.HitResult
@@ -24,6 +25,7 @@ import mozilla.components.feature.app.links.AppLinkRedirect
 import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.any
+import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
@@ -693,10 +695,16 @@ class ContextMenuCandidateTest {
 
     @Test
     fun `Candidate 'Share image'`() {
+        val store = BrowserStore(initialState = BrowserState(
+            tabs = listOf(TabSessionState("123", ContentState(url = "https://www.mozilla.org")))
+        ))
         val context = spy(testContext)
 
-        val shareImage = ContextMenuCandidate.createShareImageCandidate(context)
-
+        val usecases = spy(ContextMenuUseCases(store))
+        val shareUsecase: ContextMenuUseCases.InjectShareInternetResourceUseCase = mock()
+        doReturn(shareUsecase).`when`(usecases).injectShareFromInternet
+        val shareImage = ContextMenuCandidate.createShareImageCandidate(context, usecases)
+        val shareStateCaptor = argumentCaptor<ShareInternetResourceState>()
         // showFor
 
         assertTrue(shareImage.showFor(
@@ -713,16 +721,14 @@ class ContextMenuCandidateTest {
 
         // action
 
-        val store = BrowserStore(initialState = BrowserState(
-            tabs = listOf(TabSessionState("123", ContentState("https://www.mozilla.org")))
-        ))
-
         shareImage.action.invoke(
             store.state.tabs.first(),
             HitResult.IMAGE_SRC("https://firefox.com", "https://getpocket.com")
         )
 
-        verify(context).startActivity(any())
+        verify(shareUsecase).invoke(eq("123"), shareStateCaptor.capture())
+        assertEquals("https://firefox.com", shareStateCaptor.value.url)
+        assertEquals(store.state.tabs.first().content.private, shareStateCaptor.value.private)
     }
 
     @Test

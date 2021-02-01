@@ -191,4 +191,22 @@ class StringTest {
 
         assertEquals("test.2020.12.01.txt", "test.2020.12.01.txt".sanitizeFileName())
     }
+
+    @Test
+    fun `getDataUrlImageExtension returns a default extension if one cannot be extracted from the data url`() {
+        val base64Image = "data:;base64,testImage"
+
+        val result = base64Image.getDataUrlImageExtension()
+
+        assertEquals("jpg", result)
+    }
+
+    @Test
+    fun `getDataUrlImageExtension returns an extension based on the media type included in the the data url`() {
+        val base64Image = "data:image/gif;base64,testImage"
+
+        val result = base64Image.getDataUrlImageExtension()
+
+        assertEquals("gif", result)
+    }
 }

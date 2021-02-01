@@ -12,15 +12,16 @@ import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.InitAction
-import mozilla.components.browser.state.action.MediaAction
-import mozilla.components.browser.state.action.ReaderAction
-import mozilla.components.browser.state.action.SearchAction
-import mozilla.components.browser.state.action.SystemAction
-import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.LastAccessAction
+import mozilla.components.browser.state.action.MediaAction
 import mozilla.components.browser.state.action.MediaSessionAction
+import mozilla.components.browser.state.action.ReaderAction
 import mozilla.components.browser.state.action.RecentlyClosedAction
 import mozilla.components.browser.state.action.RestoreCompleteAction
+import mozilla.components.browser.state.action.SearchAction
+import mozilla.components.browser.state.action.ShareInternetResourceAction
+import mozilla.components.browser.state.action.SystemAction
+import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.action.UndoAction
 import mozilla.components.browser.state.action.WebExtensionAction
@@ -59,6 +60,7 @@ internal object BrowserStateReducer {
             is CrashAction -> CrashReducer.reduce(state, action)
             is LastAccessAction -> LastAccessReducer.reduce(state, action)
             is UndoAction -> UndoReducer.reduce(state, action)
+            is ShareInternetResourceAction -> ShareInternetResourceStateReducer.reduce(state, action)
         }
     }
 }

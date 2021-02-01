@@ -41,7 +41,7 @@ import java.io.InputStream
  *
  * The current implementation just throws for most access.
  */
-class FakeContext(
+open class FakeContext(
     private val sharedPreferences: SharedPreferences = FakeSharedPreferences()
 ) : Context() {
     override fun getAssets(): AssetManager = throw NotImplementedError()

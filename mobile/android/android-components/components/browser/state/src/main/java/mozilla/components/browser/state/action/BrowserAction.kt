@@ -17,17 +17,18 @@ import mozilla.components.browser.state.state.EngineState
 import mozilla.components.browser.state.state.LoadRequestState
 import mozilla.components.browser.state.state.MediaSessionState
 import mozilla.components.browser.state.state.MediaState
-import mozilla.components.browser.state.state.content.PermissionHighlightsState
 import mozilla.components.browser.state.state.ReaderState
+import mozilla.components.browser.state.state.SearchState
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.TrackingProtectionState
+import mozilla.components.browser.state.state.UndoHistoryState
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.FindResultState
-import mozilla.components.browser.state.state.SearchState
-import mozilla.components.browser.state.state.UndoHistoryState
+import mozilla.components.browser.state.state.content.PermissionHighlightsState
+import mozilla.components.browser.state.state.content.ShareInternetResourceState
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
@@ -38,8 +39,8 @@ import mozilla.components.concept.engine.history.HistoryItem
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.media.RecordingDevice
-import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.mediasession.MediaSession
+import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.search.SearchRequest
 import mozilla.components.concept.engine.webextension.WebExtensionBrowserAction
@@ -1033,6 +1034,28 @@ sealed class DownloadAction : BrowserAction() {
      * Restores the given [download] from the storage.
      */
     data class RestoreDownloadStateAction(val download: DownloadState) : DownloadAction()
+}
+
+/**
+ * [BrowserAction] implementations related to updating the session state of internet resources to be shared.
+ */
+sealed class ShareInternetResourceAction : BrowserAction() {
+    /**
+     * Starts the sharing process of an Internet resource.
+     */
+    data class AddShareAction(
+        val tabId: String,
+        val internetResource: ShareInternetResourceState
+    ) : ShareInternetResourceAction()
+
+    /**
+     * Previous share request is considered completed.
+     * File was successfully shared with other apps / user may have aborted the process or the operation
+     * may have failed. In either case the previous share request is considered completed.
+     */
+    data class ConsumeShareAction(
+        val tabId: String
+    ) : ShareInternetResourceAction()
 }
 
 /**

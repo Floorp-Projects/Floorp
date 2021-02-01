@@ -9,6 +9,7 @@ import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.browser.state.state.content.HistoryState
 import mozilla.components.browser.state.state.content.PermissionHighlightsState
+import mozilla.components.browser.state.state.content.ShareInternetResourceState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.RecordingDevice
@@ -33,6 +34,7 @@ import mozilla.components.concept.engine.window.WindowRequest
  * be used as a preview in e.g. a tab switcher.
  * @property icon the icon of the page currently loaded by this session.
  * @property download Last unhandled download request.
+ * @property share Last unhandled request to share an internet resource that first needs to be downloaded.
  * @property hitResult the target of the latest long click operation.
  * @property promptRequest the last received [PromptRequest].
  * @property findResults the list of results of the latest "find in page" operation.
@@ -70,6 +72,7 @@ data class ContentState(
     val thumbnail: Bitmap? = null,
     val icon: Bitmap? = null,
     val download: DownloadState? = null,
+    val share: ShareInternetResourceState? = null,
     val hitResult: HitResult? = null,
     val promptRequest: PromptRequest? = null,
     val findResults: List<FindResultState> = emptyList(),

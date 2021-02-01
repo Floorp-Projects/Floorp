@@ -4,4 +4,7 @@
    - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
 <paths>
     <external-path name="Download" path="." />
+
+    <!-- Offer access only to files under Context.getCacheDir()/media_share_cache/ -->
+    <cache-path name="mediaShareCache" path="mozac_share_cache"/>
 </paths>
