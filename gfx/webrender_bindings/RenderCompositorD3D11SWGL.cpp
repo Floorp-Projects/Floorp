@@ -504,7 +504,13 @@ void RenderCompositorD3D11SWGL::AttachExternalImage(
     wr::NativeSurfaceId aId, wr::ExternalImageId aExternalImage) {
   RenderTextureHost* image =
       RenderThread::Get()->GetRenderTexture(aExternalImage);
-  MOZ_RELEASE_ASSERT(image);
+  MOZ_ASSERT(image);
+  if (!image) {
+    gfxCriticalNoteOnce
+        << "Failed to get RenderTextureHost for D3D11SWGL extId:"
+        << AsUint64(aExternalImage);
+    return;
+  }
   MOZ_RELEASE_ASSERT(image->AsRenderDXGITextureHost() ||
                      image->AsRenderDXGIYCbCrTextureHost());
 
