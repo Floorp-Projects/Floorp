@@ -94,22 +94,13 @@ Run ``mach bootstrap`` to get an updated clang-cl in your
 
 ::
 
-   ac_add_options --target=x86_64-pc-mingw32
-   ac_add_options --host=x86_64-pc-mingw32
-
    ac_add_options --enable-address-sanitizer
    ac_add_options --disable-jemalloc
-
-   export CC="clang-cl.exe"
-   export CXX="clang-cl.exe"
 
    export LDFLAGS="clang_rt.asan_dynamic-x86_64.lib clang_rt.asan_dynamic_runtime_thunk-x86_64.lib"
    CLANG_LIB_DIR="$(cd ~/.mozbuild/clang/lib/clang/*/lib/windows && pwd)"
    export MOZ_CLANG_RT_ASAN_LIB_PATH="${CLANG_LIB_DIR}/clang_rt.asan_dynamic-x86_64.dll"
    export LIB=$LIB:$CLANG_LIB_DIR
-
-If you want to use a different LLVM (see the :ref:`clang-cl instructions <Building Firefox On Windows>`),
-alter CLANG_LIB_DIR as appropriate.
 
 If you launch an ASan build under WinDbg, you may see spurious
 first-chance Access Violation exceptions. These come from ASan creating
