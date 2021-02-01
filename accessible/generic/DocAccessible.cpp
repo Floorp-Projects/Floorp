@@ -921,18 +921,6 @@ void DocAccessible::AttributeChangedImpl(Accessible* aAccessible,
     return;
   }
 
-  // These attributes can change whether or not a table is a layout table.
-  // We currently cache that information on Mac, so we fire a
-  // EVENT_OBJECT_ATTRIBUTE_CHANGED, which Mac listens for, to invalidate.
-  if (aAccessible->IsTable() || aAccessible->IsTableRow() ||
-      aAccessible->IsTableCell()) {
-    if (aAttribute == nsGkAtoms::summary || aAttribute == nsGkAtoms::headers ||
-        aAttribute == nsGkAtoms::scope || aAttribute == nsGkAtoms::abbr) {
-      FireDelayedEvent(nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED,
-                       aAccessible);
-    }
-  }
-
   if (aAttribute == nsGkAtoms::aria_busy) {
     bool isOn = elm->AttrValueIs(aNameSpaceID, aAttribute, nsGkAtoms::_true,
                                  eCaseMatters);
