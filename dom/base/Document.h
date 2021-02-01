@@ -44,6 +44,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UseCounter.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/css/StylePreloadKind.h"
 #include "mozilla/dom/DispatcherTrait.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "mozilla/dom/Element.h"
@@ -2951,14 +2952,14 @@ class Document : public nsINode,
   void ForgetImagePreload(nsIURI* aURI);
 
   /**
-   * Called by nsParser to preload style sheets.  aCrossOriginAttr should be a
-   * void string if the attr is not present.
+   * Called by the parser or the preload service to preload style sheets.
+   * aCrossOriginAttr should be a void string if the attr is not present.
    */
   SheetPreloadStatus PreloadStyle(nsIURI* aURI, const Encoding* aEncoding,
                                   const nsAString& aCrossOriginAttr,
                                   ReferrerPolicyEnum aReferrerPolicy,
                                   const nsAString& aIntegrity,
-                                  bool aIsLinkPreload);
+                                  css::StylePreloadKind);
 
   /**
    * Called by the chrome registry to load style sheets.

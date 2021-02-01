@@ -1141,7 +1141,9 @@ void nsHtml5TreeOpExecutor::PreloadStyle(const nsAString& aURL,
 
   mDocument->PreloadStyle(uri, Encoding::ForLabel(aCharset), aCrossOrigin,
                           GetPreloadReferrerPolicy(aReferrerPolicy), aIntegrity,
-                          aLinkPreload);
+                          aLinkPreload
+                              ? css::StylePreloadKind::FromLinkRelPreloadElement
+                              : css::StylePreloadKind::FromParser);
 }
 
 void nsHtml5TreeOpExecutor::PreloadImage(

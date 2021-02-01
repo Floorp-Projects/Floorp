@@ -153,6 +153,7 @@ EXPORTS.mozilla.css += [
     "SheetLoadData.h",
     "SheetParsingMode.h",
     "StreamLoader.h",
+    "StylePreloadKind.h",
 ]
 
 UNIFIED_SOURCES += [
