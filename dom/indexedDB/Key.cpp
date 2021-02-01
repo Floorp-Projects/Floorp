@@ -834,7 +834,7 @@ double Key::DecodeNumber(const EncodedDataType*& aPos,
 Result<Ok, nsresult> Key::EncodeBinary(JSObject* aObject, bool aIsViewObject,
                                        uint8_t aTypeOffset) {
   uint8_t* bufferData;
-  uint32_t bufferLength;
+  size_t bufferLength;
 
   // We must use JS::GetObjectAsArrayBuffer()/JS_GetObjectAsArrayBufferView()
   // instead of js::GetArrayBufferLengthAndData(). The object might be wrapped,

@@ -1884,14 +1884,14 @@ JS_FRIEND_API bool JS::IsMappedArrayBufferObject(JSObject* obj) {
 }
 
 JS_FRIEND_API JSObject* JS::GetObjectAsArrayBuffer(JSObject* obj,
-                                                   uint32_t* length,
+                                                   size_t* length,
                                                    uint8_t** data) {
   ArrayBufferObject* aobj = obj->maybeUnwrapIf<ArrayBufferObject>();
   if (!aobj) {
     return nullptr;
   }
 
-  *length = aobj->byteLength().deprecatedGetUint32();
+  *length = aobj->byteLength().get();
   *data = aobj->dataPointer();
 
   return aobj;

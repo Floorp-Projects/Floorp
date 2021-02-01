@@ -34,6 +34,10 @@ BEGIN_TEST(testLargeArrayBuffers) {
     JS::GetArrayBufferMaybeSharedLengthAndData(buffer, &length, &isShared,
                                                &data);
     CHECK_EQUAL(length, nbytes);
+
+    length = 0;
+    CHECK(GetObjectAsArrayBuffer(buffer, &length, &data));
+    CHECK_EQUAL(length, nbytes);
   }
 
   // New Uint8Array
@@ -51,6 +55,14 @@ BEGIN_TEST(testLargeArrayBuffers) {
 
     length = 0;
     js::GetUint8ArrayLengthAndData(tarr, &length, &isShared, &data);
+    CHECK_EQUAL(length, nbytes);
+
+    length = 0;
+    CHECK(JS_GetObjectAsUint8Array(tarr, &length, &isShared, &data));
+    CHECK_EQUAL(length, nbytes);
+
+    length = 0;
+    CHECK(JS_GetObjectAsArrayBufferView(tarr, &length, &isShared, &data));
     CHECK_EQUAL(length, nbytes);
   }
 
@@ -72,6 +84,14 @@ BEGIN_TEST(testLargeArrayBuffers) {
     int16_t* int16Data;
     js::GetInt16ArrayLengthAndData(tarr, &length, &isShared, &int16Data);
     CHECK_EQUAL(length, nbytes / 2);
+
+    length = 0;
+    CHECK(JS_GetObjectAsInt16Array(tarr, &length, &isShared, &int16Data));
+    CHECK_EQUAL(length, nbytes / 2);
+
+    length = 0;
+    CHECK(JS_GetObjectAsArrayBufferView(tarr, &length, &isShared, &data));
+    CHECK_EQUAL(length, nbytes);
   }
 
   // DataView
@@ -83,6 +103,10 @@ BEGIN_TEST(testLargeArrayBuffers) {
 
     length = 0;
     js::GetArrayBufferViewLengthAndData(dv, &length, &isShared, &data);
+    CHECK_EQUAL(length, nbytes - 10);
+
+    length = 0;
+    CHECK(JS_GetObjectAsArrayBufferView(dv, &length, &isShared, &data));
     CHECK_EQUAL(length, nbytes - 10);
   }
 
