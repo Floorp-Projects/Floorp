@@ -110,10 +110,11 @@ const ExperimentAPI = {
    * Sends exposure ping
    * @param {string} featureId Feature to lookup
    * @param {boolean} defaultValue
+   * @param {{sendExposurePing: boolean}} options
    * @returns {boolean}
    */
-  isFeatureEnabled(featureId, defaultValue) {
-    const branch = this.getFeatureBranch({ featureId });
+  isFeatureEnabled(featureId, defaultValue, { sendExposurePing = true } = {}) {
+    const branch = this.getFeatureBranch({ featureId, sendExposurePing });
     if (branch?.feature.enabled !== undefined) {
       return branch.feature.enabled;
     }
