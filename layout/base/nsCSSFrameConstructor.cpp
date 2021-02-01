@@ -2976,6 +2976,8 @@ nsIFrame* nsCSSFrameConstructor::ConstructFieldSetFrame(
     nsFrameConstructorState& aState, FrameConstructionItem& aItem,
     nsContainerFrame* aParentFrame, const nsStyleDisplay* aStyleDisplay,
     nsFrameList& aFrameList) {
+  AutoRestore<bool> savedHasRenderedLegend(aState.mHasRenderedLegend);
+  aState.mHasRenderedLegend = false;
   nsIContent* const content = aItem.mContent;
   ComputedStyle* const computedStyle = aItem.mComputedStyle;
 
@@ -3053,12 +3055,8 @@ nsIFrame* nsCSSFrameConstructor::ConstructFieldSetFrame(
                                        absoluteSaveState);
   }
 
-  {
-    AutoRestore<bool> savedHasRenderedLegend(aState.mHasRenderedLegend);
-    aState.mHasRenderedLegend = false;
-    ProcessChildren(aState, content, computedStyle, contentFrame, true,
-                    childList, true);
-  }
+  ProcessChildren(aState, content, computedStyle, contentFrame, true, childList,
+                  true);
   nsFrameList fieldsetKids;
   fieldsetKids.AppendFrame(nullptr,
                            scrollFrame ? scrollFrame : contentFrameTop);
