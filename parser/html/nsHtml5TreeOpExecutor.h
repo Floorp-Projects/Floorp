@@ -231,18 +231,19 @@ class nsHtml5TreeOpExecutor final
 
   void PreloadScript(const nsAString& aURL, const nsAString& aCharset,
                      const nsAString& aType, const nsAString& aCrossOrigin,
-                     const nsAString& aIntegrity,
+                     const nsAString& aMedia, const nsAString& aIntegrity,
                      ReferrerPolicy aReferrerPolicy, bool aScriptFromHead,
                      bool aAsync, bool aDefer, bool aNoModule,
                      bool aLinkPreload);
 
   void PreloadStyle(const nsAString& aURL, const nsAString& aCharset,
-                    const nsAString& aCrossOrigin,
+                    const nsAString& aCrossOrigin, const nsAString& aMedia,
                     const nsAString& aReferrerPolicy,
                     const nsAString& aIntegrity, bool aLinkPreload);
 
   void PreloadImage(const nsAString& aURL, const nsAString& aCrossOrigin,
-                    const nsAString& aSrcset, const nsAString& aSizes,
+                    const nsAString& aMedia, const nsAString& aSrcset,
+                    const nsAString& aSizes,
                     const nsAString& aImageReferrerPolicy, bool aLinkPreload);
 
   void PreloadOpenPicture();
@@ -253,10 +254,10 @@ class nsHtml5TreeOpExecutor final
                             const nsAString& aType, const nsAString& aMedia);
 
   void PreloadFont(const nsAString& aURL, const nsAString& aCrossOrigin,
-                   const nsAString& aReferrerPolicy);
+                   const nsAString& aMedia, const nsAString& aReferrerPolicy);
 
   void PreloadFetch(const nsAString& aURL, const nsAString& aCrossOrigin,
-                    const nsAString& aReferrerPolicy);
+                    const nsAString& aMedia, const nsAString& aReferrerPolicy);
 
   void SetSpeculationBase(const nsAString& aURL);
 
@@ -275,6 +276,15 @@ class nsHtml5TreeOpExecutor final
    * Get a nsIURI for an nsString if the URL hasn't been preloaded yet.
    */
   already_AddRefed<nsIURI> ConvertIfNotPreloadedYet(const nsAString& aURL);
+
+  /**
+   * The above, plus also checks that the media attribute applies.
+   */
+  already_AddRefed<nsIURI> ConvertIfNotPreloadedYetAndMediaApplies(
+      const nsAString& aURL, const nsAString& aMedia);
+
+  /** Returns whether the given media attribute applies to mDocument */
+  bool MediaApplies(const nsAString& aMedia);
 
   /**
    * The base URI we would use for current preload operations

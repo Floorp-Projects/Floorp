@@ -74,13 +74,15 @@ class nsHtml5SpeculativeLoad {
   }
 
   inline void InitImage(nsHtml5String aUrl, nsHtml5String aCrossOrigin,
-                        nsHtml5String aReferrerPolicy, nsHtml5String aSrcset,
-                        nsHtml5String aSizes, bool aLinkPreload) {
+                        nsHtml5String aMedia, nsHtml5String aReferrerPolicy,
+                        nsHtml5String aSrcset, nsHtml5String aSizes,
+                        bool aLinkPreload) {
     MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
                "Trying to reinitialize a speculative load!");
     mOpCode = eSpeculativeLoadImage;
     aUrl.ToString(mUrlOrSizes);
-    aCrossOrigin.ToString(mCrossOriginOrMedia);
+    aCrossOrigin.ToString(mCrossOrigin);
+    aMedia.ToString(mMedia);
     nsString
         referrerPolicy;  // Not Auto, because using it to hold nsStringBuffer*
     aReferrerPolicy.ToString(referrerPolicy);
@@ -94,12 +96,13 @@ class nsHtml5SpeculativeLoad {
   }
 
   inline void InitFont(nsHtml5String aUrl, nsHtml5String aCrossOrigin,
-                       nsHtml5String aReferrerPolicy) {
+                       nsHtml5String aMedia, nsHtml5String aReferrerPolicy) {
     MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
                "Trying to reinitialize a speculative load!");
     mOpCode = eSpeculativeLoadFont;
     aUrl.ToString(mUrlOrSizes);
-    aCrossOrigin.ToString(mCrossOriginOrMedia);
+    aCrossOrigin.ToString(mCrossOrigin);
+    aMedia.ToString(mMedia);
     nsString
         referrerPolicy;  // Not Auto, because using it to hold nsStringBuffer*
     aReferrerPolicy.ToString(referrerPolicy);
@@ -111,12 +114,13 @@ class nsHtml5SpeculativeLoad {
   }
 
   inline void InitFetch(nsHtml5String aUrl, nsHtml5String aCrossOrigin,
-                        nsHtml5String aReferrerPolicy) {
+                        nsHtml5String aMedia, nsHtml5String aReferrerPolicy) {
     MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
                "Trying to reinitialize a speculative load!");
     mOpCode = eSpeculativeLoadFetch;
     aUrl.ToString(mUrlOrSizes);
-    aCrossOrigin.ToString(mCrossOriginOrMedia);
+    aCrossOrigin.ToString(mCrossOrigin);
+    aMedia.ToString(mMedia);
     nsString
         referrerPolicy;  // Not Auto, because using it to hold nsStringBuffer*
     aReferrerPolicy.ToString(referrerPolicy);
@@ -157,12 +161,12 @@ class nsHtml5SpeculativeLoad {
     aSizes.ToString(mUrlOrSizes);
     aType.ToString(
         mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity);
-    aMedia.ToString(mCrossOriginOrMedia);
+    aMedia.ToString(mMedia);
   }
 
   inline void InitScript(nsHtml5String aUrl, nsHtml5String aCharset,
                          nsHtml5String aType, nsHtml5String aCrossOrigin,
-                         nsHtml5String aIntegrity,
+                         nsHtml5String aMedia, nsHtml5String aIntegrity,
                          nsHtml5String aReferrerPolicy, bool aParserInHead,
                          bool aAsync, bool aDefer, bool aNoModule,
                          bool aLinkPreload) {
@@ -179,7 +183,8 @@ class nsHtml5SpeculativeLoad {
     aCharset.ToString(mCharsetOrSrcset);
     aType.ToString(
         mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity);
-    aCrossOrigin.ToString(mCrossOriginOrMedia);
+    aCrossOrigin.ToString(mCrossOrigin);
+    aMedia.ToString(mMedia);
     aIntegrity.ToString(mReferrerPolicyOrIntegrity);
     nsAutoString referrerPolicy;
     aReferrerPolicy.ToString(referrerPolicy);
@@ -201,14 +206,15 @@ class nsHtml5SpeculativeLoad {
     mOpCode = eSpeculativeLoadStyle;
     mUrlOrSizes = std::move(aUrl);
     mCharsetOrSrcset.SetIsVoid(true);
-    mCrossOriginOrMedia.SetIsVoid(true);
+    mCrossOrigin.SetIsVoid(true);
+    mMedia.SetIsVoid(true);
     mReferrerPolicyOrIntegrity.SetIsVoid(true);
     mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity.SetIsVoid(
         true);
   }
 
   inline void InitStyle(nsHtml5String aUrl, nsHtml5String aCharset,
-                        nsHtml5String aCrossOrigin,
+                        nsHtml5String aCrossOrigin, nsHtml5String aMedia,
                         nsHtml5String aReferrerPolicy, nsHtml5String aIntegrity,
                         bool aLinkPreload) {
     MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
@@ -216,7 +222,8 @@ class nsHtml5SpeculativeLoad {
     mOpCode = eSpeculativeLoadStyle;
     aUrl.ToString(mUrlOrSizes);
     aCharset.ToString(mCharsetOrSrcset);
-    aCrossOrigin.ToString(mCrossOriginOrMedia);
+    aCrossOrigin.ToString(mCrossOrigin);
+    aMedia.ToString(mMedia);
     nsString
         referrerPolicy;  // Not Auto, because using it to hold nsStringBuffer*
     aReferrerPolicy.ToString(referrerPolicy);
@@ -286,7 +293,7 @@ class nsHtml5SpeculativeLoad {
                "Trying to reinitialize a speculative load!");
     mOpCode = eSpeculativeLoadPreconnect;
     aUrl.ToString(mUrlOrSizes);
-    aCrossOrigin.ToString(mCrossOriginOrMedia);
+    aCrossOrigin.ToString(mCrossOrigin);
   }
 
   void Perform(nsHtml5TreeOpExecutor* aExecutor);
@@ -351,13 +358,19 @@ class nsHtml5SpeculativeLoad {
   nsString mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity;
   /**
    * If mOpCode is eSpeculativeLoadImage or eSpeculativeLoadScript[FromHead]
-   * or eSpeculativeLoadPreconnect this is the value of the "crossorigin"
-   * attribute.  If the attribute is not set, this will be a void string.
-   * If mOpCode is eSpeculativeLoadPictureSource, this is the value of the
-   * "media" attribute.  If the attribute is not set, this will be a void
-   * string.
+   * or eSpeculativeLoadPreconnect or eSpeculativeLoadStyle this is the value of
+   * the "crossorigin" attribute.  If the attribute is not set, this will be a
+   * void string.
    */
-  nsString mCrossOriginOrMedia;
+  nsString mCrossOrigin;
+  /**
+   * If mOpCode is eSpeculativeLoadPictureSource or eSpeculativeLoadStyle or
+   * Fetch or Image or Media or Script this is the value of the relevant "media"
+   * attribute of the <link rel="preload"> or <link rel="stylesheet">. If the
+   * attribute is not set, or the preload didn't originate from a <link>, this
+   * will be a void string.
+   */
+  nsString mMedia;
   /**
    * If mOpCode is eSpeculativeLoadScript[FromHead] this represents the value
    * of the "referrerpolicy" attribute. This field holds one of the values
