@@ -1075,12 +1075,6 @@ function openFeedbackPage() {
   openTrustedLinkIn(url, "tab");
 }
 
-function openTourPage() {
-  let scope = {};
-  ChromeUtils.import("resource:///modules/UITour.jsm", scope);
-  openTrustedLinkIn(scope.UITour.url, "tab");
-}
-
 function buildHelpMenu() {
   document.getElementById(
     "feedbackPage"
@@ -1089,10 +1083,6 @@ function buildHelpMenu() {
   if (checkForUpdates) {
     checkForUpdates.disabled = !Services.policies.isAllowed("appUpdate");
   }
-
-  document.getElementById(
-    "helpSafeMode"
-  ).disabled = !Services.policies.isAllowed("safeMode");
 
   let supportMenu = Services.policies.getSupportMenu();
   if (supportMenu) {
@@ -1109,8 +1099,6 @@ function buildHelpMenu() {
   if (typeof gSafeBrowsing != "undefined") {
     gSafeBrowsing.setReportPhishingMenu();
   }
-
-  updateImportCommandEnabledState();
 }
 
 function isElementVisible(aElement) {
@@ -1158,9 +1146,6 @@ function updateImportCommandEnabledState() {
   if (!Services.policies.isAllowed("profileImport")) {
     document
       .getElementById("cmd_file_importFromAnotherBrowser")
-      .setAttribute("disabled", "true");
-    document
-      .getElementById("cmd_help_importFromAnotherBrowser")
       .setAttribute("disabled", "true");
   }
 }
