@@ -555,3 +555,4 @@ load 1599518.html
 load 1599532.html
 pref(layout.accessiblecaret.enabled,true) load 1606492.html
 load 1676301-1.html
+pref(apz.mvm.force-enabled,false) pref(dom.meta-viewport.enabled,false) pref(apz.allow_zooming,false) pref(layout.dynamic-toolbar-max-height,100) load 1689371.html
