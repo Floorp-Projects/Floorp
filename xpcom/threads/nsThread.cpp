@@ -114,9 +114,6 @@ NS_DECL_CI_INTERFACE_GETTER(nsThread)
 
 Array<char, nsThread::kRunnableNameBufSize> nsThread::sMainThreadRunnableName;
 
-uint32_t nsThread::sActiveThreads;
-uint32_t nsThread::sMaxActiveThreads;
-
 #ifdef EARLY_BETA_OR_EARLIER
 const uint32_t kTelemetryWakeupCountLimit = 100;
 #endif
@@ -335,18 +332,9 @@ void nsThread::ClearThreadList() {
 /* static */
 nsThreadEnumerator nsThread::Enumerate() { return {}; }
 
-/* static */
-uint32_t nsThread::MaxActiveThreads() {
-  OffTheBooksMutexAutoLock mal(ThreadListMutex());
-  return sMaxActiveThreads;
-}
-
 void nsThread::AddToThreadList() {
   OffTheBooksMutexAutoLock mal(ThreadListMutex());
   MOZ_ASSERT(!isInList());
-
-  sActiveThreads++;
-  sMaxActiveThreads = std::max(sActiveThreads, sMaxActiveThreads);
 
   ThreadList().insertBack(this);
 }
@@ -354,7 +342,6 @@ void nsThread::AddToThreadList() {
 void nsThread::MaybeRemoveFromThreadList() {
   OffTheBooksMutexAutoLock mal(ThreadListMutex());
   if (isInList()) {
-    sActiveThreads--;
     removeFrom(ThreadList());
   }
 }

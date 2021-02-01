@@ -238,8 +238,6 @@ class nsThread : public nsIThreadInternal,
 
   static nsThreadEnumerator Enumerate();
 
-  static uint32_t MaxActiveThreads();
-
   // When entering local execution mode a new event queue is created and used as
   // an event source. This queue is only accessible through an
   // nsLocalExecutionGuard constructed from the nsLocalExecutionRecord returned
@@ -287,11 +285,6 @@ class nsThread : public nsIThreadInternal,
   static mozilla::OffTheBooksMutex& ThreadListMutex();
   static mozilla::LinkedList<nsThread>& ThreadList();
   static void ClearThreadList();
-
-  // The current number of active threads.
-  static uint32_t sActiveThreads;
-  // The maximum current number of active threads we've had in this session.
-  static uint32_t sMaxActiveThreads;
 
   void AddToThreadList();
   void MaybeRemoveFromThreadList();

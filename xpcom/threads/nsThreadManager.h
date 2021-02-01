@@ -68,10 +68,6 @@ class nsThreadManager : public nsIThreadManager {
   already_AddRefed<nsISerialEventTarget> CreateBackgroundTaskQueue(
       const char* aName);
 
-  // Returns the maximal number of threads that have been in existence
-  // simultaneously during the execution of the thread manager.
-  uint32_t GetHighestNumberOfThreads();
-
   ~nsThreadManager();
 
   void EnableMainThreadEventPrioritization();
