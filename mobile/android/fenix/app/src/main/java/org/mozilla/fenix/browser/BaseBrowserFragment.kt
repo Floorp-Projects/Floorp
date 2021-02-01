@@ -128,6 +128,7 @@ import org.mozilla.fenix.wifi.SitePermissionsWifiIntegration
 import java.lang.ref.WeakReference
 import mozilla.components.feature.media.fullscreen.MediaFullscreenOrientationFeature
 import mozilla.components.feature.webauthn.WebAuthnFeature
+import mozilla.components.support.base.feature.ActivityResultHandler
 import org.mozilla.fenix.FeatureFlags.newMediaSessionApi
 
 /**
@@ -137,7 +138,7 @@ import org.mozilla.fenix.FeatureFlags.newMediaSessionApi
  */
 @ExperimentalCoroutinesApi
 @Suppress("TooManyFunctions", "LargeClass")
-abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
+abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, ActivityResultHandler,
     OnBackLongPressedListener, AccessibilityManager.AccessibilityStateChangeListener {
 
     private lateinit var browserFragmentStore: BrowserFragmentStore
@@ -1037,10 +1038,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler,
     }
 
     /**
-     * Forwards activity results to the prompt feature.
+     * Forwards activity results to the [ActivityResultHandler] features.
      */
-    final override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        listOf(
+    override fun onActivityResult(requestCode: Int, data: Intent?, resultCode: Int): Boolean {
+        return listOf(
             promptsFeature,
             webAuthnFeature
         ).any { it.onActivityResult(requestCode, data, resultCode) }

@@ -52,6 +52,7 @@ import mozilla.components.feature.privatemode.notification.PrivateNotificationFe
 import mozilla.components.feature.search.BrowserStoreSearchAdapter
 import mozilla.components.feature.search.ext.legacy
 import mozilla.components.service.fxa.sync.SyncReason
+import mozilla.components.support.base.feature.ActivityResultHandler
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import mozilla.components.support.ktx.android.content.call
@@ -534,6 +535,15 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             }
         }
         super.onBackPressed()
+    }
+
+    final override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        supportFragmentManager.primaryNavigationFragment?.childFragmentManager?.fragments?.forEach {
+            if (it is ActivityResultHandler && it.onActivityResult(requestCode, data, resultCode)) {
+                return
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
     private fun shouldUseCustomBackLongPress(): Boolean {
