@@ -2430,7 +2430,11 @@ class BookmarkObserverRecorder {
         "Interrupted before notifying observers for new items"
       );
     }
-    PlacesObservers.notifyListeners(this.placesEvents);
+
+    if (this.placesEvents.length) {
+      PlacesObservers.notifyListeners(this.placesEvents);
+    }
+
     await Async.yieldingForEach(
       this.itemMovedArgs,
       args => {
