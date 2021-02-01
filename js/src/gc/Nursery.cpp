@@ -364,13 +364,11 @@ void js::Nursery::enterZealMode() {
 
   MOZ_ASSERT(isEmpty());
 
+  decommitTask.join();
+
   AutoEnterOOMUnsafeRegion oomUnsafe;
 
   if (isSubChunkMode()) {
-    // The poisoning call below must not race with background decommit,
-    // which could be attempting to decommit the currently-unused part of this
-    // chunk.
-    decommitTask.join();
     {
       if (!chunk(0).markPagesInUseHard(ChunkSize)) {
         oomUnsafe.crash("Out of memory trying to extend chunk for zeal mode");
