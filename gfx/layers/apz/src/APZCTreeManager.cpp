@@ -2887,6 +2887,19 @@ APZCTreeManager::HitTestResult APZCTreeManager::GetAPZCAtPointWR(
   return hit;
 }
 
+AsyncPanZoomController* APZCTreeManager::FindHandoffParent(
+    const AsyncPanZoomController* aApzc) {
+  RefPtr<HitTestingTreeNode> node = GetTargetNode(aApzc->GetGuid(), nullptr);
+  while (node) {
+    if (auto* apzc = GetTargetApzcForNode(node->GetParent())) {
+      return apzc;
+    }
+    node = node->GetParent();
+  }
+
+  return nullptr;
+}
+
 RefPtr<const OverscrollHandoffChain>
 APZCTreeManager::BuildOverscrollHandoffChain(
     const RefPtr<AsyncPanZoomController>& aInitialTarget) {
@@ -2918,7 +2931,11 @@ APZCTreeManager::BuildOverscrollHandoffChain(
         // This probably indicates a bug or missed case in layout code
         NS_WARNING("Found a non-root APZ with no handoff parent");
       }
-      apzc = apzc->GetParent();
+
+      // Find the parent APZC by using HitTestingTree (i.e. by using
+      // GetTargetApzcForNode) so that we can properly find the parent APZC for
+      // cases where cross-process iframes are inside position:fixed subtree.
+      apzc = FindHandoffParent(apzc);
       continue;
     }
 

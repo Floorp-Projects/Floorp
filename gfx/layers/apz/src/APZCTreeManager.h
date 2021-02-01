@@ -621,6 +621,8 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
                                      const ScrollableLayerGuid& aGuid,
                                      GuidComparator aComparator);
   AsyncPanZoomController* GetTargetApzcForNode(HitTestingTreeNode* aNode);
+  AsyncPanZoomController* FindHandoffParent(
+      const AsyncPanZoomController* aApzc);
   HitTestResult GetAPZCAtPoint(const ScreenPoint& aHitTestPoint,
                                const RecursiveMutexAutoLock& aProofOfTreeLock);
   HitTestResult GetAPZCAtPointWR(
