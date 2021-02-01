@@ -118,96 +118,6 @@ add_task(async function test_recordExposureEvent() {
   );
 });
 
-add_task(async function test_activateBranch() {
-  const store = ExperimentFakes.store();
-  const experiment = ExperimentFakes.experiment("foo", {
-    branch: {
-      slug: "variant",
-      feature: { featureId: "green", enabled: true },
-    },
-  });
-
-  await store.init();
-  store.addExperiment(experiment);
-
-  Assert.deepEqual(
-    store.activateBranch({ featureId: "green" }),
-    experiment.branch,
-    "Should return feature of active experiment"
-  );
-});
-
-add_task(async function test_activateBranch_activationEvent() {
-  const store = ExperimentFakes.store();
-  const sandbox = sinon.createSandbox();
-  const experiment = ExperimentFakes.experiment("foo", {
-    branch: {
-      slug: "variant",
-      feature: { featureId: "green", enabled: true },
-    },
-  });
-
-  await store.init();
-  store.addExperiment(experiment);
-  // Adding stub later because `addExperiment` emits update events
-  const stub = sandbox.stub(store, "emit");
-  // Call activateBranch to trigger an activation event
-  store.activateBranch({ featureId: "green" });
-
-  Assert.equal(stub.callCount, 1, "Called by doing activateBranch");
-  Assert.equal(stub.firstCall.args[0], "exposure", "Has correct event name");
-  Assert.equal(
-    stub.firstCall.args[1].experimentSlug,
-    experiment.slug,
-    "Has correct payload"
-  );
-});
-
-add_task(async function test_activateBranch_storeFailure() {
-  const store = ExperimentFakes.store();
-  const sandbox = sinon.createSandbox();
-  const experiment = ExperimentFakes.experiment("foo", {
-    branch: {
-      slug: "variant",
-      feature: { featureId: "green", enabled: true },
-    },
-  });
-
-  await store.init();
-  store.addExperiment(experiment);
-  // Adding stub later because `addExperiment` emits update events
-  const stub = sandbox.stub(store, "emit");
-  // Call activateBranch to trigger an activation event
-  sandbox.stub(store, "getAllActive").throws();
-  try {
-    store.activateBranch({ featureId: "green" });
-  } catch (e) {
-    /* This is expected */
-  }
-
-  Assert.equal(stub.callCount, 0, "Not called if store somehow fails");
-});
-
-add_task(async function test_activateBranch_noActivationEvent() {
-  const store = ExperimentFakes.store();
-  const sandbox = sinon.createSandbox();
-  const experiment = ExperimentFakes.experiment("foo", {
-    branch: {
-      slug: "variant",
-      feature: { featureId: "green", enabled: true },
-    },
-  });
-
-  await store.init();
-  store.addExperiment(experiment);
-  // Adding stub later because `addExperiment` emits update events
-  const stub = sandbox.stub(store, "emit");
-  // Call activateBranch to trigger an activation event
-  store.activateBranch({ featureId: "green", sendExposurePing: false });
-
-  Assert.equal(stub.callCount, 0, "Not called: sendExposurePing is false");
-});
-
 add_task(async function test_hasExperimentForFeature() {
   const store = ExperimentFakes.store();
 
@@ -259,6 +169,34 @@ add_task(async function test_hasExperimentForFeature() {
     store.hasExperimentForFeature("purple"),
     false,
     "should return false if there is a non-active experiment with the given groups"
+  );
+});
+
+add_task(async function test_hasExperimentForFeature_no_exposure() {
+  const sandbox = sinon.createSandbox();
+  const store = ExperimentFakes.store();
+
+  await store.init();
+  const emitSpy = sandbox.spy(store, "emit");
+
+  store.addExperiment(
+    ExperimentFakes.experiment("foo", {
+      branch: {
+        slug: "variant",
+        feature: { featureId: "green", enabled: true },
+      },
+    })
+  );
+
+  Assert.equal(
+    store.hasExperimentForFeature("green"),
+    true,
+    "should return true if there is an experiment with any of the given groups"
+  );
+
+  Assert.ok(
+    emitSpy.neverCalledWith("exposure"),
+    "should not emit an exposure event when checking hasExperimentForFeature"
   );
 });
 
