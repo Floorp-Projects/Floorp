@@ -2533,12 +2533,16 @@ MDefinition* MPow::foldsTo(TempAllocator& alloc) {
 
 MDefinition* MInt32ToIntPtr::foldsTo(TempAllocator& alloc) {
   MDefinition* def = input();
-  if (!def->isConstant()) {
-    return this;
+  if (def->isConstant()) {
+    int32_t i = def->toConstant()->toInt32();
+    return MConstant::NewIntPtr(alloc, intptr_t(i));
   }
 
-  int32_t i = def->toConstant()->toInt32();
-  return MConstant::NewIntPtr(alloc, intptr_t(i));
+  if (def->isNonNegativeIntPtrToInt32()) {
+    return def->toNonNegativeIntPtrToInt32()->input();
+  }
+
+  return this;
 }
 
 bool MAbs::fallible() const {
