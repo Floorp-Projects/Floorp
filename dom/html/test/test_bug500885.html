@@ -23,7 +23,7 @@ var MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
 MockFilePicker.returnValue = MockFilePicker.returnOK;
 
-function test() {
+async function test() {
   // SpecialPowers.DOMWindowUtils doesn't appear to fire mouseEvents correctly
   var wu = SpecialPowers.getDOMWindowUtils(window);
 
@@ -39,25 +39,18 @@ function test() {
     });
 
     fileInput.scrollIntoView({ behaviour: "smooth" });
-    waitForApzFlushedRepaints(function() {
-      try {
-        domActivateEvents = 0;
-        wu.sendMouseEvent("mousedown", rect.left + 5, rect.top + 5, 0, 1, 0);
-        wu.sendMouseEvent("mouseup", rect.left + 5, rect.top + 5, 0, 1, 0);
-        is(domActivateEvents, 1, "click on button should fire 1 DOMActivate event");
-    
-        domActivateEvents = 0;
-        wu.sendMouseEvent("mousedown", rect.right - 5, rect.top + 5, 0, 1, 0);
-        wu.sendMouseEvent("mouseup", rect.right - 5, rect.top + 5, 0, 1, 0);
-        is(domActivateEvents, 1, "click on text field should fire 1 DOMActivate event");
-      } finally {
-        SimpleTest.executeSoon(function() {
-          MockFilePicker.cleanup();
-          SimpleTest.finish();
-        });
-      }
-    });
-  } catch {
+    await promiseApzFlushedRepaints();
+
+    domActivateEvents = 0;
+    wu.sendMouseEvent("mousedown", rect.left + 5, rect.top + 5, 0, 1, 0);
+    wu.sendMouseEvent("mouseup", rect.left + 5, rect.top + 5, 0, 1, 0);
+    is(domActivateEvents, 1, "click on button should fire 1 DOMActivate event");
+
+    domActivateEvents = 0;
+    wu.sendMouseEvent("mousedown", rect.right - 5, rect.top + 5, 0, 1, 0);
+    wu.sendMouseEvent("mouseup", rect.right - 5, rect.top + 5, 0, 1, 0);
+    is(domActivateEvents, 1, "click on text field should fire 1 DOMActivate event");
+  } finally {
     SimpleTest.executeSoon(function() {
       MockFilePicker.cleanup();
       SimpleTest.finish();
