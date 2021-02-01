@@ -85,11 +85,11 @@ minidump_writer_linux = { git = "https://github.com/msirringhaus/minidump_writer
 
 [patch.crates-io.cranelift-codegen]
 git = "https://github.com/mozilla-spidermonkey/wasmtime"
-rev = "3334d92350da40b90d2529c147db3ea44918b558"
+rev = "a25399760e9f12b679aa267dd2af7cfedc72bb71"
 
 [patch.crates-io.cranelift-wasm]
 git = "https://github.com/mozilla-spidermonkey/wasmtime"
-rev = "3334d92350da40b90d2529c147db3ea44918b558"
+rev = "a25399760e9f12b679aa267dd2af7cfedc72bb71"
 
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 [patch.crates-io.autocfg]
