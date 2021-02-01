@@ -18,7 +18,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ToolbarBadgeHub: "resource://activity-stream/lib/ToolbarBadgeHub.jsm",
   ToolbarPanelHub: "resource://activity-stream/lib/ToolbarPanelHub.jsm",
   MomentsPageHub: "resource://activity-stream/lib/MomentsPageHub.jsm",
-  InfoBar: "resource://activity-stream/lib/InfoBar.jsm",
   ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
   ASRouterPreferences: "resource://activity-stream/lib/ASRouterPreferences.jsm",
   TARGETING_PREFERENCES:
@@ -1057,14 +1056,14 @@ class _ASRouter {
     return targetingParameters;
   }
 
-  _handleTargetingError(error, message) {
+  _handleTargetingError(type, error, message) {
     Cu.reportError(error);
     this.dispatchCFRAction(
       ac.ASRouterUserEvent({
         message_id: message.id,
         action: "asrouter_undesired_event",
         event: "TARGETING_EXPRESSION_ERROR",
-        event_context: {},
+        event_context: type,
       })
     );
   }
@@ -1226,9 +1225,6 @@ class _ASRouter {
         break;
       case "update_action":
         MomentsPageHub.executeAction(message);
-        break;
-      case "infobar":
-        InfoBar.showInfoBarMessage(browser, message, this.dispatchCFRAction);
         break;
     }
 
