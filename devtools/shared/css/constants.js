@@ -34,4 +34,5 @@ exports.PSEUDO_CLASSES = [
   ":focus-visible",
   ":focus-within",
   ":visited",
+  ":target",
 ];
