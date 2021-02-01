@@ -295,8 +295,8 @@ static UniqueChars Join(const FragmentVector& fragments,
   return UniqueChars(joined);
 }
 
-static TimeDuration SumChildTimes(
-    Phase phase, const Statistics::PhaseTimeTable& phaseTimes) {
+static TimeDuration SumChildTimes(Phase phase,
+                                  const Statistics::PhaseTimes& phaseTimes) {
   TimeDuration total = 0;
   for (phase = phases[phase].firstChild; phase != Phase::NONE;
        phase = phases[phase].nextSibling) {
@@ -391,7 +391,7 @@ UniqueChars Statistics::formatCompactSummaryMessage() const {
 }
 
 UniqueChars Statistics::formatCompactSlicePhaseTimes(
-    const PhaseTimeTable& phaseTimes) const {
+    const PhaseTimes& phaseTimes) const {
   static const TimeDuration MaxUnaccountedTime =
       TimeDuration::FromMicroseconds(100);
 
@@ -531,7 +531,7 @@ static bool IncludePhase(TimeDuration duration) {
 }
 
 UniqueChars Statistics::formatDetailedPhaseTimes(
-    const PhaseTimeTable& phaseTimes) const {
+    const PhaseTimes& phaseTimes) const {
   static const TimeDuration MaxUnaccountedChildTime =
       TimeDuration::FromMicroseconds(50);
 
@@ -740,7 +740,7 @@ void Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice,
                 JSONPrinter::SECONDS);
 }
 
-void Statistics::formatJsonPhaseTimes(const PhaseTimeTable& phaseTimes,
+void Statistics::formatJsonPhaseTimes(const PhaseTimes& phaseTimes,
                                       JSONPrinter& json) const {
   for (auto phase : AllPhases()) {
     TimeDuration ownTime = phaseTimes[phase];
@@ -882,7 +882,7 @@ TimeDuration Statistics::getMaxGCPauseSinceClear() {
 // Sum up the time for a phase, including instances of the phase with different
 // parents.
 static TimeDuration SumPhase(PhaseKind phaseKind,
-                             const Statistics::PhaseTimeTable& times) {
+                             const Statistics::PhaseTimes& times) {
   TimeDuration sum;
   for (PhaseIter phase(phaseKind); !phase.done(); phase.next()) {
     sum += times[phase];
@@ -891,8 +891,8 @@ static TimeDuration SumPhase(PhaseKind phaseKind,
 }
 
 static bool CheckSelfTime(Phase parent, Phase child,
-                          const Statistics::PhaseTimeTable& times,
-                          const Statistics::PhaseTimeTable& selfTimes,
+                          const Statistics::PhaseTimes& times,
+                          const Statistics::PhaseTimes& selfTimes,
                           TimeDuration childTime) {
   if (selfTimes[parent] < childTime) {
     fprintf(
@@ -908,10 +908,7 @@ static bool CheckSelfTime(Phase parent, Phase child,
   return true;
 }
 
-using PhaseKindTimes =
-    EnumeratedArray<PhaseKind, PhaseKind::LIMIT, TimeDuration>;
-
-static PhaseKind FindLongestPhaseKind(const PhaseKindTimes& times) {
+static PhaseKind FindLongestPhaseKind(const Statistics::PhaseKindTimes& times) {
   TimeDuration longestTime;
   PhaseKind phaseKind = PhaseKind::NONE;
   for (auto i : MajorGCPhaseKinds()) {
@@ -925,9 +922,9 @@ static PhaseKind FindLongestPhaseKind(const PhaseKindTimes& times) {
 }
 
 static PhaseKind LongestPhaseSelfTimeInMajorGC(
-    const Statistics::PhaseTimeTable& times) {
+    const Statistics::PhaseTimes& times) {
   // Start with total times per expanded phase, including children's times.
-  Statistics::PhaseTimeTable selfTimes(times);
+  Statistics::PhaseTimes selfTimes(times);
 
   // We have the total time spent in each phase, including descendant times.
   // Loop over the children and subtract their times from their parent's self
@@ -952,30 +949,9 @@ static PhaseKind LongestPhaseSelfTimeInMajorGC(
   }
 
   // Sum expanded phases corresponding to the same phase.
-  PhaseKindTimes phaseKindTimes;
+  Statistics::PhaseKindTimes phaseKindTimes;
   for (auto i : AllPhaseKinds()) {
     phaseKindTimes[i] = SumPhase(i, selfTimes);
-  }
-
-  return FindLongestPhaseKind(phaseKindTimes);
-}
-
-static TimeDuration PhaseMax(PhaseKind phaseKind,
-                             const Statistics::PhaseTimeTable& times) {
-  TimeDuration max;
-  for (PhaseIter phase(phaseKind); !phase.done(); phase.next()) {
-    max = std::max(max, times[phase]);
-  }
-
-  return max;
-}
-
-static PhaseKind LongestParallelPhaseKind(
-    const Statistics::PhaseTimeTable& times) {
-  // Find longest time for each phase kind.
-  PhaseKindTimes phaseKindTimes;
-  for (auto i : AllPhaseKinds()) {
-    phaseKindTimes[i] = PhaseMax(i, times);
   }
 
   return FindLongestPhaseKind(phaseKindTimes);
@@ -1303,7 +1279,7 @@ void Statistics::sendSliceTelemetry(const SliceData& slice) {
       // longest task.
       if (longest == PhaseKind::JOIN_PARALLEL_TASKS) {
         PhaseKind longestParallel =
-            LongestParallelPhaseKind(slice.maxParallelTimes);
+            FindLongestPhaseKind(slice.maxParallelTimes);
         reportLongestPhaseInMajorGC(longestParallel, JS_TELEMETRY_GC_SLOW_TASK);
       }
     }
@@ -1506,8 +1482,7 @@ void Statistics::recordParallelPhase(PhaseKind phaseKind,
 
   // Record the maximum task time for each phase. Don't record times for parent
   // phases.
-  Phase phase = lookupChildPhase(phaseKind);
-  TimeDuration& time = slices_.back().maxParallelTimes[phase];
+  TimeDuration& time = slices_.back().maxParallelTimes[phaseKind];
   time = std::max(time, duration);
 }
 

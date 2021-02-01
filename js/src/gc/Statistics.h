@@ -145,8 +145,10 @@ struct Statistics {
   using TimeDuration = mozilla::TimeDuration;
   using TimeStamp = mozilla::TimeStamp;
 
-  // Create a convenient type for referring to tables of phase times.
-  using PhaseTimeTable = EnumeratedArray<Phase, Phase::LIMIT, TimeDuration>;
+  // Create types for tables of times, by phase and phase kind.
+  using PhaseTimes = EnumeratedArray<Phase, Phase::LIMIT, TimeDuration>;
+  using PhaseKindTimes =
+      EnumeratedArray<PhaseKind, PhaseKind::LIMIT, TimeDuration>;
 
   static MOZ_MUST_USE bool initialize();
 
@@ -274,8 +276,8 @@ struct Statistics {
     TimeStamp end;
     size_t startFaults = 0;
     size_t endFaults = 0;
-    PhaseTimeTable phaseTimes;
-    PhaseTimeTable maxParallelTimes;
+    PhaseTimes phaseTimes;
+    PhaseKindTimes maxParallelTimes;
 
     TimeDuration duration() const { return end - start; }
     bool wasReset() const { return resetReason != GCAbortReason::None; }
@@ -351,7 +353,7 @@ struct Statistics {
   TimeDuration timedGCTime;
 
   /* Total time in a given phase for this GC. */
-  PhaseTimeTable phaseTimes;
+  PhaseTimes phaseTimes;
 
   /* Number of events of this type for this GC. */
   EnumeratedArray<Count, COUNT_LIMIT,
@@ -456,20 +458,18 @@ struct Statistics {
 
   void reportLongestPhaseInMajorGC(PhaseKind longest, int telemetryId);
 
-  UniqueChars formatCompactSlicePhaseTimes(
-      const PhaseTimeTable& phaseTimes) const;
+  UniqueChars formatCompactSlicePhaseTimes(const PhaseTimes& phaseTimes) const;
 
   UniqueChars formatDetailedDescription() const;
   UniqueChars formatDetailedSliceDescription(unsigned i,
                                              const SliceData& slice) const;
-  UniqueChars formatDetailedPhaseTimes(const PhaseTimeTable& phaseTimes) const;
+  UniqueChars formatDetailedPhaseTimes(const PhaseTimes& phaseTimes) const;
   UniqueChars formatDetailedTotals() const;
 
   void formatJsonDescription(JSONPrinter&) const;
   void formatJsonSliceDescription(unsigned i, const SliceData& slice,
                                   JSONPrinter&) const;
-  void formatJsonPhaseTimes(const PhaseTimeTable& phaseTimes,
-                            JSONPrinter&) const;
+  void formatJsonPhaseTimes(const PhaseTimes& phaseTimes, JSONPrinter&) const;
   void formatJsonSlice(size_t sliceNum, JSONPrinter&) const;
 
   double computeMMU(TimeDuration resolution) const;
