@@ -67,202 +67,196 @@ class PhaseKind:
         self.children = children
 
 
-# The root marking phase appears in several places in the graph.
-MarkRootsPhaseKind = PhaseKind(
-    "MARK_ROOTS",
-    "Mark Roots",
-    48,
-    [
-        PhaseKind("MARK_CCWS", "Mark Cross Compartment Wrappers", 50),
-        PhaseKind("MARK_STACK", "Mark C and JS stacks", 51),
-        PhaseKind("MARK_RUNTIME_DATA", "Mark Runtime-wide Data", 52),
-        PhaseKind("MARK_EMBEDDING", "Mark Embedding", 53),
-        PhaseKind("MARK_COMPARTMENTS", "Mark Compartments", 54),
-    ],
-)
+AllPhaseKinds = []
+PhaseKindsByName = dict()
 
-JoinParallelTasksPhaseKind = PhaseKind("JOIN_PARALLEL_TASKS", "Join Parallel Tasks", 67)
+
+def addPhaseKind(name, descr, bucket, children=[]):
+    assert name not in PhaseKindsByName
+    phaseKind = PhaseKind(name, descr, bucket, children)
+    AllPhaseKinds.append(phaseKind)
+    PhaseKindsByName[name] = phaseKind
+    return phaseKind
+
+
+def getPhaseKind(name):
+    return PhaseKindsByName[name]
+
 
 PhaseKindGraphRoots = [
-    PhaseKind("MUTATOR", "Mutator Running", 0),
-    PhaseKind("GC_BEGIN", "Begin Callback", 1),
-    PhaseKind(
+    addPhaseKind("MUTATOR", "Mutator Running", 0),
+    addPhaseKind("GC_BEGIN", "Begin Callback", 1),
+    addPhaseKind(
         "EVICT_NURSERY_FOR_MAJOR_GC",
         "Evict Nursery For Major GC",
         70,
         [
-            MarkRootsPhaseKind,
+            addPhaseKind(
+                "MARK_ROOTS",
+                "Mark Roots",
+                48,
+                [
+                    addPhaseKind("MARK_CCWS", "Mark Cross Compartment Wrappers", 50),
+                    addPhaseKind("MARK_STACK", "Mark C and JS stacks", 51),
+                    addPhaseKind("MARK_RUNTIME_DATA", "Mark Runtime-wide Data", 52),
+                    addPhaseKind("MARK_EMBEDDING", "Mark Embedding", 53),
+                    addPhaseKind("MARK_COMPARTMENTS", "Mark Compartments", 54),
+                ],
+            )
         ],
     ),
-    PhaseKind("WAIT_BACKGROUND_THREAD", "Wait Background Thread", 2),
-    PhaseKind(
+    addPhaseKind("WAIT_BACKGROUND_THREAD", "Wait Background Thread", 2),
+    addPhaseKind(
         "PREPARE",
         "Prepare For Collection",
         69,
         [
-            PhaseKind("UNMARK", "Unmark", 7),
-            PhaseKind("UNMARK_WEAKMAPS", "Unmark WeakMaps", 76),
-            PhaseKind("BUFFER_GRAY_ROOTS", "Buffer Gray Roots", 49),
-            PhaseKind("MARK_DISCARD_CODE", "Mark Discard Code", 3),
-            PhaseKind("RELAZIFY_FUNCTIONS", "Relazify Functions", 4),
-            PhaseKind("PURGE", "Purge", 5),
-            PhaseKind("PURGE_SHAPE_CACHES", "Purge ShapeCaches", 60),
-            PhaseKind("PURGE_SOURCE_URLS", "Purge Source URLs", 73),
-            JoinParallelTasksPhaseKind,
+            addPhaseKind("UNMARK", "Unmark", 7),
+            addPhaseKind("UNMARK_WEAKMAPS", "Unmark WeakMaps", 76),
+            addPhaseKind("BUFFER_GRAY_ROOTS", "Buffer Gray Roots", 49),
+            addPhaseKind("MARK_DISCARD_CODE", "Mark Discard Code", 3),
+            addPhaseKind("RELAZIFY_FUNCTIONS", "Relazify Functions", 4),
+            addPhaseKind("PURGE", "Purge", 5),
+            addPhaseKind("PURGE_SHAPE_CACHES", "Purge ShapeCaches", 60),
+            addPhaseKind("PURGE_SOURCE_URLS", "Purge Source URLs", 73),
+            addPhaseKind("JOIN_PARALLEL_TASKS", "Join Parallel Tasks", 67),
         ],
     ),
-    PhaseKind(
+    addPhaseKind(
         "MARK",
         "Mark",
         6,
-        [MarkRootsPhaseKind, PhaseKind("MARK_DELAYED", "Mark Delayed", 8)],
+        [getPhaseKind("MARK_ROOTS"), addPhaseKind("MARK_DELAYED", "Mark Delayed", 8)],
     ),
-    PhaseKind(
+    addPhaseKind(
         "SWEEP",
         "Sweep",
         9,
         [
-            PhaseKind(
+            addPhaseKind(
                 "SWEEP_MARK",
                 "Mark During Sweeping",
                 10,
                 [
-                    PhaseKind(
+                    addPhaseKind(
                         "SWEEP_MARK_INCOMING_BLACK", "Mark Incoming Black Pointers", 12
                     ),
-                    PhaseKind(
+                    addPhaseKind(
                         "SWEEP_MARK_WEAK",
                         "Mark Weak",
                         13,
-                        [PhaseKind("SWEEP_MARK_GRAY_WEAK", "Mark Gray and Weak", 16)],
+                        [
+                            addPhaseKind(
+                                "SWEEP_MARK_GRAY_WEAK", "Mark Gray and Weak", 16
+                            )
+                        ],
                     ),
-                    PhaseKind(
+                    addPhaseKind(
                         "SWEEP_MARK_INCOMING_GRAY", "Mark Incoming Gray Pointers", 14
                     ),
-                    PhaseKind("SWEEP_MARK_GRAY", "Mark Gray", 15),
+                    addPhaseKind("SWEEP_MARK_GRAY", "Mark Gray", 15),
                 ],
             ),
-            PhaseKind(
+            addPhaseKind(
                 "FINALIZE_START",
                 "Finalize Start Callbacks",
                 17,
                 [
-                    PhaseKind("WEAK_ZONES_CALLBACK", "Per-Slice Weak Callback", 57),
-                    PhaseKind(
+                    addPhaseKind("WEAK_ZONES_CALLBACK", "Per-Slice Weak Callback", 57),
+                    addPhaseKind(
                         "WEAK_COMPARTMENT_CALLBACK", "Per-Compartment Weak Callback", 58
                     ),
                 ],
             ),
-            PhaseKind("UPDATE_ATOMS_BITMAP", "Sweep Atoms Bitmap", 68),
-            PhaseKind("SWEEP_ATOMS_TABLE", "Sweep Atoms Table", 18),
-            PhaseKind(
+            addPhaseKind("UPDATE_ATOMS_BITMAP", "Sweep Atoms Bitmap", 68),
+            addPhaseKind("SWEEP_ATOMS_TABLE", "Sweep Atoms Table", 18),
+            addPhaseKind(
                 "SWEEP_COMPARTMENTS",
                 "Sweep Compartments",
                 20,
                 [
-                    PhaseKind("SWEEP_DISCARD_CODE", "Sweep Discard Code", 21),
-                    PhaseKind("SWEEP_INNER_VIEWS", "Sweep Inner Views", 22),
-                    PhaseKind(
+                    addPhaseKind("SWEEP_DISCARD_CODE", "Sweep Discard Code", 21),
+                    addPhaseKind("SWEEP_INNER_VIEWS", "Sweep Inner Views", 22),
+                    addPhaseKind(
                         "SWEEP_CC_WRAPPER", "Sweep Cross Compartment Wrappers", 23
                     ),
-                    PhaseKind("SWEEP_BASE_SHAPE", "Sweep Base Shapes", 24),
-                    PhaseKind("SWEEP_INITIAL_SHAPE", "Sweep Initial Shapes", 25),
-                    PhaseKind("SWEEP_REGEXP", "Sweep Regexps", 28),
-                    PhaseKind("SWEEP_COMPRESSION", "Sweep Compression Tasks", 62),
-                    PhaseKind("SWEEP_WEAKMAPS", "Sweep WeakMaps", 63),
-                    PhaseKind("SWEEP_UNIQUEIDS", "Sweep Unique IDs", 64),
-                    PhaseKind(
+                    addPhaseKind("SWEEP_BASE_SHAPE", "Sweep Base Shapes", 24),
+                    addPhaseKind("SWEEP_INITIAL_SHAPE", "Sweep Initial Shapes", 25),
+                    addPhaseKind("SWEEP_REGEXP", "Sweep Regexps", 28),
+                    addPhaseKind("SWEEP_COMPRESSION", "Sweep Compression Tasks", 62),
+                    addPhaseKind("SWEEP_WEAKMAPS", "Sweep WeakMaps", 63),
+                    addPhaseKind("SWEEP_UNIQUEIDS", "Sweep Unique IDs", 64),
+                    addPhaseKind(
                         "SWEEP_FINALIZATION_REGISTRIES",
                         "Sweep FinalizationRegistries",
                         74,
                     ),
-                    PhaseKind("SWEEP_WEAKREFS", "Sweep WeakRefs", 75),
-                    PhaseKind("SWEEP_JIT_DATA", "Sweep JIT Data", 65),
-                    PhaseKind("SWEEP_WEAK_CACHES", "Sweep Weak Caches", 66),
-                    PhaseKind("SWEEP_MISC", "Sweep Miscellaneous", 29),
-                    JoinParallelTasksPhaseKind,
+                    addPhaseKind("SWEEP_WEAKREFS", "Sweep WeakRefs", 75),
+                    addPhaseKind("SWEEP_JIT_DATA", "Sweep JIT Data", 65),
+                    addPhaseKind("SWEEP_WEAK_CACHES", "Sweep Weak Caches", 66),
+                    addPhaseKind("SWEEP_MISC", "Sweep Miscellaneous", 29),
+                    getPhaseKind("JOIN_PARALLEL_TASKS"),
                 ],
             ),
-            PhaseKind("SWEEP_OBJECT", "Sweep Object", 33),
-            PhaseKind("SWEEP_STRING", "Sweep String", 34),
-            PhaseKind("SWEEP_SCRIPT", "Sweep Script", 35),
-            PhaseKind("SWEEP_SCOPE", "Sweep Scope", 59),
-            PhaseKind("SWEEP_REGEXP_SHARED", "Sweep RegExpShared", 61),
-            PhaseKind("SWEEP_SHAPE", "Sweep Shape", 36),
-            PhaseKind("FINALIZE_END", "Finalize End Callback", 38),
-            PhaseKind("DESTROY", "Deallocate", 39),
-            JoinParallelTasksPhaseKind,
+            addPhaseKind("SWEEP_OBJECT", "Sweep Object", 33),
+            addPhaseKind("SWEEP_STRING", "Sweep String", 34),
+            addPhaseKind("SWEEP_SCRIPT", "Sweep Script", 35),
+            addPhaseKind("SWEEP_SCOPE", "Sweep Scope", 59),
+            addPhaseKind("SWEEP_REGEXP_SHARED", "Sweep RegExpShared", 61),
+            addPhaseKind("SWEEP_SHAPE", "Sweep Shape", 36),
+            addPhaseKind("FINALIZE_END", "Finalize End Callback", 38),
+            addPhaseKind("DESTROY", "Deallocate", 39),
+            getPhaseKind("JOIN_PARALLEL_TASKS"),
         ],
     ),
-    PhaseKind(
+    addPhaseKind(
         "COMPACT",
         "Compact",
         40,
         [
-            PhaseKind("COMPACT_MOVE", "Compact Move", 41),
-            PhaseKind(
+            addPhaseKind("COMPACT_MOVE", "Compact Move", 41),
+            addPhaseKind(
                 "COMPACT_UPDATE",
                 "Compact Update",
                 42,
                 [
-                    MarkRootsPhaseKind,
-                    PhaseKind("COMPACT_UPDATE_CELLS", "Compact Update Cells", 43),
-                    JoinParallelTasksPhaseKind,
+                    getPhaseKind("MARK_ROOTS"),
+                    addPhaseKind("COMPACT_UPDATE_CELLS", "Compact Update Cells", 43),
+                    getPhaseKind("JOIN_PARALLEL_TASKS"),
                 ],
             ),
         ],
     ),
-    PhaseKind("DECOMMIT", "Decommit", 72),
-    PhaseKind("GC_END", "End Callback", 44),
-    PhaseKind(
+    addPhaseKind("DECOMMIT", "Decommit", 72),
+    addPhaseKind("GC_END", "End Callback", 44),
+    addPhaseKind(
         "MINOR_GC",
         "All Minor GCs",
         45,
         [
-            MarkRootsPhaseKind,
+            getPhaseKind("MARK_ROOTS"),
         ],
     ),
-    PhaseKind(
+    addPhaseKind(
         "EVICT_NURSERY",
         "Minor GCs to Evict Nursery",
         46,
         [
-            MarkRootsPhaseKind,
+            getPhaseKind("MARK_ROOTS"),
         ],
     ),
-    PhaseKind(
+    addPhaseKind(
         "TRACE_HEAP",
         "Trace Heap",
         47,
         [
-            MarkRootsPhaseKind,
+            getPhaseKind("MARK_ROOTS"),
         ],
     ),
-    PhaseKind("BARRIER", "Barriers", 55, [PhaseKind("UNMARK_GRAY", "Unmark gray", 56)]),
+    addPhaseKind(
+        "BARRIER", "Barriers", 55, [addPhaseKind("UNMARK_GRAY", "Unmark gray", 56)]
+    ),
 ]
-
-
-def findAllPhaseKinds():
-    # Make a linear list of all unique phases by performing a depth first
-    # search on the phase graph starting at the roots.  This will be used to
-    # generate the PhaseKind enum.
-    phases = []
-    seen = set()
-
-    def dfs(phase):
-        if phase in seen:
-            return
-        phases.append(phase)
-        seen.add(phase)
-        for child in phase.children:
-            dfs(child)
-
-    for phase in PhaseKindGraphRoots:
-        dfs(phase)
-    return phases
-
-
-AllPhaseKinds = findAllPhaseKinds()
 
 
 class Phase:
