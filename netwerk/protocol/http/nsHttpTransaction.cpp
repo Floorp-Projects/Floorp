@@ -1789,7 +1789,7 @@ nsresult nsHttpTransaction::Restart() {
   // to the next
   mReuseOnRestart = false;
 
-  if (!mDoNotRemoveAltSvc && !mConnInfo->GetRoutedHost().IsEmpty() &&
+  if (!mDoNotRemoveAltSvc && (!mConnInfo->GetRoutedHost().IsEmpty() || mConnInfo->IsHttp3()) &&
       !mDontRetryWithDirectRoute) {
     RefPtr<nsHttpConnectionInfo> ci;
     mConnInfo->CloneAsDirectRoute(getter_AddRefs(ci));
