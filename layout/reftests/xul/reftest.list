@@ -72,7 +72,7 @@ fuzzy-if(skiaContent,0-1,0-60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaConte
 skip == chrome://reftest/content/xul/treecell-image-svg-1a.xhtml chrome://reftest/content/xul/treecell-image-svg-1-ref.xhtml # bug 1218954
 skip == chrome://reftest/content/xul/treecell-image-svg-1b.xhtml chrome://reftest/content/xul/treecell-image-svg-1-ref.xhtml # bug 1218954
 
-== chrome://reftest/content/xul/treechildren-padding-percent-1.xhtml chrome://reftest/content/xul/treechildren-padding-percent-1-ref.xhtml
+fuzzy-if(gtkWidget,0-1,0-1) == chrome://reftest/content/xul/treechildren-padding-percent-1.xhtml chrome://reftest/content/xul/treechildren-padding-percent-1-ref.xhtml
 
 != chrome://reftest/content/xul/treetwisty-svg-context-paint-1-not-ref.xhtml chrome://reftest/content/xul/treetwisty-svg-context-paint-1-ref.xhtml
 test-pref(svg.context-properties.content.enabled,true) fuzzy-if(gtkWidget&&!nativeThemePref,0-1,0-1) == chrome://reftest/content/xul/treetwisty-svg-context-paint-1.xhtml chrome://reftest/content/xul/treetwisty-svg-context-paint-1-ref.xhtml
