@@ -14,11 +14,17 @@ add_task(async function test_all_test_messages() {
 
   for (let message of messagesWithButtons) {
     info(`Testing ${message.id}`);
-    let { primary, secondary } = message.content.buttons;
-    await SMATestUtils.validateAction(primary.action);
-    for (let secondaryBtn of secondary) {
-      if (secondaryBtn.action) {
-        await SMATestUtils.validateAction(secondaryBtn.action);
+    if (message.template === "infobar") {
+      for (let button of message.content.buttons) {
+        await SMATestUtils.validateAction(button.action);
+      }
+    } else {
+      let { primary, secondary } = message.content.buttons;
+      await SMATestUtils.validateAction(primary.action);
+      for (let secondaryBtn of secondary) {
+        if (secondaryBtn.action) {
+          await SMATestUtils.validateAction(secondaryBtn.action);
+        }
       }
     }
   }
