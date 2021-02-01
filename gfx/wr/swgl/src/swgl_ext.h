@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-static inline void commit_span(uint32_t* buf, WideRGBA8 r) {
+static ALWAYS_INLINE void commit_span(uint32_t* buf, WideRGBA8 r) {
   if (blend_key) r = blend_pixels(buf, unaligned_load<PackedRGBA8>(buf), r);
   unaligned_store(buf, pack(r));
 }
 
-static inline void commit_span(uint32_t* buf, PackedRGBA8 r) {
+static ALWAYS_INLINE void commit_span(uint32_t* buf, PackedRGBA8 r) {
   if (blend_key)
     r = pack(blend_pixels(buf, unaligned_load<PackedRGBA8>(buf), unpack(r)));
   unaligned_store(buf, r);
@@ -33,7 +33,7 @@ UNUSED static inline void commit_solid_span(uint32_t* buf, WideRGBA8 r,
   }
 }
 
-static inline void commit_span(uint8_t* buf, WideR8 r) {
+static ALWAYS_INLINE void commit_span(uint8_t* buf, WideR8 r) {
   if (blend_key)
     r = blend_pixels(buf, unpack(unaligned_load<PackedR8>(buf)), r);
   unaligned_store(buf, pack(r));
@@ -51,18 +51,20 @@ UNUSED static inline void commit_solid_span(uint8_t* buf, WideR8 r, int len) {
 }
 
 template <typename V>
-static inline WideRGBA8 pack_span(uint32_t*, const V& v) {
+static ALWAYS_INLINE WideRGBA8 pack_span(uint32_t*, const V& v) {
   return pack_pixels_RGBA8(v);
 }
 
-static inline WideRGBA8 pack_span(uint32_t*) { return pack_pixels_RGBA8(); }
+static ALWAYS_INLINE WideRGBA8 pack_span(uint32_t*) {
+  return pack_pixels_RGBA8();
+}
 
 template <typename C>
-static inline WideR8 pack_span(uint8_t*, C c) {
+static ALWAYS_INLINE WideR8 pack_span(uint8_t*, C c) {
   return pack_pixels_R8(c);
 }
 
-static inline WideR8 pack_span(uint8_t*) { return pack_pixels_R8(); }
+static ALWAYS_INLINE WideR8 pack_span(uint8_t*) { return pack_pixels_R8(); }
 
 // Forces a value with vector run-class to have scalar run-class.
 template <typename T>
@@ -94,13 +96,13 @@ static ALWAYS_INLINE auto swgl_forceScalar(T v) -> decltype(force_scalar(v)) {
     swgl_SpanLength -= swgl_StepSize;     \
   } while (0)
 
-static inline WideRGBA8 pack_pixels_RGBA8(Float alpha) {
+static ALWAYS_INLINE WideRGBA8 pack_pixels_RGBA8(Float alpha) {
   I32 i = round_pixel(alpha);
   HalfRGBA8 c = packRGBA8(zipLow(i, i), zipHigh(i, i));
   return combine(zipLow(c, c), zipHigh(c, c));
 }
 
-static inline WideRGBA8 pack_pixels_RGBA8(float alpha) {
+static ALWAYS_INLINE WideRGBA8 pack_pixels_RGBA8(float alpha) {
   I32 i = round_pixel(alpha);
   HalfRGBA8 c = packRGBA8(i, i);
   return combine(c, c);
@@ -355,15 +357,19 @@ static inline WideRGBA8 sampleColorYUV(S0 sampler0, vec2 uv0, int layer0,
 // Helper functions to apply a color modulus when available.
 struct NoColor {};
 
-SI WideRGBA8 applyColor(WideRGBA8 src, NoColor) { return src; }
+static ALWAYS_INLINE WideRGBA8 applyColor(WideRGBA8 src, NoColor) {
+  return src;
+}
 
-SI WideRGBA8 applyColor(WideRGBA8 src, WideRGBA8 color) {
+static ALWAYS_INLINE WideRGBA8 applyColor(WideRGBA8 src, WideRGBA8 color) {
   return muldiv255(src, color);
 }
 
-SI PackedRGBA8 applyColor(PackedRGBA8 src, NoColor) { return src; }
+static ALWAYS_INLINE PackedRGBA8 applyColor(PackedRGBA8 src, NoColor) {
+  return src;
+}
 
-SI PackedRGBA8 applyColor(PackedRGBA8 src, WideRGBA8 color) {
+static ALWAYS_INLINE PackedRGBA8 applyColor(PackedRGBA8 src, WideRGBA8 color) {
   return pack(muldiv255(unpack(src), color));
 }
 
