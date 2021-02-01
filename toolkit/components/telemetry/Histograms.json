@@ -15562,17 +15562,6 @@
     "keyed": true,
     "description": "Permission requests (showing a permission prompt) by whether they were requested from code handling a user input event."
   },
-  "PROFILE_DIRECTORY_FILE_AGE": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["jrediger@mozilla.com", "telemetry-client-dev@mozilla.com"],
-    "bug_numbers": [1458574],
-    "expires_in_version": "65",
-    "high": 1500,
-    "n_buckets": 20,
-    "kind": "exponential",
-    "description": "Age of files scanned in profile directory in days when determining initial profile age."
-  },
   "QUIRKS_MODE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
