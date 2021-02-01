@@ -18,6 +18,8 @@ import mozlog
 
 if mozinfo.isLinux:
     import fcntl
+if mozinfo.isWin:
+    import os
 
 
 class NetworkError(Exception):
@@ -119,6 +121,31 @@ def _parse_ifconfig():
         return None
 
 
+def _parse_powershell():
+    logger = _get_logger()
+    logger.debug("Parsing Get-NetIPAdress output via PowerShell")
+
+    try:
+        cmd = os.path.join(
+            os.environ.get("SystemRoot", "C:\\WINDOWS"),
+            "system32",
+            "windowspowershell",
+            "v1.0",
+            "powershell.exe",
+        )
+        output = subprocess.check_output(
+            [cmd, "(Get-NetIPAddress | Format-List -Property IPAddress)"]
+        ).decode("ascii")
+        ips = re.findall(r"IPAddress : (\d+.\d+.\d+.\d+)", output)
+        for ip in ips:
+            logger.debug("IPAddress: %s" % ip)
+            if not ip.startswith("127."):
+                return ip
+        return None
+    except FileNotFoundError:
+        return None
+
+
 def get_ip():
     """Provides an available network interface address, for example
     "192.168.1.3".
@@ -138,8 +165,7 @@ def get_ip():
             ip = ips[0]
         elif len(ips) > 1:
             logger.debug("Multiple addresses found: %s" % ips)
-            # no fallback on Windows so take the first address
-            ip = ips[0] if mozinfo.isWin else None
+            ip = None
         else:
             ip = None
     except socket.gaierror:
@@ -158,6 +184,8 @@ def get_ip():
                     return ifconfig[1]
         elif mozinfo.isMac:
             ip = _parse_ifconfig()
+        elif mozinfo.isWin:
+            ip = _parse_powershell()
 
     if ip is None:
         raise NetworkError("Unable to obtain network address")
