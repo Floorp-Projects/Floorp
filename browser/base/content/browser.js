@@ -1966,6 +1966,26 @@ var gBrowserInit = {
       SetClickAndHoldHandlers();
     }
 
+    function initBackForwardButtonTooltip(tooltipId, l10nId, shortcutId) {
+      let shortcut = document.getElementById(shortcutId);
+      shortcut = ShortcutUtils.prettifyShortcut(shortcut);
+
+      let tooltip = document.getElementById(tooltipId);
+      document.l10n.setAttributes(tooltip, l10nId, { shortcut });
+    }
+
+    initBackForwardButtonTooltip(
+      "back-button-tooltip-description",
+      "navbar-tooltip-back-2",
+      "goBackKb"
+    );
+
+    initBackForwardButtonTooltip(
+      "forward-button-tooltip-description",
+      "navbar-tooltip-forward-2",
+      "goForwardKb"
+    );
+
     PlacesToolbarHelper.init();
 
     ctrlTab.readPref();

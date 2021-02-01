@@ -431,6 +431,31 @@ class nsContextMenu {
 
     this.showItem("context-reload", stopReloadItem == "reload");
     this.showItem("context-stop", stopReloadItem == "stop");
+
+    function initBackForwardMenuItemTooltip(menuItemId, l10nId, shortcutId) {
+      let shortcut = document.getElementById(shortcutId);
+      if (shortcut) {
+        shortcut = ShortcutUtils.prettifyShortcut(shortcut);
+      } else {
+        // Sidebar doesn't have navigation buttons or shortcuts, but we still
+        // want to format the menu item tooltip to remove "$shortcut" string.
+        shortcut = "";
+      }
+      let menuItem = document.getElementById(menuItemId);
+      document.l10n.setAttributes(menuItem, l10nId, { shortcut });
+    }
+
+    initBackForwardMenuItemTooltip(
+      "context-back",
+      "main-context-menu-back-2",
+      "goBackKb"
+    );
+
+    initBackForwardMenuItemTooltip(
+      "context-forward",
+      "main-context-menu-forward-2",
+      "goForwardKb"
+    );
   }
 
   initLeaveDOMFullScreenItems() {
