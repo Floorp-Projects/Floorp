@@ -15,7 +15,8 @@
             EVENT_DESCRIPTION_CHANGE, EVENT_NAME_CHANGE, EVENT_STATE_CHANGE,
             EVENT_VALUE_CHANGE, EVENT_TEXT_VALUE_CHANGE, EVENT_FOCUS,
             EVENT_DOCUMENT_RELOAD, EVENT_VIRTUALCURSOR_CHANGED, EVENT_ALERT,
-            UnexpectedEvents, waitForEvent, waitForEvents, waitForOrderedEvents */
+            EVENT_OBJECT_ATTRIBUTE_CHANGED, UnexpectedEvents, waitForEvent,
+            waitForEvents, waitForOrderedEvents */
 
 const EVENT_ANNOUNCEMENT = nsIAccessibleEvent.EVENT_ANNOUNCEMENT;
 const EVENT_DOCUMENT_LOAD_COMPLETE =
