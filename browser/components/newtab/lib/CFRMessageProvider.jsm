@@ -1044,26 +1044,6 @@ const CFR_MESSAGES = [
       params: ["google.com", "www.google.com"],
     },
   },
-  {
-    id: "INFOBAR_ACTION_86",
-    targeting: "false",
-    template: "infobar",
-    content: {
-      type: "global",
-      text: { string_id: "default-browser-notification-message" },
-      buttons: [
-        {
-          label: { string_id: "default-browser-notification-button" },
-          primary: true,
-          accessKey: "O",
-          action: {
-            type: "SET_DEFAULT_BROWSER",
-          },
-        },
-      ],
-    },
-    trigger: { id: "defaultBrowserCheck" },
-  },
 ];
 
 const CFRMessageProvider = {
