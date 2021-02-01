@@ -31,7 +31,7 @@ import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.wifi.WifiConnectionMonitor
 import java.util.concurrent.TimeUnit
 
-private const val DAY_IN_MINUTES = 24 * 60L
+private const val AMO_COLLECTION_MAX_CACHE_AGE = 2 * 24 * 60L // Two days in minutes
 
 /**
  * Provides access to all components. This class is an implementation of the Service Locator
@@ -102,12 +102,12 @@ class Components(private val context: Context) {
                 serverURL = BuildConfig.AMO_SERVER_URL,
                 collectionUser = BuildConfig.AMO_COLLECTION_USER,
                 collectionName = BuildConfig.AMO_COLLECTION_NAME,
-                maxCacheAgeInMinutes = DAY_IN_MINUTES
+                maxCacheAgeInMinutes = AMO_COLLECTION_MAX_CACHE_AGE
             )
         }
         // Fall back to defaults
         else {
-            AddonCollectionProvider(context, core.client, maxCacheAgeInMinutes = DAY_IN_MINUTES)
+            AddonCollectionProvider(context, core.client, maxCacheAgeInMinutes = AMO_COLLECTION_MAX_CACHE_AGE)
         }
     }
 
