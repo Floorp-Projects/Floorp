@@ -647,13 +647,7 @@ var gMainPane = {
     }
 
     if (AppConstants.MOZ_UPDATER) {
-      // XXX Workaround bug 1523453 -- changing selectIndex of a <deck> before
-      // frame construction could confuse nsDeckFrame::RemoveFrame().
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => {
-          gAppUpdater = new appUpdater();
-        });
-      });
+      gAppUpdater = new appUpdater();
       setEventListener("showUpdateHistory", "command", gMainPane.showUpdates);
 
       let updateDisabled =
