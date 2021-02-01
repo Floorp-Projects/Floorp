@@ -6,10 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["ProfileAge"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { TelemetryUtils } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryUtils.jsm"
-);
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { CommonUtils } = ChromeUtils.import(
@@ -17,16 +13,6 @@ const { CommonUtils } = ChromeUtils.import(
 );
 
 const FILE_TIMES = "times.json";
-
-/**
- * Calculate how many days passed between two dates.
- * @param {Object} aStartDate The starting date.
- * @param {Object} aEndDate The ending date.
- * @return {Integer} The number of days between the two dates.
- */
-function getElapsedTimeInDays(aStartDate, aEndDate) {
-  return TelemetryUtils.millisecondsToDays(aEndDate - aStartDate);
-}
 
 /**
  * Traverse the contents of the profile directory, finding the oldest file
@@ -42,11 +28,6 @@ async function getOldestProfileTimestamp(profilePath, log) {
       "Unable to fetch oldest profile entry: no profile iterator."
     );
   }
-
-  Services.telemetry.scalarAdd("telemetry.profile_directory_scans", 1);
-  let histogram = Services.telemetry.getHistogramById(
-    "PROFILE_DIRECTORY_FILE_AGE"
-  );
 
   try {
     await iterator.forEach(async entry => {
@@ -67,11 +48,6 @@ async function getOldestProfileTimestamp(profilePath, log) {
 
         if (date) {
           let timestamp = date.getTime();
-          // Get the age relative to now.
-          // We don't care about dates in the future.
-          let age_in_days = Math.max(0, getElapsedTimeInDays(timestamp, start));
-          histogram.add(age_in_days);
-
           log.debug("Using date: " + entry.path + " = " + date);
           if (timestamp < oldest) {
             oldest = timestamp;
@@ -164,10 +140,6 @@ class ProfileAgeImpl {
   async computeAndPersistCreated() {
     let oldest = await getOldestProfileTimestamp(this.profilePath, this._log);
     this._times.created = oldest;
-    Services.telemetry.scalarSet(
-      "telemetry.profile_directory_scan_date",
-      TelemetryUtils.millisecondsToDays(Date.now())
-    );
     await this.writeTimes();
     return oldest;
   }
