@@ -1946,11 +1946,6 @@ var gBrowserInit = {
     gProtectionsHandler.init();
     HomePage.delayedStartup().catch(Cu.reportError);
 
-    let safeMode = document.getElementById("helpSafeMode");
-    if (Services.appinfo.inSafeMode) {
-      document.l10n.setAttributes(safeMode, "menu-help-safe-mode-with-addons");
-    }
-
     // BiDi UI
     gBidiUI = isBidiEnabled();
     if (gBidiUI) {

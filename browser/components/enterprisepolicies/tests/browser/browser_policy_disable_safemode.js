@@ -10,16 +10,6 @@ add_task(async function setup() {
   });
 });
 
-add_task(async function test_help_menu() {
-  buildHelpMenu();
-  let safeModeMenu = document.getElementById("helpSafeMode");
-  is(
-    safeModeMenu.getAttribute("disabled"),
-    "true",
-    "The `Restart with Add-ons Disabled...` item should be disabled"
-  );
-});
-
 add_task(async function test_safemode_from_about_support() {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
