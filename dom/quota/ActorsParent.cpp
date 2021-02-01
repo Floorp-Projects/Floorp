@@ -942,7 +942,7 @@ class OriginInfo final {
   bool mDirectoryExists;
 };
 
-class OriginInfoLRUComparator {
+class OriginInfoAccessTimeComparator {
  public:
   bool Equals(const NotNull<RefPtr<const OriginInfo>>& a,
               const NotNull<RefPtr<const OriginInfo>>& b) const {
@@ -1015,14 +1015,11 @@ class GroupInfoPair {
   MOZ_COUNTED_DTOR(GroupInfoPair)
 
  private:
-  already_AddRefed<GroupInfo> LockedGetGroupInfo(
-      PersistenceType aPersistenceType) {
+  RefPtr<GroupInfo> LockedGetGroupInfo(PersistenceType aPersistenceType) {
     AssertCurrentThreadOwnsQuotaMutex();
     MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
 
-    RefPtr<GroupInfo> groupInfo =
-        GetGroupInfoForPersistenceType(aPersistenceType);
-    return groupInfo.forget();
+    return GetGroupInfoForPersistenceType(aPersistenceType);
   }
 
   void LockedSetGroupInfo(PersistenceType aPersistenceType,
@@ -3759,8 +3756,8 @@ uint64_t QuotaManager::CollectOriginsForEviction(
         if (!match) {
           MOZ_ASSERT(!originInfo->mQuotaObjects.Count(),
                      "Inactive origin shouldn't have open files!");
-          aInactiveOriginInfos.InsertElementSorted(originInfo,
-                                                   OriginInfoLRUComparator());
+          aInactiveOriginInfos.InsertElementSorted(
+              originInfo, OriginInfoAccessTimeComparator());
         }
       }
     }
@@ -7078,6 +7075,46 @@ already_AddRefed<OriginInfo> QuotaManager::LockedGetOriginInfo(
   return nullptr;
 }
 
+template <typename Iterator, typename Pred>
+void QuotaManager::MaybeInsertOriginInfos(
+    Iterator aDest, const RefPtr<GroupInfo>& aTemporaryGroupInfo,
+    const RefPtr<GroupInfo>& aDefaultGroupInfo, Pred&& aPred) {
+  const auto copy = [&aDest, &aPred](const GroupInfo& groupInfo) {
+    std::copy_if(groupInfo.mOriginInfos.cbegin(), groupInfo.mOriginInfos.cend(),
+                 aDest, aPred);
+  };
+
+  if (aTemporaryGroupInfo) {
+    MOZ_ASSERT(PERSISTENCE_TYPE_TEMPORARY ==
+               aTemporaryGroupInfo->GetPersistenceType());
+
+    copy(*aTemporaryGroupInfo);
+  }
+  if (aDefaultGroupInfo) {
+    MOZ_ASSERT(PERSISTENCE_TYPE_DEFAULT ==
+               aDefaultGroupInfo->GetPersistenceType());
+
+    copy(*aDefaultGroupInfo);
+  }
+}
+
+template <typename Collect, typename Pred>
+QuotaManager::OriginInfosFlatTraversable
+QuotaManager::CollectLRUOriginInfosUntil(Collect&& aCollect, Pred&& aPred) {
+  OriginInfosFlatTraversable originInfos;
+
+  std::forward<Collect>(aCollect)(MakeBackInserter(originInfos));
+
+  originInfos.Sort(OriginInfoAccessTimeComparator());
+
+  const auto foundIt = std::find_if(originInfos.cbegin(), originInfos.cend(),
+                                    std::forward<Pred>(aPred));
+
+  originInfos.TruncateLength(foundIt - originInfos.cbegin());
+
+  return originInfos;
+}
+
 QuotaManager::OriginInfosFlatTraversable
 QuotaManager::LockedGetOriginInfosExceedingGroupLimit() const {
   mQuotaMutex.AssertCurrentThreadOwns();
@@ -7109,33 +7146,21 @@ QuotaManager::LockedGetOriginInfosExceedingGroupLimit() const {
       MOZ_ASSERT(quotaManager, "Shouldn't be null!");
 
       if (groupUsage > quotaManager->GetGroupLimit()) {
-        const auto allOriginInfosLRUSorted = [&temporaryGroupInfo,
-                                              &defaultGroupInfo] {
-          OriginInfosFlatTraversable originInfos;
-          if (temporaryGroupInfo) {
-            originInfos.AppendElements(temporaryGroupInfo->mOriginInfos);
-          }
-          if (defaultGroupInfo) {
-            originInfos.AppendElements(defaultGroupInfo->mOriginInfos);
-          }
-          originInfos.Sort(OriginInfoLRUComparator());
-          return originInfos;
-        }();
+        // XXX Instead of appending into a flat array, return an array of
+        // arrays.
+        originInfos.AppendElements(CollectLRUOriginInfosUntil(
+            [&temporaryGroupInfo, &defaultGroupInfo](auto inserter) {
+              MaybeInsertOriginInfos(std::move(inserter), temporaryGroupInfo,
+                                     defaultGroupInfo,
+                                     [](const auto& originInfo) {
+                                       return !originInfo->LockedPersisted();
+                                     });
+            },
+            [&groupUsage, quotaManager](const auto& originInfo) {
+              groupUsage -= originInfo->LockedUsage();
 
-        for (const auto& originInfo : allOriginInfosLRUSorted) {
-          // XXX We can remove these before sorting and then just truncate the
-          // existing array at the right point.
-          if (originInfo->LockedPersisted()) {
-            continue;
-          }
-
-          originInfos.AppendElement(originInfo);
-          groupUsage -= originInfo->LockedUsage();
-
-          if (groupUsage <= quotaManager->GetGroupLimit()) {
-            break;
-          }
-        }
+              return groupUsage <= quotaManager->GetGroupLimit();
+            }));
       }
     }
   }
@@ -7149,45 +7174,33 @@ QuotaManager::LockedGetOriginInfosExceedingGlobalLimit(
     const uint64_t aAlreadyDoomedUsage) const {
   mQuotaMutex.AssertCurrentThreadOwns();
 
-  OriginInfosFlatTraversable originInfos;
-  for (const auto& entry : mGroupInfoPairs) {
-    const auto& pair = entry.GetData();
+  return CollectLRUOriginInfosUntil(
+      [this, &aAlreadyDoomedOriginInfos](auto inserter) {
+        for (const auto& entry : mGroupInfoPairs) {
+          const auto& pair = entry.GetData();
 
-    MOZ_ASSERT(!entry.GetKey().IsEmpty());
-    MOZ_ASSERT(pair);
+          MOZ_ASSERT(!entry.GetKey().IsEmpty());
+          MOZ_ASSERT(pair);
 
-    RefPtr<GroupInfo> groupInfo =
-        pair->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY);
-    if (groupInfo) {
-      originInfos.AppendElements(groupInfo->mOriginInfos);
-    }
+          MaybeInsertOriginInfos(
+              inserter, pair->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY),
+              pair->LockedGetGroupInfo(PERSISTENCE_TYPE_DEFAULT),
+              [&aAlreadyDoomedOriginInfos](const auto& originInfo) {
+                return !aAlreadyDoomedOriginInfos.Contains(originInfo) &&
+                       !originInfo->LockedPersisted();
+              });
+        }
+      },
+      [temporaryStorageUsage = mTemporaryStorageUsage - aAlreadyDoomedUsage,
+       temporaryStorageLimit = mTemporaryStorageLimit,
+       doomedUsage = uint64_t{0}](const auto& originInfo) mutable {
+        if (temporaryStorageUsage - doomedUsage <= temporaryStorageLimit) {
+          return true;
+        }
 
-    groupInfo = pair->LockedGetGroupInfo(PERSISTENCE_TYPE_DEFAULT);
-    if (groupInfo) {
-      originInfos.AppendElements(groupInfo->mOriginInfos);
-    }
-  }
-
-  originInfos.RemoveElementsBy(
-      [&aAlreadyDoomedOriginInfos](const auto& originInfo) {
-        return aAlreadyDoomedOriginInfos.Contains(originInfo) ||
-               originInfo->LockedPersisted();
+        doomedUsage += originInfo->LockedUsage();
+        return false;
       });
-
-  originInfos.Sort(OriginInfoLRUComparator());
-
-  uint64_t doomedUsage = 0;
-  for (uint32_t i = 0; i < originInfos.Length(); i++) {
-    if (mTemporaryStorageUsage - aAlreadyDoomedUsage - doomedUsage <=
-        mTemporaryStorageLimit) {
-      originInfos.TruncateLength(i);
-      break;
-    }
-
-    doomedUsage += originInfos[i]->LockedUsage();
-  }
-
-  return originInfos;
 }
 
 QuotaManager::OriginInfosFlatTraversable
