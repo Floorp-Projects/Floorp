@@ -258,15 +258,11 @@ nsSHistory::nsSHistory(BrowsingContext* aRootBC)
 
   // Init mHistoryTracker on setting mRootBC so we can bind its event
   // target to the tabGroup.
-  nsPIDOMWindowOuter* win;
-  if (mRootBC && (win = mRootBC->GetDOMWindow())) {
-    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(win);
-    mHistoryTracker = mozilla::MakeUnique<HistoryTracker>(
-        this,
-        mozilla::Preferences::GetUint(CONTENT_VIEWER_TIMEOUT_SECONDS,
-                                      CONTENT_VIEWER_TIMEOUT_SECONDS_DEFAULT),
-        global->EventTargetFor(mozilla::TaskCategory::Other));
-  }
+  mHistoryTracker = mozilla::MakeUnique<HistoryTracker>(
+      this,
+      mozilla::Preferences::GetUint(CONTENT_VIEWER_TIMEOUT_SECONDS,
+                                    CONTENT_VIEWER_TIMEOUT_SECONDS_DEFAULT),
+      GetCurrentSerialEventTarget());
 }
 
 nsSHistory::~nsSHistory() {}
