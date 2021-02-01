@@ -32,6 +32,8 @@ class ThumbnailDiskCacheTest {
         val bitmap: Bitmap = mock()
         `when`(bitmap.compress(any(), ArgumentMatchers.anyInt(), any())).thenAnswer {
             Assert.assertEquals(
+                @Suppress("DEPRECATION")
+                // Deprecation will be handled in https://github.com/mozilla-mobile/android-components/issues/9555
                 Bitmap.CompressFormat.WEBP,
                 it.arguments[0] as Bitmap.CompressFormat
             )

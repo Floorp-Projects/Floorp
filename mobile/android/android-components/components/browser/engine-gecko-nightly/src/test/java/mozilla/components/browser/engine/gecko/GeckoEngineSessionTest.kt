@@ -104,6 +104,8 @@ class GeckoEngineSessionTest {
     private lateinit var contentBlockingDelegate: ArgumentCaptor<ContentBlocking.Delegate>
     private lateinit var historyDelegate: ArgumentCaptor<GeckoSession.HistoryDelegate>
 
+    @Suppress("DEPRECATION")
+    // Deprecation will be handled in https://github.com/mozilla-mobile/android-components/issues/8514
     @Before
     fun setup() {
         ThreadUtils.setHandlerForTest(object : Handler() {

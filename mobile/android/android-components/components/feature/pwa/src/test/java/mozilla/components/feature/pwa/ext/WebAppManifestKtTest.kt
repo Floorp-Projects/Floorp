@@ -30,7 +30,6 @@ class WebAppManifestKtTest {
             startUrl = "https://example.com"
         ).toTaskDescription(null)
         assertEquals("Demo", taskDescription.label)
-        assertNull(taskDescription.icon)
         assertEquals(0, taskDescription.primaryColor)
     }
 
@@ -42,7 +41,6 @@ class WebAppManifestKtTest {
             themeColor = rgb(255, 0, 255)
         ).toTaskDescription(null)
         assertEquals("My App", taskDescription.label)
-        assertNull(taskDescription.icon)
         assertEquals(rgb(255, 0, 255), taskDescription.primaryColor)
     }
 

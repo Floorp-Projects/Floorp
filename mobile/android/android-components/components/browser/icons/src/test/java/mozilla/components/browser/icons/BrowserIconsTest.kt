@@ -281,6 +281,8 @@ class BrowserIconsTest {
         sharedDiskCache.putResources(testContext, request)
         val bitmap: Bitmap = mock()
         `when`(bitmap.compress(any(), ArgumentMatchers.anyInt(), any())).thenAnswer {
+            @Suppress("DEPRECATION")
+            // Deprecation will be handled in https://github.com/mozilla-mobile/android-components/issues/9555
             assertEquals(Bitmap.CompressFormat.WEBP, it.arguments[0] as Bitmap.CompressFormat)
             assertEquals(90, it.arguments[1] as Int) // Quality
 
