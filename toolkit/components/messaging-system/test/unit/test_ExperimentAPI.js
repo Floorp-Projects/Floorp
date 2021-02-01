@@ -208,11 +208,53 @@ add_task(async function test_isFeatureEnabled() {
 
   manager.store.addExperiment(expected);
 
+  const emitSpy = sandbox.spy(manager.store, "emit");
+  const actual = ExperimentAPI.isFeatureEnabled("aboutwelcome", true);
+
   Assert.deepEqual(
-    ExperimentAPI.isFeatureEnabled("aboutwelcome", true),
+    actual,
     feature.enabled,
     "should return feature as disabled"
   );
+
+  Assert.ok(emitSpy.calledWith("exposure"), "should emit an exposure event");
+
+  sandbox.restore();
+});
+
+add_task(async function test_isFeatureEnabled_no_exposure() {
+  const sandbox = sinon.createSandbox();
+  const manager = ExperimentFakes.manager();
+  const feature = {
+    featureId: "aboutwelcome",
+    enabled: false,
+    value: null,
+  };
+  const expected = ExperimentFakes.experiment("foo", {
+    branch: { slug: "treatment", feature },
+  });
+
+  await manager.onStartup();
+
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+
+  manager.store.addExperiment(expected);
+
+  const emitSpy = sandbox.spy(manager.store, "emit");
+  const actual = ExperimentAPI.isFeatureEnabled("aboutwelcome", true, {
+    sendExposurePing: false,
+  });
+
+  Assert.deepEqual(
+    actual,
+    feature.enabled,
+    "should return feature as disabled"
+  );
+  Assert.ok(
+    emitSpy.neverCalledWith("exposure"),
+    "should not emit an exposure event when options = { sendExposurePing: false}"
+  );
+
   sandbox.restore();
 });
 
