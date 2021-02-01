@@ -1139,6 +1139,16 @@ void nsHtml5TreeOpExecutor::PreloadStyle(const nsAString& aURL,
     return;
   }
 
+  if (aLinkPreload) {
+    auto hashKey = PreloadHashKey::CreateAsStyle(
+        uri, mDocument->NodePrincipal(),
+        dom::Element::StringToCORSMode(aCrossOrigin),
+        css::eAuthorSheetFeatures);
+    if (mDocument->Preloads().PreloadExists(hashKey)) {
+      return;
+    }
+  }
+
   mDocument->PreloadStyle(uri, Encoding::ForLabel(aCharset), aCrossOrigin,
                           GetPreloadReferrerPolicy(aReferrerPolicy), aIntegrity,
                           aLinkPreload
