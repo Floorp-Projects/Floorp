@@ -2350,6 +2350,20 @@ bool RangeAnalysis::tryHoistBoundsCheck(MBasicBlock* header,
   lowerCheck->setBailoutKind(BailoutKind::HoistBoundsCheck);
   preLoop->insertBefore(preLoop->lastIns(), lowerCheck);
 
+  // A common pattern for iterating over typed arrays is this:
+  //
+  //   for (var i = 0; i < ta.length; i++) {
+  //     use ta[i];
+  //   }
+  //
+  // Here |upperTerm| (= ta.length) is a NonNegativeIntPtrToInt32 instruction.
+  // Unwrap this if |length| is also an IntPtr so that we don't add an
+  // unnecessary bounds check and Int32ToIntPtr below.
+  if (upperTerm->isNonNegativeIntPtrToInt32() &&
+      length->type() == MIRType::IntPtr) {
+    upperTerm = upperTerm->toNonNegativeIntPtrToInt32()->input();
+  }
+
   // Hoist the loop invariant upper bounds checks.
   if (upperTerm != length || upperConstant >= 0) {
     // Hoist the bound check's length if it isn't already loop invariant.
@@ -2361,8 +2375,8 @@ bool RangeAnalysis::tryHoistBoundsCheck(MBasicBlock* header,
 
     // If the length is IntPtr, convert the upperTerm to that as well for the
     // bounds check.
-    if (length->type() == MIRType::IntPtr) {
-      MOZ_ASSERT(upperTerm->type() == MIRType::Int32);
+    if (length->type() == MIRType::IntPtr &&
+        upperTerm->type() == MIRType::Int32) {
       upperTerm = MInt32ToIntPtr::New(alloc(), upperTerm);
       upperTerm->computeRange(alloc());
       upperTerm->collectRangeInfoPreTrunc();

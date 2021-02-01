@@ -1254,6 +1254,27 @@ void CodeGenerator::visitInt32ToIntPtr(LInt32ToIntPtr* lir) {
   }
 }
 
+void CodeGenerator::visitNonNegativeIntPtrToInt32(
+    LNonNegativeIntPtrToInt32* lir) {
+  Register output = ToRegister(lir->output());
+  MOZ_ASSERT(ToRegister(lir->input()) == output);
+
+#ifdef DEBUG
+  Label ok;
+  masm.branchPtr(Assembler::NotSigned, output, output, &ok);
+  masm.assumeUnreachable("Unexpected negative value");
+  masm.bind(&ok);
+#endif
+
+#ifdef JS_64BIT
+  Label bail;
+  masm.branchPtr(Assembler::Above, output, Imm32(INT32_MAX), &bail);
+  bailoutFrom(&bail, lir->snapshot());
+#else
+  mozilla::Unused << output;
+#endif
+}
+
 void CodeGenerator::visitAdjustDataViewLength(LAdjustDataViewLength* lir) {
   Register output = ToRegister(lir->output());
   MOZ_ASSERT(ToRegister(lir->input()) == output);
@@ -7837,17 +7858,7 @@ void CodeGenerator::visitArrayBufferByteLengthInt32(
 void CodeGenerator::visitArrayBufferViewLength(LArrayBufferViewLength* lir) {
   Register obj = ToRegister(lir->object());
   Register out = ToRegister(lir->output());
-
-  if (lir->mir()->type() == MIRType::Int32) {
-    Label bail;
-    masm.loadArrayBufferViewLengthInt32(obj, out, &bail);
-    if (bail.used()) {
-      bailoutFrom(&bail, lir->snapshot());
-    }
-  } else {
-    MOZ_ASSERT(lir->mir()->type() == MIRType::IntPtr);
-    masm.loadArrayBufferViewLengthPtr(obj, out);
-  }
+  masm.loadArrayBufferViewLengthPtr(obj, out);
 }
 
 void CodeGenerator::visitArrayBufferViewByteOffset(
