@@ -9,9 +9,14 @@ const CHROME_DOMAIN = "chrome://mochitests/content";
 
 requestLongerTimeout(2);
 
-function WindowObserver(count) {
+function promisePopups(count) {
   let windows = [];
   return new Promise(resolve => {
+    if (count == 0) {
+      resolve([]);
+      return;
+    }
+
     let windowObserver = function(aSubject, aTopic, aData) {
       if (aTopic != "domwindowopened") {
         return;
@@ -27,47 +32,12 @@ function WindowObserver(count) {
   });
 }
 
-add_task(async _ => {
-  info("All opened if the pref is off");
-
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.block_multiple_popups", false],
-      ["dom.disable_open_during_load", true],
-    ],
-  });
-
-  let tab = BrowserTestUtils.addTab(
-    gBrowser,
-    TEST_DOMAIN + TEST_PATH + "browser_multiple_popups.html"
-  );
-  gBrowser.selectedTab = tab;
-
-  let browser = gBrowser.getBrowserForTab(tab);
-  await BrowserTestUtils.browserLoaded(browser);
-
-  let obs = new WindowObserver(2);
-
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#openPopups",
-    {},
-    tab.linkedBrowser
-  );
-
-  await obs;
-  ok(true, "We had 2 windows.");
-
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#closeAllWindows",
-    {},
-    tab.linkedBrowser
-  );
-
-  BrowserTestUtils.removeTab(tab);
-});
-
-add_task(async _ => {
-  info("2 window.open()s in a click event allowed because whitelisted domain.");
+async function withTestPage(popupCount, optionsOrCallback, callback) {
+  let options = optionsOrCallback;
+  if (!callback) {
+    callback = optionsOrCallback;
+    options = {};
+  }
 
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -75,6 +45,68 @@ add_task(async _ => {
       ["dom.disable_open_during_load", true],
     ],
   });
+
+  let domain = options.chrome ? CHROME_DOMAIN : TEST_DOMAIN;
+  let tab = BrowserTestUtils.addTab(
+    gBrowser,
+    domain + TEST_PATH + "browser_multiple_popups.html" + (options.query || "")
+  );
+  gBrowser.selectedTab = tab;
+
+  let browser = gBrowser.getBrowserForTab(tab);
+  await BrowserTestUtils.browserLoaded(browser);
+
+  let obs = promisePopups(popupCount);
+
+  await callback(browser);
+
+  let windows = await obs;
+  ok(true, `We had ${popupCount} windows.`);
+  for (let win of windows) {
+    win.close();
+  }
+
+  BrowserTestUtils.removeTab(tab);
+}
+
+function promisePopupsBlocked(browser, expectedCount) {
+  return SpecialPowers.spawn(browser, [expectedCount], count => {
+    return new content.Promise(resolve => {
+      content.addEventListener("DOMPopupBlocked", function cb() {
+        if (--count == 0) {
+          content.removeEventListener("DOMPopupBlocked", cb);
+          ok(true, "The popup has been blocked");
+          resolve();
+        }
+      });
+    });
+  });
+}
+
+function startOpeningTwoPopups(browser) {
+  return SpecialPowers.spawn(browser.browsingContext, [], () => {
+    let p = content.document.createElement("p");
+    p.setAttribute("id", "start");
+    content.document.body.appendChild(p);
+  });
+}
+
+add_task(async _ => {
+  info("All opened if the pref is off");
+  await withTestPage(2, async function(browser) {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["dom.block_multiple_popups", false],
+        ["dom.disable_open_during_load", true],
+      ],
+    });
+
+    await BrowserTestUtils.synthesizeMouseAtCenter("#openPopups", {}, browser);
+  });
+});
+
+add_task(async _ => {
+  info("2 window.open()s in a click event allowed because whitelisted domain.");
 
   const uri = Services.io.newURI(TEST_DOMAIN);
   const principal = Services.scriptSecurityManager.createContentPrincipal(
@@ -88,40 +120,16 @@ add_task(async _ => {
     Services.perms.ALLOW_ACTION
   );
 
-  let tab = BrowserTestUtils.addTab(
-    gBrowser,
-    TEST_DOMAIN + TEST_PATH + "browser_multiple_popups.html"
-  );
-  gBrowser.selectedTab = tab;
+  await withTestPage(2, async function(browser) {
+    await BrowserTestUtils.synthesizeMouseAtCenter("#openPopups", {}, browser);
+  });
 
-  let browser = gBrowser.getBrowserForTab(tab);
-  await BrowserTestUtils.browserLoaded(browser);
-
-  let obs = new WindowObserver(2);
-
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#openPopups",
-    {},
-    tab.linkedBrowser
-  );
-
-  await obs;
-  ok(true, "We had 2 windows.");
-
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#closeAllWindows",
-    {},
-    tab.linkedBrowser
-  );
-
-  BrowserTestUtils.removeTab(tab);
-
-  await new Promise(aResolve => {
+  await new Promise(resolve => {
     Services.clearData.deleteData(
       Ci.nsIClearDataService.CLEAR_PERMISSIONS,
       value => {
         Assert.equal(value, 0);
-        aResolve();
+        resolve();
       }
     );
   });
@@ -132,13 +140,6 @@ add_task(async _ => {
     "2 window.open()s in a mouseup event allowed because whitelisted domain."
   );
 
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.block_multiple_popups", true],
-      ["dom.disable_open_during_load", true],
-    ],
-  });
-
   const uri = Services.io.newURI(TEST_DOMAIN);
   const principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
@@ -151,33 +152,9 @@ add_task(async _ => {
     Services.perms.ALLOW_ACTION
   );
 
-  let tab = BrowserTestUtils.addTab(
-    gBrowser,
-    TEST_DOMAIN + TEST_PATH + "browser_multiple_popups.html"
-  );
-  gBrowser.selectedTab = tab;
-
-  let browser = gBrowser.getBrowserForTab(tab);
-  await BrowserTestUtils.browserLoaded(browser);
-
-  let obs = new WindowObserver(2);
-
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#input",
-    {},
-    tab.linkedBrowser
-  );
-
-  await obs;
-  ok(true, "We had 2 windows.");
-
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#closeAllWindows",
-    {},
-    tab.linkedBrowser
-  );
-
-  BrowserTestUtils.removeTab(tab);
+  await withTestPage(2, async function(browser) {
+    await BrowserTestUtils.synthesizeMouseAtCenter("#input", {}, browser);
+  });
 
   await new Promise(aResolve => {
     Services.clearData.deleteData(
@@ -195,54 +172,11 @@ add_task(async _ => {
     "2 window.open()s in a single click event: only the first one is allowed."
   );
 
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.block_multiple_popups", true],
-      ["dom.disable_open_during_load", true],
-    ],
+  await withTestPage(1, async function(browser) {
+    let p = promisePopupsBlocked(browser, 1);
+    await BrowserTestUtils.synthesizeMouseAtCenter("#openPopups", {}, browser);
+    await p;
   });
-
-  let tab = BrowserTestUtils.addTab(
-    gBrowser,
-    TEST_DOMAIN + TEST_PATH + "browser_multiple_popups.html"
-  );
-  gBrowser.selectedTab = tab;
-
-  let browser = gBrowser.getBrowserForTab(tab);
-  await BrowserTestUtils.browserLoaded(browser);
-
-  let p = SpecialPowers.spawn(browser, [], () => {
-    return new content.Promise(resolve => {
-      content.addEventListener(
-        "DOMPopupBlocked",
-        () => {
-          ok(true, "The popup has been blocked");
-          resolve();
-        },
-        { once: true }
-      );
-    });
-  });
-
-  let obs = new WindowObserver(1);
-
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#openPopups",
-    {},
-    tab.linkedBrowser
-  );
-
-  await p;
-  await obs;
-  ok(true, "We had only 1 window.");
-
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#closeAllWindows",
-    {},
-    tab.linkedBrowser
-  );
-
-  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async _ => {
@@ -250,113 +184,25 @@ add_task(async _ => {
     "2 window.open()s in a single mouseup event: only the first one is allowed."
   );
 
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.block_multiple_popups", true],
-      ["dom.disable_open_during_load", true],
-    ],
+  await withTestPage(1, async function(browser) {
+    let p = promisePopupsBlocked(browser, 1);
+    await BrowserTestUtils.synthesizeMouseAtCenter("#input", {}, browser);
+    await p;
   });
-
-  let tab = BrowserTestUtils.addTab(
-    gBrowser,
-    TEST_DOMAIN + TEST_PATH + "browser_multiple_popups.html"
-  );
-  gBrowser.selectedTab = tab;
-
-  let browser = gBrowser.getBrowserForTab(tab);
-  await BrowserTestUtils.browserLoaded(browser);
-
-  let p = SpecialPowers.spawn(browser, [], () => {
-    return new content.Promise(resolve => {
-      content.addEventListener(
-        "DOMPopupBlocked",
-        () => {
-          ok(true, "The popup has been blocked");
-          resolve();
-        },
-        { once: true }
-      );
-    });
-  });
-
-  let obs = new WindowObserver(1);
-
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#input",
-    {},
-    tab.linkedBrowser
-  );
-
-  await p;
-  await obs;
-  ok(true, "We had only 1 window.");
-
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#closeAllWindows",
-    {},
-    tab.linkedBrowser
-  );
-
-  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async _ => {
   info("2 window.open()s by non-event code: no windows allowed.");
 
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.block_multiple_popups", true],
-      ["dom.disable_open_during_load", true],
-    ],
+  await withTestPage(0, { query: "?openPopups" }, async function(browser) {
+    let p = promisePopupsBlocked(browser, 2);
+    await startOpeningTwoPopups(browser);
+    await p;
   });
-
-  let tab = BrowserTestUtils.addTab(
-    gBrowser,
-    TEST_DOMAIN + TEST_PATH + "browser_multiple_popups.html?openPopups"
-  );
-  gBrowser.selectedTab = tab;
-
-  let browser = gBrowser.getBrowserForTab(tab);
-  await BrowserTestUtils.browserLoaded(browser);
-
-  await SpecialPowers.spawn(browser, [], () => {
-    return new content.Promise(resolve => {
-      let count = 0;
-      content.addEventListener("DOMPopupBlocked", function cb() {
-        if (++count == 2) {
-          content.removeEventListener("DOMPopupBlocked", cb);
-          ok(true, "The popup has been blocked");
-          resolve();
-        }
-      });
-
-      let p = content.document.createElement("p");
-      p.setAttribute("id", "start");
-      content.document.body.appendChild(p);
-    });
-  });
-
-  ok(true, "We had 0 windows.");
-
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#closeAllWindows",
-    {},
-    tab.linkedBrowser
-  );
-
-  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async _ => {
   info("2 window.open()s by non-event code allowed by permission");
-
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.block_multiple_popups", true],
-      ["dom.disable_open_during_load", true],
-    ],
-  });
-
   const uri = Services.io.newURI(TEST_DOMAIN);
   const principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
@@ -369,26 +215,9 @@ add_task(async _ => {
     Services.perms.ALLOW_ACTION
   );
 
-  let obs = new WindowObserver(2);
-
-  let tab = BrowserTestUtils.addTab(
-    gBrowser,
-    TEST_DOMAIN + TEST_PATH + "browser_multiple_popups.html?openPopups"
-  );
-  gBrowser.selectedTab = tab;
-
-  let browser = gBrowser.getBrowserForTab(tab);
-  await BrowserTestUtils.browserLoaded(browser);
-
-  ok(true, "We had 2 windows.");
-
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#closeAllWindows",
-    {},
-    tab.linkedBrowser
-  );
-
-  BrowserTestUtils.removeTab(tab);
+  await withTestPage(2, { query: "?openPopups" }, async function(browser) {
+    await startOpeningTwoPopups(browser);
+  });
 
   await new Promise(aResolve => {
     Services.clearData.deleteData(
@@ -406,133 +235,36 @@ add_task(async _ => {
     "1 window.open() executing another window.open(): only the first one is allowed."
   );
 
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.block_multiple_popups", true],
-      ["dom.disable_open_during_load", true],
-    ],
+  await withTestPage(1, async function(browser) {
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#openNestedPopups",
+      {},
+      browser
+    );
   });
-
-  let tab = BrowserTestUtils.addTab(
-    gBrowser,
-    TEST_DOMAIN + TEST_PATH + "browser_multiple_popups.html"
-  );
-  gBrowser.selectedTab = tab;
-
-  let browser = gBrowser.getBrowserForTab(tab);
-  await BrowserTestUtils.browserLoaded(browser);
-
-  // We don't receive DOMPopupBlocked for nested windows. Let's use just the observer.
-  let obs = new WindowObserver(1);
-
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#openNestedPopups",
-    {},
-    tab.linkedBrowser
-  );
-
-  await obs;
-  ok(true, "We had 1 window.");
-
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#closeAllWindows",
-    {},
-    tab.linkedBrowser
-  );
-
-  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async _ => {
   info("window.open() and .click() on the element opening the window.");
 
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.block_multiple_popups", true],
-      ["dom.disable_open_during_load", true],
-    ],
+  await withTestPage(1, async function(browser) {
+    let p = promisePopupsBlocked(browser, 1);
+
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#openPopupAndClick",
+      {},
+      browser
+    );
+
+    await p;
   });
-
-  let tab = BrowserTestUtils.addTab(
-    gBrowser,
-    TEST_DOMAIN + TEST_PATH + "browser_multiple_popups.html"
-  );
-  gBrowser.selectedTab = tab;
-
-  let browser = gBrowser.getBrowserForTab(tab);
-  await BrowserTestUtils.browserLoaded(browser);
-
-  let p = SpecialPowers.spawn(browser, [], () => {
-    return new content.Promise(resolve => {
-      content.addEventListener(
-        "DOMPopupBlocked",
-        () => {
-          ok(true, "The popup has been blocked");
-          resolve();
-        },
-        { once: true }
-      );
-    });
-  });
-
-  let obs = new WindowObserver(1);
-
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#openPopupAndClick",
-    {},
-    tab.linkedBrowser
-  );
-
-  await p;
-  await obs;
-  ok(true, "We had only 1 window.");
-
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#closeAllWindows",
-    {},
-    tab.linkedBrowser
-  );
-
-  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async _ => {
   info("All opened from chrome.");
-
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.block_multiple_popups", true],
-      ["dom.disable_open_during_load", true],
-    ],
+  await withTestPage(2, { chrome: true }, async function(browser) {
+    await BrowserTestUtils.synthesizeMouseAtCenter("#openPopups", {}, browser);
   });
-
-  let tab = BrowserTestUtils.addTab(
-    gBrowser,
-    CHROME_DOMAIN + TEST_PATH + "browser_multiple_popups.html"
-  );
-  gBrowser.selectedTab = tab;
-
-  let browser = gBrowser.getBrowserForTab(tab);
-  await BrowserTestUtils.browserLoaded(browser);
-
-  let obs = new WindowObserver(2);
-
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#openPopups",
-    {},
-    tab.linkedBrowser
-  );
-
-  await obs;
-  ok(true, "We had 2 windows.");
-
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#closeAllWindows",
-    {},
-    tab.linkedBrowser
-  );
-
-  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_bug_1685056() {
@@ -540,74 +272,24 @@ add_task(async function test_bug_1685056() {
     "window.open() from a blank iframe window during an event dispatched at the parent page: window should be allowed"
   );
 
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.block_multiple_popups", true],
-      ["dom.disable_open_during_load", true],
-    ],
+  await withTestPage(1, async function(browser) {
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#openPopupInFrame",
+      {},
+      browser
+    );
   });
-
-  let tab = BrowserTestUtils.addTab(
-    gBrowser,
-    TEST_DOMAIN + TEST_PATH + "browser_multiple_popups.html"
-  );
-  gBrowser.selectedTab = tab;
-
-  let browser = gBrowser.getBrowserForTab(tab);
-  await BrowserTestUtils.browserLoaded(browser);
-
-  let obs = new WindowObserver(1);
-
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#openPopupInFrame",
-    {},
-    tab.linkedBrowser
-  );
-
-  await obs;
-  ok(true, "We had 1 popup.");
-
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#closeAllWindows",
-    {},
-    tab.linkedBrowser
-  );
-
-  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_bug_1689853() {
   info("window.open() from a js bookmark (LOAD_FLAGS_ALLOW_POPUPS)");
-
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.block_multiple_popups", true],
-      ["dom.disable_open_during_load", true],
-    ],
+  await withTestPage(1, async function(browser) {
+    const URI =
+      "javascript:void(window.open('empty.html', '_blank', 'width=100,height=100'));";
+    window.openTrustedLinkIn(URI, "current", {
+      allowPopups: true,
+      inBackground: false,
+      allowInheritPrincipal: true,
+    });
   });
-
-  let tab = BrowserTestUtils.addTab(
-    gBrowser,
-    TEST_DOMAIN + TEST_PATH + "browser_multiple_popups.html"
-  );
-  gBrowser.selectedTab = tab;
-
-  let browser = gBrowser.getBrowserForTab(tab);
-  await BrowserTestUtils.browserLoaded(browser);
-
-  let obs = new WindowObserver(1);
-
-  const URI =
-    "javascript:void(window.open('empty.html', '_blank', 'width=100,height=100'));";
-  window.openTrustedLinkIn(URI, "current", {
-    allowPopups: true,
-    inBackground: false,
-    allowInheritPrincipal: true,
-  });
-
-  let windows = await obs;
-  ok(true, "We had 1 popup.");
-
-  windows[0].close();
-  BrowserTestUtils.removeTab(tab);
 });
