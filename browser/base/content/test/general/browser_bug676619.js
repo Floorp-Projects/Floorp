@@ -92,6 +92,17 @@ async function runTest(url) {
   let oggExtension = getMIMEInfoForType("application/ogg").primaryExtension;
   await testLink("link13", "no file extension." + oggExtension);
 
+  const PREF = "browser.download.sanitize_non_media_extensions";
+  ok(Services.prefs.getBoolPref(PREF), "pref is set before");
+
+  // Check that PDF extension is changed/fixed when the pref is true.
+  await testLink("link14", "dummy.pdf");
+
+  // And not changed otherwise.
+  Services.prefs.setBoolPref(PREF, false);
+  await testLink("link14", "dummy.not-pdf");
+  Services.prefs.clearUserPref(PREF);
+
   BrowserTestUtils.removeTab(tab);
 }
 
