@@ -306,7 +306,7 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void emitStoreHoleCheck(Register elements, const LAllocation* index,
                           LSnapshot* snapshot);
 
-  void emitAssertRangeI(const Range* r, Register input);
+  void emitAssertRangeI(MIRType type, const Range* r, Register input);
   void emitAssertRangeD(const Range* r, FloatRegister input,
                         FloatRegister temp);
 
