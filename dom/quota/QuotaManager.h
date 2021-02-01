@@ -563,15 +563,18 @@ class QuotaManager final : public BackgroundThreadObject {
   using OriginInfosFlatTraversable =
       nsTArray<NotNull<RefPtr<const OriginInfo>>>;
 
-  OriginInfosFlatTraversable LockedGetOriginInfosExceedingGroupLimit() const;
+  using OriginInfosNestedTraversable =
+      nsTArray<nsTArray<NotNull<RefPtr<const OriginInfo>>>>;
+
+  OriginInfosNestedTraversable LockedGetOriginInfosExceedingGroupLimit() const;
 
   OriginInfosFlatTraversable LockedGetOriginInfosExceedingGlobalLimit(
-      const OriginInfosFlatTraversable& aAlreadyDoomedOriginInfos,
+      const OriginInfosNestedTraversable& aAlreadyDoomedOriginInfos,
       uint64_t aAlreadyDoomedUsage) const;
 
-  OriginInfosFlatTraversable GetOriginInfosExceedingLimits() const;
+  OriginInfosNestedTraversable GetOriginInfosExceedingLimits() const;
 
-  void ClearOrigins(const OriginInfosFlatTraversable& aDoomedOriginInfos);
+  void ClearOrigins(const OriginInfosNestedTraversable& aDoomedOriginInfos);
 
   void CleanupTemporaryStorage();
 
