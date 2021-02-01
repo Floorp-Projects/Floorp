@@ -27,7 +27,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -636,19 +635,6 @@ const TargetingGetters = {
       Services.appinfo.fissionExperimentStatus ===
       Ci.nsIXULRuntime.eExperimentStatusTreatment
     );
-  },
-  get activeNotifications() {
-    let window = BrowserWindowTracker.getTopWindow();
-
-    if (
-      window.gURLBar.view.isOpen ||
-      window.gHighPriorityNotificationBox.currentNotification ||
-      window.gBrowser.getNotificationBox().currentNotification
-    ) {
-      return true;
-    }
-
-    return false;
   },
 };
 

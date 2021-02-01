@@ -15,7 +15,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
-  ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -36,14 +35,6 @@ class AboutNewTabParent extends JSWindowActorParent {
   async receiveMessage(message) {
     switch (message.name) {
       case "DefaultBrowserNotification":
-        ASRouter.waitForInitialized.then(() =>
-          ASRouter.sendTriggerMessage({
-            browser: this.browsingContext.top.embedderElement,
-            // triggerId and triggerContext
-            id: "defaultBrowserCheck",
-            context: { source: "newtab" },
-          })
-        );
         await DefaultBrowserNotification.maybeShow(
           this.browsingContext.top.embedderElement,
           this.browsingContext.topChromeWindow?.getShellService()
