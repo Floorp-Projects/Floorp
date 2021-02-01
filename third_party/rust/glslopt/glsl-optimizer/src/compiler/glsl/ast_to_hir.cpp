@@ -6841,16 +6841,10 @@ ast_case_statement::hir(exec_list *instructions,
    labels->hir(instructions, state);
 
    /* Conditionally set fallthru state based on break state. */
-   ir_constant *const false_val = new(state) ir_constant(false);
-   ir_dereference_variable *const deref_is_fallthru_var =
-      new(state) ir_dereference_variable(state->switch_state.is_fallthru_var);
-   ir_dereference_variable *const deref_is_break_var =
-      new(state) ir_dereference_variable(state->switch_state.is_break_var);
-   ir_assignment *const reset_fallthru_on_break =
-      new(state) ir_assignment(deref_is_fallthru_var,
-                               false_val,
-                               deref_is_break_var);
-   instructions->push_tail(reset_fallthru_on_break);
+   ir_factory reset_fallthru(instructions, state);
+   reset_fallthru.emit(assign(state->switch_state.is_fallthru_var,
+                              logic_and(state->switch_state.is_fallthru_var,
+                                        logic_not(state->switch_state.is_break_var))));
 
    /* Guard case statements depending on fallthru state. */
    ir_dereference_variable *const deref_fallthru_guard =
