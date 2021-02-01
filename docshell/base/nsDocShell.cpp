@@ -774,12 +774,16 @@ nsresult nsDocShell::LoadURI(nsDocShellLoadState* aLoadState,
     mIsNavigating = true;
   }
 
-  PopupBlocker::PopupControlState popupState;
+  PopupBlocker::PopupControlState popupState = PopupBlocker::openOverridden;
   if (aLoadState->HasLoadFlags(LOAD_FLAGS_ALLOW_POPUPS)) {
     popupState = PopupBlocker::openAllowed;
-  } else {
-    popupState = PopupBlocker::openOverridden;
+    // If we allow popups as part of the navigation, ensure we fake a user
+    // interaction, so that popups can, in fact, be allowed to open.
+    if (WindowContext* wc = mBrowsingContext->GetCurrentWindowContext()) {
+      wc->NotifyUserGestureActivation();
+    }
   }
+
   AutoPopupStatePusher statePusher(popupState);
 
   if (aLoadState->GetCancelContentJSEpoch().isSome()) {
