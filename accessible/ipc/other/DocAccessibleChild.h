@@ -442,9 +442,9 @@ class DocAccessibleChild : public DocAccessibleChildBase {
 
   virtual mozilla::ipc::IPCResult RecvTakeFocus(const uint64_t& aID) override;
 
-  virtual mozilla::ipc::IPCResult RecvFocusedChild(const uint64_t& aID,
-                                                   uint64_t* aChild,
-                                                   bool* aOk) override;
+  virtual mozilla::ipc::IPCResult RecvFocusedChild(
+      const uint64_t& aID, PDocAccessibleChild** aResultDoc,
+      uint64_t* aResultID) override;
 
   virtual mozilla::ipc::IPCResult RecvLanguage(const uint64_t& aID,
                                                nsString* aLocale) override;
