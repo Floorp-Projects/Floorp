@@ -667,6 +667,8 @@ class SystemEngineView @JvmOverloads constructor(
         }
     }
 
+    @Suppress("DEPRECATION")
+    // Deprecation will be handled in https://github.com/mozilla-mobile/android-components/issues/8514
     class ImageHandler(val session: SystemEngineSession?) : Handler() {
         override fun handleMessage(msg: Message) {
             val url = msg.data.getString("url")

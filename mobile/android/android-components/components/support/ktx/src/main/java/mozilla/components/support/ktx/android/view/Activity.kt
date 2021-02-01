@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// Deprecation to be fixed in https://github.com/mozilla-mobile/android-components/issues/8517
+@file:Suppress("DEPRECATION")
+
 package mozilla.components.support.ktx.android.view
 
 import android.app.Activity

@@ -110,6 +110,8 @@ class IconDiskCache :
                     .edit(createKey(resource.url)) ?: return
 
                 editor.newOutputStream(0).use { stream ->
+                    @Suppress("DEPRECATION")
+                    // Deprecation will be handled in https://github.com/mozilla-mobile/android-components/issues/9555
                     bitmap.compress(Bitmap.CompressFormat.WEBP, WEBP_QUALITY, stream)
                 }
 

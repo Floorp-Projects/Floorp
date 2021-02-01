@@ -253,6 +253,9 @@ class SystemEngineSession(
     private fun initSettings() {
         webView.settings.apply {
             // Explicitly set global defaults.
+
+            @Suppress("DEPRECATION")
+            // Deprecation will be handled in https://github.com/mozilla-mobile/android-components/issues/8512
             setAppCacheEnabled(false)
             databaseEnabled = false
 
@@ -297,10 +300,16 @@ class SystemEngineSession(
                 get() = this@SystemEngineSession.useWideViewPort
                 set(value) = setUseWideViewPort(s, value)
             override var supportMultipleWindows by WebSetting(s::supportMultipleWindows, s::setSupportMultipleWindows)
+
+            @Suppress("DEPRECATION")
+            // Deprecation will be handled in https://github.com/mozilla-mobile/android-components/issues/8513
             override var allowFileAccessFromFileURLs by WebSetting(
                     s::getAllowFileAccessFromFileURLs, s::setAllowFileAccessFromFileURLs)
+            @Suppress("DEPRECATION")
+            // Deprecation will be handled in https://github.com/mozilla-mobile/android-components/issues/8514
             override var allowUniversalAccessFromFileURLs by WebSetting(
                     s::getAllowUniversalAccessFromFileURLs, s::setAllowUniversalAccessFromFileURLs)
+
             override var mediaPlaybackRequiresUserGesture by WebSetting(
                     s::getMediaPlaybackRequiresUserGesture, s::setMediaPlaybackRequiresUserGesture)
             override var javaScriptCanOpenWindowsAutomatically by WebSetting(

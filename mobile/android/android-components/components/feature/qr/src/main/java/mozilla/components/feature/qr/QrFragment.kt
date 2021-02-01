@@ -295,6 +295,8 @@ class QrFragment : Fragment() {
                     .apply { setOnImageAvailableListener(imageAvailableListener, backgroundHandler) }
 
             // Find out if we need to swap dimension to get the preview size relative to sensor coordinate.
+            @Suppress("DEPRECATION")
+            // Deprecation of getDefaultDisplay() and getSize() will be handled in https://github.com/mozilla-mobile/android-components/issues/8518
             val displayRotation = activity?.windowManager?.defaultDisplay?.rotation
 
             sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) as Int
@@ -307,6 +309,8 @@ class QrFragment : Fragment() {
             }
 
             val displaySize = Point()
+            @Suppress("DEPRECATION")
+            // Deprecation of getDefaultDisplay() and getSize() will be handled in https://github.com/mozilla-mobile/android-components/issues/8518
             activity?.windowManager?.defaultDisplay?.getSize(displaySize)
             var rotatedPreviewWidth = width
             var rotatedPreviewHeight = height
@@ -424,6 +428,8 @@ class QrFragment : Fragment() {
     private fun configureTransform(viewWidth: Int, viewHeight: Int) {
         val activity = activity ?: return
         val size = previewSize ?: return
+        @Suppress("DEPRECATION")
+        // Deprecation of getDefaultDisplay() and getSize() will be handled in https://github.com/mozilla-mobile/android-components/issues/8518
         val rotation = activity.windowManager.defaultDisplay.rotation
         val matrix = Matrix()
         val viewRect = RectF(0f, 0f, viewWidth.toFloat(), viewHeight.toFloat())
@@ -489,7 +495,8 @@ class QrFragment : Fragment() {
                         logger.error("Failed to configure CameraCaptureSession")
                     }
                 }
-
+                // Deprecation of createCaptureSession() will be handled in https://github.com/mozilla-mobile/android-components/issues/8510
+                @Suppress("DEPRECATION")
                 it.createCaptureSession(Arrays.asList(mImageSurface, surface), stateCallback, null)
             }
         }

@@ -12,7 +12,8 @@ object StatusBarUtils {
     /**
      * Determine the height of the status bar asynchronously.
      */
-    @Suppress("unused")
+    // Deprecation will be handled in https://github.com/mozilla-mobile/android-components/issues/9552
+    @Suppress("unused", "DEPRECATION")
     fun getStatusBarHeight(view: View, block: (Int) -> Unit) {
         if (statusBarSize > 0) {
             block(statusBarSize)
