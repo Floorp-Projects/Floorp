@@ -1065,7 +1065,7 @@ already_AddRefed<DataSourceSurface> FilterNodeBlendSoftware::Render(
   }
 
   RefPtr<DrawTarget> dt = Factory::CreateDrawTargetForData(
-      BackendType::CAIRO, targetMap.GetData(), target->GetSize(),
+      BackendType::SKIA, targetMap.GetData(), target->GetSize(),
       targetMap.GetStride(), target->GetFormat());
 
   if (!dt) {
@@ -1200,7 +1200,7 @@ already_AddRefed<DataSourceSurface> FilterNodeTransformSoftware::Render(
   }
 
   RefPtr<DrawTarget> dt = Factory::CreateDrawTargetForData(
-      BackendType::CAIRO, mapping.mData, surf->GetSize(), mapping.mStride,
+      BackendType::SKIA, mapping.mData, surf->GetSize(), mapping.mStride,
       surf->GetFormat());
   if (!dt) {
     gfxWarning() << "FilterNodeTransformSoftware::Render failed in "
