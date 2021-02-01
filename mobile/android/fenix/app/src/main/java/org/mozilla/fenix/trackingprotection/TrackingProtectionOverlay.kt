@@ -62,9 +62,9 @@ class TrackingProtectionOverlay(
             }.ifChanged { tab ->
                 tab.content.loading
             }
-            .collect { tab ->
-                onLoadingStateChanged(tab)
-            }
+                .collect { tab ->
+                    onLoadingStateChanged(tab)
+                }
         }
     }
 
@@ -77,7 +77,10 @@ class TrackingProtectionOverlay(
 
     @VisibleForTesting
     internal fun onLoadingStateChanged(tab: SessionState) {
-        if (!tab.content.loading && shouldShowTrackingProtectionOnboarding(tab)) {
+        if (shouldShowTrackingProtectionOnboarding(tab) &&
+            tab.content.progress == FULL_PROGRESS &&
+            settings.shouldUseTrackingProtection
+        ) {
             showTrackingProtectionOnboarding()
         }
     }
@@ -85,7 +88,7 @@ class TrackingProtectionOverlay(
     private fun shouldShowTrackingProtectionOnboarding(tab: SessionState) =
         tab.trackingProtection.enabled &&
                 tab.trackingProtection.blockedTrackers.isNotEmpty() &&
-            settings.shouldShowTrackingProtectionCfr
+                settings.shouldShowTrackingProtectionCfr
 
     @Suppress("MagicNumber", "InflateParams")
     private fun showTrackingProtectionOnboarding() {
@@ -184,6 +187,7 @@ class TrackingProtectionOverlay(
     }
 
     private companion object {
+        private const val FULL_PROGRESS = 100
         private const val BUTTON_INCREASE_DPS = 12
     }
 }

@@ -156,13 +156,29 @@ class TrackingProtectionOverlayTest {
     fun `show onboarding when trackers are blocked`() {
         every { toolbar.hasWindowFocus() } returns true
         every { settings.shouldShowTrackingProtectionCfr } returns true
+        every { session.content.progress } returns 100
         every { session.content.loading } returns false
+        every { settings.shouldUseTrackingProtection } returns true
         every { session.trackingProtection } returns TrackingProtectionState(
             enabled = true,
             blockedTrackers = listOf(mockk())
         )
         overlay.onLoadingStateChanged(session)
         verify { settings.incrementTrackingProtectionOnboardingCount() }
+    }
+
+    @Test
+    fun `no-op when trackers are blocked but not finished loading`() {
+        every { toolbar.hasWindowFocus() } returns true
+        every { settings.shouldShowTrackingProtectionCfr } returns true
+        every { session.content.progress } returns 50
+        every { session.content.loading } returns false
+        every { session.trackingProtection } returns TrackingProtectionState(
+            enabled = true,
+            blockedTrackers = listOf(mockk())
+        )
+        overlay.onLoadingStateChanged(session)
+        verify(exactly = 0) { settings.incrementTrackingProtectionOnboardingCount() }
     }
 
     @Test
