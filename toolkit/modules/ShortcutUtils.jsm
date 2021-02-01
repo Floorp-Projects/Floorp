@@ -123,6 +123,15 @@ var ShortcutUtils = {
     let key;
     if (keyCode) {
       keyCode = keyCode.toUpperCase();
+      if (AppConstants.platform == "macosx") {
+        // Return fancy Unicode symbols for some keys.
+        switch (keyCode) {
+          case "VK_LEFT":
+            return "\u2190"; // U+2190 LEFTWARDS ARROW
+          case "VK_RIGHT":
+            return "\u2192"; // U+2192 RIGHTWARDS ARROW
+        }
+      }
       try {
         let bundle = keyCode == "VK_RETURN" ? PlatformKeys : Keys;
         // Some keys might not exist in the locale file, which will throw.
