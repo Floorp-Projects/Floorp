@@ -12,6 +12,7 @@ import android.webkit.WebStorage
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.webkit.WebViewDatabase
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -250,7 +251,8 @@ class SystemEngineSession(
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) = set(value)
     }
 
-    private fun initSettings() {
+    @VisibleForTesting
+    internal fun initSettings() {
         webView.settings.apply {
             // Explicitly set global defaults.
 

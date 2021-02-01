@@ -22,6 +22,8 @@ import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine.BrowsingData
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
+import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
@@ -34,10 +36,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.any as mockitoAny
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.doThrow
@@ -72,11 +73,14 @@ class SystemEngineSessionTest {
 
         val engineSession = spy(SystemEngineSession(testContext))
         val webView = spy(object : WebView(testContext) {
-            override fun loadUrl(url: String?, additionalHttpHeaders: MutableMap<String, String>?) {
+            override fun loadUrl(url: String, additionalHttpHeaders: MutableMap<String, String>) {
                 loadedUrl = url
                 loadHeaders = additionalHttpHeaders
             }
         })
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
+
         engineSession.webView = webView
 
         engineSession.loadUrl("")
@@ -104,6 +108,8 @@ class SystemEngineSessionTest {
     fun loadData() {
         val engineSession = spy(SystemEngineSession(testContext))
         val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
 
         engineSession.loadData("<html><body>Hello!</body></html>")
         verify(webView, never()).loadData(anyString(), eq("text/html"), eq("UTF-8"))
@@ -124,6 +130,8 @@ class SystemEngineSessionTest {
     fun stopLoading() {
         val engineSession = spy(SystemEngineSession(testContext))
         val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
 
         engineSession.stopLoading()
         verify(webView, never()).stopLoading()
@@ -138,7 +146,8 @@ class SystemEngineSessionTest {
     fun reload() {
         val engineSession = spy(SystemEngineSession(testContext))
         val webView = mock<WebView>()
-
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
         engineSession.reload()
         verify(webView, never()).reload()
 
@@ -152,6 +161,8 @@ class SystemEngineSessionTest {
     fun goBack() {
         val engineSession = spy(SystemEngineSession(testContext))
         val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
 
         engineSession.goBack()
         verify(webView, never()).goBack()
@@ -166,6 +177,8 @@ class SystemEngineSessionTest {
     fun goForward() {
         val engineSession = spy(SystemEngineSession(testContext))
         val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
 
         engineSession.goForward()
         verify(webView, never()).goForward()
@@ -180,6 +193,8 @@ class SystemEngineSessionTest {
     fun goToHistoryIndex() {
         val engineSession = spy(SystemEngineSession(testContext))
         val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
 
         whenever(webView.copyBackForwardList()).thenReturn(mock())
         engineSession.goToHistoryIndex(0)
@@ -201,7 +216,7 @@ class SystemEngineSessionTest {
             fail("Expected IllegalArgumentException")
         } catch (e: IllegalArgumentException) {}
         assertFalse(engineSession.restoreState(SystemEngineSessionState(Bundle())))
-        verify(webView, never()).restoreState(any(Bundle::class.java))
+        verify(webView, never()).restoreState(mockitoAny(Bundle::class.java))
 
         engineSession.webView = webView
         engineSession.webView.loadUrl("http://example.com")
@@ -220,7 +235,11 @@ class SystemEngineSessionTest {
 
         val engineSession = spy(SystemEngineSession(testContext))
         val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+
+        whenever(webView.settings).thenReturn(settings)
         whenever(webView.context).thenReturn(testContext)
+
         engineSession.webView = webView
 
         var enabledObserved: Boolean? = null
@@ -679,6 +698,8 @@ class SystemEngineSessionTest {
         val engineSession = spy(SystemEngineSession(testContext))
         val webView = mock<WebView>()
         val webViewSettings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(webViewSettings)
+
         var desktopMode = false
         engineSession.register(object : EngineSession.Observer {
             override fun onDesktopModeChange(enabled: Boolean) {
@@ -708,6 +729,8 @@ class SystemEngineSessionTest {
         val defaultSettings = DefaultSettings(useWideViewPort = true)
         val engineSession = spy(SystemEngineSession(testContext, defaultSettings))
         val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
         val webViewSettings = mock<WebSettings>()
         var desktopMode = false
 
@@ -721,10 +744,10 @@ class SystemEngineSessionTest {
         whenever(webView.settings).thenReturn(webViewSettings)
         whenever(webViewSettings.userAgentString).thenReturn(userAgentMobile)
 
-        engineSession.toggleDesktopMode(false)
+        engineSession.toggleDesktopMode(true)
         verify(webViewSettings).useWideViewPort = true
-        verify(engineSession).toggleDesktopUA(userAgentMobile, false)
-        assertFalse(desktopMode)
+        verify(engineSession).toggleDesktopUA(userAgentMobile, true)
+        assertTrue(desktopMode)
     }
 
     @Test
@@ -733,8 +756,11 @@ class SystemEngineSessionTest {
         val defaultSettings = DefaultSettings(useWideViewPort = false)
         val engineSession = spy(SystemEngineSession(testContext, defaultSettings))
         val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
         val webViewSettings = mock<WebSettings>()
         var desktopMode = false
+
         engineSession.register(object : EngineSession.Observer {
             override fun onDesktopModeChange(enabled: Boolean) {
                 desktopMode = enabled
@@ -757,6 +783,61 @@ class SystemEngineSessionTest {
     }
 
     @Test
+    fun desktopModeToggleTrueWithNoProvidedDefault() {
+        val userAgentMobile = "Mozilla/5.0 (Linux; Android 9) AppleWebKit/537.36 Mobile Safari/537.36"
+        val engineSession = spy(SystemEngineSession(testContext))
+        val webView = mock<WebView>()
+
+        val webViewSettings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(webViewSettings)
+        whenever(webViewSettings.userAgentString).thenReturn(userAgentMobile)
+
+        var desktopMode = false
+        engineSession.register(object : EngineSession.Observer {
+            override fun onDesktopModeChange(enabled: Boolean) {
+                desktopMode = enabled
+            }
+        })
+
+        engineSession.webView = webView
+        whenever(webView.settings).thenReturn(webViewSettings)
+        whenever(webViewSettings.userAgentString).thenReturn(userAgentMobile)
+
+        engineSession.toggleDesktopMode(true)
+        verify(webViewSettings).useWideViewPort = true
+        verify(engineSession).toggleDesktopUA(userAgentMobile, true)
+        assertTrue(desktopMode)
+    }
+
+    @Test
+    fun desktopModeToggleFalseWithNoProvidedDefault() {
+        val userAgentMobile = "Mozilla/5.0 (Linux; Android 9) AppleWebKit/537.36 Mobile Safari/537.36"
+        val engineSession = spy(SystemEngineSession(testContext))
+
+        val webView = mock<WebView>()
+
+        val webViewSettings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(webViewSettings)
+        whenever(webViewSettings.userAgentString).thenReturn(userAgentMobile)
+
+        var desktopMode = false
+        engineSession.register(object : EngineSession.Observer {
+            override fun onDesktopModeChange(enabled: Boolean) {
+                desktopMode = enabled
+            }
+        })
+
+        engineSession.webView = webView
+        whenever(webView.settings).thenReturn(webViewSettings)
+        whenever(webViewSettings.userAgentString).thenReturn(userAgentMobile)
+
+        engineSession.toggleDesktopMode(false)
+        verify(webViewSettings).useWideViewPort = false
+        verify(engineSession).toggleDesktopUA(userAgentMobile, false)
+        assertFalse(desktopMode)
+    }
+
+    @Test
     fun desktopModeUA() {
         val userAgentMobile = "Mozilla/5.0 (Linux; Android 9) AppleWebKit/537.36 Mobile Safari/537.36"
         val userAgentDesktop = "Mozilla/5.0 (Linux; diordnA 9) AppleWebKit/537.36 eliboM Safari/537.36"
@@ -770,6 +851,8 @@ class SystemEngineSessionTest {
     fun findAll() {
         val engineSession = spy(SystemEngineSession(testContext))
         val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
         engineSession.findAll("mozilla")
         verify(webView, never()).findAllAsync(anyString())
 
@@ -789,8 +872,11 @@ class SystemEngineSessionTest {
     fun findNext() {
         val engineSession = spy(SystemEngineSession(testContext))
         val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
+
         engineSession.findNext(true)
-        verify(webView, never()).findNext(any(Boolean::class.java))
+        verify(webView, never()).findNext(mockitoAny(Boolean::class.java))
 
         engineSession.webView = webView
         engineSession.findNext(true)
@@ -801,6 +887,9 @@ class SystemEngineSessionTest {
     fun clearFindMatches() {
         val engineSession = spy(SystemEngineSession(testContext))
         val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
+
         engineSession.clearFindMatches()
         verify(webView, never()).clearMatches()
 
@@ -813,6 +902,8 @@ class SystemEngineSessionTest {
     fun clearDataMakingExpectedCalls() {
         val engineSession = spy(SystemEngineSession(testContext))
         val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
         val webStorage: WebStorage = mock()
         val webViewDatabase: WebViewDatabase = mock()
         val context: Context = testContext
@@ -897,6 +988,8 @@ class SystemEngineSessionTest {
     fun clearDataInvokesSuccessCallback() {
         val engineSession = spy(SystemEngineSession(testContext))
         val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
         val webStorage: WebStorage = mock()
         val webViewDatabase: WebViewDatabase = mock()
         val context: Context = testContext
@@ -915,6 +1008,8 @@ class SystemEngineSessionTest {
     fun clearDataInvokesErrorCallback() {
         val engineSession = spy(SystemEngineSession(testContext))
         val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
         val webViewDatabase: WebViewDatabase = mock()
         val context: Context = testContext
         var onErrorCalled = false
@@ -951,6 +1046,8 @@ class SystemEngineSessionTest {
     fun closeDestroysWebView() {
         val engineSession = SystemEngineSession(testContext)
         val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
         engineSession.webView = webView
 
         engineSession.close()
@@ -962,6 +1059,9 @@ class SystemEngineSessionTest {
         val engineSession = SystemEngineSession(testContext)
 
         val webView: WebView = mock()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
+
         engineSession.webView = webView
 
         engineSession.purgeHistory()
@@ -974,6 +1074,9 @@ class SystemEngineSessionTest {
 
         val engineSession = SystemEngineSession(testContext)
         val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
+
         engineSession.webView = webView
         Mockito.`when`(webView.canGoBack()).thenReturn(true)
         engineSession.register(object : EngineSession.Observer {

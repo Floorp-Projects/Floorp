@@ -109,10 +109,10 @@ class GeckoEngineSessionTest {
     @Before
     fun setup() {
         ThreadUtils.setHandlerForTest(object : Handler() {
-            override fun sendMessageAtTime(msg: Message?, uptimeMillis: Long): Boolean {
+            override fun sendMessageAtTime(msg: Message, uptimeMillis: Long): Boolean {
                 val wrappedRunnable = Runnable {
                     try {
-                        msg?.callback?.run()
+                        msg.callback?.run()
                     } catch (t: Throwable) {
                         // We ignore this in the test as the runnable could be calling
                         // a native method (disposeNative) which won't work in Robolectric

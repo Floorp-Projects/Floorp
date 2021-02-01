@@ -5,11 +5,13 @@
 package mozilla.components.browser.engine.system.window
 
 import android.os.Message
+import android.webkit.WebSettings
 import android.webkit.WebView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.engine.system.SystemEngineSession
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -38,6 +40,11 @@ class SystemWindowRequestTest {
     fun `prepare sets webview on engine session`() {
         val curWebView = mock<WebView>()
         val newWebView = mock<WebView>()
+        val settings = mock<WebSettings>()
+
+        whenever(curWebView.settings).thenReturn(settings)
+        whenever(newWebView.settings).thenReturn(settings)
+
         val newEngineSession = SystemEngineSession(testContext)
         val request = SystemWindowRequest(curWebView, newEngineSession, newWebView)
 

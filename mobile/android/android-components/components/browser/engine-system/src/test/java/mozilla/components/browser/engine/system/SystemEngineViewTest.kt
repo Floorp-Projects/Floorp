@@ -23,6 +23,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebView.HitTestResult
 import android.webkit.WebViewClient
@@ -33,12 +34,15 @@ import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.window.WindowRequest
+import mozilla.components.concept.fetch.Response
 import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.VisitType
@@ -58,13 +62,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.Robolectric
-import org.robolectric.RuntimeEnvironment
-import org.robolectric.annotation.Config
-import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
-import mozilla.components.concept.engine.content.blocking.Tracker
-import mozilla.components.concept.fetch.Response
 import org.mockito.ArgumentMatchers
+import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
@@ -72,6 +71,9 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
+import org.robolectric.Robolectric
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
 import java.io.StringReader
 
 @RunWith(AndroidJUnit4::class)
@@ -607,9 +609,10 @@ class SystemEngineViewTest {
     @Test
     @Suppress("Deprecation")
     fun `WebViewClient calls interceptor from deprecated onReceivedError API`() {
-        val engineSession = SystemEngineSession(testContext)
+        val engineSession = spy(SystemEngineSession(testContext))
         val engineView = SystemEngineView(testContext)
         engineView.render(engineSession)
+        doNothing().`when`(engineSession).initSettings()
 
         val requestInterceptor: RequestInterceptor = mock()
         val webViewClient = engineSession.webView.webViewClient
@@ -644,6 +647,9 @@ class SystemEngineViewTest {
         verify(requestInterceptor).onErrorRequest(engineSession, ErrorType.UNKNOWN, "http://failed.random")
 
         val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
+
         engineSession.webView = webView
         val errorResponse = RequestInterceptor.ErrorResponse("about:fail")
         webViewClient.onReceivedError(
@@ -686,9 +692,10 @@ class SystemEngineViewTest {
 
     @Test
     fun `WebViewClient calls interceptor from new onReceivedError API`() {
-        val engineSession = SystemEngineSession(testContext)
+        val engineSession = spy(SystemEngineSession(testContext))
         val engineView = SystemEngineView(testContext)
         engineView.render(engineSession)
+        doNothing().`when`(engineSession).initSettings()
 
         val requestInterceptor: RequestInterceptor = mock()
         val webViewClient = engineSession.webView.webViewClient
@@ -715,6 +722,9 @@ class SystemEngineViewTest {
         verify(requestInterceptor).onErrorRequest(engineSession, ErrorType.UNKNOWN, "http://failed.random")
 
         val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
+
         engineSession.webView = webView
         val errorResponse = RequestInterceptor.ErrorResponse("about:fail")
         webViewClient.onReceivedError(engineSession.webView, webRequest, webError)
@@ -737,9 +747,10 @@ class SystemEngineViewTest {
 
     @Test
     fun `WebViewClient calls interceptor when onReceivedSslError`() {
-        val engineSession = SystemEngineSession(testContext)
+        val engineSession = spy(SystemEngineSession(testContext))
         val engineView = SystemEngineView(testContext)
         engineView.render(engineSession)
+        doNothing().`when`(engineSession).initSettings()
 
         val requestInterceptor: RequestInterceptor = mock()
         val webViewClient = engineSession.webView.webViewClient
@@ -761,6 +772,9 @@ class SystemEngineViewTest {
         verify(handler, times(3)).cancel()
 
         val webView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(webView.settings).thenReturn(settings)
+
         engineSession.webView = webView
         val errorResponse = RequestInterceptor.ErrorResponse("about:fail")
         webViewClient.onReceivedSslError(engineSession.webView, handler, error)
@@ -843,6 +857,9 @@ class SystemEngineViewTest {
     @Test
     fun `lifecycle methods are invoked`() {
         val mockWebView = mock<WebView>()
+        val settings = mock<WebSettings>()
+        whenever(mockWebView.settings).thenReturn(settings)
+
         val engineSession1 = SystemEngineSession(testContext)
         val engineSession2 = SystemEngineSession(testContext)
 
