@@ -531,9 +531,9 @@ class SmokeTest {
         }.openNewTab {
         }.submitQuery(secondWebPage.url.toString()) {
             swipeNavBarRight(secondWebPage.url.toString())
-            verifyPageContent(firstWebPage.content)
+            verifyUrl(firstWebPage.url.toString())
             swipeNavBarLeft(firstWebPage.url.toString())
-            verifyPageContent(secondWebPage.content)
+            verifyUrl(secondWebPage.url.toString())
         }
     }
 
