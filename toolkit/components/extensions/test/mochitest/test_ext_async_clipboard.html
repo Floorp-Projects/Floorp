@@ -52,7 +52,7 @@ function clearClipboard() {
   // Empty transferables may cause crashes, so just add an unknown type.
   const TYPE = "text/x-moz-place-empty";
   transf.addDataFlavor(TYPE);
-  transf.setTransferData(TYPE, {}, 0);
+  transf.setTransferData(TYPE, {});
   SpecialPowers.Services.clipboard.setData(transf, null, SpecialPowers.Services.clipboard.kGlobalClipboard);
 }
 

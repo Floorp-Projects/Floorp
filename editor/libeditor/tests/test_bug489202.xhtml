@@ -41,7 +41,7 @@ function runTest() {
   var cstr = Cc["@mozilla.org/supports-string;1"]
       .createInstance(Ci.nsISupportsString);
   cstr.data = test_data;
-  trans.setTransferData("text/html", cstr, test_data.length*2);
+  trans.setTransferData("text/html", cstr);
 
   window.docShell
      .rootTreeItem

@@ -378,7 +378,7 @@ function copyImageToClipboard(data) {
   );
   xferable.init(null);
   xferable.addDataFlavor("image/png");
-  xferable.setTransferData("image/png", imgPtr, -1);
+  xferable.setTransferData("image/png", imgPtr);
 
   Services.clipboard.setData(
     xferable,

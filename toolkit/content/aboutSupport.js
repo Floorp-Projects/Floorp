@@ -1451,7 +1451,7 @@ function copyRawDataToClipboard(button) {
       ].createInstance(Ci.nsITransferable);
       transferable.init(getLoadContext());
       transferable.addDataFlavor("text/unicode");
-      transferable.setTransferData("text/unicode", str, str.data.length * 2);
+      transferable.setTransferData("text/unicode", str);
       Services.clipboard.setData(
         transferable,
         null,
@@ -1501,12 +1501,12 @@ async function copyContentsToClipboard() {
   // Add the HTML flavor.
   transferable.addDataFlavor("text/html");
   ssHtml.data = dataHtml;
-  transferable.setTransferData("text/html", ssHtml, dataHtml.length * 2);
+  transferable.setTransferData("text/html", ssHtml);
 
   // Add the plain text flavor.
   transferable.addDataFlavor("text/unicode");
   ssText.data = dataText;
-  transferable.setTransferData("text/unicode", ssText, dataText.length * 2);
+  transferable.setTransferData("text/unicode", ssText);
 
   // Store the data into the clipboard.
   Services.clipboard.setData(

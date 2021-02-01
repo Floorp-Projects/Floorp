@@ -525,7 +525,7 @@ function runTest(test) {
                           .createInstance(SpecialPowers.Ci.nsISupportsString);
   data.data = test.payload;
   trans.addDataFlavor("text/html");
-  trans.setTransferData("text/html", data, data.data.length * 2);
+  trans.setTransferData("text/html", data);
 
   if ("indirectPaste" in test) {
     var editor, win;

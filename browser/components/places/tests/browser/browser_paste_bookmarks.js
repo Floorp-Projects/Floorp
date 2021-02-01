@@ -239,8 +239,7 @@ add_task(async function paste_from_different_instance() {
   xferable.addDataFlavor(PlacesUtils.TYPE_X_MOZ_PLACE);
   xferable.setTransferData(
     PlacesUtils.TYPE_X_MOZ_PLACE,
-    PlacesUtils.toISupportsString(data),
-    data.length * 2
+    PlacesUtils.toISupportsString(data)
   );
 
   Services.clipboard.setData(xferable, null, Ci.nsIClipboard.kGlobalClipboard);
@@ -289,8 +288,7 @@ add_task(async function paste_separator_from_different_instance() {
   xferable.addDataFlavor(PlacesUtils.TYPE_X_MOZ_PLACE);
   xferable.setTransferData(
     PlacesUtils.TYPE_X_MOZ_PLACE,
-    PlacesUtils.toISupportsString(data),
-    data.length * 2
+    PlacesUtils.toISupportsString(data)
   );
 
   Services.clipboard.setData(xferable, null, Ci.nsIClipboard.kGlobalClipboard);

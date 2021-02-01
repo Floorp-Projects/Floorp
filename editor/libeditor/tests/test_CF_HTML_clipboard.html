@@ -71,7 +71,7 @@ function copyCF_HTML(cfhtml, success, failure) {
   var data = Cc["@mozilla.org/supports-cstring;1"].
              createInstance(Ci.nsISupportsCString);
   data.data = cfhtml;
-  trans.setTransferData(CF_HTML, data, cfhtml.length);
+  trans.setTransferData(CF_HTML, data);
   cb.setData(trans, null, cb.kGlobalClipboard);
   copyCF_HTML_worker(success, failure);
 }

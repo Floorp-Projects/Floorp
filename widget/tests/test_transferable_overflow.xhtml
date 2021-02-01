@@ -24,7 +24,7 @@
   function assignTextToTransferable(transferable, string) {
     var Suppstr = nsSupportsString();
     Suppstr.data = string;
-    transferable.setTransferData("text/unicode", Suppstr, string.length * 2);
+    transferable.setTransferData("text/unicode", Suppstr);
   }
 
   function checkTransferableText(transferable, expectedString, description) {

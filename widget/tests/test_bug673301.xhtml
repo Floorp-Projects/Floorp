@@ -24,11 +24,11 @@ var transferable = Cc['@mozilla.org/widget/transferable;1']
 transferable.init(getLoadContext());
 
 transferable.addDataFlavor("text/unicode");
-transferable.setTransferData("text/unicode", document, 4);
+transferable.setTransferData("text/unicode", document);
 
 Services.clipboard.setData(transferable, null, Ci.nsIClipboard.kGlobalClipboard);
 
-transferable.setTransferData("text/unicode", null, 0);
+transferable.setTransferData("text/unicode", null);
 
 SimpleTest.ok(true, "Didn't crash setting non-text data for text/unicode type");
 </script>

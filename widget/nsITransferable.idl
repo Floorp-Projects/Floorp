@@ -66,8 +66,8 @@ interface nsIPrincipal;
   * nsIFlavorDataProvider allows a flavor to 'promise' data later,
   * supplying the data lazily.
   *
-  * To use it, call setTransferData, passing the flavor string,
-  * a nsIFlavorDataProvider QI'd to nsISupports, and a data size of 0.
+  * To use it, call setTransferData, passing the flavor string and
+  * a nsIFlavorDataProvider QI'd to nsISupports.
   *
   * When someone calls getTransferData later, if the data size is
   * stored as 0, the nsISupports will be QI'd to nsIFlavorDataProvider,
@@ -158,7 +158,6 @@ interface nsITransferable : nsISupports
     * @param  aFlavor the flavor of data that is being set
     * @param  aData the data, either some variant of class in nsISupportsPrimitives.idl,
     *         an nsIFile, or an nsIFlavorDataProvider (see above)
-    * @param  aDataLen the length of the data, or 0 if passing a nsIFlavorDataProvider
     */
   void setTransferData(in string aFlavor, in nsISupports aData);
 
