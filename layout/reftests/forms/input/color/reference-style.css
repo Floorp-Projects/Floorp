@@ -27,8 +27,8 @@ button.input-color {
   }
 
   div.input-color-swatch {
-    height: 22px; /* for a real ::-moz-color-swatch, its 100% height computes to
-                     the widget-supplied min-height (32px) minus
-                     padding+border (10px) */
+    height: 20px; /* for a real ::-moz-color-swatch, its 100% height computes to
+                     the widget-supplied min-height (32px) minus padding
+                     (4px each side) minus border (2px each side) */
   }
 }
