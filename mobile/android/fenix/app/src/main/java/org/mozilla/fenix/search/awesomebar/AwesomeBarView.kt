@@ -42,7 +42,8 @@ import mozilla.components.browser.search.SearchEngine as LegacySearchEngine
 class AwesomeBarView(
     private val activity: HomeActivity,
     val interactor: AwesomeBarInteractor,
-    val view: BrowserAwesomeBar
+    val view: BrowserAwesomeBar,
+    private val fromHomeFragment: Boolean
 ) {
     private val sessionProvider: SessionSuggestionProvider
     private val historyStorageProvider: HistoryStorageSuggestionProvider
@@ -111,7 +112,7 @@ class AwesomeBarView(
                 selectTabUseCase,
                 components.core.icons,
                 getDrawable(activity, R.drawable.ic_search_results_tab),
-                excludeSelectedSession = true
+                excludeSelectedSession = !fromHomeFragment
             )
 
         historyStorageProvider =

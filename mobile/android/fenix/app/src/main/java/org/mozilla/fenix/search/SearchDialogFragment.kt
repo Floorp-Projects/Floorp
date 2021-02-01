@@ -116,6 +116,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         }
     }
 
+    @SuppressWarnings("LongMethod")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -172,10 +173,13 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         val awesomeBar = view.awesome_bar
         awesomeBar.customizeForBottomToolbar = requireContext().settings().shouldUseBottomToolbar
 
+        val fromHomeFragment =
+            findNavController().previousBackStackEntry?.destination?.id == R.id.homeFragment
         awesomeBarView = AwesomeBarView(
             activity,
             interactor,
-            awesomeBar
+            awesomeBar,
+            fromHomeFragment
         )
 
         view.awesome_bar.setOnTouchListener { _, _ ->
@@ -191,7 +195,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
         requireComponents.core.engine.speculativeCreateSession(isPrivate)
 
-        if (findNavController().previousBackStackEntry?.destination?.id == R.id.homeFragment) {
+        if (fromHomeFragment) {
             // When displayed above home, dispatches the touch events to scrim area to the HomeFragment
             view.search_wrapper.background = ColorDrawable(Color.TRANSPARENT)
             dialog?.window?.decorView?.setOnTouchListener { _, event ->
