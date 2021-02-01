@@ -10,15 +10,17 @@ const CHROME_DOMAIN = "chrome://mochitests/content";
 requestLongerTimeout(2);
 
 function WindowObserver(count) {
+  let windows = [];
   return new Promise(resolve => {
     let windowObserver = function(aSubject, aTopic, aData) {
       if (aTopic != "domwindowopened") {
         return;
       }
 
+      windows.push(aSubject);
       if (--count == 0) {
         Services.ww.unregisterNotification(windowObserver);
-        resolve();
+        resolve(windows);
       }
     };
     Services.ww.registerNotification(windowObserver);
@@ -571,5 +573,41 @@ add_task(async function test_bug_1685056() {
     tab.linkedBrowser
   );
 
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_bug_1689853() {
+  info("window.open() from a js bookmark (LOAD_FLAGS_ALLOW_POPUPS)");
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.block_multiple_popups", true],
+      ["dom.disable_open_during_load", true],
+    ],
+  });
+
+  let tab = BrowserTestUtils.addTab(
+    gBrowser,
+    TEST_DOMAIN + TEST_PATH + "browser_multiple_popups.html"
+  );
+  gBrowser.selectedTab = tab;
+
+  let browser = gBrowser.getBrowserForTab(tab);
+  await BrowserTestUtils.browserLoaded(browser);
+
+  let obs = new WindowObserver(1);
+
+  const URI =
+    "javascript:void(window.open('empty.html', '_blank', 'width=100,height=100'));";
+  window.openTrustedLinkIn(URI, "current", {
+    allowPopups: true,
+    inBackground: false,
+    allowInheritPrincipal: true,
+  });
+
+  let windows = await obs;
+  ok(true, "We had 1 popup.");
+
+  windows[0].close();
   BrowserTestUtils.removeTab(tab);
 });
