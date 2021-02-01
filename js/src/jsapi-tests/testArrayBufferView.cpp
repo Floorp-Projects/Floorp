@@ -83,7 +83,7 @@ static JSObject* Create(JSContext* cx) {
 }
 
 template <typename T, JSObject* CreateViewType(JSContext* cx),
-          JSObject* GetObjectAs(JSObject* obj, uint32_t* length,
+          JSObject* GetObjectAs(JSObject* obj, size_t* length,
                                 bool* isSharedMemory, T** data),
           js::Scalar::Type ExpectedType, uint32_t ExpectedLength,
           uint32_t ExpectedByteLength>
@@ -104,7 +104,7 @@ bool TestViewType(JSContext* cx) {
 
     T* data2;
     bool shared2;
-    uint32_t len;
+    size_t len;
     CHECK(obj == GetObjectAs(obj, &len, &shared2, &data2));
     CHECK(data1 == data2);
     CHECK(shared1 == shared2);

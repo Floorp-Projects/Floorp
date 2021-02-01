@@ -2672,14 +2672,14 @@ struct ExternalTypeOf<uint8_clamped> {
           [TypedArrayObjectTemplate<NativeType>::ArrayTypeID()];             \
                                                                              \
   JS_FRIEND_API JSObject* JS_GetObjectAs##Name##Array(                       \
-      JSObject* obj, uint32_t* length, bool* isShared,                       \
+      JSObject* obj, size_t* length, bool* isShared,                         \
       ExternalTypeOf<NativeType>::Type** data) {                             \
     obj = js::Unwrap##Name##Array(obj);                                      \
     if (!obj) {                                                              \
       return nullptr;                                                        \
     }                                                                        \
     TypedArrayObject* tarr = &obj->as<TypedArrayObject>();                   \
-    *length = tarr->length().deprecatedGetUint32();                          \
+    *length = tarr->length().get();                                          \
     *isShared = tarr->isSharedMemory();                                      \
     *data = static_cast<ExternalTypeOf<NativeType>::Type*>(                  \
         tarr->dataPointerEither().unwrap(                                    \

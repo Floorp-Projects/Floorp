@@ -54,12 +54,17 @@ nsresult GetWriteData(JSContext* aCx, JS::Handle<JS::Value> aValue,
     if (JS::IsArrayBufferObject(obj) ||
         (isView = JS_IsArrayBufferViewObject(obj))) {
       uint8_t* data;
-      uint32_t length;
+      size_t length;
       bool unused;
       if (isView) {
         JS_GetObjectAsArrayBufferView(obj, &length, &unused, &data);
       } else {
         JS::GetObjectAsArrayBuffer(obj, &length, &data);
+      }
+
+      // Throw for large buffers to prevent truncation.
+      if (length > INT32_MAX) {
+        return NS_ERROR_ILLEGAL_VALUE;
       }
 
       if (NS_WARN_IF(!aData.Assign(reinterpret_cast<char*>(data), length,

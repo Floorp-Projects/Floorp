@@ -246,41 +246,41 @@ extern JS_FRIEND_API void GetArrayBufferViewLengthAndData(JSObject* obj,
  * object on success, filling both outparameters.
  */
 extern JS_FRIEND_API JSObject* JS_GetObjectAsInt8Array(JSObject* obj,
-                                                       uint32_t* length,
+                                                       size_t* length,
                                                        bool* isSharedMemory,
                                                        int8_t** data);
 extern JS_FRIEND_API JSObject* JS_GetObjectAsUint8Array(JSObject* obj,
-                                                        uint32_t* length,
+                                                        size_t* length,
                                                         bool* isSharedMemory,
                                                         uint8_t** data);
 extern JS_FRIEND_API JSObject* JS_GetObjectAsUint8ClampedArray(
-    JSObject* obj, uint32_t* length, bool* isSharedMemory, uint8_t** data);
+    JSObject* obj, size_t* length, bool* isSharedMemory, uint8_t** data);
 extern JS_FRIEND_API JSObject* JS_GetObjectAsInt16Array(JSObject* obj,
-                                                        uint32_t* length,
+                                                        size_t* length,
                                                         bool* isSharedMemory,
                                                         int16_t** data);
 extern JS_FRIEND_API JSObject* JS_GetObjectAsUint16Array(JSObject* obj,
-                                                         uint32_t* length,
+                                                         size_t* length,
                                                          bool* isSharedMemory,
                                                          uint16_t** data);
 extern JS_FRIEND_API JSObject* JS_GetObjectAsInt32Array(JSObject* obj,
-                                                        uint32_t* length,
+                                                        size_t* length,
                                                         bool* isSharedMemory,
                                                         int32_t** data);
 extern JS_FRIEND_API JSObject* JS_GetObjectAsUint32Array(JSObject* obj,
-                                                         uint32_t* length,
+                                                         size_t* length,
                                                          bool* isSharedMemory,
                                                          uint32_t** data);
 extern JS_FRIEND_API JSObject* JS_GetObjectAsFloat32Array(JSObject* obj,
-                                                          uint32_t* length,
+                                                          size_t* length,
                                                           bool* isSharedMemory,
                                                           float** data);
 extern JS_FRIEND_API JSObject* JS_GetObjectAsFloat64Array(JSObject* obj,
-                                                          uint32_t* length,
+                                                          size_t* length,
                                                           bool* isSharedMemory,
                                                           double** data);
 extern JS_FRIEND_API JSObject* JS_GetObjectAsArrayBufferView(
-    JSObject* obj, uint32_t* length, bool* isSharedMemory, uint8_t** data);
+    JSObject* obj, size_t* length, bool* isSharedMemory, uint8_t** data);
 
 /*
  * Get the type of elements in a typed array, or MaxTypedArrayViewType if a

@@ -197,7 +197,7 @@ extern JS_PUBLIC_API JSObject* UnwrapArrayBuffer(JSObject* obj);
  * |*data|.
  */
 extern JS_PUBLIC_API JSObject* GetObjectAsArrayBuffer(JSObject* obj,
-                                                      uint32_t* length,
+                                                      size_t* length,
                                                       uint8_t** data);
 
 /**

@@ -260,7 +260,7 @@ JS_FRIEND_API size_t JS_GetArrayBufferViewByteOffset(JSObject* obj) {
 }
 
 JS_FRIEND_API JSObject* JS_GetObjectAsArrayBufferView(JSObject* obj,
-                                                      uint32_t* length,
+                                                      size_t* length,
                                                       bool* isSharedMemory,
                                                       uint8_t** data) {
   obj = obj->maybeUnwrapIf<ArrayBufferViewObject>();
@@ -268,13 +268,7 @@ JS_FRIEND_API JSObject* JS_GetObjectAsArrayBufferView(JSObject* obj,
     return nullptr;
   }
 
-  size_t len;
-  js::GetArrayBufferViewLengthAndData(obj, &len, isSharedMemory, data);
-
-  // TODO: change outparam to size_t.
-  MOZ_RELEASE_ASSERT(len <= UINT32_MAX);
-  *length = len;
-
+  js::GetArrayBufferViewLengthAndData(obj, length, isSharedMemory, data);
   return obj;
 }
 

@@ -5999,7 +5999,7 @@ static bool EncodeAsUtf8InBuffer(JSContext* cx, unsigned argc, Value* vp) {
   }
   array->ensureDenseInitializedLength(0, 2);
 
-  uint32_t length;
+  size_t length;
   bool isSharedMemory;
   uint8_t* data;
   if (!args[1].isObject() ||
