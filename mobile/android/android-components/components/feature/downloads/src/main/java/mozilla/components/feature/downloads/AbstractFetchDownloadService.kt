@@ -12,6 +12,7 @@ import android.app.Notification
 import android.app.Service
 import android.content.ActivityNotFoundException
 import android.content.BroadcastReceiver
+import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
@@ -21,10 +22,12 @@ import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
+import android.os.Bundle
 import android.os.Environment
 import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
+import android.provider.MediaStore.setIncludePending
 import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.annotation.ColorRes
@@ -83,7 +86,7 @@ import kotlin.random.Random
  *
  * To use this service, you must create a subclass in your application and add it to the manifest.
  */
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("TooManyFunctions", "LargeClass", "ComplexMethod")
 abstract class AbstractFetchDownloadService : Service() {
     protected abstract val store: BrowserStore
 
@@ -858,8 +861,6 @@ abstract class AbstractFetchDownloadService : Service() {
         } ?: download
     }
 
-    @Suppress("DEPRECATION")
-    // Deprecation will be handled in https://github.com/mozilla-mobile/android-components/issues/8515
     @TargetApi(Build.VERSION_CODES.Q)
     @VisibleForTesting
     internal fun useFileStreamScopedStorage(download: DownloadState, block: (OutputStream) -> Unit) {
@@ -871,19 +872,37 @@ abstract class AbstractFetchDownloadService : Service() {
         }
 
         val resolver = applicationContext.contentResolver
-        val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+
+        val queryProjection = arrayOf(MediaStore.Downloads._ID)
+        val querySelection = "${MediaStore.Downloads.DISPLAY_NAME} = ?"
+        val querySelectionArgs = arrayOf("${download.fileName}")
+
+        val queryBundle = Bundle().apply {
+            putString(ContentResolver.QUERY_ARG_SQL_SELECTION, querySelection)
+            putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, querySelectionArgs)
+        }
 
         // Query if we have a pending download with the same name. This can happen
         // if a download was interrupted, failed or cancelled before the file was
         // written to disk. Our logic above will have generated a unique file name
         // based on existing files on the device, but we might already have a row
         // for the download in the content resolver.
+
+        val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        val queryCollection =
+            if (SDK_INT >= Build.VERSION_CODES.R) {
+                queryBundle.putInt(MediaStore.QUERY_ARG_MATCH_PENDING, MediaStore.MATCH_INCLUDE)
+                collection
+            } else {
+                @Suppress("DEPRECATION")
+                setIncludePending(collection)
+            }
+
         var downloadUri: Uri? = null
         resolver.query(
-            MediaStore.setIncludePending(collection),
-            arrayOf(MediaStore.Downloads._ID),
-            "${MediaStore.Downloads.DISPLAY_NAME} = ?",
-            arrayOf("${download.fileName}"),
+            queryCollection,
+            queryProjection,
+            queryBundle,
             null
         )?.use {
             if (it.count > 0) {
