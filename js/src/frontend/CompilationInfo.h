@@ -78,6 +78,8 @@ struct ScopeContext {
   // Used only for eval.
   mozilla::Maybe<EnclosingLexicalBindingCache> enclosingLexicalBindingCache_;
 
+  uint32_t enclosingScopeEnvironmentChainLength = 0;
+
   // Eval and arrow scripts also inherit the "this" environment -- used by
   // `super` expressions -- from their enclosing script. We count the number of
   // environment hops needed to get from enclosing scope to the nearest

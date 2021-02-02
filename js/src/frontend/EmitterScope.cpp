@@ -49,7 +49,8 @@ bool EmitterScope::checkEnvironmentChainLength(BytecodeEmitter* bce) {
   if (EmitterScope* emitterScope = enclosing(&bce)) {
     hops = emitterScope->environmentChainLength_;
   } else if (bce->stencil.input.enclosingScope) {
-    hops = bce->stencil.input.enclosingScope->environmentChainLength();
+    hops =
+        bce->compilationState.scopeContext.enclosingScopeEnvironmentChainLength;
   } else {
     // If we're compiling module, enclosingScope is nullptr and it means empty
     // global scope.
