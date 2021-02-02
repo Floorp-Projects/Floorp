@@ -1412,6 +1412,13 @@ class StaticStrings {
 
   static const SmallCharTable toSmallCharTable;
 
+  static constexpr Latin1Char firstCharOfLength2(size_t s) {
+    return fromSmallChar(s >> SMALL_CHAR_BITS);
+  }
+  static constexpr Latin1Char secondCharOfLength2(size_t s) {
+    return fromSmallChar(s & SMALL_CHAR_MASK);
+  }
+
   static MOZ_ALWAYS_INLINE size_t getLength2Index(char16_t c1, char16_t c2) {
     MOZ_ASSERT(fitsInSmallChar(c1));
     MOZ_ASSERT(fitsInSmallChar(c2));

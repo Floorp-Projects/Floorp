@@ -590,8 +590,8 @@ class WellKnownParserAtoms_ROM {
 
   static constexpr void init(StaticParserAtomEntry<2>& entry, size_t i) {
     size_t len = 2;
-    char16_t buf[] = {StaticStrings::fromSmallChar(i >> 6),
-                      StaticStrings::fromSmallChar(i & 0x003F),
+    char16_t buf[] = {StaticStrings::firstCharOfLength2(i),
+                      StaticStrings::secondCharOfLength2(i),
                       /* null-terminator */ 0};
     entry.setHashAndLength(mozilla::HashString(buf), len);
     entry.setWellKnownOrStatic();
