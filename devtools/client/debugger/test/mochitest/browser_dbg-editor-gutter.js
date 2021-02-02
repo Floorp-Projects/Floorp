@@ -20,13 +20,13 @@ add_task(async function() {
   clickGutter(dbg, 4);
   await waitForDispatch(dbg, "SET_BREAKPOINT");
   is(dbg.selectors.getBreakpointCount(), 1, "One breakpoint exists");
-  await assertEditorBreakpoint(dbg, 4, true);
+  await assertBreakpoint(dbg, 4);
 
   // Make sure clicking at the same place removes the icon.
   clickGutter(dbg, 4);
   await waitForDispatch(dbg, "REMOVE_BREAKPOINT");
   is(dbg.selectors.getBreakpointCount(), 0, "No breakpoints exist");
-  await assertEditorBreakpoint(dbg, 4, false);
+  await assertNoBreakpoint(dbg, 4);
 });
 
 add_task(async function() {
@@ -54,7 +54,7 @@ add_task(async function() {
   clickGutter(dbg, 4);
   await waitForDispatch(dbg, "SET_BREAKPOINT");
   is(dbg.selectors.getBreakpointCount(), 1, "One breakpoint exists");
-  await assertEditorBreakpoint(dbg, 4, true);
+  await assertBreakpoint(dbg, 4);
 
   // click on test
   invokeInTab("test");
