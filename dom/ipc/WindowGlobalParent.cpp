@@ -300,11 +300,6 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvLoadURI(
         ("ParentIPC: Trying to send a message with dead or detached context"));
     return IPC_OK();
   }
-
-  if (net::SchemeIsJavascript(aLoadState->URI())) {
-    return IPC_FAIL(this, "Illegal cross-process javascript: load attempt");
-  }
-
   CanonicalBrowsingContext* targetBC = aTargetBC.get_canonical();
 
   // FIXME: For cross-process loads, we should double check CanAccess() for the
@@ -333,11 +328,6 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvInternalLoad(
         ("ParentIPC: Trying to send a message with dead or detached context"));
     return IPC_OK();
   }
-
-  if (net::SchemeIsJavascript(aLoadState->URI())) {
-    return IPC_FAIL(this, "Illegal cross-process javascript: load attempt");
-  }
-
   CanonicalBrowsingContext* targetBC =
       aLoadState->TargetBrowsingContext().get_canonical();
 
