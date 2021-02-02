@@ -24,9 +24,10 @@
 #include "vm/PlainObject.h"       // PlainObject
 #include "vm/Printer.h"           // js::Fprinter
 
-#include "gc/ObjectKind-inl.h"  // gc::GetGCObjectKind
-#include "vm/JSAtom-inl.h"      // AtomToId
-#include "vm/JSObject-inl.h"    // NewBuiltinClassInstance
+#include "gc/ObjectKind-inl.h"    // gc::GetGCObjectKind
+#include "vm/JSAtom-inl.h"        // AtomToId
+#include "vm/JSObject-inl.h"      // NewBuiltinClassInstance
+#include "vm/NativeObject-inl.h"  // AddDataPropertyNonDelegate
 
 namespace js {
 
@@ -61,28 +62,29 @@ static void InterpretObjLiteralValue(
   }
 }
 
-static JSObject* InterpretObjLiteralObj(
-    JSContext* cx, const frontend::CompilationAtomCache& atomCache,
-    const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags,
-    uint32_t propertyCount) {
+enum class PropertySetKind {
+  UniqueNames,
+  Normal,
+};
+
+template <PropertySetKind kind>
+bool InterpretObjLiteralObj(JSContext* cx, HandlePlainObject obj,
+                            const frontend::CompilationAtomCache& atomCache,
+                            const mozilla::Span<const uint8_t> literalInsns,
+                            ObjLiteralFlags flags) {
   bool singleton = flags.contains(ObjLiteralFlag::Singleton);
 
   ObjLiteralReader reader(literalInsns);
   ObjLiteralInsn insn;
 
-  gc::AllocKind allocKind = gc::GetGCObjectKind(propertyCount);
-  RootedPlainObject obj(
-      cx, NewBuiltinClassInstance<PlainObject>(cx, allocKind, TenuredObject));
-  if (!obj) {
-    return nullptr;
-  }
-
   RootedId propId(cx);
   RootedValue propVal(cx);
   while (reader.readInsn(&insn)) {
     MOZ_ASSERT(insn.isValid());
+    MOZ_ASSERT_IF(kind == PropertySetKind::UniqueNames,
+                  !insn.getKey().isArrayIndex());
 
-    if (insn.getKey().isArrayIndex()) {
+    if (kind == PropertySetKind::Normal && insn.getKey().isArrayIndex()) {
       propId = INT_TO_JSID(insn.getKey().getArrayIndex());
     } else {
       JSAtom* jsatom =
@@ -97,11 +99,42 @@ static JSObject* InterpretObjLiteralObj(
       propVal.setUndefined();
     }
 
-    if (!NativeDefineDataProperty(cx, obj, propId, propVal, JSPROP_ENUMERATE)) {
+    if (kind == PropertySetKind::UniqueNames) {
+      if (!AddDataPropertyNonDelegate(cx, obj, propId, propVal)) {
+        return false;
+      }
+    } else {
+      if (!NativeDefineDataProperty(cx, obj, propId, propVal,
+                                    JSPROP_ENUMERATE)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+static JSObject* InterpretObjLiteralObj(
+    JSContext* cx, const frontend::CompilationAtomCache& atomCache,
+    const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags,
+    uint32_t propertyCount) {
+  gc::AllocKind allocKind = gc::GetGCObjectKind(propertyCount);
+  RootedPlainObject obj(
+      cx, NewBuiltinClassInstance<PlainObject>(cx, allocKind, TenuredObject));
+  if (!obj) {
+    return nullptr;
+  }
+
+  if (!flags.contains(ObjLiteralFlag::HasIndexOrDuplicatePropName)) {
+    if (!InterpretObjLiteralObj<PropertySetKind::UniqueNames>(
+            cx, obj, atomCache, literalInsns, flags)) {
+      return nullptr;
+    }
+  } else {
+    if (!InterpretObjLiteralObj<PropertySetKind::Normal>(cx, obj, atomCache,
+                                                         literalInsns, flags)) {
       return nullptr;
     }
   }
-
   return obj;
 }
 
