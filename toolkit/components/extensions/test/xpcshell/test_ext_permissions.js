@@ -34,13 +34,35 @@ Services.prefs.setBoolPref(
   false
 );
 
+let sawPrompt = false;
+let acceptPrompt = false;
+const observer = {
+  observe(subject, topic, data) {
+    if (topic == "webextension-optional-permission-prompt") {
+      sawPrompt = true;
+      let { resolve } = subject.wrappedJSObject;
+      resolve(acceptPrompt);
+    }
+  },
+};
+
 add_task(async function setup() {
   // Bug 1646182: Force ExtensionPermissions to run in rkv mode, the legacy
   // storage mode will run in xpcshell-legacy-ep.ini
   await ExtensionPermissions._uninit();
 
-  optionalPermissionsPromptHandler.init();
-
+  Services.prefs.setBoolPref(
+    "extensions.webextOptionalPermissionPrompts",
+    true
+  );
+  Services.obs.addObserver(observer, "webextension-optional-permission-prompt");
+  registerCleanupFunction(() => {
+    Services.obs.removeObserver(
+      observer,
+      "webextension-optional-permission-prompt"
+    );
+    Services.prefs.clearUserPref("extensions.webextOptionalPermissionPrompts");
+  });
   await AddonTestUtils.promiseStartupManager();
   AddonTestUtils.usePrivilegedSignatures = false;
 });
@@ -229,7 +251,7 @@ add_task(async function test_permissions() {
     );
 
     // Check request() when the prompt is canceled.
-    optionalPermissionsPromptHandler.acceptPrompt = false;
+    acceptPrompt = false;
     result = await call("request", { permissions: [perm] });
     equal(result.status, "success", "request() returned cleanly");
     equal(
@@ -242,7 +264,7 @@ add_task(async function test_permissions() {
     equal(result, false, "Rejected permission was not granted");
 
     // Call request() and accept the prompt
-    optionalPermissionsPromptHandler.acceptPrompt = true;
+    acceptPrompt = true;
     let allOptional = {
       permissions: OPTIONAL_PERMISSIONS,
       origins: OPTIONAL_ORIGINS,
@@ -469,12 +491,12 @@ add_task(async function test_alreadyGranted() {
     await extension.awaitMessage("page-ready");
 
     async function checkRequest(arg, expectPrompt, msg) {
-      optionalPermissionsPromptHandler.sawPrompt = false;
+      sawPrompt = false;
       extension.sendMessage("request", arg);
       let result = await extension.awaitMessage("request.result");
       ok(result, "request() call succeeded");
       equal(
-        optionalPermissionsPromptHandler.sawPrompt,
+        sawPrompt,
         expectPrompt,
         `Got ${expectPrompt ? "" : "no "}permission prompt for ${msg}`
       );
