@@ -214,3 +214,50 @@ TEST(FOG, TestCppTimingDistWorks)
   }
   ASSERT_EQ(sampleCount, (uint64_t)2);
 }
+
+TEST(FOG, TestLabeledBooleanWorks)
+{
+  ASSERT_EQ(mozilla::Nothing(),
+            test_only::mabels_like_balloons.Get("hot_air"_ns).TestGetValue());
+  test_only::mabels_like_balloons.Get("hot_air"_ns).Set(true);
+  test_only::mabels_like_balloons.Get("helium"_ns).Set(false);
+  ASSERT_EQ(
+      true,
+      test_only::mabels_like_balloons.Get("hot_air"_ns).TestGetValue().ref());
+  ASSERT_EQ(
+      false,
+      test_only::mabels_like_balloons.Get("helium"_ns).TestGetValue().ref());
+}
+
+TEST(FOG, TestLabeledCounterWorks)
+{
+  ASSERT_EQ(mozilla::Nothing(),
+            test_only::mabels_kitchen_counters.Get("marble"_ns).TestGetValue());
+  test_only::mabels_kitchen_counters.Get("marble"_ns).Add(1);
+  test_only::mabels_kitchen_counters.Get("laminate"_ns).Add(2);
+  ASSERT_EQ(
+      1,
+      test_only::mabels_kitchen_counters.Get("marble"_ns).TestGetValue().ref());
+  ASSERT_EQ(2, test_only::mabels_kitchen_counters.Get("laminate"_ns)
+                   .TestGetValue()
+                   .ref());
+}
+
+TEST(FOG, TestLabeledStringWorks)
+{
+  ASSERT_EQ(mozilla::Nothing(),
+            test_only::mabels_balloon_strings.Get("twine"_ns).TestGetValue());
+  test_only::mabels_balloon_strings.Get("twine"_ns).Set("seems acceptable"_ns);
+  test_only::mabels_balloon_strings.Get("parachute_cord"_ns)
+      .Set("preferred"_ns);
+  ASSERT_STREQ("seems acceptable",
+               test_only::mabels_balloon_strings.Get("twine"_ns)
+                   .TestGetValue()
+                   .ref()
+                   .get());
+  ASSERT_STREQ("preferred",
+               test_only::mabels_balloon_strings.Get("parachute_cord"_ns)
+                   .TestGetValue()
+                   .ref()
+                   .get());
+}

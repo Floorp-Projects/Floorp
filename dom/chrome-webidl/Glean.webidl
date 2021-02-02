@@ -26,3 +26,20 @@ interface GleanImpl {
    */
   getter GleanCategory (DOMString identifier);
 };
+
+[ChromeOnly, Exposed=Window]
+interface GleanLabeled {
+  /**
+   * Get a specific metric for a given label.
+   *
+   * If a set of acceptable labels were specified in the `metrics.yaml` file,
+   * and the given label is not in the set, it will be recorded under the
+   * special `OTHER_LABEL` label.
+   *
+   * If a set of acceptable labels was not specified in the `metrics.yaml` file,
+   * only the first 16 unique labels will be used.
+   * After that, any additional labels will be recorded under the special
+   * `OTHER_LABEL` label.
+   */
+  getter nsISupports (DOMString identifier);
+};

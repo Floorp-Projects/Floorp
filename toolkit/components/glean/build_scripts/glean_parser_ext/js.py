@@ -71,12 +71,26 @@ def metric_identifier(category, metric_name):
     return f"{category}.{util.camelize(metric_name)}"
 
 
-def type_name(type):
+def type_name(obj):
     """
     Returns the C++ type to use for a given metric object.
     """
 
-    return "Glean" + util.Camelize(type)
+    if getattr(obj, "labeled", False):
+        return "GleanLabeled"
+    return "Glean" + util.Camelize(obj.type)
+
+
+def subtype_name(obj):
+    """
+    Returns the subtype name for labeled metrics.
+    (e.g. 'boolean' for 'labeled_boolean').
+    Returns "" for non-labeled metrics.
+    """
+    if getattr(obj, "labeled", False):
+        type = obj.type[8:]  # strips "labeled_" off the front
+        return "Glean" + util.Camelize(type)
+    return ""
 
 
 def output_js(objs, output_fd, options={}):
@@ -118,7 +132,6 @@ def write_metrics(objs, output_fd, template_filename):
 
     template = util.get_jinja2_template(
         template_filename,
-        filters=(("type_name", type_name),),
     )
 
     assert (
@@ -142,11 +155,12 @@ def write_metrics(objs, output_fd, template_filename):
 
         for metric in objs.values():
             identifier = metric_identifier(category_name, metric.name)
-            if metric.type in metric_type_ids:
-                type_id = metric_type_ids[metric.type]
+            metric_type_tuple = (type_name(metric), subtype_name(metric))
+            if metric_type_tuple in metric_type_ids:
+                type_id, _ = metric_type_ids[metric_type_tuple]
             else:
                 type_id = len(metric_type_ids) + 1
-                metric_type_ids[metric.type] = type_id
+                metric_type_ids[metric_type_tuple] = (type_id, metric.type)
 
             idx = metric_string_table.stringIndex(identifier)
             metric_id = get_metric_id(metric)

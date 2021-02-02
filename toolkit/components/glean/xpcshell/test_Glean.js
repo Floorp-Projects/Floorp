@@ -219,3 +219,90 @@ add_task(async function test_fog_timing_distribution_works() {
     "Only two buckets with samples"
   );
 });
+
+add_task(async function test_fog_labeled_boolean_works() {
+  Assert.equal(
+    undefined,
+    Glean.testOnly.mabelsLikeBalloons.at_parties.testGetValue(),
+    "New labels with no values should return undefined"
+  );
+  Glean.testOnly.mabelsLikeBalloons.at_parties.set(true);
+  Glean.testOnly.mabelsLikeBalloons.at_funerals.set(false);
+  Assert.equal(
+    true,
+    Glean.testOnly.mabelsLikeBalloons.at_parties.testGetValue()
+  );
+  Assert.equal(
+    false,
+    Glean.testOnly.mabelsLikeBalloons.at_funerals.testGetValue()
+  );
+  // What about invalid/__other__?
+  Assert.equal(
+    undefined,
+    Glean.testOnly.mabelsLikeBalloons.__other__.testGetValue()
+  );
+  Glean.testOnly.mabelsLikeBalloons.InvalidLabel.set(true);
+  Assert.equal(
+    true,
+    Glean.testOnly.mabelsLikeBalloons.__other__.testGetValue()
+  );
+  // TODO: Test that we have the right number and type of errors (bug 1683171)
+});
+
+add_task(async function test_fog_labeled_counter_works() {
+  Assert.equal(
+    undefined,
+    Glean.testOnly.mabelsKitchenCounters.near_the_sink.testGetValue(),
+    "New labels with no values should return undefined"
+  );
+  Glean.testOnly.mabelsKitchenCounters.near_the_sink.add(1);
+  Glean.testOnly.mabelsKitchenCounters.with_junk_on_them.add(2);
+  Assert.equal(
+    1,
+    Glean.testOnly.mabelsKitchenCounters.near_the_sink.testGetValue()
+  );
+  Assert.equal(
+    2,
+    Glean.testOnly.mabelsKitchenCounters.with_junk_on_them.testGetValue()
+  );
+  // What about invalid/__other__?
+  Assert.equal(
+    undefined,
+    Glean.testOnly.mabelsKitchenCounters.__other__.testGetValue()
+  );
+  Glean.testOnly.mabelsKitchenCounters.InvalidLabel.add(1);
+  Assert.equal(
+    1,
+    Glean.testOnly.mabelsKitchenCounters.__other__.testGetValue()
+  );
+  // TODO: Test that we have the right number and type of errors (bug 1683171)
+});
+
+add_task(async function test_fog_labeled_string_works() {
+  Assert.equal(
+    undefined,
+    Glean.testOnly.mabelsBalloonStrings.colour_of_99.testGetValue(),
+    "New labels with no values should return undefined"
+  );
+  Glean.testOnly.mabelsBalloonStrings.colour_of_99.set("crimson");
+  Glean.testOnly.mabelsBalloonStrings.string_lengths.set("various");
+  Assert.equal(
+    "crimson",
+    Glean.testOnly.mabelsBalloonStrings.colour_of_99.testGetValue()
+  );
+  Assert.equal(
+    "various",
+    Glean.testOnly.mabelsBalloonStrings.string_lengths.testGetValue()
+  );
+  // What about invalid/__other__?
+  Assert.equal(
+    undefined,
+    Glean.testOnly.mabelsBalloonStrings.__other__.testGetValue()
+  );
+  Glean.testOnly.mabelsBalloonStrings.InvalidLabel.set("valid");
+  Assert.equal(
+    "valid",
+    Glean.testOnly.mabelsBalloonStrings.__other__.testGetValue()
+  );
+  // TODO: Test that we have the right number and type of errors (bug 1683171)
+});
