@@ -519,6 +519,8 @@
 
 /* Overlay Play button */
 .clickToPlay {
+  appearance: none;
+  border: none;
   min-width: var(--clickToPlay-size);
   min-height: var(--clickToPlay-size);
   border-radius: 50%;
