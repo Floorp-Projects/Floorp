@@ -152,8 +152,10 @@
   cursor: pointer;
 }
 
-*|*:any-link:-moz-focusring {
+*|*:any-link:focus-visible {
   /* Don't specify the outline-color, we should always use initial value. */
+  /* TODO(emilio): I think this is redundant, html.css does the same for all
+   * :focus-visible elements. */
   outline: 1px dotted;
 }
 
