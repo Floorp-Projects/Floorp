@@ -8,7 +8,9 @@
 #include "nsTArray.h"
 #include "nsCocoaUtils.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/WritingModes.h"
 
 #import <Cocoa/Cocoa.h>
 
@@ -182,6 +184,7 @@ void NativeKeyBindings::Init(NativeKeyBindingsType aType) {
 #undef SEL_TO_COMMAND
 
 void NativeKeyBindings::GetEditCommands(const WidgetKeyboardEvent& aEvent,
+                                        const Maybe<WritingMode>& aWritingMode,
                                         nsTArray<CommandInt>& aCommands) {
   MOZ_ASSERT(!aEvent.mFlags.mIsSynthesizedForTests);
   MOZ_ASSERT(aCommands.IsEmpty());
@@ -198,6 +201,44 @@ void NativeKeyBindings::GetEditCommands(const WidgetKeyboardEvent& aEvent,
             ("%p NativeKeyBindings::GetEditCommands, no Cocoa key down event", this));
 
     return;
+  }
+
+  if (aWritingMode.isSome() && aEvent.NeedsToRemapNavigationKey() &&
+      aWritingMode.ref().IsVertical()) {
+    NSEvent* originalEvent = cocoaEvent;
+
+    // TODO: Use KeyNameIndex rather than legacy keyCode.
+    uint32_t remappedGeckoKeyCode = aEvent.GetRemappedKeyCode(aWritingMode.ref());
+    uint32_t remappedCocoaKeyCode = 0;
+    switch (remappedGeckoKeyCode) {
+      case NS_VK_UP:
+        remappedCocoaKeyCode = kVK_UpArrow;
+        break;
+      case NS_VK_DOWN:
+        remappedCocoaKeyCode = kVK_DownArrow;
+        break;
+      case NS_VK_LEFT:
+        remappedCocoaKeyCode = kVK_LeftArrow;
+        break;
+      case NS_VK_RIGHT:
+        remappedCocoaKeyCode = kVK_RightArrow;
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Add a case for the new remapped key");
+        return;
+    }
+    unichar ch = nsCocoaUtils::ConvertGeckoKeyCodeToMacCharCode(remappedGeckoKeyCode);
+    NSString* chars = [[[NSString alloc] initWithCharacters:&ch length:1] autorelease];
+    cocoaEvent = [NSEvent keyEventWithType:[originalEvent type]
+                                  location:[originalEvent locationInWindow]
+                             modifierFlags:[originalEvent modifierFlags]
+                                 timestamp:[originalEvent timestamp]
+                              windowNumber:[originalEvent windowNumber]
+                                   context:[originalEvent context]
+                                characters:chars
+               charactersIgnoringModifiers:chars
+                                 isARepeat:[originalEvent isARepeat]
+                                   keyCode:remappedCocoaKeyCode];
   }
 
   MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info,
@@ -272,6 +313,7 @@ void NativeKeyBindings::LogEditCommands(const nsTArray<CommandInt>& aCommands,
 // static
 void NativeKeyBindings::GetEditCommandsForTests(NativeKeyBindingsType aType,
                                                 const WidgetKeyboardEvent& aEvent,
+                                                const Maybe<WritingMode>& aWritingMode,
                                                 nsTArray<CommandInt>& aCommands) {
   MOZ_DIAGNOSTIC_ASSERT(aEvent.IsTrusted());
 
@@ -281,7 +323,8 @@ void NativeKeyBindings::GetEditCommandsForTests(NativeKeyBindingsType aType,
   if (NS_WARN_IF(!instance)) {
     return;
   }
-  switch (aEvent.mKeyNameIndex) {
+  switch (aWritingMode.isSome() ? aEvent.GetRemappedKeyNameIndex(aWritingMode.ref())
+                                : aEvent.mKeyNameIndex) {
     case KEY_NAME_INDEX_USE_STRING:
       if (!aEvent.IsControl() || aEvent.IsAlt() || aEvent.IsMeta()) {
         break;

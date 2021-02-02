@@ -9,6 +9,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
@@ -16,11 +17,13 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_ui.h"
+#include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WidgetUtils.h"
+#include "mozilla/WritingModes.h"
 #include "mozilla/X11Util.h"
 #include "mozilla/XREAppData.h"
 #include "mozilla/dom/Document.h"
@@ -7427,26 +7430,6 @@ TextEventDispatcherListener* nsWindow::GetNativeTextEventDispatcherListener() {
   return mIMContext;
 }
 
-void nsWindow::GetEditCommandsRemapped(NativeKeyBindingsType aType,
-                                       const WidgetKeyboardEvent& aEvent,
-                                       nsTArray<CommandInt>& aCommands,
-                                       uint32_t aGeckoKeyCode,
-                                       uint32_t aNativeKeyCode) {
-  // If aEvent.mNativeKeyEvent is nullptr, the event was created by chrome
-  // script.  In such case, we shouldn't expose the OS settings to it.
-  // So, just ignore such events here.
-  if (!aEvent.mNativeKeyEvent) {
-    return;
-  }
-  WidgetKeyboardEvent modifiedEvent(aEvent);
-  modifiedEvent.mKeyCode = aGeckoKeyCode;
-  static_cast<GdkEventKey*>(modifiedEvent.mNativeKeyEvent)->keyval =
-      aNativeKeyCode;
-
-  NativeKeyBindings* keyBindings = NativeKeyBindings::GetInstance(aType);
-  keyBindings->GetEditCommands(modifiedEvent, aCommands);
-}
-
 bool nsWindow::GetEditCommands(NativeKeyBindingsType aType,
                                const WidgetKeyboardEvent& aEvent,
                                nsTArray<CommandInt>& aCommands) {
@@ -7455,58 +7438,15 @@ bool nsWindow::GetEditCommands(NativeKeyBindingsType aType,
     return false;
   }
 
-  if (aEvent.mKeyCode >= NS_VK_LEFT && aEvent.mKeyCode <= NS_VK_DOWN) {
-    // Check if we're targeting content with vertical writing mode,
-    // and if so remap the arrow keys.
-    // XXX This may be expensive.
-    WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText,
-                                                   this);
-    nsEventStatus status;
-    DispatchEvent(&querySelectedTextEvent, status);
-
-    if (querySelectedTextEvent.FoundSelection() &&
-        querySelectedTextEvent.mReply->mWritingMode.IsVertical()) {
-      uint32_t geckoCode = 0;
-      uint32_t gdkCode = 0;
-      switch (aEvent.mKeyCode) {
-        case NS_VK_LEFT:
-          if (querySelectedTextEvent.mReply->mWritingMode.IsVerticalLR()) {
-            geckoCode = NS_VK_UP;
-            gdkCode = GDK_Up;
-          } else {
-            geckoCode = NS_VK_DOWN;
-            gdkCode = GDK_Down;
-          }
-          break;
-
-        case NS_VK_RIGHT:
-          if (querySelectedTextEvent.mReply->mWritingMode.IsVerticalLR()) {
-            geckoCode = NS_VK_DOWN;
-            gdkCode = GDK_Down;
-          } else {
-            geckoCode = NS_VK_UP;
-            gdkCode = GDK_Up;
-          }
-          break;
-
-        case NS_VK_UP:
-          geckoCode = NS_VK_LEFT;
-          gdkCode = GDK_Left;
-          break;
-
-        case NS_VK_DOWN:
-          geckoCode = NS_VK_RIGHT;
-          gdkCode = GDK_Right;
-          break;
-      }
-
-      GetEditCommandsRemapped(aType, aEvent, aCommands, geckoCode, gdkCode);
-      return true;
+  Maybe<WritingMode> writingMode;
+  if (aEvent.NeedsToRemapNavigationKey()) {
+    if (RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher()) {
+      writingMode = dispatcher->MaybeWritingModeAtSelection();
     }
   }
 
   NativeKeyBindings* keyBindings = NativeKeyBindings::GetInstance(aType);
-  keyBindings->GetEditCommands(aEvent, aCommands);
+  keyBindings->GetEditCommands(aEvent, writingMode, aCommands);
   return true;
 }
 
