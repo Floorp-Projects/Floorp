@@ -90,6 +90,8 @@ test-pref(image.animation_mode,"none") == background-blending-image-color-gif.ht
 fuzzy-if(webrender,0-1,0-49719) == background-blend-mode-body-image.html background-blend-mode-body-image-ref.html
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-16408) fuzzy-if(Android,0-4,0-768) fuzzy-if(gtkWidget,0-1,0-132) fuzzy-if(skiaContent,0-1,0-800) fuzzy-if(d2d,0-1,0-33208) fuzzy-if(webrender,0-1,0-78472) == background-blend-mode-body-transparent-image.html background-blend-mode-body-transparent-image-ref.html
 
+== background-blend-mode-body-fixed.html background-blend-mode-body-fixed-ref.html
+
 == background-blending-moz-element.html background-blending-moz-element-ref.html
 
 fuzzy(0-1,0-40000) == mix-blend-mode-soft-light.html mix-blend-mode-soft-light-ref.html

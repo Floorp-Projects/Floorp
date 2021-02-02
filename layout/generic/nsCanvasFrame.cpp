@@ -498,8 +498,6 @@ void nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         dependentFrame = nullptr;
       }
     }
-    aLists.BorderBackground()->AppendNewToTop<nsDisplayCanvasBackgroundColor>(
-        aBuilder, this);
 
     if (isThemed) {
       aLists.BorderBackground()
@@ -606,6 +604,25 @@ void nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
             thisItemASR, true);
       }
       aLists.BorderBackground()->AppendToTop(&thisItemList);
+    }
+
+    bool hasFixedBottomLayer =
+        layers.mImageCount > 0 &&
+        layers.mLayers[0].mAttachment == StyleImageLayerAttachment::Fixed;
+
+    if (!hasFixedBottomLayer || needBlendContainer) {
+      // Put a scrolled background color item in place, at the bottom of the
+      // list. The color of this item will be filled in during
+      // PresShell::AddCanvasBackgroundColorItem.
+      // Do not add this item if there's a fixed background image at the bottom
+      // (unless we have to, for correct blending); with a fixed background,
+      // it's better to allow the fixed background image to combine itself with
+      // a non-scrolled background color directly underneath, rather than
+      // interleaving the two with a scrolled background color.
+      // PresShell::AddCanvasBackgroundColorItem makes sure there always is a
+      // non-scrolled background color item at the bottom.
+      aLists.BorderBackground()
+          ->AppendNewToBottom<nsDisplayCanvasBackgroundColor>(aBuilder, this);
     }
 
     if (needBlendContainer) {
