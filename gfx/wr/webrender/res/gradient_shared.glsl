@@ -46,7 +46,7 @@ void write_gradient_vertex(
     v_gradient_address = prim_user_data.x;
 
     // Whether to repeat the gradient along the line instead of clamping.
-    v_gradient_repeat = float(extend_mode != EXTEND_MODE_CLAMP);
+    v_gradient_repeat = float(extend_mode == EXTEND_MODE_REPEAT);
 
 #ifdef WR_FEATURE_ALPHA_PASS
     v_tile_repeat = tile_repeat;
