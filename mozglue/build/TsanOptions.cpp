@@ -262,10 +262,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1674776
          "race:DocumentTimeline::GetCurrentTimeAsDuration\n"
 
-         // Bug 1674835
-         "race:nsHttpTransaction::ReadSegments\n"
-         "race:nsHttpTransaction::SecurityInfo\n"
-
          // Bug 1680285
          "race:style::traversal::note_children\n"
          "race:style::matching::MatchMethods::apply_selector_flags\n"
