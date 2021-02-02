@@ -59,6 +59,7 @@ add_task(async function setup() {
     "geolocation",
     "management",
     "menus.overrideContext",
+    "nativeMessaging",
     "search",
     "tabHide",
     "tabs",
