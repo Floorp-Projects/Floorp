@@ -779,10 +779,6 @@ with modules["DOM"]:
     # https://fetch.spec.whatwg.org/#cross-origin-resource-policy-header
     errors["NS_ERROR_DOM_CORP_FAILED"] = FAILURE(1036)
 
-    # Used to indicate that a URI may not be loaded into a cross-origin
-    # context.
-    errors["NS_ERROR_DOM_BAD_CROSS_ORIGIN_URI"] = FAILURE(1037)
-
     # May be used to indicate when e.g. setting a property value didn't
     # actually change the value, like for obj.foo = "bar"; obj.foo = "bar";
     # the second assignment throws NS_SUCCESS_DOM_NO_OPERATION.
