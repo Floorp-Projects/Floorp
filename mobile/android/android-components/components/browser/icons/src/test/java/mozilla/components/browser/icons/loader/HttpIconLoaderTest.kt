@@ -31,7 +31,6 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import java.io.InputStream
 import java.io.IOException
-import java.lang.IllegalArgumentException
 
 @RunWith(AndroidJUnit4::class)
 class HttpIconLoaderTest {
@@ -227,17 +226,29 @@ class HttpIconLoaderTest {
     }
 
     @Test
-    fun `Loader will return NoResult for IllegalArgumentExceptions`() {
+    fun `Loader will sanitize URL`() {
         val client: Client = mock()
 
         val loader = HttpIconLoader(client)
-        doThrow(IllegalArgumentException("test")).`when`(client).fetch(any())
+        doReturn(
+            Response(
+                url = "https://www.example.org",
+                headers = MutableHeaders(),
+                status = 404,
+                body = Response.Body.empty())
+        ).`when`(client).fetch(any())
 
-        val resource = IconRequest.Resource(
-            url = "http://www.example.org",
-            type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
+        loader.load(
+            mock(), mock(), IconRequest.Resource(
+                url = " \n\n https://www.example.org  \n\n ",
+                type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
+            )
         )
 
-        assertEquals(IconLoader.Result.NoResult, loader.load(mock(), mock(), resource))
+        val captor = argumentCaptor<Request>()
+        verify(client).fetch(captor.capture())
+
+        val request = captor.value
+        assertEquals("https://www.example.org", request.url)
     }
 }

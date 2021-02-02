@@ -17,8 +17,8 @@ import mozilla.components.concept.fetch.Response
 import mozilla.components.concept.fetch.isSuccess
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.net.isHttpOrHttps
+import mozilla.components.support.ktx.kotlin.sanitizeURL
 import java.io.IOException
-import java.lang.IllegalArgumentException
 import java.util.concurrent.TimeUnit
 
 private const val CONNECT_TIMEOUT = 2L // Seconds
@@ -42,7 +42,7 @@ class HttpIconLoader(
         // recently: https://github.com/mozilla-mobile/android-components/issues/2591
 
         val downloadRequest = Request(
-            url = resource.url,
+            url = resource.url.sanitizeURL(),
             method = Request.Method.GET,
             cookiePolicy = if (request.isPrivate) {
                 Request.CookiePolicy.OMIT
@@ -65,20 +65,11 @@ class HttpIconLoader(
         } catch (e: IOException) {
             logger.debug("IOException while trying to download icon resource", e)
             IconLoader.Result.NoResult
-        } catch (e: IllegalArgumentException) {
-            // Despite checking that the icon URL scheme is http or https we're
-            // still seeing GeckoView rejecting requests due to unsupported URI
-            // schemes. We believe this could be caused by GeckoView converting
-            // the String toLowerCase, but can't find a reproducible case.
-            // Instead of crashing let's log the details so we can get to bottom
-            // of it once we can reproduce.
-            logger.debug("Invalid request to fetch icon: $downloadRequest", e)
-            IconLoader.Result.NoResult
         }
     }
 
     private fun shouldDownload(resource: IconRequest.Resource): Boolean {
-        return resource.url.toUri().isHttpOrHttps && !failureCache.hasFailedRecently(resource.url)
+        return resource.url.sanitizeURL().toUri().isHttpOrHttps && !failureCache.hasFailedRecently(resource.url)
     }
 }
 
