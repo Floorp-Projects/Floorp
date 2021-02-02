@@ -360,11 +360,7 @@ void GlobalStyleSheetCache::InitSharedSheetsInParent() {
     address = reinterpret_cast<void*>(uintptr_t(p) + kOffset);
   }
 
-  bool parentMapped = shm->Map(kSharedMemorySize, address);
-  Telemetry::Accumulate(Telemetry::SHARED_MEMORY_UA_SHEETS_MAPPED_PARENT,
-                        parentMapped);
-
-  if (!parentMapped) {
+  if (!shm->Map(kSharedMemorySize, address)) {
     // Failed to map at the address we computed for some reason.  Fall back
     // to just allocating at a location of the OS's choosing, and hope that
     // it works in the content process.
@@ -401,16 +397,11 @@ void GlobalStyleSheetCache::InitSharedSheetsInParent() {
     header->mSheets[i] = sheet->ToShared(builder.get(), message);       \
     if (!header->mSheets[i]) {                                          \
       CrashReporter::AppendAppNotesToCrashReport("\n"_ns + message);    \
-      Telemetry::Accumulate(                                            \
-          Telemetry::SHARED_MEMORY_UA_SHEETS_TOSHMEM_SUCCEEDED, false); \
       return;                                                           \
     }                                                                   \
   }
 #include "mozilla/UserAgentStyleSheetList.h"
 #undef STYLE_SHEET
-
-  Telemetry::Accumulate(Telemetry::SHARED_MEMORY_UA_SHEETS_TOSHMEM_SUCCEEDED,
-                        true);
 
   // Finished writing into the shared memory.  Freeze it, so that a process
   // can't confuse other processes by changing the UA style sheet contents.
@@ -423,10 +414,7 @@ void GlobalStyleSheetCache::InitSharedSheetsInParent() {
   // between the Freeze() and Map() call, we can just fall back to keeping our
   // own copy of the UA style sheets in the parent, and still try sending the
   // shared memory to the content processes.
-  bool parentRemapped = shm->Map(kSharedMemorySize, address);
-  Telemetry::Accumulate(
-      Telemetry::SHARED_MEMORY_UA_SHEETS_MAPPED_PARENT_AFTER_FREEZE,
-      parentRemapped);
+  shm->Map(kSharedMemorySize, address);
 
   // Record how must of the shared memory we have used, for memory reporting
   // later.  We round up to the nearest page since the free space at the end
@@ -690,11 +678,7 @@ void GlobalStyleSheetCache::BuildPreferenceSheet(
     return;
   }
 
-  bool contentMapped =
-      shm->Map(kSharedMemorySize, reinterpret_cast<void*>(aAddress));
-  Telemetry::Accumulate(Telemetry::SHARED_MEMORY_UA_SHEETS_MAPPED_CHILD,
-                        contentMapped);
-  if (contentMapped) {
+  if (shm->Map(kSharedMemorySize, reinterpret_cast<void*>(aAddress))) {
     sSharedMemory = shm.release();
   }
 }
