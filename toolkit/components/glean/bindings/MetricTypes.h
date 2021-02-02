@@ -9,6 +9,7 @@
 #include "mozilla/glean/bindings/Counter.h"
 #include "mozilla/glean/bindings/Datetime.h"
 #include "mozilla/glean/bindings/Event.h"
+#include "mozilla/glean/bindings/Labeled.h"
 #include "mozilla/glean/bindings/MemoryDistribution.h"
 #include "mozilla/glean/bindings/String.h"
 #include "mozilla/glean/bindings/StringList.h"
