@@ -879,9 +879,6 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
   bool disableWasmHugeMemory =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_disable_huge_memory");
 
-  bool useOffThreadParseGlobal =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "off_thread_parse_global");
-
   nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
   if (xr) {
     bool safeMode = false;
@@ -940,8 +937,6 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
     bool disabledHugeMemory = JS::DisableWasmHugeMemory();
     MOZ_RELEASE_ASSERT(disabledHugeMemory);
   }
-
-  JS::SetUseOffThreadParseGlobal(useOffThreadParseGlobal);
 
   JS::SetLargeArrayBuffersEnabled(
       StaticPrefs::javascript_options_large_arraybuffers());
