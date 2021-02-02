@@ -96,33 +96,29 @@ detect_cpu_features (void)
 
 #elif defined(__ANDROID__) || defined(ANDROID) /* Android */
 
+#include <cpu-features.h>
+
 static arm_cpu_features_t
 detect_cpu_features (void)
 {
     arm_cpu_features_t features = 0;
-    char buf[1024];
-    char* pos;
-    const char* ver_token = "CPU architecture: ";
-    FILE* f = fopen("/proc/cpuinfo", "r");
-    if (!f) {
-	return features;
-    }
+    AndroidCpuFamily cpu_family;
+    uint64_t cpu_features;
 
-    fread(buf, sizeof(char), sizeof(buf), f);
-    fclose(f);
-    pos = strstr(buf, ver_token);
-    if (pos) {
-	char vchar = *(pos + strlen(ver_token));
-	if (vchar >= '0' && vchar <= '9') {
-	    int ver = vchar - '0';
-	    if (ver >= 7)
-		features |= ARM_V7;
-	}
+    cpu_family = android_getCpuFamily();
+    cpu_features = android_getCpuFeatures();
+
+    if (cpu_family == ANDROID_CPU_FAMILY_ARM)
+    {
+	if (cpu_features & ANDROID_CPU_ARM_FEATURE_ARMv7)
+	    features |= ARM_V7;
+
+	if (cpu_features & ANDROID_CPU_ARM_FEATURE_VFPv3)
+	    features |= ARM_VFP;
+
+	if (cpu_features & ANDROID_CPU_ARM_FEATURE_NEON)
+	    features |= ARM_NEON;
     }
-    if (strstr(buf, "neon") != NULL)
-	features |= ARM_NEON;
-    if (strstr(buf, "vfp") != NULL)
-	features |= ARM_VFP;
 
     return features;
 }
@@ -176,6 +172,31 @@ detect_cpu_features (void)
 	}
 	close (fd);
     }
+
+    return features;
+}
+
+#elif defined (_3DS) /* 3DS homebrew (devkitARM) */
+
+static arm_cpu_features_t
+detect_cpu_features (void)
+{
+    arm_cpu_features_t features = 0;
+
+    features |= ARM_V6;
+
+    return features;
+}
+
+#elif defined (PSP2) || defined (__SWITCH__)
+/* Vita (VitaSDK) or Switch (devkitA64) homebrew */
+
+static arm_cpu_features_t
+detect_cpu_features (void)
+{
+    arm_cpu_features_t features = 0;
+
+    features |= ARM_NEON;
 
     return features;
 }
