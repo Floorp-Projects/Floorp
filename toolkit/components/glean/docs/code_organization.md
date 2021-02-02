@@ -24,13 +24,13 @@ This module is the glue between Firefox and Glean.
 This module is responsible for
 
 * collecting and assembling the [client information](https://mozilla.github.io/glean/book/user/pings/index.html#the-client_info-section)
-* configuring Glean
+* configuring the Glean SDK via the Rust Language Binding
 * watching the Firefox Telemetry data upload preference (`datareporting.healthreport.uploadEnabled`)
 * scheduling builtin pings
 * controling ping upload workers
 * passing IPC buffers
 
-It calls into `glean_core` to:
+It calls into `glean` (the Glean SDK Rust Language Binding) to:
 
 * configure and initialize Glean
 * toggle `upload_enabled`
@@ -50,15 +50,14 @@ This module provides the user-facing API for Glean inside mozilla-central.
 * The crate is named `fog`.
 * It is not published to crates.io.
 * It can be consumed by other Rust crates inside mozilla-central for their Glean usage.
-* It will provide a build task for `glean_parser` integration.
 
 This module is responsible for
 
 * exposing a specific metric API in Rust
 * wrapping metric implementations for handling IPC
-* exposing FFI functionality to implement other language APIs on top
+* exposing FFI functionality to implement other language APIs on top.
+  See also [Adding a New Metric Type](new_metric_type.md).
 
-It calls into `glean_core` for:
+It calls into `glean` (the Glean SDK Rust Language Binding) for:
 
 * metric types (including pings)
-* querying `upload_enabled` status.
