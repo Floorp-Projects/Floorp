@@ -76,7 +76,7 @@ set +e
 
 if [[ "${device_type}" =~ ^(arm64-v8a|armeabi-v7a|x86_64|x86)$ ]]; then
     flank_template="${PATH_TEST}/flank-${device_type}.yml"
-elif [[ "${device_type}" == "x86-start-test" ]]; then
+elif [[ "${device_type}" == "x86-start-nightly-test" ]]; then
     flank_template="${PATH_TEST}/flank-x86-start-test.yml"
 elif [[ "${device_type}" == "arm-start-test" ]]; then
     flank_template="${PATH_TEST}/flank-armeabi-v7a-start-test.yml"
