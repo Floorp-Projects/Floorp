@@ -167,6 +167,9 @@ void ScopeContext::cacheEnclosingScope(Scope* enclosingScope) {
     return;
   }
 
+  enclosingScopeEnvironmentChainLength =
+      enclosingScope->environmentChainLength();
+
   enclosingScopeKind = enclosingScope->kind();
 
   if (enclosingScope->is<FunctionScope>()) {
