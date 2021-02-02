@@ -3490,7 +3490,7 @@ IdlNamespace.prototype.test_self = function ()
             undefined,
             "length property must be undefined"
         );
-    }, `${this.name} namespace: has no length property"`);
+    }, `${this.name} namespace: has no length property`);
 
     subsetTestByKey(this.name, test, () => {
         assert_equals(
@@ -3498,7 +3498,7 @@ IdlNamespace.prototype.test_self = function ()
             undefined,
             "name property must be undefined"
         );
-    }, `${this.name} namespace: has no name property"`);
+    }, `${this.name} namespace: has no name property`);
 };
 
 IdlNamespace.prototype.test = function ()
