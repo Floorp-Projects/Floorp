@@ -19,6 +19,7 @@ const TYPES = {
   STYLESHEET: "stylesheet",
   NETWORK_EVENT_STACKTRACE: "network-event-stacktrace",
   SOURCE: "source",
+  THREAD_STATE: "thread-state",
 };
 exports.TYPES = TYPES;
 
@@ -65,6 +66,9 @@ const FrameTargetResources = augmentResourceDictionary({
   [TYPES.SOURCE]: {
     path: "devtools/server/actors/resources/sources",
   },
+  [TYPES.THREAD_STATE]: {
+    path: "devtools/server/actors/resources/thread-states",
+  },
 });
 const ProcessTargetResources = augmentResourceDictionary({
   [TYPES.CONSOLE_MESSAGE]: {
@@ -82,10 +86,13 @@ const ProcessTargetResources = augmentResourceDictionary({
   [TYPES.SOURCE]: {
     path: "devtools/server/actors/resources/sources",
   },
+  [TYPES.THREAD_STATE]: {
+    path: "devtools/server/actors/resources/thread-states",
+  },
 });
 
 // We'll only support a few resource types in Workers (console-message, source,
-// breakpoints, …) as error and platform messages are not supported since we need access
+// thread state, …) as error and platform messages are not supported since we need access
 // to Ci, which isn't available in worker context.
 // Errors are emitted from the content process main thread so the user would still get them.
 const WorkerTargetResources = augmentResourceDictionary({
@@ -94,6 +101,9 @@ const WorkerTargetResources = augmentResourceDictionary({
   },
   [TYPES.SOURCE]: {
     path: "devtools/server/actors/resources/sources",
+  },
+  [TYPES.THREAD_STATE]: {
+    path: "devtools/server/actors/resources/thread-states",
   },
 });
 
