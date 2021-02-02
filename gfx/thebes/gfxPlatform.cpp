@@ -3384,6 +3384,7 @@ bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
   // Before we disable D3D11 and HW_COMPOSITING, we should check if we can
   // fallback from WebRender to Software WebRender + D3D11 compositing.
   if (StaticPrefs::gfx_webrender_fallback_software_d3d11_AtStartup() &&
+      StaticPrefs::gfx_webrender_software_d3d11_AtStartup() &&
       gfxConfig::IsEnabled(Feature::WEBRENDER_SOFTWARE) &&
       gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING) &&
       gfxVars::UseWebRender() && !gfxVars::UseSoftwareWebRender()) {
