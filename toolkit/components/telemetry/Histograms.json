@@ -13113,21 +13113,21 @@
   "VIDEO_SUSPEND_RECOVERY_TIME_MS" : {
     "record_in_processes": ["content"],
     "products": ["firefox"],
-    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
-    "expires_in_version": "88",
+    "alert_emails": ["alwu@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "100",
     "description": "Time taken for a video to resume after decoding was suspended, in milliseconds. Keyed by audio presence, hw acceleration, and by height ranges (boundaries: 240. 480, 720, 1080, 2160), e.g.: 'V,0-240', 'AV(hw),2160+'; and 'All' will accumulate all percentages.",
     "keyed": true,
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 100,
-    "bug_numbers": [1294349, 1570634, 1606206]
+    "bug_numbers": [1294349, 1570634, 1606206, 1689267]
   },
   "VIDEO_VP9_BENCHMARK_FPS": {
     "record_in_processes": ["content"],
     "products": ["firefox"],
-    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
-    "expires_in_version": "88",
-    "bug_numbers": [1230265, 1570634, 1606206],
+    "alert_emails": ["alwu@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "100",
+    "bug_numbers": [1230265, 1570634, 1606206, 1689267],
     "kind": "linear",
     "high": 1000,
     "n_buckets": 100,
@@ -14173,10 +14173,10 @@
     "record_in_processes": ["content"],
     "products": ["firefox"],
     "alert_emails": ["alwu@mozilla.com"],
-    "expires_in_version": "88",
+    "expires_in_version": "100",
     "kind": "enumerated",
     "n_values": 10,
-    "bug_numbers": [1280644, 1570634, 1606206],
+    "bug_numbers": [1280644, 1570634, 1606206, 1689267],
     "description": "Number of the use of the subtitles kind track. 0=Subtitles, 1=Captions, 2=Descriptions, 3=Chapters, 4=Metadata, 5=Undefined Error",
     "releaseChannelCollection": "opt-out"
   },
@@ -15673,10 +15673,10 @@
       "alwu@mozilla.com",
       "nohlmeier@mozilla.com"
     ],
-    "expires_in_version": "88",
+    "expires_in_version": "100",
     "kind": "categorical",
     "labels": ["allow", "blockAudible", "blockAll"],
-    "bug_numbers": [1567302, 1606206],
+    "bug_numbers": [1567302, 1606206, 1689267],
     "description": "counts the number of times a user changed the default autoplay behavior to each setting during a subsession.",
     "releaseChannelCollection": "opt-out"
   },
