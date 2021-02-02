@@ -729,6 +729,11 @@ var PanelMultiView = class extends AssociatedToNode {
         (anchor && anchor.getAttribute("label"));
       // The constrained width of subviews may also vary between panels.
       nextPanelView.minMaxWidth = prevPanelView.knownWidth;
+      let lockPanelVertical =
+        this.openViews[0].node.getAttribute("lockpanelvertical") == "true";
+      nextPanelView.minMaxHeight = lockPanelVertical
+        ? prevPanelView.knownHeight
+        : 0;
 
       if (anchor) {
         viewNode.classList.add("PanelUI-subView");
@@ -807,6 +812,7 @@ var PanelMultiView = class extends AssociatedToNode {
     nextPanelView.mainview = true;
     nextPanelView.headerText = "";
     nextPanelView.minMaxWidth = 0;
+    nextPanelView.minMaxHeight = 0;
 
     // Ensure the view will be visible once the panel is opened.
     nextPanelView.visible = true;
@@ -1342,6 +1348,20 @@ var PanelView = class extends AssociatedToNode {
     } else {
       style.removeProperty("min-width");
       style.removeProperty("max-width");
+    }
+  }
+
+  /**
+   * Constrains the height of this view using the "min-height" and "max-height"
+   * styles. Setting this to zero removes the constraints.
+   */
+  set minMaxHeight(value) {
+    let style = this.node.style;
+    if (value) {
+      style.minHeight = style.maxHeight = value + "px";
+    } else {
+      style.removeProperty("min-height");
+      style.removeProperty("max-height");
     }
   }
 

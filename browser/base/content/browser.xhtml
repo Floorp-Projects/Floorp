@@ -952,7 +952,8 @@
     <!-- This is a placeholder app menu which should be replaced with the "real"
          Proton app menu before the Proton pref starts getting enabled. -->
     <panelview id="appMenu-protonMainView" class="PanelUI-subView"
-               descriptionheightworkaround="true">
+               descriptionheightworkaround="true"
+               lockpanelvertical="true">
       <vbox class="panel-subview-body">
         <toolbarbutton id="appMenu-new-tab-button2"
                        class="subviewbutton subviewbutton-iconic"
@@ -1139,20 +1140,19 @@
         <toolbarbutton id="panelMenuBookmarkThisPage"
                        class="subviewbutton subviewbutton-iconic"
                        command="Browser:AddBookmarkAs"
-                       data-l10n-id="menu-bookmark-this-page"
                        onclick="PanelUI.hide();"/>
-        <toolbarbutton id="panelMenu_bookmarkingTools"
-                       data-l10n-id="bookmarks-tools"
-                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
-                       closemenu="none"
-                       oncommand="BookmarkingUI.showBookmarkingTools(this);"/>
         <toolbarbutton id="panelMenu_searchBookmarks"
                        data-l10n-id="bookmarks-search"
                        class="subviewbutton subviewbutton-iconic"
                        oncommand="PlacesCommandHook.searchBookmarks(); PanelUI.hide();"/>
+        <toolbarbutton id="panelMenu_viewBookmarksToolbar"
+                       class="subviewbutton subviewbutton-iconic"
+                       data-l10n-id="bookmarks-tools-toolbar-visibility-panel"
+                       data-l10n-args='{ "isVisible": false }'
+                       oncommand="BookmarkingUI.toggleBookmarksToolbar('bookmark-tools');"/>
         <toolbarseparator/>
         <label id="panelMenu_recentBookmarks"
-               data-l10n-id="bookmarks-recent-bookmarks"
+               data-l10n-id="bookmarks-recent-bookmarks-panel"
                class="subview-subheader"/>
         <toolbaritem id="panelMenu_bookmarksMenu"
                      orient="vertical"
@@ -1162,9 +1162,10 @@
           <!-- bookmarks menu items will go here -->
         </toolbaritem>
       </vbox>
+      <toolbarseparator/>
       <toolbarbutton id="panelMenu_showAllBookmarks"
-                     data-l10n-id="bookmarks-show-all-bookmarks"
-                     class="subviewbutton panel-subview-footer"
+                     data-l10n-id="bookmarks-manage-bookmarks"
+                     class="subviewbutton subviewbutton-iconic panel-subview-footer-button"
                      command="Browser:ShowAllBookmarks"
                      onclick="PanelUI.hide();"/>
     </panelview>
@@ -1595,29 +1596,6 @@
                        class="subviewbutton subviewbutton-iconic"
                        label="&libraryDownloads.label;"
                        oncommand="DownloadsPanel.showDownloadsHistory();"/>
-      </vbox>
-    </panelview>
-
-    <panelview id="PanelUI-bookmarkingTools" class="PanelUI-subView">
-      <vbox class="panel-subview-body">
-        <toolbarbutton id="panelMenu_toggleBookmarksMenu"
-                       class="subviewbutton subviewbutton-iconic"
-                       data-l10n-id="bookmarks-tools-menu-button-visibility"
-                       data-l10n-args='{ "isVisible": false }'
-                       oncommand="BookmarkingUI.toggleMenuButtonInToolbar(this);"/>
-        <toolbarbutton id="panelMenu_viewBookmarksSidebar"
-                       class="subviewbutton subviewbutton-iconic"
-                       data-l10n-id="bookmarks-tools-sidebar-visibility"
-                       data-l10n-args='{ "isVisible": false }'
-                       key="viewBookmarksSidebarKb"
-                       oncommand="SidebarUI.toggle('viewBookmarksSidebar', this);">
-                       <observes element="sidebar-box" attribute="positionend"/>
-        </toolbarbutton>
-        <toolbarbutton id="panelMenu_viewBookmarksToolbar"
-                       class="subviewbutton subviewbutton-iconic"
-                       data-l10n-id="bookmarks-tools-toolbar-visibility"
-                       data-l10n-args='{ "isVisible": false }'
-                       oncommand="BookmarkingUI.toggleBookmarksToolbar('bookmark-tools');"/>
       </vbox>
     </panelview>
 
@@ -2282,7 +2260,7 @@
                                                         PlacesUIUtils.getViewForNode(this.parentNode.parentNode).options);">
               <menuitem id="BMB_viewBookmarksToolbar"
                         class="menuitem-iconic subviewbutton"
-                        data-l10n-id="bookmarks-tools-toolbar-visibility"
+                        data-l10n-id="bookmarks-tools-toolbar-visibility-menuitem"
                         data-l10n-args='{ "isVisible": false }'
                         oncommand="BookmarkingUI.toggleBookmarksToolbar('bookmarks-widget');"/>
               <menuseparator/>
