@@ -315,6 +315,10 @@ struct VectorType {
     return VectorType<T, N * 2>::wrap(data, high.data);
   }
 
+#  define xxxx swizzle(0, 0, 0, 0)
+#  define yyyy swizzle(1, 1, 1, 1)
+#  define zzzz swizzle(2, 2, 2, 2)
+#  define wwww swizzle(3, 3, 3, 3)
 #  define xyxy swizzle(0, 1, 0, 1)
 #  define zwzw swizzle(2, 3, 2, 3)
 #  define zwxy swizzle(2, 3, 0, 1)
@@ -387,6 +391,12 @@ SI VectorType<T, N * 2> expand(VectorType<T, N> a) {
   return combine(a, a);
 }
 #endif
+
+template <typename T, int N>
+SI VectorType<T, N * 4> combine(VectorType<T, N> a, VectorType<T, N> b,
+                                VectorType<T, N> c, VectorType<T, N> d) {
+  return combine(combine(a, b), combine(c, d));
+}
 
 template <typename T>
 SI VectorType<T, 4> zipLow(VectorType<T, 4> a, VectorType<T, 4> b) {
