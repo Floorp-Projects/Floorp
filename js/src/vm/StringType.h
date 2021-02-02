@@ -1268,11 +1268,14 @@ class StaticStrings {
   friend struct js::frontend::CompilationAtomCache;
 
  private:
+  // Strings matches `[A-Za-z0-9$_]{2}` pattern.
+  // Store each character in 6 bits.
+  // See fromSmallChar/toSmallChar for the mapping.
   static constexpr size_t SMALL_CHAR_BITS = 6;
   static constexpr size_t SMALL_CHAR_MASK = js::BitMask(SMALL_CHAR_BITS);
 
-  /* Bigger chars cannot be in a length-2 string. */
-  static constexpr size_t SMALL_CHAR_LIMIT = 128U;
+  // To optimize ASCII -> small char, allocate a table.
+  static constexpr size_t SMALL_CHAR_TABLE_SIZE = 128U;
   static constexpr size_t NUM_SMALL_CHARS = js::Bit(SMALL_CHAR_BITS);
 
   JSAtom* length2StaticTable[NUM_SMALL_CHARS * NUM_SMALL_CHARS] = {};  // zeroes
@@ -1383,8 +1386,8 @@ class StaticStrings {
  private:
   using SmallChar = uint8_t;
 
-  struct SmallCharArray {
-    SmallChar storage[SMALL_CHAR_LIMIT];
+  struct SmallCharTable {
+    SmallChar storage[SMALL_CHAR_TABLE_SIZE];
 
     constexpr SmallChar& operator[](size_t idx) { return storage[idx]; }
     constexpr const SmallChar& operator[](size_t idx) const {
@@ -1395,29 +1398,30 @@ class StaticStrings {
   static const SmallChar INVALID_SMALL_CHAR = -1;
 
   static bool fitsInSmallChar(char16_t c) {
-    return c < SMALL_CHAR_LIMIT && toSmallCharArray[c] != INVALID_SMALL_CHAR;
+    return c < SMALL_CHAR_TABLE_SIZE &&
+           toSmallCharTable[c] != INVALID_SMALL_CHAR;
   }
 
   static constexpr Latin1Char fromSmallChar(SmallChar c);
 
   static constexpr SmallChar toSmallChar(uint32_t c);
 
-  static constexpr SmallCharArray createSmallCharArray();
+  static constexpr SmallCharTable createSmallCharTable();
 
-  static const SmallCharArray toSmallCharArray;
+  static const SmallCharTable toSmallCharTable;
 
   static MOZ_ALWAYS_INLINE size_t getLength2Index(char16_t c1, char16_t c2) {
     MOZ_ASSERT(fitsInSmallChar(c1));
     MOZ_ASSERT(fitsInSmallChar(c2));
-    return (size_t(toSmallCharArray[c1]) << SMALL_CHAR_BITS) +
-           toSmallCharArray[c2];
+    return (size_t(toSmallCharTable[c1]) << SMALL_CHAR_BITS) +
+           toSmallCharTable[c2];
   }
 
   // Same as getLength2Index, but withtout runtime assertion,
   // this should be used only for known static string.
   static constexpr size_t getLength2IndexStatic(char c1, char c2) {
-    return (size_t(toSmallCharArray[c1]) << SMALL_CHAR_BITS) +
-           toSmallCharArray[c2];
+    return (size_t(toSmallCharTable[c1]) << SMALL_CHAR_BITS) +
+           toSmallCharTable[c2];
   }
 
   MOZ_ALWAYS_INLINE JSAtom* getLength2FromIndex(size_t index) {
