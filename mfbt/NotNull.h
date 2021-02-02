@@ -77,10 +77,7 @@ struct CopyablePtr {
   T mPtr;
 
   template <typename U>
-  explicit CopyablePtr(U&& aPtr) : mPtr{std::forward<U>(aPtr)} {}
-
-  template <typename U>
-  explicit CopyablePtr(CopyablePtr<U> aPtr) : mPtr{std::move(aPtr.mPtr)} {}
+  explicit CopyablePtr(U aPtr) : mPtr{std::move(aPtr)} {}
 };
 }  // namespace detail
 
