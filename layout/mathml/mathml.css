@@ -62,7 +62,7 @@ ms[rquote]:after {
   text-decoration: none !important;
 }
 
-*:-moz-focusring {
+:focus-visible {
   /* Don't specify the outline-color, we should always use initial value. */
   outline: 1px dotted;
 }
