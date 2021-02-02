@@ -743,22 +743,6 @@ nsDocShell::SetCancelContentJSEpoch(int32_t aEpoch) {
   return NS_OK;
 }
 
-nsresult nsDocShell::CheckDisallowedJavascriptLoad(
-    nsDocShellLoadState* aLoadState) {
-  if (!net::SchemeIsJavascript(aLoadState->URI())) {
-    return NS_OK;
-  }
-
-  if (nsCOMPtr<nsIPrincipal> targetPrincipal =
-          GetInheritedPrincipal(/* aConsiderCurrentDocument */ true)) {
-    if (!aLoadState->TriggeringPrincipal()->Subsumes(targetPrincipal)) {
-      return NS_ERROR_DOM_BAD_CROSS_ORIGIN_URI;
-    }
-    return NS_OK;
-  }
-  return NS_ERROR_DOM_BAD_CROSS_ORIGIN_URI;
-}
-
 NS_IMETHODIMP
 nsDocShell::LoadURI(nsDocShellLoadState* aLoadState, bool aSetNavigating) {
   return LoadURI(aLoadState, aSetNavigating, false);
@@ -782,8 +766,6 @@ nsresult nsDocShell::LoadURI(nsDocShellLoadState* aLoadState,
     MOZ_ASSERT(false, "LoadURI must have a triggering principal");
     return NS_ERROR_FAILURE;
   }
-
-  MOZ_TRY(CheckDisallowedJavascriptLoad(aLoadState));
 
   bool oldIsNavigating = mIsNavigating;
   auto cleanupIsNavigating =
@@ -9212,8 +9194,6 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   MOZ_DIAGNOSTIC_ASSERT(
       aLoadState->TargetBrowsingContext() == GetBrowsingContext(),
       "Load must be targeting this BrowsingContext");
-
-  MOZ_TRY(CheckDisallowedJavascriptLoad(aLoadState));
 
   // If we don't have a target, we're loading into ourselves, and our load
   // delegate may want to intercept that load.
