@@ -25,20 +25,16 @@ async function selectAppMenuView(buttonId, viewId) {
   await viewPromise;
 }
 
-async function openBookmarkingToolsPanelInLibraryToolbarButton() {
+async function openBookmarkingPanelInLibraryToolbarButton() {
   await selectAppMenuView("library-button", "appMenu-libraryView");
   await selectAppMenuView(
     "appMenu-library-bookmarks-button",
     "PanelUI-bookmarks"
   );
-  await selectAppMenuView(
-    "panelMenu_bookmarkingTools",
-    "PanelUI-bookmarkingTools"
-  );
 }
 
 add_task(async function test_enable_toolbar() {
-  await openBookmarkingToolsPanelInLibraryToolbarButton();
+  await openBookmarkingPanelInLibraryToolbarButton();
   let toolbar = document.getElementById("PersonalToolbar");
   Assert.ok(toolbar.collapsed, "Bookmarks Toolbar is hidden");
 
@@ -55,23 +51,4 @@ add_task(async function test_enable_toolbar() {
     "Should have the Bookmarks Toolbar enabled."
   );
   Assert.ok(!toolbar.collapsed, "Bookmarks Toolbar is enabled");
-});
-
-add_task(async function test_enable_sidebar() {
-  await openBookmarkingToolsPanelInLibraryToolbarButton();
-
-  let viewBookmarksSidebarBtn;
-  await BrowserTestUtils.waitForCondition(() => {
-    viewBookmarksSidebarBtn = document.getElementById(
-      "panelMenu_viewBookmarksSidebar"
-    );
-    return viewBookmarksSidebarBtn;
-  }, "Should have the library 'View Bookmarks Sidebar' button.");
-  viewBookmarksSidebarBtn.click();
-  let sidebar;
-  await BrowserTestUtils.waitForCondition(() => {
-    sidebar = document.getElementById("sidebar-box");
-    return !sidebar.hidden;
-  }, "Should have the Bookmarks Sidebar enabled.");
-  Assert.ok(!sidebar.hidden, "Bookmarks Sidebar is enabled");
 });
