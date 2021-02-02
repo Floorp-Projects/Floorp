@@ -141,6 +141,13 @@ class TextInputProcessor final : public nsITextInputProcessor,
   void UnlinkFromTextEventDispatcher();
   nsresult PrepareKeyboardEventToDispatch(WidgetKeyboardEvent& aKeyboardEvent,
                                           uint32_t aKeyFlags);
+  /**
+   * InitEditCommands() initializes edit commands of aKeyboardEvent.
+   * This must be called only in a content process, and aKeyboardEvent must
+   * be used only for `eKeyPress` event.
+   */
+  nsresult InitEditCommands(WidgetKeyboardEvent& aKeyboardEvent) const;
+
   bool IsValidEventTypeForComposition(
       const WidgetKeyboardEvent& aKeyboardEvent) const;
   nsresult PrepareKeyboardEventForComposition(

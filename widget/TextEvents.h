@@ -455,7 +455,6 @@ class WidgetKeyboardEvent : public WidgetInputEvent {
         aType);
   }
 
-#ifdef DEBUG
   /**
    * AreAllEditCommandsInitialized() returns true if edit commands for all
    * types were already initialized.  Otherwise, false.
@@ -465,7 +464,6 @@ class WidgetKeyboardEvent : public WidgetInputEvent {
            mEditCommandsForMultiLineEditorInitialized &&
            mEditCommandsForRichTextEditorInitialized;
   }
-#endif  // #ifdef DEBUG
 
   /**
    * Execute edit commands for aType.

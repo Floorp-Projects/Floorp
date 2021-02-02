@@ -1850,6 +1850,9 @@ void BrowserParent::SendRealKeyEvent(WidgetKeyboardEvent& aEvent) {
   }
   aEvent.mRefPoint = TransformParentToChild(aEvent.mRefPoint);
 
+  // NOTE: If you call `InitAllEditCommands()` for the other messages too,
+  //       you also need to update
+  //       TextEventDispatcher::DispatchKeyboardEventInternal().
   if (aEvent.mMessage == eKeyPress) {
     // XXX Should we do this only when input context indicates an editor having
     //     focus and the key event won't cause inputting text?

@@ -985,35 +985,47 @@ nsresult TextInputProcessor::PrepareKeyboardEventToDispatch(
             aKeyboardEvent.mKeyNameIndex);
   }
 
-  aKeyboardEvent.mIsSynthesizedByTIP = !mForTests;
+  aKeyboardEvent.mIsSynthesizedByTIP = true;
+  aKeyboardEvent.mFlags.mIsSynthesizedForTests = mForTests;
+
+  return NS_OK;
+}
+
+nsresult TextInputProcessor::InitEditCommands(
+    WidgetKeyboardEvent& aKeyboardEvent) const {
+  MOZ_ASSERT(XRE_IsContentProcess());
+  MOZ_ASSERT(aKeyboardEvent.mMessage == eKeyPress);
 
   // When this emulates real input only in content process, we need to
   // initialize edit commands with the main process's widget via PuppetWidget
   // because they are initialized by BrowserParent before content process treats
   // them.
-  if (aKeyboardEvent.mIsSynthesizedByTIP && !XRE_IsParentProcess()) {
-    // Note that retrieving edit commands from content process is expensive.
-    // Let's skip it when the keyboard event is inputting text.
-    if (!aKeyboardEvent.IsInputtingText()) {
-      // FYI: WidgetKeyboardEvent::InitAllEditCommands() isn't available here
-      //      since it checks whether it's called in the main process to
-      //      avoid performance issues so that we need to initialize each
-      //      command manually here.
-      if (NS_WARN_IF(!aKeyboardEvent.InitEditCommandsFor(
-              nsIWidget::NativeKeyBindingsForSingleLineEditor))) {
-        return NS_ERROR_NOT_AVAILABLE;
-      }
-      if (NS_WARN_IF(!aKeyboardEvent.InitEditCommandsFor(
-              nsIWidget::NativeKeyBindingsForMultiLineEditor))) {
-        return NS_ERROR_NOT_AVAILABLE;
-      }
-      if (NS_WARN_IF(!aKeyboardEvent.InitEditCommandsFor(
-              nsIWidget::NativeKeyBindingsForRichTextEditor))) {
-        return NS_ERROR_NOT_AVAILABLE;
-      }
-    } else {
-      aKeyboardEvent.PreventNativeKeyBindings();
-    }
+  // And also when this synthesizes keyboard events for tests, we need default
+  // shortcut keys on the platform for making any developers get constant
+  // results in any environments.
+
+  // Note that retrieving edit commands via PuppetWidget is expensive.
+  // Let's skip it when the keyboard event is inputting text.
+  if (aKeyboardEvent.IsInputtingText()) {
+    aKeyboardEvent.PreventNativeKeyBindings();
+    return NS_OK;
+  }
+
+  // FYI: WidgetKeyboardEvent::InitAllEditCommands() isn't available here
+  //      since it checks whether it's called in the main process to
+  //      avoid performance issues so that we need to initialize each
+  //      command manually here.
+  if (NS_WARN_IF(!aKeyboardEvent.InitEditCommandsFor(
+          nsIWidget::NativeKeyBindingsForSingleLineEditor))) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  if (NS_WARN_IF(!aKeyboardEvent.InitEditCommandsFor(
+          nsIWidget::NativeKeyBindingsForMultiLineEditor))) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  if (NS_WARN_IF(!aKeyboardEvent.InitEditCommandsFor(
+          nsIWidget::NativeKeyBindingsForRichTextEditor))) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   return NS_OK;
@@ -1053,6 +1065,8 @@ nsresult TextInputProcessor::KeydownInternal(
 
   // We shouldn't modify the internal WidgetKeyboardEvent.
   WidgetKeyboardEvent keyEvent(aKeyboardEvent);
+  keyEvent.mFlags.mIsTrusted = true;
+  keyEvent.mMessage = eKeyDown;
   nsresult rv = PrepareKeyboardEventToDispatch(keyEvent, aKeyFlags);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -1104,8 +1118,26 @@ nsresult TextInputProcessor::KeydownInternal(
                         ? KEYDOWN_IS_CONSUMED
                         : KEYEVENT_NOT_CONSUMED;
 
-  if (aAllowToDispatchKeypress &&
-      kungFuDeathGrip->MaybeDispatchKeypressEvents(keyEvent, status)) {
+  if (!aAllowToDispatchKeypress) {
+    return NS_OK;
+  }
+
+  keyEvent.mMessage = eKeyPress;
+
+  // Only `eKeyPress` events, editor wants to execute system default edit
+  // commands mapped to the key combination.  In e10s world, edit commands can
+  // be retrieved only in the parent process due to the performance reason.
+  // Therefore, BrowserParent initializes edit commands for all cases before
+  // sending the event to focused content process.  For emulating this, we
+  // need to do it now for synthesizing `eKeyPress` events if and only if
+  // we're dispatching the events in a content process.
+  if (XRE_IsContentProcess()) {
+    nsresult rv = InitEditCommands(keyEvent);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+  if (kungFuDeathGrip->MaybeDispatchKeypressEvents(keyEvent, status)) {
     aConsumedFlags |= (status == nsEventStatus_eConsumeNoDefault)
                           ? KEYPRESS_IS_CONSUMED
                           : KEYEVENT_NOT_CONSUMED;
@@ -1147,6 +1179,8 @@ nsresult TextInputProcessor::KeyupInternal(
 
   // We shouldn't modify the internal WidgetKeyboardEvent.
   WidgetKeyboardEvent keyEvent(aKeyboardEvent);
+  keyEvent.mFlags.mIsTrusted = true;
+  keyEvent.mMessage = eKeyUp;
   nsresult rv = PrepareKeyboardEventToDispatch(keyEvent, aKeyFlags);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
