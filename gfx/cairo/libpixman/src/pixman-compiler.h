@@ -19,12 +19,6 @@
 #endif
 
 #if defined (__GNUC__)
-#  define unlikely(expr) __builtin_expect ((expr), 0)
-#else
-#  define unlikely(expr)  (expr)
-#endif
-
-#if defined (__GNUC__)
 #  define MAYBE_UNUSED  __attribute__((unused))
 #else
 #  define MAYBE_UNUSED
@@ -112,8 +106,6 @@
 /* Sun Studio 8 visibility */
 #elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
 #   define PIXMAN_EXPORT __global
-#elif defined (_MSC_VER) || defined(__MINGW32__)
-#   define PIXMAN_EXPORT PIXMAN_API
 #else
 #   define PIXMAN_EXPORT
 #endif
@@ -139,10 +131,12 @@
 #   define PIXMAN_GET_THREAD_LOCAL(name)				\
     (&name)
 
-#elif defined(__MINGW32__)
+#elif defined(__MINGW32__) || defined(PIXMAN_USE_XP_DLL_TLS_WORKAROUND)
 
 #   define _NO_W32_PSEUDO_MODIFIERS
 #   include <windows.h>
+#undef IN
+#undef OUT
 
 #   define PIXMAN_DEFINE_THREAD_LOCAL(type, name)			\
     static volatile int tls_ ## name ## _initialized = 0;		\
@@ -199,7 +193,7 @@
 #   define PIXMAN_GET_THREAD_LOCAL(name)				\
     (&name)
 
-#elif defined(HAVE_PTHREADS)
+#elif defined(HAVE_PTHREAD_SETSPECIFIC)
 
 #include <pthread.h>
 
