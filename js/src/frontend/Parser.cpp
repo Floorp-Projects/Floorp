@@ -1483,8 +1483,7 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
   }
 
   Vector<UnboundPrivateName, 8> unboundPrivateNames(cx_);
-  if (!this->compilationState_.usedNames.getUnboundPrivateNames(
-          unboundPrivateNames)) {
+  if (!usedNames_.getUnboundPrivateNames(unboundPrivateNames)) {
     return false;
   }
 
@@ -7761,8 +7760,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
   // We're leaving a class definition that was not itself nested within a class
   if (!isInClass) {
     mozilla::Maybe<UnboundPrivateName> maybeUnboundName;
-    if (!this->compilationState_.usedNames.hasUnboundPrivateNames(
-            cx_, maybeUnboundName)) {
+    if (!usedNames_.hasUnboundPrivateNames(cx_, maybeUnboundName)) {
       return null();
     }
     if (maybeUnboundName) {
