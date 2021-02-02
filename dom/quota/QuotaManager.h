@@ -595,6 +595,15 @@ class QuotaManager final : public BackgroundThreadObject {
   void MaybeRecordShutdownStep(Maybe<Client::Type> aClientType,
                                const nsACString& aStepDescription);
 
+  template <typename Iterator, typename Pred>
+  static void MaybeInsertOriginInfos(
+      Iterator aDest, const RefPtr<GroupInfo>& aTemporaryGroupInfo,
+      const RefPtr<GroupInfo>& aDefaultGroupInfo, Pred&& aPred);
+
+  template <typename Collect, typename Pred>
+  static OriginInfosFlatTraversable CollectLRUOriginInfosUntil(
+      Collect&& aCollect, Pred&& aPred);
+
   // Thread on which IO is performed.
   LazyInitializedOnceNotNull<const nsCOMPtr<nsIThread>> mIOThread;
 
