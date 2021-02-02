@@ -9156,6 +9156,14 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  // Take loadDivertedInBackground into account so the behavior would be the
+  // same as how the tab first opened.
+  const bool shouldTakeFocus =
+      aLoadState->SourceBrowsingContext() &&
+      aLoadState->SourceBrowsingContext()->IsActive() &&
+      !mBrowsingContext->IsActive() &&
+      !Preferences::GetBool("browser.tabs.loadDivertedInBackground", false);
+
   mOriginalUriString.Truncate();
 
   MOZ_LOG(gDocShellLeakLog, LogLevel::Debug,
@@ -9177,7 +9185,9 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   // If we have a target to move to, do that now.
   if (!aLoadState->Target().IsEmpty()) {
     return PerformRetargeting(aLoadState);
-  } else if (aLoadState->TargetBrowsingContext().IsNull()) {
+  }
+
+  if (aLoadState->TargetBrowsingContext().IsNull()) {
     aLoadState->SetTargetBrowsingContext(GetBrowsingContext());
   }
 
@@ -9295,8 +9305,13 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   // document. If the process fails, or if we successfully navigate within the
   // same document, return.
   if (sameDocument) {
-    return HandleSameDocumentNavigation(aLoadState,
-                                        sameDocumentNavigationState);
+    nsresult rv =
+        HandleSameDocumentNavigation(aLoadState, sameDocumentNavigationState);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (shouldTakeFocus) {
+      mBrowsingContext->Focus(CallerType::System, IgnoreErrors());
+    }
+    return rv;
   }
 
   // mContentViewer->PermitUnload can destroy |this| docShell, which
@@ -9507,6 +9522,12 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
 
   nsCOMPtr<nsIRequest> req;
   rv = DoURILoad(aLoadState, aCacheKey, getter_AddRefs(req));
+
+  if (NS_SUCCEEDED(rv)) {
+    if (shouldTakeFocus) {
+      mBrowsingContext->Focus(CallerType::System, IgnoreErrors());
+    }
+  }
 
   if (NS_FAILED(rv)) {
     nsCOMPtr<nsIChannel> chan(do_QueryInterface(req));
