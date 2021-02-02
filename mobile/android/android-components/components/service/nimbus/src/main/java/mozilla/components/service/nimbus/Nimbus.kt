@@ -159,6 +159,13 @@ data class NimbusServerSettings(
     val url: Uri
 )
 
+private val logger = Logger(LOG_TAG)
+private typealias ErrorReporter = (e: Throwable) -> Unit
+
+private val loggingErrorReporter: ErrorReporter = { e: Throwable ->
+    logger.error("Error calling rust", e)
+}
+
 /**
  * A implementation of the [NimbusApi] interface backed by the Nimbus SDK.
  */
@@ -166,7 +173,8 @@ data class NimbusServerSettings(
 class Nimbus(
     private val context: Context,
     server: NimbusServerSettings?,
-    private val delegate: Observable<NimbusApi.Observer> = ObserverRegistry()
+    private val delegate: Observable<NimbusApi.Observer> = ObserverRegistry(),
+    private val errorReporter: ErrorReporter = loggingErrorReporter
 ) : NimbusApi, Observable<NimbusApi.Observer> by delegate {
 
     // Using two single threaded executors here to enforce synchronization where needed:
@@ -179,17 +187,12 @@ class Nimbus(
         CoroutineScope(Executors.newSingleThreadExecutor().asCoroutineDispatcher())
 
     private var nimbus: NimbusClientInterface
-    private var dataDir: File
-    private val logger = Logger(LOG_TAG)
 
     override var globalUserParticipation: Boolean
         get() = nimbus.getGlobalUserParticipation()
         set(active) {
             dbScope.launch {
-                val enrolmentChanges = nimbus.setGlobalUserParticipation(active)
-                if (enrolmentChanges.isNotEmpty()) {
-                    postEnrolmentCalculation()
-                }
+                setGlobalUserParticipationOnThisThread(active)
             }
         }
 
@@ -201,13 +204,10 @@ class Nimbus(
             System.getProperty("mozilla.appservices.megazord.library", "megazord")
         )
         // Build a File object to represent the data directory for Nimbus data
-        dataDir = File(context.applicationInfo.dataDir, NIMBUS_DATA_DIR)
+        val dataDir = File(context.applicationInfo.dataDir, NIMBUS_DATA_DIR)
 
         // Build Nimbus AppContext object to pass into initialize
         val experimentContext = buildExperimentContext(context)
-
-        // Build a File object to represent the data directory for Nimbus data
-        val dataDir = File(context.applicationInfo.dataDir, NIMBUS_DATA_DIR)
 
         // Initialize Nimbus
         val remoteSettingsConfig = server?.let {
@@ -241,6 +241,20 @@ class Nimbus(
         }
     }
 
+    // Method and apparatus to catch any uncaught exceptions
+    @SuppressWarnings("TooGenericExceptionCaught")
+    private fun withCatchAll(thunk: () -> Unit) =
+        try {
+            thunk()
+        } catch (e: Throwable) {
+            try {
+                errorReporter(e)
+            } catch (e1: Throwable) {
+                logger.error("Exception calling rust", e)
+                logger.error("Exception reporting the exception", e1)
+            }
+        }
+
     override fun initialize() {
         dbScope.launch {
             initializeOnThisThread()
@@ -249,7 +263,7 @@ class Nimbus(
 
     @WorkerThread
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    private fun initializeOnThisThread() {
+    private fun initializeOnThisThread() = withCatchAll {
         nimbus.initialize()
     }
 
@@ -261,11 +275,13 @@ class Nimbus(
 
     @WorkerThread
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    private fun fetchExperimentsOnThisThread() {
+    private fun fetchExperimentsOnThisThread() = withCatchAll {
         try {
             nimbus.fetchExperiments()
             notifyObservers { onExperimentsFetched() }
         } catch (e: ErrorException.RequestError) {
+            logger.info("Error fetching experiments from endpoint: $e")
+        } catch (e: ErrorException.ResponseError) {
             logger.info("Error fetching experiments from endpoint: $e")
         }
     }
@@ -278,7 +294,7 @@ class Nimbus(
 
     @WorkerThread
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    private fun applyPendingExperimentsOnThisThread() {
+    private fun applyPendingExperimentsOnThisThread() = withCatchAll {
         try {
             nimbus.applyPendingExperiments()
             // Get the experiments to record in telemetry
@@ -288,6 +304,7 @@ class Nimbus(
         }
     }
 
+    @WorkerThread
     private fun postEnrolmentCalculation() {
         nimbus.getActiveExperiments().let {
             if (it.any()) {
@@ -320,13 +337,22 @@ class Nimbus(
 
     @WorkerThread
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    private fun setExperimentsLocallyOnThisThread(payload: String) {
+    private fun setExperimentsLocallyOnThisThread(payload: String) = withCatchAll {
         nimbus.setExperimentsLocally(payload)
+    }
+
+    @WorkerThread
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    private fun setGlobalUserParticipationOnThisThread(active: Boolean) = withCatchAll {
+        val enrolmentChanges = nimbus.setGlobalUserParticipation(active)
+        if (enrolmentChanges.isNotEmpty()) {
+            postEnrolmentCalculation()
+        }
     }
 
     override fun optOut(experimentId: String) {
         dbScope.launch {
-            nimbus.optOut(experimentId)
+            withCatchAll { nimbus.optOut(experimentId) }
         }
     }
 
@@ -335,7 +361,7 @@ class Nimbus(
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     internal fun optInWithBranch(experiment: String, branch: String) {
         dbScope.launch {
-            nimbus.optInWithBranch(experiment, branch)
+            withCatchAll { nimbus.optInWithBranch(experiment, branch) }
         }
     }
 
