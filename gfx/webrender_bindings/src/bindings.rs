@@ -1660,9 +1660,6 @@ pub extern "C" fn wr_window_new(
         // SWGL doesn't support the GL_ALWAYS depth comparison function used by
         // `clear_caches_with_quads`, but scissored clears work well.
         clear_caches_with_quads: !software && !allow_scissored_cache_clears,
-        // SWGL supports KHR_blend_equation_advanced safely, but we haven't yet
-        // tested other HW platforms determine if it is safe to allow them.
-        allow_advanced_blend_equation: software,
         start_debug_server,
         surface_origin_is_top_left,
         compositor_config,
