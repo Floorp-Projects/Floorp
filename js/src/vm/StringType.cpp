@@ -1241,16 +1241,16 @@ template bool JSLinearString::isIndexSlow(const Latin1Char* s, size_t length,
 template bool JSLinearString::isIndexSlow(const char16_t* s, size_t length,
                                           uint32_t* indexp);
 
-constexpr StaticStrings::SmallCharArray StaticStrings::createSmallCharArray() {
-  SmallCharArray array{};
-  for (size_t i = 0; i < SMALL_CHAR_LIMIT; i++) {
+constexpr StaticStrings::SmallCharTable StaticStrings::createSmallCharTable() {
+  SmallCharTable array{};
+  for (size_t i = 0; i < SMALL_CHAR_TABLE_SIZE; i++) {
     array[i] = toSmallChar(i);
   }
   return array;
 }
 
-const StaticStrings::SmallCharArray StaticStrings::toSmallCharArray =
-    createSmallCharArray();
+const StaticStrings::SmallCharTable StaticStrings::toSmallCharTable =
+    createSmallCharTable();
 
 bool StaticStrings::init(JSContext* cx) {
   AutoAllocInAtomsZone az(cx);
