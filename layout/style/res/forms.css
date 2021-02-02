@@ -492,10 +492,10 @@ input:is([type=radio], [type=checkbox]):is(:disabled, :disabled:active, :disable
   cursor: unset;
 }
 
-input:not([type=file], [type=image]):focus-visible,
-select:focus-visible,
-button:focus-visible,
-textarea:focus-visible {
+input:not([type=file], [type=image]):-moz-focusring,
+select:-moz-focusring,
+button:-moz-focusring,
+textarea:-moz-focusring {
   /* These elements can handle outline themselves when themed, so we use
    * outline-style: auto and skip rendering the outline only when themed and
    * the theme allows so */
@@ -637,7 +637,7 @@ input:is([type=reset], [type=button], [type=submit]):active:hover {
   border: 1px dotted transparent;
 }
 
-:focus-visible::-moz-focus-inner {
+:-moz-focusring::-moz-focus-inner {
   border-color: currentColor;
 }
 
@@ -728,7 +728,7 @@ optgroup:before {
   box-shadow: 0 0 1.5px 1px red;
 }
 
-:-moz-ui-invalid:focus-visible {
+:-moz-ui-invalid:-moz-focusring {
   box-shadow: 0 0 2px 2px rgba(255,0,0,0.4);
 }
 
