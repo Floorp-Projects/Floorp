@@ -103,6 +103,21 @@ async function testLinkClick(withFrame, loadDivertedInBackground) {
   );
 
   await waitForTestReady(loadDivertedInBackground, tab);
+  await clickLink(
+    withFrame,
+    "#link-4",
+    tab.linkedBrowser,
+    testTab.linkedBrowser,
+    !loadDivertedInBackground
+  );
+  is(gBrowser.tabs.length, 3, "check tabs.length");
+  is(
+    gBrowser.selectedTab,
+    loadDivertedInBackground ? tab : testTab,
+    "check selectedTab"
+  );
+
+  await waitForTestReady(loadDivertedInBackground, tab);
   let loaded = BrowserTestUtils.browserLoaded(
     testTab.linkedBrowser,
     true,
@@ -110,7 +125,7 @@ async function testLinkClick(withFrame, loadDivertedInBackground) {
   );
   await clickLink(
     withFrame,
-    "#link-4",
+    "#link-5",
     tab.linkedBrowser,
     testTab.linkedBrowser,
     !loadDivertedInBackground,
