@@ -52,25 +52,3 @@ def generate_metric_ids(objs):
             metric_id += 1
 
     return lambda metric: metric_id_mapping[(metric.category, metric.name)]
-
-
-IMPLEMENTED_CPP_TYPES = [
-    "boolean",
-    "counter",
-    "datetime",
-    "event",
-    "memory_distribution",
-    "string",
-    "string_list",
-    "timespan",
-    "timing_distribution",
-    "uuid",
-]
-
-
-def is_implemented_metric_type(typ):
-    """
-    Filter out some unimplemented metric types to avoid generating C++ code for them.
-    Once all types are implemented this code will be removed.
-    """
-    return typ in IMPLEMENTED_CPP_TYPES
