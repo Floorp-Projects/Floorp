@@ -5,8 +5,17 @@
  * The defines which are shared between C and assembly code
  */
 
-/* bilinear interpolation precision (must be < 8) */
+/* bilinear interpolation precision (must be <= 8) */
+#ifndef MOZILLA_VERSION
+#error "Need mozilla headers"
+#endif
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+#define LOW_QUALITY_INTERPOLATION
+#define LOWER_QUALITY_INTERPOLATION
+#define BILINEAR_INTERPOLATION_BITS 4
+#else
 #define BILINEAR_INTERPOLATION_BITS 7
+#endif
 #define BILINEAR_INTERPOLATION_RANGE (1 << BILINEAR_INTERPOLATION_BITS)
 
 /*
