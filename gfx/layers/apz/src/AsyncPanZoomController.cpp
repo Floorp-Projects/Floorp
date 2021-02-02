@@ -5051,9 +5051,20 @@ void AsyncPanZoomController::NotifyLayersUpdated(
              this, ToString(Metrics().GetVisualScrollOffset()).c_str(),
              ToString(aLayerMetrics.GetVisualDestination()).c_str(),
              (int)aLayerMetrics.GetVisualScrollUpdateType());
-    Metrics().ClampAndSetVisualScrollOffset(
+    bool offsetChanged = Metrics().ClampAndSetVisualScrollOffset(
         aLayerMetrics.GetVisualDestination());
 
+    // If this is the first time we got metrics for this content (isDefault) and
+    // the update type was none and the offset didn't change then we don't have
+    // to do anything. This is important because we don't want to request
+    // repaint on the initial NotifyLayersUpdated for every content and thus set
+    // a full display port.
+    if (aLayerMetrics.GetVisualScrollUpdateType() == FrameMetrics::eNone &&
+        !offsetChanged) {
+      visualScrollOffsetUpdated = false;
+    }
+  }
+  if (visualScrollOffsetUpdated) {
     // The rest of this branch largely follows the code in the
     // |if (scrollOffsetUpdated)| branch above. Eventually it should get
     // merged into that branch.
