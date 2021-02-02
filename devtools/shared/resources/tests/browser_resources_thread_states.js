@@ -36,8 +36,10 @@ async function checkBreakpointBeforeWatchResources() {
   // so that it is correctly catched by the thread actor.
   info("Attach the top level target");
   await targetList.targetFront.attach();
+  // Init the Thread actor via attachAndInitThread in order to ensure
+  // memoizing the thread front and avoid attaching it twice
   info("Attach the top level thread actor");
-  const threadFront = await targetList.targetFront.attachThread();
+  await targetList.targetFront.attachAndInitThread(targetList);
 
   info("Run the 'debugger' statement");
   // Note that we do not wait for the resolution of spawn as it will be paused
@@ -77,6 +79,7 @@ async function checkBreakpointBeforeWatchResources() {
     },
   });
 
+  const { threadFront } = targetList.targetFront;
   await threadFront.resume();
 
   await waitFor(

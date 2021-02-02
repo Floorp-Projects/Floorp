@@ -22,6 +22,7 @@ DevToolsModules(
     "storage-local-storage.js",
     "storage-session-storage.js",
     "stylesheets.js",
+    "thread-states.js",
 )
 
 with Files("*-messages.js"):
