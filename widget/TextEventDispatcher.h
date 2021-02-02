@@ -10,9 +10,11 @@
 #include "nsString.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/TextEventDispatcherListener.h"
 #include "mozilla/TextRange.h"
 #include "mozilla/widget/IMEData.h"
+#include "WritingModes.h"
 
 class nsIWidget;
 
@@ -147,6 +149,13 @@ class TextEventDispatcher final {
     }
     return const_cast<TextEventDispatcher*>(this);
   }
+
+  /**
+   * MaybeWritingModeAtSelection() returns writing mode at current selection. If
+   * it's not stored, this tries to retrieve it.  Then, chrome script can run
+   * due to flushing the layout if an element in chrome has focus.
+   */
+  MOZ_CAN_RUN_SCRIPT Maybe<WritingMode> MaybeWritingModeAtSelection() const;
 
   /**
    * StartComposition() starts composition explicitly.
@@ -326,6 +335,9 @@ class TextEventDispatcher final {
   // mIMENotificationRequests should store current IME's notification requests.
   // So, this may be invalid when IME doesn't have focus.
   IMENotificationRequests mIMENotificationRequests;
+  // mWritingMode may store writing mode at current selection while this has
+  // focus (i.e., while this can receive selection change notifications).
+  mutable Maybe<WritingMode> mWritingMode;
 
   // mPendingComposition stores new composition string temporarily.
   // These values will be used for dispatching eCompositionChange event

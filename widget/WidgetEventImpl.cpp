@@ -7,13 +7,16 @@
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/InternalMutationEvent.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_mousewheel.h"
 #include "mozilla/StaticPrefs_ui.h"
+#include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/WritingModes.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
 #include "nsCommandParams.h"
 #include "nsContentUtils.h"
@@ -757,7 +760,8 @@ WidgetKeyboardEvent::KeyNameIndexHashtable*
 WidgetKeyboardEvent::CodeNameIndexHashtable*
     WidgetKeyboardEvent::sCodeNameIndexHashtable = nullptr;
 
-void WidgetKeyboardEvent::InitAllEditCommands() {
+void WidgetKeyboardEvent::InitAllEditCommands(
+    const Maybe<WritingMode>& aWritingMode) {
   // If this event is synthesized for tests, we don't need to retrieve the
   // command via the main process.  So, we don't need widget and can trust
   // the event.
@@ -781,20 +785,20 @@ void WidgetKeyboardEvent::InitAllEditCommands() {
                "Shouldn't be called two or more times");
   }
 
-  DebugOnly<bool> okIgnored =
-      InitEditCommandsFor(nsIWidget::NativeKeyBindingsForSingleLineEditor);
+  DebugOnly<bool> okIgnored = InitEditCommandsFor(
+      nsIWidget::NativeKeyBindingsForSingleLineEditor, aWritingMode);
   NS_WARNING_ASSERTION(
       okIgnored,
       "InitEditCommandsFor(nsIWidget::NativeKeyBindingsForSingleLineEditor) "
       "failed, but ignored");
-  okIgnored =
-      InitEditCommandsFor(nsIWidget::NativeKeyBindingsForMultiLineEditor);
+  okIgnored = InitEditCommandsFor(
+      nsIWidget::NativeKeyBindingsForMultiLineEditor, aWritingMode);
   NS_WARNING_ASSERTION(
       okIgnored,
       "InitEditCommandsFor(nsIWidget::NativeKeyBindingsForMultiLineEditor) "
       "failed, but ignored");
-  okIgnored =
-      InitEditCommandsFor(nsIWidget::NativeKeyBindingsForRichTextEditor);
+  okIgnored = InitEditCommandsFor(nsIWidget::NativeKeyBindingsForRichTextEditor,
+                                  aWritingMode);
   NS_WARNING_ASSERTION(
       okIgnored,
       "InitEditCommandsFor(nsIWidget::NativeKeyBindingsForRichTextEditor) "
@@ -802,7 +806,8 @@ void WidgetKeyboardEvent::InitAllEditCommands() {
 }
 
 bool WidgetKeyboardEvent::InitEditCommandsFor(
-    nsIWidget::NativeKeyBindingsType aType) {
+    nsIWidget::NativeKeyBindingsType aType,
+    const Maybe<WritingMode>& aWritingMode) {
   bool& initialized = IsEditCommandsInitializedRef(aType);
   if (initialized) {
     return true;
@@ -818,7 +823,8 @@ bool WidgetKeyboardEvent::InitEditCommandsFor(
 #if defined(MOZ_WIDGET_GTK) || defined(XP_MACOSX)
     // TODO: We should implement `NativeKeyBindings` for Windows and Android
     //       too in bug 1301497 for getting rid of the #if.
-    widget::NativeKeyBindings::GetEditCommandsForTests(aType, *this, commands);
+    widget::NativeKeyBindings::GetEditCommandsForTests(aType, *this,
+                                                       aWritingMode, commands);
 #endif
     initialized = true;
     return true;
@@ -827,7 +833,11 @@ bool WidgetKeyboardEvent::InitEditCommandsFor(
   if (NS_WARN_IF(!mWidget) || NS_WARN_IF(!IsTrusted())) {
     return false;
   }
-  initialized = mWidget->GetEditCommands(aType, *this, commands);
+  // `nsIWidget::GetEditCommands()` will retrieve `WritingMode` at selection
+  // again, but it should be almost zero-cost since `TextEventDispatcher`
+  // caches the value.
+  nsCOMPtr<nsIWidget> widget = mWidget;
+  initialized = widget->GetEditCommands(aType, *this, commands);
   return initialized;
 }
 
@@ -846,8 +856,15 @@ bool WidgetKeyboardEvent::ExecuteEditCommands(
     return false;
   }
 
-  if (NS_WARN_IF(!InitEditCommandsFor(aType))) {
-    return false;
+  if (!IsEditCommandsInitializedRef(aType)) {
+    Maybe<WritingMode> writingMode;
+    if (RefPtr<widget::TextEventDispatcher> textEventDispatcher =
+            mWidget->GetTextEventDispatcher()) {
+      writingMode = textEventDispatcher->MaybeWritingModeAtSelection();
+    }
+    if (NS_WARN_IF(!InitEditCommandsFor(aType, writingMode))) {
+      return false;
+    }
   }
 
   const nsTArray<CommandInt>& commands = EditCommandsRef(aType);

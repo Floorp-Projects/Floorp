@@ -15,6 +15,11 @@
 using GtkWidget = struct _GtkWidget;
 
 namespace mozilla {
+
+class WritingMode;
+template <typename T>
+class Maybe;
+
 namespace widget {
 
 class NativeKeyBindings final {
@@ -31,11 +36,13 @@ class NativeKeyBindings final {
    */
   static void GetEditCommandsForTests(NativeKeyBindingsType aType,
                                       const WidgetKeyboardEvent& aEvent,
+                                      const Maybe<WritingMode>& aWritingMode,
                                       nsTArray<CommandInt>& aCommands);
 
   void Init(NativeKeyBindingsType aType);
 
   void GetEditCommands(const WidgetKeyboardEvent& aEvent,
+                       const Maybe<WritingMode>& aWritingMode,
                        nsTArray<CommandInt>& aCommands);
 
  private:
