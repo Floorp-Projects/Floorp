@@ -735,9 +735,7 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x9b41);
       APPEND_DEVICE(0x9bc0);
       APPEND_DEVICE(0x9bc2);
-      APPEND_RANGE(0x9bc4, 0x9bc5);
-      APPEND_DEVICE(0x9bc8);
-      APPEND_RANGE(0x9bca, 0x9bcc);
+      APPEND_RANGE(0x9bc4, 0x9bf6);
 
       // icelake gt1,gt1.5,gt2
       APPEND_RANGE(0x8a50, 0x8a5d);
