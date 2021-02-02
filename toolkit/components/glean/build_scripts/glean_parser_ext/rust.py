@@ -222,6 +222,7 @@ def output_rust(objs, output_fd, options={}):
             metric_by_type=objs_by_type,
             extra_args=util.extra_args,
             events_by_id=events_by_id,
+            min_submetric_id=2 ** 27 + 1,  # One more than 2**ID_BITS from js.py
         )
     )
     output_fd.write("\n")
