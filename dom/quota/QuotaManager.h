@@ -92,10 +92,9 @@ class DirectoryLock : public RefCountedObject {
 
   void Acquire(RefPtr<OpenDirectoryListener> aOpenListener);
 
-  already_AddRefed<DirectoryLock> Specialize(
-      PersistenceType aPersistenceType,
-      const quota::GroupAndOrigin& aGroupAndOrigin,
-      Client::Type aClientType) const;
+  RefPtr<DirectoryLock> Specialize(PersistenceType aPersistenceType,
+                                   const quota::GroupAndOrigin& aGroupAndOrigin,
+                                   Client::Type aClientType) const;
 
   void Log() const;
 
@@ -313,12 +312,12 @@ class QuotaManager final : public BackgroundThreadObject {
   // Unlocking is simply done by dropping all references to the lock object.
   // In other words, protection which the lock represents dies with the lock
   // object itself.
-  already_AddRefed<DirectoryLock> CreateDirectoryLock(
+  RefPtr<DirectoryLock> CreateDirectoryLock(
       PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
       Client::Type aClientType, bool aExclusive);
 
   // XXX RemoveMe once bug 1170279 gets fixed.
-  already_AddRefed<DirectoryLock> CreateDirectoryLockInternal(
+  RefPtr<DirectoryLock> CreateDirectoryLockInternal(
       const Nullable<PersistenceType>& aPersistenceType,
       const OriginScope& aOriginScope,
       const Nullable<Client::Type>& aClientType, bool aExclusive);
@@ -486,13 +485,13 @@ class QuotaManager final : public BackgroundThreadObject {
 
   void Shutdown();
 
-  already_AddRefed<DirectoryLockImpl> CreateDirectoryLock(
+  RefPtr<DirectoryLockImpl> CreateDirectoryLock(
       const Nullable<PersistenceType>& aPersistenceType,
       const nsACString& aGroup, const OriginScope& aOriginScope,
       const Nullable<Client::Type>& aClientType, bool aExclusive,
       bool aInternal);
 
-  already_AddRefed<DirectoryLockImpl> CreateDirectoryLockForEviction(
+  RefPtr<DirectoryLockImpl> CreateDirectoryLockForEviction(
       PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin);
 
   void RegisterDirectoryLock(DirectoryLockImpl& aLock);

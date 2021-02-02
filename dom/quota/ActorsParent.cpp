@@ -780,10 +780,9 @@ class DirectoryLockImpl final : public DirectoryLock {
 
   void Acquire();
 
-  already_AddRefed<DirectoryLock> Specialize(
-      PersistenceType aPersistenceType,
-      const quota::GroupAndOrigin& aGroupAndOrigin,
-      Client::Type aClientType) const;
+  RefPtr<DirectoryLock> Specialize(PersistenceType aPersistenceType,
+                                   const quota::GroupAndOrigin& aGroupAndOrigin,
+                                   Client::Type aClientType) const;
 
   void Log() const;
 
@@ -2726,7 +2725,7 @@ void DirectoryLock::Acquire(RefPtr<OpenDirectoryListener> aOpenListener) {
   AsDirectoryLockImpl(this)->Acquire(std::move(aOpenListener));
 }
 
-already_AddRefed<DirectoryLock> DirectoryLock::Specialize(
+RefPtr<DirectoryLock> DirectoryLock::Specialize(
     PersistenceType aPersistenceType,
     const quota::GroupAndOrigin& aGroupAndOrigin,
     Client::Type aClientType) const {
@@ -2914,7 +2913,7 @@ void DirectoryLockImpl::Acquire() {
   mQuotaManager->RegisterDirectoryLock(*this);
 }
 
-already_AddRefed<DirectoryLock> DirectoryLockImpl::Specialize(
+RefPtr<DirectoryLock> DirectoryLockImpl::Specialize(
     PersistenceType aPersistenceType,
     const quota::GroupAndOrigin& aGroupAndOrigin,
     Client::Type aClientType) const {
@@ -2962,7 +2961,7 @@ already_AddRefed<DirectoryLock> DirectoryLockImpl::Specialize(
     lock->Invalidate();
   }
 
-  return lock.forget();
+  return lock;
 }
 
 void DirectoryLockImpl::Log() const {
@@ -3659,10 +3658,10 @@ bool QuotaManager::IsDotFile(const nsAString& aFileName) {
   return aFileName.First() == char16_t('.');
 }
 
-auto QuotaManager::CreateDirectoryLock(
+RefPtr<DirectoryLockImpl> QuotaManager::CreateDirectoryLock(
     const Nullable<PersistenceType>& aPersistenceType, const nsACString& aGroup,
     const OriginScope& aOriginScope, const Nullable<Client::Type>& aClientType,
-    bool aExclusive, bool aInternal) -> already_AddRefed<DirectoryLockImpl> {
+    bool aExclusive, bool aInternal) {
   AssertIsOnOwningThread();
   MOZ_ASSERT_IF(aOriginScope.IsOrigin(), !aOriginScope.GetOrigin().IsEmpty());
   MOZ_ASSERT_IF(!aInternal, !aPersistenceType.IsNull());
@@ -3673,30 +3672,25 @@ auto QuotaManager::CreateDirectoryLock(
   MOZ_ASSERT_IF(!aInternal, !aClientType.IsNull());
   MOZ_ASSERT_IF(!aInternal, aClientType.Value() < Client::TypeMax());
 
-  RefPtr<DirectoryLockImpl> lock = new DirectoryLockImpl(
+  return MakeRefPtr<DirectoryLockImpl>(
       WrapNotNullUnchecked(this), GenerateDirectoryLockId(), aPersistenceType,
       aGroup, aOriginScope, aClientType, aExclusive, aInternal,
       ShouldUpdateLockIdTableFlag::Yes);
-
-  return lock.forget();
 }
 
-auto QuotaManager::CreateDirectoryLockForEviction(
-    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin)
-    -> already_AddRefed<DirectoryLockImpl> {
+RefPtr<DirectoryLockImpl> QuotaManager::CreateDirectoryLockForEviction(
+    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_INVALID);
   MOZ_ASSERT(!aGroupAndOrigin.mOrigin.IsEmpty());
 
-  RefPtr<DirectoryLockImpl> lock = new DirectoryLockImpl(
+  return MakeRefPtr<DirectoryLockImpl>(
       WrapNotNullUnchecked(this), GenerateDirectoryLockId(),
       Nullable<PersistenceType>(aPersistenceType), aGroupAndOrigin.mGroup,
       OriginScope::FromOrigin(aGroupAndOrigin.mOrigin),
       Nullable<Client::Type>(),
       /* aExclusive */ true, /* aInternal */ true,
       ShouldUpdateLockIdTableFlag::No);
-
-  return lock.forget();
 }
 
 void QuotaManager::RegisterDirectoryLock(DirectoryLockImpl& aLock) {
@@ -6374,32 +6368,26 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
   return NS_OK;
 }
 
-already_AddRefed<DirectoryLock> QuotaManager::CreateDirectoryLock(
+RefPtr<DirectoryLock> QuotaManager::CreateDirectoryLock(
     PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
     Client::Type aClientType, bool aExclusive) {
   AssertIsOnOwningThread();
 
-  RefPtr<DirectoryLockImpl> lock = CreateDirectoryLock(
+  return CreateDirectoryLock(
       Nullable<PersistenceType>(aPersistenceType), aGroupAndOrigin.mGroup,
       OriginScope::FromOrigin(aGroupAndOrigin.mOrigin),
       Nullable<Client::Type>(aClientType), aExclusive, false);
-  MOZ_ASSERT(lock);
-
-  return lock.forget();
 }
 
-already_AddRefed<DirectoryLock> QuotaManager::CreateDirectoryLockInternal(
+RefPtr<DirectoryLock> QuotaManager::CreateDirectoryLockInternal(
     const Nullable<PersistenceType>& aPersistenceType,
     const OriginScope& aOriginScope, const Nullable<Client::Type>& aClientType,
     bool aExclusive) {
   AssertIsOnOwningThread();
 
-  RefPtr<DirectoryLockImpl> lock = CreateDirectoryLock(
-      aPersistenceType, ""_ns, aOriginScope,
-      Nullable<Client::Type>(aClientType), aExclusive, true);
-  MOZ_ASSERT(lock);
-
-  return lock.forget();
+  return CreateDirectoryLock(aPersistenceType, ""_ns, aOriginScope,
+                             Nullable<Client::Type>(aClientType), aExclusive,
+                             true);
 }
 
 Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
