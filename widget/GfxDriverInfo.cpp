@@ -507,6 +507,9 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       break;
     case DeviceFamily::IntelRolloutWebRender:
 #ifdef EARLY_BETA_OR_EARLIER
+      // gen4.5 - G45
+      APPEND_DEVICE(0x2e22);
+
       // gen5 (ironlake)
       APPEND_DEVICE(0x0042);
       APPEND_DEVICE(0x0046);
