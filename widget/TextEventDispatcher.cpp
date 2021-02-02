@@ -187,6 +187,7 @@ void TextEventDispatcher::OnDestroyWidget() {
   mPendingComposition.Clear();
   nsCOMPtr<TextEventDispatcherListener> listener = do_QueryReferent(mListener);
   mListener = nullptr;
+  mWritingMode.reset();
   mInputTransactionType = eNoInputTransaction;
   if (listener) {
     listener->OnRemovedFrom(this);
@@ -224,6 +225,33 @@ void TextEventDispatcher::InitEvent(WidgetGUIEvent& aEvent) const {
                "Native IME context shouldn't be invalid");
   }
 #endif  // #ifdef DEBUG
+}
+
+Maybe<WritingMode> TextEventDispatcher::MaybeWritingModeAtSelection() const {
+  if (mWritingMode.isSome()) {
+    return mWritingMode;
+  }
+
+  if (NS_WARN_IF(!mWidget)) {
+    return Nothing();
+  }
+
+  WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText,
+                                                 mWidget);
+  nsEventStatus status = nsEventStatus_eIgnore;
+  const_cast<TextEventDispatcher*>(this)->DispatchEvent(
+      mWidget, querySelectedTextEvent, status);
+  if (!querySelectedTextEvent.FoundSelection()) {
+    if (mHasFocus) {
+      mWritingMode.reset();
+    }
+    return Nothing();
+  }
+
+  if (mHasFocus) {
+    mWritingMode = Some(querySelectedTextEvent.mReply->mWritingMode);
+  }
+  return Some(querySelectedTextEvent.mReply->mWritingMode);
 }
 
 nsresult TextEventDispatcher::DispatchEvent(nsIWidget* aWidget,
@@ -388,6 +416,7 @@ nsresult TextEventDispatcher::NotifyIME(
   switch (aIMENotification.mMessage) {
     case NOTIFY_IME_OF_BLUR:
       mHasFocus = false;
+      mWritingMode.reset();
       ClearNotificationRequests();
       break;
     case NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED:
@@ -398,6 +427,12 @@ nsresult TextEventDispatcher::NotifyIME(
       // have been handled in the remote process.
       if (!IsComposing()) {
         mIsHandlingComposition = false;
+      }
+      break;
+    case NOTIFY_IME_OF_SELECTION_CHANGE:
+      if (mHasFocus) {
+        mWritingMode =
+            Some(aIMENotification.mSelectionChangeData.GetWritingMode());
       }
       break;
     default:

@@ -42,10 +42,12 @@
 
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_widget.h"
-#include "mozilla/PresShell.h"
+#include "mozilla/WritingModes.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include <algorithm>
 
@@ -2594,7 +2596,11 @@ bool nsCocoaWindow::GetEditCommands(NativeKeyBindingsType aType, const WidgetKey
   }
 
   NativeKeyBindings* keyBindings = NativeKeyBindings::GetInstance(aType);
-  keyBindings->GetEditCommands(aEvent, aCommands);
+  // When the keyboard event is fired from this widget, it must mean that no web content has focus
+  // because any web contents should be on `nsChildView`.  And in any locales, the system UI is
+  // always horizontal layout.  So, let's pass `Nothing()` for the writing mode here, it won't be
+  // treated as in a vertical content.
+  keyBindings->GetEditCommands(aEvent, Nothing(), aCommands);
   return true;
 }
 

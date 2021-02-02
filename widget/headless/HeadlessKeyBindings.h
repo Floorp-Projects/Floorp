@@ -11,6 +11,11 @@
 #include "nsTArray.h"
 
 namespace mozilla {
+
+class WritingMode;
+template <typename T>
+class Maybe;
+
 namespace widget {
 
 /**
@@ -25,6 +30,7 @@ class HeadlessKeyBindings final {
 
   void GetEditCommands(nsIWidget::NativeKeyBindingsType aType,
                        const WidgetKeyboardEvent& aEvent,
+                       const Maybe<WritingMode>& aWritingMode,
                        nsTArray<CommandInt>& aCommands);
   [[nodiscard]] nsresult AttachNativeKeyEvent(WidgetKeyboardEvent& aEvent);
 };

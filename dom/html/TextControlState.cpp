@@ -929,7 +929,7 @@ static void DoCommandCallback(Command aCommand, void* aData) {
   }
 }
 
-NS_IMETHODIMP
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
 TextInputListener::HandleEvent(Event* aEvent) {
   if (aEvent->DefaultPrevented()) {
     return NS_OK;

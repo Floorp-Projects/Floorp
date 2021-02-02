@@ -1883,9 +1883,9 @@ class nsIWidget : public nsISupports {
     NativeKeyBindingsForMultiLineEditor,
     NativeKeyBindingsForRichTextEditor
   };
-  virtual bool GetEditCommands(NativeKeyBindingsType aType,
-                               const mozilla::WidgetKeyboardEvent& aEvent,
-                               nsTArray<mozilla::CommandInt>& aCommands);
+  MOZ_CAN_RUN_SCRIPT virtual bool GetEditCommands(
+      NativeKeyBindingsType aType, const mozilla::WidgetKeyboardEvent& aEvent,
+      nsTArray<mozilla::CommandInt>& aCommands);
 
   /*
    * Retrieves a reference to notification requests of IME.  Note that the

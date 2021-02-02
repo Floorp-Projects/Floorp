@@ -322,8 +322,10 @@ void FuzzingFunctions::SynthesizeKeyboardEvents(const GlobalObject&,
   }
 
   // First, activate necessary modifiers.
+  // MOZ_KnownLive(event.mWidget) is safe because `event` is an instance in
+  // the stack, and `mWidget` is `nsCOMPtr<nsIWidget>`.
   Modifiers activatedModifiers = ActivateModifiers(
-      textInputProcessor, event.mModifiers, event.mWidget, aRv);
+      textInputProcessor, event.mModifiers, MOZ_KnownLive(event.mWidget), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -341,8 +343,10 @@ void FuzzingFunctions::SynthesizeKeyboardEvents(const GlobalObject&,
   }
 
   // Finally, inactivate some modifiers which are activated by this call.
-  InactivateModifiers(textInputProcessor, activatedModifiers, event.mWidget,
-                      aRv);
+  // MOZ_KnownLive(event.mWidget) is safe because `event` is an instance in
+  // the stack, and `mWidget` is `nsCOMPtr<nsIWidget>`.
+  InactivateModifiers(textInputProcessor, activatedModifiers,
+                      MOZ_KnownLive(event.mWidget), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

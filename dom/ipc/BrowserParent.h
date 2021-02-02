@@ -504,9 +504,10 @@ class BrowserParent final : public PBrowserParent,
 
   LayoutDeviceToCSSScale GetLayoutDeviceToCSSScale();
 
-  mozilla::ipc::IPCResult RecvRequestNativeKeyBindings(
-      const uint32_t& aType, const mozilla::WidgetKeyboardEvent& aEvent,
-      nsTArray<mozilla::CommandInt>* aCommands);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY mozilla::ipc::IPCResult
+  RecvRequestNativeKeyBindings(const uint32_t& aType,
+                               const mozilla::WidgetKeyboardEvent& aEvent,
+                               nsTArray<mozilla::CommandInt>* aCommands);
 
   mozilla::ipc::IPCResult RecvSynthesizeNativeKeyEvent(
       const int32_t& aNativeKeyboardLayout, const int32_t& aNativeKeyCode,
@@ -554,7 +555,12 @@ class BrowserParent final : public PBrowserParent,
 
   void SendMouseWheelEvent(WidgetWheelEvent& aEvent);
 
-  void SendRealKeyEvent(WidgetKeyboardEvent& aEvent);
+  /**
+   * Only when the event is synthesized, retrieving writing mode may flush
+   * the layout.
+   */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void SendRealKeyEvent(
+      WidgetKeyboardEvent& aEvent);
 
   void SendRealTouchEvent(WidgetTouchEvent& aEvent);
 

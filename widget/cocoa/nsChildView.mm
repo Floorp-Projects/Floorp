@@ -14,12 +14,15 @@
 #include "nsChildView.h"
 #include "nsCocoaWindow.h"
 
+#include "mozilla/Maybe.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/WheelHandlingHelper.h"  // for WheelDeltaAdjustmentStrategy
+#include "mozilla/WritingModes.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/SimpleGestureEventBinding.h"
@@ -1535,33 +1538,6 @@ nsresult nsChildView::AttachNativeKeyEvent(mozilla::WidgetKeyboardEvent& aEvent)
   return mTextInputHandler->AttachNativeKeyEvent(aEvent);
 }
 
-void nsChildView::GetEditCommandsRemapped(NativeKeyBindingsType aType,
-                                          const WidgetKeyboardEvent& aEvent,
-                                          nsTArray<CommandInt>& aCommands, uint32_t aGeckoKeyCode,
-                                          uint32_t aCocoaKeyCode) {
-  NSEvent* originalEvent = reinterpret_cast<NSEvent*>(aEvent.mNativeKeyEvent);
-
-  WidgetKeyboardEvent modifiedEvent(aEvent);
-  modifiedEvent.mKeyCode = aGeckoKeyCode;
-
-  unichar ch = nsCocoaUtils::ConvertGeckoKeyCodeToMacCharCode(aGeckoKeyCode);
-  NSString* chars = [[[NSString alloc] initWithCharacters:&ch length:1] autorelease];
-
-  modifiedEvent.mNativeKeyEvent = [NSEvent keyEventWithType:[originalEvent type]
-                                                   location:[originalEvent locationInWindow]
-                                              modifierFlags:[originalEvent modifierFlags]
-                                                  timestamp:[originalEvent timestamp]
-                                               windowNumber:[originalEvent windowNumber]
-                                                    context:[originalEvent context]
-                                                 characters:chars
-                                charactersIgnoringModifiers:chars
-                                                  isARepeat:[originalEvent isARepeat]
-                                                    keyCode:aCocoaKeyCode];
-
-  NativeKeyBindings* keyBindings = NativeKeyBindings::GetInstance(aType);
-  keyBindings->GetEditCommands(modifiedEvent, aCommands);
-}
-
 bool nsChildView::GetEditCommands(NativeKeyBindingsType aType, const WidgetKeyboardEvent& aEvent,
                                   nsTArray<CommandInt>& aCommands) {
   // Validate the arguments.
@@ -1569,59 +1545,15 @@ bool nsChildView::GetEditCommands(NativeKeyBindingsType aType, const WidgetKeybo
     return false;
   }
 
-  // If the key is a cursor-movement arrow, and the current selection has
-  // vertical writing-mode, we'll remap so that the movement command
-  // generated (in terms of characters/lines) will be appropriate for
-  // the physical direction of the arrow.
-  if (aEvent.mKeyCode >= NS_VK_LEFT && aEvent.mKeyCode <= NS_VK_DOWN) {
-    // XXX This may be expensive. Should use the cache in TextInputHandler.
-    WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText, this);
-    DispatchWindowEvent(querySelectedTextEvent);
-
-    if (querySelectedTextEvent.FoundSelection() &&
-        querySelectedTextEvent.mReply->mWritingMode.IsVertical()) {
-      uint32_t geckoKey = 0;
-      uint32_t cocoaKey = 0;
-
-      switch (aEvent.mKeyCode) {
-        case NS_VK_LEFT:
-          if (querySelectedTextEvent.mReply->mWritingMode.IsVerticalLR()) {
-            geckoKey = NS_VK_UP;
-            cocoaKey = kVK_UpArrow;
-          } else {
-            geckoKey = NS_VK_DOWN;
-            cocoaKey = kVK_DownArrow;
-          }
-          break;
-
-        case NS_VK_RIGHT:
-          if (querySelectedTextEvent.mReply->mWritingMode.IsVerticalLR()) {
-            geckoKey = NS_VK_DOWN;
-            cocoaKey = kVK_DownArrow;
-          } else {
-            geckoKey = NS_VK_UP;
-            cocoaKey = kVK_UpArrow;
-          }
-          break;
-
-        case NS_VK_UP:
-          geckoKey = NS_VK_LEFT;
-          cocoaKey = kVK_LeftArrow;
-          break;
-
-        case NS_VK_DOWN:
-          geckoKey = NS_VK_RIGHT;
-          cocoaKey = kVK_RightArrow;
-          break;
-      }
-
-      GetEditCommandsRemapped(aType, aEvent, aCommands, geckoKey, cocoaKey);
-      return true;
+  Maybe<WritingMode> writingMode;
+  if (aEvent.NeedsToRemapNavigationKey()) {
+    if (RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher()) {
+      writingMode = dispatcher->MaybeWritingModeAtSelection();
     }
   }
 
   NativeKeyBindings* keyBindings = NativeKeyBindings::GetInstance(aType);
-  keyBindings->GetEditCommands(aEvent, aCommands);
+  keyBindings->GetEditCommands(aEvent, writingMode, aCommands);
   return true;
 }
 

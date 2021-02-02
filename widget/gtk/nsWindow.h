@@ -319,11 +319,7 @@ class nsWindow final : public nsBaseWidget {
   virtual InputContext GetInputContext() override;
   virtual TextEventDispatcherListener* GetNativeTextEventDispatcherListener()
       override;
-  void GetEditCommandsRemapped(NativeKeyBindingsType aType,
-                               const mozilla::WidgetKeyboardEvent& aEvent,
-                               nsTArray<mozilla::CommandInt>& aCommands,
-                               uint32_t aGeckoKeyCode, uint32_t aNativeKeyCode);
-  virtual bool GetEditCommands(
+  MOZ_CAN_RUN_SCRIPT virtual bool GetEditCommands(
       NativeKeyBindingsType aType, const mozilla::WidgetKeyboardEvent& aEvent,
       nsTArray<mozilla::CommandInt>& aCommands) override;
 

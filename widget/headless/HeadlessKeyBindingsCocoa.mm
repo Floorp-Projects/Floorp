@@ -8,6 +8,8 @@
 #include "nsCocoaUtils.h"
 #include "NativeKeyBindings.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/WritingModes.h"
 
 namespace mozilla {
 namespace widget {
@@ -33,6 +35,7 @@ nsresult HeadlessKeyBindings::AttachNativeKeyEvent(WidgetKeyboardEvent& aEvent) 
 
 void HeadlessKeyBindings::GetEditCommands(nsIWidget::NativeKeyBindingsType aType,
                                           const WidgetKeyboardEvent& aEvent,
+                                          const Maybe<WritingMode>& aWritingMode,
                                           nsTArray<CommandInt>& aCommands) {
   // Convert the widget keyboard into a cocoa event so it can be translated
   // into commands in the NativeKeyBindings.
@@ -40,7 +43,7 @@ void HeadlessKeyBindings::GetEditCommands(nsIWidget::NativeKeyBindingsType aType
   modifiedEvent.mNativeKeyEvent = nsCocoaUtils::MakeNewCococaEventFromWidgetEvent(aEvent, 0, nil);
 
   NativeKeyBindings* keyBindings = NativeKeyBindings::GetInstance(aType);
-  keyBindings->GetEditCommands(modifiedEvent, aCommands);
+  keyBindings->GetEditCommands(modifiedEvent, aWritingMode, aCommands);
 }
 
 }  // namespace widget

@@ -5,7 +5,9 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/WritingModes.h"
 
 #include "NativeKeyBindings.h"
 #include "nsString.h"
@@ -14,6 +16,7 @@
 
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
+#include <gdk/gdkkeysyms-compat.h>
 #include <gdk/gdk.h>
 
 namespace mozilla {
@@ -276,6 +279,7 @@ NativeKeyBindings::~NativeKeyBindings() {
 }
 
 void NativeKeyBindings::GetEditCommands(const WidgetKeyboardEvent& aEvent,
+                                        const Maybe<WritingMode>& aWritingMode,
                                         nsTArray<CommandInt>& aCommands) {
   MOZ_ASSERT(!aEvent.mFlags.mIsSynthesizedForTests);
   MOZ_ASSERT(aCommands.IsEmpty());
@@ -286,9 +290,30 @@ void NativeKeyBindings::GetEditCommands(const WidgetKeyboardEvent& aEvent,
   }
 
   guint keyval;
-
   if (aEvent.mCharCode) {
     keyval = gdk_unicode_to_keyval(aEvent.mCharCode);
+  } else if (aWritingMode.isSome() && aEvent.NeedsToRemapNavigationKey() &&
+             aWritingMode.ref().IsVertical()) {
+    // TODO: Use KeyNameIndex rather than legacy keyCode.
+    uint32_t remappedGeckoKeyCode =
+        aEvent.GetRemappedKeyCode(aWritingMode.ref());
+    switch (remappedGeckoKeyCode) {
+      case NS_VK_UP:
+        keyval = GDK_Up;
+        break;
+      case NS_VK_DOWN:
+        keyval = GDK_Down;
+        break;
+      case NS_VK_LEFT:
+        keyval = GDK_Left;
+        break;
+      case NS_VK_RIGHT:
+        keyval = GDK_Right;
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Add a case for the new remapped key");
+        return;
+    }
   } else {
     keyval = static_cast<GdkEventKey*>(aEvent.mNativeKeyEvent)->keyval;
   }
@@ -345,7 +370,7 @@ bool NativeKeyBindings::GetEditCommandsInternal(
 // static
 void NativeKeyBindings::GetEditCommandsForTests(
     NativeKeyBindingsType aType, const WidgetKeyboardEvent& aEvent,
-    nsTArray<CommandInt>& aCommands) {
+    const Maybe<WritingMode>& aWritingMode, nsTArray<CommandInt>& aCommands) {
   MOZ_DIAGNOSTIC_ASSERT(aEvent.IsTrusted());
 
   if (aEvent.IsAlt() || aEvent.IsMeta() || aEvent.IsOS()) {
@@ -358,7 +383,10 @@ void NativeKeyBindings::GetEditCommandsForTests(
   // https://github.com/GNOME/gtk/blob/1f141c19533f4b3f397c3959ade673ce243b6138/gtk/gtktext.c#L1289
   // https://github.com/GNOME/gtk/blob/c5dd34344f0c660ceffffb3bf9da43c263db16e1/gtk/gtktextview.c#L1534
   Command command = Command::DoNothing;
-  switch (aEvent.mKeyNameIndex) {
+  const KeyNameIndex remappedKeyNameIndex =
+      aWritingMode.isSome() ? aEvent.GetRemappedKeyNameIndex(aWritingMode.ref())
+                            : aEvent.mKeyNameIndex;
+  switch (remappedKeyNameIndex) {
     case KEY_NAME_INDEX_USE_STRING:
       switch (aEvent.PseudoCharCode()) {
         case 'a':
@@ -416,7 +444,7 @@ void NativeKeyBindings::GetEditCommandsForTests(
       [[fallthrough]];
     case KEY_NAME_INDEX_Backspace: {
       const size_t direction =
-          aEvent.mKeyNameIndex == KEY_NAME_INDEX_Delete ? kForward : kBackward;
+          remappedKeyNameIndex == KEY_NAME_INDEX_Delete ? kForward : kBackward;
       const GtkDeleteType amount =
           aEvent.IsControl() && aEvent.IsShift()
               ? GTK_DELETE_PARAGRAPH_ENDS
@@ -427,7 +455,7 @@ void NativeKeyBindings::GetEditCommandsForTests(
     }
     case KEY_NAME_INDEX_ArrowLeft:
     case KEY_NAME_INDEX_ArrowRight: {
-      const size_t direction = aEvent.mKeyNameIndex == KEY_NAME_INDEX_ArrowRight
+      const size_t direction = remappedKeyNameIndex == KEY_NAME_INDEX_ArrowRight
                                    ? kForward
                                    : kBackward;
       const GtkMovementStep amount = aEvent.IsControl()
@@ -438,7 +466,7 @@ void NativeKeyBindings::GetEditCommandsForTests(
     }
     case KEY_NAME_INDEX_ArrowUp:
     case KEY_NAME_INDEX_ArrowDown: {
-      const size_t direction = aEvent.mKeyNameIndex == KEY_NAME_INDEX_ArrowDown
+      const size_t direction = remappedKeyNameIndex == KEY_NAME_INDEX_ArrowDown
                                    ? kForward
                                    : kBackward;
       const GtkMovementStep amount = aEvent.IsControl()
@@ -450,7 +478,7 @@ void NativeKeyBindings::GetEditCommandsForTests(
     case KEY_NAME_INDEX_Home:
     case KEY_NAME_INDEX_End: {
       const size_t direction =
-          aEvent.mKeyNameIndex == KEY_NAME_INDEX_End ? kForward : kBackward;
+          remappedKeyNameIndex == KEY_NAME_INDEX_End ? kForward : kBackward;
       const GtkMovementStep amount = aEvent.IsControl()
                                          ? GTK_MOVEMENT_BUFFER_ENDS
                                          : GTK_MOVEMENT_DISPLAY_LINE_ENDS;
@@ -459,7 +487,7 @@ void NativeKeyBindings::GetEditCommandsForTests(
     }
     case KEY_NAME_INDEX_PageUp:
     case KEY_NAME_INDEX_PageDown: {
-      const size_t direction = aEvent.mKeyNameIndex == KEY_NAME_INDEX_PageDown
+      const size_t direction = remappedKeyNameIndex == KEY_NAME_INDEX_PageDown
                                    ? kForward
                                    : kBackward;
       const GtkMovementStep amount = aEvent.IsControl()

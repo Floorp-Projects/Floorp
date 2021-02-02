@@ -14,6 +14,11 @@
 struct objc_selector;
 
 namespace mozilla {
+
+class WritingMode;
+template <typename T>
+class Maybe;
+
 namespace widget {
 
 typedef nsDataHashtable<nsPtrHashKey<objc_selector>, Command>
@@ -33,11 +38,13 @@ class NativeKeyBindings final {
    */
   static void GetEditCommandsForTests(NativeKeyBindingsType aType,
                                       const WidgetKeyboardEvent& aEvent,
+                                      const Maybe<WritingMode>& aWritingMode,
                                       nsTArray<CommandInt>& aCommands);
 
   void Init(NativeKeyBindingsType aType);
 
   void GetEditCommands(const WidgetKeyboardEvent& aEvent,
+                       const Maybe<WritingMode>& aWritingMode,
                        nsTArray<CommandInt>& aCommands);
 
  private:

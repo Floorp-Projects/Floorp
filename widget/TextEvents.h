@@ -409,21 +409,99 @@ class WidgetKeyboardEvent : public WidgetInputEvent {
   }
 
   /**
+   * If the key is an arrow key, and the current selection is in a vertical
+   * content, the caret should be moved to physically.  However, arrow keys
+   * are mapped to logical move commands in horizontal content.  Therefore,
+   * we need to check writing mode if and only if the key is an arrow key, and
+   * need to remap the command to logical command in vertical content if the
+   * writing mode at selection is vertical.  These methods help to convert
+   * arrow keys in horizontal content to correspnding direction arrow keys
+   * in vertical content.
+   */
+  bool NeedsToRemapNavigationKey() const {
+    // TODO: Use mKeyNameIndex instead.
+    return mKeyCode >= NS_VK_LEFT && mKeyCode <= NS_VK_DOWN;
+  }
+
+  uint32_t GetRemappedKeyCode(const WritingMode& aWritingMode) const {
+    if (!aWritingMode.IsVertical()) {
+      return mKeyCode;
+    }
+    switch (mKeyCode) {
+      case NS_VK_LEFT:
+        return aWritingMode.IsVerticalLR() ? NS_VK_UP : NS_VK_DOWN;
+      case NS_VK_RIGHT:
+        return aWritingMode.IsVerticalLR() ? NS_VK_DOWN : NS_VK_UP;
+      case NS_VK_UP:
+        return NS_VK_LEFT;
+      case NS_VK_DOWN:
+        return NS_VK_RIGHT;
+      default:
+        return mKeyCode;
+    }
+  }
+
+  KeyNameIndex GetRemappedKeyNameIndex(const WritingMode& aWritingMode) const {
+    if (!aWritingMode.IsVertical()) {
+      return mKeyNameIndex;
+    }
+    uint32_t remappedKeyCode = GetRemappedKeyCode(aWritingMode);
+    if (remappedKeyCode == mKeyCode) {
+      return mKeyNameIndex;
+    }
+    switch (remappedKeyCode) {
+      case NS_VK_LEFT:
+        return KEY_NAME_INDEX_ArrowLeft;
+      case NS_VK_RIGHT:
+        return KEY_NAME_INDEX_ArrowRight;
+      case NS_VK_UP:
+        return KEY_NAME_INDEX_ArrowUp;
+      case NS_VK_DOWN:
+        return KEY_NAME_INDEX_ArrowDown;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Add a case for the new remapped key");
+        return mKeyNameIndex;
+    }
+  }
+
+  /**
    * Retrieves all edit commands from mWidget.  This shouldn't be called when
    * the instance is an untrusted event, doesn't have widget or in non-chrome
    * process.
+   *
+   * @param aWritingMode
+   *                    When writing mode of focused element is vertical, this
+   *                    will resolve some key's physical direction to logical
+   *                    direction.  For doing it, this must be set to the
+   *                    writing mode at current selection.  However, when there
+   *                    is no focused element and no selection ranges, this
+   *                    should be set to Nothing().  Using the result of
+   *                    `TextEventDispatcher::MaybeWritingModeAtSelection()` is
+   *                    recommended.
    */
-  void InitAllEditCommands();
+  MOZ_CAN_RUN_SCRIPT void InitAllEditCommands(
+      const Maybe<WritingMode>& aWritingMode);
 
   /**
    * Retrieves edit commands from mWidget only for aType.  This shouldn't be
    * called when the instance is an untrusted event or doesn't have widget.
    *
+   * @param aWritingMode
+   *                    When writing mode of focused element is vertical, this
+   *                    will resolve some key's physical direction to logical
+   *                    direction.  For doing it, this must be set to the
+   *                    writing mode at current selection.  However, when there
+   *                    is no focused element and no selection ranges, this
+   *                    should be set to Nothing().  Using the result of
+   *                    `TextEventDispatcher::MaybeWritingModeAtSelection()` is
+   *                    recommended.
    * @return            false if some resource is not available to get
    *                    commands unexpectedly.  Otherwise, true even if
    *                    retrieved command is nothing.
    */
-  bool InitEditCommandsFor(nsIWidget::NativeKeyBindingsType aType);
+  MOZ_CAN_RUN_SCRIPT bool InitEditCommandsFor(
+      nsIWidget::NativeKeyBindingsType aType,
+      const Maybe<WritingMode>& aWritingMode);
 
   /**
    * PreventNativeKeyBindings() makes the instance to not cause any edit
@@ -472,8 +550,9 @@ class WidgetKeyboardEvent : public WidgetInputEvent {
    *                false, otherwise.
    */
   typedef void (*DoCommandCallback)(Command, void*);
-  bool ExecuteEditCommands(nsIWidget::NativeKeyBindingsType aType,
-                           DoCommandCallback aCallback, void* aCallbackData);
+  MOZ_CAN_RUN_SCRIPT bool ExecuteEditCommands(
+      nsIWidget::NativeKeyBindingsType aType, DoCommandCallback aCallback,
+      void* aCallbackData);
 
   // If the key should cause keypress events, this returns true.
   // Otherwise, false.

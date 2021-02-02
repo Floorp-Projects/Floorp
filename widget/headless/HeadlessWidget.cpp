@@ -10,7 +10,10 @@
 #include "MouseEvents.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/WritingModes.h"
 #include "mozilla/widget/HeadlessWidgetTypes.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
 #include "nsIScreen.h"
@@ -400,8 +403,15 @@ bool HeadlessWidget::GetEditCommands(NativeKeyBindingsType aType,
     return false;
   }
 
+  Maybe<WritingMode> writingMode;
+  if (aEvent.NeedsToRemapNavigationKey()) {
+    if (RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher()) {
+      writingMode = dispatcher->MaybeWritingModeAtSelection();
+    }
+  }
+
   HeadlessKeyBindings& bindings = HeadlessKeyBindings::GetInstance();
-  bindings.GetEditCommands(aType, aEvent, aCommands);
+  bindings.GetEditCommands(aType, aEvent, writingMode, aCommands);
   return true;
 }
 

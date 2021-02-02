@@ -11,6 +11,7 @@
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TextInputProcessor.h"
+#include "mozilla/WritingModes.h"
 #include "mozilla/widget/IMEData.h"
 #include "mozilla/dom/KeyboardEvent.h"
 #include "nsContentUtils.h"
@@ -1011,20 +1012,25 @@ nsresult TextInputProcessor::InitEditCommands(
     return NS_OK;
   }
 
+  Maybe<WritingMode> writingMode;
+  if (RefPtr<TextEventDispatcher> dispatcher = mDispatcher) {
+    writingMode = dispatcher->MaybeWritingModeAtSelection();
+  }
+
   // FYI: WidgetKeyboardEvent::InitAllEditCommands() isn't available here
   //      since it checks whether it's called in the main process to
   //      avoid performance issues so that we need to initialize each
   //      command manually here.
   if (NS_WARN_IF(!aKeyboardEvent.InitEditCommandsFor(
-          nsIWidget::NativeKeyBindingsForSingleLineEditor))) {
+          nsIWidget::NativeKeyBindingsForSingleLineEditor, writingMode))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   if (NS_WARN_IF(!aKeyboardEvent.InitEditCommandsFor(
-          nsIWidget::NativeKeyBindingsForMultiLineEditor))) {
+          nsIWidget::NativeKeyBindingsForMultiLineEditor, writingMode))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   if (NS_WARN_IF(!aKeyboardEvent.InitEditCommandsFor(
-          nsIWidget::NativeKeyBindingsForRichTextEditor))) {
+          nsIWidget::NativeKeyBindingsForRichTextEditor, writingMode))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 

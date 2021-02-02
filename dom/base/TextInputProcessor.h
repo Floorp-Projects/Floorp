@@ -37,8 +37,9 @@ class TextInputProcessor final : public nsITextInputProcessor,
   NS_DECL_NSITEXTINPUTPROCESSOR
 
   // TextEventDispatcherListener
-  NS_IMETHOD NotifyIME(TextEventDispatcher* aTextEventDispatcher,
-                       const IMENotification& aNotification) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD
+  NotifyIME(TextEventDispatcher* aTextEventDispatcher,
+            const IMENotification& aNotification) override;
 
   NS_IMETHOD_(IMENotificationRequests) GetIMENotificationRequests() override;
 
@@ -76,8 +77,9 @@ class TextInputProcessor final : public nsITextInputProcessor,
    * same name methods except the type of event class.  See explanation in
    * nsITextInputProcessor for the detail.
    */
-  nsresult Keydown(const WidgetKeyboardEvent& aKeyboardEvent,
-                   uint32_t aKeyFlags, uint32_t* aConsumedFlags = nullptr);
+  MOZ_CAN_RUN_SCRIPT nsresult Keydown(const WidgetKeyboardEvent& aKeyboardEvent,
+                                      uint32_t aKeyFlags,
+                                      uint32_t* aConsumedFlags = nullptr);
   nsresult Keyup(const WidgetKeyboardEvent& aKeyboardEvent, uint32_t aKeyFlags,
                  bool* aDoDefault = nullptr);
 
@@ -125,16 +127,16 @@ class TextInputProcessor final : public nsITextInputProcessor,
   nsresult BeginInputTransactionInternal(
       mozIDOMWindow* aWindow, nsITextInputProcessorCallback* aCallback,
       bool aForTests, bool& aSucceeded);
-  nsresult CommitCompositionInternal(
+  MOZ_CAN_RUN_SCRIPT nsresult CommitCompositionInternal(
       const WidgetKeyboardEvent* aKeyboardEvent = nullptr,
       uint32_t aKeyFlags = 0, const nsAString* aCommitString = nullptr,
       bool* aSucceeded = nullptr);
-  nsresult CancelCompositionInternal(
-      const WidgetKeyboardEvent* aKeyboardEvent = nullptr,
-      uint32_t aKeyFlags = 0);
-  nsresult KeydownInternal(const WidgetKeyboardEvent& aKeyboardEvent,
-                           uint32_t aKeyFlags, bool aAllowToDispatchKeypress,
-                           uint32_t& aConsumedFlags);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  CancelCompositionInternal(const WidgetKeyboardEvent* aKeyboardEvent = nullptr,
+                            uint32_t aKeyFlags = 0);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  KeydownInternal(const WidgetKeyboardEvent& aKeyboardEvent, uint32_t aKeyFlags,
+                  bool aAllowToDispatchKeypress, uint32_t& aConsumedFlags);
   nsresult KeyupInternal(const WidgetKeyboardEvent& aKeyboardEvent,
                          uint32_t aKeyFlags, bool& aDoDefault);
   nsresult IsValidStateForComposition();
@@ -146,7 +148,8 @@ class TextInputProcessor final : public nsITextInputProcessor,
    * This must be called only in a content process, and aKeyboardEvent must
    * be used only for `eKeyPress` event.
    */
-  nsresult InitEditCommands(WidgetKeyboardEvent& aKeyboardEvent) const;
+  MOZ_CAN_RUN_SCRIPT nsresult
+  InitEditCommands(WidgetKeyboardEvent& aKeyboardEvent) const;
 
   bool IsValidEventTypeForComposition(
       const WidgetKeyboardEvent& aKeyboardEvent) const;
@@ -162,7 +165,7 @@ class TextInputProcessor final : public nsITextInputProcessor,
     EventDispatcherResult()
         : mResult(NS_OK), mDoDefault(true), mCanContinue(true) {}
   };
-  EventDispatcherResult MaybeDispatchKeydownForComposition(
+  MOZ_CAN_RUN_SCRIPT EventDispatcherResult MaybeDispatchKeydownForComposition(
       const WidgetKeyboardEvent* aKeyboardEvent, uint32_t aKeyFlags);
   EventDispatcherResult MaybeDispatchKeyupForComposition(
       const WidgetKeyboardEvent* aKeyboardEvent, uint32_t aKeyFlags);
