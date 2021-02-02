@@ -21,6 +21,7 @@
 #include "gc/Rooting.h"      // RootedAtom
 #include "gc/Tracer.h"       // TraceNullableRoot
 #include "js/CallArgs.h"     // JSNative
+#include "js/GCAPI.h"        // JS::AutoCheckCannotGC
 #include "js/RootingAPI.h"   // Rooted
 #include "js/Transcoding.h"  // JS::TranscodeBuffer
 #include "js/Value.h"        // ObjectValue
@@ -68,6 +69,9 @@ bool ScopeContext::init(JSContext* cx, CompilationInput& input,
 
   if (input.target == CompilationInput::CompilationTarget::Eval) {
     if (!cacheEnclosingScopeBindingForEval(cx, input, parserAtoms)) {
+      return false;
+    }
+    if (!cachePrivateFieldsForEval(cx, input, parserAtoms)) {
       return false;
     }
   }
@@ -308,6 +312,50 @@ bool ScopeContext::addToEnclosingLexicalBindingCache(
   return true;
 }
 
+static bool IsPrivateField(JSAtom* atom) {
+  MOZ_ASSERT(atom->length() > 0);
+
+  JS::AutoCheckCannotGC nogc;
+  if (atom->hasLatin1Chars()) {
+    return atom->latin1Chars(nogc)[0] == '#';
+  }
+
+  return atom->twoByteChars(nogc)[0] == '#';
+}
+
+bool ScopeContext::cachePrivateFieldsForEval(JSContext* cx,
+                                             CompilationInput& input,
+                                             ParserAtomsTable& parserAtoms) {
+  if (!input.options.privateClassFields) {
+    return true;
+  }
+
+  effectiveScopePrivateFieldCache_.emplace();
+
+  for (ScopeIter si(effectiveScope); si; si++) {
+    if (si.scope()->kind() != ScopeKind::ClassBody) {
+      continue;
+    }
+
+    for (js::BindingIter bi(si.scope()); bi; bi++) {
+      if (IsPrivateField(bi.name())) {
+        auto parserName =
+            parserAtoms.internJSAtom(cx, input.atomCache, bi.name());
+        if (!parserName) {
+          return false;
+        }
+
+        if (!effectiveScopePrivateFieldCache_->put(parserName)) {
+          ReportOutOfMemory(cx);
+          return false;
+        }
+      }
+    }
+  }
+
+  return true;
+}
+
 #ifdef DEBUG
 static bool NameIsOnEnvironment(Scope* scope, JSAtom* name) {
   for (BindingIter bi(scope); bi; bi++) {
@@ -492,6 +540,11 @@ ScopeContext::lookupLexicalBindingInEnclosingScope(TaggedParserAtomIndex name) {
   }
 
   return mozilla::Some(p->value());
+}
+
+bool ScopeContext::effectiveScopePrivateFieldCacheHas(
+    TaggedParserAtomIndex name) {
+  return effectiveScopePrivateFieldCache_->has(name);
 }
 
 bool CompilationInput::initScriptSource(JSContext* cx) {
