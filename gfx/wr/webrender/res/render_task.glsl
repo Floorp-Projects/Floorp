@@ -98,7 +98,7 @@ struct ClipArea {
 ClipArea fetch_clip_area(int index) {
     ClipArea area;
 
-    if (index >= CLIP_TASK_EMPTY) {
+    if (index == CLIP_TASK_EMPTY) {
         RectWithSize rect = RectWithSize(vec2(0.0), vec2(0.0));
 
         area.common_data = RenderTaskCommonData(rect, 0.0);
