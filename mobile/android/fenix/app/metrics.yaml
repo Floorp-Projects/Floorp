@@ -623,7 +623,7 @@ login_dialog:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2021-02-01"
+    expires: "2021-08-01"
   cancelled:
     type: event
     description: |
@@ -636,7 +636,7 @@ login_dialog:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2021-02-01"
+    expires: "2021-08-01"
   saved:
     type: event
     description: |
@@ -649,7 +649,7 @@ login_dialog:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2021-02-01"
+    expires: "2021-08-01"
   never_save:
     type: event
     description: |
@@ -662,7 +662,7 @@ login_dialog:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2021-02-01"
+    expires: "2021-08-01"
 
 find_in_page:
   opened:
@@ -4070,7 +4070,7 @@ autoplay:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2021-02-01"
+    expires: "2021-08-01"
   setting_changed:
     type: event
     description: |
@@ -4089,7 +4089,7 @@ autoplay:
       - interaction
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2021-02-01"
+    expires: "2021-08-01"
 
 storage.stats:
   query_stats_duration:
