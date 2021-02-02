@@ -191,10 +191,6 @@ class PerftestResultsHandler(object):
 
         expected_perfherder = 1
 
-        if output.mozproxy_data:
-            # Check if we have mozproxy data available.
-            expected_perfherder += 1
-
         if is_resource_test():
             # when resource tests are run, no perfherder data is output
             # for the regular raptor tests (i.e. speedometer) so we

@@ -34,7 +34,6 @@ class PerftestOutput(object):
         self.summarized_supporting_data = []
         self.summarized_screenshots = []
         self.subtest_alert_on = subtest_alert_on
-        self.mozproxy_data = False
         self.browser_name = None
         self.browser_version = None
 
@@ -96,10 +95,6 @@ class PerftestOutput(object):
 
             data_type = data_set["type"]
             LOG.info("summarizing %s data" % data_type)
-
-            if "mozproxy" in data_type:
-                self.mozproxy_data = True
-                LOG.info("data: {}".format(self.supporting_data))
 
             if data_type not in support_data_by_type:
                 support_data_by_type[data_type] = {
@@ -253,7 +248,7 @@ class PerftestOutput(object):
             # dumped out. TODO: Bug 1515406 - Add option to output both supplementary
             # data (i.e. power) and the regular Raptor test result
             # Both are already available as separate PERFHERDER_DATA json blobs
-            if len(self.summarized_supporting_data) == 0 or self.mozproxy_data:
+            if len(self.summarized_supporting_data) == 0:
                 LOG.info("PERFHERDER_DATA: %s" % json.dumps(self.summarized_results))
                 total_perfdata = 1
             else:
