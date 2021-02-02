@@ -1,0 +1,266 @@
+.   0005-Bug-1660275-Part-5-Store-free-names-in-lazy-function.patch   33376 Diff             /tmp/0005-Bug-1660275-Part-5-Store-free-names-in-lazy-function.patch
+    s                      1777 Shell-script[sh] /tmp/s
+  * *shell*                1885 Shell:run        ~/projects/mozilla-unified/
+    Stencil.cpp           89920 C++//            ~/projects/mozilla-unified/js/src/frontend/Stencil.cpp
+    CompilationInfo.h     28655 C++//            ~/projects/mozilla-unified/js/src/frontend/CompilationInfo.h
+    Parser.cpp           362855 C++//            ~/projects/mozilla-unified/js/src/frontend/Parser.cpp
+    EmitterScope.cpp      31646 C++//            ~/projects/mozilla-unified/js/src/frontend/EmitterScope.cpp
+ %  tmp                   12450 Dired by date    /tmp/
+    0006-Bug-1660275-Part-6-Cache-free-name-locations-for-del.patch   21231 Diff             /tmp/0006-Bug-1660275-Part-6-Cache-free-name-locations-for-del.patch
+    EmitterScope.h         6376 C++//            ~/projects/mozilla-unified/js/src/frontend/EmitterScope.h
+    ParserAtom.h          30070 C++//            ~/projects/mozilla-unified/js/src/frontend/ParserAtom.h
+    BloomFilter.h          7599 C++//            ~/projects/mozilla-unified/mfbt/BloomFilter.h
+    ParseContext.cpp      23494 C++//            ~/projects/mozilla-unified/js/src/frontend/ParseContext.cpp
+    0004-Bug-1660275-Part-4-Cache-enclosing-lexical-bindings-.patch   15475 Diff             /tmp/0004-Bug-1660275-Part-4-Cache-enclosing-lexical-bindings-.patch
+    gitconfig              4920 Conf[Unix]       ~/conf/gitconfig
+    ParserAtom.cpp        27278 C++//            ~/projects/mozilla-unified/js/src/frontend/ParserAtom.cpp
+ %* frontend<mozilla-unified>    8113 Dired by date    ~/projects/mozilla-unified/js/src/frontend/
+    Parser.h              72990 C++//            ~/projects/mozilla-unified/js/src/frontend/Parser.h
+    FullParseHandler.h    39767 C++//            ~/projects/mozilla-unified/js/src/frontend/FullParseHandler.h
+  * y                      2414 Fundamental      
+    TODO                  62737 Fundamental      ~/Documents/xpi/TODO
+    0001-Bug-1688534-Part-3-Add-HasIndexOrDuplicatePropName-f.patch    6332 Diff             /tmp/0001-Bug-1688534-Part-3-Add-HasIndexOrDuplicatePropName-f.patch
+    ObjLiteral.h          18554 C++//            ~/projects/mozilla-unified/js/src/frontend/ObjLiteral.h
+    BytecodeEmitter.cpp  333367 C++//            ~/projects/mozilla-unified/js/src/frontend/BytecodeEmitter.cpp
+    ObjLiteral.cpp         7704 C++//            ~/projects/mozilla-unified/js/src/frontend/ObjLiteral.cpp
+    emacs.el              16827 Emacs-Lisp       ~/conf/emacs.el
+ %  *Help*                32100 Help             
+ %  *Backtrace*             294 Debugger         
+    parsemark.py           5758 Python           ~/projects/mozilla-unified/js/src/tests/parsemark.py
+  * t</tmp>                1240 Fundamental      /tmp/t
+ %  data8                   261 Dired by name    ~/Documents/xpi/graph/data8/
+    s2.sh                   716 Shell-script[sh] ~/Documents/xpi/graph/s2.sh
+    graph.html             1626 HTML+            ~/Documents/xpi/graph/graph.html
+ %* graph                  1542 Dired by name    ~/Documents/xpi/graph/
+    CompileOptions.h      16295 C++//            ~/projects/mozilla-unified/js/public/CompileOptions.h
+ %  public                 6187 Dired by name    ~/projects/mozilla-unified/js/public/
+    jsapi.cpp            193448 C++//            ~/projects/mozilla-unified/js/src/jsapi.cpp
+    HelperThreads.cpp     83649 C++//            ~/projects/mozilla-unified/js/src/vm/HelperThreads.cpp
+    HelperThreadState.h   23834 C++//            ~/projects/mozilla-unified/js/src/vm/HelperThreadState.h
+    Xdr.h                 25936 C++//            ~/projects/mozilla-unified/js/src/vm/Xdr.h
+    0001-fix5.patch       29824 Diff             /tmp/0001-fix5.patch
+    UsedNameTracker.h      9136 C++//            ~/projects/mozilla-unified/js/src/frontend/UsedNameTracker.h
+    manifest.json          2248 JavaScript       ~/Documents/xpi/style/manifest.json
+ %  style                  1643 Dired by name    ~/Documents/xpi/style/
+    JSScript.cpp         162212 C++//            ~/projects/mozilla-unified/js/src/vm/JSScript.cpp
+    ParseContext.h        20486 C++//            ~/projects/mozilla-unified/js/src/frontend/ParseContext.h
+    Xdr.cpp               25158 C++//            ~/projects/mozilla-unified/js/src/vm/Xdr.cpp
+    StringType.h          71139 C++//            ~/projects/mozilla-unified/js/src/vm/StringType.h
+  * *shell*<3>             1931 Shell:run        ~/projects/mozilla-unified/js/src/frontend/
+    buy2.txt             405001 Text             ~/Documents/buy2.txt
+    AsmJS.cpp            209617 C++//            ~/projects/mozilla-unified/js/src/wasm/AsmJS.cpp
+    ParseNode.cpp         13709 C++//            ~/projects/mozilla-unified/js/src/frontend/ParseNode.cpp
+    FoldConstants.cpp     51272 C++//            ~/projects/mozilla-unified/js/src/frontend/FoldConstants.cpp
+    TokenStream.h        109067 C++//            ~/projects/mozilla-unified/js/src/frontend/TokenStream.h
+    Opcodes.h            142165 C/*              ~/projects/mozilla-unified/js/src/vm/Opcodes.h
+    jspubtd.h              2896 C++//            ~/projects/mozilla-unified/js/src/jspubtd.h
+    a.js                    539 Javascript-IDE//lah /tmp/a.js
+    ProtoKey.h             8819 C++//            ~/projects/mozilla-unified/js/public/ProtoKey.h
+    CommonPropertyNames.h   42193 C++//            ~/projects/mozilla-unified/js/src/vm/CommonPropertyNames.h
+    scope-usage            2927 Fundamental      ~/Documents/xpi/mozpatch/scope/scope-usage
+    SharedContext.cpp     14118 C++//            ~/projects/mozilla-unified/js/src/frontend/SharedContext.cpp
+    SharedContext.h       25577 C++//            ~/projects/mozilla-unified/js/src/frontend/SharedContext.h
+    HashTable.h           71707 C++//            ~/projects/mozilla-unified/mfbt/HashTable.h
+    StringType.cpp        73393 C++//            ~/projects/mozilla-unified/js/src/vm/StringType.cpp
+ %  vm                    16662 Dired by name    ~/projects/mozilla-unified/js/src/vm/
+    TokenStream.cpp      124524 C++//            ~/projects/mozilla-unified/js/src/frontend/TokenStream.cpp
+    Scope.h               57405 C++//            ~/projects/mozilla-unified/js/src/vm/Scope.h
+  * *shell*<2>             4584 Shell:run        ~/projects/mozilla-unified/
+    BytecodeCompiler.cpp   41508 C++//            ~/projects/mozilla-unified/js/src/frontend/BytecodeCompiler.cpp
+    CompilationAndEvaluation.cpp   19984 C++//            ~/projects/mozilla-unified/js/src/vm/CompilationAndEvaluation.cpp
+    js.cpp               367576 C++//            ~/projects/mozilla-unified/js/src/shell/js.cpp
+    Debugger.cpp         231604 C++//            ~/projects/mozilla-unified/js/src/debugger/Debugger.cpp
+    ReflectParse.cpp     123109 C++//            ~/projects/mozilla-unified/js/src/builtin/ReflectParse.cpp
+    a.patch               13137 Diff             /tmp/a.patch
+    JSFunction.cpp        76200 C++//            ~/projects/mozilla-unified/js/src/vm/JSFunction.cpp
+    JSFunction.h          33010 C++//            ~/projects/mozilla-unified/js/src/vm/JSFunction.h
+    NameAnalysisTypes.h   11577 C++//            ~/projects/mozilla-unified/js/src/frontend/NameAnalysisTypes.h
+    body2.txt              6756 Text             ~/Documents/body2.txt
+    JSScript.h            90960 C++//            ~/projects/mozilla-unified/js/src/vm/JSScript.h
+    Frontend2.cpp         25440 C++//            ~/projects/mozilla-unified/js/src/frontend/Frontend2.cpp
+    NativeObject.cpp      99469 C++//            ~/projects/mozilla-unified/js/src/vm/NativeObject.cpp
+    NativeObject.h        64378 C++//            ~/projects/mozilla-unified/js/src/vm/NativeObject.h
+    NativeObject-inl.h    26114 C++//            ~/projects/mozilla-unified/js/src/vm/NativeObject-inl.h
+    BytecodeSection.cpp    6223 C++//            ~/projects/mozilla-unified/js/src/frontend/BytecodeSection.cpp
+    GenerateReservedWords.py    6066 Python           ~/projects/mozilla-unified/js/src/frontend/GenerateReservedWords.py
+    store_js                790 Shell-script[bash] ~/conf/bin/store_js
+ %* Downloads              1700 Dired by date    ~/Downloads/
+ %  tests<src>             1758 Dired by name    ~/projects/mozilla-unified/js/src/tests/
+ %  src<js>                4237 Dired by name    ~/projects/mozilla-unified/js/src/
+ %  git-cinnabar           1293 Dired by name    ~/.mozbuild/git-cinnabar/
+ %  .mozbuild              2616 Dired by name    ~/.mozbuild/
+    BytecodeCompiler.h     9457 C++//            ~/projects/mozilla-unified/js/src/frontend/BytecodeCompiler.h
+    TokenKind.h           18082 C++//            ~/projects/mozilla-unified/js/src/frontend/TokenKind.h
+ %  frontend<sm-pds>       1857 Dired by name    ~/projects/mozilla-unified/obj/sm-pds/js/src/frontend/
+    ReservedWords.h        5540 C++//            ~/projects/mozilla-unified/js/src/frontend/ReservedWords.h
+ %  sm-pds                 3356 Dired by name    ~/projects/mozilla-unified/obj/sm-pds/
+    check_spidermonkey_style.py   30714 Python           ~/projects/mozilla-unified/config/check_spidermonkey_style.py
+ %  config                 3583 Dired by name    ~/projects/mozilla-unified/config/
+ %  devtools                916 Dired by name    ~/projects/mozilla-unified/js/src/devtools/
+ %  obj                    1136 Dired by date    ~/projects/mozilla-unified/obj/
+ %* mozilla-unified        7726 Dired by date    ~/projects/mozilla-unified/
+    moz.build<frontend>    2154 Python           ~/projects/mozilla-unified/js/src/frontend/moz.build
+    code                    492 Fundamental      ~/Documents/xpi/mozpatch/reserved-words/code
+ %  reserved-words          204 Dired by name    ~/Documents/xpi/mozpatch/reserved-words/
+ %* mozpatch              32959 Dired by date    ~/Documents/xpi/mozpatch/
+    BuiltinObjectKind.cpp    5528 C++//            ~/projects/mozilla-unified/js/src/vm/BuiltinObjectKind.cpp
+    BuiltinObjectKind.h    2036 C++//            ~/projects/mozilla-unified/js/src/vm/BuiltinObjectKind.h
+    JSContext.h           41398 C++//            ~/projects/mozilla-unified/js/src/vm/JSContext.h
+    Runtime.h             41530 C++//            ~/projects/mozilla-unified/js/src/vm/Runtime.h
+    Stencil.h             33298 C++//            ~/projects/mozilla-unified/js/src/frontend/Stencil.h
+    SharedStencil.h       23488 C++//            ~/projects/mozilla-unified/js/src/vm/SharedStencil.h
+ %  mozconfigs              313 Dired by name    ~/projects/jsparagus/mozconfigs/
+ %  jsparagus              2578 Dired by name    ~/projects/jsparagus/
+    smoosh_tools.rs       29243 Rust             ~/projects/jsparagus/src/bin/smoosh_tools.rs
+ %  bin<src>                442 Dired by name    ~/projects/jsparagus/src/bin/
+ %  src<jsparagus>          292 Dired by name    ~/projects/jsparagus/src/
+    StencilXdr.cpp        19436 C++//            ~/projects/mozilla-unified/js/src/frontend/StencilXdr.cpp
+ %  xdr-test                582 Dired by name    ~/projects/mozilla-unified/xdr-test/
+    stperf2.py              730 Python           ~/Documents/xpi/mozpatch/stperf2.py
+ %  .git                   1469 Dired by name    ~/projects/mozilla-unified/.git/
+    StencilEnums.h        12464 C++//            ~/projects/mozilla-unified/js/src/vm/StencilEnums.h
+    ParseNode.h           80310 C++//            ~/projects/mozilla-unified/js/src/frontend/ParseNode.h
+    cfo                     730 Shell-script[bash] ~/conf/bin/cfo
+ %  bin<conf>              7538 Dired by name    ~/conf/bin/
+    AbstractScopePtr.h     3136 C++//            ~/projects/mozilla-unified/js/src/frontend/AbstractScopePtr.h
+    AbstractScopePtr.cpp    1729 C++//            ~/projects/mozilla-unified/js/src/frontend/AbstractScopePtr.cpp
+    s2                      341 Fundamental      /tmp/s2
+    Scope.cpp             76330 C++//            ~/projects/mozilla-unified/js/src/vm/Scope.cpp
+    BytecodeEmitter.h     39052 C++//            ~/projects/mozilla-unified/js/src/frontend/BytecodeEmitter.h
+    BytecodeSection.h     13240 C++//            ~/projects/mozilla-unified/js/src/frontend/BytecodeSection.h
+    event-breakpoints.js   13458 Javascript-IDE//lah ~/projects/mozilla-unified/devtools/server/actors/utils/event-breakpoints.js
+    EnvironmentObject.cpp  141003 C++//            ~/projects/mozilla-unified/js/src/vm/EnvironmentObject.cpp
+    EnvironmentObject.h   48278 C++//            ~/projects/mozilla-unified/js/src/vm/EnvironmentObject.h
+    arrow-returning-arrow-with-block-body-followed-by-regexp.js     376 Javascript-IDE//lah ~/projects/mozilla-unified/js/src/tests/non262/arrow-functions/arrow-returning-arrow-with-block-body-followed-by-regexp.js
+    bug-1138390.js          637 Javascript-IDE//lah ~/projects/mozilla-unified/js/src/jit-test/tests/gc/bug-1138390.js
+    module.js              3255 Javascript-IDE//lah ~/projects/mozilla-unified/js/src/jit-test/tests/xdr/module.js
+ %  xdr<tests>             2454 Dired by name    ~/projects/mozilla-unified/js/src/jit-test/tests/xdr/
+    MacMini_Tiger.xml    189566 nXML Valid       ~/Documents/MacMini_Tiger.xml
+    FunctionEmitter.cpp   23816 C++//            ~/projects/mozilla-unified/js/src/frontend/FunctionEmitter.cpp
+    HelperThreads.h        9338 C++//            ~/projects/mozilla-unified/js/src/vm/HelperThreads.h
+    Eval.cpp              17708 C++//            ~/projects/mozilla-unified/js/src/builtin/Eval.cpp
+    Token.h                7373 C++//            ~/projects/mozilla-unified/js/src/frontend/Token.h
+    testFunctionNonSyntactic.cpp    3034 C++//            ~/projects/mozilla-unified/js/src/jsapi-tests/testFunctionNonSyntactic.cpp
+    tests.h               17327 C++//            ~/projects/mozilla-unified/js/src/jsapi-tests/tests.h
+ %  jsapi-tests           10709 Dired by name    ~/projects/mozilla-unified/js/src/jsapi-tests/
+    BytecodeCompilation.h    5455 C++//            ~/projects/mozilla-unified/js/src/frontend/BytecodeCompilation.h
+    testArrayBuffer.cpp    9391 C++//            ~/projects/mozilla-unified/js/src/jsapi-tests/testArrayBuffer.cpp
+    ScopeKind.h             889 C++//            ~/projects/mozilla-unified/js/src/vm/ScopeKind.h
+    testFunctionProperties.cpp     720 C++//            ~/projects/mozilla-unified/js/src/jsapi-tests/testFunctionProperties.cpp
+    moz.build<jsapi-tests>    5393 Python           ~/projects/mozilla-unified/js/src/jsapi-tests/moz.build
+    about-support.txt     55184 Text             ~/Desktop/about-support.txt
+ %  Desktop                1149 Dired by name    ~/Desktop/
+    ma                    34719 Python           ~/conf/bin/ma
+ %  scope                   195 Dired by name    ~/Documents/xpi/mozpatch/scope/
+ %  xpi                    2827 Dired by name    ~/Documents/xpi/
+    autospider.py         23961 Python           ~/projects/mozilla-unified/js/src/devtools/automation/autospider.py
+    a.py                   1838 Python           /tmp/a.py
+    pos                     132 Fundamental      ~/.mozbuild/sm_variants/pos
+ %  sm_variants             866 Dired by name    ~/.mozbuild/sm_variants/
+ %  variants               1349 Dired by name    ~/projects/mozilla-unified/js/src/devtools/automation/variants/
+ %  automation              952 Dired by name    ~/projects/mozilla-unified/js/src/devtools/automation/
+    a.cc                    315 C++//            ~/projects/tmp/a.cc
+    configure.in            857 Shell-script[sh] ~/projects/mozilla-unified/js/src/configure.in
+    configure.py           7902 Python           ~/projects/mozilla-unified/configure.py
+    immutable-xdr          1779 C++//            ~/Documents/xpi/mozpatch/immutable-data/immutable-xdr
+ %  immutable-data          204 Dired by name    ~/Documents/xpi/mozpatch/immutable-data/
+    Vector.h<mfbt>        48044 C++//            ~/projects/mozilla-unified/mfbt/Vector.h
+    Range.h                2660 C++//            ~/projects/mozilla-unified/mfbt/Range.h
+    RangedPtr.h            8042 C++//            ~/projects/mozilla-unified/mfbt/RangedPtr.h
+    furu                    776 Fundamental      ~/Desktop/furu
+    toString-eof.js         761 Javascript-IDE//lah ~/projects/mozilla-unified/js/src/tests/non262/arrow-functions/toString-eof.js
+ %  arrow-functions         595 Dired by name    ~/projects/mozilla-unified/js/src/tests/non262/arrow-functions/
+ %  non262                 4235 Dired by name    ~/projects/mozilla-unified/js/src/tests/non262/
+    SyntaxParseHandler.h   25207 C++//            ~/projects/mozilla-unified/js/src/frontend/SyntaxParseHandler.h
+    NameCollections.h     13848 C++//            ~/projects/mozilla-unified/js/src/frontend/NameCollections.h
+    Vector.h<public>       1037 C++//            ~/projects/mozilla-unified/js/public/Vector.h
+ %  xpcshell              20187 Dired by name    ~/projects/mozilla-unified/toolkit/components/extensions/test/xpcshell/
+    xpcshell-e10s.ini      1063 Conf[Unix]       ~/projects/mozilla-unified/toolkit/components/extensions/test/xpcshell/xpcshell-e10s.ini
+    runxpcshelltests.py   78938 Python           ~/projects/mozilla-unified/testing/xpcshell/runxpcshelltests.py
+    head_remote.js          232 Javascript-IDE//lah ~/projects/mozilla-unified/toolkit/components/extensions/test/xpcshell/head_remote.js
+    runner.js             22052 Javascript-IDE//lah ~/projects/mozilla-unified/testing/raptor/webext/raptor/runner.js
+    RootingAPI.h          50252 C++//            ~/projects/mozilla-unified/js/public/RootingAPI.h
+    Value.h               41723 C++//            ~/projects/mozilla-unified/js/public/Value.h
+    Span.h                33429 C++//            ~/projects/mozilla-unified/mfbt/Span.h
+    ObjectGroup.h          6113 C++//            ~/projects/mozilla-unified/js/src/vm/ObjectGroup.h
+    ObjectGroup.cpp       12420 C++//            ~/projects/mozilla-unified/js/src/vm/ObjectGroup.cpp
+    ipc<ipc>               4701 Fundamental      ~/Documents/xpi/mozpatch/ipc/ipc
+ %  ipc<mozpatch>           193 Dired by name    ~/Documents/xpi/mozpatch/ipc/
+    Transcoding.h          7608 C++//            ~/projects/mozilla-unified/js/public/Transcoding.h
+  * z                      1338 Fundamental      
+    clone<clone>           3857 C++//            ~/Documents/xpi/mozpatch/clone/clone
+    encode_graph          16944 Fundamental      ~/Documents/xpi/mozpatch/xdr/encode_graph
+ %  xdr<mozpatch>          1242 Dired by name    ~/Documents/xpi/mozpatch/xdr/
+    memberInit             1685 C++//            ~/Documents/xpi/mozpatch/member/memberInit
+ %  member                  505 Dired by name    ~/Documents/xpi/mozpatch/member/
+ %  clone<mozpatch>         195 Dired by name    ~/Documents/xpi/mozpatch/clone/
+    ext-menus.js          10090 Javascript-IDE//lah ~/projects/mozilla-unified/browser/components/extensions/child/ext-menus.js
+ %  browser               22255 Dired by name    ~/projects/mozilla-unified/browser/components/extensions/test/browser/
+ %  extensions              561 Dired by name    ~/projects/mozilla-unified/browser/extensions/
+ %  test                    398 Dired by name    ~/projects/mozilla-unified/browser/components/extensions/test/
+    RefPtr.h              16875 C++//            ~/projects/mozilla-unified/mfbt/RefPtr.h
+    OperatorNewExtensions.h    2228 C++//            ~/projects/mozilla-unified/mfbt/OperatorNewExtensions.h
+ %  mfbt                   8410 Dired by name    ~/projects/mozilla-unified/mfbt/
+    Realm.h               31792 C++//            ~/projects/mozilla-unified/js/src/vm/Realm.h
+    XPCShellImpl.cpp      43130 C++//            ~/projects/mozilla-unified/js/xpconnect/src/XPCShellImpl.cpp
+    RealmOptions.h        13559 C++//            ~/projects/mozilla-unified/js/public/RealmOptions.h
+    nsGlobalWindowInner.cpp  253147 C++//            ~/projects/mozilla-unified/dom/base/nsGlobalWindowInner.cpp
+    testSourcePolicy.cpp    1639 C++//            ~/projects/mozilla-unified/js/src/jsapi-tests/testSourcePolicy.cpp
+    testStructuredClone.cpp   10405 C++//            ~/projects/mozilla-unified/js/src/jsapi-tests/testStructuredClone.cpp
+    jsapi.h              122757 C++//            ~/projects/mozilla-unified/js/src/jsapi.h
+    TestingFunctions.cpp  223341 C++//            ~/projects/mozilla-unified/js/src/builtin/TestingFunctions.cpp
+    bug-1240090.js          547 Javascript-IDE//lah ~/projects/mozilla-unified/js/src/jit-test/tests/debug/bug-1240090.js
+    Memory-takeCensus-11.js<js>    1507 Javascript-IDE//lah ~/projects/mozilla-unified/js/src/jit-test/tests/debug/Memory-takeCensus-11.js
+    function-gname.js      1193 Javascript-IDE//lah ~/projects/mozilla-unified/js/src/jit-test/tests/basic/function-gname.js
+    eval-scopes.js         3081 Javascript-IDE//lah ~/projects/mozilla-unified/js/src/jit-test/tests/basic/eval-scopes.js
+    xx                      366 Fundamental      /tmp/xx
+    function-toString-discard-source.js    5401 Javascript-IDE//lah ~/projects/mozilla-unified/js/src/jit-test/tests/function/function-toString-discard-source.js
+    bug1359622.js           113 Javascript-IDE//lah ~/projects/mozilla-unified/js/src/jit-test/tests/class/bug1359622.js
+    testBug1147144-2.js    1162 Javascript-IDE//lah ~/projects/mozilla-unified/js/src/jit-test/tests/asm.js/testBug1147144-2.js
+    testBug1147144.js      1242 Javascript-IDE//lah ~/projects/mozilla-unified/js/src/jit-test/tests/asm.js/testBug1147144.js
+    function-toString-discard-source-name.js    5406 Javascript-IDE//lah ~/projects/mozilla-unified/js/src/jit-test/tests/function/function-toString-discard-source-name.js
+    bug1380962.js           349 Javascript-IDE//lah ~/projects/mozilla-unified/js/src/jit-test/tests/basic/bug1380962.js
+ %  function                482 Dired by name    ~/projects/mozilla-unified/js/src/jit-test/tests/function/
+ %* tests<jit-test>        4621 Dired by name    ~/projects/mozilla-unified/js/src/jit-test/tests/
+    jsshell.h              7784 C++//            ~/projects/mozilla-unified/js/src/shell/jsshell.h
+ %  shell                  1335 Dired by name    ~/projects/mozilla-unified/js/src/shell/
+ %  Profiles                476 Dired by name    ~/Library/Caches/Firefox/Profiles/
+ %  Firefox                 245 Dired by name    ~/Library/Caches/Firefox/
+    yahoo-mail-after3.js   10428 Javascript-IDE//lah ~/Documents/xpi/graph/data6/yahoo-mail-after3.js
+    graph.js               5818 Javascript-IDE//lah ~/Documents/xpi/graph/graph.js
+ %  data6                   471 Dired by name    ~/Documents/xpi/graph/data6/
+    git-brs                1959 Python           ~/conf/bin/git-brs
+    UniquePtr.h           22768 C++//            ~/projects/mozilla-unified/mfbt/UniquePtr.h
+    StencilXdr.h           2404 C++//            ~/projects/mozilla-unified/js/src/frontend/StencilXdr.h
+    Variant.h             33386 C++//            ~/projects/mozilla-unified/mfbt/Variant.h
+    ObjectEmitter.cpp     25470 C++//            ~/projects/mozilla-unified/js/src/frontend/ObjectEmitter.cpp
+    ObjectEmitter.h       27929 C++//            ~/projects/mozilla-unified/js/src/frontend/ObjectEmitter.h
+    jsnum.cpp             59213 C++//            ~/projects/mozilla-unified/js/src/jsnum.cpp
+    jsnum.h               12907 C++//            ~/projects/mozilla-unified/js/src/jsnum.h
+    StringBuffer.cpp       5635 C++//            ~/projects/mozilla-unified/js/src/util/StringBuffer.cpp
+    Instrumentation.cpp    9373 C++//            ~/projects/mozilla-unified/js/src/vm/Instrumentation.cpp
+  * c                      1550 Fundamental      /tmp/c
+    rice                    595 Fundamental      ~/conf/bin/rice
+    NameFunctions.cpp     16361 C++//            ~/projects/mozilla-unified/js/src/frontend/NameFunctions.cpp
+    InlineTable.h         16996 C++//            ~/projects/mozilla-unified/js/src/ds/InlineTable.h
+    TaggedParserAtomIndexHasher.h    1293 C++//            ~/projects/mozilla-unified/js/src/frontend/TaggedParserAtomIndexHasher.h
+    ModuleObject.cpp      88444 C++//            ~/projects/mozilla-unified/js/src/builtin/ModuleObject.cpp
+    FoldConstants.h        1721 C++//            ~/projects/mozilla-unified/js/src/frontend/FoldConstants.h
+    NameFunctions.h         741 C++//            ~/projects/mozilla-unified/js/src/frontend/NameFunctions.h
+    LabelEmitter.h         1860 C++//            ~/projects/mozilla-unified/js/src/frontend/LabelEmitter.h
+    FunctionEmitter.h     15832 C++//            ~/projects/mozilla-unified/js/src/frontend/FunctionEmitter.h
+    AsyncEmitter.cpp       5055 C++//            ~/projects/mozilla-unified/js/src/frontend/AsyncEmitter.cpp
+    *vc*                      0 Fundamental      
+    Memory-takeCensus-11.js<	js>       0 Fundamental      ~/projects/mozilla-unified/	js/src/jit-test/tests/debug/Memory-takeCensus-11.js
+ %  *Disabled Command*      653 Help             
+  * *scratch*                 0 Lisp Interaction 
+ %* *Messages*            33927 Messages         
+    SelfHosting.cpp      120584 C++//            ~/projects/mozilla-unified/js/src/vm/SelfHosting.cpp
+    testParserAtom.cpp     7110 C++//            ~/projects/mozilla-unified/js/src/jsapi-tests/testParserAtom.cpp
+    EitherParser.h         4948 C++//            ~/projects/mozilla-unified/js/src/frontend/EitherParser.h
+    SharedContext-inl.h     725 C++//            ~/projects/mozilla-unified/js/src/frontend/SharedContext-inl.h
+    GeneratorObject.cpp   18099 C++//            ~/projects/mozilla-unified/js/src/vm/GeneratorObject.cpp
+    GeneratorObject.h      9189 C++//            ~/projects/mozilla-unified/js/src/vm/GeneratorObject.h
+    PropOpEmitter.cpp      6486 C++//            ~/projects/mozilla-unified/js/src/frontend/PropOpEmitter.cpp
+ %  *Kill Ring*            3710 Kill Ring        
+ %* *Completions*           252 Completion List  
