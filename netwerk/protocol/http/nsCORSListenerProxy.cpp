@@ -1321,7 +1321,7 @@ nsresult nsCORSPreflightListener::CheckPreflightRequestApproved(
   Unused << http->GetResponseHeader("Access-Control-Allow-Headers"_ns,
                                     headerVal);
   nsTArray<nsCString> headers;
-  bool allowAllHeaders = false;
+  bool wildcard = false;
   for (const nsACString& header :
        nsCCharSeparatedTokenizer(headerVal, ',').ToRange()) {
     if (header.IsEmpty()) {
@@ -1334,24 +1334,27 @@ nsresult nsCORSPreflightListener::CheckPreflightRequestApproved(
                         parentHttpChannel);
       return NS_ERROR_DOM_BAD_URI;
     }
+
     if (header.EqualsLiteral("*") && !mWithCredentials) {
-      allowAllHeaders = true;
+      wildcard = true;
     } else {
       headers.AppendElement(header);
     }
   }
 
-  if (!allowAllHeaders) {
-    for (uint32_t i = 0; i < mPreflightHeaders.Length(); ++i) {
-      const auto& comparator = nsCaseInsensitiveCStringArrayComparator();
-      if (!headers.Contains(mPreflightHeaders[i], comparator)) {
-        LogBlockedRequest(
-            aRequest, "CORSMissingAllowHeaderFromPreflight2",
-            NS_ConvertUTF8toUTF16(mPreflightHeaders[i]).get(),
-            nsILoadInfo::BLOCKING_REASON_CORSMISSINGALLOWHEADERFROMPREFLIGHT,
-            parentHttpChannel);
-        return NS_ERROR_DOM_BAD_URI;
-      }
+  for (uint32_t i = 0; i < mPreflightHeaders.Length(); ++i) {
+    if (wildcard &&
+        !mPreflightHeaders[i].LowerCaseEqualsASCII("authorization")) {
+      continue;
+    }
+    const auto& comparator = nsCaseInsensitiveCStringArrayComparator();
+    if (!headers.Contains(mPreflightHeaders[i], comparator)) {
+      LogBlockedRequest(
+          aRequest, "CORSMissingAllowHeaderFromPreflight2",
+          NS_ConvertUTF8toUTF16(mPreflightHeaders[i]).get(),
+          nsILoadInfo::BLOCKING_REASON_CORSMISSINGALLOWHEADERFROMPREFLIGHT,
+          parentHttpChannel);
+      return NS_ERROR_DOM_BAD_URI;
     }
   }
 
