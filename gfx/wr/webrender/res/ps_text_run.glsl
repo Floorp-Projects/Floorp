@@ -47,10 +47,8 @@ Glyph fetch_glyph(int specific_prim_address,
                         int(uint(glyph_index) / GLYPHS_PER_GPU_BLOCK);
     vec4 data = fetch_from_gpu_cache_1(glyph_address);
     // Select XY or ZW based on glyph index.
-    // We use "!= 0" instead of "== 1" here in order to work around a driver
-    // bug with equality comparisons on integers.
     vec2 glyph = mix(data.xy, data.zw,
-                     bvec2(uint(glyph_index) % GLYPHS_PER_GPU_BLOCK != 0U));
+                     bvec2(uint(glyph_index) % GLYPHS_PER_GPU_BLOCK == 1U));
 
     return Glyph(glyph);
 }
