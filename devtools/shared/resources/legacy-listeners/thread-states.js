@@ -48,7 +48,7 @@ module.exports = async function({ targetList, targetFront, onAvailable }) {
 
     onAvailable([
       {
-        resourceType: ResourceWatcher.TYPES.BREAKPOINT,
+        resourceType: ResourceWatcher.TYPES.THREAD_STATE,
         state: "paused",
         why,
         frame: packet.frame,
@@ -68,7 +68,7 @@ module.exports = async function({ targetList, targetFront, onAvailable }) {
 
     onAvailable([
       {
-        resourceType: ResourceWatcher.TYPES.BREAKPOINT,
+        resourceType: ResourceWatcher.TYPES.THREAD_STATE,
         state: "resumed",
       },
     ]);

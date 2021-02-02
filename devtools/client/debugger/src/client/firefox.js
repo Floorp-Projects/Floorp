@@ -50,12 +50,12 @@ export async function onConnect(
     onTargetDestroyed
   );
 
-  // Use independant listeners for SOURCE and BREAKPOINT in order to ease
+  // Use independant listeners for SOURCE and THREAD_STATE in order to ease
   // doing batching and notify about a set of SOURCE's in one redux action.
   await resourceWatcher.watchResources([resourceWatcher.TYPES.SOURCE], {
     onAvailable: onSourceAvailable,
   });
-  await resourceWatcher.watchResources([resourceWatcher.TYPES.BREAKPOINT], {
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.THREAD_STATE], {
     onAvailable: onBreakpointAvailable,
   });
 }
@@ -69,7 +69,7 @@ export function onDisconnect() {
   resourceWatcher.unwatchResources([resourceWatcher.TYPES.SOURCE], {
     onAvailable: onSourceAvailable,
   });
-  resourceWatcher.unwatchResources([resourceWatcher.TYPES.BREAKPOINT], {
+  resourceWatcher.unwatchResources([resourceWatcher.TYPES.THREAD_STATE], {
     onAvailable: onBreakpointAvailable,
   });
 }
