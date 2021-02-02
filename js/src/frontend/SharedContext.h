@@ -416,10 +416,6 @@ class FunctionBox : public SuspendableContext {
   // (new Function() including generator/async, or event handler).
   bool isStandalone : 1;
 
-  // Valid only if isStandalone is true.
-  // True if this standalone function has non-syntactic enclosing scope.
-  bool hasNonSyntacticEnclosingScopeForStandalone : 1;
-
   // End of fields.
 
   FunctionBox(JSContext* cx, SourceExtent extent, CompilationStencil& stencil,

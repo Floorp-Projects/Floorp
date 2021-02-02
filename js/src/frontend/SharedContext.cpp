@@ -131,8 +131,7 @@ FunctionBox::FunctionBox(JSContext* cx, SourceExtent extent,
       hasExprBody_(false),
       isFunctionFieldCopiedToStencil(false),
       isInitialCompilation(stencil.isInitialStencil()),
-      isStandalone(false),
-      hasNonSyntacticEnclosingScopeForStandalone(false) {}
+      isStandalone(false) {}
 
 void FunctionBox::initFromLazyFunction(JSFunction* fun,
                                        ScopeContext& scopeContext,
@@ -219,10 +218,6 @@ void FunctionBox::initStandalone(ScopeContext& scopeContext,
   initStandaloneOrLazy(scopeContext, flags, kind);
 
   isStandalone = true;
-  if (scopeContext.effectiveScope) {
-    hasNonSyntacticEnclosingScopeForStandalone =
-        !scopeContext.effectiveScope->as<GlobalScope>().isSyntactic();
-  }
 }
 
 void FunctionBox::initStandaloneOrLazy(ScopeContext& scopeContext,

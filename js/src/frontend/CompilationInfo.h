@@ -267,14 +267,7 @@ struct CompilationInput {
   }
 
   bool initForStandaloneFunctionInNonSyntacticScope(
-      JSContext* cx, HandleScope functionEnclosingScope) {
-    target = CompilationTarget::StandaloneFunctionInNonSyntacticScope;
-    if (!initScriptSource(cx)) {
-      return false;
-    }
-    enclosingScope = functionEnclosingScope;
-    return true;
-  }
+      JSContext* cx, HandleScope functionEnclosingScope);
 
   bool initForEval(JSContext* cx, HandleScope evalEnclosingScope) {
     target = CompilationTarget::Eval;
