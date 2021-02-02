@@ -61,7 +61,7 @@ use crate::c_str;
 use crate::debug_colors;
 use crate::device::{DepthFunction, Device, DrawTarget, ExternalTexture, GpuFrameId};
 use crate::device::{ProgramCache, ReadTarget, ShaderError, Texture, TextureFilter, TextureFlags, TextureSlot};
-use crate::device::{UploadMethod, UploadPBOPool, UploadStagingBuffer, VertexUsageHint};
+use crate::device::{UploadMethod, UploadPBOPool, VertexUsageHint};
 use crate::device::query::{GpuSampler, GpuTimer};
 #[cfg(feature = "capture")]
 use crate::device::FBOId;
@@ -75,7 +75,7 @@ use crate::gpu_types::{PrimitiveInstanceData, ScalingInstance, SvgFilterInstance
 use crate::gpu_types::{BlurInstance, ClearInstance, CompositeInstance, ZBufferId};
 use crate::internal_types::{TextureSource, ResourceCacheError};
 use crate::internal_types::{CacheTextureId, DebugOutput, FastHashMap, FastHashSet, LayerIndex, RenderedDocument, ResultMsg};
-use crate::internal_types::{TextureCacheAllocationKind, TextureCacheUpdate, TextureUpdateList, TextureUpdateSource};
+use crate::internal_types::{TextureCacheAllocationKind, TextureUpdateList};
 use crate::internal_types::{RenderTargetInfo, Swizzle, DeferredResolveIndex};
 use crate::picture::{self, ResolvedSurfaceTexture};
 use crate::prim_store::DeferredResolve;
@@ -92,9 +92,9 @@ use crate::render_target::{AlphaRenderTarget, ColorRenderTarget, PictureCacheTar
 use crate::render_target::{RenderTarget, TextureCacheRenderTarget};
 use crate::render_target::{RenderTargetKind, BlitJob, BlitJobSource};
 use crate::texture_cache::{TextureCache, TextureCacheConfig};
-use crate::texture_pack::{GuillotineAllocator, FreeRectSlice};
 use crate::tile_cache::PictureCacheDebugInfo;
 use crate::util::drain_filter;
+use upload::{upload_to_texture_cache, UploadTexturePool};
 
 use euclid::{rect, Transform3D, Scale, default};
 use gleam::gl;
@@ -129,6 +129,7 @@ mod debug;
 mod gpu_cache;
 mod shade;
 mod vertex;
+mod upload;
 
 pub use debug::DebugRenderer;
 pub use shade::{Shaders, SharedShaders};
@@ -269,7 +270,7 @@ const GPU_TAG_CLEAR: GpuProfileTag = GpuProfileTag {
 /// The clear color used for the texture cache when the debug display is enabled.
 /// We use a shade of blue so that we can still identify completely blue items in
 /// the texture cache.
-const TEXTURE_CACHE_DBG_CLEAR_COLOR: [f32; 4] = [0.0, 0.0, 0.8, 1.0];
+pub const TEXTURE_CACHE_DBG_CLEAR_COLOR: [f32; 4] = [0.0, 0.0, 0.8, 1.0];
 
 impl BatchKind {
     #[cfg(feature = "debugger")]
@@ -753,6 +754,7 @@ pub struct Renderer {
     texture_resolver: TextureResolver,
 
     texture_upload_pbo_pool: UploadPBOPool,
+    staging_texture_pool: UploadTexturePool,
 
     dither_matrix_texture: Option<Texture>,
 
@@ -1038,6 +1040,7 @@ impl Renderer {
         );
 
         let texture_upload_pbo_pool = UploadPBOPool::new(&mut device, options.upload_pbo_default_size);
+        let staging_texture_pool = UploadTexturePool::new();
         let texture_resolver = TextureResolver::new(&mut device);
 
         let mut vertex_data_textures = Vec::new();
@@ -1324,6 +1327,7 @@ impl Renderer {
             gpu_cache_frame_id: FrameId::INVALID,
             gpu_cache_overflow: false,
             texture_upload_pbo_pool,
+            staging_texture_pool,
             texture_resolver,
             renderer_errors: Vec::new(),
             async_frame_recorder: None,
@@ -1540,6 +1544,7 @@ impl Renderer {
                     // not in a frame.
                     if memory_pressure {
                         self.texture_upload_pbo_pool.on_memory_pressure(&mut self.device);
+                        self.staging_texture_pool.delete_textures(&mut self.device);
                     }
 
                     self.device.end_frame();
@@ -2039,6 +2044,8 @@ impl Renderer {
         let mut results = RenderResults::default();
         self.profile.start_time(profiler::RENDERER_TIME);
 
+        self.staging_texture_pool.begin_frame();
+
         let compositor_kind = active_doc.frame.composite_state.compositor_kind;
         // CompositorKind is updated
         if self.current_compositor_kind != compositor_kind {
@@ -2328,7 +2335,10 @@ impl Renderer {
         let mut pending_texture_updates = mem::replace(&mut self.pending_texture_updates, vec![]);
         self.pending_texture_cache_updates = false;
 
-        self.profile.start_time(profiler::TEXTURE_CACHE_UPLOAD_TIME);
+        self.profile.start_time(profiler::TEXTURE_CACHE_UPDATE_TIME);
+
+        let mut create_cache_texture_time = 0;
+        let mut delete_cache_texture_time = 0;
 
         for update_list in pending_texture_updates.drain(..) {
             for allocation in update_list.allocations {
@@ -2340,6 +2350,7 @@ impl Renderer {
                 let old = match allocation.kind {
                     TextureCacheAllocationKind::Alloc(ref info) |
                     TextureCacheAllocationKind::Reset(ref info) => {
+                        let create_cache_texture_start = precise_time_ns();
                         // Create a new native texture, as requested by the texture cache.
                         //
                         // Ensure no PBO is bound when creating the texture storage,
@@ -2363,7 +2374,7 @@ impl Renderer {
                             // On Mali-Gxx devices we use batched texture uploads as it performs much better.
                             // However, due to another driver bug we must ensure the textures are fully cleared,
                             // otherwise we get visual artefacts when blitting to the texture cache.
-                            if self.device.get_capabilities().prefers_batched_texture_uploads &&
+                            if self.device.use_batched_texture_uploads() &&
                                 !self.device.get_capabilities().supports_render_target_partial_update
                             {
                                 self.clear_texture(&texture, [0.0; 4]);
@@ -2376,6 +2387,8 @@ impl Renderer {
                                 self.clear_texture(&texture, TEXTURE_CACHE_DBG_CLEAR_COLOR);
                             }
                         }
+
+                        create_cache_texture_time += precise_time_ns() - create_cache_texture_start;
 
                         self.texture_resolver.texture_cache_map.insert(allocation.id, texture)
                     }
@@ -2395,263 +2408,36 @@ impl Renderer {
                 }
 
                 if let Some(old) = old {
+                    let delete_texture_start = precise_time_ns();
                     self.device.delete_texture(old);
+                    delete_cache_texture_time += precise_time_ns() - delete_texture_start;
                 }
             }
 
-            let mut bytes_uploaded = 0;
-
-            // On some devices performing many small texture uploads is slow, so instead we batch
-            // updates in to a small number of uploads to temporary textures, then copy from those
-            // textures to the correct place in the texture cache.
-            // A list of temporary textures that batches of updates are uploaded to.
-            let mut batch_upload_textures = Vec::new();
-            #[derive(Debug)]
-            pub struct BatchUploadCopy<'a> {
-                // Index within batch_upload_textures
-                src_texture_index: usize,
-                src_offset: DeviceIntPoint,
-                // We store the texture ID as well as a reference to the texture so that we
-                // can easily sort the copies to group them by destination target.
-                dest_texture_id: CacheTextureId,
-                dest_texture: &'a Texture,
-                dest_layer_index: LayerIndex,
-                dest_offset: DeviceIntPoint,
-                size: DeviceIntSize,
-            }
-            // A list of copies that must be performed from the temporary textures to the texture cache.
-            let mut batch_upload_copies = Vec::new();
-            #[derive(Debug)]
-            pub struct BatchUploadBuffer<'a> {
-                staging_buffer: UploadStagingBuffer<'a>,
-                texture_index: usize,
-            }
-            // For each texture format, this stores a list of staging buffers
-            // and a texture allocator for packing the buffers.
-            let mut batch_upload_buffers = FastHashMap::default();
-
-            // For best performance we use a single TextureUploader for all uploads.
-            // This allows us to fill PBOs more efficiently and therefore allocate fewer PBOs.
-            let mut uploader = self.device.upload_texture(
-                &mut self.texture_upload_pbo_pool,
-            );
-            let device = &mut self.device;
-
-            for (texture_id, updates) in update_list.updates {
-                let texture = &self.texture_resolver.texture_cache_map[&texture_id];
-
-                for update in updates {
-                    let TextureCacheUpdate { rect, stride, offset, layer_index, format_override, source } = update;
-
-                    let dummy_data;
-                    let data = match source {
-                        TextureUpdateSource::Bytes { ref data } => {
-                            &data[offset as usize ..]
-                        }
-                        TextureUpdateSource::External { id, channel_index } => {
-                            let handler = self.external_image_handler
-                                .as_mut()
-                                .expect("Found external image, but no handler set!");
-                            // The filter is only relevant for NativeTexture external images.
-                            match handler.lock(id, channel_index, ImageRendering::Auto).source {
-                                ExternalImageSource::RawData(data) => {
-                                    &data[offset as usize ..]
-                                }
-                                ExternalImageSource::Invalid => {
-                                    // Create a local buffer to fill the pbo.
-                                    let bpp = texture.get_format().bytes_per_pixel();
-                                    let width = stride.unwrap_or(rect.size.width * bpp);
-                                    let total_size = width * rect.size.height;
-                                    // WR haven't support RGBAF32 format in texture_cache, so
-                                    // we use u8 type here.
-                                    dummy_data = vec![0xFFu8; total_size as usize];
-                                    &dummy_data
-                                }
-                                ExternalImageSource::NativeTexture(eid) => {
-                                    panic!("Unexpected external texture {:?} for the texture cache update of {:?}", eid, id);
-                                }
-                            }
-                        }
-                        TextureUpdateSource::DebugClear => {
-                            let draw_target = DrawTarget::from_texture(
-                                texture,
-                                layer_index as usize,
-                                false,
-                            );
-                            device.bind_draw_target(draw_target);
-                            device.clear_target(
-                                Some(TEXTURE_CACHE_DBG_CLEAR_COLOR),
-                                None,
-                                Some(draw_target.to_framebuffer_rect(update.rect.to_i32()))
-                            );
-
-                            continue;
-                        }
-                    };
-
-                    const BATCH_UPLOAD_TEXTURE_SIZE: DeviceIntSize = DeviceIntSize::new(512, 512);
-                    let use_batch_upload = device.get_capabilities().prefers_batched_texture_uploads &&
-                        texture.flags().contains(TextureFlags::IS_SHARED_TEXTURE_CACHE) &&
-                        rect.size.width <= BATCH_UPLOAD_TEXTURE_SIZE.width &&
-                        rect.size.height <= BATCH_UPLOAD_TEXTURE_SIZE.height;
-
-                    if use_batch_upload {
-                        let (allocator, buffers) = batch_upload_buffers.entry(texture.get_format())
-                            .or_insert_with(|| (GuillotineAllocator::new(None), Vec::new()));
-
-                        // Allocate a region within the staging buffer for this update. If there is
-                        // no room in an existing buffer then allocate another texture and buffer.
-                        let (slice, origin) = match allocator.allocate(&rect.size) {
-                            Some((slice, origin)) => (slice, origin),
-                            None => {
-                                let new_slice = FreeRectSlice(buffers.len() as u32);
-                                allocator.extend(new_slice, BATCH_UPLOAD_TEXTURE_SIZE, rect.size);
-
-                                let staging_texture = device.create_texture(
-                                    ImageBufferKind::Texture2D,
-                                    texture.get_format(),
-                                    BATCH_UPLOAD_TEXTURE_SIZE.width,
-                                    BATCH_UPLOAD_TEXTURE_SIZE.height,
-                                    TextureFilter::Nearest,
-                                    // Currently we need render target support as we always use glBlitFramebuffer
-                                    // to copy the texture data. Instead, we should use glCopyImageSubData on some
-                                    // platforms, and avoid creating the FBOs in that case.
-                                    Some(RenderTargetInfo { has_depth: false }),
-                                    1,
-                                );
-
-                                let staging_buffer = uploader.stage(
-                                    device,
-                                    staging_texture.get_format(),
-                                    staging_texture.get_dimensions(),
-                                ).unwrap();
-
-                                let texture_index = batch_upload_textures.len();
-                                batch_upload_textures.push(staging_texture);
-
-                                buffers.push(BatchUploadBuffer {
-                                    staging_buffer: staging_buffer,
-                                    texture_index,
-                                });
-                                (new_slice, DeviceIntPoint::zero())
-                            }
-                        };
-                        let buffer = &mut buffers[slice.0 as usize];
-                        let allocated_rect = DeviceIntRect::new(origin, rect.size);
-
-                        batch_upload_copies.push(BatchUploadCopy {
-                            src_texture_index: buffer.texture_index,
-                            src_offset: allocated_rect.origin,
-                            dest_texture_id: texture_id,
-                            dest_texture: texture,
-                            dest_layer_index: layer_index as LayerIndex,
-                            dest_offset: rect.origin,
-                            size: rect.size,
-                        });
-
-                        unsafe {
-                            let bytes_pp = texture.get_format().bytes_per_pixel() as usize;
-                            let width_bytes = rect.size.width as usize * bytes_pp;
-                            let src_stride = stride.map_or(width_bytes, |stride| {
-                                assert!(stride >= 0);
-                                stride as usize
-                            });
-                            let src_size = (rect.size.height as usize - 1) * src_stride + width_bytes;
-                            assert!(src_size <= data.len());
-
-                            let src: &[mem::MaybeUninit<u8>] = std::slice::from_raw_parts(data.as_ptr() as *const _, src_size);
-                            let dst_stride = buffer.staging_buffer.get_stride();
-                            let dst = buffer.staging_buffer.get_mapping();
-
-                            // copy the data line-by-line in to the buffer so that we do not overwrite
-                            // any other region of the buffer.
-                            for y in 0..allocated_rect.size.height as usize {
-                                let src_start = y * src_stride;
-                                let src_end = src_start + width_bytes;
-                                let dst_start = (allocated_rect.origin.y as usize + y as usize) * dst_stride +
-                                    allocated_rect.origin.x as usize * bytes_pp;
-                                let dst_end = dst_start + width_bytes;
-
-                                dst[dst_start..dst_end].copy_from_slice(&src[src_start..src_end])
-                            }
-                        }
-                    } else {
-                        bytes_uploaded += uploader.upload(
-                            device,
-                            texture,
-                            rect,
-                            layer_index,
-                            stride,
-                            format_override,
-                            data.as_ptr(),
-                            data.len()
-                        );
-                    }
-
-                    if let TextureUpdateSource::External { id, channel_index } = source {
-                        let handler = self.external_image_handler
-                            .as_mut()
-                            .expect("Found external image, but no handler set!");
-                        handler.unlock(id, channel_index);
-                    }
-                }
-            }
-
-            // Upload batched texture updates to their temporary textures.
-            for batch_buffer in batch_upload_buffers.into_iter().map(|(_, (_, buffers))| buffers).flatten() {
-                let texture = &batch_upload_textures[batch_buffer.texture_index];
-                bytes_uploaded += uploader.upload_staged(
-                    device,
-                    texture,
-                    DeviceIntRect::from_size(texture.get_dimensions()),
-                    0,
-                    None,
-                    batch_buffer.staging_buffer,
-                );
-            }
-
-            // Flush all uploads, batched or otherwise.
-            uploader.flush(device);
-
-            // Copy updates that were batch uploaded to their correct destination in the texture cache.
-            // Sort them by destination and source to minimize framebuffer binding changes.
-            batch_upload_copies.sort_unstable_by_key(|b| (b.dest_texture_id.0, b.dest_layer_index, b.src_texture_index));
-            for copy in batch_upload_copies {
-                device.copy_texture_sub_region(
-                    &batch_upload_textures[copy.src_texture_index],
-                    copy.src_offset.x as _,
-                    copy.src_offset.y as _,
-                    0,
-                    copy.dest_texture,
-                    copy.dest_offset.x as _,
-                    copy.dest_offset.y as _,
-                    copy.dest_layer_index,
-                    copy.size.width as _,
-                    copy.size.height as _,
-                    1,
-                );
-            }
-
-            for texture in batch_upload_textures.drain(..) {
-                device.delete_texture(texture);
-            }
-
-            if update_list.clears_shared_cache {
-                self.shared_texture_cache_cleared = true;
-            }
-
-            self.profile.inc(profiler::TEXTURE_UPLOADS);
-            self.profile.add(profiler::TEXTURE_UPLOADS_MEM, profiler::bytes_to_mb(bytes_uploaded));
+            upload_to_texture_cache(self, update_list.updates);
         }
+
+        if create_cache_texture_time > 0 {
+            self.profile.set(
+                profiler::CREATE_CACHE_TEXTURE_TIME,
+                profiler::ns_to_ms(create_cache_texture_time)
+            );
+        }
+        if delete_cache_texture_time > 0 {
+            self.profile.set(
+                profiler::DELETE_CACHE_TEXTURE_TIME,
+                profiler::ns_to_ms(delete_cache_texture_time)
+            )
+        }
+
+        let t = self.profile.end_time(profiler::TEXTURE_CACHE_UPDATE_TIME);
+        self.resource_upload_time += t;
 
         drain_filter(
             &mut self.notifications,
             |n| { n.when() == Checkpoint::FrameTexturesUpdated },
             |n| { n.notify(); },
         );
-
-        let t = self.profile.end_time(profiler::TEXTURE_CACHE_UPLOAD_TIME);
-        self.resource_upload_time += t;
     }
 
     fn bind_textures(&mut self, textures: &BatchTextures) {
@@ -4861,6 +4647,9 @@ impl Renderer {
             }
         }
 
+        self.device.set_use_batched_texture_uploads(flags.contains(DebugFlags::USE_BATCHED_TEXTURE_UPLOADS));
+        self.device.set_use_draw_calls_for_texture_copy(flags.contains(DebugFlags::USE_DRAW_CALLS_FOR_TEXTURE_COPY));
+
         self.debug_flags = flags;
     }
 
@@ -5267,6 +5056,7 @@ impl Renderer {
             textures.deinit(&mut self.device);
         }
         self.texture_upload_pbo_pool.deinit(&mut self.device);
+        self.staging_texture_pool.delete_textures(&mut self.device);
         self.texture_resolver.deinit(&mut self.device);
         self.vaos.deinit(&mut self.device);
         self.debug.deinit(&mut self.device);
