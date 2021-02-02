@@ -50,8 +50,8 @@ struct NumArgState {
   va_list ap;  // point to the corresponding position on ap
 };
 
-typedef mozilla::Vector<NumArgState, 20, mozilla::MallocAllocPolicy>
-    NumArgStateVector;
+using NumArgStateVector =
+    mozilla::Vector<NumArgState, 20, mozilla::MallocAllocPolicy>;
 
 // For values up to and including TYPE_DOUBLE, the lowest bit indicates
 // whether the type is signed (0) or unsigned (1).
@@ -88,18 +88,26 @@ bool mozilla::PrintfTarget::fill2(const char* src, int srclen, int width,
 
   width -= srclen;
   if (width > 0 && (flags & FLAG_LEFT) == 0) {  // Right adjusting
-    if (flags & FLAG_ZEROS) space = '0';
+    if (flags & FLAG_ZEROS) {
+      space = '0';
+    }
     while (--width >= 0) {
-      if (!emit(&space, 1)) return false;
+      if (!emit(&space, 1)) {
+        return false;
+      }
     }
   }
 
   // Copy out the source data
-  if (!emit(src, srclen)) return false;
+  if (!emit(src, srclen)) {
+    return false;
+  }
 
   if (width > 0 && (flags & FLAG_LEFT) != 0) {  // Left adjusting
     while (--width >= 0) {
-      if (!emit(&space, 1)) return false;
+      if (!emit(&space, 1)) {
+        return false;
+      }
     }
   }
   return true;
@@ -158,20 +166,32 @@ bool mozilla::PrintfTarget::fill_n(const char* src, int srclen, int width,
     }
   }
   while (--leftspaces >= 0) {
-    if (!emit(" ", 1)) return false;
+    if (!emit(" ", 1)) {
+      return false;
+    }
   }
   if (signwidth) {
-    if (!emit(&sign, 1)) return false;
+    if (!emit(&sign, 1)) {
+      return false;
+    }
   }
   while (--precwidth >= 0) {
-    if (!emit("0", 1)) return false;
+    if (!emit("0", 1)) {
+      return false;
+    }
   }
   while (--zerowidth >= 0) {
-    if (!emit("0", 1)) return false;
+    if (!emit("0", 1)) {
+      return false;
+    }
   }
-  if (!emit(src, uint32_t(srclen))) return false;
+  if (!emit(src, uint32_t(srclen))) {
+    return false;
+  }
   while (--rightspaces >= 0) {
-    if (!emit(" ", 1)) return false;
+    if (!emit(" ", 1)) {
+      return false;
+    }
   }
   return true;
 }
@@ -374,12 +394,18 @@ bool mozilla::PrintfTarget::cvt_f(double d, char c, int width, int prec,
  */
 bool mozilla::PrintfTarget::cvt_s(const char* s, int width, int prec,
                                   int flags) {
-  if (prec == 0) return true;
-  if (!s) s = "(null)";
+  if (prec == 0) {
+    return true;
+  }
+  if (!s) {
+    s = "(null)";
+  }
 
   // Limit string length by precision value
   int slen = int(strlen(s));
-  if (0 < prec && prec < slen) slen = prec;
+  if (0 < prec && prec < slen) {
+    slen = prec;
+  }
 
   // and away we go
   return fill2(s, slen, width, flags);
@@ -402,17 +428,24 @@ static bool BuildArgArray(const char* fmt, va_list ap, NumArgStateVector& nas) {
   p = fmt;
   i = 0;
   while ((c = *p++) != 0) {
-    if (c != '%') continue;
-    if ((c = *p++) == '%')  // skip %% case
+    if (c != '%') {
       continue;
+    }
+    if ((c = *p++) == '%') {  // skip %% case
+      continue;
+    }
 
     while (c != 0) {
       if (c > '9' || c < '0') {
         if (c == '$') {  // numbered argument case
-          if (i > 0) MOZ_CRASH("Bad format string");
+          if (i > 0) {
+            MOZ_CRASH("Bad format string");
+          }
           number++;
         } else {  // non-numbered argument case
-          if (number > 0) MOZ_CRASH("Bad format string");
+          if (number > 0) {
+            MOZ_CRASH("Bad format string");
+          }
           i = 1;
         }
         break;
@@ -422,23 +455,33 @@ static bool BuildArgArray(const char* fmt, va_list ap, NumArgStateVector& nas) {
     }
   }
 
-  if (number == 0) return true;
+  if (number == 0) {
+    return true;
+  }
 
   // Only allow a limited number of arguments.
   MOZ_RELEASE_ASSERT(number <= 20);
 
-  if (!nas.growByUninitialized(number)) return false;
+  if (!nas.growByUninitialized(number)) {
+    return false;
+  }
 
-  for (i = 0; i < number; i++) nas[i].type = TYPE_UNKNOWN;
+  for (i = 0; i < number; i++) {
+    nas[i].type = TYPE_UNKNOWN;
+  }
 
   // Second pass:
   // Set nas[].type.
 
   p = fmt;
   while ((c = *p++) != 0) {
-    if (c != '%') continue;
+    if (c != '%') {
+      continue;
+    }
     c = *p++;
-    if (c == '%') continue;
+    if (c == '%') {
+      continue;
+    }
 
     cn = 0;
     while (c && c != '$') {  // should improve error check later
@@ -446,11 +489,15 @@ static bool BuildArgArray(const char* fmt, va_list ap, NumArgStateVector& nas) {
       c = *p++;
     }
 
-    if (!c || cn < 1 || cn > number) MOZ_CRASH("Bad format string");
+    if (!c || cn < 1 || cn > number) {
+      MOZ_CRASH("Bad format string");
+    }
 
     // nas[cn] starts from 0, and make sure nas[cn].type is not assigned.
     cn--;
-    if (nas[cn].type != TYPE_UNKNOWN) continue;
+    if (nas[cn].type != TYPE_UNKNOWN) {
+      continue;
+    }
 
     c = *p++;
 
@@ -568,7 +615,9 @@ static bool BuildArgArray(const char* fmt, va_list ap, NumArgStateVector& nas) {
     }
 
     // get a legal para.
-    if (nas[cn].type == TYPE_UNKNOWN) MOZ_CRASH("Bad format string");
+    if (nas[cn].type == TYPE_UNKNOWN) {
+      MOZ_CRASH("Bad format string");
+    }
   }
 
   // Third pass:
@@ -647,7 +696,7 @@ bool mozilla::PrintfTarget::vprint(const char* fmt, va_list ap) {
 #if defined(XP_WIN)
     const wchar_t* ws;
 #endif
-  } u;
+  } u{};
   const char* hexp;
   int i;
 
@@ -662,7 +711,9 @@ bool mozilla::PrintfTarget::vprint(const char* fmt, va_list ap) {
 
   while ((c = *fmt++) != 0) {
     if (c != '%') {
-      if (!emit(fmt - 1, 1)) return false;
+      if (!emit(fmt - 1, 1)) {
+        return false;
+      }
 
       continue;
     }
@@ -673,7 +724,9 @@ bool mozilla::PrintfTarget::vprint(const char* fmt, va_list ap) {
     c = *fmt++;
     if (c == '%') {
       // quoting a % with %%
-      if (!emit(fmt - 1, 1)) return false;
+      if (!emit(fmt - 1, 1)) {
+        return false;
+      }
 
       continue;
     }
@@ -686,7 +739,9 @@ bool mozilla::PrintfTarget::vprint(const char* fmt, va_list ap) {
         c = *fmt++;
       }
 
-      if (nas[i - 1].type == TYPE_UNKNOWN) MOZ_CRASH("Bad format string");
+      if (nas[i - 1].type == TYPE_UNKNOWN) {
+        MOZ_CRASH("Bad format string");
+      }
 
       ap = nas[i - 1].ap;
       c = *fmt++;
@@ -698,14 +753,26 @@ bool mozilla::PrintfTarget::vprint(const char* fmt, va_list ap) {
     // the various sprintf() implementations are inconsistent
     // on this feature.
     while ((c == '-') || (c == '+') || (c == ' ') || (c == '0')) {
-      if (c == '-') flags |= FLAG_LEFT;
-      if (c == '+') flags |= FLAG_SIGNED;
-      if (c == ' ') flags |= FLAG_SPACED;
-      if (c == '0') flags |= FLAG_ZEROS;
+      if (c == '-') {
+        flags |= FLAG_LEFT;
+      }
+      if (c == '+') {
+        flags |= FLAG_SIGNED;
+      }
+      if (c == ' ') {
+        flags |= FLAG_SPACED;
+      }
+      if (c == '0') {
+        flags |= FLAG_ZEROS;
+      }
       c = *fmt++;
     }
-    if (flags & FLAG_SIGNED) flags &= ~FLAG_SPACED;
-    if (flags & FLAG_LEFT) flags &= ~FLAG_ZEROS;
+    if (flags & FLAG_SIGNED) {
+      flags &= ~FLAG_SPACED;
+    }
+    if (flags & FLAG_LEFT) {
+      flags &= ~FLAG_ZEROS;
+    }
 
     // width
     if (c == '*') {
@@ -828,8 +895,9 @@ bool mozilla::PrintfTarget::vprint(const char* fmt, va_list ap) {
           case TYPE_ULONG:
             u.l = (long)va_arg(ap, unsigned long);
           do_long:
-            if (!cvt_l(u.l, width, prec, radix, type, flags, hexp))
+            if (!cvt_l(u.l, width, prec, radix, type, flags, hexp)) {
               return false;
+            }
 
             break;
 
@@ -846,8 +914,9 @@ bool mozilla::PrintfTarget::vprint(const char* fmt, va_list ap) {
           case TYPE_ULONGLONG:
             u.ll = va_arg(ap, unsigned long long);
           do_longlong:
-            if (!cvt_ll(u.ll, width, prec, radix, type, flags, hexp))
+            if (!cvt_ll(u.ll, width, prec, radix, type, flags, hexp)) {
               return false;
+            }
 
             break;
         }
@@ -860,26 +929,34 @@ bool mozilla::PrintfTarget::vprint(const char* fmt, va_list ap) {
       case 'g':
       case 'G':
         u.d = va_arg(ap, double);
-        if (!cvt_f(u.d, c, width, prec, flags)) return false;
+        if (!cvt_f(u.d, c, width, prec, flags)) {
+          return false;
+        }
 
         break;
 
       case 'c':
         if ((flags & FLAG_LEFT) == 0) {
           while (width-- > 1) {
-            if (!emit(" ", 1)) return false;
+            if (!emit(" ", 1)) {
+              return false;
+            }
           }
         }
         switch (type) {
           case TYPE_SHORT:
           case TYPE_INTN:
             u.ch = va_arg(ap, int);
-            if (!emit(&u.ch, 1)) return false;
+            if (!emit(&u.ch, 1)) {
+              return false;
+            }
             break;
         }
         if (flags & FLAG_LEFT) {
           while (width-- > 1) {
-            if (!emit(" ", 1)) return false;
+            if (!emit(" ", 1)) {
+              return false;
+            }
           }
         }
         break;
@@ -892,7 +969,9 @@ bool mozilla::PrintfTarget::vprint(const char* fmt, va_list ap) {
       case 's':
         if (type == TYPE_INTN) {
           u.s = va_arg(ap, const char*);
-          if (!cvt_s(u.s, width, prec, flags)) return false;
+          if (!cvt_s(u.s, width, prec, flags)) {
+            return false;
+          }
           break;
         }
         MOZ_ASSERT(type == TYPE_LONG);
@@ -935,8 +1014,12 @@ bool mozilla::PrintfTarget::vprint(const char* fmt, va_list ap) {
 
       default:
         // Not a % token after all... skip it
-        if (!emit("%", 1)) return false;
-        if (!emit(fmt - 1, 1)) return false;
+        if (!emit("%", 1)) {
+          return false;
+        }
+        if (!emit(fmt - 1, 1)) {
+          return false;
+        }
     }
   }
 
