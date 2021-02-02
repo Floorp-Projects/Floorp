@@ -215,6 +215,24 @@ SI Float sqrt(Float v) {
 #endif
 }
 
+SI float recip(float x) { return 1.0f / x; }
+
+// Use a fast vector reciprocal approximation when available. This should only
+// be used in cases where it is okay that the approximation is imprecise -
+// essentially visually correct but numerically wrong. Otherwise just rely on
+// however the compiler would implement slower division if the platform doesn't
+// provide a convenient intrinsic.
+SI Float recip(Float v) {
+#if USE_SSE2
+  return _mm_rcp_ps(v);
+#elif USE_NEON
+  Float e = vrecpeq_f32(v);
+  return vrecpsq_f32(v, e) * e;
+#else
+  return 1.0f / v;
+#endif
+}
+
 SI float inversesqrt(float x) { return 1.0f / sqrtf(x); }
 
 SI Float inversesqrt(Float v) {
@@ -648,8 +666,8 @@ SI I32 roundfast(Float v, Float scale) {
 }
 
 template <typename T>
-SI auto round_pixel(T v) {
-  return roundfast(v, 255.0f);
+SI auto round_pixel(T v, float maxval = 1.0f) {
+  return roundfast(v, (255.0f / maxval));
 }
 
 #define round __glsl_round
@@ -1335,6 +1353,7 @@ struct vec3 {
   IMPLICIT constexpr vec3(Float a) : x(a), y(a), z(a) {}
   constexpr vec3(Float x, Float y, Float z) : x(x), y(y), z(z) {}
   vec3(vec2 a, Float z) : x(a.x), y(a.y), z(z) {}
+  explicit vec3(vec4);
   IMPLICIT constexpr vec3(vec3_scalar s) : x(s.x), y(s.y), z(s.z) {}
   constexpr vec3(vec3_scalar s0, vec3_scalar s1, vec3_scalar s2, vec3_scalar s3)
       : x(Float{s0.x, s1.x, s2.x, s3.x}),
@@ -1827,6 +1846,8 @@ template <typename X, typename Y, typename Z, typename W>
 vec4 make_vec4(const X& x, const Y& y, const Z& z, const W& w) {
   return vec4(x, y, z, w);
 }
+
+ALWAYS_INLINE vec3::vec3(vec4 v) : x(v.x), y(v.y), z(v.z) {}
 
 SI ivec4 roundfast(vec4 v, Float scale) {
   return ivec4(roundfast(v.x, scale), roundfast(v.y, scale),
