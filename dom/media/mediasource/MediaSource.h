@@ -87,7 +87,7 @@ class MediaSource final : public DOMEventTargetHelper,
 
   IMPL_EVENT_HANDLER(sourceopen);
   IMPL_EVENT_HANDLER(sourceended);
-  IMPL_EVENT_HANDLER(sourceclosed);
+  IMPL_EVENT_HANDLER(sourceclose);
 
   /** End WebIDL Methods. */
 
