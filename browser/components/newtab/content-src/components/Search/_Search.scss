@@ -10,6 +10,14 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
   $search-icon-padding: 16px;
   $search-icon-width: 2 * $search-icon-padding + $search-icon-size -4;
 
+  &.visible-logo {
+    .logo-and-wordmark {
+      .wordmark {
+        fill: var(--newtab-wordmark-color);
+      }
+    }
+  }
+
   .search-wrapper {
     padding-bottom: 38px;
 

@@ -123,6 +123,7 @@ body {
   --newtab-search-text-color: #{$newtab-card-secondary-text-color};
   --newtab-card-first-shadow: #{$newtab-card-firstshadow};
   --newtab-card-second-shadow: #{$newtab-card-secondshadow};
+  --newtab-wordmark-color: #{$newtab-wordmark-default-color};
 
   &[lwt-newtab-brighttext] {
     // General styles
@@ -223,5 +224,6 @@ body {
     --newtab-search-text-color: #{$newtab-card-darktheme-secondary-text-color};
     --newtab-card-first-shadow: #{$newtab-card-darktheme-firstshadow};
     --newtab-card-second-shadow: #{$newtab-darktheme-card-secondshadow};
+    --newtab-wordmark-color: #{$firefox-wordmark-darktheme-color};
   }
 }
