@@ -1272,8 +1272,7 @@ bool StaticStrings::init(JSContext* cx) {
   }
 
   for (uint32_t i = 0; i < NUM_LENGTH2_ENTRIES; i++) {
-    Latin1Char buffer[] = {fromSmallChar(i >> SMALL_CHAR_BITS),
-                           fromSmallChar(i & SMALL_CHAR_MASK)};
+    Latin1Char buffer[] = {firstCharOfLength2(i), secondCharOfLength2(i)};
     JSLinearString* s =
         NewInlineString<NoGC>(cx, Latin1Range(buffer, 2), gc::TenuredHeap);
     if (!s) {
@@ -1287,8 +1286,8 @@ bool StaticStrings::init(JSContext* cx) {
     if (i < 10) {
       intStaticTable[i] = unitStaticTable[i + '0'];
     } else if (i < 100) {
-      size_t index = ((size_t)toSmallChar((i / 10) + '0') << SMALL_CHAR_BITS) +
-                     toSmallChar((i % 10) + '0');
+      auto index =
+          getLength2IndexStatic(char(i / 10) + '0', char(i % 10) + '0');
       intStaticTable[i] = length2StaticTable[index];
     } else {
       Latin1Char buffer[] = {Latin1Char('0' + (i / 100)),
