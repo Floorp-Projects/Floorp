@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test the ResourceWatcher API around BREAKPOINT
+// Test the ResourceWatcher API around THREAD_STATE
 
 const {
   ResourceWatcher,
@@ -47,18 +47,18 @@ async function checkBreakpointBeforeWatchResources() {
 
   info("Call watchResources");
   const availableResources = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.BREAKPOINT], {
+  await resourceWatcher.watchResources([ResourceWatcher.TYPES.THREAD_STATE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
   is(
     availableResources.length,
     1,
-    "Got the breakpoint related to the debugger statement"
+    "Got the THREAD_STATE's related to the debugger statement"
   );
-  const breakpoint = availableResources.pop();
+  const threadState = availableResources.pop();
 
-  assertPausedResource(breakpoint, {
+  assertPausedResource(threadState, {
     state: "paused",
     why: {
       type: "debuggerStatement",
@@ -105,14 +105,14 @@ async function checkBreakpointAfterWatchResources() {
 
   info("Call watchResources");
   const availableResources = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.BREAKPOINT], {
+  await resourceWatcher.watchResources([ResourceWatcher.TYPES.THREAD_STATE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
   is(
     availableResources.length,
     0,
-    "Got no breakpoint when calling watchResources"
+    "Got no THREAD_STATE when calling watchResources"
   );
 
   info("Run the 'debugger' statement");
@@ -123,11 +123,11 @@ async function checkBreakpointAfterWatchResources() {
 
   await waitFor(
     () => availableResources.length == 1,
-    "Got the breakpoint related to the debugger statement"
+    "Got the THREAD_STATE related to the debugger statement"
   );
-  const breakpoint = availableResources.pop();
+  const threadState = availableResources.pop();
 
-  assertPausedResource(breakpoint, {
+  assertPausedResource(threadState, {
     state: "paused",
     why: {
       type: "debuggerStatement",
@@ -177,14 +177,14 @@ async function checkRealBreakpoint() {
 
   info("Call watchResources");
   const availableResources = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.BREAKPOINT], {
+  await resourceWatcher.watchResources([ResourceWatcher.TYPES.THREAD_STATE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
   is(
     availableResources.length,
     0,
-    "Got no breakpoint when calling watchResources"
+    "Got no THREAD_STATE when calling watchResources"
   );
 
   // treadFront is created and attached while calling watchResources
@@ -208,11 +208,11 @@ async function checkRealBreakpoint() {
 
   await waitFor(
     () => availableResources.length == 1,
-    "Got the breakpoint related to the debugger statement"
+    "Got the THREAD_STATE related to the debugger statement"
   );
-  const breakpoint = availableResources.pop();
+  const threadState = availableResources.pop();
 
-  assertPausedResource(breakpoint, {
+  assertPausedResource(threadState, {
     state: "paused",
     why: {
       type: "breakpoint",
@@ -261,14 +261,14 @@ async function checkPauseOnException() {
 
   info("Call watchResources");
   const availableResources = [];
-  await resourceWatcher.watchResources([ResourceWatcher.TYPES.BREAKPOINT], {
+  await resourceWatcher.watchResources([ResourceWatcher.TYPES.THREAD_STATE], {
     onAvailable: resources => availableResources.push(...resources),
   });
 
   is(
     availableResources.length,
     0,
-    "Got no breakpoint when calling watchResources"
+    "Got no THREAD_STATE when calling watchResources"
   );
 
   // treadFront is created and attached while calling watchResources
@@ -281,11 +281,11 @@ async function checkPauseOnException() {
 
   await waitFor(
     () => availableResources.length == 1,
-    "Got the breakpoint related to the debugger statement"
+    "Got the THREAD_STATE related to the debugger statement"
   );
-  const breakpoint = availableResources.pop();
+  const threadState = availableResources.pop();
 
-  assertPausedResource(breakpoint, {
+  assertPausedResource(threadState, {
     state: "paused",
     why: {
       type: "exception",
@@ -324,7 +324,7 @@ async function checkPauseOnException() {
 async function assertPausedResource(resource, expected) {
   is(
     resource.resourceType,
-    ResourceWatcher.TYPES.BREAKPOINT,
+    ResourceWatcher.TYPES.THREAD_STATE,
     "Resource type is correct"
   );
   is(resource.state, "paused", "state attribute is correct");
@@ -364,7 +364,7 @@ async function assertPausedResource(resource, expected) {
 async function assertResumedResource(resource) {
   is(
     resource.resourceType,
-    ResourceWatcher.TYPES.BREAKPOINT,
+    ResourceWatcher.TYPES.THREAD_STATE,
     "Resource type is correct"
   );
   is(resource.state, "resumed", "state attribute is correct");
