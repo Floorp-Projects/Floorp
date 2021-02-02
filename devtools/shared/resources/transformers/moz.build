@@ -8,4 +8,5 @@ DevToolsModules(
     "network-events.js",
     "storage-local-storage.js",
     "storage-session-storage.js",
+    "thread-states.js",
 )

@@ -673,15 +673,9 @@ class ResourceWatcher {
     if (this.hasResourceWatcherSupport(resourceType)) {
       await this.watcherFront.watchResources([resourceType]);
 
-      // Bug 1678385: In order to support watching for JS Source resource
-      // for service workers and parent process workers, which aren't supported yet
-      // by the watcher actor, we do not bail out here and allow to execute
-      // the legacy listener for these targets.
-      // Once bug 1608848 is fixed, we can remove this and always return.
-      // If this isn't fixed soon, we may add other resources we want to see
-      // being fetched from these targets.
-      const shouldRunLegacyListeners =
-        resourceType == ResourceWatcher.TYPES.SOURCE;
+      const shouldRunLegacyListeners = this._shouldRunLegacyListenerEvenWithWatcherSupport(
+        resourceType
+      );
       if (!shouldRunLegacyListeners) {
         return;
       }
@@ -697,6 +691,27 @@ class ResourceWatcher {
       promises.push(this._watchResourcesForTarget(target, resourceType));
     }
     await Promise.all(promises);
+  }
+
+  /**
+   * Return true if the resource should be watched via legacy listener,
+   * even when watcher supports this resource type.
+   *
+   * Bug 1678385: In order to support watching for JS Source resource
+   * for service workers and parent process workers, which aren't supported yet
+   * by the watcher actor, we do not bail out here and allow to execute
+   * the legacy listener for these targets.
+   * Once bug 1608848 is fixed, we can remove this and never trigger
+   * the legacy listeners codepath for these resource types.
+   *
+   * If this isn't fixed soon, we may add other resources we want to see
+   * being fetched from these targets.
+   */
+  _shouldRunLegacyListenerEvenWithWatcherSupport(resourceType) {
+    return (
+      resourceType == ResourceWatcher.TYPES.SOURCE ||
+      resourceType == ResourceWatcher.TYPES.THREAD_STATE
+    );
   }
 
   async _forwardCachedResources(resourceTypes, onAvailable) {
@@ -798,9 +813,9 @@ class ResourceWatcher {
         this.watcherFront.unwatchResources([resourceType]);
       }
 
-      // See comment in `_startListening`
-      const shouldRunLegacyListeners =
-        resourceType == ResourceWatcher.TYPES.SOURCE;
+      const shouldRunLegacyListeners = this._shouldRunLegacyListenerEvenWithWatcherSupport(
+        resourceType
+      );
       if (!shouldRunLegacyListeners) {
         return;
       }
@@ -945,4 +960,6 @@ const ResourceTransformers = {
     .SESSION_STORAGE]: require("devtools/shared/resources/transformers/storage-session-storage.js"),
   [ResourceWatcher.TYPES
     .NETWORK_EVENT]: require("devtools/shared/resources/transformers/network-events"),
+  [ResourceWatcher.TYPES
+    .THREAD_STATE]: require("devtools/shared/resources/transformers/thread-states"),
 };

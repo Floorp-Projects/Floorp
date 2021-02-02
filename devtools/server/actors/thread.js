@@ -150,6 +150,19 @@ const STATES = {
   PAUSED: "paused",
 };
 
+// Possible values for the `why.type` attribute in "paused" event
+const PAUSE_REASONS = {
+  ALREADY_PAUSED: "alreadyPaused",
+  INTERRUPTED: "interrupted", // Associated with why.onNext attribute
+  MUTATION_BREAKPOINT: "mutationBreakpoint", // Associated with why.mutationType and why.message attributes
+  DEBUGGER_STATEMENT: "debuggerStatement",
+  EXCEPTION: "exception",
+  XHR: "XHR",
+  EVENT_BREAKPOINT: "eventBreakpoint",
+  RESUME_LIMIT: "resumeLimit",
+};
+exports.PAUSE_REASONS = PAUSE_REASONS;
+
 /**
  * JSD2 actors.
  */
@@ -327,6 +340,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
   isPaused() {
     return this._state === STATES.PAUSED;
+  },
+
+  lastPausedPacket() {
+    return this._priorPause;
   },
 
   /**
@@ -738,7 +755,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       // or loading favicons. This also includes requests dispatched indirectly
       // from workers. We'll need to handle them separately in the future.
       if (frame) {
-        this._pauseAndRespond(frame, { type: "XHR" });
+        this._pauseAndRespond(frame, { type: PAUSE_REASONS.XHR });
       }
     }
   },
@@ -839,7 +856,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
 
     return this._pauseAndRespond(frame, {
-      type: "eventBreakpoint",
+      type: PAUSE_REASONS.EVENT_BREAKPOINT,
       breakpoint: eventBreakpoint,
       message: makeEventBreakpointMessage(eventBreakpoint),
     });
@@ -1100,7 +1117,11 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // in to each function.
     const steppingHookState = {
       pauseAndRespond: (frame, onPacket = k => k) =>
-        this._pauseAndRespond(frame, { type: "resumeLimit" }, onPacket),
+        this._pauseAndRespond(
+          frame,
+          { type: PAUSE_REASONS.RESUME_LIMIT },
+          onPacket
+        ),
       startFrame: startFrame || this.youngestFrame,
       steppingType,
       completion,
@@ -1519,7 +1540,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     } else if (this.state == STATES.PAUSED) {
       // TODO: return the actual reason for the existing pause.
       this.emit("paused", {
-        why: { type: "alreadyPaused" },
+        why: { type: PAUSE_REASONS.ALREADY_PAUSED },
       });
       return {};
     } else if (this.state != STATES.RUNNING) {
@@ -1533,7 +1554,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       // executed, just set an onEnterFrame handler.
       if (when == "onNext") {
         const onEnterFrame = frame => {
-          this._pauseAndRespond(frame, { type: "interrupted", onNext: true });
+          this._pauseAndRespond(frame, {
+            type: PAUSE_REASONS.INTERRUPTED,
+            onNext: true,
+          });
         };
         this.dbg.onEnterFrame = onEnterFrame;
 
@@ -1547,7 +1571,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       if (!packet) {
         return { error: "notInterrupted" };
       }
-      packet.why = { type: "interrupted", onNext: false };
+      packet.why = { type: PAUSE_REASONS.INTERRUPTED, onNext: false };
 
       // Send the response to the interrupt request now (rather than
       // returning it), because we're going to start a nested event loop
@@ -1851,7 +1875,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return this._pauseAndRespond(
       frame,
       {
-        type: "mutationBreakpoint",
+        type: PAUSE_REASONS.MUTATION_BREAKPOINT,
         mutationType,
         message: `DOM Mutation: '${mutationType}'`,
       },
@@ -1889,7 +1913,9 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       return undefined;
     }
 
-    return this._pauseAndRespond(frame, { type: "debuggerStatement" });
+    return this._pauseAndRespond(frame, {
+      type: PAUSE_REASONS.DEBUGGER_STATEMENT,
+    });
   },
 
   skipBreakpoints(skip) {
@@ -1974,7 +2000,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       }
 
       packet.why = {
-        type: "exception",
+        type: PAUSE_REASONS.EXCEPTION,
         exception: createValueGrip(value, this._pausePool, this.objectGrip),
       };
       this.emit("paused", packet);
