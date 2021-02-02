@@ -969,7 +969,9 @@
 #
 # This behavior matches both historical and GTK / Windows focus behavior.
 #
-# :focus-visible is intended to provide better heuristics than this.
+# :focus-visible is intended to provide better heuristics than this, so for now
+# we make this false whenever layout.css.focus-visible.enabled is enabled by
+# default.
 - name: browser.display.always_show_rings_after_key_focus
   type: bool
   value: false
@@ -6077,6 +6079,17 @@
 - name: layout.css.prefers-color-scheme-no-preference.enabled
   type: RelaxedAtomicBool
   value: false
+  mirror: always
+  rust: true
+
+# Whether the `:focus-visible` pseudo-class is enabled.
+#
+# NOTE: You probably want to change the default value of
+# browser.display.always_show_rings_after_key_focus whenever you change the
+# default value of this pref.
+- name: layout.css.focus-visible.enabled
+  type: RelaxedAtomicBool
+  value: true
   mirror: always
   rust: true
 

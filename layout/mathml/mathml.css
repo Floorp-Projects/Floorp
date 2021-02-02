@@ -56,10 +56,15 @@ ms[rquote]:after {
  }
 
 /**************************************************************************/
-/* Links                                                                  */
+/* Links and focusable elements                                           */
 /**************************************************************************/
 :any-link {
   text-decoration: none !important;
+}
+
+*:-moz-focusring {
+  /* Don't specify the outline-color, we should always use initial value. */
+  outline: 1px dotted;
 }
 
 /**************************************************************************/

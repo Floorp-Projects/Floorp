@@ -701,9 +701,15 @@ canvas {
   user-select: none;
 }
 
-iframe:focus-visible,
-body:focus-visible,
-html:focus-visible {
+/* focusable content: anything w/ tabindex >=0 is focusable */
+:-moz-focusring {
+  /* Don't specify the outline-color, we should always use initial value. */
+   outline: 1px dotted;
+}
+
+iframe:-moz-focusring,
+body:-moz-focusring,
+html:-moz-focusring {
   /* These elements historically don't show outlines when focused by default.
    * We could consider changing that if needed. */
   outline-style: none;
