@@ -523,6 +523,25 @@ struct ParserAtomLookupHasher {
 // We use this class to build a read-only constexpr table of ParserAtoms for the
 // well-known atoms set. This should be resolved at compile-time (including hash
 // computation) thanks to C++ constexpr.
+//
+// This table contains similar information as JSAtomState+StaticStrings,
+// with some differences:
+//
+//   | frontend                   | VM                                |
+//   |----------------------------|-----------------------------------|
+//   | emptyAtom                  | JSAtomState.empty                 |
+//   | length1Table (*1)          | StaticStrings.unitStaticTable     |
+//   | length2Table               | StaticStrings.length2StaticTable  |
+//   | -                          | StaticStrings.intStaticTable      |
+//   | non-tiny common names (*2) | JSAtomState common property names |
+//   | prototype names            | JSAtomState prototype names       |
+//   | -                          | JSAtomState symbol names          |
+//
+// *1: StaticStrings.unitStaticTable uses entire Latin1 range, but
+//     WellKnownParserAtoms_ROM.length2Table uses only ASCII range,
+//     given non-ASCII chars won't appear frequently inside source code
+// *2: tiny common property names are stored in length1/length2 tables
+//
 class WellKnownParserAtoms_ROM {
   // NOTE: While the well-known strings are all Latin1, we must use char16_t in
   //       some places in order to have constexpr mozilla::HashString.
