@@ -134,7 +134,7 @@
 }
 
 /* https://drafts.csswg.org/css-lists-3/#ua-stylesheet */
-*|*::marker {
+::marker {
   text-align: end;
   text-transform: none;
   unicode-bidi: isolate;
@@ -146,21 +146,19 @@
  * the same changes to svg.css.
  */
 
-/* Links */
+/* Links and focusable content */
 
-*|*:any-link {
+:any-link {
   cursor: pointer;
 }
 
-*|*:any-link:focus-visible {
+:focus-visible {
   /* Don't specify the outline-color, we should always use initial value. */
-  /* TODO(emilio): I think this is redundant, html.css does the same for all
-   * :focus-visible elements. */
   outline: 1px dotted;
 }
 
 /* Inert subtrees */
-*|*:-moz-inert {
+:-moz-inert {
   -moz-inert: inert;
 }
 
