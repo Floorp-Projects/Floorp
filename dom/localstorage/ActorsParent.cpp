@@ -6685,10 +6685,18 @@ nsresult PrepareDatastoreOp::OpenDirectory() {
   MOZ_ASSERT(MayProceed());
   MOZ_ASSERT(QuotaManager::Get());
 
-  mNestedState = NestedState::DirectoryOpenPending;
-  mPendingDirectoryLock = QuotaManager::Get()->OpenDirectory(
+  mPendingDirectoryLock = QuotaManager::Get()->CreateDirectoryLock(
       PERSISTENCE_TYPE_DEFAULT, mQuotaInfo, mozilla::dom::quota::Client::LS,
-      /* aExclusive */ false, this);
+      /* aExclusive */ false);
+
+  mNestedState = NestedState::DirectoryOpenPending;
+
+  {
+    // Pin the directory lock, because Acquire might clear mPendingDirectoryLock
+    // during the Acquire call.
+    RefPtr pinnedDirectoryLock = mPendingDirectoryLock;
+    pinnedDirectoryLock->Acquire(this);
+  }
 
   return NS_OK;
 }

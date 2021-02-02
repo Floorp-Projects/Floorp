@@ -13214,11 +13214,12 @@ void DeleteFilesRunnable::Open() {
     return;
   }
 
-  mState = State_DirectoryOpenPending;
-
-  RefPtr<DirectoryLock> pendingDirectoryLock = quotaManager->OpenDirectory(
+  RefPtr<DirectoryLock> directoryLock = quotaManager->CreateDirectoryLock(
       mFileManager->Type(), mFileManager->GroupAndOrigin(), quota::Client::IDB,
-      /* aExclusive */ false, this);
+      /* aExclusive */ false);
+
+  mState = State_DirectoryOpenPending;
+  directoryLock->Acquire(this);
 }
 
 void DeleteFilesRunnable::DoDatabaseWork() {
@@ -13413,12 +13414,14 @@ nsresult Maintenance::OpenDirectory() {
 
   // Get a shared lock for <profile>/storage/*/*/idb
 
-  mState = State::DirectoryOpenPending;
-  RefPtr<DirectoryLock> pendingDirectoryLock =
-      QuotaManager::Get()->OpenDirectoryInternal(
+  RefPtr<DirectoryLock> directoryLock =
+      QuotaManager::Get()->CreateDirectoryLockInternal(
           Nullable<PersistenceType>(), OriginScope::FromNull(),
           Nullable<Client::Type>(Client::IDB),
-          /* aExclusive */ false, this);
+          /* aExclusive */ false);
+
+  mState = State::DirectoryOpenPending;
+  directoryLock->Acquire(this);
 
   return NS_OK;
 }
@@ -15714,11 +15717,13 @@ nsresult FactoryOp::OpenDirectory() {
         IDB_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsString, dbFile, GetPath));
       }()));
 
+  RefPtr<DirectoryLock> directoryLock = quotaManager->CreateDirectoryLock(
+      persistenceType, mQuotaInfo, Client::IDB,
+      /* aExclusive */ false);
+
   mState = State::DirectoryOpenPending;
 
-  RefPtr<DirectoryLock> pendingDirectoryLock =
-      quotaManager->OpenDirectory(persistenceType, mQuotaInfo, Client::IDB,
-                                  /* aExclusive */ false, this);
+  directoryLock->Acquire(this);
 
   return NS_OK;
 }
