@@ -9,6 +9,14 @@
 #include <stdlib.h>
 #include <algorithm>
 
+// These constants are the the strings that GTK expects as key-value pairs for
+// setting CUPS duplex modes. These are not universal to all CUPS systems, which
+// is why they are local to this file.
+static constexpr gchar kCupsDuplex[] = "cups-Duplex";
+static constexpr gchar kCupsDuplexNone[] = "None";
+static constexpr gchar kCupsDuplexNoTumble[] = "DuplexNoTumble";
+static constexpr gchar kCupsDuplexTumble[] = "DuplexTumble";
+
 static gboolean ref_printer(GtkPrinter* aPrinter, gpointer aData) {
   ((nsPrintSettingsGTK*)aData)->SetGtkPrinter(aPrinter);
   return TRUE;
@@ -641,35 +649,52 @@ nsPrintSettingsGTK::SetResolution(int32_t aResolution) {
 
 NS_IMETHODIMP
 nsPrintSettingsGTK::GetDuplex(int32_t* aDuplex) {
+  NS_ENSURE_ARG_POINTER(aDuplex);
+
+  // Default to DuplexNone.
+  *aDuplex = kDuplexNone;
+
   if (!gtk_print_settings_has_key(mPrintSettings, GTK_PRINT_SETTINGS_DUPLEX)) {
-    *aDuplex = GTK_PRINT_DUPLEX_SIMPLEX;
-  } else {
-    *aDuplex = gtk_print_settings_get_duplex(mPrintSettings);
+    return NS_OK;
   }
+
+  switch (gtk_print_settings_get_duplex(mPrintSettings)) {
+    case GTK_PRINT_DUPLEX_SIMPLEX:
+      *aDuplex = kDuplexNone;
+      break;
+    case GTK_PRINT_DUPLEX_HORIZONTAL:
+      *aDuplex = kDuplexFlipOnSideEdge;
+      break;
+    case GTK_PRINT_DUPLEX_VERTICAL:
+      *aDuplex = kDuplexFlipOnTopEdge;
+      break;
+  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPrintSettingsGTK::SetDuplex(int32_t aDuplex) {
-  MOZ_ASSERT(aDuplex >= GTK_PRINT_DUPLEX_SIMPLEX &&
-                 aDuplex <= GTK_PRINT_DUPLEX_VERTICAL,
-             "value is out of bounds for GtkPrintDuplex enum");
-  gtk_print_settings_set_duplex(mPrintSettings,
-                                static_cast<GtkPrintDuplex>(aDuplex));
+  uint32_t duplex = static_cast<uint32_t>(aDuplex);
+  MOZ_ASSERT(duplex <= kDuplexFlipOnTopEdge,
+             "value is out of bounds for duplex enum");
 
   // We want to set the GTK CUPS Duplex setting in addition to calling
   // gtk_print_settings_set_duplex(). Some systems may look for one, or the
   // other, so it is best to set them both consistently.
-  constexpr char kCupsDuplex[] = "cups-Duplex";
-  switch (aDuplex) {
-    case GTK_PRINT_DUPLEX_SIMPLEX:
-      gtk_print_settings_set(mPrintSettings, kCupsDuplex, "None");
+  switch (duplex) {
+    case kDuplexNone:
+      gtk_print_settings_set(mPrintSettings, kCupsDuplex, kCupsDuplexNone);
+      gtk_print_settings_set_duplex(mPrintSettings, GTK_PRINT_DUPLEX_SIMPLEX);
       break;
-    case GTK_PRINT_DUPLEX_HORIZONTAL:
-      gtk_print_settings_set(mPrintSettings, kCupsDuplex, "DuplexNoTumble");
+    case kDuplexFlipOnSideEdge:
+      gtk_print_settings_set(mPrintSettings, kCupsDuplex, kCupsDuplexNoTumble);
+      gtk_print_settings_set_duplex(mPrintSettings,
+                                    GTK_PRINT_DUPLEX_HORIZONTAL);
       break;
-    case GTK_PRINT_DUPLEX_VERTICAL:
-      gtk_print_settings_set(mPrintSettings, kCupsDuplex, "DuplexTumble");
+    case kDuplexFlipOnTopEdge:
+      gtk_print_settings_set(mPrintSettings, kCupsDuplex, kCupsDuplexTumble);
+      gtk_print_settings_set_duplex(mPrintSettings, GTK_PRINT_DUPLEX_VERTICAL);
       break;
   }
 

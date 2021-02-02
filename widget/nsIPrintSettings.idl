@@ -86,11 +86,18 @@ interface nsIPrintSettings : nsISupports
   const short kOutputFormatPDF    = 2;
 
   /**
-   * Simplex/Duplex printing options
+   * Duplex printing options.
+   *
+   * Note that other libraries refer to equivalent duplex settings
+   * using different terminology. The equivalent terms are listed
+   * above each value in a comma-separated list.
    */
-  const short kSimplex          = 0;
-  const short kDuplexHorizontal = 1;
-  const short kDuplexVertical   = 2;
+  // Equivalent to: Simplex
+  const short kDuplexNone = 0;
+  // Equivalent to: Horizontal, NoTumble
+  const short kDuplexFlipOnSideEdge = 1;
+  // Equivalent to: Vertical, Tumble
+  const short kDuplexFlipOnTopEdge = 2;
 
   /**
    * Get the page size in twips, considering the

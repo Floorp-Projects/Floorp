@@ -186,14 +186,14 @@ NSPrintInfo* nsPrintSettingsX::CreateOrCopyPrintInfo(bool aWithScaling) {
     default:
       // This can't happen :) but if it does, we treat it as "none".
       MOZ_FALLTHROUGH_ASSERT("Unknown duplex value");
-    case kSimplex:
+    case kDuplexNone:
       duplexSetting = kPMDuplexNone;
       break;
-    case kDuplexVertical:
-      duplexSetting = kPMDuplexTumble;
-      break;
-    case kDuplexHorizontal:
+    case kDuplexFlipOnSideEdge:
       duplexSetting = kPMDuplexNoTumble;
+      break;
+    case kDuplexFlipOnTopEdge:
+      duplexSetting = kPMDuplexTumble;
       break;
   }
 
@@ -310,20 +310,20 @@ void nsPrintSettingsX::SetFromPrintInfo(NSPrintInfo* aPrintInfo, bool aAdoptPrin
         // An unknown value is treated as None.
         MOZ_FALLTHROUGH_ASSERT("Unknown duplex value");
       case kPMDuplexNone:
-        mDuplex = kSimplex;
+        mDuplex = kDuplexNone;
         break;
       case kPMDuplexNoTumble:
-        mDuplex = kDuplexHorizontal;
+        mDuplex = kDuplexFlipOnSideEdge;
         break;
       case kPMDuplexTumble:
-        mDuplex = kDuplexVertical;
+        mDuplex = kDuplexFlipOnTopEdge;
         break;
     }
   } else {
     // By default a printSettings dictionary doesn't initially contain the
     // duplex key at all, so this is not an error; its absence just means no
-    // duplexing has been requested, so we return kSimplex.
-    mDuplex = kSimplex;
+    // duplexing has been requested, so we return kDuplexNone.
+    mDuplex = kDuplexNone;
   }
 
   value = [printSettings objectForKey:@"com_apple_print_PrintSettings_PMDestinationType"];
