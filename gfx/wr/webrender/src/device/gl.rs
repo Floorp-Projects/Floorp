@@ -980,9 +980,9 @@ pub struct Capabilities {
     pub supports_render_target_partial_update: bool,
     /// Whether we can use SSBOs.
     pub supports_shader_storage_object: bool,
-    /// Whether the driver prefers fewer and larger texture uploads
-    /// over many smaller updates.
-    pub prefers_batched_texture_uploads: bool,
+    /// Whether to enforce that texture uploads be batched regardless of what
+    /// the pref says.
+    pub requires_batched_texture_uploads: bool,
     /// Whether clip-masking is supported natively by the GL implementation
     /// rather than emulated in shaders.
     pub uses_native_clip_mask: bool,
@@ -1069,6 +1069,12 @@ pub struct Device {
     depth_available: bool,
 
     upload_method: UploadMethod,
+    use_batched_texture_uploads: bool,
+    /// Whether to use draw calls instead of regular blitting commands.
+    ///
+    /// Note: this currently only applies to the batched texture uploads
+    /// path. 
+    use_draw_calls_for_texture_copy: bool,
 
     // HW or API capabilities
     capabilities: Capabilities,
@@ -1645,7 +1651,7 @@ impl Device {
 
         // On Mali-Gxx the driver really struggles with many small texture uploads,
         // and handles fewer, larger uploads better.
-        let prefers_batched_texture_uploads = is_mali_g;
+        let requires_batched_texture_uploads = is_mali_g;
 
         Device {
             gl,
@@ -1654,6 +1660,9 @@ impl Device {
             resource_override_path,
             use_optimized_shaders,
             upload_method,
+            use_batched_texture_uploads: requires_batched_texture_uploads,
+            use_draw_calls_for_texture_copy: false,
+
             inside_frame: false,
 
             capabilities: Capabilities {
@@ -1670,7 +1679,7 @@ impl Device {
                 supports_texture_usage,
                 supports_render_target_partial_update,
                 supports_shader_storage_object,
-                prefers_batched_texture_uploads,
+                requires_batched_texture_uploads,
                 uses_native_clip_mask,
                 renderer_name,
             },
@@ -1783,6 +1792,26 @@ impl Device {
 
     pub fn optimal_pbo_stride(&self) -> StrideAlignment {
         self.optimal_pbo_stride
+    }
+
+    pub fn upload_method(&self) -> &UploadMethod {
+        &self.upload_method
+    }
+
+    pub fn use_batched_texture_uploads(&self) -> bool {
+        self.use_batched_texture_uploads
+    }
+
+    pub fn use_draw_calls_for_texture_copy(&self) -> bool {
+        self.use_draw_calls_for_texture_copy
+    }
+
+    pub fn set_use_batched_texture_uploads(&mut self, enabled: bool) {
+        self.use_batched_texture_uploads = self.capabilities.requires_batched_texture_uploads | enabled;
+    }
+
+    pub fn set_use_draw_calls_for_texture_copy(&mut self, enabled: bool) {
+        self.use_draw_calls_for_texture_copy = enabled;
     }
 
     pub fn reset_state(&mut self) {
@@ -4298,7 +4327,7 @@ pub struct TextureUploader<'a> {
     /// A list of buffers containing uploads that need to be flushed.
     buffers: Vec<PixelBuffer<'a>>,
     /// Pool used to obtain PBOs to fill with texture data.
-    pbo_pool: &'a mut UploadPBOPool,
+    pub pbo_pool: &'a mut UploadPBOPool,
 }
 
 impl<'a> Drop for TextureUploader<'a> {

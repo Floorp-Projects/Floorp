@@ -70,6 +70,8 @@ static PROFILER_PRESETS: &'static[(&'static str, &'static str)] = &[
     (&"Frame stats", &"Primitives,Visible primitives,Draw calls,Vertices,Color passes,Alpha passes,Rendered picture tiles,Rasterized glyphs"),
     // Texture cache allocation stats.
     (&"Texture cache stats", &"Texture cache RGBA8 linear pixels, Texture cache RGBA8 linear textures, Texture cache RGBA8 glyphs pixels, Texture cache RGBA8 glyphs textures, Texture cache A8 glyphs pixels, Texture cache A8 glyphs textures, Texture cache A8 pixels, Texture cache A8 textures, Texture cache A16 pixels, Texture cache A16 textures, Texture cache RGBA8 nearest pixels, Texture cache RGBA8 nearest textures, Texture cache shared mem, Texture cache standalone mem"),
+    // Graphs to investigate driver overhead of texture cache updates.
+    (&"Texture upload perf", &"#Texture cache update,#Texture cache upload, ,#Staging CPU allocation,#Staging GPU allocation,#Staging CPU copy,#Staging GPU copy,#Upload time, ,#Upload copy batches,#Rasterized glyphs, ,#Cache texture creation,#Cache texture deletion"),
 
     // Graphs:
 
@@ -167,7 +169,7 @@ pub const SLOW_FRAME: usize = 51;
 pub const SLOW_TXN: usize = 52;
 
 pub const GPU_CACHE_UPLOAD_TIME: usize = 53;
-pub const TEXTURE_CACHE_UPLOAD_TIME: usize = 54;
+pub const TEXTURE_CACHE_UPDATE_TIME: usize = 54;
 
 pub const FRAME_TIME: usize = 55;
 
@@ -196,7 +198,17 @@ pub const TEXTURE_CACHE_RGBA8_GLYPHS_TEXTURES: usize = 75;
 pub const TEXTURE_CACHE_A8_GLYPHS_PIXELS: usize = 76;
 pub const TEXTURE_CACHE_A8_GLYPHS_TEXTURES: usize = 77;
 
-pub const NUM_PROFILER_EVENTS: usize = 78;
+pub const CPU_TEXTURE_ALLOCATION_TIME: usize = 78;
+pub const STAGING_TEXTURE_ALLOCATION_TIME: usize = 79;
+pub const UPLOAD_CPU_COPY_TIME: usize = 80;
+pub const UPLOAD_GPU_COPY_TIME: usize = 81;
+pub const UPLOAD_TIME: usize = 82;
+pub const UPLOAD_NUM_COPY_BATCHES: usize = 83;
+pub const TOTAL_UPLOAD_TIME: usize = 84;
+pub const CREATE_CACHE_TEXTURE_TIME: usize = 85;
+pub const DELETE_CACHE_TEXTURE_TIME: usize = 86;
+
+pub const NUM_PROFILER_EVENTS: usize = 87;
 
 pub struct Profiler {
     counters: Vec<Counter>,
@@ -299,7 +311,7 @@ impl Profiler {
             float("Slow transaction", "", SLOW_TXN, expected(0.0..0.0)),
 
             float("GPU cache upload", "ms", GPU_CACHE_UPLOAD_TIME, expected(0.0..2.0)),
-            float("Texture cache update", "ms", TEXTURE_CACHE_UPLOAD_TIME, expected(0.0..3.0)),
+            float("Texture cache update", "ms", TEXTURE_CACHE_UPDATE_TIME, expected(0.0..3.0)),
 
             float("Frame", "ms", FRAME_TIME, Expected::none()),
 
@@ -327,6 +339,16 @@ impl Profiler {
             int("Texture cache RGBA8 glyphs textures", "", TEXTURE_CACHE_RGBA8_GLYPHS_TEXTURES, expected(0..2)),
             int("Texture cache A8 glyphs pixels", "px", TEXTURE_CACHE_A8_GLYPHS_PIXELS, expected(0..4_000_000)),
             int("Texture cache A8 glyphs textures", "", TEXTURE_CACHE_A8_GLYPHS_TEXTURES, expected(0..2)),
+
+            float("Staging CPU allocation", "ms", CPU_TEXTURE_ALLOCATION_TIME, Expected::none()),
+            float("Staging GPU allocation", "ms", STAGING_TEXTURE_ALLOCATION_TIME, Expected::none()),
+            float("Staging CPU copy", "ms", UPLOAD_CPU_COPY_TIME, Expected::none()),
+            float("Staging GPU copy", "ms", UPLOAD_GPU_COPY_TIME, Expected::none()),
+            float("Upload time", "ms", UPLOAD_TIME, Expected::none()),
+            int("Upload copy batches", "", UPLOAD_NUM_COPY_BATCHES, Expected::none()),
+            float("Texture cache upload", "ms", TOTAL_UPLOAD_TIME, expected(0.0..5.0)),
+            float("Cache texture creation", "ms", CREATE_CACHE_TEXTURE_TIME, expected(0.0..2.0)),
+            float("Cache texture deletion", "ms", DELETE_CACHE_TEXTURE_TIME, expected(0.0..1.0)),
         ];
 
 
