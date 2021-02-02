@@ -32,7 +32,7 @@ function continueTest(win) {
     doc.body.focus();
     sel.collapse(doc.body.firstChild, 3);
     SimpleTest.executeSoon(function() {
-      synthesizeKey("VK_LEFT", {accelKey: true}, win);
+      synthesizeKey("KEY_ArrowLeft", {accelKey: true}, win);
       ok(sel.isCollapsed, "The selection must be collapsed");
       is(sel.anchorNode, doc.body.firstChild, "The anchor node should be the body element's text node");
       is(sel.anchorOffset, 0, "The anchor offset should be 0");
