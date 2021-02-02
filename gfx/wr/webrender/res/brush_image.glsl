@@ -193,16 +193,11 @@ void brush_vs(
     // Derive the texture coordinates for this image, based on
     // whether the source image is a local-space or screen-space
     // image.
-    switch (raster_space) {
-        case RASTER_SCREEN: {
-            // Since the screen space UVs specify an arbitrary quad, do
-            // a bilinear interpolation to get the correct UV for this
-            // local position.
-            f = get_image_quad_uv(specific_resource_address, f);
-            break;
-        }
-        default:
-            break;
+    if (raster_space == RASTER_SCREEN) {
+        // Since the screen space UVs specify an arbitrary quad, do
+        // a bilinear interpolation to get the correct UV for this
+        // local position.
+        f = get_image_quad_uv(specific_resource_address, f);
     }
 #endif
 
