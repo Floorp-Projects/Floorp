@@ -11,7 +11,7 @@ use crate::ipc::need_ipc;
 ///
 /// We wrap it in a private module that is inaccessible outside of this module.
 mod private {
-    use super::{BooleanMetric, CounterMetric, StringMetric};
+    use super::{BooleanMetric, CounterMetric, MetricId, StringMetric};
 
     /// The sealed trait.
     ///
@@ -19,6 +19,7 @@ mod private {
     /// as labeled types.
     pub trait Sealed {
         type GleanMetric: glean::private::AllowLabeled + Clone;
+        fn from_glean_metric(id: MetricId, metric: Self::GleanMetric) -> Self;
     }
 
     // `LabeledMetric<BooleanMetric>` is possible.
@@ -26,6 +27,9 @@ mod private {
     // See [Labeled Booleans](https://mozilla.github.io/glean/book/user/metrics/labeled_booleans.html).
     impl Sealed for BooleanMetric {
         type GleanMetric = glean::private::BooleanMetric;
+        fn from_glean_metric(_id: MetricId, metric: Self::GleanMetric) -> Self {
+            BooleanMetric::Parent(metric)
+        }
     }
 
     // `LabeledMetric<StringMetric>` is possible.
@@ -33,6 +37,9 @@ mod private {
     // See [Labeled Strings](https://mozilla.github.io/glean/book/user/metrics/labeled_strings.html).
     impl Sealed for StringMetric {
         type GleanMetric = glean::private::StringMetric;
+        fn from_glean_metric(_id: MetricId, metric: Self::GleanMetric) -> Self {
+            StringMetric::Parent(metric)
+        }
     }
 
     // `LabeledMetric<CounterMetric>` is possible.
@@ -40,6 +47,9 @@ mod private {
     // See [Labeled Counters](https://mozilla.github.io/glean/book/user/metrics/labeled_counters.html).
     impl Sealed for CounterMetric {
         type GleanMetric = glean::private::CounterMetric;
+        fn from_glean_metric(id: MetricId, metric: Self::GleanMetric) -> Self {
+            CounterMetric::Parent { id, inner: metric }
+        }
     }
 }
 
@@ -80,13 +90,9 @@ impl<T> AllowLabeled for T where T: private::Sealed {}
 /// ```rust,ignore
 /// errro::seen_one.get("upload").set(true);
 /// ```
-//#[derive(Debug)]
 pub struct LabeledMetric<T: AllowLabeled> {
-    // TODO: the `_id` is currently not needed, hence the
-    // prefix, but it will be needed when adding IPC support
-    // to this type.
     /// The metric ID of the underlying metric.
-    _id: MetricId,
+    id: MetricId,
 
     /// Wrapping the underlying core metric.
     ///
@@ -107,12 +113,12 @@ where
         labels: Option<Vec<String>>,
     ) -> LabeledMetric<T> {
         let core = glean::private::LabeledMetric::new(meta, labels);
-        LabeledMetric { _id: id, core }
+        LabeledMetric { id, core }
     }
 }
 
 #[inherent(pub)]
-impl<U> glean_core::traits::Labeled<U::GleanMetric> for LabeledMetric<U>
+impl<U> glean_core::traits::Labeled<U> for LabeledMetric<U>
 where
     U: AllowLabeled + Clone,
 {
@@ -127,11 +133,11 @@ where
     ///
     /// Labels must be `snake_case` and less than 30 characters.
     /// If an invalid label is used, the metric will be recorded in the special `OTHER_LABEL` label.
-    fn get(&self, label: &str) -> U::GleanMetric {
+    fn get(&self, label: &str) -> U {
         if need_ipc() {
             panic!("Use of labeled metrics in IPC land not yet implemented!");
         } else {
-            self.core.get(label)
+            U::from_glean_metric(self.id, self.core.get(label))
         }
     }
 
