@@ -18,15 +18,6 @@ Services.prefs.setBoolPref(
   false
 );
 
-const observer = {
-  observe(subject, topic, data) {
-    if (topic == "webextension-optional-permission-prompt") {
-      let { resolve } = subject.wrappedJSObject;
-      resolve(true);
-    }
-  },
-};
-
 // Look up the cached permissions, if any.
 async function getCachedPermissions(extensionId) {
   const NotFound = Symbol("extension ID not found in permissions cache");
@@ -60,19 +51,12 @@ add_task(async function setup() {
   // storage mode will run in xpcshell-legacy-ep.ini
   await ExtensionPermissions._uninit();
 
-  Services.prefs.setBoolPref(
-    "extensions.webextOptionalPermissionPrompts",
-    true
-  );
-  Services.obs.addObserver(observer, "webextension-optional-permission-prompt");
+  optionalPermissionsPromptHandler.init();
+  optionalPermissionsPromptHandler.acceptPrompt = true;
+
   await AddonTestUtils.promiseStartupManager();
   registerCleanupFunction(async () => {
     await AddonTestUtils.promiseShutdownManager();
-    Services.obs.removeObserver(
-      observer,
-      "webextension-optional-permission-prompt"
-    );
-    Services.prefs.clearUserPref("extensions.webextOptionalPermissionPrompts");
   });
 });
 
