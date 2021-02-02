@@ -49,6 +49,24 @@
 using namespace js;
 using namespace js::frontend;
 
+bool ScopeContext::init(JSContext* cx, CompilationInput& input,
+                        InheritThis inheritThis, JSObject* enclosingEnv) {
+  Scope* maybeNonDefaultEnclosingScope = input.maybeNonDefaultEnclosingScope();
+
+  effectiveScope =
+      determineEffectiveScope(maybeNonDefaultEnclosingScope, enclosingEnv);
+
+  if (inheritThis == InheritThis::Yes) {
+    computeThisBinding(effectiveScope);
+    computeThisEnvironment(maybeNonDefaultEnclosingScope);
+  }
+  computeInScope(maybeNonDefaultEnclosingScope);
+
+  cacheEnclosingScope(input.enclosingScope);
+
+  return true;
+}
+
 void ScopeContext::computeThisEnvironment(Scope* enclosingScope) {
   uint32_t envCount = 0;
   for (ScopeIter si(enclosingScope); si; si++) {
@@ -125,21 +143,6 @@ void ScopeContext::computeThisBinding(Scope* scope) {
 }
 
 void ScopeContext::computeInScope(Scope* enclosingScope) {
-  if (enclosingScope) {
-    enclosingScopeKind = enclosingScope->kind();
-    if (enclosingScope->is<FunctionScope>()) {
-      MOZ_ASSERT(enclosingScope->as<FunctionScope>().canonicalFunction());
-      enclosingScopeIsArrow =
-          enclosingScope->as<FunctionScope>().canonicalFunction()->isArrow();
-    }
-    enclosingScopeHasEnvironment = enclosingScope->hasEnvironment();
-
-#ifdef DEBUG
-    hasNonSyntacticScopeOnChain =
-        enclosingScope->hasOnChain(ScopeKind::NonSyntactic);
-#endif
-  }
-
   for (ScopeIter si(enclosingScope); si; si++) {
     if (si.kind() == ScopeKind::ClassBody) {
       inClass = true;
@@ -149,6 +152,27 @@ void ScopeContext::computeInScope(Scope* enclosingScope) {
       inWith = true;
     }
   }
+}
+
+void ScopeContext::cacheEnclosingScope(Scope* enclosingScope) {
+  if (!enclosingScope) {
+    return;
+  }
+
+  enclosingScopeKind = enclosingScope->kind();
+
+  if (enclosingScope->is<FunctionScope>()) {
+    MOZ_ASSERT(enclosingScope->as<FunctionScope>().canonicalFunction());
+    enclosingScopeIsArrow =
+        enclosingScope->as<FunctionScope>().canonicalFunction()->isArrow();
+  }
+
+  enclosingScopeHasEnvironment = enclosingScope->hasEnvironment();
+
+#ifdef DEBUG
+  hasNonSyntacticScopeOnChain =
+      enclosingScope->hasOnChain(ScopeKind::NonSyntactic);
+#endif
 }
 
 /* static */
@@ -1202,14 +1226,12 @@ bool CompilationStencilSet::deserializeStencils(JSContext* cx,
   return true;
 }
 
-CompilationState::CompilationState(
-    JSContext* cx, LifoAllocScope& frontendAllocScope,
-    const JS::ReadOnlyCompileOptions& options, CompilationStencil& stencil,
-    InheritThis inheritThis /* = InheritThis::No */,
-    JSObject* enclosingEnv /* = nullptr */)
+CompilationState::CompilationState(JSContext* cx,
+                                   LifoAllocScope& frontendAllocScope,
+                                   const JS::ReadOnlyCompileOptions& options,
+                                   CompilationStencil& stencil)
     : directives(options.forceStrictMode()),
-      scopeContext(cx, inheritThis,
-                   stencil.input.maybeNonDefaultEnclosingScope(), enclosingEnv),
+      scopeContext(cx),
       usedNames(cx),
       allocScope(frontendAllocScope),
       input(stencil.input),
