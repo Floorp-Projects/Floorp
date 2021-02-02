@@ -553,6 +553,15 @@ static bool BuildArgArray(const char* fmt, va_list ap, NumArgStateVector& nas) {
                      : sizeof(size_t) == sizeof(long) ? TYPE_LONG
                                                       : TYPE_LONGLONG;
       c = *p++;
+    } else if (c == 't') {
+      static_assert(sizeof(ptrdiff_t) == sizeof(int) ||
+                        sizeof(ptrdiff_t) == sizeof(long) ||
+                        sizeof(ptrdiff_t) == sizeof(long long),
+                    "ptrdiff_t is not one of the expected sizes");
+      nas[cn].type = sizeof(ptrdiff_t) == sizeof(int)    ? TYPE_INTN
+                     : sizeof(ptrdiff_t) == sizeof(long) ? TYPE_LONG
+                                                         : TYPE_LONGLONG;
+      c = *p++;
     }
 
     // format
@@ -830,6 +839,15 @@ bool mozilla::PrintfTarget::vprint(const char* fmt, va_list ap) {
       type = sizeof(size_t) == sizeof(int)    ? TYPE_INTN
              : sizeof(size_t) == sizeof(long) ? TYPE_LONG
                                               : TYPE_LONGLONG;
+      c = *fmt++;
+    } else if (c == 't') {
+      static_assert(sizeof(ptrdiff_t) == sizeof(int) ||
+                        sizeof(ptrdiff_t) == sizeof(long) ||
+                        sizeof(ptrdiff_t) == sizeof(long long),
+                    "ptrdiff_t is not one of the expected sizes");
+      type = sizeof(ptrdiff_t) == sizeof(int)    ? TYPE_INTN
+             : sizeof(ptrdiff_t) == sizeof(long) ? TYPE_LONG
+                                                 : TYPE_LONGLONG;
       c = *fmt++;
     }
 
