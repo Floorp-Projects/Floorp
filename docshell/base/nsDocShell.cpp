@@ -6252,32 +6252,28 @@ already_AddRefed<nsIURI> nsDocShell::AttemptURIFixup(
   // https://foo and https://www.foo.com.
   //
   if (aStatus == NS_ERROR_UNKNOWN_HOST || aStatus == NS_ERROR_NET_RESET) {
-    bool doCreateAlternate = true;
-
     // Skip fixup for anything except a normal document load
     // operation on the topframe.
+    bool doCreateAlternate = aLoadType == LOAD_NORMAL && aIsTopFrame;
 
-    if (aLoadType != LOAD_NORMAL || !aIsTopFrame) {
-      doCreateAlternate = false;
-    } else {
-      // Test if keyword lookup produced a new URI or not
-      if (newURI) {
-        bool sameURI = false;
-        url->Equals(newURI, &sameURI);
-        if (!sameURI) {
-          // Keyword lookup made a new URI so no need to try
-          // an alternate one.
-          doCreateAlternate = false;
-        }
-      }
-
-      if (doCreateAlternate) {
-        nsCOMPtr<nsILoadInfo> info = aChannel->LoadInfo();
-        // Skip doing this if our channel was redirected, because we
-        // shouldn't be guessing things about the post-redirect URI.
-        if (!info->RedirectChain().IsEmpty()) {
-          doCreateAlternate = false;
-        }
+    if (doCreateAlternate) {
+      nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+      nsIPrincipal* principal = loadInfo->TriggeringPrincipal();
+      // Only do this if our channel was loaded directly by the user from the
+      // URL bar or similar (system principal) and not redirected, because we
+      // shouldn't be guessing things about links from other sites, or a
+      // post-redirect URI.
+      doCreateAlternate = principal && principal->IsSystemPrincipal() &&
+                          loadInfo->RedirectChain().IsEmpty();
+    }
+    // Test if keyword lookup produced a new URI or not
+    if (doCreateAlternate && newURI) {
+      bool sameURI = false;
+      url->Equals(newURI, &sameURI);
+      if (!sameURI) {
+        // Keyword lookup made a new URI so no need to try
+        // an alternate one.
+        doCreateAlternate = false;
       }
     }
     if (doCreateAlternate) {
