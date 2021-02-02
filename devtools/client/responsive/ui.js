@@ -295,18 +295,6 @@ class ResponsiveUI {
       // Resseting the throtting needs to be done before the
       // network events watching is stopped.
       await this.updateNetworkThrottling();
-
-      this.targetList.unwatchTargets(
-        [this.targetList.TYPES.FRAME],
-        this.onTargetAvailable
-      );
-
-      this.resourceWatcher.unwatchResources(
-        [this.resourceWatcher.TYPES.NETWORK_EVENT],
-        { onAvailable: this.onNetworkResourceAvailable }
-      );
-
-      this.targetList.destroy();
     }
 
     this.tab.removeEventListener("TabClose", this);
@@ -344,6 +332,22 @@ class ResponsiveUI {
       if (reloadNeeded && currentTarget) {
         await currentTarget.reload();
       }
+
+      // Unwatch targets & resources as the last step. If we are not waching for
+      // any resource & target anymore, the JSWindowActors will be unregistered
+      // which will trigger an early destruction of the RDM target, before we
+      // could finalize the cleanup.
+      this.targetList.unwatchTargets(
+        [this.targetList.TYPES.FRAME],
+        this.onTargetAvailable
+      );
+
+      this.resourceWatcher.unwatchResources(
+        [this.resourceWatcher.TYPES.NETWORK_EVENT],
+        { onAvailable: this.onNetworkResourceAvailable }
+      );
+
+      this.targetList.destroy();
     }
 
     // Show the browser UI now.
