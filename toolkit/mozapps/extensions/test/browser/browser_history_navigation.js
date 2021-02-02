@@ -112,8 +112,8 @@ function is_in_discovery(aManager, canGoBack, canGoForward) {
   check_state(canGoBack, canGoForward);
 }
 
-async function expand_addon_element(aManager, aId) {
-  var addon = get_addon_element(aManager, aId);
+async function expand_addon_element(aManagerWin, aId) {
+  var addon = getAddonCard(aManagerWin, aId);
   addon.click();
 }
 

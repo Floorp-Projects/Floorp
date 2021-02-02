@@ -102,10 +102,6 @@ function isLayoutStable(win) {
   return true;
 }
 
-function getAddonCard(win, addonId) {
-  return win.document.querySelector(`addon-card[addon-id="${addonId}"]`);
-}
-
 function getScrollOffset(win) {
   let { scrollTop: top, scrollLeft: left } = win.document.documentElement;
   return { top, left };
