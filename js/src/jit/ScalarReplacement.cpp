@@ -1252,6 +1252,7 @@ static bool IsArgumentsObjectEscaped(MInstruction* ins) {
       // This is a replaceable consumer.
       case MDefinition::Opcode::ArgumentsObjectLength:
       case MDefinition::Opcode::GetArgumentsObjectArg:
+      case MDefinition::Opcode::LoadArgumentsObjectArg:
         break;
 
       default:
@@ -1274,6 +1275,7 @@ class ArgumentsReplacer : public MDefinitionVisitorDefaultNoop {
 
   void visitGuardToClass(MGuardToClass* ins);
   void visitGetArgumentsObjectArg(MGetArgumentsObjectArg* ins);
+  void visitLoadArgumentsObjectArg(MLoadArgumentsObjectArg* ins);
   void visitArgumentsObjectLength(MArgumentsObjectLength* ins);
 
  public:
@@ -1349,6 +1351,37 @@ void ArgumentsReplacer::visitGetArgumentsObjectArg(
   ins->block()->insertBefore(ins, index);
 
   auto* loadArg = MGetFrameArgument::New(alloc(), index);
+  ins->block()->insertBefore(ins, loadArg);
+  ins->replaceAllUsesWith(loadArg);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
+void ArgumentsReplacer::visitLoadArgumentsObjectArg(
+    MLoadArgumentsObjectArg* ins) {
+  // There is only one possible arguments object.
+  // TODO: support inlining.
+  MOZ_ASSERT(ins->getArgsObject() == args_);
+
+  MDefinition* index = ins->index();
+
+  // Insert bounds check.
+  auto* length = MArgumentsLength::New(alloc());
+  ins->block()->insertBefore(ins, length);
+
+  MInstruction* check = MBoundsCheck::New(alloc(), index, length);
+  ins->block()->insertBefore(ins, check);
+
+  // TODO: Set special bailout kind?
+  check->setBailoutKind(ins->bailoutKind());
+
+  if (JitOptions.spectreIndexMasking) {
+    check = MSpectreMaskIndex::New(alloc(), check, length);
+    ins->block()->insertBefore(ins, check);
+  }
+
+  auto* loadArg = MGetFrameArgument::New(alloc(), check);
   ins->block()->insertBefore(ins, loadArg);
   ins->replaceAllUsesWith(loadArg);
 
