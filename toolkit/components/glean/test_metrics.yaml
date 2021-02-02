@@ -165,6 +165,57 @@ test_only:
     send_in_pings:
       - test-ping
 
+  mabels_kitchen_counters:
+    type: labeled_counter
+    description: |
+      Counts Mabels labeled by their kitchen counters.
+      This is a test-only metric.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1675277
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1675277#c1
+    data_sensitivity:
+      - technical
+    expires: never
+    notification_emails:
+      - glean-team@mozilla.com
+    send_in_pings:
+      - test-ping
+
+  mabels_like_balloons:
+    type: labeled_boolean
+    description: |
+      Does the labeled Mabel like balloons?
+      This is a test-only metric.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1675277
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1675277#c1
+    data_sensitivity:
+      - technical
+    expires: never
+    notification_emails:
+      - glean-team@mozilla.com
+    send_in_pings:
+      - test-ping
+
+  mabels_balloon_strings:
+    type: labeled_string
+    description: |
+      What do the labeled Mabel's liked balloons' strings say?
+      This is a test-only metric.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1675277
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1675277#c1
+    data_sensitivity:
+      - technical
+    expires: never
+    notification_emails:
+      - glean-team@mozilla.com
+    send_in_pings:
+      - test-ping
+
 test_only.ipc:
   a_counter:
     type: counter
