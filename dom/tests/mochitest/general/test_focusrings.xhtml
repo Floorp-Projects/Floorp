@@ -18,8 +18,6 @@
 
 SimpleTest.waitForExplicitFinish();
 
-const kFocusVisibleEnabled = SpecialPowers.getBoolPref("layout.css.focus-visible.enabled");
-
 function snapShot(element) {
   var rect = element.getBoundingClientRect();
   adjustedRect = { left: rect.left - 6, top: rect.top - 6,
@@ -70,12 +68,12 @@ function runTest()
   is(getComputedStyle($("l1"), "").outlineWidth, "0px", "appearance on previous list after focus() with :focus");
 
   synthesizeMouse($("l1"), 4, 4, { });
-  checkFocus($("l1"), expectedVisible && !kFocusVisibleEnabled, "appearance on list after mouse focus with :moz-focusring");
+  checkFocus($("l1"), false, "appearance on list after mouse focus with :moz-focusring");
   synthesizeMouse($("l2"), 4, 4, { });
   checkFocus($("l2"), true, "appearance on list after mouse focus with :focus");
 
   synthesizeMouse($("b1"), 4, 4, { });
-  checkFocus($("b1"), !isMac && expectedVisible && !kFocusVisibleEnabled, "appearance on button after mouse focus with :moz-focusring");
+  checkFocus($("b1"), false, "appearance on button after mouse focus with :moz-focusring");
   if (navigator.platform.includes("Mac")) {
     ok(compareSnapshots(snapShot($("b1")), snapShot($("b2")), false)[0], "focus after mouse shows no ring");
   }
@@ -143,7 +141,7 @@ function testHTMLElements(list, isMac, expectedNoRingsOnWin)
 
     var expectedMatchWithMouse = shouldFocus && !expectedNoRingsOnWin;
     var mouseRingSize = ringSize;
-    if (shouldFocus && kFocusVisibleEnabled) {
+    if (shouldFocus) {
       var textControl = (function() {
         if (elem.localName == "textarea")
           return true;
