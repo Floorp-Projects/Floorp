@@ -185,20 +185,7 @@ function addRDMTaskWithPreAndPost(url, preTask, task, postTask, options) {
       ui = rdmValues.ui;
       manager = rdmValues.manager;
 
-      // Always wait for the post-init message.
-      await message.wait(ui.toolWindow, "post-init");
-
-      // Always wait for the viewport to be added.
-      const { store } = ui.toolWindow;
-      await waitUntilState(store, state => state.viewports.length == 1);
-
-      if (waitForDeviceList) {
-        // Wait until the device list has been loaded.
-        await waitUntilState(
-          store,
-          state => state.devices.listState == localTypes.loadableState.LOADED
-        );
-      }
+      await waitForRDMLoaded(ui, { waitForDeviceList });
     }
 
     try {
@@ -230,6 +217,26 @@ function addRDMTaskWithPreAndPost(url, preTask, task, postTask, options) {
     // any changes made by the tasks.
     await SpecialPowers.flushPrefEnv();
   });
+}
+
+/**
+ * Wait for the RDM UI to be fully loaded
+ */
+async function waitForRDMLoaded(ui, { waitForDeviceList }) {
+  // Always wait for the post-init message.
+  await message.wait(ui.toolWindow, "post-init");
+
+  // Always wait for the viewport to be added.
+  const { store } = ui.toolWindow;
+  await waitUntilState(store, state => state.viewports.length == 1);
+
+  if (waitForDeviceList) {
+    // Wait until the device list has been loaded.
+    await waitUntilState(
+      store,
+      state => state.devices.listState == localTypes.loadableState.LOADED
+    );
+  }
 }
 
 /**
@@ -924,6 +931,39 @@ async function waitForDeviceAndViewportState(ui) {
       state.viewports.length == 1 &&
       state.devices.listState == localTypes.loadableState.LOADED
   );
+}
+
+/**
+ * Wait for the content page to be rendered with the expected pixel ratio.
+ *
+ * @param {ResponsiveUI} ui
+ *        The ResponsiveUI instance.
+ * @param {Integer} expected
+ *        The expected dpr for the content page.
+ */
+function waitForDevicePixelRatio(ui, expected) {
+  return SpecialPowers.spawn(ui.getViewportBrowser(), [{ expected }], function(
+    args
+  ) {
+    const initial = content.devicePixelRatio;
+    info(
+      `Listening for pixel ratio change ` +
+        `(current: ${initial}, expected: ${args.expected})`
+    );
+    return new Promise(resolve => {
+      const mql = content.matchMedia(`(resolution: ${args.expected}dppx)`);
+      if (mql.matches) {
+        info(`Ratio already changed to ${args.expected}dppx`);
+        resolve(content.devicePixelRatio);
+        return;
+      }
+      mql.addListener(function listener() {
+        info(`Ratio changed to ${args.expected}dppx`);
+        mql.removeListener(listener);
+        resolve(content.devicePixelRatio);
+      });
+    });
+  });
 }
 
 /**
