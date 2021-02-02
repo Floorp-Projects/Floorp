@@ -16,13 +16,9 @@ addLoadEvent(() => {
 });
 
 async function doTests(aWindow) {
-  const IS_WIN = navigator.platform.includes("Win");
-  // On macOS and Linux, Shift + PageUp/PageDown requires native event to
-  // resolve default action of PageDown and PageUp. Although macOS widget has
-  // nsIWidget::AttachNativeKeyEvent(), we cannot use synthesizeKey() for the
-  // following tests.  So, use nsISelectionController.pageMove() instead on
-  // non-Windows platforms.
-  const kUseKeyboardEvent = IS_WIN;
+  // On macOS, there is no shortcut keys to extend selection per page.
+  // Therefore, we need to use nsISelectionController.pageMove() instead.
+  const kUseKeyboardEvent = !navigator.platform.includes("Mac");
   let selectionController = SpecialPowers.wrap(aWindow)
                                          .docShell
                                          .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
@@ -31,7 +27,7 @@ async function doTests(aWindow) {
   // On Windows, per-page selection to start or end expands selection to same
   // column of first or last line.  On the other platforms, it expands selection
   // to start or end of first or last line.
-  const kSelectToStartOrEnd = !IS_WIN;
+  const kSelectToStartOrEnd = !navigator.platform.includes("Win");
 
   await SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false]]});
   await SimpleTest.promiseFocus(aWindow);
