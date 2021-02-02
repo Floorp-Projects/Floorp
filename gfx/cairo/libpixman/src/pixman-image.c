@@ -33,25 +33,6 @@
 
 static const pixman_color_t transparent_black = { 0, 0, 0, 0 };
 
-/**
- ** bug 1293598 - clean up every pointer after free to avoid
- ** "dereferencing freed memory" problem
- **/
-#define PIXMAN_POSION
-
-static void
-free_memory (void** p)
-{
-#ifdef PIXMAN_POISON
-    if (*p) {
-#endif
-        free (*p);
-#ifdef PIXMAN_POISON
-        *p = NULL;
-    }
-#endif
-}
-
 static void
 gradient_property_changed (pixman_image_t *image)
 {
@@ -164,8 +145,8 @@ _pixman_image_fini (pixman_image_t *image)
 
 	pixman_region32_fini (&common->clip_region);
 
-	free_memory (&common->transform);
-	free_memory (&common->filter_params);
+	free (common->transform);
+	free (common->filter_params);
 
 	if (common->alpha_map)
 	    pixman_image_unref ((pixman_image_t *)common->alpha_map);
@@ -177,8 +158,7 @@ _pixman_image_fini (pixman_image_t *image)
 	    if (image->gradient.stops)
 	    {
 		/* See _pixman_init_gradient() for an explanation of the - 1 */
-		void *addr = image->gradient.stops - 1;
-		free_memory (&addr);
+		free (image->gradient.stops - 1);
 	    }
 
 	    /* This will trigger if someone adds a property_changed
@@ -189,11 +169,8 @@ _pixman_image_fini (pixman_image_t *image)
 		image->common.property_changed == gradient_property_changed);
 	}
 
-	if (image->type == BITS && image->bits.free_me) {
-	    free_memory (&image->bits.free_me);
-	    image->bits.bits = NULL;
-        }
-
+	if (image->type == BITS && image->bits.free_me)
+	    free (image->bits.free_me);
 
 	return TRUE;
     }
@@ -233,7 +210,7 @@ pixman_image_unref (pixman_image_t *image)
 {
     if (_pixman_image_fini (image))
     {
-	free_memory (&image);
+	free (image);
 	return TRUE;
     }
 
@@ -358,37 +335,47 @@ compute_image_info (pixman_image_t *image)
 	{
 	    flags |= FAST_PATH_NEAREST_FILTER;
 	}
-	else if (
-	    /* affine and integer translation components in matrix ... */
-	    ((flags & FAST_PATH_AFFINE_TRANSFORM) &&
-	     !pixman_fixed_frac (image->common.transform->matrix[0][2] |
-				 image->common.transform->matrix[1][2])) &&
-	    (
-		/* ... combined with a simple rotation */
-		(flags & (FAST_PATH_ROTATE_90_TRANSFORM |
-			  FAST_PATH_ROTATE_180_TRANSFORM |
-			  FAST_PATH_ROTATE_270_TRANSFORM)) ||
-		/* ... or combined with a simple non-rotated translation */
-		(image->common.transform->matrix[0][0] == pixman_fixed_1 &&
-		 image->common.transform->matrix[1][1] == pixman_fixed_1 &&
-		 image->common.transform->matrix[0][1] == 0 &&
-		 image->common.transform->matrix[1][0] == 0)
-		)
-	    )
+	else if (flags & FAST_PATH_AFFINE_TRANSFORM)
 	{
-	    /* FIXME: there are some affine-test failures, showing that
-	     * handling of BILINEAR and NEAREST filter is not quite
-	     * equivalent when getting close to 32K for the translation
-	     * components of the matrix. That's likely some bug, but for
-	     * now just skip BILINEAR->NEAREST optimization in this case.
+	    /* Suppose the transform is
+	     *
+	     *    [ t00, t01, t02 ]
+	     *    [ t10, t11, t12 ]
+	     *    [   0,   0,   1 ]
+	     *
+	     * and the destination coordinates are (n + 0.5, m + 0.5). Then
+	     * the transformed x coordinate is:
+	     *
+	     *     tx = t00 * (n + 0.5) + t01 * (m + 0.5) + t02
+	     *        = t00 * n + t01 * m + t02 + (t00 + t01) * 0.5
+	     *
+	     * which implies that if t00, t01 and t02 are all integers
+	     * and (t00 + t01) is odd, then tx will be an integer plus 0.5,
+	     * which means a BILINEAR filter will reduce to NEAREST. The same
+	     * applies in the y direction
 	     */
-	    pixman_fixed_t magic_limit = pixman_int_to_fixed (30000);
-	    if (image->common.transform->matrix[0][2] <= magic_limit  &&
-	        image->common.transform->matrix[1][2] <= magic_limit  &&
-	        image->common.transform->matrix[0][2] >= -magic_limit &&
-	        image->common.transform->matrix[1][2] >= -magic_limit)
+	    pixman_fixed_t (*t)[3] = image->common.transform->matrix;
+
+	    if ((pixman_fixed_frac (
+		     t[0][0] | t[0][1] | t[0][2] |
+		     t[1][0] | t[1][1] | t[1][2]) == 0)			&&
+		(pixman_fixed_to_int (
+		    (t[0][0] + t[0][1]) & (t[1][0] + t[1][1])) % 2) == 1)
 	    {
-		flags |= FAST_PATH_NEAREST_FILTER;
+		/* FIXME: there are some affine-test failures, showing that
+		 * handling of BILINEAR and NEAREST filter is not quite
+		 * equivalent when getting close to 32K for the translation
+		 * components of the matrix. That's likely some bug, but for
+		 * now just skip BILINEAR->NEAREST optimization in this case.
+		 */
+		pixman_fixed_t magic_limit = pixman_int_to_fixed (30000);
+		if (image->common.transform->matrix[0][2] <= magic_limit  &&
+		    image->common.transform->matrix[1][2] <= magic_limit  &&
+		    image->common.transform->matrix[0][2] >= -magic_limit &&
+		    image->common.transform->matrix[1][2] >= -magic_limit)
+		{
+		    flags |= FAST_PATH_NEAREST_FILTER;
+		}
 	    }
 	}
 	break;
@@ -483,10 +470,6 @@ compute_image_info (pixman_image_t *image)
 
 	if (PIXMAN_FORMAT_IS_WIDE (image->bits.format))
 	    flags &= ~FAST_PATH_NARROW_FORMAT;
-
-	if (image->bits.format == PIXMAN_r5g6b5)
-	    flags |= FAST_PATH_16_FORMAT;
-
 	break;
 
     case RADIAL:
@@ -529,8 +512,10 @@ compute_image_info (pixman_image_t *image)
 	break;
     }
 
-    /* Alpha map */
-    if (!image->common.alpha_map)
+    /* Alpha maps are only supported for BITS images, so it's always
+     * safe to ignore their presense for non-BITS images
+     */
+    if (!image->common.alpha_map || image->type != BITS)
     {
 	flags |= FAST_PATH_NO_ALPHA_MAP;
     }
@@ -699,6 +684,41 @@ pixman_image_set_repeat (pixman_image_t *image,
     image_property_changed (image);
 }
 
+PIXMAN_EXPORT void
+pixman_image_set_dither (pixman_image_t *image,
+			 pixman_dither_t dither)
+{
+    if (image->type == BITS)
+    {
+	if (image->bits.dither == dither)
+	    return;
+
+	image->bits.dither = dither;
+
+	image_property_changed (image);
+    }
+}
+
+PIXMAN_EXPORT void
+pixman_image_set_dither_offset (pixman_image_t *image,
+				int             offset_x,
+				int             offset_y)
+{
+    if (image->type == BITS)
+    {
+	if (image->bits.dither_offset_x == offset_x &&
+	    image->bits.dither_offset_y == offset_y)
+	{
+	    return;
+	}
+
+	image->bits.dither_offset_x = offset_x;
+	image->bits.dither_offset_y = offset_y;
+
+	image_property_changed (image);
+    }
+}
+
 PIXMAN_EXPORT pixman_bool_t
 pixman_image_set_filter (pixman_image_t *      image,
                          pixman_filter_t       filter,
@@ -857,6 +877,10 @@ pixman_image_set_accessors (pixman_image_t *           image,
 
     if (image->type == BITS)
     {
+	/* Accessors only work for <= 32 bpp. */
+	if (PIXMAN_FORMAT_BPP(image->bits.format) > 32)
+	    return_if_fail (!read_func && !write_func);
+
 	image->bits.read_func = read_func;
 	image->bits.write_func = write_func;
 
@@ -936,7 +960,7 @@ _pixman_image_get_solid (pixman_implementation_t *imp,
 	else if (image->bits.format == PIXMAN_x8r8g8b8)
 	    result = image->bits.bits[0] | 0xff000000;
 	else if (image->bits.format == PIXMAN_a8)
-	    result = (*(uint8_t *)image->bits.bits) << 24;
+	    result = (uint32_t)(*(uint8_t *)image->bits.bits) << 24;
 	else
 	    goto otherwise;
     }
@@ -945,12 +969,15 @@ _pixman_image_get_solid (pixman_implementation_t *imp,
 	pixman_iter_t iter;
 
     otherwise:
-	_pixman_implementation_src_iter_init (
+	_pixman_implementation_iter_init (
 	    imp, &iter, image, 0, 0, 1, 1,
 	    (uint8_t *)&result,
-	    ITER_NARROW, image->common.flags);
+	    ITER_NARROW | ITER_SRC, image->common.flags);
 	
 	result = *iter.get_scanline (&iter, NULL);
+
+	if (iter.fini)
+	    iter.fini (&iter);
     }
 
     /* If necessary, convert RGB <--> BGR. */

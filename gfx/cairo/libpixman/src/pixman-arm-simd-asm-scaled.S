@@ -37,16 +37,7 @@
 	.altmacro
 	.p2align 2
 
-/* Supplementary macro for setting function attributes */
-.macro pixman_asm_function fname
-	.func fname
-	.global fname
-#ifdef __ELF__
-	.hidden fname
-	.type fname, %function
-#endif
-fname:
-.endm
+#include "pixman-arm-asm.h"
 
 /*
  * Note: This code is only using armv5te instructions (not even armv6),
