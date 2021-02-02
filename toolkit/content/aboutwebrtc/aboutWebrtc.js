@@ -1030,10 +1030,8 @@ function renderICEStats(report) {
     }
     iceDiv.append(statsTable);
   }
-  // add just a bit of vertical space between the restart/rollback
-  // counts and the ICE candidate pair table above.
+  // restart/rollback counts.
   iceDiv.append(
-    renderElement("br"),
     renderIceMetric("about-webrtc-ice-restart-count-label", report.iceRestarts),
     renderIceMetric(
       "about-webrtc-ice-rollback-count-label",

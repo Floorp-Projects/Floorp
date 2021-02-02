@@ -2,12 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-html {
-  background-color: #edeceb;
+body {
+  margin: 8px;
 }
 
 table {
   font-family: monospace;
+  border: 1px solid var(--in-content-border-color);
+  border-spacing: 0;
+  margin-block: 1em;
 }
 
 .controls {
@@ -20,49 +23,46 @@ table {
   margin: 0.5em 0;
 }
 
-.control > button {
-  margin: 0 0.25em;
-}
-
 .message > p {
-  margin: 0.5em 0.5em;
+  margin: 4px;
 }
 
-.log p, .prefs p {
+.log p,
+.prefs p {
   font-family: monospace;
-  padding-left: 2em;
+  padding-inline-start: 2em;
   text-indent: -2em;
-  margin-top: 2px;
-  margin-bottom: 2px;
+  margin-block: 2px;
 }
 
 #content > div {
   padding: 1em 2em;
   margin: 1em 0;
-  border: 1px solid #afaca9;
+  border: 1px solid var(--in-content-box-border-color);
   border-radius: 10px;
-  background: none repeat scroll 0% 0% #fff;
+  background-color: var(--in-content-box-background);
 }
 
-.section-heading *
-{
+.section-heading > * {
   display: inline-block;
 }
 
 .section-heading > button {
-  margin-left: 1em;
-  margin-right: 1em;
+  margin-inline: 1em;
 }
 
-.peer-connection > h3
-{
-  background-color: #ddd;
+.peer-connection > h3 {
+  background-color: var(--in-content-box-info-background);
+  padding: 4px;
+}
+
+.peer-connection > button {
+  margin-inline-start: 0;
 }
 
 .peer-connection table {
   width: 100%;
   text-align: center;
-  border: none;
 }
 
 .peer-connection table th {
@@ -72,50 +72,63 @@ table {
 .peer-connection table th,
 .peer-connection table td {
   padding: 0.4em;
+  border: 1px solid var(--in-content-border-color);
 }
 
-.peer-connection table tr:nth-child(even) {
-  background-color: #ddd;
+.peer-connection table tr:nth-child(odd) {
+  background-color: var(--in-content-box-background-odd);
 }
 
 .peer-connection table caption {
-  text-align: left;
+  text-align: start;
 }
 
 .peer-connection table.raw-candidate {
-  text-align: left;
+  text-align: match-parent;
 }
 
 .bottom-border td {
-  border-bottom: thin solid;
-  border-color: black;
+  border-bottom: 2px solid currentColor;
 }
 
 .peer-connection-config div {
   margin-inline: 1em;
+  padding: 4px;
+  border: 1px solid var(--in-content-border-color);
 }
 
-.peer-connection-config div:nth-of-type(odd) {
-  background-color: #ddd;
+.peer-connection-config div:nth-child(odd) {
+  background-color: var(--in-content-box-background-odd);
 }
 
-/* This is the pale colour scheme from:
+/* The pale colour scheme is taken from:
    https://personal.sron.nl/~pault/#sec:qualitative */
-.ice-trickled { background-color: #cceeff; }
-.ice-succeeded { background-color: #ccddaa; }
-.ice-failed { background-color: #ffcccc; }
-.ice-cancelled { background-color: #eeeebb; }
+.ice-trickled {
+  background-color: #cceeff; /* pale cyan */
+}
+.ice-succeeded {
+  background-color: #ccddaa; /* pale green */
+}
+.ice-failed {
+  background-color: #ffcccc; /* pale red */
+}
+.ice-cancelled {
+  background-color: #eeeebb; /* pale yellow */
+}
+.ice-trickled,
+.ice-succeeded,
+.ice-failed,
+.ice-cancelled {
+  color: black
+}
 
 .info-label {
   font-weight: bold;
 }
 
-.info-body {
-  padding-left: 0.5em;
-}
-
+.info-body,
 .stat-label {
-  padding-left: 0.5em;
+  padding-inline-start: 0.5em;
 }
 
 .section-ctrl {
@@ -123,7 +136,7 @@ table {
 }
 
 div.fold-trigger {
-  color: blue;
+  color: var(--blue-60);
   cursor: pointer;
 }
 
@@ -149,13 +162,11 @@ div.fold-trigger {
 }
 
 .sdp-history h5 {
-  background-color: #ddd;
+  background-color: var(--in-content-box-info-background);
 }
 
 .sdp-history div {
-  border: thin solid;
-  border-color: black;
-  flex: 1;
+  border: 1px solid var(--in-content-border-color);
   padding: 1em;
   width: 50%;
   overflow: scroll;
