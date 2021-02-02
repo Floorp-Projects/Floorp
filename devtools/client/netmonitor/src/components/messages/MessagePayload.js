@@ -199,8 +199,16 @@ class MessagePayload extends Component {
     // json payload
     let { json } = parseJSON(payload);
     if (json) {
-      const actionCablePayload = this.parseActionCable(json);
-      if (actionCablePayload) {
+      const { data, identifier } = json;
+      // A json payload MAY be an "Action cable" if it
+      // contains either a `data` or an `identifier` property
+      // which are also json strings and would need to be parsed.
+      // See https://medium.com/codequest/actioncable-in-rails-api-f087b65c860d
+      if (
+        (data && typeof data == "string") ||
+        (identifier && typeof identifier == "string")
+      ) {
+        const actionCablePayload = this.parseActionCable(json);
         return {
           formattedData: actionCablePayload,
           formattedDataTitle: "Action Cable",
@@ -288,9 +296,7 @@ class MessagePayload extends Component {
   parseActionCable(payload) {
     const identifier = payload.identifier && parseJSON(payload.identifier).json;
     const data = payload.data && parseJSON(payload.data).json;
-    if (!data && !identifier) {
-      return null;
-    }
+
     if (identifier) {
       payload.identifier = identifier;
     }
