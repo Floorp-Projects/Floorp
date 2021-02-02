@@ -12,7 +12,7 @@
 #define RB_MASK 0xff00ff
 #define AG_MASK 0xff00ff00
 #define RB_ONE_HALF 0x800080
-#define RB_MASK_PLUS_ONE 0x10000100
+#define RB_MASK_PLUS_ONE 0x1000100
 
 #define ALPHA_8(x) ((x) >> A_SHIFT)
 #define RED_8(x) (((x) >> R_SHIFT) & MASK)

@@ -266,13 +266,6 @@ FAST_NEAREST_MAINLOOP (cputype##_##name##_normal_##op,                        \
                        scaled_nearest_scanline_##cputype##_##name##_##op,     \
                        src_type, dst_type, NORMAL)
 
-/* Provide entries for the fast path table */
-#define PIXMAN_ARM_SIMPLE_NEAREST_FAST_PATH(op,s,d,func)                      \
-    SIMPLE_NEAREST_FAST_PATH_COVER (op,s,d,func),                             \
-    SIMPLE_NEAREST_FAST_PATH_NONE (op,s,d,func),                              \
-    SIMPLE_NEAREST_FAST_PATH_PAD (op,s,d,func),                               \
-    SIMPLE_NEAREST_FAST_PATH_NORMAL (op,s,d,func)
-
 #define PIXMAN_ARM_BIND_SCALED_NEAREST_SRC_A8_DST(flags, cputype, name, op,   \
                                                   src_type, dst_type)         \
 void                                                                          \
@@ -318,9 +311,7 @@ FAST_NEAREST_MAINLOOP_COMMON (cputype##_##name##_normal_##op,                 \
 
 /* Provide entries for the fast path table */
 #define PIXMAN_ARM_SIMPLE_NEAREST_A8_MASK_FAST_PATH(op,s,d,func)              \
-    SIMPLE_NEAREST_A8_MASK_FAST_PATH_COVER (op,s,d,func),                     \
-    SIMPLE_NEAREST_A8_MASK_FAST_PATH_NONE (op,s,d,func),                      \
-    SIMPLE_NEAREST_A8_MASK_FAST_PATH_PAD (op,s,d,func),                       \
+    SIMPLE_NEAREST_A8_MASK_FAST_PATH (op,s,d,func),                           \
     SIMPLE_NEAREST_A8_MASK_FAST_PATH_NORMAL (op,s,d,func)
 
 /*****************************************************************************/
@@ -360,16 +351,16 @@ scaled_bilinear_scanline_##cputype##_##name##_##op (                          \
                                                                               \
 FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_cover_##op,                 \
                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
-                       NULL, src_type, uint32_t, dst_type, COVER, FLAG_NONE)  \
+                       src_type, uint32_t, dst_type, COVER, FLAG_NONE)        \
 FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_none_##op,                  \
                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
-                       NULL, src_type, uint32_t, dst_type, NONE, FLAG_NONE)   \
+                       src_type, uint32_t, dst_type, NONE, FLAG_NONE)         \
 FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_pad_##op,                   \
                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
-                       NULL, src_type, uint32_t, dst_type, PAD, FLAG_NONE)    \
+                       src_type, uint32_t, dst_type, PAD, FLAG_NONE)          \
 FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_normal_##op,                \
                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
-                       NULL, src_type, uint32_t, dst_type, NORMAL,            \
+                       src_type, uint32_t, dst_type, NORMAL,                  \
                        FLAG_NONE)
 
 
@@ -409,19 +400,19 @@ scaled_bilinear_scanline_##cputype##_##name##_##op (                          \
                                                                               \
 FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_cover_##op,                 \
                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
-                       NULL, src_type, uint8_t, dst_type, COVER,              \
+                       src_type, uint8_t, dst_type, COVER,                    \
                        FLAG_HAVE_NON_SOLID_MASK)                              \
 FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_none_##op,                  \
                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
-                       NULL, src_type, uint8_t, dst_type, NONE,               \
+                       src_type, uint8_t, dst_type, NONE,                     \
                        FLAG_HAVE_NON_SOLID_MASK)                              \
 FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_pad_##op,                   \
                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
-                       NULL, src_type, uint8_t, dst_type, PAD,                \
+                       src_type, uint8_t, dst_type, PAD,                      \
                        FLAG_HAVE_NON_SOLID_MASK)                              \
 FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_normal_##op,                \
                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
-                       NULL, src_type, uint8_t, dst_type, NORMAL,             \
+                       src_type, uint8_t, dst_type, NORMAL,                   \
                        FLAG_HAVE_NON_SOLID_MASK)
 
 

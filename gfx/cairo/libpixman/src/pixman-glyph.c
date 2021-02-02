@@ -391,6 +391,9 @@ box32_intersect (pixman_box32_t *dest,
     return dest->x2 > dest->x1 && dest->y2 > dest->y1;
 }
 
+#if defined(__GNUC__) && !defined(__x86_64__) && !defined(__amd64__)
+__attribute__((__force_align_arg_pointer__))
+#endif
 PIXMAN_EXPORT void
 pixman_composite_glyphs_no_mask (pixman_op_t            op,
 				 pixman_image_t        *src,
@@ -630,6 +633,9 @@ out:
  *   - Trim the mask to the destination clip/image?
  *   - Trim composite region based on sources, when the op ignores 0s.
  */
+#if defined(__GNUC__) && !defined(__x86_64__) && !defined(__amd64__)
+__attribute__((__force_align_arg_pointer__))
+#endif
 PIXMAN_EXPORT void
 pixman_composite_glyphs (pixman_op_t            op,
 			 pixman_image_t        *src,

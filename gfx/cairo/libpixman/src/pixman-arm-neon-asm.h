@@ -385,7 +385,7 @@
  * execute simultaneously with NEON and be completely shadowed by it. Thus
  * we get no performance overhead at all (*). This looks like a very nice
  * feature of Cortex-A8, if used wisely. We don't have a hardware prefetcher,
- * but still can implement some rather advanced prefetch logic in sofware
+ * but still can implement some rather advanced prefetch logic in software
  * for almost zero cost!
  *
  * (*) The overhead of the prefetcher is visible when running some trivial
@@ -631,16 +631,8 @@ local skip1
                                    src_basereg_   = 0, \
                                    mask_basereg_  = 24
 
-    .func fname
-    .global fname
-    /* For ELF format also set function visibility to hidden */
-#ifdef __ELF__
-    .hidden fname
-    .type fname, %function
-#endif
-fname:
-    .fnstart
-    .save       {r4-r12, lr}
+    pixman_asm_function fname
+
     push        {r4-r12, lr}        /* save all registers */
 
 /*
@@ -818,7 +810,6 @@ fname:
 
     init
 .if regs_shortage
-    .save       {r0, r1}
     push        {r0, r1}
 .endif
     subs        H, H, #1
@@ -904,7 +895,6 @@ fname:
 .endif
     cleanup
     pop         {r4-r12, pc}  /* exit */
-    .fnend
 
     .purgem     fetch_src_pixblock
     .purgem     pixld_src
@@ -949,15 +939,8 @@ fname:
                                                    src_basereg_   = 0, \
                                                    mask_basereg_  = 24
 
-    .func fname
-    .global fname
-    /* For ELF format also set function visibility to hidden */
-#ifdef __ELF__
-    .hidden fname
-    .type fname, %function
-#endif
-fname:
-    .fnstart
+    pixman_asm_function fname
+
     .set PREFETCH_TYPE_CURRENT, PREFETCH_TYPE_NONE
 /*
  * Make some macro arguments globally visible and accessible
@@ -992,7 +975,6 @@ fname:
     .endm
 
     ldr         UNIT_X, [sp]
-    .save       {r4-r8, lr}
     push        {r4-r8, lr}
     ldr         SRC_WIDTH_FIXED, [sp, #(24 + 4)]
     .if mask_bpp != 0
@@ -1108,7 +1090,6 @@ fname:
     .purgem     fetch_src_pixblock
     .purgem     pixld_src
 
-    .fnend
     .endfunc
 .endm
 
@@ -1135,7 +1116,6 @@ fname:
  */
 
 .macro default_init_need_all_regs
-    .vsave      {d8-d15}
     vpush       {d8-d15}
 .endm
 

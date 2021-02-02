@@ -109,14 +109,16 @@ general_cubic (double x, double B, double C)
 
     if (ax < 1)
     {
-	return ((12 - 9 * B - 6 * C) * ax * ax * ax +
-		(-18 + 12 * B + 6 * C) * ax * ax + (6 - 2 * B)) / 6;
+	return (((12 - 9 * B - 6 * C) * ax +
+		 (-18 + 12 * B + 6 * C)) * ax * ax +
+		(6 - 2 * B)) / 6;
     }
-    else if (ax >= 1 && ax < 2)
+    else if (ax < 2)
     {
-	return ((-B - 6 * C) * ax * ax * ax +
-		(6 * B + 30 * C) * ax * ax + (-12 * B - 48 * C) *
-		ax + (8 * B + 24 * C)) / 6;
+	return ((((-B - 6 * C) * ax +
+		  (6 * B + 30 * C)) * ax +
+		 (-12 * B - 48 * C)) * ax +
+		(8 * B + 24 * C)) / 6;
     }
     else
     {
@@ -141,7 +143,7 @@ static const filter_info_t filters[] =
     { PIXMAN_KERNEL_BOX,	        box_kernel,       1.0 },
     { PIXMAN_KERNEL_LINEAR,	        linear_kernel,    2.0 },
     { PIXMAN_KERNEL_CUBIC,		cubic_kernel,     4.0 },
-    { PIXMAN_KERNEL_GAUSSIAN,	        gaussian_kernel,  6 * SIGMA },
+    { PIXMAN_KERNEL_GAUSSIAN,	        gaussian_kernel,  5.0 },
     { PIXMAN_KERNEL_LANCZOS2,	        lanczos2_kernel,  4.0 },
     { PIXMAN_KERNEL_LANCZOS3,	        lanczos3_kernel,  6.0 },
     { PIXMAN_KERNEL_LANCZOS3_STRETCHED, nice_kernel,      8.0 },
@@ -160,18 +162,21 @@ integral (pixman_kernel_t kernel1, double x1,
 	  pixman_kernel_t kernel2, double scale, double x2,
 	  double width)
 {
-    /* If the integration interval crosses zero, break it into
-     * two separate integrals. This ensures that filters such
-     * as LINEAR that are not differentiable at 0 will still
-     * integrate properly.
+    if (kernel1 == PIXMAN_KERNEL_BOX && kernel2 == PIXMAN_KERNEL_BOX)
+    {
+	return width;
+    }
+    /* The LINEAR filter is not differentiable at 0, so if the
+     * integration interval crosses zero, break it into two
+     * separate integrals.
      */
-    if (x1 < 0 && x1 + width > 0)
+    else if (kernel1 == PIXMAN_KERNEL_LINEAR && x1 < 0 && x1 + width > 0)
     {
 	return
 	    integral (kernel1, x1, kernel2, scale, x2, - x1) +
 	    integral (kernel1, 0, kernel2, scale, x2 - x1, width + x1);
     }
-    else if (x2 < 0 && x2 + width > 0)
+    else if (kernel2 == PIXMAN_KERNEL_LINEAR && x2 < 0 && x2 + width > 0)
     {
 	return
 	    integral (kernel1, x1, kernel2, scale, x2, - x2) +
@@ -189,13 +194,19 @@ integral (pixman_kernel_t kernel1, double x1,
     }
     else
     {
-	/* Integration via Simpson's rule */
-#define N_SEGMENTS 128
+	/* Integration via Simpson's rule
+	 * See http://www.intmath.com/integration/6-simpsons-rule.php
+	 * 12 segments (6 cubic approximations) seems to produce best
+	 * result for lanczos3.linear, which was the combination that
+	 * showed the most errors.  This makes sense as the lanczos3
+	 * filter is 6 wide.
+	 */
+#define N_SEGMENTS 12
 #define SAMPLE(a1, a2)							\
 	(filters[kernel1].func ((a1)) * filters[kernel2].func ((a2) * scale))
 	
 	double s = 0.0;
-	double h = width / (double)N_SEGMENTS;
+	double h = width / N_SEGMENTS;
 	int i;
 
 	s = SAMPLE (x1, x2);
@@ -204,11 +215,14 @@ integral (pixman_kernel_t kernel1, double x1,
 	{
 	    double a1 = x1 + h * i;
 	    double a2 = x2 + h * i;
+	    s += 4 * SAMPLE (a1, a2);
+	}
 
+	for (i = 2; i < N_SEGMENTS; i += 2)
+	{
+	    double a1 = x1 + h * i;
+	    double a2 = x2 + h * i;
 	    s += 2 * SAMPLE (a1, a2);
-
-	    if (i >= 2 && i < N_SEGMENTS - 1)
-		s += 4 * SAMPLE (a1, a2);
 	}
 
 	s += SAMPLE (x1 + width, x2 + width);
@@ -217,24 +231,16 @@ integral (pixman_kernel_t kernel1, double x1,
     }
 }
 
-static pixman_fixed_t *
-create_1d_filter (int             *width,
+static void
+create_1d_filter (int              width,
 		  pixman_kernel_t  reconstruct,
 		  pixman_kernel_t  sample,
 		  double           scale,
-		  int              n_phases)
+		  int              n_phases,
+		  pixman_fixed_t *p)
 {
-    pixman_fixed_t *params, *p;
     double step;
-    double size;
     int i;
-
-    size = scale * filters[sample].width + filters[reconstruct].width;
-    *width = ceil (size);
-
-    p = params = malloc (*width * n_phases * sizeof (pixman_fixed_t));
-    if (!params)
-        return NULL;
 
     step = 1.0 / n_phases;
 
@@ -243,15 +249,15 @@ create_1d_filter (int             *width,
         double frac = step / 2.0 + i * step;
 	pixman_fixed_t new_total;
         int x, x1, x2;
-	double total;
+	double total, e;
 
 	/* Sample convolution of reconstruction and sampling
 	 * filter. See rounding.txt regarding the rounding
 	 * and sample positions.
 	 */
 
-	x1 = ceil (frac - *width / 2.0 - 0.5);
-        x2 = x1 + *width;
+	x1 = ceil (frac - width / 2.0 - 0.5);
+	x2 = x1 + width;
 
 	total = 0;
         for (x = x1; x < x2; ++x)
@@ -274,28 +280,153 @@ create_1d_filter (int             *width,
 			      ihigh - ilow);
 	    }
 
-	    total += c;
-            *p++ = (pixman_fixed_t)(c * 65535.0 + 0.5);
+            *p = (pixman_fixed_t)floor (c * 65536.0 + 0.5);
+	    total += *p;
+	    p++;
         }
 
-	/* Normalize */
-	p -= *width;
-        total = 1 / total;
+	/* Normalize, with error diffusion */
+	p -= width;
+        total = 65536.0 / total;
         new_total = 0;
+	e = 0.0;
 	for (x = x1; x < x2; ++x)
 	{
-	    pixman_fixed_t t = (*p) * total + 0.5;
+	    double v = (*p) * total + e;
+	    pixman_fixed_t t = floor (v + 0.5);
 
+	    e = v - t;
 	    new_total += t;
 	    *p++ = t;
 	}
 
-	if (new_total != pixman_fixed_1)
-	    *(p - *width / 2) += (pixman_fixed_1 - new_total);
+	/* pixman_fixed_e's worth of error may remain; put it
+	 * at the first sample, since that is the only one that
+	 * hasn't had any error diffused into it.
+	 */
+	*(p - width) += pixman_fixed_1 - new_total;
+    }
+}
+
+
+static int
+filter_width (pixman_kernel_t reconstruct, pixman_kernel_t sample, double size)
+{
+    return ceil (filters[reconstruct].width + size * filters[sample].width);
+}
+
+#ifdef PIXMAN_GNUPLOT
+
+/* If enable-gnuplot is configured, then you can pipe the output of a
+ * pixman-using program to gnuplot and get a continuously-updated plot
+ * of the horizontal filter. This works well with demos/scale to test
+ * the filter generation.
+ *
+ * The plot is all the different subposition filters shuffled
+ * together. This is misleading in a few cases:
+ *
+ *  IMPULSE.BOX - goes up and down as the subfilters have different
+ *		  numbers of non-zero samples
+ *  IMPULSE.TRIANGLE - somewhat crooked for the same reason
+ *  1-wide filters - looks triangular, but a 1-wide box would be more
+ *		     accurate
+ */
+static void
+gnuplot_filter (int width, int n_phases, const pixman_fixed_t* p)
+{
+    double step;
+    int i, j;
+    int first;
+
+    step = 1.0 / n_phases;
+
+    printf ("set style line 1 lc rgb '#0060ad' lt 1 lw 0.5 pt 7 pi 1 ps 0.5\n");
+    printf ("plot [x=%g:%g] '-' with linespoints ls 1\n", -width*0.5, width*0.5);
+    /* Print a point at the origin so that y==0 line is included: */
+    printf ("0 0\n\n");
+
+    /* The position of the first sample of the phase corresponding to
+     * frac is given by:
+     * 
+     *     ceil (frac - width / 2.0 - 0.5) + 0.5 - frac
+     * 
+     * We have to find the frac that minimizes this expression.
+     * 
+     * For odd widths, we have
+     * 
+     *     ceil (frac - width / 2.0 - 0.5) + 0.5 - frac
+     *   = ceil (frac) + K - frac
+     *   = 1 + K - frac
+     * 
+     * for some K, so this is minimized when frac is maximized and
+     * strictly growing with frac. So for odd widths, we can simply
+     * start at the last phase and go backwards.
+     * 
+     * For even widths, we have
+     * 
+     *     ceil (frac - width / 2.0 - 0.5) + 0.5 - frac
+     *   = ceil (frac - 0.5) + K - frac
+     * 
+     * The graph for this function (ignoring K) looks like this:
+     * 
+     *        0.5
+     *           |    |\ 
+     *           |    | \ 
+     *           |    |  \ 
+     *         0 |    |   \ 
+     *           |\   |
+     *           | \  |
+     *           |  \ |
+     *      -0.5 |   \|
+     *   ---------------------------------
+     *           0    0.5   1
+     * 
+     * So in this case we need to start with the phase whose frac is
+     * less than, but as close as possible to 0.5, then go backwards
+     * until we hit the first phase, then wrap around to the last
+     * phase and continue backwards.
+     * 
+     * Which phase is as close as possible 0.5? The locations of the
+     * sampling point corresponding to the kth phase is given by
+     * 1/(2 * n_phases) + k / n_phases:
+     * 
+     *         1/(2 * n_phases) + k / n_phases = 0.5
+     *  
+     * from which it follows that
+     * 
+     *         k = (n_phases - 1) / 2
+     * 
+     * rounded down is the phase in question.
+     */
+    if (width & 1)
+	first = n_phases - 1;
+    else
+	first = (n_phases - 1) / 2;
+
+    for (j = 0; j < width; ++j)
+    {
+	for (i = 0; i < n_phases; ++i)
+	{
+	    int phase = first - i;
+	    double frac, pos;
+
+	    if (phase < 0)
+		phase = n_phases + phase;
+
+	    frac = step / 2.0 + phase * step;
+	    pos = ceil (frac - width / 2.0 - 0.5) + 0.5 - frac + j;
+
+	    printf ("%g %g\n",
+		    pos,
+		    pixman_fixed_to_double (*(p + phase * width + j)));
+	}
     }
 
-    return params;
+    printf ("e\n");
+    fflush (stdout);
 }
+
+#endif
 
 /* Create the parameter list for a SEPARABLE_CONVOLUTION filter
  * with the given kernels and scale parameters
@@ -313,38 +444,35 @@ pixman_filter_create_separable_convolution (int             *n_values,
 {
     double sx = fabs (pixman_fixed_to_double (scale_x));
     double sy = fabs (pixman_fixed_to_double (scale_y));
-    pixman_fixed_t *horz = NULL, *vert = NULL, *params = NULL;
+    pixman_fixed_t *params;
     int subsample_x, subsample_y;
     int width, height;
 
+    width = filter_width (reconstruct_x, sample_x, sx);
     subsample_x = (1 << subsample_bits_x);
+
+    height = filter_width (reconstruct_y, sample_y, sy);
     subsample_y = (1 << subsample_bits_y);
 
-    horz = create_1d_filter (&width, reconstruct_x, sample_x, sx, subsample_x);
-    vert = create_1d_filter (&height, reconstruct_y, sample_y, sy, subsample_y);
-
-    if (!horz || !vert)
-        goto out;
-    
     *n_values = 4 + width * subsample_x + height * subsample_y;
     
     params = malloc (*n_values * sizeof (pixman_fixed_t));
     if (!params)
-        goto out;
+	return NULL;
 
     params[0] = pixman_int_to_fixed (width);
     params[1] = pixman_int_to_fixed (height);
     params[2] = pixman_int_to_fixed (subsample_bits_x);
     params[3] = pixman_int_to_fixed (subsample_bits_y);
 
-    memcpy (params + 4, horz,
-	    width * subsample_x * sizeof (pixman_fixed_t));
-    memcpy (params + 4 + width * subsample_x, vert,
-	    height * subsample_y * sizeof (pixman_fixed_t));
+    create_1d_filter (width, reconstruct_x, sample_x, sx, subsample_x,
+		      params + 4);
+    create_1d_filter (height, reconstruct_y, sample_y, sy, subsample_y,
+		      params + 4 + width * subsample_x);
 
-out:
-    free (horz);
-    free (vert);
+#ifdef PIXMAN_GNUPLOT
+    gnuplot_filter(width, subsample_x, params + 4);
+#endif
 
     return params;
 }

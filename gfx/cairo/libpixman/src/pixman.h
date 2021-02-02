@@ -69,11 +69,6 @@ SOFTWARE.
 #ifndef PIXMAN_H__
 #define PIXMAN_H__
 
-#ifdef MOZILLA_VERSION
-#include "cairo/pixman-rename.h"
-#endif
-
-
 #include <pixman-version.h>
 
 #ifdef  __cplusplus
@@ -132,7 +127,7 @@ typedef pixman_fixed_16_16_t	pixman_fixed_t;
 #define pixman_fixed_1_minus_e		(pixman_fixed_1 - pixman_fixed_e)
 #define pixman_fixed_minus_1		(pixman_int_to_fixed(-1))
 #define pixman_fixed_to_int(f)		((int) ((f) >> 16))
-#define pixman_int_to_fixed(i)		((pixman_fixed_t) ((uint32_t)(i) << 16))
+#define pixman_int_to_fixed(i)		((pixman_fixed_t) ((uint32_t) (i) << 16))
 #define pixman_fixed_to_double(f)	(double) ((f) / (double) pixman_fixed_1)
 #define pixman_double_to_fixed(d)	((pixman_fixed_t) ((d) * 65536.0))
 #define pixman_fixed_frac(f)		((f) & pixman_fixed_1_minus_e)
@@ -189,42 +184,73 @@ struct pixman_transform
 struct pixman_box16;
 typedef  union pixman_image		pixman_image_t;
 
+PIXMAN_API
 void          pixman_transform_init_identity    (struct pixman_transform       *matrix);
+
+PIXMAN_API
 pixman_bool_t pixman_transform_point_3d         (const struct pixman_transform *transform,
 						 struct pixman_vector          *vector);
+
+PIXMAN_API
 pixman_bool_t pixman_transform_point            (const struct pixman_transform *transform,
 						 struct pixman_vector          *vector);
+
+PIXMAN_API
 pixman_bool_t pixman_transform_multiply         (struct pixman_transform       *dst,
 						 const struct pixman_transform *l,
 						 const struct pixman_transform *r);
+
+PIXMAN_API
 void          pixman_transform_init_scale       (struct pixman_transform       *t,
 						 pixman_fixed_t                 sx,
 						 pixman_fixed_t                 sy);
+
+PIXMAN_API
 pixman_bool_t pixman_transform_scale            (struct pixman_transform       *forward,
 						 struct pixman_transform       *reverse,
 						 pixman_fixed_t                 sx,
 						 pixman_fixed_t                 sy);
+
+PIXMAN_API
 void          pixman_transform_init_rotate      (struct pixman_transform       *t,
 						 pixman_fixed_t                 cos,
 						 pixman_fixed_t                 sin);
+
+PIXMAN_API
 pixman_bool_t pixman_transform_rotate           (struct pixman_transform       *forward,
 						 struct pixman_transform       *reverse,
 						 pixman_fixed_t                 c,
 						 pixman_fixed_t                 s);
+
+PIXMAN_API
 void          pixman_transform_init_translate   (struct pixman_transform       *t,
 						 pixman_fixed_t                 tx,
 						 pixman_fixed_t                 ty);
+
+PIXMAN_API
 pixman_bool_t pixman_transform_translate        (struct pixman_transform       *forward,
 						 struct pixman_transform       *reverse,
 						 pixman_fixed_t                 tx,
 						 pixman_fixed_t                 ty);
+
+PIXMAN_API
 pixman_bool_t pixman_transform_bounds           (const struct pixman_transform *matrix,
 						 struct pixman_box16           *b);
+
+PIXMAN_API
 pixman_bool_t pixman_transform_invert           (struct pixman_transform       *dst,
 						 const struct pixman_transform *src);
+
+PIXMAN_API
 pixman_bool_t pixman_transform_is_identity      (const struct pixman_transform *t);
+
+PIXMAN_API
 pixman_bool_t pixman_transform_is_scale         (const struct pixman_transform *t);
+
+PIXMAN_API
 pixman_bool_t pixman_transform_is_int_translate (const struct pixman_transform *t);
+
+PIXMAN_API
 pixman_bool_t pixman_transform_is_inverse       (const struct pixman_transform *a,
 						 const struct pixman_transform *b);
 
@@ -244,42 +270,70 @@ struct pixman_f_transform
     double  m[3][3];
 };
 
+
+PIXMAN_API
 pixman_bool_t pixman_transform_from_pixman_f_transform (struct pixman_transform         *t,
 							const struct pixman_f_transform *ft);
+
+PIXMAN_API
 void          pixman_f_transform_from_pixman_transform (struct pixman_f_transform       *ft,
 							const struct pixman_transform   *t);
+
+PIXMAN_API
 pixman_bool_t pixman_f_transform_invert                (struct pixman_f_transform       *dst,
 							const struct pixman_f_transform *src);
+
+PIXMAN_API
 pixman_bool_t pixman_f_transform_point                 (const struct pixman_f_transform *t,
 							struct pixman_f_vector          *v);
+
+PIXMAN_API
 void          pixman_f_transform_point_3d              (const struct pixman_f_transform *t,
 							struct pixman_f_vector          *v);
+
+PIXMAN_API
 void          pixman_f_transform_multiply              (struct pixman_f_transform       *dst,
 							const struct pixman_f_transform *l,
 							const struct pixman_f_transform *r);
+
+PIXMAN_API
 void          pixman_f_transform_init_scale            (struct pixman_f_transform       *t,
 							double                           sx,
 							double                           sy);
+
+PIXMAN_API
 pixman_bool_t pixman_f_transform_scale                 (struct pixman_f_transform       *forward,
 							struct pixman_f_transform       *reverse,
 							double                           sx,
 							double                           sy);
+
+PIXMAN_API
 void          pixman_f_transform_init_rotate           (struct pixman_f_transform       *t,
 							double                           cos,
 							double                           sin);
+
+PIXMAN_API
 pixman_bool_t pixman_f_transform_rotate                (struct pixman_f_transform       *forward,
 							struct pixman_f_transform       *reverse,
 							double                           c,
 							double                           s);
+
+PIXMAN_API
 void          pixman_f_transform_init_translate        (struct pixman_f_transform       *t,
 							double                           tx,
 							double                           ty);
+
+PIXMAN_API
 pixman_bool_t pixman_f_transform_translate             (struct pixman_f_transform       *forward,
 							struct pixman_f_transform       *reverse,
 							double                           tx,
 							double                           ty);
+
+PIXMAN_API
 pixman_bool_t pixman_f_transform_bounds                (const struct pixman_f_transform *t,
 							struct pixman_box16             *b);
+
+PIXMAN_API
 void          pixman_f_transform_init_identity         (struct pixman_f_transform       *t);
 
 typedef enum
@@ -289,6 +343,16 @@ typedef enum
     PIXMAN_REPEAT_PAD,
     PIXMAN_REPEAT_REFLECT
 } pixman_repeat_t;
+
+typedef enum
+{
+    PIXMAN_DITHER_NONE,
+    PIXMAN_DITHER_FAST,
+    PIXMAN_DITHER_GOOD,
+    PIXMAN_DITHER_BEST,
+    PIXMAN_DITHER_ORDERED_BAYER_8,
+    PIXMAN_DITHER_ORDERED_BLUE_NOISE_64,
+} pixman_dither_t;
 
 typedef enum
 {
@@ -428,73 +492,120 @@ typedef enum
 /* This function exists only to make it possible to preserve
  * the X ABI - it should go away at first opportunity.
  */
+PIXMAN_API
 void pixman_region_set_static_pointers (pixman_box16_t         *empty_box,
 					pixman_region16_data_t *empty_data,
 					pixman_region16_data_t *broken_data);
 
 /* creation/destruction */
+PIXMAN_API
 void                    pixman_region_init               (pixman_region16_t *region);
+
+PIXMAN_API
 void                    pixman_region_init_rect          (pixman_region16_t *region,
 							  int                x,
 							  int                y,
 							  unsigned int       width,
 							  unsigned int       height);
+
+PIXMAN_API
 pixman_bool_t           pixman_region_init_rects         (pixman_region16_t *region,
 							  const pixman_box16_t *boxes,
 							  int                count);
+
+PIXMAN_API
 void                    pixman_region_init_with_extents  (pixman_region16_t *region,
 							  pixman_box16_t    *extents);
+
+PIXMAN_API
 void                    pixman_region_init_from_image    (pixman_region16_t *region,
 							  pixman_image_t    *image);
+
+PIXMAN_API
 void                    pixman_region_fini               (pixman_region16_t *region);
 
 
 /* manipulation */
+PIXMAN_API
 void                    pixman_region_translate          (pixman_region16_t *region,
 							  int                x,
 							  int                y);
+
+PIXMAN_API
 pixman_bool_t           pixman_region_copy               (pixman_region16_t *dest,
 							  pixman_region16_t *source);
+
+PIXMAN_API
 pixman_bool_t           pixman_region_intersect          (pixman_region16_t *new_reg,
 							  pixman_region16_t *reg1,
 							  pixman_region16_t *reg2);
+
+PIXMAN_API
 pixman_bool_t           pixman_region_union              (pixman_region16_t *new_reg,
 							  pixman_region16_t *reg1,
 							  pixman_region16_t *reg2);
+
+PIXMAN_API
 pixman_bool_t           pixman_region_union_rect         (pixman_region16_t *dest,
 							  pixman_region16_t *source,
 							  int                x,
 							  int                y,
 							  unsigned int       width,
 							  unsigned int       height);
+
+PIXMAN_API
 pixman_bool_t		pixman_region_intersect_rect     (pixman_region16_t *dest,
 							  pixman_region16_t *source,
 							  int                x,
 							  int                y,
 							  unsigned int       width,
 							  unsigned int       height);
+
+PIXMAN_API
 pixman_bool_t           pixman_region_subtract           (pixman_region16_t *reg_d,
 							  pixman_region16_t *reg_m,
 							  pixman_region16_t *reg_s);
+
+PIXMAN_API
 pixman_bool_t           pixman_region_inverse            (pixman_region16_t *new_reg,
 							  pixman_region16_t *reg1,
 							  pixman_box16_t    *inv_rect);
+
+PIXMAN_API
 pixman_bool_t           pixman_region_contains_point     (pixman_region16_t *region,
 							  int                x,
 							  int                y,
 							  pixman_box16_t    *box);
+
+PIXMAN_API
 pixman_region_overlap_t pixman_region_contains_rectangle (pixman_region16_t *region,
 							  pixman_box16_t    *prect);
+
+PIXMAN_API
 pixman_bool_t           pixman_region_not_empty          (pixman_region16_t *region);
+
+PIXMAN_API
 pixman_box16_t *        pixman_region_extents            (pixman_region16_t *region);
+
+PIXMAN_API
 int                     pixman_region_n_rects            (pixman_region16_t *region);
+
+PIXMAN_API
 pixman_box16_t *        pixman_region_rectangles         (pixman_region16_t *region,
 							  int               *n_rects);
+
+PIXMAN_API
 pixman_bool_t           pixman_region_equal              (pixman_region16_t *region1,
 							  pixman_region16_t *region2);
+
+PIXMAN_API
 pixman_bool_t           pixman_region_selfcheck          (pixman_region16_t *region);
+
+PIXMAN_API
 void                    pixman_region_reset              (pixman_region16_t *region,
 							  pixman_box16_t    *box);
+
+PIXMAN_API
 void			pixman_region_clear		 (pixman_region16_t *region);
 /*
  * 32 bit regions
@@ -528,72 +639,119 @@ struct pixman_region32
 };
 
 /* creation/destruction */
+PIXMAN_API
 void                    pixman_region32_init               (pixman_region32_t *region);
+
+PIXMAN_API
 void                    pixman_region32_init_rect          (pixman_region32_t *region,
 							    int                x,
 							    int                y,
 							    unsigned int       width,
 							    unsigned int       height);
+
+PIXMAN_API
 pixman_bool_t           pixman_region32_init_rects         (pixman_region32_t *region,
 							    const pixman_box32_t *boxes,
 							    int                count);
+
+PIXMAN_API
 void                    pixman_region32_init_with_extents  (pixman_region32_t *region,
 							    pixman_box32_t    *extents);
+
+PIXMAN_API
 void                    pixman_region32_init_from_image    (pixman_region32_t *region,
 							    pixman_image_t    *image);
+
+PIXMAN_API
 void                    pixman_region32_fini               (pixman_region32_t *region);
 
 
 /* manipulation */
+PIXMAN_API
 void                    pixman_region32_translate          (pixman_region32_t *region,
 							    int                x,
 							    int                y);
+
+PIXMAN_API
 pixman_bool_t           pixman_region32_copy               (pixman_region32_t *dest,
 							    pixman_region32_t *source);
+
+PIXMAN_API
 pixman_bool_t           pixman_region32_intersect          (pixman_region32_t *new_reg,
 							    pixman_region32_t *reg1,
 							    pixman_region32_t *reg2);
+
+PIXMAN_API
 pixman_bool_t           pixman_region32_union              (pixman_region32_t *new_reg,
 							    pixman_region32_t *reg1,
 							    pixman_region32_t *reg2);
+
+PIXMAN_API
 pixman_bool_t		pixman_region32_intersect_rect     (pixman_region32_t *dest,
 							    pixman_region32_t *source,
 							    int                x,
 							    int                y,
 							    unsigned int       width,
 							    unsigned int       height);
+
+PIXMAN_API
 pixman_bool_t           pixman_region32_union_rect         (pixman_region32_t *dest,
 							    pixman_region32_t *source,
 							    int                x,
 							    int                y,
 							    unsigned int       width,
 							    unsigned int       height);
+
+PIXMAN_API
 pixman_bool_t           pixman_region32_subtract           (pixman_region32_t *reg_d,
 							    pixman_region32_t *reg_m,
 							    pixman_region32_t *reg_s);
+
+PIXMAN_API
 pixman_bool_t           pixman_region32_inverse            (pixman_region32_t *new_reg,
 							    pixman_region32_t *reg1,
 							    pixman_box32_t    *inv_rect);
+
+PIXMAN_API
 pixman_bool_t           pixman_region32_contains_point     (pixman_region32_t *region,
 							    int                x,
 							    int                y,
 							    pixman_box32_t    *box);
+
+PIXMAN_API
 pixman_region_overlap_t pixman_region32_contains_rectangle (pixman_region32_t *region,
 							    pixman_box32_t    *prect);
+
+PIXMAN_API
 pixman_bool_t           pixman_region32_not_empty          (pixman_region32_t *region);
+
+PIXMAN_API
 pixman_box32_t *        pixman_region32_extents            (pixman_region32_t *region);
+
+PIXMAN_API
 int                     pixman_region32_n_rects            (pixman_region32_t *region);
+
+PIXMAN_API
 pixman_box32_t *        pixman_region32_rectangles         (pixman_region32_t *region,
 							    int               *n_rects);
+
+PIXMAN_API
 pixman_bool_t           pixman_region32_equal              (pixman_region32_t *region1,
 							    pixman_region32_t *region2);
+
+PIXMAN_API
 pixman_bool_t           pixman_region32_selfcheck          (pixman_region32_t *region);
+
+PIXMAN_API
 void                    pixman_region32_reset              (pixman_region32_t *region,
 							    pixman_box32_t    *box);
+
+PIXMAN_API
 void			pixman_region32_clear		   (pixman_region32_t *region);
 
 
 /* Copy / Fill / Misc */
+PIXMAN_API
 pixman_bool_t pixman_blt                (uint32_t           *src_bits,
 					 uint32_t           *dst_bits,
 					 int                 src_stride,
@@ -606,6 +764,8 @@ pixman_bool_t pixman_blt                (uint32_t           *src_bits,
 					 int                 dest_y,
 					 int                 width,
 					 int                 height);
+
+PIXMAN_API
 pixman_bool_t pixman_fill               (uint32_t           *bits,
 					 int                 stride,
 					 int                 bpp,
@@ -615,7 +775,11 @@ pixman_bool_t pixman_fill               (uint32_t           *bits,
 					 int                 height,
 					 uint32_t            _xor);
 
+
+PIXMAN_API
 int           pixman_version            (void);
+
+PIXMAN_API
 const char*   pixman_version_string     (void);
 
 /*
@@ -659,12 +823,24 @@ struct pixman_indexed
 					 ((g) << 4) |	  \
 					 ((b)))
 
-#define PIXMAN_FORMAT_BPP(f)	(((f) >> 24)       )
-#define PIXMAN_FORMAT_TYPE(f)	(((f) >> 16) & 0xff)
-#define PIXMAN_FORMAT_A(f)	(((f) >> 12) & 0x0f)
-#define PIXMAN_FORMAT_R(f)	(((f) >>  8) & 0x0f)
-#define PIXMAN_FORMAT_G(f)	(((f) >>  4) & 0x0f)
-#define PIXMAN_FORMAT_B(f)	(((f)      ) & 0x0f)
+#define PIXMAN_FORMAT_BYTE(bpp,type,a,r,g,b) \
+	(((bpp >> 3) << 24) | \
+	(3 << 22) | ((type) << 16) | \
+	((a >> 3) << 12) | \
+	((r >> 3) << 8) | \
+	((g >> 3) << 4) | \
+	((b >> 3)))
+
+#define PIXMAN_FORMAT_RESHIFT(val, ofs, num) \
+	(((val >> (ofs)) & ((1 << (num)) - 1)) << ((val >> 22) & 3))
+
+#define PIXMAN_FORMAT_BPP(f)	PIXMAN_FORMAT_RESHIFT(f, 24, 8)
+#define PIXMAN_FORMAT_SHIFT(f)	((uint32_t)((f >> 22) & 3))
+#define PIXMAN_FORMAT_TYPE(f)	(((f) >> 16) & 0x3f)
+#define PIXMAN_FORMAT_A(f)	PIXMAN_FORMAT_RESHIFT(f, 12, 4)
+#define PIXMAN_FORMAT_R(f)	PIXMAN_FORMAT_RESHIFT(f, 8, 4)
+#define PIXMAN_FORMAT_G(f)	PIXMAN_FORMAT_RESHIFT(f, 4, 4)
+#define PIXMAN_FORMAT_B(f)	PIXMAN_FORMAT_RESHIFT(f, 0, 4)
 #define PIXMAN_FORMAT_RGB(f)	(((f)      ) & 0xfff)
 #define PIXMAN_FORMAT_VIS(f)	(((f)      ) & 0xffff)
 #define PIXMAN_FORMAT_DEPTH(f)	(PIXMAN_FORMAT_A(f) +	\
@@ -683,15 +859,22 @@ struct pixman_indexed
 #define PIXMAN_TYPE_BGRA	8
 #define PIXMAN_TYPE_RGBA	9
 #define PIXMAN_TYPE_ARGB_SRGB	10
+#define PIXMAN_TYPE_RGBA_FLOAT	11
 
 #define PIXMAN_FORMAT_COLOR(f)				\
 	(PIXMAN_FORMAT_TYPE(f) == PIXMAN_TYPE_ARGB ||	\
 	 PIXMAN_FORMAT_TYPE(f) == PIXMAN_TYPE_ABGR ||	\
 	 PIXMAN_FORMAT_TYPE(f) == PIXMAN_TYPE_BGRA ||	\
-	 PIXMAN_FORMAT_TYPE(f) == PIXMAN_TYPE_RGBA)
+	 PIXMAN_FORMAT_TYPE(f) == PIXMAN_TYPE_RGBA ||	\
+	 PIXMAN_FORMAT_TYPE(f) == PIXMAN_TYPE_RGBA_FLOAT)
+
+typedef enum {
+/* 128bpp formats */
+    PIXMAN_rgba_float =	PIXMAN_FORMAT_BYTE(128,PIXMAN_TYPE_RGBA_FLOAT,32,32,32,32),
+/* 96bpp formats */
+    PIXMAN_rgb_float =	PIXMAN_FORMAT_BYTE(96,PIXMAN_TYPE_RGBA_FLOAT,0,32,32,32),
 
 /* 32bpp formats */
-typedef enum {
     PIXMAN_a8r8g8b8 =	 PIXMAN_FORMAT(32,PIXMAN_TYPE_ARGB,8,8,8,8),
     PIXMAN_x8r8g8b8 =	 PIXMAN_FORMAT(32,PIXMAN_TYPE_ARGB,0,8,8,8),
     PIXMAN_a8b8g8r8 =	 PIXMAN_FORMAT(32,PIXMAN_TYPE_ABGR,8,8,8,8),
@@ -762,30 +945,44 @@ typedef enum {
 } pixman_format_code_t;
 
 /* Querying supported format values. */
+PIXMAN_API
 pixman_bool_t pixman_format_supported_destination (pixman_format_code_t format);
+
+PIXMAN_API
 pixman_bool_t pixman_format_supported_source      (pixman_format_code_t format);
 
 /* Constructors */
+PIXMAN_API
 pixman_image_t *pixman_image_create_solid_fill       (const pixman_color_t         *color);
+
+PIXMAN_API
 pixman_image_t *pixman_image_create_linear_gradient  (const pixman_point_fixed_t   *p1,
 						      const pixman_point_fixed_t   *p2,
 						      const pixman_gradient_stop_t *stops,
 						      int                           n_stops);
+
+PIXMAN_API
 pixman_image_t *pixman_image_create_radial_gradient  (const pixman_point_fixed_t   *inner,
 						      const pixman_point_fixed_t   *outer,
 						      pixman_fixed_t                inner_radius,
 						      pixman_fixed_t                outer_radius,
 						      const pixman_gradient_stop_t *stops,
 						      int                           n_stops);
+
+PIXMAN_API
 pixman_image_t *pixman_image_create_conical_gradient (const pixman_point_fixed_t   *center,
 						      pixman_fixed_t                angle,
 						      const pixman_gradient_stop_t *stops,
 						      int                           n_stops);
+
+PIXMAN_API
 pixman_image_t *pixman_image_create_bits             (pixman_format_code_t          format,
 						      int                           width,
 						      int                           height,
 						      uint32_t                     *bits,
 						      int                           rowstride_bytes);
+
+PIXMAN_API
 pixman_image_t *pixman_image_create_bits_no_clear    (pixman_format_code_t format,
 						      int                  width,
 						      int                  height,
@@ -793,48 +990,99 @@ pixman_image_t *pixman_image_create_bits_no_clear    (pixman_format_code_t forma
 						      int                  rowstride_bytes);
 
 /* Destructor */
+PIXMAN_API
 pixman_image_t *pixman_image_ref                     (pixman_image_t               *image);
+
+PIXMAN_API
 pixman_bool_t   pixman_image_unref                   (pixman_image_t               *image);
 
+
+PIXMAN_API
 void		pixman_image_set_destroy_function    (pixman_image_t		   *image,
 						      pixman_image_destroy_func_t   function,
 						      void			   *data);
+
+PIXMAN_API
 void *		pixman_image_get_destroy_data        (pixman_image_t		   *image);
 
 /* Set properties */
+PIXMAN_API
 pixman_bool_t   pixman_image_set_clip_region         (pixman_image_t               *image,
 						      pixman_region16_t            *region);
+
+PIXMAN_API
 pixman_bool_t   pixman_image_set_clip_region32       (pixman_image_t               *image,
 						      pixman_region32_t            *region);
+
+PIXMAN_API
 void		pixman_image_set_has_client_clip     (pixman_image_t               *image,
 						      pixman_bool_t		    clien_clip);
+
+PIXMAN_API
 pixman_bool_t   pixman_image_set_transform           (pixman_image_t               *image,
 						      const pixman_transform_t     *transform);
+
+PIXMAN_API
 void            pixman_image_set_repeat              (pixman_image_t               *image,
 						      pixman_repeat_t               repeat);
+
+PIXMAN_API
+void            pixman_image_set_dither              (pixman_image_t               *image,
+						      pixman_dither_t               dither);
+
+PIXMAN_API
+void            pixman_image_set_dither_offset       (pixman_image_t               *image,
+						      int                           offset_x,
+						      int                           offset_y);
+
+PIXMAN_API
 pixman_bool_t   pixman_image_set_filter              (pixman_image_t               *image,
 						      pixman_filter_t               filter,
 						      const pixman_fixed_t         *filter_params,
 						      int                           n_filter_params);
+
+PIXMAN_API
 void		pixman_image_set_source_clipping     (pixman_image_t		   *image,
 						      pixman_bool_t                 source_clipping);
+
+PIXMAN_API
 void            pixman_image_set_alpha_map           (pixman_image_t               *image,
 						      pixman_image_t               *alpha_map,
 						      int16_t                       x,
 						      int16_t                       y);
+
+PIXMAN_API
 void            pixman_image_set_component_alpha     (pixman_image_t               *image,
 						      pixman_bool_t                 component_alpha);
+
+PIXMAN_API
 pixman_bool_t   pixman_image_get_component_alpha     (pixman_image_t               *image);
+
+PIXMAN_API
 void		pixman_image_set_accessors	     (pixman_image_t		   *image,
 						      pixman_read_memory_func_t	    read_func,
 						      pixman_write_memory_func_t    write_func);
+
+PIXMAN_API
 void		pixman_image_set_indexed	     (pixman_image_t		   *image,
 						      const pixman_indexed_t	   *indexed);
+
+PIXMAN_API
 uint32_t       *pixman_image_get_data                (pixman_image_t               *image);
+
+PIXMAN_API
 int		pixman_image_get_width               (pixman_image_t               *image);
+
+PIXMAN_API
 int             pixman_image_get_height              (pixman_image_t               *image);
+
+PIXMAN_API
 int		pixman_image_get_stride              (pixman_image_t               *image); /* in bytes */
+
+PIXMAN_API
 int		pixman_image_get_depth               (pixman_image_t		   *image);
+
+PIXMAN_API
 pixman_format_code_t pixman_image_get_format	     (pixman_image_t		   *image);
 
 typedef enum
@@ -852,6 +1100,7 @@ typedef enum
 /* Create the parameter list for a SEPARABLE_CONVOLUTION filter
  * with the given kernels and scale parameters.
  */
+PIXMAN_API
 pixman_fixed_t *
 pixman_filter_create_separable_convolution (int             *n_values,
 					    pixman_fixed_t   scale_x,
@@ -863,11 +1112,15 @@ pixman_filter_create_separable_convolution (int             *n_values,
 					    int              subsample_bits_x,
 					    int              subsample_bits_y);
 
+
+PIXMAN_API
 pixman_bool_t	pixman_image_fill_rectangles	     (pixman_op_t		    op,
 						      pixman_image_t		   *image,
 						      const pixman_color_t	   *color,
 						      int			    n_rects,
 						      const pixman_rectangle16_t   *rects);
+
+PIXMAN_API
 pixman_bool_t   pixman_image_fill_boxes              (pixman_op_t                   op,
                                                       pixman_image_t               *dest,
                                                       const pixman_color_t         *color,
@@ -875,6 +1128,7 @@ pixman_bool_t   pixman_image_fill_boxes              (pixman_op_t               
                                                       const pixman_box32_t         *boxes);
 
 /* Composite */
+PIXMAN_API
 pixman_bool_t pixman_compute_composite_region (pixman_region16_t *region,
 					       pixman_image_t    *src_image,
 					       pixman_image_t    *mask_image,
@@ -887,6 +1141,8 @@ pixman_bool_t pixman_compute_composite_region (pixman_region16_t *region,
 					       int16_t            dest_y,
 					       uint16_t           width,
 					       uint16_t           height);
+
+PIXMAN_API
 void          pixman_image_composite          (pixman_op_t        op,
 					       pixman_image_t    *src,
 					       pixman_image_t    *mask,
@@ -899,6 +1155,8 @@ void          pixman_image_composite          (pixman_op_t        op,
 					       int16_t            dest_y,
 					       uint16_t           width,
 					       uint16_t           height);
+
+PIXMAN_API
 void          pixman_image_composite32        (pixman_op_t        op,
 					       pixman_image_t    *src,
 					       pixman_image_t    *mask,
@@ -930,6 +1188,7 @@ void          pixman_image_composite32        (pixman_op_t        op,
  * Since 0.21.2, pixman doesn't do these workarounds anymore, so now this
  * function is a no-op.
  */
+PIXMAN_API
 void pixman_disable_out_of_bounds_workaround (void);
 
 /*
@@ -942,29 +1201,48 @@ typedef struct
     const void *glyph;
 } pixman_glyph_t;
 
+PIXMAN_API
 pixman_glyph_cache_t *pixman_glyph_cache_create       (void);
+
+PIXMAN_API
 void                  pixman_glyph_cache_destroy      (pixman_glyph_cache_t *cache);
+
+PIXMAN_API
 void                  pixman_glyph_cache_freeze       (pixman_glyph_cache_t *cache);
+
+PIXMAN_API
 void                  pixman_glyph_cache_thaw         (pixman_glyph_cache_t *cache);
+
+PIXMAN_API
 const void *          pixman_glyph_cache_lookup       (pixman_glyph_cache_t *cache,
 						       void                 *font_key,
 						       void                 *glyph_key);
+
+PIXMAN_API
 const void *          pixman_glyph_cache_insert       (pixman_glyph_cache_t *cache,
 						       void                 *font_key,
 						       void                 *glyph_key,
 						       int		     origin_x,
 						       int                   origin_y,
 						       pixman_image_t       *glyph_image);
+
+PIXMAN_API
 void                  pixman_glyph_cache_remove       (pixman_glyph_cache_t *cache,
 						       void                 *font_key,
 						       void                 *glyph_key);
+
+PIXMAN_API
 void                  pixman_glyph_get_extents        (pixman_glyph_cache_t *cache,
 						       int                   n_glyphs,
 						       pixman_glyph_t       *glyphs,
 						       pixman_box32_t       *extents);
+
+PIXMAN_API
 pixman_format_code_t  pixman_glyph_get_mask_format    (pixman_glyph_cache_t *cache,
 						       int		     n_glyphs,
 						       const pixman_glyph_t *glyphs);
+
+PIXMAN_API
 void                  pixman_composite_glyphs         (pixman_op_t           op,
 						       pixman_image_t       *src,
 						       pixman_image_t       *dest,
@@ -980,6 +1258,8 @@ void                  pixman_composite_glyphs         (pixman_op_t           op,
 						       pixman_glyph_cache_t *cache,
 						       int		     n_glyphs,
 						       const pixman_glyph_t *glyphs);
+
+PIXMAN_API
 void                  pixman_composite_glyphs_no_mask (pixman_op_t           op,
 						       pixman_image_t       *src,
 						       pixman_image_t       *dest,
@@ -1035,7 +1315,7 @@ struct pixman_triangle
 #define pixman_trapezoid_valid(t)				   \
     ((t)->left.p1.y != (t)->left.p2.y &&			   \
      (t)->right.p1.y != (t)->right.p2.y &&			   \
-     (int) ((t)->bottom - (t)->top) > 0)
+     ((t)->bottom > (t)->top))
 
 struct pixman_span_fix
 {
@@ -1047,12 +1327,19 @@ struct pixman_trap
     pixman_span_fix_t	top, bot;
 };
 
+PIXMAN_API
 pixman_fixed_t pixman_sample_ceil_y        (pixman_fixed_t             y,
 					    int                        bpp);
+
+PIXMAN_API
 pixman_fixed_t pixman_sample_floor_y       (pixman_fixed_t             y,
 					    int                        bpp);
+
+PIXMAN_API
 void           pixman_edge_step            (pixman_edge_t             *e,
 					    int                        n);
+
+PIXMAN_API
 void           pixman_edge_init            (pixman_edge_t             *e,
 					    int                        bpp,
 					    pixman_fixed_t             y_start,
@@ -1060,31 +1347,43 @@ void           pixman_edge_init            (pixman_edge_t             *e,
 					    pixman_fixed_t             y_top,
 					    pixman_fixed_t             x_bot,
 					    pixman_fixed_t             y_bot);
+
+PIXMAN_API
 void           pixman_line_fixed_edge_init (pixman_edge_t             *e,
 					    int                        bpp,
 					    pixman_fixed_t             y,
 					    const pixman_line_fixed_t *line,
 					    int                        x_off,
 					    int                        y_off);
+
+PIXMAN_API
 void           pixman_rasterize_edges      (pixman_image_t            *image,
 					    pixman_edge_t             *l,
 					    pixman_edge_t             *r,
 					    pixman_fixed_t             t,
 					    pixman_fixed_t             b);
+
+PIXMAN_API
 void           pixman_add_traps            (pixman_image_t            *image,
 					    int16_t                    x_off,
 					    int16_t                    y_off,
 					    int                        ntrap,
 					    const pixman_trap_t       *traps);
+
+PIXMAN_API
 void           pixman_add_trapezoids       (pixman_image_t            *image,
 					    int16_t                    x_off,
 					    int                        y_off,
 					    int                        ntraps,
 					    const pixman_trapezoid_t  *traps);
+
+PIXMAN_API
 void           pixman_rasterize_trapezoid  (pixman_image_t            *image,
 					    const pixman_trapezoid_t  *trap,
 					    int                        x_off,
 					    int                        y_off);
+
+PIXMAN_API
 void          pixman_composite_trapezoids (pixman_op_t		       op,
 					   pixman_image_t *	       src,
 					   pixman_image_t *	       dst,
@@ -1095,6 +1394,8 @@ void          pixman_composite_trapezoids (pixman_op_t		       op,
 					   int			       y_dst,
 					   int			       n_traps,
 					   const pixman_trapezoid_t *  traps);
+
+PIXMAN_API
 void          pixman_composite_triangles (pixman_op_t		       op,
 					  pixman_image_t *	       src,
 					  pixman_image_t *	       dst,
@@ -1105,6 +1406,8 @@ void          pixman_composite_triangles (pixman_op_t		       op,
 					  int			       y_dst,
 					  int			       n_tris,
 					  const pixman_triangle_t *    tris);
+
+PIXMAN_API
 void	      pixman_add_triangles       (pixman_image_t              *image,
 					  int32_t	               x_off,
 					  int32_t	               y_off,

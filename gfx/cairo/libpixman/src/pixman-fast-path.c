@@ -908,7 +908,7 @@ fast_composite_add_n_8_8 (pixman_implementation_t *imp,
 #define CREATE_BITMASK(n) (0x80000000 >> (n))
 #define UPDATE_BITMASK(n) ((n) >> 1)
 #else
-#define CREATE_BITMASK(n) (1 << (n))
+#define CREATE_BITMASK(n) (1U << (n))
 #define UPDATE_BITMASK(n) ((n) << 1)
 #endif
 
@@ -1202,228 +1202,6 @@ FAST_NEAREST (8888_565_cover, 8888, 0565, uint32_t, uint16_t, OVER, COVER)
 FAST_NEAREST (8888_565_none, 8888, 0565, uint32_t, uint16_t, OVER, NONE)
 FAST_NEAREST (8888_565_pad, 8888, 0565, uint32_t, uint16_t, OVER, PAD)
 FAST_NEAREST (8888_565_normal, 8888, 0565, uint32_t, uint16_t, OVER, NORMAL)
-
-static force_inline void
-scaled_bilinear_scanline_8888_565_OVER (uint16_t *       dst,
-                                        const uint32_t * mask,
-                                        const uint32_t * src_top,
-                                        const uint32_t * src_bottom,
-                                        int32_t          w,
-                                        int              wt,
-                                        int              wb,
-                                        pixman_fixed_t   vx,
-                                        pixman_fixed_t   unit_x,
-                                        pixman_fixed_t   max_vx,
-                                        pixman_bool_t    zero_src)
-{
-    while ((w -= 1) >= 0)
-    {
-	uint32_t tl = src_top [pixman_fixed_to_int (vx)];
-	uint32_t tr = src_top [pixman_fixed_to_int (vx) + 1];
-	uint32_t bl = src_bottom [pixman_fixed_to_int (vx)];
-	uint32_t br = src_bottom [pixman_fixed_to_int (vx) + 1];
-	uint32_t src, result;
-	uint16_t d;
-	d = *dst;
-	src = bilinear_interpolation (tl, tr,
-				      bl, br,
-				      pixman_fixed_to_bilinear_weight(vx),
-				      wb);
-	vx += unit_x;
-	result = over (src, convert_0565_to_0888 (d));
-	*dst++ = convert_8888_to_0565 (result);
-    }
-}
-
-static force_inline void
-scaled_bilinear_scanline_8888_8888_OVER (uint32_t *       dst,
-                                         const uint32_t * mask,
-                                         const uint32_t * src_top,
-                                         const uint32_t * src_bottom,
-                                         int32_t          w,
-                                         int              wt,
-                                         int              wb,
-                                         pixman_fixed_t   vx,
-                                         pixman_fixed_t   unit_x,
-                                         pixman_fixed_t   max_vx,
-                                         pixman_bool_t    zero_src)
-{
-    while ((w -= 1) >= 0)
-    {
-	uint32_t tl = src_top [pixman_fixed_to_int (vx)];
-	uint32_t tr = src_top [pixman_fixed_to_int (vx) + 1];
-	uint32_t bl = src_bottom [pixman_fixed_to_int (vx)];
-	uint32_t br = src_bottom [pixman_fixed_to_int (vx) + 1];
-	uint32_t src;
-	uint32_t d;
-	uint32_t result;
-	d = *dst;
-	src = bilinear_interpolation (tl, tr,
-				      bl, br,
-				      pixman_fixed_to_bilinear_weight(vx),
-				      wb);
-	vx += unit_x;
-	*dst++ = over (src, d);
-    }
-}
-
-#ifndef LOWER_QUALITY_INTERPOLATION
-
-static force_inline void
-scaled_bilinear_scanline_565_565_SRC (uint16_t *       dst,
-				      const uint32_t * mask,
-				      const uint16_t * src_top,
-				      const uint16_t * src_bottom,
-				      int32_t          w,
-				      int              wt,
-				      int              wb,
-				      pixman_fixed_t   vx,
-				      pixman_fixed_t   unit_x,
-				      pixman_fixed_t   max_vx,
-				      pixman_bool_t    zero_src)
-{
-    while ((w -= 1) >= 0)
-    {
-	uint16_t tl = src_top [pixman_fixed_to_int (vx)];
-	uint16_t tr = src_top [pixman_fixed_to_int (vx) + 1];
-	uint16_t bl = src_bottom [pixman_fixed_to_int (vx)];
-	uint16_t br = src_bottom [pixman_fixed_to_int (vx) + 1];
-	uint32_t d;
-	d = bilinear_interpolation(convert_0565_to_8888 (tl),
-				   convert_0565_to_8888 (tr),
-				   convert_0565_to_8888 (bl),
-				   convert_0565_to_8888 (br),
-				   pixman_fixed_to_bilinear_weight (vx),
-				   wb);
-	vx += unit_x;
-	*dst++ = convert_8888_to_0565 (d);
-    }
-}
-
-#else
-
-/* This is a clever low resolution bilinear interpolation inspired by the code
-   in Skia */
-
-/* This takes the green component from the 565 representation and moves it:
-   00000000 00000000 rrrrrggg gggbbbbb
-
-   00000ggg ggg00000 rrrrr000 000bbbbb
-
-   This gives us 5 extra bits of space before each component to let us do
-   SWAR style optimizations
-*/
-
-#define GREEN_MASK (((1 << 6) - 1) << 5)
-
-static inline uint32_t
-expand_rgb_565 (uint16_t c) {
-    return ((c & GREEN_MASK) << 16) | (c & ~GREEN_MASK);
-}
-
-static inline uint16_t
-compact_rgb_565 (uint32_t c) {
-    return ((c >> 16) & GREEN_MASK) | (c & ~GREEN_MASK);
-}
-
-static inline uint16_t
-bilinear_interpolation_565(uint16_t tl, uint16_t tr,
-			   uint16_t bl, uint16_t br,
-			   int x, int y)
-{
-    int xy;
-    uint32_t a00 = expand_rgb_565 (tl);
-    uint32_t a01 = expand_rgb_565 (tr);
-    uint32_t a10 = expand_rgb_565 (bl);
-    uint32_t a11 = expand_rgb_565 (br);
-
-    xy = (x * y) >> 3;
-    return compact_rgb_565 ((a00 * (32 - 2*y - 2*x + xy) +
-			     a01 * (2*x - xy) +
-			     a10 * (2*y - xy) +
-			     a11 * xy) >> 5);
-}
-
-static force_inline void
-scaled_bilinear_scanline_565_565_SRC (uint16_t *       dst,
-				      const uint32_t * mask,
-				      const uint16_t * src_top,
-				      const uint16_t * src_bottom,
-				      int32_t          w,
-				      int              wt,
-				      int              wb,
-				      pixman_fixed_t   vx,
-				      pixman_fixed_t   unit_x,
-				      pixman_fixed_t   max_vx,
-				      pixman_bool_t    zero_src)
-{
-    while ((w -= 1) >= 0)
-    {
-	uint16_t tl = src_top [pixman_fixed_to_int (vx)];
-	uint16_t tr = src_top [pixman_fixed_to_int (vx) + 1];
-	uint16_t bl = src_bottom [pixman_fixed_to_int (vx)];
-	uint16_t br = src_bottom [pixman_fixed_to_int (vx) + 1];
-
-        uint16_t d = bilinear_interpolation_565 (tl, tr, bl, br,
-						 pixman_fixed_to_bilinear_weight(vx),
-						 wb);
-        vx += unit_x;
-        *dst++ = d;
-    }
-}
-
-#endif
-
-FAST_BILINEAR_MAINLOOP_COMMON (565_565_cover_SRC,
-			       scaled_bilinear_scanline_565_565_SRC, NULL,
-			       uint16_t, uint32_t, uint16_t,
-			       COVER, FLAG_NONE)
-FAST_BILINEAR_MAINLOOP_COMMON (565_565_pad_SRC,
-			       scaled_bilinear_scanline_565_565_SRC, NULL,
-			       uint16_t, uint32_t, uint16_t,
-			       PAD, FLAG_NONE)
-FAST_BILINEAR_MAINLOOP_COMMON (565_565_none_SRC,
-			       scaled_bilinear_scanline_565_565_SRC, NULL,
-			       uint16_t, uint32_t, uint16_t,
-			       NONE, FLAG_NONE)
-FAST_BILINEAR_MAINLOOP_COMMON (565_565_normal_SRC,
-			       scaled_bilinear_scanline_565_565_SRC, NULL,
-			       uint16_t, uint32_t, uint16_t,
-			       NORMAL, FLAG_NONE)
-
-FAST_BILINEAR_MAINLOOP_COMMON (8888_565_cover_OVER,
-			       scaled_bilinear_scanline_8888_565_OVER, NULL,
-			       uint32_t, uint32_t, uint16_t,
-			       COVER, FLAG_NONE)
-FAST_BILINEAR_MAINLOOP_COMMON (8888_565_pad_OVER,
-			       scaled_bilinear_scanline_8888_565_OVER, NULL,
-			       uint32_t, uint32_t, uint16_t,
-			       PAD, FLAG_NONE)
-FAST_BILINEAR_MAINLOOP_COMMON (8888_565_none_OVER,
-			       scaled_bilinear_scanline_8888_565_OVER, NULL,
-			       uint32_t, uint32_t, uint16_t,
-			       NONE, FLAG_NONE)
-FAST_BILINEAR_MAINLOOP_COMMON (8888_565_normal_OVER,
-			       scaled_bilinear_scanline_8888_565_OVER, NULL,
-			       uint32_t, uint32_t, uint16_t,
-			       NORMAL, FLAG_NONE)
-
-FAST_BILINEAR_MAINLOOP_COMMON (8888_8888_cover_OVER,
-			       scaled_bilinear_scanline_8888_8888_OVER, NULL,
-			       uint32_t, uint32_t, uint32_t,
-			       COVER, FLAG_NONE)
-FAST_BILINEAR_MAINLOOP_COMMON (8888_8888_pad_OVER,
-			       scaled_bilinear_scanline_8888_8888_OVER, NULL,
-			       uint32_t, uint32_t, uint32_t,
-			       PAD, FLAG_NONE)
-FAST_BILINEAR_MAINLOOP_COMMON (8888_8888_none_OVER,
-			       scaled_bilinear_scanline_8888_8888_OVER, NULL,
-			       uint32_t, uint32_t, uint32_t,
-			       NONE, FLAG_NONE)
-FAST_BILINEAR_MAINLOOP_COMMON (8888_8888_normal_OVER,
-			       scaled_bilinear_scanline_8888_8888_OVER, NULL,
-			       uint32_t, uint32_t, uint32_t,
-			       NORMAL, FLAG_NONE)
 
 #define REPEAT_MIN_WIDTH    32
 
@@ -2193,10 +1971,6 @@ static const pixman_fast_path_t c_fast_paths[] =
 	fast_composite_tiled_repeat
     },
 
-    SIMPLE_BILINEAR_FAST_PATH (SRC, r5g6b5, r5g6b5, 565_565),
-    SIMPLE_BILINEAR_FAST_PATH (OVER, a8r8g8b8, r5g6b5, 8888_565),
-    SIMPLE_BILINEAR_FAST_PATH (OVER, a8r8g8b8, a8r8g8b8, 8888_8888),
-
     {   PIXMAN_OP_NONE	},
 };
 
@@ -2489,93 +2263,1024 @@ fast_write_back_r5g6b5 (pixman_iter_t *iter)
 
 typedef struct
 {
-    pixman_format_code_t	format;
-    pixman_iter_get_scanline_t	get_scanline;
-    pixman_iter_write_back_t	write_back;
-} fetcher_info_t;
+    int		y;
+    uint64_t *	buffer;
+} line_t;
 
-static const fetcher_info_t fetchers[] =
+typedef struct
 {
-    { PIXMAN_r5g6b5, fast_fetch_r5g6b5, fast_write_back_r5g6b5 },
-    { PIXMAN_null }
-};
+    line_t		lines[2];
+    pixman_fixed_t	y;
+    pixman_fixed_t	x;
+    uint64_t		data[1];
+} bilinear_info_t;
 
-static pixman_bool_t
-fast_src_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
+static void
+fetch_horizontal (bits_image_t *image, line_t *line,
+		  int y, pixman_fixed_t x, pixman_fixed_t ux, int n)
 {
-    pixman_image_t *image = iter->image;
+    uint32_t *bits = image->bits + y * image->rowstride;
+    int i;
 
-#define FLAGS								\
+    for (i = 0; i < n; ++i)
+    {
+	int x0 = pixman_fixed_to_int (x);
+	int x1 = x0 + 1;
+	int32_t dist_x;
+
+	uint32_t left = *(bits + x0);
+	uint32_t right = *(bits + x1);
+
+	dist_x = pixman_fixed_to_bilinear_weight (x);
+	dist_x <<= (8 - BILINEAR_INTERPOLATION_BITS);
+
+#if SIZEOF_LONG <= 4
+	{
+	    uint32_t lag, rag, ag;
+	    uint32_t lrb, rrb, rb;
+
+	    lag = (left & 0xff00ff00) >> 8;
+	    rag = (right & 0xff00ff00) >> 8;
+	    ag = (lag << 8) + dist_x * (rag - lag);
+
+	    lrb = (left & 0x00ff00ff);
+	    rrb = (right & 0x00ff00ff);
+	    rb = (lrb << 8) + dist_x * (rrb - lrb);
+
+	    *((uint32_t *)(line->buffer + i)) = ag;
+	    *((uint32_t *)(line->buffer + i) + 1) = rb;
+	}
+#else
+	{
+	    uint64_t lagrb, ragrb;
+	    uint32_t lag, rag;
+	    uint32_t lrb, rrb;
+
+	    lag = (left & 0xff00ff00);
+	    lrb = (left & 0x00ff00ff);
+	    rag = (right & 0xff00ff00);
+	    rrb = (right & 0x00ff00ff);
+	    lagrb = (((uint64_t)lag) << 24) | lrb;
+	    ragrb = (((uint64_t)rag) << 24) | rrb;
+
+	    line->buffer[i] = (lagrb << 8) + dist_x * (ragrb - lagrb);
+	}
+#endif
+
+	x += ux;
+    }
+
+    line->y = y;
+}
+
+static uint32_t *
+fast_fetch_bilinear_cover (pixman_iter_t *iter, const uint32_t *mask)
+{
+    pixman_fixed_t fx, ux;
+    bilinear_info_t *info = iter->data;
+    line_t *line0, *line1;
+    int y0, y1;
+    int32_t dist_y;
+    int i;
+
+    COMPILE_TIME_ASSERT (BILINEAR_INTERPOLATION_BITS < 8);
+
+    fx = info->x;
+    ux = iter->image->common.transform->matrix[0][0];
+
+    y0 = pixman_fixed_to_int (info->y);
+    y1 = y0 + 1;
+    dist_y = pixman_fixed_to_bilinear_weight (info->y);
+    dist_y <<= (8 - BILINEAR_INTERPOLATION_BITS);
+
+    line0 = &info->lines[y0 & 0x01];
+    line1 = &info->lines[y1 & 0x01];
+
+    if (line0->y != y0)
+    {
+	fetch_horizontal (
+	    &iter->image->bits, line0, y0, fx, ux, iter->width);
+    }
+
+    if (line1->y != y1)
+    {
+	fetch_horizontal (
+	    &iter->image->bits, line1, y1, fx, ux, iter->width);
+    }
+
+    for (i = 0; i < iter->width; ++i)
+    {
+#if SIZEOF_LONG <= 4
+	uint32_t ta, tr, tg, tb;
+	uint32_t ba, br, bg, bb;
+	uint32_t tag, trb;
+	uint32_t bag, brb;
+	uint32_t a, r, g, b;
+
+	tag = *((uint32_t *)(line0->buffer + i));
+	trb = *((uint32_t *)(line0->buffer + i) + 1);
+	bag = *((uint32_t *)(line1->buffer + i));
+	brb = *((uint32_t *)(line1->buffer + i) + 1);
+
+	ta = tag >> 16;
+	ba = bag >> 16;
+	a = (ta << 8) + dist_y * (ba - ta);
+
+	tr = trb >> 16;
+	br = brb >> 16;
+	r = (tr << 8) + dist_y * (br - tr);
+
+	tg = tag & 0xffff;
+	bg = bag & 0xffff;
+	g = (tg << 8) + dist_y * (bg - tg);
+	
+	tb = trb & 0xffff;
+	bb = brb & 0xffff;
+	b = (tb << 8) + dist_y * (bb - tb);
+
+	a = (a <<  8) & 0xff000000;
+	r = (r <<  0) & 0x00ff0000;
+	g = (g >>  8) & 0x0000ff00;
+	b = (b >> 16) & 0x000000ff;
+#else
+	uint64_t top = line0->buffer[i];
+	uint64_t bot = line1->buffer[i];
+	uint64_t tar = (top & 0xffff0000ffff0000ULL) >> 16;
+	uint64_t bar = (bot & 0xffff0000ffff0000ULL) >> 16;
+	uint64_t tgb = (top & 0x0000ffff0000ffffULL);
+	uint64_t bgb = (bot & 0x0000ffff0000ffffULL);
+	uint64_t ar, gb;
+	uint32_t a, r, g, b;
+
+	ar = (tar << 8) + dist_y * (bar - tar);
+	gb = (tgb << 8) + dist_y * (bgb - tgb);
+
+	a = ((ar >> 24) & 0xff000000);
+	r = ((ar >>  0) & 0x00ff0000);
+	g = ((gb >> 40) & 0x0000ff00);
+	b = ((gb >> 16) & 0x000000ff);
+#endif
+
+	iter->buffer[i] = a | r | g | b;
+    }
+
+    info->y += iter->image->common.transform->matrix[1][1];
+
+    return iter->buffer;
+}
+
+static void
+bilinear_cover_iter_fini (pixman_iter_t *iter)
+{
+    free (iter->data);
+}
+
+static void
+fast_bilinear_cover_iter_init (pixman_iter_t *iter, const pixman_iter_info_t *iter_info)
+{
+    int width = iter->width;
+    bilinear_info_t *info;
+    pixman_vector_t v;
+
+    /* Reference point is the center of the pixel */
+    v.vector[0] = pixman_int_to_fixed (iter->x) + pixman_fixed_1 / 2;
+    v.vector[1] = pixman_int_to_fixed (iter->y) + pixman_fixed_1 / 2;
+    v.vector[2] = pixman_fixed_1;
+
+    if (!pixman_transform_point_3d (iter->image->common.transform, &v))
+	goto fail;
+
+    info = malloc (sizeof (*info) + (2 * width - 1) * sizeof (uint64_t));
+    if (!info)
+	goto fail;
+
+    info->x = v.vector[0] - pixman_fixed_1 / 2;
+    info->y = v.vector[1] - pixman_fixed_1 / 2;
+
+    /* It is safe to set the y coordinates to -1 initially
+     * because COVER_CLIP_BILINEAR ensures that we will only
+     * be asked to fetch lines in the [0, height) interval
+     */
+    info->lines[0].y = -1;
+    info->lines[0].buffer = &(info->data[0]);
+    info->lines[1].y = -1;
+    info->lines[1].buffer = &(info->data[width]);
+
+    iter->get_scanline = fast_fetch_bilinear_cover;
+    iter->fini = bilinear_cover_iter_fini;
+
+    iter->data = info;
+    return;
+
+fail:
+    /* Something went wrong, either a bad matrix or OOM; in such cases,
+     * we don't guarantee any particular rendering.
+     */
+    _pixman_log_error (
+	FUNC, "Allocation failure or bad matrix, skipping rendering\n");
+    
+    iter->get_scanline = _pixman_iter_get_scanline_noop;
+    iter->fini = NULL;
+}
+
+static uint32_t *
+bits_image_fetch_bilinear_no_repeat_8888 (pixman_iter_t *iter,
+					  const uint32_t *mask)
+{
+
+    pixman_image_t * ima = iter->image;
+    int              offset = iter->x;
+    int              line = iter->y++;
+    int              width = iter->width;
+    uint32_t *       buffer = iter->buffer;
+
+    bits_image_t *bits = &ima->bits;
+    pixman_fixed_t x_top, x_bottom, x;
+    pixman_fixed_t ux_top, ux_bottom, ux;
+    pixman_vector_t v;
+    uint32_t top_mask, bottom_mask;
+    uint32_t *top_row;
+    uint32_t *bottom_row;
+    uint32_t *end;
+    uint32_t zero[2] = { 0, 0 };
+    uint32_t one = 1;
+    int y, y1, y2;
+    int disty;
+    int mask_inc;
+    int w;
+
+    /* reference point is the center of the pixel */
+    v.vector[0] = pixman_int_to_fixed (offset) + pixman_fixed_1 / 2;
+    v.vector[1] = pixman_int_to_fixed (line) + pixman_fixed_1 / 2;
+    v.vector[2] = pixman_fixed_1;
+
+    if (!pixman_transform_point_3d (bits->common.transform, &v))
+	return iter->buffer;
+
+    ux = ux_top = ux_bottom = bits->common.transform->matrix[0][0];
+    x = x_top = x_bottom = v.vector[0] - pixman_fixed_1/2;
+
+    y = v.vector[1] - pixman_fixed_1/2;
+    disty = pixman_fixed_to_bilinear_weight (y);
+
+    /* Load the pointers to the first and second lines from the source
+     * image that bilinear code must read.
+     *
+     * The main trick in this code is about the check if any line are
+     * outside of the image;
+     *
+     * When I realize that a line (any one) is outside, I change
+     * the pointer to a dummy area with zeros. Once I change this, I
+     * must be sure the pointer will not change, so I set the
+     * variables to each pointer increments inside the loop.
+     */
+    y1 = pixman_fixed_to_int (y);
+    y2 = y1 + 1;
+
+    if (y1 < 0 || y1 >= bits->height)
+    {
+	top_row = zero;
+	x_top = 0;
+	ux_top = 0;
+    }
+    else
+    {
+	top_row = bits->bits + y1 * bits->rowstride;
+	x_top = x;
+	ux_top = ux;
+    }
+
+    if (y2 < 0 || y2 >= bits->height)
+    {
+	bottom_row = zero;
+	x_bottom = 0;
+	ux_bottom = 0;
+    }
+    else
+    {
+	bottom_row = bits->bits + y2 * bits->rowstride;
+	x_bottom = x;
+	ux_bottom = ux;
+    }
+
+    /* Instead of checking whether the operation uses the mast in
+     * each loop iteration, verify this only once and prepare the
+     * variables to make the code smaller inside the loop.
+     */
+    if (!mask)
+    {
+        mask_inc = 0;
+        mask = &one;
+    }
+    else
+    {
+        /* If have a mask, prepare the variables to check it */
+        mask_inc = 1;
+    }
+
+    /* If both are zero, then the whole thing is zero */
+    if (top_row == zero && bottom_row == zero)
+    {
+	memset (buffer, 0, width * sizeof (uint32_t));
+	return iter->buffer;
+    }
+    else if (bits->format == PIXMAN_x8r8g8b8)
+    {
+	if (top_row == zero)
+	{
+	    top_mask = 0;
+	    bottom_mask = 0xff000000;
+	}
+	else if (bottom_row == zero)
+	{
+	    top_mask = 0xff000000;
+	    bottom_mask = 0;
+	}
+	else
+	{
+	    top_mask = 0xff000000;
+	    bottom_mask = 0xff000000;
+	}
+    }
+    else
+    {
+	top_mask = 0;
+	bottom_mask = 0;
+    }
+
+    end = buffer + width;
+
+    /* Zero fill to the left of the image */
+    while (buffer < end && x < pixman_fixed_minus_1)
+    {
+	*buffer++ = 0;
+	x += ux;
+	x_top += ux_top;
+	x_bottom += ux_bottom;
+	mask += mask_inc;
+    }
+
+    /* Left edge
+     */
+    while (buffer < end && x < 0)
+    {
+	uint32_t tr, br;
+	int32_t distx;
+
+	tr = top_row[pixman_fixed_to_int (x_top) + 1] | top_mask;
+	br = bottom_row[pixman_fixed_to_int (x_bottom) + 1] | bottom_mask;
+
+	distx = pixman_fixed_to_bilinear_weight (x);
+
+	*buffer++ = bilinear_interpolation (0, tr, 0, br, distx, disty);
+
+	x += ux;
+	x_top += ux_top;
+	x_bottom += ux_bottom;
+	mask += mask_inc;
+    }
+
+    /* Main part */
+    w = pixman_int_to_fixed (bits->width - 1);
+
+    while (buffer < end  &&  x < w)
+    {
+	if (*mask)
+	{
+	    uint32_t tl, tr, bl, br;
+	    int32_t distx;
+
+	    tl = top_row [pixman_fixed_to_int (x_top)] | top_mask;
+	    tr = top_row [pixman_fixed_to_int (x_top) + 1] | top_mask;
+	    bl = bottom_row [pixman_fixed_to_int (x_bottom)] | bottom_mask;
+	    br = bottom_row [pixman_fixed_to_int (x_bottom) + 1] | bottom_mask;
+
+	    distx = pixman_fixed_to_bilinear_weight (x);
+
+	    *buffer = bilinear_interpolation (tl, tr, bl, br, distx, disty);
+	}
+
+	buffer++;
+	x += ux;
+	x_top += ux_top;
+	x_bottom += ux_bottom;
+	mask += mask_inc;
+    }
+
+    /* Right Edge */
+    w = pixman_int_to_fixed (bits->width);
+    while (buffer < end  &&  x < w)
+    {
+	if (*mask)
+	{
+	    uint32_t tl, bl;
+	    int32_t distx;
+
+	    tl = top_row [pixman_fixed_to_int (x_top)] | top_mask;
+	    bl = bottom_row [pixman_fixed_to_int (x_bottom)] | bottom_mask;
+
+	    distx = pixman_fixed_to_bilinear_weight (x);
+
+	    *buffer = bilinear_interpolation (tl, 0, bl, 0, distx, disty);
+	}
+
+	buffer++;
+	x += ux;
+	x_top += ux_top;
+	x_bottom += ux_bottom;
+	mask += mask_inc;
+    }
+
+    /* Zero fill to the left of the image */
+    while (buffer < end)
+	*buffer++ = 0;
+
+    return iter->buffer;
+}
+
+typedef uint32_t (* convert_pixel_t) (const uint8_t *row, int x);
+
+static force_inline void
+bits_image_fetch_separable_convolution_affine (pixman_image_t * image,
+					       int              offset,
+					       int              line,
+					       int              width,
+					       uint32_t *       buffer,
+					       const uint32_t * mask,
+
+					       convert_pixel_t	convert_pixel,
+					       pixman_format_code_t	format,
+					       pixman_repeat_t	repeat_mode)
+{
+    bits_image_t *bits = &image->bits;
+    pixman_fixed_t *params = image->common.filter_params;
+    int cwidth = pixman_fixed_to_int (params[0]);
+    int cheight = pixman_fixed_to_int (params[1]);
+    int x_off = ((cwidth << 16) - pixman_fixed_1) >> 1;
+    int y_off = ((cheight << 16) - pixman_fixed_1) >> 1;
+    int x_phase_bits = pixman_fixed_to_int (params[2]);
+    int y_phase_bits = pixman_fixed_to_int (params[3]);
+    int x_phase_shift = 16 - x_phase_bits;
+    int y_phase_shift = 16 - y_phase_bits;
+    pixman_fixed_t vx, vy;
+    pixman_fixed_t ux, uy;
+    pixman_vector_t v;
+    int k;
+
+    /* reference point is the center of the pixel */
+    v.vector[0] = pixman_int_to_fixed (offset) + pixman_fixed_1 / 2;
+    v.vector[1] = pixman_int_to_fixed (line) + pixman_fixed_1 / 2;
+    v.vector[2] = pixman_fixed_1;
+
+    if (!pixman_transform_point_3d (image->common.transform, &v))
+	return;
+
+    ux = image->common.transform->matrix[0][0];
+    uy = image->common.transform->matrix[1][0];
+
+    vx = v.vector[0];
+    vy = v.vector[1];
+
+    for (k = 0; k < width; ++k)
+    {
+	pixman_fixed_t *y_params;
+	int satot, srtot, sgtot, sbtot;
+	pixman_fixed_t x, y;
+	int32_t x1, x2, y1, y2;
+	int32_t px, py;
+	int i, j;
+
+	if (mask && !mask[k])
+	    goto next;
+
+	/* Round x and y to the middle of the closest phase before continuing. This
+	 * ensures that the convolution matrix is aligned right, since it was
+	 * positioned relative to a particular phase (and not relative to whatever
+	 * exact fraction we happen to get here).
+	 */
+	x = ((vx >> x_phase_shift) << x_phase_shift) + ((1 << x_phase_shift) >> 1);
+	y = ((vy >> y_phase_shift) << y_phase_shift) + ((1 << y_phase_shift) >> 1);
+
+	px = (x & 0xffff) >> x_phase_shift;
+	py = (y & 0xffff) >> y_phase_shift;
+
+	x1 = pixman_fixed_to_int (x - pixman_fixed_e - x_off);
+	y1 = pixman_fixed_to_int (y - pixman_fixed_e - y_off);
+	x2 = x1 + cwidth;
+	y2 = y1 + cheight;
+
+	satot = srtot = sgtot = sbtot = 0;
+
+	y_params = params + 4 + (1 << x_phase_bits) * cwidth + py * cheight;
+
+	for (i = y1; i < y2; ++i)
+	{
+	    pixman_fixed_t fy = *y_params++;
+
+	    if (fy)
+	    {
+		pixman_fixed_t *x_params = params + 4 + px * cwidth;
+
+		for (j = x1; j < x2; ++j)
+		{
+		    pixman_fixed_t fx = *x_params++;
+		    int rx = j;
+		    int ry = i;
+		    
+		    if (fx)
+		    {
+			pixman_fixed_t f;
+			uint32_t pixel, mask;
+			uint8_t *row;
+
+			mask = PIXMAN_FORMAT_A (format)? 0 : 0xff000000;
+
+			if (repeat_mode != PIXMAN_REPEAT_NONE)
+			{
+			    repeat (repeat_mode, &rx, bits->width);
+			    repeat (repeat_mode, &ry, bits->height);
+
+			    row = (uint8_t *)(bits->bits + bits->rowstride * ry);
+			    pixel = convert_pixel (row, rx) | mask;
+			}
+			else
+			{
+			    if (rx < 0 || ry < 0 || rx >= bits->width || ry >= bits->height)
+			    {
+				pixel = 0;
+			    }
+			    else
+			    {
+				row = (uint8_t *)(bits->bits + bits->rowstride * ry);
+				pixel = convert_pixel (row, rx) | mask;
+			    }
+			}
+
+			f = ((pixman_fixed_32_32_t)fx * fy + 0x8000) >> 16;
+			srtot += (int)RED_8 (pixel) * f;
+			sgtot += (int)GREEN_8 (pixel) * f;
+			sbtot += (int)BLUE_8 (pixel) * f;
+			satot += (int)ALPHA_8 (pixel) * f;
+		    }
+		}
+	    }
+	}
+
+	satot = (satot + 0x8000) >> 16;
+	srtot = (srtot + 0x8000) >> 16;
+	sgtot = (sgtot + 0x8000) >> 16;
+	sbtot = (sbtot + 0x8000) >> 16;
+
+	satot = CLIP (satot, 0, 0xff);
+	srtot = CLIP (srtot, 0, 0xff);
+	sgtot = CLIP (sgtot, 0, 0xff);
+	sbtot = CLIP (sbtot, 0, 0xff);
+
+	buffer[k] = (satot << 24) | (srtot << 16) | (sgtot << 8) | (sbtot << 0);
+
+    next:
+	vx += ux;
+	vy += uy;
+    }
+}
+
+static const uint8_t zero[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+
+static force_inline void
+bits_image_fetch_bilinear_affine (pixman_image_t * image,
+				  int              offset,
+				  int              line,
+				  int              width,
+				  uint32_t *       buffer,
+				  const uint32_t * mask,
+
+				  convert_pixel_t	convert_pixel,
+				  pixman_format_code_t	format,
+				  pixman_repeat_t	repeat_mode)
+{
+    pixman_fixed_t x, y;
+    pixman_fixed_t ux, uy;
+    pixman_vector_t v;
+    bits_image_t *bits = &image->bits;
+    int i;
+
+    /* reference point is the center of the pixel */
+    v.vector[0] = pixman_int_to_fixed (offset) + pixman_fixed_1 / 2;
+    v.vector[1] = pixman_int_to_fixed (line) + pixman_fixed_1 / 2;
+    v.vector[2] = pixman_fixed_1;
+
+    if (!pixman_transform_point_3d (image->common.transform, &v))
+	return;
+
+    ux = image->common.transform->matrix[0][0];
+    uy = image->common.transform->matrix[1][0];
+
+    x = v.vector[0];
+    y = v.vector[1];
+
+    for (i = 0; i < width; ++i)
+    {
+	int x1, y1, x2, y2;
+	uint32_t tl, tr, bl, br;
+	int32_t distx, disty;
+	int width = image->bits.width;
+	int height = image->bits.height;
+	const uint8_t *row1;
+	const uint8_t *row2;
+
+	if (mask && !mask[i])
+	    goto next;
+
+	x1 = x - pixman_fixed_1 / 2;
+	y1 = y - pixman_fixed_1 / 2;
+
+	distx = pixman_fixed_to_bilinear_weight (x1);
+	disty = pixman_fixed_to_bilinear_weight (y1);
+
+	y1 = pixman_fixed_to_int (y1);
+	y2 = y1 + 1;
+	x1 = pixman_fixed_to_int (x1);
+	x2 = x1 + 1;
+
+	if (repeat_mode != PIXMAN_REPEAT_NONE)
+	{
+	    uint32_t mask;
+
+	    mask = PIXMAN_FORMAT_A (format)? 0 : 0xff000000;
+
+	    repeat (repeat_mode, &x1, width);
+	    repeat (repeat_mode, &y1, height);
+	    repeat (repeat_mode, &x2, width);
+	    repeat (repeat_mode, &y2, height);
+
+	    row1 = (uint8_t *)(bits->bits + bits->rowstride * y1);
+	    row2 = (uint8_t *)(bits->bits + bits->rowstride * y2);
+
+	    tl = convert_pixel (row1, x1) | mask;
+	    tr = convert_pixel (row1, x2) | mask;
+	    bl = convert_pixel (row2, x1) | mask;
+	    br = convert_pixel (row2, x2) | mask;
+	}
+	else
+	{
+	    uint32_t mask1, mask2;
+	    int bpp;
+
+	    /* Note: PIXMAN_FORMAT_BPP() returns an unsigned value,
+	     * which means if you use it in expressions, those
+	     * expressions become unsigned themselves. Since
+	     * the variables below can be negative in some cases,
+	     * that will lead to crashes on 64 bit architectures.
+	     *
+	     * So this line makes sure bpp is signed
+	     */
+	    bpp = PIXMAN_FORMAT_BPP (format);
+
+	    if (x1 >= width || x2 < 0 || y1 >= height || y2 < 0)
+	    {
+		buffer[i] = 0;
+		goto next;
+	    }
+
+	    if (y2 == 0)
+	    {
+		row1 = zero;
+		mask1 = 0;
+	    }
+	    else
+	    {
+		row1 = (uint8_t *)(bits->bits + bits->rowstride * y1);
+		row1 += bpp / 8 * x1;
+
+		mask1 = PIXMAN_FORMAT_A (format)? 0 : 0xff000000;
+	    }
+
+	    if (y1 == height - 1)
+	    {
+		row2 = zero;
+		mask2 = 0;
+	    }
+	    else
+	    {
+		row2 = (uint8_t *)(bits->bits + bits->rowstride * y2);
+		row2 += bpp / 8 * x1;
+
+		mask2 = PIXMAN_FORMAT_A (format)? 0 : 0xff000000;
+	    }
+
+	    if (x2 == 0)
+	    {
+		tl = 0;
+		bl = 0;
+	    }
+	    else
+	    {
+		tl = convert_pixel (row1, 0) | mask1;
+		bl = convert_pixel (row2, 0) | mask2;
+	    }
+
+	    if (x1 == width - 1)
+	    {
+		tr = 0;
+		br = 0;
+	    }
+	    else
+	    {
+		tr = convert_pixel (row1, 1) | mask1;
+		br = convert_pixel (row2, 1) | mask2;
+	    }
+	}
+
+	buffer[i] = bilinear_interpolation (
+	    tl, tr, bl, br, distx, disty);
+
+    next:
+	x += ux;
+	y += uy;
+    }
+}
+
+static force_inline void
+bits_image_fetch_nearest_affine (pixman_image_t * image,
+				 int              offset,
+				 int              line,
+				 int              width,
+				 uint32_t *       buffer,
+				 const uint32_t * mask,
+				 
+				 convert_pixel_t	convert_pixel,
+				 pixman_format_code_t	format,
+				 pixman_repeat_t	repeat_mode)
+{
+    pixman_fixed_t x, y;
+    pixman_fixed_t ux, uy;
+    pixman_vector_t v;
+    bits_image_t *bits = &image->bits;
+    int i;
+
+    /* reference point is the center of the pixel */
+    v.vector[0] = pixman_int_to_fixed (offset) + pixman_fixed_1 / 2;
+    v.vector[1] = pixman_int_to_fixed (line) + pixman_fixed_1 / 2;
+    v.vector[2] = pixman_fixed_1;
+
+    if (!pixman_transform_point_3d (image->common.transform, &v))
+	return;
+
+    ux = image->common.transform->matrix[0][0];
+    uy = image->common.transform->matrix[1][0];
+
+    x = v.vector[0];
+    y = v.vector[1];
+
+    for (i = 0; i < width; ++i)
+    {
+	int width, height, x0, y0;
+	const uint8_t *row;
+
+	if (mask && !mask[i])
+	    goto next;
+	
+	width = image->bits.width;
+	height = image->bits.height;
+	x0 = pixman_fixed_to_int (x - pixman_fixed_e);
+	y0 = pixman_fixed_to_int (y - pixman_fixed_e);
+
+	if (repeat_mode == PIXMAN_REPEAT_NONE &&
+	    (y0 < 0 || y0 >= height || x0 < 0 || x0 >= width))
+	{
+	    buffer[i] = 0;
+	}
+	else
+	{
+	    uint32_t mask = PIXMAN_FORMAT_A (format)? 0 : 0xff000000;
+
+	    if (repeat_mode != PIXMAN_REPEAT_NONE)
+	    {
+		repeat (repeat_mode, &x0, width);
+		repeat (repeat_mode, &y0, height);
+	    }
+
+	    row = (uint8_t *)(bits->bits + bits->rowstride * y0);
+
+	    buffer[i] = convert_pixel (row, x0) | mask;
+	}
+
+    next:
+	x += ux;
+	y += uy;
+    }
+}
+
+static force_inline uint32_t
+convert_a8r8g8b8 (const uint8_t *row, int x)
+{
+    return *(((uint32_t *)row) + x);
+}
+
+static force_inline uint32_t
+convert_x8r8g8b8 (const uint8_t *row, int x)
+{
+    return *(((uint32_t *)row) + x);
+}
+
+static force_inline uint32_t
+convert_a8 (const uint8_t *row, int x)
+{
+    return (uint32_t) *(row + x) << 24;
+}
+
+static force_inline uint32_t
+convert_r5g6b5 (const uint8_t *row, int x)
+{
+    return convert_0565_to_0888 (*((uint16_t *)row + x));
+}
+
+#define MAKE_SEPARABLE_CONVOLUTION_FETCHER(name, format, repeat_mode)  \
+    static uint32_t *							\
+    bits_image_fetch_separable_convolution_affine_ ## name (pixman_iter_t   *iter, \
+							    const uint32_t * mask) \
+    {									\
+	bits_image_fetch_separable_convolution_affine (                 \
+	    iter->image,                                                \
+	    iter->x, iter->y++,                                         \
+	    iter->width,                                                \
+	    iter->buffer, mask,                                         \
+	    convert_ ## format,                                         \
+	    PIXMAN_ ## format,                                          \
+	    repeat_mode);                                               \
+									\
+	return iter->buffer;                                            \
+    }
+
+#define MAKE_BILINEAR_FETCHER(name, format, repeat_mode)		\
+    static uint32_t *							\
+    bits_image_fetch_bilinear_affine_ ## name (pixman_iter_t   *iter,	\
+					       const uint32_t * mask)	\
+    {									\
+	bits_image_fetch_bilinear_affine (iter->image,			\
+					  iter->x, iter->y++,		\
+					  iter->width,			\
+					  iter->buffer, mask,		\
+					  convert_ ## format,		\
+					  PIXMAN_ ## format,		\
+					  repeat_mode);			\
+	return iter->buffer;						\
+    }
+
+#define MAKE_NEAREST_FETCHER(name, format, repeat_mode)			\
+    static uint32_t *							\
+    bits_image_fetch_nearest_affine_ ## name (pixman_iter_t   *iter,	\
+					      const uint32_t * mask)	\
+    {									\
+	bits_image_fetch_nearest_affine (iter->image,			\
+					 iter->x, iter->y++,		\
+					 iter->width,			\
+					 iter->buffer, mask,		\
+					 convert_ ## format,		\
+					 PIXMAN_ ## format,		\
+					 repeat_mode);			\
+	return iter->buffer;						\
+    }
+
+#define MAKE_FETCHERS(name, format, repeat_mode)			\
+    MAKE_NEAREST_FETCHER (name, format, repeat_mode)			\
+    MAKE_BILINEAR_FETCHER (name, format, repeat_mode)			\
+    MAKE_SEPARABLE_CONVOLUTION_FETCHER (name, format, repeat_mode)
+
+MAKE_FETCHERS (pad_a8r8g8b8,     a8r8g8b8, PIXMAN_REPEAT_PAD)
+MAKE_FETCHERS (none_a8r8g8b8,    a8r8g8b8, PIXMAN_REPEAT_NONE)
+MAKE_FETCHERS (reflect_a8r8g8b8, a8r8g8b8, PIXMAN_REPEAT_REFLECT)
+MAKE_FETCHERS (normal_a8r8g8b8,  a8r8g8b8, PIXMAN_REPEAT_NORMAL)
+MAKE_FETCHERS (pad_x8r8g8b8,     x8r8g8b8, PIXMAN_REPEAT_PAD)
+MAKE_FETCHERS (none_x8r8g8b8,    x8r8g8b8, PIXMAN_REPEAT_NONE)
+MAKE_FETCHERS (reflect_x8r8g8b8, x8r8g8b8, PIXMAN_REPEAT_REFLECT)
+MAKE_FETCHERS (normal_x8r8g8b8,  x8r8g8b8, PIXMAN_REPEAT_NORMAL)
+MAKE_FETCHERS (pad_a8,           a8,       PIXMAN_REPEAT_PAD)
+MAKE_FETCHERS (none_a8,          a8,       PIXMAN_REPEAT_NONE)
+MAKE_FETCHERS (reflect_a8,	 a8,       PIXMAN_REPEAT_REFLECT)
+MAKE_FETCHERS (normal_a8,	 a8,       PIXMAN_REPEAT_NORMAL)
+MAKE_FETCHERS (pad_r5g6b5,       r5g6b5,   PIXMAN_REPEAT_PAD)
+MAKE_FETCHERS (none_r5g6b5,      r5g6b5,   PIXMAN_REPEAT_NONE)
+MAKE_FETCHERS (reflect_r5g6b5,   r5g6b5,   PIXMAN_REPEAT_REFLECT)
+MAKE_FETCHERS (normal_r5g6b5,    r5g6b5,   PIXMAN_REPEAT_NORMAL)
+
+#define IMAGE_FLAGS							\
     (FAST_PATH_STANDARD_FLAGS | FAST_PATH_ID_TRANSFORM |		\
      FAST_PATH_BITS_IMAGE | FAST_PATH_SAMPLES_COVER_CLIP_NEAREST)
 
-    if (iter->iter_flags & ITER_16)
-	    return FALSE;
-
-    if ((iter->iter_flags & ITER_NARROW)			&&
-	(iter->image_flags & FLAGS) == FLAGS)
-    {
-	const fetcher_info_t *f;
-
-	for (f = &fetchers[0]; f->format != PIXMAN_null; f++)
-	{
-	    if (image->common.extended_format_code == f->format)
-	    {
-		uint8_t *b = (uint8_t *)image->bits.bits;
-		int s = image->bits.rowstride * 4;
-
-		iter->bits = b + s * iter->y + iter->x * PIXMAN_FORMAT_BPP (f->format) / 8;
-		iter->stride = s;
-
-		iter->get_scanline = f->get_scanline;
-		return TRUE;
-	    }
-	}
-    }
-
-    return FALSE;
-}
-
-static pixman_bool_t
-fast_dest_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
+static const pixman_iter_info_t fast_iters[] = 
 {
-    pixman_image_t *image = iter->image;
+    { PIXMAN_r5g6b5, IMAGE_FLAGS, ITER_NARROW | ITER_SRC,
+      _pixman_iter_init_bits_stride, fast_fetch_r5g6b5, NULL },
 
-    if (iter->iter_flags & ITER_16)
-	    return FALSE;
+    { PIXMAN_r5g6b5, FAST_PATH_STD_DEST_FLAGS,
+      ITER_NARROW | ITER_DEST,
+      _pixman_iter_init_bits_stride,
+      fast_fetch_r5g6b5, fast_write_back_r5g6b5 },
+    
+    { PIXMAN_r5g6b5, FAST_PATH_STD_DEST_FLAGS,
+      ITER_NARROW | ITER_DEST | ITER_IGNORE_RGB | ITER_IGNORE_ALPHA,
+      _pixman_iter_init_bits_stride,
+      fast_dest_fetch_noop, fast_write_back_r5g6b5 },
 
-    if ((iter->iter_flags & ITER_NARROW)		&&
-	(iter->image_flags & FAST_PATH_STD_DEST_FLAGS) == FAST_PATH_STD_DEST_FLAGS)
-    {
-	const fetcher_info_t *f;
+    { PIXMAN_a8r8g8b8,
+      (FAST_PATH_STANDARD_FLAGS			|
+       FAST_PATH_SCALE_TRANSFORM		|
+       FAST_PATH_BILINEAR_FILTER		|
+       FAST_PATH_SAMPLES_COVER_CLIP_BILINEAR),
+      ITER_NARROW | ITER_SRC,
+      fast_bilinear_cover_iter_init,
+      NULL, NULL
+    },
 
-	for (f = &fetchers[0]; f->format != PIXMAN_null; f++)
-	{
-	    if (image->common.extended_format_code == f->format)
-	    {
-		uint8_t *b = (uint8_t *)image->bits.bits;
-		int s = image->bits.rowstride * 4;
+#define FAST_BILINEAR_FLAGS						\
+    (FAST_PATH_NO_ALPHA_MAP		|				\
+     FAST_PATH_NO_ACCESSORS		|				\
+     FAST_PATH_HAS_TRANSFORM		|				\
+     FAST_PATH_AFFINE_TRANSFORM		|				\
+     FAST_PATH_X_UNIT_POSITIVE		|				\
+     FAST_PATH_Y_UNIT_ZERO		|				\
+     FAST_PATH_NONE_REPEAT		|				\
+     FAST_PATH_BILINEAR_FILTER)
 
-		iter->bits = b + s * iter->y + iter->x * PIXMAN_FORMAT_BPP (f->format) / 8;
-		iter->stride = s;
+    { PIXMAN_a8r8g8b8,
+      FAST_BILINEAR_FLAGS,
+      ITER_NARROW | ITER_SRC,
+      NULL, bits_image_fetch_bilinear_no_repeat_8888, NULL
+    },
 
-		if ((iter->iter_flags & (ITER_IGNORE_RGB | ITER_IGNORE_ALPHA)) ==
-		    (ITER_IGNORE_RGB | ITER_IGNORE_ALPHA))
-		{
-		    iter->get_scanline = fast_dest_fetch_noop;
-		}
-		else
-		{
-		    iter->get_scanline = f->get_scanline;
-		}
-		iter->write_back = f->write_back;
-		return TRUE;
-	    }
-	}
-    }
-    return FALSE;
-}
+    { PIXMAN_x8r8g8b8,
+      FAST_BILINEAR_FLAGS,
+      ITER_NARROW | ITER_SRC,
+      NULL, bits_image_fetch_bilinear_no_repeat_8888, NULL
+    },
 
+#define GENERAL_BILINEAR_FLAGS						\
+    (FAST_PATH_NO_ALPHA_MAP		|				\
+     FAST_PATH_NO_ACCESSORS		|				\
+     FAST_PATH_HAS_TRANSFORM		|				\
+     FAST_PATH_AFFINE_TRANSFORM		|				\
+     FAST_PATH_BILINEAR_FILTER)
+
+#define GENERAL_NEAREST_FLAGS						\
+    (FAST_PATH_NO_ALPHA_MAP		|				\
+     FAST_PATH_NO_ACCESSORS		|				\
+     FAST_PATH_HAS_TRANSFORM		|				\
+     FAST_PATH_AFFINE_TRANSFORM		|				\
+     FAST_PATH_NEAREST_FILTER)
+
+#define GENERAL_SEPARABLE_CONVOLUTION_FLAGS				\
+    (FAST_PATH_NO_ALPHA_MAP            |				\
+     FAST_PATH_NO_ACCESSORS            |				\
+     FAST_PATH_HAS_TRANSFORM           |				\
+     FAST_PATH_AFFINE_TRANSFORM        |				\
+     FAST_PATH_SEPARABLE_CONVOLUTION_FILTER)
+    
+#define SEPARABLE_CONVOLUTION_AFFINE_FAST_PATH(name, format, repeat)   \
+    { PIXMAN_ ## format,						\
+      GENERAL_SEPARABLE_CONVOLUTION_FLAGS | FAST_PATH_ ## repeat ## _REPEAT, \
+      ITER_NARROW | ITER_SRC,						\
+      NULL, bits_image_fetch_separable_convolution_affine_ ## name, NULL \
+    },
+
+#define BILINEAR_AFFINE_FAST_PATH(name, format, repeat)			\
+    { PIXMAN_ ## format,						\
+      GENERAL_BILINEAR_FLAGS | FAST_PATH_ ## repeat ## _REPEAT,		\
+      ITER_NARROW | ITER_SRC,						\
+      NULL, bits_image_fetch_bilinear_affine_ ## name, NULL,		\
+    },
+
+#define NEAREST_AFFINE_FAST_PATH(name, format, repeat)			\
+    { PIXMAN_ ## format,						\
+      GENERAL_NEAREST_FLAGS | FAST_PATH_ ## repeat ## _REPEAT,		\
+      ITER_NARROW | ITER_SRC,						\
+      NULL, bits_image_fetch_nearest_affine_ ## name, NULL		\
+    },
+
+#define AFFINE_FAST_PATHS(name, format, repeat)				\
+    NEAREST_AFFINE_FAST_PATH(name, format, repeat)			\
+    BILINEAR_AFFINE_FAST_PATH(name, format, repeat)			\
+    SEPARABLE_CONVOLUTION_AFFINE_FAST_PATH(name, format, repeat)
+    
+    AFFINE_FAST_PATHS (pad_a8r8g8b8, a8r8g8b8, PAD)
+    AFFINE_FAST_PATHS (none_a8r8g8b8, a8r8g8b8, NONE)
+    AFFINE_FAST_PATHS (reflect_a8r8g8b8, a8r8g8b8, REFLECT)
+    AFFINE_FAST_PATHS (normal_a8r8g8b8, a8r8g8b8, NORMAL)
+    AFFINE_FAST_PATHS (pad_x8r8g8b8, x8r8g8b8, PAD)
+    AFFINE_FAST_PATHS (none_x8r8g8b8, x8r8g8b8, NONE)
+    AFFINE_FAST_PATHS (reflect_x8r8g8b8, x8r8g8b8, REFLECT)
+    AFFINE_FAST_PATHS (normal_x8r8g8b8, x8r8g8b8, NORMAL)
+    AFFINE_FAST_PATHS (pad_a8, a8, PAD)
+    AFFINE_FAST_PATHS (none_a8, a8, NONE)
+    AFFINE_FAST_PATHS (reflect_a8, a8, REFLECT)
+    AFFINE_FAST_PATHS (normal_a8, a8, NORMAL)
+    AFFINE_FAST_PATHS (pad_r5g6b5, r5g6b5, PAD)
+    AFFINE_FAST_PATHS (none_r5g6b5, r5g6b5, NONE)
+    AFFINE_FAST_PATHS (reflect_r5g6b5, r5g6b5, REFLECT)
+    AFFINE_FAST_PATHS (normal_r5g6b5, r5g6b5, NORMAL)
+
+    { PIXMAN_null },
+};
 
 pixman_implementation_t *
 _pixman_implementation_create_fast_path (pixman_implementation_t *fallback)
@@ -2583,8 +3288,7 @@ _pixman_implementation_create_fast_path (pixman_implementation_t *fallback)
     pixman_implementation_t *imp = _pixman_implementation_create (fallback, c_fast_paths);
 
     imp->fill = fast_path_fill;
-    imp->src_iter_init = fast_src_iter_init;
-    imp->dest_iter_init = fast_dest_iter_init;
+    imp->iter_info = fast_iters;
 
     return imp;
 }

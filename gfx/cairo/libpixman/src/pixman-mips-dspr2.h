@@ -26,7 +26,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * Author:  Nemanja Lukic (nlukic@mips.com)
+ * Author:  Nemanja Lukic (nemanja.lukic@rt-rk.com)
  */
 
 #ifndef PIXMAN_MIPS_DSPR2_H
@@ -246,6 +246,48 @@ mips_composite_##name (pixman_implementation_t *imp,                     \
     }                                                                    \
 }
 
+/****************************************************************************/
+
+#define PIXMAN_MIPS_BIND_SCALED_NEAREST_SRC_DST(name, op,                    \
+                                                src_type, dst_type)          \
+void                                                                         \
+pixman_scaled_nearest_scanline_##name##_##op##_asm_mips (                    \
+                                                   dst_type *       dst,     \
+                                                   const src_type * src,     \
+                                                   int32_t          w,       \
+                                                   pixman_fixed_t   vx,      \
+                                                   pixman_fixed_t   unit_x); \
+                                                                             \
+static force_inline void                                                     \
+scaled_nearest_scanline_mips_##name##_##op (dst_type *       pd,             \
+                                            const src_type * ps,             \
+                                            int32_t          w,              \
+                                            pixman_fixed_t   vx,             \
+                                            pixman_fixed_t   unit_x,         \
+                                            pixman_fixed_t   max_vx,         \
+                                            pixman_bool_t    zero_src)       \
+{                                                                            \
+    pixman_scaled_nearest_scanline_##name##_##op##_asm_mips (pd, ps, w,      \
+                                                             vx, unit_x);    \
+}                                                                            \
+                                                                             \
+FAST_NEAREST_MAINLOOP (mips_##name##_cover_##op,                             \
+                       scaled_nearest_scanline_mips_##name##_##op,           \
+                       src_type, dst_type, COVER)                            \
+FAST_NEAREST_MAINLOOP (mips_##name##_none_##op,                              \
+                       scaled_nearest_scanline_mips_##name##_##op,           \
+                       src_type, dst_type, NONE)                             \
+FAST_NEAREST_MAINLOOP (mips_##name##_pad_##op,                               \
+                       scaled_nearest_scanline_mips_##name##_##op,           \
+                       src_type, dst_type, PAD)
+
+/* Provide entries for the fast path table */
+#define PIXMAN_MIPS_SIMPLE_NEAREST_FAST_PATH(op,s,d,func)                    \
+    SIMPLE_NEAREST_FAST_PATH_COVER (op,s,d,func),                            \
+    SIMPLE_NEAREST_FAST_PATH_NONE (op,s,d,func),                             \
+    SIMPLE_NEAREST_FAST_PATH_PAD (op,s,d,func)
+
+
 /*****************************************************************************/
 
 #define PIXMAN_MIPS_BIND_SCALED_NEAREST_SRC_A8_DST(flags, name, op,           \
@@ -285,12 +327,6 @@ FAST_NEAREST_MAINLOOP_COMMON (mips_##name##_none_##op,                        \
 FAST_NEAREST_MAINLOOP_COMMON (mips_##name##_pad_##op,                         \
                               scaled_nearest_scanline_mips_##name##_##op,     \
                               src_type, uint8_t, dst_type, PAD, TRUE, FALSE)
-
-/* Provide entries for the fast path table */
-#define PIXMAN_MIPS_SIMPLE_NEAREST_A8_MASK_FAST_PATH(op,s,d,func)             \
-    SIMPLE_NEAREST_A8_MASK_FAST_PATH_COVER (op,s,d,func),                     \
-    SIMPLE_NEAREST_A8_MASK_FAST_PATH_NONE (op,s,d,func),                      \
-    SIMPLE_NEAREST_A8_MASK_FAST_PATH_PAD (op,s,d,func)
 
 /****************************************************************************/
 

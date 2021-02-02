@@ -76,6 +76,16 @@
 .set FLAG_SPILL_LINE_VARS,           48
 .set FLAG_PROCESS_CORRUPTS_SCRATCH,  0
 .set FLAG_PROCESS_PRESERVES_SCRATCH, 64
+.set FLAG_PROCESS_PRESERVES_WK0,     0
+.set FLAG_PROCESS_CORRUPTS_WK0,      128 /* if possible, use the specified register(s) instead so WK0 can hold number of leading pixels */
+.set FLAG_PRELOAD_DST,               0
+.set FLAG_NO_PRELOAD_DST,            256
+
+/*
+ * Number of bytes by which to adjust preload offset of destination
+ * buffer (allows preload instruction to be moved before the load(s))
+ */
+.set DST_PRELOAD_BIAS, 0
 
 /*
  * Offset into stack where mask and source pointer/stride can be accessed.
@@ -85,6 +95,11 @@
 #else
 .set ARGS_STACK_OFFSET,        (9*4)
 #endif
+
+/*
+ * Offset into stack where space allocated during init macro can be accessed.
+ */
+.set LOCALS_STACK_OFFSET,     0
 
 /*
  * Constants for selecting preferable prefetch type.
@@ -196,8 +211,8 @@
         PF  add,    SCRATCH, base, WK0, lsl #bpp_shift-dst_bpp_shift
         PF  and,    SCRATCH, SCRATCH, #31
         PF  rsb,    SCRATCH, SCRATCH, WK0, lsl #bpp_shift-dst_bpp_shift
-        PF  sub,    SCRATCH, SCRATCH, #1    /* so now ranges are -16..-1 / 0..31 / 32..63 */
-        PF  movs,   SCRATCH, SCRATCH, #32-6 /* so this sets         NC   /  nc   /   Nc   */
+        PF  sub,    SCRATCH, SCRATCH, #1        /* so now ranges are -16..-1 / 0..31 / 32..63 */
+        PF  movs,   SCRATCH, SCRATCH, lsl #32-6 /* so this sets         NC   /  nc   /   Nc   */
         PF  bcs,    61f
         PF  bpl,    60f
         PF  pld,    [ptr, #32*(prefetch_distance+2)]
@@ -359,23 +374,41 @@
 
 
 .macro test_bits_1_0_ptr
+ .if (flags) & FLAG_PROCESS_CORRUPTS_WK0
+        movs    SCRATCH, X, lsl #32-1  /* C,N = bits 1,0 of DST */
+ .else
         movs    SCRATCH, WK0, lsl #32-1  /* C,N = bits 1,0 of DST */
+ .endif
 .endm
 
 .macro test_bits_3_2_ptr
+ .if (flags) & FLAG_PROCESS_CORRUPTS_WK0
+        movs    SCRATCH, X, lsl #32-3  /* C,N = bits 3, 2 of DST */
+ .else
         movs    SCRATCH, WK0, lsl #32-3  /* C,N = bits 3, 2 of DST */
+ .endif
 .endm
 
 .macro leading_15bytes  process_head, process_tail
         /* On entry, WK0 bits 0-3 = number of bytes until destination is 16-byte aligned */
+ .set DECREMENT_X, 1
+ .if (flags) & FLAG_PROCESS_CORRUPTS_WK0
+  .set DECREMENT_X, 0
+        sub     X, X, WK0, lsr #dst_bpp_shift
+        str     X, [sp, #LINE_SAVED_REG_COUNT*4]
+        mov     X, WK0
+ .endif
         /* Use unaligned loads in all cases for simplicity */
  .if dst_w_bpp == 8
-        conditional_process2  test_bits_1_0_ptr, mi, cs, process_head, process_tail, 1, 2, 1, 2, 1, 1, 1
+        conditional_process2  test_bits_1_0_ptr, mi, cs, process_head, process_tail, 1, 2, 1, 2, 1, 1, DECREMENT_X
  .elseif dst_w_bpp == 16
         test_bits_1_0_ptr
-        conditional_process1  cs, process_head, process_tail, 2, 2, 1, 1, 1
+        conditional_process1  cs, process_head, process_tail, 2, 2, 1, 1, DECREMENT_X
  .endif
-        conditional_process2  test_bits_3_2_ptr, mi, cs, process_head, process_tail, 4, 8, 1, 2, 1, 1, 1
+        conditional_process2  test_bits_3_2_ptr, mi, cs, process_head, process_tail, 4, 8, 1, 2, 1, 1, DECREMENT_X
+ .if (flags) & FLAG_PROCESS_CORRUPTS_WK0
+        ldr     X, [sp, #LINE_SAVED_REG_COUNT*4]
+ .endif
 .endm
 
 .macro test_bits_3_2_pix
@@ -414,7 +447,7 @@
         preload_middle  src_bpp, SRC, 0
         preload_middle  mask_bpp, MASK, 0
   .endif
-  .if (dst_r_bpp > 0) && ((SUBBLOCK % 2) == 0)
+  .if (dst_r_bpp > 0) && ((SUBBLOCK % 2) == 0) && (((flags) & FLAG_NO_PRELOAD_DST) == 0)
         /* Because we know that writes are 16-byte aligned, it's relatively easy to ensure that
          * destination prefetches are 32-byte aligned. It's also the easiest channel to offset
          * preloads for, to achieve staggered prefetches for multiple channels, because there are
@@ -437,11 +470,11 @@
  .if dst_r_bpp > 0
         tst     DST, #16
         bne     111f
-        process_inner_loop  process_head, process_tail, unaligned_src, unaligned_mask, 16
+        process_inner_loop  process_head, process_tail, unaligned_src, unaligned_mask, 16 + DST_PRELOAD_BIAS
         b       112f
 111:
  .endif
-        process_inner_loop  process_head, process_tail, unaligned_src, unaligned_mask, 0
+        process_inner_loop  process_head, process_tail, unaligned_src, unaligned_mask, 0 + DST_PRELOAD_BIAS
 112:
         /* Just before the final (prefetch_distance+1) 32-byte blocks, deal with final preloads */
  .if (src_bpp*pix_per_block > 256) || (mask_bpp*pix_per_block > 256) || (dst_r_bpp*pix_per_block > 256)
@@ -449,7 +482,9 @@
  .endif
         preload_trailing  src_bpp, src_bpp_shift, SRC
         preload_trailing  mask_bpp, mask_bpp_shift, MASK
+ .if ((flags) & FLAG_NO_PRELOAD_DST) == 0
         preload_trailing  dst_r_bpp, dst_bpp_shift, DST
+ .endif
         add     X, X, #(prefetch_distance+2)*pix_per_block - 128/dst_w_bpp
         /* The remainder of the line is handled identically to the medium case */
         medium_case_inner_loop_and_trailing_pixels  process_head, process_tail,, exit_label, unaligned_src, unaligned_mask
@@ -561,13 +596,7 @@
                                    process_tail, \
                                    process_inner_loop
 
- .func fname
- .global fname
- /* For ELF format also set function visibility to hidden */
-#ifdef __ELF__
- .hidden fname
- .type fname, %function
-#endif
+    pixman_asm_function fname
 
 /*
  * Make some macro arguments globally visible and accessible
@@ -679,16 +708,12 @@
     SCRATCH     .req    r12
     ORIG_W      .req    r14 /* width (pixels) */
 
-fname:
-        .fnstart
-	.save   {r4-r11, lr}
         push    {r4-r11, lr}        /* save all registers */
 
         subs    Y, Y, #1
         blo     199f
 
 #ifdef DEBUG_PARAMS
-	.pad    #9*4
         sub     sp, sp, #9*4
 #endif
 
@@ -708,6 +733,13 @@ fname:
 #endif
 
         init
+
+ .if (flags) & FLAG_PROCESS_CORRUPTS_WK0
+        /* Reserve a word in which to store X during leading pixels */
+        sub     sp, sp, #4
+  .set ARGS_STACK_OFFSET, ARGS_STACK_OFFSET+4
+  .set LOCALS_STACK_OFFSET, LOCALS_STACK_OFFSET+4
+ .endif
         
         lsl     STRIDE_D, #dst_bpp_shift /* stride in bytes */
         sub     STRIDE_D, STRIDE_D, X, lsl #dst_bpp_shift
@@ -737,42 +769,49 @@ fname:
   .if (flags) & FLAG_SPILL_LINE_VARS_WIDE
         /* This is stmdb sp!,{} */
         .word   0xE92D0000 | LINE_SAVED_REGS
+   .set ARGS_STACK_OFFSET, ARGS_STACK_OFFSET + LINE_SAVED_REG_COUNT*4
+   .set LOCALS_STACK_OFFSET, LOCALS_STACK_OFFSET + LINE_SAVED_REG_COUNT*4
   .endif
 151:    /* New line */
         newline
         preload_leading_step1  src_bpp, WK1, SRC
         preload_leading_step1  mask_bpp, WK2, MASK
+  .if ((flags) & FLAG_NO_PRELOAD_DST) == 0
         preload_leading_step1  dst_r_bpp, WK3, DST
-        
-        tst     DST, #15
-        beq     154f
-        rsb     WK0, DST, #0 /* bits 0-3 = number of leading bytes until destination aligned */
-  .if (src_bpp != 0 && src_bpp != 2*dst_w_bpp) || (mask_bpp != 0 && mask_bpp != 2*dst_w_bpp)
-        PF  and,    WK0, WK0, #15
   .endif
+        
+        ands    WK0, DST, #15
+        beq     154f
+        rsb     WK0, WK0, #16 /* number of leading bytes until destination aligned */
 
         preload_leading_step2  src_bpp, src_bpp_shift, WK1, SRC
         preload_leading_step2  mask_bpp, mask_bpp_shift, WK2, MASK
+  .if ((flags) & FLAG_NO_PRELOAD_DST) == 0
         preload_leading_step2  dst_r_bpp, dst_bpp_shift, WK3, DST
+  .endif
 
         leading_15bytes  process_head, process_tail
         
 154:    /* Destination now 16-byte aligned; we have at least one prefetch on each channel as well as at least one 16-byte output block */
- .if (src_bpp > 0) && (mask_bpp == 0) && ((flags) & FLAG_PROCESS_PRESERVES_SCRATCH)
+  .if (src_bpp > 0) && (mask_bpp == 0) && ((flags) & FLAG_PROCESS_PRESERVES_SCRATCH)
         and     SCRATCH, SRC, #31
         rsb     SCRATCH, SCRATCH, #32*prefetch_distance
- .elseif (src_bpp == 0) && (mask_bpp > 0) && ((flags) & FLAG_PROCESS_PRESERVES_SCRATCH)
+  .elseif (src_bpp == 0) && (mask_bpp > 0) && ((flags) & FLAG_PROCESS_PRESERVES_SCRATCH)
         and     SCRATCH, MASK, #31
         rsb     SCRATCH, SCRATCH, #32*prefetch_distance
- .endif
- .ifc "process_inner_loop",""
+  .endif
+  .ifc "process_inner_loop",""
         switch_on_alignment  wide_case_inner_loop_and_trailing_pixels, process_head, process_tail, wide_case_inner_loop, 157f
- .else
+  .else
         switch_on_alignment  wide_case_inner_loop_and_trailing_pixels, process_head, process_tail, process_inner_loop, 157f
- .endif
+  .endif
 
 157:    /* Check for another line */
         end_of_line 1, %((flags) & FLAG_SPILL_LINE_VARS_WIDE), 151b
+  .if (flags) & FLAG_SPILL_LINE_VARS_WIDE
+   .set ARGS_STACK_OFFSET, ARGS_STACK_OFFSET - LINE_SAVED_REG_COUNT*4
+   .set LOCALS_STACK_OFFSET, LOCALS_STACK_OFFSET - LINE_SAVED_REG_COUNT*4
+  .endif
  .endif
 
  .ltorg
@@ -782,17 +821,21 @@ fname:
  .if (flags) & FLAG_SPILL_LINE_VARS_NON_WIDE
         /* This is stmdb sp!,{} */
         .word   0xE92D0000 | LINE_SAVED_REGS
+  .set ARGS_STACK_OFFSET, ARGS_STACK_OFFSET + LINE_SAVED_REG_COUNT*4
+  .set LOCALS_STACK_OFFSET, LOCALS_STACK_OFFSET + LINE_SAVED_REG_COUNT*4
  .endif
 161:    /* New line */
         newline
         preload_line 0, src_bpp, src_bpp_shift, SRC  /* in: X, corrupts: WK0-WK1 */
         preload_line 0, mask_bpp, mask_bpp_shift, MASK
+ .if ((flags) & FLAG_NO_PRELOAD_DST) == 0
         preload_line 0, dst_r_bpp, dst_bpp_shift, DST
+ .endif
         
         sub     X, X, #128/dst_w_bpp     /* simplifies inner loop termination */
-        tst     DST, #15
+        ands    WK0, DST, #15
         beq     164f
-        rsb     WK0, DST, #0 /* bits 0-3 = number of leading bytes until destination aligned */
+        rsb     WK0, WK0, #16 /* number of leading bytes until destination aligned */
         
         leading_15bytes  process_head, process_tail
         
@@ -816,7 +859,9 @@ fname:
         newline
         preload_line 1, src_bpp, src_bpp_shift, SRC  /* in: X, corrupts: WK0-WK1 */
         preload_line 1, mask_bpp, mask_bpp_shift, MASK
+ .if ((flags) & FLAG_NO_PRELOAD_DST) == 0
         preload_line 1, dst_r_bpp, dst_bpp_shift, DST
+ .endif
         
  .if dst_w_bpp == 8
         tst     DST, #3
@@ -847,12 +892,22 @@ fname:
 
 177:    /* Check for another line */
         end_of_line %(dst_w_bpp < 32), %((flags) & FLAG_SPILL_LINE_VARS_NON_WIDE), 171b, last_one
+ .if (flags) & FLAG_SPILL_LINE_VARS_NON_WIDE
+  .set ARGS_STACK_OFFSET, ARGS_STACK_OFFSET - LINE_SAVED_REG_COUNT*4
+  .set LOCALS_STACK_OFFSET, LOCALS_STACK_OFFSET - LINE_SAVED_REG_COUNT*4
+ .endif
 
 197:
  .if (flags) & FLAG_SPILL_LINE_VARS
         add     sp, sp, #LINE_SAVED_REG_COUNT*4
  .endif
 198:
+ .if (flags) & FLAG_PROCESS_CORRUPTS_WK0
+  .set ARGS_STACK_OFFSET, ARGS_STACK_OFFSET-4
+  .set LOCALS_STACK_OFFSET, LOCALS_STACK_OFFSET-4
+        add     sp, sp, #4
+ .endif
+
         cleanup
 
 #ifdef DEBUG_PARAMS
@@ -860,7 +915,6 @@ fname:
 #endif
 199:
         pop     {r4-r11, pc}  /* exit */
-	.fnend
 
  .ltorg
 

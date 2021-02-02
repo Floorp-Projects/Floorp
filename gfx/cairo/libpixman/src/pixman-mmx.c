@@ -44,8 +44,6 @@
 #include "pixman-combine32.h"
 #include "pixman-inlines.h"
 
-#define no_vERBOSE
-
 #ifdef VERBOSE
 #define CHECKPOINT() error_f ("at %s %d\n", __FUNCTION__, __LINE__)
 #else
@@ -91,21 +89,7 @@ _mm_mulhi_pu16 (__m64 __A, __m64 __B)
     return __A;
 }
 
-#  ifdef __OPTIMIZE__
-extern __inline __m64 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-_mm_shuffle_pi16 (__m64 __A, int8_t const __N)
-{
-    __m64 ret;
-
-    asm ("pshufw %2, %1, %0\n\t"
-	: "=y" (ret)
-	: "y" (__A), "K" (__N)
-    );
-
-    return ret;
-}
-#  else
-#   define _mm_shuffle_pi16(A, N)					\
+# define _mm_shuffle_pi16(A, N)						\
     ({									\
 	__m64 ret;							\
 									\
@@ -116,7 +100,6 @@ _mm_shuffle_pi16 (__m64 __A, int8_t const __N)
 									\
 	ret;								\
     })
-#  endif
 # endif
 #endif
 
@@ -303,6 +286,29 @@ negate (__m64 mask)
     return _mm_xor_si64 (mask, MC (4x00ff));
 }
 
+/* Computes the product of two unsigned fixed-point 8-bit values from 0 to 1
+ * and maps its result to the same range.
+ *
+ * Jim Blinn gives multiple ways to compute this in "Jim Blinn's Corner:
+ * Notation, Notation, Notation", the first of which is
+ *
+ *   prod(a, b) = (a * b + 128) / 255.
+ *
+ * By approximating the division by 255 as 257/65536 it can be replaced by a
+ * multiply and a right shift. This is the implementation that we use in
+ * pix_multiply(), but we _mm_mulhi_pu16() by 257 (part of SSE1 or Extended
+ * 3DNow!, and unavailable at the time of the book's publication) to perform
+ * the multiplication and right shift in a single operation.
+ *
+ *   prod(a, b) = ((a * b + 128) * 257) >> 16.
+ *
+ * A third way (how pix_multiply() was implemented prior to 14208344) exists
+ * also that performs the multiplication by 257 with adds and shifts.
+ *
+ * Where temp = a * b + 128
+ *
+ *   prod(a, b) = (temp + (temp >> 8)) >> 8.
+ */
 static force_inline __m64
 pix_multiply (__m64 a, __m64 b)
 {
@@ -381,8 +387,10 @@ in_over (__m64 src, __m64 srca, __m64 mask, __m64 dest)
 static force_inline __m64 ldq_u(__m64 *p)
 {
 #ifdef USE_X86_MMX
-    /* x86's alignment restrictions are very relaxed. */
-    return *(__m64 *)p;
+    /* x86's alignment restrictions are very relaxed, but that's no excuse */
+    __m64 r;
+    memcpy(&r, p, sizeof(__m64));
+    return r;
 #elif defined USE_ARM_IWMMXT
     int align = (uintptr_t)p & 7;
     __m64 *aligned_p;
@@ -401,7 +409,9 @@ static force_inline uint32_t ldl_u(const uint32_t *p)
 {
 #ifdef USE_X86_MMX
     /* x86's alignment restrictions are very relaxed. */
-    return *p;
+    uint32_t r;
+    memcpy(&r, p, sizeof(uint32_t));
+    return r;
 #else
     struct __una_u32 { uint32_t x __attribute__((packed)); };
     const struct __una_u32 *ptr = (const struct __una_u32 *) p;
@@ -3534,13 +3544,111 @@ mmx_composite_over_reverse_n_8888 (pixman_implementation_t *imp,
     _mm_empty ();
 }
 
+static force_inline void
+scaled_nearest_scanline_mmx_8888_8888_OVER (uint32_t*       pd,
+                                            const uint32_t* ps,
+                                            int32_t         w,
+                                            pixman_fixed_t  vx,
+                                            pixman_fixed_t  unit_x,
+                                            pixman_fixed_t  src_width_fixed,
+                                            pixman_bool_t   fully_transparent_src)
+{
+    if (fully_transparent_src)
+	return;
+
+    while (w)
+    {
+	__m64 d = load (pd);
+	__m64 s = load (ps + pixman_fixed_to_int (vx));
+	vx += unit_x;
+	while (vx >= 0)
+	    vx -= src_width_fixed;
+
+	store8888 (pd, core_combine_over_u_pixel_mmx (s, d));
+	pd++;
+
+	w--;
+    }
+
+    _mm_empty ();
+}
+
+FAST_NEAREST_MAINLOOP (mmx_8888_8888_cover_OVER,
+		       scaled_nearest_scanline_mmx_8888_8888_OVER,
+		       uint32_t, uint32_t, COVER)
+FAST_NEAREST_MAINLOOP (mmx_8888_8888_none_OVER,
+		       scaled_nearest_scanline_mmx_8888_8888_OVER,
+		       uint32_t, uint32_t, NONE)
+FAST_NEAREST_MAINLOOP (mmx_8888_8888_pad_OVER,
+		       scaled_nearest_scanline_mmx_8888_8888_OVER,
+		       uint32_t, uint32_t, PAD)
+FAST_NEAREST_MAINLOOP (mmx_8888_8888_normal_OVER,
+		       scaled_nearest_scanline_mmx_8888_8888_OVER,
+		       uint32_t, uint32_t, NORMAL)
+
+static force_inline void
+scaled_nearest_scanline_mmx_8888_n_8888_OVER (const uint32_t * mask,
+					      uint32_t *       dst,
+					      const uint32_t * src,
+					      int32_t          w,
+					      pixman_fixed_t   vx,
+					      pixman_fixed_t   unit_x,
+					      pixman_fixed_t   src_width_fixed,
+					      pixman_bool_t    zero_src)
+{
+    __m64 mm_mask;
+
+    if (zero_src || (*mask >> 24) == 0)
+    {
+	/* A workaround for https://gcc.gnu.org/PR47759 */
+	_mm_empty ();
+	return;
+    }
+
+    mm_mask = expand_alpha (load8888 (mask));
+
+    while (w)
+    {
+	uint32_t s = *(src + pixman_fixed_to_int (vx));
+	vx += unit_x;
+	while (vx >= 0)
+	    vx -= src_width_fixed;
+
+	if (s)
+	{
+	    __m64 ms = load8888 (&s);
+	    __m64 alpha = expand_alpha (ms);
+	    __m64 dest  = load8888 (dst);
+
+	    store8888 (dst, (in_over (ms, alpha, mm_mask, dest)));
+	}
+
+	dst++;
+	w--;
+    }
+
+    _mm_empty ();
+}
+
+FAST_NEAREST_MAINLOOP_COMMON (mmx_8888_n_8888_cover_OVER,
+			      scaled_nearest_scanline_mmx_8888_n_8888_OVER,
+			      uint32_t, uint32_t, uint32_t, COVER, TRUE, TRUE)
+FAST_NEAREST_MAINLOOP_COMMON (mmx_8888_n_8888_pad_OVER,
+			      scaled_nearest_scanline_mmx_8888_n_8888_OVER,
+			      uint32_t, uint32_t, uint32_t, PAD, TRUE, TRUE)
+FAST_NEAREST_MAINLOOP_COMMON (mmx_8888_n_8888_none_OVER,
+			      scaled_nearest_scanline_mmx_8888_n_8888_OVER,
+			      uint32_t, uint32_t, uint32_t, NONE, TRUE, TRUE)
+FAST_NEAREST_MAINLOOP_COMMON (mmx_8888_n_8888_normal_OVER,
+			      scaled_nearest_scanline_mmx_8888_n_8888_OVER,
+			      uint32_t, uint32_t, uint32_t, NORMAL, TRUE, TRUE)
+
 #define BSHIFT ((1 << BILINEAR_INTERPOLATION_BITS))
 #define BMSK (BSHIFT - 1)
 
 #define BILINEAR_DECLARE_VARIABLES						\
     const __m64 mm_wt = _mm_set_pi16 (wt, wt, wt, wt);				\
     const __m64 mm_wb = _mm_set_pi16 (wb, wb, wb, wb);				\
-    const __m64 mm_BSHIFT = _mm_set_pi16 (BSHIFT, BSHIFT, BSHIFT, BSHIFT);	\
     const __m64 mm_addc7 = _mm_set_pi16 (0, 1, 0, 1);				\
     const __m64 mm_xorc7 = _mm_set_pi16 (0, BMSK, 0, BMSK);			\
     const __m64 mm_ux = _mm_set_pi16 (unit_x, unit_x, unit_x, unit_x);		\
@@ -3559,36 +3667,16 @@ do {										\
     __m64 b_lo = _mm_mullo_pi16 (_mm_unpacklo_pi8 (b, mm_zero), mm_wb);		\
     __m64 hi = _mm_add_pi16 (t_hi, b_hi);					\
     __m64 lo = _mm_add_pi16 (t_lo, b_lo);					\
-    vx += unit_x;								\
-    if (BILINEAR_INTERPOLATION_BITS < 8)					\
-    {										\
-	/* calculate horizontal weights */					\
-	__m64 mm_wh = _mm_add_pi16 (mm_addc7, _mm_xor_si64 (mm_xorc7,		\
+    /* calculate horizontal weights */						\
+    __m64 mm_wh = _mm_add_pi16 (mm_addc7, _mm_xor_si64 (mm_xorc7,		\
 			  _mm_srli_pi16 (mm_x,					\
 					 16 - BILINEAR_INTERPOLATION_BITS)));	\
-	/* horizontal interpolation */						\
-	__m64 p = _mm_unpacklo_pi16 (lo, hi);					\
-	__m64 q = _mm_unpackhi_pi16 (lo, hi);					\
-	lo = _mm_madd_pi16 (p, mm_wh);						\
-	hi = _mm_madd_pi16 (q, mm_wh);						\
-    }										\
-    else									\
-    {										\
-	/* calculate horizontal weights */					\
-	__m64 mm_wh_lo = _mm_sub_pi16 (mm_BSHIFT, _mm_srli_pi16 (mm_x,		\
-					16 - BILINEAR_INTERPOLATION_BITS));	\
-	__m64 mm_wh_hi = _mm_srli_pi16 (mm_x,					\
-					16 - BILINEAR_INTERPOLATION_BITS);	\
-	/* horizontal interpolation */						\
-	__m64 mm_lo_lo = _mm_mullo_pi16 (lo, mm_wh_lo);				\
-	__m64 mm_lo_hi = _mm_mullo_pi16 (hi, mm_wh_hi);				\
-	__m64 mm_hi_lo = _mm_mulhi_pu16 (lo, mm_wh_lo);				\
-	__m64 mm_hi_hi = _mm_mulhi_pu16 (hi, mm_wh_hi);				\
-	lo = _mm_add_pi32 (_mm_unpacklo_pi16 (mm_lo_lo, mm_hi_lo),		\
-			   _mm_unpacklo_pi16 (mm_lo_hi, mm_hi_hi));		\
-	hi = _mm_add_pi32 (_mm_unpackhi_pi16 (mm_lo_lo, mm_hi_lo),		\
-			   _mm_unpackhi_pi16 (mm_lo_hi, mm_hi_hi));		\
-    }										\
+    /* horizontal interpolation */						\
+    __m64 p = _mm_unpacklo_pi16 (lo, hi);					\
+    __m64 q = _mm_unpackhi_pi16 (lo, hi);					\
+    vx += unit_x;								\
+    lo = _mm_madd_pi16 (p, mm_wh);						\
+    hi = _mm_madd_pi16 (q, mm_wh);						\
     mm_x = _mm_add_pi16 (mm_x, mm_ux);						\
     /* shift and pack the result */						\
     hi = _mm_srli_pi32 (hi, BILINEAR_INTERPOLATION_BITS * 2);			\
@@ -3866,7 +3954,7 @@ mmx_fetch_a8 (pixman_iter_t *iter, const uint32_t *mask)
 
     while (w && (((uintptr_t)dst) & 15))
     {
-        *dst++ = *(src++) << 24;
+        *dst++ = (uint32_t)*(src++) << 24;
         w--;
     }
 
@@ -3893,7 +3981,7 @@ mmx_fetch_a8 (pixman_iter_t *iter, const uint32_t *mask)
 
     while (w)
     {
-	*dst++ = *(src++) << 24;
+	*dst++ = (uint32_t)*(src++) << 24;
 	w--;
     }
 
@@ -3901,52 +3989,23 @@ mmx_fetch_a8 (pixman_iter_t *iter, const uint32_t *mask)
     return iter->buffer;
 }
 
-typedef struct
-{
-    pixman_format_code_t	format;
-    pixman_iter_get_scanline_t	get_scanline;
-} fetcher_info_t;
-
-static const fetcher_info_t fetchers[] =
-{
-    { PIXMAN_x8r8g8b8,		mmx_fetch_x8r8g8b8 },
-    { PIXMAN_r5g6b5,		mmx_fetch_r5g6b5 },
-    { PIXMAN_a8,		mmx_fetch_a8 },
-    { PIXMAN_null }
-};
-
-static pixman_bool_t
-mmx_src_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
-{
-    pixman_image_t *image = iter->image;
-
-#define FLAGS								\
+#define IMAGE_FLAGS							\
     (FAST_PATH_STANDARD_FLAGS | FAST_PATH_ID_TRANSFORM |		\
      FAST_PATH_BITS_IMAGE | FAST_PATH_SAMPLES_COVER_CLIP_NEAREST)
 
-    if ((iter->iter_flags & ITER_NARROW)			&&
-	(iter->image_flags & FLAGS) == FLAGS)
-    {
-	const fetcher_info_t *f;
-
-	for (f = &fetchers[0]; f->format != PIXMAN_null; f++)
-	{
-	    if (image->common.extended_format_code == f->format)
-	    {
-		uint8_t *b = (uint8_t *)image->bits.bits;
-		int s = image->bits.rowstride * 4;
-
-		iter->bits = b + s * iter->y + iter->x * PIXMAN_FORMAT_BPP (f->format) / 8;
-		iter->stride = s;
-
-		iter->get_scanline = f->get_scanline;
-		return TRUE;
-	    }
-	}
-    }
-
-    return FALSE;
-}
+static const pixman_iter_info_t mmx_iters[] = 
+{
+    { PIXMAN_x8r8g8b8, IMAGE_FLAGS, ITER_NARROW,
+      _pixman_iter_init_bits_stride, mmx_fetch_x8r8g8b8, NULL
+    },
+    { PIXMAN_r5g6b5, IMAGE_FLAGS, ITER_NARROW,
+      _pixman_iter_init_bits_stride, mmx_fetch_r5g6b5, NULL
+    },
+    { PIXMAN_a8, IMAGE_FLAGS, ITER_NARROW,
+      _pixman_iter_init_bits_stride, mmx_fetch_a8, NULL
+    },
+    { PIXMAN_null },
+};
 
 static const pixman_fast_path_t mmx_fast_paths[] =
 {
@@ -4024,6 +4083,16 @@ static const pixman_fast_path_t mmx_fast_paths[] =
     PIXMAN_STD_FAST_PATH    (IN,   a8,       null,     a8,       mmx_composite_in_8_8              ),
     PIXMAN_STD_FAST_PATH    (IN,   solid,    a8,       a8,       mmx_composite_in_n_8_8            ),
 
+    SIMPLE_NEAREST_FAST_PATH (OVER,   a8r8g8b8, x8r8g8b8, mmx_8888_8888                            ),
+    SIMPLE_NEAREST_FAST_PATH (OVER,   a8b8g8r8, x8b8g8r8, mmx_8888_8888                            ),
+    SIMPLE_NEAREST_FAST_PATH (OVER,   a8r8g8b8, a8r8g8b8, mmx_8888_8888                            ),
+    SIMPLE_NEAREST_FAST_PATH (OVER,   a8b8g8r8, a8b8g8r8, mmx_8888_8888                            ),
+
+    SIMPLE_NEAREST_SOLID_MASK_FAST_PATH (OVER, a8r8g8b8, a8r8g8b8, mmx_8888_n_8888                 ),
+    SIMPLE_NEAREST_SOLID_MASK_FAST_PATH (OVER, a8b8g8r8, a8b8g8r8, mmx_8888_n_8888                 ),
+    SIMPLE_NEAREST_SOLID_MASK_FAST_PATH (OVER, a8r8g8b8, x8r8g8b8, mmx_8888_n_8888                 ),
+    SIMPLE_NEAREST_SOLID_MASK_FAST_PATH (OVER, a8b8g8r8, x8b8g8r8, mmx_8888_n_8888                 ),
+
     SIMPLE_BILINEAR_FAST_PATH (SRC, a8r8g8b8,          a8r8g8b8, mmx_8888_8888                     ),
     SIMPLE_BILINEAR_FAST_PATH (SRC, a8r8g8b8,          x8r8g8b8, mmx_8888_8888                     ),
     SIMPLE_BILINEAR_FAST_PATH (SRC, x8r8g8b8,          x8r8g8b8, mmx_8888_8888                     ),
@@ -4076,7 +4145,7 @@ _pixman_implementation_create_mmx (pixman_implementation_t *fallback)
     imp->blt = mmx_blt;
     imp->fill = mmx_fill;
 
-    imp->src_iter_init = mmx_src_iter_init;
+    imp->iter_info = mmx_iters;
 
     return imp;
 }

@@ -65,22 +65,12 @@
 .p2align 2
 
 #include "pixman-private.h"
+#include "pixman-arm-asm.h"
 #include "pixman-arm-neon-asm.h"
 
 /*
  * Bilinear macros from pixman-arm-neon-asm.S
  */
-
-/* Supplementary macro for setting function attributes */
-.macro pixman_asm_function fname
-    .func fname
-    .global fname
-#ifdef __ELF__
-    .hidden fname
-    .type fname, %function
-#endif
-fname:
-.endm
 
 /*
  * Bilinear scaling support code which tries to provide pixel fetching, color
