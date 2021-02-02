@@ -853,7 +853,7 @@ bool PerHandlerParser<ParseHandler>::
       //   After closed-over-bindings are snapshotted in the handler,
       //   remove this.
       auto parserAtom = this->compilationState_.parserAtoms.internJSAtom(
-          cx_, this->getCompilationStencil(), name);
+          cx_, this->getCompilationStencil().input.atomCache, name);
       if (!parserAtom) {
         return false;
       }
@@ -2787,7 +2787,7 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
   TaggedParserAtomIndex displayAtom;
   if (fun->displayAtom()) {
     displayAtom = this->compilationState_.parserAtoms.internJSAtom(
-        cx_, this->stencil_, fun->displayAtom());
+        cx_, this->stencil_.input.atomCache, fun->displayAtom());
     if (!displayAtom) {
       return false;
     }
@@ -3277,7 +3277,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
   TaggedParserAtomIndex displayAtom;
   if (fun->displayAtom()) {
     displayAtom = this->compilationState_.parserAtoms.internJSAtom(
-        cx_, this->stencil_, fun->displayAtom());
+        cx_, this->stencil_.input.atomCache, fun->displayAtom());
     if (!displayAtom) {
       return null();
     }
