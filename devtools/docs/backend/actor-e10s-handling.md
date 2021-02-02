@@ -2,13 +2,11 @@
 
 In multi-process environments, most devtools actors are created and initialized in the child content process, to be able to access the resources they are exposing to the toolbox. But sometimes, these actors need to access things in the parent process too. Here's why and how.
 
-{% hint style="danger" %}
-
-This documentation page is **deprecated**. `setupInParent` relies on the message manager which is being deprecated. Furthermore, communications between parent and content processes should be avoided for security reasons. If possible, the client should be responsible for calling actors both on the parent and content process.
-
-This page will be removed when all actors relying on this API are removed.
-
-{% endhint %}
+```warning::
+  | This documentation page is **deprecated**. setupInParent relies on the message manager which is being deprecated. Furthermore, communications between parent and content processes should be avoided for security reasons. If possible, the client should be responsible for calling actors both on the parent and content process.
+  |
+  | This page will be removed when all actors relying on this API are removed.
+```
 
 ## Use case and examples
 
