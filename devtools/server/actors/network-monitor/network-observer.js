@@ -794,6 +794,8 @@ NetworkObserver.prototype = {
     const event = {};
     event.method = channel.requestMethod;
     event.channelId = channel.channelId;
+    event.browingContextID = getChannelBrowsingContextID(channel);
+
     event.url = channel.URI.spec;
     event.private = httpActivity.private;
     event.headersSize = 0;
@@ -1719,3 +1721,18 @@ function stringToCauseType(value) {
   );
 }
 exports.stringToCauseType = stringToCauseType;
+
+function getChannelBrowsingContextID(channel) {
+  if (channel.loadInfo.browsingContextID) {
+    return channel.loadInfo.browsingContextID;
+  }
+  // At least WebSocket channel aren't having a browsingContextID set on their loadInfo
+  // We fallback on top frame element, which works, but will be wrong for WebSocket
+  // in same-process iframes...
+  const topFrame = NetworkHelper.getTopFrameForRequest(channel);
+  // topFrame is typically null for some chrome requests like favicons
+  if (topFrame && topFrame.browsingContext) {
+    return topFrame.browsingContext.id;
+  }
+  return null;
+}

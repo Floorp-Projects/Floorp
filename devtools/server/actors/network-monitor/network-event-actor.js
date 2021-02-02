@@ -83,6 +83,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
       networkEvent.isThirdPartyTrackingResource;
     this._referrerPolicy = networkEvent.referrerPolicy;
     this._channelId = networkEvent.channelId;
+    this._browsingContextID = networkEvent.browingContextID;
     this._serial = networkEvent.serial;
     this._blockedReason = networkEvent.blockedReason;
     this._blockingExtension = networkEvent.blockingExtension;
@@ -95,12 +96,25 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
    * Returns a grip for this actor.
    */
   asResource() {
+    // The browsingContextID is used by the ResourceWatcher on the client
+    // to find the related Target Front.
+    const browsingContextID = this._browsingContextID
+      ? this._browsingContextID
+      : -1;
+
+    // Ensure that we have a browsing context ID for all requests when debugging a tab (=`browserId` is defined).
+    // Only privileged requests debugged via the Browser Toolbox (=`browserId` null) can be unrelated to any browsing context.
+    if (
+      !this._browsingContextID &&
+      this.networkEventWatcher.watcherActor.browserId
+    ) {
+      throw new Error(
+        `Got a request ${this._request.url} without a browsingContextID set`
+      );
+    }
     return {
       resourceType: NETWORK_EVENT,
-      // The browsingContextID is used by the ResourceWatcher on the client
-      // to find the related Target Front.
-      browsingContextID: this.networkEventWatcher.watcherActor.browserElement
-        .browsingContext.id,
+      browsingContextID,
       resourceId: this._channelId,
       actor: this.actorID,
       startedDateTime: this._startedDateTime,

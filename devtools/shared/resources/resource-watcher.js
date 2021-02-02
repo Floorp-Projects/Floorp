@@ -367,9 +367,6 @@ class ResourceWatcher {
 
       if (watcherFront) {
         targetFront = await this._getTargetForWatcherResource(resource);
-        if (!targetFront) {
-          continue;
-        }
       }
 
       // Put the targetFront on the resource for easy retrieval.
@@ -588,6 +585,14 @@ class ResourceWatcher {
   // and targets are in distinct processes)
   _getTargetForWatcherResource(resource) {
     const { browsingContextID, resourceType } = resource;
+
+    // Some privileged resources aren't related to any BrowsingContext
+    // and so aren't bound to any Target Front.
+    // Server watchers should pass an explicit "-1" value in order to prevent
+    // silently ignoring an undefined browsingContextID attribute.
+    if (browsingContextID == -1) {
+      return null;
+    }
 
     // Resource emitted from the Watcher Actor should all have a
     // browsingContextID attribute
