@@ -96,6 +96,16 @@ class MockRegistry {
     );
     Services.prefs.setBoolPref("network.notify.dnsSuffixList", false);
 
+    this.oldCheckForProxiesPref = Services.prefs.getBoolPref(
+      "network.notify.checkForProxies"
+    );
+    Services.prefs.setBoolPref("network.notify.checkForProxies", false);
+
+    this.oldCheckForNRPTPref = Services.prefs.getBoolPref(
+      "network.notify.checkForNRPT"
+    );
+    Services.prefs.setBoolPref("network.notify.checkForNRPT", false);
+
     this.cid = MockRegistrar.register(
       "@mozilla.org/windows-registry-key;1",
       MockWindowsRegKey
@@ -107,6 +117,14 @@ class MockRegistry {
     Services.prefs.setBoolPref(
       "network.notify.dnsSuffixList",
       this.oldSuffixListPref
+    );
+    Services.prefs.setBoolPref(
+      "network.notify.checkForProxies",
+      this.oldCheckForProxiesPref
+    );
+    Services.prefs.setBoolPref(
+      "network.notify.checkForNRPT",
+      this.oldCheckForNRPTPref
     );
     this.cid = null;
   }
