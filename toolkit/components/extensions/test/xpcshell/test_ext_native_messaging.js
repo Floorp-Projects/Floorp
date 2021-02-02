@@ -8,15 +8,6 @@ const PREF_MAX_READ = "webextensions.native-messaging.max-input-message-bytes";
 const PREF_MAX_WRITE =
   "webextensions.native-messaging.max-output-message-bytes";
 
-AddonTestUtils.init(this);
-AddonTestUtils.overrideCertDB();
-AddonTestUtils.createAppInfo(
-  "xpcshell@tests.mozilla.org",
-  "XPCShell",
-  "1",
-  "42"
-);
-
 const server = createHttpServer({ hosts: ["example.com"] });
 
 server.registerPathHandler("/dummy", (request, response) => {
@@ -94,28 +85,19 @@ if (AppConstants.platform == "win") {
 }
 
 add_task(async function setup() {
-  optionalPermissionsPromptHandler.init();
-  optionalPermissionsPromptHandler.acceptPrompt = true;
-  await AddonTestUtils.promiseStartupManager();
-
   await setupHosts(SCRIPTS);
 });
 
 // Test the basic operation of native messaging with a simple
 // script that echoes back whatever message is sent to it.
 add_task(async function test_happy_path() {
-  async function background() {
-    let port;
-    browser.test.onMessage.addListener(async (what, payload) => {
-      if (what == "request") {
-        await browser.permissions.request({ permissions: ["nativeMessaging"] });
-        // connectNative requires permission
-        port = browser.runtime.connectNative("echo");
-        port.onMessage.addListener(msg => {
-          browser.test.sendMessage("message", msg);
-        });
-        browser.test.sendMessage("ready");
-      } else if (what == "send") {
+  function background() {
+    let port = browser.runtime.connectNative("echo");
+    port.onMessage.addListener(msg => {
+      browser.test.sendMessage("message", msg);
+    });
+    browser.test.onMessage.addListener((what, payload) => {
+      if (what == "send") {
         if (payload._json) {
           let json = payload._json;
           payload.toJSON = () => json;
@@ -124,22 +106,19 @@ add_task(async function test_happy_path() {
         port.postMessage(payload);
       }
     });
+    browser.test.sendMessage("ready");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
       applications: { gecko: { id: ID } },
-      optional_permissions: ["nativeMessaging"],
+      permissions: ["nativeMessaging"],
     },
-    useAddonManager: "temporary",
   });
 
   await extension.startup();
-  await withHandlingUserInput(extension, async () => {
-    extension.sendMessage("request");
-    await extension.awaitMessage("ready");
-  });
+  await extension.awaitMessage("ready");
   const tests = [
     {
       data: "this is a string",
