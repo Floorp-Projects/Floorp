@@ -1,6 +1,6 @@
 "use strict";
 
-/* exported createHttpServer, cleanupDir, clearCache, promiseConsoleOutput,
+/* exported createHttpServer, cleanupDir, clearCache, optionalPermissionsPromptHandler, promiseConsoleOutput,
             promiseQuotaManagerServiceReset, promiseQuotaManagerServiceClear,
             runWithPrefs, testEnv, withHandlingUserInput, resetHandlingUserInput */
 
@@ -275,3 +275,34 @@ function promiseQuotaManagerServiceClear() {
     Services.qms.clear().callback = resolve;
   });
 }
+
+// Optional Permission prompt handling
+const optionalPermissionsPromptHandler = {
+  sawPrompt: false,
+  acceptPrompt: false,
+
+  init() {
+    Services.prefs.setBoolPref(
+      "extensions.webextOptionalPermissionPrompts",
+      true
+    );
+    Services.obs.addObserver(this, "webextension-optional-permission-prompt");
+    registerCleanupFunction(() => {
+      Services.obs.removeObserver(
+        this,
+        "webextension-optional-permission-prompt"
+      );
+      Services.prefs.clearUserPref(
+        "extensions.webextOptionalPermissionPrompts"
+      );
+    });
+  },
+
+  observe(subject, topic, data) {
+    if (topic == "webextension-optional-permission-prompt") {
+      this.sawPrompt = true;
+      let { resolve } = subject.wrappedJSObject;
+      resolve(this.acceptPrompt);
+    }
+  },
+};
