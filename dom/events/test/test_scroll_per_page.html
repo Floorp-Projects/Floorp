@@ -35,36 +35,64 @@ async function doTests(aWindow) {
         return `text node in ${getElementDescription(aNode.parentElement)}`;
       case aNode.ELEMENT_NODE:
         return getElementDescription(aNode);
+      case aNode.DOCUMENT_NODE:
+        return `document node`;
       default:
         return "unknown node";
     }
   }
 
-  function waitForScrollEvent() {
-    return new Promise(resolve => {
-      aWindow.addEventListener("scroll", () => { SimpleTest.executeSoon(resolve); }, {once: true, capture: true});
-    });
+  function getScrollPositionStr(aNode) {
+    return `{ scrollTop: ${aNode.scrollTop}, scrollHeight: ${
+      aNode.scrollHeight
+    }, scrollLeft: ${aNode.scrollLeft}, scrollWidth: ${aNode.scrollWidth} }`;
   }
 
-  async function doPageDown() {
-    let waitForScrolling = waitForScrollEvent();
-    if (!navigator.platform.includes("Mac")) {
-      synthesizeKey("KEY_PageDown", {}, aWindow);
-    } else {
-      synthesizeKey("KEY_PageDown", { altKey: true }, aWindow);
+  async function doPageDownOrUp(aKey, aFocusedElement, aScrollTargetElement) {
+    let scrollEventTarget =
+      aScrollTargetElement === doc.documentElement
+        ? doc
+        : aScrollTargetElement;
+    let scrollEventFired = false;
+    function onScroll(aEvent) {
+      scrollEventFired |= aEvent.target === scrollEventTarget;
     }
-    await waitForScrolling;
+    scrollEventTarget.addEventListener("scroll", onScroll);
+    if (!navigator.platform.includes("Mac")) {
+      synthesizeKey(`KEY_${aKey}`, {}, aWindow);
+    } else {
+      synthesizeKey(`KEY_${aKey}`, { altKey: true }, aWindow);
+    }
+    let retry = 3;
+    while (retry--) {
+      await waitToClearOutAnyPotentialScrolls(aWindow);
+      if (scrollEventFired) {
+        break;
+      }
+    }
+    ok(scrollEventFired,
+      `Scroll event should've been fired on ${getNodeDescription(scrollEventTarget)}`);
+    scrollEventTarget.removeEventListener("scroll", onScroll);
   }
 
-  async function doPageUp() {
-    let waitForScrolling = waitForScrollEvent();
-    if (!navigator.platform.includes("Mac")) {
-      synthesizeKey("KEY_PageUp", {}, aWindow);
-    } else {
-      synthesizeKey("KEY_PageUp", { altKey: true }, aWindow);
-    }
-    await waitForScrolling;
+  async function doPageDown(aFocusedElement, aScrollTargetElement) {
+    await doPageDownOrUp("PageDown", aFocusedElement, aScrollTargetElement);
   }
+
+  async function doPageUp(aFocusedElement, aScrollTargetElement) {
+    await doPageDownOrUp("PageUp", aFocusedElement, aScrollTargetElement);
+  }
+
+  // Let's put log of scroll events for making debug this test easier.
+  aWindow.addEventListener("scroll", (aEvent) => {
+    let scrollElement =
+      aEvent.target === doc
+        ? doc.documentElement
+        : aEvent.target;
+    info(`"scroll" event fired on ${getNodeDescription(aEvent.target)}: ${
+      getScrollPositionStr(scrollElement)
+    }`);
+  }, { capture: true });
 
   let doc = aWindow.document;
   let body = doc.body;
@@ -86,7 +114,7 @@ async function doTests(aWindow) {
 
   let description = "PageDown in non-scrollable editing host: ";
   let previousScrollTop = container.scrollTop;
-  await doPageDown();
+  await doPageDown(editor, container);
   ok(container.scrollTop > previousScrollTop,
      `${description}the document should be scrolled down even if user presses PageDown in the editing host got: ${container.scrollTop}, previous position: ${previousScrollTop}`);
   let range = selection.getRangeAt(0);
@@ -98,7 +126,7 @@ async function doTests(aWindow) {
 
   description = "PageUp in non-scrollable editing host: ";
   previousScrollTop = container.scrollTop;
-  await doPageUp();
+  await doPageUp(editor, container);
   ok(container.scrollTop < previousScrollTop,
      `${description}the document should be scrolled up even if user presses PageDown in the editing host got: ${container.scrollTop}, previous position: ${previousScrollTop}`);
   range = selection.getRangeAt(0);
@@ -125,7 +153,7 @@ async function doTests(aWindow) {
 
   description = "PageDown in scrollable editing host: ";
   previousScrollTop = container.scrollTop;
-  await doPageDown();
+  await doPageDown(editor, container);
   ok(container.scrollTop > previousScrollTop,
      `${description}the editor should be scrolled down even if user presses PageDown in the editing host got: ${container.scrollTop}, previous position: ${previousScrollTop}`);
   range = selection.getRangeAt(0);
@@ -137,7 +165,7 @@ async function doTests(aWindow) {
 
   description = "PageUp in scrollable editing host: ";
   previousScrollTop = container.scrollTop;
-  await doPageUp();
+  await doPageUp(editor, container);
   ok(container.scrollTop < previousScrollTop,
      `${description}the editor should be scrolled up even if user presses PageDown in the editing host got: ${container.scrollTop}, previous position: ${previousScrollTop}`);
   range = selection.getRangeAt(0);
@@ -156,7 +184,7 @@ async function doTests(aWindow) {
 
   description = "PageDown in too large editing host: ";
   previousScrollTop = container.scrollTop;
-  await doPageDown();
+  await doPageDown(editor, container);
   ok(container.scrollTop > previousScrollTop,
      `${description} The document should be scrolled down (got: ${container.scrollTop}, previous position: ${previousScrollTop})`);
   ok(container.scrollTop <= previousScrollTop + container.clientHeight,
@@ -169,7 +197,7 @@ async function doTests(aWindow) {
   description = "PageUp in too large editing host: ";
   container.scrollTop = container.scrollHeight;
   previousScrollTop = container.scrollTop;
-  await doPageUp();
+  await doPageUp(editor, container);
   ok(container.scrollTop >= previousScrollTop - container.clientHeight,
      `${description} The document should not be scrolled up too much (got: ${container.scrollTop}, previous position: ${previousScrollTop}, scroll height: ${container.clientHeight})`);
 
@@ -182,18 +210,18 @@ async function doTests(aWindow) {
 
   description = "PageDown in scrollable editing host";
   previousScrollTop = container.scrollTop;
-  await doPageDown();
+  await doPageDown(editor, container);
   ok(container.scrollTop > previousScrollTop,
      `${description} #1: Should be scrolled down (got: ${container.scrollTop}, previous position: ${previousScrollTop})`);
   previousScrollTop = container.scrollTop;
-  await doPageDown();
+  await doPageDown(editor, container);
   ok(container.scrollTop > previousScrollTop,
      `${description} #2: should be scrolled down (got:${container.scrollTop}, previous position: ${previousScrollTop})`);
   previousScrollTop = container.scrollTop;
-  await doPageDown();
+  await doPageDown(editor, container);
   ok(container.scrollTop > previousScrollTop,
      `${description} #3: should be scrolled down (got:${container.scrollTop}, previous position: ${previousScrollTop})`);
-  await doPageUp();
+  await doPageUp(editor, container);
   ok(container.scrollTop < 300,
      `PageUp in scrollable editing host after scrolled down 3 pages: should be scrolled up to show caret (got:${container.scrollTop}`);
 
@@ -209,18 +237,18 @@ async function doTests(aWindow) {
 
   description = "PageDown in too high non-scrollable editing host";
   previousScrollTop = container.scrollTop;
-  await doPageDown();
+  await doPageDown(editor, container);
   ok(container.scrollTop > previousScrollTop,
      `${description} #1: Should be scrolled down (got: ${container.scrollTop}, previous position: ${previousScrollTop})`);
   previousScrollTop = container.scrollTop;
-  await doPageDown();
+  await doPageDown(editor, container);
   ok(container.scrollTop > previousScrollTop,
      `${description} #2: should be scrolled down (got:${container.scrollTop}, previous position: ${previousScrollTop})`);
   previousScrollTop = container.scrollTop;
-  await doPageDown();
+  await doPageDown(editor, container);
   ok(container.scrollTop > previousScrollTop,
      `${description} #3: should be scrolled down (got:${container.scrollTop}, previous position: ${previousScrollTop})`);
-  await doPageUp();
+  await doPageUp(editor, container);
   ok(container.scrollTop < 300,
      `PageUp in too high non-scrollable editing host after scrolled down 3 pages: should be scrolled up to show caret (got:${container.scrollTop}`);
 
