@@ -330,7 +330,11 @@ abstract class AbstractFetchDownloadService : Service() {
      * from another thread, causing inconsistencies in the ui.
      */
     @VisibleForTesting
-    internal fun updateDownloadNotification(latestUIStatus: Status, download: DownloadJobState) {
+    internal fun updateDownloadNotification(
+        latestUIStatus: Status,
+        download: DownloadJobState,
+        scope: CoroutineScope = CoroutineScope(IO)
+    ) {
         val notification = when (latestUIStatus) {
             DOWNLOADING -> DownloadNotification.createOngoingDownloadNotification(
                 context,
@@ -348,7 +352,7 @@ abstract class AbstractFetchDownloadService : Service() {
                 style.notificationAccentColor
             )
             COMPLETED -> {
-                addToDownloadSystemDatabaseCompat(download.state)
+                addToDownloadSystemDatabaseCompat(download.state, scope)
                 DownloadNotification.createDownloadCompletedNotification(
                     context,
                     download,
@@ -420,26 +424,30 @@ abstract class AbstractFetchDownloadService : Service() {
      * otherwise nothing will happen.
      */
     @VisibleForTesting
-    internal fun addToDownloadSystemDatabaseCompat(download: DownloadState) {
+    internal fun addToDownloadSystemDatabaseCompat(
+        download: DownloadState,
+        scope: CoroutineScope = CoroutineScope(IO)
+    ) {
         if (!shouldUseScopedStorage()) {
             val fileName = download.fileName
                 ?: throw IllegalStateException("A fileName for a download is required")
             val file = File(download.filePath)
             // addCompletedDownload can't handle any non http(s) urls
             val url = if (!download.isScheme(listOf("http", "https"))) null else download.url.toUri()
-
-            addCompletedDownload(
-                title = fileName,
-                description = fileName,
-                isMediaScannerScannable = true,
-                mimeType = download.contentType ?: "*/*",
-                path = file.absolutePath,
-                length = download.contentLength ?: file.length(),
-                // Only show notifications if our channel is blocked
-                showNotification = !DownloadNotification.isChannelEnabled(context),
-                uri = url,
-                referer = download.referrerUrl?.toUri()
-            )
+            scope.launch {
+                addCompletedDownload(
+                    title = fileName,
+                    description = fileName,
+                    isMediaScannerScannable = true,
+                    mimeType = download.contentType ?: "*/*",
+                    path = file.absolutePath,
+                    length = download.contentLength ?: file.length(),
+                    // Only show notifications if our channel is blocked
+                    showNotification = !DownloadNotification.isChannelEnabled(context),
+                    uri = url,
+                    referer = download.referrerUrl?.toUri()
+                )
+            }
         }
     }
 

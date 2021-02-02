@@ -26,6 +26,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.state.content.DownloadState
@@ -1310,7 +1311,7 @@ class AbstractFetchDownloadServiceTest {
 
     @Test
     @Config(sdk = [Build.VERSION_CODES.P])
-    fun `WHEN a download is completed and the scoped storage is not used it MUST be added manually to the download system database`() {
+    fun `WHEN a download is completed and the scoped storage is not used it MUST be added manually to the download system database`() = runBlockingTest {
         val download = DownloadState(
                 url = "http://www.mozilla.org",
                 fileName = "example.apk",
@@ -1325,7 +1326,7 @@ class AbstractFetchDownloadServiceTest {
         val downloadJobState = DownloadJobState(state = download, status = DownloadState.Status.COMPLETED)
 
         doReturn(testContext).`when`(service).context
-        service.updateDownloadNotification(DownloadState.Status.COMPLETED, downloadJobState)
+        service.updateDownloadNotification(DownloadState.Status.COMPLETED, downloadJobState, this)
 
         verify(service).addCompletedDownload(
             title = any(),
@@ -1341,7 +1342,7 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
-    fun `WHEN a download is completed and the scoped storage is used addToDownloadSystemDatabaseCompat MUST NOT be called`() {
+    fun `WHEN a download is completed and the scoped storage is used addToDownloadSystemDatabaseCompat MUST NOT be called`() = runBlockingTest {
         val download = DownloadState(
             url = "http://www.mozilla.org",
             fileName = "example.apk",
@@ -1368,7 +1369,7 @@ class AbstractFetchDownloadServiceTest {
             referer = any())
         doReturn(true).`when`(service).shouldUseScopedStorage()
 
-        service.updateDownloadNotification(DownloadState.Status.COMPLETED, downloadJobState)
+        service.updateDownloadNotification(DownloadState.Status.COMPLETED, downloadJobState, this)
 
         verify(service, never()).addCompletedDownload(
             title = any(),
@@ -1442,7 +1443,7 @@ class AbstractFetchDownloadServiceTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.P])
     @Suppress("Deprecation")
-    fun `do not pass non-http(s) url to addCompletedDownload`() {
+    fun `do not pass non-http(s) url to addCompletedDownload`() = runBlockingTest {
         val download = DownloadState(
             url = "blob:moz-extension://d5ea9baa-64c9-4c3d-bb38-49308c47997c/",
             fileName = "example.apk",
@@ -1460,14 +1461,14 @@ class AbstractFetchDownloadServiceTest {
         doReturn(spyContext).`when`(service).context
         doReturn(downloadManager).`when`(spyContext).getSystemService<DownloadManager>()
 
-        service.addToDownloadSystemDatabaseCompat(download)
+        service.addToDownloadSystemDatabaseCompat(download, this)
         verify(downloadManager).addCompletedDownload(anyString(), anyString(), anyBoolean(), anyString(), anyString(), anyLong(), anyBoolean(), isNull(), any())
     }
 
     @Test
     @Config(sdk = [Build.VERSION_CODES.P])
     @Suppress("Deprecation")
-    fun `pass http(s) url to addCompletedDownload`() {
+    fun `pass http(s) url to addCompletedDownload`() = runBlockingTest {
         val download = DownloadState(
             url = "https://mozilla.com",
             fileName = "example.apk",
@@ -1485,7 +1486,7 @@ class AbstractFetchDownloadServiceTest {
         doReturn(spyContext).`when`(service).context
         doReturn(downloadManager).`when`(spyContext).getSystemService<DownloadManager>()
 
-        service.addToDownloadSystemDatabaseCompat(download)
+        service.addToDownloadSystemDatabaseCompat(download, this)
         verify(downloadManager).addCompletedDownload(anyString(), anyString(), anyBoolean(), anyString(), anyString(), anyLong(), anyBoolean(), any(), any())
     }
 
