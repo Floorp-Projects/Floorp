@@ -183,6 +183,23 @@ void ScopeContext::cacheEnclosingScope(Scope* enclosingScope) {
 #ifdef DEBUG
   hasNonSyntacticScopeOnChain =
       enclosingScope->hasOnChain(ScopeKind::NonSyntactic);
+
+  // This computes a general answer for the query "does the enclosing scope
+  // have a function scope that needs a home object?", but it's only asserted
+  // if the parser parses eval body that contains `super` that needs a home
+  // object.
+  for (ScopeIter si(enclosingScope); si; si++) {
+    if (si.kind() == ScopeKind::Function) {
+      JSFunction* fun = si.scope()->as<FunctionScope>().canonicalFunction();
+      if (fun->isArrow()) {
+        continue;
+      }
+      if (fun->allowSuperProperty() && fun->baseScript()->needsHomeObject()) {
+        hasFunctionNeedsHomeObjectOnChain = true;
+      }
+      break;
+    }
+  }
 #endif
 }
 

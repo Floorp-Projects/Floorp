@@ -1608,21 +1608,10 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
     // ParseContext, then we must be emitting an eval script, and the
     // outer function must already be marked as needing a home object
     // since it contains an eval.
-    ScopeIter si(this->stencil_.input.enclosingScope);
-    for (; si; si++) {
-      if (si.kind() == ScopeKind::Function) {
-        JSFunction* fun = si.scope()->as<FunctionScope>().canonicalFunction();
-        if (fun->isArrow()) {
-          continue;
-        }
-        MOZ_ASSERT(fun->allowSuperProperty());
-        MOZ_ASSERT(fun->baseScript()->needsHomeObject());
-        break;
-      }
-    }
-    MOZ_ASSERT(!si.done(),
-               "Eval must have found an enclosing function box scope that "
-               "allows super.property");
+    MOZ_ASSERT(
+        this->compilationState_.scopeContext.hasFunctionNeedsHomeObjectOnChain,
+        "Eval must have found an enclosing function box scope that "
+        "allows super.property");
   }
 #endif
 
