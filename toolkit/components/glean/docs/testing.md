@@ -30,7 +30,7 @@ It does this through the displayed user interface (just follow the instructions)
 
 Not all of our Rust code can be tested in a single fashion, unfortunately.
 
-### Using `rusttests`
+### Using `rusttests` (Treeherder symbol `Br` (a build task))
 
 If the crate you're testing has no Gecko symbols you can write standard
 [Rust tests](https://doc.rust-lang.org/book/ch11-01-writing-tests.html).
@@ -48,7 +48,7 @@ If the crate uses only a few Gecko symbols, they may use the
 This allows the crate to test its non-Gecko-adjacent code using Rust tests.
 (You will need to cover the Gecko-adjacent code via another means.)
 
-### Using `gtest`
+### Using `gtest` (Treeherder symbol `GTest` (a build task))
 
 Because Gecko symbols aren't built for the
 `rusttests` build,
@@ -71,7 +71,7 @@ By necessity these can only be integration tests against the compiled crate.
 
 To run FOG's Rust `gtest` suite use `mach gtest FOG.*`
 
-## Python
+## Python (Treeherder symbol `py3(fp)` aka `source-test-python-fog`)
 
 The [Glean Parser](https://github.com/mozilla/glean_parser/)
 has been augmented to generate FOG-specific APIs for Glean metrics.
@@ -84,7 +84,7 @@ If your default Python is Python 2, you may need to instead run:
 
 `python3 mach python-test toolkit/components/glean/pytest`
 
-## C++
+## C++ (Treeherder symbol `GTest` (a build task))
 
 To test the C++ parts of FOG's implementation
 (like metric types)
@@ -100,7 +100,7 @@ or the test runner won't be able to find it.
 All tests should start with `FOG` so that all tests are run with
 `./mach gtest FOG*`.
 
-## JS
+## JS (Treeherder symbol `X(Xn)` for some number `n`)
 
 To test the JS parts of FOG's implementation
 (like metric types)
@@ -115,3 +115,16 @@ or the test runner will not be able to find it.
 
 To run FOG's JS tests, run:
 `./mach test toolkit/components/glean/xpcshell`
+
+## Integration (Marionette, borrowing `telemetry-tests-client` Treeherder symbol `tt(c)`)
+
+To test pings (See [bug 1681742](https://bugzilla.mozilla.org/show_bug.cgi?id=1681742))
+or anything that requires one or more full browsers running,
+we use the `telemetry-tests-client` suite in
+[`toolkit/components/telemetry/tests/marionette/tests/client/`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/telemetry/tests/marionette/tests/client/).
+
+For more information on this suite, look to
+[Firefox Telemetry's Test Documentation](https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/tests.html#integration-tests-telemetry-tests-client-and-telemetry-integration-tests).
+
+To run these integration tests, run:
+`./mach test toolkit/components/telemetry/tests/marionette/tests/client/`
