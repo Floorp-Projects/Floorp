@@ -1,6 +1,6 @@
 # New Metrics and Pings
 
-**Note:** FOG is not ready to be used,
+**Note:** FOG is not ready to be used without assistance,
 so you probably should not be adding metrics and pings using this guide yet.
 Instead, please use Firefox Telemetry unless you have explicitly been given permission by a
 [Telemetry Module Peer](https://wiki.mozilla.org/Modules/All#Telemetry).
@@ -40,7 +40,7 @@ adding your definitions files to the Python lists therein.
 If you don't, no API will be generated for your metrics and your build will fail.
 
 In addition, do not forget to file a bug in `Data Platform and Tools :: General`
-asking for your definitions files to be added to the others for `firefox.desktop`.
+asking for your definitions files to be added to the others for `firefox_desktop`.
 If you don't, your metrics will not show up in datasets and tools
 because the pipeline won't know that they exist.
 

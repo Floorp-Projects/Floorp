@@ -16,6 +16,9 @@ and no data collections will be persisted or reported from that point.
 
 If set to a value `port` which is greater than 0, pings will be sent to
 `http://localhost:port` instead of `https://incoming.telemetry.mozilla.org`.
-If set to a value which is less than 0, FOG will not squelch all sent pings,
-telling the Glean SDK that the ping was sent successfully.
+If set to a value which is less than 0,
+FOG will take all pings scheduled for upload and drop them on the floor,
+telling the Glean SDK that it was sent successfully.
+This is how you emulate "recording enabled but upload disabled"
+like developer builds have in Firefox Telemetry.
 Defaults to 0.
