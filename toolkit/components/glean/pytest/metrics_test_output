@@ -538,5 +538,29 @@ pub(crate) mod __glean_metric_maps {
            _ => panic!("No event for metric id {}", metric_id),
         }
     }
+
+    pub(crate) mod submetric_maps {
+        use std::sync::{
+          atomic::AtomicU32,
+          RwLock,
+        };
+        use super::*;
+
+        pub(crate) const MIN_LABELED_SUBMETRIC_ID: u32 = 134217729;
+        pub(crate) static NEXT_LABELED_SUBMETRIC_ID: AtomicU32 = AtomicU32::new(MIN_LABELED_SUBMETRIC_ID);
+        pub(crate) static LABELED_METRICS_TO_IDS: Lazy<RwLock<HashMap<(u32, String), u32>>> = Lazy::new(||
+            RwLock::new(HashMap::new())
+        );
+
+        pub static BOOLEAN_MAP: Lazy<RwLock<HashMap<MetricId, BooleanMetric>>> = Lazy::new(||
+            RwLock::new(HashMap::new())
+        );
+        pub static COUNTER_MAP: Lazy<RwLock<HashMap<MetricId, CounterMetric>>> = Lazy::new(||
+            RwLock::new(HashMap::new())
+        );
+        pub static STRING_MAP: Lazy<RwLock<HashMap<MetricId, StringMetric>>> = Lazy::new(||
+            RwLock::new(HashMap::new())
+        );
+    }
 }
 
