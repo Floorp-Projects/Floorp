@@ -49,17 +49,6 @@ struct CompilationInput;
 // ScopeContext hold information derivied from the scope and environment chains
 // to try to avoid the parser needing to traverse VM structures directly.
 struct ScopeContext {
-  // If this eval is in response to Debugger.Frame.eval, we may have an
-  // incomplete scope chain. In order to provide a better debugging experience,
-  // we inspect the (optional) environment chain to determine it's enclosing
-  // FunctionScope if there is one. If there is no such scope, we use the
-  // orignal scope provided.
-  //
-  // NOTE: This is used to compute the ThisBinding kind and to allow access to
-  //       private fields, while other contextual information only uses the
-  //       actual scope passed to the compile.
-  JS::Rooted<Scope*> effectiveScope;
-
   // Class field initializer info if we are nested within a class constructor.
   // We may be an combination of arrow and eval context within the constructor.
   mozilla::Maybe<MemberInitializers> memberInitializers = {};
@@ -130,8 +119,6 @@ struct ScopeContext {
   bool hasFunctionNeedsHomeObjectOnChain = false;
 #endif
 
-  explicit ScopeContext(JSContext* cx) : effectiveScope(cx) {}
-
   bool init(JSContext* cx, CompilationInput& input,
             ParserAtomsTable& parserAtoms, InheritThis inheritThis,
             JSObject* enclosingEnv);
@@ -157,6 +144,7 @@ struct ScopeContext {
                                          ParserAtomsTable& parserAtoms);
 
   bool cachePrivateFieldsForEval(JSContext* cx, CompilationInput& input,
+                                 Scope* effectiveScope,
                                  ParserAtomsTable& parserAtoms);
 
   bool addToEnclosingLexicalBindingCache(JSContext* cx, CompilationInput& input,
