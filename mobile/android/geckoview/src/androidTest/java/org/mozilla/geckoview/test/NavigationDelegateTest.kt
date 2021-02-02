@@ -4,6 +4,8 @@
 
 package org.mozilla.geckoview.test
 
+import android.os.SystemClock
+import android.view.KeyEvent
 import android.util.Base64
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
@@ -1371,6 +1373,45 @@ class NavigationDelegateTest : BaseSessionTest() {
 
             @AssertCalled(count = 0)
             override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
+                return null
+            }
+        })
+    }
+
+    @Test fun onNewSession_submitFormWithTargetBlank() {
+        sessionRule.session.loadTestPath(FORM_BLANK_HTML_PATH)
+        sessionRule.waitForPageStop()
+
+        sessionRule.session.evaluateJS("""
+            document.querySelector('input[type=text]').focus()
+        """)
+        sessionRule.session.waitUntilCalled(GeckoSession.TextInputDelegate::class,
+                                            "restartInput")
+
+        val time = SystemClock.uptimeMillis()
+        val keyEvent = KeyEvent(time, time, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER, 0)
+        sessionRule.session.textInput.onKeyDown(KeyEvent.KEYCODE_ENTER, keyEvent)
+        sessionRule.session.textInput.onKeyUp(KeyEvent.KEYCODE_ENTER,
+                                              KeyEvent.changeAction(keyEvent,
+                                                                    KeyEvent.ACTION_UP))
+
+        sessionRule.session.waitUntilCalled(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 1, order = [1])
+            override fun onLoadRequest(session: GeckoSession, request: LoadRequest):
+                                       GeckoResult<AllowOrDeny>? {
+                assertThat("URL should be correct", request.uri,
+                           endsWith("form_blank.html?"))
+                assertThat("Trigger URL should match", request.triggerUri,
+                           endsWith("form_blank.html"))
+                assertThat("Target should be correct", request.target,
+                           equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW))
+                return null
+            }
+
+            @AssertCalled(count = 1, order = [2])
+            override fun onNewSession(session: GeckoSession, uri: String):
+                                      GeckoResult<GeckoSession>? {
+                assertThat("URL should be correct", uri, endsWith("form_blank.html?"))
                 return null
             }
         })
