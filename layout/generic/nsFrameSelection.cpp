@@ -858,7 +858,7 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
     const FocusMode focusMode = aContinueSelection
                                     ? FocusMode::kExtendSelection
                                     : FocusMode::kCollapseToNewPoint;
-    rv = TakeFocus(MOZ_KnownLive(pos.mResultContent), pos.mContentOffset,
+    rv = TakeFocus(MOZ_KnownLive(*pos.mResultContent), pos.mContentOffset,
                    pos.mContentOffset, tHint, focusMode);
   } else if (aAmount <= eSelectWordNoSpace && direction == eDirNext &&
              !aContinueSelection) {
@@ -1239,7 +1239,7 @@ nsresult nsFrameSelection::HandleClick(nsIContent* aNewFocus,
 
     AutoPrepareFocusRange prep(selection,
                                aFocusMode == FocusMode::kMultiRangeSelection);
-    return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aHint,
+    return TakeFocus(*aNewFocus, aContentOffset, aContentEndOffset, aHint,
                      aFocusMode);
   }
 
@@ -1346,24 +1346,20 @@ struct ParentAndOffset {
 /**
 hard to go from nodes to frames, easy the other way!
  */
-nsresult nsFrameSelection::TakeFocus(nsIContent* const aNewFocus,
+nsresult nsFrameSelection::TakeFocus(nsIContent& aNewFocus,
                                      uint32_t aContentOffset,
                                      uint32_t aContentEndOffset,
                                      CaretAssociateHint aHint,
                                      const FocusMode aFocusMode) {
-  if (!aNewFocus) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
   NS_ENSURE_STATE(mPresShell);
 
-  if (!IsValidSelectionPoint(aNewFocus)) {
+  if (!IsValidSelectionPoint(&aNewFocus)) {
     return NS_ERROR_FAILURE;
   }
 
   MOZ_LOG(sFrameSelectionLog, LogLevel::Verbose,
           ("%s: new focus=%p, offsets=(%u, %u), hint=%i, focusMode=%i",
-           __FUNCTION__, aNewFocus, aContentOffset, aContentEndOffset,
+           __FUNCTION__, &aNewFocus, aContentOffset, aContentEndOffset,
            static_cast<int>(aHint), static_cast<int>(aFocusMode)));
 
   mPresShell->FrameSelectionWillTakeFocus(*this);
@@ -1401,7 +1397,7 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* const aNewFocus,
 
         ErrorResult error;
         RefPtr<nsRange> newRange = nsRange::Create(
-            aNewFocus, aContentOffset, aNewFocus, aContentOffset, error);
+            &aNewFocus, aContentOffset, &aNewFocus, aContentOffset, error);
         if (NS_WARN_IF(error.Failed())) {
           return error.StealNSResult();
         }
@@ -1414,7 +1410,7 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* const aNewFocus,
             mDesiredCaretPos.mIsSet;  // need to keep old desired
                                       // position if it was set.
         RefPtr<Selection> selection = mDomSelections[index];
-        selection->CollapseInLimiter(aNewFocus, aContentOffset);
+        selection->CollapseInLimiter(&aNewFocus, aContentOffset);
         mDesiredCaretPos.mIsSet =
             oldDesiredPosSet;  // now reset desired pos back.
       }
@@ -1422,7 +1418,7 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* const aNewFocus,
       mBatching = saveBatching;
 
       if (aContentEndOffset != aContentOffset) {
-        mDomSelections[index]->Extend(aNewFocus, aContentEndOffset);
+        mDomSelections[index]->Extend(&aNewFocus, aContentEndOffset);
       }
 
       // find out if we are inside a table. if so, find out which one and which
@@ -1434,8 +1430,8 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* const aNewFocus,
       RefPtr<nsPresContext> context = mPresShell->GetPresContext();
       mTableSelection.mClosestInclusiveTableCellAncestor = nullptr;
       if (nsINode* inclusiveTableCellAncestor =
-              TableSelection::IsContentInActivelyEditableTableCell(context,
-                                                                   aNewFocus)) {
+              TableSelection::IsContentInActivelyEditableTableCell(
+                  context, &aNewFocus)) {
         mTableSelection.mClosestInclusiveTableCellAncestor =
             inclusiveTableCellAncestor;
         MOZ_LOG(sFrameSelectionLog, LogLevel::Debug,
@@ -1447,7 +1443,7 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* const aNewFocus,
     case FocusMode::kExtendSelection: {
       // Now update the range list:
       nsINode* inclusiveTableCellAncestor =
-          GetClosestInclusiveTableCellAncestor(aNewFocus);
+          GetClosestInclusiveTableCellAncestor(&aNewFocus);
       if (mTableSelection.mClosestInclusiveTableCellAncestor &&
           inclusiveTableCellAncestor &&
           inclusiveTableCellAncestor !=
@@ -1498,9 +1494,9 @@ nsresult nsFrameSelection::TakeFocus(nsIContent* const aNewFocus,
             aContentEndOffset > aContentOffset)  // didn't go far enough
         {
           mDomSelections[index]->Extend(
-              aNewFocus, aContentEndOffset);  // this will only redraw the diff
+              &aNewFocus, aContentEndOffset);  // this will only redraw the diff
         } else
-          mDomSelections[index]->Extend(aNewFocus, aContentOffset);
+          mDomSelections[index]->Extend(&aNewFocus, aContentOffset);
       }
       break;
     }
@@ -3062,7 +3058,7 @@ void nsFrameSelection::SetAncestorLimiter(nsIContent* aLimiter) {
       if (mLimiters.mAncestorLimiter) {
         SetChangeReasons(nsISelectionListener::NO_REASON);
         nsCOMPtr<nsIContent> limiter(mLimiters.mAncestorLimiter);
-        const nsresult rv = TakeFocus(limiter, 0, 0, CARET_ASSOCIATE_BEFORE,
+        const nsresult rv = TakeFocus(*limiter, 0, 0, CARET_ASSOCIATE_BEFORE,
                                       FocusMode::kCollapseToNewPoint);
         Unused << NS_WARN_IF(NS_FAILED(rv));
         // TODO: in case of failure, propagate it to the callers.
