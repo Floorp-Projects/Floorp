@@ -564,13 +564,9 @@ class QuotaManager final : public BackgroundThreadObject {
   using OriginInfosNestedTraversable =
       nsTArray<nsTArray<NotNull<RefPtr<const OriginInfo>>>>;
 
-  OriginInfosNestedTraversable LockedGetOriginInfosExceedingGroupLimit() const;
+  OriginInfosNestedTraversable GetOriginInfosExceedingGroupLimit() const;
 
-  OriginInfosFlatTraversable LockedGetOriginInfosExceedingGlobalLimit(
-      const OriginInfosNestedTraversable& aAlreadyDoomedOriginInfos,
-      uint64_t aAlreadyDoomedUsage) const;
-
-  OriginInfosNestedTraversable GetOriginInfosExceedingLimits() const;
+  OriginInfosNestedTraversable GetOriginInfosExceedingGlobalLimit() const;
 
   void ClearOrigins(const OriginInfosNestedTraversable& aDoomedOriginInfos);
 
@@ -598,10 +594,10 @@ class QuotaManager final : public BackgroundThreadObject {
   void MaybeRecordShutdownStep(Maybe<Client::Type> aClientType,
                                const nsACString& aStepDescription);
 
-  template <typename Iterator, typename Pred>
-  static void MaybeInsertOriginInfos(
+  template <typename Iterator>
+  static void MaybeInsertNonPersistedOriginInfos(
       Iterator aDest, const RefPtr<GroupInfo>& aTemporaryGroupInfo,
-      const RefPtr<GroupInfo>& aDefaultGroupInfo, Pred&& aPred);
+      const RefPtr<GroupInfo>& aDefaultGroupInfo);
 
   template <typename Collect, typename Pred>
   static OriginInfosFlatTraversable CollectLRUOriginInfosUntil(

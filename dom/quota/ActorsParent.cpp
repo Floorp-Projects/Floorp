@@ -7089,13 +7089,14 @@ already_AddRefed<OriginInfo> QuotaManager::LockedGetOriginInfo(
   return nullptr;
 }
 
-template <typename Iterator, typename Pred>
-void QuotaManager::MaybeInsertOriginInfos(
+template <typename Iterator>
+void QuotaManager::MaybeInsertNonPersistedOriginInfos(
     Iterator aDest, const RefPtr<GroupInfo>& aTemporaryGroupInfo,
-    const RefPtr<GroupInfo>& aDefaultGroupInfo, Pred&& aPred) {
-  const auto copy = [&aDest, &aPred](const GroupInfo& groupInfo) {
-    std::copy_if(groupInfo.mOriginInfos.cbegin(), groupInfo.mOriginInfos.cend(),
-                 aDest, aPred);
+    const RefPtr<GroupInfo>& aDefaultGroupInfo) {
+  const auto copy = [&aDest](const GroupInfo& groupInfo) {
+    std::copy_if(
+        groupInfo.mOriginInfos.cbegin(), groupInfo.mOriginInfos.cend(), aDest,
+        [](const auto& originInfo) { return !originInfo->LockedPersisted(); });
   };
 
   if (aTemporaryGroupInfo) {
@@ -7130,8 +7131,8 @@ QuotaManager::CollectLRUOriginInfosUntil(Collect&& aCollect, Pred&& aPred) {
 }
 
 QuotaManager::OriginInfosNestedTraversable
-QuotaManager::LockedGetOriginInfosExceedingGroupLimit() const {
-  mQuotaMutex.AssertCurrentThreadOwns();
+QuotaManager::GetOriginInfosExceedingGroupLimit() const {
+  MutexAutoLock lock(mQuotaMutex);
 
   OriginInfosNestedTraversable originInfos;
 
@@ -7162,11 +7163,8 @@ QuotaManager::LockedGetOriginInfosExceedingGroupLimit() const {
       if (groupUsage > quotaManager->GetGroupLimit()) {
         originInfos.AppendElement(CollectLRUOriginInfosUntil(
             [&temporaryGroupInfo, &defaultGroupInfo](auto inserter) {
-              MaybeInsertOriginInfos(std::move(inserter), temporaryGroupInfo,
-                                     defaultGroupInfo,
-                                     [](const auto& originInfo) {
-                                       return !originInfo->LockedPersisted();
-                                     });
+              MaybeInsertNonPersistedOriginInfos(
+                  std::move(inserter), temporaryGroupInfo, defaultGroupInfo);
             },
             [&groupUsage, quotaManager](const auto& originInfo) {
               groupUsage -= originInfo->LockedUsage();
@@ -7180,36 +7178,27 @@ QuotaManager::LockedGetOriginInfosExceedingGroupLimit() const {
   return originInfos;
 }
 
-QuotaManager::OriginInfosFlatTraversable
-QuotaManager::LockedGetOriginInfosExceedingGlobalLimit(
-    const OriginInfosNestedTraversable& aAlreadyDoomedOriginInfos,
-    const uint64_t aAlreadyDoomedUsage) const {
-  mQuotaMutex.AssertCurrentThreadOwns();
+QuotaManager::OriginInfosNestedTraversable
+QuotaManager::GetOriginInfosExceedingGlobalLimit() const {
+  MutexAutoLock lock(mQuotaMutex);
 
-  return CollectLRUOriginInfosUntil(
-      [this, &aAlreadyDoomedOriginInfos](auto inserter) {
+  QuotaManager::OriginInfosNestedTraversable res;
+  res.AppendElement(CollectLRUOriginInfosUntil(
+      // XXX The lambda only needs to capture this, but due to Bug 1421435 it
+      // can't.
+      [&](auto inserter) {
         for (const auto& entry : mGroupInfoPairs) {
           const auto& pair = entry.GetData();
 
           MOZ_ASSERT(!entry.GetKey().IsEmpty());
           MOZ_ASSERT(pair);
 
-          MaybeInsertOriginInfos(
+          MaybeInsertNonPersistedOriginInfos(
               inserter, pair->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY),
-              pair->LockedGetGroupInfo(PERSISTENCE_TYPE_DEFAULT),
-              [&aAlreadyDoomedOriginInfos](const auto& originInfo) {
-                return !std::any_of(aAlreadyDoomedOriginInfos.cbegin(),
-                                    aAlreadyDoomedOriginInfos.cend(),
-                                    // XXX This should capture originInfo by
-                                    // value, but it can't due to Bug 1421435.
-                                    [&originInfo](const auto& array) {
-                                      return array.Contains(originInfo);
-                                    }) &&
-                       !originInfo->LockedPersisted();
-              });
+              pair->LockedGetGroupInfo(PERSISTENCE_TYPE_DEFAULT));
         }
       },
-      [temporaryStorageUsage = mTemporaryStorageUsage - aAlreadyDoomedUsage,
+      [temporaryStorageUsage = mTemporaryStorageUsage,
        temporaryStorageLimit = mTemporaryStorageLimit,
        doomedUsage = uint64_t{0}](const auto& originInfo) mutable {
         if (temporaryStorageUsage - doomedUsage <= temporaryStorageLimit) {
@@ -7218,35 +7207,9 @@ QuotaManager::LockedGetOriginInfosExceedingGlobalLimit(
 
         doomedUsage += originInfo->LockedUsage();
         return false;
-      });
-}
+      }));
 
-QuotaManager::OriginInfosNestedTraversable
-QuotaManager::GetOriginInfosExceedingLimits() const {
-  MutexAutoLock lock(mQuotaMutex);
-
-  auto originInfos = LockedGetOriginInfosExceedingGroupLimit();
-
-  const uint64_t doomedUsage = std::accumulate(
-      originInfos.cbegin(), originInfos.cend(), uint64_t(0),
-      [](uint64_t oldValue, const auto& currentOriginInfos) {
-        return std::accumulate(currentOriginInfos.cbegin(),
-                               currentOriginInfos.cend(), oldValue,
-                               [](uint64_t oldValue, const auto& originInfo) {
-                                 return oldValue + originInfo->LockedUsage();
-                               });
-      });
-
-  // Evicting origins that exceed their group limit also affects the global
-  // temporary storage usage. If the global temporary storage limit would still
-  // be exceeded after evicting the origins that were already selected, we need
-  // to specifically evict origins to get below the global limit.
-  if (mTemporaryStorageUsage - doomedUsage > mTemporaryStorageLimit) {
-    originInfos.AppendElement(
-        LockedGetOriginInfosExceedingGlobalLimit(originInfos, doomedUsage));
-  }
-
-  return originInfos;
+  return res;
 }
 
 void QuotaManager::ClearOrigins(
@@ -7301,7 +7264,11 @@ void QuotaManager::ClearOrigins(
 void QuotaManager::CleanupTemporaryStorage() {
   AssertIsOnIOThread();
 
-  ClearOrigins(GetOriginInfosExceedingLimits());
+  // Evicting origins that exceed their group limit also affects the global
+  // temporary storage usage, so these steps have to be taken sequentially.
+  // Combining them doesn't seem worth the added complexity.
+  ClearOrigins(GetOriginInfosExceedingGroupLimit());
+  ClearOrigins(GetOriginInfosExceedingGlobalLimit());
 
   if (mTemporaryStorageUsage > mTemporaryStorageLimit) {
     // If disk space is still low after origin clear, notify storage pressure.
