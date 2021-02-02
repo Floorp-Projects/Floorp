@@ -815,7 +815,8 @@ class ParserAtomsTable {
   TaggedParserAtomIndex internChar16(JSContext* cx, const char16_t* char16Ptr,
                                      uint32_t length);
 
-  TaggedParserAtomIndex internJSAtom(JSContext* cx, CompilationStencil& stencil,
+  TaggedParserAtomIndex internJSAtom(JSContext* cx,
+                                     CompilationAtomCache& atomCache,
                                      JSAtom* atom);
 
   TaggedParserAtomIndex concatAtoms(JSContext* cx,
