@@ -347,7 +347,8 @@ struct EnumSerializer {
   template <typename U>
   static QueueStatus Write(ProducerView<U>& aProducerView,
                            const ParamType& aValue) {
-    MOZ_RELEASE_ASSERT(EnumValidator::IsLegalValue(aValue));
+    MOZ_RELEASE_ASSERT(
+        EnumValidator::IsLegalValue(static_cast<DataType>(aValue)));
     return aProducerView.WriteParam(DataType(aValue));
   }
 
@@ -359,7 +360,7 @@ struct EnumSerializer {
           CrashReporter::Annotation::IPCReadErrorReason, "Bad iter"_ns);
       return aConsumerView.GetStatus();
     }
-    if (!EnumValidator::IsLegalValue(ParamType(value))) {
+    if (!EnumValidator::IsLegalValue(static_cast<DataType>(value))) {
       CrashReporter::AnnotateCrashReport(
           CrashReporter::Annotation::IPCReadErrorReason, "Illegal value"_ns);
       return QueueStatus::kFatalError;
