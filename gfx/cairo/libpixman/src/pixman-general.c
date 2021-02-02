@@ -37,43 +37,47 @@
 #include <string.h>
 #include "pixman-private.h"
 
-static pixman_bool_t
-general_src_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
+static void
+general_iter_init (pixman_iter_t *iter, const pixman_iter_info_t *info)
 {
     pixman_image_t *image = iter->image;
 
-    if (image->type == LINEAR)
-	_pixman_linear_gradient_iter_init (image, iter);
-    else if (image->type == RADIAL)
+    switch (image->type)
+    {
+    case BITS:
+        if ((iter->iter_flags & ITER_SRC) == ITER_SRC)
+            _pixman_bits_image_src_iter_init (image, iter);
+        else
+            _pixman_bits_image_dest_iter_init (image, iter);
+        break;
+
+    case LINEAR:
+        _pixman_linear_gradient_iter_init (image, iter);
+        break;
+
+    case RADIAL:
 	_pixman_radial_gradient_iter_init (image, iter);
-    else if (image->type == CONICAL)
+        break;
+
+    case CONICAL:
 	_pixman_conical_gradient_iter_init (image, iter);
-    else if (image->type == BITS)
-	_pixman_bits_image_src_iter_init (image, iter);
-    else if (image->type == SOLID)
+        break;
+
+    case SOLID:
         _pixman_log_error (FUNC, "Solid image not handled by noop");
-    else         
+        break;
+
+    default:
 	_pixman_log_error (FUNC, "Pixman bug: unknown image type\n");
-
-    return TRUE;
+        break;
+    }
 }
 
-static pixman_bool_t
-general_dest_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
+static const pixman_iter_info_t general_iters[] =
 {
-    if (iter->image->type == BITS)
-    {
-	_pixman_bits_image_dest_iter_init (iter->image, iter);
-
-	return TRUE;
-    }
-    else
-    {
-	_pixman_log_error (FUNC, "Trying to write to a non-writable image");
-
-	return FALSE;
-    }
-}
+    { PIXMAN_any, 0, 0, general_iter_init, NULL, NULL },
+    { PIXMAN_null },
+};
 
 typedef struct op_info_t op_info_t;
 struct op_info_t
@@ -105,62 +109,75 @@ static const op_info_t op_flags[PIXMAN_N_OPERATORS] =
 
 #define SCANLINE_BUFFER_LENGTH 8192
 
+static pixman_bool_t
+operator_needs_division (pixman_op_t op)
+{
+    static const uint8_t needs_division[] =
+    {
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, /* SATURATE */
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, /* DISJOINT */
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, /* CONJOINT */
+	0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, /* blend ops */
+    };
+
+    return needs_division[op];
+}
+
 static void
 general_composite_rect  (pixman_implementation_t *imp,
                          pixman_composite_info_t *info)
 {
     PIXMAN_COMPOSITE_ARGS (info);
-    uint64_t stack_scanline_buffer[(SCANLINE_BUFFER_LENGTH * 3 + 7) / 8];
+    uint8_t stack_scanline_buffer[3 * SCANLINE_BUFFER_LENGTH];
     uint8_t *scanline_buffer = (uint8_t *) stack_scanline_buffer;
     uint8_t *src_buffer, *mask_buffer, *dest_buffer;
     pixman_iter_t src_iter, mask_iter, dest_iter;
     pixman_combine_32_func_t compose;
     pixman_bool_t component_alpha;
-    iter_flags_t narrow, src_iter_flags;
-    iter_flags_t rgb16;
+    iter_flags_t width_flag, src_iter_flags;
     int Bpp;
     int i;
 
-    if ((src_image->common.flags & FAST_PATH_NARROW_FORMAT)		    &&
-	(!mask_image || mask_image->common.flags & FAST_PATH_NARROW_FORMAT) &&
-	(dest_image->common.flags & FAST_PATH_NARROW_FORMAT))
+    if ((src_image->common.flags & FAST_PATH_NARROW_FORMAT)		     &&
+	(!mask_image || mask_image->common.flags & FAST_PATH_NARROW_FORMAT)  &&
+	(dest_image->common.flags & FAST_PATH_NARROW_FORMAT)		     &&
+	!(operator_needs_division (op))                                      &&
+	(dest_image->bits.dither == PIXMAN_DITHER_NONE))
     {
-	narrow = ITER_NARROW;
+	width_flag = ITER_NARROW;
 	Bpp = 4;
     }
     else
     {
-	narrow = 0;
+	width_flag = ITER_WIDE;
 	Bpp = 16;
     }
 
-    // XXX: This special casing is bad. Ideally, we'd keep the general code general perhaps
-    // by having it deal more specifically with different intermediate formats
-    if (
-	(dest_image->common.flags & FAST_PATH_16_FORMAT && (src_image->type == LINEAR || src_image->type == RADIAL)) &&
-	( op == PIXMAN_OP_SRC ||
-         (op == PIXMAN_OP_OVER && (src_image->common.flags & FAST_PATH_IS_OPAQUE))
-	)
-	) {
-	rgb16 = ITER_16;
-    } else {
-	rgb16 = 0;
-    }
+#define ALIGN(addr)							\
+    ((uint8_t *)((((uintptr_t)(addr)) + 15) & (~15)))
 
+    if (width <= 0 || _pixman_multiply_overflows_int (width, Bpp * 3))
+	return;
 
-    if (width * Bpp > SCANLINE_BUFFER_LENGTH)
+    if (width * Bpp * 3 > sizeof (stack_scanline_buffer) - 15 * 3)
     {
-	scanline_buffer = pixman_malloc_abc (width, 3, Bpp);
+	scanline_buffer = pixman_malloc_ab_plus_c (width, Bpp * 3, 15 * 3);
 
 	if (!scanline_buffer)
 	    return;
+
+	memset (scanline_buffer, 0, width * Bpp * 3 + 15 * 3);
+    }
+    else
+    {
+	memset (stack_scanline_buffer, 0, sizeof (stack_scanline_buffer));
     }
 
-    src_buffer = scanline_buffer;
-    mask_buffer = src_buffer + width * Bpp;
-    dest_buffer = mask_buffer + width * Bpp;
+    src_buffer = ALIGN (scanline_buffer);
+    mask_buffer = ALIGN (src_buffer + width * Bpp);
+    dest_buffer = ALIGN (mask_buffer + width * Bpp);
 
-    if (!narrow)
+    if (width_flag == ITER_WIDE)
     {
 	/* To make sure there aren't any NANs in the buffers */
 	memset (src_buffer, 0, width * Bpp);
@@ -169,11 +186,12 @@ general_composite_rect  (pixman_implementation_t *imp,
     }
     
     /* src iter */
-    src_iter_flags = narrow | op_flags[op].src | rgb16;
+    src_iter_flags = width_flag | op_flags[op].src | ITER_SRC;
 
-    _pixman_implementation_src_iter_init (imp->toplevel, &src_iter, src_image,
-					  src_x, src_y, width, height,
-					  src_buffer, src_iter_flags, info->src_flags);
+    _pixman_implementation_iter_init (imp->toplevel, &src_iter, src_image,
+                                      src_x, src_y, width, height,
+                                      src_buffer, src_iter_flags,
+                                      info->src_flags);
 
     /* mask iter */
     if ((src_iter_flags & (ITER_IGNORE_ALPHA | ITER_IGNORE_RGB)) ==
@@ -185,23 +203,21 @@ general_composite_rect  (pixman_implementation_t *imp,
 	mask_image = NULL;
     }
 
-    component_alpha =
-        mask_image			      &&
-        mask_image->common.type == BITS       &&
-        mask_image->common.component_alpha    &&
-        PIXMAN_FORMAT_RGB (mask_image->bits.format);
+    component_alpha = mask_image && mask_image->common.component_alpha;
 
-    _pixman_implementation_src_iter_init (
-	imp->toplevel, &mask_iter, mask_image, mask_x, mask_y, width, height,
-	mask_buffer, narrow | (component_alpha? 0 : ITER_IGNORE_RGB), info->mask_flags);
+    _pixman_implementation_iter_init (
+	imp->toplevel, &mask_iter,
+	mask_image, mask_x, mask_y, width, height, mask_buffer,
+	ITER_SRC | width_flag | (component_alpha? 0 : ITER_IGNORE_RGB),
+	info->mask_flags);
 
     /* dest iter */
-    _pixman_implementation_dest_iter_init (
+    _pixman_implementation_iter_init (
 	imp->toplevel, &dest_iter, dest_image, dest_x, dest_y, width, height,
-	dest_buffer, narrow | op_flags[op].dst | rgb16, info->dest_flags);
+	dest_buffer, ITER_DEST | width_flag | op_flags[op].dst, info->dest_flags);
 
     compose = _pixman_implementation_lookup_combiner (
-	imp->toplevel, op, component_alpha, narrow, !!rgb16);
+	imp->toplevel, op, component_alpha, width_flag != ITER_WIDE);
 
     for (i = 0; i < height; ++i)
     {
@@ -216,6 +232,13 @@ general_composite_rect  (pixman_implementation_t *imp,
 	dest_iter.write_back (&dest_iter);
     }
 
+    if (src_iter.fini)
+	src_iter.fini (&src_iter);
+    if (mask_iter.fini)
+	mask_iter.fini (&mask_iter);
+    if (dest_iter.fini)
+	dest_iter.fini (&dest_iter);
+    
     if (scanline_buffer != (uint8_t *) stack_scanline_buffer)
 	free (scanline_buffer);
 }
@@ -231,12 +254,10 @@ _pixman_implementation_create_general (void)
 {
     pixman_implementation_t *imp = _pixman_implementation_create (NULL, general_fast_path);
 
-    _pixman_setup_combiner_functions_16 (imp);
     _pixman_setup_combiner_functions_32 (imp);
     _pixman_setup_combiner_functions_float (imp);
 
-    imp->src_iter_init = general_src_iter_init;
-    imp->dest_iter_init = general_dest_iter_init;
+    imp->iter_info = general_iters;
 
     return imp;
 }

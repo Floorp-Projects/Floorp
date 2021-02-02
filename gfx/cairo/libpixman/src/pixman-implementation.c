@@ -150,9 +150,16 @@ _pixman_implementation_lookup_composite (pixman_implementation_t  *toplevel,
     }
 
     /* We should never reach this point */
-    _pixman_log_error (FUNC, "No known composite function\n");
+    _pixman_log_error (
+        FUNC,
+        "No composite function found\n"
+        "\n"
+        "The most likely cause of this is that this system has issues with\n"
+        "thread local storage\n");
+
     *out_imp = NULL;
     *out_func = dummy_composite_rect;
+    return;
 
 update_cache:
     if (i)
@@ -186,8 +193,7 @@ pixman_combine_32_func_t
 _pixman_implementation_lookup_combiner (pixman_implementation_t *imp,
 					pixman_op_t		 op,
 					pixman_bool_t		 component_alpha,
-					pixman_bool_t		 narrow,
-					pixman_bool_t		 rgb16)
+					pixman_bool_t		 narrow)
 {
     while (imp)
     {
@@ -211,8 +217,6 @@ _pixman_implementation_lookup_combiner (pixman_implementation_t *imp,
 	    f = imp->combine_32_ca[op];
 	    break;
 	}
-	if (rgb16)
-	    f = (pixman_combine_32_func_t *)imp->combine_16[op];
 
 	if (f)
 	    return f;
@@ -281,50 +285,26 @@ _pixman_implementation_fill (pixman_implementation_t *imp,
     return FALSE;
 }
 
-pixman_bool_t
-_pixman_implementation_src_iter_init (pixman_implementation_t	*imp,
-				      pixman_iter_t             *iter,
-				      pixman_image_t		*image,
-				      int			 x,
-				      int			 y,
-				      int			 width,
-				      int			 height,
-				      uint8_t			*buffer,
-				      iter_flags_t		 iter_flags,
-				      uint32_t                   image_flags)
+static uint32_t *
+get_scanline_null (pixman_iter_t *iter, const uint32_t *mask)
 {
-    iter->image = image;
-    iter->buffer = (uint32_t *)buffer;
-    iter->x = x;
-    iter->y = y;
-    iter->width = width;
-    iter->height = height;
-    iter->iter_flags = iter_flags;
-    iter->image_flags = image_flags;
-
-    while (imp)
-    {
-	if (imp->src_iter_init && (*imp->src_iter_init) (imp, iter))
-	    return TRUE;
-
-	imp = imp->fallback;
-    }
-
-    return FALSE;
+    return NULL;
 }
 
-pixman_bool_t
-_pixman_implementation_dest_iter_init (pixman_implementation_t	*imp,
-				       pixman_iter_t            *iter,
-				       pixman_image_t		*image,
-				       int			 x,
-				       int			 y,
-				       int			 width,
-				       int			 height,
-				       uint8_t			*buffer,
-				       iter_flags_t		 iter_flags,
-				       uint32_t                  image_flags)
+void
+_pixman_implementation_iter_init (pixman_implementation_t *imp,
+                                  pixman_iter_t           *iter,
+                                  pixman_image_t          *image,
+                                  int                      x,
+                                  int                      y,
+                                  int                      width,
+                                  int                      height,
+                                  uint8_t                 *buffer,
+                                  iter_flags_t             iter_flags,
+                                  uint32_t                 image_flags)
 {
+    pixman_format_code_t format;
+
     iter->image = image;
     iter->buffer = (uint32_t *)buffer;
     iter->x = x;
@@ -333,16 +313,40 @@ _pixman_implementation_dest_iter_init (pixman_implementation_t	*imp,
     iter->height = height;
     iter->iter_flags = iter_flags;
     iter->image_flags = image_flags;
+    iter->fini = NULL;
+
+    if (!iter->image)
+    {
+	iter->get_scanline = get_scanline_null;
+	return;
+    }
+
+    format = iter->image->common.extended_format_code;
 
     while (imp)
     {
-	if (imp->dest_iter_init && (*imp->dest_iter_init) (imp, iter))
-	    return TRUE;
+        if (imp->iter_info)
+        {
+            const pixman_iter_info_t *info;
 
-	imp = imp->fallback;
+            for (info = imp->iter_info; info->format != PIXMAN_null; ++info)
+            {
+                if ((info->format == PIXMAN_any || info->format == format) &&
+                    (info->image_flags & image_flags) == info->image_flags &&
+                    (info->iter_flags & iter_flags) == info->iter_flags)
+                {
+                    iter->get_scanline = info->get_scanline;
+                    iter->write_back = info->write_back;
+
+                    if (info->initializer)
+                        info->initializer (iter, info);
+                    return;
+                }
+            }
+        }
+
+        imp = imp->fallback;
     }
-
-    return FALSE;
 }
 
 pixman_bool_t
@@ -376,6 +380,11 @@ _pixman_disabled (const char *name)
     return FALSE;
 }
 
+static const pixman_fast_path_t empty_fast_path[] =
+{
+    { PIXMAN_OP_NONE }
+};
+
 pixman_implementation_t *
 _pixman_choose_implementation (void)
 {
@@ -392,6 +401,17 @@ _pixman_choose_implementation (void)
     imp = _pixman_mips_get_implementations (imp);
 
     imp = _pixman_implementation_create_noop (imp);
+
+    if (_pixman_disabled ("wholeops"))
+    {
+        pixman_implementation_t *cur;
+
+        /* Disable all whole-operation paths except the general one,
+         * so that optimized iterators are used as much as possible.
+         */
+        for (cur = imp; cur->fallback; cur = cur->fallback)
+            cur->fast_paths = empty_fast_path;
+    }
 
     return imp;
 }
