@@ -31,7 +31,7 @@ add_task(async function() {
 
   await clickGutter(dbg, 70);
   await waitForBreakpointCount(dbg, 1);
-  await assertEditorBreakpoint(dbg, 70, true);
+  await assertBreakpoint(dbg, 70);
 
   await clickGutter(dbg, 70);
   await waitForBreakpointCount(dbg, 0);
@@ -81,23 +81,6 @@ function assertBreakpointExists(dbg, source, line) {
     getBreakpoint({ sourceId: source.id, line }),
     "Breakpoint has correct line"
   );
-}
-
-async function assertEditorBreakpoint(dbg, line, shouldExist) {
-  const el = await getLineEl(dbg, line);
-  const exists = !!el.querySelector(".new-breakpoint");
-  ok(
-    exists === shouldExist,
-    `Breakpoint ${shouldExist ? "exists" : "does not exist"} on line ${line}`
-  );
-}
-
-async function getLineEl(dbg, line) {
-  let el = await codeMirrorGutterElement(dbg, line);
-  while (el && !el.matches(".CodeMirror-code > div")) {
-    el = el.parentElement;
-  }
-  return el;
 }
 
 async function clickGutter(dbg, line) {
