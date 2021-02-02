@@ -589,13 +589,13 @@ static inline U16 textureLinearUnpackedR8(S sampler, ivec2 i,
   auto b0 = unaligned_load<V2<uint8_t>>(&buf[row0.y]);
   auto c0 = unaligned_load<V2<uint8_t>>(&buf[row0.z]);
   auto d0 = unaligned_load<V2<uint8_t>>(&buf[row0.w]);
-  auto abcd0 = CONVERT(combine(combine(a0, b0), combine(c0, d0)), V8<int16_t>);
+  auto abcd0 = CONVERT(combine(a0, b0, c0, d0), V8<int16_t>);
 
   auto a1 = unaligned_load<V2<uint8_t>>(&buf[row1.x]);
   auto b1 = unaligned_load<V2<uint8_t>>(&buf[row1.y]);
   auto c1 = unaligned_load<V2<uint8_t>>(&buf[row1.z]);
   auto d1 = unaligned_load<V2<uint8_t>>(&buf[row1.w]);
-  auto abcd1 = CONVERT(combine(combine(a1, b1), combine(c1, d1)), V8<int16_t>);
+  auto abcd1 = CONVERT(combine(a1, b1, c1, d1), V8<int16_t>);
 
   abcd0 += ((abcd1 - abcd0) * fracy.xxyyzzww) >> 7;
 
@@ -709,15 +709,13 @@ static inline I16 textureLinearUnpackedR16(S sampler, ivec2 i,
   auto b0 = unaligned_load<V2<uint16_t>>(&buf[row0.y]);
   auto c0 = unaligned_load<V2<uint16_t>>(&buf[row0.z]);
   auto d0 = unaligned_load<V2<uint16_t>>(&buf[row0.w]);
-  auto abcd0 =
-      CONVERT(combine(combine(a0, b0), combine(c0, d0)) >> 1, V8<int16_t>);
+  auto abcd0 = CONVERT(combine(a0, b0, c0, d0) >> 1, V8<int16_t>);
 
   auto a1 = unaligned_load<V2<uint16_t>>(&buf[row1.x]);
   auto b1 = unaligned_load<V2<uint16_t>>(&buf[row1.y]);
   auto c1 = unaligned_load<V2<uint16_t>>(&buf[row1.z]);
   auto d1 = unaligned_load<V2<uint16_t>>(&buf[row1.w]);
-  auto abcd1 =
-      CONVERT(combine(combine(a1, b1), combine(c1, d1)) >> 1, V8<int16_t>);
+  auto abcd1 = CONVERT(combine(a1, b1, c1, d1) >> 1, V8<int16_t>);
 
   // The samples occupy 15 bits and the fraction occupies 15 bits, so that when
   // they are multiplied together, the new scaled sample will fit in the high
@@ -766,6 +764,9 @@ vec4 textureLinearR16(S sampler, vec2 P, int32_t zoffset = 0) {
   Float r = CONVERT(textureLinearUnpackedR16(sampler, i, zoffset), Float);
   return vec4(r * (1.0f / 32767.0f), 0.0f, 0.0f, 1.0f);
 }
+
+using PackedRGBA32F = V16<float>;
+using WideRGBA32F = V16<float>;
 
 template <typename S>
 vec4 textureLinearRGBA32F(S sampler, vec2 P, int32_t zoffset = 0) {
