@@ -1229,12 +1229,124 @@ async function getEditorLineEl(dbg, line) {
   return el;
 }
 
-async function assertEditorBreakpoint(dbg, line, shouldExist) {
+/*
+ * Assert that no breakpoint is set on a given line.
+ *
+ * @memberof mochitest/helpers
+ * @param {Object} dbg
+ * @param {Number} line Line where to check for a breakpoint in the editor
+ * @static
+ */
+async function assertNoBreakpoint(
+  dbg,
+  line
+) {
   const el = await getEditorLineEl(dbg, line);
 
   const exists = !!el.querySelector(".new-breakpoint");
-  const existsStr = shouldExist ? "exists" : "does not exist";
-  ok(exists === shouldExist, `Breakpoint ${existsStr} on line ${line}`);
+  ok(!exists, `Breakpoint doesn't exists on line ${line}`);
+}
+
+/*
+ * Assert that a regular breakpoint is set. (no conditional, nor log breakpoint)
+ *
+ * @memberof mochitest/helpers
+ * @param {Object} dbg
+ * @param {Number} line Line where to check for a breakpoint
+ * @static
+ */
+async function assertBreakpoint(
+  dbg,
+  line
+) {
+  const el = await getEditorLineEl(dbg, line);
+
+  const exists = !!el.querySelector(".new-breakpoint");
+  ok(exists, `Breakpoint exists on line ${line}`);
+
+  const hasConditionClass = el.classList.contains(
+    "has-condition"
+  );
+
+  ok(
+    !hasConditionClass,
+    `Regular breakpoint doesn't have condition on line ${line}`
+  );
+
+  const hasLogClass = el.classList.contains("has-log");
+
+  ok(
+    !hasLogClass,
+    `Regular breakpoint doesn't have log on line ${line}`
+  );
+}
+
+/*
+ * Assert that a conditionnal breakpoint is set.
+ *
+ * @memberof mochitest/helpers
+ * @param {Object} dbg
+ * @param {Number} line Line where to check for a breakpoint
+ * @static
+ */
+async function assertConditionBreakpoint(
+  dbg,
+  line
+) {
+  const el = await getEditorLineEl(dbg, line);
+
+  const exists = !!el.querySelector(".new-breakpoint");
+  ok(exists, `Breakpoint exists on line ${line}`);
+
+  const hasConditionClass = el.classList.contains(
+    "has-condition"
+  );
+
+  ok(
+    hasConditionClass,
+    `Conditional breakpoint on line ${line}`
+  );
+
+  const hasLogClass = el.classList.contains("has-log");
+
+  ok(
+    !hasLogClass,
+    `Conditional breakpoint doesn't have log breakpoint on line ${line}`
+  );
+}
+
+/*
+ * Assert that a log breakpoint is set.
+ *
+ * @memberof mochitest/helpers
+ * @param {Object} dbg
+ * @param {Number} line Line where to check for a breakpoint
+ * @static
+ */
+async function assertLogBreakpoint(
+  dbg,
+  line
+) {
+  const el = await getEditorLineEl(dbg, line);
+
+  const exists = !!el.querySelector(".new-breakpoint");
+  ok(exists, `Breakpoint exists on line ${line}`);
+
+  const hasConditionClass = el.classList.contains(
+    "has-condition"
+  );
+
+  ok(
+    !hasConditionClass,
+    `Log breakpoint doesn't have condition on line ${line}`
+  );
+
+  const hasLogClass = el.classList.contains("has-log");
+
+  ok(
+    hasLogClass,
+    `Log breakpoint on line ${line}`
+  );
 }
 
 function assertBreakpointSnippet(dbg, index, snippet) {
@@ -2007,6 +2119,17 @@ async function toggleDebbuggerSettingsMenuItem(dbg, { className, isChecked }) {
 
   // Waits for the debugger settings panel to disappear.
   await waitFor(() => menuButton.getAttribute("aria-expanded") === "false");
+}
+
+async function setLogPoint(dbg, index, value) {
+  rightClickElement(dbg, "gutter", index);
+  selectContextMenuItem(
+    dbg,
+    `${selectors.addLogItem},${selectors.editLogItem}`
+  );
+  const onBreakpointSet = waitForDispatch(dbg, "SET_BREAKPOINT");
+  await typeInPanel(dbg, value);
+  await onBreakpointSet;
 }
 
 // This module is also loaded for Browser Toolbox tests, within the browser toolbox process

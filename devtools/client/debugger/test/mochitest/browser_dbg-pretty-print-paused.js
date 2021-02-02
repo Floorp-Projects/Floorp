@@ -23,7 +23,7 @@ add_task(async function() {
   );
   assertPausedLocation(dbg);
   await waitForBreakpoint(dbg, "math.min.js:formatted", 18);
-  await assertEditorBreakpoint(dbg, 18, true);
+  await assertBreakpoint(dbg, 18);
 
   await resume(dbg);
 });

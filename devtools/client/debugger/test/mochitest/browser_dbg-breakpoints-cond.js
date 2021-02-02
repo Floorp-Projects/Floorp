@@ -15,7 +15,7 @@ add_task(async function() {
 
   let bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.options.condition, "1", "breakpoint is created with the condition");
-  await assertEditorBreakpoint(dbg, 5, { hasCondition: true });
+  await assertConditionBreakpoint(dbg, 5);
 
   info("Edit the conditional breakpoint set above");
   await setConditionalBreakpoint(dbg, 5, "2");
@@ -23,7 +23,7 @@ add_task(async function() {
 
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.options.condition, "12", "breakpoint is created with the condition");
-  await assertEditorBreakpoint(dbg, 5, { hasCondition: true });
+  await assertConditionBreakpoint(dbg, 5);
 
   info("Hit 'Enter' when the cursor is in the conditional statement");
   rightClickElement(dbg, "gutter", 5);
@@ -52,7 +52,7 @@ add_task(async function() {
   await waitForDispatch(dbg, "REMOVE_BREAKPOINT");
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp, undefined, "breakpoint was removed");
-  await assertEditorBreakpoint(dbg, 5);
+  await assertNoBreakpoint(dbg, 5);
 
   info("Adding a condition to a breakpoint");
   clickElement(dbg, "gutter", 5);
@@ -62,7 +62,7 @@ add_task(async function() {
 
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.options.condition, "1", "breakpoint is created with the condition");
-  await assertEditorBreakpoint(dbg, 5, { hasCondition: true });
+  await assertConditionBreakpoint(dbg, 5);
 
   info("Double click the conditional breakpoint in secondary pane");
   dblClickElement(dbg, "conditionalBreakpointInSecPane");
@@ -87,7 +87,7 @@ add_task(async function() {
   info('Add "log point"');
   await setLogPoint(dbg, 5, "44");
   await waitForLog(dbg, 44);
-  await assertEditorBreakpoint(dbg, 5, { hasLog: true });
+  await assertLogBreakpoint(dbg, 5);
 
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.options.logValue, "44", "breakpoint condition removed");
@@ -110,35 +110,6 @@ add_task(async function() {
   is(logPointPanel, null, "The logpoint panel is closed");
 });
 
-function getLineEl(dbg, line) {
-  const lines = dbg.win.document.querySelectorAll(".CodeMirror-code > div");
-  return lines[line - 1];
-}
-
-function assertEditorBreakpoint(
-  dbg,
-  line,
-  { hasCondition = false, hasLog = false } = {}
-) {
-  const hasConditionClass = getLineEl(dbg, line).classList.contains(
-    "has-condition"
-  );
-
-  ok(
-    hasConditionClass === hasCondition,
-    `Breakpoint condition ${
-      hasCondition ? "exists" : "does not exist"
-    } on line ${line}`
-  );
-
-  const hasLogClass = getLineEl(dbg, line).classList.contains("has-log");
-
-  ok(
-    hasLogClass === hasLog,
-    `Breakpoint log ${hasLog ? "exists" : "does not exist"} on line ${line}`
-  );
-}
-
 function waitForBreakpointWithoutCondition(dbg, url, line) {
   return waitForState(dbg, () => {
     const bp = findBreakpoint(dbg, url, line);
@@ -153,15 +124,6 @@ async function setConditionalBreakpoint(dbg, index, condition) {
   rightClickElement(dbg, "gutter", index);
   selectContextMenuItem(dbg, selector);
   typeInPanel(dbg, condition);
-}
-
-async function setLogPoint(dbg, index, value) {
-  rightClickElement(dbg, "gutter", index);
-  selectContextMenuItem(
-    dbg,
-    `${selectors.addLogItem},${selectors.editLogItem}`
-  );
-  await typeInPanel(dbg, value);
 }
 
 async function waitForConditionalPanelFocus(dbg) {

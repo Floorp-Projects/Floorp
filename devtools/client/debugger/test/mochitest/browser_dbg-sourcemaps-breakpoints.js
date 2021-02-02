@@ -16,17 +16,17 @@ add_task(async function() {
 
   await clickGutter(dbg, 9);
   await waitForBreakpointCount(dbg, 1);
-  await assertEditorBreakpoint(dbg, 9, true);
+  await assertBreakpoint(dbg, 9);
   assertBreakpointSnippet(dbg, 3, "output(times2(3));");
 
   await selectSource(dbg, "bundle.js");
-  await assertEditorBreakpoint(dbg, 55, true);
+  await assertBreakpoint(dbg, 55);
   assertBreakpointSnippet(dbg, 3, "output(times2(3));");
 
   await clickGutter(dbg, 55);
   await waitForBreakpointCount(dbg, 0);
-  await assertEditorBreakpoint(dbg, 55, false);
+  await assertNoBreakpoint(dbg, 55);
 
   await selectSource(dbg, "entry.js");
-  await assertEditorBreakpoint(dbg, 9, false);
+  await assertNoBreakpoint(dbg, 9);
 });
