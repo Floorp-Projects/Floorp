@@ -1251,6 +1251,7 @@ static bool IsArgumentsObjectEscaped(MInstruction* ins) {
 
       // This is a replaceable consumer.
       case MDefinition::Opcode::ArgumentsObjectLength:
+      case MDefinition::Opcode::GetArgumentsObjectArg:
         break;
 
       default:
@@ -1272,6 +1273,7 @@ class ArgumentsReplacer : public MDefinitionVisitorDefaultNoop {
   TempAllocator& alloc() { return graph_.alloc(); }
 
   void visitGuardToClass(MGuardToClass* ins);
+  void visitGetArgumentsObjectArg(MGetArgumentsObjectArg* ins);
   void visitArgumentsObjectLength(MArgumentsObjectLength* ins);
 
  public:
@@ -1331,6 +1333,26 @@ void ArgumentsReplacer::visitGuardToClass(MGuardToClass* ins) {
   ins->replaceAllUsesWith(args_);
 
   // Remove the guard.
+  ins->block()->discard(ins);
+}
+
+void ArgumentsReplacer::visitGetArgumentsObjectArg(
+    MGetArgumentsObjectArg* ins) {
+  // There is only one possible arguments object.
+  // TODO: support inlining.
+  MOZ_ASSERT(ins->getArgsObject() == args_);
+
+  // We don't support setting arguments in IsArgumentsObjectEscaped,
+  // so we can load the argument from the frame without worrying
+  // about it being stale.
+  auto* index = MConstant::New(alloc(), Int32Value(ins->argno()));
+  ins->block()->insertBefore(ins, index);
+
+  auto* loadArg = MGetFrameArgument::New(alloc(), index);
+  ins->block()->insertBefore(ins, loadArg);
+  ins->replaceAllUsesWith(loadArg);
+
+  // Remove original instruction.
   ins->block()->discard(ins);
 }
 
