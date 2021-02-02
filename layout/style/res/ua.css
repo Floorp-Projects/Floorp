@@ -134,7 +134,7 @@
 }
 
 /* https://drafts.csswg.org/css-lists-3/#ua-stylesheet */
-::marker {
+*|*::marker {
   text-align: end;
   text-transform: none;
   unicode-bidi: isolate;
@@ -146,19 +146,19 @@
  * the same changes to svg.css.
  */
 
-/* Links and focusable content */
+/* Links */
 
-:any-link {
+*|*:any-link {
   cursor: pointer;
 }
 
-:focus-visible {
+*|*:any-link:-moz-focusring {
   /* Don't specify the outline-color, we should always use initial value. */
   outline: 1px dotted;
 }
 
 /* Inert subtrees */
-:-moz-inert {
+*|*:-moz-inert {
   -moz-inert: inert;
 }
 
