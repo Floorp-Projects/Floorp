@@ -16,26 +16,10 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 class UtilsKtTest {
     @Test
     fun `friendly root titles`() {
-        val url = BookmarkNode(
-            BookmarkNodeType.ITEM,
-            "456",
-            "folder",
-            0,
-            "Mozilla",
-            "http://mozilla.org",
-            null
-        )
+        val url = testBookmarkItem("folder","http://mozilla.org", "Mozilla")
         assertEquals("Mozilla", friendlyRootTitle(testContext, url))
 
-        val folder = BookmarkNode(
-            BookmarkNodeType.FOLDER,
-            "456",
-            "folder",
-            0,
-            "Folder",
-            null,
-            null
-        )
+        val folder = testFolder("456", "folder", null, "Folder")
         assertEquals("Folder", friendlyRootTitle(testContext, folder))
 
         val root = folder.copy(guid = "root________", title = "root")
@@ -65,67 +49,17 @@ class UtilsKtTest {
 
     @Test
     fun `flatNodeList various cases`() {
-        val url = BookmarkNode(
-            BookmarkNodeType.ITEM,
-            "456",
-            "folder",
-            0,
-            "Mozilla",
-            "http://mozilla.org",
-            null
-        )
-        val url2 = BookmarkNode(
-            BookmarkNodeType.ITEM,
-            "8674",
-            "folder2",
-            0,
-            "Mozilla",
-            "http://mozilla.org",
-            null
-        )
+        val url = testBookmarkItem("folder", "http://mozilla.org")
+        val url2 = testBookmarkItem( "folder2", "http://mozilla.org")
         assertEquals(emptyList<BookmarkNodeWithDepth>(), url.flatNodeList(null))
 
-        val root = BookmarkNode(
-            BookmarkNodeType.FOLDER,
-            "root",
-            null,
-            0,
-            "root",
-            null,
-            null
-        )
+        val root = testFolder("root", null, null)
         assertEquals(listOf(BookmarkNodeWithDepth(0, root, null)), root.flatNodeList(null))
         assertEquals(emptyList<BookmarkNodeWithDepth>(), root.flatNodeList("root"))
 
-        val folder = BookmarkNode(
-            BookmarkNodeType.FOLDER,
-            "folder",
-            root.guid,
-            0,
-            "folder",
-            null,
-            listOf(url)
-        )
-
-        val folder3 = BookmarkNode(
-            BookmarkNodeType.FOLDER,
-            "folder3",
-            "folder2",
-            0,
-            "folder3",
-            null,
-            null
-        )
-
-        val folder2 = BookmarkNode(
-            BookmarkNodeType.FOLDER,
-            "folder2",
-            root.guid,
-            0,
-            "folder2",
-            null,
-            listOf(folder3, url2)
-        )
+        val folder = testFolder("folder", root.guid, listOf(url))
+        val folder3 = testFolder("folder3", "folder2", null)
+        val folder2 = testFolder("folder2", root.guid, listOf(folder3, url2))
 
         val rootWithChildren = root.copy(children = listOf(folder, folder2))
         assertEquals(
@@ -145,3 +79,23 @@ class UtilsKtTest {
         )
     }
 }
+
+internal fun testBookmarkItem(parentGuid: String, url: String, title: String = "Item for $url") = BookmarkNode(
+    BookmarkNodeType.ITEM,
+    "guid#${Math.random() * 1000}",
+    parentGuid,
+    0,
+    title,
+    url,
+    null
+)
+
+internal fun testFolder(guid: String, parentGuid: String?, children: List<BookmarkNode>?, title: String = "Folder: $guid") = BookmarkNode(
+    BookmarkNodeType.FOLDER,
+    guid,
+    parentGuid,
+    0,
+    title,
+    null,
+    children
+)
