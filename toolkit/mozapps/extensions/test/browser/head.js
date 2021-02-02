@@ -98,20 +98,6 @@ function promiseFocus(window) {
   return new Promise(resolve => waitForFocus(resolve, window));
 }
 
-// Helper to register test failures and close windows if any are left open
-function checkOpenWindows(aWindowID) {
-  let found = false;
-  for (let win of Services.wm.getEnumerator(aWindowID)) {
-    if (!win.closed) {
-      found = true;
-      win.close();
-    }
-  }
-  if (found) {
-    ok(false, "Found unexpected " + aWindowID + " window still open");
-  }
-}
-
 // Tools to disable and re-enable the background update and blocklist timers
 // so that tests can protect themselves from unwanted timer events.
 var gCatMan = Services.catMan;
@@ -154,11 +140,6 @@ registerCleanupFunction(function() {
       Services.prefs.setCharPref(pref.name, pref.value);
     }
   }
-
-  // Throw an error if the add-ons manager window is open anywhere
-  checkOpenWindows("Addons:Manager");
-  checkOpenWindows("Addons:Compatibility");
-  checkOpenWindows("Addons:Install");
 
   return AddonManager.getAllInstalls().then(aInstalls => {
     for (let install of aInstalls) {
