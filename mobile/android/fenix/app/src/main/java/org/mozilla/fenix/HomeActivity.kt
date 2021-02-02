@@ -92,6 +92,7 @@ import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.library.recentlyclosed.RecentlyClosedFragmentDirections
 import org.mozilla.fenix.perf.Performance
 import org.mozilla.fenix.perf.PerformanceInflater
+import org.mozilla.fenix.perf.ProfilerMarkers
 import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.search.SearchDialogFragmentDirections
 import org.mozilla.fenix.session.PrivateNotificationService
@@ -327,6 +328,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         breadcrumb(
             message = "onStart()"
         )
+
+        ProfilerMarkers.homeActivityOnStart(rootContainer, components.core.engine.profiler)
     }
 
     override fun onStop() {
