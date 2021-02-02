@@ -19,6 +19,8 @@ add_task(async function() {
   await checkRealBreakpoint();
 
   await checkPauseOnException();
+
+  await checkSetBeforeWatch();
 });
 
 async function checkBreakpointBeforeWatchResources() {
@@ -310,6 +312,95 @@ async function checkPauseOnException() {
   await threadFront.resume();
   info("Wait for page to finish reloading after resume");
   await reloaded;
+
+  await waitFor(
+    () => availableResources.length == 1,
+    "Wait until we receive the resumed event"
+  );
+
+  const resumed = availableResources.pop();
+
+  assertResumedResource(resumed);
+
+  targetList.destroy();
+  await client.close();
+}
+
+async function checkSetBeforeWatch() {
+  info(
+    "Verify bug 1683139 - D103068, where setting a breakpoint before watching for thread state, avoid receiving the paused state"
+  );
+
+  const tab = await addTab(BREAKPOINT_TEST_URL);
+
+  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+    tab
+  );
+
+  // Attach the target in order to create the thread actor
+  info("Attach the top level target");
+  await targetList.targetFront.attach();
+  // Instantiate the thread front in order to be able to set a breakpoint before watching for thread state
+  info("Attach the top level thread actor");
+  await targetList.targetFront.attachAndInitThread(targetList);
+  const { threadFront } = targetList.targetFront;
+
+  // We have to call `sources` request, otherwise the Thread Actor
+  // doesn't start watching for sources, and ignore the setBreakpoint call
+  // as it doesn't have any source registered.
+  await threadFront.getSources();
+
+  // Set the breakpoint before trying to hit it
+  await threadFront.setBreakpoint(
+    { sourceUrl: BREAKPOINT_TEST_URL, line: 14, column: 6 },
+    {}
+  );
+
+  info("Run the test function where we set a breakpoint");
+  // Note that we do not wait for the resolution of spawn as it will be paused
+  ContentTask.spawn(tab.linkedBrowser, null, () => {
+    content.window.wrappedJSObject.testFunction();
+  });
+
+  // bug 1683139 - D103068. Re-setting the breakpoint just before watching for thread state
+  // prevented to receive the paused state change.
+  await threadFront.setBreakpoint(
+    { sourceUrl: BREAKPOINT_TEST_URL, line: 14, column: 6 },
+    {}
+  );
+
+  info("Call watchResources");
+  const availableResources = [];
+  await resourceWatcher.watchResources([ResourceWatcher.TYPES.THREAD_STATE], {
+    onAvailable: resources => availableResources.push(...resources),
+  });
+
+  await waitFor(
+    () => availableResources.length == 1,
+    "Got the THREAD_STATE related to the debugger statement"
+  );
+  const threadState = availableResources.pop();
+
+  assertPausedResource(threadState, {
+    state: "paused",
+    why: {
+      type: "breakpoint",
+    },
+    frame: {
+      type: "call",
+      asyncCause: null,
+      state: "on-stack",
+      // this: object actor's form referring to `this` variable
+      displayName: "testFunction",
+      // arguments: []
+      where: {
+        line: 14,
+        column: 6,
+      },
+    },
+  });
+
+  await threadFront.resume();
 
   await waitFor(
     () => availableResources.length == 1,
