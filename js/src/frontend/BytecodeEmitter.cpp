@@ -1689,13 +1689,13 @@ bool BytecodeEmitter::iteratorResultShape(GCThingIndex* outShape) {
   ObjLiteralWriter writer;
   writer.beginObject(flags);
 
-  writer.setPropName(compilationState.parserAtoms,
-                     TaggedParserAtomIndex::WellKnown::value());
+  writer.setPropNameNoDuplicateCheck(compilationState.parserAtoms,
+                                     TaggedParserAtomIndex::WellKnown::value());
   if (!writer.propWithUndefinedValue(cx)) {
     return false;
   }
-  writer.setPropName(compilationState.parserAtoms,
-                     TaggedParserAtomIndex::WellKnown::done());
+  writer.setPropNameNoDuplicateCheck(compilationState.parserAtoms,
+                                     TaggedParserAtomIndex::WellKnown::done());
   if (!writer.propWithUndefinedValue(cx)) {
     return false;
   }
@@ -8940,8 +8940,10 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
     ParseNode* key = prop->left();
 
     if (key->is<NameNode>()) {
-      writer.setPropName(compilationState.parserAtoms,
-                         key->as<NameNode>().atom());
+      if (!writer.setPropName(cx, compilationState.parserAtoms,
+                              key->as<NameNode>().atom())) {
+        return false;
+      }
     } else {
       double numValue = key->as<NumericLiteral>().value();
       int32_t i = 0;
@@ -9004,7 +9006,9 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
       atom = key->as<NameNode>().atom();
     }
 
-    writer.setPropName(compilationState.parserAtoms, atom);
+    if (!writer.setPropName(cx, compilationState.parserAtoms, atom)) {
+      return false;
+    }
 
     if (!writer.propWithUndefinedValue(cx)) {
       return false;
