@@ -778,11 +778,7 @@
 # -1 = determine dynamically, 0 = none, n = memory capacity in kilobytes.
 - name: browser.cache.memory.capacity
   type: RelaxedAtomicInt32
-#ifdef ANDROID
-  value: 1024
-#else
   value: -1
-#endif
   mirror: always
 
 # When smartsizing is disabled we could potentially fill all disk space by
