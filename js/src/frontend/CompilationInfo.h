@@ -116,6 +116,10 @@ struct ScopeContext {
 #ifdef DEBUG
   // True if the enclosing scope has non-syntactic scope on chain.
   bool hasNonSyntacticScopeOnChain = false;
+
+  // True if the enclosing scope has function scope where the function needs
+  // home object.
+  bool hasFunctionNeedsHomeObjectOnChain = false;
 #endif
 
   explicit ScopeContext(JSContext* cx) : effectiveScope(cx) {}
