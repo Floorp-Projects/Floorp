@@ -44,11 +44,19 @@ namespace IPC {
 template <typename E, typename EnumValidator>
 struct EnumSerializer {
   typedef E paramType;
+
+  // XXX(Bug 1690343) Should this be changed to
+  // std::make_unsigned_t<std::underlying_type_t<paramType>>, to make this more
+  // consistent with the type used for validating values?
   typedef typename mozilla::UnsignedStdintTypeForSize<sizeof(paramType)>::Type
       uintParamType;
 
   static void Write(Message* aMsg, const paramType& aValue) {
-    MOZ_RELEASE_ASSERT(EnumValidator::IsLegalValue(aValue));
+    // XXX This assertion is somewhat meaningless at least for E that don't have
+    // a fixed underlying type: if aValue weren't a legal value, we would
+    // already have UB where this function is called.
+    MOZ_RELEASE_ASSERT(EnumValidator::IsLegalValue(
+        static_cast<std::underlying_type_t<paramType>>(aValue)));
     WriteParam(aMsg, uintParamType(aValue));
   }
 
@@ -59,7 +67,7 @@ struct EnumSerializer {
       CrashReporter::AnnotateCrashReport(
           CrashReporter::Annotation::IPCReadErrorReason, "Bad iter"_ns);
       return false;
-    } else if (!EnumValidator::IsLegalValue(paramType(value))) {
+    } else if (!EnumValidator::IsLegalValue(value)) {
       CrashReporter::AnnotateCrashReport(
           CrashReporter::Annotation::IPCReadErrorReason, "Illegal value"_ns);
       return false;
@@ -80,8 +88,13 @@ class ContiguousEnumValidator {
   }
 
  public:
-  static bool IsLegalValue(E e) {
-    return IsLessThanOrEqual(MinLegal, e) && e < HighBound;
+  using IntegralType = std::underlying_type_t<E>;
+  static constexpr auto kMinLegalIntegral = static_cast<IntegralType>(MinLegal);
+  static constexpr auto kHighBoundIntegral =
+      static_cast<IntegralType>(HighBound);
+
+  static bool IsLegalValue(const IntegralType e) {
+    return IsLessThanOrEqual(kMinLegalIntegral, e) && e < kHighBoundIntegral;
   }
 };
 
@@ -96,14 +109,20 @@ class ContiguousEnumValidatorInclusive {
   }
 
  public:
-  static bool IsLegalValue(E e) {
-    return IsLessThanOrEqual(MinLegal, e) && e <= MaxLegal;
+  using IntegralType = std::underlying_type_t<E>;
+  static constexpr auto kMinLegalIntegral = static_cast<IntegralType>(MinLegal);
+  static constexpr auto kMaxLegalIntegral = static_cast<IntegralType>(MaxLegal);
+
+  static bool IsLegalValue(const IntegralType e) {
+    return IsLessThanOrEqual(kMinLegalIntegral, e) && e <= kMaxLegalIntegral;
   }
 };
 
 template <typename E, E AllBits>
 struct BitFlagsEnumValidator {
-  static bool IsLegalValue(E e) { return (e & AllBits) == e; }
+  static bool IsLegalValue(const std::underlying_type_t<E> e) {
+    return (e & static_cast<std::underlying_type_t<E>>(AllBits)) == e;
+  }
 };
 
 /**

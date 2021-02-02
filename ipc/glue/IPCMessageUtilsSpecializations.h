@@ -886,12 +886,24 @@ struct ParamTraits<mozilla::dom::Optional<T>> {
 };
 
 struct CrossOriginOpenerPolicyValidator {
-  static bool IsLegalValue(nsILoadInfo::CrossOriginOpenerPolicy e) {
-    return e == nsILoadInfo::OPENER_POLICY_UNSAFE_NONE ||
-           e == nsILoadInfo::OPENER_POLICY_SAME_ORIGIN ||
-           e == nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_ALLOW_POPUPS ||
-           e == nsILoadInfo::
-                    OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP;
+  using IntegralType =
+      std::underlying_type_t<nsILoadInfo::CrossOriginOpenerPolicy>;
+
+  static bool IsLegalValue(const IntegralType e) {
+    return AreIntegralValuesEqual(e, nsILoadInfo::OPENER_POLICY_UNSAFE_NONE) ||
+           AreIntegralValuesEqual(e, nsILoadInfo::OPENER_POLICY_SAME_ORIGIN) ||
+           AreIntegralValuesEqual(
+               e, nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_ALLOW_POPUPS) ||
+           AreIntegralValuesEqual(
+               e, nsILoadInfo::
+                      OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP);
+  }
+
+ private:
+  static bool AreIntegralValuesEqual(
+      const IntegralType aLhs,
+      const nsILoadInfo::CrossOriginOpenerPolicy aRhs) {
+    return aLhs == static_cast<IntegralType>(aRhs);
   }
 };
 
@@ -901,9 +913,19 @@ struct ParamTraits<nsILoadInfo::CrossOriginOpenerPolicy>
                      CrossOriginOpenerPolicyValidator> {};
 
 struct CrossOriginEmbedderPolicyValidator {
-  static bool IsLegalValue(nsILoadInfo::CrossOriginEmbedderPolicy e) {
-    return e == nsILoadInfo::EMBEDDER_POLICY_NULL ||
-           e == nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP;
+  using IntegralType =
+      std::underlying_type_t<nsILoadInfo::CrossOriginEmbedderPolicy>;
+
+  static bool IsLegalValue(const IntegralType e) {
+    return AreIntegralValuesEqual(e, nsILoadInfo::EMBEDDER_POLICY_NULL) ||
+           AreIntegralValuesEqual(e, nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP);
+  }
+
+ private:
+  static bool AreIntegralValuesEqual(
+      const IntegralType aLhs,
+      const nsILoadInfo::CrossOriginEmbedderPolicy aRhs) {
+    return aLhs == static_cast<IntegralType>(aRhs);
   }
 };
 
