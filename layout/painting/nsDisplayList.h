@@ -3104,12 +3104,6 @@ class nsDisplayItem : public nsDisplayItemBase {
     return GetPaintRect();
   }
 
-  virtual bool HasHitTestInfo() const { return false; }
-
-#ifdef DEBUG
-  virtual bool IsHitTestItem() const { return false; }
-#endif
-
  protected:
   typedef bool (*PrefFunc)(void);
   bool ShouldUseAdvancedLayer(LayerManager* aManager, PrefFunc aFunc) const;
@@ -3909,108 +3903,6 @@ class RetainedDisplayList : public nsDisplayList {
   // Temporary state initialized during the preprocess pass
   // of RetainedDisplayListBuilder and then used during merging.
   nsTArray<OldItemInfo> mOldItems;
-};
-
-struct HitTestInfo {
-  HitTestInfo(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-              const mozilla::gfx::CompositorHitTestInfo& aHitTestFlags)
-      : mArea(aFrame->GetCompositorHitTestArea(aBuilder)),
-        mFlags(aHitTestFlags),
-        mAGR(aBuilder->FindAnimatedGeometryRootFor(aFrame)),
-        mASR(aBuilder->CurrentActiveScrolledRoot()),
-        mClipChain(aBuilder->ClipState().GetCurrentCombinedClipChain(aBuilder)),
-        mClip(mozilla::DisplayItemClipChain::ClipForASR(mClipChain, mASR)) {}
-
-  HitTestInfo(const nsRect& aArea,
-              const mozilla::gfx::CompositorHitTestInfo& aHitTestFlags)
-      : mArea(aArea),
-        mFlags(aHitTestFlags),
-        mAGR(nullptr),
-        mASR(nullptr),
-        mClipChain(nullptr),
-        mClip(nullptr) {}
-
-  nsRect mArea;
-  mozilla::gfx::CompositorHitTestInfo mFlags;
-
-  RefPtr<AnimatedGeometryRoot> mAGR;
-  RefPtr<const mozilla::ActiveScrolledRoot> mASR;
-  RefPtr<const mozilla::DisplayItemClipChain> mClipChain;
-  const mozilla::DisplayItemClip* mClip;
-};
-
-class nsDisplayHitTestInfoBase : public nsPaintedDisplayItem {
- public:
-  nsDisplayHitTestInfoBase(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-      : nsPaintedDisplayItem(aBuilder, aFrame) {}
-
-  nsDisplayHitTestInfoBase(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                           const ActiveScrolledRoot* aActiveScrolledRoot)
-      : nsPaintedDisplayItem(aBuilder, aFrame, aActiveScrolledRoot) {}
-
-  nsDisplayHitTestInfoBase(nsDisplayListBuilder* aBuilder,
-                           const nsDisplayHitTestInfoBase& aOther)
-      : nsPaintedDisplayItem(aBuilder, aOther) {}
-
-  const HitTestInfo& GetHitTestInfo() const {
-    MOZ_ASSERT(HasHitTestInfo());
-    return *mHitTestInfo;
-  }
-
-  void SetActiveScrolledRoot(
-      const ActiveScrolledRoot* aActiveScrolledRoot) override {
-    nsPaintedDisplayItem::SetActiveScrolledRoot(aActiveScrolledRoot);
-    UpdateHitTestInfoActiveScrolledRoot(aActiveScrolledRoot);
-  }
-
-  /**
-   * Updates mASR and mClip fields using the given |aActiveScrolledRoot|.
-   */
-  void UpdateHitTestInfoActiveScrolledRoot(
-      const ActiveScrolledRoot* aActiveScrolledRoot) {
-    if (HasHitTestInfo()) {
-      mHitTestInfo->mASR = aActiveScrolledRoot;
-      mHitTestInfo->mClip = mozilla::DisplayItemClipChain::ClipForASR(
-          mHitTestInfo->mClipChain, mHitTestInfo->mASR);
-    }
-  }
-
-  void SetHitTestInfo(mozilla::UniquePtr<HitTestInfo>&& aHitTestInfo) {
-    MOZ_ASSERT(aHitTestInfo);
-    MOZ_ASSERT(aHitTestInfo->mFlags !=
-               mozilla::gfx::CompositorHitTestInvisibleToHit);
-
-    mHitTestInfo = std::move(aHitTestInfo);
-  }
-
-  void SetHitTestInfo(
-      const nsRect& aArea,
-      const mozilla::gfx::CompositorHitTestInfo& aHitTestFlags) {
-    MOZ_ASSERT(aHitTestFlags != mozilla::gfx::CompositorHitTestInvisibleToHit);
-
-    mHitTestInfo = mozilla::MakeUnique<HitTestInfo>(aArea, aHitTestFlags);
-    mHitTestInfo->mAGR = mAnimatedGeometryRoot;
-    mHitTestInfo->mASR = mActiveScrolledRoot;
-    mHitTestInfo->mClipChain = mClipChain;
-    mHitTestInfo->mClip = mClip;
-  }
-
-  const nsRect& HitTestArea() const { return mHitTestInfo->mArea; }
-
-  const mozilla::gfx::CompositorHitTestInfo& HitTestFlags() const {
-    return mHitTestInfo->mFlags;
-  }
-
-  bool HasHitTestInfo() const final { return mHitTestInfo.get(); }
-
-  void AddSizeOfExcludingThis(nsWindowSizes&) const override;
-
-#ifdef DEBUG
-  bool IsHitTestItem() const final { return true; }
-#endif
-
- protected:
-  mozilla::UniquePtr<HitTestInfo> mHitTestInfo;
 };
 
 class nsDisplayContainer final : public nsDisplayItem {
@@ -5253,13 +5145,27 @@ class nsDisplayEventReceiver final : public nsDisplayItem {
                HitTestState* aState, nsTArray<nsIFrame*>* aOutFrames) final;
 };
 
+struct HitTestInfo {
+  HitTestInfo(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+              const mozilla::gfx::CompositorHitTestInfo& aHitTestFlags)
+      : mArea(aFrame->GetCompositorHitTestArea(aBuilder)),
+        mFlags(aHitTestFlags) {}
+
+  HitTestInfo(const nsRect& aArea,
+              const mozilla::gfx::CompositorHitTestInfo& aHitTestFlags)
+      : mArea(aArea), mFlags(aHitTestFlags) {}
+
+  nsRect mArea;
+  mozilla::gfx::CompositorHitTestInfo mFlags;
+};
+
 /**
  * Similar to nsDisplayEventReceiver in that it is used for hit-testing. However
  * this gets built when we're doing widget painting and we need to send the
  * compositor some hit-test info for a frame. This is effectively a dummy item
  * whose sole purpose is to carry the hit-test info to the compositor.
  */
-class nsDisplayCompositorHitTestInfo : public nsDisplayHitTestInfoBase {
+class nsDisplayCompositorHitTestInfo : public nsPaintedDisplayItem {
  public:
   nsDisplayCompositorHitTestInfo(
       nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
@@ -5286,6 +5192,26 @@ class nsDisplayCompositorHitTestInfo : public nsDisplayHitTestInfoBase {
   int32_t ZIndex() const override;
   void SetOverrideZIndex(int32_t aZIndex);
 
+  void SetHitTestInfo(mozilla::UniquePtr<HitTestInfo>&& aHitTestInfo) {
+    MOZ_ASSERT(aHitTestInfo);
+    MOZ_ASSERT(aHitTestInfo->mFlags !=
+               mozilla::gfx::CompositorHitTestInvisibleToHit);
+
+    mHitTestInfo = std::move(aHitTestInfo);
+  }
+
+  void SetHitTestInfo(
+      const nsRect& aArea,
+      const mozilla::gfx::CompositorHitTestInfo& aHitTestFlags) {
+    MOZ_ASSERT(aHitTestFlags != mozilla::gfx::CompositorHitTestInvisibleToHit);
+    mHitTestInfo = mozilla::MakeUnique<HitTestInfo>(aArea, aHitTestFlags);
+  }
+
+  const HitTestInfo& GetHitTestInfo() const {
+    MOZ_ASSERT(mHitTestInfo);
+    return *mHitTestInfo;
+  }
+
   /**
    * ApplyOpacity() is overriden for opacity flattening.
    */
@@ -5302,10 +5228,18 @@ class nsDisplayCompositorHitTestInfo : public nsDisplayHitTestInfoBase {
     return nsRect();
   }
 
+  const nsRect& HitTestArea() const { return mHitTestInfo->mArea; }
+
+  const mozilla::gfx::CompositorHitTestInfo& HitTestFlags() const {
+    return mHitTestInfo->mFlags;
+  }
+
  private:
   mozilla::Maybe<mozilla::layers::ScrollableLayerGuid::ViewID> mScrollTarget;
   mozilla::Maybe<int32_t> mOverrideZIndex;
   int32_t mAppUnitsPerDevPixel;
+
+  mozilla::UniquePtr<HitTestInfo> mHitTestInfo;
 };
 
 /**
@@ -5322,7 +5256,7 @@ class nsDisplayCompositorHitTestInfo : public nsDisplayHitTestInfoBase {
  * we allow the frame to be nullptr. Callers to GetUnderlyingFrame must
  * detect and handle this case.
  */
-class nsDisplayWrapList : public nsDisplayHitTestInfoBase {
+class nsDisplayWrapList : public nsPaintedDisplayItem {
  public:
   /**
    * Takes all the items from aList and puts them in our list.
@@ -5339,7 +5273,7 @@ class nsDisplayWrapList : public nsDisplayHitTestInfoBase {
                     bool aClearClipChain = false);
 
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-      : nsDisplayHitTestInfoBase(aBuilder, aFrame),
+      : nsPaintedDisplayItem(aBuilder, aFrame),
         mFrameActiveScrolledRoot(aBuilder->CurrentActiveScrolledRoot()),
         mOverrideZIndex(0),
         mHasZIndexOverride(false) {
@@ -5357,7 +5291,7 @@ class nsDisplayWrapList : public nsDisplayHitTestInfoBase {
   nsDisplayWrapList(const nsDisplayWrapList& aOther) = delete;
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
                     const nsDisplayWrapList& aOther)
-      : nsDisplayHitTestInfoBase(aBuilder, aOther),
+      : nsPaintedDisplayItem(aBuilder, aOther),
         mListPtr(&mList),
         mFrameActiveScrolledRoot(aOther.mFrameActiveScrolledRoot),
         mMergedFrames(aOther.mMergedFrames.Clone()),
@@ -5378,7 +5312,7 @@ class nsDisplayWrapList : public nsDisplayHitTestInfoBase {
 
   void Destroy(nsDisplayListBuilder* aBuilder) override {
     mList.DeleteAll(aBuilder);
-    nsDisplayHitTestInfoBase::Destroy(aBuilder);
+    nsPaintedDisplayItem::Destroy(aBuilder);
   }
 
   /**
@@ -5416,14 +5350,6 @@ class nsDisplayWrapList : public nsDisplayHitTestInfoBase {
     // the frame.
     buildingRect.UnionRect(mBaseBuildingRect, buildingRect);
     SetBuildingRect(buildingRect);
-  }
-
-  void SetActiveScrolledRoot(
-      const ActiveScrolledRoot* aActiveScrolledRoot) override {
-    // Skip unnecessary call to
-    // |nsDisplayHitTestInfoBase::UpdateHitTestInfoActiveScrolledRoot()|, since
-    // callers will manually call that with different ASR.
-    nsDisplayHitTestInfoBase::SetActiveScrolledRoot(aActiveScrolledRoot);
   }
 
   void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
@@ -5501,7 +5427,7 @@ class nsDisplayWrapList : public nsDisplayHitTestInfoBase {
 
   int32_t ZIndex() const override {
     return (mHasZIndexOverride) ? mOverrideZIndex
-                                : nsDisplayHitTestInfoBase::ZIndex();
+                                : nsPaintedDisplayItem::ZIndex();
   }
 
   void SetOverrideZIndex(int32_t aZIndex) {
@@ -6759,7 +6685,7 @@ class nsDisplayFilters : public nsDisplayEffectsBase {
  * function.
  * INVARIANT: The wrapped frame is non-null.
  */
-class nsDisplayTransform : public nsDisplayHitTestInfoBase {
+class nsDisplayTransform : public nsPaintedDisplayItem {
   using Matrix4x4 = mozilla::gfx::Matrix4x4;
   using Matrix4x4Flagged = mozilla::gfx::Matrix4x4Flagged;
   using Point3D = mozilla::gfx::Point3D;
@@ -6797,7 +6723,7 @@ class nsDisplayTransform : public nsDisplayHitTestInfoBase {
   NS_DISPLAY_DECL_NAME("nsDisplayTransform", TYPE_TRANSFORM)
 
   bool RestoreState() override {
-    if (!nsDisplayHitTestInfoBase::RestoreState() && !mShouldFlatten) {
+    if (!nsPaintedDisplayItem::RestoreState() && !mShouldFlatten) {
       return false;
     }
 
@@ -6817,7 +6743,7 @@ class nsDisplayTransform : public nsDisplayHitTestInfoBase {
 
   void Destroy(nsDisplayListBuilder* aBuilder) override {
     GetChildren()->DeleteAll(aBuilder);
-    nsDisplayHitTestInfoBase::Destroy(aBuilder);
+    nsPaintedDisplayItem::Destroy(aBuilder);
   }
 
   nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) const override;
@@ -6890,7 +6816,7 @@ class nsDisplayTransform : public nsDisplayHitTestInfoBase {
     if (!mTransformGetter) {
       return mFrame;
     }
-    return nsDisplayHitTestInfoBase::ReferenceFrameForChildren();
+    return nsPaintedDisplayItem::ReferenceFrameForChildren();
   }
 
   AnimatedGeometryRoot* AnimatedGeometryRootForScrollMetadata() const override {
@@ -7150,7 +7076,7 @@ class nsDisplayTransform : public nsDisplayHitTestInfoBase {
  * perspective-origin is relative to an ancestor of the transformed frame, and
  * APZ can scroll the child separately.
  */
-class nsDisplayPerspective : public nsDisplayHitTestInfoBase {
+class nsDisplayPerspective : public nsPaintedDisplayItem {
   typedef mozilla::gfx::Point3D Point3D;
 
  public:
@@ -7162,7 +7088,7 @@ class nsDisplayPerspective : public nsDisplayHitTestInfoBase {
 
   void Destroy(nsDisplayListBuilder* aBuilder) override {
     mList.DeleteAll(aBuilder);
-    nsDisplayHitTestInfoBase::Destroy(aBuilder);
+    nsPaintedDisplayItem::Destroy(aBuilder);
   }
 
   void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,

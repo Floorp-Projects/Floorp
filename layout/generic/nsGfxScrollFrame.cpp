@@ -4084,8 +4084,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                   DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
                 auto* hitTestItem =
                     static_cast<nsDisplayCompositorHitTestInfo*>(item);
-                if (hitTestItem->HasHitTestInfo() &&
-                    hitTestItem->HitTestFlags().contains(
+                if (hitTestItem->HitTestFlags().contains(
                         CompositorHitTestFlags::eInactiveScrollframe)) {
                   zIndex = std::max(zIndex, hitTestItem->ZIndex());
                   item->SetCantBeReused();
