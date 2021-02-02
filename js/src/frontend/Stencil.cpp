@@ -557,6 +557,18 @@ bool CompilationInput::initScriptSource(JSContext* cx) {
   return ss->initFromOptions(cx, options);
 }
 
+bool CompilationInput::initForStandaloneFunctionInNonSyntacticScope(
+    JSContext* cx, HandleScope functionEnclosingScope) {
+  MOZ_ASSERT(!functionEnclosingScope->as<GlobalScope>().isSyntactic());
+
+  target = CompilationTarget::StandaloneFunctionInNonSyntacticScope;
+  if (!initScriptSource(cx)) {
+    return false;
+  }
+  enclosingScope = functionEnclosingScope;
+  return true;
+}
+
 void CompilationInput::trace(JSTracer* trc) {
   atomCache.trace(trc);
   TraceNullableRoot(trc, &lazy, "compilation-input-lazy");

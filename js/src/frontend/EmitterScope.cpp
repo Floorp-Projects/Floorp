@@ -492,7 +492,9 @@ bool EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* funbox) {
   } else if (funbox->isStandalone) {
     // If the function is standalone, the enclosing scope is either an empty
     // global or non-syntactic scope, and there's no static bindings.
-    if (funbox->hasNonSyntacticEnclosingScopeForStandalone) {
+    if (bce->stencil.input.target ==
+        CompilationInput::CompilationTarget::
+            StandaloneFunctionInNonSyntacticScope) {
       fallbackFreeNameLocation_ = Some(NameLocation::Dynamic());
     } else {
       fallbackFreeNameLocation_ = Some(NameLocation::Global(BindingKind::Var));
