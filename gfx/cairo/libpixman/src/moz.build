@@ -35,6 +35,7 @@ SOURCES += [
     'pixman-arm.c',
     'pixman-bits-image.c',
     'pixman-combine-float.c',
+    'pixman-combine16.c',
     'pixman-combine32.c',
     'pixman-conical-gradient.c',
     'pixman-edge-accessors.c',
@@ -69,14 +70,8 @@ LOCAL_INCLUDES += [
     '../../cairo/src',
 ]
 
-if CONFIG['OS_TARGET'] == 'Android':
-    # For cpu-features.h
-    LOCAL_INCLUDES += [
-        '%%%s/sources/android/cpufeatures' % CONFIG['ANDROID_NDK']
-    ]
-
 if CONFIG['MOZ_USE_PTHREADS']:
-    DEFINES['HAVE_PTHREADS'] = True
+    DEFINES['HAVE_PTHREAD_SETSPECIFIC'] = True
 
 DEFINES['PACKAGE'] = 'mozpixman'
 

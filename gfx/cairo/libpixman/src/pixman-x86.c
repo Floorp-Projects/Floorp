@@ -25,7 +25,7 @@
 
 #include "pixman-private.h"
 
-#if defined(USE_X86_MMX) || defined (USE_SSE2) || defined (USE_SSSE3)
+#if defined(USE_X86_MMX) || defined (USE_SSE2)
 
 /* The CPU detection code needs to be in a file not compiled with
  * "-mmmx -msse", as gcc would generate CMOV instructions otherwise
@@ -39,8 +39,7 @@ typedef enum
     X86_MMX_EXTENSIONS		= (1 << 1),
     X86_SSE			= (1 << 2) | X86_MMX_EXTENSIONS,
     X86_SSE2			= (1 << 3),
-    X86_CMOV			= (1 << 4),
-    X86_SSSE3			= (1 << 5)
+    X86_CMOV			= (1 << 4)
 } cpu_features_t;
 
 #ifdef HAVE_GETISAX
@@ -65,8 +64,6 @@ detect_cpu_features (void)
 	    features |= X86_SSE;
 	if (result & AV_386_SSE2)
 	    features |= X86_SSE2;
-	if (result & AV_386_SSSE3)
-	    features |= X86_SSSE3;
     }
 
     return features;
@@ -174,8 +171,6 @@ detect_cpu_features (void)
 	features |= X86_SSE;
     if (d & (1 << 26))
 	features |= X86_SSE2;
-    if (c & (1 << 9))
-	features |= X86_SSSE3;
 
     /* Check for AMD specific features */
     if ((features & X86_MMX) && !(features & X86_SSE))
@@ -191,7 +186,6 @@ detect_cpu_features (void)
 	memcpy (vendor + 8, &c, 4);
 
 	if (strcmp (vendor, "AuthenticAMD") == 0 ||
-	    strcmp (vendor, "HygonGenuine") == 0 ||
 	    strcmp (vendor, "Geode by NSC") == 0)
 	{
 	    pixman_cpuid (0x80000000, &a, &b, &c, &d);
@@ -232,7 +226,6 @@ _pixman_x86_get_implementations (pixman_implementation_t *imp)
 {
 #define MMX_BITS  (X86_MMX | X86_MMX_EXTENSIONS)
 #define SSE2_BITS (X86_MMX | X86_MMX_EXTENSIONS | X86_SSE | X86_SSE2)
-#define SSSE3_BITS (X86_SSE | X86_SSE2 | X86_SSSE3)
 
 #ifdef USE_X86_MMX
     if (!_pixman_disabled ("mmx") && have_feature (MMX_BITS))
@@ -242,11 +235,6 @@ _pixman_x86_get_implementations (pixman_implementation_t *imp)
 #ifdef USE_SSE2
     if (!_pixman_disabled ("sse2") && have_feature (SSE2_BITS))
 	imp = _pixman_implementation_create_sse2 (imp);
-#endif
-
-#ifdef USE_SSSE3
-    if (!_pixman_disabled ("ssse3") && have_feature (SSSE3_BITS))
-	imp = _pixman_implementation_create_ssse3 (imp);
 #endif
 
     return imp;

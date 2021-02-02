@@ -51,10 +51,7 @@ coordinates_to_parameter (double x, double y, double angle)
 }
 
 static uint32_t *
-conical_get_scanline (pixman_iter_t                 *iter,
-		      const uint32_t                *mask,
-		      int                            Bpp,
-		      pixman_gradient_walker_write_t write_pixel)
+conical_get_scanline_narrow (pixman_iter_t *iter, const uint32_t *mask)
 {
     pixman_image_t *image = iter->image;
     int x = iter->x;
@@ -64,7 +61,7 @@ conical_get_scanline (pixman_iter_t                 *iter,
 
     gradient_t *gradient = (gradient_t *)image;
     conical_gradient_t *conical = (conical_gradient_t *)image;
-    uint32_t       *end = buffer + width * (Bpp / 4);
+    uint32_t       *end = buffer + width;
     pixman_gradient_walker_t walker;
     pixman_bool_t affine = TRUE;
     double cx = 1.;
@@ -112,12 +109,11 @@ conical_get_scanline (pixman_iter_t                 *iter,
 	    {
 		double t = coordinates_to_parameter (rx, ry, conical->angle);
 
-		write_pixel (&walker,
-			     (pixman_fixed_48_16_t)pixman_double_to_fixed (t),
-			     buffer);
+		*buffer = _pixman_gradient_walker_pixel (
+		    &walker, (pixman_fixed_48_16_t)pixman_double_to_fixed (t));
 	    }
 
-	    buffer += (Bpp / 4);
+	    ++buffer;
 
 	    rx += cx;
 	    ry += cy;
@@ -148,12 +144,11 @@ conical_get_scanline (pixman_iter_t                 *iter,
 
 		t = coordinates_to_parameter (x, y, conical->angle);
 
-		write_pixel (&walker,
-			     (pixman_fixed_48_16_t)pixman_double_to_fixed (t),
-			     buffer);
+		*buffer = _pixman_gradient_walker_pixel (
+		    &walker, (pixman_fixed_48_16_t)pixman_double_to_fixed (t));
 	    }
 
-	    buffer += (Bpp / 4);
+	    ++buffer;
 
 	    rx += cx;
 	    ry += cy;
@@ -166,17 +161,14 @@ conical_get_scanline (pixman_iter_t                 *iter,
 }
 
 static uint32_t *
-conical_get_scanline_narrow (pixman_iter_t *iter, const uint32_t *mask)
-{
-    return conical_get_scanline (iter, mask, 4,
-				 _pixman_gradient_walker_write_narrow);
-}
-
-static uint32_t *
 conical_get_scanline_wide (pixman_iter_t *iter, const uint32_t *mask)
 {
-    return conical_get_scanline (iter, NULL, 16,
-				 _pixman_gradient_walker_write_wide);
+    uint32_t *buffer = conical_get_scanline_narrow (iter, NULL);
+
+    pixman_expand_to_float (
+	(argb_t *)buffer, buffer, PIXMAN_a8r8g8b8, iter->width);
+
+    return buffer;
 }
 
 void
