@@ -2791,7 +2791,7 @@ this.VideoControlsImplWidget = class {
           <div id="controlsOverlay" class="controlsOverlay stackItem" role="none">
             <div class="controlsSpacerStack">
               <div id="controlsSpacer" class="controlsSpacer stackItem" role="none"></div>
-              <div id="clickToPlay" class="clickToPlay" hidden="true"></div>
+              <button id="clickToPlay" class="clickToPlay" hidden="true"></button>
             </div>
 
             <button id="pictureInPictureToggle" class="pip-wrapper" position="left" hidden="true">
@@ -3075,7 +3075,7 @@ this.NoControlsMobileImplWidget = class {
         <div id="controlsContainer" class="controlsContainer" role="none" hidden="true">
           <div class="controlsOverlay stackItem">
             <div class="controlsSpacerStack">
-              <div id="clickToPlay" class="clickToPlay"></div>
+              <button id="clickToPlay" class="clickToPlay"></button>
             </div>
           </div>
         </div>
