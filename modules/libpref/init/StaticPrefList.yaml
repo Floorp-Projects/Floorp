@@ -5320,14 +5320,6 @@
 #endif
   mirror: always
 
-# True if off-thread parsing should use a parse GlobalObject in order to
-# directly allocate to the GC from a helper thread. If false, transfer the
-# CompilationStencil back to main thread before allocating GC objects.
-- name: javascript.options.off_thread_parse_global
-  type: bool
-  value: false
-  mirror: once
-
 - name: javascript.options.wasm_optimizingjit
   type: bool
 #if defined(MOZ_AARCH64) && !defined(ENABLE_WASM_CRANELIFT)
