@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=596506
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTest);
 
-const kIsMac = navigator.platform.indexOf("Mac") == 0;
+const kIsMac = navigator.platform.includes("Mac");
 
 
 function runTest() {
@@ -31,14 +31,14 @@ function runTest() {
   edit.focus();
 
   sendString("First");
-  synthesizeKey("KEY_Enter", {});
+  synthesizeKey("KEY_Enter");
   sendString("Second");
-  synthesizeKey("KEY_ArrowUp", {});
-  synthesizeKey("KEY_ArrowUp", {});
+  synthesizeKey("KEY_ArrowUp");
+  synthesizeKey("KEY_ArrowUp");
   if (kIsMac) {
-    synthesizeKey("KEY_ArrowRight", {accelKey: true});
+    synthesizeKey("KEY_ArrowRight", { accelKey: true });
   } else {
-    synthesizeKey("KEY_End", {});
+    synthesizeKey("KEY_End");
   }
   sendString("ly");
   is(edit.value, "Firstly\nSecond",

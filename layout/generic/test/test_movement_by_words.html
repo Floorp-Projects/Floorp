@@ -16,6 +16,8 @@
 
 /** Tests for bugs 384147, 981281, 1066756 **/
 
+const kIsMac = navigator.platform.includes("Mac");
+
 SimpleTest.waitForExplicitFinish();
 
 SimpleTest.waitForFocus(function(){setTimeout(focusing, 0)});
@@ -28,8 +30,6 @@ function focusing() {
 
 var eatSpace;
 var stopAtPunctuation;
-var wordModifiers =
-    (navigator.platform.includes("Mac")) ? {altKey:true} : {ctrlKey:true};
 var sel = window.getSelection();
 var editor = document.getElementById("editor");
 
@@ -46,13 +46,23 @@ function errString(dir) {
 }
 
 function testRight(node, offset) {
-  synthesizeKey("VK_RIGHT", wordModifiers);
+  if (!kIsMac) {
+    synthesizeKey("KEY_ArrowRight", { ctrlKey: true });
+  } else {
+    // macOS does not have default shortcut key to move caret per word.
+    SpecialPowers.doCommand(window, "cmd_wordNext");
+  }
   is(sel.anchorNode, node, errString("Right"));
   is(sel.anchorOffset, offset, errString("Right"));
 }
 
 function testLeft(node, offset) {
-  synthesizeKey("VK_LEFT", wordModifiers);
+  if (!kIsMac) {
+    synthesizeKey("KEY_ArrowLeft", { ctrlKey: true });
+  } else {
+    // macOS does not have default shortcut key to move caret per word.
+    SpecialPowers.doCommand(window, "cmd_wordPrevious");
+  }
   is(sel.anchorNode, node, errString("Left"));
   is(sel.anchorOffset, offset, errString("Left"));
 }
