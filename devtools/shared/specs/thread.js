@@ -25,6 +25,11 @@ types.addDictType("thread.frames", {
   frames: "array:frame",
 });
 
+types.addDictType("thread.breakpoint-options", {
+  condition: "nullable:string",
+  logValue: "nullable:string",
+});
+
 types.addDictType("paused-reason", {
   type: "string",
 
@@ -121,7 +126,7 @@ const threadSpec = generateActorSpec({
     setBreakpoint: {
       request: {
         location: Arg(0, "json"),
-        options: Arg(1, "json"),
+        options: Arg(1, "thread.breakpoint-options"),
       },
     },
     removeBreakpoint: {

@@ -4,7 +4,12 @@
 
 "use strict";
 
-const { generateActorSpec, Arg } = require("devtools/shared/protocol");
+const { generateActorSpec, Arg, types } = require("devtools/shared/protocol");
+
+types.addDictType("breakpoint-list.breakpoint-options", {
+  condition: "nullable:string",
+  logValue: "nullable:string",
+});
 
 const breakpointListSpec = generateActorSpec({
   typeName: "breakpoint-list",
@@ -13,7 +18,7 @@ const breakpointListSpec = generateActorSpec({
     setBreakpoint: {
       request: {
         location: Arg(0, "json"),
-        options: Arg(1, "json"),
+        options: Arg(1, "breakpoint-list.breakpoint-options"),
       },
     },
     removeBreakpoint: {

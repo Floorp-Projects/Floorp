@@ -537,7 +537,14 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   async setBreakpoint(location, options) {
-    const actor = this.breakpointActorMap.getOrCreateBreakpointActor(location);
+    let actor = this.breakpointActorMap.get(location);
+    // Avoid resetting the exact same breakpoint twice
+    if (actor && JSON.stringify(actor.options) == JSON.stringify(options)) {
+      return;
+    }
+    if (!actor) {
+      actor = this.breakpointActorMap.getOrCreateBreakpointActor(location);
+    }
     actor.setOptions(options);
     this._maybeClearPriorPause(location);
 
