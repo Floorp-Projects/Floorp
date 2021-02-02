@@ -27,6 +27,24 @@ namespace test {
     constexpr impl::BooleanMetric boolean_metric(1);
 
     /**
+     * generated from test.labeled_boolean_metric
+     */
+    /**
+     * A multi-line
+     * description
+     */
+    constexpr impl::Labeled<impl::BooleanMetric> labeled_boolean_metric(2);
+
+    /**
+     * generated from test.labeled_boolean_metric_labels
+     */
+    /**
+     * A multi-line
+     * description
+     */
+    constexpr impl::Labeled<impl::BooleanMetric> labeled_boolean_metric_labels(3);
+
+    /**
      * generated from test.counter_metric
      */
     /**
@@ -36,6 +54,24 @@ namespace test {
     constexpr impl::CounterMetric counter_metric(4);
 
     /**
+     * generated from test.labeled_counter_metric
+     */
+    /**
+     * A multi-line
+     * description
+     */
+    constexpr impl::Labeled<impl::CounterMetric> labeled_counter_metric(5);
+
+    /**
+     * generated from test.labeled_counter_metric_labels
+     */
+    /**
+     * A multi-line
+     * description
+     */
+    constexpr impl::Labeled<impl::CounterMetric> labeled_counter_metric_labels(6);
+
+    /**
      * generated from test.string_metric
      */
     /**
@@ -43,6 +79,24 @@ namespace test {
      * description
      */
     constexpr impl::StringMetric string_metric(7);
+
+    /**
+     * generated from test.labeled_string_metric
+     */
+    /**
+     * A multi-line
+     * description
+     */
+    constexpr impl::Labeled<impl::StringMetric> labeled_string_metric(8);
+
+    /**
+     * generated from test.labeled_string_metric_labels
+     */
+    /**
+     * A multi-line
+     * description
+     */
+    constexpr impl::Labeled<impl::StringMetric> labeled_string_metric_labels(9);
 
     /**
      * generated from test.string_list_metric
