@@ -15970,46 +15970,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Tracking the use of the custom IDBFactory.open overload accepting an options dictionary in one of the categories."
   },
-  "SHARED_MEMORY_UA_SHEETS_MAPPED_PARENT": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "alert_emails": ["cmccormack@mozilla.com"],
-    "bug_numbers": [1562060, 1621773],
-    "expires_in_version": "83",
-    "kind": "boolean",
-    "releaseChannelCollection": "opt-out",
-    "description": "Whether the parent process successfully mapped the User Agent style sheet shared memory buffer at the desired address"
-  },
-  "SHARED_MEMORY_UA_SHEETS_TOSHMEM_SUCCEEDED": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "alert_emails": ["layout-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1621773],
-    "expires_in_version": "83",
-    "kind": "boolean",
-    "releaseChannelCollection": "opt-out",
-    "description": "Whether the parent process failed to convert User Agent style sheets into a form suitable for storing in shared memory"
-  },
-  "SHARED_MEMORY_UA_SHEETS_MAPPED_PARENT_AFTER_FREEZE": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "alert_emails": ["layout-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1562060, 1621773],
-    "expires_in_version": "83",
-    "kind": "boolean",
-    "releaseChannelCollection": "opt-out",
-    "description": "Whether the parent process successfully mapped the User Agent style sheet shared memory buffer at the desired address"
-  },
-  "SHARED_MEMORY_UA_SHEETS_MAPPED_CHILD": {
-    "record_in_processes": ["content"],
-    "products": ["firefox"],
-    "alert_emails": ["layout-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1562060, 1621773],
-    "expires_in_version": "83",
-    "kind": "boolean",
-    "releaseChannelCollection": "opt-out",
-    "description": "Whether a child process successfully mapped the User Agent style sheet shared memory buffer at the desired address"
-  },
   "TLS_1_3_CLIENT_AUTH_USES_PHA": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
