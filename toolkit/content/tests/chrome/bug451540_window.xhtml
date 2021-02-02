@@ -21,13 +21,6 @@
     let gPrefsvc = SpecialPowers.Services.prefs.nsIPrefBranch;
     let gBrowser;
 
-    let sendCtrl = true;
-    let sendMeta = false;
-    if (navigator.platform.includes("Mac")) {
-      sendCtrl = false;
-      sendMeta = true;
-    }
-
     var SimpleTest = window.arguments[0].SimpleTest;
     var ok = window.arguments[0].ok;
     var is = window.arguments[0].is;
@@ -92,9 +85,9 @@
       });
       info(`focused element`);
       if (navigator.platform.includes("Mac")) {
-        await BrowserTestUtils.synthesizeKey("VK_LEFT", { metaKey: true }, gBrowser);
+        await BrowserTestUtils.synthesizeKey("KEY_ArrowLeft", { metaKey: true }, gBrowser);
       } else {
-        await BrowserTestUtils.synthesizeKey("VK_HOME", {}, gBrowser);
+        await BrowserTestUtils.synthesizeKey("KEY_Home", {}, gBrowser);
       }
     }
 
@@ -121,6 +114,16 @@
         return;
       }
 
+      let moveCaretToNextWordBoundary = async (aBrowser) => {
+        if (!navigator.platform.includes("Mac")) {
+          return BrowserTestUtils.synthesizeKey("KEY_ArrowRight", { accelKey: true }, aBrowser);
+        }
+        // macOS does not have default shortcut key to move caret per word.
+        return SpecialPowers.spawn(aBrowser, [], async () => {
+          content.docShell.doCommand("cmd_wordNext");
+        });
+      };
+
       // Initialize the findbar
       let matchCase = gFindBar.getElement("find-case-sensitive");
       if (matchCase.checked) {
@@ -133,7 +136,7 @@
       await testSelection(elementId, 1, testTypeText + " correctly highlighted match");
 
       // Test 2: check highlight removed when text added within the highlight
-      await BrowserTestUtils.synthesizeKey("VK_RIGHT", {}, gBrowser);
+      await BrowserTestUtils.synthesizeKey("KEY_ArrowRight", {}, gBrowser);
       await BrowserTestUtils.synthesizeKey("a", {}, gBrowser);
 
       await testSelection(elementId, 0, testTypeText + " correctly removed highlight on text insertion");
@@ -146,36 +149,36 @@
       //  Test 4: check highlighting remains when text added after highlight
       await resetForNextTest(elementId);
       for (let x = 0; x < SEARCH_TEXT.length; x++) {
-        await BrowserTestUtils.synthesizeKey("VK_RIGHT", {}, gBrowser);
+        await BrowserTestUtils.synthesizeKey("KEY_ArrowRight", {}, gBrowser);
       }
       await BrowserTestUtils.synthesizeKey("a", {}, gBrowser);
       await testSelection(elementId, 1, testTypeText + " highlight correctly remained on text insertion at end");
 
       // Test 5: deleting text within the highlight
       await resetForNextTest(elementId);
-      await BrowserTestUtils.synthesizeKey("VK_RIGHT", {}, gBrowser);
-      await BrowserTestUtils.synthesizeKey("VK_BACK_SPACE", {}, gBrowser);
+      await BrowserTestUtils.synthesizeKey("KEY_ArrowRight", {}, gBrowser);
+      await BrowserTestUtils.synthesizeKey("KEY_Backspace", {}, gBrowser);
       await testSelection(elementId, 0, testTypeText + " correctly removed highlight on text deletion");
 
       // Test 6: deleting text at end of highlight
       await resetForNextTest(elementId, SEARCH_TEXT + "A");
       for (let x = 0; x < (SEARCH_TEXT + "A").length; x++) {
-        await BrowserTestUtils.synthesizeKey("VK_RIGHT", {}, gBrowser);
+        await BrowserTestUtils.synthesizeKey("KEY_ArrowRight", {}, gBrowser);
       }
-      await BrowserTestUtils.synthesizeKey("VK_BACK_SPACE", {}, gBrowser);
+      await BrowserTestUtils.synthesizeKey("KEY_Backspace", {}, gBrowser);
       await testSelection(elementId, 1, testTypeText + " highlight correctly remained on text deletion at end");
 
       // Test 7: deleting text at start of highlight
       await resetForNextTest(elementId, "A" + SEARCH_TEXT);
-      await BrowserTestUtils.synthesizeKey("VK_RIGHT", {}, gBrowser);
-      await BrowserTestUtils.synthesizeKey("VK_BACK_SPACE", {}, gBrowser);
+      await BrowserTestUtils.synthesizeKey("KEY_ArrowRight", {}, gBrowser);
+      await BrowserTestUtils.synthesizeKey("KEY_Backspace", {}, gBrowser);
       await testSelection(elementId, 1, testTypeText + " highlight correctly remained on text deletion at start");
 
       // Test 8: deleting selection
       await resetForNextTest(elementId);
-      await BrowserTestUtils.synthesizeKey("VK_RIGHT", { shiftKey: true }, gBrowser);
-      await BrowserTestUtils.synthesizeKey("VK_RIGHT", { shiftKey: true }, gBrowser);
-      await BrowserTestUtils.synthesizeKey("x", { ctrlKey: sendCtrl, metaKey: sendMeta }, gBrowser);
+      await BrowserTestUtils.synthesizeKey("KEY_ArrowRight", { shiftKey: true }, gBrowser);
+      await BrowserTestUtils.synthesizeKey("KEY_ArrowRight", { shiftKey: true }, gBrowser);
+      await BrowserTestUtils.synthesizeKey("x", { accelKey: true }, gBrowser);
       await testSelection(elementId, 0, testTypeText + " correctly removed highlight on selection deletion");
 
       // Test 9: Multiple matches within one editor (part 1)
@@ -184,12 +187,12 @@
       // second match is edited
       await resetForNextTest(elementId, SEARCH_TEXT + " " + SEARCH_TEXT);
       await testSelection(elementId, 2, testTypeText + " correctly highlighted both matches");
-      await BrowserTestUtils.synthesizeKey("VK_RIGHT", {}, gBrowser);
+      await BrowserTestUtils.synthesizeKey("KEY_ArrowRight", {}, gBrowser);
       await BrowserTestUtils.synthesizeKey("a", {}, gBrowser);
       await testSelection(elementId, 1, testTypeText + " correctly removed only the first highlight on text insertion");
-      await BrowserTestUtils.synthesizeKey("VK_RIGHT", { ctrlKey: sendCtrl, metaKey: sendMeta }, gBrowser);
-      await BrowserTestUtils.synthesizeKey("VK_RIGHT", { ctrlKey: sendCtrl, metaKey: sendMeta }, gBrowser);
-      await BrowserTestUtils.synthesizeKey("VK_LEFT", {}, gBrowser);
+      await moveCaretToNextWordBoundary(gBrowser);
+      await moveCaretToNextWordBoundary(gBrowser);
+      await BrowserTestUtils.synthesizeKey("KEY_ArrowLeft", {}, gBrowser);
       await BrowserTestUtils.synthesizeKey("a", {}, gBrowser);
       await testSelection(elementId, 0, testTypeText + " correctly removed second highlight on text insertion");
 
@@ -199,13 +202,13 @@
       // second match is edited
       await resetForNextTest(elementId, SEARCH_TEXT + " " + SEARCH_TEXT);
       await testSelection(elementId, 2, testTypeText + " correctly highlighted both matches");
-      await BrowserTestUtils.synthesizeKey("VK_RIGHT", {}, gBrowser);
-      await BrowserTestUtils.synthesizeKey("VK_BACK_SPACE", {}, gBrowser);
+      await BrowserTestUtils.synthesizeKey("KEY_ArrowRight", {}, gBrowser);
+      await BrowserTestUtils.synthesizeKey("KEY_Backspace", {}, gBrowser);
       await testSelection(elementId, 1, testTypeText + " correctly removed only the first highlight on text deletion");
-      await BrowserTestUtils.synthesizeKey("VK_RIGHT", { ctrlKey: sendCtrl, metaKey: sendMeta }, gBrowser);
-      await BrowserTestUtils.synthesizeKey("VK_RIGHT", { ctrlKey: sendCtrl, metaKey: sendMeta }, gBrowser);
-      await BrowserTestUtils.synthesizeKey("VK_LEFT", {}, gBrowser);
-      await BrowserTestUtils.synthesizeKey("VK_BACK_SPACE", {}, gBrowser);
+      await moveCaretToNextWordBoundary(gBrowser);
+      await moveCaretToNextWordBoundary(gBrowser);
+      await BrowserTestUtils.synthesizeKey("KEY_ArrowLeft", {}, gBrowser);
+      await BrowserTestUtils.synthesizeKey("KEY_Backspace", {}, gBrowser);
       await testSelection(elementId, 0, testTypeText + " correctly removed second highlight on text deletion");
 
       // Test 11: Multiple matches within one editor (part 3)
@@ -213,15 +216,15 @@
       // in first match, and that second match highlighting gets correctly
       // removed when it has a selection deleted from it
       await resetForNextTest(elementId, SEARCH_TEXT + " " + SEARCH_TEXT);
-      await BrowserTestUtils.synthesizeKey("VK_RIGHT", { shiftKey: true }, gBrowser);
-      await BrowserTestUtils.synthesizeKey("VK_RIGHT", { shiftKey: true }, gBrowser);
-      await BrowserTestUtils.synthesizeKey("x", { ctrlKey: sendCtrl, metaKey: sendMeta }, gBrowser);
+      await BrowserTestUtils.synthesizeKey("KEY_ArrowRight", { shiftKey: true }, gBrowser);
+      await BrowserTestUtils.synthesizeKey("KEY_ArrowRight", { shiftKey: true }, gBrowser);
+      await BrowserTestUtils.synthesizeKey("x", { accelKey: true }, gBrowser);
       await testSelection(elementId, 1, testTypeText + " correctly removed only first highlight on selection deletion");
-      await BrowserTestUtils.synthesizeKey("VK_RIGHT", { ctrlKey: sendCtrl, metaKey: sendMeta }, gBrowser);
-      await BrowserTestUtils.synthesizeKey("VK_RIGHT", { ctrlKey: sendCtrl, metaKey: sendMeta }, gBrowser);
-      await BrowserTestUtils.synthesizeKey("VK_LEFT", { shiftKey: true }, gBrowser);
-      await BrowserTestUtils.synthesizeKey("VK_LEFT", { shiftKey: true }, gBrowser);
-      await BrowserTestUtils.synthesizeKey("x", { ctrlKey: sendCtrl, metaKey: sendMeta }, gBrowser);
+      await moveCaretToNextWordBoundary(gBrowser);
+      await moveCaretToNextWordBoundary(gBrowser);
+      await BrowserTestUtils.synthesizeKey("KEY_ArrowLeft", { shiftKey: true }, gBrowser);
+      await BrowserTestUtils.synthesizeKey("KEY_ArrowLeft", { shiftKey: true }, gBrowser);
+      await BrowserTestUtils.synthesizeKey("x", { accelKey: true }, gBrowser);
       await testSelection(elementId, 0, testTypeText + " correctly removed second highlight on selection deletion");
 
       // Turn off highlighting
@@ -229,7 +232,6 @@
       if (highlightButton.checked) {
         highlightButton.click();
       }
-
     }
 
     function onPageShow() {

@@ -169,7 +169,15 @@ async function testResultOfTabInteractions(testData) {
   }, "AutoComplete popup should have closed");
 
   await synthesizeKey("KEY_Tab");
-  await new Promise(resolve => SimpleTest.executeSoon(resolve));
+  // Filling password is performed asynchronously.  So, let's wait the value
+  // change instead of just waiting next event loop.
+  if (testData.expectedTabbedPassword === "") {
+    await new Promise(resolve => SimpleTest.executeSoon(resolve));
+  } else {
+    await TestUtils.waitForCondition(() => {
+      return pword.value === testData.expectedTabbedPassword;
+    }, "Password field should be filled");
+  }
 
   ok($_(1, "pword").matches("input:focus"), "pword field is focused");
   checkForm(1, testData.expectedTabbedUsername, testData.expectedTabbedPassword);
