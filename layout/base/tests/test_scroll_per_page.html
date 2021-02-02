@@ -17,22 +17,6 @@ addLoadEvent(() => {
 });
 
 async function doTests(aWindow) {
-  const IS_WIN = navigator.platform.includes("Win");
-  // On macOS and Linux, PageUp/PageDown requires native event to resolve
-  // default action of PageDown and PageUp. Although macOS widget has
-  // nsIWidget::AttachNativeKeyEvent(), we cannot use synthesizeKey() for the
-  // following tests.  So, use nsISelectionController.pageMove() instead on
-  // non-Windows platforms.
-  const kUseKeyboardEvent = IS_WIN;
-  let selectionController;
-  if (!kUseKeyboardEvent) {
-    selectionController = SpecialPowers.wrap(aWindow)
-                                       .docShell
-                                       .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-                                       .getInterface(SpecialPowers.Ci.nsISelectionDisplay)
-                                       .QueryInterface(SpecialPowers.Ci.nsISelectionController);
-  }
-
   await SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false]]});
   await SimpleTest.promiseFocus(aWindow);
 
@@ -64,20 +48,20 @@ async function doTests(aWindow) {
 
   async function doPageDown() {
     let waitForScrolling = waitForScrollEvent();
-    if (kUseKeyboardEvent) {
+    if (!navigator.platform.includes("Mac")) {
       synthesizeKey("KEY_PageDown", {}, aWindow);
     } else {
-      selectionController.pageMove(true, false);
+      synthesizeKey("KEY_PageDown", { altKey: true }, aWindow);
     }
     await waitForScrolling;
   }
 
   async function doPageUp() {
     let waitForScrolling = waitForScrollEvent();
-    if (kUseKeyboardEvent) {
+    if (!navigator.platform.includes("Mac")) {
       synthesizeKey("KEY_PageUp", {}, aWindow);
     } else {
-      selectionController.pageMove(false, false);
+      synthesizeKey("KEY_PageUp", { altKey: true }, aWindow);
     }
     await waitForScrolling;
   }
