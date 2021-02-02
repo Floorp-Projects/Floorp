@@ -3661,8 +3661,6 @@
 # Callers which cannot use `useRemoteSubframes` must use
 # `Services.appinfo.fissionAutostart` or `mozilla::FissionAutostart()` to check
 # if fission is enabled by default.
-# Note: This is overridden in all.js on RELEASE_OR_BETA in order to add the
-# locked attribute.
 - name: fission.autostart
   type: bool
   value: false
