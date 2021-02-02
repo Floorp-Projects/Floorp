@@ -86,10 +86,17 @@ class ResponsiveUIManager {
    *         the UI has closed, there is no resolution value.
    */
   toggle(window, tab, options = {}) {
-    const action = this.isActiveForTab(tab) ? "close" : "open";
-    const completed = this[action + "IfNeeded"](window, tab, options);
+    const completed = this._toggleForTab(window, tab, options);
     completed.catch(console.error);
     return completed;
+  }
+
+  _toggleForTab(window, tab, options) {
+    if (this.isActiveForTab(tab)) {
+      return this.closeIfNeeded(window, tab, options);
+    }
+
+    return this.openIfNeeded(window, tab, options);
   }
 
   /**
