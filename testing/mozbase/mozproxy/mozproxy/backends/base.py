@@ -31,7 +31,3 @@ class Playback(object):
     @abstractmethod
     def stop(self):
         pass
-
-    @abstractmethod
-    def confidence(self):
-        pass
