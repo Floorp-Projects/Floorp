@@ -2541,19 +2541,6 @@ pref("dom.ipc.processCount.webLargeAllocation", 10);
 // Disable e10s for Gecko by default. This is overridden in firefox.js.
 pref("browser.tabs.remote.autostart", false);
 
-// Disable fission for Gecko by default. Lock it on release and beta because
-// it is not ready for use and can leak URIs to telemetry until bug 1561653 is
-// fixed.
-// IMPORTANT: This preference should *almost never* be checked directly, since
-// any session can contain a mix of Fission and non-Fission windows. Instead,
-// callers should check whether the relevant nsILoadContext has the
-// `useRemoteSubframes` flag set.
-#if defined(RELEASE_OR_BETA)
-  pref("fission.autostart", false, locked);
-#else
-  pref("fission.autostart", false);
-#endif
-
 // Whether certain properties from origin attributes should be included as part
 // of remote types. Only in effect when fission is enabled.
 pref("browser.tabs.remote.useOriginAttributesInRemoteType", false);
