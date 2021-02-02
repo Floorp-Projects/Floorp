@@ -53,7 +53,6 @@ struct DefaultJitOptions {
   bool disableCacheIR;
   bool disableSink;
   bool disableBailoutLoopCheck;
-  bool scalarReplaceArguments;
   bool baselineInterpreter;
   bool baselineJit;
   bool ion;

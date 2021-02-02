@@ -3844,10 +3844,6 @@ bool jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg) {
   // and also simplifies handling of early returns.
   script->setNeedsArgsObj(true);
 
-  if (JitOptions.scalarReplaceArguments) {
-    return true;
-  }
-
   // Always construct arguments objects when in debug mode, for generator
   // scripts (generators can be suspended when speculation fails) or when
   // direct eval is present.
