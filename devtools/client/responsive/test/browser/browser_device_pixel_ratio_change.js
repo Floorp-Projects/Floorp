@@ -133,28 +133,3 @@ function testViewportDevicePixelRatioSelect(ui, expected) {
     }.`
   );
 }
-
-function waitForDevicePixelRatio(ui, expected) {
-  return SpecialPowers.spawn(ui.getViewportBrowser(), [{ expected }], function(
-    args
-  ) {
-    const initial = content.devicePixelRatio;
-    info(
-      `Listening for pixel ratio change ` +
-        `(current: ${initial}, expected: ${args.expected})`
-    );
-    return new Promise(resolve => {
-      const mql = content.matchMedia(`(resolution: ${args.expected}dppx)`);
-      if (mql.matches) {
-        info(`Ratio already changed to ${args.expected}dppx`);
-        resolve(content.devicePixelRatio);
-        return;
-      }
-      mql.addListener(function listener() {
-        info(`Ratio changed to ${args.expected}dppx`);
-        mql.removeListener(listener);
-        resolve(content.devicePixelRatio);
-      });
-    });
-  });
-}
