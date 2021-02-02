@@ -154,6 +154,21 @@ void LocationBase::SetURI(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
 
   rv = bc->LoadURI(loadState);
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (rv == NS_ERROR_DOM_BAD_CROSS_ORIGIN_URI &&
+        net::SchemeIsJavascript(loadState->URI())) {
+      // Per spec[1], attempting to load a javascript: URI into a cross-origin
+      // BrowsingContext is a no-op, and should not raise an exception.
+      // Technically, Location setters run with exceptions enabled should only
+      // throw an exception[2] when the caller is not allowed to navigate[3] the
+      // target browsing context due to sandboxing flags or not being
+      // closely-related enough, though in practice we currently throw for other
+      // reasons as well.
+      //
+      // [1]: https://html.spec.whatwg.org/multipage/browsing-the-web.html#javascript-protocol
+      // [2]: https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate
+      // [3]: https://html.spec.whatwg.org/multipage/browsers.html#allowed-to-navigate
+      return;
+    }
     aRv.Throw(rv);
   }
 }
