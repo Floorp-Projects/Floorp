@@ -2069,8 +2069,8 @@ var BookmarkingUI = {
     }
 
     let panelMenuItemL10nId = isStarred
-      ? "library-bookmarks-bookmark-edit"
-      : "library-bookmarks-bookmark-this-page";
+      ? "bookmarks-bookmark-edit-panel"
+      : "bookmarks-current-tab";
     let panelMenuToolbarButton = PanelMultiView.getViewNode(
       document,
       "panelMenuBookmarkThisPage"
@@ -2155,6 +2155,7 @@ var BookmarkingUI = {
     view.addEventListener("ViewShowing", this);
     view.addEventListener("ViewHiding", this);
     anchor.setAttribute("closemenu", "none");
+    this.updateLabel("panelMenu_viewBookmarksToolbar", !this.toolbar.collapsed);
     PanelUI.showSubView("PanelUI-bookmarks", anchor, event);
   },
 
@@ -2251,22 +2252,6 @@ var BookmarkingUI = {
     this._panelMenuView.uninit();
     delete this._panelMenuView;
     aEvent.target.removeEventListener("ViewHiding", this);
-  },
-
-  showBookmarkingTools(triggerNode) {
-    let placement = CustomizableUI.getPlacementOfWidget(
-      this.BOOKMARK_BUTTON_ID
-    );
-    this.updateLabel(
-      "panelMenu_toggleBookmarksMenu",
-      placement && placement.area == CustomizableUI.AREA_NAVBAR
-    );
-    this.updateLabel(
-      "panelMenu_viewBookmarksSidebar",
-      SidebarUI.currentID == "viewBookmarksSidebar"
-    );
-    this.updateLabel("panelMenu_viewBookmarksToolbar", !this.toolbar.collapsed);
-    PanelUI.showSubView("PanelUI-bookmarkingTools", triggerNode);
   },
 
   toggleMenuButtonInToolbar(triggerNode) {
