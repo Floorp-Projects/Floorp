@@ -304,6 +304,8 @@ template <XDRMode mode>
     stencil.flags_.deserialize(flags);
   }
 
+  MOZ_TRY(xdr->codeUint32(&stencil.propertyCount_));
+
   MOZ_TRY(XDRSpanContent(xdr, stencil.code_));
 
   return Ok();

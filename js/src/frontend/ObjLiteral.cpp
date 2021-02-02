@@ -57,13 +57,17 @@ static void InterpretObjLiteralValue(
 
 static JSObject* InterpretObjLiteralObj(
     JSContext* cx, const frontend::CompilationAtomCache& atomCache,
-    const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags) {
+    const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags,
+    uint32_t propertyCount) {
   bool singleton = flags.contains(ObjLiteralFlag::Singleton);
 
   ObjLiteralReader reader(literalInsns);
   ObjLiteralInsn insn;
 
   Rooted<IdValueVector> properties(cx, IdValueVector(cx));
+  if (!properties.reserve(propertyCount)) {
+    return nullptr;
+  }
 
   // Compute property values and build the key/value-pair list.
   while (reader.readInsn(&insn)) {
@@ -84,9 +88,7 @@ static JSObject* InterpretObjLiteralObj(
       InterpretObjLiteralValue(cx, atomCache, insn, &propVal);
     }
 
-    if (!properties.emplaceBack(propId, propVal)) {
-      return nullptr;
-    }
+    properties.infallibleEmplaceBack(propId, propVal);
   }
 
   return NewPlainObjectWithProperties(cx, properties.begin(),
@@ -95,20 +97,22 @@ static JSObject* InterpretObjLiteralObj(
 
 static JSObject* InterpretObjLiteralArray(
     JSContext* cx, const frontend::CompilationAtomCache& atomCache,
-    const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags) {
+    const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags,
+    uint32_t propertyCount) {
   ObjLiteralReader reader(literalInsns);
   ObjLiteralInsn insn;
 
   Rooted<ValueVector> elements(cx, ValueVector(cx));
+  if (!elements.reserve(propertyCount)) {
+    return nullptr;
+  }
 
   while (reader.readInsn(&insn)) {
     MOZ_ASSERT(insn.isValid());
 
     JS::Value propVal;
     InterpretObjLiteralValue(cx, atomCache, insn, &propVal);
-    if (!elements.append(propVal)) {
-      return nullptr;
-    }
+    elements.infallibleAppend(propVal);
   }
 
   return NewDenseCopiedArray(cx, elements.length(), elements.begin(),
@@ -118,15 +122,18 @@ static JSObject* InterpretObjLiteralArray(
 
 static JSObject* InterpretObjLiteral(
     JSContext* cx, const frontend::CompilationAtomCache& atomCache,
-    const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags) {
+    const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags,
+    uint32_t propertyCount) {
   return flags.contains(ObjLiteralFlag::Array)
-             ? InterpretObjLiteralArray(cx, atomCache, literalInsns, flags)
-             : InterpretObjLiteralObj(cx, atomCache, literalInsns, flags);
+             ? InterpretObjLiteralArray(cx, atomCache, literalInsns, flags,
+                                        propertyCount)
+             : InterpretObjLiteralObj(cx, atomCache, literalInsns, flags,
+                                      propertyCount);
 }
 
 JSObject* ObjLiteralStencil::create(
     JSContext* cx, const frontend::CompilationAtomCache& atomCache) const {
-  return InterpretObjLiteral(cx, atomCache, code_, flags_);
+  return InterpretObjLiteral(cx, atomCache, code_, flags_, propertyCount_);
 }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
@@ -150,7 +157,8 @@ static void DumpObjLiteralFlagsItems(js::JSONPrinter& json,
 static void DumpObjLiteral(js::JSONPrinter& json,
                            frontend::BaseCompilationStencil* stencil,
                            mozilla::Span<const uint8_t> code,
-                           const ObjLiteralFlags& flags) {
+                           const ObjLiteralFlags& flags,
+                           uint32_t propertyCount) {
   json.beginListProperty("flags");
   DumpObjLiteralFlagsItems(json, flags);
   json.endList();
@@ -206,6 +214,8 @@ static void DumpObjLiteral(js::JSONPrinter& json,
     json.endObject();
   }
   json.endList();
+
+  json.property("propertyCount", propertyCount);
 }
 
 void ObjLiteralWriter::dump() {
@@ -223,7 +233,7 @@ void ObjLiteralWriter::dump(js::JSONPrinter& json,
 
 void ObjLiteralWriter::dumpFields(js::JSONPrinter& json,
                                   frontend::BaseCompilationStencil* stencil) {
-  DumpObjLiteral(json, stencil, getCode(), flags_);
+  DumpObjLiteral(json, stencil, getCode(), flags_, propertyCount_);
 }
 
 void ObjLiteralStencil::dump() {
@@ -241,7 +251,7 @@ void ObjLiteralStencil::dump(js::JSONPrinter& json,
 
 void ObjLiteralStencil::dumpFields(js::JSONPrinter& json,
                                    frontend::BaseCompilationStencil* stencil) {
-  DumpObjLiteral(json, stencil, code_, flags_);
+  DumpObjLiteral(json, stencil, code_, flags_, propertyCount_);
 }
 
 #endif  // defined(DEBUG) || defined(JS_JITSPEW)
