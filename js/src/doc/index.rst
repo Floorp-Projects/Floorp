@@ -129,6 +129,8 @@ transformed and optimized before being *lowered* to a Low-level Intermediate
 Representation (Ion LIR). This *LIR* performs register allocation and then
 generates native machine code in a process called *Code Generation*.
 
+See `MIR Optimizations`_ for an overview of MIR optimizations.
+
 The optimizations here assume that a script continues to see data similar
 what has been seen before. The *Baseline* JITs are essential to success here
 because they generate *ICs* that match observed data. If after a script is
@@ -177,6 +179,7 @@ Other documentation
    gc
    Debugger/index
    SavedFrame/index
+   MIR-optimizations/index
 
 
 .. _gc::Cell: https://searchfox.org/mozilla-central/search?q=[SMDOC]+GC+Cell
@@ -190,3 +193,4 @@ Other documentation
 .. _Bytecode: https://en.wikipedia.org/wiki/Bytecode
 .. _Abstract Syntax Tree: https://en.wikipedia.org/wiki/Abstract_syntax_tree
 .. _Intermediate Representation: https://en.wikipedia.org/wiki/Intermediate_representation
+.. _MIR Optimizations: ./MIR-optimizations/index.html
