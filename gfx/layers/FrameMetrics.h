@@ -255,10 +255,7 @@ struct FrameMetrics {
            aContentFrameMetrics.GetVisualScrollOffset();
   }
 
-  /*
-   * Returns true if the layout scroll offset or visual scroll offset changed.
-   */
-  bool ApplyScrollUpdateFrom(const ScrollPositionUpdate& aUpdate);
+  void ApplyScrollUpdateFrom(const ScrollPositionUpdate& aUpdate);
 
   /**
    * Applies the relative scroll offset update contained in aOther to the
@@ -331,11 +328,8 @@ struct FrameMetrics {
   }
 
   CSSPoint GetLayoutScrollOffset() const { return mLayoutViewport.TopLeft(); }
-  // Returns true if it changed.
-  bool SetLayoutScrollOffset(const CSSPoint& aLayoutScrollOffset) {
-    CSSPoint offsetBefore = GetLayoutScrollOffset();
+  void SetLayoutScrollOffset(const CSSPoint& aLayoutScrollOffset) {
     mLayoutViewport.MoveTo(aLayoutScrollOffset);
-    return (offsetBefore != GetLayoutScrollOffset());
   }
 
   const CSSPoint& GetVisualScrollOffset() const { return mScrollOffset; }
