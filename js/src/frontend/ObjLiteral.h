@@ -10,11 +10,9 @@
 
 #include "mozilla/EndianUtils.h"
 #include "mozilla/EnumSet.h"
-#include "mozilla/HashTable.h"  // HashSet
 #include "mozilla/Span.h"
 
 #include "frontend/ParserAtom.h"  // ParserAtomsTable, TaggedParserAtomIndex
-#include "frontend/TaggedParserAtomIndexHasher.h"  // TaggedParserAtomIndexHasher
 #include "js/AllocPolicy.h"
 #include "js/GCPolicyAPI.h"
 #include "js/Value.h"
@@ -140,11 +138,6 @@ enum class ObjLiteralFlag : uint8_t {
   // If set, this is an object literal in a singleton context and property
   // values are included. See also JSOp::Object.
   Singleton = 2,
-
-  // If set, this object contains index property, or duplicate non-index
-  // property.
-  // This flag is valid only if Array flag isn't set.
-  HasIndexOrDuplicatePropName = 3,
 };
 
 using ObjLiteralFlags = mozilla::EnumSet<ObjLiteralFlag>;
@@ -256,7 +249,7 @@ struct ObjLiteralWriterBase {
     return true;
   }
 
- protected:
+ public:
   MOZ_MUST_USE bool pushOpAndName(JSContext* cx, ObjLiteralOpcode op,
                                   ObjLiteralKey key) {
     uint8_t opdata = static_cast<uint8_t>(op);
@@ -292,32 +285,10 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
 
   mozilla::Span<const uint8_t> getCode() const { return code_; }
   ObjLiteralFlags getFlags() const { return flags_; }
-  uint32_t getPropertyCount() const { return propertyCount_; }
 
   void beginObject(ObjLiteralFlags flags) { flags_ = flags; }
-  bool setPropName(JSContext* cx, frontend::ParserAtomsTable& parserAtoms,
+  void setPropName(frontend::ParserAtomsTable& parserAtoms,
                    const frontend::TaggedParserAtomIndex propName) {
-    // Only valid in object-mode.
-    setPropNameNoDuplicateCheck(parserAtoms, propName);
-
-    if (flags_.contains(ObjLiteralFlag::HasIndexOrDuplicatePropName)) {
-      return true;
-    }
-
-    auto p = propNames_.lookupForAdd(propName);
-    if (!p) {
-      if (!propNames_.add(p, propName)) {
-        js::ReportOutOfMemory(cx);
-        return false;
-      }
-    } else {
-      flags_ += ObjLiteralFlag::HasIndexOrDuplicatePropName;
-    }
-    return true;
-  }
-  void setPropNameNoDuplicateCheck(
-      frontend::ParserAtomsTable& parserAtoms,
-      const frontend::TaggedParserAtomIndex propName) {
     // Only valid in object-mode.
     MOZ_ASSERT(!flags_.contains(ObjLiteralFlag::Array));
     parserAtoms.markUsedByStencil(propName);
@@ -328,7 +299,6 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
     MOZ_ASSERT(!flags_.contains(ObjLiteralFlag::Array));
     MOZ_ASSERT(propIndex <= ATOM_INDEX_MASK);
     nextKey_ = ObjLiteralKey::fromArrayIndex(propIndex);
-    flags_ += ObjLiteralFlag::HasIndexOrDuplicatePropName;
   }
   void beginDenseArrayElements() {
     // Only valid in array-mode.
@@ -340,7 +310,6 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
 
   MOZ_MUST_USE bool propWithConstNumericValue(JSContext* cx,
                                               const JS::Value& value) {
-    propertyCount_++;
     MOZ_ASSERT(value.isNumber());
     return pushOpAndName(cx, ObjLiteralOpcode::ConstValue, nextKey_) &&
            pushValueArg(cx, value);
@@ -348,25 +317,20 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
   MOZ_MUST_USE bool propWithAtomValue(
       JSContext* cx, frontend::ParserAtomsTable& parserAtoms,
       const frontend::TaggedParserAtomIndex value) {
-    propertyCount_++;
     parserAtoms.markUsedByStencil(value);
     return pushOpAndName(cx, ObjLiteralOpcode::ConstAtom, nextKey_) &&
            pushAtomArg(cx, value);
   }
   MOZ_MUST_USE bool propWithNullValue(JSContext* cx) {
-    propertyCount_++;
     return pushOpAndName(cx, ObjLiteralOpcode::Null, nextKey_);
   }
   MOZ_MUST_USE bool propWithUndefinedValue(JSContext* cx) {
-    propertyCount_++;
     return pushOpAndName(cx, ObjLiteralOpcode::Undefined, nextKey_);
   }
   MOZ_MUST_USE bool propWithTrueValue(JSContext* cx) {
-    propertyCount_++;
     return pushOpAndName(cx, ObjLiteralOpcode::True, nextKey_);
   }
   MOZ_MUST_USE bool propWithFalseValue(JSContext* cx) {
-    propertyCount_++;
     return pushOpAndName(cx, ObjLiteralOpcode::False, nextKey_);
   }
 
@@ -383,10 +347,6 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
  private:
   ObjLiteralFlags flags_;
   ObjLiteralKey nextKey_;
-  uint32_t propertyCount_ = 0;
-  mozilla::HashSet<frontend::TaggedParserAtomIndex,
-                   frontend::TaggedParserAtomIndexHasher>
-      propNames_;
 };
 
 struct ObjLiteralReaderBase {
@@ -577,16 +537,12 @@ class ObjLiteralStencil {
 
   mozilla::Span<uint8_t> code_;
   ObjLiteralFlags flags_;
-  uint32_t propertyCount_ = 0;
 
  public:
   ObjLiteralStencil() = default;
 
-  ObjLiteralStencil(uint8_t* code, size_t length, const ObjLiteralFlags& flags,
-                    uint32_t propertyCount)
-      : code_(mozilla::Span(code, length)),
-        flags_(flags),
-        propertyCount_(propertyCount) {}
+  ObjLiteralStencil(uint8_t* code, size_t length, const ObjLiteralFlags& flags)
+      : code_(mozilla::Span(code, length)), flags_(flags) {}
 
   JSObject* create(JSContext* cx,
                    const frontend::CompilationAtomCache& atomCache) const;

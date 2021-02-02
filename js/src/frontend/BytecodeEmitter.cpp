@@ -1674,8 +1674,8 @@ bool BytecodeEmitter::addObjLiteralData(ObjLiteralWriter& writer,
     ReportAllocationOverflow(cx);
     return false;
   }
-  if (!compilationState.objLiteralData.emplaceBack(code, len, writer.getFlags(),
-                                                   writer.getPropertyCount())) {
+  if (!compilationState.objLiteralData.emplaceBack(code, len,
+                                                   writer.getFlags())) {
     js::ReportOutOfMemory(cx);
     return false;
   }
@@ -1689,13 +1689,13 @@ bool BytecodeEmitter::iteratorResultShape(GCThingIndex* outShape) {
   ObjLiteralWriter writer;
   writer.beginObject(flags);
 
-  writer.setPropNameNoDuplicateCheck(compilationState.parserAtoms,
-                                     TaggedParserAtomIndex::WellKnown::value());
+  writer.setPropName(compilationState.parserAtoms,
+                     TaggedParserAtomIndex::WellKnown::value());
   if (!writer.propWithUndefinedValue(cx)) {
     return false;
   }
-  writer.setPropNameNoDuplicateCheck(compilationState.parserAtoms,
-                                     TaggedParserAtomIndex::WellKnown::done());
+  writer.setPropName(compilationState.parserAtoms,
+                     TaggedParserAtomIndex::WellKnown::done());
   if (!writer.propWithUndefinedValue(cx)) {
     return false;
   }
@@ -8940,10 +8940,8 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
     ParseNode* key = prop->left();
 
     if (key->is<NameNode>()) {
-      if (!writer.setPropName(cx, compilationState.parserAtoms,
-                              key->as<NameNode>().atom())) {
-        return false;
-      }
+      writer.setPropName(compilationState.parserAtoms,
+                         key->as<NameNode>().atom());
     } else {
       double numValue = key->as<NumericLiteral>().value();
       int32_t i = 0;
@@ -9006,9 +9004,7 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
       atom = key->as<NameNode>().atom();
     }
 
-    if (!writer.setPropName(cx, compilationState.parserAtoms, atom)) {
-      return false;
-    }
+    writer.setPropName(compilationState.parserAtoms, atom);
 
     if (!writer.propWithUndefinedValue(cx)) {
       return false;
