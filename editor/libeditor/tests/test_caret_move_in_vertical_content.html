@@ -1,0 +1,183 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1103374
+-->
+<head>
+  <title>Testing caret move in vertical content</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=289384">Mozilla Bug 1103374</a>
+<input value="ABCD"><textarea>ABCD
+EFGH</textarea>
+<div contenteditable></div>
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  (function testContentEditable() {
+    const editor = document.querySelector("div[contenteditable]");
+    const selection = getSelection();
+    function nodeStr(node) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        return `#text ("${node.data}")`;
+      }
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        return `<${node.tagName.toLowerCase()}>`;
+      }
+      return node;
+    }
+    function rangeStr(container, offset) {
+      return `{ container: ${nodeStr(container)}, offset: ${offset} }`;
+    }
+    function selectionStr() {
+      if (selection.rangeCount === 0) {
+        return "<no range>";
+      }
+      if (selection.isCollapsed) {
+        return rangeStr(selection.focusNode, selection.focusOffset);
+      }
+      return `${
+        rangeStr(selection.anchorNode, selection.anchorOffset)
+      } - ${
+        rangeStr(selection.focusNode, selection.focusOffset)
+      }`;
+    }
+    (function testVerticalRL() {
+      editor.innerHTML = '<p style="font-family: monospace; writing-mode: vertical-rl">ABCD<br>EFGH</p>';
+      editor.focus();
+      const firstLine = editor.querySelector("p").firstChild;
+      const secondLine = firstLine.nextSibling.nextSibling;
+      selection.collapse(firstLine, firstLine.length / 2);
+      synthesizeKey("KEY_ArrowUp");
+      is(selectionStr(), rangeStr(firstLine, firstLine.length / 2 - 1),
+        "contenteditable: ArrowUp should move caret to previous character in vertical-rl content");
+      synthesizeKey("KEY_ArrowDown");
+      is(selectionStr(), rangeStr(firstLine, firstLine.length / 2),
+        "contenteditable: ArrowDown should move caret to next character in vertical-rl content");
+      synthesizeKey("KEY_ArrowLeft");
+      is(selectionStr(), rangeStr(secondLine, secondLine.length / 2),
+        "contenteditable: ArrowLeft should move caret to next line in vertical-rl content");
+      synthesizeKey("KEY_ArrowRight");
+      is(selectionStr(), rangeStr(firstLine, firstLine.length / 2),
+        "contenteditable: ArrowRight should move caret to previous line in vertical-rl content");
+      editor.blur();
+    })();
+    (function testVerticalLR() {
+      editor.innerHTML = '<p style="font-family: monospace; writing-mode: vertical-lr">ABCD<br>EFGH</p>';
+      editor.focus();
+      const firstLine = editor.querySelector("p").firstChild;
+      const secondLine = firstLine.nextSibling.nextSibling;
+      selection.collapse(firstLine, firstLine.length / 2);
+      synthesizeKey("KEY_ArrowUp");
+      is(selectionStr(), rangeStr(firstLine, firstLine.length / 2 - 1),
+        "contenteditable: ArrowUp should move caret to previous character in vertical-lr content");
+      synthesizeKey("KEY_ArrowDown");
+      is(selectionStr(), rangeStr(firstLine, firstLine.length / 2),
+        "contenteditable: ArrowDown should move caret to next character in vertical-lr content");
+      synthesizeKey("KEY_ArrowRight");
+      is(selectionStr(), rangeStr(secondLine, secondLine.length / 2),
+        "contenteditable: ArrowRight should move caret to next line in vertical-lr content");
+      synthesizeKey("KEY_ArrowLeft");
+      is(selectionStr(), rangeStr(firstLine, firstLine.length / 2),
+        "contenteditable: ArrowLeft should move caret to previous line in vertical-lr content");
+      editor.blur();
+    })();
+  })();
+  (function testInputTypeText() {
+    const editor = document.querySelector("input");
+    (function testVerticalRL() {
+      editor.style.writingMode = "vertical-rl";
+      editor.focus();
+      editor.selectionStart = editor.selectionEnd = editor.value.length / 2;
+      synthesizeKey("KEY_ArrowRight");
+      is(editor.selectionStart, 0,
+        "<input>: ArrowRight should move caret to beginning of the input element if vertical-rl");
+      editor.selectionStart = editor.selectionEnd = editor.value.length / 2;
+      synthesizeKey("KEY_ArrowLeft");
+      is(editor.selectionStart, editor.value.length,
+        "<input>: ArrowLeft should move caret to end of the input element if vertical-rl");
+      editor.selectionStart = editor.selectionEnd = editor.value.length / 2;
+      synthesizeKey("KEY_ArrowDown");
+      is(editor.selectionStart, editor.value.length / 2 + 1,
+        "<input>: ArrowDown should move caret to next character if vertical-rl");
+      editor.selectionStart = editor.selectionEnd = editor.value.length / 2;
+      synthesizeKey("KEY_ArrowUp");
+      is(editor.selectionStart, editor.value.length / 2 - 1,
+        "<input>: ArrowUp should move caret to previous character if vertical-rl");
+      editor.blur();
+    })();
+    (function testVerticalLR() {
+      editor.style.writingMode = "vertical-lr";
+      editor.focus();
+      editor.selectionStart = editor.selectionEnd = editor.value.length / 2;
+      synthesizeKey("KEY_ArrowLeft");
+      is(editor.selectionStart, 0,
+        "<input>: ArrowLeft should move caret to beginning of the input element if vertical-lr");
+      editor.selectionStart = editor.selectionEnd = editor.value.length / 2;
+      synthesizeKey("KEY_ArrowRight");
+      is(editor.selectionStart, editor.value.length,
+        "<input>: ArrowRight should move caret to end of the input element if vertical-lr");
+      editor.selectionStart = editor.selectionEnd = editor.value.length / 2;
+      synthesizeKey("KEY_ArrowDown");
+      is(editor.selectionStart, editor.value.length / 2 + 1,
+        "<input>: ArrowDown should move caret to next character if vertical-lr");
+      editor.selectionStart = editor.selectionEnd = editor.value.length / 2;
+      synthesizeKey("KEY_ArrowUp");
+      is(editor.selectionStart, editor.value.length / 2 - 1,
+        "<input>: ArrowUp should move caret to previous character if vertical-lr");
+      editor.blur();
+    })();
+  })();
+  (function testTextArea() {
+    const editor = document.querySelector("textarea");
+    (function testVerticalRL() {
+      editor.style.writingMode = "vertical-rl";
+      editor.focus();
+      editor.selectionStart = editor.selectionEnd = "ABCD\nEF".length;
+      synthesizeKey("KEY_ArrowRight");
+      isfuzzy(editor.selectionStart, "AB".length, 1,
+        "<textarea>: ArrowRight should move caret to previous line of textarea element if vertical-rl");
+      editor.selectionStart = editor.selectionEnd = "AB".length;
+      synthesizeKey("KEY_ArrowLeft");
+      isfuzzy(editor.selectionStart, "ABCD\nEF".length, 1,
+        "<textarea>: ArrowLeft should move caret to next line of textarea element if vertical-rl");
+      editor.selectionStart = editor.selectionEnd = "AB".length;
+      synthesizeKey("KEY_ArrowDown");
+      is(editor.selectionStart, "ABC".length,
+        "<textarea>: ArrowDown should move caret to next character if vertical-rl");
+      editor.selectionStart = editor.selectionEnd = "AB".length;
+      synthesizeKey("KEY_ArrowUp");
+      is(editor.selectionStart, "A".length,
+        "<textarea>: ArrowUp should move caret to previous character if vertical-rl");
+      editor.blur();
+    })();
+    (function testVerticalLR() {
+      editor.style.writingMode = "vertical-lr";
+      editor.focus();
+      editor.selectionStart = editor.selectionEnd = "ABCD\nEF".length;
+      synthesizeKey("KEY_ArrowLeft");
+      isfuzzy(editor.selectionStart, "AB".length, 1,
+        "<textarea>: ArrowLeft should move caret to previous line of textarea element if vertical-rl");
+      editor.selectionStart = editor.selectionEnd = "AB".length;
+      synthesizeKey("KEY_ArrowRight");
+      isfuzzy(editor.selectionStart, "ABCD\nEF".length, 1,
+        "<textarea>: ArrowRight should move caret to next line of textarea element if vertical-rl");
+      editor.selectionStart = editor.selectionEnd = "AB".length;
+      synthesizeKey("KEY_ArrowDown");
+      is(editor.selectionStart, "ABC".length,
+        "<textarea>: ArrowDown should move caret to next character if vertical-rl");
+      editor.selectionStart = editor.selectionEnd = "AB".length;
+      synthesizeKey("KEY_ArrowUp");
+      is(editor.selectionStart, "A".length,
+        "<textarea>: ArrowUp should move caret to previous character if vertical-rl");
+      editor.blur();
+    })();
+  })();
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>
