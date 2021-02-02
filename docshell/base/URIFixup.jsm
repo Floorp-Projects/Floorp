@@ -43,6 +43,13 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIProtocolHandler"
 );
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "fileProtocolHandler",
+  "@mozilla.org/network/protocol;1?name=file",
+  "nsIFileProtocolHandler"
+);
+
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "fixupSchemeTypos",
@@ -822,7 +829,9 @@ function fileURIFixup(uriString) {
       // object. The URL of that is returned if successful.
       let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       file.initWithPath(uriString);
-      return Services.io.newFileURI(file);
+      return Services.io.newURI(
+        fileProtocolHandler.getURLSpecFromActualFile(file)
+      );
     } catch (ex) {
       // Not a file uri.
     }
