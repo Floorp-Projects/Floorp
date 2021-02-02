@@ -596,13 +596,13 @@ static ALWAYS_INLINE V8<int16_t> linearRowTapsR8(S sampler, I32 ix,
   auto b0 = unaligned_load<V2<uint8_t>>(&buf[ix.y]);
   auto c0 = unaligned_load<V2<uint8_t>>(&buf[ix.z]);
   auto d0 = unaligned_load<V2<uint8_t>>(&buf[ix.w]);
-  auto abcd0 = CONVERT(combine(a0, b0, c0, d0), V8<int16_t>);
+  auto abcd0 = CONVERT(combine(combine(a0, b0), combine(c0, d0)), V8<int16_t>);
   buf += stridey;
   auto a1 = unaligned_load<V2<uint8_t>>(&buf[ix.x]);
   auto b1 = unaligned_load<V2<uint8_t>>(&buf[ix.y]);
   auto c1 = unaligned_load<V2<uint8_t>>(&buf[ix.z]);
   auto d1 = unaligned_load<V2<uint8_t>>(&buf[ix.w]);
-  auto abcd1 = CONVERT(combine(a1, b1, c1, d1), V8<int16_t>);
+  auto abcd1 = CONVERT(combine(combine(a1, b1), combine(c1, d1)), V8<int16_t>);
   abcd0 += ((abcd1 - abcd0) * fracy) >> 7;
   return abcd0;
 }

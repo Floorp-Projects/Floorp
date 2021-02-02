@@ -2287,7 +2287,7 @@ impl Gl for Context {
 
     // GL_KHR_blend_equation_advanced
     fn blend_barrier_khr(&self) {
-        // No barrier required, so nothing to do
+        panic!();
     }
 
     // GL_CHROMIUM_copy_texture
