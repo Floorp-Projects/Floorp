@@ -1712,12 +1712,6 @@ class FLBDisplayListIterator : public FlattenedDisplayListIterator {
                          ContainerState* aState)
       : FlattenedDisplayListIterator(aBuilder, aList, false), mState(aState) {
     MOZ_ASSERT(mState);
-
-    if (mState->mContainerItem) {
-      // Add container item hit test information for processing, if needed.
-      AddHitTestMarkerIfNeeded(mState->mContainerItem);
-    }
-
     ResolveFlattening();
   }
 
@@ -1736,12 +1730,6 @@ class FLBDisplayListIterator : public FlattenedDisplayListIterator {
   }
 
  private:
-  void AddHitTestMarkerIfNeeded(nsDisplayItem* aItem) {
-    if (aItem->HasHitTestInfo()) {
-      mMarkers.emplace_back(aItem, DisplayItemEntryType::HitTestInfo);
-    }
-  }
-
   bool ShouldFlattenNextItem() override {
     if (!FlattenedDisplayListIterator::ShouldFlattenNextItem()) {
       return false;
@@ -1784,7 +1772,6 @@ class FLBDisplayListIterator : public FlattenedDisplayListIterator {
   void EnterChildList(nsDisplayItem* aContainerItem) override {
     mFlattenedLists.AppendElement(aContainerItem);
     AddMarkerIfNeeded<MarkerType::StartMarker>(aContainerItem, mMarkers);
-    AddHitTestMarkerIfNeeded(aContainerItem);
   }
 
   void ExitChildList() override {
@@ -4052,11 +4039,10 @@ void PaintedLayerData::AccumulateHitTestItem(ContainerState* aState,
                                              nsDisplayItem* aItem,
                                              const DisplayItemClip& aClip,
                                              TransformClipNode* aTransform) {
-  auto* item = static_cast<nsDisplayHitTestInfoBase*>(aItem);
-  const HitTestInfo& info = item->GetHitTestInfo();
-
-  nsRect area = info.mArea;
-  const CompositorHitTestInfo& flags = info.mFlags;
+  MOZ_ASSERT(aItem->GetType() == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO);
+  auto* item = static_cast<nsDisplayCompositorHitTestInfo*>(aItem);
+  nsRect area = item->HitTestArea();
+  const CompositorHitTestInfo& flags = item->HitTestFlags();
 
   FLB_LOG_PAINTED_LAYER_DECISION(
       this,
@@ -4559,9 +4545,14 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
     MOZ_ASSERT(item);
     DisplayItemType itemType = item->GetType();
 
+    bool snap = false;
+    nsRect itemContent = item->GetBounds(mBuilder, &snap);
+
     if (itemType == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
       // Override the marker for nsDisplayCompositorHitTestInfo items.
       marker = DisplayItemEntryType::HitTestInfo;
+      itemContent =
+          static_cast<nsDisplayCompositorHitTestInfo*>(item)->HitTestArea();
     }
 
     const bool inEffect = InTransform() || InOpacity();
@@ -4584,35 +4575,11 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
       }
     }
 
-    AnimatedGeometryRoot* itemAGR = nullptr;
-    const ActiveScrolledRoot* itemASR = nullptr;
+    AnimatedGeometryRoot* itemAGR = item->GetAnimatedGeometryRoot();
+    const ActiveScrolledRoot* itemASR = item->GetActiveScrolledRoot();
+    const DisplayItemClipChain* itemClipChain = item->GetClipChain();
     const DisplayItemClipChain* layerClipChain = nullptr;
-    const DisplayItemClipChain* itemClipChain = nullptr;
-    const DisplayItemClip* itemClipPtr = nullptr;
-
-    bool snap = false;
-    nsRect itemContent;
-
-    if (marker == DisplayItemEntryType::HitTestInfo) {
-      MOZ_ASSERT(item->IsHitTestItem());
-      const auto& hitTestInfo =
-          static_cast<nsDisplayHitTestInfoBase*>(item)->GetHitTestInfo();
-
-      // Override the layer selection hints for items that have hit test
-      // information. This is needed because container items may have different
-      // clipping, AGR, or ASR than the child items in them.
-      itemAGR = hitTestInfo.mAGR;
-      itemASR = hitTestInfo.mASR;
-      itemClipChain = hitTestInfo.mClipChain;
-      itemClipPtr = hitTestInfo.mClip;
-      itemContent = hitTestInfo.mArea;
-    } else {
-      itemAGR = item->GetAnimatedGeometryRoot();
-      itemASR = item->GetActiveScrolledRoot();
-      itemClipChain = item->GetClipChain();
-      itemClipPtr = &item->GetClip();
-      itemContent = item->GetBounds(mBuilder, &snap);
-    }
+    const DisplayItemClip* itemClipPtr = &item->GetClip();
 
     if (mManager->IsWidgetLayerManager() && !inEffect) {
       if (itemClipChain && itemClipChain->mASR == itemASR &&
@@ -4626,13 +4593,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
       itemAGR = inEffect ? containerAGR : mContainerAnimatedGeometryRoot;
       itemASR = inEffect ? containerASR : mContainerASR;
 
-      if (marker == DisplayItemEntryType::HitTestInfo) {
-        // Items with hit test info are processed twice, once with ::HitTestInfo
-        // marker and then with ::Item marker.
-        // With ::HitTestInfo markers, fuse the clip chain of hit test struct,
-        // and with ::Item markers, fuse the clip chain of the actual item.
-        itemClipChain = mBuilder->FuseClipChainUpTo(itemClipChain, itemASR);
-      } else if (!IsEffectEndMarker(marker)) {
+      if (!IsEffectEndMarker(marker)) {
         // No need to fuse clip chain for effect end markers, since it was
         // already done for effect start markers.
         item->FuseClipChainUpTo(mBuilder, itemASR);
