@@ -230,14 +230,16 @@ void Context::QuotaInitRunnable::OpenDirectory() {
                         mState == STATE_OPEN_DIRECTORY);
   MOZ_DIAGNOSTIC_ASSERT(QuotaManager::Get());
 
-  // QuotaManager::OpenDirectory() will hold a reference to us as
-  // a listener.  We will then get DirectoryLockAcquired() on the owning
-  // thread when it is safe to access our storage directory.
+  RefPtr<DirectoryLock> directoryLock =
+      QuotaManager::Get()->CreateDirectoryLock(
+          PERSISTENCE_TYPE_DEFAULT, mQuotaInfo, quota::Client::DOMCACHE,
+          /* aExclusive */ false);
+
+  // DirectoryLock::Acquire() will hold a reference to us as a listener. We will
+  // then get DirectoryLockAcquired() on the owning thread when it is safe to
+  // access our storage directory.
   mState = STATE_WAIT_FOR_DIRECTORY_LOCK;
-  RefPtr<DirectoryLock> pendingDirectoryLock =
-      QuotaManager::Get()->OpenDirectory(PERSISTENCE_TYPE_DEFAULT, mQuotaInfo,
-                                         quota::Client::DOMCACHE,
-                                         /* aExclusive */ false, this);
+  directoryLock->Acquire(this);
 }
 
 void Context::QuotaInitRunnable::DirectoryLockAcquired(DirectoryLock* aLock) {

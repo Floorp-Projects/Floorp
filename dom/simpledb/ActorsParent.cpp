@@ -1178,12 +1178,14 @@ nsresult OpenOp::OpenDirectory() {
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
   MOZ_ASSERT(QuotaManager::Get());
 
+  RefPtr<DirectoryLock> directoryLock =
+      QuotaManager::Get()->CreateDirectoryLock(
+          GetConnection()->GetPersistenceType(), mQuotaInfo,
+          mozilla::dom::quota::Client::SDB,
+          /* aExclusive */ false);
+
   mState = State::DirectoryOpenPending;
-  RefPtr<DirectoryLock> pendingDirectoryLock =
-      QuotaManager::Get()->OpenDirectory(GetConnection()->GetPersistenceType(),
-                                         mQuotaInfo,
-                                         mozilla::dom::quota::Client::SDB,
-                                         /* aExclusive */ false, this);
+  directoryLock->Acquire(this);
 
   return NS_OK;
 }

@@ -73,6 +73,8 @@ class NS_NO_VTABLE RefCountedObject {
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 };
 
+class OpenDirectoryListener;
+
 class DirectoryLock : public RefCountedObject {
   friend class DirectoryLockImpl;
 
@@ -87,6 +89,8 @@ class DirectoryLock : public RefCountedObject {
   const nsACString& Origin() const;
 
   Client::Type ClientType() const;
+
+  void Acquire(RefPtr<OpenDirectoryListener> aOpenListener);
 
   already_AddRefed<DirectoryLock> Specialize(
       PersistenceType aPersistenceType,
@@ -259,6 +263,10 @@ class QuotaManager final : public BackgroundThreadObject {
 
   void PersistOrigin(const GroupAndOrigin& aGroupAndOrigin);
 
+  using DirectoryLockIdTableArray =
+      AutoTArray<Client::DirectoryLockIdTable, Client::TYPE_MAX>;
+  void AbortOperationsForLocks(const DirectoryLockIdTableArray& aLockIds);
+
   // Called when a process is being shot down. Aborts any running operations
   // for the given process.
   void AbortOperationsForProcess(ContentParentId aContentParentId);
@@ -305,17 +313,15 @@ class QuotaManager final : public BackgroundThreadObject {
   // Unlocking is simply done by dropping all references to the lock object.
   // In other words, protection which the lock represents dies with the lock
   // object itself.
-  already_AddRefed<DirectoryLock> OpenDirectory(
+  already_AddRefed<DirectoryLock> CreateDirectoryLock(
       PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
-      Client::Type aClientType, bool aExclusive,
-      RefPtr<OpenDirectoryListener> aOpenListener);
+      Client::Type aClientType, bool aExclusive);
 
   // XXX RemoveMe once bug 1170279 gets fixed.
-  already_AddRefed<DirectoryLock> OpenDirectoryInternal(
+  already_AddRefed<DirectoryLock> CreateDirectoryLockInternal(
       const Nullable<PersistenceType>& aPersistenceType,
       const OriginScope& aOriginScope,
-      const Nullable<Client::Type>& aClientType, bool aExclusive,
-      OpenDirectoryListener* aOpenListener);
+      const Nullable<Client::Type>& aClientType, bool aExclusive);
 
   // Collect inactive and the least recently used origins.
   uint64_t CollectOriginsForEviction(
@@ -484,8 +490,7 @@ class QuotaManager final : public BackgroundThreadObject {
       const Nullable<PersistenceType>& aPersistenceType,
       const nsACString& aGroup, const OriginScope& aOriginScope,
       const Nullable<Client::Type>& aClientType, bool aExclusive,
-      bool aInternal, RefPtr<OpenDirectoryListener> aOpenListener,
-      bool& aBlockedOut);
+      bool aInternal);
 
   already_AddRefed<DirectoryLockImpl> CreateDirectoryLockForEviction(
       PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin);
@@ -493,6 +498,8 @@ class QuotaManager final : public BackgroundThreadObject {
   void RegisterDirectoryLock(DirectoryLockImpl& aLock);
 
   void UnregisterDirectoryLock(DirectoryLockImpl& aLock);
+
+  void AddPendingDirectoryLock(DirectoryLockImpl& aLock);
 
   void RemovePendingDirectoryLock(DirectoryLockImpl& aLock);
 

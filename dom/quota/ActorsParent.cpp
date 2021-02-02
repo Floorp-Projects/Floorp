@@ -666,8 +666,7 @@ class DirectoryLockImpl final : public DirectoryLock {
                     const nsACString& aGroup, const OriginScope& aOriginScope,
                     const Nullable<Client::Type>& aClientType, bool aExclusive,
                     bool aInternal,
-                    ShouldUpdateLockIdTableFlag aShouldUpdateLockIdTableFlag,
-                    RefPtr<OpenDirectoryListener> aOpenListener);
+                    ShouldUpdateLockIdTableFlag aShouldUpdateLockIdTableFlag);
 
   void AssertIsOnOwningThread() const
 #ifdef DEBUG
@@ -777,6 +776,10 @@ class DirectoryLockImpl final : public DirectoryLock {
     return mClientType.Value();
   }
 
+  void Acquire(RefPtr<OpenDirectoryListener> aOpenListener);
+
+  void Acquire();
+
   already_AddRefed<DirectoryLock> Specialize(
       PersistenceType aPersistenceType,
       const quota::GroupAndOrigin& aGroupAndOrigin,
@@ -788,11 +791,17 @@ class DirectoryLockImpl final : public DirectoryLock {
   ~DirectoryLockImpl();
 };
 
-const DirectoryLockImpl* GetDirectoryLockImpl(
+const DirectoryLockImpl* AsDirectoryLockImpl(
     const DirectoryLock* aDirectoryLock) {
   MOZ_ASSERT(aDirectoryLock);
 
   return static_cast<const DirectoryLockImpl*>(aDirectoryLock);
+}
+
+DirectoryLockImpl* AsDirectoryLockImpl(DirectoryLock* aDirectoryLock) {
+  MOZ_ASSERT(aDirectoryLock);
+
+  return static_cast<DirectoryLockImpl*>(aDirectoryLock);
 }
 
 class QuotaManager::Observer final : public nsIObserver {
@@ -2695,41 +2704,44 @@ bool RecvShutdownQuotaManager() {
  * Directory lock
  ******************************************************************************/
 
-int64_t DirectoryLock::Id() const { return GetDirectoryLockImpl(this)->Id(); }
+int64_t DirectoryLock::Id() const { return AsDirectoryLockImpl(this)->Id(); }
 
 PersistenceType DirectoryLock::GetPersistenceType() const {
-  return GetDirectoryLockImpl(this)->GetPersistenceType();
+  return AsDirectoryLockImpl(this)->GetPersistenceType();
 }
 
 quota::GroupAndOrigin DirectoryLock::GroupAndOrigin() const {
-  return GetDirectoryLockImpl(this)->GroupAndOrigin();
+  return AsDirectoryLockImpl(this)->GroupAndOrigin();
 }
 
 const nsACString& DirectoryLock::Origin() const {
-  return GetDirectoryLockImpl(this)->Origin();
+  return AsDirectoryLockImpl(this)->Origin();
 }
 
 Client::Type DirectoryLock::ClientType() const {
-  return GetDirectoryLockImpl(this)->ClientType();
+  return AsDirectoryLockImpl(this)->ClientType();
+}
+
+void DirectoryLock::Acquire(RefPtr<OpenDirectoryListener> aOpenListener) {
+  AsDirectoryLockImpl(this)->Acquire(std::move(aOpenListener));
 }
 
 already_AddRefed<DirectoryLock> DirectoryLock::Specialize(
     PersistenceType aPersistenceType,
     const quota::GroupAndOrigin& aGroupAndOrigin,
     Client::Type aClientType) const {
-  return GetDirectoryLockImpl(this)->Specialize(aPersistenceType,
-                                                aGroupAndOrigin, aClientType);
+  return AsDirectoryLockImpl(this)->Specialize(aPersistenceType,
+                                               aGroupAndOrigin, aClientType);
 }
 
-void DirectoryLock::Log() const { GetDirectoryLockImpl(this)->Log(); }
+void DirectoryLock::Log() const { AsDirectoryLockImpl(this)->Log(); }
 
 DirectoryLockImpl::DirectoryLockImpl(
     MovingNotNull<RefPtr<QuotaManager>> aQuotaManager, const int64_t aId,
     const Nullable<PersistenceType>& aPersistenceType, const nsACString& aGroup,
     const OriginScope& aOriginScope, const Nullable<Client::Type>& aClientType,
     const bool aExclusive, const bool aInternal,
-    const ShouldUpdateLockIdTableFlag aShouldUpdateLockIdTableFlag,
-    RefPtr<OpenDirectoryListener> aOpenListener)
+    const ShouldUpdateLockIdTableFlag aShouldUpdateLockIdTableFlag)
     : mQuotaManager(std::move(aQuotaManager)),
       mPersistenceType(aPersistenceType),
       mGroup(aGroup),
@@ -2750,11 +2762,6 @@ DirectoryLockImpl::DirectoryLockImpl(
   MOZ_ASSERT_IF(!aInternal, aOriginScope.IsOrigin());
   MOZ_ASSERT_IF(!aInternal, !aClientType.IsNull());
   MOZ_ASSERT_IF(!aInternal, aClientType.Value() < Client::TypeMax());
-  MOZ_ASSERT_IF(!aInternal, aOpenListener);
-
-  if (aOpenListener) {
-    mOpenListener.init(WrapNotNullUnchecked(std::move(aOpenListener)));
-  }
 }
 
 DirectoryLockImpl::~DirectoryLockImpl() {
@@ -2835,6 +2842,78 @@ void DirectoryLockImpl::NotifyOpenListener() {
   mPending.Flip();
 }
 
+void DirectoryLockImpl::Acquire(RefPtr<OpenDirectoryListener> aOpenListener) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aOpenListener);
+
+  mOpenListener.init(WrapNotNullUnchecked(std::move(aOpenListener)));
+
+  mQuotaManager->AddPendingDirectoryLock(*this);
+
+  // See if this lock needs to wait.
+  bool blocked = false;
+
+  // XXX It is probably unnecessary to iterate this in reverse order.
+  for (DirectoryLockImpl* const existingLock :
+       Reversed(mQuotaManager->mDirectoryLocks)) {
+    if (MustWaitFor(*existingLock)) {
+      existingLock->AddBlockingLock(*this);
+      AddBlockedOnLock(*existingLock);
+      blocked = true;
+    }
+  }
+
+  mQuotaManager->RegisterDirectoryLock(*this);
+
+  // Otherwise, notify the open listener immediately.
+  if (!blocked) {
+    NotifyOpenListener();
+    return;
+  }
+
+  if (!mExclusive || !mInternal) {
+    return;
+  }
+
+  // All the locks that block this new exclusive internal lock need to be
+  // invalidated. We also need to notify clients to abort operations for them.
+  QuotaManager::DirectoryLockIdTableArray lockIds;
+  lockIds.SetLength(Client::TypeMax());
+
+  const auto& blockedOnLocks = GetBlockedOnLocks();
+  MOZ_ASSERT(!blockedOnLocks.IsEmpty());
+
+  for (DirectoryLockImpl* blockedOnLock : blockedOnLocks) {
+    if (!blockedOnLock->IsInternal()) {
+      blockedOnLock->Invalidate();
+
+      // Clients don't have to handle pending locks. Invalidation is sufficient
+      // in that case (once a lock is ready and the listener needs to be
+      // notified, we will call DirectoryLockFailed instead of
+      // DirectoryLockAcquired which should release any remaining references to
+      // the lock).
+      if (!blockedOnLock->IsPending()) {
+        lockIds[blockedOnLock->ClientType()].Put(blockedOnLock->Id());
+      }
+    }
+  }
+
+  mQuotaManager->AbortOperationsForLocks(lockIds);
+}
+
+void DirectoryLockImpl::Acquire() {
+  AssertIsOnOwningThread();
+
+#ifdef DEBUG
+  for (const DirectoryLockImpl* const existingLock :
+       mQuotaManager->mDirectoryLocks) {
+    MOZ_ASSERT(!MustWaitFor(*existingLock));
+  }
+#endif
+
+  mQuotaManager->RegisterDirectoryLock(*this);
+}
+
 already_AddRefed<DirectoryLock> DirectoryLockImpl::Specialize(
     PersistenceType aPersistenceType,
     const quota::GroupAndOrigin& aGroupAndOrigin,
@@ -2856,16 +2935,14 @@ already_AddRefed<DirectoryLock> DirectoryLockImpl::Specialize(
       Nullable<PersistenceType>(aPersistenceType), aGroupAndOrigin.mGroup,
       OriginScope::FromOrigin(aGroupAndOrigin.mOrigin),
       Nullable<Client::Type>(aClientType),
-      /* aExclusive */ false, mInternal, ShouldUpdateLockIdTableFlag::Yes,
-      /* aOpenListener */ nullptr);
+      /* aExclusive */ false, mInternal, ShouldUpdateLockIdTableFlag::Yes);
   if (NS_WARN_IF(!Overlaps(*lock))) {
     return nullptr;
   }
 
 #ifdef DEBUG
-  for (uint32_t index = mQuotaManager->mDirectoryLocks.Length(); index > 0;
-       index--) {
-    DirectoryLockImpl* existingLock = mQuotaManager->mDirectoryLocks[index - 1];
+  for (DirectoryLockImpl* const existingLock :
+       Reversed(mQuotaManager->mDirectoryLocks)) {
     if (existingLock != this && !existingLock->MustWaitFor(*this)) {
       MOZ_ASSERT(!existingLock->MustWaitFor(*lock));
     }
@@ -3585,9 +3662,7 @@ bool QuotaManager::IsDotFile(const nsAString& aFileName) {
 auto QuotaManager::CreateDirectoryLock(
     const Nullable<PersistenceType>& aPersistenceType, const nsACString& aGroup,
     const OriginScope& aOriginScope, const Nullable<Client::Type>& aClientType,
-    bool aExclusive, bool aInternal,
-    RefPtr<OpenDirectoryListener> aOpenListener, bool& aBlockedOut)
-    -> already_AddRefed<DirectoryLockImpl> {
+    bool aExclusive, bool aInternal) -> already_AddRefed<DirectoryLockImpl> {
   AssertIsOnOwningThread();
   MOZ_ASSERT_IF(aOriginScope.IsOrigin(), !aOriginScope.GetOrigin().IsEmpty());
   MOZ_ASSERT_IF(!aInternal, !aPersistenceType.IsNull());
@@ -3597,35 +3672,12 @@ auto QuotaManager::CreateDirectoryLock(
   MOZ_ASSERT_IF(!aInternal, aOriginScope.IsOrigin());
   MOZ_ASSERT_IF(!aInternal, !aClientType.IsNull());
   MOZ_ASSERT_IF(!aInternal, aClientType.Value() < Client::TypeMax());
-  MOZ_ASSERT_IF(!aInternal, aOpenListener);
 
   RefPtr<DirectoryLockImpl> lock = new DirectoryLockImpl(
       WrapNotNullUnchecked(this), GenerateDirectoryLockId(), aPersistenceType,
       aGroup, aOriginScope, aClientType, aExclusive, aInternal,
-      ShouldUpdateLockIdTableFlag::Yes, std::move(aOpenListener));
+      ShouldUpdateLockIdTableFlag::Yes);
 
-  mPendingDirectoryLocks.AppendElement(lock);
-
-  // See if this lock needs to wait.
-  bool blocked = false;
-
-  // XXX It is probably unnecessary to iterate this in reverse order.
-  for (DirectoryLockImpl* const existingLock : Reversed(mDirectoryLocks)) {
-    if (lock->MustWaitFor(*existingLock)) {
-      existingLock->AddBlockingLock(*lock);
-      lock->AddBlockedOnLock(*existingLock);
-      blocked = true;
-    }
-  }
-
-  RegisterDirectoryLock(*lock);
-
-  // Otherwise, notify the open listener immediately.
-  if (!blocked) {
-    lock->NotifyOpenListener();
-  }
-
-  aBlockedOut = blocked;
   return lock.forget();
 }
 
@@ -3642,15 +3694,7 @@ auto QuotaManager::CreateDirectoryLockForEviction(
       OriginScope::FromOrigin(aGroupAndOrigin.mOrigin),
       Nullable<Client::Type>(),
       /* aExclusive */ true, /* aInternal */ true,
-      ShouldUpdateLockIdTableFlag::No, nullptr);
-
-#ifdef DEBUG
-  for (const DirectoryLockImpl* const existingLock : mDirectoryLocks) {
-    MOZ_ASSERT(!lock->MustWaitFor(*existingLock));
-  }
-#endif
-
-  RegisterDirectoryLock(*lock);
+      ShouldUpdateLockIdTableFlag::No);
 
   return lock.forget();
 }
@@ -3722,6 +3766,12 @@ void QuotaManager::UnregisterDirectoryLock(DirectoryLockImpl& aLock) {
   }
 
   aLock.SetRegistered(false);
+}
+
+void QuotaManager::AddPendingDirectoryLock(DirectoryLockImpl& aLock) {
+  AssertIsOnOwningThread();
+
+  mPendingDirectoryLocks.AppendElement(&aLock);
 }
 
 void QuotaManager::RemovePendingDirectoryLock(DirectoryLockImpl& aLock) {
@@ -3845,6 +3895,9 @@ uint64_t QuotaManager::CollectOriginsForEviction(
       RefPtr<DirectoryLockImpl> lock = CreateDirectoryLockForEviction(
           originInfo->mGroupInfo->mPersistenceType,
           GroupAndOrigin{originInfo->mGroupInfo->mGroup, originInfo->mOrigin});
+
+      lock->Acquire();
+
       aLocks.AppendElement(lock.forget());
     }
 
@@ -4802,6 +4855,15 @@ void QuotaManager::PersistOrigin(const GroupAndOrigin& aGroupAndOrigin) {
       LockedGetOriginInfo(PERSISTENCE_TYPE_DEFAULT, aGroupAndOrigin);
   if (originInfo && !originInfo->LockedPersisted()) {
     originInfo->LockedPersist();
+  }
+}
+
+void QuotaManager::AbortOperationsForLocks(
+    const DirectoryLockIdTableArray& aLockIds) {
+  for (Client::Type type : AllClientTypes()) {
+    if (aLockIds[type].Filled()) {
+      (*mClients)[type]->AbortOperationsForLocks(aLockIds[type]);
+    }
   }
 }
 
@@ -6312,69 +6374,32 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
   return NS_OK;
 }
 
-already_AddRefed<DirectoryLock> QuotaManager::OpenDirectory(
+already_AddRefed<DirectoryLock> QuotaManager::CreateDirectoryLock(
     PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
-    Client::Type aClientType, bool aExclusive,
-    RefPtr<OpenDirectoryListener> aOpenListener) {
+    Client::Type aClientType, bool aExclusive) {
   AssertIsOnOwningThread();
 
-  bool blocked;
   RefPtr<DirectoryLockImpl> lock = CreateDirectoryLock(
       Nullable<PersistenceType>(aPersistenceType), aGroupAndOrigin.mGroup,
       OriginScope::FromOrigin(aGroupAndOrigin.mOrigin),
-      Nullable<Client::Type>(aClientType), aExclusive, false,
-      std::move(aOpenListener), blocked);
+      Nullable<Client::Type>(aClientType), aExclusive, false);
   MOZ_ASSERT(lock);
 
-  return blocked ? lock.forget() : nullptr;
+  return lock.forget();
 }
 
-already_AddRefed<DirectoryLock> QuotaManager::OpenDirectoryInternal(
+already_AddRefed<DirectoryLock> QuotaManager::CreateDirectoryLockInternal(
     const Nullable<PersistenceType>& aPersistenceType,
     const OriginScope& aOriginScope, const Nullable<Client::Type>& aClientType,
-    bool aExclusive, OpenDirectoryListener* aOpenListener) {
+    bool aExclusive) {
   AssertIsOnOwningThread();
 
-  bool blocked;
-  RefPtr<DirectoryLockImpl> lock =
-      CreateDirectoryLock(aPersistenceType, ""_ns, aOriginScope,
-                          Nullable<Client::Type>(aClientType), aExclusive, true,
-                          aOpenListener, blocked);
+  RefPtr<DirectoryLockImpl> lock = CreateDirectoryLock(
+      aPersistenceType, ""_ns, aOriginScope,
+      Nullable<Client::Type>(aClientType), aExclusive, true);
   MOZ_ASSERT(lock);
 
-  if (!aExclusive) {
-    return blocked ? lock.forget() : nullptr;
-  }
-
-  // All the locks that block this new exclusive lock need to be invalidated.
-  // We also need to notify clients to abort operations for them.
-  AutoTArray<Client::DirectoryLockIdTable, Client::TYPE_MAX> lockIds;
-  lockIds.SetLength(Client::TypeMax());
-
-  const auto& blockedOnLocks = lock->GetBlockedOnLocks();
-
-  for (DirectoryLockImpl* blockedOnLock : blockedOnLocks) {
-    if (!blockedOnLock->IsInternal()) {
-      blockedOnLock->Invalidate();
-
-      // Clients don't have to handle pending locks. Invalidation is sufficient
-      // in that case (once a lock is ready and the listener needs to be
-      // notified, we will call DirectoryLockFailed instead of
-      // DirectoryLockAcquired which should release any remaining references to
-      // the lock).
-      if (!blockedOnLock->IsPending()) {
-        lockIds[blockedOnLock->ClientType()].Put(blockedOnLock->Id());
-      }
-    }
-  }
-
-  for (Client::Type type : AllClientTypes()) {
-    if (lockIds[type].Filled()) {
-      (*mClients)[type]->AbortOperationsForLocks(lockIds[type]);
-    }
-  }
-
-  return blocked ? lock.forget() : nullptr;
+  return lock.forget();
 }
 
 Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
@@ -7807,9 +7832,11 @@ void NormalOriginOperationBase::Open() {
   AdvanceState();
 
   if (mNeedsDirectoryLocking) {
-    RefPtr<DirectoryLock> pendingDirectoryLock =
-        QuotaManager::Get()->OpenDirectoryInternal(
-            mPersistenceType, mOriginScope, mClientType, mExclusive, this);
+    RefPtr<DirectoryLock> directoryLock =
+        QuotaManager::Get()->CreateDirectoryLockInternal(
+            mPersistenceType, mOriginScope, mClientType, mExclusive);
+
+    directoryLock->Acquire(this);
   } else {
     QM_TRY(DirectoryOpen(), QM_VOID, [this](const nsresult rv) { Finish(rv); });
   }
