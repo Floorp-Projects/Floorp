@@ -7,48 +7,54 @@
 
 #include "frontend/ObjLiteral.h"
 
-#include "mozilla/DebugOnly.h"
+#include "NamespaceImports.h"  // ValueVector
 
+#include "builtin/Array.h"             // NewDenseCopiedArray
 #include "frontend/CompilationInfo.h"  // frontend::CompilationAtomCache
 #include "frontend/ParserAtom.h"  // frontend::ParserAtom, frontend::ParserAtomTable
-#include "js/RootingAPI.h"
-#include "vm/JSAtom.h"
-#include "vm/JSObject.h"
-#include "vm/JSONPrinter.h"  // js::JSONPrinter
-#include "vm/ObjectGroup.h"
-#include "vm/Printer.h"  // js::Fprinter
+#include "gc/AllocKind.h"         // gc::AllocKind
+#include "gc/Rooting.h"           // RootedPlainObject
+#include "js/Id.h"                // INT_TO_JSID
+#include "js/RootingAPI.h"        // Rooted
+#include "js/TypeDecls.h"         // RootedId, RootedValue
+#include "vm/JSAtom.h"            // JSAtom
+#include "vm/JSONPrinter.h"       // js::JSONPrinter
+#include "vm/NativeObject.h"      // NativeDefineDataProperty
+#include "vm/ObjectGroup.h"       // TenuredObject
+#include "vm/PlainObject.h"       // PlainObject
+#include "vm/Printer.h"           // js::Fprinter
 
-#include "gc/ObjectKind-inl.h"
-#include "vm/JSAtom-inl.h"
-#include "vm/JSObject-inl.h"
+#include "gc/ObjectKind-inl.h"  // gc::GetGCObjectKind
+#include "vm/JSAtom-inl.h"      // AtomToId
+#include "vm/JSObject-inl.h"    // NewBuiltinClassInstance
 
 namespace js {
 
 static void InterpretObjLiteralValue(
     JSContext* cx, const frontend::CompilationAtomCache& atomCache,
-    const ObjLiteralInsn& insn, JS::Value* valOut) {
+    const ObjLiteralInsn& insn, MutableHandleValue valOut) {
   switch (insn.getOp()) {
     case ObjLiteralOpcode::ConstValue:
-      *valOut = insn.getConstValue();
+      valOut.set(insn.getConstValue());
       return;
     case ObjLiteralOpcode::ConstAtom: {
       frontend::TaggedParserAtomIndex index = insn.getAtomIndex();
       JSAtom* jsatom = atomCache.getExistingAtomAt(cx, index);
       MOZ_ASSERT(jsatom);
-      *valOut = StringValue(jsatom);
+      valOut.setString(jsatom);
       return;
     }
     case ObjLiteralOpcode::Null:
-      *valOut = NullValue();
+      valOut.setNull();
       return;
     case ObjLiteralOpcode::Undefined:
-      *valOut = UndefinedValue();
+      valOut.setUndefined();
       return;
     case ObjLiteralOpcode::True:
-      *valOut = BooleanValue(true);
+      valOut.setBoolean(true);
       return;
     case ObjLiteralOpcode::False:
-      *valOut = BooleanValue(false);
+      valOut.setBoolean(false);
       return;
     default:
       MOZ_CRASH("Unexpected object-literal instruction opcode");
@@ -62,18 +68,24 @@ static JSObject* InterpretObjLiteralObj(
   bool singleton = flags.contains(ObjLiteralFlag::Singleton);
 
   ObjLiteralReader reader(literalInsns);
-  ObjLiteralInsn insn;
 
-  Rooted<IdValueVector> properties(cx, IdValueVector(cx));
-  if (!properties.reserve(propertyCount)) {
+  gc::AllocKind allocKind = gc::GetGCObjectKind(propertyCount);
+  RootedPlainObject obj(
+      cx, NewBuiltinClassInstance<PlainObject>(cx, allocKind, TenuredObject));
+  if (!obj) {
     return nullptr;
   }
 
-  // Compute property values and build the key/value-pair list.
-  while (reader.readInsn(&insn)) {
+  RootedId propId(cx);
+  RootedValue propVal(cx);
+  while (true) {
+    // Make sure `insn` doesn't live across GC.
+    ObjLiteralInsn insn;
+    if (!reader.readInsn(&insn)) {
+      break;
+    }
     MOZ_ASSERT(insn.isValid());
 
-    jsid propId;
     if (insn.getKey().isArrayIndex()) {
       propId = INT_TO_JSID(insn.getKey().getArrayIndex());
     } else {
@@ -83,16 +95,18 @@ static JSObject* InterpretObjLiteralObj(
       propId = AtomToId(jsatom);
     }
 
-    JS::Value propVal;
     if (singleton) {
       InterpretObjLiteralValue(cx, atomCache, insn, &propVal);
+    } else {
+      propVal.setUndefined();
     }
 
-    properties.infallibleEmplaceBack(propId, propVal);
+    if (!NativeDefineDataProperty(cx, obj, propId, propVal, JSPROP_ENUMERATE)) {
+      return nullptr;
+    }
   }
 
-  return NewPlainObjectWithProperties(cx, properties.begin(),
-                                      properties.length(), TenuredObject);
+  return obj;
 }
 
 static JSObject* InterpretObjLiteralArray(
@@ -107,10 +121,10 @@ static JSObject* InterpretObjLiteralArray(
     return nullptr;
   }
 
+  RootedValue propVal(cx);
   while (reader.readInsn(&insn)) {
     MOZ_ASSERT(insn.isValid());
 
-    JS::Value propVal;
     InterpretObjLiteralValue(cx, atomCache, insn, &propVal);
     elements.infallibleAppend(propVal);
   }
