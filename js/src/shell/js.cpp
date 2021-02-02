@@ -5606,6 +5606,9 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::CompilationState compilationState(cx, allocScope, options,
                                               stencil.get());
+  if (!compilationState.init(cx)) {
+    return false;
+  }
 
   if (isAscii) {
     const Latin1Char* latin1 = stableChars.latin1Range().begin().get();
@@ -5679,6 +5682,9 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::CompilationState compilationState(cx, allocScope, options,
                                               stencil.get());
+  if (!compilationState.init(cx)) {
+    return false;
+  }
 
   Parser<frontend::SyntaxParseHandler, char16_t> parser(
       cx, options, chars, length,
