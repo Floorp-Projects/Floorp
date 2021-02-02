@@ -56,8 +56,17 @@ bool ScopeContext::init(JSContext* cx, CompilationInput& input,
                         JSObject* enclosingEnv) {
   Scope* maybeNonDefaultEnclosingScope = input.maybeNonDefaultEnclosingScope();
 
-  effectiveScope =
-      determineEffectiveScope(maybeNonDefaultEnclosingScope, enclosingEnv);
+  // If this eval is in response to Debugger.Frame.eval, we may have an
+  // incomplete scope chain. In order to provide a better debugging experience,
+  // we inspect the (optional) environment chain to determine it's enclosing
+  // FunctionScope if there is one. If there is no such scope, we use the
+  // orignal scope provided.
+  //
+  // NOTE: This is used to compute the ThisBinding kind and to allow access to
+  //       private fields, while other contextual information only uses the
+  //       actual scope passed to the compile.
+  JS::Rooted<Scope*> effectiveScope(
+      cx, determineEffectiveScope(maybeNonDefaultEnclosingScope, enclosingEnv));
 
   if (inheritThis == InheritThis::Yes) {
     computeThisBinding(effectiveScope);
@@ -71,7 +80,7 @@ bool ScopeContext::init(JSContext* cx, CompilationInput& input,
     if (!cacheEnclosingScopeBindingForEval(cx, input, parserAtoms)) {
       return false;
     }
-    if (!cachePrivateFieldsForEval(cx, input, parserAtoms)) {
+    if (!cachePrivateFieldsForEval(cx, input, effectiveScope, parserAtoms)) {
       return false;
     }
   }
@@ -325,6 +334,7 @@ static bool IsPrivateField(JSAtom* atom) {
 
 bool ScopeContext::cachePrivateFieldsForEval(JSContext* cx,
                                              CompilationInput& input,
+                                             Scope* effectiveScope,
                                              ParserAtomsTable& parserAtoms) {
   if (!input.options.privateClassFields) {
     return true;
@@ -1588,7 +1598,6 @@ CompilationState::CompilationState(JSContext* cx,
                                    const JS::ReadOnlyCompileOptions& options,
                                    CompilationStencil& stencil)
     : directives(options.forceStrictMode()),
-      scopeContext(cx),
       usedNames(cx),
       allocScope(frontendAllocScope),
       input(stencil.input),
