@@ -762,10 +762,13 @@ struct Program {
 };
 
 // clang-format off
-// for GL defines to fully expand
+// Fully-expand GL defines while ignoring more than 4 suffixes
 #define CONCAT_KEY(prefix, x, y, z, w, ...) prefix##x##y##z##w
-#define BLEND_KEY(...) CONCAT_KEY(BLEND_, __VA_ARGS__, 0, 0)
-#define MASK_BLEND_KEY(...) CONCAT_KEY(MASK_BLEND_, __VA_ARGS__, 0, 0)
+// Generate a blend key enum symbol
+#define BLEND_KEY(...) CONCAT_KEY(BLEND_, __VA_ARGS__, 0, 0, 0)
+// Generate a blend key symbol for a clip-mask variation
+#define MASK_BLEND_KEY(...) CONCAT_KEY(MASK_BLEND_, __VA_ARGS__, 0, 0, 0)
+// Utility macro to easily generate similar code for all implemented blend modes
 #define FOR_EACH_BLEND_KEY(macro)                                              \
   macro(GL_ONE, GL_ZERO, 0, 0)                                                 \
   macro(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA)  \
@@ -778,7 +781,24 @@ struct Program {
   macro(GL_ONE, GL_ONE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA)                        \
   macro(GL_ONE_MINUS_DST_ALPHA, GL_ONE, GL_ZERO, GL_ONE)                       \
   macro(GL_CONSTANT_COLOR, GL_ONE_MINUS_SRC_COLOR, 0, 0)                       \
-  macro(GL_ONE, GL_ONE_MINUS_SRC1_COLOR, 0, 0)
+  macro(GL_ONE, GL_ONE_MINUS_SRC1_COLOR, 0, 0)                                 \
+  macro(GL_MIN, 0, 0, 0)                                                       \
+  macro(GL_MAX, 0, 0, 0)                                                       \
+  macro(GL_MULTIPLY_KHR, 0, 0, 0)                                              \
+  macro(GL_SCREEN_KHR, 0, 0, 0)                                                \
+  macro(GL_OVERLAY_KHR, 0, 0, 0)                                               \
+  macro(GL_DARKEN_KHR, 0, 0, 0)                                                \
+  macro(GL_LIGHTEN_KHR, 0, 0, 0)                                               \
+  macro(GL_COLORDODGE_KHR, 0, 0, 0)                                            \
+  macro(GL_COLORBURN_KHR, 0, 0, 0)                                             \
+  macro(GL_HARDLIGHT_KHR, 0, 0, 0)                                             \
+  macro(GL_SOFTLIGHT_KHR, 0, 0, 0)                                             \
+  macro(GL_DIFFERENCE_KHR, 0, 0, 0)                                            \
+  macro(GL_EXCLUSION_KHR, 0, 0, 0)                                             \
+  macro(GL_HSL_HUE_KHR, 0, 0, 0)                                               \
+  macro(GL_HSL_SATURATION_KHR, 0, 0, 0)                                        \
+  macro(GL_HSL_COLOR_KHR, 0, 0, 0)                                             \
+  macro(GL_HSL_LUMINOSITY_KHR, 0, 0, 0)
 
 #define DEFINE_BLEND_KEY(...) BLEND_KEY(__VA_ARGS__),
 #define DEFINE_MASK_BLEND_KEY(...) MASK_BLEND_KEY(__VA_ARGS__),
@@ -1299,6 +1319,8 @@ static const char* const extensions[] = {
     "GL_ARB_invalidate_subdata",
     "GL_ARB_texture_storage",
     "GL_EXT_timer_query",
+    "GL_KHR_blend_equation_advanced",
+    "GL_KHR_blend_equation_advanced_coherent",
     "GL_APPLE_rgb_422",
 };
 
@@ -1437,6 +1459,37 @@ GLenum remap_blendfunc(GLenum rgb, GLenum a) {
   return a;
 }
 
+// Generate a hashed blend key based on blend func and equation state. This
+// allows all the blend state to be processed down to a blend key that can be
+// dealt with inside a single switch statement.
+static void hash_blend_key() {
+  GLenum srgb = ctx->blendfunc_srgb;
+  GLenum drgb = ctx->blendfunc_drgb;
+  GLenum sa = ctx->blendfunc_sa;
+  GLenum da = ctx->blendfunc_da;
+  GLenum equation = ctx->blend_equation;
+#define HASH_BLEND_KEY(x, y, z, w) ((x << 4) | (y) | (z << 24) | (w << 20))
+  // Basic non-separate blend funcs used the two argument form
+  int hash = HASH_BLEND_KEY(srgb, drgb, 0, 0);
+  // Separate alpha blend funcs use the 4 argument hash
+  if (srgb != sa || drgb != da) hash |= HASH_BLEND_KEY(0, 0, sa, da);
+  // Any other blend equation than the default func_add ignores the func and
+  // instead generates a one-argument hash based on the equation
+  if (equation != GL_FUNC_ADD) hash = HASH_BLEND_KEY(equation, 0, 0, 0);
+  switch (hash) {
+#define MAP_BLEND_KEY(...)                   \
+  case HASH_BLEND_KEY(__VA_ARGS__):          \
+    ctx->blend_key = BLEND_KEY(__VA_ARGS__); \
+    break;
+    FOR_EACH_BLEND_KEY(MAP_BLEND_KEY)
+    default:
+      debugf("blendfunc: %x, %x, separate: %x, %x, equation: %x\n", srgb, drgb,
+             sa, da, equation);
+      assert(false);
+      break;
+  }
+}
+
 void BlendFunc(GLenum srgb, GLenum drgb, GLenum sa, GLenum da) {
   ctx->blendfunc_srgb = srgb;
   ctx->blendfunc_drgb = drgb;
@@ -1445,20 +1498,7 @@ void BlendFunc(GLenum srgb, GLenum drgb, GLenum sa, GLenum da) {
   ctx->blendfunc_sa = sa;
   ctx->blendfunc_da = da;
 
-#define HASH_BLEND_KEY(x, y, z, w) ((x << 4) | (y) | (z << 24) | (w << 20))
-  int hash = HASH_BLEND_KEY(srgb, drgb, 0, 0);
-  if (srgb != sa || drgb != da) hash |= HASH_BLEND_KEY(0, 0, sa, da);
-  switch (hash) {
-#define MAP_BLEND_KEY(...)                   \
-  case HASH_BLEND_KEY(__VA_ARGS__):          \
-    ctx->blend_key = BLEND_KEY(__VA_ARGS__); \
-    break;
-    FOR_EACH_BLEND_KEY(MAP_BLEND_KEY)
-    default:
-      debugf("blendfunc: %x, %x, separate: %x, %x\n", srgb, drgb, sa, da);
-      assert(false);
-      break;
-  }
+  hash_blend_key();
 }
 
 void BlendColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
@@ -1467,8 +1507,12 @@ void BlendColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
 }
 
 void BlendEquation(GLenum mode) {
-  assert(mode == GL_FUNC_ADD);
-  ctx->blend_equation = mode;
+  assert(mode == GL_FUNC_ADD || mode == GL_MIN || mode == GL_MAX ||
+         (mode >= GL_MULTIPLY_KHR && mode <= GL_HSL_LUMINOSITY_KHR));
+  if (mode != ctx->blend_equation) {
+    ctx->blend_equation = mode;
+    hash_blend_key();
+  }
 }
 
 void DepthMask(GLboolean flag) { ctx->depthmask = flag; }
@@ -2990,8 +3034,9 @@ static ALWAYS_INLINE HalfRGBA8 packRGBA8(I32 a, I32 b) {
 #endif
 }
 
-static ALWAYS_INLINE WideRGBA8 pack_pixels_RGBA8(const vec4& v) {
-  ivec4 i = round_pixel(v);
+static ALWAYS_INLINE WideRGBA8 pack_pixels_RGBA8(const vec4& v,
+                                                 float maxval = 1.0f) {
+  ivec4 i = round_pixel(v, maxval);
   HalfRGBA8 xz = packRGBA8(i.z, i.x);
   HalfRGBA8 yw = packRGBA8(i.y, i.w);
   HalfRGBA8 xyzwl = zipLow(xz, yw);
@@ -3009,6 +3054,12 @@ UNUSED static ALWAYS_INLINE WideRGBA8 pack_pixels_RGBA8(const vec4_scalar& v) {
 
 static ALWAYS_INLINE WideRGBA8 pack_pixels_RGBA8() {
   return pack_pixels_RGBA8(fragment_shader->gl_FragColor);
+}
+
+static ALWAYS_INLINE WideRGBA8 pack_pixels_RGBA8(WideRGBA32F v,
+                                                 float maxval = 1.0f) {
+  ivec4 i = round_pixel(bit_cast<vec4>(v), maxval);
+  return combine(packRGBA8(i.x, i.y), packRGBA8(i.z, i.w));
 }
 
 // Load a partial span > 0 and < 4 pixels.
@@ -3079,8 +3130,126 @@ static ALWAYS_INLINE T addlow(T x, T y) {
   return bit_cast<T>(bit_cast<bytes>(x) + bit_cast<bytes>(y));
 }
 
-static ALWAYS_INLINE WideRGBA8 alphas(WideRGBA8 c) {
+// Replace color components of each pixel with the pixel's alpha values.
+template <typename T>
+static ALWAYS_INLINE T alphas(T c) {
   return SHUFFLE(c, c, 3, 3, 3, 3, 7, 7, 7, 7, 11, 11, 11, 11, 15, 15, 15, 15);
+}
+
+// Replace the alpha values of the first vector with alpha values from the
+// second, while leaving the color components unmodified.
+template <typename T>
+static ALWAYS_INLINE T set_alphas(T c, T a) {
+  return SHUFFLE(c, a, 0, 1, 2, 19, 4, 5, 6, 23, 8, 9, 10, 27, 12, 13, 14, 31);
+}
+
+// Miscellaneous helper functions for working with packed RGBA8 data.
+static ALWAYS_INLINE HalfRGBA8 if_then_else(V8<int16_t> c, HalfRGBA8 t,
+                                            HalfRGBA8 e) {
+  return bit_cast<HalfRGBA8>((c & t) | (~c & e));
+}
+
+template <typename T, typename C, int N>
+static ALWAYS_INLINE VectorType<T, N> if_then_else(VectorType<C, N> c,
+                                                   VectorType<T, N> t,
+                                                   VectorType<T, N> e) {
+  return combine(if_then_else(lowHalf(c), lowHalf(t), lowHalf(e)),
+                 if_then_else(highHalf(c), highHalf(t), highHalf(e)));
+}
+
+static ALWAYS_INLINE HalfRGBA8 min(HalfRGBA8 x, HalfRGBA8 y) {
+#if USE_SSE2
+  return bit_cast<HalfRGBA8>(
+      _mm_min_epi16(bit_cast<V8<int16_t>>(x), bit_cast<V8<int16_t>>(y)));
+#elif USE_NEON
+  return vminq_u16(x, y);
+#else
+  return if_then_else(a < b, a, b);
+#endif
+}
+
+template <typename T, int N>
+static ALWAYS_INLINE VectorType<T, N> min(VectorType<T, N> x,
+                                          VectorType<T, N> y) {
+  return combine(min(lowHalf(x), lowHalf(y)), min(highHalf(x), highHalf(y)));
+}
+
+static ALWAYS_INLINE HalfRGBA8 max(HalfRGBA8 x, HalfRGBA8 y) {
+#if USE_SSE2
+  return bit_cast<HalfRGBA8>(
+      _mm_max_epi16(bit_cast<V8<int16_t>>(x), bit_cast<V8<int16_t>>(y)));
+#elif USE_NEON
+  return vmaxq_u16(x, y);
+#else
+  return if_then_else(a > b, a, b);
+#endif
+}
+
+template <typename T, int N>
+static ALWAYS_INLINE VectorType<T, N> max(VectorType<T, N> x,
+                                          VectorType<T, N> y) {
+  return combine(max(lowHalf(x), lowHalf(y)), max(highHalf(x), highHalf(y)));
+}
+
+template <typename T, int N>
+static ALWAYS_INLINE VectorType<T, N> recip(VectorType<T, N> v) {
+  return combine(recip(lowHalf(v)), recip(highHalf(v)));
+}
+
+// Helper to get the reciprocal if the value is non-zero, or otherwise default
+// to the supplied fallback value.
+template <typename V>
+static ALWAYS_INLINE V recip_or(V v, float f) {
+  return if_then_else(v != V(0.0f), recip(v), V(f));
+}
+
+template <typename T, int N>
+static ALWAYS_INLINE VectorType<T, N> inversesqrt(VectorType<T, N> v) {
+  return combine(inversesqrt(lowHalf(v)), inversesqrt(highHalf(v)));
+}
+
+// Extract the alpha components so that we can cheaply calculate the reciprocal
+// on a single SIMD register. Then multiply the duplicated alpha reciprocal with
+// the pixel data. 0 alpha is treated as transparent black.
+static ALWAYS_INLINE WideRGBA32F unpremultiply(WideRGBA32F v) {
+  Float a = recip_or((Float){v[3], v[7], v[11], v[15]}, 0.0f);
+  return v * combine(a.xxxx, a.yyyy, a.zzzz, a.wwww);
+}
+
+// Packed RGBA32F data is AoS in BGRA order. Transpose it to SoA and swizzle to
+// RGBA to unpack.
+static ALWAYS_INLINE vec4 unpack(PackedRGBA32F c) {
+  return bit_cast<vec4>(
+      SHUFFLE(c, c, 2, 6, 10, 14, 1, 5, 9, 13, 0, 4, 8, 12, 3, 7, 11, 15));
+}
+
+// The following lum/sat functions mostly follow the KHR_blend_equation_advanced
+// specification but are rearranged to work on premultiplied data.
+static ALWAYS_INLINE Float lumv3(vec3 v) {
+  return v.x * 0.30f + v.y * 0.59f + v.z * 0.11f;
+}
+
+static ALWAYS_INLINE Float minv3(vec3 v) { return min(min(v.x, v.y), v.z); }
+
+static ALWAYS_INLINE Float maxv3(vec3 v) { return max(max(v.x, v.y), v.z); }
+
+static inline vec3 clip_color(vec3 v, Float lum, Float alpha) {
+  Float mincol = max(-minv3(v), lum);
+  Float maxcol = max(maxv3(v), alpha - lum);
+  return lum + v * (lum * (alpha - lum) * recip_or(mincol * maxcol, 0.0f));
+}
+
+static inline vec3 set_lum(vec3 base, vec3 ref, Float alpha) {
+  return clip_color(base - lumv3(base), lumv3(ref), alpha);
+}
+
+static inline vec3 set_lum_sat(vec3 base, vec3 sref, vec3 lref, Float alpha) {
+  vec3 diff = base - minv3(base);
+  Float sbase = maxv3(diff);
+  Float ssat = maxv3(sref) - minv3(sref);
+  // The sbase range is rescaled to ssat. If sbase has 0 extent, then rescale
+  // to black, as per specification.
+  return set_lum(diff * ssat * recip_or(sbase, 0.0f), lref, alpha);
 }
 
 // A pointer into the color buffer for the start of the span.
@@ -3172,6 +3341,182 @@ static ALWAYS_INLINE WideRGBA8 blend_pixels(uint32_t* buf, PackedRGBA8 pdst,
           pack_pixels_RGBA8(fragment_shader->gl_SecondaryFragColor);
       return muldiv255(src, mask) + dst -
              muldiv255(dst, muldiv255(secondary, mask));
+    }
+    case BLEND_CASE(GL_MIN):
+      return min(src, dst);
+    case BLEND_CASE(GL_MAX):
+      return max(src, dst);
+
+      // clang-format off
+    // The KHR_blend_equation_advanced spec describes the blend equations such
+    // that the unpremultiplied values Cs, Cd, As, Ad and function f combine to
+    // the result:
+    //      Cr = f(Cs,Cd)*As*Ad + Cs*As*(1-Ad) + Cd*AD*(1-As)
+    //      Ar = As*Ad + As*(1-Ad) + Ad*(1-As)
+    // However, working with unpremultiplied values requires expensive math to
+    // unpremultiply and premultiply again during blending. We can use the fact
+    // that premultiplied value P = C*A and simplify the equations such that no
+    // unpremultiplied colors are necessary, allowing us to stay with integer
+    // math that avoids floating-point conversions in the common case. Some of
+    // the blend modes require division or sqrt, in which case we do convert
+    // to (possibly transposed/unpacked) floating-point to implement the mode.
+    // However, most common modes can still use cheaper premultiplied integer
+    // math. As an example, the multiply mode f(Cs,Cd) = Cs*Cd is simplified
+    // to:
+    //     Cr = Cs*Cd*As*Ad + Cs*As*(1-Ad) + Cd*Ad*(1-As)
+    //     .. Pr = Ps*Pd + Ps - Ps*Ad + Pd - Pd*As
+    //     Ar = As*Ad + As - As*Ad + Ad - Ad*As
+    //     .. Ar = As + Ad - As*Ad
+    // Note that the alpha equation is the same for all blend equations, such
+    // that so long as the implementation results in As + Ad - As*Ad, we can
+    // avoid using separate instructions to compute the alpha result, which is
+    // dependent on the math used to implement each blend mode. The exact
+    // reductions used to get the final math for every blend mode are too
+    // involved to show here in comments, but mostly follows from replacing
+    // Cs*As and Cd*Ad with Ps and Ps while factoring out as many common terms
+    // as possible.
+      // clang-format on
+
+    case BLEND_CASE(GL_MULTIPLY_KHR): {
+      WideRGBA8 diff = muldiv255(alphas(src) - (src & RGB_MASK),
+                                 alphas(dst) - (dst & RGB_MASK));
+      return src + dst + (diff & RGB_MASK) - alphas(diff);
+    }
+    case BLEND_CASE(GL_SCREEN_KHR):
+      return src + dst - muldiv255(src, dst);
+    case BLEND_CASE(GL_OVERLAY_KHR): {
+      WideRGBA8 srcA = alphas(src);
+      WideRGBA8 dstA = alphas(dst);
+      WideRGBA8 diff = muldiv255(src, dst) + muldiv255(srcA - src, dstA - dst);
+      return src + dst +
+             if_then_else(dst * 2 <= dstA, (diff & RGB_MASK) - alphas(diff),
+                          -diff);
+    }
+    case BLEND_CASE(GL_DARKEN_KHR):
+      return src + dst -
+             max(muldiv255(src, alphas(dst)), muldiv255(dst, alphas(src)));
+    case BLEND_CASE(GL_LIGHTEN_KHR):
+      return src + dst -
+             min(muldiv255(src, alphas(dst)), muldiv255(dst, alphas(src)));
+
+    case BLEND_CASE(GL_COLORDODGE_KHR): {
+      // Color-dodge and color-burn require division, so we convert to FP math
+      // here, but avoid transposing to a vec4.
+      WideRGBA32F srcF = CONVERT(src, WideRGBA32F);
+      WideRGBA32F srcA = alphas(srcF);
+      WideRGBA32F dstF = CONVERT(dst, WideRGBA32F);
+      WideRGBA32F dstA = alphas(dstF);
+      return pack_pixels_RGBA8(
+          srcA * set_alphas(
+                     min(dstA, dstF * srcA * recip_or(srcA - srcF, 255.0f)),
+                     dstF) +
+              srcF * (255.0f - dstA) + dstF * (255.0f - srcA),
+          255.0f * 255.0f);
+    }
+    case BLEND_CASE(GL_COLORBURN_KHR): {
+      WideRGBA32F srcF = CONVERT(src, WideRGBA32F);
+      WideRGBA32F srcA = alphas(srcF);
+      WideRGBA32F dstF = CONVERT(dst, WideRGBA32F);
+      WideRGBA32F dstA = alphas(dstF);
+      return pack_pixels_RGBA8(
+          srcA * set_alphas((dstA - min(dstA, (dstA - dstF) * srcA *
+                                                  recip_or(srcF, 255.0f))),
+                            dstF) +
+              srcF * (255.0f - dstA) + dstF * (255.0f - srcA),
+          255.0f * 255.0f);
+    }
+    case BLEND_CASE(GL_HARDLIGHT_KHR): {
+      WideRGBA8 srcA = alphas(src);
+      WideRGBA8 dstA = alphas(dst);
+      WideRGBA8 diff = muldiv255(src, dst) + muldiv255(srcA - src, dstA - dst);
+      return src + dst +
+             if_then_else(src * 2 <= srcA, (diff & RGB_MASK) - alphas(diff),
+                          -diff);
+    }
+    case BLEND_CASE(GL_SOFTLIGHT_KHR): {
+      // Soft-light requires an unpremultiply that can't be factored out as
+      // well as a sqrt, so we convert to FP math here, but avoid transposing
+      // to a vec4.
+      WideRGBA32F srcF = CONVERT(src, WideRGBA32F);
+      WideRGBA32F srcA = alphas(srcF);
+      WideRGBA32F dstF = CONVERT(dst, WideRGBA32F);
+      WideRGBA32F dstA = alphas(dstF);
+      WideRGBA32F dstU = unpremultiply(dstF);
+      WideRGBA32F scale = srcF + srcF - srcA;
+      return pack_pixels_RGBA8(
+          dstF * (255.0f +
+                  set_alphas(
+                      scale *
+                          if_then_else(scale < 0.0f, 1.0f - dstU,
+                                       min((16.0f * dstU - 12.0f) * dstU + 3.0f,
+                                           inversesqrt(dstU) - 1.0f)),
+                      WideRGBA32F(0.0f))) +
+              srcF * (255.0f - dstA),
+          255.0f * 255.0f);
+    }
+    case BLEND_CASE(GL_DIFFERENCE_KHR): {
+      WideRGBA8 diff =
+          min(muldiv255(dst, alphas(src)), muldiv255(src, alphas(dst)));
+      return src + dst - diff - (diff & RGB_MASK);
+    }
+    case BLEND_CASE(GL_EXCLUSION_KHR): {
+      WideRGBA8 diff = muldiv255(src, dst);
+      return src + dst - diff - (diff & RGB_MASK);
+    }
+    case BLEND_CASE(GL_HSL_HUE_KHR): {
+      // The HSL blend modes are non-separable and require complicated use of
+      // division. It is advantageous to convert to FP and transpose to vec4
+      // math to more easily manipulate the individual color components.
+      vec4 srcV = unpack(CONVERT(src, PackedRGBA32F));
+      vec4 dstV = unpack(CONVERT(dst, PackedRGBA32F));
+      Float srcA = srcV.w * (1.0f / 255.0f);
+      Float dstA = dstV.w * (1.0f / 255.0f);
+      Float srcDstA = srcV.w * dstA;
+      vec3 srcC = vec3(srcV) * dstA;
+      vec3 dstC = vec3(dstV) * srcA;
+      return pack_pixels_RGBA8(vec4(set_lum_sat(srcC, dstC, dstC, srcDstA) +
+                                        vec3(srcV) - srcC + vec3(dstV) - dstC,
+                                    srcV.w + dstV.w - srcDstA),
+                               255.0f);
+    }
+    case BLEND_CASE(GL_HSL_SATURATION_KHR): {
+      vec4 srcV = unpack(CONVERT(src, PackedRGBA32F));
+      vec4 dstV = unpack(CONVERT(dst, PackedRGBA32F));
+      Float srcA = srcV.w * (1.0f / 255.0f);
+      Float dstA = dstV.w * (1.0f / 255.0f);
+      Float srcDstA = srcV.w * dstA;
+      vec3 srcC = vec3(srcV) * dstA;
+      vec3 dstC = vec3(dstV) * srcA;
+      return pack_pixels_RGBA8(vec4(set_lum_sat(dstC, srcC, dstC, srcDstA) +
+                                        vec3(srcV) - srcC + vec3(dstV) - dstC,
+                                    srcV.w + dstV.w - srcDstA),
+                               255.0f);
+    }
+    case BLEND_CASE(GL_HSL_COLOR_KHR): {
+      vec4 srcV = unpack(CONVERT(src, PackedRGBA32F));
+      vec4 dstV = unpack(CONVERT(dst, PackedRGBA32F));
+      Float srcA = srcV.w * (1.0f / 255.0f);
+      Float dstA = dstV.w * (1.0f / 255.0f);
+      Float srcDstA = srcV.w * dstA;
+      vec3 srcC = vec3(srcV) * dstA;
+      vec3 dstC = vec3(dstV) * srcA;
+      return pack_pixels_RGBA8(vec4(set_lum(srcC, dstC, srcDstA) + vec3(srcV) -
+                                        srcC + vec3(dstV) - dstC,
+                                    srcV.w + dstV.w - srcDstA),
+                               255.0f);
+    }
+    case BLEND_CASE(GL_HSL_LUMINOSITY_KHR): {
+      vec4 srcV = unpack(CONVERT(src, PackedRGBA32F));
+      vec4 dstV = unpack(CONVERT(dst, PackedRGBA32F));
+      Float srcA = srcV.w * (1.0f / 255.0f);
+      Float dstA = dstV.w * (1.0f / 255.0f);
+      Float srcDstA = srcV.w * dstA;
+      vec3 srcC = vec3(srcV) * dstA;
+      vec3 dstC = vec3(dstV) * srcA;
+      return pack_pixels_RGBA8(vec4(set_lum(dstC, srcC, srcDstA) + vec3(srcV) -
+                                        srcC + vec3(dstV) - dstC,
+                                    srcV.w + dstV.w - srcDstA),
+                               255.0f);
     }
     default:
       UNREACHABLE;
