@@ -1271,7 +1271,7 @@ bool StaticStrings::init(JSContext* cx) {
     unitStaticTable[i] = s->morphAtomizedStringIntoPermanentAtom(hash);
   }
 
-  for (uint32_t i = 0; i < NUM_SMALL_CHARS * NUM_SMALL_CHARS; i++) {
+  for (uint32_t i = 0; i < NUM_LENGTH2_ENTRIES; i++) {
     Latin1Char buffer[] = {fromSmallChar(i >> SMALL_CHAR_BITS),
                            fromSmallChar(i & SMALL_CHAR_MASK)};
     JSLinearString* s =
@@ -1319,17 +1319,17 @@ inline void TraceStaticString(JSTracer* trc, JSAtom* atom, const char* name) {
 void StaticStrings::trace(JSTracer* trc) {
   /* These strings never change, so barriers are not needed. */
 
-  for (uint32_t i = 0; i < UNIT_STATIC_LIMIT; i++) {
-    TraceStaticString(trc, unitStaticTable[i], "unit-static-string");
+  for (auto& s : unitStaticTable) {
+    TraceStaticString(trc, s, "unit-static-string");
   }
 
-  for (uint32_t i = 0; i < NUM_SMALL_CHARS * NUM_SMALL_CHARS; i++) {
-    TraceStaticString(trc, length2StaticTable[i], "length2-static-string");
+  for (auto& s : length2StaticTable) {
+    TraceStaticString(trc, s, "length2-static-string");
   }
 
   /* This may mark some strings more than once, but so be it. */
-  for (uint32_t i = 0; i < INT_STATIC_LIMIT; i++) {
-    TraceStaticString(trc, intStaticTable[i], "int-static-string");
+  for (auto& s : intStaticTable) {
+    TraceStaticString(trc, s, "int-static-string");
   }
 }
 

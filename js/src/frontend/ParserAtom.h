@@ -530,9 +530,9 @@ class WellKnownParserAtoms_ROM {
   using Char16Traits = std::char_traits<char16_t>;
 
  public:
-  static const size_t ASCII_STATIC_LIMIT = 128U;
-  static const size_t NUM_SMALL_CHARS = StaticStrings::NUM_SMALL_CHARS;
-  static const size_t NUM_LENGTH2_ENTRIES = NUM_SMALL_CHARS * NUM_SMALL_CHARS;
+  static constexpr size_t ASCII_STATIC_LIMIT = 128U;
+  static constexpr size_t NUM_LENGTH2_ENTRIES =
+      StaticStrings::NUM_LENGTH2_ENTRIES;
 
   StaticParserAtomEntry<0> emptyAtom;
   StaticParserAtomEntry<1> length1Table[ASCII_STATIC_LIMIT];
