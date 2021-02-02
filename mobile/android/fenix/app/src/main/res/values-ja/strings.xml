@@ -1107,6 +1107,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">ストレージ領域を空けます</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">サイトの許可設定</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">ダウンロード一覧</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">閲覧データを削除</string>
 
@@ -1227,9 +1229,6 @@
     <string name="onboarding_private_browsing_button">設定を開く</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">あなたのプライバシー</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">%s は、あなたがオンラインで共有するものと、私たちと共有するものをコントロールできるように設計されています。</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">個人情報保護方針を読む</string>
 
