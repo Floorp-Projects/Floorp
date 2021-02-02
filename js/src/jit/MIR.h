@@ -3072,7 +3072,6 @@ class MCreateArgumentsObject : public MUnaryInstruction,
   MCreateArgumentsObject(MDefinition* callObj, ArgumentsObject* templateObj)
       : MUnaryInstruction(classOpcode, callObj), templateObj_(templateObj) {
     setResultType(MIRType::Object);
-    setGuard();
   }
 
  public:
