@@ -864,6 +864,25 @@ inline bool IsPackedArray(JSObject* obj) {
   return true;
 }
 
+MOZ_ALWAYS_INLINE bool AddDataPropertyNonDelegate(JSContext* cx,
+                                                  HandlePlainObject obj,
+                                                  HandleId id, HandleValue v) {
+  MOZ_ASSERT(!JSID_IS_INT(id));
+  MOZ_ASSERT(!obj->isDelegate());
+
+  // If we know this is a new property we can call addProperty instead of
+  // the slower putProperty.
+  Shape* shape = NativeObject::addEnumerableDataProperty(cx, obj, id);
+  if (!shape) {
+    return false;
+  }
+
+  obj->setSlot(shape->slot(), v);
+
+  MOZ_ASSERT(!obj->getClass()->getAddProperty());
+  return true;
+}
+
 }  // namespace js
 
 #endif /* vm_NativeObject_inl_h */
