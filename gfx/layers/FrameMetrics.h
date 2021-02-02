@@ -323,8 +323,11 @@ struct FrameMetrics {
   bool IsRootContent() const { return mIsRootContent; }
 
   // Set scroll offset, first clamping to the scroll range.
-  void ClampAndSetVisualScrollOffset(const CSSPoint& aScrollOffset) {
+  // Return true if it changed.
+  bool ClampAndSetVisualScrollOffset(const CSSPoint& aScrollOffset) {
+    CSSPoint offsetBefore = GetVisualScrollOffset();
     SetVisualScrollOffset(CalculateScrollRange().ClampPoint(aScrollOffset));
+    return (offsetBefore != GetVisualScrollOffset());
   }
 
   CSSPoint GetLayoutScrollOffset() const { return mLayoutViewport.TopLeft(); }
