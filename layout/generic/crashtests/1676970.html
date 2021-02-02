@@ -1,0 +1,20 @@
+<script>
+function go() {
+  a.appendChild(c)
+  a.getRootNode().addEventListener("DOMSubtreeModified", eh, { once: true })
+  b.setAttribute("oninvalid", "eh()")
+}
+function eh() {
+  b.setAttribute("role", "dialog")
+  window.scrollBy(0.802, 0.384)
+  var x = document.getSelection()
+  x.extend(a)
+  x.modify("move", "forward", "lineboundary")
+  a.style.setProperty("column-span", "all")
+}
+</script>
+<body onload=go()>
+<select>
+<option id="a" contenteditable="true">x</span>
+<input id="b">
+<textarea id="c">

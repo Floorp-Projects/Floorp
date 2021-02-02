@@ -5263,20 +5263,32 @@ static bool SelfIsSelectable(nsIFrame* aFrame, uint32_t aFlags) {
 }
 
 static bool SelectionDescendToKids(nsIFrame* aFrame) {
-  StyleUserSelect style = aFrame->StyleUIReset()->mUserSelect;
-  nsIFrame* parent = aFrame->GetParent();
   // If we are only near (not directly over) then don't traverse
-  // frames with independent selection (e.g. text and list controls)
-  // unless we're already inside such a frame (see bug 268497).  Note that this
-  // prevents any of the users of this method from entering form controls.
+  // frames with independent selection (e.g. text and list controls, see bug
+  // 268497).  Note that this prevents any of the users of this method from
+  // entering form controls.
   // XXX We might want some way to allow using the up-arrow to go into a form
   // control, but the focus didn't work right anyway; it'd probably be enough
   // if the left and right arrows could enter textboxes (which I don't believe
   // they can at the moment)
-  return !aFrame->IsGeneratedContentFrame() && style != StyleUserSelect::All &&
-         style != StyleUserSelect::None &&
-         (parent->HasAnyStateBits(NS_FRAME_INDEPENDENT_SELECTION) ||
-          !aFrame->HasAnyStateBits(NS_FRAME_INDEPENDENT_SELECTION));
+  if (aFrame->IsTextInputFrame() || aFrame->IsListControlFrame()) {
+    MOZ_ASSERT(aFrame->HasAnyStateBits(NS_FRAME_INDEPENDENT_SELECTION));
+    return false;
+  }
+
+  // Failure in this assertion means a new type of frame forms the root of an
+  // NS_FRAME_INDEPENDENT_SELECTION subtree. In such case, the condition above
+  // should be changed to handle it.
+  MOZ_ASSERT_IF(
+      aFrame->HasAnyStateBits(NS_FRAME_INDEPENDENT_SELECTION),
+      aFrame->GetParent()->HasAnyStateBits(NS_FRAME_INDEPENDENT_SELECTION));
+
+  if (aFrame->IsGeneratedContentFrame()) {
+    return false;
+  }
+
+  auto style = aFrame->StyleUIReset()->mUserSelect;
+  return style != StyleUserSelect::All && style != StyleUserSelect::None;
 }
 
 static FrameTarget GetSelectionClosestFrameForChild(nsIFrame* aChild,
