@@ -162,6 +162,10 @@ static void DumpObjLiteralFlagsItems(js::JSONPrinter& json,
     json.value("Singleton");
     flags -= ObjLiteralFlag::Singleton;
   }
+  if (flags.contains(ObjLiteralFlag::HasIndexOrDuplicatePropName)) {
+    json.value("HasIndexOrDuplicatePropName");
+    flags -= ObjLiteralFlag::HasIndexOrDuplicatePropName;
+  }
 
   if (!flags.isEmpty()) {
     json.value("Unknown(%x)", flags.serialize());
