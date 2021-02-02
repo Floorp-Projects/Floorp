@@ -235,7 +235,7 @@ static void ReportBufferTooSmall(JSContext* cx, uint32_t dummy) {
 }
 
 static void ReportTooBigCharacter(JSContext* cx, uint32_t v) {
-  char buffer[10];
+  char buffer[11];
   SprintfLiteral(buffer, "0x%x", v);
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                             JSMSG_UTF8_CHAR_TOO_LARGE, buffer);
