@@ -10,9 +10,11 @@
 
 #include "mozilla/EndianUtils.h"
 #include "mozilla/EnumSet.h"
+#include "mozilla/HashTable.h"  // HashSet
 #include "mozilla/Span.h"
 
 #include "frontend/ParserAtom.h"  // ParserAtomsTable, TaggedParserAtomIndex
+#include "frontend/TaggedParserAtomIndexHasher.h"  // TaggedParserAtomIndexHasher
 #include "js/AllocPolicy.h"
 #include "js/GCPolicyAPI.h"
 #include "js/Value.h"
@@ -138,6 +140,11 @@ enum class ObjLiteralFlag : uint8_t {
   // If set, this is an object literal in a singleton context and property
   // values are included. See also JSOp::Object.
   Singleton = 2,
+
+  // If set, this object contains index property, or duplicate non-index
+  // property.
+  // This flag is valid only if Array flag isn't set.
+  HasIndexOrDuplicatePropName = 3,
 };
 
 using ObjLiteralFlags = mozilla::EnumSet<ObjLiteralFlag>;
@@ -288,8 +295,29 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
   uint32_t getPropertyCount() const { return propertyCount_; }
 
   void beginObject(ObjLiteralFlags flags) { flags_ = flags; }
-  void setPropName(frontend::ParserAtomsTable& parserAtoms,
+  bool setPropName(JSContext* cx, frontend::ParserAtomsTable& parserAtoms,
                    const frontend::TaggedParserAtomIndex propName) {
+    // Only valid in object-mode.
+    setPropNameNoDuplicateCheck(parserAtoms, propName);
+
+    if (flags_.contains(ObjLiteralFlag::HasIndexOrDuplicatePropName)) {
+      return true;
+    }
+
+    auto p = propNames_.lookupForAdd(propName);
+    if (!p) {
+      if (!propNames_.add(p, propName)) {
+        js::ReportOutOfMemory(cx);
+        return false;
+      }
+    } else {
+      flags_ += ObjLiteralFlag::HasIndexOrDuplicatePropName;
+    }
+    return true;
+  }
+  void setPropNameNoDuplicateCheck(
+      frontend::ParserAtomsTable& parserAtoms,
+      const frontend::TaggedParserAtomIndex propName) {
     // Only valid in object-mode.
     MOZ_ASSERT(!flags_.contains(ObjLiteralFlag::Array));
     parserAtoms.markUsedByStencil(propName);
@@ -300,6 +328,7 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
     MOZ_ASSERT(!flags_.contains(ObjLiteralFlag::Array));
     MOZ_ASSERT(propIndex <= ATOM_INDEX_MASK);
     nextKey_ = ObjLiteralKey::fromArrayIndex(propIndex);
+    flags_ += ObjLiteralFlag::HasIndexOrDuplicatePropName;
   }
   void beginDenseArrayElements() {
     // Only valid in array-mode.
@@ -355,6 +384,9 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
   ObjLiteralFlags flags_;
   ObjLiteralKey nextKey_;
   uint32_t propertyCount_ = 0;
+  mozilla::HashSet<frontend::TaggedParserAtomIndex,
+                   frontend::TaggedParserAtomIndexHasher>
+      propNames_;
 };
 
 struct ObjLiteralReaderBase {
