@@ -4163,7 +4163,7 @@ mozilla::ipc::IPCResult ContentChild::RecvLoadURI(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvInternalLoad(
-    nsDocShellLoadState* aLoadState, bool aTakeFocus) {
+    nsDocShellLoadState* aLoadState) {
   if (!aLoadState->Target().IsEmpty() ||
       aLoadState->TargetBrowsingContext().IsNull()) {
     return IPC_FAIL(this, "must already be retargeted");
@@ -4174,12 +4174,6 @@ mozilla::ipc::IPCResult ContentChild::RecvInternalLoad(
   BrowsingContext* context = aLoadState->TargetBrowsingContext().get();
 
   context->InternalLoad(aLoadState);
-
-  if (aTakeFocus) {
-    if (nsCOMPtr<nsPIDOMWindowOuter> domWin = context->GetDOMWindow()) {
-      nsFocusManager::FocusWindow(domWin, CallerType::System);
-    }
-  }
 
 #ifdef MOZ_CRASHREPORTER
   if (CrashReporter::GetEnabled()) {
