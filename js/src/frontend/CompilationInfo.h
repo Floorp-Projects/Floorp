@@ -41,6 +41,8 @@ class JSONPrinter;
 
 namespace frontend {
 
+struct CompilationInput;
+
 // ScopeContext hold information derivied from the scope and environment chains
 // to try to avoid the parser needing to traverse VM structures directly.
 struct ScopeContext {
@@ -66,9 +68,7 @@ struct ScopeContext {
   // compiling is not an eval or arrow-function.
   uint32_t enclosingThisEnvironmentHops = 0;
 
-  // If non-null enclosingScope is passed to constructor, the kind of the scope.
-  // If null enclosingScope is passed instead, the compilation should use
-  // empty global scope.
+  // The kind of enclosing scope.
   ScopeKind enclosingScopeKind = ScopeKind::Global;
 
   // The type of binding required for `this` of the top level context, as
@@ -88,32 +88,27 @@ struct ScopeContext {
   bool inClass = false;
   bool inWith = false;
 
-  // True if the passed enclosingScope is for FunctionScope of arrow function.
+  // True if the enclosing scope is for FunctionScope of arrow function.
   bool enclosingScopeIsArrow = false;
 
-  // True if the passed enclosingScope has environment.
+  // True if the enclosing scope has environment.
   bool enclosingScopeHasEnvironment = false;
 
 #ifdef DEBUG
-  // True if the passed enclosingScope has non-syntactic scope on chain.
+  // True if the enclosing scope has non-syntactic scope on chain.
   bool hasNonSyntacticScopeOnChain = false;
 #endif
 
-  explicit ScopeContext(JSContext* cx, InheritThis inheritThis,
-                        Scope* enclosingScope, JSObject* enclosingEnv = nullptr)
-      : effectiveScope(cx,
-                       determineEffectiveScope(enclosingScope, enclosingEnv)) {
-    if (inheritThis == InheritThis::Yes) {
-      computeThisBinding(effectiveScope);
-      computeThisEnvironment(enclosingScope);
-    }
-    computeInScope(enclosingScope);
-  }
+  explicit ScopeContext(JSContext* cx) : effectiveScope(cx) {}
+
+  bool init(JSContext* cx, CompilationInput& input, InheritThis inheritThis,
+            JSObject* enclosingEnv);
 
  private:
   void computeThisBinding(Scope* scope);
   void computeThisEnvironment(Scope* enclosingScope);
   void computeInScope(Scope* enclosingScope);
+  void cacheEnclosingScope(Scope* enclosingScope);
 
   static Scope* determineEffectiveScope(Scope* scope, JSObject* environment);
 };
@@ -320,9 +315,12 @@ struct MOZ_RAII CompilationState {
 
   CompilationState(JSContext* cx, LifoAllocScope& frontendAllocScope,
                    const JS::ReadOnlyCompileOptions& options,
-                   CompilationStencil& stencil,
-                   InheritThis inheritThis = InheritThis::No,
-                   JSObject* enclosingEnv = nullptr);
+                   CompilationStencil& stencil);
+
+  bool init(JSContext* cx, InheritThis inheritThis = InheritThis::No,
+            JSObject* enclosingEnv = nullptr) {
+    return scopeContext.init(cx, input, inheritThis, enclosingEnv);
+  }
 
   bool finish(JSContext* cx, CompilationStencil& stencil);
 
