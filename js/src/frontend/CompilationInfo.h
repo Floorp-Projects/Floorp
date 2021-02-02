@@ -197,17 +197,19 @@ struct CompilationInput {
 
   ScriptSourceHolder source_;
 
-  //  * If we're compiling standalone function, an empty global scope.
-  //  * If we're compiling standalone function in scope, the non-null enclosing
-  //    scope of the function
-  //  * If we're compiling eval, the non-null enclosing scope of the `eval`.
-  //  * If we're compiling module, null that means empty global scope
-  //    (See EmitterScope::checkEnvironmentChainLength)
-  //  * If we're compiling self-hosted JS, an empty global scope.
+  //  * If the target is Global, null.
+  //  * If the target is SelfHosting, an empty global scope.
   //    This scope is also used for EmptyGlobalScopeType in
   //    BaseCompilationStencil.gcThings.
   //    See the comment in initForSelfHostingGlobal.
-  //  * Null otherwise
+  //  * If the target is StandaloneFunction, an empty global scope.
+  //  * If the target is StandaloneFunctionInNonSyntacticScope, the non-null
+  //    enclosing scope of the function
+  //  * If the target is Eval, the non-null enclosing scope of the `eval`.
+  //  * If the target is Module, null that means empty global scope
+  //    (See EmitterScope::checkEnvironmentChainLength)
+  //  * If the target is Delazification, the non-null enclosing scope of
+  //    the function
   Scope* enclosingScope = nullptr;
 
   explicit CompilationInput(const JS::ReadOnlyCompileOptions& options)
