@@ -243,7 +243,7 @@ class Nimbus(
 
     // Method and apparatus to catch any uncaught exceptions
     @SuppressWarnings("TooGenericExceptionCaught")
-    private fun withCatchAll(thunk: () -> Unit) =
+    private fun <R> withCatchAll(thunk: () -> R) =
         try {
             thunk()
         } catch (e: Throwable) {
@@ -253,6 +253,7 @@ class Nimbus(
                 logger.error("Exception calling rust", e)
                 logger.error("Exception reporting the exception", e1)
             }
+            null
         }
 
     override fun initialize() {
@@ -322,10 +323,13 @@ class Nimbus(
 
     override fun setExperimentsLocally(@RawRes file: Int) {
         dbScope.launch {
-            val payload = context.resources.openRawResource(file).use {
-                it.bufferedReader().readText()
+            withCatchAll {
+                context.resources.openRawResource(file).use {
+                    it.bufferedReader().readText()
+                }
+            }?.let { payload ->
+                setExperimentsLocallyOnThisThread(payload)
             }
-            setExperimentsLocallyOnThisThread(payload)
         }
     }
 
