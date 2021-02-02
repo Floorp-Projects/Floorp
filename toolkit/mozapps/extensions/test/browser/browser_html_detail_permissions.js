@@ -411,10 +411,7 @@ add_task(async function testPermissionsViewStates() {
   }
 
   function wait_for_addon_item_updated(addonId) {
-    return BrowserTestUtils.waitForEvent(
-      get_addon_element(view, addonId),
-      "update"
-    );
+    return BrowserTestUtils.waitForEvent(getAddonCard(view, addonId), "update");
   }
 
   let promiseItemUpdated = wait_for_addon_item_updated(ID);

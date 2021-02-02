@@ -60,7 +60,7 @@ add_task(async function test_updateid() {
   newAddon.pendingOperations = AddonManager.PENDING_INSTALL;
   gProvider.installs[0]._addonToInstall = newAddon;
 
-  var item = get_addon_element(gManagerWindow, "addon1@tests.mozilla.org");
+  var item = getAddonCard(gManagerWindow, "addon1@tests.mozilla.org");
   is(
     getName(item),
     "manually updating addon",
@@ -77,7 +77,7 @@ add_task(async function test_updateid() {
   var update = await getUpdateButton(item);
   is_element_visible(update, "Update button should be visible");
 
-  item = get_addon_element(gManagerWindow, "addon2@tests.mozilla.org");
+  item = getAddonCard(gManagerWindow, "addon2@tests.mozilla.org");
   is(item, null, "Should not show the new version in the list");
 
   await close_manager(gManagerWindow);
