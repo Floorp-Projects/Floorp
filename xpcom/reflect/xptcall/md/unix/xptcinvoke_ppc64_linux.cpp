@@ -91,7 +91,13 @@ extern "C" void invoke_copy_to_stack(uint64_t* gpregs, double* fpregs,
         if (!s->IsIndirect() && s->type == nsXPTType::T_DOUBLE) {
             if (nr_fpr < FPR_COUNT) {
                 fpregs[nr_fpr++] = s->val.d;
-                nr_gpr++;
+                // Even if we have enough FPRs, still skip space in
+                // the parameter area if we ran out of placeholder GPRs.
+                if (nr_gpr < GPR_COUNT) {
+                    nr_gpr++;
+                } else {
+                    d++;
+                }
             } else {
                 *((double *)d) = s->val.d;
                 d++;
@@ -101,7 +107,11 @@ extern "C" void invoke_copy_to_stack(uint64_t* gpregs, double* fpregs,
             if (nr_fpr < FPR_COUNT) {
                 // Single-precision floats are passed in FPRs too.
                 fpregs[nr_fpr++] = s->val.f;
-                nr_gpr++;
+                if (nr_gpr < GPR_COUNT) {
+                    nr_gpr++;
+                } else {
+                    d++;
+                }
             } else {
 #ifdef __LITTLE_ENDIAN__
                 *((float *)d) = s->val.f;
