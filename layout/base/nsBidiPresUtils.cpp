@@ -1337,7 +1337,8 @@ void nsBidiPresUtils::TraverseFrames(nsIFrame* aCurrentFrame,
 
               if (!nextSibling && !createdContinuation) {
                 break;
-              } else if (next) {
+              }
+              if (next) {
                 frame = next;
                 aBpd->AppendFrame(frame, aBpd->mCurrentTraverseLine);
                 // Mark the line after the newline as dirty.
