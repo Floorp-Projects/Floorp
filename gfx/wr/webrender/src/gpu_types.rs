@@ -237,9 +237,9 @@ pub struct PrimitiveInstanceData {
 #[derive(Clone, Debug)]
 #[repr(C)]
 pub struct CompositeInstance {
-    // Device space rectangle of surface
+    // Device space destination rectangle of surface
     rect: DeviceRect,
-    // Device space clip rect for this surface
+    // Device space destination clip rect for this surface
     clip_rect: DeviceRect,
     // Color for solid color tiles, white otherwise
     color: PremultipliedColorF,

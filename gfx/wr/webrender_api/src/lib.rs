@@ -557,6 +557,8 @@ bitflags! {
         const PROFILER_CAPTURE = (1 as u32) << 25; // need "as u32" until we have cbindgen#556
         /// Invalidate picture tiles every frames (useful when inspecting GPU work in external tools).
         const FORCE_PICTURE_INVALIDATION = (1 as u32) << 26;
+        const USE_BATCHED_TEXTURE_UPLOADS = (1 as u32) << 27;
+        const USE_DRAW_CALLS_FOR_TEXTURE_COPY = (1 as u32) << 28;
     }
 }
 
