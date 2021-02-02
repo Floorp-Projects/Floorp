@@ -1674,8 +1674,8 @@ bool BytecodeEmitter::addObjLiteralData(ObjLiteralWriter& writer,
     ReportAllocationOverflow(cx);
     return false;
   }
-  if (!compilationState.objLiteralData.emplaceBack(code, len,
-                                                   writer.getFlags())) {
+  if (!compilationState.objLiteralData.emplaceBack(code, len, writer.getFlags(),
+                                                   writer.getPropertyCount())) {
     js::ReportOutOfMemory(cx);
     return false;
   }
