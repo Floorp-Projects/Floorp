@@ -78,6 +78,14 @@ struct ScopeContext {
   // Used only for eval.
   mozilla::Maybe<EnclosingLexicalBindingCache> enclosingLexicalBindingCache_;
 
+  using EffectiveScopePrivateFieldCache =
+      mozilla::HashSet<TaggedParserAtomIndex, TaggedParserAtomIndexHasher>;
+
+  // Cache of enclosing class's private fields.
+  // Used only for eval.
+  mozilla::Maybe<EffectiveScopePrivateFieldCache>
+      effectiveScopePrivateFieldCache_;
+
   uint32_t enclosingScopeEnvironmentChainLength = 0;
 
   // Eval and arrow scripts also inherit the "this" environment -- used by
@@ -135,6 +143,8 @@ struct ScopeContext {
       JSContext* cx, CompilationInput& input, ParserAtomsTable& parserAtoms,
       TaggedParserAtomIndex name, uint8_t hops);
 
+  bool effectiveScopePrivateFieldCacheHas(TaggedParserAtomIndex name);
+
  private:
   void computeThisBinding(Scope* scope);
   void computeThisEnvironment(Scope* enclosingScope);
@@ -145,6 +155,9 @@ struct ScopeContext {
 
   bool cacheEnclosingScopeBindingForEval(JSContext* cx, CompilationInput& input,
                                          ParserAtomsTable& parserAtoms);
+
+  bool cachePrivateFieldsForEval(JSContext* cx, CompilationInput& input,
+                                 ParserAtomsTable& parserAtoms);
 
   bool addToEnclosingLexicalBindingCache(JSContext* cx, CompilationInput& input,
                                          ParserAtomsTable& parserAtoms,

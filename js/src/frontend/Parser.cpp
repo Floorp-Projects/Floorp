@@ -1482,6 +1482,10 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
     return true;
   }
 
+  if (!this->stencil_.input.options.privateClassFields) {
+    return true;
+  }
+
   Vector<UnboundPrivateName, 8> unboundPrivateNames(cx_);
   if (!usedNames_.getUnboundPrivateNames(unboundPrivateNames)) {
     return false;
@@ -1508,41 +1512,6 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
     return false;
   }
 
-  // For the given private name, search the enclosing scope chain
-  // to see if there's an associated binding, and if not, issue an error.
-  auto verifyPrivateName = [](JSContext* cx, auto* parser,
-                              HandleScope enclosingScope,
-                              UnboundPrivateName unboundName) {
-    const ParserAtom* unboundAtom =
-        parser->compilationState_.parserAtoms.getParserAtom(unboundName.atom);
-
-    // Walk the enclosing scope chain looking for this private name;
-    for (ScopeIter si(enclosingScope); si; si++) {
-      // Private names are only found within class body scopes.
-      if (si.scope()->kind() != ScopeKind::ClassBody) {
-        continue;
-      }
-
-      // Look for a matching binding.
-      for (js::BindingIter bi(si.scope()); bi; bi++) {
-        if (unboundAtom->equalsJSAtom(bi.name())) {
-          // Awesome. We found it, we're done here!
-          return true;
-        }
-      }
-    }
-
-    // Didn't find a matching binding, so issue an error.
-    UniqueChars str = ParserAtomToPrintableString(
-        cx, parser->compilationState_.parserAtoms, unboundName.atom);
-    if (!str) {
-      return false;
-    }
-    parser->errorAt(unboundName.position.begin, JSMSG_MISSING_PRIVATE_DECL,
-                    str.get());
-    return false;
-  };
-
   // It's important that the unbound private names are sorted, as we
   // want our errors to always be issued to the first textually.
   for (UnboundPrivateName unboundName : unboundPrivateNames) {
@@ -1550,9 +1519,15 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
     // Debugger.Frame.prototype.eval call. In order to find the declared private
     // names, we must use the effective scope that was determined when creating
     // the scopeContext.
-    if (!verifyPrivateName(cx_, this,
-                           compilationState_.scopeContext.effectiveScope,
-                           unboundName)) {
+    if (!this->compilationState_.scopeContext
+             .effectiveScopePrivateFieldCacheHas(unboundName.atom)) {
+      UniqueChars str = ParserAtomToPrintableString(
+          cx_, this->compilationState_.parserAtoms, unboundName.atom);
+      if (!str) {
+        return false;
+      }
+      errorAt(unboundName.position.begin, JSMSG_MISSING_PRIVATE_DECL,
+              str.get());
       return false;
     }
   }
