@@ -79,29 +79,6 @@ class Input extends Domain {
       EventUtils.synthesizeKey(eventUtilsKey, eventInfo, browserWindow);
     }
 
-    // Temporary workaround to handle certain native key bindings than cannot
-    // be synthesized with EventUtils: dispatch editor command directly
-    if (domType == "keydown") {
-      switch (Services.appinfo.OS) {
-        case "Linux":
-          if (modifiers == ctrl && key == "Backspace") {
-            await this.executeInChild(
-              "_doDocShellCommand",
-              "cmd_deleteWordBackward"
-            );
-          }
-          break;
-        case "Darwin":
-          if (modifiers == meta && key == "Backspace") {
-            await this.executeInChild(
-              "_doDocShellCommand",
-              "cmd_deleteToBeginningOfLine"
-            );
-          }
-      }
-    }
-
-    // TODO in case of workaround for native key bindings: wait for input event?
     await this.executeInChild("_waitForContentEvent", eventId);
   }
 

@@ -3,19 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_widget_NativeKeyBindings_h_
-#define mozilla_widget_NativeKeyBindings_h_
+#ifndef NativeKeyBindings_h
+#define NativeKeyBindings_h
 
-#import <Cocoa/Cocoa.h>
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "nsDataHashtable.h"
 #include "nsIWidget.h"
 
+struct objc_selector;
+
 namespace mozilla {
 namespace widget {
 
-typedef nsDataHashtable<nsPtrHashKey<struct objc_selector>, Command>
+typedef nsDataHashtable<nsPtrHashKey<objc_selector>, Command>
     SelectorCommandHashtable;
 
 class NativeKeyBindings final {
@@ -25,6 +26,15 @@ class NativeKeyBindings final {
   static NativeKeyBindings* GetInstance(NativeKeyBindingsType aType);
   static void Shutdown();
 
+  /**
+   * GetEditCommandsForTests() returns commands performed in native widget
+   * in typical environment.  I.e., this does NOT refer customized shortcut
+   * key mappings of the environment.
+   */
+  static void GetEditCommandsForTests(NativeKeyBindingsType aType,
+                                      const WidgetKeyboardEvent& aEvent,
+                                      nsTArray<CommandInt>& aCommands);
+
   void Init(NativeKeyBindingsType aType);
 
   void GetEditCommands(const WidgetKeyboardEvent& aEvent,
@@ -32,6 +42,12 @@ class NativeKeyBindings final {
 
  private:
   NativeKeyBindings();
+
+  void AppendEditCommandsForSelector(objc_selector* aSelector,
+                                     nsTArray<CommandInt>& aCommands) const;
+
+  void LogEditCommands(const nsTArray<CommandInt>& aCommands,
+                       const char* aDescription) const;
 
   SelectorCommandHashtable mSelectorToCommand;
 
@@ -42,4 +58,4 @@ class NativeKeyBindings final {
 }  // namespace widget
 }  // namespace mozilla
 
-#endif  // mozilla_widget_NativeKeyBindings_h_
+#endif  // NativeKeyBindings_h
