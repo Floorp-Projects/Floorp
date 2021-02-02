@@ -79,11 +79,11 @@ add_task(async function test_theme_enable() {
 
   // enable fresh installed theme
   let manager = await open_manager("addons://list/theme");
-  let customTheme = get_addon_element(manager, CUSTOM_THEME_ID);
+  let customTheme = getAddonCard(manager, CUSTOM_THEME_ID);
   clickEnableExtension(customTheme);
 
   // enable default theme again
-  let defaultTheme = get_addon_element(manager, DEFAULT_THEME_ID);
+  let defaultTheme = getAddonCard(manager, DEFAULT_THEME_ID);
   clickEnableExtension(defaultTheme);
 
   let addon = await AddonManager.getAddonByID(CUSTOM_THEME_ID);
@@ -121,7 +121,7 @@ add_task(async function test_sideloaded_extension_permissions_prompt() {
 
   // Test click event on permission cancel option.
   let manager = await open_manager("addons://list/extension");
-  let addon = get_addon_element(manager, ADDON_ID);
+  let addon = getAddonCard(manager, ADDON_ID);
 
   Assert.notEqual(addon, null, "Found sideloaded addon in about:addons");
 
@@ -145,7 +145,7 @@ add_task(async function test_sideloaded_extension_permissions_prompt() {
   );
 
   // Test click event on permission accept option.
-  addon = get_addon_element(manager, ADDON_ID);
+  addon = getAddonCard(manager, ADDON_ID);
   Assert.notEqual(addon, null, "Found sideloaded addon in about:addons");
 
   assertEnabledSideloadedExtensionElement(manager, addon);

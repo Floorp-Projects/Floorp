@@ -67,16 +67,14 @@ add_task(async function test_addon_icon() {
   await extension.startup();
 
   await checkIconInView("addons://list/extension", "list", doc => {
-    return get_addon_element(doc.defaultView, id).querySelector(".addon-icon");
+    return getAddonCard(doc.defaultView, id).querySelector(".addon-icon");
   });
 
   await checkIconInView(
     "addons://detail/" + encodeURIComponent(id),
     "details",
     doc => {
-      return get_addon_element(doc.defaultView, id).querySelector(
-        ".addon-icon"
-      );
+      return getAddonCard(doc.defaultView, id).querySelector(".addon-icon");
     }
   );
 
