@@ -1277,8 +1277,10 @@ class StaticStrings {
   // To optimize ASCII -> small char, allocate a table.
   static constexpr size_t SMALL_CHAR_TABLE_SIZE = 128U;
   static constexpr size_t NUM_SMALL_CHARS = js::Bit(SMALL_CHAR_BITS);
+  static constexpr size_t NUM_LENGTH2_ENTRIES =
+      NUM_SMALL_CHARS * NUM_SMALL_CHARS;
 
-  JSAtom* length2StaticTable[NUM_SMALL_CHARS * NUM_SMALL_CHARS] = {};  // zeroes
+  JSAtom* length2StaticTable[NUM_LENGTH2_ENTRIES] = {};  // zeroes
 
  public:
   /* We keep these public for the JITs. */
