@@ -701,12 +701,6 @@ canvas {
   user-select: none;
 }
 
-/* focusable content: anything w/ tabindex >=0 is focusable */
-:focus-visible {
-  /* Don't specify the outline-color, we should always use initial value. */
-   outline: 1px dotted;
-}
-
 iframe:focus-visible,
 body:focus-visible,
 html:focus-visible {
