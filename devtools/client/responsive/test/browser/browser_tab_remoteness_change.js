@@ -29,36 +29,6 @@ addRDMTask(
         state.viewports.length == 1 &&
         state.devices.listState == Types.loadableState.LOADED
     );
-    const clientClosed = waitForClientClose(ui);
-
-    closeRDM(tab, {
-      reason: "BeforeTabRemotenessChange",
-    });
-
-    // This flag is set at the end of `ResponsiveUI.destroy`.  If it is true
-    // without waiting for `closeRDM` above, then we must have closed
-    // synchronously.
-    is(ui.destroyed, true, "RDM closed synchronously");
-
-    await clientClosed;
-    await removeTab(tab);
-  },
-  { onlyPrefAndTask: true }
-);
-
-addRDMTask(
-  null,
-  async function() {
-    const tab = await addTab(TEST_URL);
-
-    const { ui } = await openRDM(tab);
-    const { store } = ui.toolWindow;
-    await waitUntilState(
-      store,
-      state =>
-        state.viewports.length == 1 &&
-        state.devices.listState == Types.loadableState.LOADED
-    );
 
     // Load URL that requires the main process, forcing a remoteness flip
     await navigateToNewDomain("about:robots", ui);

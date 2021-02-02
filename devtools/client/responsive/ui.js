@@ -146,8 +146,6 @@ class ResponsiveUI {
     // so that we can zoom the size of the viewport by the same amount.
     this.browserWindow.addEventListener("FullZoomChange", this);
 
-    this.tab.addEventListener("BeforeTabRemotenessChange", this);
-
     // Get the protocol ready to speak with responsive emulation actor
     debug("Wait until RDP server connect");
     await this.connectToServer();
@@ -272,13 +270,9 @@ class ResponsiveUI {
     // So, skip any waiting when we're about to close the tab.
     const isTabDestroyed =
       !this.tab.linkedBrowser || this.responsiveFront.isDestroyed();
-    const isWindowClosing =
-      (options && options.reason === "unload") || isTabDestroyed;
+    const isWindowClosing = options?.reason === "unload" || isTabDestroyed;
     const isTabContentDestroying =
-      isWindowClosing ||
-      (options &&
-        (options.reason === "TabClose" ||
-          options.reason === "BeforeTabRemotenessChange"));
+      isWindowClosing || options?.reason === "TabClose";
 
     let currentTarget;
 
@@ -316,7 +310,6 @@ class ResponsiveUI {
     }
 
     this.tab.removeEventListener("TabClose", this);
-    this.tab.removeEventListener("BeforeTabRemotenessChange", this);
     this.browserWindow.removeEventListener("unload", this);
     this.tab.linkedBrowser.leaveResponsiveMode();
 
@@ -389,7 +382,10 @@ class ResponsiveUI {
     this.client = new DevToolsClient(DevToolsServer.connectPipe());
     await this.client.connect();
 
-    const descriptor = await this.client.mainRoot.getTab();
+    // Pass a proper `tab` filter option to getTab in order to create a
+    // "local" TabDescriptor, which handles target switching autonomously with
+    // its corresponding target-list.
+    const descriptor = await this.client.mainRoot.getTab({ tab: this.tab });
     const targetFront = await descriptor.getTarget();
 
     this.targetList = new TargetList(this.client.mainRoot, targetFront);
@@ -452,9 +448,6 @@ class ResponsiveUI {
         // will pick up changes to the zoom.
         const { width, height } = this.getViewportSize();
         this.updateViewportSize(width, height);
-        break;
-      case "BeforeTabRemotenessChange":
-        this.onRemotenessChange(event);
         break;
       case "TabClose":
       case "unload":
@@ -1057,17 +1050,6 @@ class ResponsiveUI {
   // This just needed to setup watching for network resources,
   // to support network throttling.
   onNetworkResourceAvailable() {}
-
-  async onRemotenessChange(event) {
-    // The current tab target will be destroyed by the process change.
-    // Wait for the target to be fully destroyed so that the cache of the
-    // corresponding TabDescriptorFront has been cleared. Otherwise, getTab()
-    // might return the soon to be destroyed target again.
-    await this.targetList.targetFront.once("target-destroyed");
-    const descriptor = await this.client.mainRoot.getTab();
-    const newTarget = await descriptor.getTarget();
-    await this.targetList.switchToTarget(newTarget);
-  }
 
   /**
    * Reload the current tab.
