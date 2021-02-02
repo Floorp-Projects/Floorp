@@ -24,7 +24,11 @@
 #if defined(XP_WIN)
 #  include "npapi.h"
 #  include "WinUtils.h"
-#endif
+#endif  // #if defined (XP_WIN)
+
+#if defined(MOZ_WIDGET_GTK) || defined(XP_MACOSX)
+#  include "NativeKeyBindings.h"
+#endif  // #if defined(MOZ_WIDGET_GTK) || defined(XP_MACOSX)
 
 namespace mozilla {
 
@@ -754,23 +758,28 @@ WidgetKeyboardEvent::CodeNameIndexHashtable*
     WidgetKeyboardEvent::sCodeNameIndexHashtable = nullptr;
 
 void WidgetKeyboardEvent::InitAllEditCommands() {
-  // If the event was created without widget, e.g., created event in chrome
-  // script, this shouldn't execute native key bindings.
-  if (NS_WARN_IF(!mWidget)) {
-    return;
-  }
+  // If this event is synthesized for tests, we don't need to retrieve the
+  // command via the main process.  So, we don't need widget and can trust
+  // the event.
+  if (!mFlags.mIsSynthesizedForTests) {
+    // If the event was created without widget, e.g., created event in chrome
+    // script, this shouldn't execute native key bindings.
+    if (NS_WARN_IF(!mWidget)) {
+      return;
+    }
 
-  // This event should be trusted event here and we shouldn't expose native
-  // key binding information to web contents with untrusted events.
-  if (NS_WARN_IF(!IsTrusted())) {
-    return;
-  }
+    // This event should be trusted event here and we shouldn't expose native
+    // key binding information to web contents with untrusted events.
+    if (NS_WARN_IF(!IsTrusted())) {
+      return;
+    }
 
-  MOZ_ASSERT(
-      XRE_IsParentProcess(),
-      "It's too expensive to retrieve all edit commands from remote process");
-  MOZ_ASSERT(!AreAllEditCommandsInitialized(),
-             "Shouldn't be called two or more times");
+    MOZ_ASSERT(
+        XRE_IsParentProcess(),
+        "It's too expensive to retrieve all edit commands from remote process");
+    MOZ_ASSERT(!AreAllEditCommandsInitialized(),
+               "Shouldn't be called two or more times");
+  }
 
   DebugOnly<bool> okIgnored =
       InitEditCommandsFor(nsIWidget::NativeKeyBindingsForSingleLineEditor);
@@ -794,15 +803,30 @@ void WidgetKeyboardEvent::InitAllEditCommands() {
 
 bool WidgetKeyboardEvent::InitEditCommandsFor(
     nsIWidget::NativeKeyBindingsType aType) {
-  if (NS_WARN_IF(!mWidget) || NS_WARN_IF(!IsTrusted())) {
-    return false;
-  }
-
   bool& initialized = IsEditCommandsInitializedRef(aType);
   if (initialized) {
     return true;
   }
   nsTArray<CommandInt>& commands = EditCommandsRef(aType);
+
+  // If this event is synthesized for tests, we shouldn't access customized
+  // shortcut settings of the environment.  Therefore, we don't need to check
+  // whether `widget` is set or not.  And we can treat synthesized events are
+  // always trusted.
+  if (mFlags.mIsSynthesizedForTests) {
+    MOZ_DIAGNOSTIC_ASSERT(IsTrusted());
+#if defined(MOZ_WIDGET_GTK) || defined(XP_MACOSX)
+    // TODO: We should implement `NativeKeyBindings` for Windows and Android
+    //       too in bug 1301497 for getting rid of the #if.
+    widget::NativeKeyBindings::GetEditCommandsForTests(aType, *this, commands);
+#endif
+    initialized = true;
+    return true;
+  }
+
+  if (NS_WARN_IF(!mWidget) || NS_WARN_IF(!IsTrusted())) {
+    return false;
+  }
   initialized = mWidget->GetEditCommands(aType, *this, commands);
   return initialized;
 }

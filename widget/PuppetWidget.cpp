@@ -520,6 +520,7 @@ bool PuppetWidget::AsyncPanZoomEnabled() const {
 bool PuppetWidget::GetEditCommands(NativeKeyBindingsType aType,
                                    const WidgetKeyboardEvent& aEvent,
                                    nsTArray<CommandInt>& aCommands) {
+  MOZ_ASSERT(!aEvent.mFlags.mIsSynthesizedForTests);
   // Validate the arguments.
   if (NS_WARN_IF(!nsIWidget::GetEditCommands(aType, aEvent, aCommands))) {
     return false;

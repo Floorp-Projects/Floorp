@@ -60,12 +60,4 @@ class Input extends ContentProcessDomain {
     await eventPromise;
     this._eventPromises.delete(eventId);
   }
-
-  /**
-   * Expose docShell.doCommand to parent domain.
-   * Used in temporary workaround for emulating certain native key bindings
-   */
-  _doDocShellCommand(command) {
-    this.docShell.doCommand(command);
-  }
 }
