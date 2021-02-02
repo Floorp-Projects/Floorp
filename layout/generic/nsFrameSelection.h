@@ -745,7 +745,7 @@ class nsFrameSelection final {
   // TODO: in case an error is returned, it sometimes refers to a programming
   // error, in other cases to runtime errors. This deserves to be cleaned up.
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  TakeFocus(nsIContent* aNewFocus, uint32_t aContentOffset,
+  TakeFocus(nsIContent& aNewFocus, uint32_t aContentOffset,
             uint32_t aContentEndOffset, CaretAssociateHint aHint,
             FocusMode aFocusMode);
 
