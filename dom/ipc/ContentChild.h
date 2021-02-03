@@ -189,8 +189,6 @@ class ContentChild final : public PContentChild,
       Endpoint<PRemoteDecoderManagerChild>&& aVideoManager,
       nsTArray<uint32_t>&& namespaces);
 
-  mozilla::ipc::IPCResult RecvAudioDefaultDeviceChange();
-
   mozilla::ipc::IPCResult RecvReinitRenderingForDeviceReset();
 
   mozilla::ipc::IPCResult RecvSetProcessSandbox(
