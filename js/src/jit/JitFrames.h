@@ -155,6 +155,7 @@ struct ResumeFromException {
   static const uint32_t RESUME_FORCED_RETURN = 3;
   static const uint32_t RESUME_BAILOUT = 4;
   static const uint32_t RESUME_WASM = 5;
+  static const uint32_t RESUME_WASM_CATCH = 6;
 
   uint8_t* framePointer;
   uint8_t* stackPointer;
@@ -162,6 +163,7 @@ struct ResumeFromException {
   uint32_t kind;
 
   // Value to push when resuming into a |finally| block.
+  // Also used by Wasm to send the exception object to the throw stub.
   JS::Value exception;
 
   BaselineBailoutInfo* bailoutInfo;

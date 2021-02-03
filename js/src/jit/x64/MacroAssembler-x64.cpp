@@ -464,6 +464,7 @@ void MacroAssemblerX64::handleFailureWithHandlerTail(Label* profilerExitTail) {
   Label return_;
   Label bailout;
   Label wasm;
+  Label wasmCatch;
 
   load32(Address(rsp, offsetof(ResumeFromException, kind)), rax);
   asMasm().branch32(Assembler::Equal, rax,
@@ -479,6 +480,8 @@ void MacroAssemblerX64::handleFailureWithHandlerTail(Label* profilerExitTail) {
                     Imm32(ResumeFromException::RESUME_BAILOUT), &bailout);
   asMasm().branch32(Assembler::Equal, rax,
                     Imm32(ResumeFromException::RESUME_WASM), &wasm);
+  asMasm().branch32(Assembler::Equal, rax,
+                    Imm32(ResumeFromException::RESUME_WASM_CATCH), &wasmCatch);
 
   breakpoint();  // Invalid kind.
 
@@ -549,6 +552,13 @@ void MacroAssemblerX64::handleFailureWithHandlerTail(Label* profilerExitTail) {
   loadPtr(Address(rsp, offsetof(ResumeFromException, framePointer)), rbp);
   loadPtr(Address(rsp, offsetof(ResumeFromException, stackPointer)), rsp);
   masm.ret();
+
+  // Found a wasm catch handler, restore state and jump to it.
+  bind(&wasmCatch);
+  loadPtr(Address(rsp, offsetof(ResumeFromException, target)), rax);
+  loadPtr(Address(rsp, offsetof(ResumeFromException, framePointer)), rbp);
+  loadPtr(Address(rsp, offsetof(ResumeFromException, stackPointer)), rsp);
+  jmp(Operand(rax));
 }
 
 void MacroAssemblerX64::profilerEnterFrame(Register framePtr,

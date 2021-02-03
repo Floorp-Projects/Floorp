@@ -3325,6 +3325,7 @@ void MacroAssemblerARMCompat::handleFailureWithHandlerTail(
   Label return_;
   Label bailout;
   Label wasm;
+  Label wasmCatch;
 
   {
     ScratchRegisterScope scratch(asMasm());
@@ -3344,6 +3345,8 @@ void MacroAssemblerARMCompat::handleFailureWithHandlerTail(
                     Imm32(ResumeFromException::RESUME_BAILOUT), &bailout);
   asMasm().branch32(Assembler::Equal, r0,
                     Imm32(ResumeFromException::RESUME_WASM), &wasm);
+  asMasm().branch32(Assembler::Equal, r0,
+                    Imm32(ResumeFromException::RESUME_WASM_CATCH), &wasmCatch);
 
   breakpoint();  // Invalid kind.
 
@@ -3446,6 +3449,18 @@ void MacroAssemblerARMCompat::handleFailureWithHandlerTail(
            scratch);
   }
   as_dtr(IsLoad, 32, PostIndex, pc, DTRAddr(sp, DtrOffImm(4)));
+
+  // Found a wasm catch handler, restore state and jump to it.
+  bind(&wasmCatch);
+  {
+    ScratchRegisterScope scratch(asMasm());
+    ma_ldr(Address(sp, offsetof(ResumeFromException, target)), r1, scratch);
+    ma_ldr(Address(sp, offsetof(ResumeFromException, framePointer)), r11,
+           scratch);
+    ma_ldr(Address(sp, offsetof(ResumeFromException, stackPointer)), sp,
+           scratch);
+  }
+  jump(r1);
 }
 
 Assembler::Condition MacroAssemblerARMCompat::testStringTruthy(
