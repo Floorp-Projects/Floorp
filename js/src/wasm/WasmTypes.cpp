@@ -21,6 +21,7 @@
 #include <algorithm>
 
 #include "jsmath.h"
+#include "jit/JitFrames.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/Printf.h"
 #include "util/Memory.h"

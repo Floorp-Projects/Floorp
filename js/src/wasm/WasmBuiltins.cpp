@@ -222,6 +222,26 @@ const SymbolicAddressSignature SASigStructNarrow = {
     _Infallible,
     3,
     {_PTR, _RoN, _RoN, _END}};
+#ifdef ENABLE_WASM_EXCEPTIONS
+const SymbolicAddressSignature SASigExceptionNew = {
+    SymbolicAddress::ExceptionNew,
+    _RoN,
+    _FailOnNullPtr,
+    3,
+    {_PTR, _I32, _I32, _END}};
+const SymbolicAddressSignature SASigThrowException = {
+    SymbolicAddress::ThrowException,
+    _RoN,
+    _FailOnNullPtr,
+    2,
+    {_PTR, _RoN, _END}};
+const SymbolicAddressSignature SASigGetLocalExceptionIndex = {
+    SymbolicAddress::GetLocalExceptionIndex,
+    _I32,
+    _Infallible,
+    2,
+    {_PTR, _RoN, _END}};
+#endif
 
 }  // namespace wasm
 }  // namespace js
@@ -1177,6 +1197,24 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       MOZ_ASSERT(*abiType == ToABIType(SASigStructNarrow));
       return FuncCast(Instance::structNarrow, *abiType);
 
+#if defined(ENABLE_WASM_EXCEPTIONS)
+    case SymbolicAddress::ExceptionNew:
+      *abiType = MakeABIFunctionType(
+          ArgType_General, {ArgType_General, ArgType_Int32, ArgType_Int32});
+      MOZ_ASSERT(*abiType == ToABIType(SASigExceptionNew));
+      return FuncCast(Instance::exceptionNew, *abiType);
+    case SymbolicAddress::ThrowException:
+      *abiType = MakeABIFunctionType(ArgType_General,
+                                     {ArgType_General, ArgType_General});
+      MOZ_ASSERT(*abiType == ToABIType(SASigThrowException));
+      return FuncCast(Instance::throwException, *abiType);
+    case SymbolicAddress::GetLocalExceptionIndex:
+      *abiType = MakeABIFunctionType(ArgType_Int32,
+                                     {ArgType_General, ArgType_General});
+      MOZ_ASSERT(*abiType == ToABIType(SASigGetLocalExceptionIndex));
+      return FuncCast(Instance::getLocalExceptionIndex, *abiType);
+#endif
+
 #if defined(JS_CODEGEN_MIPS32)
     case SymbolicAddress::js_jit_gAtomic64Lock:
       return &js::jit::gAtomic64Lock;
@@ -1292,6 +1330,11 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::PostBarrierFiltering:
     case SymbolicAddress::StructNew:
     case SymbolicAddress::StructNarrow:
+#ifdef ENABLE_WASM_EXCEPTIONS
+    case SymbolicAddress::ExceptionNew:
+    case SymbolicAddress::ThrowException:
+    case SymbolicAddress::GetLocalExceptionIndex:
+#endif
       return true;
     case SymbolicAddress::Limit:
       break;
