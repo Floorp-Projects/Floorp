@@ -28,6 +28,11 @@
 // peekTag can be used to see if the next tag is an expected given tag.
 // readTLV reads and returns an entire (tag, length, value) tuple (again
 // returned as an array of bytes).
+//
+// NB: While DERDecoder must be given an array, it does not validate that each
+// element in the array is an integer in the range [0, 255]. If the input to be
+// decoded could conceivably violate this property, callers should perform this
+// check before using DERDecoder.
 
 const UNIVERSAL = 0 << 6;
 const CONSTRUCTED = 1 << 5;
@@ -94,10 +99,6 @@ class DERDecoder {
     }
     if (bytes.length > 65539) {
       throw new Error(ERROR_UNSUPPORTED_LENGTH);
-    }
-    // Reject inputs containing non-integer values or values too small or large.
-    if (bytes.some(b => !Number.isInteger(b) || b < 0 || b > 255)) {
-      throw new Error(ERROR_INVALID_INPUT);
     }
     this._bytes = bytes;
     this._cursor = 0;
@@ -189,10 +190,11 @@ class DERDecoder {
     if (length < 0) {
       throw new Error(ERROR_INVALID_LENGTH);
     }
-    let bytes = [];
-    for (let i = 0; i < length; i++) {
-      bytes.push(this.readByte());
+    if (this._cursor + length > this._bytes.length) {
+      throw new Error(ERROR_DATA_TRUNCATED);
     }
+    let bytes = this._bytes.slice(this._cursor, this._cursor + length);
+    this._cursor += length;
     return bytes;
   }
 
