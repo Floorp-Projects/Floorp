@@ -204,7 +204,7 @@
 #include "jspubtd.h"
 
 #include "frontend/ErrorReporter.h"
-#include "frontend/ParserAtom.h"  // ParserAtom, ParserName, ParserAtomsTable, TaggedParserAtomIndex
+#include "frontend/ParserAtom.h"  // ParserAtom, ParserAtomsTable, TaggedParserAtomIndex
 #include "frontend/Token.h"
 #include "frontend/TokenKind.h"
 #include "js/CompileOptions.h"
@@ -236,10 +236,16 @@ namespace frontend {
 //  - WasmFrameIter::computeLine
 static constexpr uint32_t ColumnLimit = std::numeric_limits<int32_t>::max() / 2;
 
-extern TokenKind ReservedWordTokenKind(const ParserName* name);
+// If `name` is reserved word, returns the TokenKind of it.
+// TokenKind::Limit otherwise.
+extern TokenKind ReservedWordTokenKind(TaggedParserAtomIndex name);
 
-extern const char* ReservedWordToCharZ(const ParserName* name);
+// If `name` is reserved word, returns string representation of it.
+// nullptr otherwise.
+extern const char* ReservedWordToCharZ(TaggedParserAtomIndex name);
 
+// If `tt` is reserved word, returns string representation of it.
+// nullptr otherwise.
 extern const char* ReservedWordToCharZ(TokenKind tt);
 
 struct TokenStreamFlags {

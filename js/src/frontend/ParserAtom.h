@@ -168,6 +168,45 @@ class TaggedParserAtomIndex {
     }
   };
 
+  // The value of rawData() for WellKnown TaggedParserAtomIndex.
+  // For using in switch-case.
+  class WellKnownRawData {
+   public:
+#define METHOD_(_, NAME, _2)                                                 \
+  static constexpr uint32_t NAME() {                                         \
+    return uint32_t(WellKnownAtomId::NAME) | WellKnownTag | WellKnownSubTag; \
+  }
+    FOR_EACH_NONTINY_COMMON_PROPERTYNAME(METHOD_)
+#undef METHOD_
+
+#define METHOD_(NAME, _)                                                     \
+  static constexpr uint32_t NAME() {                                         \
+    return uint32_t(WellKnownAtomId::NAME) | WellKnownTag | WellKnownSubTag; \
+  }
+    JS_FOR_EACH_PROTOTYPE(METHOD_)
+#undef METHOD_
+
+#define METHOD_(_, NAME, STR)                                 \
+  static constexpr uint32_t NAME() {                          \
+    return uint32_t((STR)[0]) | WellKnownTag | Static1SubTag; \
+  }
+    FOR_EACH_LENGTH1_PROPERTYNAME(METHOD_)
+#undef METHOD_
+
+#define METHOD_(_, NAME, STR)                                              \
+  static constexpr uint32_t NAME() {                                       \
+    return uint32_t(                                                       \
+               StaticStrings::getLength2IndexStatic((STR)[0], (STR)[1])) | \
+           WellKnownTag | Static2SubTag;                                   \
+  }
+    FOR_EACH_LENGTH2_PROPERTYNAME(METHOD_)
+#undef METHOD_
+
+    static constexpr uint32_t empty() {
+      return uint32_t(WellKnownAtomId::empty) | WellKnownTag | WellKnownSubTag;
+    }
+  };
+
   // NOTE: this is not well-known "null".
   static TaggedParserAtomIndex null() { return TaggedParserAtomIndex(); }
 
