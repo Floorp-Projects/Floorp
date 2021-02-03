@@ -1568,7 +1568,6 @@ dependencies = [
  "bincode",
  "chrono",
  "glean",
- "glean-core",
  "inherent",
  "log",
  "nsstring",

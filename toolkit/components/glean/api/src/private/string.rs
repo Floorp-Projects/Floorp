@@ -65,7 +65,7 @@ impl StringMetric {
 }
 
 #[inherent(pub)]
-impl glean_core::traits::String for StringMetric {
+impl glean::traits::String for StringMetric {
     /// Sets to the specified value.
     ///
     /// # Arguments
@@ -78,7 +78,7 @@ impl glean_core::traits::String for StringMetric {
     fn set<S: Into<std::string::String>>(&self, value: S) {
         match self {
             StringMetric::Parent(p) => {
-                glean_core::traits::String::set(&*p, value);
+                glean::traits::String::set(&*p, value);
             }
             StringMetric::Child(_) => {
                 log::error!("Unable to set string metric in non-main process. Ignoring.");

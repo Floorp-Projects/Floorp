@@ -6,7 +6,7 @@ use inherent::inherent;
 
 use super::{CommonMetricData, MetricId, TimeUnit};
 
-use glean_core::traits::Timespan;
+use glean::traits::Timespan;
 
 use crate::ipc::need_ipc;
 

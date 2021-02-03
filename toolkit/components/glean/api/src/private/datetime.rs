@@ -9,7 +9,7 @@ use super::{CommonMetricData, MetricId};
 use super::TimeUnit;
 use crate::ipc::need_ipc;
 use chrono::{FixedOffset, TimeZone};
-use glean_core::traits::Datetime;
+use glean::traits::Datetime;
 
 /// A datetime metric of a certain resolution.
 ///
@@ -106,7 +106,7 @@ impl Datetime for DatetimeMetric {
     ///
     /// - `value` - The date and time and timezone value to set.
     ///             If None we use the current local time.
-    fn set(&self, value: Option<glean_core::metrics::Datetime>) {
+    fn set(&self, value: Option<glean::Datetime>) {
         match self {
             DatetimeMetric::Parent(p) => {
                 Datetime::set(&*p, value);
@@ -135,7 +135,7 @@ impl Datetime for DatetimeMetric {
     fn test_get_value<'a, S: Into<Option<&'a str>>>(
         &self,
         ping_name: S,
-    ) -> Option<glean_core::metrics::Datetime> {
+    ) -> Option<glean::Datetime> {
         match self {
             DatetimeMetric::Parent(p) => p.test_get_value(ping_name),
             DatetimeMetric::Child(_) => {

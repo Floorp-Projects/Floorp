@@ -6,7 +6,7 @@ use inherent::inherent;
 
 use super::{CommonMetricData, MetricId};
 
-use glean_core::traits::StringList;
+use glean::traits::StringList;
 
 use crate::ipc::{need_ipc, with_ipc_payload};
 

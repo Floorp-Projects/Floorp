@@ -9,7 +9,7 @@
 
 pub mod test {
     use crate::private::*;
-    use glean_core::CommonMetricData;
+    use glean::CommonMetricData;
     use once_cell::sync::Lazy;
 
     #[allow(non_upper_case_globals)]
@@ -223,7 +223,7 @@ pub mod test {
 }
 pub mod test_nested {
     use crate::private::*;
-    use glean_core::CommonMetricData;
+    use glean::CommonMetricData;
     use once_cell::sync::Lazy;
 
     #[allow(non_upper_case_globals)]
