@@ -4048,7 +4048,7 @@ nsresult EditorBase::ClearSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   ErrorResult error;
-  SelectionRefPtr()->RemoveAllRanges(error);
+  MOZ_KnownLive(SelectionRefPtr())->RemoveAllRanges(error);
   NS_WARNING_ASSERTION(!error.Failed(), "Selection::RemoveAllRanges() failed");
   return error.StealNSResult();
 }

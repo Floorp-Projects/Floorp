@@ -2802,7 +2802,7 @@ bool TextControlState::SetValueWithTextEditor(
     // Since we don't use undo transaction, we don't need to store
     // selection state.  SetText will set selection to tail.
     IgnoredErrorResult ignoredError;
-    selection->RemoveAllRanges(ignoredError);
+    MOZ_KnownLive(selection)->RemoveAllRanges(ignoredError);
     NS_WARNING_ASSERTION(!ignoredError.Failed(),
                          "Selection::RemoveAllRanges() failed, but ignored");
   }
