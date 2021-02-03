@@ -9070,6 +9070,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
       if (LOAD_TYPE_HAS_FLAGS(mLoadType, LOAD_FLAGS_REPLACE_HISTORY)) {
         mBrowsingContext->ReplaceActiveSessionHistoryEntry(mActiveEntry.get());
       } else {
+        mBrowsingContext->IncrementHistoryEntryCountForBrowsingContext();
         // FIXME We should probably just compute mChildOffset in the parent
         //       instead of passing it over IPC here.
         mBrowsingContext->SetActiveSessionHistoryEntry(
@@ -11824,6 +11825,7 @@ void nsDocShell::UpdateActiveEntry(
   if (replace) {
     mBrowsingContext->ReplaceActiveSessionHistoryEntry(mActiveEntry.get());
   } else {
+    mBrowsingContext->IncrementHistoryEntryCountForBrowsingContext();
     // FIXME We should probably just compute mChildOffset in the parent
     //       instead of passing it over IPC here.
     mBrowsingContext->SetActiveSessionHistoryEntry(
@@ -13461,6 +13463,9 @@ void nsDocShell::MoveLoadingToActiveEntry(bool aPersist) {
              this, mLoadingEntry->mInfo.GetURI()->GetSpecOrDefault().get()));
     mActiveEntry = MakeUnique<SessionHistoryInfo>(mLoadingEntry->mInfo);
     mLoadingEntry.swap(loadingEntry);
+    if (!mActiveEntryIsLoadingFromSessionHistory) {
+      mBrowsingContext->IncrementHistoryEntryCountForBrowsingContext();
+    }
   }
 
   if (mActiveEntry) {
