@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
   <meta charset="utf-8">
   <title>Test for Bug 1151663</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
   <script type="application/javascript" src="apz_test_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <script type="application/javascript">
@@ -18,7 +19,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
         prefs: [
           ["apz.test.logging_enabled", true]
         ]
-      }];
+      },
+      ];
+
+      if (getPlatform() != "android") {
+        // promiseMoveMouseAndScrollWheelOver in helper_check_dp_size doesn't
+        // work on android. Trying to use promiseNativeTouchDrag on android
+        // leads to very large display ports (larger than even the bad case
+        // below), not sure why.
+        subtests.push(
+          { file: "helper_check_dp_size.html", prefs: [["apz.test.logging_enabled", true]] }
+        );
+      }
 
       window.onload = function() {
         runSubtestsSeriallyInFreshWindows(subtests)

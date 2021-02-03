@@ -1,0 +1,124 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1689492
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1689492, helper page</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+    // -------------------------------------------------------------------
+    // Infrastructure to get the test assertions to run at the right time.
+    // -------------------------------------------------------------------
+    var SimpleTest = window.opener.SimpleTest;
+
+    // --------------------------------------------------------------------
+    // In this test we have a scrollable root scroll frame (not needed, but
+    // more representative), a scrollable outer div, and a scrollable inner
+    // div. We scroll the inner div, and test that it gets a non-zero
+    // display port (not the main reason for the test, that should already
+    // work, but it's a good sanity check), and then check that the outer
+    // div gets a display port and (here's the important part of the test)
+    // that that display port has zero margins, ie it's relatively close to the
+    // dimensions of the outer div (it can't be exact because we align display
+    // ports). This tests a regression where the outer div would get non-zero
+    // margin display port even though it had never been scrolled (it still
+    // needs a display port because it has a scrollable child). We run the
+    // test several times with different sized outerdiv.
+    // --------------------------------------------------------------------
+
+    function createDivs(outerwidth, outerheight) {
+      let outerdiv = document.createElement("div");
+      outerdiv.id = "outerdiv";
+      outerdiv.style.width = outerwidth + "px";
+      outerdiv.style.height = outerheight + "px";
+      outerdiv.style.overflow = "scroll";
+
+      let innerdiv = document.createElement("div");
+      innerdiv.id = "innerdiv";
+      innerdiv.style.width = "25px";
+      innerdiv.style.height = "25px";
+      innerdiv.style.overflow = "scroll";
+      outerdiv.appendChild(innerdiv);
+
+      let innerspacer = document.createElement("div");
+      innerspacer.style.width = "25px";
+      innerspacer.style.height = "100px";
+      innerdiv.appendChild(innerspacer);
+
+      let outerspacer = document.createElement("div");
+      outerspacer.style.width = "50px";
+      outerspacer.style.height = "10000px";
+      outerdiv.appendChild(outerspacer);
+
+
+      let theplace = document.getElementById("theplace");
+      theplace.parentNode.insertBefore(outerdiv, theplace.nextSibling);
+    }
+
+    async function testOne(theheight, allowedscalefactor, outputprefix) {
+      createDivs(50, theheight);
+      // flush layout
+      document.documentElement.getBoundingClientRect();
+      await promiseApzFlushedRepaints();
+
+      document.getElementById("innerdiv").scrollTop = "10px";
+
+      // Activate the inner div.
+      await promiseMoveMouseAndScrollWheelOver(document.getElementById("innerdiv"), 0, 10);
+
+      await promiseApzFlushedRepaints();
+
+      let innerdp = getLastContentDisplayportFor("innerdiv");
+      ok(innerdp.h > 30, outputprefix + " innerdiv display port should be larger than innerdiv");
+
+      let outerdp = getLastContentDisplayportFor("outerdiv");
+      is(outerdp.x, 0, outputprefix + " outerdiv display port should zero margin x");
+      is(outerdp.y, 0, outputprefix + " outerdiv display port should zero margin y");
+      is(outerdp.w, 50, outputprefix + " outerdiv display port should zero margin w");
+      ok(outerdp.h < theheight * allowedscalefactor, outputprefix + " outerdiv display port should zero margin h");
+
+      ok(true, "innerdp " + JSON.stringify(innerdp));
+      ok(true, "outerdp " + JSON.stringify(outerdp));
+
+      document.getElementById("outerdiv").remove();
+    }
+
+    async function test() {
+      // We test a variety of scroll frame heights.
+      // The first argument of testOne is the scroll frame height.
+      // The second argument is the allowed scale factor of scroll frame height
+      // to display port height.
+      // In the comment following each line we record the values of the display
+      // port height at the time of writing the test in both the good (ie with
+      // the bug this test is testing fixed), and bad (before the bug this
+      // test is testing fixed) cases. These values can obviously be different,
+      // but it gives a good idea that the good and bad values are far apart so
+      // this test should be robust, and provides good context in the future if
+      // this test starts failing.
+      await testOne( 50, 5.2, "(height 50)");                                        // good wr  256 non-wr 256, bad wr  256 non-wr  384
+      await testOne(128, 2.1, "(height128)");                                        // good wr  256 non-wr 256, bad wr  512 non-wr  640
+      await testOne(200, 2.0, "(height200)");                                        // good wr  384 non-wr 384, bad wr  768 non-wr  896
+      await testOne(256, 1.6, "(height256)");                                        // good wr  384 non-wr 384, bad wr  768 non-wr 1024
+      await testOne(329, 1.6, "(height329)");                                        // good wr  512 non-wr 512, bad wr  896 non-wr 1280
+      await testOne(500, 1.3, "(height500)");                                        // good wr  640 non-wr 640, bad wr 1280 non-wr 1920
+      await testOne(640, getHitTestConfig().isWebRender ? 1.7 : 1.3, "(height640)"); // good wr 1024 non-wr 768, bad wr 1536 non-wr 2432
+
+    }
+
+    waitUntilApzStable()
+    .then(forceLayerTreeToCompositor)
+    .then(test)
+    .then(subtestDone, subtestFailed);
+  </script>
+</head>
+<body>
+  <a id="theplace" target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1689492">Mozilla Bug 1689492</a>
+  <!-- Put enough content into the page to make it have a nonzero scroll range, not needed -->
+  <div style="height: 5000px"></div>
+</body>
+</html>
