@@ -904,7 +904,13 @@ add_task(async function getTopFrecentSites() {
 });
 
 add_task(
-  { skip_if: () => AppConstants.MOZ_APP_NAME == "thunderbird" },
+  {
+    skip_if: () =>
+      AppConstants.MOZ_APP_NAME == "thunderbird" ||
+      Services.prefs.getBoolPref(
+        "browser.topsites.useRemoteSetting"
+      ) /* see bug 1664502 */,
+  },
   async function getTopFrecentSites_improveSearch() {
     await setUpActivityStreamTest();
     const SEARCH_SHORTCUTS_EXPERIMENT_PREF =

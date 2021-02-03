@@ -1344,7 +1344,11 @@ pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.prop
 // This is a fallback value for when prompt callers do not specify a modalType.
 pref("prompts.defaultModalType", 3);
 
-pref("browser.topsites.useRemoteSetting", false);
+#ifdef NIGHTLY_BUILD
+  pref("browser.topsites.useRemoteSetting", true);
+#else
+  pref("browser.topsites.useRemoteSetting", false);
+#endif
 
 // The base URL for the Quick Suggest anonymizing proxy. To make a request to
 // the proxy, include a campaign ID in the path.
