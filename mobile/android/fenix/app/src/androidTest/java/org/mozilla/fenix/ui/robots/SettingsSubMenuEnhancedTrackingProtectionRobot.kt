@@ -13,6 +13,7 @@ import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withChild
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
@@ -25,6 +26,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.not
+import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.assertIsChecked
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.isChecked
@@ -49,9 +51,9 @@ class SettingsSubMenuEnhancedTrackingProtectionRobot {
 
     fun verifyEnhancedTrackingProtectionOptionsGrayedOut() = assertEnhancedTrackingProtectionOptionsGrayedOut()
 
-    fun verifyEnhancedTrackingProtectionDefaults() = assertEnhancedTrackingProtectionDefaults()
+    fun verifyTrackingProtectionSwitchEnabled() = assertTrackingProtectionSwitchEnabled()
 
-    fun clickEnhancedTrackingProtectionDefaults() = onView(withResourceName("switch_widget")).click()
+    fun switchEnhancedTrackingProtectionToggle() = onView(withResourceName("switch_widget")).click()
 
     fun verifyRadioButtonDefaults() = assertRadioButtonDefaults()
 
@@ -60,10 +62,14 @@ class SettingsSubMenuEnhancedTrackingProtectionRobot {
         verifyEnhancedTrackingProtectionHeaderDescription()
         verifyLearnMoreText()
         verifyEnhancedTrackingProtectionTextWithSwitchWidget()
-        verifyEnhancedTrackingProtectionDefaults()
+        verifyTrackingProtectionSwitchEnabled()
         verifyRadioButtonDefaults()
         verifyEnhancedTrackingProtectionOptions()
     }
+
+    fun verifyCustomTrackingProtectionSettings() = assertCustomTrackingProtectionSettings()
+
+    fun selectTrackingProtectionOption(option: String) = onView(withText(option)).click()
 
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())!!
@@ -183,7 +189,7 @@ private fun assertEnhancedTrackingProtectionOptionsGrayedOut() {
         .check(matches(not(isEnabled(true))))
 }
 
-private fun assertEnhancedTrackingProtectionDefaults() {
+private fun assertTrackingProtectionSwitchEnabled() {
     onView(withResourceName("switch_widget")).check(
         matches(
             isChecked(
@@ -218,3 +224,28 @@ private fun goBackButton() =
 
 private fun openExceptions() =
     onView(allOf(withText("Exceptions")))
+
+private fun assertCustomTrackingProtectionSettings() {
+    scrollToElementByText("Redirect Trackers")
+    cookiesCheckbox().check(matches(isDisplayed()))
+    cookiesDropDownMenuDefault().check(matches(isDisplayed()))
+    trackingContentCheckbox().check(matches(isDisplayed()))
+    trackingcontentDropDownDefault().check(matches(isDisplayed()))
+    cryptominersCheckbox().check(matches(isDisplayed()))
+    fingerprintersCheckbox().check(matches(isDisplayed()))
+    redirectTrackersCheckbox().check(matches(isDisplayed()))
+}
+
+private fun cookiesCheckbox() = onView(withText("Cookies"))
+
+private fun cookiesDropDownMenuDefault() = onView(withText("All cookies (will cause websites to break)"))
+
+private fun trackingContentCheckbox() = onView(withText("Tracking content"))
+
+private fun trackingcontentDropDownDefault() = onView(withText("In all tabs"))
+
+private fun cryptominersCheckbox() = onView(withText("Cryptominers"))
+
+private fun fingerprintersCheckbox() = onView(withText("Fingerprinters"))
+
+private fun redirectTrackersCheckbox() = onView(withText("Redirect Trackers"))

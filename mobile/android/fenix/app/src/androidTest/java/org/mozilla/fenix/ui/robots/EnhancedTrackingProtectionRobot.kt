@@ -8,13 +8,20 @@ package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions
+import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
+import org.hamcrest.Matchers.containsString
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
@@ -36,6 +43,14 @@ class EnhancedTrackingProtectionRobot {
 
     fun verifyEnhancedTrackingProtectionDetailsStatus(status: String) =
         assertEnhancedTrackingProtectionDetailsStatus(status)
+
+    fun verifyTrackingCookiesBlocked() = assertTrackingCookiesBlocked()
+
+    fun verifyFingerprintersBlocked() = assertFingerprintersBlocked()
+
+    fun verifyCryptominersBlocked() = assertCryptominersBlocked()
+
+    fun verifyBasicLevelTrackingContentBlocked() = assertBasicLevelTrackingContentBlocked()
 
     class Transition {
         fun openEnhancedTrackingProtectionSheet(interact: EnhancedTrackingProtectionRobot.() -> Unit): Transition {
@@ -129,3 +144,45 @@ private fun openEnhancedTrackingProtectionSettings() =
 
 private fun openEnhancedTrackingProtectionDetails() =
     onView(ViewMatchers.withId(R.id.tracking_content))
+
+private fun assertTrackingCookiesBlocked() {
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/cross_site_tracking"))
+        .waitForExists(waitingTime)
+    onView(withId(R.id.blocking_header)).check(matches(isDisplayed()))
+    onView(withId(R.id.cross_site_tracking)).check(matches(isDisplayed()))
+}
+
+private fun assertFingerprintersBlocked() {
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/fingerprinters"))
+        .waitForExists(waitingTime)
+    onView(withId(R.id.blocking_header)).check(matches(isDisplayed()))
+    onView(withId(R.id.fingerprinters)).check(matches(isDisplayed()))
+}
+
+private fun assertCryptominersBlocked() {
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/cryptominers"))
+        .waitForExists(waitingTime)
+    onView(withId(R.id.blocking_header)).check(matches(isDisplayed()))
+    onView(withId(R.id.cryptominers)).check(matches(isDisplayed()))
+}
+
+private fun assertBasicLevelTrackingContentBlocked() {
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/tracking_content"))
+        .waitForExists(waitingTime)
+
+    onView(withId(R.id.tracking_content))
+        .check(matches(isDisplayed()))
+        .click()
+    onView(withId(R.id.blocking_text_list))
+        .check(
+            matches(
+                withText(
+                    containsString(
+                        "social-track-digest256.dummytracker.org\n" +
+                                "ads-track-digest256.dummytracker.org\n" +
+                                "analytics-track-digest256.dummytracker.org"
+                    )
+                )
+            )
+        )
+}

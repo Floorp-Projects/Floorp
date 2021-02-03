@@ -28,6 +28,7 @@ import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.clickTabCrashedRestoreButton
 import org.mozilla.fenix.ui.robots.clickUrlbar
+import org.mozilla.fenix.ui.robots.dismissTrackingOnboarding
 import org.mozilla.fenix.ui.robots.downloadRobot
 import org.mozilla.fenix.ui.robots.enhancedTrackingProtection
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -372,7 +373,7 @@ class SmokeTest {
         }.openThreeDotMenu {
         }.openSettings {
         }.openEnhancedTrackingProtectionSubMenu {
-            clickEnhancedTrackingProtectionDefaults()
+            switchEnhancedTrackingProtectionToggle()
             verifyEnhancedTrackingProtectionOptionsGrayedOut()
         }.goBackToHomeScreen {
             navigationToolbar {
@@ -381,13 +382,39 @@ class SmokeTest {
             }.openThreeDotMenu {
             }.openSettings {
             }.openEnhancedTrackingProtectionSubMenu {
-                clickEnhancedTrackingProtectionDefaults()
+                switchEnhancedTrackingProtectionToggle()
             }.goBack {
             }.goBackToBrowser {
                 clickEnhancedTrackingProtectionPanel()
                 verifyEnhancedTrackingProtectionSwitch()
                 clickEnhancedTrackingProtectionSwitchOffOn()
             }
+        }
+    }
+
+    @Test
+    fun customTrackingProtectionSettingsTest() {
+        val trackingPage = TestAssetHelper.getEnhancedTrackingProtectionAsset(mockWebServer)
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openEnhancedTrackingProtectionSubMenu {
+            verifyEnhancedTrackingProtectionOptions()
+            selectTrackingProtectionOption("Custom")
+            verifyCustomTrackingProtectionSettings()
+        }.goBackToHomeScreen {}
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(trackingPage.url) {}
+
+        enhancedTrackingProtection {
+            dismissTrackingOnboarding()
+        }.openEnhancedTrackingProtectionSheet {
+            verifyTrackingCookiesBlocked()
+            verifyCryptominersBlocked()
+            verifyFingerprintersBlocked()
+            verifyBasicLevelTrackingContentBlocked()
         }
     }
 

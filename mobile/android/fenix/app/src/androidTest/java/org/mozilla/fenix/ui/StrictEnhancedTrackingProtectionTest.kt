@@ -70,7 +70,7 @@ class StrictEnhancedTrackingProtectionTest {
         }.openEnhancedTrackingProtectionSubMenu {
             verifyEnhancedTrackingProtectionHeader()
             verifyEnhancedTrackingProtectionOptions()
-            verifyEnhancedTrackingProtectionDefaults()
+            verifyTrackingProtectionSwitchEnabled()
         }.openExceptions {
             verifyDefault()
         }
@@ -177,7 +177,7 @@ class StrictEnhancedTrackingProtectionTest {
         }.openProtectionSettings {
             verifyEnhancedTrackingProtectionHeader()
             verifyEnhancedTrackingProtectionOptions()
-            verifyEnhancedTrackingProtectionDefaults()
+            verifyTrackingProtectionSwitchEnabled()
         }
 
         settingsSubMenuEnhancedTrackingProtection {
