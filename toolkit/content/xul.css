@@ -37,6 +37,11 @@
   direction: rtl;
 }
 
+/* XUL doesn't show outlines by default */
+:focus-visible {
+  outline: initial;
+}
+
 /*
  * Native anonymous popups and tooltips in html are document-level, which means
  * that they don't inherit from the root, so this is needed.
