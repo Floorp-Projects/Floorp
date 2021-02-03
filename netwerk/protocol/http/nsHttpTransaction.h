@@ -139,7 +139,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   // restart - this indicates that state for dev tools
   void Refused0RTT();
 
-  [[nodiscard]] bool CanDo0RTT() override;
   [[nodiscard]] nsresult RestartOnFastOpenError() override;
 
   uint64_t TopLevelOuterContentWindowId() override {

@@ -190,8 +190,6 @@ class nsAHttpTransaction : public nsSupportsWeakReference {
   // want to use the alt-svc on the restart.
   virtual void DoNotRemoveAltSvc() {}
 
-  // Returns true if early-data or fast open is possible.
-  [[nodiscard]] virtual bool CanDo0RTT() { return false; }
   // Returns true if early-data is possible and transaction will remember
   // that it is in 0RTT mode (to know should it rewide transaction or not
   // in the case of an error).
