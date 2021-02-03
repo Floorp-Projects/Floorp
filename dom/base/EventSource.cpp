@@ -98,8 +98,8 @@ class EventSourceImpl final : public nsIObserver,
   nsresult GetBaseURI(nsIURI** aBaseURI);
 
   void SetupHttpChannel();
-  nsresult SetupReferrerInfo();
-  nsresult InitChannelAndRequestEventSource();
+  nsresult SetupReferrerInfo(const nsCOMPtr<Document>& aDocument);
+  nsresult InitChannelAndRequestEventSource(bool aEventTargetAccessAllowed);
   nsresult ResetConnection();
   void ResetDecoder();
   nsresult SetReconnectionTimeout();
@@ -554,7 +554,9 @@ class ConnectRunnable final : public WorkerMainThreadRunnable {
 
   bool MainThreadRun() override {
     MOZ_ASSERT(mESImpl);
-    mESImpl->InitChannelAndRequestEventSource();
+    // We are allowed to access the event target since this runnable is
+    // synchronized with the thread the event target lives on.
+    mESImpl->InitChannelAndRequestEventSource(true);
     // We want to ensure the shortest possible remaining lifetime
     // and not depend on the Runnable's destruction.
     mESImpl = nullptr;
@@ -585,6 +587,10 @@ nsresult EventSourceImpl::ParseURL(const nsAString& aURL) {
   rv = srcURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // This assignment doesn't require extra synchronization because this function
+  // is only ever called from EventSourceImpl::Init(), which is either called
+  // directly if mEventSource was created on the main thread, or via a
+  // synchronous runnable if it was created on a worker thread.
   mEventSource->mOriginalURL = NS_ConvertUTF8toUTF16(spec);
   mSrc = srcURI;
   mOrigin = origin;
@@ -664,6 +670,7 @@ EventSourceImpl::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aSubject);
+  MOZ_ASSERT(mIsMainThread);
   if (!mEventSource->GetOwner() || window != mEventSource->GetOwner()) {
     return NS_OK;
   }
@@ -882,7 +889,7 @@ EventSourceImpl::AsyncOnChannelRedirect(
 
   bool isValidScheme = newURI->SchemeIs("http") || newURI->SchemeIs("https");
 
-  rv = mEventSource->CheckCurrentGlobalCorrectness();
+  rv = mIsMainThread ? mEventSource->CheckCurrentGlobalCorrectness() : NS_OK;
   if (NS_FAILED(rv) || !isValidScheme) {
     DispatchFailConnection();
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -927,20 +934,26 @@ EventSourceImpl::GetInterface(const nsIID& aIID, void** aResult) {
 
   if (aIID.Equals(NS_GET_IID(nsIAuthPrompt)) ||
       aIID.Equals(NS_GET_IID(nsIAuthPrompt2))) {
-    nsresult rv = mEventSource->CheckCurrentGlobalCorrectness();
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
-
+    nsresult rv;
     nsCOMPtr<nsIPromptFactory> wwatch =
         do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    nsCOMPtr<nsPIDOMWindowOuter> window;
+
+    // To avoid a data race we may only access the event target if it lives on
+    // the main thread.
+    if (mIsMainThread) {
+      rv = mEventSource->CheckCurrentGlobalCorrectness();
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
+
+      if (mEventSource->GetOwner()) {
+        window = mEventSource->GetOwner()->GetOuterWindow();
+      }
+    }
+
     // Get the an auth prompter for our window so that the parenting
     // of the dialogs works as it should when using tabs.
-
-    nsCOMPtr<nsPIDOMWindowOuter> window;
-    if (mEventSource->GetOwner()) {
-      window = mEventSource->GetOwner()->GetOuterWindow();
-    }
 
     return wwatch->GetPrompt(window, aIID, aResult);
   }
@@ -967,7 +980,8 @@ nsresult EventSourceImpl::GetBaseURI(nsIURI** aBaseURI) {
   nsCOMPtr<nsIURI> baseURI;
 
   // first we try from document->GetBaseURI()
-  nsCOMPtr<Document> doc = mEventSource->GetDocumentIfCurrent();
+  nsCOMPtr<Document> doc =
+      mIsMainThread ? mEventSource->GetDocumentIfCurrent() : nullptr;
   if (doc) {
     baseURI = doc->GetBaseURI();
   }
@@ -1013,12 +1027,13 @@ void EventSourceImpl::SetupHttpChannel() {
   Unused << rv;
 }
 
-nsresult EventSourceImpl::SetupReferrerInfo() {
+nsresult EventSourceImpl::SetupReferrerInfo(
+    const nsCOMPtr<Document>& aDocument) {
   AssertIsOnMainThread();
   MOZ_ASSERT(!IsShutDown());
 
-  if (nsCOMPtr<Document> doc = mEventSource->GetDocumentIfCurrent()) {
-    auto referrerInfo = MakeRefPtr<ReferrerInfo>(*doc);
+  if (aDocument) {
+    auto referrerInfo = MakeRefPtr<ReferrerInfo>(*aDocument);
     nsresult rv = mHttpChannel->SetReferrerInfoWithoutClone(referrerInfo);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -1026,7 +1041,8 @@ nsresult EventSourceImpl::SetupReferrerInfo() {
   return NS_OK;
 }
 
-nsresult EventSourceImpl::InitChannelAndRequestEventSource() {
+nsresult EventSourceImpl::InitChannelAndRequestEventSource(
+    const bool aEventTargetAccessAllowed) {
   AssertIsOnMainThread();
   if (IsClosed()) {
     return NS_ERROR_ABORT;
@@ -1034,7 +1050,10 @@ nsresult EventSourceImpl::InitChannelAndRequestEventSource() {
 
   bool isValidScheme = mSrc->SchemeIs("http") || mSrc->SchemeIs("https");
 
-  nsresult rv = mEventSource->CheckCurrentGlobalCorrectness();
+  MOZ_ASSERT_IF(mIsMainThread, aEventTargetAccessAllowed);
+  nsresult rv = aEventTargetAccessAllowed
+                    ? mEventSource->CheckCurrentGlobalCorrectness()
+                    : NS_OK;
   if (NS_FAILED(rv) || !isValidScheme) {
     DispatchFailConnection();
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -1046,7 +1065,9 @@ nsresult EventSourceImpl::InitChannelAndRequestEventSource() {
   loadFlags = nsIRequest::LOAD_BACKGROUND | nsIRequest::LOAD_BYPASS_CACHE |
               nsIRequest::INHIBIT_CACHING;
 
-  nsCOMPtr<Document> doc = mEventSource->GetDocumentIfCurrent();
+  const nsCOMPtr<Document> doc = aEventTargetAccessAllowed
+                                     ? mEventSource->GetDocumentIfCurrent()
+                                     : nullptr;
 
   nsSecurityFlags securityFlags =
       nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT;
@@ -1084,7 +1105,7 @@ nsresult EventSourceImpl::InitChannelAndRequestEventSource() {
   NS_ENSURE_TRUE(mHttpChannel, NS_ERROR_NO_INTERFACE);
 
   SetupHttpChannel();
-  rv = SetupReferrerInfo();
+  rv = SetupReferrerInfo(doc);
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
@@ -1360,7 +1381,7 @@ NS_IMETHODIMP EventSourceImpl::Notify(nsITimer* aTimer) {
   MOZ_ASSERT(!mHttpChannel, "the channel hasn't been cancelled!!");
 
   if (!IsFrozen()) {
-    nsresult rv = InitChannelAndRequestEventSource();
+    nsresult rv = InitChannelAndRequestEventSource(mIsMainThread);
     if (NS_FAILED(rv)) {
       NS_WARNING("InitChannelAndRequestEventSource() failed");
     }
@@ -1390,7 +1411,7 @@ nsresult EventSourceImpl::Thaw() {
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = InitChannelAndRequestEventSource();
+  rv = InitChannelAndRequestEventSource(mIsMainThread);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1961,7 +1982,7 @@ already_AddRefed<EventSource> EventSource::Constructor(
       return nullptr;
     }
 
-    eventSource->mESImpl->InitChannelAndRequestEventSource();
+    eventSource->mESImpl->InitChannelAndRequestEventSource(true);
     return eventSource.forget();
   }
 
