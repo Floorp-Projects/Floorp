@@ -257,7 +257,10 @@ function testMemory(string, total, delta, assumptions) {
     Assert.equal(delta || 0, 0);
     return;
   }
-  let deltaTotalNumber = Number.parseFloat(extractedDeltaTotal);
+  let deltaTotalNumber = Number.parseFloat(
+    // Remove the thousands separator that breaks parseFloat.
+    extractedDeltaTotal.replace(/,/g, "")
+  );
   Assert.ok(
     deltaTotalNumber > 0 && deltaTotalNumber < 1024,
     `Unitless delta memory use is in (0, 1024): ${extractedDeltaTotal}`
@@ -271,7 +274,7 @@ function testMemory(string, total, delta, assumptions) {
   // Let's just check that the number displayed is within 10% of `delta`.
   let computedDelta =
     getMemoryMultiplier(extractedDeltaUnit, extractedDeltaSign) *
-    extractedDeltaTotal;
+    deltaTotalNumber;
   Assert.equal(
     computedDelta >= 0,
     delta >= 0,
