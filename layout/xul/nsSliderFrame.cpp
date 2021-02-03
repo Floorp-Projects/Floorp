@@ -41,14 +41,18 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/SVGIntegrationUtils.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/AsyncDragMetrics.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/ScrollInputMethods.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 #include <algorithm>
 
 using namespace mozilla;
+using namespace mozilla::gfx;
+using mozilla::dom::Document;
 using mozilla::dom::Event;
 using mozilla::layers::APZCCallbackHelper;
 using mozilla::layers::AsyncDragMetrics;
@@ -225,6 +229,128 @@ nsresult nsSliderFrame::AttributeChanged(int32_t aNameSpaceID,
   return rv;
 }
 
+// Draw any tick marks that show the position of find in page results.
+class nsDisplaySliderMarks final : public nsPaintedDisplayItem {
+ public:
+  nsDisplaySliderMarks(nsDisplayListBuilder* aBuilder, nsSliderFrame* aFrame)
+      : nsPaintedDisplayItem(aBuilder, aFrame) {
+    MOZ_COUNT_CTOR(nsDisplaySliderMarks);
+  }
+  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplaySliderMarks)
+
+  NS_DISPLAY_DECL_NAME("SliderMarks", TYPE_SLIDER_MARKS)
+
+  void PaintMarks(nsDisplayListBuilder* aDisplayListBuilder,
+                  wr::DisplayListBuilder* aBuilder, gfxContext* aCtx);
+
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
+                           bool* aSnap) const override {
+    *aSnap = false;
+    return mFrame->InkOverflowRectRelativeToSelf() + ToReferenceFrame();
+  }
+
+  bool CreateWebRenderCommands(
+      wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
+      const StackingContextHelper& aSc,
+      mozilla::layers::RenderRootStateManager* aManager,
+      nsDisplayListBuilder* aDisplayListBuilder) override;
+
+  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
+};
+
+// This is shared between the webrender and Paint() paths. For the former,
+// aBuilder should be assigned and aCtx will be null. For the latter, aBuilder
+// should be null and aCtx should be the gfxContext for painting.
+void nsDisplaySliderMarks::PaintMarks(nsDisplayListBuilder* aDisplayListBuilder,
+                                      wr::DisplayListBuilder* aBuilder,
+                                      gfxContext* aCtx) {
+  DrawTarget* drawTarget = nullptr;
+  if (aCtx) {
+    drawTarget = aCtx->GetDrawTarget();
+  } else {
+    MOZ_ASSERT(aBuilder);
+  }
+
+  Document* doc = mFrame->GetContent()->GetUncomposedDoc();
+  if (!doc) {
+    return;
+  }
+
+  nsGlobalWindowInner* window =
+      nsGlobalWindowInner::Cast(doc->GetInnerWindow());
+  if (!window) {
+    return;
+  }
+
+  nsSliderFrame* sliderFrame = static_cast<nsSliderFrame*>(mFrame);
+
+  nsIFrame* scrollbarBox = sliderFrame->GetScrollbar();
+  nsCOMPtr<nsIContent> scrollbar = GetContentOfBox(scrollbarBox);
+
+  int32_t minPos = sliderFrame->GetMinPosition(scrollbar);
+  int32_t maxPos = sliderFrame->GetMaxPosition(scrollbar);
+
+  // Use the text highlight color for the tick marks.
+  nscolor highlightColor =
+      LookAndFeel::GetColor(LookAndFeel::ColorID::TextHighlightBackground);
+  DeviceColor fillColor = ToDeviceColor(highlightColor);
+  fillColor.a = 0.3;  // make the mark mostly transparent
+
+  int32_t appUnitsPerDevPixel =
+      sliderFrame->PresContext()->AppUnitsPerDevPixel();
+  nsRect sliderRect = sliderFrame->GetRect();
+
+  nsPoint refPoint = aDisplayListBuilder->ToReferenceFrame(mFrame);
+
+  nsTArray<uint32_t>& marks = window->GetScrollMarks();
+  for (uint32_t m = 0; m < marks.Length(); m++) {
+    uint32_t markValue = marks[m];
+    if (markValue > (uint32_t)maxPos) {
+      markValue = maxPos;
+    }
+    if (markValue < (uint32_t)minPos) {
+      markValue = minPos;
+    }
+
+    // The values in the marks array range up to the window's scrollMaxY
+    // (the same as the slider's maxpos). Scale the values to fit within
+    // the slider's height.
+    nsRect markRect(refPoint, nsSize(sliderRect.width, 0));
+    markRect.y +=
+        (nscoord)((double)markValue / (maxPos - minPos) * sliderRect.height);
+
+    // Increase the height of the tick mark rectangle by two pixels. The
+    // tick marks should be drawn ignoring any page zoom that is applied.
+    if (drawTarget) {
+      Rect devPixelRect =
+          NSRectToSnappedRect(markRect, appUnitsPerDevPixel, *drawTarget);
+      devPixelRect.Inflate(0, 2);
+      drawTarget->FillRect(devPixelRect, ColorPattern(fillColor));
+    } else {
+      LayoutDeviceIntRect dRect = LayoutDeviceIntRect::FromAppUnitsToNearest(
+          markRect, appUnitsPerDevPixel);
+      dRect.Inflate(0, 2);
+      wr::LayoutRect layoutRect = wr::ToLayoutRect(dRect);
+      aBuilder->PushRect(layoutRect, layoutRect, BackfaceIsHidden(),
+                         wr::ToColorF(fillColor));
+    }
+  }
+}
+
+bool nsDisplaySliderMarks::CreateWebRenderCommands(
+    wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
+    const StackingContextHelper& aSc,
+    mozilla::layers::RenderRootStateManager* aManager,
+    nsDisplayListBuilder* aDisplayListBuilder) {
+  PaintMarks(aDisplayListBuilder, &aBuilder, nullptr);
+  return true;
+}
+
+void nsDisplaySliderMarks::Paint(nsDisplayListBuilder* aBuilder,
+                                 gfxContext* aCtx) {
+  PaintMarks(aBuilder, nullptr, aCtx);
+}
+
 void nsSliderFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                      const nsDisplayListSet& aLists) {
   if (aBuilder->IsForEventDelivery() && isDraggingThumb()) {
@@ -235,6 +361,28 @@ void nsSliderFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 
   nsBoxFrame::BuildDisplayList(aBuilder, aLists);
+
+  // If this is a vertical scrollbar for the root frame, draw any markers.
+  // Markers are not drawn for other scrollbars.
+  if (!aBuilder->IsForEventDelivery()) {
+    nsIFrame* scrollbarBox = GetScrollbar();
+    if (scrollbarBox && !IsXULHorizontal()) {
+      if (nsIScrollableFrame* scrollFrame =
+              do_QueryFrame(scrollbarBox->GetParent())) {
+        if (scrollFrame->IsRootScrollFrameOfDocument()) {
+          Document* doc = mContent->GetUncomposedDoc();
+          if (doc) {
+            nsGlobalWindowInner* window =
+                nsGlobalWindowInner::Cast(doc->GetInnerWindow());
+            if (window && window->GetScrollMarks().Length() > 0) {
+              aLists.Content()->AppendNewToTop<nsDisplaySliderMarks>(aBuilder,
+                                                                     this);
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 static bool UsesCustomScrollbarMediator(nsIFrame* scrollbarBox) {

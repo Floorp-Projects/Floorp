@@ -47,6 +47,7 @@ class nsSliderFrame final : public nsBoxFrame {
   NS_DECL_QUERYFRAME
 
   friend class nsSliderMediator;
+  friend class nsDisplaySliderMarks;
 
   explicit nsSliderFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   virtual ~nsSliderFrame();
