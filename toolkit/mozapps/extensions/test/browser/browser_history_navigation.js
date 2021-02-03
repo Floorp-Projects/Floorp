@@ -69,7 +69,6 @@ function check_state(canGoBack, canGoForward) {
 }
 
 function is_in_list(aManager, view, canGoBack, canGoForward) {
-  var doc = aManager.document;
   var categoryUtils = new CategoryUtilities(aManager);
 
   is(
@@ -78,17 +77,15 @@ function is_in_list(aManager, view, canGoBack, canGoForward) {
     "Should be on the right category"
   );
 
-  doc = aManager.getHtmlBrowser().contentDocument;
   ok(
-    doc.querySelector("addon-list"),
-    "Got a list-view in the HTML about:addons browser"
+    aManager.document.querySelector("addon-list"),
+    "Got a list-view in about:addons"
   );
 
   check_state(canGoBack, canGoForward);
 }
 
 function is_in_detail(aManager, view, canGoBack, canGoForward) {
-  var doc = aManager.document;
   var categoryUtils = new CategoryUtilities(aManager);
 
   is(
@@ -97,20 +94,18 @@ function is_in_detail(aManager, view, canGoBack, canGoForward) {
     "Should be on the right category"
   );
 
-  doc = aManager.getHtmlBrowser().contentDocument;
   is(
-    doc.querySelectorAll("addon-card").length,
+    aManager.document.querySelectorAll("addon-card").length,
     1,
-    "Got a detail-view in the HTML about:addons browser"
+    "Got a detail-view in about:addons"
   );
 
   check_state(canGoBack, canGoForward);
 }
 
 function is_in_discovery(aManager, canGoBack, canGoForward) {
-  const doc = aManager.getHtmlBrowser().contentDocument;
   ok(
-    doc.querySelector("discovery-pane"),
+    aManager.document.querySelector("discovery-pane"),
     "Got a discovery panel in the HTML about:addons browser"
   );
 
@@ -190,7 +185,9 @@ add_task(async function test_navigate_between_webpage_and_aboutaddons() {
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:addons");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  let manager = await wait_for_manager_load(gBrowser.contentWindow);
+  let manager = await wait_for_manager_load(
+    gBrowser.selectedBrowser.contentWindow
+  );
 
   info("Part 3");
   is_in_list(manager, "addons://list/extension", true, false);
@@ -501,8 +498,7 @@ add_task(async function test_history_on_detailview_extension_removed() {
   info("Part 2");
   is_in_detail(aManager, "addons://list/extension", true, false);
 
-  const doc = aManager.getHtmlBrowser().contentDocument;
-  const addonCard = doc.querySelector(
+  const addonCard = aManager.document.querySelector(
     'addon-card[addon-id="test1@tests.mozilla.org"]'
   );
   const promptService = mockPromptService();
@@ -604,7 +600,6 @@ add_task(async function test_initialSelectedView_on_aboutaddons_reload() {
     managerWindow.gViewController.initialViewSelected,
     "initialViewSelected is true as expected on first about:addons load"
   );
-  is(managerWindow.gPendingInitializations, 0, "No pending initializations");
 
   await close_manager(managerWindow);
 });

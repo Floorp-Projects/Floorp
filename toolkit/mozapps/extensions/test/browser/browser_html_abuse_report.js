@@ -543,13 +543,10 @@ add_task(async function test_abusereport_from_aboutaddons_menu() {
   const extension = await installTestExtension(EXT_ID);
 
   await openAboutAddons();
-  await gManagerWindow.promiseHtmlBrowserLoaded();
 
   AbuseReportTestUtils.assertReportPanelHidden();
 
-  const { contentDocument: doc } = gManagerWindow.getHtmlBrowser();
-
-  const addonCard = doc.querySelector(
+  const addonCard = gManagerWindow.document.querySelector(
     `addon-list addon-card[addon-id="${extension.id}"]`
   );
   ok(addonCard, "Got the addon-card for the test extension");
@@ -580,13 +577,10 @@ add_task(async function test_abusereport_from_aboutaddons_remove() {
   const extension = await installTestExtension(EXT_ID, "theme");
 
   await openAboutAddons("theme");
-  await gManagerWindow.promiseHtmlBrowserLoaded();
 
   AbuseReportTestUtils.assertReportPanelHidden();
 
-  const { contentDocument: doc } = gManagerWindow.getHtmlBrowser();
-
-  const addonCard = doc.querySelector(
+  const addonCard = gManagerWindow.document.querySelector(
     `addon-list addon-card[addon-id="${extension.id}"]`
   );
   ok(addonCard, "Got the addon-card for the test theme extension");
@@ -691,6 +685,7 @@ add_task(async function test_abusereport_from_browserAction_remove() {
     menu.hidePopup();
 
     let panelEl = await onceReportOpened;
+
     await AbuseReportTestUtils.closeReportPanel(panelEl);
 
     let onceExtStarted = AddonTestUtils.promiseWebExtensionStartup(EXT_ID);
@@ -862,11 +857,8 @@ add_task(async function test_abusereport_open_author_url() {
 add_task(async function test_no_report_checkbox_for_unsupported_addon_types() {
   async function test_report_checkbox_hidden(addon) {
     await openAboutAddons(addon.type);
-    await gManagerWindow.promiseHtmlBrowserLoaded();
 
-    const { contentDocument: doc } = gManagerWindow.getHtmlBrowser();
-
-    const addonCard = doc.querySelector(
+    const addonCard = gManagerWindow.document.querySelector(
       `addon-list addon-card[addon-id="${addon.id}"]`
     );
     ok(addonCard, "Got the addon-card for the test extension");

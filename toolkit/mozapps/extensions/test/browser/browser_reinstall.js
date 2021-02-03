@@ -15,8 +15,7 @@ const testIdSuffix = "@tests.mozilla.org";
 let gManagerWindow, xpi1, xpi2;
 
 function htmlDoc() {
-  return gManagerWindow.document.getElementById("html-view-browser")
-    .contentDocument;
+  return gManagerWindow.document;
 }
 
 function get_list_item_count() {

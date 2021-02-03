@@ -6,7 +6,7 @@
 
 add_task(async function testCategoryRestore() {
   let win = await loadInitialView("extension");
-  let utils = new CategoryUtilities(win.managerWindow);
+  let utils = new CategoryUtilities(win);
 
   // Open the plugins category
   await utils.openType("plugin");
@@ -14,7 +14,7 @@ add_task(async function testCategoryRestore() {
   // Re-open the manager
   await closeView(win);
   win = await loadInitialView();
-  utils = new CategoryUtilities(win.managerWindow);
+  utils = new CategoryUtilities(win);
 
   is(
     utils.selectedCategory,
@@ -28,7 +28,7 @@ add_task(async function testCategoryRestore() {
   // Re-open the manager
   await closeView(win);
   win = await loadInitialView();
-  utils = new CategoryUtilities(win.managerWindow);
+  utils = new CategoryUtilities(win);
 
   is(
     utils.selectedCategory,
@@ -42,15 +42,15 @@ add_task(async function testCategoryRestore() {
 add_task(async function testInvalidAddonType() {
   let win = await loadInitialView("invalid");
 
-  let categoryUtils = new CategoryUtilities(win.managerWindow);
+  let categoryUtils = new CategoryUtilities(win);
   is(
     categoryUtils.getSelectedViewId(),
-    win.managerWindow.gViewController.defaultViewId,
+    win.gViewController.defaultViewId,
     "default view is selected"
   );
   is(
-    win.managerWindow.gViewController.currentViewId,
-    win.managerWindow.gViewController.defaultViewId,
+    win.gViewController.currentViewId,
+    win.gViewController.defaultViewId,
     "default view is shown"
   );
 
@@ -60,15 +60,15 @@ add_task(async function testInvalidAddonType() {
 add_task(async function testInvalidViewId() {
   let win = await loadInitialView("addons://invalid/view");
 
-  let categoryUtils = new CategoryUtilities(win.managerWindow);
+  let categoryUtils = new CategoryUtilities(win);
   is(
     categoryUtils.getSelectedViewId(),
-    win.managerWindow.gViewController.defaultViewId,
+    win.gViewController.defaultViewId,
     "default view is selected"
   );
   is(
-    win.managerWindow.gViewController.currentViewId,
-    win.managerWindow.gViewController.defaultViewId,
+    win.gViewController.currentViewId,
+    win.gViewController.defaultViewId,
     "default view is shown"
   );
 

@@ -158,8 +158,8 @@ async function switchToNonDiscoView(win) {
   // Listeners registered while the discopane was the active view continue to be
   // active when the view switches to the extensions list, because both views
   // share the same document.
-  win.managerWindow.gViewController.loadView("addons://list/extension");
-  await wait_for_view_load(win.managerWindow);
+  win.gViewController.loadView("addons://list/extension");
+  await wait_for_view_load(win);
   ok(
     win.document.querySelector("addon-list"),
     "Should be at the extension list view"
@@ -174,8 +174,8 @@ async function switchToDiscoView(win) {
     null,
     "Cannot switch to discopane when the discopane is already shown"
   );
-  win.managerWindow.gViewController.loadView("addons://discover/");
-  await wait_for_view_load(win.managerWindow);
+  win.gViewController.loadView("addons://discover/");
+  await wait_for_view_load(win);
   await promiseDiscopaneUpdate(win);
 }
 

@@ -40,7 +40,7 @@ function assertEnabledSideloadedExtensionElement(managerWindow, addonElement) {
   ok(!toggleDisabled.checked, "toggle-disable isn't checked");
 }
 
-function clickEnableExtension(managerWindow, addonElement) {
+function clickEnableExtension(addonElement) {
   addonElement.querySelector('[action="toggle-disabled"]').click();
 }
 
@@ -80,11 +80,11 @@ add_task(async function test_theme_enable() {
   // enable fresh installed theme
   let manager = await open_manager("addons://list/theme");
   let customTheme = get_addon_element(manager, CUSTOM_THEME_ID);
-  clickEnableExtension(manager, customTheme);
+  clickEnableExtension(customTheme);
 
   // enable default theme again
   let defaultTheme = get_addon_element(manager, DEFAULT_THEME_ID);
-  clickEnableExtension(manager, defaultTheme);
+  clickEnableExtension(defaultTheme);
 
   let addon = await AddonManager.getAddonByID(CUSTOM_THEME_ID);
   await close_manager(manager);
@@ -128,7 +128,7 @@ add_task(async function test_sideloaded_extension_permissions_prompt() {
   assertDisabledSideloadedExtensionElement(manager, addon);
 
   let popupPromise = promisePopupNotificationShown("addon-webext-permissions");
-  clickEnableExtension(manager, addon);
+  clickEnableExtension(addon);
   let panel = await popupPromise;
 
   ok(PopupNotifications.isPanelOpen, "Permission popup should be visible");
@@ -151,7 +151,7 @@ add_task(async function test_sideloaded_extension_permissions_prompt() {
   assertEnabledSideloadedExtensionElement(manager, addon);
 
   popupPromise = promisePopupNotificationShown("addon-webext-permissions");
-  clickEnableExtension(manager, addon);
+  clickEnableExtension(addon);
   panel = await popupPromise;
 
   ok(PopupNotifications.isPanelOpen, "Permission popup should be visible");

@@ -606,7 +606,7 @@ add_task(async function testAvailableUpdates() {
   let win = await loadInitialView("extension");
   let doc = win.document;
   let updatesMessage = doc.getElementById("updates-message");
-  let categoryUtils = new CategoryUtilities(win.managerWindow);
+  let categoryUtils = new CategoryUtilities(win);
 
   let availableCat = categoryUtils.get("available-updates");
 
@@ -727,7 +727,7 @@ add_task(async function testUpdatesShownOnLoad() {
   await findUpdatesForAddonId(id);
 
   let win = await loadInitialView("extension");
-  let categoryUtils = new CategoryUtilities(win.managerWindow);
+  let categoryUtils = new CategoryUtilities(win);
   let updatesButton = categoryUtils.get("available-updates");
 
   ok(!updatesButton.hidden, "The updates button is shown");
@@ -752,7 +752,7 @@ add_task(async function testUpdatesShownOnLoad() {
   info("Check that the updates section is hidden when re-opened");
   await closeView(win);
   win = await loadInitialView("extension");
-  categoryUtils = new CategoryUtilities(win.managerWindow);
+  categoryUtils = new CategoryUtilities(win);
   updatesButton = categoryUtils.get("available-updates");
 
   ok(updatesButton.hidden, "Available updates is hidden");

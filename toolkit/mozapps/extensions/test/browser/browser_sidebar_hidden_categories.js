@@ -193,7 +193,7 @@ add_task(async function testLocalesHiddenIfPreviousViewAndNoLocales() {
   });
   let win = await viewLoaded;
 
-  let categoryUtils = new CategoryUtilities(win.managerWindow);
+  let categoryUtils = new CategoryUtilities(win);
 
   await TestUtils.waitForCondition(
     () => categoryUtils.selectedCategory != "locale"
@@ -206,7 +206,7 @@ add_task(async function testLocalesHiddenIfPreviousViewAndNoLocales() {
 
   is(
     categoryUtils.getSelectedViewId(),
-    win.managerWindow.gViewController.defaultViewId,
+    win.gViewController.defaultViewId,
     "default view is selected"
   );
 
