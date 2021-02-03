@@ -123,21 +123,21 @@ impl<'de> Deserialize<'de> for AddonInstallParameters {
         struct Base64 {
             addon: String,
             temporary: Option<bool>,
-        };
+        }
 
         #[derive(Debug, Deserialize)]
         #[serde(deny_unknown_fields)]
         struct Path {
             path: String,
             temporary: Option<bool>,
-        };
+        }
 
         #[derive(Debug, Deserialize)]
         #[serde(untagged)]
         enum Helper {
             Base64(Base64),
             Path(Path),
-        };
+        }
 
         let params = match Helper::deserialize(deserializer)? {
             Helper::Path(ref mut data) => AddonInstallParameters {
