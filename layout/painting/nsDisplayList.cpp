@@ -2592,6 +2592,14 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
                     presContext->DevPixelsToAppUnits(bounds.y),
                     presContext->DevPixelsToAppUnits(bounds.width),
                     presContext->DevPixelsToAppUnits(bounds.height));
+        // Treat the invalid region from the layer manager as being relative to
+        // the widget, rather than relative to the view. (It's unclear whether
+        // this is the right thing to do, but it matches some aspects of
+        // painting more than the alternative would. Moreover, non-zero view to
+        // widget offsets only occur for fractionally-positioned popups, for bad
+        // reasons. See bug 1688899 for details.)
+        // Make the rectangle relative to the view.
+        rect -= view->ViewToWidgetOffset();
         if (shouldInvalidate) {
           view->GetViewManager()->InvalidateViewNoSuppression(view, rect);
         }
