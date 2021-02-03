@@ -705,7 +705,8 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         DesktopEnvironment::All, WindowProtocol::All, DriverVendor::MesaAll,
         DeviceFamily::AmdR600, nsIGfxInfo::FEATURE_WEBRENDER,
         nsIGfxInfo::FEATURE_BLOCKED_DEVICE, DRIVER_COMPARISON_IGNORED,
-        V(0, 0, 0, 0), "FEATURE_FAILURE_WEBRENDER_BUG_1673939", "");
+        V(0, 0, 0, 0), "FEATURE_FAILURE_WEBRENDER_BUG_1673939",
+        "https://gitlab.freedesktop.org/mesa/mesa/-/issues/3720");
 
     ////////////////////////////////////
     // FEATURE_WEBRENDER - ALLOWLIST
