@@ -138,7 +138,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                     customTabSessionId,
                     manifest,
                     WebAppSiteControlsBuilder(
-                        requireComponents.core.sessionManager,
+                        requireComponents.core.store,
                         requireComponents.useCases.sessionUseCases.reload,
                         customTabSessionId,
                         manifest
