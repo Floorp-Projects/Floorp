@@ -302,7 +302,8 @@ RefPtr<PlatformDecoderModule::CreateDecoderPromise> PDMFactory::CreateDecoder(
 
 RefPtr<PlatformDecoderModule::CreateDecoderPromise>
 PDMFactory::CheckAndMaybeCreateDecoder(CreateDecoderParamsForAsync&& aParams,
-                                       uint32_t aIndex) {
+                                       uint32_t aIndex,
+                                       Maybe<MediaResult> aEarlierError) {
   uint32_t i = aIndex;
   auto params = SupportDecoderParams(aParams);
   for (; i < mCurrentPDMs.Length(); i++) {
@@ -321,9 +322,13 @@ PDMFactory::CheckAndMaybeCreateDecoder(CreateDecoderParamsForAsync&& aParams,
                     const MediaResult& aError) mutable {
                   // Try the next PDM.
                   return self->CheckAndMaybeCreateDecoder(std::move(params),
-                                                          i + 1);
+                                                          i + 1, Some(aError));
                 });
     return p;
+  }
+  if (aEarlierError) {
+    return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
+        std::move(*aEarlierError), __func__);
   }
   return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
       MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,

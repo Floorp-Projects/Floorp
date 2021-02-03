@@ -112,7 +112,8 @@ class PDMFactory final {
   RefPtr<PDMCreateDecoderPromise> CreateDecoderWithPDM(
       PlatformDecoderModule* aPDM, const CreateDecoderParams& aParams);
   RefPtr<PDMCreateDecoderPromise> CheckAndMaybeCreateDecoder(
-      CreateDecoderParamsForAsync&& aParams, uint32_t aIndex);
+      CreateDecoderParamsForAsync&& aParams, uint32_t aIndex,
+      Maybe<MediaResult> aEarlierError = Nothing());
 
   nsTArray<RefPtr<PlatformDecoderModule>> mCurrentPDMs;
   RefPtr<PlatformDecoderModule> mEMEPDM;
