@@ -39,7 +39,6 @@
 #include "CacheControlParser.h"
 #include "CachePushChecker.h"
 #include "LoadContextInfo.h"
-#include "TCPFastOpenLayer.h"
 #include "nsQueryObject.h"
 
 namespace mozilla {
@@ -128,8 +127,6 @@ Http2Session::Http2Session(nsISocketTransport* aSocketTransport,
       mOriginFrameActivated(false),
       mCntActivated(0),
       mTlsHandshakeFinished(false),
-      mCheckNetworkStallsWithTFO(false),
-      mLastRequestBytesSentTime(0),
       mPeerFailedHandshake(false),
       mTrrStreams(0),
       mEnableWebsockets(false),
@@ -297,18 +294,9 @@ uint32_t Http2Session::ReadTimeoutTick(PRIntervalTime now) {
   LOG3(("Http2Session::ReadTimeoutTick %p delta since last read %ds\n", this,
         PR_IntervalToSeconds(now - mLastReadEpoch)));
 
-  uint32_t nextTick = UINT32_MAX;
-  if (mCheckNetworkStallsWithTFO && mLastRequestBytesSentTime) {
-    PRIntervalTime initialResponseDelta = now - mLastRequestBytesSentTime;
-    if (initialResponseDelta >= gHttpHandler->FastOpenStallsTimeout()) {
-      gHttpHandler->IncrementFastOpenStallsCounter();
-      mCheckNetworkStallsWithTFO = false;
-    } else {
-      nextTick = PR_IntervalToSeconds(gHttpHandler->FastOpenStallsTimeout()) -
-                 PR_IntervalToSeconds(initialResponseDelta);
-    }
+  if (!mPingThreshold) {
+    return UINT32_MAX;
   }
-  if (!mPingThreshold) return nextTick;
 
   if ((now - mLastReadEpoch) < mPingThreshold) {
     // recent activity means ping is not an issue
@@ -321,8 +309,8 @@ uint32_t Http2Session::ReadTimeoutTick(PRIntervalTime now) {
       }
     }
 
-    return std::min(nextTick, PR_IntervalToSeconds(mPingThreshold) -
-                                  PR_IntervalToSeconds(now - mLastReadEpoch));
+    return PR_IntervalToSeconds(mPingThreshold) -
+           PR_IntervalToSeconds(now - mLastReadEpoch);
   }
 
   if (mPingSentEpoch) {
@@ -407,24 +395,6 @@ uint32_t Http2Session::RegisterStreamID(Http2Stream* stream, uint32_t aNewID) {
   }
 
   mStreamIDHash.Put(aNewID, stream);
-
-  // If TCP fast Open has been used and conection was idle for some time
-  // we will be cautious and watch out for bug 1395494.
-  if (!mCheckNetworkStallsWithTFO && mConnection) {
-    RefPtr<HttpConnectionBase> connBase = mConnection->HttpConnection();
-    RefPtr<nsHttpConnection> conn = do_QueryObject(connBase);
-    if (conn && (conn->GetFastOpenStatus() == TFO_DATA_SENT) &&
-        gHttpHandler
-            ->CheckIfConnectionIsStalledOnlyIfIdleForThisAmountOfSeconds() &&
-        IdleTime() >=
-            gHttpHandler
-                ->CheckIfConnectionIsStalledOnlyIfIdleForThisAmountOfSeconds()) {
-      // If a connection was using the TCP FastOpen and it was idle for a
-      // long time we should check for stalls like bug 1395494.
-      mCheckNetworkStallsWithTFO = true;
-      mLastRequestBytesSentTime = PR_IntervalNow();
-    }
-  }
 
   if (aNewID & 1) {
     // don't count push streams here
@@ -639,7 +609,6 @@ nsresult Http2Session::NetworkRead(nsAHttpSegmentWriter* writer, char* buf,
   nsresult rv = writer->OnWriteSegment(buf, count, countWritten);
   if (NS_SUCCEEDED(rv) && *countWritten > 0) {
     mLastReadEpoch = PR_IntervalNow();
-    mCheckNetworkStallsWithTFO = false;
   }
   return rv;
 }
@@ -3502,16 +3471,6 @@ nsresult Http2Session::Finish0RTT(bool aRestart, bool aAlpnChanged) {
   RealignOutputQueue();
 
   return NS_OK;
-}
-
-void Http2Session::SetFastOpenStatus(uint8_t aStatus) {
-  LOG3(("Http2Session::SetFastOpenStatus %d [this=%p]", aStatus, this));
-
-  for (size_t i = 0; i < m0RTTStreams.Length(); ++i) {
-    if (m0RTTStreams[i]) {
-      m0RTTStreams[i]->Transaction()->SetFastOpenStatus(aStatus);
-    }
-  }
 }
 
 nsresult Http2Session::ProcessConnectedPush(Http2Stream* pushConnectedStream,

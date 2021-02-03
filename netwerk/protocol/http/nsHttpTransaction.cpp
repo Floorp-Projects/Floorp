@@ -13,7 +13,6 @@
 #include "HttpLog.h"
 #include "HTTPSRecordResolver.h"
 #include "NSSErrorsService.h"
-#include "TCPFastOpenLayer.h"
 #include "TunnelUtils.h"
 #include "base/basictypes.h"
 #include "mozilla/ScopeExit.h"
@@ -140,7 +139,6 @@ nsHttpTransaction::nsHttpTransaction()
       m0RTTInProgress(false),
       mDoNotTryEarlyData(false),
       mEarlyDataDisposition(EARLY_NONE),
-      mFastOpenStatus(TFO_NOT_TRIED),
       mTrafficCategory(HttpTrafficCategory::eInvalid),
       mProxyConnectResponseCode(0),
       mHTTPSSVCReceivedStage(HTTPSSVC_NOT_USED),
@@ -674,13 +672,6 @@ void nsHttpTransaction::OnTransportStatus(nsITransport* transport,
       {
         MutexAutoLock lock(mLock);
         mTimings.tcpConnectEnd = tnow;
-        // After a socket is connected we know for sure whether data
-        // has been sent on SYN packet and if not we should update TLS
-        // start timing.
-        if ((mFastOpenStatus != TFO_DATA_SENT) &&
-            !mTimings.secureConnectionStart.IsNull()) {
-          mTimings.secureConnectionStart = tnow;
-        }
       }
     } else if (status == NS_NET_STATUS_TLS_HANDSHAKE_STARTING) {
       {
@@ -2102,17 +2093,6 @@ nsresult nsHttpTransaction::HandleContentStart() {
       mEarlyDataDisposition = EARLY_NONE;
     }  // no header on NONE case
 
-    if (mFastOpenStatus == TFO_DATA_SENT) {
-      Unused << mResponseHead->SetHeader(nsHttp::X_Firefox_TCP_Fast_Open,
-                                         "data sent"_ns);
-    } else if (mFastOpenStatus == TFO_TRIED) {
-      Unused << mResponseHead->SetHeader(nsHttp::X_Firefox_TCP_Fast_Open,
-                                         "tried negotiating"_ns);
-    } else if (mFastOpenStatus == TFO_FAILED) {
-      Unused << mResponseHead->SetHeader(nsHttp::X_Firefox_TCP_Fast_Open,
-                                         "failed"_ns);
-    }  // no header on TFO_NOT_TRIED case
-
     if (LOG3_ENABLED()) {
       LOG3(("http response [\n"));
       nsAutoCString headers;
@@ -2905,45 +2885,6 @@ nsresult nsHttpTransaction::Finish0RTT(bool aRestart,
     mSecurityInfo = std::move(info);
   }
   return NS_OK;
-}
-
-nsresult nsHttpTransaction::RestartOnFastOpenError() {
-  // This will happen on connection error during Fast Open or if connect
-  // during Fast Open takes too long. So we should not have received any
-  // data!
-  MOZ_ASSERT(!mReceivedData);
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-
-  LOG(
-      ("nsHttpTransaction::RestartOnFastOpenError - restarting transaction "
-       "%p\n",
-       this));
-
-  // rewind streams in case we already wrote out the request
-  nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mRequestStream);
-  if (seekable) seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
-  // clear old connection state...
-  {
-    MutexAutoLock lock(mLock);
-    mSecurityInfo = nullptr;
-  }
-
-  if (!mConnInfo->GetRoutedHost().IsEmpty()) {
-    RefPtr<nsHttpConnectionInfo> ci;
-    mConnInfo->CloneAsDirectRoute(getter_AddRefs(ci));
-    mConnInfo = ci;
-    RemoveAlternateServiceUsedHeader(mRequestHead);
-  }
-  mEarlyDataDisposition = EARLY_NONE;
-  m0RTTInProgress = false;
-  mFastOpenStatus = TFO_FAILED;
-  mTimings = TimingStruct();
-  return NS_OK;
-}
-
-void nsHttpTransaction::SetFastOpenStatus(uint8_t aStatus) {
-  LOG(("nsHttpTransaction::SetFastOpenStatus %d [this=%p]\n", aStatus, this));
-  mFastOpenStatus = aStatus;
 }
 
 void nsHttpTransaction::Refused0RTT() {

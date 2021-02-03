@@ -15,7 +15,6 @@
 #include "nsIHttpActivityObserver.h"
 #include "nsQueryObject.h"
 #include "nsNetUtil.h"
-#include "TCPFastOpenLayer.h"
 
 namespace mozilla {
 namespace net {
@@ -31,7 +30,6 @@ NullHttpTransaction::NullHttpTransaction(nsHttpConnectionInfo* ci,
       mRequestHead(nullptr),
       mIsDone(false),
       mClaimed(false),
-      mFastOpenStatus(TFO_NOT_TRIED),
       mCallbacks(callbacks),
       mConnectionInfo(ci) {
   nsresult rv;
@@ -105,12 +103,6 @@ void NullHttpTransaction::OnTransportStatus(nsITransport* transport,
     }
     if (mTimings.tcpConnectEnd.IsNull()) {
       mTimings.tcpConnectEnd = tnow;
-    }
-    // After a socket is connected we know for sure whether data has been
-    // sent on SYN packet and if not we should update TLS start timing.
-    if ((mFastOpenStatus != TFO_DATA_SENT) &&
-        !mTimings.secureConnectionStart.IsNull()) {
-      mTimings.secureConnectionStart = tnow;
     }
   } else if (status == NS_NET_STATUS_TLS_HANDSHAKE_STARTING) {
     if (mTimings.secureConnectionStart.IsNull()) {

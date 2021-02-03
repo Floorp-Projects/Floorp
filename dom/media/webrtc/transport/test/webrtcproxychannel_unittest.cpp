@@ -168,15 +168,6 @@ class FakeSocketTransportProvider : public nsISocketTransport {
     MOZ_ASSERT(false);
     return NS_OK;
   }
-  NS_IMETHOD SetFastOpenCallback(
-      mozilla::net::TCPFastOpen* aFastOpen) override {
-    MOZ_ASSERT(false);
-    return NS_OK;
-  }
-  NS_IMETHOD GetFirstRetryError(nsresult* aFirstRetryError) override {
-    MOZ_ASSERT(false);
-    return NS_OK;
-  }
   NS_IMETHOD GetResetIPFamilyPreference(
       bool* aResetIPFamilyPreference) override {
     MOZ_ASSERT(false);

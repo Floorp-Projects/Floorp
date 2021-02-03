@@ -11,7 +11,6 @@
 #include "nsHttp.h"
 #include "nsHttpHandler.h"
 #include "nsHttpRequestHead.h"
-#include "TCPFastOpen.h"
 #include "nsISocketProvider.h"
 #include "nsSocketProviderService.h"
 #include "nsISSLSocketControl.h"
@@ -2037,14 +2036,6 @@ SocketTransportShim::Bind(NetAddr* aLocalAddr) {
 }
 
 NS_IMETHODIMP
-SocketTransportShim::GetFirstRetryError(nsresult* aFirstRetryError) {
-  if (mIsWebsocket) {
-    LOG3(("WARNING: SocketTransportShim::GetFirstRetryError %p", this));
-  }
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 SocketTransportShim::GetEchConfigUsed(bool* aEchConfigUsed) {
   if (mIsWebsocket) {
     LOG3(("WARNING: SocketTransportShim::GetEchConfigUsed %p", this));
@@ -2154,11 +2145,6 @@ SocketTransportShim::GetQoSBits(uint8_t* aQoSBits) {
 NS_IMETHODIMP
 SocketTransportShim::SetQoSBits(uint8_t aQoSBits) {
   return mWrapped->SetQoSBits(aQoSBits);
-}
-
-NS_IMETHODIMP
-SocketTransportShim::SetFastOpenCallback(TCPFastOpen* aFastOpen) {
-  return mWrapped->SetFastOpenCallback(aFastOpen);
 }
 
 NS_IMPL_ISUPPORTS(TLSFilterTransaction, nsITimerCallback, nsINamed)

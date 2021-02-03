@@ -209,16 +209,10 @@ class nsAHttpTransaction : public nsSupportsWeakReference {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  [[nodiscard]] virtual nsresult RestartOnFastOpenError() {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   virtual uint64_t TopLevelOuterContentWindowId() {
     MOZ_ASSERT(false);
     return 0;
   }
-
-  virtual void SetFastOpenStatus(uint8_t aStatus) {}
 
   virtual void OnProxyConnectComplete(int32_t aResponseCode) {}
 

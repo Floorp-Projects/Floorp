@@ -312,8 +312,6 @@ interface nsISocketTransport : nsITransport
     void setKeepaliveVals(in long keepaliveIdleTime,
                           in long keepaliveRetryInterval);
 
-    readonly attribute nsresult firstRetryError;
-
     /**
      * If true, this socket transport has found out the prefered family
      * according it's connection flags could not be used to establish
