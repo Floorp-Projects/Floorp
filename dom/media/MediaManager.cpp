@@ -1190,19 +1190,6 @@ static const MediaTrackConstraints& GetInvariant(
                                           : empty;
 }
 
-/**
- * Creates a MediaTrack, attaches a listener and resolves a MozPromise to
- * provide the stream to the DOM.
- *
- * All of this must be done on the main thread!
- *
- * Note that the various GetUserMedia Runnable classes currently allow for
- * two tracks.  If we ever need to support getting more than two tracks
- * at once, we could convert everything to nsTArray<RefPtr<blah> >'s,
- * though that would complicate the constructors some.  Currently the
- * GetUserMedia spec does not allow for more than 2 tracks to be obtained in
- * one call, to simplify handling of constraints.
- */
 class GetUserMediaStreamRunnable : public Runnable {
  public:
   GetUserMediaStreamRunnable(
@@ -1230,186 +1217,7 @@ class GetUserMediaStreamRunnable : public Runnable {
         MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError), __func__);
   }
 
-  NS_IMETHOD
-  Run() override {
-    MOZ_ASSERT(NS_IsMainThread());
-    LOG("GetUserMediaStreamRunnable::Run()");
-    nsGlobalWindowInner* window =
-        nsGlobalWindowInner::GetInnerWindowWithId(mWindowID);
-
-    // We're on main-thread, and the windowlist can only
-    // be invalidated from the main-thread (see OnNavigation)
-    if (!mManager->IsWindowListenerStillActive(mWindowListener)) {
-      // This window is no longer live. mListener has already been removed.
-      return NS_OK;
-    }
-
-    MediaTrackGraph::GraphDriverType graphDriverType =
-        mAudioDevice ? MediaTrackGraph::AUDIO_THREAD_DRIVER
-                     : MediaTrackGraph::SYSTEM_THREAD_DRIVER;
-    MediaTrackGraph* mtg = MediaTrackGraph::GetInstance(
-        graphDriverType, window, MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE,
-        MediaTrackGraph::DEFAULT_OUTPUT_DEVICE);
-
-    auto domStream = MakeRefPtr<DOMMediaStream>(window);
-    RefPtr<LocalTrackSource> audioTrackSource;
-    RefPtr<LocalTrackSource> videoTrackSource;
-    nsCOMPtr<nsIPrincipal> principal;
-    if (mPeerIdentity) {
-      principal = NullPrincipal::CreateWithInheritedAttributes(
-          window->GetExtantDoc()->NodePrincipal());
-    } else {
-      principal = window->GetExtantDoc()->NodePrincipal();
-    }
-    RefPtr<GenericNonExclusivePromise> firstFramePromise;
-    if (mAudioDevice) {
-      if (mAudioDevice->GetMediaSource() == MediaSourceEnum::AudioCapture) {
-        // AudioCapture is a special case, here, in the sense that we're not
-        // really using the audio source and the SourceMediaTrack, which acts
-        // as placeholders. We re-route a number of tracks internally in the
-        // MTG and mix them down instead.
-        NS_WARNING(
-            "MediaCaptureWindowState doesn't handle "
-            "MediaSourceEnum::AudioCapture. This must be fixed with UX "
-            "before shipping.");
-        auto audioCaptureSource = MakeRefPtr<AudioCaptureTrackSource>(
-            principal, window, u"Window audio capture"_ns,
-            mtg->CreateAudioCaptureTrack(), mPeerIdentity);
-        audioTrackSource = audioCaptureSource;
-        RefPtr<MediaStreamTrack> track = new dom::AudioStreamTrack(
-            window, audioCaptureSource->InputTrack(), audioCaptureSource);
-        domStream->AddTrackInternal(track);
-      } else {
-        nsString audioDeviceName;
-        mAudioDevice->GetName(audioDeviceName);
-        RefPtr<MediaTrack> track;
-#ifdef MOZ_WEBRTC
-        if (mAudioDevice->mIsFake) {
-          track = mtg->CreateSourceTrack(MediaSegment::AUDIO);
-        } else {
-          track = AudioInputTrack::Create(mtg);
-          track->Suspend();  // Microphone source resumes in SetTrack
-        }
-#else
-        track = mtg->CreateSourceTrack(MediaSegment::AUDIO);
-#endif
-        audioTrackSource = new LocalTrackSource(
-            principal, audioDeviceName, mSourceListener,
-            mAudioDevice->GetMediaSource(), track, mPeerIdentity);
-        MOZ_ASSERT(MediaManager::IsOn(mConstraints.mAudio));
-        RefPtr<MediaStreamTrack> domTrack = new dom::AudioStreamTrack(
-            window, track, audioTrackSource, dom::MediaStreamTrackState::Live,
-            false, GetInvariant(mConstraints.mAudio));
-        domStream->AddTrackInternal(domTrack);
-      }
-    }
-    if (mVideoDevice) {
-      nsString videoDeviceName;
-      mVideoDevice->GetName(videoDeviceName);
-      RefPtr<MediaTrack> track = mtg->CreateSourceTrack(MediaSegment::VIDEO);
-      videoTrackSource = new LocalTrackSource(
-          principal, videoDeviceName, mSourceListener,
-          mVideoDevice->GetMediaSource(), track, mPeerIdentity);
-      MOZ_ASSERT(MediaManager::IsOn(mConstraints.mVideo));
-      RefPtr<MediaStreamTrack> domTrack = new dom::VideoStreamTrack(
-          window, track, videoTrackSource, dom::MediaStreamTrackState::Live,
-          false, GetInvariant(mConstraints.mVideo));
-      domStream->AddTrackInternal(domTrack);
-      switch (mVideoDevice->GetMediaSource()) {
-        case MediaSourceEnum::Browser:
-        case MediaSourceEnum::Screen:
-        case MediaSourceEnum::Window:
-          // Wait for first frame for screen-sharing devices, to ensure
-          // with and height settings are available immediately, to pass wpt.
-          firstFramePromise = mVideoDevice->mSource->GetFirstFramePromise();
-          break;
-        default:
-          break;
-      }
-    }
-
-    if (!domStream || (!audioTrackSource && !videoTrackSource) ||
-        sHasShutdown) {
-      LOG("Returning error for getUserMedia() - no stream");
-
-      mHolder.Reject(MakeRefPtr<MediaMgrError>(
-                         MediaMgrError::Name::AbortError,
-                         sHasShutdown ? "In shutdown"_ns : "No stream."_ns),
-                     __func__);
-      return NS_OK;
-    }
-
-    // Activate our source listener. We'll call Start() on the source when we
-    // get a callback that the MediaStream has started consuming. The listener
-    // is freed when the page is invalidated (on navigation or close).
-    mWindowListener->Activate(mSourceListener, mAudioDevice,
-                              std::move(audioTrackSource), mVideoDevice,
-                              std::move(videoTrackSource));
-
-    // Dispatch to the media thread to ask it to start the sources, because that
-    // can take a while.
-    mSourceListener->InitializeAsync()
-        ->Then(
-            GetMainThreadSerialEventTarget(), __func__,
-            [manager = mManager, windowListener = mWindowListener,
-             firstFramePromise] {
-              LOG("GetUserMediaStreamRunnable::Run: starting success callback "
-                  "following InitializeAsync()");
-              // Initiating and starting devices succeeded.
-              windowListener->ChromeAffectingStateChanged();
-              manager->SendPendingGUMRequest();
-              if (!firstFramePromise) {
-                return SourceListener::SourceListenerPromise::CreateAndResolve(
-                    true, __func__);
-              }
-              RefPtr<SourceListener::SourceListenerPromise> resolvePromise =
-                  firstFramePromise->Then(
-                      GetMainThreadSerialEventTarget(), __func__,
-                      [] {
-                        return SourceListener::SourceListenerPromise::
-                            CreateAndResolve(true, __func__);
-                      },
-                      [] {
-                        return SourceListener::SourceListenerPromise::
-                            CreateAndReject(MakeRefPtr<MediaMgrError>(
-                                                MediaMgrError::Name::AbortError,
-                                                "In shutdown"),
-                                            __func__);
-                      });
-              return resolvePromise;
-            },
-            [](RefPtr<MediaMgrError>&& aError) {
-              LOG("GetUserMediaStreamRunnable::Run: starting failure callback "
-                  "following InitializeAsync()");
-              return SourceListener::SourceListenerPromise::CreateAndReject(
-                  aError, __func__);
-            })
-        ->Then(GetMainThreadSerialEventTarget(), __func__,
-               [holder = std::move(mHolder),
-                domStream](const SourceListener::SourceListenerPromise::
-                               ResolveOrRejectValue& aValue) mutable {
-                 if (aValue.IsResolve()) {
-                   holder.Resolve(domStream, __func__);
-                 } else {
-                   holder.Reject(aValue.RejectValue(), __func__);
-                 }
-               });
-
-    if (!IsPrincipalInfoPrivate(mPrincipalInfo)) {
-      // Call GetPrincipalKey again, this time w/persist = true, to promote
-      // deviceIds to persistent, in case they're not already. Fire'n'forget.
-      media::GetPrincipalKey(mPrincipalInfo, true)
-          ->Then(GetCurrentSerialEventTarget(), __func__,
-                 [](const media::PrincipalKeyPromise::ResolveOrRejectValue&
-                        aValue) {
-                   if (aValue.IsReject()) {
-                     LOG("Failed get Principal key. Persisting of deviceIds "
-                         "will be broken");
-                   }
-                 });
-    }
-    return NS_OK;
-  }
+  NS_IMETHOD Run() override;
 
  private:
   MozPromiseHolder<MediaManager::StreamPromise> mHolder;
@@ -1717,6 +1525,192 @@ class GetUserMediaTask : public Runnable {
  private:
   RefPtr<MediaManager> mManager;  // get ref to this when creating the runnable
 };
+
+/**
+ * Creates a MediaTrack, attaches a listener and resolves a MozPromise to
+ * provide the stream to the DOM.
+ *
+ * All of this must be done on the main thread!
+ */
+NS_IMETHODIMP GetUserMediaStreamRunnable::Run() {
+  MOZ_ASSERT(NS_IsMainThread());
+  LOG("GetUserMediaStreamRunnable::Run()");
+  nsGlobalWindowInner* window =
+      nsGlobalWindowInner::GetInnerWindowWithId(mWindowID);
+
+  // We're on main-thread, and the windowlist can only
+  // be invalidated from the main-thread (see OnNavigation)
+  if (!mManager->IsWindowListenerStillActive(mWindowListener)) {
+    // This window is no longer live. mListener has already been removed.
+    return NS_OK;
+  }
+
+  MediaTrackGraph::GraphDriverType graphDriverType =
+      mAudioDevice ? MediaTrackGraph::AUDIO_THREAD_DRIVER
+                   : MediaTrackGraph::SYSTEM_THREAD_DRIVER;
+  MediaTrackGraph* mtg = MediaTrackGraph::GetInstance(
+      graphDriverType, window, MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE,
+      MediaTrackGraph::DEFAULT_OUTPUT_DEVICE);
+
+  auto domStream = MakeRefPtr<DOMMediaStream>(window);
+  RefPtr<LocalTrackSource> audioTrackSource;
+  RefPtr<LocalTrackSource> videoTrackSource;
+  nsCOMPtr<nsIPrincipal> principal;
+  if (mPeerIdentity) {
+    principal = NullPrincipal::CreateWithInheritedAttributes(
+        window->GetExtantDoc()->NodePrincipal());
+  } else {
+    principal = window->GetExtantDoc()->NodePrincipal();
+  }
+  RefPtr<GenericNonExclusivePromise> firstFramePromise;
+  if (mAudioDevice) {
+    if (mAudioDevice->GetMediaSource() == MediaSourceEnum::AudioCapture) {
+      // AudioCapture is a special case, here, in the sense that we're not
+      // really using the audio source and the SourceMediaTrack, which acts
+      // as placeholders. We re-route a number of tracks internally in the
+      // MTG and mix them down instead.
+      NS_WARNING(
+          "MediaCaptureWindowState doesn't handle "
+          "MediaSourceEnum::AudioCapture. This must be fixed with UX "
+          "before shipping.");
+      auto audioCaptureSource = MakeRefPtr<AudioCaptureTrackSource>(
+          principal, window, u"Window audio capture"_ns,
+          mtg->CreateAudioCaptureTrack(), mPeerIdentity);
+      audioTrackSource = audioCaptureSource;
+      RefPtr<MediaStreamTrack> track = new dom::AudioStreamTrack(
+          window, audioCaptureSource->InputTrack(), audioCaptureSource);
+      domStream->AddTrackInternal(track);
+    } else {
+      nsString audioDeviceName;
+      mAudioDevice->GetName(audioDeviceName);
+      RefPtr<MediaTrack> track;
+#ifdef MOZ_WEBRTC
+      if (mAudioDevice->mIsFake) {
+        track = mtg->CreateSourceTrack(MediaSegment::AUDIO);
+      } else {
+        track = AudioInputTrack::Create(mtg);
+        track->Suspend();  // Microphone source resumes in SetTrack
+      }
+#else
+      track = mtg->CreateSourceTrack(MediaSegment::AUDIO);
+#endif
+      audioTrackSource = new LocalTrackSource(
+          principal, audioDeviceName, mSourceListener,
+          mAudioDevice->GetMediaSource(), track, mPeerIdentity);
+      MOZ_ASSERT(MediaManager::IsOn(mConstraints.mAudio));
+      RefPtr<MediaStreamTrack> domTrack = new dom::AudioStreamTrack(
+          window, track, audioTrackSource, dom::MediaStreamTrackState::Live,
+          false, GetInvariant(mConstraints.mAudio));
+      domStream->AddTrackInternal(domTrack);
+    }
+  }
+  if (mVideoDevice) {
+    nsString videoDeviceName;
+    mVideoDevice->GetName(videoDeviceName);
+    RefPtr<MediaTrack> track = mtg->CreateSourceTrack(MediaSegment::VIDEO);
+    videoTrackSource = new LocalTrackSource(
+        principal, videoDeviceName, mSourceListener,
+        mVideoDevice->GetMediaSource(), track, mPeerIdentity);
+    MOZ_ASSERT(MediaManager::IsOn(mConstraints.mVideo));
+    RefPtr<MediaStreamTrack> domTrack = new dom::VideoStreamTrack(
+        window, track, videoTrackSource, dom::MediaStreamTrackState::Live,
+        false, GetInvariant(mConstraints.mVideo));
+    domStream->AddTrackInternal(domTrack);
+    switch (mVideoDevice->GetMediaSource()) {
+      case MediaSourceEnum::Browser:
+      case MediaSourceEnum::Screen:
+      case MediaSourceEnum::Window:
+        // Wait for first frame for screen-sharing devices, to ensure
+        // with and height settings are available immediately, to pass wpt.
+        firstFramePromise = mVideoDevice->mSource->GetFirstFramePromise();
+        break;
+      default:
+        break;
+    }
+  }
+
+  if (!domStream || (!audioTrackSource && !videoTrackSource) || sHasShutdown) {
+    LOG("Returning error for getUserMedia() - no stream");
+
+    mHolder.Reject(MakeRefPtr<MediaMgrError>(
+                       MediaMgrError::Name::AbortError,
+                       sHasShutdown ? "In shutdown"_ns : "No stream."_ns),
+                   __func__);
+    return NS_OK;
+  }
+
+  // Activate our source listener. We'll call Start() on the source when we
+  // get a callback that the MediaStream has started consuming. The listener
+  // is freed when the page is invalidated (on navigation or close).
+  mWindowListener->Activate(mSourceListener, mAudioDevice,
+                            std::move(audioTrackSource), mVideoDevice,
+                            std::move(videoTrackSource));
+
+  // Dispatch to the media thread to ask it to start the sources, because that
+  // can take a while.
+  mSourceListener->InitializeAsync()
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [manager = mManager, windowListener = mWindowListener,
+           firstFramePromise] {
+            LOG("GetUserMediaStreamRunnable::Run: starting success callback "
+                "following InitializeAsync()");
+            // Initiating and starting devices succeeded.
+            windowListener->ChromeAffectingStateChanged();
+            manager->SendPendingGUMRequest();
+            if (!firstFramePromise) {
+              return SourceListener::SourceListenerPromise::CreateAndResolve(
+                  true, __func__);
+            }
+            RefPtr<SourceListener::SourceListenerPromise> resolvePromise =
+                firstFramePromise->Then(
+                    GetMainThreadSerialEventTarget(), __func__,
+                    [] {
+                      return SourceListener::SourceListenerPromise::
+                          CreateAndResolve(true, __func__);
+                    },
+                    [] {
+                      return SourceListener::SourceListenerPromise::
+                          CreateAndReject(MakeRefPtr<MediaMgrError>(
+                                              MediaMgrError::Name::AbortError,
+                                              "In shutdown"),
+                                          __func__);
+                    });
+            return resolvePromise;
+          },
+          [](RefPtr<MediaMgrError>&& aError) {
+            LOG("GetUserMediaStreamRunnable::Run: starting failure callback "
+                "following InitializeAsync()");
+            return SourceListener::SourceListenerPromise::CreateAndReject(
+                aError, __func__);
+          })
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [holder = std::move(mHolder), domStream](
+              const SourceListener::SourceListenerPromise::ResolveOrRejectValue&
+                  aValue) mutable {
+            if (aValue.IsResolve()) {
+              holder.Resolve(domStream, __func__);
+            } else {
+              holder.Reject(aValue.RejectValue(), __func__);
+            }
+          });
+
+  if (!IsPrincipalInfoPrivate(mPrincipalInfo)) {
+    // Call GetPrincipalKey again, this time w/persist = true, to promote
+    // deviceIds to persistent, in case they're not already. Fire'n'forget.
+    media::GetPrincipalKey(mPrincipalInfo, true)
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [](const media::PrincipalKeyPromise::ResolveOrRejectValue& aValue) {
+              if (aValue.IsReject()) {
+                LOG("Failed get Principal key. Persisting of deviceIds "
+                    "will be broken");
+              }
+            });
+  }
+  return NS_OK;
+}
 
 /* static */
 void MediaManager::GuessVideoDeviceGroupIDs(MediaDeviceSet& aDevices,
