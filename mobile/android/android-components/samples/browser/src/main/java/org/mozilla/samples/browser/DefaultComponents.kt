@@ -65,6 +65,7 @@ import mozilla.components.feature.search.middleware.SearchMiddleware
 import mozilla.components.feature.search.region.RegionMiddleware
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.session.middleware.LastAccessMiddleware
 import mozilla.components.feature.session.middleware.undo.UndoMiddleware
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage
 import mozilla.components.feature.tabs.CustomTabsUseCases
@@ -141,7 +142,8 @@ open class DefaultComponents(private val applicationContext: Context) {
                 LocationService.default()
             ),
             SearchMiddleware(applicationContext),
-            RecordingDevicesMiddleware(applicationContext)
+            RecordingDevicesMiddleware(applicationContext),
+            LastAccessMiddleware()
         ) + EngineMiddleware.create(engine, ::findSessionById))
     }
 

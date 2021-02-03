@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.session.engine.middleware
+package mozilla.components.feature.session.middleware
 
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.TabListAction
@@ -15,7 +15,7 @@ import mozilla.components.lib.state.MiddlewareContext
 /**
  * [Middleware] that handles updating the [TabSessionState.lastAccess] when a tab is selected.
  */
-internal class LastAccessMiddleware : Middleware<BrowserState, BrowserAction> {
+class LastAccessMiddleware : Middleware<BrowserState, BrowserAction> {
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
