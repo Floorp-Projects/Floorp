@@ -288,6 +288,182 @@ bool ScopeContext::addToEnclosingLexicalBindingCache(
   return true;
 }
 
+#ifdef DEBUG
+static bool NameIsOnEnvironment(Scope* scope, JSAtom* name) {
+  for (BindingIter bi(scope); bi; bi++) {
+    // If found, the name must already be on the environment or an import,
+    // or else there is a bug in the closed-over name analysis in the
+    // Parser.
+    if (bi.name() == name) {
+      BindingLocation::Kind kind = bi.location().kind();
+
+      if (bi.hasArgumentSlot()) {
+        JSScript* script = scope->as<FunctionScope>().script();
+        if (script->functionAllowsParameterRedeclaration()) {
+          // Check for duplicate positional formal parameters.
+          for (BindingIter bi2(bi); bi2 && bi2.hasArgumentSlot(); bi2++) {
+            if (bi2.name() == name) {
+              kind = bi2.location().kind();
+            }
+          }
+        }
+      }
+
+      return kind == BindingLocation::Kind::Global ||
+             kind == BindingLocation::Kind::Environment ||
+             kind == BindingLocation::Kind::Import;
+    }
+  }
+
+  // If not found, assume it's on the global or dynamically accessed.
+  return true;
+}
+#endif
+
+/* static */
+NameLocation ScopeContext::searchInDelazificationEnclosingScope(
+    JSContext* cx, CompilationInput& input, ParserAtomsTable& parserAtoms,
+    TaggedParserAtomIndex name, uint8_t hops) {
+  MOZ_ASSERT(input.target ==
+             CompilationInput::CompilationTarget::Delazification);
+
+  // TODO-Stencil
+  //   Here, we convert our name into a JSAtom*, and hard-crash on failure
+  //   to allocate.  This conversion should not be required as we should be
+  //   able to iterate up snapshotted scope chains that use parser atoms.
+  //
+  //   This will be fixed when the enclosing scopes are snapshotted.
+  //
+  //   See bug 1690277.
+  JSAtom* jsname = nullptr;
+  {
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    const ParserAtom* atom = parserAtoms.getParserAtom(name);
+    jsname = atom->toJSAtom(cx, name, input.atomCache);
+    if (!jsname) {
+      oomUnsafe.crash("EmitterScope::searchAndCache");
+    }
+  }
+
+  for (ScopeIter si(input.enclosingScope); si; si++) {
+    MOZ_ASSERT(NameIsOnEnvironment(si.scope(), jsname));
+
+    bool hasEnv = si.hasSyntacticEnvironment();
+
+    switch (si.kind()) {
+      case ScopeKind::Function:
+        if (hasEnv) {
+          JSScript* script = si.scope()->as<FunctionScope>().script();
+          if (script->funHasExtensibleScope()) {
+            return NameLocation::Dynamic();
+          }
+
+          for (BindingIter bi(si.scope()); bi; bi++) {
+            if (bi.name() != jsname) {
+              continue;
+            }
+
+            BindingLocation bindLoc = bi.location();
+            if (bi.hasArgumentSlot() &&
+                script->functionAllowsParameterRedeclaration()) {
+              // Check for duplicate positional formal parameters.
+              for (BindingIter bi2(bi); bi2 && bi2.hasArgumentSlot(); bi2++) {
+                if (bi2.name() == jsname) {
+                  bindLoc = bi2.location();
+                }
+              }
+            }
+
+            MOZ_ASSERT(bindLoc.kind() == BindingLocation::Kind::Environment);
+            return NameLocation::EnvironmentCoordinate(bi.kind(), hops,
+                                                       bindLoc.slot());
+          }
+        }
+        break;
+
+      case ScopeKind::FunctionBodyVar:
+      case ScopeKind::Lexical:
+      case ScopeKind::NamedLambda:
+      case ScopeKind::StrictNamedLambda:
+      case ScopeKind::SimpleCatch:
+      case ScopeKind::Catch:
+      case ScopeKind::FunctionLexical:
+      case ScopeKind::ClassBody:
+        if (hasEnv) {
+          for (BindingIter bi(si.scope()); bi; bi++) {
+            if (bi.name() != jsname) {
+              continue;
+            }
+
+            // The name must already have been marked as closed
+            // over. If this assertion is hit, there is a bug in the
+            // name analysis.
+            BindingLocation bindLoc = bi.location();
+            MOZ_ASSERT(bindLoc.kind() == BindingLocation::Kind::Environment);
+            return NameLocation::EnvironmentCoordinate(bi.kind(), hops,
+                                                       bindLoc.slot());
+          }
+        }
+        break;
+
+      case ScopeKind::Module:
+        // This case is used only when delazifying a function inside
+        // module.
+        // Initial compilation of module doesn't have enlcosing scope.
+        if (hasEnv) {
+          for (BindingIter bi(si.scope()); bi; bi++) {
+            if (bi.name() != jsname) {
+              continue;
+            }
+
+            BindingLocation bindLoc = bi.location();
+
+            // Imports are on the environment but are indirect
+            // bindings and must be accessed dynamically instead of
+            // using an EnvironmentCoordinate.
+            if (bindLoc.kind() == BindingLocation::Kind::Import) {
+              MOZ_ASSERT(si.kind() == ScopeKind::Module);
+              return NameLocation::Import();
+            }
+
+            MOZ_ASSERT(bindLoc.kind() == BindingLocation::Kind::Environment);
+            return NameLocation::EnvironmentCoordinate(bi.kind(), hops,
+                                                       bindLoc.slot());
+          }
+        }
+        break;
+
+      case ScopeKind::Eval:
+      case ScopeKind::StrictEval:
+        // As an optimization, if the eval doesn't have its own var
+        // environment and its immediate enclosing scope is a global
+        // scope, all accesses are global.
+        if (!hasEnv && si.scope()->enclosing()->is<GlobalScope>()) {
+          return NameLocation::Global(BindingKind::Var);
+        }
+        return NameLocation::Dynamic();
+
+      case ScopeKind::Global:
+        return NameLocation::Global(BindingKind::Var);
+
+      case ScopeKind::With:
+      case ScopeKind::NonSyntactic:
+        return NameLocation::Dynamic();
+
+      case ScopeKind::WasmInstance:
+      case ScopeKind::WasmFunction:
+        MOZ_CRASH("No direct eval inside wasm functions");
+    }
+
+    if (hasEnv) {
+      MOZ_ASSERT(hops < ENVCOORD_HOPS_LIMIT - 1);
+      hops++;
+    }
+  }
+
+  MOZ_CRASH("Malformed scope chain");
+}
+
 mozilla::Maybe<ScopeContext::EnclosingLexicalBindingKind>
 ScopeContext::lookupLexicalBindingInEnclosingScope(TaggedParserAtomIndex name) {
   auto p = enclosingLexicalBindingCache_->lookup(name);

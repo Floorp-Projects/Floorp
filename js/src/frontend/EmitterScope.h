@@ -87,8 +87,6 @@ class EmitterScope : public Nestable<EmitterScope> {
 
   static bool nameCanBeFree(BytecodeEmitter* bce, TaggedParserAtomIndex name);
 
-  static NameLocation searchInEnclosingScope(JSAtom* name, Scope* scope,
-                                             uint8_t hops);
   NameLocation searchAndCache(BytecodeEmitter* bce, TaggedParserAtomIndex name);
 
   MOZ_MUST_USE bool internEmptyGlobalScopeAsBody(BytecodeEmitter* bce);
