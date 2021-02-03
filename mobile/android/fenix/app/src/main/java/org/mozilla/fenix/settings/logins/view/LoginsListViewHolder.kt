@@ -5,6 +5,7 @@
 package org.mozilla.fenix.settings.logins.view
 
 import android.view.View
+import androidx.core.view.isVisible
 import kotlinx.android.synthetic.main.logins_item.*
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
@@ -28,6 +29,7 @@ class LoginsListViewHolder(
             timeLastUsed = item.timeLastUsed
         )
         webAddressView.text = item.origin
+        usernameView.isVisible = item.username.isNotEmpty()
         usernameView.text = item.username
 
         updateFavIcon(item.origin)
