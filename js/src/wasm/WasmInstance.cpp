@@ -1021,6 +1021,65 @@ static const StructType* GetDescrStructType(JSContext* cx,
   return nonnullPtr;
 }
 
+#ifdef ENABLE_WASM_EXCEPTIONS
+/* static */ void* Instance::exceptionNew(Instance* instance, uint32_t exnIndex,
+                                          uint32_t nbytes) {
+  MOZ_ASSERT(SASigExceptionNew.failureMode == FailureMode::FailOnNullPtr);
+
+  JSContext* cx = TlsContext.get();
+
+  SharedExceptionTag tag = instance->exceptionTags()[exnIndex];
+  RootedArrayBufferObject buf(
+      cx, ArrayBufferObject::createZeroed(cx, BufferSize(nbytes)));
+
+  if (!buf) {
+    return nullptr;
+  }
+
+  return AnyRef::fromJSObject(WasmRuntimeExceptionObject::create(cx, tag, buf))
+      .forCompiledCode();
+}
+
+/* static */ void* Instance::throwException(Instance* instance, JSObject* exn) {
+  MOZ_ASSERT(SASigThrowException.failureMode == FailureMode::FailOnNullPtr);
+
+  JSContext* cx = TlsContext.get();
+  RootedObject exnObj(cx, exn);
+  RootedValue exnVal(cx);
+
+  if (exnObj->is<WasmJSExceptionObject>()) {
+    exnVal.set(exnObj.as<WasmJSExceptionObject>()->value());
+  } else {
+    exnVal.set(ObjectValue(*exnObj));
+  }
+  cx->setPendingException(exnVal, nullptr);
+
+  // By always returning a nullptr, we trigger a wasmTrap(Trap::ThrowReported),
+  // and use that to trigger the stack walking for this exception.
+  return nullptr;
+}
+
+/* static */ uint32_t Instance::getLocalExceptionIndex(Instance* instance,
+                                                       JSObject* exn) {
+  MOZ_ASSERT(SASigGetLocalExceptionIndex.failureMode ==
+             FailureMode::Infallible);
+
+  if (exn->is<WasmRuntimeExceptionObject>()) {
+    ExceptionTag& exnTag = exn->as<WasmRuntimeExceptionObject>().tag();
+    for (size_t i = 0; i < instance->exceptionTags().length(); i++) {
+      ExceptionTag& tag = *instance->exceptionTags()[i];
+      if (&tag == &exnTag) {
+        return i;
+      }
+    }
+  }
+
+  // Signal an unknown exception tag, e.g., for a non-imported exception or
+  // JS value.
+  return UINT32_MAX;
+}
+#endif
+
 // Note, dst must point into nonmoveable storage that is not in the nursery,
 // this matters for the write barriers.  Furthermore, for pointer types the
 // current value of *dst must be null so that only a post-barrier is required.
