@@ -31,8 +31,8 @@
 #include "nsGlobalWindowOuter.h"
 
 using namespace mozilla;
-using mozilla::dom::Document;
 using mozilla::dom::DisplayMode;
+using mozilla::dom::Document;
 
 static nsTArray<const nsStaticAtom*>* sSystemMetrics = nullptr;
 
