@@ -142,15 +142,6 @@ static const ReservedWordInfo* FindReservedWord(
 }
 
 static const ReservedWordInfo* FindReservedWord(
-    JSLinearString* str, js::frontend::NameVisibility* visibility) {
-  JS::AutoCheckCannotGC nogc;
-  if (str->hasLatin1Chars()) {
-    return FindReservedWord(str->latin1Chars(nogc), str->length(), visibility);
-  }
-  return FindReservedWord(str->twoByteChars(nogc), str->length(), visibility);
-}
-
-static const ReservedWordInfo* FindReservedWord(
     const js::frontend::ParserAtomEntry* atom,
     js::frontend::NameVisibility* visibility) {
   if (atom->hasLatin1Chars()) {
@@ -327,14 +318,6 @@ bool IsIdentifierNameOrPrivateName(const char16_t* chars, size_t length) {
 bool IsKeyword(const ParserAtom* atom) {
   NameVisibility visibility;
   if (const ReservedWordInfo* rw = FindReservedWord(atom, &visibility)) {
-    return TokenKindIsKeyword(rw->tokentype);
-  }
-
-  return false;
-}
-bool IsKeyword(JSLinearString* str) {
-  NameVisibility visibility;
-  if (const ReservedWordInfo* rw = FindReservedWord(str, &visibility)) {
     return TokenKindIsKeyword(rw->tokentype);
   }
 
