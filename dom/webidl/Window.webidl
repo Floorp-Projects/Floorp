@@ -794,7 +794,14 @@ partial interface Window {
 partial interface Window {
   [SameObject, Pref="dom.visualviewport.enabled", Replaceable]
   readonly attribute VisualViewport visualViewport;
+};
 
+// Used to assign marks to appear on the scrollbar when
+// finding on a page.
+partial interface Window {
+  // The marks are values between 0 and scrollMaxY.
+  [ChromeOnly]
+  void setScrollMarks(sequence<unsigned long> marks);
 };
 
 dictionary WindowPostMessageOptions : PostMessageOptions {

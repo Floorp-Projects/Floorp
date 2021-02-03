@@ -1264,6 +1264,9 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
     return true;
   }
 
+  nsTArray<uint32_t>& GetScrollMarks() { return mScrollMarks; }
+  void SetScrollMarks(const nsTArray<uint32_t>& aScrollMarks);
+
  private:
   RefPtr<mozilla::dom::ContentMediaController> mContentMediaController;
 
@@ -1466,6 +1469,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   nsTArray<mozilla::UniquePtr<PromiseDocumentFlushedResolver>>
       mDocumentFlushedResolvers;
+
+  nsTArray<uint32_t> mScrollMarks;
 
   static InnerWindowByIdTable* sInnerWindowsById;
 
