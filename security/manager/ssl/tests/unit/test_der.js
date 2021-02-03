@@ -15,31 +15,6 @@ function run_simple_tests() {
     /invalid input/,
     "should throw given non-array input"
   );
-  throws(
-    () => new DER.DERDecoder([0, "invalid input", 1]),
-    /invalid input/,
-    "should throw given non-byte data (string case)"
-  );
-  throws(
-    () => new DER.DERDecoder([31, 1, {}]),
-    /invalid input/,
-    "should throw given non-byte data (object case)"
-  );
-  throws(
-    () => new DER.DERDecoder([0.1, 3, 1]),
-    /invalid input/,
-    "should throw given non-byte data (non-integer case)"
-  );
-  throws(
-    () => new DER.DERDecoder([1, 3, -1]),
-    /invalid input/,
-    "should throw given non-byte data (negative integer case)"
-  );
-  throws(
-    () => new DER.DERDecoder([1, 300, 79]),
-    /invalid input/,
-    "should throw given non-byte data (large integer case)"
-  );
 
   let testReadByte = new DER.DERDecoder([0x0a, 0x0b]);
   equal(testReadByte.readByte(), 0x0a, "should read 0x0a");
