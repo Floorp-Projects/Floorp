@@ -2199,7 +2199,7 @@ class WebExtensionTest : BaseSessionTest() {
 
         val assertOnDownloadCalled = GeckoResult<WebExtension.Download>()
         val downloadDelegate = object : DownloadDelegate {
-            override fun onDownload(source: WebExtension, request: DownloadRequest): GeckoResult<WebExtension.Download>? {
+            override fun onDownload(source: WebExtension, request: DownloadRequest): GeckoResult<DownloadInitData>? {
                 assertEquals(webExtension!!.id, source.id)
                 assertEquals(uri, request.request.uri)
                 assertEquals("POST", request.request.method)
@@ -2217,7 +2217,11 @@ class WebExtensionTest : BaseSessionTest() {
 
                 val download = controller.createDownload(1)
                 assertOnDownloadCalled.complete(download)
-                return GeckoResult.fromValue(download)
+
+                val downloadInfo = object: Download.Info {}
+
+                val initialData = DownloadInitData(download, downloadInfo);
+                return GeckoResult.fromValue(initialData)
             }
         }
 
@@ -2264,7 +2268,7 @@ class WebExtensionTest : BaseSessionTest() {
 
         val assertOnDownloadCalled = GeckoResult<WebExtension.Download>()
         val downloadDelegate = object : DownloadDelegate {
-            override fun onDownload(source: WebExtension, request: DownloadRequest): GeckoResult<WebExtension.Download>? {
+            override fun onDownload(source: WebExtension, request: DownloadRequest): GeckoResult<DownloadInitData>? {
                 assertEquals(webExtension!!.id, source.id)
                 assertEquals(uri, request.request.uri)
                 assertEquals("GET", request.request.method)
@@ -2278,7 +2282,11 @@ class WebExtensionTest : BaseSessionTest() {
 
                 val download = controller.createDownload(2)
                 assertOnDownloadCalled.complete(download)
-                return GeckoResult.fromValue(download)
+
+                val downloadInfo = object: Download.Info {}
+
+                val initialData = DownloadInitData(download, downloadInfo)
+                return GeckoResult.fromValue(initialData)
             }
         }
 

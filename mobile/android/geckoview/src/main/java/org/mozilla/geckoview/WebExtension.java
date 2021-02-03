@@ -19,7 +19,6 @@ import org.mozilla.gecko.util.GeckoBundle;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -2251,11 +2250,11 @@ public class WebExtension {
          *
          * @param source - Web Extension that requested the download
          * @param request - contains the {@link WebRequest} and additional parameters for the request
-         * @return {@link Download} instance
+         * @return {@link DownloadInitData} instance
          */
         @AnyThread
         @Nullable
-        default GeckoResult<WebExtension.Download> onDownload(@NonNull WebExtension source, @NonNull DownloadRequest request) {
+        default GeckoResult<WebExtension.DownloadInitData> onDownload(@NonNull WebExtension source, @NonNull DownloadRequest request) {
             return null;
         }
     }
@@ -2299,7 +2298,7 @@ public class WebExtension {
          * Represents a unique identifier for the downloaded item
          * that is persistent across browser sessions
          */
-        public final @NonNull int id;
+        public final int id;
 
         /**
          * For testing.
@@ -2311,7 +2310,7 @@ public class WebExtension {
 
         /* package */ void setDelegate(final Delegate delegate) { }
 
-        /* package */ GeckoResult<Void> update(final DownloadInfo data) {
+        /* package */ GeckoResult<Void> update(final Info data) {
             return null;
         }
 
@@ -2342,91 +2341,256 @@ public class WebExtension {
             }
         }
 
-        /* package */ interface DownloadInfo {
-            @IntDef(flag = true, value = { IN_PROGRESS, INTERRUPTED, COMPLETE })
-            /* package */ @interface DownloadStatusFlags {};
+        /**
+         * Represents a download in progress where the app is currently receiving data from the server. See also {@link Info#state()}.
+         */
+        @IntDef({STATE_IN_PROGRESS, STATE_INTERRUPTED, STATE_COMPLETE})
+        public @interface DownloadState {}
+
+        /**
+         * Download is in progress. Default state
+         */
+        public static final int STATE_IN_PROGRESS = 0;
+
+        /**
+         * An error broke the connection with the server.
+         */
+        public static final int STATE_INTERRUPTED = 1;
+
+        /**
+         * The download completed successfully.
+         */
+        public static final int STATE_COMPLETE = 2;
+
+        /**
+         * Represents a possible reason why a download was interrupted. See also {@link Info#error()}.
+         */
+        @IntDef({
+                INTERRUPT_REASON_NO_INTERRUPT,
+                INTERRUPT_REASON_FILE_FAILED,
+                INTERRUPT_REASON_FILE_ACCESS_DENIED,
+                INTERRUPT_REASON_FILE_NO_SPACE,
+                INTERRUPT_REASON_FILE_NAME_TOO_LONG,
+                INTERRUPT_REASON_FILE_TOO_LARGE,
+                INTERRUPT_REASON_FILE_VIRUS_INFECTED,
+                INTERRUPT_REASON_FILE_TRANSIENT_ERROR,
+                INTERRUPT_REASON_FILE_BLOCKED,
+                INTERRUPT_REASON_FILE_SECURITY_CHECK_FAILED,
+                INTERRUPT_REASON_FILE_TOO_SHORT,
+                INTERRUPT_REASON_NETWORK_FAILED,
+                INTERRUPT_REASON_NETWORK_TIMEOUT,
+                INTERRUPT_REASON_NETWORK_DISCONNECTED,
+                INTERRUPT_REASON_NETWORK_SERVER_DOWN,
+                INTERRUPT_REASON_NETWORK_INVALID_REQUEST,
+                INTERRUPT_REASON_SERVER_FAILED,
+                INTERRUPT_REASON_SERVER_NO_RANGE,
+                INTERRUPT_REASON_SERVER_BAD_CONTENT,
+                INTERRUPT_REASON_SERVER_UNAUTHORIZED,
+                INTERRUPT_REASON_SERVER_CERT_PROBLEM,
+                INTERRUPT_REASON_SERVER_FORBIDDEN,
+                INTERRUPT_REASON_USER_CANCELED,
+                INTERRUPT_REASON_USER_SHUTDOWN,
+                INTERRUPT_REASON_CRASH
+        })
+        public @interface DownloadInterruptReason {}
+
+        // File-related errors
+        public static final int INTERRUPT_REASON_NO_INTERRUPT = 0;
+        public static final int INTERRUPT_REASON_FILE_FAILED = 1;
+        public static final int INTERRUPT_REASON_FILE_ACCESS_DENIED = 2;
+        public static final int INTERRUPT_REASON_FILE_NO_SPACE = 3;
+        public static final int INTERRUPT_REASON_FILE_NAME_TOO_LONG = 4;
+        public static final int INTERRUPT_REASON_FILE_TOO_LARGE = 5;
+        public static final int INTERRUPT_REASON_FILE_VIRUS_INFECTED = 6;
+        public static final int INTERRUPT_REASON_FILE_TRANSIENT_ERROR = 7;
+        public static final int INTERRUPT_REASON_FILE_BLOCKED = 8;
+        public static final int INTERRUPT_REASON_FILE_SECURITY_CHECK_FAILED = 9;
+        public static final int INTERRUPT_REASON_FILE_TOO_SHORT = 10;
+        // Network-related errors
+        public static final int INTERRUPT_REASON_NETWORK_FAILED = 11;
+        public static final int INTERRUPT_REASON_NETWORK_TIMEOUT = 12;
+        public static final int INTERRUPT_REASON_NETWORK_DISCONNECTED = 13;
+        public static final int INTERRUPT_REASON_NETWORK_SERVER_DOWN = 14;
+        public static final int INTERRUPT_REASON_NETWORK_INVALID_REQUEST = 15;
+        // Server-related errors
+        public static final int INTERRUPT_REASON_SERVER_FAILED = 16;
+        public static final int INTERRUPT_REASON_SERVER_NO_RANGE = 17;
+        public static final int INTERRUPT_REASON_SERVER_BAD_CONTENT = 18;
+        public static final int INTERRUPT_REASON_SERVER_UNAUTHORIZED = 19;
+        public static final int INTERRUPT_REASON_SERVER_CERT_PROBLEM = 20;
+        public static final int INTERRUPT_REASON_SERVER_FORBIDDEN = 21;
+        // User-related errors
+        public static final int INTERRUPT_REASON_USER_CANCELED = 22;
+        public static final int INTERRUPT_REASON_USER_SHUTDOWN = 23;
+        // Miscellaneous
+        public static final int INTERRUPT_REASON_CRASH = 24;
+
+        /**
+         * Interface for communicating the state of downloads to Web Extensions.
+         * See also <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/downloads/DownloadItem">WebExtensions/API/downloads/DownloadItem</a>
+         */
+        public interface Info {
 
             /**
-             * The app is currently receiving download data from the server.
+             * @return A number representing the number of bytes received so far from the host during the download
+             *         This does not take file compression into consideration
              */
-            /* package */ static final int IN_PROGRESS = 0;
-
-            /**
-             * An error broke the connection with the server.
-             */
-            /* package */ static final int INTERRUPTED = 1;
-
-            /**
-             * The download completed successfully.
-             */
-            /* package */ static final int COMPLETE = 1 << 1;
-
-            /**
-             * @return boolean indicating whether the download is paused
-             * i.e. if the download has stopped reading data from the host
-             * but has kept the connection open
-             */
-            default boolean paused() {
-                return false;
-            }
-
-            /**
-             * @return Date (in ISO 8601 format) representing
-             * the estimated number of milliseconds between the UNIX epoch
-             * and when this download is estimated to be completed
-             */
-            default Date estimatedEndTime() {
-                return null;
-            }
-
-            /**
-             * @return boolean indicating whether a currently-interrupted
-             * (e.g. paused) download can be resumed from the point where it was interrupted
-             */
-            default boolean canResume() {
-                return false;
-            }
-
-            /**
-             * @return number of bytes received so far from the host during the download;
-             * this does not take file compression into consideration
-             */
+            @UiThread
             default long bytesReceived() {
                 return 0;
             }
 
             /**
-             * @return total number of bytes in the file being downloaded.
-             * This does not take file compression into consideration.
-             * A value of -1 here means that the total number of bytes is unknown
+             * @return boolean indicating whether a currently-interrupted
+             *         (e.g. paused) download can be resumed from the point where it was interrupted
              */
-            default long totalBytes() {
-                return 0;
+            @UiThread
+            default boolean canResume() {
+                return false;
             }
 
             /**
-             * @return Date representing the number of milliseconds between
-             * the UNIX epoch and when this download ended.
-             * This is null if the download has not yet finished
+             * @return A number representing the time when this download ended.
+             *         This is null if the download has not yet finished.
              */
-            default Date endTime() {
+            @Nullable
+            @UiThread
+            default Long endTime() {
+                return null;
+            }
+
+            /**
+             * @return One of <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/downloads/InterruptReason">Interrupt Reason</a> constants denoting the error reason.
+             */
+            @Nullable
+            @UiThread
+            default @DownloadInterruptReason Integer error() {
+                return null;
+            }
+
+            /**
+             * @return the estimated number of milliseconds between the UNIX epoch and when this download is estimated to be completed.
+             *         This is null if it is not known.
+             */
+            @Nullable
+            @UiThread
+            default Long estimatedEndTime() {
                 return null;
             }
 
             /**
              * @return boolean indicating whether a downloaded file still exists
              */
+            @UiThread
             default boolean fileExists() {
                 return false;
             }
 
             /**
-             * @return one of {@link DownloadStatusFlags} to indicate
-             * whether the download is in progress, interrupted or complete
+             * @return the filename.
              */
-            default @DownloadStatusFlags int status() {
-                return 0;
+            @NonNull
+            @UiThread
+            default String filename() {
+                return "";
             }
+
+            /**
+             * @return the total number of bytes in the whole file, after decompression.
+             *         A value of -1 means that the total file size is unknown.
+             */
+            @UiThread
+            default long fileSize() {
+                return -1;
+            }
+
+            /**
+             * @return the downloaded file's MIME type
+             */
+            @NonNull
+            @UiThread
+            default String mime() {
+                return "";
+            }
+
+            /**
+             * @return boolean indicating whether the download is paused
+             *         i.e. if the download has stopped reading data from the host
+             *         but has kept the connection open
+             */
+            @UiThread
+            default boolean paused() {
+                return false;
+            }
+
+            /**
+             * @return String representing the downloaded file's referrer
+             */
+            @NonNull
+            @UiThread
+            default String referrer() {
+                return "";
+            }
+
+            /**
+             * @return the number of milliseconds between the UNIX epoch and when this download began
+             */
+            @UiThread
+            default long startTime() {
+                return -1;
+            }
+
+            /**
+             * @return a new state; one of the state constants to indicate
+             *         whether the download is in progress, interrupted or complete
+             */
+            @UiThread
+            default @DownloadState int state() {
+                return STATE_IN_PROGRESS;
+            }
+
+            /**
+             * @return total number of bytes in the file being downloaded.
+             *         This does not take file compression into consideration.
+             *         A value of -1 here means that the total number of bytes is unknown
+             */
+            @UiThread
+            default long totalBytes() {
+                return -1;
+            }
+        }
+
+        @NonNull
+        @UiThread
+        /* package */ static GeckoBundle downloadInfoToBundle(final @NonNull Info data) {
+            GeckoBundle dataBundle = new GeckoBundle();
+
+            dataBundle.putLong("bytesReceived", data.bytesReceived());
+            dataBundle.putBoolean("canResume", data.canResume());
+            dataBundle.putBoolean("exists", data.fileExists());
+            dataBundle.putString("filename", data.filename());
+            dataBundle.putLong("fileSize", data.fileSize());
+            dataBundle.putString("mime", data.mime());
+            dataBundle.putBoolean("paused", data.paused());
+            dataBundle.putString("referrer", data.referrer());
+            dataBundle.putString("startTime", String.valueOf(data.startTime()));
+            dataBundle.putInt("state", data.state());
+            dataBundle.putLong("totalBytes", data.totalBytes());
+
+            Long endTime = data.endTime();
+            if (endTime != null) {
+                dataBundle.putString("endTime", endTime.toString());
+            }
+            Integer error = data.error();
+            if (error != null) {
+                dataBundle.putInt("error", error);
+            }
+            Long estimatedEndTime = data.estimatedEndTime();
+            if (estimatedEndTime != null) {
+                dataBundle.putString("estimatedEndTime", estimatedEndTime.toString());
+            }
+
+            return dataBundle;
         }
     }
 
@@ -2605,6 +2769,19 @@ public class WebExtension {
             /* package */ DownloadRequest build() {
                 return new DownloadRequest(this);
             }
+        }
+    }
+
+    /**
+     * Represents initial information on a download provided to Web Extension
+     */
+    public static class DownloadInitData {
+        @NonNull public final WebExtension.Download download;
+        @NonNull public final Download.Info initData;
+
+        public DownloadInitData(final Download download, final Download.Info initData) {
+            this.download = download;
+            this.initData = initData;
         }
     }
 }
