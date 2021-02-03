@@ -1390,10 +1390,12 @@ nsresult nsFrameSelection::TakeFocus(nsIContent& aNewFocus,
           mBatching;  // hack to use the collapse code.
       mBatching.mCounter = 1;
 
+      RefPtr<Selection> selection = mDomSelections[index];
+
       if (aFocusMode == FocusMode::kMultiRangeSelection) {
         // Remove existing collapsed ranges as there's no point in having
         // non-anchor/focus collapsed ranges.
-        mDomSelections[index]->RemoveCollapsedRanges();
+        selection->RemoveCollapsedRanges();
 
         ErrorResult error;
         RefPtr<nsRange> newRange = nsRange::Create(
@@ -1402,14 +1404,12 @@ nsresult nsFrameSelection::TakeFocus(nsIContent& aNewFocus,
           return error.StealNSResult();
         }
         MOZ_ASSERT(newRange);
-        const RefPtr<Selection> selection{mDomSelections[index]};
         selection->AddRangeAndSelectFramesAndNotifyListeners(*newRange,
                                                              IgnoreErrors());
       } else {
         bool oldDesiredPosSet =
             mDesiredCaretPos.mIsSet;  // need to keep old desired
                                       // position if it was set.
-        RefPtr<Selection> selection = mDomSelections[index];
         selection->CollapseInLimiter(&aNewFocus, aContentOffset);
         mDesiredCaretPos.mIsSet =
             oldDesiredPosSet;  // now reset desired pos back.
@@ -1418,7 +1418,7 @@ nsresult nsFrameSelection::TakeFocus(nsIContent& aNewFocus,
       mBatching = saveBatching;
 
       if (aContentEndOffset != aContentOffset) {
-        mDomSelections[index]->Extend(&aNewFocus, aContentEndOffset);
+        selection->Extend(&aNewFocus, aContentEndOffset);
       }
 
       // find out if we are inside a table. if so, find out which one and which
@@ -1487,16 +1487,16 @@ nsresult nsFrameSelection::TakeFocus(nsIContent& aNewFocus,
           }
         }
       } else {
+        RefPtr<Selection> selection = mDomSelections[index];
         // XXXX Problem: Shift+click in browser is appending text selection to
         // selected table!!!
-        //   is this the place to erase seleced cells ?????
-        if (mDomSelections[index]->GetDirection() == eDirNext &&
-            aContentEndOffset > aContentOffset)  // didn't go far enough
-        {
-          mDomSelections[index]->Extend(
-              &aNewFocus, aContentEndOffset);  // this will only redraw the diff
-        } else
-          mDomSelections[index]->Extend(&aNewFocus, aContentOffset);
+        //   is this the place to erase selected cells ?????
+        uint32_t offset =
+            (selection->GetDirection() == eDirNext &&
+             aContentEndOffset > aContentOffset)  // didn't go far enough
+                ? aContentEndOffset  // this will only redraw the diff
+                : aContentOffset;
+        selection->Extend(&aNewFocus, offset);
       }
       break;
     }
