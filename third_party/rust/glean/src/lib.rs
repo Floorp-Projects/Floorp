@@ -46,10 +46,10 @@ use std::sync::Mutex;
 pub use configuration::Configuration;
 use configuration::DEFAULT_GLEAN_ENDPOINT;
 pub use core_metrics::ClientInfoMetrics;
+use glean_core::global_glean;
 pub use glean_core::{
-    global_glean,
-    metrics::{DistributionData, MemoryUnit, RecordedEvent, TimeUnit},
-    setup_glean, CommonMetricData, Error, ErrorType, Glean, HistogramType, Lifetime, Result,
+    metrics::{Datetime, DistributionData, MemoryUnit, RecordedEvent, TimeUnit, TimerId},
+    traits, CommonMetricData, Error, ErrorType, Glean, HistogramType, Lifetime, Result,
 };
 use private::RecordedExperimentData;
 
@@ -250,6 +250,11 @@ pub fn initialize(cfg: Configuration, client_info: ClientInfoMetrics) {
                 // they are registered synchronously before we need them.
                 // We don't need to handle the deletion-request ping. It's never touched
                 // from the language implementation.
+                //
+                // Note: this will actually double-register them.
+                // On instantiation they will launch a task to register themselves.
+                // That task could fail to run if the dispatcher queue is full.
+                // We still register them here synchronously.
                 glean.register_ping_type(&glean_metrics::pings::baseline.ping_type);
                 glean.register_ping_type(&glean_metrics::pings::metrics.ping_type);
                 glean.register_ping_type(&glean_metrics::pings::events.ping_type);
@@ -292,7 +297,17 @@ pub fn initialize(cfg: Configuration, client_info: ClientInfoMetrics) {
                 // force-closed. If that's the case, submit a 'baseline' ping with the
                 // reason "dirty_startup". We only do that from the second run.
                 if !is_first_run && dirty_flag {
-                    // TODO: bug 1672956 - submit_ping_by_name_sync("baseline", "dirty_startup");
+                    // The `submit_ping_by_name_sync` function cannot be used, otherwise
+                    // startup will cause a dead-lock, since that function requests a
+                    // write lock on the `glean` object.
+                    // Note that unwrapping below is safe: the function will return an
+                    // `Ok` value for a known ping.
+                    if glean
+                        .submit_ping_by_name("baseline", Some("dirty_startup"))
+                        .unwrap()
+                    {
+                        state.upload_manager.trigger_upload();
+                    }
                 }
 
                 // From the second time we run, after all startup pings are generated,
@@ -305,8 +320,15 @@ pub fn initialize(cfg: Configuration, client_info: ClientInfoMetrics) {
             });
 
             // Signal Dispatcher that init is complete
-            if let Err(err) = dispatcher::flush_init() {
-                log::error!("Unable to flush the preinit queue: {}", err);
+            match dispatcher::flush_init() {
+                Ok(task_count) if task_count > 0 => {
+                    with_glean(|glean| {
+                        glean_metrics::error::preinit_tasks_overflow
+                            .add_sync(&glean, task_count as i32);
+                    });
+                }
+                Ok(_) => {}
+                Err(err) => log::error!("Unable to flush the preinit queue: {}", err),
             }
         })
         .expect("Failed to spawn Glean's init thread");
@@ -332,6 +354,37 @@ pub fn shutdown() {
 
     if let Err(e) = dispatcher::shutdown() {
         log::error!("Can't shutdown dispatcher thread: {:?}", e);
+    }
+}
+
+/// Unblock the global dispatcher to start processing queued tasks.
+///
+/// This should _only_ be called if it is guaranteed that `initialize` will never be called.
+///
+/// **Note**: Exported as a FFI function to be used by other language bindings (e.g. Kotlin/Swift)
+/// to unblock the RLB-internal dispatcher.
+/// This allows the usage of both the RLB and other language bindings (e.g. Kotlin/Swift)
+/// within the same application.
+#[no_mangle]
+#[inline(never)]
+pub extern "C" fn rlb_flush_dispatcher() {
+    log::trace!("FLushing RLB dispatcher through the FFI");
+
+    let was_initialized = was_initialize_called();
+
+    // Panic in debug mode
+    debug_assert!(!was_initialized);
+
+    // In release do a check and bail out
+    if was_initialized {
+        log::error!(
+            "Tried to flush the dispatcher from outside, but Glean was initialized in the RLB."
+        );
+        return;
+    }
+
+    if let Err(err) = dispatcher::flush_init() {
+        log::error!("Unable to flush the preinit queue: {}", err);
     }
 }
 
@@ -528,6 +581,57 @@ pub fn set_experiment_active(
 pub fn set_experiment_inactive(experiment_id: String) {
     dispatcher::launch(move || {
         with_glean(|glean| glean.set_experiment_inactive(experiment_id.to_owned()))
+    })
+}
+
+/// Performs the collection/cleanup operations required by becoming active.
+///
+/// This functions generates a baseline ping with reason `active`
+/// and then sets the dirty bit.
+/// This should be called whenever the consuming product becomes active (e.g.
+/// getting to foreground).
+pub fn handle_client_active() {
+    dispatcher::launch(move || {
+        with_glean_mut(|glean| {
+            glean.handle_client_active();
+
+            // The above call may generate pings, so we need to trigger
+            // the uploader. It's fine to trigger it if no ping was generated:
+            // it will bail out.
+            let state = global_state().lock().unwrap();
+            state.upload_manager.trigger_upload();
+        })
+    });
+
+    // The previous block of code may send a ping containing the `duration` metric,
+    // in `glean.handle_client_active`. We intentionally start recording a new
+    // `duration` after that happens, so that the measurement gets reported when
+    // calling `handle_client_inactive`.
+    core_metrics::internal_metrics::baseline_duration.start();
+}
+
+/// Performs the collection/cleanup operations required by becoming inactive.
+///
+/// This functions generates a baseline and an events ping with reason
+/// `inactive` and then clears the dirty bit.
+/// This should be called whenever the consuming product becomes inactive (e.g.
+/// getting to background).
+pub fn handle_client_inactive() {
+    // This needs to be called before the `handle_client_inactive` api: it stops
+    // measuring the duration of the previous activity time, before any ping is sent
+    // by the next call.
+    core_metrics::internal_metrics::baseline_duration.stop();
+
+    dispatcher::launch(move || {
+        with_glean_mut(|glean| {
+            glean.handle_client_inactive();
+
+            // The above call may generate pings, so we need to trigger
+            // the uploader. It's fine to trigger it if no ping was generated:
+            // it will bail out.
+            let state = global_state().lock().unwrap();
+            state.upload_manager.trigger_upload();
+        })
     })
 }
 

@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::private::PingType;
-use crate::private::{BooleanMetric, CounterMetric};
+use crate::private::{BooleanMetric, CounterMetric, EventMetric};
 use std::path::PathBuf;
 
 use super::*;
@@ -171,15 +171,143 @@ fn test_experiments_recording_before_glean_inits() {
 }
 
 #[test]
-#[ignore] // TODO: To be done in bug 1673645.
-fn test_sending_of_foreground_background_pings() {
-    todo!()
+fn sending_of_foreground_background_pings() {
+    let _lock = lock_test();
+
+    let click: EventMetric<traits::NoExtraKeys> = private::EventMetric::new(CommonMetricData {
+        name: "click".into(),
+        category: "ui".into(),
+        send_in_pings: vec!["events".into()],
+        lifetime: Lifetime::Ping,
+        disabled: false,
+        ..Default::default()
+    });
+
+    // Define a fake uploader that reports back the submission headers
+    // using a crossbeam channel.
+    let (s, r) = crossbeam_channel::bounded::<String>(3);
+
+    #[derive(Debug)]
+    pub struct FakeUploader {
+        sender: crossbeam_channel::Sender<String>,
+    }
+    impl net::PingUploader for FakeUploader {
+        fn upload(
+            &self,
+            url: String,
+            _body: Vec<u8>,
+            _headers: Vec<(String, String)>,
+        ) -> net::UploadResult {
+            self.sender.send(url).unwrap();
+            net::UploadResult::HttpStatus(200)
+        }
+    }
+
+    // Create a custom configuration to use a fake uploader.
+    let dir = tempfile::tempdir().unwrap();
+    let tmpname = dir.path().display().to_string();
+
+    let cfg = Configuration {
+        data_path: tmpname,
+        application_id: GLOBAL_APPLICATION_ID.into(),
+        upload_enabled: true,
+        max_events: None,
+        delay_ping_lifetime_io: false,
+        channel: Some("testing".into()),
+        server_endpoint: Some("invalid-test-host".into()),
+        uploader: Some(Box::new(FakeUploader { sender: s })),
+    };
+
+    let _t = new_glean(Some(cfg), true);
+    crate::block_on_dispatcher();
+
+    // Simulate becoming active.
+    handle_client_active();
+
+    // We expect a baseline ping to be generated here (reason: 'active').
+    let url = r.recv().unwrap();
+    assert!(url.contains("baseline"));
+
+    // Recording an event so that an "events" ping will contain data.
+    click.record(None);
+
+    // Simulate becoming inactive
+    handle_client_inactive();
+
+    // Wait for the pings to arrive.
+    let mut expected_pings = vec!["baseline", "events"];
+    for _ in 0..2 {
+        let url = r.recv().unwrap();
+        // If the url contains the expected reason, remove it from the list.
+        expected_pings.retain(|&name| !url.contains(name));
+    }
+    // We received all the expected pings.
+    assert_eq!(0, expected_pings.len());
+
+    // Simulate becoming active again.
+    handle_client_active();
+
+    // We expect a baseline ping to be generated here (reason: 'active').
+    let url = r.recv().unwrap();
+    assert!(url.contains("baseline"));
 }
 
 #[test]
-#[ignore] // TODO: To be done in bug 1672958.
-fn test_sending_of_startup_baseline_ping() {
-    todo!()
+fn sending_of_startup_baseline_ping() {
+    let _lock = lock_test();
+
+    // Create an instance of Glean, wait for init and then flip the dirty
+    // bit to true.
+    let data_dir = new_glean(None, true);
+
+    crate::block_on_dispatcher();
+
+    with_glean_mut(|glean| glean.set_dirty_flag(true));
+
+    // Restart glean and wait for a baseline ping to be generated.
+    let (s, r) = crossbeam_channel::bounded::<String>(1);
+
+    // Define a fake uploader that reports back the submission URL
+    // using a crossbeam channel.
+    #[derive(Debug)]
+    pub struct FakeUploader {
+        sender: crossbeam_channel::Sender<String>,
+    }
+    impl net::PingUploader for FakeUploader {
+        fn upload(
+            &self,
+            url: String,
+            _body: Vec<u8>,
+            _headers: Vec<(String, String)>,
+        ) -> net::UploadResult {
+            self.sender.send(url).unwrap();
+            net::UploadResult::HttpStatus(200)
+        }
+    }
+
+    // Create a custom configuration to use a fake uploader.
+    let tmpname = data_dir.path().display().to_string();
+
+    // Now reset Glean: it should still send a baseline ping with reason
+    // dirty_startup when starting, because of the dirty bit being set.
+    test_reset_glean(
+        Configuration {
+            data_path: tmpname,
+            application_id: GLOBAL_APPLICATION_ID.into(),
+            upload_enabled: true,
+            max_events: None,
+            delay_ping_lifetime_io: false,
+            channel: Some("testing".into()),
+            server_endpoint: Some("invalid-test-host".into()),
+            uploader: Some(Box::new(FakeUploader { sender: s })),
+        },
+        ClientInfoMetrics::unknown(),
+        false,
+    );
+
+    // Wait for the ping to arrive.
+    let url = r.recv().unwrap();
+    assert_eq!(url.contains("baseline"), true);
 }
 
 #[test]
@@ -395,12 +523,6 @@ fn core_metrics_should_be_cleared_and_restored_when_disabling_and_enabling_uploa
     assert!(core_metrics::internal_metrics::os_version
         .test_get_value(None)
         .is_some());
-}
-
-#[test]
-#[ignore] // TODO: To be done in bug 1686736.
-fn overflowing_the_task_queue_records_telemetry() {
-    todo!()
 }
 
 #[test]

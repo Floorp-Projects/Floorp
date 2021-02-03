@@ -29,7 +29,7 @@
 use std::{
     mem,
     sync::{
-        atomic::{AtomicBool, Ordering},
+        atomic::{AtomicBool, AtomicUsize, Ordering},
         Arc,
     },
     thread::{self, JoinHandle},
@@ -107,6 +107,9 @@ struct DispatchGuard {
     /// Whether to queue on the preinit buffer or on the unbounded queue
     queue_preinit: Arc<AtomicBool>,
 
+    /// The number of items that were added to the queue after it filled up.
+    overflow_count: Arc<AtomicUsize>,
+
     /// Used to unblock the worker thread initially.
     block_sender: Sender<Blocked>,
 
@@ -132,10 +135,20 @@ impl DispatchGuard {
 
     fn send(&self, task: Command) -> Result<(), DispatchError> {
         if self.queue_preinit.load(Ordering::SeqCst) {
-            match self.preinit_sender.try_send(task) {
-                Ok(()) => Ok(()),
-                Err(TrySendError::Full(_)) => Err(DispatchError::QueueFull),
-                Err(TrySendError::Disconnected(_)) => Err(DispatchError::SendError),
+            match self
+                .preinit_sender
+                .try_send(task)
+                .map_err(DispatchError::from)
+            {
+                Err(err @ DispatchError::QueueFull) => {
+                    // This value ends up in the `preinit_tasks_overflow` metric, but we
+                    // can't record directly there, because that would only add
+                    // the recording to an already-overflowing task queue and would be
+                    // silently dropped.
+                    self.overflow_count.fetch_add(1, Ordering::SeqCst);
+                    Err(err)
+                }
+                err => err,
             }
         } else {
             self.sender.send(task)?;
@@ -145,11 +158,20 @@ impl DispatchGuard {
 
     fn block_on_queue(&self) {
         let (tx, rx) = crossbeam_channel::bounded(0);
-        self.launch(move || {
+
+        // We explicitly don't use `self.launch` here.
+        // We always put this task on the unbounded queue.
+        // The pre-init queue might be full before its flushed, in which case this would panic.
+        // Blocking on the queue can only work if it is eventually flushed anyway.
+
+        let task = Command::Task(Box::new(move || {
             tx.send(())
-                .expect("(worker) Can't send message on single-use channel")
-        })
-        .expect("Failed to launch the blocking task");
+                .expect("(worker) Can't send message on single-use channel");
+        }));
+        self.sender
+            .send(task)
+            .expect("Failed to launch the blocking task");
+
         rx.recv()
             .expect("Failed to receive message on single-use channel");
     }
@@ -166,7 +188,7 @@ impl DispatchGuard {
         Ok(())
     }
 
-    fn flush_init(&mut self) -> Result<(), DispatchError> {
+    fn flush_init(&mut self) -> Result<usize, DispatchError> {
         // We immediately stop queueing in the pre-init buffer.
         let old_val = self.queue_preinit.swap(false, Ordering::SeqCst);
         if !old_val {
@@ -187,7 +209,12 @@ impl DispatchGuard {
         // Now wait for the worker thread to do the swap and inform us.
         // This blocks until all tasks in the preinit buffer have been processed.
         swap_receiver.recv()?;
-        Ok(())
+        let overflow_count = self.overflow_count.load(Ordering::SeqCst);
+        if overflow_count > 0 {
+            Ok(overflow_count + global::GLOBAL_DISPATCHER_LIMIT)
+        } else {
+            Ok(0)
+        }
     }
 }
 
@@ -218,6 +245,7 @@ impl Dispatcher {
         let (sender, mut unbounded_receiver) = unbounded();
 
         let queue_preinit = Arc::new(AtomicBool::new(true));
+        let overflow_count = Arc::new(AtomicUsize::new(0));
 
         let worker = thread::Builder::new()
             .name("glean.dispatcher".into())
@@ -282,6 +310,7 @@ impl Dispatcher {
 
         let guard = DispatchGuard {
             queue_preinit,
+            overflow_count,
             block_sender,
             preinit_sender,
             sender,
@@ -317,7 +346,7 @@ impl Dispatcher {
     /// Once the initial queue is empty the dispatcher will wait for new tasks to be launched.
     ///
     /// Returns an error if called multiple times.
-    pub fn flush_init(&mut self) -> Result<(), DispatchError> {
+    pub fn flush_init(&mut self) -> Result<usize, DispatchError> {
         self.guard().flush_init()
     }
 }

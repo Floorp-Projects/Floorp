@@ -2,9 +2,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-//! Important: consider this module unstable / experimental.
+//! API definitions for the different metric types supported by the Glean SDK.
 //!
-//! The different metric types supported by the Glean SDK to handle data.
+//! Individual metric types implement this trait to expose the specific metrics API.
+//! It can be used by wrapping implementations to guarantee API conformance.
 
 mod boolean;
 mod counter;
