@@ -860,7 +860,7 @@ class Selection final : public nsSupportsWeakReference,
      */
     Element* GetCommonEditingHost() const;
 
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY void MaybeFocusCommonEditingHost(
+    MOZ_CAN_RUN_SCRIPT void MaybeFocusCommonEditingHost(
         PresShell* aPresShell) const;
 
     static nsresult SubtractRange(StyledRange& aRange, nsRange& aSubtract,
