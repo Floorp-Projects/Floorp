@@ -92,6 +92,20 @@ async function runTest(url) {
   let oggExtension = getMIMEInfoForType("application/ogg").primaryExtension;
   await testLink("link13", "no file extension." + oggExtension);
 
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1690051#c8
+  if (AppConstants.platform != "win") {
+    const PREF = "browser.download.sanitize_non_media_extensions";
+    ok(Services.prefs.getBoolPref(PREF), "pref is set before");
+
+    // Check that ics (iCal) extension is changed/fixed when the pref is true.
+    await testLink("link14", "dummy.ics");
+
+    // And not changed otherwise.
+    Services.prefs.setBoolPref(PREF, false);
+    await testLink("link14", "dummy.not-ics");
+    Services.prefs.clearUserPref(PREF);
+  }
+
   BrowserTestUtils.removeTab(tab);
 }
 
