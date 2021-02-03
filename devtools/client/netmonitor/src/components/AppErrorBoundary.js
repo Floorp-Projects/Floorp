@@ -8,7 +8,7 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { div, h1, h2, p, a } = dom;
+const { div, h1, h2, h3, p, a } = dom;
 
 // File a bug for the Net Monitor specifically
 const bugLink =
@@ -35,6 +35,7 @@ class AppErrorBoundary extends Component {
 
     this.state = {
       errorMsg: "No error",
+      errorStack: null,
       errorInfo: null,
     };
   }
@@ -45,7 +46,7 @@ class AppErrorBoundary extends Component {
    *  following object (which is provided to componentDidCatch):
    *  componentStack: {"\n in (component) \n in (other component)..."}
    */
-  renderStackTrace(info = {}) {
+  renderErrorInfo(info = {}) {
     if (Object.keys(info).length > 0) {
       return Object.keys(info).map((obj, outerIdx) => {
         const traceParts = info[obj]
@@ -53,6 +54,7 @@ class AppErrorBoundary extends Component {
           .map((part, idx) => p({ key: `strace${idx}` }, part));
         return div(
           { key: `st-div-${outerIdx}`, className: "stack-trace-section" },
+          h3({}, "React Component Stack"),
           p({ key: `st-p-${outerIdx}` }, obj.toString()),
           traceParts
         );
@@ -60,6 +62,22 @@ class AppErrorBoundary extends Component {
     }
 
     return p({}, "undefined errorInfo");
+  }
+
+  renderStackTrace(stacktrace = "") {
+    const re = /:\d+:\d+/g;
+    const traces = stacktrace
+      .replace(re, "$&,")
+      .split(",")
+      .map((trace, index) => {
+        return p({}, trace);
+      });
+
+    return div(
+      { className: "stack-trace-section" },
+      h3({}, "Stacktrace"),
+      traces
+    );
   }
 
   // Return a valid object, even if we don't receive one
@@ -77,9 +95,9 @@ class AppErrorBoundary extends Component {
   // Called when a child component throws an error.
   componentDidCatch(error, info) {
     const validInfo = this.getValidInfo(info);
-
     this.setState({
       errorMsg: error.toString(),
+      errorStack: error.stack,
       errorInfo: validInfo,
     });
   }
@@ -107,7 +125,8 @@ class AppErrorBoundary extends Component {
           FILE_BUG_BUTTON
         ),
         h2({ className: "error-panel-error" }, this.state.errorMsg),
-        div({}, this.renderStackTrace(this.state.errorInfo)),
+        div({}, this.renderErrorInfo(this.state.errorInfo)),
+        div({}, this.renderStackTrace(this.state.errorStack)),
         p({ className: "error-panel-reload-info" }, RELOAD_PAGE_INFO)
       );
     }
