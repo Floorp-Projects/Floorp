@@ -513,6 +513,23 @@ Value wasm::UnboxFuncRef(FuncRef val) {
   return result;
 }
 
+const JSClass WasmJSExceptionObject::class_ = {
+    "WasmJSExnRefObject", JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS)};
+
+WasmJSExceptionObject* WasmJSExceptionObject::create(JSContext* cx,
+                                                     MutableHandleValue value) {
+  WasmJSExceptionObject* obj =
+      NewObjectWithGivenProto<WasmJSExceptionObject>(cx, nullptr);
+
+  if (!obj) {
+    return nullptr;
+  }
+
+  obj->setFixedSlot(VALUE_SLOT, value);
+
+  return obj;
+}
+
 bool wasm::IsRoundingFunction(SymbolicAddress callee, jit::RoundingMode* mode) {
   switch (callee) {
     case SymbolicAddress::FloorD:
