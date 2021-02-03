@@ -132,6 +132,8 @@ mod util;
 mod visibility;
 mod api_resources;
 mod image_tiling;
+pub mod host_utils;
+
 ///
 pub mod intern;
 ///
@@ -219,7 +221,7 @@ pub use crate::profiler::{ProfilerHooks, set_profiler_hooks};
 pub use crate::renderer::{
     AsyncPropertySampler, CpuProfile, DebugFlags, GpuProfile, GraphicsApi,
     GraphicsApiInfo, PipelineInfo, Renderer, RendererError, RendererOptions, RenderResults,
-    RendererStats, SceneBuilderHooks, Shaders, SharedShaders, ThreadListener, ShaderPrecacheFlags,
+    RendererStats, SceneBuilderHooks, Shaders, SharedShaders, ShaderPrecacheFlags,
     MAX_VERTEX_TEXTURE_WIDTH, ONE_TIME_USAGE_HINT,
 };
 pub use crate::hit_test::SharedHitTester;
