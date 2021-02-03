@@ -10,7 +10,6 @@ use std::ffi::{c_void, CStr, CString};
 use std::io;
 use std::net;
 use std::os::raw::c_char;
-use std::panic;
 use std::sync::mpsc::channel;
 use std::thread;
 use std::time;
