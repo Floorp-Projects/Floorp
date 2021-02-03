@@ -2085,7 +2085,7 @@ Toolbox.prototype = {
     const serviceWorkersTestingEnabled = Services.prefs.getBoolPref(pref);
     this.target.reconfigure({
       options: {
-        serviceWorkersTestingEnabled
+        serviceWorkersTestingEnabled,
       },
     });
   },
