@@ -85,6 +85,7 @@ Finder.prototype = {
       // need to clear from the selection.
       this._highlighter.hide(window);
       this._highlighter.clear(window);
+      this.highlighter.removeScrollMarks();
     }
     this.listeners = [];
     this._docShell
@@ -492,6 +493,7 @@ Finder.prototype = {
   onFindbarClose() {
     this.enableSelection();
     this.highlighter.highlight(false);
+    this.highlighter.removeScrollMarks();
     this.iterator.reset();
     activeFinderRoots.delete(this._docShell.browsingContext.top);
   },
