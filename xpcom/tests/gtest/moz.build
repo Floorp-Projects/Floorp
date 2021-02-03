@@ -25,6 +25,7 @@ UNIFIED_SOURCES += [
     "TestID.cpp",
     "TestInputStreamLengthHelper.cpp",
     "TestLogCommandLineHandler.cpp",
+    "TestLogging.cpp",
     "TestMoveString.cpp",
     "TestMozPromise.cpp",
     "TestMruCache.cpp",
