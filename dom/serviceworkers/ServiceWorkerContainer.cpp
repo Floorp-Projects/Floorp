@@ -73,9 +73,8 @@ bool IsInPrivateBrowsing(JSContext* const aCx) {
 bool IsServiceWorkersTestingEnabledInWindow(JSObject* const aGlobal) {
   if (const nsCOMPtr<nsPIDOMWindowInner> innerWindow =
           Navigator::GetWindowFromGlobal(aGlobal)) {
-    if (const nsCOMPtr<nsPIDOMWindowOuter> outerWindow =
-            innerWindow->GetOuterWindow()) {
-      return outerWindow->GetServiceWorkersTestingEnabled();
+    if (auto* bc = innerWindow->GetBrowsingContext()) {
+      return bc->Top()->ServiceWorkersTestingEnabled();
     }
   }
   return false;
@@ -87,6 +86,8 @@ bool IsServiceWorkersTestingEnabledInWindow(JSObject* const aGlobal) {
 bool ServiceWorkerContainer::IsEnabled(JSContext* aCx, JSObject* aGlobal) {
   MOZ_ASSERT(NS_IsMainThread());
 
+  // FIXME: Why does this need to root? Shouldn't the caller root aGlobal for
+  // us?
   JS::Rooted<JSObject*> global(aCx, aGlobal);
 
   if (!StaticPrefs::dom_serviceWorkers_enabled()) {
@@ -101,14 +102,8 @@ bool ServiceWorkerContainer::IsEnabled(JSContext* aCx, JSObject* aGlobal) {
     return true;
   }
 
-  const bool isTestingEnabledInWindow =
-      IsServiceWorkersTestingEnabledInWindow(global);
-  const bool isTestingEnabledByPref =
-      StaticPrefs::dom_serviceWorkers_testing_enabled();
-  const bool isTestingEnabled =
-      isTestingEnabledByPref || isTestingEnabledInWindow;
-
-  return isTestingEnabled;
+  return StaticPrefs::dom_serviceWorkers_testing_enabled() ||
+         IsServiceWorkersTestingEnabledInWindow(global);
 }
 
 // static

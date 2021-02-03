@@ -1248,11 +1248,7 @@ const browsingContextTargetPrototype = {
     ) {
       this._setPaintFlashingEnabled(options.paintFlashing);
     }
-    if (
-      typeof options.serviceWorkersTestingEnabled !== "undefined" &&
-      options.serviceWorkersTestingEnabled !==
-        this._getServiceWorkersTestingEnabled()
-    ) {
+    if (typeof options.serviceWorkersTestingEnabled !== "undefined") {
       this._setServiceWorkersTestingEnabled(
         options.serviceWorkersTestingEnabled
       );
@@ -1335,8 +1331,9 @@ const browsingContextTargetPrototype = {
    * Disable or enable the service workers testing features.
    */
   _setServiceWorkersTestingEnabled(enabled) {
-    const windowUtils = this.window.windowUtils;
-    windowUtils.serviceWorkersTestingEnabled = enabled;
+    if (this.browsingContext.serviceWorkersTestingEnabled != enabled) {
+      this.browsingContext.serviceWorkersTestingEnabled = enabled;
+    }
   },
 
   /**
@@ -1370,19 +1367,6 @@ const browsingContextTargetPrototype = {
     }
 
     return this.window.windowUtils.paintFlashing;
-  },
-
-  /**
-   * Return service workers testing allowed status.
-   */
-  _getServiceWorkersTestingEnabled() {
-    if (!this.docShell) {
-      // The browsing context is already closed.
-      return null;
-    }
-
-    const windowUtils = this.window.windowUtils;
-    return windowUtils.serviceWorkersTestingEnabled;
   },
 
   _changeTopLevelDocument(window) {
