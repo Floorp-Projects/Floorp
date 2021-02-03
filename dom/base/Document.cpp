@@ -16826,11 +16826,19 @@ StylePrefersColorScheme Document::PrefersColorScheme(
     return StylePrefersColorScheme::Light;
   }
 
-  if (nsPresContext* pc = GetPresContext()) {
-    if (auto devtoolsOverride = pc->GetOverridePrefersColorScheme()) {
-      return *devtoolsOverride;
+  if (auto* bc = GetBrowsingContext()) {
+    switch (bc->Top()->PrefersColorSchemeOverride()) {
+      case dom::PrefersColorSchemeOverride::Dark:
+        return StylePrefersColorScheme::Dark;
+      case dom::PrefersColorSchemeOverride::Light:
+        return StylePrefersColorScheme::Light;
+      case dom::PrefersColorSchemeOverride::None:
+      case dom::PrefersColorSchemeOverride::EndGuard_:
+        break;
     }
+  }
 
+  if (nsPresContext* pc = GetPresContext()) {
     if (pc->IsPrintingOrPrintPreview()) {
       return StylePrefersColorScheme::Light;
     }

@@ -1190,10 +1190,11 @@ class SpecialPowersChild extends JSWindowActorChild {
   }
 
   emulateMedium(window, mediaType) {
-    this._getMUDV(window).emulateMedium(mediaType);
+    BrowsingContext.getFromWindow(window).top.mediumOverride = mediaType;
   }
+
   stopEmulatingMedium(window) {
-    this._getMUDV(window).stopEmulatingMedium();
+    BrowsingContext.getFromWindow(window).top.mediumOverride = "";
   }
 
   // Takes a snapshot of the given window and returns a <canvas>

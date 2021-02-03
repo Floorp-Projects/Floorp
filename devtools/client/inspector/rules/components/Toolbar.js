@@ -90,16 +90,17 @@ class Toolbar extends PureComponent {
   onColorSchemeSimulationClick(event) {
     event.stopPropagation();
 
-    this.props.onToggleColorSchemeSimulation();
+    let nextColorScheme =
+        (this.state.currentColorScheme + 1) % COLOR_SCHEMES.length;
+    this.props.onToggleColorSchemeSimulation(COLOR_SCHEMES[nextColorScheme]);
     this.setState(prevState => ({
-      currentColorScheme:
-        (prevState.currentColorScheme + 1) % COLOR_SCHEMES.length,
+      currentColorScheme: nextColorScheme,
     }));
   }
 
   onPrintSimulationToggle(event) {
     event.stopPropagation();
-    this.props.onTogglePrintSimulation();
+    this.props.onTogglePrintSimulation(!this.state.isPrintSimulationEnabled);
     this.setState(prevState => ({
       isPrintSimulationEnabled: !prevState.isPrintSimulationEnabled,
     }));

@@ -226,11 +226,6 @@ const ActorRegistry = {
       constructor: "ResponsiveActor",
       type: { target: true },
     });
-    this.registerModule("devtools/server/actors/emulation/content-viewer", {
-      prefix: "contentViewer",
-      constructor: "ContentViewerActor",
-      type: { target: true },
-    });
     this.registerModule(
       "devtools/server/actors/addon/webextension-inspected-window",
       {

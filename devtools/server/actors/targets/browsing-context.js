@@ -1248,6 +1248,12 @@ const browsingContextTargetPrototype = {
     ) {
       this._setPaintFlashingEnabled(options.paintFlashing);
     }
+    if (typeof options.colorSchemeSimulation !== "undefined") {
+      this._setColorSchemeSimulation(options.colorSchemeSimulation);
+    }
+    if (typeof options.printSimulationEnabled !== "undefined") {
+      this._setPrintSimulationEnabled(options.printSimulationEnabled);
+    }
     if (typeof options.serviceWorkersTestingEnabled !== "undefined") {
       this._setServiceWorkersTestingEnabled(
         options.serviceWorkersTestingEnabled
@@ -1256,7 +1262,6 @@ const browsingContextTargetPrototype = {
     if (typeof options.restoreFocus == "boolean") {
       this._restoreFocus = options.restoreFocus;
     }
-
     // Reload if:
     //  - there's an explicit `performReload` flag and it's true
     //  - there's no `performReload` flag, but it makes sense to do so
@@ -1278,6 +1283,8 @@ const browsingContextTargetPrototype = {
     this._setCacheDisabled(false);
     this._setServiceWorkersTestingEnabled(false);
     this._setPaintFlashingEnabled(false);
+    this._setPrintSimulationEnabled(false);
+    this._setColorSchemeSimulation(null);
 
     if (this._restoreFocus && this.browsingContext?.isActive) {
       this.window.focus();
@@ -1333,6 +1340,26 @@ const browsingContextTargetPrototype = {
   _setServiceWorkersTestingEnabled(enabled) {
     if (this.browsingContext.serviceWorkersTestingEnabled != enabled) {
       this.browsingContext.serviceWorkersTestingEnabled = enabled;
+    }
+  },
+
+  /**
+   * Disable or enable the print simulation.
+   */
+  _setPrintSimulationEnabled(enabled) {
+    let value = enabled ? "print" : "";
+    if (this.browsingContext.mediumOverride != value) {
+      this.browsingContext.mediumOverride = value;
+    }
+  },
+
+  /**
+   * Disable or enable the color-scheme simulation.
+   */
+  _setColorSchemeSimulation(override) {
+    let value = override || "none";
+    if (this.browsingContext.prefersColorSchemeOverride != value) {
+      this.browsingContext.prefersColorSchemeOverride = value;
     }
   },
 

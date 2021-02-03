@@ -768,11 +768,23 @@ void nsPresContext::RecomputeBrowsingContextDependentData() {
   if (!browsingContext) {
     // This can legitimately happen for e.g. SVG images. Those just get scaled
     // as a result of the zoom on the embedder document so it doesn't really
-    // matter...
+    // matter... Medium also doesn't affect those.
     return;
   }
   SetFullZoom(browsingContext->FullZoom());
   SetTextZoom(browsingContext->TextZoom());
+  if (doc == mDocument) {
+    // Medium doesn't apply to resource documents, etc.
+    auto* top = browsingContext->Top();
+    RefPtr<nsAtom> mediumToEmulate;
+    if (MOZ_UNLIKELY(!top->GetMediumOverride().IsEmpty())) {
+      nsAutoString lower;
+      nsContentUtils::ASCIIToLower(top->GetMediumOverride(), lower);
+      mediumToEmulate = NS_Atomize(lower);
+    }
+    EmulateMedium(mediumToEmulate);
+  }
+
   mDocument->EnumerateExternalResources([](dom::Document& aSubResource) {
     if (nsPresContext* subResourcePc = aSubResource.GetPresContext()) {
       subResourcePc->RecomputeBrowsingContextDependentData();
@@ -1060,18 +1072,6 @@ void nsPresContext::SetOverrideDPPX(float aDPPX) {
 
   mMediaEmulationData.mDPPX = aDPPX;
   MediaFeatureValuesChanged({MediaFeatureChangeReason::ResolutionChange},
-                            MediaFeatureChangePropagation::JustThisDocument);
-}
-
-void nsPresContext::SetOverridePrefersColorScheme(
-    const Maybe<StylePrefersColorScheme>& aOverride) {
-  if (GetOverridePrefersColorScheme() == aOverride) {
-    return;
-  }
-  mMediaEmulationData.mPrefersColorScheme = aOverride;
-  // This is a bit of a lie, but it's the code-path that gets taken for regular
-  // system metrics changes via ThemeChanged().
-  MediaFeatureValuesChanged({MediaFeatureChangeReason::SystemMetricsChange},
                             MediaFeatureChangePropagation::JustThisDocument);
 }
 
