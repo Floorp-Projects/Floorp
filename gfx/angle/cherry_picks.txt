@@ -1,3 +1,23 @@
+commit fa5e0bac2b3b087e14a06b468e354fc6a54b264a
+Author: Geoff Lang <geofflang@chromium.org>
+Date:   Wed Sep 18 16:42:28 2019 -0400
+
+    Fix depth pitch calculations for compressed textures.
+    
+    Depth pitch computations were not taking into account the block size
+    and simply multiplying the row pitch with the pixel height.  This caused
+    our load functions to use a very high depth pitch, reading past the end
+    of the user-supplied buffer.
+    
+    BUG=angleproject:3190
+    BUG=angleproject:3920
+    
+    Change-Id: I4ef4763b542735993568c51ae4b5a235659b9094
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/1811837
+    Reviewed-by: Tim Van Patten <timvp@google.com>
+    Reviewed-by: Ian Elliott <ianelliott@google.com>
+    Commit-Queue: Geoff Lang <geofflang@chromium.org>
+
 commit 3a998d51928fb5856be5299fc189434d2da2e946
 Author: Jeff Muizelaar <jrmuizel@gmail.com>
 Date:   Mon Nov 9 17:09:12 2020 -0500
