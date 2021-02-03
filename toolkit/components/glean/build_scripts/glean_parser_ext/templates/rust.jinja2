@@ -61,7 +61,7 @@ Jinja2 template is not. Please file bugs! #}
 {% for category_name, objs in all_objs.items() %}
 pub mod {{ category_name|snake_case }} {
     use crate::private::*;
-    use glean_core::CommonMetricData;
+    use glean::CommonMetricData;
     use once_cell::sync::Lazy;
 
     {% for obj in objs.values() %}

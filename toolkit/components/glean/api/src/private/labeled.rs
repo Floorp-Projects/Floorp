@@ -118,7 +118,7 @@ where
 }
 
 #[inherent(pub)]
-impl<U> glean_core::traits::Labeled<U> for LabeledMetric<U>
+impl<U> glean::traits::Labeled<U> for LabeledMetric<U>
 where
     U: AllowLabeled + Clone,
 {

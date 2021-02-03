@@ -9,7 +9,6 @@ publish = false
 bincode = "1.0"
 chrono = "0.4.10"
 glean = "34.0.0"
-glean-core = { version = "34.0.0", features = ["rkv-safe-mode"] }
 inherent = "0.1.4"
 log = "0.4"
 nsstring = { path = "../../../../xpcom/rust/nsstring", optional = true }

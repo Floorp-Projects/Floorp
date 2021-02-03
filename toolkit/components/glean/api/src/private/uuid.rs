@@ -41,7 +41,7 @@ impl UuidMetric {
 }
 
 #[inherent(pub)]
-impl glean_core::traits::Uuid for UuidMetric {
+impl glean::traits::Uuid for UuidMetric {
     /// Set to the specified value.
     ///
     /// ## Arguments
@@ -50,7 +50,7 @@ impl glean_core::traits::Uuid for UuidMetric {
     fn set(&self, value: Uuid) {
         match self {
             UuidMetric::Parent(p) => {
-                glean_core::traits::Uuid::set(&*p, value);
+                glean::traits::Uuid::set(&*p, value);
             }
             UuidMetric::Child(_c) => {
                 log::error!("Unable to set the uuid metric in non-main process. Ignoring.");
@@ -67,7 +67,7 @@ impl glean_core::traits::Uuid for UuidMetric {
     /// a non-parent process.
     fn generate_and_set(&self) -> Uuid {
         match self {
-            UuidMetric::Parent(p) => glean_core::traits::Uuid::generate_and_set(&*p),
+            UuidMetric::Parent(p) => glean::traits::Uuid::generate_and_set(&*p),
             UuidMetric::Child(_c) => {
                 log::error!("Unable to set the uuid metric in non-main process. Ignoring.");
                 // TODO: Record an error.

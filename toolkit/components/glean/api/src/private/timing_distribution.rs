@@ -12,11 +12,10 @@ use std::sync::{
 use std::time::Instant;
 
 use super::{CommonMetricData, MetricId, TimeUnit};
-use glean::{DistributionData, ErrorType};
-use glean_core::metrics::TimerId;
+use glean::{DistributionData, ErrorType, TimerId};
 
 use crate::ipc::{need_ipc, with_ipc_payload};
-use glean_core::traits::TimingDistribution;
+use glean::traits::TimingDistribution;
 
 /// A timing distribution metric.
 ///
