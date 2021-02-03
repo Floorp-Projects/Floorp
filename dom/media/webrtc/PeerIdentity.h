@@ -7,7 +7,7 @@
 #ifndef PeerIdentity_h
 #define PeerIdentity_h
 
-#include "mozilla/RefCounted.h"
+#include "nsISupportsImpl.h"
 #include "nsString.h"
 
 template <class T>
@@ -26,19 +26,19 @@ namespace mozilla {
  * See:
  * http://tools.ietf.org/html/draft-ietf-rtcweb-security-arch-09#section-5.6.5.3.3.1
  */
-class PeerIdentity final : public RefCounted<PeerIdentity> {
+class PeerIdentity final {
  public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(PeerIdentity)
+  NS_INLINE_DECL_REFCOUNTING(PeerIdentity)
 
   explicit PeerIdentity(const nsAString& aPeerIdentity)
       : mPeerIdentity(aPeerIdentity) {}
-  ~PeerIdentity() = default;
 
   bool Equals(const PeerIdentity& aOther) const;
   bool Equals(const nsAString& aOtherString) const;
   const nsString& ToString() const { return mPeerIdentity; }
 
  private:
+  ~PeerIdentity() = default;
   static void GetUser(const nsAString& aPeerIdentity, nsAString& aUser);
   static void GetHost(const nsAString& aPeerIdentity, nsAString& aHost);
 
