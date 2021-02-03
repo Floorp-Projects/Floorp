@@ -10,12 +10,10 @@ import android.net.Uri
 import android.os.Environment
 import androidx.core.net.toUri
 import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.ext.toElement
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.CrashAction
 import mozilla.components.browser.state.action.EngineAction
-import mozilla.components.browser.state.action.MediaAction
 import mozilla.components.browser.state.action.MediaSessionAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.state.AppIntentState
@@ -30,7 +28,6 @@ import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.history.HistoryItem
 import mozilla.components.concept.engine.manifest.WebAppManifest
-import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.concept.engine.permission.PermissionRequest
@@ -50,8 +47,6 @@ internal class EngineObserver(
     private val session: Session,
     private val store: Store<BrowserState, BrowserAction>?
 ) : EngineSession.Observer {
-    private val mediaMap: MutableMap<Media, MediaObserver> = mutableMapOf()
-
     override fun onNavigateBack() {
         store?.dispatch(ContentAction.UpdateSearchTermsAction(session.id, ""))
     }
@@ -299,32 +294,6 @@ internal class EngineObserver(
                 windowRequest
             )
         )
-    }
-
-    override fun onMediaAdded(media: Media) {
-        val store = store ?: return
-
-        val mediaElement = media.toElement()
-
-        store.dispatch(MediaAction.AddMediaAction(session.id, mediaElement))
-
-        val observer = MediaObserver(media, mediaElement, store, session.id)
-        media.register(observer)
-
-        mediaMap[media] = observer
-    }
-
-    override fun onMediaRemoved(media: Media) {
-        val store = store ?: return
-
-        val observer = mediaMap[media]
-        if (observer != null) {
-            media.unregister(observer)
-
-            store.dispatch(MediaAction.RemoveMediaAction(session.id, observer.element))
-        }
-
-        mediaMap.remove(media)
     }
 
     override fun onMediaActivated(mediaSessionController: MediaSession.Controller) {

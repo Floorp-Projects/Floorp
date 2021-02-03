@@ -12,16 +12,13 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
-import mozilla.components.browser.state.action.MediaAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.state.state.MediaState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.tabstray.Tabs
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.tabs.ext.toTabs
-import mozilla.components.support.test.any
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import org.junit.After
@@ -242,43 +239,6 @@ class TabsTrayPresenterTest {
 
         verify(tabsTray).onTabsChanged(0, 1)
         verify(tabsTray).onTabsChanged(3, 1)
-    }
-
-    @Test
-    fun `tabs tray will get updated if mediaState changes`() {
-        val store = BrowserStore(
-            BrowserState(
-                tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "a"),
-                    createTab("https://getpocket.com", id = "b"),
-                    createTab("https://developer.mozilla.org", id = "c"),
-                    createTab("https://www.firefox.com", id = "d"),
-                    createTab("https://www.google.com", id = "e")
-                ),
-                selectedTabId = "a"
-            )
-        )
-
-        val tabsTray: MockedTabsTray = spy(MockedTabsTray())
-        val presenter = TabsTrayPresenter(
-            tabsTray,
-            store,
-            tabsFilter = { true },
-            closeTabsTray = mock()
-        )
-
-        presenter.start()
-        testDispatcher.advanceUntilIdle()
-
-        store.dispatch(
-            MediaAction.UpdateMediaAggregateAction(
-                store.state.media.aggregate.copy(activeTabId = "a", state = MediaState.State.PLAYING)
-            )
-        ).joinBlocking()
-
-        testDispatcher.advanceUntilIdle()
-
-        verify(tabsTray, times(2)).updateTabs(any())
     }
 
     @Test

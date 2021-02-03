@@ -5,7 +5,6 @@
 package mozilla.components.concept.tabstray
 
 import android.graphics.Bitmap
-import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.mediasession.MediaSession
 
 /**
@@ -16,7 +15,6 @@ import mozilla.components.concept.engine.mediasession.MediaSession
  * @property title Current title of the tab (or an empty [String]]).
  * @property icon Current icon of the tab (or null)
  * @property thumbnail Current thumbnail of the tab (or null)
- * @property mediaState Current media state for the tab (or null)
  * @property playbackState Current media session playback state for the tab (or null)
  * @property controller Current media session controller for the tab (or null)
  */
@@ -26,7 +24,6 @@ data class Tab(
     val title: String = "",
     val icon: Bitmap? = null,
     val thumbnail: Bitmap? = null,
-    val mediaState: Media.State? = null,
     val playbackState: MediaSession.PlaybackState? = null,
     val controller: MediaSession.Controller? = null
 )

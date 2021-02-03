@@ -28,13 +28,11 @@ import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.history.HistoryItem
 import mozilla.components.concept.engine.manifest.WebAppManifest
-import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.fetch.Response
-import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
@@ -690,105 +688,6 @@ class EngineObserverTest {
             session.id,
             false
         ))
-    }
-
-    @Test
-    fun `onMediaAdded will subscribe to media and add it to store`() {
-        val store = BrowserStore()
-
-        val sessionManager = SessionManager(engine = mock(), store = store)
-
-        val session = Session("https://www.mozilla.org", id = "test-tab").also {
-            sessionManager.add(it)
-        }
-        val observer = EngineObserver(session, store)
-        assertEquals(0, store.state.media.elements.size)
-
-        val media1: Media = spy(object : Media() {
-            override val controller: Controller = mock()
-            override val metadata: Metadata = mock()
-            override val volume: Volume = mock()
-            override val fullscreen: Boolean = false
-        })
-        observer.onMediaAdded(media1)
-
-        store.waitUntilIdle()
-
-        verify(media1).register(any())
-        assertEquals(1, store.state.media.elements["test-tab"]?.size)
-
-        val media2: Media = spy(object : Media() {
-            override val controller: Controller = mock()
-            override val metadata: Metadata = mock()
-            override val volume: Volume = mock()
-            override val fullscreen: Boolean = false
-        })
-        observer.onMediaAdded(media2)
-
-        store.waitUntilIdle()
-
-        verify(media2).register(any())
-        assertEquals(2, store.state.media.elements["test-tab"]?.size)
-
-        val media3: Media = spy(object : Media() {
-            override val controller: Controller = mock()
-            override val metadata: Metadata = mock()
-            override val volume: Volume = mock()
-            override val fullscreen: Boolean = false
-        })
-        observer.onMediaAdded(media3)
-
-        store.waitUntilIdle()
-
-        verify(media3).register(any())
-        assertEquals(3, store.state.media.elements["test-tab"]?.size)
-    }
-
-    @Test
-    fun `onMediaRemoved will unsubscribe and remove it from store`() {
-        val store = BrowserStore()
-
-        val sessionManager = SessionManager(engine = mock(), store = store)
-
-        val session = Session("https://www.mozilla.org", id = "test-tab").also {
-            sessionManager.add(it)
-        }
-        val observer = EngineObserver(session, store)
-
-        val media1: Media = spy(object : Media() {
-            override val controller: Controller = mock()
-            override val metadata: Metadata = mock()
-            override val volume: Volume = mock()
-            override val fullscreen: Boolean = false
-        })
-        observer.onMediaAdded(media1)
-
-        val media2: Media = spy(object : Media() {
-            override val controller: Controller = mock()
-            override val metadata: Metadata = mock()
-            override val volume: Volume = mock()
-            override val fullscreen: Boolean = false
-        })
-        observer.onMediaAdded(media2)
-
-        store.waitUntilIdle()
-
-        assertEquals(2, store.state.media.elements["test-tab"]?.size)
-        verify(media1, never()).unregister(any())
-        verify(media2, never()).unregister(any())
-
-        observer.onMediaRemoved(media1)
-        store.waitUntilIdle()
-
-        assertEquals(1, store.state.media.elements["test-tab"]?.size)
-        verify(media1).unregister(any())
-        verify(media2, never()).unregister(any())
-
-        observer.onMediaRemoved(media2)
-        store.waitUntilIdle()
-
-        assertNull(store.state.media.elements["test-tab"])
-        verify(media2).unregister(any())
     }
 
     @Test

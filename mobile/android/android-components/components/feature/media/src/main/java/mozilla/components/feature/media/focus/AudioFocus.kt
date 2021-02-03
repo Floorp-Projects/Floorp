@@ -9,9 +9,6 @@ import android.os.Build
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.mediasession.MediaSession
-import mozilla.components.feature.media.ext.pauseIfPlaying
-import mozilla.components.feature.media.ext.playIfPaused
-import mozilla.components.feature.media.ext.playing
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -51,7 +48,7 @@ internal class AudioFocus(
 
     private fun processAudioFocusResult(result: Int) {
         logger.debug("processAudioFocusResult($result)")
-        var sessionState = sessionId?.let {
+        val sessionState = sessionId?.let {
             store.state.findTabOrCustomTab(it)
         }
 
@@ -63,14 +60,12 @@ internal class AudioFocus(
             }
             AudioManager.AUDIOFOCUS_REQUEST_FAILED -> {
                 // Failed: Pause media since we didn't get audio focus.
-                store.state.media.pauseIfPlaying()
                 sessionState?.mediaSessionState?.controller?.pause()
                 playDelayed = false
                 resumeOnFocusGain = false
             }
             AudioManager.AUDIOFOCUS_REQUEST_DELAYED -> {
                 // Delayed: Pause media until we gain focus via callback
-                store.state.media.pauseIfPlaying()
                 sessionState?.mediaSessionState?.controller?.pause()
                 playDelayed = true
                 resumeOnFocusGain = false
@@ -83,14 +78,13 @@ internal class AudioFocus(
     @Suppress("ComplexMethod")
     override fun onAudioFocusChange(focusChange: Int) {
         logger.debug("onAudioFocusChange($focusChange)")
-        var sessionState = sessionId?.let {
+        val sessionState = sessionId?.let {
             store.state.findTabOrCustomTab(it)
         }
 
         when (focusChange) {
             AudioManager.AUDIOFOCUS_GAIN -> {
                 if (playDelayed || resumeOnFocusGain) {
-                    store.state.media.playIfPaused()
                     sessionState?.mediaSessionState?.controller?.play()
                     playDelayed = false
                     resumeOnFocusGain = false
@@ -98,17 +92,14 @@ internal class AudioFocus(
             }
 
             AudioManager.AUDIOFOCUS_LOSS -> {
-                store.state.media.pauseIfPlaying()
                 sessionState?.mediaSessionState?.controller?.pause()
                 resumeOnFocusGain = false
                 playDelayed = false
             }
 
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                store.state.media.pauseIfPlaying()
                 sessionState?.mediaSessionState?.controller?.pause()
-                resumeOnFocusGain = store.state.media.playing() ||
-                    sessionState?.mediaSessionState?.playbackState == MediaSession.PlaybackState.PLAYING
+                resumeOnFocusGain = sessionState?.mediaSessionState?.playbackState == MediaSession.PlaybackState.PLAYING
 
                 playDelayed = false
             }

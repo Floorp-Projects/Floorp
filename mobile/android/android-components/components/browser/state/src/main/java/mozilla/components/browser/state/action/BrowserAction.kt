@@ -17,7 +17,6 @@ import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.EngineState
 import mozilla.components.browser.state.state.LoadRequestState
 import mozilla.components.browser.state.state.MediaSessionState
-import mozilla.components.browser.state.state.MediaState
 import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.SearchState
 import mozilla.components.browser.state.state.SecurityInfoState
@@ -38,7 +37,6 @@ import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.history.HistoryItem
 import mozilla.components.concept.engine.manifest.WebAppManifest
-import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.concept.engine.permission.PermissionRequest
@@ -869,83 +867,6 @@ sealed class ReaderAction : BrowserAction() {
      * Clears the [ReaderState.activeUrl].
      */
     data class ClearReaderActiveUrlAction(val tabId: String) : ReaderAction()
-}
-
-/**
- * [BrowserAction] implementations related to updating the [MediaState].
- */
-sealed class MediaAction : BrowserAction() {
-    /**
-     * Adds [media] to the list of [MediaState.Element] for the tab with id [tabId].
-     */
-    data class AddMediaAction(val tabId: String, val media: MediaState.Element) : MediaAction()
-
-    /**
-     * Removes [media] from the list of [MediaState.Element] for the tab with id [tabId].
-     */
-    data class RemoveMediaAction(val tabId: String, val media: MediaState.Element) : MediaAction()
-
-    /**
-     * Removes all [MediaState.Element] for tabs with ids in [tabIds].
-     */
-    data class RemoveTabMediaAction(val tabIds: List<String>) : MediaAction()
-
-    /**
-     * Updates the [Media.State] for the [MediaState.Element] with id [mediaId] owned by the tab
-     * with id [tabId].
-     */
-    data class UpdateMediaStateAction(
-        val tabId: String,
-        val mediaId: String,
-        val state: Media.State
-    ) : MediaAction()
-
-    /**
-     * Updates the [Media.PlaybackState] for the [MediaState.Element] with id [mediaId] owned by the
-     * tab with id [tabId].
-     */
-    data class UpdateMediaPlaybackStateAction(
-        val tabId: String,
-        val mediaId: String,
-        val playbackState: Media.PlaybackState
-    ) : MediaAction()
-
-    /**
-     * Updates the [Media.Metadata] for the [MediaState.Element] with id [mediaId] owned by the tab
-     * with id [tabId].
-     */
-    data class UpdateMediaMetadataAction(
-        val tabId: String,
-        val mediaId: String,
-        val metadata: Media.Metadata
-    ) : MediaAction()
-
-    /**
-     * Updates the [Media.Volume] for the [MediaState.Element] with id [mediaId] owned by the tab
-     * with id [tabId].
-     */
-    data class UpdateMediaVolumeAction(
-        val tabId: String,
-        val mediaId: String,
-        val volume: Media.Volume
-    ) : MediaAction()
-
-    /**
-     * Updates the [Media.fullscreen] for the [MediaState.Element] with id [mediaId] owned by the tab
-     * with id [tabId].
-     */
-    data class UpdateMediaFullscreenAction(
-        val tabId: String,
-        val mediaId: String,
-        val fullScreen: Boolean
-    ) : MediaAction()
-
-    /**
-     * Updates [MediaState.Aggregate] in the [MediaState].
-     */
-    data class UpdateMediaAggregateAction(
-        val aggregate: MediaState.Aggregate
-    ) : MediaAction()
 }
 
 /**

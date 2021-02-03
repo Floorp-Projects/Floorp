@@ -8,7 +8,6 @@ import android.graphics.Bitmap
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.content.blocking.Tracker
-import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.test.mock
@@ -42,9 +41,7 @@ class EngineSessionTest {
         val windowRequest = mock(WindowRequest::class.java)
         session.register(observer)
 
-        val mediaAdded: Media = mock()
-        val mediaRemoved: Media = mock()
-        var mediaSessionController: MediaSession.Controller = mock()
+        val mediaSessionController: MediaSession.Controller = mock()
         val mediaSessionMetadata: MediaSession.Metadata = mock()
         val mediaSessionFeature: MediaSession.Feature = mock()
         val mediaSessionPositionState: MediaSession.PositionState = mock()
@@ -71,8 +68,6 @@ class EngineSessionTest {
         session.notifyInternalObservers { onCancelContentPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onAppPermissionRequest(permissionRequest) }
         session.notifyInternalObservers { onWindowRequest(windowRequest) }
-        session.notifyInternalObservers { onMediaAdded(mediaAdded) }
-        session.notifyInternalObservers { onMediaRemoved(mediaRemoved) }
         session.notifyInternalObservers { onMediaActivated(mediaSessionController) }
         session.notifyInternalObservers { onMediaDeactivated() }
         session.notifyInternalObservers { onMediaMetadataChanged(mediaSessionMetadata) }
@@ -106,8 +101,6 @@ class EngineSessionTest {
         verify(observer).onContentPermissionRequest(permissionRequest)
         verify(observer).onCancelContentPermissionRequest(permissionRequest)
         verify(observer).onWindowRequest(windowRequest)
-        verify(observer).onMediaAdded(mediaAdded)
-        verify(observer).onMediaRemoved(mediaRemoved)
         verify(observer).onMediaActivated(mediaSessionController)
         verify(observer).onMediaDeactivated()
         verify(observer).onMediaMetadataChanged(mediaSessionMetadata)
@@ -159,9 +152,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onLaunchIntentRequest("https://www.mozilla.org", null) }
         session.unregister(observer)
 
-        val mediaAdded: Media = mock()
-        val mediaRemoved: Media = mock()
-        var mediaSessionController: MediaSession.Controller = mock()
+        val mediaSessionController: MediaSession.Controller = mock()
         val mediaSessionMetadata: MediaSession.Metadata = mock()
         val mediaSessionFeature: MediaSession.Feature = mock()
         val mediaSessionPositionState: MediaSession.PositionState = mock()
@@ -184,8 +175,6 @@ class EngineSessionTest {
         session.notifyInternalObservers { onCancelContentPermissionRequest(otherPermissionRequest) }
         session.notifyInternalObservers { onAppPermissionRequest(otherPermissionRequest) }
         session.notifyInternalObservers { onWindowRequest(windowRequest) }
-        session.notifyInternalObservers { onMediaAdded(mediaAdded) }
-        session.notifyInternalObservers { onMediaRemoved(mediaRemoved) }
         session.notifyInternalObservers { onMediaActivated(mediaSessionController) }
         session.notifyInternalObservers { onMediaDeactivated() }
         session.notifyInternalObservers { onMediaMetadataChanged(mediaSessionMetadata) }
@@ -235,8 +224,6 @@ class EngineSessionTest {
         verify(observer, never()).onContentPermissionRequest(otherPermissionRequest)
         verify(observer, never()).onCancelContentPermissionRequest(otherPermissionRequest)
         verify(observer, never()).onWindowRequest(otherWindowRequest)
-        verify(observer, never()).onMediaAdded(mediaAdded)
-        verify(observer, never()).onMediaRemoved(mediaRemoved)
         verify(observer, never()).onMediaActivated(mediaSessionController)
         verify(observer, never()).onMediaDeactivated()
         verify(observer, never()).onMediaMetadataChanged(mediaSessionMetadata)
@@ -834,8 +821,6 @@ class EngineSessionTest {
         defaultObserver.onContentPermissionRequest(mock(PermissionRequest::class.java))
         defaultObserver.onCancelContentPermissionRequest(mock(PermissionRequest::class.java))
         defaultObserver.onWindowRequest(mock(WindowRequest::class.java))
-        defaultObserver.onMediaAdded(mock())
-        defaultObserver.onMediaRemoved(mock())
         defaultObserver.onCrash()
     }
 
@@ -913,8 +898,6 @@ class EngineSessionTest {
         val bitmap: Bitmap = mock()
         val permissionRequest = mock(PermissionRequest::class.java)
         val windowRequest = mock(WindowRequest::class.java)
-        val mediaAdded: Media = mock()
-        val mediaRemoved: Media = mock()
         val tracker: Tracker = mock()
 
         observer.onLocationChange("https://www.mozilla.org")
@@ -937,8 +920,6 @@ class EngineSessionTest {
         observer.onCancelContentPermissionRequest(permissionRequest)
         observer.onAppPermissionRequest(permissionRequest)
         observer.onWindowRequest(windowRequest)
-        observer.onMediaAdded(mediaAdded)
-        observer.onMediaRemoved(mediaRemoved)
         observer.onCrash()
         observer.onLoadRequest("https://www.mozilla.org", true, true)
         observer.onLaunchIntentRequest("https://www.mozilla.org", null)

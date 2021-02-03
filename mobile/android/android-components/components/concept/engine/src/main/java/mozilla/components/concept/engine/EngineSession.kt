@@ -13,7 +13,6 @@ import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.history.HistoryItem
 import mozilla.components.concept.engine.manifest.WebAppManifest
-import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.concept.engine.permission.PermissionRequest
@@ -92,9 +91,6 @@ abstract class EngineSession(
          * @param windowRequest the request to describing the required window action.
          */
         fun onWindowRequest(windowRequest: WindowRequest) = Unit
-
-        fun onMediaAdded(media: Media) = Unit
-        fun onMediaRemoved(media: Media) = Unit
 
         /**
          * Notify that the given media session has become active.

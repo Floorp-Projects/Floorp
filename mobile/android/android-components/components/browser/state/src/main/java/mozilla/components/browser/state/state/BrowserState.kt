@@ -22,7 +22,6 @@ import mozilla.components.lib.state.State
  * be overridden per [SessionState].
  * @property activeWebExtensionTabId the ID of the tab that is marked active for web extensions
  * to support tabs.query({active: true}).
- * @property media The state of all media elements and playback states for all tabs.
  * @property search the state of search for this browser state.
  * @property downloads Downloads ([DownloadState]s) mapped to their IDs.
  * @property undoHistory History of recently closed tabs to support "undo" (Requires UndoMiddleware).
@@ -37,7 +36,6 @@ data class BrowserState(
     val containers: Map<String, ContainerState> = emptyMap(),
     val extensions: Map<String, WebExtensionState> = emptyMap(),
     val activeWebExtensionTabId: String? = null,
-    val media: MediaState = MediaState(),
     val downloads: Map<String, DownloadState> = emptyMap(),
     val search: SearchState = SearchState(),
     val undoHistory: UndoHistoryState = UndoHistoryState(),
