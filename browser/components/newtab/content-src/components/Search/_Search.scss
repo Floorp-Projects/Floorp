@@ -38,7 +38,17 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
       }
     }
 
+    .search-button {
+      &:focus {
+        outline: 0;
+        box-shadow: 0 0 0 2px var(--newtab-focus-outline);
+        border: 1px solid var(--newtab-focus-border);
+        border-radius: 0 $border-radius-new $border-radius-new 0;
+      }
+    }
+
     input:focus {
+      outline: 0;
       border: 1px solid var(--newtab-focus-border);
       box-shadow: 0 0 0 2px var(--newtab-focus-outline);
     }
