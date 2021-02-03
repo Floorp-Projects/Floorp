@@ -20,6 +20,7 @@
 #include "js-config.h"
 #include "jstypes.h"
 
+#include "js/HeapAPI.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 
@@ -930,7 +931,7 @@ static MOZ_ALWAYS_INLINE void ExposeValueToActiveJS(const Value& v) {
   MOZ_ASSERT(!js::gc::EdgeNeedsSweepUnbarrieredSlow(&tmp));
 #endif
   if (v.isGCThing()) {
-    js::gc::ExposeGCThingToActiveJS(GCCellPtr(v));
+    js::gc::ExposeGCThingToActiveJS(v.toGCCellPtr());
   }
 }
 
@@ -1162,6 +1163,7 @@ class WrappedPtrOperations<JS::Value, Wrapper> {
   JS::BigInt* toBigInt() const { return value().toBigInt(); }
   JSObject& toObject() const { return value().toObject(); }
   JSObject* toObjectOrNull() const { return value().toObjectOrNull(); }
+  JS::GCCellPtr toGCCellPtr() const { return value().toGCCellPtr(); }
   gc::Cell* toGCThing() const { return value().toGCThing(); }
   JS::TraceKind traceKind() const { return value().traceKind(); }
   void* toPrivate() const { return value().toPrivate(); }
