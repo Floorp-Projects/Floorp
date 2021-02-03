@@ -5202,8 +5202,8 @@ RemoteWorkerChild* WorkerPrivate::GetRemoteWorkerController() {
 
 void WorkerPrivate::SetRemoteWorkerControllerWeakRef(
     ThreadSafeWeakPtr<RemoteWorkerChild> aWeakRef) {
-  MOZ_ASSERT(aWeakRef);
-  MOZ_ASSERT(!mRemoteWorkerControllerWeakRef);
+  MOZ_ASSERT(!aWeakRef.IsNull());
+  MOZ_ASSERT(mRemoteWorkerControllerWeakRef.IsNull());
   MOZ_ASSERT(IsServiceWorker());
 
   mRemoteWorkerControllerWeakRef = std::move(aWeakRef);

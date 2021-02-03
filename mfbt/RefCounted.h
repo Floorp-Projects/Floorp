@@ -62,23 +62,49 @@ const MozRefCountType DEAD = 0xffffdead;
 
 // When building code that gets compiled into Gecko, try to use the
 // trace-refcount leak logging facilities.
-#ifdef MOZ_REFCOUNTED_LEAK_CHECKING
 class RefCountLogger {
  public:
-  static void logAddRef(const void* aPointer, MozRefCountType aRefCount,
-                        const char* aTypeName, uint32_t aInstanceSize) {
-    MOZ_ASSERT(aRefCount != DEAD);
-    NS_LogAddRef(const_cast<void*>(aPointer), aRefCount, aTypeName,
-                 aInstanceSize);
+  // Called by `RefCounted`-like classes to log a successful AddRef call in the
+  // Gecko leak-logging system. This call is a no-op outside of Gecko. Should be
+  // called afer incrementing the reference count.
+  template <class T>
+  static void logAddRef(const T* aPointer, MozRefCountType aRefCount) {
+#ifdef MOZ_REFCOUNTED_LEAK_CHECKING
+    const void* pointer = aPointer;
+    const char* typeName = aPointer->typeName();
+    uint32_t typeSize = aPointer->typeSize();
+    NS_LogAddRef(const_cast<void*>(pointer), aRefCount, typeName, typeSize);
+#endif
   }
 
-  static void logRelease(const void* aPointer, MozRefCountType aRefCount,
-                         const char* aTypeName) {
-    MOZ_ASSERT(aRefCount != DEAD);
-    NS_LogRelease(const_cast<void*>(aPointer), aRefCount, aTypeName);
-  }
-};
+  // Created by `RefCounted`-like classes to log a successful Release call in
+  // the Gecko leak-logging system. The constructor should be invoked before the
+  // refcount is decremented to avoid invoking `typeName()` with a zero
+  // reference count. This call is a no-op outside of Gecko.
+  class MOZ_STACK_CLASS ReleaseLogger final {
+   public:
+    template <class T>
+    explicit ReleaseLogger(const T* aPointer)
+#ifdef MOZ_REFCOUNTED_LEAK_CHECKING
+        : mPointer(aPointer),
+          mTypeName(aPointer->typeName())
 #endif
+    {
+    }
+
+    void logRelease(MozRefCountType aRefCount) {
+#ifdef MOZ_REFCOUNTED_LEAK_CHECKING
+      MOZ_ASSERT(aRefCount != DEAD);
+      NS_LogRelease(const_cast<void*>(mPointer), aRefCount, mTypeName);
+#endif
+    }
+
+#ifdef MOZ_REFCOUNTED_LEAK_CHECKING
+    const void* mPointer;
+    const char* mTypeName;
+#endif
+  };
+};
 
 // This is used WeakPtr.h as well as this file.
 enum RefCountAtomicity { AtomicRefCount, NonAtomicRefCount };
@@ -165,6 +191,26 @@ class RC<T, AtomicRefCount> {
     return mValue.load(std::memory_order_acquire);
   }
 
+  T IncrementIfNonzero() {
+    // This can be a relaxed load as any write of 0 that we observe will leave
+    // the field in a permanently zero (or `DEAD`) state (so a "stale" read of 0
+    // is fine), and any other value is confirmed by the CAS below.
+    //
+    // This roughly matches rust's Arc::upgrade implementation as of rust 1.49.0
+    T prev = mValue.load(std::memory_order_relaxed);
+    while (prev != 0) {
+      MOZ_ASSERT(prev != detail::DEAD,
+                 "Cannot IncrementIfNonzero if marked as dead!");
+      // TODO: It may be possible to use relaxed success ordering here?
+      if (mValue.compare_exchange_weak(prev, prev + 1,
+                                       std::memory_order_acquire,
+                                       std::memory_order_relaxed)) {
+        return prev + 1;
+      }
+    }
+    return 0;
+  }
+
  private:
   std::atomic<T> mValue;
 };
@@ -178,34 +224,22 @@ class RefCounted {
 #endif
 
  public:
-  // Compatibility with nsRefPtr.
+  // Compatibility with RefPtr.
   void AddRef() const {
     // Note: this method must be thread safe for AtomicRefCounted.
     MOZ_ASSERT(int32_t(mRefCnt) >= 0);
-#ifndef MOZ_REFCOUNTED_LEAK_CHECKING
-    ++mRefCnt;
-#else
-    const char* type = static_cast<const T*>(this)->typeName();
-    uint32_t size = static_cast<const T*>(this)->typeSize();
-    const void* ptr = static_cast<const T*>(this);
     MozRefCountType cnt = ++mRefCnt;
-    detail::RefCountLogger::logAddRef(ptr, cnt, type, size);
-#endif
+    detail::RefCountLogger::logAddRef(static_cast<const T*>(this), cnt);
   }
 
   void Release() const {
     // Note: this method must be thread safe for AtomicRefCounted.
     MOZ_ASSERT(int32_t(mRefCnt) > 0);
-#ifndef MOZ_REFCOUNTED_LEAK_CHECKING
-    MozRefCountType cnt = --mRefCnt;
-#else
-    const char* type = static_cast<const T*>(this)->typeName();
-    const void* ptr = static_cast<const T*>(this);
+    detail::RefCountLogger::ReleaseLogger logger(static_cast<const T*>(this));
     MozRefCountType cnt = --mRefCnt;
     // Note: it's not safe to touch |this| after decrementing the refcount,
     // except for below.
-    detail::RefCountLogger::logRelease(ptr, cnt, type);
-#endif
+    logger.logRelease(cnt);
     if (0 == cnt) {
       // Because we have atomically decremented the refcount above, only
       // one thread can get a 0 count here, so as long as we can assume that

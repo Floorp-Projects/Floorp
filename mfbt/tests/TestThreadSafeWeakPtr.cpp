@@ -95,13 +95,27 @@ int main() {
   // Destroying the underlying object clears weak pointers to it.
   // It should not affect pointers that are not currently pointing to it.
   c1 = nullptr;
-  MOZ_RELEASE_ASSERT(
-      !bool(w1), "Deleting an object should clear ThreadSafeWeakPtr's to it.");
-  MOZ_RELEASE_ASSERT(bool(w2),
-                     "Deleting an object should not clear ThreadSafeWeakPtr "
-                     "that are not pointing to it.");
+  {
+    RefPtr<C> s1(w1);
+    MOZ_RELEASE_ASSERT(
+        !s1, "Deleting an object should clear ThreadSafeWeakPtr's to it.");
+    MOZ_RELEASE_ASSERT(w1.IsDead(), "The weak pointer is now dead");
+    MOZ_RELEASE_ASSERT(!w1.IsNull(), "The weak pointer isn't null");
+
+    RefPtr<C> s2(w2);
+    MOZ_RELEASE_ASSERT(s2,
+                       "Deleting an object should not clear ThreadSafeWeakPtr "
+                       "that are not pointing to it.");
+    MOZ_RELEASE_ASSERT(!w2.IsDead(), "The weak pointer isn't dead");
+    MOZ_RELEASE_ASSERT(!w2.IsNull(), "The weak pointer isn't null");
+  }
 
   c2 = nullptr;
-  MOZ_RELEASE_ASSERT(
-      !bool(w2), "Deleting an object should clear ThreadSafeWeakPtr's to it.");
+  {
+    RefPtr<C> s2(w2);
+    MOZ_RELEASE_ASSERT(
+        !s2, "Deleting an object should clear ThreadSafeWeakPtr's to it.");
+    MOZ_RELEASE_ASSERT(w2.IsDead(), "The weak pointer is now dead");
+    MOZ_RELEASE_ASSERT(!w2.IsNull(), "The weak pointer isn't null");
+  }
 }
