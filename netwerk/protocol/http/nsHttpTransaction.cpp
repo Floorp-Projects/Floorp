@@ -441,7 +441,7 @@ nsresult nsHttpTransaction::Init(
     mPushedStream = trans->TakePushedStreamById(aPushedStreamId);
   }
 
-  if (gHttpHandler->UseHTTPSRRAsAltSvcEnabled()) {
+  if (gHttpHandler->UseHTTPSRRAsAltSvcEnabled() && !mConnInfo->UsingConnect()) {
     mHTTPSSVCReceivedStage = HTTPSSVC_NOT_PRESENT;
 
     nsCOMPtr<nsIEventTarget> target;
