@@ -1229,8 +1229,7 @@
     <string name="onboarding_privacy_notice_header">Vaše soukromí</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">%s vám dává kontrolu nad tím, co sdílíte online a co sdílíte s námi.
-    </string>
+    <string name="onboarding_privacy_notice_description2">%s vám dává kontrolu nad tím, co sdílíte online a co sdílíte s námi.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Přečíst zásady ochrany osobních údajů</string>
 
