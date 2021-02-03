@@ -27,6 +27,7 @@ const global = {
   setIntervalWithTarget,
   setTimeout,
   setTimeoutWithTarget,
+  Date,
 };
 Services.scriptloader.loadSubScript(
   "resource://testing-common/sinon-7.2.7.js",

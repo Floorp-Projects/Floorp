@@ -25,6 +25,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FilterExpressions:
     "resource://gre/modules/components-utils/FilterExpressions.jsm",
   TargetingContext: "resource://messaging-system/targeting/Targeting.jsm",
+  Normandy: "resource://normandy/Normandy.jsm",
   NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
   CleanupManager: "resource://normandy/lib/CleanupManager.jsm",
@@ -296,6 +297,10 @@ var RecipeRunner = {
       // Do nothing if already running.
       return;
     }
+    this.running = true;
+
+    await Normandy.defaultPrefsHaveBeenApplied.promise;
+
     try {
       this.running = true;
       Services.obs.notifyObservers(null, "recipe-runner:start");
