@@ -35,6 +35,10 @@
   --pip-toggle-padding: 5px;
   --pip-toggle-icon-width-height: 16px;
   --pip-toggle-translate-x: calc(100% - var(--pip-toggle-icon-width-height) - 2 * var(--pip-toggle-padding));
+  --control-focus-outline: 2px solid #00DDFF;
+  --control-focus-outline-offset: -2px;
+
+  color: #fff;
 }
 .controlsContainer.touch {
   --clickToPlay-size: 64px;
@@ -44,6 +48,12 @@
   --track-size: 7px;
   --thumb-size: 16px;
   --label-font-size: 16px;
+}
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
+.controlsContainer {
+  --control-focus-outline: 2px solid #fff;
+}
 }
 
 /* Some CSS custom properties defined here are referenced by videocontrols.js */
@@ -117,7 +127,6 @@
   justify-content: center;
   align-items: center;
   background-color: rgb(80,80,80, .85);
-  color: #fff;
 }
 
 .controlsOverlay {
@@ -145,7 +154,6 @@
   height: 40px;
   padding: 0 9px;
   background-color: rgba(26,26,26,.8);
-  color: #fff;
 }
 
 .touch .controlBar {
@@ -169,6 +177,18 @@
   color: inherit;
   /* We don't suppress ::-moz-focus-inner, so that does for a focus indicator */
   outline: none;
+}
+
+/* Keyboard focus styling for interactive control elements (includes control
+   bar, click to play and track list) */
+.controlBar > .button:focus-visible,
+.volumeControl:focus-visible,
+.scrubber:focus-visible,
+.clickToPlay:focus-visible,
+.textTrackList > .textTrackItem:focus-visible {
+  outline: var(--control-focus-outline);
+  outline-offset: var(--control-focus-outline-offset);
+  -moz-outline-radius: 2px;
 }
 
 .touch .controlBar > .button {
@@ -235,7 +255,8 @@
   width: var(--thumb-size);
   border: none;
   border-radius: 50%;
-  background-color: #fff;
+  /* this is a foreground element even though it is implemented as a background */
+  background-color: currentColor;
   filter: drop-shadow(0px 0px 2px rgba(0,0,0,0.65));
 }
 
@@ -280,6 +301,7 @@
 .scrubber,
 .volumeControl {
   bottom: 0;
+  color: inherit;
   left: 0;
   position: absolute;
   width: 100%;
@@ -328,7 +350,8 @@
 }
 
 .volumeControl::-moz-range-progress {
-  background-color: #fff;
+  /* this is a foreground element even though it is implemented as a background */
+  background-color: currentColor;
 }
 
 .volumeControl::-moz-range-track {
@@ -383,8 +406,8 @@
   overflow: hidden;
   text-align: left;
   text-overflow: ellipsis;
-  color: #fff;
   background-color: transparent;
+  color: inherit;
 }
 
 .textTrackList > .textTrackItem:hover {
@@ -465,7 +488,7 @@
   appearance: none;
   position: absolute;
   background-color: #0060df;
-  color: #fff;
+  color: inherit;
   border: 0;
   padding: var(--pip-toggle-padding);
   right: 0;
@@ -530,10 +553,15 @@
   background-size: 40% 40%;
   background-color: #1a1a1a;
   -moz-context-properties: fill;
-  fill: #fff;
+  fill: currentColor;
+  color: inherit;
   opacity: 0.8;
   position: relative;
   top: 20px;
+}
+
+.clickToPlay:focus-visible {
+  -moz-outline-radius: 50%;
 }
 
 .controlsSpacerStack:hover > .clickToPlay,
@@ -561,7 +589,6 @@
   align-items: center;
   opacity: 1;
   background-color: rgb(12, 12, 13);
-  color: #fff;
 }
 
 /* Status description formatting */
@@ -600,6 +627,7 @@
   cursor: pointer;
   -moz-appearance: none;
   background: none;
+  color: inherit;
   border: none;
   text-align: unset;
   top: calc(70% - 40px);
@@ -660,7 +688,7 @@
   background-image: url("chrome://global/skin/media/pictureinpicture.svg");
   background-size: var(--pip-icon-size) var(--pip-icon-size);
   -moz-context-properties: fill;
-  fill: #fff;
+  fill: currentColor;
   height: var(--pip-icon-size);
   width: var(--pip-icon-size);
   background-repeat: no-repeat;
@@ -721,7 +749,6 @@
   width: max-content;
   border-radius: 8px;
   opacity: 0;
-  color: #fff;
   align-items: center;
   scale: 0.33 1;
   font-size: 14px;
