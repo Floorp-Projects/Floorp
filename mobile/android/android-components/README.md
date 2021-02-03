@@ -204,8 +204,6 @@ _Components and libraries to interact with backend services._
 
 * 🔵 [**Firefox Sync - Logins**](components/service/sync-logins/README.md) - A library for integrating with Firefox Sync - Logins.
 
-* 🔵 [**Fretboard**](components/service/fretboard/README.md) - An Android framework for segmenting users in order to run A/B tests and roll out features gradually.
-
 * 🔵 [**Glean**](components/service/glean/README.md) - A client-side telemetry SDK for collecting metrics and sending them to Mozilla's telemetry service (eventually replacing [service-telemetry](components/service/telemetry/README.md)).
 
 * 🔴 [**Experiments**](components/service/experiments/README.md) - An Android SDK for running experiments on user segments in multiple branches.
