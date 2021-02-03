@@ -57,19 +57,21 @@ pub enum ImmutableScriptFlagsEnum {
     #[allow(dead_code)]
     IsFieldInitializer = 1 << 20,
     #[allow(dead_code)]
-    HasRest = 1 << 21,
+    UseMemberInitializers = 1 << 21,
     #[allow(dead_code)]
-    NeedsFunctionEnvironmentObjects = 1 << 22,
+    HasRest = 1 << 22,
     #[allow(dead_code)]
-    FunctionHasExtraBodyVarScope = 1 << 23,
+    NeedsFunctionEnvironmentObjects = 1 << 23,
     #[allow(dead_code)]
-    ShouldDeclareArguments = 1 << 24,
+    FunctionHasExtraBodyVarScope = 1 << 24,
     #[allow(dead_code)]
-    ArgumentsHasVarBinding = 1 << 25,
+    ShouldDeclareArguments = 1 << 25,
     #[allow(dead_code)]
-    AlwaysNeedsArgsObj = 1 << 26,
+    ArgumentsHasVarBinding = 1 << 26,
     #[allow(dead_code)]
-    HasMappedArgsObj = 1 << 27,
+    AlwaysNeedsArgsObj = 1 << 27,
+    #[allow(dead_code)]
+    HasMappedArgsObj = 1 << 28,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -91,25 +93,31 @@ pub enum MutableScriptFlagsEnum {
     #[allow(dead_code)]
     SpewEnabled = 1 << 15,
     #[allow(dead_code)]
-    BaselineDisabled = 1 << 16,
+    NeedsFinalWarmUpCount = 1 << 16,
     #[allow(dead_code)]
-    IonDisabled = 1 << 17,
+    BaselineDisabled = 1 << 17,
     #[allow(dead_code)]
-    FailedBoundsCheck = 1 << 18,
+    IonDisabled = 1 << 18,
     #[allow(dead_code)]
-    FailedShapeGuard = 1 << 19,
+    FailedBoundsCheck = 1 << 19,
     #[allow(dead_code)]
-    HadLICMInvalidation = 1 << 20,
+    FailedShapeGuard = 1 << 20,
     #[allow(dead_code)]
-    HadOverflowBailout = 1 << 21,
+    HadLICMInvalidation = 1 << 21,
     #[allow(dead_code)]
-    Uninlineable = 1 << 22,
+    HadEagerTruncationBailout = 1 << 22,
     #[allow(dead_code)]
-    InvalidatedIdempotentCache = 1 << 23,
+    Uninlineable = 1 << 23,
     #[allow(dead_code)]
-    FailedLexicalCheck = 1 << 24,
+    InvalidatedIdempotentCache = 1 << 24,
     #[allow(dead_code)]
-    HadSpeculativePhiBailout = 1 << 25,
+    FailedLexicalCheck = 1 << 25,
+    #[allow(dead_code)]
+    HadSpeculativePhiBailout = 1 << 26,
+    #[allow(dead_code)]
+    HadUnboxFoldingBailout = 1 << 27,
+    #[allow(dead_code)]
+    IsInlinableLargeFunction = 1 << 28,
 }
 
 // @@@@ END TYPES @@@@
