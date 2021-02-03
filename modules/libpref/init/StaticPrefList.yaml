@@ -6557,7 +6557,7 @@
 
 - name: layout.display-list.improve-fragmentation
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 # Are dynamic reflow roots enabled?
