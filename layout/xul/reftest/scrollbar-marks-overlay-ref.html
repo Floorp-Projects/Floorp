@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<script>
+  // Account for scrollbar buttons on Windows
+const hasScrollbarButtons = navigator.platform.indexOf("Win") >= 0;
+const scrollbarButtonHeight = 16;
+
+function assignMarks()
+{
+  let frame = document.getElementById('frame');
+  let width = frame.getBoundingClientRect().width;
+
+  let innerRect = frame.contentDocument.documentElement.getBoundingClientRect();
+  let markWidth = width - innerRect.width - 2;
+
+  let scrollButtonHeight = hasScrollbarButtons ? scrollbarButtonHeight : 0;
+  let sliderHeight = 200 - scrollButtonHeight * 2;
+
+  let one = document.getElementById('one');
+  one.style.width = markWidth + "px";
+  one.style.top = (Math.floor(30 / frames[0].scrollMaxY * sliderHeight) + scrollButtonHeight) + "px";
+
+  let two = document.getElementById('two');
+  two.style.width = markWidth + "px";
+  two.style.top = (Math.floor(70 / frames[0].scrollMaxY * sliderHeight) + scrollButtonHeight) + "px";
+
+  let three = document.getElementById('three');
+  three.style.width = markWidth + "px";
+  three.style.top = (Math.floor(110 / frames[0].scrollMaxY * sliderHeight) + scrollButtonHeight) + "px";
+
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+<body onload="assignMarks()">
+<div style='border: 1px solid red; position: absolute; width: 300px; height; 100px; padding: 0;'>
+<iframe id='frame' style='position: relative; border: none; height: 200px;' src='data:text/html,<p style="height: 400px;"></p>'></iframe>
+  <div id='one' style='border: 1px solid #ef0fff; opacity: 0.3; position: absolute; right: 0px;'></div>
+  <div id='two' style='border: 1px solid #ef0fff; opacity: 0.3; position: absolute; right: 0px;'></div>
+  <div id='three' style='border: 1px solid #ef0fff; opacity: 0.3; position: absolute; right: 0px;'></div>
+</div>
+</body>
+</html>
