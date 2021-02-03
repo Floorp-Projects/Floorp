@@ -2544,6 +2544,12 @@ void ScrollFrameHelper::MarkScrollbarsDirtyForReflow() const {
   }
 }
 
+void ScrollFrameHelper::InvalidateVerticalScrollbar() const {
+  if (mVScrollbarBox) {
+    mVScrollbarBox->InvalidateFrameSubtree();
+  }
+}
+
 bool ScrollFrameHelper::IsAlwaysActive() const {
   if (nsDisplayItem::ForceActiveLayers()) {
     return true;

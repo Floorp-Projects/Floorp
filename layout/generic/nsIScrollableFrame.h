@@ -496,6 +496,11 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    */
   virtual void MarkScrollbarsDirtyForReflow() const = 0;
 
+  /**
+   * Invalidate the scrollbar after the marks have been changed.
+   */
+  virtual void InvalidateVerticalScrollbar() const = 0;
+
   virtual void UpdateScrollbarPosition() = 0;
 
   virtual void SetTransformingByAPZ(bool aTransforming) = 0;
