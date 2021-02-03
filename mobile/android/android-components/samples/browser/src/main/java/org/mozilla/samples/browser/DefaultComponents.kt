@@ -26,7 +26,6 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.engine.EngineMiddleware
 import mozilla.components.browser.session.storage.SessionStorage
-import mozilla.components.browser.session.undo.UndoMiddleware
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
@@ -66,6 +65,7 @@ import mozilla.components.feature.search.middleware.SearchMiddleware
 import mozilla.components.feature.search.region.RegionMiddleware
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.session.middleware.undo.UndoMiddleware
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage
 import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
