@@ -1520,6 +1520,7 @@ var Policies = {
         "security.osclientcerts.autoload",
         "security.ssl.errorReporting.enabled",
         "security.tls.hello_downgrade_check",
+        "security.tls.version.enable-deprecated",
         "security.warn_submit_secure_to_insecure",
       ];
       const blockedPrefs = [];
