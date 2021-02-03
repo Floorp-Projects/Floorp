@@ -225,7 +225,6 @@
 #  include <process.h>
 #  define getpid _getpid
 #  include "mozilla/WinDllServices.h"
-#  include "mozilla/audio/AudioNotificationReceiver.h"
 #  include "mozilla/widget/AudioSession.h"
 #  include "mozilla/widget/WinContentSystemParameters.h"
 #endif
@@ -1553,13 +1552,6 @@ mozilla::ipc::IPCResult ContentChild::RecvReinitRendering(
   }
 
   RemoteDecoderManagerChild::InitForGPUProcess(std::move(aVideoManager));
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentChild::RecvAudioDefaultDeviceChange() {
-#ifdef XP_WIN
-  audio::AudioNotificationReceiver::NotifyDefaultDeviceChanged();
-#endif
   return IPC_OK();
 }
 

@@ -516,8 +516,6 @@ child:
       Endpoint<PRemoteDecoderManagerChild> video,
       uint32_t[] namespaces);
 
-    async AudioDefaultDeviceChange();
-
     async NetworkLinkTypeChange(uint32_t type);
 
     // Re-create the rendering stack for a device reset.
