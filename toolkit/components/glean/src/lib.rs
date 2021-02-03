@@ -38,8 +38,10 @@ use xpcom::{RefPtr, XpCom};
 
 use glean::{ClientInfoMetrics, Configuration};
 
+mod user_activity;
 mod viaduct_uploader;
 
+use crate::user_activity::UserActivityObserver;
 use crate::viaduct_uploader::ViaductUploader;
 
 /// Project FOG's entry point.
@@ -79,6 +81,14 @@ pub unsafe extern "C" fn fog_init() -> nsresult {
     if let Err(e) = pref_observer.begin_observing() {
         log::error!(
             "Could not observe data upload pref. Abandoning FOG init due to {:?}",
+            e
+        );
+        return e;
+    }
+
+    if let Err(e) = UserActivityObserver::begin_observing() {
+        log::error!(
+            "Could not observe user activity. Abandoning FOG init due to {:?}",
             e
         );
         return e;

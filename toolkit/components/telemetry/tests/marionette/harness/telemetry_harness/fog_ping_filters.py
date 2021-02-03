@@ -25,5 +25,6 @@ class FOGDocTypePingFilter(FOGPingFilter):
         return ping["request_url"]["doc_type"] == self.doc_type
 
 
+FOG_BASELINE_PING = FOGDocTypePingFilter("baseline")
 FOG_DELETION_REQUEST_PING = FOGDocTypePingFilter("deletion-request")
 FOG_ONE_PING_ONLY_PING = FOGDocTypePingFilter("one-ping-only")
