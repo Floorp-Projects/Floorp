@@ -58,6 +58,9 @@ bool CompiledCode::swap(MacroAssembler& masm) {
   callSiteTargets.swap(masm.callSiteTargets());
   trapSites.swap(masm.trapSites());
   symbolicAccesses.swap(masm.symbolicAccesses());
+#ifdef ENABLE_WASM_EXCEPTIONS
+  tryNotes.swap(masm.tryNotes());
+#endif
   codeLabels.swap(masm.codeLabels());
   return true;
 }
@@ -753,6 +756,15 @@ bool ModuleGenerator::linkCompiledCode(CompiledCode& code) {
     }
   }
 
+#ifdef ENABLE_WASM_EXCEPTIONS
+  auto tryNoteOp = [=](uint32_t, WasmTryNote* tn) {
+    tn->offsetBy(offsetInModule);
+  };
+  if (!AppendForEach(&metadataTier_->tryNotes, code.tryNotes, tryNoteOp)) {
+    return false;
+  }
+#endif
+
   return true;
 }
 
@@ -1011,6 +1023,9 @@ bool ModuleGenerator::finishCodegen() {
   MOZ_ASSERT(masm_.callSiteTargets().empty());
   MOZ_ASSERT(masm_.trapSites().empty());
   MOZ_ASSERT(masm_.symbolicAccesses().empty());
+#ifdef ENABLE_WASM_EXCEPTIONS
+  MOZ_ASSERT(masm_.tryNotes().empty());
+#endif
   MOZ_ASSERT(masm_.codeLabels().empty());
 
   masm_.finish();
@@ -1021,6 +1036,11 @@ bool ModuleGenerator::finishMetadataTier() {
   // The stack maps aren't yet sorted.  Do so now, since we'll need to
   // binary-search them at GC time.
   metadataTier_->stackMaps.sort();
+
+  // The try notes also need to be sorted to simplify lookup.
+#ifdef ENABLE_WASM_EXCEPTIONS
+  std::sort(metadataTier_->tryNotes.begin(), metadataTier_->tryNotes.end());
+#endif
 
 #ifdef DEBUG
   // Check that the stack map contains no duplicates, since that could lead to
@@ -1060,6 +1080,17 @@ bool ModuleGenerator::finishMetadataTier() {
     MOZ_ASSERT(debugTrapFarJumpOffset >= last);
     last = debugTrapFarJumpOffset;
   }
+
+  // Try notes should be sorted so that the end of ranges are in rising order
+  // so that the innermost catch handler is chosen.
+#  ifdef ENABLE_WASM_EXCEPTIONS
+  last = 0;
+  for (const WasmTryNote& tryNote : metadataTier_->tryNotes) {
+    MOZ_ASSERT(tryNote.end >= last);
+    MOZ_ASSERT(tryNote.end > tryNote.begin);
+    last = tryNote.end;
+  }
+#  endif
 #endif
 
   // These Vectors can get large and the excess capacity can be significant,
@@ -1070,6 +1101,9 @@ bool ModuleGenerator::finishMetadataTier() {
   metadataTier_->callSites.shrinkStorageToFit();
   metadataTier_->trapSites.shrinkStorageToFit();
   metadataTier_->debugTrapFarJumpOffsets.shrinkStorageToFit();
+#ifdef ENABLE_WASM_EXCEPTIONS
+  metadataTier_->tryNotes.shrinkStorageToFit();
+#endif
   for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
     metadataTier_->trapSites[trap].shrinkStorageToFit();
   }
@@ -1351,6 +1385,9 @@ size_t CompiledCode::sizeOfExcludingThis(
          callSites.sizeOfExcludingThis(mallocSizeOf) +
          callSiteTargets.sizeOfExcludingThis(mallocSizeOf) + trapSitesSize +
          symbolicAccesses.sizeOfExcludingThis(mallocSizeOf) +
+#ifdef ENABLE_WASM_EXCEPTIONS
+         tryNotes.sizeOfExcludingThis(mallocSizeOf) +
+#endif
          codeLabels.sizeOfExcludingThis(mallocSizeOf);
 }
 
