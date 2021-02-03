@@ -16,7 +16,7 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 class UtilsKtTest {
     @Test
     fun `friendly root titles`() {
-        val url = testBookmarkItem("folder","http://mozilla.org", "Mozilla")
+        val url = testBookmarkItem("folder", "http://mozilla.org", "Mozilla")
         assertEquals("Mozilla", friendlyRootTitle(testContext, url))
 
         val folder = testFolder("456", "folder", null, "Folder")
@@ -50,7 +50,7 @@ class UtilsKtTest {
     @Test
     fun `flatNodeList various cases`() {
         val url = testBookmarkItem("folder", "http://mozilla.org")
-        val url2 = testBookmarkItem( "folder2", "http://mozilla.org")
+        val url2 = testBookmarkItem("folder2", "http://mozilla.org")
         assertEquals(emptyList<BookmarkNodeWithDepth>(), url.flatNodeList(null))
 
         val root = testFolder("root", null, null)
@@ -98,4 +98,8 @@ internal fun testFolder(guid: String, parentGuid: String?, children: List<Bookma
     title,
     null,
     children
+)
+
+internal fun testSeparator(parentGuid: String) = BookmarkNode(
+    BookmarkNodeType.SEPARATOR, "guid#${Math.random() * 1000}", parentGuid, null, null, null, null
 )

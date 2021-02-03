@@ -21,23 +21,25 @@ import org.mozilla.fenix.library.bookmarks.viewholders.BookmarkSeparatorViewHold
 class BookmarkAdapter(private val emptyView: View, private val interactor: BookmarkViewInteractor) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    private var tree: List<BookmarkNode> = listOf()
+    @VisibleForTesting var tree: List<BookmarkNode> = listOf()
     private var mode: BookmarkFragmentState.Mode = BookmarkFragmentState.Mode.Normal()
     private var isFirstRun = true
 
     fun updateData(tree: BookmarkNode?, mode: BookmarkFragmentState.Mode) {
-        // Display folders above all other bookmarks.
         val allNodes = tree?.children.orEmpty()
         val folders: MutableList<BookmarkNode> = mutableListOf()
         val notFolders: MutableList<BookmarkNode> = mutableListOf()
+        val separators: MutableList<BookmarkNode> = mutableListOf()
         allNodes.forEach {
-            if (it.type == BookmarkNodeType.FOLDER) {
-                folders.add(it)
-            } else {
-                notFolders.add(it)
+            when (it.type) {
+                BookmarkNodeType.SEPARATOR -> separators.add(it)
+                BookmarkNodeType.FOLDER -> folders.add(it)
+                else -> notFolders.add(it)
             }
         }
-        val newTree = folders + notFolders
+        // Display folders above all other bookmarks. Exclude separators.
+        // For separator removal, see discussion in https://github.com/mozilla-mobile/fenix/issues/15214
+        val newTree = folders + notFolders - separators
 
         val diffUtil = DiffUtil.calculateDiff(
             BookmarkDiffUtil(
