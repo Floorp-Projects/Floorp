@@ -88,6 +88,9 @@ typedef GCVector<WasmExceptionObject*, 0, SystemAllocPolicy>
     WasmExceptionObjectVector;
 using RootedWasmExceptionObject = Rooted<WasmExceptionObject*>;
 
+class WasmRuntimeExceptionObject;
+using RootedWasmRuntimeExceptionObject = Rooted<WasmRuntimeExceptionObject*>;
+
 namespace wasm {
 
 using mozilla::Atomic;
