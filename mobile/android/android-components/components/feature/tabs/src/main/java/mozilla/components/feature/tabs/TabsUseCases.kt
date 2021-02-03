@@ -34,11 +34,6 @@ class TabsUseCases(
      */
     interface SelectTabUseCase {
         /**
-         * Select given [session].
-         */
-        operator fun invoke(session: Session)
-
-        /**
          * Select [Session] with the given [tabId].
          */
         operator fun invoke(tabId: String)
@@ -47,16 +42,6 @@ class TabsUseCases(
     class DefaultSelectTabUseCase internal constructor(
         private val sessionManager: SessionManager
     ) : SelectTabUseCase {
-
-        /**
-         * Marks the provided session as selected.
-         *
-         * @param session The session to select.
-         */
-        override operator fun invoke(session: Session) {
-            sessionManager.select(session)
-        }
-
         /**
          * Marks the tab with the provided [tabId] as selected.
          */
@@ -93,13 +78,6 @@ class TabsUseCases(
          * should be removed together with invoke(Session).
          */
         operator fun invoke(sessionId: String, selectParentIfExists: Boolean) = invoke(sessionId)
-
-        /**
-         * Removes the provided session.
-         *
-         * @param session The session to remove.
-         */
-        operator fun invoke(session: Session)
     }
 
     /**
@@ -119,7 +97,7 @@ class TabsUseCases(
         override operator fun invoke(sessionId: String) {
             val session = sessionManager.findSessionById(sessionId)
             if (session != null) {
-                invoke(session)
+                sessionManager.remove(session)
             }
         }
 
@@ -137,15 +115,6 @@ class TabsUseCases(
                 sessionManager.remove(session, selectParentIfExists)
             }
         }
-
-        /**
-         * Removes the provided session.
-         *
-         * @param session The session to remove.
-         */
-        override operator fun invoke(session: Session) {
-            sessionManager.remove(session)
-        }
     }
 
     class AddNewTabUseCase internal constructor(
@@ -160,7 +129,7 @@ class TabsUseCases(
          * @param flags the [LoadUrlFlags] to use when loading the provided URL.
          */
         override fun invoke(url: String, flags: LoadUrlFlags, additionalHeaders: Map<String, String>?) {
-            this.invoke(url, true, true, null, flags)
+            this.invoke(url, selectTab = true, startLoading = true, parentId = null, flags = flags)
         }
 
         /**
@@ -222,7 +191,7 @@ class TabsUseCases(
          * @param flags the [LoadUrlFlags] to use when loading the provided URL.
          */
         override fun invoke(url: String, flags: LoadUrlFlags, additionalHeaders: Map<String, String>?) {
-            this.invoke(url, true, true, null, flags)
+            this.invoke(url, selectTab = true, startLoading = true, parentId = null, flags = flags)
         }
 
         /**
@@ -335,7 +304,7 @@ class TabsUseCases(
     class RestoreUseCase(
         private val store: BrowserStore,
         private val sessionManager: SessionManager,
-        private val selectTab: TabsUseCases.SelectTabUseCase
+        private val selectTab: SelectTabUseCase
     ) {
         /**
          * Restores the given list of [RecoverableTab]s.

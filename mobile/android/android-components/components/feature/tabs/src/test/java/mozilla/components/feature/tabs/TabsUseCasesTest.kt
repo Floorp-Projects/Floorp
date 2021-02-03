@@ -28,6 +28,7 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -46,7 +47,9 @@ class TabsUseCasesTest {
         val useCases = TabsUseCases(BrowserStore(), sessionManager)
 
         val session = Session("A")
-        useCases.selectTab(session)
+        doReturn(session).`when`(sessionManager).findSessionById(session.id)
+
+        useCases.selectTab(session.id)
 
         verify(sessionManager).select(session)
     }
@@ -57,7 +60,9 @@ class TabsUseCasesTest {
         val useCases = TabsUseCases(BrowserStore(), sessionManager)
 
         val session = Session("A")
-        useCases.removeTab(session)
+        doReturn(session).`when`(sessionManager).findSessionById(session.id)
+
+        useCases.removeTab(session.id)
 
         verify(sessionManager).remove(session, false)
     }

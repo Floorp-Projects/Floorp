@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_tabstray.tabsTray
 import kotlinx.android.synthetic.main.fragment_tabstray.toolbar
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.tabstray.TabsAdapter
 import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
 import mozilla.components.feature.tabs.TabsUseCases
@@ -96,11 +95,6 @@ private class RemoveTabWithUndoUseCase(
 ) : TabsUseCases.RemoveTabUseCase {
     override fun invoke(sessionId: String) {
         actual.invoke(sessionId)
-        showSnackbar()
-    }
-
-    override fun invoke(session: Session) {
-        actual.invoke(session)
         showSnackbar()
     }
 
