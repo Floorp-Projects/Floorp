@@ -821,12 +821,14 @@ void NativeLayerCA::Representation::ApplyChanges(
     mWrappingCALayer.bounds = NSZeroRect;
     mWrappingCALayer.anchorPoint = NSZeroPoint;
     mWrappingCALayer.contentsGravity = kCAGravityTopLeft;
+    mWrappingCALayer.edgeAntialiasingMask = 0;
     mContentCALayer = [[CALayer layer] retain];
     mContentCALayer.position = NSZeroPoint;
     mContentCALayer.anchorPoint = NSZeroPoint;
     mContentCALayer.contentsGravity = kCAGravityTopLeft;
     mContentCALayer.contentsScale = 1;
     mContentCALayer.bounds = CGRectMake(0, 0, aSize.width, aSize.height);
+    mContentCALayer.edgeAntialiasingMask = 0;
     mContentCALayer.opaque = aIsOpaque;
     if ([mContentCALayer respondsToSelector:@selector(setContentsOpaque:)]) {
       // The opaque property seems to not be enough when using IOSurface contents.
