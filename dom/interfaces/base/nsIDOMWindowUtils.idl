@@ -1865,11 +1865,6 @@ interface nsIDOMWindowUtils : nsISupports {
                        in int32_t aLeft);
 
   /**
-   * Enable some service workers testing features.
-   */
-  attribute boolean serviceWorkersTestingEnabled;
-
-  /**
    * Returns a JSObject which contains a list of frame uniformities
    * when the pref gfx.vsync.collect-scroll-data is enabled.
    * Every result contains a layer address and a frame uniformity for that layer.

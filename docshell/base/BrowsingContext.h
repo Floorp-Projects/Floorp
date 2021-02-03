@@ -188,6 +188,7 @@ enum class ExplicitActiveStatus : uint8_t {
    * browsing contexts created as a descendant of this one.  Valid only for  \
    * top BCs. */                                                             \
   FIELD(AuthorStyleDisabledDefault, bool)                                    \
+  FIELD(ServiceWorkersTestingEnabled, bool)                                  \
   FIELD(DisplayMode, mozilla::dom::DisplayMode)                              \
   /* True if the top level browsing context owns a main media controller */  \
   FIELD(HasMainMediaController, bool)                                        \
@@ -435,7 +436,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     }
   }
 
-  uint32_t SandboxFlags() { return GetSandboxFlags(); }
+  uint32_t SandboxFlags() const { return GetSandboxFlags(); }
 
   Span<RefPtr<BrowsingContext>> Children() const;
   void GetChildren(nsTArray<RefPtr<BrowsingContext>>& aChildren);
@@ -789,6 +790,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   void IncrementHistoryEntryCountForBrowsingContext();
 
+  bool ServiceWorkersTestingEnabled() const {
+    return GetServiceWorkersTestingEnabled();
+  }
+
  protected:
   virtual ~BrowsingContext();
   BrowsingContext(WindowContext* aParentWindow, BrowsingContextGroup* aGroup,
@@ -875,6 +880,11 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
       return opener && opener->Group() == Group();
     }
     return true;
+  }
+
+  bool CanSet(FieldIndex<IDX_ServiceWorkersTestingEnabled>, bool,
+              ContentParent*) {
+    return IsTop();
   }
 
   bool CanSet(FieldIndex<IDX_SuspendMediaWhenInactive>, bool, ContentParent*) {

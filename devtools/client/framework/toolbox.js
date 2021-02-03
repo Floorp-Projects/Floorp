@@ -2082,12 +2082,10 @@ Toolbox.prototype = {
    */
   _applyServiceWorkersTestingSettings: function() {
     const pref = "devtools.serviceWorkers.testing.enabled";
-    const serviceWorkersTestingEnabled =
-      Services.prefs.getBoolPref(pref) || false;
-
+    const serviceWorkersTestingEnabled = Services.prefs.getBoolPref(pref);
     this.target.reconfigure({
       options: {
-        serviceWorkersTestingEnabled: serviceWorkersTestingEnabled,
+        serviceWorkersTestingEnabled
       },
     });
   },

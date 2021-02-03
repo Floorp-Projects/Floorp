@@ -773,9 +773,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
 
   void RefreshMediaElementsVolume();
 
-  void SetServiceWorkersTestingEnabled(bool aEnabled);
-  bool GetServiceWorkersTestingEnabled();
-
   float GetDevicePixelRatio(mozilla::dom::CallerType aCallerType);
 
   bool HadOriginalOpener() const;
@@ -1135,10 +1132,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   uint64_t mWindowID;
 
   uint32_t mMarkedCCGeneration;
-
-  // Let the service workers plumbing know that some feature are enabled while
-  // testing.
-  bool mServiceWorkersTestingEnabled;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowOuter, NS_PIDOMWINDOWOUTER_IID)
