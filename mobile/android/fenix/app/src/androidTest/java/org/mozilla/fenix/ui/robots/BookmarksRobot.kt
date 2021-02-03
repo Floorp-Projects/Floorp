@@ -105,6 +105,10 @@ class BookmarksRobot {
     fun verifySelectDefaultFolderSnackBarText() = assertSnackBarText("Can’t edit default folders")
 
     fun verifyCurrentFolderTitle(title: String) {
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/navigationToolbar")
+            .textContains(title))
+            .waitForExists(waitingTime)
+
         onView(
             allOf(
                 withText(title),
@@ -112,6 +116,14 @@ class BookmarksRobot {
             )
         )
             .check(matches(isDisplayed()))
+    }
+
+    fun waitForBookmarksFolderContentToExist(parentFolderName: String, childFolderName: String) {
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/navigationToolbar")
+            .textContains(parentFolderName))
+            .waitForExists(waitingTime)
+
+        mDevice.waitNotNull(Until.findObject(By.text(childFolderName)), waitingTime)
     }
 
     fun verifySignInToSyncButton() =
