@@ -405,10 +405,8 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
  * 'let', 'static', 'yield', or for any strict mode reserved word.
  */
 bool ParserBase::isValidStrictBinding(TaggedParserAtomIndex name) {
-  const ParserName* atom =
-      this->compilationState_.parserAtoms.getParserAtom(name)->asName();
-  TokenKind tt = ReservedWordTokenKind(atom);
-  if (tt == TokenKind::Name) {
+  TokenKind tt = ReservedWordTokenKind(name);
+  if (tt == TokenKind::Limit) {
     return name != TaggedParserAtomIndex::WellKnown::eval() &&
            name != TaggedParserAtomIndex::WellKnown::arguments();
   }
@@ -4781,11 +4779,8 @@ bool Parser<FullParseHandler, Unit>::namedImportsOrNamespaceImport(
         // that is a keyword is a syntax error if it is not followed
         // by the keyword 'as'.
         // See the ImportSpecifier production in ES6 section 15.2.2.
-        const ParserName* name =
-            this->compilationState_.parserAtoms.getParserAtom(importName)
-                ->asName();
-        if (IsKeyword(name)) {
-          error(JSMSG_AS_AFTER_RESERVED_WORD, ReservedWordToCharZ(name));
+        if (IsKeyword(importName)) {
+          error(JSMSG_AS_AFTER_RESERVED_WORD, ReservedWordToCharZ(importName));
           return false;
         }
       }
@@ -10182,13 +10177,16 @@ template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::checkLabelOrIdentifierReference(
     TaggedParserAtomIndex ident, uint32_t offset, YieldHandling yieldHandling,
     TokenKind hint /* = TokenKind::Limit */) {
-  const ParserName* identAtom =
-      this->compilationState_.parserAtoms.getParserAtom(ident)->asName();
   TokenKind tt;
   if (hint == TokenKind::Limit) {
-    tt = ReservedWordTokenKind(identAtom);
+    tt = ReservedWordTokenKind(ident);
   } else {
-    MOZ_ASSERT(hint == ReservedWordTokenKind(identAtom),
+    // All non-reserved word kinds are folded into TokenKind::Limit in
+    // ReservedWordTokenKind and the following code.
+    if (hint == TokenKind::Name || hint == TokenKind::PrivateName) {
+      hint = TokenKind::Limit;
+    }
+    MOZ_ASSERT(hint == ReservedWordTokenKind(ident),
                "hint doesn't match actual token kind");
     tt = hint;
   }
@@ -10199,7 +10197,8 @@ bool GeneralParser<ParseHandler, Unit>::checkLabelOrIdentifierReference(
     return false;
   }
 
-  if (tt == TokenKind::Name) {
+  if (tt == TokenKind::Limit) {
+    // Either TokenKind::Name or TokenKind::PrivateName
     return true;
   }
   if (TokenKindIsContextualKeyword(tt)) {
