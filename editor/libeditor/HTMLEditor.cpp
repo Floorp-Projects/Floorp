@@ -3884,7 +3884,8 @@ nsresult HTMLEditor::SelectEntireDocument() {
 
   // Otherwise, select all children.
   ErrorResult error;
-  SelectionRefPtr()->SelectAllChildren(*bodyOrDocumentElement, error);
+  MOZ_KnownLive(SelectionRefPtr())
+      ->SelectAllChildren(*bodyOrDocumentElement, error);
   if (NS_WARN_IF(Destroyed())) {
     error.SuppressException();
     return NS_ERROR_EDITOR_DESTROYED;
@@ -3914,7 +3915,7 @@ nsresult HTMLEditor::SelectAllInternal() {
   }
 
   nsCOMPtr<nsIContent> anchorContent = anchorNode->AsContent();
-  nsIContent* rootContent;
+  nsCOMPtr<nsIContent> rootContent;
   if (anchorContent->HasIndependentSelection()) {
     SelectionRefPtr()->SetAncestorLimiter(nullptr);
     rootContent = mRootElement;
@@ -3947,7 +3948,7 @@ nsresult HTMLEditor::SelectAllInternal() {
     userSelection.emplace(SelectionRefPtr());
   }
   ErrorResult error;
-  SelectionRefPtr()->SelectAllChildren(*rootContent, error);
+  MOZ_KnownLive(SelectionRefPtr())->SelectAllChildren(*rootContent, error);
   NS_WARNING_ASSERTION(!error.Failed(),
                        "Selection::SelectAllChildren() failed");
   return error.StealNSResult();

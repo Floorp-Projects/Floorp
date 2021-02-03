@@ -616,7 +616,7 @@ nsresult TextEditor::SetTextAsSubAction(const nsAString& aString) {
       //     line here since we will need to recreate it in multiline
       //     text editor.
       ErrorResult error;
-      SelectionRefPtr()->SelectAllChildren(*rootElement, error);
+      MOZ_KnownLive(SelectionRefPtr())->SelectAllChildren(*rootElement, error);
       NS_WARNING_ASSERTION(
           !error.Failed(),
           "Selection::SelectAllChildren() failed, but ignored");
@@ -1594,7 +1594,8 @@ nsresult TextEditor::SelectEntireDocument() {
   }
 
   ErrorResult error;
-  SelectionRefPtr()->SelectAllChildren(*anonymousDivElement, error);
+  MOZ_KnownLive(SelectionRefPtr())
+      ->SelectAllChildren(*anonymousDivElement, error);
   NS_WARNING_ASSERTION(!error.Failed(),
                        "Selection::SelectAllChildren() failed");
   return error.StealNSResult();
