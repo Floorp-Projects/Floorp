@@ -130,9 +130,6 @@ class ConnectionEntry {
   // True if this connection entry has initiated a socket
   bool mUsedForConnection : 1;
 
-  // Try using TCP Fast Open.
-  bool mUseFastOpen : 1;
-
   bool mDoNotDestroy : 1;
 
   bool IsHttp3() const { return mConnInfo->IsHttp3(); }

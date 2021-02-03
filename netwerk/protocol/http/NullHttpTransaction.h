@@ -64,10 +64,6 @@ class NullHttpTransaction : public nsAHttpTransaction {
     return mTimings.secureConnectionStart;
   }
 
-  void SetFastOpenStatus(uint8_t aStatus) override {
-    mFastOpenStatus = aStatus;
-  }
-
  protected:
   virtual ~NullHttpTransaction();
 
@@ -82,7 +78,6 @@ class NullHttpTransaction : public nsAHttpTransaction {
   bool mIsDone;
   bool mClaimed;
   TimingStruct mTimings;
-  uint8_t mFastOpenStatus;
 
  protected:
   RefPtr<nsAHttpConnection> mConnection;

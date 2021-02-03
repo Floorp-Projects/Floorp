@@ -707,7 +707,6 @@ nsSocketTransport::nsSocketTransport()
       mKeepaliveIdleTimeS(-1),
       mKeepaliveRetryIntervalS(-1),
       mKeepaliveProbeCount(-1),
-      mFirstRetryError(NS_OK),
       mDoNotRetryToConnect(false),
       mUsingQuic(false) {
   this->mNetAddr.raw.family = 0;
@@ -1714,10 +1713,6 @@ bool nsSocketTransport::RecoverFromError() {
 
   bool tryAgain = false;
 
-  // This is only needed for telemetry.
-  if (NS_SUCCEEDED(mFirstRetryError)) {
-    mFirstRetryError = mCondition;
-  }
   if ((mState == STATE_CONNECTING) && mDNSRecord) {
     if (mNetAddr.raw.family == AF_INET) {
       if (mSocketTransportService->IsTelemetryEnabledAndNotSleepPhase()) {
@@ -3327,12 +3322,6 @@ void nsSocketTransport::SendPRBlockingTelemetry(
   } else {
     Telemetry::Accumulate(aIDNormal, PR_IntervalToMilliseconds(now - aStart));
   }
-}
-
-NS_IMETHODIMP
-nsSocketTransport::GetFirstRetryError(nsresult* aFirstRetryError) {
-  *aFirstRetryError = mFirstRetryError;
-  return NS_OK;
 }
 
 NS_IMETHODIMP

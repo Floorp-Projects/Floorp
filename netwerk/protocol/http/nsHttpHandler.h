@@ -228,29 +228,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
     return mTCPKeepaliveLongLivedIdleTimeS;
   }
 
-  bool UseFastOpen() {
-    return mUseFastOpen && mFastOpenSupported &&
-           (mFastOpenStallsCounter < mFastOpenStallsLimit) &&
-           (mFastOpenConsecutiveFailureCounter <
-            mFastOpenConsecutiveFailureLimit);
-  }
-  // If one of tcp connections return PR_NOT_TCP_SOCKET_ERROR while trying
-  // fast open, it means that Fast Open is turned off so we will not try again
-  // until a restart. This is only on Linux.
-  void SetFastOpenNotSupported() { mFastOpenSupported = false; }
-
-  void IncrementFastOpenConsecutiveFailureCounter();
-
-  void ResetFastOpenConsecutiveFailureCounter() {
-    mFastOpenConsecutiveFailureCounter = 0;
-  }
-
-  void IncrementFastOpenStallsCounter();
-  uint32_t CheckIfConnectionIsStalledOnlyIfIdleForThisAmountOfSeconds() {
-    return mFastOpenStallsIdleTime;
-  }
-  uint32_t FastOpenStallsTimeout() { return mFastOpenStallsTimeout; }
-
   // returns the HTTP framing check level preference, as controlled with
   // network.http.enforce-framing.http1 and network.http.enforce-framing.soft
   FrameCheckLevel GetEnforceH1Framing() { return mEnforceH1Framing; }
@@ -545,8 +522,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   void NotifyObservers(nsIChannel* chan, const char* event);
 
-  void SetFastOpenOSSupport();
-
   friend class SocketProcessChild;
   void SetHttpHandlerInitArgs(const HttpHandlerInitArgs& aArgs);
   void SetDeviceModelId(const nsCString& aModelId);
@@ -778,15 +753,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   // We may disable speculative connect if the browser has user certificates
   // installed as that might randomly popup the certificate choosing window.
   Atomic<bool, Relaxed> mSpeculativeConnectEnabled;
-
-  Atomic<bool, Relaxed> mUseFastOpen;
-  Atomic<bool, Relaxed> mFastOpenSupported;
-  uint32_t mFastOpenConsecutiveFailureLimit;
-  uint32_t mFastOpenConsecutiveFailureCounter;
-  uint32_t mFastOpenStallsLimit;
-  uint32_t mFastOpenStallsCounter;
-  Atomic<uint32_t, Relaxed> mFastOpenStallsIdleTime;
-  uint32_t mFastOpenStallsTimeout;
 
   // If true, the transactions from active tab will be dispatched first.
   bool mActiveTabPriority;

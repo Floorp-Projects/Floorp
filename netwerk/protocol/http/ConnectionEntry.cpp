@@ -39,13 +39,6 @@ ConnectionEntry::ConnectionEntry(nsHttpConnectionInfo* ci)
       mPreferIPv6(false),
       mUsedForConnection(false),
       mDoNotDestroy(false) {
-  if (mConnInfo->FirstHopSSL() && !mConnInfo->IsHttp3()) {
-    mUseFastOpen = gHttpHandler->UseFastOpen();
-  } else {
-    // Only allow the TCP fast open on a secure connection.
-    mUseFastOpen = false;
-  }
-
   LOG(("ConnectionEntry::ConnectionEntry this=%p key=%s", this,
        ci->HashKey().get()));
 }

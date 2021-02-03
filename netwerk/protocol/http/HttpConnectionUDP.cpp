@@ -38,7 +38,6 @@
 #include "sslt.h"
 #include "NSSErrorsService.h"
 #include "TunnelUtils.h"
-#include "TCPFastOpenLayer.h"
 #include "Http3Session.h"
 
 namespace mozilla {
@@ -138,8 +137,8 @@ nsresult HttpConnectionUDP::Activate(nsAHttpTransaction* trans, uint32_t caps,
         caps));
 
   if (!mExperienced && !trans->IsNullTransaction()) {
-    // For QUIC and TFO we have HttpConnecitonUDP before the actual connection
-    // has been establish so wait fo TFO and TLS handshake to be finished before
+    // For QUIC we have HttpConnecitonUDP before the actual connection
+    // has been establish so wait for TLS handshake to be finished before
     // we mark the connection 'experienced'.
     if (!mExperienced && mHttp3Session->IsConnected()) {
       mExperienced = true;

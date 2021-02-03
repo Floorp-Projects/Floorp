@@ -269,7 +269,6 @@ class Http2Session final : public ASpdySession,
                                             uint32_t*, bool*) final;
   [[nodiscard]] bool Do0RTT() final { return true; }
   [[nodiscard]] nsresult Finish0RTT(bool aRestart, bool aAlpnChanged) final;
-  void SetFastOpenStatus(uint8_t aStatus) final;
 
   // For use by an HTTP2Stream
   void Received421(nsHttpConnectionInfo* ci);
@@ -567,13 +566,10 @@ class Http2Session final : public ASpdySession,
   uint32_t mCntActivated;
 
   // A h2 session will be created before all socket events are trigered,
-  // e.g. NS_NET_STATUS_TLS_HANDSHAKE_ENDED and for TFO many others.
+  // e.g. NS_NET_STATUS_TLS_HANDSHAKE_ENDED.
   // We should propagate this events to the first nsHttpTransaction.
   RefPtr<nsHttpTransaction> mFirstHttpTransaction;
   bool mTlsHandshakeFinished;
-
-  bool mCheckNetworkStallsWithTFO;
-  PRIntervalTime mLastRequestBytesSentTime;
 
   bool mPeerFailedHandshake;
 

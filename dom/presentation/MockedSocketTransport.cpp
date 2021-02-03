@@ -63,11 +63,6 @@ NS_IMETHODIMP
 MockedSocketTransport::Bind(NetAddr*) { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
-MockedSocketTransport::GetFirstRetryError(nsresult*) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 MockedSocketTransport::GetEchConfigUsed(bool*) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -214,11 +209,6 @@ MockedSocketTransport::GetQoSBits(uint8_t*) { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
 MockedSocketTransport::SetQoSBits(uint8_t) { return NS_ERROR_NOT_IMPLEMENTED; }
-
-NS_IMETHODIMP
-MockedSocketTransport::SetFastOpenCallback(TCPFastOpen*) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 }  // namespace dom
 }  // namespace mozilla
