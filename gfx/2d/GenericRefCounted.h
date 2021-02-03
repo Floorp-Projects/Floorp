@@ -60,18 +60,30 @@ class GenericRefCounted : public GenericRefCountedBase {
   virtual void AddRef() override {
     // Note: this method must be thread safe for GenericAtomicRefCounted.
     MOZ_ASSERT(int32_t(refCnt) >= 0);
+#ifndef MOZ_REFCOUNTED_LEAK_CHECKING
+    ++refCnt;
+#else
+    const char* type = typeName();
+    uint32_t size = typeSize();
+    const void* ptr = this;
     MozRefCountType cnt = ++refCnt;
-    detail::RefCountLogger::logAddRef(this, cnt);
+    detail::RefCountLogger::logAddRef(ptr, cnt, type, size);
+#endif
   }
 
   virtual void Release() override {
     // Note: this method must be thread safe for GenericAtomicRefCounted.
     MOZ_ASSERT(int32_t(refCnt) > 0);
-    detail::RefCountLogger::ReleaseLogger logger{this};
+#ifndef MOZ_REFCOUNTED_LEAK_CHECKING
+    MozRefCountType cnt = --refCnt;
+#else
+    const char* type = typeName();
+    const void* ptr = this;
     MozRefCountType cnt = --refCnt;
     // Note: it's not safe to touch |this| after decrementing the refcount,
     // except for below.
-    logger.logRelease(cnt);
+    detail::RefCountLogger::logRelease(ptr, cnt, type);
+#endif
     if (0 == cnt) {
       // Because we have atomically decremented the refcount above, only
       // one thread can get a 0 count here, so as long as we can assume that

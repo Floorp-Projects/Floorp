@@ -58,18 +58,26 @@ class SafeRefCounted : public SafeRefCountedBase {
     // Note: this method must be thread safe for AtomicRefCounted.
     MOZ_ASSERT(int32_t(mRefCnt) >= 0);
     const MozRefCountType cnt = ++mRefCnt;
-    detail::RefCountLogger::logAddRef(static_cast<const T*>(this), cnt);
+#ifdef MOZ_REFCOUNTED_LEAK_CHECKING
+    const char* const type = static_cast<const T*>(this)->typeName();
+    const uint32_t size = static_cast<const T*>(this)->typeSize();
+    const void* const ptr = static_cast<const T*>(this);
+    detail::RefCountLogger::logAddRef(ptr, cnt, type, size);
+#endif
     return cnt;
   }
 
   MozRefCountType Release() const {
     // Note: this method must be thread safe for AtomicRefCounted.
     MOZ_ASSERT(int32_t(mRefCnt) > 0);
-    detail::RefCountLogger::ReleaseLogger logger(static_cast<const T*>(this));
     const MozRefCountType cnt = --mRefCnt;
+#ifdef MOZ_REFCOUNTED_LEAK_CHECKING
+    const char* const type = static_cast<const T*>(this)->typeName();
+    const void* const ptr = static_cast<const T*>(this);
     // Note: it's not safe to touch |this| after decrementing the refcount,
     // except for below.
-    logger.logRelease(cnt);
+    detail::RefCountLogger::logRelease(ptr, cnt, type);
+#endif
     if (0 == cnt) {
       // Because we have atomically decremented the refcount above, only
       // one thread can get a 0 count here, so as long as we can assume that
