@@ -746,8 +746,8 @@ fn bench(args: &SimpleArgs) -> Result<(), Error> {
 }
 
 fn test(args: &SimpleArgs) -> Result<(), Error> {
-    run_mach(&["jstests", "--args=-smoosh"], args)?;
-    run_mach(&["jit-test", "--args=-smoosh"], args)
+    run_mach(&["jstests", "--args=--smoosh"], args)?;
+    run_mach(&["jit-test", "--args=--smoosh"], args)
 }
 
 fn vendor(moz: &MozillaTree) -> Result<(), Error> {
