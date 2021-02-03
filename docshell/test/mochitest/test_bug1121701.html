@@ -14,47 +14,64 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1121701
 
   var testUrl1 = "file_bug1121701_1.html";
   var testUrl2 = "file_bug1121701_2.html";
-  var testWin;
 
+  var bc = new BroadcastChannel("file_bug1121701_1");
+  var bc2 = new BroadcastChannel("file_bug1121701_2");
   var page1LoadCount = 0;
-  function child1PageShow(e) {
-    ++page1LoadCount;
-    if (page1LoadCount == 1) {
-      SimpleTest.executeSoon(function() {
-        is(e.persisted, false, "Initial page load shouldn't be persisted.");
-        testWin.document.body.innerHTML = "modified";
-        testWin.onpagehide = function(event) {
-          testWin.onpagehide = null;
-          ok(event.persisted, "test page 1 should have been persisted");
-          is(testWin.document.body.innerHTML, "modified");
-        };
-        testWin.location.href = testUrl2;
-      });
-    } else if (page1LoadCount == 2) {
-      is(e.persisted, true, "Page load from bfcache should be persisted.");
-      is(testWin.document.body.innerHTML, "modified");
-      testWin.close();
-      SimpleTest.finish();
+  let page1Done = {};
+  page1Done.promise = new Promise(resolve => {
+    page1Done.resolve = resolve;
+  });
+  let page2Done = {};
+  page2Done.promise = new Promise(resolve => {
+    page2Done.resolve = resolve;
+  });
+
+  async function scheduleFinish() {
+    await Promise.all([page1Done.promise, page2Done.promise]);
+    bc2.close();
+    bc.close();
+    SimpleTest.finish();
+  }
+  bc.onmessage = (msgEvent) => {
+    var msg = msgEvent.data;
+    var command = msg.command;
+    if (command == "child1PageShow") {
+      ++page1LoadCount;
+      var persisted = msg.persisted;
+      var pageHideAsserts = msg.pageHideAsserts;
+      if (pageHideAsserts) {
+        ok(pageHideAsserts.persisted, "onpagehide: test page 1 should get persisted");
+        is(pageHideAsserts.innerHTML, "modified",  "onpagehide: innerHTML text is 'modified'");
+      }
+      if (page1LoadCount == 1) {
+        SimpleTest.executeSoon(function() {
+          is(persisted, false, "Initial page load shouldn't be persisted.");
+          bc.postMessage({command: "setInnerHTML", testUrl2});
+        });
+      } else if (page1LoadCount == 2) {
+        is(persisted, true, "Page load from bfcache should be persisted.");
+        is(msg.innerHTML, "modified", "innerHTML text is 'modified'");
+        bc.postMessage({command: "close"});
+      }
+    } else if (command == "closed") {
+      page1Done.resolve();
+    }
+  }
+  bc2.onmessage = (msgEvent) => {
+    var msg = msgEvent.data;
+    var command = msg.command;
+    if (command == "child2PageShow") {
+      bc2.postMessage({command: "setInnerHTML", location: location.href});
+    } else if (command == "onmessage") {
+      page2Done.resolve();
     }
   }
 
-  function child2PageShow(e) {
-    testWin.document.body.innerHTML = "<img>";
-    SimpleTest.executeSoon(function() {
-      testWin.onmessage = function() {
-        ok(true, "Got message");
-        testWin.document.body.firstChild.src = location.href;
-      };
-      testWin.onbeforeunload = function() {
-        testWin.postMessage("foo", "*");
-      };
-      testWin.history.back();
-    });
-  }
-
   SimpleTest.waitForExplicitFinish();
-  addLoadEvent(function() {
-    testWin = window.open(testUrl1);
+  addLoadEvent(async function() {
+    scheduleFinish();
+    window.open(testUrl1, "", "noopener");
   });
 
   </script>
