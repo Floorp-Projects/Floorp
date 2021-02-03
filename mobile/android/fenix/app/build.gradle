@@ -58,8 +58,7 @@ android {
         def deepLinkSchemeValue = "fenix-dev"
         buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
         manifestPlaceholders = [
-                "deepLinkScheme": deepLinkSchemeValue,
-                "requestLegacyExternalStorage": true
+                "deepLinkScheme": deepLinkSchemeValue
         ]
 
         // Build flag for "Mozilla Online" variants. See `Config.isMozillaOnline`.
@@ -94,19 +93,13 @@ android {
             applicationIdSuffix ".fenix.debug"
             resValue "bool", "IS_DEBUG", "true"
             pseudoLocalesEnabled true
-            def deepLinkSchemeValue = "fenix-dev"
-            buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
-            manifestPlaceholders = [
-                    "deepLinkScheme": deepLinkSchemeValue,
-                    "requestLegacyExternalStorage": false
-            ]
         }
         nightly releaseTemplate >> {
             applicationIdSuffix ".fenix"
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
             def deepLinkSchemeValue = "fenix-nightly"
             buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
-            manifestPlaceholders = ["deepLinkScheme": deepLinkSchemeValue, "requestLegacyExternalStorage": false]
+            manifestPlaceholders = ["deepLinkScheme": deepLinkSchemeValue]
         }
         beta releaseTemplate >> {
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
@@ -122,8 +115,7 @@ android {
                     //  - https://issuetracker.google.com/issues/36924841
                     //  - https://issuetracker.google.com/issues/36905922
                     "sharedUserId": "org.mozilla.firefox.sharedID",
-                    "deepLinkScheme": deepLinkSchemeValue,
-                    "requestLegacyExternalStorage": true
+                    "deepLinkScheme": deepLinkSchemeValue
             ]
         }
         release releaseTemplate >> {
@@ -140,8 +132,7 @@ android {
                     //  - https://issuetracker.google.com/issues/36924841
                     //  - https://issuetracker.google.com/issues/36905922
                     "sharedUserId": "org.mozilla.firefox.sharedID",
-                    "deepLinkScheme": deepLinkSchemeValue,
-                    "requestLegacyExternalStorage": true
+                    "deepLinkScheme": deepLinkSchemeValue
             ]
         }
     }

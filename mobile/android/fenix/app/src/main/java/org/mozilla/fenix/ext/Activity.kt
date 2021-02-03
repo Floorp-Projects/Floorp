@@ -17,6 +17,8 @@ import mozilla.components.concept.base.crash.Breadcrumb
  */
 fun Activity.enterToImmersiveMode() {
     window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    // This will be addressed on https://github.com/mozilla-mobile/fenix/issues/17804
+    @Suppress("DEPRECATION")
     window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
             or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
             or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION

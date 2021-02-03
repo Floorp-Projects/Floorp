@@ -34,12 +34,12 @@ class WifiConnectionMonitor(app: Application) {
     private var isRegistered = false
 
     private val frameworkListener = object : ConnectivityManager.NetworkCallback() {
-        override fun onLost(network: Network?) {
+        override fun onLost(network: Network) {
             notifyListeners(false)
             lastKnownStateWasAvailable = false
         }
 
-        override fun onAvailable(network: Network?) {
+        override fun onAvailable(network: Network) {
             notifyListeners(true)
             lastKnownStateWasAvailable = true
         }

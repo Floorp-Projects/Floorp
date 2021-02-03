@@ -47,8 +47,8 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
 
     @VisibleForTesting
     internal val networkCallback = object : ConnectivityManager.NetworkCallback() {
-        override fun onLost(network: Network?) = reloadDevices(network)
-        override fun onAvailable(network: Network?) = reloadDevices(network)
+        override fun onLost(network: Network) = reloadDevices(network)
+        override fun onAvailable(network: Network) = reloadDevices(network)
 
         private fun reloadDevices(network: Network?) {
             viewModelScope.launch(ioDispatcher) {

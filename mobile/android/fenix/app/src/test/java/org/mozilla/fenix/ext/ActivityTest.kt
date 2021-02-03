@@ -18,6 +18,8 @@ import org.robolectric.Shadows.shadowOf
 @RunWith(FenixRobolectricTestRunner::class)
 class ActivityTest {
 
+    // This will be addressed on https://github.com/mozilla-mobile/fenix/issues/17804
+    @Suppress("DEPRECATION")
     @Test
     fun testEnterImmersiveMode() {
         val activity = Robolectric.buildActivity(Activity::class.java).create().get()
