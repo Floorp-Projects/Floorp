@@ -112,9 +112,9 @@ add_task(async function pageaction_popup_image_contextmenu() {
     "#testimg"
   );
 
-  let item = contentAreaContextMenu.querySelector("#context-viewimageinfo");
+  let item = contentAreaContextMenu.querySelector("#context-copyimage");
   ok(!item.hidden);
-  ok(item.disabled);
+  ok(!item.disabled);
 
   await closeContextMenu(contentAreaContextMenu);
 
