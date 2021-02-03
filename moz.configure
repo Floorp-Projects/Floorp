@@ -241,6 +241,8 @@ def original_path():
 
 option(
     "--enable-bootstrap",
+    nargs="?",
+    choices=("install", "update"),
     when=developer_options,
     help="Automatically update/bootstrap some toolchains when they are present but out of date",
 )
@@ -249,6 +251,10 @@ option(
 @depends("--enable-bootstrap", when=developer_options)
 def bootstrap(value):
     if value:
+        # value here is either an empty tuple, or a tuple containing either
+        # 'install' or 'update'. All values but 'install' mean 'update'.
+        if len(value) and value[0] == "install":
+            return "install"
         return True
 
 
@@ -293,7 +299,7 @@ def bootstrap_search_path(*path_parts, **kwargs):
     def bootstrap_search_path(
         bootstrap, order, original_path, toolchains_base_dir, tasks, shell, build_env
     ):
-        def try_bootstrap():
+        def try_bootstrap(exists):
             label = "toolchain-{}-{}".format(
                 tasks.prefix, path_parts[0].replace("_", "-")
             )
@@ -315,10 +321,11 @@ def bootstrap_search_path(*path_parts, **kwargs):
                     index = fh.read().strip()
             except Exception:
                 index = None
-            if index == task_index:
+            if index == task_index and exists:
                 return
             log.info(
-                "Updating bootstrapped toolchain in %s",
+                "%s bootstrapped toolchain in %s",
+                "Updating" if exists else "Installing",
                 os.path.join(toolchains_base_dir, path_parts[0]),
             )
             subprocess.run(
@@ -339,10 +346,10 @@ def bootstrap_search_path(*path_parts, **kwargs):
                 fh.write(task_index)
 
         path = os.path.join(toolchains_base_dir, *path_parts)
-        # Only bootstrap toolchains that have been bootstrapped at least once.
-        if bootstrap and tasks and os.path.exists(path):
+        exists = os.path.exists(path)
+        if bootstrap and tasks and (exists or bootstrap == "install"):
             try:
-                try_bootstrap()
+                try_bootstrap(exists)
             except Exception as e:
                 log.error("%s", e)
                 die("If you can't fix the above, retry with --disable-bootstrap.")
