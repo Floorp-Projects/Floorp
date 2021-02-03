@@ -342,6 +342,21 @@ export class WelcomeScreen extends React.PureComponent {
             />
           </div>
         ) : null;
+      case "image":
+        return this.props.content.tiles.source ? (
+          <div className={`${this.props.content.tiles.media_type}`}>
+            <img
+              src={
+                AboutWelcomeUtils.hasDarkMode() &&
+                this.props.content.tiles.source.dark
+                  ? this.props.content.tiles.source.dark
+                  : this.props.content.tiles.source.default
+              }
+              role="presentation"
+              alt=""
+            />
+          </div>
+        ) : null;
     }
     return null;
   }
