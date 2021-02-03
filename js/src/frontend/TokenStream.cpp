@@ -80,6 +80,12 @@ static const ReservedWordInfo reservedWords[] = {
 #undef RESERVED_WORD_INFO
 };
 
+enum class ReservedWordsIndex : size_t {
+#define ENTRY_(_1, NAME, _3) NAME,
+  FOR_EACH_JAVASCRIPT_RESERVED_WORD(ENTRY_)
+#undef ENTRY_
+};
+
 // Returns a ReservedWordInfo for the specified characters, or nullptr if the
 // string is not a reserved word.
 template <typename CharT>
@@ -129,25 +135,17 @@ MOZ_ALWAYS_INLINE const ReservedWordInfo* FindReservedWord<Utf8Unit>(
   return FindReservedWord(Utf8AsUnsignedChars(units), length);
 }
 
-template <typename CharT>
 static const ReservedWordInfo* FindReservedWord(
-    const CharT* chars, size_t length,
-    js::frontend::NameVisibility* visibility) {
-  if (length > 0 && chars[0] == '#') {
-    *visibility = js::frontend::NameVisibility::Private;
-    return nullptr;
+    const js::frontend::TaggedParserAtomIndex atom) {
+  switch (atom.rawData()) {
+#define CASE_(_1, NAME, _3)                                           \
+  case js::frontend::TaggedParserAtomIndex::WellKnownRawData::NAME(): \
+    return &reservedWords[size_t(ReservedWordsIndex::NAME)];
+    FOR_EACH_JAVASCRIPT_RESERVED_WORD(CASE_)
+#undef CASE_
   }
-  *visibility = js::frontend::NameVisibility::Public;
-  return FindReservedWord(chars, length);
-}
 
-static const ReservedWordInfo* FindReservedWord(
-    const js::frontend::ParserAtomEntry* atom,
-    js::frontend::NameVisibility* visibility) {
-  if (atom->hasLatin1Chars()) {
-    return FindReservedWord(atom->latin1Chars(), atom->length(), visibility);
-  }
-  return FindReservedWord(atom->twoByteChars(), atom->length(), visibility);
+  return nullptr;
 }
 
 static uint32_t GetSingleCodePoint(const char16_t** p, const char16_t* end) {
@@ -315,28 +313,24 @@ bool IsIdentifierNameOrPrivateName(const char16_t* chars, size_t length) {
   return true;
 }
 
-bool IsKeyword(const ParserAtom* atom) {
-  NameVisibility visibility;
-  if (const ReservedWordInfo* rw = FindReservedWord(atom, &visibility)) {
+bool IsKeyword(TaggedParserAtomIndex atom) {
+  if (const ReservedWordInfo* rw = FindReservedWord(atom)) {
     return TokenKindIsKeyword(rw->tokentype);
   }
 
   return false;
 }
 
-TokenKind ReservedWordTokenKind(const ParserName* name) {
-  NameVisibility visibility;
-  if (const ReservedWordInfo* rw = FindReservedWord(name, &visibility)) {
+TokenKind ReservedWordTokenKind(TaggedParserAtomIndex name) {
+  if (const ReservedWordInfo* rw = FindReservedWord(name)) {
     return rw->tokentype;
   }
 
-  return visibility == NameVisibility::Private ? TokenKind::PrivateName
-                                               : TokenKind::Name;
+  return TokenKind::Limit;
 }
 
-const char* ReservedWordToCharZ(const ParserName* name) {
-  NameVisibility visibility;
-  if (const ReservedWordInfo* rw = FindReservedWord(name, &visibility)) {
+const char* ReservedWordToCharZ(TaggedParserAtomIndex name) {
+  if (const ReservedWordInfo* rw = FindReservedWord(name)) {
     return ReservedWordToCharZ(rw->tokentype);
   }
 
