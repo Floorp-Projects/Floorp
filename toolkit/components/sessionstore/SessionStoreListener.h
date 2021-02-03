@@ -135,6 +135,7 @@ class TabListener : public nsIDOMEventListener,
   void SetEpoch(uint32_t aEpoch) { mEpoch = aEpoch; }
   uint32_t GetEpoch() { return mEpoch; }
   void UpdateSHistoryChanges(bool aImmediately);
+  void SetOwnerContent(Element* aElement);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(TabListener, nsIDOMEventListener)
@@ -148,6 +149,8 @@ class TabListener : public nsIDOMEventListener,
   static void TimerCallback(nsITimer* aTimer, void* aClosure);
   void AddTimerForUpdate();
   void StopTimerForUpdate();
+  void AddEventListeners();
+  void RemoveEventListeners();
   bool UpdateSessionStore(uint32_t aFlushId = 0, bool aIsFinal = false);
   void ResetStorageChangeListener();
   void RemoveStorageChangeListener();
