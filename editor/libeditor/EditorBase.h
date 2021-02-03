@@ -2255,7 +2255,7 @@ class EditorBase : public nsIEditor,
    * When you are using AppendNodeToSelectionAsRange(), call this first to
    * start a new selection.
    */
-  nsresult ClearSelection();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult ClearSelection();
 
   /**
    * Initializes selection and caret for the editor.  If aEventTarget isn't

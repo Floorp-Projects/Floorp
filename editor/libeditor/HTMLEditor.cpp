@@ -4451,7 +4451,7 @@ void HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
 
     // If we have not seen the selection yet, clear all of its ranges.
     if (range.mSelection != previousSelection) {
-      range.mSelection->RemoveAllRanges(aError);
+      MOZ_KnownLive(range.mSelection)->RemoveAllRanges(aError);
       if (aError.Failed()) {
         NS_WARNING("Selection::RemoveAllRanges() failed");
         return;
@@ -4728,7 +4728,7 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
     // If we have not seen the selection yet, clear all of its ranges.
     if (range.mSelection != previousSelection) {
       ErrorResult error;
-      range.mSelection->RemoveAllRanges(error);
+      MOZ_KnownLive(range.mSelection)->RemoveAllRanges(error);
       if (NS_WARN_IF(Destroyed())) {
         error.SuppressException();
         return NS_ERROR_EDITOR_DESTROYED;
