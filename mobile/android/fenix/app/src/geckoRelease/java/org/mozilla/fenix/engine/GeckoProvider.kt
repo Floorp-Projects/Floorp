@@ -13,6 +13,7 @@ import mozilla.components.lib.crash.handler.CrashHandlerService
 import mozilla.components.service.sync.logins.GeckoLoginStorageDelegate
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.ext.components
+import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.ContentBlocking.SafeBrowsingProvider

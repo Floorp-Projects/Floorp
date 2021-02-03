@@ -10,7 +10,6 @@ import androidx.core.graphics.BlendModeCompat.SRC_IN
 import androidx.core.graphics.drawable.toBitmap
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
 import mozilla.components.browser.search.DefaultSearchEngineProvider
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.EngineSession
@@ -86,10 +85,6 @@ class AwesomeBarView(
     }
 
     private val selectTabUseCase = object : TabsUseCases.SelectTabUseCase {
-        override fun invoke(session: Session) {
-            interactor.onExistingSessionSelected(session.id)
-        }
-
         override fun invoke(tabId: String) {
             interactor.onExistingSessionSelected(tabId)
         }
