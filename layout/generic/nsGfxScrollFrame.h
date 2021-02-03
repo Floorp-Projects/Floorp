@@ -409,6 +409,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
                         const nsRect& aOldScrollArea);
 
   void MarkScrollbarsDirtyForReflow() const;
+  void InvalidateVerticalScrollbar() const;
 
   bool IsAlwaysActive() const;
   void MarkEverScrolled();
@@ -1092,6 +1093,10 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   void MarkScrollbarsDirtyForReflow() const final {
     mHelper.MarkScrollbarsDirtyForReflow();
   }
+  void InvalidateVerticalScrollbar() const final {
+    mHelper.InvalidateVerticalScrollbar();
+  }
+
   void UpdateScrollbarPosition() final { mHelper.UpdateScrollbarPosition(); }
   bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
                              nsRect* aVisibleRect, nsRect* aDirtyRect,
@@ -1570,6 +1575,9 @@ class nsXULScrollFrame final : public nsBoxFrame,
   }
   void MarkScrollbarsDirtyForReflow() const final {
     mHelper.MarkScrollbarsDirtyForReflow();
+  }
+  void InvalidateVerticalScrollbar() const final {
+    mHelper.InvalidateVerticalScrollbar();
   }
   void UpdateScrollbarPosition() final { mHelper.UpdateScrollbarPosition(); }
 
