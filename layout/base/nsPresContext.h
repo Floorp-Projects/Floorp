@@ -135,7 +135,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   template <typename T>
   using Maybe = mozilla::Maybe<T>;
   using MediaEmulationData = mozilla::MediaEmulationData;
-  using StylePrefersColorScheme = mozilla::StylePrefersColorScheme;
 
   typedef mozilla::ScrollStyles ScrollStyles;
   using TransactionId = mozilla::layers::TransactionId;
@@ -553,11 +552,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
    * and such should also move here.
    */
   void RecomputeBrowsingContextDependentData();
-
-  Maybe<StylePrefersColorScheme> GetOverridePrefersColorScheme() const {
-    return mMediaEmulationData.mPrefersColorScheme;
-  }
-  void SetOverridePrefersColorScheme(const Maybe<StylePrefersColorScheme>&);
 
   mozilla::CSSCoord GetAutoQualityMinFontSize() const {
     return DevPixelsToFloatCSSPixels(mAutoQualityMinFontSizePixelsPref);

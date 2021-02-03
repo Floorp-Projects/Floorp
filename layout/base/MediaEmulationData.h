@@ -11,18 +11,14 @@
 #define mozilla_MediaEmulationData_h
 
 #include "nsAtom.h"
-#include "mozilla/Maybe.h"
 
 namespace mozilla {
-
-enum class StylePrefersColorScheme : uint8_t;
 
 struct MediaEmulationData final {
   MediaEmulationData() = default;
 
   RefPtr<nsAtom> mMedium;
   float mDPPX = 0.0;
-  Maybe<StylePrefersColorScheme> mPrefersColorScheme;
 };
 
 }  // namespace mozilla

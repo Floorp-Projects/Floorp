@@ -19,7 +19,6 @@ DevToolsModules(
     "breakpoint-list.js",
     "changes.js",
     "compatibility.js",
-    "content-viewer.js",
     "css-properties.js",
     "device.js",
     "environment.js",
