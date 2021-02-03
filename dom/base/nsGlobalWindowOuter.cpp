@@ -3108,27 +3108,6 @@ void nsPIDOMWindowOuter::RefreshMediaElementsSuspend(SuspendTypes aSuspend) {
   }
 }
 
-void nsPIDOMWindowOuter::SetServiceWorkersTestingEnabled(bool aEnabled) {
-  // Devtools should only be setting this on the top level window.  Its
-  // ok if devtools clears the flag on clean up of nested windows, though.
-  // It will have no affect.
-#ifdef DEBUG
-  nsCOMPtr<nsPIDOMWindowOuter> topWindow = GetInProcessScriptableTop();
-  MOZ_ASSERT_IF(aEnabled, this == topWindow);
-#endif
-  mServiceWorkersTestingEnabled = aEnabled;
-}
-
-bool nsPIDOMWindowOuter::GetServiceWorkersTestingEnabled() {
-  // Automatically get this setting from the top level window so that nested
-  // iframes get the correct devtools setting.
-  nsCOMPtr<nsPIDOMWindowOuter> topWindow = GetInProcessScriptableTop();
-  if (!topWindow) {
-    return false;
-  }
-  return topWindow->mServiceWorkersTestingEnabled;
-}
-
 mozilla::dom::BrowsingContextGroup*
 nsPIDOMWindowOuter::GetBrowsingContextGroup() const {
   return mBrowsingContext ? mBrowsingContext->Group() : nullptr;
@@ -7625,7 +7604,6 @@ nsPIDOMWindowOuter::nsPIDOMWindowOuter(uint64_t aWindowID)
       mIsRootOuterWindow(false),
       mInnerWindow(nullptr),
       mWindowID(aWindowID),
-      mMarkedCCGeneration(0),
-      mServiceWorkersTestingEnabled(false) {}
+      mMarkedCCGeneration(0) {}
 
 nsPIDOMWindowOuter::~nsPIDOMWindowOuter() = default;

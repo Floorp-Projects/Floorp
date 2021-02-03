@@ -4916,7 +4916,8 @@ already_AddRefed<CacheStorage> nsGlobalWindowInner::GetCaches(
     ErrorResult& aRv) {
   if (!mCacheStorage) {
     bool forceTrustedOrigin =
-        GetOuterWindow()->GetServiceWorkersTestingEnabled();
+        GetBrowsingContext() &&
+        GetBrowsingContext()->Top()->GetServiceWorkersTestingEnabled();
     mCacheStorage = CacheStorage::CreateOnMainThread(
         cache::DEFAULT_NAMESPACE, this, GetEffectiveStoragePrincipal(),
         forceTrustedOrigin, aRv);

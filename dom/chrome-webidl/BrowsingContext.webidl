@@ -145,6 +145,9 @@ interface BrowsingContext {
   // debugging this browsing context.
   [SetterThrows] attribute boolean watchedByDevTools;
 
+  // Enable some service workers testing features, for DevTools.
+  [SetterThrows] attribute boolean serviceWorkersTestingEnabled;
+
   /**
    * A unique identifier for the browser element that is hosting this
    * BrowsingContext tree. Every BrowsingContext in the element's tree will
