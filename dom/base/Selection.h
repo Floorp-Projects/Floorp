@@ -210,8 +210,7 @@ class Selection final : public nsSupportsWeakReference,
     CollapseInternal(InLimiter::eYes, aPoint, aRv);
   }
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  nsresult Extend(nsINode* aContainer, int32_t aOffset);
+  MOZ_CAN_RUN_SCRIPT nsresult Extend(nsINode* aContainer, int32_t aOffset);
 
   /**
    * See mStyledRanges.mRanges.
@@ -329,9 +328,8 @@ class Selection final : public nsSupportsWeakReference,
   MOZ_CAN_RUN_SCRIPT void CollapseToStartJS(mozilla::ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT void CollapseToEndJS(mozilla::ErrorResult& aRv);
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void ExtendJS(nsINode& aContainer, uint32_t aOffset,
-                mozilla::ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void ExtendJS(nsINode& aContainer, uint32_t aOffset,
+                                   mozilla::ErrorResult& aRv);
 
   void SelectAllChildrenJS(nsINode& aNode, mozilla::ErrorResult& aRv);
 
@@ -504,8 +502,8 @@ class Selection final : public nsSupportsWeakReference,
    * @param aOffset    Where in aContainer to place the offset of the new
    *                   selection end.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void Extend(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void Extend(nsINode& aContainer, uint32_t aOffset,
+                                 ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT void AddRangeAndSelectFramesAndNotifyListeners(
       nsRange& aRange, mozilla::ErrorResult& aRv);
