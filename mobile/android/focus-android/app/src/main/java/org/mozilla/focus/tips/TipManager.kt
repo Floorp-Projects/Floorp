@@ -29,8 +29,6 @@ import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.Browsers
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.SupportUtils
-import org.mozilla.focus.utils.homeScreenTipsExperimentDescriptor
-import org.mozilla.focus.utils.isInExperiment
 import java.util.Locale
 import java.util.Random
 
@@ -223,7 +221,6 @@ object TipManager {
     // Will not return a tip if tips are disabled or if MAX TIPS have already been shown.
     @Suppress("ReturnCount", "ComplexMethod") // Using early returns
     fun getNextTipIfAvailable(context: Context): Tip? {
-        if (!context.isInExperiment(homeScreenTipsExperimentDescriptor)) return null
         if (!Settings.getInstance(context).shouldDisplayHomescreenTips()) return null
         val currentLocale = LocaleManager.getInstance().getCurrentLocale(context)
 

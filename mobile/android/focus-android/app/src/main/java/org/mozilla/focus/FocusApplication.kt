@@ -5,7 +5,6 @@
 
 package org.mozilla.focus
 
-import android.content.Context
 import android.os.StrictMode
 import androidx.preference.PreferenceManager
 import kotlinx.coroutines.CoroutineScope
@@ -13,11 +12,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
-import mozilla.components.service.fretboard.Fretboard
-import mozilla.components.service.fretboard.ValuesProvider
-import mozilla.components.service.fretboard.source.kinto.KintoExperimentSource
-import mozilla.components.service.fretboard.storage.flatfile.FlatFileExperimentStorage
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import org.mozilla.focus.locale.LocaleAwareApplication
@@ -28,19 +22,11 @@ import org.mozilla.focus.telemetry.TelemetrySessionObserver
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AdjustHelper
 import org.mozilla.focus.utils.AppConstants
-import org.mozilla.focus.utils.EXPERIMENTS_BASE_URL
-import org.mozilla.focus.utils.EXPERIMENTS_BUCKET_NAME
-import org.mozilla.focus.utils.EXPERIMENTS_COLLECTION_NAME
-import org.mozilla.focus.utils.EXPERIMENTS_JSON_FILENAME
 import org.mozilla.focus.utils.StethoWrapper
 import org.mozilla.focus.web.CleanupSessionObserver
-import org.mozilla.focus.web.WebViewProvider
-import java.io.File
 import kotlin.coroutines.CoroutineContext
 
 class FocusApplication : LocaleAwareApplication(), CoroutineScope {
-    lateinit var fretboard: Fretboard
-
     private var job = Job()
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
@@ -61,7 +47,6 @@ class FocusApplication : LocaleAwareApplication(), CoroutineScope {
         PreferenceManager.setDefaultValues(this, R.xml.settings, false)
 
         TelemetryWrapper.init(this)
-        loadExperiments()
 
         enableStrictMode()
 
@@ -86,24 +71,6 @@ class FocusApplication : LocaleAwareApplication(), CoroutineScope {
             @Suppress("DEPRECATION")
             register(CleanupSessionObserver(this@FocusApplication))
         }
-
-        launch(IO) { fretboard.updateExperiments() }
-    }
-
-    private fun loadExperiments() {
-        val experimentsFile = File(filesDir, EXPERIMENTS_JSON_FILENAME)
-        val experimentSource = KintoExperimentSource(
-            EXPERIMENTS_BASE_URL, EXPERIMENTS_BUCKET_NAME, EXPERIMENTS_COLLECTION_NAME, HttpURLConnectionClient()
-        )
-        fretboard = Fretboard(experimentSource, FlatFileExperimentStorage(experimentsFile),
-            object : ValuesProvider() {
-                override fun getClientId(context: Context): String {
-                    return TelemetryWrapper.clientId
-                }
-            })
-        fretboard.loadExperiments()
-        TelemetryWrapper.recordActiveExperiments(this)
-        WebViewProvider.determineEngine()
     }
 
     private fun enableStrictMode() {

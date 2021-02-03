@@ -12,7 +12,6 @@ import org.mozilla.focus.ext.components
 import org.mozilla.focus.search.CustomSearchEngineStore
 import org.mozilla.focus.utils.Browsers
 import org.mozilla.focus.utils.Settings
-import org.mozilla.focus.utils.app
 import org.mozilla.telemetry.TelemetryHolder
 import org.mozilla.telemetry.measurement.SettingsMeasurement
 
@@ -25,13 +24,11 @@ internal class TelemetrySettingsProvider(
 ) : SettingsMeasurement.SharedPreferenceSettingsProvider() {
     private val prefKeyDefaultBrowser: String
     private val prefKeySearchEngine: String
-    private val prefKeyFretboardBucketNumber: String
 
     init {
         val resources = context.resources
         prefKeyDefaultBrowser = resources.getString(R.string.pref_key_default_browser)
         prefKeySearchEngine = resources.getString(R.string.pref_key_search_engine)
-        prefKeyFretboardBucketNumber = resources.getString(R.string.pref_key_fretboard_bucket_number)
     }
 
     override fun containsKey(key: String): Boolean = when (key) {
@@ -40,9 +37,6 @@ internal class TelemetrySettingsProvider(
 
         // We always want to report the current search engine - even if it's not in settings yet.
         prefKeySearchEngine -> true
-
-        // Not actually a setting - but we want to report this like a setting.
-        prefKeyFretboardBucketNumber -> true
 
         else -> super.containsKey(key)
     }
@@ -71,9 +65,6 @@ internal class TelemetrySettingsProvider(
                     value = CustomSearchEngineStore.ENGINE_TYPE_CUSTOM
                 }
                 value
-            }
-            prefKeyFretboardBucketNumber -> {
-                context.app.fretboard.getUserBucket(context)
             }
             else -> super.getValue(key)
         }

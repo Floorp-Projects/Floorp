@@ -29,7 +29,6 @@ import org.mozilla.focus.session.ui.SessionsSheetFragment
 import org.mozilla.focus.shortcut.HomeScreen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
-import org.mozilla.focus.utils.ExperimentsSyncService
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.ViewUtils
@@ -164,7 +163,6 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         super.onStop()
 
         TelemetryWrapper.stopMainActivity()
-        ExperimentsSyncService.scheduleSync(this)
     }
 
     override fun onNewIntent(unsafeIntent: Intent) {

@@ -12,12 +12,7 @@ import org.mozilla.focus.webview.SystemWebView
 
 object WebViewProvider : IWebViewProvider {
 
-    var engine: IWebViewProvider? = null
-
-    fun determineEngine(): IWebViewProvider {
-        engine = GeckoWebViewProvider()
-        return engine!!
-    }
+    var engine: IWebViewProvider? = GeckoWebViewProvider()
 
     override fun preload(context: Context) {
         engine!!.preload(context)
