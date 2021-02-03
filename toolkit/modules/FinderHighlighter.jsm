@@ -180,6 +180,7 @@ function FinderHighlighter(finder, useTop = false) {
   this._modal = Services.prefs.getBoolPref(kModalHighlightPref);
   this._useSubFrames = false;
   this._useTop = useTop;
+  this._marksListener = null;
   this.finder = finder;
 }
 
@@ -510,6 +511,7 @@ FinderHighlighter.prototype = {
       (foundInThisFrame && !foundRange)
     ) {
       this.hide(window);
+      this.updateScrollMarks();
       return;
     }
 
@@ -538,6 +540,7 @@ FinderHighlighter.prototype = {
           );
         }
       }
+      this.updateScrollMarks();
       return;
     }
 
@@ -594,6 +597,87 @@ FinderHighlighter.prototype = {
     this._removeRangeOutline(window);
   },
 
+  // Update the tick marks that should appear on the page's vertical scrollbar.
+  updateScrollMarks() {
+    // Only show scrollbar marks when normal highlighting is enabled.
+    if (this.useModal() || !this.highlightAll) {
+      this.removeScrollMarks();
+      return;
+    }
+
+    let marks = new Set(); // Use a set so duplicate values are removed.
+    let window = this.finder._getWindow();
+    let yStart = window.scrollY;
+
+    // If the document is not scrollable, there is no scrollbar to show marks on.
+    if (window && window.scrollMaxY > 0) {
+      let controllers = [this.finder._getSelectionController(window)];
+      let editors = this.editors;
+      if (editors) {
+        // Add the selection controllers from any input fields.
+        controllers.push(...editors.map(editor => editor.selectionController));
+      }
+
+      for (let controller of controllers) {
+        let findSelection = controller.getSelection(
+          Ci.nsISelectionController.SELECTION_FIND
+        );
+
+        let rangeCount = findSelection.rangeCount;
+        let yAdj =
+          window.scrollMaxY /
+          window.document.documentElement.getBoundingClientRect().height;
+        for (let r = 0; r < rangeCount; r++) {
+          let rect = findSelection.getRangeAt(r).getBoundingClientRect();
+          let yPos = Math.round((yStart + rect.y + rect.height / 2) * yAdj); // use the midpoint
+          marks.add(yPos);
+        }
+      }
+    }
+
+    if (marks.size) {
+      // Assign the marks to the window and add a listener for the MozScrolledAreaChanged
+      // event which fires whenever the scrollable area's size is updated.
+      window.setScrollMarks(Array.from(marks));
+
+      if (!this._marksListener) {
+        this._marksListener = event => {
+          this.updateScrollMarks();
+        };
+
+        window.addEventListener(
+          "MozScrolledAreaChanged",
+          this._marksListener,
+          true
+        );
+      }
+    } else if (this._marksListener) {
+      // No results were found so remove any existing ones and the MozScrolledAreaChanged listener.
+      this.removeScrollMarks();
+    }
+  },
+
+  removeScrollMarks() {
+    let window;
+    try {
+      window = this.finder._getWindow();
+    } catch (ex) {
+      // An exception can happen after changing remoteness but this
+      // would have deleted the marks anyway.
+      return;
+    }
+
+    if (this._marksListener) {
+      window.removeEventListener(
+        "MozScrolledAreaChanged",
+        this._marksListener,
+        true
+      );
+      this._marksListener = null;
+    }
+    window.setScrollMarks([]);
+  },
+
   /**
    * When the current page is refreshed or navigated away from, the CanvasFrame
    * contents is not valid anymore, i.e. all anonymous content is destroyed.
@@ -626,6 +710,7 @@ FinderHighlighter.prototype = {
       this.clear(window);
     }
     this._modal = useModalHighlight;
+    this.updateScrollMarks();
   },
 
   /**
@@ -643,6 +728,8 @@ FinderHighlighter.prototype = {
       }
       this.clear(window);
       this._scheduleRepaintOfMask(window);
+    } else {
+      this.updateScrollMarks();
     }
   },
 
