@@ -2059,6 +2059,12 @@ void nsFrameLoader::SetOwnerContent(Element* aContent) {
   }
   mOwnerContent = aContent;
 
+  if (mSessionStoreListener && mOwnerContent) {
+    // mOwnerContent will only be null when the frame loader is being destroyed,
+    // so the session store listener will be destroyed along with it.
+    mSessionStoreListener->SetOwnerContent(mOwnerContent);
+  }
+
   if (RefPtr<BrowsingContext> browsingContext = GetExtantBrowsingContext()) {
     browsingContext->SetEmbedderElement(mOwnerContent);
   }

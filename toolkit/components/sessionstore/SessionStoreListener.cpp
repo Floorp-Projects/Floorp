@@ -221,22 +221,50 @@ nsresult TabListener::Init() {
     mStorageObserverRegistered = true;
   }
 
-  nsCOMPtr<EventTarget> eventTarget = GetEventTarget();
-  if (!eventTarget) {
-    return NS_OK;
-  }
-  eventTarget->AddSystemEventListener(u"mozvisualscroll"_ns, this, false);
-  eventTarget->AddSystemEventListener(u"input"_ns, this, false);
-
-  if (mozilla::SessionHistoryInParent()) {
-    eventTarget->AddSystemEventListener(u"DOMTitleChanged"_ns, this, false);
-  }
-
-  mEventListenerRegistered = true;
-  eventTarget->AddSystemEventListener(u"MozSessionStorageChanged"_ns, this,
-                                      false);
-  mStorageChangeListenerRegistered = true;
+  AddEventListeners();
   return NS_OK;
+}
+
+void TabListener::AddEventListeners() {
+  if (nsCOMPtr<EventTarget> eventTarget = GetEventTarget()) {
+    eventTarget->AddSystemEventListener(u"mozvisualscroll"_ns, this, false);
+    eventTarget->AddSystemEventListener(u"input"_ns, this, false);
+    if (mozilla::SessionHistoryInParent()) {
+      eventTarget->AddSystemEventListener(u"DOMTitleChanged"_ns, this, false);
+    }
+    mEventListenerRegistered = true;
+
+    eventTarget->AddSystemEventListener(u"MozSessionStorageChanged"_ns, this,
+                                        false);
+    mStorageChangeListenerRegistered = true;
+  }
+}
+
+void TabListener::RemoveEventListeners() {
+  if (nsCOMPtr<EventTarget> eventTarget = GetEventTarget()) {
+    if (mEventListenerRegistered) {
+      eventTarget->RemoveSystemEventListener(u"mozvisualscroll"_ns, this,
+                                             false);
+      eventTarget->RemoveSystemEventListener(u"input"_ns, this, false);
+      if (mozilla::SessionHistoryInParent()) {
+        eventTarget->RemoveSystemEventListener(u"DOMTitleChanged"_ns, this,
+                                               false);
+      }
+      mEventListenerRegistered = false;
+    }
+    if (mStorageChangeListenerRegistered) {
+      eventTarget->RemoveSystemEventListener(u"MozSessionStorageChanged"_ns,
+                                             this, false);
+      mStorageChangeListenerRegistered = false;
+    }
+  }
+}
+
+void TabListener::SetOwnerContent(Element* aElement) {
+  MOZ_DIAGNOSTIC_ASSERT(aElement);
+  RemoveEventListeners();
+  mOwnerContent = aElement;
+  AddEventListeners();
 }
 
 /* static */
@@ -811,26 +839,7 @@ void TabListener::RemoveListeners() {
     }
   }
 
-  if (mEventListenerRegistered || mStorageChangeListenerRegistered) {
-    nsCOMPtr<EventTarget> eventTarget = GetEventTarget();
-    if (eventTarget) {
-      if (mEventListenerRegistered) {
-        eventTarget->RemoveSystemEventListener(u"mozvisualscroll"_ns, this,
-                                               false);
-        eventTarget->RemoveSystemEventListener(u"input"_ns, this, false);
-        if (mozilla::SessionHistoryInParent()) {
-          eventTarget->RemoveSystemEventListener(u"DOMTitleChanged"_ns, this,
-                                                 false);
-        }
-        mEventListenerRegistered = false;
-      }
-      if (mStorageChangeListenerRegistered) {
-        eventTarget->RemoveSystemEventListener(u"MozSessionStorageChanged"_ns,
-                                               this, false);
-        mStorageChangeListenerRegistered = false;
-      }
-    }
-  }
+  RemoveEventListeners();
 
   if (mPrefObserverRegistered || mStorageObserverRegistered) {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
