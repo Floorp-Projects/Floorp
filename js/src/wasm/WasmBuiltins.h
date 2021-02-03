@@ -75,6 +75,11 @@ extern const SymbolicAddressSignature SASigPostBarrier;
 extern const SymbolicAddressSignature SASigPostBarrierFiltering;
 extern const SymbolicAddressSignature SASigStructNew;
 extern const SymbolicAddressSignature SASigStructNarrow;
+#ifdef ENABLE_WASM_EXCEPTIONS
+extern const SymbolicAddressSignature SASigExceptionNew;
+extern const SymbolicAddressSignature SASigThrowException;
+extern const SymbolicAddressSignature SASigGetLocalExceptionIndex;
+#endif
 
 // A SymbolicAddress that NeedsBuiltinThunk() will call through a thunk to the
 // C++ function. This will be true for all normal calls from normal wasm

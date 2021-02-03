@@ -1460,6 +1460,14 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native struct.new (in wasm)";
     case SymbolicAddress::StructNarrow:
       return "call to native struct.narrow (in wasm)";
+#if defined(ENABLE_WASM_EXCEPTIONS)
+    case SymbolicAddress::ExceptionNew:
+      return "call to native exception new (in wasm)";
+    case SymbolicAddress::ThrowException:
+      return "call to native throw exception (in wasm)";
+    case SymbolicAddress::GetLocalExceptionIndex:
+      return "call to native get the local index of an exn's tag (in wasm)";
+#endif
 #if defined(JS_CODEGEN_MIPS32)
     case SymbolicAddress::js_jit_gAtomic64Lock:
       MOZ_CRASH();

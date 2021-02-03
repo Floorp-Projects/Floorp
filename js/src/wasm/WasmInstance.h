@@ -223,6 +223,12 @@ class Instance {
   static void* structNew(Instance* instance, void* structDescr);
   static void* structNarrow(Instance* instance, void* outputStructDescr,
                             void* maybeNullPtr);
+#ifdef ENABLE_WASM_EXCEPTIONS
+  static void* exceptionNew(Instance* instance, uint32_t exnIndex,
+                            uint32_t nbytes);
+  static void* throwException(Instance* instance, JSObject* exn);
+  static uint32_t getLocalExceptionIndex(Instance* instance, JSObject* exn);
+#endif
 };
 
 using UniqueInstance = UniquePtr<Instance>;
