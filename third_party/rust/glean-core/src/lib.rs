@@ -882,6 +882,34 @@ impl Glean {
         }
     }
 
+    /// Performs the collection/cleanup operations required by becoming active.
+    ///
+    /// This functions generates a baseline ping with reason `active`
+    /// and then sets the dirty bit.
+    pub fn handle_client_active(&mut self) {
+        if let Err(err) = self.internal_pings.baseline.submit(self, Some("active")) {
+            log::warn!("Failed to submit baseline ping on active: {}", err);
+        }
+
+        self.set_dirty_flag(true);
+    }
+
+    /// Performs the collection/cleanup operations required by becoming inactive.
+    ///
+    /// This functions generates a baseline and an events ping with reason
+    /// `inactive` and then clears the dirty bit.
+    pub fn handle_client_inactive(&mut self) {
+        if let Err(err) = self.internal_pings.baseline.submit(self, Some("inactive")) {
+            log::warn!("Failed to submit baseline ping on inactive: {}", err);
+        }
+
+        if let Err(err) = self.internal_pings.events.submit(self, Some("inactive")) {
+            log::warn!("Failed to submit events ping on inactive: {}", err);
+        }
+
+        self.set_dirty_flag(false);
+    }
+
     /// **Test-only API (exported for FFI purposes).**
     ///
     /// Checks if an experiment is currently active.

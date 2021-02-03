@@ -21,7 +21,16 @@ pub struct InternalPings {
 impl InternalPings {
     pub fn new() -> InternalPings {
         InternalPings {
-            baseline: PingType::new("baseline", true, false, vec![]),
+            baseline: PingType::new(
+                "baseline",
+                true,
+                false,
+                vec![
+                    "active".to_string(),
+                    "dirty_startup".to_string(),
+                    "inactive".to_string(),
+                ],
+            ),
             metrics: PingType::new(
                 "metrics",
                 true,
@@ -34,7 +43,16 @@ impl InternalPings {
                     "upgrade".to_string(),
                 ],
             ),
-            events: PingType::new("events", true, false, vec![]),
+            events: PingType::new(
+                "events",
+                true,
+                false,
+                vec![
+                    "startup".to_string(),
+                    "inactive".to_string(),
+                    "max_capacity".to_string(),
+                ],
+            ),
             deletion_request: PingType::new("deletion-request", true, true, vec![]),
         }
     }

@@ -872,6 +872,7 @@ fn records_database_file_size() {
     assert!(data.sum > 0);
 }
 
+#[cfg(not(target_os = "windows"))]
 #[test]
 fn records_io_errors() {
     use std::fs;
@@ -905,4 +906,24 @@ fn records_io_errors() {
     // Now we can submit a ping
     let submitted = glean.internal_pings.metrics.submit(&glean, None);
     assert!(submitted.is_ok());
+}
+
+#[test]
+fn test_activity_api() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dir = tempfile::tempdir().unwrap();
+    let (mut glean, _) = new_glean(Some(dir));
+
+    // Signal that the client was active.
+    glean.handle_client_active();
+
+    // Check that we set everything we needed for the 'active' status.
+    assert!(glean.is_dirty_flag_set());
+
+    // Signal back that client is ianctive.
+    glean.handle_client_inactive();
+
+    // Check that we set everything we needed for the 'inactuve' status.
+    assert!(!glean.is_dirty_flag_set());
 }
