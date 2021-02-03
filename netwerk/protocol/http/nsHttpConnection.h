@@ -73,13 +73,6 @@ class nsHttpConnection final : public HttpConnectionBase,
 
   nsHttpConnection();
 
-  void SetFastOpen(bool aFastOpen);
-  // Close this connection and return the transaction. The transaction is
-  // restarted as well. This will only happened before connection is
-  // connected.
-  nsAHttpTransaction* CloseConnectionFastOpenTakesTooLongOrError(
-      bool aCloseocketTransport);
-
   //-------------------------------------------------------------------------
   // XXX document when these are ok to call
 
@@ -165,12 +158,8 @@ class nsHttpConnection final : public HttpConnectionBase,
   // connection since CheckForTraffic() was called.
   bool NoTraffic() {
     return mTrafficStamp &&
-           (mTrafficCount == (mTotalBytesWritten + mTotalBytesRead)) &&
-           !mFastOpen;
+           (mTrafficCount == (mTotalBytesWritten + mTotalBytesRead));
   }
-
-  void SetFastOpenStatus(uint8_t tfoStatus);
-  uint8_t GetFastOpenStatus() { return mFastOpenStatus; }
 
   // Return true when the socket this connection is using has not been
   // authenticated using a client certificate.  Before SSL negotiation
@@ -338,14 +327,6 @@ class nsHttpConnection final : public HttpConnectionBase,
   bool mEarlyDataNegotiated;  // Only used for telemetry
   nsCString mEarlyNegotiatedALPN;
   bool mDid0RTTSpdy;
-
-  bool mFastOpen;
-  uint8_t mFastOpenStatus;
-
-  bool mForceSendDuringFastOpenPending;
-  bool mReceivedSocketWouldBlockDuringFastOpen;
-  bool mCheckNetworkStallsWithTFO;
-  PRIntervalTime mLastRequestBytesSentTime;
 
  private:
   bool mThroughCaptivePortal;

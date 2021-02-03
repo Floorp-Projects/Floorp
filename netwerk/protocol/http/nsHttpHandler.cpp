@@ -113,14 +113,6 @@
 #define SAFE_HINT_HEADER_VALUE "safeHint.enabled"
 #define SECURITY_PREFIX "security."
 #define DOM_SECURITY_PREFIX "dom.security"
-#define TCP_FAST_OPEN_ENABLE "network.tcp.tcp_fastopen_enable"
-#define TCP_FAST_OPEN_FAILURE_LIMIT \
-  "network.tcp.tcp_fastopen_consecutive_failure_limit"
-#define TCP_FAST_OPEN_STALLS_LIMIT "network.tcp.tcp_fastopen_http_stalls_limit"
-#define TCP_FAST_OPEN_STALLS_IDLE \
-  "network.tcp.tcp_fastopen_http_check_for_stalls_only_if_idle_for"
-#define TCP_FAST_OPEN_STALLS_TIMEOUT \
-  "network.tcp.tcp_fastopen_http_stalls_timeout"
 
 #define ACCEPT_HEADER_STYLE "text/css,*/*;q=0.1"
 #define ACCEPT_HEADER_ALL "*/*"
@@ -309,13 +301,6 @@ nsHttpHandler::nsHttpHandler()
       mMaxHttpResponseHeaderSize(393216),
       mFocusedWindowTransactionRatio(0.9f),
       mSpeculativeConnectEnabled(false),
-      mUseFastOpen(true),
-      mFastOpenConsecutiveFailureLimit(5),
-      mFastOpenConsecutiveFailureCounter(0),
-      mFastOpenStallsLimit(3),
-      mFastOpenStallsCounter(0),
-      mFastOpenStallsIdleTime(10),
-      mFastOpenStallsTimeout(20),
       mActiveTabPriority(true),
       mProcessId(0),
       mNextChannelId(1),
@@ -333,83 +318,6 @@ nsHttpHandler::nsHttpHandler()
   if (runtime) {
     runtime->GetProcessID(&mProcessId);
   }
-
-  mFastOpenSupported = false;
-  if (XRE_IsParentProcess()) {
-    SetFastOpenOSSupport();
-  }
-}
-
-void nsHttpHandler::SetFastOpenOSSupport() {
-#if !defined(XP_WIN) && !defined(XP_LINUX) && !defined(ANDROID) && \
-    !defined(HAS_CONNECTX)
-  return;
-#elif defined(XP_WIN)
-  mFastOpenSupported = IsWindows10BuildOrLater(16299);
-
-  if (mFastOpenSupported) {
-    // We have some problems with lavasoft software and tcp fast open.
-    if (GetModuleHandleW(L"pmls64.dll") || GetModuleHandleW(L"rlls64.dll")) {
-      mFastOpenSupported = false;
-    }
-  }
-#else
-
-  nsAutoCString version;
-  nsresult rv;
-#  ifdef ANDROID
-  nsCOMPtr<nsIPropertyBag2> infoService =
-      do_GetService("@mozilla.org/system-info;1");
-  MOZ_ASSERT(infoService, "Could not find a system info service");
-  rv = infoService->GetPropertyAsACString(u"sdk_version"_ns, version);
-#  else
-  char buf[SYS_INFO_BUFFER_LENGTH];
-  if (PR_GetSystemInfo(PR_SI_RELEASE, buf, sizeof(buf)) == PR_SUCCESS) {
-    version = buf;
-    rv = NS_OK;
-  } else {
-    rv = NS_ERROR_FAILURE;
-  }
-#  endif
-
-  LOG(("nsHttpHandler::SetFastOpenOSSupport version %s", version.get()));
-
-  if (NS_SUCCEEDED(rv)) {
-    // set min version minus 1.
-#  if XP_MACOSX
-    int min_version[] = {17, 5};  // High Sierra 10.13.4
-#  elif ANDROID
-    int min_version[] = {4, 4};
-#  elif XP_LINUX
-    int min_version[] = {3, 6};
-#  endif
-    int inx = 0;
-    nsCCharSeparatedTokenizer tokenizer(version, '.');
-    while ((inx < 2) && tokenizer.hasMoreTokens()) {
-      nsAutoCString token(tokenizer.nextToken());
-      const char* nondigit = NS_strspnp("0123456789", token.get());
-      if (nondigit && *nondigit) {
-        break;
-      }
-      nsresult rv;
-      int32_t ver = token.ToInteger(&rv);
-      if (NS_FAILED(rv)) {
-        break;
-      }
-      if (ver > min_version[inx]) {
-        mFastOpenSupported = true;
-        break;
-      } else if (ver == min_version[inx] && inx == 1) {
-        mFastOpenSupported = true;
-      } else if (ver < min_version[inx]) {
-        break;
-      }
-      inx++;
-    }
-  }
-#endif
-  LOG(("nsHttpHandler::SetFastOpenOSSupport %s supported.\n",
-       mFastOpenSupported ? "" : "not"));
 }
 
 nsHttpHandler::~nsHttpHandler() {
@@ -444,11 +352,6 @@ static const char* gCallbackPrefs[] = {
     SAFE_HINT_HEADER_VALUE,
     SECURITY_PREFIX,
     DOM_SECURITY_PREFIX,
-    TCP_FAST_OPEN_ENABLE,
-    TCP_FAST_OPEN_FAILURE_LIMIT,
-    TCP_FAST_OPEN_STALLS_LIMIT,
-    TCP_FAST_OPEN_STALLS_IDLE,
-    TCP_FAST_OPEN_STALLS_TIMEOUT,
     "image.http.accept",
     "image.avif.enabled",
     "image.webp.enabled",
@@ -600,11 +503,6 @@ nsresult nsHttpHandler::Init() {
           this, "net:current-toplevel-outer-content-windowid", true);
     }
 
-    if (mFastOpenSupported) {
-      obsService->AddObserver(this, "captive-portal-login", true);
-      obsService->AddObserver(this, "captive-portal-login-success", true);
-    }
-
     // disabled as its a nop right now
     // obsService->AddObserver(this, "net:failed-to-process-uri-content", true);
   }
@@ -665,10 +563,9 @@ nsresult nsHttpHandler::InitConnectionMgr() {
                     ->SendPHttpConnectionMgrConstructor(
                         parent,
                         HttpHandlerInitArgs(
-                            self->mFastOpenSupported, self->mLegacyAppName,
-                            self->mLegacyAppVersion, self->mPlatform,
-                            self->mOscpu, self->mMisc, self->mProduct,
-                            self->mProductSub, self->mAppName,
+                            self->mLegacyAppName, self->mLegacyAppVersion,
+                            self->mPlatform, self->mOscpu, self->mMisc,
+                            self->mProduct, self->mProductSub, self->mAppName,
                             self->mAppVersion, self->mCompatFirefox,
                             self->mCompatDevice, self->mDeviceModelId));
     };
@@ -791,37 +688,6 @@ bool nsHttpHandler::IsAcceptableEncoding(const char* enc, bool isSecure) {
   LOG(("nsHttpHandler::IsAceptableEncoding %s https=%d %d\n", enc, isSecure,
        rv));
   return rv;
-}
-
-void nsHttpHandler::IncrementFastOpenConsecutiveFailureCounter() {
-  LOG(
-      ("nsHttpHandler::IncrementFastOpenConsecutiveFailureCounter - "
-       "failed=%d failure_limit=%d",
-       mFastOpenConsecutiveFailureCounter, mFastOpenConsecutiveFailureLimit));
-  if (mFastOpenConsecutiveFailureCounter < mFastOpenConsecutiveFailureLimit) {
-    mFastOpenConsecutiveFailureCounter++;
-    if (mFastOpenConsecutiveFailureCounter ==
-        mFastOpenConsecutiveFailureLimit) {
-      LOG(
-          ("nsHttpHandler::IncrementFastOpenConsecutiveFailureCounter - "
-           "Fast open failed too many times"));
-    }
-  }
-}
-
-void nsHttpHandler::IncrementFastOpenStallsCounter() {
-  LOG(
-      ("nsHttpHandler::IncrementFastOpenStallsCounter - failed=%d "
-       "failure_limit=%d",
-       mFastOpenStallsCounter, mFastOpenStallsLimit));
-  if (mFastOpenStallsCounter < mFastOpenStallsLimit) {
-    mFastOpenStallsCounter++;
-    if (mFastOpenStallsCounter == mFastOpenStallsLimit) {
-      LOG(
-          ("nsHttpHandler::IncrementFastOpenStallsCounter - "
-           "There are too many stalls involving TFO and TLS."));
-    }
-  }
 }
 
 nsresult nsHttpHandler::GetStreamConverterService(
@@ -1905,53 +1771,6 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     }
   }
 
-  if (PREF_CHANGED(TCP_FAST_OPEN_ENABLE)) {
-    rv = Preferences::GetBool(TCP_FAST_OPEN_ENABLE, &cVar);
-    if (NS_SUCCEEDED(rv)) {
-      mUseFastOpen = cVar;
-    }
-  }
-
-  if (PREF_CHANGED(TCP_FAST_OPEN_FAILURE_LIMIT)) {
-    rv = Preferences::GetInt(TCP_FAST_OPEN_FAILURE_LIMIT, &val);
-    if (NS_SUCCEEDED(rv)) {
-      if (val < 0) {
-        val = 0;
-      }
-      mFastOpenConsecutiveFailureLimit = val;
-    }
-  }
-
-  if (PREF_CHANGED(TCP_FAST_OPEN_STALLS_LIMIT)) {
-    rv = Preferences::GetInt(TCP_FAST_OPEN_STALLS_LIMIT, &val);
-    if (NS_SUCCEEDED(rv)) {
-      if (val < 0) {
-        val = 0;
-      }
-      mFastOpenStallsLimit = val;
-    }
-  }
-
-  if (PREF_CHANGED(TCP_FAST_OPEN_STALLS_TIMEOUT)) {
-    rv = Preferences::GetInt(TCP_FAST_OPEN_STALLS_TIMEOUT, &val);
-    if (NS_SUCCEEDED(rv)) {
-      if (val < 0) {
-        val = 0;
-      }
-      mFastOpenStallsTimeout = val;
-    }
-  }
-
-  if (PREF_CHANGED(TCP_FAST_OPEN_STALLS_IDLE)) {
-    rv = Preferences::GetInt(TCP_FAST_OPEN_STALLS_IDLE, &val);
-    if (NS_SUCCEEDED(rv)) {
-      if (val < 0) {
-        val = 0;
-      }
-      mFastOpenStallsIdleTime = val;
-    }
-  }
-
   if (PREF_CHANGED(HTTP_PREF("spdy.default-hpack-buffer"))) {
     rv = Preferences::GetInt(HTTP_PREF("spdy.default-hpack-buffer"), &val);
     if (NS_SUCCEEDED(rv)) {
@@ -2359,19 +2178,6 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
       } else {
         Telemetry::Accumulate(Telemetry::DNT_USAGE, 1);
       }
-
-      if (UseFastOpen()) {
-        Telemetry::Accumulate(Telemetry::TCP_FAST_OPEN_STATUS, 0);
-      } else if (!mFastOpenSupported) {
-        Telemetry::Accumulate(Telemetry::TCP_FAST_OPEN_STATUS, 1);
-      } else if (!mUseFastOpen) {
-        Telemetry::Accumulate(Telemetry::TCP_FAST_OPEN_STATUS, 2);
-      } else if (mFastOpenConsecutiveFailureCounter >=
-                 mFastOpenConsecutiveFailureLimit) {
-        Telemetry::Accumulate(Telemetry::TCP_FAST_OPEN_STATUS, 3);
-      } else {
-        Telemetry::Accumulate(Telemetry::TCP_FAST_OPEN_STATUS, 4);
-      }
     }
   } else if (!strcmp(topic, "profile-change-net-restore")) {
     // initialize connection manager
@@ -2468,11 +2274,6 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
         }
       }
     }
-  } else if (!strcmp(topic, "captive-portal-login") ||
-             !strcmp(topic, "captive-portal-login-success")) {
-    // We have detected a captive portal and we will reset the Fast Open
-    // failure counter.
-    ResetFastOpenConsecutiveFailureCounter();
   } else if (!strcmp(topic, "psm:user-certificate-added")) {
     // A user certificate has just been added.
     // We should immediately disable speculative connect
@@ -2976,7 +2777,6 @@ void nsHttpHandler::ClearHostMapping(nsHttpConnectionInfo* aConnInfo) {
 
 void nsHttpHandler::SetHttpHandlerInitArgs(const HttpHandlerInitArgs& aArgs) {
   MOZ_ASSERT(XRE_IsSocketProcess());
-  mFastOpenSupported = aArgs.mFastOpenSupported();
   mLegacyAppName = aArgs.mLegacyAppName();
   mLegacyAppVersion = aArgs.mLegacyAppVersion();
   mPlatform = aArgs.mPlatform();

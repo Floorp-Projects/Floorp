@@ -47,7 +47,6 @@ namespace mozilla {
 namespace net {
 
 struct HttpHandlerInitArgs {
-  bool mFastOpenSupported;
   nsCString mLegacyAppName;
   nsCString mLegacyAppVersion;
   nsCString mPlatform;
