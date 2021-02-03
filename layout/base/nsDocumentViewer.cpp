@@ -239,6 +239,9 @@ NS_IMPL_ISUPPORTS(BFCachePreventionObserver, nsIMutationObserver)
 
 void BFCachePreventionObserver::CharacterDataChanged(
     nsIContent* aContent, const CharacterDataChangeInfo&) {
+  if (aContent->IsInNativeAnonymousSubtree()) {
+    return;
+  }
   MutationHappened();
 }
 
@@ -247,19 +250,31 @@ void BFCachePreventionObserver::AttributeChanged(Element* aElement,
                                                  nsAtom* aAttribute,
                                                  int32_t aModType,
                                                  const nsAttrValue* aOldValue) {
+  if (aElement->IsInNativeAnonymousSubtree()) {
+    return;
+  }
   MutationHappened();
 }
 
 void BFCachePreventionObserver::ContentAppended(nsIContent* aFirstNewContent) {
+  if (aFirstNewContent->IsInNativeAnonymousSubtree()) {
+    return;
+  }
   MutationHappened();
 }
 
 void BFCachePreventionObserver::ContentInserted(nsIContent* aChild) {
+  if (aChild->IsInNativeAnonymousSubtree()) {
+    return;
+  }
   MutationHappened();
 }
 
 void BFCachePreventionObserver::ContentRemoved(nsIContent* aChild,
                                                nsIContent* aPreviousSibling) {
+  if (aChild->IsInNativeAnonymousSubtree()) {
+    return;
+  }
   MutationHappened();
 }
 
