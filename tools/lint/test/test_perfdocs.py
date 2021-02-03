@@ -168,6 +168,42 @@ def test_perfdocs_bad_paths(structured_logger, config, paths):
 
 
 @mock.patch("perfdocs.logger.PerfDocLogger")
+def test_perfdocs_gatherer_fetch_perfdocs_tree(
+    logger, structured_logger, perfdocs_sample
+):
+    top_dir = perfdocs_sample["top_dir"]
+    setup_sample_logger(logger, structured_logger, top_dir)
+
+    from perfdocs.gatherer import Gatherer
+
+    gatherer = Gatherer(top_dir)
+    assert not gatherer._perfdocs_tree
+
+    gatherer.fetch_perfdocs_tree()
+    assert gatherer._perfdocs_tree
+
+    expected = ["path", "yml", "rst", "static"]
+    for i, key in enumerate(gatherer._perfdocs_tree[0].keys()):
+        assert key == expected[i]
+
+
+@mock.patch("perfdocs.logger.PerfDocLogger")
+def test_perfdocs_gatherer_get_test_list(logger, structured_logger, perfdocs_sample):
+    top_dir = perfdocs_sample["top_dir"]
+    setup_sample_logger(logger, structured_logger, top_dir)
+
+    from perfdocs.gatherer import Gatherer
+
+    gatherer = Gatherer(top_dir)
+    gatherer.fetch_perfdocs_tree()
+    framework = gatherer.get_test_list(gatherer._perfdocs_tree[0])
+
+    expected = ["name", "test_list", "yml_content", "yml_path"]
+    for i, key in enumerate(sorted(framework.keys())):
+        assert key == expected[i]
+
+
+@mock.patch("perfdocs.logger.PerfDocLogger")
 def test_perfdocs_verification(logger, structured_logger, perfdocs_sample):
     top_dir = perfdocs_sample["top_dir"]
     setup_sample_logger(logger, structured_logger, top_dir)
@@ -330,6 +366,35 @@ def test_perfdocs_verifier_not_existing_tests_in_suites(
         "Could not find an existing test for DifferentName - bad test name?",
         "Could not find a test description for Example",
     ]
+
+    assert logger.warning.call_count == 2
+    for i, call in enumerate(logger.warning.call_args_list):
+        args, _ = call
+        assert args[0] == expected[i]
+
+
+@mock.patch("perfdocs.logger.PerfDocLogger")
+def test_perfdocs_verifier_missing_contents_in_suite(
+    logger, structured_logger, perfdocs_sample
+):
+    top_dir = perfdocs_sample["top_dir"]
+    setup_sample_logger(logger, structured_logger, top_dir)
+
+    with open(perfdocs_sample["config"], "r") as file:
+        filedata = file.read()
+        filedata = filedata.replace("suite:", "InvalidSuite:")
+    with open(perfdocs_sample["config"], "w") as file:
+        file.write(filedata)
+
+    from perfdocs.verifier import Verifier
+
+    verifier = Verifier(top_dir)
+    verifier._check_framework_descriptions(verifier._gatherer.perfdocs_tree[0])
+
+    expected = (
+        "Could not find an existing suite for InvalidSuite - bad suite name?",
+        "Missing suite description for suite",
+    )
 
     assert logger.warning.call_count == 2
     for i, call in enumerate(logger.warning.call_args_list):
