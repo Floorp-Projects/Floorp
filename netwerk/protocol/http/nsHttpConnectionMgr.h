@@ -21,7 +21,6 @@
 #include "ARefBase.h"
 #include "nsWeakReference.h"
 #include "ConnectionEntry.h"
-#include "TCPFastOpen.h"
 
 #include "nsINamed.h"
 #include "nsIObserver.h"

@@ -43,7 +43,6 @@
 #include "ConnectionHandle.h"
 #include "HttpConnectionUDP.h"
 #include "SpeculativeTransaction.h"
-#include "TCPFastOpenLayer.h"
 
 namespace mozilla {
 namespace net {
@@ -595,8 +594,7 @@ void nsHttpConnectionMgr::OnMsgClearConnectionHistory(int32_t,
     RefPtr<ConnectionEntry> ent = iter.Data();
     if (ent->IdleConnectionsLength() == 0 && ent->ActiveConnsLength() == 0 &&
         ent->HalfOpensLength() == 0 && ent->UrgentStartQueueLength() == 0 &&
-        ent->PendingQueueLength() == 0 &&
-        ent->HalfOpenFastOpenBackupsLength() == 0 && !ent->mDoNotDestroy) {
+        ent->PendingQueueLength() == 0 && !ent->mDoNotDestroy) {
       iter.Remove();
     }
   }
@@ -1916,8 +1914,7 @@ void nsHttpConnectionMgr::AbortAndCloseAllConnections(int32_t, ARefBase*) {
     // Close all half open tcp connections.
     ent->CloseAllHalfOpens();
 
-    MOZ_ASSERT(ent->HalfOpenFastOpenBackupsLength() == 0 &&
-               !ent->mDoNotDestroy);
+    MOZ_ASSERT(!ent->mDoNotDestroy);
     iter.Remove();
   }
 
@@ -2183,8 +2180,7 @@ void nsHttpConnectionMgr::OnMsgPruneDeadConnections(int32_t, ARefBase*) {
       if (mCT.Count() > 125 && ent->IdleConnectionsLength() == 0 &&
           ent->ActiveConnsLength() == 0 && ent->HalfOpensLength() == 0 &&
           ent->PendingQueueLength() == 0 &&
-          ent->UrgentStartQueueLength() == 0 &&
-          ent->HalfOpenFastOpenBackupsLength() == 0 && !ent->mDoNotDestroy &&
+          ent->UrgentStartQueueLength() == 0 && !ent->mDoNotDestroy &&
           (!ent->mUsingSpdy || mCT.Count() > 300)) {
         LOG(("    removing empty connection entry\n"));
         iter.Remove();

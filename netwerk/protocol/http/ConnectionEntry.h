@@ -80,13 +80,9 @@ class ConnectionEntry {
   void MoveConnection(HttpConnectionBase* proxyConn, ConnectionEntry* otherEnt);
 
   size_t HalfOpensLength() const { return mHalfOpens.Length(); }
-  size_t HalfOpenFastOpenBackupsLength() const {
-    return mHalfOpenFastOpenBackups.Length();
-  }
+
   void InsertIntoHalfOpens(HalfOpenSocket* sock);
-  void InsertIntoHalfOpenFastOpenBackups(HalfOpenSocket* sock);
   void CloseAllHalfOpens();
-  void RemoveHalfOpenFastOpenBackups(HalfOpenSocket* sock);
   bool IsInHalfOpens(HalfOpenSocket* sock);
 
   HttpRetParams GetConnectionData();
@@ -196,9 +192,6 @@ class ConnectionEntry {
   nsTArray<RefPtr<HttpConnectionBase>> mActiveConns;  // active connections
 
   nsTArray<HalfOpenSocket*> mHalfOpens;  // half open connections
-  nsTArray<RefPtr<HalfOpenSocket>>
-      mHalfOpenFastOpenBackups;  // backup half open connections for
-                                 // connection in fast open phase
 
   PendingTransactionQueue mPendingQ;
   ~ConnectionEntry();

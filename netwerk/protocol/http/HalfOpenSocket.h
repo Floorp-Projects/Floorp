@@ -14,7 +14,6 @@
 #include "nsINamed.h"
 #include "nsITransport.h"
 #include "nsWeakReference.h"
-#include "TCPFastOpen.h"
 
 namespace mozilla {
 namespace net {
@@ -35,8 +34,7 @@ class HalfOpenSocket final : public nsIOutputStreamCallback,
                              public nsIInterfaceRequestor,
                              public nsITimerCallback,
                              public nsINamed,
-                             public nsSupportsWeakReference,
-                             public TCPFastOpen {
+                             public nsSupportsWeakReference {
   ~HalfOpenSocket();
 
  public:
@@ -83,15 +81,8 @@ class HalfOpenSocket final : public nsIOutputStreamCallback,
   bool Claim();
   void Unclaim();
 
-  bool FastOpenEnabled() override;
-  nsresult StartFastOpen() override;
-  void SetFastOpenConnected(nsresult, bool aWillRetry) override;
-  void FastOpenNotSupported() override;
-  void SetFastOpenStatus(uint8_t tfoStatus) override;
-  void CancelFastOpenConnection();
-
  private:
-  nsresult SetupConn(nsIAsyncOutputStream* out, bool aFastOpen);
+  nsresult SetupConn(nsIAsyncOutputStream* out);
 
   // To find out whether |mTransaction| is still in the connection entry's
   // pending queue. If the transaction is found and |removeWhenFound| is
@@ -143,10 +134,6 @@ class HalfOpenSocket final : public nsIOutputStreamCallback,
   // transactions.
   bool mFreeToUse;
   nsresult mPrimaryStreamStatus;
-
-  bool mFastOpenInProgress;
-  RefPtr<nsHttpConnection> mConnectionNegotiatingFastOpen;
-  uint8_t mFastOpenStatus;
 
   RefPtr<ConnectionEntry> mEnt;
   nsCOMPtr<nsITimer> mSynTimer;
