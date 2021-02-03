@@ -18,6 +18,10 @@ linux64/opt:
         max-run-time: 7200
         env:
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
+            # bug 1690154 - enable full symbols on all branches, but only
+            # upload them on the official set. In conjunction with
+            # `enable-full-crashsymbols`.
+            MOZ_ENABLE_FULL_SYMBOLS: "1"
     run:
         using: mozharness
         actions: [get-secrets, build]
@@ -150,6 +154,10 @@ linux64/debug:
         max-run-time: 5400
         env:
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
+            # bug 1690154 - enable full symbols on all branches, but only
+            # upload them on the official set. In conjunction with
+            # `enable-full-crashsymbols`.
+            MOZ_ENABLE_FULL_SYMBOLS: "1"
     run:
         using: mozharness
         actions: [get-secrets, build]
@@ -305,6 +313,10 @@ linux64-devedition/opt:
         max-run-time: 7200
         env:
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
+            # bug 1690154 - enable full symbols on all branches, but only
+            # upload them on the official set. In conjunction with
+            # `enable-full-crashsymbols`.
+            MOZ_ENABLE_FULL_SYMBOLS: "1"
     run:
         using: mozharness
         actions: [get-secrets, build]
@@ -1086,6 +1098,10 @@ linux64-shippable/opt:
         max-run-time: 9000
         env:
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
+            # bug 1690154 - enable full symbols on all branches, but only
+            # upload them on the official set. In conjunction with
+            # `enable-full-crashsymbols`.
+            MOZ_ENABLE_FULL_SYMBOLS: "1"
     run:
         using: mozharness
         actions: [get-secrets, build]
