@@ -77,12 +77,6 @@ loader.lazyRequireGetter(
   "devtools/client/shared/inplace-editor",
   true
 );
-loader.lazyRequireGetter(
-  this,
-  "COLOR_SCHEMES",
-  "devtools/client/inspector/rules/constants",
-  true
-);
 
 const PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
 
@@ -499,7 +493,7 @@ class RulesView {
     await this.currentTarget.reconfigure({
       options: {
         colorSchemeSimulation: nextState,
-      }
+      },
     });
     await this.updateElementStyle();
   }
@@ -511,7 +505,7 @@ class RulesView {
     await this.currentTarget.reconfigure({
       options: {
         printSimulationEnabled: enabled,
-      }
+      },
     });
     await this.updateElementStyle();
   }

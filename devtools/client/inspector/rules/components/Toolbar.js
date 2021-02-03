@@ -90,8 +90,8 @@ class Toolbar extends PureComponent {
   onColorSchemeSimulationClick(event) {
     event.stopPropagation();
 
-    let nextColorScheme =
-        (this.state.currentColorScheme + 1) % COLOR_SCHEMES.length;
+    const nextColorScheme =
+      (this.state.currentColorScheme + 1) % COLOR_SCHEMES.length;
     this.props.onToggleColorSchemeSimulation(COLOR_SCHEMES[nextColorScheme]);
     this.setState(prevState => ({
       currentColorScheme: nextColorScheme,
