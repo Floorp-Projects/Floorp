@@ -88,18 +88,13 @@ class EventSource final : public DOMEventTargetHelper {
 
   nsresult CreateAndDispatchSimpleEvent(const nsAString& aName);
 
-  // Raw pointer because this EventSourceImpl is created, managed and destroyed
+  // This EventSourceImpl is created, managed and destroyed
   // by EventSource.
-  EventSourceImpl* mImpl;
+  RefPtr<EventSourceImpl> mESImpl;
   nsString mOriginalURL;
   uint16_t mReadyState;
   bool mWithCredentials;
   bool mIsMainThread;
-  // This is used to keep EventSourceImpl instance when there is a connection.
-  bool mKeepingAlive;
-
-  void UpdateMustKeepAlive();
-  void UpdateDontKeepAlive();
 };
 
 }  // namespace dom
