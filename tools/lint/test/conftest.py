@@ -205,15 +205,15 @@ def perfdocs_sample():
     )
 
     with temp_dir() as tmpdir:
-        suitedir = os.path.join(tmpdir, "suite")
+        suite_dir = os.path.join(tmpdir, "suite")
         perfdocs_dir = os.path.join(tmpdir, "perfdocs")
         os.mkdir(perfdocs_dir)
-        os.mkdir(suitedir)
+        os.mkdir(suite_dir)
 
         with temp_file(
-            "perftest.ini", tempdir=suitedir, content="[perftest_sample.js]"
+            "perftest.ini", tempdir=suite_dir, content="[perftest_sample.js]"
         ) as tmpmanifest, temp_file(
-            "perftest_sample.js", tempdir=suitedir, content=SAMPLE_TEST
+            "perftest_sample.js", tempdir=suite_dir, content=SAMPLE_TEST
         ) as tmptest, temp_file(
             "config.yml", tempdir=perfdocs_dir, content=SAMPLE_CONFIG
         ) as tmpconfig, temp_file(
