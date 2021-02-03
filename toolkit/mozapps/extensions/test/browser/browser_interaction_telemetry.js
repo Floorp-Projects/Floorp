@@ -131,8 +131,7 @@ async function init(startPage) {
 
   await gCategoryUtilities.openType(startPage);
 
-  return gManagerWindow.document.getElementById("html-view-browser")
-    .contentDocument;
+  return gManagerWindow.document;
 }
 
 /* Test functions start here. */

@@ -74,7 +74,7 @@ add_task(async function testRecentUpdatesList() {
   // Load extension view first so we can mock the startOfDay property.
   let win = await loadInitialView("extension");
   let doc = win.document;
-  let categoryUtils = new CategoryUtilities(win.managerWindow);
+  let categoryUtils = new CategoryUtilities(win);
   const RECENT_URL = "addons://updates/recent";
   let recentCat = categoryUtils.get("recent-updates");
 

@@ -645,8 +645,13 @@ add_task(async function browseraction_contextmenu_report_extension() {
       "Got about:addons tab selected"
     );
 
-    await BrowserTestUtils.browserLoaded(browser);
-
+    // Do not wait for the about:addons tab to be loaded if its
+    // document is already readyState==complete.
+    // This prevents intermittent timeout failures while running
+    // this test in optimized builds.
+    if (browser.contentDocument?.readyState != "complete") {
+      await BrowserTestUtils.browserLoaded(browser);
+    }
     await testReportDialog();
 
     // Close the new about:addons tab when running in customize mode,

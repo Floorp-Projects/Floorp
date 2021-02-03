@@ -179,10 +179,7 @@ async function waitForUpdate(addon) {
  * Trigger an action from the page options menu.
  */
 function triggerPageOptionsAction(win, action) {
-  win
-    .getHtmlBrowser()
-    .contentDocument.querySelector(`#page-options [action="${action}"]`)
-    .click();
+  win.document.querySelector(`#page-options [action="${action}"]`).click();
 }
 
 function isDefaultIcon(icon) {
@@ -484,16 +481,13 @@ async function interactiveUpdateTest(autoUpdate, checkFn) {
     if (manualUpdatePromise) {
       await manualUpdatePromise;
 
-      let doc = win.getHtmlBrowser().contentDocument;
+      let doc = win.document;
       if (win.gViewController.currentViewId !== "addons://updates/available") {
         let showUpdatesBtn = doc.querySelector("addon-updates-message").button;
         await TestUtils.waitForCondition(() => {
           return !showUpdatesBtn.hidden;
         }, "Wait for show updates button");
-        let viewChanged = BrowserTestUtils.waitForEvent(
-          win.document,
-          "ViewChanged"
-        );
+        let viewChanged = BrowserTestUtils.waitForEvent(doc, "ViewChanged");
         showUpdatesBtn.click();
         await viewChanged;
       }

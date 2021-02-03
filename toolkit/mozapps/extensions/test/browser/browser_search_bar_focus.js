@@ -25,18 +25,13 @@ function testKeys(win, searchBox) {
   searchBox.blur();
 }
 
-// Get a stack frame with the expected browser type.
-const testHtmlKeys = (...args) => testKeys(...args);
-const testXulKeys = (...args) => testKeys(...args);
-
 add_task(async function testSearchBarKeyboardAccess() {
   let win = await loadInitialView("extension");
 
   let doc = win.document;
   let searchBox = doc.querySelector("search-addons").input;
 
-  testHtmlKeys(win, searchBox);
-  testXulKeys(win.managerWindow, searchBox);
+  testKeys(win, searchBox);
 
   await closeView(win);
 });

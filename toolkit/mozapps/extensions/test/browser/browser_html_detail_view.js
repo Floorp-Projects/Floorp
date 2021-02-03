@@ -123,11 +123,8 @@ async function hasPrivateAllowed(id) {
 }
 
 async function assertBackButtonIsDisabled(win) {
-  await win.htmlBrowserLoaded;
-
   let backButton = await BrowserTestUtils.waitForCondition(async () => {
-    let doc = win.getHtmlBrowser().contentDocument;
-    let backButton = doc.querySelector(".back-button");
+    let backButton = win.document.querySelector(".back-button");
 
     // Wait until the button is visible in the page.
     return backButton && !backButton.hidden ? backButton : false;

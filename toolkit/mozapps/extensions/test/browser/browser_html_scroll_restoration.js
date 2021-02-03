@@ -62,7 +62,7 @@ add_task(async function setup() {
 
 async function switchToView(win, type, param = "") {
   let loaded = waitForViewLoad(win);
-  win.managerWindow.gViewController.loadView(`addons://${type}/${param}`);
+  win.gViewController.loadView(`addons://${type}/${param}`);
   await loaded;
   await waitForStableLayout(win);
 }
@@ -71,10 +71,10 @@ async function switchToView(win, type, param = "") {
 // delta = +1 = go forwards.
 async function historyGo(win, delta, expectedViewType) {
   let loaded = waitForViewLoad(win);
-  win.managerWindow.history.go(delta);
+  win.history.go(delta);
   await loaded;
   is(
-    win.managerWindow.gViewController.currentViewId,
+    win.gViewController.currentViewId,
     expectedViewType,
     "Expected view after history navigation"
   );

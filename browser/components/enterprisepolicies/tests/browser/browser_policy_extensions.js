@@ -7,10 +7,8 @@ const BASE_URL =
   "http://mochi.test:8888/browser/browser/components/enterprisepolicies/tests/browser";
 
 async function isExtensionLocked(win, addonID) {
-  let addonCard = await BrowserTestUtils.waitForCondition(async () => {
-    let doc = win.getHtmlBrowser().contentDocument;
-    await win.htmlBrowserLoaded;
-    return doc.querySelector(`addon-card[addon-id="${addonID}"]`);
+  let addonCard = await BrowserTestUtils.waitForCondition(() => {
+    return win.document.querySelector(`addon-card[addon-id="${addonID}"]`);
   }, `Get addon-card for "${addonID}"`);
   let disableBtn = addonCard.querySelector('[action="toggle-disabled"]');
   let removeBtn = addonCard.querySelector('panel-item[action="remove"]');
