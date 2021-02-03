@@ -8,6 +8,9 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonRollouts: "resource://normandy/lib/AddonRollouts.jsm",
@@ -45,6 +48,7 @@ log.level = Services.prefs.getIntPref(PREF_LOGGING_LEVEL, Log.Level.Warn);
 var Normandy = {
   studyPrefsChanged: {},
   rolloutPrefsChanged: {},
+  defaultPrefsHaveBeenApplied: PromiseUtils.defer(),
 
   async init({ runAsync = true } = {}) {
     // Initialization that needs to happen before the first paint on startup.
@@ -60,6 +64,7 @@ var Normandy = {
     this.studyPrefsChanged = this.applyStartupPrefs(
       STARTUP_EXPERIMENT_PREFS_BRANCH
     );
+    this.defaultPrefsHaveBeenApplied.resolve();
 
     if (runAsync) {
       Services.obs.addObserver(this, UI_AVAILABLE_NOTIFICATION);
