@@ -543,7 +543,7 @@ nsresult TextEditor::ReplaceTextAsAction(
   // Select the range but as far as possible, we should not create new range
   // even if it's part of special Selection.
   ErrorResult error;
-  SelectionRefPtr()->RemoveAllRanges(error);
+  MOZ_KnownLive(SelectionRefPtr())->RemoveAllRanges(error);
   if (error.Failed()) {
     NS_WARNING("Selection::RemoveAllRanges() failed");
     return error.StealNSResult();

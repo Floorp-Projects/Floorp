@@ -204,8 +204,9 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
   nsresult ScheduleSpellCheck(
       mozilla::UniquePtr<mozInlineSpellStatus>&& aStatus);
 
-  nsresult DoSpellCheckSelection(mozInlineSpellWordUtil& aWordUtil,
-                                 mozilla::dom::Selection* aSpellCheckSelection);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
+  DoSpellCheckSelection(mozInlineSpellWordUtil& aWordUtil,
+                        mozilla::dom::Selection* aSpellCheckSelection);
   nsresult DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
                         mozilla::dom::Selection* aSpellCheckSelection,
                         const mozilla::UniquePtr<mozInlineSpellStatus>& aStatus,

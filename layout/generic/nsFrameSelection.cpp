@@ -2161,10 +2161,13 @@ nsITableCellLayout* nsFrameSelection::GetCellLayout(
 
 nsresult nsFrameSelection::ClearNormalSelection() {
   int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-  if (!mDomSelections[index]) return NS_ERROR_NULL_POINTER;
+  RefPtr<Selection> selection = mDomSelections[index];
+  if (!selection) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   ErrorResult err;
-  mDomSelections[index]->RemoveAllRanges(err);
+  selection->RemoveAllRanges(err);
   return err.StealNSResult();
 }
 

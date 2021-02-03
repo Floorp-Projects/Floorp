@@ -916,7 +916,7 @@ nsresult HTMLEditor::DeleteTableElementAndChildrenWithTransaction(
     // Select the <table> element after clear current selection.
     if (SelectionRefPtr()->RangeCount()) {
       ErrorResult error;
-      SelectionRefPtr()->RemoveAllRanges(error);
+      MOZ_KnownLive(SelectionRefPtr())->RemoveAllRanges(error);
       if (error.Failed()) {
         NS_WARNING("Selection::RemoveAllRanges() failed");
         return error.StealNSResult();
