@@ -535,14 +535,21 @@ size_t CacheableChars::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
 size_t MetadataTier::serializedSize() const {
   return SerializedPodVectorSize(funcToCodeRange) +
          SerializedPodVectorSize(codeRanges) +
-         SerializedPodVectorSize(callSites) + trapSites.serializedSize() +
-         SerializedVectorSize(funcImports) + SerializedVectorSize(funcExports);
+         SerializedPodVectorSize(callSites) +
+#ifdef ENABLE_WASM_EXCEPTIONS
+         SerializedPodVectorSize(tryNotes) +
+#endif
+         trapSites.serializedSize() + SerializedVectorSize(funcImports) +
+         SerializedVectorSize(funcExports);
 }
 
 size_t MetadataTier::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return funcToCodeRange.sizeOfExcludingThis(mallocSizeOf) +
          codeRanges.sizeOfExcludingThis(mallocSizeOf) +
          callSites.sizeOfExcludingThis(mallocSizeOf) +
+#ifdef ENABLE_WASM_EXCEPTIONS
+         tryNotes.sizeOfExcludingThis(mallocSizeOf) +
+#endif
          trapSites.sizeOfExcludingThis(mallocSizeOf) +
          SizeOfVectorExcludingThis(funcImports, mallocSizeOf) +
          SizeOfVectorExcludingThis(funcExports, mallocSizeOf);
@@ -552,6 +559,9 @@ uint8_t* MetadataTier::serialize(uint8_t* cursor) const {
   cursor = SerializePodVector(cursor, funcToCodeRange);
   cursor = SerializePodVector(cursor, codeRanges);
   cursor = SerializePodVector(cursor, callSites);
+#ifdef ENABLE_WASM_EXCEPTIONS
+  cursor = SerializePodVector(cursor, tryNotes);
+#endif
   cursor = trapSites.serialize(cursor);
   cursor = SerializeVector(cursor, funcImports);
   cursor = SerializeVector(cursor, funcExports);
@@ -563,6 +573,9 @@ uint8_t* MetadataTier::serialize(uint8_t* cursor) const {
   (cursor = DeserializePodVector(cursor, &funcToCodeRange)) &&
       (cursor = DeserializePodVector(cursor, &codeRanges)) &&
       (cursor = DeserializePodVector(cursor, &callSites)) &&
+#ifdef ENABLE_WASM_EXCEPTIONS
+      (cursor = DeserializePodVector(cursor, &tryNotes)) &&
+#endif
       (cursor = trapSites.deserialize(cursor)) &&
       (cursor = DeserializeVector(cursor, &funcImports)) &&
       (cursor = DeserializeVector(cursor, &funcExports));
@@ -704,6 +717,9 @@ bool LazyStubTier::createMany(const Uint32Vector& funcExportIndices,
   MOZ_ASSERT(masm.callSites().empty());
   MOZ_ASSERT(masm.callSiteTargets().empty());
   MOZ_ASSERT(masm.trapSites().empty());
+#ifdef ENABLE_WASM_EXCEPTIONS
+  MOZ_ASSERT(masm.tryNotes().empty());
+#endif
 
   if (masm.oom()) {
     return false;
@@ -904,6 +920,11 @@ bool MetadataTier::clone(const MetadataTier& src) {
   if (!debugTrapFarJumpOffsets.appendAll(src.debugTrapFarJumpOffsets)) {
     return false;
   }
+#ifdef ENABLE_WASM_EXCEPTIONS
+  if (!tryNotes.appendAll(src.tryNotes)) {
+    return false;
+  }
+#endif
 
   for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
     if (!trapSites[trap].appendAll(src.trapSites[trap])) {
@@ -1121,6 +1142,24 @@ const CodeRange* CodeTier::lookupRange(const void* pc) const {
   return LookupInSorted(metadata_->codeRanges, target);
 }
 
+#ifdef ENABLE_WASM_EXCEPTIONS
+const wasm::WasmTryNote* CodeTier::lookupWasmTryNote(const void* pc) const {
+  size_t target = (uint8_t*)pc - segment_->base();
+  const WasmTryNoteVector& tryNotes = metadata_->tryNotes;
+
+  // We find the first hit (there may be multiple) to obtain the innermost
+  // handler, which is why we cannot binary search here.
+  for (size_t i = 0; i < tryNotes.length(); i++) {
+    const WasmTryNote& tn = tryNotes[i];
+    if (target >= tn.begin && target < tn.end) {
+      return &tryNotes[i];
+    }
+  }
+
+  return nullptr;
+}
+#endif
+
 bool JumpTables::init(CompileMode mode, const ModuleSegment& ms,
                       const CodeRangeVector& codeRanges) {
   static_assert(JSScript::offsetOfJitCodeRaw() == 0,
@@ -1310,6 +1349,19 @@ const StackMap* Code::lookupStackMap(uint8_t* nextPC) const {
   }
   return nullptr;
 }
+
+#ifdef ENABLE_WASM_EXCEPTIONS
+const wasm::WasmTryNote* Code::lookupWasmTryNote(void* pc, Tier* tier) const {
+  for (Tier t : tiers()) {
+    const WasmTryNote* result = codeTier(t).lookupWasmTryNote(pc);
+    if (result) {
+      *tier = t;
+      return result;
+    }
+  }
+  return nullptr;
+}
+#endif
 
 struct TrapSitePCOffset {
   const TrapSiteVector& trapSites;

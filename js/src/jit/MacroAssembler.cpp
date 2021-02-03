@@ -3640,6 +3640,13 @@ void MacroAssembler::wasmInterruptCheck(Register tls,
   bind(&ok);
 }
 
+#ifdef ENABLE_WASM_EXCEPTIONS
+size_t MacroAssembler::wasmStartTry() {
+  wasm::WasmTryNote tryNote = wasm::WasmTryNote(currentOffset(), 0, 0);
+  return append(tryNote);
+}
+#endif
+
 std::pair<CodeOffset, uint32_t> MacroAssembler::wasmReserveStackChecked(
     uint32_t amount, wasm::BytecodeOffset trapOffset) {
   if (amount > MAX_UNCHECKED_LEAF_FRAME_SIZE) {

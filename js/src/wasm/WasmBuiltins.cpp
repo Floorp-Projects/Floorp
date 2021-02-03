@@ -1426,6 +1426,9 @@ bool wasm::EnsureBuiltinThunksInitialized() {
   MOZ_ASSERT(masm.callSites().empty());
   MOZ_ASSERT(masm.callSiteTargets().empty());
   MOZ_ASSERT(masm.trapSites().empty());
+#ifdef ENABLE_WASM_EXCEPTIONS
+  MOZ_ASSERT(masm.tryNotes().empty());
+#endif
 
   if (!ExecutableAllocator::makeExecutableAndFlushICache(
           FlushICacheSpec::LocalThreadOnly, thunks->codeBase,
