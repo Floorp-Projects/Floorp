@@ -13,6 +13,7 @@
 #include "nsArrayUtils.h"
 #include "nsClipboard.h"
 #include "nsReadableUtils.h"
+#include "nsICookieJarSettings.h"
 #include "nsITransferable.h"
 #include "nsISupportsPrimitives.h"
 #include "IEnumFE.h"
@@ -70,7 +71,8 @@ nsDataObj::CStream::~CStream() {}
 // helper - initializes the stream
 nsresult nsDataObj::CStream::Init(nsIURI* pSourceURI,
                                   nsContentPolicyType aContentPolicyType,
-                                  nsIPrincipal* aRequestingPrincipal) {
+                                  nsIPrincipal* aRequestingPrincipal,
+                                  nsICookieJarSettings* aCookieJarSettings) {
   // we can not create a channel without a requestingPrincipal
   if (!aRequestingPrincipal) {
     return NS_ERROR_FAILURE;
@@ -78,8 +80,7 @@ nsresult nsDataObj::CStream::Init(nsIURI* pSourceURI,
   nsresult rv;
   rv = NS_NewChannel(getter_AddRefs(mChannel), pSourceURI, aRequestingPrincipal,
                      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT,
-                     aContentPolicyType,
-                     nullptr,  // nsICookieJarSettings
+                     aContentPolicyType, aCookieJarSettings,
                      nullptr,  // PerformanceStorage
                      nullptr,  // loadGroup
                      nullptr,  // aCallbacks
@@ -313,8 +314,14 @@ HRESULT nsDataObj::CreateStream(IStream** outStream) {
       mTransferable->GetRequestingPrincipal();
   MOZ_ASSERT(requestingPrincipal, "can not create channel without a principal");
 
+  // Note that the cookieJarSettings could be null if the data object is for the
+  // image copy. We will fix this in Bug 1690532.
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
+      mTransferable->GetCookieJarSettings();
+
   nsContentPolicyType contentPolicyType = mTransferable->GetContentPolicyType();
-  rv = pStream->Init(sourceURI, contentPolicyType, requestingPrincipal);
+  rv = pStream->Init(sourceURI, contentPolicyType, requestingPrincipal,
+                     cookieJarSettings);
   if (NS_FAILED(rv)) {
     pStream->Release();
     return E_FAIL;
