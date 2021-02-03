@@ -138,12 +138,8 @@ let img =
 var imageBuffer = imageBufferFromDataURI(img);
 
 function getInlineOptionsBrowser(aboutAddonsBrowser) {
-  let { contentWindow } = aboutAddonsBrowser;
-  let htmlBrowser = contentWindow.document.getElementById("html-view-browser");
-  return (
-    htmlBrowser.contentDocument.getElementById("addon-inline-options") ||
-    contentWindow.document.getElementById("addon-options")
-  );
+  let { contentDocument } = aboutAddonsBrowser;
+  return contentDocument.getElementById("addon-inline-options");
 }
 
 function getListStyleImage(button) {

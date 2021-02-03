@@ -54,8 +54,7 @@ add_task(async function testClickingSidebarEntriesChangesView() {
 
 add_task(async function testClickingSidebarPaddingNoChange() {
   let win = await loadInitialView("theme");
-  let { managerWindow } = win;
-  let categoryUtils = new CategoryUtilities(managerWindow);
+  let categoryUtils = new CategoryUtilities(win);
   let themeCategory = categoryUtils.get("theme");
 
   let loadDetailView = async () => {
@@ -64,7 +63,7 @@ add_task(async function testClickingSidebarPaddingNoChange() {
     await loaded;
 
     is(
-      managerWindow.gViewController.currentViewId,
+      win.gViewController.currentViewId,
       `addons://detail/${THEME_ID}`,
       "The detail view loaded"
     );
@@ -76,7 +75,7 @@ add_task(async function testClickingSidebarPaddingNoChange() {
   EventUtils.synthesizeMouseAtCenter(themeCategory, {}, win);
   await loaded;
   is(
-    managerWindow.gViewController.currentViewId,
+    win.gViewController.currentViewId,
     `addons://list/theme`,
     "The detail view loaded"
   );
@@ -84,7 +83,7 @@ add_task(async function testClickingSidebarPaddingNoChange() {
   // Confirm that clicking on the padding beside it does nothing.
   await loadDetailView();
   EventUtils.synthesizeMouse(themeCategory, -5, -5, {}, win);
-  ok(!managerWindow.gViewController.isLoading, "No view is loading");
+  ok(!win.gViewController.isLoading, "No view is loading");
 
   await closeView(win);
 });
@@ -108,8 +107,6 @@ add_task(async function testKeyboardUsage() {
 
   ok(!isFocusInCategories(), "Focus is not in the category list");
 
-  // Tab into the HTML browser.
-  await sendTabKey();
   // Tab to the first focusable element.
   await sendTabKey();
 
@@ -148,7 +145,7 @@ add_task(async function testKeyboardUsage() {
 
   await sendKey("VK_DOWN");
   is(win.document.activeElement, pluginCategory, "Plugins is still focused");
-  ok(!win.managerWindow.gViewController.isLoading, "No view is loading");
+  ok(!win.gViewController.isLoading, "No view is loading");
 
   loaded = waitForViewLoad(win);
   await sendKey("VK_UP");

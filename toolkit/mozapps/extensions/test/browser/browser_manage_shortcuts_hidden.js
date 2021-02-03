@@ -5,8 +5,7 @@ async function loadShortcutsView() {
   let managerWin = await open_manager(null);
   managerWin.gViewController.loadView("addons://shortcuts/shortcuts");
   await wait_for_view_load(managerWin);
-  return managerWin.document.getElementById("html-view-browser")
-    .contentDocument;
+  return managerWin.document;
 }
 
 async function closeShortcutsView(doc) {

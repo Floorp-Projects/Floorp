@@ -12,7 +12,7 @@ const RELATIVE_DIR = "toolkit/mozapps/extensions/test/xpinstall/";
 const TESTROOT = "http://example.com/browser/" + RELATIVE_DIR;
 const TESTROOT2 = "http://example.org/browser/" + RELATIVE_DIR;
 const PROMPT_URL = "chrome://global/content/commonDialog.xhtml";
-const ADDONS_URL = "chrome://mozapps/content/extensions/extensions.xhtml";
+const ADDONS_URL = "chrome://mozapps/content/extensions/aboutaddons.html";
 const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
 const PREF_INSTALL_REQUIREBUILTINCERTS =
   "extensions.install.requireBuiltInCerts";

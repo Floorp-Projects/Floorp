@@ -18,7 +18,7 @@ async function loadShortcutsView() {
   // Load the theme view initially so we can verify that the category is switched
   // to "extension" when the shortcuts view is loaded.
   let win = await loadInitialView("theme");
-  let categoryUtils = new CategoryUtilities(win.managerWindow);
+  let categoryUtils = new CategoryUtilities(win);
 
   is(
     categoryUtils.getSelectedViewId(),
@@ -86,11 +86,24 @@ add_task(async function testUpdatingCommands() {
     );
   }
 
+  // Load the about:addons shortcut view before verify that emitting
+  // the key events does trigger the expected extension commands.
+  // There is apparently a race (more likely to be triggered on an
+  // optimized build) between:
+  // - the new opened browser window to be ready to listen for the
+  //   keyboard events that are expected to triggered one of the key
+  //   in the extension keyset
+  // - and the test calling EventUtils.syntesizeKey to test that
+  //   the expected extension command listener is notified.
+  //
+  // Loading the shortcut view before calling checkShortcut seems to be
+  // enough to consistently avoid that race condition.
+  let win = await loadShortcutsView();
+
   // Check that the original shortcuts work.
   await checkShortcut("commandOne", "7", { shiftKey: true, altKey: true });
   await checkShortcut("commandTwo", "4", { altKey: true });
 
-  let win = await loadShortcutsView();
   let doc = win.document;
 
   let card = doc.querySelector(`.card[addon-id="${extension.id}"]`);

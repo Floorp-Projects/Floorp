@@ -43,21 +43,17 @@ const EXT_SYSTEM_ADDON_ID = "test-system-addon@mochi.test";
 const EXT_UNSUPPORTED_TYPE_ADDON_ID = "report-unsupported-type@mochi.test";
 const THEME_NO_UNINSTALL_ID = "theme-without-perm-can-uninstall@mochi.test";
 
-let gHtmlAboutAddonsWindow;
 let gManagerWindow;
 
 AddonTestUtils.initMochitest(this);
 
 async function openAboutAddons(type = "extension") {
-  const win = await loadInitialView(type);
-  gHtmlAboutAddonsWindow = win;
-  gManagerWindow = win.managerWindow;
+  gManagerWindow = await loadInitialView(type);
 }
 
 async function closeAboutAddons() {
-  if (gHtmlAboutAddonsWindow) {
-    await closeView(gHtmlAboutAddonsWindow);
-    gHtmlAboutAddonsWindow = null;
+  if (gManagerWindow) {
+    await closeView(gManagerWindow);
     gManagerWindow = null;
   }
 }
@@ -314,14 +310,14 @@ const AbuseReportTestUtils = {
         }
       }
       function cleanup() {
-        if (gHtmlAboutAddonsWindow) {
-          gHtmlAboutAddonsWindow.document.removeEventListener(
+        if (gManagerWindow) {
+          gManagerWindow.document.removeEventListener(
             "abuse-report:new-message-bar",
             listener
           );
         }
       }
-      gHtmlAboutAddonsWindow.document.addEventListener(
+      gManagerWindow.document.addEventListener(
         "abuse-report:new-message-bar",
         listener
       );
@@ -331,10 +327,7 @@ const AbuseReportTestUtils = {
   // Assert that the report action is hidden on the addon card
   // for the given about:addons windows and extension id.
   async assertReportActionHidden(gManagerWindow, extId) {
-    await gManagerWindow.promiseHtmlBrowserLoaded();
-    const { contentDocument: doc } = gManagerWindow.getHtmlBrowser();
-
-    let addonCard = doc.querySelector(
+    let addonCard = gManagerWindow.document.querySelector(
       `addon-list addon-card[addon-id="${extId}"]`
     );
     ok(addonCard, `Got the addon-card for the ${extId} test extension`);
@@ -364,7 +357,7 @@ const AbuseReportTestUtils = {
   },
 
   triggerNewReport(addonId, reportEntryPoint) {
-    gHtmlAboutAddonsWindow.openAbuseReport({ addonId, reportEntryPoint });
+    gManagerWindow.openAbuseReport({ addonId, reportEntryPoint });
   },
 
   triggerSubmit(reason, message) {
@@ -379,7 +372,7 @@ const AbuseReportTestUtils = {
   async openReport(addonId, reportEntryPoint = REPORT_ENTRY_POINT) {
     // Close the current about:addons window if it has been leaved open from
     // a previous test case failure.
-    if (gHtmlAboutAddonsWindow) {
+    if (gManagerWindow) {
       await closeAboutAddons();
     }
 

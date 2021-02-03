@@ -31,8 +31,8 @@ add_task(async function() {
     ),
   ]);
 
-  let addonsPage = gBrowser.selectedBrowser.contentWindow.document.getElementById(
-    "addons-page"
+  let addonsPage = gBrowser.selectedBrowser.contentWindow.document.querySelector(
+    "title[data-l10n-id='addons-page-title']"
   );
   ok(addonsPage, "Add-ons page was opened");
 });

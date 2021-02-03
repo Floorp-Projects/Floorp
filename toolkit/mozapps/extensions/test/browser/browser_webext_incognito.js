@@ -19,9 +19,7 @@ AddonTestUtils.initMochitest(this);
 function get_test_items() {
   var items = {};
 
-  for (let item of gManagerWindow
-    .getHtmlBrowser()
-    .contentDocument.querySelectorAll("addon-card")) {
+  for (let item of gManagerWindow.document.querySelectorAll("addon-card")) {
     items[item.getAttribute("addon-id")] = item;
   }
 
@@ -29,9 +27,7 @@ function get_test_items() {
 }
 
 function getHtmlElem(selector) {
-  return gManagerWindow
-    .getHtmlBrowser()
-    .contentDocument.querySelector(selector);
+  return gManagerWindow.document.querySelector(selector);
 }
 
 function getPrivateBrowsingBadge(card) {
