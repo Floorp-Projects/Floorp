@@ -184,6 +184,7 @@ void MacroAssemblerCompat::handleFailureWithHandlerTail(
   Label return_;
   Label bailout;
   Label wasm;
+  Label wasmCatch;
 
   MOZ_ASSERT(
       GetStackPointer64().Is(x28));  // Lets the code below be a little cleaner.
@@ -202,6 +203,8 @@ void MacroAssemblerCompat::handleFailureWithHandlerTail(
                     Imm32(ResumeFromException::RESUME_BAILOUT), &bailout);
   asMasm().branch32(Assembler::Equal, r0,
                     Imm32(ResumeFromException::RESUME_WASM), &wasm);
+  asMasm().branch32(Assembler::Equal, r0,
+                    Imm32(ResumeFromException::RESUME_WASM_CATCH), &wasmCatch);
 
   breakpoint();  // Invalid kind.
 
@@ -289,6 +292,14 @@ void MacroAssemblerCompat::handleFailureWithHandlerTail(
                       offsetof(ResumeFromException, stackPointer)));
   syncStackPtr();
   ret();
+
+  // Found a wasm catch handler, restore state and jump to it.
+  bind(&wasmCatch);
+  loadPtr(Address(r28, offsetof(ResumeFromException, target)), r0);
+  loadPtr(Address(r28, offsetof(ResumeFromException, framePointer)), r29);
+  loadPtr(Address(r28, offsetof(ResumeFromException, stackPointer)), r28);
+  syncStackPtr();
+  Br(x0);
 }
 
 void MacroAssemblerCompat::profilerEnterFrame(Register framePtr,

@@ -564,9 +564,7 @@ static void* GetLastProfilingFrame(ResumeFromException* rfe) {
 void HandleExceptionWasm(JSContext* cx, wasm::WasmFrameIter* iter,
                          ResumeFromException* rfe) {
   MOZ_ASSERT(cx->activation()->asJit()->hasWasmExitFP());
-  rfe->kind = ResumeFromException::RESUME_WASM;
-  rfe->framePointer = (uint8_t*)wasm::FailFP;
-  rfe->stackPointer = (uint8_t*)wasm::HandleThrow(cx, *iter);
+  wasm::HandleThrow(cx, *iter, rfe);
   MOZ_ASSERT(iter->done());
 }
 
@@ -609,6 +607,11 @@ void HandleException(ResumeFromException* rfe) {
     if (iter.isWasm()) {
       prevJitFrame = nullptr;
       HandleExceptionWasm(cx, &iter.asWasm(), rfe);
+      // If a wasm try-catch handler is found, we can immediately jump to it
+      // and quit iterating through the stack.
+      if (rfe->kind == ResumeFromException::RESUME_WASM_CATCH) {
+        return;
+      }
       if (!iter.done()) {
         ++iter;
       }

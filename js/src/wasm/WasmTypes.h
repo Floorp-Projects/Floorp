@@ -1035,6 +1035,21 @@ using SharedExceptionTag = RefPtr<ExceptionTag>;
 typedef Vector<SharedExceptionTag, 0, SystemAllocPolicy>
     SharedExceptionTagVector;
 
+// WasmJSExceptionObject wraps a JS Value in order to provide a uniform
+// method of handling JS thrown exceptions. Exceptions originating in Wasm
+// are WebAssemby.RuntimeException objects, whereas exceptions from JS are
+// wrapped as WasmJSExceptionObject objects.
+class WasmJSExceptionObject : public NativeObject {
+  static const unsigned VALUE_SLOT = 0;
+
+ public:
+  static const unsigned RESERVED_SLOTS = 1;
+  static const JSClass class_;
+  const Value& value() const { return getFixedSlot(VALUE_SLOT); }
+
+  static WasmJSExceptionObject* create(JSContext* cx, MutableHandleValue value);
+};
+
 // Code can be compiled either with the Baseline compiler or the Ion compiler,
 // and tier-variant data are tagged with the Tier value.
 //

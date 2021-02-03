@@ -22,6 +22,9 @@
 #include "wasm/WasmTypes.h"
 
 namespace js {
+namespace jit {
+struct ResumeFromException;
+}
 namespace wasm {
 
 class WasmFrameIter;
@@ -94,7 +97,8 @@ bool LookupBuiltinThunk(void* pc, const CodeRange** codeRange,
 
 bool EnsureBuiltinThunksInitialized();
 
-void* HandleThrow(JSContext* cx, WasmFrameIter& iter);
+bool HandleThrow(JSContext* cx, WasmFrameIter& iter,
+                 jit::ResumeFromException* rfe);
 
 void* SymbolicAddressTarget(SymbolicAddress sym);
 
