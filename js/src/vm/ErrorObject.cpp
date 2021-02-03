@@ -483,6 +483,7 @@ bool js::ErrorObject::init(JSContext* cx, Handle<ErrorObject*> obj,
     obj->initSlot(MESSAGE_SLOT, StringValue(message));
   }
   obj->initReservedSlot(SOURCEID_SLOT, Int32Value(sourceId));
+  obj->initReservedSlot(WASM_TRAP_SLOT, BooleanValue(false));
 
   return true;
 }
@@ -687,6 +688,10 @@ bool js::ErrorObject::setStack_impl(JSContext* cx, const CallArgs& args) {
   RootedValue val(cx, args[0]);
 
   return DefineDataProperty(cx, thisObj, cx->names().stack, val);
+}
+
+void js::ErrorObject::setFromWasmTrap() {
+  setReservedSlot(WASM_TRAP_SLOT, BooleanValue(true));
 }
 
 JSString* js::ErrorToSource(JSContext* cx, HandleObject obj) {
