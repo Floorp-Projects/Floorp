@@ -36,8 +36,9 @@
 
 .requests-list-network-summary-button {
   display: inline-flex;
+  align-items: center;
   cursor: pointer;
-  height: 18px;
+  height: 20px;
   background: none;
   box-shadow: none;
   border-color: transparent;
