@@ -377,6 +377,7 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
     if (!entry) {
       return nullptr;
     }
+    Unused << SetHistoryEntryCount(entry->BCHistoryLength());
   } else {
     entry = new SessionHistoryEntry(aLoadState, aChannel);
     if (IsTop()) {
@@ -730,9 +731,10 @@ void CanonicalBrowsingContext::RemoveDynEntriesFromActiveSessionHistoryEntry() {
   shistory->RemoveDynEntries(shistory->GetIndexOfEntry(root), mActiveEntry);
 }
 
-void CanonicalBrowsingContext::RemoveFromSessionHistory() {
+void CanonicalBrowsingContext::RemoveFromSessionHistory(const nsID& aChangeID) {
   nsSHistory* shistory = static_cast<nsSHistory*>(GetSessionHistory());
   if (shistory) {
+    CallerWillNotifyHistoryIndexAndLengthChanges caller(shistory);
     nsCOMPtr<nsISHEntry> root = nsSHistory::GetRootSHEntry(mActiveEntry);
     bool didRemove;
     AutoTArray<nsID, 16> ids({GetHistoryID()});
@@ -749,6 +751,7 @@ void CanonicalBrowsingContext::RemoveFromSessionHistory() {
         }
       }
     }
+    HistoryCommitIndexAndLength(aChangeID, caller);
   }
 }
 

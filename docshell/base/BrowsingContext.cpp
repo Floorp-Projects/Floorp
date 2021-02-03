@@ -2077,6 +2077,10 @@ PopupBlocker::PopupControlState BrowsingContext::RevisePopupAbuseLevel(
   return abuse;
 }
 
+void BrowsingContext::IncrementHistoryEntryCountForBrowsingContext() {
+  Unused << SetHistoryEntryCount(GetHistoryEntryCount() + 1);
+}
+
 std::tuple<bool, bool> BrowsingContext::CanFocusCheck(CallerType aCallerType) {
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (!fm) {
@@ -3170,11 +3174,11 @@ void BrowsingContext::RemoveDynEntriesFromActiveSessionHistoryEntry() {
   }
 }
 
-void BrowsingContext::RemoveFromSessionHistory() {
+void BrowsingContext::RemoveFromSessionHistory(const nsID& aChangeID) {
   if (XRE_IsContentProcess()) {
-    ContentChild::GetSingleton()->SendRemoveFromSessionHistory(this);
+    ContentChild::GetSingleton()->SendRemoveFromSessionHistory(this, aChangeID);
   } else {
-    Canonical()->RemoveFromSessionHistory();
+    Canonical()->RemoveFromSessionHistory(aChangeID);
   }
 }
 
