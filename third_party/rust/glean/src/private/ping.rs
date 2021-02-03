@@ -4,7 +4,9 @@
 
 use inherent::inherent;
 
-/// A Glean ping.
+/// A ping is a bundle of related metrics, gathered in a payload to be transmitted.
+///
+/// The ping payload will be encoded in JSON format and contains shared information data.
 #[derive(Clone, Debug)]
 pub struct PingType {
     pub(crate) name: String,

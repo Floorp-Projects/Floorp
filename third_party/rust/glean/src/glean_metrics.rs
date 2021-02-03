@@ -8,3 +8,21 @@
 // 'glean-parser' from the SDK registry files.
 
 include!(concat!("pings.rs"));
+
+pub mod error {
+    use crate::private::CounterMetric;
+    use crate::{CommonMetricData, Lifetime};
+    use once_cell::sync::Lazy;
+
+    #[allow(non_upper_case_globals)]
+    pub static preinit_tasks_overflow: Lazy<CounterMetric> = Lazy::new(|| {
+        CounterMetric::new(CommonMetricData {
+            name: "glean.error".into(),
+            category: "preinit_tasks_overflow".into(),
+            send_in_pings: vec!["metrics".into()],
+            lifetime: Lifetime::Ping,
+            disabled: false,
+            ..Default::default()
+        })
+    });
+}
