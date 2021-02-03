@@ -108,9 +108,8 @@ void CacheStreamControlChild::OpenStream(const nsID& aId,
   SendOpenStream(aId)->Then(
       GetCurrentSerialEventTarget(), __func__,
       [aResolver,
-       holder = holder.clonePtr()](const Maybe<IPCStream>& aOptionalStream) {
-        nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(aOptionalStream);
-        aResolver(std::move(stream));
+       holder = holder.clonePtr()](RefPtr<nsIInputStream>&& aOptionalStream) {
+        aResolver(nsCOMPtr<nsIInputStream>(std::move(aOptionalStream)));
       },
       [aResolver, holder = holder.clonePtr()](ResponseRejectReason&& aReason) {
         aResolver(nullptr);
