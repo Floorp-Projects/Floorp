@@ -28,7 +28,6 @@ ConnectionEntry::~ConnectionEntry() {
   MOZ_ASSERT(!mHalfOpens.Length());
   MOZ_ASSERT(!PendingQueueLength());
   MOZ_ASSERT(!UrgentStartQueueLength());
-  MOZ_ASSERT(!mHalfOpenFastOpenBackups.Length());
   MOZ_ASSERT(!mDoNotDestroy);
 }
 
@@ -90,9 +89,6 @@ bool ConnectionEntry::RemoveHalfOpen(HalfOpenSocket* halfOpen) {
     }
 
     gHttpHandler->ConnMgr()->DecreaseNumHalfOpenConns();
-
-  } else {
-    mHalfOpenFastOpenBackups.RemoveElement(halfOpen);
   }
 
   if (!UnconnectedHalfOpens()) {
@@ -428,12 +424,6 @@ void ConnectionEntry::ClosePersistentConnections() {
   for (int32_t i = 0; i < activeCount; i++) {
     mActiveConns[i]->DontReuse();
   }
-
-  for (int32_t index = mHalfOpenFastOpenBackups.Length() - 1; index >= 0;
-       --index) {
-    RefPtr<HalfOpenSocket> half = mHalfOpenFastOpenBackups[index];
-    half->CancelFastOpenConnection();
-  }
 }
 
 uint32_t ConnectionEntry::PruneDeadConnections() {
@@ -541,18 +531,6 @@ void ConnectionEntry::MakeAllDontReuseExcept(HttpConnectionBase* conn) {
         half.get()));
     mHalfOpens[index]->Abandon();
   }
-
-  for (int32_t index = mHalfOpenFastOpenBackups.Length() - 1; index >= 0;
-       --index) {
-    LOG(
-        ("ConnectionEntry::MakeAllDontReuseExcept shutting down connection in "
-         "fast "
-         "open state (%p) because new spdy connection (%p) takes "
-         "precedence\n",
-         mHalfOpenFastOpenBackups[index].get(), conn));
-    RefPtr<HalfOpenSocket> half = mHalfOpenFastOpenBackups[index];
-    half->CancelFastOpenConnection();
-  }
 }
 
 bool ConnectionEntry::FindConnToClaim(
@@ -643,16 +621,6 @@ HttpConnectionBase* ConnectionEntry::GetH2orH3ActiveConn() {
       if (tmp != experienced) {
         tmp->DontReuse();
       }
-    }
-    for (int32_t index = mHalfOpenFastOpenBackups.Length() - 1; index >= 0;
-         --index) {
-      LOG(
-          ("GetH2orH3ActiveConn() shutting down connection in fast "
-           "open state (%p) because we have an experienced spdy "
-           "connection (%p).\n",
-           mHalfOpenFastOpenBackups[index].get(), experienced));
-      RefPtr<HalfOpenSocket> half = mHalfOpenFastOpenBackups[index];
-      half->CancelFastOpenConnection();
     }
 
     LOG(
@@ -815,18 +783,10 @@ void ConnectionEntry::InsertIntoHalfOpens(HalfOpenSocket* sock) {
   gHttpHandler->ConnMgr()->IncreaseNumHalfOpenConns();
 }
 
-void ConnectionEntry::InsertIntoHalfOpenFastOpenBackups(HalfOpenSocket* sock) {
-  mHalfOpenFastOpenBackups.AppendElement(sock);
-}
-
 void ConnectionEntry::CloseAllHalfOpens() {
   for (int32_t i = int32_t(HalfOpensLength()) - 1; i >= 0; i--) {
     mHalfOpens[i]->Abandon();
   }
-}
-
-void ConnectionEntry::RemoveHalfOpenFastOpenBackups(HalfOpenSocket* sock) {
-  mHalfOpenFastOpenBackups.RemoveElement(sock);
 }
 
 bool ConnectionEntry::IsInHalfOpens(HalfOpenSocket* sock) {
