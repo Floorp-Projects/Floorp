@@ -45,24 +45,30 @@ const State = {
   COMPLETE: "complete",
 };
 
+const STATE_MAP = new Map([
+  [0, State.IN_PROGRESS],
+  [1, State.INTERRUPTED],
+  [2, State.COMPLETE],
+]);
+
 // TODO Bug 1247794: make id and extension info persistent
 class DownloadItem {
   constructor(downloadInfo, options, extension) {
     this.id = downloadInfo.id;
     this.url = options.url;
     this.referrer = downloadInfo.referrer || "";
-    this.filename = options.filename || "";
+    this.filename = downloadInfo.filename || "";
     this.incognito = options.incognito;
-    this.danger = downloadInfo.danger || "safe"; // todo; not implemented in toolkit either
+    this.danger = "safe"; // todo; not implemented in desktop either
     this.mime = downloadInfo.mime || "";
-    this.startTime = Date.now().toString();
-    this.state = State.IN_PROGRESS;
-    this.paused = false;
-    this.canResume = false;
-    this.bytesReceived = 0;
-    this.totalBytes = -1;
-    this.fileSize = -1;
-    this.exists = downloadInfo.exists || false;
+    this.startTime = downloadInfo.startTime;
+    this.state = STATE_MAP.get(downloadInfo.state);
+    this.paused = downloadInfo.paused;
+    this.canResume = downloadInfo.canResume;
+    this.bytesReceived = downloadInfo.bytesReceived;
+    this.totalBytes = downloadInfo.totalBytes;
+    this.fileSize = downloadInfo.fileSize;
+    this.exists = downloadInfo.exists;
     this.byExtensionId = extension?.id;
     this.byExtensionName = extension?.name;
   }
@@ -134,11 +140,7 @@ this.downloads = class extends ExtensionAPI {
               extensionId: extension.id,
             })
             .then(value => {
-              const downloadItem = new DownloadItem(
-                { id: value },
-                options,
-                extension
-              );
+              const downloadItem = new DownloadItem(value, options, extension);
               return downloadItem.id;
             });
         },

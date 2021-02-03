@@ -916,7 +916,7 @@ public class WebExtensionController {
 
         WebExtension.DownloadRequest request = WebExtension.DownloadRequest.fromBundle(optionsBundle);
 
-        GeckoResult<WebExtension.Download> result = delegate.onDownload(extension, request);
+        GeckoResult<WebExtension.DownloadInitData> result = delegate.onDownload(extension, request);
         if (result == null) {
             message.callback.sendError("downloads.download is not supported");
             return;
@@ -924,10 +924,14 @@ public class WebExtensionController {
 
         message.callback.resolveTo(result.map(value -> {
             if (value == null) {
-                Log.e(LOGTAG, "onDownload returned invalid null id");
+                Log.e(LOGTAG, "onDownload returned invalid null value");
                 throw new IllegalArgumentException("downloads.download is not supported");
             }
-            return value.id;
+
+            GeckoBundle returnMessage = WebExtension.Download.downloadInfoToBundle(value.initData);
+            returnMessage.putInt("id", value.download.id);
+
+            return returnMessage;
         }));
     }
 
