@@ -99,7 +99,7 @@ const SEARCH_FILTERS = [
 ];
 
 const REMOTE_SETTING_DEFAULTS_PREF = "browser.topsites.useRemoteSetting";
-const DEFAULT_SITES_POLICY_PREF =
+const DEFAULT_SITES_OVERRIDE_PREF =
   "browser.newtabpage.activity-stream.default.sites";
 const DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH = "browser.topsites.experiment.";
 
@@ -139,7 +139,7 @@ this.TopSitesFeed = class TopSitesFeed {
     Services.obs.addObserver(this, "browser-search-engine-modified");
     Services.obs.addObserver(this, "browser-region-updated");
     Services.prefs.addObserver(REMOTE_SETTING_DEFAULTS_PREF, this);
-    Services.prefs.addObserver(DEFAULT_SITES_POLICY_PREF, this);
+    Services.prefs.addObserver(DEFAULT_SITES_OVERRIDE_PREF, this);
     Services.prefs.addObserver(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH, this);
   }
 
@@ -148,7 +148,7 @@ this.TopSitesFeed = class TopSitesFeed {
     Services.obs.removeObserver(this, "browser-search-engine-modified");
     Services.obs.removeObserver(this, "browser-region-updated");
     Services.prefs.removeObserver(REMOTE_SETTING_DEFAULTS_PREF, this);
-    Services.prefs.removeObserver(DEFAULT_SITES_POLICY_PREF, this);
+    Services.prefs.removeObserver(DEFAULT_SITES_OVERRIDE_PREF, this);
     Services.prefs.removeObserver(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH, this);
   }
 
@@ -172,7 +172,7 @@ this.TopSitesFeed = class TopSitesFeed {
       case "nsPref:changed":
         if (
           data === REMOTE_SETTING_DEFAULTS_PREF ||
-          data === DEFAULT_SITES_POLICY_PREF ||
+          data === DEFAULT_SITES_OVERRIDE_PREF ||
           data.startsWith(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH)
         ) {
           this._readDefaults();
@@ -189,11 +189,9 @@ this.TopSitesFeed = class TopSitesFeed {
    * _readDefaults - sets DEFAULT_TOP_SITES
    */
   async _readDefaults({ isStartup = false } = {}) {
-    this._useRemoteSetting = Services.prefs.getBoolPref(
-      REMOTE_SETTING_DEFAULTS_PREF
-    );
+    this._useRemoteSetting = false;
 
-    if (!this._useRemoteSetting) {
+    if (!Services.prefs.getBoolPref(REMOTE_SETTING_DEFAULTS_PREF)) {
       this.refreshDefaults(
         this.store.getState().Prefs.values[DEFAULT_SITES_PREF],
         { isStartup }
@@ -201,20 +199,20 @@ this.TopSitesFeed = class TopSitesFeed {
       return;
     }
 
-    // Try using default top sites from enterprise policies. The pref is locked
-    // when set that way.
-    if (Services.prefs.prefIsLocked(DEFAULT_SITES_POLICY_PREF)) {
-      let sites;
-      try {
-        sites = Services.prefs.getStringPref(DEFAULT_SITES_POLICY_PREF);
-      } catch (e) {}
-      if (sites) {
-        this.refreshDefaults(sites, { isStartup });
-        return;
-      }
+    // Try using default top sites from enterprise policies or tests. The pref
+    // is locked when set via enterprise policy. Tests have no default sites
+    // unless they set them via this pref.
+    if (
+      Services.prefs.prefIsLocked(DEFAULT_SITES_OVERRIDE_PREF) ||
+      Cu.isInAutomation
+    ) {
+      let sites = Services.prefs.getStringPref(DEFAULT_SITES_OVERRIDE_PREF, "");
+      this.refreshDefaults(sites, { isStartup });
+      return;
     }
 
     // Read defaults from remote settings.
+    this._useRemoteSetting = true;
     let remoteSettingData = await this._getRemoteConfig();
 
     // Clear out the array of any previous defaults.
