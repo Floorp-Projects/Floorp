@@ -1769,6 +1769,7 @@ main {
       padding-block: 7px;
       padding-inline: 10px 13px;
       margin-inline-start: 2px;
+      margin-bottom: 2px;
       -moz-context-properties: fill;
       fill: var(--customize-menu-primary-text-color);
       background: url("chrome://activity-stream/content/data/content/assets/glyph-arrowhead-down-12.svg") right no-repeat;
