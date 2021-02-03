@@ -305,13 +305,7 @@ else:
     UNIFIED_SOURCES += ["UnderrunHandlerNoop.cpp"]
 
 if CONFIG["OS_TARGET"] == "WINNT":
-    EXPORTS.mozilla.audio += [
-        "AudioNotificationReceiver.h",
-        "AudioNotificationSender.h",
-    ]
     SOURCES += [
-        "AudioNotificationReceiver.cpp",
-        "AudioNotificationSender.cpp",
         "ThreadPoolCOMListener.cpp",
     ]
 

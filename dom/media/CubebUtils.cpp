@@ -56,9 +56,6 @@
 // Hidden pref used by tests to force failure to obtain cubeb context
 #define PREF_CUBEB_FORCE_NULL_CONTEXT "media.cubeb.force_null_context"
 #define PREF_CUBEB_OUTPUT_VOICE_ROUTING "media.cubeb.output_voice_routing"
-// Hidden pref to disable BMO 1427011 experiment; can be removed once proven.
-#define PREF_CUBEB_DISABLE_DEVICE_SWITCHING \
-  "media.cubeb.disable_device_switching"
 #define PREF_CUBEB_SANDBOX "media.cubeb.sandbox"
 #define PREF_AUDIOIPC_POOL_SIZE "media.audioipc.pool_size"
 #define PREF_AUDIOIPC_STACK_SIZE "media.audioipc.stack_size"
@@ -106,7 +103,6 @@ bool sCubebPlaybackLatencyPrefSet = false;
 bool sCubebMTGLatencyPrefSet = false;
 bool sAudioStreamInitEverSucceeded = false;
 bool sCubebForceNullContext = false;
-bool sCubebDisableDeviceSwitching = true;
 bool sRouteOutputAsVoice = false;
 #ifdef MOZ_CUBEB_REMOTING
 bool sCubebSandbox = false;
@@ -258,12 +254,6 @@ void PrefChanged(const char* aPref, void* aClosure) {
     MOZ_LOG(gCubebLog, LogLevel::Verbose,
             ("%s: %s", PREF_CUBEB_FORCE_NULL_CONTEXT,
              sCubebForceNullContext ? "true" : "false"));
-  } else if (strcmp(aPref, PREF_CUBEB_DISABLE_DEVICE_SWITCHING) == 0) {
-    StaticMutexAutoLock lock(sMutex);
-    sCubebDisableDeviceSwitching = Preferences::GetBool(aPref, true);
-    MOZ_LOG(gCubebLog, LogLevel::Verbose,
-            ("%s: %s", PREF_CUBEB_DISABLE_DEVICE_SWITCHING,
-             sCubebDisableDeviceSwitching ? "true" : "false"));
   }
 #ifdef MOZ_CUBEB_REMOTING
   else if (strcmp(aPref, PREF_CUBEB_SANDBOX) == 0) {
@@ -700,12 +690,6 @@ char* GetForcedOutputDevice() {
 cubeb_stream_prefs GetDefaultStreamPrefs(cubeb_device_type aType) {
   cubeb_stream_prefs prefs = CUBEB_STREAM_PREF_NONE;
 #ifdef XP_WIN
-  // Investigation for bug 1427011 - if we're in E10S mode, rely on the
-  // AudioNotification IPC to detect device changes.
-  if (sCubebDisableDeviceSwitching &&
-      (XRE_IsE10sParentProcess() || XRE_IsContentProcess())) {
-    prefs |= CUBEB_STREAM_PREF_DISABLE_DEVICE_SWITCHING;
-  }
   if (StaticPrefs::media_cubeb_wasapi_raw() & static_cast<uint32_t>(aType)) {
     prefs |= CUBEB_STREAM_PREF_RAW;
   }
