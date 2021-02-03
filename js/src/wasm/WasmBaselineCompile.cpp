@@ -3114,6 +3114,18 @@ class BaseCompiler final : public BaseCompilerInterface {
 
   using BCESet = uint64_t;
 
+  // Information stored in the control node for generating exception handling
+  // landing pads.
+
+  struct CatchInfo {
+    uint32_t eventIndex;      // Index for the associated exception.
+    NonAssertingLabel label;  // The entry label for the handler.
+
+    explicit CatchInfo(uint32_t eventIndex_) : eventIndex(eventIndex_) {}
+  };
+
+  using CatchInfoVector = Vector<CatchInfo, 0, SystemAllocPolicy>;
+
   // Control node, representing labels and stack heights at join points.
 
   struct Control {
@@ -3125,6 +3137,8 @@ class BaseCompiler final : public BaseCompilerInterface {
     BCESet bceSafeOnExit;          // Bounds check info flowing out of the item
     bool deadOnArrival;            // deadCode_ was set on entry to the region
     bool deadThenBranch;           // deadCode_ was set on exit from "then"
+    size_t tryNoteIndex;           // For tracking try branch code ranges.
+    CatchInfoVector catchInfos;    // Used for try-catch handlers.
 
     Control()
         : stackHeight(StackHeight::Invalid()),
@@ -7820,6 +7834,23 @@ class BaseCompiler final : public BaseCompilerInterface {
 
   void trap(Trap t) const { masm.wasmTrap(t, bytecodeOffset()); }
 
+#ifdef ENABLE_WASM_EXCEPTIONS
+  // Abstracted helper for throwing, used for throw, rethrow, and rethrowing
+  // at the end of a series of catch blocks (if none matched the exception).
+  [[nodiscard]] bool throwFrom(RegPtr exn, uint32_t lineOrBytecode) {
+    pushRef(exn);
+
+    // ThrowException invokes a trap, and the rest is dead code.
+    if (!emitInstanceCall(lineOrBytecode, SASigThrowException)) {
+      return false;
+    }
+    freeRef(popRef());
+    deadCode_ = true;
+
+    return true;
+  }
+#endif
+
   ////////////////////////////////////////////////////////////
   //
   // Object support.
@@ -8069,6 +8100,10 @@ class BaseCompiler final : public BaseCompilerInterface {
   [[nodiscard]] bool emitIf();
   [[nodiscard]] bool emitElse();
 #ifdef ENABLE_WASM_EXCEPTIONS
+  // Used for common setup for catch and catch_all.
+  void emitCatchSetup(LabelKind kind, Control& tryCatch,
+                      const ResultType& resultType);
+
   [[nodiscard]] bool emitTry();
   [[nodiscard]] bool emitCatch();
   [[nodiscard]] bool emitThrow();
@@ -8122,6 +8157,9 @@ class BaseCompiler final : public BaseCompilerInterface {
   MOZ_MUST_USE bool endBlock(ResultType type);
   MOZ_MUST_USE bool endIfThen(ResultType type);
   MOZ_MUST_USE bool endIfThenElse(ResultType type);
+#ifdef ENABLE_WASM_EXCEPTIONS
+  MOZ_MUST_USE bool endTryCatch(ResultType type);
+#endif
 
   void doReturn(ContinuationKind kind);
   void pushReturnValueOfCall(const FunctionCall& call, MIRType type);
@@ -9994,10 +10032,12 @@ bool BaseCompiler::emitEnd() {
       break;
 #ifdef ENABLE_WASM_EXCEPTIONS
     case LabelKind::Try:
-      MOZ_CRASH("NYI");
+      MOZ_CRASH("Try-catch block cannot end without catch.");
       break;
     case LabelKind::Catch:
-      MOZ_CRASH("NYI");
+      if (!endTryCatch(type)) {
+        return false;
+      }
       break;
 #endif
   }
@@ -10191,11 +10231,61 @@ bool BaseCompiler::emitTry() {
     return false;
   }
 
-  if (deadCode_) {
-    return true;
+  if (!deadCode_) {
+    // Simplifies jumping out, but it is also necessary so that control
+    // can re-enter the catch handler without restoring registers.
+    sync();
   }
 
-  MOZ_CRASH("NYI");
+  initControl(controlItem(), params);
+
+  if (!deadCode_) {
+    // Be conservative for BCE due to complex control flow in try blocks.
+    controlItem().bceSafeOnExit = 0;
+    // Mark the beginning of the try block, the rest is filled in by catch.
+    controlItem().tryNoteIndex = masm.wasmStartTry();
+  }
+
+  return true;
+}
+
+void BaseCompiler::emitCatchSetup(LabelKind kind, Control& tryCatch,
+                                  const ResultType& resultType) {
+  // Catch ends the try or last catch, so we finish this like endIfThen.
+  if (deadCode_) {
+    fr.resetStackHeight(tryCatch.stackHeight, resultType);
+    popValueStackTo(tryCatch.stackSize);
+  } else {
+    MOZ_ASSERT(stk_.length() == tryCatch.stackSize + resultType.length());
+    // Try jumps to the end of the try-catch block unless a throw is done.
+    popBlockResults(resultType, tryCatch.stackHeight, ContinuationKind::Jump);
+    freeResultRegisters(resultType);
+    MOZ_ASSERT(!tryCatch.deadOnArrival);
+  }
+
+  // Reset to this "catch" branch.
+  deadCode_ = tryCatch.deadOnArrival;
+
+  // We use the empty result type here because catch does *not* take the
+  // try-catch block parameters.
+  fr.resetStackHeight(tryCatch.stackHeight, ResultType::Empty());
+
+  if (deadCode_) {
+    return;
+  }
+
+  bceSafe_ = 0;
+
+  // The end of the previous try/catch jumps to the join point.
+  masm.jump(&tryCatch.label);
+
+  // Note end of try block for finding the catch block target. This needs
+  // to happen after the stack is reset to the correct height.
+  if (kind == LabelKind::Try) {
+    WasmTryNoteVector& tryNotes = masm.tryNotes();
+    WasmTryNote& tryNote = tryNotes[controlItem().tryNoteIndex];
+    tryNote.end = masm.currentOffset();
+  }
 }
 
 bool BaseCompiler::emitCatch() {
@@ -10209,14 +10299,181 @@ bool BaseCompiler::emitCatch() {
     return false;
   }
 
+  Control& tryCatch = controlItem();
+
+  emitCatchSetup(kind, tryCatch, resultType);
+
   if (deadCode_) {
     return true;
   }
 
-  MOZ_CRASH("NYI");
+  // Construct info used for the exception landing pad.
+  CatchInfo catchInfo(eventIndex);
+  if (!tryCatch.catchInfos.emplaceBack(catchInfo)) {
+    return false;
+  }
+
+  masm.bind(&tryCatch.catchInfos.back().label);
+
+  // Extract the arguments in the exception package and push them.
+  const ResultType params = moduleEnv_.events[eventIndex].resultType();
+
+  const uint32_t dataOffset =
+      NativeObject::getFixedSlotOffset(ArrayBufferObject::DATA_SLOT);
+
+  // The code in the landing pad guarantees us that the exception reference
+  // is live in this register.
+  RegPtr exn = RegPtr(WasmExceptionReg);
+  needRef(exn);
+  RegPtr scratch = needRef();
+
+  masm.unboxObject(Address(exn, WasmRuntimeExceptionObject::offsetOfValues()),
+                   scratch);
+  freeRef(exn);
+
+  masm.loadPtr(Address(scratch, dataOffset), scratch);
+  size_t argOffset = 0;
+  for (uint32_t i = 0; i < params.length(); i++) {
+    switch (params[i].kind()) {
+      case ValType::I32: {
+        RegI32 reg = needI32();
+        masm.load32(Address(scratch, argOffset), reg);
+        pushI32(reg);
+        break;
+      }
+      case ValType::I64: {
+        RegI64 reg = needI64();
+        masm.load64(Address(scratch, argOffset), reg);
+        pushI64(reg);
+        break;
+      }
+      case ValType::F32: {
+        RegF32 reg = needF32();
+        masm.loadFloat32(Address(scratch, argOffset), reg);
+        pushF32(reg);
+        break;
+      }
+      case ValType::F64: {
+        RegF64 reg = needF64();
+        masm.loadDouble(Address(scratch, argOffset), reg);
+        pushF64(reg);
+        break;
+      }
+      case ValType::V128: {
+#  ifdef ENABLE_WASM_SIMD
+        RegV128 reg = needV128();
+        masm.loadUnalignedSimd128(Address(scratch, argOffset), reg);
+        pushV128(reg);
+        break;
+#  else
+        MOZ_CRASH("No SIMD support");
+#  endif
+      }
+      case ValType::Ref:
+        MOZ_CRASH("NYI - no reftype support");
+    }
+    argOffset += SizeOf(params[i]);
+  }
+  freeRef(scratch);
+
+  return true;
+}
+
+bool BaseCompiler::endTryCatch(ResultType type) {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
+  Control& tryCatch = controlItem();
+
+  if (deadCode_) {
+    fr.resetStackHeight(tryCatch.stackHeight, type);
+    popValueStackTo(tryCatch.stackSize);
+  } else {
+    MOZ_ASSERT(stk_.length() == tryCatch.stackSize + type.length());
+    // Assume we have a control join, so place results in block result
+    // allocations and also handle the implicit exception reference.
+    popBlockResults(type, tryCatch.stackHeight, ContinuationKind::Jump);
+    // Since we will emit a landing pad after this and jump over it to get to
+    // the control join, we free these here and re-capture at the join.
+    freeResultRegisters(type);
+    masm.jump(&tryCatch.label);
+    MOZ_ASSERT(!tryCatch.bceSafeOnExit);
+    MOZ_ASSERT(!tryCatch.deadOnArrival);
+  }
+
+  deadCode_ = tryCatch.deadOnArrival;
+
+  if (deadCode_) {
+    return true;
+  }
+
+  // Create landing pad for all catch handlers in this block.
+  masm.bind(&tryCatch.otherLabel);
+
+  // The stack height also needs to be set not for a block result, but for the
+  // entry to the exception handlers. This is reset again below for the join.
+  StackHeight prePadHeight = fr.stackHeight();
+  fr.setStackHeight(tryCatch.stackHeight);
+
+  WasmTryNoteVector& tryNotes = masm.tryNotes();
+  WasmTryNote& tryNote = tryNotes[controlItem().tryNoteIndex];
+  tryNote.entryPoint = masm.currentOffset();
+  tryNote.framePushed = masm.framePushed();
+
+  RegPtr exn = RegPtr(WasmExceptionReg);
+  needRef(exn);
+
+  // Explicitly restore the tls data in case the throw was across instances.
+  fr.loadTlsPtr(WasmTlsReg);
+  masm.loadWasmPinnedRegsFromTls();
+  RegPtr scratch = needRef();
+  RegPtr scratch2 = needRef();
+  masm.switchToWasmTlsRealm(scratch, scratch2);
+  freeRef(scratch2);
+
+  // Make sure that the exception pointer is saved across the call.
+  masm.movePtr(exn, scratch);
+  pushRef(exn);
+  pushRef(scratch);
+
+  if (!emitInstanceCall(lineOrBytecode, SASigGetLocalExceptionIndex)) {
+    return false;
+  }
+
+  // Prevent conflict with exn register when popping this result.
+  needRef(exn);
+  RegI32 index = popI32();
+  freeRef(exn);
+
+  // Ensure that the exception is materialized before branching.
+  exn = popRef(RegPtr(WasmExceptionReg));
+
+  for (CatchInfo& info : tryCatch.catchInfos) {
+    masm.branch32(Assembler::Equal, index, Imm32(info.eventIndex), &info.label);
+  }
+  freeI32(index);
+
+  // If none of the tag checks succeed, then we rethrow the exception.
+  if (!throwFrom(exn, lineOrBytecode)) {
+    return false;
+  }
+
+  // Reset stack height for join.
+  fr.setStackHeight(prePadHeight);
+
+  // Create join point.
+  if (tryCatch.label.used()) {
+    masm.bind(&tryCatch.label);
+  }
+
+  captureResultRegisters(type);
+  deadCode_ = tryCatch.deadOnArrival;
+  bceSafe_ = tryCatch.bceSafeOnExit;
+
+  return pushBlockResults(type);
 }
 
 bool BaseCompiler::emitThrow() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
   uint32_t exnIndex;
   NothingVector unused_argValues;
 
@@ -10228,7 +10485,76 @@ bool BaseCompiler::emitThrow() {
     return true;
   }
 
-  MOZ_CRASH("NYI");
+  const ResultType& params = moduleEnv_.events[exnIndex].resultType();
+
+  // Measure space we need for all the args to put in the exception.
+  uint32_t exnBytes = 0;
+  for (size_t i = 0; i < params.length(); i++) {
+    exnBytes += SizeOf(params[i]);
+  }
+
+  // Create the new exception object that we will throw.
+  pushI32(exnIndex);
+  pushI32(exnBytes);
+  if (!emitInstanceCall(lineOrBytecode, SASigExceptionNew)) {
+    return false;
+  }
+
+  RegPtr exn = popRef();
+  // Create scratch register, to store the exception package values.
+  RegPtr scratch = needRef();
+  const uint32_t dataOffset =
+      NativeObject::getFixedSlotOffset(ArrayBufferObject::DATA_SLOT);
+
+  masm.unboxObject(Address(exn, WasmRuntimeExceptionObject::offsetOfValues()),
+                   scratch);
+  masm.loadPtr(Address(scratch, dataOffset), scratch);
+
+  size_t argOffset = exnBytes;
+  for (int32_t i = params.length() - 1; i >= 0; i--) {
+    argOffset -= SizeOf(params[i]);
+    switch (params[i].kind()) {
+      case ValType::I32: {
+        RegI32 reg = popI32();
+        masm.store32(reg, Address(scratch, argOffset));
+        freeI32(reg);
+        break;
+      }
+      case ValType::I64: {
+        RegI64 reg = popI64();
+        masm.store64(reg, Address(scratch, argOffset));
+        freeI64(reg);
+        break;
+      }
+      case ValType::F32: {
+        RegF32 reg = popF32();
+        masm.storeFloat32(reg, Address(scratch, argOffset));
+        freeF32(reg);
+        break;
+      }
+      case ValType::F64: {
+        RegF64 reg = popF64();
+        masm.storeDouble(reg, Address(scratch, argOffset));
+        freeF64(reg);
+        break;
+      }
+      case ValType::V128: {
+#  ifdef ENABLE_WASM_SIMD
+        RegV128 reg = popV128();
+        masm.storeUnalignedSimd128(reg, Address(scratch, argOffset));
+        freeV128(reg);
+        break;
+#  else
+        MOZ_CRASH("No SIMD support");
+#  endif
+      }
+      case ValType::Ref:
+        MOZ_CRASH("NYI - no reftype support");
+    }
+  }
+  freeRef(scratch);
+
+  return throwFrom(exn, lineOrBytecode);
 }
 #endif
 
