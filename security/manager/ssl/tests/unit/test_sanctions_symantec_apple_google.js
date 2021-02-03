@@ -3,18 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-// Tests handling of certificates issued by Symantec. If such certificates were
-// issued by an Apple or Google intermediate, they are allowlisted. Otherwise,
-// If they have a notBefore before 1 June 2016, they should be distrusted, while
-// those from that date or later emit a warning to the console.
-
-function shouldBeImminentlyDistrusted(aTransportSecurityInfo) {
-  let isDistrust =
-    aTransportSecurityInfo.securityState &
-    Ci.nsIWebProgressListener.STATE_CERT_DISTRUST_IMMINENT;
-  Assert.ok(isDistrust, "This host should be imminently distrusted");
-}
-
 do_get_profile();
 
 const certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
