@@ -35,11 +35,11 @@ BEGIN_TEST(testGCCellPtr) {
 
   CHECK(JS::GCCellPtr(obj.get()));
   CHECK(JS::GCCellPtr(obj.get()).kind() == JS::TraceKind::Object);
-  CHECK(JS::GCCellPtr(JS::ObjectValue(*obj)).kind() == JS::TraceKind::Object);
+  CHECK(JS::ObjectValue(*obj).toGCCellPtr().kind() == JS::TraceKind::Object);
 
   CHECK(JS::GCCellPtr(str.get()));
   CHECK(JS::GCCellPtr(str.get()).kind() == JS::TraceKind::String);
-  CHECK(JS::GCCellPtr(JS::StringValue(str)).kind() == JS::TraceKind::String);
+  CHECK(JS::StringValue(str).toGCCellPtr().kind() == JS::TraceKind::String);
 
   CHECK(JS::GCCellPtr(script.get()));
   CHECK(!JS::GCCellPtr(nullptr));

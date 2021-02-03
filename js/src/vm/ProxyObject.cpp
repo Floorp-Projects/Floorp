@@ -162,7 +162,7 @@ void ProxyObject::setSameCompartmentPrivate(const Value& priv) {
 
 inline void ProxyObject::setPrivate(const Value& priv) {
   MOZ_ASSERT_IF(IsMarkedBlack(this) && priv.isGCThing(),
-                !JS::GCThingIsMarkedGray(JS::GCCellPtr(priv)));
+                !JS::GCThingIsMarkedGray(priv.toGCCellPtr()));
   *slotOfPrivate() = priv;
 }
 

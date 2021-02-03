@@ -235,6 +235,7 @@
 #include "jit/JitRuntime.h"
 #include "jit/JitZone.h"
 #include "jit/MacroAssembler.h"  // js::jit::CodeAlignment
+#include "js/HeapAPI.h"          // JS::GCCellPtr
 #include "js/Object.h"           // JS::GetClass
 #include "js/SliceBudget.h"
 #include "proxy/DeadObjectProxy.h"
@@ -8307,37 +8308,8 @@ JS_FRIEND_API size_t JS::GCTraceKindSize(JS::TraceKind kind) {
   }
 }
 
-JS::GCCellPtr::GCCellPtr(const Value& v) : ptr(0) {
-  switch (v.type()) {
-    case ValueType::String:
-      ptr = checkedCast(v.toString(), JS::TraceKind::String);
-      return;
-    case ValueType::Object:
-      ptr = checkedCast(&v.toObject(), JS::TraceKind::Object);
-      return;
-    case ValueType::Symbol:
-      ptr = checkedCast(v.toSymbol(), JS::TraceKind::Symbol);
-      return;
-    case ValueType::BigInt:
-      ptr = checkedCast(v.toBigInt(), JS::TraceKind::BigInt);
-      return;
-    case ValueType::PrivateGCThing:
-      ptr = checkedCast(v.toGCThing(), v.toGCThing()->getTraceKind());
-      return;
-    case ValueType::Double:
-    case ValueType::Int32:
-    case ValueType::Boolean:
-    case ValueType::Undefined:
-    case ValueType::Null:
-    case ValueType::Magic: {
-      MOZ_ASSERT(!v.isGCThing());
-      ptr = checkedCast(nullptr, JS::TraceKind::Null);
-      return;
-    }
-  }
-
-  ReportBadValueTypeAndCrash(v);
-}
+JS::GCCellPtr::GCCellPtr(const Value& v)
+    : GCCellPtr(v.toGCThing(), v.traceKind()) {}
 
 JS::TraceKind JS::GCCellPtr::outOfLineKind() const {
   MOZ_ASSERT((ptr & OutOfLineTraceKindMask) == OutOfLineTraceKindMask);
