@@ -461,7 +461,7 @@ MSG_DEF(JSMSG_WASM_NONSHARED_WAIT ,    0, JSEXN_WASMRUNTIMEERROR, "atomic wait o
 MSG_DEF(JSMSG_WASM_NULL_REQUIRED,      0, JSEXN_TYPEERR,     "nullref requires a null value")
 MSG_DEF(JSMSG_WASM_SUPPLY_ONLY_ONE,    2, JSEXN_TYPEERR,     "exactly one of {0} and {1} must be supplied")
 MSG_DEF(JSMSG_WASM_MISSING_REQUIRED,   1, JSEXN_TYPEERR,     "Missing required argument {0}")
-MSG_DEF(JSMSG_WASM_EXN_CONSTRUCTOR,    0, JSEXN_WASMRUNTIMEERROR, "cannot call WebAssembly.Exception")
+MSG_DEF(JSMSG_WASM_EXN_CONSTRUCTOR,    1, JSEXN_WASMRUNTIMEERROR, "cannot call {0}")
 
 // Proxy
 MSG_DEF(JSMSG_BAD_TRAP_RETURN_VALUE,   2, JSEXN_TYPEERR,"trap {1} for {0} returned a primitive value")

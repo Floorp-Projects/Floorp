@@ -512,6 +512,40 @@ class WasmExceptionObject : public NativeObject {
   wasm::ExceptionTag& tag() const;
 };
 
+// The class of WebAssembly.RuntimeException. This class is used for
+// representing exceptions thrown from Wasm in JS. (it is also used as
+// the internal representation for exceptions in Wasm)
+
+class WasmRuntimeExceptionObject : public NativeObject {
+  static const unsigned TAG_SLOT = 0;
+  static const unsigned VALUES_SLOT = 1;
+
+  static const JSClassOps classOps_;
+  static const ClassSpec classSpec_;
+  static void finalize(JSFreeOp*, JSObject* obj);
+  static void trace(JSTracer* trc, JSObject* obj);
+
+ public:
+  static const unsigned RESERVED_SLOTS = 2;
+  static const JSClass class_;
+  static const JSClass& protoClass_;
+  static const JSPropertySpec properties[];
+  static const JSFunctionSpec methods[];
+  static const JSFunctionSpec static_methods[];
+  static bool construct(JSContext*, unsigned, Value*);
+
+  static WasmRuntimeExceptionObject* create(JSContext* cx,
+                                            wasm::SharedExceptionTag tag,
+                                            Handle<ArrayBufferObject*> values);
+  bool isNewborn() const;
+
+  wasm::ExceptionTag& tag() const;
+
+  static size_t offsetOfValues() {
+    return NativeObject::getFixedSlotOffset(VALUES_SLOT);
+  }
+};
+
 // The class of the WebAssembly global namespace object.
 
 class WasmNamespaceObject : public NativeObject {
