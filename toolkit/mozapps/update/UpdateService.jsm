@@ -1177,6 +1177,19 @@ function isServiceInstalled() {
 }
 
 /**
+ * Gets the appropriate pending update state. Returns STATE_PENDING_SERVICE,
+ * STATE_PENDING_ELEVATE, or STATE_PENDING.
+ */
+function getBestPendingState() {
+  if (shouldUseService()) {
+    return STATE_PENDING_SERVICE;
+  } else if (getElevationRequired()) {
+    return STATE_PENDING_ELEVATE;
+  }
+  return STATE_PENDING;
+}
+
+/**
  * Removes the contents of the ready update directory and rotates the update
  * logs when present. If the update.log exists in the patch directory this will
  * move the last-update.log if it exists to backup-update.log in the parent
@@ -4337,7 +4350,8 @@ UpdateManager.prototype = {
         parts[1] == DELETE_ERROR_STAGING_LOCK_FILE ||
         parts[1] == UNEXPECTED_STAGING_ERROR
       ) {
-        writeStatusFile(getReadyUpdateDir(), (update.state = STATE_PENDING));
+        update.state = getBestPendingState();
+        writeStatusFile(getReadyUpdateDir(), update.state);
       } else if (!handleUpdateFailure(update, parts[1])) {
         handleFallbackToCompleteUpdate(true);
       }
@@ -5695,13 +5709,7 @@ Downloader.prototype = {
 
         if (migratedToReadyUpdate) {
           AUSTLMY.pingMoveResult(AUSTLMY.MOVE_RESULT_SUCCESS);
-          if (shouldUseService()) {
-            state = STATE_PENDING_SERVICE;
-          } else if (getElevationRequired()) {
-            state = STATE_PENDING_ELEVATE;
-          } else {
-            state = STATE_PENDING;
-          }
+          state = getBestPendingState();
           shouldShowPrompt = !getCanStageUpdates();
 
           // Tell the updater.exe we're ready to apply.
