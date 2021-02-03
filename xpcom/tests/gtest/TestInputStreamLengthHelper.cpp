@@ -62,9 +62,7 @@ class LengthStream final : public nsIInputStreamLength,
 
   NS_IMETHOD AsyncLengthWait(nsIInputStreamLengthCallback* aCallback,
                              nsIEventTarget* aEventTarget) override {
-    if (aCallback) {
-      aCallback->OnInputStreamLengthReady(this, mLength);
-    }
+    aCallback->OnInputStreamLengthReady(this, mLength);
     return NS_OK;
   }
 
