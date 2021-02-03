@@ -117,7 +117,7 @@ add_task(async function sidebar_image_contextmenu() {
 
   let contentAreaContextMenu = await openContextMenuInSidebar("#testimg");
 
-  let item = contentAreaContextMenu.querySelector("#context-viewimageinfo");
+  let item = contentAreaContextMenu.querySelector("#context-copyimage");
   ok(!item.hidden);
   ok(!item.disabled);
 
