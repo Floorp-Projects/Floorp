@@ -466,8 +466,10 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
                 LogicalPoint(wm), dummyContainerSize,
                 ReflowChildFlags::NoMoveFrame, aStatus);
 
-    if (!prevInFlow && !aReflowInput.mFlags.mIsTopOfPage &&
-        aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE) {
+    if (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE &&
+        !(HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) &&
+          aReflowInput.mStyleDisplay->IsAbsolutelyPositionedStyle()) &&
+        !prevInFlow && !aReflowInput.mFlags.mIsTopOfPage) {
       // Propagate break-before from the legend to the fieldset.
       if (legend->StyleDisplay()->BreakBefore() ||
           aStatus.IsInlineBreakBefore()) {
