@@ -4,7 +4,7 @@
 
 use inherent::inherent;
 
-use glean_core::traits::Boolean;
+use glean::traits::Boolean;
 
 use super::CommonMetricData;
 

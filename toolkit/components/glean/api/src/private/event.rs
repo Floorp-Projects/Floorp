@@ -10,8 +10,8 @@ use super::{CommonMetricData, Instant, MetricId, RecordedEvent};
 
 use crate::ipc::{need_ipc, with_ipc_payload};
 
-use glean_core::traits::Event;
-pub use glean_core::traits::{EventRecordingError, ExtraKeys, NoExtraKeys};
+use glean::traits::Event;
+pub use glean::traits::{EventRecordingError, ExtraKeys, NoExtraKeys};
 
 /// An event metric.
 ///

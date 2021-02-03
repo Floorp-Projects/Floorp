@@ -4,7 +4,7 @@
 
 use inherent::inherent;
 
-use glean_core::traits::Counter;
+use glean::traits::Counter;
 
 use super::CommonMetricData;
 

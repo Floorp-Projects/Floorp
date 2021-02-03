@@ -9,12 +9,12 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde::{Deserialize, Serialize};
 
-// Re-export of `glean_core` types we can re-use.
-// That way a user only needs to depend on this crate, not on glean_core (and there can't be a
+// Re-export of `glean` types we can re-use.
+// That way a user only needs to depend on this crate, not on glean (and there can't be a
 // version mismatch).
-pub use glean_core::{
-    metrics::DistributionData, metrics::MemoryUnit, metrics::RecordedEvent, metrics::TimeUnit,
-    CommonMetricData, ErrorType, Lifetime,
+pub use glean::{
+    traits, CommonMetricData, DistributionData, ErrorType, Lifetime, MemoryUnit, RecordedEvent,
+    TimeUnit, TimerId,
 };
 
 mod boolean;

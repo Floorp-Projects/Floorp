@@ -6,7 +6,7 @@ use inherent::inherent;
 
 use super::{CommonMetricData, DistributionData, MemoryUnit, MetricId};
 
-use glean_core::traits::MemoryDistribution;
+use glean::traits::MemoryDistribution;
 
 use crate::ipc::{need_ipc, with_ipc_payload};
 

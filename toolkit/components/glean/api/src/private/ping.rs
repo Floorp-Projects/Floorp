@@ -45,7 +45,7 @@ impl Ping {
 }
 
 #[inherent(pub)]
-impl glean_core::traits::Ping for Ping {
+impl glean::traits::Ping for Ping {
     /// Submits the ping for eventual uploading
     ///
     /// # Arguments
@@ -55,7 +55,7 @@ impl glean_core::traits::Ping for Ping {
     fn submit(&self, reason: Option<&str>) {
         match self {
             Ping::Parent(p) => {
-                glean_core::traits::Ping::submit(p, reason);
+                glean::traits::Ping::submit(p, reason);
             }
             Ping::Child => {
                 log::error!(
