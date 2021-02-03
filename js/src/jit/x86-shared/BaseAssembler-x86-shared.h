@@ -5216,7 +5216,7 @@ class BaseAssembler : public GenericAssembler {
                      int32_t offset, RegisterID base, RegisterID index,
                      int32_t scale, int reg) {
       m_buffer.ensureSpace(MaxInstructionSize);
-      emitRexIfNeeded(reg, 0, base);
+      emitRexIfNeeded(reg, index, base);
       m_buffer.putByteUnchecked(OP_2BYTE_ESCAPE);
       m_buffer.putByteUnchecked(escape);
       m_buffer.putByteUnchecked(opcode);
