@@ -22,6 +22,7 @@
 #include "mozilla/StaticPrefs_bidi.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/Unused.h"
 
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -3061,8 +3062,10 @@ void nsFrameSelection::SetAncestorLimiter(nsIContent* aLimiter) {
       if (mLimiters.mAncestorLimiter) {
         SetChangeReasons(nsISelectionListener::NO_REASON);
         nsCOMPtr<nsIContent> limiter(mLimiters.mAncestorLimiter);
-        TakeFocus(limiter, 0, 0, CARET_ASSOCIATE_BEFORE,
-                  FocusMode::kCollapseToNewPoint);
+        const nsresult rv = TakeFocus(limiter, 0, 0, CARET_ASSOCIATE_BEFORE,
+                                      FocusMode::kCollapseToNewPoint);
+        Unused << NS_WARN_IF(NS_FAILED(rv));
+        // TODO: in case of failure, propagate it to the callers.
       }
     }
   }
