@@ -397,7 +397,8 @@ SessionHistoryEntry::SessionHistoryEntry(SessionHistoryInfo* aInfo)
 SessionHistoryEntry::SessionHistoryEntry(const SessionHistoryEntry& aEntry)
     : mInfo(MakeUnique<SessionHistoryInfo>(*aEntry.mInfo)),
       mParent(aEntry.mParent),
-      mID(aEntry.mID) {}
+      mID(aEntry.mID),
+      mBCHistoryLength(aEntry.mBCHistoryLength) {}
 
 SessionHistoryEntry::~SessionHistoryEntry() {
   // Null out the mParent pointers on all our kids.

@@ -150,7 +150,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   void RemoveDynEntriesFromActiveSessionHistoryEntry();
 
-  void RemoveFromSessionHistory();
+  void RemoveFromSessionHistory(const nsID& aChangeID);
 
   void HistoryGo(int32_t aIndex, uint64_t aHistoryEpoch,
                  bool aRequireUserInteraction,

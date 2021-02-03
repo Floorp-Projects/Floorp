@@ -1737,7 +1737,7 @@ parent:
         MaybeDiscardedBrowsingContext aContext);
 
     async RemoveFromSessionHistory(
-        MaybeDiscardedBrowsingContext aContext);
+        MaybeDiscardedBrowsingContext aContext, nsID changeID);
 
 both:
     async ScriptError(nsString message, nsString sourceName, nsString sourceLine,

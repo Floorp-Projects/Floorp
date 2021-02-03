@@ -261,6 +261,9 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
                                             nsISHEntry* aOldEntry,
                                             nsISHEntry* aNewEntry);
 
+  void UpdateEntryLength(nsISHEntry* aOldEntry, nsISHEntry* aNewEntry,
+                         bool aMove);
+
  protected:
   bool mHasOngoingUpdate;
   bool mIsRemote;

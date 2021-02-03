@@ -227,6 +227,92 @@ struct LoadingSessionHistoryInfo {
   bool mLoadingCurrentActiveEntry = false;
 };
 
+// HistoryEntryCounterForBrowsingContext is used to count the number of entries
+// which are added to the session history for a particular browsing context.
+// If a SessionHistoryEntry is cloned because of navigation in some other
+// browsing context, that doesn't cause the counter value to be increased.
+// The browsing context specific counter is needed to make it easier to
+// synchronously update history.length value in a child process when
+// an iframe is removed from DOM.
+class HistoryEntryCounterForBrowsingContext {
+ public:
+  HistoryEntryCounterForBrowsingContext()
+      : mCounter(new RefCountedCounter()), mHasModified(false) {
+    ++(*this);
+  }
+
+  HistoryEntryCounterForBrowsingContext(
+      const HistoryEntryCounterForBrowsingContext& aOther)
+      : mCounter(aOther.mCounter), mHasModified(false) {}
+
+  HistoryEntryCounterForBrowsingContext(
+      HistoryEntryCounterForBrowsingContext&& aOther) = delete;
+
+  ~HistoryEntryCounterForBrowsingContext() {
+    if (mHasModified) {
+      --(*mCounter);
+    }
+  }
+
+  void CopyValueFrom(const HistoryEntryCounterForBrowsingContext& aOther) {
+    if (mHasModified) {
+      --(*mCounter);
+    }
+    mCounter = aOther.mCounter;
+    mHasModified = false;
+  }
+
+  HistoryEntryCounterForBrowsingContext& operator=(
+      const HistoryEntryCounterForBrowsingContext& aOther) = delete;
+
+  HistoryEntryCounterForBrowsingContext& operator++() {
+    mHasModified = true;
+    ++(*mCounter);
+    return *this;
+  }
+
+  operator uint32_t() const { return *mCounter; }
+
+  bool Modified() { return mHasModified; }
+
+  void SetModified(bool aModified) { mHasModified = aModified; }
+
+  void Reset() {
+    if (mHasModified) {
+      --(*mCounter);
+    }
+    mCounter = new RefCountedCounter();
+    mHasModified = false;
+  }
+
+ private:
+  class RefCountedCounter {
+   public:
+    NS_INLINE_DECL_REFCOUNTING(
+        mozilla::dom::HistoryEntryCounterForBrowsingContext::RefCountedCounter)
+
+    RefCountedCounter& operator++() {
+      ++mCounter;
+      return *this;
+    }
+
+    RefCountedCounter& operator--() {
+      --mCounter;
+      return *this;
+    }
+
+    operator uint32_t() const { return mCounter; }
+
+   private:
+    ~RefCountedCounter() = default;
+
+    uint32_t mCounter = 0;
+  };
+
+  RefPtr<RefCountedCounter> mCounter;
+  bool mHasModified;
+};
+
 // SessionHistoryEntry is used to store session history data in the parent
 // process. It holds a SessionHistoryInfo, some state shared amongst multiple
 // SessionHistoryEntries, a parent and children.
@@ -271,6 +357,16 @@ class SessionHistoryEntry : public nsISHEntry {
 
   const nsID& DocshellID() const;
 
+  HistoryEntryCounterForBrowsingContext& BCHistoryLength() {
+    return mBCHistoryLength;
+  }
+
+  void SetBCHistoryLength(HistoryEntryCounterForBrowsingContext& aCounter) {
+    mBCHistoryLength.CopyValueFrom(aCounter);
+  }
+
+  void ClearBCHistoryLength() { mBCHistoryLength.Reset(); }
+
   void SetIsDynamicallyAdded(bool aDynamic);
 
   // Get an entry based on LoadingSessionHistoryInfo's mLoadId. Parent process
@@ -291,6 +387,8 @@ class SessionHistoryEntry : public nsISHEntry {
   nsTArray<RefPtr<SessionHistoryEntry>> mChildren;
 
   bool mForInitialLoad = false;
+
+  HistoryEntryCounterForBrowsingContext mBCHistoryLength;
 
   static nsDataHashtable<nsUint64HashKey, SessionHistoryEntry*>* sLoadIdToEntry;
 };

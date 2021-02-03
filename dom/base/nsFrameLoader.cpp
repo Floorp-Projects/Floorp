@@ -1881,7 +1881,21 @@ void nsFrameLoader::StartDestroy(bool aForProcessSwitch) {
           browsingContext->Top()->GetChildSessionHistory();
       if (childSHistory) {
         if (mozilla::SessionHistoryInParent()) {
-          browsingContext->RemoveFromSessionHistory();
+          uint32_t addedEntries = 0;
+          browsingContext->PreOrderWalk([&addedEntries](BrowsingContext* aBC) {
+            // The initial load doesn't increase history length.
+            addedEntries += aBC->GetHistoryEntryCount() - 1;
+          });
+
+          nsID changeID = {};
+          if (addedEntries > 0) {
+            ChildSHistory* shistory =
+                browsingContext->Top()->GetChildSessionHistory();
+            if (shistory) {
+              changeID = shistory->AddPendingHistoryChange(0, -addedEntries);
+            }
+          }
+          browsingContext->RemoveFromSessionHistory(changeID);
         } else {
           AutoTArray<nsID, 16> ids({browsingContext->GetHistoryID()});
           childSHistory->LegacySHistory()->RemoveEntries(

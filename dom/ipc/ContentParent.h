@@ -1407,7 +1407,7 @@ class ContentParent final
       const MaybeDiscarded<BrowsingContext>& aContext);
 
   mozilla::ipc::IPCResult RecvRemoveFromSessionHistory(
-      const MaybeDiscarded<BrowsingContext>& aContext);
+      const MaybeDiscarded<BrowsingContext>& aContext, const nsID& aChangeID);
 
   mozilla::ipc::IPCResult RecvHistoryReload(
       const MaybeDiscarded<BrowsingContext>& aContext,
