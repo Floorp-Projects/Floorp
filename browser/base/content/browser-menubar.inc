@@ -484,6 +484,11 @@
                           onclick="checkForMiddleClick(this, event);"
                           data-l10n-id="menu-help-troubleshooting-info"
                           appmenu-data-l10n-id="appmenu-help-troubleshooting-info"/>
+                <menuitem id="help_taskManager"
+                          oncommand="switchToTabHavingURI('about:performance', true)"
+                          onclick="checkForMiddleClick(this, event);"
+                          data-l10n-id="menu-help-taskmanager"
+                          appmenu-data-l10n-id="appmenu-help-taskmanager"/>
                 <menuitem id="menu_HelpPopup_reportPhishingtoolmenu"
                           disabled="true"
                           oncommand="openUILink(gSafeBrowsing.getReportURL('Phish'), event, {triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})});"

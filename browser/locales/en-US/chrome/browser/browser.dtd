@@ -16,8 +16,6 @@
 <!ENTITY openFileCmd.label "Open File…">
 <!ENTITY printCmd.label "Print…">
 
-<!ENTITY taskManagerCmd.label "Task Manager">
-
 <!ENTITY menubarCmd.label "Menu Bar">
 <!ENTITY menubarCmd.accesskey "M">
 <!-- LOCALIZATION NOTE: The accessibleLabel is a spoken label that should not
