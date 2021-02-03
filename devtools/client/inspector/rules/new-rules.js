@@ -187,13 +187,6 @@ class RulesView {
    * if they are supported in the current target.
    */
   async initSimulationFeatures() {
-    // XXX: We used to initialize the front early in order to call
-    // actorHasMethod to check against backward compatibility. This is no longer
-    // necessary and the call to getFront could be done later if needed.
-    this.contentViewerFront = await this.currentTarget.getFront(
-      "contentViewer"
-    );
-
     if (!this.currentTarget.chrome) {
       this.store.dispatch(updatePrintSimulationHidden(false));
     } else {
@@ -239,11 +232,6 @@ class RulesView {
     if (this.elementStyle) {
       this.elementStyle.destroy();
       this.elementStyle = null;
-    }
-
-    if (this.contentViewerFront) {
-      this.contentViewerFront.destroy();
-      this.contentViewerFront = null;
     }
 
     this._dummyElement = null;
@@ -507,26 +495,24 @@ class RulesView {
   /**
    * Handler for toggling color scheme simulation.
    */
-  async onToggleColorSchemeSimulation() {
-    const currentState = await this.contentViewerFront.getEmulatedColorScheme();
-    const index = COLOR_SCHEMES.indexOf(currentState);
-    const nextState = COLOR_SCHEMES[(index + 1) % COLOR_SCHEMES.length];
-    await this.contentViewerFront.setEmulatedColorScheme(nextState);
+  async onToggleColorSchemeSimulation(nextState) {
+    await this.currentTarget.reconfigure({
+      options: {
+        colorSchemeSimulation: nextState,
+      }
+    });
     await this.updateElementStyle();
   }
 
   /**
    * Handler for toggling print media simulation.
    */
-  async onTogglePrintSimulation() {
-    const enabled = await this.contentViewerFront.getIsPrintSimulationEnabled();
-
-    if (!enabled) {
-      await this.contentViewerFront.startPrintMediaSimulation();
-    } else {
-      await this.contentViewerFront.stopPrintMediaSimulation(false);
-    }
-
+  async onTogglePrintSimulation(enabled) {
+    await this.currentTarget.reconfigure({
+      options: {
+        printSimulationEnabled: enabled,
+      }
+    });
     await this.updateElementStyle();
   }
 

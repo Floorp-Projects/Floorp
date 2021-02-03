@@ -307,31 +307,6 @@ interface nsIContentViewer : nsISupports
    */
   void resumePainting();
 
-  /*
-   * Render the document as if being viewed on a device with the specified
-   * media type. This will cause a reflow.
-   *
-   * @param mediaType The media type to be emulated
-   */
-  void emulateMedium(in AString aMediaType);
-
-  /*
-   * Restore the viewer's natural media type
-   */
-  void stopEmulatingMedium();
-
-  cenum PrefersColorScheme : 8 {
-    PREFERS_COLOR_SCHEME_LIGHT,
-    PREFERS_COLOR_SCHEME_DARK,
-    PREFERS_COLOR_SCHEME_NONE, /* This clears the override. */
-  };
-
-  /*
-   * Emulate or stop emulating the prefers color scheme on this page and
-   * subdocuments.
-   */
-  void emulatePrefersColorScheme(in nsIContentViewer_PrefersColorScheme aPrefersColorScheme);
-
   [noscript, notxpcom] Encoding getHintCharset();
   [noscript, notxpcom] void setHintCharset(in Encoding aEncoding);
 };

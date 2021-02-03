@@ -22,18 +22,19 @@ function colorId() {
 }
 
 {
-  let cv = SpecialPowers.wrap(window).docShell.contentViewer;
-  ok('emulatePrefersColorScheme' in cv, "API should exist");
+  let bc = SpecialPowers.wrap(window).browsingContext.top;
+  ok('prefersColorSchemeOverride' in bc, "API should exist");
+  is(bc.prefersColorSchemeOverride, "none", "Override shouldn't be active.");
 
   let originalColor = colorId();
 
-  cv.emulatePrefersColorScheme(cv.PREFERS_COLOR_SCHEME_LIGHT);
+  bc.prefersColorSchemeOverride = "light";
   is(colorId(), 1, "Light emulation works");
 
-  cv.emulatePrefersColorScheme(cv.PREFERS_COLOR_SCHEME_DARK);
+  bc.prefersColorSchemeOverride = "dark";
   is(colorId(), 2, "Dark emulation works");
 
-  cv.emulatePrefersColorScheme(cv.PREFERS_COLOR_SCHEME_NONE);
+  bc.prefersColorSchemeOverride = "none";
   is(colorId(), originalColor, "Clearing the override works");
 }
 </script>

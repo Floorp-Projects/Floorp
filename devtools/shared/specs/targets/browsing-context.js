@@ -45,8 +45,10 @@ types.addDictType("browsingContextTarget.reload", {
 types.addDictType("browsingContextTarget.reconfigure", {
   javascriptEnabled: "nullable:boolean",
   cacheDisabled: "nullable:boolean",
+  colorSchemeSimulation: "nullable:string",
   serviceWorkersTestingEnabled: "nullable:boolean",
   performReload: "nullable:boolean",
+  printSimulationEnabled: "nullable:boolean",
 });
 
 const browsingContextTargetSpecPrototype = {

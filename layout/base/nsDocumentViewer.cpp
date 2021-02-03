@@ -339,11 +339,6 @@ class nsDocumentViewer final : public nsIContentViewer,
   // nsIDocumentViewerPrint Printing Methods
   NS_DECL_NSIDOCUMENTVIEWERPRINT
 
-  void EmulateMediumInternal(nsAtom*);
-
-  using ColorSchemeOverride = Maybe<StylePrefersColorScheme>;
-  void EmulatePrefersColorSchemeInternal(const ColorSchemeOverride&);
-
  protected:
   virtual ~nsDocumentViewer();
 
@@ -2644,61 +2639,6 @@ nsDocumentViewer::GetAuthorStyleDisabled(bool* aStyleDisabled) {
     *aStyleDisabled = false;
   }
   return NS_OK;
-}
-
-void nsDocumentViewer::EmulateMediumInternal(nsAtom* aMedia) {
-  auto childFn = [&](nsDocumentViewer* aChild) {
-    aChild->EmulateMediumInternal(aMedia);
-  };
-  auto presContextFn = [&](nsPresContext* aPc) { aPc->EmulateMedium(aMedia); };
-  PropagateToPresContextsHelper(childFn, presContextFn);
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::EmulateMedium(const nsAString& aMediaType) {
-  nsAutoString mediaType;
-  nsContentUtils::ASCIIToLower(aMediaType, mediaType);
-  RefPtr<nsAtom> media = NS_Atomize(mediaType);
-
-  EmulateMediumInternal(media);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::StopEmulatingMedium() {
-  EmulateMediumInternal(nullptr);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::EmulatePrefersColorScheme(PrefersColorScheme aScheme) {
-  auto ToStyle = [](PrefersColorScheme aScheme) -> ColorSchemeOverride {
-    switch (aScheme) {
-      case PREFERS_COLOR_SCHEME_LIGHT:
-        return Some(StylePrefersColorScheme::Light);
-      case PREFERS_COLOR_SCHEME_DARK:
-        return Some(StylePrefersColorScheme::Dark);
-      case PREFERS_COLOR_SCHEME_NONE:
-        return Nothing();
-      default:
-        MOZ_ASSERT_UNREACHABLE("Unknown prefers color scheme value?");
-        return Nothing();
-    };
-  };
-
-  EmulatePrefersColorSchemeInternal(ToStyle(aScheme));
-  return NS_OK;
-}
-
-void nsDocumentViewer::EmulatePrefersColorSchemeInternal(
-    const ColorSchemeOverride& aOverride) {
-  auto childFn = [&aOverride](nsDocumentViewer* aChild) {
-    aChild->EmulatePrefersColorSchemeInternal(aOverride);
-  };
-  auto presContextFn = [&aOverride](nsPresContext* aPc) {
-    aPc->SetOverridePrefersColorScheme(aOverride);
-  };
-  PropagateToPresContextsHelper(childFn, presContextFn);
 }
 
 NS_IMETHODIMP nsDocumentViewer::GetHintCharacterSet(
