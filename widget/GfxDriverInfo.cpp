@@ -1021,6 +1021,7 @@ const nsAString& GfxDriverInfo::GetDriverVendor(DriverVendor id) {
     DECLARE_DRIVER_VENDOR_ID(MesaSoftPipe, "mesa/softpipe");
     DECLARE_DRIVER_VENDOR_ID(MesaSWRast, "mesa/swrast");
     DECLARE_DRIVER_VENDOR_ID(MesaUnknown, "mesa/unknown");
+    DECLARE_DRIVER_VENDOR_ID(MesaR600, "mesa/r600");
     DECLARE_DRIVER_VENDOR_ID(MesaNouveau, "mesa/nouveau");
     DECLARE_DRIVER_VENDOR_ID(NonMesaAll, "non-mesa/all");
     DECLARE_DRIVER_VENDOR_ID(HardwareMesaAll, "mesa/hw-all");
