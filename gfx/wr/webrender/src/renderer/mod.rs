@@ -94,6 +94,7 @@ use crate::render_target::{RenderTargetKind, BlitJob, BlitJobSource};
 use crate::texture_cache::{TextureCache, TextureCacheConfig};
 use crate::tile_cache::PictureCacheDebugInfo;
 use crate::util::drain_filter;
+use crate::host_utils::{thread_started, thread_stopped};
 use upload::{upload_to_texture_cache, UploadTexturePool};
 
 use euclid::{rect, Transform3D, Scale, default};
@@ -1118,9 +1119,6 @@ impl Renderer {
         let enclosing_size_of_op = options.enclosing_size_of_op;
         let make_size_of_ops =
             move || size_of_op.map(|o| MallocSizeOfOps::new(o, enclosing_size_of_op));
-        let thread_listener = Arc::new(options.thread_listener);
-        let thread_listener_for_rayon_start = thread_listener.clone();
-        let thread_listener_for_rayon_end = thread_listener.clone();
         let workers = options
             .workers
             .take()
@@ -1129,14 +1127,10 @@ impl Renderer {
                     .thread_name(|idx|{ format!("WRWorker#{}", idx) })
                     .start_handler(move |idx| {
                         register_thread_with_profiler(format!("WRWorker#{}", idx));
-                        if let Some(ref thread_listener) = *thread_listener_for_rayon_start {
-                            thread_listener.thread_started(&format!("WRWorker#{}", idx));
-                        }
+                        thread_started(&format!("WRWorker#{}", idx));
                     })
-                    .exit_handler(move |idx| {
-                        if let Some(ref thread_listener) = *thread_listener_for_rayon_end {
-                            thread_listener.thread_stopped(&format!("WRWorker#{}", idx));
-                        }
+                    .exit_handler(move |_idx| {
+                        thread_stopped();
                     })
                     .build();
                 Arc::new(worker.unwrap())
@@ -1147,9 +1141,6 @@ impl Renderer {
         let font_instances = SharedFontInstanceMap::new();
 
         let blob_image_handler = options.blob_image_handler.take();
-        let thread_listener_for_render_backend = thread_listener.clone();
-        let thread_listener_for_scene_builder = thread_listener.clone();
-        let thread_listener_for_lp_scene_builder = thread_listener.clone();
         let scene_builder_hooks = options.scene_builder_hooks;
         let rb_thread_name = format!("WRRenderBackend#{}", options.renderer_id.unwrap_or(0));
         let scene_thread_name = format!("WRSceneBuilder#{}", options.renderer_id.unwrap_or(0));
@@ -1163,9 +1154,7 @@ impl Renderer {
 
         thread::Builder::new().name(scene_thread_name.clone()).spawn(move || {
             register_thread_with_profiler(scene_thread_name.clone());
-            if let Some(ref thread_listener) = *thread_listener_for_scene_builder {
-                thread_listener.thread_started(&scene_thread_name);
-            }
+            thread_started(&scene_thread_name);
 
             let mut scene_builder = SceneBuilderThread::new(
                 config,
@@ -1177,9 +1166,7 @@ impl Renderer {
             );
             scene_builder.run();
 
-            if let Some(ref thread_listener) = *thread_listener_for_scene_builder {
-                thread_listener.thread_stopped(&scene_thread_name);
-            }
+            thread_stopped();
         })?;
 
         let low_priority_scene_tx = if options.support_low_priority_transactions {
@@ -1192,16 +1179,12 @@ impl Renderer {
 
             thread::Builder::new().name(lp_scene_thread_name.clone()).spawn(move || {
                 register_thread_with_profiler(lp_scene_thread_name.clone());
-                if let Some(ref thread_listener) = *thread_listener_for_lp_scene_builder {
-                    thread_listener.thread_started(&lp_scene_thread_name);
-                }
+                thread_started(&lp_scene_thread_name);
 
                 let mut scene_builder = lp_builder;
                 scene_builder.run();
 
-                if let Some(ref thread_listener) = *thread_listener_for_lp_scene_builder {
-                    thread_listener.thread_stopped(&lp_scene_thread_name);
-                }
+                thread_stopped();
             })?;
 
             low_priority_scene_tx
@@ -1225,9 +1208,7 @@ impl Renderer {
         let enable_multithreading = options.enable_multithreading;
         thread::Builder::new().name(rb_thread_name.clone()).spawn(move || {
             register_thread_with_profiler(rb_thread_name.clone());
-            if let Some(ref thread_listener) = *thread_listener_for_render_backend {
-                thread_listener.thread_started(&rb_thread_name);
-            }
+            thread_started(&rb_thread_name);
 
             let texture_cache = TextureCache::new(
                 max_texture_size,
@@ -1264,9 +1245,7 @@ impl Renderer {
                 namespace_alloc_by_client,
             );
             backend.run();
-            if let Some(ref thread_listener) = *thread_listener_for_render_backend {
-                thread_listener.thread_stopped(&rb_thread_name);
-            }
+            thread_stopped();
         })?;
 
         let debug_method = if !options.enable_gpu_markers {
@@ -5176,11 +5155,6 @@ impl Renderer {
     }
 }
 
-pub trait ThreadListener {
-    fn thread_started(&self, thread_name: &str);
-    fn thread_stopped(&self, thread_name: &str);
-}
-
 /// Allows callers to hook in at certain points of the async scene build. These
 /// functions are all called from the scene builder thread.
 pub trait SceneBuilderHooks {
@@ -5268,7 +5242,6 @@ pub struct RendererOptions {
     pub enable_multithreading: bool,
     pub blob_image_handler: Option<Box<dyn BlobImageHandler>>,
     pub crash_annotator: Option<Box<dyn CrashAnnotator>>,
-    pub thread_listener: Option<Box<dyn ThreadListener + Send + Sync>>,
     pub size_of_op: Option<VoidPtrToSizeFn>,
     pub enclosing_size_of_op: Option<VoidPtrToSizeFn>,
     pub cached_programs: Option<Rc<ProgramCache>>,
@@ -5356,7 +5329,6 @@ impl Default for RendererOptions {
             enable_multithreading: true,
             blob_image_handler: None,
             crash_annotator: None,
-            thread_listener: None,
             size_of_op: None,
             enclosing_size_of_op: None,
             renderer_id: None,

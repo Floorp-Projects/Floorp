@@ -38,7 +38,7 @@ use webrender::{
     CompositorCapabilities, CompositorConfig, CompositorSurfaceTransform, DebugFlags, Device, NativeSurfaceId,
     NativeSurfaceInfo, NativeTileId, PartialPresentCompositor, PipelineInfo, ProfilerHooks, RecordedFrameHandle,
     Renderer, RendererOptions, RendererStats, SceneBuilderHooks, ShaderPrecacheFlags, Shaders, SharedShaders,
-    TextureCacheConfig, ThreadListener, UploadMethod, ONE_TIME_USAGE_HINT,
+    TextureCacheConfig, UploadMethod, ONE_TIME_USAGE_HINT, host_utils::{thread_started, thread_stopped}
 };
 use wr_malloc_size_of::MallocSizeOfOps;
 
@@ -1058,33 +1058,7 @@ impl AsyncPropertySampler for SamplerCallback {
 }
 
 extern "C" {
-    fn gecko_profiler_register_thread(name: *const ::std::os::raw::c_char);
-    fn gecko_profiler_unregister_thread();
     fn wr_register_thread_local_arena();
-}
-
-pub struct GeckoProfilerThreadListener {}
-
-impl GeckoProfilerThreadListener {
-    pub fn new() -> GeckoProfilerThreadListener {
-        GeckoProfilerThreadListener {}
-    }
-}
-
-impl ThreadListener for GeckoProfilerThreadListener {
-    fn thread_started(&self, thread_name: &str) {
-        let name = CString::new(thread_name).unwrap();
-        unsafe {
-            // gecko_profiler_register_thread copies the passed name here.
-            gecko_profiler_register_thread(name.as_ptr());
-        }
-    }
-
-    fn thread_stopped(&self, _: &str) {
-        unsafe {
-            gecko_profiler_unregister_thread();
-        }
-    }
 }
 
 pub struct WrThreadPool(Arc<rayon::ThreadPool>);
@@ -1101,15 +1075,14 @@ pub extern "C" fn wr_thread_pool_new(low_priority: bool) -> *mut WrThreadPool {
     let worker = rayon::ThreadPoolBuilder::new()
         .thread_name(move |idx| format!("WRWorker{}#{}", priority_tag, idx))
         .num_threads(num_threads)
-        .start_handler(move |idx| unsafe {
-            wr_register_thread_local_arena();
+        .start_handler(move |idx| {
+            unsafe { wr_register_thread_local_arena(); }
             let name = format!("WRWorker{}#{}", priority_tag, idx);
             register_thread_with_profiler(name.clone());
-            let name = CString::new(name).unwrap();
-            gecko_profiler_register_thread(name.as_ptr());
+            thread_started(&name);
         })
-        .exit_handler(|_idx| unsafe {
-            gecko_profiler_unregister_thread();
+        .exit_handler(|_idx| {
+            thread_stopped();
         })
         .build();
 
@@ -1633,7 +1606,6 @@ pub extern "C" fn wr_window_new(
         ))),
         crash_annotator: Some(Box::new(MozCrashAnnotator)),
         workers: Some(workers),
-        thread_listener: Some(Box::new(GeckoProfilerThreadListener::new())),
         size_of_op: Some(size_of_op),
         enclosing_size_of_op: Some(enclosing_size_of_op),
         cached_programs,

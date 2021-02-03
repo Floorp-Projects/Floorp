@@ -28,7 +28,7 @@ wr_malloc_size_of = { path = "../wr/wr_malloc_size_of" }
 path = "../wr/webrender"
 version = "0.61.0"
 default-features = false
-features = ["capture", "serialize_program"]
+features = ["capture", "serialize_program", "gecko"]
 
 [target.'cfg(target_os = "windows")'.dependencies]
 dwrote = "0.11"
