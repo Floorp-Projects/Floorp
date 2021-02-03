@@ -1751,7 +1751,7 @@ CssRuleView.prototype = {
     this.currentTarget.reconfigure({
       options: {
         colorSchemeSimulation: nextState,
-      }
+      },
     });
     this.refreshPanel();
   },
@@ -1761,7 +1761,7 @@ CssRuleView.prototype = {
     this.currentTarget.reconfigure({
       options: {
         printSimulationEnabled: enabled,
-      }
+      },
     });
     // Refresh the current element's rules in the panel.
     this.refreshPanel();
