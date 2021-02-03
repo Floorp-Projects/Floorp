@@ -6,6 +6,12 @@ ChromeUtils.import(
   "resource://gre/modules/components-utils/FilterExpressions.jsm",
   this
 );
+ChromeUtils.import(
+  "resource://gre/modules/components-utils/FilterExpressions.jsm",
+  this
+);
+
+ChromeUtils.import("resource://normandy/Normandy.jsm", this);
 ChromeUtils.import("resource://normandy/actions/BaseAction.jsm", this);
 ChromeUtils.import("resource://normandy/lib/RecipeRunner.jsm", this);
 ChromeUtils.import("resource://normandy/lib/ClientEnvironment.jsm", this);
@@ -14,10 +20,6 @@ ChromeUtils.import("resource://normandy/lib/NormandyApi.jsm", this);
 ChromeUtils.import("resource://normandy/lib/ActionsManager.jsm", this);
 ChromeUtils.import("resource://normandy/lib/AddonStudies.jsm", this);
 ChromeUtils.import("resource://normandy/lib/Uptake.jsm", this);
-ChromeUtils.import(
-  "resource://gre/modules/components-utils/FilterExpressions.jsm",
-  this
-);
 
 const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
@@ -775,3 +777,35 @@ decorate_task(async function testAutomaticCapabilities() {
     "built-in, non-enumerable properties should not be included"
   );
 });
+
+// Test that recipe runner won't run if Normandy hasn't been initialized.
+decorate_task(
+  withStub(Uptake, "reportRunner"),
+  withStub(ActionsManager.prototype, "finalize"),
+  NormandyTestUtils.withMockRecipeCollection([]),
+  async function testRunEvents(reportRunnerStub, finalizeStub) {
+    const observer = sinon.spy();
+    Services.obs.addObserver(observer, "recipe-runner:start");
+
+    const originalPrefsApplied = Normandy.defaultPrefsHaveBeenApplied;
+    Normandy.defaultPrefsHaveBeenApplied = PromiseUtils.defer();
+
+    const recipeRunnerPromise = RecipeRunner.run();
+    await Promise.resolve();
+    ok(
+      !observer.called,
+      "RecipeRunner.run shouldn't run if Normandy isn't initialized"
+    );
+
+    Normandy.defaultPrefsHaveBeenApplied.resolve();
+    await recipeRunnerPromise;
+    ok(
+      observer.called,
+      "RecipeRunner.run should run after Normandy has initialized"
+    );
+
+    // cleanup
+    Services.obs.removeObserver(observer, "recipe-runner:start");
+    Normandy.defaultPrefsHaveBeenApplied = originalPrefsApplied;
+  }
+);
