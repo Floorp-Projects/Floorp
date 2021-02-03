@@ -1285,7 +1285,9 @@ var Bookmarks = Object.freeze({
 
       await removeBookmarks(removeItems, options);
 
-      // Notify onItemRemoved to listeners.
+      // Notify bookmark-removed to listeners.
+      let notifications = [];
+
       for (let item of removeItems) {
         let observers = PlacesUtils.bookmarks.getObservers();
         let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
@@ -1293,19 +1295,22 @@ var Bookmarks = Object.freeze({
         if (item.type == Bookmarks.TYPE_BOOKMARK) {
           url = item.hasOwnProperty("url") ? item.url.href : null;
         }
-        let notification = new PlacesBookmarkRemoved({
-          id: item._id,
-          url,
-          itemType: item.type,
-          parentId: item._parentId,
-          index: item.index,
-          guid: item.guid,
-          parentGuid: item.parentGuid,
-          source: options.source,
-          isTagging: isUntagging,
-          isDescendantRemoval: false,
-        });
-        PlacesObservers.notifyListeners([notification]);
+
+        notifications.push(
+          new PlacesBookmarkRemoved({
+            id: item._id,
+            url,
+            itemType: item.type,
+            parentId: item._parentId,
+            index: item.index,
+            guid: item.guid,
+            parentGuid: item.parentGuid,
+            source: options.source,
+            isTagging: isUntagging,
+            isDescendantRemoval: false,
+          })
+        );
+
         if (isUntagging) {
           for (let entry of await fetchBookmarksByURL(item, {
             concurrent: true,
@@ -1326,6 +1331,8 @@ var Bookmarks = Object.freeze({
           }
         }
       }
+
+      PlacesObservers.notifyListeners(notifications);
     })();
   },
 
@@ -3235,28 +3242,30 @@ var removeFoldersContents = async function(db, folderGuids, options) {
   // Notify listeners in reverse order to serve children before parents.
   let { source = Bookmarks.SOURCES.DEFAULT } = options;
   let observers = PlacesUtils.bookmarks.getObservers();
-  let notification = [];
+  let notifications = [];
   for (let item of itemsRemoved.reverse()) {
     let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
     let url = "";
     if (item.type == Bookmarks.TYPE_BOOKMARK) {
       url = item.hasOwnProperty("url") ? item.url.href : null;
     }
-    notification = new PlacesBookmarkRemoved({
-      id: item._id,
-      url,
-      parentId: item._parentId,
-      index: item.index,
-      itemType: item.type,
-      guid: item.guid,
-      parentGuid: item.parentGuid,
-      source,
-      isTagging: isUntagging,
-      isDescendantRemoval: !PlacesUtils.bookmarks.userContentRoots.includes(
-        item.parentGuid
-      ),
-    });
-    PlacesObservers.notifyListeners([notification]);
+    notifications.push(
+      new PlacesBookmarkRemoved({
+        id: item._id,
+        url,
+        parentId: item._parentId,
+        index: item.index,
+        itemType: item.type,
+        guid: item.guid,
+        parentGuid: item.parentGuid,
+        source,
+        isTagging: isUntagging,
+        isDescendantRemoval: !PlacesUtils.bookmarks.userContentRoots.includes(
+          item.parentGuid
+        ),
+      })
+    );
+
     if (isUntagging) {
       for (let entry of await fetchBookmarksByURL(item, true)) {
         notify(observers, "onItemChanged", [
@@ -3275,6 +3284,11 @@ var removeFoldersContents = async function(db, folderGuids, options) {
       }
     }
   }
+
+  if (notifications.length) {
+    PlacesObservers.notifyListeners(notifications);
+  }
+
   return itemsRemoved.filter(item => "url" in item).map(item => item.url);
 };
 
