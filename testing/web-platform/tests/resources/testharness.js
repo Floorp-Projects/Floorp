@@ -2839,6 +2839,8 @@ policies and contribution forms [3].
                     this.hide_test_state = value;
                 } else if (p == "output") {
                     this.output = value;
+                } else if (p === "debug") {
+                    settings.debug = value;
                 }
             }
         }
