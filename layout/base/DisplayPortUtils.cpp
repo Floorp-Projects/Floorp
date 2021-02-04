@@ -630,6 +630,11 @@ void DisplayPortUtils::MarkDisplayPortAsPainted(nsIContent* aContent) {
   }
 }
 
+bool DisplayPortUtils::HasNonMinimalDisplayPort(nsIContent* aContent) {
+  return HasDisplayPort(aContent) &&
+         !aContent->GetProperty(nsGkAtoms::MinimalDisplayPort);
+}
+
 /* static */
 bool DisplayPortUtils::GetDisplayPortForVisibilityTesting(nsIContent* aContent,
                                                           nsRect* aResult) {
@@ -943,7 +948,7 @@ bool DisplayPortUtils::MaybeCreateDisplayPort(nsDisplayListBuilder* aBuilder,
     return false;
   }
 
-  bool haveDisplayPort = HasDisplayPort(content);
+  bool haveDisplayPort = HasNonMinimalDisplayPort(content);
 
   // We perform an optimization where we ensure that at least one
   // async-scrollable frame (i.e. one that WantsAsyncScroll()) has a
@@ -966,7 +971,7 @@ bool DisplayPortUtils::MaybeCreateDisplayPort(nsDisplayListBuilder* aBuilder,
 
       CalculateAndSetDisplayPortMargins(scrollableFrame, aRepaintMode);
 #ifdef DEBUG
-      haveDisplayPort = HasDisplayPort(content);
+      haveDisplayPort = HasNonMinimalDisplayPort(content);
       MOZ_ASSERT(haveDisplayPort,
                  "should have a displayport after having just set it");
 #endif
@@ -996,7 +1001,7 @@ void DisplayPortUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
     MOZ_ASSERT(scrollAncestor->WantAsyncScroll() ||
                frame->PresShell()->GetRootScrollFrame() == frame);
     if (nsLayoutUtils::AsyncPanZoomEnabled(frame) &&
-        !HasDisplayPort(frame->GetContent())) {
+        (!HasNonMinimalDisplayPort(frame->GetContent()))) {
       SetDisplayPortMargins(frame->GetContent(), frame->PresShell(),
                             DisplayPortMargins::Empty(frame->GetContent()),
                             ClearMinimalDisplayPortProperty::Yes, 0,

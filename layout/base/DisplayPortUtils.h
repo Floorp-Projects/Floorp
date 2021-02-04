@@ -181,6 +181,11 @@ class DisplayPortUtils {
                                   const nsIFrame* aScrolledFrame = nullptr);
 
   /**
+   * Check whether the given element has a non-minimal displayport.
+   */
+  static bool HasNonMinimalDisplayPort(nsIContent* aContent);
+
+  /**
    * Check if the given element has a margins based displayport but is missing a
    * displayport base rect that it needs to properly compute a displayport rect.
    */

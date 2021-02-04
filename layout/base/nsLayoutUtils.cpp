@@ -3294,7 +3294,7 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
                      presShell->GetRootScrollFrame())) {
         if (dom::Element* element =
                 presShell->GetDocument()->GetDocumentElement()) {
-          if (!DisplayPortUtils::HasDisplayPort(element)) {
+          if (!DisplayPortUtils::HasNonMinimalDisplayPort(element)) {
             APZCCallbackHelper::InitializeRootDisplayport(presShell);
           }
         }
