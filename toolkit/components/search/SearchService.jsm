@@ -1569,23 +1569,28 @@ SearchService.prototype = {
     if (!this._initialized && !isAppProvided && !initEngine) {
       await this.init();
     }
+    // Special search engines (policy and user) are skipped for migration as
+    // there would never have been an OpenSearch engine associated with those.
+    if (extensionID && !extensionID.startsWith("set-via")) {
+      for (let engine of this._engines.values()) {
+        if (
+          !engine.extensionID &&
+          engine._loadPath.startsWith(`jar:[profile]/extensions/${extensionID}`)
+        ) {
+          // This is a legacy extension engine that needs to be migrated to WebExtensions.
+          logConsole.debug("Migrating existing engine");
+          isCurrent = isCurrent || this.defaultEngine == engine;
+          await this.removeEngine(engine);
+        }
+      }
+    }
+
     let existingEngine = this._engines.get(name);
     if (existingEngine) {
-      if (
-        extensionID &&
-        existingEngine._loadPath.startsWith(
-          `jar:[profile]/extensions/${extensionID}`
-        )
-      ) {
-        // This is a legacy extension engine that needs to be migrated to WebExtensions.
-        isCurrent = this.defaultEngine == existingEngine;
-        await this.removeEngine(existingEngine);
-      } else {
-        throw Components.Exception(
-          "An engine with that name already exists!",
-          Cr.NS_ERROR_FILE_ALREADY_EXISTS
-        );
-      }
+      throw Components.Exception(
+        "An engine with that name already exists!",
+        Cr.NS_ERROR_FILE_ALREADY_EXISTS
+      );
     }
 
     let newEngine = new SearchEngine({
