@@ -435,3 +435,90 @@ addAccessibleTask(
     );
   }
 );
+
+/*
+ * The following style changes should fire a table style changed
+ * event, which in turn invalidates the layout-table cache
+ * associated with the given table.
+ */
+addAccessibleTask(
+  `<table id="sampleTable">
+    <tr id="rowOne">
+      <td id="cellOne">cell1</td>
+      <td>cell2</td>
+    </tr>
+    <tr>
+      <td>cell3</td>
+      <td>cell4</td>
+    </tr>
+  </table>`,
+  async (browser, accDoc) => {
+    let table = getNativeInterface(accDoc, "sampleTable");
+    // we should start as a layout table
+    is(table.getAttributeValue("AXRole"), "AXGroup", "Table is layout table");
+
+    info("Adding cell border");
+    // after cell border added, we should have a data table
+    await testIsLayout(
+      table,
+      "cellOne",
+      EVENT_TABLE_STYLING_CHANGED,
+      async () => {
+        await SpecialPowers.spawn(browser, [], () => {
+          content.document
+            .getElementById("cellOne")
+            .style.setProperty("border", "5px solid green");
+        });
+      },
+      false
+    );
+
+    info("Removing cell border");
+    // after cell border removed, we should have a layout table
+    await testIsLayout(
+      table,
+      "cellOne",
+      EVENT_TABLE_STYLING_CHANGED,
+      async () => {
+        await SpecialPowers.spawn(browser, [], () => {
+          content.document
+            .getElementById("cellOne")
+            .style.removeProperty("border");
+        });
+      },
+      true
+    );
+
+    info("Adding row background");
+    // after row background added, we should have a data table
+    await testIsLayout(
+      table,
+      "rowOne",
+      EVENT_TABLE_STYLING_CHANGED,
+      async () => {
+        await SpecialPowers.spawn(browser, [], () => {
+          content.document
+            .getElementById("rowOne")
+            .style.setProperty("background-color", "green");
+        });
+      },
+      false
+    );
+
+    info("Removing row background");
+    // after row background removed, we should have a layout table
+    await testIsLayout(
+      table,
+      "rowOne",
+      EVENT_TABLE_STYLING_CHANGED,
+      async () => {
+        await SpecialPowers.spawn(browser, [], () => {
+          content.document
+            .getElementById("rowOne")
+            .style.removeProperty("background-color");
+        });
+      },
+      true
+    );
+  }
+);
