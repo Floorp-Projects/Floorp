@@ -117,6 +117,10 @@ class AboutConfigTest {
     return this.document.getElementById("about-config-search");
   }
 
+  get showOnlyModifiedCheckbox() {
+    return this.document.getElementById("about-config-show-only-modified");
+  }
+
   get prefsTable() {
     return this.document.getElementById("prefs");
   }
