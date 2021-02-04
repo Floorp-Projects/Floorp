@@ -52,12 +52,18 @@ class BrowserAction extends BrowserActionBase {
 
   openPopup() {
     const tab = tabTracker.activeTab;
+    const popupUri = this.triggerClickOrPopup(tab);
     const actionObject = this.getContextData(tab);
     const action = this.helper.extractProperties(actionObject);
     this.helper.sendRequest(tab.id, {
       action,
       type: "GeckoView:BrowserAction:OpenPopup",
+      popupUri,
     });
+  }
+
+  triggerClickOrPopup(tab = tabTracker.activeTab) {
+    return super.triggerClickOrPopup(tab);
   }
 
   getTab(tabId) {
@@ -68,7 +74,7 @@ class BrowserAction extends BrowserActionBase {
     return this.helper.getWindow(windowId);
   }
 
-  click() {
+  dispatchClick() {
     this.clickDelegate.onClick();
   }
 }
