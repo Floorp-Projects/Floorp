@@ -408,7 +408,7 @@ impl RenderTarget for ColorRenderTarget {
             RenderTaskKind::LineDecoration(..) => {
                 panic!("Should not be added to color target!");
             }
-            RenderTaskKind::Readback => {}
+            RenderTaskKind::Readback(..) => {}
             RenderTaskKind::Scaling(ref info) => {
                 add_scaling_instances(
                     info,
@@ -530,7 +530,7 @@ impl RenderTarget for AlphaRenderTarget {
         let (target_rect, _) = task.get_target_rect();
 
         match task.kind {
-            RenderTaskKind::Readback |
+            RenderTaskKind::Readback(..) |
             RenderTaskKind::Picture(..) |
             RenderTaskKind::Blit(..) |
             RenderTaskKind::Border(..) |
@@ -752,7 +752,7 @@ impl TextureCacheRenderTarget {
             RenderTaskKind::Picture(..) |
             RenderTaskKind::ClipRegion(..) |
             RenderTaskKind::CacheMask(..) |
-            RenderTaskKind::Readback |
+            RenderTaskKind::Readback(..) |
             RenderTaskKind::Scaling(..) |
             RenderTaskKind::SvgFilter(..) => {
                 panic!("BUG: unexpected task kind for texture cache target");
