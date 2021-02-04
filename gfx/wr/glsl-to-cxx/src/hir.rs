@@ -2989,6 +2989,13 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
         "bvec4",
         Some("make_bvec4"),
         Type::new(BVec4),
+        vec![Type::new(Bool)],
+    );
+    declare_function(
+        state,
+        "bvec4",
+        Some("make_bvec4"),
+        Type::new(BVec4),
         vec![Type::new(BVec2), Type::new(BVec2)],
     );
 
