@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import androidx.annotation.AnyThread;
 import androidx.annotation.NonNull;
 
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ImageResource;
 
@@ -37,9 +38,26 @@ public class Image {
      * @param size pixel size at which this image will be displayed at.
      *
      * @return A {@link GeckoResult} that resolves to the bitmap when ready.
+     *         Will resolve exceptionally to {@link ImageProcessingException} if the image
+     *         cannot be processed.
      */
     @NonNull
     public GeckoResult<Bitmap> getBitmap(final int size) {
         return mCollection.getBitmap(size);
+    }
+
+    /**
+     * Thrown whenever an image cannot be processed by {@link #getBitmap}
+     */
+    @WrapForJNI
+    public static class ImageProcessingException extends RuntimeException {
+        /**
+         * Build an instance of this class.
+         *
+         * @param message description of the error.
+         */
+        public ImageProcessingException(final String message) {
+            super(message);
+        }
     }
 }
