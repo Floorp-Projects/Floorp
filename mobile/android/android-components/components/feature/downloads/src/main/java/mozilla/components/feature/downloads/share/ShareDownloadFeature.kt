@@ -8,6 +8,7 @@ import android.content.Context
 import android.webkit.MimeTypeMap
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
@@ -56,12 +57,6 @@ private const val OPERATION_TIMEOUT_MILLIS = 1000L
 internal const val CHARACTERS_IN_SHARE_TEXT_LIMIT = 200
 
 /**
- * Coroutine dispatcher used for the cleanup of old cached files. Defaults to IO.
- */
-@VisibleForTesting
-internal var cleanupCacheCoroutineDispatcher = IO
-
-/**
  * Subdirectory of Context.getCacheDir() where the resources to be shared are stored.
  *
  * Location must be kept in sync with the paths our FileProvider can share from.
@@ -86,13 +81,16 @@ internal var cacheDirName = "mozac_share_cache"
  *  @param context Android context used for various platform interactions
  *  @param httpClient Client used for downloading internet resources
  *  @param store a reference to the application's [BrowserStore]
- */
+ * param Coroutine dispatcher used for the cleanup of old cached files. Defaults to IO.
+*/
 @Suppress("TooManyFunctions")
 class ShareDownloadFeature(
     private val context: Context,
     private val httpClient: Client,
     private val store: BrowserStore,
-    private val tabId: String?
+    private val tabId: String?,
+    @VisibleForTesting
+    internal var cleanupCacheCoroutineDispatcher: CoroutineDispatcher = IO
 ) : LifecycleAwareFeature {
     private val logger = Logger("ShareDownloadMiddleware")
 

@@ -56,20 +56,19 @@ class ShareDownloadFeatureTest {
     val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
     @Before
-    fun `setup`() {
+    fun setup() {
         // Effectively reset context mock
         context = spy(testContext)
         doReturn(File(testCacheDirName)).`when`(context).cacheDir
     }
 
     @After
-    fun `cleanup`() {
+    fun cleanup() {
         context.cacheDir.deleteRecursively()
     }
 
     @Test
     fun `cleanupCache should automatically be called when this class is initialized`() = runBlocking {
-        cleanupCacheCoroutineDispatcher = Dispatchers.Main
         val cacheDir = File(context.cacheDir, cacheDirName).also { dir ->
             dir.mkdirs()
             File(dir, "leftoverFile").also { file ->
@@ -79,7 +78,7 @@ class ShareDownloadFeatureTest {
 
         assertTrue(cacheDir.listFiles()!!.isNotEmpty())
 
-        ShareDownloadFeature(context, mock(), mock(), null)
+        ShareDownloadFeature(context, mock(), mock(), null, Dispatchers.Main)
 
         assertTrue(cacheDir.listFiles()!!.isEmpty())
     }
@@ -104,7 +103,7 @@ class ShareDownloadFeatureTest {
 
     @Test
     fun `cleanupCache should delete all files from the cache directory`() = runBlocking {
-        val shareFeature = spy(ShareDownloadFeature(context, mock(), mock(), null))
+        val shareFeature = spy(ShareDownloadFeature(context, mock(), mock(), null, Dispatchers.Main))
         val testDir = File(context.cacheDir, cacheDirName).also { dir ->
             dir.mkdirs()
             File(dir, "testFile").also { file ->
@@ -203,7 +202,7 @@ class ShareDownloadFeatureTest {
         val inputStream = "clientTest".byteInputStream(StandardCharsets.UTF_8)
         doAnswer { Response("randomUrl.png", 200, MutableHeaders(), Response.Body(inputStream)) }
             .`when`(client).fetch(any())
-        val shareFeature = ShareDownloadFeature(context, client, mock(), null)
+        val shareFeature = ShareDownloadFeature(context, client, mock(), null, Dispatchers.Main)
         val shareState = ShareInternetResourceState("randomUrl.png")
 
         val result = shareFeature.download(shareState)
