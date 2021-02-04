@@ -255,9 +255,9 @@ interface nsISearchService : nsISupports
   readonly attribute bool isInitialized;
 
   /**
-   * Checks if WebExtension Search Engines are valid and up-to-date.
+   * Runs background checks; Designed to be run on idle.
    */
-  Promise checkWebExtensionEngines();
+  Promise runBackgroundChecks();
 
   /**
    * Resets the default engine to its original value.
