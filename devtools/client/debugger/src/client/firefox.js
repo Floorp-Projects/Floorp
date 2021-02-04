@@ -6,13 +6,14 @@
 
 import { setupCommands, clientCommands } from "./firefox/commands";
 import {
-  setupEvents,
-  waitForSourceActorToBeRegisteredInStore,
-} from "./firefox/events";
-import { createPause, prepareSourcePayload } from "./firefox/create";
+  setupCreate,
+  createPause,
+  prepareSourcePayload,
+} from "./firefox/create";
 import { features, prefs } from "../utils/prefs";
 
 import { recordEvent } from "../utils/telemetry";
+import sourceQueue from "../utils/source-queue";
 
 let actions;
 let targetList;
@@ -33,7 +34,8 @@ export async function onConnect(
   resourceWatcher = _resourceWatcher;
 
   setupCommands({ devToolsClient, targetList });
-  setupEvents({ actions, devToolsClient, store, resourceWatcher });
+  setupCreate({ store });
+  sourceQueue.initialize(actions);
   const { targetFront } = targetList;
   if (targetFront.isBrowsingContext || targetFront.isParentProcess) {
     targetList.listenForWorkers = true;
@@ -162,15 +164,7 @@ async function onBreakpointAvailable(breakpoints) {
   for (const resource of breakpoints) {
     const threadFront = await resource.targetFront.getFront("thread");
     if (resource.state == "paused") {
-      if (resource.frame) {
-        // When reloading we might receive a pause event before the
-        // top frame's source has arrived.
-        await waitForSourceActorToBeRegisteredInStore(
-          resource.frame.where.actor
-        );
-      }
-
-      const pause = createPause(threadFront.actor, resource);
+      const pause = await createPause(threadFront.actor, resource);
       actions.paused(pause);
       recordEvent("pause", { reason: resource.why.type });
     } else if (resource.state == "resumed") {

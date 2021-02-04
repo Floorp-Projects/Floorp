@@ -5,14 +5,12 @@
 // @flow
 
 import { createThread, createFrame } from "./create";
-import { waitForSourceActorToBeRegisteredInStore } from "./events";
 import { makePendingLocationId } from "../../utils/breakpoint";
 
 // $FlowIgnore
 import Reps from "devtools/client/shared/components/reps/index";
 
 import type {
-  ActorId,
   BreakpointLocation,
   BreakpointOptions,
   PendingLocation,
@@ -20,7 +18,6 @@ import type {
   FrameId,
   OINode,
   Script,
-  SourceId,
   SourceActor,
   Range,
   URL,
@@ -34,6 +31,7 @@ import type {
   Grip,
   ThreadFront,
   ObjectFront,
+  FrameFront,
   ExpressionResult,
 } from "./types";
 
@@ -42,7 +40,6 @@ import type { EventListenerCategoryList } from "../../actions/types";
 let targets: { [string]: Target };
 let devToolsClient: DevToolsClient;
 let targetList: TargetList;
-let sourceActors: { [ActorId]: SourceId };
 let breakpoints: { [string]: Object };
 
 const CALL_STACK_PAGE_SIZE = 1000;
@@ -56,7 +53,6 @@ function setupCommands(dependencies: Dependencies): void {
   devToolsClient = dependencies.devToolsClient;
   targetList = dependencies.targetList;
   targets = {};
-  sourceActors = {};
   breakpoints = {};
 }
 
@@ -360,18 +356,12 @@ function getProperties(thread: string, grip: Grip): Promise<*> {
 
 async function getFrames(thread: string) {
   const threadFront = lookupThreadFront(thread);
-  const response = await threadFront.getFrames(0, CALL_STACK_PAGE_SIZE);
+  const response = (await threadFront.getFrames(0, CALL_STACK_PAGE_SIZE): any);
 
-  // Ensure that each frame has its source already available.
-  // Because of throttling, the source may be available a bit late.
-  await Promise.all(
-    response.frames.map(frame =>
-      waitForSourceActorToBeRegisteredInStore(frame.where.actor)
+  return Promise.all(
+    response.frames.map<?FrameFront>((frame, i) =>
+      createFrame(thread, frame, i)
     )
-  );
-
-  return response.frames.map<?Frame>((frame, i) =>
-    createFrame(thread, frame, i)
   );
 }
 
@@ -444,21 +434,10 @@ function pauseGrip(thread: string, func: Function): ObjectFront {
   return lookupThreadFront(thread).pauseGrip(func);
 }
 
-function registerSourceActor(sourceActorId: string, sourceId: SourceId) {
-  sourceActors[sourceActorId] = sourceId;
-}
-
 async function toggleEventLogging(logEventBreakpoints: boolean) {
   return forEachThread(thread =>
     thread.toggleEventLogging(logEventBreakpoints)
   );
-}
-
-function getSourceForActor(actor: ActorId) {
-  if (!sourceActors[actor]) {
-    throw new Error(`Unknown source actor: ${actor}`);
-  }
-  return sourceActors[actor];
 }
 
 async function addThread(targetFront: Target) {
@@ -536,7 +515,6 @@ const clientCommands = {
   restart,
   breakOnNext,
   sourceContents,
-  getSourceForActor,
   getSourceActorBreakpointPositions,
   getSourceActorBreakableLines,
   hasBreakpoint,
@@ -556,7 +534,6 @@ const clientCommands = {
   getFrames,
   pauseOnExceptions,
   toggleEventLogging,
-  registerSourceActor,
   addThread,
   removeThread,
   getMainThread,

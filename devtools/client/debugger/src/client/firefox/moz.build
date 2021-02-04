@@ -8,5 +8,4 @@ DIRS += []
 CompiledModules(
     "commands.js",
     "create.js",
-    "events.js",
 )
