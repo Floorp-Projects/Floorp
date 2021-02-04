@@ -439,9 +439,15 @@ interface nsIAccessibleEvent : nsISupports
   const unsigned long EVENT_LIVE_REGION_REMOVED = 0x005B;
 
   /**
+   * A style change has occured on a table that may cause it to
+   * change from data to layout table, or the reverse.
+   */
+  const unsigned long EVENT_TABLE_STYLING_CHANGED = 0x005C;
+
+  /**
    * Help make sure event map does not get out-of-line.
    */
-  const unsigned long EVENT_LAST_ENTRY = 0x005C;
+  const unsigned long EVENT_LAST_ENTRY = 0x005D;
 
   /**
    * The type of event, based on the enumerated event values

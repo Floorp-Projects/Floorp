@@ -498,6 +498,16 @@ void nsAccessibilityService::ContentRemoved(PresShell* aPresShell,
 #endif
 }
 
+void nsAccessibilityService::TableLayoutGuessMaybeChanged(
+    PresShell* aPresShell, nsIContent* aContent) {
+  if (DocAccessible* document = GetDocAccessible(aPresShell)) {
+    if (Accessible* accessible = document->GetAccessible(aContent)) {
+      document->FireDelayedEvent(
+          nsIAccessibleEvent::EVENT_TABLE_STYLING_CHANGED, accessible);
+    }
+  }
+}
+
 void nsAccessibilityService::UpdateText(PresShell* aPresShell,
                                         nsIContent* aContent) {
   DocAccessible* document = GetDocAccessible(aPresShell);
