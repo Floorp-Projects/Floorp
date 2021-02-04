@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<!--
+bugzilla.mozilla.org/show_bug.cgi?id=1681800
+-->
+<head>
+<title>Test for bug 1681800</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1681800">Mozilla Bug 1681800</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script>
+add_task(function() {
+  document.documentElement.focus({})
+  document.documentElement.focus({})
+  ok(true, "no crash");
+})
+</script>
+</pre>
+</body>
+</html>
