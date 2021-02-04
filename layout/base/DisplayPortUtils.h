@@ -230,10 +230,13 @@ class DisplayPortUtils {
    * @param aRepaintMode whether to schedule a paint after setting the margins
    * @return true if the new margins were applied.
    */
+  enum class ClearMinimalDisplayPortProperty { No, Yes };
+
   static bool SetDisplayPortMargins(
       nsIContent* aContent, PresShell* aPresShell,
-      const DisplayPortMargins& aMargins, uint32_t aPriority = 0,
-      RepaintMode aRepaintMode = RepaintMode::Repaint);
+      const DisplayPortMargins& aMargins,
+      ClearMinimalDisplayPortProperty aClearMinimalDisplayPortProperty,
+      uint32_t aPriority = 0, RepaintMode aRepaintMode = RepaintMode::Repaint);
 
   /**
    * Set the display port base rect for given element to be used with display

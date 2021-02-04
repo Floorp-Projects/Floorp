@@ -341,7 +341,8 @@ static nsRect GetDisplayPortFromMarginsData(
   ScreenMargin margins = aMarginsData->mMargins.GetRelativeToLayoutViewport(
       aOptions.mGeometryType, scrollableFrame);
 
-  if (presShell->IsDisplayportSuppressed()) {
+  if (presShell->IsDisplayportSuppressed() ||
+      aContent->GetProperty(nsGkAtoms::MinimalDisplayPort)) {
     alignment = ScreenSize(1, 1);
   } else if (useWebRender) {
     // Moving the displayport is relatively expensive with WR so we use a larger
@@ -550,7 +551,8 @@ static bool GetDisplayPortImpl(nsIContent* aContent, nsRect* aResult,
   if (rectData) {
     result = GetDisplayPortFromRectData(aContent, rectData, aMultiplier);
   } else if (isDisplayportSuppressed ||
-             nsLayoutUtils::ShouldDisableApzForElement(aContent)) {
+             nsLayoutUtils::ShouldDisableApzForElement(aContent) ||
+             aContent->GetProperty(nsGkAtoms::MinimalDisplayPort)) {
     // Make a copy of the margins data but set the margins to empty.
     // Do not create a new DisplayPortMargins object with
     // DisplayPortMargins::Empty(), because that will record the visual
@@ -700,11 +702,11 @@ void DisplayPortUtils::InvalidateForDisplayPortChange(
   }
 }
 
-bool DisplayPortUtils::SetDisplayPortMargins(nsIContent* aContent,
-                                             PresShell* aPresShell,
-                                             const DisplayPortMargins& aMargins,
-                                             uint32_t aPriority,
-                                             RepaintMode aRepaintMode) {
+bool DisplayPortUtils::SetDisplayPortMargins(
+    nsIContent* aContent, PresShell* aPresShell,
+    const DisplayPortMargins& aMargins,
+    ClearMinimalDisplayPortProperty aClearMinimalDisplayPortProperty,
+    uint32_t aPriority, RepaintMode aRepaintMode) {
   MOZ_ASSERT(aContent);
   MOZ_ASSERT(aContent->GetComposedDoc() == aPresShell->GetDocument());
 
@@ -743,6 +745,21 @@ bool DisplayPortUtils::SetDisplayPortMargins(nsIContent* aContent,
       nsGkAtoms::DisplayPortMargins,
       new DisplayPortMarginsPropertyData(aMargins, aPriority, wasPainted),
       nsINode::DeleteProperty<DisplayPortMarginsPropertyData>);
+
+  if (aClearMinimalDisplayPortProperty ==
+      ClearMinimalDisplayPortProperty::Yes) {
+    if (MOZ_LOG_TEST(sDisplayportLog, LogLevel::Debug) &&
+        aContent->GetProperty(nsGkAtoms::MinimalDisplayPort)) {
+      mozilla::layers::ScrollableLayerGuid::ViewID viewID =
+          mozilla::layers::ScrollableLayerGuid::NULL_SCROLL_ID;
+      nsLayoutUtils::FindIDFor(aContent, &viewID);
+      MOZ_LOG(sDisplayportLog, LogLevel::Debug,
+              ("SetDisplayPortMargins removing MinimalDisplayPort prop on "
+               "scrollId=%" PRIu64 "\n",
+               viewID));
+    }
+    aContent->RemoveProperty(nsGkAtoms::MinimalDisplayPort);
+  }
 
   nsIScrollableFrame* scrollableFrame =
       scrollFrame ? scrollFrame->GetScrollTargetFrame() : nullptr;
@@ -912,7 +929,9 @@ bool DisplayPortUtils::CalculateAndSetDisplayPortMargins(
       aScrollFrame, displayportMargins,
       Some(metrics.DisplayportPixelsPerCSSPixel()));
 
-  return SetDisplayPortMargins(content, presShell, margins, 0, aRepaintMode);
+  return SetDisplayPortMargins(content, presShell, margins,
+                               ClearMinimalDisplayPortProperty::Yes, 0,
+                               aRepaintMode);
 }
 
 bool DisplayPortUtils::MaybeCreateDisplayPort(nsDisplayListBuilder* aBuilder,
@@ -979,7 +998,8 @@ void DisplayPortUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
     if (nsLayoutUtils::AsyncPanZoomEnabled(frame) &&
         !HasDisplayPort(frame->GetContent())) {
       SetDisplayPortMargins(frame->GetContent(), frame->PresShell(),
-                            DisplayPortMargins::Empty(frame->GetContent()), 0,
+                            DisplayPortMargins::Empty(frame->GetContent()),
+                            ClearMinimalDisplayPortProperty::Yes, 0,
                             RepaintMode::Repaint);
     }
   }
@@ -1118,7 +1138,7 @@ static void UpdateDisplayPortMarginsForPendingMetrics(
       DisplayPortMargins::FromAPZ(
           aMetrics.GetDisplayPortMargins(), aMetrics.GetVisualScrollOffset(),
           frameScrollOffset, aMetrics.DisplayportPixelsPerCSSPixel()),
-      0);
+      DisplayPortUtils::ClearMinimalDisplayPortProperty::No, 0);
 }
 
 /* static */

@@ -2187,6 +2187,7 @@ STATIC_ATOMS = [
     Atom("DisplayPort", "_displayport"),
     Atom("DisplayPortMargins", "_displayportmargins"),
     Atom("DisplayPortBase", "_displayportbase"),
+    Atom("MinimalDisplayPort", "_minimaldisplayport"),
     Atom("forcemessagemanager", "forcemessagemanager"),
     Atom("preloadedState", "preloadedState"),
     Atom("initialBrowsingContextGroupId", "initialBrowsingContextGroupId"),

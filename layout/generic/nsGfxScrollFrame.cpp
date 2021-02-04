@@ -8,6 +8,7 @@
 
 #include "nsGfxScrollFrame.h"
 
+#include "nsIXULRuntime.h"
 #include "ActiveLayerTracker.h"
 #include "base/compiler_specific.h"
 #include "DisplayItemClip.h"
@@ -2232,7 +2233,8 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
     // when scrolling.
     DisplayPortUtils::SetDisplayPortMargins(
         mOuter->GetContent(), mOuter->PresShell(),
-        DisplayPortMargins::Empty(mOuter->GetContent()), 0);
+        DisplayPortMargins::Empty(mOuter->GetContent()),
+        DisplayPortUtils::ClearMinimalDisplayPortProperty::Yes, 0);
     DisplayPortUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
         mOuter);
   }
@@ -3938,7 +3940,8 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         // to be disabled on the next paint.
         DisplayPortUtils::SetDisplayPortMargins(
             mOuter->GetContent(), mOuter->PresShell(),
-            DisplayPortMargins::Empty(mOuter->GetContent()), 0,
+            DisplayPortMargins::Empty(mOuter->GetContent()),
+            DisplayPortUtils::ClearMinimalDisplayPortProperty::Yes, 0,
             DisplayPortUtils::RepaintMode::DoNotRepaint);
         // Call DecideScrollableLayer to recompute mWillBuildScrollableLayer
         // and recompute the current animated geometry root if needed. It's
@@ -4246,6 +4249,18 @@ nsRect ScrollFrameHelper::RestrictToRootDisplayPort(
   return aDisplayportBase.Intersect(rootDisplayPort);
 }
 
+/* static */ bool ScrollFrameHelper::ShouldActivateAllScrollFrames() {
+  if (gfxVars::UseWebRender()) {
+    return (StaticPrefs::apz_wr_activate_all_scroll_frames() ||
+            (StaticPrefs::apz_wr_activate_all_scroll_frames_when_fission() &&
+             FissionAutostart()));
+  } else {
+    return (StaticPrefs::apz_nonwr_activate_all_scroll_frames() ||
+            (StaticPrefs::apz_nonwr_activate_all_scroll_frames_when_fission() &&
+             FissionAutostart()));
+  }
+}
+
 bool ScrollFrameHelper::DecideScrollableLayer(
     nsDisplayListBuilder* aBuilder, nsRect* aVisibleRect, nsRect* aDirtyRect,
     bool aSetBase, bool* aDirtyRectHasBeenOverriden) {
@@ -4253,6 +4268,22 @@ bool ScrollFrameHelper::DecideScrollableLayer(
   bool oldWillBuildScrollableLayer = mWillBuildScrollableLayer;
 
   nsIContent* content = mOuter->GetContent();
+  // For hit testing purposes with fission we want to create a
+  // minimal display port for every scroll frame that could be active. (We only
+  // do this when aSetBase is true because we only want to do this the first
+  // time this function is called for the same scroll frame.)
+  if (ShouldActivateAllScrollFrames() &&
+      !DisplayPortUtils::HasDisplayPort(content) &&
+      nsLayoutUtils::AsyncPanZoomEnabled(mOuter) && WantAsyncScroll() &&
+      aBuilder->IsPaintingToWindow() && aSetBase) {
+    DisplayPortUtils::SetDisplayPortMargins(
+        content, mOuter->PresShell(), DisplayPortMargins::Empty(content),
+        DisplayPortUtils::ClearMinimalDisplayPortProperty::No, 0,
+        DisplayPortUtils::RepaintMode::DoNotRepaint);
+    content->SetProperty(nsGkAtoms::MinimalDisplayPort,
+                         reinterpret_cast<void*>(true));
+  }
+
   bool usingDisplayPort = DisplayPortUtils::HasDisplayPort(content);
   if (aBuilder->IsPaintingToWindow()) {
     if (aSetBase) {
