@@ -506,6 +506,7 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
                      nsPresContext::CSSPixelsToAppUnits(aWidthPx),
                      nsPresContext::CSSPixelsToAppUnits(aHeightPx));
 
+  aElement->RemoveProperty(nsGkAtoms::MinimalDisplayPort);
   aElement->SetProperty(
       nsGkAtoms::DisplayPort,
       new DisplayPortPropertyData(displayport, aPriority, wasPainted),
@@ -564,7 +565,8 @@ nsDOMWindowUtils::SetDisplayPortMarginsForElement(
 
   DisplayPortUtils::SetDisplayPortMargins(
       aElement, presShell,
-      DisplayPortMargins::ForContent(aElement, displayportMargins), aPriority);
+      DisplayPortMargins::ForContent(aElement, displayportMargins),
+      DisplayPortUtils::ClearMinimalDisplayPortProperty::Yes, aPriority);
 
   return NS_OK;
 }
