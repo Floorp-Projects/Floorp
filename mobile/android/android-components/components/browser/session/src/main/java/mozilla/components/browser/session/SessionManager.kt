@@ -24,6 +24,10 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
+import mozilla.components.support.base.Component
+import mozilla.components.support.base.facts.Action
+import mozilla.components.support.base.facts.Fact
+import mozilla.components.support.base.facts.collect
 import mozilla.components.support.base.observer.DeprecatedObservable
 
 /**
@@ -123,6 +127,7 @@ class SessionManager(
         }
 
         delegate.add(session, selected, parent)
+        Fact(Component.BROWSER_SESSION, Action.IMPLEMENTATION_DETAIL, "SessionManager.add").collect()
 
         if (engineSession != null) {
             store?.syncDispatch(LinkEngineSessionAction(
@@ -330,6 +335,7 @@ class SessionManager(
      */
     fun select(session: Session) {
         delegate.select(session)
+        Fact(Component.BROWSER_SESSION, Action.IMPLEMENTATION_DETAIL, "SessionManager.select").collect()
 
         store?.syncDispatch(
             TabListAction.SelectTabAction(session.id)
