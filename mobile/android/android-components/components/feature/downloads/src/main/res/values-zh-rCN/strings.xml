@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
-    <string name="mozac_feature_downloads_notification_channel">下载项</string>
+    <string name="mozac_feature_downloads_notification_channel">下载</string>
 
     <!-- Text shown on the second row of a paused download notification. -->
     <string name="mozac_feature_downloads_paused_notification_text">下载已暂停</string>
