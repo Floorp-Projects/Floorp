@@ -27,7 +27,9 @@ namespace a11y {
 
 inline mozAccessible* GetNativeFromGeckoAccessible(
     mozilla::a11y::AccessibleOrProxy aAccOrProxy) {
-  MOZ_ASSERT(!aAccOrProxy.IsNull(), "Cannot get native from null accessible");
+  if (aAccOrProxy.IsNull()) {
+    return nil;
+  }
   if (Accessible* acc = aAccOrProxy.AsAccessible()) {
     mozAccessible* native = nil;
     acc->GetNativeInterface((void**)&native);
