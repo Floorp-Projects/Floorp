@@ -102,7 +102,11 @@
         app:destination="@id/trackingProtectionExceptionsFragment" />
     <action
         android:id="@+id/action_global_accountSettingsFragment"
-        app:destination="@id/accountSettingsFragment" />
+        app:destination="@id/accountSettingsFragment"
+        app:enterAnim="@anim/slide_in_right"
+        app:exitAnim="@anim/slide_out_left"
+        app:popEnterAnim="@anim/slide_in_left"
+        app:popExitAnim="@anim/slide_out_right" />
     <action
         android:id="@+id/action_global_trackingProtectionPanelDialogFragment"
         app:destination="@id/trackingProtectionPanelDialogFragment" />
