@@ -1073,10 +1073,31 @@
 
     <panelview id="PanelUI-history" flex="1">
       <vbox class="panel-subview-body">
+        <toolbarbutton id="appMenuViewHistorySidebar"
+                       label="&appMenuHistory.viewSidebar.label;"
+                       label-checked="&appMenuHistory.hideSidebar.label;"
+                       label-unchecked="&appMenuHistory.viewSidebar.label;"
+                       type="checkbox"
+                       class="subviewbutton subviewbutton-iconic"
+                       key="key_gotoHistory"
+                       oncommand="SidebarUI.toggle('viewHistorySidebar');">
+                       <observes element="sidebar-box" attribute="positionend"/>
+        </toolbarbutton>
         <toolbarbutton id="appMenuClearRecentHistory"
                        label="&appMenuHistory.clearRecent.label;"
                        class="subviewbutton subviewbutton-iconic"
                        command="Tools:Sanitize"/>
+        <toolbarseparator/>
+        <toolbarbutton id="appMenuRecentlyClosedTabs"
+                       label="&historyUndoMenu.label;"
+                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       closemenu="none"
+                       oncommand="PanelUI.showSubView('appMenu-library-recentlyClosedTabs', this)"/>
+        <toolbarbutton id="appMenuRecentlyClosedWindows"
+                       label="&historyUndoWindowMenu.label;"
+                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       closemenu="none"
+                       oncommand="PanelUI.showSubView('appMenu-library-recentlyClosedWindows', this)"/>
         <toolbarseparator/>
         <label value="&appMenuHistory.recentHistory.label;"
                class="subview-subheader"/>
@@ -1088,21 +1109,9 @@
           <!-- history menu items will go here -->
         </toolbaritem>
       </vbox>
-      <toolbarseparator/>
-      <toolbarbutton id="appMenuRecentlyClosedTabs"
-                     label="&historyUndoMenu.label;"
-                     class="subviewbutton subviewbutton-iconic subviewbutton-nav"
-                     closemenu="none"
-                     oncommand="PanelUI.showSubView('appMenu-library-recentlyClosedTabs', this)"/>
-      <toolbarbutton id="appMenuRecentlyClosedWindows"
-                     label="&historyUndoWindowMenu.label;"
-                     class="subviewbutton subviewbutton-iconic subviewbutton-nav"
-                     closemenu="none"
-                     oncommand="PanelUI.showSubView('appMenu-library-recentlyClosedWindows', this)"/>
-      <toolbarseparator/>
       <toolbarbutton id="PanelUI-historyMore"
-                     class="subviewbutton subviewbutton-iconic panel-subview-footer-button"
-                     data-l10n-id="appmenu-manage-history"
+                     class="panel-subview-footer subviewbutton"
+                     label="&appMenuHistory.showAll.label;"
                      oncommand="PlacesCommandHook.showPlacesOrganizer('History'); CustomizableUI.hidePanelForNode(this);"/>
     </panelview>
 
