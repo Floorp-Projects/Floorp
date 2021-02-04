@@ -634,7 +634,8 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
       if (mExtendMode == ExtendMode::CLAMP) {
         // The image is not repeating. Just push as a regular image.
         aBuilder.PushImage(dest, clip, !aItem->BackfaceIsHidden(), rendering,
-                           key.value());
+                           key.value(), true,
+                           wr::ColorF{1.0f, 1.0f, 1.0f, aOpacity});
       } else {
         nsPoint firstTilePos = nsLayoutUtils::GetBackgroundFirstTilePos(
             aDest.TopLeft(), aFill.TopLeft(), aRepeatSize);
@@ -665,7 +666,8 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
 
         aBuilder.PushRepeatingImage(fill, clip, !aItem->BackfaceIsHidden(),
                                     stretchSize, wr::ToLayoutSize(gapSize),
-                                    rendering, key.value());
+                                    rendering, key.value(), true,
+                                    wr::ColorF{1.0f, 1.0f, 1.0f, aOpacity});
       }
       break;
     }
