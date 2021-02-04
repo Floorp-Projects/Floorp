@@ -1551,6 +1551,13 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
       SelectionMgr()->SetControlSelectionListener(aRoot->AsElement());
     }
 
+    // If the accessible is a table, or table part, its layout table
+    // status may have changed. We need to invalidate the associated
+    // cache, which listens for the following event.
+    if (acc->IsTable() || acc->IsTableRow() || acc->IsTableCell()) {
+      FireDelayedEvent(nsIAccessibleEvent::EVENT_TABLE_STYLING_CHANGED, acc);
+    }
+
     // The accessible can be reparented or reordered in its parent.
     // We schedule it for reinsertion. For example, a slotted element
     // can change its slot attribute to a different slot.

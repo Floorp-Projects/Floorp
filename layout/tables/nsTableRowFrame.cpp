@@ -26,6 +26,10 @@
 #include "nsIFrameInlines.h"
 #include <algorithm>
 
+#ifdef ACCESSIBILITY
+#  include "nsAccessibilityService.h"
+#endif
+
 using namespace mozilla;
 
 namespace mozilla {
@@ -173,6 +177,24 @@ void nsTableRowFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
 
   if (!aOldComputedStyle)  // avoid this on init
     return;
+
+#ifdef ACCESSIBILITY
+  if (nsAccessibilityService* accService = GetAccService()) {
+    // If a table row's background color is now different from
+    // the background color of its previous row, it is possible our
+    // table now has alternating row colors. This changes whether or not
+    // the table is classified as a layout table or data table.
+    // We invalidate on every background color change to avoid
+    // walking the tree in search of the nearest row.
+    if (StyleBackground()->BackgroundColor(this) !=
+        aOldComputedStyle->StyleBackground()->BackgroundColor(
+            aOldComputedStyle)) {
+      // We send a notification here to invalidate the a11y cache on the
+      // table so the next fetch of IsProbablyLayoutTable() is accurate.
+      accService->TableLayoutGuessMaybeChanged(PresShell(), mContent);
+    }
+  }
+#endif
 
   nsTableFrame* tableFrame = GetTableFrame();
   if (tableFrame->IsBorderCollapse() &&

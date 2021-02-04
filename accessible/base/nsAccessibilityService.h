@@ -173,6 +173,12 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
    */
   void ContentRemoved(mozilla::PresShell* aPresShell, nsIContent* aChild);
 
+  /**
+   * Notification used to invalidate the isLayoutTable cache.
+   */
+  void TableLayoutGuessMaybeChanged(mozilla::PresShell* aPresShell,
+                                    nsIContent* aContent);
+
   void UpdateText(mozilla::PresShell* aPresShell, nsIContent* aContent);
 
   /**
@@ -498,6 +504,7 @@ static const char kEventTypeNames[][40] = {
     "announcement",                     // EVENT_ANNOUNCEMENT
     "live region added",                // EVENT_LIVE_REGION_ADDED
     "live region removed",              // EVENT_LIVE_REGION_REMOVED
+    "table styling changed",            // EVENT_TABLE_STYLING_CHANGED
 };
 
 #endif
