@@ -172,7 +172,14 @@ Result<nsIFileKind, nsresult> GetDirEntryKind(nsIFile& aFile) {
           })
           .orElse([](const nsresult rv) -> Result<nsIFileKind, nsresult> {
             if (rv == NS_ERROR_FILE_NOT_FOUND ||
-                rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+                rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
+#ifdef WIN32
+                // We treat ERROR_FILE_CORRUPT as if the file did not exist at
+                // all.
+                || (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_WIN32 &&
+                    NS_ERROR_GET_CODE(rv) == ERROR_FILE_CORRUPT)
+#endif
+            ) {
               return nsIFileKind::DoesNotExist;
             }
 
