@@ -270,13 +270,7 @@ Fragment text_fs(void) {
     vec4 mask = texture(sColor0, tc);
     // v_mask_swizzle.z != 0 means we are using an R8 texture as alpha,
     // and therefore must swizzle from the r channel to all channels.
-    // Use ternary operator on SWGL for performance, and mix() on GPUs to
-    // minimize branching.
-#ifdef SWGL
-    mask = v_mask_swizzle.z != 0.0 ? vec4(mask.r) : mask;
-#else
     mask = mix(mask, mask.rrrr, bvec4(v_mask_swizzle.z != 0.0));
-#endif
     mask.rgb = mask.rgb * v_mask_swizzle.x + mask.aaa * v_mask_swizzle.y;
 
     #ifdef WR_FEATURE_GLYPH_TRANSFORM
