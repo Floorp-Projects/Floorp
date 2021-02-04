@@ -51,19 +51,26 @@ class PageAction extends PageActionBase {
   }
 
   openPopup() {
-    const actionObject = this.getContextData(tabTracker.activeTab);
+    const tab = tabTracker.activeTab;
+    const popupUri = this.triggerClickOrPopup(tab);
+    const actionObject = this.getContextData(tab);
     const action = this.helper.extractProperties(actionObject);
-    this.helper.sendRequest(tabTracker.activeTab.id, {
+    this.helper.sendRequest(tab.id, {
       action,
       type: "GeckoView:PageAction:OpenPopup",
+      popupUri,
     });
+  }
+
+  triggerClickOrPopup(tab = tabTracker.activeTab) {
+    return super.triggerClickOrPopup(tab);
   }
 
   getTab(tabId) {
     return this.helper.getTab(tabId);
   }
 
-  click() {
+  dispatchClick() {
     this.clickDelegate.onClick();
   }
 }
