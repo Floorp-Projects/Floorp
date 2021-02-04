@@ -850,7 +850,7 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
             // If we're just opening the database during origin initialization,
             // then we don't want to erase any files. The failure here will fail
             // origin initialization too.
-            if (aValue != NS_ERROR_FILE_CORRUPTED || aName.IsVoid()) {
+            if (!IsDatabaseCorruptionError(aValue) || aName.IsVoid()) {
               return Err(aValue);
             }
 

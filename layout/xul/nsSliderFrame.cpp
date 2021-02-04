@@ -1122,7 +1122,7 @@ void nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent) {
     return;
   }
 
-  if (!DisplayPortUtils::HasDisplayPort(scrollableContent)) {
+  if (!DisplayPortUtils::HasNonMinimalDisplayPort(scrollableContent)) {
     return;
   }
 

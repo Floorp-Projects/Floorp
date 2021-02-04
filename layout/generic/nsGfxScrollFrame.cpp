@@ -8,6 +8,7 @@
 
 #include "nsGfxScrollFrame.h"
 
+#include "nsIXULRuntime.h"
 #include "ActiveLayerTracker.h"
 #include "base/compiler_specific.h"
 #include "DisplayItemClip.h"
@@ -2232,7 +2233,8 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
     // when scrolling.
     DisplayPortUtils::SetDisplayPortMargins(
         mOuter->GetContent(), mOuter->PresShell(),
-        DisplayPortMargins::Empty(mOuter->GetContent()), 0);
+        DisplayPortMargins::Empty(mOuter->GetContent()),
+        DisplayPortUtils::ClearMinimalDisplayPortProperty::Yes, 0);
     DisplayPortUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
         mOuter);
   }
@@ -2604,12 +2606,26 @@ static void RemoveDisplayPortCallback(nsITimer* aTimer, void* aClosure) {
   // happens between actual painting. If the displayport is reset to a
   // different position that's ok; this scrollframe hasn't been scrolled
   // recently and so the reset should be correct.
-  DisplayPortUtils::RemoveDisplayPort(helper->mOuter->GetContent());
+
+  nsIContent* content = helper->mOuter->GetContent();
+
+  if (ScrollFrameHelper::ShouldActivateAllScrollFrames()) {
+    // If we are activating all scroll frames then we only want to remove the
+    // regular display port and downgrade to a minimal display port.
+    MOZ_ASSERT(!content->GetProperty(nsGkAtoms::MinimalDisplayPort));
+    content->SetProperty(nsGkAtoms::MinimalDisplayPort,
+                         reinterpret_cast<void*>(true));
+  } else {
+    content->RemoveProperty(nsGkAtoms::MinimalDisplayPort);
+    DisplayPortUtils::RemoveDisplayPort(content);
+    // Be conservative and unflag this this scrollframe as being scrollable by
+    // APZ. If it is still scrollable this will get flipped back soon enough.
+    helper->mScrollableByAPZ = false;
+  }
+
   DisplayPortUtils::ExpireDisplayPortOnAsyncScrollableAncestor(helper->mOuter);
+
   helper->mOuter->SchedulePaint();
-  // Be conservative and unflag this this scrollframe as being scrollable by
-  // APZ. If it is still scrollable this will get flipped back soon enough.
-  helper->mScrollableByAPZ = false;
 }
 
 void ScrollFrameHelper::MarkEverScrolled() {
@@ -2662,6 +2678,10 @@ bool ScrollFrameHelper::AllowDisplayPortExpiration() {
     return false;
   }
   if (mIsRoot && mOuter->PresContext()->IsRoot()) {
+    return false;
+  }
+  if (ShouldActivateAllScrollFrames() &&
+      mOuter->GetContent()->GetProperty(nsGkAtoms::MinimalDisplayPort)) {
     return false;
   }
   return true;
@@ -3002,6 +3022,7 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
   bool schedulePaint = true;
   if (nsLayoutUtils::AsyncPanZoomEnabled(mOuter) &&
       !nsLayoutUtils::ShouldDisableApzForElement(content) &&
+      !content->GetProperty(nsGkAtoms::MinimalDisplayPort) &&
       StaticPrefs::apz_paint_skipping_enabled()) {
     // If APZ is enabled with paint-skipping, there are certain conditions in
     // which we can skip paints:
@@ -3938,7 +3959,8 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         // to be disabled on the next paint.
         DisplayPortUtils::SetDisplayPortMargins(
             mOuter->GetContent(), mOuter->PresShell(),
-            DisplayPortMargins::Empty(mOuter->GetContent()), 0,
+            DisplayPortMargins::Empty(mOuter->GetContent()),
+            DisplayPortUtils::ClearMinimalDisplayPortProperty::Yes, 0,
             DisplayPortUtils::RepaintMode::DoNotRepaint);
         // Call DecideScrollableLayer to recompute mWillBuildScrollableLayer
         // and recompute the current animated geometry root if needed. It's
@@ -4246,6 +4268,18 @@ nsRect ScrollFrameHelper::RestrictToRootDisplayPort(
   return aDisplayportBase.Intersect(rootDisplayPort);
 }
 
+/* static */ bool ScrollFrameHelper::ShouldActivateAllScrollFrames() {
+  if (gfxVars::UseWebRender()) {
+    return (StaticPrefs::apz_wr_activate_all_scroll_frames() ||
+            (StaticPrefs::apz_wr_activate_all_scroll_frames_when_fission() &&
+             FissionAutostart()));
+  } else {
+    return (StaticPrefs::apz_nonwr_activate_all_scroll_frames() ||
+            (StaticPrefs::apz_nonwr_activate_all_scroll_frames_when_fission() &&
+             FissionAutostart()));
+  }
+}
+
 bool ScrollFrameHelper::DecideScrollableLayer(
     nsDisplayListBuilder* aBuilder, nsRect* aVisibleRect, nsRect* aDirtyRect,
     bool aSetBase, bool* aDirtyRectHasBeenOverriden) {
@@ -4253,6 +4287,22 @@ bool ScrollFrameHelper::DecideScrollableLayer(
   bool oldWillBuildScrollableLayer = mWillBuildScrollableLayer;
 
   nsIContent* content = mOuter->GetContent();
+  // For hit testing purposes with fission we want to create a
+  // minimal display port for every scroll frame that could be active. (We only
+  // do this when aSetBase is true because we only want to do this the first
+  // time this function is called for the same scroll frame.)
+  if (ShouldActivateAllScrollFrames() &&
+      !DisplayPortUtils::HasDisplayPort(content) &&
+      nsLayoutUtils::AsyncPanZoomEnabled(mOuter) && WantAsyncScroll() &&
+      aBuilder->IsPaintingToWindow() && aSetBase) {
+    DisplayPortUtils::SetDisplayPortMargins(
+        content, mOuter->PresShell(), DisplayPortMargins::Empty(content),
+        DisplayPortUtils::ClearMinimalDisplayPortProperty::No, 0,
+        DisplayPortUtils::RepaintMode::DoNotRepaint);
+    content->SetProperty(nsGkAtoms::MinimalDisplayPort,
+                         reinterpret_cast<void*>(true));
+  }
+
   bool usingDisplayPort = DisplayPortUtils::HasDisplayPort(content);
   if (aBuilder->IsPaintingToWindow()) {
     if (aSetBase) {
@@ -4672,11 +4722,12 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit,
     AppendScrollUpdate(
         ScrollPositionUpdate::NewPureRelativeScroll(aOrigin, aMode, delta));
 
-    if (!DisplayPortUtils::HasDisplayPort(mOuter->GetContent())) {
+    nsIContent* content = mOuter->GetContent();
+    if (!DisplayPortUtils::HasNonMinimalDisplayPort(content)) {
       if (MOZ_LOG_TEST(sDisplayportLog, LogLevel::Debug)) {
         mozilla::layers::ScrollableLayerGuid::ViewID viewID =
             mozilla::layers::ScrollableLayerGuid::NULL_SCROLL_ID;
-        nsLayoutUtils::FindIDFor(mOuter->GetContent(), &viewID);
+        nsLayoutUtils::FindIDFor(content, &viewID);
         MOZ_LOG(
             sDisplayportLog, LogLevel::Debug,
             ("ScrollBy setting displayport on scrollId=%" PRIu64 "\n", viewID));
@@ -5941,6 +5992,20 @@ bool ScrollFrameHelper::IsScrollingActive(
   nsIContent* content = mOuter->GetContent();
   return mHasBeenScrolledRecently || IsAlwaysActive() ||
          DisplayPortUtils::HasDisplayPort(content) ||
+         nsContentUtils::HasScrollgrab(content);
+}
+
+bool ScrollFrameHelper::IsScrollingActiveNotMinimalDisplayPort(
+    nsDisplayListBuilder* aBuilder) const {
+  const nsStyleDisplay* disp = mOuter->StyleDisplay();
+  if (disp->mWillChange.bits & StyleWillChangeBits::SCROLL &&
+      aBuilder->IsInWillChangeBudget(mOuter, GetVisualViewportSize())) {
+    return true;
+  }
+
+  nsIContent* content = mOuter->GetContent();
+  return mHasBeenScrolledRecently || IsAlwaysActive() ||
+         DisplayPortUtils::HasNonMinimalDisplayPort(content) ||
          nsContentUtils::HasScrollgrab(content);
 }
 
@@ -7766,7 +7831,8 @@ void ScrollFrameHelper::ApzSmoothScrollTo(const nsPoint& aDestination,
   AppendScrollUpdate(
       ScrollPositionUpdate::NewSmoothScroll(aOrigin, aDestination));
 
-  if (!DisplayPortUtils::HasDisplayPort(mOuter->GetContent())) {
+  nsIContent* content = mOuter->GetContent();
+  if (!DisplayPortUtils::HasNonMinimalDisplayPort(content)) {
     // If this frame doesn't have a displayport then there won't be an
     // APZC instance for it and so there won't be anything to process
     // this smooth scroll request. We should set a displayport on this
@@ -7774,7 +7840,7 @@ void ScrollFrameHelper::ApzSmoothScrollTo(const nsPoint& aDestination,
     if (MOZ_LOG_TEST(sDisplayportLog, LogLevel::Debug)) {
       mozilla::layers::ScrollableLayerGuid::ViewID viewID =
           mozilla::layers::ScrollableLayerGuid::NULL_SCROLL_ID;
-      nsLayoutUtils::FindIDFor(mOuter->GetContent(), &viewID);
+      nsLayoutUtils::FindIDFor(content, &viewID);
       MOZ_LOG(
           sDisplayportLog, LogLevel::Debug,
           ("ApzSmoothScrollTo setting displayport on scrollId=%" PRIu64 "\n",
