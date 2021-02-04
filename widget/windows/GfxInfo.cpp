@@ -867,36 +867,7 @@ nsresult GfxInfo::Init() {
   }
 
   // Get monitor information
-  for (int deviceIndex = 0;; deviceIndex++) {
-    DISPLAY_DEVICEW device;
-    device.cb = sizeof(device);
-    if (!::EnumDisplayDevicesW(nullptr, deviceIndex, &device, 0)) {
-      break;
-    }
-
-    if (!(device.StateFlags & DISPLAY_DEVICE_ACTIVE)) {
-      continue;
-    }
-
-    DEVMODEW mode;
-    mode.dmSize = sizeof(mode);
-    mode.dmDriverExtra = 0;
-    if (!::EnumDisplaySettingsW(device.DeviceName, ENUM_CURRENT_SETTINGS,
-                                &mode)) {
-      continue;
-    }
-
-    DisplayInfo displayInfo;
-
-    displayInfo.mScreenWidth = mode.dmPelsWidth;
-    displayInfo.mScreenHeight = mode.dmPelsHeight;
-    displayInfo.mRefreshRate = mode.dmDisplayFrequency;
-    displayInfo.mIsPseudoDisplay =
-        !!(device.StateFlags & DISPLAY_DEVICE_MIRRORING_DRIVER);
-    displayInfo.mDeviceString = device.DeviceString;
-
-    mDisplayInfo.AppendElement(displayInfo);
-  }
+  RefreshMonitors();
 
   const char* spoofedDriverVersionString =
       PR_GetEnv("MOZ_GFX_SPOOF_DRIVER_VERSION");
@@ -928,6 +899,43 @@ GfxInfo::GetAdapterDescription(nsAString& aAdapterDescription) {
 NS_IMETHODIMP
 GfxInfo::GetAdapterDescription2(nsAString& aAdapterDescription) {
   aAdapterDescription = mDeviceString[1 - mActiveGPUIndex];
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GfxInfo::RefreshMonitors() {
+  mDisplayInfo.Clear();
+
+  for (int deviceIndex = 0;; deviceIndex++) {
+    DISPLAY_DEVICEW device;
+    device.cb = sizeof(device);
+    if (!::EnumDisplayDevicesW(nullptr, deviceIndex, &device, 0)) {
+      break;
+    }
+
+    if (!(device.StateFlags & DISPLAY_DEVICE_ACTIVE)) {
+      continue;
+    }
+
+    DEVMODEW mode;
+    mode.dmSize = sizeof(mode);
+    mode.dmDriverExtra = 0;
+    if (!::EnumDisplaySettingsW(device.DeviceName, ENUM_CURRENT_SETTINGS,
+                                &mode)) {
+      continue;
+    }
+
+    DisplayInfo displayInfo;
+
+    displayInfo.mScreenWidth = mode.dmPelsWidth;
+    displayInfo.mScreenHeight = mode.dmPelsHeight;
+    displayInfo.mRefreshRate = mode.dmDisplayFrequency;
+    displayInfo.mIsPseudoDisplay =
+        !!(device.StateFlags & DISPLAY_DEVICE_MIRRORING_DRIVER);
+    displayInfo.mDeviceString = device.DeviceString;
+
+    mDisplayInfo.AppendElement(displayInfo);
+  }
   return NS_OK;
 }
 

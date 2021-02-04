@@ -83,6 +83,11 @@ void ScreenHelperWin::RefreshScreens() {
   }
   ScreenManager& screenManager = ScreenManager::GetSingleton();
   screenManager.Refresh(std::move(screens));
+
+  nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+  if (gfxInfo) {
+    gfxInfo->RefreshMonitors();
+  }
 }
 
 }  // namespace widget
