@@ -5,6 +5,7 @@
 #ifndef mozilla_net_DNSPacket_h__
 #define mozilla_net_DNSPacket_h__
 
+#include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
 #include "nsHostResolver.h"
 #include "pk11pub.h"
@@ -80,7 +81,7 @@ class DNSPacket {
 
 class ODoHDNSPacket final : public DNSPacket {
  public:
-  ODoHDNSPacket() {}
+  ODoHDNSPacket() = default;
   virtual ~ODoHDNSPacket();
 
   static bool ParseODoHConfigs(const nsCString& aRawODoHConfig,
@@ -104,6 +105,12 @@ class ODoHDNSPacket final : public DNSPacket {
 
   HpkeContext* mContext = nullptr;
   UniqueSECItem mPlainQuery;
+  // This struct indicates the range of decrypted responses stored in mResponse.
+  struct DecryptedResponseRange {
+    uint16_t mStart = 0;
+    uint16_t mLength = 0;
+  };
+  Maybe<DecryptedResponseRange> mDecryptedResponseRange;
 };
 
 }  // namespace net
