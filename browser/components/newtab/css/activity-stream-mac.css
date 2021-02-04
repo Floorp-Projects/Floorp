@@ -1311,6 +1311,9 @@ main {
     color: var(--newtab-search-text-color);
     font-weight: 500;
     font-size: 15px; }
+    .outer-wrapper.newtab-experience .search-wrapper .search-handoff-button:dir(rtl),
+    .outer-wrapper.newtab-experience .search-wrapper input:dir(rtl) {
+      background-position-x: right 16px; }
   .outer-wrapper.newtab-experience .search-wrapper .search-handoff-button {
     padding-inline-end: 15px; }
     .outer-wrapper.newtab-experience .search-wrapper .search-handoff-button .fake-caret {
