@@ -266,6 +266,7 @@ impl Wrench {
             testing: true,
             max_texture_size: Some(8196), // Needed for rawtest::test_resize_image.
             allow_dual_source_blending: !disable_dual_source_blending,
+            allow_advanced_blend_equation: true,
             dump_shader_source,
             // SWGL doesn't support the GL_ALWAYS depth comparison function used by
             // `clear_caches_with_quads`, but scissored clears work well.
