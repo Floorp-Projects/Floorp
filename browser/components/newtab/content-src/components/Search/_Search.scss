@@ -72,6 +72,10 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
       color: var(--newtab-search-text-color);
       font-weight: 500;
       font-size: 15px;
+
+      &:dir(rtl) {
+        background-position-x: right $search-icon-padding;
+      }
     }
 
     .search-handoff-button {
