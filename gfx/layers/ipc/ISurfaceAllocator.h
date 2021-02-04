@@ -188,7 +188,7 @@ class LegacySurfaceDescriptorAllocator {
 bool IsSurfaceDescriptorValid(const SurfaceDescriptor& aSurface);
 
 already_AddRefed<gfx::DrawTarget> GetDrawTargetForDescriptor(
-    const SurfaceDescriptor& aDescriptor, gfx::BackendType aBackend);
+    const SurfaceDescriptor& aDescriptor);
 
 already_AddRefed<gfx::DataSourceSurface> GetSurfaceForDescriptor(
     const SurfaceDescriptor& aDescriptor);
