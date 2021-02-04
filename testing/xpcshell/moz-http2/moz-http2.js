@@ -782,11 +782,15 @@ function handleRequest(req, res) {
         }
       }
 
-      let delay = undefined;
+      let delay = 0;
       if (packet.questions[0].type == "A") {
-        delay = u.query.delayIPv4;
+        delay = parseInt(u.query.delayIPv4);
       } else if (packet.questions[0].type == "AAAA") {
-        delay = u.query.delayIPv6;
+        delay = parseInt(u.query.delayIPv6);
+      }
+
+      if (u.query.slowConfirm && responseType() == "NS") {
+        delay += 1000;
       }
 
       if (delay) {
@@ -794,7 +798,7 @@ function handleRequest(req, res) {
           arg => {
             writeResponse(arg[0], arg[1]);
           },
-          parseInt(delay),
+          delay,
           [response, buf]
         );
         return;

@@ -38,7 +38,7 @@ class TRRService : public TRRServiceBase,
   TRRService();
   nsresult Init();
   nsresult Start();
-  bool Enabled(nsIRequest::TRRMode aMode = nsIRequest::TRR_FIRST_MODE);
+  bool Enabled(nsIRequest::TRRMode aRequestMode = nsIRequest::TRR_DEFAULT_MODE);
   bool IsConfirmed() { return mConfirmationState == CONFIRM_OK; }
 
   bool DisableIPv6() { return mDisableIPv6; }

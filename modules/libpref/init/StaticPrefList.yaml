@@ -494,7 +494,7 @@
     type: RelaxedAtomicBool
     value: true
     mirror: always
-    
+
 -   name: apz.gtk.touchpad_pinch.enabled
     type: RelaxedAtomicBool
     value: false
@@ -8698,6 +8698,14 @@
 
 # If we should wait for captive portal confirmation before enabling TRR
 - name: network.trr.wait-for-portal
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# If we should wait for TRR service confirmation to complete before enabling
+# TRR for lookups when fallback is enabled. Confirmation is always skipped when
+# global mode is TRR-only (no fallback).
+- name: network.trr.wait-for-confirmation
   type: RelaxedAtomicBool
   value: false
   mirror: always
