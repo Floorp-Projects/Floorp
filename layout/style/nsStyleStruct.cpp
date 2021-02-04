@@ -2065,7 +2065,7 @@ nscolor nsStyleBackground::BackgroundColor(const nsIFrame* aFrame) const {
   return mBackgroundColor.CalcColor(aFrame);
 }
 
-nscolor nsStyleBackground::BackgroundColor(ComputedStyle* aStyle) const {
+nscolor nsStyleBackground::BackgroundColor(const ComputedStyle* aStyle) const {
   return mBackgroundColor.CalcColor(*aStyle);
 }
 

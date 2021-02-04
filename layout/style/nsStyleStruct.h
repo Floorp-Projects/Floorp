@@ -342,7 +342,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBackground {
 
   // Return the background color as nscolor.
   nscolor BackgroundColor(const nsIFrame* aFrame) const;
-  nscolor BackgroundColor(mozilla::ComputedStyle* aStyle) const;
+  nscolor BackgroundColor(const mozilla::ComputedStyle* aStyle) const;
 
   // True if this background is completely transparent.
   bool IsTransparent(const nsIFrame* aFrame) const;
