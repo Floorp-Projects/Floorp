@@ -15,6 +15,4 @@ Once a review has been approved, someone with enough privileges can request the 
 
 If you don't have the privileges, you can also ask your mentor to land the code. In fact, they might even initiate that for you once the code review is approved.
 
-To request the landing, add the *Check-in Needed* Tags to the review (*Edit Revision*).
-
-Someone looks at review marked with `Check-in Needed` a few times a day, verifies they have an associated **approved** review, and then attempts to land them.
+To request the landing, ask your reviewer to land the patch.
