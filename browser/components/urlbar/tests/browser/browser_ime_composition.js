@@ -65,6 +65,7 @@ add_task(async function() {
     await test_composition_tabToSearch(val);
     await test_composition_autofill(val);
   }
+  await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
 });
 
 async function test_composition(keepPanelOpenDuringImeComposition) {
@@ -265,6 +266,7 @@ async function test_composition_tabToSearch(keepPanelOpenDuringImeComposition) {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: "exa",
+    fireInputEvent: true,
   });
 
   while (gURLBar.searchMode?.engineName != "Test") {

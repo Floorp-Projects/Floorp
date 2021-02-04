@@ -235,6 +235,22 @@ urlbar.picked.searchmode.*
     a Google search suggestion at index 2, we would record in **both**
     ``urlbar.picked.searchsuggestion`` and ``urlbar.picked.searchmode.oneoff``.
 
+urlbar.tabtosearch.*
+  This is a set of keyed scalars whose values are uints incremented when a
+  tab-to-search result is shown, once per engine per engagement. There are two
+  sub-probes: ``urlbar.tabtosearch.impressions`` and
+  ``urlbar.tabtosearch.impressions_onboarding``. The former records impressions
+  of regular tab-to-search results and the latter records impressions of
+  onboarding tab-to-search results. The key values are identical to those of the
+  ``urlbar.searchmode.*`` probes: they are the names of the engines shown in the
+  tab-to-search results. Engines that are not built in are grouped under the
+  key ``other``.
+
+  .. note::
+    Due to the potentially sensitive nature of these data, they are currently
+    collected only on pre-release version of Firefox. See bug 1686330.
+
+
 
 Event Telemetry
 ---------------

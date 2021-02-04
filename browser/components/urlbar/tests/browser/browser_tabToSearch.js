@@ -51,6 +51,7 @@ add_task(async function basic() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: TEST_ENGINE_DOMAIN.slice(0, 4),
+    fireInputEvent: true,
   });
   let autofillResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   Assert.ok(autofillResult.autofill);
@@ -111,7 +112,7 @@ add_task(async function basic() {
   });
 
   await UrlbarTestUtils.exitSearchMode(window);
-  await UrlbarTestUtils.promisePopupClose(window);
+  await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
 });
 
 // Tests that we do not set aria-activedescendant after tabbing to a
@@ -126,6 +127,7 @@ add_task(async function activedescendant_tab() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: TEST_ENGINE_DOMAIN.slice(0, 4),
+    fireInputEvent: true,
   });
   Assert.equal(
     UrlbarTestUtils.getResultCount(window),
@@ -173,10 +175,11 @@ add_task(async function activedescendant_tab() {
   // Now close and reopen the view, then do another search that yields a
   // tab-to-search result. aria-activedescendant should not be set when it is
   // selected.
-  await UrlbarTestUtils.promisePopupClose(window);
+  await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: TEST_ENGINE_DOMAIN.slice(0, 4),
+    fireInputEvent: true,
   });
   tabToSearchRow = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
   Assert.equal(
@@ -196,7 +199,7 @@ add_task(async function activedescendant_tab() {
   Assert.ok(!aadID, "aria-activedescendant was not set.");
 
   await UrlbarTestUtils.exitSearchMode(window);
-  await UrlbarTestUtils.promisePopupClose(window);
+  await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
   await SpecialPowers.popPrefEnv();
 });
 
@@ -206,6 +209,7 @@ add_task(async function activedescendant_arrow() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: TEST_ENGINE_DOMAIN.slice(0, 4),
+    fireInputEvent: true,
   });
   let tabToSearchRow = await UrlbarTestUtils.waitForAutocompleteResultAt(
     window,
@@ -250,7 +254,7 @@ add_task(async function activedescendant_arrow() {
   );
 
   await UrlbarTestUtils.exitSearchMode(window);
-  await UrlbarTestUtils.promisePopupClose(window);
+  await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
 });
 
 add_task(async function tab_key_race() {
@@ -300,6 +304,7 @@ add_task(async function tab_key_race() {
       UrlbarProvidersManager.unregisterProvider(provider);
     });
   });
+  gURLBar.focus();
   info("Type the beginning of the search string to get tab-to-search");
   EventUtils.synthesizeKey(TEST_ENGINE_DOMAIN.slice(0, 1));
   info("Awaiting for the query to start");
@@ -317,7 +322,7 @@ add_task(async function tab_key_race() {
   });
 
   await UrlbarTestUtils.exitSearchMode(window);
-  await UrlbarTestUtils.promisePopupClose(window);
+  await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
 });
 
 // Test that large-style onboarding results appear and have the correct
@@ -330,6 +335,7 @@ add_task(async function onboard() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: TEST_ENGINE_DOMAIN.slice(0, 4),
+    fireInputEvent: true,
   });
   let autofillResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   Assert.ok(autofillResult.autofill);
@@ -423,7 +429,7 @@ add_task(async function onboard() {
     entry: "tabtosearch_onboard",
   });
   await UrlbarTestUtils.exitSearchMode(window);
-  await UrlbarTestUtils.promisePopupClose(window);
+  await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
   UrlbarPrefs.set("tabToSearch.onboard.interactionsLeft", 3);
   delete UrlbarProviderTabToSearch.onboardingInteractionAtTime;
   await SpecialPowers.popPrefEnv();
@@ -445,6 +451,7 @@ add_task(async function onboard_limit() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: TEST_ENGINE_DOMAIN.slice(0, 4),
+    fireInputEvent: true,
   });
   let onboardingResult = (
     await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1)
@@ -469,6 +476,7 @@ add_task(async function onboard_limit() {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: TEST_ENGINE_DOMAIN.slice(0, 4),
+      fireInputEvent: true,
     });
     onboardingResult = (
       await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1)
@@ -499,6 +507,7 @@ add_task(async function onboard_limit() {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: TEST_ENGINE_DOMAIN.slice(0, 4),
+      fireInputEvent: true,
     });
     let tabToSearchResult = (
       await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1)
@@ -527,6 +536,7 @@ add_task(async function onboard_limit() {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: TEST_ENGINE_DOMAIN.slice(0, 4),
+      fireInputEvent: true,
     });
     let tabToSearchResult = (
       await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1)
@@ -559,6 +569,7 @@ add_task(async function onboard_limit() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: TEST_ENGINE_DOMAIN.slice(0, 4),
+    fireInputEvent: true,
   });
   let tabToSearchResult = (
     await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1)
@@ -574,7 +585,7 @@ add_task(async function onboard_limit() {
     "Now that interactionsLeft is 0, we don't show onboarding results."
   );
 
-  await UrlbarTestUtils.promisePopupClose(window);
+  await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
   UrlbarPrefs.set("tabToSearch.onboard.interactionsLeft", 3);
   delete UrlbarProviderTabToSearch.onboardingInteractionAtTime;
   await SpecialPowers.popPrefEnv();
@@ -598,6 +609,7 @@ add_task(async function onboard_multipleEnginesForHostname() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: TEST_ENGINE_DOMAIN.slice(0, 4),
+    fireInputEvent: true,
   });
 
   Assert.equal(
@@ -626,8 +638,8 @@ add_task(async function onboard_multipleEnginesForHostname() {
     UrlbarUtils.RESULT_TYPE.DYNAMIC,
     "The tab-to-search result is the only onboarding result."
   );
+  await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
   await Services.search.removeEngine(testEngineMaps);
-  await UrlbarTestUtils.promisePopupClose(window);
   UrlbarPrefs.set("tabToSearch.onboard.interactionsLeft", 3);
   delete UrlbarProviderTabToSearch.onboardingInteractionAtTime;
   await SpecialPowers.popPrefEnv();
@@ -651,6 +663,7 @@ add_task(async function extended_unicode_in_engine() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: engineDomain.slice(0, 4),
+    fireInputEvent: true,
   });
   let tabToSearchDetails = await UrlbarTestUtils.getDetailsOfResultAt(
     window,
@@ -673,7 +686,7 @@ add_task(async function extended_unicode_in_engine() {
     "The correct action text is displayed in the tab-to-search result."
   );
 
-  await UrlbarTestUtils.promisePopupClose(window);
+  await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
   await PlacesUtils.history.clear();
   await Services.search.removeEngine(testEngine);
 });

@@ -18,6 +18,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
+});
+
 const SEARCH_ENGINE_TOPIC = "browser-search-engine-modified";
 
 /**
@@ -194,6 +198,41 @@ class SearchUtils {
       isPrivate
       ? Services.search.defaultPrivateEngine
       : Services.search.defaultEngine;
+  }
+
+  /**
+   * To make analysis easier, we sanitize some engine names when
+   * recording telemetry about search mode. This function returns the sanitized
+   * key name to record in telemetry.
+   *
+   * @param {object} searchMode
+   *   A search mode object. See UrlbarInput.setSearchMode.
+   * @returns {string}
+   *   A sanitized scalar key, used to access Telemetry data.
+   */
+  getSearchModeScalarKey(searchMode) {
+    let scalarKey;
+    if (searchMode.engineName) {
+      let engine = Services.search.getEngineByName(searchMode.engineName);
+      let resultDomain = engine.getResultDomain();
+      // For built-in engines, sanitize the data in a few special cases to make
+      // analysis easier.
+      if (!engine.isAppProvided) {
+        scalarKey = "other";
+      } else if (resultDomain.includes("amazon.")) {
+        // Group all the localized Amazon sites together.
+        scalarKey = "Amazon";
+      } else if (resultDomain.endsWith("wikipedia.org")) {
+        // Group all the localized Wikipedia sites together.
+        scalarKey = "Wikipedia";
+      } else {
+        scalarKey = searchMode.engineName;
+      }
+    } else if (searchMode.source) {
+      scalarKey = UrlbarUtils.getResultSourceName(searchMode.source) || "other";
+    }
+
+    return scalarKey;
   }
 
   async _initInternal() {
