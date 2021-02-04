@@ -7,6 +7,7 @@ package mozilla.components.concept.engine.webextension
 import android.graphics.Bitmap
 import android.net.Uri
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.Settings
 import org.json.JSONObject
 
 /**
@@ -127,8 +128,10 @@ abstract class WebExtension(
      *
      * @param tabHandler the [TabHandler] to be invoked when the web extension
      * wants to open a new tab.
+     * @param defaultSettings used to pass default tab settings to any tabs opened by
+     * a web extension.
      */
-    abstract fun registerTabHandler(tabHandler: TabHandler)
+    abstract fun registerTabHandler(tabHandler: TabHandler, defaultSettings: Settings?)
 
     /**
      * Registers a [TabHandler] for the provided [EngineSession]. The handler

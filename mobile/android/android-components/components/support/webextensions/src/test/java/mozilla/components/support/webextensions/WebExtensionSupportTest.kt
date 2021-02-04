@@ -545,7 +545,8 @@ class WebExtensionSupportTest {
         val actionHandlerCaptor = argumentCaptor<ActionHandler>()
         val tabHandlerCaptor = argumentCaptor<TabHandler>()
         verify(ext, never()).registerActionHandler(any(), any())
-        verify(ext, never()).registerTabHandler(any(), any())
+        verify(ext, never()).registerTabHandler(session = any(),
+            tabHandler = any())
 
         val engineSession1: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction(tab.id, engineSession1)).joinBlocking()

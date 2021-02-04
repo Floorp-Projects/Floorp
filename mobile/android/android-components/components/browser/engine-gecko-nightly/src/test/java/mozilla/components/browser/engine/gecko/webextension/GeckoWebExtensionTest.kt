@@ -6,6 +6,7 @@ package mozilla.components.browser.engine.gecko.webextension
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
+import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.ActionHandler
 import mozilla.components.concept.engine.webextension.DisabledFlags
@@ -324,7 +325,9 @@ class GeckoWebExtensionTest {
             runtime = runtime,
             nativeExtension = nativeGeckoWebExt
         )
-        extension.registerTabHandler(tabHandler)
+        val defaultSettings: DefaultSettings = mock()
+
+        extension.registerTabHandler(tabHandler, defaultSettings)
         verify(nativeGeckoWebExt).tabDelegate = tabDelegateCaptor.capture()
 
         // Verify that tab methods are forwarded to the handler

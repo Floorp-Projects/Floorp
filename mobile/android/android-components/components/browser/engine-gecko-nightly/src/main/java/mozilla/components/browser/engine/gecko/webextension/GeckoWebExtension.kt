@@ -9,6 +9,7 @@ import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.browser.engine.gecko.await
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.ActionHandler
 import mozilla.components.concept.engine.webextension.DisabledFlags
@@ -244,7 +245,7 @@ class GeckoWebExtension(
     /**
      * See [WebExtension.registerTabHandler].
      */
-    override fun registerTabHandler(tabHandler: TabHandler) {
+    override fun registerTabHandler(tabHandler: TabHandler, defaultSettings: Settings?) {
 
         val tabDelegate = object : GeckoNativeWebExtension.TabDelegate {
 
@@ -252,7 +253,11 @@ class GeckoWebExtension(
                 ext: GeckoNativeWebExtension,
                 tabDetails: GeckoNativeWebExtension.CreateTabDetails
             ): GeckoResult<GeckoSession>? {
-                val geckoEngineSession = GeckoEngineSession(runtime, openGeckoSession = false)
+                val geckoEngineSession = GeckoEngineSession(
+                    runtime,
+                    defaultSettings = defaultSettings,
+                    openGeckoSession = false
+                )
 
                 tabHandler.onNewTab(
                     this@GeckoWebExtension,
@@ -267,7 +272,8 @@ class GeckoWebExtension(
                 ext.metaData.optionsPageUrl?.let { optionsPageUrl ->
                     tabHandler.onNewTab(
                         this@GeckoWebExtension,
-                        GeckoEngineSession(runtime),
+                        GeckoEngineSession(runtime,
+                            defaultSettings = defaultSettings),
                         false,
                         optionsPageUrl
                     )

@@ -36,6 +36,10 @@ permalink: /changelog/
 * **feature-webauthn**
   * 🆕 New component to enable support for WebAuthn specification with `WebAuthnFeature`.
 
+* **concept-engine**
+  * Added `defaultSettings: Settings?` parameter to registerTabHandler to supply a default Tracking Policy when opening a new extension tab.
+  * When calling `onNewTab` in `registerTabHandler` from `GeckoWebExtension.kt` a default `TrackingProtectionPolicy.strict()` is supplied to the new `GeckoEngineSession`. This was added in to avoid WebExtension tabs without any ETP settings.
+
 * **concept-storage**
   * Introduced `CreditCardsAddressesStorage` interface for describing credit card and address storage.
 

@@ -88,7 +88,8 @@ class GeckoEngine(
         }
 
         override fun onToggleActionPopup(extension: WebExtension, action: Action): EngineSession? {
-            return webExtensionDelegate?.onToggleActionPopup(extension, GeckoEngineSession(runtime), action)
+            return webExtensionDelegate?.onToggleActionPopup(extension, GeckoEngineSession(runtime,
+                defaultSettings = defaultSettings), action)
         }
     }
     private val webExtensionTabHandler = object : TabHandler {
@@ -214,7 +215,7 @@ class GeckoEngine(
             val installedExtension = GeckoWebExtension(it, runtime)
             webExtensionDelegate?.onInstalled(installedExtension)
             installedExtension.registerActionHandler(webExtensionActionHandler)
-            installedExtension.registerTabHandler(webExtensionTabHandler)
+            installedExtension.registerTabHandler(webExtensionTabHandler, defaultSettings)
             onSuccess(installedExtension)
         }
 
@@ -272,7 +273,7 @@ class GeckoEngine(
             val updatedExtension = if (geckoExtension != null) {
                 GeckoWebExtension(geckoExtension, runtime).also {
                     it.registerActionHandler(webExtensionActionHandler)
-                    it.registerTabHandler(webExtensionTabHandler)
+                    it.registerTabHandler(webExtensionTabHandler, defaultSettings)
                 }
             } else {
                 null
@@ -343,7 +344,7 @@ class GeckoEngine(
 
             extensions.forEach { extension ->
                 extension.registerActionHandler(webExtensionActionHandler)
-                extension.registerTabHandler(webExtensionTabHandler)
+                extension.registerTabHandler(webExtensionTabHandler, defaultSettings)
             }
 
             onSuccess(extensions)
