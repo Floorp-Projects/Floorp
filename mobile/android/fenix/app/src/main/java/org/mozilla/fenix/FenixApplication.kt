@@ -20,7 +20,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.appservices.Megazord
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.concept.base.crash.Breadcrumb
@@ -402,9 +401,19 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                             components.core.store.state.selectedTab?.content?.private
                                 ?: components.settings.openLinksInAPrivateTab
 
-                        val session = Session(url, shouldCreatePrivateSession)
-                        components.core.sessionManager.add(session, true, engineSession)
-                        session.id
+                        if (shouldCreatePrivateSession) {
+                            components.useCases.tabsUseCases.addPrivateTab(
+                                url = url,
+                                selectTab = true,
+                                engineSession = engineSession
+                            )
+                        } else {
+                            components.useCases.tabsUseCases.addTab(
+                                url = url,
+                                selectTab = true,
+                                engineSession = engineSession
+                            )
+                        }
                 },
                 onCloseTabOverride = {
                     _, sessionId -> components.useCases.tabsUseCases.removeTab(sessionId)
