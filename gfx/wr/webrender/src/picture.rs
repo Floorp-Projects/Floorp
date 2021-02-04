@@ -4067,8 +4067,6 @@ pub struct SurfaceInfo {
     pub device_pixel_scale: DevicePixelScale,
     /// The scale factors of the surface to raster transform.
     pub scale_factors: (f32, f32),
-    /// The allocated device rect for this surface
-    pub device_rect: Option<DeviceRect>,
 }
 
 impl SurfaceInfo {
@@ -4107,12 +4105,7 @@ impl SurfaceInfo {
             inflation_factor,
             device_pixel_scale,
             scale_factors,
-            device_rect: None,
         }
-    }
-
-    pub fn get_device_rect(&self) -> DeviceRect {
-        self.device_rect.expect("bug: queried before surface was initialized")
     }
 }
 
@@ -5099,7 +5092,6 @@ impl PicturePrimitive {
                 frame_state.init_surface_tiled(
                     surface_index,
                     surface_tasks,
-                    device_clip_rect,
                 );
             }
             Some(ref mut raster_config) => {
@@ -5307,7 +5299,6 @@ impl PicturePrimitive {
                             blur_render_task_id,
                             picture_task_id,
                             parent_surface_index,
-                            device_rect,
                         );
                     }
                     PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)) => {
@@ -5405,7 +5396,6 @@ impl PicturePrimitive {
                             blur_render_task_id,
                             picture_task_id,
                             parent_surface_index,
-                            device_rect,
                         );
                     }
                     PictureCompositeMode::MixBlend(..) if !frame_context.fb_config.gpu_supports_advanced_blend => {
@@ -5425,55 +5415,10 @@ impl PicturePrimitive {
                             device_pixel_scale,
                         );
 
-                        let parent_surface = &frame_state.surfaces[parent_surface_index.0];
-                        let parent_raster_spatial_node_index = parent_surface.raster_spatial_node_index;
-                        let parent_device_pixel_scale = parent_surface.device_pixel_scale;
-
-                        // Create a space mapper that will allow mapping from the local rect
-                        // of the mix-blend primitive into the space of the surface that we
-                        // need to read back from. Note that we use the parent's raster spatial
-                        // node here, so that we are in the correct device space of the parent
-                        // surface, whether it establishes a raster root or not.
-                        let map_pic_to_parent = SpaceMapper::new_with_target(
-                            parent_raster_spatial_node_index,
-                            self.spatial_node_index,
-                            RasterRect::max_rect(),         // TODO(gw): May need a conservative estimate?
-                            frame_context.spatial_tree,
-                        );
-                        let pic_in_raster_space = map_pic_to_parent
-                            .map(&pic_rect)
-                            .expect("bug: unable to map mix-blend content into parent");
-
-                        // Apply device pixel ratio for parent surface to get into device
-                        // pixels for that surface.
-                        let backdrop_rect = raster_rect_to_device_pixels(
-                            pic_in_raster_space,
-                            parent_device_pixel_scale,
-                        );
-
-                        let parent_surface_rect = parent_surface.get_device_rect();
-                        let backdrop_rect = backdrop_rect
-                            .intersection(&parent_surface_rect)
-                            .expect("bug: readback rect outside parent rect clip");
-
-                        // Calculate the UV coords necessary for the shader to sampler
-                        // from the primitive rect within the readback region. This is
-                        // 0..1 for aligned surfaces, but doing it this way allows
-                        // accurate sampling if the primitive bounds have fractional values.
-                        let backdrop_uv = calculate_uv_rect_kind(
-                            &pic_rect,
-                            &map_pic_to_parent.get_transform(),
-                            &backdrop_rect,
-                            parent_device_pixel_scale,
-                        );
-
                         let readback_task_id = frame_state.rg_builder.add().init(
                             RenderTask::new_dynamic(
-                                backdrop_rect.size.to_i32(),
-                                RenderTaskKind::new_readback(
-                                    backdrop_rect.origin,
-                                    backdrop_uv,
-                                ),
+                                clipped.size.to_i32(),
+                                RenderTaskKind::new_readback(),
                             )
                         );
 
@@ -5508,7 +5453,6 @@ impl PicturePrimitive {
                             raster_config.surface_index,
                             render_task_id,
                             parent_surface_index,
-                            clipped,
                         );
                     }
                     PictureCompositeMode::Filter(..) => {
@@ -5553,7 +5497,6 @@ impl PicturePrimitive {
                             raster_config.surface_index,
                             render_task_id,
                             parent_surface_index,
-                            clipped,
                         );
                     }
                     PictureCompositeMode::ComponentTransferFilter(..) => {
@@ -5597,7 +5540,6 @@ impl PicturePrimitive {
                             raster_config.surface_index,
                             render_task_id,
                             parent_surface_index,
-                            clipped,
                         );
                     }
                     PictureCompositeMode::MixBlend(..) |
@@ -5642,7 +5584,6 @@ impl PicturePrimitive {
                             raster_config.surface_index,
                             render_task_id,
                             parent_surface_index,
-                            clipped,
                         );
                     }
                     PictureCompositeMode::SvgFilter(ref primitives, ref filter_datas) => {
@@ -5698,17 +5639,9 @@ impl PicturePrimitive {
                             filter_task_id,
                             picture_task_id,
                             parent_surface_index,
-                            clipped,
                         );
                     }
                 }
-
-                // Update the device pixel ratio in the surface, in case it was adjusted due
-                // to the surface being too large. This ensures the correct scale is available
-                // in case it's used as input to a parent mix-blend-mode readback.
-                frame_state
-                    .surfaces[raster_config.surface_index.0]
-                    .device_pixel_scale = device_pixel_scale;
             }
             None => {}
         };
