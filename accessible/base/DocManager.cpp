@@ -91,20 +91,22 @@ Accessible* DocManager::FindAccessibleInCache(nsINode* aNode) const {
   return nullptr;
 }
 
-void DocManager::RemoveFromXPCDocumentCache(DocAccessible* aDocument) {
+void DocManager::RemoveFromXPCDocumentCache(DocAccessible* aDocument,
+                                            bool aAllowServiceShutdown) {
   xpcAccessibleDocument* xpcDoc = mXPCDocumentCache.GetWeak(aDocument);
   if (xpcDoc) {
     xpcDoc->Shutdown();
     mXPCDocumentCache.Remove(aDocument);
 
-    if (!HasXPCDocuments()) {
+    if (aAllowServiceShutdown && !HasXPCDocuments()) {
       MaybeShutdownAccService(nsAccessibilityService::eXPCOM);
     }
   }
 }
 
 void DocManager::NotifyOfDocumentShutdown(DocAccessible* aDocument,
-                                          Document* aDOMDocument) {
+                                          Document* aDOMDocument,
+                                          bool aAllowServiceShutdown) {
   // We need to remove listeners in both cases, when document is being shutdown
   // or when accessibility service is being shut down as well.
   RemoveListeners(aDOMDocument);
@@ -115,7 +117,7 @@ void DocManager::NotifyOfDocumentShutdown(DocAccessible* aDocument,
     return;
   }
 
-  RemoveFromXPCDocumentCache(aDocument);
+  RemoveFromXPCDocumentCache(aDocument, aAllowServiceShutdown);
   mDocAccessibleCache.Remove(aDOMDocument);
 }
 
