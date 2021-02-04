@@ -6,6 +6,7 @@ import os
 import sys
 from argparse import REMAINDER, SUPPRESS, ArgumentParser
 
+from mozlint.errors import NoValidLinter
 from mozlint.formatters import all_formatters
 
 
@@ -252,7 +253,9 @@ def find_linters(config_paths, linters=None):
                 continue
 
             lints[name] = os.path.join(search_path, f)
-    return lints.values()
+
+    linters_not_found = list(set(linters).difference(set(lints.keys())))
+    return {"lint_paths": lints.values(), "linters_not_found": linters_not_found}
 
 
 def run(
@@ -278,26 +281,43 @@ def run(
 
     if list_linters:
         lint_paths = find_linters(lintargs["config_paths"], linters)
-        linters = [os.path.splitext(os.path.basename(l))[0] for l in lint_paths]
+        linters = [
+            os.path.splitext(os.path.basename(l))[0] for l in lint_paths["lint_paths"]
+        ]
         print("\n".join(sorted(linters)))
         return 0
 
     lint = LintRoller(**lintargs)
-    lint.read(find_linters(lintargs["config_paths"], linters))
+    linters_info = find_linters(lintargs["config_paths"], linters)
 
-    # Always run bootstrapping, but return early if --setup was passed in.
-    ret = lint.setup(virtualenv_manager=virtualenv_manager)
-    if setup:
-        return ret
+    result = None
 
-    # run all linters
-    result = lint.roll(
-        paths, outgoing=outgoing, workdir=workdir, rev=rev, num_procs=num_procs
-    )
+    try:
+
+        lint.read(linters_info["lint_paths"])
+
+        # Always run bootstrapping, but return early if --setup was passed in.
+        ret = lint.setup(virtualenv_manager=virtualenv_manager)
+        if setup:
+            return ret
+
+        if linters_info["linters_not_found"] != []:
+            raise NoValidLinter
+
+        # run all linters
+        result = lint.roll(
+            paths, outgoing=outgoing, workdir=workdir, rev=rev, num_procs=num_procs
+        )
+    except NoValidLinter as e:
+        result = lint.result
+        print(str(e))
 
     if edit and result.issues:
         edit_issues(result)
         result = lint.roll(result.issues.keys(), num_procs=num_procs)
+
+    for every in linters_info["linters_not_found"]:
+        result.failed_setup.add(every)
 
     for formatter_name, path in formats:
         formatter = formatters.get(formatter_name)
