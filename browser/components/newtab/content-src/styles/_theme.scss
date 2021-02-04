@@ -87,6 +87,7 @@ body {
   --newtab-topsites-icon-shadow: inset #{$inner-box-shadow};
   --newtab-topsites-label-color: inherit;
   --newtab-topsites-outer-card-hover: #{$newtab-card-hover-color};
+  --newtab-topsites-context-menu-hover: #{$newtab-card-hover-color};
 
   // Cards
   --newtab-card-active-outline-color: #{$grey-30};
@@ -188,6 +189,7 @@ body {
     --newtab-topsites-icon-shadow: none;
     --newtab-topsites-label-color: #{$grey-10-80};
     --newtab-topsites-outer-card-hover: #{$newtab-card-darktheme-hover-color};
+    --newtab-topsites-context-menu-hover: #{$newtab-card-darktheme-hover-color};
 
     // Cards
     --newtab-card-active-outline-color: #{$grey-60};
