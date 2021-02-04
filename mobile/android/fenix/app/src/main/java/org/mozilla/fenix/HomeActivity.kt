@@ -17,7 +17,7 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewConfiguration
-import android.view.WindowManager
+import android.view.WindowManager.LayoutParams.FLAG_SECURE
 import androidx.annotation.CallSuper
 import androidx.annotation.IdRes
 import androidx.annotation.VisibleForTesting
@@ -278,6 +278,11 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     override fun onResume() {
         super.onResume()
 
+        // Even if screenshots are allowed, we hide private content in the recents screen in onPause
+        // so onResume we should go back to setting these flags with the user screenshot setting
+        // See https://github.com/mozilla-mobile/fenix/issues/11153
+        updateSecureWindowFlags(settings().lastKnownMode)
+
         // Diagnostic breadcrumb for "Display already aquired" crash:
         // https://github.com/mozilla-mobile/android-components/issues/7960
         breadcrumb(
@@ -341,8 +346,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         settings().shouldReturnToBrowser =
             components.core.store.state.getNormalOrPrivateTabs(private = false).isNotEmpty()
 
+        // Even if screenshots are allowed, we want to hide private content in the recents screen
+        // See https://github.com/mozilla-mobile/fenix/issues/11153
         if (settings().lastKnownMode.isPrivate) {
-            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            window.addFlags(FLAG_SECURE)
         }
 
         // We will remove this when AC code lands to emit a fact on getTopSites in DefaultTopSitesStorage
@@ -850,7 +857,18 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
     protected open fun createBrowsingModeManager(initialMode: BrowsingMode): BrowsingModeManager {
         return DefaultBrowsingModeManager(initialMode, components.settings) { newMode ->
+            updateSecureWindowFlags(newMode)
             themeManager.currentTheme = newMode
+        }.also {
+            updateSecureWindowFlags(initialMode)
+        }
+    }
+
+    fun updateSecureWindowFlags(mode: BrowsingMode = browsingModeManager.mode) {
+        if (mode == BrowsingMode.Private && !settings().allowScreenshotsInPrivateMode) {
+            window.addFlags(FLAG_SECURE)
+        } else {
+            window.clearFlags(FLAG_SECURE)
         }
     }
 

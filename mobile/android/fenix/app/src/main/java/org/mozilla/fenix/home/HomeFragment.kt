@@ -12,7 +12,6 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.os.StrictMode
-import android.view.Display.FLAG_SECURE
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -85,6 +84,7 @@ import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
@@ -104,8 +104,9 @@ import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
+import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.home.mozonline.showPrivacyPopWindow
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 import org.mozilla.fenix.home.sessioncontrol.SessionControlView
@@ -121,8 +122,6 @@ import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.whatsnew.WhatsNew
 import java.lang.ref.WeakReference
 import kotlin.math.min
-import org.mozilla.fenix.Config
-import org.mozilla.fenix.home.mozonline.showPrivacyPopWindow
 
 @ExperimentalCoroutinesApi
 @Suppress("TooManyFunctions", "LargeClass")
@@ -407,12 +406,6 @@ class HomeFragment : Fragment() {
             }
         }
 
-        if (browsingModeManager.mode.isPrivate) {
-            requireActivity().window.addFlags(FLAG_SECURE)
-        } else {
-            requireActivity().window.clearFlags(FLAG_SECURE)
-        }
-
         consumeFrom(requireComponents.core.store) {
             updateTabCounter(it)
         }
@@ -551,7 +544,6 @@ class HomeFragment : Fragment() {
         sessionControlView = null
         appBarLayout = null
         bundleArgs.clear()
-        requireActivity().window.clearFlags(FLAG_SECURE)
     }
 
     override fun onStart() {

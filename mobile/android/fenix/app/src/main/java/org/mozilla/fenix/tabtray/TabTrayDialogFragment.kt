@@ -268,7 +268,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
     private fun setSecureFlagsIfNeeded(private: Boolean) {
         if (private && context?.settings()?.allowScreenshotsInPrivateMode == false) {
             dialog?.window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        } else if (!(activity as HomeActivity).browsingModeManager.mode.isPrivate) {
+        } else {
             dialog?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
     }
