@@ -26,6 +26,7 @@ import mozilla.components.support.test.whenever
 import mozilla.components.support.webextensions.WebExtensionSupport
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -65,6 +66,7 @@ class AddonUpdaterWorkerTest {
     }
 
     @Test
+    @Ignore("https://github.com/mozilla-mobile/android-components/issues/8172")
     fun `doWork - will return Result_success when SuccessfullyUpdated`() {
         val updateAttemptStorage = mock<DefaultAddonUpdater.UpdateAttemptStorage>()
         val addonId = "addonId"
