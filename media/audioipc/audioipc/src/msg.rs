@@ -5,7 +5,6 @@
 
 use iovec::unix;
 use iovec::IoVec;
-use libc;
 use std::os::unix::io::{AsRawFd, RawFd};
 use std::{cmp, io, mem, ptr};
 

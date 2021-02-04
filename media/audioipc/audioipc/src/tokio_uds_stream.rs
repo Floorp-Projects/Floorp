@@ -9,9 +9,7 @@ use tokio_reactor::{Handle, PollEvented};
 use bytes::{Buf, BufMut};
 use futures::{Async, Future, Poll};
 use iovec::{self, IoVec};
-use libc;
 use mio::Ready;
-use mio_uds;
 
 use std::fmt;
 use std::io::{self, Read, Write};

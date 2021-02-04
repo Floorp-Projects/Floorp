@@ -5,7 +5,6 @@
 
 #[cfg(target_os = "linux")]
 use audio_thread_priority::{promote_thread_to_real_time, RtPriorityThreadInfo};
-use audioipc;
 use audioipc::codec::LengthDelimitedCodec;
 use audioipc::frame::{framed, Framed};
 use audioipc::messages::{
@@ -22,7 +21,6 @@ use cubeb_core::ffi;
 use futures::future::{self, FutureResult};
 use futures::sync::oneshot;
 use futures::Future;
-use slab;
 use std::convert::From;
 use std::ffi::CStr;
 use std::mem::size_of;

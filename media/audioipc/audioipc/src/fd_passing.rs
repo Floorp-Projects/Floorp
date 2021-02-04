@@ -37,7 +37,7 @@ impl IncomingFds {
                 .recv_fds
                 .as_mut()
                 .and_then(|recv_fds| recv_fds.next())
-                .and_then(|fds| Some(clone_into_array(&fds)));
+                .map(|fds| clone_into_array(&fds));
 
             if fds.is_some() {
                 return fds;
@@ -312,8 +312,6 @@ fn close_fds(fds: &[RawFd]) {
 #[cfg(test)]
 mod tests {
     use bytes::BufMut;
-    use libc;
-    use std;
 
     extern "C" {
         fn cmsghdr_bytes(size: *mut libc::size_t) -> *const u8;
