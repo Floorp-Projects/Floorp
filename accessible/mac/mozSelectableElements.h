@@ -122,4 +122,7 @@
 // override
 - (void)handleAccessibleEvent:(uint32_t)eventType;
 
+// override
+- (void)moxPerformPress;
+
 @end
