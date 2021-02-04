@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import absolute_import
 
-import collections
 import os
 import pathlib
 import re
@@ -12,6 +11,8 @@ from manifestparser import TestManifest
 from mozperftest.script import ScriptInfo
 from perfdocs.utils import read_yaml
 from perfdocs.logger import PerfDocLogger
+
+logger = PerfDocLogger()
 
 """
 This file is for framework specific gatherers since manifests
@@ -131,19 +132,19 @@ class RaptorGatherer(FrameworkGatherer):
         """
         test_manifest = TestManifest([manifest_path], strict=False)
         test_list = test_manifest.active_tests(exists=False, disabled=False)
-        subtest_list = {}
+        subtests = {}
         for subtest in test_list:
-            subtest_list[subtest["name"]] = subtest["manifest"]
-            self._urls[subtest["name"]] = {
-                "type": suite_name,
-                "url": subtest["test_url"],
-            }
+            subtests[subtest["name"]] = subtest["manifest"]
+            self._urls.setdefault(suite_name, []).append(
+                {
+                    "test_name": subtest["name"],
+                    "url": subtest["test_url"],
+                }
+            )
 
-        self._urls = collections.OrderedDict(
-            sorted(self._urls.items(), key=lambda t: len(t[0]))
-        )
+        self._urls[suite_name].sort(key=lambda item: item["test_name"])
 
-        return subtest_list
+        return subtests
 
     def get_test_list(self):
         """
@@ -166,7 +167,7 @@ class RaptorGatherer(FrameworkGatherer):
         for suite_name, manifest_paths in suite_list.items():
             if not self._test_list.get(suite_name):
                 self._test_list[suite_name] = {}
-            for i, manifest_path in enumerate(manifest_paths, 1):
+            for manifest_path in manifest_paths:
                 subtest_list = self._get_subtests_from_ini(manifest_path, suite_name)
                 self._test_list[suite_name].update(subtest_list)
 
@@ -174,27 +175,18 @@ class RaptorGatherer(FrameworkGatherer):
 
     def build_test_description(self, title, test_description="", suite_name=""):
         matcher = set()
-        for name, val in self._urls.items():
-            if title == name and suite_name == val["type"]:
-                matcher.add(val["url"])
-                break
-
-        if len(matcher) == 0:
-            for name, val in self._urls.items():
-                if title in name and suite_name == val["type"]:
-                    matcher.add(val["url"])
+        for suite, val in self._urls.items():
+            for test in val:
+                if title in test["test_name"] and suite_name == suite:
+                    matcher.add(test["url"])
                     break
 
-        return [
-            "* `"
-            + title
-            + " ("
-            + test_description
-            + ") "
-            + "<"
-            + matcher.pop()
-            + ">`__"
-        ]
+        try:
+            url = matcher.pop()
+        except KeyError as e:
+            logger.critical("{}: no url found for test {}".format(e, title))
+
+        return ["* `{} ({}) <{}>`__".format(title, test_description, url)]
 
     def build_suite_section(self, title, content):
         return self._build_section_with_header(

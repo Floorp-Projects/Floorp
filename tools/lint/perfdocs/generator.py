@@ -82,13 +82,13 @@ class Generator(object):
 
                 tests = suite_info.get("tests", {})
                 for test_name in sorted(tests.keys()):
-                    documentation.extend(
-                        self._verifier._gatherer.framework_gatherers[
-                            yaml_content["name"]
-                        ].build_test_description(
-                            test_name, tests[test_name], suite_name
-                        )
+                    gatherer = self._verifier._gatherer.framework_gatherers[
+                        yaml_content["name"]
+                    ]
+                    test_description = gatherer.build_test_description(
+                        test_name, tests[test_name], suite_name
                     )
+                    documentation.extend(test_description)
                 documentation.append("")
 
             # Insert documentation into `.rst` file
