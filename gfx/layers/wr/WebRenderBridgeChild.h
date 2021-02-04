@@ -123,6 +123,14 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
     mIdNamespace = aIdNamespace;
   }
 
+  bool MatchesNamespace(const wr::ImageKey& aImageKey) const {
+    return aImageKey.mNamespace == mIdNamespace;
+  }
+
+  bool MatchesNamespace(const wr::BlobImageKey& aBlobKey) const {
+    return MatchesNamespace(aBlobKey._0);
+  }
+
   wr::FontKey GetNextFontKey() {
     return wr::FontKey{GetNamespace(), GetNextResourceId()};
   }
