@@ -7947,32 +7947,7 @@ CSSSize nsLayoutUtils::CalculateRootCompositionSize(
   rootCompositionSize.width -= margins.LeftRight();
   rootCompositionSize.height -= margins.TopBottom();
 
-  CSSSize result =
-      rootCompositionSize / aMetrics.DisplayportPixelsPerCSSPixel();
-
-  // If this is a nested content process, the in-process root content document's
-  // composition size may still be arbitrarily large, so bound it further by
-  // how much of the in-process RCD is visible in the top-level (cross-process
-  // RCD) viewport.
-  // Note: the size of GetTopLevelViewportVisibleRectInSelfCoords() is not
-  // the full composition size of the cross-process RCD-RSF, but rather the portion
-  // of the subdocument that's visible in it. That makes it suitable as a bounding
-  // size for the displayports of the scroll frames in the subdocument (which is
-  // what CalculateRootCompositionSize() is used for) -- in fact, it's a *better*
-  // bounding size -- but the name of this function is not strictly accurate any
-  // more and should probably be renamed to CalculateBoundingCompositionSize().
-  if (rootPresShell) {
-    if (BrowserChild* bc = BrowserChild::GetFrom(rootPresShell)) {
-      if (const auto& visibleRect =
-              bc->GetTopLevelViewportVisibleRectInSelfCoords()) {
-        CSSSize cssVisibleRect =
-            visibleRect->Size() / rootPresContext->CSSToDevPixelScale();
-        result = Min(result, cssVisibleRect);
-      }
-    }
-  }
-
-  return result;
+  return rootCompositionSize / aMetrics.DisplayportPixelsPerCSSPixel();
 }
 
 /* static */
