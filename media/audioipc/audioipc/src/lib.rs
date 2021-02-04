@@ -132,10 +132,7 @@ fn valid_handle(handle: PlatformHandleType) -> bool {
 impl PlatformHandle {
     pub fn new(raw: PlatformHandleType, owned: bool) -> PlatformHandle {
         assert!(valid_handle(raw));
-        let inner = Inner {
-            handle: raw,
-            owned: owned,
-        };
+        let inner = Inner { handle: raw, owned };
         PlatformHandle(RefCell::new(inner))
     }
 

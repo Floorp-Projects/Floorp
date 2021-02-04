@@ -46,6 +46,8 @@ pub struct ClientStream<'ctx> {
     user_ptr: *mut c_void,
     token: usize,
     device_change_cb: Arc<Mutex<ffi::cubeb_device_changed_callback>>,
+    // Signals ClientStream that CallbackServer has dropped.
+    shutdown_rx: mpsc::Receiver<()>,
 }
 
 struct CallbackServer {
@@ -56,6 +58,8 @@ struct CallbackServer {
     user_ptr: usize,
     cpu_pool: CpuPool,
     device_change_cb: Arc<Mutex<ffi::cubeb_device_changed_callback>>,
+    // Signals ClientStream that CallbackServer has dropped.
+    _shutdown_tx: mpsc::Sender<()>,
 }
 
 impl rpc::Server for CallbackServer {
@@ -218,6 +222,8 @@ impl<'ctx> ClientStream<'ctx> {
         let null_cb: ffi::cubeb_device_changed_callback = None;
         let device_change_cb = Arc::new(Mutex::new(null_cb));
 
+        let (_shutdown_tx, shutdown_rx) = mpsc::channel();
+
         let server = CallbackServer {
             input_shm,
             output_shm,
@@ -226,6 +232,7 @@ impl<'ctx> ClientStream<'ctx> {
             user_ptr: user_data,
             cpu_pool,
             device_change_cb: device_change_cb.clone(),
+            _shutdown_tx,
         };
 
         let (wait_tx, wait_rx) = mpsc::channel();
@@ -248,6 +255,7 @@ impl<'ctx> ClientStream<'ctx> {
             user_ptr,
             token: data.token,
             device_change_cb,
+            shutdown_rx,
         }));
         Ok(unsafe { Stream::from_ptr(stream as *mut _) })
     }
@@ -255,9 +263,17 @@ impl<'ctx> ClientStream<'ctx> {
 
 impl<'ctx> Drop for ClientStream<'ctx> {
     fn drop(&mut self) {
-        debug!("ClientStream dropped...");
+        debug!("ClientStream drop");
         let rpc = self.context.rpc();
         let _ = send_recv!(rpc, StreamDestroy(self.token) => StreamDestroyed);
+        debug!("ClientStream drop - stream destroyed");
+        // Wait for CallbackServer to shutdown.  The remote server drops the RPC
+        // connection during StreamDestroy, which will cause CallbackServer to drop
+        // once the connection close is detected.  Dropping CallbackServer will
+        // cause the shutdown channel to error on recv, which we rely on to
+        // synchronize with CallbackServer dropping.
+        let _ = self.shutdown_rx.recv();
+        debug!("ClientStream dropped");
     }
 }
 
