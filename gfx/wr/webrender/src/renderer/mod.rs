@@ -1145,7 +1145,7 @@ impl Renderer {
         let rb_thread_name = format!("WRRenderBackend#{}", options.renderer_id.unwrap_or(0));
         let scene_thread_name = format!("WRSceneBuilder#{}", options.renderer_id.unwrap_or(0));
         let lp_scene_thread_name = format!("WRSceneBuilderLP#{}", options.renderer_id.unwrap_or(0));
-        let glyph_rasterizer = GlyphRasterizer::new(workers)?;
+        let glyph_rasterizer = GlyphRasterizer::new(workers, device.get_capabilities().supports_r8_texture_upload)?;
 
         let (scene_builder_channels, scene_tx) =
             SceneBuilderThreadChannels::new(api_tx.clone());

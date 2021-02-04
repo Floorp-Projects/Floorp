@@ -146,7 +146,9 @@ impl GlyphRasterizer {
         self.pending_glyph_jobs += 1;
         self.pending_glyph_count -= glyphs.len();
 
-        fn process_glyph(key: &GlyphKey, font_contexts: &FontContexts, font: &FontInstance) -> GlyphRasterJob {
+        let can_use_r8_format = self.can_use_r8_format;
+
+        let process_glyph = move |key: &GlyphKey, font_contexts: &FontContexts, font: &FontInstance| -> GlyphRasterJob {
             profile_scope!("glyph-raster");
             let mut context = font_contexts.lock_current_context();
             let mut job = GlyphRasterJob {
@@ -185,7 +187,7 @@ impl GlyphRasterizer {
                 // Convert from BGRA8 to R8 if required. In the future we can make it the
                 // backends' responsibility to output glyphs in the desired format,
                 // potentially reducing the number of copies.
-                if glyph.format.image_format().bytes_per_pixel() == 1 {
+                if glyph.format.image_format(can_use_r8_format).bytes_per_pixel() == 1 {
                     glyph.bytes = glyph.bytes
                         .chunks_mut(4)
                         .map(|pixel| pixel[3])
@@ -194,7 +196,7 @@ impl GlyphRasterizer {
             }
 
             job
-        }
+        };
 
         // if the number of glyphs is small, do it inline to avoid the threading overhead;
         // send the result into glyph_tx so downstream code can't tell the difference.
@@ -293,7 +295,7 @@ impl GlyphRasterizer {
                             ImageDescriptor {
                                 size: size2(glyph.width, glyph.height),
                                 stride: None,
-                                format: glyph.format.image_format(),
+                                format: glyph.format.image_format(self.can_use_r8_format),
                                 flags: ImageDescriptorFlags::empty(),
                                 offset: 0,
                             },
@@ -765,12 +767,25 @@ impl GlyphFormat {
     }
 
     /// Returns the ImageFormat that a glyph should be stored as in the texture cache.
-    pub fn image_format(&self) -> ImageFormat {
-        // GlyphFormat::Alpha and GlyphFormat::TransformedAlpha should be stored in an R8
-        // texture, but we ran in to some rendering issues on various platforms after doing so.
-        // So keep using BGRA8 for all glyph formats until those are solved.
-        // See bug 1687554.
-        ImageFormat::BGRA8
+    /// can_use_r8_format should be set false on platforms where we have encountered
+    /// issues with R8 textures, so that we do not use them for glyphs.
+    pub fn image_format(&self, can_use_r8_format: bool) -> ImageFormat {
+        match *self {
+            // GlyphFormat::Bitmap glyphs could be stored in an R8 texture. However, we currently
+            // support drawing ColorBitmap glyphs (stored in a BGRA8 texture) in Bitmap mode, and
+            // currently the text shader cannot differentiate between the two cases.
+            GlyphFormat::Alpha | GlyphFormat::TransformedAlpha => {
+                if can_use_r8_format {
+                    ImageFormat::R8
+                } else {
+                    ImageFormat::BGRA8
+                }
+            }
+            GlyphFormat::Subpixel |
+            GlyphFormat::TransformedSubpixel |
+            GlyphFormat::Bitmap |
+            GlyphFormat::ColorBitmap => ImageFormat::BGRA8,
+        }
     }
 }
 
@@ -977,10 +992,13 @@ pub struct GlyphRasterizer {
 
     // Whether to parallelize glyph rasterization with rayon.
     enable_multithreading: bool,
+
+    // Whether glyphs can be rasterized in r8 format when it makes sense.
+    can_use_r8_format: bool,
 }
 
 impl GlyphRasterizer {
-    pub fn new(workers: Arc<ThreadPool>) -> Result<Self, ResourceCacheError> {
+    pub fn new(workers: Arc<ThreadPool>, can_use_r8_format: bool) -> Result<Self, ResourceCacheError> {
         let (glyph_tx, glyph_rx) = unbounded_channel();
 
         let num_workers = workers.current_num_threads();
@@ -1012,6 +1030,7 @@ impl GlyphRasterizer {
             font_instances_to_remove: Vec::new(),
             enable_multithreading: true,
             pending_glyph_requests: FastHashMap::default(),
+            can_use_r8_format,
         })
     }
 
@@ -1159,7 +1178,7 @@ mod test_glyph_rasterizer {
             .thread_name(|idx|{ format!("WRWorker#{}", idx) })
             .build();
         let workers = Arc::new(worker.unwrap());
-        let mut glyph_rasterizer = GlyphRasterizer::new(workers).unwrap();
+        let mut glyph_rasterizer = GlyphRasterizer::new(workers, true).unwrap();
         let mut glyph_cache = GlyphCache::new();
         let mut gpu_cache = GpuCache::new_for_testing();
         let mut texture_cache = TextureCache::new_for_testing(2048, FORMAT);
@@ -1237,7 +1256,7 @@ mod test_glyph_rasterizer {
             .thread_name(|idx|{ format!("WRWorker#{}", idx) })
             .build();
         let workers = Arc::new(worker.unwrap());
-        let mut glyph_rasterizer = GlyphRasterizer::new(workers).unwrap();
+        let mut glyph_rasterizer = GlyphRasterizer::new(workers, true).unwrap();
         let mut glyph_cache = GlyphCache::new();
         let mut gpu_cache = GpuCache::new_for_testing();
         let mut texture_cache = TextureCache::new_for_testing(2048, FORMAT);
