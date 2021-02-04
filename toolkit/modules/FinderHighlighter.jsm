@@ -600,7 +600,7 @@ FinderHighlighter.prototype = {
   // Update the tick marks that should appear on the page's vertical scrollbar.
   updateScrollMarks() {
     // Only show scrollbar marks when normal highlighting is enabled.
-    if (this.useModal() || !this.highlightAll) {
+    if (this.useModal() || !this._highlightAll) {
       this.removeScrollMarks();
       return;
     }
