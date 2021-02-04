@@ -311,6 +311,67 @@ fn sending_of_startup_baseline_ping() {
 }
 
 #[test]
+fn no_dirty_baseline_on_clean_shutdowns() {
+    let _lock = lock_test();
+
+    // Create an instance of Glean, wait for init and then flip the dirty
+    // bit to true.
+    let data_dir = new_glean(None, true);
+
+    crate::block_on_dispatcher();
+
+    with_glean_mut(|glean| glean.set_dirty_flag(true));
+
+    crate::shutdown();
+
+    // Restart glean and wait for a baseline ping to be generated.
+    let (s, r) = crossbeam_channel::bounded::<String>(1);
+
+    // Define a fake uploader that reports back the submission URL
+    // using a crossbeam channel.
+    #[derive(Debug)]
+    pub struct FakeUploader {
+        sender: crossbeam_channel::Sender<String>,
+    }
+    impl net::PingUploader for FakeUploader {
+        fn upload(
+            &self,
+            url: String,
+            _body: Vec<u8>,
+            _headers: Vec<(String, String)>,
+        ) -> net::UploadResult {
+            self.sender.send(url).unwrap();
+            net::UploadResult::HttpStatus(200)
+        }
+    }
+
+    // Create a custom configuration to use a fake uploader.
+    let tmpname = data_dir.path().display().to_string();
+
+    // Now reset Glean: it should not send a baseline ping, because
+    // we cleared the dirty bit.
+    test_reset_glean(
+        Configuration {
+            data_path: tmpname,
+            application_id: GLOBAL_APPLICATION_ID.into(),
+            upload_enabled: true,
+            max_events: None,
+            delay_ping_lifetime_io: false,
+            channel: Some("testing".into()),
+            server_endpoint: Some("invalid-test-host".into()),
+            uploader: Some(Box::new(FakeUploader { sender: s })),
+        },
+        ClientInfoMetrics::unknown(),
+        false,
+    );
+
+    crate::block_on_dispatcher();
+
+    // We don't expect a startup ping.
+    assert_eq!(r.try_recv(), Err(crossbeam_channel::TryRecvError::Empty));
+}
+
+#[test]
 fn initialize_must_not_crash_if_data_dir_is_messed_up() {
     let _lock = lock_test();
 
