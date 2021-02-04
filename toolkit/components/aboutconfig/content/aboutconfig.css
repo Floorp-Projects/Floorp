@@ -32,7 +32,7 @@
   fill: #fcd100;
 }
 
-#search-container {
+#toolbar {
   position: sticky;
   top: 0;
   box-sizing: border-box;
@@ -41,6 +41,14 @@
   padding: 10px;
   padding-bottom: 0;
   min-width: 644px;
+  display: flex;
+}
+
+.checkbox-container {
+  /* Center align and get rid of whitespace. */
+  display: inline-flex;
+  align-items: center;
+  margin-inline-start: 1ch;
 }
 
 #about-config-search {
@@ -48,7 +56,7 @@
   fill: currentColor;
   fill-opacity: 0.4;
   box-sizing: border-box;
-  width: 100%;
+  flex-grow: 1;
   background-image: url("chrome://global/skin/icons/search-glass.svg");
   background-repeat: no-repeat;
   background-position: 8px center;

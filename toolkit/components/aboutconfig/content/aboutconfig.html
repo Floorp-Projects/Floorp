@@ -44,11 +44,15 @@
     </div>
 
     <template id="main">
-      <div id="search-container">
+      <div id="toolbar">
         <!-- Use a unique ID to prevent showing autocomplete results from other
              browser pages with similarly named fields. -->
         <input type="text" id="about-config-search"
                data-l10n-id="about-config-search-input1">
+        <label class="checkbox-container">
+          <input type="checkbox" id="about-config-show-only-modified">
+          <span data-l10n-id="about-config-show-only-modified"></span>
+        </label>
       </div>
 
       <table id="prefs"></table>

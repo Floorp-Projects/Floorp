@@ -20,6 +20,8 @@ about-config-search-input1 =
     .placeholder = Search preference name
 about-config-show-all = Show All
 
+about-config-show-only-modified = Show only modified preferences
+
 about-config-pref-add-button =
     .title = Add
 about-config-pref-toggle-button =

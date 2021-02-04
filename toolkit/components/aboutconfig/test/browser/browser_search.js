@@ -46,6 +46,20 @@ add_task(async function test_search() {
     // We want thousands of prefs instead of a few dozen that are filtered.
     Assert.greater(this.rows.length, prefArray.length - 50);
 
+    // Check if "Only show modified" feature works.
+    await EventUtils.sendMouseEvent(
+      { type: "click" },
+      this.showOnlyModifiedCheckbox
+    );
+    Assert.ok(this.rows.every(r => r.hasClass("has-user-value")));
+
+    // Uncheck checkbox
+    await EventUtils.sendMouseEvent(
+      { type: "click" },
+      this.showOnlyModifiedCheckbox
+    );
+    Assert.ok(!this.rows.every(r => r.hasClass("has-user-value")));
+
     // Pressing ESC while showing all preferences returns to the initial page.
     EventUtils.sendKey("escape");
     Assert.equal(this.rows.length, 0);

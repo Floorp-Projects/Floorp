@@ -48,6 +48,7 @@ let gDeletedPrefs = new Map();
  */
 let gSortedExistingPrefs = null;
 let gSearchInput = null;
+let gShowOnlyModifiedCheckbox = null;
 let gPrefsTable = null;
 
 /**
@@ -139,11 +140,20 @@ class PrefRow {
   }
 
   get matchesFilter() {
+    if (!this.matchesModifiedFilter) {
+      return false;
+    }
+
     return (
       gFilterShowAll ||
       (gFilterPattern && gFilterPattern.test(this.name)) ||
       (gFilterString && this.name.toLowerCase().includes(gFilterString))
     );
+  }
+
+  get matchesModifiedFilter() {
+    const onlyShowModified = gShowOnlyModifiedCheckbox.checked;
+    return !onlyShowModified || this.hasUserValue;
   }
 
   /**
@@ -449,7 +459,11 @@ function loadPrefs() {
   let search = (gSearchInput = document.getElementById("about-config-search"));
   let prefs = (gPrefsTable = document.getElementById("prefs"));
   let showAll = document.getElementById("show-all");
+  gShowOnlyModifiedCheckbox = document.getElementById(
+    "about-config-show-only-modified"
+  );
   search.focus();
+  gShowOnlyModifiedCheckbox.checked = false;
 
   for (let name of Services.prefs.getChildList("")) {
     new PrefRow(name);
@@ -477,6 +491,17 @@ function loadPrefs() {
     } else {
       gFilterPrefsTask.arm();
     }
+  });
+
+  gShowOnlyModifiedCheckbox.addEventListener("change", () => {
+    // This checkbox:
+    // - Filters results to only modified prefs when search query is entered
+    // - Shows all modified prefs, in show all mode, and after initial checkbox click
+    let tableHidden = !document.body.classList.contains("table-shown");
+    filterPrefs({
+      showAll:
+        gFilterShowAll || (gShowOnlyModifiedCheckbox.checked && tableHidden),
+    });
   });
 
   showAll.addEventListener("click", event => {
