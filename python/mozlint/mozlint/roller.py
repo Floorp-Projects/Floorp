@@ -25,7 +25,7 @@ from mozversioncontrol import (
     InvalidRepoPath,
 )
 
-from .errors import LintersNotConfigured
+from .errors import LintersNotConfigured, NoValidLinter
 from .parser import Parser
 from .pathutils import findobject
 from .result import ResultSummary
@@ -189,7 +189,7 @@ class LintRoller(object):
     def setup(self, virtualenv_manager=None):
         """Run setup for applicable linters"""
         if not self.linters:
-            raise LintersNotConfigured
+            raise NoValidLinter
 
         for linter in self.linters:
             if "setup" not in linter:
