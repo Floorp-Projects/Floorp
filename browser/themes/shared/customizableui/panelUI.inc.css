@@ -1169,6 +1169,17 @@ panelview .toolbarbutton-1,
 .subviewbutton-iconic:not(.subviewbutton-back) > .toolbarbutton-icon {
   display: none;
 }
+
+#appMenu-zoomReduce-button2 > .toolbarbutton-icon,
+#appMenu-zoomEnlarge-button2 > .toolbarbutton-icon,
+#appMenu-fullscreen-button2 > .toolbarbutton-icon {
+  display: unset;
+}
+
+#appMenu-zoom-controls2 > .subviewbutton {
+  margin-inline-start: 2px;
+  padding: 4px 4px;
+}
 } /*** END proton ***/
 
 /* We don't always display: none this item, and if it has forced width (like above)
@@ -1316,14 +1327,12 @@ panelmultiview .toolbaritem-combined-buttons > spacer.after-label {
   padding: 4px 5px;
 }
 
-#appMenu-zoom-controls > .subviewbutton,
-#appMenu-zoom-controls2 > .subviewbutton {
+#appMenu-zoom-controls > .subviewbutton {
   margin-inline-start: 10px;
 }
 
 /* Unset the min-height constraint, because that works better for a text-only button. */
-#appMenu-zoomReset-button,
-#appMenu-zoomReset-button2 {
+#appMenu-zoomReset-button {
   min-height: unset;
   border: 1px solid var(--panel-separator-color);
   border-radius: 10000px;
