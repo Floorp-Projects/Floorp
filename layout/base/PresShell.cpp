@@ -4089,6 +4089,11 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
   MOZ_ASSERT(NeedFlush(flushType), "Why did we get called?");
 
 #ifdef MOZ_GECKO_PROFILER
+  AUTO_PROFILER_MARKER_TEXT(
+      "DoFlushPendingNotifications", LAYOUT,
+      MarkerOptions(MarkerStack::Capture(), MarkerInnerWindowIdFromDocShell(
+                                                mPresContext->GetDocShell())),
+      nsDependentCString(kFlushTypeNames[flushType]));
   AUTO_PROFILER_LABEL_DYNAMIC_CSTR_NONSENSITIVE(
       "PresShell::DoFlushPendingNotifications", LAYOUT,
       kFlushTypeNames[flushType]);

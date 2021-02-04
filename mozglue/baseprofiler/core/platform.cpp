@@ -1667,10 +1667,10 @@ static void DoNativeBacktrace(PSLockRef aLock,
 //
 // The grammar for entry sequences is in a comment above
 // ProfileBuffer::StreamSamplesToJSON.
-static inline void DoSharedSample(PSLockRef aLock, bool aIsSynchronous,
-                                  RegisteredThread& aRegisteredThread,
-                                  const Registers& aRegs, uint64_t aSamplePos,
-                                  ProfileBuffer& aBuffer) {
+static inline void DoSharedSample(
+    PSLockRef aLock, bool aIsSynchronous, RegisteredThread& aRegisteredThread,
+    const Registers& aRegs, uint64_t aSamplePos, ProfileBuffer& aBuffer,
+    StackCaptureOptions aCaptureOptions = StackCaptureOptions::Full) {
   // WARNING: this function runs within the profiler's "critical section".
 
   MOZ_ASSERT(!aBuffer.IsThreadSafe(),
@@ -1681,7 +1681,8 @@ static inline void DoSharedSample(PSLockRef aLock, bool aIsSynchronous,
   ProfileBufferCollector collector(aBuffer, aSamplePos);
   NativeStack nativeStack;
 #if defined(HAVE_NATIVE_UNWIND)
-  if (ActivePS::FeatureStackWalk(aLock)) {
+  if (ActivePS::FeatureStackWalk(aLock) &&
+      aCaptureOptions == StackCaptureOptions::Full) {
     DoNativeBacktrace(aLock, aRegisteredThread, aRegs, nativeStack);
 
     MergeStacks(ActivePS::Features(aLock), aIsSynchronous, aRegisteredThread,
@@ -1693,7 +1694,8 @@ static inline void DoSharedSample(PSLockRef aLock, bool aIsSynchronous,
                 aRegs, nativeStack, collector);
 
     // We can't walk the whole native stack, but we can record the top frame.
-    if (ActivePS::FeatureLeaf(aLock)) {
+    if (ActivePS::FeatureLeaf(aLock) &&
+        aCaptureOptions == StackCaptureOptions::Full) {
       aBuffer.AddEntry(ProfileBufferEntry::NativeLeafAddr((void*)aRegs.mPC));
     }
   }
@@ -1702,8 +1704,12 @@ static inline void DoSharedSample(PSLockRef aLock, bool aIsSynchronous,
 // Writes the components of a synchronous sample to the given ProfileBuffer.
 static void DoSyncSample(PSLockRef aLock, RegisteredThread& aRegisteredThread,
                          const TimeStamp& aNow, const Registers& aRegs,
-                         ProfileBuffer& aBuffer) {
+                         ProfileBuffer& aBuffer,
+                         StackCaptureOptions aCaptureOptions) {
   // WARNING: this function runs within the profiler's "critical section".
+
+  MOZ_ASSERT(aCaptureOptions != StackCaptureOptions::NoStack,
+             "DoSyncSample should not be called when no capture is needed");
 
   uint64_t samplePos =
       aBuffer.AddThreadIdEntry(aRegisteredThread.Info()->ThreadId());
@@ -1712,7 +1718,7 @@ static void DoSyncSample(PSLockRef aLock, RegisteredThread& aRegisteredThread,
   aBuffer.AddEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
 
   DoSharedSample(aLock, /* aIsSynchronous = */ true, aRegisteredThread, aRegs,
-                 samplePos, aBuffer);
+                 samplePos, aBuffer, aCaptureOptions);
 }
 
 // Writes the components of a periodic sample to ActivePS's ProfileBuffer.
@@ -3550,12 +3556,14 @@ double profiler_time() {
   return delta.ToMilliseconds();
 }
 
-bool profiler_capture_backtrace_into(ProfileChunkedBuffer& aChunkedBuffer) {
+bool profiler_capture_backtrace_into(ProfileChunkedBuffer& aChunkedBuffer,
+                                     StackCaptureOptions aCaptureOptions) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock;
 
-  if (!ActivePS::Exists(lock)) {
+  if (!ActivePS::Exists(lock) ||
+      aCaptureOptions == StackCaptureOptions::NoStack) {
     return false;
   }
 
@@ -3576,7 +3584,7 @@ bool profiler_capture_backtrace_into(ProfileChunkedBuffer& aChunkedBuffer) {
 #endif
 
   DoSyncSample(lock, *registeredThread, TimeStamp::NowUnfuzzed(), regs,
-               profileBuffer);
+               profileBuffer, aCaptureOptions);
 
   return true;
 }
@@ -3594,7 +3602,7 @@ UniquePtr<ProfileChunkedBuffer> profiler_capture_backtrace() {
       MakeUnique<ProfileBufferChunkManagerSingle>(
           ProfileBufferChunkManager::scExpectedMaximumStackSize));
 
-  if (!profiler_capture_backtrace_into(*buffer)) {
+  if (!profiler_capture_backtrace_into(*buffer, StackCaptureOptions::Full)) {
     return nullptr;
   }
 
