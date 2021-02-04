@@ -2234,20 +2234,18 @@ nsresult LaunchChild(bool aBlankCommandLine) {
   rv = lf->GetNativePath(exePath);
   if (NS_FAILED(rv)) return rv;
 
-#      if defined(XP_UNIX)
-  if (execv(exePath.get(), gRestartArgv) == -1) return NS_ERROR_FAILURE;
-#      else
-  PRProcess* process =
-      PR_CreateProcess(exePath.get(), gRestartArgv, nullptr, nullptr);
-  if (!process) return NS_ERROR_FAILURE;
+  if (PR_FAILURE ==
+      PR_CreateProcessDetached(exePath.get(), gRestartArgv, nullptr, nullptr)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  int32_t exitCode;
-  PRStatus failed = PR_WaitProcess(process, &exitCode);
-  if (failed || exitCode) return NS_ERROR_FAILURE;
-#      endif  // XP_UNIX
-#    endif    // WP_WIN
-#  endif      // WP_MACOSX
-#endif        // MOZ_WIDGET_ANDROID
+  // Note that we don't know if the child process starts okay, if it
+  // immediately returns non-zero then we may mask that by returning a zero
+  // exit status.
+
+#    endif  // WP_WIN
+#  endif    // WP_MACOSX
+#endif      // MOZ_WIDGET_ANDROID
 
   return NS_ERROR_LAUNCHED_CHILD_PROCESS;
 }
