@@ -6,6 +6,7 @@ package mozilla.components.browser.state.action
 
 import android.content.ComponentCallbacks2
 import android.graphics.Bitmap
+import android.os.SystemClock
 import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.AppIntentState
@@ -47,6 +48,7 @@ import mozilla.components.concept.engine.webextension.WebExtensionBrowserAction
 import mozilla.components.concept.engine.webextension.WebExtensionPageAction
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.lib.state.Action
+import mozilla.components.support.base.android.Clock
 
 /**
  * [Action] implementation related to [BrowserState].
@@ -755,10 +757,16 @@ sealed class EngineAction : BrowserAction() {
 
     /**
      * Attaches the provided [EngineSession] to the session with the provided [sessionId].
+     *
+     * @property sessionId The ID of the tab the [EngineSession] should be linked to.
+     * @property engineSession The [EngineSession] that should be linked to the tab.
+     * @property timestamp Timestamp (milliseconds) of when the linking has happened (By default
+     * set to [SystemClock.elapsedRealtime].
      */
     data class LinkEngineSessionAction(
         val sessionId: String,
         val engineSession: EngineSession,
+        val timestamp: Long = Clock.elapsedRealtime(),
         val skipLoading: Boolean = false
     ) : EngineAction()
 
@@ -766,6 +774,14 @@ sealed class EngineAction : BrowserAction() {
      * Suspends the [EngineSession] of the session with the provided [sessionId].
      */
     data class SuspendEngineSessionAction(
+        val sessionId: String
+    ) : EngineAction()
+
+    /**
+     * Marks the [EngineSession] of the session with the provided [sessionId] as killed (The matching
+     * content process was killed).
+     */
+    data class KillEngineSessionAction(
         val sessionId: String
     ) : EngineAction()
 

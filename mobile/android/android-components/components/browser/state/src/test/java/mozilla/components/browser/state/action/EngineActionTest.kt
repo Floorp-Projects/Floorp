@@ -44,10 +44,11 @@ class EngineActionTest {
         assertNull(engineState().engineSession)
 
         val engineSession: EngineSession = mock()
-        store.dispatch(EngineAction.LinkEngineSessionAction(tab.id, engineSession)).joinBlocking()
+        store.dispatch(EngineAction.LinkEngineSessionAction(tab.id, engineSession, timestamp = 1234)).joinBlocking()
 
         assertNotNull(engineState().engineSession)
         assertEquals(engineSession, engineState().engineSession)
+        assertEquals(1234L, engineState().timestamp)
     }
 
     @Test

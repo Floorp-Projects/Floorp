@@ -90,4 +90,42 @@ class SuspendMiddlewareTest {
         store.dispatch(EngineAction.SuspendEngineSessionAction(tab.id)).joinBlocking()
         verify(store, never()).dispatch(EngineAction.UnlinkEngineSessionAction(tab.id))
     }
+
+    @Test
+    fun `SuspendEngineSessionAction and KillEngineSessionAction process state the same`() {
+        val middleware = SuspendMiddleware(scope)
+
+        val tab = createTab("https://www.mozilla.org", id = "1")
+        val suspendStore = BrowserStore(
+            initialState = BrowserState(tabs = listOf(tab)),
+            middleware = listOf(middleware)
+        )
+        val killStore = BrowserStore(
+            initialState = BrowserState(tabs = listOf(tab)),
+            middleware = listOf(middleware)
+        )
+
+        val engineSession: EngineSession = mock()
+        suspendStore.dispatch(EngineAction.LinkEngineSessionAction(tab.id, engineSession)).joinBlocking()
+        killStore.dispatch(EngineAction.LinkEngineSessionAction(tab.id, engineSession)).joinBlocking()
+
+        val state: EngineSessionState = mock()
+        suspendStore.dispatch(EngineAction.UpdateEngineSessionStateAction(tab.id, state)).joinBlocking()
+        killStore.dispatch(EngineAction.UpdateEngineSessionStateAction(tab.id, state)).joinBlocking()
+
+        suspendStore.dispatch(EngineAction.SuspendEngineSessionAction(tab.id)).joinBlocking()
+        killStore.dispatch(EngineAction.KillEngineSessionAction(tab.id)).joinBlocking()
+
+        suspendStore.waitUntilIdle()
+        killStore.waitUntilIdle()
+        dispatcher.advanceUntilIdle()
+
+        assertNull(suspendStore.state.findTab(tab.id)?.engineState?.engineSession)
+        assertEquals(state, suspendStore.state.findTab(tab.id)?.engineState?.engineSessionState)
+
+        assertNull(killStore.state.findTab(tab.id)?.engineState?.engineSession)
+        assertEquals(state, killStore.state.findTab(tab.id)?.engineState?.engineSessionState)
+
+        assertEquals(suspendStore.state, killStore.state)
+    }
 }

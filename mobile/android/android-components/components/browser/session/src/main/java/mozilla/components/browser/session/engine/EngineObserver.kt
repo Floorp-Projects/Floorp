@@ -392,7 +392,7 @@ internal class EngineObserver(
     }
 
     override fun onProcessKilled() {
-        store?.dispatch(EngineAction.SuspendEngineSessionAction(
+        store?.dispatch(EngineAction.KillEngineSessionAction(
             session.id
         ))
     }

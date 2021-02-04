@@ -17,10 +17,12 @@ import mozilla.components.concept.engine.EngineSessionState
  * used to observe engine events and update the store. It should become obsolete, once the
  * migration to browser state is complete, as the engine will then have direct access to
  * the store.
+ * @property timestamp Timestamp of when the [EngineSession] was linked.
  */
 data class EngineState(
     val engineSession: EngineSession? = null,
     val engineSessionState: EngineSessionState? = null,
     val engineObserver: EngineSession.Observer? = null,
-    val crashed: Boolean = false
+    val crashed: Boolean = false,
+    val timestamp: Long? = null
 )

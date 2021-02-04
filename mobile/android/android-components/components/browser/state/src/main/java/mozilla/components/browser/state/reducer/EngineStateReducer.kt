@@ -17,7 +17,8 @@ internal object EngineStateReducer {
     fun reduce(state: BrowserState, action: EngineAction): BrowserState = when (action) {
         is EngineAction.LinkEngineSessionAction -> state.copyWithEngineState(action.sessionId) {
             it.copy(
-                engineSession = action.engineSession
+                engineSession = action.engineSession,
+                timestamp = action.timestamp
             )
         }
         is EngineAction.UnlinkEngineSessionAction -> state.copyWithEngineState(action.sessionId) {
@@ -48,6 +49,7 @@ internal object EngineStateReducer {
         is EngineAction.GoToHistoryIndexAction,
         is EngineAction.ToggleDesktopModeAction,
         is EngineAction.ExitFullScreenModeAction,
+        is EngineAction.KillEngineSessionAction,
         is EngineAction.ClearDataAction -> {
             throw IllegalStateException("You need to add EngineMiddleware to your BrowserStore. ($action)")
         }

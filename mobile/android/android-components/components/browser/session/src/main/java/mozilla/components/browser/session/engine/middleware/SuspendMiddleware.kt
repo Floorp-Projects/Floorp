@@ -32,18 +32,18 @@ internal class SuspendMiddleware(
         next: (BrowserAction) -> Unit,
         action: BrowserAction
     ) {
-        if (action is EngineAction.SuspendEngineSessionAction) {
-            suspend(context, action)
-        } else {
-            next(action)
+        when (action) {
+            is EngineAction.SuspendEngineSessionAction -> suspend(context, action.sessionId)
+            is EngineAction.KillEngineSessionAction -> suspend(context, action.sessionId)
+            else -> next(action)
         }
     }
 
     private fun suspend(
         context: MiddlewareContext<BrowserState, BrowserAction>,
-        action: EngineAction.SuspendEngineSessionAction
+        sessionId: String
     ) {
-        val tab = context.state.findTab(action.sessionId) ?: return
+        val tab = context.state.findTab(sessionId) ?: return
 
         // First we unlink (which clearsEngineSession and state)
         context.dispatch(EngineAction.UnlinkEngineSessionAction(
