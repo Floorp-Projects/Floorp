@@ -434,6 +434,20 @@ namespace widget {
 NS_IMPL_ISUPPORTS(GeckoEditableSupport, TextEventDispatcherListener,
                   nsISupportsWeakReference)
 
+// This is the blocker helper class whether disposing GeckoEditableChild now.
+// During JNI call from GeckoEditableChild, we shouldn't dispose it.
+class MOZ_RAII AutoGeckoEditableBlocker final {
+ public:
+  explicit AutoGeckoEditableBlocker(GeckoEditableSupport* aGeckoEditableSupport)
+      : mGeckoEditable(aGeckoEditableSupport) {
+    mGeckoEditable->AddBlocker();
+  }
+  ~AutoGeckoEditableBlocker() { mGeckoEditable->ReleaseBlocker(); }
+
+ private:
+  RefPtr<GeckoEditableSupport> mGeckoEditable;
+};
+
 RefPtr<TextComposition> GeckoEditableSupport::GetComposition() const {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   return widget ? IMEStateManager::GetTextCompositionFor(widget) : nullptr;
@@ -459,6 +473,8 @@ void GeckoEditableSupport::OnKeyEvent(int32_t aAction, int32_t aKeyCode,
                                       int32_t aRepeatCount, int32_t aFlags,
                                       bool aIsSynthesizedImeKey,
                                       jni::Object::Param aOriginalEvent) {
+  AutoGeckoEditableBlocker blocker(this);
+
   nsCOMPtr<nsIWidget> widget = GetWidget();
   RefPtr<TextEventDispatcher> dispatcher =
       mDispatcher ? mDispatcher.get()
@@ -541,6 +557,8 @@ void GeckoEditableSupport::OnKeyEvent(int32_t aAction, int32_t aKeyCode,
  */
 void GeckoEditableSupport::SendIMEDummyKeyEvent(nsIWidget* aWidget,
                                                 EventMessage msg) {
+  AutoGeckoEditableBlocker blocker(this);
+
   nsEventStatus status = nsEventStatus_eIgnore;
   MOZ_ASSERT(mDispatcher);
 
@@ -839,6 +857,8 @@ void GeckoEditableSupport::UpdateCompositionRects() {
 }
 
 void GeckoEditableSupport::OnImeSynchronize() {
+  AutoGeckoEditableBlocker blocker(this);
+
   if (mIMEDelaySynchronizeReply) {
     // If we are waiting for other events to reply,
     // queue this reply as well.
@@ -853,6 +873,8 @@ void GeckoEditableSupport::OnImeSynchronize() {
 
 void GeckoEditableSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
                                             jni::String::Param aText) {
+  AutoGeckoEditableBlocker blocker(this);
+
   if (DoReplaceText(aStart, aEnd, aText)) {
     mIMEDelaySynchronizeReply = true;
   }
@@ -1030,6 +1052,8 @@ void GeckoEditableSupport::OnImeAddCompositionRange(
     int32_t aStart, int32_t aEnd, int32_t aRangeType, int32_t aRangeStyle,
     int32_t aRangeLineStyle, bool aRangeBoldLine, int32_t aRangeForeColor,
     int32_t aRangeBackColor, int32_t aRangeLineColor) {
+  AutoGeckoEditableBlocker blocker(this);
+
   if (mIMEMaskEventsCount > 0) {
     // Not focused.
     return;
@@ -1053,6 +1077,8 @@ void GeckoEditableSupport::OnImeAddCompositionRange(
 
 void GeckoEditableSupport::OnImeUpdateComposition(int32_t aStart, int32_t aEnd,
                                                   int32_t aFlags) {
+  AutoGeckoEditableBlocker blocker(this);
+
   if (DoUpdateComposition(aStart, aEnd, aFlags)) {
     mIMEDelaySynchronizeReply = true;
   }
@@ -1156,6 +1182,8 @@ bool GeckoEditableSupport::DoUpdateComposition(int32_t aStart, int32_t aEnd,
 }
 
 void GeckoEditableSupport::OnImeRequestCursorUpdates(int aRequestMode) {
+  AutoGeckoEditableBlocker blocker(this);
+
   if (aRequestMode == EditableClient::ONE_SHOT) {
     UpdateCompositionRects();
     return;
@@ -1211,6 +1239,8 @@ class MOZ_STACK_CLASS AutoSelectionRestore final {
 };
 
 void GeckoEditableSupport::OnImeRequestCommit() {
+  AutoGeckoEditableBlocker blocker(this);
+
   if (mIMEMaskEventsCount > 0) {
     // Not focused.
     return;
@@ -1478,6 +1508,8 @@ InputContext GeckoEditableSupport::GetInputContext() {
 }
 
 void GeckoEditableSupport::TransferParent(jni::Object::Param aEditableParent) {
+  AutoGeckoEditableBlocker blocker(this);
+
   mEditable->SetParent(aEditableParent);
 
   // If we are already focused, make sure the new parent has our token
