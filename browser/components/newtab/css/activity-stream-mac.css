@@ -79,6 +79,7 @@ body {
   --newtab-topsites-icon-shadow: inset 0 0 0 1px var(--newtab-inner-box-shadow-color);
   --newtab-topsites-label-color: inherit;
   --newtab-topsites-outer-card-hover: rgba(0, 0, 0, 0.05);
+  --newtab-topsites-context-menu-hover: rgba(0, 0, 0, 0.05);
   --newtab-card-active-outline-color: #D7D7DB;
   --newtab-card-background-color: #FFF;
   --newtab-card-hairline-color: rgba(0, 0, 0, 0.1);
@@ -159,6 +160,7 @@ body {
     --newtab-topsites-icon-shadow: none;
     --newtab-topsites-label-color: rgba(249, 249, 250, 0.8);
     --newtab-topsites-outer-card-hover: rgba(180, 180, 180, 0.1);
+    --newtab-topsites-context-menu-hover: rgba(180, 180, 180, 0.1);
     --newtab-card-active-outline-color: #4A4A4F;
     --newtab-card-background-color: #38383D;
     --newtab-card-hairline-color: rgba(249, 249, 250, 0.1);
@@ -524,7 +526,7 @@ main {
 .personalize-button {
   font-size: 12px;
   font-weight: 600;
-  border: 1px solid transparent;
+  border: 0;
   border-radius: 4px;
   background-color: var(--newtab-background-button-color);
   color: var(--newtab-background-button-text-color);
@@ -536,9 +538,9 @@ main {
   .personalize-button:active {
     background-color: var(--newtab-background-button-active-color); }
   .personalize-button:focus-visible {
-    border-color: var(--newtab-focus-border);
+    border: 0;
     outline: 0;
-    box-shadow: 0 0 0 2px var(--newtab-focus-outline); }
+    box-shadow: 0 0 0 3px var(--newtab-focus-outline), 0 0 0 1px var(--newtab-focus-border); }
 
 .as-error-fallback {
   align-items: center;
@@ -640,8 +642,7 @@ main {
     font-size: 32px;
     font-weight: 200;
     justify-content: center;
-    text-transform: uppercase;
-    transition: box-shadow 150ms; }
+    text-transform: uppercase; }
     .top-site-outer .tile .icon-wrapper {
       border-radius: 4px;
       width: 48px;
@@ -966,7 +967,8 @@ main {
 
 .outer-wrapper:not(.newtab-experience) .top-site-outer .tile {
   height: 96px;
-  width: 96px; }
+  width: 96px;
+  transition: box-shadow 150ms; }
 
 .outer-wrapper:not(.newtab-experience) .top-site-outer .top-site-icon {
   box-shadow: var(--newtab-topsites-icon-shadow); }
@@ -1041,16 +1043,22 @@ main {
   .outer-wrapper.newtab-experience .top-site-outer .context-menu-button {
     background-image: url("chrome://global/skin/icons/more.svg");
     border: 0;
+    border-radius: 4px;
     cursor: pointer;
     fill: var(--newtab-icon-primary-color);
+    -moz-context-properties: fill;
     height: 20px;
+    width: 20px;
     inset-inline-end: -9px;
     opacity: 0;
     position: absolute;
     top: -20px;
     transition: opacity 200ms; }
     .outer-wrapper.newtab-experience .top-site-outer .context-menu-button:is(:active, :focus) {
-      opacity: 1; }
+      outline: 0;
+      opacity: 1;
+      background-color: var(--newtab-topsites-context-menu-hover);
+      fill: var(--newtab-primary-action-background); }
   .outer-wrapper.newtab-experience .top-site-outer .edit-button {
     background-image: url("chrome://activity-stream/content/data/content/assets/glyph-edit-16.svg"); }
   .outer-wrapper.newtab-experience .top-site-outer .tile {
@@ -1058,7 +1066,6 @@ main {
     box-shadow: 0 3px 8px var(--newtab-inner-box-shadow-color-nte), 0 0 2px var(--newtab-tile-shadow-secondary);
     background-color: var(--newtab-topsites-background-color);
     justify-content: center;
-    transition: box-shadow 150ms;
     margin: 0 auto;
     height: 80px;
     width: 80px; }
@@ -1877,11 +1884,27 @@ main {
 
 .outer-wrapper.newtab-experience .card-outer {
   border-radius: 8px; }
+  .outer-wrapper.newtab-experience .card-outer:is(:focus):not(.placeholder) {
+    border: 0;
+    outline: 0;
+    box-shadow: 0 0 0 3px var(--newtab-focus-outline), 0 0 0 1px var(--newtab-focus-border);
+    transition: none; }
+  .outer-wrapper.newtab-experience .card-outer:hover {
+    box-shadow: none;
+    transition: none; }
   .outer-wrapper.newtab-experience .card-outer .card {
     box-shadow: 0 3px 8px var(--newtab-card-first-shadow), 0 0 2px var(--newtab-card-second-shadow);
     border-radius: 8px; }
   .outer-wrapper.newtab-experience .card-outer .card-preview-image-outer {
     border-radius: 8px 8px 0 0; }
+  .outer-wrapper.newtab-experience .card-outer .context-menu-button:is(:active, :focus) {
+    outline: 0;
+    fill: var(--newtab-primary-action-background);
+    border: 1px solid var(--newtab-primary-action-background); }
+  .outer-wrapper.newtab-experience .card-outer > a:is(:focus) .card {
+    border: 0;
+    outline: 0;
+    box-shadow: 0 0 0 3px var(--newtab-focus-outline), 0 0 0 1px var(--newtab-focus-border); }
 
 .outer-wrapper:not(.newtab-experience) .card-outer:is(:hover, :focus, .active):not(.placeholder) {
   box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
@@ -2512,9 +2535,10 @@ main {
     border-radius: 8px 8px 0 0; }
 
 .outer-wrapper.newtab-experience .ds-card-grid .ds-card-link:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--newtab-focus-outline);
-  border: 1px solid var(--newtab-focus-border);
+  border: 0;
+  outline: 0;
+  box-shadow: 0 0 0 3px var(--newtab-focus-outline), 0 0 0 1px var(--newtab-focus-border);
+  transition: none;
   border-radius: 8px; }
 
 .ds-card-grid {
@@ -3182,16 +3206,10 @@ main {
 .outer-wrapper:not(.newtab-experience) .ds-top-sites .top-sites .top-sites-list {
   margin: 0 -12px; }
 
-.outer-wrapper.newtab-experience .ds-top-sites .top-sites .top-site-outer .top-site-inner > a:is(.active, :focus) .top-site-inner {
-  box-shadow: 0 0 0 5px rgba(10, 132, 255, 0.3);
-  transition: box-shadow 150ms;
-  border-radius: 4px;
-  outline: none; }
-  [lwt-newtab-brighttext] .outer-wrapper.newtab-experience .ds-top-sites .top-sites .top-site-outer .top-site-inner > a:is(.active, :focus) .top-site-inner {
-    box-shadow: 0 0 0 5px rgba(69, 161, 255, 0.4);
-    transition: box-shadow 150ms;
-    border-radius: 4px;
-    outline: none; }
+.outer-wrapper.newtab-experience .ds-top-sites .top-sites .top-site-outer .top-site-inner > a:is(.active, :focus) .tile {
+  border: 0;
+  outline: 0;
+  box-shadow: 0 0 0 3px var(--newtab-focus-outline), 0 0 0 1px var(--newtab-focus-border); }
 
 .outer-wrapper.newtab-experience .ds-top-sites .top-sites .top-site-outer .top-site-inner > a:is(:hover) .top-site-inner {
   box-shadow: 0 0 0 5px #D7D7DB;
@@ -3528,6 +3546,21 @@ main {
     margin: 0; }
     [lwt-newtab-brighttext] .ds-card p {
       color: #F9F9FA; }
+
+.outer-wrapper.newtab-experience .ds-card .context-menu-button:is(:active, :focus) {
+  outline: 0;
+  fill: var(--newtab-primary-action-background);
+  border: 1px solid var(--newtab-primary-action-background); }
+
+.outer-wrapper.newtab-experience .ds-card .ds-card-link:focus {
+  border: 0;
+  outline: 0;
+  box-shadow: 0 0 0 3px var(--newtab-focus-outline), 0 0 0 1px var(--newtab-focus-border);
+  transition: none; }
+  .outer-wrapper.newtab-experience .ds-card .ds-card-link:focus header {
+    color: #0060DF; }
+    [lwt-newtab-brighttext] .outer-wrapper.newtab-experience .ds-card .ds-card-link:focus header {
+      color: #45A1FF; }
 
 .story-footer {
   color: var(--newtab-text-secondary-color);

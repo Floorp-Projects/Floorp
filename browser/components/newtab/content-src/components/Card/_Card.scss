@@ -1,6 +1,19 @@
+// Special styling for the New Tab Experience styles,
+// This is to be incorporated once the styles are made permanent
 .outer-wrapper.newtab-experience {
   .card-outer {
     border-radius: $border-radius-new;
+
+    &:is(:focus):not(.placeholder) {
+      @include ds-focus-nte;
+
+      transition: none;
+    }
+
+    &:hover {
+      box-shadow: none;
+      transition: none;
+    }
 
     .card {
       box-shadow: 0 3px 8px var(--newtab-card-first-shadow), 0 0 2px var(--newtab-card-second-shadow);
@@ -9,6 +22,23 @@
 
     .card-preview-image-outer {
       border-radius: $border-radius-new $border-radius-new 0 0;
+    }
+
+    // Temporary fix to have the context button focus blend in with other New Tab Experience context menu focus
+    .context-menu-button {
+      &:is(:active, :focus) {
+        outline: 0;
+        fill: var(--newtab-primary-action-background);
+        border: 1px solid var(--newtab-primary-action-background);
+      }
+    }
+
+    > a {
+      &:is(:focus) {
+        .card {
+          @include ds-focus-nte;
+        }
+      }
     }
   }
 }

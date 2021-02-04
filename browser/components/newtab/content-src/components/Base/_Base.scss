@@ -157,7 +157,7 @@ main {
 .personalize-button {
   font-size: 12px;
   font-weight: 600;
-  border: 1px solid transparent;
+  border: 0;
   border-radius: 4px;
   background-color: var(--newtab-background-button-color);
   color: var(--newtab-background-button-text-color);
@@ -174,8 +174,6 @@ main {
   }
 
   &:focus-visible {
-    border-color: var(--newtab-focus-border);
-    outline: 0;
-    box-shadow: 0 0 0 2px var(--newtab-focus-outline);
+    @include ds-focus-nte;
   }
 }
