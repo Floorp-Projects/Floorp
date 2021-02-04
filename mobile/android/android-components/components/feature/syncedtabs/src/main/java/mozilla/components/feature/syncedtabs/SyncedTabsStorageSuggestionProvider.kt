@@ -12,6 +12,7 @@ import mozilla.components.concept.sync.DeviceType
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.syncedtabs.storage.SyncedTabsStorage
 import mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Flag
+import mozilla.components.feature.syncedtabs.facts.emitSyncedTabSuggestionClickedFact
 import java.util.UUID
 
 /**
@@ -72,7 +73,10 @@ class SyncedTabsStorageSuggestionProvider(
                 flags = setOf(Flag.SYNC_TAB),
                 title = result.tab.title,
                 description = result.clientName,
-                onSuggestionClicked = { loadUrlUseCase.invoke(result.tab.url) }
+                onSuggestionClicked = {
+                    loadUrlUseCase.invoke(result.tab.url)
+                    emitSyncedTabSuggestionClickedFact()
+                }
             )
         }
     }

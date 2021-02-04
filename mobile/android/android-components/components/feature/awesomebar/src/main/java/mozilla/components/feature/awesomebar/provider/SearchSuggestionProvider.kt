@@ -16,6 +16,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.isSuccess
+import mozilla.components.feature.awesomebar.facts.emitSearchSuggestionClickedFact
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlin.sanitizeURL
@@ -220,6 +221,7 @@ class SearchSuggestionProvider private constructor(
             icon = icon ?: client.searchEngine?.icon,
             onChipClicked = { chip ->
                 searchUseCase.invoke(chip.title)
+                emitSearchSuggestionClickedFact()
             }
         ))
     }

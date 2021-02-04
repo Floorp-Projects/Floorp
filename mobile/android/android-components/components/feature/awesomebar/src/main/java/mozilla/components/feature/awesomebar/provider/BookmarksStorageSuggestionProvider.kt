@@ -11,6 +11,7 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarksStorage
+import mozilla.components.feature.awesomebar.facts.emitBookmarkSuggestionClickedFact
 import mozilla.components.feature.session.SessionUseCases
 import java.util.UUID
 
@@ -70,7 +71,10 @@ class BookmarksStorageSuggestionProvider(
                 title = result.title,
                 description = result.url,
                 editSuggestion = result.url,
-                onSuggestionClicked = { loadUrlUseCase.invoke(result.url!!) }
+                onSuggestionClicked = {
+                    loadUrlUseCase.invoke(result.url!!)
+                    emitBookmarkSuggestionClickedFact()
+                }
             )
         }
     }

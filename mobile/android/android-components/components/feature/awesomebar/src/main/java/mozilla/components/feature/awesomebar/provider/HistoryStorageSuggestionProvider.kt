@@ -10,6 +10,7 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.SearchResult
+import mozilla.components.feature.awesomebar.facts.emitHistorySuggestionClickedFact
 import mozilla.components.feature.session.SessionUseCases
 import java.util.UUID
 
@@ -68,7 +69,10 @@ class HistoryStorageSuggestionProvider(
                 description = result.url,
                 editSuggestion = result.url,
                 score = result.score,
-                onSuggestionClicked = { loadUrlUseCase.invoke(result.url) }
+                onSuggestionClicked = {
+                    loadUrlUseCase.invoke(result.url)
+                    emitHistorySuggestionClickedFact()
+                }
             )
         }
     }

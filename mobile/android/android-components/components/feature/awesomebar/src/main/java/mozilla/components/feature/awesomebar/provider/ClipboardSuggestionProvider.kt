@@ -13,6 +13,7 @@ import androidx.core.graphics.drawable.toBitmap
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.awesomebar.R
+import mozilla.components.feature.awesomebar.facts.emitClipboardSuggestionClickedFact
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.utils.WebURLFinder
 import java.util.UUID
@@ -67,6 +68,7 @@ class ClipboardSuggestionProvider(
             title = title,
             onSuggestionClicked = {
                 loadUrlUseCase.invoke(url)
+                emitClipboardSuggestionClickedFact()
             }
         ))
     }

@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import mozilla.components.browser.search.DefaultSearchEngineProvider
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.concept.awesomebar.AwesomeBar
+import mozilla.components.feature.awesomebar.facts.emitSearchActionClickedFact
 import mozilla.components.feature.search.SearchUseCases
 
 private const val FIXED_ID = "@@@search.action.provider.fixed.id@@"
@@ -42,6 +43,7 @@ class SearchActionProvider(
             score = Int.MAX_VALUE,
             onSuggestionClicked = {
                 searchUseCase.invoke(text)
+                emitSearchActionClickedFact()
             }
         ))
     }
