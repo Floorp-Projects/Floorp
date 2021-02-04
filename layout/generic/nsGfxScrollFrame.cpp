@@ -2606,12 +2606,26 @@ static void RemoveDisplayPortCallback(nsITimer* aTimer, void* aClosure) {
   // happens between actual painting. If the displayport is reset to a
   // different position that's ok; this scrollframe hasn't been scrolled
   // recently and so the reset should be correct.
-  DisplayPortUtils::RemoveDisplayPort(helper->mOuter->GetContent());
+
+  nsIContent* content = helper->mOuter->GetContent();
+
+  if (ScrollFrameHelper::ShouldActivateAllScrollFrames()) {
+    // If we are activating all scroll frames then we only want to remove the
+    // regular display port and downgrade to a minimal display port.
+    MOZ_ASSERT(!content->GetProperty(nsGkAtoms::MinimalDisplayPort));
+    content->SetProperty(nsGkAtoms::MinimalDisplayPort,
+                         reinterpret_cast<void*>(true));
+  } else {
+    content->RemoveProperty(nsGkAtoms::MinimalDisplayPort);
+    DisplayPortUtils::RemoveDisplayPort(content);
+    // Be conservative and unflag this this scrollframe as being scrollable by
+    // APZ. If it is still scrollable this will get flipped back soon enough.
+    helper->mScrollableByAPZ = false;
+  }
+
   DisplayPortUtils::ExpireDisplayPortOnAsyncScrollableAncestor(helper->mOuter);
+
   helper->mOuter->SchedulePaint();
-  // Be conservative and unflag this this scrollframe as being scrollable by
-  // APZ. If it is still scrollable this will get flipped back soon enough.
-  helper->mScrollableByAPZ = false;
 }
 
 void ScrollFrameHelper::MarkEverScrolled() {
@@ -2664,6 +2678,10 @@ bool ScrollFrameHelper::AllowDisplayPortExpiration() {
     return false;
   }
   if (mIsRoot && mOuter->PresContext()->IsRoot()) {
+    return false;
+  }
+  if (ShouldActivateAllScrollFrames() &&
+      mOuter->GetContent()->GetProperty(nsGkAtoms::MinimalDisplayPort)) {
     return false;
   }
   return true;
