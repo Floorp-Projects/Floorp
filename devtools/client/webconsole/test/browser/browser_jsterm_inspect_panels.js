@@ -42,9 +42,7 @@ async function testInspectingFunction(hud) {
 
   info("Test `inspect(test_mangled)`");
   execute(hud, "inspect(test_mangled)");
-  await waitFor(
-    expectedSourceSelected("test-mangled-function.js/originalSource-", 3)
-  );
+  await waitFor(expectedSourceSelected("test-mangled-function.js", 3, true));
   ok(true, "inspected source-mapped function is now selected in the debugger");
 
   info("Test `inspect(test_bound)`");
@@ -52,7 +50,11 @@ async function testInspectingFunction(hud) {
   await waitFor(expectedSourceSelected("test-simple-function.js", 7));
   ok(true, "inspected bound target function is now selected in the debugger");
 
-  function expectedSourceSelected(sourceFilename, sourceLine) {
+  function expectedSourceSelected(
+    sourceFilename,
+    sourceLine,
+    isOriginalSource
+  ) {
     return () => {
       const dbg = hud.toolbox.getPanel("jsdebugger");
       if (!dbg) {
@@ -64,6 +66,13 @@ async function testInspectingFunction(hud) {
       );
 
       if (!selectedLocation) {
+        return false;
+      }
+
+      if (
+        isOriginalSource &&
+        !selectedLocation.sourceId.includes("/originalSource-")
+      ) {
         return false;
       }
 

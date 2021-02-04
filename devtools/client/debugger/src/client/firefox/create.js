@@ -20,15 +20,13 @@ export function prepareSourcePayload(
   threadFront: ThreadFront,
   source: SourcePayload
 ): GeneratedSourceData {
-  const { isServiceWorker } = threadFront.parentFront;
-
   // We populate the set of sources as soon as we hear about them. Note that
   // this means that we have seen an actor, but it might still be in the
   // debounced queue for creation, so the Redux store itself might not have
   // a source actor with this ID yet.
   clientCommands.registerSourceActor(
     source.actor,
-    makeSourceId(source, isServiceWorker)
+    makeSourceId(source, threadFront.actor)
   );
 
   source = { ...source };
@@ -44,7 +42,7 @@ export function prepareSourcePayload(
     delete (source: any).introductionUrl;
   }
 
-  return { thread: threadFront.actor, isServiceWorker, source };
+  return { thread: threadFront.actor, source };
 }
 
 export function createFrame(
@@ -77,15 +75,16 @@ export function createFrame(
   };
 }
 
-export function makeSourceId(source: SourcePayload, isServiceWorker: boolean) {
+export function makeSourceId(source: SourcePayload, threadActorId: ThreadId) {
   // Source actors with the same URL will be given the same source ID and
   // grouped together under the same source in the client. There is an exception
-  // for sources from service workers, where there may be multiple service
-  // worker threads running at the same time which use different versions of the
-  // same URL.
-  return source.url && !isServiceWorker
-    ? `sourceURL-${source.url}`
-    : `source-${source.actor}`;
+  // for sources from distinct target types, where there may be multiple processes/threads
+  // running at the same time which use different versions of the same URL.
+  const target = clientCommands.lookupTarget(threadActorId);
+  if (target.isTopLevel && source.url) {
+    return `source-${source.url}`;
+  }
+  return `source-${source.actor}`;
 }
 
 export function createPause(thread: string, packet: PausedPacket): any {
