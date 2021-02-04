@@ -378,6 +378,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
  public:
   bool IsScrollbarOnRight() const;
   bool IsScrollingActive(nsDisplayListBuilder* aBuilder) const;
+  bool IsScrollingActiveNotMinimalDisplayPort(
+      nsDisplayListBuilder* aBuilder) const;
   bool IsMaybeAsynchronouslyScrolled() const {
     // If this is true, then we'll build an ASR, and that's what we want
     // to know I think.
@@ -1042,6 +1044,10 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   bool IsScrollingActive(nsDisplayListBuilder* aBuilder) final {
     return mHelper.IsScrollingActive(aBuilder);
   }
+  bool IsScrollingActiveNotMinimalDisplayPort(
+      nsDisplayListBuilder* aBuilder) final {
+    return mHelper.IsScrollingActiveNotMinimalDisplayPort(aBuilder);
+  }
   bool IsMaybeScrollingActive() const final {
     return mHelper.IsMaybeScrollingActive();
   }
@@ -1524,6 +1530,10 @@ class nsXULScrollFrame final : public nsBoxFrame,
   }
   bool IsScrollingActive(nsDisplayListBuilder* aBuilder) final {
     return mHelper.IsScrollingActive(aBuilder);
+  }
+  bool IsScrollingActiveNotMinimalDisplayPort(
+      nsDisplayListBuilder* aBuilder) final {
+    return mHelper.IsScrollingActiveNotMinimalDisplayPort(aBuilder);
   }
   bool IsMaybeScrollingActive() const final {
     return mHelper.IsMaybeScrollingActive();

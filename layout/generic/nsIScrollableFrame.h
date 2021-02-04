@@ -382,6 +382,13 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   virtual bool IsScrollingActive(nsDisplayListBuilder* aBuilder) = 0;
 
   /**
+   * The same as IsScrollingActive but minimal display ports are not considered
+   * active.
+   */
+  virtual bool IsScrollingActiveNotMinimalDisplayPort(
+      nsDisplayListBuilder* aBuilder) = 0;
+
+  /**
    * Returns true if this scroll frame might be scrolled
    * asynchronously by the compositor.
    */

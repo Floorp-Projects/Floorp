@@ -3004,6 +3004,7 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
   bool schedulePaint = true;
   if (nsLayoutUtils::AsyncPanZoomEnabled(mOuter) &&
       !nsLayoutUtils::ShouldDisableApzForElement(content) &&
+      !content->GetProperty(nsGkAtoms::MinimalDisplayPort) &&
       StaticPrefs::apz_paint_skipping_enabled()) {
     // If APZ is enabled with paint-skipping, there are certain conditions in
     // which we can skip paints:
@@ -4703,11 +4704,12 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit,
     AppendScrollUpdate(
         ScrollPositionUpdate::NewPureRelativeScroll(aOrigin, aMode, delta));
 
-    if (!DisplayPortUtils::HasDisplayPort(mOuter->GetContent())) {
+    nsIContent* content = mOuter->GetContent();
+    if (!DisplayPortUtils::HasNonMinimalDisplayPort(content)) {
       if (MOZ_LOG_TEST(sDisplayportLog, LogLevel::Debug)) {
         mozilla::layers::ScrollableLayerGuid::ViewID viewID =
             mozilla::layers::ScrollableLayerGuid::NULL_SCROLL_ID;
-        nsLayoutUtils::FindIDFor(mOuter->GetContent(), &viewID);
+        nsLayoutUtils::FindIDFor(content, &viewID);
         MOZ_LOG(
             sDisplayportLog, LogLevel::Debug,
             ("ScrollBy setting displayport on scrollId=%" PRIu64 "\n", viewID));
@@ -5972,6 +5974,20 @@ bool ScrollFrameHelper::IsScrollingActive(
   nsIContent* content = mOuter->GetContent();
   return mHasBeenScrolledRecently || IsAlwaysActive() ||
          DisplayPortUtils::HasDisplayPort(content) ||
+         nsContentUtils::HasScrollgrab(content);
+}
+
+bool ScrollFrameHelper::IsScrollingActiveNotMinimalDisplayPort(
+    nsDisplayListBuilder* aBuilder) const {
+  const nsStyleDisplay* disp = mOuter->StyleDisplay();
+  if (disp->mWillChange.bits & StyleWillChangeBits::SCROLL &&
+      aBuilder->IsInWillChangeBudget(mOuter, GetVisualViewportSize())) {
+    return true;
+  }
+
+  nsIContent* content = mOuter->GetContent();
+  return mHasBeenScrolledRecently || IsAlwaysActive() ||
+         DisplayPortUtils::HasNonMinimalDisplayPort(content) ||
          nsContentUtils::HasScrollgrab(content);
 }
 
@@ -7797,7 +7813,8 @@ void ScrollFrameHelper::ApzSmoothScrollTo(const nsPoint& aDestination,
   AppendScrollUpdate(
       ScrollPositionUpdate::NewSmoothScroll(aOrigin, aDestination));
 
-  if (!DisplayPortUtils::HasDisplayPort(mOuter->GetContent())) {
+  nsIContent* content = mOuter->GetContent();
+  if (!DisplayPortUtils::HasNonMinimalDisplayPort(content)) {
     // If this frame doesn't have a displayport then there won't be an
     // APZC instance for it and so there won't be anything to process
     // this smooth scroll request. We should set a displayport on this
@@ -7805,7 +7822,7 @@ void ScrollFrameHelper::ApzSmoothScrollTo(const nsPoint& aDestination,
     if (MOZ_LOG_TEST(sDisplayportLog, LogLevel::Debug)) {
       mozilla::layers::ScrollableLayerGuid::ViewID viewID =
           mozilla::layers::ScrollableLayerGuid::NULL_SCROLL_ID;
-      nsLayoutUtils::FindIDFor(mOuter->GetContent(), &viewID);
+      nsLayoutUtils::FindIDFor(content, &viewID);
       MOZ_LOG(
           sDisplayportLog, LogLevel::Debug,
           ("ApzSmoothScrollTo setting displayport on scrollId=%" PRIu64 "\n",
