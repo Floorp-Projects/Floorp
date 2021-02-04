@@ -10,6 +10,8 @@
 #include "js/ArrayBuffer.h"
 #include "js/ArrayBufferMaybeShared.h"
 #include "js/experimental/TypedData.h"
+#include "js/SharedArrayBuffer.h"
+
 #include "jsapi-tests/tests.h"
 
 using namespace js;
@@ -133,3 +135,22 @@ BEGIN_TEST(testLargeArrayBuffers) {
   return true;
 }
 END_TEST(testLargeArrayBuffers)
+
+BEGIN_TEST(testLargeSharedArrayBuffers) {
+#ifdef JS_64BIT
+  constexpr size_t nbytes = size_t(5) * 1024 * 1024 * 1024;  // 5 GB.
+
+  RootedObject buffer(cx, JS::NewSharedArrayBuffer(cx, nbytes));
+  CHECK(JS::IsSharedArrayBufferObject(buffer));
+  CHECK_EQUAL(GetSharedArrayBufferByteLength(buffer), nbytes);
+
+  size_t length;
+  bool isShared;
+  uint8_t* data;
+  JS::GetSharedArrayBufferLengthAndData(buffer, &length, &isShared, &data);
+  CHECK_EQUAL(length, nbytes);
+#endif
+
+  return true;
+}
+END_TEST(testLargeSharedArrayBuffers)

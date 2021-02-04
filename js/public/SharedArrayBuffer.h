@@ -9,7 +9,7 @@
 #define js_SharedArrayBuffer_h
 
 #include <stddef.h>  // size_t
-#include <stdint.h>  // uint32_t
+#include <stdint.h>  // uint8_t
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
@@ -29,7 +29,7 @@ namespace JS {
  * true.
  */
 extern JS_PUBLIC_API JSObject* NewSharedArrayBuffer(JSContext* cx,
-                                                    uint32_t nbytes);
+                                                    size_t nbytes);
 
 // TYPE TESTING
 
@@ -45,7 +45,7 @@ extern JS_PUBLIC_API bool IsSharedArrayBufferObject(JSObject* obj);
 
 extern JS_PUBLIC_API JSObject* UnwrapSharedArrayBuffer(JSObject* obj);
 
-extern JS_PUBLIC_API uint32_t GetSharedArrayBufferByteLength(JSObject* obj);
+extern JS_PUBLIC_API size_t GetSharedArrayBufferByteLength(JSObject* obj);
 
 extern JS_PUBLIC_API uint8_t* GetSharedArrayBufferData(JSObject* obj,
                                                        bool* isSharedMemory,
@@ -56,7 +56,7 @@ extern JS_PUBLIC_API uint8_t* GetSharedArrayBufferData(JSObject* obj,
 // There is an isShared out argument for API consistency (eases use from DOM).
 // It will always be set to true.
 extern JS_PUBLIC_API void GetSharedArrayBufferLengthAndData(
-    JSObject* obj, uint32_t* length, bool* isSharedMemory, uint8_t** data);
+    JSObject* obj, size_t* length, bool* isSharedMemory, uint8_t** data);
 
 /**
  * Returns true if there are any live SharedArrayBuffer objects, including those

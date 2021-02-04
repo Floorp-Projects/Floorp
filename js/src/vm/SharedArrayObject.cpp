@@ -431,28 +431,31 @@ SharedArrayBufferObject& js::AsSharedArrayBuffer(HandleObject obj) {
   return obj->as<SharedArrayBufferObject>();
 }
 
-JS_FRIEND_API uint32_t JS::GetSharedArrayBufferByteLength(JSObject* obj) {
+JS_FRIEND_API size_t JS::GetSharedArrayBufferByteLength(JSObject* obj) {
   auto* aobj = obj->maybeUnwrapAs<SharedArrayBufferObject>();
-  return aobj ? aobj->byteLength().deprecatedGetUint32() : 0;
+  return aobj ? aobj->byteLength().get() : 0;
 }
 
 JS_FRIEND_API void JS::GetSharedArrayBufferLengthAndData(JSObject* obj,
-                                                         uint32_t* length,
+                                                         size_t* length,
                                                          bool* isSharedMemory,
                                                          uint8_t** data) {
   MOZ_ASSERT(obj->is<SharedArrayBufferObject>());
-  *length =
-      obj->as<SharedArrayBufferObject>().byteLength().deprecatedGetUint32();
+  *length = obj->as<SharedArrayBufferObject>().byteLength().get();
   *data = obj->as<SharedArrayBufferObject>().dataPointerShared().unwrap(
       /*safe - caller knows*/);
   *isSharedMemory = true;
 }
 
-JS_FRIEND_API JSObject* JS::NewSharedArrayBuffer(JSContext* cx,
-                                                 uint32_t nbytes) {
+JS_FRIEND_API JSObject* JS::NewSharedArrayBuffer(JSContext* cx, size_t nbytes) {
   MOZ_ASSERT(cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled());
 
-  MOZ_ASSERT(nbytes <= INT32_MAX);
+  if (nbytes > ArrayBufferObject::maxBufferByteLength()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_SHARED_ARRAY_BAD_LENGTH);
+    return nullptr;
+  }
+
   return SharedArrayBufferObject::New(cx, BufferSize(nbytes),
                                       /* proto = */ nullptr);
 }

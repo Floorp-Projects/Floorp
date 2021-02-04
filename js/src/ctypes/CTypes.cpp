@@ -3642,15 +3642,15 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
           // Check that array is consistent with type, then
           // copy the array.
           const bool bufferShared = cls == ESClass::SharedArrayBuffer;
-          uint32_t sourceLength =
-              bufferShared ? JS::GetSharedArrayBufferByteLength(valObj)
-                           : JS::GetArrayBufferByteLength(valObj);
+          size_t sourceLength = bufferShared
+                                    ? JS::GetSharedArrayBufferByteLength(valObj)
+                                    : JS::GetArrayBufferByteLength(valObj);
           size_t elementSize = CType::GetSize(baseType);
           size_t arraySize = elementSize * targetLength;
-          if (arraySize != size_t(sourceLength)) {
+          if (arraySize != sourceLength) {
             MOZ_ASSERT(!funObj);
-            return ArrayLengthMismatch(cx, arraySize, targetType,
-                                       size_t(sourceLength), val, convType);
+            return ArrayLengthMismatch(cx, arraySize, targetType, sourceLength,
+                                       val, convType);
           }
           SharedMem<void*> target = SharedMem<void*>::unshared(buffer);
           JS::AutoCheckCannotGC nogc;
