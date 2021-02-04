@@ -285,10 +285,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1682951
          "race:storage::Connection::Release\n"
 
-         // Bug 1682928
-         "race:EventSourceImpl::OnStopRequest\n"
-         "race:UpdateDontKeepAlive\n"
-
          // Bug 1683357
          "race:image::ImageSurfaceCache::SuggestedSizeInternal\n"
          "race:image::RasterImage::SetMetadata\n"
