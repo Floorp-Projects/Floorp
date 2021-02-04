@@ -1,10 +1,8 @@
-from __future__ import unicode_literals
-
+import io
 import os
 import sys
 
 import mock
-import six
 
 here = os.path.dirname(__file__)
 root = os.path.abspath(os.path.join(here, "..", "..", ".."))
@@ -58,7 +56,7 @@ def test_filter_ignorelist_errors():
 
 
 def test_parse_ignorelist():
-    input_buffer = six.StringIO("""
+    input_buffer = io.StringIO("""
 # Comment
 CR AT EOL: svg/import/*
 CR AT EOL: streams/resources/test-utils.js
