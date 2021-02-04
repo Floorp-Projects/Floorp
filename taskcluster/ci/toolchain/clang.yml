@@ -168,23 +168,18 @@ linux64-clang-11-aarch64-cross:
         symbol: TL(clang11-aarch64)
     worker-type: b-linux
     worker:
-        max-run-time: 5400
-        docker-image: {in-tree: toolchain-arm64-build}
+        max-run-time: 600
     run:
-        using: toolchain-script
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/clang-11-linux64-aarch64-cross.json'
-        resources:
-            - 'build/build-clang/clang-11-linux64-aarch64-cross.json'
+        script: repack-clang-linux-cross.sh
         toolchain-alias: linux64-clang-aarch64-cross
         toolchain-artifact: public/build/clang.tar.zst
+    dependencies:
+        linux64-aarch64-compiler-rt-11: toolchain-linux64-aarch64-compiler-rt-11
     fetches:
-        fetch:
-            - clang-11
         toolchain:
-            - linux64-binutils
-            - linux64-gcc-7
+            - linux64-clang-11
+        linux64-aarch64-compiler-rt-11:
+            - artifact: compiler-rt.tar.zst
 
 linux64-clang-11-macosx-cross:
     description: "Clang 11 toolchain repack with MacOS Compiler RT libs"
