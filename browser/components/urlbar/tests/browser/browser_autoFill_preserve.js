@@ -254,7 +254,7 @@ function checkKeys(testTuples) {
 
 async function cleanUp() {
   EventUtils.synthesizeKey("KEY_Escape");
-  await UrlbarTestUtils.promisePopupClose(window);
+  await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
 }

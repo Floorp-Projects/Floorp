@@ -558,9 +558,13 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       state.canAddTabToSearch = false;
       // We want to record in urlbar.tips once per engagement per engine. Since
       // whether these results are shown is dependent on the Muxer, we must
-      // add to `onboardingEnginesShown` here.
+      // add to `enginesShown` here.
       if (result.payload.dynamicType) {
-        UrlbarProviderTabToSearch.onboardingEnginesShown.add(
+        UrlbarProviderTabToSearch.enginesShown.onboarding.add(
+          result.payload.engine
+        );
+      } else {
+        UrlbarProviderTabToSearch.enginesShown.regular.add(
           result.payload.engine
         );
       }

@@ -6017,6 +6017,42 @@ urlbar:
     record_in_processes:
       - main
 
+urlbar.tabtosearch:
+  impressions:
+    bug_numbers:
+      - 1686330
+    description: >
+      A keyed uint recording how many times non-onboarding tab-to-search results
+      are shown in the Urlbar for a particular search engine.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-in
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  impressions_onboarding:
+    bug_numbers:
+      - 1686330
+    description: >
+      A keyed uint recording how many times onboarding tab-to-search results
+      are shown in the Urlbar for a particular search engine.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search@mozilla.com
+      - tbrooks@mozilla.com
+    release_channel_collection: opt-in
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
 urlbar.picked:
     autofill:
       bug_numbers:

@@ -115,6 +115,9 @@ add_task(async function setup() {
   // test when it selects results in the urlbar.
   await PlacesUtils.history.clear();
 
+  Services.telemetry.clearScalars();
+  Services.telemetry.clearEvents();
+
   // Clear historical search suggestions to avoid interference from previous
   // tests.
   await SpecialPowers.pushPrefEnv({
@@ -525,6 +528,7 @@ add_task(async function test_tabtosearch_onboard() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: engineDomain.slice(0, 4),
+    fireInputEvent: true,
   });
   let tabToSearchResult = (
     await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1)
