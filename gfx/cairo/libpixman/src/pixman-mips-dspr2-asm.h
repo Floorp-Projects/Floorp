@@ -26,7 +26,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * Author:  Nemanja Lukic (nlukic@mips.com)
+ * Author:  Nemanja Lukic (nemanja.lukic@rt-rk.com)
  */
 
 #ifndef PIXMAN_MIPS_DSPR2_ASM_H
@@ -72,6 +72,7 @@
 #define LEAF_MIPS32R2(symbol)                           \
                 .globl  symbol;                         \
                 .align  2;                              \
+                .hidden symbol;                         \
                 .type   symbol, @function;              \
                 .ent    symbol, 0;                      \
 symbol:         .frame  sp, 0, ra;                      \
@@ -354,17 +355,16 @@ LEAF_MIPS32R2(symbol)                                   \
                                 out1_565, out2_565,  \
                                 maskR, maskG, maskB, \
                                 scratch1, scratch2
-    precrq.ph.w       \scratch1, \in2_8888, \in1_8888
-    precr_sra.ph.w    \in2_8888, \in1_8888, 0
-    shll.ph           \scratch1, \scratch1, 8
-    srl               \in2_8888, \in2_8888, 3
-    and               \scratch2, \in2_8888, \maskB
-    and               \scratch1, \scratch1, \maskR
-    srl               \in2_8888, \in2_8888, 2
-    and               \out2_565, \in2_8888, \maskG
-    or                \out2_565, \out2_565, \scratch2
-    or                \out1_565, \out2_565, \scratch1
-    srl               \out2_565, \out1_565, 16
+    precr.qb.ph    \scratch1, \in2_8888, \in1_8888
+    precrq.qb.ph   \in2_8888, \in2_8888, \in1_8888
+    and            \out1_565, \scratch1, \maskR
+    shrl.ph        \scratch1, \scratch1, 3
+    shll.ph        \in2_8888, \in2_8888, 3
+    and            \scratch1, \scratch1, \maskB
+    or             \out1_565, \out1_565, \scratch1
+    and            \in2_8888, \in2_8888, \maskG
+    or             \out1_565, \out1_565, \in2_8888
+    srl            \out2_565, \out1_565, 16
 .endm
 
 /*
@@ -585,6 +585,36 @@ LEAF_MIPS32R2(symbol)                                   \
                        \scratch2, \scratch3, \scratch4
 
     addu_s.qb          \out_8888, \out_8888, \s_8888
+.endm
+
+/*
+ * OVER operation on two a8r8g8b8 source pixels (s1_8888 and s2_8888) and two
+ * a8r8g8b8 destination pixels (d1_8888 and d2_8888). It also requires maskLSR
+ * needed for rounding process. maskLSR must have following value:
+ *   li       maskLSR, 0x00ff00ff
+ */
+.macro OVER_2x8888_2x8888 s1_8888,   \
+                          s2_8888,   \
+                          d1_8888,   \
+                          d2_8888,   \
+                          out1_8888, \
+                          out2_8888, \
+                          maskLSR,   \
+                          scratch1, scratch2, scratch3, \
+                          scratch4, scratch5, scratch6
+    not                    \scratch1,  \s1_8888
+    srl                    \scratch1,  \scratch1,  24
+    not                    \scratch2,  \s2_8888
+    srl                    \scratch2,  \scratch2,  24
+    MIPS_2xUN8x4_MUL_2xUN8 \d1_8888,   \d2_8888, \
+                           \scratch1,  \scratch2,  \
+                           \out1_8888, \out2_8888, \
+                           \maskLSR, \
+                           \scratch3,  \scratch4, \scratch5, \
+                           \scratch6,  \d1_8888,  \d2_8888
+
+    addu_s.qb              \out1_8888, \out1_8888, \s1_8888
+    addu_s.qb              \out2_8888, \out2_8888, \s2_8888
 .endm
 
 .macro MIPS_UN8x4_MUL_UN8_ADD_UN8x4 s_8888,   \
