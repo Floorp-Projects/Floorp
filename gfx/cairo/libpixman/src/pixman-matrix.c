@@ -37,7 +37,7 @@
 static force_inline int
 count_leading_zeros (uint32_t x)
 {
-#ifdef __GNUC__
+#ifdef HAVE_BUILTIN_CLZ
     return __builtin_clz (x);
 #else
     int n = 0;
@@ -273,7 +273,7 @@ pixman_transform_point_31_16 (const pixman_transform_t    *t,
         {
             /* the divisor is small, we can actually keep all the bits */
             int64_t hi, rhi, lo, rlo;
-            int64_t div = (divint << 16) + divfrac;
+            int64_t div = ((uint64_t)divint << 16) + divfrac;
 
             fixed_64_16_to_int128 (tmp[0][0], tmp[0][1], &hi, &lo, 32);
             rlo = rounded_sdiv_128_by_49 (hi, lo, div, &rhi);
