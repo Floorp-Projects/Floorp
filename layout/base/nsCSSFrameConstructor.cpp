@@ -9328,8 +9328,12 @@ inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
   // that information offhand in many cases.
   MOZ_ASSERT(ParentIsWrapperAnonBox(aParentFrame) == aParentIsWrapperAnonBox);
 
+  // Note: we explicitly exclude TableColGroupFrame because it doesn't
+  // have the FCDATA_IS_WRAPPER_ANON_BOX on pseudos so aParentIsWrapperAnonBox
+  // is false for such pseudos (see sPseudoParentData below).
   if (!aParentIsWrapperAnonBox && aState.mHasRenderedLegend &&
-      aParentFrame->GetContent()->IsHTMLElement(nsGkAtoms::fieldset)) {
+      aParentFrame->GetContent()->IsHTMLElement(nsGkAtoms::fieldset) &&
+      !aParentFrame->IsTableColGroupFrame()) {
     DebugOnly<bool> found = false;
     for (FCItemIterator iter(aItems); !iter.IsDone(); iter.Next()) {
       if (iter.item().mIsRenderedLegend) {
