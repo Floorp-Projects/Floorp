@@ -59,7 +59,6 @@ pub enum BrushBatchKind {
     Blend,
     MixBlend {
         task_id: RenderTaskId,
-        source_id: RenderTaskId,
         backdrop_id: RenderTaskId,
     },
     YuvImage(ImageBufferKind, YuvFormat, ColorDepth, YuvColorSpace, ColorRange),
@@ -1979,7 +1978,6 @@ impl BatchBuilder {
                                     BatchKind::Brush(
                                         BrushBatchKind::MixBlend {
                                             task_id: self.batchers[0].render_task_id,
-                                            source_id: cache_task_id,
                                             backdrop_id,
                                         },
                                     ),
@@ -2001,12 +1999,12 @@ impl BatchBuilder {
                                         clip_mask: clip_mask_texture_id,
                                     },
                                 );
-                                let backdrop_task_address: RenderTaskAddress = backdrop_id.into();
-                                let source_task_address: RenderTaskAddress = cache_task_id.into();
+                                let src_uv_address = render_tasks[cache_task_id].get_texture_address(gpu_cache);
+                                let readback_uv_address = render_tasks[backdrop_id].get_texture_address(gpu_cache);
                                 let prim_header_index = prim_headers.push(&prim_header, z_id, [
                                     mode as u32 as i32,
-                                    backdrop_task_address.0 as i32,
-                                    source_task_address.0 as i32,
+                                    readback_uv_address.as_int(),
+                                    src_uv_address.as_int(),
                                     0,
                                 ]);
 

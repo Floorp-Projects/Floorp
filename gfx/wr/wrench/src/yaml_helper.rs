@@ -52,6 +52,8 @@ fn string_to_color(color: &str) -> Option<ColorF> {
         "white" => Some(ColorF::new(1.0, 1.0, 1.0, 1.0)),
         "black" => Some(ColorF::new(0.0, 0.0, 0.0, 1.0)),
         "yellow" => Some(ColorF::new(1.0, 1.0, 0.0, 1.0)),
+        "cyan" => Some(ColorF::new(0.0, 1.0, 1.0, 1.0)),
+        "magenta" => Some(ColorF::new(1.0, 0.0, 1.0, 1.0)),
         "transparent" => Some(ColorF::new(1.0, 1.0, 1.0, 0.0)),
         s => {
             let items: Vec<f32> = s.split_whitespace()
