@@ -7260,7 +7260,7 @@ void nsGridContainerFrame::ReflowInFlowChild(
   childRI.mFlags.mIsBResizeForPercentages = true;
 
   // A table-wrapper needs to propagate the CB size we give it to its
-  // inner table frame later.  @see nsTableWrapperFrame::InitChildReflowInput.
+  // inner table frame later.  @see nsTableWrapperFrame::OuterBeginReflowChild.
   if (aChild->IsTableWrapperFrame()) {
     LogicalSize* cb =
         aChild->GetProperty(nsTableWrapperFrame::GridItemCBSizeProperty());
