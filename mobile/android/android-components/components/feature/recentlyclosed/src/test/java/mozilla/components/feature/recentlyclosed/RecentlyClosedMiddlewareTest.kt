@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.undo.UndoMiddleware
+import mozilla.components.feature.session.middleware.undo.UndoMiddleware
 import mozilla.components.browser.state.action.RecentlyClosedAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.UndoAction
