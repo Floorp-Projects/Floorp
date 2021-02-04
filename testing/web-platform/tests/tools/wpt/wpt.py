@@ -6,7 +6,6 @@ import sys
 
 from tools import localpaths  # noqa: F401
 
-from six import iteritems
 from . import virtualenv
 
 
@@ -23,7 +22,7 @@ def load_commands():
         base_dir = os.path.dirname(abs_path)
         with open(abs_path, "r") as f:
             data = json.load(f)
-            for command, props in iteritems(data):
+            for command, props in data.items():
                 assert "path" in props
                 assert "script" in props
                 rv[command] = {
@@ -51,7 +50,7 @@ def parse_args(argv, commands=load_commands()):
                         help="Whether to use the virtualenv as-is. Must set --venv as well")
     parser.add_argument("--debug", action="store_true", help="Run the debugger in case of an exception")
     subparsers = parser.add_subparsers(dest="command")
-    for command, props in iteritems(commands):
+    for command, props in commands.items():
         subparsers.add_parser(command, help=props["help"], add_help=False)
 
     args, extra = parser.parse_known_args(argv)
