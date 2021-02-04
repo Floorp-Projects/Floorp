@@ -404,9 +404,6 @@ bool nsMIMEInputStream::Deserialize(
   const MIMEInputStreamParams& params = aParams.get_MIMEInputStreamParams();
   const Maybe<InputStreamParams>& wrappedParams = params.optionalStream();
 
-  mHeaders = params.headers().Clone();
-  mStartedReading = params.startedReading();
-
   if (wrappedParams.isSome()) {
     nsCOMPtr<nsIInputStream> stream;
     stream = InputStreamHelper::DeserializeInputStream(wrappedParams.ref(),
@@ -429,6 +426,9 @@ bool nsMIMEInputStream::Deserialize(
 
     MOZ_ALWAYS_SUCCEEDS(SetData(seekable));
   }
+
+  mHeaders = params.headers().Clone();
+  mStartedReading = params.startedReading();
 
   return true;
 }
