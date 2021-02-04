@@ -19,7 +19,8 @@ add_task(async function() {
   await onRemoved;
 
   // We should be paused at the first line of simple-worker.js
-  assertPausedAtSourceAndLine(dbg, workerSource.id, 11);
+  const workerSource2 = dbg.selectors.getSelectedSourceWithContent();
+  assertPausedAtSourceAndLine(dbg, workerSource2.id, 11);
 
   await toggleNode(dbg, "var_array");
   ok(findNodeValue(dbg, "0") == '"mango"', "array elem0");

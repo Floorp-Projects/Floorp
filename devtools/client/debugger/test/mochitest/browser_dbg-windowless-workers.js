@@ -35,7 +35,8 @@ add_task(async function() {
   await dbg.actions.breakOnNext(getThreadContext(dbg));
   await waitForPaused(dbg, "simple-worker.js");
   threadIsSelected(dbg, 2);
-  assertPausedAtSourceAndLine(dbg, workerSource.id, 3);
+  const workerSource2 = dbg.selectors.getSelectedSourceWithContent();
+  assertPausedAtSourceAndLine(dbg, workerSource2.id, 3);
 
   info("Add a watch expression and view the value");
   await addExpression(dbg, "count");
@@ -45,7 +46,7 @@ add_task(async function() {
 
   info("StepOver in the first worker");
   await stepOver(dbg);
-  assertPausedAtSourceAndLine(dbg, workerSource.id, 4);
+  assertPausedAtSourceAndLine(dbg, workerSource2.id, 4);
 
   info("Ensure that the watch expression has updated");
   await waitUntil(() => {
@@ -81,19 +82,20 @@ add_task(async function() {
   info("View the first paused thread");
   dbg.actions.selectThread(getContext(dbg), thread1);
   await waitForPaused(dbg);
-  assertPausedAtSourceAndLine(dbg, workerSource.id, 10);
+  assertPausedAtSourceAndLine(dbg, workerSource2.id, 10);
 
   info("View the second paused thread");
   await dbg.actions.selectThread(getContext(dbg), thread2);
   threadIsSelected(dbg, 3);
   await waitForPaused(dbg);
-  assertPausedAtSourceAndLine(dbg, workerSource.id, 10);
+  const workerSource3 = dbg.selectors.getSelectedSourceWithContent();
+  assertPausedAtSourceAndLine(dbg, workerSource3.id, 10);
 
   info("StepOver in second worker and not the first");
   await stepOver(dbg);
-  assertPausedAtSourceAndLine(dbg, workerSource.id, 11);
+  assertPausedAtSourceAndLine(dbg, workerSource3.id, 11);
   await dbg.actions.selectThread(getContext(dbg), thread1);
-  assertPausedAtSourceAndLine(dbg, workerSource.id, 10);
+  assertPausedAtSourceAndLine(dbg, workerSource2.id, 10);
 });
 
 function assertClass(dbg, selector, className, ...args) {

@@ -159,7 +159,6 @@ function createMakeSource(): (
         isBlackBoxed: !!props.isBlackBoxed,
         extensionName: null,
       },
-      isServiceWorker: false,
     };
   };
 }
