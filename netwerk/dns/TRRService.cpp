@@ -230,14 +230,16 @@ void TRRService::SetDetectedTrrURI(const nsACString& aURI) {
   mURISetByDetection = MaybeSetPrivateURI(aURI);
 }
 
-bool TRRService::Enabled(nsIRequest::TRRMode aMode) {
-  if (mMode == nsIDNSService::MODE_TRROFF) {
+bool TRRService::Enabled(nsIRequest::TRRMode aRequestMode) {
+  if (mMode == nsIDNSService::MODE_TRROFF ||
+      aRequestMode == nsIRequest::TRR_DISABLED_MODE) {
     return false;
   }
+
   if (mConfirmationState == CONFIRM_INIT &&
       (!StaticPrefs::network_trr_wait_for_portal() || mCaptiveIsPassed ||
        (mMode == nsIDNSService::MODE_TRRONLY ||
-        aMode == nsIRequest::TRR_ONLY_MODE))) {
+        aRequestMode == nsIRequest::TRR_ONLY_MODE))) {
     LOG(("TRRService::Enabled => CONFIRM_TRYING\n"));
     mConfirmationState = CONFIRM_TRYING;
   }
@@ -245,14 +247,38 @@ bool TRRService::Enabled(nsIRequest::TRRMode aMode) {
   if (mConfirmationState == CONFIRM_TRYING) {
     LOG(("TRRService::Enabled MaybeConfirm()\n"));
     MaybeConfirm();
+    if (mMode == nsIDNSService::MODE_TRRONLY) {
+      MOZ_ASSERT(mConfirmationState == CONFIRM_OK,
+                 "Global mode is trr-only, but confirmation failed?");
+    }
   }
 
-  if (mConfirmationState != CONFIRM_OK) {
-    LOG(("TRRService::Enabled mConfirmationState=%d mCaptiveIsPassed=%d\n",
-         (int)mConfirmationState, (int)mCaptiveIsPassed));
+  LOG(("TRRService::Enabled mConfirmationState=%d mCaptiveIsPassed=%d\n",
+       (int)mConfirmationState, (int)mCaptiveIsPassed));
+
+  if (mConfirmationState == CONFIRM_OK) {
+    return true;
   }
 
-  return (mConfirmationState == CONFIRM_OK);
+  if (StaticPrefs::network_trr_wait_for_confirmation()) {
+    return false;
+  }
+
+  if ((aRequestMode == nsIRequest::TRR_DEFAULT_MODE &&
+       mMode == nsIDNSService::MODE_TRRONLY) ||
+      aRequestMode == nsIRequest::TRR_ONLY_MODE) {
+    // For TRR-only requests, or if the global mode is TRR-only, just say we're
+    // enabled.
+    return true;
+  }
+
+  if ((aRequestMode == nsIRequest::TRR_DEFAULT_MODE &&
+       mMode == nsIDNSService::MODE_TRRFIRST) ||
+      aRequestMode == nsIRequest::TRR_FIRST_MODE) {
+    return mConfirmationState != CONFIRM_FAILED;
+  }
+
+  return false;
 }
 
 void TRRService::GetPrefBranch(nsIPrefBranch** result) {
@@ -691,7 +717,7 @@ bool TRRService::MaybeBootstrap(const nsACString& aPossible,
 bool TRRService::IsDomainBlocked(const nsACString& aHost,
                                  const nsACString& aOriginSuffix,
                                  bool aPrivateBrowsing) {
-  if (!Enabled(nsIRequest::TRR_DEFAULT_MODE)) {
+  if (!Enabled()) {
     return true;
   }
 

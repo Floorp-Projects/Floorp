@@ -1637,7 +1637,8 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec) {
     rv = TrrLookup(rec);
   }
 
-  bool serviceNotReady = !gTRRService || !gTRRService->IsConfirmed();
+  bool serviceNotReady =
+      !gTRRService || !gTRRService->Enabled(rec->mEffectiveTRRMode);
 
   if (rec->mEffectiveTRRMode == nsIRequest::TRR_DISABLED_MODE ||
       (rec->mEffectiveTRRMode == nsIRequest::TRR_FIRST_MODE &&
