@@ -9,6 +9,7 @@
 
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/layers/ClipManager.h"
+#include "mozilla/layers/HitTestInfoManager.h"
 #include "mozilla/layers/WebRenderMessages.h"
 #include "mozilla/layers/WebRenderScrollData.h"
 #include "mozilla/layers/WebRenderUserData.h"
@@ -178,6 +179,7 @@ class WebRenderCommandBuilder final {
                                nsDisplayListBuilder* aDisplayListBuilder);
 
   ClipManager mClipManager;
+  HitTestInfoManager mHitTestInfoManager;
 
   // We use this as a temporary data structure while building the mScrollData
   // inside a layers-free transaction.

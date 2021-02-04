@@ -173,6 +173,25 @@ void UpdateDisplayItemData(nsPaintedDisplayItem* aItem) {
   }
 }
 
+static bool ItemTypeSupportsHitTesting(const DisplayItemType aType) {
+  switch (aType) {
+    case DisplayItemType::TYPE_BACKGROUND:
+    case DisplayItemType::TYPE_BACKGROUND_COLOR:
+    case DisplayItemType::TYPE_THEMED_BACKGROUND:
+      return true;
+    default:
+      return false;
+  }
+}
+
+void InitializeHitTestInfo(nsDisplayListBuilder* aBuilder,
+                           nsPaintedDisplayItem* aItem,
+                           const DisplayItemType aType) {
+  if (ItemTypeSupportsHitTesting(aType)) {
+    aItem->GetHitTestInfo().Initialize(aBuilder, aItem->Frame());
+  }
+}
+
 /* static */
 already_AddRefed<ActiveScrolledRoot> ActiveScrolledRoot::CreateASRForFrame(
     const ActiveScrolledRoot* aParent, nsIScrollableFrame* aScrollableFrame,
@@ -613,9 +632,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mBuildAsyncZoomContainer(false),
       mContainsBackdropFilter(false),
       mIsRelativeToLayoutViewport(false),
-      mUseOverlayScrollbars(false),
-      mHitTestArea(),
-      mHitTestInfo(CompositorHitTestInvisibleToHit) {
+      mUseOverlayScrollbars(false) {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
 
   mBuildCompositorHitTestInfo = mAsyncPanZoomEnabled && IsForPainting();
@@ -2085,7 +2102,7 @@ void nsDisplayListBuilder::AppendNewScrollInfoItemForHoisting(
 }
 
 void nsDisplayListBuilder::BuildCompositorHitTestInfoIfNeeded(
-    nsIFrame* aFrame, nsDisplayList* aList, const bool aBuildNew) {
+    nsIFrame* aFrame, nsDisplayList* aList) {
   MOZ_ASSERT(aFrame);
   MOZ_ASSERT(aList);
 
@@ -2094,22 +2111,9 @@ void nsDisplayListBuilder::BuildCompositorHitTestInfoIfNeeded(
   }
 
   const CompositorHitTestInfo info = aFrame->GetCompositorHitTestInfo(this);
-  if (info == CompositorHitTestInvisibleToHit) {
-    return;
+  if (info != CompositorHitTestInvisibleToHit) {
+    aList->AppendNewToTop<nsDisplayCompositorHitTestInfo>(this, aFrame);
   }
-
-  const nsRect area = aFrame->GetCompositorHitTestArea(this);
-  if (!aBuildNew && GetHitTestInfo() == info &&
-      GetHitTestArea().Contains(area)) {
-    return;
-  }
-
-  auto* item = MakeDisplayItem<nsDisplayCompositorHitTestInfo>(
-      this, aFrame, info, Some(area));
-  MOZ_ASSERT(item);
-
-  SetCompositorHitTestInfo(area, info);
-  aList->AppendToTop(item);
 }
 
 void nsDisplayListSet::MoveTo(const nsDisplayListSet& aDestination) const {
@@ -3544,7 +3548,7 @@ static nsDisplayBackgroundColor* CreateBackgroundColor(
 }
 
 /*static*/
-bool nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
+AppendedBackgroundType nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
     const nsRect& aBackgroundRect, nsDisplayList* aList,
     bool aAllowWillPaintBorderOptimization, ComputedStyle* aComputedStyle,
@@ -3590,7 +3594,7 @@ bool nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
 
   if (SpecialCutoutRegionCase(aBuilder, aFrame, aBackgroundRect, aList,
                               color)) {
-    return false;
+    return AppendedBackgroundType::None;
   }
 
   const nsStyleBorder* borderStyle = aFrame->StyleBorder();
@@ -3659,13 +3663,21 @@ bool nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
       bgItemList.AppendToTop(bgItem);
     }
 
-    aList->AppendToTop(&bgItemList);
-    return true;
+    if (!bgItemList.IsEmpty()) {
+      aList->AppendToTop(&bgItemList);
+      return AppendedBackgroundType::ThemedBackground;
+    }
+
+    return AppendedBackgroundType::None;
   }
 
   if (!bg || !drawBackgroundImage) {
-    aList->AppendToTop(&bgItemList);
-    return false;
+    if (!bgItemList.IsEmpty()) {
+      aList->AppendToTop(&bgItemList);
+      return AppendedBackgroundType::Background;
+    }
+
+    return AppendedBackgroundType::None;
   }
 
   const ActiveScrolledRoot* asr = aBuilder->CurrentActiveScrolledRoot();
@@ -3782,8 +3794,12 @@ bool nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
             aBuilder, aFrame, aSecondaryReferenceFrame, &bgItemList, asr));
   }
 
-  aList->AppendToTop(&bgItemList);
-  return false;
+  if (!bgItemList.IsEmpty()) {
+    aList->AppendToTop(&bgItemList);
+    return AppendedBackgroundType::Background;
+  }
+
+  return AppendedBackgroundType::None;
 }
 
 // Check that the rounded border of aFrame, added to aToReferenceFrame,
@@ -4845,90 +4861,12 @@ void nsDisplayEventReceiver::HitTest(nsDisplayListBuilder* aBuilder,
   aOutFrames->AppendElement(mFrame);
 }
 
-nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-    const mozilla::gfx::CompositorHitTestInfo& aHitTestFlags,
-    const mozilla::Maybe<nsRect>& aArea)
-    : nsPaintedDisplayItem(aBuilder, aFrame),
-      mAppUnitsPerDevPixel(mFrame->PresContext()->AppUnitsPerDevPixel()) {
-  MOZ_COUNT_CTOR(nsDisplayCompositorHitTestInfo);
-  // We should never even create this display item if we're not building
-  // compositor hit-test info or if the computed hit info indicated the
-  // frame is invisible to hit-testing
-  MOZ_ASSERT(aBuilder->BuildCompositorHitTestInfo());
-  MOZ_ASSERT(aHitTestFlags != CompositorHitTestInvisibleToHit);
-
-  const nsRect& area =
-      aArea.isSome() ? *aArea : aFrame->GetCompositorHitTestArea(aBuilder);
-
-  SetHitTestInfo(area, aHitTestFlags);
-  InitializeScrollTarget(aBuilder);
-}
-
-nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-    mozilla::UniquePtr<HitTestInfo>&& aHitTestInfo)
-    : nsPaintedDisplayItem(aBuilder, aFrame),
-      mAppUnitsPerDevPixel(mFrame->PresContext()->AppUnitsPerDevPixel()) {
-  MOZ_COUNT_CTOR(nsDisplayCompositorHitTestInfo);
-  SetHitTestInfo(std::move(aHitTestInfo));
-  InitializeScrollTarget(aBuilder);
-}
-
-void nsDisplayCompositorHitTestInfo::InitializeScrollTarget(
-    nsDisplayListBuilder* aBuilder) {
-  if (aBuilder->GetCurrentScrollbarDirection().isSome()) {
-    // In the case of scrollbar frames, we use the scrollbar's target
-    // scrollframe instead of the scrollframe with which the scrollbar actually
-    // moves.
-    MOZ_ASSERT(HitTestFlags().contains(CompositorHitTestFlags::eScrollbar));
-    mScrollTarget = mozilla::Some(aBuilder->GetCurrentScrollbarTarget());
-  }
-}
-
 bool nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
-  if (HitTestArea().IsEmpty()) {
-    return true;
-  }
-
-  // XXX: eventually this scrollId computation and the SetHitTestInfo
-  // call will get moved out into the WR display item iteration code so that
-  // we don't need to do it as often, and so that we can do it for other
-  // display item types as well (reducing the need for as many instances of
-  // this display item).
-  ScrollableLayerGuid::ViewID scrollId =
-      mScrollTarget.valueOrFrom([&]() -> ScrollableLayerGuid::ViewID {
-        const ActiveScrolledRoot* asr = GetActiveScrolledRoot();
-        Maybe<ScrollableLayerGuid::ViewID> fixedTarget =
-            aBuilder.GetContainingFixedPosScrollTarget(asr);
-        if (fixedTarget) {
-          return *fixedTarget;
-        }
-        if (asr) {
-          return asr->GetViewId();
-        }
-        return ScrollableLayerGuid::NULL_SCROLL_ID;
-      });
-
-  Maybe<SideBits> sideBits =
-      aBuilder.GetContainingFixedPosSideBits(GetActiveScrolledRoot());
-
-  // Insert a transparent rectangle with the hit-test info
-  const LayoutDeviceRect devRect =
-      LayoutDeviceRect::FromAppUnits(HitTestArea(), mAppUnitsPerDevPixel);
-
-  const wr::LayoutRect rect = wr::ToLayoutRect(devRect);
-
-  aBuilder.StartGroup(this);
-  aBuilder.PushHitTest(rect, rect, !BackfaceIsHidden(), scrollId,
-                       HitTestFlags(), sideBits.valueOr(SideBits::eNone));
-  aBuilder.FinishGroup();
-
   return true;
 }
 
@@ -7360,7 +7298,8 @@ bool nsDisplayAsyncZoom::UpdateScrollData(
 //
 
 #ifndef DEBUG
-static_assert(sizeof(nsDisplayTransform) < 512, "nsDisplayTransform has grown");
+static_assert(sizeof(nsDisplayTransform) <= 512,
+              "nsDisplayTransform has grown");
 #endif
 
 nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
@@ -10228,13 +10167,12 @@ nsDisplayListBuilder::AutoBuildingDisplayList::AutoBuildingDisplayList(
     : mBuilder(aBuilder),
       mPrevFrame(aBuilder->mCurrentFrame),
       mPrevReferenceFrame(aBuilder->mCurrentReferenceFrame),
-      mPrevHitTestArea(aBuilder->mHitTestArea),
-      mPrevHitTestInfo(aBuilder->mHitTestInfo),
       mPrevOffset(aBuilder->mCurrentOffsetToReferenceFrame),
       mPrevAdditionalOffset(aBuilder->mAdditionalOffset),
       mPrevVisibleRect(aBuilder->mVisibleRect),
       mPrevDirtyRect(aBuilder->mDirtyRect),
       mPrevAGR(aBuilder->mCurrentAGR),
+      mPrevCompositorHitTestInfo(aBuilder->mCompositorHitTestInfo),
       mPrevAncestorHasApzAwareEventHandler(
           aBuilder->mAncestorHasApzAwareEventHandler),
       mPrevBuildingInvisibleItems(aBuilder->mBuildingInvisibleItems),

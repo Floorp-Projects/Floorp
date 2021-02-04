@@ -207,6 +207,7 @@ struct Grouper {
   int32_t mAppUnitsPerDevPixel;
   nsDisplayListBuilder* mDisplayListBuilder;
   ClipManager& mClipManager;
+  HitTestInfoManager mHitTestInfoManager;
   Matrix mTransform;
 
   // Paint the list of aChildren display items.
@@ -1230,17 +1231,19 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
       {
         auto spaceAndClipChain = mClipManager.SwitchItem(item);
         wr::SpaceAndClipChainHelper saccHelper(aBuilder, spaceAndClipChain);
+        mHitTestInfoManager.SwitchItem(item->AsPaintedDisplayItem(), aBuilder,
+                                       aDisplayListBuilder);
 
         sIndent++;
         // Note: this call to CreateWebRenderCommands can recurse back into
         // this function.
         bool createdWRCommands = item->CreateWebRenderCommands(
             aBuilder, aResources, aSc, manager, mDisplayListBuilder);
-        sIndent--;
         MOZ_RELEASE_ASSERT(
             createdWRCommands,
             "active transforms should always succeed at creating "
             "WebRender commands");
+        sIndent--;
       }
 
       currentGroup = &groupData->mFollowingGroup;
@@ -1412,6 +1415,7 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
   GP("DoGroupingForDisplayList\n");
 
   mClipManager.BeginList(aSc);
+  mHitTestInfoManager.Reset();
   Grouper g(mClipManager);
 
   int32_t appUnitsPerDevPixel =
@@ -1566,6 +1570,8 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
   aScrollData = WebRenderScrollData(mManager, aDisplayListBuilder);
   MOZ_ASSERT(mLayerScrollData.empty());
   mClipManager.BeginBuild(mManager, aBuilder);
+  mHitTestInfoManager.Reset();
+
   mBuilderDumpIndex = 0;
   mLastCanvasDatas.Clear();
   mLastLocalCanvasDatas.Clear();
@@ -1649,6 +1655,12 @@ void WebRenderCommandBuilder::CreateWebRenderCommands(
     nsDisplayListBuilder* aDisplayListBuilder) {
   auto* item = aItem->AsPaintedDisplayItem();
   MOZ_RELEASE_ASSERT(item, "Tried to paint item that cannot be painted");
+
+  mHitTestInfoManager.SwitchItem(item, aBuilder, aDisplayListBuilder);
+  if (item->GetType() == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
+    // The hit test information was processed above.
+    return;
+  }
 
   if (aBuilder.ReuseItem(item)) {
     // No further processing should be needed, since the item was reused.
