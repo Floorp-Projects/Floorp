@@ -10482,6 +10482,37 @@
 #endif
   mirror: always
 
+# The size in CSS pixels at full zoom of the minimum scrollbar width.
+- name: widget.gtk.non-native.scrollbar.normal-size
+  type: uint32_t
+  value: 12
+  mirror: always
+
+# The size in CSS pixels at full zoom of the "thin" scrollbars.
+- name: widget.gtk.non-native.scrollbar.thin-size
+  type: uint32_t
+  value: 6
+  mirror: always
+
+# The amount of space that the thumb should fill the scrollbar, from zero to
+# one.
+- name: widget.gtk.non-native.scrollbar.thumb-size
+  type: float
+  value: 0.75
+  mirror: always
+
+# The minimum size of the scroll thumb, in the scrollbar direction.
+- name: widget.gtk.non-native.scrollbar.thumb-cross-size
+  type: uint32_t
+  value: 40
+  mirror: always
+
+# Whether the thumb should be rounded for the non-native scrollbars.
+- name: widget.gtk.non-native.round-thumb
+  type: bool
+  value: true
+  mirror: always
+
 # Preference to disable dark scrollbar implementation.
 # This is mainly for testing because dark scrollbars have to be semi-
 # transparent, but many reftests expect scrollbars to look identical
