@@ -38,7 +38,7 @@ def lint(files, config, **kwargs):
             file=sys.stderr,
         )
         files = ["--all"]
-    cmd = ["python2", os.path.join(tests_dir, "wpt"), "lint", "--json"] + files
+    cmd = ["python3", os.path.join(tests_dir, "wpt"), "lint", "--json"] + files
     log.debug("Command: {}".format(" ".join(cmd)))
 
     proc = ProcessHandler(

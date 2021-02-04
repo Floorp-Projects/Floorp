@@ -1226,6 +1226,8 @@ class AsyncPanZoomController {
  private:
   friend class AutoApplyAsyncTestAttributes;
 
+  bool SuppressAsyncScrollOffset() const;
+
   /**
    * Applies |mTestAsyncScrollOffset| and |mTestAsyncZoom| to this
    * AsyncPanZoomController. Calls |SampleCompositedAsyncTransform| to ensure
