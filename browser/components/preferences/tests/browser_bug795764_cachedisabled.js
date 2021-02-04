@@ -1,10 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const httpsOnlyVisible = SpecialPowers.getBoolPref(
-  "browser.preferences.exposeHTTPSOnly"
-);
-
 function test() {
   waitForExplicitFinish();
 
@@ -38,15 +34,7 @@ async function runTest(win) {
   for (let element of elements) {
     let attributeValue = element.getAttribute("data-category");
     if (attributeValue == "panePrivacy") {
-      // HTTPS-Only Mode is exposed depending on the preference.
-      if (element.id == "httpsOnlyBox") {
-        if (httpsOnlyVisible) {
-          is_element_visible(element, "HTTPSOnly should be visible");
-        } else {
-          is_element_hidden(element, "HTTPSOnly should not be visible");
-        }
-        continue;
-      }
+      is_element_visible(element, "HTTPSOnly should be visible");
 
       is_element_visible(
         element,
