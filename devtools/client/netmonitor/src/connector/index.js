@@ -16,7 +16,6 @@ class Connector {
     // Bind public API
     this.connect = this.connect.bind(this);
     this.disconnect = this.disconnect.bind(this);
-    this.connectChrome = this.connectChrome.bind(this);
     this.connectFirefox = this.connectFirefox.bind(this);
     this.getLongString = this.getLongString.bind(this);
     this.getTabTarget = this.getTabTarget.bind(this);
@@ -38,9 +37,6 @@ class Connector {
 
     const { clientType } = connection.tab;
     switch (clientType) {
-      case "chrome":
-        await this.connectChrome(connection, actions, getState);
-        break;
       case "firefox":
         await this.connectFirefox(connection, actions, getState);
         break;
@@ -51,12 +47,6 @@ class Connector {
 
   disconnect() {
     this.connector && this.connector.disconnect();
-  }
-
-  connectChrome(connection, actions, getState) {
-    const ChromeConnector = require("devtools/client/netmonitor/src/connector/chrome-connector");
-    this.connector = new ChromeConnector();
-    return this.connector.connect(connection, actions, getState);
   }
 
   connectFirefox(connection, actions, getState) {
