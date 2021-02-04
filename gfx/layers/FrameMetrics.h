@@ -101,7 +101,8 @@ struct FrameMetrics {
         mCompositionSizeWithoutDynamicToolbar(),
         mIsRootContent(false),
         mIsScrollInfoLayer(false),
-        mHasNonZeroDisplayPortMargins(false) {}
+        mHasNonZeroDisplayPortMargins(false),
+        mMinimalDisplayPort(false) {}
 
   // Default copy ctor and operator= are fine
 
@@ -129,6 +130,7 @@ struct FrameMetrics {
            mIsScrollInfoLayer == aOther.mIsScrollInfoLayer &&
            mHasNonZeroDisplayPortMargins ==
                aOther.mHasNonZeroDisplayPortMargins &&
+           mMinimalDisplayPort == aOther.mMinimalDisplayPort &&
            mFixedLayerMargins == aOther.mFixedLayerMargins &&
            mCompositionSizeWithoutDynamicToolbar ==
                aOther.mCompositionSizeWithoutDynamicToolbar;
@@ -421,6 +423,11 @@ struct FrameMetrics {
     return mHasNonZeroDisplayPortMargins;
   }
 
+  void SetMinimalDisplayPort(bool aMinimalDisplayPort) {
+    mMinimalDisplayPort = aMinimalDisplayPort;
+  }
+  bool IsMinimalDisplayPort() const { return mMinimalDisplayPort; }
+
   void SetVisualDestination(const CSSPoint& aVisualDestination) {
     mVisualDestination = aVisualDestination;
   }
@@ -628,6 +635,12 @@ struct FrameMetrics {
 
   // Whether there are non-zero display port margins set on this element.
   bool mHasNonZeroDisplayPortMargins : 1;
+
+  // Whether this scroll frame is using a minimal display port, which means that
+  // any set display port margins are ignored when calculating the display port
+  // and instead zero margins are used and further no tile or alignment
+  // boundaries are used that could potentially expand the size.
+  bool mMinimalDisplayPort : 1;
 
   // WARNING!!!!
   //

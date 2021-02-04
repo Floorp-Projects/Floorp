@@ -4378,10 +4378,16 @@ LayoutDeviceToParentLayerScale AsyncPanZoomController::GetCurrentPinchZoomScale(
   return scale.ToScaleFactor() / Metrics().GetDevPixelsPerCSSPixel();
 }
 
+bool AsyncPanZoomController::SuppressAsyncScrollOffset() const {
+  return mScrollMetadata.IsApzForceDisabled() ||
+         (Metrics().IsMinimalDisplayPort() &&
+          StaticPrefs::apz_prefer_jank_minimal_displayports());
+}
+
 CSSRect AsyncPanZoomController::GetEffectiveLayoutViewport(
     AsyncTransformConsumer aMode,
     const RecursiveMutexAutoLock& aProofOfLock) const {
-  if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
+  if (aMode == eForCompositing && SuppressAsyncScrollOffset()) {
     return mLastContentPaintMetrics.GetLayoutViewport();
   }
   if (aMode == eForCompositing) {
@@ -4393,7 +4399,7 @@ CSSRect AsyncPanZoomController::GetEffectiveLayoutViewport(
 CSSPoint AsyncPanZoomController::GetEffectiveScrollOffset(
     AsyncTransformConsumer aMode,
     const RecursiveMutexAutoLock& aProofOfLock) const {
-  if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
+  if (aMode == eForCompositing && SuppressAsyncScrollOffset()) {
     return mLastContentPaintMetrics.GetVisualScrollOffset();
   }
   if (aMode == eForCompositing) {
@@ -4405,7 +4411,7 @@ CSSPoint AsyncPanZoomController::GetEffectiveScrollOffset(
 CSSToParentLayerScale2D AsyncPanZoomController::GetEffectiveZoom(
     AsyncTransformConsumer aMode,
     const RecursiveMutexAutoLock& aProofOfLock) const {
-  if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
+  if (aMode == eForCompositing && SuppressAsyncScrollOffset()) {
     return mLastContentPaintMetrics.GetZoom();
   }
   if (aMode == eForCompositing) {
@@ -4844,6 +4850,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     Metrics().SetIsScrollInfoLayer(aLayerMetrics.IsScrollInfoLayer());
     Metrics().SetHasNonZeroDisplayPortMargins(
         aLayerMetrics.HasNonZeroDisplayPortMargins());
+    Metrics().SetMinimalDisplayPort(aLayerMetrics.IsMinimalDisplayPort());
     mScrollMetadata.SetForceDisableApz(aScrollMetadata.IsApzForceDisabled());
     mScrollMetadata.SetIsRDMTouchSimulationActive(
         aScrollMetadata.GetIsRDMTouchSimulationActive());
