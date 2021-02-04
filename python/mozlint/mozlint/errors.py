@@ -12,6 +12,14 @@ class LinterNotFound(LintException):
         LintException.__init__(self, "Could not find lint file '{}'".format(path))
 
 
+class NoValidLinter(LintException):
+    def __init__(self):
+        LintException.__init__(
+            self,
+            "Invalid linters given, run again using valid linters or no linters",
+        )
+
+
 class LinterParseError(LintException):
     def __init__(self, path, message):
         LintException.__init__(self, "{}: {}".format(path, message))

@@ -12,7 +12,7 @@ import time
 import mozunit
 import pytest
 
-from mozlint.errors import LintersNotConfigured
+from mozlint.errors import LintersNotConfigured, NoValidLinter
 from mozlint.result import Issue, ResultSummary
 from itertools import chain
 
@@ -311,7 +311,7 @@ def test_support_files(lint, linters, filedir, monkeypatch, files):
 
 
 def test_setup(lint, linters, filedir, capfd):
-    with pytest.raises(LintersNotConfigured):
+    with pytest.raises(NoValidLinter):
         lint.setup()
 
     lint.read(linters("setup", "setupfailed", "setupraised"))
