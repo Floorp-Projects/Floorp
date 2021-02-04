@@ -55,7 +55,6 @@ class WindowBackBuffer {
   void Attach(wl_surface* aSurface);
   void Detach(wl_buffer* aBuffer);
   bool IsAttached() { return mAttached; }
-  void SetAttached() { mAttached = true; };
 
   void Clear();
   bool Create(int aWidth, int aHeight);
