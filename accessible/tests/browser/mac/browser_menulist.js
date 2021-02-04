@@ -50,3 +50,42 @@ addAccessibleTask(
   },
   { topLevel: false, chrome: true }
 );
+
+addAccessibleTask(
+  "mac/doc_menulist.xhtml",
+  async (browser, accDoc) => {
+    const menulist = getNativeInterface(accDoc, "defaultZoom");
+
+    const actions = menulist.actionNames;
+    ok(actions.includes("AXPress"), "menu has press action");
+    let event = waitForMacEvent("AXMenuOpened");
+    menulist.performAction("AXPress");
+    await event;
+
+    const menu = menulist.getAttributeValue("AXChildren")[0];
+    ok(menu, "Menulist contains menu");
+    const children = menu.getAttributeValue("AXChildren");
+    is(children.length, 4, "Menu has 4 items");
+
+    // Menu is open, initial focus should land on the first item
+    is(
+      children[0].getAttributeValue("AXSelected"),
+      1,
+      "First menu item is selected"
+    );
+    // focus the second item, and verify it is selected
+    event = waitForMacEvent("AXFocusedUIElementChanged");
+    EventUtils.synthesizeKey("KEY_ArrowDown");
+    await event;
+    is(
+      children[1].getAttributeValue("AXSelected"),
+      1,
+      "Second menu item is selected"
+    );
+    // press the second item, check for selected event
+    event = waitForMacEvent("AXMenuItemSelected");
+    children[1].performAction("AXPress");
+    await event;
+  },
+  { topLevel: false, chrome: true }
+);
