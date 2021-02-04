@@ -210,12 +210,10 @@ impl<'a> FrameBuildingState<'a> {
         &mut self,
         surface_index: SurfaceIndex,
         tasks: Vec<RenderTaskId>,
-        device_rect: DeviceRect,
     ) {
         let surface = &mut self.surfaces[surface_index.0];
         assert!(surface.render_tasks.is_none());
         surface.render_tasks = Some(SurfaceRenderTasks::Tiled(tasks));
-        surface.device_rect = Some(device_rect);
     }
 
     /// Initialize render tasks for a simple surface, that contains only a
@@ -225,12 +223,10 @@ impl<'a> FrameBuildingState<'a> {
         surface_index: SurfaceIndex,
         task_id: RenderTaskId,
         parent_surface_index: SurfaceIndex,
-        device_rect: DeviceRect,
     ) {
         let surface = &mut self.surfaces[surface_index.0];
         assert!(surface.render_tasks.is_none());
         surface.render_tasks = Some(SurfaceRenderTasks::Simple(task_id));
-        surface.device_rect = Some(device_rect);
 
         self.add_child_render_task(
             parent_surface_index,
@@ -247,12 +243,10 @@ impl<'a> FrameBuildingState<'a> {
         root_task_id: RenderTaskId,
         port_task_id: RenderTaskId,
         parent_surface_index: SurfaceIndex,
-        device_rect: DeviceRect,
     ) {
         let surface = &mut self.surfaces[surface_index.0];
         assert!(surface.render_tasks.is_none());
         surface.render_tasks = Some(SurfaceRenderTasks::Chained { root_task_id, port_task_id });
-        surface.device_rect = Some(device_rect);
 
         self.add_child_render_task(
             parent_surface_index,
