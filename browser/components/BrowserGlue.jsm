@@ -2762,7 +2762,7 @@ BrowserGlue.prototype = {
 
       () => OsEnvironment.reportAllowedAppSources(),
 
-      () => Services.search.checkWebExtensionEngines(),
+      () => Services.search.runBackgroundChecks(),
 
       () => BrowserUsageTelemetry.reportInstallationTelemetry(),
     ];

@@ -183,7 +183,9 @@ var SearchTestUtils = Object.freeze({
 
     let extension = gTestScope.ExtensionTestUtils.loadExtension(extensionInfo);
     await extension.startup();
-    await AddonTestUtils.waitForSearchProviderStartup(extension);
+    if (!options.skipWaitForSearchEngine) {
+      await AddonTestUtils.waitForSearchProviderStartup(extension);
+    }
     return extension;
   },
 
