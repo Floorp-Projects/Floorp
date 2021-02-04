@@ -5415,10 +5415,50 @@ impl PicturePrimitive {
                             device_pixel_scale,
                         );
 
+                        let parent_surface = &frame_state.surfaces[parent_surface_index.0];
+                        let parent_raster_spatial_node_index = parent_surface.raster_spatial_node_index;
+                        let parent_device_pixel_scale = parent_surface.device_pixel_scale;
+
+                        // Create a space mapper that will allow mapping from the local rect
+                        // of the mix-blend primitive into the space of the surface that we
+                        // need to read back from. Note that we use the parent's raster spatial
+                        // node here, so that we are in the correct device space of the parent
+                        // surface, whether it establishes a raster root or not.
+                        let map_pic_to_parent = SpaceMapper::new_with_target(
+                            parent_raster_spatial_node_index,
+                            self.spatial_node_index,
+                            RasterRect::max_rect(),         // TODO(gw): May need a conservative estimate?
+                            frame_context.spatial_tree,
+                        );
+                        let pic_in_raster_space = map_pic_to_parent
+                            .map(&pic_rect)
+                            .expect("bug: unable to map mix-blend content into parent");
+
+                        // Apply device pixel ratio for parent surface to get into device
+                        // pixels for that surface.
+                        let backdrop_rect = raster_rect_to_device_pixels(
+                            pic_in_raster_space,
+                            parent_device_pixel_scale,
+                        );
+
+                        // Calculate the UV coords necessary for the shader to sampler
+                        // from the primitive rect within the readback region. This is
+                        // 0..1 for aligned surfaces, but doing it this way allows
+                        // accurate sampling if the primitive bounds have fractional values.
+                        let backdrop_uv = calculate_uv_rect_kind(
+                            &pic_rect,
+                            &map_pic_to_parent.get_transform(),
+                            &backdrop_rect,
+                            parent_device_pixel_scale,
+                        );
+
                         let readback_task_id = frame_state.rg_builder.add().init(
                             RenderTask::new_dynamic(
-                                clipped.size.to_i32(),
-                                RenderTaskKind::new_readback(),
+                                backdrop_rect.size.to_i32(),
+                                RenderTaskKind::new_readback(
+                                    backdrop_rect.origin.to_i32(),
+                                    backdrop_uv,
+                                ),
                             )
                         );
 

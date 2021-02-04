@@ -2489,7 +2489,6 @@ impl Renderer {
         &mut self,
         draw_target: DrawTarget,
         uses_scissor: bool,
-        source: &RenderTask,
         backdrop: &RenderTask,
         readback: &RenderTask,
     ) {
@@ -2504,16 +2503,19 @@ impl Renderer {
         let (cache_texture, _) = self.texture_resolver
             .resolve(&texture_source).expect("bug: no source texture");
 
+        // Extract the rectangle in the backdrop surface's device space of where
+        // we need to read from.
+        let readback_origin = match readback.kind {
+            RenderTaskKind::Readback(ref info) => info.readback_origin,
+            _ => unreachable!(),
+        };
+
         // Before submitting the composite batch, do the
         // framebuffer readbacks that are needed for each
         // composite operation in this batch.
         let (readback_rect, readback_layer) = readback.get_target_rect();
         let (backdrop_rect, _) = backdrop.get_target_rect();
-        let (backdrop_screen_origin, backdrop_scale) = match backdrop.kind {
-            RenderTaskKind::Picture(ref task_info) => (task_info.content_origin, task_info.device_pixel_scale),
-            _ => panic!("bug: composite on non-picture?"),
-        };
-        let (source_screen_origin, source_scale) = match source.kind {
+        let (backdrop_screen_origin, _) = match backdrop.kind {
             RenderTaskKind::Picture(ref task_info) => (task_info.content_origin, task_info.device_pixel_scale),
             _ => panic!("bug: composite on non-picture?"),
         };
@@ -2528,28 +2530,22 @@ impl Renderer {
             false,
         );
 
-        let source_in_backdrop_space = source_screen_origin * (backdrop_scale.0 / source_scale.0);
-
-        let mut src = DeviceIntRect::new(
-            (source_in_backdrop_space + (backdrop_rect.origin.to_f32() - backdrop_screen_origin)).to_i32(),
+        let src = DeviceIntRect::new(
+            readback_origin +
+                backdrop_rect.origin.to_vector() -
+                backdrop_screen_origin.to_i32().to_vector(),
             readback_rect.size,
         );
-        let mut dest = readback_rect.to_i32();
-        let device_to_framebuffer = Scale::new(1i32);
 
-        // Need to invert the y coordinates and flip the image vertically when
-        // reading back from the framebuffer.
-        if draw_target.is_default() {
-            src.origin.y = draw_target.dimensions().height as i32 - src.size.height - src.origin.y;
-            dest.origin.y += dest.size.height;
-            dest.size.height = -dest.size.height;
-        }
+        // Should always be drawing to picture cache tiles or off-screen surface!
+        debug_assert!(!draw_target.is_default());
+        let device_to_framebuffer = Scale::new(1i32);
 
         self.device.blit_render_target(
             draw_target.into(),
             src * device_to_framebuffer,
             cache_draw_target,
-            dest * device_to_framebuffer,
+            readback_rect * device_to_framebuffer,
             TextureFilter::Linear,
         );
 
@@ -2899,14 +2895,13 @@ impl Renderer {
                 }
 
                 // Handle special case readback for composites.
-                if let BatchKind::Brush(BrushBatchKind::MixBlend { task_id, source_id, backdrop_id }) = batch.key.kind {
+                if let BatchKind::Brush(BrushBatchKind::MixBlend { task_id, backdrop_id }) = batch.key.kind {
                     // composites can't be grouped together because
                     // they may overlap and affect each other.
                     debug_assert_eq!(batch.instances.len(), 1);
                     self.handle_readback_composite(
                         draw_target,
                         uses_scissor,
-                        &render_tasks[source_id],
                         &render_tasks[task_id],
                         &render_tasks[backdrop_id],
                     );
