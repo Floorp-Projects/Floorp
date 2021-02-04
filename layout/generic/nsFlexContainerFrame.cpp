@@ -2003,6 +2003,8 @@ void nsFlexContainerFrame::MarkIntrinsicISizesDirty() {
 nscoord nsFlexContainerFrame::MeasureFlexItemContentBSize(
     FlexItem& aFlexItem, bool aForceBResizeForMeasuringReflow,
     bool aHasLineClampEllipsis, const ReflowInput& aParentReflowInput) {
+  FLEX_LOG("Measuring flex item's content block-size");
+
   // Set up a reflow input for measuring the flex item's auto-height:
   WritingMode wm = aFlexItem.Frame()->GetWritingMode();
   LogicalSize availSize = aParentReflowInput.ComputedSize(wm);
@@ -2017,8 +2019,15 @@ nscoord nsFlexContainerFrame::MeasureFlexItemContentBSize(
   childRIForMeasuringBSize.Init(PresContext());
 
   if (aFlexItem.IsStretched()) {
+    // TODO: This code should really use StyleSizeOverrides (rather than
+    // SetComputedISize) to impose the ISize here, in order to stretch table
+    // flex items correctly (to fix Bug 799725). However, when we make that
+    // change, we'll also need to prevent ComputeSize from transferring our
+    // ISize-override through the aspect-ratio to set the BSize, because that
+    // would prevent us from measuring the content BSize here.
     childRIForMeasuringBSize.SetComputedISize(aFlexItem.CrossSize());
     childRIForMeasuringBSize.SetIResize(true);
+    FLEX_LOGV(" Cross size override: %d", aFlexItem.CrossSize());
   }
 
   if (aForceBResizeForMeasuringReflow) {
@@ -2965,8 +2974,6 @@ void FlexLine::FreezeOrRestoreEachFlexibleSize(const nscoord aTotalViolation,
 
 void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
                                       ComputedFlexLineInfo* aLineInfo) {
-  FLEX_LOG("ResolveFlexibleLengths");
-
   // Before we start resolving sizes: if we have an aLineInfo structure to fill
   // out, we inform it of each item's base size, and we initialize the "delta"
   // for each item to 0. (And if the flex algorithm wants to grow or shrink the
@@ -2997,10 +3004,13 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
   if ((mNumFrozenItems == NumItems()) && !aLineInfo) {
     // All our items are frozen, so we have no flexible lengths to resolve,
     // and we aren't being asked to generate computed line info.
+    FLEX_LOG("No flexible length to resolve");
     return;
   }
   MOZ_ASSERT(!IsEmpty() || aLineInfo,
              "empty lines should take the early-return above");
+
+  FLEX_LOG("Resolving flexible lengths for items");
 
   // Subtract space occupied by our items' margins/borders/padding/gaps, so
   // we can just be dealing with the space available for our flex items' content
@@ -5011,6 +5021,8 @@ void nsFlexContainerFrame::DoFlexLayout(
         } else {
           sizeOverrides.mStyleBSize.emplace(item.StyleMainSize());
         }
+        FLEX_LOG("Sizing flex item %p in cross axis", item.Frame());
+        FLEX_LOGV(" Main size override: %d", item.MainSize());
 
         const WritingMode wm = item.GetWritingMode();
         LogicalSize availSize = aReflowInput.ComputedSize(wm);
@@ -5432,6 +5444,8 @@ nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
     const FlexItem& aItem, LogicalPoint& aFramePos,
     const LogicalSize& aAvailableSize, const nsSize& aContainerSize,
     bool aHasLineClampEllipsis) {
+  FLEX_LOG("Doing final reflow for flex item %p", aItem.Frame());
+
   WritingMode outerWM = aReflowInput.GetWritingMode();
 
   StyleSizeOverrides sizeOverrides;
@@ -5441,6 +5455,8 @@ nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
   } else {
     sizeOverrides.mStyleBSize.emplace(aItem.StyleMainSize());
   }
+  FLEX_LOGV(" Main size override: %d", aItem.MainSize());
+
   // Override flex item's cross size if it was stretched in the cross axis (in
   // which case we're imposing a cross size).
   if (aItem.IsStretched()) {
@@ -5449,6 +5465,7 @@ nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
     } else {
       sizeOverrides.mStyleBSize.emplace(aItem.StyleCrossSize());
     }
+    FLEX_LOGV(" Cross size override: %d", aItem.CrossSize());
   }
   if (sizeOverrides.mStyleBSize && aItem.HadMeasuringReflow()) {
     // Because we are overriding the block-size, *and* we had an earlier
