@@ -9,6 +9,13 @@
 
 #include "nsDisplayList.h"
 
+#define DEBUG_HITTEST_INFO 0
+#if DEBUG_HITTEST_INFO
+#  define HITTEST_INFO_LOG(...) printf_stderr(__VA_ARGS__)
+#else
+#  define HITTEST_INFO_LOG(...)
+#endif
+
 namespace mozilla::layers {
 
 using ViewID = ScrollableLayerGuid::ViewID;
@@ -27,8 +34,7 @@ static int32_t GetAppUnitsFromDisplayItem(nsDisplayItem* aItem) {
 }
 
 static void CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
-                                    nsPaintedDisplayItem* aItem,
-                                    const nsRect& aArea,
+                                    nsDisplayItem* aItem, const nsRect& aArea,
                                     const gfx::CompositorHitTestInfo& aFlags,
                                     const ViewID& aViewId) {
   const Maybe<SideBits> sideBits =
@@ -45,13 +51,15 @@ static void CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
 void HitTestInfoManager::Reset() {
   mArea = nsRect();
   mFlags = gfx::CompositorHitTestInvisibleToHit;
+  HITTEST_INFO_LOG("* HitTestInfoManager::Reset\n");
 }
 
-void HitTestInfoManager::SwitchItem(nsPaintedDisplayItem* aItem,
+void HitTestInfoManager::SwitchItem(nsDisplayItem* aItem,
                                     wr::DisplayListBuilder& aBuilder,
                                     nsDisplayListBuilder* aDisplayListBuilder) {
-  if (!aItem || aItem->HasChildren()) {
-    // Either the item is not a painted display item, or it is a container item.
+  MOZ_ASSERT(aItem);
+
+  if (!aItem->HasHitTestInfo()) {
     return;
   }
 
@@ -59,7 +67,7 @@ void HitTestInfoManager::SwitchItem(nsPaintedDisplayItem* aItem,
   const nsRect& area = hitTestInfo.Area();
   const gfx::CompositorHitTestInfo& flags = hitTestInfo.Info();
 
-  if (area.IsEmpty() || flags == gfx::CompositorHitTestInvisibleToHit) {
+  if (flags == gfx::CompositorHitTestInvisibleToHit || area.IsEmpty()) {
     return;
   }
 
@@ -72,6 +80,9 @@ void HitTestInfoManager::SwitchItem(nsPaintedDisplayItem* aItem,
     return;
   }
 
+  HITTEST_INFO_LOG("+ [%d, %d, %d, %d]: flags: 0x%x, viewId: %llu\n", area.x,
+                   area.y, area.width, area.height, flags.serialize(), viewId);
+
   CreateWebRenderCommands(aBuilder, aItem, area, flags, viewId);
 }
 
@@ -82,6 +93,9 @@ bool HitTestInfoManager::Update(const nsRect& aArea,
   if (mViewId == aViewId && mFlags == aFlags && mArea.Contains(aArea) &&
       mSpaceAndClipChain == aSpaceAndClip) {
     // The previous hit testing information can be reused.
+    HITTEST_INFO_LOG("s [%d, %d, %d, %d]: flags: 0x%x, viewId: %llu\n", aArea.x,
+                     aArea.y, aArea.width, aArea.height, aFlags.serialize(),
+                     aViewId);
     return false;
   }
 

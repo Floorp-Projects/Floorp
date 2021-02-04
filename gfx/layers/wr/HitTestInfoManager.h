@@ -43,7 +43,7 @@ class HitTestInfoManager {
    * Extracts the hit testing information from |aItem|, and if necessary, adds
    * a new WebRender hit test item using |aBuilder|.
    */
-  void SwitchItem(nsPaintedDisplayItem* aItem, wr::DisplayListBuilder& aBuilder,
+  void SwitchItem(nsDisplayItem* aItem, wr::DisplayListBuilder& aBuilder,
                   nsDisplayListBuilder* aDisplayListBuilder);
 
  private:

@@ -11,6 +11,21 @@
 
 namespace mozilla {
 
+static const HitTestInfo* gEmptyHitTestInfo = nullptr;
+
+const HitTestInfo& HitTestInfo::Empty() {
+  if (gEmptyHitTestInfo) {
+    gEmptyHitTestInfo = new HitTestInfo();
+  }
+
+  return *gEmptyHitTestInfo;
+}
+
+void HitTestInfo::Shutdown() {
+  delete gEmptyHitTestInfo;
+  gEmptyHitTestInfo = nullptr;
+}
+
 using ViewID = layers::ScrollableLayerGuid::ViewID;
 
 ViewID HitTestInfo::GetViewId(wr::DisplayListBuilder& aBuilder,
@@ -19,8 +34,7 @@ ViewID HitTestInfo::GetViewId(wr::DisplayListBuilder& aBuilder,
     return *mScrollTarget;
   }
 
-  Maybe<ScrollableLayerGuid::ViewID> fixedTarget =
-      aBuilder.GetContainingFixedPosScrollTarget(aASR);
+  Maybe<ViewID> fixedTarget = aBuilder.GetContainingFixedPosScrollTarget(aASR);
 
   if (fixedTarget) {
     return *fixedTarget;
