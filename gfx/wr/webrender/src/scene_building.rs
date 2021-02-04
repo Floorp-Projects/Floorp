@@ -2,6 +2,39 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+//! # Scene building
+//!
+//! Scene building is the phase during which display lists, a representation built for
+//! serialization, are turned into a scene, webrender's internal representation that is
+//! suited for rendering frames.
+//!
+//! This phase is happening asynchronously on the scene builder thread.
+//!
+//! # General algorithm
+//!
+//! The important aspects of scene building are:
+//! - Building up primitive lists (much of the cost of scene building goes here).
+//! - Creating pictures for content that needs to be rendered into a surface, be it so that
+//!   filters can be applied or for caching purposes.
+//! - Maintaining a temporary stack of stacking contexts to keep track of some of the
+//!   drawing states.
+//! - Stitching multiple display lists which reference each other (without cycles) into
+//!   a single scene (see build_reference_frame).
+//! - Interning, which detects when some of the retained state stays the same between display
+//!   lists.
+//!
+//! The scene builder linearly traverses the serialized display list which is naturally
+//! ordered back-to-front, accumulating primitives in the top-most stacking context's
+//! primitive list.
+//! At the end of each stacking context (see pop_stacking_context), its primitive list is
+//! either handed over to a picture if one is created, or it is concatenated into the parent
+//! stacking context's primitive list.
+//!
+//! The flow of the algorithm is mostly linear except when handling:
+//!  - shadow stacks (see push_shadow and pop_all_shadows),
+//!  - backdrop filters (see add_backdrop_filter)
+//!
+
 use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayListIter, PrimitiveFlags};
 use api::{ClipId, ColorF, CommonItemProperties, ComplexClipRegion, ComponentTransferFuncType, RasterSpace};
 use api::{DisplayItem, DisplayItemRef, ExtendMode, ExternalScrollId, FilterData, SharedFontInstanceMap};
@@ -3354,6 +3387,9 @@ impl<'a> SceneBuilder<'a> {
             );
     }
 
+    /// Create pictures for each stacking context rendered into their parents, down to the nearest
+    /// backdrop root until we have a picture that represents the contents of all primitives added
+    /// since the backdrop root
     pub fn cut_backdrop_picture(&mut self) -> Option<PictureIndex> {
         let mut flattened_items = None;
         let mut backdrop_root =  None;
