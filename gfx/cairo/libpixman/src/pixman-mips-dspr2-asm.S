@@ -26,7 +26,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * Author:  Nemanja Lukic (nlukic@mips.com)
+ * Author:  Nemanja Lukic (nemanja.lukic@rt-rk.com)
  */
 
 #include "pixman-private.h"
@@ -310,6 +310,516 @@ LEAF_MIPS_DSPR2(pixman_composite_src_x888_8888_asm_mips)
 
 END(pixman_composite_src_x888_8888_asm_mips)
 
+#if defined(__MIPSEL__) || defined(__MIPSEL) || defined(_MIPSEL) || defined(MIPSEL)
+LEAF_MIPS_DSPR2(pixman_composite_src_0888_8888_rev_asm_mips)
+/*
+ * a0 - dst (a8r8g8b8)
+ * a1 - src (b8g8r8)
+ * a2 - w
+ */
+
+    beqz              a2, 6f
+     nop
+
+    lui               t8, 0xff00;
+    srl               t9, a2, 2   /* t9 = how many multiples of 4 src pixels */
+    beqz              t9, 4f      /* branch if less than 4 src pixels */
+     nop
+
+    li                t0, 0x1
+    li                t1, 0x2
+    li                t2, 0x3
+    andi              t3, a1, 0x3
+    beq               t3, t0, 1f
+     nop
+    beq               t3, t1, 2f
+     nop
+    beq               t3, t2, 3f
+     nop
+
+0:
+    beqz              t9, 4f
+     addiu            t9, t9, -1
+    lw                t0, 0(a1)            /* t0 = R2 | B1 | G1 | R1 */
+    lw                t1, 4(a1)            /* t1 = G3 | R3 | B2 | G2 */
+    lw                t2, 8(a1)            /* t2 = B4 | G4 | R4 | B3 */
+
+    addiu             a1, a1, 12
+    addiu             a2, a2, -4
+
+    wsbh              t0, t0               /* t0 = B1 | R2 | R1 | G1 */
+    wsbh              t1, t1               /* t1 = R3 | G3 | G2 | B2 */
+    wsbh              t2, t2               /* t2 = G4 | B4 | B3 | R4 */
+
+    packrl.ph         t3, t1, t0           /* t3 = G2 | B2 | B1 | R2 */
+    packrl.ph         t4, t0, t0           /* t4 = R1 | G1 | B1 | R2 */
+    rotr              t3, t3, 16           /* t3 = B1 | R2 | G2 | B2 */
+    or                t3, t3, t8           /* t3 = FF | R2 | G2 | B2 */
+    srl               t4, t4, 8            /* t4 =  0 | R1 | G1 | B1 */
+    or                t4, t4, t8           /* t4 = FF | R1 | G1 | B1 */
+    packrl.ph         t5, t2, t1           /* t5 = B3 | R4 | R3 | G3 */
+    rotr              t5, t5, 24           /* t5 = R4 | R3 | G3 | B3 */
+    or                t5, t5, t8           /* t5 = FF | R3 | G3 | B3 */
+    rotr              t2, t2, 16           /* t2 = B3 | R4 | G4 | B4 */
+    or                t2, t2, t8           /* t5 = FF | R3 | G3 | B3 */
+
+    sw                t4, 0(a0)
+    sw                t3, 4(a0)
+    sw                t5, 8(a0)
+    sw                t2, 12(a0)
+    b                 0b
+     addiu            a0, a0, 16
+
+1:
+    lbu               t6, 0(a1)            /* t6 =  0 |  0 |  0 | R1 */
+    lhu               t7, 1(a1)            /* t7 =  0 |  0 | B1 | G1 */
+    sll               t6, t6, 16           /* t6 =  0 | R1 |  0 | 0  */
+    wsbh              t7, t7               /* t7 =  0 |  0 | G1 | B1 */
+    or                t7, t6, t7           /* t7 =  0 | R1 | G1 | B1 */
+11:
+    beqz              t9, 4f
+     addiu            t9, t9, -1
+    lw                t0, 3(a1)            /* t0 = R3 | B2 | G2 | R2 */
+    lw                t1, 7(a1)            /* t1 = G4 | R4 | B3 | G3 */
+    lw                t2, 11(a1)           /* t2 = B5 | G5 | R5 | B4 */
+
+    addiu             a1, a1, 12
+    addiu             a2, a2, -4
+
+    wsbh              t0, t0               /* t0 = B2 | R3 | R2 | G2 */
+    wsbh              t1, t1               /* t1 = R4 | G4 | G3 | B3 */
+    wsbh              t2, t2               /* t2 = G5 | B5 | B4 | R5 */
+
+    packrl.ph         t3, t1, t0           /* t3 = G3 | B3 | B2 | R3 */
+    packrl.ph         t4, t2, t1           /* t4 = B4 | R5 | R4 | G4 */
+    rotr              t0, t0, 24           /* t0 = R3 | R2 | G2 | B2 */
+    rotr              t3, t3, 16           /* t3 = B2 | R3 | G3 | B3 */
+    rotr              t4, t4, 24           /* t4 = R5 | R4 | G4 | B4 */
+    or                t7, t7, t8           /* t7 = FF | R1 | G1 | B1 */
+    or                t0, t0, t8           /* t0 = FF | R2 | G2 | B2 */
+    or                t3, t3, t8           /* t1 = FF | R3 | G3 | B3 */
+    or                t4, t4, t8           /* t3 = FF | R4 | G4 | B4 */
+
+    sw                t7, 0(a0)
+    sw                t0, 4(a0)
+    sw                t3, 8(a0)
+    sw                t4, 12(a0)
+    rotr              t7, t2, 16           /* t7 = xx | R5 | G5 | B5 */
+    b                 11b
+     addiu            a0, a0, 16
+
+2:
+    lhu               t7, 0(a1)            /* t7 =  0 |  0 | G1 | R1 */
+    wsbh              t7, t7               /* t7 =  0 |  0 | R1 | G1 */
+21:
+    beqz              t9, 4f
+     addiu            t9, t9, -1
+    lw                t0, 2(a1)            /* t0 = B2 | G2 | R2 | B1 */
+    lw                t1, 6(a1)            /* t1 = R4 | B3 | G3 | R3 */
+    lw                t2, 10(a1)           /* t2 = G5 | R5 | B4 | G4 */
+
+    addiu             a1, a1, 12
+    addiu             a2, a2, -4
+
+    wsbh              t0, t0               /* t0 = G2 | B2 | B1 | R2 */
+    wsbh              t1, t1               /* t1 = B3 | R4 | R3 | G3 */
+    wsbh              t2, t2               /* t2 = R5 | G5 | G4 | B4 */
+
+    precr_sra.ph.w    t7, t0, 0            /* t7 = R1 | G1 | B1 | R2 */
+    rotr              t0, t0, 16           /* t0 = B1 | R2 | G2 | B2 */
+    packrl.ph         t3, t2, t1           /* t3 = G4 | B4 | B3 | R4 */
+    rotr              t1, t1, 24           /* t1 = R4 | R3 | G3 | B3 */
+    srl               t7, t7, 8            /* t7 =  0 | R1 | G1 | B1 */
+    rotr              t3, t3, 16           /* t3 = B3 | R4 | G4 | B4 */
+    or                t7, t7, t8           /* t7 = FF | R1 | G1 | B1 */
+    or                t0, t0, t8           /* t0 = FF | R2 | G2 | B2 */
+    or                t1, t1, t8           /* t1 = FF | R3 | G3 | B3 */
+    or                t3, t3, t8           /* t3 = FF | R4 | G4 | B4 */
+
+    sw                t7, 0(a0)
+    sw                t0, 4(a0)
+    sw                t1, 8(a0)
+    sw                t3, 12(a0)
+    srl               t7, t2, 16           /* t7 =  0 |  0 | R5 | G5 */
+    b                 21b
+     addiu            a0, a0, 16
+
+3:
+    lbu               t7, 0(a1)            /* t7 =  0 |  0 |  0 | R1 */
+31:
+    beqz              t9, 4f
+     addiu            t9, t9, -1
+    lw                t0, 1(a1)            /* t0 = G2 | R2 | B1 | G1 */
+    lw                t1, 5(a1)            /* t1 = B3 | G3 | R3 | B2 */
+    lw                t2, 9(a1)            /* t2 = R5 | B4 | G4 | R4 */
+
+    addiu             a1, a1, 12
+    addiu             a2, a2, -4
+
+    wsbh              t0, t0               /* t0 = R2 | G2 | G1 | B1 */
+    wsbh              t1, t1               /* t1 = G3 | B3 | B2 | R3 */
+    wsbh              t2, t2               /* t2 = B4 | R5 | R4 | G4 */
+
+    precr_sra.ph.w    t7, t0, 0            /* t7 = xx | R1 | G1 | B1 */
+    packrl.ph         t3, t1, t0           /* t3 = B2 | R3 | R2 | G2 */
+    rotr              t1, t1, 16           /* t1 = B2 | R3 | G3 | B3 */
+    rotr              t4, t2, 24           /* t4 = R5 | R4 | G4 | B4 */
+    rotr              t3, t3, 24           /* t3 = R3 | R2 | G2 | B2 */
+    or                t7, t7, t8           /* t7 = FF | R1 | G1 | B1 */
+    or                t3, t3, t8           /* t3 = FF | R2 | G2 | B2 */
+    or                t1, t1, t8           /* t1 = FF | R3 | G3 | B3 */
+    or                t4, t4, t8           /* t4 = FF | R4 | G4 | B4 */
+
+    sw                t7, 0(a0)
+    sw                t3, 4(a0)
+    sw                t1, 8(a0)
+    sw                t4, 12(a0)
+    srl               t7, t2, 16           /* t7 =  0 |  0 | xx | R5 */
+    b                 31b
+     addiu            a0, a0, 16
+
+4:
+    beqz              a2, 6f
+     nop
+5:
+    lbu               t0, 0(a1)            /* t0 =  0 | 0 | 0 | R */
+    lbu               t1, 1(a1)            /* t1 =  0 | 0 | 0 | G */
+    lbu               t2, 2(a1)            /* t2 =  0 | 0 | 0 | B */
+    addiu             a1, a1, 3
+
+    sll               t0, t0, 16           /* t2 =  0 | R | 0 | 0 */
+    sll               t1, t1, 8            /* t1 =  0 | 0 | G | 0 */
+
+    or                t2, t2, t1           /* t2 =  0 | 0 | G | B */
+    or                t2, t2, t0           /* t2 =  0 | R | G | B */
+    or                t2, t2, t8           /* t2 = FF | R | G | B */
+
+    sw                t2, 0(a0)
+    addiu             a2, a2, -1
+    bnez              a2, 5b
+     addiu            a0, a0, 4
+6:
+    j                 ra
+     nop
+
+END(pixman_composite_src_0888_8888_rev_asm_mips)
+
+LEAF_MIPS_DSPR2(pixman_composite_src_0888_0565_rev_asm_mips)
+/*
+ * a0 - dst (r5g6b5)
+ * a1 - src (b8g8r8)
+ * a2 - w
+ */
+
+    SAVE_REGS_ON_STACK 0, v0, v1
+    beqz              a2, 6f
+     nop
+
+    li                t6, 0xf800f800
+    li                t7, 0x07e007e0
+    li                t8, 0x001F001F
+    srl               t9, a2, 2   /* t9 = how many multiples of 4 src pixels */
+    beqz              t9, 4f      /* branch if less than 4 src pixels */
+     nop
+
+    li                t0, 0x1
+    li                t1, 0x2
+    li                t2, 0x3
+    andi              t3, a1, 0x3
+    beq               t3, t0, 1f
+     nop
+    beq               t3, t1, 2f
+     nop
+    beq               t3, t2, 3f
+     nop
+
+0:
+    beqz              t9, 4f
+     addiu            t9, t9, -1
+    lw                t0, 0(a1)            /* t0 = R2 | B1 | G1 | R1 */
+    lw                t1, 4(a1)            /* t1 = G3 | R3 | B2 | G2 */
+    lw                t2, 8(a1)            /* t2 = B4 | G4 | R4 | B3 */
+
+    addiu             a1, a1, 12
+    addiu             a2, a2, -4
+
+    wsbh              t0, t0               /* t0 = B1 | R2 | R1 | G1 */
+    wsbh              t1, t1               /* t1 = R3 | G3 | G2 | B2 */
+    wsbh              t2, t2               /* t2 = G4 | B4 | B3 | R4 */
+
+    packrl.ph         t3, t1, t0           /* t3 = G2 | B2 | B1 | R2 */
+    packrl.ph         t4, t0, t0           /* t4 = R1 | G1 | B1 | R2 */
+    rotr              t3, t3, 16           /* t3 = B1 | R2 | G2 | B2 */
+    srl               t4, t4, 8            /* t4 =  0 | R1 | G1 | B1 */
+    packrl.ph         t5, t2, t1           /* t5 = B3 | R4 | R3 | G3 */
+    rotr              t5, t5, 24           /* t5 = R4 | R3 | G3 | B3 */
+    rotr              t2, t2, 16           /* t2 = B3 | R4 | G4 | B4 */
+
+    CONVERT_2x8888_TO_2x0565 t4, t3, t4, t3, t6, t7, t8, v0, v1
+    CONVERT_2x8888_TO_2x0565 t5, t2, t5, t2, t6, t7, t8, v0, v1
+
+    sh                t4, 0(a0)
+    sh                t3, 2(a0)
+    sh                t5, 4(a0)
+    sh                t2, 6(a0)
+    b                 0b
+     addiu            a0, a0, 8
+
+1:
+    lbu               t4, 0(a1)            /* t4 =  0 |  0 |  0 | R1 */
+    lhu               t5, 1(a1)            /* t5 =  0 |  0 | B1 | G1 */
+    sll               t4, t4, 16           /* t4 =  0 | R1 |  0 | 0  */
+    wsbh              t5, t5               /* t5 =  0 |  0 | G1 | B1 */
+    or                t5, t4, t5           /* t5 =  0 | R1 | G1 | B1 */
+11:
+    beqz              t9, 4f
+     addiu            t9, t9, -1
+    lw                t0, 3(a1)            /* t0 = R3 | B2 | G2 | R2 */
+    lw                t1, 7(a1)            /* t1 = G4 | R4 | B3 | G3 */
+    lw                t2, 11(a1)           /* t2 = B5 | G5 | R5 | B4 */
+
+    addiu             a1, a1, 12
+    addiu             a2, a2, -4
+
+    wsbh              t0, t0               /* t0 = B2 | R3 | R2 | G2 */
+    wsbh              t1, t1               /* t1 = R4 | G4 | G3 | B3 */
+    wsbh              t2, t2               /* t2 = G5 | B5 | B4 | R5 */
+
+    packrl.ph         t3, t1, t0           /* t3 = G3 | B3 | B2 | R3 */
+    packrl.ph         t4, t2, t1           /* t4 = B4 | R5 | R4 | G4 */
+    rotr              t0, t0, 24           /* t0 = R3 | R2 | G2 | B2 */
+    rotr              t3, t3, 16           /* t3 = B2 | R3 | G3 | B3 */
+    rotr              t4, t4, 24           /* t4 = R5 | R4 | G4 | B4 */
+
+    CONVERT_2x8888_TO_2x0565 t5, t0, t5, t0, t6, t7, t8, v0, v1
+    CONVERT_2x8888_TO_2x0565 t3, t4, t3, t4, t6, t7, t8, v0, v1
+
+    sh                t5, 0(a0)
+    sh                t0, 2(a0)
+    sh                t3, 4(a0)
+    sh                t4, 6(a0)
+    rotr              t5, t2, 16           /* t5 = xx | R5 | G5 | B5 */
+    b                 11b
+     addiu            a0, a0, 8
+
+2:
+    lhu               t5, 0(a1)            /* t5 =  0 |  0 | G1 | R1 */
+    wsbh              t5, t5               /* t5 =  0 |  0 | R1 | G1 */
+21:
+    beqz              t9, 4f
+     addiu            t9, t9, -1
+    lw                t0, 2(a1)            /* t0 = B2 | G2 | R2 | B1 */
+    lw                t1, 6(a1)            /* t1 = R4 | B3 | G3 | R3 */
+    lw                t2, 10(a1)           /* t2 = G5 | R5 | B4 | G4 */
+
+    addiu             a1, a1, 12
+    addiu             a2, a2, -4
+
+    wsbh              t0, t0               /* t0 = G2 | B2 | B1 | R2 */
+    wsbh              t1, t1               /* t1 = B3 | R4 | R3 | G3 */
+    wsbh              t2, t2               /* t2 = R5 | G5 | G4 | B4 */
+
+    precr_sra.ph.w    t5, t0, 0            /* t5 = R1 | G1 | B1 | R2 */
+    rotr              t0, t0, 16           /* t0 = B1 | R2 | G2 | B2 */
+    packrl.ph         t3, t2, t1           /* t3 = G4 | B4 | B3 | R4 */
+    rotr              t1, t1, 24           /* t1 = R4 | R3 | G3 | B3 */
+    srl               t5, t5, 8            /* t5 =  0 | R1 | G1 | B1 */
+    rotr              t3, t3, 16           /* t3 = B3 | R4 | G4 | B4 */
+
+    CONVERT_2x8888_TO_2x0565 t5, t0, t5, t0, t6, t7, t8, v0, v1
+    CONVERT_2x8888_TO_2x0565 t1, t3, t1, t3, t6, t7, t8, v0, v1
+
+    sh                t5, 0(a0)
+    sh                t0, 2(a0)
+    sh                t1, 4(a0)
+    sh                t3, 6(a0)
+    srl               t5, t2, 16           /* t5 =  0 |  0 | R5 | G5 */
+    b                 21b
+     addiu            a0, a0, 8
+
+3:
+    lbu               t5, 0(a1)            /* t5 =  0 |  0 |  0 | R1 */
+31:
+    beqz              t9, 4f
+     addiu            t9, t9, -1
+    lw                t0, 1(a1)            /* t0 = G2 | R2 | B1 | G1 */
+    lw                t1, 5(a1)            /* t1 = B3 | G3 | R3 | B2 */
+    lw                t2, 9(a1)            /* t2 = R5 | B4 | G4 | R4 */
+
+    addiu             a1, a1, 12
+    addiu             a2, a2, -4
+
+    wsbh              t0, t0               /* t0 = R2 | G2 | G1 | B1 */
+    wsbh              t1, t1               /* t1 = G3 | B3 | B2 | R3 */
+    wsbh              t2, t2               /* t2 = B4 | R5 | R4 | G4 */
+
+    precr_sra.ph.w    t5, t0, 0            /* t5 = xx | R1 | G1 | B1 */
+    packrl.ph         t3, t1, t0           /* t3 = B2 | R3 | R2 | G2 */
+    rotr              t1, t1, 16           /* t1 = B2 | R3 | G3 | B3 */
+    rotr              t4, t2, 24           /* t4 = R5 | R4 | G4 | B4 */
+    rotr              t3, t3, 24           /* t3 = R3 | R2 | G2 | B2 */
+
+    CONVERT_2x8888_TO_2x0565 t5, t3, t5, t3, t6, t7, t8, v0, v1
+    CONVERT_2x8888_TO_2x0565 t1, t4, t1, t4, t6, t7, t8, v0, v1
+
+    sh                t5, 0(a0)
+    sh                t3, 2(a0)
+    sh                t1, 4(a0)
+    sh                t4, 6(a0)
+    srl               t5, t2, 16           /* t5 =  0 |  0 | xx | R5 */
+    b                 31b
+     addiu            a0, a0, 8
+
+4:
+    beqz              a2, 6f
+     nop
+5:
+    lbu               t0, 0(a1)            /* t0 =  0 | 0 | 0 | R */
+    lbu               t1, 1(a1)            /* t1 =  0 | 0 | 0 | G */
+    lbu               t2, 2(a1)            /* t2 =  0 | 0 | 0 | B */
+    addiu             a1, a1, 3
+
+    sll               t0, t0, 16           /* t2 =  0 | R | 0 | 0 */
+    sll               t1, t1, 8            /* t1 =  0 | 0 | G | 0 */
+
+    or                t2, t2, t1           /* t2 =  0 | 0 | G | B */
+    or                t2, t2, t0           /* t2 =  0 | R | G | B */
+
+    CONVERT_1x8888_TO_1x0565 t2, t3, t4, t5
+
+    sh                t3, 0(a0)
+    addiu             a2, a2, -1
+    bnez              a2, 5b
+     addiu            a0, a0, 2
+6:
+    RESTORE_REGS_FROM_STACK 0, v0, v1
+    j                 ra
+     nop
+
+END(pixman_composite_src_0888_0565_rev_asm_mips)
+#endif
+
+LEAF_MIPS_DSPR2(pixman_composite_src_pixbuf_8888_asm_mips)
+/*
+ * a0 - dst  (a8b8g8r8)
+ * a1 - src  (a8r8g8b8)
+ * a2 - w
+ */
+
+    SAVE_REGS_ON_STACK 0, v0
+    li       v0, 0x00ff00ff
+
+    beqz     a2, 3f
+     nop
+    addiu    t1, a2, -1
+    beqz     t1, 2f
+     nop
+1:
+    lw       t0, 0(a1)
+    lw       t1, 4(a1)
+    addiu    a1, a1, 8
+    addiu    a2, a2, -2
+    srl      t2, t0, 24
+    srl      t3, t1, 24
+
+    MIPS_2xUN8x4_MUL_2xUN8 t0, t1, t2, t3, t0, t1, v0, t4, t5, t6, t7, t8, t9
+
+    sll      t0, t0, 8
+    sll      t1, t1, 8
+    andi     t2, t2, 0xff
+    andi     t3, t3, 0xff
+    or       t0, t0, t2
+    or       t1, t1, t3
+    wsbh     t0, t0
+    wsbh     t1, t1
+    rotr     t0, t0, 16
+    rotr     t1, t1, 16
+    sw       t0, 0(a0)
+    sw       t1, 4(a0)
+
+    addiu    t2, a2, -1
+    bgtz     t2, 1b
+     addiu   a0, a0, 8
+2:
+    beqz     a2, 3f
+     nop
+    lw       t0, 0(a1)
+    srl      t1, t0, 24
+
+    MIPS_UN8x4_MUL_UN8 t0, t1, t0, v0, t3, t4, t5
+
+    sll      t0, t0, 8
+    andi     t1, t1, 0xff
+    or       t0, t0, t1
+    wsbh     t0, t0
+    rotr     t0, t0, 16
+    sw       t0, 0(a0)
+3:
+    RESTORE_REGS_FROM_STACK 0, v0
+    j        ra
+     nop
+
+END(pixman_composite_src_pixbuf_8888_asm_mips)
+
+LEAF_MIPS_DSPR2(pixman_composite_src_rpixbuf_8888_asm_mips)
+/*
+ * a0 - dst  (a8r8g8b8)
+ * a1 - src  (a8r8g8b8)
+ * a2 - w
+ */
+
+    SAVE_REGS_ON_STACK 0, v0
+    li       v0, 0x00ff00ff
+
+    beqz     a2, 3f
+     nop
+    addiu    t1, a2, -1
+    beqz     t1, 2f
+     nop
+1:
+    lw       t0, 0(a1)
+    lw       t1, 4(a1)
+    addiu    a1, a1, 8
+    addiu    a2, a2, -2
+    srl      t2, t0, 24
+    srl      t3, t1, 24
+
+    MIPS_2xUN8x4_MUL_2xUN8 t0, t1, t2, t3, t0, t1, v0, t4, t5, t6, t7, t8, t9
+
+    sll      t0, t0, 8
+    sll      t1, t1, 8
+    andi     t2, t2, 0xff
+    andi     t3, t3, 0xff
+    or       t0, t0, t2
+    or       t1, t1, t3
+    rotr     t0, t0, 8
+    rotr     t1, t1, 8
+    sw       t0, 0(a0)
+    sw       t1, 4(a0)
+
+    addiu    t2, a2, -1
+    bgtz     t2, 1b
+     addiu   a0, a0, 8
+2:
+    beqz     a2, 3f
+     nop
+    lw       t0, 0(a1)
+    srl      t1, t0, 24
+
+    MIPS_UN8x4_MUL_UN8 t0, t1, t0, v0, t3, t4, t5
+
+    sll      t0, t0, 8
+    andi     t1, t1, 0xff
+    or       t0, t0, t1
+    rotr     t0, t0, 8
+    sw       t0, 0(a0)
+3:
+    RESTORE_REGS_FROM_STACK 0, v0
+    j        ra
+     nop
+
+END(pixman_composite_src_rpixbuf_8888_asm_mips)
+
 LEAF_MIPS_DSPR2(pixman_composite_src_n_8_8888_asm_mips)
 /*
  * a0 - dst  (a8r8g8b8)
@@ -451,34 +961,35 @@ LEAF_MIPS_DSPR2(pixman_composite_over_n_8888_8888_ca_asm_mips)
  * a3 - w
  */
 
-    SAVE_REGS_ON_STACK 8, s0, s1, s2, s3, s4, s5
-    beqz         a3, 4f
+    beqz         a3, 8f
      nop
+    SAVE_REGS_ON_STACK 8, s0, s1, s2, s3, s4, s5
+
     li           t6, 0xff
     addiu        t7, zero, -1 /* t7 = 0xffffffff */
     srl          t8, a1, 24   /* t8 = srca */
     li           t9, 0x00ff00ff
+
     addiu        t1, a3, -1
-    beqz         t1, 3f       /* last pixel */
+    beqz         t1, 4f       /* last pixel */
      nop
-    beq          t8, t6, 2f   /* if (srca == 0xff) */
-     nop
-1:
-                              /* a1 = src */
+
+0:
     lw           t0, 0(a2)    /* t0 = mask */
     lw           t1, 4(a2)    /* t1 = mask */
+    addiu        a3, a3, -2   /* w = w - 2 */
     or           t2, t0, t1
-    beqz         t2, 12f      /* if (t0 == 0) && (t1 == 0) */
+    beqz         t2, 3f      /* if (t0 == 0) && (t1 == 0) */
      addiu       a2, a2, 8
-    and          t3, t0, t1
-    move         t4, a1       /* t4 = src */
-    move         t5, a1       /* t5 = src */
+    and          t2, t0, t1
+    beq          t2, t7, 1f  /* if (t0 == 0xffffffff) && (t1 == 0xffffffff) */
+     nop
+
+//if(ma)
     lw           t2, 0(a0)    /* t2 = dst */
-    beq          t3, t7, 11f  /* if (t0 == 0xffffffff) && (t1 == 0xffffffff) */
-     lw          t3, 4(a0)    /* t3 = dst */
+    lw           t3, 4(a0)    /* t3 = dst */
     MIPS_2xUN8x4_MUL_2xUN8x4 a1, a1, t0, t1, t4, t5, t9, s0, s1, s2, s3, s4, s5
     MIPS_2xUN8x4_MUL_2xUN8   t0, t1, t8, t8, t0, t1, t9, s0, s1, s2, s3, s4, s5
-11:
     not          t0, t0
     not          t1, t1
     MIPS_2xUN8x4_MUL_2xUN8x4 t2, t3, t0, t1, t2, t3, t9, s0, s1, s2, s3, s4, s5
@@ -486,60 +997,77 @@ LEAF_MIPS_DSPR2(pixman_composite_over_n_8888_8888_ca_asm_mips)
     addu_s.qb    t3, t5, t3
     sw           t2, 0(a0)
     sw           t3, 4(a0)
-12:
-    addiu        a3, a3, -2
     addiu        t1, a3, -1
-    bgtz         t1, 1b
+    bgtz         t1, 0b
      addiu       a0, a0, 8
-    b            3f
+    b            4f
      nop
-2:
-                              /* a1 = src */
-    lw           t0, 0(a2)    /* t0 = mask */
-    lw           t1, 4(a2)    /* t1 = mask */
-    or           t2, t0, t1
-    beqz         t2, 22f      /* if (t0 == 0) & (t1 == 0) */
-     addiu       a2, a2, 8
-    and          t2, t0, t1
-    move         t4, a1
-    beq          t2, t7, 21f  /* if (t0 == 0xffffffff) && (t1 == 0xffffffff) */
-     move        t5, a1
+1:
+//if (t0 == 0xffffffff) && (t1 == 0xffffffff):
+    beq          t8, t6, 2f   /* if (srca == 0xff) */
+     nop
     lw           t2, 0(a0)    /* t2 = dst */
     lw           t3, 4(a0)    /* t3 = dst */
-    MIPS_2xUN8x4_MUL_2xUN8x4 a1, a1, t0, t1, t4, t5, t9, s0, s1, s2, s3, s4, s5
-    not          t0, t0
-    not          t1, t1
-    MIPS_2xUN8x4_MUL_2xUN8x4 t2, t3, t0, t1, t2, t3, t9, s0, s1, s2, s3, s4, s5
-    addu_s.qb    t4, t4, t2
-    addu_s.qb    t5, t5, t3
-21:
-    sw           t4, 0(a0)
-    sw           t5, 4(a0)
-22:
-    addiu        a3, a3, -2
+    not          t0, a1
+    not          t1, a1
+    srl          t0, t0, 24
+    srl          t1, t1, 24
+    MIPS_2xUN8x4_MUL_2xUN8 t2, t3, t0, t1, t2, t3, t9, s0, s1, s2, s3, s4, s5
+    addu_s.qb    t2, a1, t2
+    addu_s.qb    t3, a1, t3
+    sw           t2, 0(a0)
+    sw           t3, 4(a0)
     addiu        t1, a3, -1
-    bgtz         t1, 2b
+    bgtz         t1, 0b
      addiu       a0, a0, 8
+    b            4f
+     nop
+2:
+    sw           a1, 0(a0)
+    sw           a1, 4(a0)
 3:
-    blez         a3, 4f
+    addiu        t1, a3, -1
+    bgtz         t1, 0b
+     addiu       a0, a0, 8
+
+4:
+    beqz         a3, 7f
      nop
                               /* a1 = src */
-    lw           t1, 0(a2)    /* t1 = mask */
-    beqz         t1, 4f
+    lw           t0, 0(a2)    /* t0 = mask */
+    beqz         t0, 7f       /* if (t0 == 0) */
      nop
-    move         t2, a1       /* t2 = src */
-    beq          t1, t7, 31f
-     lw          t0, 0(a0)    /* t0 = dst */
-
-    MIPS_UN8x4_MUL_UN8x4  a1, t1, t2, t9, t3, t4, t5, t6
-    MIPS_UN8x4_MUL_UN8    t1, t8, t1, t9, t3, t4, t5
-31:
-    not          t1, t1
-    MIPS_UN8x4_MUL_UN8x4  t0, t1, t0, t9, t3, t4, t5, t6
-    addu_s.qb    t0, t2, t0
-    sw           t0, 0(a0)
-4:
+    beq          t0, t7, 5f  /* if (t0 == 0xffffffff) */
+     nop
+//if(ma)
+    lw           t1, 0(a0)    /* t1 = dst */
+    MIPS_UN8x4_MUL_UN8x4  a1, t0, t2, t9, t3, t4, t5, s0
+    MIPS_UN8x4_MUL_UN8    t0, t8, t0, t9, t3, t4, t5
+    not          t0, t0
+    MIPS_UN8x4_MUL_UN8x4  t1, t0, t1, t9, t3, t4, t5, s0
+    addu_s.qb    t1, t2, t1
+    sw           t1, 0(a0)
     RESTORE_REGS_FROM_STACK 8, s0, s1, s2, s3, s4, s5
+    j            ra
+     nop
+5:
+//if (t0 == 0xffffffff)
+    beq          t8, t6, 6f   /* if (srca == 0xff) */
+     nop
+    lw           t1, 0(a0)    /* t1 = dst */
+    not          t0, a1
+    srl          t0, t0, 24
+    MIPS_UN8x4_MUL_UN8 t1, t0, t1, t9, t2, t3, t4
+    addu_s.qb    t1, a1, t1
+    sw           t1, 0(a0)
+    RESTORE_REGS_FROM_STACK 8, s0, s1, s2, s3, s4, s5
+    j            ra
+     nop
+6:
+    sw           a1, 0(a0)
+7:
+    RESTORE_REGS_FROM_STACK 8, s0, s1, s2, s3, s4, s5
+8:
     j            ra
      nop
 
@@ -553,110 +1081,250 @@ LEAF_MIPS_DSPR2(pixman_composite_over_n_8888_0565_ca_asm_mips)
  * a3 - w
  */
 
+    beqz         a3, 8f
+     nop
     SAVE_REGS_ON_STACK 20, s0, s1, s2, s3, s4, s5, s6, s7, s8
-    beqz         a3, 4f
-     nop
-    li           t5, 0xf800f800
-    li           t6, 0x07e007e0
-    li           t7, 0x001F001F
-    li           t9, 0x00ff00ff
 
+    li           t6, 0xff
+    addiu        t7, zero, -1 /* t7 = 0xffffffff */
     srl          t8, a1, 24   /* t8 = srca */
-    addiu        t1, a3, -1
-    beqz         t1, 3f       /* last pixel */
-     nop
-    li           s0, 0xff     /* s0 = 0xff */
-    addiu        s1, zero, -1 /* s1 = 0xffffffff */
+    li           t9, 0x00ff00ff
+    li           s6, 0xf800f800
+    li           s7, 0x07e007e0
+    li           s8, 0x001F001F
 
-    beq          t8, s0, 2f   /* if (srca == 0xff) */
-     nop
-1:
-                              /* a1 = src */
-    lw           t0, 0(a2)    /* t0 = mask */
-    lw           t1, 4(a2)    /* t1 = mask */
-    or           t2, t0, t1
-    beqz         t2, 12f      /* if (t0 == 0) && (t1 == 0) */
-     addiu       a2, a2, 8
-    and          t3, t0, t1
-    move         s2, a1       /* s2 = src */
-    move         s3, a1       /* s3 = src */
-    lhu          t2, 0(a0)    /* t2 = dst */
-    beq          t3, s1, 11f  /* if (t0 == 0xffffffff) && (t1 == 0xffffffff) */
-     lhu         t3, 2(a0)    /* t3 = dst */
-    MIPS_2xUN8x4_MUL_2xUN8x4 a1, a1, t0, t1, s2, s3, t9, t4, s4, s5, s6, s7, s8
-    MIPS_2xUN8x4_MUL_2xUN8   t0, t1, t8, t8, t0, t1, t9, t4, s4, s5, s6, s7, s8
-11:
-    not          t0, t0
-    not          t1, t1
-    CONVERT_2x0565_TO_2x8888 t2, t3, s4, s5, t6, t7, t4, s6, s7, s8
-    MIPS_2xUN8x4_MUL_2xUN8x4 s4, s5, t0, t1, s4, s5, t9, t4, s6, s7, s8, t0, t1
-    addu_s.qb    s2, s2, s4
-    addu_s.qb    s3, s3, s5
-    CONVERT_2x8888_TO_2x0565 s2, s3, t2, t3, t5, t6, t7, s4, s5
-    sh           t2, 0(a0)
-    sh           t3, 2(a0)
-12:
-    addiu        a3, a3, -2
     addiu        t1, a3, -1
-    bgtz         t1, 1b
-     addiu       a0, a0, 4
-    b            3f
+    beqz         t1, 4f       /* last pixel */
      nop
-2:
-                              /* a1 = src */
+
+0:
     lw           t0, 0(a2)    /* t0 = mask */
     lw           t1, 4(a2)    /* t1 = mask */
+    addiu        a3, a3, -2   /* w = w - 2 */
     or           t2, t0, t1
-    beqz         t2, 22f      /* if (t0 == 0) & (t1 == 0) */
+    beqz         t2, 3f      /* if (t0 == 0) && (t1 == 0) */
      addiu       a2, a2, 8
-    and          t3, t0, t1
-    move         t2, a1
-    beq          t3, s1, 21f  /* if (t0 == 0xffffffff) && (t1 == 0xffffffff) */
-     move        t3, a1
+    and          t2, t0, t1
+    beq          t2, t7, 1f  /* if (t0 == 0xffffffff) && (t1 == 0xffffffff) */
+     nop
+
+//if(ma)
     lhu          t2, 0(a0)    /* t2 = dst */
     lhu          t3, 2(a0)    /* t3 = dst */
-    MIPS_2xUN8x4_MUL_2xUN8x4 a1, a1, t0, t1, s2, s3, t9, t4, s4, s5, s6, s7, s8
+    MIPS_2xUN8x4_MUL_2xUN8x4 a1, a1, t0, t1, t4, t5, t9, s0, s1, s2, s3, s4, s5
+    MIPS_2xUN8x4_MUL_2xUN8   t0, t1, t8, t8, t0, t1, t9, s0, s1, s2, s3, s4, s5
     not          t0, t0
     not          t1, t1
-    CONVERT_2x0565_TO_2x8888 t2, t3, s4, s5, t6, t7, t4, s6, s7, s8
-    MIPS_2xUN8x4_MUL_2xUN8x4 s4, s5, t0, t1, s4, s5, t9, t4, s6, s7, s8, t2, t3
-    addu_s.qb    t2, s2, s4
-    addu_s.qb    t3, s3, s5
-21:
-    CONVERT_2x8888_TO_2x0565 t2, t3, t0, t1, t5, t6, t7, s2, s3
-    sh           t0, 0(a0)
-    sh           t1, 2(a0)
-22:
-    addiu        a3, a3, -2
+    CONVERT_2x0565_TO_2x8888 t2, t3, t2, t3, s7, s8, s0, s1, s2, s3
+    MIPS_2xUN8x4_MUL_2xUN8x4 t2, t3, t0, t1, t2, t3, t9, s0, s1, s2, s3, s4, s5
+    addu_s.qb    t2, t4, t2
+    addu_s.qb    t3, t5, t3
+    CONVERT_2x8888_TO_2x0565 t2, t3, t2, t3, s6, s7, s8, s0, s1
+    sh           t2, 0(a0)
+    sh           t3, 2(a0)
     addiu        t1, a3, -1
-    bgtz         t1, 2b
+    bgtz         t1, 0b
      addiu       a0, a0, 4
+    b            4f
+     nop
+1:
+//if (t0 == 0xffffffff) && (t1 == 0xffffffff):
+    beq          t8, t6, 2f   /* if (srca == 0xff) */
+     nop
+    lhu          t2, 0(a0)    /* t2 = dst */
+    lhu          t3, 2(a0)    /* t3 = dst */
+    not          t0, a1
+    not          t1, a1
+    srl          t0, t0, 24
+    srl          t1, t1, 24
+    CONVERT_2x0565_TO_2x8888 t2, t3, t2, t3, s7, s8, s0, s1, s2, s3
+    MIPS_2xUN8x4_MUL_2xUN8   t2, t3, t0, t1, t2, t3, t9, s0, s1, s2, s3, s4, s5
+    addu_s.qb    t2, a1, t2
+    addu_s.qb    t3, a1, t3
+    CONVERT_2x8888_TO_2x0565 t2, t3, t2, t3, s6, s7, s8, s0, s1
+    sh           t2, 0(a0)
+    sh           t3, 2(a0)
+    addiu        t1, a3, -1
+    bgtz         t1, 0b
+     addiu       a0, a0, 4
+    b            4f
+     nop
+2:
+    CONVERT_1x8888_TO_1x0565 a1, t2, s0, s1
+    sh           t2, 0(a0)
+    sh           t2, 2(a0)
 3:
-    blez         a3, 4f
+    addiu        t1, a3, -1
+    bgtz         t1, 0b
+     addiu       a0, a0, 4
+
+4:
+    beqz         a3, 7f
      nop
                               /* a1 = src */
-    lw           t1, 0(a2)    /* t1 = mask */
-    beqz         t1, 4f
+    lw           t0, 0(a2)    /* t0 = mask */
+    beqz         t0, 7f       /* if (t0 == 0) */
      nop
-    move         t2, a1       /* t2 = src */
-    beq          t1, t7, 31f
-     lhu         t0, 0(a0)    /* t0 = dst */
-
-    MIPS_UN8x4_MUL_UN8x4     a1, t1, t2, t9, t3, t4, t5, t6
-    MIPS_UN8x4_MUL_UN8       t1, t8, t1, t9, t3, t4, t5
-31:
-    not          t1, t1
-    CONVERT_1x0565_TO_1x8888 t0, s1, s2, s3
-    MIPS_UN8x4_MUL_UN8x4     s1, t1, t3, t9, t4, t5, t6, t7
-    addu_s.qb    t0, t2, t3
-    CONVERT_1x8888_TO_1x0565 t0, s1, s2, s3
-    sh           s1, 0(a0)
-4:
-    RESTORE_REGS_FROM_STACK  20, s0, s1, s2, s3, s4, s5, s6, s7, s8
+    beq          t0, t7, 5f  /* if (t0 == 0xffffffff) */
+     nop
+//if(ma)
+    lhu          t1, 0(a0)    /* t1 = dst */
+    MIPS_UN8x4_MUL_UN8x4     a1, t0, t2, t9, t3, t4, t5, s0
+    MIPS_UN8x4_MUL_UN8       t0, t8, t0, t9, t3, t4, t5
+    not          t0, t0
+    CONVERT_1x0565_TO_1x8888 t1, s1, s2, s3
+    MIPS_UN8x4_MUL_UN8x4     s1, t0, s1, t9, t3, t4, t5, s0
+    addu_s.qb    s1, t2, s1
+    CONVERT_1x8888_TO_1x0565 s1, t1, s0, s2
+    sh           t1, 0(a0)
+    RESTORE_REGS_FROM_STACK 20, s0, s1, s2, s3, s4, s5, s6, s7, s8
+    j            ra
+     nop
+5:
+//if (t0 == 0xffffffff)
+    beq          t8, t6, 6f   /* if (srca == 0xff) */
+     nop
+    lhu          t1, 0(a0)    /* t1 = dst */
+    not          t0, a1
+    srl          t0, t0, 24
+    CONVERT_1x0565_TO_1x8888 t1, s1, s2, s3
+    MIPS_UN8x4_MUL_UN8       s1, t0, s1, t9, t2, t3, t4
+    addu_s.qb    s1, a1, s1
+    CONVERT_1x8888_TO_1x0565 s1, t1, s0, s2
+    sh           t1, 0(a0)
+    RESTORE_REGS_FROM_STACK 20, s0, s1, s2, s3, s4, s5, s6, s7, s8
+    j            ra
+     nop
+6:
+    CONVERT_1x8888_TO_1x0565 a1, t1, s0, s2
+    sh           t1, 0(a0)
+7:
+    RESTORE_REGS_FROM_STACK 20, s0, s1, s2, s3, s4, s5, s6, s7, s8
+8:
     j            ra
      nop
 
 END(pixman_composite_over_n_8888_0565_ca_asm_mips)
+
+LEAF_MIPS_DSPR2(pixman_composite_over_n_8_8_asm_mips)
+/*
+ * a0 - dst  (a8)
+ * a1 - src  (32bit constant)
+ * a2 - mask (a8)
+ * a3 - w
+ */
+
+    SAVE_REGS_ON_STACK 0, v0
+    li                t9, 0x00ff00ff
+    beqz              a3, 3f
+     nop
+    srl               v0, a3, 2   /* v0 = how many multiples of 4 dst pixels */
+    beqz              v0, 1f      /* branch if less than 4 src pixels */
+     nop
+
+    srl               t8, a1, 24
+    replv.ph          t8, t8
+
+0:
+    beqz              v0, 1f
+     addiu            v0, v0, -1
+    lbu               t0, 0(a2)
+    lbu               t1, 1(a2)
+    lbu               t2, 2(a2)
+    lbu               t3, 3(a2)
+    lbu               t4, 0(a0)
+    lbu               t5, 1(a0)
+    lbu               t6, 2(a0)
+    lbu               t7, 3(a0)
+
+    addiu             a2, a2, 4
+
+    precr_sra.ph.w    t1, t0, 0
+    precr_sra.ph.w    t3, t2, 0
+    precr_sra.ph.w    t5, t4, 0
+    precr_sra.ph.w    t7, t6, 0
+
+    precr.qb.ph       t0, t3, t1
+    precr.qb.ph       t1, t7, t5
+
+    muleu_s.ph.qbl    t2, t0, t8
+    muleu_s.ph.qbr    t3, t0, t8
+    shra_r.ph         t4, t2, 8
+    shra_r.ph         t5, t3, 8
+    and               t4, t4, t9
+    and               t5, t5, t9
+    addq.ph           t2, t2, t4
+    addq.ph           t3, t3, t5
+    shra_r.ph         t2, t2, 8
+    shra_r.ph         t3, t3, 8
+    precr.qb.ph       t0, t2, t3
+    not               t6, t0
+
+    preceu.ph.qbl     t7, t6
+    preceu.ph.qbr     t6, t6
+
+    muleu_s.ph.qbl    t2, t1, t7
+    muleu_s.ph.qbr    t3, t1, t6
+    shra_r.ph         t4, t2, 8
+    shra_r.ph         t5, t3, 8
+    and               t4, t4, t9
+    and               t5, t5, t9
+    addq.ph           t2, t2, t4
+    addq.ph           t3, t3, t5
+    shra_r.ph         t2, t2, 8
+    shra_r.ph         t3, t3, 8
+    precr.qb.ph       t1, t2, t3
+
+    addu_s.qb         t2, t0, t1
+
+    sb                t2, 0(a0)
+    srl               t2, t2, 8
+    sb                t2, 1(a0)
+    srl               t2, t2, 8
+    sb                t2, 2(a0)
+    srl               t2, t2, 8
+    sb                t2, 3(a0)
+    addiu             a3, a3, -4
+    b                 0b
+     addiu            a0, a0, 4
+
+1:
+    beqz              a3, 3f
+     nop
+    srl               t8, a1, 24
+2:
+    lbu               t0, 0(a2)
+    lbu               t1, 0(a0)
+    addiu             a2, a2, 1
+
+    mul               t2, t0, t8
+    shra_r.ph         t3, t2, 8
+    andi              t3, t3, 0x00ff
+    addq.ph           t2, t2, t3
+    shra_r.ph         t2, t2, 8
+    not               t3, t2
+    andi              t3, t3, 0x00ff
+
+
+    mul               t4, t1, t3
+    shra_r.ph         t5, t4, 8
+    andi              t5, t5, 0x00ff
+    addq.ph           t4, t4, t5
+    shra_r.ph         t4, t4, 8
+    andi              t4, t4, 0x00ff
+
+    addu_s.qb         t2, t2, t4
+    sb                t2, 0(a0)
+    addiu             a3, a3, -1
+    bnez              a3, 2b
+     addiu            a0, a0, 1
+
+3:
+    RESTORE_REGS_FROM_STACK 0, v0
+    j                 ra
+     nop
+
+END(pixman_composite_over_n_8_8_asm_mips)
 
 LEAF_MIPS_DSPR2(pixman_composite_over_n_8_8888_asm_mips)
 /*
@@ -1341,6 +2009,84 @@ LEAF_MIPS_DSPR2(pixman_composite_over_8888_8888_asm_mips)
      nop
 
 END(pixman_composite_over_8888_8888_asm_mips)
+
+LEAF_MIPS_DSPR2(pixman_composite_over_8888_0565_asm_mips)
+/*
+ * a0 - dst  (r5g6b5)
+ * a1 - src  (a8r8g8b8)
+ * a2 - w
+ */
+
+    SAVE_REGS_ON_STACK 8, s0, s1, s2, s3, s4, s5
+    li           t4, 0x00ff00ff
+    li           s3, 0xf800f800
+    li           s4, 0x07e007e0
+    li           s5, 0x001F001F
+    beqz         a2, 3f
+     nop
+    addiu        t1, a2, -1
+    beqz         t1, 2f
+     nop
+1:
+    lw           t0, 0(a1) /* t0 = source      (a8r8g8b8) */
+    lw           t1, 4(a1) /* t1 = source      (a8r8g8b8) */
+    lhu          t2, 0(a0) /* t2 = destination (r5g6b5) */
+    lhu          t3, 2(a0) /* t3 = destination (r5g6b5) */
+    addiu        a1, a1, 8
+
+    not          t5, t0
+    srl          t5, t5, 24
+    not          t6, t1
+    srl          t6, t6, 24
+
+    or           t7, t5, t6
+    beqz         t7, 11f
+     or          t8, t0, t1
+    beqz         t8, 12f
+
+    CONVERT_2x0565_TO_2x8888 t2, t3, s0, s1, s4, s5, t7, t8, t9, s2
+    MIPS_2xUN8x4_MUL_2xUN8   s0, s1, t5, t6, t7, t8, t4, t9, t2, t3, s2, s0, s1
+
+    addu_s.qb    t0, t7, t0
+    addu_s.qb    t1, t8, t1
+11:
+    CONVERT_2x8888_TO_2x0565 t0, t1, t7, t8, s3, s4, s5, t2, t3
+    sh           t7, 0(a0)
+    sh           t8, 2(a0)
+12:
+    addiu        a2, a2, -2
+    addiu        t1, a2, -1
+    bgtz         t1, 1b
+     addiu       a0, a0, 4
+2:
+    beqz         a2, 3f
+     nop
+
+    lw           t0, 0(a1) /* t0 = source      (a8r8g8b8) */
+    lhu          t1, 0(a0) /* t1 = destination (r5g6b5) */
+    addiu        a1, a1, 4
+
+    not          t2, t0
+    srl          t2, t2, 24
+
+    beqz         t2, 21f
+     nop
+    beqz         t0, 3f
+
+    CONVERT_1x0565_TO_1x8888 t1, s0, t8, t9
+    MIPS_UN8x4_MUL_UN8       s0, t2, t3, t4, t5, t6, t7
+
+    addu_s.qb    t0, t3, t0
+21:
+    CONVERT_1x8888_TO_1x0565 t0, s0, t8, t9
+    sh           s0, 0(a0)
+
+3:
+    RESTORE_REGS_FROM_STACK 8, s0, s1, s2, s3, s4, s5
+    j            ra
+     nop
+
+END(pixman_composite_over_8888_0565_asm_mips)
 
 LEAF_MIPS_DSPR2(pixman_composite_over_n_0565_asm_mips)
 /*
@@ -2349,100 +3095,264 @@ END(pixman_composite_over_reverse_n_8888_asm_mips)
 LEAF_MIPS_DSPR2(pixman_composite_in_n_8_asm_mips)
 /*
  * a0 - dst  (a8)
- * a1 - src  (a8r8g8b8)
+ * a1 - src  (32bit constant)
  * a2 - w
  */
 
-    beqz              a2, 5f
+    li                t9, 0x00ff00ff
+    beqz              a2, 3f
+     nop
+    srl               t7, a2, 2   /* t7 = how many multiples of 4 dst pixels */
+    beqz              t7, 1f      /* branch if less than 4 src pixels */
      nop
 
-    SAVE_REGS_ON_STACK 20, s0, s1, s2, s3, s4, s5, s6, s7
-    move              t7, a1
-    srl               t5, t7, 24
-    replv.ph          t5, t5
-    srl               t9, a2, 2   /* t1 = how many multiples of 4 src pixels */
-    beqz              t9, 2f      /* branch if less than 4 src pixels */
-     nop
+    srl               t8, a1, 24
+    replv.ph          t8, t8
 
-1:
-    addiu             t9, t9, -1
-    addiu             a2, a2, -4
+0:
+    beqz              t7, 1f
+     addiu            t7, t7, -1
     lbu               t0, 0(a0)
     lbu               t1, 1(a0)
     lbu               t2, 2(a0)
     lbu               t3, 3(a0)
 
-    muleu_s.ph.qbl    s0, t0, t5
-    muleu_s.ph.qbr    s1, t0, t5
-    muleu_s.ph.qbl    s2, t1, t5
-    muleu_s.ph.qbr    s3, t1, t5
-    muleu_s.ph.qbl    s4, t2, t5
-    muleu_s.ph.qbr    s5, t2, t5
-    muleu_s.ph.qbl    s6, t3, t5
-    muleu_s.ph.qbr    s7, t3, t5
+    precr_sra.ph.w    t1, t0, 0
+    precr_sra.ph.w    t3, t2, 0
+    precr.qb.ph       t0, t3, t1
 
-    shrl.ph           t4, s0, 8
-    shrl.ph           t6, s1, 8
-    shrl.ph           t7, s2, 8
-    shrl.ph           t8, s3, 8
-    addq.ph           t0, s0, t4
-    addq.ph           t1, s1, t6
-    addq.ph           t2, s2, t7
-    addq.ph           t3, s3, t8
-    shra_r.ph         t0, t0, 8
-    shra_r.ph         t1, t1, 8
+    muleu_s.ph.qbl    t2, t0, t8
+    muleu_s.ph.qbr    t3, t0, t8
+    shra_r.ph         t4, t2, 8
+    shra_r.ph         t5, t3, 8
+    and               t4, t4, t9
+    and               t5, t5, t9
+    addq.ph           t2, t2, t4
+    addq.ph           t3, t3, t5
     shra_r.ph         t2, t2, 8
     shra_r.ph         t3, t3, 8
-    shrl.ph           t4, s4, 8
-    shrl.ph           t6, s5, 8
-    shrl.ph           t7, s6, 8
-    shrl.ph           t8, s7, 8
-    addq.ph           s0, s4, t4
-    addq.ph           s1, s5, t6
-    addq.ph           s2, s6, t7
-    addq.ph           s3, s7, t8
-    shra_r.ph         t4, s0, 8
-    shra_r.ph         t6, s1, 8
-    shra_r.ph         t7, s2, 8
-    shra_r.ph         t8, s3, 8
+    precr.qb.ph       t2, t2, t3
 
-    precr.qb.ph       s0, t0, t1
-    precr.qb.ph       s1, t2, t3
-    precr.qb.ph       s2, t4, t6
-    precr.qb.ph       s3, t7, t8
-
-    sb                s0, 0(a0)
-    sb                s1, 1(a0)
-    sb                s2, 2(a0)
-    sb                s3, 3(a0)
-    bgtz              t9, 1b
+    sb                t2, 0(a0)
+    srl               t2, t2, 8
+    sb                t2, 1(a0)
+    srl               t2, t2, 8
+    sb                t2, 2(a0)
+    srl               t2, t2, 8
+    sb                t2, 3(a0)
+    addiu             a2, a2, -4
+    b                 0b
      addiu            a0, a0, 4
-2:
-    beqz              a2, 4f
-     nop
-3:
-    lbu               t1, 0(a0)
 
-    muleu_s.ph.qbl    t4, t1, t5
-    muleu_s.ph.qbr    t7, t1, t5
-    shrl.ph           t6, t4, 8
-    shrl.ph           t0, t7, 8
-    addq.ph           t8, t4, t6
-    addq.ph           t9, t7, t0
-    shra_r.ph         t8, t8, 8
-    shra_r.ph         t9, t9, 8
-    precr.qb.ph       t2, t8, t9
+1:
+    beqz              a2, 3f
+     nop
+    srl               t8, a1, 24
+2:
+    lbu               t0, 0(a0)
+
+    mul               t2, t0, t8
+    shra_r.ph         t3, t2, 8
+    andi              t3, t3, 0x00ff
+    addq.ph           t2, t2, t3
+    shra_r.ph         t2, t2, 8
+
     sb                t2, 0(a0)
     addiu             a2, a2, -1
-    bnez              a2, 3b
+    bnez              a2, 2b
      addiu            a0, a0, 1
-4:
-    RESTORE_REGS_FROM_STACK 20, s0, s1, s2, s3, s4, s5, s6, s7
-5:
+
+3:
     j                 ra
      nop
 
 END(pixman_composite_in_n_8_asm_mips)
+
+LEAF_MIPS_DSPR2(pixman_scaled_nearest_scanline_8888_8888_OVER_asm_mips)
+/*
+ * a0     - dst  (a8r8g8b8)
+ * a1     - src  (a8r8g8b8)
+ * a2     - w
+ * a3     - vx
+ * 16(sp) - unit_x
+ */
+
+    SAVE_REGS_ON_STACK 0, s0, s1, s2, s3
+    lw       t8, 16(sp) /* t8 = unit_x */
+    li       t6, 0x00ff00ff
+    beqz     a2, 3f
+     nop
+    addiu    t1, a2, -1
+    beqz     t1, 2f
+     nop
+1:
+    sra      t0, a3, 16 /* t0 = vx >> 16 */
+    sll      t0, t0, 2  /* t0 = t0 * 4 (a8r8g8b8) */
+    addu     t0, a1, t0
+    lw       t0, 0(t0)  /* t0 = source      (a8r8g8b8) */
+    addu     a3, a3, t8 /* a3 = vx + unit_x */
+
+    sra      t1, a3, 16 /* t0 = vx >> 16 */
+    sll      t1, t1, 2  /* t0 = t0 * 4 (a8r8g8b8) */
+    addu     t1, a1, t1
+    lw       t1, 0(t1)  /* t1 = source      (a8r8g8b8) */
+    addu     a3, a3, t8 /* a3 = vx + unit_x */
+
+    lw       t2, 0(a0)  /* t2 = destination (a8r8g8b8) */
+    lw       t3, 4(a0)  /* t3 = destination (a8r8g8b8) */
+
+    OVER_2x8888_2x8888 t0, t1, t2, t3, t4, t5, t6, t7, t9, s0, s1, s2, s3
+
+    sw       t4, 0(a0)
+    sw       t5, 4(a0)
+    addiu    a2, a2, -2
+    addiu    t1, a2, -1
+    bgtz     t1, 1b
+     addiu   a0, a0, 8
+2:
+    beqz     a2, 3f
+     nop
+    sra      t0, a3, 16 /* t0 = vx >> 16 */
+    sll      t0, t0, 2  /* t0 = t0 * 4 (a8r8g8b8) */
+    addu     t0, a1, t0
+    lw       t0, 0(t0)  /* t0 = source      (a8r8g8b8) */
+    lw       t1, 0(a0)  /* t1 = destination (a8r8g8b8) */
+    addu     a3, a3, t8 /* a3 = vx + unit_x */
+
+    OVER_8888_8888 t0, t1, t2, t6, t4, t5, t3, t7
+
+    sw       t2, 0(a0)
+3:
+    RESTORE_REGS_FROM_STACK 0, s0, s1, s2, s3
+    j        ra
+     nop
+
+END(pixman_scaled_nearest_scanline_8888_8888_OVER_asm_mips)
+
+LEAF_MIPS_DSPR2(pixman_scaled_nearest_scanline_8888_0565_OVER_asm_mips)
+/*
+ * a0     - dst  (r5g6b5)
+ * a1     - src  (a8r8g8b8)
+ * a2     - w
+ * a3     - vx
+ * 16(sp) - unit_x
+ */
+
+    SAVE_REGS_ON_STACK 24, s0, s1, s2, s3, s4, v0, v1
+    lw       t8, 40(sp) /* t8 = unit_x */
+    li       t4, 0x00ff00ff
+    li       t5, 0xf800f800
+    li       t6, 0x07e007e0
+    li       t7, 0x001F001F
+    beqz     a2, 3f
+     nop
+    addiu    t1, a2, -1
+    beqz     t1, 2f
+     nop
+1:
+    sra      t0, a3, 16 /* t0 = vx >> 16 */
+    sll      t0, t0, 2  /* t0 = t0 * 4 (a8r8g8b8) */
+    addu     t0, a1, t0
+    lw       t0, 0(t0)  /* t0 = source      (a8r8g8b8) */
+    addu     a3, a3, t8 /* a3 = vx + unit_x */
+    sra      t1, a3, 16 /* t0 = vx >> 16 */
+    sll      t1, t1, 2  /* t0 = t0 * 4 (a8r8g8b8) */
+    addu     t1, a1, t1
+    lw       t1, 0(t1)  /* t1 = source      (a8r8g8b8) */
+    addu     a3, a3, t8 /* a3 = vx + unit_x */
+    lhu      t2, 0(a0)  /* t2 = destination (r5g6b5) */
+    lhu      t3, 2(a0)  /* t3 = destination (r5g6b5) */
+
+    CONVERT_2x0565_TO_2x8888 t2, t3, v0, v1, t6, t7, s0, s1, s2, s3
+    OVER_2x8888_2x8888       t0, t1, v0, v1, t2, t3, t4, t9, s0, s1, s2, s3, s4
+    CONVERT_2x8888_TO_2x0565 t2, t3, v0, v1, t5, t6, t7, t9, s2
+
+    sh       v0, 0(a0)
+    sh       v1, 2(a0)
+    addiu    a2, a2, -2
+    addiu    t1, a2, -1
+    bgtz     t1, 1b
+     addiu   a0, a0, 4
+2:
+    beqz     a2, 3f
+     nop
+    sra      t0, a3, 16 /* t0 = vx >> 16 */
+    sll      t0, t0, 2  /* t0 = t0 * 4 (a8r8g8b8) */
+    addu     t0, a1, t0
+    lw       t0, 0(t0)  /* t0 = source      (a8r8g8b8) */
+    lhu      t1, 0(a0)  /* t1 = destination (r5g6b5) */
+    addu     a3, a3, t8 /* a3 = vx + unit_x */
+
+    CONVERT_1x0565_TO_1x8888 t1, t2, t5, t6
+    OVER_8888_8888           t0, t2, t1, t4, t3, t5, t6, t7
+    CONVERT_1x8888_TO_1x0565 t1, t2, t5, t6
+
+    sh       t2, 0(a0)
+3:
+    RESTORE_REGS_FROM_STACK 24, s0, s1, s2, s3, s4, v0, v1
+    j        ra
+     nop
+
+END(pixman_scaled_nearest_scanline_8888_0565_OVER_asm_mips)
+
+LEAF_MIPS_DSPR2(pixman_scaled_nearest_scanline_0565_8888_SRC_asm_mips)
+/*
+ * a0     - dst (a8r8g8b8)
+ * a1     - src (r5g6b5)
+ * a2     - w
+ * a3     - vx
+ * 16(sp) - unit_x
+ */
+
+    SAVE_REGS_ON_STACK 0, v0
+    beqz     a2, 3f
+     nop
+
+    lw       v0, 16(sp) /* v0 = unit_x */
+    addiu    t1, a2, -1
+    beqz     t1, 2f
+     nop
+
+    li       t4, 0x07e007e0
+    li       t5, 0x001F001F
+1:
+    sra      t0, a3, 16 /* t0 = vx >> 16 */
+    sll      t0, t0, 1  /* t0 = t0 * 2 ((r5g6b5)) */
+    addu     t0, a1, t0
+    lhu      t0, 0(t0)  /* t0 = source ((r5g6b5)) */
+    addu     a3, a3, v0 /* a3 = vx + unit_x */
+    sra      t1, a3, 16 /* t1 = vx >> 16 */
+    sll      t1, t1, 1  /* t1 = t1 * 2 ((r5g6b5)) */
+    addu     t1, a1, t1
+    lhu      t1, 0(t1)  /* t1 = source ((r5g6b5)) */
+    addu     a3, a3, v0 /* a3 = vx + unit_x */
+    addiu    a2, a2, -2
+
+    CONVERT_2x0565_TO_2x8888 t0, t1, t2, t3, t4, t5, t6, t7, t8, t9
+
+    sw       t2, 0(a0)
+    sw       t3, 4(a0)
+
+    addiu    t2, a2, -1
+    bgtz     t2, 1b
+     addiu   a0, a0, 8
+2:
+    beqz     a2, 3f
+     nop
+    sra      t0, a3, 16 /* t0 = vx >> 16 */
+    sll      t0, t0, 1  /* t0 = t0 * 2 ((r5g6b5)) */
+    addu     t0, a1, t0
+    lhu      t0, 0(t0)  /* t0 = source ((r5g6b5)) */
+
+    CONVERT_1x0565_TO_1x8888 t0, t1, t2, t3
+
+    sw       t1, 0(a0)
+3:
+    RESTORE_REGS_FROM_STACK 0, v0
+    j        ra
+     nop
+
+END(pixman_scaled_nearest_scanline_0565_8888_SRC_asm_mips)
 
 LEAF_MIPS_DSPR2(pixman_scaled_nearest_scanline_8888_8_0565_OVER_asm_mips)
 /*
