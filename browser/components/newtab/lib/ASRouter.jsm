@@ -696,9 +696,11 @@ class _ASRouter {
    */
   _resetInitialization() {
     this.initialized = false;
+    this.initializing = false;
     this.waitForInitialized = new Promise(resolve => {
       this._finishInitializing = () => {
         this.initialized = true;
+        this.initializing = false;
         resolve();
       };
     });
@@ -900,6 +902,10 @@ class _ASRouter {
     updateAdminState,
     dispatchCFRAction,
   }) {
+    if (this.initializing || this.initialized) {
+      return null;
+    }
+    this.initializing = true;
     this._storage = storage;
     this.ALLOWLIST_HOSTS = this._loadSnippetsAllowHosts();
     this.clearChildMessages = this.toWaitForInitFunc(clearChildMessages);

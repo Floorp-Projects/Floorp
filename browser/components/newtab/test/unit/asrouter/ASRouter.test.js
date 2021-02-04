@@ -330,6 +330,24 @@ describe("ASRouter", () => {
   });
 
   describe("#init", () => {
+    it("should only be called once", async () => {
+      Router = new _ASRouter();
+      let state = await initASRouter(Router);
+
+      assert.equal(state, Router.state);
+
+      assert.isNull(await Router.init({}));
+    });
+    it("should only be called once", async () => {
+      Router = new _ASRouter();
+      initASRouter(Router);
+      let secondCall = await Router.init({});
+
+      assert.isNull(
+        secondCall,
+        "Should not init twice, it should exit early with null"
+      );
+    });
     it("should set state.messageBlockList to the block list in persistent storage", async () => {
       messageBlockList = ["foo"];
       Router = new _ASRouter();

@@ -53,12 +53,11 @@ class ASRouterNewTabHookInstance {
     }
   }
 
-  /**
-   * Note: Should only ever be called on an initialized instance
-   */
   destroy() {
-    this.disconnect();
-    this._router.uninit();
+    if (this._router?.initialized) {
+      this.disconnect();
+      this._router.uninit();
+    }
   }
 
   /**
@@ -79,7 +78,6 @@ class ASRouterNewTabHookInstance {
 
   /**
    * Disconnects new tab message handler from hook.
-   * Note: Should only ever be called on an initialized instance
    */
   disconnect() {
     this._newTabMessageHandler = null;
