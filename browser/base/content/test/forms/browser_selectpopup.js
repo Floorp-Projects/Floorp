@@ -649,7 +649,10 @@ async function performLargePopupTests(win) {
   EventUtils.synthesizeMouseAtPoint(
     popupRect.left + 5,
     popupRect.top - 10,
-    { type: "mousemove" },
+    {
+      type: "mousemove",
+      buttons: 1,
+    },
     win
   );
   is(
@@ -661,7 +664,10 @@ async function performLargePopupTests(win) {
   EventUtils.synthesizeMouseAtPoint(
     popupRect.left + 20,
     popupRect.top + 10,
-    { type: "mousemove" },
+    {
+      type: "mousemove",
+      buttons: 1,
+    },
     win
   );
 
@@ -675,7 +681,10 @@ async function performLargePopupTests(win) {
   EventUtils.synthesizeMouseAtPoint(
     popupRect.left + 20,
     popupRect.top - 20,
-    { type: "mousemove" },
+    {
+      type: "mousemove",
+      buttons: 1,
+    },
     win
   );
   await scrolledPromise;
@@ -692,7 +701,10 @@ async function performLargePopupTests(win) {
   EventUtils.synthesizeMouseAtPoint(
     popupRect.left + 20,
     popupRect.bottom + 20,
-    { type: "mousemove" },
+    {
+      type: "mousemove",
+      buttons: 1,
+    },
     win
   );
   await scrolledPromise;
@@ -739,7 +751,10 @@ async function performLargePopupTests(win) {
   EventUtils.synthesizeMouseAtPoint(
     popupRect.left + 20,
     popupRect.bottom + 20,
-    { type: "mousemove" },
+    {
+      type: "mousemove",
+      buttons: 1,
+    },
     win
   );
   await scrolledPromise;
@@ -755,7 +770,10 @@ async function performLargePopupTests(win) {
   EventUtils.synthesizeMouseAtPoint(
     popupRect.left + 20,
     popupRect.top - 20,
-    { type: "mousemove" },
+    {
+      type: "mousemove",
+      buttons: 1,
+    },
     win
   );
   await scrolledPromise;
@@ -1042,6 +1060,7 @@ add_task(async function test_mousemove_correcttarget() {
 
     EventUtils.synthesizeMouseAtCenter(selectPopup.firstElementChild, {
       type: "mousemove",
+      buttons: 1,
     });
   });
 

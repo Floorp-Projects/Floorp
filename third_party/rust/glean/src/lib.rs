@@ -352,6 +352,12 @@ pub fn shutdown() {
         return;
     }
 
+    dispatcher::launch(move || {
+        with_glean_mut(|glean| {
+            glean.set_dirty_flag(false);
+        })
+    });
+
     if let Err(e) = dispatcher::shutdown() {
         log::error!("Can't shutdown dispatcher thread: {:?}", e);
     }

@@ -264,8 +264,11 @@ static void SetDisplayPortMargins(PresShell* aPresShell, nsIContent* aContent,
            ToString(aDisplayPortMargins).c_str(), viewID));
     }
   }
-  DisplayPortUtils::SetDisplayPortMargins(aContent, aPresShell,
-                                          aDisplayPortMargins, 0);
+  DisplayPortUtils::SetDisplayPortMargins(
+      aContent, aPresShell, aDisplayPortMargins,
+      hadDisplayPort ? DisplayPortUtils::ClearMinimalDisplayPortProperty::No
+                     : DisplayPortUtils::ClearMinimalDisplayPortProperty::Yes,
+      0);
   if (!hadDisplayPort) {
     DisplayPortUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
         aContent->GetPrimaryFrame());
@@ -441,7 +444,8 @@ void APZCCallbackHelper::InitializeRootDisplayport(PresShell* aPresShell) {
     // Note that we also set the base rect that goes with these margins in
     // nsRootBoxFrame::BuildDisplayList.
     DisplayPortUtils::SetDisplayPortMargins(
-        content, aPresShell, DisplayPortMargins::Empty(content), 0);
+        content, aPresShell, DisplayPortMargins::Empty(content),
+        DisplayPortUtils::ClearMinimalDisplayPortProperty::Yes, 0);
     DisplayPortUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
         content->GetPrimaryFrame());
   }
@@ -615,7 +619,7 @@ static bool PrepareForSetTargetAPZCNotification(
   if (!guidIsValid) {
     return false;
   }
-  if (DisplayPortUtils::HasDisplayPort(dpElement)) {
+  if (DisplayPortUtils::HasNonMinimalDisplayPort(dpElement)) {
     // If the element has a displayport but it hasn't been painted yet,
     // we want the caller to wait for the paint to happen, but we don't
     // need to set the displayport here since it's already been set.
@@ -646,7 +650,7 @@ static bool PrepareForSetTargetAPZCNotification(
   nsIFrame* frame = do_QueryFrame(scrollAncestor);
   DisplayPortUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(frame);
 
-  return true;
+  return !DisplayPortUtils::HasPaintedDisplayPort(dpElement);
 }
 
 static void SendLayersDependentApzcTargetConfirmation(

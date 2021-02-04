@@ -453,8 +453,7 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
   // just called onLeaveFrame (which would lead to the frame being re-added
   // to the map of live frames, right as it becomes trash).
 
-  JitActivation* activation = CallingActivation();
-  MOZ_ASSERT(activation == iter.activation());
+  MOZ_ASSERT(CallingActivation() == iter.activation());
   MOZ_ASSERT(!iter.done());
   iter.setUnwind(WasmFrameIter::Unwind::True);
 
@@ -469,6 +468,7 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
   RootedWasmInstanceObject keepAlive(cx, iter.instance()->object());
 
 #ifdef ENABLE_WASM_EXCEPTIONS
+  JitActivation* activation = CallingActivation();
   RootedValue exn(cx);
   bool hasCatchableException = HasCatchableException(activation, cx, &exn);
 #endif

@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "firefox-connector.js",
     "firefox-data-provider.js",
     "index.js",
 )

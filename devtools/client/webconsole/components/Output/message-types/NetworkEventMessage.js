@@ -174,7 +174,6 @@ function NetworkEventMessage({
     },
     getTabTarget: () => {},
     sendHTTPRequest: () => {},
-    setPreferences: () => {},
     triggerActivity: () => {},
     requestData: (requestId, dataType) => {
       return serviceContainer.requestData(requestId, dataType);

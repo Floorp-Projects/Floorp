@@ -466,7 +466,7 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
           .orElse([&aUsageFile, &aDBFile, &aCorruptedFileHandler,
                    &storageService](const nsresult rv)
                       -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
-            if (rv == NS_ERROR_FILE_CORRUPTED) {
+            if (IsDatabaseCorruptionError(rv)) {
               // Remove the usage file first (it might not exist at all due
               // to corrupted state, which is ignored here).
               LS_TRY(ToResult(aUsageFile.Remove(false))
@@ -678,7 +678,7 @@ CreateArchiveStorageConnection(const nsAString& aStoragePath) {
                                  OpenUnsharedDatabase, archiveFile)
           .orElse([](const nsresult rv)
                       -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
-            if (rv == NS_ERROR_FILE_CORRUPTED) {
+            if (IsDatabaseCorruptionError(rv)) {
               // Don't throw an error, leave a corrupted ls-archive database as
               // it is.
               return nsCOMPtr<mozIStorageConnection>{};
@@ -814,7 +814,7 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateShadowStorageConnection(
                                  OpenUnsharedDatabase, shadowFile)
           .orElse([&shadowFile, &ss](const nsresult rv)
                       -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
-            if (rv == NS_ERROR_FILE_CORRUPTED) {
+            if (IsDatabaseCorruptionError(rv)) {
               LS_TRY(shadowFile->Remove(false));
 
               LS_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(

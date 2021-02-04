@@ -273,11 +273,12 @@ async function dragScroll()
   is(getScrollPos(), scrollPos, "scroll position after mousemove over button should not change");
 
   synthesizeMouseAtPoint(popupRect.left + 20, popupRect.top + 10, { type: "mousemove" });
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.top + 10, { type: "mousedown", buttons: 1 });
 
   // Dragging above the popup scrolls it up.
   let scrolledPromise = waitForEvent(popup, "scroll", false,
     () => getScrollPos() < scrollPos - 5);
-  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.top - 20, { type: "mousemove" });
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.top - 20, { type: "mousemove", buttons: 1 });
   await scrolledPromise;
   ok(true, "scroll position at drag up");
 
@@ -285,7 +286,7 @@ async function dragScroll()
   scrollPos = getScrollPos();
   scrolledPromise = waitForEvent(popup, "scroll", false,
     () => getScrollPos() > scrollPos + 5);
-  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 20, { type: "mousemove" });
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 20, { type: "mousemove", buttons: 1 });
   await scrolledPromise;
   ok(true, "scroll position at drag down");
 
@@ -301,12 +302,12 @@ async function dragScroll()
   // visible, as the asynchronous scrolling may have moved it out of view.
   popup.childNodes[4].scrollIntoView({ block: "nearest", behavior: "instant" });
   let menuRect = popup.childNodes[4].getBoundingClientRect();
-  synthesizeMouseAtPoint(menuRect.left + 5, menuRect.top + 5, { type: "mousedown" });
+  synthesizeMouseAtPoint(menuRect.left + 5, menuRect.top + 5, { type: "mousedown", buttons: 1 });
 
   // Dragging below the popup scrolls it down.
   scrolledPromise = waitForEvent(popup, "scroll", false,
     () => getScrollPos() > scrollPos + 5);
-  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 20, { type: "mousemove" });
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 20, { type: "mousemove", buttons: 1 });
   await scrolledPromise;
   ok(true, "scroll position at drag down from item");
 
@@ -314,7 +315,7 @@ async function dragScroll()
   scrollPos = getScrollPos();
   scrolledPromise = waitForEvent(popup, "scroll", false,
     () => getScrollPos() < scrollPos - 5);
-  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.top - 20, { type: "mousemove" });
+  synthesizeMouseAtPoint(popupRect.left + 20, popupRect.top - 20, { type: "mousemove", buttons: 1 });
   await scrolledPromise;
   ok(true, "scroll position at drag up from item");
 
