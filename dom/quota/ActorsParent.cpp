@@ -495,7 +495,7 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateWebAppsStoreConnection(
                                  &aWebAppsStoreFile)
           .orElse([](const nsresult rv)
                       -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
-            if (rv == NS_ERROR_FILE_CORRUPTED) {
+            if (IsDatabaseCorruptionError(rv)) {
               // Don't throw an error, leave a corrupted webappsstore database
               // as it is.
               return nsCOMPtr<mozIStorageConnection>{};
@@ -5957,7 +5957,7 @@ QuotaManager::CreateLocalStorageArchiveConnection() {
                                    OpenUnsharedDatabase, lsArchiveFile)
             .orElse([&removed, &lsArchiveFile, &ss](const nsresult rv)
                         -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
-              if (!removed && rv == NS_ERROR_FILE_CORRUPTED) {
+              if (!removed && IsDatabaseCorruptionError(rv)) {
                 QM_TRY(lsArchiveFile->Remove(false));
 
                 removed = true;
@@ -6136,8 +6136,8 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
   QM_TRY_UNWRAP(auto connection,
                 MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>, ss,
                                            OpenUnsharedDatabase, storageFile)
-                    .orElse(ErrToOkOrErr<NS_ERROR_FILE_CORRUPTED, nullptr,
-                                         nsCOMPtr<mozIStorageConnection>>));
+                    .orElse(FilterDatabaseCorruptionError<
+                            nullptr, nsCOMPtr<mozIStorageConnection>>));
 
   if (!connection) {
     // Nuke the database file.

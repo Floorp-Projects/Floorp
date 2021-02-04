@@ -26,6 +26,7 @@ namespace mozilla::dom::cache {
 using mozilla::dom::quota::AssertIsOnIOThread;
 using mozilla::dom::quota::Client;
 using mozilla::dom::quota::CloneFileAndAppend;
+using mozilla::dom::quota::IsDatabaseCorruptionError;
 using mozilla::dom::quota::PERSISTENCE_TYPE_DEFAULT;
 using mozilla::dom::quota::PersistenceType;
 
@@ -177,7 +178,7 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> OpenDBConnection(
           .orElse([&aQuotaInfo, &aDBFile, &storageService,
                    &dbFileUrl](const nsresult rv)
                       -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
-            if (rv == NS_ERROR_FILE_CORRUPTED) {
+            if (IsDatabaseCorruptionError(rv)) {
               NS_WARNING(
                   "Cache database corrupted. Recreating empty database.");
 
