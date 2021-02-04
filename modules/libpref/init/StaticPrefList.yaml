@@ -1884,12 +1884,6 @@
   value: false
   mirror: always
 
-# Enable the form.requestSubmit API
-- name: dom.forms.requestsubmit.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Whether the Gamepad API is enabled
 - name: dom.gamepad.enabled
   type: bool
