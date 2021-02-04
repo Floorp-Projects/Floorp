@@ -119,7 +119,6 @@ $letter-fallback-color: $white;
     font-weight: 200;
     justify-content: center;
     text-transform: uppercase; // sass-lint:disable-line no-disallowed-properties
-    transition: box-shadow $hover-transition-duration;
 
     .icon-wrapper {
       border-radius: 4px;
@@ -569,6 +568,7 @@ $letter-fallback-color: $white;
       .tile {
         height: $top-sites-size;
         width: $top-sites-size;
+        transition: box-shadow $hover-transition-duration;
       }
 
       .top-site-icon {
@@ -687,7 +687,6 @@ $letter-fallback-color: $white;
         box-shadow: $inner-box-shadow-nte, $tile-shadow-second;
         background-color: var(--newtab-topsites-background-color);
         justify-content: center;
-        transition: box-shadow $hover-transition-duration;
         margin: 0 auto;
         height: $top-sites-size-nte;
         width: $top-sites-size-nte;
@@ -706,8 +705,7 @@ $letter-fallback-color: $white;
         .sponsored-label {
           font-size: 12px;
         }
-    }
-
+      }
 
       .default-icon,
       .search-topsite {
