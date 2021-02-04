@@ -33,7 +33,6 @@ class Connector {
     this.willNavigate = this.willNavigate.bind(this);
     this.navigate = this.navigate.bind(this);
     this.sendHTTPRequest = this.sendHTTPRequest.bind(this);
-    this.setPreferences = this.setPreferences.bind(this);
     this.triggerActivity = this.triggerActivity.bind(this);
     this.getTabTarget = this.getTabTarget.bind(this);
     this.viewSourceInDebugger = this.viewSourceInDebugger.bind(this);
@@ -444,16 +443,6 @@ class Connector {
       return this.networkFront.setBlockedUrls(urls);
     }
     return this.webConsoleFront.setBlockedUrls(urls);
-  }
-
-  /**
-   * Set network preferences to control network flow
-   *
-   * @param {object} request request payload would like to sent to backend
-   * @param {function} callback callback will be invoked after the request finished
-   */
-  setPreferences(request) {
-    return this.webConsoleFront.setPreferences(request);
   }
 
   /**
