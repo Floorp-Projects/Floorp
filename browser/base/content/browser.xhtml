@@ -1018,12 +1018,8 @@
                        data-l10n-id="appmenuitem-find-in-page"
                        key="key_find"
                        command="cmd_find"/>
-        <toolbaritem id="appMenu-zoom-controls2" class="toolbaritem-combined-buttons" closemenu="none">
-          <!-- Use a spacer, because panel sizing code gets confused when using CSS methods. -->
-          <spacer class="before-label"/>
-          <label value="&fullZoom.label;"/>
-          <!-- This spacer keeps the scrollbar from overlapping the view. -->
-          <spacer class="after-label"/>
+        <toolbaritem id="appMenu-zoom-controls2" class="subviewbutton subviewbutton-iconic toolbaritem-combined-buttons" closemenu="none">
+          <label class="toolbarbutton-text" value="&fullZoom.label;"/>
           <toolbarbutton id="appMenu-zoomReduce-button2"
                          class="subviewbutton subviewbutton-iconic"
                          command="cmd_fullZoomReduce"
@@ -1038,7 +1034,6 @@
                          command="cmd_fullZoomEnlarge"
                          data-l10n-id="appmenuitem-zoom-enlarge"
                          tooltip="dynamic-shortcut-tooltip"/>
-          <toolbarseparator orient="vertical"/>
           <toolbarbutton id="appMenu-fullscreen-button2"
                          class="subviewbutton subviewbutton-iconic"
                          label="&fullScreenCmd.label;"
