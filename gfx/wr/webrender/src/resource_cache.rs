@@ -538,7 +538,7 @@ impl ResourceCache {
             ImageFormat::RGBA8,
         );
         let workers = Arc::new(ThreadPoolBuilder::new().build().unwrap());
-        let glyph_rasterizer = GlyphRasterizer::new(workers).unwrap();
+        let glyph_rasterizer = GlyphRasterizer::new(workers, true).unwrap();
         let cached_glyphs = GlyphCache::new();
         let font_instances = SharedFontInstanceMap::new();
 
