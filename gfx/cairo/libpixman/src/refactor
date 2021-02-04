@@ -1,0 +1,478 @@
+Roadmap
+
+- Move all the fetchers etc. into pixman-image to make pixman-compose.c
+  less intimidating.
+
+  DONE
+
+- Make combiners for unified alpha take a mask argument. That way
+  we won't need two separate paths for unified vs component in the
+  general compositing code.
+
+  DONE, except that the Altivec code needs to be updated. Luca is
+  looking into that.
+
+- Delete separate 'unified alpha' path
+ 
+  DONE
+
+- Split images into their own files
+
+  DONE
+
+- Split the gradient walker code out into its own file
+
+  DONE
+
+- Add scanline getters per image
+
+  DONE
+
+- Generic 64 bit fetcher 
+
+  DONE
+
+- Split fast path tables into their respective architecture dependent
+  files.
+
+See "Render Algorithm" below for rationale
+
+Images will eventually have these virtual functions:
+
+       get_scanline()
+       get_scanline_wide()
+       get_pixel()
+       get_pixel_wide()
+       get_untransformed_pixel()
+       get_untransformed_pixel_wide()
+       get_unfiltered_pixel()
+       get_unfiltered_pixel_wide()
+
+       store_scanline()
+       store_scanline_wide()
+
+1.
+
+Initially we will just have get_scanline() and get_scanline_wide();
+these will be based on the ones in pixman-compose. Hopefully this will
+reduce the complexity in pixman_composite_rect_general().
+
+Note that there is access considerations - the compose function is
+being compiled twice.
+
+
+2.
+
+Split image types into their own source files. Export noop virtual
+reinit() call.  Call this whenever a property of the image changes.
+
+
+3. 
+
+Split the get_scanline() call into smaller functions that are
+initialized by the reinit() call.
+
+The Render Algorithm:
+	(first repeat, then filter, then transform, then clip)
+
+Starting from a destination pixel (x, y), do
+
+	1 x = x - xDst + xSrc
+	  y = y - yDst + ySrc
+
+	2 reject pixel that is outside the clip
+
+	This treats clipping as something that happens after
+	transformation, which I think is correct for client clips. For
+	hierarchy clips it is wrong, but who really cares? Without
+	GraphicsExposes hierarchy clips are basically irrelevant. Yes,
+	you could imagine cases where the pixels of a subwindow of a
+	redirected, transformed window should be treated as
+	transparent. I don't really care
+
+	Basically, I think the render spec should say that pixels that
+	are unavailable due to the hierarcy have undefined content,
+	and that GraphicsExposes are not generated. Ie., basically
+	that using non-redirected windows as sources is fail. This is
+	at least consistent with the current implementation and we can
+	update the spec later if someone makes it work.
+
+	The implication for render is that it should stop passing the
+	hierarchy clip to pixman. In pixman, if a souce image has a
+	clip it should be used in computing the composite region and
+	nowhere else, regardless of what "has_client_clip" says. The
+	default should be for there to not be any clip.
+
+	I would really like to get rid of the client clip as well for
+	source images, but unfortunately there is at least one
+	application in the wild that uses them.
+
+	3 Transform pixel: (x, y) = T(x, y)
+
+	4 Call p = GetUntransformedPixel (x, y)
+
+	5 If the image has an alpha map, then
+
+		Call GetUntransformedPixel (x, y) on the alpha map
+		
+		add resulting alpha channel to p
+
+	   return p
+
+	Where GetUnTransformedPixel is:
+
+	6 switch (filter)
+	  {
+	  case NEAREST:
+		return GetUnfilteredPixel (x, y);
+		break;
+
+	  case BILINEAR:
+		return GetUnfilteredPixel (...) // 4 times 
+		break;
+
+	  case CONVOLUTION:
+		return GetUnfilteredPixel (...) // as many times as necessary.
+		break;
+	  }
+
+	Where GetUnfilteredPixel (x, y) is
+
+	7 switch (repeat)
+	   {
+	   case REPEAT_NORMAL:
+	   case REPEAT_PAD:
+	   case REPEAT_REFLECT:
+		// adjust x, y as appropriate
+		break;
+
+	   case REPEAT_NONE:
+	        if (x, y) is outside image bounds
+		     return 0;
+		break;
+	   }
+
+	   return GetRawPixel(x, y)
+
+	Where GetRawPixel (x, y) is
+
+	8 Compute the pixel in question, depending on image type.
+
+For gradients, repeat has a totally different meaning, so
+UnfilteredPixel() and RawPixel() must be the same function so that
+gradients can do their own repeat algorithm.
+
+So, the GetRawPixel
+
+	for bits must deal with repeats
+	for gradients must deal with repeats (differently)
+	for solids, should ignore repeats.
+
+	for polygons, when we add them, either ignore repeats or do
+	something similar to bits (in which case, we may want an extra
+	layer of indirection to modify the coordinates).
+
+It is then possible to build things like "get scanline" or "get tile" on
+top of this. In the simplest case, just repeatedly calling GetPixel()
+would work, but specialized get_scanline()s or get_tile()s could be
+plugged in for common cases. 
+
+By not plugging anything in for images with access functions, we only
+have to compile the pixel functions twice, not the scanline functions.
+
+And we can get rid of fetchers for the bizarre formats that no one
+uses. Such as b2g3r3 etc. r1g2b1? Seriously? It is also worth
+considering a generic format based pixel fetcher for these edge cases.
+
+Since the actual routines depend on the image attributes, the images
+must be notified when those change and update their function pointers
+appropriately. So there should probably be a virtual function called
+(* reinit) or something like that.
+
+There will also be wide fetchers for both pixels and lines. The line
+fetcher will just call the wide pixel fetcher. The wide pixel fetcher
+will just call expand, except for 10 bit formats.
+
+Rendering pipeline:
+
+Drawable:
+	0. if (picture has alpha map)
+		0.1. Position alpha map according to the alpha_x/alpha_y
+	        0.2. Where the two drawables intersect, the alpha channel
+		     Replace the alpha channel of source with the one
+		     from the alpha map. Replacement only takes place
+		     in the intersection of the two drawables' geometries.
+	1. Repeat the drawable according to the repeat attribute
+	2. Reconstruct a continuous image according to the filter
+	3. Transform according to the transform attribute
+	4. Position image such that src_x, src_y is over dst_x, dst_y
+	5. Sample once per destination pixel 
+	6. Clip. If a pixel is not within the source clip, then no
+	   compositing takes place at that pixel. (Ie., it's *not*
+	   treated as 0).
+
+	Sampling a drawable: 
+
+	- If the channel does not have an alpha channel, the pixels in it
+	  are treated as opaque.
+
+	Note on reconstruction:
+
+	- The top left pixel has coordinates (0.5, 0.5) and pixels are
+	  spaced 1 apart.
+
+Gradient:
+	1. Unless gradient type is conical, repeat the underlying (0, 1)
+		gradient according to the repeat attribute
+	2. Integrate the gradient across the plane according to type.
+	3. Transform according to transform attribute
+	4. Position gradient 
+	5. Sample once per destination pixel.
+ 	6. Clip
+
+Solid Fill:
+	1. Repeat has no effect
+	2. Image is already continuous and defined for the entire plane
+	3. Transform has no effect
+	4. Positioning has no effect
+	5. Sample once per destination pixel.
+	6. Clip
+
+Polygon:
+	1. Repeat has no effect
+	2. Image is already continuous and defined on the whole plane
+	3. Transform according to transform attribute
+	4. Position image
+	5. Supersample 15x17 per destination pixel.
+	6. Clip
+
+Possibly interesting additions:
+	- More general transformations, such as warping, or general
+	  shading.
+
+	- Shader image where a function is called to generate the
+          pixel (ie., uploading assembly code).
+
+	- Resampling kernels
+
+	  In principle the polygon image uses a 15x17 box filter for
+	  resampling. If we allow general resampling filters, then we
+	  get all the various antialiasing types for free. 
+
+	  Bilinear downsampling looks terrible and could be much 
+	  improved by a resampling filter. NEAREST reconstruction
+	  combined with a box resampling filter is what GdkPixbuf
+	  does, I believe.
+
+	  Useful for high frequency gradients as well.
+
+	  (Note that the difference between a reconstruction and a
+	  resampling filter is mainly where in the pipeline they
+	  occur. High quality resampling should use a correctly
+	  oriented kernel so it should happen after transformation.
+
+	  An implementation can transform the resampling kernel and
+	  convolve it with the reconstruction if it so desires, but it
+	  will need to deal with the fact that the resampling kernel
+	  will not necessarily be pixel aligned.
+
+	  "Output kernels"
+
+	  One could imagine doing the resampling after compositing,
+	  ie., for each destination pixel sample each source image 16
+	  times, then composite those subpixels individually, then
+	  finally apply a kernel.
+
+	  However, this is effectively the same as full screen
+	  antialiasing, which is a simpler way to think about it. So
+	  resampling kernels may make sense for individual images, but
+	  not as a post-compositing step.
+	  
+	  Fullscreen AA is inefficient without chained compositing
+	  though. Consider an (image scaled up to oversample size IN
+	  some polygon) scaled down to screen size. With the current
+	  implementation, there will be a huge temporary. With chained
+	  compositing, the whole thing ends up being equivalent to the
+	  output kernel from above.
+
+	- Color space conversion
+
+	  The complete model here is that each surface has a color
+	  space associated with it and that the compositing operation
+	  also has one associated with it. Note also that gradients
+	  should have associcated colorspaces.
+
+	- Dithering
+
+	  If people dither something that is already dithered, it will
+	  look terrible, but don't do that, then. (Dithering happens
+	  after resampling if at all - what is the relationship
+	  with color spaces? Presumably dithering should happen in linear
+	  intensity space).
+
+	- Floating point surfaces, 16, 32 and possibly 64 bit per
+	  channel.
+
+	Maybe crack:
+
+	- Glyph polygons
+
+	  If glyphs could be given as polygons, they could be
+	  positioned and rasterized more accurately. The glyph
+	  structure would need subpixel positioning though.
+
+	- Luminance vs. coverage for the alpha channel
+
+	  Whether the alpha channel should be interpreted as luminance
+          modulation or as coverage (intensity modulation). This is a
+          bit of a departure from the rendering model though. It could
+	  also be considered whether it should be possible to have 
+	  both channels in the same drawable.
+
+	- Alternative for component alpha
+
+	  - Set component-alpha on the output image.
+
+	    - This means each of the components are sampled
+	      independently and composited in the corresponding
+	      channel only.
+
+	  - Have 3 x oversampled mask
+
+	  - Scale it down by 3 horizontally, with [ 1/3, 1/3, 1/3 ]
+            resampling filter. 
+
+	    Is this equivalent to just using a component alpha mask?
+
+	Incompatible changes:
+
+	- Gradients could be specified with premultiplied colors. (You
+	  can use a mask to get things like gradients from solid red to
+	  transparent red.
+
+Refactoring pixman
+
+The pixman code is not particularly nice to put it mildly. Among the
+issues are
+
+- inconsistent naming style (fb vs Fb, camelCase vs
+  underscore_naming). Sometimes there is even inconsistency *within*
+  one name.
+
+      fetchProc32 ACCESS(pixman_fetchProcForPicture32)
+
+  may be one of the uglies names ever created.
+
+  coding style: 
+  	 use the one from cairo except that pixman uses this brace style:
+	 
+		while (blah)
+		{
+		}
+
+	Format do while like this:
+
+	       do 
+	       {
+
+	       } 
+	       while (...);
+
+- PIXMAN_COMPOSITE_RECT_GENERAL() is horribly complex
+
+- switch case logic in pixman-access.c
+
+  Instead it would be better to just store function pointers in the
+  image objects themselves,
+
+  	get_pixel()
+	get_scanline()
+
+- Much of the scanline fetching code is for formats that no one 
+  ever uses. a2r2g2b2 anyone?
+
+  It would probably be worthwhile having a generic fetcher for any
+  pixman format whatsoever.
+
+- Code related to particular image types should be split into individual
+  files.
+
+	pixman-bits-image.c
+	pixman-linear-gradient-image.c
+	pixman-radial-gradient-image.c
+	pixman-solid-image.c
+
+- Fast path code should be split into files based on architecture:
+
+       pixman-mmx-fastpath.c
+       pixman-sse2-fastpath.c
+       pixman-c-fastpath.c
+
+       etc.
+
+  Each of these files should then export a fastpath table, which would
+  be declared in pixman-private.h. This should allow us to get rid
+  of the pixman-mmx.h files.
+
+  The fast path table should describe each fast path. Ie there should
+  be bitfields indicating what things the fast path can handle, rather than
+  like now where it is only allowed to take one format per src/mask/dest. Ie., 
+
+  { 
+    FAST_a8r8g8b8 | FAST_x8r8g8b8,
+    FAST_null,
+    FAST_x8r8g8b8,
+    FAST_repeat_normal | FAST_repeat_none,
+    the_fast_path
+  }
+
+There should then be *one* file that implements pixman_image_composite(). 
+This should do this:
+
+     optimize_operator();
+
+     convert 1x1 repeat to solid (actually this should be done at
+     image creation time).
+     
+     is there a useful fastpath?
+
+There should be a file called pixman-cpu.c that contains all the
+architecture specific stuff to detect what CPU features we have.
+
+Issues that must be kept in mind:
+
+       - we need accessor code to be preserved
+
+       - maybe there should be a "store_scanline" too?
+
+         Is this sufficient?
+
+	 We should preserve the optimization where the
+	 compositing happens directly in the destination
+	 whenever possible.
+
+	- It should be possible to create GPU samplers from the
+	  images.
+
+The "horizontal" classification should be a bit in the image, the
+"vertical" classification should just happen inside the gradient
+file. Note though that
+
+      (a) these will change if the tranformation/repeat changes.
+
+      (b) at the moment the optimization for linear gradients
+          takes the source rectangle into account. Presumably
+	  this is to also optimize the case where the gradient
+	  is close enough to horizontal?
+
+Who is responsible for repeats? In principle it should be the scanline
+fetch. Right now NORMAL repeats are handled by walk_composite_region()
+while other repeats are handled by the scanline code.
+
+
+(Random note on filtering: do you filter before or after
+transformation?  Hardware is going to filter after transformation;
+this is also what pixman does currently). It's not completely clear
+what filtering *after* transformation means. One thing that might look
+good would be to do *supersampling*, ie., compute multiple subpixels
+per destination pixel, then average them together.
