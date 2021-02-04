@@ -153,7 +153,8 @@ nsresult ResolveURI(nsIURI* in, nsIURI** out) {
     NS_ENSURE_SUCCESS(rv, rv);
 
     return ioService->NewURI(spec, nullptr, nullptr, out);
-  } else if (in->SchemeIs("chrome")) {
+  }
+  if (in->SchemeIs("chrome")) {
     nsCOMPtr<nsIChromeRegistry> chromeReg =
         mozilla::services::GetChromeRegistry();
     if (!chromeReg) return NS_ERROR_UNEXPECTED;
