@@ -17,6 +17,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/OperatorNewExtensions.h"
+#include "mozilla/StaticPrefs_timer.h"
 
 #include <math.h>
 
@@ -763,6 +764,10 @@ void TimerThread::DoAfterSleep() {
 NS_IMETHODIMP
 TimerThread::Observe(nsISupports* /* aSubject */, const char* aTopic,
                      const char16_t* /* aData */) {
+  if (StaticPrefs::timer_ignore_sleep_wake_notifications()) {
+    return NS_OK;
+  }
+
   if (strcmp(aTopic, "sleep_notification") == 0 ||
       strcmp(aTopic, "suspend_process_notification") == 0) {
     DoBeforeSleep();
