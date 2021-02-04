@@ -66,5 +66,12 @@ enum class Action {
      * [Fact] with [CLICK] action to be emitted. This click may causes something to load which emits a follow-up a
      * [Fact] with [INTERACTION] action.
      */
-    INTERACTION
+    INTERACTION,
+
+    /**
+     * An implementation detail event exposed to understand the system for diagnostic purposes.
+     * For example, for each action the app may add profiler markers to better understand
+     * the app visually inside profiles.
+     */
+    IMPLEMENTATION_DETAIL,
 }
