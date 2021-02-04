@@ -243,17 +243,8 @@ reviewed.
    completing all necessary verifications.
 
 
-Add the tag "check-in needed" on the revision(s) in phabricator. To do
-so, click on the "Edit" button on a phabricator revision, and start
-typing "check-in needed" in the Tags field. It should auto-complete. If
-Phabricator doesn't allow you to add the keyword, ask someone else to
-add it. Community members with commit access, regularly search for
-revisions with the checkin-needed keyword, often committing in a day or
-so. If the patch does not get checked, within a reasonable timeframe,
-join #developers on `chat.mozilla.org <https://chat.mozilla.org>`__, asking
-someone to check on your behalf. In most circumstances, a link to a
-passing Try run will be required, in order to verify the patch will not
-cause any new failures after landing.
+Ask the reviewer to land the patch for you.
+For more details, see :ref:`push_a_change`
 
 If pushing the patch yourself, please follow :ref:`Committing rules and responsibilities`.
 `Lando <https://moz-conduit.readthedocs.io/en/latest/lando-user.html>`__ is used

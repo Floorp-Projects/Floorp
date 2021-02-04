@@ -154,18 +154,9 @@ making sure there are no unexpected regressions. If you don't have try
 server access already, your mentor, or the person who reviewed your
 patch, will be able to help.
 
-Once you have a **green** try server run, mark that your patch is ready
-to commit by
+Ask the reviewer to land the patch for you.
+For more details, see :ref:`push_a_change`
 
-#. opening the Phabricator page for your patch
-#. clicking the 'Edit Revision' link in the sidebar on the right
-#. then into the 'Tags' field and
-#. typing 'Check-In Needed' to get the tag added.
-
-A friendly Mozillian, with commit access, will be along shortly to push
-your patch to the repository, and update the bug as required. If your
-patch passes all Mozilla's automated testing, it will soon be merged
-into the main branch, and become a part of the Nightly build.
 
 Do it all again!
 ----------------

@@ -263,12 +263,18 @@ To pull changes from the repository, run:
    # Git
    $ git pull --rebase
 
+.. _push_a_change:
+
 To push a change in the code base
 ---------------------------------
 
 Once the change has been accepted and you've fixed any remaining issues
-the reviewer identified, add the *Check-in Needed* tag to the review
-(use the *Edit Revision* option on the top right).
+the reviewer identified, the reviewer should land the patch.
+
+If the patch has not landed on "autoland" (the integration branch) after a few days,
+feel free to contact the reviewer and/or
+@Aryx or @Sylvestre on the `#introduction <https://chat.mozilla.org/#/room/#introduction:mozilla.org>`__
+channel.
 
 The landing procedure will automatically close the review and the bug.
 
