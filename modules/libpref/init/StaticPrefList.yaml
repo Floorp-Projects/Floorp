@@ -243,6 +243,26 @@
 # The apz prefs are explained in AsyncPanZoomController.cpp
 #---------------------------------------------------------------------------
 
+- name: apz.wr.activate_all_scroll_frames
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: apz.wr.activate_all_scroll_frames_when_fission
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: apz.nonwr.activate_all_scroll_frames
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: apz.nonwr.activate_all_scroll_frames_when_fission
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: apz.allow_double_tap_zooming
   type: RelaxedAtomicBool
   value: true
