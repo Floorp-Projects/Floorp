@@ -191,10 +191,6 @@ class nsTableWrapperFrame : public nsContainerFrame {
                                ClassID aID = kClassID);
   virtual ~nsTableWrapperFrame();
 
-  void InitChildReflowInput(nsPresContext& aPresContext,
-                            const ReflowInput& aOuterRS,
-                            ReflowInput& aReflowInput);
-
   // Get a NS_STYLE_CAPTION_SIDE_* value, or NO_SIDE if no caption is present.
   // (Remember that caption-side values are interpreted logically, despite
   // having "physical" names.)

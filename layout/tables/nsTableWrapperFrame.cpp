@@ -224,39 +224,6 @@ ComputedStyle* nsTableWrapperFrame::GetParentComputedStyle(
   return (*aProviderFrame = InnerTableFrame())->Style();
 }
 
-// INCREMENTAL REFLOW HELPER FUNCTIONS
-
-void nsTableWrapperFrame::InitChildReflowInput(nsPresContext& aPresContext,
-                                               const ReflowInput& aOuterRI,
-                                               ReflowInput& aReflowInput) {
-  Maybe<LogicalMargin> collapseBorder;
-  Maybe<LogicalMargin> collapsePadding;
-  Maybe<LogicalSize> cbSize;
-  if (aReflowInput.mFrame == InnerTableFrame()) {
-    WritingMode wm = aReflowInput.GetWritingMode();
-    if (InnerTableFrame()->IsBorderCollapse()) {
-      collapseBorder.emplace(InnerTableFrame()->GetIncludedOuterBCBorder(wm));
-      collapsePadding.emplace(wm);
-    }
-    // Propagate our stored CB size if present, minus any margins.
-    //
-    // Note that inner table computed margins are always zero, they're inherited
-    // by the table wrapper, so we need to get our margin from aOuterRI.
-    if (!HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
-      if (LogicalSize* cb = GetProperty(GridItemCBSizeProperty())) {
-        cbSize.emplace(*cb);
-        *cbSize -= aOuterRI.ComputedLogicalMargin(wm).Size(wm);
-      }
-    }
-    if (!cbSize) {
-      // For inner table frames, the containing block is the same as for
-      // the outer table frame.
-      cbSize.emplace(aOuterRI.mContainingBlockSize);
-    }
-  }
-  aReflowInput.Init(&aPresContext, cbSize, collapseBorder, collapsePadding);
-}
-
 static nsSize GetContainingBlockSize(const ReflowInput& aOuterRI) {
   nsSize size(0, 0);
   const ReflowInput* containRS = aOuterRI.mCBReflowInput;
@@ -622,22 +589,44 @@ void nsTableWrapperFrame::OuterBeginReflowChild(nsPresContext* aPresContext,
                                                 const ReflowInput& aOuterRI,
                                                 Maybe<ReflowInput>& aChildRI,
                                                 nscoord aAvailISize) {
-  // work around pixel rounding errors, round down to ensure we don't exceed the
-  // avail height in
   WritingMode wm = aChildFrame->GetWritingMode();
-  LogicalSize outerSize = aOuterRI.AvailableSize(wm);
-  nscoord availBSize = outerSize.BSize(wm);
-  if (NS_UNCONSTRAINEDSIZE != availBSize) {
-    if (mCaptionFrames.FirstChild() == aChildFrame) {
-      availBSize = NS_UNCONSTRAINEDSIZE;
-    }
-  }
-  LogicalSize availSize(wm, aAvailISize, availBSize);
+
   // create and init the child reflow input, using passed-in Maybe<>,
   // so that caller can use it after we return.
-  aChildRI.emplace(aPresContext, aOuterRI, aChildFrame, availSize, Nothing(),
-                   ReflowInput::InitFlag::CallerWillInit);
-  InitChildReflowInput(*aPresContext, aOuterRI, *aChildRI);
+  if (mCaptionFrames.FirstChild() == aChildFrame) {
+    const LogicalSize availSize(wm, aAvailISize, NS_UNCONSTRAINEDSIZE);
+    aChildRI.emplace(aPresContext, aOuterRI, aChildFrame, availSize);
+  } else {
+    MOZ_ASSERT(InnerTableFrame() == aChildFrame);
+
+    const LogicalSize availSize(wm, aAvailISize, aOuterRI.AvailableBSize());
+    aChildRI.emplace(aPresContext, aOuterRI, aChildFrame, availSize, Nothing(),
+                     ReflowInput::InitFlag::CallerWillInit);
+
+    Maybe<LogicalMargin> collapseBorder;
+    Maybe<LogicalMargin> collapsePadding;
+    Maybe<LogicalSize> cbSize;
+    if (InnerTableFrame()->IsBorderCollapse()) {
+      collapseBorder.emplace(InnerTableFrame()->GetIncludedOuterBCBorder(wm));
+      collapsePadding.emplace(wm);
+    }
+    // Propagate our stored CB size if present, minus any margins.
+    //
+    // Note that inner table computed margins are always zero, they're inherited
+    // by the table wrapper, so we need to get our margin from aOuterRI.
+    if (!HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
+      if (LogicalSize* cb = GetProperty(GridItemCBSizeProperty())) {
+        cbSize.emplace(*cb);
+        *cbSize -= aOuterRI.ComputedLogicalMargin(wm).Size(wm);
+      }
+    }
+    if (!cbSize) {
+      // For inner table frames, the containing block is the same as for
+      // the outer table frame.
+      cbSize.emplace(aOuterRI.mContainingBlockSize);
+    }
+    aChildRI->Init(aPresContext, cbSize, collapseBorder, collapsePadding);
+  }
 
   // see if we need to reset top-of-page due to a caption
   if (aChildRI->mFlags.mIsTopOfPage &&
