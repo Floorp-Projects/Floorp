@@ -18,7 +18,6 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.engine.EngineMiddleware
 import mozilla.components.browser.session.storage.SessionStorage
-import mozilla.components.browser.session.undo.UndoMiddleware
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
@@ -44,6 +43,8 @@ import mozilla.components.feature.recentlyclosed.RecentlyClosedMiddleware
 import mozilla.components.feature.search.middleware.SearchMiddleware
 import mozilla.components.feature.search.region.RegionMiddleware
 import mozilla.components.feature.session.HistoryDelegate
+import mozilla.components.feature.session.middleware.LastAccessMiddleware
+import mozilla.components.feature.session.middleware.undo.UndoMiddleware
 import mozilla.components.feature.top.sites.DefaultTopSitesStorage
 import mozilla.components.feature.top.sites.PinnedSiteStorage
 import mozilla.components.feature.webcompat.WebCompatFeature
@@ -178,6 +179,7 @@ class Core(
     val store by lazyMonitored {
         val middlewareList =
             mutableListOf(
+                LastAccessMiddleware(),
                 RecentlyClosedMiddleware(context, RECENTLY_CLOSED_MAX, engine),
                 DownloadMiddleware(context, DownloadService::class.java),
                 ReaderViewMiddleware(),
