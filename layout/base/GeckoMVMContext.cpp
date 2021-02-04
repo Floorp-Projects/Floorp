@@ -169,7 +169,8 @@ void GeckoMVMContext::PostVisualViewportResizeEventByDynamicToolbar() {
 void GeckoMVMContext::UpdateDisplayPortMargins() {
   MOZ_ASSERT(mPresShell);
   if (nsIFrame* root = mPresShell->GetRootScrollFrame()) {
-    bool hasDisplayPort = DisplayPortUtils::HasDisplayPort(root->GetContent());
+    nsIContent* content = root->GetContent();
+    bool hasDisplayPort = DisplayPortUtils::HasNonMinimalDisplayPort(content);
     bool hasResolution = mPresShell->GetResolution() != 1.0f;
     if (!hasDisplayPort && !hasResolution) {
       // We only want to update the displayport if there is one already, or
@@ -184,8 +185,7 @@ void GeckoMVMContext::UpdateDisplayPortMargins() {
     // because non-toplevel documents have no limit on their size.
     MOZ_ASSERT(
         mPresShell->GetPresContext()->IsRootContentDocumentCrossProcess());
-    DisplayPortUtils::SetDisplayPortBaseIfNotSet(root->GetContent(),
-                                                 displayportBase);
+    DisplayPortUtils::SetDisplayPortBaseIfNotSet(content, displayportBase);
     nsIScrollableFrame* scrollable = do_QueryFrame(root);
     DisplayPortUtils::CalculateAndSetDisplayPortMargins(
         scrollable, DisplayPortUtils::RepaintMode::Repaint);

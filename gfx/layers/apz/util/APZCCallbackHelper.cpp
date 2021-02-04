@@ -619,7 +619,7 @@ static bool PrepareForSetTargetAPZCNotification(
   if (!guidIsValid) {
     return false;
   }
-  if (DisplayPortUtils::HasDisplayPort(dpElement)) {
+  if (DisplayPortUtils::HasNonMinimalDisplayPort(dpElement)) {
     // If the element has a displayport but it hasn't been painted yet,
     // we want the caller to wait for the paint to happen, but we don't
     // need to set the displayport here since it's already been set.
