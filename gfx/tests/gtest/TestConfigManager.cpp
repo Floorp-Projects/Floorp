@@ -93,6 +93,7 @@ class MockGfxInfo final : public nsIGfxInfo {
                          JS::MutableHandleValue _retval) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
+  NS_IMETHOD RefreshMonitors(void) override { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD GetFailures(nsTArray<int32_t>& indices,
                          nsTArray<nsCString>& failures) override {
     return NS_ERROR_NOT_IMPLEMENTED;

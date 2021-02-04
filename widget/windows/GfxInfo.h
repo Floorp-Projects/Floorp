@@ -66,6 +66,8 @@ class GfxInfo : public GfxInfoBase {
 
   nsresult FindMonitors(JSContext* cx, JS::HandleObject array) override;
 
+  NS_IMETHOD RefreshMonitors() override;
+
 #ifdef DEBUG
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIGFXINFODEBUG
