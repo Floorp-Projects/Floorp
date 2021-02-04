@@ -28,6 +28,7 @@ jobs-from:
     - cctools-port.yml
     - clang-tidy.yml
     - clang.yml
+    - compiler-rt.yml
     - dump-syms.yml
     - fix-stacks.yml
     - gcc.yml
