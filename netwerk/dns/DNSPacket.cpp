@@ -1139,6 +1139,8 @@ bool ODoHDNSPacket::ParseODoHConfigs(const nsCString& aRawODoHConfig,
             static_cast<HpkeKdfId>(config.mContents.mKdfId),
             static_cast<HpkeAeadId>(config.mContents.mAeadId)) == SECSuccess) {
       result.AppendElement(std::move(config));
+    } else {
+      LOG(("ODoHDNSPacket::ParseODoHConfigs got an invalid config"));
     }
   }
 
@@ -1164,7 +1166,8 @@ nsresult ODoHDNSPacket::EncodeRequest(nsCString& aBody, const nsACString& aHost,
   const ObliviousDoHConfig& config = (*gODoHService->ODoHConfigs())[0];
 
   ObliviousDoHMessage message;
-  if (!EncryptDNSQuery(queryBody, 2, config, message)) {
+  // The spec didn't recommand padding length for encryption, let's use 0 here.
+  if (!EncryptDNSQuery(queryBody, 0, config, message)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1285,29 +1288,40 @@ nsresult ODoHDNSPacket::Decode(
     TypeRecordResultType& aTypeResult,
     nsClassHashtable<nsCStringHashKey, DOHresp>& aAdditionalRecords,
     uint32_t& aTTL) {
-  if (!DecryptDNSResponse()) {
-    return NS_ERROR_FAILURE;
-  }
+  // This function could be called multiple times when we are checking CNAME
+  // records, but we only need to decrypt the response once.
+  if (!mDecryptedResponseRange) {
+    if (!DecryptDNSResponse()) {
+      return NS_ERROR_FAILURE;
+    }
 
-  uint32_t index = 0;
-  uint16_t responseLength = get16bit(mResponse, index);
-  index += 2;
+    uint32_t index = 0;
+    uint16_t responseLength = get16bit(mResponse, index);
+    index += 2;
 
-  if (mBodySize < (index + responseLength)) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-  unsigned char* plainResponse = &mResponse[index];
-  index += responseLength;
+    if (mBodySize < (index + responseLength)) {
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
 
-  uint16_t paddingLen = get16bit(mResponse, index);
+    DecryptedResponseRange range;
+    range.mStart = index;
+    range.mLength = responseLength;
 
-  if (static_cast<unsigned int>(4 + responseLength + paddingLen) != mBodySize) {
-    return NS_ERROR_ILLEGAL_VALUE;
+    index += responseLength;
+    uint16_t paddingLen = get16bit(mResponse, index);
+
+    if (static_cast<unsigned int>(4 + responseLength + paddingLen) !=
+        mBodySize) {
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
+
+    mDecryptedResponseRange.emplace(range);
   }
 
   return DecodeInternal(aHost, aType, aCname, aAllowRFC1918, aReason, aResp,
-                        aTypeResult, aAdditionalRecords, aTTL, plainResponse,
-                        responseLength);
+                        aTypeResult, aAdditionalRecords, aTTL,
+                        &mResponse[mDecryptedResponseRange->mStart],
+                        mDecryptedResponseRange->mLength);
 }
 
 static bool CreateObliviousDoHMessage(const unsigned char* aData,
@@ -1395,7 +1409,7 @@ static SECStatus HKDFExpand(PK11SymKey* aPrk, const SECItem* aInfo,
 bool ODoHDNSPacket::DecryptDNSResponse() {
   ObliviousDoHMessage message;
   if (!CreateObliviousDoHMessage(mResponse, mBodySize, message)) {
-    LOG(("ODoHDNSPacket::DecryptDNSResponse invalid responce"));
+    LOG(("ODoHDNSPacket::DecryptDNSResponse invalid response"));
     return false;
   }
 

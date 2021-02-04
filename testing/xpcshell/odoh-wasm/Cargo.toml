@@ -14,7 +14,7 @@ default = ["console_error_panic_hook"]
 
 [dependencies]
 wasm-bindgen = "0.2.63"
-odoh-rs = "=0.1.6"
+odoh-rs = "=0.1.8"
 hpke = "0.4.3"
 js-sys = "0.3"
 hex = "0.4"

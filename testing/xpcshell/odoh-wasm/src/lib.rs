@@ -70,7 +70,7 @@ pub fn get_odoh_config() -> js_sys::Uint8Array {
     let public_key_bytes = key_pair.public_key.public_key;
     let length_bytes = (public_key_bytes.len() as u16).to_be_bytes();
     let odoh_config_length = 12 + public_key_bytes.len();
-    let version = 0xff03;
+    let version = 0xff04;
     let odoh_contents_length = 8 + public_key_bytes.len();
     let kem_id = 0x0020; // DHKEM(X25519, HKDF-SHA256)
     let kdf_id = 0x0001; // KDF(SHA-256)

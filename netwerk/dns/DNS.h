@@ -151,7 +151,7 @@ union NetAddr {
   bool ToStringBuffer(char* buf, uint32_t bufSize) const;
 };
 
-#define ODOH_VERSION 0xff03
+#define ODOH_VERSION 0xff04
 static const char kODoHQuery[] = "odoh query";
 static const char hODoHConfigID[] = "odoh key id";
 static const char kODoHSecret[] = "odoh secret";
