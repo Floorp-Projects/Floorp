@@ -98,8 +98,6 @@ interface nsIGfxInfo : nsISupports
   [implicit_jscontext]
   jsval getMonitors();
 
-  void refreshMonitors();
-
   Array<ACString> getFailures(out Array<long> indices);
 
   [noscript, notxpcom] void logFailure(in ACString failure);
