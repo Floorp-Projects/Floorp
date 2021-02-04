@@ -72,13 +72,13 @@ nsresult ODoHService::ReadPrefs(const char* aName) {
   if (!aName || !strcmp(aName, kODoHProxyURIPref) ||
       !strcmp(aName, kODoHTargetHostPref) ||
       !strcmp(aName, kODoHTargetPathPref)) {
-    OnODoHPrefsChange();
+    OnODoHPrefsChange(aName == nullptr);
   }
 
   return NS_OK;
 }
 
-void ODoHService::OnODoHPrefsChange() {
+void ODoHService::OnODoHPrefsChange(bool aInit) {
   nsAutoCString proxyURI;
   Preferences::GetCString(kODoHProxyURIPref, proxyURI);
   nsAutoCString targetHost;
@@ -101,8 +101,32 @@ void ODoHService::OnODoHPrefsChange() {
   }
 
   if (updateODoHConfig) {
-    UpdateODoHConfig();
+    // When this function is called from ODoHService::Init(), it's on the same
+    // call stack as nsDNSService is inited. In this case, we need to dispatch
+    // UpdateODoHConfig(), since recursively getting DNS service is not allowed.
+    auto task = []() { gODoHService->UpdateODoHConfig(); };
+    if (aInit) {
+      NS_DispatchToMainThread(NS_NewRunnableFunction(
+          "ODoHService::UpdateODoHConfig", std::move(task)));
+    } else {
+      task();
+    }
   }
+}
+
+static nsresult ExtractHost(const nsACString& aURI, nsCString& aResult) {
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURI);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!uri->SchemeIs("https")) {
+    LOG(("ODoHService host uri is not https"));
+    return NS_ERROR_FAILURE;
+  }
+
+  return uri->GetAsciiHost(aResult);
 }
 
 void ODoHService::BuildODoHRequestURI() {
@@ -118,9 +142,14 @@ void ODoHService::BuildODoHRequestURI() {
     mODoHRequestURI.AppendLiteral("/");
     mODoHRequestURI.Append(mODoHTargetPath);
   } else {
+    nsAutoCString hostStr;
+    if (NS_FAILED(ExtractHost(mODoHTargetHost, hostStr))) {
+      return;
+    }
+
     mODoHRequestURI.Append(mODoHProxyURI);
     mODoHRequestURI.AppendLiteral("?targethost=");
-    mODoHRequestURI.Append(mODoHTargetHost);
+    mODoHRequestURI.Append(hostStr);
     mODoHRequestURI.AppendLiteral("&targetpath=/");
     mODoHRequestURI.Append(mODoHTargetPath);
   }
@@ -140,7 +169,7 @@ nsresult ODoHService::UpdateODoHConfig() {
   nsAutoCString uri;
   {
     MutexAutoLock lock(mLock);
-    uri = mODoHProxyURI.IsEmpty() ? mODoHTargetHost : mODoHProxyURI;
+    uri = mODoHTargetHost;
   }
 
   nsCOMPtr<nsIDNSService> dns(
@@ -153,21 +182,8 @@ nsresult ODoHService::UpdateODoHConfig() {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsCOMPtr<nsIURI> queryURI;
-  nsresult rv = NS_NewURI(getter_AddRefs(queryURI), uri);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsAutoCString scheme;
-  queryURI->GetScheme(scheme);
-  if (!scheme.Equals("https")) {
-    LOG(("ODoHService::UpdateODoHConfig uri is not https"));
-    return NS_ERROR_FAILURE;
-  }
-
   nsAutoCString hostStr;
-  rv = queryURI->GetAsciiHost(hostStr);
+  nsresult rv = ExtractHost(uri, hostStr);
   if (NS_FAILED(rv)) {
     return rv;
   }

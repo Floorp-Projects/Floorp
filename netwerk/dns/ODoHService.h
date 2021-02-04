@@ -34,13 +34,13 @@ class ODoHService : public nsIDNSListener,
   const Maybe<nsTArray<ObliviousDoHConfig>>& ODoHConfigs();
   void AppendPendingODoHRequest(ODoH* aRequest);
   void GetRequestURI(nsACString& aResult);
+  // Send a DNS query to reterive the ODoHConfig.
   nsresult UpdateODoHConfig();
 
  private:
   virtual ~ODoHService();
   nsresult ReadPrefs(const char* aName);
-  void OnODoHPrefsChange();
-  // Send a DNS query to reterive the ODoHConfig.
+  void OnODoHPrefsChange(bool aInit);
   void BuildODoHRequestURI();
 
   Mutex mLock;
