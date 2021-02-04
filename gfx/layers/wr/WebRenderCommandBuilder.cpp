@@ -710,6 +710,10 @@ struct DIGroup {
       }
       mKey = Some(key);
     } else {
+      MOZ_DIAGNOSTIC_ASSERT(
+          aWrManager->WrBridge()->MatchesNamespace(mKey.ref()),
+          "Stale blob key for group!");
+
       wr::ImageDescriptor descriptor(dtSize, 0, dt->GetFormat(), opacity);
 
       // Convert mInvalidRect to image space by subtracting the corner of the
@@ -2402,6 +2406,10 @@ WebRenderCommandBuilder::GenerateFallbackData(
   }
 
   if (useBlobImage) {
+    MOZ_DIAGNOSTIC_ASSERT(mManager->WrBridge()->MatchesNamespace(
+                              fallbackData->GetBlobImageKey().ref()),
+                          "Stale blob key for fallback!");
+
     aResources.SetBlobImageVisibleArea(
         fallbackData->GetBlobImageKey().value(),
         ViewAs<ImagePixel>(visibleRect, PixelCastJustification::LayerIsImage));
@@ -2592,6 +2600,10 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
       maskData->mShouldHandleOpacity = aMaskItem->ShouldHandleOpacity();
     }
   }
+
+  MOZ_DIAGNOSTIC_ASSERT(
+      mManager->WrBridge()->MatchesNamespace(maskData->mBlobKey.ref()),
+      "Stale blob key for mask!");
 
   wr::ImageMask imageMask;
   imageMask.image = wr::AsImageKey(maskData->mBlobKey.value());
