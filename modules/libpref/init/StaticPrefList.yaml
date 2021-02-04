@@ -10527,6 +10527,12 @@
   value: true
   mirror: always
 
+# Whether buttons shouldn't be suppressed for non-native scrollbars.
+- name: widget.gtk.non-native.scrollbar.allow-buttons
+  type: bool
+  value: false
+  mirror: always
+
 # Preference to disable dark scrollbar implementation.
 # This is mainly for testing because dark scrollbars have to be semi-
 # transparent, but many reftests expect scrollbars to look identical
