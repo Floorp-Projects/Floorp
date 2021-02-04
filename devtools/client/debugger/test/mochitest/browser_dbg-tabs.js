@@ -14,12 +14,12 @@ add_task(async function() {
   info("Test reloading the debugger");
   await reload(dbg, "simple1", "simple2");
   is(countTabs(dbg), 2);
-  await waitForSelectedSource(dbg);
+  await waitForSelectedSource(dbg, "simple2.js");
 
   info("Test reloading the debuggee a second time");
   await reload(dbg, "simple1", "simple2");
   is(countTabs(dbg), 2);
-  await waitForSelectedSource(dbg);
+  await waitForSelectedSource(dbg, "simple2.js");
 });
 
 add_task(async function() {
