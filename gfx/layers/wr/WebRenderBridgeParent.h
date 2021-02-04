@@ -220,6 +220,14 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   wr::Epoch GetCurrentEpoch() const { return mWrEpoch; }
   wr::IdNamespace GetIdNamespace() { return mIdNamespace; }
 
+  bool MatchesNamespace(const wr::ImageKey& aImageKey) const {
+    return aImageKey.mNamespace == mIdNamespace;
+  }
+
+  bool MatchesNamespace(const wr::BlobImageKey& aBlobKey) const {
+    return MatchesNamespace(aBlobKey._0);
+  }
+
   void FlushRendering(bool aWaitForPresent = true);
 
   /**
