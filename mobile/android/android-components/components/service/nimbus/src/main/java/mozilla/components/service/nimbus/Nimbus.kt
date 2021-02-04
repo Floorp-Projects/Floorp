@@ -189,7 +189,7 @@ class Nimbus(
     private val fetchScope: CoroutineScope =
         CoroutineScope(Executors.newSingleThreadExecutor().asCoroutineDispatcher())
 
-    private var nimbus: NimbusClientInterface
+    private val nimbus: NimbusClientInterface
 
     override var globalUserParticipation: Boolean
         get() = nimbus.getGlobalUserParticipation()
