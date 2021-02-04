@@ -396,6 +396,9 @@ void DocAccessible::Shutdown() {
 
   RemoveEventListeners();
 
+  // mParent->RemoveChild clears mParent, but we need to know whether we were a
+  // child later, so use a flag.
+  const bool isChild = !!mParent;
   if (mParent) {
     DocAccessible* parentDocument = mParent->Document();
     if (parentDocument) parentDocument->RemoveChildDocument(this);
@@ -403,6 +406,9 @@ void DocAccessible::Shutdown() {
     mParent->RemoveChild(this);
     MOZ_ASSERT(!mParent, "Parent has to be null!");
   }
+
+  mPresShell->SetDocAccessible(nullptr);
+  mPresShell = nullptr;  // Avoid reentrancy
 
   // Walk the array backwards because child documents remove themselves from the
   // array as they are shutdown.
@@ -424,9 +430,6 @@ void DocAccessible::Shutdown() {
     mVirtualCursor = nullptr;
   }
 
-  mPresShell->SetDocAccessible(nullptr);
-  mPresShell = nullptr;  // Avoid reentrancy
-
   mDependentIDsHashes.Clear();
   mNodeToAccessibleMap.Clear();
 
@@ -446,7 +449,13 @@ void DocAccessible::Shutdown() {
 
   HyperTextAccessibleWrap::Shutdown();
 
-  GetAccService()->NotifyOfDocumentShutdown(this, mDocumentNode);
+  MOZ_ASSERT(GetAccService());
+  GetAccService()->NotifyOfDocumentShutdown(
+      this, mDocumentNode,
+      // Make sure we don't shut down AccService while a parent document is
+      // still shutting down. The parent will allow service shutdown when it
+      // reaches this point.
+      /* aAllowServiceShutdown */ !isChild);
   mDocumentNode = nullptr;
 }
 
