@@ -44,13 +44,6 @@
 namespace mozilla {
 namespace net {
 
-enum TlsHandshakeResult : uint32_t {
-  EchConfigSuccessful = 0,
-  EchConfigFailed,
-  NoEchConfigSuccessful,
-  NoEchConfigFailed,
-};
-
 //-----------------------------------------------------------------------------
 // nsHttpConnection <public>
 //-----------------------------------------------------------------------------
@@ -426,8 +419,6 @@ bool nsHttpConnection::EnsureNPNComplete(nsresult& aOut0RTTWriteHandshakeValue,
   nsCOMPtr<nsITransportSecurityInfo> info;
   nsCOMPtr<nsISSLSocketControl> ssl;
   nsAutoCString negotiatedNPN;
-  // This is needed for telemetry
-  bool handshakeSucceeded = false;
 
   GetSecurityInfo(getter_AddRefs(securityInfo));
   if (!securityInfo) {
@@ -540,8 +531,6 @@ bool nsHttpConnection::EnsureNPNComplete(nsresult& aOut0RTTWriteHandshakeValue,
     LOG1(("nsHttpConnection::EnsureNPNComplete %p [%s] negotiated to '%s'%s\n",
           this, mConnInfo->HashKey().get(), negotiatedNPN.get(),
           mTLSFilter ? " [Double Tunnel]" : ""));
-
-    handshakeSucceeded = true;
 
     int16_t tlsVersion;
     ssl->GetSSLVersionUsed(&tlsVersion);
@@ -673,19 +662,6 @@ npnComplete:
     // We have to reset this here, just in case we end up starting spdy again,
     // so it can actually do everything it needs to do.
     mDid0RTTSpdy = false;
-  }
-
-  if (ssl) {
-    // Telemetry for tls failure rate with and without esni;
-    bool echConfigUsed;
-    mSocketTransport->GetEchConfigUsed(&echConfigUsed);
-    TlsHandshakeResult result =
-        echConfigUsed
-            ? (handshakeSucceeded ? TlsHandshakeResult::EchConfigSuccessful
-                                  : TlsHandshakeResult::EchConfigFailed)
-            : (handshakeSucceeded ? TlsHandshakeResult::NoEchConfigSuccessful
-                                  : TlsHandshakeResult::NoEchConfigFailed);
-    Telemetry::Accumulate(Telemetry::ECHCONFIG_SUCCESS_RATE, result);
   }
 
   if (rv == psm::GetXPCOMFromNSSError(
