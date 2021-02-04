@@ -817,13 +817,7 @@ abstract class AbstractFetchDownloadService : Service() {
     }
 
     @VisibleForTesting
-    internal fun shouldUseScopedStorage() =
-            getSdkVersion() >= Build.VERSION_CODES.Q && !isExternalStorageLegacy()
-
-    @SuppressLint("NewApi")
-    @VisibleForTesting
-    internal fun isExternalStorageLegacy(): Boolean =
-        Environment.isExternalStorageLegacy()
+    internal fun shouldUseScopedStorage() = getSdkVersion() >= Build.VERSION_CODES.Q
 
     /**
      * Gets the SDK version from the system.
