@@ -77,6 +77,7 @@ add_task(async function remote() {
     "example.com/",
     "Urlbar contains the typed string."
   );
+  await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
 });
 
 // Tests that autofill works as normal when entering and when in a local search
@@ -134,4 +135,5 @@ add_task(async function local() {
     "example.com/",
     "Urlbar contains the typed string."
   );
+  await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
 });

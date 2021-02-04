@@ -249,9 +249,7 @@ async function searchAndCheck(
 }
 
 async function cleanUp() {
-  await UrlbarTestUtils.promisePopupClose(window, () => {
-    EventUtils.synthesizeKey("KEY_Escape");
-  });
+  await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
 }
