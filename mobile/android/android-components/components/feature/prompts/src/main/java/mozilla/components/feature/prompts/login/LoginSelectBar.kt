@@ -15,6 +15,7 @@ import androidx.core.content.withStyledAttributes
 import androidx.core.view.isVisible
 import androidx.core.widget.ImageViewCompat
 import androidx.core.widget.TextViewCompat
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.storage.Login
@@ -114,7 +115,10 @@ class LoginSelectBar @JvmOverloads constructor(
                 }
             }
         loginsList?.apply {
-            layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
+            layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false).also {
+                val dividerItemDecoration = DividerItemDecoration(context, it.orientation)
+                addItemDecoration(dividerItemDecoration)
+            }
             adapter = listAdapter
         }
     }
