@@ -385,8 +385,12 @@ nsresult nsButtonFrameRenderer::DisplayButton(nsDisplayListBuilder* aBuilder,
   nsRect buttonRect =
       mFrame->GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(mFrame);
 
-  nsDisplayBackgroundImage::AppendBackgroundItemsToTop(aBuilder, mFrame,
-                                                       buttonRect, aBackground);
+  const AppendedBackgroundType result =
+      nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
+          aBuilder, mFrame, buttonRect, aBackground);
+  if (result == AppendedBackgroundType::None) {
+    aBuilder->BuildCompositorHitTestInfoIfNeeded(GetFrame(), aBackground);
+  }
 
   aBackground->AppendNewToTop<nsDisplayButtonBorder>(aBuilder, GetFrame(),
                                                      this);

@@ -34,6 +34,7 @@
 #include "DisplayListClipState.h"
 #include "LayerState.h"
 #include "FrameMetrics.h"
+#include "HitTestInfo.h"
 #include "ImgDrawResult.h"
 #include "mozilla/dom/EffectsInfo.h"
 #include "mozilla/dom/RemoteBrowser.h"
@@ -680,29 +681,20 @@ class nsDisplayListBuilder {
     mAllowMergingAndFlattening = aAllow;
   }
 
-  /**
-   * Sets the current compositor hit test area and info to |aHitTestArea| and
-   * |aHitTestInfo|.
-   * This is used during display list building to determine if the parent frame
-   * hit test info contains the same information that child frame needs.
-   */
-  void SetCompositorHitTestInfo(const nsRect& aHitTestArea,
-                                const CompositorHitTestInfo& aHitTestInfo) {
-    mHitTestArea = aHitTestArea;
-    mHitTestInfo = aHitTestInfo;
+  void SetCompositorHitTestInfo(const CompositorHitTestInfo& aInfo) {
+    mCompositorHitTestInfo = aInfo;
   }
 
-  const nsRect& GetHitTestArea() const { return mHitTestArea; }
-  const CompositorHitTestInfo& GetHitTestInfo() const { return mHitTestInfo; }
+  const CompositorHitTestInfo& GetCompositorHitTestInfo() const {
+    return mCompositorHitTestInfo;
+  }
 
   /**
    * Builds a new nsDisplayCompositorHitTestInfo for the frame |aFrame| if
-   * needed, and adds it to the top of |aList|. If |aBuildNew| is true, the
-   * previous hit test info will not be reused.
+   * needed, and adds it to the top of |aList|.
    */
   void BuildCompositorHitTestInfoIfNeeded(nsIFrame* aFrame,
-                                          nsDisplayList* aList,
-                                          const bool aBuildNew);
+                                          nsDisplayList* aList);
 
   bool IsInsidePointerEventsNoneDoc() {
     return CurrentPresShellState()->mInsidePointerEventsNoneDoc;
@@ -1134,8 +1126,6 @@ class nsDisplayListBuilder {
     ~AutoBuildingDisplayList() {
       mBuilder->mCurrentFrame = mPrevFrame;
       mBuilder->mCurrentReferenceFrame = mPrevReferenceFrame;
-      mBuilder->mHitTestArea = mPrevHitTestArea;
-      mBuilder->mHitTestInfo = mPrevHitTestInfo;
       mBuilder->mCurrentOffsetToReferenceFrame = mPrevOffset;
       mBuilder->mVisibleRect = mPrevVisibleRect;
       mBuilder->mDirtyRect = mPrevDirtyRect;
@@ -1145,6 +1135,7 @@ class nsDisplayListBuilder {
       mBuilder->mBuildingInvisibleItems = mPrevBuildingInvisibleItems;
       mBuilder->mInInvalidSubtree = mPrevInInvalidSubtree;
       mBuilder->mAdditionalOffset = mPrevAdditionalOffset;
+      mBuilder->mCompositorHitTestInfo = mPrevCompositorHitTestInfo;
     }
 
    private:
@@ -1152,13 +1143,12 @@ class nsDisplayListBuilder {
     AGRState mCurrentAGRState;
     const nsIFrame* mPrevFrame;
     const nsIFrame* mPrevReferenceFrame;
-    nsRect mPrevHitTestArea;
-    CompositorHitTestInfo mPrevHitTestInfo;
     nsPoint mPrevOffset;
     mozilla::Maybe<nsPoint> mPrevAdditionalOffset;
     nsRect mPrevVisibleRect;
     nsRect mPrevDirtyRect;
     RefPtr<AnimatedGeometryRoot> mPrevAGR;
+    CompositorHitTestInfo mPrevCompositorHitTestInfo;
     bool mPrevAncestorHasApzAwareEventHandler;
     bool mPrevBuildingInvisibleItems;
     bool mPrevInInvalidSubtree;
@@ -1832,7 +1822,6 @@ class nsDisplayListBuilder {
   friend class nsDisplayItem;
   friend class nsDisplayOwnLayer;
   friend struct RetainedDisplayListBuilder;
-  friend struct HitTestInfo;
   AnimatedGeometryRoot* FindAnimatedGeometryRootFor(nsIFrame* aFrame);
 
   AnimatedGeometryRoot* WrapAGRForFrame(
@@ -2029,8 +2018,7 @@ class nsDisplayListBuilder {
   bool mUseOverlayScrollbars;
 
   mozilla::Maybe<float> mVisibleThreshold;
-  nsRect mHitTestArea;
-  CompositorHitTestInfo mHitTestInfo;
+  mozilla::gfx::CompositorHitTestInfo mCompositorHitTestInfo;
 };
 
 class nsDisplayItem;
@@ -2083,7 +2071,17 @@ void AssertUniqueItem(nsDisplayItem* aItem);
  */
 bool ShouldBuildItemForEvents(const DisplayItemType aType);
 
+/**
+ * Updates the item DisplayItemData if needed.
+ */
 void UpdateDisplayItemData(nsPaintedDisplayItem* aItem);
+
+/**
+ * Initializes the hit test information of |aItem| if the item type supports it.
+ */
+void InitializeHitTestInfo(nsDisplayListBuilder* aBuilder,
+                           nsPaintedDisplayItem* aItem,
+                           const DisplayItemType aType);
 
 template <typename T, typename F, typename... Args>
 MOZ_ALWAYS_INLINE T* MakeDisplayItemWithIndex(nsDisplayListBuilder* aBuilder,
@@ -2112,6 +2110,7 @@ MOZ_ALWAYS_INLINE T* MakeDisplayItemWithIndex(nsDisplayListBuilder* aBuilder,
   nsPaintedDisplayItem* paintedItem = item->AsPaintedDisplayItem();
   if (paintedItem) {
     UpdateDisplayItemData(paintedItem);
+    InitializeHitTestInfo(aBuilder, paintedItem, type);
   }
 
   if (aBuilder->InInvalidSubtree() ||
@@ -2163,8 +2162,6 @@ class nsDisplayItemLink {
 
   friend class nsDisplayList;
 };
-
-class nsPaintedDisplayItem;
 
 /*
  * nsDisplayItemBase is a base-class for all display items. It is mainly
@@ -3255,9 +3252,16 @@ class nsPaintedDisplayItem : public nsDisplayItem {
     mCacheIndex = mozilla::Nothing();
   }
 
+  mozilla::HitTestInfo& GetHitTestInfo() { return mHitTestInfo; }
+  const nsRect& HitTestArea() const { return mHitTestInfo.Area(); }
+  const mozilla::gfx::CompositorHitTestInfo& HitTestFlags() const {
+    return mHitTestInfo.Info();
+  }
+
  protected:
   nsPaintedDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-      : nsDisplayItem(aBuilder, aFrame) {}
+      : nsPaintedDisplayItem(aBuilder, aFrame,
+                             aBuilder->CurrentActiveScrolledRoot()) {}
 
   nsPaintedDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                        const ActiveScrolledRoot* aActiveScrolledRoot)
@@ -3265,12 +3269,15 @@ class nsPaintedDisplayItem : public nsDisplayItem {
 
   nsPaintedDisplayItem(nsDisplayListBuilder* aBuilder,
                        const nsPaintedDisplayItem& aOther)
-      : nsDisplayItem(aBuilder, aOther) {}
+      : nsDisplayItem(aBuilder, aOther), mHitTestInfo(aOther.mHitTestInfo) {}
 
  private:
   mozilla::DisplayItemData* mDisplayItemData = nullptr;
   mozilla::layers::LayerManager* mDisplayItemDataLayerManager = nullptr;
   mozilla::Maybe<uint16_t> mCacheIndex;
+
+ protected:
+  mozilla::HitTestInfo mHitTestInfo;
 };
 
 /**
@@ -4438,6 +4445,12 @@ class nsDisplaySolidColorRegion : public nsPaintedDisplayItem {
   sRGBColor mColor;
 };
 
+enum class AppendedBackgroundType : uint8_t {
+  None,
+  Background,
+  ThemedBackground,
+};
+
 /**
  * A display item to paint one background-image for a frame. Each background
  * image layer gets its own nsDisplayBackgroundImage.
@@ -4476,12 +4489,14 @@ class nsDisplayBackgroundImage : public nsDisplayImageContainer {
 
   NS_DISPLAY_DECL_NAME("Background", TYPE_BACKGROUND)
 
-  // This will create and append new items for all the layers of the
-  // background. Returns whether we appended a themed background.
-  // aAllowWillPaintBorderOptimization should usually be left at true, unless
-  // aFrame has special border drawing that causes opaque borders to not
-  // actually be opaque.
-  static bool AppendBackgroundItemsToTop(
+  /**
+   * This will create and append new items for all the layers of the
+   * background. Returns the type of background that was appended.
+   * aAllowWillPaintBorderOptimization should usually be left at true, unless
+   * aFrame has special border drawing that causes opaque borders to not
+   * actually be opaque.
+   */
+  static AppendedBackgroundType AppendBackgroundItemsToTop(
       nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
       const nsRect& aBackgroundRect, nsDisplayList* aList,
       bool aAllowWillPaintBorderOptimization = true,
@@ -5145,20 +5160,6 @@ class nsDisplayEventReceiver final : public nsDisplayItem {
                HitTestState* aState, nsTArray<nsIFrame*>* aOutFrames) final;
 };
 
-struct HitTestInfo {
-  HitTestInfo(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-              const mozilla::gfx::CompositorHitTestInfo& aHitTestFlags)
-      : mArea(aFrame->GetCompositorHitTestArea(aBuilder)),
-        mFlags(aHitTestFlags) {}
-
-  HitTestInfo(const nsRect& aArea,
-              const mozilla::gfx::CompositorHitTestInfo& aHitTestFlags)
-      : mArea(aArea), mFlags(aHitTestFlags) {}
-
-  nsRect mArea;
-  mozilla::gfx::CompositorHitTestInfo mFlags;
-};
-
 /**
  * Similar to nsDisplayEventReceiver in that it is used for hit-testing. However
  * this gets built when we're doing widget painting and we need to send the
@@ -5167,20 +5168,25 @@ struct HitTestInfo {
  */
 class nsDisplayCompositorHitTestInfo : public nsPaintedDisplayItem {
  public:
-  nsDisplayCompositorHitTestInfo(
-      nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-      const mozilla::gfx::CompositorHitTestInfo& aHitTestFlags,
-      const mozilla::Maybe<nsRect>& aArea = mozilla::Nothing());
+  nsDisplayCompositorHitTestInfo(nsDisplayListBuilder* aBuilder,
+                                 nsIFrame* aFrame)
+      : nsPaintedDisplayItem(aBuilder, aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayCompositorHitTestInfo);
+    mHitTestInfo.Initialize(aBuilder, aFrame);
+  }
 
   nsDisplayCompositorHitTestInfo(
-      nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-      mozilla::UniquePtr<HitTestInfo>&& aHitTestInfo);
+      nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, const nsRect& aArea,
+      const mozilla::gfx::CompositorHitTestInfo& aHitTestFlags)
+      : nsPaintedDisplayItem(aBuilder, aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayCompositorHitTestInfo);
+    mHitTestInfo.SetAreaAndInfo(aArea, aHitTestFlags);
+    mHitTestInfo.InitializeScrollTarget(aBuilder);
+  }
 
   MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayCompositorHitTestInfo)
 
   NS_DISPLAY_DECL_NAME("CompositorHitTestInfo", TYPE_COMPOSITOR_HITTEST_INFO)
-
-  void InitializeScrollTarget(nsDisplayListBuilder* aBuilder);
 
   bool CreateWebRenderCommands(
       mozilla::wr::DisplayListBuilder& aBuilder,
@@ -5191,26 +5197,6 @@ class nsDisplayCompositorHitTestInfo : public nsPaintedDisplayItem {
 
   int32_t ZIndex() const override;
   void SetOverrideZIndex(int32_t aZIndex);
-
-  void SetHitTestInfo(mozilla::UniquePtr<HitTestInfo>&& aHitTestInfo) {
-    MOZ_ASSERT(aHitTestInfo);
-    MOZ_ASSERT(aHitTestInfo->mFlags !=
-               mozilla::gfx::CompositorHitTestInvisibleToHit);
-
-    mHitTestInfo = std::move(aHitTestInfo);
-  }
-
-  void SetHitTestInfo(
-      const nsRect& aArea,
-      const mozilla::gfx::CompositorHitTestInfo& aHitTestFlags) {
-    MOZ_ASSERT(aHitTestFlags != mozilla::gfx::CompositorHitTestInvisibleToHit);
-    mHitTestInfo = mozilla::MakeUnique<HitTestInfo>(aArea, aHitTestFlags);
-  }
-
-  const HitTestInfo& GetHitTestInfo() const {
-    MOZ_ASSERT(mHitTestInfo);
-    return *mHitTestInfo;
-  }
 
   /**
    * ApplyOpacity() is overriden for opacity flattening.
@@ -5228,18 +5214,8 @@ class nsDisplayCompositorHitTestInfo : public nsPaintedDisplayItem {
     return nsRect();
   }
 
-  const nsRect& HitTestArea() const { return mHitTestInfo->mArea; }
-
-  const mozilla::gfx::CompositorHitTestInfo& HitTestFlags() const {
-    return mHitTestInfo->mFlags;
-  }
-
  private:
-  mozilla::Maybe<mozilla::layers::ScrollableLayerGuid::ViewID> mScrollTarget;
   mozilla::Maybe<int32_t> mOverrideZIndex;
-  int32_t mAppUnitsPerDevPixel;
-
-  mozilla::UniquePtr<HitTestInfo> mHitTestInfo;
 };
 
 /**
