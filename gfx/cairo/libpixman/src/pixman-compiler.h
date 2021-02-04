@@ -89,6 +89,23 @@
 #   endif
 #endif
 
+/* In libxul builds we don't ever want to export pixman symbols */
+#if 1
+#include "prcpucfg.h"
+
+#ifdef HAVE_VISIBILITY_HIDDEN_ATTRIBUTE
+#define CVISIBILITY_HIDDEN __attribute__((visibility("hidden")))
+#elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
+#define CVISIBILITY_HIDDEN __hidden
+#else
+#define CVISIBILITY_HIDDEN
+#endif
+
+/* In libxul builds we don't ever want to export cairo symbols */
+#define PIXMAN_EXPORT extern CVISIBILITY_HIDDEN
+
+#else
+
 /* GCC visibility */
 #if defined(__GNUC__) && __GNUC__ >= 4 && !defined(_WIN32)
 #   define PIXMAN_EXPORT __attribute__ ((visibility("default")))
@@ -99,6 +116,8 @@
 #   define PIXMAN_EXPORT PIXMAN_API
 #else
 #   define PIXMAN_EXPORT
+#endif
+
 #endif
 
 /* member offsets */
