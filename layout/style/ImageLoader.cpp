@@ -410,16 +410,6 @@ already_AddRefed<imgRequestProxy> ImageLoader::LoadImage(
     return nullptr;
   }
 
-  if (aImage.HasRef()) {
-    bool isEqualExceptRef = false;
-    nsIURI* docURI = aDocument.GetDocumentURI();
-    if (NS_SUCCEEDED(uri->EqualsExceptRef(docURI, &isEqualExceptRef)) &&
-        isEqualExceptRef) {
-      // Prevent loading an internal resource.
-      return nullptr;
-    }
-  }
-
   int32_t loadFlags =
       nsIRequest::LOAD_NORMAL |
       nsContentUtils::CORSModeToLoadImageFlags(EffectiveCorsMode(uri, aImage));
