@@ -6,8 +6,7 @@
 # Script to generate <canvas src> reftest files for "object-fit" and
 # "object-position", from corresponding reftest files that use <object>.
 #
-# This script expects to be run from this working directory:
-#  mozilla-central/layout/reftests/w3c-css/submitted/images3
+# This script expects to be run from the parent directory.
 
 # Array of image files that we'll use
 imageFileArr=("support/colors-16x8.png" "support/colors-8x16.png")
