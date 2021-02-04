@@ -7603,11 +7603,15 @@ AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
       writer.loadArgumentDynamicSlot(ArgumentKind::This, argcId);
   ObjOperandId thisObjId = writer.guardToObject(thisValId);
 
+  CallFlags targetFlags(CallFlags::FunCall);
   if (mode_ == ICState::Mode::Specialized) {
     // Ensure that |this| is the expected target function.
     emitCalleeGuard(thisObjId, target);
 
-    CallFlags targetFlags(CallFlags::FunCall);
+    if (cx_->realm() == target->realm()) {
+      targetFlags.setIsSameRealm();
+    }
+
     if (isScripted) {
       writer.callScriptedFunction(thisObjId, argcId, targetFlags);
     } else {
@@ -7620,7 +7624,6 @@ AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
     // Guard that function is not a class constructor.
     writer.guardNotClassConstructor(thisObjId);
 
-    CallFlags targetFlags(CallFlags::FunCall);
     if (isScripted) {
       writer.guardFunctionHasJitEntry(thisObjId, /*isConstructing =*/false);
       writer.callScriptedFunction(thisObjId, argcId, targetFlags);
@@ -8245,6 +8248,10 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
   if (mode_ == ICState::Mode::Specialized) {
     // Ensure that |this| is the expected target function.
     emitCalleeGuard(thisObjId, target);
+
+    if (cx_->realm() == target->realm()) {
+      targetFlags.setIsSameRealm();
+    }
 
     if (isScripted) {
       writer.callScriptedFunction(thisObjId, argcId, targetFlags);
