@@ -1473,6 +1473,9 @@ GfxInfoBase::GetMonitors(JSContext* aCx, JS::MutableHandleValue aResult) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+GfxInfoBase::RefreshMonitors() { return NS_ERROR_NOT_IMPLEMENTED; }
+
 static inline bool SetJSPropertyString(JSContext* aCx,
                                        JS::Handle<JSObject*> aObj,
                                        const char* aProp, const char* aString) {
