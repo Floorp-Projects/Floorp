@@ -20,7 +20,6 @@ import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.feature.tabs.TabsUseCases
-import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
@@ -28,7 +27,6 @@ import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.home.HomeFragment
-import mozilla.components.browser.storage.sync.Tab as SyncTab
 
 /**
  * [TabTrayDialogFragment] controller.
@@ -42,7 +40,6 @@ interface TabTrayController {
     fun handleTabSettingsClicked()
     fun handleShareTabsOfTypeClicked(private: Boolean)
     fun handleShareSelectedTabsClicked(selectedTabs: Set<Tab>)
-    fun handleSyncedTabClicked(syncTab: SyncTab)
     fun handleSaveToCollectionClicked(selectedTabs: Set<Tab>)
     fun handleBookmarkSelectedTabs(selectedTabs: Set<Tab>)
     fun handleDeleteSelectedTabs(selectedTabs: Set<Tab>)
@@ -195,14 +192,6 @@ class DefaultTabTrayController(
             tabTrayDialogFragmentStore.dispatch(TabTrayDialogFragmentAction.ExitMultiSelectMode)
             showUndoSnackbarForTabs()
         }
-    }
-
-    override fun handleSyncedTabClicked(syncTab: SyncTab) {
-        activity.openToBrowserAndLoad(
-            searchTermOrURL = syncTab.active().url,
-            newTab = true,
-            from = BrowserDirection.FromTabTray
-        )
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)

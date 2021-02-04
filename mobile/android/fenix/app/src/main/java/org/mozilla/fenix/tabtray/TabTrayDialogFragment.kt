@@ -215,7 +215,6 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
                     showBookmarksSnackbar = ::showBookmarksSnackbar
                 )
             ),
-            store = tabTrayDialogStore,
             isPrivate = isPrivate,
             isInLandscape = ::isInLandscape,
             lifecycleOwner = viewLifecycleOwner

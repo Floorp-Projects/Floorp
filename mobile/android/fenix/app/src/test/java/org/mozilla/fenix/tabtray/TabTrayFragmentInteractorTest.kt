@@ -90,12 +90,6 @@ class TabTrayFragmentInteractorTest {
     }
 
     @Test
-    fun onSyncedTabClicked() {
-        interactor.onSyncedTabClicked(mockk(relaxed = true))
-        verify { controller.handleSyncedTabClicked(any()) }
-    }
-
-    @Test
     fun onBackPressed() {
         interactor.onBackPressed()
         verify { controller.handleBackPressed() }

@@ -190,7 +190,7 @@ class HomeMenu(
             if (settings.shouldDeleteBrowsingDataOnQuit) quitItem else null,
             settingsItem,
             BrowserMenuDivider(),
-            if (settings.syncedTabsInTabsTray) null else syncedTabsItem,
+            syncedTabsItem,
             bookmarksItem,
             historyItem,
             downloadsItem,

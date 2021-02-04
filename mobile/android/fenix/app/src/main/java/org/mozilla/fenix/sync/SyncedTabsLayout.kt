@@ -19,7 +19,6 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.storage.sync.SyncedDeviceTabs
 import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
@@ -47,9 +46,6 @@ class SyncedTabsLayout @JvmOverloads constructor(
         synced_tabs_list.adapter = adapter
 
         synced_tabs_pull_to_refresh.setOnRefreshListener { listener?.onRefresh() }
-
-        // Sanity-check: Remove this class when the feature flag is always enabled.
-        FeatureFlags.syncedTabsInTabsTray
     }
 
     override fun onError(error: SyncedTabsView.ErrorType) {

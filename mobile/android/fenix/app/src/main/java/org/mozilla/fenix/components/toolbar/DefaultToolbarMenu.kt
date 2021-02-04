@@ -332,14 +332,12 @@ class DefaultToolbarMenu(
             ?.browsingModeManager?.mode == BrowsingMode.Normal
         val shouldDeleteDataOnQuit = context.components.settings
             .shouldDeleteBrowsingDataOnQuit
-        val syncedTabsInTabsTray = context.components.settings
-            .syncedTabsInTabsTray
 
         val menuItems = listOfNotNull(
             downloadsItem,
             historyItem,
             bookmarksItem,
-            if (syncedTabsInTabsTray) null else syncedTabs,
+            syncedTabs,
             settings,
             if (shouldDeleteDataOnQuit) deleteDataOnQuit else null,
             BrowserMenuDivider(),
@@ -471,9 +469,6 @@ class DefaultToolbarMenu(
             onItemTapped.invoke(ToolbarMenu.Item.Settings)
         }
 
-        val syncedTabsInTabsTray = context.components.settings
-            .syncedTabsInTabsTray
-
         val menuItems = listOfNotNull(
             newTabItem,
             BrowserMenuDivider(),
@@ -481,7 +476,7 @@ class DefaultToolbarMenu(
             historyItem,
             downloadsItem,
             extensionsItem,
-            if (syncedTabsInTabsTray) null else syncedTabsItem,
+            syncedTabsItem,
             BrowserMenuDivider(),
             findInPageItem,
             desktopSiteItem,

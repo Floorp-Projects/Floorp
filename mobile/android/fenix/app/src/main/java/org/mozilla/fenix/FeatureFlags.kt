@@ -15,13 +15,6 @@ object FeatureFlags {
     val pullToRefreshEnabled = Config.channel.isNightlyOrDebug
 
     /**
-     * Shows Synced Tabs in the tabs tray.
-     *
-     * Tracking issue: https://github.com/mozilla-mobile/fenix/issues/13892
-     */
-    val syncedTabsInTabsTray = Config.channel.isNightlyOrDebug
-
-    /**
      * Enables the Nimbus experiments library.
      */
     val nimbusExperiments = Config.channel.isNightlyOrDebug

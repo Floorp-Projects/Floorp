@@ -32,7 +32,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -176,15 +175,6 @@ class DefaultTabTrayControllerTest {
 
         verify {
             dismissTabTrayAndNavigateHome(any())
-        }
-    }
-
-    @Test
-    fun onSyncedTabClicked() {
-        controller.handleSyncedTabClicked(mockk(relaxed = true))
-
-        verify {
-            activity.openToBrowserAndLoad(any(), true, BrowserDirection.FromTabTray)
         }
     }
 

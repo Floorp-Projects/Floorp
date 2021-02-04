@@ -6,10 +6,7 @@ package org.mozilla.fenix.settings
 
 import android.os.Bundle
 import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.SwitchPreference
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 
 class SecretSettingsFragment : PreferenceFragmentCompat() {
@@ -21,11 +18,5 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.secret_settings_preferences, rootKey)
-
-        requirePreference<SwitchPreference>(R.string.pref_key_synced_tabs_tabs_tray).apply {
-            isVisible = FeatureFlags.syncedTabsInTabsTray
-            isChecked = context.settings().syncedTabsInTabsTray
-            onPreferenceChangeListener = SharedPreferenceUpdater()
-        }
     }
 }
