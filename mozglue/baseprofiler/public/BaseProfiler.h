@@ -76,7 +76,7 @@ static inline UniqueProfilerBacktrace profiler_get_backtrace() {
 }
 
 static inline bool profiler_capture_backtrace_into(
-    ProfileChunkedBuffer& aChunkedBuffer) {
+    ProfileChunkedBuffer& aChunkedBuffer, StackCaptureOptions aCaptureOptions) {
   return false;
 }
 
@@ -108,6 +108,7 @@ namespace mozilla {
 
 class MallocAllocPolicy;
 class ProfileChunkedBuffer;
+enum class StackCaptureOptions;
 template <class T, size_t MinInlineCapacity, class AllocPolicy>
 class Vector;
 
@@ -554,9 +555,10 @@ using UniqueProfilerBacktrace =
 
 // Immediately capture the current thread's call stack, store it in the provided
 // buffer (usually to avoid allocations if you can construct the buffer on the
-// stack). Returns false if unsuccessful, or if the profiler is inactive.
+// stack). Returns false if unsuccessful, if the profiler is inactive, or if
+// aCaptureOptions is NoStack.
 MFBT_API bool profiler_capture_backtrace_into(
-    ProfileChunkedBuffer& aChunkedBuffer);
+    ProfileChunkedBuffer& aChunkedBuffer, StackCaptureOptions aCaptureOptions);
 
 // Immediately capture the current thread's call stack, and return it in a
 // ProfileChunkedBuffer (usually for later use in MarkerStack::TakeBacktrace()).

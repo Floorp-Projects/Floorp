@@ -13,6 +13,17 @@
 #ifndef BaseProfilerMarkersPrerequisites_h
 #define BaseProfilerMarkersPrerequisites_h
 
+namespace mozilla {
+
+enum class StackCaptureOptions {
+  NoStack,    // No stack captured.
+  Full,       // Capture a full stack, including label frames, JS frames and
+              // native frames.
+  NonNative,  // Capture a stack without native frames for reduced overhead.
+};
+
+}
+
 #ifdef MOZ_GECKO_PROFILER
 
 #  include "BaseProfilingCategory.h"
@@ -427,7 +438,7 @@ class MarkerStack {
 
   // Allow move.
   MarkerStack(MarkerStack&& aOther)
-      : mIsCaptureRequested(aOther.mIsCaptureRequested),
+      : mCaptureOptions(aOther.mCaptureOptions),
         mOptionalChunkedBufferStorage(
             std::move(aOther.mOptionalChunkedBufferStorage)),
         mChunkedBuffer(aOther.mChunkedBuffer) {
@@ -435,7 +446,7 @@ class MarkerStack {
     aOther.Clear();
   }
   MarkerStack& operator=(MarkerStack&& aOther) {
-    mIsCaptureRequested = aOther.mIsCaptureRequested;
+    mCaptureOptions = aOther.mCaptureOptions;
     mOptionalChunkedBufferStorage =
         std::move(aOther.mOptionalChunkedBufferStorage);
     mChunkedBuffer = aOther.mChunkedBuffer;
@@ -446,8 +457,7 @@ class MarkerStack {
 
   // Take ownership of a backtrace. If null or empty, equivalent to NoStack().
   explicit MarkerStack(UniquePtr<ProfileChunkedBuffer>&& aExternalChunkedBuffer)
-      : mIsCaptureRequested(false),
-        mOptionalChunkedBufferStorage(
+      : mOptionalChunkedBufferStorage(
             (!aExternalChunkedBuffer || aExternalChunkedBuffer->IsEmpty())
                 ? nullptr
                 : std::move(aExternalChunkedBuffer)),
@@ -458,25 +468,27 @@ class MarkerStack {
   // Use an existing backtrace stored elsewhere, which the user must guarantee
   // is alive during the add-marker call. If empty, equivalent to NoStack().
   explicit MarkerStack(ProfileChunkedBuffer& aExternalChunkedBuffer)
-      : mIsCaptureRequested(false),
-        mChunkedBuffer(aExternalChunkedBuffer.IsEmpty()
+      : mChunkedBuffer(aExternalChunkedBuffer.IsEmpty()
                            ? nullptr
                            : &aExternalChunkedBuffer) {
     AssertInvariants();
   }
 
   // Don't capture a stack in this marker.
-  static MarkerStack NoStack() { return MarkerStack(false); }
+  static MarkerStack NoStack() {
+    return MarkerStack(StackCaptureOptions::NoStack);
+  }
 
   // Capture a stack when adding this marker.
-  static MarkerStack Capture() {
+  static MarkerStack Capture(
+      StackCaptureOptions aCaptureOptions = StackCaptureOptions::Full) {
     // Actual capture will be handled inside profiler_add_marker.
-    return MarkerStack(true);
+    return MarkerStack(aCaptureOptions);
   }
 
   // Optionally capture a stack, useful for avoiding long-winded ternaries.
   static MarkerStack MaybeCapture(bool aDoCapture) {
-    return MarkerStack(aDoCapture);
+    return aDoCapture ? Capture() : NoStack();
   }
 
   // Use an existing backtrace stored elsewhere, which the user must guarantee
@@ -493,18 +505,16 @@ class MarkerStack {
     return MarkerStack(std::move(aExternalChunkedBuffer));
   }
 
-  [[nodiscard]] bool IsCaptureNeeded() const {
-    // If the chunked buffer already contains something, consider the capture
-    // request already fulfilled.
-    return mIsCaptureRequested;
+  [[nodiscard]] StackCaptureOptions CaptureOptions() const {
+    return mCaptureOptions;
   }
 
   ProfileChunkedBuffer* GetChunkedBuffer() const { return mChunkedBuffer; }
 
   // Use backtrace after a request. If null, equivalent to NoStack().
   void UseRequestedBacktrace(ProfileChunkedBuffer* aExternalChunkedBuffer) {
-    MOZ_RELEASE_ASSERT(IsCaptureNeeded());
-    mIsCaptureRequested = false;
+    MOZ_RELEASE_ASSERT(mCaptureOptions != StackCaptureOptions::NoStack);
+    mCaptureOptions = StackCaptureOptions::NoStack;
     if (aExternalChunkedBuffer && !aExternalChunkedBuffer->IsEmpty()) {
       // We only need to use the provided buffer if it is not empty.
       mChunkedBuffer = aExternalChunkedBuffer;
@@ -513,22 +523,22 @@ class MarkerStack {
   }
 
   void Clear() {
-    mIsCaptureRequested = false;
+    mCaptureOptions = StackCaptureOptions::NoStack;
     mOptionalChunkedBufferStorage.reset();
     mChunkedBuffer = nullptr;
     AssertInvariants();
   }
 
  private:
-  explicit MarkerStack(bool aIsCaptureRequested)
-      : mIsCaptureRequested(aIsCaptureRequested) {
+  explicit MarkerStack(StackCaptureOptions aCaptureOptions)
+      : mCaptureOptions(aCaptureOptions) {
     AssertInvariants();
   }
 
   // This should be called after every constructor and non-const function.
   void AssertInvariants() const {
 #  ifdef DEBUG
-    if (mIsCaptureRequested) {
+    if (mCaptureOptions != StackCaptureOptions::NoStack) {
       MOZ_ASSERT(!mOptionalChunkedBufferStorage,
                  "We should not hold a buffer when capture is requested");
       MOZ_ASSERT(!mChunkedBuffer,
@@ -547,8 +557,7 @@ class MarkerStack {
 #  endif  // DEBUG
   }
 
-  // True if a capture is requested when marker is added to the profile buffer.
-  bool mIsCaptureRequested = false;
+  StackCaptureOptions mCaptureOptions = StackCaptureOptions::NoStack;
 
   // Optional storage for the backtrace, in case it was captured before the
   // add-marker call.

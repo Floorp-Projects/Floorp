@@ -53,7 +53,8 @@ class ProfileChunkedBuffer;
 
 bool profiler_can_accept_markers();
 bool profiler_capture_backtrace_into(
-    mozilla::ProfileChunkedBuffer& aChunkedBuffer);
+    mozilla::ProfileChunkedBuffer& aChunkedBuffer,
+    mozilla::StackCaptureOptions aCaptureOptions);
 
 // Bring category names from Base Profiler into the geckoprofiler::category
 // namespace, for consistency with other Gecko Profiler identifiers.

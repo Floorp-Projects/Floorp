@@ -79,7 +79,8 @@ static inline UniqueProfilerBacktrace profiler_get_backtrace() {
 }
 
 static inline bool profiler_capture_backtrace_into(
-    mozilla::ProfileChunkedBuffer& aChunkedBuffer) {
+    mozilla::ProfileChunkedBuffer& aChunkedBuffer,
+    StackCaptureOptions aCaptureOptions) {
   return false;
 }
 static inline mozilla::UniquePtr<mozilla::ProfileChunkedBuffer>
@@ -700,7 +701,8 @@ using UniqueProfilerBacktrace =
 // buffer (usually to avoid allocations if you can construct the buffer on the
 // stack). Returns false if unsuccessful, or if the profiler is inactive.
 bool profiler_capture_backtrace_into(
-    mozilla::ProfileChunkedBuffer& aChunkedBuffer);
+    mozilla::ProfileChunkedBuffer& aChunkedBuffer,
+    mozilla::StackCaptureOptions aCaptureOptions);
 
 // Immediately capture the current thread's call stack, and return it in a
 // ProfileChunkedBuffer (usually for later use in MarkerStack::TakeBacktrace()).
