@@ -46,6 +46,10 @@ nsITheme::Transparency nsNativeBasicThemeGTK::GetWidgetTransparency(
   return nsNativeBasicTheme::GetWidgetTransparency(aFrame, aAppearance);
 }
 
+bool nsNativeBasicThemeGTK::ThemeSupportsScrollbarButtons() {
+  return StaticPrefs::widget_gtk_non_native_scrollbar_allow_buttons();
+}
+
 auto nsNativeBasicThemeGTK::GetScrollbarSizes(nsPresContext* aPresContext,
                                               StyleScrollbarWidth aWidth,
                                               Overlay) -> ScrollbarSizes {
