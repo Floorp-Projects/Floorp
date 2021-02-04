@@ -61,7 +61,6 @@ classes_with_WrapForJNI = [
     "GeckoVideoInfo",
     "GeckoWebExecutor",
     "HardwareCodecCapabilityUtils",
-    "Image",
     "ImageDecoder",
     "MediaDrmProxy",
     "PanZoomController",
