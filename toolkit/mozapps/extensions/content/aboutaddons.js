@@ -2252,6 +2252,7 @@ class InlineOptionsBrowser extends HTMLElement {
       }
     }, 100);
 
+    this._embedderElement = null;
     this._promiseDisconnected = new Promise(
       resolve => (this._resolveDisconnected = resolve)
     );
@@ -2259,27 +2260,18 @@ class InlineOptionsBrowser extends HTMLElement {
 
   connectedCallback() {
     window.addEventListener("scroll", this, true);
-    top.browsingContext.embedderElement.addEventListener(
-      "FullZoomChange",
-      this
-    );
-    top.browsingContext.embedderElement.addEventListener(
-      "TextZoomChange",
-      this
-    );
+    const { embedderElement } = top.browsingContext;
+    this._embedderElement = embedderElement;
+    embedderElement.addEventListener("FullZoomChange", this);
+    embedderElement.addEventListener("TextZoomChange", this);
   }
 
   disconnectedCallback() {
     this._resolveDisconnected();
     window.removeEventListener("scroll", this, true);
-    top.browsingContext.embedderElement.removeEventListener(
-      "FullZoomChange",
-      this
-    );
-    top.browsingContext.embedderElement.removeEventListener(
-      "TextZoomChange",
-      this
-    );
+    this._embedderElement?.removeEventListener("FullZoomChange", this);
+    this._embedderElement?.removeEventListener("TextZoomChange", this);
+    this._embedderElement = null;
   }
 
   handleEvent(e) {
