@@ -73,6 +73,7 @@ const intermittently_loaded_scripts = {
     "resource://testing-common/BrowserTestUtilsChild.jsm",
     "resource://testing-common/ContentEventListenerChild.jsm",
     "resource://specialpowers/SpecialPowersChild.jsm",
+    "resource://specialpowers/AppTestDelegateChild.jsm",
     "resource://specialpowers/WrapPrivileged.jsm",
   ]),
   processScripts: new Set([]),
