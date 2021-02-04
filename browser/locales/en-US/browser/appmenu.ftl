@@ -112,11 +112,6 @@ profiler-popup-capture-shortcut =
      *[other] Ctrl+Shift+2
   }
 
-## History panel
-
-appmenu-manage-history =
-    .label = Manage History
-
 ## Help panel
 appmenu-help-header =
     .title = { -brand-shorter-name } Help

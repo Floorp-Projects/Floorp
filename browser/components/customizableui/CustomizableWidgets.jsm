@@ -25,7 +25,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   CharsetMenu: "resource://gre/modules/CharsetMenu.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
-  SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
 });
 
@@ -108,15 +107,6 @@ const CustomizableWidgets = [
       let panelview = event.target;
       let document = panelview.ownerDocument;
       let window = document.defaultView;
-
-      PanelMultiView.getViewNode(
-        document,
-        "appMenuRecentlyClosedTabs"
-      ).disabled = SessionStore.getClosedTabCount(window) == 0;
-      PanelMultiView.getViewNode(
-        document,
-        "appMenuRecentlyClosedWindows"
-      ).disabled = SessionStore.getClosedWindowCount(window) == 0;
 
       // We restrict the amount of results to 42. Not 50, but 42. Why? Because 42.
       let query =
