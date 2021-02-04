@@ -482,11 +482,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool WatchedByDevTools();
   void SetWatchedByDevTools(bool aWatchedByDevTools, ErrorResult& aRv);
 
-  mozilla::dom::TouchEventsOverride TouchEventsOverride() const;
-  void SetTouchEventsOverride(
-      const enum TouchEventsOverride aTouchEventsOverride, ErrorResult& aRv);
-  MOZ_MUST_USE nsresult
-  SetTouchEventsOverride(const enum TouchEventsOverride aTouchEventsOverride);
+  dom::TouchEventsOverride TouchEventsOverride() const;
+  void SetTouchEventsOverride(dom::TouchEventsOverride, ErrorResult& aRv);
 
   bool FullscreenAllowed() const;
 
@@ -916,7 +913,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   }
 
   bool CanSet(FieldIndex<IDX_TouchEventsOverrideInternal>,
-              const enum TouchEventsOverride& aTouchEventsOverride,
+              dom::TouchEventsOverride aTouchEventsOverride,
               ContentParent* aSource);
 
   bool CanSet(FieldIndex<IDX_DisplayMode>, const enum DisplayMode& aDisplayMode,
