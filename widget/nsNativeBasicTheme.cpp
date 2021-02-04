@@ -11,6 +11,7 @@
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/gfx/Filters.h"
+#include "mozilla/RelativeLuminanceUtils.h"
 #include "nsCSSColorUtils.h"
 #include "nsCSSRendering.h"
 #include "nsLayoutUtils.h"
@@ -358,13 +359,47 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeScrollbarColors(
   return std::make_pair(gfx::sRGBColor::FromABGR(color), sScrollbarBorderColor);
 }
 
+nscolor nsNativeBasicTheme::AdjustUnthemedScrollbarThumbColor(
+    nscolor aFaceColor, EventStates aStates) {
+  // In Windows 10, scrollbar thumb has the following colors:
+  //
+  // State  | Color    | Luminance
+  // -------+----------+----------
+  // Normal | Gray 205 |     61.0%
+  // Hover  | Gray 166 |     38.1%
+  // Active | Gray 96  |     11.7%
+  //
+  // This function is written based on the ratios between the values.
+  bool isActive = aStates.HasState(NS_EVENT_STATE_ACTIVE);
+  bool isHover = aStates.HasState(NS_EVENT_STATE_HOVER);
+  if (!isActive && !isHover) {
+    return aFaceColor;
+  }
+  float luminance = RelativeLuminanceUtils::Compute(aFaceColor);
+  if (isActive) {
+    if (luminance >= 0.18f) {
+      luminance *= 0.192f;
+    } else {
+      luminance /= 0.192f;
+    }
+  } else {
+    if (luminance >= 0.18f) {
+      luminance *= 0.625f;
+    } else {
+      luminance /= 0.625f;
+    }
+  }
+  return RelativeLuminanceUtils::Adjust(aFaceColor, luminance);
+}
+
 sRGBColor nsNativeBasicTheme::ComputeScrollbarThumbColor(
     nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState) {
   const nsStyleUI* ui = aStyle.StyleUI();
   nscolor color;
   if (ui->mScrollbarColor.IsColors()) {
-    color = ui->mScrollbarColor.AsColors().thumb.CalcColor(aStyle);
+    color = AdjustUnthemedScrollbarThumbColor(
+        ui->mScrollbarColor.AsColors().thumb.CalcColor(aStyle), aElementState);
   } else if (aDocumentState.HasAllStates(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
     color = LookAndFeel::GetColor(
         LookAndFeel::ColorID::ThemedScrollbarThumbInactive,

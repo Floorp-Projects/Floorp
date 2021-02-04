@@ -25,8 +25,6 @@ class ScrollbarUtil {
   static nscolor GetScrollbarButtonColor(nscolor aTrackColor,
                                          EventStates aStates);
   static nscolor GetScrollbarArrowColor(nscolor aButtonColor);
-  static nscolor AdjustScrollbarFaceColor(nscolor aFaceColor,
-                                          EventStates aStates);
   static nscolor GetScrollbarTrackColor(nsIFrame* aFrame);
   static nscolor GetScrollbarThumbColor(nsIFrame* aFrame,
                                         EventStates aEventStates);

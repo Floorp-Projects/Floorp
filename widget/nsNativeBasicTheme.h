@@ -189,6 +189,7 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   ScrollbarSizes GetScrollbarSizes(nsPresContext*,
                                    StyleScrollbarWidth,
                                    Overlay) override;
+  static nscolor AdjustUnthemedScrollbarThumbColor(nscolor, EventStates);
 
  protected:
   nsNativeBasicTheme() = default;

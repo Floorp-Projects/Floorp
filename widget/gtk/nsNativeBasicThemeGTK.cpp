@@ -10,6 +10,18 @@
 #include "mozilla/StaticPrefs_widget.h"
 
 using namespace mozilla;
+using mozilla::gfx::sRGBColor;
+
+static bool ShouldUseDarkScrollbar(nsIFrame* aFrame,
+                                   const ComputedStyle& aStyle) {
+  if (StaticPrefs::widget_disable_dark_scrollbar()) {
+    return false;
+  }
+  if (aStyle.StyleUI()->mScrollbarColor.IsColors()) {
+    return false;
+  }
+  return nsNativeTheme::IsDarkBackground(aFrame);
+}
 
 already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly() {
   static StaticRefPtr<nsITheme> gInstance;
@@ -44,6 +56,28 @@ auto nsNativeBasicThemeGTK::GetScrollbarSizes(nsPresContext* aPresContext,
           : StaticPrefs::widget_gtk_non_native_scrollbar_normal_size();
   LayoutDeviceIntCoord s = (size * dpiRatio).Truncated();
   return {s, s};
+}
+
+std::pair<sRGBColor, sRGBColor> nsNativeBasicThemeGTK::ComputeScrollbarColors(
+    nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aDocumentState) {
+  if (ShouldUseDarkScrollbar(aFrame, aStyle)) {
+    auto color = sRGBColor::FromU8(20, 20, 25, 77);
+    return {color, color};
+  }
+  return nsNativeBasicTheme::ComputeScrollbarColors(aFrame, aStyle,
+                                                    aDocumentState);
+}
+
+sRGBColor nsNativeBasicThemeGTK::ComputeScrollbarThumbColor(
+    nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aElementState, const EventStates& aDocumentState) {
+  if (ShouldUseDarkScrollbar(aFrame, aStyle)) {
+    return sRGBColor::FromABGR(AdjustUnthemedScrollbarThumbColor(
+        NS_RGBA(249, 249, 250, 102), aElementState));
+  }
+  return nsNativeBasicTheme::ComputeScrollbarThumbColor(
+      aFrame, aStyle, aElementState, aDocumentState);
 }
 
 NS_IMETHODIMP
