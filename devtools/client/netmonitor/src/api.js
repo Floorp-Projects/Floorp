@@ -68,11 +68,7 @@ NetMonitorAPI.prototype = {
       owner: this,
     };
 
-    await this.connector.connectFirefox(
-      connection,
-      this.actions,
-      this.store.getState
-    );
+    await this.connector.connect(connection, this.actions, this.store.getState);
   },
 
   /**
@@ -193,9 +189,7 @@ NetMonitorAPI.prototype = {
     };
 
     this.harExportConnector = new Connector();
-    this.harExportConnectorReady = this.harExportConnector.connectFirefox(
-      connection
-    );
+    this.harExportConnectorReady = this.harExportConnector.connect(connection);
 
     await this.harExportConnectorReady;
     return this.harExportConnector;

@@ -33,7 +33,7 @@ executed by the page (including inner iframes). The final export is triggered
 by HarAutomation at the right time.
 
 Note: this object is using it's own logic to fetch data from the backend.
-It should reuse the Firefox Connector (src/connector/firefox-connector),
+It should reuse the Netmonitor Connector (src/connector/index),
 so we don't have to maintain two code paths.
 
 ## HarExporter
