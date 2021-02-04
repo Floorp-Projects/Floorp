@@ -8,6 +8,7 @@
 #include "mozilla/RelativeLuminanceUtils.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "nsNativeTheme.h"
+#include "nsNativeBasicTheme.h"
 
 /*static*/
 bool ScrollbarUtil::IsScrollbarWidthThin(ComputedStyle* aStyle) {
@@ -103,41 +104,6 @@ nscolor ScrollbarUtil::GetScrollbarArrowColor(nscolor aButtonColor) {
 }
 
 /*static*/
-nscolor ScrollbarUtil::AdjustScrollbarFaceColor(nscolor aFaceColor,
-                                                EventStates aStates) {
-  // In Windows 10, scrollbar thumb has the following colors:
-  //
-  // State  | Color    | Luminance
-  // -------+----------+----------
-  // Normal | Gray 205 |     61.0%
-  // Hover  | Gray 166 |     38.1%
-  // Active | Gray 96  |     11.7%
-  //
-  // This function is written based on the ratios between the values.
-
-  bool isActive = aStates.HasState(NS_EVENT_STATE_ACTIVE);
-  bool isHover = aStates.HasState(NS_EVENT_STATE_HOVER);
-  if (!isActive && !isHover) {
-    return aFaceColor;
-  }
-  float luminance = RelativeLuminanceUtils::Compute(aFaceColor);
-  if (isActive) {
-    if (luminance >= 0.18f) {
-      luminance *= 0.192f;
-    } else {
-      luminance /= 0.192f;
-    }
-  } else {
-    if (luminance >= 0.18f) {
-      luminance *= 0.625f;
-    } else {
-      luminance /= 0.625f;
-    }
-  }
-  return RelativeLuminanceUtils::Adjust(aFaceColor, luminance);
-}
-
-/*static*/
 nscolor ScrollbarUtil::GetScrollbarTrackColor(nsIFrame* aFrame) {
   bool darkScrollbar = false;
   ComputedStyle* style = GetCustomScrollbarStyle(aFrame, &darkScrollbar);
@@ -158,19 +124,19 @@ nscolor ScrollbarUtil::GetScrollbarThumbColor(nsIFrame* aFrame,
                                               EventStates aEventStates) {
   bool darkScrollbar = false;
   ComputedStyle* style = GetCustomScrollbarStyle(aFrame, &darkScrollbar);
+  nscolor color =
+      darkScrollbar ? NS_RGBA(249, 249, 250, 102) : NS_RGB(205, 205, 205);
   if (style) {
     const nsStyleUI* ui = style->StyleUI();
     auto* customColors = ui->mScrollbarColor.IsAuto()
                              ? nullptr
                              : &ui->mScrollbarColor.AsColors();
     if (customColors) {
-      nscolor faceColor = customColors->thumb.CalcColor(*style);
-      return AdjustScrollbarFaceColor(faceColor, aEventStates);
+      color = customColors->thumb.CalcColor(*style);
     }
   }
-  nscolor faceColor =
-      darkScrollbar ? NS_RGBA(249, 249, 250, 102) : NS_RGB(205, 205, 205);
-  return AdjustScrollbarFaceColor(faceColor, aEventStates);
+  return nsNativeBasicTheme::AdjustUnthemedScrollbarThumbColor(color,
+                                                               aEventStates);
 }
 
 /*static*/
