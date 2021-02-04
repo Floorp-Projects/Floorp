@@ -983,6 +983,8 @@ pub struct Capabilities {
     /// Whether to enforce that texture uploads be batched regardless of what
     /// the pref says.
     pub requires_batched_texture_uploads: bool,
+    /// Whether the driver can reliably upload data to R8 format textures.
+    pub supports_r8_texture_upload: bool,
     /// Whether clip-masking is supported natively by the GL implementation
     /// rather than emulated in shaders.
     pub uses_native_clip_mask: bool,
@@ -1653,6 +1655,17 @@ impl Device {
         // and handles fewer, larger uploads better.
         let requires_batched_texture_uploads = is_mali_g;
 
+        // On Linux we we have seen uploads to R8 format textures result in
+        // corruption on some AMD cards.
+        // See https://bugzilla.mozilla.org/show_bug.cgi?id=1687554#c13
+        let supports_r8_texture_upload = if cfg!(target_os = "linux")
+            && renderer_name.starts_with("AMD Radeon RX")
+        {
+            false
+        } else {
+            true
+        };
+
         Device {
             gl,
             base_gl: None,
@@ -1680,6 +1693,7 @@ impl Device {
                 supports_render_target_partial_update,
                 supports_shader_storage_object,
                 requires_batched_texture_uploads,
+                supports_r8_texture_upload,
                 uses_native_clip_mask,
                 renderer_name,
             },
