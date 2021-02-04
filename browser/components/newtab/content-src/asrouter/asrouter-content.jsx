@@ -135,7 +135,10 @@ export class ASRouterUISurface extends React.PureComponent {
   }
 
   onBlockSelected(options) {
-    return this.onBlockById(this.state.message.id, options);
+    return this.onBlockById(this.state.message.id, {
+      ...options,
+      campaign: this.state.message.campaign,
+    });
   }
 
   onBlockById(id, options) {
@@ -150,8 +153,13 @@ export class ASRouterUISurface extends React.PureComponent {
     this.clearMessage(this.state.message.id);
   }
 
-  clearMessage(id) {
-    if (id === this.state.message.id) {
+  // Blocking a snippet by id blocks the entire campaign
+  // so when clearing we use the two values interchangeably
+  clearMessage(idOrCampaign) {
+    if (
+      idOrCampaign === this.state.message.id ||
+      idOrCampaign === this.state.message.campaign
+    ) {
       this.setState({ message: {} });
     }
   }

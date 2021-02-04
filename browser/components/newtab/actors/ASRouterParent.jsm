@@ -51,7 +51,7 @@ class ASRouterTabs {
     return Promise.all(
       [...this.actors]
         .filter(a =>
-          a.browsingContext.embedderElement.getAttribute("preloaded")
+          a.browsingContext.embedderElement.getAttribute("preloadedState")
         )
         .map(a => a.sendAsyncMessage(message, data))
     );
@@ -103,11 +103,15 @@ class ASRouterParent extends JSWindowActorParent {
 
   receiveMessage({ name, data }) {
     return ASRouterParent.tabs.loadingMessageHandler.then(handler => {
-      if (name === BLOCK_MESSAGE_BY_ID && data.preloadedOnly) {
+      if (name === BLOCK_MESSAGE_BY_ID) {
         return Promise.all([
           handler.handleMessage(name, data, this.getTab()),
-          ASRouterParent.tabs.messagePreloaded("ClearMessages", [data.id]),
-        ]).then(() => false);
+          // All tabs should clear messages not just preloaded, for example
+          // two different windows can display the same snippet.
+          // ASRouter blocks snippets by campaign not by id so we just tell
+          // other tabs that this specific campaign was blocked.
+          ASRouterParent.tabs.messageAll("ClearMessages", [data.campaign]),
+        ]).then(([handleMessageResult]) => handleMessageResult);
       }
       return handler.handleMessage(name, data, this.getTab());
     });

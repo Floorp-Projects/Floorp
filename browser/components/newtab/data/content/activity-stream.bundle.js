@@ -2633,7 +2633,9 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Pur
   }
 
   onBlockSelected(options) {
-    return this.onBlockById(this.state.message.id, options);
+    return this.onBlockById(this.state.message.id, { ...options,
+      campaign: this.state.message.campaign
+    });
   }
 
   onBlockById(id, options) {
@@ -2648,10 +2650,12 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Pur
 
   onDismiss() {
     this.clearMessage(this.state.message.id);
-  }
+  } // Blocking a snippet by id blocks the entire campaign
+  // so when clearing we use the two values interchangeably
 
-  clearMessage(id) {
-    if (id === this.state.message.id) {
+
+  clearMessage(idOrCampaign) {
+    if (idOrCampaign === this.state.message.id || idOrCampaign === this.state.message.campaign) {
       this.setState({
         message: {}
       });
