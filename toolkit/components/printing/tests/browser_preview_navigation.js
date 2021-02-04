@@ -215,7 +215,6 @@ add_task(async function testPreviewNavigationCommands() {
       paginationElem.shadowRoot.querySelector("#navigateNext"),
       {}
     );
-    await helper.awaitAnimationFrame();
     EventUtils.synthesizeMouseAtCenter(
       paginationElem.shadowRoot.querySelector("#navigateNext"),
       {}
@@ -230,7 +229,6 @@ add_task(async function testPreviewNavigationCommands() {
       paginationElem.shadowRoot.querySelector("#navigatePrevious"),
       {}
     );
-    await helper.awaitAnimationFrame();
     EventUtils.synthesizeMouseAtCenter(
       paginationElem.shadowRoot.querySelector("#navigatePrevious"),
       {}
@@ -243,7 +241,6 @@ add_task(async function testPreviewNavigationCommands() {
 
     // move focus before closing the dialog
     helper.get("cancel-button").focus();
-    await helper.awaitAnimationFrame();
     await helper.closeDialog();
   }, "longerArticle.html");
 });
@@ -375,7 +372,6 @@ add_task(async function testPreviewNavigationSelection() {
 
     // move focus before closing the dialog
     helper.get("cancel-button").focus();
-    await helper.awaitAnimationFrame();
     await helper.closeDialog();
   }, "longerArticle.html");
 });
@@ -423,7 +419,6 @@ add_task(async function testPaginatorAfterSettingsUpdate() {
 
     // move focus before closing the dialog
     helper.get("cancel-button").focus();
-    await helper.awaitAnimationFrame();
     await helper.closeDialog();
   }, "longerArticle.html");
 });
