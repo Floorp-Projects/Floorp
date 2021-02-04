@@ -578,8 +578,7 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvResumeAsync() {
 
 mozilla::ipc::IPCResult CompositorBridgeParent::RecvMakeSnapshot(
     const SurfaceDescriptor& aInSnapshot, const gfx::IntRect& aRect) {
-  RefPtr<DrawTarget> target =
-      GetDrawTargetForDescriptor(aInSnapshot, gfx::BackendType::CAIRO);
+  RefPtr<DrawTarget> target = GetDrawTargetForDescriptor(aInSnapshot);
   MOZ_ASSERT(target);
   if (!target) {
     // We kill the content process rather than have it continue with an invalid
