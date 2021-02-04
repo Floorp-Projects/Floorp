@@ -56,11 +56,15 @@ class DocManager : public nsIWebProgressListener,
 
   /**
    * Called by document accessible when it gets shutdown.
+   * @param aAllowServiceShutdown true to shut down nsAccessibilityService
+   *        if it is no longer required, false to prevent it.
    */
   void NotifyOfDocumentShutdown(DocAccessible* aDocument,
-                                dom::Document* aDOMDocument);
+                                dom::Document* aDOMDocument,
+                                bool aAllowServiceShutdown = true);
 
-  void RemoveFromXPCDocumentCache(DocAccessible* aDocument);
+  void RemoveFromXPCDocumentCache(DocAccessible* aDocument,
+                                  bool aAllowServiceShutdown = true);
 
   /**
    * Return XPCOM accessible document.
