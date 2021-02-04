@@ -181,11 +181,7 @@ class TestQuitRestart(MarionetteTestCase):
         self.assertEqual(self.marionette.profile, self.profile)
         self.assertNotEqual(self.marionette.session_id, self.session_id)
 
-        # An in-app restart will keep the same process id only on Linux
-        if self.marionette.session_capabilities["platformName"] == "linux":
-            self.assertEqual(self.marionette.process_id, self.pid)
-        else:
-            self.assertNotEqual(self.marionette.process_id, self.pid)
+        self.assertNotEqual(self.marionette.process_id, self.pid)
 
         self.assertNotEqual(
             self.marionette.get_pref("startup.homepage_welcome_url"), "about:about"
@@ -199,11 +195,7 @@ class TestQuitRestart(MarionetteTestCase):
         self.assertEqual(self.marionette.profile, self.profile)
         self.assertNotEqual(self.marionette.session_id, self.session_id)
 
-        # An in-app restart will keep the same process id only on Linux
-        if self.marionette.session_capabilities["platformName"] == "linux":
-            self.assertEqual(self.marionette.process_id, self.pid)
-        else:
-            self.assertNotEqual(self.marionette.process_id, self.pid)
+        self.assertNotEqual(self.marionette.process_id, self.pid)
 
         self.assertNotEqual(
             self.marionette.get_pref("startup.homepage_welcome_url"), "about:about"
@@ -386,11 +378,7 @@ class TestQuitRestart(MarionetteTestCase):
         self.marionette.set_context("chrome")
         self.marionette.restart(in_app=True)
 
-        # An in-app restart will keep the same process id only on Linux
-        if self.marionette.session_capabilities["platformName"] == "linux":
-            self.assertEqual(self.marionette.process_id, self.pid)
-        else:
-            self.assertNotEqual(self.marionette.process_id, self.pid)
+        self.assertNotEqual(self.marionette.process_id, self.pid)
 
         self.assertIn(
             "chrome://",
@@ -411,11 +399,7 @@ class TestQuitRestart(MarionetteTestCase):
         with self.marionette.using_context("chrome"):
             self.marionette.restart(in_app=True)
 
-            # An in-app restart will keep the same process id only on Linux
-            if self.marionette.session_capabilities["platformName"] == "linux":
-                self.assertEqual(self.marionette.process_id, self.pid)
-            else:
-                self.assertNotEqual(self.marionette.process_id, self.pid)
+            self.assertNotEqual(self.marionette.process_id, self.pid)
 
             self.assertIn(
                 "chrome://",
