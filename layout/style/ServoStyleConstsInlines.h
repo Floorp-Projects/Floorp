@@ -396,10 +396,19 @@ inline nsIURI* StyleCssUrl::GetURI() const {
   auto& loadData = LoadData();
   if (!(loadData.flags & StyleLoadDataFlags::TRIED_TO_RESOLVE_URI)) {
     loadData.flags |= StyleLoadDataFlags::TRIED_TO_RESOLVE_URI;
-    RefPtr<nsIURI> resolved;
-    NS_NewURI(getter_AddRefs(resolved), SpecifiedSerialization(), nullptr,
-              ExtraData().BaseURI());
-    loadData.resolved_uri = resolved.forget().take();
+    nsDependentCSubstring serialization = SpecifiedSerialization();
+    // https://drafts.csswg.org/css-values-4/#url-empty:
+    //
+    //     If the value of the url() is the empty string (like url("") or url()),
+    //     the url must resolve to an invalid resource (similar to what the url
+    //     about:invalid does).
+    //
+    if (!serialization.IsEmpty()) {
+      RefPtr<nsIURI> resolved;
+      NS_NewURI(getter_AddRefs(resolved), serialization, nullptr,
+                ExtraData().BaseURI());
+      loadData.resolved_uri = resolved.forget().take();
+    }
   }
   return loadData.resolved_uri;
 }
