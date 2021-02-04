@@ -88,9 +88,9 @@ dependencies = [
 
 [[package]]
 name = "ctor"
-version = "0.1.18"
+version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "10bcb9d7dcbf7002aaffbb53eac22906b64cdcc127971dcc387d8eb7c95d5560"
+checksum = "e8f45d9ad417bcef4817d614a501ab55cdd96a6fdb24f49aab89a54acfd66b19"
 dependencies = [
  "quote",
  "syn",
@@ -120,9 +120,9 @@ dependencies = [
 
 [[package]]
 name = "flate2"
-version = "1.0.19"
+version = "1.0.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7411863d55df97a419aa64cb4d2f167103ea9d767e2c54a1868b7ac3f6b47129"
+checksum = "cd3aec53de10fe96d7d8c565eb17f2c687bb5518a2ec453b5b1252964526abe0"
 dependencies = [
  "cfg-if",
  "crc32fast",
@@ -153,7 +153,7 @@ dependencies = [
 
 [[package]]
 name = "glean-core"
-version = "34.0.0"
+version = "34.1.0"
 dependencies = [
  "bincode",
  "chrono",
@@ -229,9 +229,9 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"
-version = "0.2.84"
+version = "0.2.85"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1cca32fa0182e8c0989459524dc356b8f2b5c10f1b9eb521b7d182c03cf8c5ff"
+checksum = "7ccac4b00700875e6a07c6cde370d44d32fa01c5a65cdd2fca6858c479d28bb3"
 
 [[package]]
 name = "lmdb-rkv"
