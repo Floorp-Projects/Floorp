@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "buildID": "20121106",
+  "locale": "en-US",
+  "metaData": {},
+  "engines": [
+    {
+      "_name": "engine1",
+      "_metaData": {
+        "alias": "testAlias"
+      },
+      "_isAppProvided": true
+    },
+    {
+      "_name": "engine2",
+      "_metaData": {
+        "alias": null,
+        "hidden": true
+      },
+      "_isAppProvided": true
+    },
+    {
+      "_name": "simple",
+      "_loadPath": "jar:[profile]/extensions/simple@tests.mozilla.org.xpi!/simple.xml",
+      "_shortName": "simple",
+      "description": "A migration test engine",
+      "__searchForm": "http://www.example.com/",
+      "_metaData": {},
+      "_urls": [
+        {
+          "template": "http://www.example.com/search",
+          "rels": [],
+          "resultDomain": "google.com",
+          "params": [
+            {
+              "name": "q",
+              "value": "{searchTerms}"
+            }
+          ]
+        }
+      ],
+      "queryCharset": "UTF-8"
+    },
+    {
+      "_name": "simple search",
+      "_loadPath": "[other]addEngineWithDetails:simple@tests.mozilla.org",
+      "_shortName": "simple search",
+      "description": "A migration test engine",
+      "__searchForm": "http://www.example.com/",
+      "_metaData": {},
+      "_urls": [
+        {
+          "template": "http://www.example.com/search",
+          "rels": [],
+          "resultDomain": "google.com",
+          "params": [
+            {
+              "name": "q",
+              "value": "{searchTerms}"
+            }
+          ]
+        }
+      ],
+      "queryCharset": "UTF-8",
+      "_extensionID": "simple@tests.mozilla.org"
+    }
+  ]
+}
