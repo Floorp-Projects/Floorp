@@ -822,8 +822,6 @@ pref("browser.preferences.experimental", false);
 pref("browser.preferences.experimental.hidden", false);
 pref("browser.preferences.defaultPerformanceSettings.enabled", true);
 
-pref("browser.preferences.exposeHTTPSOnly", true);
-
 pref("browser.proton.enabled", false);
 
 // Backspace and Shift+Backspace behavior

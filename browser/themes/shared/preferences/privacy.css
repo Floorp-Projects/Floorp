@@ -405,8 +405,3 @@
 #submitHealthReportBox {
   display: -moz-inline-box;
 }
-
-/* HTTPS-Only Mode */
-#httpsOnlyBox[hidehttpsonly] {
-  display: none;
-}
