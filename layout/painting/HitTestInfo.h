@@ -42,6 +42,8 @@ class HitTestInfo {
   const nsRect& Area() const { return mArea; }
   const CompositorHitTestInfo& Info() const { return mInfo; }
 
+  static const HitTestInfo& Empty();
+
  private:
   nsRect mArea;
   CompositorHitTestInfo mInfo;

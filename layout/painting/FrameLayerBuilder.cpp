@@ -683,7 +683,7 @@ class PaintedLayerData {
    * need to update our regions.
    * @param aVisibleRect the area of the item that's visible
    */
-  void Accumulate(ContainerState* aState, nsPaintedDisplayItem* aItem,
+  void Accumulate(ContainerState* aState, nsDisplayItem* aItem,
                   const nsIntRect& aVisibleRect, const nsRect& aContentRect,
                   const DisplayItemClip& aClip, LayerState aLayerState,
                   nsDisplayList* aList, DisplayItemEntryType aType,
@@ -3842,18 +3842,30 @@ UniquePtr<InactiveLayerData> PaintedLayerData::CreateInactiveLayerData(
   return data;
 }
 
-void PaintedLayerData::Accumulate(
-    ContainerState* aState, nsPaintedDisplayItem* aItem,
-    const nsIntRect& aVisibleRect, const nsRect& aContentRect,
-    const DisplayItemClip& aClip, LayerState aLayerState, nsDisplayList* aList,
-    DisplayItemEntryType aType, nsTArray<size_t>& aOpacityIndices,
-    const RefPtr<TransformClipNode>& aTransform) {
+void PaintedLayerData::Accumulate(ContainerState* aState, nsDisplayItem* aItem,
+                                  const nsIntRect& aVisibleRect,
+                                  const nsRect& aContentRect,
+                                  const DisplayItemClip& aClip,
+                                  LayerState aLayerState, nsDisplayList* aList,
+                                  DisplayItemEntryType aType,
+                                  nsTArray<size_t>& aOpacityIndices,
+                                  const RefPtr<TransformClipNode>& aTransform) {
+  if (aItem->HasHitTestInfo()) {
+    AccumulateHitTestItem(aState, aItem, aClip, aTransform);
+  }
+
+  if (aItem->GetType() == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
+    // These items only carry hit test information.
+    return;
+  }
+
+  nsPaintedDisplayItem* item = aItem->AsPaintedDisplayItem();
   // If aItem is nullptr, the cast to nsPaintedDisplayItem failed.
-  MOZ_ASSERT(aItem, "Can only accumulate display items that are painted!");
+  MOZ_ASSERT(item, "Can only accumulate display items that are painted!");
 
   FLB_LOG_PAINTED_LAYER_DECISION(
-      this, "Accumulating dp=%s(%p), f=%p against pld=%p\n", aItem->Name(),
-      aItem, aItem->Frame(), this);
+      this, "Accumulating dp=%s(%p), f=%p against pld=%p\n", item->Name(), item,
+      item->Frame(), this);
 
   const bool hasOpacity = aOpacityIndices.Length() > 0;
   UpdateEffectStatus(aType, aOpacityIndices);
@@ -3861,13 +3873,12 @@ void PaintedLayerData::Accumulate(
   const DisplayItemClip* oldClip = mItemClip;
   mItemClip = &aClip;
 
-  const bool isMerged = aItem->AsDisplayWrapList() &&
-                        aItem->AsDisplayWrapList()->HasMergedFrames();
+  const bool isMerged =
+      item->AsDisplayWrapList() && item->AsDisplayWrapList()->HasMergedFrames();
 
   if (IsEffectEndMarker(aType)) {
-    mAssignedDisplayItems.emplace_back(aItem, aLayerState, nullptr,
-                                       aContentRect, aType, hasOpacity,
-                                       aTransform, isMerged);
+    mAssignedDisplayItems.emplace_back(item, aLayerState, nullptr, aContentRect,
+                                       aType, hasOpacity, aTransform, isMerged);
     return;
   }
 
@@ -3875,23 +3886,23 @@ void PaintedLayerData::Accumulate(
       (oldClip == mItemClip) || (oldClip && *oldClip == *mItemClip);
 
   DisplayItemData* currentData =
-      isMerged ? nullptr : aItem->GetDisplayItemData();
+      isMerged ? nullptr : item->GetDisplayItemData();
 
   DisplayItemData* oldData = aState->mLayerBuilder->GetOldLayerForFrame(
-      aItem->Frame(), aItem->GetPerFrameKey(), currentData,
-      aItem->GetDisplayItemDataLayerManager());
+      item->Frame(), item->GetPerFrameKey(), currentData,
+      item->GetDisplayItemDataLayerManager());
 
-  mAssignedDisplayItems.emplace_back(aItem, aLayerState, oldData, aContentRect,
+  mAssignedDisplayItems.emplace_back(item, aLayerState, oldData, aContentRect,
                                      aType, hasOpacity, aTransform, isMerged);
 
   if (aLayerState != LayerState::LAYER_NONE) {
     FLB_LOG_PAINTED_LAYER_DECISION(this, "Creating nested FLB for item %p\n",
-                                   aItem);
+                                   item);
     mAssignedDisplayItems.back().mInactiveLayerData =
-        CreateInactiveLayerData(aState, aItem, oldData);
+        CreateInactiveLayerData(aState, item, oldData);
   }
 
-  if (aState->mBuilder->NeedToForceTransparentSurfaceForItem(aItem)) {
+  if (aState->mBuilder->NeedToForceTransparentSurfaceForItem(item)) {
     mForceTransparentSurface = true;
   }
 
@@ -3899,10 +3910,10 @@ void PaintedLayerData::Accumulate(
     // Disable component alpha.
     // Note that the transform (if any) on the PaintedLayer is always an integer
     // translation so we don't have to factor that in here.
-    aItem->DisableComponentAlpha();
+    item->DisableComponentAlpha();
   } else {
     const bool needsComponentAlpha =
-        SetupComponentAlpha(aState, aItem, aVisibleRect, aTransform);
+        SetupComponentAlpha(aState, item, aVisibleRect, aTransform);
 
     if (needsComponentAlpha) {
       // This display item needs background copy when pushing opacity group.
@@ -3939,7 +3950,7 @@ void PaintedLayerData::Accumulate(
   // Active opacity means no opaque pixels.
   if (!hasOpacity) {
     opaquePixels = aState->ComputeOpaqueRect(
-        aItem, mAnimatedGeometryRoot, mASR, aClip, aList, &mHideAllLayersBelow,
+        item, mAnimatedGeometryRoot, mASR, aClip, aList, &mHideAllLayersBelow,
         &mOpaqueForAnimatedGeometryRootParent);
     opaquePixels.AndWith(aVisibleRect);
   }
@@ -3949,8 +3960,8 @@ void PaintedLayerData::Accumulate(
    */
   if (nsIntRegion(aVisibleRect).Contains(mVisibleRegion) &&
       opaquePixels.Contains(mVisibleRegion) &&
-      aItem->SupportsOptimizingToImage()) {
-    mImage = static_cast<nsDisplayImageContainer*>(aItem);
+      item->SupportsOptimizingToImage()) {
+    mImage = static_cast<nsDisplayImageContainer*>(item);
     FLB_LOG_PAINTED_LAYER_DECISION(
         this, "  Tracking image: nsDisplayImageContainer covers the layer\n");
   } else if (mImage) {
@@ -3962,7 +3973,7 @@ void PaintedLayerData::Accumulate(
 
   Maybe<nscolor> uniformColor;
   if (!hasOpacity) {
-    uniformColor = aItem->IsUniform(aState->mBuilder);
+    uniformColor = item->IsUniform(aState->mBuilder);
   }
 
   // Some display items have to exist (so they can set forceTransparentSurface
@@ -3974,7 +3985,7 @@ void PaintedLayerData::Accumulate(
     // pixel-aligned (thus the item will not be truly uniform).
     if (uniformColor) {
       bool snap;
-      nsRect bounds = aItem->GetBounds(aState->mBuilder, &snap);
+      nsRect bounds = item->GetBounds(aState->mBuilder, &snap);
       if (!aState->ScaleToInsidePixels(bounds, snap).Contains(aVisibleRect)) {
         uniformColor = Nothing();
         FLB_LOG_PAINTED_LAYER_DECISION(
@@ -4020,7 +4031,7 @@ void PaintedLayerData::Accumulate(
       // Opaque display items in chrome documents whose window is partially
       // transparent are always added to the opaque region. This helps ensure
       // that we get as much subpixel-AA as possible in the chrome.
-      if (tmp.GetNumRects() <= 4 || aItem->Frame()->PresContext()->IsChrome()) {
+      if (tmp.GetNumRects() <= 4 || item->Frame()->PresContext()->IsChrome()) {
         mOpaqueRegion = std::move(tmp);
       }
     }
@@ -4038,17 +4049,15 @@ void PaintedLayerData::AccumulateHitTestItem(ContainerState* aState,
                                              nsDisplayItem* aItem,
                                              const DisplayItemClip& aClip,
                                              TransformClipNode* aTransform) {
-  auto* item = aItem->AsPaintedDisplayItem();
-  MOZ_ASSERT(item);
-
-  nsRect area = item->HitTestArea();
-  const CompositorHitTestInfo& flags = item->HitTestFlags();
+  const auto& hitTestInfo = aItem->GetHitTestInfo();
+  nsRect area = hitTestInfo.Area();
+  const CompositorHitTestInfo& flags = hitTestInfo.Info();
 
   FLB_LOG_PAINTED_LAYER_DECISION(
       this,
       "Accumulating hit test info %p against pld=%p, "
       "area: [%d, %d, %d, %d], flags: 0x%x]\n",
-      item, this, area.x, area.y, area.width, area.height, flags.serialize());
+      aItem, this, area.x, area.y, area.width, area.height, flags.serialize());
 
   area = aClip.ApplyNonRoundedIntersection(area);
 
@@ -4058,7 +4067,7 @@ void PaintedLayerData::AccumulateHitTestItem(ContainerState* aState,
 
   if (area.IsEmpty()) {
     FLB_LOG_PAINTED_LAYER_DECISION(
-        this, "Discarded empty hit test info %p for pld=%p\n", item, this);
+        this, "Discarded empty hit test info %p for pld=%p\n", aItem, this);
     return;
   }
 
@@ -4067,7 +4076,7 @@ void PaintedLayerData::AccumulateHitTestItem(ContainerState* aState,
   // use the NS_FRAME_SIMPLE_EVENT_REGIONS to avoid calling the slightly
   // expensive HasNonZeroCorner function if we know from a previous run that
   // the frame has zero corners.
-  nsIFrame* frame = item->Frame();
+  nsIFrame* frame = aItem->Frame();
   bool simpleRegions = frame->HasAnyStateBits(NS_FRAME_SIMPLE_EVENT_REGIONS);
   if (!simpleRegions) {
     if (nsLayoutUtils::HasNonZeroCorner(frame->StyleBorder()->mBorderRadius)) {
@@ -4548,12 +4557,6 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
     bool snap = false;
     nsRect itemContent = item->GetBounds(mBuilder, &snap);
 
-    if (itemType == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
-      itemContent = static_cast<nsPaintedDisplayItem*>(item)->HitTestArea();
-    }
-
-    const bool inEffect = InTransform() || InOpacity();
-
     NS_ASSERTION(mAppUnitsPerDevPixel == AppUnitsPerDevPixel(item),
                  "items in a container layer should all have the same app "
                  "units per dev pixel");
@@ -4578,6 +4581,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
     const DisplayItemClipChain* layerClipChain = nullptr;
     const DisplayItemClip* itemClipPtr = &item->GetClip();
 
+    const bool inEffect = InTransform() || InOpacity();
     if (mManager->IsWidgetLayerManager() && !inEffect) {
       if (itemClipChain && itemClipChain->mASR == itemASR &&
           itemType != DisplayItemType::TYPE_STICKY_POSITION) {
@@ -4608,20 +4612,9 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
       // because the layer state of the item cannot be active, otherwise the
       // parent item would not have been flattened.
       MOZ_ASSERT(selectedLayer);
-
-      if (item->AsPaintedDisplayItem()->GetHitTestInfo().Info() !=
-          mozilla::gfx::CompositorHitTestInvisibleToHit) {
-        selectedLayer->AccumulateHitTestItem(this, item, itemClip, nullptr);
-      }
-
-      if (itemType == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
-        // The hit test info was processed above.
-        continue;
-      }
-
-      selectedLayer->Accumulate(this, item->AsPaintedDisplayItem(), nsIntRect(),
-                                nsRect(), itemClip, layerState, aList, marker,
-                                opacityIndices, transformNode);
+      selectedLayer->Accumulate(this, item, nsIntRect(), nsRect(), itemClip,
+                                layerState, aList, marker, opacityIndices,
+                                transformNode);
       continue;
     }
 
@@ -5123,19 +5116,9 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
       }
       MOZ_ASSERT(paintedLayerData);
 
-      if (item->AsPaintedDisplayItem()->GetHitTestInfo().Info() !=
-          mozilla::gfx::CompositorHitTestInvisibleToHit) {
-        paintedLayerData->AccumulateHitTestItem(this, item, itemClip, nullptr);
-      }
-
-      if (itemType == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
-        // The hit test info was processed above.
-        continue;
-      }
-
-      paintedLayerData->Accumulate(
-          this, item->AsPaintedDisplayItem(), itemVisibleRect, itemContent,
-          itemClip, layerState, aList, marker, opacityIndices, transformNode);
+      paintedLayerData->Accumulate(this, item, itemVisibleRect, itemContent,
+                                   itemClip, layerState, aList, marker,
+                                   opacityIndices, transformNode);
 
       if (!paintedLayerData->mLayer) {
         // Try to recycle the old layer of this display item.
