@@ -225,7 +225,16 @@ function waitForSelectedLocation(dbg, line, column) {
   });
 }
 
-function waitForSelectedSource(dbg, url) {
+/**
+ * Wait for a given source to be selected and ready.
+ *
+ * @memberof mochitest/waits
+ * @param {Object} dbg
+ * @param {null|string|Source} sourceOrUrl Optional. Either a source URL (string) or a source object (typically fetched via `findSource`)
+ * @return {Promise}
+ * @static
+ */
+function waitForSelectedSource(dbg, sourceOrUrl) {
   const {
     getSelectedSourceWithContent,
     hasSymbols,
@@ -240,13 +249,18 @@ function waitForSelectedSource(dbg, url) {
         return false;
       }
 
-      if (!url) {
-        return true;
-      }
-
-      const newSource = findSource(dbg, url, { silent: true });
-      if (newSource.id != source.id) {
-        return false;
+      if (sourceOrUrl) {
+        // Second argument is either a source URL (string)
+        // or a Source object.
+        if (typeof sourceOrUrl == "string") {
+          if (!source.url.includes(sourceOrUrl)) {
+            return false;
+          }
+        } else {
+          if (source.id != sourceOrUrl.id) {
+            return false;
+          }
+        }
       }
 
       return hasSymbols(source) && getBreakableLines(source.id);
