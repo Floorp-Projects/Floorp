@@ -13,8 +13,6 @@ class nsNativeBasicThemeAndroid : public nsNativeBasicTheme {
  public:
   nsNativeBasicThemeAndroid() = default;
 
-  bool ThemeSupportsScrollbarButtons() override { return false; }
-
  protected:
   virtual ~nsNativeBasicThemeAndroid() = default;
 };
