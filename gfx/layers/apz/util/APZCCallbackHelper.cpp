@@ -650,7 +650,7 @@ static bool PrepareForSetTargetAPZCNotification(
   nsIFrame* frame = do_QueryFrame(scrollAncestor);
   DisplayPortUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(frame);
 
-  return true;
+  return !DisplayPortUtils::HasPaintedDisplayPort(dpElement);
 }
 
 static void SendLayersDependentApzcTargetConfirmation(
