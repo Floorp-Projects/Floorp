@@ -6093,8 +6093,11 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
       Initialization::Storage,
       [&self = *this] { return static_cast<bool>(self.mStorageConnection); });
 
-  const auto contextLogExtraInfo = ScopedLogExtraInfo{
-      ScopedLogExtraInfo::kTagContext, "Initialization::Storage"_ns};
+  const auto contextLogExtraInfo =
+      autoRecord.IsFirstInitializationAttempt()
+          ? Some(ScopedLogExtraInfo{ScopedLogExtraInfo::kTagContext,
+                                    "Initialization::Storage"_ns})
+          : Nothing{};
 
   QM_TRY_INSPECT(const auto& storageFile, QM_NewLocalFile(mBasePath));
 
@@ -6529,8 +6532,11 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
       Initialization::TemporaryStorage,
       [&self = *this] { return self.mTemporaryStorageInitialized; });
 
-  const auto contextLogExtraInfo = ScopedLogExtraInfo{
-      ScopedLogExtraInfo::kTagContext, "Initialization::TemporaryStorage"_ns};
+  const auto contextLogExtraInfo =
+      autoRecord.IsFirstInitializationAttempt()
+          ? Some(ScopedLogExtraInfo{ScopedLogExtraInfo::kTagContext,
+                                    "Initialization::TemporaryStorage"_ns})
+          : Nothing{};
 
   QM_TRY_INSPECT(
       const auto& storageDir,

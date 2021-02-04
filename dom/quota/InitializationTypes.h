@@ -62,6 +62,10 @@ class InitializationInfo final {
           mInitialization(aInitialization),
           mSuccessFunction(std::move(aSuccessFunction)) {}
 
+    bool IsFirstInitializationAttempt() const {
+      return !mOwner.InitializationAttempted(mInitialization);
+    }
+
     ~AutoInitializationAttempt() {
       if (mOwner.InitializationAttempted(mInitialization)) {
         return;
