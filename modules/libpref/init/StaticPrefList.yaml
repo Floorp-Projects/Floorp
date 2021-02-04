@@ -9890,6 +9890,21 @@
   mirror: always
 
 #---------------------------------------------------------------------------
+# Prefs starting with "timer."
+#---------------------------------------------------------------------------
+
+# Since our timestamp on macOS does not increment while the system is asleep, we
+# should ignore sleep/wake notifications to make timer thread process timers.
+- name: timer.ignore_sleep_wake_notifications
+  type: RelaxedAtomicBool
+#ifdef XP_MACOSX
+  value: true
+#else
+  value: false
+#endif
+  mirror: always
+
+#---------------------------------------------------------------------------
 # Prefs starting with "toolkit."
 #---------------------------------------------------------------------------
 

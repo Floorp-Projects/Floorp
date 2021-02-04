@@ -79,6 +79,7 @@ pref_groups = [
     "telemetry",
     "test",
     "threads",
+    "timer",
     "toolkit",
     "ui",
     "urlclassifier",
