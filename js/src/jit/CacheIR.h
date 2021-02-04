@@ -336,6 +336,7 @@ class CallFlags {
     return isConstructing_;
   }
   bool isSameRealm() const { return isSameRealm_; }
+  void setIsSameRealm() { isSameRealm_ = true; }
 
   bool needsUninitializedThis() const { return needsUninitializedThis_; }
   void setNeedsUninitializedThis() { needsUninitializedThis_ = true; }
@@ -1158,8 +1159,8 @@ class MOZ_RAII CacheIRReader {
                          needsUninitializedThis);
       default:
         // The existing non-standard argument formats (FunCall and FunApply)
-        // can't be constructors and have no support for isSameRealm.
-        MOZ_ASSERT(!isConstructing && !isSameRealm);
+        // can't be constructors.
+        MOZ_ASSERT(!isConstructing);
         return CallFlags(format);
     }
   }
