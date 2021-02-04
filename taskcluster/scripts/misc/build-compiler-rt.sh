@@ -23,13 +23,40 @@ x86_64-apple-darwin)
   arch=x86_64
   sdk=10.12
   ;;
+esac
+
+case "$target" in
+*-apple-darwin)
+  libdir=lib/darwin
+  EXTRA_CMAKE_FLAGS="
+    -DCMAKE_LINKER=$MOZ_FETCHES_DIR/cctools/bin/$target-ld
+    -DCMAKE_LIPO=$MOZ_FETCHES_DIR/cctools/bin/lipo
+    -DCMAKE_SYSTEM_NAME=Darwin
+    -DCMAKE_SYSTEM_VERSION=$sdk
+    -DCMAKE_OSX_SYSROOT=$MOZ_FETCHES_DIR/MacOSX$sdk.sdk
+    -DDARWIN_osx_ARCHS=$arch
+    -DDARWIN_osx_SYSROOT=$MOZ_FETCHES_DIR/MacOSX$sdk.sdk
+    -DDARWIN_macosx_OVERRIDE_SDK_VERSION=$sdk
+    -DDARWIN_osx_BUILTIN_ARCHS=$arch
+  "
+  # compiler-rt build script expects to find `codesign` in $PATH.
+  # Give it a fake one.
+  echo "#!/bin/sh" > codesign
+  chmod +x codesign
+  PATH="$PWD:$MOZ_FETCHES_DIR/cctools/bin:$PATH"
+  ;;
+aarch64-unknown-linux-gnu)
+  libdir=lib/linux
+  EXTRA_CMAKE_FLAGS="
+    -DCMAKE_LINKER=$MOZ_FETCHES_DIR/clang/bin/ld.lld
+  "
+  PATH="$MOZ_FETCHES_DIR/binutils/bin:$PATH"
+  ;;
 *)
   echo $target is not supported yet
   exit 1
   ;;
 esac
-
-export PATH="$MOZ_FETCHES_DIR/cctools/bin:$PATH"
 
 if [ -n "$TOOLTOOL_MANIFEST" ]; then
   . $GECKO_PATH/taskcluster/scripts/misc/tooltool-download.sh
@@ -56,26 +83,13 @@ cmake \
   -DLLVM_ENABLE_ASSERTIONS=OFF \
   -DLLVM_CONFIG_PATH=$MOZ_FETCHES_DIR/clang/bin/llvm-config \
   -DCOMPILER_RT_DEFAULT_TARGET_ONLY=ON \
-  -DCMAKE_LINKER=$MOZ_FETCHES_DIR/cctools/bin/$target-ld \
-  -DCMAKE_LIPO=$MOZ_FETCHES_DIR/cctools/bin/lipo \
-  -DCMAKE_SYSTEM_NAME=Darwin \
-  -DCMAKE_SYSTEM_VERSION=$sdk \
-  -DCMAKE_OSX_SYSROOT=$MOZ_FETCHES_DIR/MacOSX$sdk.sdk \
-  -DDARWIN_osx_ARCHS=$arch \
-  -DDARWIN_osx_SYSROOT=$MOZ_FETCHES_DIR/MacOSX$sdk.sdk \
-  -DDARWIN_macosx_OVERRIDE_SDK_VERSION=$sdk \
-  -DDARWIN_osx_BUILTIN_ARCHS=$arch
+  $EXTRA_CMAKE_FLAGS
 
-# compiler-rt build script expects to find `codesign` in $PATH.
-# Give it a fake one.
-echo "#!/bin/sh" > codesign
-chmod +x codesign
-
-PATH=$PATH:$PWD ninja -v
+ninja -v
 
 cd ..
 
-tar -cf - compiler-rt/lib/darwin | python3 $GECKO_PATH/taskcluster/scripts/misc/zstdpy > "compiler-rt.tar.zst"
+tar -cf - compiler-rt/$libdir | python3 $GECKO_PATH/taskcluster/scripts/misc/zstdpy > "compiler-rt.tar.zst"
 
 mkdir -p "$UPLOAD_DIR"
 mv "compiler-rt.tar.zst" "$UPLOAD_DIR"
