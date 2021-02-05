@@ -38,7 +38,7 @@ add_task(async function() {
   const requestItem = document.querySelector(".request-list-item");
   requestItem.scrollIntoView();
   const requestsListStatus = requestItem.querySelector(".status-code");
-  await EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
+  EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
   await waitUntil(() => requestsListStatus.title);
   await waitForDOMIfNeeded(requestItem, ".requests-list-timings-total");
 
@@ -56,7 +56,7 @@ add_task(async function() {
 
   wait = waitForDOM(document, "#response-panel .accordion-item", 2);
   store.dispatch(Actions.toggleNetworkDetails());
-  await clickOnSidebarTab(document, "response");
+  clickOnSidebarTab(document, "response");
   await wait;
 
   wait = waitForDOM(document, "#response-panel .CodeMirror-code");

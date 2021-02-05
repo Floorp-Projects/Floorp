@@ -35,7 +35,7 @@ add_task(async function() {
     "#request-panel .CodeMirror-code"
   );
   store.dispatch(Actions.toggleNetworkDetails());
-  await clickOnSidebarTab(document, "request");
+  clickOnSidebarTab(document, "request");
   await Promise.all([waitAccordionItems, waitSourceEditor]);
   const tabpanel = document.querySelector("#request-panel");
 

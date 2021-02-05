@@ -33,7 +33,7 @@ add_task(async function() {
     interactiveRule: false,
     labelRule: false,
   });
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     {
       type: "click",
       [isMacOS ? "metaKey" : "ctrlKey"]: true,

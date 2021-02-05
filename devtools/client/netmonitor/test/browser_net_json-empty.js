@@ -30,7 +30,7 @@ add_task(async function() {
   );
 
   store.dispatch(Actions.toggleNetworkDetails());
-  await clickOnSidebarTab(document, "response");
+  clickOnSidebarTab(document, "response");
 
   await onResponsePanelReady;
 

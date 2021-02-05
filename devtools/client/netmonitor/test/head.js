@@ -977,7 +977,7 @@ async function hideColumn(monitor, column) {
   const { document } = monitor.panelWin;
 
   info(`Clicking context-menu item for ${column}`);
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "contextmenu" },
     document.querySelector(".requests-list-headers")
   );
@@ -1000,7 +1000,7 @@ async function showColumn(monitor, column) {
   const { document } = monitor.panelWin;
 
   info(`Clicking context-menu item for ${column}`);
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "contextmenu" },
     document.querySelector(".requests-list-headers")
   );
@@ -1031,7 +1031,7 @@ async function selectIndexAndWaitForSourceEditor(monitor, index) {
   );
   // Select the request first, as it may try to fetch whatever is the current request's
   // responseContent if we select the ResponseTab first.
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[index]
   );
@@ -1273,7 +1273,7 @@ async function waitForDOMIfNeeded(target, selector, expectedLength = 1) {
  *        The action, block or unblock, to construct a corresponding context menu id.
  */
 async function toggleBlockedUrl(element, monitor, store, action = "block") {
-  await EventUtils.sendMouseEvent({ type: "contextmenu" }, element);
+  EventUtils.sendMouseEvent({ type: "contextmenu" }, element);
   const contextMenuId = `request-list-context-${action}-url`;
   const contextBlockToggle = getContextMenuItem(monitor, contextMenuId);
   const onRequestComplete = waitForDispatch(
@@ -1348,13 +1348,13 @@ function compareValues(first, second) {
  * @param {String} name
  *        Network panel sidebar tab name.
  */
-const clickOnSidebarTab = async (doc, name) => {
+const clickOnSidebarTab = (doc, name) => {
   AccessibilityUtils.setEnv({
     // Keyboard accessibility is handled on the sidebar tabs container level
     // (nav). Users can use arrow keys to navigate between and select tabs.
     nonNegativeTabIndexRule: false,
   });
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     doc.querySelector(`#${name}-tab`)
   );

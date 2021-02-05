@@ -41,7 +41,7 @@ async function test() {
     ".CodeMirror-gutters"
   );
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "mousedown", shiftKey: true },
     gutter,
     iframe.contentWindow
