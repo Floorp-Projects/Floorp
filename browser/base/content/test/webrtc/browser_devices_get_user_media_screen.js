@@ -664,7 +664,7 @@ var gTests = [
       await indicator;
       await checkSharingUI({ screen: "Screen" });
 
-      ok(identityPopupHidden(), "control center should be hidden");
+      ok(permissionPopupHidden(), "control center should be hidden");
       if (IS_MAC) {
         let activeStreams = webrtcUI.getActiveStreams(false, false, true);
         webrtcUI.showSharingDoorhanger(activeStreams[0]);
@@ -676,12 +676,12 @@ var gTests = [
         EventUtils.synthesizeMouseAtCenter(elt, {}, win);
       }
       await TestUtils.waitForCondition(
-        () => !identityPopupHidden(),
+        () => !permissionPopupHidden(),
         "wait for control center to open"
       );
-      ok(!identityPopupHidden(), "control center should be open");
+      ok(!permissionPopupHidden(), "control center should be open");
 
-      gIdentityHandler._identityPopup.hidePopup();
+      gPermissionPanel._permissionPopup.hidePopup();
 
       await closeStream();
     },
