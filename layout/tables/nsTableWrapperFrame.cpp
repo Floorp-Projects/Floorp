@@ -396,7 +396,7 @@ LogicalSize nsTableWrapperFrame::ComputeAutoSize(
   return LogicalSize(aWM, inlineSize, NS_UNCONSTRAINEDSIZE);
 }
 
-uint8_t nsTableWrapperFrame::GetCaptionSide() {
+uint8_t nsTableWrapperFrame::GetCaptionSide() const {
   if (mCaptionFrames.NotEmpty()) {
     return mCaptionFrames.FirstChild()->StyleTableBorder()->mCaptionSide;
   } else {
