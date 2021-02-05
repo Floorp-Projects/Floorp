@@ -501,6 +501,14 @@ class ParseContext : public Nestable<ParseContext> {
     return sc_->isModuleContext() && sc_->isTopLevelContext();
   }
 
+  // True if this is the outermost ParserContext for current compile. For
+  // delazification, this lets us identify if the lazy PrivateScriptData is for
+  // current parser context.
+  bool isOutermostOfCurrentCompile() const {
+    MOZ_ASSERT(!!enclosing() == !!scriptId());
+    return (scriptId() == 0);
+  }
+
   void setSuperScopeNeedsHomeObject() {
     MOZ_ASSERT(sc_->allowSuperProperty());
     superScopeNeedsHomeObject_ = true;

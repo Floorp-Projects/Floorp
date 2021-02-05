@@ -134,6 +134,11 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     return innermostEmitterScope_;
   }
 
+  // When parsing internal code such as self-hosted functions or synthetic
+  // class constructors, we do not emit breakpoint and srcnote data since there
+  // is no direcly corresponding user-visible sources.
+  const bool suppressBreakpointsAndSourceNotes = false;
+
   // Script contains finally block.
   bool hasTryFinally = false;
 
@@ -334,10 +339,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // Indicates the emitter should not generate location or debugger source
   // notes. This lets us avoid generating notes for non-user code.
   bool skipLocationSrcNotes() const {
-    return inPrologue() || (emitterMode == EmitterMode::SelfHosting);
+    return inPrologue() || suppressBreakpointsAndSourceNotes;
   }
   bool skipBreakpointSrcNotes() const {
-    return inPrologue() || (emitterMode == EmitterMode::SelfHosting);
+    return inPrologue() || suppressBreakpointsAndSourceNotes;
   }
 
   // Append a new source note of the given type (and therefore size) to the

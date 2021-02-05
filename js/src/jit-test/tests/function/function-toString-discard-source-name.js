@@ -83,13 +83,15 @@ eval(`
 class classDecl {}
 var classExpr = class C {};
 var classExprAnon = class {};
+var classExprAnonField = class {x = 1};
 
 this.classDecl = classDecl;
 `);
 
 assertFunctionName(classDecl, "classDecl");
 assertFunctionName(classExpr, "C");
-assertFunctionName(classExprAnon, "classExprAnon");
+assertFunctionName(classExprAnon, undefined);
+assertFunctionName(classExprAnonField, undefined);
 
 
 // Class declarations and expressions (explicit constructor).
