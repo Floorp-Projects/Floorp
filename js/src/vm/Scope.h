@@ -730,6 +730,9 @@ class FunctionScope : public Scope {
   uint32_t nextFrameSlot() const { return data().slotInfo.nextFrameSlot; }
 
   JSFunction* canonicalFunction() const { return data().canonicalFunction; }
+  void initCanonicalFunction(JSFunction* fun) {
+    data().canonicalFunction.init(fun);
+  }
 
   JSScript* script() const;
 
@@ -1104,6 +1107,7 @@ class ModuleScope : public Scope {
   uint32_t nextFrameSlot() const { return data().slotInfo.nextFrameSlot; }
 
   ModuleObject* module() const { return data().module; }
+  void initModule(ModuleObject* mod) { return data().module.init(mod); }
 
   // Off-thread compilation needs to calculate environmentChainLength for
   // an emptyGlobalScope where the global may not be available.

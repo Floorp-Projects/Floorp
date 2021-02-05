@@ -1094,11 +1094,13 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
   // Finish initializing the ModuleObject if needed.
   if (scriptExtra.isModule()) {
     RootedScript script(cx, gcOutput.script);
-
-    gcOutput.module->initScriptSlots(script);
-    gcOutput.module->initStatusSlot();
-
     RootedModuleObject module(cx, gcOutput.module);
+
+    script->outermostScope()->as<ModuleScope>().initModule(module);
+
+    module->initScriptSlots(script);
+    module->initStatusSlot();
+
     if (!ModuleObject::createEnvironment(cx, module)) {
       return false;
     }
