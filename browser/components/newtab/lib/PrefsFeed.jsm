@@ -93,14 +93,9 @@ this.PrefsFeed = class PrefsFeed {
    * Helper for initializing experiment and feature config data in .init()
    * */
   addExperimentDataToValues(values) {
-    let experimentData;
-    try {
-      experimentData = ExperimentAPI.getExperiment({
-        featureId: "newtab",
-      });
-    } catch (e) {
-      Cu.reportError(e);
-    }
+    let experimentData = ExperimentAPI.getExperiment({
+      featureId: "newtab",
+    });
     values.experimentData = experimentData;
     values.featureConfig = this.getFeatureConfigFromExperimentData(
       experimentData

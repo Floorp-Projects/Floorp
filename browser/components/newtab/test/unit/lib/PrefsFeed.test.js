@@ -111,16 +111,6 @@ describe("PrefsFeed", () => {
     const [{ data }] = feed.store.dispatch.firstCall.args;
     assert.deepEqual(data.featureConfig, { prefsButtonIcon: "icon-settings" });
   });
-  it("should dispatch PREFS_INITIAL_VALUES with a default feature config ExperimentAPI throws", () => {
-    sandbox.stub(global.ExperimentAPI, "getExperiment").throws();
-    feed.onAction({ type: at.INIT });
-    assert.equal(
-      feed.store.dispatch.firstCall.args[0].type,
-      at.PREFS_INITIAL_VALUES
-    );
-    const [{ data }] = feed.store.dispatch.firstCall.args;
-    assert.deepEqual(data.featureConfig, { prefsButtonIcon: "icon-settings" });
-  });
   it("should add one branch observer on init", () => {
     feed.onAction({ type: at.INIT });
     assert.calledOnce(feed._prefs.observeBranch);

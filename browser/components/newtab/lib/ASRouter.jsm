@@ -344,27 +344,16 @@ const MessageLoaderUtils = {
   },
 
   async _experimentsAPILoader(provider, options) {
-    try {
-      await ExperimentAPI.ready();
-    } catch (e) {
-      MessageLoaderUtils.reportError(e);
-      return [];
-    }
+    await ExperimentAPI.ready();
 
     let experiments = [];
     for (const featureId of provider.messageGroups) {
-      let experimentData;
-      try {
-        experimentData = ExperimentAPI.getExperiment({
-          featureId,
-          sendExposurePing: false,
-        });
-        // Not enrolled in any experiment for this feature, we can skip
-        if (!experimentData) {
-          continue;
-        }
-      } catch (e) {
-        MessageLoaderUtils.reportError(e);
+      let experimentData = ExperimentAPI.getExperiment({
+        featureId,
+        sendExposurePing: false,
+      });
+      // Not enrolled in any experiment for this feature, we can skip
+      if (!experimentData) {
         continue;
       }
 
