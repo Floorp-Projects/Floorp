@@ -562,7 +562,7 @@ void CodeGeneratorShared::encode(LSnapshot* snapshot) {
   uint32_t mirOpcode = 0;
   uint32_t mirId = 0;
 
-  if (LNode* ins = instruction()) {
+  if (LInstruction* ins = instruction()) {
     lirOpcode = uint32_t(ins->op());
     lirId = ins->id();
     if (ins->mirRaw()) {
