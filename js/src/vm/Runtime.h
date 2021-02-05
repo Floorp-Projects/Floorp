@@ -18,6 +18,7 @@
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Vector.h"
+#include "mozilla/XorShift128PlusRNG.h"
 
 #include <algorithm>
 #include <setjmp.h>
