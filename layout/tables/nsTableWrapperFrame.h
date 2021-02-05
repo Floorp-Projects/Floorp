@@ -240,9 +240,9 @@ class nsTableWrapperFrame : public nsContainerFrame {
                                    const nscoord aAvailISize) const;
 
   // Reflow the child (caption or inner table frame).
-  void OuterDoReflowChild(nsPresContext* aPresContext, nsIFrame* aChildFrame,
-                          const ReflowInput& aChildRI, ReflowOutput& aMetrics,
-                          nsReflowStatus& aStatus);
+  void ReflowChild(nsPresContext* aPresContext, nsIFrame* aChildFrame,
+                   const ReflowInput& aChildRI, ReflowOutput& aMetrics,
+                   nsReflowStatus& aStatus);
 
   // Set the overflow areas in our reflow metrics
   void UpdateOverflowAreas(ReflowOutput& aMet);

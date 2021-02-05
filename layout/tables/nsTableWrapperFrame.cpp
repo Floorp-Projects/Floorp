@@ -643,11 +643,11 @@ void nsTableWrapperFrame::CreateReflowInputForCaption(
   }
 }
 
-void nsTableWrapperFrame::OuterDoReflowChild(nsPresContext* aPresContext,
-                                             nsIFrame* aChildFrame,
-                                             const ReflowInput& aChildRI,
-                                             ReflowOutput& aMetrics,
-                                             nsReflowStatus& aStatus) {
+void nsTableWrapperFrame::ReflowChild(nsPresContext* aPresContext,
+                                      nsIFrame* aChildFrame,
+                                      const ReflowInput& aChildRI,
+                                      ReflowOutput& aMetrics,
+                                      nsReflowStatus& aStatus) {
   // Using zero as containerSize here because we want consistency between
   // the GetLogicalPosition and ReflowChild calls, to avoid unnecessarily
   // changing the frame's coordinates; but we don't yet know its final
@@ -668,8 +668,8 @@ void nsTableWrapperFrame::OuterDoReflowChild(nsPresContext* aPresContext,
     flags |= ReflowChildFlags::NoDeleteNextInFlowChild;
   }
 
-  ReflowChild(aChildFrame, aPresContext, aMetrics, aChildRI, wm, childPt,
-              zeroCSize, flags, aStatus);
+  nsContainerFrame::ReflowChild(aChildFrame, aPresContext, aMetrics, aChildRI,
+                                wm, childPt, zeroCSize, flags, aStatus);
 }
 
 void nsTableWrapperFrame::UpdateOverflowAreas(ReflowOutput& aMet) {
@@ -777,8 +777,8 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
     // We intentionally don't merge capStatus into aStatus, since we currently
     // can't handle caption continuations, but we probably should.
     nsReflowStatus capStatus;
-    OuterDoReflowChild(aPresContext, mCaptionFrames.FirstChild(), *captionRI,
-                       *captionMet, capStatus);
+    ReflowChild(aPresContext, mCaptionFrames.FirstChild(), *captionRI,
+                *captionMet, capStatus);
     captionSize.ISize(wm) = captionMet->ISize(wm);
     captionSize.BSize(wm) = captionMet->BSize(wm);
     captionMargin = captionRI->ComputedLogicalMargin(wm);
@@ -824,8 +824,7 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
   // Then, now that we know how much to reduce the isize of the inner
   // table to account for side captions, reflow the inner table.
   ReflowOutput innerMet(innerRI->GetWritingMode());
-  OuterDoReflowChild(aPresContext, InnerTableFrame(), *innerRI, innerMet,
-                     aStatus);
+  ReflowChild(aPresContext, InnerTableFrame(), *innerRI, innerMet, aStatus);
   LogicalSize innerSize(wm, innerMet.ISize(wm), innerMet.BSize(wm));
 
   LogicalSize containSize(wm, GetContainingBlockSize(aOuterRI));
