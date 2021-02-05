@@ -23,7 +23,19 @@ const MAX_IMAGE_HEIGHT = 10000;
  *                          browser element we want to animate.
  */
 function simulateCameraFlash(browsingContext) {
-  const node = browsingContext.topFrameElement;
+  // If there's no topFrameElement (it can happen if the screenshot is taken from the
+  // browser toolbox), use the top chrome window document element.
+  const node =
+    browsingContext.topFrameElement ||
+    browsingContext.topChromeWindow.document.documentElement;
+
+  if (!node) {
+    console.error(
+      "Can't find an element to play the camera flash animation on for the following browsing context:",
+      browsingContext
+    );
+    return;
+  }
 
   // Don't take a screenshot if the user prefers reduced motion.
   if (node.ownerGlobal.matchMedia("(prefers-reduced-motion)").matches) {
