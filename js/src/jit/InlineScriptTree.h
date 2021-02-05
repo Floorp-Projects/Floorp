@@ -90,8 +90,10 @@ class BytecodeSite : public TempObject {
   jsbytecode* pc_;
 
  public:
+  // Wasm compilation leaves both fields null.
   BytecodeSite() : tree_(nullptr), pc_(nullptr) {}
 
+  // Warp compilation sets both fields to non-null values.
   BytecodeSite(InlineScriptTree* tree, jsbytecode* pc) : tree_(tree), pc_(pc) {
     MOZ_ASSERT(tree_ != nullptr);
     MOZ_ASSERT(pc_ != nullptr);
