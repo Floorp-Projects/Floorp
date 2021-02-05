@@ -231,6 +231,9 @@ class Nimbus(
         )
     }
 
+    // This is currently not available from the main thread.
+    // see https://jira.mozilla.com/browse/SDK-191
+    @WorkerThread
     override fun getActiveExperiments(): List<EnrolledExperiment> =
         nimbus.getActiveExperiments()
 
@@ -269,7 +272,7 @@ class Nimbus(
 
     @WorkerThread
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    private fun initializeOnThisThread() = withCatchAll {
+    internal fun initializeOnThisThread() = withCatchAll {
         nimbus.initialize()
     }
 
@@ -281,7 +284,7 @@ class Nimbus(
 
     @WorkerThread
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    private fun fetchExperimentsOnThisThread() = withCatchAll {
+    internal fun fetchExperimentsOnThisThread() = withCatchAll {
         try {
             nimbus.fetchExperiments()
             notifyObservers { onExperimentsFetched() }
@@ -300,7 +303,7 @@ class Nimbus(
 
     @WorkerThread
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun applyPendingExperimentsOnThisThread() {
+    internal fun applyPendingExperimentsOnThisThread() = withCatchAll {
         try {
             nimbus.applyPendingExperiments()
             // Get the experiments to record in telemetry
@@ -346,13 +349,13 @@ class Nimbus(
 
     @WorkerThread
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    private fun setExperimentsLocallyOnThisThread(payload: String) = withCatchAll {
+    internal fun setExperimentsLocallyOnThisThread(payload: String) = withCatchAll {
         nimbus.setExperimentsLocally(payload)
     }
 
     @WorkerThread
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    private fun setGlobalUserParticipationOnThisThread(active: Boolean) = withCatchAll {
+    internal fun setGlobalUserParticipationOnThisThread(active: Boolean) = withCatchAll {
         val enrolmentChanges = nimbus.setGlobalUserParticipation(active)
         if (enrolmentChanges.isNotEmpty()) {
             postEnrolmentCalculation()
@@ -413,10 +416,18 @@ class Nimbus(
         }
     }
 
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun recordExposure(experimentId: String) {
+        dbScope.launch {
+            recordExposureOnThisThread(experimentId)
+        }
+    }
+
     // The exposure event should be recorded when the expected treatment (or no-treatment, such as
     // for a "control" branch) is applied or shown to the user.
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun recordExposure(experimentId: String) {
+    @WorkerThread
+    internal fun recordExposureOnThisThread(experimentId: String) = withCatchAll {
         val activeExperiments = getActiveExperiments()
         activeExperiments.find { it.slug == experimentId }?.also { experiment ->
             NimbusEvents.exposure.record(mapOf(
