@@ -266,6 +266,27 @@ TEST_P(TlsConnectTls13, RecordSizeCiphertextExceed) {
   server_->CheckErrorCode(SSL_ERROR_RECORD_OVERFLOW_ALERT);
 }
 
+TEST_F(TlsConnectStreamTls13, ClientHelloF5Padding) {
+  EnsureTlsSetup();
+  ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+  ScopedPK11SymKey key(
+      PK11_KeyGen(slot.get(), CKM_NSS_CHACHA20_POLY1305, nullptr, 32, nullptr));
+
+  auto filter =
+      MakeTlsFilter<TlsHandshakeRecorder>(client_, kTlsHandshakeClientHello);
+
+  // Add PSK with label long enough to push CH length into [256, 511].
+  std::vector<uint8_t> label(100);
+  EXPECT_EQ(SECSuccess,
+            SSL_AddExternalPsk(client_->ssl_fd(), key.get(), label.data(),
+                               label.size(), ssl_hash_sha256));
+  StartConnect();
+  client_->Handshake();
+
+  // Filter removes the 4B handshake header.
+  EXPECT_EQ(508UL, filter->buffer().len());
+}
+
 // This indiscriminately adds padding to application data records.
 class TlsRecordPadder : public TlsRecordFilter {
  public:

@@ -837,9 +837,6 @@ ssl_SendEmptyExtension(const sslSocket *ss, TLSExtensionData *xtnData,
 static unsigned int
 ssl_CalculatePaddingExtLen(const sslSocket *ss, unsigned int clientHelloLength)
 {
-    unsigned int recordLength = 1 /* handshake message type */ +
-                                3 /* handshake message length */ +
-                                clientHelloLength;
     unsigned int extensionLen;
 
     /* Don't pad for DTLS, for SSLv3, or for renegotiation. */
@@ -853,11 +850,11 @@ ssl_CalculatePaddingExtLen(const sslSocket *ss, unsigned int clientHelloLength)
      * the ClientHello doesn't have a length between 256 and 511 bytes
      * (inclusive). Initial ClientHello records with such lengths trigger bugs
      * in F5 devices. */
-    if (recordLength < 256 || recordLength >= 512) {
+    if (clientHelloLength < 256 || clientHelloLength >= 512) {
         return 0;
     }
 
-    extensionLen = 512 - recordLength;
+    extensionLen = 512 - clientHelloLength;
     /* Extensions take at least four bytes to encode. Always include at least
      * one byte of data if we are padding. Some servers will time out or
      * terminate the connection if the last ClientHello extension is empty. */
