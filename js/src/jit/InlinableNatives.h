@@ -9,8 +9,6 @@
 
 #include <stdint.h>  // For uint16_t
 
-#include "jspubtd.h"  // For JSClass
-
 #define INLINABLE_NATIVE_LIST(_)                   \
   _(Array)                                         \
   _(ArrayIsArray)                                  \
@@ -194,6 +192,7 @@
   _(IntrinsicTypedArrayByteOffset)                 \
   _(IntrinsicTypedArrayElementShift)
 
+struct JSClass;
 class JSJitInfo;
 
 namespace js {
