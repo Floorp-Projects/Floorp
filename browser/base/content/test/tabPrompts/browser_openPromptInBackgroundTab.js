@@ -85,21 +85,25 @@ add_task(async function test_old_modal_ui() {
     window,
     "popupshown",
     true,
-    event => event.target == gIdentityHandler._identityPopup
+    event => event.target == gPermissionPanel._permissionPopup
   );
-  gIdentityHandler._identityBox.click();
+  gPermissionPanel._identityPermissionBox.click();
   await shown;
   let labelText = SitePermissions.getPermissionLabel("focus-tab-by-prompt");
   let permissionsList = document.getElementById(
-    "identity-popup-permission-list"
+    "permission-popup-permission-list"
   );
-  let label = permissionsList.querySelector(".identity-popup-permission-label");
+  let label = permissionsList.querySelector(
+    ".permission-popup-permission-label"
+  );
   is(label.textContent, labelText);
-  gIdentityHandler._identityPopup.hidePopup();
+  gPermissionPanel._permissionPopup.hidePopup();
 
   // Check if the identity icon signals granted permission.
   ok(
-    gIdentityHandler._identityBox.classList.contains("grantedPermissions"),
+    gPermissionPanel._identityPermissionBox.hasAttribute(
+      "hasGrantedPermissions"
+    ),
     "identity-box signals granted permissions"
   );
 
@@ -210,22 +214,26 @@ add_task(async function test_new_modal_ui() {
     window,
     "popupshown",
     true,
-    event => event.target == gIdentityHandler._identityPopup
+    event => event.target == gPermissionPanel._permissionPopup
   );
-  gIdentityHandler._identityBox.click();
+  gPermissionPanel._identityPermissionBox.click();
   await shown;
   let labelText = SitePermissions.getPermissionLabel("focus-tab-by-prompt");
   let permissionsList = document.getElementById(
-    "identity-popup-permission-list"
+    "permission-popup-permission-list"
   );
-  let label = permissionsList.querySelector(".identity-popup-permission-label");
+  let label = permissionsList.querySelector(
+    ".permission-popup-permission-label"
+  );
   is(label.textContent, labelText);
-  gIdentityHandler._identityPopup.hidePopup();
+  gPermissionPanel.hidePopup();
 
   // Check if the identity icon signals granted permission.
   ok(
-    gIdentityHandler._identityBox.classList.contains("grantedPermissions"),
-    "identity-box signals granted permissions"
+    gPermissionPanel._identityPermissionBox.hasAttribute(
+      "hasGrantedPermissions"
+    ),
+    "identity-permission-box signals granted permissions"
   );
 
   let openedTabSelectedPromise = BrowserTestUtils.waitForAttribute(

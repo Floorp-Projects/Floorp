@@ -86,7 +86,7 @@ async function runTest(options) {
         true,
         event => event.target == gIdentityHandler._identityPopup
       );
-      gIdentityHandler._identityBox.click();
+      gIdentityHandler._identityIconBox.click();
       await promisePanelOpen;
 
       // Check if the HTTPS-Only UI is visible

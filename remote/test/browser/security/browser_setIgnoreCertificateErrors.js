@@ -33,7 +33,7 @@ const BAD_CERTS = [
 
 function getConnectionState() {
   // prevents items that are being lazy loaded causing issues
-  document.getElementById("identity-box").click();
+  document.getElementById("identity-icon-box").click();
   gIdentityHandler.refreshIdentityPopup();
   return document.getElementById("identity-popup").getAttribute("connection");
 }
