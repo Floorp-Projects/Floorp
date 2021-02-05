@@ -1718,6 +1718,7 @@ package org.mozilla.geckoview {
 
   public static class WebExtension.Download {
     ctor protected Download(int);
+    method @Nullable @UiThread public GeckoResult<Void> update(@NonNull WebExtension.Download.Info);
     field public static final int INTERRUPT_REASON_CRASH = 24;
     field public static final int INTERRUPT_REASON_FILE_ACCESS_DENIED = 2;
     field public static final int INTERRUPT_REASON_FILE_BLOCKED = 8;

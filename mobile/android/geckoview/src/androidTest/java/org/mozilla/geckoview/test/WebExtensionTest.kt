@@ -14,6 +14,7 @@ import org.junit.Assume.assumeThat
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.gecko.EventDispatcher
 import org.mozilla.geckoview.*
 import org.mozilla.geckoview.WebExtension.*
 import org.mozilla.geckoview.WebExtension.BrowsingDataDelegate.Type.*
@@ -2299,4 +2300,217 @@ class WebExtensionTest : BaseSessionTest() {
         assertNotNull(downloadCreated.id)
         sessionRule.waitForResult(controller.uninstall(webExtension))
     }
+
+    @Test
+    fun testOnChangedWithChanges() {
+        val uri = createTestUrl("/assets/www/images/test.gif")
+        val downloadId = 33
+
+        val webExtension = sessionRule.waitForResult(
+                controller.installBuiltIn("resource://android/assets/web_extensions/download-onChanged/"))
+
+        val assertOnDownloadCalled = GeckoResult<WebExtension.Download>()
+        val downloadDelegate = object : DownloadDelegate {
+            override fun onDownload(source: WebExtension, request: DownloadRequest): GeckoResult<WebExtension.DownloadInitData>? {
+                assertEquals(webExtension!!.id, source.id)
+                assertEquals(uri, request.request.uri)
+
+                val download = controller.createDownload(downloadId)
+                assertOnDownloadCalled.complete(download)
+                return GeckoResult.fromValue(DownloadInitData(download, object : Download.Info {}))
+            }
+        }
+
+        val onMessageCalled = GeckoResult<JSONObject>()
+        val messageDelegate = object : MessageDelegate {
+            override fun onMessage(nativeApp: String, message: Any, sender: MessageSender): GeckoResult<Any>? {
+                onMessageCalled.complete(message as JSONObject)
+                return GeckoResult.fromValue(message)
+            }
+        }
+
+        webExtension.setDownloadDelegate(downloadDelegate)
+        webExtension.setMessageDelegate(messageDelegate, "browser")
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        val downloadCreated = sessionRule.waitForResult(assertOnDownloadCalled)
+        val updateData = object : WebExtension.Download.Info {
+            val endTime = Date().time
+            val fileExists = true
+            val totalBytes: Long = 25
+            val mime = "image/gif"
+            val fileSize: Long = 48
+            val filename = "test.gif"
+
+            override fun state(): Int {
+                return WebExtension.Download.STATE_COMPLETE
+            }
+
+            override fun endTime(): Long {
+                return endTime
+            }
+
+            override fun fileExists(): Boolean {
+                return fileExists;
+            }
+
+            override fun totalBytes(): Long {
+                return totalBytes
+            }
+
+            override fun mime(): String {
+                return mime
+            }
+
+            override fun fileSize(): Long {
+                return fileSize
+            }
+
+            override fun filename(): String {
+                return filename
+            }
+        }
+
+        assertEquals(downloadId, downloadCreated.id)
+
+        downloadCreated.update(updateData)
+
+        val onChangedHappened = sessionRule.waitForResult(onMessageCalled)
+        val current = onChangedHappened.getJSONObject("current");
+        val previous = onChangedHappened.getJSONObject("previous");
+
+        assertEquals(3, onChangedHappened.length())
+        assertEquals(7, current.length())
+        assertEquals(7, previous.length())
+
+        assertEquals(downloadCreated.id, onChangedHappened.getInt("id"))
+        assertEquals("complete", current.get("state").toString())
+        assertEquals(updateData.endTime.toString(), current.getString("endTime"))
+        assertEquals(updateData.fileExists, current.getBoolean("exists"))
+        assertEquals(updateData.totalBytes, current.getLong("totalBytes"))
+        assertEquals(updateData.mime, current.getString("mime"))
+        assertEquals(updateData.fileSize, current.getLong("fileSize"))
+        assertEquals(updateData.filename, current.getString("filename"))
+
+        assertEquals("in_progress", previous.get("state").toString())
+        assertEquals("null", previous.getString("endTime"))
+        assertEquals(false, previous.getBoolean("exists"))
+        assertEquals(-1, previous.getLong("totalBytes"))
+        assertEquals("", previous.getString("mime"))
+        assertEquals(-1, previous.getLong("fileSize"))
+        assertEquals("", previous.getString("filename"))
+
+        sessionRule.waitForResult(controller.uninstall(webExtension))
+    }
+
+    @Test
+    fun testOnChangedNoChanges() {
+        val uri = createTestUrl("/assets/www/images/test.gif")
+        val downloadId = 4
+
+        val webExtension = sessionRule.waitForResult(
+                controller.installBuiltIn("resource://android/assets/web_extensions/download-onChanged/"))
+
+        val assertOnDownloadCalled = GeckoResult<WebExtension.Download>()
+        val downloadDelegate = object : DownloadDelegate {
+            override fun onDownload(source: WebExtension, request: DownloadRequest): GeckoResult<WebExtension.DownloadInitData>? {
+                assertEquals(webExtension!!.id, source.id)
+                assertEquals(uri, request.request.uri)
+
+                val download = controller.createDownload(downloadId)
+                assertOnDownloadCalled.complete(download)
+                return GeckoResult.fromValue(DownloadInitData(download, object : Download.Info {}))
+            }
+        }
+
+        val onMessageCalled = GeckoResult<JSONObject>()
+        val messageDelegate = object : MessageDelegate {
+            override fun onMessage(nativeApp: String, message: Any, sender: MessageSender): GeckoResult<Any>? {
+                onMessageCalled.complete(message as JSONObject)
+                return GeckoResult.fromValue(message)
+            }
+        }
+
+        webExtension.setDownloadDelegate(downloadDelegate)
+        webExtension.setMessageDelegate(messageDelegate, "browser")
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        val downloadCreated = sessionRule.waitForResult(assertOnDownloadCalled)
+        val updateData = object : WebExtension.Download.Info {}
+
+        assertEquals(downloadId, downloadCreated.id)
+
+        val r = downloadCreated.update(updateData)
+
+        try {
+            sessionRule.waitForResult(r!!)
+            val onChangedHappened = sessionRule.waitForResult(onMessageCalled)
+            assertEquals(1, onChangedHappened.length())
+            assertEquals(downloadCreated.id, onChangedHappened.getInt("id"))
+        } catch (ex: Exception) {
+            // update() call should timeout because the callback that sends the message should not be called
+            assertTrue(ex.message!!.startsWith("Timed out"))
+            sessionRule.waitForResult(controller.uninstall(webExtension))
+            return
+        }
+    }
+
+    @Test
+    fun testOnChangedWrongId() {
+        val uri = createTestUrl("/assets/www/images/test.gif")
+        val downloadId = 5
+
+        val webExtension = sessionRule.waitForResult(
+                controller.installBuiltIn("resource://android/assets/web_extensions/download-onChanged/"))
+
+        val assertOnDownloadCalled = GeckoResult<WebExtension.Download>()
+        val downloadDelegate = object : DownloadDelegate {
+            override fun onDownload(source: WebExtension, request: DownloadRequest): GeckoResult<WebExtension.DownloadInitData>? {
+                assertEquals(webExtension!!.id, source.id)
+                assertEquals(uri, request.request.uri)
+
+                val download = controller.createDownload(downloadId)
+                assertOnDownloadCalled.complete(download)
+                return GeckoResult.fromValue(DownloadInitData(download, object : Download.Info {}))
+            }
+        }
+
+        val onMessageCalled = GeckoResult<String>()
+        val messageDelegate = object : MessageDelegate {
+            override fun onMessage(nativeApp: String, message: Any, sender: MessageSender): GeckoResult<Any>? {
+                onMessageCalled.complete(message as String)
+                return GeckoResult.fromValue(message)
+            }
+        }
+
+        webExtension.setDownloadDelegate(downloadDelegate)
+        webExtension.setMessageDelegate(messageDelegate, "browser")
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        val updateData = object : WebExtension.Download.Info {
+            override fun state(): Int {
+                return WebExtension.Download.STATE_COMPLETE
+            }
+        }
+
+        val randomDownload = controller.createDownload(25)
+
+        val r = randomDownload!!.update(updateData)
+
+        try {
+            sessionRule.waitForResult(r!!)
+        } catch (ex: Exception) {
+            val a = ex.cause!! as EventDispatcher.QueryException
+            assertEquals("Error: Trying to update unknown download", a.data)
+            sessionRule.waitForResult(controller.uninstall(webExtension))
+            return
+        }
+    }
+
 }
