@@ -7,7 +7,8 @@
  * https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#the-formdataevent-interface
  */
 
-[Exposed=Window]
+[Exposed=Window,
+ Pref="dom.formdata.event.enabled"]
 interface FormDataEvent : Event {
   constructor(DOMString type, optional FormDataEventInit eventInitDict = {});
     

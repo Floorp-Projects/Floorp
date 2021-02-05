@@ -1858,6 +1858,12 @@
   value: false
   mirror: always
 
+# Enable formData event
+- name: dom.formdata.event.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Support @autocomplete values for form autofill feature.
 - name: dom.forms.autocomplete.formautofill
   type: bool
