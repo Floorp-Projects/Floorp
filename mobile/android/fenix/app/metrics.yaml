@@ -4402,3 +4402,55 @@ contextual_menu:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-06-01"
+
+engine:
+  tab_kills:
+    type: labeled_counter
+    labels:
+      - foreground
+      - background
+    description: |
+      How often was the content process of a foreground (selected) or
+      background tab killed.
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/9366
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/17864
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - fenix-core@mozilla.com
+      - skaspari@mozilla.com
+    expires: "2021-12-31"
+  kill_foreground_age:
+    type: timespan
+    time_unit: millisecond
+    description: |
+      Measures the age of the engine session of a foreground (selected) tab
+      at the time its content process got killed.
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/9366
+    data_reviews:
+      - TBD
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - fenix-core@mozilla.com
+      - skaspari@mozilla.com
+    expires: "2021-12-31"
+  kill_background_age:
+    type: timespan
+    time_unit: millisecond
+    description: |
+      Measures the age of the engine session of a background tab at the
+      time its content process got killed.
+    bugs:
+      - https://github.com/mozilla-mobile/android-components/issues/9366
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/17864
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - fenix-core@mozilla.com
+      - skaspari@mozilla.com
+    expires: "2021-12-31"
