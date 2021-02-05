@@ -87,6 +87,36 @@ add_task(async function test_getExperimentMetaData() {
   sandbox.restore();
 });
 
+add_task(function test_getExperimentMetaData_safe() {
+  const sandbox = sinon.createSandbox();
+
+  sandbox.stub(ExperimentAPI._store, "get").throws();
+  sandbox.stub(ExperimentAPI._store, "getExperimentForFeature").throws();
+
+  try {
+    let metadata = ExperimentAPI.getExperimentMetaData({ slug: "foo" });
+    Assert.equal(metadata, null, "Should not throw");
+  } catch (e) {
+    Assert.ok(false, "Error should be caught in ExperimentAPI");
+  }
+
+  Assert.ok(ExperimentAPI._store.get.calledOnce, "Sanity check");
+
+  try {
+    let metadata = ExperimentAPI.getExperimentMetaData({ featureId: "foo" });
+    Assert.equal(metadata, null, "Should not throw");
+  } catch (e) {
+    Assert.ok(false, "Error should be caught in ExperimentAPI");
+  }
+
+  Assert.ok(
+    ExperimentAPI._store.getExperimentForFeature.calledOnce,
+    "Sanity check"
+  );
+
+  sandbox.restore();
+});
+
 add_task(async function test_getExperiment_feature() {
   const sandbox = sinon.createSandbox();
   const manager = ExperimentFakes.manager();
@@ -115,6 +145,23 @@ add_task(async function test_getExperiment_feature() {
     expected.slug,
     "should return an experiment by featureId"
   );
+
+  sandbox.restore();
+});
+
+add_task(async function test_getExperiment_safe() {
+  const sandbox = sinon.createSandbox();
+  sandbox.stub(ExperimentAPI._store, "getExperimentForFeature").throws();
+
+  try {
+    Assert.equal(
+      ExperimentAPI.getExperiment({ featureId: "foo" }),
+      null,
+      "It should not fail even when it throws."
+    );
+  } catch (e) {
+    Assert.ok(false, "Error should be caught by ExperimentAPI");
+  }
 
   sandbox.restore();
 });
@@ -434,6 +481,23 @@ add_task(async function test_activateBranch() {
     experiment.branch,
     "Should return feature of active experiment"
   );
+
+  sandbox.restore();
+});
+
+add_task(async function test_activateBranch_safe() {
+  const sandbox = sinon.createSandbox();
+  sandbox.stub(ExperimentAPI._store, "getAllActive").throws();
+
+  try {
+    Assert.equal(
+      ExperimentAPI.activateBranch({ featureId: "green" }),
+      null,
+      "Should not throw"
+    );
+  } catch (e) {
+    Assert.ok(false, "Should catch error in ExperimentAPI");
+  }
 
   sandbox.restore();
 });

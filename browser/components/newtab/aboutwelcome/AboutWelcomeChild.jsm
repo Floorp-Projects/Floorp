@@ -306,18 +306,13 @@ class AboutWelcomeChild extends JSWindowActorChild {
    * Send initial data to page including experiment information
    */
   AWGetExperimentData() {
-    let experimentData;
-    try {
-      // Note that we specifically don't wait for experiments to be loaded from disk so if
-      // about:welcome loads outside of the "FirstStartup" scenario this will likely not be ready
-      experimentData = ExperimentAPI.getExperiment({
-        featureId: "aboutwelcome",
-        // Telemetry handled in AboutNewTabService.jsm
-        sendExposurePing: false,
-      });
-    } catch (e) {
-      Cu.reportError(e);
-    }
+    // Note that we specifically don't wait for experiments to be loaded from disk so if
+    // about:welcome loads outside of the "FirstStartup" scenario this will likely not be ready
+    let experimentData = ExperimentAPI.getExperiment({
+      featureId: "aboutwelcome",
+      // Telemetry handled in AboutNewTabService.jsm
+      sendExposurePing: false,
+    });
 
     if (experimentData?.slug) {
       log.debug(

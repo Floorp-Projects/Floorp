@@ -3862,13 +3862,10 @@ BrowserGlue.prototype = {
         "resource:///actors/AboutNewTabParent.jsm",
         {}
       );
-      let isFeatureEnabled = false;
-      try {
-        isFeatureEnabled = ExperimentAPI.getExperiment({
-          featureId: "infobar",
-          sendExposurePing: false,
-        })?.branch.feature.enabled;
-      } catch (e) {}
+      let isFeatureEnabled = ExperimentAPI.getExperiment({
+        featureId: "infobar",
+        sendExposurePing: false,
+      })?.branch.feature.enabled;
       if (willPrompt) {
         // Prevent the related notification from appearing and
         // show the modal prompt.

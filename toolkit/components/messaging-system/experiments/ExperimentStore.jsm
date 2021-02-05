@@ -102,11 +102,14 @@ class ExperimentStore extends SharedDataMap {
    * @returns {Enrollment[]}
    */
   getAll() {
-    if (!this._data) {
-      return Object.values(syncDataStore);
+    let data = [];
+    try {
+      data = Object.values(this._data || syncDataStore);
+    } catch (e) {
+      Cu.reportError(e);
     }
 
-    return Object.values(this._data);
+    return data;
   }
 
   /**
