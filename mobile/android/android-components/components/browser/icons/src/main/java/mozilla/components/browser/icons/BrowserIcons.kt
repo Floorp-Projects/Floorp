@@ -51,6 +51,7 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.concept.base.memory.MemoryConsumer
+import mozilla.components.support.base.utils.NamedThreadFactory
 import mozilla.components.support.images.DesiredSize
 import mozilla.components.support.images.decoder.AndroidImageDecoder
 import mozilla.components.support.images.decoder.ImageDecoder
@@ -97,7 +98,10 @@ class BrowserIcons(
         MemoryIconProcessor(sharedMemoryCache),
         DiskIconProcessor(sharedDiskCache)
     ),
-    jobDispatcher: CoroutineDispatcher = Executors.newFixedThreadPool(THREADS).asCoroutineDispatcher()
+    jobDispatcher: CoroutineDispatcher = Executors.newFixedThreadPool(
+        THREADS,
+        NamedThreadFactory("BrowserIcons")
+    ).asCoroutineDispatcher()
 ) : MemoryConsumer {
     private val logger = Logger("BrowserIcons")
     private val maximumSize = context.resources.getDimensionPixelSize(R.dimen.mozac_browser_icons_maximum_size)

@@ -22,6 +22,7 @@ import mozilla.components.browser.awesomebar.facts.emitProviderQueryTimingFact
 import mozilla.components.browser.awesomebar.layout.SuggestionLayout
 import mozilla.components.browser.awesomebar.transform.SuggestionTransformer
 import mozilla.components.concept.awesomebar.AwesomeBar
+import mozilla.components.support.base.utils.NamedThreadFactory
 import java.util.concurrent.Executors
 
 private const val PROVIDER_QUERY_THREADS = 3
@@ -39,7 +40,10 @@ class BrowserAwesomeBar @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : RecyclerView(context, attrs, defStyleAttr), AwesomeBar {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal var jobDispatcher = Executors.newFixedThreadPool(PROVIDER_QUERY_THREADS).asCoroutineDispatcher()
+    internal var jobDispatcher = Executors.newFixedThreadPool(
+        PROVIDER_QUERY_THREADS,
+        NamedThreadFactory("BrowserAwesomeBar")
+    ).asCoroutineDispatcher()
     private val providers: MutableList<AwesomeBar.SuggestionProvider> = mutableListOf()
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val uniqueSuggestionIds = LruCache<String, Long>(INITIAL_NUMBER_OF_PROVIDERS * PROVIDER_MAX_SUGGESTIONS)

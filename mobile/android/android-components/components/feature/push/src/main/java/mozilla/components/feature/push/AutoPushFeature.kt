@@ -24,6 +24,7 @@ import mozilla.components.concept.push.PushService
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.feature.push.ext.launchAndTry
 import mozilla.components.feature.push.ext.ifInitialized
+import mozilla.components.support.base.utils.NamedThreadFactory
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
@@ -68,7 +69,9 @@ class AutoPushFeature(
     private val context: Context,
     private val service: PushService,
     val config: PushConfig,
-    coroutineContext: CoroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher(),
+    coroutineContext: CoroutineContext = Executors.newSingleThreadExecutor(
+        NamedThreadFactory("AutoPushFeature")
+    ).asCoroutineDispatcher(),
     private val connection: PushConnection = RustPushConnection(
         senderId = config.senderId,
         serverHost = config.serverHost,

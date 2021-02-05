@@ -50,6 +50,7 @@ import mozilla.components.service.fxa.StorageWrapper
 import mozilla.components.service.fxa.asAuthFlowUrl
 import mozilla.components.service.fxa.withRetries
 import mozilla.components.service.fxa.withServiceRetries
+import mozilla.components.support.base.utils.NamedThreadFactory
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
@@ -128,8 +129,9 @@ open class FxaAccountManager(
     private val crashReporter: CrashReporting? = null,
     // We want a single-threaded execution model for our account-related "actions" (state machine side-effects).
     // That is, we want to ensure a sequential execution flow, but on a background thread.
-    private val coroutineContext: CoroutineContext = Executors
-        .newSingleThreadExecutor().asCoroutineDispatcher() + SupervisorJob()
+    private val coroutineContext: CoroutineContext = Executors.newSingleThreadExecutor(
+        NamedThreadFactory("FxaAccountManager")
+    ).asCoroutineDispatcher() + SupervisorJob()
 ) : Closeable, Observable<AccountObserver> by ObserverRegistry() {
     private val logger = Logger("FirefoxAccountStateMachine")
 

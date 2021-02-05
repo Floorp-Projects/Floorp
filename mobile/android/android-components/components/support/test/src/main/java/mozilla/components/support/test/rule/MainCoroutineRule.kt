@@ -14,12 +14,14 @@ import kotlinx.coroutines.test.setMain
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import java.util.concurrent.Executors
+import mozilla.components.support.base.utils.NamedThreadFactory
 
 /**
  * Create single threaded dispatcher for test environment.
  */
-fun createTestCoroutinesDispatcher(): CoroutineDispatcher =
-    Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+fun createTestCoroutinesDispatcher(): CoroutineDispatcher = Executors.newSingleThreadExecutor(
+    NamedThreadFactory("TestCoroutinesDispatcher")
+).asCoroutineDispatcher()
 
 /**
  * JUnit rule to change Dispatchers.Main in coroutines.

@@ -30,6 +30,7 @@ import mozilla.components.browser.toolbar.internal.ActionContainer
 import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.base.utils.NamedThreadFactory
 import mozilla.components.support.ktx.android.view.showKeyboard
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import java.util.concurrent.Executors
@@ -77,7 +78,10 @@ class EditToolbar internal constructor(
     )
 
     private val autocompleteDispatcher = SupervisorJob() +
-        Executors.newFixedThreadPool(AUTOCOMPLETE_QUERY_THREADS).asCoroutineDispatcher() +
+        Executors.newFixedThreadPool(
+            AUTOCOMPLETE_QUERY_THREADS,
+            NamedThreadFactory("EditToolbar")
+        ).asCoroutineDispatcher() +
         CoroutineExceptionHandler { _, throwable ->
             logger.error("Error while processing autocomplete input", throwable)
         }
