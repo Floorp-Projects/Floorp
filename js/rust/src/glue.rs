@@ -301,12 +301,6 @@ extern "C" {
         aHandler: *const ::libc::c_void,
         aClass: *const JSClass,
     ) -> *mut JSObject;
-    pub fn WrapperNewSingleton(
-        aCx: *mut JSContext,
-        aObj: JS::HandleObject,
-        aHandler: *const ::libc::c_void,
-        aClass: *const JSClass,
-    ) -> *mut JSObject;
     pub fn NewWindowProxy(
         aCx: *mut JSContext,
         aObj: JS::HandleObject,

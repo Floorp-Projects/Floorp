@@ -465,16 +465,6 @@ JSObject* WrapperNew(JSContext* aCx, JS::HandleObject aObj,
   return js::Wrapper::New(aCx, aObj, (const js::Wrapper*)aHandler, options);
 }
 
-JSObject* WrapperNewSingleton(JSContext* aCx, JS::HandleObject aObj,
-                              const void* aHandler, const JSClass* aClass) {
-  js::WrapperOptions options;
-  if (aClass) {
-    options.setClass(aClass);
-  }
-  return js::Wrapper::NewSingleton(aCx, aObj, (const js::Wrapper*)aHandler,
-                                   options);
-}
-
 const JSClass WindowProxyClass = PROXY_CLASS_DEF(
     "Proxy", JSCLASS_HAS_RESERVED_SLOTS(1)); /* additional class flags */
 
@@ -490,7 +480,7 @@ void SetProxyReservedSlot(JSObject* obj, uint32_t slot, const JS::Value* val) {
 
 JSObject* NewWindowProxy(JSContext* aCx, JS::HandleObject aObj,
                          const void* aHandler) {
-  return WrapperNewSingleton(aCx, aObj, aHandler, &WindowProxyClass);
+  return WrapperNew(aCx, aObj, aHandler, &WindowProxyClass);
 }
 
 JS::Value GetProxyPrivate(JSObject* obj) { return js::GetProxyPrivate(obj); }
