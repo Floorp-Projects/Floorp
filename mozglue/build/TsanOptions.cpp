@@ -270,10 +270,6 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:nssToken_Destroy\n"
          "race:nssSlot_GetToken\n"
 
-         // Bug 1683439
-         "race:AudioCallbackDriver::MixerCallback\n"
-         "race:AudioCallbackDriver::Init\n"
-
          // Bug 1683417
          "race:DataChannelConnection::SetSignals\n"
          "race:DataChannelConnection::SetReady\n"
