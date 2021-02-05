@@ -483,7 +483,8 @@ void nsNativeBasicTheme::PaintRoundedFocusRect(DrawTarget* aDrawTarget,
                                                const LayoutDeviceRect& aRect,
                                                DPIRatio aDpiRatio,
                                                CSSCoord aRadius,
-                                               CSSCoord aOffset) {
+                                               CSSCoord aOffset,
+                                               bool aInnerOnly) {
   // NOTE(emilio): If the widths or offsets here change, make sure to tweak
   // the GetWidgetOverflow path for FocusOutline.
   auto [innerColor, middleColor, outerColor] = ComputeFocusRectColors();
@@ -506,6 +507,10 @@ void nsNativeBasicTheme::PaintRoundedFocusRect(DrawTarget* aDrawTarget,
                                                 strokeRadius, strokeWidth);
   aDrawTarget->Stroke(roundedRect, ColorPattern(ToDeviceColor(innerColor)),
                       StrokeOptions(strokeWidth));
+
+  if (aInnerOnly) {
+    return;
+  }
 
   offset = CSSCoord(1.0f) * aDpiRatio;
   strokeRadius += offset;
@@ -1272,7 +1277,8 @@ nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
       break;
     case StyleAppearance::FocusOutline:
       // TODO(emilio): Consider supporting outline-radius / outline-offset?
-      PaintRoundedFocusRect(dt, devPxRect, dpiRatio, 0.0f, 0.0f);
+      PaintRoundedFocusRect(dt, devPxRect, dpiRatio, 0.0f, 0.0f,
+                            /* aInnerOnly = */ true);
       break;
     default:
       // Various appearance values are used for XUL elements.  Normally these
@@ -1359,8 +1365,8 @@ bool nsNativeBasicTheme::GetWidgetOverflow(nsDeviceContext* aContext,
   nsIntMargin overflow;
   switch (aAppearance) {
     case StyleAppearance::FocusOutline:
-      // 2px * each of the segments + 1 px for the separation between them.
-      overflow.SizeTo(5, 5, 5, 5);
+      // 2px * one segment
+      overflow.SizeTo(2, 2, 2, 2);
       break;
     case StyleAppearance::Radio:
     case StyleAppearance::Checkbox:
