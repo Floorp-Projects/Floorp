@@ -639,14 +639,19 @@ Scope* ScopeStencil::enclosingExistingScope(
 Scope* ScopeStencil::createScope(JSContext* cx, CompilationInput& input,
                                  CompilationGCOutput& gcOutput,
                                  BaseParserScopeData* baseScopeData) const {
-  Scope* scope = nullptr;
+  RootedScope enclosingScope(cx, enclosingExistingScope(input, gcOutput));
+  return createScope(cx, input.atomCache, enclosingScope, baseScopeData);
+}
+
+Scope* ScopeStencil::createScope(JSContext* cx, CompilationAtomCache& atomCache,
+                                 HandleScope enclosingScope,
+                                 BaseParserScopeData* baseScopeData) const {
   switch (kind()) {
     case ScopeKind::Function: {
       using ScopeType = FunctionScope;
       MOZ_ASSERT(matchScopeKind<ScopeType>(kind()));
-      scope = createSpecificScope<ScopeType, CallObject>(cx, input, gcOutput,
-                                                         baseScopeData);
-      break;
+      return createSpecificScope<ScopeType, CallObject>(
+          cx, atomCache, enclosingScope, baseScopeData);
     }
     case ScopeKind::Lexical:
     case ScopeKind::SimpleCatch:
@@ -657,53 +662,48 @@ Scope* ScopeStencil::createScope(JSContext* cx, CompilationInput& input,
     case ScopeKind::ClassBody: {
       using ScopeType = LexicalScope;
       MOZ_ASSERT(matchScopeKind<ScopeType>(kind()));
-      scope = createSpecificScope<ScopeType, LexicalEnvironmentObject>(
-          cx, input, gcOutput, baseScopeData);
-      break;
+      return createSpecificScope<ScopeType, LexicalEnvironmentObject>(
+          cx, atomCache, enclosingScope, baseScopeData);
     }
     case ScopeKind::FunctionBodyVar: {
       using ScopeType = VarScope;
       MOZ_ASSERT(matchScopeKind<ScopeType>(kind()));
-      scope = createSpecificScope<ScopeType, VarEnvironmentObject>(
-          cx, input, gcOutput, baseScopeData);
-      break;
+      return createSpecificScope<ScopeType, VarEnvironmentObject>(
+          cx, atomCache, enclosingScope, baseScopeData);
     }
     case ScopeKind::Global:
     case ScopeKind::NonSyntactic: {
       using ScopeType = GlobalScope;
       MOZ_ASSERT(matchScopeKind<ScopeType>(kind()));
-      scope = createSpecificScope<ScopeType, std::nullptr_t>(
-          cx, input, gcOutput, baseScopeData);
-      break;
+      return createSpecificScope<ScopeType, std::nullptr_t>(
+          cx, atomCache, enclosingScope, baseScopeData);
     }
     case ScopeKind::Eval:
     case ScopeKind::StrictEval: {
       using ScopeType = EvalScope;
       MOZ_ASSERT(matchScopeKind<ScopeType>(kind()));
-      scope = createSpecificScope<ScopeType, VarEnvironmentObject>(
-          cx, input, gcOutput, baseScopeData);
-      break;
+      return createSpecificScope<ScopeType, VarEnvironmentObject>(
+          cx, atomCache, enclosingScope, baseScopeData);
     }
     case ScopeKind::Module: {
       using ScopeType = ModuleScope;
       MOZ_ASSERT(matchScopeKind<ScopeType>(kind()));
-      scope = createSpecificScope<ScopeType, ModuleEnvironmentObject>(
-          cx, input, gcOutput, baseScopeData);
-      break;
+      return createSpecificScope<ScopeType, ModuleEnvironmentObject>(
+          cx, atomCache, enclosingScope, baseScopeData);
     }
     case ScopeKind::With: {
       using ScopeType = WithScope;
       MOZ_ASSERT(matchScopeKind<ScopeType>(kind()));
-      scope = createSpecificScope<ScopeType, std::nullptr_t>(
-          cx, input, gcOutput, baseScopeData);
-      break;
+      return createSpecificScope<ScopeType, std::nullptr_t>(
+          cx, atomCache, enclosingScope, baseScopeData);
     }
     case ScopeKind::WasmFunction:
     case ScopeKind::WasmInstance: {
-      MOZ_CRASH("Unexpected deferred type");
+      // ScopeStencil does not support WASM
+      break;
     }
   }
-  return scope;
+  MOZ_CRASH();
 }
 
 static bool CreateLazyScript(JSContext* cx, const CompilationInput& input,
