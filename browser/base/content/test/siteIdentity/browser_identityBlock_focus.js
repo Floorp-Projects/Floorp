@@ -68,12 +68,12 @@ add_task(async function testWithNotifications() {
       "tracking protection icon container should be focused"
     );
     await synthesizeKeyAndWaitForFocus(
-      gIdentityHandler._identityBox,
+      gIdentityHandler._identityIconBox,
       "ArrowRight"
     );
     is(
       document.activeElement,
-      gIdentityHandler._identityBox,
+      gIdentityHandler._identityIconBox,
       "identity block should be focused"
     );
     let geoIcon = document.getElementById("geo-notification-icon");

@@ -64,7 +64,7 @@ async function checkForDOMElement(state, id) {
   return el;
 }
 
-async function testIdentityPopupGeoContainer(
+async function testPermissionPopupGeoContainer(
   containerVisible,
   timestampVisible
 ) {
@@ -74,14 +74,14 @@ async function testIdentityPopupGeoContainer(
     ok(false, "Can't have timestamp without container");
   }
 
-  // Only call openIdentityPopup if popup is closed, otherwise it does not resolve
-  if (!gIdentityHandler._identityBox.hasAttribute("open")) {
-    await openIdentityPopup();
+  // Only call openPermissionPopup if popup is closed, otherwise it does not resolve
+  if (!gPermissionPanel._identityPermissionBox.hasAttribute("open")) {
+    await openPermissionPopup();
   }
 
   let checkContainer = checkForDOMElement(
     containerVisible,
-    "identity-popup-geo-container"
+    "permission-popup-geo-container"
   );
 
   if (containerVisible && timestampVisible) {
@@ -90,11 +90,11 @@ async function testIdentityPopupGeoContainer(
     let container = await checkContainer;
     await BrowserTestUtils.waitForCondition(
       () => container.childElementCount == 2,
-      "identity-popup-geo-container should have two elements."
+      "permission-popup-geo-container should have two elements."
     );
     is(
       container.childNodes[0].classList[0],
-      "identity-popup-permission-item",
+      "permission-popup-permission-item",
       "Geo container should have permission item."
     );
     is(
@@ -249,14 +249,14 @@ async function testIndicatorExplicitAllow(persistent) {
 
   await Promise.all([
     testGeoSharingIconVisible(true),
-    testIdentityPopupGeoContainer(true, true),
+    testPermissionPopupGeoContainer(true, true),
     testGeoLocationLastAccessSet(tab.linkedBrowser),
   ]);
 
   await cleanup(tab);
 }
 
-// Indicator and identity popup entry shown after explicit PermissionUI geolocation allow
+// Indicator and permission popup entry shown after explicit PermissionUI geolocation allow
 add_task(function test_indicator_and_timestamp_after_explicit_allow() {
   return testIndicatorExplicitAllow(false);
 });
@@ -264,7 +264,7 @@ add_task(function test_indicator_and_timestamp_after_explicit_allow_remember() {
   return testIndicatorExplicitAllow(true);
 });
 
-// Indicator and identity popup entry shown after auto PermissionUI geolocation allow
+// Indicator and permission popup entry shown after auto PermissionUI geolocation allow
 add_task(async function test_indicator_and_timestamp_after_implicit_allow() {
   PermissionTestUtils.add(
     EXAMPLE_PAGE_URI,
@@ -278,7 +278,7 @@ add_task(async function test_indicator_and_timestamp_after_implicit_allow() {
 
   await Promise.all([
     testGeoSharingIconVisible(true),
-    testIdentityPopupGeoContainer(true, true),
+    testPermissionPopupGeoContainer(true, true),
     testGeoLocationLastAccessSet(tab.linkedBrowser),
   ]);
 
@@ -295,8 +295,8 @@ add_task(function test_indicator_sharing_state_inactive() {
   return testIndicatorGeoSharingState(false);
 });
 
-// Identity popup shows permission if geo permission is set to persistent allow
-add_task(async function test_identity_popup_permission_scope_permanent() {
+// Permission popup shows permission if geo permission is set to persistent allow
+add_task(async function test_permission_popup_permission_scope_permanent() {
   PermissionTestUtils.add(
     EXAMPLE_PAGE_URI,
     "geo",
@@ -305,35 +305,35 @@ add_task(async function test_identity_popup_permission_scope_permanent() {
   );
   let tab = await openExamplePage();
 
-  await testIdentityPopupGeoContainer(true, false); // Expect permission to be visible, but not lastAccess indicator
+  await testPermissionPopupGeoContainer(true, false); // Expect permission to be visible, but not lastAccess indicator
 
   await cleanup(tab);
 });
 
 // Sharing state set, but no permission
-add_task(async function test_identity_popup_permission_sharing_state() {
+add_task(async function test_permission_popup_permission_sharing_state() {
   let tab = await openExamplePage();
   gBrowser.updateBrowserSharing(tab.linkedBrowser, { geo: true });
-  await testIdentityPopupGeoContainer(true, false);
+  await testPermissionPopupGeoContainer(true, false);
 
   await cleanup(tab);
 });
 
-// Identity popup has correct state if sharing state and last geo access timestamp are set
+// Permission popup has correct state if sharing state and last geo access timestamp are set
 add_task(
-  async function test_identity_popup_permission_sharing_state_timestamp() {
+  async function test_permission_popup_permission_sharing_state_timestamp() {
     let tab = await openExamplePage();
     gBrowser.updateBrowserSharing(tab.linkedBrowser, { geo: true });
     await setGeoLastAccess(tab.linkedBrowser, true);
 
-    await testIdentityPopupGeoContainer(true, true);
+    await testPermissionPopupGeoContainer(true, true);
 
     await cleanup(tab);
   }
 );
 
 // Clicking permission clear button clears permission and resets geo sharing state
-add_task(async function test_identity_popup_permission_clear() {
+add_task(async function test_permission_popup_permission_clear() {
   PermissionTestUtils.add(
     EXAMPLE_PAGE_URI,
     "geo",
@@ -343,17 +343,17 @@ add_task(async function test_identity_popup_permission_clear() {
   let tab = await openExamplePage();
   gBrowser.updateBrowserSharing(tab.linkedBrowser, { geo: true });
 
-  await openIdentityPopup();
+  await openPermissionPopup();
 
   let clearButton = document.querySelector(
-    "#identity-popup-geo-container button"
+    "#permission-popup-geo-container button"
   );
   ok(clearButton, "Clear button is visible");
   clearButton.click();
 
   await Promise.all([
     testGeoSharingIconVisible(false),
-    testIdentityPopupGeoContainer(false, false),
+    testPermissionPopupGeoContainer(false, false),
     BrowserTestUtils.waitForCondition(() => {
       let sharingState = tab._sharingState;
       return (
@@ -370,12 +370,12 @@ add_task(async function test_identity_popup_permission_clear() {
  * Tests that we only show the last access label once when the sharing
  * state is updated multiple times while the popup is open.
  */
-add_task(async function test_identity_no_duplicate_last_access_label() {
+add_task(async function test_permission_no_duplicate_last_access_label() {
   let tab = await openExamplePage();
   await setGeoLastAccess(tab.linkedBrowser, true);
-  await openIdentityPopup();
+  await openPermissionPopup();
   gBrowser.updateBrowserSharing(tab.linkedBrowser, { geo: true });
   gBrowser.updateBrowserSharing(tab.linkedBrowser, { geo: true });
-  await testIdentityPopupGeoContainer(true, true);
+  await testPermissionPopupGeoContainer(true, true);
   await cleanup(tab);
 });

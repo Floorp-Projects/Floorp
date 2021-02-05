@@ -138,7 +138,7 @@ async function runTest(i, forward) {
     true,
     event => event.target == gIdentityHandler._identityPopup
   );
-  gIdentityHandler._identityBox.click();
+  gIdentityHandler._identityIconBox.click();
   info("Waiting for the Control Center to be shown");
   await popupShown;
   ok(

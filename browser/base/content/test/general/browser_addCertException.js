@@ -20,7 +20,7 @@ add_task(async function() {
     true,
     event => event.target == gIdentityHandler._identityPopup
   );
-  gIdentityHandler._identityBox.click();
+  gIdentityHandler._identityIconBox.click();
   await promisePanelOpen;
 
   let promiseViewShown = BrowserTestUtils.waitForEvent(
