@@ -3,6 +3,9 @@
 const { ExperimentAPI } = ChromeUtils.import(
   "resource://messaging-system/experiments/ExperimentAPI.jsm"
 );
+const { ExperimentFakes } = ChromeUtils.import(
+  "resource://testing-common/MSTestUtils.jsm"
+);
 
 /**
  * Enrolls browser in an experiment with value featureValue and
@@ -15,8 +18,11 @@ const { ExperimentAPI } = ChromeUtils.import(
 async function testWithExperimentFeatureValue(slug, featureValue, test) {
   test_newtab({
     async before() {
-      let updatePromise = new Promise(resolve =>
-        ExperimentAPI._store.once(`update:${slug}`, resolve)
+      let updatePromise = ExperimentFakes.waitForExperimentUpdate(
+        ExperimentAPI,
+        {
+          slug,
+        }
       );
 
       ExperimentAPI._store.addExperiment({
