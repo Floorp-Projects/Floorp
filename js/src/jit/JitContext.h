@@ -36,10 +36,8 @@ enum MethodStatus {
 enum class AbortReason : uint8_t {
   NoAbort,
   Alloc = 2,
-  Inlining = 4,
-  PreliminaryObjects = 6,
-  Disable = 8,
-  Error = 10,
+  Disable = 4,
+  Error = 6,
 };
 }  // namespace jit
 }  // namespace js
