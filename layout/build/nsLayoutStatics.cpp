@@ -58,7 +58,6 @@
 #include "StorageObserver.h"
 #include "CacheObserver.h"
 #include "DisplayItemClip.h"
-#include "HitTestInfo.h"
 #include "ActiveLayerTracker.h"
 #include "FrameLayerBuilder.h"
 #include "AnimationCommon.h"
@@ -390,7 +389,6 @@ void nsLayoutStatics::Shutdown() {
   ContentParent::ShutDown();
 
   DisplayItemClip::Shutdown();
-  HitTestInfo::Shutdown();
 
   CacheObserver::Shutdown();
 

@@ -77,6 +77,7 @@ enum class DisplayItemEntryType : uint8_t {
   PopOpacity,
   PushTransform,
   PopTransform,
+  HitTestInfo,
 };
 
 /**

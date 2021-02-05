@@ -3852,9 +3852,10 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       if (info != CompositorHitTestInvisibleToHit) {
         auto* hitInfo =
             MakeDisplayItemWithIndex<nsDisplayCompositorHitTestInfo>(
-                aBuilder, mScrolledFrame, 1);
+                aBuilder, mScrolledFrame, 1, info);
         if (hitInfo) {
-          aBuilder->SetCompositorHitTestInfo(info);
+          aBuilder->SetCompositorHitTestInfo(hitInfo->HitTestArea(),
+                                             hitInfo->HitTestFlags());
           set.BorderBackground()->AppendToTop(hitInfo);
         }
       }
@@ -4071,36 +4072,38 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
     // Make sure that APZ will dispatch events back to content so we can
     // create a displayport for this frame. We'll add the item later on.
-    if (!mWillBuildScrollableLayer && aBuilder->BuildCompositorHitTestInfo()) {
-      int32_t zIndex = MaxZIndexInListOfItemsContainedInFrame(
-          scrolledContent.PositionedDescendants(), mOuter);
-      if (aBuilder->IsPartialUpdate()) {
-        if (auto* items =
-                mScrolledFrame->GetProperty(nsIFrame::DisplayItems())) {
-          for (nsDisplayItemBase* item : *items) {
-            if (item->GetType() ==
-                DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
-              auto* hitTestItem =
-                  static_cast<nsDisplayCompositorHitTestInfo*>(item);
-              if (hitTestItem->GetHitTestInfo().Info().contains(
-                      CompositorHitTestFlags::eInactiveScrollframe)) {
-                zIndex = std::max(zIndex, hitTestItem->ZIndex());
-                item->SetCantBeReused();
+    if (!mWillBuildScrollableLayer) {
+      if (aBuilder->BuildCompositorHitTestInfo()) {
+        int32_t zIndex = MaxZIndexInListOfItemsContainedInFrame(
+            scrolledContent.PositionedDescendants(), mOuter);
+        if (aBuilder->IsPartialUpdate()) {
+          if (auto* items =
+                  mScrolledFrame->GetProperty(nsIFrame::DisplayItems())) {
+            for (nsDisplayItemBase* item : *items) {
+              if (item->GetType() ==
+                  DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
+                auto* hitTestItem =
+                    static_cast<nsDisplayCompositorHitTestInfo*>(item);
+                if (hitTestItem->HasHitTestInfo() &&
+                    hitTestItem->HitTestFlags().contains(
+                        CompositorHitTestFlags::eInactiveScrollframe)) {
+                  zIndex = std::max(zIndex, hitTestItem->ZIndex());
+                  item->SetCantBeReused();
+                }
               }
             }
           }
         }
-      }
-      // Make sure the z-index of the inactive item is at least zero.
-      // Otherwise, it will end up behind non-positioned items in the scrolled
-      // content.
-      zIndex = std::max(zIndex, 0);
-      nsDisplayCompositorHitTestInfo* hitInfo =
-          MakeDisplayItemWithIndex<nsDisplayCompositorHitTestInfo>(
-              aBuilder, mScrolledFrame, 1, area, info);
-      if (hitInfo) {
-        AppendInternalItemToTop(scrolledContent, hitInfo, Some(zIndex));
-        aBuilder->SetCompositorHitTestInfo(info);
+        // Make sure the z-index of the inactive item is at least zero.
+        // Otherwise, it will end up behind non-positioned items in the scrolled
+        // content.
+        zIndex = std::max(zIndex, 0);
+        nsDisplayCompositorHitTestInfo* hitInfo =
+            MakeDisplayItemWithIndex<nsDisplayCompositorHitTestInfo>(
+                aBuilder, mScrolledFrame, 1, info, Some(area));
+        if (hitInfo) {
+          AppendInternalItemToTop(scrolledContent, hitInfo, Some(zIndex));
+        }
       }
     }
 

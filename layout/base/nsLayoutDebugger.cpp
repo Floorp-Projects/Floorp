@@ -117,11 +117,12 @@ static void PrintDisplayItemTo(nsDisplayListBuilder* aBuilder,
   }
 
   if (aItem->HasHitTestInfo()) {
-    const auto& hitTestInfo = aItem->GetHitTestInfo();
-    aStream << nsPrintfCString(" hitTestInfo(0x%x)",
-                               hitTestInfo.Info().serialize());
+    auto* hitTestInfoItem = static_cast<nsDisplayHitTestInfoBase*>(aItem);
 
-    nsRect area = hitTestInfo.Area();
+    aStream << nsPrintfCString(" hitTestInfo(0x%x)",
+                               hitTestInfoItem->HitTestFlags().serialize());
+
+    nsRect area = hitTestInfoItem->HitTestArea();
     aStream << nsPrintfCString(" hitTestArea(%d,%d,%d,%d)", area.x, area.y,
                                area.width, area.height);
   }

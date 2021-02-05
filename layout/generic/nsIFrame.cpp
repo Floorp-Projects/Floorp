@@ -2584,26 +2584,19 @@ bool nsIFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder* aBuilder,
     return false;
   }
 
-  AppendedBackgroundType result = AppendedBackgroundType::None;
-
   // Here we don't try to detect background propagation. Frames that might
   // receive a propagated background should just set aForceBackground to
   // true.
   if (hitTesting || aForceBackground ||
       !StyleBackground()->IsTransparent(this) ||
       StyleDisplay()->HasAppearance()) {
-    result = nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
+    return nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
         aBuilder, this,
         GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(this),
         aLists.BorderBackground());
   }
 
-  if (result == AppendedBackgroundType::None) {
-    aBuilder->BuildCompositorHitTestInfoIfNeeded(this,
-                                                 aLists.BorderBackground());
-  }
-
-  return result == AppendedBackgroundType::ThemedBackground;
+  return false;
 }
 
 void nsIFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder* aBuilder,
@@ -2882,19 +2875,6 @@ static void CheckForApzAwareEventHandlers(nsDisplayListBuilder* aBuilder,
   }
 }
 
-static void UpdateCurrentHitTestInfo(nsDisplayListBuilder* aBuilder,
-                                     nsIFrame* aFrame) {
-  if (!aBuilder->BuildCompositorHitTestInfo()) {
-    // Compositor hit test info is not used.
-    return;
-  }
-
-  CheckForApzAwareEventHandlers(aBuilder, aFrame);
-
-  const CompositorHitTestInfo info = aFrame->GetCompositorHitTestInfo(aBuilder);
-  aBuilder->SetCompositorHitTestInfo(info);
-}
-
 /**
  * True if aDescendant participates the context aAncestor participating.
  */
@@ -3103,6 +3083,28 @@ struct ContainerTracker {
   bool mCreatedContainer = false;
 };
 
+/**
+ * Adds hit test information |aHitTestInfo| on the container item |aContainer|,
+ * or if the container item is null, creates a separate hit test item that is
+ * added to the bottom of the display list |aList|.
+ */
+static void AddHitTestInfo(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
+                           nsDisplayItem* aContainer, nsIFrame* aFrame,
+                           mozilla::UniquePtr<HitTestInfo>&& aHitTestInfo) {
+  nsDisplayHitTestInfoBase* hitTestItem;
+
+  if (aContainer) {
+    MOZ_ASSERT(aContainer->IsHitTestItem());
+    hitTestItem = static_cast<nsDisplayHitTestInfoBase*>(aContainer);
+    hitTestItem->SetHitTestInfo(std::move(aHitTestInfo));
+  } else {
+    // No container item was created for this frame. Create a separate
+    // nsDisplayCompositorHitTestInfo item instead.
+    aList->AppendNewToBottom<nsDisplayCompositorHitTestInfo>(
+        aBuilder, aFrame, std::move(aHitTestInfo));
+  }
+}
+
 void nsIFrame::BuildDisplayListForStackingContext(
     nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
     bool* aCreatedContainerItem) {
@@ -3307,8 +3309,6 @@ void nsIFrame::BuildDisplayListForStackingContext(
   nsDisplayListBuilder::AutoBuildingDisplayList buildingDisplayList(
       aBuilder, this, visibleRect, dirtyRect, isTransformed);
 
-  UpdateCurrentHitTestInfo(aBuilder, this);
-
   // Depending on the effects that are applied to this frame, we can create
   // multiple container display items and wrap them around our contents.
   // This enum lists all the potential container display items, in the order
@@ -3398,6 +3398,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
     ApplyClipProp(transformedCssClip);
   }
 
+  mozilla::UniquePtr<HitTestInfo> hitTestInfo;
+
   nsDisplayListCollection set(aBuilder);
   Maybe<nsRect> clipForMask;
   bool insertBackdropRoot;
@@ -3409,6 +3411,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
                                                           usingFilter);
     nsDisplayListBuilder::AutoInEventsOnly inEventsSetter(
         aBuilder, opacityItemForEventsOnly);
+
+    CheckForApzAwareEventHandlers(aBuilder, this);
 
     // If we have a mask, compute a clip to bound the masked content.
     // This is necessary in case the content moves with an ancestor
@@ -3438,6 +3442,24 @@ void nsIFrame::BuildDisplayListForStackingContext(
     }
 
     aBuilder->AdjustWindowDraggingRegion(this);
+
+    if (gfxVars::UseWebRender()) {
+      aBuilder->BuildCompositorHitTestInfoIfNeeded(this, set.BorderBackground(),
+                                                   true);
+    } else {
+      CompositorHitTestInfo info = aBuilder->BuildCompositorHitTestInfo()
+                                       ? GetCompositorHitTestInfo(aBuilder)
+                                       : CompositorHitTestInvisibleToHit;
+
+      if (info != CompositorHitTestInvisibleToHit) {
+        // Frame has hit test flags set, initialize the hit test info structure.
+        hitTestInfo = mozilla::MakeUnique<HitTestInfo>(aBuilder, this, info);
+
+        // Let child frames know the current hit test area and hit test flags.
+        aBuilder->SetCompositorHitTestInfo(hitTestInfo->mArea,
+                                           hitTestInfo->mFlags);
+      }
+    }
 
     MarkAbsoluteFramesForDisplayList(aBuilder);
     aBuilder->Check();
@@ -3812,6 +3834,13 @@ void nsIFrame::BuildDisplayListForStackingContext(
     *aCreatedContainerItem = ct.mCreatedContainer;
   }
 
+  if (hitTestInfo) {
+    // WebRender support is not yet implemented.
+    MOZ_ASSERT(!gfxVars::UseWebRender());
+    AddHitTestInfo(aBuilder, &resultList, ct.mContainer, this,
+                   std::move(hitTestInfo));
+  }
+
   aList->AppendToTop(&resultList);
 }
 
@@ -3966,7 +3995,11 @@ void nsIFrame::BuildDisplayListForSimpleChild(nsDisplayListBuilder* aBuilder,
   nsDisplayListBuilder::AutoBuildingDisplayList buildingForChild(
       aBuilder, aChild, visible, dirty, false);
 
-  UpdateCurrentHitTestInfo(aBuilder, aChild);
+  CheckForApzAwareEventHandlers(aBuilder, aChild);
+
+  aBuilder->BuildCompositorHitTestInfoIfNeeded(
+      aChild, aLists.BorderBackground(),
+      buildingForChild.IsAnimatedGeometryRoot());
 
   aChild->MarkAbsoluteFramesForDisplayList(aBuilder);
   aBuilder->AdjustWindowDraggingRegion(aChild);
@@ -4180,11 +4213,9 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
 
   nsDisplayListBuilder::AutoBuildingDisplayList buildingForChild(
       aBuilder, child, visible, dirty);
-
-  UpdateCurrentHitTestInfo(aBuilder, child);
-
   DisplayListClipState::AutoClipMultiple clipState(aBuilder);
   nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter asrSetter(aBuilder);
+  CheckForApzAwareEventHandlers(aBuilder, child);
 
   if (savedOutOfFlowData) {
     aBuilder->SetBuildingInvisibleItems(false);
@@ -4255,6 +4286,8 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
 
     child->MarkAbsoluteFramesForDisplayList(aBuilder);
 
+    const bool differentAGR = buildingForChild.IsAnimatedGeometryRoot();
+
     if (!awayFromCommonPath &&
         // Some SVG frames might change opacity without invalidating the frame,
         // so exclude them from the fast-path.
@@ -4267,6 +4300,10 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
       // THIS IS THE COMMON CASE.
       // Not a pseudo or real stacking context. Do the simple thing and
       // return early.
+
+      aBuilder->BuildCompositorHitTestInfoIfNeeded(
+          child, aLists.BorderBackground(), differentAGR);
+
       aBuilder->AdjustWindowDraggingRegion(child);
       aBuilder->Check();
       child->BuildDisplayList(aBuilder, aLists);
@@ -4284,6 +4321,16 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     // z-index:non-auto
     nsDisplayListCollection pseudoStack(aBuilder);
 
+    // If this frame has z-index != 0, then the display item might get sorted
+    // into a different place in the list, and we can't rely on the previous
+    // hit test info to still be behind us. Force a new hit test info for this
+    // item, and for the item after it, so that we always have the right hit
+    // test info.
+    const bool mayBeSorted = ZIndex().valueOr(0) != 0;
+
+    aBuilder->BuildCompositorHitTestInfoIfNeeded(
+        child, pseudoStack.BorderBackground(), differentAGR || mayBeSorted);
+
     aBuilder->AdjustWindowDraggingRegion(child);
     nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
     aBuilder->Check();
@@ -4292,6 +4339,16 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     if (aBuilder->DisplayCaret(child, pseudoStack.Outlines())) {
       builtContainerItem = false;
     }
+
+    // If we forced a new hit-test info because this frame is going to be
+    // sorted, then clear the 'previous' data on the builder so that the next
+    // item also gets a new hit test info. That way we're guaranteeing hit-test
+    // info before and after each item that might get moved to a different spot.
+    if (mayBeSorted) {
+      aBuilder->SetCompositorHitTestInfo(
+          nsRect(), CompositorHitTestFlags::eVisibleToHitTest);
+    }
+
     wrapListASR = contASRTracker.GetContainerASR();
 
     list.AppendToTop(pseudoStack.BorderBackground());
@@ -11190,7 +11247,7 @@ CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
     // that code, but woven into the top-down recursive display list building
     // process.
     CompositorHitTestInfo inheritedTouchAction =
-        aBuilder->GetCompositorHitTestInfo() & CompositorHitTestTouchActionMask;
+        aBuilder->GetHitTestInfo() & CompositorHitTestTouchActionMask;
 
     nsIFrame* touchActionFrame = this;
     if (nsIScrollableFrame* scrollFrame =
