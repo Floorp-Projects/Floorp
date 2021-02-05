@@ -893,16 +893,16 @@ const LInstruction* LNode::toInstruction() const {
 
 class LElementVisitor {
 #ifdef TRACK_SNAPSHOTS
-  LNode* ins_ = nullptr;
+  LInstruction* ins_ = nullptr;
 #endif
 
  protected:
 #ifdef TRACK_SNAPSHOTS
-  LNode* instruction() { return ins_; }
+  LInstruction* instruction() { return ins_; }
 
-  void setElement(LNode* ins) { ins_ = ins; }
+  void setElement(LInstruction* ins) { ins_ = ins; }
 #else
-  void setElement(LNode* ins) {}
+  void setElement(LInstruction* ins) {}
 #endif
 };
 
