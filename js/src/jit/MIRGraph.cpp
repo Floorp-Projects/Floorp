@@ -49,12 +49,6 @@ mozilla::GenericErrorResult<AbortReason> MIRGenerator::abort(AbortReason r) {
       case AbortReason::Alloc:
         JitSpew(JitSpew_IonAbort, "AbortReason::Alloc");
         break;
-      case AbortReason::Inlining:
-        JitSpew(JitSpew_IonAbort, "AbortReason::Inlining");
-        break;
-      case AbortReason::PreliminaryObjects:
-        JitSpew(JitSpew_IonAbort, "AbortReason::PreliminaryObjects");
-        break;
       case AbortReason::Disable:
         JitSpew(JitSpew_IonAbort, "AbortReason::Disable");
         break;
