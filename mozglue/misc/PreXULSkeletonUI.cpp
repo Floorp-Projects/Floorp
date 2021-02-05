@@ -1150,6 +1150,21 @@ DWORD WINAPI AnimateSkeletonUI(void* aUnused) {
     return 0;
   }
 
+  // See the comments above the InterlockedIncrement calls below here - we
+  // atomically flip this up and down around sleep so the main thread doesn't
+  // have to wait for us if we're just sleeping.
+  if (InterlockedIncrement(&sAnimationControlFlag) != 1) {
+    return 0;
+  }
+  // Sleep for two seconds - startups faster than this don't really benefit
+  // from an animation, and we don't want to take away cycles from them.
+  // Startups longer than this, however, are more likely to be blocked on IO,
+  // and thus animating does not substantially impact startup times for them.
+  ::Sleep(2000);
+  if (InterlockedDecrement(&sAnimationControlFlag) != 0) {
+    return 0;
+  }
+
   // On each of the animated rects (which happen to all be placeholder UI
   // rects sharing the same color), we want to animate a gradient moving across
   // the screen from left to right. The gradient starts as the rect's color on,
