@@ -662,11 +662,6 @@ var vectors = [
   },
   {
     data:
-      '<?xml-stylesheet type="text/xsl" href="#" ?>\r\n<stylesheet xmlns="http://www.w3.org/TR/WD-xsl">\r\n<template match="/">\r\n<eval>new ActiveXObject(&apos;htmlfile&apos;).parentWindow.alert(1)</eval>\r\n<if expr="new ActiveXObject(\'htmlfile\').parentWindow.alert(2)"></if>\r\n</template>\r\n</stylesheet>',
-    sanitized: "<html><head></head><body>\n\n</body></html>",
-  },
-  {
-    data:
       '<form action="" method="post">\r\n<input name="username" value="admin" />\r\n<input name="password" type="password" value="secret" />\r\n<input name="injected" value="injected" dirname="password" />\r\n<input type="submit">\r\n</form>',
     sanitized: "<html><head></head><body>\n\n\n\n\n</body></html>",
   },
@@ -984,5 +979,29 @@ var vectors = [
   {
     data: "",
     sanitized: "<html><head></head><body></body></html>",
+  },
+  {
+    data: "<dialog>allowed</dialog>",
+    sanitized:
+      "<html><head></head><body><dialog>allowed</dialog></body></html>",
+  },
+  {
+    data: "<main>allowed</main>",
+    sanitized: "<html><head></head><body><main>allowed</main></body></html>",
+  },
+  {
+    data: "<picture>allowed</picture>",
+    sanitized:
+      "<html><head></head><body><picture>allowed</picture></body></html>",
+  },
+  {
+    data: "<template>allowed</template>",
+    sanitized:
+      "<html><head><template>allowed</template></head><body></body></html>",
+  },
+  {
+    data: '<template><img src="x" onerror="alert(1)"></template>',
+    sanitized:
+      "<html><head><template><img></template></head><body></body></html>",
   },
 ];
