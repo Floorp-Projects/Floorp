@@ -446,7 +446,7 @@ for k, v in variant.get("env", {}).items():
 
 if AUTOMATION:
     # Currently only supported on linux64.
-    if platform.system() == "Linux" and platform.machine() == "x86_64":
+    if platform.system() == "Linux" and word_bits == 64:
         use_minidump = variant.get("use_minidump", True)
     else:
         use_minidump = False

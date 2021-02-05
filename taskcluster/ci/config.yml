@@ -207,6 +207,7 @@ try:
     # all"
     ridealong-builds:
         'linux':
+            - 'sm-plain-linux32'
             - 'sm-arm-sim-linux32'
         'linux64':
             - 'sm-plain-linux64'
