@@ -20,4 +20,7 @@ viaduct = { git = "https://github.com/mozilla/application-services", rev = "8a57
 url = "2.1" # Copied from viaduct's deps, see https://github.com/mozilla/application-services/issues/3062
 
 [features]
+# Leave data collection enabled, but disable upload.
+disable_upload = []
+# Letting us know we're compiling with Gecko symbols.
 with_gecko = ["fog/with_gecko"]
