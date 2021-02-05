@@ -10,5 +10,6 @@ class CustomTabsServiceStore(
     initialState: CustomTabsServiceState = CustomTabsServiceState()
 ) : Store<CustomTabsServiceState, CustomTabsAction>(
     initialState,
-    CustomTabsServiceStateReducer::reduce
+    CustomTabsServiceStateReducer::reduce,
+    threadNamePrefix = "CustomTabsService"
 )

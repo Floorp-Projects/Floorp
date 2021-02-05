@@ -30,6 +30,7 @@ dependencies {
     implementation Dependencies.androidx_fragment
     implementation Dependencies.androidx_lifecycle_process
 
+    implementation project(':support-base')
     implementation project(':support-ktx')
 
     testImplementation project(':support-test')

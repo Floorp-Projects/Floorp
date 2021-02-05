@@ -29,13 +29,16 @@ import java.util.concurrent.Executors
  * @param initialState The initial state until a dispatched [Action] creates a new state.
  * @param reducer A function that gets the current [State] and [Action] passed in and will return a new [State].
  * @param middleware Optional list of [Middleware] sitting between the [Store] and the [Reducer].
+ * @param threadNamePrefix Optional prefix with which to name threads for the [Store]. If not provided,
+ * the naming scheme will be deferred to [Executors.defaultThreadFactory]
  */
 open class Store<S : State, A : Action>(
     initialState: S,
     reducer: Reducer<S, A>,
-    middleware: List<Middleware<S, A>> = emptyList()
+    middleware: List<Middleware<S, A>> = emptyList(),
+    threadNamePrefix: String? = null
 ) {
-    private val threadFactory = StoreThreadFactory()
+    private val threadFactory = StoreThreadFactory(threadNamePrefix)
     private val dispatcher = Executors.newSingleThreadExecutor(threadFactory).asCoroutineDispatcher()
     private val reducerChainBuilder = ReducerChainBuilder(threadFactory, reducer, middleware)
     private val scope = CoroutineScope(dispatcher)

@@ -25,7 +25,8 @@ class BrowserStore(
 ) : Store<BrowserState, BrowserAction>(
     initialState,
     BrowserStateReducer::reduce,
-    middleware
+    middleware,
+    "BrowserStore"
 ) {
     init {
         initialState.selectedTabId?.let {

@@ -46,6 +46,9 @@ permalink: /changelog/
 * **support-base**
   * Add `NamedThreadFactory`, a `ThreadFactory` that names its threads with the given argument.
 
+* **lib-state**
+  * Add `threadNamePrefix` parameter to `Store` to give threads created by the `Store` a specific name.
+
 # 72.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v71.0.0...v72.0.0)
