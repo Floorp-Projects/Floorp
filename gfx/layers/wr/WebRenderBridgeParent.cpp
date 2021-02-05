@@ -518,8 +518,6 @@ bool WebRenderBridgeParent::UpdateResources(
       }
       case OpUpdateResource::TOpAddBlobImage: {
         const auto& op = cmd.get_OpAddBlobImage();
-        MOZ_DIAGNOSTIC_ASSERT(MatchesNamespace(op.key()),
-                              "stale blob key for add!");
         wr::Vec<uint8_t> bytes;
         if (!reader.Read(op.bytes(), bytes)) {
           gfxCriticalNote << "TOpAddBlobImage failed";
@@ -531,8 +529,6 @@ bool WebRenderBridgeParent::UpdateResources(
       }
       case OpUpdateResource::TOpUpdateBlobImage: {
         const auto& op = cmd.get_OpUpdateBlobImage();
-        MOZ_DIAGNOSTIC_ASSERT(MatchesNamespace(op.key()),
-                              "stale blob key for update!");
         wr::Vec<uint8_t> bytes;
         if (!reader.Read(op.bytes(), bytes)) {
           gfxCriticalNote << "TOpUpdateBlobImage failed";
@@ -545,8 +541,6 @@ bool WebRenderBridgeParent::UpdateResources(
       }
       case OpUpdateResource::TOpSetBlobImageVisibleArea: {
         const auto& op = cmd.get_OpSetBlobImageVisibleArea();
-        MOZ_DIAGNOSTIC_ASSERT(MatchesNamespace(op.key()),
-                              "stale blob key for visible area!");
         aUpdates.SetBlobImageVisibleArea(op.key(),
                                          wr::ToDeviceIntRect(op.area()));
         break;
