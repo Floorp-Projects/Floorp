@@ -1,4 +1,5 @@
 import { ASRouterParentProcessMessageHandler } from "lib/ASRouterParentProcessMessageHandler.jsm";
+import { _ASRouter } from "lib/ASRouter.jsm";
 import { MESSAGE_TYPE_HASH as msg } from "common/ActorConstants.jsm";
 
 describe("ASRouterParentProcessMessageHandler", () => {
@@ -8,53 +9,58 @@ describe("ASRouterParentProcessMessageHandler", () => {
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     const returnValue = { value: 1 };
-    const router = {
-      _storage: {
-        set: sandbox.stub().resolves(),
-        get: sandbox.stub().resolves(),
-      },
-      _updateOnboardingState: sandbox.stub().resolves(),
-      addImpression: sandbox.stub().resolves(),
-      addPreviewEndpoint: sandbox.stub().resolves(),
-      blockMessageById: sandbox.stub().resolves(returnValue),
-      evaluateExpression: sandbox.stub().resolves(),
-      forceAttribution: sandbox.stub().resolves(),
-      forceWNPanel: sandbox.stub().resolves(),
-      closeWNPanel: sandbox.stub().resolves(),
-      loadMessagesFromAllProviders: sandbox.stub().resolves(returnValue),
-      sendNewTabMessage: sandbox.stub().resolves(returnValue),
-      sendTriggerMessage: sandbox.stub().resolves(returnValue),
-      sendMessage: sandbox.stub().resolves(returnValue),
-      setMessageById: sandbox.stub().resolves(returnValue),
-      resetGroupsState: sandbox.stub().resolves(),
-      setState: sandbox.stub().callsFake(callback => {
-        if (typeof callback === "function") {
-          callback({
-            messageBlockList: [
-              {
-                id: 0,
-              },
-              {
-                id: 1,
-              },
-              {
-                id: 2,
-              },
-              {
-                id: 3,
-              },
-              {
-                id: 4,
-              },
-            ],
-          });
-        }
-        return Promise.resolve(returnValue);
-      }),
-      updateTargetingParameters: sandbox.stub().resolves(returnValue),
-      unblockMessageById: sandbox.stub().resolves(returnValue),
-      unblockAll: sandbox.stub().resolves(returnValue),
+    const router = new _ASRouter();
+    [
+      "_updateOnboardingState",
+      "addImpression",
+      "addPreviewEndpoint",
+      "evaluateExpression",
+      "forceAttribution",
+      "forceWNPanel",
+      "closeWNPanel",
+      "resetGroupsState",
+    ].forEach(method => sandbox.stub(router, `${method}`).resolves());
+    [
+      "blockMessageById",
+      "loadMessagesFromAllProviders",
+      "sendNewTabMessage",
+      "sendTriggerMessage",
+      "routeCFRMessage",
+      "setMessageById",
+      "updateTargetingParameters",
+      "unblockMessageById",
+      "unblockAll",
+    ].forEach(method =>
+      sandbox.stub(router, `${method}`).resolves(returnValue)
+    );
+    router._storage = {
+      set: sandbox.stub().resolves(),
+      get: sandbox.stub().resolves(),
     };
+    sandbox.stub(router, "setState").callsFake(callback => {
+      if (typeof callback === "function") {
+        callback({
+          messageBlockList: [
+            {
+              id: 0,
+            },
+            {
+              id: 1,
+            },
+            {
+              id: 2,
+            },
+            {
+              id: 3,
+            },
+            {
+              id: 4,
+            },
+          ],
+        });
+      }
+      return Promise.resolve(returnValue);
+    });
     const preferences = {
       enableOrDisableProvider: sandbox.stub(),
       resetProviderPref: sandbox.stub(),
@@ -351,7 +357,7 @@ describe("ASRouterParentProcessMessageHandler", () => {
       });
     });
     describe("MODIFY_MESSAGE_JSON action", () => {
-      it("default calls sendMessage", async () => {
+      it("default calls routeCFRMessage", async () => {
         const result = await handler.handleMessage(
           msg.MODIFY_MESSAGE_JSON,
           {
@@ -359,21 +365,21 @@ describe("ASRouterParentProcessMessageHandler", () => {
               text: "something",
             },
           },
-          { id: 100, browser: { ownerGlobal: {} } }
+          { browser: { ownerGlobal: {} }, id: 100 }
         );
-        assert.calledOnce(config.router.sendMessage);
+        assert.calledOnce(config.router.routeCFRMessage);
         assert.calledWith(
-          config.router.sendMessage,
+          config.router.routeCFRMessage,
           { text: "something" },
+          { ownerGlobal: {} },
           { content: { text: "something" } },
-          true,
-          { ownerGlobal: {} }
+          true
         );
         assert.deepEqual(result, { value: 1 });
       });
     });
     describe("OVERRIDE_MESSAGE action", () => {
-      it("default calls sendMessage", async () => {
+      it("default calls setMessageById", async () => {
         const result = await handler.handleMessage(
           msg.OVERRIDE_MESSAGE,
           {
