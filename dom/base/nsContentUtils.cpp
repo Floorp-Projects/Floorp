@@ -4040,9 +4040,7 @@ nsIContentPolicy* nsContentUtils::GetContentPolicy() {
 // static
 bool nsContentUtils::IsEventAttributeName(nsAtom* aName, int32_t aType) {
   const char16_t* name = aName->GetUTF16String();
-  if (name[0] != 'o' || name[1] != 'n' ||
-      (aName == nsGkAtoms::onformdata &&
-       !mozilla::StaticPrefs::dom_formdata_event_enabled())) {
+  if (name[0] != 'o' || name[1] != 'n') {
     return false;
   }
 
