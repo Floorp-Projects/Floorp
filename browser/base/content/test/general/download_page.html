@@ -32,11 +32,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=676619
         <li><a href="download_with_content_disposition_header.sjs?attachment=none"
             download="download_page_4.txt" id="link11">Download "download_page_4.txt"</a></li>
         <li><a href="http://example.com/"
-                download="example.com" id="link12" target="_blank">Download "example.com"</a></li>
+            download="example.com" id="link12" target="_blank">Download "example.com"</a></li>
         <li><a href="video.ogg"
-                download="no file extension" id="link13">Download "force extension"</a></li>
+            download="no file extension" id="link13">Download "force extension"</a></li>
         <li><a href="dummy.ics"
-                download="dummy.not-ics" id="link14">Download "dummy.not-ics"</a></li>
+            download="dummy.not-ics" id="link14">Download "dummy.not-ics"</a></li>
+        <li><a href="redirect_download.sjs?inline=download_page_3.txt"
+            download="not_used.txt" id="link15">Download "download_page_3.txt"</a></li>
+        <li><a href="redirect_download.sjs?attachment=download_page_3.txt"
+            download="not_used.txt" id="link16">Download "download_page_3.txt"</a></li>
+        <li><a href="redirect_download.sjs?inline=none"
+            download="download_page_4.txt" id="link17">Download "download_page_4.txt"</a></li>
+        <li><a href="redirect_download.sjs?attachment=none"
+            download="download_page_4.txt" id="link18">Download "download_page_4.txt"</a></li>
     </ul>
     <div id="unload-flag">Okay</div>
 

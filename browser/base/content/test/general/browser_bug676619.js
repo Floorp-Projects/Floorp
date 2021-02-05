@@ -106,6 +106,11 @@ async function runTest(url) {
     Services.prefs.clearUserPref(PREF);
   }
 
+  await testLink("link15", "download_page_3.txt");
+  await testLink("link16", "download_page_3.txt");
+  await testLink("link17", "download_page_4.txt");
+  await testLink("link18", "download_page_4.txt");
+
   BrowserTestUtils.removeTab(tab);
 }
 
