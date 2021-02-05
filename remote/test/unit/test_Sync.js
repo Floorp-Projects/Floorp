@@ -4,9 +4,7 @@
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const { PollPromise } = ChromeUtils.import(
-  "chrome://remote/content/shared/Sync.jsm"
-);
+const { PollPromise } = ChromeUtils.import("chrome://remote/content/Sync.jsm");
 
 /**
  * Mimic a DOM node for listening for events.
