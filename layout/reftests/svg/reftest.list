@@ -37,7 +37,7 @@ needs-focus == autofocus-02b.svg pass.svg
 == baseline-middle-01.svg pass.svg
 
 == blend-color-burn.svg blend-color-burn-ref.svg
-== blend-color-dodge.svg blend-color-dodge-ref.svg
+fuzzy-if(winWidget&&gpuProcess&&!d2d,0-1,0-1600) == blend-color-dodge.svg blend-color-dodge-ref.svg
 # == blend-color.svg blend-color-ref.svg
 == blend-darken.svg blend-darken-ref.svg
 == blend-difference.svg blend-difference-ref.svg
