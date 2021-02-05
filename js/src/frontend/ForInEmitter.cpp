@@ -57,7 +57,7 @@ bool ForInEmitter::emitInitialize() {
     //              [stack] ITER NEXTITERVAL? ISNOITER
     return false;
   }
-  if (!bce_->emitJump(JSOp::IfNe, &loopInfo_->breaks)) {
+  if (!bce_->emitJump(JSOp::JumpIfTrue, &loopInfo_->breaks)) {
     //              [stack] ITER NEXTITERVAL?
     return false;
   }
