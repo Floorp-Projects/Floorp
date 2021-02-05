@@ -907,21 +907,6 @@ static constexpr ABIFunctionType MakeABIFunctionType(
   return ABIFunctionType(detail::MakeABIFunctionType(ret, args));
 }
 
-enum class BarrierKind : uint32_t {
-  // No barrier is needed.
-  NoBarrier,
-
-  // The barrier only has to check the value's type tag is in the TypeSet.
-  // Specific object types don't have to be checked.
-  TypeTagOnly,
-
-  // Check if the value is in the TypeSet, including the object type if it's
-  // an object.
-  TypeSet
-};
-
-enum ReprotectCode { Reprotect = true, DontReprotect = false };
-
 // Rounding modes for round instructions.
 enum class RoundingMode { Down, Up, NearestTiesToEven, TowardsZero };
 
