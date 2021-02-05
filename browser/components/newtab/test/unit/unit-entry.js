@@ -66,13 +66,6 @@ class JSWindowActorChild {
   }
 }
 
-class ExperimentFeature {
-  isEnabled() {}
-  getValue() {}
-  onUpdate() {}
-  off() {}
-}
-
 const TEST_GLOBAL = {
   JSWindowActorParent,
   JSWindowActorChild,
@@ -441,7 +434,6 @@ const TEST_GLOBAL = {
     on: () => {},
     off: () => {},
   },
-  ExperimentFeature,
   TelemetryEnvironment: {
     setExperimentActive() {},
     currentEnvironment: {
