@@ -183,7 +183,6 @@ bool CodeGeneratorShared::generateOutOfLineCode() {
     JitSpew(JitSpew_Codegen, "# Emitting out of line code");
 
     masm.setFramePushed(outOfLineCode_[i]->framePushed());
-    lastPC_ = outOfLineCode_[i]->pc();
     outOfLineCode_[i]->bind(&masm);
 
     outOfLineCode_[i]->generate(this);
