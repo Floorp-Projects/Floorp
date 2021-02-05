@@ -2765,8 +2765,12 @@ static bool GenerateTrapExit(MacroAssembler& masm, Label* throwLabel,
 // should only be called after the caller has reported an error.
 static bool GenerateThrowStub(MacroAssembler& masm, Label* throwLabel,
                               Offsets* offsets) {
+  Register scratch = ABINonArgReturnReg0;
+  Register scratch2 = ABINonArgReturnReg1;
+
   AssertExpectedSP(masm);
   masm.haltingAlign(CodeAlignment);
+  masm.setFramePushed(0);
 
   masm.bind(throwLabel);
 
@@ -2781,15 +2785,23 @@ static bool GenerateThrowStub(MacroAssembler& masm, Label* throwLabel,
 
   // Allocate space for exception or regular resume information.
   masm.reserveStack(sizeof(jit::ResumeFromException));
+  masm.moveStackPtrTo(scratch);
 
   MIRTypeVector handleThrowTypes;
   MOZ_ALWAYS_TRUE(handleThrowTypes.append(MIRType::Pointer));
 
+  unsigned frameSize =
+      StackDecrementForCall(ABIStackAlignment, masm.framePushed(),
+                            StackArgBytesForNativeABI(handleThrowTypes));
+  masm.reserveStack(frameSize);
+  masm.assertStackAlignment(ABIStackAlignment);
+
   ABIArgMIRTypeIter i(handleThrowTypes);
   if (i->kind() == ABIArg::GPR) {
-    masm.moveStackPtrTo(i->gpr());
+    masm.movePtr(scratch, i->gpr());
   } else {
-    masm.storeStackPtr(Address(masm.getStackPointer(), i->offsetFromArgBase()));
+    masm.storePtr(scratch,
+                  Address(masm.getStackPointer(), i->offsetFromArgBase()));
   }
   i++;
   MOZ_ASSERT(i.done());
@@ -2802,8 +2814,6 @@ static bool GenerateThrowStub(MacroAssembler& masm, Label* throwLabel,
   // address of the handler to jump to and the FP/SP values to restore.
   masm.call(SymbolicAddress::HandleThrow);
 
-  Register scratch = ABINonArgReturnReg0;
-  Register scratch2 = ABINonArgReturnReg1;
   Label resumeCatch, leaveWasm;
 
   masm.load32(Address(ReturnReg, offsetof(jit::ResumeFromException, kind)),
