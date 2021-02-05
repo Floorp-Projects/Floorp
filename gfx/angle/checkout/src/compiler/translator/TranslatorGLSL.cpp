@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2013 The ANGLE Project Authors. All rights reserved.
+// Copyright 2002 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -11,7 +11,7 @@
 #include "compiler/translator/ExtensionGLSL.h"
 #include "compiler/translator/OutputGLSL.h"
 #include "compiler/translator/VersionGLSL.h"
-#include "compiler/translator/tree_ops/EmulatePrecision.h"
+#include "compiler/translator/tree_ops/RewriteRowMajorMatrices.h"
 #include "compiler/translator/tree_ops/RewriteTexelFetchOffset.h"
 #include "compiler/translator/tree_ops/RewriteUnaryMinusOperatorFloat.h"
 
@@ -44,7 +44,7 @@ void TranslatorGLSL::initBuiltInFunctionEmulator(BuiltInFunctionEmulator *emu,
     InitBuiltInFunctionEmulatorForGLSLMissingFunctions(emu, getShaderType(), targetGLSLVersion);
 }
 
-void TranslatorGLSL::translate(TIntermBlock *root,
+bool TranslatorGLSL::translate(TIntermBlock *root,
                                ShCompileOptions compileOptions,
                                PerformanceDiagnostics * /*perfDiagnostics*/)
 {
@@ -95,24 +95,31 @@ void TranslatorGLSL::translate(TIntermBlock *root,
 
     if ((compileOptions & SH_REWRITE_TEXELFETCHOFFSET_TO_TEXELFETCH) != 0)
     {
-        sh::RewriteTexelFetchOffset(root, getSymbolTable(), getShaderVersion());
+        if (!sh::RewriteTexelFetchOffset(this, root, getSymbolTable(), getShaderVersion()))
+        {
+            return false;
+        }
     }
 
     if ((compileOptions & SH_REWRITE_FLOAT_UNARY_MINUS_OPERATOR) != 0)
     {
-        sh::RewriteUnaryMinusOperatorFloat(root);
+        if (!sh::RewriteUnaryMinusOperatorFloat(this, root))
+        {
+            return false;
+        }
     }
 
-    bool precisionEmulation =
-        getResources().WEBGL_debug_shader_precision && getPragma().debugShaderPrecision;
-
-    if (precisionEmulation)
+    if ((compileOptions & SH_REWRITE_ROW_MAJOR_MATRICES) != 0 && getShaderVersion() >= 300)
     {
-        EmulatePrecision emulatePrecision(&getSymbolTable());
-        root->traverse(&emulatePrecision);
-        emulatePrecision.updateTree();
-        emulatePrecision.writeEmulationHelpers(sink, getShaderVersion(), getOutputType());
+        if (!RewriteRowMajorMatrices(this, root, &getSymbolTable()))
+        {
+            return false;
+        }
     }
+
+    bool precisionEmulation = false;
+    if (!emulatePrecisionIfNeeded(root, sink, &precisionEmulation, getOutputType()))
+        return false;
 
     // Write emulated built-in functions if needed.
     if (!getBuiltInFunctionEmulator().isOutputEmpty())
@@ -192,6 +199,8 @@ void TranslatorGLSL::translate(TIntermBlock *root,
             sink << "out vec4 angle_SecondaryFragData[" << getResources().MaxDualSourceDrawBuffers
                  << "];\n";
         }
+
+        EmitEarlyFragmentTestsGLSL(*this, sink);
     }
 
     if (getShaderType() == GL_COMPUTE_SHADER)
@@ -212,6 +221,8 @@ void TranslatorGLSL::translate(TIntermBlock *root,
                            compileOptions);
 
     root->traverse(&outputGLSL);
+
+    return true;
 }
 
 bool TranslatorGLSL::shouldFlattenPragmaStdglInvariantAll()
@@ -243,6 +254,9 @@ void TranslatorGLSL::writeVersion(TIntermNode *root)
 
 void TranslatorGLSL::writeExtensionBehavior(TIntermNode *root, ShCompileOptions compileOptions)
 {
+    bool usesTextureCubeMapArray = false;
+    bool usesTextureBuffer       = false;
+
     TInfoSinkBase &sink                   = getInfoSink().obj;
     const TExtensionBehavior &extBehavior = getExtensionBehavior();
     for (const auto &iter : extBehavior)
@@ -279,7 +293,12 @@ void TranslatorGLSL::writeExtensionBehavior(TIntermNode *root, ShCompileOptions 
             (iter.first == TExtension::OVR_multiview) || (iter.first == TExtension::OVR_multiview2);
         if (isMultiview)
         {
-            EmitMultiviewGLSL(*this, compileOptions, iter.second, sink);
+            // Only either OVR_multiview or OVR_multiview2 should be emitted.
+            if ((iter.first != TExtension::OVR_multiview) ||
+                !IsExtensionEnabled(extBehavior, TExtension::OVR_multiview2))
+            {
+                EmitMultiviewGLSL(*this, compileOptions, iter.first, iter.second, sink);
+            }
         }
 
         // Support ANGLE_texture_multisample extension on GLSL300
@@ -288,6 +307,20 @@ void TranslatorGLSL::writeExtensionBehavior(TIntermNode *root, ShCompileOptions 
         {
             sink << "#extension GL_ARB_texture_multisample : " << GetBehaviorString(iter.second)
                  << "\n";
+        }
+
+        if ((iter.first == TExtension::OES_texture_cube_map_array ||
+             iter.first == TExtension::EXT_texture_cube_map_array) &&
+            (iter.second == EBhRequire || iter.second == EBhEnable))
+        {
+            usesTextureCubeMapArray = true;
+        }
+
+        if ((iter.first == TExtension::OES_texture_buffer ||
+             iter.first == TExtension::EXT_texture_buffer) &&
+            (iter.second == EBhRequire || iter.second == EBhEnable))
+        {
+            usesTextureBuffer = true;
         }
     }
 
@@ -307,6 +340,35 @@ void TranslatorGLSL::writeExtensionBehavior(TIntermNode *root, ShCompileOptions 
         // on drivers that don't have the extension at all as it would break WebGL 1 for
         // some users.
         sink << "#extension GL_ARB_gpu_shader5 : enable\n";
+        sink << "#extension GL_EXT_gpu_shader5 : enable\n";
+    }
+
+    if (usesTextureCubeMapArray)
+    {
+        if (getOutputType() >= SH_GLSL_COMPATIBILITY_OUTPUT &&
+            getOutputType() < SH_GLSL_400_CORE_OUTPUT)
+        {
+            sink << "#extension GL_ARB_texture_cube_map_array : enable\n";
+        }
+        else if (getOutputType() == SH_ESSL_OUTPUT && getShaderVersion() < 320)
+        {
+            sink << "#extension GL_OES_texture_cube_map_array : enable\n";
+            sink << "#extension GL_EXT_texture_cube_map_array : enable\n";
+        }
+    }
+
+    if (usesTextureBuffer)
+    {
+        if (getOutputType() >= SH_GLSL_COMPATIBILITY_OUTPUT &&
+            getOutputType() < SH_GLSL_400_CORE_OUTPUT)
+        {
+            sink << "#extension GL_ARB_texture_buffer_objects : enable\n";
+        }
+        else if (getOutputType() == SH_ESSL_OUTPUT && getShaderVersion() < 320)
+        {
+            sink << "#extension GL_OES_texture_buffer : enable\n";
+            sink << "#extension GL_EXT_texture_buffer : enable\n";
+        }
     }
 
     TExtensionGLSL extensionGLSL(getOutputType());

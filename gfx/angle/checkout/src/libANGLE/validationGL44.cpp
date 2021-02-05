@@ -11,27 +11,27 @@
 namespace gl
 {
 
-bool ValidateBindBuffersBase(Context *context,
+bool ValidateBindBuffersBase(const Context *context,
                              GLenum target,
                              GLuint first,
                              GLsizei count,
-                             const GLuint *buffers)
+                             const BufferID *buffers)
 {
     return true;
 }
 
-bool ValidateBindBuffersRange(Context *context,
+bool ValidateBindBuffersRange(const Context *context,
                               GLenum target,
                               GLuint first,
                               GLsizei count,
-                              const GLuint *buffers,
+                              const BufferID *buffers,
                               const GLintptr *offsets,
                               const GLsizeiptr *sizes)
 {
     return true;
 }
 
-bool ValidateBindImageTextures(Context *context,
+bool ValidateBindImageTextures(const Context *context,
                                GLuint first,
                                GLsizei count,
                                const GLuint *textures)
@@ -39,28 +39,34 @@ bool ValidateBindImageTextures(Context *context,
     return true;
 }
 
-bool ValidateBindSamplers(Context *context, GLuint first, GLsizei count, const GLuint *samplers)
+bool ValidateBindSamplers(const Context *context,
+                          GLuint first,
+                          GLsizei count,
+                          const GLuint *samplers)
 {
     return true;
 }
 
-bool ValidateBindTextures(Context *context, GLuint first, GLsizei count, const GLuint *textures)
+bool ValidateBindTextures(const Context *context,
+                          GLuint first,
+                          GLsizei count,
+                          const GLuint *textures)
 {
     return true;
 }
 
-bool ValidateBindVertexBuffers(Context *context,
+bool ValidateBindVertexBuffers(const Context *context,
                                GLuint first,
                                GLsizei count,
-                               const GLuint *buffers,
+                               const BufferID *buffers,
                                const GLintptr *offsets,
                                const GLsizei *strides)
 {
     return true;
 }
 
-bool ValidateBufferStorage(Context *context,
-                           GLenum target,
+bool ValidateBufferStorage(const Context *context,
+                           BufferBinding targetPacked,
                            GLsizeiptr size,
                            const void *data,
                            GLbitfield flags)
@@ -68,8 +74,8 @@ bool ValidateBufferStorage(Context *context,
     return true;
 }
 
-bool ValidateClearTexImage(Context *context,
-                           GLuint texture,
+bool ValidateClearTexImage(const Context *context,
+                           TextureID texture,
                            GLint level,
                            GLenum format,
                            GLenum type,
@@ -78,8 +84,8 @@ bool ValidateClearTexImage(Context *context,
     return true;
 }
 
-bool ValidateClearTexSubImage(Context *context,
-                              GLuint texture,
+bool ValidateClearTexSubImage(const Context *context,
+                              TextureID texture,
                               GLint level,
                               GLint xoffset,
                               GLint yoffset,

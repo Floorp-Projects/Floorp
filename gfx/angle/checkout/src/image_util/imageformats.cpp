@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2016 The ANGLE Project Authors. All rights reserved.
+// Copyright 2016 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -1713,6 +1713,83 @@ void R10G10B10A2S::average(R10G10B10A2S *dst, const R10G10B10A2S *src1, const R1
     dst->A = gl::average(src1->A, src2->A);
 }
 
+void R10G10B10X2::readColor(gl::ColorUI *dst, const R10G10B10X2 *src)
+{
+    dst->red   = src->R;
+    dst->green = src->G;
+    dst->blue  = src->B;
+    dst->alpha = 0x3;
+}
+
+void R10G10B10X2::readColor(gl::ColorF *dst, const R10G10B10X2 *src)
+{
+    dst->red   = gl::normalizedToFloat<10>(src->R);
+    dst->green = gl::normalizedToFloat<10>(src->G);
+    dst->blue  = gl::normalizedToFloat<10>(src->B);
+    dst->alpha = 1.0f;
+}
+
+void R10G10B10X2::writeColor(R10G10B10X2 *dst, const gl::ColorUI *src)
+{
+    dst->R = static_cast<uint32_t>(src->red);
+    dst->G = static_cast<uint32_t>(src->green);
+    dst->B = static_cast<uint32_t>(src->blue);
+}
+
+void R10G10B10X2::writeColor(R10G10B10X2 *dst, const gl::ColorF *src)
+{
+    dst->R = gl::floatToNormalized<10, uint32_t>(src->red);
+    dst->G = gl::floatToNormalized<10, uint32_t>(src->green);
+    dst->B = gl::floatToNormalized<10, uint32_t>(src->blue);
+}
+
+void R10G10B10X2::average(R10G10B10X2 *dst, const R10G10B10X2 *src1, const R10G10B10X2 *src2)
+{
+    dst->R = gl::average(src1->R, src2->R);
+    dst->G = gl::average(src1->G, src2->G);
+    dst->B = gl::average(src1->B, src2->B);
+}
+
+void B10G10R10A2::readColor(gl::ColorUI *dst, const B10G10R10A2 *src)
+{
+    dst->red   = src->R;
+    dst->green = src->G;
+    dst->blue  = src->B;
+    dst->alpha = src->A;
+}
+
+void B10G10R10A2::readColor(gl::ColorF *dst, const B10G10R10A2 *src)
+{
+    dst->red   = gl::normalizedToFloat<10>(src->R);
+    dst->green = gl::normalizedToFloat<10>(src->G);
+    dst->blue  = gl::normalizedToFloat<10>(src->B);
+    dst->alpha = gl::normalizedToFloat<2>(src->A);
+}
+
+void B10G10R10A2::writeColor(B10G10R10A2 *dst, const gl::ColorUI *src)
+{
+    dst->R = static_cast<uint32_t>(src->red);
+    dst->G = static_cast<uint32_t>(src->green);
+    dst->B = static_cast<uint32_t>(src->blue);
+    dst->A = static_cast<uint32_t>(src->alpha);
+}
+
+void B10G10R10A2::writeColor(B10G10R10A2 *dst, const gl::ColorF *src)
+{
+    dst->R = gl::floatToNormalized<10, uint32_t>(src->red);
+    dst->G = gl::floatToNormalized<10, uint32_t>(src->green);
+    dst->B = gl::floatToNormalized<10, uint32_t>(src->blue);
+    dst->A = gl::floatToNormalized<2, uint32_t>(src->alpha);
+}
+
+void B10G10R10A2::average(B10G10R10A2 *dst, const B10G10R10A2 *src1, const B10G10R10A2 *src2)
+{
+    dst->R = gl::average(src1->R, src2->R);
+    dst->G = gl::average(src1->G, src2->G);
+    dst->B = gl::average(src1->B, src2->B);
+    dst->A = gl::average(src1->A, src2->A);
+}
+
 void R9G9B9E5::readColor(gl::ColorF *dst, const R9G9B9E5 *src)
 {
     gl::convert999E5toRGBFloats(gl::bitCast<uint32_t>(*src), &dst->red, &dst->green, &dst->blue);
@@ -1762,7 +1839,7 @@ void R11G11B10F::average(R11G11B10F *dst, const R11G11B10F *src1, const R11G11B1
 void D24S8::ReadDepthStencil(DepthStencil *dst, const D24S8 *src)
 {
     dst->depth   = gl::normalizedToFloat<24>(src->D);
-    dst->stencil = gl::getShiftedData<8, 24>(src->S);
+    dst->stencil = src->S;
 }
 
 void D24S8::WriteDepthStencil(D24S8 *dst, const DepthStencil *src)
@@ -1773,32 +1850,34 @@ void D24S8::WriteDepthStencil(D24S8 *dst, const DepthStencil *src)
 
 void S8::ReadDepthStencil(DepthStencil *dst, const S8 *src)
 {
-    UNIMPLEMENTED();
+    dst->depth   = 0;
+    dst->stencil = src->S;
 }
 
 void S8::WriteDepthStencil(S8 *dst, const DepthStencil *src)
 {
-    UNIMPLEMENTED();
+    dst->S = src->stencil & 0xFF;
 }
 
 void D16::ReadDepthStencil(DepthStencil *dst, const D16 *src)
 {
-    UNIMPLEMENTED();
+    dst->depth   = gl::normalizedToFloat(src->D);
+    dst->stencil = 0;
 }
 
 void D16::WriteDepthStencil(D16 *dst, const DepthStencil *src)
 {
-    UNIMPLEMENTED();
+    dst->D = gl::floatToNormalized<uint16_t>(static_cast<float>(src->depth));
 }
 
-void D24::ReadDepthStencil(DepthStencil *dst, const D24 *src)
+void D24X8::ReadDepthStencil(DepthStencil *dst, const D24X8 *src)
 {
-    dst->depth = gl::normalizedToFloat<24>(src->D);
+    dst->depth = gl::normalizedToFloat<24>(src->D & 0x00ffffff);
 }
 
-void D24::WriteDepthStencil(D24 *dst, const DepthStencil *src)
+void D24X8::WriteDepthStencil(D24X8 *dst, const DepthStencil *src)
 {
-    UNIMPLEMENTED();
+    dst->D = gl::floatToNormalized<24, uint32_t>(static_cast<float>(src->depth));
 }
 
 void D32F::ReadDepthStencil(DepthStencil *dst, const D32F *src)
@@ -1808,26 +1887,27 @@ void D32F::ReadDepthStencil(DepthStencil *dst, const D32F *src)
 
 void D32F::WriteDepthStencil(D32F *dst, const DepthStencil *src)
 {
-    UNIMPLEMENTED();
+    dst->D = static_cast<float>(src->depth);
 }
 
 void D32::ReadDepthStencil(DepthStencil *dst, const D32 *src)
 {
-    UNIMPLEMENTED();
+    dst->depth   = gl::normalizedToFloat(src->D);
+    dst->stencil = 0;
 }
 
 void D32::WriteDepthStencil(D32 *dst, const DepthStencil *src)
 {
-    UNIMPLEMENTED();
+    dst->D = gl::floatToNormalized<uint32_t>(static_cast<float>(src->depth));
 }
 
-void D32FS8::ReadDepthStencil(DepthStencil *dst, const D32FS8 *src)
+void D32FS8X24::ReadDepthStencil(DepthStencil *dst, const D32FS8X24 *src)
 {
     dst->depth   = src->D;
-    dst->stencil = gl::getShiftedData<8, 24>(static_cast<uint32_t>(src->S));
+    dst->stencil = src->S;
 }
 
-void D32FS8::WriteDepthStencil(D32FS8 *dst, const DepthStencil *src)
+void D32FS8X24::WriteDepthStencil(D32FS8X24 *dst, const DepthStencil *src)
 {
     dst->D = static_cast<float>(src->depth);
     dst->S = src->stencil & 0xFF;

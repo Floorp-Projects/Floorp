@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2014 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -32,9 +32,9 @@ class Std140PaddingHelper
     Std140PaddingHelper &operator=(const Std140PaddingHelper &other);
 
     int elementIndex() const { return mElementIndex; }
-    int prePadding(const TType &type);
-    TString prePaddingString(const TType &type);
-    TString postPaddingString(const TType &type, bool useHLSLRowMajorPacking);
+    int prePadding(const TType &type, bool forcePadding);
+    TString prePaddingString(const TType &type, bool forcePadding);
+    TString postPaddingString(const TType &type, bool useHLSLRowMajorPacking, bool forcePadding);
 
   private:
     TString next();
@@ -90,7 +90,8 @@ class StructureHLSL : angle::NonCopyable
     void storeStd140ElementIndex(const TStructure &structure, bool useHLSLRowMajorPacking);
     TString defineQualified(const TStructure &structure,
                             bool useHLSLRowMajorPacking,
-                            bool useStd140Packing);
+                            bool useStd140Packing,
+                            bool forcePackingEnd);
     DefinedStructs::iterator defineVariants(const TStructure &structure, const TString &name);
 };
 }  // namespace sh

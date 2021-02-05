@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2017 The ANGLE Project Authors. All rights reserved.
+// Copyright 2017 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -15,6 +15,7 @@
 namespace sh
 {
 
+class TCompiler;
 class TSymbolTable;
 class TSymbolUniqueId;
 
@@ -34,9 +35,9 @@ class TIntermTraverser : angle::NonCopyable
 {
   public:
     POOL_ALLOCATOR_NEW_DELETE
-    TIntermTraverser(bool preVisit,
-                     bool inVisit,
-                     bool postVisit,
+    TIntermTraverser(bool preVisitIn,
+                     bool inVisitIn,
+                     bool postVisitIn,
                      TSymbolTable *symbolTable = nullptr);
     virtual ~TIntermTraverser();
 
@@ -56,7 +57,8 @@ class TIntermTraverser : angle::NonCopyable
     }
     virtual bool visitAggregate(Visit visit, TIntermAggregate *node) { return true; }
     virtual bool visitBlock(Visit visit, TIntermBlock *node) { return true; }
-    virtual bool visitInvariantDeclaration(Visit visit, TIntermInvariantDeclaration *node)
+    virtual bool visitGlobalQualifierDeclaration(Visit visit,
+                                                 TIntermGlobalQualifierDeclaration *node)
     {
         return true;
     }
@@ -89,7 +91,10 @@ class TIntermTraverser : angle::NonCopyable
     // If traversers need to replace nodes, they can add the replacements in
     // mReplacements/mMultiReplacements during traversal and the user of the traverser should call
     // this function after traversal to perform them.
-    void updateTree();
+    //
+    // Compiler is used to validate the tree.  Node is the same given to traverse().  Returns false
+    // if the tree is invalid after update.
+    ANGLE_NO_DISCARD bool updateTree(TCompiler *compiler, TIntermNode *node);
 
   protected:
     void setMaxAllowedDepth(int depth);
@@ -129,10 +134,13 @@ class TIntermTraverser : angle::NonCopyable
     friend void TIntermConstantUnion::traverse(TIntermTraverser *);
     friend void TIntermFunctionPrototype::traverse(TIntermTraverser *);
 
-    TIntermNode *getParentNode() { return mPath.size() <= 1 ? nullptr : mPath[mPath.size() - 2u]; }
+    TIntermNode *getParentNode() const
+    {
+        return mPath.size() <= 1 ? nullptr : mPath[mPath.size() - 2u];
+    }
 
     // Return the nth ancestor of the node being traversed. getAncestorNode(0) == getParentNode()
-    TIntermNode *getAncestorNode(unsigned int n)
+    TIntermNode *getAncestorNode(unsigned int n) const
     {
         if (mPath.size() > n + 1u)
         {
@@ -142,6 +150,12 @@ class TIntermTraverser : angle::NonCopyable
     }
 
     const TIntermBlock *getParentBlock() const;
+
+    TIntermNode *getRootNode() const
+    {
+        ASSERT(!mPath.empty());
+        return mPath.front();
+    }
 
     void pushParentBlock(TIntermBlock *node);
     void incrementParentBlockPos();
@@ -287,7 +301,7 @@ class TLValueTrackingTraverser : public TIntermTraverser
                              bool inVisit,
                              bool postVisit,
                              TSymbolTable *symbolTable);
-    virtual ~TLValueTrackingTraverser() {}
+    ~TLValueTrackingTraverser() override {}
 
     void traverseBinary(TIntermBinary *node) final;
     void traverseUnary(TIntermUnary *node) final;

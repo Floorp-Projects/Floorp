@@ -6,13 +6,13 @@ DEFINES["ANGLE_CAPTURE_ENABLED"] = "0"
 DEFINES["ANGLE_ENABLE_D3D11"] = True
 DEFINES["ANGLE_ENABLE_D3D9"] = True
 # DEFINES["ANGLE_IS_64_BIT_CPU"] = True
+# DEFINES["ANGLE_IS_WIN"] = True
+# DEFINES["ANGLE_PRELOADED_D3DCOMPILER_MODULE_NAMES"] = "{ "d3dcompiler_47.dll", "d3dcompiler_46.dll", "d3dcompiler_43.dll" }"
 # DEFINES["CERT_CHAIN_PARA_HAS_EXTRA_FIELDS"] = True
-# DEFINES["CHROMIUM_BUILD"] = True
-DEFINES["CR_CLANG_REVISION"] = '"357692-1"'
+DEFINES["CR_CLANG_REVISION"] = '"llvmorg-12-init-11060-g118c3f3c-1"'
 DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
 DEFINES["EGL_EGLEXT_PROTOTYPES"] = True
 DEFINES["EGL_EGL_PROTOTYPES"] = "1"
-# DEFINES["FULL_SAFE_BROWSING"] = True
 DEFINES["GL_API"] = ""
 DEFINES["GL_APICALL"] = ""
 DEFINES["GL_GLES_PROTOTYPES"] = "1"
@@ -21,12 +21,9 @@ DEFINES["LIBANGLE_IMPLEMENTATION"] = True
 DEFINES["LIBGLESV2_IMPLEMENTATION"] = True
 # DEFINES["NDEBUG"] = True
 DEFINES["NOMINMAX"] = True
-# DEFINES["NO_TCMALLOC"] = True
-DEFINES["NTDDI_VERSION"] = "NTDDI_WIN10_RS2"
+# DEFINES["NTDDI_VERSION"] = "NTDDI_WIN10_VB"
 # DEFINES["NVALGRIND"] = True
 # DEFINES["PSAPI_VERSION"] = "2"
-# DEFINES["SAFE_BROWSING_CSD"] = True
-# DEFINES["SAFE_BROWSING_DB_LOCAL"] = True
 DEFINES["UNICODE"] = True
 # DEFINES["USE_AURA"] = "1"
 # DEFINES["WIN32"] = True
@@ -41,7 +38,6 @@ DEFINES["_HAS_EXCEPTIONS"] = "0"
 DEFINES["_SCL_SECURE_NO_DEPRECATE"] = True
 DEFINES["_SECURE_ATL"] = True
 DEFINES["_UNICODE"] = True
-# DEFINES["_USING_V110_SDK71_"] = True
 # DEFINES["_WIN32_WINNT"] = "0x0A00"
 # DEFINES["_WINDOWS"] = True
 # DEFINES["__STD_C"] = True
@@ -51,44 +47,80 @@ LOCAL_INCLUDES += [
     "../../checkout/out/gen/angle/",
     "../../checkout/src/",
     "../../checkout/src/common/third_party/base/",
+    "../../checkout/third_party/zlib/",
+    "../../checkout/third_party/zlib/google/",
 ]
 
 # CXXFLAGS += [
+#     "-add-plugin",
 #     "-D__DATE__=",
 #     "-D__TIME__=",
 #     "-D__TIMESTAMP__=",
+#     "-debug-info-kind=constructor",
 #     "-fcolor-diagnostics",
 #     "-fcomplete-member-pointers",
 #     "-fcrash-diagnostics-dir=../tools/clang/crashreports",
 #     "-fdebug-compilation-dir",
 #     "-fmerge-all-constants",
-#     "-fmsc-version=1911",
-#     "-fno-standalone-debug",
+#     "-fmsc-version=1916",
+#     "-ftrivial-auto-var-init=pattern",
 #     "-gcodeview-ghash",
 #     "-instcombine-lower-dbg-declare=0",
 #     "-m64",
 #     "-mllvm",
 #     "-no-canonical-prefixes",
+#     "-Wbad-function-cast",
+#     "-Wconditional-uninitialized",
+#     "-Wdeprecated-copy",
+#     "-Wexit-time-destructors",
 #     "-Wextra-semi",
+#     "-Wextra-semi-stmt",
+#     "-Wfloat-conversion",
+#     "-Wglobal-constructors",
 #     "-Wheader-hygiene",
 #     "-Wimplicit-fallthrough",
+#     "-Winconsistent-missing-destructor-override",
+#     "-Wmax-tokens",
+#     "-Wmissing-field-initializers",
+#     "-Wnewline-eof",
+#     "-Wno-builtin-assume-aligned-alignment",
 #     "-Wno-builtin-macro-redefined",
 #     "-Wno-c++11-narrowing",
+#     "-Wno-deprecated-copy",
+#     "-Wno-final-dtor-non-final-class",
 #     "-Wno-ignored-pragma-optimize",
+#     "-Wno-implicit-int-float-conversion",
 #     "-Wno-missing-field-initializers",
+#     "-Wno-non-c-typedef-for-linkage",
 #     "-Wno-nonportable-include-path",
+#     "-Wno-psabi",
+#     "-Wno-trigraphs",
 #     "-Wno-undefined-var-template",
 #     "-Wno-unneeded-internal-declaration",
 #     "-Wno-unused-parameter",
 #     "-Wnon-virtual-dtor",
+#     "-Wparentheses",
+#     "-Wrange-loop-analysis",
+#     "-Wredundant-parens",
+#     "-Wreturn-std-move-in-c++11",
+#     "-Wshadow-field",
+#     "-Wshorten-64-to-32",
+#     "-Wstrict-prototypes",
 #     "-Wstring-conversion",
+#     "-Wsuggest-destructor-override",
+#     "-Wsuggest-override",
 #     "-Wtautological-overlap-compare",
+#     "-Wtautological-type-limit-compare",
 #     "-Wthread-safety",
+#     "-Wundefined-reinterpret-cast",
 #     "-Wunneeded-internal-declaration",
+#     "-Wunreachable-code",
+#     "-Wweak-template-vtables",
 #     "-Xclang",
 #     ".",
 #     "/bigobj",
 #     "/Brepro",
+#     "/D__WRL_ENABLE_FUNCTION_STATICS__",
 #     "/FS",
 #     "/GR-",
 #     "/guard:cf,nochecks",
@@ -144,6 +176,7 @@ LOCAL_INCLUDES += [
 #     "/wd4995",
 #     "/wd4996",
 #     "/we4244",
+#     "/we4312",
 #     "/we4456",
 #     "/we4458",
 #     "/we4715",
@@ -154,6 +187,8 @@ LOCAL_INCLUDES += [
 #     "/Z7",
 #     "/Zc:inline",
 #     "/Zc:sizedDealloc-",
+#     "/Zc:twoPhase",
+#     "find-bad-constructs",
 # ]
 
 SOURCES += [
@@ -175,13 +210,14 @@ SOURCES += [
     "../../checkout/src/libANGLE/es3_copy_conversion_table_autogen.cpp",
     "../../checkout/src/libANGLE/Fence.cpp",
     "../../checkout/src/libANGLE/format_map_autogen.cpp",
+    "../../checkout/src/libANGLE/format_map_desktop.cpp",
     "../../checkout/src/libANGLE/formatutils.cpp",
     "../../checkout/src/libANGLE/Framebuffer.cpp",
     "../../checkout/src/libANGLE/FramebufferAttachment.cpp",
+    "../../checkout/src/libANGLE/FrameCapture_mock.cpp",
     "../../checkout/src/libANGLE/GLES1Renderer.cpp",
     "../../checkout/src/libANGLE/GLES1State.cpp",
     "../../checkout/src/libANGLE/HandleAllocator.cpp",
-    "../../checkout/src/libANGLE/HandleRangeAllocator.cpp",
     "../../checkout/src/libANGLE/Image.cpp",
     "../../checkout/src/libANGLE/ImageIndex.cpp",
     "../../checkout/src/libANGLE/IndexRangeCache.cpp",
@@ -189,15 +225,20 @@ SOURCES += [
     "../../checkout/src/libANGLE/MemoryObject.cpp",
     "../../checkout/src/libANGLE/MemoryProgramCache.cpp",
     "../../checkout/src/libANGLE/Observer.cpp",
-    "../../checkout/src/libANGLE/Path.cpp",
+    "../../checkout/src/libANGLE/Overlay.cpp",
+    "../../checkout/src/libANGLE/Overlay_autogen.cpp",
+    "../../checkout/src/libANGLE/Overlay_font_autogen.cpp",
+    "../../checkout/src/libANGLE/OverlayWidgets.cpp",
     "../../checkout/src/libANGLE/Platform.cpp",
     "../../checkout/src/libANGLE/Program.cpp",
+    "../../checkout/src/libANGLE/ProgramExecutable.cpp",
     "../../checkout/src/libANGLE/ProgramLinkedResources.cpp",
     "../../checkout/src/libANGLE/ProgramPipeline.cpp",
     "../../checkout/src/libANGLE/Query.cpp",
     "../../checkout/src/libANGLE/queryconversions.cpp",
     "../../checkout/src/libANGLE/queryutils.cpp",
     "../../checkout/src/libANGLE/Renderbuffer.cpp",
+    "../../checkout/src/libANGLE/renderer/BufferImpl.cpp",
     "../../checkout/src/libANGLE/renderer/ContextImpl.cpp",
     "../../checkout/src/libANGLE/renderer/d3d/BufferD3D.cpp",
     "../../checkout/src/libANGLE/renderer/d3d/CompilerD3D.cpp",
@@ -207,8 +248,6 @@ SOURCES += [
     "../../checkout/src/libANGLE/renderer/d3d/d3d11/Context11.cpp",
     "../../checkout/src/libANGLE/renderer/d3d/d3d11/converged/CompositorNativeWindow11.cpp",
     "../../checkout/src/libANGLE/renderer/d3d/d3d11/DebugAnnotator11.cpp",
-    "../../checkout/src/libANGLE/renderer/d3d/d3d11/dxgi_format_map_autogen.cpp",
-    "../../checkout/src/libANGLE/renderer/d3d/d3d11/dxgi_support_table_autogen.cpp",
     "../../checkout/src/libANGLE/renderer/d3d/d3d11/ExternalImageSiblingImpl11.cpp",
     "../../checkout/src/libANGLE/renderer/d3d/d3d11/Fence11.cpp",
     "../../checkout/src/libANGLE/renderer/d3d/d3d11/formatutils11.cpp",
@@ -280,11 +319,17 @@ SOURCES += [
     "../../checkout/src/libANGLE/renderer/d3d/TextureD3D.cpp",
     "../../checkout/src/libANGLE/renderer/d3d/VertexBuffer.cpp",
     "../../checkout/src/libANGLE/renderer/d3d/VertexDataManager.cpp",
+    "../../checkout/src/libANGLE/renderer/d3d_format.cpp",
     "../../checkout/src/libANGLE/renderer/DeviceImpl.cpp",
     "../../checkout/src/libANGLE/renderer/DisplayImpl.cpp",
     "../../checkout/src/libANGLE/renderer/driver_utils.cpp",
+    "../../checkout/src/libANGLE/renderer/dxgi_format_map_autogen.cpp",
+    "../../checkout/src/libANGLE/renderer/dxgi_support_table_autogen.cpp",
+    "../../checkout/src/libANGLE/renderer/EGLReusableSync.cpp",
+    "../../checkout/src/libANGLE/renderer/EGLSyncImpl.cpp",
     "../../checkout/src/libANGLE/renderer/Format_table_autogen.cpp",
     "../../checkout/src/libANGLE/renderer/load_functions_table_autogen.cpp",
+    "../../checkout/src/libANGLE/renderer/ProgramPipelineImpl.cpp",
     "../../checkout/src/libANGLE/renderer/QueryImpl.cpp",
     "../../checkout/src/libANGLE/renderer/renderer_utils.cpp",
     "../../checkout/src/libANGLE/renderer/ShaderImpl.cpp",
@@ -307,6 +352,8 @@ SOURCES += [
     "../../checkout/src/libANGLE/validationES2.cpp",
     "../../checkout/src/libANGLE/validationES3.cpp",
     "../../checkout/src/libANGLE/validationES31.cpp",
+    "../../checkout/src/libANGLE/validationES32.cpp",
+    "../../checkout/src/libANGLE/validationESEXT.cpp",
     "../../checkout/src/libANGLE/validationGL1.cpp",
     "../../checkout/src/libANGLE/validationGL11.cpp",
     "../../checkout/src/libANGLE/validationGL12.cpp",
@@ -336,6 +383,7 @@ SOURCES += [
     "../../checkout/src/libGLESv2/entry_points_gles_2_0_autogen.cpp",
     "../../checkout/src/libGLESv2/entry_points_gles_3_0_autogen.cpp",
     "../../checkout/src/libGLESv2/entry_points_gles_3_1_autogen.cpp",
+    "../../checkout/src/libGLESv2/entry_points_gles_3_2_autogen.cpp",
     "../../checkout/src/libGLESv2/entry_points_gles_ext_autogen.cpp",
     "../../checkout/src/libGLESv2/global_state.cpp",
     "../../checkout/src/libGLESv2/libGLESv2_autogen.cpp",
@@ -347,6 +395,7 @@ USE_LIBS += [
     "angle_common",
     "angle_gpu_info_util",
     "angle_image_util",
+    "compression_utils_portable",
     "translator",
 ]
 
@@ -354,6 +403,7 @@ DIRS += [
     "../angle_common",
     "../angle_gpu_info_util",
     "../angle_image_util",
+    "../compression_utils_portable",
     "../translator",
 ]
 
@@ -388,13 +438,16 @@ OS_LIBS += [
 
 # LDFLAGS += [
 #     "--color-diagnostics",
+#     "/call-graph-profile-sort:no",
 #     "/DEBUG:GHASH",
 #     "/DELAYLOAD:d3d9.dll",
 #     "/DYNAMICBASE",
 #     "/FIXED:NO",
+#     "/guard:cf",
 #     "/ignore:4199",
 #     "/ignore:4221",
 #     "/INCREMENTAL:NO",
+#     "/lldignoreenv",
 #     "/MACHINE:X64",
 #     "/NXCOMPAT",
 #     "/OPT:ICF",
@@ -404,7 +457,7 @@ OS_LIBS += [
 #     "/PDBSourcePath:C:/dev/angle/out",
 #     "/PROFILE",
 #     "/SUBSYSTEM:CONSOLE,5.02",
-#     "/TIMESTAMP:1554613200",
+#     "/TIMESTAMP:1604206800",
 #     "/WX",
 # ]
 

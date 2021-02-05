@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2012-2013 The ANGLE Project Authors. All rights reserved.
+// Copyright 2012 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -30,6 +30,25 @@ namespace gl
 class Buffer;
 class Texture;
 
+enum class Command
+{
+    Blit,
+    Clear,
+    CopyImage,
+    Dispatch,
+    Draw,
+    GenerateMipmap,
+    ReadPixels,
+    TexImage,
+    Other
+};
+
+enum class InitState
+{
+    MayNeedInit,
+    Initialized,
+};
+
 struct Rectangle
 {
     Rectangle() : x(0), y(0), width(0), height(0) {}
@@ -53,6 +72,8 @@ struct Rectangle
 
     bool encloses(const gl::Rectangle &inside) const;
 
+    bool empty() const { return width == 0 && height == 0; }
+
     int x;
     int y;
     int width;
@@ -62,7 +83,27 @@ struct Rectangle
 bool operator==(const Rectangle &a, const Rectangle &b);
 bool operator!=(const Rectangle &a, const Rectangle &b);
 
+// Calculate the intersection of two rectangles.  Returns false if the intersection is empty.
 bool ClipRectangle(const Rectangle &source, const Rectangle &clip, Rectangle *intersection);
+// Calculate the smallest rectangle that covers both rectangles.  This rectangle may cover areas
+// not covered by the two rectangles, for example in this situation:
+//
+//   +--+        +----+
+//   | ++-+  ->  |    |
+//   +-++ |      |    |
+//     +--+      +----+
+//
+void GetEnclosingRectangle(const Rectangle &rect1, const Rectangle &rect2, Rectangle *rectUnion);
+// Extend the source rectangle to cover parts (or all of) the second rectangle, in such a way that
+// no area is covered that isn't covered by both rectangles.  For example:
+//
+//             +--+        +--+
+//  source --> |  |        |  |
+//            ++--+-+  ->  |  |
+//            |+--+ |      |  |
+//            +-----+      +--+
+//
+void ExtendRectangle(const Rectangle &source, const Rectangle &extend, Rectangle *extended);
 
 struct Offset
 {
@@ -103,7 +144,8 @@ struct Box
     Box(int x_in, int y_in, int z_in, int width_in, int height_in, int depth_in)
         : x(x_in), y(y_in), z(z_in), width(width_in), height(height_in), depth(depth_in)
     {}
-    Box(const Offset &offset, const Extents &size)
+    template <typename O, typename E>
+    Box(const O &offset, const E &size)
         : x(offset.x),
           y(offset.y),
           z(offset.z),
@@ -114,6 +156,9 @@ struct Box
     bool operator==(const Box &other) const;
     bool operator!=(const Box &other) const;
     Rectangle toRect() const;
+
+    // Whether the Box has offset 0 and the same extents as argument.
+    bool coversSameExtent(const Extents &size) const;
 
     int x;
     int y;
@@ -127,6 +172,7 @@ struct RasterizerState final
 {
     // This will zero-initialize the struct, including padding.
     RasterizerState();
+    RasterizerState(const RasterizerState &other);
 
     bool cullFace;
     CullFaceMode cullMode;
@@ -136,10 +182,13 @@ struct RasterizerState final
     GLfloat polygonOffsetFactor;
     GLfloat polygonOffsetUnits;
 
+    // pointDrawMode/multiSample are only used in the D3D back-end right now.
     bool pointDrawMode;
     bool multiSample;
 
     bool rasterizerDiscard;
+
+    bool dither;
 };
 
 bool operator==(const RasterizerState &a, const RasterizerState &b);
@@ -150,8 +199,6 @@ struct BlendState final
     // This will zero-initialize the struct, including padding.
     BlendState();
     BlendState(const BlendState &other);
-
-    bool allChannelsMasked() const;
 
     bool blend;
     GLenum sourceBlendRGB;
@@ -165,10 +212,6 @@ struct BlendState final
     bool colorMaskGreen;
     bool colorMaskBlue;
     bool colorMaskAlpha;
-
-    bool sampleAlphaToCoverage;
-
-    bool dither;
 };
 
 bool operator==(const BlendState &a, const BlendState &b);
@@ -179,6 +222,11 @@ struct DepthStencilState final
     // This will zero-initialize the struct, including padding.
     DepthStencilState();
     DepthStencilState(const DepthStencilState &other);
+
+    bool isDepthMaskedOut() const;
+    bool isStencilMaskedOut() const;
+    bool isStencilNoOp() const;
+    bool isStencilBackNoOp() const;
 
     bool depthTest;
     GLenum depthFunc;
@@ -232,6 +280,8 @@ class SamplerState final
     // This will zero-initialize the struct, including padding.
     SamplerState();
     SamplerState(const SamplerState &other);
+
+    SamplerState &operator=(const SamplerState &other);
 
     static SamplerState CreateDefaultForTarget(TextureType type);
 
@@ -385,10 +435,260 @@ using AttributesMask = angle::BitSet<MAX_VERTEX_ATTRIBS>;
 using UniformBlockBindingMask = angle::BitSet<IMPLEMENTATION_MAX_COMBINED_SHADER_UNIFORM_BUFFERS>;
 
 // Used in Framebuffer / Program
-using DrawBufferMask = angle::BitSet<IMPLEMENTATION_MAX_DRAW_BUFFERS>;
+using DrawBufferMask = angle::BitSet8<IMPLEMENTATION_MAX_DRAW_BUFFERS>;
+
+class BlendStateExt final
+{
+    static_assert(IMPLEMENTATION_MAX_DRAW_BUFFERS == 8, "Only up to 8 draw buffers supported.");
+
+  public:
+    template <typename ElementType, size_t ElementCount>
+    struct StorageType final
+    {
+        static_assert(ElementCount <= 256, "ElementCount cannot exceed 256.");
+
+#if defined(ANGLE_IS_64_BIT_CPU)
+        // Always use uint64_t on 64-bit systems
+        static constexpr size_t kBits = 8;
+#else
+        static constexpr size_t kBits = ElementCount > 16 ? 8 : 4;
+#endif
+
+        using Type = typename std::conditional<kBits == 8, uint64_t, uint32_t>::type;
+
+        static constexpr Type kMaxValueMask = (kBits == 8) ? 0xFF : 0xF;
+
+        static constexpr Type GetMask(const size_t drawBuffers)
+        {
+            ASSERT(drawBuffers > 0);
+            ASSERT(drawBuffers <= IMPLEMENTATION_MAX_DRAW_BUFFERS);
+            return static_cast<Type>(0xFFFFFFFFFFFFFFFFull >> (64 - drawBuffers * kBits));
+        }
+
+        // A multiplier that is used to replicate 4- or 8-bit value 8 times.
+        static constexpr Type kReplicator = (kBits == 8) ? 0x0101010101010101ull : 0x11111111;
+
+        // Extract packed `Bits`-bit value of index `index`. `values` variable contains up to 8
+        // packed values.
+        static constexpr ElementType GetValueIndexed(const size_t index, const Type values)
+        {
+            ASSERT(index < IMPLEMENTATION_MAX_DRAW_BUFFERS);
+
+            return static_cast<ElementType>((values >> (index * kBits)) & kMaxValueMask);
+        }
+
+        // Replicate `Bits`-bit value 8 times and mask the result.
+        static constexpr Type GetReplicatedValue(const ElementType value, const Type mask)
+        {
+            ASSERT(static_cast<size_t>(value) <= kMaxValueMask);
+            return (static_cast<size_t>(value) * kReplicator) & mask;
+        }
+
+        // Replace `Bits`-bit value of index `index` in `target` with `value`.
+        static constexpr void SetValueIndexed(const size_t index,
+                                              const ElementType value,
+                                              Type *target)
+        {
+            ASSERT(static_cast<size_t>(value) <= kMaxValueMask);
+            ASSERT(index < IMPLEMENTATION_MAX_DRAW_BUFFERS);
+
+            // Bitmask with set bits that contain the value of index `index`.
+            const Type selector = kMaxValueMask << (index * kBits);
+
+            // Shift the new `value` to its position in the packed value.
+            const Type builtValue = static_cast<Type>(value) << (index * kBits);
+
+            // Mark differing bits of `target` and `builtValue`, then flip the bits on those
+            // positions in `target`.
+            // Taken from https://graphics.stanford.edu/~seander/bithacks.html#MaskedMerge
+            *target = *target ^ ((*target ^ builtValue) & selector);
+        }
+
+        // Compare two packed sets of eight 4-bit values and return an 8-bit diff mask.
+        static constexpr DrawBufferMask GetDiffMask(const uint32_t packedValue1,
+                                                    const uint32_t packedValue2)
+        {
+            uint32_t diff = packedValue1 ^ packedValue2;
+
+            // For each 4-bit value that is different between inputs, set the msb to 1 and other
+            // bits to 0.
+            diff = (diff | ((diff & 0x77777777) + 0x77777777)) & 0x88888888;
+
+            // By this point, `diff` looks like a...b...c...d...e...f...g...h... (dots mean zeros).
+            // To get DrawBufferMask, we need to compress this 32-bit value to 8 bits, i.e. abcdefgh
+
+            // Multiplying the lower half of `diff` by 0x249 (0x200 + 0x40 + 0x8 + 0x1) produces:
+            // ................e...f...g...h... +
+            // .............e...f...g...h...... +
+            // ..........e...f...g...h......... +
+            // .......e...f...g...h............
+            // ________________________________ =
+            // .......e..ef.efgefghfgh.gh..h...
+            //                 ^^^^
+            // Similar operation is applied to the upper word.
+            // This calculation could be replaced with a single PEXT instruction from BMI2 set.
+            diff = ((((diff & 0xFFFF0000) * 0x249) >> 24) & 0xF0) | (((diff * 0x249) >> 12) & 0xF);
+
+            return DrawBufferMask(static_cast<uint8_t>(diff));
+        }
+
+        // Compare two packed sets of eight 8-bit values and return an 8-bit diff mask.
+        static constexpr DrawBufferMask GetDiffMask(const uint64_t packedValue1,
+                                                    const uint64_t packedValue2)
+        {
+            uint64_t diff = packedValue1 ^ packedValue2;
+
+            // For each 8-bit value that is different between inputs, set the msb to 1 and other
+            // bits to 0.
+            diff = (diff | ((diff & 0x7F7F7F7F7F7F7F7F) + 0x7F7F7F7F7F7F7F7F)) & 0x8080808080808080;
+
+            // By this point, `diff` looks like (dots mean zeros):
+            // a.......b.......c.......d.......e.......f.......g.......h.......
+            // To get DrawBufferMask, we need to compress this 64-bit value to 8 bits, i.e. abcdefgh
+
+            // Multiplying `diff` by 0x0002040810204081 produces:
+            // a.......b.......c.......d.......e.......f.......g.......h....... +
+            // .b.......c.......d.......e.......f.......g.......h.............. +
+            // ..c.......d.......e.......f.......g.......h..................... +
+            // ...d.......e.......f.......g.......h............................ +
+            // ....e.......f.......g.......h................................... +
+            // .....f.......g.......h.......................................... +
+            // ......g.......h................................................. +
+            // .......h........................................................
+            // ________________________________________________________________ =
+            // abcdefghbcdefgh.cdefgh..defgh...efgh....fgh.....gh......h.......
+            // ^^^^^^^^
+            // This operation could be replaced with a single PEXT instruction from BMI2 set.
+            diff = 0x0002040810204081 * diff >> 56;
+
+            return DrawBufferMask(static_cast<uint8_t>(diff));
+        }
+    };
+
+    using FactorStorage    = StorageType<BlendFactorType, angle::EnumSize<BlendFactorType>()>;
+    using EquationStorage  = StorageType<BlendEquationType, angle::EnumSize<BlendEquationType>()>;
+    using ColorMaskStorage = StorageType<uint8_t, 16>;
+
+    BlendStateExt(const size_t drawBuffers = 1);
+
+    BlendStateExt &operator=(const BlendStateExt &other);
+
+    ///////// Blending Toggle /////////
+
+    void setEnabled(const bool enabled);
+    void setEnabledIndexed(const size_t index, const bool enabled);
+
+    ///////// Color Write Mask /////////
+
+    static constexpr size_t PackColorMask(const bool red,
+                                          const bool green,
+                                          const bool blue,
+                                          const bool alpha)
+    {
+        return (red ? 1 : 0) | (green ? 2 : 0) | (blue ? 4 : 0) | (alpha ? 8 : 0);
+    }
+
+    static constexpr void UnpackColorMask(const size_t value,
+                                          bool *red,
+                                          bool *green,
+                                          bool *blue,
+                                          bool *alpha)
+    {
+        *red   = static_cast<bool>(value & 1);
+        *green = static_cast<bool>(value & 2);
+        *blue  = static_cast<bool>(value & 4);
+        *alpha = static_cast<bool>(value & 8);
+    }
+
+    ColorMaskStorage::Type expandColorMaskValue(const bool red,
+                                                const bool green,
+                                                const bool blue,
+                                                const bool alpha) const;
+    ColorMaskStorage::Type expandColorMaskIndexed(const size_t index) const;
+    void setColorMask(const bool red, const bool green, const bool blue, const bool alpha);
+    void setColorMaskIndexed(const size_t index, const uint8_t value);
+    void setColorMaskIndexed(const size_t index,
+                             const bool red,
+                             const bool green,
+                             const bool blue,
+                             const bool alpha);
+    uint8_t getColorMaskIndexed(const size_t index) const;
+    void getColorMaskIndexed(const size_t index,
+                             bool *red,
+                             bool *green,
+                             bool *blue,
+                             bool *alpha) const;
+    DrawBufferMask compareColorMask(ColorMaskStorage::Type other) const;
+
+    ///////// Blend Equation /////////
+
+    EquationStorage::Type expandEquationValue(const GLenum mode) const;
+    EquationStorage::Type expandEquationColorIndexed(const size_t index) const;
+    EquationStorage::Type expandEquationAlphaIndexed(const size_t index) const;
+    void setEquations(const GLenum modeColor, const GLenum modeAlpha);
+    void setEquationsIndexed(const size_t index, const GLenum modeColor, const GLenum modeAlpha);
+    void setEquationsIndexed(const size_t index,
+                             const size_t otherIndex,
+                             const BlendStateExt &other);
+    GLenum getEquationColorIndexed(size_t index) const;
+    GLenum getEquationAlphaIndexed(size_t index) const;
+    DrawBufferMask compareEquations(const EquationStorage::Type color,
+                                    const EquationStorage::Type alpha) const;
+
+    ///////// Blend Factors /////////
+
+    FactorStorage::Type expandFactorValue(const GLenum func) const;
+    FactorStorage::Type expandSrcColorIndexed(const size_t index) const;
+    FactorStorage::Type expandDstColorIndexed(const size_t index) const;
+    FactorStorage::Type expandSrcAlphaIndexed(const size_t index) const;
+    FactorStorage::Type expandDstAlphaIndexed(const size_t index) const;
+    void setFactors(const GLenum srcColor,
+                    const GLenum dstColor,
+                    const GLenum srcAlpha,
+                    const GLenum dstAlpha);
+    void setFactorsIndexed(const size_t index,
+                           const GLenum srcColor,
+                           const GLenum dstColor,
+                           const GLenum srcAlpha,
+                           const GLenum dstAlpha);
+    void setFactorsIndexed(const size_t index, const size_t otherIndex, const BlendStateExt &other);
+    GLenum getSrcColorIndexed(size_t index) const;
+    GLenum getDstColorIndexed(size_t index) const;
+    GLenum getSrcAlphaIndexed(size_t index) const;
+    GLenum getDstAlphaIndexed(size_t index) const;
+    DrawBufferMask compareFactors(const FactorStorage::Type srcColor,
+                                  const FactorStorage::Type dstColor,
+                                  const FactorStorage::Type srcAlpha,
+                                  const FactorStorage::Type dstAlpha) const;
+
+    ///////// Data Members /////////
+
+    const FactorStorage::Type mMaxFactorMask;
+    FactorStorage::Type mSrcColor;
+    FactorStorage::Type mDstColor;
+    FactorStorage::Type mSrcAlpha;
+    FactorStorage::Type mDstAlpha;
+
+    const EquationStorage::Type mMaxEquationMask;
+    EquationStorage::Type mEquationColor;
+    EquationStorage::Type mEquationAlpha;
+
+    const ColorMaskStorage::Type mMaxColorMask;
+    ColorMaskStorage::Type mColorMask;
+
+    const DrawBufferMask mMaxEnabledMask;
+    DrawBufferMask mEnabledMask;
+
+    const size_t mMaxDrawBuffers;
+};
+
+// Used in StateCache
+using StorageBuffersMask = angle::BitSet<IMPLEMENTATION_MAX_SHADER_STORAGE_BUFFER_BINDINGS>;
 
 template <typename T>
 using TexLevelArray = std::array<T, IMPLEMENTATION_MAX_TEXTURE_LEVELS>;
+
+using TexLevelMask = angle::BitSet<IMPLEMENTATION_MAX_TEXTURE_LEVELS>;
 
 enum class ComponentType
 {
@@ -455,11 +755,51 @@ bool ValidateComponentTypeMasks(unsigned long outputTypes,
                                 unsigned long outputMask,
                                 unsigned long inputMask);
 
-using ContextID = uintptr_t;
+enum class RenderToTextureImageIndex
+{
+    // The default image of the texture, where data is expected to be.
+    Default = 0,
+
+    // Intermediate multisampled images for EXT_multisampled_render_to_texture.
+    // These values must match log2(SampleCount).
+    IntermediateImage2xMultisampled  = 1,
+    IntermediateImage4xMultisampled  = 2,
+    IntermediateImage8xMultisampled  = 3,
+    IntermediateImage16xMultisampled = 4,
+
+    // We currently only support up to 16xMSAA in backends that use this enum.
+    InvalidEnum = 5,
+    EnumCount   = 5,
+};
+
+template <typename T>
+using RenderToTextureImageMap = angle::PackedEnumMap<RenderToTextureImageIndex, T>;
+
+struct ContextID
+{
+    uint32_t value;
+};
+
+inline bool operator==(ContextID lhs, ContextID rhs)
+{
+    return lhs.value == rhs.value;
+}
+
+inline bool operator!=(ContextID lhs, ContextID rhs)
+{
+    return lhs.value != rhs.value;
+}
+
+inline bool operator<(ContextID lhs, ContextID rhs)
+{
+    return lhs.value < rhs.value;
+}
 
 constexpr size_t kCubeFaceCount = 6;
 
-using TextureMap = angle::PackedEnumMap<TextureType, BindingPointer<Texture>>;
+template <typename T>
+using TextureTypeMap = angle::PackedEnumMap<TextureType, T>;
+using TextureMap     = TextureTypeMap<BindingPointer<Texture>>;
 
 // ShaderVector can contain one item per shader.  It differs from ShaderMap in that the values are
 // not indexed by ShaderType.
@@ -468,6 +808,11 @@ using ShaderVector = angle::FixedVector<T, static_cast<size_t>(ShaderType::EnumC
 
 template <typename T>
 using AttachmentArray = std::array<T, IMPLEMENTATION_MAX_FRAMEBUFFER_ATTACHMENTS>;
+
+template <typename T>
+using AttachmentVector = angle::FixedVector<T, IMPLEMENTATION_MAX_FRAMEBUFFER_ATTACHMENTS>;
+
+using AttachmentsMask = angle::BitSet<IMPLEMENTATION_MAX_FRAMEBUFFER_ATTACHMENTS>;
 
 template <typename T>
 using DrawBuffersArray = std::array<T, IMPLEMENTATION_MAX_DRAW_BUFFERS>;
@@ -483,8 +828,7 @@ using ActiveTextureMask = angle::BitSet<IMPLEMENTATION_MAX_ACTIVE_TEXTURES>;
 template <typename T>
 using ActiveTextureArray = std::array<T, IMPLEMENTATION_MAX_ACTIVE_TEXTURES>;
 
-using ActiveTexturePointerArray = ActiveTextureArray<Texture *>;
-using ActiveTextureTypeArray    = ActiveTextureArray<TextureType>;
+using ActiveTextureTypeArray = ActiveTextureArray<TextureType>;
 
 template <typename T>
 using UniformBuffersArray = std::array<T, IMPLEMENTATION_MAX_UNIFORM_BUFFER_BINDINGS>;
@@ -492,6 +836,9 @@ template <typename T>
 using StorageBuffersArray = std::array<T, IMPLEMENTATION_MAX_SHADER_STORAGE_BUFFER_BINDINGS>;
 template <typename T>
 using AtomicCounterBuffersArray = std::array<T, IMPLEMENTATION_MAX_ATOMIC_COUNTER_BUFFERS>;
+using AtomicCounterBufferMask   = angle::BitSet<IMPLEMENTATION_MAX_ATOMIC_COUNTER_BUFFERS>;
+template <typename T>
+using ImagesArray = std::array<T, IMPLEMENTATION_MAX_IMAGE_UNITS>;
 
 using ImageUnitMask = angle::BitSet<IMPLEMENTATION_MAX_IMAGE_UNITS>;
 
@@ -502,20 +849,90 @@ using TransformFeedbackBuffersArray =
     std::array<T, gl::IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_BUFFERS>;
 
 constexpr size_t kBarrierVectorDefaultSize = 16;
-using BufferBarrierVector                  = angle::FastVector<Buffer *, kBarrierVectorDefaultSize>;
+
+template <typename T>
+using BarrierVector = angle::FastVector<T, kBarrierVectorDefaultSize>;
+
+using BufferBarrierVector = BarrierVector<Buffer *>;
 
 struct TextureAndLayout
 {
     Texture *texture;
     GLenum layout;
 };
-using TextureBarrierVector = angle::FastVector<TextureAndLayout, kBarrierVectorDefaultSize>;
+using TextureBarrierVector = BarrierVector<TextureAndLayout>;
 
 // OffsetBindingPointer.getSize() returns the size specified by the user, which may be larger than
 // the size of the bound buffer. This function reduces the returned size to fit the bound buffer if
 // necessary. Returns 0 if no buffer is bound or if integer overflow occurs.
 GLsizeiptr GetBoundBufferAvailableSize(const OffsetBindingPointer<Buffer> &binding);
 
+// A texture level index.
+template <typename T>
+class LevelIndexWrapper
+{
+  public:
+    LevelIndexWrapper() = default;
+    explicit constexpr LevelIndexWrapper(T levelIndex) : mLevelIndex(levelIndex) {}
+    constexpr LevelIndexWrapper(const LevelIndexWrapper &other) = default;
+    constexpr LevelIndexWrapper &operator=(const LevelIndexWrapper &other) = default;
+
+    constexpr T get() const { return mLevelIndex; }
+
+    LevelIndexWrapper &operator++()
+    {
+        ++mLevelIndex;
+        return *this;
+    }
+    constexpr bool operator<(const LevelIndexWrapper &other) const
+    {
+        return mLevelIndex < other.mLevelIndex;
+    }
+    constexpr bool operator<=(const LevelIndexWrapper &other) const
+    {
+        return mLevelIndex <= other.mLevelIndex;
+    }
+    constexpr bool operator>(const LevelIndexWrapper &other) const
+    {
+        return mLevelIndex > other.mLevelIndex;
+    }
+    constexpr bool operator>=(const LevelIndexWrapper &other) const
+    {
+        return mLevelIndex >= other.mLevelIndex;
+    }
+    constexpr bool operator==(const LevelIndexWrapper &other) const
+    {
+        return mLevelIndex == other.mLevelIndex;
+    }
+    constexpr bool operator!=(const LevelIndexWrapper &other) const
+    {
+        return mLevelIndex != other.mLevelIndex;
+    }
+    constexpr LevelIndexWrapper operator+(T other) const
+    {
+        return LevelIndexWrapper(mLevelIndex + other);
+    }
+    constexpr LevelIndexWrapper operator-(T other) const
+    {
+        return LevelIndexWrapper(mLevelIndex - other);
+    }
+    constexpr T operator-(LevelIndexWrapper other) const { return mLevelIndex - other.mLevelIndex; }
+
+  private:
+    T mLevelIndex;
+};
+
+// A GL texture level index.
+using LevelIndex = LevelIndexWrapper<GLint>;
+
+enum class MultisamplingMode
+{
+    // Regular multisampling
+    Regular = 0,
+    // GL_EXT_multisampled_render_to_texture renderbuffer/texture attachments which perform implicit
+    // resolve of multisampled data.
+    MultisampledRenderToTexture,
+};
 }  // namespace gl
 
 namespace rx

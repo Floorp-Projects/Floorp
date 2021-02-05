@@ -27,10 +27,10 @@ namespace gl
 {
 class Context;
 
-class Semaphore final : public RefCountObject
+class Semaphore final : public RefCountObject<SemaphoreID>
 {
   public:
-    Semaphore(rx::GLImplFactory *factory, GLuint id);
+    Semaphore(rx::GLImplFactory *factory, SemaphoreID id);
     ~Semaphore() override;
 
     void onDestroy(const Context *context) override;
@@ -38,6 +38,7 @@ class Semaphore final : public RefCountObject
     rx::SemaphoreImpl *getImplementation() const { return mImplementation.get(); }
 
     angle::Result importFd(Context *context, HandleType handleType, GLint fd);
+    angle::Result importZirconHandle(Context *context, HandleType handleType, GLuint handle);
 
     angle::Result wait(Context *context,
                        const BufferBarrierVector &bufferBarriers,

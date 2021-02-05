@@ -13,8 +13,9 @@
 #include "common/Optional.h"
 #include "common/PackedEnums.h"
 #include "common/angleutils.h"
+#include "common/entry_points_enum_autogen.h"
 #include "common/mathutil.h"
-#include "libANGLE/entry_points_enum_autogen.h"
+#include "libANGLE/Display.h"
 
 namespace gl
 {
@@ -40,6 +41,12 @@ template <EntryPoint EP>
 struct DefaultReturnValue<EP, GLboolean>
 {
     static constexpr GLboolean kValue = GL_FALSE;
+};
+
+template <EntryPoint EP>
+struct DefaultReturnValue<EP, ShaderProgramID>
+{
+    static constexpr ShaderProgramID kValue = {0};
 };
 
 // Catch-all rules for pointer types.
@@ -83,13 +90,36 @@ constexpr ANGLE_INLINE ReturnType GetDefaultReturnValue()
 }
 
 #if ANGLE_CAPTURE_ENABLED
-#    define ANGLE_CAPTURE(Func, ...)                                                         \
-        CaptureCallToFrameCapture("gl" ANGLE_STRINGIFY(Func), Capture##Func, Validate##Func, \
-                                  __VA_ARGS__)
+#    define ANGLE_CAPTURE(Func, ...) CaptureCallToFrameCapture(Capture##Func, __VA_ARGS__)
 #else
 #    define ANGLE_CAPTURE(...)
 #endif  // ANGLE_CAPTURE_ENABLED
 
+#define FUNC_EVENT(format, ...) \
+    EVENT(nullptr, gl::EntryPoint::Begin, __FUNCTION__, format, __VA_ARGS__)
+
+inline int CID(const Context *context)
+{
+    return context == nullptr ? 0 : static_cast<int>(context->id().value);
+}
 }  // namespace gl
+
+namespace egl
+{
+inline int CID(EGLDisplay display, EGLContext context)
+{
+    auto *displayPtr = reinterpret_cast<const egl::Display *>(display);
+    if (!Display::isValidDisplay(displayPtr))
+    {
+        return -1;
+    }
+    auto *contextPtr = reinterpret_cast<const gl::Context *>(context);
+    if (!displayPtr->isValidContext(contextPtr))
+    {
+        return -1;
+    }
+    return gl::CID(contextPtr);
+}
+}  // namespace egl
 
 #endif  // LIBANGLE_ENTRY_POINT_UTILS_H_

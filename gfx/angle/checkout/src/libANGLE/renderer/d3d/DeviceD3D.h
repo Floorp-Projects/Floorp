@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2015 The ANGLE Project Authors. All rights reserved.
+// Copyright 2015 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -22,7 +22,9 @@ class DeviceD3D : public DeviceImpl
     ~DeviceD3D() override;
 
     egl::Error initialize() override;
-    egl::Error getDevice(void **outValue) override;
+    egl::Error getAttribute(const egl::Display *display,
+                            EGLint attribute,
+                            void **outValue) override;
     EGLint getType() override;
     void generateExtensions(egl::DeviceExtensions *outExtensions) const override;
 

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2013 The ANGLE Project Authors. All rights reserved.
+// Copyright 2002 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -98,6 +98,9 @@ class TCompiler : public TShHandleBase
     int getShaderVersion() const { return mShaderVersion; }
     TInfoSink &getInfoSink() { return mInfoSink; }
 
+    bool isEarlyFragmentTestsSpecified() const { return mEarlyFragmentTestsSpecified; }
+    bool isEarlyFragmentTestsOptimized() const { return mEarlyFragmentTestsOptimized; }
+
     bool isComputeShaderLocalSizeDeclared() const { return mComputeShaderLocalSizeDeclared; }
     const sh::WorkGroupSize &getComputeShaderLocalSize() const { return mComputeShaderLocalSize; }
     int getNumViews() const { return mNumViews; }
@@ -105,11 +108,11 @@ class TCompiler : public TShHandleBase
     // Clears the results from the previous compilation.
     void clearResults();
 
-    const std::vector<sh::Attribute> &getAttributes() const { return mAttributes; }
-    const std::vector<sh::OutputVariable> &getOutputVariables() const { return mOutputVariables; }
-    const std::vector<sh::Uniform> &getUniforms() const { return mUniforms; }
-    const std::vector<sh::Varying> &getInputVaryings() const { return mInputVaryings; }
-    const std::vector<sh::Varying> &getOutputVaryings() const { return mOutputVaryings; }
+    const std::vector<sh::ShaderVariable> &getAttributes() const { return mAttributes; }
+    const std::vector<sh::ShaderVariable> &getOutputVariables() const { return mOutputVariables; }
+    const std::vector<sh::ShaderVariable> &getUniforms() const { return mUniforms; }
+    const std::vector<sh::ShaderVariable> &getInputVaryings() const { return mInputVaryings; }
+    const std::vector<sh::ShaderVariable> &getOutputVaryings() const { return mOutputVaryings; }
     const std::vector<sh::InterfaceBlock> &getInterfaceBlocks() const { return mInterfaceBlocks; }
     const std::vector<sh::InterfaceBlock> &getUniformBlocks() const { return mUniformBlocks; }
     const std::vector<sh::InterfaceBlock> &getShaderStorageBlocks() const
@@ -141,7 +144,12 @@ class TCompiler : public TShHandleBase
         return mGeometryShaderOutputPrimitiveType;
     }
 
+    unsigned int getStructSize(const ShaderVariable &var) const;
+    unsigned int getSharedMemorySize() const;
+
     sh::GLenum getShaderType() const { return mShaderType; }
+
+    bool validateAST(TIntermNode *root);
 
   protected:
     // Add emulated functions to the built-in function emulator.
@@ -149,9 +157,9 @@ class TCompiler : public TShHandleBase
                                              ShCompileOptions compileOptions)
     {}
     // Translate to object code. May generate performance warnings through the diagnostics.
-    virtual void translate(TIntermBlock *root,
-                           ShCompileOptions compileOptions,
-                           PerformanceDiagnostics *perfDiagnostics) = 0;
+    ANGLE_NO_DISCARD virtual bool translate(TIntermBlock *root,
+                                            ShCompileOptions compileOptions,
+                                            PerformanceDiagnostics *perfDiagnostics) = 0;
     // Get built-in extensions with default behavior.
     const TExtensionBehavior &getExtensionBehavior() const;
     const char *getSourcePath() const;
@@ -166,13 +174,20 @@ class TCompiler : public TShHandleBase
 
     virtual bool shouldFlattenPragmaStdglInvariantAll() = 0;
     virtual bool shouldCollectVariables(ShCompileOptions compileOptions);
+    // If precision emulation needed, set isNeeded to true and emulate precision for given
+    //  outputLanguage, returning false if that fails, else returning true.
+    bool emulatePrecisionIfNeeded(TIntermBlock *root,
+                                  TInfoSinkBase &sink,
+                                  bool *isNeeded,
+                                  const ShShaderOutput outputLanguage);
 
     bool wereVariablesCollected() const;
-    std::vector<sh::Attribute> mAttributes;
-    std::vector<sh::OutputVariable> mOutputVariables;
-    std::vector<sh::Uniform> mUniforms;
-    std::vector<sh::Varying> mInputVaryings;
-    std::vector<sh::Varying> mOutputVaryings;
+    std::vector<sh::ShaderVariable> mAttributes;
+    std::vector<sh::ShaderVariable> mOutputVariables;
+    std::vector<sh::ShaderVariable> mUniforms;
+    std::vector<sh::ShaderVariable> mInputVaryings;
+    std::vector<sh::ShaderVariable> mOutputVaryings;
+    std::vector<sh::ShaderVariable> mSharedVariables;
     std::vector<sh::InterfaceBlock> mInterfaceBlocks;
     std::vector<sh::InterfaceBlock> mUniformBlocks;
     std::vector<sh::InterfaceBlock> mShaderStorageBlocks;
@@ -188,15 +203,15 @@ class TCompiler : public TShHandleBase
     // Insert statements to reference all members in unused uniform blocks with standard and shared
     // layout. This is to work around a Mac driver that treats unused standard/shared
     // uniform blocks as inactive.
-    void useAllMembersInUnusedStandardAndSharedBlocks(TIntermBlock *root);
+    ANGLE_NO_DISCARD bool useAllMembersInUnusedStandardAndSharedBlocks(TIntermBlock *root);
     // Insert statements to initialize output variables in the beginning of main().
     // This is to avoid undefined behaviors.
-    void initializeOutputVariables(TIntermBlock *root);
+    ANGLE_NO_DISCARD bool initializeOutputVariables(TIntermBlock *root);
     // Insert gl_Position = vec4(0,0,0,0) to the beginning of main().
     // It is to work around a Linux driver bug where missing this causes compile failure
     // while spec says it is allowed.
     // This function should only be applied to vertex shaders.
-    void initializeGLPosition(TIntermBlock *root);
+    ANGLE_NO_DISCARD bool initializeGLPosition(TIntermBlock *root);
     // Return true if the maximum expression complexity is below the limit.
     bool limitExpressionComplexity(TIntermBlock *root);
     // Creates the function call DAG for further analysis, returning false if there is a recursion
@@ -262,6 +277,10 @@ class TCompiler : public TShHandleBase
     TDiagnostics mDiagnostics;
     const char *mSourcePath;  // Path of source file or NULL
 
+    // fragment shader early fragment tests
+    bool mEarlyFragmentTestsSpecified;
+    bool mEarlyFragmentTestsOptimized;
+
     // compute shader local group size
     bool mComputeShaderLocalSizeDeclared;
     sh::WorkGroupSize mComputeShaderLocalSize;
@@ -282,6 +301,8 @@ class TCompiler : public TShHandleBase
 
     // Track what should be validated given passes currently applied.
     ValidateASTOptions mValidateASTOptions;
+
+    ShCompileOptions mCompileOptions;
 };
 
 //
@@ -296,8 +317,13 @@ class TCompiler : public TShHandleBase
 TCompiler *ConstructCompiler(sh::GLenum type, ShShaderSpec spec, ShShaderOutput output);
 void DeleteCompiler(TCompiler *);
 
+void EmitEarlyFragmentTestsGLSL(const TCompiler &, TInfoSinkBase &sink);
 void EmitWorkGroupSizeGLSL(const TCompiler &, TInfoSinkBase &sink);
-void EmitMultiviewGLSL(const TCompiler &, const ShCompileOptions &, TBehavior, TInfoSinkBase &sink);
+void EmitMultiviewGLSL(const TCompiler &,
+                       const ShCompileOptions &,
+                       const TExtension,
+                       const TBehavior,
+                       TInfoSinkBase &sink);
 
 }  // namespace sh
 

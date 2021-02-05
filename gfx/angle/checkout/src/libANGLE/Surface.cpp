@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2002 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -24,12 +24,30 @@
 
 namespace egl
 {
+namespace
+{
+angle::SubjectIndex kSurfaceImplSubjectIndex = 0;
+}  // namespace
 
 SurfaceState::SurfaceState(const egl::Config *configIn, const AttributeMap &attributesIn)
-    : label(nullptr), config(configIn), attributes(attributesIn), timestampsEnabled(false)
-{}
+    : label(nullptr),
+      config((configIn != nullptr) ? new egl::Config(*configIn) : nullptr),
+      attributes(attributesIn),
+      timestampsEnabled(false),
+      directComposition(false)
+{
+    directComposition = attributes.get(EGL_DIRECT_COMPOSITION_ANGLE, EGL_FALSE) == EGL_TRUE;
+}
 
-SurfaceState::~SurfaceState() = default;
+SurfaceState::~SurfaceState()
+{
+    delete config;
+}
+
+bool SurfaceState::isRobustResourceInitEnabled() const
+{
+    return attributes.get(EGL_ROBUST_RESOURCE_INITIALIZATION_ANGLE, EGL_FALSE) == EGL_TRUE;
+}
 
 Surface::Surface(EGLint surfaceType,
                  const egl::Config *config,
@@ -65,7 +83,8 @@ Surface::Surface(EGLint surfaceType,
       mTexture(nullptr),
       mColorFormat(config->renderTargetFormat),
       mDSFormat(config->depthStencilFormat),
-      mInitState(gl::InitState::Initialized)
+      mInitState(gl::InitState::Initialized),
+      mImplObserverBinding(this, kSurfaceImplSubjectIndex)
 {
     mPostSubBufferRequested =
         (attributes.get(EGL_POST_SUB_BUFFER_SUPPORTED_NV, EGL_FALSE) == EGL_TRUE);
@@ -77,14 +96,17 @@ Surface::Surface(EGLint surfaceType,
         mLargestPbuffer = (attributes.get(EGL_LARGEST_PBUFFER, EGL_FALSE) == EGL_TRUE);
     }
 
+    if (mType == EGL_PIXMAP_BIT)
+    {
+        mRenderBuffer = EGL_SINGLE_BUFFER;
+    }
+
     mGLColorspace =
         static_cast<EGLenum>(attributes.get(EGL_GL_COLORSPACE, EGL_GL_COLORSPACE_LINEAR));
     mVGAlphaFormat =
         static_cast<EGLenum>(attributes.get(EGL_VG_ALPHA_FORMAT, EGL_VG_ALPHA_FORMAT_NONPRE));
     mVGColorspace = static_cast<EGLenum>(attributes.get(EGL_VG_COLORSPACE, EGL_VG_COLORSPACE_sRGB));
     mMipmapTexture = (attributes.get(EGL_MIPMAP_TEXTURE, EGL_FALSE) == EGL_TRUE);
-
-    mDirectComposition = (attributes.get(EGL_DIRECT_COMPOSITION_ANGLE, EGL_FALSE) == EGL_TRUE);
 
     mRobustResourceInitialization =
         (attributes.get(EGL_ROBUST_RESOURCE_INITIALIZATION_ANGLE, EGL_FALSE) == EGL_TRUE);
@@ -107,6 +129,9 @@ Surface::Surface(EGLint surfaceType,
     }
 
     mOrientation = static_cast<EGLint>(attributes.get(EGL_SURFACE_ORIENTATION_ANGLE, 0));
+
+    mTextureOffset.x = static_cast<int>(mState.attributes.get(EGL_TEXTURE_OFFSET_X_ANGLE, 0));
+    mTextureOffset.y = static_cast<int>(mState.attributes.get(EGL_TEXTURE_OFFSET_Y_ANGLE, 0));
 }
 
 Surface::~Surface() {}
@@ -131,19 +156,39 @@ Error Surface::destroyImpl(const Display *display)
     return NoError();
 }
 
-void Surface::postSwap(const Display *display)
+void Surface::postSwap(const gl::Context *context)
 {
     if (mRobustResourceInitialization && mSwapBehavior != EGL_BUFFER_PRESERVED)
     {
         mInitState = gl::InitState::MayNeedInit;
         onStateChange(angle::SubjectMessage::SubjectChanged);
     }
-
-    display->onPostSwap();
 }
 
 Error Surface::initialize(const Display *display)
 {
+    GLenum overrideRenderTargetFormat = mState.config->renderTargetFormat;
+
+    // To account for color space differences, override the renderTargetFormat with the
+    // non-linear format. If no suitable non-linear format was found, return
+    // EGL_BAD_MATCH error
+    if (!gl::ColorspaceFormatOverride(mGLColorspace, &overrideRenderTargetFormat))
+    {
+        return egl::EglBadMatch();
+    }
+
+    // If an override is required update mState.config as well
+    if (mState.config->renderTargetFormat != overrideRenderTargetFormat)
+    {
+        egl::Config *overrideConfig        = new egl::Config(*(mState.config));
+        overrideConfig->renderTargetFormat = overrideRenderTargetFormat;
+        delete mState.config;
+        mState.config = overrideConfig;
+
+        mColorFormat = gl::Format(mState.config->renderTargetFormat);
+        mDSFormat    = gl::Format(mState.config->depthStencilFormat);
+    }
+
     ANGLE_TRY(mImplementation->initialize(display));
 
     // Initialized here since impl is nullptr in the constructor.
@@ -175,6 +220,8 @@ Error Surface::initialize(const Display *display)
         mState.supportedCompositorTimings = mImplementation->getSupportedCompositorTimings();
         mState.supportedTimestamps        = mImplementation->getSupportedTimestamps();
     }
+
+    mImplObserverBinding.bind(mImplementation);
 
     return NoError();
 }
@@ -234,16 +281,30 @@ EGLint Surface::getType() const
 Error Surface::swap(const gl::Context *context)
 {
     ANGLE_TRACE_EVENT0("gpu.angle", "egl::Surface::swap");
+    context->onPreSwap();
+
+    context->getState().getOverlay()->onSwap();
 
     ANGLE_TRY(mImplementation->swap(context));
-    postSwap(context->getDisplay());
+    postSwap(context);
     return NoError();
 }
 
 Error Surface::swapWithDamage(const gl::Context *context, EGLint *rects, EGLint n_rects)
 {
+    context->getState().getOverlay()->onSwap();
+
     ANGLE_TRY(mImplementation->swapWithDamage(context, rects, n_rects));
-    postSwap(context->getDisplay());
+    postSwap(context);
+    return NoError();
+}
+
+Error Surface::swapWithFrameToken(const gl::Context *context, EGLFrameTokenANGLE frameToken)
+{
+    context->getState().getOverlay()->onSwap();
+
+    ANGLE_TRY(mImplementation->swapWithFrameToken(context, frameToken));
+    postSwap(context);
     return NoError();
 }
 
@@ -258,7 +319,11 @@ Error Surface::postSubBuffer(const gl::Context *context,
         return egl::NoError();
     }
 
-    return mImplementation->postSubBuffer(context, x, y, width, height);
+    context->getState().getOverlay()->onSwap();
+
+    ANGLE_TRY(mImplementation->postSubBuffer(context, x, y, width, height));
+    postSwap(context);
+    return NoError();
 }
 
 Error Surface::setPresentationTime(EGLnsecsANDROID time)
@@ -404,6 +469,32 @@ EGLint Surface::getHeight() const
     return mFixedSize ? static_cast<EGLint>(mFixedHeight) : mImplementation->getHeight();
 }
 
+egl::Error Surface::getUserWidth(const egl::Display *display, EGLint *value) const
+{
+    if (mFixedSize)
+    {
+        *value = static_cast<EGLint>(mFixedWidth);
+        return NoError();
+    }
+    else
+    {
+        return mImplementation->getUserWidth(display, value);
+    }
+}
+
+egl::Error Surface::getUserHeight(const egl::Display *display, EGLint *value) const
+{
+    if (mFixedSize)
+    {
+        *value = static_cast<EGLint>(mFixedHeight);
+        return NoError();
+    }
+    else
+    {
+        return mImplementation->getUserHeight(display, value);
+    }
+}
+
 Error Surface::bindTexImage(gl::Context *context, gl::Texture *texture, EGLint buffer)
 {
     ASSERT(!mTexture);
@@ -434,6 +525,11 @@ Error Surface::releaseTexImage(const gl::Context *context, EGLint buffer)
 Error Surface::getSyncValues(EGLuint64KHR *ust, EGLuint64KHR *msc, EGLuint64KHR *sbc)
 {
     return mImplementation->getSyncValues(ust, msc, sbc);
+}
+
+Error Surface::getMscRate(EGLint *numerator, EGLint *denominator)
+{
+    return mImplementation->getMscRate(numerator, denominator);
 }
 
 Error Surface::releaseTexImageFromTexture(const gl::Context *context)
@@ -471,9 +567,10 @@ GLuint Surface::getId() const
     return 0;
 }
 
-gl::Framebuffer *Surface::createDefaultFramebuffer(const gl::Context *context)
+gl::Framebuffer *Surface::createDefaultFramebuffer(const gl::Context *context,
+                                                   egl::Surface *readSurface)
 {
-    return new gl::Framebuffer(context, this);
+    return new gl::Framebuffer(context, this, readSurface);
 }
 
 gl::InitState Surface::initState(const gl::ImageIndex & /*imageIndex*/) const
@@ -525,6 +622,23 @@ Error Surface::getFrameTimestamps(EGLuint64KHR frameId,
                                   EGLnsecsANDROID *values) const
 {
     return mImplementation->getFrameTimestamps(frameId, numTimestamps, timestamps, values);
+}
+
+void Surface::onSubjectStateChange(angle::SubjectIndex index, angle::SubjectMessage message)
+{
+    ASSERT(index == kSurfaceImplSubjectIndex);
+    switch (message)
+    {
+        case angle::SubjectMessage::SubjectChanged:
+            onStateChange(angle::SubjectMessage::ContentsChanged);
+            break;
+        case angle::SubjectMessage::SurfaceChanged:
+            onStateChange(angle::SubjectMessage::SurfaceChanged);
+            break;
+        default:
+            UNREACHABLE();
+            break;
+    }
 }
 
 WindowSurface::WindowSurface(rx::EGLImplFactory *implFactory,

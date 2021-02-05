@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2013 The ANGLE Project Authors. All rights reserved.
+// Copyright 2002 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -38,6 +38,7 @@ size_t VariableExternalSize(GLenum type);
 int VariableRowCount(GLenum type);
 int VariableColumnCount(GLenum type);
 bool IsSamplerType(GLenum type);
+bool IsSamplerCubeType(GLenum type);
 bool IsImageType(GLenum type);
 bool IsImage2DType(GLenum type);
 bool IsAtomicCounterType(GLenum type);
@@ -49,6 +50,7 @@ int MatrixRegisterCount(GLenum type, bool isRowMajorMatrix);
 int MatrixComponentCount(GLenum type, bool isRowMajorMatrix);
 int VariableSortOrder(GLenum type);
 GLenum VariableBoolVectorType(GLenum type);
+std::string GetGLSLTypeString(GLenum type);
 
 int AllocateFirstFreeBits(unsigned int *bits, unsigned int allocationSize, unsigned int bitsSize);
 
@@ -59,11 +61,10 @@ int AllocateFirstFreeBits(unsigned int *bits, unsigned int allocationSize, unsig
 // outSubscripts.
 std::string ParseResourceName(const std::string &name, std::vector<unsigned int> *outSubscripts);
 
-// Find the child field which matches 'fullName' == var.name + "." + field.name.
-// Return nullptr if not found.
-const sh::ShaderVariable *FindShaderVarField(const sh::ShaderVariable &var,
-                                             const std::string &fullName,
-                                             GLuint *fieldIndexOut);
+// Strips only the last array index from a resource name.
+std::string StripLastArrayIndex(const std::string &name);
+
+bool SamplerNameContainsNonZeroArrayElement(const std::string &name);
 
 // Find the range of index values in the provided indices pointer.  Primitive restart indices are
 // only counted in the range if primitive restart is disabled.
@@ -90,6 +91,7 @@ static_assert(GetPrimitiveRestartIndexFromType<uint32_t>() == 0xFFFFFFFF,
               "verify restart index for uint8_t values");
 
 bool IsTriangleMode(PrimitiveMode drawMode);
+bool IsPolygonMode(PrimitiveMode mode);
 
 namespace priv
 {
@@ -214,6 +216,28 @@ enum class PipelineType
 };
 
 PipelineType GetPipelineType(ShaderType shaderType);
+
+// For use with KHR_debug.
+const char *GetDebugMessageSourceString(GLenum source);
+const char *GetDebugMessageTypeString(GLenum type);
+const char *GetDebugMessageSeverityString(GLenum severity);
+
+// For use with EXT_texture_format_sRGB_override and EXT_texture_sRGB_decode
+// A texture may be forced to decode to a nonlinear colorspace, to a linear colorspace, or to the
+// default colorspace of its current format.
+//
+// Default corresponds to "the texture should use the imageview that corresponds to its format"
+// Linear corresponds to "the texture has sRGB decoding disabled by extension, and should use a
+// linear imageview even if it is in a nonlinear format" NonLinear corresponds to "the texture has
+// sRGB override enabled by extension, and should use a nonlinear imageview even if it is in a
+// linear format"
+enum class SrgbOverride
+{
+    Default = 0,
+    SRGB,
+    Linear
+};
+
 }  // namespace gl
 
 namespace egl
@@ -241,7 +265,7 @@ EGLenum GLComponentTypeToEGLColorComponentType(GLenum glComponentType);
 EGLClientBuffer GLObjectHandleToEGLClientBuffer(GLuint handle);
 }  // namespace gl_egl
 
-#if !defined(ANGLE_ENABLE_WINDOWS_STORE)
+#if !defined(ANGLE_ENABLE_WINDOWS_UWP)
 std::string getTempPath();
 void writeFile(const char *path, const void *data, size_t size);
 #endif
@@ -249,5 +273,14 @@ void writeFile(const char *path, const void *data, size_t size);
 #if defined(ANGLE_PLATFORM_WINDOWS)
 void ScheduleYield();
 #endif
+
+// Get the underlying type. Useful for indexing into arrays with enum values by avoiding the clutter
+// of the extraneous static_cast<>() calls.
+// https://stackoverflow.com/a/8357462
+template <typename E>
+constexpr typename std::underlying_type<E>::type ToUnderlying(E e) noexcept
+{
+    return static_cast<typename std::underlying_type<E>::type>(e);
+}
 
 #endif  // COMMON_UTILITIES_H_

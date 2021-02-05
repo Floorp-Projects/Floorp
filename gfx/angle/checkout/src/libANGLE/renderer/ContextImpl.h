@@ -51,25 +51,61 @@ class ContextImpl : public GLImplFactory
                                               GLint first,
                                               GLsizei count,
                                               GLsizei instanceCount) = 0;
+    // Necessary for Vulkan since gl_InstanceIndex includes baseInstance
+    virtual angle::Result drawArraysInstancedBaseInstance(const gl::Context *context,
+                                                          gl::PrimitiveMode mode,
+                                                          GLint first,
+                                                          GLsizei count,
+                                                          GLsizei instanceCount,
+                                                          GLuint baseInstance) = 0;
 
     virtual angle::Result drawElements(const gl::Context *context,
                                        gl::PrimitiveMode mode,
                                        GLsizei count,
                                        gl::DrawElementsType type,
-                                       const void *indices)        = 0;
+                                       const void *indices)                                = 0;
+    virtual angle::Result drawElementsBaseVertex(const gl::Context *context,
+                                                 gl::PrimitiveMode mode,
+                                                 GLsizei count,
+                                                 gl::DrawElementsType type,
+                                                 const void *indices,
+                                                 GLint baseVertex)                         = 0;
     virtual angle::Result drawElementsInstanced(const gl::Context *context,
                                                 gl::PrimitiveMode mode,
                                                 GLsizei count,
                                                 gl::DrawElementsType type,
                                                 const void *indices,
-                                                GLsizei instances) = 0;
+                                                GLsizei instances)                         = 0;
+    virtual angle::Result drawElementsInstancedBaseVertex(const gl::Context *context,
+                                                          gl::PrimitiveMode mode,
+                                                          GLsizei count,
+                                                          gl::DrawElementsType type,
+                                                          const void *indices,
+                                                          GLsizei instances,
+                                                          GLint baseVertex)                = 0;
+    virtual angle::Result drawElementsInstancedBaseVertexBaseInstance(const gl::Context *context,
+                                                                      gl::PrimitiveMode mode,
+                                                                      GLsizei count,
+                                                                      gl::DrawElementsType type,
+                                                                      const void *indices,
+                                                                      GLsizei instances,
+                                                                      GLint baseVertex,
+                                                                      GLuint baseInstance) = 0;
     virtual angle::Result drawRangeElements(const gl::Context *context,
                                             gl::PrimitiveMode mode,
                                             GLuint start,
                                             GLuint end,
                                             GLsizei count,
                                             gl::DrawElementsType type,
-                                            const void *indices)   = 0;
+                                            const void *indices)                           = 0;
+    virtual angle::Result drawRangeElementsBaseVertex(const gl::Context *context,
+                                                      gl::PrimitiveMode mode,
+                                                      GLuint start,
+                                                      GLuint end,
+                                                      GLsizei count,
+                                                      gl::DrawElementsType type,
+                                                      const void *indices,
+                                                      GLint baseVertex)                    = 0;
 
     virtual angle::Result drawArraysIndirect(const gl::Context *context,
                                              gl::PrimitiveMode mode,
@@ -79,51 +115,48 @@ class ContextImpl : public GLImplFactory
                                                gl::DrawElementsType type,
                                                const void *indirect) = 0;
 
-    // CHROMIUM_path_rendering path drawing methods.
-    virtual void stencilFillPath(const gl::Path *path, GLenum fillMode, GLuint mask);
-    virtual void stencilStrokePath(const gl::Path *path, GLint reference, GLuint mask);
-    virtual void coverFillPath(const gl::Path *path, GLenum coverMode);
-    virtual void coverStrokePath(const gl::Path *path, GLenum coverMode);
-    virtual void stencilThenCoverFillPath(const gl::Path *path,
-                                          GLenum fillMode,
-                                          GLuint mask,
-                                          GLenum coverMode);
-
-    virtual void stencilThenCoverStrokePath(const gl::Path *path,
-                                            GLint reference,
-                                            GLuint mask,
-                                            GLenum coverMode);
-
-    virtual void coverFillPathInstanced(const std::vector<gl::Path *> &paths,
-                                        GLenum coverMode,
-                                        GLenum transformType,
-                                        const GLfloat *transformValues);
-    virtual void coverStrokePathInstanced(const std::vector<gl::Path *> &paths,
-                                          GLenum coverMode,
-                                          GLenum transformType,
-                                          const GLfloat *transformValues);
-    virtual void stencilFillPathInstanced(const std::vector<gl::Path *> &paths,
-                                          GLenum fillMode,
-                                          GLuint mask,
-                                          GLenum transformType,
-                                          const GLfloat *transformValues);
-    virtual void stencilStrokePathInstanced(const std::vector<gl::Path *> &paths,
-                                            GLint reference,
-                                            GLuint mask,
-                                            GLenum transformType,
-                                            const GLfloat *transformValues);
-    virtual void stencilThenCoverFillPathInstanced(const std::vector<gl::Path *> &paths,
-                                                   GLenum coverMode,
-                                                   GLenum fillMode,
-                                                   GLuint mask,
-                                                   GLenum transformType,
-                                                   const GLfloat *transformValues);
-    virtual void stencilThenCoverStrokePathInstanced(const std::vector<gl::Path *> &paths,
-                                                     GLenum coverMode,
-                                                     GLint reference,
-                                                     GLuint mask,
-                                                     GLenum transformType,
-                                                     const GLfloat *transformValues);
+    // MultiDraw* impl added as we need workaround for promoting dynamic attributes in D3D backend
+    virtual angle::Result multiDrawArrays(const gl::Context *context,
+                                          gl::PrimitiveMode mode,
+                                          const GLint *firsts,
+                                          const GLsizei *counts,
+                                          GLsizei drawcount)                      = 0;
+    virtual angle::Result multiDrawArraysInstanced(const gl::Context *context,
+                                                   gl::PrimitiveMode mode,
+                                                   const GLint *firsts,
+                                                   const GLsizei *counts,
+                                                   const GLsizei *instanceCounts,
+                                                   GLsizei drawcount)             = 0;
+    virtual angle::Result multiDrawElements(const gl::Context *context,
+                                            gl::PrimitiveMode mode,
+                                            const GLsizei *counts,
+                                            gl::DrawElementsType type,
+                                            const GLvoid *const *indices,
+                                            GLsizei drawcount)                    = 0;
+    virtual angle::Result multiDrawElementsInstanced(const gl::Context *context,
+                                                     gl::PrimitiveMode mode,
+                                                     const GLsizei *counts,
+                                                     gl::DrawElementsType type,
+                                                     const GLvoid *const *indices,
+                                                     const GLsizei *instanceCounts,
+                                                     GLsizei drawcount)           = 0;
+    virtual angle::Result multiDrawArraysInstancedBaseInstance(const gl::Context *context,
+                                                               gl::PrimitiveMode mode,
+                                                               const GLint *firsts,
+                                                               const GLsizei *counts,
+                                                               const GLsizei *instanceCounts,
+                                                               const GLuint *baseInstances,
+                                                               GLsizei drawcount) = 0;
+    virtual angle::Result multiDrawElementsInstancedBaseVertexBaseInstance(
+        const gl::Context *context,
+        gl::PrimitiveMode mode,
+        const GLsizei *counts,
+        gl::DrawElementsType type,
+        const GLvoid *const *indices,
+        const GLsizei *instanceCounts,
+        const GLint *baseVertices,
+        const GLuint *baseInstances,
+        GLsizei drawcount) = 0;
 
     // Device loss
     virtual gl::GraphicsResetStatus getResetStatus() = 0;
@@ -133,13 +166,16 @@ class ContextImpl : public GLImplFactory
     virtual std::string getRendererDescription() const = 0;
 
     // EXT_debug_marker
-    virtual void insertEventMarker(GLsizei length, const char *marker) = 0;
-    virtual void pushGroupMarker(GLsizei length, const char *marker)   = 0;
-    virtual void popGroupMarker()                                      = 0;
+    virtual angle::Result insertEventMarker(GLsizei length, const char *marker) = 0;
+    virtual angle::Result pushGroupMarker(GLsizei length, const char *marker)   = 0;
+    virtual angle::Result popGroupMarker()                                      = 0;
 
     // KHR_debug
-    virtual void pushDebugGroup(GLenum source, GLuint id, const std::string &message) = 0;
-    virtual void popDebugGroup()                                                      = 0;
+    virtual angle::Result pushDebugGroup(const gl::Context *context,
+                                         GLenum source,
+                                         GLuint id,
+                                         const std::string &message) = 0;
+    virtual angle::Result popDebugGroup(const gl::Context *context)  = 0;
 
     // KHR_parallel_shader_compile
     virtual void setMaxShaderCompilerThreads(GLuint count) {}
@@ -177,7 +213,7 @@ class ContextImpl : public GLImplFactory
     virtual angle::Result memoryBarrierByRegion(const gl::Context *context,
                                                 GLbitfield barriers)                     = 0;
 
-    const gl::State &getState() { return mState; }
+    const gl::State &getState() const { return mState; }
     int getClientMajorVersion() const { return mState.getClientMajorVersion(); }
     int getClientMinorVersion() const { return mState.getClientMinorVersion(); }
     const gl::Caps &getCaps() const { return mState.getCaps(); }
@@ -195,6 +231,12 @@ class ContextImpl : public GLImplFactory
                      const char *file,
                      const char *function,
                      unsigned int line);
+
+    virtual egl::ContextPriority getContextPriority() const;
+
+    // EGL_ANGLE_power_preference implementation.
+    virtual egl::Error releaseHighPowerGPU(gl::Context *context);
+    virtual egl::Error reacquireHighPowerGPU(gl::Context *context);
 
   protected:
     const gl::State &mState;

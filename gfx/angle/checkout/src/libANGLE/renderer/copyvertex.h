@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013-2015 The ANGLE Project Authors. All rights reserved.
+// Copyright 2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -44,8 +44,27 @@ void Copy32FixedTo32FVertexData(const uint8_t *input, size_t stride, size_t coun
 template <typename T, size_t inputComponentCount, size_t outputComponentCount, bool normalized>
 void CopyTo32FVertexData(const uint8_t *input, size_t stride, size_t count, uint8_t *output);
 
+template <size_t inputComponentCount, size_t outputComponentCount>
+void Copy32FTo16FVertexData(const uint8_t *input, size_t stride, size_t count, uint8_t *output);
+
+void CopyXYZ32FToXYZ9E5(const uint8_t *input, size_t stride, size_t count, uint8_t *output);
+
+void CopyXYZ32FToX11Y11B10F(const uint8_t *input, size_t stride, size_t count, uint8_t *output);
+
 template <bool isSigned, bool normalized, bool toFloat>
 void CopyXYZ10W2ToXYZW32FVertexData(const uint8_t *input,
+                                    size_t stride,
+                                    size_t count,
+                                    uint8_t *output);
+
+template <bool isSigned, bool normalized>
+void CopyXYZ10ToXYZW32FVertexData(const uint8_t *input,
+                                  size_t stride,
+                                  size_t count,
+                                  uint8_t *output);
+
+template <bool isSigned, bool normalized>
+void CopyW2XYZ10ToXYZW32FVertexData(const uint8_t *input,
                                     size_t stride,
                                     size_t count,
                                     uint8_t *output);

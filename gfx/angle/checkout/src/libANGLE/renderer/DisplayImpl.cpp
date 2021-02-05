@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2014 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -23,6 +23,16 @@ DisplayImpl::~DisplayImpl()
     ASSERT(mState.surfaceSet.empty());
 }
 
+egl::Error DisplayImpl::prepareForCall()
+{
+    return egl::NoError();
+}
+
+egl::Error DisplayImpl::releaseThread()
+{
+    return egl::NoError();
+}
+
 const egl::DisplayExtensions &DisplayImpl::getExtensions() const
 {
     if (!mExtensionsInitialized)
@@ -32,6 +42,11 @@ const egl::DisplayExtensions &DisplayImpl::getExtensions() const
     }
 
     return mExtensions;
+}
+
+egl::Error DisplayImpl::handleGPUSwitch()
+{
+    return egl::NoError();
 }
 
 egl::Error DisplayImpl::validateClientBuffer(const egl::Config *configuration,
@@ -50,6 +65,14 @@ egl::Error DisplayImpl::validateImageClientBuffer(const gl::Context *context,
 {
     UNREACHABLE();
     return egl::EglBadDisplay() << "DisplayImpl::validateImageClientBuffer unimplemented.";
+}
+
+egl::Error DisplayImpl::validatePixmap(egl::Config *config,
+                                       EGLNativePixmapType pixmap,
+                                       const egl::AttributeMap &attributes) const
+{
+    UNREACHABLE();
+    return egl::EglBadDisplay() << "DisplayImpl::valdiatePixmap unimplemented.";
 }
 
 const egl::Caps &DisplayImpl::getCaps() const

@@ -121,7 +121,7 @@ angle::Result HLSLCompiler::ensureInitialized(d3d::Context *context)
     }
 
     ANGLE_TRACE_EVENT0("gpu.angle", "HLSLCompiler::initialize");
-#if !defined(ANGLE_ENABLE_WINDOWS_STORE)
+#if !defined(ANGLE_ENABLE_WINDOWS_UWP)
 #    if defined(ANGLE_PRELOADED_D3DCOMPILER_MODULE_NAMES)
     // Find a D3DCompiler module that had already been loaded based on a predefined list of
     // versions.
@@ -214,20 +214,17 @@ angle::Result HLSLCompiler::compileToBinary(d3d::Context *context,
 {
     ASSERT(mInitialized);
 
-#if !defined(ANGLE_ENABLE_WINDOWS_STORE)
+#if !defined(ANGLE_ENABLE_WINDOWS_UWP)
     ASSERT(mD3DCompilerModule);
 #endif
     ASSERT(mD3DCompileFunc);
 
-#if !defined(ANGLE_ENABLE_WINDOWS_STORE)
-    if (gl::DebugAnnotationsActive())
-    {
-        std::string sourcePath = getTempPath();
-        std::ostringstream stream;
-        stream << "#line 2 \"" << sourcePath << "\"\n\n" << hlsl;
-        std::string sourceText = stream.str();
-        writeFile(sourcePath.c_str(), sourceText.c_str(), sourceText.size());
-    }
+#if !defined(ANGLE_ENABLE_WINDOWS_UWP) && defined(ANGLE_ENABLE_DEBUG_TRACE)
+    std::string sourcePath = getTempPath();
+    std::ostringstream stream;
+    stream << "#line 2 \"" << sourcePath << "\"\n\n" << hlsl;
+    std::string sourceText = stream.str();
+    writeFile(sourcePath.c_str(), sourceText.c_str(), sourceText.size());
 #endif
 
     const D3D_SHADER_MACRO *macros = overrideMacros ? overrideMacros : nullptr;
@@ -239,7 +236,7 @@ angle::Result HLSLCompiler::compileToBinary(d3d::Context *context,
         HRESULT result         = S_OK;
 
         {
-            ANGLE_TRACE_EVENT0("gpu.angle", "D3DCompile");
+            ANGLE_TRACE_EVENT1("gpu.angle", "D3DCompile", "source", hlsl);
             SCOPED_ANGLE_HISTOGRAM_TIMER("GPU.ANGLE.D3DCompileMS");
             result = mD3DCompileFunc(hlsl.c_str(), hlsl.length(), gl::g_fakepath, macros, nullptr,
                                      "main", profile.c_str(), configs[i].flags, 0, &binary,
@@ -250,6 +247,7 @@ angle::Result HLSLCompiler::compileToBinary(d3d::Context *context,
         {
             std::string message = static_cast<const char *>(errorMessage->GetBufferPointer());
             SafeRelease(errorMessage);
+            ANGLE_TRACE_EVENT1("gpu.angle", "D3DCompile::Error", "error", errorMessage);
 
             infoLog.appendSanitized(message.c_str());
 

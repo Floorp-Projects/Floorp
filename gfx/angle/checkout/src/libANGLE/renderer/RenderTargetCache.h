@@ -32,6 +32,8 @@ class RenderTargetCache final : angle::NonCopyable
                          const gl::Framebuffer::DirtyBits &dirtyBits);
 
     // Update individual RenderTargets.
+    angle::Result updateReadColorRenderTarget(const gl::Context *context,
+                                              const gl::FramebufferState &state);
     angle::Result updateColorRenderTarget(const gl::Context *context,
                                           const gl::FramebufferState &state,
                                           size_t colorIndex);
@@ -43,6 +45,7 @@ class RenderTargetCache final : angle::NonCopyable
     const RenderTargetArray &getColors() const;
     RenderTargetT *getDepthStencil() const;
 
+    RenderTargetT *getColorDraw(const gl::FramebufferState &state, size_t colorIndex) const;
     RenderTargetT *getColorRead(const gl::FramebufferState &state) const;
 
   private:
@@ -50,19 +53,17 @@ class RenderTargetCache final : angle::NonCopyable
                                            const gl::FramebufferAttachment *attachment,
                                            RenderTargetT **cachedRenderTarget);
 
-    gl::AttachmentArray<RenderTargetT *> mColorRenderTargets;
+    RenderTargetT *mReadRenderTarget                         = nullptr;
+    gl::AttachmentArray<RenderTargetT *> mColorRenderTargets = {};
     // We only support a single Depth/Stencil RenderTarget currently.
-    RenderTargetT *mDepthStencilRenderTarget;
+    RenderTargetT *mDepthStencilRenderTarget = nullptr;
 };
 
 template <typename RenderTargetT>
-RenderTargetCache<RenderTargetT>::RenderTargetCache()
-    : mColorRenderTargets{{nullptr}}, mDepthStencilRenderTarget(nullptr)
-{}
+RenderTargetCache<RenderTargetT>::RenderTargetCache() = default;
 
 template <typename RenderTargetT>
-RenderTargetCache<RenderTargetT>::~RenderTargetCache()
-{}
+RenderTargetCache<RenderTargetT>::~RenderTargetCache() = default;
 
 template <typename RenderTargetT>
 angle::Result RenderTargetCache<RenderTargetT>::update(const gl::Context *context,
@@ -77,8 +78,10 @@ angle::Result RenderTargetCache<RenderTargetT>::update(const gl::Context *contex
             case gl::Framebuffer::DIRTY_BIT_STENCIL_ATTACHMENT:
                 ANGLE_TRY(updateDepthStencilRenderTarget(context, state));
                 break;
-            case gl::Framebuffer::DIRTY_BIT_DRAW_BUFFERS:
             case gl::Framebuffer::DIRTY_BIT_READ_BUFFER:
+                ANGLE_TRY(updateReadColorRenderTarget(context, state));
+                break;
+            case gl::Framebuffer::DIRTY_BIT_DRAW_BUFFERS:
             case gl::Framebuffer::DIRTY_BIT_DEFAULT_WIDTH:
             case gl::Framebuffer::DIRTY_BIT_DEFAULT_HEIGHT:
             case gl::Framebuffer::DIRTY_BIT_DEFAULT_SAMPLES:
@@ -114,11 +117,26 @@ RenderTargetT *RenderTargetCache<RenderTargetT>::getDepthStencil() const
 }
 
 template <typename RenderTargetT>
+angle::Result RenderTargetCache<RenderTargetT>::updateReadColorRenderTarget(
+    const gl::Context *context,
+    const gl::FramebufferState &state)
+{
+    return updateCachedRenderTarget(context, state.getReadAttachment(), &mReadRenderTarget);
+}
+
+template <typename RenderTargetT>
 angle::Result RenderTargetCache<RenderTargetT>::updateColorRenderTarget(
     const gl::Context *context,
     const gl::FramebufferState &state,
     size_t colorIndex)
 {
+    // If the color render target we're updating is also the read buffer, make sure we update the
+    // read render target also so it's not stale.
+    if (state.getReadBufferState() != GL_NONE && state.getReadIndex() == colorIndex)
+    {
+        ANGLE_TRY(updateReadColorRenderTarget(context, state));
+    }
+
     return updateCachedRenderTarget(context, state.getColorAttachment(colorIndex),
                                     &mColorRenderTargets[colorIndex]);
 }
@@ -142,19 +160,25 @@ angle::Result RenderTargetCache<RenderTargetT>::updateCachedRenderTarget(
     if (attachment)
     {
         ASSERT(attachment->isAttached());
-        ANGLE_TRY(attachment->getRenderTarget(context, &newRenderTarget));
+        ANGLE_TRY(attachment->getRenderTarget(context, attachment->getRenderToTextureSamples(),
+                                              &newRenderTarget));
     }
     *cachedRenderTarget = newRenderTarget;
     return angle::Result::Continue;
 }
 
 template <typename RenderTargetT>
+RenderTargetT *RenderTargetCache<RenderTargetT>::getColorDraw(const gl::FramebufferState &state,
+                                                              size_t colorIndex) const
+{
+    return mColorRenderTargets[colorIndex];
+}
+
+template <typename RenderTargetT>
 RenderTargetT *RenderTargetCache<RenderTargetT>::getColorRead(
     const gl::FramebufferState &state) const
 {
-    ASSERT(mColorRenderTargets[state.getReadIndex()] &&
-           state.getReadIndex() < mColorRenderTargets.size());
-    return mColorRenderTargets[state.getReadIndex()];
+    return mReadRenderTarget;
 }
 
 }  // namespace rx

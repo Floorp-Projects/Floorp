@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2002 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -30,7 +30,8 @@ class EmulatePrecision : public TLValueTrackingTraverser
     bool visitBinary(Visit visit, TIntermBinary *node) override;
     bool visitUnary(Visit visit, TIntermUnary *node) override;
     bool visitAggregate(Visit visit, TIntermAggregate *node) override;
-    bool visitInvariantDeclaration(Visit visit, TIntermInvariantDeclaration *node) override;
+    bool visitGlobalQualifierDeclaration(Visit visit,
+                                         TIntermGlobalQualifierDeclaration *node) override;
     bool visitDeclaration(Visit visit, TIntermDeclaration *node) override;
 
     void writeEmulationHelpers(TInfoSinkBase &sink,

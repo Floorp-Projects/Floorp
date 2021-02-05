@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2012 The ANGLE Project Authors. All rights reserved.
+// Copyright 2012 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -90,6 +90,10 @@ class Image11 : public ImageD3D
     void verifyAssociatedStorageValid(TextureStorage11 *textureStorage) const;
     void disassociateStorage();
 
+    angle::Result getStagingTexture(const gl::Context *context,
+                                    const TextureHelper11 **outStagingTexture,
+                                    unsigned int *outSubresourceIndex);
+
   protected:
     template <typename T>
     friend class d3d11::ScopedUnmapper;
@@ -103,9 +107,6 @@ class Image11 : public ImageD3D
                                         const TextureHelper11 &textureHelper,
                                         UINT sourceSubResource);
 
-    angle::Result getStagingTexture(const gl::Context *context,
-                                    const TextureHelper11 **outStagingTexture,
-                                    unsigned int *outSubresourceIndex);
     angle::Result createStagingTexture(const gl::Context *context);
     void releaseStagingTexture();
 

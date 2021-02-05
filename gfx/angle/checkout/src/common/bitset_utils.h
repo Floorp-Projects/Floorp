@@ -24,6 +24,9 @@ namespace angle
 template <typename BitsT, typename ParamT>
 constexpr static BitsT Bit(ParamT x)
 {
+    // It's undefined behavior if the shift size is equal to or larger than the width of the type.
+    ASSERT(static_cast<size_t>(x) < sizeof(BitsT) * 8);
+
     return (static_cast<BitsT>(1) << static_cast<size_t>(x));
 }
 
@@ -82,6 +85,8 @@ class BitSetT final
         std::size_t mCurrentBit;
     };
 
+    using value_type = BitsT;
+
     BitSetT();
     constexpr explicit BitSetT(BitsT value);
 
@@ -131,6 +136,10 @@ class BitSetT final
 
     Iterator begin() const { return Iterator(*this); }
     Iterator end() const { return Iterator(BitSetT()); }
+
+    constexpr static BitSetT Zero() { return BitSetT(); }
+
+    ParamT first() const;
 
   private:
     // Produces a mask of ones up to the "x"th bit.
@@ -196,7 +205,7 @@ IterableBitSet<N>::Iterator::Iterator(const std::bitset<N> &bitset)
     }
     else
     {
-        mOffset = static_cast<unsigned long>(rx::roundUp(N, BitsPerWord));
+        mOffset = static_cast<unsigned long>(rx::roundUpPow2(N, BitsPerWord));
     }
 }
 
@@ -444,6 +453,13 @@ BitSetT<N, BitsT, ParamT> &BitSetT<N, BitsT, ParamT>::flip(ParamT pos)
 }
 
 template <size_t N, typename BitsT, typename ParamT>
+ParamT BitSetT<N, BitsT, ParamT>::first() const
+{
+    ASSERT(!none());
+    return static_cast<ParamT>(gl::ScanForward(mBits));
+}
+
+template <size_t N, typename BitsT, typename ParamT>
 BitSetT<N, BitsT, ParamT>::Iterator::Iterator(const BitSetT &bits) : mBitsCopy(bits), mCurrentBit(0)
 {
     if (bits.any())
@@ -453,8 +469,8 @@ BitSetT<N, BitsT, ParamT>::Iterator::Iterator(const BitSetT &bits) : mBitsCopy(b
 }
 
 template <size_t N, typename BitsT, typename ParamT>
-ANGLE_INLINE typename BitSetT<N, BitsT, ParamT>::Iterator &BitSetT<N, BitsT, ParamT>::Iterator::
-operator++()
+ANGLE_INLINE typename BitSetT<N, BitsT, ParamT>::Iterator &
+BitSetT<N, BitsT, ParamT>::Iterator::operator++()
 {
     ASSERT(mBitsCopy.any());
     mBitsCopy.reset(static_cast<ParamT>(mCurrentBit));
@@ -492,13 +508,16 @@ std::size_t BitSetT<N, BitsT, ParamT>::Iterator::getNextBit()
 }
 
 template <size_t N>
+using BitSet8 = BitSetT<N, uint8_t>;
+
+template <size_t N>
+using BitSet16 = BitSetT<N, uint16_t>;
+
+template <size_t N>
 using BitSet32 = BitSetT<N, uint32_t>;
 
-// ScanForward for 64-bits requires a 64-bit implementation.
-#if defined(ANGLE_IS_64_BIT_CPU)
 template <size_t N>
 using BitSet64 = BitSetT<N, uint64_t>;
-#endif  // defined(ANGLE_IS_64_BIT_CPU)
 
 namespace priv
 {

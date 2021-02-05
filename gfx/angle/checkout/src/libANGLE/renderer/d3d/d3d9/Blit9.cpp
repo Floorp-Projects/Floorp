@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+// Copyright 2002 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -233,7 +233,7 @@ angle::Result Blit9::copy2D(const gl::Context *context,
     ASSERT(colorbuffer);
 
     RenderTarget9 *renderTarget9 = nullptr;
-    ANGLE_TRY(colorbuffer->getRenderTarget(context, &renderTarget9));
+    ANGLE_TRY(colorbuffer->getRenderTarget(context, 0, &renderTarget9));
     ASSERT(renderTarget9);
 
     angle::ComPtr<IDirect3DSurface9> source = renderTarget9->getSurface();
@@ -267,7 +267,7 @@ angle::Result Blit9::copyCube(const gl::Context *context,
     ASSERT(colorbuffer);
 
     RenderTarget9 *renderTarget9 = nullptr;
-    ANGLE_TRY(colorbuffer->getRenderTarget(context, &renderTarget9));
+    ANGLE_TRY(colorbuffer->getRenderTarget(context, 0, &renderTarget9));
     ASSERT(renderTarget9);
 
     angle::ComPtr<IDirect3DSurface9> source = renderTarget9->getSurface();
@@ -667,8 +667,8 @@ void Blit9::setCommonBlitState()
     device->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
     device->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
 
-    RECT scissorRect = {0};  // Scissoring is disabled for flipping, but we need this to capture and
-                             // restore the old rectangle
+    RECT scissorRect = {};  // Scissoring is disabled for flipping, but we need this to capture and
+                            // restore the old rectangle
     device->SetScissorRect(&scissorRect);
 
     for (int i = 0; i < gl::MAX_VERTEX_ATTRIBS; i++)
@@ -704,22 +704,22 @@ void Blit9::saveState()
 
         setCommonBlitState();
 
-        static const float dummyConst[8] = {0};
+        static const float mockConst[8] = {0};
 
         device->SetVertexShader(nullptr);
-        device->SetVertexShaderConstantF(0, dummyConst, 2);
+        device->SetVertexShaderConstantF(0, mockConst, 2);
         device->SetPixelShader(nullptr);
-        device->SetPixelShaderConstantF(0, dummyConst, 2);
+        device->SetPixelShaderConstantF(0, mockConst, 2);
 
-        D3DVIEWPORT9 dummyVp;
-        dummyVp.X      = 0;
-        dummyVp.Y      = 0;
-        dummyVp.Width  = 1;
-        dummyVp.Height = 1;
-        dummyVp.MinZ   = 0;
-        dummyVp.MaxZ   = 1;
+        D3DVIEWPORT9 mockVp;
+        mockVp.X      = 0;
+        mockVp.Y      = 0;
+        mockVp.Width  = 1;
+        mockVp.Height = 1;
+        mockVp.MinZ   = 0;
+        mockVp.MaxZ   = 1;
 
-        device->SetViewport(&dummyVp);
+        device->SetViewport(&mockVp);
 
         device->SetTexture(0, nullptr);
 

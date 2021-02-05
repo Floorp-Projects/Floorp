@@ -71,6 +71,9 @@ class FixedVector final
     void push_back(const value_type &value);
     void push_back(value_type &&value);
 
+    template <class... Args>
+    void emplace_back(Args &&... args);
+
     void pop_back();
     reference back();
     const_reference back() const;
@@ -257,6 +260,15 @@ void FixedVector<T, N, Storage>::push_back(value_type &&value)
 {
     ASSERT(mSize < N);
     mStorage[mSize] = std::move(value);
+    mSize++;
+}
+
+template <class T, size_t N, class Storage>
+template <class... Args>
+void FixedVector<T, N, Storage>::emplace_back(Args &&... args)
+{
+    ASSERT(mSize < N);
+    new (&mStorage[mSize]) T{std::forward<Args>(args)...};
     mSize++;
 }
 

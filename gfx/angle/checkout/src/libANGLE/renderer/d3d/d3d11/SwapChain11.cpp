@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2012-2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2012 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -94,7 +94,7 @@ SwapChain11::SwapChain11(Renderer11 *renderer,
       mDepthStencilRenderTarget(this, renderer, true),
       mEGLSamples(samples)
 {
-    // Sanity check that if present path fast is active then we're using the default orientation
+    // Check that if present path fast is active then we're using the default orientation
     ASSERT(!mRenderer->presentPathFastEnabled() || orientation == 0);
 
     // Get the performance counter
@@ -204,7 +204,7 @@ EGLint SwapChain11::resetOffscreenColorBuffer(DisplayD3D *displayD3D,
 
     const d3d11::Format &backbufferFormatInfo =
         d3d11::Format::Get(mOffscreenRenderTargetFormat, mRenderer->getRenderer11DeviceCaps());
-    D3D11_TEXTURE2D_DESC offscreenTextureDesc = {0};
+    D3D11_TEXTURE2D_DESC offscreenTextureDesc = {};
 
     // If the app passed in a share handle or D3D texture, open the resource
     // See EGL_ANGLE_d3d_share_handle_client_buffer and EGL_ANGLE_d3d_texture_client_buffer
@@ -338,7 +338,7 @@ EGLint SwapChain11::resetOffscreenColorBuffer(DisplayD3D *displayD3D,
 
     if (previousOffscreenTexture.valid())
     {
-        D3D11_BOX sourceBox = {0};
+        D3D11_BOX sourceBox = {};
         sourceBox.left      = 0;
         sourceBox.right     = std::min(previousWidth, backbufferWidth);
         sourceBox.top       = std::max(previousHeight - backbufferHeight, 0);
@@ -385,7 +385,7 @@ EGLint SwapChain11::resetOffscreenDepthBuffer(DisplayD3D *displayD3D,
         // must also have the same quality value.
         if (mOffscreenTexture.valid() && getD3DSamples() > 1)
         {
-            D3D11_TEXTURE2D_DESC offscreenTextureDesc = {0};
+            D3D11_TEXTURE2D_DESC offscreenTextureDesc = {};
             mOffscreenTexture.getDesc(&offscreenTextureDesc);
             depthStencilTextureDesc.SampleDesc.Quality = offscreenTextureDesc.SampleDesc.Quality;
         }

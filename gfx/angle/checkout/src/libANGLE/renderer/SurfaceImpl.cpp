@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2002 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -93,4 +93,22 @@ egl::Error SurfaceImpl::getFrameTimestamps(EGLuint64KHR frameId,
     return egl::EglBadDisplay();
 }
 
+egl::Error SurfaceImpl::swapWithFrameToken(const gl::Context *context,
+                                           EGLFrameTokenANGLE frameToken)
+{
+    UNREACHABLE();
+    return egl::EglBadDisplay();
+}
+
+egl::Error SurfaceImpl::getUserWidth(const egl::Display *display, EGLint *value) const
+{
+    *value = getWidth();
+    return egl::NoError();
+}
+
+egl::Error SurfaceImpl::getUserHeight(const egl::Display *display, EGLint *value) const
+{
+    *value = getHeight();
+    return egl::NoError();
+}
 }  // namespace rx

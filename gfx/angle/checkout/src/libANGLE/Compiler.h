@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2014 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -31,7 +31,9 @@ class State;
 class Compiler final : public RefCountObjectNoID
 {
   public:
-    Compiler(rx::GLImplFactory *implFactory, const State &data);
+    Compiler(rx::GLImplFactory *implFactory, const State &data, egl::Display *display);
+
+    void onDestroy(const Context *context) override;
 
     ShCompilerInstance getInstance(ShaderType shaderType);
     void putInstance(ShCompilerInstance &&instance);

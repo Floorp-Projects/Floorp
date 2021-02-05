@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2015 The ANGLE Project Authors. All rights reserved.
+// Copyright 2015 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -80,6 +80,9 @@ class Debug : angle::NonCopyable
     void pushGroup(GLenum source, GLuint id, std::string &&message);
     void popGroup();
     size_t getGroupStackDepth() const;
+
+    // Helper for ANGLE_PERF_WARNING
+    void insertPerfWarning(GLenum severity, const char *message, uint32_t *repeatCount) const;
 
   private:
     bool isMessageEnabled(GLenum source, GLenum type, GLuint id, GLenum severity) const;
@@ -162,4 +165,13 @@ class Debug : angle::NonCopyable
     angle::PackedEnumBitSet<MessageType> mEnabledMessageTypes;
 };
 }  // namespace egl
+
+// Generate a perf warning.  Only outputs the same message a few times to avoid spamming the logs.
+#define ANGLE_PERF_WARNING(debug, severity, message)                 \
+    do                                                               \
+    {                                                                \
+        static uint32_t sRepeatCount = 0;                            \
+        (debug).insertPerfWarning(severity, message, &sRepeatCount); \
+    } while (0)
+
 #endif  // LIBANGLE_DEBUG_H_

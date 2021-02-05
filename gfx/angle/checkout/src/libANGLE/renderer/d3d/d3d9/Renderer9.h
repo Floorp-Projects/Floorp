@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2012-2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2012 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -44,26 +44,6 @@ struct ClearParameters;
 struct D3DUniform;
 struct TranslatedAttribute;
 
-enum D3D9InitError
-{
-    D3D9_INIT_SUCCESS = 0,
-    // Failed to load the D3D or ANGLE compiler
-    D3D9_INIT_COMPILER_ERROR,
-    // Failed to load a necessary DLL
-    D3D9_INIT_MISSING_DEP,
-    // Device creation error
-    D3D9_INIT_CREATE_DEVICE_ERROR,
-    // System does not meet minimum shader spec
-    D3D9_INIT_UNSUPPORTED_VERSION,
-    // System does not support stretchrect from textures
-    D3D9_INIT_UNSUPPORTED_STRETCHRECT,
-    // A call returned out of memory or device lost
-    D3D9_INIT_OUT_OF_MEMORY,
-    // Other unspecified error
-    D3D9_INIT_OTHER_ERROR,
-    NUM_D3D9_INIT_ERRORS
-};
-
 class Renderer9 : public RendererD3D
 {
   public:
@@ -96,9 +76,11 @@ class Renderer9 : public RendererD3D
                                   EGLint samples) override;
     egl::Error getD3DTextureInfo(const egl::Config *configuration,
                                  IUnknown *d3dTexture,
+                                 const egl::AttributeMap &attribs,
                                  EGLint *width,
                                  EGLint *height,
-                                 EGLint *samples,
+                                 GLsizei *samples,
+                                 gl::Format *glFormat,
                                  const angle::Format **angleFormat) const override;
     egl::Error validateShareHandle(const egl::Config *config,
                                    HANDLE shareHandle,
@@ -349,6 +331,7 @@ class Renderer9 : public RendererD3D
     bool supportsFastCopyBufferToTexture(GLenum internalFormat) const override;
     angle::Result fastCopyBufferToTexture(const gl::Context *context,
                                           const gl::PixelUnpackState &unpack,
+                                          gl::Buffer *unpackBuffer,
                                           unsigned int offset,
                                           RenderTargetD3D *destRenderTarget,
                                           GLenum destinationFormat,
@@ -371,6 +354,7 @@ class Renderer9 : public RendererD3D
                                          const gl::VertexBinding &binding,
                                          size_t count,
                                          GLsizei instances,
+                                         GLuint baseInstance,
                                          unsigned int *bytesRequiredOut) const override;
 
     angle::Result copyToRenderTarget(const gl::Context *context,
@@ -420,6 +404,8 @@ class Renderer9 : public RendererD3D
                                        gl::Texture **textureOut) override;
 
     angle::Result ensureVertexDataManagerInitialized(const gl::Context *context);
+
+    void setGlobalDebugAnnotator() override;
 
   private:
     angle::Result drawArraysImpl(const gl::Context *context,

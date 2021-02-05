@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2014 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -13,6 +13,7 @@
 #include "libANGLE/Caps.h"
 #include "libANGLE/Config.h"
 #include "libANGLE/Error.h"
+#include "libANGLE/Observer.h"
 #include "libANGLE/Stream.h"
 #include "libANGLE/Version.h"
 #include "libANGLE/renderer/EGLImplFactory.h"
@@ -51,7 +52,15 @@ struct ConfigDesc;
 class DeviceImpl;
 class StreamProducerImpl;
 
-class DisplayImpl : public EGLImplFactory
+class ShareGroupImpl : angle::NonCopyable
+{
+  public:
+    ShareGroupImpl() {}
+    virtual ~ShareGroupImpl() {}
+    virtual void onDestroy(const egl::Display *display) {}
+};
+
+class DisplayImpl : public EGLImplFactory, public angle::Subject
 {
   public:
     DisplayImpl(const egl::DisplayState &state);
@@ -59,8 +68,11 @@ class DisplayImpl : public EGLImplFactory
 
     virtual egl::Error initialize(egl::Display *display) = 0;
     virtual void terminate()                             = 0;
+    virtual egl::Error prepareForCall();
+    virtual egl::Error releaseThread();
 
-    virtual egl::Error makeCurrent(egl::Surface *drawSurface,
+    virtual egl::Error makeCurrent(egl::Display *display,
+                                   egl::Surface *drawSurface,
                                    egl::Surface *readSurface,
                                    gl::Context *context) = 0;
 
@@ -78,6 +90,9 @@ class DisplayImpl : public EGLImplFactory
                                                  EGLenum target,
                                                  EGLClientBuffer clientBuffer,
                                                  const egl::AttributeMap &attribs) const;
+    virtual egl::Error validatePixmap(egl::Config *config,
+                                      EGLNativePixmapType pixmap,
+                                      const egl::AttributeMap &attributes) const;
 
     virtual std::string getVendorString() const = 0;
 
@@ -101,6 +116,8 @@ class DisplayImpl : public EGLImplFactory
     virtual void populateFeatureList(angle::FeatureList *features) = 0;
 
     const egl::DisplayState &getState() const { return mState; }
+
+    virtual egl::Error handleGPUSwitch();
 
   protected:
     const egl::DisplayState &mState;

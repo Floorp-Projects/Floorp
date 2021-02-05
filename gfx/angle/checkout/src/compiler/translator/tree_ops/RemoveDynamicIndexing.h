@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2015 The ANGLE Project Authors. All rights reserved.
+// Copyright 2002 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -12,16 +12,30 @@
 #ifndef COMPILER_TRANSLATOR_TREEOPS_REMOVEDYNAMICINDEXING_H_
 #define COMPILER_TRANSLATOR_TREEOPS_REMOVEDYNAMICINDEXING_H_
 
+#include "common/angleutils.h"
+
+#include <functional>
+
 namespace sh
 {
 
+class TCompiler;
 class TIntermNode;
+class TIntermBinary;
 class TSymbolTable;
 class PerformanceDiagnostics;
 
-void RemoveDynamicIndexing(TIntermNode *root,
-                           TSymbolTable *symbolTable,
-                           PerformanceDiagnostics *perfDiagnostics);
+ANGLE_NO_DISCARD bool RemoveDynamicIndexingOfNonSSBOVectorOrMatrix(
+    TCompiler *compiler,
+    TIntermNode *root,
+    TSymbolTable *symbolTable,
+    PerformanceDiagnostics *perfDiagnostics);
+
+ANGLE_NO_DISCARD bool RemoveDynamicIndexingOfSwizzledVector(
+    TCompiler *compiler,
+    TIntermNode *root,
+    TSymbolTable *symbolTable,
+    PerformanceDiagnostics *perfDiagnostics);
 
 }  // namespace sh
 
