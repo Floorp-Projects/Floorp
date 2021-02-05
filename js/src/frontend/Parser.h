@@ -1273,6 +1273,13 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                                          TokenPos synthesizedBodyPos,
                                          HasHeritage hasHeritage);
 
+ protected:
+  FunctionNodeType synthesizeConstructorBody(TokenPos synthesizedBodyPos,
+                                             HasHeritage hasHeritage,
+                                             FunctionNodeType funNode,
+                                             FunctionBox* funbox);
+
+ private:
   bool checkBindingIdentifier(TaggedParserAtomIndex ident, uint32_t offset,
                               YieldHandling yieldHandling,
                               TokenKind hint = TokenKind::Limit);

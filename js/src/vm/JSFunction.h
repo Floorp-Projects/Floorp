@@ -578,7 +578,7 @@ class JSFunction : public js::NativeObject {
   }
 
   bool isDerivedClassConstructor() const;
-  bool isFieldInitializer() const;
+  bool isSyntheticFunction() const;
 
   static unsigned offsetOfNative() {
     return offsetof(JSFunction, u.native.func_);

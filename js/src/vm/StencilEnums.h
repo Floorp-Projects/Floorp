@@ -183,8 +183,11 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // uses the `extends` syntax.
   IsDerivedClassConstructor = 1 << 19,
 
-  // This function is a field initializer lambda for a class.
-  IsFieldInitializer = 1 << 20,
+  // This function is synthesized by the Parser. This is used for field
+  // initializer lambdas and missing constructors for classes. These functions
+  // have unusual source coordinates and may be hidden from things like
+  // Reflect.parse.
+  IsSyntheticFunction = 1 << 20,
 
   // This function is a class constructor that has MemberInitializer data
   // associated with it.
