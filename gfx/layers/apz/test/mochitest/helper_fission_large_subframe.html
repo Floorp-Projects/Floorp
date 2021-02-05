@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html id="rcd_docelement">
+<head>
+  <meta charset="utf-8">
+  <title>Test that large OOPIF does not get a too-large displayport</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="helper_fission_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script>
+
+fission_subtest_init();
+
+FissionTestHelper.startTestPromise
+  .then(waitUntilApzStable)
+  .then(loadOOPIFrame("testframe", "helper_fission_empty.html"))
+  .then(waitUntilApzStable)
+  .then(test)
+  .then(FissionTestHelper.subtestDone, FissionTestHelper.subtestFailed);
+
+// Code that will run inside the iframe.
+let get_iframe_displayport = function() {
+  // Give the page a scroll range. This will make the unclamped displayport
+  // even taller.
+  document.body.style.height = "200vh";
+  // Do a round-trip to APZ to make sure the scroll range is reflected
+  // in the displayport it sets.
+  promiseApzFlushedRepaints().then(() => {
+    // Query the composed displayport and report it to the embedder.
+    let dp = getLastContentDisplayportFor("fission_empty_docelement");
+    let result = { x: dp.x, y: dp.y, w: dp.w, h: dp.h };
+    FissionTestHelper.fireEventInEmbedder("OOPIF:Displayport", result);
+  });
+  return true;
+};
+
+async function test() {
+  let iframeElement = document.getElementById("testframe");
+
+  // Give the page a scroll range and make sure APZ sets non-empty displayport margins.
+  document.body.style.height = "500vh";
+  await promiseApzFlushedRepaints();
+
+  // Query the iframe's displayport.
+  let displayportPromise = promiseOneEvent(window, "OOPIF:Displayport", null);
+  ok(await FissionTestHelper.sendToOopif(iframeElement, `(${get_iframe_displayport})()`), "Gotten iframe displayport");
+  let iframeDp = (await displayportPromise).data;
+  dump("iframe displayport is " + JSON.stringify(iframeDp) + "\n");
+
+  // Query the page's displayport.
+  let dp = getLastContentDisplayportFor("rcd_docelement");
+  dump("page displayport is " + JSON.stringify(dp) + "\n");
+
+  // Check that the iframe's displayport is no more than twice as tall as
+  // the page's displayport. The reason it can be up to twice as tall is
+  // described in bug 1690697; we may be able to assert a tighter bound
+  // after making improvements in that bug.
+  ok(iframeDp.h <= (dp.h * 2), "iframe displayport should be no more than twice as tall as page displayport");
+}
+
+  </script>
+</head>
+<body>
+<!-- Make the iframe's viewport very tall -->
+<iframe style="margin-top: 200px" id="testframe" height="10000px"></iframe>
+</body>
+</html>
