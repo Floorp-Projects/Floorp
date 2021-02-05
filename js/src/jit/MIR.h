@@ -544,7 +544,7 @@ class MDefinition : public MNode {
         bailoutKind_(BailoutKind::Unknown),
         resultType_(MIRType::None) {}
 
-  // Copying a definition leaves the list of uses and the block empty.
+  // Copying a definition leaves the list of uses empty.
   explicit MDefinition(const MDefinition& other)
       : MNode(other),
         id_(0),
@@ -976,7 +976,7 @@ class MInstruction : public MDefinition, public InlineListNode<MInstruction> {
  public:
   explicit MInstruction(Opcode op) : MDefinition(op), resumePoint_(nullptr) {}
 
-  // Copying an instruction leaves the block and resume point as empty.
+  // Copying an instruction leaves the resume point as empty.
   explicit MInstruction(const MInstruction& other)
       : MDefinition(other), resumePoint_(nullptr) {}
 
