@@ -1100,7 +1100,7 @@ static bool TestTrueTargetIsJoinPoint(JSOp op) {
     case JSOp::Case:
       return true;
 
-    case JSOp::IfEq:
+    case JSOp::JumpIfFalse:
     case JSOp::And:
     case JSOp::Coalesce:
       return false;
@@ -1434,7 +1434,9 @@ bool WarpBuilder::buildTestBackedge(BytecodeLocation loc) {
   return buildBackedge();
 }
 
-bool WarpBuilder::build_IfEq(BytecodeLocation loc) { return buildTestOp(loc); }
+bool WarpBuilder::build_JumpIfFalse(BytecodeLocation loc) {
+  return buildTestOp(loc);
+}
 
 bool WarpBuilder::build_IfNe(BytecodeLocation loc) { return buildTestOp(loc); }
 
