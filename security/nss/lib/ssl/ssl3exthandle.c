@@ -921,7 +921,7 @@ ssl_ParseSessionTicket(sslSocket *ss, const SECItem *decryptedTicket,
 #ifndef UNSAFE_FUZZER_MODE
     PORT_Assert(temp < ssl_auth_size);
 #else
-    temp %= (8 * sizeof(SSLAuthType));
+    temp %= (8 * sizeof(SSLAuthType)) - 1;
 #endif
 
     parsedTicket->authType = (SSLAuthType)temp;

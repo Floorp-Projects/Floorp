@@ -43,16 +43,7 @@ RUN update-alternatives --install /usr/bin/clang-format \
 
 # Latest version of abigail-tools
 RUN apt-get update \
- && apt-get install -y --no-install-recommends automake libtool libxml2-dev \
- && git clone git://sourceware.org/git/libabigail.git /tmp/libabigail \
- && cd /tmp/libabigail \
- && autoreconf -fi \
- && ./configure --prefix=/usr --disable-static --disable-apidoc --disable-manual \
- && make && make install \
- && rm -rf /tmp/libabigail \
- && apt-get remove -y automake libtool libxml2-dev \
- && rm -rf /var/lib/apt/lists/* \
- && apt-get autoremove -y && apt-get clean -y
+ && apt-get install -y libabigail-dev abigail-tools
 
 ENV SHELL /bin/bash
 ENV USER worker

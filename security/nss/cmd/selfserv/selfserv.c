@@ -1968,12 +1968,14 @@ configureEchWithData(PRFileDesc *model_sock)
 {
 /* The input should be a Base64-encoded ECHKey struct:
      *  struct {
-     *     opaque sk<0..2^16-1>;
-     *     ECHConfig config<0..2^16>; // draft-ietf-tls-esni-09
+     *     opaque pkcs8_ech_keypair<0..2^16-1>;
+     *     ECHConfigs configs<0..2^16>; // draft-ietf-tls-esni-09
      * } ECHKey;
      *
      * This is not a standardized format, rather it's designed for
      * interoperability with https://github.com/xvzcf/tls-interop-runner.
+     * It is the user's responsibility to ensure that the PKCS8 keypair
+     * corresponds to the public key embedded in the ECHConfigs.
      */
 
 #define REMAINING_BYTES(rdr, buf) \
@@ -1984,9 +1986,9 @@ configureEchWithData(PRFileDesc *model_sock)
     unsigned char *reader;
     PK11SlotInfo *slot = NULL;
     SECItem *decoded = NULL;
-    SECItem *pkcs8Key = NULL;
     SECKEYPublicKey *pk = NULL;
     SECKEYPrivateKey *sk = NULL;
+    SECItem pkcs8Key = { siBuffer, NULL, 0 };
 
     decoded = NSSBase64_DecodeBuffer(NULL, NULL, echParamsStr, PORT_Strlen(echParamsStr));
     if (!decoded || decoded->len < 2) {
@@ -2001,32 +2003,14 @@ configureEchWithData(PRFileDesc *model_sock)
         errWarn("Bad ECHParams encoding");
         goto loser;
     }
-    /* Importing a raw KEM private key is generally awful,
-     * however since we only support X25519, we can hardcode
-     * all the OID data. */
-    const PRUint8 pkcs8Start[] = { 0x30, 0x67, 0x02, 0x01, 0x00, 0x30, 0x14, 0x06,
-                                   0x07, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x02, 0x01,
-                                   0x06, 0x09, 0x2B, 0x06, 0x01, 0x04, 0x01, 0xDA,
-                                   0x47, 0x0F, 0x01, 0x04, 0x4C, 0x30, 0x4A, 0x02,
-                                   0x01, 0x01, 0x04, 0x20 };
-    const PRUint8 pkcs8End[] = { 0xA1, 0x23, 0x03, 0x21, 0x00, 0x00, 0x00, 0x00,
-                                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                 0x00, 0x00, 0x00, 0x00, 0x00 };
-    pkcs8Key = SECITEM_AllocItem(NULL, NULL, sizeof(pkcs8Start) + len + sizeof(pkcs8End));
-    if (!pkcs8Key) {
-        goto loser;
-    }
-    PORT_Memcpy(pkcs8Key->data, pkcs8Start, sizeof(pkcs8Start));
-    PORT_Memcpy(&pkcs8Key->data[sizeof(pkcs8Start)], reader, len);
-    PORT_Memcpy(&pkcs8Key->data[sizeof(pkcs8Start) + len], pkcs8End, sizeof(pkcs8End));
+    pkcs8Key.data = reader;
+    pkcs8Key.len = len;
     reader += len;
 
     /* Convert the key bytes to key handles */
     slot = PK11_GetInternalKeySlot();
     rv = PK11_ImportDERPrivateKeyInfoAndReturnKey(
-        slot, pkcs8Key, NULL, NULL, PR_FALSE, PR_FALSE, KU_ALL, &sk, NULL);
+        slot, &pkcs8Key, NULL, NULL, PR_FALSE, PR_FALSE, KU_ALL, &sk, NULL);
     if (rv != SECSuccess || !sk) {
         errWarn("ECH key import failed");
         goto loser;
@@ -2037,7 +2021,7 @@ configureEchWithData(PRFileDesc *model_sock)
         goto loser;
     }
 
-    /* Remainder is the ECHConfig. */
+    /* Remainder is the ECHConfigs. */
     rv = SSL_SetServerEchConfigs(model_sock, pk, sk, reader,
                                  REMAINING_BYTES(reader, decoded));
     if (rv != SECSuccess) {
@@ -2048,7 +2032,6 @@ configureEchWithData(PRFileDesc *model_sock)
     PK11_FreeSlot(slot);
     SECKEY_DestroyPrivateKey(sk);
     SECKEY_DestroyPublicKey(pk);
-    SECITEM_FreeItem(pkcs8Key, PR_TRUE);
     SECITEM_FreeItem(decoded, PR_TRUE);
     return SECSuccess;
 loser:
@@ -2057,7 +2040,6 @@ loser:
     }
     SECKEY_DestroyPrivateKey(sk);
     SECKEY_DestroyPublicKey(pk);
-    SECITEM_FreeItem(pkcs8Key, PR_TRUE);
     SECITEM_FreeItem(decoded, PR_TRUE);
     return SECFailure;
 }
