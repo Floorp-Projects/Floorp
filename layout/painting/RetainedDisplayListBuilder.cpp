@@ -344,22 +344,49 @@ static Maybe<const ActiveScrolledRoot*> SelectContainerASR(
 
 static void UpdateASR(nsDisplayItem* aItem,
                       Maybe<const ActiveScrolledRoot*>& aContainerASR) {
-  if (!aContainerASR) {
+  Maybe<const ActiveScrolledRoot*> asr;
+
+  if (aItem->HasHitTestInfo()) {
+    const HitTestInfo& info =
+        static_cast<nsDisplayHitTestInfoBase*>(aItem)->GetHitTestInfo();
+    asr = SelectContainerASR(info.mClipChain, info.mASR, aContainerASR);
+  } else {
+    asr = aContainerASR;
+  }
+
+  if (!asr) {
     return;
   }
 
   nsDisplayWrapList* wrapList = aItem->AsDisplayWrapList();
   if (!wrapList) {
-    aItem->SetActiveScrolledRoot(*aContainerASR);
+    aItem->SetActiveScrolledRoot(*asr);
     return;
   }
 
   wrapList->SetActiveScrolledRoot(ActiveScrolledRoot::PickAncestor(
-      wrapList->GetFrameActiveScrolledRoot(), *aContainerASR));
+      wrapList->GetFrameActiveScrolledRoot(), *asr));
+
+  wrapList->UpdateHitTestInfoActiveScrolledRoot(*asr);
 }
 
 static void CopyASR(nsDisplayItem* aOld, nsDisplayItem* aNew) {
+  const ActiveScrolledRoot* hitTest = nullptr;
+  if (aOld->HasHitTestInfo()) {
+    MOZ_ASSERT(aNew->HasHitTestInfo());
+    const HitTestInfo& info =
+        static_cast<nsDisplayHitTestInfoBase*>(aOld)->GetHitTestInfo();
+    hitTest = info.mASR;
+  }
+
   aNew->SetActiveScrolledRoot(aOld->GetActiveScrolledRoot());
+
+  // SetActiveScrolledRoot for most items will also set the hit-test info item's
+  // asr, so we need to manually set that again to what we saved earlier.
+  if (aOld->HasHitTestInfo()) {
+    static_cast<nsDisplayHitTestInfoBase*>(aNew)
+        ->UpdateHitTestInfoActiveScrolledRoot(hitTest);
+  }
 }
 
 OldItemInfo::OldItemInfo(nsDisplayItem* aItem)
