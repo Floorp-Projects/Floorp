@@ -505,8 +505,6 @@ class OutOfLineCode : public TempObject {
   uint32_t framePushed() const { return framePushed_; }
   void setBytecodeSite(const BytecodeSite* site) { site_ = site; }
   const BytecodeSite* bytecodeSite() const { return site_; }
-  jsbytecode* pc() const { return site_->pc(); }
-  JSScript* script() const { return site_->script(); }
 };
 
 // For OOL paths that want a specific-typed code generator.
