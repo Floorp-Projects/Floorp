@@ -26,5 +26,5 @@ SECStatus tls13_HandleHrrCookie(sslSocket *ss,
                                 HpkeAeadId *previousEchAeadId,
                                 SECItem *previousEchConfigId,
                                 HpkeContext **previousEchHpkeCtx,
-                                PRBool recoverHashState);
+                                PRBool recoverState);
 #endif

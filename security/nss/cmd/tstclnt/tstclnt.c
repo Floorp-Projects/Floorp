@@ -1279,6 +1279,11 @@ printEchRetryConfigs(PRFileDesc *s)
             return SECFailure;
         }
 
+        // Remove the newline characters that NSSBase64_EncodeItem unhelpfully inserts.
+        char *newline = strstr(retriesBase64, "\r\n");
+        if (newline) {
+            memmove(newline, newline + 2, strlen(newline + 2) + 1);
+        }
         fprintf(stderr, "Received ECH retry_configs: \n%s\n", retriesBase64);
         PORT_Free(retriesBase64);
         SECITEM_FreeItem(&retries, PR_FALSE);
