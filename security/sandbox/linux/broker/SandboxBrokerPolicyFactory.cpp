@@ -561,12 +561,13 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
     }
     rv = profileDir->Clone(getter_AddRefs(workDir));
     if (NS_SUCCEEDED(rv)) {
-      nsAutoCString tmpPath;
-      rv = workDir->GetNativePath(tmpPath);
+      rv = workDir->AppendNative("extensions"_ns);
       if (NS_SUCCEEDED(rv)) {
-        tmpPath.Append("/extensions/");
-        policy->AddPrefix(rdonly, tmpPath.get());
-        policy->AddPath(rdonly, tmpPath.get());
+        nsAutoCString tmpPath;
+        rv = workDir->GetNativePath(tmpPath);
+        if (NS_SUCCEEDED(rv)) {
+          policy->AddDir(rdonly, tmpPath.get());
+        }
       }
     }
   }
