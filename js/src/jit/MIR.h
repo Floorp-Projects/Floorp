@@ -591,7 +591,11 @@ class MDefinition : public MNode {
   }
 
  public:
-  const BytecodeSite* trackedSite() const { return trackedSite_; }
+  const BytecodeSite* trackedSite() const {
+    MOZ_ASSERT(trackedSite_,
+               "missing tracked bytecode site; node not assigned to a block?");
+    return trackedSite_;
+  }
 
   BailoutKind bailoutKind() const { return bailoutKind_; }
   void setBailoutKind(BailoutKind kind) { bailoutKind_ = kind; }

@@ -565,13 +565,11 @@ void CodeGeneratorShared::encode(LSnapshot* snapshot) {
   if (LInstruction* ins = instruction()) {
     lirOpcode = uint32_t(ins->op());
     lirId = ins->id();
-    if (ins->mirRaw()) {
-      mirOpcode = uint32_t(ins->mirRaw()->op());
-      mirId = ins->mirRaw()->id();
-
-      const BytecodeSite* site = ins->mirRaw()->trackedSite();
-      if (site && site->pc()) {
-        pcOpcode = *site->pc();
+    if (MDefinition* mir = ins->mirRaw()) {
+      mirOpcode = uint32_t(mir->op());
+      mirId = mir->id();
+      if (jsbytecode* pc = mir->trackedSite()->pc()) {
+        pcOpcode = *pc;
       }
     }
   }
