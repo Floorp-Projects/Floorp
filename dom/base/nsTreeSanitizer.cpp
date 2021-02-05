@@ -14,6 +14,7 @@
 #include "mozilla/css/Rule.h"
 #include "mozilla/dom/CSSRuleList.h"
 #include "mozilla/dom/DocumentFragment.h"
+#include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/NullPrincipal.h"
 #include "nsCSSPropertyID.h"
@@ -61,11 +62,13 @@ const nsStaticAtom* const kElementsHTML[] = {
   nsGkAtoms::code,
   nsGkAtoms::col,
   nsGkAtoms::colgroup,
+  nsGkAtoms::data,
   nsGkAtoms::datalist,
   nsGkAtoms::dd,
   nsGkAtoms::del,
   nsGkAtoms::details,
   nsGkAtoms::dfn,
+  nsGkAtoms::dialog,
   nsGkAtoms::dir,
   nsGkAtoms::div,
   nsGkAtoms::dl,
@@ -99,6 +102,7 @@ const nsStaticAtom* const kElementsHTML[] = {
   nsGkAtoms::li,
   nsGkAtoms::link,
   nsGkAtoms::listing,
+  nsGkAtoms::main,
   nsGkAtoms::map,
   nsGkAtoms::mark,
   nsGkAtoms::menu,
@@ -112,6 +116,7 @@ const nsStaticAtom* const kElementsHTML[] = {
   nsGkAtoms::option,
   nsGkAtoms::output,
   nsGkAtoms::p,
+  nsGkAtoms::picture,
   nsGkAtoms::pre,
   nsGkAtoms::progress,
   nsGkAtoms::q,
@@ -136,6 +141,7 @@ const nsStaticAtom* const kElementsHTML[] = {
   nsGkAtoms::table,
   nsGkAtoms::tbody,
   nsGkAtoms::td,
+  // template checked and traversed specially
   nsGkAtoms::textarea,
   nsGkAtoms::tfoot,
   nsGkAtoms::th,
@@ -1009,6 +1015,9 @@ bool nsTreeSanitizer::MustFlatten(int32_t aNamespace, nsAtom* aLocal) {
          nsGkAtoms::head == aLocal || nsGkAtoms::body == aLocal)) {
       return false;
     }
+    if (nsGkAtoms::_template == aLocal) {
+      return false;
+    }
     return !sElementsHTML->Contains(aLocal);
   }
   if (aNamespace == kNameSpaceID_SVG) {
@@ -1339,6 +1348,15 @@ void nsTreeSanitizer::SanitizeChildren(nsINode* aRoot) {
         node->RemoveFromParent();
         node = next;
         continue;
+      }
+      if (nsGkAtoms::_template == localName) {
+        // traverse into the DocFragment content attribute of template elements
+        bool wasFullDocument = mFullDocument;
+        mFullDocument = false;
+        RefPtr<DocumentFragment> frag =
+            static_cast<HTMLTemplateElement*>(elt)->Content();
+        SanitizeChildren(frag);
+        mFullDocument = wasFullDocument;
       }
       if (nsGkAtoms::style == localName) {
         // If !mOnlyConditionalCSS check the following condition:
