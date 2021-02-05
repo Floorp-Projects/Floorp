@@ -1391,7 +1391,7 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::JumpTarget:
     case JSOp::Undefined:
     case JSOp::IfNe:
-    case JSOp::IfEq:
+    case JSOp::JumpIfFalse:
     case JSOp::Return:
     case JSOp::RetRval:
     case JSOp::And:

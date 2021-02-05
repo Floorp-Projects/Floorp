@@ -31,7 +31,8 @@ bool BranchEmitterBase::emitThenInternal(ConditionKind conditionKind) {
   }
 
   // Emit a branch-if-false around the then part.
-  JSOp op = conditionKind == ConditionKind::Positive ? JSOp::IfEq : JSOp::IfNe;
+  JSOp op =
+      conditionKind == ConditionKind::Positive ? JSOp::JumpIfFalse : JSOp::IfNe;
   if (!bce_->emitJump(op, &jumpAroundThen_)) {
     return false;
   }

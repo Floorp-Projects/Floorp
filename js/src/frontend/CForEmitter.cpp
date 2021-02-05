@@ -82,7 +82,7 @@ bool CForEmitter::emitBody(Cond cond) {
   cond_ = cond;
 
   if (cond_ == Cond::Present) {
-    if (!bce_->emitJump(JSOp::IfEq, &loopInfo_->breaks)) {
+    if (!bce_->emitJump(JSOp::JumpIfFalse, &loopInfo_->breaks)) {
       return false;
     }
   }

@@ -2035,7 +2035,7 @@ bool BaselineCodeGen<Handler>::emitTest(bool branchIfTrue) {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_IfEq() {
+bool BaselineCodeGen<Handler>::emit_JumpIfFalse() {
   return emitTest(false);
 }
 
