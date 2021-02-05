@@ -206,8 +206,6 @@ _Components and libraries to interact with backend services._
 
 * 🔵 [**Glean**](components/service/glean/README.md) - A client-side telemetry SDK for collecting metrics and sending them to Mozilla's telemetry service (eventually replacing [service-telemetry](components/service/telemetry/README.md)).
 
-* 🔴 [**Experiments**](components/service/experiments/README.md) - An Android SDK for running experiments on user segments in multiple branches.
-
 * 🔵 [**Location**](components/service/location/README.md) - A library for accessing Mozilla's and other location services.
 
 * 🔴 [**Nimbus**](components/service/nimbus/README.md) - A wrapper for the Nimbus SDK.
