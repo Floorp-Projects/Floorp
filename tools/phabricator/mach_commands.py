@@ -103,7 +103,11 @@ class PhabricatorCommandProvider(MachCommandBase):
             [pip3, "show", "-f", "MozPhab"], universal_newlines=True
         )
         mozphab_package_location = re.compile(r"Location: (.*)").search(info).group(1)
-        potential_cli_paths = re.compile(r"([^\s]*moz-phab(?:\.exe)?)").findall(info)
+        # This needs to match "moz-phab" (*nix) and "moz-phab.exe" (Windows) while missing
+        # "moz-phab-script.py" (Windows).
+        potential_cli_paths = re.compile(
+            r"([^\s]*moz-phab(?:\.exe)?)$", re.MULTILINE
+        ).findall(info)
 
         if len(potential_cli_paths) != 1:
             self.log(
