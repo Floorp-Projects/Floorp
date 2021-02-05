@@ -747,16 +747,25 @@ function getHitTestConfig() {
     if (isWebRender) {
       activateAllScrollFrames =
         SpecialPowers.getBoolPref("apz.wr.activate_all_scroll_frames") ||
-        (SpecialPowers.getBoolPref("apz.wr.activate_all_scroll_frames_when_fission") &&
-         SpecialPowers.getBoolPref("fission.autostart"));
+        (SpecialPowers.getBoolPref(
+          "apz.wr.activate_all_scroll_frames_when_fission"
+        ) &&
+          SpecialPowers.getBoolPref("fission.autostart"));
     } else {
       activateAllScrollFrames =
         SpecialPowers.getBoolPref("apz.nonwr.activate_all_scroll_frames") ||
-        (SpecialPowers.getBoolPref("apz.nonwr.activate_all_scroll_frames_when_fission") &&
-         SpecialPowers.getBoolPref("fission.autostart"));
+        (SpecialPowers.getBoolPref(
+          "apz.nonwr.activate_all_scroll_frames_when_fission"
+        ) &&
+          SpecialPowers.getBoolPref("fission.autostart"));
     }
 
-    window.hitTestConfig = { utils, isWebRender, isWindows, activateAllScrollFrames };
+    window.hitTestConfig = {
+      utils,
+      isWebRender,
+      isWindows,
+      activateAllScrollFrames,
+    };
   }
   return window.hitTestConfig;
 }
@@ -908,15 +917,20 @@ function hitTestScrollbar(params) {
     // will fall back to the main thread for everything.
     if (config.isWebRender) {
       expectedHitInfo |= APZHitResultFlags.APZ_AWARE_LISTENERS;
-      if (!config.activateAllScrollFrames &&
-          params.layerState == LayerState.INACTIVE) {
+      if (
+        !config.activateAllScrollFrames &&
+        params.layerState == LayerState.INACTIVE
+      ) {
         expectedHitInfo |= APZHitResultFlags.INACTIVE_SCROLLFRAME;
       }
     } else {
       expectedHitInfo |= APZHitResultFlags.IRREGULAR_AREA;
     }
     // We do not generate the layers for thumbs on inactive scrollframes.
-    if (params.layerState == LayerState.ACTIVE || config.activateAllScrollFrames) {
+    if (
+      params.layerState == LayerState.ACTIVE ||
+      config.activateAllScrollFrames
+    ) {
       expectedHitInfo |= APZHitResultFlags.SCROLLBAR_THUMB;
     }
   }
