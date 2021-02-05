@@ -2246,9 +2246,6 @@ ScopeStencil::createSpecificScopeData<FunctionScope>(
     return nullptr;
   }
 
-  // Initialize the HeapPtr in the FunctionScope::RuntimeData.
-  data->canonicalFunction = gcOutput.functions[functionIndex()];
-
   return data;
 }
 
@@ -2263,9 +2260,6 @@ ScopeStencil::createSpecificScopeData<ModuleScope>(
   if (!data) {
     return nullptr;
   }
-
-  // Initialize the HeapPtr in the ModuleScope::RuntimeData.
-  data->module = gcOutput.module;
 
   return data;
 }

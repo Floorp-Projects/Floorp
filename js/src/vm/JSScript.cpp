@@ -3857,9 +3857,8 @@ bool JSScript::fullyInitFromStencil(
     }
   });
 
-  /* The counts of indexed things must be checked during code generation. */
-  js::frontend::ScriptStencil& scriptStencil = stencil.scriptData[scriptIndex];
-  MOZ_ASSERT(scriptStencil.gcThingsLength <= INDEX_LIMIT);
+  // The counts of indexed things must be checked during code generation.
+  MOZ_ASSERT(stencil.scriptData[scriptIndex].gcThingsLength <= INDEX_LIMIT);
 
   // Note: These flags should already be correct when the BaseScript was
   // allocated.
@@ -3893,9 +3892,10 @@ bool JSScript::fullyInitFromStencil(
   // NOTE: JSScript is now constructed and should be linked in.
   rollbackGuard.release();
 
-  // Link JSFunction to this JSScript.
-  if (scriptStencil.isFunction()) {
+  // Link Scope -> JSFunction -> BaseScript.
+  if (script->isFunction()) {
     JSFunction* fun = gcOutput.functions[scriptIndex];
+    script->bodyScope()->as<FunctionScope>().initCanonicalFunction(fun);
     if (fun->isIncomplete()) {
       fun->initScript(script);
     } else {
