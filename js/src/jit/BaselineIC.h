@@ -528,7 +528,7 @@ inline ICFallbackStub* ICStub::getChainFallback() {
 AllocatableGeneralRegisterSet BaselineICAvailableGeneralRegs(size_t numInputs);
 
 // ToBool
-//      JSOp::IfNe
+//      JSOp::JumpIfTrue
 
 class ICToBool_Fallback : public ICFallbackStub {
   friend class ICStubSpace;

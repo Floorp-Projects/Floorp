@@ -2299,7 +2299,7 @@
      *   Operands: int32_t offset
      *   Stack: cond =>
      */ \
-    MACRO(IfNe, if_ne, NULL, 5, 1, 0, JOF_JUMP|JOF_IC) \
+    MACRO(JumpIfTrue, jump_if_true, NULL, 5, 1, 0, JOF_JUMP|JOF_IC) \
     /*
      * Short-circuit for logical AND.
      *
@@ -2337,8 +2337,8 @@
      */ \
     MACRO(Coalesce, coalesce, NULL, 5, 1, 1, JOF_JUMP) \
      /*
-     * Like `JSOp::IfNe` ("jump if true"), but if the branch is taken,
-     * pop and discard an additional stack value.
+     * Like `JSOp::JumpIfTrue`, but if the branch is taken, pop and discard an
+     * additional stack value.
      *
      * This is used to implement `switch` statements when the
      * `JSOp::TableSwitch` optimization is not possible. The switch statement
@@ -2364,8 +2364,8 @@
      *
      * This opcode is weird: it's the only one whose ndefs varies depending on
      * which way a conditional branch goes. We could implement switch
-     * statements using `JSOp::IfNe` and `JSOp::Pop`, but that would also be
-     * awkward--putting the `JSOp::Pop` inside the `switch` body would
+     * statements using `JSOp::JumpIfTrue` and `JSOp::Pop`, but that would also
+     * be awkward--putting the `JSOp::Pop` inside the `switch` body would
      * complicate fallthrough.
      *
      *   Category: Control flow

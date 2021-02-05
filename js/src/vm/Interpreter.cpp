@@ -1370,8 +1370,8 @@ again:
 static_assert(JSOpLength_SetName == JSOpLength_SetProp);
 
 /* See TRY_BRANCH_AFTER_COND. */
-static_assert(JSOpLength_IfNe == JSOpLength_JumpIfFalse);
-static_assert(uint8_t(JSOp::IfNe) == uint8_t(JSOp::JumpIfFalse) + 1);
+static_assert(JSOpLength_JumpIfTrue == JSOpLength_JumpIfFalse);
+static_assert(uint8_t(JSOp::JumpIfTrue) == uint8_t(JSOp::JumpIfFalse) + 1);
 
 /*
  * Compute the implicit |this| value used by a call expression with an
@@ -2392,14 +2392,14 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(JumpIfFalse)
 
-    CASE(IfNe) {
+    CASE(JumpIfTrue) {
       bool cond = ToBoolean(REGS.stackHandleAt(-1));
       REGS.sp--;
       if (cond) {
         BRANCH(GET_JUMP_OFFSET(REGS.pc));
       }
     }
-    END_CASE(IfNe)
+    END_CASE(JumpIfTrue)
 
     CASE(Or) {
       bool cond = ToBoolean(REGS.stackHandleAt(-1));

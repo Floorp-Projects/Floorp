@@ -2040,7 +2040,7 @@ bool BaselineCodeGen<Handler>::emit_JumpIfFalse() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_IfNe() {
+bool BaselineCodeGen<Handler>::emit_JumpIfTrue() {
   return emitTest(true);
 }
 

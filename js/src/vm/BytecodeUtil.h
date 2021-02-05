@@ -234,7 +234,7 @@ static inline void SetLoopHeadDepthHint(jsbytecode* pc, unsigned loopDepth) {
 static inline bool IsBackedgePC(jsbytecode* pc) {
   switch (JSOp(*pc)) {
     case JSOp::Goto:
-    case JSOp::IfNe:
+    case JSOp::JumpIfTrue:
       return GET_JUMP_OFFSET(pc) < 0;
     default:
       return false;
