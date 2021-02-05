@@ -158,6 +158,7 @@ class FunctionBox;
   F(Spread, UnaryNode)                                           \
   F(MutateProto, UnaryNode)                                      \
   F(ClassDecl, ClassNode)                                        \
+  F(DefaultConstructor, ClassMethod)                             \
   F(ClassMethod, ClassMethod)                                    \
   F(ClassField, ClassField)                                      \
   F(ClassMemberList, ListNode)                                   \
@@ -302,6 +303,9 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  * ClassMemberList (ListNode)
  *   head: list of N ClassMethod or ClassField nodes
  *   count: N >= 0
+ * DefaultConstructor (ClassMethod)
+ *   name: propertyName
+ *   method: methodDefinition
  * ClassMethod (ClassMethod)
  *   name: propertyName
  *   method: methodDefinition
@@ -2090,16 +2094,21 @@ class ClassMethod : public BinaryNode {
    * Method definitions often keep a name and function body that overlap,
    * so explicitly define the beginning and end here.
    */
-  ClassMethod(ParseNode* name, ParseNode* body, AccessorType accessorType,
-              bool isStatic, FunctionNode* initializerIfPrivate)
-      : BinaryNode(ParseNodeKind::ClassMethod,
-                   TokenPos(name->pn_pos.begin, body->pn_pos.end), name, body),
+  ClassMethod(ParseNodeKind kind, ParseNode* name, ParseNode* body,
+              AccessorType accessorType, bool isStatic,
+              FunctionNode* initializerIfPrivate)
+      : BinaryNode(kind, TokenPos(name->pn_pos.begin, body->pn_pos.end), name,
+                   body),
         isStatic_(isStatic),
         accessorType_(accessorType),
-        initializerIfPrivate_(initializerIfPrivate) {}
+        initializerIfPrivate_(initializerIfPrivate) {
+    MOZ_ASSERT(kind == ParseNodeKind::DefaultConstructor ||
+               kind == ParseNodeKind::ClassMethod);
+  }
 
   static bool test(const ParseNode& node) {
-    bool match = node.isKind(ParseNodeKind::ClassMethod);
+    bool match = node.isKind(ParseNodeKind::DefaultConstructor) ||
+                 node.isKind(ParseNodeKind::ClassMethod);
     MOZ_ASSERT_IF(match, node.is<BinaryNode>());
     return match;
   }

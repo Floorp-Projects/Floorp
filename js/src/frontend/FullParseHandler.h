@@ -491,6 +491,17 @@ class FullParseHandler {
     return true;
   }
 
+  MOZ_MUST_USE ClassMethod* newDefaultClassConstructor(
+      Node key, FunctionNodeType funNode) {
+    MOZ_ASSERT(isUsableAsObjectPropertyName(key));
+
+    checkAndSetIsDirectRHSAnonFunction(funNode);
+
+    return new_<ClassMethod>(ParseNodeKind::DefaultConstructor, key, funNode,
+                             AccessorType::None,
+                             /* isStatic = */ false, nullptr);
+  }
+
   MOZ_MUST_USE ClassMethod* newClassMethodDefinition(
       Node key, FunctionNodeType funNode, AccessorType atype, bool isStatic,
       mozilla::Maybe<FunctionNodeType> initializerIfPrivate) {
@@ -499,10 +510,11 @@ class FullParseHandler {
     checkAndSetIsDirectRHSAnonFunction(funNode);
 
     if (initializerIfPrivate.isSome()) {
-      return new_<ClassMethod>(key, funNode, atype, isStatic,
-                               initializerIfPrivate.value());
+      return new_<ClassMethod>(ParseNodeKind::ClassMethod, key, funNode, atype,
+                               isStatic, initializerIfPrivate.value());
     }
-    return new_<ClassMethod>(key, funNode, atype, isStatic, nullptr);
+    return new_<ClassMethod>(ParseNodeKind::ClassMethod, key, funNode, atype,
+                             isStatic, nullptr);
   }
 
   MOZ_MUST_USE ClassField* newClassFieldDefinition(Node name,
@@ -517,11 +529,11 @@ class FullParseHandler {
                                              Node member) {
     MOZ_ASSERT(memberList->isKind(ParseNodeKind::ClassMemberList));
     // Constructors can be surrounded by LexicalScopes.
-    MOZ_ASSERT(member->isKind(ParseNodeKind::ClassMethod) ||
+    MOZ_ASSERT(member->isKind(ParseNodeKind::DefaultConstructor) ||
+               member->isKind(ParseNodeKind::ClassMethod) ||
                member->isKind(ParseNodeKind::ClassField) ||
                (member->isKind(ParseNodeKind::LexicalScope) &&
-                member->as<LexicalScopeNode>().scopeBody()->isKind(
-                    ParseNodeKind::ClassMethod)));
+                member->as<LexicalScopeNode>().scopeBody()->is<ClassMethod>()));
 
     addList(/* list = */ memberList, /* kid = */ member);
     return true;

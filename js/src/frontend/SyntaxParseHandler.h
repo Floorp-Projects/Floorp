@@ -364,6 +364,10 @@ class SyntaxParseHandler {
                                               AccessorType atype) {
     return true;
   }
+  MOZ_MUST_USE Node newDefaultClassConstructor(Node key,
+                                               FunctionNodeType funNode) {
+    return NodeGeneric;
+  }
   MOZ_MUST_USE Node newClassMethodDefinition(
       Node key, FunctionNodeType funNode, AccessorType atype, bool isStatic,
       mozilla::Maybe<FunctionNodeType> initializerIfPrivate) {

@@ -2552,7 +2552,7 @@ bool ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst) {
             return false;
           }
           members.infallibleAppend(prop);
-        } else {
+        } else if (!item->isKind(ParseNodeKind::DefaultConstructor)) {
           ClassMethod* method = &item->as<ClassMethod>();
           MOZ_ASSERT(memberList->pn_pos.encloses(method->pn_pos));
 
