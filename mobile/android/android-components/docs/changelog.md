@@ -43,6 +43,9 @@ permalink: /changelog/
 * **concept-storage**
   * Introduced `CreditCardsAddressesStorage` interface for describing credit card and address storage.
 
+* **support-base**
+  * Add `NamedThreadFactory`, a `ThreadFactory` that names its threads with the given argument.
+
 # 72.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v71.0.0...v72.0.0)
