@@ -206,6 +206,10 @@ void CodeGeneratorShared::addOutOfLineCode(OutOfLineCode* code,
 }
 
 bool CodeGeneratorShared::addNativeToBytecodeEntry(const BytecodeSite* site) {
+  MOZ_ASSERT(site);
+  MOZ_ASSERT(site->tree());
+  MOZ_ASSERT(site->pc());
+
   // Skip the table entirely if profiling is not enabled.
   if (!isProfilerInstrumentationEnabled()) {
     return true;
@@ -216,10 +220,6 @@ bool CodeGeneratorShared::addNativeToBytecodeEntry(const BytecodeSite* site) {
   if (masm.oom()) {
     return false;
   }
-
-  MOZ_ASSERT(site);
-  MOZ_ASSERT(site->tree());
-  MOZ_ASSERT(site->pc());
 
   InlineScriptTree* tree = site->tree();
   jsbytecode* pc = site->pc();
