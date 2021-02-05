@@ -7498,9 +7498,8 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
     if (!constructorNameNode) {
       return false;
     }
-    ClassMethodType method = handler_.newClassMethodDefinition(
-        constructorNameNode, synthesizedCtor, AccessorType::None,
-        /* isStatic = */ false, Nothing());
+    ClassMethodType method = handler_.newDefaultClassConstructor(
+        constructorNameNode, synthesizedCtor);
     if (!method) {
       return false;
     }
