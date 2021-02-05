@@ -106,7 +106,7 @@ static bool HasOperandInLoop(MInstruction* ins, bool hasCalls) {
 // Test whether the given instruction is hoistable, ignoring memory
 // dependencies.
 static bool IsHoistableIgnoringDependency(MInstruction* ins, bool hasCalls) {
-  return ins->isMovable() && !ins->isEffectful() && !ins->neverHoist() &&
+  return ins->isMovable() && !ins->isEffectful() &&
          !HasOperandInLoop(ins, hasCalls);
 }
 
