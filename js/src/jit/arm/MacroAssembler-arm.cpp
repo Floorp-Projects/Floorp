@@ -6,7 +6,6 @@
 
 #include "jit/arm/MacroAssembler-arm.h"
 
-#include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"

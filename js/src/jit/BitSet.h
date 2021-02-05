@@ -8,7 +8,6 @@
 #define jit_BitSet_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/MathAlgorithms.h"
 
 #include <stddef.h>

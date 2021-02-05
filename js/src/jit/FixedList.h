@@ -8,7 +8,6 @@
 #define jit_FixedList_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 
 #include <stddef.h>

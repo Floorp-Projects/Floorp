@@ -9,8 +9,6 @@
 
 // This file declares various analysis passes that operate on MIR.
 
-#include "mozilla/Attributes.h"
-
 #include <stddef.h>
 #include <stdint.h>
 

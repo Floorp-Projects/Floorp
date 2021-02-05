@@ -7,8 +7,6 @@
 #ifndef jit_EdgeCaseAnalysis_h
 #define jit_EdgeCaseAnalysis_h
 
-#include "mozilla/Attributes.h"
-
 namespace js {
 namespace jit {
 

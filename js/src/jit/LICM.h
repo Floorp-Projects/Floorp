@@ -9,8 +9,6 @@
 
 // This file represents the Loop Invariant Code Motion optimization pass
 
-#include "mozilla/Attributes.h"
-
 namespace js {
 namespace jit {
 
