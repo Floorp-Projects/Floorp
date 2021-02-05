@@ -415,7 +415,7 @@ this.talos_powers = class extends ExtensionAPI {
       resProto.ALLOW_CONTENT_ACCESS
     );
 
-    frameScriptURL = this.extension.baseURI.resolve(
+    frameScriptURL = this.extension.rootURI.resolve(
       "chrome/talos-powers-content.js"
     );
 
