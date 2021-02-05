@@ -225,6 +225,11 @@ const Types = (exports.__TypesForTests = [
     front: "devtools/client/fronts/screenshot",
   },
   {
+    types: ["screenshot-content"],
+    spec: "devtools/shared/specs/screenshot-content",
+    front: "devtools/client/fronts/screenshot-content",
+  },
+  {
     types: ["source"],
     spec: "devtools/shared/specs/source",
     front: "devtools/client/fronts/source",

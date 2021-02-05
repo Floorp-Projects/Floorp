@@ -4,20 +4,22 @@
 
 "use strict";
 
-const { screenshotSpec } = require("devtools/shared/specs/screenshot");
+const {
+  screenshotContentSpec,
+} = require("devtools/shared/specs/screenshot-content");
 const {
   FrontClassWithSpec,
   registerFront,
 } = require("devtools/shared/protocol");
 
-class ScreenshotFront extends FrontClassWithSpec(screenshotSpec) {
+class ScreenshotContentFront extends FrontClassWithSpec(screenshotContentSpec) {
   constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);
 
     // Attribute name from which to retrieve the actorID out of the target actor's form
-    this.formAttributeName = "screenshotActor";
+    this.formAttributeName = "screenshotContentActor";
   }
 }
 
-exports.ScreenshotFront = ScreenshotFront;
-registerFront(ScreenshotFront);
+exports.ScreenshotContentFront = ScreenshotContentFront;
+registerFront(ScreenshotContentFront);

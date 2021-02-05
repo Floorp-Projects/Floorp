@@ -3,11 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-const { Cc, Ci } = require("chrome");
-const Services = require("Services");
-const { LocalizationHelper } = require("devtools/shared/l10n");
 
-loader.lazyRequireGetter(this, "getRect", "devtools/shared/layout/utils", true);
+const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const CONTAINER_FLASHING_DURATION = 500;
 const STRINGS_URI = "devtools/shared/locales/screenshot.properties";
@@ -22,11 +19,11 @@ const MAX_IMAGE_HEIGHT = 10000;
 
 /**
  * This function is called to simulate camera effects
- * @param object document
- *        The target document.
+ * @param {BrowsingContext} browsingContext: The browsing context associated with the
+ *                          browser element we want to animate.
  */
-function simulateCameraFlash(document) {
-  const node = document.documentElement;
+function simulateCameraFlash(browsingContext) {
+  const node = browsingContext.topFrameElement;
 
   // Don't take a screenshot if the user prefers reduced motion.
   if (node.ownerGlobal.matchMedia("(prefers-reduced-motion)").matches) {
@@ -39,138 +36,126 @@ function simulateCameraFlash(document) {
 }
 
 /**
- * This function simply handles the --delay argument before calling
- * createScreenshotData
+ * Take a screenshot of a browser element given its browsingContext.
+ *
+ * @param {Object} args
+ * @param {Number} args.delay: Number of seconds to wait before taking the screenshot
+ * @param {Object|null} args.rect: Object with left, top, width and height properties
+ *                      representing the rect **inside the browser element** that should
+ *                      be rendered. If null, the current viewport of the element will be rendered.
+ * @param {Boolean} args.fullpage: Should the screenshot be the height of the whole page
+ * @param {String} args.filename: Expected filename for the screenshot
+ * @param {Number} args.dpr: Scale of the screenshot. ⚠️ Note that the scale might be
+ *                 decreased if the resulting image would be too big to draw safely.
+ *                 Warning message will be returned if that's the case.
+ * @param {BrowsingContext} browsingContext
+ * @returns {Object} object with the following properties:
+ *          - data {String}: The dataURL representing the screenshot
+ *          - height {Number}: Height of the resulting screenshot
+ *          - width {Number}: Width of the resulting screenshot
+ *          - filename {String}: Filename of the resulting screenshot
+ *          - messages {Array<Object{text, level}>}: An array of object representing the
+ *            different messages and their level that should be displayed to the user.
  */
-function captureScreenshot(args, document) {
-  if (args.help) {
-    return null;
-  }
-  if (args.delay > 0) {
-    return new Promise((resolve, reject) => {
-      document.defaultView.setTimeout(() => {
-        createScreenshotDataURL(document, args).then(resolve, reject);
-      }, args.delay * 1000);
-    });
-  }
-  return createScreenshotDataURL(document, args);
-}
-
-exports.captureScreenshot = captureScreenshot;
-
-/**
- * This does the dirty work of creating a base64 string out of an
- * area of the browser window
- */
-function createScreenshotDataURL(document, args) {
-  let window = document.defaultView;
-  let left = 0;
-  let top = 0;
-  let width;
-  let height;
-  const currentX = window.scrollX;
-  const currentY = window.scrollY;
+async function captureScreenshot(args, browsingContext) {
+  const messages = [];
 
   let filename = getFilename(args.filename);
 
   if (args.fullpage) {
-    // Bug 961832: Screenshot shows fixed position element in wrong
-    // position if we don't scroll to top
-    window.scrollTo(0, 0);
-    width = window.innerWidth + window.scrollMaxX - window.scrollMinX;
-    height = window.innerHeight + window.scrollMaxY - window.scrollMinY;
     filename = filename.replace(".png", "-fullpage.png");
-  } else if (args.rawNode) {
-    window = args.rawNode.ownerGlobal;
-    ({ top, left, width, height } = getRect(window, args.rawNode, window));
-  } else if (args.selector) {
-    const node = window.document.querySelector(args.selector);
-    if (!node) {
-      logWarningInPage(
-        L10N.getFormatStr("screenshotNoSelectorMatchWarning", args.selector),
-        window
-      );
-      return Promise.resolve({ data: null });
-    }
-    ({ top, left, width, height } = getRect(window, node, window));
-  } else {
-    left = window.scrollX;
-    top = window.scrollY;
-    width = window.innerWidth;
-    height = window.innerHeight;
   }
 
-  // Only adjust for scrollbars when considering the full window
-  if (args.fullpage) {
-    const winUtils = window.windowUtils;
-    const scrollbarHeight = {};
-    const scrollbarWidth = {};
-    winUtils.getScrollbarSize(false, scrollbarWidth, scrollbarHeight);
-    width -= scrollbarWidth.value;
-    height -= scrollbarHeight.value;
-  }
+  let { left, top, width, height } = args.rect || {};
 
   // Truncate the width and height if necessary.
-  if (width > MAX_IMAGE_WIDTH || height > MAX_IMAGE_HEIGHT) {
+  if (width && (width > MAX_IMAGE_WIDTH || height > MAX_IMAGE_HEIGHT)) {
     width = Math.min(width, MAX_IMAGE_WIDTH);
     height = Math.min(height, MAX_IMAGE_HEIGHT);
-    logWarningInPage(
-      L10N.getFormatStr("screenshotTruncationWarning", width, height),
-      window
+    messages.push({
+      level: "warn",
+      text: L10N.getFormatStr("screenshotTruncationWarning", width, height),
+    });
+  }
+
+  let rect = null;
+  if (args.rect) {
+    rect = new globalThis.DOMRect(
+      Math.round(left),
+      Math.round(top),
+      Math.round(width),
+      Math.round(height)
     );
   }
 
-  const ratio = args.dpr ? args.dpr : window.devicePixelRatio;
+  const ratio = args.dpr ? args.dpr : 1;
 
+  const document = browsingContext.topChromeWindow.document;
   const canvas = document.createElementNS(
     "http://www.w3.org/1999/xhtml",
     "canvas"
   );
-  const ctx = canvas.getContext("2d");
 
-  const drawToCanvas = actualRatio => {
+  const drawToCanvas = async actualRatio => {
     // Even after decreasing width, height and ratio, there may still be cases where the
     // hardware fails at creating the image. Let's catch this so we can at least show an
     // error message to the user.
     try {
-      canvas.width = width * actualRatio;
-      canvas.height = height * actualRatio;
-      ctx.scale(actualRatio, actualRatio);
-      ctx.drawWindow(window, left, top, width, height, "#fff");
+      const snapshot = await browsingContext.currentWindowGlobal.drawSnapshot(
+        rect,
+        actualRatio,
+        "rgb(255,255,255)"
+      );
+
+      canvas.width = snapshot.width;
+      canvas.height = snapshot.height;
+      width = snapshot.width;
+      height = snapshot.height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(snapshot, 0, 0);
+
+      // Bug 1574935 - Huge dimensions can trigger an OOM because multiple copies
+      // of the bitmap will exist in memory. Force the removal of the snapshot
+      // because it is no longer needed.
+      snapshot.close();
+
       return canvas.toDataURL("image/png", "");
     } catch (e) {
       return null;
     }
   };
 
-  let data = drawToCanvas(ratio);
+  let data = await drawToCanvas(ratio);
   if (!data && ratio > 1.0) {
     // If the user provided DPR or the window.devicePixelRatio was higher than 1,
     // try again with a reduced ratio.
-    logWarningInPage(L10N.getStr("screenshotDPRDecreasedWarning"), window);
-    data = drawToCanvas(1.0);
+    messages.push({
+      level: "warn",
+      text: L10N.getStr("screenshotDPRDecreasedWarning"),
+    });
+    data = await drawToCanvas(1.0);
   }
   if (!data) {
-    logErrorInPage(L10N.getStr("screenshotRenderingError"), window);
-  }
-
-  // See comment above on bug 961832
-  if (args.fullpage) {
-    window.scrollTo(currentX, currentY);
+    messages.push({
+      level: "error",
+      text: L10N.getStr("screenshotRenderingError"),
+    });
   }
 
   if (data) {
-    simulateCameraFlash(document);
+    simulateCameraFlash(browsingContext);
   }
 
-  return Promise.resolve({
-    destinations: [],
+  return {
     data,
     height,
     width,
     filename,
-  });
+    messages,
+  };
 }
+
+exports.captureScreenshot = captureScreenshot;
 
 /**
  * We may have a filename specified in args, or we might have to generate
@@ -183,44 +168,17 @@ function getFilename(defaultName) {
   }
 
   const date = new Date();
-  let dateString =
-    date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
-  dateString = dateString
-    .split("-")
-    .map(function(part) {
-      if (part.length == 1) {
-        part = "0" + part;
-      }
-      return part;
-    })
-    .join("-");
+  const monthString = (date.getMonth() + 1).toString().padStart(2, "0");
+  const dayString = (date.getDate() + 1).toString().padStart(2, "0");
+  const dateString = `${date.getFullYear()}-${monthString}-${dayString}`;
 
   const timeString = date
     .toTimeString()
     .replace(/:/g, ".")
     .split(" ")[0];
+
   return (
     L10N.getFormatStr("screenshotGeneratedFilename", dateString, timeString) +
     ".png"
   );
 }
-
-function logInPage(text, flags, window) {
-  const scriptError = Cc["@mozilla.org/scripterror;1"].createInstance(
-    Ci.nsIScriptError
-  );
-  scriptError.initWithWindowID(
-    text,
-    null,
-    null,
-    0,
-    0,
-    flags,
-    "screenshot",
-    window.windowGlobalChild.innerWindowId
-  );
-  Services.console.logMessage(scriptError);
-}
-
-const logErrorInPage = (text, window) => logInPage(text, 0, window);
-const logWarningInPage = (text, window) => logInPage(text, 1, window);

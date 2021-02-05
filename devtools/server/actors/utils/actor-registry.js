@@ -163,6 +163,12 @@ const ActorRegistry = {
         type: { global: true },
       }
     );
+
+    this.registerModule("devtools/server/actors/screenshot", {
+      prefix: "screenshot",
+      constructor: "ScreenshotActor",
+      type: { global: true },
+    });
   },
 
   /**
@@ -239,11 +245,6 @@ const ActorRegistry = {
       constructor: "AccessibilityActor",
       type: { target: true },
     });
-    this.registerModule("devtools/server/actors/screenshot", {
-      prefix: "screenshot",
-      constructor: "ScreenshotActor",
-      type: { target: true },
-    });
     this.registerModule("devtools/server/actors/changes", {
       prefix: "changes",
       constructor: "ChangesActor",
@@ -278,6 +279,11 @@ const ActorRegistry = {
         type: { target: true },
       }
     );
+    this.registerModule("devtools/server/actors/screenshot-content", {
+      prefix: "screenshotContent",
+      constructor: "ScreenshotContentActor",
+      type: { target: true },
+    });
   },
 
   /**

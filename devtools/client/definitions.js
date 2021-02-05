@@ -92,6 +92,12 @@ loader.lazyRequireGetter(
   "DevToolsFissionPrefs",
   "devtools/client/devtools-fission-prefs"
 );
+loader.lazyRequireGetter(
+  this,
+  "captureAndSaveScreenshot",
+  "devtools/client/shared/screenshot",
+  true
+);
 
 const { MultiLocalizationHelper } = require("devtools/shared/l10n");
 const L10N = new MultiLocalizationHelper(
@@ -542,8 +548,15 @@ exports.ToolboxButtons = [
   {
     id: "command-button-screenshot",
     description: l10n("toolbox.buttons.screenshot"),
-    isTargetSupported: target =>
-      !target.chrome && target.hasActor("screenshot"),
+    isTargetSupported: targetFront => {
+      return (
+        !targetFront.isParentProcess &&
+        // @backward-compat { version 87 } We need to check for the screenshot actor as well
+        // when connecting to older server that does not have the screenshotContentActor
+        (targetFront.hasActor("screenshotContent") ||
+          targetFront.hasActor("screenshot"))
+      );
+    },
     async onClick(event, toolbox) {
       // Special case for screenshot button to check for clipboard preference
       const clipboardEnabled = Services.prefs.getBoolPref(
@@ -553,8 +566,8 @@ exports.ToolboxButtons = [
       if (clipboardEnabled) {
         args.clipboard = true;
       }
-      const screenshotFront = await toolbox.target.getFront("screenshot");
-      await screenshotFront.captureAndSave(toolbox.win, args);
+
+      await captureAndSaveScreenshot(toolbox.target, toolbox.win, args);
     },
   },
   createHighlightButton("RulersHighlighter", "rulers"),

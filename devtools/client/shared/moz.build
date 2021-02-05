@@ -44,7 +44,7 @@ DevToolsModules(
     "poller.js",
     "prefs.js",
     "react-utils.js",
-    "save-screenshot.js",
+    "screenshot.js",
     "scroll.js",
     "source-utils.js",
     "SplitView.jsm",

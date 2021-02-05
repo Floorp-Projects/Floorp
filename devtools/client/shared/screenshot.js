@@ -15,6 +15,103 @@ loader.lazyImporter(this, "FileUtils", "resource://gre/modules/FileUtils.jsm");
 const STRINGS_URI = "devtools/shared/locales/screenshot.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
+/**
+ * Take a screenshot of a browser element matching the passed target and save it to a file
+ * or the clipboard.
+ *
+ * @param {TargetFront} targetFront: The targetFront of the frame we want to take a screenshot of.
+ * @param {Window} window: The DevTools Client window.
+ * @param {Object} args
+ * @param {Boolean} args.fullpage: Should the screenshot be the height of the whole page
+ * @param {String} args.filename: Expected filename for the screenshot
+ * @param {Boolean} args.clipboard: Whether or not the screenshot should be saved to the clipboard.
+ * @param {Number} args.dpr: Scale of the screenshot. Defaults to the window `devicePixelRatio`.
+ *                           ⚠️ Note that the scale might be decreased if the resulting
+ *                           image would be too big to draw safely. Warning will be emitted
+ *                           to the console if that's the case.
+ * @param {Number} args.delay: Number of seconds to wait before taking the screenshot
+ * @param {Boolean} args.help: Set to true to receive a message with the screenshot command
+ *                             documentation.
+ * @returns {Array<Object{text, level}>} An array of object representing the different
+ *          messages emitted throught the process, that should be displayed to the user.
+ */
+async function captureAndSaveScreenshot(targetFront, window, args = {}) {
+  if (args.help) {
+    // Wrap message in an array so that the return value is consistant.
+    return [{ text: getFormattedHelpData() }];
+  }
+
+  if (targetFront.isParentProcess) {
+    return [
+      {
+        text:
+          "Taking screenshot from ParentProcess target isn't supported yet (See Bug 1474006)",
+        level: "warn",
+      },
+    ];
+  }
+
+  // @backward-compat { version 87 } The screenshot-content actor was introduced in 87,
+  // so we can always use it once 87 reaches release.
+  const supportsContentScreenshot = targetFront.hasActor("screenshotContent");
+
+  let captureResponse;
+  if (supportsContentScreenshot) {
+    if (args.delay > 0) {
+      await new Promise(res => setTimeout(res, args.delay * 1000));
+    }
+
+    const screenshotContentFront = await targetFront.getFront(
+      "screenshot-content"
+    );
+
+    // Call the content-process on the server to retrieve informations that will be needed
+    // by the parent process.
+    const {
+      rect,
+      windowDpr,
+      messages,
+      error,
+    } = await screenshotContentFront.prepareCapture(args);
+
+    if (error) {
+      return messages;
+    }
+
+    if (rect) {
+      args.rect = rect;
+    }
+
+    if (!args.dpr) {
+      args.dpr = windowDpr;
+    }
+
+    args.browsingContextID = targetFront.browsingContextID;
+
+    // We can now call the parent process which will take the screenshot via
+    // the drawSnapshot API
+    const rootFront = targetFront.client.mainRoot;
+    const parentProcessScreenshotFront = await rootFront.getFront("screenshot");
+    captureResponse = await parentProcessScreenshotFront.capture(args);
+    messages.push(...(captureResponse.messages || []));
+
+    // Reset the page to the state it was in before taking the screenshot (e.g. set the
+    // scroll position as it was before). This is a oneway method so there's nothing to
+    // wait for.
+    screenshotContentFront.captureDone();
+  } else {
+    const screenshotFront = await targetFront.getFront("screenshot");
+    captureResponse = await screenshotFront.capture(args);
+  }
+
+  if (captureResponse.error) {
+    return captureResponse.messages || [];
+  }
+
+  const saveMessages = await saveScreenshot(window, args, captureResponse);
+  return (captureResponse.messages || []).concat(saveMessages);
+}
+
 const screenshotDescription = L10N.getStr("screenshotDesc");
 const screenshotGroupOptions = L10N.getStr("screenshotGroupOptions");
 const screenshotCommandParams = [
@@ -116,10 +213,12 @@ function getFormattedHelpData() {
  *         Response messages from processing the screenshot
  */
 function saveScreenshot(window, args = {}, value) {
+  // @backward-compat { version 87 } This is still needed by the console when connecting
+  // to an older server. Once 87 is in release, we can remove this whole block since we
+  // already handle args.help in captureScreenshotAndSave.
   if (args.help) {
-    const message = getFormattedHelpData();
-    // Wrap message in an array so that the return value is consistant with save
-    return [message];
+    // Wrap message in an array so that the return value is consistant.
+    return [{ text: getFormattedHelpData() }];
   }
 
   // Guard against missing image data.
@@ -211,10 +310,10 @@ function saveToClipboard(base64URI) {
       null,
       Services.clipboard.kGlobalClipboard
     );
-    return L10N.getStr("screenshotCopied");
+    return { text: L10N.getStr("screenshotCopied") };
   } catch (ex) {
     console.error(ex);
-    return L10N.getStr("screenshotErrorCopying");
+    return { level: "error", text: L10N.getStr("screenshotErrorCopying") };
   }
 }
 
@@ -263,11 +362,14 @@ async function saveToFile(image) {
     list.add(download);
     // Await successful completion of the save via the download manager
     await download.start();
-    return L10N.getFormatStr("screenshotSavedToFile", filename);
+    return { text: L10N.getFormatStr("screenshotSavedToFile", filename) };
   } catch (ex) {
     console.error(ex);
-    return L10N.getFormatStr("screenshotErrorSavingToFile", filename);
+    return {
+      level: "error",
+      text: L10N.getFormatStr("screenshotErrorSavingToFile", filename),
+    };
   }
 }
 
-module.exports = saveScreenshot;
+module.exports = { captureAndSaveScreenshot, saveScreenshot };

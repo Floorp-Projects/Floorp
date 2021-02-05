@@ -48,8 +48,9 @@ loader.lazyRequireGetter(this, "l10n", "devtools/client/responsive/utils/l10n");
 loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
 loader.lazyRequireGetter(
   this,
-  "saveScreenshot",
-  "devtools/client/shared/save-screenshot"
+  "captureAndSaveScreenshot",
+  "devtools/client/shared/screenshot",
+  true
 );
 
 const RELOAD_CONDITION_PREF_PREFIX = "devtools.responsive.reloadConditions.";
@@ -697,9 +698,7 @@ class ResponsiveUI {
   }
 
   async onScreenshot() {
-    const data = await this.responsiveFront.captureScreenshot();
-    await saveScreenshot(this.browserWindow, {}, data);
-
+    await captureAndSaveScreenshot(this.currentTarget, this.browserWindow);
     message.post(this.rdmFrame.contentWindow, "screenshot-captured");
   }
 
