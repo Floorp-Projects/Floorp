@@ -36,12 +36,6 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.ext.toShortUrl
 import kotlin.math.max
-import mozilla.components.browser.state.state.MediaState
-import mozilla.components.feature.media.ext.pauseIfPlaying
-import mozilla.components.feature.media.ext.playIfPaused
-import org.mozilla.fenix.FeatureFlags.newMediaSessionApi
-import org.mozilla.fenix.ext.getMediaStateForSession
-import org.mozilla.fenix.utils.Do
 
 /**
  * A RecyclerView ViewHolder implementation for "tab" items.
@@ -99,94 +93,46 @@ class TabTrayViewHolder(
         // Media state
         playPauseButtonView.increaseTapArea(PLAY_PAUSE_BUTTON_EXTRA_DPS)
 
-        if (newMediaSessionApi) {
-            with(playPauseButtonView) {
-                invalidate()
-                val sessionState = store.state.findTabOrCustomTab(tab.id)
+        with(playPauseButtonView) {
+            invalidate()
+            val sessionState = store.state.findTabOrCustomTab(tab.id)
+            when (sessionState?.mediaSessionState?.playbackState) {
+                MediaSession.PlaybackState.PAUSED -> {
+                    showAndEnable()
+                    contentDescription =
+                        context.getString(R.string.mozac_feature_media_notification_action_play)
+                    setImageDrawable(
+                        AppCompatResources.getDrawable(context, R.drawable.media_state_play)
+                    )
+                }
+
+                MediaSession.PlaybackState.PLAYING -> {
+                    showAndEnable()
+                    contentDescription =
+                        context.getString(R.string.mozac_feature_media_notification_action_pause)
+                    setImageDrawable(
+                        AppCompatResources.getDrawable(context, R.drawable.media_state_pause)
+                    )
+                }
+
+                else -> {
+                    removeTouchDelegate()
+                    removeAndDisable()
+                }
+            }
+
+            setOnClickListener {
                 when (sessionState?.mediaSessionState?.playbackState) {
-                    MediaSession.PlaybackState.PAUSED -> {
-                        showAndEnable()
-                        contentDescription =
-                            context.getString(R.string.mozac_feature_media_notification_action_play)
-                        setImageDrawable(
-                            AppCompatResources.getDrawable(context, R.drawable.media_state_play)
-                        )
-                    }
-
                     MediaSession.PlaybackState.PLAYING -> {
-                        showAndEnable()
-                        contentDescription =
-                            context.getString(R.string.mozac_feature_media_notification_action_pause)
-                        setImageDrawable(
-                            AppCompatResources.getDrawable(context, R.drawable.media_state_pause)
-                        )
-                    }
-
-                    else -> {
-                        removeTouchDelegate()
-                        removeAndDisable()
-                    }
-                }
-
-                setOnClickListener {
-                    when (sessionState?.mediaSessionState?.playbackState) {
-                        MediaSession.PlaybackState.PLAYING -> {
-                            metrics.track(Event.TabMediaPause)
-                            sessionState.mediaSessionState?.controller?.pause()
-                        }
-
-                        MediaSession.PlaybackState.PAUSED -> {
-                            metrics.track(Event.TabMediaPlay)
-                            sessionState.mediaSessionState?.controller?.play()
-                        }
-                        else -> throw AssertionError(
-                            "Play/Pause button clicked without play/pause state."
-                        )
-                    }
-                }
-            }
-        } else {
-            with(playPauseButtonView) {
-                invalidate()
-                Do exhaustive when (store.state.getMediaStateForSession(tab.id)) {
-                    MediaState.State.PAUSED -> {
-                        showAndEnable()
-                        contentDescription =
-                            context.getString(R.string.mozac_feature_media_notification_action_play)
-                        setImageDrawable(
-                            AppCompatResources.getDrawable(context, R.drawable.media_state_play)
-                        )
-                    }
-
-                    MediaState.State.PLAYING -> {
-                        showAndEnable()
-                        contentDescription =
-                            context.getString(R.string.mozac_feature_media_notification_action_pause)
-                        setImageDrawable(
-                            AppCompatResources.getDrawable(context, R.drawable.media_state_pause)
-                        )
-                    }
-
-                    MediaState.State.NONE -> {
-                        removeTouchDelegate()
-                        removeAndDisable()
-                    }
-                }
-            }
-
-            playPauseButtonView.setOnClickListener {
-                Do exhaustive when (store.state.getMediaStateForSession(tab.id)) {
-                    MediaState.State.PLAYING -> {
                         metrics.track(Event.TabMediaPause)
-                        store.state.media.pauseIfPlaying()
+                        sessionState.mediaSessionState?.controller?.pause()
                     }
 
-                    MediaState.State.PAUSED -> {
+                    MediaSession.PlaybackState.PAUSED -> {
                         metrics.track(Event.TabMediaPlay)
-                        store.state.media.playIfPaused()
+                        sessionState.mediaSessionState?.controller?.play()
                     }
-
-                    MediaState.State.NONE -> throw AssertionError(
+                    else -> throw AssertionError(
                         "Play/Pause button clicked without play/pause state."
                     )
                 }

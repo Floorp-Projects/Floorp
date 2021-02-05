@@ -128,7 +128,6 @@ import mozilla.components.feature.media.fullscreen.MediaFullscreenOrientationFea
 import mozilla.components.feature.session.behavior.EngineViewBrowserToolbarBehavior
 import mozilla.components.feature.webauthn.WebAuthnFeature
 import mozilla.components.support.base.feature.ActivityResultHandler
-import org.mozilla.fenix.FeatureFlags.newMediaSessionApi
 import mozilla.components.feature.session.behavior.ToolbarPosition as MozacToolbarPosition
 
 /**
@@ -410,25 +409,14 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
             view = view
         )
 
-        if (newMediaSessionApi) {
-            fullScreenMediaSessionFeature.set(
-                feature = MediaSessionFullscreenFeature(
-                    requireActivity(),
-                    context.components.core.store
-                ),
-                owner = this,
-                view = view
-            )
-        } else {
-            fullScreenMediaFeature.set(
-                feature = MediaFullscreenOrientationFeature(
-                    requireActivity(),
-                    context.components.core.store
-                ),
-                owner = this,
-                view = view
-            )
-        }
+        fullScreenMediaSessionFeature.set(
+            feature = MediaSessionFullscreenFeature(
+                requireActivity(),
+                context.components.core.store
+            ),
+            owner = this,
+            view = view
+        )
 
         val shareDownloadFeature = ShareDownloadFeature(
             context = context.applicationContext,

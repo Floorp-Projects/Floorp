@@ -34,7 +34,6 @@ import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
 import mozilla.components.feature.downloads.DownloadMiddleware
 import mozilla.components.feature.logins.exceptions.LoginExceptionStorage
 import mozilla.components.feature.media.MediaSessionFeature
-import mozilla.components.feature.media.middleware.MediaMiddleware
 import mozilla.components.feature.media.middleware.RecordingDevicesMiddleware
 import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.WebAppShortcutManager
@@ -62,7 +61,6 @@ import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
-import org.mozilla.fenix.FeatureFlags.newMediaSessionApi
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.TelemetryMiddleware
@@ -70,7 +68,6 @@ import org.mozilla.fenix.components.search.SearchMigration
 import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.media.MediaService
 import org.mozilla.fenix.media.MediaSessionService
 import org.mozilla.fenix.perf.StrictModeManager
 import org.mozilla.fenix.perf.lazyMonitored
@@ -199,10 +196,6 @@ class Core(
                 RecordingDevicesMiddleware(context)
             )
 
-        if (!newMediaSessionApi) {
-            middlewareList.add(MediaMiddleware(context, MediaService::class.java))
-        }
-
         BrowserStore(
             middleware = middlewareList + EngineMiddleware.create(engine, ::findSessionById)
         )
@@ -250,9 +243,7 @@ class Core(
                 permissionStorage.permissionsStorage, HomeActivity::class.java
             )
 
-            if (newMediaSessionApi) {
-                MediaSessionFeature(context, MediaSessionService::class.java, store).start()
-            }
+            MediaSessionFeature(context, MediaSessionService::class.java, store).start()
         }
     }
 

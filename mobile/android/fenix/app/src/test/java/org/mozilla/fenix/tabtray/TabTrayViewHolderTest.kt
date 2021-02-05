@@ -17,7 +17,6 @@ import io.mockk.verify
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.MediaSessionState
-import mozilla.components.browser.state.state.MediaState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
@@ -31,7 +30,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.FeatureFlags.newMediaSessionApi
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -83,31 +81,20 @@ class TabTrayViewHolderTest {
             url = "https://example.com"
         )
 
-        if (newMediaSessionApi) {
-            state = state.copy(
-                tabs = listOf(
-                    TabSessionState(
-                        id = "123",
-                        content = ContentState(
-                            url = "https://example.com",
-                            searchTerms = "search terms"
-                        ),
-                        mediaSessionState = mediaSessionState
-                    )
+        state = state.copy(
+            tabs = listOf(
+                TabSessionState(
+                    id = "123",
+                    content = ContentState(
+                        url = "https://example.com",
+                        searchTerms = "search terms"
+                    ),
+                    mediaSessionState = mediaSessionState
                 )
             )
+        )
 
-            every { mediaSessionState.playbackState } answers { MediaSession.PlaybackState.PAUSED }
-        } else {
-            state = state.copy(
-                media = MediaState(
-                    aggregate = MediaState.Aggregate(
-                        activeTabId = "123",
-                        state = MediaState.State.PAUSED
-                    )
-                )
-            )
-        }
+        every { mediaSessionState.playbackState } answers { MediaSession.PlaybackState.PAUSED }
 
         tabViewHolder.bind(tab, false, mockk(), mockk())
 
@@ -124,31 +111,20 @@ class TabTrayViewHolderTest {
             url = "https://example.com"
         )
 
-        if (newMediaSessionApi) {
-            state = state.copy(
-                tabs = listOf(
-                    TabSessionState(
-                        id = "123",
-                        content = ContentState(
-                            url = "https://example.com",
-                            searchTerms = "search terms"
-                        ),
-                        mediaSessionState = mediaSessionState
-                    )
+        state = state.copy(
+            tabs = listOf(
+                TabSessionState(
+                    id = "123",
+                    content = ContentState(
+                        url = "https://example.com",
+                        searchTerms = "search terms"
+                    ),
+                    mediaSessionState = mediaSessionState
                 )
             )
+        )
 
-            every { mediaSessionState.playbackState } answers { MediaSession.PlaybackState.PLAYING }
-        } else {
-            state = state.copy(
-                media = MediaState(
-                    aggregate = MediaState.Aggregate(
-                        activeTabId = "123",
-                        state = MediaState.State.PLAYING
-                    )
-                )
-            )
-        }
+        every { mediaSessionState.playbackState } answers { MediaSession.PlaybackState.PLAYING }
 
         tabViewHolder.bind(tab, false, mockk(), mockk())
 

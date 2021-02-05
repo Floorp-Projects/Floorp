@@ -27,12 +27,6 @@ object FeatureFlags {
     val nimbusExperiments = Config.channel.isNightlyOrDebug
 
     /**
-     * Enables the new MediaSession API.
-     */
-    @Suppress("MayBeConst")
-    val newMediaSessionApi = true
-
-    /**
      * Enables WebAuthn support.
      */
     val webAuthFeature = Config.channel.isNightlyOrDebug

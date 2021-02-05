@@ -23,7 +23,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.FeatureFlags.newMediaSessionApi
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -81,13 +80,8 @@ class OpenSpecificTabIntentProcessorTest {
     @Test
     fun `GIVEN an intent with correct action and extra string WHEN it is processed THEN session should be selected and openToBrowser should be called`() {
         val intent = Intent().apply {
-            if (newMediaSessionApi) {
-                action = AbstractMediaSessionService.Companion.ACTION_SWITCH_TAB
-                putExtra(AbstractMediaSessionService.Companion.EXTRA_TAB_ID, TEST_SESSION_ID)
-            } else {
-                action = AbstractMediaService.Companion.ACTION_SWITCH_TAB
-                putExtra(AbstractMediaService.Companion.EXTRA_TAB_ID, TEST_SESSION_ID)
-            }
+            action = AbstractMediaSessionService.Companion.ACTION_SWITCH_TAB
+            putExtra(AbstractMediaSessionService.Companion.EXTRA_TAB_ID, TEST_SESSION_ID)
         }
         val store = BrowserStore(BrowserState(tabs = listOf(createTab(id = TEST_SESSION_ID, url = "https:mozilla.org"))))
         val tabUseCases: TabsUseCases = mockk(relaxed = true)

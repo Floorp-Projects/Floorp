@@ -7,10 +7,8 @@ package org.mozilla.fenix.home.intent
 import android.content.Intent
 import androidx.navigation.NavController
 import mozilla.components.browser.state.selector.findTab
-import mozilla.components.feature.media.service.AbstractMediaService
 import mozilla.components.feature.media.service.AbstractMediaSessionService
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.FeatureFlags.newMediaSessionApi
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.ext.components
 
@@ -44,17 +42,9 @@ class OpenSpecificTabIntentProcessor(
 }
 
 private fun getAction(): String {
-    return if (newMediaSessionApi) {
-        AbstractMediaSessionService.Companion.ACTION_SWITCH_TAB
-    } else {
-        AbstractMediaService.Companion.ACTION_SWITCH_TAB
-    }
+    return AbstractMediaSessionService.Companion.ACTION_SWITCH_TAB
 }
 
 private fun getTabId(): String {
-    return if (newMediaSessionApi) {
-        AbstractMediaSessionService.Companion.EXTRA_TAB_ID
-    } else {
-        AbstractMediaService.Companion.EXTRA_TAB_ID
-    }
+    return AbstractMediaSessionService.Companion.EXTRA_TAB_ID
 }
