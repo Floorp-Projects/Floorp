@@ -575,8 +575,7 @@ SharedModule wasm::CompileBuffer(const CompileArgs& args,
                                  const ShareableBytes& bytecode,
                                  UniqueChars* error,
                                  UniqueCharsVector* warnings,
-                                 JS::OptimizedEncodingListener* listener,
-                                 JSTelemetrySender telemetrySender) {
+                                 JS::OptimizedEncodingListener* listener) {
   Decoder d(bytecode.bytes, 0, error, warnings);
 
   ModuleEnvironment moduleEnv(args.features);
@@ -587,7 +586,7 @@ SharedModule wasm::CompileBuffer(const CompileArgs& args,
   compilerEnv.computeParameters(d);
 
   ModuleGenerator mg(args, &moduleEnv, &compilerEnv, nullptr, error);
-  if (!mg.init(nullptr, telemetrySender)) {
+  if (!mg.init(nullptr)) {
     return nullptr;
   }
 
@@ -603,8 +602,7 @@ SharedModule wasm::CompileBuffer(const CompileArgs& args,
 }
 
 void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
-                        const Module& module, Atomic<bool>* cancelled,
-                        JSTelemetrySender telemetrySender) {
+                        const Module& module, Atomic<bool>* cancelled) {
   UniqueChars error;
   Decoder d(bytecode, 0, &error);
 
@@ -621,7 +619,7 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
   compilerEnv.computeParameters(d);
 
   ModuleGenerator mg(args, &moduleEnv, &compilerEnv, cancelled, &error);
-  if (!mg.init(nullptr, telemetrySender)) {
+  if (!mg.init(nullptr)) {
     return;
   }
 
@@ -721,7 +719,7 @@ SharedModule wasm::CompileStreaming(
     const ExclusiveBytesPtr& codeBytesEnd,
     const ExclusiveStreamEndData& exclusiveStreamEnd,
     const Atomic<bool>& cancelled, UniqueChars* error,
-    UniqueCharsVector* warnings, JSTelemetrySender telemetrySender) {
+    UniqueCharsVector* warnings) {
   CompilerEnvironment compilerEnv(args);
   ModuleEnvironment moduleEnv(args.features);
 
@@ -743,7 +741,7 @@ SharedModule wasm::CompileStreaming(
   }
 
   ModuleGenerator mg(args, &moduleEnv, &compilerEnv, &cancelled, error);
-  if (!mg.init(nullptr, telemetrySender)) {
+  if (!mg.init(nullptr)) {
     return nullptr;
   }
 
