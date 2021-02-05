@@ -69,7 +69,15 @@ static PROFILER_PRESETS: &'static[(&'static str, &'static str)] = &[
     // Stats about the content of the frame.
     (&"Frame stats", &"Primitives,Visible primitives,Draw calls,Vertices,Color passes,Alpha passes,Rendered picture tiles,Rasterized glyphs"),
     // Texture cache allocation stats.
-    (&"Texture cache stats", &"Texture cache RGBA8 linear pixels, Texture cache RGBA8 linear textures, Texture cache RGBA8 glyphs pixels, Texture cache RGBA8 glyphs textures, Texture cache A8 glyphs pixels, Texture cache A8 glyphs textures, Texture cache A8 pixels, Texture cache A8 textures, Texture cache A16 pixels, Texture cache A16 textures, Texture cache RGBA8 nearest pixels, Texture cache RGBA8 nearest textures, Texture cache shared mem, Texture cache standalone mem"),
+    (&"Texture cache stats", &"Texture cache RGBA8 linear textures, Texture cache RGBA8 linear pixels, Texture cache RGBA8 linear pressure,
+        , ,Texture cache RGBA8 glyphs textures, Texture cache RGBA8 glyphs pixels, Texture cache RGBA8 glyphs pressure,
+        , ,Texture cache A8 glyphs textures, Texture cache A8 glyphs pixels, Texture cache A8 glyphs pressure,
+        , ,Texture cache A8 textures, Texture cache A8 pixels, Texture cache A8 pressure,
+        , ,Texture cache A16 textures, Texture cache A16 pixels, Texture cache A16 pressure,
+        , ,Texture cache RGBA8 nearest textures, Texture cache RGBA8 nearest pixels, Texture cache RGBA8 nearest pressure,
+        , ,Texture cache shared mem, Texture cache standalone mem, Texture cache standalone pressure,
+        , ,Texture cache eviction count, Texture cache youngest evicted"
+    ),
     // Graphs to investigate driver overhead of texture cache updates.
     (&"Texture upload perf", &"#Texture cache update,#Texture cache upload, ,#Staging CPU allocation,#Staging GPU allocation,#Staging CPU copy,#Staging GPU copy,#Upload time, ,#Upload copy batches,#Rasterized glyphs, ,#Cache texture creation,#Cache texture deletion"),
 
@@ -208,7 +216,17 @@ pub const TOTAL_UPLOAD_TIME: usize = 84;
 pub const CREATE_CACHE_TEXTURE_TIME: usize = 85;
 pub const DELETE_CACHE_TEXTURE_TIME: usize = 86;
 
-pub const NUM_PROFILER_EVENTS: usize = 87;
+pub const TEXTURE_CACHE_COLOR8_LINEAR_PRESSURE: usize = 87;
+pub const TEXTURE_CACHE_COLOR8_NEAREST_PRESSURE: usize = 88;
+pub const TEXTURE_CACHE_COLOR8_GLYPHS_PRESSURE: usize = 89;
+pub const TEXTURE_CACHE_ALPHA8_PRESSURE: usize = 90;
+pub const TEXTURE_CACHE_ALPHA8_GLYPHS_PRESSURE: usize = 91;
+pub const TEXTURE_CACHE_ALPHA16_PRESSURE: usize = 92;
+pub const TEXTURE_CACHE_STANDALONE_PRESSURE: usize = 93;
+pub const TEXTURE_CACHE_EVICTION_COUNT: usize = 94;
+pub const TEXTURE_CACHE_YOUNGEST_EVICTION: usize = 95;
+
+pub const NUM_PROFILER_EVENTS: usize = 96;
 
 pub struct Profiler {
     counters: Vec<Counter>,
@@ -349,8 +367,17 @@ impl Profiler {
             float("Texture cache upload", "ms", TOTAL_UPLOAD_TIME, expected(0.0..5.0)),
             float("Cache texture creation", "ms", CREATE_CACHE_TEXTURE_TIME, expected(0.0..2.0)),
             float("Cache texture deletion", "ms", DELETE_CACHE_TEXTURE_TIME, expected(0.0..1.0)),
-        ];
 
+            float("Texture cache RGBA8 linear pressure", "", TEXTURE_CACHE_COLOR8_LINEAR_PRESSURE, expected(0.0..1.0)),
+            float("Texture cache RGBA8 nearest pressure", "", TEXTURE_CACHE_COLOR8_NEAREST_PRESSURE, expected(0.0..1.0)),
+            float("Texture cache RGBA8 glyphs pressure", "", TEXTURE_CACHE_COLOR8_GLYPHS_PRESSURE, expected(0.0..1.0)),
+            float("Texture cache A8 pressure", "", TEXTURE_CACHE_ALPHA8_PRESSURE, expected(0.0..1.0)),
+            float("Texture cache A8 glyphs pressure", "", TEXTURE_CACHE_ALPHA8_GLYPHS_PRESSURE, expected(0.0..1.0)),
+            float("Texture cache A16 pressure", "", TEXTURE_CACHE_ALPHA16_PRESSURE, expected(0.0..1.0)),
+            float("Texture cache standalone pressure", "", TEXTURE_CACHE_STANDALONE_PRESSURE, expected(0.0..1.0)),
+            int("Texture cache eviction count", "items", TEXTURE_CACHE_EVICTION_COUNT, Expected::none()),
+            int("Texture cache youngest evicted", "frames", TEXTURE_CACHE_YOUNGEST_EVICTION, Expected::none()),
+        ];
 
         let mut counters = Vec::with_capacity(profile_counters.len());
 

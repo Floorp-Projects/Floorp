@@ -306,6 +306,16 @@ impl BudgetType {
         BudgetType::Standalone,
     ];
 
+    pub const PRESSURE_COUNTERS: [usize; BudgetType::COUNT] = [
+        profiler::TEXTURE_CACHE_COLOR8_LINEAR_PRESSURE,
+        profiler::TEXTURE_CACHE_COLOR8_NEAREST_PRESSURE,
+        profiler::TEXTURE_CACHE_COLOR8_GLYPHS_PRESSURE,
+        profiler::TEXTURE_CACHE_ALPHA8_PRESSURE,
+        profiler::TEXTURE_CACHE_ALPHA8_GLYPHS_PRESSURE,
+        profiler::TEXTURE_CACHE_ALPHA16_PRESSURE,
+        profiler::TEXTURE_CACHE_STANDALONE_PRESSURE,
+    ];
+
     pub fn iter() -> impl Iterator<Item = BudgetType> {
         BudgetType::VALUES.iter().cloned()
     }
@@ -854,7 +864,7 @@ impl TextureCache {
         );
         let mut now = FrameStamp::first(DocumentId::new(IdNamespace(1), 1));
         now.advance();
-        cache.begin_frame(now);
+        cache.begin_frame(now, &mut TransactionProfile::new());
         cache
     }
 
@@ -900,7 +910,7 @@ impl TextureCache {
     }
 
     /// Called at the beginning of each frame.
-    pub fn begin_frame(&mut self, stamp: FrameStamp) {
+    pub fn begin_frame(&mut self, stamp: FrameStamp, profile: &mut TransactionProfile) {
         debug_assert!(!self.now.is_valid());
         profile_scope!("begin_frame");
         self.now = stamp;
@@ -909,7 +919,7 @@ impl TextureCache {
         // we won't evict items that have been requested on this frame.
         // It also frees up space in the cache for items allocated later in the frame
         // potentially reducing texture allocations and fragmentation.
-        self.evict_items_from_cache_if_required();
+        self.evict_items_from_cache_if_required(profile);
         self.expire_old_picture_cache_tiles();
     }
 
@@ -931,6 +941,12 @@ impl TextureCache {
         self.shared_textures.color8_linear.release_empty_textures(callback);
         self.shared_textures.color8_nearest.release_empty_textures(callback);
         self.shared_textures.color8_glyphs.release_empty_textures(callback);
+
+        for budget in BudgetType::iter() {
+            let threshold = self.get_eviction_threshold(budget);
+            let pressure = self.bytes_allocated[budget as usize] as f32 / threshold as f32;
+            profile.set(BudgetType::PRESSURE_COUNTERS[budget as usize], pressure);
+        }
 
         profile.set(profiler::TEXTURE_CACHE_A8_PIXELS, self.shared_textures.alpha8_linear.allocated_space());
         profile.set(profiler::TEXTURE_CACHE_A8_TEXTURES, self.shared_textures.alpha8_linear.allocated_textures());
@@ -1299,9 +1315,10 @@ impl TextureCache {
 
     /// Evict old items from the shared and standalone caches, if we're over a
     /// threshold memory usage value
-    fn evict_items_from_cache_if_required(&mut self) {
+    fn evict_items_from_cache_if_required(&mut self, profile: &mut TransactionProfile) {
         let previous_frame_id = self.now.frame_id() - 1;
         let mut eviction_count = 0;
+        let mut youngest_evicted = FrameId::first();
 
         for budget in BudgetType::iter() {
             let threshold = self.get_eviction_threshold(budget);
@@ -1319,6 +1336,9 @@ impl TextureCache {
                         // we know that all remaining items were also used in the previous frame (or more recently).
                         break;
                     }
+                    if entry.last_access.frame_id() > youngest_evicted {
+                        youngest_evicted = entry.last_access.frame_id();
+                    }
                     let entry = self.lru_cache.pop_oldest(budget as u8).unwrap();
                     entry.evict();
                     self.free(&entry);
@@ -1331,6 +1351,14 @@ impl TextureCache {
                     break;
                 }
             }
+        }
+
+        if eviction_count > 0 {
+            profile.set(profiler::TEXTURE_CACHE_EVICTION_COUNT, eviction_count);
+            profile.set(
+                profiler::TEXTURE_CACHE_YOUNGEST_EVICTION,
+                self.now.frame_id().as_usize() - youngest_evicted.as_usize()
+            );
         }
     }
 

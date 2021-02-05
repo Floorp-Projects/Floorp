@@ -535,7 +535,7 @@ impl FrameBuilder {
 
         profile.set(profiler::PRIMITIVES, scene.prim_store.prim_count());
         profile.set(profiler::PICTURE_CACHE_SLICES, scene.tile_cache_config.picture_cache_slice_count);
-        resource_cache.begin_frame(stamp);
+        resource_cache.begin_frame(stamp, profile);
         gpu_cache.begin_frame(stamp);
 
         self.globals.update(gpu_cache);
