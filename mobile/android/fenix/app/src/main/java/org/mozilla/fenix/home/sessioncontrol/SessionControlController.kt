@@ -372,6 +372,10 @@ class DefaultSessionControlController(
             TopSite.Type.PINNED -> metrics.track(Event.TopSiteOpenPinned)
         }
 
+        if (url == SupportUtils.GOOGLE_URL) {
+            metrics.track(Event.TopSiteOpenGoogle)
+        }
+
         if (url == SupportUtils.POCKET_TRENDING_URL) {
             metrics.track(Event.PocketTopSiteClicked)
         }

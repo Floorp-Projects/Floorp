@@ -3415,6 +3415,19 @@ top_sites:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
+  open_google_search_attribution:
+    type: event
+    description: |
+      A user opened the google top site
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/17418
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/17637
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-08-01"
   open_frecency:
     type: event
     description: |

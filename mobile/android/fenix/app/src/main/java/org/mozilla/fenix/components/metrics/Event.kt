@@ -122,6 +122,7 @@ sealed class Event {
     object NotificationMediaPlay : Event()
     object NotificationMediaPause : Event()
     object TopSiteOpenDefault : Event()
+    object TopSiteOpenGoogle : Event()
     object TopSiteOpenFrecent : Event()
     object TopSiteOpenPinned : Event()
     object TopSiteOpenInNewTab : Event()

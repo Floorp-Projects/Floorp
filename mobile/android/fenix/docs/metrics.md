@@ -28,8 +28,8 @@ an hashed version of the Google Advertising ID.
 
 **Bugs related to this ping:**
 
-- 1538011
-- 1501822
+- <https://bugzilla.mozilla.com/1538011/>
+- <https://bugzilla.mozilla.com/1501822/>
 
 The following metrics are added to the ping:
 
@@ -221,6 +221,7 @@ The following metrics are added to the ping:
 | top_sites.long_press |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user long pressed on a top site  |[1](https://github.com/mozilla-mobile/fenix/pull/15136), [2](https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068)|<ul><li>type: The type of top site. Options are: "FRECENCY," "DEFAULT," or "PINNED." </li></ul>|2021-08-01 |2 |
 | top_sites.open_default |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user opened a default top site  |[1](https://github.com/mozilla-mobile/fenix/pull/10752), [2](https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068)||2021-08-01 |2 |
 | top_sites.open_frecency |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user opened a frecency top site  |[1](https://github.com/mozilla-mobile/fenix/pull/15136), [2](https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068)||2021-08-01 |2 |
+| top_sites.open_google_search_attribution |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user opened the google top site  |[1](https://github.com/mozilla-mobile/fenix/pull/17637)||2021-08-01 |2 |
 | top_sites.open_in_new_tab |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user opens a new tab based on a top site item  |[1](https://github.com/mozilla-mobile/fenix/pull/7523), [2](https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068)||2021-08-01 |2 |
 | top_sites.open_in_private_tab |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user opens a new private tab based on a top site item  |[1](https://github.com/mozilla-mobile/fenix/pull/7523), [2](https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068)||2021-08-01 |2 |
 | top_sites.open_pinned |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user opened a pinned top site  |[1](https://github.com/mozilla-mobile/fenix/pull/15136), [2](https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068)||2021-08-01 |2 |

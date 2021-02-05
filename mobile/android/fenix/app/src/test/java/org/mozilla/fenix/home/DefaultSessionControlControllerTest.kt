@@ -369,6 +369,7 @@ class DefaultSessionControlControllerTest {
         controller.handleSelectTopSite(topSiteUrl, TopSite.Type.DEFAULT)
         verify { metrics.track(Event.TopSiteOpenInNewTab) }
         verify { metrics.track(Event.TopSiteOpenDefault) }
+        verify { metrics.track(Event.TopSiteOpenGoogle) }
         verify {
             tabsUseCases.addTab.invoke(
                 url = SupportUtils.GOOGLE_US_URL,
@@ -388,6 +389,7 @@ class DefaultSessionControlControllerTest {
         controller.handleSelectTopSite(topSiteUrl, TopSite.Type.DEFAULT)
         verify { metrics.track(Event.TopSiteOpenInNewTab) }
         verify { metrics.track(Event.TopSiteOpenDefault) }
+        verify { metrics.track(Event.TopSiteOpenGoogle) }
         verify {
             tabsUseCases.addTab.invoke(
                 SupportUtils.GOOGLE_XX_URL,
@@ -407,6 +409,7 @@ class DefaultSessionControlControllerTest {
         controller.handleSelectTopSite(topSiteUrl, TopSite.Type.PINNED)
         verify { metrics.track(Event.TopSiteOpenInNewTab) }
         verify { metrics.track(Event.TopSiteOpenPinned) }
+        verify { metrics.track(Event.TopSiteOpenGoogle) }
         verify {
             tabsUseCases.addTab.invoke(
                 SupportUtils.GOOGLE_US_URL,
@@ -426,6 +429,7 @@ class DefaultSessionControlControllerTest {
         controller.handleSelectTopSite(topSiteUrl, TopSite.Type.PINNED)
         verify { metrics.track(Event.TopSiteOpenInNewTab) }
         verify { metrics.track(Event.TopSiteOpenPinned) }
+        verify { metrics.track(Event.TopSiteOpenGoogle) }
         verify {
             tabsUseCases.addTab.invoke(
                 SupportUtils.GOOGLE_XX_URL,
@@ -445,6 +449,7 @@ class DefaultSessionControlControllerTest {
         controller.handleSelectTopSite(topSiteUrl, TopSite.Type.FRECENT)
         verify { metrics.track(Event.TopSiteOpenInNewTab) }
         verify { metrics.track(Event.TopSiteOpenFrecent) }
+        verify { metrics.track(Event.TopSiteOpenGoogle) }
         verify {
             tabsUseCases.addTab.invoke(
                 SupportUtils.GOOGLE_US_URL,
@@ -464,6 +469,7 @@ class DefaultSessionControlControllerTest {
         controller.handleSelectTopSite(topSiteUrl, TopSite.Type.FRECENT)
         verify { metrics.track(Event.TopSiteOpenInNewTab) }
         verify { metrics.track(Event.TopSiteOpenFrecent) }
+        verify { metrics.track(Event.TopSiteOpenGoogle) }
         verify {
             tabsUseCases.addTab.invoke(
                 SupportUtils.GOOGLE_XX_URL,
