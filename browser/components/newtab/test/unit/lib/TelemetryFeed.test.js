@@ -1795,11 +1795,6 @@ describe("TelemetryFeed", () => {
     it("should return false if there is no CFR experiment registered", () => {
       assert.ok(!instance.isInCFRCohort);
     });
-    it("should return false if getExperimentMetaData throws", () => {
-      sandbox.stub(ExperimentAPI, "getExperimentMetaData").throws();
-
-      assert.ok(!instance.isInCFRCohort);
-    });
     it("should return true if there is a CFR experiment registered", () => {
       sandbox.stub(ExperimentAPI, "getExperimentMetaData").returns({
         slug: "SOME-CFR-EXP",

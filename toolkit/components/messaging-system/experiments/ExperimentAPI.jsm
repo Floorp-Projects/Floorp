@@ -59,10 +59,14 @@ const ExperimentAPI = {
       );
     }
     let experimentData;
-    if (slug) {
-      experimentData = this._store.get(slug);
-    } else if (featureId) {
-      experimentData = this._store.getExperimentForFeature(featureId);
+    try {
+      if (slug) {
+        experimentData = this._store.get(slug);
+      } else if (featureId) {
+        experimentData = this._store.getExperimentForFeature(featureId);
+      }
+    } catch (e) {
+      Cu.reportError(e);
     }
     if (experimentData) {
       return {
@@ -88,10 +92,14 @@ const ExperimentAPI = {
     }
 
     let experimentData;
-    if (slug) {
-      experimentData = this._store.get(slug);
-    } else if (featureId) {
-      experimentData = this._store.getExperimentForFeature(featureId);
+    try {
+      if (slug) {
+        experimentData = this._store.get(slug);
+      } else if (featureId) {
+        experimentData = this._store.getExperimentForFeature(featureId);
+      }
+    } catch (e) {
+      Cu.reportError(e);
     }
     if (experimentData) {
       return {
@@ -111,25 +119,32 @@ const ExperimentAPI = {
    * @returns {Branch | null}
    */
   activateBranch({ slug, featureId, sendExposurePing = true }) {
-    for (let experiment of this._store.getAllActive()) {
-      if (
-        experiment?.branch.feature.featureId === featureId ||
-        experiment.slug === slug
-      ) {
-        if (sendExposurePing) {
-          this._store._emitExperimentExposure({
-            experimentSlug: experiment.slug,
-            branchSlug: experiment.branch.slug,
-            featureId,
-          });
-        }
-        // Default to null for feature-less experiments where we're only
-        // interested in exposure.
-        return experiment?.branch || null;
+    let experiment = null;
+    try {
+      if (slug) {
+        experiment = this._store.get(slug);
+      } else if (featureId) {
+        experiment = this._store.getExperimentForFeature(featureId);
       }
+    } catch (e) {
+      Cu.reportError(e);
     }
 
-    return null;
+    if (!experiment) {
+      return null;
+    }
+
+    if (sendExposurePing) {
+      this._store._emitExperimentExposure({
+        experimentSlug: experiment.slug,
+        branchSlug: experiment?.branch?.slug,
+        featureId,
+      });
+    }
+
+    // Default to null for feature-less experiments where we're only
+    // interested in exposure.
+    return experiment?.branch || null;
   },
 
   /**

@@ -2668,19 +2668,6 @@ describe("ASRouter", () => {
         messageGroups: ["asrouter"],
       };
 
-      global.ExperimentAPI.getExperiment.throws();
-      const stub = sandbox.stub(MessageLoaderUtils, "reportError");
-
-      await MessageLoaderUtils.loadMessagesForProvider(args);
-
-      assert.calledOnce(stub);
-    });
-    it("should handle the case of no experiments in the ExperimentAPI", async () => {
-      const args = {
-        type: "remote-experiments",
-        messageGroups: ["asrouter"],
-      };
-
       global.ExperimentAPI.getExperiment.returns(null);
 
       const result = await MessageLoaderUtils.loadMessagesForProvider(args);
@@ -2730,19 +2717,6 @@ describe("ASRouter", () => {
       const result = await MessageLoaderUtils.loadMessagesForProvider(args);
 
       assert.lengthOf(result.messages, 0);
-    });
-    it("should fetch messages from the ExperimentAPI", async () => {
-      global.ExperimentAPI.ready.throws();
-      const args = {
-        type: "remote-experiments",
-        messageGroups: ["asrouter"],
-      };
-      const stub = sandbox.stub(MessageLoaderUtils, "reportError");
-
-      await MessageLoaderUtils.loadMessagesForProvider(args);
-
-      assert.notCalled(global.ExperimentAPI.getExperiment);
-      assert.calledOnce(stub);
     });
     it("should fetch branches with trigger", async () => {
       const args = {

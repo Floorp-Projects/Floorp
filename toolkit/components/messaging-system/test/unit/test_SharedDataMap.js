@@ -83,6 +83,20 @@ with_sharedDataMap(async function test_saveSoon({ instance, sandbox }) {
   Assert.equal(stub.callCount, 1, "Should call save soon when setting a value");
 });
 
+with_sharedDataMap(async function test_init_safe({ instance, sandbox }) {
+  let stub = sandbox.stub(instance._store, "load");
+  sandbox.replaceGetter(instance._store, "data", () => {
+    throw new Error("expected xpcshell");
+  });
+
+  try {
+    await instance.init();
+    Assert.ok(stub.calledOnce, "Load should be called");
+  } catch (e) {
+    Assert.ok(false, "Error should be caught in SharedDataMap");
+  }
+});
+
 with_sharedDataMap(async function test_childInit({ instance, sandbox }) {
   sandbox.stub(instance, "isParent").get(() => false);
   const stubA = sandbox.stub(instance._store, "ensureDataReady");
