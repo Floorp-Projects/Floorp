@@ -117,6 +117,23 @@ activity_stream:
       page: about:home or about_newtab - the page where the event occurred
       user_prefs: An integer representaing a user's A-S settings.
 
+readermode:
+  view:
+    objects: ["on", "off"]
+    release_channel_collection: opt-out
+    record_in_processes: ["content"]
+    description: >
+      This is recorded any time Reader Mode is turned on or off.
+    bug_numbers: [1689201]
+    notification_emails:
+      - "kirill@getpocket.com"
+      - "sdowne@getpocket.com"
+    expiry_version: never
+    extra_keys:
+      subcategory: The broad event category for this probe. E.g. navigation
+    products:
+      - "firefox"
+
 addonsManager:
   install:
     description: >
