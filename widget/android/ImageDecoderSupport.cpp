@@ -12,6 +12,7 @@
 #include "JavaExceptions.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Swizzle.h"
+#include "mozilla/java/ImageWrappers.h"
 #include "nsNetUtil.h"
 
 namespace mozilla {
@@ -31,7 +32,7 @@ class ImageCallbackHelper : public imgIContainerCallback,
 
   void CompleteExceptionally(const char* aMessage) {
     mResult->CompleteExceptionally(
-        java::sdk::IllegalArgumentException::New(aMessage)
+        java::Image::ImageProcessingException::New(aMessage)
             .Cast<jni::Throwable>());
     gDecodeRequests.remove(this);
   }
@@ -59,7 +60,8 @@ class ImageCallbackHelper : public imgIContainerCallback,
     MOZ_ALWAYS_TRUE(gDecodeRequests.putNew(this));
 
     if (NS_FAILED(aStatus)) {
-      CompleteExceptionally("Could not process image.");
+      nsPrintfCString error("Could not process image: %d", aStatus);
+      CompleteExceptionally(error.get());
       return aStatus;
     }
 
