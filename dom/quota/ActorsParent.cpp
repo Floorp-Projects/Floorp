@@ -454,6 +454,84 @@ nsresult UpgradeCacheFrom1To2(mozIStorageConnection* aConnection) {
 }
 */
 
+Result<bool, nsresult> MaybeCreateOrUpgradeCache(
+    mozIStorageConnection& aConnection) {
+  bool cacheUsable = true;
+
+  QM_TRY_UNWRAP(int32_t cacheVersion, LoadCacheVersion(aConnection));
+
+  if (cacheVersion > kCacheVersion) {
+    cacheUsable = false;
+  } else if (cacheVersion != kCacheVersion) {
+    const bool newCache = !cacheVersion;
+
+    mozStorageTransaction transaction(
+        &aConnection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+    if (newCache) {
+      QM_TRY(CreateCacheTables(&aConnection));
+
+#ifdef DEBUG
+      {
+        QM_TRY_INSPECT(const int32_t& cacheVersion,
+                       LoadCacheVersion(aConnection));
+        MOZ_ASSERT(cacheVersion == kCacheVersion);
+      }
+#endif
+
+      QM_TRY(aConnection.ExecuteSimpleSQL(
+          nsLiteralCString("INSERT INTO cache (valid, build_id) "
+                           "VALUES (0, '')")));
+
+      nsCOMPtr<mozIStorageStatement> insertStmt;
+
+      for (const PersistenceType persistenceType : kAllPersistenceTypes) {
+        if (insertStmt) {
+          MOZ_ALWAYS_SUCCEEDS(insertStmt->Reset());
+        } else {
+          QM_TRY_UNWRAP(insertStmt, MOZ_TO_RESULT_INVOKE_TYPED(
+                                        nsCOMPtr<mozIStorageStatement>,
+                                        aConnection, CreateStatement,
+                                        "INSERT INTO repository (id, name) "
+                                        "VALUES (:id, :name)"_ns));
+        }
+
+        QM_TRY(insertStmt->BindInt32ByName("id"_ns, persistenceType));
+
+        QM_TRY(insertStmt->BindUTF8StringByName(
+            "name"_ns, PersistenceTypeToString(persistenceType)));
+
+        QM_TRY(insertStmt->Execute());
+      }
+    } else {
+      // This logic needs to change next time we change the cache!
+      static_assert(kCacheVersion == 1,
+                    "Upgrade function needed due to cache version increase.");
+
+      while (cacheVersion != kCacheVersion) {
+        /* if (cacheVersion == 1) {
+          QM_TRY(UpgradeCacheFrom1To2(connection));
+        } else */
+        {
+          QM_FAIL(Err(NS_ERROR_FAILURE), []() {
+            QM_WARNING(
+                "Unable to initialize cache, no upgrade path is "
+                "available!");
+          });
+        }
+
+        QM_TRY_UNWRAP(cacheVersion, LoadCacheVersion(aConnection));
+      }
+
+      MOZ_ASSERT(cacheVersion == kCacheVersion);
+    }
+
+    QM_TRY(transaction.Commit());
+  }
+
+  return cacheUsable;
+}
+
 nsresult InvalidateCache(mozIStorageConnection& aConnection) {
   AssertIsOnIOThread();
 
@@ -5681,7 +5759,7 @@ nsresult QuotaManager::UpgradeStorageFrom2_2To2_3(
   return rv;
 }
 
-nsresult QuotaManager::MaybeRemoveLocalStorageData() {
+nsresult QuotaManager::MaybeRemoveLocalStorageDataAndArchive() {
   AssertIsOnIOThread();
   MOZ_ASSERT(!CachedNextGenLocalStorageEnabled());
 
@@ -5801,7 +5879,7 @@ nsresult QuotaManager::MaybeRemoveLocalStorageDirectories() {
 }
 
 Result<nsCOMPtr<mozIStorageConnection>, nsresult>
-QuotaManager::CreateLocalStorageArchiveConnectionFromWebAppsStore() {
+QuotaManager::CreateLocalStorageArchiveConnectionFromWebAppsStore() const {
   AssertIsOnIOThread();
   MOZ_ASSERT(CachedNextGenLocalStorageEnabled());
 
@@ -5894,8 +5972,7 @@ QuotaManager::CreateLocalStorageArchiveConnectionFromWebAppsStore() {
   // If webappsstore database is not useable, just create an empty archive.
 
   // Ensure the storage directory actually exists.
-  QM_TRY_INSPECT(const auto& storageDirectory,
-                 QM_NewLocalFile(GetStoragePath()));
+  QM_TRY_INSPECT(const auto& storageDirectory, QM_NewLocalFile(*mStoragePath));
 
   QM_TRY_INSPECT(const bool& created, EnsureDirectory(*storageDirectory));
 
@@ -5912,7 +5989,7 @@ QuotaManager::CreateLocalStorageArchiveConnectionFromWebAppsStore() {
 }
 
 Result<std::pair<nsCOMPtr<mozIStorageConnection>, bool>, nsresult>
-QuotaManager::CreateLocalStorageArchiveConnection() {
+QuotaManager::CreateLocalStorageArchiveConnection() const {
   AssertIsOnIOThread();
   MOZ_ASSERT(CachedNextGenLocalStorageEnabled());
 
@@ -5996,7 +6073,7 @@ QuotaManager::CreateLocalStorageArchiveConnection() {
   }
 
   QM_TRY_RETURN(CreateLocalStorageArchiveConnectionFromWebAppsStore().map(
-      [](auto&& connection) {
+      [](nsCOMPtr<mozIStorageConnection>&& connection) {
         return std::pair{std::move(connection), true};
       }));
 }
@@ -6081,30 +6158,12 @@ void QuotaManager::AssertStorageIsInitialized() const {
 
 #endif  // DEBUG
 
-nsresult QuotaManager::EnsureStorageIsInitialized() {
+nsresult QuotaManager::MaybeUpgradeToDefaultStorageDirectory(
+    nsIFile& aStorageFile) {
   AssertIsOnIOThread();
 
-  if (mStorageConnection) {
-    mInitializationInfo.AssertInitializationAttempted(Initialization::Storage);
-    return NS_OK;
-  }
-
-  const auto autoRecord = mInitializationInfo.RecordFirstInitializationAttempt(
-      Initialization::Storage,
-      [&self = *this] { return static_cast<bool>(self.mStorageConnection); });
-
-  const auto contextLogExtraInfo =
-      autoRecord.IsFirstInitializationAttempt()
-          ? Some(ScopedLogExtraInfo{ScopedLogExtraInfo::kTagContext,
-                                    "Initialization::Storage"_ns})
-          : Nothing{};
-
-  QM_TRY_INSPECT(const auto& storageFile, QM_NewLocalFile(mBasePath));
-
-  QM_TRY(storageFile->Append(mStorageName + kSQLiteSuffix));
-
   QM_TRY_INSPECT(const auto& storageFileExists,
-                 MOZ_TO_RESULT_INVOKE(storageFile, Exists));
+                 MOZ_TO_RESULT_INVOKE(aStorageFile, Exists));
 
   if (!storageFileExists) {
     QM_TRY_INSPECT(const auto& indexedDBDir, QM_NewLocalFile(*mIndexedDBPath));
@@ -6132,6 +6191,187 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
     }
   }
 
+  return NS_OK;
+}
+
+nsresult QuotaManager::MaybeCreateOrUpgradeStorage(
+    mozIStorageConnection& aConnection) {
+  AssertIsOnIOThread();
+
+  QM_TRY_UNWRAP(auto storageVersion,
+                MOZ_TO_RESULT_INVOKE(aConnection, GetSchemaVersion));
+
+  // Hacky downgrade logic!
+  // If we see major.minor of 3.0, downgrade it to be 2.1.
+  if (storageVersion == kHackyPreDowngradeStorageVersion) {
+    storageVersion = kHackyPostDowngradeStorageVersion;
+    QM_TRY(aConnection.SetSchemaVersion(storageVersion), QM_PROPAGATE,
+           [](const auto&) { MOZ_ASSERT(false, "Downgrade didn't take."); });
+  }
+
+  QM_TRY(OkIf(GetMajorStorageVersion(storageVersion) <= kMajorStorageVersion),
+         NS_ERROR_FAILURE, [](const auto&) {
+           NS_WARNING("Unable to initialize storage, version is too high!");
+         });
+
+  if (storageVersion < kStorageVersion) {
+    const bool newDatabase = !storageVersion;
+
+    QM_TRY_INSPECT(const auto& storageDir, QM_NewLocalFile(*mStoragePath));
+
+    QM_TRY_INSPECT(const auto& storageDirExists,
+                   MOZ_TO_RESULT_INVOKE(storageDir, Exists));
+
+    const bool newDirectory = !storageDirExists;
+
+    if (newDatabase) {
+      // Set the page size first.
+      if (kSQLitePageSizeOverride) {
+        QM_TRY(aConnection.ExecuteSimpleSQL(nsPrintfCString(
+            "PRAGMA page_size = %" PRIu32 ";", kSQLitePageSizeOverride)));
+      }
+    }
+
+    mozStorageTransaction transaction(
+        &aConnection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+    // An upgrade method can upgrade the database, the storage or both.
+    // The upgrade loop below can only be avoided when there's no database and
+    // no storage yet (e.g. new profile).
+    if (newDatabase && newDirectory) {
+      QM_TRY(CreateTables(&aConnection));
+
+#ifdef DEBUG
+      {
+        QM_TRY_INSPECT(const int32_t& storageVersion,
+                       MOZ_TO_RESULT_INVOKE(aConnection, GetSchemaVersion),
+                       QM_ASSERT_UNREACHABLE);
+        MOZ_ASSERT(storageVersion == kStorageVersion);
+      }
+#endif
+
+      QM_TRY(aConnection.ExecuteSimpleSQL(
+          nsLiteralCString("INSERT INTO database (cache_version) "
+                           "VALUES (0)")));
+    } else {
+      // This logic needs to change next time we change the storage!
+      static_assert(kStorageVersion == int32_t((2 << 16) + 3),
+                    "Upgrade function needed due to storage version increase.");
+
+      while (storageVersion != kStorageVersion) {
+        if (storageVersion == 0) {
+          QM_TRY(UpgradeStorageFrom0_0To1_0(&aConnection));
+        } else if (storageVersion == MakeStorageVersion(1, 0)) {
+          QM_TRY(UpgradeStorageFrom1_0To2_0(&aConnection));
+        } else if (storageVersion == MakeStorageVersion(2, 0)) {
+          QM_TRY(UpgradeStorageFrom2_0To2_1(&aConnection));
+        } else if (storageVersion == MakeStorageVersion(2, 1)) {
+          QM_TRY(UpgradeStorageFrom2_1To2_2(&aConnection));
+        } else if (storageVersion == MakeStorageVersion(2, 2)) {
+          QM_TRY(UpgradeStorageFrom2_2To2_3(&aConnection));
+        } else {
+          QM_FAIL(NS_ERROR_FAILURE, []() {
+            NS_WARNING(
+                "Unable to initialize storage, no upgrade path is "
+                "available!");
+          });
+        }
+
+        QM_TRY_UNWRAP(storageVersion,
+                      MOZ_TO_RESULT_INVOKE(aConnection, GetSchemaVersion));
+      }
+
+      MOZ_ASSERT(storageVersion == kStorageVersion);
+    }
+
+    QM_TRY(transaction.Commit());
+  }
+
+  return NS_OK;
+}
+
+nsresult QuotaManager::MaybeInitializeOrUpgradeLocalStorageArchive() {
+  AssertIsOnIOThread();
+
+  QM_TRY_UNWRAP((auto [connection, newlyCreatedOrRecreated]),
+                CreateLocalStorageArchiveConnection());
+
+  uint32_t version = 0;
+
+  if (!newlyCreatedOrRecreated) {
+    QM_TRY_INSPECT(const auto& initialized,
+                   IsLocalStorageArchiveInitialized(*connection));
+
+    if (initialized) {
+      QM_TRY_UNWRAP(version, LoadLocalStorageArchiveVersion(*connection));
+    }
+  }
+
+  if (version > kLocalStorageArchiveVersion) {
+    QM_TRY(DowngradeLocalStorageArchive(connection));
+
+    QM_TRY_UNWRAP(version, LoadLocalStorageArchiveVersion(*connection));
+
+    MOZ_ASSERT(version == kLocalStorageArchiveVersion);
+  } else if (version != kLocalStorageArchiveVersion) {
+    if (newlyCreatedOrRecreated) {
+      MOZ_ASSERT(version == 0);
+
+      QM_TRY(InitializeLocalStorageArchive(connection,
+                                           kLocalStorageArchiveVersion));
+    } else {
+      static_assert(kLocalStorageArchiveVersion == 4,
+                    "Upgrade function needed due to LocalStorage archive "
+                    "version increase.");
+
+      while (version != kLocalStorageArchiveVersion) {
+        if (version < 4) {
+          QM_TRY(UpgradeLocalStorageArchiveFromLessThan4To4(connection));
+        } /* else if (version == 4) {
+          QM_TRY(UpgradeLocalStorageArchiveFrom4To5(connection));
+        } */
+        else {
+          QM_FAIL(NS_ERROR_FAILURE, []() {
+            QM_WARNING(
+                "Unable to initialize LocalStorage archive, no upgrade "
+                "path "
+                "is available!");
+          });
+        }
+
+        QM_TRY_UNWRAP(version, LoadLocalStorageArchiveVersion(*connection));
+      }
+
+      MOZ_ASSERT(version == kLocalStorageArchiveVersion);
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult QuotaManager::EnsureStorageIsInitialized() {
+  AssertIsOnIOThread();
+
+  if (mStorageConnection) {
+    mInitializationInfo.AssertInitializationAttempted(Initialization::Storage);
+    return NS_OK;
+  }
+
+  const auto autoRecord = mInitializationInfo.RecordFirstInitializationAttempt(
+      Initialization::Storage,
+      [&self = *this] { return static_cast<bool>(self.mStorageConnection); });
+
+  const auto contextLogExtraInfo =
+      autoRecord.IsFirstInitializationAttempt()
+          ? Some(ScopedLogExtraInfo{ScopedLogExtraInfo::kTagContext,
+                                    "Initialization::Storage"_ns})
+          : Nothing{};
+
+  QM_TRY_INSPECT(const auto& storageFile, QM_NewLocalFile(mBasePath));
+  QM_TRY(storageFile->Append(mStorageName + kSQLiteSuffix));
+
+  QM_TRY(MaybeUpgradeToDefaultStorageDirectory(*storageFile));
+
   QM_TRY_INSPECT(const auto& ss, ToResultGet<nsCOMPtr<mozIStorageService>>(
                                      MOZ_SELECT_OVERLOAD(do_GetService),
                                      MOZ_STORAGE_SERVICE_CONTRACTID));
@@ -6155,231 +6395,23 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
   QM_TRY(connection->ExecuteSimpleSQL("PRAGMA synchronous = EXTRA;"_ns));
 
   // Check to make sure that the storage version is correct.
-  QM_TRY_UNWRAP(auto storageVersion,
-                MOZ_TO_RESULT_INVOKE(connection, GetSchemaVersion));
-
-  // Hacky downgrade logic!
-  // If we see major.minor of 3.0, downgrade it to be 2.1.
-  if (storageVersion == kHackyPreDowngradeStorageVersion) {
-    storageVersion = kHackyPostDowngradeStorageVersion;
-    QM_TRY(connection->SetSchemaVersion(storageVersion), QM_PROPAGATE,
-           [](const auto&) { MOZ_ASSERT(false, "Downgrade didn't take."); });
-  }
-
-  QM_TRY(OkIf(GetMajorStorageVersion(storageVersion) <= kMajorStorageVersion),
-         NS_ERROR_FAILURE, [](const auto&) {
-           NS_WARNING("Unable to initialize storage, version is too high!");
-         });
-
-  if (storageVersion < kStorageVersion) {
-    const bool newDatabase = !storageVersion;
-
-    QM_TRY_INSPECT(const auto& storageDir, QM_NewLocalFile(*mStoragePath));
-
-    QM_TRY_INSPECT(const auto& storageDirExists,
-                   MOZ_TO_RESULT_INVOKE(storageDir, Exists));
-
-    const bool newDirectory = !storageDirExists;
-
-    if (newDatabase) {
-      // Set the page size first.
-      if (kSQLitePageSizeOverride) {
-        QM_TRY(connection->ExecuteSimpleSQL(nsPrintfCString(
-            "PRAGMA page_size = %" PRIu32 ";", kSQLitePageSizeOverride)));
-      }
-    }
-
-    mozStorageTransaction transaction(
-        connection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
-
-    // An upgrade method can upgrade the database, the storage or both.
-    // The upgrade loop below can only be avoided when there's no database and
-    // no storage yet (e.g. new profile).
-    if (newDatabase && newDirectory) {
-      QM_TRY(CreateTables(connection));
-
-#ifdef DEBUG
-      {
-        QM_TRY_INSPECT(const int32_t& storageVersion,
-                       MOZ_TO_RESULT_INVOKE(connection, GetSchemaVersion),
-                       QM_ASSERT_UNREACHABLE);
-        MOZ_ASSERT(storageVersion == kStorageVersion);
-      }
-#endif
-
-      QM_TRY(connection->ExecuteSimpleSQL(
-          nsLiteralCString("INSERT INTO database (cache_version) "
-                           "VALUES (0)")));
-    } else {
-      // This logic needs to change next time we change the storage!
-      static_assert(kStorageVersion == int32_t((2 << 16) + 3),
-                    "Upgrade function needed due to storage version increase.");
-
-      while (storageVersion != kStorageVersion) {
-        if (storageVersion == 0) {
-          QM_TRY(UpgradeStorageFrom0_0To1_0(connection));
-        } else if (storageVersion == MakeStorageVersion(1, 0)) {
-          QM_TRY(UpgradeStorageFrom1_0To2_0(connection));
-        } else if (storageVersion == MakeStorageVersion(2, 0)) {
-          QM_TRY(UpgradeStorageFrom2_0To2_1(connection));
-        } else if (storageVersion == MakeStorageVersion(2, 1)) {
-          QM_TRY(UpgradeStorageFrom2_1To2_2(connection));
-        } else if (storageVersion == MakeStorageVersion(2, 2)) {
-          QM_TRY(UpgradeStorageFrom2_2To2_3(connection));
-        } else {
-          QM_FAIL(NS_ERROR_FAILURE, []() {
-            NS_WARNING(
-                "Unable to initialize storage, no upgrade path is "
-                "available!");
-          });
-        }
-
-        QM_TRY_UNWRAP(storageVersion,
-                      MOZ_TO_RESULT_INVOKE(connection, GetSchemaVersion));
-      }
-
-      MOZ_ASSERT(storageVersion == kStorageVersion);
-    }
-
-    QM_TRY(transaction.Commit());
-  }
+  QM_TRY(MaybeCreateOrUpgradeStorage(*connection));
 
   if (CachedNextGenLocalStorageEnabled()) {
-    QM_TRY_UNWRAP((auto [connection, newlyCreatedOrRecreated]),
-                  CreateLocalStorageArchiveConnection());
-
-    uint32_t version = 0;
-
-    if (!newlyCreatedOrRecreated) {
-      QM_TRY_INSPECT(const auto& initialized,
-                     IsLocalStorageArchiveInitialized(*connection));
-
-      if (initialized) {
-        QM_TRY_UNWRAP(version, LoadLocalStorageArchiveVersion(*connection));
-      }
-    }
-
-    if (version > kLocalStorageArchiveVersion) {
-      QM_TRY(DowngradeLocalStorageArchive(connection));
-
-      QM_TRY_UNWRAP(version, LoadLocalStorageArchiveVersion(*connection));
-
-      MOZ_ASSERT(version == kLocalStorageArchiveVersion);
-    } else if (version != kLocalStorageArchiveVersion) {
-      if (newlyCreatedOrRecreated) {
-        MOZ_ASSERT(version == 0);
-
-        QM_TRY(InitializeLocalStorageArchive(connection,
-                                             kLocalStorageArchiveVersion));
-      } else {
-        static_assert(kLocalStorageArchiveVersion == 4,
-                      "Upgrade function needed due to LocalStorage archive "
-                      "version increase.");
-
-        while (version != kLocalStorageArchiveVersion) {
-          if (version < 4) {
-            QM_TRY(UpgradeLocalStorageArchiveFromLessThan4To4(connection));
-          } /* else if (version == 4) {
-            QM_TRY(UpgradeLocalStorageArchiveFrom4To5(connection));
-          } */
-          else {
-            QM_FAIL(NS_ERROR_FAILURE, []() {
-              QM_WARNING(
-                  "Unable to initialize LocalStorage archive, no upgrade path "
-                  "is available!");
-            });
-          }
-
-          QM_TRY_UNWRAP(version, LoadLocalStorageArchiveVersion(*connection));
-        }
-
-        MOZ_ASSERT(version == kLocalStorageArchiveVersion);
-      }
-    }
+    QM_TRY(MaybeInitializeOrUpgradeLocalStorageArchive());
   } else {
-    QM_TRY(MaybeRemoveLocalStorageData());
+    QM_TRY(MaybeRemoveLocalStorageDataAndArchive());
   }
 
-  bool cacheUsable = true;
+  QM_TRY_UNWRAP(mCacheUsable, MaybeCreateOrUpgradeCache(*connection));
 
-  QM_TRY_UNWRAP(int32_t cacheVersion, LoadCacheVersion(*connection));
-
-  if (cacheVersion > kCacheVersion) {
-    cacheUsable = false;
-  } else if (cacheVersion != kCacheVersion) {
-    const bool newCache = !cacheVersion;
-
-    mozStorageTransaction transaction(
-        connection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
-
-    if (newCache) {
-      QM_TRY(CreateCacheTables(connection));
-
-#ifdef DEBUG
-      {
-        QM_TRY_INSPECT(const int32_t& cacheVersion,
-                       LoadCacheVersion(*connection));
-        MOZ_ASSERT(cacheVersion == kCacheVersion);
-      }
-#endif
-
-      QM_TRY(connection->ExecuteSimpleSQL(
-          nsLiteralCString("INSERT INTO cache (valid, build_id) "
-                           "VALUES (0, '')")));
-
-      nsCOMPtr<mozIStorageStatement> insertStmt;
-
-      for (const PersistenceType persistenceType : kAllPersistenceTypes) {
-        if (insertStmt) {
-          MOZ_ALWAYS_SUCCEEDS(insertStmt->Reset());
-        } else {
-          QM_TRY_UNWRAP(insertStmt, MOZ_TO_RESULT_INVOKE_TYPED(
-                                        nsCOMPtr<mozIStorageStatement>,
-                                        connection, CreateStatement,
-                                        "INSERT INTO repository (id, name) "
-                                        "VALUES (:id, :name)"_ns));
-        }
-
-        QM_TRY(insertStmt->BindInt32ByName("id"_ns, persistenceType));
-
-        QM_TRY(insertStmt->BindUTF8StringByName(
-            "name"_ns, PersistenceTypeToString(persistenceType)));
-
-        QM_TRY(insertStmt->Execute());
-      }
-    } else {
-      // This logic needs to change next time we change the cache!
-      static_assert(kCacheVersion == 1,
-                    "Upgrade function needed due to cache version increase.");
-
-      while (cacheVersion != kCacheVersion) {
-        /* if (cacheVersion == 1) {
-          QM_TRY(UpgradeCacheFrom1To2(connection));
-        } else */
-        {
-          QM_FAIL(NS_ERROR_FAILURE, []() {
-            QM_WARNING(
-                "Unable to initialize cache, no upgrade path is available!");
-          });
-        }
-
-        QM_TRY_UNWRAP(cacheVersion, LoadCacheVersion(*connection));
-      }
-
-      MOZ_ASSERT(cacheVersion == kCacheVersion);
-    }
-
-    QM_TRY(transaction.Commit());
-  }
-
-  if (cacheUsable && gInvalidateQuotaCache) {
+  if (mCacheUsable && gInvalidateQuotaCache) {
     QM_TRY(InvalidateCache(*connection));
 
     gInvalidateQuotaCache = false;
   }
 
   mStorageConnection = std::move(connection);
-  mCacheUsable = cacheUsable;
 
   return NS_OK;
 }
