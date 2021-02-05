@@ -579,9 +579,6 @@ bool DelElemOperation(JSContext* cx, HandleValue val, HandleValue index,
 
 JSObject* BindVarOperation(JSContext* cx, JSObject* envChain);
 
-JSObject* SingletonObjectLiteralOperation(JSContext* cx, HandleScript script,
-                                          jsbytecode* pc);
-
 JSObject* ImportMetaOperation(JSContext* cx, HandleScript script);
 
 JSObject* BuiltinObjectOperation(JSContext* cx, BuiltinObjectKind kind);
