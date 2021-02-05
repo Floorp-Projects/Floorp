@@ -1343,3 +1343,17 @@ function checkImageColorAt({ image, x = 0, y, expectedColor, label }) {
   const color = colorAt(image, x, y);
   is(`rgb(${Object.values(color).join(", ")})`, expectedColor, label);
 }
+
+/**
+ * Assert that a given parent pool has the expected number of children for
+ * a given typeName.
+ */
+function checkPoolChildrenSize(parentPool, typeName, expected) {
+  const children = [...parentPool.poolChildren()];
+  const childrenByType = children.filter(pool => pool.typeName === typeName);
+  is(
+    childrenByType.length,
+    expected,
+    `${parentPool.actorID} should have ${expected} children of type ${typeName}`
+  );
+}

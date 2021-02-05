@@ -78,6 +78,16 @@ class WatcherFront extends FrontClassWithSpec(watcherSpec) {
   }
 
   /**
+   * Memoized getter for the "breakpoint-list" actor
+   */
+  async getBreakpointListActor() {
+    if (!this._breakpointListActor) {
+      this._breakpointListActor = await super.getBreakpointListActor();
+    }
+    return this._breakpointListActor;
+  }
+
+  /**
    * For a given BrowsingContext ID, return the already existing BrowsingContextTargetFront
    */
   async getBrowsingContextTarget(id) {
@@ -108,6 +118,16 @@ class WatcherFront extends FrontClassWithSpec(watcherSpec) {
     }
 
     return null;
+  }
+
+  /**
+   * Memoized getter for the "networkParent" actor
+   */
+  async getNetworkParentActor() {
+    if (!this._networkParentActor) {
+      this._networkParentActor = await super.getNetworkParentActor();
+    }
+    return this._networkParentActor;
   }
 }
 registerFront(WatcherFront);
