@@ -458,7 +458,8 @@ function test() {
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv(
-  {"set": [["dom.w3c_touch_events.legacy_apis.enabled", true]]},
+  {"set": [["dom.w3c_touch_events.legacy_apis.enabled", true],
+           ["dom.formdata.event.enabled", true]]},
   function() {
     test();
     SimpleTest.finish();
