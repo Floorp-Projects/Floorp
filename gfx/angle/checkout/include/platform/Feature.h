@@ -13,25 +13,36 @@
 #include <string>
 #include <vector>
 
+#define ANGLE_FEATURE_CONDITION(set, feature, cond)       \
+    do                                                    \
+    {                                                     \
+        (set)->feature.enabled   = cond;                  \
+        (set)->feature.condition = ANGLE_STRINGIFY(cond); \
+    } while (0)
+
 namespace angle
 {
 
 enum class FeatureCategory
 {
     FrontendWorkarounds,
+    FrontendFeatures,
     OpenGLWorkarounds,
     D3DWorkarounds,
     D3DCompilerWorkarounds,
     VulkanWorkarounds,
     VulkanFeatures,
+    MetalFeatures,
 };
 
 constexpr char kFeatureCategoryFrontendWorkarounds[]    = "Frontend workarounds";
+constexpr char kFeatureCategoryFrontendFeatures[]       = "Frontend features";
 constexpr char kFeatureCategoryOpenGLWorkarounds[]      = "OpenGL workarounds";
 constexpr char kFeatureCategoryD3DWorkarounds[]         = "D3D workarounds";
 constexpr char kFeatureCategoryD3DCompilerWorkarounds[] = "D3D compiler workarounds";
 constexpr char kFeatureCategoryVulkanWorkarounds[]      = "Vulkan workarounds";
 constexpr char kFeatureCategoryVulkanFeatures[]         = "Vulkan features";
+constexpr char kFeatureCategoryMetalFeatures[]          = "Metal features";
 constexpr char kFeatureCategoryUnknown[]                = "Unknown";
 
 inline const char *FeatureCategoryToString(const FeatureCategory &fc)
@@ -40,6 +51,10 @@ inline const char *FeatureCategoryToString(const FeatureCategory &fc)
     {
         case FeatureCategory::FrontendWorkarounds:
             return kFeatureCategoryFrontendWorkarounds;
+            break;
+
+        case FeatureCategory::FrontendFeatures:
+            return kFeatureCategoryFrontendFeatures;
             break;
 
         case FeatureCategory::OpenGLWorkarounds:
@@ -60,6 +75,10 @@ inline const char *FeatureCategoryToString(const FeatureCategory &fc)
 
         case FeatureCategory::VulkanFeatures:
             return kFeatureCategoryVulkanFeatures;
+            break;
+
+        case FeatureCategory::MetalFeatures:
+            return kFeatureCategoryMetalFeatures;
             break;
 
         default:
@@ -110,6 +129,9 @@ struct Feature
     // Whether the workaround is enabled or not. Determined by heuristics like vendor ID and
     // version, but may be overriden to any value.
     bool enabled = false;
+
+    // A stingified version of the condition used to set 'enabled'. ie "IsNvidia() && IsApple()"
+    const char *condition;
 };
 
 inline Feature::Feature(const Feature &other) = default;
@@ -118,7 +140,12 @@ inline Feature::Feature(const char *name,
                         const char *description,
                         FeatureMap *const mapPtr,
                         const char *bug = "")
-    : name(name), category(category), description(description), bug(bug), enabled(false)
+    : name(name),
+      category(category),
+      description(description),
+      bug(bug),
+      enabled(false),
+      condition("")
 {
     if (mapPtr != nullptr)
     {
@@ -143,9 +170,9 @@ struct FeatureSetBase
     FeatureMap members = FeatureMap();
 
   public:
-    void overrideFeatures(const std::vector<std::string> &feature_names, const bool enabled)
+    void overrideFeatures(const std::vector<std::string> &featureNames, bool enabled)
     {
-        for (const std::string &name : feature_names)
+        for (const std::string &name : featureNames)
         {
             if (members.find(name) != members.end())
             {
@@ -161,6 +188,8 @@ struct FeatureSetBase
             features->push_back(it->second);
         }
     }
+
+    const FeatureMap &getFeatures() const { return members; }
 };
 
 inline FeatureSetBase::FeatureSetBase()  = default;

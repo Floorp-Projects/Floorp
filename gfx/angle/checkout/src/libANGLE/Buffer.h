@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2002 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -18,6 +18,7 @@
 #include "libANGLE/IndexRangeCache.h"
 #include "libANGLE/Observer.h"
 #include "libANGLE/RefCountObject.h"
+#include "libANGLE/angletypes.h"
 
 namespace rx
 {
@@ -45,6 +46,7 @@ class BufferState final : angle::NonCopyable
     GLint64 getMapLength() const { return mMapLength; }
     GLint64 getSize() const { return mSize; }
     bool isBoundForTransformFeedback() const { return mTransformFeedbackIndexedBindingCount != 0; }
+    std::string getLabel() const { return mLabel; }
 
   private:
     friend class Buffer;
@@ -62,26 +64,39 @@ class BufferState final : angle::NonCopyable
     int mBindingCount;
     int mTransformFeedbackIndexedBindingCount;
     int mTransformFeedbackGenericBindingCount;
+    GLboolean mImmutable;
+    GLbitfield mStorageExtUsageFlags;
 };
 
-class Buffer final : public RefCountObject,
+class Buffer final : public RefCountObject<BufferID>,
                      public LabeledObject,
                      public angle::ObserverInterface,
                      public angle::Subject
 {
   public:
-    Buffer(rx::GLImplFactory *factory, GLuint id);
+    Buffer(rx::GLImplFactory *factory, BufferID id);
     ~Buffer() override;
     void onDestroy(const Context *context) override;
 
     void setLabel(const Context *context, const std::string &label) override;
     const std::string &getLabel() const override;
 
+    angle::Result bufferStorage(Context *context,
+                                BufferBinding target,
+                                GLsizeiptr size,
+                                const void *data,
+                                GLbitfield flags);
     angle::Result bufferData(Context *context,
                              BufferBinding target,
                              const void *data,
                              GLsizeiptr size,
                              BufferUsage usage);
+    angle::Result bufferDataImpl(Context *context,
+                                 BufferBinding target,
+                                 const void *data,
+                                 GLsizeiptr size,
+                                 BufferUsage usage,
+                                 GLbitfield flags);
     angle::Result bufferSubData(const Context *context,
                                 BufferBinding target,
                                 const void *data,
@@ -100,8 +115,7 @@ class Buffer final : public RefCountObject,
     angle::Result unmap(const Context *context, GLboolean *result);
 
     // These are called when another operation changes Buffer data.
-    void onTransformFeedback();
-    void onPixelPack();
+    void onDataChanged();
 
     angle::Result getIndexRange(const gl::Context *context,
                                 DrawElementsType type,
@@ -109,7 +123,7 @@ class Buffer final : public RefCountObject,
                                 size_t count,
                                 bool primitiveRestartEnabled,
                                 IndexRange *outRange) const;
-
+    const BufferState &getState() const { return mState; }
     BufferUsage getUsage() const { return mState.mUsage; }
     GLbitfield getAccessFlags() const { return mState.mAccessFlags; }
     GLenum getAccess() const { return mState.mAccess; }
@@ -119,6 +133,11 @@ class Buffer final : public RefCountObject,
     GLint64 getMapLength() const { return mState.mMapLength; }
     GLint64 getSize() const { return mState.mSize; }
     GLint64 getMemorySize() const;
+    GLboolean isImmutable() const { return mState.mImmutable; }
+    GLbitfield getStorageExtUsageFlags() const { return mState.mStorageExtUsageFlags; }
+
+    // Buffers are always initialized immediately when allocated
+    InitState initState() const { return InitState::Initialized; }
 
     rx::BufferImpl *getImplementation() const { return mImpl; }
 
@@ -138,6 +157,10 @@ class Buffer final : public RefCountObject,
     bool isDoubleBoundForTransformFeedback() const;
     void onTFBindingChanged(const Context *context, bool bound, bool indexed);
     void onNonTFBindingChanged(int incr) { mState.mBindingCount += incr; }
+    angle::Result getSubData(const gl::Context *context,
+                             GLintptr offset,
+                             GLsizeiptr size,
+                             void *outData);
 
     // angle::ObserverInterface implementation.
     void onSubjectStateChange(angle::SubjectIndex index, angle::SubjectMessage message) override;

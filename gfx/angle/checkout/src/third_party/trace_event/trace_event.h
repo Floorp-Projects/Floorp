@@ -454,10 +454,9 @@
 #define INTERNALTRACEEVENTUID(name_prefix) INTERNAL_TRACE_EVENT_UID2(name_prefix, __LINE__)
 
 // Implementation detail: internal macro to create static category.
-#define INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(platform, category)    \
-    static const unsigned char *INTERNALTRACEEVENTUID(catstatic) = 0; \
-    if (!INTERNALTRACEEVENTUID(catstatic))                            \
-        INTERNALTRACEEVENTUID(catstatic) = TRACE_EVENT_API_GET_CATEGORY_ENABLED(platform, category);
+#define INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(platform, category) \
+    static const unsigned char *INTERNALTRACEEVENTUID(catstatic) = \
+        TRACE_EVENT_API_GET_CATEGORY_ENABLED(platform, category);
 
 // Implementation detail: internal macro to create static category and add
 // event if the category is enabled.
@@ -475,17 +474,20 @@
 // Implementation detail: internal macro to create static category and add begin
 // event if the category is enabled. Also adds the end event when the scope
 // ends.
-#define INTERNAL_TRACE_EVENT_ADD_SCOPED(platform, category, name, ...)                 \
-    INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(platform, category);                        \
-    gl::TraceEvent::TraceEndOnScopeClose INTERNALTRACEEVENTUID(profileScope);          \
-    if (*INTERNALTRACEEVENTUID(catstatic))                                             \
-    {                                                                                  \
-        gl::TraceEvent::addTraceEvent(                                                 \
-            platform, TRACE_EVENT_PHASE_BEGIN, INTERNALTRACEEVENTUID(catstatic), name, \
-            gl::TraceEvent::noEventId, TRACE_EVENT_FLAG_NONE, ##__VA_ARGS__);          \
-        INTERNALTRACEEVENTUID(profileScope)                                            \
-            .initialize(platform, INTERNALTRACEEVENTUID(catstatic), name);             \
-    }
+#define INTERNAL_TRACE_EVENT_ADD_SCOPED(platform, category, name, ...)                     \
+    INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(platform, category);                            \
+    gl::TraceEvent::TraceEndOnScopeClose INTERNALTRACEEVENTUID(profileScope);              \
+    do                                                                                     \
+    {                                                                                      \
+        if (*INTERNALTRACEEVENTUID(catstatic))                                             \
+        {                                                                                  \
+            gl::TraceEvent::addTraceEvent(                                                 \
+                platform, TRACE_EVENT_PHASE_BEGIN, INTERNALTRACEEVENTUID(catstatic), name, \
+                gl::TraceEvent::noEventId, TRACE_EVENT_FLAG_NONE, ##__VA_ARGS__);          \
+            INTERNALTRACEEVENTUID(profileScope)                                            \
+                .initialize(platform, INTERNALTRACEEVENTUID(catstatic), name);             \
+        }                                                                                  \
+    } while (0)
 
 // Implementation detail: internal macro to create static category and add
 // event if the category is enabled.

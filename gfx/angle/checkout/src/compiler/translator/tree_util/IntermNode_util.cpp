@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2017 The ANGLE Project Authors. All rights reserved.
+// Copyright 2017 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -113,14 +113,31 @@ TIntermTyped *CreateZeroNode(const TType &type)
     return TIntermAggregate::CreateConstructor(constType, arguments);
 }
 
+TIntermConstantUnion *CreateFloatNode(float value)
+{
+    TConstantUnion *u = new TConstantUnion[1];
+    u[0].setFConst(value);
+
+    TType type(EbtFloat, EbpUndefined, EvqConst, 1);
+    return new TIntermConstantUnion(u, type);
+}
+
 TIntermConstantUnion *CreateIndexNode(int index)
 {
     TConstantUnion *u = new TConstantUnion[1];
     u[0].setIConst(index);
 
     TType type(EbtInt, EbpUndefined, EvqConst, 1);
-    TIntermConstantUnion *node = new TIntermConstantUnion(u, type);
-    return node;
+    return new TIntermConstantUnion(u, type);
+}
+
+TIntermConstantUnion *CreateUIntNode(unsigned int value)
+{
+    TConstantUnion *u = new TConstantUnion[1];
+    u[0].setUConst(value);
+
+    TType type(EbtUInt, EbpUndefined, EvqConst, 1);
+    return new TIntermConstantUnion(u, type);
 }
 
 TIntermConstantUnion *CreateBoolNode(bool value)
@@ -129,8 +146,7 @@ TIntermConstantUnion *CreateBoolNode(bool value)
     u[0].setBConst(value);
 
     TType type(EbtBool, EbpUndefined, EvqConst, 1);
-    TIntermConstantUnion *node = new TIntermConstantUnion(u, type);
-    return node;
+    return new TIntermConstantUnion(u, type);
 }
 
 TVariable *CreateTempVariable(TSymbolTable *symbolTable, const TType *type)
@@ -213,22 +229,26 @@ const TVariable *DeclareInterfaceBlock(TIntermBlock *root,
                                        TFieldList *fieldList,
                                        TQualifier qualifier,
                                        const TMemoryQualifier &memoryQualifier,
-                                       const char *blockTypeName,
-                                       const char *blockVariableName)
+                                       uint32_t arraySize,
+                                       const ImmutableString &blockTypeName,
+                                       const ImmutableString &blockVariableName)
 {
     // Define an interface block.
     TLayoutQualifier layoutQualifier = TLayoutQualifier::Create();
-    TInterfaceBlock *interfaceBlock =
-        new TInterfaceBlock(symbolTable, ImmutableString(blockTypeName), fieldList, layoutQualifier,
-                            SymbolType::AngleInternal);
+    TInterfaceBlock *interfaceBlock  = new TInterfaceBlock(
+        symbolTable, blockTypeName, fieldList, layoutQualifier, SymbolType::AngleInternal);
 
     // Turn the inteface block into a declaration.
     TType *interfaceBlockType = new TType(interfaceBlock, qualifier, layoutQualifier);
     interfaceBlockType->setMemoryQualifier(memoryQualifier);
+    if (arraySize > 0)
+    {
+        interfaceBlockType->makeArray(arraySize);
+    }
 
     TIntermDeclaration *interfaceBlockDecl = new TIntermDeclaration;
-    TVariable *interfaceBlockVar = new TVariable(symbolTable, ImmutableString(blockVariableName),
-                                                 interfaceBlockType, SymbolType::AngleInternal);
+    TVariable *interfaceBlockVar = new TVariable(symbolTable, blockVariableName, interfaceBlockType,
+                                                 SymbolType::AngleInternal);
     TIntermSymbol *interfaceBlockDeclarator = new TIntermSymbol(interfaceBlockVar);
     interfaceBlockDecl->appendDeclarator(interfaceBlockDeclarator);
 

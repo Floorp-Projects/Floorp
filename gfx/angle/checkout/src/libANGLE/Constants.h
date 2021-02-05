@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013 The ANGLE Project Authors. All rights reserved.
+// Copyright 2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -34,17 +34,19 @@ enum
         IMPLEMENTATION_MAX_DRAW_BUFFERS + 2,  // 2 extra for depth and/or stencil buffers
 
     IMPLEMENTATION_MAX_VERTEX_SHADER_UNIFORM_BUFFERS   = 16,
+    IMPLEMENTATION_MAX_GEOMETRY_SHADER_UNIFORM_BUFFERS = 16,
     IMPLEMENTATION_MAX_FRAGMENT_SHADER_UNIFORM_BUFFERS = 16,
     IMPLEMENTATION_MAX_COMPUTE_SHADER_UNIFORM_BUFFERS  = 16,
-    IMPLEMENTATION_MAX_COMBINED_SHADER_UNIFORM_BUFFERS =
-        IMPLEMENTATION_MAX_VERTEX_SHADER_UNIFORM_BUFFERS +
-        IMPLEMENTATION_MAX_FRAGMENT_SHADER_UNIFORM_BUFFERS,
+    // GL_EXT_geometry_shader increases the minimum value of GL_MAX_COMBINED_UNIFORM_BLOCKS to 36.
+    IMPLEMENTATION_MAX_COMBINED_SHADER_UNIFORM_BUFFERS = 36,
 
     // GL_EXT_geometry_shader increases the minimum value of GL_MAX_UNIFORM_BUFFER_BINDINGS to 48.
-    IMPLEMENTATION_MAX_UNIFORM_BUFFER_BINDINGS = 48,
+    // Vulkan's minimum value for maxDescriptorSetUniformBuffers is 72 so allow exposing up to that
+    // many.
+    IMPLEMENTATION_MAX_UNIFORM_BUFFER_BINDINGS = 72,
 
     // Transform feedback limits set to the minimum required by the spec.
-    IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS = 64,
+    IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS = 128,
     IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS       = 4,
     IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS    = 4,
     IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_BUFFERS                = 4,
@@ -55,13 +57,13 @@ enum
     // These are the maximums the implementation can support
     // The actual GL caps are limited by the device caps
     // and should be queried from the Context
-    IMPLEMENTATION_MAX_2D_TEXTURE_SIZE         = 16384,
-    IMPLEMENTATION_MAX_CUBE_MAP_TEXTURE_SIZE   = 16384,
-    IMPLEMENTATION_MAX_3D_TEXTURE_SIZE         = 2048,
+    IMPLEMENTATION_MAX_2D_TEXTURE_SIZE         = 32768,
+    IMPLEMENTATION_MAX_CUBE_MAP_TEXTURE_SIZE   = 32768,
+    IMPLEMENTATION_MAX_3D_TEXTURE_SIZE         = 16384,
     IMPLEMENTATION_MAX_2D_ARRAY_TEXTURE_LAYERS = 2048,
 
     // 1+log2 of max of MAX_*_TEXTURE_SIZE
-    IMPLEMENTATION_MAX_TEXTURE_LEVELS = 15,
+    IMPLEMENTATION_MAX_TEXTURE_LEVELS = 16,
 
     // Limit active textures so we can use fast bitsets.
     IMPLEMENTATION_MAX_SHADER_TEXTURES = 32,
@@ -72,14 +74,28 @@ enum
     IMPLEMENTATION_MAX_ATOMIC_COUNTER_BUFFERS = 8,
 
     // Implementation upper limits, real maximums depend on the hardware.
-    IMPLEMENTATION_MAX_SHADER_STORAGE_BUFFER_BINDINGS = 64
+    IMPLEMENTATION_MAX_SHADER_STORAGE_BUFFER_BINDINGS = 64,
+
+    // Implementation upper limits of max number of clip distances
+    IMPLEMENTATION_MAX_CLIP_DISTANCES = 32,
 };
 
 namespace limits
 {
+// Almost all drivers use 2048 (the minimum value) as GL_MAX_VERTEX_ATTRIB_STRIDE.  ANGLE advertizes
+// the same limit.
+constexpr uint32_t kMaxVertexAttribStride = 2048;
+
 // Some of the minimums required by GL, used to detect if the backend meets the minimum requirement.
 // Currently, there's no need to separate these values per spec version.
 constexpr uint32_t kMinimumComputeStorageBuffers = 4;
+
+// OpenGL ES 3.0+ Minimum Values
+// Table 6.31 MAX_VERTEX_UNIFORM_BLOCKS minimum value = 12
+// Table 6.32 MAX_FRAGMENT_UNIFORM_BLOCKS minimum value = 12
+constexpr uint32_t kMinimumShaderUniformBlocks = 12;
+// Table 6.31 MAX_VERTEX_OUTPUT_COMPONENTS minimum value = 64
+constexpr uint32_t kMinimumVertexOutputComponents = 64;
 }  // namespace limits
 
 }  // namespace gl

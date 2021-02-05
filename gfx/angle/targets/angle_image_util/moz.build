@@ -3,19 +3,15 @@
 include("../../moz.build.common")
 
 # DEFINES["ANGLE_IS_64_BIT_CPU"] = True
+# DEFINES["ANGLE_IS_WIN"] = True
 # DEFINES["CERT_CHAIN_PARA_HAS_EXTRA_FIELDS"] = True
-# DEFINES["CHROMIUM_BUILD"] = True
-DEFINES["CR_CLANG_REVISION"] = '"357692-1"'
+DEFINES["CR_CLANG_REVISION"] = '"llvmorg-12-init-11060-g118c3f3c-1"'
 DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
-# DEFINES["FULL_SAFE_BROWSING"] = True
 # DEFINES["NDEBUG"] = True
 DEFINES["NOMINMAX"] = True
-# DEFINES["NO_TCMALLOC"] = True
-DEFINES["NTDDI_VERSION"] = "NTDDI_WIN10_RS2"
+# DEFINES["NTDDI_VERSION"] = "NTDDI_WIN10_VB"
 # DEFINES["NVALGRIND"] = True
 # DEFINES["PSAPI_VERSION"] = "2"
-# DEFINES["SAFE_BROWSING_CSD"] = True
-# DEFINES["SAFE_BROWSING_DB_LOCAL"] = True
 DEFINES["UNICODE"] = True
 # DEFINES["USE_AURA"] = "1"
 # DEFINES["WIN32"] = True
@@ -30,7 +26,6 @@ DEFINES["_HAS_EXCEPTIONS"] = "0"
 DEFINES["_SCL_SECURE_NO_DEPRECATE"] = True
 DEFINES["_SECURE_ATL"] = True
 DEFINES["_UNICODE"] = True
-# DEFINES["_USING_V110_SDK71_"] = True
 # DEFINES["_WIN32_WINNT"] = "0x0A00"
 # DEFINES["_WINDOWS"] = True
 # DEFINES["__STD_C"] = True
@@ -46,38 +41,71 @@ LOCAL_INCLUDES += [
 #     "-D__DATE__=",
 #     "-D__TIME__=",
 #     "-D__TIMESTAMP__=",
+#     "-debug-info-kind=constructor",
 #     "-fcolor-diagnostics",
 #     "-fcomplete-member-pointers",
 #     "-fcrash-diagnostics-dir=../tools/clang/crashreports",
 #     "-fdebug-compilation-dir",
 #     "-fmerge-all-constants",
-#     "-fmsc-version=1911",
-#     "-fno-standalone-debug",
+#     "-fmsc-version=1916",
+#     "-ftrivial-auto-var-init=pattern",
 #     "-gcodeview-ghash",
 #     "-instcombine-lower-dbg-declare=0",
 #     "-m64",
 #     "-mllvm",
 #     "-no-canonical-prefixes",
+#     "-Wbad-function-cast",
+#     "-Wconditional-uninitialized",
+#     "-Wdeprecated-copy",
+#     "-Wexit-time-destructors",
 #     "-Wextra-semi",
+#     "-Wextra-semi-stmt",
+#     "-Wfloat-conversion",
+#     "-Wglobal-constructors",
 #     "-Wheader-hygiene",
 #     "-Wimplicit-fallthrough",
+#     "-Winconsistent-missing-destructor-override",
+#     "-Wmax-tokens",
+#     "-Wmissing-field-initializers",
+#     "-Wnewline-eof",
+#     "-Wno-builtin-assume-aligned-alignment",
 #     "-Wno-builtin-macro-redefined",
 #     "-Wno-c++11-narrowing",
+#     "-Wno-deprecated-copy",
+#     "-Wno-final-dtor-non-final-class",
 #     "-Wno-ignored-pragma-optimize",
+#     "-Wno-implicit-int-float-conversion",
 #     "-Wno-missing-field-initializers",
+#     "-Wno-non-c-typedef-for-linkage",
 #     "-Wno-nonportable-include-path",
+#     "-Wno-psabi",
+#     "-Wno-trigraphs",
 #     "-Wno-undefined-var-template",
 #     "-Wno-unneeded-internal-declaration",
 #     "-Wno-unused-parameter",
 #     "-Wnon-virtual-dtor",
+#     "-Wparentheses",
+#     "-Wrange-loop-analysis",
+#     "-Wredundant-parens",
+#     "-Wreturn-std-move-in-c++11",
+#     "-Wshadow-field",
+#     "-Wshorten-64-to-32",
+#     "-Wstrict-prototypes",
 #     "-Wstring-conversion",
+#     "-Wsuggest-destructor-override",
+#     "-Wsuggest-override",
 #     "-Wtautological-overlap-compare",
+#     "-Wtautological-type-limit-compare",
 #     "-Wthread-safety",
+#     "-Wundefined-reinterpret-cast",
 #     "-Wunneeded-internal-declaration",
+#     "-Wunreachable-code",
+#     "-Wweak-template-vtables",
 #     "-Xclang",
 #     ".",
 #     "/bigobj",
 #     "/Brepro",
+#     "/D__WRL_ENABLE_FUNCTION_STATICS__",
 #     "/FS",
 #     "/GR-",
 #     "/guard:cf,nochecks",
@@ -132,6 +160,7 @@ LOCAL_INCLUDES += [
 #     "/wd4995",
 #     "/wd4996",
 #     "/we4244",
+#     "/we4312",
 #     "/we4456",
 #     "/we4458",
 #     "/we4715",
@@ -142,6 +171,7 @@ LOCAL_INCLUDES += [
 #     "/Z7",
 #     "/Zc:inline",
 #     "/Zc:sizedDealloc-",
+#     "/Zc:twoPhase",
 # ]
 
 SOURCES += [
@@ -161,16 +191,18 @@ DIRS += [
 
 # LDFLAGS += [
 #     "--color-diagnostics",
+#     "/call-graph-profile-sort:no",
 #     "/DEBUG:GHASH",
 #     "/FIXED:NO",
 #     "/INCREMENTAL:NO",
+#     "/lldignoreenv",
 #     "/OPT:ICF",
 #     "/OPT:NOLLDTAILMERGE",
 #     "/OPT:REF",
 #     "/pdbaltpath:%_PDB%",
 #     "/PDBSourcePath:C:/dev/angle/out",
 #     "/PROFILE",
-#     "/TIMESTAMP:1554613200",
+#     "/TIMESTAMP:1604206800",
 #     "/WX",
 # ]
 

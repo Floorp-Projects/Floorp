@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013 The ANGLE Project Authors. All rights reserved.
+// Copyright 2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -19,6 +19,10 @@
 #ifdef ANGLE_ENABLE_VULKAN
 #    include "compiler/translator/TranslatorVulkan.h"
 #endif  // ANGLE_ENABLE_VULKAN
+
+#ifdef ANGLE_ENABLE_METAL
+#    include "compiler/translator/TranslatorMetal.h"
+#endif  // ANGLE_ENABLE_METAL
 
 #include "compiler/translator/util.h"
 
@@ -59,6 +63,13 @@ TCompiler *ConstructCompiler(sh::GLenum type, ShShaderSpec spec, ShShaderOutput 
         return new TranslatorVulkan(type, spec);
     }
 #endif  // ANGLE_ENABLE_VULKAN
+
+#ifdef ANGLE_ENABLE_METAL
+    if (IsOutputMetal(output))
+    {
+        return new TranslatorMetal(type, spec);
+    }
+#endif  // ANGLE_ENABLE_METAL
 
     // Unsupported compiler or unknown format. Return nullptr per the sh::ConstructCompiler API.
     return nullptr;

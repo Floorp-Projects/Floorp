@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+// Copyright 2002 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -43,6 +43,7 @@ struct Config
     EGLint alphaMaskSize;          // Bits of Alpha Mask in the mask buffer
     EGLBoolean bindToTextureRGB;   // True if bindable to RGB textures.
     EGLBoolean bindToTextureRGBA;  // True if bindable to RGBA textures.
+    EGLenum bindToTextureTarget;   // Which texture target should be used for pbuffers
     EGLenum colorBufferType;       // Color buffer type
     EGLenum configCaveat;          // Any caveats for the configuration
     EGLint configID;               // Unique EGLConfig identifier
@@ -70,6 +71,12 @@ struct Config
     EGLint optimalOrientation;     // Optimal window surface orientation
     EGLenum colorComponentType;    // Color component type
     EGLBoolean recordable;         // EGL_TRUE if a surface can support recording on Android
+    EGLBoolean framebufferTarget;  // EGL_TRUE if the config supports rendering to a ANativeWindow
+                                   // for which the buffers are passed to the HWComposer HAL as a
+                                   // framebuffer target layer.
+    EGLBoolean yInverted;  // True if the drawable's framebuffer is y-inverted.  This can be used to
+                           // determine if y-inverted texture coordinates need to be used when
+                           // texturing from this drawable when it is bound to a texture target.
 };
 
 class ConfigSet

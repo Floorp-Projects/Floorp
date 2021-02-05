@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2002 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -46,7 +46,7 @@ angle::Result IndexBuffer9::initialize(const gl::Context *context,
         }
         else if (indexType == gl::DrawElementsType::UnsignedInt)
         {
-            ASSERT(mRenderer->getNativeExtensions().elementIndexUint);
+            ASSERT(mRenderer->getNativeExtensions().elementIndexUintOES);
             format = D3DFMT_INDEX32;
         }
         else
@@ -123,12 +123,12 @@ angle::Result IndexBuffer9::discard(const gl::Context *context)
 {
     ASSERT(mIndexBuffer);
 
-    void *dummy;
+    void *mock;
     HRESULT result;
 
     Context9 *context9 = GetImplAs<Context9>(context);
 
-    result = mIndexBuffer->Lock(0, 1, &dummy, D3DLOCK_DISCARD);
+    result = mIndexBuffer->Lock(0, 1, &mock, D3DLOCK_DISCARD);
     ANGLE_TRY_HR(context9, result, "Failed to lock internal index buffer");
 
     result = mIndexBuffer->Unlock();

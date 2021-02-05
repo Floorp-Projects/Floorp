@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2013 The ANGLE Project Authors. All rights reserved.
+// Copyright 2002 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -35,43 +35,6 @@ bool isInitialized = false;
 
 template <typename VarT>
 const std::vector<VarT> *GetVariableList(const TCompiler *compiler);
-
-template <>
-const std::vector<Uniform> *GetVariableList(const TCompiler *compiler)
-{
-    return &compiler->getUniforms();
-}
-
-template <>
-const std::vector<Varying> *GetVariableList(const TCompiler *compiler)
-{
-    switch (compiler->getShaderType())
-    {
-        case GL_VERTEX_SHADER:
-            return &compiler->getOutputVaryings();
-        case GL_FRAGMENT_SHADER:
-            return &compiler->getInputVaryings();
-        case GL_COMPUTE_SHADER:
-            ASSERT(compiler->getOutputVaryings().empty() && compiler->getInputVaryings().empty());
-            return &compiler->getOutputVaryings();
-        // Since geometry shaders have both input and output varyings, we shouldn't call GetVaryings
-        // on a geometry shader.
-        default:
-            return nullptr;
-    }
-}
-
-template <>
-const std::vector<Attribute> *GetVariableList(const TCompiler *compiler)
-{
-    return &compiler->getAttributes();
-}
-
-template <>
-const std::vector<OutputVariable> *GetVariableList(const TCompiler *compiler)
-{
-    return &compiler->getOutputVariables();
-}
 
 template <>
 const std::vector<InterfaceBlock> *GetVariableList(const TCompiler *compiler)
@@ -186,30 +149,43 @@ void InitBuiltInResources(ShBuiltInResources *resources)
     resources->MaxDrawBuffers               = 1;
 
     // Extensions.
-    resources->OES_standard_derivatives                 = 0;
-    resources->OES_EGL_image_external                   = 0;
-    resources->OES_EGL_image_external_essl3             = 0;
-    resources->NV_EGL_stream_consumer_external          = 0;
-    resources->ARB_texture_rectangle                    = 0;
-    resources->EXT_blend_func_extended                  = 0;
-    resources->EXT_draw_buffers                         = 0;
-    resources->EXT_frag_depth                           = 0;
-    resources->EXT_shader_texture_lod                   = 0;
-    resources->WEBGL_debug_shader_precision             = 0;
-    resources->EXT_shader_framebuffer_fetch             = 0;
-    resources->NV_shader_framebuffer_fetch              = 0;
-    resources->ARM_shader_framebuffer_fetch             = 0;
-    resources->OVR_multiview                            = 0;
-    resources->OVR_multiview2                           = 0;
-    resources->EXT_YUV_target                           = 0;
-    resources->EXT_geometry_shader                      = 0;
-    resources->OES_texture_storage_multisample_2d_array = 0;
-    resources->OES_texture_3D                           = 0;
-    resources->ANGLE_texture_multisample                = 0;
-    resources->ANGLE_multi_draw                         = 0;
-    resources->ANGLE_base_vertex_base_instance          = 0;
+    resources->OES_standard_derivatives                    = 0;
+    resources->OES_EGL_image_external                      = 0;
+    resources->OES_EGL_image_external_essl3                = 0;
+    resources->NV_EGL_stream_consumer_external             = 0;
+    resources->ARB_texture_rectangle                       = 0;
+    resources->EXT_blend_func_extended                     = 0;
+    resources->EXT_draw_buffers                            = 0;
+    resources->EXT_frag_depth                              = 0;
+    resources->EXT_shader_texture_lod                      = 0;
+    resources->WEBGL_debug_shader_precision                = 0;
+    resources->EXT_shader_framebuffer_fetch                = 0;
+    resources->NV_shader_framebuffer_fetch                 = 0;
+    resources->ARM_shader_framebuffer_fetch                = 0;
+    resources->OVR_multiview                               = 0;
+    resources->OVR_multiview2                              = 0;
+    resources->EXT_YUV_target                              = 0;
+    resources->EXT_geometry_shader                         = 0;
+    resources->EXT_gpu_shader5                             = 0;
+    resources->EXT_shader_non_constant_global_initializers = 0;
+    resources->NV_shader_noperspective_interpolation       = 0;
+    resources->OES_texture_storage_multisample_2d_array    = 0;
+    resources->OES_texture_3D                              = 0;
+    resources->ANGLE_texture_multisample                   = 0;
+    resources->ANGLE_multi_draw                            = 0;
+    resources->ANGLE_base_vertex_base_instance             = 0;
+    resources->WEBGL_video_texture                         = 0;
+    resources->APPLE_clip_distance                         = 0;
+    resources->OES_texture_cube_map_array                  = 0;
+    resources->EXT_texture_cube_map_array                  = 0;
+    resources->EXT_shadow_samplers                         = 0;
+    resources->OES_shader_multisample_interpolation        = 0;
+    resources->NV_draw_buffers                             = 0;
+    resources->OES_shader_image_atomic                     = 0;
+    resources->OES_texture_buffer                          = 0;
+    resources->EXT_texture_buffer                          = 0;
 
-    resources->NV_draw_buffers = 0;
+    resources->MaxClipDistances = 0;
 
     // Disable highp precision in fragment shader by default.
     resources->FragmentPrecisionHigh = 0;
@@ -290,6 +266,8 @@ void InitBuiltInResources(ShBuiltInResources *resources)
     resources->MaxGeometryShaderStorageBlocks   = 0;
     resources->MaxGeometryShaderInvocations     = 32;
     resources->MaxGeometryImageUniforms         = 0;
+
+    resources->SubPixelBits = 8;
 }
 
 //
@@ -410,12 +388,17 @@ const std::map<std::string, std::string> *GetNameHashingMap(const ShHandle handl
     return &(compiler->getNameMap());
 }
 
-const std::vector<Uniform> *GetUniforms(const ShHandle handle)
+const std::vector<ShaderVariable> *GetUniforms(const ShHandle handle)
 {
-    return GetShaderVariables<Uniform>(handle);
+    TCompiler *compiler = GetCompilerFromHandle(handle);
+    if (!compiler)
+    {
+        return nullptr;
+    }
+    return &compiler->getUniforms();
 }
 
-const std::vector<Varying> *GetInputVaryings(const ShHandle handle)
+const std::vector<ShaderVariable> *GetInputVaryings(const ShHandle handle)
 {
     TCompiler *compiler = GetCompilerFromHandle(handle);
     if (compiler == nullptr)
@@ -425,7 +408,7 @@ const std::vector<Varying> *GetInputVaryings(const ShHandle handle)
     return &compiler->getInputVaryings();
 }
 
-const std::vector<Varying> *GetOutputVaryings(const ShHandle handle)
+const std::vector<ShaderVariable> *GetOutputVaryings(const ShHandle handle)
 {
     TCompiler *compiler = GetCompilerFromHandle(handle);
     if (compiler == nullptr)
@@ -435,19 +418,48 @@ const std::vector<Varying> *GetOutputVaryings(const ShHandle handle)
     return &compiler->getOutputVaryings();
 }
 
-const std::vector<Varying> *GetVaryings(const ShHandle handle)
+const std::vector<ShaderVariable> *GetVaryings(const ShHandle handle)
 {
-    return GetShaderVariables<Varying>(handle);
+    TCompiler *compiler = GetCompilerFromHandle(handle);
+    if (compiler == nullptr)
+    {
+        return nullptr;
+    }
+
+    switch (compiler->getShaderType())
+    {
+        case GL_VERTEX_SHADER:
+            return &compiler->getOutputVaryings();
+        case GL_FRAGMENT_SHADER:
+            return &compiler->getInputVaryings();
+        case GL_COMPUTE_SHADER:
+            ASSERT(compiler->getOutputVaryings().empty() && compiler->getInputVaryings().empty());
+            return &compiler->getOutputVaryings();
+        // Since geometry shaders have both input and output varyings, we shouldn't call GetVaryings
+        // on a geometry shader.
+        default:
+            return nullptr;
+    }
 }
 
-const std::vector<Attribute> *GetAttributes(const ShHandle handle)
+const std::vector<ShaderVariable> *GetAttributes(const ShHandle handle)
 {
-    return GetShaderVariables<Attribute>(handle);
+    TCompiler *compiler = GetCompilerFromHandle(handle);
+    if (!compiler)
+    {
+        return nullptr;
+    }
+    return &compiler->getAttributes();
 }
 
-const std::vector<OutputVariable> *GetOutputVariables(const ShHandle handle)
+const std::vector<ShaderVariable> *GetOutputVariables(const ShHandle handle)
 {
-    return GetShaderVariables<OutputVariable>(handle);
+    TCompiler *compiler = GetCompilerFromHandle(handle);
+    if (!compiler)
+    {
+        return nullptr;
+    }
+    return &compiler->getOutputVariables();
 }
 
 const std::vector<InterfaceBlock> *GetInterfaceBlocks(const ShHandle handle)
@@ -496,6 +508,16 @@ int GetVertexShaderNumViews(const ShHandle handle)
     return compiler->getNumViews();
 }
 
+bool HasEarlyFragmentTestsOptimization(const ShHandle handle)
+{
+    TCompiler *compiler = GetCompilerFromHandle(handle);
+    if (compiler == nullptr)
+    {
+        return false;
+    }
+    return compiler->isEarlyFragmentTestsOptimized();
+}
+
 bool CheckVariablesWithinPackingLimits(int maxVectors, const std::vector<ShaderVariable> &variables)
 {
     return CheckVariablesInPackingLimits(maxVectors, variables);
@@ -540,6 +562,19 @@ bool GetUniformBlockRegister(const ShHandle handle,
 
     *indexOut = translator->getUniformBlockRegister(uniformBlockName);
     return true;
+#else
+    return false;
+#endif  // ANGLE_ENABLE_HLSL
+}
+
+bool ShouldUniformBlockUseStructuredBuffer(const ShHandle handle,
+                                           const std::string &uniformBlockName)
+{
+#ifdef ANGLE_ENABLE_HLSL
+    TranslatorHLSL *translator = GetTranslatorHLSLFromHandle(handle);
+    ASSERT(translator);
+
+    return translator->shouldUniformBlockUseStructuredBuffer(uniformBlockName);
 #else
     return false;
 #endif  // ANGLE_ENABLE_HLSL
@@ -671,5 +706,43 @@ int GetGeometryShaderMaxVertices(const ShHandle handle)
     ASSERT(maxVertices >= 0);
     return maxVertices;
 }
+
+unsigned int GetShaderSharedMemorySize(const ShHandle handle)
+{
+    ASSERT(handle);
+
+    TShHandleBase *base = static_cast<TShHandleBase *>(handle);
+    TCompiler *compiler = base->getAsCompiler();
+    ASSERT(compiler);
+
+    unsigned int sharedMemorySize = compiler->getSharedMemorySize();
+    return sharedMemorySize;
+}
+
+// Can't prefix with just _ because then we might introduce a double underscore, which is not safe
+// in GLSL (ESSL 3.00.6 section 3.8: All identifiers containing a double underscore are reserved for
+// use by the underlying implementation). u is short for user-defined.
+const char kUserDefinedNamePrefix[] = "_u";
+
+namespace vk
+{
+// Interface block name containing the aggregate default uniforms
+const char kDefaultUniformsNameVS[]  = "defaultUniformsVS";
+const char kDefaultUniformsNameTCS[] = "defaultUniformsTCS";
+const char kDefaultUniformsNameTES[] = "defaultUniformsTES";
+const char kDefaultUniformsNameGS[]  = "defaultUniformsGS";
+const char kDefaultUniformsNameFS[]  = "defaultUniformsFS";
+const char kDefaultUniformsNameCS[]  = "defaultUniformsCS";
+
+// Interface block and variable names containing driver uniforms
+const char kDriverUniformsBlockName[] = "ANGLEUniformBlock";
+const char kDriverUniformsVarName[]   = "ANGLEUniforms";
+
+// Interface block array name used for atomic counter emulation
+const char kAtomicCountersBlockName[] = "ANGLEAtomicCounters";
+
+const char kLineRasterEmulationPosition[] = "ANGLEPosition";
+
+}  // namespace vk
 
 }  // namespace sh

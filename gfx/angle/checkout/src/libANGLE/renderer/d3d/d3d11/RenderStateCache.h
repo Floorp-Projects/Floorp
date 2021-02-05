@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2012-2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2012 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -69,7 +69,8 @@ class RenderStateCache : angle::NonCopyable
 
     static d3d11::BlendStateKey GetBlendStateKey(const gl::Context *context,
                                                  Framebuffer11 *framebuffer11,
-                                                 const gl::BlendState &blendState);
+                                                 const gl::BlendStateExt &blendStateExt,
+                                                 bool sampleAlphaToCoverage);
     angle::Result getBlendState(const gl::Context *context,
                                 Renderer11 *renderer,
                                 const d3d11::BlendStateKey &key,

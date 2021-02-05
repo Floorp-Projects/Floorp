@@ -10,183 +10,126 @@
 namespace gl
 {
 
-bool ValidateBeginConditionalRender(Context *context, GLuint id, GLenum mode)
+bool ValidateBeginConditionalRender(const Context *context, GLuint id, GLenum mode)
 {
     return true;
 }
 
-bool ValidateBindFragDataLocation(Context *context,
-                                  GLuint program,
+bool ValidateBindFragDataLocation(const Context *context,
+                                  ShaderProgramID program,
                                   GLuint color,
                                   const GLchar *name)
 {
     return true;
 }
 
-bool ValidateClampColor(Context *context, GLenum target, GLenum clamp)
+bool ValidateClampColor(const Context *context, GLenum target, GLenum clamp)
 {
     return true;
 }
 
-bool ValidateColorMaski(Context *context,
-                        GLuint index,
-                        GLboolean r,
-                        GLboolean g,
-                        GLboolean b,
-                        GLboolean a)
+bool ValidateEndConditionalRender(const Context *context)
 {
     return true;
 }
 
-bool ValidateDisablei(Context *context, GLenum target, GLuint index)
-{
-    return true;
-}
-
-bool ValidateEnablei(Context *context, GLenum target, GLuint index)
-{
-    return true;
-}
-
-bool ValidateEndConditionalRender(Context *context)
-{
-    return true;
-}
-
-bool ValidateFramebufferTexture1D(Context *context,
+bool ValidateFramebufferTexture1D(const Context *context,
                                   GLenum target,
                                   GLenum attachment,
-                                  GLenum textarget,
-                                  GLuint texture,
+                                  TextureTarget textargetPacked,
+                                  TextureID texture,
                                   GLint level)
 {
     return true;
 }
 
-bool ValidateFramebufferTexture3D(Context *context,
+bool ValidateFramebufferTexture3D(const Context *context,
                                   GLenum target,
                                   GLenum attachment,
                                   TextureTarget textargetPacked,
-                                  GLuint texture,
+                                  TextureID texture,
                                   GLint level,
                                   GLint zoffset)
 {
     return true;
 }
 
-bool ValidateGetTexParameterIiv(Context *context,
-                                TextureType targetPacked,
-                                GLenum pname,
-                                GLint *params)
+bool ValidateVertexAttribI1i(const Context *context, GLuint index, GLint x)
 {
     return true;
 }
 
-bool ValidateGetTexParameterIuiv(Context *context,
-                                 TextureType targetPacked,
-                                 GLenum pname,
-                                 GLuint *params)
+bool ValidateVertexAttribI1iv(const Context *context, GLuint index, const GLint *v)
 {
     return true;
 }
 
-bool ValidateIsEnabledi(Context *context, GLenum target, GLuint index)
+bool ValidateVertexAttribI1ui(const Context *context, GLuint index, GLuint x)
 {
     return true;
 }
 
-bool ValidateTexParameterIiv(Context *context,
-                             TextureType targetPacked,
-                             GLenum pname,
-                             const GLint *params)
+bool ValidateVertexAttribI1uiv(const Context *context, GLuint index, const GLuint *v)
 {
     return true;
 }
 
-bool ValidateTexParameterIuiv(Context *context,
-                              TextureType targetPacked,
-                              GLenum pname,
-                              const GLuint *params)
+bool ValidateVertexAttribI2i(const Context *context, GLuint index, GLint x, GLint y)
 {
     return true;
 }
 
-bool ValidateVertexAttribI1i(Context *context, GLuint index, GLint x)
+bool ValidateVertexAttribI2iv(const Context *context, GLuint index, const GLint *v)
 {
     return true;
 }
 
-bool ValidateVertexAttribI1iv(Context *context, GLuint index, const GLint *v)
+bool ValidateVertexAttribI2ui(const Context *context, GLuint index, GLuint x, GLuint y)
 {
     return true;
 }
 
-bool ValidateVertexAttribI1ui(Context *context, GLuint index, GLuint x)
+bool ValidateVertexAttribI2uiv(const Context *context, GLuint index, const GLuint *v)
 {
     return true;
 }
 
-bool ValidateVertexAttribI1uiv(Context *context, GLuint index, const GLuint *v)
+bool ValidateVertexAttribI3i(const Context *context, GLuint index, GLint x, GLint y, GLint z)
 {
     return true;
 }
 
-bool ValidateVertexAttribI2i(Context *context, GLuint index, GLint x, GLint y)
+bool ValidateVertexAttribI3iv(const Context *context, GLuint index, const GLint *v)
 {
     return true;
 }
 
-bool ValidateVertexAttribI2iv(Context *context, GLuint index, const GLint *v)
+bool ValidateVertexAttribI3ui(const Context *context, GLuint index, GLuint x, GLuint y, GLuint z)
 {
     return true;
 }
 
-bool ValidateVertexAttribI2ui(Context *context, GLuint index, GLuint x, GLuint y)
+bool ValidateVertexAttribI3uiv(const Context *context, GLuint index, const GLuint *v)
 {
     return true;
 }
 
-bool ValidateVertexAttribI2uiv(Context *context, GLuint index, const GLuint *v)
+bool ValidateVertexAttribI4bv(const Context *context, GLuint index, const GLbyte *v)
 {
     return true;
 }
 
-bool ValidateVertexAttribI3i(Context *context, GLuint index, GLint x, GLint y, GLint z)
+bool ValidateVertexAttribI4sv(const Context *context, GLuint index, const GLshort *v)
 {
     return true;
 }
 
-bool ValidateVertexAttribI3iv(Context *context, GLuint index, const GLint *v)
+bool ValidateVertexAttribI4ubv(const Context *context, GLuint index, const GLubyte *v)
 {
     return true;
 }
 
-bool ValidateVertexAttribI3ui(Context *context, GLuint index, GLuint x, GLuint y, GLuint z)
-{
-    return true;
-}
-
-bool ValidateVertexAttribI3uiv(Context *context, GLuint index, const GLuint *v)
-{
-    return true;
-}
-
-bool ValidateVertexAttribI4bv(Context *context, GLuint index, const GLbyte *v)
-{
-    return true;
-}
-
-bool ValidateVertexAttribI4sv(Context *context, GLuint index, const GLshort *v)
-{
-    return true;
-}
-
-bool ValidateVertexAttribI4ubv(Context *context, GLuint index, const GLubyte *v)
-{
-    return true;
-}
-
-bool ValidateVertexAttribI4usv(Context *context, GLuint index, const GLushort *v)
+bool ValidateVertexAttribI4usv(const Context *context, GLuint index, const GLushort *v)
 {
     return true;
 }

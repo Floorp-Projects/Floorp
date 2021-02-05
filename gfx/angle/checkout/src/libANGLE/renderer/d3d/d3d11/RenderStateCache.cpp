@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2012-2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2012 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -45,28 +45,60 @@ void RenderStateCache::clear()
 // static
 d3d11::BlendStateKey RenderStateCache::GetBlendStateKey(const gl::Context *context,
                                                         Framebuffer11 *framebuffer11,
-                                                        const gl::BlendState &blendState)
+                                                        const gl::BlendStateExt &blendStateExt,
+                                                        bool sampleAlphaToCoverage)
 {
     d3d11::BlendStateKey key;
+    // All fields of the BlendStateExt inside the key should be initialized for the caching to
+    // work correctly. Due to mrt_perf_workaround, the actual indices of active draw buffers may be
+    // different, so both arrays should be tracked.
+    key.blendStateExt                      = gl::BlendStateExt(blendStateExt.mMaxDrawBuffers);
     const gl::AttachmentList &colorbuffers = framebuffer11->getColorAttachmentsForRender(context);
-    const UINT8 blendStateMask =
-        gl_d3d11::ConvertColorMask(blendState.colorMaskRed, blendState.colorMaskGreen,
-                                   blendState.colorMaskBlue, blendState.colorMaskAlpha);
+    const gl::DrawBufferMask colorAttachmentsForRenderMask =
+        framebuffer11->getLastColorAttachmentsForRenderMask();
 
-    key.blendState = blendState;
+    ASSERT(blendStateExt.mMaxDrawBuffers <= colorAttachmentsForRenderMask.size());
+    ASSERT(colorbuffers.size() == colorAttachmentsForRenderMask.count());
 
-    for (size_t i = 0; i < colorbuffers.size(); i++)
+    size_t keyBlendIndex = 0;
+
+    // With blending disabled, factors and equations are ignored when building
+    // D3D11_RENDER_TARGET_BLEND_DESC, so we can reduce the amount of unique keys by
+    // enforcing default values.
+    for (size_t sourceIndex : colorAttachmentsForRenderMask)
     {
-        const gl::FramebufferAttachment *attachment = colorbuffers[i];
+        ASSERT(keyBlendIndex < colorbuffers.size());
+        const gl::FramebufferAttachment *attachment = colorbuffers[keyBlendIndex];
 
-        if (attachment)
+        // Do not set blend state for null attachments that may be present when
+        // mrt_perf_workaround is disabled.
+        if (attachment == nullptr)
         {
-            key.rtvMax = static_cast<uint32_t>(i) + 1;
-            key.rtvMasks[i] =
-                (gl_d3d11::GetColorMask(*attachment->getFormat().info)) & blendStateMask;
+            keyBlendIndex++;
+            continue;
         }
+
+        const uint8_t colorMask = blendStateExt.getColorMaskIndexed(sourceIndex);
+
+        const gl::InternalFormat &internalFormat = *attachment->getFormat().info;
+
+        key.blendStateExt.setColorMaskIndexed(keyBlendIndex,
+                                              gl_d3d11::GetColorMask(internalFormat) & colorMask);
+        key.rtvMax = static_cast<uint16_t>(keyBlendIndex) + 1;
+
+        // Some D3D11 drivers produce unexpected results when blending is enabled for integer
+        // attachments. Per OpenGL ES spec, it must be ignored anyway. When blending is disabled,
+        // the state remains default to reduce the number of unique keys.
+        if (blendStateExt.mEnabledMask.test(sourceIndex) && !internalFormat.isInt())
+        {
+            key.blendStateExt.setEnabledIndexed(keyBlendIndex, true);
+            key.blendStateExt.setEquationsIndexed(keyBlendIndex, sourceIndex, blendStateExt);
+            key.blendStateExt.setFactorsIndexed(keyBlendIndex, sourceIndex, blendStateExt);
+        }
+        keyBlendIndex++;
     }
 
+    key.sampleAlphaToCoverage = sampleAlphaToCoverage ? 1 : 0;
     return key;
 }
 
@@ -85,32 +117,39 @@ angle::Result RenderStateCache::getBlendState(const gl::Context *context,
     TrimCache(kMaxStates, kGCLimit, "blend state", &mBlendStateCache);
 
     // Create a new blend state and insert it into the cache
-    D3D11_BLEND_DESC blendDesc;
-    D3D11_RENDER_TARGET_BLEND_DESC &rtDesc0 = blendDesc.RenderTarget[0];
-    const gl::BlendState &blendState        = key.blendState;
+    D3D11_BLEND_DESC blendDesc             = {};  // avoid undefined fields
+    const gl::BlendStateExt &blendStateExt = key.blendStateExt;
 
-    blendDesc.AlphaToCoverageEnable  = blendState.sampleAlphaToCoverage;
+    blendDesc.AlphaToCoverageEnable  = key.sampleAlphaToCoverage != 0 ? TRUE : FALSE;
     blendDesc.IndependentBlendEnable = key.rtvMax > 1 ? TRUE : FALSE;
 
-    rtDesc0 = {};
+    // D3D11 API always accepts an array of blend states. Its validity depends on the hardware
+    // feature level. Given that we do not expose GL entrypoints that set per-buffer blend states on
+    // systems lower than FL10_1, this array will be always valid.
 
-    if (blendState.blend)
+    for (size_t i = 0; i < blendStateExt.mMaxDrawBuffers; i++)
     {
-        rtDesc0.BlendEnable    = true;
-        rtDesc0.SrcBlend       = gl_d3d11::ConvertBlendFunc(blendState.sourceBlendRGB, false);
-        rtDesc0.DestBlend      = gl_d3d11::ConvertBlendFunc(blendState.destBlendRGB, false);
-        rtDesc0.BlendOp        = gl_d3d11::ConvertBlendOp(blendState.blendEquationRGB);
-        rtDesc0.SrcBlendAlpha  = gl_d3d11::ConvertBlendFunc(blendState.sourceBlendAlpha, true);
-        rtDesc0.DestBlendAlpha = gl_d3d11::ConvertBlendFunc(blendState.destBlendAlpha, true);
-        rtDesc0.BlendOpAlpha   = gl_d3d11::ConvertBlendOp(blendState.blendEquationAlpha);
-    }
+        D3D11_RENDER_TARGET_BLEND_DESC &rtDesc = blendDesc.RenderTarget[i];
 
-    rtDesc0.RenderTargetWriteMask = key.rtvMasks[0];
+        if (blendStateExt.mEnabledMask.test(i))
+        {
+            rtDesc.BlendEnable = true;
+            rtDesc.SrcBlend =
+                gl_d3d11::ConvertBlendFunc(blendStateExt.getSrcColorIndexed(i), false);
+            rtDesc.DestBlend =
+                gl_d3d11::ConvertBlendFunc(blendStateExt.getDstColorIndexed(i), false);
+            rtDesc.BlendOp = gl_d3d11::ConvertBlendOp(blendStateExt.getEquationColorIndexed(i));
+            rtDesc.SrcBlendAlpha =
+                gl_d3d11::ConvertBlendFunc(blendStateExt.getSrcAlphaIndexed(i), true);
+            rtDesc.DestBlendAlpha =
+                gl_d3d11::ConvertBlendFunc(blendStateExt.getDstAlphaIndexed(i), true);
+            rtDesc.BlendOpAlpha =
+                gl_d3d11::ConvertBlendOp(blendStateExt.getEquationAlphaIndexed(i));
+        }
 
-    for (unsigned int i = 1; i < D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT; i++)
-    {
-        blendDesc.RenderTarget[i]                       = rtDesc0;
-        blendDesc.RenderTarget[i].RenderTargetWriteMask = key.rtvMasks[i];
+        // blendStateExt.colorMask follows the same packing scheme as
+        // D3D11_RENDER_TARGET_BLEND_DESC.RenderTargetWriteMask
+        rtDesc.RenderTargetWriteMask = blendStateExt.getColorMaskIndexed(i);
     }
 
     d3d11::BlendState d3dBlendState;
@@ -195,7 +234,7 @@ angle::Result RenderStateCache::getDepthStencilState(const gl::Context *context,
 
     TrimCache(kMaxStates, kGCLimit, "depth stencil state", &mDepthStencilStateCache);
 
-    D3D11_DEPTH_STENCIL_DESC dsDesc     = {0};
+    D3D11_DEPTH_STENCIL_DESC dsDesc     = {};
     dsDesc.DepthEnable                  = glState.depthTest ? TRUE : FALSE;
     dsDesc.DepthWriteMask               = ConvertDepthMask(glState.depthMask);
     dsDesc.DepthFunc                    = ConvertComparison(glState.depthFunc);

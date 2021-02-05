@@ -1,5 +1,5 @@
 //
-// Copyright(c) 2016 The ANGLE Project Authors. All rights reserved.
+// Copyright 2016 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -12,6 +12,11 @@
 #include <EGL/egl.h>
 
 #include "libANGLE/Debug.h"
+
+namespace angle
+{
+extern bool gUseAndroidOpenGLTlsSlot;
+}  // namespace angle
 
 namespace gl
 {
@@ -47,7 +52,6 @@ class Thread : public LabeledObject
     Surface *getCurrentDrawSurface() const;
     Surface *getCurrentReadSurface() const;
     gl::Context *getContext() const;
-    gl::Context *getValidContext() const;
     Display *getDisplay() const;
 
   private:

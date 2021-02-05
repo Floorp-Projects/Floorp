@@ -105,7 +105,7 @@ HRESULT CompositorNativeWindow11::createSwapChain(ID3D11Device *device,
     ComPtr<IDXGIFactory2> factory2;
     factory2.Attach(d3d11::DynamicCastComObject<IDXGIFactory2>(factory));
 
-    DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {0};
+    DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
     swapChainDesc.Width                 = width;
     swapChainDesc.Height                = height;
     swapChainDesc.Format                = format;
@@ -341,7 +341,7 @@ bool RoHelper::SupportedWindowsRelease()
 
     if (FAILED(hr))
     {
-        return isSupported;
+        return !!isSupported;
     }
 
     Microsoft::WRL::ComPtr<ABI::Windows::Foundation::Metadata::IApiInformationStatics> api;
@@ -351,19 +351,19 @@ bool RoHelper::SupportedWindowsRelease()
 
     if (FAILED(hr))
     {
-        return isSupported;
+        return !!isSupported;
     }
 
     hr = GetStringReference(L"Windows.Foundation.UniversalApiContract", &contractName,
                             &contractNameHeader);
     if (FAILED(hr))
     {
-        return isSupported;
+        return !!isSupported;
     }
 
     api->IsApiContractPresentByMajor(contractName, 6, &isSupported);
 
-    return isSupported;
+    return !!isSupported;
 }
 
 HRESULT RoHelper::GetStringReference(PCWSTR source, HSTRING *act, HSTRING_HEADER *header)

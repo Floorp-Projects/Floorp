@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2013 The ANGLE Project Authors. All rights reserved.
+// Copyright 2002 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -23,6 +23,7 @@ class TranslatorHLSL : public TCompiler
 
     bool hasUniformBlock(const std::string &interfaceBlockName) const;
     unsigned int getUniformBlockRegister(const std::string &interfaceBlockName) const;
+    bool shouldUniformBlockUseStructuredBuffer(const std::string &uniformBlockName) const;
 
     const std::map<std::string, unsigned int> *getUniformRegisterMap() const;
     unsigned int getReadonlyImage2DRegisterIndex() const;
@@ -30,9 +31,9 @@ class TranslatorHLSL : public TCompiler
     const std::set<std::string> *getUsedImage2DFunctionNames() const;
 
   protected:
-    void translate(TIntermBlock *root,
-                   ShCompileOptions compileOptions,
-                   PerformanceDiagnostics *perfDiagnostics) override;
+    ANGLE_NO_DISCARD bool translate(TIntermBlock *root,
+                                    ShCompileOptions compileOptions,
+                                    PerformanceDiagnostics *perfDiagnostics) override;
     bool shouldFlattenPragmaStdglInvariantAll() override;
 
     // collectVariables needs to be run always so registers can be assigned.
@@ -40,10 +41,12 @@ class TranslatorHLSL : public TCompiler
 
     std::map<std::string, unsigned int> mShaderStorageBlockRegisterMap;
     std::map<std::string, unsigned int> mUniformBlockRegisterMap;
+    std::map<std::string, bool> mUniformBlockUseStructuredBufferMap;
     std::map<std::string, unsigned int> mUniformRegisterMap;
     unsigned int mReadonlyImage2DRegisterIndex;
     unsigned int mImage2DRegisterIndex;
     std::set<std::string> mUsedImage2DFunctionNames;
+    std::map<int, const TInterfaceBlock *> mUniformBlocksTranslatedToStructuredBuffers;
 };
 
 }  // namespace sh

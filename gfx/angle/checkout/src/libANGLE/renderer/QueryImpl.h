@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013 The ANGLE Project Authors. All rights reserved.
+// Copyright 2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -38,6 +38,15 @@ class QueryImpl : angle::NonCopyable
     virtual angle::Result isResultAvailable(const gl::Context *context, bool *available) = 0;
 
     gl::QueryType getType() const { return mType; }
+
+    // Convenient functions
+    bool isOcclusionQuery() const { return isAnySamplesQuery() || isAnySamplesConservativeQuery(); }
+    bool isAnySamplesQuery() const { return getType() == gl::QueryType::AnySamples; }
+
+    bool isAnySamplesConservativeQuery() const
+    {
+        return getType() == gl::QueryType::AnySamplesConservative;
+    }
 
   private:
     gl::QueryType mType;

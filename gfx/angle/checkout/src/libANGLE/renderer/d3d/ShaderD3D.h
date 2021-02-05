@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2014 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -33,7 +33,7 @@ struct D3DUniform;
 class ShaderD3D : public ShaderImpl
 {
   public:
-    ShaderD3D(const gl::ShaderState &data,
+    ShaderD3D(const gl::ShaderState &state,
               const angle::FeaturesD3D &features,
               const gl::Extensions &extensions);
     ~ShaderD3D() override;
@@ -54,6 +54,7 @@ class ShaderD3D : public ShaderImpl
     unsigned int getUniformRegister(const std::string &uniformName) const;
 
     unsigned int getUniformBlockRegister(const std::string &blockName) const;
+    bool shouldUniformBlockUseStructuredBuffer(const std::string &blockName) const;
     unsigned int getShaderStorageBlockRegister(const std::string &blockName) const;
     unsigned int getReadonlyImage2DRegisterIndex() const { return mReadonlyImage2DRegisterIndex; }
     unsigned int getImage2DRegisterIndex() const { return mImage2DRegisterIndex; }
@@ -68,6 +69,7 @@ class ShaderD3D : public ShaderImpl
     bool usesSecondaryColor() const { return mUsesSecondaryColor; }
     bool usesFragCoord() const { return mUsesFragCoord; }
     bool usesFrontFacing() const { return mUsesFrontFacing; }
+    bool usesHelperInvocation() const { return mUsesHelperInvocation; }
     bool usesPointSize() const { return mUsesPointSize; }
     bool usesPointCoord() const { return mUsesPointCoord; }
     bool usesDepthRange() const { return mUsesDepthRange; }
@@ -85,6 +87,7 @@ class ShaderD3D : public ShaderImpl
     bool mUsesSecondaryColor;
     bool mUsesFragCoord;
     bool mUsesFrontFacing;
+    bool mUsesHelperInvocation;
     bool mUsesPointSize;
     bool mUsesPointCoord;
     bool mUsesDepthRange;
@@ -100,6 +103,7 @@ class ShaderD3D : public ShaderImpl
     mutable std::string mDebugInfo;
     std::map<std::string, unsigned int> mUniformRegisterMap;
     std::map<std::string, unsigned int> mUniformBlockRegisterMap;
+    std::map<std::string, bool> mUniformBlockUseStructuredBufferMap;
     std::map<std::string, unsigned int> mShaderStorageBlockRegisterMap;
     unsigned int mReadonlyImage2DRegisterIndex;
     unsigned int mImage2DRegisterIndex;

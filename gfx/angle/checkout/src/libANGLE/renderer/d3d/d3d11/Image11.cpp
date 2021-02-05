@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2012 The ANGLE Project Authors. All rights reserved.
+// Copyright 2012 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -383,7 +383,7 @@ angle::Result Image11::copyFromFramebuffer(const gl::Context *context,
     if (d3d11Format.texFormat == mDXGIFormat && sourceInternalFormat == mInternalFormat)
     {
         RenderTarget11 *rt11 = nullptr;
-        ANGLE_TRY(srcAttachment->getRenderTarget(context, &rt11));
+        ANGLE_TRY(srcAttachment->getRenderTarget(context, 0, &rt11));
         ASSERT(rt11->getTexture().get());
 
         TextureHelper11 textureHelper  = rt11->getTexture();

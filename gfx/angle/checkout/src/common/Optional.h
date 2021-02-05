@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2015 The ANGLE Project Authors. All rights reserved.
+// Copyright 2015 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -43,10 +43,16 @@ struct Optional
     }
 
     void reset() { mValid = false; }
+    T &&release()
+    {
+        mValid = false;
+        return std::move(mValue);
+    }
 
     static Optional Invalid() { return Optional(); }
 
     bool valid() const { return mValid; }
+    T &value() { return mValue; }
     const T &value() const { return mValue; }
 
     bool operator==(const Optional &other) const

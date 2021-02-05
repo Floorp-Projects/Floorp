@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2016 The ANGLE Project Authors. All rights reserved.
+// Copyright 2002 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -24,6 +24,7 @@ TLayoutQualifier JoinLayoutQualifiers(TLayoutQualifier leftQualifier,
 enum TQualifierType
 {
     QtInvariant,
+    QtPrecise,
     QtInterpolation,
     QtLayout,
     QtStorage,
@@ -50,10 +51,21 @@ class TInvariantQualifierWrapper final : public TQualifierWrapperBase
 {
   public:
     TInvariantQualifierWrapper(const TSourceLoc &line) : TQualifierWrapperBase(line) {}
-    ~TInvariantQualifierWrapper() {}
+    ~TInvariantQualifierWrapper() override {}
 
     TQualifierType getType() const override { return QtInvariant; }
     ImmutableString getQualifierString() const override { return ImmutableString("invariant"); }
+    unsigned int getRank() const override;
+};
+
+class TPreciseQualifierWrapper final : public TQualifierWrapperBase
+{
+  public:
+    TPreciseQualifierWrapper(const TSourceLoc &line) : TQualifierWrapperBase(line) {}
+    ~TPreciseQualifierWrapper() override {}
+
+    TQualifierType getType() const override { return QtPrecise; }
+    ImmutableString getQualifierString() const override { return ImmutableString("precise"); }
     unsigned int getRank() const override;
 };
 
@@ -63,7 +75,7 @@ class TInterpolationQualifierWrapper final : public TQualifierWrapperBase
     TInterpolationQualifierWrapper(TQualifier interpolationQualifier, const TSourceLoc &line)
         : TQualifierWrapperBase(line), mInterpolationQualifier(interpolationQualifier)
     {}
-    ~TInterpolationQualifierWrapper() {}
+    ~TInterpolationQualifierWrapper() override {}
 
     TQualifierType getType() const override { return QtInterpolation; }
     ImmutableString getQualifierString() const override
@@ -83,7 +95,7 @@ class TLayoutQualifierWrapper final : public TQualifierWrapperBase
     TLayoutQualifierWrapper(TLayoutQualifier layoutQualifier, const TSourceLoc &line)
         : TQualifierWrapperBase(line), mLayoutQualifier(layoutQualifier)
     {}
-    ~TLayoutQualifierWrapper() {}
+    ~TLayoutQualifierWrapper() override {}
 
     TQualifierType getType() const override { return QtLayout; }
     ImmutableString getQualifierString() const override { return ImmutableString("layout"); }
@@ -100,7 +112,7 @@ class TStorageQualifierWrapper final : public TQualifierWrapperBase
     TStorageQualifierWrapper(TQualifier storageQualifier, const TSourceLoc &line)
         : TQualifierWrapperBase(line), mStorageQualifier(storageQualifier)
     {}
-    ~TStorageQualifierWrapper() {}
+    ~TStorageQualifierWrapper() override {}
 
     TQualifierType getType() const override { return QtStorage; }
     ImmutableString getQualifierString() const override
@@ -120,7 +132,7 @@ class TPrecisionQualifierWrapper final : public TQualifierWrapperBase
     TPrecisionQualifierWrapper(TPrecision precisionQualifier, const TSourceLoc &line)
         : TQualifierWrapperBase(line), mPrecisionQualifier(precisionQualifier)
     {}
-    ~TPrecisionQualifierWrapper() {}
+    ~TPrecisionQualifierWrapper() override {}
 
     TQualifierType getType() const override { return QtPrecision; }
     ImmutableString getQualifierString() const override
@@ -140,7 +152,7 @@ class TMemoryQualifierWrapper final : public TQualifierWrapperBase
     TMemoryQualifierWrapper(TQualifier memoryQualifier, const TSourceLoc &line)
         : TQualifierWrapperBase(line), mMemoryQualifier(memoryQualifier)
     {}
-    ~TMemoryQualifierWrapper() {}
+    ~TMemoryQualifierWrapper() override {}
 
     TQualifierType getType() const override { return QtMemory; }
     ImmutableString getQualifierString() const override
@@ -165,6 +177,7 @@ struct TTypeQualifier
     TPrecision precision;
     TQualifier qualifier;
     bool invariant;
+    bool precise;
     TSourceLoc line;
 };
 

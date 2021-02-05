@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2014 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -12,19 +12,31 @@
 #include "common/Optional.h"
 #include "common/angleutils.h"
 
+#include <string>
+
 namespace angle
 {
+std::string GetExecutableName();
 std::string GetExecutablePath();
 std::string GetExecutableDirectory();
+std::string GetHelperExecutableDir();
 const char *GetSharedLibraryExtension();
+const char *GetExecutableExtension();
+char GetPathSeparator();
 Optional<std::string> GetCWD();
 bool SetCWD(const char *dirName);
 bool SetEnvironmentVar(const char *variableName, const char *value);
 bool UnsetEnvironmentVar(const char *variableName);
 std::string GetEnvironmentVar(const char *variableName);
-const char *GetPathSeparator();
+std::string GetEnvironmentVarOrUnCachedAndroidProperty(const char *variableName,
+                                                       const char *propertyName);
+std::string GetEnvironmentVarOrAndroidProperty(const char *variableName, const char *propertyName);
+const char *GetPathSeparatorForEnvironmentVar();
 bool PrependPathToEnvironmentVar(const char *variableName, const char *path);
 bool IsDirectory(const char *filename);
+
+// Get absolute time in seconds.  Use this function to get an absolute time with an unknown origin.
+double GetCurrentTime();
 
 // Run an application and get the output.  Gets a nullptr-terminated set of args to execute the
 // application with, and returns the stdout and stderr outputs as well as the exit code.
@@ -60,6 +72,7 @@ enum class SearchType
 };
 
 Library *OpenSharedLibrary(const char *libraryName, SearchType searchType);
+Library *OpenSharedLibraryWithExtension(const char *libraryName);
 
 // Returns true if the process is currently being debugged.
 bool IsDebuggerAttached();

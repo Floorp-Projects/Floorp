@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2015 The ANGLE Project Authors. All rights reserved.
+// Copyright 2015 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -49,6 +49,8 @@ const Display *DisplayFromContext(const gl::Context *context)
 {
     return (context ? context->getDisplay() : nullptr);
 }
+
+angle::SubjectIndex kExternalImageImplSubjectIndex = 0;
 }  // anonymous namespace
 
 ImageSibling::ImageSibling() : FramebufferAttachmentObject(), mSourcesOf(), mTargetOf() {}
@@ -145,8 +147,11 @@ ExternalImageSibling::ExternalImageSibling(rx::EGLImplFactory *factory,
                                            EGLenum target,
                                            EGLClientBuffer buffer,
                                            const AttributeMap &attribs)
-    : mImplementation(factory->createExternalImageSibling(context, target, buffer, attribs))
-{}
+    : mImplementation(factory->createExternalImageSibling(context, target, buffer, attribs)),
+      mImplObserverBinding(this, kExternalImageImplSubjectIndex)
+{
+    mImplObserverBinding.bind(mImplementation.get());
+}
 
 ExternalImageSibling::~ExternalImageSibling() = default;
 
@@ -173,7 +178,7 @@ gl::Format ExternalImageSibling::getAttachmentFormat(GLenum binding,
 
 GLsizei ExternalImageSibling::getAttachmentSamples(const gl::ImageIndex &imageIndex) const
 {
-    return mImplementation->getSamples();
+    return static_cast<GLsizei>(mImplementation->getSamples());
 }
 
 bool ExternalImageSibling::isRenderable(const gl::Context *context,
@@ -188,9 +193,9 @@ bool ExternalImageSibling::isTextureable(const gl::Context *context) const
     return mImplementation->isTexturable(context);
 }
 
-void ExternalImageSibling::onAttach(const gl::Context *context) {}
+void ExternalImageSibling::onAttach(const gl::Context *context, rx::Serial framebufferSerial) {}
 
-void ExternalImageSibling::onDetach(const gl::Context *context) {}
+void ExternalImageSibling::onDetach(const gl::Context *context, rx::Serial framebufferSerial) {}
 
 GLuint ExternalImageSibling::getId() const
 {
@@ -211,6 +216,12 @@ rx::ExternalImageSiblingImpl *ExternalImageSibling::getImplementation() const
     return mImplementation.get();
 }
 
+void ExternalImageSibling::onSubjectStateChange(angle::SubjectIndex index,
+                                                angle::SubjectMessage message)
+{
+    onStateChange(message);
+}
+
 rx::FramebufferAttachmentObjectImpl *ExternalImageSibling::getAttachmentImpl() const
 {
     return mImplementation.get();
@@ -225,7 +236,9 @@ ImageState::ImageState(EGLenum target, ImageSibling *buffer, const AttributeMap 
       format(GL_NONE),
       size(),
       samples(),
-      sourceType(target)
+      sourceType(target),
+      colorspace(
+          static_cast<EGLenum>(attribs.get(EGL_GL_COLORSPACE, EGL_GL_COLORSPACE_DEFAULT_EXT)))
 {}
 
 ImageState::~ImageState() {}
@@ -375,6 +388,11 @@ size_t Image::getHeight() const
     return mState.size.height;
 }
 
+bool Image::isLayered() const
+{
+    return mState.imageIndex.isLayered();
+}
+
 size_t Image::getSamples() const
 {
     return mState.samples;
@@ -392,7 +410,19 @@ Error Image::initialize(const Display *display)
         ANGLE_TRY(rx::GetAs<ExternalImageSibling>(mState.source)->initialize(display));
     }
 
-    mState.format  = mState.source->getAttachmentFormat(GL_NONE, mState.imageIndex);
+    mState.format = mState.source->getAttachmentFormat(GL_NONE, mState.imageIndex);
+
+    if (mState.colorspace != EGL_GL_COLORSPACE_DEFAULT_EXT)
+    {
+        GLenum nonLinearFormat = mState.format.info->sizedInternalFormat;
+        if (!gl::ColorspaceFormatOverride(mState.colorspace, &nonLinearFormat))
+        {
+            // the colorspace format is not supported
+            return egl::EglBadMatch();
+        }
+        mState.format = gl::Format(nonLinearFormat);
+    }
+
     mState.size    = mState.source->getAttachmentSize(mState.imageIndex);
     mState.samples = mState.source->getAttachmentSamples(mState.imageIndex);
 

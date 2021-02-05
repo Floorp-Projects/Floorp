@@ -44,7 +44,7 @@ enum Image2DMethod
     IMAGE2DSTORE
 };
 
-Image2DHLSLGroup image2DHLSLGroup(const sh::Uniform &uniform)
+Image2DHLSLGroup image2DHLSLGroup(const sh::ShaderVariable &uniform)
 {
     GLenum format = uniform.imageUnitFormat;
     bool readonly = uniform.readonly;
@@ -701,7 +701,7 @@ void OutputHLSLImage2DUniformGroup(ProgramD3D &programD3D,
                                    gl::ShaderType shaderType,
                                    std::ostringstream &out,
                                    const Image2DHLSLGroup textureGroup,
-                                   const std::vector<sh::Uniform> &group,
+                                   const std::vector<sh::ShaderVariable> &group,
                                    const gl::ImageUnitTextureTypeMap &image2DBindLayout,
                                    unsigned int *groupTextureRegisterIndex,
                                    unsigned int *groupRWTextureRegisterIndex,
@@ -715,7 +715,7 @@ void OutputHLSLImage2DUniformGroup(ProgramD3D &programD3D,
     }
 
     unsigned int texture2DCount = 0, texture3DCount = 0, texture2DArrayCount = 0;
-    for (const sh::Uniform &uniform : group)
+    for (const sh::ShaderVariable &uniform : group)
     {
         if (!programD3D.hasNamedUniform(uniform.name))
         {
@@ -776,7 +776,7 @@ void OutputHLSLImage2DUniformGroup(ProgramD3D &programD3D,
             << " " << declarationStr << "2DArray[" << texture2DArrayCount << "]"
             << " : register(" << registerStr << texture2DArrayRegisterIndex << ");\n";
     }
-    for (const sh::Uniform &uniform : group)
+    for (const sh::ShaderVariable &uniform : group)
     {
         if (!programD3D.hasNamedUniform(uniform.name))
         {
@@ -856,13 +856,13 @@ std::string generateShaderForImage2DBindSignature(
     ProgramD3D &programD3D,
     const gl::ProgramState &programData,
     gl::ShaderType shaderType,
-    std::vector<sh::Uniform> &image2DUniforms,
+    std::vector<sh::ShaderVariable> &image2DUniforms,
     const gl::ImageUnitTextureTypeMap &image2DBindLayout)
 {
-    std::vector<std::vector<sh::Uniform>> groupedImage2DUniforms(IMAGE2D_MAX + 1);
+    std::vector<std::vector<sh::ShaderVariable>> groupedImage2DUniforms(IMAGE2D_MAX + 1);
     unsigned int image2DTexture2DCount = 0, image2DTexture3DCount = 0,
                  image2DTexture2DArrayCount = 0;
-    for (sh::Uniform &image2D : image2DUniforms)
+    for (sh::ShaderVariable &image2D : image2DUniforms)
     {
         for (unsigned int index = 0; index < image2D.getArraySizeProduct(); index++)
         {

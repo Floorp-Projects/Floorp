@@ -135,6 +135,7 @@ struct ClipPlaneParameters
     ClipPlaneParameters();
     ClipPlaneParameters(bool enabled, const angle::Vector4 &equation);
     ClipPlaneParameters(const ClipPlaneParameters &other);
+    ClipPlaneParameters &operator=(const ClipPlaneParameters &other);
 
     bool enabled;
     angle::Vector4 equation;
@@ -215,9 +216,10 @@ class GLES1State final : angle::NonCopyable
     const PointParameters &pointParameters() const;
 
     AttributesMask getVertexArraysAttributeMask() const;
+    AttributesMask getActiveAttributesMask() const;
 
     void setHint(GLenum target, GLenum mode);
-    GLenum getHint(GLenum target);
+    GLenum getHint(GLenum target) const;
 
   private:
     friend class State;

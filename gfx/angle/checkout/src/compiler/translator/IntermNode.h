@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2002 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -38,7 +38,7 @@ class TDiagnostics;
 class TIntermTraverser;
 class TIntermAggregate;
 class TIntermBlock;
-class TIntermInvariantDeclaration;
+class TIntermGlobalQualifierDeclaration;
 class TIntermDeclaration;
 class TIntermFunctionPrototype;
 class TIntermFunctionDefinition;
@@ -90,7 +90,10 @@ class TIntermNode : angle::NonCopyable
     virtual TIntermAggregate *getAsAggregate() { return nullptr; }
     virtual TIntermBlock *getAsBlock() { return nullptr; }
     virtual TIntermFunctionPrototype *getAsFunctionPrototypeNode() { return nullptr; }
-    virtual TIntermInvariantDeclaration *getAsInvariantDeclarationNode() { return nullptr; }
+    virtual TIntermGlobalQualifierDeclaration *getAsGlobalQualifierDeclarationNode()
+    {
+        return nullptr;
+    }
     virtual TIntermDeclaration *getAsDeclarationNode() { return nullptr; }
     virtual TIntermSwizzle *getAsSwizzleNode() { return nullptr; }
     virtual TIntermBinary *getAsBinaryNode() { return nullptr; }
@@ -103,6 +106,8 @@ class TIntermNode : angle::NonCopyable
     virtual TIntermLoop *getAsLoopNode() { return nullptr; }
     virtual TIntermBranch *getAsBranchNode() { return nullptr; }
     virtual TIntermPreprocessorDirective *getAsPreprocessorDirective() { return nullptr; }
+
+    virtual TIntermNode *deepCopy() const = 0;
 
     virtual size_t getChildCount() const                  = 0;
     virtual TIntermNode *getChildNode(size_t index) const = 0;
@@ -131,7 +136,7 @@ class TIntermTyped : public TIntermNode
   public:
     TIntermTyped() {}
 
-    virtual TIntermTyped *deepCopy() const = 0;
+    virtual TIntermTyped *deepCopy() const override = 0;
 
     TIntermTyped *getAsTyped() override { return this; }
 
@@ -211,12 +216,17 @@ class TIntermLoop : public TIntermNode
     void setExpression(TIntermTyped *expression) { mExpr = expression; }
     void setBody(TIntermBlock *body) { mBody = body; }
 
+    virtual TIntermLoop *deepCopy() const override { return new TIntermLoop(*this); }
+
   protected:
     TLoopType mType;
     TIntermNode *mInit;   // for-loop initialization
     TIntermTyped *mCond;  // loop exit condition
     TIntermTyped *mExpr;  // for-loop expression
     TIntermBlock *mBody;  // loop body
+
+  private:
+    TIntermLoop(const TIntermLoop &);
 };
 
 //
@@ -237,9 +247,14 @@ class TIntermBranch : public TIntermNode
     TOperator getFlowOp() { return mFlowOp; }
     TIntermTyped *getExpression() { return mExpression; }
 
+    virtual TIntermBranch *deepCopy() const override { return new TIntermBranch(*this); }
+
   protected:
     TOperator mFlowOp;
     TIntermTyped *mExpression;  // zero except for "return exp;" statements
+
+  private:
+    TIntermBranch(const TIntermBranch &);
 };
 
 // Nodes that correspond to variable symbols in the source code. These may be regular variables or
@@ -332,6 +347,10 @@ class TIntermConstantUnion : public TIntermExpression
     bool getBConst(size_t index) const
     {
         return mUnionArrayPointer ? mUnionArrayPointer[index].getBConst() : false;
+    }
+    bool isZero(size_t index) const
+    {
+        return mUnionArrayPointer ? mUnionArrayPointer[index].isZero() : false;
     }
 
     TIntermConstantUnion *getAsConstantUnion() override { return this; }
@@ -578,7 +597,7 @@ class TIntermAggregate : public TIntermOperator, public TIntermAggregateBase
     static TIntermAggregate *CreateBuiltInFunctionCall(const TFunction &func,
                                                        TIntermSequence *arguments);
     static TIntermAggregate *CreateConstructor(const TType &type, TIntermSequence *arguments);
-    ~TIntermAggregate() {}
+    ~TIntermAggregate() override {}
 
     // Note: only supported for nodes that can be a part of an expression.
     TIntermTyped *deepCopy() const override { return new TIntermAggregate(*this); }
@@ -655,7 +674,7 @@ class TIntermBlock : public TIntermNode, public TIntermAggregateBase
 {
   public:
     TIntermBlock() : TIntermNode() {}
-    ~TIntermBlock() {}
+    ~TIntermBlock() override {}
 
     TIntermBlock *getAsBlock() override { return this; }
     void traverse(TIntermTraverser *it) final;
@@ -672,8 +691,13 @@ class TIntermBlock : public TIntermNode, public TIntermAggregateBase
     TIntermSequence *getSequence() override { return &mStatements; }
     const TIntermSequence *getSequence() const override { return &mStatements; }
 
+    TIntermBlock *deepCopy() const override { return new TIntermBlock(*this); }
+
   protected:
     TIntermSequence mStatements;
+
+  private:
+    TIntermBlock(const TIntermBlock &);
 };
 
 // Function prototype. May be in the AST either as a function prototype declaration or as a part of
@@ -682,7 +706,7 @@ class TIntermFunctionPrototype : public TIntermTyped
 {
   public:
     TIntermFunctionPrototype(const TFunction *function);
-    ~TIntermFunctionPrototype() {}
+    ~TIntermFunctionPrototype() override {}
 
     TIntermFunctionPrototype *getAsFunctionPrototypeNode() override { return this; }
     void traverse(TIntermTraverser *it) final;
@@ -736,6 +760,12 @@ class TIntermFunctionDefinition : public TIntermNode
 
     const TFunction *getFunction() const { return mPrototype->getFunction(); }
 
+    TIntermNode *deepCopy() const override
+    {
+        UNREACHABLE();
+        return nullptr;
+    }
+
   private:
     TIntermFunctionPrototype *mPrototype;
     TIntermBlock *mBody;
@@ -746,7 +776,7 @@ class TIntermDeclaration : public TIntermNode, public TIntermAggregateBase
 {
   public:
     TIntermDeclaration() : TIntermNode() {}
-    ~TIntermDeclaration() {}
+    ~TIntermDeclaration() override {}
 
     TIntermDeclaration *getAsDeclarationNode() override { return this; }
     bool visit(Visit visit, TIntermTraverser *it) final;
@@ -763,27 +793,49 @@ class TIntermDeclaration : public TIntermNode, public TIntermAggregateBase
     TIntermSequence *getSequence() override { return &mDeclarators; }
     const TIntermSequence *getSequence() const override { return &mDeclarators; }
 
+    TIntermNode *deepCopy() const override
+    {
+        UNREACHABLE();
+        return nullptr;
+    }
+
   protected:
     TIntermSequence mDeclarators;
 };
 
 // Specialized declarations for attributing invariance.
-class TIntermInvariantDeclaration : public TIntermNode
+class TIntermGlobalQualifierDeclaration : public TIntermNode
 {
   public:
-    TIntermInvariantDeclaration(TIntermSymbol *symbol, const TSourceLoc &line);
+    TIntermGlobalQualifierDeclaration(TIntermSymbol *symbol,
+                                      bool isPrecise,
+                                      const TSourceLoc &line);
 
-    virtual TIntermInvariantDeclaration *getAsInvariantDeclarationNode() override { return this; }
+    virtual TIntermGlobalQualifierDeclaration *getAsGlobalQualifierDeclarationNode() override
+    {
+        return this;
+    }
     bool visit(Visit visit, TIntermTraverser *it) final;
 
     TIntermSymbol *getSymbol() { return mSymbol; }
+    bool isInvariant() const { return !mIsPrecise; }
+    bool isPrecise() const { return mIsPrecise; }
 
     size_t getChildCount() const final;
     TIntermNode *getChildNode(size_t index) const final;
     bool replaceChildNode(TIntermNode *original, TIntermNode *replacement) override;
 
+    TIntermGlobalQualifierDeclaration *deepCopy() const override
+    {
+        return new TIntermGlobalQualifierDeclaration(*this);
+    }
+
   private:
     TIntermSymbol *mSymbol;
+    // Either |precise| or |invariant|, determined based on this flag.
+    bool mIsPrecise;
+
+    TIntermGlobalQualifierDeclaration(const TIntermGlobalQualifierDeclaration &);
 };
 
 // For ternary operators like a ? b : c.
@@ -841,10 +893,15 @@ class TIntermIfElse : public TIntermNode
     TIntermBlock *getTrueBlock() const { return mTrueBlock; }
     TIntermBlock *getFalseBlock() const { return mFalseBlock; }
 
+    TIntermIfElse *deepCopy() const override { return new TIntermIfElse(*this); }
+
   protected:
     TIntermTyped *mCondition;
     TIntermBlock *mTrueBlock;
     TIntermBlock *mFalseBlock;
+
+  private:
+    TIntermIfElse(const TIntermIfElse &);
 };
 
 //
@@ -868,9 +925,14 @@ class TIntermSwitch : public TIntermNode
     // Must be called with a non-null statementList.
     void setStatementList(TIntermBlock *statementList);
 
+    TIntermSwitch *deepCopy() const override { return new TIntermSwitch(*this); }
+
   protected:
     TIntermTyped *mInit;
     TIntermBlock *mStatementList;
+
+  private:
+    TIntermSwitch(const TIntermSwitch &);
 };
 
 //
@@ -891,8 +953,13 @@ class TIntermCase : public TIntermNode
     bool hasCondition() const { return mCondition != nullptr; }
     TIntermTyped *getCondition() const { return mCondition; }
 
+    TIntermCase *deepCopy() const override { return new TIntermCase(*this); }
+
   protected:
     TIntermTyped *mCondition;
+
+  private:
+    TIntermCase(const TIntermCase &);
 };
 
 //
@@ -908,10 +975,10 @@ enum class PreprocessorDirective
     Endif,
 };
 
-class TIntermPreprocessorDirective : public TIntermNode
+class TIntermPreprocessorDirective final : public TIntermNode
 {
   public:
-    // This could also take an ImmutbleString as an argument.
+    // This could also take an ImmutableString as an argument.
     TIntermPreprocessorDirective(PreprocessorDirective directive, ImmutableString command);
     ~TIntermPreprocessorDirective() final;
 
@@ -926,9 +993,16 @@ class TIntermPreprocessorDirective : public TIntermNode
     PreprocessorDirective getDirective() const { return mDirective; }
     const ImmutableString &getCommand() const { return mCommand; }
 
+    TIntermPreprocessorDirective *deepCopy() const override
+    {
+        return new TIntermPreprocessorDirective(*this);
+    }
+
   private:
     PreprocessorDirective mDirective;
     ImmutableString mCommand;
+
+    TIntermPreprocessorDirective(const TIntermPreprocessorDirective &);
 };
 
 }  // namespace sh

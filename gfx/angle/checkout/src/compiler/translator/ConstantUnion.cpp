@@ -105,6 +105,23 @@ bool TConstantUnion::getBConst() const
     return bConst;
 }
 
+bool TConstantUnion::isZero() const
+{
+    switch (type)
+    {
+        case EbtInt:
+            return getIConst() == 0;
+        case EbtUInt:
+            return getUConst() == 0;
+        case EbtFloat:
+            return getFConst() == 0.0f;
+        case EbtBool:
+            return getBConst() == false;
+        default:
+            return false;
+    }
+}
+
 TYuvCscStandardEXT TConstantUnion::getYuvCscStandardEXTConst() const
 {
     ASSERT(type == EbtYuvCscStandardEXT);

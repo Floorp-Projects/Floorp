@@ -12,7 +12,7 @@
 #define COMMON_POOLALLOC_H_
 
 #if !defined(NDEBUG)
-#    define ANGLE_POOL_ALLOC_GUARD_BLOCKS  // define to enable guard block sanity checking
+#    define ANGLE_POOL_ALLOC_GUARD_BLOCKS  // define to enable guard block checking
 #endif
 
 //
@@ -125,7 +125,7 @@ class PoolAllocator : angle::NonCopyable
   public:
     static const int kDefaultAlignment = 16;
     //
-    // Create PoolAllocator. If alignment is be set to 1 byte then fastAllocate()
+    // Create PoolAllocator. If alignment is set to 1 byte then fastAllocate()
     //  function can be used to make allocations with less overhead.
     //
     PoolAllocator(int growthIncrement = 8 * 1024, int allocationAlignment = kDefaultAlignment);
@@ -134,6 +134,11 @@ class PoolAllocator : angle::NonCopyable
     // Don't call the destructor just to free up the memory, call pop()
     //
     ~PoolAllocator();
+
+    //
+    // Initialize page size and alignment after construction
+    //
+    void initialize(int pageSize, int alignment);
 
     //
     // Call push() to establish a new place to pop memory to.  Does not

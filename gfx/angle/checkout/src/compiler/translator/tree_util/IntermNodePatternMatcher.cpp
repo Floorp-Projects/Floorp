@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2016 The ANGLE Project Authors. All rights reserved.
+// Copyright 2016 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -57,6 +57,12 @@ bool IntermNodePatternMatcher::IsDynamicIndexingOfVectorOrMatrix(TIntermBinary *
 {
     return node->getOp() == EOpIndexIndirect && !node->getLeft()->isArray() &&
            node->getLeft()->getBasicType() != EbtStruct;
+}
+
+// static
+bool IntermNodePatternMatcher::IsDynamicIndexingOfSwizzledVector(TIntermBinary *node)
+{
+    return IsDynamicIndexingOfVectorOrMatrix(node) && node->getLeft()->getAsSwizzleNode();
 }
 
 bool IntermNodePatternMatcher::matchInternal(TIntermBinary *node, TIntermNode *parentNode)

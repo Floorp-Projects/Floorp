@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2014 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -45,6 +45,7 @@ class SurfaceD3D : public SurfaceImpl
                             EGLint buffer) override;
     egl::Error releaseTexImage(const gl::Context *context, EGLint buffer) override;
     egl::Error getSyncValues(EGLuint64KHR *ust, EGLuint64KHR *msc, EGLuint64KHR *sbc) override;
+    egl::Error getMscRate(EGLint *numerator, EGLint *denominator) override;
     void setSwapInterval(EGLint interval) override;
     void setFixedWidth(EGLint width) override;
     void setFixedHeight(EGLint height) override;
@@ -65,6 +66,7 @@ class SurfaceD3D : public SurfaceImpl
     angle::Result getAttachmentRenderTarget(const gl::Context *context,
                                             GLenum binding,
                                             const gl::ImageIndex &imageIndex,
+                                            GLsizei samples,
                                             FramebufferAttachmentRenderTarget **rtOut) override;
     angle::Result initializeContents(const gl::Context *context,
                                      const gl::ImageIndex &imageIndex) override;

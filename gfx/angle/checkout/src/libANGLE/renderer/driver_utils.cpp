@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2016 The ANGLE Project Authors. All rights reserved.
+// Copyright 2016 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -11,9 +11,18 @@
 #include "libANGLE/renderer/driver_utils.h"
 
 #include "common/platform.h"
+#include "common/system_utils.h"
 
 #if defined(ANGLE_PLATFORM_ANDROID)
 #    include <sys/system_properties.h>
+#endif
+
+#if defined(ANGLE_PLATFORM_LINUX)
+#    include <sys/utsname.h>
+#endif
+
+#if defined(ANGLE_PLATFORM_WINDOWS)
+#    include <versionhelpers.h>
 #endif
 
 namespace rx
@@ -97,7 +106,8 @@ bool IntelDriverVersion::operator>=(const IntelDriverVersion &version)
 
 bool IsSandyBridge(uint32_t DeviceId)
 {
-    return std::find(std::begin(SandyBridge), std::end(SandyBridge), DeviceId) != std::end(SandyBridge);
+    return std::find(std::begin(SandyBridge), std::end(SandyBridge), DeviceId) !=
+           std::end(SandyBridge);
 }
 
 bool IsIvyBridge(uint32_t DeviceId)
@@ -142,14 +152,20 @@ const char *GetVendorString(uint32_t vendorId)
     {
         case VENDOR_ID_AMD:
             return "Advanced Micro Devices";
-        case VENDOR_ID_NVIDIA:
-            return "NVIDIA";
-        case VENDOR_ID_INTEL:
-            return "Intel";
-        case VENDOR_ID_QUALCOMM:
-            return "Qualcomm";
         case VENDOR_ID_ARM:
             return "ARM";
+        case VENDOR_ID_BROADCOM:
+            return "Broadcom";
+        case VENDOR_ID_GOOGLE:
+            return "Google";
+        case VENDOR_ID_INTEL:
+            return "Intel";
+        case VENDOR_ID_NVIDIA:
+            return "NVIDIA";
+        case VENDOR_ID_POWERVR:
+            return "Imagination Technologies";
+        case VENDOR_ID_QUALCOMM:
+            return "Qualcomm";
         default:
             // TODO(jmadill): More vendor IDs.
             ASSERT(vendorId == 0xba5eba11);  // Mock vendor ID used for tests.
@@ -205,5 +221,91 @@ OSVersion GetMacOSVersion()
     return OSVersion(0, 0, 0);
 }
 #endif
+
+#if defined(ANGLE_PLATFORM_LINUX)
+bool ParseLinuxOSVersion(const char *version, int *major, int *minor, int *patch)
+{
+    errno = 0;  // reset global error flag.
+    char *next;
+    *major = static_cast<int>(strtol(version, &next, 10));
+    if (next == nullptr || *next != '.' || errno != 0)
+    {
+        return false;
+    }
+
+    *minor = static_cast<int>(strtol(next + 1, &next, 10));
+    if (next == nullptr || *next != '.' || errno != 0)
+    {
+        return false;
+    }
+
+    *patch = static_cast<int>(strtol(next + 1, &next, 10));
+    if (errno != 0)
+    {
+        return false;
+    }
+
+    return true;
+}
+#endif
+
+OSVersion GetLinuxOSVersion()
+{
+#if defined(ANGLE_PLATFORM_LINUX)
+    struct utsname uname_info;
+    if (uname(&uname_info) != 0)
+    {
+        return OSVersion(0, 0, 0);
+    }
+
+    int majorVersion = 0, minorVersion = 0, patchVersion = 0;
+    if (ParseLinuxOSVersion(uname_info.release, &majorVersion, &minorVersion, &patchVersion))
+    {
+        return OSVersion(majorVersion, minorVersion, patchVersion);
+    }
+#endif
+
+    return OSVersion(0, 0, 0);
+}
+
+// There are multiple environment variables that may or may not be set during Wayland
+// sessions, including WAYLAND_DISPLAY, XDG_SESSION_TYPE, and DESKTOP_SESSION
+bool IsWayland()
+{
+    static bool checked   = false;
+    static bool isWayland = false;
+    if (!checked)
+    {
+        if (IsLinux())
+        {
+            if (!angle::GetEnvironmentVar("WAYLAND_DISPLAY").empty())
+            {
+                isWayland = true;
+            }
+            else if (angle::GetEnvironmentVar("XDG_SESSION_TYPE") == "wayland")
+            {
+                isWayland = true;
+            }
+            else if (angle::GetEnvironmentVar("DESKTOP_SESSION").find("wayland") !=
+                     std::string::npos)
+            {
+                isWayland = true;
+            }
+        }
+        checked = true;
+    }
+    return isWayland;
+}
+
+bool IsWin10OrGreater()
+{
+#if defined(ANGLE_ENABLE_WINDOWS_UWP)
+    return true;
+#elif defined(ANGLE_PLATFORM_WINDOWS)
+    return IsWindows10OrGreater();
+#else
+    return false;
+#endif
+}
 
 }  // namespace rx

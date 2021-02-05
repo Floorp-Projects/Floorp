@@ -37,7 +37,7 @@ void GLES1Renderer::onDestroy(Context *context, State *state)
     {
         (void)state->setProgram(context, 0);
 
-        mShaderPrograms->deleteProgram(context, mProgramState.program);
+        mShaderPrograms->deleteProgram(context, {mProgramState.program});
         mShaderPrograms->release(context);
         mShaderPrograms             = nullptr;
         mRendererProgramInitialized = false;
@@ -503,12 +503,12 @@ void GLES1Renderer::drawTexture(Context *context,
     mDrawTextureEnabled = false;
 }
 
-Shader *GLES1Renderer::getShader(GLuint handle) const
+Shader *GLES1Renderer::getShader(ShaderProgramID handle) const
 {
     return mShaderPrograms->getShader(handle);
 }
 
-Program *GLES1Renderer::getProgram(GLuint handle) const
+Program *GLES1Renderer::getProgram(ShaderProgramID handle) const
 {
     return mShaderPrograms->getProgram(handle);
 }
@@ -516,12 +516,12 @@ Program *GLES1Renderer::getProgram(GLuint handle) const
 angle::Result GLES1Renderer::compileShader(Context *context,
                                            ShaderType shaderType,
                                            const char *src,
-                                           GLuint *shaderOut)
+                                           ShaderProgramID *shaderOut)
 {
     rx::ContextImpl *implementation = context->getImplementation();
     const Limitations &limitations  = implementation->getNativeLimitations();
 
-    GLuint shader = mShaderPrograms->createShader(implementation, limitations, shaderType);
+    ShaderProgramID shader = mShaderPrograms->createShader(implementation, limitations, shaderType);
 
     Shader *shaderObject = getShader(shader);
     ANGLE_CHECK(context, shaderObject, "Missing shader object", GL_INVALID_OPERATION);
@@ -547,20 +547,20 @@ angle::Result GLES1Renderer::compileShader(Context *context,
 
 angle::Result GLES1Renderer::linkProgram(Context *context,
                                          State *glState,
-                                         GLuint vertexShader,
-                                         GLuint fragmentShader,
+                                         ShaderProgramID vertexShader,
+                                         ShaderProgramID fragmentShader,
                                          const std::unordered_map<GLint, std::string> &attribLocs,
-                                         GLuint *programOut)
+                                         ShaderProgramID *programOut)
 {
-    GLuint program = mShaderPrograms->createProgram(context->getImplementation());
+    ShaderProgramID program = mShaderPrograms->createProgram(context->getImplementation());
 
     Program *programObject = getProgram(program);
     ANGLE_CHECK(context, programObject, "Missing program object", GL_INVALID_OPERATION);
 
     *programOut = program;
 
-    programObject->attachShader(getShader(vertexShader));
-    programObject->attachShader(getShader(fragmentShader));
+    programObject->attachShader(context, getShader(vertexShader));
+    programObject->attachShader(context, getShader(fragmentShader));
 
     for (auto it : attribLocs)
     {
@@ -576,9 +576,9 @@ angle::Result GLES1Renderer::linkProgram(Context *context,
 
     if (!programObject->isLinked())
     {
-        GLint infoLogLength = programObject->getInfoLogLength();
+        GLint infoLogLength = programObject->getExecutable().getInfoLogLength();
         std::vector<char> infoLog(infoLogLength, 0);
-        programObject->getInfoLog(infoLogLength - 1, nullptr, infoLog.data());
+        programObject->getExecutable().getInfoLog(infoLogLength - 1, nullptr, infoLog.data());
 
         ERR() << "Internal GLES 1 shader link failed. Info log: " << infoLog.data();
         ANGLE_CHECK(context, false, "GLES1Renderer program link failed.", GL_INVALID_OPERATION);
@@ -600,8 +600,8 @@ angle::Result GLES1Renderer::initializeRendererProgram(Context *context, State *
 
     mShaderPrograms = new ShaderProgramManager();
 
-    GLuint vertexShader;
-    GLuint fragmentShader;
+    ShaderProgramID vertexShader;
+    ShaderProgramID fragmentShader;
 
     ANGLE_TRY(compileShader(context, ShaderType::Vertex, kGLES1DrawVShader, &vertexShader));
 
@@ -761,80 +761,83 @@ angle::Result GLES1Renderer::initializeRendererProgram(Context *context, State *
     return angle::Result::Continue;
 }
 
-void GLES1Renderer::setUniform1i(Context *context, Program *programObject, GLint loc, GLint value)
+void GLES1Renderer::setUniform1i(Context *context,
+                                 Program *programObject,
+                                 UniformLocation location,
+                                 GLint value)
 {
-    if (loc == -1)
+    if (location.value == -1)
         return;
-    programObject->setUniform1iv(context, loc, 1, &value);
+    programObject->setUniform1iv(context, location, 1, &value);
 }
 
 void GLES1Renderer::setUniform1iv(Context *context,
                                   Program *programObject,
-                                  GLint loc,
+                                  UniformLocation location,
                                   GLint count,
                                   const GLint *value)
 {
-    if (loc == -1)
+    if (location.value == -1)
         return;
-    programObject->setUniform1iv(context, loc, count, value);
+    programObject->setUniform1iv(context, location, count, value);
 }
 
 void GLES1Renderer::setUniformMatrix4fv(Program *programObject,
-                                        GLint loc,
+                                        UniformLocation location,
                                         GLint count,
                                         GLboolean transpose,
                                         const GLfloat *value)
 {
-    if (loc == -1)
+    if (location.value == -1)
         return;
-    programObject->setUniformMatrix4fv(loc, count, transpose, value);
+    programObject->setUniformMatrix4fv(location, count, transpose, value);
 }
 
 void GLES1Renderer::setUniform4fv(Program *programObject,
-                                  GLint loc,
+                                  UniformLocation location,
                                   GLint count,
                                   const GLfloat *value)
 {
-    if (loc == -1)
+    if (location.value == -1)
         return;
-    programObject->setUniform4fv(loc, count, value);
+    programObject->setUniform4fv(location, count, value);
 }
 
 void GLES1Renderer::setUniform3fv(Program *programObject,
-                                  GLint loc,
+                                  UniformLocation location,
                                   GLint count,
                                   const GLfloat *value)
 {
-    if (loc == -1)
+    if (location.value == -1)
         return;
-    programObject->setUniform3fv(loc, count, value);
+    programObject->setUniform3fv(location, count, value);
 }
 
 void GLES1Renderer::setUniform2fv(Program *programObject,
-                                  GLint loc,
+                                  UniformLocation location,
                                   GLint count,
                                   const GLfloat *value)
 {
-    if (loc == -1)
+    if (location.value == -1)
         return;
-    programObject->setUniform2fv(loc, count, value);
+    programObject->setUniform2fv(location, count, value);
 }
 
-void GLES1Renderer::setUniform1f(Program *programObject, GLint loc, GLfloat value)
+void GLES1Renderer::setUniform1f(Program *programObject, UniformLocation location, GLfloat value)
 {
-    if (loc == -1)
+    if (location.value == -1)
         return;
-    programObject->setUniform1fv(loc, 1, &value);
+    programObject->setUniform1fv(location, 1, &value);
 }
 
 void GLES1Renderer::setUniform1fv(Program *programObject,
-                                  GLint loc,
+                                  UniformLocation location,
                                   GLint count,
                                   const GLfloat *value)
 {
-    if (loc == -1)
+    if (location.value == -1)
         return;
-    programObject->setUniform1fv(loc, count, value);
+    programObject->setUniform1fv(location, count, value);
 }
 
 void GLES1Renderer::setAttributesEnabled(Context *context, State *glState, AttributesMask mask)

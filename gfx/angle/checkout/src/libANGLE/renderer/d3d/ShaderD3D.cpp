@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2014 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -16,6 +16,7 @@
 #include "libANGLE/features.h"
 #include "libANGLE/renderer/d3d/ProgramD3D.h"
 #include "libANGLE/renderer/d3d/RendererD3D.h"
+#include "libANGLE/trace.h"
 
 namespace rx
 {
@@ -36,6 +37,7 @@ class TranslateTaskD3D : public angle::Closure
 
     void operator()() override
     {
+        ANGLE_TRACE_EVENT1("gpu.angle", "TranslateTask::run", "source", mSource);
         std::vector<const char *> srcStrings;
         if (!mSourcePath.empty())
         {
@@ -85,10 +87,10 @@ class WaitableCompileEventD3D final : public WaitableCompileEvent
     std::shared_ptr<TranslateTaskD3D> mTranslateTask;
 };
 
-ShaderD3D::ShaderD3D(const gl::ShaderState &data,
+ShaderD3D::ShaderD3D(const gl::ShaderState &state,
                      const angle::FeaturesD3D &features,
                      const gl::Extensions &extensions)
-    : ShaderImpl(data), mAdditionalOptions(0)
+    : ShaderImpl(state), mAdditionalOptions(0)
 {
     uncompile();
 
@@ -115,13 +117,17 @@ ShaderD3D::ShaderD3D(const gl::ShaderState &data,
         mAdditionalOptions |= SH_EMULATE_ISNAN_FLOAT_FUNCTION;
     }
     if (features.skipVSConstantRegisterZero.enabled &&
-        mData.getShaderType() == gl::ShaderType::Vertex)
+        mState.getShaderType() == gl::ShaderType::Vertex)
     {
         mAdditionalOptions |= SH_SKIP_D3D_CONSTANT_REGISTER_ZERO;
     }
     if (features.forceAtomicValueResolution.enabled)
     {
         mAdditionalOptions |= SH_FORCE_ATOMIC_VALUE_RESOLUTION;
+    }
+    if (features.allowTranslateUniformBlockToStructuredBuffer.enabled)
+    {
+        mAdditionalOptions |= SH_ALLOW_TRANSLATE_UNIFORM_BLOCK_TO_STRUCTUREDBUFFER;
     }
     if (extensions.multiview || extensions.multiview2)
     {
@@ -138,7 +144,7 @@ std::string ShaderD3D::getDebugInfo() const
         return "";
     }
 
-    return mDebugInfo + std::string("\n// ") + gl::GetShaderTypeString(mData.getShaderType()) +
+    return mDebugInfo + std::string("\n// ") + gl::GetShaderTypeString(mState.getShaderType()) +
            " SHADER END\n";
 }
 
@@ -154,6 +160,7 @@ void ShaderD3D::uncompile()
     mUsesSecondaryColor          = false;
     mUsesFragCoord               = false;
     mUsesFrontFacing             = false;
+    mUsesHelperInvocation        = false;
     mUsesPointSize               = false;
     mUsesPointCoord              = false;
     mUsesDepthRange              = false;
@@ -206,6 +213,12 @@ unsigned int ShaderD3D::getUniformBlockRegister(const std::string &blockName) co
     return mUniformBlockRegisterMap.find(blockName)->second;
 }
 
+bool ShaderD3D::shouldUniformBlockUseStructuredBuffer(const std::string &blockName) const
+{
+    ASSERT(mUniformBlockUseStructuredBufferMap.count(blockName) > 0);
+    return mUniformBlockUseStructuredBufferMap.find(blockName)->second;
+}
+
 unsigned int ShaderD3D::getShaderStorageBlockRegister(const std::string &blockName) const
 {
     ASSERT(mShaderStorageBlockRegisterMap.count(blockName) > 0);
@@ -250,9 +263,9 @@ std::shared_ptr<WaitableCompileEvent> ShaderD3D::compile(const gl::Context *cont
 
     ShCompileOptions additionalOptions = 0;
 
-    const std::string &source = mData.getSource();
+    const std::string &source = mState.getSource();
 
-#if !defined(ANGLE_ENABLE_WINDOWS_STORE)
+#if !defined(ANGLE_ENABLE_WINDOWS_UWP)
     if (gl::DebugAnnotationsActive())
     {
         sourcePath = getTempPath();
@@ -269,7 +282,7 @@ std::shared_ptr<WaitableCompileEvent> ShaderD3D::compile(const gl::Context *cont
         // TODO(jmadill): We shouldn't need to cache this.
         mCompilerOutputType = compiler->getShaderOutputType();
 
-        const std::string &translatedSource = mData.getTranslatedSource();
+        const std::string &translatedSource = mState.getTranslatedSource();
 
         mUsesMultipleRenderTargets = translatedSource.find("GL_USES_MRT") != std::string::npos;
         mUsesFragColor      = translatedSource.find("GL_USES_FRAG_COLOR") != std::string::npos;
@@ -277,10 +290,12 @@ std::shared_ptr<WaitableCompileEvent> ShaderD3D::compile(const gl::Context *cont
         mUsesSecondaryColor = translatedSource.find("GL_USES_SECONDARY_COLOR") != std::string::npos;
         mUsesFragCoord      = translatedSource.find("GL_USES_FRAG_COORD") != std::string::npos;
         mUsesFrontFacing    = translatedSource.find("GL_USES_FRONT_FACING") != std::string::npos;
-        mUsesPointSize      = translatedSource.find("GL_USES_POINT_SIZE") != std::string::npos;
-        mUsesPointCoord     = translatedSource.find("GL_USES_POINT_COORD") != std::string::npos;
-        mUsesDepthRange     = translatedSource.find("GL_USES_DEPTH_RANGE") != std::string::npos;
-        mUsesFragDepth      = translatedSource.find("GL_USES_FRAG_DEPTH") != std::string::npos;
+        mUsesHelperInvocation =
+            translatedSource.find("GL_USES_HELPER_INVOCATION") != std::string::npos;
+        mUsesPointSize  = translatedSource.find("GL_USES_POINT_SIZE") != std::string::npos;
+        mUsesPointCoord = translatedSource.find("GL_USES_POINT_COORD") != std::string::npos;
+        mUsesDepthRange = translatedSource.find("GL_USES_DEPTH_RANGE") != std::string::npos;
+        mUsesFragDepth  = translatedSource.find("GL_USES_FRAG_DEPTH") != std::string::npos;
         mHasANGLEMultiviewEnabled =
             translatedSource.find("GL_ANGLE_MULTIVIEW_ENABLED") != std::string::npos;
         mUsesVertexID = translatedSource.find("GL_USES_VERTEX_ID") != std::string::npos;
@@ -299,7 +314,7 @@ std::shared_ptr<WaitableCompileEvent> ShaderD3D::compile(const gl::Context *cont
         mUsedImage2DFunctionNames =
             GetUsedImage2DFunctionNames(sh::GetUsedImage2DFunctionNames(compilerHandle));
 
-        for (const sh::InterfaceBlock &interfaceBlock : mData.getUniformBlocks())
+        for (const sh::InterfaceBlock &interfaceBlock : mState.getUniformBlocks())
         {
             if (interfaceBlock.active)
             {
@@ -307,12 +322,15 @@ std::shared_ptr<WaitableCompileEvent> ShaderD3D::compile(const gl::Context *cont
                 bool blockRegisterResult =
                     sh::GetUniformBlockRegister(compilerHandle, interfaceBlock.name, &index);
                 ASSERT(blockRegisterResult);
+                bool useStructuredBuffer =
+                    sh::ShouldUniformBlockUseStructuredBuffer(compilerHandle, interfaceBlock.name);
 
-                mUniformBlockRegisterMap[interfaceBlock.name] = index;
+                mUniformBlockRegisterMap[interfaceBlock.name]            = index;
+                mUniformBlockUseStructuredBufferMap[interfaceBlock.name] = useStructuredBuffer;
             }
         }
 
-        for (const sh::InterfaceBlock &interfaceBlock : mData.getShaderStorageBlocks())
+        for (const sh::InterfaceBlock &interfaceBlock : mState.getShaderStorageBlocks())
         {
             if (interfaceBlock.active)
             {
@@ -325,9 +343,9 @@ std::shared_ptr<WaitableCompileEvent> ShaderD3D::compile(const gl::Context *cont
             }
         }
 
-        mDebugInfo +=
-            std::string("// ") + gl::GetShaderTypeString(mData.getShaderType()) + " SHADER BEGIN\n";
-        mDebugInfo += "\n// GLSL BEGIN\n\n" + mData.getSource() + "\n\n// GLSL END\n\n\n";
+        mDebugInfo += std::string("// ") + gl::GetShaderTypeString(mState.getShaderType()) +
+                      " SHADER BEGIN\n";
+        mDebugInfo += "\n// GLSL BEGIN\n\n" + mState.getSource() + "\n\n// GLSL END\n\n\n";
         mDebugInfo +=
             "// INITIAL HLSL BEGIN\n\n" + translatedSource + "\n// INITIAL HLSL END\n\n\n";
         // Successive steps will append more info

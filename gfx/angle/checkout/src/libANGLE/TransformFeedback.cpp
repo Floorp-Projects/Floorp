@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2014 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -84,8 +84,10 @@ GLsizeiptr TransformFeedbackState::getPrimitivesDrawn() const
     }
 }
 
-TransformFeedback::TransformFeedback(rx::GLImplFactory *implFactory, GLuint id, const Caps &caps)
-    : RefCountObject(id),
+TransformFeedback::TransformFeedback(rx::GLImplFactory *implFactory,
+                                     TransformFeedbackID id,
+                                     const Caps &caps)
+    : RefCountObject(implFactory->generateSerial(), id),
       mState(caps.maxTransformFeedbackSeparateAttributes),
       mImplementation(implFactory->createTransformFeedback(mState))
 {
@@ -105,6 +107,11 @@ void TransformFeedback::onDestroy(const Context *context)
     for (size_t i = 0; i < mState.mIndexedBuffers.size(); i++)
     {
         mState.mIndexedBuffers[i].set(context, nullptr, 0, 0);
+    }
+
+    if (mImplementation)
+    {
+        mImplementation->onDestroy(context);
     }
 }
 
@@ -214,7 +221,7 @@ void TransformFeedback::onVerticesDrawn(const Context *context, GLsizei count, G
     {
         if (buffer.get() != nullptr)
         {
-            buffer->onTransformFeedback();
+            buffer->onDataChanged();
         }
     }
 }
@@ -235,17 +242,17 @@ void TransformFeedback::bindProgram(const Context *context, Program *program)
     }
 }
 
-bool TransformFeedback::hasBoundProgram(GLuint program) const
+bool TransformFeedback::hasBoundProgram(ShaderProgramID program) const
 {
-    return mState.mProgram != nullptr && mState.mProgram->id() == program;
+    return mState.mProgram != nullptr && mState.mProgram->id().value == program.value;
 }
 
-angle::Result TransformFeedback::detachBuffer(const Context *context, GLuint bufferName)
+angle::Result TransformFeedback::detachBuffer(const Context *context, BufferID bufferID)
 {
     bool isBound = context->isCurrentTransformFeedback(this);
     for (size_t index = 0; index < mState.mIndexedBuffers.size(); index++)
     {
-        if (mState.mIndexedBuffers[index].id() == bufferName)
+        if (mState.mIndexedBuffers[index].id() == bufferID)
         {
             if (isBound)
             {
@@ -318,5 +325,10 @@ void TransformFeedback::onBindingChanged(const Context *context, bool bound)
             buffer->onTFBindingChanged(context, bound, true);
         }
     }
+}
+
+const std::vector<OffsetBindingPointer<Buffer>> &TransformFeedback::getIndexedBuffers() const
+{
+    return mState.mIndexedBuffers;
 }
 }  // namespace gl
