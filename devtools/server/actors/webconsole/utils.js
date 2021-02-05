@@ -5,17 +5,6 @@
 "use strict";
 
 const { Cu } = require("chrome");
-
-// Note that this is only used in WebConsoleCommands, see $0 and screenshot.
-if (!isWorker) {
-  loader.lazyRequireGetter(
-    this,
-    "captureScreenshot",
-    "devtools/server/actors/utils/capture-screenshot",
-    true
-  );
-}
-
 const CONSOLE_WORKER_IDS = (exports.CONSOLE_WORKER_IDS = [
   "SharedWorker",
   "ServiceWorker",
@@ -577,15 +566,10 @@ WebConsoleCommands._registerOriginal("copy", function(owner, value) {
  */
 WebConsoleCommands._registerOriginal("screenshot", function(owner, args = {}) {
   owner.helperResult = (async () => {
-    // creates data for saving the screenshot
-    // help is handled on the client side
-    const value = await captureScreenshot(args, owner.window.document);
+    // everything is handled on the client side, so we return a very simple object with
+    // the args
     return {
       type: "screenshotOutput",
-      value,
-      // pass args through to the client, so that the client can take care of copying
-      // and saving the screenshot data on the client machine instead of on the
-      // remote machine
       args,
     };
   })();

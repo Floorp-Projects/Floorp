@@ -53,6 +53,7 @@ DevToolsModules(
     "process.js",
     "reflow.js",
     "root.js",
+    "screenshot-content.js",
     "screenshot.js",
     "source.js",
     "storage.js",

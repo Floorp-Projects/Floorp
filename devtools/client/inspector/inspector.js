@@ -57,13 +57,14 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "saveScreenshot",
-  "devtools/client/shared/save-screenshot"
+  "PICKER_TYPES",
+  "devtools/shared/picker-constants"
 );
 loader.lazyRequireGetter(
   this,
-  "PICKER_TYPES",
-  "devtools/shared/picker-constants"
+  "captureAndSaveScreenshot",
+  "devtools/client/shared/screenshot",
+  true
 );
 
 // This import to chrome code is forbidden according to the inspector specific
@@ -1907,11 +1908,12 @@ Inspector.prototype = {
       nodeActorID: this.selection.nodeFront.actorID,
       clipboard: clipboardEnabled,
     };
-    const screenshotFront = await this.selection.nodeFront.targetFront.getFront(
-      "screenshot"
+
+    await captureAndSaveScreenshot(
+      this.selection.nodeFront.targetFront,
+      this.panelWin,
+      args
     );
-    const screenshot = await screenshotFront.capture(args);
-    await saveScreenshot(this.panelWin, args, screenshot);
   },
 
   /**
