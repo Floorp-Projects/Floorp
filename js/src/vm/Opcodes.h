@@ -2286,7 +2286,7 @@
      *   Operands: int32_t forwardOffset
      *   Stack: cond =>
      */ \
-    MACRO(IfEq, if_eq, NULL, 5, 1, 0, JOF_JUMP|JOF_IC) \
+    MACRO(JumpIfFalse, jump_if_false, NULL, 5, 1, 0, JOF_JUMP|JOF_IC) \
     /*
      * If ToBoolean(`cond`) is true, jump to a 32-bit offset from the current
      * instruction.

@@ -55,7 +55,7 @@ class MOZ_STACK_CLASS CForEmitter {
   //   loop:
   //     JSOp::LoopHead
   //     {cond}
-  //     JSOp::IfEq break
+  //     JSOp::JumpIfFalse break
   //     {body}
   //   continue:
   //     {update}

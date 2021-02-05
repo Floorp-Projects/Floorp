@@ -56,7 +56,7 @@ bool WhileEmitter::emitCond(const Maybe<uint32_t>& whilePos,
 bool WhileEmitter::emitBody() {
   MOZ_ASSERT(state_ == State::Cond);
 
-  if (!bce_->emitJump(JSOp::IfEq, &loopInfo_->breaks)) {
+  if (!bce_->emitJump(JSOp::JumpIfFalse, &loopInfo_->breaks)) {
     return false;
   }
 

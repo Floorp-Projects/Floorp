@@ -652,7 +652,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::SetArg:
       case JSOp::JumpTarget:
       case JSOp::LoopHead:
-      case JSOp::IfEq:
+      case JSOp::JumpIfFalse:
       case JSOp::IfNe:
       case JSOp::And:
       case JSOp::Or:

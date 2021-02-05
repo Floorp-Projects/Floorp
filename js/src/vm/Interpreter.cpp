@@ -1370,8 +1370,8 @@ again:
 static_assert(JSOpLength_SetName == JSOpLength_SetProp);
 
 /* See TRY_BRANCH_AFTER_COND. */
-static_assert(JSOpLength_IfNe == JSOpLength_IfEq);
-static_assert(uint8_t(JSOp::IfNe) == uint8_t(JSOp::IfEq) + 1);
+static_assert(JSOpLength_IfNe == JSOpLength_JumpIfFalse);
+static_assert(uint8_t(JSOp::IfNe) == uint8_t(JSOp::JumpIfFalse) + 1);
 
 /*
  * Compute the implicit |this| value used by a call expression with an
@@ -2383,14 +2383,14 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     CASE(Goto) { BRANCH(GET_JUMP_OFFSET(REGS.pc)); }
 
-    CASE(IfEq) {
+    CASE(JumpIfFalse) {
       bool cond = ToBoolean(REGS.stackHandleAt(-1));
       REGS.sp--;
       if (!cond) {
         BRANCH(GET_JUMP_OFFSET(REGS.pc));
       }
     }
-    END_CASE(IfEq)
+    END_CASE(JumpIfFalse)
 
     CASE(IfNe) {
       bool cond = ToBoolean(REGS.stackHandleAt(-1));
@@ -2431,18 +2431,19 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     if (!ToPropertyKey(cx, REGS.stackHandleAt(n), &(id))) goto error; \
   JS_END_MACRO
 
-#define TRY_BRANCH_AFTER_COND(cond, spdec)                                \
-  JS_BEGIN_MACRO                                                          \
-    MOZ_ASSERT(GetBytecodeLength(REGS.pc) == 1);                          \
-    unsigned diff_ = (unsigned)GET_UINT8(REGS.pc) - (unsigned)JSOp::IfEq; \
-    if (diff_ <= 1) {                                                     \
-      REGS.sp -= (spdec);                                                 \
-      if ((cond) == (diff_ != 0)) {                                       \
-        ++REGS.pc;                                                        \
-        BRANCH(GET_JUMP_OFFSET(REGS.pc));                                 \
-      }                                                                   \
-      ADVANCE_AND_DISPATCH(1 + JSOpLength_IfEq);                          \
-    }                                                                     \
+#define TRY_BRANCH_AFTER_COND(cond, spdec)                          \
+  JS_BEGIN_MACRO                                                    \
+    MOZ_ASSERT(GetBytecodeLength(REGS.pc) == 1);                    \
+    unsigned diff_ =                                                \
+        (unsigned)GET_UINT8(REGS.pc) - (unsigned)JSOp::JumpIfFalse; \
+    if (diff_ <= 1) {                                               \
+      REGS.sp -= (spdec);                                           \
+      if ((cond) == (diff_ != 0)) {                                 \
+        ++REGS.pc;                                                  \
+        BRANCH(GET_JUMP_OFFSET(REGS.pc));                           \
+      }                                                             \
+      ADVANCE_AND_DISPATCH(1 + JSOpLength_JumpIfFalse);             \
+    }                                                               \
   JS_END_MACRO
 
     CASE(In) {
