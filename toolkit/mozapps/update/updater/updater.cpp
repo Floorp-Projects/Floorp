@@ -104,6 +104,10 @@ struct UpdateServerThreadArgs {
 #  define USE_EXECV
 #endif
 
+#if defined(XP_OPENBSD)
+#  define stat64 stat
+#endif
+
 #if defined(MOZ_VERIFY_MAR_SIGNATURE) && !defined(XP_WIN) && !defined(XP_MACOSX)
 #  include "nss.h"
 #  include "prerror.h"
