@@ -285,6 +285,7 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
   if (mStateManager.mAsyncResourceUpdates || !mPendingScrollUpdates.IsEmpty() ||
       WrBridge()->HasWebRenderParentCommands()) {
     transactionData.emplace();
+    transactionData->mIdNamespace = WrBridge()->GetNamespace();
     transactionData->mPaintSequenceNumber = mPaintSequenceNumber;
     if (mStateManager.mAsyncResourceUpdates) {
       mStateManager.mAsyncResourceUpdates->Flush(
