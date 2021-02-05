@@ -350,6 +350,7 @@ MBasicBlock::MBasicBlock(MIRGraph& graph, const CompileInfo& info,
       columnIndex_(0u)
 #endif
 {
+  MOZ_ASSERT(trackedSite_, "trackedSite_ is non-nullptr");
 }
 
 bool MBasicBlock::init() { return slots_.init(graph_.alloc(), info_.nslots()); }
