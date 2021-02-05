@@ -108,6 +108,13 @@ void nsPageContentFrame::Reflow(nsPresContext* aPresContext,
           MOZ_ASSERT(ratio >= 0.0 && ratio < 1.0);
           mPD->mShrinkToFitRatio = std::min(mPD->mShrinkToFitRatio, ratio);
         }
+
+        // pdf.js pages should never overflow given the scaling above.
+        // nsPrintJob::SetupToPrintContent ignores some ratios close to 1.0
+        // though and doesn't reflow us again in that case, so we need to clear
+        // the overflow area here in case that happens. (bug 1689789)
+        frame->ClearOverflowRects();
+        kidReflowOutput.mOverflowAreas = aReflowOutput.mOverflowAreas;
       }
     }
 
