@@ -41,12 +41,9 @@ const { E10SUtils } = ChromeUtils.import(
   "resource://gre/modules/E10SUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(this, "awExperimentFeature", () => {
-  const { ExperimentFeature } = ChromeUtils.import(
-    "resource://messaging-system/experiments/ExperimentAPI.jsm"
-  );
-  return new ExperimentFeature("aboutwelcome");
-});
+const { ExperimentAPI } = ChromeUtils.import(
+  "resource://messaging-system/experiments/ExperimentAPI.jsm"
+);
 
 /**
  * BEWARE: Do not add variables for holding state in the global scope.
@@ -61,6 +58,7 @@ const PREF_ABOUT_HOME_CACHE_ENABLED =
   "browser.startup.homepage.abouthome_cache.enabled";
 const PREF_ABOUT_HOME_CACHE_TESTING =
   "browser.startup.homepage.abouthome_cache.testing";
+const PREF_ABOUT_WELCOME_ENABLED = "browser.aboutwelcome.enabled";
 const ABOUT_WELCOME_URL =
   "resource://activity-stream/aboutwelcome/aboutwelcome.html";
 
@@ -406,6 +404,13 @@ class BaseAboutNewTabService {
 
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
+      "isAboutWelcomePrefEnabled",
+      PREF_ABOUT_WELCOME_ENABLED,
+      false
+    );
+
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
       "privilegedAboutProcessEnabled",
       PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS,
       false
@@ -448,7 +453,11 @@ class BaseAboutNewTabService {
      * This is calculated in the same way the default URL is.
      */
 
-    if (awExperimentFeature.isEnabled({ defaultValue: true })) {
+    if (
+      this.isAboutWelcomePrefEnabled &&
+      // about:welcome should be enabled by default if no experiment exists.
+      ExperimentAPI.isFeatureEnabled("aboutwelcome", true)
+    ) {
       return ABOUT_WELCOME_URL;
     }
     return this.defaultURL;
