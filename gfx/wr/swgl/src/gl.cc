@@ -2958,14 +2958,6 @@ void CopyTexSubImage2D(GLenum target, UNUSED GLint level, GLint xoffset,
 
 using ZMask = I32;
 
-static inline PackedRGBA8 convert_zmask(ZMask mask, uint32_t*) {
-  return bit_cast<PackedRGBA8>(mask);
-}
-
-static inline WideR8 convert_zmask(ZMask mask, uint8_t*) {
-  return CONVERT(mask, WideR8);
-}
-
 #if USE_SSE2
 #  define ZMASK_NONE_PASSED 0xFFFF
 #  define ZMASK_ALL_PASSED 0
@@ -2983,12 +2975,11 @@ static inline uint32_t zmask_code(ZMask mask) {
 // Interprets items in the depth buffer as sign-extended 32-bit depth values
 // instead of as runs. Returns a mask that signals which samples in the given
 // chunk passed or failed the depth test with given Z value.
-template <bool DISCARD, typename Z>
-static ALWAYS_INLINE bool check_depth(Z z, DepthRun* zbuf, ZMask& outmask,
+template <bool DISCARD>
+static ALWAYS_INLINE bool check_depth(I32 src, DepthRun* zbuf, ZMask& outmask,
                                       int span = 4) {
   // SSE2 does not support unsigned comparison. So ensure Z value is
   // sign-extended to int32_t.
-  I32 src = I32(z);
   I32 dest = unaligned_load<I32>(zbuf);
   // Invert the depth test to check which pixels failed and should be discarded.
   ZMask mask = ctx->depthfunc == GL_LEQUAL
@@ -3014,10 +3005,8 @@ static ALWAYS_INLINE I32 packDepth() {
   return cast(fragment_shader->gl_FragCoord.z * 0xFFFF);
 }
 
-template <typename Z>
-static ALWAYS_INLINE void discard_depth(Z z, DepthRun* zbuf, I32 mask) {
+static ALWAYS_INLINE void discard_depth(I32 src, DepthRun* zbuf, I32 mask) {
   if (ctx->depthmask) {
-    I32 src = I32(z);
     I32 dest = unaligned_load<I32>(zbuf);
     mask |= fragment_shader->swgl_IsPixelDiscarded;
     unaligned_store(zbuf, (mask & dest) | (~mask & src));
@@ -3527,30 +3516,26 @@ static ALWAYS_INLINE WideRGBA8 blend_pixels(uint32_t* buf, PackedRGBA8 pdst,
 #undef BLEND_CASE_KEY
 }
 
-template <bool DISCARD, int SPAN>
-static ALWAYS_INLINE void discard_output(uint32_t* buf, PackedRGBA8 mask) {
+static ALWAYS_INLINE void mask_output(uint32_t* buf, ZMask zmask,
+                                      int span = 4) {
   WideRGBA8 r = pack_pixels_RGBA8();
-  PackedRGBA8 dst = load_span<PackedRGBA8>(buf, SPAN);
-  if (blend_key) r = blend_pixels(buf, dst, r, SPAN);
-  if (DISCARD)
-    mask |= bit_cast<PackedRGBA8>(fragment_shader->swgl_IsPixelDiscarded);
-  store_span(buf, (mask & dst) | (~mask & pack(r)), SPAN);
+  PackedRGBA8 dst = load_span<PackedRGBA8>(buf, span);
+  if (blend_key) r = blend_pixels(buf, dst, r, span);
+  PackedRGBA8 mask = bit_cast<PackedRGBA8>(zmask);
+  store_span(buf, (mask & dst) | (~mask & pack(r)), span);
 }
 
-template <bool DISCARD, int SPAN>
-static ALWAYS_INLINE void discard_output(uint32_t* buf) {
+template <bool DISCARD>
+static ALWAYS_INLINE void discard_output(uint32_t* buf, int span = 4) {
+  mask_output(buf, fragment_shader->swgl_IsPixelDiscarded, span);
+}
+
+template <>
+ALWAYS_INLINE void discard_output<false>(uint32_t* buf, int span) {
   WideRGBA8 r = pack_pixels_RGBA8();
-  if (DISCARD) {
-    PackedRGBA8 dst = load_span<PackedRGBA8>(buf, SPAN);
-    if (blend_key) r = blend_pixels(buf, dst, r, SPAN);
-    PackedRGBA8 mask =
-        bit_cast<PackedRGBA8>(fragment_shader->swgl_IsPixelDiscarded);
-    store_span(buf, (mask & dst) | (~mask & pack(r)), SPAN);
-  } else {
-    if (blend_key)
-      r = blend_pixels(buf, load_span<PackedRGBA8>(buf, SPAN), r, SPAN);
-    store_span(buf, pack(r), SPAN);
-  }
+  if (blend_key)
+    r = blend_pixels(buf, load_span<PackedRGBA8>(buf, span), r, span);
+  store_span(buf, pack(r), span);
 }
 
 static ALWAYS_INLINE WideR8 packR8(I32 a) {
@@ -3595,96 +3580,25 @@ static ALWAYS_INLINE WideR8 blend_pixels(uint8_t* buf, WideR8 dst, WideR8 src,
 #undef BLEND_CASE_KEY
 }
 
-template <bool DISCARD, int SPAN>
-static ALWAYS_INLINE void discard_output(uint8_t* buf, WideR8 mask) {
+static ALWAYS_INLINE void mask_output(uint8_t* buf, ZMask zmask, int span = 4) {
   WideR8 r = pack_pixels_R8();
-  WideR8 dst = unpack(load_span<PackedR8>(buf, SPAN));
-  if (blend_key) r = blend_pixels(buf, dst, r, SPAN);
-  if (DISCARD) mask |= packR8(fragment_shader->swgl_IsPixelDiscarded);
-  store_span(buf, pack((mask & dst) | (~mask & r)), SPAN);
+  WideR8 dst = unpack(load_span<PackedR8>(buf, span));
+  if (blend_key) r = blend_pixels(buf, dst, r, span);
+  WideR8 mask = packR8(zmask);
+  store_span(buf, pack((mask & dst) | (~mask & r)), span);
 }
 
-template <bool DISCARD, int SPAN>
-static ALWAYS_INLINE void discard_output(uint8_t* buf) {
+template <bool DISCARD>
+static ALWAYS_INLINE void discard_output(uint8_t* buf, int span = 4) {
+  mask_output(buf, fragment_shader->swgl_IsPixelDiscarded, span);
+}
+
+template <>
+ALWAYS_INLINE void discard_output<false>(uint8_t* buf, int span) {
   WideR8 r = pack_pixels_R8();
-  if (DISCARD) {
-    WideR8 dst = unpack(load_span<PackedR8>(buf, SPAN));
-    if (blend_key) r = blend_pixels(buf, dst, r, SPAN);
-    WideR8 mask = packR8(fragment_shader->swgl_IsPixelDiscarded);
-    store_span(buf, pack((mask & dst) | (~mask & r)), SPAN);
-  } else {
-    if (blend_key)
-      r = blend_pixels(buf, unpack(load_span<PackedR8>(buf, SPAN)), r, SPAN);
-    store_span(buf, pack(r), SPAN);
-  }
-}
-
-template <bool DISCARD, bool W, typename P, typename M>
-static inline void commit_output(P* buf, M mask) {
-  fragment_shader->run<W>();
-  discard_output<DISCARD, 4>(buf, mask);
-}
-
-template <bool DISCARD, bool W, typename P, typename M>
-static inline void commit_output(P* buf, M mask, int span) {
-  fragment_shader->run<W>();
-  switch (span) {
-    case 1:
-      discard_output<DISCARD, 1>(buf, mask);
-      break;
-    case 2:
-      discard_output<DISCARD, 2>(buf, mask);
-      break;
-    default:
-      discard_output<DISCARD, 3>(buf, mask);
-      break;
-  }
-}
-
-template <bool DISCARD, bool W, typename P>
-static inline void commit_output(P* buf) {
-  fragment_shader->run<W>();
-  discard_output<DISCARD, 4>(buf);
-}
-
-template <bool DISCARD, bool W, typename P>
-static inline void commit_output(P* buf, int span) {
-  fragment_shader->run<W>();
-  switch (span) {
-    case 1:
-      discard_output<DISCARD, 1>(buf);
-      break;
-    case 2:
-      discard_output<DISCARD, 2>(buf);
-      break;
-    default:
-      discard_output<DISCARD, 3>(buf);
-      break;
-  }
-}
-
-template <bool DISCARD, bool W, typename P, typename Z>
-static inline void commit_output(P* buf, Z z, DepthRun* zbuf) {
-  ZMask zmask;
-  if (check_depth<DISCARD>(z, zbuf, zmask)) {
-    commit_output<DISCARD, W>(buf, convert_zmask(zmask, buf));
-    if (DISCARD) {
-      discard_depth(z, zbuf, zmask);
-    }
-  } else {
-    fragment_shader->skip<W>();
-  }
-}
-
-template <bool DISCARD, bool W, typename P, typename Z>
-static inline void commit_output(P* buf, Z z, DepthRun* zbuf, int span) {
-  ZMask zmask;
-  if (check_depth<DISCARD>(z, zbuf, zmask, span)) {
-    commit_output<DISCARD, W>(buf, convert_zmask(zmask, buf), span);
-    if (DISCARD) {
-      discard_depth(z, zbuf, zmask);
-    }
-  }
+  if (blend_key)
+    r = blend_pixels(buf, unpack(load_span<PackedR8>(buf, span)), r, span);
+  store_span(buf, pack(r), span);
 }
 
 #include "composite.h"
@@ -3807,24 +3721,24 @@ static ALWAYS_INLINE void draw_depth_span(uint16_t z, P* buf,
       // If we have a draw specialization, try to process as many 4-pixel
       // chunks as possible using it.
       if (fragment_shader->has_draw_span(buf)) {
-        int len = span & ~3;
-        fragment_shader->draw_span(buf, len);
-        buf += len;
-        span &= 3;
-      } else {
-        // Otherwise, just process each chunk individually.
-        while (span >= 4) {
-          commit_output<false, false>(buf);
-          buf += 4;
-          span -= 4;
-        }
+        int drawn = fragment_shader->draw_span(buf, span & ~3);
+        buf += drawn;
+        span -= drawn;
+      }
+      // Otherwise, just process each chunk individually.
+      while (span >= 4) {
+        fragment_shader->run();
+        discard_output<false>(buf);
+        buf += 4;
+        span -= 4;
       }
     }
     // If we have a partial chunk left over, we still have to process it as if
     // it were a full chunk. Mask off only the part of the chunk we want to
     // use.
     if (span > 0) {
-      commit_output<false, false>(buf, span);
+      fragment_shader->run();
+      discard_output<false>(buf, span);
       buf += span;
     }
     // Skip past any runs that fail the depth test.
@@ -3855,20 +3769,36 @@ static ALWAYS_INLINE void draw_span(P* buf, DepthRun* depth, int span, Z z) {
     // Otherwise, for the no-perspective case, we just use the provided Z.
     // Process 4-pixel chunks first.
     for (; span >= 4; span -= 4, buf += 4, depth += 4) {
-      commit_output<DISCARD, W>(buf, z(), depth);
+      I32 zsrc = z();
+      ZMask zmask;
+      if (check_depth<DISCARD>(zsrc, depth, zmask)) {
+        fragment_shader->run<W>();
+        mask_output(buf, zmask);
+        if (DISCARD) discard_depth(zsrc, depth, zmask);
+      } else {
+        fragment_shader->skip<W>();
+      }
     }
     // If there are any remaining pixels, do a partial chunk.
     if (span > 0) {
-      commit_output<DISCARD, W>(buf, z(), depth, span);
+      I32 zsrc = z();
+      ZMask zmask;
+      if (check_depth<DISCARD>(zsrc, depth, zmask, span)) {
+        fragment_shader->run<W>();
+        mask_output(buf, zmask, span);
+        if (DISCARD) discard_depth(zsrc, depth, zmask);
+      }
     }
   } else {
     // Process 4-pixel chunks first.
     for (; span >= 4; span -= 4, buf += 4) {
-      commit_output<DISCARD, W>(buf);
+      fragment_shader->run<W>();
+      discard_output<DISCARD>(buf);
     }
     // If there are any remaining pixels, do a partial chunk.
     if (span > 0) {
-      commit_output<DISCARD, W>(buf, span);
+      fragment_shader->run<W>();
+      discard_output<DISCARD>(buf, span);
     }
   }
 }
@@ -4159,10 +4089,9 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint16_t z,
           // Check if the fragment shader has an optimized draw specialization.
           if (span >= 4 && fragment_shader->has_draw_span(buf)) {
             // Draw specialization expects 4-pixel chunks.
-            int len = span & ~3;
-            fragment_shader->draw_span(buf, len);
-            buf += len;
-            span &= 3;
+            int drawn = fragment_shader->draw_span(buf, span & ~3);
+            buf += drawn;
+            span -= drawn;
           }
         }
         draw_span<false, false>(buf, depth, span, [=] { return z; });

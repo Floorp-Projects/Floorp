@@ -579,16 +579,11 @@ static IntRect swgl_ClipMaskBounds = {0, 0, 0, 0};
 // swgl_SpanLength. Any varying interpolants used will be advanced past the
 // committed part of the span in case the fragment shader must be executed for
 // any remaining pixels that were not committed by the span shader.
-#define DISPATCH_DRAW_SPAN(self, format)                                      \
-  do {                                                                        \
-    int total = self->swgl_SpanLength;                                        \
-    self->swgl_drawSpan##format();                                            \
-    int drawn = total - self->swgl_SpanLength;                                \
-    if (drawn) self->step_interp_inputs(drawn);                               \
-    while (self->swgl_SpanLength > 0) {                                       \
-      run(self);                                                              \
-      commit_span(self->swgl_Out##format, pack_span(self->swgl_Out##format)); \
-      self->swgl_Out##format += swgl_StepSize;                                \
-      self->swgl_SpanLength -= swgl_StepSize;                                 \
-    }                                                                         \
+#define DISPATCH_DRAW_SPAN(self, format)        \
+  do {                                          \
+    int total = self->swgl_SpanLength;          \
+    self->swgl_drawSpan##format();              \
+    int drawn = total - self->swgl_SpanLength;  \
+    if (drawn) self->step_interp_inputs(drawn); \
+    return drawn;                               \
   } while (0)
