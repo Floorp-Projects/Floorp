@@ -11,7 +11,7 @@ var EXPORTED_SYMBOLS = [
   "UnsupportedError",
 ];
 
-const { Log } = ChromeUtils.import("chrome://remote/content/shared/Log.jsm");
+const { Log } = ChromeUtils.import("chrome://remote/content/Log.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"

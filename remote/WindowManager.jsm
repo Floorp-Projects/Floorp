@@ -7,9 +7,7 @@
 var EXPORTED_SYMBOLS = ["WindowManager"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { EventPromise } = ChromeUtils.import(
-  "chrome://remote/content/shared/Sync.jsm"
-);
+const { EventPromise } = ChromeUtils.import("chrome://remote/content/Sync.jsm");
 
 var WindowManager = {
   async focus(window) {

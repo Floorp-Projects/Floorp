@@ -4,14 +4,19 @@
 
 remote.jar:
 % content remote %content/
-  content/components/RemoteAgent.jsm (components/RemoteAgent.jsm)
+  content/RemoteAgent.jsm (RemoteAgent.jsm)
 
   content/Connection.jsm (Connection.jsm)
   content/Error.jsm (Error.jsm)
+  content/Format.jsm (Format.jsm)
   content/JSONHandler.jsm (JSONHandler.jsm)
+  content/Log.jsm (Log.jsm)
   content/Protocol.jsm (Protocol.jsm)
   content/RecommendedPreferences.jsm (RecommendedPreferences.jsm)
   content/StreamRegistry.jsm (StreamRegistry.jsm)
+  content/Sync.jsm (Sync.jsm)
+  content/TabManager.jsm (TabManager.jsm)
+  content/WindowManager.jsm (WindowManager.jsm)
 
   # observers
   content/observers/ChannelEventSink.jsm (observers/ChannelEventSink.jsm)
@@ -62,13 +67,6 @@ remote.jar:
   content/server/HTTPD.jsm (../netwerk/test/httpserver/httpd.js)
   content/server/WebSocketHandshake.jsm (server/WebSocketHandshake.jsm)
   content/server/WebSocketTransport.jsm (server/WebSocketTransport.jsm)
-
-  # shared modules
-  content/shared/Format.jsm (shared/Format.jsm)
-  content/shared/Log.jsm (shared/Log.jsm)
-  content/shared/Sync.jsm (shared/Sync.jsm)
-  content/shared/TabManager.jsm (shared/TabManager.jsm)
-  content/shared/WindowManager.jsm (shared/WindowManager.jsm)
 
   # imports from external folders
   content/external/EventUtils.js (../testing/mochitest/tests/SimpleTest/EventUtils.js)
