@@ -324,25 +324,42 @@ class SingleTestMixin(object):
         mozinfo.update({"verify": True})
         self.info("Per-test run using mozinfo: %s" % str(mozinfo.info))
 
+        # determine which files were changed on this push
         changed_files = set()
+        url = "%s/json-automationrelevance/%s" % (repository.rstrip("/"), revision)
+        contents = self.retry(get_automationrelevance, attempts=2, sleeptime=10)
+        for c in contents["changesets"]:
+            self.info(
+                " {cset} {desc}".format(
+                    cset=c["node"][0:12],
+                    desc=c["desc"].splitlines()[0].encode("ascii", "ignore"),
+                )
+            )
+            changed_files |= set(c["files"])
+        changed_files = list(changed_files)
+
+        # check specified test paths, as from 'mach try ... <path>'
         if os.environ.get("MOZHARNESS_TEST_PATHS", None) is not None:
             suite_to_paths = json.loads(os.environ["MOZHARNESS_TEST_PATHS"])
-            specified_files = itertools.chain.from_iterable(suite_to_paths.values())
-            changed_files.update(specified_files)
+            specified_paths = itertools.chain.from_iterable(suite_to_paths.values())
+            specified_paths = list(specified_paths)
+            # filter the list of changed files to those found under the
+            # specified path(s)
+            changed_and_specified = set()
+            for changed in changed_files:
+                for specified in specified_paths:
+                    if changed.startswith(specified):
+                        changed_and_specified.add(changed)
+                        break
+            if changed_and_specified:
+                changed_files = changed_and_specified
+            else:
+                # if specified paths do not match changed files, assume the
+                # specified paths are explicitly requested tests
+                changed_files = set()
+                changed_files.update(specified_paths)
             self.info("Per-test run found explicit request in MOZHARNESS_TEST_PATHS:")
             self.info(str(changed_files))
-        else:
-            # determine which files were changed on this push
-            url = "%s/json-automationrelevance/%s" % (repository.rstrip("/"), revision)
-            contents = self.retry(get_automationrelevance, attempts=2, sleeptime=10)
-            for c in contents["changesets"]:
-                self.info(
-                    " {cset} {desc}".format(
-                        cset=c["node"][0:12],
-                        desc=c["desc"].splitlines()[0].encode("ascii", "ignore"),
-                    )
-                )
-                changed_files |= set(c["files"])
 
         if self.config.get("per_test_category") == "web-platform":
             self._find_wpt_tests(dirs, changed_files)
