@@ -124,19 +124,14 @@ browsertime-tp6:
         extra-options:
             - --chimera
 
-browsertime-speedometer:
-    description: "Raptor (browsertime) Speedometer on Firefox"
-    raptor-test: speedometer
+browsertime-benchmark:
+    description: "Raptor (browsertime) Benchmark tests "
+    raptor-subtests:
+        - [speedometer, sp]
+        - ares6
     variants: ["fission"]
     apps: ["firefox"]
-    treeherder-symbol: Btime(sp)
-
-browsertime-ares6:
-    description: "Raptor (browsertime) ares6 on Firefox"
-    raptor-test: raptor-ares6
-    variants: ["fission"]
-    apps: ["firefox"]
-    treeherder-symbol: Btime(ares6)
+    treeherder-symbol: Btime()
 
 browsertime-tp6-profiling:
     description: "Raptor (browsertime) tp6 page-load tests with Gecko Profiling"
