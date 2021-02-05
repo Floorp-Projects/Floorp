@@ -23,8 +23,11 @@ impl PingUploader for ViaductUploader {
         log::trace!("FOG Ping Uploader uploading to {}", url);
         let url_clone = url.clone();
         let result: std::result::Result<UploadResult, viaduct::Error> = (move || {
+            let debug_tagged = headers.iter().any(|(name, _)| name == "X-Debug-ID");
             let localhost_port = static_prefs::pref!("telemetry.fog.test.localhost_port");
-            if localhost_port < 0 {
+            if localhost_port < 0
+                || (localhost_port == 0 && !debug_tagged && cfg!(feature = "disable_upload"))
+            {
                 log::info!("FOG Ping uploader faking success");
                 return Ok(UploadResult::HttpStatus(200));
             }
