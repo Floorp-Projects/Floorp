@@ -35,14 +35,12 @@ kotlin {
             }
         }
         val androidMain by getting {
-            dependencies {
-                implementation("com.google.android.material:material:1.2.1")
-            }
+            dependencies {}
         }
         val androidTest by getting {
             dependencies {
                 implementation(kotlin("test-junit"))
-                implementation("junit:junit:4.13")
+                implementation(Dependencies.testing_junit)
             }
         }
         val iosMain by getting {
