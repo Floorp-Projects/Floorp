@@ -1233,8 +1233,16 @@ impl TextureCache {
         self.shared_textures.color8_linear.dump_as_svg(output)
     }
 
-    pub fn dump_glyphs_as_svg(&self, output: &mut dyn std::io::Write) -> std::io::Result<()> {
+    pub fn dump_color8_glyphs_as_svg(&self, output: &mut dyn std::io::Write) -> std::io::Result<()> {
         self.shared_textures.color8_glyphs.dump_as_svg(output)
+    }
+
+    pub fn dump_alpha8_glyphs_as_svg(&self, output: &mut dyn std::io::Write) -> std::io::Result<()> {
+        self.shared_textures.alpha8_glyphs.dump_as_svg(output)
+    }
+
+    pub fn dump_alpha8_linear_as_svg(&self, output: &mut dyn std::io::Write) -> std::io::Result<()> {
+        self.shared_textures.alpha8_linear.dump_as_svg(output)
     }
 
     /// Expire picture cache tiles that haven't been referenced in the last frame.

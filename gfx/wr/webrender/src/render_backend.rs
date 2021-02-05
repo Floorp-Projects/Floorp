@@ -1754,14 +1754,26 @@ impl RenderBackend {
                     &rendered_document.frame.passes,
                     &mut render_tasks_file
                 ).unwrap();
+
                 let file_name = format!("texture-cache-color-linear-{}-{}.svg", id.namespace_id.0, id.id);
                 let mut texture_file = fs::File::create(&config.file_path_for_frame(file_name, "svg"))
                     .expect("Failed to open the SVG file.");
                 self.resource_cache.texture_cache.dump_color8_linear_as_svg(&mut texture_file).unwrap();
-                let file_name = format!("texture-cache-glyphs-{}-{}.svg", id.namespace_id.0, id.id);
+
+                let file_name = format!("texture-cache-color8-glyphs-{}-{}.svg", id.namespace_id.0, id.id);
                 let mut texture_file = fs::File::create(&config.file_path_for_frame(file_name, "svg"))
                     .expect("Failed to open the SVG file.");
-                self.resource_cache.texture_cache.dump_glyphs_as_svg(&mut texture_file).unwrap();
+                self.resource_cache.texture_cache.dump_color8_glyphs_as_svg(&mut texture_file).unwrap();
+
+                let file_name = format!("texture-cache-alpha8-glyphs-{}-{}.svg", id.namespace_id.0, id.id);
+                let mut texture_file = fs::File::create(&config.file_path_for_frame(file_name, "svg"))
+                    .expect("Failed to open the SVG file.");
+                self.resource_cache.texture_cache.dump_alpha8_glyphs_as_svg(&mut texture_file).unwrap();
+
+                let file_name = format!("texture-cache-alpha8-linear-{}-{}.svg", id.namespace_id.0, id.id);
+                let mut texture_file = fs::File::create(&config.file_path_for_frame(file_name, "svg"))
+                    .expect("Failed to open the SVG file.");
+                self.resource_cache.texture_cache.dump_alpha8_linear_as_svg(&mut texture_file).unwrap();
             }
 
             let data_stores_name = format!("data-stores-{}-{}", id.namespace_id.0, id.id);
