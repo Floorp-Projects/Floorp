@@ -13,12 +13,11 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.security.MessageDigest
 
-// To find the LLVM tools from the Android NDK, there are a few wrinkles.  In a compiled build,
-// we can use our own `ANDROID_NDK` configure option.  But in an artifact build, that isn't
-// defined, so we fall back to `android.ndkDirectory` -- but that's defined in
-// `local.properties`, which may not define it.  In that case, fall back to crawling the
-// filesystem.
-@Memoized
+// To find the Android NDK directory, there are a few wrinkles.  In a compiled
+// build, we can use our own `ANDROID_NDK` configure option.  But in an
+// artifact build, that isn't defined, so we fall back to
+// `android.ndkDirectory` -- but that's defined in `local.properties`, which
+// may not define it.  In that case, fall back to crawling the filesystem.
 def getNDKDirectory() {
     if (project.mozconfig.substs.ANDROID_NDK) {
         return project.mozconfig.substs.ANDROID_NDK
@@ -35,9 +34,35 @@ def getNDKDirectory() {
     return null
 }
 
-ext.getNDKDirectory = {
+// Get the LLVM bin folder, either from the currently used toolchain or, if
+// this is an artifact build, from the Android NDK.
+@Memoized
+def getLlvmBinFolder() {
+    // If we have a clang path, just use that
+    if (project.mozconfig.substs.MOZ_CLANG_PATH) {
+        return project.file(project.mozconfig.substs.MOZ_CLANG_PATH)
+            .parentFile
+    }
+
+    def ndkDirectory = getNDKDirectory()
+    if (!ndkDirectory) {
+        // Give up
+        return null;
+    }
+
+    // The `**` in the pattern depends on the host architecture.  We could compute them or bake them
+    // in, but this is easy enough.  `FileNameFinder` won't return a directory, so we find a file
+    // and return its parent directory.
+    return project
+        .file(new FileNameFinder()
+                  .getFileNames(ndkDirectory, "toolchains/llvm/prebuilt/**/bin/llvm-*")
+                  .first())
+        .parentFile
+}
+
+ext.getLlvmBinFolder = {
     // This is the easiest way to expose the memoized function to consumers.
-    getNDKDirectory()
+    getLlvmBinFolder()
 }
 
 // Bug 1657190: This task works around a bug in the Android-Gradle plugin.  When using SNAPSHOT
@@ -64,12 +89,8 @@ class SyncLibsAndUpdateGenerationID extends DefaultTask {
     @OutputDirectory
     File destinationDir
 
-    // The `**` in the pattern depends on the host architecture.  We could compute them or bake them
-    // in, but this is easy enough.  `FileNameFinder` won't return a directory, so we find a file
-    // and return its parent directory.
     @Input
-    File llvmBin = project.file(new FileNameFinder().getFileNames(project.ext.getNDKDirectory(), "toolchains/llvm/prebuilt/**/bin/llvm-*")
-                                .first()).parentFile
+    File llvmBin = project.ext.getLlvmBinFolder()
 
     // Sibling to `.note.gnu.build-id`.
     @Input
@@ -191,8 +212,8 @@ ext.configureVariantWithGeckoBinaries = { variant ->
             return false
         } else if (mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
             return false
-        } else if (ext.getNDKDirectory() == null) {
-            logger.warn("Could not determine Android NDK directory.")
+        } else if (ext.getLlvmBinFolder() == null) {
+            logger.warn("Could not determine LLVM bin directory.")
             logger.warn("Set `ndk.dir` in `${project.topsrcdir}/local.properties` to avoid startup crashes when using `substitute-local-geckoview.gradle`.")
             logger.warn("See https://bugzilla.mozilla.org/show_bug.cgi?id=1657190.")
             return false
