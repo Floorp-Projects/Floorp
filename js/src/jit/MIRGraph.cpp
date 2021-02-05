@@ -150,6 +150,8 @@ MBasicBlock* MBasicBlock::New(MIRGraph& graph, size_t stackDepth,
 MBasicBlock* MBasicBlock::NewPopN(MIRGraph& graph, const CompileInfo& info,
                                   MBasicBlock* pred, BytecodeSite* site,
                                   Kind kind, uint32_t popped) {
+  MOZ_ASSERT(site->pc() != nullptr);
+
   MBasicBlock* block = new (graph.alloc()) MBasicBlock(graph, info, site, kind);
   if (!block->init()) {
     return nullptr;
