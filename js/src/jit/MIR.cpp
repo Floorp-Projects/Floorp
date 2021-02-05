@@ -604,6 +604,12 @@ void MDefinition::dumpLocation() const {
 }
 #endif
 
+#ifdef DEBUG
+bool MDefinition::trackedSiteMatchesBlock(const BytecodeSite* site) const {
+  return site == block()->trackedSite();
+}
+#endif
+
 #if defined(DEBUG) || defined(JS_JITSPEW)
 size_t MDefinition::useCount() const {
   size_t count = 0;
