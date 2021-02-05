@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2014 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -23,7 +23,6 @@
 
 namespace sh
 {
-struct Attribute;
 struct ShaderVariable;
 }  // namespace sh
 
@@ -149,7 +148,7 @@ class DynamicHLSL : angle::NonCopyable
     std::string generateVertexShaderForInputLayout(
         const std::string &sourceShader,
         const gl::InputLayout &inputLayout,
-        const std::vector<sh::Attribute> &shaderAttributes) const;
+        const std::vector<sh::ShaderVariable> &shaderAttributes) const;
     std::string generatePixelShaderForOutputSignature(
         const std::string &sourceShader,
         const std::vector<PixelShaderOutputVariable> &outputVariables,
@@ -159,7 +158,7 @@ class DynamicHLSL : angle::NonCopyable
         const d3d::Context *context,
         ProgramD3D &programD3D,
         const gl::ProgramState &programData,
-        std::vector<sh::Uniform> &image2DUniforms,
+        std::vector<sh::ShaderVariable> &image2DUniforms,
         const gl::ImageUnitTextureTypeMap &image2DBindLayout) const;
     void generateShaderLinkHLSL(const gl::Caps &caps,
                                 const gl::ProgramState &programData,

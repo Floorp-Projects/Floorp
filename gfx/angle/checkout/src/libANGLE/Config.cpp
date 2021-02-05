@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+// Copyright 2002 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -34,6 +34,7 @@ Config::Config()
       alphaMaskSize(0),
       bindToTextureRGB(EGL_FALSE),
       bindToTextureRGBA(EGL_FALSE),
+      bindToTextureTarget(EGL_TEXTURE_2D),
       colorBufferType(EGL_RGB_BUFFER),
       configCaveat(EGL_NONE),
       configID(0),
@@ -60,7 +61,9 @@ Config::Config()
       transparentBlueValue(0),
       optimalOrientation(0),
       colorComponentType(EGL_COLOR_COMPONENT_TYPE_FIXED_EXT),
-      recordable(EGL_FALSE)
+      recordable(EGL_FALSE),
+      framebufferTarget(EGL_FALSE),  // TODO: http://anglebug.com/4208
+      yInverted(EGL_FALSE)
 {}
 
 Config::~Config() {}
@@ -317,6 +320,9 @@ std::vector<const Config *> ConfigSet::filter(const AttributeMap &attributeMap) 
                 case EGL_BIND_TO_TEXTURE_RGBA:
                     match = config.bindToTextureRGBA == static_cast<EGLBoolean>(attributeValue);
                     break;
+                case EGL_BIND_TO_TEXTURE_TARGET_ANGLE:
+                    match = config.bindToTextureTarget == static_cast<EGLenum>(attributeValue);
+                    break;
                 case EGL_MIN_SWAP_INTERVAL:
                     match = config.minSwapInterval == attributeValue;
                     break;
@@ -359,6 +365,12 @@ std::vector<const Config *> ConfigSet::filter(const AttributeMap &attributeMap) 
                     break;
                 case EGL_RECORDABLE_ANDROID:
                     match = config.recordable == static_cast<EGLBoolean>(attributeValue);
+                    break;
+                case EGL_FRAMEBUFFER_TARGET_ANDROID:
+                    match = config.framebufferTarget == static_cast<EGLBoolean>(attributeValue);
+                    break;
+                case EGL_Y_INVERTED_NOK:
+                    match = config.yInverted == static_cast<EGLBoolean>(attributeValue);
                     break;
                 default:
                     UNREACHABLE();

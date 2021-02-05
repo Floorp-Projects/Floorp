@@ -1,11 +1,12 @@
 //
-// Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+// Copyright 2002 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
 
 #include "compiler/translator/tree_util/IntermTraverse.h"
 
+#include "compiler/translator/Compiler.h"
 #include "compiler/translator/InfoSink.h"
 #include "compiler/translator/SymbolTable.h"
 #include "compiler/translator/tree_util/IntermNode_util.h"
@@ -49,6 +50,10 @@ void TIntermTraverser::traverse(T *node)
             node->visit(PostVisit, this);
     }
 }
+
+// Instantiate template for RewriteAtomicFunctionExpressions, in case this gets inlined thus not
+// exported from the TU.
+template void TIntermTraverser::traverse(TIntermNode *);
 
 void TIntermNode::traverse(TIntermTraverser *it)
 {
@@ -161,9 +166,9 @@ bool TIntermDeclaration::visit(Visit visit, TIntermTraverser *it)
     return it->visitDeclaration(visit, this);
 }
 
-bool TIntermInvariantDeclaration::visit(Visit visit, TIntermTraverser *it)
+bool TIntermGlobalQualifierDeclaration::visit(Visit visit, TIntermTraverser *it)
 {
-    return it->visitInvariantDeclaration(visit, this);
+    return it->visitGlobalQualifierDeclaration(visit, this);
 }
 
 bool TIntermBlock::visit(Visit visit, TIntermTraverser *it)
@@ -485,23 +490,22 @@ bool TIntermTraverser::CompareInsertion(const NodeInsertMultipleEntry &a,
 {
     if (a.parent != b.parent)
     {
-        return a.parent > b.parent;
+        return a.parent < b.parent;
     }
-    return a.position > b.position;
+    return a.position < b.position;
 }
 
-void TIntermTraverser::updateTree()
+bool TIntermTraverser::updateTree(TCompiler *compiler, TIntermNode *node)
 {
-    // Sort the insertions so that insertion position is decreasing. This way multiple insertions to
+    // Sort the insertions so that insertion position is increasing and same position insertions are
+    // not reordered. The insertions are processed in reverse order so that multiple insertions to
     // the same parent node are handled correctly.
-    std::sort(mInsertions.begin(), mInsertions.end(), CompareInsertion);
+    std::stable_sort(mInsertions.begin(), mInsertions.end(), CompareInsertion);
     for (size_t ii = 0; ii < mInsertions.size(); ++ii)
     {
-        // We can't know here what the intended ordering of two insertions to the same position is,
-        // so it is not supported.
-        ASSERT(ii == 0 || mInsertions[ii].position != mInsertions[ii - 1].position ||
-               mInsertions[ii].parent != mInsertions[ii - 1].parent);
-        const NodeInsertMultipleEntry &insertion = mInsertions[ii];
+        // If two insertions are to the same position, insert them in the order they were specified.
+        // The std::stable_sort call above will automatically guarantee this.
+        const NodeInsertMultipleEntry &insertion = mInsertions[mInsertions.size() - ii - 1];
         ASSERT(insertion.parent);
         if (!insertion.insertionsAfter.empty())
         {
@@ -548,6 +552,8 @@ void TIntermTraverser::updateTree()
     }
 
     clearReplacementQueue();
+
+    return compiler->validateAST(node);
 }
 
 void TIntermTraverser::clearReplacementQueue()
@@ -571,11 +577,11 @@ void TIntermTraverser::queueReplacementWithParent(TIntermNode *parent,
     mReplacements.push_back(NodeUpdateEntry(parent, original, replacement, originalBecomesChild));
 }
 
-TLValueTrackingTraverser::TLValueTrackingTraverser(bool preVisit,
-                                                   bool inVisit,
-                                                   bool postVisit,
+TLValueTrackingTraverser::TLValueTrackingTraverser(bool preVisitIn,
+                                                   bool inVisitIn,
+                                                   bool postVisitIn,
                                                    TSymbolTable *symbolTable)
-    : TIntermTraverser(preVisit, inVisit, postVisit, symbolTable),
+    : TIntermTraverser(preVisitIn, inVisitIn, postVisitIn, symbolTable),
       mOperatorRequiresLValue(false),
       mInFunctionCallOutParameter(false)
 {

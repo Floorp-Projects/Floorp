@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+// Copyright 2002 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -13,9 +13,11 @@
 #define LIBANGLE_REFCOUNTOBJECT_H_
 
 #include "angle_gl.h"
+#include "common/PackedEnums.h"
 #include "common/debug.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/Observer.h"
+#include "libANGLE/renderer/serial_utils.h"
 
 #include <cstddef>
 
@@ -135,18 +137,22 @@ class BindingPointer;
 
 using RefCountObjectNoID = angle::RefCountObject<Context, angle::Result>;
 
+template <typename IDType>
 class RefCountObject : public gl::RefCountObjectNoID
 {
   public:
-    explicit RefCountObject(GLuint id) : mId(id) {}
+    explicit RefCountObject(rx::Serial serial, IDType id) : mSerial(serial), mId(id) {}
 
-    GLuint id() const { return mId; }
+    rx::Serial serial() const { return mSerial; }
+    IDType id() const { return mId; }
 
   protected:
     ~RefCountObject() override {}
 
   private:
-    GLuint mId;
+    // Unique serials are used to identify resources for frame capture.
+    rx::Serial mSerial;
+    IDType mId;
 };
 
 template <class ObjectType>
@@ -160,10 +166,12 @@ class BindingPointer : public angle::BindingPointer<ObjectType, Context>
 
     BindingPointer(ObjectType *object) : angle::BindingPointer<ObjectType, Context>(object) {}
 
-    GLuint id() const
+    typename ResourceTypeToID<ObjectType>::IDType id() const
     {
         ObjectType *obj = this->get();
-        return obj ? obj->id() : 0;
+        if (obj)
+            return obj->id();
+        return {0};
     }
 };
 
@@ -199,8 +207,16 @@ class OffsetBindingPointer : public BindingPointer<ObjectType>
     void assign(ObjectType *object, GLintptr offset, GLsizeiptr size)
     {
         assign(object);
-        mOffset = offset;
-        mSize   = size;
+        if (object)
+        {
+            mOffset = offset;
+            mSize   = size;
+        }
+        else
+        {
+            mOffset = 0;
+            mSize   = 0;
+        }
     }
 
   private:
@@ -219,7 +235,7 @@ class SubjectBindingPointer : protected BindingPointer<SubjectT>, public angle::
     SubjectBindingPointer(angle::ObserverInterface *observer, angle::SubjectIndex index)
         : ObserverBindingBase(observer, index)
     {}
-    ~SubjectBindingPointer() {}
+    ~SubjectBindingPointer() override {}
     SubjectBindingPointer(const SubjectBindingPointer &other) = default;
     SubjectBindingPointer &operator=(const SubjectBindingPointer &other) = default;
 

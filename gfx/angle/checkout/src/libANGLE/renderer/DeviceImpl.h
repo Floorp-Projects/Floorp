@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2015 The ANGLE Project Authors. All rights reserved.
+// Copyright 2015 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -15,11 +15,13 @@
 
 namespace egl
 {
-class Device;
+class Display;
 }
 
 namespace rx
 {
+class DisplayImpl;
+
 class DeviceImpl : angle::NonCopyable
 {
   public:
@@ -28,7 +30,9 @@ class DeviceImpl : angle::NonCopyable
 
     virtual egl::Error initialize() = 0;
 
-    virtual egl::Error getDevice(void **outValue)                               = 0;
+    virtual egl::Error getAttribute(const egl::Display *display,
+                                    EGLint attribute,
+                                    void **outValue)                            = 0;
     virtual EGLint getType()                                                    = 0;
     virtual void generateExtensions(egl::DeviceExtensions *outExtensions) const = 0;
 };

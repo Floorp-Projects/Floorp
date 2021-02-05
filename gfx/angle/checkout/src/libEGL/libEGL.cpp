@@ -1,11 +1,12 @@
 //
-// Copyright (c) 2002-2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2002 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
 
 // libEGL.cpp: Implements the exported EGL functions.
 
+#include "anglebase/no_destructor.h"
 #include "common/system_utils.h"
 
 #include <memory>
@@ -21,11 +22,16 @@ namespace
 {
 #if defined(ANGLE_USE_EGL_LOADER)
 bool gLoaded = false;
-std::unique_ptr<angle::Library> gEntryPointsLib;
+
+std::unique_ptr<angle::Library> &EntryPointsLib()
+{
+    static angle::base::NoDestructor<std::unique_ptr<angle::Library>> entryPointsLib;
+    return *entryPointsLib;
+}
 
 angle::GenericProc KHRONOS_APIENTRY GlobalLoad(const char *symbol)
 {
-    return reinterpret_cast<angle::GenericProc>(gEntryPointsLib->getSymbol(symbol));
+    return reinterpret_cast<angle::GenericProc>(EntryPointsLib()->getSymbol(symbol));
 }
 
 void EnsureEGLLoaded()
@@ -33,7 +39,7 @@ void EnsureEGLLoaded()
     if (gLoaded)
         return;
 
-    gEntryPointsLib.reset(
+    EntryPointsLib().reset(
         angle::OpenSharedLibrary(ANGLE_GLESV2_LIBRARY_NAME, angle::SearchType::ApplicationDir));
     angle::LoadEGL_EGL(GlobalLoad);
     if (!EGL_GetPlatformDisplay)
@@ -566,6 +572,15 @@ EGLBoolean EGLAPIENTRY eglGetSyncValuesCHROMIUM(EGLDisplay dpy,
     return EGL_GetSyncValuesCHROMIUM(dpy, surface, ust, msc, sbc);
 }
 
+EGLBoolean EGLAPIENTRY eglGetMscRateANGLE(EGLDisplay dpy,
+                                          EGLSurface surface,
+                                          EGLint *numerator,
+                                          EGLint *denominator)
+{
+    EnsureEGLLoaded();
+    return EGL_GetMscRateANGLE(dpy, surface, numerator, denominator);
+}
+
 EGLBoolean EGLAPIENTRY eglSwapBuffersWithDamageKHR(EGLDisplay dpy,
                                                    EGLSurface surface,
                                                    EGLint *rects,
@@ -700,10 +715,63 @@ EGLClientBuffer EGLAPIENTRY eglGetNativeClientBufferANDROID(const struct AHardwa
     return EGL_GetNativeClientBufferANDROID(buffer);
 }
 
+EGLClientBuffer EGLAPIENTRY eglCreateNativeClientBufferANDROID(const EGLint *attrib_list)
+{
+    EnsureEGLLoaded();
+    return EGL_CreateNativeClientBufferANDROID(attrib_list);
+}
+
 EGLint EGLAPIENTRY eglDupNativeFenceFDANDROID(EGLDisplay dpy, EGLSyncKHR sync)
 {
     EnsureEGLLoaded();
     return EGL_DupNativeFenceFDANDROID(dpy, sync);
+}
+
+EGLBoolean EGLAPIENTRY eglSwapBuffersWithFrameTokenANGLE(EGLDisplay dpy,
+                                                         EGLSurface surface,
+                                                         EGLFrameTokenANGLE frametoken)
+{
+    EnsureEGLLoaded();
+    return EGL_SwapBuffersWithFrameTokenANGLE(dpy, surface, frametoken);
+}
+
+EGLSync EGLAPIENTRY eglCreateSyncKHR(EGLDisplay dpy, EGLenum type, const EGLint *attrib_list)
+{
+    EnsureEGLLoaded();
+    return EGL_CreateSyncKHR(dpy, type, attrib_list);
+}
+
+EGLBoolean EGLAPIENTRY eglDestroySyncKHR(EGLDisplay dpy, EGLSync sync)
+{
+    EnsureEGLLoaded();
+    return EGL_DestroySyncKHR(dpy, sync);
+}
+
+EGLint EGLAPIENTRY eglClientWaitSyncKHR(EGLDisplay dpy, EGLSync sync, EGLint flags, EGLTime timeout)
+{
+    EnsureEGLLoaded();
+    return EGL_ClientWaitSyncKHR(dpy, sync, flags, timeout);
+}
+
+EGLBoolean EGLAPIENTRY eglGetSyncAttribKHR(EGLDisplay dpy,
+                                           EGLSync sync,
+                                           EGLint attribute,
+                                           EGLint *value)
+{
+    EnsureEGLLoaded();
+    return EGL_GetSyncAttribKHR(dpy, sync, attribute, value);
+}
+
+EGLint EGLAPIENTRY eglWaitSyncKHR(EGLDisplay dpy, EGLSync sync, EGLint flags)
+{
+    EnsureEGLLoaded();
+    return EGL_WaitSyncKHR(dpy, sync, flags);
+}
+
+EGLBoolean EGLAPIENTRY eglSignalSyncKHR(EGLDisplay dpy, EGLSync sync, EGLenum mode)
+{
+    EnsureEGLLoaded();
+    return EGL_SignalSyncKHR(dpy, sync, mode);
 }
 
 }  // extern "C"

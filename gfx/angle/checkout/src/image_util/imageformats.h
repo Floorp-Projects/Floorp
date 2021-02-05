@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013-2015 The ANGLE Project Authors. All rights reserved.
+// Copyright 2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -685,6 +685,35 @@ struct R10G10B10A2S
 };
 static_assert(sizeof(R10G10B10A2S) == 4, "R10G10B10A2S struct not 32-bits.");
 
+struct R10G10B10X2
+{
+    uint32_t R : 10;
+    uint32_t G : 10;
+    uint32_t B : 10;
+
+    static void readColor(gl::ColorF *dst, const R10G10B10X2 *src);
+    static void readColor(gl::ColorUI *dst, const R10G10B10X2 *src);
+    static void writeColor(R10G10B10X2 *dst, const gl::ColorF *src);
+    static void writeColor(R10G10B10X2 *dst, const gl::ColorUI *src);
+    static void average(R10G10B10X2 *dst, const R10G10B10X2 *src1, const R10G10B10X2 *src2);
+};
+static_assert(sizeof(R10G10B10X2) == 4, "R10G10B10X2 struct not 32-bits.");
+
+struct B10G10R10A2
+{
+    uint32_t B : 10;
+    uint32_t G : 10;
+    uint32_t R : 10;
+    uint32_t A : 2;
+
+    static void readColor(gl::ColorF *dst, const B10G10R10A2 *src);
+    static void readColor(gl::ColorUI *dst, const B10G10R10A2 *src);
+    static void writeColor(B10G10R10A2 *dst, const gl::ColorF *src);
+    static void writeColor(B10G10R10A2 *dst, const gl::ColorUI *src);
+    static void average(B10G10R10A2 *dst, const B10G10R10A2 *src1, const B10G10R10A2 *src2);
+};
+static_assert(sizeof(B10G10R10A2) == 4, "B10G10R10A2 struct not 32-bits.");
+
 struct R9G9B9E5
 {
     uint32_t R : 9;
@@ -712,8 +741,8 @@ static_assert(sizeof(R11G11B10F) == 4, "R11G11B10F struct not 32-bits.");
 
 struct D24S8
 {
-    uint32_t D : 24;
     uint32_t S : 8;
+    uint32_t D : 24;
 
     static void ReadDepthStencil(DepthStencil *dst, const D24S8 *src);
     static void WriteDepthStencil(D24S8 *dst, const DepthStencil *src);
@@ -735,12 +764,13 @@ struct D16
     static void WriteDepthStencil(D16 *dst, const DepthStencil *src);
 };
 
-struct D24
+struct D24X8
 {
-    uint32_t D;
+    uint32_t D : 24;
+    uint32_t X : 8;
 
-    static void ReadDepthStencil(DepthStencil *dst, const D24 *src);
-    static void WriteDepthStencil(D24 *dst, const DepthStencil *src);
+    static void ReadDepthStencil(DepthStencil *dst, const D24X8 *src);
+    static void WriteDepthStencil(D24X8 *dst, const DepthStencil *src);
 };
 
 struct D32F
@@ -759,13 +789,13 @@ struct D32
     static void WriteDepthStencil(D32 *dst, const DepthStencil *src);
 };
 
-struct D32FS8
+struct D32FS8X24
 {
     float D;
     uint32_t S;
 
-    static void ReadDepthStencil(DepthStencil *dst, const D32FS8 *src);
-    static void WriteDepthStencil(D32FS8 *dst, const DepthStencil *src);
+    static void ReadDepthStencil(DepthStencil *dst, const D32FS8X24 *src);
+    static void WriteDepthStencil(D32FS8X24 *dst, const DepthStencil *src);
 };
 }  // namespace angle
 

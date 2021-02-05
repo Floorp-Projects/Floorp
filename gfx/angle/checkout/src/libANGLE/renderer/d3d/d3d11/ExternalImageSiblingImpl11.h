@@ -19,7 +19,9 @@ class RenderTargetD3D;
 class ExternalImageSiblingImpl11 : public ExternalImageSiblingImpl
 {
   public:
-    ExternalImageSiblingImpl11(Renderer11 *renderer, EGLClientBuffer clientBuffer);
+    ExternalImageSiblingImpl11(Renderer11 *renderer,
+                               EGLClientBuffer clientBuffer,
+                               const egl::AttributeMap &attribs);
     ~ExternalImageSiblingImpl11() override;
 
     // ExternalImageSiblingImpl interface
@@ -34,6 +36,7 @@ class ExternalImageSiblingImpl11 : public ExternalImageSiblingImpl
     angle::Result getAttachmentRenderTarget(const gl::Context *context,
                                             GLenum binding,
                                             const gl::ImageIndex &imageIndex,
+                                            GLsizei samples,
                                             FramebufferAttachmentRenderTarget **rtOut) override;
     angle::Result initializeContents(const gl::Context *context,
                                      const gl::ImageIndex &imageIndex) override;
@@ -43,13 +46,16 @@ class ExternalImageSiblingImpl11 : public ExternalImageSiblingImpl
 
     Renderer11 *mRenderer;
     EGLClientBuffer mBuffer;
+    egl::AttributeMap mAttribs;
+
     TextureHelper11 mTexture;
 
-    gl::Format mFormat;
-    bool mIsRenderable;
-    bool mIsTexturable;
-    gl::Extents mSize;
-    size_t mSamples;
+    gl::Format mFormat = gl::Format::Invalid();
+    bool mIsRenderable = false;
+    bool mIsTexturable = false;
+    EGLint mWidth      = 0;
+    EGLint mHeight     = 0;
+    GLsizei mSamples   = 0;
 
     std::unique_ptr<RenderTargetD3D> mRenderTarget;
 };

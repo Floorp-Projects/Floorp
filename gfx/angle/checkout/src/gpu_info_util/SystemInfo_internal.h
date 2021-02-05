@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013-2017 The ANGLE Project Authors. All rights reserved.
+// Copyright 2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -29,9 +29,13 @@ bool ParseMacMachineModel(const std::string &identifier,
                           int32_t *minor);
 bool CMDeviceIDToDeviceAndVendorID(const std::string &id, uint32_t *vendorId, uint32_t *deviceId);
 
-// Use a heuristic to attempt to find the GPU used for 3D graphics. Sets activeGPUIndex,
-// isOptimus, and isAMDSwitchable. Deprecated: also sets primaryGPUIndex.
-void FindActiveGPU(SystemInfo *info);
+#if defined(ANGLE_PLATFORM_MACOS) || defined(ANGLE_PLATFORM_MACCATALYST)
+bool GetSystemInfo_mac(SystemInfo *info);
+#endif
+
+#if defined(ANGLE_PLATFORM_IOS) || (defined(ANGLE_PLATFORM_MACCATALYST) && defined(ANGLE_CPU_ARM64))
+bool GetSystemInfo_ios(SystemInfo *info);
+#endif
 
 }  // namespace angle
 

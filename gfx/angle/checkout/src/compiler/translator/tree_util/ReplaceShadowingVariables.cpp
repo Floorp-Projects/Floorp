@@ -18,6 +18,7 @@
 #include "compiler/translator/tree_util/ReplaceShadowingVariables.h"
 #include "compiler/translator/tree_util/ReplaceVariable.h"
 
+#include "compiler/translator/Compiler.h"
 #include "compiler/translator/IntermNode.h"
 #include "compiler/translator/Symbol.h"
 #include "compiler/translator/SymbolTable.h"
@@ -44,10 +45,7 @@ class ReplaceShadowingVariablesTraverser : public TIntermTraverser
 {
   public:
     ReplaceShadowingVariablesTraverser(TSymbolTable *symbolTable)
-        : TIntermTraverser(true, true, true),
-          mSymbolTable(symbolTable),
-          mParameterNames{},
-          mFunctionBody(nullptr)
+        : TIntermTraverser(true, true, true, symbolTable), mParameterNames{}, mFunctionBody(nullptr)
     {}
 
     bool visitFunctionDefinition(Visit visit, TIntermFunctionDefinition *node) override
@@ -58,8 +56,8 @@ class ReplaceShadowingVariablesTraverser : public TIntermTraverser
             ASSERT(mParameterNames.size() == 0);
             const TFunction *func = node->getFunctionPrototype()->getFunction();
             // Grab all of the parameter names from the function prototype
-            uint32_t paramCount = func->getParamCount();
-            for (uint32_t i = 0; i < paramCount; ++i)
+            size_t paramCount = func->getParamCount();
+            for (size_t i = 0; i < paramCount; ++i)
             {
                 mParameterNames.emplace(std::string(func->getParam(i)->name().data()));
             }
@@ -105,18 +103,21 @@ class ReplaceShadowingVariablesTraverser : public TIntermTraverser
         return true;
     }
     // Perform replacement of vars for any deferred replacements that were identified
-    void executeReplacements()
+    ANGLE_NO_DISCARD bool executeReplacements(TCompiler *compiler)
     {
         for (DeferredReplacementBlock &replace : mReplacements)
         {
-            ReplaceVariable(replace.functionBody, replace.originalVariable,
-                            replace.replacementVariable);
+            if (!ReplaceVariable(compiler, replace.functionBody, replace.originalVariable,
+                                 replace.replacementVariable))
+            {
+                return false;
+            }
         }
         mReplacements.clear();
+        return true;
     }
 
   private:
-    TSymbolTable *mSymbolTable;
     std::unordered_set<std::string> mParameterNames;
     TIntermBlock *mFunctionBody;
     std::vector<DeferredReplacementBlock> mReplacements;
@@ -125,12 +126,17 @@ class ReplaceShadowingVariablesTraverser : public TIntermTraverser
 }  // anonymous namespace
 
 // Replaces every occurrence of a variable with another variable.
-void ReplaceShadowingVariables(TIntermBlock *root, TSymbolTable *symbolTable)
+ANGLE_NO_DISCARD bool ReplaceShadowingVariables(TCompiler *compiler,
+                                                TIntermBlock *root,
+                                                TSymbolTable *symbolTable)
 {
     ReplaceShadowingVariablesTraverser traverser(symbolTable);
     root->traverse(&traverser);
-    traverser.executeReplacements();
-    traverser.updateTree();
+    if (!traverser.executeReplacements(compiler))
+    {
+        return false;
+    }
+    return traverser.updateTree(compiler, root);
 }
 
 }  // namespace sh

@@ -51,6 +51,8 @@ ClipPlaneParameters::ClipPlaneParameters(bool enabled, const angle::Vector4 &equ
 
 ClipPlaneParameters::ClipPlaneParameters(const ClipPlaneParameters &other) = default;
 
+ClipPlaneParameters &ClipPlaneParameters::operator=(const ClipPlaneParameters &other) = default;
+
 GLES1State::GLES1State()
     : mGLState(nullptr),
       mVertexArrayEnabled(false),
@@ -512,6 +514,12 @@ AttributesMask GLES1State::getVertexArraysAttributeMask() const
     return attribsMask;
 }
 
+AttributesMask GLES1State::getActiveAttributesMask() const
+{
+    // The program always has 8 attributes enabled.
+    return AttributesMask(0xFF);
+}
+
 void GLES1State::setHint(GLenum target, GLenum mode)
 {
     setDirty(DIRTY_GLES1_HINT_SETTING);
@@ -535,7 +543,7 @@ void GLES1State::setHint(GLenum target, GLenum mode)
     }
 }
 
-GLenum GLES1State::getHint(GLenum target)
+GLenum GLES1State::getHint(GLenum target) const
 {
     switch (target)
     {

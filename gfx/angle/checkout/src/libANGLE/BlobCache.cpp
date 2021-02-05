@@ -9,11 +9,10 @@
 
 #include "libANGLE/BlobCache.h"
 #include "common/utilities.h"
-#include "common/version.h"
 #include "libANGLE/Context.h"
 #include "libANGLE/Display.h"
 #include "libANGLE/histogram_macros.h"
-#include "platform/Platform.h"
+#include "platform/PlatformMethods.h"
 
 namespace egl
 {
@@ -69,7 +68,8 @@ void BlobCache::populate(const BlobCache::Key &key, angle::MemoryBuffer &&value,
 
 bool BlobCache::get(angle::ScratchBuffer *scratchBuffer,
                     const BlobCache::Key &key,
-                    BlobCache::Value *valueOut)
+                    BlobCache::Value *valueOut,
+                    size_t *bufferSizeOut)
 {
     // Look into the application's cache, if there is such a cache
     if (areBlobCacheFuncsSet())
@@ -102,7 +102,8 @@ bool BlobCache::get(angle::ScratchBuffer *scratchBuffer,
             return false;
         }
 
-        *valueOut = BlobCache::Value(scratchMemory->data(), scratchMemory->size());
+        *valueOut      = BlobCache::Value(scratchMemory->data(), scratchMemory->size());
+        *bufferSizeOut = valueSize;
         return true;
     }
 
@@ -123,7 +124,8 @@ bool BlobCache::get(angle::ScratchBuffer *scratchBuffer,
                                         kCacheResultMax);
         }
 
-        *valueOut = BlobCache::Value(entry->first.data(), entry->first.size());
+        *valueOut      = BlobCache::Value(entry->first.data(), entry->first.size());
+        *bufferSizeOut = entry->first.size();
     }
     else
     {
@@ -147,8 +149,7 @@ bool BlobCache::getAt(size_t index, const BlobCache::Key **keyOut, BlobCache::Va
 
 void BlobCache::remove(const BlobCache::Key &key)
 {
-    bool result = mBlobCache.eraseByKey(key);
-    ASSERT(result);
+    mBlobCache.eraseByKey(key);
 }
 
 void BlobCache::setBlobCacheFuncs(EGLSetBlobFuncANDROID set, EGLGetBlobFuncANDROID get)

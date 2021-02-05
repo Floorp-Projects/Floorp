@@ -1,5 +1,5 @@
 //
-// Copyright(c) 2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2014 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -10,49 +10,41 @@
 
 #include "common/debug.h"
 #include "common/platform.h"
-#include "common/tls.h"
+#include "common/system_utils.h"
+#include "libANGLE/ErrorStrings.h"
+#include "libGLESv2/resource.h"
 
-namespace gl
-{
-// In single-threaded cases we can avoid a TLS lookup for the current Context.
-//
-// Let a global single-threaded context have 3 states: unset, set, and multi-threaded.
-// Initially it is unset. Then, on MakeCurrent:
-//
-//  * if the ST context is unset                      -> set the global context.
-//  * if the ST context is set and matches the TLS    -> set the global context.
-//  * if the ST context is set and does not match TLS -> set multi-threaded mode.
-//  * if in multi-threaded mode, unset and subsequently ignore the global context.
-//
-// Implementation-wise we can use a pointer and a boolean to represent the three modes.
-Context *gSingleThreadedContext = nullptr;
-bool gIsMultiThreadedContext    = false;
-}  // namespace gl
+#include <atomic>
 
 namespace egl
 {
 namespace
 {
-static TLSIndex threadTLS = TLS_INVALID_INDEX;
-Debug *g_Debug            = nullptr;
-std::atomic<std::mutex *> g_Mutex;
+Debug *g_Debug = nullptr;
+
+ANGLE_REQUIRE_CONSTANT_INIT std::atomic<angle::GlobalMutex *> g_Mutex(nullptr);
+static_assert(std::is_trivially_destructible<decltype(g_Mutex)>::value,
+              "global mutex is not trivially destructible");
+
+void SetContextToAndroidOpenGLTLSSlot(gl::Context *value)
+{
+#if defined(ANGLE_PLATFORM_ANDROID)
+    if (angle::gUseAndroidOpenGLTlsSlot)
+    {
+        ANGLE_ANDROID_GET_GL_TLS()[angle::kAndroidOpenGLTlsSlot] = static_cast<void *>(value);
+    }
+#endif
+}
 
 Thread *AllocateCurrentThread()
 {
-    ASSERT(threadTLS != TLS_INVALID_INDEX);
-    if (threadTLS == TLS_INVALID_INDEX)
-    {
-        return nullptr;
-    }
+    gCurrentThread = new Thread();
 
-    Thread *thread = new Thread();
-    if (!SetTLSValue(threadTLS, thread))
-    {
-        ERR() << "Could not set thread local storage.";
-        return nullptr;
-    }
+    // Initialize fast TLS slot
+    SetContextToAndroidOpenGLTLSSlot(nullptr);
+    gl::gCurrentValidContext = nullptr;
 
-    return thread;
+    return gCurrentThread;
 }
 
 void AllocateDebug()
@@ -68,8 +60,8 @@ void AllocateMutex()
 {
     if (g_Mutex == nullptr)
     {
-        std::unique_ptr<std::mutex> newMutex(new std::mutex());
-        std::mutex *expected = nullptr;
+        std::unique_ptr<angle::GlobalMutex> newMutex(new angle::GlobalMutex());
+        angle::GlobalMutex *expected = nullptr;
         if (g_Mutex.compare_exchange_strong(expected, newMutex.get()))
         {
             newMutex.release();
@@ -79,7 +71,9 @@ void AllocateMutex()
 
 }  // anonymous namespace
 
-std::mutex &GetGlobalMutex()
+thread_local Thread *gCurrentThread = nullptr;
+
+angle::GlobalMutex &GetGlobalMutex()
 {
     AllocateMutex();
     return *g_Mutex;
@@ -87,16 +81,7 @@ std::mutex &GetGlobalMutex()
 
 Thread *GetCurrentThread()
 {
-    // Create a TLS index if one has not been created for this DLL
-    if (threadTLS == TLS_INVALID_INDEX)
-    {
-        threadTLS = CreateTLSIndex();
-    }
-
-    Thread *current = static_cast<Thread *>(GetTLSValue(threadTLS));
-
-    // ANGLE issue 488: when the dll is loaded after thread initialization,
-    // thread local storage (current) might not exist yet.
+    Thread *current = gCurrentThread;
     return (current ? current : AllocateCurrentThread());
 }
 
@@ -108,26 +93,28 @@ Debug *GetDebug()
 
 void SetContextCurrent(Thread *thread, gl::Context *context)
 {
-    // See above comment on gGlobalContext.
-    // If the context is in multi-threaded mode, ignore the global context.
-    if (!gl::gIsMultiThreadedContext)
-    {
-        // If the global context is unset or matches the current TLS, set the global context.
-        if (gl::gSingleThreadedContext == nullptr ||
-            gl::gSingleThreadedContext == thread->getContext())
-        {
-            gl::gSingleThreadedContext = context;
-        }
-        else
-        {
-            // If the global context is set and does not match TLS, set multi-threaded mode.
-            gl::gSingleThreadedContext  = nullptr;
-            gl::gIsMultiThreadedContext = true;
-        }
-    }
-    thread->setCurrent(context);
+    ASSERT(gCurrentThread);
+    gCurrentThread->setCurrent(context);
+    SetContextToAndroidOpenGLTLSSlot(context);
+    gl::gCurrentValidContext = context;
 }
 }  // namespace egl
+
+namespace gl
+{
+void GenerateContextLostErrorOnContext(Context *context)
+{
+    if (context && context->isContextLost())
+    {
+        context->validationError(GL_CONTEXT_LOST, err::kContextLost);
+    }
+}
+
+void GenerateContextLostErrorOnCurrentGlobalContext()
+{
+    GenerateContextLostErrorOnContext(GetGlobalContext());
+}
+}  // namespace gl
 
 #ifdef ANGLE_PLATFORM_WINDOWS
 namespace egl
@@ -136,11 +123,9 @@ namespace egl
 namespace
 {
 
-bool DeallocateCurrentThread()
+void DeallocateCurrentThread()
 {
-    Thread *thread = static_cast<Thread *>(GetTLSValue(threadTLS));
-    SafeDelete(thread);
-    return SetTLSValue(threadTLS, nullptr);
+    SafeDelete(gCurrentThread);
 }
 
 void DeallocateDebug()
@@ -150,10 +135,10 @@ void DeallocateDebug()
 
 void DeallocateMutex()
 {
-    std::mutex *mutex = g_Mutex.exchange(nullptr);
+    angle::GlobalMutex *mutex = g_Mutex.exchange(nullptr);
     {
         // Wait for the mutex to become released by other threads before deleting.
-        std::lock_guard<std::mutex> lock(*mutex);
+        std::lock_guard<angle::GlobalMutex> lock(*mutex);
     }
     SafeDelete(mutex);
 }
@@ -162,62 +147,94 @@ bool InitializeProcess()
 {
     ASSERT(g_Debug == nullptr);
     AllocateDebug();
-
     AllocateMutex();
-
-    threadTLS = CreateTLSIndex();
-    if (threadTLS == TLS_INVALID_INDEX)
-    {
-        return false;
-    }
-
     return AllocateCurrentThread() != nullptr;
 }
 
-bool TerminateProcess()
+void TerminateProcess()
 {
     DeallocateDebug();
-
     DeallocateMutex();
-
-    if (!DeallocateCurrentThread())
-    {
-        return false;
-    }
-
-    if (threadTLS != TLS_INVALID_INDEX)
-    {
-        TLSIndex tlsCopy = threadTLS;
-        threadTLS        = TLS_INVALID_INDEX;
-
-        if (!DestroyTLSIndex(tlsCopy))
-        {
-            return false;
-        }
-    }
-
-    return true;
+    DeallocateCurrentThread();
 }
 
 }  // anonymous namespace
 
 }  // namespace egl
 
-extern "C" BOOL WINAPI DllMain(HINSTANCE, DWORD reason, LPVOID)
+namespace
+{
+// The following WaitForDebugger code is based on SwiftShader. See:
+// https://cs.chromium.org/chromium/src/third_party/swiftshader/src/Vulkan/main.cpp
+#    if defined(ANGLE_ENABLE_ASSERTS) && !defined(ANGLE_ENABLE_WINDOWS_UWP)
+INT_PTR CALLBACK DebuggerWaitDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    RECT rect;
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            ::GetWindowRect(GetDesktopWindow(), &rect);
+            ::SetWindowPos(hwnd, HWND_TOP, rect.right / 2, rect.bottom / 2, 0, 0, SWP_NOSIZE);
+            ::SetTimer(hwnd, 1, 100, NULL);
+            return TRUE;
+        case WM_COMMAND:
+            if (LOWORD(wParam) == IDCANCEL)
+            {
+                ::EndDialog(hwnd, 0);
+            }
+            break;
+        case WM_TIMER:
+            if (angle::IsDebuggerAttached())
+            {
+                ::EndDialog(hwnd, 0);
+            }
+    }
+
+    return FALSE;
+}
+
+void WaitForDebugger(HINSTANCE instance)
+{
+    if (angle::IsDebuggerAttached())
+        return;
+
+    HRSRC dialog = ::FindResourceA(instance, MAKEINTRESOURCEA(IDD_DIALOG1), MAKEINTRESOURCEA(5));
+    if (!dialog)
+    {
+        printf("Error finding wait for debugger dialog. Error %lu.\n", ::GetLastError());
+        return;
+    }
+
+    DLGTEMPLATE *dialogTemplate = reinterpret_cast<DLGTEMPLATE *>(::LoadResource(instance, dialog));
+    ::DialogBoxIndirectA(instance, dialogTemplate, NULL, DebuggerWaitDialogProc);
+}
+#    else
+void WaitForDebugger(HINSTANCE instance) {}
+#    endif  // defined(ANGLE_ENABLE_ASSERTS) && !defined(ANGLE_ENABLE_WINDOWS_UWP)
+}  // namespace
+
+extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID)
 {
     switch (reason)
     {
         case DLL_PROCESS_ATTACH:
+            if (angle::GetEnvironmentVar("ANGLE_WAIT_FOR_DEBUGGER") == "1")
+            {
+                WaitForDebugger(instance);
+            }
             return static_cast<BOOL>(egl::InitializeProcess());
 
         case DLL_THREAD_ATTACH:
             return static_cast<BOOL>(egl::AllocateCurrentThread() != nullptr);
 
         case DLL_THREAD_DETACH:
-            return static_cast<BOOL>(egl::DeallocateCurrentThread());
+            egl::DeallocateCurrentThread();
+            break;
 
         case DLL_PROCESS_DETACH:
-            return static_cast<BOOL>(egl::TerminateProcess());
+            egl::TerminateProcess();
+            break;
     }
 
     return TRUE;

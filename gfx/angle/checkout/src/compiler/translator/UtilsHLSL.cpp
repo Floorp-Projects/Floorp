@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2014 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -73,6 +73,7 @@ HLSLTextureGroup TextureGroup(const TBasicType type, TLayoutImageInternalFormat 
     switch (type)
     {
         case EbtSampler2D:
+        case EbtSamplerVideoWEBGL:
             return HLSL_TEXTURE_2D;
         case EbtSamplerCube:
             return HLSL_TEXTURE_CUBE;
@@ -974,6 +975,8 @@ TString TypeString(const TType &type)
                 return "samplerCUBE";
             case EbtSamplerExternalOES:
                 return "sampler2D";
+            case EbtSamplerVideoWEBGL:
+                return "sampler2D";
             case EbtAtomicCounter:
                 // Multiple atomic_uints will be implemented as a single RWByteAddressBuffer
                 return "RWByteAddressBuffer";
@@ -1005,7 +1008,8 @@ TString StructNameString(const TStructure &structure)
 
 TString QualifiedStructNameString(const TStructure &structure,
                                   bool useHLSLRowMajorPacking,
-                                  bool useStd140Packing)
+                                  bool useStd140Packing,
+                                  bool forcePadding)
 {
     if (structure.symbolType() == SymbolType::Empty)
     {
@@ -1025,6 +1029,11 @@ TString QualifiedStructNameString(const TStructure &structure,
     if (useHLSLRowMajorPacking)
     {
         prefix += "rm_";
+    }
+
+    if (forcePadding)
+    {
+        prefix += "fp_";
     }
 
     return prefix + StructNameString(structure);
@@ -1054,6 +1063,8 @@ const char *InterpolationString(TQualifier qualifier)
             return "nointerpolation";
         case EvqCentroidOut:
             return "centroid";
+        case EvqSampleIn:
+            return "sample";
         default:
             UNREACHABLE();
     }
@@ -1074,6 +1085,8 @@ const char *QualifierString(TQualifier qualifier)
             return "inout";
         case EvqConstReadOnly:
             return "const";
+        case EvqSampleOut:
+            return "sample";
         default:
             UNREACHABLE();
     }

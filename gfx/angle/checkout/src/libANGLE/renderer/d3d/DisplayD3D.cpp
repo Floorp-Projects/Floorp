@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2014 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -22,14 +22,6 @@
 #include "libANGLE/renderer/d3d/SurfaceD3D.h"
 #include "libANGLE/renderer/d3d/SwapChainD3D.h"
 
-#if defined(ANGLE_ENABLE_D3D9)
-#    include "libANGLE/renderer/d3d/d3d9/Renderer9.h"
-#endif  // ANGLE_ENABLE_D3D9
-
-#if defined(ANGLE_ENABLE_D3D11)
-#    include "libANGLE/renderer/d3d/d3d11/Renderer11.h"
-#endif  // ANGLE_ENABLE_D3D11
-
 #if !defined(ANGLE_DEFAULT_D3D11)
 // Enables use of the Direct3D 11 API for a default display, when available
 #    define ANGLE_DEFAULT_D3D11 1
@@ -38,13 +30,7 @@
 namespace rx
 {
 
-typedef RendererD3D *(*CreateRendererD3DFunction)(egl::Display *);
-
-template <typename RendererType>
-static RendererD3D *CreateTypedRendererD3D(egl::Display *display)
-{
-    return new RendererType(display);
-}
+using CreateRendererD3DFunction = RendererD3D *(*)(egl::Display *);
 
 egl::Error CreateRendererD3D(egl::Display *display, RendererD3D **outRenderer)
 {
@@ -61,20 +47,44 @@ egl::Error CreateRendererD3D(egl::Display *display, RendererD3D **outRenderer)
             attribMap.get(EGL_PLATFORM_ANGLE_TYPE_ANGLE, EGL_PLATFORM_ANGLE_TYPE_DEFAULT_ANGLE));
 
 #if defined(ANGLE_ENABLE_D3D11)
-        if (nativeDisplay == EGL_D3D11_ELSE_D3D9_DISPLAY_ANGLE ||
-            nativeDisplay == EGL_D3D11_ONLY_DISPLAY_ANGLE ||
-            requestedDisplayType == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
-        {
-            rendererCreationFunctions.push_back(CreateTypedRendererD3D<Renderer11>);
-        }
+        const auto addD3D11 = nativeDisplay == EGL_D3D11_ELSE_D3D9_DISPLAY_ANGLE ||
+                              nativeDisplay == EGL_D3D11_ONLY_DISPLAY_ANGLE ||
+                              requestedDisplayType == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE;
 #endif
 
 #if defined(ANGLE_ENABLE_D3D9)
-        if (nativeDisplay == EGL_D3D11_ELSE_D3D9_DISPLAY_ANGLE ||
-            requestedDisplayType == EGL_PLATFORM_ANGLE_TYPE_D3D9_ANGLE)
+        const auto addD3D9 = nativeDisplay == EGL_D3D11_ELSE_D3D9_DISPLAY_ANGLE ||
+                             requestedDisplayType == EGL_PLATFORM_ANGLE_TYPE_D3D9_ANGLE;
+#endif
+
+#if ANGLE_DEFAULT_D3D11
+#    if defined(ANGLE_ENABLE_D3D11)
+        if (addD3D11)
         {
-            rendererCreationFunctions.push_back(CreateTypedRendererD3D<Renderer9>);
+            rendererCreationFunctions.push_back(CreateRenderer11);
         }
+#    endif
+
+#    if defined(ANGLE_ENABLE_D3D9)
+        if (addD3D9)
+        {
+            rendererCreationFunctions.push_back(CreateRenderer9);
+        }
+#    endif
+#else
+#    if defined(ANGLE_ENABLE_D3D9)
+        if (addD3D9)
+        {
+            rendererCreationFunctions.push_back(CreateRenderer9);
+        }
+#    endif
+
+#    if defined(ANGLE_ENABLE_D3D11)
+        if (addD3D11)
+        {
+            rendererCreationFunctions.push_back(CreateRenderer11);
+        }
+#    endif
 #endif
 
         if (nativeDisplay != EGL_D3D11_ELSE_D3D9_DISPLAY_ANGLE &&
@@ -85,17 +95,17 @@ egl::Error CreateRendererD3D(egl::Display *display, RendererD3D **outRenderer)
             // the definition of ANGLE_DEFAULT_D3D11
 #if ANGLE_DEFAULT_D3D11
 #    if defined(ANGLE_ENABLE_D3D11)
-            rendererCreationFunctions.push_back(CreateTypedRendererD3D<Renderer11>);
+            rendererCreationFunctions.push_back(CreateRenderer11);
 #    endif
 #    if defined(ANGLE_ENABLE_D3D9)
-            rendererCreationFunctions.push_back(CreateTypedRendererD3D<Renderer9>);
+            rendererCreationFunctions.push_back(CreateRenderer9);
 #    endif
 #else
 #    if defined(ANGLE_ENABLE_D3D9)
-            rendererCreationFunctions.push_back(CreateTypedRendererD3D<Renderer9>);
+            rendererCreationFunctions.push_back(CreateRenderer9);
 #    endif
 #    if defined(ANGLE_ENABLE_D3D11)
-            rendererCreationFunctions.push_back(CreateTypedRendererD3D<Renderer11>);
+            rendererCreationFunctions.push_back(CreateRenderer11);
 #    endif
 #endif
         }
@@ -105,7 +115,7 @@ egl::Error CreateRendererD3D(egl::Display *display, RendererD3D **outRenderer)
 #if defined(ANGLE_ENABLE_D3D11)
         if (display->getDevice()->getType() == EGL_D3D11_DEVICE_ANGLE)
         {
-            rendererCreationFunctions.push_back(CreateTypedRendererD3D<Renderer11>);
+            rendererCreationFunctions.push_back(CreateRenderer11);
         }
 #endif
     }
@@ -145,6 +155,7 @@ egl::Error CreateRendererD3D(egl::Display *display, RendererD3D **outRenderer)
 
         // Failed to create the renderer, try the next
         SafeDelete(renderer);
+        ERR() << "Failed to create D3D renderer: " << result.getMessage();
     }
 
     return egl::EglNotInitialized() << "No available renderers.";
@@ -224,10 +235,20 @@ ExternalImageSiblingImpl *DisplayD3D::createExternalImageSibling(const gl::Conte
     return mRenderer->createExternalImageSibling(context, target, buffer, attribs);
 }
 
-egl::Error DisplayD3D::makeCurrent(egl::Surface *drawSurface,
+ShareGroupImpl *DisplayD3D::createShareGroup()
+{
+    return new ShareGroupD3D();
+}
+
+egl::Error DisplayD3D::makeCurrent(egl::Display *display,
+                                   egl::Surface *drawSurface,
                                    egl::Surface *readSurface,
                                    gl::Context *context)
 {
+    // Ensure the appropriate global DebugAnnotator is used
+    ASSERT(mRenderer != nullptr);
+    mRenderer->setGlobalDebugAnnotator();
+
     return egl::NoError();
 }
 
@@ -287,7 +308,7 @@ bool DisplayD3D::isValidNativeWindow(EGLNativeWindowType window) const
     return mRenderer->isValidNativeWindow(window);
 }
 
-egl::Error DisplayD3D::validateClientBuffer(const egl::Config *configuration,
+egl::Error DisplayD3D::validateClientBuffer(const egl::Config *config,
                                             EGLenum buftype,
                                             EGLClientBuffer clientBuffer,
                                             const egl::AttributeMap &attribs) const
@@ -295,16 +316,16 @@ egl::Error DisplayD3D::validateClientBuffer(const egl::Config *configuration,
     switch (buftype)
     {
         case EGL_D3D_TEXTURE_2D_SHARE_HANDLE_ANGLE:
-            return mRenderer->validateShareHandle(configuration, static_cast<HANDLE>(clientBuffer),
+            return mRenderer->validateShareHandle(config, static_cast<HANDLE>(clientBuffer),
                                                   attribs);
 
         case EGL_D3D_TEXTURE_ANGLE:
-            return mRenderer->getD3DTextureInfo(configuration,
-                                                static_cast<IUnknown *>(clientBuffer), nullptr,
-                                                nullptr, nullptr, nullptr);
+            return mRenderer->getD3DTextureInfo(config, static_cast<IUnknown *>(clientBuffer),
+                                                attribs, nullptr, nullptr, nullptr, nullptr,
+                                                nullptr);
 
         default:
-            return DisplayImpl::validateClientBuffer(configuration, buftype, clientBuffer, attribs);
+            return DisplayImpl::validateClientBuffer(config, buftype, clientBuffer, attribs);
     }
 }
 
@@ -318,7 +339,8 @@ egl::Error DisplayD3D::validateImageClientBuffer(const gl::Context *context,
         case EGL_D3D11_TEXTURE_ANGLE:
         {
             return mRenderer->getD3DTextureInfo(nullptr, static_cast<IUnknown *>(clientBuffer),
-                                                nullptr, nullptr, nullptr, nullptr);
+                                                attribs, nullptr, nullptr, nullptr, nullptr,
+                                                nullptr);
         }
 
         default:
@@ -347,7 +369,7 @@ void DisplayD3D::generateCaps(egl::Caps *outCaps) const
     // Display must be initialized to generate caps
     ASSERT(mRenderer != nullptr);
 
-    outCaps->textureNPOT = mRenderer->getNativeExtensions().textureNPOT;
+    outCaps->textureNPOT = mRenderer->getNativeExtensions().textureNPOTOES;
 }
 
 egl::Error DisplayD3D::waitClient(const gl::Context *context)

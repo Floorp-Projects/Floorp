@@ -82,13 +82,14 @@ angle::Result Framebuffer9::readPixelsImpl(const gl::Context *context,
                                            GLenum type,
                                            size_t outputPitch,
                                            const gl::PixelPackState &pack,
+                                           gl::Buffer *packBuffer,
                                            uint8_t *pixels)
 {
     const gl::FramebufferAttachment *colorbuffer = mState.getColorAttachment(0);
     ASSERT(colorbuffer);
 
     RenderTarget9 *renderTarget = nullptr;
-    ANGLE_TRY(colorbuffer->getRenderTarget(context, &renderTarget));
+    ANGLE_TRY(colorbuffer->getRenderTarget(context, 0, &renderTarget));
     ASSERT(renderTarget);
 
     IDirect3DSurface9 *surface = renderTarget->getSurface();
@@ -237,14 +238,15 @@ angle::Result Framebuffer9::blitImpl(const gl::Context *context,
         ASSERT(readBuffer);
 
         RenderTarget9 *readRenderTarget = nullptr;
-        ANGLE_TRY(readBuffer->getRenderTarget(context, &readRenderTarget));
+        ANGLE_TRY(readBuffer->getRenderTarget(context, 0, &readRenderTarget));
         ASSERT(readRenderTarget);
 
         const gl::FramebufferAttachment *drawBuffer = mState.getColorAttachment(0);
         ASSERT(drawBuffer);
 
         RenderTarget9 *drawRenderTarget = nullptr;
-        ANGLE_TRY(drawBuffer->getRenderTarget(context, &drawRenderTarget));
+        ANGLE_TRY(
+            drawBuffer->getRenderTarget(context, drawBuffer->getSamples(), &drawRenderTarget));
         ASSERT(drawRenderTarget);
 
         // The getSurface calls do an AddRef so save them until after no errors are possible
@@ -354,14 +356,15 @@ angle::Result Framebuffer9::blitImpl(const gl::Context *context,
         ASSERT(readBuffer);
 
         RenderTarget9 *readDepthStencil = nullptr;
-        ANGLE_TRY(readBuffer->getRenderTarget(context, &readDepthStencil));
+        ANGLE_TRY(readBuffer->getRenderTarget(context, 0, &readDepthStencil));
         ASSERT(readDepthStencil);
 
         const gl::FramebufferAttachment *drawBuffer = mState.getDepthOrStencilAttachment();
         ASSERT(drawBuffer);
 
         RenderTarget9 *drawDepthStencil = nullptr;
-        ANGLE_TRY(drawBuffer->getRenderTarget(context, &drawDepthStencil));
+        ANGLE_TRY(
+            drawBuffer->getRenderTarget(context, drawBuffer->getSamples(), &drawDepthStencil));
         ASSERT(drawDepthStencil);
 
         // The getSurface calls do an AddRef so save them until after no errors are possible
@@ -383,11 +386,14 @@ angle::Result Framebuffer9::blitImpl(const gl::Context *context,
     return angle::Result::Continue;
 }
 
-GLenum Framebuffer9::getRenderTargetImplementationFormat(RenderTargetD3D *renderTarget) const
+const gl::InternalFormat &Framebuffer9::getImplementationColorReadFormat(
+    const gl::Context *context) const
 {
-    RenderTarget9 *renderTarget9         = GetAs<RenderTarget9>(renderTarget);
-    const d3d9::D3DFormat &d3dFormatInfo = d3d9::GetD3DFormatInfo(renderTarget9->getD3DFormat());
-    return d3dFormatInfo.info().glInternalFormat;
+    GLenum sizedFormat = mState.getReadAttachment()->getFormat().info->sizedInternalFormat;
+    const d3d9::TextureFormat &textureFormat = d3d9::GetTextureFormatInfo(sizedFormat);
+    const d3d9::D3DFormat &d3dFormatInfo     = d3d9::GetD3DFormatInfo(textureFormat.renderFormat);
+    const angle::Format &angleFormat         = angle::Format::Get(d3dFormatInfo.formatID);
+    return gl::GetSizedInternalFormatInfo(angleFormat.fboImplementationInternalFormat);
 }
 
 angle::Result Framebuffer9::getSamplePosition(const gl::Context *context,
@@ -399,9 +405,11 @@ angle::Result Framebuffer9::getSamplePosition(const gl::Context *context,
 }
 
 angle::Result Framebuffer9::syncState(const gl::Context *context,
-                                      const gl::Framebuffer::DirtyBits &dirtyBits)
+                                      GLenum binding,
+                                      const gl::Framebuffer::DirtyBits &dirtyBits,
+                                      gl::Command command)
 {
-    ANGLE_TRY(FramebufferD3D::syncState(context, dirtyBits));
+    ANGLE_TRY(FramebufferD3D::syncState(context, binding, dirtyBits, command));
     ANGLE_TRY(mRenderTargetCache.update(context, mState, dirtyBits));
     return angle::Result::Continue;
 }

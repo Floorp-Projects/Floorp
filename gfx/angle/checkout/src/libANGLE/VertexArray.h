@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013 The ANGLE Project Authors. All rights reserved.
+// Copyright 2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -70,6 +70,15 @@ class VertexArrayState final : angle::NonCopyable
 
     // Get all the attributes in an AttributesMask that are using the given binding.
     AttributesMask getBindingToAttributesMask(GLuint bindingIndex) const;
+
+    ComponentTypeMask getVertexAttributesTypeMask() const { return mVertexAttributesTypeMask; }
+
+    AttributesMask getClientMemoryAttribsMask() const { return mClientMemoryAttribsMask; }
+
+    gl::AttributesMask getNullPointerClientMemoryAttribsMask() const
+    {
+        return mNullPointerClientMemoryAttribsMask;
+    }
 
   private:
     friend class VertexArray;
@@ -159,11 +168,14 @@ class VertexArray final : public angle::ObserverInterface,
     using DirtyAttribBitsArray  = std::array<DirtyAttribBits, gl::MAX_VERTEX_ATTRIBS>;
     using DirtyBindingBitsArray = std::array<DirtyBindingBits, gl::MAX_VERTEX_ATTRIB_BINDINGS>;
 
-    VertexArray(rx::GLImplFactory *factory, GLuint id, size_t maxAttribs, size_t maxAttribBindings);
+    VertexArray(rx::GLImplFactory *factory,
+                VertexArrayID id,
+                size_t maxAttribs,
+                size_t maxAttribBindings);
 
     void onDestroy(const Context *context);
 
-    GLuint id() const { return mId; }
+    VertexArrayID id() const { return mId; }
 
     void setLabel(const Context *context, const std::string &label) override;
     const std::string &getLabel() const override;
@@ -176,7 +188,7 @@ class VertexArray final : public angle::ObserverInterface,
     }
 
     // Returns true if the function finds and detaches a bound buffer.
-    bool detachBuffer(const Context *context, GLuint bufferName);
+    bool detachBuffer(const Context *context, BufferID bufferID);
 
     void setVertexAttribDivisor(const Context *context, size_t index, GLuint divisor);
     void enableAttribute(size_t attribIndex, bool enabledState);
@@ -243,6 +255,10 @@ class VertexArray final : public angle::ObserverInterface,
     {
         return mState.mCachedEnabledMappedArrayBuffers.any();
     }
+
+    const VertexArrayState &getState() const { return mState; }
+
+    bool isBufferAccessValidationEnabled() const { return mBufferAccessValidationEnabled; }
 
     // Observer implementation
     void onSubjectStateChange(angle::SubjectIndex index, angle::SubjectMessage message) override;
@@ -326,7 +342,7 @@ class VertexArray final : public angle::ObserverInterface,
                               GLintptr offset,
                               GLsizei stride);
 
-    GLuint mId;
+    VertexArrayID mId;
 
     VertexArrayState mState;
     DirtyBits mDirtyBits;

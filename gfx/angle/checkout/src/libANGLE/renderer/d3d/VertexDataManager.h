@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
+// Copyright 2002 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -111,7 +111,8 @@ class VertexDataManager : angle::NonCopyable
                                       const gl::AttributesMask &dynamicAttribsMask,
                                       GLint start,
                                       size_t count,
-                                      GLsizei instances);
+                                      GLsizei instances,
+                                      GLuint baseInstance);
 
     // Promote static usage of dynamic buffers.
     static void PromoteDynamicAttribs(const gl::Context *context,
@@ -140,13 +141,15 @@ class VertexDataManager : angle::NonCopyable
                                         const TranslatedAttribute &translatedAttrib,
                                         GLint start,
                                         size_t count,
-                                        GLsizei instances);
+                                        GLsizei instances,
+                                        GLuint baseInstance);
 
     angle::Result storeDynamicAttrib(const gl::Context *context,
                                      TranslatedAttribute *translated,
                                      GLint start,
                                      size_t count,
-                                     GLsizei instances);
+                                     GLsizei instances,
+                                     GLuint baseInstance);
 
     BufferFactoryD3D *const mFactory;
 

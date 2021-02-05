@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013 The ANGLE Project Authors. All rights reserved.
+// Copyright 2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -241,7 +241,7 @@ angle::Result Query11::testQuery(Context11 *context11, QueryState *queryState)
             case gl::QueryType::TransformFeedbackPrimitivesWritten:
             {
                 ASSERT(queryState->query.valid());
-                D3D11_QUERY_DATA_SO_STATISTICS soStats = {0};
+                D3D11_QUERY_DATA_SO_STATISTICS soStats = {};
                 HRESULT result =
                     context->GetData(queryState->query.get(), &soStats, sizeof(soStats), 0);
                 ANGLE_TRY_HR(context11, result, "Failed to get the data of an internal query");
@@ -259,7 +259,7 @@ angle::Result Query11::testQuery(Context11 *context11, QueryState *queryState)
                 ASSERT(queryState->query.valid());
                 ASSERT(queryState->beginTimestamp.valid());
                 ASSERT(queryState->endTimestamp.valid());
-                D3D11_QUERY_DATA_TIMESTAMP_DISJOINT timeStats = {0};
+                D3D11_QUERY_DATA_TIMESTAMP_DISJOINT timeStats = {};
                 HRESULT result =
                     context->GetData(queryState->query.get(), &timeStats, sizeof(timeStats), 0);
                 ANGLE_TRY_HR(context11, result, "Failed to get the data of an internal query");

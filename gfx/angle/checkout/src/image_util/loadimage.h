@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013-2015 The ANGLE Project Authors. All rights reserved.
+// Copyright 2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -225,7 +225,27 @@ void LoadRGBA8ToBGRA4(size_t width,
                       size_t outputRowPitch,
                       size_t outputDepthPitch);
 
+void LoadRGBA8ToRGBA4(size_t width,
+                      size_t height,
+                      size_t depth,
+                      const uint8_t *input,
+                      size_t inputRowPitch,
+                      size_t inputDepthPitch,
+                      uint8_t *output,
+                      size_t outputRowPitch,
+                      size_t outputDepthPitch);
+
 void LoadRGBA4ToARGB4(size_t width,
+                      size_t height,
+                      size_t depth,
+                      const uint8_t *input,
+                      size_t inputRowPitch,
+                      size_t inputDepthPitch,
+                      uint8_t *output,
+                      size_t outputRowPitch,
+                      size_t outputDepthPitch);
+
+void LoadRGBA4ToRGBA4(size_t width,
                       size_t height,
                       size_t depth,
                       const uint8_t *input,
@@ -275,6 +295,16 @@ void LoadRGBA8ToBGR5A1(size_t width,
                        size_t outputRowPitch,
                        size_t outputDepthPitch);
 
+void LoadRGBA8ToRGB5A1(size_t width,
+                       size_t height,
+                       size_t depth,
+                       const uint8_t *input,
+                       size_t inputRowPitch,
+                       size_t inputDepthPitch,
+                       uint8_t *output,
+                       size_t outputRowPitch,
+                       size_t outputDepthPitch);
+
 void LoadRGB10A2ToBGR5A1(size_t width,
                          size_t height,
                          size_t depth,
@@ -284,6 +314,36 @@ void LoadRGB10A2ToBGR5A1(size_t width,
                          uint8_t *output,
                          size_t outputRowPitch,
                          size_t outputDepthPitch);
+
+void LoadRGB10A2ToRGB5A1(size_t width,
+                         size_t height,
+                         size_t depth,
+                         const uint8_t *input,
+                         size_t inputRowPitch,
+                         size_t inputDepthPitch,
+                         uint8_t *output,
+                         size_t outputRowPitch,
+                         size_t outputDepthPitch);
+
+void LoadRGB5A1ToRGB5A1(size_t width,
+                        size_t height,
+                        size_t depth,
+                        const uint8_t *input,
+                        size_t inputRowPitch,
+                        size_t inputDepthPitch,
+                        uint8_t *output,
+                        size_t outputRowPitch,
+                        size_t outputDepthPitch);
+
+void LoadRGB5A1ToBGR5A1(size_t width,
+                        size_t height,
+                        size_t depth,
+                        const uint8_t *input,
+                        size_t inputRowPitch,
+                        size_t inputDepthPitch,
+                        uint8_t *output,
+                        size_t outputRowPitch,
+                        size_t outputDepthPitch);
 
 void LoadRGB5A1ToA1RGB5(size_t width,
                         size_t height,
@@ -334,6 +394,16 @@ void LoadRGB10A2ToRGBA8(size_t width,
                         uint8_t *output,
                         size_t outputRowPitch,
                         size_t outputDepthPitch);
+
+void LoadRGB10A2ToRGB10X2(size_t width,
+                          size_t height,
+                          size_t depth,
+                          const uint8_t *input,
+                          size_t inputRowPitch,
+                          size_t inputDepthPitch,
+                          uint8_t *output,
+                          size_t outputRowPitch,
+                          size_t outputDepthPitch);
 
 void LoadRGB16FToRGB9E5(size_t width,
                         size_t height,
@@ -395,6 +465,36 @@ void LoadD24S8ToD32FS8X24(size_t width,
                           size_t outputRowPitch,
                           size_t outputDepthPitch);
 
+void LoadD24S8ToD32F(size_t width,
+                     size_t height,
+                     size_t depth,
+                     const uint8_t *input,
+                     size_t inputRowPitch,
+                     size_t inputDepthPitch,
+                     uint8_t *output,
+                     size_t outputRowPitch,
+                     size_t outputDepthPitch);
+
+void LoadD32ToD32FX32(size_t width,
+                      size_t height,
+                      size_t depth,
+                      const uint8_t *input,
+                      size_t inputRowPitch,
+                      size_t inputDepthPitch,
+                      uint8_t *output,
+                      size_t outputRowPitch,
+                      size_t outputDepthPitch);
+
+void LoadD32ToD32F(size_t width,
+                   size_t height,
+                   size_t depth,
+                   const uint8_t *input,
+                   size_t inputRowPitch,
+                   size_t inputDepthPitch,
+                   uint8_t *output,
+                   size_t outputRowPitch,
+                   size_t outputDepthPitch);
+
 void LoadD32FToD32F(size_t width,
                     size_t height,
                     size_t depth,
@@ -424,6 +524,26 @@ void LoadX24S8ToS8(size_t width,
                    uint8_t *output,
                    size_t outputRowPitch,
                    size_t outputDepthPitch);
+
+void LoadX32S8ToS8(size_t width,
+                   size_t height,
+                   size_t depth,
+                   const uint8_t *input,
+                   size_t inputRowPitch,
+                   size_t inputDepthPitch,
+                   uint8_t *output,
+                   size_t outputRowPitch,
+                   size_t outputDepthPitch);
+
+void LoadD32FS8X24ToD32F(size_t width,
+                         size_t height,
+                         size_t depth,
+                         const uint8_t *input,
+                         size_t inputRowPitch,
+                         size_t inputDepthPitch,
+                         uint8_t *output,
+                         size_t outputRowPitch,
+                         size_t outputDepthPitch);
 
 void LoadD32FS8X24ToD32FS8X24(size_t width,
                               size_t height,
@@ -630,6 +750,46 @@ void LoadEACRG11SToRG16(size_t width,
                         uint8_t *output,
                         size_t outputRowPitch,
                         size_t outputDepthPitch);
+
+void LoadEACR11ToR16F(size_t width,
+                      size_t height,
+                      size_t depth,
+                      const uint8_t *input,
+                      size_t inputRowPitch,
+                      size_t inputDepthPitch,
+                      uint8_t *output,
+                      size_t outputRowPitch,
+                      size_t outputDepthPitch);
+
+void LoadEACR11SToR16F(size_t width,
+                       size_t height,
+                       size_t depth,
+                       const uint8_t *input,
+                       size_t inputRowPitch,
+                       size_t inputDepthPitch,
+                       uint8_t *output,
+                       size_t outputRowPitch,
+                       size_t outputDepthPitch);
+
+void LoadEACRG11ToRG16F(size_t width,
+                        size_t height,
+                        size_t depth,
+                        const uint8_t *input,
+                        size_t inputRowPitch,
+                        size_t inputDepthPitch,
+                        uint8_t *output,
+                        size_t outputRowPitch,
+                        size_t outputDepthPitch);
+
+void LoadEACRG11SToRG16F(size_t width,
+                         size_t height,
+                         size_t depth,
+                         const uint8_t *input,
+                         size_t inputRowPitch,
+                         size_t inputDepthPitch,
+                         uint8_t *output,
+                         size_t outputRowPitch,
+                         size_t outputDepthPitch);
 
 void LoadETC2RGB8ToRGBA8(size_t width,
                          size_t height,

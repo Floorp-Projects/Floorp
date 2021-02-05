@@ -11,7 +11,7 @@
 
 #include "libANGLE/LoggingAnnotator.h"
 
-#include <mutex>
+#include <thread>
 
 namespace rx
 {
@@ -23,16 +23,23 @@ class DebugAnnotator11 : public angle::LoggingAnnotator
     ~DebugAnnotator11() override;
     void initialize(ID3D11DeviceContext *context);
     void release();
-    void beginEvent(const char *eventName, const char *eventMessage) override;
-    void endEvent(const char *eventName) override;
+    void beginEvent(gl::Context *context,
+                    gl::EntryPoint entryPoint,
+                    const char *eventName,
+                    const char *eventMessage) override;
+    void endEvent(gl::Context *context, const char *eventName, gl::EntryPoint entryPoint) override;
     void setMarker(const char *markerName) override;
     bool getStatus() override;
 
   private:
+    bool loggingEnabledForThisThread() const;
+
     angle::ComPtr<ID3DUserDefinedAnnotation> mUserDefinedAnnotation;
     static constexpr size_t kMaxMessageLength = 256;
     wchar_t mWCharMessage[kMaxMessageLength];
-    std::mutex mAnnotationMutex;
+
+    // Only log annotations from the thread used to initialize the debug annotator
+    std::thread::id mAnnotationThread;
 };
 
 }  // namespace rx

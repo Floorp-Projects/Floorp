@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2012-2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2012 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -73,44 +73,6 @@ enum
     MAX_FRAGMENT_UNIFORM_VECTORS_D3D11 = 1024
 };
 
-// Possible reasons RendererD3D initialize can fail
-enum D3D11InitError
-{
-    // The renderer loaded successfully
-    D3D11_INIT_SUCCESS = 0,
-    // Failed to load the ANGLE & D3D compiler libraries
-    D3D11_INIT_COMPILER_ERROR,
-    // Failed to load a necessary DLL (non-compiler)
-    D3D11_INIT_MISSING_DEP,
-    // CreateDevice returned E_INVALIDARG
-    D3D11_INIT_CREATEDEVICE_INVALIDARG,
-    // CreateDevice failed with an error other than invalid arg
-    D3D11_INIT_CREATEDEVICE_ERROR,
-    // DXGI 1.2 required but not found
-    D3D11_INIT_INCOMPATIBLE_DXGI,
-    // Other initialization error
-    D3D11_INIT_OTHER_ERROR,
-    // CreateDevice returned E_FAIL
-    D3D11_INIT_CREATEDEVICE_FAIL,
-    // CreateDevice returned E_NOTIMPL
-    D3D11_INIT_CREATEDEVICE_NOTIMPL,
-    // CreateDevice returned E_OUTOFMEMORY
-    D3D11_INIT_CREATEDEVICE_OUTOFMEMORY,
-    // CreateDevice returned DXGI_ERROR_INVALID_CALL
-    D3D11_INIT_CREATEDEVICE_INVALIDCALL,
-    // CreateDevice returned DXGI_ERROR_SDK_COMPONENT_MISSING
-    D3D11_INIT_CREATEDEVICE_COMPONENTMISSING,
-    // CreateDevice returned DXGI_ERROR_WAS_STILL_DRAWING
-    D3D11_INIT_CREATEDEVICE_WASSTILLDRAWING,
-    // CreateDevice returned DXGI_ERROR_NOT_CURRENTLY_AVAILABLE
-    D3D11_INIT_CREATEDEVICE_NOTAVAILABLE,
-    // CreateDevice returned DXGI_ERROR_DEVICE_HUNG
-    D3D11_INIT_CREATEDEVICE_DEVICEHUNG,
-    // CreateDevice returned NULL
-    D3D11_INIT_CREATEDEVICE_NULL,
-    NUM_D3D11_INIT_ERRORS
-};
-
 class Renderer11 : public RendererD3D
 {
   public:
@@ -142,9 +104,11 @@ class Renderer11 : public RendererD3D
                                   EGLint samples) override;
     egl::Error getD3DTextureInfo(const egl::Config *configuration,
                                  IUnknown *d3dTexture,
+                                 const egl::AttributeMap &attribs,
                                  EGLint *width,
                                  EGLint *height,
-                                 EGLint *samples,
+                                 GLsizei *samples,
+                                 gl::Format *glFormat,
                                  const angle::Format **angleFormat) const override;
     egl::Error validateShareHandle(const egl::Config *config,
                                    HANDLE shareHandle,
@@ -340,6 +304,7 @@ class Renderer11 : public RendererD3D
     angle::Result getSamplerState(const gl::Context *context,
                                   const gl::SamplerState &samplerState,
                                   ID3D11SamplerState **outSamplerState);
+    UINT getSampleDescQuality(GLuint supportedSamples) const;
 
     Blit11 *getBlitter() { return mBlit; }
     Clear11 *getClearer() { return mClear; }
@@ -349,6 +314,7 @@ class Renderer11 : public RendererD3D
     bool supportsFastCopyBufferToTexture(GLenum internalFormat) const override;
     angle::Result fastCopyBufferToTexture(const gl::Context *context,
                                           const gl::PixelUnpackState &unpack,
+                                          gl::Buffer *unpackBuffer,
                                           unsigned int offset,
                                           RenderTargetD3D *destRenderTarget,
                                           GLenum destinationFormat,
@@ -371,6 +337,7 @@ class Renderer11 : public RendererD3D
                                          const gl::VertexBinding &binding,
                                          size_t count,
                                          GLsizei instances,
+                                         GLuint baseInstance,
                                          unsigned int *bytesRequiredOut) const override;
 
     angle::Result readFromAttachment(const gl::Context *context,
@@ -409,14 +376,17 @@ class Renderer11 : public RendererD3D
                              gl::PrimitiveMode mode,
                              GLint firstVertex,
                              GLsizei vertexCount,
-                             GLsizei instanceCount);
+                             GLsizei instanceCount,
+                             GLuint baseInstance);
     angle::Result drawElements(const gl::Context *context,
                                gl::PrimitiveMode mode,
                                GLint startVertex,
                                GLsizei indexCount,
                                gl::DrawElementsType indexType,
                                const void *indices,
-                               GLsizei instanceCount);
+                               GLsizei instanceCount,
+                               GLint baseVertex,
+                               GLuint baseInstance);
     angle::Result drawArraysIndirect(const gl::Context *context, const void *indirect);
     angle::Result drawElementsIndirect(const gl::Context *context, const void *indirect);
 
@@ -506,6 +476,8 @@ class Renderer11 : public RendererD3D
                                        gl::TextureType type,
                                        gl::Texture **textureOut) override;
 
+    void setGlobalDebugAnnotator() override;
+
   private:
     void generateCaps(gl::Caps *outCaps,
                       gl::TextureCapsMap *outTextureCaps,
@@ -549,6 +521,9 @@ class Renderer11 : public RendererD3D
         const gl::TextureCaps &depthStencilBufferFormatCaps) const;
 
     HRESULT callD3D11CreateDevice(PFN_D3D11_CREATE_DEVICE createDevice, bool debug);
+    HRESULT callD3D11On12CreateDevice(PFN_D3D12_CREATE_DEVICE createDevice12,
+                                      PFN_D3D11ON12_CREATE_DEVICE createDevice11on12,
+                                      bool debug);
     egl::Error initializeD3DDevice();
     egl::Error initializeDevice();
     void releaseDeviceResources();
@@ -565,6 +540,7 @@ class Renderer11 : public RendererD3D
                                                              UINT vertexCount);
 
     HMODULE mD3d11Module;
+    HMODULE mD3d12Module;
     HMODULE mDxgiModule;
     HMODULE mDCompModule;
     std::vector<D3D_FEATURE_LEVEL> mAvailableFeatureLevels;
@@ -598,6 +574,9 @@ class Renderer11 : public RendererD3D
     std::set<const Buffer11 *> mAliveBuffers;
 
     double mLastHistogramUpdateTime;
+
+    angle::ComPtr<ID3D12Device> mDevice12;
+    angle::ComPtr<ID3D12CommandQueue> mCommandQueue;
 
     ID3D11Device *mDevice;
     Renderer11DeviceCaps mRenderer11DeviceCaps;

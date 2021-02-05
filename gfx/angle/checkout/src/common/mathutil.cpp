@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013 The ANGLE Project Authors. All rights reserved.
+// Copyright 2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -77,17 +77,6 @@ void convert999E5toRGBFloats(unsigned int input, float *red, float *green, float
         inputData->G * pow(2.0f, (int)inputData->E - g_sharedexp_bias - g_sharedexp_mantissabits);
     *blue =
         inputData->B * pow(2.0f, (int)inputData->E - g_sharedexp_bias - g_sharedexp_mantissabits);
-}
-
-int BitCountPolyfill(uint32_t bits)
-{
-    int ones = 0;
-    while (bits)
-    {
-        ones += bool(bits & 1);
-        bits >>= 1;
-    }
-    return ones;
 }
 
 }  // namespace gl

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2014 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -96,6 +96,28 @@ struct D3DInterfaceBlock
     gl::ShaderMap<unsigned int> mShaderRegisterIndexes;
 };
 
+struct D3DUniformBlock : D3DInterfaceBlock
+{
+    D3DUniformBlock();
+    D3DUniformBlock(const D3DUniformBlock &other);
+
+    gl::ShaderMap<bool> mUseStructuredBuffers;
+    gl::ShaderMap<unsigned int> mByteWidths;
+    gl::ShaderMap<unsigned int> mStructureByteStrides;
+};
+
+struct D3DUBOCache
+{
+    unsigned int registerIndex;
+    int binding;
+};
+
+struct D3DUBOCacheUseSB : D3DUBOCache
+{
+    unsigned int byteWidth;
+    unsigned int structureByteStride;
+};
+
 struct D3DVarying final
 {
     D3DVarying();
@@ -117,7 +139,8 @@ class ProgramD3DMetadata final : angle::NonCopyable
 {
   public:
     ProgramD3DMetadata(RendererD3D *renderer,
-                       const gl::ShaderMap<const ShaderD3D *> &attachedShaders);
+                       const gl::ShaderMap<const ShaderD3D *> &attachedShaders,
+                       EGLenum clientType);
     ~ProgramD3DMetadata();
 
     int getRendererMajorShaderModel() const;
@@ -137,7 +160,7 @@ class ProgramD3DMetadata final : angle::NonCopyable
     bool usesTransformFeedbackGLPosition() const;
     bool usesSystemValuePointSize() const;
     bool usesMultipleFragmentOuts() const;
-    GLint getMajorShaderVersion() const;
+    bool usesCustomOutVars() const;
     const ShaderD3D *getFragmentShader() const;
 
   private:
@@ -147,6 +170,7 @@ class ProgramD3DMetadata final : angle::NonCopyable
     const bool mUsesViewScale;
     const bool mCanSelectViewInVertexShader;
     const gl::ShaderMap<const ShaderD3D *> mAttachedShaders;
+    const EGLenum mClientType;
 };
 
 using D3DUniformMap = std::map<std::string, D3DUniform *>;
@@ -209,23 +233,20 @@ class ProgramD3D : public ProgramImpl
                                                            gl::InfoLog *infoLog);
     std::unique_ptr<LinkEvent> link(const gl::Context *context,
                                     const gl::ProgramLinkedResources &resources,
-                                    gl::InfoLog &infoLog) override;
+                                    gl::InfoLog &infoLog,
+                                    const gl::ProgramMergedVaryings &mergedVaryings) override;
     GLboolean validate(const gl::Caps &caps, gl::InfoLog *infoLog) override;
 
-    void setPathFragmentInputGen(const std::string &inputName,
-                                 GLenum genMode,
-                                 GLint components,
-                                 const GLfloat *coeffs) override;
-
-    void updateUniformBufferCache(const gl::Caps &caps,
-                                  const gl::ShaderMap<unsigned int> &reservedShaderRegisterIndexes);
+    void updateUniformBufferCache(const gl::Caps &caps);
 
     unsigned int getAtomicCounterBufferRegisterIndex(GLuint binding,
                                                      gl::ShaderType shaderType) const;
 
     unsigned int getShaderStorageBufferRegisterIndex(GLuint blockIndex,
                                                      gl::ShaderType shaderType) const;
-    const std::vector<GLint> &getShaderUniformBufferCache(gl::ShaderType shaderType) const;
+    const std::vector<D3DUBOCache> &getShaderUniformBufferCache(gl::ShaderType shaderType) const;
+    const std::vector<D3DUBOCacheUseSB> &getShaderUniformBufferCacheUseSB(
+        gl::ShaderType shaderType) const;
 
     void dirtyAllUniforms();
 
@@ -319,7 +340,7 @@ class ProgramD3D : public ProgramImpl
 
     bool hasShaderStage(gl::ShaderType shaderType) const
     {
-        return mState.getLinkedShaderStages()[shaderType];
+        return mState.getExecutable().getLinkedShaderStages()[shaderType];
     }
 
     void assignImage2DRegisters(unsigned int startImageIndex,
@@ -436,7 +457,7 @@ class ProgramD3D : public ProgramImpl
 
     void defineUniformsAndAssignRegisters();
     void defineUniformBase(const gl::Shader *shader,
-                           const sh::Uniform &uniform,
+                           const sh::ShaderVariable &uniform,
                            D3DUniformMap *uniformMap);
     void assignAllSamplerRegisters();
     void assignSamplerRegisters(size_t uniformIndex);
@@ -550,7 +571,8 @@ class ProgramD3D : public ProgramImpl
 
     unsigned int mSerial;
 
-    gl::ShaderMap<std::vector<int>> mShaderUBOCaches;
+    gl::ShaderMap<std::vector<D3DUBOCache>> mShaderUBOCaches;
+    gl::ShaderMap<std::vector<D3DUBOCacheUseSB>> mShaderUBOCachesUseSB;
     VertexExecutable::Signature mCachedVertexSignature;
     gl::InputLayout mCachedInputLayout;
     Optional<size_t> mCachedVertexExecutableIndex;
@@ -559,12 +581,12 @@ class ProgramD3D : public ProgramImpl
     std::vector<D3DUniform *> mD3DUniforms;
     std::map<std::string, int> mImageBindingMap;
     std::map<std::string, int> mAtomicBindingMap;
-    std::vector<D3DInterfaceBlock> mD3DUniformBlocks;
+    std::vector<D3DUniformBlock> mD3DUniformBlocks;
     std::vector<D3DInterfaceBlock> mD3DShaderStorageBlocks;
     std::array<unsigned int, gl::IMPLEMENTATION_MAX_ATOMIC_COUNTER_BUFFERS>
         mComputeAtomicCounterBufferRegisterIndices;
 
-    std::vector<sh::Uniform> mImage2DUniforms;
+    std::vector<sh::ShaderVariable> mImage2DUniforms;
     gl::ImageUnitTextureTypeMap mComputeShaderImage2DBindLayoutCache;
     Optional<size_t> mCachedComputeExecutableIndex;
 

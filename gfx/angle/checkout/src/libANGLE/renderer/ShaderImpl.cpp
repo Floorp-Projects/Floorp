@@ -9,6 +9,7 @@
 #include "libANGLE/renderer/ShaderImpl.h"
 
 #include "libANGLE/Context.h"
+#include "libANGLE/trace.h"
 
 namespace rx
 {
@@ -46,6 +47,7 @@ class TranslateTask : public angle::Closure
 
     void operator()() override
     {
+        ANGLE_TRACE_EVENT1("gpu.angle", "TranslateTask::run", "source", mSource);
         const char *source = mSource.c_str();
         mResult            = sh::Compile(mHandle, &source, 1, mOptions);
     }
@@ -83,6 +85,10 @@ std::shared_ptr<WaitableCompileEvent> ShaderImpl::compileImpl(
     const std::string &source,
     ShCompileOptions compileOptions)
 {
+#if defined(ANGLE_ENABLE_ASSERTS)
+    compileOptions |= SH_VALIDATE_AST;
+#endif
+
     auto workerThreadPool = context->getWorkerThreadPool();
     auto translateTask =
         std::make_shared<TranslateTask>(compilerInstance->getHandle(), compileOptions, source);

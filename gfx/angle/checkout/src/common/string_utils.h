@@ -69,17 +69,41 @@ bool BeginsWith(const char *str, const char *prefix);
 bool BeginsWith(const std::string &str, const std::string &prefix, const size_t prefixLength);
 
 // Check if the string str ends with the given suffix.
-// Suffix may not be NUL and needs to be NULL terminated.
+// The comparison is case sensitive.
+bool EndsWith(const std::string &str, const std::string &suffix);
+
+// Check if the string str ends with the given suffix.
+// Suffix may not be NULL and needs to be NULL terminated.
 // The comparison is case sensitive.
 bool EndsWith(const std::string &str, const char *suffix);
 
+// Check if the string str ends with the given suffix.
+// str and suffix may not be NULL and need to be NULL terminated.
+// The comparison is case sensitive.
+bool EndsWith(const char *str, const char *suffix);
+
 // Convert to lower-case.
 void ToLower(std::string *str);
+
+// Convert to upper-case.
+void ToUpper(std::string *str);
 
 // Replaces the substring 'substring' in 'str' with 'replacement'. Returns true if successful.
 bool ReplaceSubstring(std::string *str,
                       const std::string &substring,
                       const std::string &replacement);
+
+// Split up a string parsed from an environment variable.
+std::vector<std::string> GetStringsFromEnvironmentVarOrAndroidProperty(const char *varName,
+                                                                       const char *propertyName,
+                                                                       const char *separator);
+
+// Split up a string parsed from environment variable or via Android property, use cached result if
+// available.
+std::vector<std::string> GetCachedStringsFromEnvironmentVarOrAndroidProperty(
+    const char *varName,
+    const char *propertyName,
+    const char *separator);
 
 }  // namespace angle
 

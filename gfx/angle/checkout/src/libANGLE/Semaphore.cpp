@@ -14,8 +14,8 @@
 namespace gl
 {
 
-Semaphore::Semaphore(rx::GLImplFactory *factory, GLuint id)
-    : RefCountObject(id), mImplementation(factory->createSemaphore())
+Semaphore::Semaphore(rx::GLImplFactory *factory, SemaphoreID id)
+    : RefCountObject(factory->generateSerial(), id), mImplementation(factory->createSemaphore())
 {}
 
 Semaphore::~Semaphore() {}
@@ -28,6 +28,11 @@ void Semaphore::onDestroy(const Context *context)
 angle::Result Semaphore::importFd(Context *context, HandleType handleType, GLint fd)
 {
     return mImplementation->importFd(context, handleType, fd);
+}
+
+angle::Result Semaphore::importZirconHandle(Context *context, HandleType handleType, GLuint handle)
+{
+    return mImplementation->importZirconHandle(context, handleType, handle);
 }
 
 angle::Result Semaphore::wait(Context *context,

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013-2015 The ANGLE Project Authors. All rights reserved.
+// Copyright 2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -8,6 +8,7 @@
 
 #include "image_util/loadimage.h"
 
+#include <type_traits>
 #include "common/mathutil.h"
 
 #include "image_util/imageformats.h"
@@ -89,7 +90,8 @@ struct ETC2Block
                                   size_t h,
                                   size_t destPixelStride,
                                   size_t destRowPitch,
-                                  bool isSigned) const
+                                  bool isSigned,
+                                  bool isFloat) const
     {
         for (size_t j = 0; j < 4 && (y + j) < h; j++)
         {
@@ -100,11 +102,17 @@ struct ETC2Block
                 uint16_t *pixel = row + (i * destPixelStride);
                 if (isSigned)
                 {
-                    *pixel = renormalizeSignedEAC(getSingleEACChannel(i, j, isSigned));
+                    int16_t tempPixel =
+                        renormalizeEAC<int16_t>(getSingleEACChannel(i, j, isSigned));
+                    *pixel =
+                        isFloat ? gl::float32ToFloat16(float(gl::normalize(tempPixel))) : tempPixel;
                 }
                 else
                 {
-                    *pixel = renormalizeUnsignedEAC(getSingleEACChannel(i, j, isSigned));
+                    uint16_t tempPixel =
+                        renormalizeEAC<uint16_t>(getSingleEACChannel(i, j, isSigned));
+                    *pixel =
+                        isFloat ? gl::float32ToFloat16(float(gl::normalize(tempPixel))) : tempPixel;
                 }
             }
         }
@@ -241,9 +249,9 @@ struct ETC2Block
                 {
                     // Byte 1
                     unsigned char TR1b : 2;
-                    unsigned char TdummyB : 1;
+                    unsigned char TunusedB : 1;
                     unsigned char TR1a : 2;
-                    unsigned char TdummyA : 3;
+                    unsigned char TunusedA : 3;
                     // Byte 2
                     unsigned char TB1 : 4;
                     unsigned char TG1 : 4;
@@ -262,13 +270,13 @@ struct ETC2Block
                     // Byte 1
                     unsigned char HG1a : 3;
                     unsigned char HR1 : 4;
-                    unsigned char HdummyA : 1;
+                    unsigned char HunusedA : 1;
                     // Byte 2
                     unsigned char HB1b : 2;
-                    unsigned char HdummyC : 1;
+                    unsigned char HunusedC : 1;
                     unsigned char HB1a : 1;
                     unsigned char HG1b : 1;
-                    unsigned char HdummyB : 3;
+                    unsigned char HunusedB : 3;
                     // Byte 3
                     unsigned char HG2a : 3;
                     unsigned char HR2 : 4;
@@ -290,16 +298,16 @@ struct ETC2Block
             // Byte 1
             unsigned char GO1 : 1;
             unsigned char RO : 6;
-            unsigned char PdummyA : 1;
+            unsigned char PunusedA : 1;
             // Byte 2
             unsigned char BO1 : 1;
             unsigned char GO2 : 6;
-            unsigned char PdummyB : 1;
+            unsigned char PunusedB : 1;
             // Byte 3
             unsigned char BO3a : 2;
-            unsigned char PdummyD : 1;
+            unsigned char PunusedD : 1;
             unsigned char BO2 : 2;
-            unsigned char PdummyC : 3;
+            unsigned char PunusedC : 3;
             // Byte 4
             unsigned char RH2 : 1;
             bool Pflipbit : 1;
@@ -361,17 +369,33 @@ struct ETC2Block
         return static_cast<signed char>(gl::clamp(value, -128, 127));
     }
 
-    static uint16_t renormalizeUnsignedEAC(int value)
+    template <typename T>
+    static T renormalizeEAC(int value)
     {
-        // Data is in the range 0 to 2047, clamp it and then scale it to 16-bit
-        return static_cast<uint16_t>(gl::clamp(value, 0, 2047)) << 5;
-    }
+        int upper = 0;
+        int lower = 0;
+        int shift = 0;
 
-    static int16_t renormalizeSignedEAC(int value)
-    {
-        // Data is in the range -1023 to 1023, clamp it and then scale it to 16-bit
-        // The spec states that -1024 invalid and should be clamped to -1023
-        return static_cast<int16_t>(gl::clamp(value, -1023, 1023)) * 32;
+        if (std::is_same<T, int16_t>::value)
+        {
+            // The spec states that -1024 invalid and should be clamped to -1023
+            upper = 1023;
+            lower = -1023;
+            shift = 5;
+        }
+        else if (std::is_same<T, uint16_t>::value)
+        {
+            upper = 2047;
+            lower = 0;
+            shift = 5;
+        }
+        else
+        {
+            // We currently only support renormalizing int16_t or uint16_t
+            UNREACHABLE();
+        }
+
+        return static_cast<T>(gl::clamp(value, lower, upper)) << shift;
     }
 
     static R8G8B8A8 createRGBA(int red, int green, int blue, int alpha)
@@ -1018,12 +1042,12 @@ struct ETC2Block
         // Power iteration algorithm to get the eigenvalues and eigenvector
 
         // Starts with diagonal vector
-        float vfr = static_cast<float>(max[0] - min[0]);
-        float vfg = static_cast<float>(max[1] - min[1]);
-        float vfb = static_cast<float>(max[2] - min[2]);
-        float eigenvalue;
+        float vfr        = static_cast<float>(max[0] - min[0]);
+        float vfg        = static_cast<float>(max[1] - min[1]);
+        float vfb        = static_cast<float>(max[2] - min[2]);
+        float eigenvalue = 0.0f;
 
-        static const size_t kPowerIterations = 4;
+        constexpr size_t kPowerIterations = 4;
         for (size_t i = 0; i < kPowerIterations; i++)
         {
             float r = vfr * cov[0] + vfg * cov[1] + vfb * cov[2];
@@ -1466,7 +1490,8 @@ void LoadR11EACToR16(size_t width,
                      uint8_t *output,
                      size_t outputRowPitch,
                      size_t outputDepthPitch,
-                     bool isSigned)
+                     bool isSigned,
+                     bool isFloat)
 {
     for (size_t z = 0; z < depth; z++)
     {
@@ -1483,7 +1508,7 @@ void LoadR11EACToR16(size_t width,
                 uint16_t *destPixels         = destRow + x;
 
                 sourceBlock->decodeAsSingleEACChannel(destPixels, x, y, width, height, 1,
-                                                      outputRowPitch, isSigned);
+                                                      outputRowPitch, isSigned, isFloat);
             }
         }
     }
@@ -1498,7 +1523,8 @@ void LoadRG11EACToRG16(size_t width,
                        uint8_t *output,
                        size_t outputRowPitch,
                        size_t outputDepthPitch,
-                       bool isSigned)
+                       bool isSigned,
+                       bool isFloat)
 {
     for (size_t z = 0; z < depth; z++)
     {
@@ -1514,12 +1540,12 @@ void LoadRG11EACToRG16(size_t width,
                 uint16_t *destPixelsRed         = destRow + (x * 2);
                 const ETC2Block *sourceBlockRed = sourceRow + (x / 2);
                 sourceBlockRed->decodeAsSingleEACChannel(destPixelsRed, x, y, width, height, 2,
-                                                         outputRowPitch, isSigned);
+                                                         outputRowPitch, isSigned, isFloat);
 
                 uint16_t *destPixelsGreen         = destPixelsRed + 1;
                 const ETC2Block *sourceBlockGreen = sourceBlockRed + 1;
                 sourceBlockGreen->decodeAsSingleEACChannel(destPixelsGreen, x, y, width, height, 2,
-                                                           outputRowPitch, isSigned);
+                                                           outputRowPitch, isSigned, isFloat);
             }
         }
     }
@@ -1724,7 +1750,7 @@ void LoadEACR11ToR16(size_t width,
                      size_t outputDepthPitch)
 {
     LoadR11EACToR16(width, height, depth, input, inputRowPitch, inputDepthPitch, output,
-                    outputRowPitch, outputDepthPitch, false);
+                    outputRowPitch, outputDepthPitch, false, false);
 }
 
 void LoadEACR11SToR16(size_t width,
@@ -1738,7 +1764,7 @@ void LoadEACR11SToR16(size_t width,
                       size_t outputDepthPitch)
 {
     LoadR11EACToR16(width, height, depth, input, inputRowPitch, inputDepthPitch, output,
-                    outputRowPitch, outputDepthPitch, true);
+                    outputRowPitch, outputDepthPitch, true, false);
 }
 
 void LoadEACRG11ToRG16(size_t width,
@@ -1752,7 +1778,7 @@ void LoadEACRG11ToRG16(size_t width,
                        size_t outputDepthPitch)
 {
     LoadRG11EACToRG16(width, height, depth, input, inputRowPitch, inputDepthPitch, output,
-                      outputRowPitch, outputDepthPitch, false);
+                      outputRowPitch, outputDepthPitch, false, false);
 }
 
 void LoadEACRG11SToRG16(size_t width,
@@ -1766,7 +1792,63 @@ void LoadEACRG11SToRG16(size_t width,
                         size_t outputDepthPitch)
 {
     LoadRG11EACToRG16(width, height, depth, input, inputRowPitch, inputDepthPitch, output,
-                      outputRowPitch, outputDepthPitch, true);
+                      outputRowPitch, outputDepthPitch, true, false);
+}
+
+void LoadEACR11ToR16F(size_t width,
+                      size_t height,
+                      size_t depth,
+                      const uint8_t *input,
+                      size_t inputRowPitch,
+                      size_t inputDepthPitch,
+                      uint8_t *output,
+                      size_t outputRowPitch,
+                      size_t outputDepthPitch)
+{
+    LoadR11EACToR16(width, height, depth, input, inputRowPitch, inputDepthPitch, output,
+                    outputRowPitch, outputDepthPitch, false, true);
+}
+
+void LoadEACR11SToR16F(size_t width,
+                       size_t height,
+                       size_t depth,
+                       const uint8_t *input,
+                       size_t inputRowPitch,
+                       size_t inputDepthPitch,
+                       uint8_t *output,
+                       size_t outputRowPitch,
+                       size_t outputDepthPitch)
+{
+    LoadR11EACToR16(width, height, depth, input, inputRowPitch, inputDepthPitch, output,
+                    outputRowPitch, outputDepthPitch, true, true);
+}
+
+void LoadEACRG11ToRG16F(size_t width,
+                        size_t height,
+                        size_t depth,
+                        const uint8_t *input,
+                        size_t inputRowPitch,
+                        size_t inputDepthPitch,
+                        uint8_t *output,
+                        size_t outputRowPitch,
+                        size_t outputDepthPitch)
+{
+    LoadRG11EACToRG16(width, height, depth, input, inputRowPitch, inputDepthPitch, output,
+                      outputRowPitch, outputDepthPitch, false, true);
+}
+
+void LoadEACRG11SToRG16F(size_t width,
+                         size_t height,
+                         size_t depth,
+                         const uint8_t *input,
+                         size_t inputRowPitch,
+                         size_t inputDepthPitch,
+                         uint8_t *output,
+                         size_t outputRowPitch,
+                         size_t outputDepthPitch)
+{
+    LoadRG11EACToRG16(width, height, depth, input, inputRowPitch, inputDepthPitch, output,
+                      outputRowPitch, outputDepthPitch, true, true);
 }
 
 void LoadETC2RGB8ToRGBA8(size_t width,

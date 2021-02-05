@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2014 The ANGLE Project Authors. All rights reserved.
+// Copyright 2002 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -11,12 +11,17 @@
 
 #include "common/platform.h"
 
+#if defined(ANGLE_USE_ABSEIL)
+#    include "absl/container/flat_hash_map.h"
+#endif  // defined(ANGLE_USE_ABSEIL)
+
 #include <climits>
 #include <cstdarg>
 #include <cstddef>
 #include <set>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 // A helper class to disallow copy and assignment operators
@@ -26,6 +31,14 @@ namespace angle
 #if defined(ANGLE_ENABLE_D3D9) || defined(ANGLE_ENABLE_D3D11)
 using Microsoft::WRL::ComPtr;
 #endif  // defined(ANGLE_ENABLE_D3D9) || defined(ANGLE_ENABLE_D3D11)
+
+#if defined(ANGLE_USE_ABSEIL)
+template <typename Key, typename T>
+using HashMap = absl::flat_hash_map<Key, T>;
+#else
+template <typename Key, typename T>
+using HashMap = std::unordered_map<Key, T>;
+#endif  // defined(ANGLE_USE_ABSEIL)
 
 class NonCopyable
 {
@@ -183,6 +196,13 @@ std::string ToString(const T &value)
     return o.str();
 }
 
+inline bool IsLittleEndian()
+{
+    constexpr uint32_t kEndiannessTest = 1;
+    const bool isLittleEndian          = *reinterpret_cast<const uint8_t *>(&kEndiannessTest) == 1;
+    return isLittleEndian;
+}
+
 // snprintf is not defined with MSVC prior to to msvc14
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #    define snprintf _snprintf
@@ -196,8 +216,9 @@ std::string ToString(const T &value)
 #define GL_INT_64_ANGLEX 0x6ABE
 #define GL_UINT_64_ANGLEX 0x6ABF
 #define GL_BGRA8_SRGB_ANGLEX 0x6AC0
+#define GL_BGR10_A2_ANGLEX 0x6AF9
 
-// These are dummy formats used to fit typeless D3D textures that can be bound to EGL pbuffers into
+// These are fake formats used to fit typeless D3D textures that can be bound to EGL pbuffers into
 // the format system (for extension EGL_ANGLE_d3d_texture_client_buffer):
 #define GL_RGBA8_TYPELESS_ANGLEX 0x6AC1
 #define GL_RGBA8_TYPELESS_SRGB_ANGLEX 0x6AC2
@@ -249,6 +270,21 @@ std::string ToString(const T &value)
 #define GL_RGB10_A2_SNORM_ANGLEX 0x6AEB
 #define GL_RGB10_A2_SSCALED_ANGLEX 0x6AEC
 #define GL_RGB10_A2_USCALED_ANGLEX 0x6AED
+
+// EXT_texture_type_2_10_10_10_REV
+#define GL_RGB10_UNORM_ANGLEX 0x6AEE
+
+// These are fake formats for OES_vertex_type_10_10_10_2
+#define GL_A2_RGB10_UNORM_ANGLEX 0x6AEF
+#define GL_A2_RGB10_SNORM_ANGLEX 0x6AF0
+#define GL_A2_RGB10_USCALED_ANGLEX 0x6AF1
+#define GL_A2_RGB10_SSCALED_ANGLEX 0x6AF2
+#define GL_X2_RGB10_UINT_ANGLEX 0x6AF3
+#define GL_X2_RGB10_SINT_ANGLEX 0x6AF4
+#define GL_X2_RGB10_USCALED_ANGLEX 0x6AF5
+#define GL_X2_RGB10_SSCALED_ANGLEX 0x6AF6
+#define GL_X2_RGB10_UNORM_ANGLEX 0x6AF7
+#define GL_X2_RGB10_SNORM_ANGLEX 0x6AF8
 
 #define ANGLE_CHECK_GL_ALLOC(context, result) \
     ANGLE_CHECK(context, result, "Failed to allocate host memory", GL_OUT_OF_MEMORY)
@@ -329,5 +365,11 @@ std::string ToString(const T &value)
 #else
 #    define ANGLE_MAYBE_UNUSED
 #endif  // __has_cpp_attribute(maybe_unused)
+
+#if __has_cpp_attribute(require_constant_initialization)
+#    define ANGLE_REQUIRE_CONSTANT_INIT [[require_constant_initialization]]
+#else
+#    define ANGLE_REQUIRE_CONSTANT_INIT
+#endif  // __has_cpp_attribute(require_constant_initialization)
 
 #endif  // COMMON_ANGLEUTILS_H_

@@ -7,7 +7,7 @@
 //   String helper functions.
 //
 
-#include "string_utils.h"
+#include "common/string_utils.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -16,6 +16,20 @@
 #include <sstream>
 
 #include "common/platform.h"
+#include "common/system_utils.h"
+
+namespace
+{
+
+bool EndsWithSuffix(const char *str,
+                    const size_t strLen,
+                    const char *suffix,
+                    const size_t suffixLen)
+{
+    return suffixLen <= strLen && strncmp(str + strLen - suffixLen, suffix, suffixLen) == 0;
+}
+
+}  // anonymous namespace
 
 namespace angle
 {
@@ -177,22 +191,34 @@ bool BeginsWith(const std::string &str, const std::string &prefix, const size_t 
     return strncmp(str.c_str(), prefix.c_str(), prefixLength) == 0;
 }
 
+bool EndsWith(const std::string &str, const std::string &suffix)
+{
+    return EndsWithSuffix(str.c_str(), str.length(), suffix.c_str(), suffix.length());
+}
+
 bool EndsWith(const std::string &str, const char *suffix)
 {
-    const auto len = strlen(suffix);
-    if (len > str.size())
-        return false;
+    return EndsWithSuffix(str.c_str(), str.length(), suffix, strlen(suffix));
+}
 
-    const char *end = str.c_str() + str.size() - len;
-
-    return memcmp(end, suffix, len) == 0;
+bool EndsWith(const char *str, const char *suffix)
+{
+    return EndsWithSuffix(str, strlen(str), suffix, strlen(suffix));
 }
 
 void ToLower(std::string *str)
 {
-    for (auto &ch : *str)
+    for (char &ch : *str)
     {
         ch = static_cast<char>(::tolower(ch));
+    }
+}
+
+void ToUpper(std::string *str)
+{
+    for (char &ch : *str)
+    {
+        ch = static_cast<char>(::toupper(ch));
     }
 }
 
@@ -209,4 +235,20 @@ bool ReplaceSubstring(std::string *str,
     return true;
 }
 
+std::vector<std::string> GetStringsFromEnvironmentVarOrAndroidProperty(const char *varName,
+                                                                       const char *propertyName,
+                                                                       const char *separator)
+{
+    std::string environment = GetEnvironmentVarOrAndroidProperty(varName, propertyName);
+    return SplitString(environment, separator, TRIM_WHITESPACE, SPLIT_WANT_NONEMPTY);
+}
+
+std::vector<std::string> GetCachedStringsFromEnvironmentVarOrAndroidProperty(
+    const char *varName,
+    const char *propertyName,
+    const char *separator)
+{
+    std::string environment = GetEnvironmentVarOrAndroidProperty(varName, propertyName);
+    return SplitString(environment, separator, TRIM_WHITESPACE, SPLIT_WANT_NONEMPTY);
+}
 }  // namespace angle

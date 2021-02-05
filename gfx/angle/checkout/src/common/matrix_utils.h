@@ -134,6 +134,7 @@ class Matrix
 
     std::vector<T> elements() const { return mElements; }
     T *data() { return mElements.data(); }
+    const T *constData() const { return mElements.data(); }
 
     Matrix<T> compMult(const Matrix<T> &mat1) const
     {
@@ -335,7 +336,7 @@ class Matrix
         Matrix<T> result(std::vector<T>(mElements.size()), rows(), columns());
         for (unsigned int i = 0; i < rows(); i++)
             for (unsigned int j = 0; j < columns(); j++)
-                result(i, j) = det ? adjugateMatrix(i, j) / det : T();
+                result(i, j) = (det != static_cast<T>(0)) ? adjugateMatrix(i, j) / det : T();
 
         return result;
     }

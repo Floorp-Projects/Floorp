@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2013 The ANGLE Project Authors. All rights reserved.
+// Copyright 2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -14,6 +14,7 @@
 #include <ostream>
 
 #include "angle_gl.h"
+#include "common/android_util.h"
 #include "libANGLE/Caps.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/Version.h"
@@ -55,6 +56,58 @@ struct Type
 
 uint32_t GetPackedTypeInfo(GLenum type);
 
+ANGLE_INLINE GLenum GetNonLinearFormat(const GLenum format)
+{
+    switch (format)
+    {
+        case GL_BGRA8_EXT:
+            return GL_BGRA8_SRGB_ANGLEX;
+        case GL_RGBA8:
+            return GL_SRGB8_ALPHA8;
+        case GL_RGB8:
+        case GL_BGRX8_ANGLEX:
+            return GL_SRGB8;
+        case GL_RGBA16F:
+            return GL_RGBA16F;
+        default:
+            return GL_NONE;
+    }
+}
+
+ANGLE_INLINE bool ColorspaceFormatOverride(const EGLenum colorspace, GLenum *rendertargetformat)
+{
+    // Override the rendertargetformat based on colorpsace
+    switch (colorspace)
+    {
+        case EGL_GL_COLORSPACE_LINEAR:                 // linear colorspace no translation needed
+        case EGL_GL_COLORSPACE_SCRGB_LINEAR_EXT:       // linear colorspace no translation needed
+        case EGL_GL_COLORSPACE_DISPLAY_P3_LINEAR_EXT:  // linear colorspace no translation needed
+        case EGL_GL_COLORSPACE_DISPLAY_P3_PASSTHROUGH_EXT:  // App, not the HW, will specify the
+                                                            // transfer function
+        case EGL_GL_COLORSPACE_SCRGB_EXT:  // App, not the HW, will specify the transfer function
+            // No translation
+            return true;
+        case EGL_GL_COLORSPACE_SRGB_KHR:
+        case EGL_GL_COLORSPACE_DISPLAY_P3_EXT:
+        {
+            GLenum nonLinearFormat = GetNonLinearFormat(*rendertargetformat);
+            if (nonLinearFormat != GL_NONE)
+            {
+                *rendertargetformat = nonLinearFormat;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        break;
+        default:
+            UNREACHABLE();
+            return false;
+    }
+}
+
 ANGLE_INLINE const Type GetTypeInfo(GLenum type)
 {
     return Type(GetPackedTypeInfo(type));
@@ -81,8 +134,12 @@ struct InternalFormat
 {
     InternalFormat();
     InternalFormat(const InternalFormat &other);
+    InternalFormat &operator=(const InternalFormat &other);
 
     GLuint computePixelBytes(GLenum formatType) const;
+
+    ANGLE_NO_DISCARD bool computeBufferRowLength(uint32_t width, uint32_t *resultOut) const;
+    ANGLE_NO_DISCARD bool computeBufferImageHeight(uint32_t height, uint32_t *resultOut) const;
 
     ANGLE_NO_DISCARD bool computeRowPitch(GLenum formatType,
                                           GLsizei width,
@@ -103,6 +160,8 @@ struct InternalFormat
 
     ANGLE_NO_DISCARD bool computeCompressedImageSize(const Extents &size, GLuint *resultOut) const;
 
+    ANGLE_NO_DISCARD std::pair<GLuint, GLuint> getCompressedImageMinBlocks() const;
+
     ANGLE_NO_DISCARD bool computeSkipBytes(GLenum formatType,
                                            GLuint rowPitch,
                                            GLuint depthPitch,
@@ -117,8 +176,21 @@ struct InternalFormat
                                                    GLuint *resultOut) const;
 
     bool isLUMA() const;
-    GLenum getReadPixelsFormat() const;
+    GLenum getReadPixelsFormat(const Extensions &extensions) const;
     GLenum getReadPixelsType(const Version &version) const;
+
+    // Support upload a portion of image?
+    bool supportSubImage() const;
+
+    ANGLE_INLINE bool isChannelSizeCompatible(GLuint redSize,
+                                              GLuint greenSize,
+                                              GLuint blueSize,
+                                              GLuint alphaSize) const
+    {
+        // We only check for equality in all channel sizes
+        return ((redSize == redBits) && (greenSize == greenBits) && (blueSize == blueBits) &&
+                (alphaSize == alphaBits));
+    }
 
     // Return true if the format is a required renderbuffer format in the given version of the core
     // spec. Note that it isn't always clear whether all the rules that apply to core required
@@ -127,6 +199,7 @@ struct InternalFormat
     bool isRequiredRenderbufferFormat(const Version &version) const;
 
     bool isInt() const;
+    bool isDepthOrStencil() const;
 
     bool operator==(const InternalFormat &other) const;
     bool operator!=(const InternalFormat &other) const;
@@ -168,6 +241,7 @@ struct InternalFormat
     SupportCheckFunction filterSupport;
     SupportCheckFunction textureAttachmentSupport;  // glFramebufferTexture2D
     SupportCheckFunction renderbufferSupport;       // glFramebufferRenderbuffer
+    SupportCheckFunction blendSupport;
 };
 
 // A "Format" wraps an InternalFormat struct, querying it from either a sized internal format or
@@ -204,8 +278,29 @@ const InternalFormat &GetInternalFormatInfo(GLenum internalFormat, GLenum type);
 // format is valid.
 GLenum GetUnsizedFormat(GLenum internalFormat);
 
+// Return whether the compressed format requires whole image/mip level to be uploaded to texture.
+bool CompressedFormatRequiresWholeImage(GLenum internalFormat);
+
+// In support of GetImage, check for LUMA formats and override with real format
+void MaybeOverrideLuminance(GLenum &format, GLenum &type, GLenum actualFormat, GLenum actualType);
+
 typedef std::set<GLenum> FormatSet;
 const FormatSet &GetAllSizedInternalFormats();
+
+typedef angle::HashMap<GLenum, angle::HashMap<GLenum, InternalFormat>> InternalFormatInfoMap;
+const InternalFormatInfoMap &GetInternalFormatMap();
+
+int GetAndroidHardwareBufferFormatFromChannelSizes(const egl::AttributeMap &attribMap);
+
+ANGLE_INLINE int GetNativeVisualID(const InternalFormat &internalFormat)
+{
+    int nativeVisualId = 0;
+#if defined(ANGLE_PLATFORM_ANDROID)
+    nativeVisualId =
+        angle::android::GLInternalFormatToNativePixelFormat(internalFormat.internalFormat);
+#endif
+    return nativeVisualId;
+}
 
 // From the ESSL 3.00.4 spec:
 // Vertex shader inputs can only be float, floating-point vectors, matrices, signed and unsigned
@@ -260,6 +355,74 @@ angle::FormatID GetCurrentValueFormatID(VertexAttribType currentValueType);
 const VertexFormat &GetVertexFormatFromID(angle::FormatID vertexFormatID);
 size_t GetVertexFormatSize(angle::FormatID vertexFormatID);
 
+ANGLE_INLINE bool IsS3TCFormat(const GLenum format)
+{
+    switch (format)
+    {
+        case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+        case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+        case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+        case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+        case GL_COMPRESSED_SRGB_S3TC_DXT1_EXT:
+        case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT:
+        case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT:
+        case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+ANGLE_INLINE bool IsRGTCFormat(const GLenum format)
+{
+    switch (format)
+    {
+        case GL_COMPRESSED_RED_RGTC1_EXT:
+        case GL_COMPRESSED_SIGNED_RED_RGTC1_EXT:
+        case GL_COMPRESSED_RED_GREEN_RGTC2_EXT:
+        case GL_COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+ANGLE_INLINE bool IsASTC2DFormat(const GLenum format)
+{
+    if ((format >= GL_COMPRESSED_RGBA_ASTC_4x4_KHR &&
+         format <= GL_COMPRESSED_RGBA_ASTC_12x12_KHR) ||
+        (format >= GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR &&
+         format <= GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR))
+    {
+        return true;
+    }
+    return false;
+}
+
+ANGLE_INLINE bool IsETC2EACFormat(const GLenum format)
+{
+    // ES 3.1, Table 8.19
+    switch (format)
+    {
+        case GL_COMPRESSED_R11_EAC:
+        case GL_COMPRESSED_SIGNED_R11_EAC:
+        case GL_COMPRESSED_RG11_EAC:
+        case GL_COMPRESSED_SIGNED_RG11_EAC:
+        case GL_COMPRESSED_RGB8_ETC2:
+        case GL_COMPRESSED_SRGB8_ETC2:
+        case GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2:
+        case GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2:
+        case GL_COMPRESSED_RGBA8_ETC2_EAC:
+        case GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
 // Check if an internal format is ever valid in ES3.  Makes no checks about support for a specific
 // context.
 bool ValidES3InternalFormat(GLenum internalFormat);
@@ -268,6 +431,11 @@ bool ValidES3InternalFormat(GLenum internalFormat);
 bool ValidES3Format(GLenum format);
 bool ValidES3Type(GLenum type);
 bool ValidES3FormatCombination(GLenum format, GLenum type, GLenum internalFormat);
+
+// Implemented in format_map_desktop.cpp
+bool ValidDesktopFormat(GLenum format);
+bool ValidDesktopType(GLenum type);
+bool ValidDesktopFormatCombination(GLenum format, GLenum type, GLenum internalFormat);
 
 // Implemented in es3_copy_conversion_table_autogen.cpp
 bool ValidES3CopyConversion(GLenum textureFormat, GLenum framebufferFormat);

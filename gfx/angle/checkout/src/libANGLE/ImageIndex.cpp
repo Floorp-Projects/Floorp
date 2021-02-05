@@ -35,24 +35,35 @@ GLint TextureTargetToLayer(TextureTarget target)
         case TextureTarget::CubeMapNegativeZ:
             return 5;
         case TextureTarget::External:
-            return ImageIndex::kEntireLevel;
         case TextureTarget::Rectangle:
-            return ImageIndex::kEntireLevel;
         case TextureTarget::_2D:
-            return ImageIndex::kEntireLevel;
+        case TextureTarget::VideoImage:
         case TextureTarget::_2DArray:
-            return ImageIndex::kEntireLevel;
         case TextureTarget::_2DMultisample:
-            return ImageIndex::kEntireLevel;
         case TextureTarget::_2DMultisampleArray:
-            return ImageIndex::kEntireLevel;
         case TextureTarget::_3D:
+        case TextureTarget::Buffer:
+        case TextureTarget::CubeMapArray:
             return ImageIndex::kEntireLevel;
         default:
             UNREACHABLE();
             return 0;
     }
 }
+
+bool IsArrayTarget(TextureTarget target)
+{
+    switch (target)
+    {
+        case TextureTarget::_2DArray:
+        case TextureTarget::_2DMultisampleArray:
+        case TextureTarget::CubeMapArray:
+            return true;
+        default:
+            return false;
+    }
+}
+}  // anonymous namespace
 
 TextureTarget TextureTypeToTarget(TextureType type, GLint layerIndex)
 {
@@ -68,19 +79,6 @@ TextureTarget TextureTypeToTarget(TextureType type, GLint layerIndex)
         return NonCubeTextureTypeToTarget(type);
     }
 }
-
-bool IsArrayTarget(TextureTarget target)
-{
-    switch (target)
-    {
-        case TextureTarget::_2DArray:
-        case TextureTarget::_2DMultisampleArray:
-            return true;
-        default:
-            return false;
-    }
-}
-}  // anonymous namespace
 
 ImageIndex::ImageIndex()
     : mType(TextureType::InvalidEnum), mLevelIndex(0), mLayerIndex(0), mLayerCount(kEntireLevel)
@@ -103,6 +101,7 @@ bool ImageIndex::isLayered() const
         case TextureType::_2DMultisampleArray:
         case TextureType::CubeMap:
         case TextureType::_3D:
+        case TextureType::CubeMapArray:
             return mLayerIndex == kEntireLevel;
         default:
             return false;
@@ -120,12 +119,24 @@ bool ImageIndex::has3DLayer() const
 bool ImageIndex::usesTex3D() const
 {
     return mType == TextureType::_3D || mType == TextureType::_2DArray ||
-           mType == TextureType::_2DMultisampleArray;
+           mType == TextureType::_2DMultisampleArray || mType == TextureType::CubeMapArray;
 }
 
 TextureTarget ImageIndex::getTarget() const
 {
     return TextureTypeToTarget(mType, mLayerIndex);
+}
+
+gl::TextureTarget ImageIndex::getTargetOrFirstCubeFace() const
+{
+    if (isEntireLevelCubeMap())
+    {
+        return gl::kCubeMapTextureTargetMin;
+    }
+    else
+    {
+        return getTarget();
+    }
 }
 
 GLint ImageIndex::cubeMapFaceIndex() const

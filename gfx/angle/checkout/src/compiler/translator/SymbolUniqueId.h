@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2017 The ANGLE Project Authors. All rights reserved.
+// Copyright 2017 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -37,7 +37,7 @@ class TSymbolUniqueId
     int mId;
 };
 
-enum class SymbolType
+enum class SymbolType : uint8_t
 {
     BuiltIn,
     UserDefined,
@@ -45,7 +45,7 @@ enum class SymbolType
     Empty  // Meaning symbol without a name.
 };
 
-enum class SymbolClass
+enum class SymbolClass : uint8_t
 {
     Function,
     Variable,

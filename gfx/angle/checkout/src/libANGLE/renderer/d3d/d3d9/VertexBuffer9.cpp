@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
+// Copyright 2002 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -78,7 +78,7 @@ angle::Result VertexBuffer9::storeVertexAttributes(const gl::Context *context,
 
     unsigned int mapSize = 0;
     ANGLE_TRY(
-        mRenderer->getVertexSpaceRequired(context, attrib, binding, count, instances, &mapSize));
+        mRenderer->getVertexSpaceRequired(context, attrib, binding, count, instances, 0, &mapSize));
 
     HRESULT result =
         mVertexBuffer->Lock(offset, mapSize, reinterpret_cast<void **>(&mapPtr), lockFlags);
@@ -132,12 +132,12 @@ angle::Result VertexBuffer9::discard(const gl::Context *context)
 {
     ASSERT(mVertexBuffer);
 
-    void *dummy;
+    void *mock;
     HRESULT result;
 
     Context9 *context9 = GetImplAs<Context9>(context);
 
-    result = mVertexBuffer->Lock(0, 1, &dummy, D3DLOCK_DISCARD);
+    result = mVertexBuffer->Lock(0, 1, &mock, D3DLOCK_DISCARD);
     ANGLE_TRY_HR(context9, result, "Failed to lock internal vertex buffer for discarding");
 
     result = mVertexBuffer->Unlock();
