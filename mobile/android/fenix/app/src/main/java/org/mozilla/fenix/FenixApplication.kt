@@ -306,6 +306,10 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             // ... but RustHttpConfig.setClient() and RustLog.enable() can be called later.
             RustHttpConfig.setClient(lazy { components.core.client })
             RustLog.enable(components.analytics.crashReporter)
+            // We want to ensure Nimbus is initialized as early as possible so we can
+            // experiment on features close to startup.
+            // But we need viaduct (the RustHttp client) to be ready before we do.
+            components.analytics.experiments.initialize()
         }
     }
 
