@@ -5035,8 +5035,8 @@ QuotaManager::GetDirectoryMetadataWithQuotaInfo2(nsIFile* aDirectory) {
         CreateDirectoryMetadata2(*aDirectory, timestamp, persisted, quotaInfo));
   }
 
-  return GetDirectoryResultWithQuotaInfo{
-      {static_cast<int64_t>(timestamp), persisted}, std::move(quotaInfo)};
+  return GetDirectoryResultWithQuotaInfo{static_cast<int64_t>(timestamp),
+                                         persisted, std::move(quotaInfo)};
 }
 
 Result<QuotaManager::GetDirectoryResultWithQuotaInfo, nsresult>
@@ -5055,45 +5055,6 @@ QuotaManager::GetDirectoryMetadataWithQuotaInfo2WithRestore(nsIFile* aDirectory,
     QM_TRY(RestoreDirectoryMetadata2(aDirectory, aPersistent));
 
     QM_TRY_RETURN(GetDirectoryMetadataWithQuotaInfo2(aDirectory));
-  }
-
-  return maybeFirstAttemptResult.extract();
-}
-
-Result<QuotaManager::GetDirectoryResult, nsresult>
-QuotaManager::GetDirectoryMetadata2(nsIFile* aDirectory) {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(aDirectory);
-  MOZ_ASSERT(mStorageConnection);
-
-  QM_TRY_INSPECT(const auto& binaryStream,
-                 GetBinaryInputStream(*aDirectory,
-                                      nsLiteralString(METADATA_V2_FILE_NAME)));
-
-  QM_TRY_INSPECT(const uint64_t& timestamp,
-                 MOZ_TO_RESULT_INVOKE(binaryStream, Read64));
-
-  QM_TRY_INSPECT(const bool& persisted,
-                 MOZ_TO_RESULT_INVOKE(binaryStream, ReadBoolean));
-
-  return GetDirectoryResult{static_cast<int64_t>(timestamp), persisted};
-}
-
-Result<QuotaManager::GetDirectoryResult, nsresult>
-QuotaManager::GetDirectoryMetadata2WithRestore(nsIFile* aDirectory,
-                                               bool aPersistent) {
-  QM_TRY_UNWRAP(
-      auto maybeFirstAttemptResult,
-      ([this, &aDirectory]() -> Result<Maybe<GetDirectoryResult>, nsresult> {
-        QM_TRY_RETURN(GetDirectoryMetadata2(aDirectory)
-                          .map(Some<GetDirectoryResult, GetDirectoryResult>),
-                      Maybe<GetDirectoryResult>{});
-      }()));
-
-  if (!maybeFirstAttemptResult) {
-    QM_TRY(RestoreDirectoryMetadata2(aDirectory, aPersistent));
-
-    QM_TRY_RETURN(GetDirectoryMetadata2(aDirectory));
   }
 
   return maybeFirstAttemptResult.extract();
@@ -6471,9 +6432,10 @@ QuotaManager::EnsurePersistentOriginIsInitialized(const QuotaInfo& aQuotaInfo) {
           }
 
           // Get the metadata. We only use the timestamp.
-          QM_TRY_INSPECT(const auto& metadata, GetDirectoryMetadata2WithRestore(
-                                                   directory,
-                                                   /* aPersistent */ true));
+          QM_TRY_INSPECT(const auto& metadata,
+                         GetDirectoryMetadataWithQuotaInfo2WithRestore(
+                             directory,
+                             /* aPersistent */ true));
 
           MOZ_ASSERT(metadata.mTimestamp <= PR_Now());
 
@@ -9597,7 +9559,7 @@ nsresult PersistedOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   if (exists) {
     // Get the metadata. We only use the persisted flag.
     QM_TRY_INSPECT(const auto& metadata,
-                   aQuotaManager.GetDirectoryMetadata2WithRestore(
+                   aQuotaManager.GetDirectoryMetadataWithQuotaInfo2WithRestore(
                        directory,
                        /* aPersistent */ false));
 
@@ -9664,7 +9626,7 @@ nsresult PersistOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
     // Get the metadata (restore the metadata file if necessary). We only use
     // the persisted flag.
     QM_TRY_INSPECT(const auto& metadata,
-                   aQuotaManager.GetDirectoryMetadata2WithRestore(
+                   aQuotaManager.GetDirectoryMetadataWithQuotaInfo2WithRestore(
                        directory,
                        /* aPersistent */ false));
 
