@@ -41,16 +41,6 @@ async function captureAndSaveScreenshot(targetFront, window, args = {}) {
     return [{ text: getFormattedHelpData() }];
   }
 
-  if (targetFront.isParentProcess) {
-    return [
-      {
-        text:
-          "Taking screenshot from ParentProcess target isn't supported yet (See Bug 1474006)",
-        level: "warn",
-      },
-    ];
-  }
-
   // @backward-compat { version 87 } The screenshot-content actor was introduced in 87,
   // so we can always use it once 87 reaches release.
   const supportsContentScreenshot = targetFront.hasActor("screenshotContent");

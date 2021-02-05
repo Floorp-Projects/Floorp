@@ -550,11 +550,10 @@ exports.ToolboxButtons = [
     description: l10n("toolbox.buttons.screenshot"),
     isTargetSupported: targetFront => {
       return (
-        !targetFront.isParentProcess &&
         // @backward-compat { version 87 } We need to check for the screenshot actor as well
         // when connecting to older server that does not have the screenshotContentActor
-        (targetFront.hasActor("screenshotContent") ||
-          targetFront.hasActor("screenshot"))
+        targetFront.hasActor("screenshotContent") ||
+        targetFront.hasActor("screenshot")
       );
     },
     async onClick(event, toolbox) {
