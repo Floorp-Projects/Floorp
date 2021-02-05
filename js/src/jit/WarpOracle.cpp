@@ -668,8 +668,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::BindVar:
       case JSOp::MutateProto:
       case JSOp::Callee:
-      case JSOp::ClassConstructor:
-      case JSOp::DerivedConstructor:
       case JSOp::ToAsyncIter:
       case JSOp::ObjWithProto:
       case JSOp::GetAliasedVar:

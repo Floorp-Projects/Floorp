@@ -415,16 +415,6 @@ class MOZ_RAII AutoSaveLocalStrictMode {
 //
 // Usage: (check for the return value is omitted for simplicity)
 //
-//   `class {}`
-//     ClassEmitter ce(this);
-//     ce.emitScope(scopeBindings);
-//     ce.emitClass(nullptr, nullptr, false);
-//
-//     ce.emitInitDefaultConstructor(offset_of_class,
-//                                   offset_of_closing_bracket);
-//
-//     ce.emitEnd(ClassEmitter::Kind::Expression);
-//
 //   `class { constructor() { ... } }`
 //     ClassEmitter ce(this);
 //     ce.emitScope(scopeBindings);
@@ -500,41 +490,41 @@ class MOZ_RAII AutoSaveLocalStrictMode {
 //     ce.emitMemberInitializersEnd();
 //
 //   `m() {}` in class
-//     // after emitInitConstructor/emitInitDefaultConstructor
+//     // after emitInitConstructor
 //     ce.prepareForPropValue(Some(offset_of_m));
 //     emit(function_for_m);
 //     ce.emitInitProp(atom_of_m);
 //
 //   `m() { super.f(); }` in class
-//     // after emitInitConstructor/emitInitDefaultConstructor
+//     // after emitInitConstructor
 //     ce.prepareForPropValue(Some(offset_of_m));
 //     emit(function_for_m);
 //     ce.emitInitHomeObject();
 //     ce.emitInitProp(atom_of_m);
 //
 //   `async m() { super.f(); }` in class
-//     // after emitInitConstructor/emitInitDefaultConstructor
+//     // after emitInitConstructor
 //     ce.prepareForPropValue(Some(offset_of_m));
 //     emit(function_for_m);
 //     ce.emitInitHomeObject();
 //     ce.emitInitProp(atom_of_m);
 //
 //   `get p() { super.f(); }` in class
-//     // after emitInitConstructor/emitInitDefaultConstructor
+//     // after emitInitConstructor
 //     ce.prepareForPropValue(Some(offset_of_p));
 //     emit(function_for_p);
 //     ce.emitInitHomeObject();
 //     ce.emitInitGetter(atom_of_m);
 //
 //   `static m() {}` in class
-//     // after emitInitConstructor/emitInitDefaultConstructor
+//     // after emitInitConstructor
 //     ce.prepareForPropValue(Some(offset_of_m),
 //                            PropertyEmitter::Kind::Static);
 //     emit(function_for_m);
 //     ce.emitInitProp(atom_of_m);
 //
 //   `static get [p]() { super.f(); }` in class
-//     // after emitInitConstructor/emitInitDefaultConstructor
+//     // after emitInitConstructor
 //     ce.prepareForComputedPropValue(Some(offset_of_m),
 //                                    PropertyEmitter::Kind::Static);
 //     emit(p);
@@ -646,10 +636,10 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
   //     +<--------------+
   //     |
   //     |   emitInitConstructor           +-----------------+
-  //     +-+--------------------------->+->| InitConstructor |-+
-  //       |                            ^  +-----------------+ |
-  //       | emitInitDefaultConstructor |                      |
-  //       +----------------------------+                      |
+  //     +-------------------------------->| InitConstructor |-+
+  //                                       +-----------------+ |
+  //                                                           |
+  //                                                           |
   //                                                           |
   //     +-----------------------------------------------------+
   //     |
@@ -695,7 +685,7 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
     // After calling emitClass or emitDerivedClass.
     Class,
 
-    // After calling emitInitConstructor or emitInitDefaultConstructor.
+    // After calling emitInitConstructor.
     InitConstructor,
 
     // After calling prepareForMemberInitializers(isStatic = false).
@@ -783,18 +773,6 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
   // @param needsHomeObject
   //        True if the constructor contains `super.foo`
   MOZ_MUST_USE bool emitInitConstructor(bool needsHomeObject);
-
-  // Parameters are the offset in the source code for each character below:
-  //
-  //   class X { foo() {} }
-  //   ^                  ^
-  //   |                  |
-  //   |                  classEnd
-  //   |
-  //   classStart
-  //
-  MOZ_MUST_USE bool emitInitDefaultConstructor(uint32_t classStart,
-                                               uint32_t classEnd);
 
   MOZ_MUST_USE bool prepareForMemberInitializers(size_t numInitializers,
                                                  bool isStatic);
