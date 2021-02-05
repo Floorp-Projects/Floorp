@@ -199,9 +199,9 @@ void CodeGeneratorShared::addOutOfLineCode(OutOfLineCode* code,
 
 void CodeGeneratorShared::addOutOfLineCode(OutOfLineCode* code,
                                            const BytecodeSite* site) {
+  MOZ_ASSERT_IF(!gen->compilingWasm(), site->script()->containsPC(site->pc()));
   code->setFramePushed(masm.framePushed());
   code->setBytecodeSite(site);
-  MOZ_ASSERT_IF(!gen->compilingWasm(), code->script()->containsPC(code->pc()));
   masm.propagateOOM(outOfLineCode_.append(code));
 }
 
