@@ -844,7 +844,7 @@ var LayerState = {
 //     If directions.vertical is true, the vertical scrollbar will be tested.
 //     If directions.horizontal is true, the horizontal scrollbar will be tested.
 //     Both may be true in a single call (in which case two tests are performed).
-//   expectedScrollId: The scroll id that is expected to be hit.
+//   expectedScrollId: The scroll id that is expected to be hit, if WR is disabled.
 //   expectedLayersId: The layers id that is expected to be hit.
 //   trackLocation: One of ScrollbarTrackLocation.{START, END}.
 //     Determines which end of the scrollbar track is targeted.
@@ -893,15 +893,24 @@ function hitTestScrollbar(params) {
     // will fall back to the main thread for everything.
     if (config.isWebRender) {
       expectedHitInfo |= APZHitResultFlags.APZ_AWARE_LISTENERS;
-      if (params.layerState == LayerState.INACTIVE) {
-        expectedHitInfo |= APZHitResultFlags.INACTIVE_SCROLLFRAME;
-      }
     } else {
       expectedHitInfo |= APZHitResultFlags.IRREGULAR_AREA;
     }
     // We do not generate the layers for thumbs on inactive scrollframes.
-    if (params.layerState == LayerState.ACTIVE) {
+    if (params.layerState == LayerState.ACTIVE || config.isWebRender) {
       expectedHitInfo |= APZHitResultFlags.SCROLLBAR_THUMB;
+    }
+  }
+
+  var expectedScrollId = params.expectedScrollId;
+  if (config.isWebRender) {
+    expectedScrollId = config.utils.getViewId(params.element);
+    if (params.layerState == LayerState.ACTIVE) {
+      is(
+        expectedScrollId,
+        params.expectedScrollId,
+        "Expected scrollId for active scrollframe should match"
+      );
     }
   }
 
@@ -926,7 +935,7 @@ function hitTestScrollbar(params) {
     checkHitResult(
       hitTest(verticalScrollbarPoint),
       expectedHitInfo | APZHitResultFlags.SCROLLBAR_VERTICAL,
-      params.expectedScrollId,
+      expectedScrollId,
       params.expectedLayersId,
       scrollframeMsg + " - vertical scrollbar"
     );
@@ -946,7 +955,7 @@ function hitTestScrollbar(params) {
     checkHitResult(
       hitTest(horizontalScrollbarPoint),
       expectedHitInfo,
-      params.expectedScrollId,
+      expectedScrollId,
       params.expectedLayersId,
       scrollframeMsg + " - horizontal scrollbar"
     );
