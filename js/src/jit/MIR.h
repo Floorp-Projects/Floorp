@@ -10936,10 +10936,6 @@ class MResumePoint final : public MNode
   MResumePoint(MBasicBlock* block, jsbytecode* pc, Mode mode);
   void inherit(MBasicBlock* state);
 
-  void setBlock(MBasicBlock* block) {
-    setBlockAndKind(block, Kind::ResumePoint);
-  }
-
   // Calling isDefinition or isResumePoint on MResumePoint is unnecessary.
   bool isDefinition() const = delete;
   bool isResumePoint() const = delete;
