@@ -3584,11 +3584,11 @@ fn write_abi(state: &mut OutputState) {
             }
             if state.hir.lookup("swgl_drawSpanRGBA8").is_some() {
                 state.write(
-                    "static void draw_span_RGBA8(Self* self) { DISPATCH_DRAW_SPAN(self, RGBA8); }\n");
+                    "static int draw_span_RGBA8(Self* self) { DISPATCH_DRAW_SPAN(self, RGBA8); }\n");
             }
             if state.hir.lookup("swgl_drawSpanR8").is_some() {
                 state.write(
-                    "static void draw_span_R8(Self* self) { DISPATCH_DRAW_SPAN(self, R8); }\n");
+                    "static int draw_span_R8(Self* self) { DISPATCH_DRAW_SPAN(self, R8); }\n");
             }
 
             write!(state, "public:\n{}_frag() {{\n", state.name);
