@@ -20,7 +20,7 @@ add_task(async function() {
   info("Clicking waterfall and waiting for panel update.");
   const wait = waitForDOM(document, "#timings-panel");
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".requests-list-timings")[0]
   );

@@ -21,54 +21,54 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 7);
 
-  await testCopyUrlParamsHidden(0, false);
+  testCopyUrlParamsHidden(0, false);
   await testCopyUrlParams(0, "a");
-  await testCopyPostDataHidden(0, false);
+  testCopyPostDataHidden(0, false);
   await testCopyPostData(0, '{ "foo": "bar" }');
 
-  await testCopyUrlParamsHidden(1, false);
+  testCopyUrlParamsHidden(1, false);
   await testCopyUrlParams(1, "a=b");
-  await testCopyPostDataHidden(1, false);
+  testCopyPostDataHidden(1, false);
   await testCopyPostData(1, '{ "foo": "bar" }');
 
-  await testCopyUrlParamsHidden(2, false);
+  testCopyUrlParamsHidden(2, false);
   await testCopyUrlParams(2, "a=b");
-  await testCopyPostDataHidden(2, false);
+  testCopyPostDataHidden(2, false);
   await testCopyPostData(2, "foo=bar");
 
-  await testCopyUrlParamsHidden(3, false);
+  testCopyUrlParamsHidden(3, false);
   await testCopyUrlParams(3, "a");
-  await testCopyPostDataHidden(3, false);
+  testCopyPostDataHidden(3, false);
   await testCopyPostData(3, '{ "foo": "bar" }');
 
-  await testCopyUrlParamsHidden(4, false);
+  testCopyUrlParamsHidden(4, false);
   await testCopyUrlParams(4, "a=b");
-  await testCopyPostDataHidden(4, false);
+  testCopyPostDataHidden(4, false);
   await testCopyPostData(4, '{ "foo": "bar" }');
 
-  await testCopyUrlParamsHidden(5, false);
+  testCopyUrlParamsHidden(5, false);
   await testCopyUrlParams(5, "a=b");
-  await testCopyPostDataHidden(5, false);
+  testCopyPostDataHidden(5, false);
   await testCopyPostData(5, "?foo=bar");
-  await testCopyRequestDataLabel(5, "POST");
+  testCopyRequestDataLabel(5, "POST");
 
-  await testCopyUrlParamsHidden(6, true);
-  await testCopyPostDataHidden(6, true);
+  testCopyUrlParamsHidden(6, true);
+  testCopyPostDataHidden(6, true);
 
-  await testCopyPostDataHidden(7, false);
-  await testCopyRequestDataLabel(7, "PATCH");
+  testCopyPostDataHidden(7, false);
+  testCopyRequestDataLabel(7, "PATCH");
 
-  await testCopyPostDataHidden(8, false);
-  await testCopyRequestDataLabel(8, "PUT");
+  testCopyPostDataHidden(8, false);
+  testCopyRequestDataLabel(8, "PUT");
 
   return teardown(monitor);
 
-  async function testCopyUrlParamsHidden(index, hidden) {
-    await EventUtils.sendMouseEvent(
+  function testCopyUrlParamsHidden(index, hidden) {
+    EventUtils.sendMouseEvent(
       { type: "mousedown" },
       document.querySelectorAll(".request-list-item")[index]
     );
-    await EventUtils.sendMouseEvent(
+    EventUtils.sendMouseEvent(
       { type: "contextmenu" },
       document.querySelectorAll(".request-list-item")[index]
     );
@@ -86,11 +86,11 @@ add_task(async function() {
   }
 
   async function testCopyUrlParams(index, queryString) {
-    await EventUtils.sendMouseEvent(
+    EventUtils.sendMouseEvent(
       { type: "mousedown" },
       document.querySelectorAll(".request-list-item")[index]
     );
-    await EventUtils.sendMouseEvent(
+    EventUtils.sendMouseEvent(
       { type: "contextmenu" },
       document.querySelectorAll(".request-list-item")[index]
     );
@@ -103,12 +103,12 @@ add_task(async function() {
     ok(true, "The url query string copied from the selected item is correct.");
   }
 
-  async function testCopyPostDataHidden(index, hidden) {
-    await EventUtils.sendMouseEvent(
+  function testCopyPostDataHidden(index, hidden) {
+    EventUtils.sendMouseEvent(
       { type: "mousedown" },
       document.querySelectorAll(".request-list-item")[index]
     );
-    await EventUtils.sendMouseEvent(
+    EventUtils.sendMouseEvent(
       { type: "contextmenu" },
       document.querySelectorAll(".request-list-item")[index]
     );
@@ -125,12 +125,12 @@ add_task(async function() {
     );
   }
 
-  async function testCopyRequestDataLabel(index, method) {
-    await EventUtils.sendMouseEvent(
+  function testCopyRequestDataLabel(index, method) {
+    EventUtils.sendMouseEvent(
       { type: "mousedown" },
       document.querySelectorAll(".request-list-item")[index]
     );
-    await EventUtils.sendMouseEvent(
+    EventUtils.sendMouseEvent(
       { type: "contextmenu" },
       document.querySelectorAll(".request-list-item")[index]
     );
@@ -155,11 +155,11 @@ add_task(async function() {
       const { formDataSections, requestPostData } = requests[index];
       return formDataSections && requestPostData;
     });
-    await EventUtils.sendMouseEvent(
+    EventUtils.sendMouseEvent(
       { type: "mousedown" },
       document.querySelectorAll(".request-list-item")[index]
     );
-    await EventUtils.sendMouseEvent(
+    EventUtils.sendMouseEvent(
       { type: "contextmenu" },
       document.querySelectorAll(".request-list-item")[index]
     );

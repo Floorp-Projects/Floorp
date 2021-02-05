@@ -30,7 +30,7 @@ add_task(async function() {
   assertSingleRequestState();
 
   // Click clear and make sure the requests are gone
-  await EventUtils.sendMouseEvent({ type: "click" }, clearButton);
+  EventUtils.sendMouseEvent({ type: "click" }, clearButton);
   assertNoRequestState();
 
   // Load a second request and make sure they still show up
@@ -50,7 +50,7 @@ add_task(async function() {
   );
 
   // Click clear and make sure the details pane closes
-  await EventUtils.sendMouseEvent({ type: "click" }, clearButton);
+  EventUtils.sendMouseEvent({ type: "click" }, clearButton);
 
   assertNoRequestState();
   ok(

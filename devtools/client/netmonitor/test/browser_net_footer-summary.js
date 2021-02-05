@@ -48,7 +48,7 @@ add_task(async function() {
       const buttonEl = document.querySelector(
         `.requests-list-filter-${button}-button`
       );
-      await EventUtils.sendMouseEvent({ type: "click" }, buttonEl);
+      EventUtils.sendMouseEvent({ type: "click" }, buttonEl);
       testStatus();
     }
   }
