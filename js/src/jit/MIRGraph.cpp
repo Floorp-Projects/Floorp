@@ -527,9 +527,8 @@ void MBasicBlock::moveBefore(MInstruction* at, MInstruction* ins) {
 
   // Insert into new block, which may be distinct.
   // Uses and operands are untouched.
-  ins->setBlock(at->block());
+  ins->setInstructionBlock(at->block(), at->trackedSite());
   at->block()->instructions_.insertBefore(at, ins);
-  ins->setTrackedSite(at->trackedSite());
 }
 
 MInstruction* MBasicBlock::safeInsertTop(MDefinition* ins, IgnoreTop ignore) {
@@ -675,18 +674,16 @@ void MBasicBlock::clear() {
 
 void MBasicBlock::insertBefore(MInstruction* at, MInstruction* ins) {
   MOZ_ASSERT(at->block() == this);
-  ins->setBlock(this);
+  ins->setInstructionBlock(this, at->trackedSite());
   graph().allocDefinitionId(ins);
   instructions_.insertBefore(at, ins);
-  ins->setTrackedSite(at->trackedSite());
 }
 
 void MBasicBlock::insertAfter(MInstruction* at, MInstruction* ins) {
   MOZ_ASSERT(at->block() == this);
-  ins->setBlock(this);
+  ins->setInstructionBlock(this, at->trackedSite());
   graph().allocDefinitionId(ins);
   instructions_.insertAfter(at, ins);
-  ins->setTrackedSite(at->trackedSite());
 }
 
 void MBasicBlock::insertAtEnd(MInstruction* ins) {
@@ -699,7 +696,7 @@ void MBasicBlock::insertAtEnd(MInstruction* ins) {
 
 void MBasicBlock::addPhi(MPhi* phi) {
   phis_.pushBack(phi);
-  phi->setBlock(this);
+  phi->setPhiBlock(this);
   graph().allocDefinitionId(phi);
 }
 

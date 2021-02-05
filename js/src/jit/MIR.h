@@ -524,7 +524,14 @@ class MDefinition : public MNode {
   bool isResumePoint() const = delete;
 
  protected:
-  void setBlock(MBasicBlock* block) {
+  void setInstructionBlock(MBasicBlock* block, const BytecodeSite* site) {
+    MOZ_ASSERT(isInstruction());
+    setBlockAndKind(block, Kind::Definition);
+    setTrackedSite(site);
+  }
+
+  void setPhiBlock(MBasicBlock* block) {
+    MOZ_ASSERT(isPhi());
     setBlockAndKind(block, Kind::Definition);
   }
 
@@ -577,10 +584,13 @@ class MDefinition : public MNode {
 
   MBasicBlock* block() const { return definitionBlock(); }
 
+ private:
   void setTrackedSite(const BytecodeSite* site) {
     MOZ_ASSERT(site);
     trackedSite_ = site;
   }
+
+ public:
   const BytecodeSite* trackedSite() const { return trackedSite_; }
   jsbytecode* trackedPc() const {
     return trackedSite_ ? trackedSite_->pc() : nullptr;
