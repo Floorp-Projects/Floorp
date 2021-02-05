@@ -8,7 +8,6 @@
 #define jit_RematerializedFrame_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
 
 #include <algorithm>
 #include <stddef.h>

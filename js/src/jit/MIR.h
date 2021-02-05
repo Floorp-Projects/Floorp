@@ -14,7 +14,6 @@
 
 #include "mozilla/Alignment.h"
 #include "mozilla/Array.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/MacroForEach.h"
 
 #include <algorithm>

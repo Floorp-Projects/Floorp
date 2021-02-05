@@ -7,8 +7,6 @@
 #ifndef jit_AlignmentMaskAnalysis_h
 #define jit_AlignmentMaskAnalysis_h
 
-#include "mozilla/Attributes.h"
-
 namespace js {
 namespace jit {
 

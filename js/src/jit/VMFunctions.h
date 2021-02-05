@@ -8,7 +8,6 @@
 #define jit_VMFunctions_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
 
 #include <stddef.h>
 #include <stdint.h>

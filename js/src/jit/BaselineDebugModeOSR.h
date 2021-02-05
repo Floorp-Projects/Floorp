@@ -7,8 +7,6 @@
 #ifndef jit_BaselineDebugModeOSR_h
 #define jit_BaselineDebugModeOSR_h
 
-#include "mozilla/Attributes.h"
-
 #include "jstypes.h"
 
 #include "debugger/DebugAPI.h"
