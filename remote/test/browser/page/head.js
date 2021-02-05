@@ -17,9 +17,7 @@ const {
   setTimeout,
 } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
-const { PollPromise } = ChromeUtils.import(
-  "chrome://remote/content/shared/Sync.jsm"
-);
+const { PollPromise } = ChromeUtils.import("chrome://remote/content/Sync.jsm");
 
 const TIMEOUT_SET_HISTORY_INDEX = 1000;
 

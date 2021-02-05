@@ -33,14 +33,12 @@ const { UnsupportedError } = ChromeUtils.import(
 const { streamRegistry } = ChromeUtils.import(
   "chrome://remote/content/domains/parent/IO.jsm"
 );
-const { PollPromise } = ChromeUtils.import(
-  "chrome://remote/content/shared/Sync.jsm"
-);
+const { PollPromise } = ChromeUtils.import("chrome://remote/content/Sync.jsm");
 const { TabManager } = ChromeUtils.import(
-  "chrome://remote/content/shared/TabManager.jsm"
+  "chrome://remote/content/TabManager.jsm"
 );
 const { WindowManager } = ChromeUtils.import(
-  "chrome://remote/content/shared/WindowManager.jsm"
+  "chrome://remote/content/WindowManager.jsm"
 );
 
 const MAX_CANVAS_DIMENSION = 32767;
