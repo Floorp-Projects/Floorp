@@ -49,9 +49,6 @@ using namespace mozilla::widget;
 using namespace mozilla::gl;
 using namespace mozilla::layers;
 
-#ifndef DRM_FORMAT_MOD_INVALID
-#  define DRM_FORMAT_MOD_INVALID ((1ULL << 56) - 1)
-#endif
 #define BUFFER_FLAGS 0
 
 #ifndef GBM_BO_USE_TEXTURING
