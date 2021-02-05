@@ -194,9 +194,9 @@ class nsTableWrapperFrame : public nsContainerFrame {
   // Get a NS_STYLE_CAPTION_SIDE_* value, or NO_SIDE if no caption is present.
   // (Remember that caption-side values are interpreted logically, despite
   // having "physical" names.)
-  uint8_t GetCaptionSide();
+  uint8_t GetCaptionSide() const;
 
-  bool HasSideCaption() {
+  bool HasSideCaption() const {
     uint8_t captionSide = GetCaptionSide();
     return captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
            captionSide == NS_STYLE_CAPTION_SIDE_RIGHT;
