@@ -182,6 +182,7 @@ std::unique_ptr<webgl::ShaderValidator> WebGLContext::CreateShaderValidator(
     resources.EXT_shader_texture_lod = 1;
 
   if (IsExtensionEnabled(WebGLExtensionID::OVR_multiview2)) {
+    resources.OVR_multiview = 1;
     resources.OVR_multiview2 = 1;
     resources.MaxViewsOVR = limits.maxMultiviewLayers;
   }
