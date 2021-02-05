@@ -9,4 +9,4 @@ LLVM_PROJ_DIR=$MOZ_FETCHES_DIR/llvm-project
 make LLVM_PROJ_DIR=$LLVM_PROJ_DIR PREFIX=$PREFIX
 # Put a tarball in the artifacts dir
 mkdir -p $UPLOAD_DIR
-tar -C $MOZ_FETCHES_DIR/wasi-sdk/build/install/$PREFIX/../ -caf $UPLOAD_DIR/wasi-sysroot.tar.xz wasi-sysroot
+tar -C $MOZ_FETCHES_DIR/wasi-sdk/build/install/$PREFIX/../ -caf $UPLOAD_DIR/wasi-sysroot.tar.xz wasi-sysroot/{lib,share}
