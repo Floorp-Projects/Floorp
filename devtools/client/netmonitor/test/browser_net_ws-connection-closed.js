@@ -32,10 +32,10 @@ add_task(async function() {
   const requests = document.querySelectorAll(".request-list-item");
 
   // Select the request to open the side panel.
-  await EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
+  EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
 
   // Click on the "Response" panel
-  await clickOnSidebarTab(document, "response");
+  clickOnSidebarTab(document, "response");
 
   const wait = waitForDOM(
     document,

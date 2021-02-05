@@ -41,10 +41,10 @@ add_task(async function() {
   );
 
   // Select the first request
-  await EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
+  EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
 
   // Click on the "Response" panel
-  await clickOnSidebarTab(document, "response");
+  clickOnSidebarTab(document, "response");
   await wait;
 
   // Get all messages present in the "Response" panel
@@ -72,7 +72,7 @@ add_task(async function() {
     "#messages-view .message-list-table .message-list-item",
     2
   );
-  await EventUtils.sendMouseEvent({ type: "mousedown" }, requests[1]);
+  EventUtils.sendMouseEvent({ type: "mousedown" }, requests[1]);
   await wait;
   const secondRequestFrames = document.querySelectorAll(
     "#messages-view .message-list-table .message-list-item"

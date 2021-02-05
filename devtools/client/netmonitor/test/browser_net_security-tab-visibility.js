@@ -68,7 +68,7 @@ add_task(async function() {
     await onComplete;
 
     info("Selecting the request.");
-    await EventUtils.sendMouseEvent(
+    EventUtils.sendMouseEvent(
       { type: "mousedown" },
       document.querySelectorAll(".request-list-item")[0]
     );
@@ -89,7 +89,7 @@ add_task(async function() {
     if (testcase.visibleOnSecurityInfo) {
       // click security panel to lazy load the securityState
       await waitUntil(() => document.querySelector("#security-tab"));
-      await clickOnSidebarTab(document, "security");
+      clickOnSidebarTab(document, "security");
       await waitUntil(() =>
         document.querySelector("#security-panel .security-info-value")
       );

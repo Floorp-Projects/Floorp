@@ -136,7 +136,7 @@ async function getButtonAndMenuInfo(toolbox, menuButton) {
     // Users can use arrow keys to navigate between and select tabs.
     nonNegativeTabIndexRule: false,
   });
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     {
       type: "click",
       screenX: 1,
