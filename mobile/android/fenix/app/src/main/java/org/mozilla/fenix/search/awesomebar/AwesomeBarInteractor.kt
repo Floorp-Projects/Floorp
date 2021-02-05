@@ -44,4 +44,9 @@ interface AwesomeBarInteractor {
      * Called whenever the Shortcuts button is clicked
      */
     fun onSearchShortcutsButtonClicked()
+
+    /**
+     * Called whenever search engine suggestion is tapped
+     */
+    fun onSearchEngineSuggestionSelected(searchEngine: SearchEngine)
 }

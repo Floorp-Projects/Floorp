@@ -37,6 +37,10 @@ class SearchDialogInteractor(
         searchController.handleSearchTermsTapped(searchTerms)
     }
 
+    override fun onSearchEngineSuggestionSelected(searchEngine: SearchEngine) {
+        searchController.handleSearchEngineSuggestionClicked(searchEngine)
+    }
+
     override fun onSearchShortcutEngineSelected(searchEngine: SearchEngine) {
         searchController.handleSearchShortcutEngineSelected(searchEngine)
     }

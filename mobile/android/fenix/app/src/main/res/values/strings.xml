@@ -212,6 +212,10 @@
     <string name="search_suggestions_onboarding_text">%s will share everything you type in the address bar with your default search engine.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Learn more</string>
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">Search %s</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Search directly from the address bar</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->

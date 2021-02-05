@@ -157,7 +157,12 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                     toolbarView.view.hideKeyboard()
                     toolbarView.view.clearFocus()
                 },
-                focusToolbar = { toolbarView.view.edit.focus() }
+                focusToolbar = { toolbarView.view.edit.focus() },
+                clearToolbar = {
+                    toolbarView.view
+                        .findViewById<InlineAutocompleteEditText>(R.id.mozac_browser_toolbar_edit_url_view)
+                        ?.setText("")
+                }
             )
         )
 

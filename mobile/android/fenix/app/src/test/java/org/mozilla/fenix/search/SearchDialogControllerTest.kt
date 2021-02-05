@@ -50,6 +50,7 @@ class SearchDialogControllerTest {
     @MockK private lateinit var sessionManager: SessionManager
     @MockK(relaxed = true) private lateinit var clearToolbarFocus: () -> Unit
     @MockK(relaxed = true) private lateinit var focusToolbar: () -> Unit
+    @MockK(relaxed = true) private lateinit var clearToolbar: () -> Unit
     @MockK(relaxed = true) private lateinit var dismissDialog: () -> Unit
 
     private lateinit var controller: SearchDialogController
@@ -81,7 +82,8 @@ class SearchDialogControllerTest {
             metrics = metrics,
             dismissDialog = dismissDialog,
             clearToolbarFocus = clearToolbarFocus,
-            focusToolbar = focusToolbar
+            focusToolbar = focusToolbar,
+            clearToolbar = clearToolbar
         )
     }
 

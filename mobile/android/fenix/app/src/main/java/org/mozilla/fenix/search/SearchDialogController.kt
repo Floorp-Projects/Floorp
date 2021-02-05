@@ -42,6 +42,7 @@ interface SearchController {
     fun handleExistingSessionSelected(tabId: String)
     fun handleSearchShortcutsButtonClicked()
     fun handleCameraPermissionsNeeded()
+    fun handleSearchEngineSuggestionClicked(searchEngine: SearchEngine)
 }
 
 @Suppress("TooManyFunctions", "LongParameterList")
@@ -55,7 +56,8 @@ class SearchDialogController(
     private val metrics: MetricController,
     private val dismissDialog: () -> Unit,
     private val clearToolbarFocus: () -> Unit,
-    private val focusToolbar: () -> Unit
+    private val focusToolbar: () -> Unit,
+    private val clearToolbar: () -> Unit
 ) : SearchController {
 
     override fun handleUrlCommitted(url: String) {
@@ -219,6 +221,11 @@ class SearchDialogController(
     override fun handleCameraPermissionsNeeded() {
         val dialog = buildDialog()
         dialog.show()
+    }
+
+    override fun handleSearchEngineSuggestionClicked(searchEngine: SearchEngine) {
+        clearToolbar()
+        handleSearchShortcutEngineSelected(searchEngine)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
