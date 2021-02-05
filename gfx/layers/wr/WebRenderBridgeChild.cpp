@@ -99,7 +99,7 @@ void WebRenderBridgeChild::UpdateResources(
   nsTArray<ipc::Shmem> largeShmems;
   aResources.Flush(resourceUpdates, smallShmems, largeShmems);
 
-  this->SendUpdateResources(mIdNamespace, resourceUpdates, smallShmems,
+  this->SendUpdateResources(resourceUpdates, smallShmems,
                             std::move(largeShmems));
 }
 
