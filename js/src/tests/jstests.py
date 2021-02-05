@@ -401,6 +401,10 @@ def parse_args():
     )
 
     op.add_argument("--js-shell", metavar="JS_SHELL", help="JS shell to run tests with")
+    op.add_argument(
+        "-z", "--gc-zeal", help="GC zeal mode to use when running the shell"
+    )
+
     options, args = op.parse_known_args()
 
     # Need a shell unless in a special mode.
@@ -751,7 +755,7 @@ def main():
             return 1
 
     test_count, test_gen = load_tests(options, requested_paths, excluded_paths)
-    test_environment = get_environment_overlay(options.js_shell)
+    test_environment = get_environment_overlay(options.js_shell, options.gc_zeal)
 
     if test_count == 0:
         print("no tests selected")
