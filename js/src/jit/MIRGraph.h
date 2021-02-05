@@ -576,17 +576,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
     return hitCount_;
   }
 
-  // Track bailouts by storing the current pc in MIR instruction added at
-  // this cycle. This is also used for tracking calls and optimizations when
-  // profiling.
-  void updateTrackedSite(BytecodeSite* site) {
-    MOZ_ASSERT(site->tree() == trackedSite_->tree());
-    trackedSite_ = site;
-  }
   BytecodeSite* trackedSite() const { return trackedSite_; }
-  jsbytecode* trackedPc() const {
-    return trackedSite_ ? trackedSite_->pc() : nullptr;
-  }
   InlineScriptTree* trackedTree() const {
     return trackedSite_ ? trackedSite_->tree() : nullptr;
   }
@@ -635,6 +625,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   Vector<MBasicBlock*, 1, JitAllocPolicy> immediatelyDominated_;
   MBasicBlock* immediateDominator_;
 
+  // Track bailouts by storing the current pc in MIR instruction added at
+  // this cycle. This is also used for tracking calls and optimizations when
+  // profiling.
   BytecodeSite* trackedSite_;
 
   // Record the number of times a block got visited. Note, due to inlined
