@@ -336,7 +336,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
 
   MIRGraph& graph() { return graph_; }
   const CompileInfo& info() const { return info_; }
-  jsbytecode* pc() const { return pc_; }
+  jsbytecode* pc() const { return trackedSite_->pc(); }
   uint32_t nslots() const { return slots_.length(); }
   uint32_t id() const { return id_; }
   uint32_t numPredecessors() const { return predecessors_.length(); }
@@ -592,7 +592,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   uint32_t id_;
   uint32_t domIndex_;  // Index in the dominator tree.
   uint32_t numDominated_;
-  jsbytecode* pc_;
   LBlock* lir_;
 
   // Copy of a dominator block's outerResumePoint_ which holds the state of
