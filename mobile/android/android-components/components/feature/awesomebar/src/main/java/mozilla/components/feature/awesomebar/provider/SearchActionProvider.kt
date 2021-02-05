@@ -40,7 +40,7 @@ class SearchActionProvider(
             title = text,
             description = if (showDescription) searchEngine.name else null,
             icon = icon ?: searchEngine.icon,
-            score = Int.MAX_VALUE,
+            score = Int.MAX_VALUE - 1,
             onSuggestionClicked = {
                 searchUseCase.invoke(text)
                 emitSearchActionClickedFact()
