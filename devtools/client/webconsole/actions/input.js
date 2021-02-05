@@ -25,11 +25,6 @@ loader.lazyServiceGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "saveScreenshot",
-  "devtools/client/shared/save-screenshot"
-);
-loader.lazyRequireGetter(
-  this,
   "messagesActions",
   "devtools/client/webconsole/actions/messages"
 );
@@ -48,6 +43,13 @@ loader.lazyRequireGetter(
   this,
   "netmonitorBlockingActions",
   "devtools/client/netmonitor/src/actions/request-blocking"
+);
+
+loader.lazyRequireGetter(
+  this,
+  ["saveScreenshot", "captureAndSaveScreenshot"],
+  "devtools/client/shared/screenshot",
+  true
 );
 
 const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
@@ -205,19 +207,43 @@ function handleHelperResult(response) {
           break;
         case "screenshotOutput":
           const { args, value } = helperResult;
-          const screenshotMessages = await saveScreenshot(
-            webConsoleUI.getPanelWindow(),
-            args,
-            value
-          );
-          dispatch(
-            messagesActions.messagesAdd(
-              screenshotMessages.map(message => ({
-                message,
-                resourceType: ResourceWatcher.TYPES.PLATFORM_MESSAGE,
-              }))
-            )
-          );
+          const targetFront =
+            toolbox?.getSelectedTargetFront() || hud.currentTarget;
+          let screenshotMessages;
+
+          // @backward-compat { version 87 } The screenshot-content actor isn't available
+          // in older server.
+          // With an old server, the console actor captures the screenshot when handling
+          // the command, and send it to the client which only needs to save it to a file.
+          // With a new server, the server simply acknowledges the command,
+          // and the client will drive the whole screenshot process (capture and save).
+          if (targetFront.hasActor("screenshotContent")) {
+            screenshotMessages = await captureAndSaveScreenshot(
+              targetFront,
+              webConsoleUI.getPanelWindow(),
+              args
+            );
+          } else {
+            screenshotMessages = await saveScreenshot(
+              webConsoleUI.getPanelWindow(),
+              args,
+              value
+            );
+          }
+
+          if (screenshotMessages && screenshotMessages.length > 0) {
+            dispatch(
+              messagesActions.messagesAdd(
+                screenshotMessages.map(message => ({
+                  message: {
+                    level: message.level || "log",
+                    arguments: [message.text],
+                  },
+                  resourceType: ResourceWatcher.TYPES.CONSOLE_MESSAGE,
+                }))
+              )
+            );
+          }
           break;
         case "blockURL":
           const blockURL = helperResult.args.url;

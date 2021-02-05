@@ -141,13 +141,6 @@ const responsiveSpec = generateActorSpec({
       response: {},
     },
 
-    captureScreenshot: {
-      request: {},
-      response: {
-        value: RetVal("json"),
-      },
-    },
-
     setFloatingScrollbars: {
       request: {
         state: Arg(0, "boolean"),

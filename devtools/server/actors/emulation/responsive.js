@@ -11,12 +11,6 @@ const { responsiveSpec } = require("devtools/shared/specs/responsive");
 
 loader.lazyRequireGetter(
   this,
-  "ScreenshotActor",
-  "devtools/server/actors/screenshot",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "TouchSimulator",
   "devtools/server/actors/emulation/touch-simulator",
   true
@@ -61,7 +55,6 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
 
     this.targetActor = null;
     this.docShell = null;
-    this._screenshotActor = null;
     this._touchSimulator = null;
 
     protocol.Actor.prototype.destroy.call(this);
@@ -82,15 +75,6 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
     }
     const form = this.targetActor.form();
     return this.conn._getOrCreateActor(form.consoleActor);
-  },
-
-  get screenshotActor() {
-    if (!this._screenshotActor) {
-      this._screenshotActor = new ScreenshotActor(this.conn, this.targetActor);
-      this.manage(this._screenshotActor);
-    }
-
-    return this._screenshotActor;
   },
 
   get touchSimulator() {
@@ -371,10 +355,6 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
 
     this.setScreenOrientation(type, angle);
     this.win.dispatchEvent(orientationChangeEvent);
-  },
-
-  async captureScreenshot() {
-    return this.screenshotActor.capture({});
   },
 
   /**
