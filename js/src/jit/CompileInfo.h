@@ -20,21 +20,12 @@
 #include "vm/BytecodeUtil.h"      // JSOp
 #include "vm/JSAtomState.h"       // JSAtomState
 #include "vm/JSFunction.h"        // JSFunction
-#include "vm/JSScript.h"          // JSScript, PCToLineNumber
+#include "vm/JSScript.h"          // JSScript
 #include "vm/Scope.h"             // BindingIter
-
-class JSAtom;
-class JSObject;
-
-namespace JS {
-class BigInt;
-}  // namespace JS
 
 namespace js {
 
 class ModuleObject;
-class PropertyName;
-class RegExpObject;
 
 namespace jit {
 
@@ -173,29 +164,9 @@ class CompileInfo {
   jsbytecode* osrPc() const { return osrPc_; }
   InlineScriptTree* inlineScriptTree() const { return inlineScriptTree_; }
 
-  bool hasOsrAt(jsbytecode* pc) const {
-    MOZ_ASSERT(JSOp(*pc) == JSOp::LoopHead);
-    return pc == osrPc();
-  }
-
   const char* filename() const { return script_->filename(); }
 
   unsigned lineno() const { return script_->lineno(); }
-  unsigned lineno(jsbytecode* pc) const { return PCToLineNumber(script_, pc); }
-
-  // Script accessors based on PC.
-
-  JSAtom* getAtom(jsbytecode* pc) const { return script_->getAtom(pc); }
-
-  PropertyName* getName(jsbytecode* pc) const { return script_->getName(pc); }
-
-  inline RegExpObject* getRegExp(jsbytecode* pc) const;
-
-  JSObject* getObject(jsbytecode* pc) const { return script_->getObject(pc); }
-
-  inline JSFunction* getFunction(jsbytecode* pc) const;
-
-  BigInt* getBigInt(jsbytecode* pc) const { return script_->getBigInt(pc); }
 
   // Total number of slots: args, locals, and stack.
   unsigned nslots() const { return nslots_; }
@@ -246,27 +217,9 @@ class CompileInfo {
   uint32_t firstStackSlot() const { return firstLocalSlot() + nlocals(); }
   uint32_t stackSlot(uint32_t i) const { return firstStackSlot() + i; }
 
-  uint32_t startArgSlot() const {
-    MOZ_ASSERT(script());
-    return StartArgSlot(script());
-  }
-  uint32_t endArgSlot() const {
-    MOZ_ASSERT(script());
-    return CountArgSlots(script(), funMaybeLazy());
-  }
-
   uint32_t totalSlots() const {
     MOZ_ASSERT(script() && funMaybeLazy());
     return nimplicit() + nargs() + nlocals();
-  }
-
-  bool isSlotAliased(uint32_t index) const {
-    MOZ_ASSERT(index >= startArgSlot());
-    uint32_t arg = index - firstArgSlot();
-    if (arg < nargs()) {
-      return script()->formalIsAliased(arg);
-    }
-    return false;
   }
 
   bool hasArguments() const { return script()->argumentsHasVarBinding(); }
