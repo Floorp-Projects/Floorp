@@ -1002,7 +1002,7 @@ class MarionetteRefTestExecutor(RefTestExecutor):
                 result["extra"]["assertion_count"] = assertion_count
 
         if self.debug_test and result["status"] in ["PASS", "FAIL", "ERROR"] and "extra" in result:
-            self.parent.base.set_window(self.parent.base.window_handles()[0])
+            self.protocol.base.set_window(self.protocol.base.window_handles()[0])
             self.protocol.debug.load_reftest_analyzer(test, result)
 
         return self.convert_result(test, result)
