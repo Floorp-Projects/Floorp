@@ -110,14 +110,14 @@ void ScopeContext::computeThisEnvironment(Scope* enclosingScope) {
                   ? mozilla::Some(fun->baseScript()->getMemberInitializers())
                   : mozilla::Some(MemberInitializers::Empty());
           MOZ_ASSERT(memberInitializers->valid);
+        } else {
+          if (fun->isSyntheticFunction()) {
+            allowArguments = false;
+          }
         }
 
         if (fun->isDerivedClassConstructor()) {
           allowSuperCall = true;
-        }
-
-        if (fun->isFieldInitializer()) {
-          allowArguments = false;
         }
 
         // Found the effective "this" environment, so stop.
@@ -2330,8 +2330,8 @@ static void DumpImmutableScriptFlags(js::JSONPrinter& json,
         case ImmutableScriptFlagsEnum::IsDerivedClassConstructor:
           json.value("IsDerivedClassConstructor");
           break;
-        case ImmutableScriptFlagsEnum::IsFieldInitializer:
-          json.value("IsFieldInitializer");
+        case ImmutableScriptFlagsEnum::IsSyntheticFunction:
+          json.value("IsSyntheticFunction");
           break;
         case ImmutableScriptFlagsEnum::UseMemberInitializers:
           json.value("UseMemberInitializers");

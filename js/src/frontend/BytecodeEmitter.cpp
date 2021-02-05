@@ -116,6 +116,22 @@ static bool NeedsMethodInitializer(ParseNode* member, bool isStatic) {
          !member->as<ClassMethod>().isStatic();
 }
 
+static bool ShouldSuppressBreakpointsAndSourceNotes(
+    SharedContext* sc, BytecodeEmitter::EmitterMode emitterMode) {
+  // Suppress for all self-hosting code.
+  if (emitterMode == BytecodeEmitter::EmitterMode::SelfHosting) {
+    return true;
+  }
+
+  // Suppress for synthesized class constructors.
+  if (sc->isFunctionBox()) {
+    FunctionBox* funbox = sc->asFunctionBox();
+    return funbox->isSyntheticFunction() && funbox->isClassConstructor();
+  }
+
+  return false;
+}
+
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
                                  CompilationStencil& stencil,
                                  CompilationState& compilationState,
@@ -127,6 +143,8 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
       perScriptData_(cx, compilationState),
       stencil(stencil),
       compilationState(compilationState),
+      suppressBreakpointsAndSourceNotes(
+          ShouldSuppressBreakpointsAndSourceNotes(sc, emitterMode)),
       emitterMode(emitterMode) {}
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,

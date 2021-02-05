@@ -169,10 +169,16 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
     thisBinding_ = sc->thisBinding();
   } else {
     if (IsConstructorKind(kind)) {
-      auto stmt =
+      // Record this function into the enclosing class statement so that
+      // finishClassConstructor can final processing. Due to aborted syntax
+      // parses (eg, because of asm.js), this may have already been set with an
+      // early FunctionBox. In that case, the FunctionNode should still match.
+      auto classStmt =
           enclosing->findInnermostStatement<ParseContext::ClassStatement>();
-      MOZ_ASSERT(stmt);
-      stmt->constructorBox = this;
+      MOZ_ASSERT(classStmt);
+      MOZ_ASSERT(classStmt->constructorBox == nullptr ||
+                 classStmt->constructorBox->functionNode == this->functionNode);
+      classStmt->constructorBox = this;
     }
 
     allowNewTarget_ = true;
@@ -187,7 +193,7 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
     }
 
     if (kind == FunctionSyntaxKind::FieldInitializer) {
-      setFieldInitializer();
+      setSyntheticFunction();
       allowArguments_ = false;
     }
   }
@@ -242,7 +248,7 @@ void FunctionBox::initStandaloneOrLazy(ScopeContext& scopeContext,
     }
 
     if (kind == FunctionSyntaxKind::FieldInitializer) {
-      setFieldInitializer();
+      setSyntheticFunction();
       allowArguments_ = false;
     }
   }

@@ -843,6 +843,8 @@ bool PerHandlerParser<ParseHandler>::
   }
 
   if (handler_.canSkipLazyClosedOverBindings()) {
+    MOZ_ASSERT(pc_->isOutermostOfCurrentCompile());
+
     // Scopes are nullptr-delimited in the BaseScript closed over bindings
     // array.
     uint32_t slotCount = scope.declaredCount();
@@ -2742,6 +2744,8 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
   // parse recorded the free variables of nested functions and their extents,
   // so we can skip over them after accounting for their free variables.
 
+  MOZ_ASSERT(pc_->isOutermostOfCurrentCompile());
+
   RootedFunction fun(cx_, handler_.nextLazyInnerFunction());
 
   // TODO-Stencil: Consider for snapshotting.
@@ -2764,6 +2768,15 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
   ScriptStencil& script = funbox->functionStencil();
   funbox->initFromLazyFunctionToSkip(fun);
   funbox->copyFunctionFields(script);
+
+  // If the inner lazy function is class constructor, connect it to the class
+  // statement/expression we are parsing.
+  if (funbox->isClassConstructor()) {
+    auto classStmt =
+        pc_->template findInnermostStatement<ParseContext::ClassStatement>();
+    MOZ_ASSERT(!classStmt->constructorBox);
+    classStmt->constructorBox = funbox;
+  }
 
   MOZ_ASSERT_IF(pc_->isFunctionBox(),
                 pc_->functionBox()->index() < funbox->index());
@@ -3216,8 +3229,11 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
       syntaxKind = FunctionSyntaxKind::ClassConstructor;
     }
   } else if (fun->isMethod()) {
-    if (fun->isFieldInitializer()) {
+    if (fun->isSyntheticFunction()) {
+      MOZ_ASSERT(!fun->isClassConstructor());
       syntaxKind = FunctionSyntaxKind::FieldInitializer;
+      MOZ_ASSERT_UNREACHABLE(
+          "Lazy parsing of class field initializers not supported (yet)");
     } else {
       syntaxKind = FunctionSyntaxKind::Method;
     }
@@ -3278,10 +3294,31 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
 
   YieldHandling yieldHandling = GetYieldHandling(generatorKind);
 
-  if (!functionFormalParametersAndBody(InAllowed, yieldHandling, &funNode,
-                                       syntaxKind)) {
-    MOZ_ASSERT(directives == newDirectives);
-    return null();
+  if (funbox->isSyntheticFunction()) {
+    // Currently default class constructors are the only synthetic function that
+    // supports delazification.
+    MOZ_ASSERT(funbox->isClassConstructor());
+    MOZ_ASSERT(funbox->extent().toStringStart == funbox->extent().sourceStart);
+
+    HasHeritage hasHeritage = funbox->isDerivedClassConstructor()
+                                  ? HasHeritage::Yes
+                                  : HasHeritage::No;
+    TokenPos synthesizedBodyPos(funbox->extent().toStringStart,
+                                funbox->extent().toStringEnd);
+
+    // Reset pos() to the `class` keyword for predictable results.
+    tokenStream.consumeKnownToken(TokenKind::Class);
+
+    if (!this->synthesizeConstructorBody(synthesizedBodyPos, hasHeritage,
+                                         funNode, funbox)) {
+      return null();
+    }
+  } else {
+    if (!functionFormalParametersAndBody(InAllowed, yieldHandling, &funNode,
+                                         syntaxKind)) {
+      MOZ_ASSERT(directives == newDirectives);
+      return null();
+    }
   }
 
   if (!CheckParseTree(cx_, alloc_, funNode)) {
@@ -7462,12 +7499,7 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
     uint32_t classStartOffset, uint32_t classEndOffset,
     const ClassInitializedMembers& classInitializedMembers,
     ListNodeType& classMembers) {
-  // Fields cannot re-use the constructor obtained via JSOp::ClassConstructor or
-  // JSOp::DerivedConstructor due to needing to emit calls to the field
-  // initializers in the constructor. So, synthesize a new one.
-  size_t numMemberInitializers = classInitializedMembers.privateMethods +
-                                 classInitializedMembers.instanceFields;
-  if (classStmt.constructorBox == nullptr && numMemberInitializers) {
+  if (classStmt.constructorBox == nullptr) {
     MOZ_ASSERT(!options().selfHostingMode);
     // Unconditionally create the scope here, because it's always the
     // constructor.
@@ -7488,8 +7520,6 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
     if (!synthesizedCtor) {
       return false;
     }
-
-    MOZ_ASSERT(classStmt.constructorBox != nullptr);
 
     // Note: the *function* has the name of the class, but the *property*
     // containing the function has the name "constructor"
@@ -7513,19 +7543,22 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
     }
   }
 
-  if (FunctionBox* ctorbox = classStmt.constructorBox) {
-    // Amend the toStringEnd offset for the constructor now that we've
-    // finished parsing the class.
-    ctorbox->setCtorToStringEnd(classEndOffset);
+  MOZ_ASSERT(classStmt.constructorBox);
+  FunctionBox* ctorbox = classStmt.constructorBox;
 
-    if (numMemberInitializers) {
-      // Now that we have full set of initializers, update the constructor.
-      MemberInitializers initializers(numMemberInitializers);
-      ctorbox->setMemberInitializers(initializers);
+  // Amend the toStringEnd offset for the constructor now that we've
+  // finished parsing the class.
+  ctorbox->setCtorToStringEnd(classEndOffset);
 
-      // Field initialization need access to `this`.
-      ctorbox->setCtorFunctionHasThisBinding();
-    }
+  size_t numMemberInitializers = classInitializedMembers.privateMethods +
+                                 classInitializedMembers.instanceFields;
+  if (numMemberInitializers) {
+    // Now that we have full set of initializers, update the constructor.
+    MemberInitializers initializers(numMemberInitializers);
+    ctorbox->setMemberInitializers(initializers);
+
+    // Field initialization need access to `this`.
+    ctorbox->setCtorFunctionHasThisBinding();
   }
 
   return true;
@@ -7743,10 +7776,6 @@ typename ParseHandler::FunctionNodeType
 GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
     TaggedParserAtomIndex className, TokenPos synthesizedBodyPos,
     HasHeritage hasHeritage) {
-  if (!abortIfSyntaxParser()) {
-    return null();
-  }
-
   FunctionSyntaxKind functionSyntaxKind =
       hasHeritage == HasHeritage::Yes
           ? FunctionSyntaxKind::DerivedClassConstructor
@@ -7764,6 +7793,24 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
     return null();
   }
 
+  // If we see any inner function, note it on our current context. The bytecode
+  // emitter may eliminate the function later, but we use a conservative
+  // definition for consistency between lazy and full parsing.
+  pc_->sc()->setHasInnerFunctions();
+
+  // When fully parsing a lazy script, we do not fully reparse its inner
+  // functions, which are also lazy. Instead, their free variables and source
+  // extents are recorded and may be skipped.
+  if (handler_.canSkipLazyInnerFunctions()) {
+    if (!skipLazyInnerFunction(funNode, synthesizedBodyPos.begin,
+                               functionSyntaxKind,
+                               /* tryAnnexB = */ false)) {
+      return null();
+    }
+
+    return funNode;
+  }
+
   // Create the FunctionBox and link it to the function object.
   Directives directives(true);
   FunctionBox* funbox = newFunctionBox(
@@ -7775,11 +7822,36 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
   funbox->initWithEnclosingParseContext(pc_, flags, functionSyntaxKind);
   setFunctionEndFromCurrentToken(funbox);
 
+  // Mark this function as being synthesized by the parser. This means special
+  // handling in delazification will be used since we don't have typical
+  // function syntax.
+  funbox->setSyntheticFunction();
+
   // Push a SourceParseContext on to the stack.
+  ParseContext* outerpc = pc_;
   SourceParseContext funpc(this, funbox, /* newDirectives = */ nullptr);
   if (!funpc.init()) {
     return null();
   }
+
+  if (!synthesizeConstructorBody(synthesizedBodyPos, hasHeritage, funNode,
+                                 funbox)) {
+    return null();
+  }
+
+  if (!leaveInnerFunction(outerpc)) {
+    return null();
+  }
+
+  return funNode;
+}
+
+template <class ParseHandler, typename Unit>
+typename ParseHandler::FunctionNodeType
+GeneralParser<ParseHandler, Unit>::synthesizeConstructorBody(
+    TokenPos synthesizedBodyPos, HasHeritage hasHeritage,
+    FunctionNodeType funNode, FunctionBox* funbox) {
+  MOZ_ASSERT(funbox->isClassConstructor());
 
   // Create a ListNode for the parameters + body (there are no parameters).
   ListNodeType argsbody =
@@ -7891,10 +7963,6 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
   if (!finishFunction()) {
     return null();
   }
-
-  // This function is asserted to set classStmt->constructorBox - however, it's
-  // not directly set in this function, but rather in
-  // initWithEnclosingParseContext.
 
   return funNode;
 }
@@ -8036,7 +8104,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
     return null();
   }
   funbox->initWithEnclosingParseContext(pc_, flags, syntaxKind);
-  MOZ_ASSERT(funbox->isFieldInitializer());
+  MOZ_ASSERT(funbox->isSyntheticFunction());
 
   // We can't use setFunctionStartAtCurrentToken because that uses pos().begin,
   // which is incorrect for fields without initializers (pos() points to the

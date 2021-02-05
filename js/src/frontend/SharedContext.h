@@ -598,12 +598,13 @@ class FunctionBox : public SuspendableContext {
     setFlag(ImmutableFlags::IsDerivedClassConstructor);
   }
 
-  bool isFieldInitializer() const {
-    return hasFlag(ImmutableFlags::IsFieldInitializer);
+  bool isSyntheticFunction() const {
+    return hasFlag(ImmutableFlags::IsSyntheticFunction);
   }
-  void setFieldInitializer() {
+  void setSyntheticFunction() {
+    // Field initializer or class consturctor.
     MOZ_ASSERT(flags_.isMethod());
-    setFlag(ImmutableFlags::IsFieldInitializer);
+    setFlag(ImmutableFlags::IsSyntheticFunction);
   }
 
   bool hasSimpleParameterList() const {

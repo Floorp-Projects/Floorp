@@ -6,3 +6,11 @@ class a {
     "use asm";
   }
 }
+
+function f() {
+  class a {
+    constructor() {
+      "use asm";
+    }
+  }
+}
