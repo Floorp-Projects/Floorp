@@ -568,8 +568,10 @@ void CodeGeneratorShared::encode(LSnapshot* snapshot) {
     if (ins->mirRaw()) {
       mirOpcode = uint32_t(ins->mirRaw()->op());
       mirId = ins->mirRaw()->id();
-      if (ins->mirRaw()->trackedPc()) {
-        pcOpcode = *ins->mirRaw()->trackedPc();
+
+      const BytecodeSite* site = ins->mirRaw()->trackedSite();
+      if (site && site->pc()) {
+        pcOpcode = *site->pc();
       }
     }
   }
