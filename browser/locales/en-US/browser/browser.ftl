@@ -307,13 +307,10 @@ identity-https-only-info-turn-on2 = Turn on HTTPS-Only Mode for this site if you
 identity-https-only-info-turn-off2 = If the page seems broken, you may want to turn off HTTPS-Only Mode for this site to reload using insecure HTTP.
 identity-https-only-info-no-upgrade = Unable to upgrade connection from HTTP.
 
-identity-permissions =
-    .value = Permissions
 identity-permissions-storage-access-header = Cross-site cookies
 identity-permissions-storage-access-hint = These parties can use cross-site cookies and site data while you are on this site.
 
 identity-permissions-reload-hint = You may need to reload the page for changes to apply.
-identity-permissions-empty = You have not granted this site any special permissions.
 identity-clear-site-data =
     .label = Clear Cookies and Site Data…
 identity-connection-not-secure-security-view = You are not securely connected to this site.
