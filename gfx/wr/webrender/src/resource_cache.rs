@@ -1197,11 +1197,11 @@ impl ResourceCache {
         })
     }
 
-    pub fn begin_frame(&mut self, stamp: FrameStamp) {
+    pub fn begin_frame(&mut self, stamp: FrameStamp, profile: &mut TransactionProfile) {
         profile_scope!("begin_frame");
         debug_assert_eq!(self.state, State::Idle);
         self.state = State::AddResources;
-        self.texture_cache.begin_frame(stamp);
+        self.texture_cache.begin_frame(stamp, profile);
         self.cached_glyphs.begin_frame(
             stamp,
             &mut self.texture_cache,
