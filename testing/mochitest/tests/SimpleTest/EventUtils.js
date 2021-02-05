@@ -227,7 +227,7 @@ function computeButtons(aEvent, utils) {
   return utils.MOUSE_BUTTONS_NOT_SPECIFIED;
 }
 
-async function sendMouseEvent(aEvent, aTarget, aWindow) {
+function sendMouseEvent(aEvent, aTarget, aWindow) {
   if (
     ![
       "click",
@@ -253,7 +253,7 @@ async function sendMouseEvent(aEvent, aTarget, aWindow) {
   }
 
   if (aEvent.type === "click" && this.AccessibilityUtils) {
-    await this.AccessibilityUtils.assertCanBeClicked(aTarget);
+    this.AccessibilityUtils.assertCanBeClicked(aTarget);
   }
 
   var event = aWindow.document.createEvent("MouseEvent");
