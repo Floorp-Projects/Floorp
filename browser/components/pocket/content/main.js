@@ -143,11 +143,17 @@ var pktUI = (function() {
       var startheight = 490;
       var inOverflowMenu = isInOverflowMenu();
       var controlvariant = pktApi.getSignupPanelTabTestVariant() == "control";
+      var loggedOutVariant = Services.prefs.getCharPref(
+        "extensions.pocket.loggedOutVariant"
+      );
 
       if (inOverflowMenu) {
         startheight = overflowMenuHeight;
       } else {
         startheight = 460;
+        if (loggedOutVariant === "button_variant") {
+          startheight = 406;
+        }
       }
       if (!controlvariant) {
         startheight = 427;
@@ -163,7 +169,7 @@ var pktUI = (function() {
         "about:pocket-signup?pockethost=" +
           Services.prefs.getCharPref("extensions.pocket.site") +
           "&loggedOutVariant=" +
-          Services.prefs.getCharPref("extensions.pocket.loggedOutVariant") +
+          loggedOutVariant +
           "&variant=" +
           variant +
           "&controlvariant=" +
