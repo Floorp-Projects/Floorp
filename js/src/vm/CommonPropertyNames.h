@@ -122,10 +122,6 @@
   MACRO(decimal, decimal, "decimal")                                           \
   MACRO(decodeURI, decodeURI, "decodeURI")                                     \
   MACRO(decodeURIComponent, decodeURIComponent, "decodeURIComponent")          \
-  MACRO(DefaultBaseClassConstructor, DefaultBaseClassConstructor,              \
-        "DefaultBaseClassConstructor")                                         \
-  MACRO(DefaultDerivedClassConstructor, DefaultDerivedClassConstructor,        \
-        "DefaultDerivedClassConstructor")                                      \
   MACRO(default, default_, "default")                                          \
   MACRO(defineGetter, defineGetter, "__defineGetter__")                        \
   MACRO(defineProperty, defineProperty, "defineProperty")                      \

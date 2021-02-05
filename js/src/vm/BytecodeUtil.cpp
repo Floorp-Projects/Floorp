@@ -1582,22 +1582,6 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       }
       break;
 
-    case JOF_CLASS_CTOR: {
-      GCThingIndex atomIndex;
-      uint32_t classStartOffset = 0, classEndOffset = 0;
-      GetClassConstructorOperands(pc, &atomIndex, &classStartOffset,
-                                  &classEndOffset);
-      RootedValue v(cx, StringValue(script->getAtom(atomIndex)));
-      UniqueChars bytes = ToDisassemblySource(cx, v);
-      if (!bytes) {
-        return 0;
-      }
-      if (!sp->jsprintf(" %s (off: %u-%u)", bytes.get(), classStartOffset,
-                        classEndOffset)) {
-        return 0;
-      }
-      break;
-    }
     case JOF_TWO_UINT8: {
       int one = (int)GET_UINT8(pc);
       int two = (int)GET_UINT8(pc + 1);
@@ -2026,10 +2010,6 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
 
       case JSOp::CallSiteObj:
         return write("OBJ");
-
-      case JSOp::ClassConstructor:
-      case JSOp::DerivedConstructor:
-        return write("CONSTRUCTOR");
 
       case JSOp::Double:
         return sprinter.printf("%lf", GET_INLINE_VALUE(pc).toDouble());

@@ -4495,20 +4495,11 @@ static JSScript* CopyScriptImpl(JSContext* cx, HandleScript src,
   // Some embeddings are not careful to use ExposeObjectToActiveJS as needed.
   JS::AssertObjectIsNotGray(sourceObject);
 
-  // When cloning is for `MakeDefaultConstructor`, the SourceExtent will be
-  // provided by caller instead of copying from `src`.
-  SourceExtent extent = maybeClassExtent ? *maybeClassExtent : src->extent();
+  SourceExtent extent = src->extent();
 
   ImmutableScriptFlags flags = src->immutableFlags();
   flags.setFlag(JSScript::ImmutableFlags::HasNonSyntacticScope,
                 scopes[0]->hasOnChain(ScopeKind::NonSyntactic));
-
-  // When this clone is for `MakeDefaultConstructor` we also want to clear the
-  // SelfHosted flag. This is a hack to do it here, but ensures that the flags
-  // are not modified after the JSScript is created.
-  if (maybeClassExtent) {
-    flags.clearFlag(JSScript::ImmutableFlags::SelfHosted);
-  }
 
   // FunctionFlags and ImmutableScriptFlags should agree on self-hosting status.
   MOZ_ASSERT_IF(functionOrGlobal->is<JSFunction>(),
@@ -4576,10 +4567,9 @@ JSScript* js::CloneGlobalScript(JSContext* cx, HandleScript src) {
   return dst;
 }
 
-JSScript* js::CloneScriptIntoFunction(JSContext* cx, HandleScope enclosingScope,
-                                      HandleFunction fun, HandleScript src,
-                                      Handle<ScriptSourceObject*> sourceObject,
-                                      SourceExtent* maybeClassExtent) {
+JSScript* js::CloneScriptIntoFunction(
+    JSContext* cx, HandleScope enclosingScope, HandleFunction fun,
+    HandleScript src, Handle<ScriptSourceObject*> sourceObject) {
   MOZ_ASSERT(src->realm() != cx->realm(),
              "js::CloneScriptIntoFunction should only be used for for realm "
              "mismatches. Otherwise just share the script directly.");
@@ -4617,8 +4607,7 @@ JSScript* js::CloneScriptIntoFunction(JSContext* cx, HandleScope enclosingScope,
 
   // Save flags in case we need to undo the early mutations.
   const FunctionFlags preservedFlags = fun->flags();
-  RootedScript dst(cx, CopyScriptImpl(cx, src, fun, sourceObject, &scopes,
-                                      maybeClassExtent));
+  RootedScript dst(cx, CopyScriptImpl(cx, src, fun, sourceObject, &scopes));
   if (!dst) {
     fun->setFlags(preservedFlags);
     return nullptr;

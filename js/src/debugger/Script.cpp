@@ -1516,7 +1516,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::RegExp:
     case JSOp::CallSiteObj:
     case JSOp::Object:
-    case JSOp::ClassConstructor:
     case JSOp::Typeof:
     case JSOp::TypeofExpr:
     case JSOp::ToAsyncIter:
@@ -1559,7 +1558,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::FunWithProto:
     case JSOp::ObjWithProto:
     case JSOp::BuiltinObject:
-    case JSOp::DerivedConstructor:
     case JSOp::CheckThis:
     case JSOp::CheckReturn:
     case JSOp::CheckThisReinit:

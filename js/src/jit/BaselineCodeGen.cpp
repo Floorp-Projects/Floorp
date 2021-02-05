@@ -6308,49 +6308,6 @@ bool BaselineCodeGen<Handler>::emit_FunWithProto() {
   return true;
 }
 
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_ClassConstructor() {
-  frame.syncStack(0);
-
-  // Pass nullptr as prototype to MakeDefaultConstructor
-  prepareVMCall();
-  pushArg(ImmPtr(nullptr));
-  pushBytecodePCArg();
-  pushScriptArg();
-
-  using Fn =
-      JSFunction* (*)(JSContext*, HandleScript, jsbytecode*, HandleObject);
-  if (!callVM<Fn, js::MakeDefaultConstructor>()) {
-    return false;
-  }
-
-  masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
-  frame.push(R0);
-  return true;
-}
-
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_DerivedConstructor() {
-  frame.popRegsAndSync(1);
-
-  masm.unboxObject(R0, R0.scratchReg());
-
-  prepareVMCall();
-  pushArg(R0.scratchReg());
-  pushBytecodePCArg();
-  pushScriptArg();
-
-  using Fn =
-      JSFunction* (*)(JSContext*, HandleScript, jsbytecode*, HandleObject);
-  if (!callVM<Fn, js::MakeDefaultConstructor>()) {
-    return false;
-  }
-
-  masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
-  frame.push(R0);
-  return true;
-}
-
 template <>
 bool BaselineCompilerCodeGen::emit_ImportMeta() {
   // Note: this is like the interpreter implementation, but optimized a bit by

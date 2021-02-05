@@ -1609,47 +1609,6 @@
      */ \
     MACRO(FunWithProto, fun_with_proto, NULL, 5, 1, 1, JOF_OBJECT) \
     /*
-     * Create and push a default constructor for a base class.
-     *
-     * A default constructor behaves like `constructor() {}`.
-     *
-     * Implements: [ClassDefinitionEvaluation for *ClassTail*][1], steps
-     * 10.b. and 12-17.
-     *
-     * The `sourceStart`/`sourceEnd` offsets are the start/end offsets of the
-     * class definition in the source buffer, used for `toString()`. They must
-     * be valid offsets into the source buffer, measured in code units, such
-     * that `scriptSource->substring(cx, start, end)` is valid.
-     *
-     * [1]: https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation
-     *
-     *   Category: Functions
-     *   Type: Creating constructors
-     *   Operands: uint32_t nameIndex, uint32_t sourceStart, uint32_t sourceEnd
-     *   Stack: => constructor
-     */ \
-    MACRO(ClassConstructor, class_constructor, NULL, 13, 0, 1, JOF_CLASS_CTOR) \
-    /*
-     * Create and push a default constructor for a derived class.
-     *
-     * A default derived-class constructor behaves like
-     * `constructor(...args) { super(...args); }`.
-     *
-     * Implements: [ClassDefinitionEvaluation for *ClassTail*][1], steps
-     * 10.a. and 12-17.
-     *
-     * `sourceStart` and `sourceEnd` follow the same rules as for
-     * `JSOp::ClassConstructor`.
-     *
-     * [1]: https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation
-     *
-     *   Category: Functions
-     *   Type: Creating constructors
-     *   Operands: uint32_t nameIndex, uint32_t sourceStart, uint32_t sourceEnd
-     *   Stack: proto => constructor
-     */ \
-    MACRO(DerivedConstructor, derived_constructor, NULL, 13, 1, 1, JOF_CLASS_CTOR) \
-    /*
      * Pushes the current global's %BuiltinObject%.
      *
      * `kind` must be a valid `BuiltinObjectKind` (and must not be
@@ -3579,6 +3538,8 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
+  MACRO(228)                                   \
+  MACRO(229)                                   \
   MACRO(230)                                   \
   MACRO(231)                                   \
   MACRO(232)                                   \

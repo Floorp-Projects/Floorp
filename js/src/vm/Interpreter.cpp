@@ -273,71 +273,6 @@ static bool SetPropertyOperation(JSContext* cx, JSOp op, HandleValue lval,
          result.checkStrictModeError(cx, obj, id, op == JSOp::StrictSetProp);
 }
 
-JSFunction* js::MakeDefaultConstructor(JSContext* cx, HandleScript script,
-                                       jsbytecode* pc, HandleObject proto) {
-  JSOp op = JSOp(*pc);
-  bool derived = op == JSOp::DerivedConstructor;
-  MOZ_ASSERT(derived == !!proto);
-
-  // Get class name and source offsets from bytecode.
-  GCThingIndex atomIndex;
-  uint32_t classStartOffset = 0, classEndOffset = 0;
-  GetClassConstructorOperands(pc, &atomIndex, &classStartOffset,
-                              &classEndOffset);
-  RootedAtom className(cx, script->getAtom(atomIndex));
-
-  // The empty atom is used as a sentinel to indicate no name is assigned. This
-  // happens when the name is computed by a dynamic SetFunctionName.
-  if (className == cx->names().empty) {
-    className = nullptr;
-  }
-
-  // Locate the self-hosted script that we will use as a template.
-  RootedPropertyName selfHostedName(
-      cx, derived ? cx->names().DefaultDerivedClassConstructor
-                  : cx->names().DefaultBaseClassConstructor);
-  RootedFunction sourceFun(
-      cx, cx->runtime()->getUnclonedSelfHostedFunction(selfHostedName.get()));
-  MOZ_ASSERT(sourceFun);
-  RootedScript sourceScript(cx, sourceFun->nonLazyScript());
-
-  // Create the new class constructor function.
-  RootedFunction ctor(
-      cx, NewScriptedFunction(cx, sourceFun->nargs(),
-                              FunctionFlags::INTERPRETED_CLASS_CTOR, className,
-                              proto, gc::AllocKind::FUNCTION, TenuredObject));
-  if (!ctor) {
-    return nullptr;
-  }
-
-  // Override the source span needs for toString. Calling toString on a class
-  // constructor should return the class declaration, not the source for the
-  // (self-hosted) constructor function.
-  unsigned column;
-  unsigned line = PCToLineNumber(script, pc, &column);
-  SourceExtent classExtent = SourceExtent::makeClassExtent(
-      classStartOffset, classEndOffset, line, column);
-
-  // Clone bytecode from template function.
-  MOZ_ASSERT(sourceFun->enclosingScope()->is<GlobalScope>());
-  RootedScope enclosingScope(cx, &cx->global()->emptyGlobalScope());
-  Rooted<ScriptSourceObject*> sourceObject(cx, script->sourceObject());
-  if (!CloneScriptIntoFunction(cx, enclosingScope, ctor, sourceScript,
-                               sourceObject, &classExtent)) {
-    return nullptr;
-  }
-  RootedScript ctorScript(cx, ctor->nonLazyScript());
-
-  // Even though the script was cloned from the self-hosted template, we cannot
-  // delazify back to a SelfHostedLazyScript. The script is no longer marked as
-  // SelfHosted either.
-  ctorScript->clearAllowRelazify();
-
-  DebugAPI::onNewScript(cx, ctorScript);
-
-  return ctor;
-}
-
 static JSObject* SuperFunOperation(JSObject* callee) {
   MOZ_ASSERT(callee->as<JSFunction>().isClassConstructor());
   MOZ_ASSERT(
@@ -4413,30 +4348,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       REGS.sp[-1].setObjectOrNull(superFun);
     }
     END_CASE(SuperFun)
-
-    CASE(DerivedConstructor) {
-      MOZ_ASSERT(REGS.sp[-1].isObject());
-      ReservedRooted<JSObject*> proto(&rootObject0, &REGS.sp[-1].toObject());
-
-      JSFunction* constructor =
-          MakeDefaultConstructor(cx, script, REGS.pc, proto);
-      if (!constructor) {
-        goto error;
-      }
-
-      REGS.sp[-1].setObject(*constructor);
-    }
-    END_CASE(DerivedConstructor)
-
-    CASE(ClassConstructor) {
-      JSFunction* constructor =
-          MakeDefaultConstructor(cx, script, REGS.pc, nullptr);
-      if (!constructor) {
-        goto error;
-      }
-      PUSH_OBJECT(*constructor);
-    }
-    END_CASE(ClassConstructor)
 
     CASE(CheckObjCoercible) {
       ReservedRooted<Value> checkVal(&rootValue0, REGS.sp[-1]);
