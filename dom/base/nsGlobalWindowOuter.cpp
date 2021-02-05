@@ -1302,10 +1302,10 @@ static JSObject* NewOuterWindowProxy(JSContext* cx,
   js::WrapperOptions options;
   options.setClass(&OuterWindowProxyClass);
   JSObject* obj =
-      js::Wrapper::NewSingleton(cx, global,
-                                isChrome ? &nsChromeOuterWindowProxy::singleton
-                                         : &nsOuterWindowProxy::singleton,
-                                options);
+      js::Wrapper::New(cx, global,
+                       isChrome ? &nsChromeOuterWindowProxy::singleton
+                                : &nsOuterWindowProxy::singleton,
+                       options);
   MOZ_ASSERT_IF(obj, js::IsWindowProxy(obj));
   return obj;
 }

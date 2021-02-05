@@ -600,7 +600,7 @@ JSObject* NewShellWindowProxy(JSContext* cx, JS::HandleObject global) {
 
   JSAutoRealm ar(cx, global);
   JSObject* obj =
-      js::Wrapper::NewSingleton(cx, global, &js::Wrapper::singleton, options);
+      js::Wrapper::New(cx, global, &js::Wrapper::singleton, options);
   MOZ_ASSERT_IF(obj, js::IsWindowProxy(obj));
   return obj;
 }
