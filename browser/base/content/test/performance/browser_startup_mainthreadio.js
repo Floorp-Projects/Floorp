@@ -269,7 +269,6 @@ const startupPhases = {
     {
       // bug 1541246
       path: "ProfD:extensions",
-      ignoreIfUnused: true, // bug 1649590
       condition: WIN,
       stat: 1,
     },
@@ -446,13 +445,6 @@ const startupPhases = {
       ignoreIfUnused: true,
       stat: 1,
       close: 1,
-    },
-    {
-      // Bug 1649590
-      path: "ProfD:extensions",
-      ignoreIfUnused: true,
-      condition: WIN,
-      stat: 1,
     },
   ],
 
