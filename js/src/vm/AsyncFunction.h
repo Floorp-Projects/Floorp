@@ -259,7 +259,7 @@
 //
 //   CanSkipAwait                    # VALUE, CAN_SKIP
 //   MaybeExtractAwaitValue          # VALUE_OR_RVAL, CAN_SKIP
-//   IfNe END                        # VALUE
+//   JumpIfTrue END                  # VALUE
 //
 //   JumpTarget                      # VALUE
 //   GetAliasedVar ".generator"      # VALUE .generator

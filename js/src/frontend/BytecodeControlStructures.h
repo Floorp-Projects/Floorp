@@ -103,7 +103,7 @@ class LoopControl : public BreakableControl {
   //     {loop update if present}
   //
   //     # Loop end, backward jump
-  //     JSOp::Goto/JSOp::IfNe head
+  //     JSOp::Goto/JSOp::JumpIfTrue head
   //
   //   breakTarget:
 

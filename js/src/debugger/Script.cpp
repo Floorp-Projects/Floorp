@@ -1390,7 +1390,7 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::Lineno:
     case JSOp::JumpTarget:
     case JSOp::Undefined:
-    case JSOp::IfNe:
+    case JSOp::JumpIfTrue:
     case JSOp::JumpIfFalse:
     case JSOp::Return:
     case JSOp::RetRval:

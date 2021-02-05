@@ -130,7 +130,7 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
   // if (done) break;
   MOZ_ASSERT(bce_->innermostNestableControl == loopInfo_.ptr(),
              "must be at the top-level of the loop");
-  if (!bce_->emitJump(JSOp::IfNe, &loopInfo_->breaks)) {
+  if (!bce_->emitJump(JSOp::JumpIfTrue, &loopInfo_->breaks)) {
     //              [stack] NEXT ITER RESULT
     return false;
   }
