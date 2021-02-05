@@ -54,10 +54,6 @@ addons = {
         "download.js",
         "manifest.json",
     ],
-    "download-onChanged": [
-        "download.js",
-        "manifest.json",
-    ],
 }
 
 for addon, files in addons.items():

@@ -19,13 +19,9 @@ exclude: true
 - Added [`WebExtension.Download.Info`][87.2] interface that can be used to
   implement the WebExtension `downloads` API. This interface allows communicating
   download's state to Web Extension.
-- Added [`WebExtension.Download#update`][87.3] that can be used to
-  implement the WebExtension `downloads` API. This method is used to communicate
-  updates in the download status to the Web Extension
   
 [87.1]: {{javadoc_uri}}/WebExtension.DownloadInitData.html
 [87.2]: {{javadoc_uri}}/WebExtension.Download.Info.html
-[87.3]: {{javadoc_uri}}/WebExtension.Download.html#update-org.mozilla.geckoview.WebExtension.Download.Info-
 
 ## v86
 - Removed deprecated [`ContentDelegate#onExternalResponse(GeckoSession, WebResponseInfo)`].
@@ -891,4 +887,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: d68a42e07eba44db1bf6f3b7de828fd534f5d819
+[api-version]: d751d69857ce777d1cab63a431bd6d67dc8b2a48
