@@ -37,7 +37,7 @@ function test(testDriver) {
   } catch (e) {
     hasViewId = false;
   }
-  if (!config.isWebRender) {
+  if (!config.activateAllScrollFrames) {
     ok(!hasViewId, "The nested scroller should be inactive and not have a view id");
   }
 
