@@ -746,13 +746,19 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
   mTextHash.Clear();
 
   // Process content inserted notifications to update the tree.
-  for (auto iter = mContentInsertions.ConstIter(); !iter.Done(); iter.Next()) {
+  // Processing an insertion can indirectly run script (e.g. querying a XUL
+  // interface), which might result in another insertion being queued.
+  // We don't want to lose any queued insertions if this happens. Therefore, we
+  // move the current insertions into a temporary data structure and process
+  // them from there. Any insertions queued during processing will get handled
+  // in subsequent refresh driver ticks.
+  auto contentInsertions = std::move(mContentInsertions);
+  for (auto iter = contentInsertions.ConstIter(); !iter.Done(); iter.Next()) {
     mDocument->ProcessContentInserted(iter.Key(), iter.UserData());
     if (!mDocument) {
       return;
     }
   }
-  mContentInsertions.Clear();
 
   // Bind hanging child documents unless we are using IPC and the
   // document has no IPC actor.  If we fail to bind the child doc then
