@@ -1605,23 +1605,6 @@ bool WarpBuilder::build_Callee(BytecodeLocation) {
   return true;
 }
 
-bool WarpBuilder::build_ClassConstructor(BytecodeLocation loc) {
-  jsbytecode* pc = loc.toRawBytecode();
-  auto* constructor = MClassConstructor::New(alloc(), pc);
-  current->add(constructor);
-  current->push(constructor);
-  return resumeAfter(constructor, loc);
-}
-
-bool WarpBuilder::build_DerivedConstructor(BytecodeLocation loc) {
-  jsbytecode* pc = loc.toRawBytecode();
-  MDefinition* prototype = current->pop();
-  auto* constructor = MDerivedClassConstructor::New(alloc(), prototype, pc);
-  current->add(constructor);
-  current->push(constructor);
-  return resumeAfter(constructor, loc);
-}
-
 bool WarpBuilder::build_ToAsyncIter(BytecodeLocation loc) {
   MDefinition* nextMethod = current->pop();
   MDefinition* iterator = current->pop();

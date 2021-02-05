@@ -116,11 +116,7 @@ class FunctionFlags {
     // Flags that XDR ignores. See also: js::BaseScript::MutableFlags.
     MUTABLE_FLAGS = RESOLVED_NAME | RESOLVED_LENGTH,
 
-    // Flags preserved when cloning a function. (Exception:
-    // js::MakeDefaultConstructor produces default constructors for ECMAScript
-    // classes by cloning self-hosted functions, and then clearing their
-    // SELF_HOSTED bit, setting their CONSTRUCTOR bit, and otherwise munging
-    // them to look like they originated with the class definition.) */
+    // Flags preserved when cloning a function.
     STABLE_ACROSS_CLONES =
         CONSTRUCTOR | LAMBDA | SELF_HOSTED | FUNCTION_KIND_MASK
   };

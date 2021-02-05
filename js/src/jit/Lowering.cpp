@@ -2568,21 +2568,6 @@ void LIRGenerator::visitUnaryCache(MUnaryCache* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitClassConstructor(MClassConstructor* ins) {
-  LClassConstructor* lir = new (alloc()) LClassConstructor();
-  defineReturn(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
-void LIRGenerator::visitDerivedClassConstructor(MDerivedClassConstructor* ins) {
-  MDefinition* proto = ins->prototype();
-  MOZ_ASSERT(ins->type() == MIRType::Object);
-
-  auto* lir = new (alloc()) LDerivedClassConstructor(useRegisterAtStart(proto));
-  defineReturn(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitModuleMetadata(MModuleMetadata* ins) {
   LModuleMetadata* lir = new (alloc()) LModuleMetadata();
   defineReturn(lir, ins);

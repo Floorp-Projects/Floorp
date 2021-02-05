@@ -170,7 +170,6 @@ namespace jit {
   _(LambdaArrow, js::LambdaArrow)                                              \
   _(LeaveWith, js::jit::LeaveWith)                                             \
   _(LexicalEnvironmentObjectCreate, js::LexicalEnvironmentObject::create)      \
-  _(MakeDefaultConstructor, js::MakeDefaultConstructor)                        \
   _(MutatePrototype, js::jit::MutatePrototype)                                 \
   _(NamedLambdaObjectCreateTemplateObject,                                     \
     js::NamedLambdaObject::createTemplateObject)                               \
