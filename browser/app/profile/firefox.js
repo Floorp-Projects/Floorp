@@ -1369,6 +1369,9 @@ pref("prompts.tabChromePromptSubDialog", true);
 // Activates preloading of the new tab url.
 pref("browser.newtab.preload", true);
 
+// Experiment Prefs for Nimbus
+pref("browser.newtab.experiments.value", "{\"prefsButtonIcon\": \"icon-settings\"}");
+
 // Preference to enable the entire new newtab experience at once.
 pref("browser.newtabpage.activity-stream.newNewtabExperience.enabled", false);
 
