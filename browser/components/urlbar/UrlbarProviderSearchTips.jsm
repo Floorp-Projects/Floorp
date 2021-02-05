@@ -414,7 +414,11 @@ async function isBrowserShowingNotification() {
 
   // tracking protection and identity box doorhangers
   if (
-    ["tracking-protection-icon-container", "identity-box"].some(
+    [
+      "tracking-protection-icon-container",
+      "identity-icon-box",
+      "identity-permission-box",
+    ].some(
       id => window.document.getElementById(id).getAttribute("open") == "true"
     )
   ) {

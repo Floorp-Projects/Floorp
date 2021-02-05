@@ -1227,7 +1227,7 @@
       }
 
       updateUserContextUIIndicator();
-      gIdentityHandler.updateSharingIndicator();
+      gPermissionPanel.updateSharingIndicator();
 
       // Enable touch events to start a native dragging
       // session to allow the user to easily drag the selected tab.
@@ -1402,7 +1402,7 @@
       tab.removeAttribute("sharing");
       this._tabAttrModified(tab, ["sharing"]);
       if (aBrowser == this.selectedBrowser) {
-        gIdentityHandler.updateSharingIndicator();
+        gPermissionPanel.updateSharingIndicator();
       }
     },
 
@@ -1431,7 +1431,7 @@
       }
 
       if (aBrowser == this.selectedBrowser) {
-        gIdentityHandler.updateSharingIndicator();
+        gPermissionPanel.updateSharingIndicator();
       }
     },
 
@@ -4187,6 +4187,7 @@
       // Also reset DOS mitigations for the basic auth prompt on reload.
       delete browser.authPromptAbuseCounter;
       gIdentityHandler.hidePopup();
+      gPermissionPanel.hidePopup();
       browser.reload();
     },
 
