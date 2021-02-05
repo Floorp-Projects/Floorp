@@ -226,12 +226,20 @@ class nsTableWrapperFrame : public nsContainerFrame {
                           mozilla::LogicalPoint& aOrigin,
                           mozilla::WritingMode aWM);
 
-  // reflow the child (caption or innertable frame)
-  void OuterBeginReflowChild(nsPresContext* aPresContext, nsIFrame* aChildFrame,
-                             const ReflowInput& aOuterRI,
-                             mozilla::Maybe<ReflowInput>& aChildRI,
-                             nscoord aAvailISize);
+  // Create and init the child reflow input, using passed-in aChildRI, so that
+  // caller can use it after we return.
+  void CreateReflowInputForInnerTable(nsPresContext* aPresContext,
+                                      nsTableFrame* aTableFrame,
+                                      const ReflowInput& aOuterRI,
+                                      Maybe<ReflowInput>& aChildRI,
+                                      const nscoord aAvailISize) const;
+  void CreateReflowInputForCaption(nsPresContext* aPresContext,
+                                   nsIFrame* aCaptionFrame,
+                                   const ReflowInput& aOuterRI,
+                                   Maybe<ReflowInput>& aChildRI,
+                                   const nscoord aAvailISize) const;
 
+  // Reflow the child (caption or inner table frame).
   void OuterDoReflowChild(nsPresContext* aPresContext, nsIFrame* aChildFrame,
                           const ReflowInput& aChildRI, ReflowOutput& aMetrics,
                           nsReflowStatus& aStatus);

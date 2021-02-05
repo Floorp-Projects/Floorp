@@ -584,53 +584,57 @@ nsresult nsTableWrapperFrame::GetInnerOrigin(
   return NS_OK;
 }
 
-void nsTableWrapperFrame::OuterBeginReflowChild(nsPresContext* aPresContext,
-                                                nsIFrame* aChildFrame,
-                                                const ReflowInput& aOuterRI,
-                                                Maybe<ReflowInput>& aChildRI,
-                                                nscoord aAvailISize) {
-  WritingMode wm = aChildFrame->GetWritingMode();
+void nsTableWrapperFrame::CreateReflowInputForInnerTable(
+    nsPresContext* aPresContext, nsTableFrame* aTableFrame,
+    const ReflowInput& aOuterRI, Maybe<ReflowInput>& aChildRI,
+    const nscoord aAvailISize) const {
+  MOZ_ASSERT(InnerTableFrame() == aTableFrame);
 
-  // create and init the child reflow input, using passed-in Maybe<>,
-  // so that caller can use it after we return.
-  if (mCaptionFrames.FirstChild() == aChildFrame) {
-    const LogicalSize availSize(wm, aAvailISize, NS_UNCONSTRAINEDSIZE);
-    aChildRI.emplace(aPresContext, aOuterRI, aChildFrame, availSize);
-  } else {
-    MOZ_ASSERT(InnerTableFrame() == aChildFrame);
+  const WritingMode wm = aTableFrame->GetWritingMode();
+  const LogicalSize availSize(wm, aAvailISize, aOuterRI.AvailableBSize());
+  aChildRI.emplace(aPresContext, aOuterRI, aTableFrame, availSize, Nothing(),
+                   ReflowInput::InitFlag::CallerWillInit);
 
-    const LogicalSize availSize(wm, aAvailISize, aOuterRI.AvailableBSize());
-    aChildRI.emplace(aPresContext, aOuterRI, aChildFrame, availSize, Nothing(),
-                     ReflowInput::InitFlag::CallerWillInit);
-
-    Maybe<LogicalMargin> collapseBorder;
-    Maybe<LogicalMargin> collapsePadding;
-    Maybe<LogicalSize> cbSize;
-    if (InnerTableFrame()->IsBorderCollapse()) {
-      collapseBorder.emplace(InnerTableFrame()->GetIncludedOuterBCBorder(wm));
-      collapsePadding.emplace(wm);
-    }
-    // Propagate our stored CB size if present, minus any margins.
-    //
-    // Note that inner table computed margins are always zero, they're inherited
-    // by the table wrapper, so we need to get our margin from aOuterRI.
-    if (!HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
-      if (LogicalSize* cb = GetProperty(GridItemCBSizeProperty())) {
-        cbSize.emplace(*cb);
-        *cbSize -= aOuterRI.ComputedLogicalMargin(wm).Size(wm);
-      }
-    }
-    if (!cbSize) {
-      // For inner table frames, the containing block is the same as for
-      // the outer table frame.
-      cbSize.emplace(aOuterRI.mContainingBlockSize);
-    }
-    aChildRI->Init(aPresContext, cbSize, collapseBorder, collapsePadding);
+  Maybe<LogicalMargin> collapseBorder;
+  Maybe<LogicalMargin> collapsePadding;
+  Maybe<LogicalSize> cbSize;
+  if (InnerTableFrame()->IsBorderCollapse()) {
+    collapseBorder.emplace(InnerTableFrame()->GetIncludedOuterBCBorder(wm));
+    collapsePadding.emplace(wm);
   }
+  // Propagate our stored CB size if present, minus any margins.
+  //
+  // Note that inner table computed margins are always zero, they're inherited
+  // by the table wrapper, so we need to get our margin from aOuterRI.
+  if (!HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
+    if (LogicalSize* cb = GetProperty(GridItemCBSizeProperty())) {
+      cbSize.emplace(*cb);
+      *cbSize -= aOuterRI.ComputedLogicalMargin(wm).Size(wm);
+    }
+  }
+  if (!cbSize) {
+    // For inner table frames, the containing block is the same as for
+    // the outer table frame.
+    cbSize.emplace(aOuterRI.mContainingBlockSize);
+  }
+  aChildRI->Init(aPresContext, cbSize, collapseBorder, collapsePadding);
+}
 
-  // see if we need to reset top-of-page due to a caption
-  if (aChildRI->mFlags.mIsTopOfPage &&
-      mCaptionFrames.FirstChild() == aChildFrame) {
+void nsTableWrapperFrame::CreateReflowInputForCaption(
+    nsPresContext* aPresContext, nsIFrame* aCaptionFrame,
+    const ReflowInput& aOuterRI, Maybe<ReflowInput>& aChildRI,
+    const nscoord aAvailISize) const {
+  MOZ_ASSERT(aCaptionFrame == mCaptionFrames.FirstChild());
+
+  const WritingMode wm = aCaptionFrame->GetWritingMode();
+
+  // Use unconstrained available block-size so that the caption is always
+  // fully-complete.
+  const LogicalSize availSize(wm, aAvailISize, NS_UNCONSTRAINEDSIZE);
+  aChildRI.emplace(aPresContext, aOuterRI, aCaptionFrame, availSize);
+
+  // See if we need to reset mIsTopOfPage flag.
+  if (aChildRI->mFlags.mIsTopOfPage) {
     uint8_t captionSide = GetCaptionSide();
     if (captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM ||
         captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE) {
@@ -715,20 +719,20 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
 
   if (captionSide == NO_SIDE) {
     // We don't have a caption.
-    OuterBeginReflowChild(aPresContext, InnerTableFrame(), aOuterRI, innerRI,
-                          contentBoxISize);
+    CreateReflowInputForInnerTable(aPresContext, InnerTableFrame(), aOuterRI,
+                                   innerRI, contentBoxISize);
   } else if (captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
              captionSide == NS_STYLE_CAPTION_SIDE_RIGHT) {
     // ComputeAutoSize takes care of making side captions small. Compute
     // the caption's size first, and tell the table to fit in what's left.
-    OuterBeginReflowChild(aPresContext, mCaptionFrames.FirstChild(), aOuterRI,
-                          captionRI, contentBoxISize);
+    CreateReflowInputForCaption(aPresContext, mCaptionFrames.FirstChild(),
+                                aOuterRI, captionRI, contentBoxISize);
     captionWM = captionRI->GetWritingMode();
     nscoord innerAvailISize =
         contentBoxISize -
         captionRI->ComputedSizeWithMarginBorderPadding(wm).ISize(wm);
-    OuterBeginReflowChild(aPresContext, InnerTableFrame(), aOuterRI, innerRI,
-                          innerAvailISize);
+    CreateReflowInputForInnerTable(aPresContext, InnerTableFrame(), aOuterRI,
+                                   innerRI, innerAvailISize);
   } else if (captionSide == NS_STYLE_CAPTION_SIDE_TOP ||
              captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM) {
     // Compute the table's size first, and then prevent the caption from
@@ -739,8 +743,8 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
     //   table box inside it
     // We don't actually make our anonymous box that isize (if we did,
     // it would break 'auto' margins), but this effectively does that.
-    OuterBeginReflowChild(aPresContext, InnerTableFrame(), aOuterRI, innerRI,
-                          contentBoxISize);
+    CreateReflowInputForInnerTable(aPresContext, InnerTableFrame(), aOuterRI,
+                                   innerRI, contentBoxISize);
     // It's good that CSS 2.1 says not to include margins, since we
     // can't, since they already been converted so they exactly
     // fill the available isize (ignoring the margin on one side if
@@ -748,8 +752,8 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
     // GetCaptionOrigin, though.)
     nscoord innerBorderISize =
         innerRI->ComputedSizeWithBorderPadding(wm).ISize(wm);
-    OuterBeginReflowChild(aPresContext, mCaptionFrames.FirstChild(), aOuterRI,
-                          captionRI, innerBorderISize);
+    CreateReflowInputForCaption(aPresContext, mCaptionFrames.FirstChild(),
+                                aOuterRI, captionRI, innerBorderISize);
     captionWM = captionRI->GetWritingMode();
   } else {
     NS_ASSERTION(captionSide == NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE ||
@@ -757,11 +761,11 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
                  "unexpected caption-side");
     // Size the table and the caption independently.
     captionWM = mCaptionFrames.FirstChild()->GetWritingMode();
-    OuterBeginReflowChild(aPresContext, mCaptionFrames.FirstChild(), aOuterRI,
-                          captionRI,
-                          aOuterRI.ComputedSize(captionWM).ISize(captionWM));
-    OuterBeginReflowChild(aPresContext, InnerTableFrame(), aOuterRI, innerRI,
-                          contentBoxISize);
+    CreateReflowInputForCaption(
+        aPresContext, mCaptionFrames.FirstChild(), aOuterRI, captionRI,
+        aOuterRI.ComputedSize(captionWM).ISize(captionWM));
+    CreateReflowInputForInnerTable(aPresContext, InnerTableFrame(), aOuterRI,
+                                   innerRI, contentBoxISize);
   }
 
   // First reflow the caption.
@@ -770,7 +774,9 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
   LogicalMargin captionMargin(wm);
   if (mCaptionFrames.NotEmpty()) {
     captionMet.emplace(wm);
-    nsReflowStatus capStatus;  // don't let the caption cause incomplete
+    // We intentionally don't merge capStatus into aStatus, since we currently
+    // can't handle caption continuations, but we probably should.
+    nsReflowStatus capStatus;
     OuterDoReflowChild(aPresContext, mCaptionFrames.FirstChild(), *captionRI,
                        *captionMet, capStatus);
     captionSize.ISize(wm) = captionMet->ISize(wm);
@@ -808,8 +814,8 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
         if (oldCBSize != *cbSize) {
           // Reset the inner table's ReflowInput to stretch it to the new size.
           innerRI.reset();
-          OuterBeginReflowChild(aPresContext, InnerTableFrame(), aOuterRI,
-                                innerRI, contentBoxISize);
+          CreateReflowInputForInnerTable(aPresContext, InnerTableFrame(),
+                                         aOuterRI, innerRI, contentBoxISize);
         }
       }
     }
