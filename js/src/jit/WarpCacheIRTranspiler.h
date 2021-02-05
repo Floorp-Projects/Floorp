@@ -7,8 +7,6 @@
 #ifndef jit_WarpCacheIRTranspiler_h
 #define jit_WarpCacheIRTranspiler_h
 
-#include "mozilla/Attributes.h"
-
 #include <initializer_list>
 
 namespace js {

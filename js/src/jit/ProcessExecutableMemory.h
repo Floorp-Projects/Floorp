@@ -7,8 +7,6 @@
 #ifndef jit_ProcessExecutableMemory_h
 #define jit_ProcessExecutableMemory_h
 
-#include "mozilla/Attributes.h"
-
 #include "util/Poison.h"
 
 namespace js {

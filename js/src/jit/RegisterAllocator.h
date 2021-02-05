@@ -7,7 +7,6 @@
 #ifndef jit_RegisterAllocator_h
 #define jit_RegisterAllocator_h
 
-#include "mozilla/Attributes.h"
 #include "mozilla/MathAlgorithms.h"
 
 #include "jit/LIR.h"

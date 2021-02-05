@@ -8,8 +8,6 @@
 #ifndef jit_Sink_h
 #define jit_Sink_h
 
-#include "mozilla/Attributes.h"
-
 namespace js {
 namespace jit {
 
