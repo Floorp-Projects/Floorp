@@ -27,8 +27,7 @@
 <script type="application/javascript">
 
 function test(testDriver) {
-  var config = getHitTestConfig();
-  var utils = config.utils;
+  var utils = getHitTestConfig().utils;
 
   let hasViewId;
   try {
@@ -37,9 +36,7 @@ function test(testDriver) {
   } catch (e) {
     hasViewId = false;
   }
-  if (!config.activateAllScrollFrames) {
-    ok(!hasViewId, "The nested scroller should be inactive and not have a view id");
-  }
+  ok(!hasViewId, "The nested scroller should be inactive and not have a view id");
 
   checkHitResult(
     hitTest(centerOf(document.body)),
