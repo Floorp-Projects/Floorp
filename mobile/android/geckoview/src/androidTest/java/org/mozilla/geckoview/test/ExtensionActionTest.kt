@@ -18,6 +18,7 @@ import org.junit.runners.Parameterized
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.WebExtension
+import org.mozilla.geckoview.Image.ImageProcessingException
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 
@@ -466,7 +467,9 @@ class ExtensionActionTest : BaseSessionTest() {
             action.icon!!.getBitmap(38).accept({
                 error.completeExceptionally(RuntimeException("Should not succeed."))
             }, { exception ->
-                assertTrue(exception is IllegalArgumentException)
+                if (!(exception is ImageProcessingException)) {
+                    throw exception!!;
+                }
                 error.complete(null)
             })
         }
