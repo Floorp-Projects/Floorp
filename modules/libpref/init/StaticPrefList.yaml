@@ -10502,6 +10502,9 @@
 #---------------------------------------------------------------------------
 
 # Global user preference for disabling native theme in content processes.
+#
+# NOTE(emilio): When changing this make sure to update the non_native_theme
+# entry in python/mozbuild/mozbuild/mozinfo.py
 - name: widget.disable-native-theme-for-content
   type: RelaxedAtomicBool
 #if defined(XP_LINUX) && defined(NIGHTLY_BUILD) && !defined(ANDROID)
