@@ -68,6 +68,8 @@ ChromeUtils.defineModuleGetter(
 const gIsFirefoxDesktop =
   Services.appinfo.ID == "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
 
+Services.telemetry.setEventRecordingEnabled("readermode", true);
+
 var ReaderMode = {
   // Version of the cache schema.
   CACHE_VERSION: 1,
@@ -79,6 +81,10 @@ var ReaderMode = {
    * if not, append the about:reader page in the history instead.
    */
   enterReaderMode(docShell, win) {
+    Services.telemetry.recordEvent("readermode", "view", "on", null, {
+      subcategory: "feature",
+    });
+
     let url = win.document.location.href;
     let readerURL = "about:reader?url=" + encodeURIComponent(url);
 
@@ -104,6 +110,10 @@ var ReaderMode = {
    * if not, append the original page in the history instead.
    */
   leaveReaderMode(docShell, win) {
+    Services.telemetry.recordEvent("readermode", "view", "off", null, {
+      subcategory: "feature",
+    });
+
     let url = win.document.location.href;
     let originalURL = ReaderMode.getOriginalUrl(url);
     let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
