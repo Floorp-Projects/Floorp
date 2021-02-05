@@ -179,9 +179,7 @@ async function test() {
   ok(isLayerized("outer4"), "outer4 is still layerized because inner4 is still layerized");
 }
 
-if (getHitTestConfig().activateAllScrollFrames) {
-  ok(true, "Skipping layerization test with activateAllScrollFrames pref because we layerize always");
-} else if (isApzEnabled()) {
+if (isApzEnabled()) {
   SimpleTest.waitForExplicitFinish();
   SimpleTest.requestFlakyTimeout("we are testing code that measures an actual timeout");
   SimpleTest.expectAssertions(0, 8); // we get a bunch of "ASSERTION: Bounds computation mismatch" sometimes (bug 1232856)

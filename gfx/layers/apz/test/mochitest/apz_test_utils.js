@@ -736,36 +736,12 @@ async function injectScript(aScript, aWindow = window) {
 //   utils: the nsIDOMWindowUtils instance for this window
 //   isWebRender: true if WebRender is enabled
 //   isWindow: true if the platform is Windows
-//   activateAllScrollFrames: true if prefs indicate all scroll frames are
-//                            activated with at least a minimal display port
 function getHitTestConfig() {
   if (!("hitTestConfig" in window)) {
     var utils = SpecialPowers.getDOMWindowUtils(window);
     var isWebRender = utils.layerManagerType == "WebRender";
     var isWindows = getPlatform() == "windows";
-    let activateAllScrollFrames = false;
-    if (isWebRender) {
-      activateAllScrollFrames =
-        SpecialPowers.getBoolPref("apz.wr.activate_all_scroll_frames") ||
-        (SpecialPowers.getBoolPref(
-          "apz.wr.activate_all_scroll_frames_when_fission"
-        ) &&
-          SpecialPowers.getBoolPref("fission.autostart"));
-    } else {
-      activateAllScrollFrames =
-        SpecialPowers.getBoolPref("apz.nonwr.activate_all_scroll_frames") ||
-        (SpecialPowers.getBoolPref(
-          "apz.nonwr.activate_all_scroll_frames_when_fission"
-        ) &&
-          SpecialPowers.getBoolPref("fission.autostart"));
-    }
-
-    window.hitTestConfig = {
-      utils,
-      isWebRender,
-      isWindows,
-      activateAllScrollFrames,
-    };
+    window.hitTestConfig = { utils, isWebRender, isWindows };
   }
   return window.hitTestConfig;
 }
@@ -868,7 +844,7 @@ var LayerState = {
 //     If directions.vertical is true, the vertical scrollbar will be tested.
 //     If directions.horizontal is true, the horizontal scrollbar will be tested.
 //     Both may be true in a single call (in which case two tests are performed).
-//   expectedScrollId: The scroll id that is expected to be hit, if activateAllScrollFrames is false.
+//   expectedScrollId: The scroll id that is expected to be hit.
 //   expectedLayersId: The layers id that is expected to be hit.
 //   trackLocation: One of ScrollbarTrackLocation.{START, END}.
 //     Determines which end of the scrollbar track is targeted.
@@ -917,33 +893,15 @@ function hitTestScrollbar(params) {
     // will fall back to the main thread for everything.
     if (config.isWebRender) {
       expectedHitInfo |= APZHitResultFlags.APZ_AWARE_LISTENERS;
-      if (
-        !config.activateAllScrollFrames &&
-        params.layerState == LayerState.INACTIVE
-      ) {
+      if (params.layerState == LayerState.INACTIVE) {
         expectedHitInfo |= APZHitResultFlags.INACTIVE_SCROLLFRAME;
       }
     } else {
       expectedHitInfo |= APZHitResultFlags.IRREGULAR_AREA;
     }
     // We do not generate the layers for thumbs on inactive scrollframes.
-    if (
-      params.layerState == LayerState.ACTIVE ||
-      config.activateAllScrollFrames
-    ) {
-      expectedHitInfo |= APZHitResultFlags.SCROLLBAR_THUMB;
-    }
-  }
-
-  var expectedScrollId = params.expectedScrollId;
-  if (config.activateAllScrollFrames) {
-    expectedScrollId = config.utils.getViewId(params.element);
     if (params.layerState == LayerState.ACTIVE) {
-      is(
-        expectedScrollId,
-        params.expectedScrollId,
-        "Expected scrollId for active scrollframe should match"
-      );
+      expectedHitInfo |= APZHitResultFlags.SCROLLBAR_THUMB;
     }
   }
 
@@ -968,7 +926,7 @@ function hitTestScrollbar(params) {
     checkHitResult(
       hitTest(verticalScrollbarPoint),
       expectedHitInfo | APZHitResultFlags.SCROLLBAR_VERTICAL,
-      expectedScrollId,
+      params.expectedScrollId,
       params.expectedLayersId,
       scrollframeMsg + " - vertical scrollbar"
     );
@@ -988,7 +946,7 @@ function hitTestScrollbar(params) {
     checkHitResult(
       hitTest(horizontalScrollbarPoint),
       expectedHitInfo,
-      expectedScrollId,
+      params.expectedScrollId,
       params.expectedLayersId,
       scrollframeMsg + " - horizontal scrollbar"
     );
