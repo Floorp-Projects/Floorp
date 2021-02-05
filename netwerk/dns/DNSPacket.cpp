@@ -954,6 +954,10 @@ nsresult DNSPacket::DecodeInternal(
       aTypeResult.is<TypeRecordEmpty>()) {
     // no entries were stored!
     LOG(("TRR: No entries were stored!\n"));
+    if (aReason == nsHostRecord::TRR_UNSET) {
+      aReason = nsHostRecord::TRR_NO_ANSWERS;
+    }
+
     if (extendedError != UINT16_MAX && hardFail(extendedError)) {
       return NS_ERROR_DEFINITIVE_UNKNOWN_HOST;
     }
