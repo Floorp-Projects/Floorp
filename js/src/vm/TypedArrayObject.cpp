@@ -313,8 +313,6 @@ namespace {
 
 enum class SpeciesConstructorOverride { None, ArrayBuffer };
 
-enum class CreateSingleton { No, Yes };
-
 template <typename NativeType>
 class TypedArrayObjectTemplate : public TypedArrayObject {
   friend class TypedArrayObject;
