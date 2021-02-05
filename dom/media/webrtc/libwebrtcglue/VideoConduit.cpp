@@ -54,7 +54,9 @@
 
 namespace mozilla {
 
-static const char* vcLogTag = "WebrtcVideoSessionConduit";
+namespace {
+
+const char* vcLogTag = "WebrtcVideoSessionConduit";
 #ifdef LOGTAG
 #  undef LOGTAG
 #endif
@@ -62,9 +64,9 @@ static const char* vcLogTag = "WebrtcVideoSessionConduit";
 
 using LocalDirection = MediaSessionConduitLocalDirection;
 
-static const int kNullPayloadType = -1;
-static const char* kUlpFecPayloadName = "ulpfec";
-static const char* kRedPayloadName = "red";
+const int kNullPayloadType = -1;
+const char* kUlpFecPayloadName = "ulpfec";
+const char* kRedPayloadName = "red";
 
 // The number of frame buffers WebrtcVideoConduit may create before returning
 // errors.
@@ -80,8 +82,7 @@ static const char* kRedPayloadName = "red";
 
 
 template <class t>
-static void ConstrainPreservingAspectRatioExact(uint32_t max_fs, t* width,
-                                                t* height) {
+void ConstrainPreservingAspectRatioExact(uint32_t max_fs, t* width, t* height) {
   // We could try to pick a better starting divisor, but it won't make any real
   // performance difference.
   for (size_t d = 1; d < std::min(*width, *height); ++d) {
@@ -101,9 +102,8 @@ static void ConstrainPreservingAspectRatioExact(uint32_t max_fs, t* width,
 }
 
 template <class t>
-static void ConstrainPreservingAspectRatio(uint16_t max_width,
-                                           uint16_t max_height, t* width,
-                                           t* height) {
+void ConstrainPreservingAspectRatio(uint16_t max_width, uint16_t max_height,
+                                    t* width, t* height) {
   if (((*width) <= max_width) && ((*height) <= max_height)) {
     return;
   }
@@ -123,10 +123,10 @@ static void ConstrainPreservingAspectRatio(uint16_t max_width,
  * @param current framerate
  * @result new framerate
  */
-static unsigned int SelectSendFrameRate(const VideoCodecConfig* codecConfig,
-                                        unsigned int old_framerate,
-                                        unsigned short sending_width,
-                                        unsigned short sending_height) {
+unsigned int SelectSendFrameRate(const VideoCodecConfig* codecConfig,
+                                 unsigned int old_framerate,
+                                 unsigned short sending_width,
+                                 unsigned short sending_height) {
   unsigned int new_framerate = old_framerate;
 
   // Limit frame rate based on max-mbps
@@ -150,8 +150,7 @@ static unsigned int SelectSendFrameRate(const VideoCodecConfig* codecConfig,
 /**
  * Perform validation on the codecConfig to be applied
  */
-static MediaConduitErrorCode ValidateCodecConfig(
-    const VideoCodecConfig* codecInfo) {
+MediaConduitErrorCode ValidateCodecConfig(const VideoCodecConfig* codecInfo) {
   if (!codecInfo) {
     CSFLogError(LOGTAG, "%s Null CodecConfig ", __FUNCTION__);
     return kMediaConduitMalformedArgument;
@@ -164,6 +163,113 @@ static MediaConduitErrorCode ValidateCodecConfig(
 
   return kMediaConduitNoError;
 }
+
+webrtc::VideoCodecType SupportedCodecType(webrtc::VideoCodecType aType) {
+  switch (aType) {
+    case webrtc::VideoCodecType::kVideoCodecVP8:
+    case webrtc::VideoCodecType::kVideoCodecVP9:
+    case webrtc::VideoCodecType::kVideoCodecH264:
+      return aType;
+    default:
+      return webrtc::VideoCodecType::kVideoCodecGeneric;
+  }
+  // NOTREACHED
+}
+
+rtc::scoped_refptr<webrtc::VideoEncoderConfig::EncoderSpecificSettings>
+ConfigureVideoEncoderSettings(const VideoCodecConfig* aConfig,
+                              const WebrtcVideoConduit* aConduit) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  bool is_screencast =
+      aConduit->CodecMode() == webrtc::VideoCodecMode::kScreensharing;
+  // No automatic resizing when using simulcast or screencast.
+  bool automatic_resize = !is_screencast && aConfig->mEncodings.size() <= 1;
+  bool frame_dropping = !is_screencast;
+  bool denoising;
+  bool codec_default_denoising = false;
+  if (is_screencast) {
+    denoising = false;
+  } else {
+    // Use codec default if video_noise_reduction is unset.
+    denoising = aConduit->Denoising();
+    codec_default_denoising = !denoising;
+  }
+
+  if (aConfig->mName == "H264") {
+    webrtc::VideoCodecH264 h264_settings =
+        webrtc::VideoEncoder::GetDefaultH264Settings();
+    h264_settings.frameDroppingOn = frame_dropping;
+    h264_settings.packetizationMode = aConfig->mPacketizationMode;
+    return new rtc::RefCountedObject<
+        webrtc::VideoEncoderConfig::H264EncoderSpecificSettings>(h264_settings);
+  }
+  if (aConfig->mName == "VP8") {
+    webrtc::VideoCodecVP8 vp8_settings =
+        webrtc::VideoEncoder::GetDefaultVp8Settings();
+    vp8_settings.automaticResizeOn = automatic_resize;
+    // VP8 denoising is enabled by default.
+    vp8_settings.denoisingOn = codec_default_denoising ? true : denoising;
+    vp8_settings.frameDroppingOn = frame_dropping;
+    return new rtc::RefCountedObject<
+        webrtc::VideoEncoderConfig::Vp8EncoderSpecificSettings>(vp8_settings);
+  }
+  if (aConfig->mName == "VP9") {
+    webrtc::VideoCodecVP9 vp9_settings =
+        webrtc::VideoEncoder::GetDefaultVp9Settings();
+    if (is_screencast) {
+      // TODO(asapersson): Set to 2 for now since there is a DCHECK in
+      // VideoSendStream::ReconfigureVideoEncoder.
+      vp9_settings.numberOfSpatialLayers = 2;
+    } else {
+      vp9_settings.numberOfSpatialLayers = aConduit->SpatialLayers();
+    }
+    // VP9 denoising is disabled by default.
+    vp9_settings.denoisingOn = codec_default_denoising ? false : denoising;
+    vp9_settings.frameDroppingOn = true;  // This must be true for VP9
+    return new rtc::RefCountedObject<
+        webrtc::VideoEncoderConfig::Vp9EncoderSpecificSettings>(vp9_settings);
+  }
+  return nullptr;
+}
+
+// Compare lists of codecs
+bool CodecsDifferent(const nsTArray<UniquePtr<VideoCodecConfig>>& a,
+                     const nsTArray<UniquePtr<VideoCodecConfig>>& b) {
+  // return a != b;
+  // would work if UniquePtr<> operator== compared contents!
+  auto len = a.Length();
+  if (len != b.Length()) {
+    return true;
+  }
+
+  // XXX std::equal would work, if we could use it on this - fails for the
+  // same reason as above.  c++14 would let us pass a comparator function.
+  for (uint32_t i = 0; i < len; ++i) {
+    if (!(*a[i] == *b[i])) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+uint32_t GenerateRandomSSRC() {
+  uint32_t ssrc;
+  do {
+    SECStatus rv = PK11_GenerateRandom(reinterpret_cast<unsigned char*>(&ssrc),
+                                       sizeof(ssrc));
+    if (rv != SECSuccess) {
+      CSFLogError(LOGTAG, "%s: PK11_GenerateRandom failed with error %d",
+                  __FUNCTION__, rv);
+      return 0;
+    }
+  } while (ssrc == 0);  // webrtc.org code has fits if you select an SSRC of 0
+
+  return ssrc;
+}
+
+}  // namespace
 
 /**
  * Factory Method for VideoConduit
@@ -320,18 +426,6 @@ void WebrtcVideoConduit::DeleteSendStream() {
   }
 }
 
-webrtc::VideoCodecType SupportedCodecType(webrtc::VideoCodecType aType) {
-  switch (aType) {
-    case webrtc::VideoCodecType::kVideoCodecVP8:
-    case webrtc::VideoCodecType::kVideoCodecVP9:
-    case webrtc::VideoCodecType::kVideoCodecH264:
-      return aType;
-    default:
-      return webrtc::VideoCodecType::kVideoCodecGeneric;
-  }
-  // NOTREACHED
-}
-
 MediaConduitErrorCode WebrtcVideoConduit::CreateSendStream() {
   MOZ_ASSERT(NS_IsMainThread());
   mMutex.AssertCurrentThreadOwns();
@@ -441,84 +535,6 @@ MediaConduitErrorCode WebrtcVideoConduit::CreateRecvStream() {
               mRecvStream, mRecvStreamConfig.rtp.remote_ssrc,
               mRecvStreamConfig.rtp.remote_ssrc);
   return kMediaConduitNoError;
-}
-
-static rtc::scoped_refptr<webrtc::VideoEncoderConfig::EncoderSpecificSettings>
-ConfigureVideoEncoderSettings(const VideoCodecConfig* aConfig,
-                              const WebrtcVideoConduit* aConduit) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  bool is_screencast =
-      aConduit->CodecMode() == webrtc::VideoCodecMode::kScreensharing;
-  // No automatic resizing when using simulcast or screencast.
-  bool automatic_resize = !is_screencast && aConfig->mEncodings.size() <= 1;
-  bool frame_dropping = !is_screencast;
-  bool denoising;
-  bool codec_default_denoising = false;
-  if (is_screencast) {
-    denoising = false;
-  } else {
-    // Use codec default if video_noise_reduction is unset.
-    denoising = aConduit->Denoising();
-    codec_default_denoising = !denoising;
-  }
-
-  if (aConfig->mName == "H264") {
-    webrtc::VideoCodecH264 h264_settings =
-        webrtc::VideoEncoder::GetDefaultH264Settings();
-    h264_settings.frameDroppingOn = frame_dropping;
-    h264_settings.packetizationMode = aConfig->mPacketizationMode;
-    return new rtc::RefCountedObject<
-        webrtc::VideoEncoderConfig::H264EncoderSpecificSettings>(h264_settings);
-  }
-  if (aConfig->mName == "VP8") {
-    webrtc::VideoCodecVP8 vp8_settings =
-        webrtc::VideoEncoder::GetDefaultVp8Settings();
-    vp8_settings.automaticResizeOn = automatic_resize;
-    // VP8 denoising is enabled by default.
-    vp8_settings.denoisingOn = codec_default_denoising ? true : denoising;
-    vp8_settings.frameDroppingOn = frame_dropping;
-    return new rtc::RefCountedObject<
-        webrtc::VideoEncoderConfig::Vp8EncoderSpecificSettings>(vp8_settings);
-  }
-  if (aConfig->mName == "VP9") {
-    webrtc::VideoCodecVP9 vp9_settings =
-        webrtc::VideoEncoder::GetDefaultVp9Settings();
-    if (is_screencast) {
-      // TODO(asapersson): Set to 2 for now since there is a DCHECK in
-      // VideoSendStream::ReconfigureVideoEncoder.
-      vp9_settings.numberOfSpatialLayers = 2;
-    } else {
-      vp9_settings.numberOfSpatialLayers = aConduit->SpatialLayers();
-    }
-    // VP9 denoising is disabled by default.
-    vp9_settings.denoisingOn = codec_default_denoising ? false : denoising;
-    vp9_settings.frameDroppingOn = true;  // This must be true for VP9
-    return new rtc::RefCountedObject<
-        webrtc::VideoEncoderConfig::Vp9EncoderSpecificSettings>(vp9_settings);
-  }
-  return nullptr;
-}
-
-// Compare lists of codecs
-static bool CodecsDifferent(const nsTArray<UniquePtr<VideoCodecConfig>>& a,
-                            const nsTArray<UniquePtr<VideoCodecConfig>>& b) {
-  // return a != b;
-  // would work if UniquePtr<> operator== compared contents!
-  auto len = a.Length();
-  if (len != b.Length()) {
-    return true;
-  }
-
-  // XXX std::equal would work, if we could use it on this - fails for the
-  // same reason as above.  c++14 would let us pass a comparator function.
-  for (uint32_t i = 0; i < len; ++i) {
-    if (!(*a[i] == *b[i])) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 /**
@@ -691,21 +707,6 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureSendMediaCodec(
   }
 
   return condError;
-}
-
-static uint32_t GenerateRandomSSRC() {
-  uint32_t ssrc;
-  do {
-    SECStatus rv = PK11_GenerateRandom(reinterpret_cast<unsigned char*>(&ssrc),
-                                       sizeof(ssrc));
-    if (rv != SECSuccess) {
-      CSFLogError(LOGTAG, "%s: PK11_GenerateRandom failed with error %d",
-                  __FUNCTION__, rv);
-      return 0;
-    }
-  } while (ssrc == 0);  // webrtc.org code has fits if you select an SSRC of 0
-
-  return ssrc;
 }
 
 bool WebrtcVideoConduit::SetRemoteSSRC(uint32_t ssrc, uint32_t rtxSsrc) {
