@@ -889,10 +889,9 @@ class MNodeIterator {
 
 void MBasicBlock::add(MInstruction* ins) {
   MOZ_ASSERT(!hasLastIns());
-  ins->setBlock(this);
+  ins->setInstructionBlock(this, trackedSite_);
   graph().allocDefinitionId(ins);
   instructions_.pushBack(ins);
-  ins->setTrackedSite(trackedSite_);
 }
 
 }  // namespace jit
