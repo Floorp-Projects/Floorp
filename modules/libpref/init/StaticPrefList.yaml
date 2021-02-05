@@ -250,7 +250,7 @@
 
 - name: apz.wr.activate_all_scroll_frames_when_fission
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 - name: apz.nonwr.activate_all_scroll_frames
