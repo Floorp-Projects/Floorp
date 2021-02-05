@@ -30,4 +30,4 @@ Sources
 -------
 
 * `Configuration (YAML) <https://searchfox.org/mozilla-central/source/tools/lint/rustfmt.yml>`_
-* `Source <https://searchfox.org/mozilla-central/source/tools/lint/rustfmt/__init__.py>`_
+* `Source <https://searchfox.org/mozilla-central/source/tools/lint/rust/__init__.py>`_
