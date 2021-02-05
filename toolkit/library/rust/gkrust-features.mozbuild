@@ -76,6 +76,8 @@ if CONFIG['ENABLE_REMOTE_AGENT']:
 
 if CONFIG['MOZ_GLEAN']:
     gkrust_features += ['glean', 'glean_with_gecko']
+    if not CONFIG['MOZILLA_OFFICIAL']:
+        gkrust_features += ['glean_disable_upload']
 
 if CONFIG['MOZ_RUST_FXA_CLIENT']:
     gkrust_features += ['rust_fxa_client']

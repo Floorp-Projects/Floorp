@@ -1,4 +1,4 @@
-# Preferences
+# Preferences and Defines
 
 ## User Preferences
 
@@ -22,6 +22,38 @@ telling the Glean SDK that it was sent successfully.
 This is how you emulate "recording enabled but upload disabled"
 like developer builds have in Firefox Telemetry.
 Defaults to 0.
+
+## Defines
+
+`MOZ_GLEAN`
+
+If unset, Glean and FOG are not included in the build.
+Only unset on Android at the moment.
+This define will likely be removed after we sort out how Android and Geckoview will work
+(see [bug 1670261](https://bugzilla.mozilla.org/show_bug.cgi?id=1670261)).
+It can be queried in C++ via `#ifdef MOZ_GLEAN`,
+in JS via `AppConstants.MOZ_GLEAN`,
+and Rust via the `gkrust/glean` feature.
+
+`MOZILLA_OFFICIAL`
+
+If unset, we set a `glean_disable_upload` Rust feature in
+`gkrust` and `gkrust-shared` which is forwarded to `fog_control` as `disable_upload`.
+This feature defaults FOG to an "upload disabled"
+mode where collection on the client proceeds as normal but no ping is sent.
+This mode can be overridden at runtime in two ways:
+* If the ping has a
+  [Debug Tag](https://mozilla.github.io/glean/book/user/debugging/index.html)
+  then it is sent so that it may be inspected in the
+  [Glean Debug Ping Viewer](https://debug-ping-preview.firebaseapp.com/).
+* If the preference `telemetry.fog.test.localhost_port` is set to a value greater than 0,
+  then pings are sent to a server operating locally at that port
+  (even if the ping has a Debug Tag), to enable testing.
+
+`MOZILLA_OFFICIAL` tends to be set on most builds released to users,
+including builds distributed by Linux distributions.
+It tends to not be set on local developer builds.
+See [bug 1680025](https://bugzilla.mozilla.org/show_bug.cgi?id=1680025) for details.
 
 `telemetry.fog.test.activity_limit`
 `telemetry.fog.test.inactivity_limit`
