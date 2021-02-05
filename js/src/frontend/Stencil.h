@@ -390,6 +390,9 @@ class ScopeStencil {
   Scope* createScope(JSContext* cx, CompilationInput& input,
                      CompilationGCOutput& gcOutput,
                      BaseParserScopeData* baseScopeData) const;
+  Scope* createScope(JSContext* cx, CompilationAtomCache& atomCache,
+                     HandleScope enclosingScope,
+                     BaseParserScopeData* baseScopeData) const;
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();
@@ -404,7 +407,7 @@ class ScopeStencil {
   template <typename SpecificScopeType>
   UniquePtr<typename SpecificScopeType::RuntimeData> createSpecificScopeData(
       JSContext* cx, CompilationAtomCache& atomCache,
-      CompilationGCOutput& gcOutput, BaseParserScopeData* baseData) const;
+      BaseParserScopeData* baseData) const;
 
   template <typename SpecificEnvironmentType>
   MOZ_MUST_USE bool createSpecificShape(JSContext* cx, ScopeKind kind,
@@ -412,8 +415,8 @@ class ScopeStencil {
                                         MutableHandleShape shape) const;
 
   template <typename SpecificScopeType, typename SpecificEnvironmentType>
-  Scope* createSpecificScope(JSContext* cx, CompilationInput& input,
-                             CompilationGCOutput& gcOutput,
+  Scope* createSpecificScope(JSContext* cx, CompilationAtomCache& atomCache,
+                             HandleScope enclosingScope,
                              BaseParserScopeData* baseData) const;
 
   template <typename ScopeT>
