@@ -389,9 +389,6 @@ bool js::RunScript(JSContext* cx, RunState& state) {
       mozilla::TimeDuration delta = ReallyNow() - startTime;
       cx->realm()->timers.executionTime += delta;
       cx->setIsMeasuringExecutionTime(false);
-
-      // JS_TELEMETRY_RUN_TIME_US reporting was done here, but is temporarily
-      // disabled due to the crash in 1670348.
     }
   });
 
