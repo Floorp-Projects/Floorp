@@ -135,7 +135,7 @@ class ASRouterParentProcessMessageHandler {
         return this._router.closeWNPanel(browser);
       }
       case msg.MODIFY_MESSAGE_JSON: {
-        return this._router.sendMessage(data.content, data, true, browser);
+        return this._router.routeCFRMessage(data.content, browser, data, true);
       }
       case msg.OVERRIDE_MESSAGE: {
         return this._router.setMessageById(data, true, browser);
