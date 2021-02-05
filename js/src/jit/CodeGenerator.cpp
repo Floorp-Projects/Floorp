@@ -6484,8 +6484,9 @@ bool CodeGenerator::generateBody() {
 
       if (iter->mirRaw()) {
         // Only add instructions that have a tracked inline script tree.
-        if (iter->mirRaw()->trackedTree()) {
-          if (!addNativeToBytecodeEntry(iter->mirRaw()->trackedSite())) {
+        const BytecodeSite* site = iter->mirRaw()->trackedSite();
+        if (site && site->tree()) {
+          if (!addNativeToBytecodeEntry(site)) {
             return false;
           }
         }
