@@ -1813,10 +1813,10 @@ static bool ReshapeForProtoMutation(JSContext* cx, HandleObject obj) {
   // Heuristics:
   //  - Set UNCACHEABLE_PROTO flag on shape to avoid creating too many private
   //    shape copies.
-  //  - Only propegate along proto chain if we are mark DELEGATE. This avoids
+  //  - Only propagate along proto chain if we are marked DELEGATE. This avoids
   //    reshaping in normal object access cases.
   //
-  // NOTE: We only handle NativeObjects and don't propegate reshapes through
+  // NOTE: We only handle NativeObjects and don't propagate reshapes through
   //       any non-native objects on the chain.
   //
   // See Also:

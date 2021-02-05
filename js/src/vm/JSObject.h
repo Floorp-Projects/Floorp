@@ -210,9 +210,7 @@ class JSObject
 
   // Objects with an uncacheable proto can have their prototype mutated
   // without inducing a shape change on the object. JIT inline caches should
-  // do an explicit group guard to guard against this. Singletons always
-  // generate a new shape when their prototype changes, regardless of this
-  // hasUncacheableProto flag.
+  // do an explicit group guard to guard against this.
   inline bool hasUncacheableProto() const;
   static bool setUncacheableProto(JSContext* cx, JS::HandleObject obj) {
     MOZ_ASSERT(obj->hasStaticPrototype(),
