@@ -595,24 +595,6 @@ class MDefinition : public MNode {
   BailoutKind bailoutKind() const { return bailoutKind_; }
   void setBailoutKind(BailoutKind kind) { bailoutKind_ = kind; }
 
-  jsbytecode* profilerLeavePc() const {
-    // If this is in a top-level function, use the pc directly.
-    if (trackedTree()->isOutermostCaller()) {
-      return trackedPc();
-    }
-
-    // Walk up the InlineScriptTree chain to find the top-most callPC
-    InlineScriptTree* curTree = trackedTree();
-    InlineScriptTree* callerTree = curTree->caller();
-    while (!callerTree->isOutermostCaller()) {
-      curTree = callerTree;
-      callerTree = curTree->caller();
-    }
-
-    // Return the callPc of the topmost inlined script.
-    return curTree->callerPc();
-  }
-
   // Return the range of this value, *before* any bailout checks. Contrast
   // this with the type() method, and the Range constructor which takes an
   // MDefinition*, which describe the value *after* any bailout checks.
