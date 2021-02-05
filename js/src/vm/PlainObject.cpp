@@ -11,31 +11,22 @@
 #include "vm/PlainObject-inl.h"
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Maybe.h"       // mozilla::Maybe
 
 #include "jspubtd.h"  // JSProto_Object
 
-#include "gc/AllocKind.h"   // js::gc::AllocKind
-#include "vm/JSContext.h"   // JSContext
-#include "vm/JSFunction.h"  // JSFunction
-#include "vm/JSObject.h"    // JSObject, js::GetPrototypeFromConstructor
-#include "vm/ObjectGroup.h"  // js::ObjectGroup, js::{Generic,Singleton,Tenured}Object
+#include "gc/AllocKind.h"    // js::gc::AllocKind
+#include "vm/JSContext.h"    // JSContext
+#include "vm/JSFunction.h"   // JSFunction
+#include "vm/JSObject.h"     // JSObject, js::GetPrototypeFromConstructor
+#include "vm/ObjectGroup.h"  // js::ObjectGroup, js::{Generic,Tenured}Object
 #include "vm/TaggedProto.h"  // js::TaggedProto
 
-#include "vm/JSObject-inl.h"  // js::GuessObjectGCKind, js::NewObjectWithGroup, js::NewObjectGCKind
+#include "vm/JSObject-inl.h"  // js::NewObjectWithGroup, js::NewObjectGCKind
 
 using JS::Handle;
 using JS::Rooted;
 
-using js::GenericObject;
-using js::GuessObjectGCKind;
-using js::NewObjectGCKind;
-using js::NewObjectKind;
-using js::NewObjectWithGroup;
-using js::ObjectGroup;
 using js::PlainObject;
-using js::TaggedProto;
-using js::TenuredObject;
 
 PlainObject* js::CreateThisForFunction(JSContext* cx,
                                        Handle<JSFunction*> callee,
