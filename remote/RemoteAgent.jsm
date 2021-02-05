@@ -14,7 +14,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   HttpServer: "chrome://remote/content/server/HTTPD.jsm",
   JSONHandler: "chrome://remote/content/JSONHandler.jsm",
-  Log: "chrome://remote/content/shared/Log.jsm",
+  Log: "chrome://remote/content/Log.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
   RecommendedPreferences: "chrome://remote/content/RecommendedPreferences.jsm",
   TargetList: "chrome://remote/content/targets/TargetList.jsm",

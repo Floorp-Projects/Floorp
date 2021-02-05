@@ -13,7 +13,7 @@ const { MainProcessSession } = ChromeUtils.import(
   "chrome://remote/content/sessions/MainProcessSession.jsm"
 );
 const { RemoteAgent } = ChromeUtils.import(
-  "chrome://remote/content/components/RemoteAgent.jsm"
+  "chrome://remote/content/RemoteAgent.jsm"
 );
 
 /**
