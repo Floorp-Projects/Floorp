@@ -98,6 +98,9 @@ bool BasicLayerManager::PushGroupForLayer(gfxContext* aContext, Layer* aLayer,
 
   if (!canPushGroup) {
     aContext->Save();
+    // Restore() is called in PopGroupForLayer
+    // if group.mFinalTarget != group.mGroupTarget
+
     gfxUtils::ClipToRegion(aGroupResult.mFinalTarget,
                            aGroupResult.mVisibleRegion);
 
@@ -121,6 +124,7 @@ bool BasicLayerManager::PushGroupForLayer(gfxContext* aContext, Layer* aLayer,
         gfxCriticalNote
             << "BasicLayerManager context problem in PushGroupForLayer "
             << gfx::hexa(dt);
+        aContext->Restore();
         return false;
       }
       ctx->SetMatrix(aContext->CurrentMatrix());
