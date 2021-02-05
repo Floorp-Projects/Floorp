@@ -57,12 +57,6 @@ class InlineScriptTree {
 
   bool isOutermostCaller() const { return caller_ == nullptr; }
   bool hasCaller() const { return caller_ != nullptr; }
-  InlineScriptTree* outermostCaller() {
-    if (isOutermostCaller()) {
-      return this;
-    }
-    return caller_->outermostCaller();
-  }
 
   jsbytecode* callerPc() const { return callerPc_; }
 
