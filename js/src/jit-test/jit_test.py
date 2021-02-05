@@ -367,10 +367,13 @@ def main(argv):
         help=argparse.SUPPRESS,
     )
     op.add_argument("js_shell", metavar="JS_SHELL", help="JS shell to run tests with")
+    op.add_argument(
+        "-z", "--gc-zeal", help="GC zeal mode to use when running the shell"
+    )
 
     options, test_args = op.parse_known_args(argv)
     js_shell = which(options.js_shell)
-    test_environment = get_environment_overlay(js_shell)
+    test_environment = get_environment_overlay(js_shell, options.gc_zeal)
 
     if not (os.path.isfile(js_shell) and os.access(js_shell, os.X_OK)):
         if (
