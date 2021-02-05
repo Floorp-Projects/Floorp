@@ -267,12 +267,9 @@ class QuotaManager final : public BackgroundThreadObject {
 
   nsresult RestoreDirectoryMetadata2(nsIFile* aDirectory, bool aPersistent);
 
-  struct GetDirectoryResult {
+  struct GetDirectoryResultWithQuotaInfo {
     int64_t mTimestamp;
     bool mPersisted;
-  };
-
-  struct GetDirectoryResultWithQuotaInfo : GetDirectoryResult {
     QuotaInfo mQuotaInfo;
   };
 
@@ -282,12 +279,6 @@ class QuotaManager final : public BackgroundThreadObject {
   Result<GetDirectoryResultWithQuotaInfo, nsresult>
   GetDirectoryMetadataWithQuotaInfo2WithRestore(nsIFile* aDirectory,
                                                 bool aPersistent);
-
-  Result<GetDirectoryResult, nsresult> GetDirectoryMetadata2(
-      nsIFile* aDirectory);
-
-  Result<GetDirectoryResult, nsresult> GetDirectoryMetadata2WithRestore(
-      nsIFile* aDirectory, bool aPersistent);
 
   // This is the main entry point into the QuotaManager API.
   // Any storage API implementation (quota client) that participates in
