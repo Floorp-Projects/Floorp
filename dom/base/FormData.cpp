@@ -301,9 +301,7 @@ already_AddRefed<FormData> FormData::Constructor(
 
     // Step 9. Return a shallow clone of entry list.
     // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#constructing-form-data-set
-    if (StaticPrefs::dom_formdata_event_enabled()) {
-      formData = formData->Clone();
-    }
+    formData = formData->Clone();
   }
 
   return formData.forget();
