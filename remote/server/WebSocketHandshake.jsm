@@ -15,7 +15,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { executeSoon } = ChromeUtils.import("chrome://remote/content/Sync.jsm");
+const { executeSoon } = ChromeUtils.import(
+  "chrome://remote/content/shared/Sync.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "WebSocket", () => {
   return Services.appShell.hiddenDOMWindow.WebSocket;

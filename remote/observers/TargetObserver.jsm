@@ -6,7 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["TabObserver"];
 
-const { EventPromise } = ChromeUtils.import("chrome://remote/content/Sync.jsm");
+const { EventPromise } = ChromeUtils.import(
+  "chrome://remote/content/shared/Sync.jsm"
+);
 const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );
