@@ -30,9 +30,7 @@ const { EventEmitter } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const { executeSoon } = ChromeUtils.import(
-  "chrome://remote/content/shared/Sync.jsm"
-);
+const { executeSoon } = ChromeUtils.import("chrome://remote/content/Sync.jsm");
 
 class ContextObserver {
   constructor(chromeEventHandler) {

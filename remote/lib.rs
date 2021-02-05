@@ -11,8 +11,8 @@ extern crate thiserror;
 extern crate xpcom;
 
 mod error;
-mod handler;
 mod remote_agent;
+mod startup;
 
 pub use crate::error::RemoteAgentError;
 pub use crate::remote_agent::{RemoteAgent, RemoteAgentResult, DEFAULT_HOST, DEFAULT_PORT};

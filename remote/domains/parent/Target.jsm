@@ -26,13 +26,13 @@ const { MainProcessTarget } = ChromeUtils.import(
   "chrome://remote/content/targets/MainProcessTarget.jsm"
 );
 const { TabManager } = ChromeUtils.import(
-  "chrome://remote/content/shared/TabManager.jsm"
+  "chrome://remote/content/TabManager.jsm"
 );
 const { TabSession } = ChromeUtils.import(
   "chrome://remote/content/sessions/TabSession.jsm"
 );
 const { WindowManager } = ChromeUtils.import(
-  "chrome://remote/content/shared/WindowManager.jsm"
+  "chrome://remote/content/WindowManager.jsm"
 );
 
 let browserContextIds = 1;
