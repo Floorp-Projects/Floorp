@@ -577,9 +577,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   }
 
   BytecodeSite* trackedSite() const { return trackedSite_; }
-  InlineScriptTree* trackedTree() const {
-    return trackedSite_ ? trackedSite_->tree() : nullptr;
-  }
+  InlineScriptTree* trackedTree() const { return trackedSite_->tree(); }
 
  private:
   MIRGraph& graph_;
