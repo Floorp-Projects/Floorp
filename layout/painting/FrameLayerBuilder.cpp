@@ -1737,7 +1737,6 @@ class FLBDisplayListIterator : public FlattenedDisplayListIterator {
 
     nsDisplayItem* next = PeekNext();
     const DisplayItemType type = next->GetType();
-
     if (type == DisplayItemType::TYPE_SVG_WRAPPER) {
       // We mark SetContainsSVG for the CONTENT_FRAME_TIME_WITH_SVG metric
       if (RefPtr<LayerManager> lm = mState->mBuilder->GetWidgetLayerManager()) {
@@ -4039,8 +4038,9 @@ void PaintedLayerData::AccumulateHitTestItem(ContainerState* aState,
                                              nsDisplayItem* aItem,
                                              const DisplayItemClip& aClip,
                                              TransformClipNode* aTransform) {
-  MOZ_ASSERT(aItem->GetType() == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO);
-  auto* item = static_cast<nsDisplayCompositorHitTestInfo*>(aItem);
+  auto* item = aItem->AsPaintedDisplayItem();
+  MOZ_ASSERT(item);
+
   nsRect area = item->HitTestArea();
   const CompositorHitTestInfo& flags = item->HitTestFlags();
 
@@ -4549,10 +4549,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
     nsRect itemContent = item->GetBounds(mBuilder, &snap);
 
     if (itemType == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
-      // Override the marker for nsDisplayCompositorHitTestInfo items.
-      marker = DisplayItemEntryType::HitTestInfo;
-      itemContent =
-          static_cast<nsDisplayCompositorHitTestInfo*>(item)->HitTestArea();
+      itemContent = static_cast<nsPaintedDisplayItem*>(item)->HitTestArea();
     }
 
     const bool inEffect = InTransform() || InOpacity();
@@ -4606,18 +4603,22 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
     const DisplayItemClip& itemClip =
         itemClipPtr ? *itemClipPtr : DisplayItemClip::NoClip();
 
-    if (inEffect && marker == DisplayItemEntryType::HitTestInfo) {
-      // Fast-path for hit test items inside flattened inactive layers.
-      MOZ_ASSERT(selectedLayer);
-      selectedLayer->AccumulateHitTestItem(this, item, itemClip, transformNode);
-      continue;
-    }
-
     if (inEffect && marker == DisplayItemEntryType::Item) {
       // Fast-path for items inside flattened inactive layers. This works
       // because the layer state of the item cannot be active, otherwise the
       // parent item would not have been flattened.
       MOZ_ASSERT(selectedLayer);
+
+      if (item->AsPaintedDisplayItem()->GetHitTestInfo().Info() !=
+          mozilla::gfx::CompositorHitTestInvisibleToHit) {
+        selectedLayer->AccumulateHitTestItem(this, item, itemClip, nullptr);
+      }
+
+      if (itemType == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
+        // The hit test info was processed above.
+        continue;
+      }
+
       selectedLayer->Accumulate(this, item->AsPaintedDisplayItem(), nsIntRect(),
                                 nsRect(), itemClip, layerState, aList, marker,
                                 opacityIndices, transformNode);
@@ -4678,7 +4679,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
 #ifdef DEBUG
     nsRect bounds = itemContent;
 
-    if (marker == DisplayItemEntryType::HitTestInfo || inEffect) {
+    if (inEffect) {
       bounds.SetEmpty();
     }
 
@@ -5109,9 +5110,6 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
                                            ? mContainerReferenceFrame
                                            : item->ReferenceFrame();
 
-      MOZ_ASSERT(item != mContainerItem ||
-                 marker == DisplayItemEntryType::HitTestInfo);
-
       PaintedLayerData* paintedLayerData = selectedLayer;
 
       if (!paintedLayerData) {
@@ -5125,31 +5123,36 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
       }
       MOZ_ASSERT(paintedLayerData);
 
-      if (marker == DisplayItemEntryType::HitTestInfo) {
-        MOZ_ASSERT(!transformNode);
+      if (item->AsPaintedDisplayItem()->GetHitTestInfo().Info() !=
+          mozilla::gfx::CompositorHitTestInvisibleToHit) {
         paintedLayerData->AccumulateHitTestItem(this, item, itemClip, nullptr);
-      } else {
-        paintedLayerData->Accumulate(
-            this, item->AsPaintedDisplayItem(), itemVisibleRect, itemContent,
-            itemClip, layerState, aList, marker, opacityIndices, transformNode);
+      }
 
-        if (!paintedLayerData->mLayer) {
-          // Try to recycle the old layer of this display item.
-          RefPtr<PaintedLayer> layer = AttemptToRecyclePaintedLayer(
-              itemAGR, item, topLeft,
-              inEffect ? containerReferenceFrame : referenceFrame);
-          if (layer) {
-            paintedLayerData->mLayer = layer;
+      if (itemType == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
+        // The hit test info was processed above.
+        continue;
+      }
 
-            auto* userData = GetPaintedDisplayItemLayerUserData(layer);
-            paintedLayerData->mAssignedDisplayItems.reserve(
-                userData->mLastItemCount);
+      paintedLayerData->Accumulate(
+          this, item->AsPaintedDisplayItem(), itemVisibleRect, itemContent,
+          itemClip, layerState, aList, marker, opacityIndices, transformNode);
 
-            NS_ASSERTION(FindIndexOfLayerIn(mNewChildLayers, layer) < 0,
-                         "Layer already in list???");
-            mNewChildLayers[paintedLayerData->mNewChildLayersIndex].mLayer =
-                std::move(layer);
-          }
+      if (!paintedLayerData->mLayer) {
+        // Try to recycle the old layer of this display item.
+        RefPtr<PaintedLayer> layer = AttemptToRecyclePaintedLayer(
+            itemAGR, item, topLeft,
+            inEffect ? containerReferenceFrame : referenceFrame);
+        if (layer) {
+          paintedLayerData->mLayer = layer;
+
+          auto* userData = GetPaintedDisplayItemLayerUserData(layer);
+          paintedLayerData->mAssignedDisplayItems.reserve(
+              userData->mLastItemCount);
+
+          NS_ASSERTION(FindIndexOfLayerIn(mNewChildLayers, layer) < 0,
+                       "Layer already in list???");
+          mNewChildLayers[paintedLayerData->mNewChildLayersIndex].mLayer =
+              std::move(layer);
         }
       }
 

@@ -215,6 +215,9 @@ void SVGGeometryFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         styleSVG->mMarkerMid.IsNone() && styleSVG->mMarkerStart.IsNone()) {
       return;
     }
+
+    aBuilder->BuildCompositorHitTestInfoIfNeeded(this,
+                                                 aLists.BorderBackground());
   }
 
   DisplayOutline(aBuilder, aLists);
