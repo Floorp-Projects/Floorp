@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Logging.h"
+#include "mozilla/Sprintf.h"
 #include "gtest/gtest.h"
 
 namespace mozilla::detail {
