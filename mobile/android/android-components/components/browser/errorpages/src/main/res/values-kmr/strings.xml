@@ -3,4 +3,102 @@
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Dîsa biceribîne</string>
 
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Daxwaz nehate temamkirin</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>Derbarê vê çewtî an jî pirsgirêkê de agahiya ekstra niha ne mewcûd e..</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Girêdana ewle pêk nehat</string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Girêdana ewle pêk nehat</string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Pêşketî…</string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Vegere (tê pêşniyarkirin)</string>
+
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Rîskê qebûl bike û bidomîne</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Girêdan qut bû</string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Girêdan derdem bû</string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Nehate girêdan</string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Bersiva nediyar ji serverê</string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Rûpel bi awayekî rast nayê berhêlkirin</string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Moda derhêl</string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Port ji ber sedemên ewlehiyê hatiye sînordarkirin</string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Girêdan hate resetkirin</string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Cureya dosyeyê ya neewle</string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Çewtiya Naveroka Xerabe</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Naverok têk çû</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Çewtiya kodkirina naverokê</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Navnîşan nehate dîtin</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Girêdana înternetê tune</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Girêdana xwe ya torê kontrol bike an jî bîstek din hewl bide ku rûpelê ji nû ve bar bike.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Dîsa bar bike</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Navnîşana nederbasdar</string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Navnîşan ne derbasdar e</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Protokola Nenas</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Rûpel nehate dîtin</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Gihîna li dosyeyê hate redkirin</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Proxy Serverê girêdan red kir</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Proxy server nehate dîtin</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Pirsgirêka malpera nebaş (malware)</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Pirsgirêka malpera nexwestî</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Pirsgirêka malpera ziyandar</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Pirsgirêka malpera xapîner</string>
     </resources>

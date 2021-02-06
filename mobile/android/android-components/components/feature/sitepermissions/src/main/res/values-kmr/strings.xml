@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Option in a dialog for requesting a microphone permission, this option will give access to
+         the first microphone-->
+    <string name="mozac_feature_sitepermissions_option_microphone_one">Mîkrofon 1</string>
+    <!-- Option in a dialog for requesting a camera permission, this option will give access to
+         back facing camera-->
+    <string name="mozac_feature_sitepermissions_back_facing_camera2">Kameraya paşiyê</string>
     <!-- Option in a dialog for requesting a camera permission, this option will give access to
      front facing camera-->
     <string name="mozac_feature_sitepermissions_selfie_camera2">Kameraya pêşiyê</string>
