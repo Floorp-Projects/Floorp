@@ -7,7 +7,10 @@
 #ifndef MOZILLA_GFX_RENDERCOMPOSITOR_NATIVE_H
 #define MOZILLA_GFX_RENDERCOMPOSITOR_NATIVE_H
 
+#include <unordered_map>
+
 #include "GLTypes.h"
+#include "mozilla/HashFunctions.h"
 #include "mozilla/layers/ScreenshotGrabber.h"
 #include "mozilla/webrender/RenderCompositor.h"
 #include "mozilla/TimeStamp.h"

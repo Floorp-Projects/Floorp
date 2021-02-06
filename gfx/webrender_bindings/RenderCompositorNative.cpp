@@ -1,5 +1,3 @@
-#include "RenderCompositorNative.h"
-#include "RenderCompositorNative.h"
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -11,6 +9,7 @@
 #include "GLContext.h"
 #include "GLContextProvider.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/CompositionRecorder.h"
 #include "mozilla/layers/NativeLayer.h"
 #include "mozilla/layers/SurfacePool.h"
@@ -382,7 +381,7 @@ void RenderCompositorNative::AddSurface(
   MOZ_RELEASE_ASSERT(surfaceCursor != mSurfaces.end());
   const Surface& surface = surfaceCursor->second;
 
-  Matrix4x4 transform(
+  gfx::Matrix4x4 transform(
       aTransform.m11, aTransform.m12, aTransform.m13, aTransform.m14,
       aTransform.m21, aTransform.m22, aTransform.m23, aTransform.m24,
       aTransform.m31, aTransform.m32, aTransform.m33, aTransform.m34,
