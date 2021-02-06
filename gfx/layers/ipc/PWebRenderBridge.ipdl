@@ -61,7 +61,7 @@ parent:
                          nsCString txnURL, TimeStamp fwdTime,
                          CompositionPayload[] payloads);
   async SetFocusTarget(FocusTarget focusTarget);
-  async UpdateResources(OpUpdateResource[] aResourceUpdates,
+  async UpdateResources(IdNamespace aIdNamespace, OpUpdateResource[] aResourceUpdates,
                         RefCountedShmem[] aSmallShmems, Shmem[] aLargeShmems);
   async ParentCommands(WebRenderParentCommand[] commands);
   sync GetSnapshot(PTexture texture) returns (bool aNeedsYFlip);

@@ -30,6 +30,7 @@ struct DisplayListData {
 };
 
 struct TransactionData {
+  wr::IdNamespace mIdNamespace;
   nsTArray<WebRenderParentCommand> mCommands;
   nsTArray<OpUpdateResource> mResourceUpdates;
   nsTArray<RefCountedShmem> mSmallShmems;

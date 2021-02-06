@@ -109,6 +109,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   mozilla::ipc::IPCResult RecvDeleteCompositorAnimations(
       nsTArray<uint64_t>&& aIds) override;
   mozilla::ipc::IPCResult RecvUpdateResources(
+      const wr::IdNamespace& aIdNamespace,
       nsTArray<OpUpdateResource>&& aUpdates,
       nsTArray<RefCountedShmem>&& aSmallShmems,
       nsTArray<ipc::Shmem>&& aLargeShmems) override;
@@ -220,6 +221,22 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   wr::Epoch GetCurrentEpoch() const { return mWrEpoch; }
   wr::IdNamespace GetIdNamespace() { return mIdNamespace; }
 
+  bool MatchesNamespace(const wr::ImageKey& aImageKey) const {
+    return aImageKey.mNamespace == mIdNamespace;
+  }
+
+  bool MatchesNamespace(const wr::BlobImageKey& aBlobKey) const {
+    return MatchesNamespace(wr::AsImageKey(aBlobKey));
+  }
+
+  bool MatchesNamespace(const wr::FontKey& aFontKey) const {
+    return aFontKey.mNamespace == mIdNamespace;
+  }
+
+  bool MatchesNamespace(const wr::FontInstanceKey& aFontKey) const {
+    return aFontKey.mNamespace == mIdNamespace;
+  }
+
   void FlushRendering(bool aWaitForPresent = true);
 
   /**
@@ -318,7 +335,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
                       const nsTArray<ipc::Shmem>& aLargeShmems,
                       const TimeStamp& aTxnStartTime,
                       wr::TransactionBuilder& aTxn, wr::Epoch aWrEpoch,
-                      bool aValidTransaction, bool aObserveLayersUpdate);
+                      bool aObserveLayersUpdate);
 
   void UpdateAPZFocusState(const FocusTarget& aFocus);
   void UpdateAPZScrollData(const wr::Epoch& aEpoch,
