@@ -162,7 +162,17 @@ class LoginCSVImport {
           columnName.toLocaleLowerCase()
         );
         if (fieldName) {
-          fieldsInFile.add(fieldName);
+          if (!fieldsInFile.has(fieldName)) {
+            fieldsInFile.add(fieldName);
+          } else {
+            TelemetryStopwatch.cancelKeyed(
+              "FX_MIGRATION_LOGINS_IMPORT_MS",
+              LoginCSVImport.MIGRATION_HISTOGRAM_KEY
+            );
+            throw new ImportFailedException(
+              ImportFailedErrorType.CONFLICTING_VALUES_ERROR
+            );
+          }
         }
       }
     }
@@ -183,22 +193,6 @@ class LoginCSVImport {
         LoginCSVImport.MIGRATION_HISTOGRAM_KEY
       );
       throw new ImportFailedException(ImportFailedErrorType.FILE_FORMAT_ERROR);
-    }
-
-    const uniqueLoginIdentifiers = new Set();
-    for (const csvObject of parsedLines) {
-      // TODO: handle duplicates without guid column. Bug 1687852
-
-      if (csvObject.guid) {
-        if (uniqueLoginIdentifiers.has(csvObject.guid)) {
-          throw new ImportFailedException(
-            ImportFailedErrorType.CONFLICTING_VALUES_ERROR,
-            csvObject.guid
-          );
-        } else {
-          uniqueLoginIdentifiers.add(csvObject.guid);
-        }
-      }
     }
 
     let loginsToImport = parsedLines.map(csvObject => {
