@@ -51,8 +51,8 @@ async function test() {
   // #scroller, but anywhere else within the OOPIF box should hit the OOPIF.
 
   checkHitResult(await fissionHitTest(centerOf("abspos"), iframe),
-                 APZHitResultFlags.VISIBLE | APZHitResultFlags.INACTIVE_SCROLLFRAME, // the INACTIVE_SCROLLFRAME flag may be dropped depending on how the fix is implemented
-                 utils.getViewId(document.scrollingElement), // this may change to the scrollId of the inactive scrollframe depending on how the fix is implemented
+                 APZHitResultFlags.VISIBLE,
+                 utils.getViewId(document.getElementById("scroller")),
                  utils.getLayersId(),
                  "abspos element on top of OOPIF should hit parent doc hosting the OOPIF");
 

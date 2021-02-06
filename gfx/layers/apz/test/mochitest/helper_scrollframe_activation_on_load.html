@@ -7,6 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
   <meta charset="utf-8">
   <title>Test for Bug 1151663, helper page</title>
   <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
@@ -46,10 +47,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
 
       // The apzc tree for this page should consist of a single root APZC,
       // which either is the RCD with no child APZCs (e10s/B2G case) or has a
-      // single child APZC which is for the RCD (fennec case).
+      // single child APZC which is for the RCD (fennec case). With WR enabled
+      // we activate scrollframes anyway, so we expect there to be a child.
       var rcd = findRcdNode(apzcTree);
       ok(rcd != null, "found the RCD node");
-      is(rcd.children.length, 0, "expected no children on the RCD");
+      if (getHitTestConfig().isWebRender) {
+        is(rcd.children.length, 1, "expected one child on the RCD");
+      } else {
+        is(rcd.children.length, 0, "expected no children on the RCD");
+      }
     }
     waitUntilApzStable()
     .then(forceLayerTreeToCompositor)
