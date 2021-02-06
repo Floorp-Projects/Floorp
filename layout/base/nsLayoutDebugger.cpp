@@ -116,11 +116,12 @@ static void PrintDisplayItemTo(nsDisplayListBuilder* aBuilder,
     aStream << ")";
   }
 
-  if (auto* paintedItem = aItem->AsPaintedDisplayItem()) {
+  if (aItem->HasHitTestInfo()) {
+    const auto& hitTestInfo = aItem->GetHitTestInfo();
     aStream << nsPrintfCString(" hitTestInfo(0x%x)",
-                               paintedItem->HitTestFlags().serialize());
+                               hitTestInfo.Info().serialize());
 
-    nsRect area = paintedItem->HitTestArea();
+    nsRect area = hitTestInfo.Area();
     aStream << nsPrintfCString(" hitTestArea(%d,%d,%d,%d)", area.x, area.y,
                                area.width, area.height);
   }

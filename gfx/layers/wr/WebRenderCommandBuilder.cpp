@@ -788,15 +788,17 @@ struct DIGroup {
          item->GetPerFrameKey(), bounds.x, bounds.y, bounds.XMost(),
          bounds.YMost());
 
-      if (item->GetType() == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
+      if (item->HasHitTestInfo()) {
         // Accumulate the hit-test info flags. In cases where there are multiple
         // hittest-info display items with different flags, mHitInfo will have
         // the union of all those flags. If that is the case, we will
         // additionally set eIrregularArea (at the site that we use mHitInfo)
         // so that downstream consumers of this (primarily APZ) will know that
         // the exact shape of what gets hit with what is unknown.
-        mHitInfo +=
-            static_cast<nsDisplayCompositorHitTestInfo*>(item)->HitTestFlags();
+        mHitInfo += item->GetHitTestInfo().Info();
+      }
+
+      if (item->GetType() == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
         continue;
       }
 
@@ -1231,8 +1233,7 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
       {
         auto spaceAndClipChain = mClipManager.SwitchItem(item);
         wr::SpaceAndClipChainHelper saccHelper(aBuilder, spaceAndClipChain);
-        mHitTestInfoManager.SwitchItem(item->AsPaintedDisplayItem(), aBuilder,
-                                       aDisplayListBuilder);
+        mHitTestInfoManager.ProcessItem(item, aBuilder, aDisplayListBuilder);
 
         sIndent++;
         // Note: this call to CreateWebRenderCommands can recurse back into
@@ -1653,14 +1654,14 @@ void WebRenderCommandBuilder::CreateWebRenderCommands(
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc,
     nsDisplayListBuilder* aDisplayListBuilder) {
-  auto* item = aItem->AsPaintedDisplayItem();
-  MOZ_RELEASE_ASSERT(item, "Tried to paint item that cannot be painted");
-
-  mHitTestInfoManager.SwitchItem(item, aBuilder, aDisplayListBuilder);
-  if (item->GetType() == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
+  mHitTestInfoManager.ProcessItem(aItem, aBuilder, aDisplayListBuilder);
+  if (aItem->GetType() == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
     // The hit test information was processed above.
     return;
   }
+
+  auto* item = aItem->AsPaintedDisplayItem();
+  MOZ_RELEASE_ASSERT(item, "Tried to paint item that cannot be painted");
 
   if (aBuilder.ReuseItem(item)) {
     // No further processing should be needed, since the item was reused.

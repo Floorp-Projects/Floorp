@@ -188,7 +188,7 @@ void InitializeHitTestInfo(nsDisplayListBuilder* aBuilder,
                            nsPaintedDisplayItem* aItem,
                            const DisplayItemType aType) {
   if (ItemTypeSupportsHitTesting(aType)) {
-    aItem->GetHitTestInfo().Initialize(aBuilder, aItem->Frame());
+    aItem->InitializeHitTestInfo(aBuilder);
   }
 }
 
@@ -4874,7 +4874,7 @@ bool nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(
 }
 
 int32_t nsDisplayCompositorHitTestInfo::ZIndex() const {
-  return mOverrideZIndex ? *mOverrideZIndex : nsPaintedDisplayItem::ZIndex();
+  return mOverrideZIndex ? *mOverrideZIndex : nsDisplayItem::ZIndex();
 }
 
 void nsDisplayCompositorHitTestInfo::SetOverrideZIndex(int32_t aZIndex) {
