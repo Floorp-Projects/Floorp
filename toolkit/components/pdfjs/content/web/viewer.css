@@ -277,7 +277,7 @@
   direction: ltr;
   width: 816px;
   height: 1056px;
-  margin: 1px auto -8px auto;
+  margin: 1px auto -8px;
   position: relative;
   overflow: visible;
   border: 9px solid transparent;
@@ -287,7 +287,7 @@
 }
 
 .pdfViewer.removePageBorders .page {
-  margin: 0 auto 10px auto;
+  margin: 0 auto 10px;
   border: none;
 }
 
@@ -822,8 +822,8 @@ html[dir="rtl"] #outerContainer.sidebarOpen #loadingBar {
   z-index: 10000;
   height: auto;
   min-width: 16px;
-  padding: 0 4px 0 4px;
-  margin: 4px 2px 4px 2px;
+  padding: 0 4px;
+  margin: 4px 2px;
   color: rgba(217, 217, 217, 1);
   font-size: 12px;
   line-height: 14px;
@@ -934,7 +934,7 @@ html[dir="rtl"] #findInput[data-status="pending"] {
 }
 
 .secondaryToolbar {
-  padding: 6px 0 10px 0;
+  padding: 6px 0 10px;
   height: auto;
   z-index: 30000;
   background-color: var(--doorhanger-bg-color);
@@ -1420,7 +1420,7 @@ html[dir="rtl"] .toolbarButton.pdfSidebarNotification::after {
 .secondaryToolbarButton {
   position: relative;
   margin: 0;
-  padding: 0 0 1px 0;
+  padding: 0 0 1px;
   height: auto;
   min-height: 26px;
   width: auto;
@@ -1513,7 +1513,7 @@ html[dir="rtl"] .verticalToolbarSeparator {
 
 .horizontalToolbarSeparator {
   display: block;
-  margin: 6px 0 5px 0;
+  margin: 6px 0 5px;
   height: 1px;
   width: 100%;
   border-top: 1px solid var(--doorhanger-separator-color);
@@ -1521,7 +1521,7 @@ html[dir="rtl"] .verticalToolbarSeparator {
 
 .toolbarField {
   padding: 4px 7px;
-  margin: 3px 0 3px 0;
+  margin: 3px 0;
   border-radius: 2px;
   background-color: var(--field-bg-color);
   background-clip: padding-box;
@@ -1602,7 +1602,7 @@ html[dir="rtl"] #numPages.toolbarLabel {
 }
 
 .thumbnail {
-  margin: 0 10px 5px 10px;
+  margin: 0 10px 5px;
 }
 html[dir="ltr"] .thumbnail {
   float: left;
@@ -1621,7 +1621,7 @@ html[dir="rtl"] .thumbnail {
 
 .thumbnail:not([data-loaded]) {
   border: 1px dashed rgba(132, 132, 132, 1);
-  margin: -1px 9px 4px 9px;
+  margin: -1px 9px 4px;
 }
 
 .thumbnailImage {
@@ -1797,8 +1797,8 @@ html[dir="rtl"] .treeItemToggler::before {
 
 .overlayButton {
   width: auto;
-  margin: 3px 4px 2px 4px !important;
-  padding: 2px 11px 2px 11px;
+  margin: 3px 4px 2px !important;
+  padding: 2px 11px;
 }
 
 #overlayContainer {
@@ -1846,7 +1846,7 @@ html[dir="rtl"] .treeItemToggler::before {
 
 .dialog .separator {
   display: block;
-  margin: 4px 0 4px 0;
+  margin: 4px 0;
   height: 1px;
   width: 100%;
   background-color: var(--separator-color);
