@@ -11,7 +11,7 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { HTTP_404, HTTP_505 } = ChromeUtils.import(
   "chrome://remote/content/server/HTTPD.jsm"
 );
-const { Log } = ChromeUtils.import("chrome://remote/content/Log.jsm");
+const { Log } = ChromeUtils.import("chrome://remote/content/shared/Log.jsm");
 const { Protocol } = ChromeUtils.import("chrome://remote/content/Protocol.jsm");
 const { RemoteAgentError } = ChromeUtils.import(
   "chrome://remote/content/Error.jsm"

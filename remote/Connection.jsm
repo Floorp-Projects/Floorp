@@ -10,8 +10,10 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { truncate } = ChromeUtils.import("chrome://remote/content/Format.jsm");
-const { Log } = ChromeUtils.import("chrome://remote/content/Log.jsm");
+const { truncate } = ChromeUtils.import(
+  "chrome://remote/content/shared/Format.jsm"
+);
+const { Log } = ChromeUtils.import("chrome://remote/content/shared/Log.jsm");
 const { UnknownMethodError } = ChromeUtils.import(
   "chrome://remote/content/Error.jsm"
 );

@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["pprint", "truncate"];
 
-const { Log } = ChromeUtils.import("chrome://remote/content/Log.jsm");
+const { Log } = ChromeUtils.import("chrome://remote/content/shared/Log.jsm");
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
