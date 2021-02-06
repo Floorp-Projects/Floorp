@@ -498,6 +498,11 @@ bool WebRenderBridgeParent::UpdateResources(
     switch (cmd.type()) {
       case OpUpdateResource::TOpAddImage: {
         const auto& op = cmd.get_OpAddImage();
+        if (!MatchesNamespace(op.key())) {
+          MOZ_ASSERT_UNREACHABLE("Stale image key (add)!");
+          break;
+        }
+
         wr::Vec<uint8_t> bytes;
         if (!reader.Read(op.bytes(), bytes)) {
           return false;
@@ -507,6 +512,11 @@ bool WebRenderBridgeParent::UpdateResources(
       }
       case OpUpdateResource::TOpUpdateImage: {
         const auto& op = cmd.get_OpUpdateImage();
+        if (!MatchesNamespace(op.key())) {
+          MOZ_ASSERT_UNREACHABLE("Stale image key (update)!");
+          break;
+        }
+
         wr::Vec<uint8_t> bytes;
         if (!reader.Read(op.bytes(), bytes)) {
           return false;
@@ -516,6 +526,11 @@ bool WebRenderBridgeParent::UpdateResources(
       }
       case OpUpdateResource::TOpAddBlobImage: {
         const auto& op = cmd.get_OpAddBlobImage();
+        if (!MatchesNamespace(op.key())) {
+          MOZ_ASSERT_UNREACHABLE("Stale blob image key (add)!");
+          break;
+        }
+
         wr::Vec<uint8_t> bytes;
         if (!reader.Read(op.bytes(), bytes)) {
           return false;
@@ -526,6 +541,11 @@ bool WebRenderBridgeParent::UpdateResources(
       }
       case OpUpdateResource::TOpUpdateBlobImage: {
         const auto& op = cmd.get_OpUpdateBlobImage();
+        if (!MatchesNamespace(op.key())) {
+          MOZ_ASSERT_UNREACHABLE("Stale blob image key (update)!");
+          break;
+        }
+
         wr::Vec<uint8_t> bytes;
         if (!reader.Read(op.bytes(), bytes)) {
           return false;
@@ -537,6 +557,10 @@ bool WebRenderBridgeParent::UpdateResources(
       }
       case OpUpdateResource::TOpSetBlobImageVisibleArea: {
         const auto& op = cmd.get_OpSetBlobImageVisibleArea();
+        if (!MatchesNamespace(op.key())) {
+          MOZ_ASSERT_UNREACHABLE("Stale blob image key (visible)!");
+          break;
+        }
         aUpdates.SetBlobImageVisibleArea(op.key(),
                                          wr::ToDeviceIntRect(op.area()));
         break;
@@ -592,6 +616,11 @@ bool WebRenderBridgeParent::UpdateResources(
       }
       case OpUpdateResource::TOpAddFontDescriptor: {
         const auto& op = cmd.get_OpAddFontDescriptor();
+        if (!MatchesNamespace(op.key())) {
+          MOZ_ASSERT_UNREACHABLE("Stale font key (add descriptor)!");
+          break;
+        }
+
         wr::Vec<uint8_t> bytes;
         if (!reader.Read(op.bytes(), bytes)) {
           return false;
@@ -601,6 +630,12 @@ bool WebRenderBridgeParent::UpdateResources(
       }
       case OpUpdateResource::TOpAddFontInstance: {
         const auto& op = cmd.get_OpAddFontInstance();
+        if (!MatchesNamespace(op.instanceKey()) ||
+            !MatchesNamespace(op.fontKey())) {
+          MOZ_ASSERT_UNREACHABLE("Stale font key (add instance)!");
+          break;
+        }
+
         wr::Vec<uint8_t> variations;
         if (!reader.Read(op.variations(), variations)) {
           return false;
@@ -613,21 +648,43 @@ bool WebRenderBridgeParent::UpdateResources(
       }
       case OpUpdateResource::TOpDeleteImage: {
         const auto& op = cmd.get_OpDeleteImage();
+        if (!MatchesNamespace(op.key())) {
+          // TODO(aosmond): We should also assert here, but the callers are less
+          // careful about checking when cleaning up their old keys. We should
+          // perform an audit on image key usage.
+          break;
+        }
+
         DeleteImage(op.key(), aUpdates);
         break;
       }
       case OpUpdateResource::TOpDeleteBlobImage: {
         const auto& op = cmd.get_OpDeleteBlobImage();
+        if (!MatchesNamespace(op.key())) {
+          MOZ_ASSERT_UNREACHABLE("Stale blob image key (delete)!");
+          break;
+        }
+
         aUpdates.DeleteBlobImage(op.key());
         break;
       }
       case OpUpdateResource::TOpDeleteFont: {
         const auto& op = cmd.get_OpDeleteFont();
+        if (!MatchesNamespace(op.key())) {
+          MOZ_ASSERT_UNREACHABLE("Stale font key (delete)!");
+          break;
+        }
+
         aUpdates.DeleteFont(op.key());
         break;
       }
       case OpUpdateResource::TOpDeleteFontInstance: {
         const auto& op = cmd.get_OpDeleteFontInstance();
+        if (!MatchesNamespace(op.key())) {
+          MOZ_ASSERT_UNREACHABLE("Stale font instance key (delete)!");
+          break;
+        }
+
         aUpdates.DeleteFontInstance(op.key());
         break;
       }
@@ -650,9 +707,8 @@ bool WebRenderBridgeParent::UpdateResources(
 bool WebRenderBridgeParent::AddPrivateExternalImage(
     wr::ExternalImageId aExtId, wr::ImageKey aKey, wr::ImageDescriptor aDesc,
     wr::TransactionBuilder& aResources) {
-  Range<wr::ImageKey> keys(&aKey, 1);
-  // Check if key is obsoleted.
-  if (keys[0].mNamespace != mIdNamespace) {
+  if (!MatchesNamespace(aKey)) {
+    MOZ_ASSERT_UNREACHABLE("Stale private external image key (add)!");
     return true;
   }
 
@@ -666,9 +722,8 @@ bool WebRenderBridgeParent::UpdatePrivateExternalImage(
     wr::ExternalImageId aExtId, wr::ImageKey aKey,
     const wr::ImageDescriptor& aDesc, const ImageIntRect& aDirtyRect,
     wr::TransactionBuilder& aResources) {
-  Range<wr::ImageKey> keys(&aKey, 1);
-  // Check if key is obsoleted.
-  if (keys[0].mNamespace != mIdNamespace) {
+  if (!MatchesNamespace(aKey)) {
+    MOZ_ASSERT_UNREACHABLE("Stale private external image key (update)!");
     return true;
   }
 
@@ -682,9 +737,8 @@ bool WebRenderBridgeParent::UpdatePrivateExternalImage(
 bool WebRenderBridgeParent::AddSharedExternalImage(
     wr::ExternalImageId aExtId, wr::ImageKey aKey,
     wr::TransactionBuilder& aResources) {
-  Range<wr::ImageKey> keys(&aKey, 1);
-  // Check if key is obsoleted.
-  if (keys[0].mNamespace != mIdNamespace) {
+  if (!MatchesNamespace(aKey)) {
+    MOZ_ASSERT_UNREACHABLE("Stale shared external image key (add)!");
     return true;
   }
 
@@ -718,10 +772,8 @@ bool WebRenderBridgeParent::AddSharedExternalImage(
 bool WebRenderBridgeParent::PushExternalImageForTexture(
     wr::ExternalImageId aExtId, wr::ImageKey aKey, TextureHost* aTexture,
     bool aIsUpdate, wr::TransactionBuilder& aResources) {
-  auto op = aIsUpdate ? TextureHost::UPDATE_IMAGE : TextureHost::ADD_IMAGE;
-  Range<wr::ImageKey> keys(&aKey, 1);
-  // Check if key is obsoleted.
-  if (keys[0].mNamespace != mIdNamespace) {
+  if (!MatchesNamespace(aKey)) {
+    MOZ_ASSERT_UNREACHABLE("Stale texture external image key!");
     return true;
   }
 
@@ -731,8 +783,10 @@ bool WebRenderBridgeParent::PushExternalImageForTexture(
     return false;
   }
 
+  auto op = aIsUpdate ? TextureHost::UPDATE_IMAGE : TextureHost::ADD_IMAGE;
   WebRenderTextureHost* wrTexture = aTexture->AsWebRenderTextureHost();
   if (wrTexture) {
+    Range<wr::ImageKey> keys(&aKey, 1);
     wrTexture->PushResourceUpdates(aResources, op, keys,
                                    wrTexture->GetExternalImageKey());
     auto it = mTextureHosts.find(wr::AsUint64(aKey));
@@ -768,9 +822,9 @@ bool WebRenderBridgeParent::PushExternalImageForTexture(
   data.PushBytes(Range<uint8_t>(map.mData, size.height * map.mStride));
 
   if (op == TextureHost::UPDATE_IMAGE) {
-    aResources.UpdateImageBuffer(keys[0], descriptor, data);
+    aResources.UpdateImageBuffer(aKey, descriptor, data);
   } else {
-    aResources.AddImage(keys[0], descriptor, data);
+    aResources.AddImage(aKey, descriptor, data);
   }
 
   dSurf->Unmap();
@@ -782,9 +836,8 @@ bool WebRenderBridgeParent::UpdateSharedExternalImage(
     wr::ExternalImageId aExtId, wr::ImageKey aKey,
     const ImageIntRect& aDirtyRect, wr::TransactionBuilder& aResources,
     UniquePtr<ScheduleSharedSurfaceRelease>& aScheduleRelease) {
-  Range<wr::ImageKey> keys(&aKey, 1);
-  // Check if key is obsoleted.
-  if (keys[0].mNamespace != mIdNamespace) {
+  if (!MatchesNamespace(aKey)) {
+    MOZ_ASSERT_UNREACHABLE("Stale shared external image key (update)!");
     return true;
   }
 
@@ -842,10 +895,11 @@ void WebRenderBridgeParent::ObserveSharedSurfaceRelease(
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvUpdateResources(
+    const wr::IdNamespace& aIdNamespace,
     nsTArray<OpUpdateResource>&& aResourceUpdates,
     nsTArray<RefCountedShmem>&& aSmallShmems,
     nsTArray<ipc::Shmem>&& aLargeShmems) {
-  if (mDestroyed) {
+  if (mDestroyed || aIdNamespace != mIdNamespace) {
     wr::IpcResourceUpdateQueue::ReleaseShmems(this, aSmallShmems);
     wr::IpcResourceUpdateQueue::ReleaseShmems(this, aLargeShmems);
     return IPC_OK();
@@ -1043,7 +1097,7 @@ bool WebRenderBridgeParent::SetDisplayList(
     const nsTArray<OpUpdateResource>& aResourceUpdates,
     const nsTArray<RefCountedShmem>& aSmallShmems,
     const nsTArray<ipc::Shmem>& aLargeShmems, const TimeStamp& aTxnStartTime,
-    wr::TransactionBuilder& aTxn, wr::Epoch aWrEpoch, bool aValidTransaction,
+    wr::TransactionBuilder& aTxn, wr::Epoch aWrEpoch,
     bool aObserveLayersUpdate) {
   if (NS_WARN_IF(!UpdateResources(aResourceUpdates, aSmallShmems, aLargeShmems,
                                   aTxn))) {
@@ -1052,37 +1106,33 @@ bool WebRenderBridgeParent::SetDisplayList(
 
   wr::Vec<uint8_t> dlData(std::move(aDL));
 
-  if (aValidTransaction) {
-    if (IsRootWebRenderBridgeParent()) {
-      LayoutDeviceIntSize widgetSize = mWidget->GetClientSize();
-      LayoutDeviceIntRect rect =
-          LayoutDeviceIntRect(LayoutDeviceIntPoint(), widgetSize);
-      aTxn.SetDocumentView(rect);
-    }
-    gfx::DeviceColor clearColor(0.f, 0.f, 0.f, 0.f);
-    aTxn.SetDisplayList(clearColor, aWrEpoch,
-                        wr::ToLayoutSize(RoundedToInt(aRect).Size()),
-                        mPipelineId, aDLDesc, dlData);
+  if (IsRootWebRenderBridgeParent()) {
+    LayoutDeviceIntSize widgetSize = mWidget->GetClientSize();
+    LayoutDeviceIntRect rect =
+        LayoutDeviceIntRect(LayoutDeviceIntPoint(), widgetSize);
+    aTxn.SetDocumentView(rect);
+  }
+  gfx::DeviceColor clearColor(0.f, 0.f, 0.f, 0.f);
+  aTxn.SetDisplayList(clearColor, aWrEpoch,
+                      wr::ToLayoutSize(RoundedToInt(aRect).Size()), mPipelineId,
+                      aDLDesc, dlData);
 
-    if (aObserveLayersUpdate) {
-      aTxn.Notify(wr::Checkpoint::SceneBuilt,
-                  MakeUnique<ScheduleObserveLayersUpdate>(
-                      mCompositorBridge, GetLayersId(),
-                      mChildLayersObserverEpoch, true));
-    }
-
-    if (!IsRootWebRenderBridgeParent()) {
-      aTxn.Notify(
-          wr::Checkpoint::SceneBuilt,
-          MakeUnique<SceneBuiltNotification>(this, aWrEpoch, aTxnStartTime));
-    }
-
-    mApi->SendTransaction(aTxn);
-
-    // We will schedule generating a frame after the scene
-    // build is done, so we don't need to do it here.
+  if (aObserveLayersUpdate) {
+    aTxn.Notify(
+        wr::Checkpoint::SceneBuilt,
+        MakeUnique<ScheduleObserveLayersUpdate>(
+            mCompositorBridge, GetLayersId(), mChildLayersObserverEpoch, true));
   }
 
+  if (!IsRootWebRenderBridgeParent()) {
+    aTxn.Notify(wr::Checkpoint::SceneBuilt, MakeUnique<SceneBuiltNotification>(
+                                                this, aWrEpoch, aTxnStartTime));
+  }
+
+  mApi->SendTransaction(aTxn);
+
+  // We will schedule generating a frame after the scene
+  // build is done, so we don't need to do it here.
   return true;
 }
 
@@ -1111,12 +1161,11 @@ bool WebRenderBridgeParent::ProcessDisplayListData(
     return false;
   }
 
-  if (aDisplayList.mDL &&
+  if (aDisplayList.mDL && aValidTransaction &&
       !SetDisplayList(aDisplayList.mRect, std::move(aDisplayList.mDL.ref()),
                       aDisplayList.mDLDesc, aDisplayList.mResourceUpdates,
                       aDisplayList.mSmallShmems, aDisplayList.mLargeShmems,
-                      aTxnStartTime, txn, aWrEpoch, aValidTransaction,
-                      aObserveLayersUpdate)) {
+                      aTxnStartTime, txn, aWrEpoch, aObserveLayersUpdate)) {
     return false;
   }
   return true;
@@ -1161,6 +1210,8 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
 
   if (!ProcessDisplayListData(aDisplayList, wrEpoch, aTxnStartTime,
                               validTransaction, observeLayersUpdate)) {
+    wr::IpcResourceUpdateQueue::ReleaseShmems(this, aDisplayList.mSmallShmems);
+    wr::IpcResourceUpdateQueue::ReleaseShmems(this, aDisplayList.mLargeShmems);
     return IPC_FAIL(this, "Failed to process DisplayListData.");
   }
 
@@ -1212,7 +1263,8 @@ bool WebRenderBridgeParent::ProcessEmptyTransactionUpdates(
   // AsyncImagePipelineManager.
   Unused << GetNextWrEpoch();
 
-  if (!UpdateResources(aData.mResourceUpdates, aData.mSmallShmems,
+  if (aData.mIdNamespace == mIdNamespace &&
+      !UpdateResources(aData.mResourceUpdates, aData.mSmallShmems,
                        aData.mLargeShmems, txn)) {
     return false;
   }
@@ -1290,6 +1342,10 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
     bool scheduleComposite = false;
     if (!ProcessEmptyTransactionUpdates(*aTransactionData,
                                         &scheduleComposite)) {
+      wr::IpcResourceUpdateQueue::ReleaseShmems(this,
+                                                aTransactionData->mSmallShmems);
+      wr::IpcResourceUpdateQueue::ReleaseShmems(this,
+                                                aTransactionData->mLargeShmems);
       return IPC_FAIL(this, "Failed to process empty transaction update.");
     }
     scheduleAnyComposite = scheduleAnyComposite || scheduleComposite;
