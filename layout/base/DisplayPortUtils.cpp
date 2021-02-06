@@ -1001,10 +1001,10 @@ void DisplayPortUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
     MOZ_ASSERT(scrollAncestor->WantAsyncScroll() ||
                frame->PresShell()->GetRootScrollFrame() == frame);
     if (nsLayoutUtils::AsyncPanZoomEnabled(frame) &&
-        (!HasNonMinimalDisplayPort(frame->GetContent()))) {
+        !HasDisplayPort(frame->GetContent())) {
       SetDisplayPortMargins(frame->GetContent(), frame->PresShell(),
                             DisplayPortMargins::Empty(frame->GetContent()),
-                            ClearMinimalDisplayPortProperty::Yes, 0,
+                            ClearMinimalDisplayPortProperty::No, 0,
                             RepaintMode::Repaint);
     }
   }
