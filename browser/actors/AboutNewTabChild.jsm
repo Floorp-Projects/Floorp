@@ -13,9 +13,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { ExperimentAPI } = ChromeUtils.import(
-  "resource://messaging-system/experiments/ExperimentAPI.jsm"
-);
+
 const { PrivateBrowsingUtils } = ChromeUtils.import(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
@@ -27,12 +25,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "isAboutWelcomePrefEnabled",
-  "browser.aboutwelcome.enabled",
-  false
-);
+XPCOMUtils.defineLazyGetter(this, "awExperimentFeature", () => {
+  const { ExperimentFeature } = ChromeUtils.import(
+    "resource://messaging-system/experiments/ExperimentAPI.jsm"
+  );
+  return new ExperimentFeature("aboutwelcome");
+});
 
 class AboutNewTabChild extends JSWindowActorChild {
   handleEvent(event) {
@@ -40,9 +38,7 @@ class AboutNewTabChild extends JSWindowActorChild {
       // If the separate about:welcome page is enabled, we can skip all of this,
       // since that mode doesn't load any of the Activity Stream bits.
       if (
-        isAboutWelcomePrefEnabled &&
-        // about:welcome should be enabled by default if no experiment exists.
-        ExperimentAPI.isFeatureEnabled("aboutwelcome", true) &&
+        awExperimentFeature.isEnabled({ defaultValue: true }) &&
         this.contentWindow.location.pathname.includes("welcome")
       ) {
         return;

@@ -15,11 +15,17 @@ const LoginInfo = new Components.Constructor(
   "init"
 );
 
+XPCOMUtils.defineLazyGetter(this, "autocompleteFeature", () => {
+  const { ExperimentFeature } = ChromeUtils.import(
+    "resource://messaging-system/experiments/ExperimentAPI.jsm"
+  );
+  return new ExperimentFeature("password-autocomplete");
+});
+
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ChromeMigrationUtils: "resource:///modules/ChromeMigrationUtils.jsm",
-  ExperimentAPI: "resource://messaging-system/experiments/ExperimentAPI.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
   PasswordGenerator: "resource://gre/modules/PasswordGenerator.jsm",
@@ -322,8 +328,7 @@ class LoginManagerParent extends JSWindowActorParent {
         const profiles = await migrator.getSourceProfiles();
         if (
           profiles.length == 1 &&
-          ExperimentAPI.getFeatureValue({ featureId: "password-autocomplete" })
-            ?.directMigrateSingleProfile
+          autocompleteFeature.getValue()?.directMigrateSingleProfile
         ) {
           const loginAdded = new Promise(resolve => {
             const obs = (subject, topic, data) => {
