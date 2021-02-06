@@ -65,6 +65,7 @@ add_task(async function test_main() {
   ];
   if (isWebRender) {
     subtests = subtests.concat([
+      { file: "helper_fission_inactivescroller_positionedcontent.html" },
       // add WebRender-specific tests here
     ]);
   } else {
