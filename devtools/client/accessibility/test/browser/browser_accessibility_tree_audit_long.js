@@ -74,7 +74,7 @@ const tests = [
   {
     desc: "Select a row that is guaranteed to have to be scrolled into view.",
     setup: async ({ doc }) => {
-      selectRow(doc, 0);
+      await selectRow(doc, 0);
       EventUtils.synthesizeKey("VK_END", {}, doc.defaultView);
     },
     expected: {

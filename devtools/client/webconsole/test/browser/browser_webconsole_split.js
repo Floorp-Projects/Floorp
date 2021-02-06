@@ -109,7 +109,7 @@ add_task(async function() {
       // Toobox toolbar buttons are handled with arrow keys.
       nonNegativeTabIndexRule: false,
     });
-    EventUtils.sendMouseEvent({ type: "click" }, button);
+    await EventUtils.sendMouseEvent({ type: "click" }, button);
     AccessibilityUtils.resetEnv();
     await onPopupShown;
 

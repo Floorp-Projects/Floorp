@@ -30,7 +30,7 @@ add_task(async function() {
   const fileHeader = document.querySelector(`#requests-list-file-header-box`);
   const fileColumnResizer = fileHeader.querySelector(".column-resizer");
 
-  EventUtils.sendMouseEvent({ type: "dblclick" }, fileColumnResizer);
+  await EventUtils.sendMouseEvent({ type: "dblclick" }, fileColumnResizer);
 
   // After resize - get fresh prefs for tests.
   let columnsData = JSON.parse(
@@ -47,7 +47,7 @@ add_task(async function() {
   );
 
   // Resizing `transferred` column.
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "contextmenu" },
     document.querySelector("#requests-list-transferred-button")
   );

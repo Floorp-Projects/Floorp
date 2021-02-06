@@ -1144,7 +1144,7 @@ async function toggleShapesHighlighter(
 
   if (show) {
     const onHighlighterShown = highlighters.once("shapes-highlighter-shown");
-    EventUtils.sendMouseEvent(
+    await EventUtils.sendMouseEvent(
       { type: "click", metaKey, ctrlKey },
       shapesToggle,
       view.styleWindow
@@ -1152,7 +1152,7 @@ async function toggleShapesHighlighter(
     await onHighlighterShown;
   } else {
     const onHighlighterHidden = highlighters.once("shapes-highlighter-hidden");
-    EventUtils.sendMouseEvent(
+    await EventUtils.sendMouseEvent(
       { type: "click", metaKey, ctrlKey },
       shapesToggle,
       view.styleWindow

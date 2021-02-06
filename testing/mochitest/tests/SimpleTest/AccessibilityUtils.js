@@ -14,6 +14,9 @@
  */
 
 this.AccessibilityUtils = (function() {
+  // Duration until the accessible lookup times out.
+  const GET_ACCESSIBLE_TIMEOUT = 1000;
+
   const FORCE_DISABLE_ACCESSIBILITY_PREF = "accessibility.force_disabled";
 
   // Accessible states.
@@ -433,32 +436,6 @@ this.AccessibilityUtils = (function() {
   }
 
   /**
-   * Walk node ancestry and force refresh driver tick in every document.
-   * @param {DOMNode} node
-   *        Node for traversing the ancestry.
-   */
-  function forceRefreshDriverTick(node) {
-    const wins = [];
-    let bc = BrowsingContext.getFromWindow(node.ownerDocument.defaultView); // eslint-disable-line
-    while (bc) {
-      wins.push(bc.associatedWindow);
-      bc = bc.embedderWindowGlobal?.browsingContext;
-    }
-
-    let win = wins.pop();
-    while (win) {
-      // Stop the refresh driver from doing its regular ticks and force two
-      // refresh driver ticks: first to let layout update and notify a11y,  and
-      // the second to let a11y process updates.
-      win.windowUtils.advanceTimeAndRefresh(100);
-      win.windowUtils.advanceTimeAndRefresh(100);
-      // Go back to normal refresh driver ticks.
-      win.windowUtils.restoreNormalRefresh();
-      win = wins.pop();
-    }
-  }
-
-  /**
    * Get an accessible object for a node.
    * Note: this method will not resolve if accessible object does not become
    * available for a given node.
@@ -466,10 +443,10 @@ this.AccessibilityUtils = (function() {
    * @param  {DOMNode} node
    *         Node to get the accessible object for.
    *
-   * @return {nsIAccessible}
-   *         Accessibility object for a given node.
+   * @return {Promise.<nsIAccessible>}
+   *         Promise with an accessibility object for a given node.
    */
-  function getAccessible(node) {
+  async function getAccessible(node) {
     const accessibilityService = Cc[
       "@mozilla.org/accessibilityService;1"
     ].getService(Ci.nsIAccessibilityService);
@@ -483,9 +460,28 @@ this.AccessibilityUtils = (function() {
       return acc;
     }
 
-    // Force refresh tick throughout document hierarchy
-    forceRefreshDriverTick(node);
-    return accessibilityService.getAccessibleFor(node);
+    let resolver, timeoutID;
+    const accPromise = new Promise(resolve => {
+      resolver = resolve;
+    });
+
+    const observe = subject => {
+      acc = accessibilityService.getAccessibleFor(node);
+      if (acc) {
+        clearTimeout(timeoutID);
+        SpecialPowers.Services.obs.removeObserver(observe, "accessible-event");
+        resolver(acc);
+      }
+    };
+    SpecialPowers.Services.obs.addObserver(observe, "accessible-event");
+
+    timeoutID = setTimeout(() => {
+      // Final attempt in case the show event never fired.
+      SpecialPowers.Services.obs.removeObserver(observe, "accessible-event");
+      resolver(accessibilityService.getAccessibleFor(node));
+    }, GET_ACCESSIBLE_TIMEOUT);
+
+    return accPromise;
   }
 
   function runIfA11YChecks(task) {
@@ -502,8 +498,8 @@ this.AccessibilityUtils = (function() {
    *
    */
   const AccessibilityUtils = {
-    assertCanBeClicked(node) {
-      const acc = getAccessible(node);
+    async assertCanBeClicked(node) {
+      const acc = await getAccessible(node);
       if (!acc) {
         if (gEnv.mustHaveAccessibleRule) {
           a11yFail("Node is not accessible via accessibility API", {

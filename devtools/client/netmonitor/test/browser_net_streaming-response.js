@@ -42,7 +42,7 @@ add_task(async function() {
   for (const requestItem of requestItems) {
     requestItem.scrollIntoView();
     const requestsListStatus = requestItem.querySelector(".status-code");
-    EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
+    await EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
     await waitUntil(() => requestsListStatus.title);
     await waitForDOMIfNeeded(requestItem, ".requests-list-timings-total");
   }
@@ -63,7 +63,7 @@ add_task(async function() {
 
   wait = waitForDOM(document, "#response-panel");
   store.dispatch(Actions.toggleNetworkDetails());
-  clickOnSidebarTab(document, "response");
+  await clickOnSidebarTab(document, "response");
   await wait;
 
   store.dispatch(Actions.selectRequest(null));

@@ -45,14 +45,14 @@ add_task(async function() {
   treeRoot.on("link", handler);
 
   // Fire right click.
-  rightMousedown(A.target.querySelector(".call-tree-url"));
+  await rightMousedown(A.target.querySelector(".call-tree-url"));
 
   // Ensure link was not called for right click.
   await idleWait(100);
   ok(!linkEvent, "The `link` event not fired for right click.");
 
   // Fire left click.
-  mousedown(A.target.querySelector(".call-tree-url"));
+  await mousedown(A.target.querySelector(".call-tree-url"));
 
   // Ensure link was called for left click.
   await waitUntil(() => linkEvent);

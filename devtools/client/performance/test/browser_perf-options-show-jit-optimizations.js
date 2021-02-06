@@ -69,7 +69,7 @@ async function spawnTest() {
   // Select the node with optimizations and change to a new recording
   // to ensure the opts view is cleared
   let rendered = once(JsCallTreeView, "focus");
-  mousedown(window, $$(".call-tree-item")[2]);
+  await mousedown(window, $$(".call-tree-item")[2]);
   await rendered;
   let isHidden = $("#jit-optimizations-view").classList.contains("hidden");
   ok(!isHidden, "opts view should be visible when selecting a frame with opts");
@@ -87,7 +87,7 @@ async function spawnTest() {
   await rendered;
 
   rendered = once(JsCallTreeView, "focus");
-  mousedown(window, $$(".call-tree-item")[2]);
+  await mousedown(window, $$(".call-tree-item")[2]);
   await rendered;
   isHidden = $("#jit-optimizations-view").classList.contains("hidden");
   ok(!isHidden, "opts view should be visible when selecting a frame with opts");
@@ -100,7 +100,7 @@ async function spawnTest() {
   ok(isHidden, "opts view hidden when toggling off jit pref");
 
   rendered = once(JsCallTreeView, "focus");
-  mousedown(window, $$(".call-tree-item")[2]);
+  await mousedown(window, $$(".call-tree-item")[2]);
   await rendered;
   isHidden = $("#jit-optimizations-view").classList.contains("hidden");
   ok(
@@ -127,7 +127,7 @@ async function spawnTest() {
     info(`Checking frame ${frameIndex}`);
     // Click the frame
     let rendered = once(JsCallTreeView, "focus");
-    mousedown(window, $$(".call-tree-item")[frameIndex]);
+    await mousedown(window, $$(".call-tree-item")[frameIndex]);
     await rendered;
 
     let isHidden = $("#jit-optimizations-view").classList.contains("hidden");

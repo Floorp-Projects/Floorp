@@ -65,7 +65,7 @@ async function testWhiteSpaceContextMenuItem(column, document, monitor) {
   );
 
   info(`Right clicking on white-space in the header to get the context menu`);
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "contextmenu" },
     document.querySelector(".requests-list-headers")
   );
@@ -82,7 +82,7 @@ async function testVisibleColumnContextMenuItem(column, document, monitor) {
   );
 
   info(`Clicking context-menu item for ${column}`);
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "contextmenu" },
     document.querySelector("#requests-list-status-button") ||
       document.querySelector("#requests-list-waterfall-button")
@@ -133,7 +133,7 @@ async function testHiddenColumnContextMenuItem(column, document, monitor) {
   );
 
   info(`Clicking context-menu item for ${column}`);
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "contextmenu" },
     document.querySelector("#requests-list-status-button") ||
       document.querySelector("#requests-list-waterfall-button")

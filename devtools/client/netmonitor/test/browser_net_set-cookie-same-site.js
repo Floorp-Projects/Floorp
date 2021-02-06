@@ -22,13 +22,13 @@ add_task(async function() {
   await wait;
 
   wait = waitForDOM(document, ".headers-overview");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
   await wait;
 
-  clickOnSidebarTab(document, "cookies");
+  await clickOnSidebarTab(document, "cookies");
 
   info("Checking the SameSite property");
   const expectedValues = [

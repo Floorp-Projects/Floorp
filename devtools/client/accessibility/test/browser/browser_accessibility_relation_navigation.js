@@ -48,7 +48,7 @@ const tests = [
   },
   {
     desc: "Expand first tree node.",
-    setup: ({ doc }) => toggleRow(doc, 0),
+    setup: async ({ doc }) => toggleRow(doc, 0),
     expected: {
       tree: [
         {
@@ -68,7 +68,9 @@ const tests = [
   },
   {
     desc: "Select second tree node.",
-    setup: ({ doc }) => selectRow(doc, 1),
+    setup: async ({ doc }) => {
+      await selectRow(doc, 1);
+    },
     expected: {
       sidebar: {
         name: "Top level header",
@@ -98,7 +100,7 @@ const tests = [
         // keys.
         mustHaveAccessibleRule: false,
       });
-      EventUtils.sendMouseEvent(
+      await EventUtils.sendMouseEvent(
         { type: "click" },
         relations.querySelector(".arrow"),
         win
@@ -113,7 +115,7 @@ const tests = [
         // activated.
         nonNegativeTabIndexRule: false,
       });
-      EventUtils.sendMouseEvent(
+      await EventUtils.sendMouseEvent(
         { type: "click" },
         containingDocRelation.querySelector(".open-accessibility-inspector"),
         win

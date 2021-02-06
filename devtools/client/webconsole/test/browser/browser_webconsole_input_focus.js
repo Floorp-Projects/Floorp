@@ -50,7 +50,7 @@ add_task(async function() {
     interactiveRule: false,
     labelRule: false,
   });
-  EventUtils.sendMouseEvent({ type: "click" }, msg);
+  await EventUtils.sendMouseEvent({ type: "click" }, msg);
   AccessibilityUtils.resetEnv();
   ok(isInputFocused(hud), "input node is focused, second time");
 
@@ -70,7 +70,7 @@ add_task(async function() {
     interactiveRule: false,
     labelRule: false,
   });
-  EventUtils.sendMouseEvent({ type: "click" }, msg);
+  await EventUtils.sendMouseEvent({ type: "click" }, msg);
   AccessibilityUtils.resetEnv();
   ok(!isInputFocused(hud), "input node not focused after text is selected");
 });

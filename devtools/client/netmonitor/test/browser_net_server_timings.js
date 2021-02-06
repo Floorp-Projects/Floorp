@@ -36,7 +36,7 @@ add_task(async function() {
     interactiveRule: false,
     labelRule: false,
   });
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelectorAll(".request-list-item")[0]
   );
@@ -44,7 +44,7 @@ add_task(async function() {
 
   store.dispatch(Actions.toggleNetworkDetails());
 
-  clickOnSidebarTab(document, "timings");
+  await clickOnSidebarTab(document, "timings");
   await wait;
 
   // Check the UI contains server side timings and correct values

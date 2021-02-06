@@ -59,7 +59,7 @@ add_task(async function() {
     // Accessibility is handled on the container level.
     mustHaveAccessibleRule: false,
   });
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".search-panel-content .treeRow .treeIcon")
   );

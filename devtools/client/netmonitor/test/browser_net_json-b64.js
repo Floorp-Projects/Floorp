@@ -31,7 +31,7 @@ add_task(async function() {
 
   store.dispatch(Actions.toggleNetworkDetails());
 
-  clickOnSidebarTab(document, "response");
+  await clickOnSidebarTab(document, "response");
 
   await Promise.all([wait, waitForPropsView]);
 
