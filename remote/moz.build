@@ -4,7 +4,6 @@
 
 DIRS += [
     "components",
-    "startup",
     "test",
 ]
 
