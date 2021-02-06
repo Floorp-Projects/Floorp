@@ -93,7 +93,7 @@ add_task(async function() {
     "The fourth request was not blocked"
   );
 
-  EventUtils.sendMouseEvent({ type: "mousedown" }, requestItems[0]);
+  await EventUtils.sendMouseEvent({ type: "mousedown" }, requestItems[0]);
   // Right-click test1, select "Unblock URL" from its context menu
   await toggleBlockedUrl(requestItems[0], monitor, store, "unblock");
 

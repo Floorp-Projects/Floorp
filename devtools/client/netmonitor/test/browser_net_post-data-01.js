@@ -32,7 +32,7 @@ add_task(async function() {
   for (const requestItem of requestItems) {
     requestItem.scrollIntoView();
     const requestsListStatus = requestItem.querySelector(".status-code");
-    EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
+    await EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
     await waitUntil(() => requestsListStatus.title);
   }
 
@@ -69,11 +69,11 @@ add_task(async function() {
 
   // Wait for all accordion items updated by react
   const wait = waitForDOM(document, "#request-panel .accordion-item", 2);
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
-  clickOnSidebarTab(document, "request");
+  await clickOnSidebarTab(document, "request");
   await wait;
   await testParamsTab("urlencoded");
 
@@ -87,7 +87,7 @@ add_task(async function() {
     document,
     "#request-panel .CodeMirror-code"
   );
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[1]
   );

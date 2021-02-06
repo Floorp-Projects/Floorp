@@ -100,7 +100,7 @@ add_task(async function() {
     !!moreNodesLink,
     "A 'more nodes' button is displayed in the host container"
   );
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     moreNodesLink.querySelector("button")
   );

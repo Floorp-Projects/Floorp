@@ -81,13 +81,13 @@ add_task(async function() {
   is(requests.length, 2, "There should be two requests");
 
   // Select the WS request.
-  EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
+  await EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
 
   store.dispatch(Actions.toggleMessageColumn("size"));
   store.dispatch(Actions.toggleMessageColumn("opCode"));
   store.dispatch(Actions.toggleMessageColumn("maskBit"));
   store.dispatch(Actions.toggleMessageColumn("finBit"));
-  clickOnSidebarTab(document, "response");
+  await clickOnSidebarTab(document, "response");
 
   // Get all messages present in the "Response" panel
   const frames = document.querySelectorAll(
@@ -140,7 +140,7 @@ add_task(async function() {
   );
 
   // Select the SSE request.
-  EventUtils.sendMouseEvent({ type: "mousedown" }, requests[1]);
+  await EventUtils.sendMouseEvent({ type: "mousedown" }, requests[1]);
 
   store.dispatch(Actions.toggleMessageColumn("lastEventId"));
   store.dispatch(Actions.toggleMessageColumn("eventName"));
@@ -186,7 +186,7 @@ add_task(async function() {
   );
 
   // Select the WS request again.
-  EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
+  await EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
   is(
     shallowEqual(store.getState().messages.columns, {
       data: true,
@@ -201,7 +201,7 @@ add_task(async function() {
   );
 
   // Select the SSE request again.
-  EventUtils.sendMouseEvent({ type: "mousedown" }, requests[1]);
+  await EventUtils.sendMouseEvent({ type: "mousedown" }, requests[1]);
   is(
     shallowEqual(store.getState().messages.columns, {
       data: true,
@@ -219,7 +219,7 @@ add_task(async function() {
   store.dispatch(Actions.resetMessageColumns());
 
   // Switch to WS request again.
-  EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
+  await EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
   is(
     shallowEqual(store.getState().messages.columns, {
       data: true,
@@ -237,7 +237,7 @@ add_task(async function() {
   store.dispatch(Actions.resetMessageColumns());
 
   // Switch to SSE request again.
-  EventUtils.sendMouseEvent({ type: "mousedown" }, requests[1]);
+  await EventUtils.sendMouseEvent({ type: "mousedown" }, requests[1]);
   is(
     shallowEqual(store.getState().messages.columns, {
       data: true,
@@ -252,7 +252,7 @@ add_task(async function() {
   );
 
   // Switch to WS request again.
-  EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
+  await EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
   is(
     shallowEqual(store.getState().messages.columns, {
       data: true,

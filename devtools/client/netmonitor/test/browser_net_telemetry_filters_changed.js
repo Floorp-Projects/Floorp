@@ -33,7 +33,7 @@ add_task(async function() {
   await wait;
 
   info("Click on the 'HTML' filter");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-html-button")
   );
@@ -50,7 +50,7 @@ add_task(async function() {
   );
 
   info("Click on the 'CSS' filter");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-css-button")
   );

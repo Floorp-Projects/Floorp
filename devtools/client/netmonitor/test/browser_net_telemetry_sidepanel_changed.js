@@ -33,7 +33,7 @@ add_task(async function() {
   const waitForHeaders = waitUntil(() =>
     document.querySelector(".headers-overview")
   );
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
@@ -42,7 +42,7 @@ add_task(async function() {
 
   // Click on the Cookies panel and wait till it's opened.
   info("Click on the Cookies panel");
-  clickOnSidebarTab(document, "cookies");
+  await clickOnSidebarTab(document, "cookies");
   await waitForRequestData(store, ["requestCookies", "responseCookies"]);
 
   checkTelemetryEvent(

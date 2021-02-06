@@ -34,7 +34,7 @@ add_task(async function() {
     interactiveRule: false,
     labelRule: false,
   });
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelectorAll(".request-list-item")[0]
   );

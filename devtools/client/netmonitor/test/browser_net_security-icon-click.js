@@ -29,10 +29,10 @@ add_task(async function() {
   await clickAndTestSecurityIcon();
 
   info("Selecting headers panel again.");
-  clickOnSidebarTab(document, "headers");
+  await clickOnSidebarTab(document, "headers");
 
   info("Sorting the items by filename.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-file-button")
   );

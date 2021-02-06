@@ -39,7 +39,7 @@ add_task(async function() {
     );
 
     const firstRequest = document.querySelectorAll(".request-list-item")[0];
-    EventUtils.sendMouseEvent({ type: "mousedown" }, firstRequest);
+    await EventUtils.sendMouseEvent({ type: "mousedown" }, firstRequest);
 
     await waitForHeaderSections;
 
@@ -57,7 +57,7 @@ add_task(async function() {
     info("Captured normal request");
 
     // Mark as blocked
-    EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequest);
+    await EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequest);
     const contextBlock = getContextMenuItem(
       monitor,
       "request-list-context-block-url"
@@ -94,7 +94,7 @@ add_task(async function() {
     );
 
     const firstRequest = document.querySelectorAll(".request-list-item")[0];
-    EventUtils.sendMouseEvent({ type: "mousedown" }, firstRequest);
+    await EventUtils.sendMouseEvent({ type: "mousedown" }, firstRequest);
 
     await waitForHeaderSections;
 
@@ -113,7 +113,7 @@ add_task(async function() {
     info("Captured blocked request");
 
     // Mark as unblocked
-    EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequest);
+    await EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequest);
     const contextUnblock = getContextMenuItem(
       monitor,
       "request-list-context-unblock-url"
@@ -143,7 +143,7 @@ add_task(async function() {
     unblockedRequestSize = firstRequest.querySelector(
       ".requests-list-transferred"
     ).textContent;
-    EventUtils.sendMouseEvent({ type: "mousedown" }, firstRequest);
+    await EventUtils.sendMouseEvent({ type: "mousedown" }, firstRequest);
     unblockedRequestState = getSelectedRequest(store.getState());
     info("Captured unblocked request");
   }

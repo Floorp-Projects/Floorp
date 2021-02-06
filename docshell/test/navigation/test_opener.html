@@ -17,7 +17,7 @@ window.onload = async function() {
   navigateByLocation(window0);
   navigateByOpen("window1");
   navigateByForm("window2");
-  navigateByHyperlink("window3");
+  await navigateByHyperlink("window3");
 
   await waitForFinishedFrames(4);
   await isNavigated(window0, "Should be able to navigate popup by setting location.");

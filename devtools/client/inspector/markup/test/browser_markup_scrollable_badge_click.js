@@ -94,7 +94,7 @@ add_task(async function() {
   checkTelemetry("devtools.markup.scrollable.badge.clicked", "", 2, "scalar");
 
   info("Double-click on the scrollable badge");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "dblclick" },
     container.editor._scrollableBadge
   );

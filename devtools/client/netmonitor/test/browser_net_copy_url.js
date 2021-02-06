@@ -21,7 +21,7 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 1);
 
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
@@ -37,7 +37,7 @@ add_task(async function() {
   emptyClipboard();
 
   info("Simulating context click on a first element of the request table");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "contextmenu" },
     document.querySelectorAll(".request-list-item")[0]
   );

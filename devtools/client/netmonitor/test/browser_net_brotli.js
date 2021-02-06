@@ -32,7 +32,7 @@ add_task(async function() {
   const requestItem = document.querySelector(".request-list-item");
   // Status code title is generated on hover
   const requestsListStatus = requestItem.querySelector(".status-code");
-  EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
+  await EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
   await waitUntil(() => requestsListStatus.title);
   await waitForDOMIfNeeded(requestItem, ".requests-list-timings-total");
 
@@ -58,7 +58,7 @@ add_task(async function() {
     TEST_EVENTS.RECEIVED_RESPONSE_CONTENT
   );
   store.dispatch(Actions.toggleNetworkDetails());
-  clickOnSidebarTab(document, "response");
+  await clickOnSidebarTab(document, "response");
   await wait;
   await onResponseContent;
   await testResponse("br");

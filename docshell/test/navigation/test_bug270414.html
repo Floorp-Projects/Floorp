@@ -55,7 +55,7 @@ function testChild3() {
     window3 = window.open("", "window3", "width=10,height=10");
     window3.document.open();
     window3.document.write(headerHTML);
-    window3.document.write("<script>navigateByHyperlink('child3');<\/script>");
+    window3.document.write("<script>(async function() { await navigateByHyperlink('child3'); })();<\/script>");
     window3.document.write(footerHTML);
     window3.document.close();
   }

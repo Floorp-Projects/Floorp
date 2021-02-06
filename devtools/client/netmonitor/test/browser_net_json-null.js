@@ -34,7 +34,7 @@ add_task(async function() {
     1
   );
   store.dispatch(Actions.toggleNetworkDetails());
-  clickOnSidebarTab(document, "response");
+  await clickOnSidebarTab(document, "response");
   await Promise.all([onResponsePanelReady, onPropsViewReady]);
 
   const tabpanel = document.querySelector("#response-panel");

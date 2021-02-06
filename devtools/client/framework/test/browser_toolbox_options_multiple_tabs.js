@@ -75,7 +75,7 @@ async function toggleTool({ doc, panelWin, checkbox, tab }, toolId) {
   const onToggleTool = gDevTools.once(
     `tool-${prevChecked ? "unregistered" : "registered"}`
   );
-  EventUtils.sendMouseEvent({ type: "click" }, checkbox, panelWin);
+  await EventUtils.sendMouseEvent({ type: "click" }, checkbox, panelWin);
   const id = await onToggleTool;
 
   is(id, toolId, `Correct event for ${toolId} was fired`);
