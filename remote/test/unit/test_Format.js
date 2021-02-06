@@ -4,7 +4,7 @@
 "use strict";
 
 const { truncate, pprint } = ChromeUtils.import(
-  "chrome://remote/content/Format.jsm"
+  "chrome://remote/content/shared/Format.jsm"
 );
 
 const MAX_STRING_LENGTH = 250;
