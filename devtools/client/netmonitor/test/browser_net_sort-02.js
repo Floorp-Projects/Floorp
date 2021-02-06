@@ -78,7 +78,7 @@ add_task(async function() {
   await testContents([0, 2, 4, 3, 1]);
 
   info("Testing status sort, ascending.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-status-button")
   );
@@ -86,7 +86,7 @@ add_task(async function() {
   await testContents([0, 1, 2, 3, 4]);
 
   info("Testing status sort, descending.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-status-button")
   );
@@ -94,7 +94,7 @@ add_task(async function() {
   await testContents([4, 3, 2, 1, 0]);
 
   info("Testing status sort, ascending. Checking sort loops correctly.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-status-button")
   );
@@ -102,7 +102,7 @@ add_task(async function() {
   await testContents([0, 1, 2, 3, 4]);
 
   info("Testing method sort, ascending.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-method-button")
   );
@@ -110,7 +110,7 @@ add_task(async function() {
   await testContents([0, 1, 2, 3, 4]);
 
   info("Testing method sort, descending.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-method-button")
   );
@@ -118,7 +118,7 @@ add_task(async function() {
   await testContents([4, 3, 2, 1, 0]);
 
   info("Testing method sort, ascending. Checking sort loops correctly.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-method-button")
   );
@@ -126,7 +126,7 @@ add_task(async function() {
   await testContents([0, 1, 2, 3, 4]);
 
   info("Testing file sort, ascending.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-file-button")
   );
@@ -134,7 +134,7 @@ add_task(async function() {
   await testContents([0, 1, 2, 3, 4]);
 
   info("Testing file sort, descending.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-file-button")
   );
@@ -142,7 +142,7 @@ add_task(async function() {
   await testContents([4, 3, 2, 1, 0]);
 
   info("Testing file sort, ascending. Checking sort loops correctly.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-file-button")
   );
@@ -150,7 +150,7 @@ add_task(async function() {
   await testContents([0, 1, 2, 3, 4]);
 
   info("Testing URL sort, ascending.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-url-button")
   );
@@ -158,7 +158,7 @@ add_task(async function() {
   await testContents([0, 1, 2, 3, 4]);
 
   info("Testing URL sort, descending.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-url-button")
   );
@@ -166,7 +166,7 @@ add_task(async function() {
   await testContents([4, 3, 2, 1, 0]);
 
   info("Testing URL sort, ascending. Checking sort loops correctly.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-url-button")
   );
@@ -174,7 +174,7 @@ add_task(async function() {
   await testContents([0, 1, 2, 3, 4]);
 
   info("Testing type sort, ascending.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-type-button")
   );
@@ -182,7 +182,7 @@ add_task(async function() {
   await testContents([0, 1, 2, 3, 4]);
 
   info("Testing type sort, descending.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-type-button")
   );
@@ -190,7 +190,7 @@ add_task(async function() {
   await testContents([4, 3, 2, 1, 0]);
 
   info("Testing type sort, ascending. Checking sort loops correctly.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-type-button")
   );
@@ -198,7 +198,7 @@ add_task(async function() {
   await testContents([0, 1, 2, 3, 4]);
 
   info("Testing transferred sort, ascending.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-transferred-button")
   );
@@ -206,7 +206,7 @@ add_task(async function() {
   await testContents([0, 1, 2, 3, 4]);
 
   info("Testing transferred sort, descending.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-transferred-button")
   );
@@ -214,7 +214,7 @@ add_task(async function() {
   await testContents([4, 3, 2, 1, 0]);
 
   info("Testing transferred sort, ascending. Checking sort loops correctly.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-transferred-button")
   );
@@ -222,7 +222,7 @@ add_task(async function() {
   await testContents([0, 1, 2, 3, 4]);
 
   info("Testing size sort, ascending.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-contentSize-button")
   );
@@ -230,7 +230,7 @@ add_task(async function() {
   await testContents([0, 1, 2, 3, 4]);
 
   info("Testing size sort, descending.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-contentSize-button")
   );
@@ -238,7 +238,7 @@ add_task(async function() {
   await testContents([4, 3, 2, 1, 0]);
 
   info("Testing size sort, ascending. Checking sort loops correctly.");
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-contentSize-button")
   );
@@ -251,7 +251,7 @@ add_task(async function() {
   // opened, the waterfall button is not visible. Therefore we hide the network
   // details panel
   await store.dispatch(Actions.toggleNetworkDetails());
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-waterfall-button")
   );
@@ -261,7 +261,7 @@ add_task(async function() {
 
   info("Testing waterfall sort, descending.");
   await store.dispatch(Actions.toggleNetworkDetails());
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-waterfall-button")
   );
@@ -271,7 +271,7 @@ add_task(async function() {
 
   info("Testing waterfall sort, ascending. Checking sort loops correctly.");
   await store.dispatch(Actions.toggleNetworkDetails());
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector("#requests-list-waterfall-button")
   );
@@ -373,7 +373,10 @@ add_task(async function() {
     for (const requestItem of requestItems) {
       requestItem.scrollIntoView();
       const requestsListStatus = requestItem.querySelector(".status-code");
-      EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
+      await EventUtils.sendMouseEvent(
+        { type: "mouseover" },
+        requestsListStatus
+      );
       await waitUntil(() => requestsListStatus.title);
     }
 

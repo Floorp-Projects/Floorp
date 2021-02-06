@@ -19,7 +19,7 @@ add_task(async () => {
       let controls = pipWin.document.getElementById("controls");
 
       await promiseFullscreenEntered(pipWin, async () => {
-        EventUtils.sendMouseEvent(
+        await EventUtils.sendMouseEvent(
           {
             type: "dblclick",
           },
@@ -38,7 +38,7 @@ add_task(async () => {
       // on the document body.
 
       await promiseFullscreenExited(pipWin, async () => {
-        EventUtils.sendMouseEvent(
+        await EventUtils.sendMouseEvent(
           {
             type: "dblclick",
           },
@@ -55,7 +55,7 @@ add_task(async () => {
       // Now we double-click to re-enter fullscreen.
 
       await promiseFullscreenEntered(pipWin, async () => {
-        EventUtils.sendMouseEvent(
+        await EventUtils.sendMouseEvent(
           {
             type: "dblclick",
           },

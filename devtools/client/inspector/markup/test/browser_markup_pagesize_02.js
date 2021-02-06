@@ -33,7 +33,7 @@ async function showAllNodes(inspector) {
   ok(button, "All nodes button is here");
   const win = button.ownerDocument.defaultView;
 
-  EventUtils.sendMouseEvent({ type: "click" }, button, win);
+  await EventUtils.sendMouseEvent({ type: "click" }, button, win);
   await inspector.markup._waitForChildren();
 }
 

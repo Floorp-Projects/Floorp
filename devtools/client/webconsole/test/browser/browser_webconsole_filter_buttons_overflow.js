@@ -43,7 +43,7 @@ add_task(async function() {
     // container level.
     mustHaveAccessibleRule: false,
   });
-  EventUtils.sendMouseEvent(
+  await EventUtils.sendMouseEvent(
     {
       type: "click",
       [Services.appinfo.OS === "Darwin" ? "metaKey" : "ctrlKey"]: true,

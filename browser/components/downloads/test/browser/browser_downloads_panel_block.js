@@ -22,7 +22,7 @@ add_task(async function mainTest() {
 
     // Open the panel and click the item to show the subview.
     let viewPromise = promiseViewShown(DownloadsBlockedSubview.subview);
-    EventUtils.sendMouseEvent({ type: "click" }, item);
+    await EventUtils.sendMouseEvent({ type: "click" }, item);
     await viewPromise;
 
     // Items are listed in newest-to-oldest order, so e.g. the first item's
@@ -39,7 +39,7 @@ add_task(async function mainTest() {
 
     // Show the subview again.
     viewPromise = promiseViewShown(DownloadsBlockedSubview.subview);
-    EventUtils.sendMouseEvent({ type: "click" }, item);
+    await EventUtils.sendMouseEvent({ type: "click" }, item);
     await viewPromise;
 
     // Click the Open button.  The download should be unblocked and then opened,
@@ -64,7 +64,7 @@ add_task(async function mainTest() {
     await openPanel();
 
     viewPromise = promiseViewShown(DownloadsBlockedSubview.subview);
-    EventUtils.sendMouseEvent({ type: "click" }, item);
+    await EventUtils.sendMouseEvent({ type: "click" }, item);
     await viewPromise;
 
     // Click the Remove button.  The panel should close and the item should be
