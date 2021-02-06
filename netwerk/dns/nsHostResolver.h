@@ -119,6 +119,7 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
     TRR_SERVER_RESPONSE_ERR = 27,  // Server responded with non-200 code
     TRR_RCODE_FAIL = 28,           // DNS response contains a non-NOERROR rcode
     TRR_NO_CONNECTIVITY = 29,      // Not confirmed because of no connectivity
+    TRR_NXDOMAIN = 30,             // DNS response contains NXDOMAIN rcode (0x03)
   };
 
   // Records the first reason that caused TRR to be skipped or to fail.
