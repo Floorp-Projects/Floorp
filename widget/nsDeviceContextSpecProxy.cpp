@@ -82,7 +82,7 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecProxy::MakePrintTarget() {
 
   RefPtr<gfxASurface> surface =
       gfxPlatform::GetPlatform()->CreateOffscreenSurface(
-          mozilla::gfx::IntSize::Truncate(width, height),
+          mozilla::gfx::IntSize::Ceil(width, height),
           mozilla::gfx::SurfaceFormat::A8R8G8B8_UINT32);
   if (!surface) {
     return nullptr;
