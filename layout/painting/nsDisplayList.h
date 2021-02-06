@@ -3081,6 +3081,10 @@ class nsDisplayItem : public nsDisplayItemBase {
     return mFrame != aOther->mFrame;
   }
 
+  bool HasHitTestInfo() const {
+    return mItemFlags.contains(ItemFlag::HasHitTestInfo);
+  }
+
   bool HasSameTypeAndClip(const nsDisplayItem* aOther) const {
     return GetPerFrameKey() == aOther->GetPerFrameKey() &&
            GetClipChain() == aOther->GetClipChain();
@@ -3101,10 +3105,15 @@ class nsDisplayItem : public nsDisplayItemBase {
     return GetPaintRect();
   }
 
+  virtual const mozilla::HitTestInfo& GetHitTestInfo() {
+    return mozilla::HitTestInfo::Empty();
+  }
+
  protected:
   typedef bool (*PrefFunc)(void);
   bool ShouldUseAdvancedLayer(LayerManager* aManager, PrefFunc aFunc) const;
   bool CanUseAdvancedLayer(LayerManager* aManager) const;
+  void SetHasHitTestInfo() { mItemFlags += ItemFlag::HasHitTestInfo; }
 
   RefPtr<const DisplayItemClipChain> mClipChain;
   const DisplayItemClip* mClip;
@@ -3137,8 +3146,9 @@ class nsDisplayItem : public nsDisplayItemBase {
     Combines3DTransformWithAncestors,
     DisableSubpixelAA,
     ForceNotVisible,
-    PaintRectValid,
+    HasHitTestInfo,
     IsGlassItem,
+    PaintRectValid,
 #ifdef MOZ_DUMP_PAINTING
     // True if this frame has been painted.
     Painted,
@@ -3252,10 +3262,10 @@ class nsPaintedDisplayItem : public nsDisplayItem {
     mCacheIndex = mozilla::Nothing();
   }
 
-  mozilla::HitTestInfo& GetHitTestInfo() { return mHitTestInfo; }
-  const nsRect& HitTestArea() const { return mHitTestInfo.Area(); }
-  const mozilla::gfx::CompositorHitTestInfo& HitTestFlags() const {
-    return mHitTestInfo.Info();
+  const mozilla::HitTestInfo& GetHitTestInfo() final { return mHitTestInfo; }
+  void InitializeHitTestInfo(nsDisplayListBuilder* aBuilder) {
+    mHitTestInfo.Initialize(aBuilder, Frame());
+    SetHasHitTestInfo();
   }
 
  protected:
@@ -5181,22 +5191,24 @@ class nsDisplayEventReceiver final : public nsDisplayItem {
  * compositor some hit-test info for a frame. This is effectively a dummy item
  * whose sole purpose is to carry the hit-test info to the compositor.
  */
-class nsDisplayCompositorHitTestInfo : public nsPaintedDisplayItem {
+class nsDisplayCompositorHitTestInfo final : public nsDisplayItem {
  public:
   nsDisplayCompositorHitTestInfo(nsDisplayListBuilder* aBuilder,
                                  nsIFrame* aFrame)
-      : nsPaintedDisplayItem(aBuilder, aFrame) {
+      : nsDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayCompositorHitTestInfo);
     mHitTestInfo.Initialize(aBuilder, aFrame);
+    SetHasHitTestInfo();
   }
 
   nsDisplayCompositorHitTestInfo(
       nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, const nsRect& aArea,
       const mozilla::gfx::CompositorHitTestInfo& aHitTestFlags)
-      : nsPaintedDisplayItem(aBuilder, aFrame) {
+      : nsDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayCompositorHitTestInfo);
     mHitTestInfo.SetAreaAndInfo(aArea, aHitTestFlags);
     mHitTestInfo.InitializeScrollTarget(aBuilder);
+    SetHasHitTestInfo();
   }
 
   MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayCompositorHitTestInfo)
@@ -5213,23 +5225,15 @@ class nsDisplayCompositorHitTestInfo : public nsPaintedDisplayItem {
   int32_t ZIndex() const override;
   void SetOverrideZIndex(int32_t aZIndex);
 
-  /**
-   * ApplyOpacity() is overriden for opacity flattening.
-   */
-  void ApplyOpacity(nsDisplayListBuilder* aBuilder, float aOpacity,
-                    const DisplayItemClipChain* aClip) override {}
-
-  /**
-   * CanApplyOpacity() is overriden for opacity flattening.
-   */
-  bool CanApplyOpacity() const override { return true; }
-
   nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const override {
     *aSnap = false;
     return nsRect();
   }
 
+  const mozilla::HitTestInfo& GetHitTestInfo() final { return mHitTestInfo; }
+
  private:
+  mozilla::HitTestInfo mHitTestInfo;
   mozilla::Maybe<int32_t> mOverrideZIndex;
 };
 
