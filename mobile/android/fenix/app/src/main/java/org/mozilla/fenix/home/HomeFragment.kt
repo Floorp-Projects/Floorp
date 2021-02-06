@@ -234,7 +234,7 @@ class HomeFragment : Fragment() {
                 storage = components.core.topSitesStorage,
                 config = ::getTopSitesConfig
             ),
-            owner = this,
+            owner = viewLifecycleOwner,
             view = view
         )
 
