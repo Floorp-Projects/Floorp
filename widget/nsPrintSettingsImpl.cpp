@@ -687,6 +687,8 @@ nsPrintSettings::GetEffectivePageSize(double* aWidth, double* aHeight) {
     *aWidth = NS_INCHES_TO_TWIPS(float(mPaperWidth));
     *aHeight = NS_INCHES_TO_TWIPS(float(mPaperHeight));
   } else {
+    MOZ_ASSERT(mPaperSizeUnit == kPaperSizeMillimeters,
+               "unexpected paper size unit");
     *aWidth = NS_MILLIMETERS_TO_TWIPS(float(mPaperWidth));
     *aHeight = NS_MILLIMETERS_TO_TWIPS(float(mPaperHeight));
   }
