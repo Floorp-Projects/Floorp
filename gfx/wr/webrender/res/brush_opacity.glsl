@@ -98,10 +98,13 @@ void swgl_drawSpanRGBA8() {
     vec2 max_uv = swgl_linearQuantize(sColor0, v_uv_sample_bounds.zw);
     vec2 step_uv = swgl_linearQuantizeStep(sColor0, swgl_interpStep(v_uv)) * perspective_divisor;
 
+    #ifdef WR_FEATURE_ANTIALIASING
+    float aa_range = compute_aa_range(v_local_pos);
+    #endif
     while (swgl_SpanLength > 0) {
         float alpha = v_opacity;
         #ifdef WR_FEATURE_ANTIALIASING
-            alpha *= init_transform_fs(v_local_pos);
+            alpha *= init_transform_fs_noperspective(v_local_pos, aa_range);
             v_local_pos += swgl_interpStep(v_local_pos);
         #endif
         swgl_commitTextureLinearColorRGBA8(sColor0, clamp(uv, min_uv, max_uv), alpha, 0);

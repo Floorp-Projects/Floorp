@@ -380,10 +380,13 @@ void swgl_drawSpanRGBA8() {
         #else
         if (v_color != vec4(1.0)) {
         #endif
+            #ifdef WR_FEATURE_ANTIALIASING
+            float aa_range = compute_aa_range(v_local_pos);
+            #endif
             while (swgl_SpanLength > 0) {
                 vec4 color = v_color;
                 #ifdef WR_FEATURE_ANTIALIASING
-                    color *= init_transform_fs(v_local_pos);
+                    color *= init_transform_fs_noperspective(v_local_pos, aa_range);
                     v_local_pos += swgl_interpStep(v_local_pos);
                 #endif
                 #ifdef WR_FEATURE_REPETITION

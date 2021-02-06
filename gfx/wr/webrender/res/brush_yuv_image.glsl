@@ -150,8 +150,9 @@ void swgl_drawSpanRGBA8() {
 
         #ifdef WR_FEATURE_ALPHA_PASS
         if (has_valid_transform_bounds()) {
+            float aa_range = compute_aa_range(vLocalPos);
             while (swgl_SpanLength > 0) {
-                float alpha = init_transform_fs(vLocalPos);
+                float alpha = init_transform_fs_noperspective(vLocalPos, aa_range);
                 vLocalPos += swgl_interpStep(vLocalPos);
                 swgl_commitTextureLinearColorYUV(sColor0, clamp(uv0, min_uv0, max_uv0), layer0,
                                                  sColor1, clamp(uv1, min_uv1, max_uv1), layer1,
@@ -193,8 +194,9 @@ void swgl_drawSpanRGBA8() {
 
         #ifdef WR_FEATURE_ALPHA_PASS
         if (has_valid_transform_bounds()) {
+            float aa_range = compute_aa_range(vLocalPos);
             while (swgl_SpanLength > 0) {
-                float alpha = init_transform_fs(vLocalPos);
+                float alpha = init_transform_fs_noperspective(vLocalPos, aa_range);
                 vLocalPos += swgl_interpStep(vLocalPos);
                 swgl_commitTextureLinearColorYUV(sColor0, clamp(uv0, min_uv0, max_uv0), layer0,
                                                  sColor1, clamp(uv1, min_uv1, max_uv1), layer1,
@@ -226,8 +228,9 @@ void swgl_drawSpanRGBA8() {
 
         #ifdef WR_FEATURE_ALPHA_PASS
         if (has_valid_transform_bounds()) {
+            float aa_range = compute_aa_range(vLocalPos);
             while (swgl_SpanLength > 0) {
-                float alpha = init_transform_fs(vLocalPos);
+                float alpha = init_transform_fs_noperspective(vLocalPos, aa_range);
                 vLocalPos += swgl_interpStep(vLocalPos);
                 swgl_commitTextureLinearColorYUV(sColor0, clamp(uv0, min_uv0, max_uv0), layer0,
                                                  vYuvColorSpace, vRescaleFactor, alpha);

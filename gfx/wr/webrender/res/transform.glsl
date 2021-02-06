@@ -107,7 +107,10 @@ float signed_distance_rect(vec2 pos, vec2 p0, vec2 p1) {
     return max(d.x, d.y);
 }
 
-float init_transform_fs(vec2 local_pos) {
+// When perspective is not used, the aa_range (derivative of local_pos) is
+// constant across the entire primitive. In this case it is useful to pre-
+// compute the aa_range and pass it in here per-pixel.
+float init_transform_fs_noperspective(vec2 local_pos, float aa_range) {
     // Get signed distance from local rect bounds.
     float d = signed_distance_rect(
         local_pos,
@@ -115,11 +118,18 @@ float init_transform_fs(vec2 local_pos) {
         vTransformBounds.zw
     );
 
+    // Only apply AA to fragments outside the signed distance field.
+    return distance_aa(aa_range, d);
+}
+
+// In the (potentially) perspective case, the aa_range will vary per-pixel
+// with the derivative of local_pos. Compute that here and then punt to
+// the no-perspective version to calculate the coverage.
+float init_transform_fs(vec2 local_pos) {
     // Find the appropriate distance to apply the AA smoothstep over.
     float aa_range = compute_aa_range(local_pos);
 
-    // Only apply AA to fragments outside the signed distance field.
-    return distance_aa(aa_range, d);
+    return init_transform_fs_noperspective(local_pos, aa_range);
 }
 
 float init_transform_rough_fs(vec2 local_pos) {

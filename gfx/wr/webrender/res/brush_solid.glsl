@@ -59,8 +59,9 @@ Fragment brush_fs() {
 void swgl_drawSpanRGBA8() {
     #ifdef WR_FEATURE_ALPHA_PASS
         if (has_valid_transform_bounds()) {
+            float aa_range = compute_aa_range(v_local_pos);
             while (swgl_SpanLength > 0) {
-                float alpha = init_transform_fs(v_local_pos);
+                float alpha = init_transform_fs_noperspective(v_local_pos, aa_range);
                 swgl_commitColorRGBA8(v_color, alpha);
                 v_local_pos += swgl_interpStep(v_local_pos);
             }
@@ -75,8 +76,9 @@ void swgl_drawSpanRGBA8() {
 void swgl_drawSpanR8() {
     #ifdef WR_FEATURE_ALPHA_PASS
         if (has_valid_transform_bounds()) {
+            float aa_range = compute_aa_range(v_local_pos);
             while (swgl_SpanLength > 0) {
-                float alpha = init_transform_fs(v_local_pos);
+                float alpha = init_transform_fs_noperspective(v_local_pos, aa_range);
                 swgl_commitColorR8(v_color.x, alpha);
                 v_local_pos += swgl_interpStep(v_local_pos);
             }
