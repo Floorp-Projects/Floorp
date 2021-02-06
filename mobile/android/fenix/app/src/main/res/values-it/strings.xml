@@ -205,7 +205,7 @@
     <!-- Header displayed when selecting a shortcut search engine -->
     <string name="search_engines_search_with">Adesso cerca con:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
-    <string name="awesomebar_clipboard_title">Copia il link dagli appunti</string>
+    <string name="awesomebar_clipboard_title">Incolla il link dagli appunti</string>
 
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_allow_button">Consenti</string>

@@ -8,9 +8,9 @@
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">گزینه‌های بیشتر</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-    <string name="content_description_private_browsing_button">فعال شده در حالت مرور خصوصی</string>
+    <string name="content_description_private_browsing_button">فعال کردن حالت خصوصی</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-    <string name="content_description_disable_private_browsing_button">غیر فعال شده در حالت مرور خصوصی</string>
+    <string name="content_description_disable_private_browsing_button">غیرفعال کردن حالت مرور خصوصی</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">جست‌وجو یا ورود آدرس</string>
     <!-- No Open Tabs Message Description -->
@@ -24,7 +24,7 @@
     <!-- Default title for pinned JD top site that links to JD home page  -->
     <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
-    <string name="open_tab_tray_single">1 زبانه باز. برای تغییر زبانه ها ضربه بزنید.</string>
+    <string name="open_tab_tray_single">1 زبانه‌ي باز. برای تغییر زبانه ها ضربه بزنید.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string name="open_tab_tray_plural">%1$s زبانه‌های باز. برای تغییر زبانه‌ها ضربه بزنید.</string>
 
@@ -68,9 +68,9 @@
     <!-- Text for the main message -->
     <string name="cfr_message">برای باز کردن زبانه های خصوصی از صفحه اصلی ، میانبر اضافه کنید.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">میانبر را اضافه کنید</string>
+    <string name="cfr_pos_button_text">افزودن میانبر</string>
     <!-- Text for the negative button -->
-    <string name="cfr_neg_button_text">نه، ممنون!</string>
+    <string name="cfr_neg_button_text">نه، ممنون</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
@@ -192,13 +192,13 @@
 
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
-    <string name="search_scan_button">اسکن</string>
+    <string name="search_scan_button">بررسی</string>
     <!-- Button in the search view that lets a user change their search engine -->
     <string name="search_engine_button">موتور جست‌وجو</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">تنظیمات موتور جستجو</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_engines_search_with">این بار، جست‌وجو با:</string>
+    <string name="search_engines_search_with">این بار بگرد با:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">پیوند را از کلیپ بورد پر کنید</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -493,6 +493,11 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">موضوع دستگاه را دنبال کنید</string>
 
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">برای تازه‌ سازی صفحه بکشید</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">برای پنهان‌ کردن نوار ابزار پیمایش کنید</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
     <string name="preference_gestures_swipe_toolbar_switch_tabs">برای جابجایی بین زبانه‌ها، نوار ابزار را به طرفین بکشید</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
@@ -1078,6 +1083,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">فضای ذخیره سازی را آزاد می کند</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">مجوزهای سایت</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">دریافت‌ها</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">داده مرور را حذف کنید</string>
     <!-- Title for the Delete browsing data on quit preference -->
@@ -1148,6 +1155,10 @@
     <string name="onboarding_account_sign_in_header">شروع به همگام سازی نشانک‌ها،‌ گذرواژه ها و چیزهای بیشتر با حساب Firefox شما.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">اطلاعات بیشتر</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_3">شما به عنوان%s در یک مرورگر دیگر Firefox در این تلفن وارد شده اید. آیا می خواهید با این حساب وارد شوید؟</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">بله،‌ من را وارد کن</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1195,8 +1206,7 @@
     <string name="onboarding_privacy_notice_header">حریم‌ خصوصی شما</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">ما%s طراحی کرده ایم تا بتوانیم بر آنچه به اشتراک می گذارید کنترل کنید
-        آنلاین و آنچه را با ما به اشتراک می گذارید.</string>
+    <string name="onboarding_privacy_notice_description2">ما%s طراحی کرده ایم تا بتوانیم بر آنچه به صورت انلاین یا با ما اشتراک می گذارید کنترل داشته باشید.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">اعلامیه حریم خصوصی ما را بخوانید</string>
 
@@ -1396,6 +1406,9 @@
     <string name="add_to_homescreen_continue">ادامه به این پایگاه اینترنتی</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">نام میانبر</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">شما به راحتی می‌توانید این پایگاه اینترنتی را به صفحه خانگی تلفن خود اضافه کنید تا دسترسی مستقیم به آن داشته باشید و مرور سریعتی را مانند تجربه کردن یک برنامه داشته باشید.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">ورودها و گذرواژه‌ها</string>

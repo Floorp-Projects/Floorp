@@ -1101,6 +1101,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Frigjer lagringsplass</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Nettstadløyve</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Nedlastingar</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Slett nettlesardata</string>
     <!-- Title for the Delete browsing data on quit preference -->
@@ -1225,8 +1227,7 @@
     <string name="onboarding_privacy_notice_header">Ditt personvern</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">Vi har utvikla %s for å gi deg kontroll over det du deler
-        på nettet og kva du deler med oss.</string>
+    <string name="onboarding_privacy_notice_description2">Vi har utvikla %s for å gi deg kontroll over det du deler på nettet og kva du deler med oss.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Les personvernmerknaden vår</string>
 

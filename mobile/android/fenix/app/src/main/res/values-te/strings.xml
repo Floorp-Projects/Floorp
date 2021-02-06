@@ -537,6 +537,8 @@
     <!-- Tab Management -->
     <!-- Title of preference for tabs management -->
     <string name="preferences_tabs">ట్యాబులు</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">ట్యాబు వీక్షణ</string>
     <!-- Option for a list tab view -->
     <string name="tab_view_list">జాబితా</string>
     <!-- Option for a grid tab view -->
@@ -1347,6 +1349,9 @@
 
     <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_title">దారిమళ్ళింపు ట్రాకర్లు</string>
+
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">తెలిసిన ట్రాకింగు వెబ్‌సైట్లు దారిమార్పుల ద్వారా అమర్చే కుకీలను తుడిచివేస్తుంది.</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">తోడ్పాటు</string>

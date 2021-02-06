@@ -20,6 +20,10 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Your private tabs will be shown here.</string>
 
+    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
+    <string name="default_top_site_baidu">Baidu</string>
+    <!-- Default title for pinned JD top site that links to JD home page  -->
+    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 open tab. Tap to switch tabs.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -71,14 +75,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">No thanks</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Get to Firefox faster. Add a widget to your Home screen.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">Add widget</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">Not now</string>
-
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
     <string name="open_in_app_cfr_info_message">You can set Firefox to automatically open links in apps.</string>
@@ -100,6 +96,13 @@
     <string name="tab_tray_close_tabs_banner_positive_button_text">View options</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Dismiss</string>
+
+    <!-- Text for the banner message to tell users about our grid view feature. -->
+    <string name="tab_tray_grid_view_banner_message">Change the layout of open tabs. Go to settings and select grid under tab view.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_grid_view_banner_positive_button_text">Go to settings</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_grid_view_banner_negative_button_text">Dismiss</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -151,8 +154,6 @@
     <string name="browser_menu_find_in_page">Find in page</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Private tab</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">New tab</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Save to collection</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -359,6 +360,12 @@
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Add-on collection modified. Quitting the application to apply changes…</string>
 
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Add-on is not supported</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Add-on is already installed</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sync now</string>
@@ -437,6 +444,10 @@
     <string name="preferences_marketing_data">Marketing data</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Shares data about what features you use in %1$s with Leanplum, our mobile marketing vendor.</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Studies</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Allows Mozilla to install and run studies</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Experiments</string>
     <!-- Summary for experiments preferences -->
@@ -559,6 +570,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">After one month</string>
 
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Close manually</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Close after one day</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Close after one week</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Close after one month</string>
+
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Open tabs</string>
@@ -576,6 +596,8 @@
     <string name="tab_tray_title">Open Tabs</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Save to collection</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">Select</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Share all tabs</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -590,8 +612,18 @@
     <string name="tab_tray_menu_home">Go home</string>
     <!-- Shortcut action to toggle private mode -->
     <string name="tab_tray_menu_toggle">Toggle tab mode</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">Bookmark</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">Close</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">Share selected tabs</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">Selected tabs menu</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Remove tab from collection</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">Select tabs</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Close tab</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -627,8 +659,10 @@
 
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Collection name</string>
-    <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">Remove</string>
+    <!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Rename</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Remove</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Delete from history</string>
@@ -681,11 +715,26 @@
     <string name="history_empty_message">No history here</string>
 
     <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Delete downloads</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">Are you sure you want to clear your downloads?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">Downloads Removed</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">Removed %1$s</string>
     <!-- Text shown when no download exists -->
-    <string name="download_empty_message">No downloads here</string>
+    <string name="download_empty_message_1">No downloaded files</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d selected</string>
+
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">Open</string>
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Remove</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -808,6 +857,8 @@
     <string name="preference_phone_feature_notification">Notification</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Persistent Storage</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">DRM-controlled content</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Ask to allow</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -947,6 +998,12 @@
     <string name="snackbar_tab_closed">Tab closed</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Tabs closed</string>
+    <!-- Text shown in snackbar when user closes tabs -->
+    <string name="snackbar_message_tabs_closed">Tabs closed!</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">Bookmarks saved!</string>
+    <!-- Text shown in snackbar action for viewing bookmarks -->
+    <string name="snackbar_message_bookmarks_view">View</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">Added to top sites!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1022,6 +1079,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Frees up storage space</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Site permissions</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Downloads</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Delete browsing data</string>
     <!-- Title for the Delete browsing data on quit preference -->
@@ -1143,9 +1202,7 @@
     <string name="onboarding_privacy_notice_header">Your privacy</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">We’ve designed %s to give you control over what you share
-        online and what you share with us.
-    </string>
+    <string name="onboarding_privacy_notice_description2">We’ve designed %s to give you control over what you share online and what you share with us.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Read our privacy notice</string>
 
@@ -1602,6 +1659,15 @@
 
     <!-- Label for the show most visited sites preference -->
     <string name="top_sites_toggle_top_frecent_sites">Show most visited sites</string>
+
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Name</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">Top site name</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">OK</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Cancel</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Remove</string>

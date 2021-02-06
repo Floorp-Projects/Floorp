@@ -1,0 +1,1152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">Taybet %s</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (Taybet)</string>
+
+
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Vebijarkên zêdetir</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">Gerîna taybet veke</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">Gerîna taybet bigire</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">Lê bigere an jî navnîşanê bikevê</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">Hilpekînên te yên vekirî ew ê li vir bên nîşandan.</string>
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Hilpekînên te yên taybet ew ê li vir bên nîşandan.</string>
+    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
+    <string name="default_top_site_baidu">Baidu</string>
+    <!-- Default title for pinned JD top site that links to JD home page  -->
+    <string name="default_top_site_jd">JD</string>
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 hilpekîna vekirî. Ji bo hilpekînê biguherînî, bitikîne.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s hilpekînên vekirî. Ji bo hilpekînê biguherînî, bitikîne.</string>
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d hilpekîn hatin bijartin</string>
+    <!-- Label of button in create collection dialog for creating a new collection  -->
+    <string name="tab_tray_add_new_collection">Koleksiyona nû tevlî bike</string>
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">Nav</string>
+    <!-- Label of button in save to collection dialog for selecting a current collection  -->
+    <string name="tab_tray_select_collection">Koleksiyonê hilbijêre</string>
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">Ji moda pir-bijartinê derkeve</string>
+    <!-- Content description for save to collection button while in multiselect mode in tab tray -->
+    <string name="tab_tray_collection_button_multiselect_content_description">Hilpekînên bijartî li koleksiyonê qeyd bike</string>
+    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
+    <string name="tab_tray_item_selected_multiselect_content_description">%1$s hat bijartin</string>
+
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">Bıjartina %1$s hate rakirin</string>
+    <!-- Content description announcement when exiting multiselect mode in tab tray -->
+    <string name="tab_tray_exit_multiselect_content_description">Ji moda pir-bijartinê hate derketin</string>
+
+    <!-- Content description announcement when entering multiselect mode in tab tray -->
+    <string name="tab_tray_enter_multiselect_content_description">Tu ket moda pir-bijartinê, ji bo tomarkirina li koleksiyonê hilpekînan hilbijêre</string>
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">Hate bijartin</string>
+
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s berhemeke Mozillayê ye.</string>
+
+    <!-- Private Browsing -->
+    <!-- Title for private session option -->
+    <string name="private_browsing_title">Tu di rûniştina taybet de yî.</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">
+        %1$s, dema ku te hilpekînên taybet girtin an jî tu ji sepanê derket ew ê raboriya te ya gerîn û lêgerînê ji hilpekînên taybet bên paqijkirin. Ev, rê li ber şopandina/nedîtina te ji aliyê malper û peydakerên servîsê ve nagirê lê heke hin kesên din ên vê cîhazê bi kar tînin hebin ew ê bihêle ku tu raboriya xwe ji wan veşêrî.</string>
+    <string name="private_browsing_common_myths">
+       Efsaneyên berbelav ên derbarê gerîna taybet de
+    </string>
+    <!-- Delete session button to erase your history in a private session -->
+    <string name="private_browsing_delete_session">Rûniştinê jê bibe</string>
+
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Ji bo ku tu ji ekrana xwe ya Destpêkê hilpekîneke taybet vekî, kurterêyekê tevlî bike.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">Kurterêyê tevlî bike</string>
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">Na, spas</string>
+
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">Tu dikarî Firefoxê saz bike ku girêdanan bi otomatîkî di sepanan de veke.</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Here sazkariyan</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">Bigire</string>
+
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Gihîna kamerayê hewce ye. Here sazkariyên Androidê ji beşa destûran, destûrê bide.</string>
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Here sazkariyan</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Bigire</string>
+
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Hilpekînên vekirî yên ku di ser wan re roj, hefte an jî meh derbas bûne tu dikarî wan bixweber bidî girtin.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Vebijarkan bibîne</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Bigire</string>
+
+    <!-- Text for the banner message to tell users about our grid view feature. -->
+    <string name="tab_tray_grid_view_banner_message">Tu dikarî raxistina hilpekînên vekirî biguherînî. Here sazkariyan û ji bin &quot;xuyabûna hilpekînê&quot; gridê hilbijêre.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_grid_view_banner_positive_button_text">Here sazkariyan</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_grid_view_banner_negative_button_text">Bigire</string>
+
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">Hilpekîna nû</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">Hilpekîna taybet a nû</string>
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Malperên favorî</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
+    <string name="browser_tabs_button">Hilpekînên vekirî</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">Paşve</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">Pêşve</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">Nû bike</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">Rawestîne</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_add_ons">Pêvek</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">Ti pêvek li vir tune</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">Alîkarî</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">Çi tiştên nû hene?</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">Sazkarî</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">Pirtûkxane</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">Malpera sermaseyê</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">Tevlî ekrana destpêkê bike</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">Saz bike</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Hilpekînên senkronîzekirî</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Dîsa senkronîze bike</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">Di rûpelê de bibîne</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="browser_menu_private_tab">Hilpekîna taybet</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">Li koleksiyonê tomar bike</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">Parve bike</string>
+    <!-- Share menu title, displayed when a user is sharing their current site -->
+    <string name="menu_share_with">Parve bike bi…</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">Di %1$s de veke</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">Bihêzkirin ji aliyê %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">Bihêzkirin ji aliyê %1$s</string>
+    <!-- Browser menu button to put the current page in reader mode -->
+    <string name="browser_menu_read">Moda xwînerê</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Moda xwînerê bigire</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">Di sepanê de veke</string>
+    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
+    <string name="browser_menu_read_appearance">Xuyang</string>
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">Nayê girêdan. Şemaya URLyê nayê nasîn.</string>
+
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">Zimanê hilbijartî</string>
+
+
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">Lêgerîn</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">Zimanê cîhazê</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">Li zimanan bigere</string>
+
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">Motora lêgerînê</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">Sazkariyên motora lêgerînê</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_engines_search_with">Îja ka bi vê bigere:</string>
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">Girêdanê ji panoyê bîne</string>
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">Destûrê bide</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">Destûrê nede</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">Di rûniştina taybet de bila pêşniyarên lêgerînê were pêş te?</string>
+    <!-- Search suggestion onboarding hint Learn more link text -->
+    <string name="search_suggestions_onboarding_learn_more_link">Zêdetir bizane</string>
+
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Hilpekîna nû ya Firefoxê veke</string>
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Lêgerîn</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Di web’ê de bigere</string>
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Lêgerîna dengî</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">Sazkarî</string>
+    <!-- Preference category for basic settings -->
+    <string name="preferences_category_basics">Bingeh</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Giştî</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">Derbar</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">Motora lêgerînê ya jixweber</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Lêgerîn</string>
+    <!-- Preference linking to help about Fenix -->
+    <string name="preferences_help">Alîkarî</string>
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">Li ser Google Playê puan bide</string>
+    <!-- Preference for giving feedback about Fenix -->
+    <string name="preferences_feedback">Paşragihandinê bişîne</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">Derbarê %1$s</string>
+
+
+    <!-- Preference linking to the your rights SUMO page -->
+    <string name="preferences_your_rights">Mafên te</string>
+    <!-- Preference for settings related to saved passwords -->
+    <string name="preferences_passwords">Pêborîn</string>
+    <!-- Preference for settings related to saved credit cards and addresses -->
+    <string name="preferences_credit_cards_addresses">Kartên krediyê û navnîşan</string>
+    <!-- Preference for settings related to changing the default browser -->
+    <string name="preferences_set_as_default_browser">Bike geroka sereke</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">Pêşketî</string>
+    <!-- Preference category for privacy settings -->
+    <string name="preferences_category_privacy">Nihênî</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Nihênî û ewlehî</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">Destûrên malperê</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Gerîna taybet</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Girêdanan di hilpekîna taybet de veke</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">Gihînbarî</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Servera taybet a hesabê Firefoxê</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">Hesab</string>
+    <!-- Preference shown on banner to sign into account -->
+    <string name="preferences_sign_in">Têkeve</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Rûkar</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">Serrûpel</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Taybet bike</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Hesabê Firefoxê</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">Ziman</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">Vebijarkên daneyê</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">Berhevkirina daneyan</string>
+    <!-- Preference linking to the privacy notice -->
+    <string name="preferences_privacy_link">Agahdariya nihêniyê</string>
+    <!-- Preference category for developer tools -->
+    <string name="developer_tools_category">Amûrên pêşvebirinê</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Lêgerîna dengî nîşan bide</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">Sazkariyên hesêb</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Navnîşanan bixweber dagire</string>
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Girêdanan di sepanan de veke</string>
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Pêvek</string>
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Danezan</string>
+
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Koleksiyona pêvekên taybet</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">Baş e</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Betal bike</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Navê koleksiyonê</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Xwediyê koleksiyonê (nasnameya bikarhêner)</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Pêvek nayê piştgirîkirin</string>
+
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Pêvek jixwe sazkirî ye
+</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">Aniha senkronîze bike</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">Bila çi bên senkronîzekirin, hilbijêre</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">Raborî</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Hesab</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">Hilpekînên vekirî</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">Derkeve</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">Navê cîhazê</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">Navê cîhazê nabe vala bimîne.</string>
+
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">Tê sekronîzekirin…</string>
+
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">Senkronîzekirin têk çû, Senkronîzeya dawî: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">Senkronîzekirin têk çû, Senkronîzeya dawî: tune</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">Senkronîzekirina dawî: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">Senkronîzekirina dawî: tune</string>
+
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name_2">%1$s - %2$s %3$s</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Hilpekînên hatine wergirtin</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">Hilpekîn hate wergirtin</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">Hilpekîn hatin wergirtin</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">Hilpekîna ji %s ve hat</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">Parastina ji Şopandinê</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">Parastina ji Şopandinê</string>
+
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Zêdetir bizane</string>
+
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">Telemetrî</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Daneyên bazarkirinê</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Lêkolîn</string>
+
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">Raporkera têkçûnan</string>
+
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">Xizmeta cîgehê ya Mozillayê</string>
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">Rapora tenduristiyê ya %s’ê</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string name="preferences_sync">Sync’ê veke</string>
+    <!-- Preference for account login -->
+    <string name="preferences_sync_sign_in">Têkeve</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">Hesêb rake</string>
+
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">Kamerayê veke</string>
+    <!-- Button to cancel pairing -->
+    <string name="pair_cancel">Betal</string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Li jorê</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Li jêrê</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Ronî</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Tarî</string>
+
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Rûkara cîhazê bi kar bîne</string>
+
+    <!-- Library -->
+    <!-- Option in Library to open Sessions page -->
+    <string name="library_sessions">Rûniştin</string>
+    <!-- Option in Library to open Screenshots page -->
+    <string name="library_screenshots">Wêneyên ekranê</string>
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">Daxistinên te</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">Raborî</string>
+    <!-- Option in Library to open Reading List -->
+    <string name="library_reading_list">Lîsteya xwendinê</string>
+    <!-- Menu Item Label for Search in Library -->
+    <string name="library_search">Lêgerîn</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">Sazkarî</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">Bigire</string>
+
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d hilpekîn</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d hilpekîn</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Hilpekîn</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Xuyabûna hilpekînê</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Lîste</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Grid</string>
+
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Hilpekînan bigire</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">Manûel</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">Piştî rojekê</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">Piştî hefteyekê</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">Piştî mehekê</string>
+
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Manûelê bigire</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Piştî rojekê bigire</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Piştî hefteyekê bigire</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Piştî mehekê bigire</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">Hilpekînên vekirî</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_title">Rûniştina taybet</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">Hilpekînên taybet</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">Hilpekînê tevlî bike</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Hilpekîna taybet tevlî bike</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Taybet</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">Hilpekînên vekirî</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">Li koleksiyonê tomar bike</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">Hilbijêre</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Hemû hilpekînan parve bike</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Sazkariyên hilpekînê</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Hemû hilpekînan bigire</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">Hilpekîna nû</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">Here serrûpelê</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">Bigire</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">Hilpekînan hilbijêre</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">Hilpekînê bigire</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">Hemû hilpekînan bigire</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">Hilpekînan parve bike</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection1">Hilpekînan li koleksiyonê tomar bike</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
+    <string name="tab_menu">Menûya hilpekînan</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">Hilpekînê parve bike</string>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
+    <string name="current_session_delete">Jê bibe</string>
+    <!-- Button in the current session menu. Saves the session when pressed -->
+    <string name="current_session_save">Tomar bike</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
+    <string name="current_session_share">Parve bike</string>
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">Wêneyê rûniştina niha</string>
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">Li koleksiyonê tomar bike</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">Koleksiyonê jê bibe</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">Koleksiyonê bi nav bike</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">Hilpekînan veke</string>
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Navê koleksiyonê</string>
+	<!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Nav biguherîne</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Rake</string>
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Ji raboriyê rake</string>
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (Moda Taybet)</string>
+    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
+    <string name="tab_tray_save_to_collection">Tomar bike</string>
+
+    <!-- History -->
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">Raboriyê jê bibe</string>
+    <!-- Text for the dialog to confirm clearing all history -->
+    <string name="history_delete_all_dialog">Tu bi rastî jî dixwazî raboriya xwe paqij bikî?</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Raborî hate jêbirin</string>
+
+
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">%1$s hate jêbirin</string>
+    <!-- Text for positive action to delete history in deleting history dialog -->
+    <string name="history_clear_dialog">Paqij bike</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">Kopî</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Parve bike</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">Di hilpekîna nû de veke</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">Di hilpekîna taybet de veke</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="history_delete_item">Jê bibe</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">%1$d hate bijartin</string>
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">%1$d hêmanan jê bibe</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Îro</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Doh</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">24 saetên dawî</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">7 rojên dawî</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">30 rojên dawî</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">Kevntir</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">Raborî tune</string>
+
+    <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Daxistinan jê bibe</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">Tu bi rastî jî dixwazî daxistinên xwe paqij bikî?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">Daxistin hatin rakirin</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">%1$s hate rakirin</string>
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message_1">Ti tişt nehatiye daxistin</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">Veke</string>
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Rake</string>
+
+
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">Hilpekînê bigire</string>
+
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">Peldankê tevlî bike</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">SERERAST BIKE</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">Sererast bike</string>
+    <!-- Bookmark overflow menu select button -->
+    <string name="bookmark_menu_select_button">Hilbijêre</string>
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">Kopî bike</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">Parve bike</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">Jê bibe</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Tomar bike</string>
+
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">Peldankê sererast bike</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">NAVNÎŞAN</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">PELDANK</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">NAV</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">Peldankê tevlî bike</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">Peldankê hilbijêre</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">Sernav hewce ye</string>
+
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">VEGERÎNE</string>
+
+    <!-- Site Permissions -->
+    <!-- Site permissions preferences header -->
+    <string name="permissions_header">Destûr</string>
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Here sazkariyan</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Kamera</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Mîkrofon</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Cîgeh</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Danezan</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Ji hêla Androidê ve hate astengkirin</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">Istisna</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on">Vekirî</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">Girtî</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Destûrê bide deng û vîdyoyê</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Deng û vîdyoyê tenê di daneya hucreyî de asteng bike</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Deng û vîdyo ew ê tenê di  Wi-Fi de bên vekirin</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio2">Tenê dengan asteng bike</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked3">Deng û vîdyoyê asteng bike</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Vekirî</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Girtî</string>
+
+    <!-- Collections -->
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">Koleksiyon</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">Menûya koleksiyonê</string>
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">Hilpekînan hilbijêre</string>
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">Koleksiyonê hilbijêre</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">Koleksiyonê bi nav bike</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">Koleksiyona nû tevlî bike</string>
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">Gişî hilbijêre</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">Ji bo tomarkirinê, hilpekînan hilbijêre</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">%d hilpekîn hatin bijartin</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">%d hilpekîn hate bijartin</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">Hilpekîn hatin tomarkirin!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Koleksiyon hate tomarkirin!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">Hilpekîn hate tomarkirin!</string>
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">Bigire</string>
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">Tomar bike</string>
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Bibîne</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">Koleksiyona %d</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header">Bişîne û parve bike</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">Parve bike</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Parve bike</string>
+    <!-- Sub-header in the dialog to share a link to another app -->
+    <string name="share_link_subheader">Girêdanê parve bike</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">Bişîne cîhazê</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">Hemû çalakî</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Têkeve Sync’ê</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">Ji hemû cîhazan re bişîne</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Dîsa li Sync’ê girê bide</string>
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">Derhêl</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">Cîhazeke din girê bide</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">Min fêm kir</string>
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Bişîne cîhazê</string>
+
+    <!-- Notification action to open Fenix and resume the current browsing session. -->
+    <string name="notification_pbm_action_open">Veke</string>
+    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
+    <string name="notification_pbm_action_delete_and_open">Jê bibe û veke</string>
+    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_powered_by_channel_name">Bihêzkirin ji aliyê</string>
+    <!-- Text shown in snackbar when user deletes a collection -->
+    <string name="snackbar_collection_deleted">Koleksiyon hate jêbirin</string>
+    <!-- Text shown in snackbar when user deletes a tab -->
+    <string name="snackbar_tab_deleted">Hilpekîn hate jêbirin</string>
+    <!-- Text shown in snackbar when user deletes all tabs -->
+    <string name="snackbar_tabs_deleted">Hilpekîn hatin jêbirin</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Hilpekîn hate girtin</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Hilpekîn hatin girtin</string>
+    <!-- Text shown in snackbar when user closes tabs -->
+    <string name="snackbar_message_tabs_closed">Hilpekîn hatin girtin!</string>
+    <!-- Text shown in snackbar action for viewing bookmarks -->
+    <string name="snackbar_message_bookmarks_view">Bibîne</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">Tevlî malperên favorî bû!</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Hilpekîna taybet hate girtin</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Hilpekînên taybet hatin girtin</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">Hilpekînên taybet hatin jêbirin</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">VEGERÎNE</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">Malper hate rakirin</string>
+    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_undo">Vegerîne</string>
+    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_confirm">Bipejirîne</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">BIHÊLE</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">NEHÊLE</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">Tu bi rastî jî dixwazî koleksiyana %1$s’ê were jêbirin?</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">%1$s’ê jê bibe?</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">Jê bibe</string>
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string name="tab_collection_dialog_negative">Betal bike</string>
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">URL hate kopîkirin</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">Mezinahiya fontê</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">Daneyên gerînê jê bibe</string>
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title_2">Hilpekînên vekirî</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">%d hilpekîn</string>
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">Raboriya gerînê û daneyên malperê</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d navnîşan</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Raborî</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d rûpel</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Kûkî</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Daxistinên te</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">Daneyên gerînê jê bibe</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Derkeve</string>
+
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">Betal bike</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">Jê bibe</string>
+
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">Daneyên gerînê hate jêbirin</string>
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Daneyên gerînê tên jêbirin…</string>
+
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">Firefox Preview niha bûye Firefox Nightly</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header">Tu bi xêr hatî %s’ê!</string>
+    <!-- text for the Firefox Accounts section header -->
+    <string name="onboarding_fxa_section_header">Jixwe hesabekî te heye?</string>
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">%s’ê nas bike</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">Tiştên nû bibîne</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">Bersiv li vir in</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_learn_more">Zêdetir bizane</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">Erê, têkeve</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">Dikevê…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
+    <string name="onboarding_firefox_account_sign_in">Têkeve Firefox’ê</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">Têketinê neke</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">Sync vekirî ye</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">Têketin bi ser neket</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_2">Nihêniya otomatîk</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button_2">Standard (jixweber)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">Tund (tê pêşniyarkirin)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Tund</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">Sazkariyan veke</string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">Nihêniya te</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Agahdariya me ya nihêniyê bixwîne</string>
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">Bigire</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Dest bi gerînê bike</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Rûkara xwe hilbijêre</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">Otomatîk</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">Rûkara tarî</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">Rûkara ronî</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">Hilpekîn hatin şandin!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">Hilpekîn hate şandin!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Nehate şandin</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">DÎSA BICERIBÎNE</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">Girêdanê qut bike</string>
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">Betal bike</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Paşve here</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">Mafên te</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">Di %s çi tiştên nû hene?</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | Pirtûkxaneyên OSS’ê</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">Piştgirî</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">Agahdariya nihêniyê</string>
+
+    <!-- Content description of the tab counter toolbar button when one tab is open -->
+    <string name="tab_counter_content_description_one_tab">1 hilpekîn</string>
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">%d hilpekîn</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">Kopî bike</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Bizeliqîne û here</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">Bizeliqîne</string>
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL li panoyê hate kopîkirin</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Tevlî ekrana destpêkê bike</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">Betal bike</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Tevlî bike</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Li malperê berdewam bike</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Navê kurterêyê</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Hesab û pêborîn</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Hesab û pêborînan tomar bike</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Ji bo tomarkirinê, bipirse</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Qet tomar neke</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">Bixweber dagire</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Hesaban senkronîze bike</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">Vekirî</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">Girtî</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">Dîsa girê bide</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Têkeve Sync’ê</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Hesabên tomarkirî</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Derbarê Sync’ê de agahî bistîne.</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Istisna</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Hemû istisnayan jê bibe</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Li hesaban bigere</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">Alfabetîkî</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Malper</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Navê bikarhêner</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Pêborîn</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">PIN’a xwe dîsa bikevê</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">Zêdetir bizane</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">Bila %s, vî hesabî tomar bike?</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">Tomar bike</string>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">Tomar neke</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Pêborîn li panoyê hate kopîkirin</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Navê bikarhêner li panoyê hate kopîkirin</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Malper li panoyê hate kopîkirin</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Pêborînê kopî bike</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Pêborînê paqij bike</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Navê bikarhêner kopî bike</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Navê bikarhêner paqij bike</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">Malperê kopî bike</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Malperê di gerokê de veke</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Pêborînê nîşan bide</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Pêborînê veşêre</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">ji bo hesabên xwe yên tomarkirî bibînî, kilîdê veke</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Hesab û pêborînên xwe biparêze</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">Piştre</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">Aniha saz bike</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">Kilîda cîhaza xwe rake</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">Hemû malperan nêzîk bike</string>
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Nav (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Bikaranîna dawî</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">Motora lêgerînê tevlî bike</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">Motora lêgerînê sererast bike</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">Tevlî bike</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Tomar bike</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">Sererast bike</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">Jê bibe</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">Yên din</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">Nav</string>
+    <!-- Text for the button to learn more about adding a custom search engine -->
+    <string name="search_add_custom_engine_learn_more_label">Zêdetir Bizane</string>
+
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">%s tê nûvekirin…</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">Pêborîn</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Ji bo destûrdayînê:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Here sazkariyên Androidê</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Li <b>Destûr</b>ê bitikîne]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Rewşa <b>%1$s</b>ê bike VEKIRÎ]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">Girêdana ewle</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">Girêdana neewle</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Istisnayên malperê tune</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">Gotarên Serekî</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">Tevlî malperên favorî bike</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">Piştrastkirin ji aliyê: %1$s</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">Jê bibe</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Sererast bike</string>
+
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">Tu bi rastî jî dixwazî vî hesabî jê bibî?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">Jê bibe</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Vebijarkên hesêb</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Guhertinan li hesêb tomar bike.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Guhertinan betal bike</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Sererast bike</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Pêborîn hewce ye</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Lêgerîna dengî</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Aniha bipeyive</string>
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Jixwe hesabek bi vî navê bikarhêneriyê heye</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Cîhazeke din girê bide.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Ji kerema xwe, ji nû ve têkeve.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Ji kerema xwe, senkronîzekirina hilpekînê veke.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Têkeve Sync’ê</string>
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">Hilpekînên vekirî tune</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Gihîşte sînorê malperên favorî</string>
+
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">Baş e</string>
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Nav</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">Navê malpera favorî</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">Baş e</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Betal bike</string>
+
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Rake</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Ji bo agahiyên zêdetir, bitikîne</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">Tiştên ku ji te re girîng in berhev bike</string>
+    </resources>

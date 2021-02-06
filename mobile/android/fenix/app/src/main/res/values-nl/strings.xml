@@ -1129,8 +1129,9 @@
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header">Firefox Preview is nu Firefox Nightly</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description">Firefox Nightly wordt elke nacht bijgewerkt en heeft experimentele nieuwe functies.
-        Het is echter mogelijk minder stabiel. Download onze bètabrowser voor een meer stabiele ervaring.</string>
+    <string name="tip_firefox_preview_moved_description">
+        Firefox Nightly wordt elke nacht bijgewerkt en heeft experimentele nieuwe functies.
+        Het is echter mogelijk minder stabiel. Download onze betabrowser voor een meer stabiele ervaring.</string>
 
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_button_2">Download Firefox voor Android Beta</string>
