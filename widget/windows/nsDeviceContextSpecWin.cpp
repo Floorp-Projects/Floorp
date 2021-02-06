@@ -247,7 +247,7 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget() {
     // convert twips to points
     width /= TWIPS_PER_POINT_FLOAT;
     height /= TWIPS_PER_POINT_FLOAT;
-    IntSize size = IntSize::Truncate(width, height);
+    IntSize size = IntSize::Ceil(width, height);
 
     if (mOutputFormat == nsIPrintSettings::kOutputFormatPDF) {
       nsString filename;
@@ -307,8 +307,7 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget() {
       return nullptr;
     }
 
-    return PrintTargetPDF::CreateOrNull(stream,
-                                        IntSize::Truncate(width, height));
+    return PrintTargetPDF::CreateOrNull(stream, IntSize::Ceil(width, height));
   }
 
   if (mDevMode) {
