@@ -92,8 +92,9 @@ void swgl_drawSpanRGBA8() {
 #ifdef WR_FEATURE_ALPHA_PASS
     if (has_valid_transform_bounds()) {
         // If there is a transform, need to anti-alias the result.
+        float aa_range = compute_aa_range(v_local_pos);
         while (swgl_SpanLength > 0) {
-            float alpha = init_transform_fs(v_local_pos);
+            float alpha = init_transform_fs_noperspective(v_local_pos, aa_range);
             v_local_pos += swgl_interpStep(v_local_pos);
             float offset = get_gradient_offset();
             // Handle both repeating and clamped gradients.
