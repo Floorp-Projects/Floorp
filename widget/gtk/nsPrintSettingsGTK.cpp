@@ -578,11 +578,19 @@ nsPrintSettingsGTK::SetPaperSizeUnit(int16_t aPaperSizeUnit) {
 NS_IMETHODIMP
 nsPrintSettingsGTK::GetEffectivePageSize(double* aWidth, double* aHeight) {
   GtkPaperSize* paperSize = gtk_page_setup_get_paper_size(mPageSetup);
-  *aWidth = NS_INCHES_TO_INT_TWIPS(
-      gtk_paper_size_get_width(paperSize, GTK_UNIT_INCH));
-  *aHeight = NS_INCHES_TO_INT_TWIPS(
-      gtk_paper_size_get_height(paperSize, GTK_UNIT_INCH));
-
+  if (mPaperSizeUnit == kPaperSizeInches) {
+    *aWidth =
+        NS_INCHES_TO_TWIPS(gtk_paper_size_get_width(paperSize, GTK_UNIT_INCH));
+    *aHeight =
+        NS_INCHES_TO_TWIPS(gtk_paper_size_get_height(paperSize, GTK_UNIT_INCH));
+  } else {
+    MOZ_ASSERT(mPaperSizeUnit == kPaperSizeMillimeters,
+               "unexpected paper size unit");
+    *aWidth = NS_MILLIMETERS_TO_TWIPS(
+        gtk_paper_size_get_width(paperSize, GTK_UNIT_MM));
+    *aHeight = NS_MILLIMETERS_TO_TWIPS(
+        gtk_paper_size_get_height(paperSize, GTK_UNIT_MM));
+  }
   GtkPageOrientation gtkOrient = gtk_page_setup_get_orientation(mPageSetup);
 
   if (gtkOrient == GTK_PAGE_ORIENTATION_LANDSCAPE ||

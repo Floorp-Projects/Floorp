@@ -283,7 +283,7 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecX::MakePrintTarget() {
   GetPaperRect(&top, &left, &bottom, &right);
   const double width = right - left;
   const double height = bottom - top;
-  IntSize size = IntSize::Floor(width, height);
+  IntSize size = IntSize::Ceil(width, height);
 
 #ifdef MOZ_ENABLE_SKIA_PDF
   if (mPrintViaSkPDF) {
