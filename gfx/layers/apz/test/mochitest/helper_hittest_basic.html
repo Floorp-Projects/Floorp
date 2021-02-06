@@ -24,12 +24,18 @@ async function test() {
   var scroller = document.getElementById("scroller");
   var apzaware = document.getElementById("apzaware");
 
+  let expectedHitInfo = APZHitResultFlags.VISIBLE;
+  if (config.isWebRender) {
+    if (!config.activateAllScrollFrames) {
+      expectedHitInfo |= APZHitResultFlags.INACTIVE_SCROLLFRAME;
+    }
+  } else {
+    expectedHitInfo |= APZHitResultFlags.IRREGULAR_AREA;
+  }
   checkHitResult(hitTest(centerOf(scroller)),
-                 APZHitResultFlags.VISIBLE |
-                 (config.isWebRender ? 0
-                                     : APZHitResultFlags.IRREGULAR_AREA),
-                 (config.isWebRender ? utils.getViewId(scroller)
-                                     : utils.getViewId(document.scrollingElement)),
+                 expectedHitInfo,
+                 (config.activateAllScrollFrames ? utils.getViewId(scroller)
+                                                 : utils.getViewId(document.scrollingElement)),
                  utils.getLayersId(),
                  "inactive scrollframe");
 

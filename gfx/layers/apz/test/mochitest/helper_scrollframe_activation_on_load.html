@@ -47,11 +47,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
 
       // The apzc tree for this page should consist of a single root APZC,
       // which either is the RCD with no child APZCs (e10s/B2G case) or has a
-      // single child APZC which is for the RCD (fennec case). With WR enabled
-      // we activate scrollframes anyway, so we expect there to be a child.
+      // single child APZC which is for the RCD (fennec case). If we activate
+      // all scrollframes then we expect there to be a child.
       var rcd = findRcdNode(apzcTree);
       ok(rcd != null, "found the RCD node");
-      if (getHitTestConfig().isWebRender) {
+      if (getHitTestConfig().activateAllScrollFrames) {
         is(rcd.children.length, 1, "expected one child on the RCD");
       } else {
         is(rcd.children.length, 0, "expected no children on the RCD");
