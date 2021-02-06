@@ -3083,28 +3083,6 @@ struct ContainerTracker {
   bool mCreatedContainer = false;
 };
 
-/**
- * Adds hit test information |aHitTestInfo| on the container item |aContainer|,
- * or if the container item is null, creates a separate hit test item that is
- * added to the bottom of the display list |aList|.
- */
-static void AddHitTestInfo(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
-                           nsDisplayItem* aContainer, nsIFrame* aFrame,
-                           mozilla::UniquePtr<HitTestInfo>&& aHitTestInfo) {
-  nsDisplayHitTestInfoBase* hitTestItem;
-
-  if (aContainer) {
-    MOZ_ASSERT(aContainer->IsHitTestItem());
-    hitTestItem = static_cast<nsDisplayHitTestInfoBase*>(aContainer);
-    hitTestItem->SetHitTestInfo(std::move(aHitTestInfo));
-  } else {
-    // No container item was created for this frame. Create a separate
-    // nsDisplayCompositorHitTestInfo item instead.
-    aList->AppendNewToBottom<nsDisplayCompositorHitTestInfo>(
-        aBuilder, aFrame, std::move(aHitTestInfo));
-  }
-}
-
 void nsIFrame::BuildDisplayListForStackingContext(
     nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
     bool* aCreatedContainerItem) {
@@ -3442,24 +3420,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
     }
 
     aBuilder->AdjustWindowDraggingRegion(this);
-
-    if (gfxVars::UseWebRender()) {
-      aBuilder->BuildCompositorHitTestInfoIfNeeded(this, set.BorderBackground(),
-                                                   true);
-    } else {
-      CompositorHitTestInfo info = aBuilder->BuildCompositorHitTestInfo()
-                                       ? GetCompositorHitTestInfo(aBuilder)
-                                       : CompositorHitTestInvisibleToHit;
-
-      if (info != CompositorHitTestInvisibleToHit) {
-        // Frame has hit test flags set, initialize the hit test info structure.
-        hitTestInfo = mozilla::MakeUnique<HitTestInfo>(aBuilder, this, info);
-
-        // Let child frames know the current hit test area and hit test flags.
-        aBuilder->SetCompositorHitTestInfo(hitTestInfo->mArea,
-                                           hitTestInfo->mFlags);
-      }
-    }
+    aBuilder->BuildCompositorHitTestInfoIfNeeded(this, set.BorderBackground(),
+                                                 true);
 
     MarkAbsoluteFramesForDisplayList(aBuilder);
     aBuilder->Check();
@@ -3832,13 +3794,6 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
   if (aCreatedContainerItem) {
     *aCreatedContainerItem = ct.mCreatedContainer;
-  }
-
-  if (hitTestInfo) {
-    // WebRender support is not yet implemented.
-    MOZ_ASSERT(!gfxVars::UseWebRender());
-    AddHitTestInfo(aBuilder, &resultList, ct.mContainer, this,
-                   std::move(hitTestInfo));
   }
 
   aList->AppendToTop(&resultList);
