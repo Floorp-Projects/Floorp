@@ -77,10 +77,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1689492
       ok(innerdp.h > 30, outputprefix + " innerdiv display port should be larger than innerdiv");
 
       let outerdp = getLastContentDisplayportFor("outerdiv");
-      is(outerdp.x, 0, outputprefix + " outerdiv display port should zero margin x");
-      is(outerdp.y, 0, outputprefix + " outerdiv display port should zero margin y");
-      is(outerdp.w, 50, outputprefix + " outerdiv display port should zero margin w");
-      ok(outerdp.h < theheight * allowedscalefactor, outputprefix + " outerdiv display port should zero margin h");
+      is(outerdp.x, 0, outputprefix + " outerdiv display port should be relatively bounded x");
+      is(outerdp.y, 0, outputprefix + " outerdiv display port should be relatively bounded y");
+      ok(outerdp.w <= 50, outputprefix + " outerdiv display port should relatively bounded w");
+      ok(outerdp.h < theheight * allowedscalefactor, outputprefix + " outerdiv display port should be relatively bounded h");
 
       ok(true, "innerdp " + JSON.stringify(innerdp));
       ok(true, "outerdp " + JSON.stringify(outerdp));
