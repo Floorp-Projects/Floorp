@@ -19,7 +19,7 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     DIRS += []
 else:
-    DIRS += ["emacs"]
+    DIRS += []
 
 BROWSER_CHROME_MANIFESTS += [
     "test/browser.ini",
