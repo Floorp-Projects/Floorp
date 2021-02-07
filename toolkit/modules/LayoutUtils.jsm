@@ -10,29 +10,17 @@ var EXPORTED_SYMBOLS = ["LayoutUtils"];
 var LayoutUtils = {
   /**
    * For a given DOM element, returns its position in "screen"
-   * coordinates. In a content process, the coordinates returned will
-   * be relative to the left/top of the tab. In the chrome process,
-   * the coordinates are relative to the user's screen.
+   * coordinates.
    */
   getElementBoundingScreenRect(aElement) {
-    return this.getElementBoundingRect(aElement, true);
-  },
-
-  /**
-   * For a given DOM element, returns its position as an offset from the topmost
-   * window. In a content process, the coordinates returned will be relative to
-   * the left/top of the topmost content area. If aInScreenCoords is true,
-   * screen coordinates will be returned instead.
-   */
-  getElementBoundingRect(aElement, aInScreenCoords) {
     let rect = aElement.getBoundingClientRect();
     let win = aElement.ownerGlobal;
 
     let x = rect.left;
     let y = rect.top;
 
-    // We need to compensate for any iframes that might shift things
-    // over. We also need to compensate for zooming.
+    // We need to compensate for ancestor iframes in the same process
+    // that might shift things over.
     let parentFrame = win.frameElement;
     while (parentFrame) {
       win = parentFrame.ownerGlobal;
@@ -51,36 +39,11 @@ var LayoutUtils = {
       parentFrame = win.frameElement;
     }
 
-    rect = {
-      left: x,
-      top: y,
-      width: rect.width,
-      height: rect.height,
-    };
-    rect = win.windowUtils.transformRectLayoutToVisual(
-      rect.left,
-      rect.top,
+    return aElement.ownerGlobal.windowUtils.toScreenRect(
+      x,
+      y,
       rect.width,
       rect.height
     );
-
-    if (aInScreenCoords) {
-      rect = {
-        left: rect.left + win.mozInnerScreenX,
-        top: rect.top + win.mozInnerScreenY,
-        width: rect.width,
-        height: rect.height,
-      };
-    }
-
-    let fullZoom = win.windowUtils.fullZoom;
-    rect = {
-      left: rect.left * fullZoom,
-      top: rect.top * fullZoom,
-      width: rect.width * fullZoom,
-      height: rect.height * fullZoom,
-    };
-
-    return rect;
   },
 };
