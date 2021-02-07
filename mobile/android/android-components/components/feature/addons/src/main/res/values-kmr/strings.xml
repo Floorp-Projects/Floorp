@@ -21,9 +21,9 @@
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Girtî</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
-    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Di gerîna taybet de destûrê bide</string>
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Di gerîna veşartî de destûrê bide</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
-    <string name="mozac_feature_addons_settings_run_in_private_browsing">Di gerîna taybet de bixebitîne</string>
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">Di gerîna veşartî de bixebitîne</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Çalak</string>
     <!-- Indicates the add-on is disabled. -->

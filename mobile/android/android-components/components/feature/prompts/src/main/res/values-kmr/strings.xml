@@ -4,6 +4,10 @@
     <string name="mozac_feature_prompts_ok">Baş e</string>
     <!-- Text for confirmation for a negative action in dialog.  -->
     <string name="mozac_feature_prompts_cancel">Betal bike</string>
+    <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
+    <string name="mozac_feature_prompts_no_more_dialogs">Nehêle ku ev malper diyalogên ekstra çêbike</string>
+    <!-- Text for a positive button, when an user selects a date in date/time picker. -->
+    <string name="mozac_feature_prompts_set_date">Saz bike</string>
     <!-- Text for a button that clears the selected input in the date/time picker. -->
     <string name="mozac_feature_prompts_clear">Paqij bike</string>
     <!-- Text for the title of an authentication dialog. -->
@@ -33,6 +37,9 @@
     <string name="mozac_feature_prompt_login_update_headline">Vî hesabî nûve bike?</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_add_username_headline">Navê bikarhêner tevlî pêborîna tomarkirî bike?</string>
+    <!-- Text for a label for the field when prompt requesting a text is shown. -->
+    <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
+    <string name="mozac_feature_prompts_content_description_input_label">Etîketa qada nivîsîna metinê</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">Rengekî hilbijêre</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
@@ -49,14 +56,30 @@
     <string name="mozac_feature_prompts_before_unload_leave">Derkeve</string>
     <!-- Title of the month chooser dialog. -->
     <string name="mozac_feature_prompts_set_month">Mehekê hilbijêre</string>
+    <!-- January (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jan">Rêb</string>
+    <!-- February month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_feb">Sib</string>
+    <!-- March month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_mar">Ada</string>
+    <!-- April month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_apr">Nîs</string>
     <!-- May month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_may">Gul</string>
+    <!-- June month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jun">Hez</string>
     <!-- July month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_jul">Tîr</string>
+    <!-- August month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_aug">Teb</string>
     <!-- September month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_sep">Îlo</string>
     <!-- October month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_oct">Cot</string>
+    <!-- November month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_nov">Mij</string>
+    <!-- December month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_dec">Ber</string>
     <!-- Option in expanded select login prompt that links to login settings -->
     <string name="mozac_feature_prompts_manage_logins">Hesaban birêve bibe</string>
 
@@ -69,6 +92,7 @@
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">Daneyan dîsa ji vê malperê re bişîne?</string>
+    <string name="mozac_feature_prompt_repost_message">Nûkirina vê rûpelê, dibe ku kirinên vê dawiyê ducar bike. (wekî; şandina pereyan an jî şandina şîroveyekê)</string>
     <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
     <string name="mozac_feature_prompt_repost_positive_button_text">Daneyan dîsa bişîne</string>
     <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
