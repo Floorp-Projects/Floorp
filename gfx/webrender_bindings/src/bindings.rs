@@ -38,7 +38,8 @@ use webrender::{
     CompositorCapabilities, CompositorConfig, CompositorSurfaceTransform, DebugFlags, Device, NativeSurfaceId,
     NativeSurfaceInfo, NativeTileId, PartialPresentCompositor, PipelineInfo, ProfilerHooks, RecordedFrameHandle,
     Renderer, RendererOptions, RendererStats, SceneBuilderHooks, ShaderPrecacheFlags, Shaders, SharedShaders,
-    TextureCacheConfig, UploadMethod, ONE_TIME_USAGE_HINT, host_utils::{thread_started, thread_stopped}
+    TextureCacheConfig, UploadMethod, ONE_TIME_USAGE_HINT, host_utils::{thread_started, thread_stopped},
+    MappableCompositor, MappedTileInfo,
 };
 use wr_malloc_size_of::MallocSizeOfOps;
 
@@ -1384,31 +1385,12 @@ impl Compositor for WrCompositor {
     }
 }
 
-pub struct WrPartialPresentCompositor(*mut c_void);
-
-impl PartialPresentCompositor for WrPartialPresentCompositor {
-    fn set_buffer_damage_region(&mut self, rects: &[DeviceIntRect]) {
-        unsafe {
-            wr_partial_present_compositor_set_buffer_damage_region(self.0, rects.as_ptr(), rects.len());
-        }
-    }
-}
-
-/// Information about the underlying data buffer of a mapped tile.
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct MappedTileInfo {
-    pub data: *mut c_void,
-    pub stride: i32,
-}
-
-/// WrCompositor-specific extensions to the basic Compositor interface.
-impl WrCompositor {
+impl MappableCompositor for WrCompositor {
     /// Map a tile's underlying buffer so it can be used as the backing for
     /// a SWGL framebuffer. This is intended to be a replacement for 'bind'
     /// in any compositors that intend to directly interoperate with SWGL
     /// while supporting some form of native layers.
-    pub fn map_tile(
+    fn map_tile(
         &mut self,
         id: NativeTileId,
         dirty_rect: DeviceIntRect,
@@ -1439,9 +1421,19 @@ impl WrCompositor {
 
     /// Unmap a tile that was was previously mapped via map_tile to signal
     /// that SWGL is done rendering to the buffer.
-    pub fn unmap_tile(&mut self) {
+    fn unmap_tile(&mut self) {
         unsafe {
             wr_compositor_unmap_tile(self.0);
+        }
+    }
+}
+
+pub struct WrPartialPresentCompositor(*mut c_void);
+
+impl PartialPresentCompositor for WrPartialPresentCompositor {
+    fn set_buffer_damage_region(&mut self, rects: &[DeviceIntRect]) {
+        unsafe {
+            wr_partial_present_compositor_set_buffer_damage_region(self.0, rects.as_ptr(), rects.len());
         }
     }
 }
@@ -1554,7 +1546,7 @@ pub extern "C" fn wr_window_new(
             compositor: Box::new(SwCompositor::new(
                 sw_gl.unwrap(),
                 native_gl,
-                WrCompositor(compositor),
+                Box::new(WrCompositor(compositor)),
                 use_native_compositor,
             )),
         }
