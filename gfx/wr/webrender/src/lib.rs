@@ -88,6 +88,7 @@ mod clip;
 mod space;
 mod spatial_tree;
 mod composite;
+mod compositor;
 mod debug_colors;
 mod debug_font_data;
 mod debug_item;
@@ -237,3 +238,6 @@ pub use crate::picture::{TileNode, TileNodeKind, TileSerializer, TileCacheInstan
 pub use crate::intern::ItemUid;
 pub use crate::render_api::*;
 pub use crate::tile_cache::{PictureCacheDebugInfo, DirtyTileDebugInfo, TileDebugInfo, SliceDebugInfo};
+
+#[cfg(feature = "sw_compositor")]
+pub use crate::compositor::sw_compositor;
