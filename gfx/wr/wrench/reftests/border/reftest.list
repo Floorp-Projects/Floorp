@@ -22,7 +22,7 @@ platform(linux,mac) == border-image-round.yaml border-image-round-ref.png
 == border-image-crash.yaml border-image-crash-ref.yaml
 fuzzy(1,5000) == border-image-fill.yaml border-image-fill-ref.png
 fuzzy(2,25360) == border-image-fill-2.yaml border-image-fill-2-ref.png
-== border-no-bogus-line.yaml border-no-bogus-line-ref.png
+fuzzy-if(platform(swgl),1,8) == border-no-bogus-line.yaml border-no-bogus-line-ref.png
 platform(linux,mac) fuzzy(1,130) == dotted-corner-small-radius.yaml dotted-corner-small-radius.png
 fuzzy-if(platform(swgl),1,20) == overlapping.yaml overlapping.png
 == zero-width.yaml blank.yaml
