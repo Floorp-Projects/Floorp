@@ -263,6 +263,23 @@ ShortcutKeyData ShortcutKeys::sTextAreaHandlers[] = {
     {u"keypress", u"VK_RIGHT", nullptr, u"shift,alt", u"cmd_selectEndLine"},    // Android
 #endif // MOZ_WIDGET_ANDROID
 
+    /**************************************************************************
+     * PageUp/PageDown keys in <textarea>.
+     **************************************************************************/
+#if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID) ||\
+    defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,      u"cmd_movePageUp"},      // Win, Android, Emacs
+    {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,      u"cmd_movePageDown"},    // Win, Android, Emacs
+    {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",     u"cmd_selectPageUp"},    // Win, Android, Emacs
+    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift",     u"cmd_selectPageDown"},  // Win, Android, Emacs
+#endif  // XP_WIN || MOZ_WIDGET_ANDROID || USE_EMACS_KEY_BINDINGS
+#if defined(MOZ_WIDGET_ANDROID)
+    {u"keypress", u"VK_PAGE_UP",   nullptr, u"alt",       u"cmd_moveTop"},         // Android
+    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"alt",       u"cmd_moveBottom"},      // Android
+    {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift,alt", u"cmd_selectTop"},       // Android
+    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift,alt", u"cmd_selectBottom"},    // Android
+#endif  // MOZ_WIDGET_ANDROID
+
 
 #if defined(USE_EMACS_KEY_BINDINGS)
     {u"keypress", u"VK_DELETE",    nullptr, u"shift",          u"cmd_cutOrDelete"},              // Emacs
@@ -277,21 +294,9 @@ ShortcutKeyData ShortcutKeys::sTextAreaHandlers[] = {
     {u"keypress", u"VK_END",       nullptr, u"control",        u"cmd_moveBottom"},               // Emacs
     {u"keypress", u"VK_HOME",      nullptr, u"shift,control",  u"cmd_selectTop"},                // Emacs
     {u"keypress", u"VK_END",       nullptr, u"shift,control",  u"cmd_selectBottom"},             // Emacs
-    {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,           u"cmd_movePageUp"},               // Emacs
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_movePageDown"},             // Emacs
-    {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",          u"cmd_selectPageUp"},             // Emacs
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift",          u"cmd_selectPageDown"},           // Emacs
     {u"keypress", u"VK_BACK",      nullptr, u"control",        u"cmd_deleteWordBackward"},       // Emacs
 #endif  // USE_EMACS_KEY_BINDINGS
 #if defined(MOZ_WIDGET_ANDROID)
-    {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,           u"cmd_movePageUp"},               // Android
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_movePageDown"},             // Android
-    {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",          u"cmd_selectPageUp"},             // Android
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift",          u"cmd_selectPageDown"},           // Android
-    {u"keypress", u"VK_PAGE_UP",   nullptr, u"alt",            u"cmd_moveTop"},                  // Android
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"alt",            u"cmd_moveBottom"},               // Android
-    {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift,alt",      u"cmd_selectTop"},                // Android
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift,alt",      u"cmd_selectBottom"},             // Android
     {u"keypress", u"VK_HOME",      nullptr, nullptr,           u"cmd_beginLine"},                // Android
     {u"keypress", u"VK_END",       nullptr, nullptr,           u"cmd_endLine"},                  // Android
     {u"keypress", u"VK_HOME",      nullptr, u"shift",          u"cmd_selectBeginLine"},          // Android
@@ -314,10 +319,6 @@ ShortcutKeyData ShortcutKeys::sTextAreaHandlers[] = {
     {u"keypress", u"VK_END",       nullptr, u"shift,control",  u"cmd_selectBottom"},             // Win
     {u"keypress", u"VK_HOME",      nullptr, u"control",        u"cmd_moveTop"},                  // Win
     {u"keypress", u"VK_END",       nullptr, u"control",        u"cmd_moveBottom"},               // Win
-    {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,           u"cmd_movePageUp"},               // Win
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_movePageDown"},             // Win
-    {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",          u"cmd_selectPageUp"},             // Win
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift",          u"cmd_selectPageDown"},           // Win
     {u"keypress", u"VK_DELETE",    nullptr, u"shift",          u"cmd_cutOrDelete"},              // Win
     {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_deleteWordForward"},        // Win
     {u"keypress", u"VK_INSERT",    nullptr, u"control",        u"cmd_copy"},                     // Win
@@ -455,18 +456,33 @@ ShortcutKeyData ShortcutKeys::sBrowserHandlers[] = {
     {u"keypress", u"VK_RIGHT", nullptr, u"shift,alt", u"cmd_selectEndLine"},    // Android
 #endif  // MOZ_WIDGET_ANDROID
 
+    /**************************************************************************
+     * PageUp/PageDown keys in non-editable element.
+     **************************************************************************/
+#if defined(MOZ_WIDGET_COCOA)
+    {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,      u"cmd_scrollPageUp"},    // macOS
+    {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,      u"cmd_scrollPageDown"},  // macOS
+#endif  // MOZ_WIDGET_COCOA
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) ||\
+    defined(MOZ_WIDGET_ANDROID) || defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,      u"cmd_movePageUp"},      // Win, Linux, Android, Emacs
+    {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,      u"cmd_movePageDown"},    // Win, Linux, Android, Emacs
+    {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",     u"cmd_selectPageUp"},    // Win, Linux, Android, Emacs
+    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift",     u"cmd_selectPageDown"},  // Win, Linux, Android, Emacs
+#endif  // XP_WIN || MOZ_WIDGET_GTK || MOZ_WIDGET_ANDROID || USE_EMACS_KEY_BINDINGS
+#if defined(MOZ_WIDGET_ANDROID)
+    {u"keypress", u"VK_PAGE_UP",   nullptr, u"alt",       u"cmd_moveTop"},         // Android
+    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"alt",       u"cmd_moveBottom"},      // Android
+    {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift,alt", u"cmd_selectTop"},       // Android
+    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift,alt", u"cmd_selectBottom"},    // Android
+#endif  // MOZ_WIDGET_ANDROID
+
 
 #if defined(MOZ_WIDGET_COCOA)
-    {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,           u"cmd_scrollPageUp"},             // macOS
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_scrollPageDown"},           // macOS
     {u"keypress", u"VK_HOME",      nullptr, nullptr,           u"cmd_scrollTop"},                // macOS
     {u"keypress", u"VK_END",       nullptr, nullptr,           u"cmd_scrollBottom"},             // macOS
 #endif  // MOZ_WIDGET_COCOA
 #if defined(USE_EMACS_KEY_BINDINGS)
-    {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,           u"cmd_movePageUp"},               // Emacs
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_movePageDown"},             // Emacs
-    {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",          u"cmd_selectPageUp"},             // Emacs
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift",          u"cmd_selectPageDown"},           // Emacs
     {u"keypress", u"VK_DELETE",    nullptr, u"shift",          u"cmd_cut"},                      // Emacs
     {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_copy"},                     // Emacs
     {u"keypress", u"VK_INSERT",    nullptr, u"control",        u"cmd_copy"},                     // Emacs
@@ -480,14 +496,6 @@ ShortcutKeyData ShortcutKeys::sBrowserHandlers[] = {
     {u"keypress", u"VK_END",       nullptr, u"shift",          u"cmd_selectEndLine"},            // Emacs
 #endif  // USE_EMACS_KEY_BINDINGS
 #if defined(MOZ_WIDGET_ANDROID)
-    {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,           u"cmd_movePageUp"},               // Android
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_movePageDown"},             // Android
-    {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",          u"cmd_selectPageUp"},             // Android
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift",          u"cmd_selectPageDown"},           // Android
-    {u"keypress", u"VK_PAGE_UP",   nullptr, u"alt",            u"cmd_moveTop"},                  // Android
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"alt",            u"cmd_moveBottom"},               // Android
-    {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift,alt",      u"cmd_selectTop"},                // Android
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift,alt",      u"cmd_selectBottom"},             // Android
     {u"keypress", u"VK_HOME",      nullptr, nullptr,           u"cmd_beginLine"},                // Android
     {u"keypress", u"VK_END",       nullptr, nullptr,           u"cmd_endLine"},                  // Android
     {u"keypress", u"VK_HOME",      nullptr, u"shift",          u"cmd_selectBeginLine"},          // Android
@@ -502,10 +510,6 @@ ShortcutKeyData ShortcutKeys::sBrowserHandlers[] = {
     {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_deleteWordForward"},        // Android
 #endif  // MOZ_WIDGET_ANDROID
 #if defined(MOZ_WIDGET_GTK)
-    {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,           u"cmd_movePageUp"},               // Linux
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_movePageDown"},             // Linux
-    {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",          u"cmd_selectPageUp"},             // Linux
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift",          u"cmd_selectPageDown"},           // Linux
     {u"keypress", u"VK_DELETE",    nullptr, u"shift",          u"cmd_cut"},                      // Linux
     {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_copy"},                     // Linux
     {u"keypress", u"VK_INSERT",    nullptr, u"control",        u"cmd_copy"},                     // Linux
@@ -519,10 +523,6 @@ ShortcutKeyData ShortcutKeys::sBrowserHandlers[] = {
     {u"keypress", u"VK_END",       nullptr, u"shift,control",  u"cmd_selectBottom"},             // Linux
 #endif  // MOZ_WIDGET_GTK
 #if defined(XP_WIN)
-    {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,           u"cmd_movePageUp"},               // Win
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_movePageDown"},             // Win
-    {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",          u"cmd_selectPageUp"},             // Win
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift",          u"cmd_selectPageDown"},           // Win
     {u"keypress", u"VK_DELETE",    nullptr, u"shift",          u"cmd_cut"},                      // Win
     {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_deleteWordForward"},        // Win
     {u"keypress", u"VK_INSERT",    nullptr, u"control",        u"cmd_copy"},                     // Win
@@ -623,6 +623,23 @@ ShortcutKeyData ShortcutKeys::sEditorHandlers[] = {
     {u"keypress", u"VK_RIGHT", nullptr, u"shift,alt", u"cmd_selectEndLine"},    // Android
 #endif  // MOZ_WIDGET_ANDROID
 
+    /**************************************************************************
+     * PageUp/PageDown keys in HTMLEditor.
+     **************************************************************************/
+#if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID) ||\
+    defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,      u"cmd_movePageUp"},      // Win, Android, Emacs
+    {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,      u"cmd_movePageDown"},    // Win, Android, Emacs
+    {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",     u"cmd_selectPageUp"},    // Win, Android, Emacs
+    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift",     u"cmd_selectPageDown"},  // Win, Android, Emacs
+#endif  // XP_WIN || MOZ_WIDGET_ANDROID || USE_EMACS_KEY_BINDINGS
+#if defined(MOZ_WIDGET_ANDROID)
+    {u"keypress", u"VK_PAGE_UP",   nullptr, u"alt",       u"cmd_moveTop"},         // Android
+    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"alt",       u"cmd_moveBottom"},      // Android
+    {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift,alt", u"cmd_selectTop"},       // Android
+    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift,alt", u"cmd_selectBottom"},    // Android
+#endif  // MOZ_WIDGET_ANDROID
+
 
 #if defined(USE_EMACS_KEY_BINDINGS)
     {u"keypress", u"VK_DELETE",    nullptr, u"shift",          u"cmd_cutOrDelete"},              // Emacs
@@ -638,20 +655,8 @@ ShortcutKeyData ShortcutKeys::sEditorHandlers[] = {
     {u"keypress", u"VK_END",       nullptr, u"shift,control",  u"cmd_selectBottom"},             // Emacs
     {u"keypress", u"VK_HOME",      nullptr, u"control",        u"cmd_moveTop"},                  // Emacs
     {u"keypress", u"VK_END",       nullptr, u"control",        u"cmd_moveBottom"},               // Emacs
-    {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,           u"cmd_movePageUp"},               // Emacs
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_movePageDown"},             // Emacs
-    {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",          u"cmd_selectPageUp"},             // Emacs
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift",          u"cmd_selectPageDown"},           // Emacs
 #endif  // USE_EMACS_KEY_BINDINGS
 #if defined(MOZ_WIDGET_ANDROID)
-    {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,           u"cmd_movePageUp"},               // Android
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_movePageDown"},             // Android
-    {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",          u"cmd_selectPageUp"},             // Android
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift",          u"cmd_selectPageDown"},           // Android
-    {u"keypress", u"VK_PAGE_UP",   nullptr, u"alt",            u"cmd_moveTop"},                  // Android
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"alt",            u"cmd_moveBottom"},               // Android
-    {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift,alt",      u"cmd_selectTop"},                // Android
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift,alt",      u"cmd_selectBottom"},             // Android
     {u"keypress", u"VK_HOME",      nullptr, nullptr,           u"cmd_beginLine"},                // Android
     {u"keypress", u"VK_END",       nullptr, nullptr,           u"cmd_endLine"},                  // Android
     {u"keypress", u"VK_HOME",      nullptr, u"shift",          u"cmd_selectBeginLine"},          // Android
@@ -681,10 +686,6 @@ ShortcutKeyData ShortcutKeys::sEditorHandlers[] = {
     {u"keypress", u"VK_END",       nullptr, nullptr,           u"cmd_endLine"},                  // Win
     {u"keypress", u"VK_HOME",      nullptr, u"shift",          u"cmd_selectBeginLine"},          // Win
     {u"keypress", u"VK_END",       nullptr, u"shift",          u"cmd_selectEndLine"},            // Win
-    {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,           u"cmd_movePageUp"},               // Win
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_movePageDown"},             // Win
-    {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",          u"cmd_selectPageUp"},             // Win
-    {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift",          u"cmd_selectPageDown"},           // Win
 #endif  // XP_WIN
 
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || \
