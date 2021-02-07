@@ -15,7 +15,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     DIRS += ["mac"]
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
-    DIRS += ["android"]
+    DIRS += []
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     DIRS += []
 else:
