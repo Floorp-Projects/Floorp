@@ -3,14 +3,18 @@
 
 "use strict";
 
+function getSheetCount(el) {
+  return el.ownerDocument.l10n.getAttributes(el).args.sheetCount;
+}
+
 add_task(async function testSheetCount() {
   await PrintHelper.withTestPage(async helper => {
     await helper.startPrint();
 
-    let sheetCountElement = helper.get("sheet-count");
-    let { id } = helper.doc.l10n.getAttributes(sheetCountElement);
+    let sheetCount = helper.get("sheet-count");
+    let { id } = helper.doc.l10n.getAttributes(sheetCount);
     is(id, "printui-sheets-count", "The l10n id is correct");
-    let initialSheetCount = helper.sheetCount;
+    let initialSheetCount = getSheetCount(sheetCount);
     ok(initialSheetCount >= 1, "There is an initial sheet count");
 
     await helper.openMoreSettings();
@@ -21,7 +25,7 @@ add_task(async function testSheetCount() {
     let percentScale = helper.get("percent-scale");
     await helper.waitForPreview(() => helper.text(percentScale, "200"));
 
-    let zoomedSheetCount = helper.sheetCount;
+    let zoomedSheetCount = getSheetCount(sheetCount);
     ok(zoomedSheetCount > initialSheetCount, "The sheet count increased");
 
     // Since we're using the Save to PDF printer, the numCopies element should
@@ -32,7 +36,7 @@ add_task(async function testSheetCount() {
       numCopies: 4,
     });
     is(
-      helper.sheetCount,
+      getSheetCount(sheetCount),
       zoomedSheetCount,
       "numCopies is ignored for Save to PDF printer"
     );
@@ -79,7 +83,7 @@ add_task(async function testSheetCount() {
     ok(BrowserTestUtils.is_visible(numCopies), "numCopies element is visible");
     is(numCopies.value, "4", "numCopies displays the correct value");
     is(
-      helper.sheetCount,
+      getSheetCount(sheetCount),
       zoomedSheetCount * 4,
       "numCopies is used when using a non-PDF printer"
     );
@@ -98,11 +102,12 @@ add_task(async function testSheetCountPageRange() {
       })
     );
 
+    let sheetCount = helper.get("sheet-count");
     await BrowserTestUtils.waitForCondition(
-      () => helper.sheetCount != 1,
+      () => getSheetCount(sheetCount) != 1,
       "Wait for sheet count to update"
     );
-    let sheets = helper.sheetCount;
+    let sheets = getSheetCount(sheetCount);
     ok(sheets >= 3, "There are at least 3 pages");
 
     // Set page range to 2-3, sheet count should be 2.
@@ -112,7 +117,7 @@ add_task(async function testSheetCountPageRange() {
       })
     );
 
-    sheets = helper.sheetCount;
+    sheets = getSheetCount(sheetCount);
     is(sheets, 2, "There are now only 2 pages shown");
   });
 });
@@ -138,11 +143,12 @@ add_task(async function testPagesPerSheetCount() {
       })
     );
 
+    let sheetCount = helper.get("sheet-count");
     await BrowserTestUtils.waitForCondition(
-      () => helper.sheetCount != 1,
+      () => getSheetCount(sheetCount) != 1,
       "Wait for sheet count to update"
     );
-    let sheets = helper.sheetCount;
+    let sheets = getSheetCount(sheetCount);
 
     ok(sheets > 1, "There are multiple pages");
 
@@ -159,14 +165,14 @@ add_task(async function testPagesPerSheetCount() {
     }
     await helper.waitForPreview(() => EventUtils.sendKey("return", helper.win));
 
-    sheets = helper.sheetCount;
+    sheets = getSheetCount(sheetCount);
     is(sheets, 1, "There's only one sheet now");
 
     await helper.waitForSettingsEvent(() =>
       helper.dispatchSettingsChange({ numCopies: 5 })
     );
 
-    sheets = helper.sheetCount;
+    sheets = getSheetCount(sheetCount);
     is(sheets, 5, "Copies are handled with pages per sheet correctly");
 
     await helper.closeDialog();
