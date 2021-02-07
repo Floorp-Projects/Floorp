@@ -451,6 +451,9 @@ partial interface Document {
   Promise<any> blockParsing(Promise<any> promise,
                             optional BlockParsingOptions options = {});
 
+  [Func="nsContentUtils::IsPDFJS", BinaryName="blockUnblockOnloadForPDFJS"]
+  void blockUnblockOnload(boolean block);
+
   // like documentURI, except that for error pages, it returns the URI we were
   // trying to load when we hit an error, rather than the error page's own URI.
   [ChromeOnly] readonly attribute URI? mozDocumentURIIfNotForErrorPages;
