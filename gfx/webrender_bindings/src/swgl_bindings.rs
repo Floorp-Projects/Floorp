@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use bindings::WrCompositor;
 use gleam::{gl, gl::GLenum, gl::Gl};
 use std::cell::{Cell, UnsafeCell};
 use std::collections::{hash_map::HashMap, VecDeque};
@@ -16,7 +15,7 @@ use std::thread;
 use webrender::{
     api::units::*, api::ColorDepth, api::ExternalImageId, api::ImageRendering, api::YuvColorSpace, Compositor,
     CompositorCapabilities, CompositorSurfaceTransform, NativeSurfaceId, NativeSurfaceInfo, NativeTileId,
-    host_utils::{thread_started, thread_stopped}
+    host_utils::{thread_started, thread_stopped}, MappableCompositor,
 };
 
 #[no_mangle]
@@ -974,7 +973,7 @@ type FrameSurface = (
 pub struct SwCompositor {
     gl: swgl::Context,
     native_gl: Option<Rc<dyn gl::Gl>>,
-    compositor: WrCompositor,
+    compositor: Box<dyn MappableCompositor>,
     use_native_compositor: bool,
     surfaces: HashMap<NativeSurfaceId, SwSurface>,
     frame_surfaces: Vec<FrameSurface>,
@@ -1002,7 +1001,7 @@ impl SwCompositor {
     pub fn new(
         gl: swgl::Context,
         native_gl: Option<Rc<dyn gl::Gl>>,
-        compositor: WrCompositor,
+        compositor: Box<dyn MappableCompositor>,
         use_native_compositor: bool,
     ) -> Self {
         let depth_id = gl.gen_textures(1)[0];

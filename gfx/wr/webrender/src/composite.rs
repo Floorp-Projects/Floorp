@@ -14,7 +14,7 @@ use crate::prim_store::DeferredResolve;
 use crate::resource_cache::{ImageRequest, ResourceCache};
 use crate::util::Preallocator;
 use crate::tile_cache::PictureCacheDebugInfo;
-use std::{ops, u64};
+use std::{ops, u64, os::raw::c_void};
 
 /*
  Types and definitions related to compositing picture cache tiles
@@ -1055,6 +1055,32 @@ pub trait Compositor {
     /// specify what features a compositor supports, depending on the
     /// underlying platform
     fn get_capabilities(&self) -> CompositorCapabilities;
+}
+
+/// Information about the underlying data buffer of a mapped tile.
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct MappedTileInfo {
+    pub data: *mut c_void,
+    pub stride: i32,
+}
+
+/// A Compositor variant that supports mapping tiles into CPU memory.
+pub trait MappableCompositor: Compositor {
+    /// Map a tile's underlying buffer so it can be used as the backing for
+    /// a SWGL framebuffer. This is intended to be a replacement for 'bind'
+    /// in any compositors that intend to directly interoperate with SWGL
+    /// while supporting some form of native layers.
+    fn map_tile(
+        &mut self,
+        id: NativeTileId,
+        dirty_rect: DeviceIntRect,
+        valid_rect: DeviceIntRect,
+    ) -> Option<MappedTileInfo>;
+
+    /// Unmap a tile that was was previously mapped via map_tile to signal
+    /// that SWGL is done rendering to the buffer.
+    fn unmap_tile(&mut self);
 }
 
 /// Defines an interface to a non-native (application-level) Compositor which handles
