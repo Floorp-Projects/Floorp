@@ -10,17 +10,6 @@ with Files("**"):
 with Files("Event*"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
-if CONFIG["OS_ARCH"] == "WINNT":
-    DIRS += []
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
-    DIRS += ["mac"]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
-    DIRS += []
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
-    DIRS += []
-else:
-    DIRS += []
-
 BROWSER_CHROME_MANIFESTS += [
     "test/browser.ini",
 ]

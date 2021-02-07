@@ -2,14 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZ_WIDGET_COCOA
+#include "ShortcutKeys.h"
 
-#  include "ShortcutKeys.h"
-
-#  if !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK) && \
-      !defined(MOZ_WIDGET_ANDROID)
-#    define USE_EMACS_KEY_BINDINGS
-#  endif
+#if !defined(XP_WIN) && !defined(MOZ_WIDGET_COCOA) && \
+    !defined(MOZ_WIDGET_GTK) && !defined(MOZ_WIDGET_ANDROID)
+#  define USE_EMACS_KEY_BINDINGS
+#endif
 
 /**
  * This file defines shortcut keys for <input>, <textarea>, page navigation
@@ -25,6 +23,8 @@
  *
  * Windows:
  * https://searchfox.org/mozilla-central/rev/fd853f4aea89186efdb368e759a71b7a90c2b89c/dom/events/win/ShortcutKeyDefinitions.cpp
+ * macOS:
+ * https://searchfox.org/mozilla-central/rev/fd853f4aea89186efdb368e759a71b7a90c2b89c/dom/events/mac/ShortcutKeyDefinitions.cpp
  * Linux:
  * https://searchfox.org/mozilla-central/rev/fd853f4aea89186efdb368e759a71b7a90c2b89c/dom/events/unix/ShortcutKeyDefinitions.cpp
  * Android:
@@ -36,10 +36,13 @@
 namespace mozilla {
 
 ShortcutKeyData ShortcutKeys::sInputHandlers[] = {
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || \
+    defined(MOZ_WIDGET_ANDROID) || defined(USE_EMACS_KEY_BINDINGS)
 #  include "ShortcutKeyDefinitionsForInputCommon.h"
+#endif
 
 // clang-format off
-#  if defined(USE_EMACS_KEY_BINDINGS)
+#if defined(USE_EMACS_KEY_BINDINGS)
     {u"keypress", u"VK_DELETE",    nullptr, u"shift",         u"cmd_cutOrDelete"},               // Emacs
     {u"keypress", u"VK_DELETE",    nullptr, u"control",       u"cmd_copyOrDelete"},              // Emacs
     {u"keypress", u"VK_INSERT",    nullptr, u"control",       u"cmd_copy"},                      // Emacs
@@ -57,8 +60,8 @@ ShortcutKeyData ShortcutKeys::sInputHandlers[] = {
     {u"keypress", u"VK_RIGHT",     nullptr, u"control",       u"cmd_wordNext"},                  // Emacs
     {u"keypress", u"VK_LEFT",      nullptr, u"shift,control", u"cmd_selectWordPrevious"},        // Emacs
     {u"keypress", u"VK_RIGHT",     nullptr, u"shift,control", u"cmd_selectWordNext"},            // Emacs
-#  endif // USE_EMACS_KEY_BINDINGS
-#  if defined(MOZ_WIDGET_ANDROID)
+#endif // USE_EMACS_KEY_BINDINGS
+#if defined(MOZ_WIDGET_ANDROID)
     {u"keypress", u"VK_LEFT",      nullptr, u"control",        u"cmd_wordPrevious"},             // Android
     {u"keypress", u"VK_RIGHT",     nullptr, u"control",        u"cmd_wordNext"},                 // Android
     {u"keypress", u"VK_LEFT",      nullptr, u"shift,control",  u"cmd_selectWordPrevious"},       // Android
@@ -75,8 +78,8 @@ ShortcutKeyData ShortcutKeys::sInputHandlers[] = {
     {u"keypress", u"VK_BACK",      nullptr, u"control",        u"cmd_deleteWordBackward"},       // Android
     {u"keypress", u"VK_DELETE",    nullptr, u"alt",            u"cmd_deleteToEndOfLine"},        // Android
     {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_deleteWordForward"},        // Android
-#  endif  // MOZ_WIDGET_ANDROID
-#  if defined(XP_WIN)
+#endif  // MOZ_WIDGET_ANDROID
+#if defined(XP_WIN)
     {u"keypress", u"VK_HOME",      nullptr, nullptr,           u"cmd_beginLine"},                // Win
     {u"keypress", u"VK_END",       nullptr, nullptr,           u"cmd_endLine"},                  // Win
     {u"keypress", u"VK_HOME",      nullptr, u"shift",          u"cmd_selectBeginLine"},          // Win
@@ -100,9 +103,17 @@ ShortcutKeyData ShortcutKeys::sInputHandlers[] = {
     {u"keypress", u"VK_BACK",      nullptr, u"alt",            u"cmd_undo"},                     // Win
     {u"keypress", u"VK_BACK",      nullptr, u"alt,shift",      u"cmd_redo"},                     // Win
     {u"keypress", u"VK_BACK",      nullptr, u"control",        u"cmd_deleteWordBackward"},       // Win
-#  endif  // XP_WIN
+#endif  // XP_WIN
 
-#  if defined(USE_EMACS_KEY_BINDINGS)
+#if defined(MOZ_WIDGET_COCOA)
+    {u"keypress", nullptr, u"c", u"accel",       u"cmd_copy"},                     // macOS
+    {u"keypress", nullptr, u"x", u"accel",       u"cmd_cut"},                      // macOS
+    {u"keypress", nullptr, u"v", u"accel",       u"cmd_paste"},                    // macOS
+    {u"keypress", nullptr, u"z", u"accel",       u"cmd_undo"},                     // macOS
+    {u"keypress", nullptr, u"z", u"accel,shift", u"cmd_redo"},                     // macOS
+    {u"keypress", nullptr, u"a", u"accel",       u"cmd_selectAll"},                // macOS
+#endif  // MOZ_WIDGET_COCOA
+#if defined(USE_EMACS_KEY_BINDINGS)
     {u"keypress", nullptr, u"a", u"control",     u"cmd_beginLine"},                // Emacs
     {u"keypress", nullptr, u"e", u"control",     u"cmd_endLine"},                  // Emacs
     {u"keypress", nullptr, u"b", u"control",     u"cmd_charPrevious"},             // Emacs
@@ -114,29 +125,32 @@ ShortcutKeyData ShortcutKeys::sInputHandlers[] = {
     {u"keypress", nullptr, u"k", u"control",     u"cmd_deleteToEndOfLine"},        // Emacs
     {u"keypress", nullptr, u"y", u"accel",       u"cmd_redo"},                     // Emacs
     {u"keypress", nullptr, u"a", u"alt",         u"cmd_selectAll"},                // Emacs
-#  endif  // USE_EMACS_KEY_BINDINGS
-#  if defined(MOZ_WIDGET_ANDROID)
+#endif  // USE_EMACS_KEY_BINDINGS
+#if defined(MOZ_WIDGET_ANDROID)
     {u"keypress", nullptr, u"a", u"accel",       u"cmd_selectAll"},                // Android
-#  endif  // MOZ_WIDGET_ANDROID
-#  if defined(MOZ_WIDGET_GTK)
+#endif  // MOZ_WIDGET_ANDROID
+#if defined(MOZ_WIDGET_GTK)
     {u"keypress", nullptr, u"a", u"alt",         u"cmd_selectAll"},                // Linux
     {u"keypress", nullptr, u"y", u"accel",       u"cmd_redo"},                     // Linux
     {u"keypress", nullptr, u"z", u"accel,shift", u"cmd_redo"},                     // Linux
     {u"keypress", nullptr, u"z", u"accel",       u"cmd_undo"},                     // Linux
-#  endif  // MOZ_WIDGET_GTK
-#  if defined(XP_WIN)
+#endif  // MOZ_WIDGET_GTK
+#if defined(XP_WIN)
     {u"keypress", nullptr, u"a", u"accel",       u"cmd_selectAll"},                // Win
     {u"keypress", nullptr, u"y", u"accel",       u"cmd_redo"},                     // Win
-#  endif  // XP_WIN
+#endif  // XP_WIN
     // clang-format on
 
     {nullptr, nullptr, nullptr, nullptr, nullptr}};
 
 ShortcutKeyData ShortcutKeys::sTextAreaHandlers[] = {
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || \
+    defined(MOZ_WIDGET_ANDROID) || defined(USE_EMACS_KEY_BINDINGS)
 #  include "ShortcutKeyDefinitionsForTextAreaCommon.h"
+#endif
 
 // clang-format off
-#  if defined(USE_EMACS_KEY_BINDINGS)
+#if defined(USE_EMACS_KEY_BINDINGS)
     {u"keypress", u"VK_DELETE",    nullptr, u"shift",          u"cmd_cutOrDelete"},              // Emacs
     {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_copyOrDelete"},             // Emacs
     {u"keypress", u"VK_INSERT",    nullptr, u"control",        u"cmd_copy"},                     // Emacs
@@ -158,8 +172,8 @@ ShortcutKeyData ShortcutKeys::sTextAreaHandlers[] = {
     {u"keypress", u"VK_LEFT",      nullptr, u"shift,control",  u"cmd_selectWordPrevious"},       // Emacs
     {u"keypress", u"VK_RIGHT",     nullptr, u"shift,control",  u"cmd_selectWordNext"},           // Emacs
     {u"keypress", u"VK_BACK",      nullptr, u"control",        u"cmd_deleteWordBackward"},       // Emacs
-#  endif  // USE_EMACS_KEY_BINDINGS
-#  if defined(MOZ_WIDGET_ANDROID)
+#endif  // USE_EMACS_KEY_BINDINGS
+#if defined(MOZ_WIDGET_ANDROID)
     {u"keypress", u"VK_LEFT",      nullptr, u"control",        u"cmd_wordPrevious"},             // Android
     {u"keypress", u"VK_RIGHT",     nullptr, u"control",        u"cmd_wordNext"},                 // Android
     {u"keypress", u"VK_LEFT",      nullptr, u"shift,control",  u"cmd_selectWordPrevious"},       // Android
@@ -193,7 +207,7 @@ ShortcutKeyData ShortcutKeys::sTextAreaHandlers[] = {
     {u"keypress", u"VK_DELETE",    nullptr, u"alt",            u"cmd_deleteToEndOfLine"},        // Android
     {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_deleteWordForward"},        // Android
 #endif  // MOZ_WIDGET_ANDROID
-#  if defined(XP_WIN)
+#if defined(XP_WIN)
     {u"keypress", u"VK_HOME",      nullptr, nullptr,           u"cmd_beginLine"},                // Win
     {u"keypress", u"VK_END",       nullptr, nullptr,           u"cmd_endLine"},                  // Win
     {u"keypress", u"VK_HOME",      nullptr, u"shift",          u"cmd_selectBeginLine"},          // Win
@@ -221,9 +235,17 @@ ShortcutKeyData ShortcutKeys::sTextAreaHandlers[] = {
     {u"keypress", u"VK_BACK",      nullptr, u"alt",            u"cmd_undo"},                     // Win
     {u"keypress", u"VK_BACK",      nullptr, u"alt,shift",      u"cmd_redo"},                     // Win
     {u"keypress", u"VK_BACK",      nullptr, u"control",        u"cmd_deleteWordBackward"},       // Win
-#  endif  // XP_WIN
+#endif  // XP_WIN
 
-#  if defined(USE_EMACS_KEY_BINDINGS)
+#if defined(MOZ_WIDGET_COCOA)
+    {u"keypress", nullptr, u"c", u"accel",       u"cmd_copy"},                     // macOS
+    {u"keypress", nullptr, u"x", u"accel",       u"cmd_cut"},                      // macOS
+    {u"keypress", nullptr, u"v", u"accel",       u"cmd_paste"},                    // macOS
+    {u"keypress", nullptr, u"z", u"accel",       u"cmd_undo"},                     // macOS
+    {u"keypress", nullptr, u"z", u"accel,shift", u"cmd_redo"},                     // macOS
+    {u"keypress", nullptr, u"a", u"accel",       u"cmd_selectAll"},                // macOS
+#endif  // MOZ_WIDGET_COCOA
+#if defined(USE_EMACS_KEY_BINDINGS)
     {u"keypress", nullptr, u"a", u"control",     u"cmd_beginLine"},                // Emacs
     {u"keypress", nullptr, u"e", u"control",     u"cmd_endLine"},                  // Emacs
     {u"keypress", nullptr, u"b", u"control",     u"cmd_charPrevious"},             // Emacs
@@ -237,29 +259,47 @@ ShortcutKeyData ShortcutKeys::sTextAreaHandlers[] = {
     {u"keypress", nullptr, u"p", u"control",     u"cmd_linePrevious"},             // Emacs
     {u"keypress", nullptr, u"y", u"accel",       u"cmd_redo"},                     // Emacs
     {u"keypress", nullptr, u"a", u"alt",         u"cmd_selectAll"},                // Emacs
-#  endif  // USE_EMACS_KEY_BINDINGS
-#  if defined(MOZ_WIDGET_ANDROID)
+#endif  // USE_EMACS_KEY_BINDINGS
+#if defined(MOZ_WIDGET_ANDROID)
     {u"keypress", nullptr, u"a", u"accel",       u"cmd_selectAll"},                // Android
-#  endif  // MOZ_WIDGET_ANDROID
-#  if defined(MOZ_WIDGET_GTK)
+#endif  // MOZ_WIDGET_ANDROID
+#if defined(MOZ_WIDGET_GTK)
     {u"keypress", nullptr, u"a", u"alt",         u"cmd_selectAll"},                // Linux
     {u"keypress", nullptr, u"y", u"accel",       u"cmd_redo"},                     // Linux
     {u"keypress", nullptr, u"z", u"accel",       u"cmd_undo"},                     // Linux
     {u"keypress", nullptr, u"z", u"accel,shift", u"cmd_redo"},                     // Linux
-#  endif  // MOZ_WIDGET_GTK
-#  if defined(XP_WIN)
+#endif  // MOZ_WIDGET_GTK
+#if defined(XP_WIN)
     {u"keypress", nullptr, u"a", u"accel",       u"cmd_selectAll"},                // Win
     {u"keypress", nullptr, u"y", u"accel",       u"cmd_redo"},                     // Win
-#  endif  // XP_WIN
+#endif  // XP_WIN
     // clang-format on
 
     {nullptr, nullptr, nullptr, nullptr, nullptr}};
 
 ShortcutKeyData ShortcutKeys::sBrowserHandlers[] = {
-#  include "ShortcutKeyDefinitionsForBrowserCommon.h"
+#include "ShortcutKeyDefinitionsForBrowserCommon.h"
 
 // clang-format off
-#  if defined(USE_EMACS_KEY_BINDINGS)
+#if defined(MOZ_WIDGET_COCOA)
+    {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,           u"cmd_scrollPageUp"},             // macOS
+    {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_scrollPageDown"},           // macOS
+    {u"keypress", u"VK_HOME",      nullptr, nullptr,           u"cmd_scrollTop"},                // macOS
+    {u"keypress", u"VK_END",       nullptr, nullptr,           u"cmd_scrollBottom"},             // macOS
+    {u"keypress", u"VK_LEFT",      nullptr, u"alt",            u"cmd_moveLeft2"},                // macOS
+    {u"keypress", u"VK_RIGHT",     nullptr, u"alt",            u"cmd_moveRight2"},               // macOS
+    {u"keypress", u"VK_LEFT",      nullptr, u"alt,shift",      u"cmd_selectLeft2"},              // macOS
+    {u"keypress", u"VK_RIGHT",     nullptr, u"alt,shift",      u"cmd_selectRight2"},             // macOS
+    {u"keypress", u"VK_LEFT",      nullptr, u"shift",          u"cmd_selectLeft"},               // macOS
+    {u"keypress", u"VK_RIGHT",     nullptr, u"shift",          u"cmd_selectRight"},              // macOS
+    {u"keypress", u"VK_UP",        nullptr, u"alt,shift",      u"cmd_selectUp2"},                // macOS
+    {u"keypress", u"VK_DOWN",      nullptr, u"alt,shift",      u"cmd_selectDown2"},              // macOS
+    {u"keypress", u"VK_UP",        nullptr, u"shift",          u"cmd_selectUp"},                 // macOS
+    {u"keypress", u"VK_DOWN",      nullptr, u"shift",          u"cmd_selectDown"},               // macOS
+    {u"keypress", u"VK_UP",        nullptr, u"accel",          u"cmd_moveUp2"},                  // macOS
+    {u"keypress", u"VK_DOWN",      nullptr, u"accel",          u"cmd_moveDown2"},                // macOS
+#endif  // MOZ_WIDGET_COCOA
+#if defined(USE_EMACS_KEY_BINDINGS)
     {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,           u"cmd_movePageUp"},               // Emacs
     {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_movePageDown"},             // Emacs
     {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",          u"cmd_selectPageUp"},             // Emacs
@@ -283,8 +323,8 @@ ShortcutKeyData ShortcutKeys::sBrowserHandlers[] = {
     {u"keypress", u"VK_END",       nullptr, u"shift",          u"cmd_selectEndLine"},            // Emacs
     {u"keypress", u"VK_UP",        nullptr, u"shift",          u"cmd_selectLinePrevious"},       // Emacs
     {u"keypress", u"VK_DOWN",      nullptr, u"shift",          u"cmd_selectLineNext"},           // Emacs
-#  endif  // USE_EMACS_KEY_BINDINGS
-#  if defined(MOZ_WIDGET_ANDROID)
+#endif  // USE_EMACS_KEY_BINDINGS
+#if defined(MOZ_WIDGET_ANDROID)
     {u"keypress", u"VK_LEFT",      nullptr, u"shift",          u"cmd_selectCharPrevious"},       // Android
     {u"keypress", u"VK_RIGHT",     nullptr, u"shift",          u"cmd_selectCharNext"},           // Android
     {u"keypress", u"VK_LEFT",      nullptr, u"control",        u"cmd_wordPrevious"},             // Android
@@ -321,8 +361,8 @@ ShortcutKeyData ShortcutKeys::sBrowserHandlers[] = {
     {u"keypress", u"VK_BACK",      nullptr, u"control",        u"cmd_deleteWordBackward"},       // Android
     {u"keypress", u"VK_DELETE",    nullptr, u"alt",            u"cmd_deleteToEndOfLine"},        // Android
     {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_deleteWordForward"},        // Android
-#  endif  // MOZ_WIDGET_ANDROID
-#  if defined(MOZ_WIDGET_GTK)
+#endif  // MOZ_WIDGET_ANDROID
+#if defined(MOZ_WIDGET_GTK)
     {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,           u"cmd_movePageUp"},               // Linux
     {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_movePageDown"},             // Linux
     {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",          u"cmd_selectPageUp"},             // Linux
@@ -350,8 +390,8 @@ ShortcutKeyData ShortcutKeys::sBrowserHandlers[] = {
     {u"keypress", u"VK_DOWN",      nullptr, u"control",        u"cmd_moveDown2"},                // Linux
     {u"keypress", u"VK_UP",        nullptr, u"control,shift",  u"cmd_selectUp2"},                // Linux
     {u"keypress", u"VK_DOWN",      nullptr, u"control,shift",  u"cmd_selectDown2"},              // Linux
-#  endif  // MOZ_WIDGET_GTK
-#  if defined(XP_WIN)
+#endif  // MOZ_WIDGET_GTK
+#if defined(XP_WIN)
     {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,           u"cmd_movePageUp"},               // Win
     {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_movePageDown"},             // Win
     {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",          u"cmd_selectPageUp"},             // Win
@@ -379,26 +419,29 @@ ShortcutKeyData ShortcutKeys::sBrowserHandlers[] = {
     {u"keypress", u"VK_DOWN",      nullptr, u"shift",          u"cmd_selectDown"},               // Win
     {u"keypress", u"VK_HOME",      nullptr, u"shift",          u"cmd_selectBeginLine"},          // Win
     {u"keypress", u"VK_END",       nullptr, u"shift",          u"cmd_selectEndLine"},            // Win
-#  endif  // XP_WIN
+#endif  // XP_WIN
 
-#  if defined(USE_EMACS_KEY_BINDINGS)
+#if defined(USE_EMACS_KEY_BINDINGS)
     {u"keypress", nullptr, u"a", u"alt",   u"cmd_selectAll"},  // Emacs
-#  endif  // USE_EMACS_KEY_BINDINGS
-#  if defined(MOZ_WIDGET_GTK)
+#endif  // USE_EMACS_KEY_BINDINGS
+#if defined(MOZ_WIDGET_GTK)
     {u"keypress", nullptr, u"a", u"alt",   u"cmd_selectAll"},  // Linux
-#  endif  // MOZ_WIDGET_GTK
-#  if defined(XP_WIN)
+#endif  // MOZ_WIDGET_GTK
+#if defined(XP_WIN)
     {u"keypress", nullptr, u"y", u"accel", u"cmd_redo"},       // Win
-#  endif  // XP_WIN
+#endif  // XP_WIN
     // clang-format on
 
     {nullptr, nullptr, nullptr, nullptr, nullptr}};
 
 ShortcutKeyData ShortcutKeys::sEditorHandlers[] = {
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || \
+    defined(MOZ_WIDGET_ANDROID) || defined(USE_EMACS_KEY_BINDINGS)
 #  include "ShortcutKeyDefinitionsForEditorCommon.h"
+#endif
 
 // clang-format off
-#  if defined(USE_EMACS_KEY_BINDINGS)
+#if defined(USE_EMACS_KEY_BINDINGS)
     {u"keypress", u"VK_DELETE",    nullptr, u"shift",          u"cmd_cutOrDelete"},              // Emacs
     {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_copyOrDelete"},             // Emacs
     {u"keypress", u"VK_INSERT",    nullptr, u"control",        u"cmd_copy"},                     // Emacs
@@ -420,8 +463,8 @@ ShortcutKeyData ShortcutKeys::sEditorHandlers[] = {
     {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_movePageDown"},             // Emacs
     {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",          u"cmd_selectPageUp"},             // Emacs
     {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift",          u"cmd_selectPageDown"},           // Emacs
-#  endif  // USE_EMACS_KEY_BINDINGS
-#  if defined(MOZ_WIDGET_ANDROID)
+#endif  // USE_EMACS_KEY_BINDINGS
+#if defined(MOZ_WIDGET_ANDROID)
     {u"keypress", u"VK_LEFT",      nullptr, u"control",        u"cmd_wordPrevious"},             // Android
     {u"keypress", u"VK_RIGHT",     nullptr, u"control",        u"cmd_wordNext"},                 // Android
     {u"keypress", u"VK_LEFT",      nullptr, u"shift,control",  u"cmd_selectWordPrevious"},       // Android
@@ -454,8 +497,8 @@ ShortcutKeyData ShortcutKeys::sEditorHandlers[] = {
     {u"keypress", u"VK_BACK",      nullptr, u"control",        u"cmd_deleteWordBackward"},       // Android
     {u"keypress", u"VK_DELETE",    nullptr, u"alt",            u"cmd_deleteToEndOfLine"},        // Android
     {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_deleteWordForward"},        // Android
-#  endif  // MOZ_WIDGET_ANDROID
-#  if defined(XP_WIN)
+#endif  // MOZ_WIDGET_ANDROID
+#if defined(XP_WIN)
     {u"keypress", u"VK_DELETE",    nullptr, u"shift",          u"cmd_cutOrDelete"},              // Win
     {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_deleteWordForward"},        // Win
     {u"keypress", u"VK_INSERT",    nullptr, u"control",        u"cmd_copy"},                     // Win
@@ -483,45 +526,55 @@ ShortcutKeyData ShortcutKeys::sEditorHandlers[] = {
     {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_movePageDown"},             // Win
     {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",          u"cmd_selectPageUp"},             // Win
     {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift",          u"cmd_selectPageDown"},           // Win
-#  endif  // XP_WIN
+#endif  // XP_WIN
 
-#  if defined(USE_EMACS_KEY_BINDINGS)
-    {u"keypress", nullptr, u"h", u"control",     u"cmd_deleteCharBackward"},       // Emacs
-    {u"keypress", nullptr, u"d", u"control",     u"cmd_deleteCharForward"},        // Emacs
-    {u"keypress", nullptr, u"k", u"control",     u"cmd_deleteToEndOfLine"},        // Emacs
-    {u"keypress", nullptr, u"u", u"control",     u"cmd_deleteToBeginningOfLine"},  // Emacs
-    {u"keypress", nullptr, u"a", u"control",     u"cmd_beginLine"},                // Emacs
-    {u"keypress", nullptr, u"e", u"control",     u"cmd_endLine"},                  // Emacs
-    {u"keypress", nullptr, u"b", u"control",     u"cmd_charPrevious"},             // Emacs
-    {u"keypress", nullptr, u"f", u"control",     u"cmd_charNext"},                 // Emacs
-    {u"keypress", nullptr, u"p", u"control",     u"cmd_linePrevious"},             // Emacs
-    {u"keypress", nullptr, u"n", u"control",     u"cmd_lineNext"},                 // Emacs
-    {u"keypress", nullptr, u"x", u"control",     u"cmd_cut"},                      // Emacs
-    {u"keypress", nullptr, u"c", u"control",     u"cmd_copy"},                     // Emacs
-    {u"keypress", nullptr, u"v", u"control",     u"cmd_paste"},                    // Emacs
-    {u"keypress", nullptr, u"z", u"control",     u"cmd_undo"},                     // Emacs
-    {u"keypress", nullptr, u"y", u"accel",       u"cmd_redo"},                     // Emacs
-    {u"keypress", nullptr, u"a", u"alt",         u"cmd_selectAll"},                // Emacs
-#  endif  // USE_EMACS_KEY_BINDINGS
-#  if defined(MOZ_WIDGET_ANDROID)
-    {u"keypress", nullptr, u"a", u"accel",       u"cmd_selectAll"},                // Android
-#  endif  // MOZ_WIDGET_ANDROID
-#  if defined(MOZ_WIDGET_GTK)
-    {u"keypress", nullptr, u"z", u"accel",       u"cmd_undo"},                     // Linux
-    {u"keypress", nullptr, u"z", u"accel,shift", u"cmd_redo"},                     // Linux
-    {u"keypress", nullptr, u"y", u"accel",       u"cmd_redo"},                     // Linux
-    {u"keypress", nullptr, u"a", u"alt",         u"cmd_selectAll"},                // Linux
-#  endif  // MOZ_WIDGET_GTK
-#  if defined(XP_WIN)
-    {u"keypress", nullptr, u"a", u"accel",       u"cmd_selectAll"},                // Win
-    {u"keypress", nullptr, u"y", u"accel",       u"cmd_redo"},                     // Win
-#  endif  // XP_WIN
+#if defined(MOZ_WIDGET_COCOA)
+    {u"keypress", nullptr, u" ", u"shift",           u"cmd_scrollPageUp"},             // macOS
+    {u"keypress", nullptr, u" ", nullptr,            u"cmd_scrollPageDown"},           // macOS
+    {u"keypress", nullptr, u"z", u"accel",           u"cmd_undo"},                     // macOS
+    {u"keypress", nullptr, u"z", u"accel,shift",     u"cmd_redo"},                     // macOS
+    {u"keypress", nullptr, u"x", u"accel",           u"cmd_cut"},                      // macOS
+    {u"keypress", nullptr, u"c", u"accel",           u"cmd_copy"},                     // macOS
+    {u"keypress", nullptr, u"v", u"accel",           u"cmd_paste"},                    // macOS
+    {u"keypress", nullptr, u"v", u"accel,shift",     u"cmd_pasteNoFormatting"},        // macOS
+    {u"keypress", nullptr, u"a", u"accel",           u"cmd_selectAll"},                // macOS
+    {u"keypress", nullptr, u"v", u"accel,alt,shift", u"cmd_pasteNoFormatting"},        // macOS
+#endif  // MOZ_WIDGET_COCOA
+#if defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", nullptr, u"h", u"control",         u"cmd_deleteCharBackward"},       // Emacs
+    {u"keypress", nullptr, u"d", u"control",         u"cmd_deleteCharForward"},        // Emacs
+    {u"keypress", nullptr, u"k", u"control",         u"cmd_deleteToEndOfLine"},        // Emacs
+    {u"keypress", nullptr, u"u", u"control",         u"cmd_deleteToBeginningOfLine"},  // Emacs
+    {u"keypress", nullptr, u"a", u"control",         u"cmd_beginLine"},                // Emacs
+    {u"keypress", nullptr, u"e", u"control",         u"cmd_endLine"},                  // Emacs
+    {u"keypress", nullptr, u"b", u"control",         u"cmd_charPrevious"},             // Emacs
+    {u"keypress", nullptr, u"f", u"control",         u"cmd_charNext"},                 // Emacs
+    {u"keypress", nullptr, u"p", u"control",         u"cmd_linePrevious"},             // Emacs
+    {u"keypress", nullptr, u"n", u"control",         u"cmd_lineNext"},                 // Emacs
+    {u"keypress", nullptr, u"x", u"control",         u"cmd_cut"},                      // Emacs
+    {u"keypress", nullptr, u"c", u"control",         u"cmd_copy"},                     // Emacs
+    {u"keypress", nullptr, u"v", u"control",         u"cmd_paste"},                    // Emacs
+    {u"keypress", nullptr, u"z", u"control",         u"cmd_undo"},                     // Emacs
+    {u"keypress", nullptr, u"y", u"accel",           u"cmd_redo"},                     // Emacs
+    {u"keypress", nullptr, u"a", u"alt",             u"cmd_selectAll"},                // Emacs
+#endif  // USE_EMACS_KEY_BINDINGS
+#if defined(MOZ_WIDGET_ANDROID)
+    {u"keypress", nullptr, u"a", u"accel",           u"cmd_selectAll"},                // Android
+#endif  // MOZ_WIDGET_ANDROID
+#if defined(MOZ_WIDGET_GTK)
+    {u"keypress", nullptr, u"z", u"accel",           u"cmd_undo"},                     // Linux
+    {u"keypress", nullptr, u"z", u"accel,shift",     u"cmd_redo"},                     // Linux
+    {u"keypress", nullptr, u"y", u"accel",           u"cmd_redo"},                     // Linux
+    {u"keypress", nullptr, u"a", u"alt",             u"cmd_selectAll"},                // Linux
+#endif  // MOZ_WIDGET_GTK
+#if defined(XP_WIN)
+    {u"keypress", nullptr, u"a", u"accel",           u"cmd_selectAll"},                // Win
+    {u"keypress", nullptr, u"y", u"accel",           u"cmd_redo"},                     // Win
+#endif  // XP_WIN
     // clang-format on
 
     {nullptr, nullptr, nullptr, nullptr, nullptr}};
 
 }  // namespace mozilla
-
-#endif
 
 #undef USE_EMACS_KEY_BINDINGS
