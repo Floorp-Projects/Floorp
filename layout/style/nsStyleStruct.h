@@ -1673,7 +1673,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTableBorder {
   nscoord mBorderSpacingCol;
   nscoord mBorderSpacingRow;
   mozilla::StyleBorderCollapse mBorderCollapse;
-  uint8_t mCaptionSide;
+  mozilla::StyleCaptionSide mCaptionSide;
   mozilla::StyleEmptyCells mEmptyCells;
 };
 

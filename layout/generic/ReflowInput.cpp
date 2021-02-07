@@ -2063,9 +2063,9 @@ static inline bool IsSideCaption(nsIFrame* aFrame,
   if (aStyleDisplay->mDisplay != StyleDisplay::TableCaption) {
     return false;
   }
-  uint8_t captionSide = aFrame->StyleTableBorder()->mCaptionSide;
-  return captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
-         captionSide == NS_STYLE_CAPTION_SIDE_RIGHT;
+  auto captionSide = aFrame->StyleTableBorder()->mCaptionSide;
+  return captionSide == StyleCaptionSide::Left ||
+         captionSide == StyleCaptionSide::Right;
 }
 
 // XXX refactor this code to have methods for each set of properties
