@@ -306,6 +306,10 @@ class PrintHelper {
     return this.doc.getElementById(id);
   }
 
+  get sheetCount() {
+    return this.doc.l10n.getAttributes(this.get("sheet-count")).args.sheetCount;
+  }
+
   get sourceURI() {
     return this.win.PrintEventHandler.originalSourceCurrentURI;
   }
