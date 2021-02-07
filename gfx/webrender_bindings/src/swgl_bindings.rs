@@ -15,7 +15,7 @@ use std::thread;
 use webrender::{
     api::units::*, api::ColorDepth, api::ExternalImageId, api::ImageRendering, api::YuvColorSpace, Compositor,
     CompositorCapabilities, CompositorSurfaceTransform, NativeSurfaceId, NativeSurfaceInfo, NativeTileId,
-    host_utils::{thread_started, thread_stopped}, MappableCompositor,
+    host_utils::{thread_started, thread_stopped}, MappableCompositor, SWGLCompositeSurfaceInfo,
 };
 
 #[no_mangle]
@@ -104,31 +104,6 @@ pub extern "C" fn wr_swgl_clear_color_rect(
     a: f32,
 ) {
     swgl::Context::from(ctx).clear_color_rect(fbo, x, y, width, height, r, g, b, a);
-}
-
-/// Descriptor for a locked surface that will be directly composited by SWGL.
-#[repr(C)]
-struct WrSWGLCompositeSurfaceInfo {
-    /// The number of YUV planes in the surface. 0 indicates non-YUV BGRA.
-    /// 1 is interleaved YUV. 2 is NV12. 3 is planar YUV.
-    yuv_planes: u32,
-    /// Textures for planes of the surface, or 0 if not applicable.
-    textures: [u32; 3],
-    /// Color space of surface if using a YUV format.
-    color_space: YuvColorSpace,
-    /// Color depth of surface if using a YUV format.
-    color_depth: ColorDepth,
-    /// The actual source surface size before transformation.
-    size: DeviceIntSize,
-}
-
-extern "C" {
-    fn wr_swgl_lock_composite_surface(
-        ctx: *mut c_void,
-        external_image_id: ExternalImageId,
-        composite_info: *mut WrSWGLCompositeSurfaceInfo,
-    ) -> bool;
-    fn wr_swgl_unlock_composite_surface(ctx: *mut c_void, external_image_id: ExternalImageId);
 }
 
 pub struct SwTile {
@@ -246,7 +221,7 @@ pub struct SwSurface {
     /// An attached external image for this surface.
     external_image: Option<ExternalImageId>,
     /// Descriptor for the external image if successfully locked for composite.
-    composite_surface: Option<WrSWGLCompositeSurfaceInfo>,
+    composite_surface: Option<SWGLCompositeSurfaceInfo>,
 }
 
 impl SwSurface {
@@ -1292,7 +1267,7 @@ impl SwCompositor {
                 // If the surface has an attached external image, attempt to lock the external image
                 // for compositing. Yields a descriptor of textures and data necessary for their
                 // interpretation on success.
-                let mut info = WrSWGLCompositeSurfaceInfo {
+                let mut info = SWGLCompositeSurfaceInfo {
                     yuv_planes: 0,
                     textures: [0; 3],
                     color_space: YuvColorSpace::Identity,
@@ -1301,7 +1276,7 @@ impl SwCompositor {
                 };
                 assert!(!surface.tiles.is_empty());
                 let mut tile = &mut surface.tiles[0];
-                if unsafe { wr_swgl_lock_composite_surface(self.gl.into(), external_image, &mut info) } {
+                if self.compositor.lock_composite_surface(self.gl.into(), external_image, &mut info) {
                     tile.valid_rect = DeviceIntRect::from_size(info.size);
                     surface.composite_surface = Some(info);
                 } else {
@@ -1318,7 +1293,7 @@ impl SwCompositor {
             if let Some(surface) = self.surfaces.get_mut(id) {
                 if let Some(external_image) = surface.external_image {
                     if surface.composite_surface.is_some() {
-                        unsafe { wr_swgl_unlock_composite_surface(self.gl.into(), external_image) };
+                        self.compositor.unlock_composite_surface(self.gl.into(), external_image);
                         surface.composite_surface = None;
                     }
                 }
