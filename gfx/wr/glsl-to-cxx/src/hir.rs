@@ -3413,6 +3413,13 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
     declare_function(state, "log2", None, Type::new(Float), vec![Type::new(Float)]);
     declare_function(
         state,
+        "recip",
+        None,
+        Type::new(Float),
+        vec![Type::new(Float)],
+    );
+    declare_function(
+        state,
         "inversesqrt",
         None,
         Type::new(Float),

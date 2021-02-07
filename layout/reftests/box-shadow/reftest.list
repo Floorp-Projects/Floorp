@@ -14,7 +14,7 @@ random != boxshadow-blur-2.html boxshadow-blur-2-notref.html # fixedpoint divisi
 fuzzy-if(OSX==1010,0-1,0-24) fuzzy-if(d2d,0-16,0-999) fuzzy-if(skiaContent,0-14,0-179) fuzzy-if(webrender&&swgl,1-1,714-714) == boxshadow-large-border-radius.html boxshadow-large-border-radius-ref.html # Bug 1209649
 
 == boxshadow-fileupload.html boxshadow-fileupload-ref.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-98,0-152) fuzzy-if(skiaContent,0-13,0-28) fuzzy-if(webrender,19-19,47-47) == boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-98,0-152) fuzzy-if(skiaContent,0-13,0-28) fuzzy-if(webrender,18-19,47-49) == boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg
 fuzzy-if(skiaContent,0-1,0-18) random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed-ref.html
 fuzzy-if(skiaContent,0-1,0-17) == boxshadow-mixed-2.html boxshadow-mixed-2-ref.html
 random-if(d2d) fuzzy-if(skiaContent,0-1,0-212) fuzzy-if(webrender,0-127,0-3528) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
@@ -26,10 +26,10 @@ fuzzy(0-2,0-440) == boxshadow-skiprect.html boxshadow-skiprect-ref.html
 == boxshadow-opacity.html boxshadow-opacity-ref.html
 == boxshadow-color-rounding.html boxshadow-color-rounding-ref.html
 == boxshadow-color-rounding-middle.html boxshadow-color-rounding-middle-ref.html
-fuzzy(0-3,0-500) fuzzy-if(d2d,0-2,0-1080) fuzzy-if(webrender&&swgl,1-1,1000-1000) == boxshadow-border-radius-int.html boxshadow-border-radius-int-ref.html
+fuzzy(0-3,0-500) fuzzy-if(d2d,0-2,0-1080) == boxshadow-border-radius-int.html boxshadow-border-radius-int-ref.html
 == boxshadow-inset-neg-spread.html about:blank
 == boxshadow-inset-neg-spread2.html boxshadow-inset-neg-spread2-ref.html
-fuzzy(0-26,0-3610) fuzzy-if(d2d,0-26,0-5910) fuzzy-if(webrender,4-6,4172-4350) == boxshadow-rotated.html boxshadow-rotated-ref.html # Bug 1211264
+fuzzy(0-26,0-3610) fuzzy-if(d2d,0-26,0-5910) fuzzy-if(webrender,4-6,4088-4350) == boxshadow-rotated.html boxshadow-rotated-ref.html # Bug 1211264
 == boxshadow-inset-large-border-radius.html boxshadow-inset-large-border-radius-ref.html
 
 # fuzzy due to blur going inside, but as long as it's essentially black instead of a light gray its ok.

@@ -87,7 +87,7 @@
     /// This range represents a coefficient to go from one CSS pixel to half a device pixel.
     float compute_aa_range(vec2 position) {
         // The constant factor is chosen to compensate for the fact that length(fw) is equal
-        // to sqrt(2) times the device pixel ratio in the typical case. 1/sqrt(2) = 0.7071.
+        // to sqrt(2) times the device pixel ratio in the typical case.
         //
         // This coefficient is chosen to ensure that any sample 0.5 pixels or more inside of
         // the shape has no anti-aliasing applied to it (since pixels are sampled at their center,
@@ -102,12 +102,18 @@
         // We may want to adjust this constant in specific scenarios (for example keep the principled
         // value for straight edges where we want pixel-perfect equivalence with non antialiased lines
         // when axis aligned, while selecting a larger and smoother aa range on curves).
+        //
+        // As a further optimization, we compute the reciprocal of this range, such that we
+        // can then use the cheaper inversesqrt() instead of length(). This also elides a
+        // division that would otherwise be necessary inside distance_aa.
         #ifdef SWGL
             // SWGL uses an approximation for fwidth() such that it returns equal x and y.
-            // Thus, 1/sqrt(2) * length((x,y)) = 1/sqrt(2) * sqrt(x*x + x*x) = x.
-            return fwidth(position).x;
+            // Thus, sqrt(2)/length(w) = sqrt(2)/sqrt(x*x + x*x) = recip(x).
+            return recip(fwidth(position).x);
         #else
-            return 0.7071 * length(fwidth(position));
+            // sqrt(2)/length(w) = inversesqrt(0.5 * dot(w, w))
+            vec2 w = fwidth(position);
+            return inversesqrt(0.5 * dot(w, w));
         #endif
     }
 
@@ -115,26 +121,18 @@
     ///
     /// 0.0 means inside the shape, 1.0 means outside.
     ///
-    /// This cubic polynomial approximates the area of a 1x1 pixel square under a
-    /// line, given the signed Euclidean distance from the center of the square to
-    /// that line. Calculating the *exact* area would require taking into account
-    /// not only this distance but also the angle of the line. However, in
-    /// practice, this complexity is not required, as the area is roughly the same
-    /// regardless of the angle.
-    ///
-    /// The coefficients of this polynomial were determined through least-squares
-    /// regression and are accurate to within 2.16% of the total area of the pixel
-    /// square 95% of the time, with a maximum error of 3.53%.
+    /// This makes the simplifying assumption that the area of a 1x1 pixel square
+    /// under a line is reasonably similar to just the signed Euclidian distance
+    /// from the center of the square to that line. This diverges slightly from
+    /// better approximations of the exact area, but the difference between the
+    /// methods is not perceptibly noticeable, while this approximation is much
+    /// faster to compute.
     ///
     /// See the comments in `compute_aa_range()` for more information on the
     /// cutoff values of -0.5 and 0.5.
     float distance_aa(float aa_range, float signed_distance) {
-        float dist = signed_distance / aa_range;
-        bool inside = dist <= -0.5 + EPSILON;
-        bool outside = dist >= 0.5 - EPSILON;
-        return inside || outside
-            ? float(inside)
-            : 0.5 + dist * (0.8431027 * dist * dist - 1.14453603);
+        float dist = signed_distance * aa_range;
+        return clamp(0.5 - dist, 0.0, 1.0);
     }
 
     /// Component-wise selection.

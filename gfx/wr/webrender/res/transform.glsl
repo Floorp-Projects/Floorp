@@ -100,7 +100,11 @@ bool has_valid_transform_bounds() {
 
 float signed_distance_rect(vec2 pos, vec2 p0, vec2 p1) {
     vec2 d = max(p0 - pos, pos - p1);
-    return length(max(vec2(0.0), d)) + min(0.0, max(d.x, d.y));
+    // Instead of using a true signed distance to rect here, we just use the
+    // simpler approximation of the maximum distance on either axis from the
+    // outside of the rectangle. This avoids expensive use of length() and only
+    // causes mostly imperceptible differences at corner pixels.
+    return max(d.x, d.y);
 }
 
 float init_transform_fs(vec2 local_pos) {
