@@ -138,25 +138,37 @@ ShortcutKeyData ShortcutKeys::sInputHandlers[] = {
     {u"keypress", u"VK_INSERT", nullptr, u"shift",   u"cmd_paste"},  // Win, Emacs
 #endif  // XP_WIN || USE_EMACS_KEY_BINDINGS
 
-
+    /**************************************************************************
+     * Delete key in <input>.
+     **************************************************************************/
+#if defined(XP_WIN) || defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", u"VK_DELETE", nullptr, u"shift",   u"cmd_cutOrDelete"},        // Win, Emacs
+#endif // XP_WIN || USE_EMACS_KEY_BINDINGS
 #if defined(USE_EMACS_KEY_BINDINGS)
-    {u"keypress", u"VK_DELETE",    nullptr, u"shift",         u"cmd_cutOrDelete"},               // Emacs
-    {u"keypress", u"VK_DELETE",    nullptr, u"control",       u"cmd_copyOrDelete"},              // Emacs
-    {u"keypress", u"VK_BACK",      nullptr, u"control",       u"cmd_deleteWordBackward"},        // Emacs
+    {u"keypress", u"VK_DELETE", nullptr, u"control", u"cmd_copyOrDelete"},       // Emacs
 #endif // USE_EMACS_KEY_BINDINGS
+#if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID)
+    {u"keypress", u"VK_DELETE", nullptr, u"control", u"cmd_deleteWordForward"},  // Win, Android
+#endif  // XP_WIN
 #if defined(MOZ_WIDGET_ANDROID)
-    {u"keypress", u"VK_BACK",      nullptr, u"alt",            u"cmd_deleteToBeginningOfLine"},  // Android
-    {u"keypress", u"VK_BACK",      nullptr, u"control",        u"cmd_deleteWordBackward"},       // Android
-    {u"keypress", u"VK_DELETE",    nullptr, u"alt",            u"cmd_deleteToEndOfLine"},        // Android
-    {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_deleteWordForward"},        // Android
+    {u"keypress", u"VK_DELETE", nullptr, u"alt",     u"cmd_deleteToEndOfLine"},  // Android
+#endif  // MOZ_WIDGET_ANDROID
+
+    /**************************************************************************
+     * Backspace key in <input>.
+     **************************************************************************/
+#if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID) ||\
+    defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", u"VK_BACK", nullptr, u"control",   u"cmd_deleteWordBackward"},       // Win, Android, Emacs
+#endif // XP_WIN || MOZ_WIDGET_ANDROID || USE_EMACS_KEY_BINDINGS
+#if defined(MOZ_WIDGET_ANDROID)
+    {u"keypress", u"VK_BACK", nullptr, u"alt",       u"cmd_deleteToBeginningOfLine"},  // Android
 #endif  // MOZ_WIDGET_ANDROID
 #if defined(XP_WIN)
-    {u"keypress", u"VK_DELETE",    nullptr, u"shift",          u"cmd_cutOrDelete"},              // Win
-    {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_deleteWordForward"},        // Win
-    {u"keypress", u"VK_BACK",      nullptr, u"alt",            u"cmd_undo"},                     // Win
-    {u"keypress", u"VK_BACK",      nullptr, u"alt,shift",      u"cmd_redo"},                     // Win
-    {u"keypress", u"VK_BACK",      nullptr, u"control",        u"cmd_deleteWordBackward"},       // Win
+    {u"keypress", u"VK_BACK", nullptr, u"alt",       u"cmd_undo"},                     // Win
+    {u"keypress", u"VK_BACK", nullptr, u"alt,shift", u"cmd_redo"},                     // Win
 #endif  // XP_WIN
+
 
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || \
     defined(MOZ_WIDGET_ANDROID) || defined(USE_EMACS_KEY_BINDINGS)
@@ -310,25 +322,37 @@ ShortcutKeyData ShortcutKeys::sTextAreaHandlers[] = {
     {u"keypress", u"VK_INSERT", nullptr, u"shift",   u"cmd_paste"},  // Win, Emacs
 #endif  // XP_WIN || USE_EMACS_KEY_BINDINGS
 
-
+    /**************************************************************************
+     * Delete key in <textarea>.
+     **************************************************************************/
+#if defined(XP_WIN) || defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", u"VK_DELETE", nullptr, u"shift",   u"cmd_cutOrDelete"},        // Win, Emacs
+#endif  // XP_WIN || USE_EMACS_KEY_BINDINGS
 #if defined(USE_EMACS_KEY_BINDINGS)
-    {u"keypress", u"VK_DELETE",    nullptr, u"shift",          u"cmd_cutOrDelete"},              // Emacs
-    {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_copyOrDelete"},             // Emacs
-    {u"keypress", u"VK_BACK",      nullptr, u"control",        u"cmd_deleteWordBackward"},       // Emacs
+    {u"keypress", u"VK_DELETE", nullptr, u"control", u"cmd_copyOrDelete"},       // Emacs
 #endif  // USE_EMACS_KEY_BINDINGS
+#if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID)
+    {u"keypress", u"VK_DELETE", nullptr, u"control", u"cmd_deleteWordForward"},  // Win, Android
+#endif  // XP_WIN || MOZ_WIDGET_ANDROID
 #if defined(MOZ_WIDGET_ANDROID)
-    {u"keypress", u"VK_BACK",      nullptr, u"alt",            u"cmd_deleteToBeginningOfLine"},  // Android
-    {u"keypress", u"VK_BACK",      nullptr, u"control",        u"cmd_deleteWordBackward"},       // Android
-    {u"keypress", u"VK_DELETE",    nullptr, u"alt",            u"cmd_deleteToEndOfLine"},        // Android
-    {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_deleteWordForward"},        // Android
+    {u"keypress", u"VK_DELETE", nullptr, u"alt",     u"cmd_deleteToEndOfLine"},  // Android
+#endif  // MOZ_WIDGET_ANDROID
+
+    /**************************************************************************
+     * Backspace key in <textarea>.
+     **************************************************************************/
+#if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID) ||\
+    defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", u"VK_BACK", nullptr, u"control",   u"cmd_deleteWordBackward"},       // Win, Android, Emacs
+#endif  // XP_WIN || MOZ_WIDGET_ANDROID || USE_EMACS_KEY_BINDINGS
+#if defined(MOZ_WIDGET_ANDROID)
+    {u"keypress", u"VK_BACK", nullptr, u"alt",       u"cmd_deleteToBeginningOfLine"},  // Android
 #endif  // MOZ_WIDGET_ANDROID
 #if defined(XP_WIN)
-    {u"keypress", u"VK_DELETE",    nullptr, u"shift",          u"cmd_cutOrDelete"},              // Win
-    {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_deleteWordForward"},        // Win
-    {u"keypress", u"VK_BACK",      nullptr, u"alt",            u"cmd_undo"},                     // Win
-    {u"keypress", u"VK_BACK",      nullptr, u"alt,shift",      u"cmd_redo"},                     // Win
-    {u"keypress", u"VK_BACK",      nullptr, u"control",        u"cmd_deleteWordBackward"},       // Win
+    {u"keypress", u"VK_BACK", nullptr, u"alt",       u"cmd_undo"},                     // Win
+    {u"keypress", u"VK_BACK", nullptr, u"alt,shift", u"cmd_redo"},                     // Win
 #endif  // XP_WIN
+
 
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || \
     defined(MOZ_WIDGET_ANDROID) || defined(USE_EMACS_KEY_BINDINGS)
@@ -506,25 +530,31 @@ ShortcutKeyData ShortcutKeys::sBrowserHandlers[] = {
     {u"keypress", u"VK_INSERT",    nullptr, u"control",        u"cmd_copy"},  // Win, Linux, Emacs
 #endif  // XP_WIN || MOZ_WIDGET_GTK || USE_EMACS_KEY_BINDINGS
 
-
-#if defined(USE_EMACS_KEY_BINDINGS)
-    {u"keypress", u"VK_DELETE",    nullptr, u"shift",          u"cmd_cut"},                      // Emacs
-    {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_copy"},                     // Emacs
-#endif  // USE_EMACS_KEY_BINDINGS
+    /**************************************************************************
+     * Delete key in non-editable element.
+     **************************************************************************/
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) ||\
+    defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", u"VK_DELETE", nullptr, u"shift",   u"cmd_cut"},                // Win, Linux, Emacs
+#endif  // XP_WIN || MOZ_WIDGET_GTK || USE_EMACS_KEY_BINDINGS
+#if defined(MOZ_WIDGET_GTK) || defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", u"VK_DELETE", nullptr, u"control", u"cmd_copy"},               // Linux, Emacs
+#endif  // MOZ_WIDGET_GTK || USE_EMACS_KEY_BINDINGS
+#if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID)
+    {u"keypress", u"VK_DELETE", nullptr, u"control", u"cmd_deleteWordForward"},  // Win, Android
+#endif  // XP_WIN || MOZ_WIDGET_ANDROID
 #if defined(MOZ_WIDGET_ANDROID)
-    {u"keypress", u"VK_BACK",      nullptr, u"alt",            u"cmd_deleteToBeginningOfLine"},  // Android
-    {u"keypress", u"VK_BACK",      nullptr, u"control",        u"cmd_deleteWordBackward"},       // Android
-    {u"keypress", u"VK_DELETE",    nullptr, u"alt",            u"cmd_deleteToEndOfLine"},        // Android
-    {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_deleteWordForward"},        // Android
+    {u"keypress", u"VK_DELETE", nullptr, u"alt",     u"cmd_deleteToEndOfLine"},  // Android
 #endif  // MOZ_WIDGET_ANDROID
-#if defined(MOZ_WIDGET_GTK)
-    {u"keypress", u"VK_DELETE",    nullptr, u"shift",          u"cmd_cut"},                      // Linux
-    {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_copy"},                     // Linux
-#endif  // MOZ_WIDGET_GTK
-#if defined(XP_WIN)
-    {u"keypress", u"VK_DELETE",    nullptr, u"shift",          u"cmd_cut"},                      // Win
-    {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_deleteWordForward"},        // Win
-#endif  // XP_WIN
+
+    /**************************************************************************
+     * Backspace key in non-editable element.
+     **************************************************************************/
+#if defined(MOZ_WIDGET_ANDROID)
+    {u"keypress", u"VK_BACK", nullptr, u"alt",     u"cmd_deleteToBeginningOfLine"},  // Android
+    {u"keypress", u"VK_BACK", nullptr, u"control", u"cmd_deleteWordBackward"},       // Android
+#endif  // MOZ_WIDGET_ANDROID
+
 
     {u"keypress", nullptr, u" ", u"shift",       u"cmd_scrollPageUp"},    // Win, macOS, Linux, Android, Emacs
     {u"keypress", nullptr, u" ", nullptr,        u"cmd_scrollPageDown"},  // Win, macOS, Linux, Android, Emacs
@@ -653,25 +683,36 @@ ShortcutKeyData ShortcutKeys::sEditorHandlers[] = {
     {u"keypress", u"VK_INSERT", nullptr, u"shift",   u"cmd_paste"},  // Win, Emacs
 #endif  // XP_WIN || USE_EMACS_KEY_BINDINGS
 
-
+    /**************************************************************************
+     * Delete key in HTMLEditor.
+     **************************************************************************/
+#if defined(XP_WIN) || defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", u"VK_DELETE", nullptr, u"shift",   u"cmd_cutOrDelete"},        // Win, Emacs
+#endif  // XP_WIN || USE_EMACS_KEY_BINDINGS
 #if defined(USE_EMACS_KEY_BINDINGS)
-    {u"keypress", u"VK_DELETE",    nullptr, u"shift",          u"cmd_cutOrDelete"},              // Emacs
-    {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_copyOrDelete"},             // Emacs
-    {u"keypress", u"VK_BACK",      nullptr, u"control",        u"cmd_deleteWordBackward"},       // Emacs
+    {u"keypress", u"VK_DELETE", nullptr, u"control", u"cmd_copyOrDelete"},       // Emacs
 #endif  // USE_EMACS_KEY_BINDINGS
+#if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID)
+    {u"keypress", u"VK_DELETE", nullptr, u"control", u"cmd_deleteWordForward"},  // Win, Android
+#endif  // XP_WIN || MOZ_WIDGET_ANDROID
 #if defined(MOZ_WIDGET_ANDROID)
-    {u"keypress", u"VK_BACK",      nullptr, u"alt",            u"cmd_deleteToBeginningOfLine"},  // Android
-    {u"keypress", u"VK_BACK",      nullptr, u"control",        u"cmd_deleteWordBackward"},       // Android
-    {u"keypress", u"VK_DELETE",    nullptr, u"alt",            u"cmd_deleteToEndOfLine"},        // Android
-    {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_deleteWordForward"},        // Android
+    {u"keypress", u"VK_DELETE", nullptr, u"alt",     u"cmd_deleteToEndOfLine"},  // Android
+#endif  // MOZ_WIDGET_ANDROID
+
+    /**************************************************************************
+     * Backspace key in HTMLEditor.
+     **************************************************************************/
+#if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID) || defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", u"VK_BACK", nullptr, u"control",   u"cmd_deleteWordBackward"},       // Win, Android, Emacs
+#endif  // XP_WIN || MOZ_WIDGET_ANDROID || USE_EMACS_KEY_BINDINGS
+#if defined(MOZ_WIDGET_ANDROID)
+    {u"keypress", u"VK_BACK", nullptr, u"alt",       u"cmd_deleteToBeginningOfLine"},  // Android
 #endif  // MOZ_WIDGET_ANDROID
 #if defined(XP_WIN)
-    {u"keypress", u"VK_DELETE",    nullptr, u"shift",          u"cmd_cutOrDelete"},              // Win
-    {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_deleteWordForward"},        // Win
-    {u"keypress", u"VK_BACK",      nullptr, u"alt",            u"cmd_undo"},                     // Win
-    {u"keypress", u"VK_BACK",      nullptr, u"alt,shift",      u"cmd_redo"},                     // Win
-    {u"keypress", u"VK_BACK",      nullptr, u"control",        u"cmd_deleteWordBackward"},       // Win
+    {u"keypress", u"VK_BACK", nullptr, u"alt",       u"cmd_undo"},                     // Win
+    {u"keypress", u"VK_BACK", nullptr, u"alt,shift", u"cmd_redo"},                     // Win
 #endif  // XP_WIN
+
 
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || \
     defined(MOZ_WIDGET_ANDROID) || defined(USE_EMACS_KEY_BINDINGS)
