@@ -105,6 +105,17 @@ KeyEventHandler::~KeyEventHandler() {
   NS_CONTENT_DELETE_LIST_MEMBER(KeyEventHandler, this, mNextHandler);
 }
 
+void KeyEventHandler::GetCommand(nsAString& aCommand) const {
+  MOZ_ASSERT(aCommand.IsEmpty());
+  if (mIsXULKey) {
+    MOZ_ASSERT_UNREACHABLE("Not yet implemented");
+    return;
+  }
+  if (mCommand) {
+    aCommand.Assign(mCommand);
+  }
+}
+
 bool KeyEventHandler::TryConvertToKeyboardShortcut(
     KeyboardShortcut* aOut) const {
   // Convert the event type
