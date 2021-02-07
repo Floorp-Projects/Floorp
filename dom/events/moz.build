@@ -11,7 +11,7 @@ with Files("Event*"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
 if CONFIG["OS_ARCH"] == "WINNT":
-    DIRS += ["win"]
+    DIRS += []
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     DIRS += ["mac"]
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
@@ -152,6 +152,7 @@ UNIFIED_SOURCES += [
     "PointerEventHandler.cpp",
     "RemoteDragStartData.cpp",
     "ScrollAreaEvent.cpp",
+    "ShortcutKeyDefinitions.cpp",
     "ShortcutKeys.cpp",
     "SimpleGestureEvent.cpp",
     "StorageEvent.cpp",
