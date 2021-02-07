@@ -31,7 +31,7 @@ use nsstring::nsAString;
 use num_cpus;
 use program_cache::{remove_disk_cache, WrProgramCache};
 use rayon;
-use swgl_bindings::SwCompositor;
+use webrender::sw_compositor::SwCompositor;
 use tracy_rs::register_thread_with_profiler;
 use webrender::{
     api::units::*, api::*, render_api::*, set_profiler_hooks, AsyncPropertySampler, AsyncScreenshotHandle, Compositor,

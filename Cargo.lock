@@ -5848,6 +5848,7 @@ dependencies = [
  "serde_json",
  "smallvec",
  "svg_fmt",
+ "swgl",
  "time",
  "tracy-rs",
  "uuid",
