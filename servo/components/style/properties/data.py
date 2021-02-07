@@ -403,6 +403,7 @@ class Longhand(object):
                 "BackgroundRepeat",
                 "BorderImageRepeat",
                 "BorderStyle",
+                "table::CaptionSide",
                 "Clear",
                 "ColumnCount",
                 "Contain",
