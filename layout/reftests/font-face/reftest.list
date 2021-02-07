@@ -78,7 +78,7 @@ skip == enable-sheet-7.html multiple-in-family-1-ref.html
 == disable-sheet-4.html disable-sheet-4-ref.html
 == disable-sheet-5.html disable-sheet-4-ref.html
 == sheet-set-base-1.html sheet-set-base-1-ref.html
-random-if(cocoaWidget) == sheet-set-switch-1.html sheet-set-switch-1-ref.html # bug 468217
+== sheet-set-switch-1.html sheet-set-switch-1-ref.html
 == insert-rule-1a.html insert-rule-1-ref.html
 == insert-rule-1b.html insert-rule-1-ref.html
 == delete-rule-1.html delete-rule-1-ref.html
