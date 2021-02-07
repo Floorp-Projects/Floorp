@@ -49,17 +49,64 @@ namespace mozilla {
 
 ShortcutKeyData ShortcutKeys::sInputHandlers[] = {
 // clang-format off
+    /**************************************************************************
+     * Arrow keys to move caret in <input>.
+     **************************************************************************/
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || \
     defined(MOZ_WIDGET_ANDROID) || defined(USE_EMACS_KEY_BINDINGS)
-    {u"keypress", u"VK_LEFT",      nullptr, nullptr,          u"cmd_moveLeft"},                 // Win, Linux, Android, Emacs
-    {u"keypress", u"VK_RIGHT",     nullptr, nullptr,          u"cmd_moveRight"},                // Win, Linux, Android, Emacs
-    {u"keypress", u"VK_LEFT",      nullptr, u"shift",         u"cmd_selectLeft"},               // Win, Linux, Android, Emacs
-    {u"keypress", u"VK_RIGHT",     nullptr, u"shift",         u"cmd_selectRight"},              // Win, Linux, Android, Emacs
-    {u"keypress", u"VK_UP",        nullptr, nullptr,          u"cmd_moveUp"},                   // Win, Linux, Android, Emacs
-    {u"keypress", u"VK_DOWN",      nullptr, nullptr,          u"cmd_moveDown"},                 // Win, Linux, Android, Emacs
-    {u"keypress", u"VK_UP",        nullptr, u"shift",         u"cmd_selectUp"},                 // Win, Linux, Android, Emacs
-    {u"keypress", u"VK_DOWN",      nullptr, u"shift",         u"cmd_selectDown"},               // Win, Linux, Android, Emacs
-#endif
+    {u"keypress", u"VK_LEFT",  nullptr, nullptr,  u"cmd_moveLeft"},   // Win, Linux, Android, Emacs
+    {u"keypress", u"VK_RIGHT", nullptr, nullptr,  u"cmd_moveRight"},  // Win, Linux, Android, Emacs
+    {u"keypress", u"VK_UP",    nullptr, nullptr,  u"cmd_moveUp"},     // Win, Linux, Android, Emacs
+    {u"keypress", u"VK_DOWN",  nullptr, nullptr,  u"cmd_moveDown"},   // Win, Linux, Android, Emacs
+#endif  // Except MOZ_WIDGET_COCOA
+
+    /**************************************************************************
+     * Arrow keys to select a char/line in <input>.
+     **************************************************************************/
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || \
+    defined(MOZ_WIDGET_ANDROID) || defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", u"VK_LEFT",  nullptr, u"shift", u"cmd_selectLeft"},   // Win, Linux, Android, Emacs
+    {u"keypress", u"VK_RIGHT", nullptr, u"shift", u"cmd_selectRight"},  // Win, Linux, Android, Emacs
+    {u"keypress", u"VK_UP",    nullptr, u"shift", u"cmd_selectUp"},     // Win, Linux, Android, Emacs
+    {u"keypress", u"VK_DOWN",  nullptr, u"shift", u"cmd_selectDown"},   // Win, Linux, Android, Emacs
+#endif  // Except MOZ_WIDGET_COCOA
+
+    /**************************************************************************
+     * Arrow keys per word in <input>.
+     **************************************************************************/
+#if defined(MOZ_WIDGET_ANDROID) || defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", u"VK_LEFT",  nullptr, u"control",       u"cmd_wordPrevious"},        // Android, Emacs
+    {u"keypress", u"VK_RIGHT", nullptr, u"control",       u"cmd_wordNext"},            // Android, Emacs
+    {u"keypress", u"VK_LEFT",  nullptr, u"shift,control", u"cmd_selectWordPrevious"},  // Android, Emacs
+    {u"keypress", u"VK_RIGHT", nullptr, u"shift,control", u"cmd_selectWordNext"},      // Android, Emacs
+#endif // MOZ_WIDGET_ANDROID || USE_EMACS_KEY_BINDINGS
+#if defined(XP_WIN)
+    {u"keypress", u"VK_LEFT",  nullptr, u"control",       u"cmd_moveLeft2"},           // Win
+    {u"keypress", u"VK_RIGHT", nullptr, u"control",       u"cmd_moveRight2"},          // Win
+    {u"keypress", u"VK_LEFT",  nullptr, u"shift,control", u"cmd_selectLeft2"},         // Win
+    {u"keypress", u"VK_RIGHT", nullptr, u"shift,control", u"cmd_selectRight2"},        // Win
+#endif // XP_WIN
+
+    /**************************************************************************
+     * Arrow keys per block in <input>.
+     **************************************************************************/
+#if defined(XP_WIN)
+    {u"keypress", u"VK_UP",   nullptr, u"control",       u"cmd_moveUp2"},      // Win
+    {u"keypress", u"VK_DOWN", nullptr, u"control",       u"cmd_moveDown2"},    // Win
+    {u"keypress", u"VK_UP",   nullptr, u"shift,control", u"cmd_selectUp2"},    // Win
+    {u"keypress", u"VK_DOWN", nullptr, u"shift,control", u"cmd_selectDown2"},  // Win
+#endif // XP_WIN
+
+    /**************************************************************************
+     * Arrow keys to begin/end of a line in <input>.
+     **************************************************************************/
+#if defined(MOZ_WIDGET_ANDROID)
+    {u"keypress", u"VK_LEFT",  nullptr, u"alt",       u"cmd_beginLine"},        // Android
+    {u"keypress", u"VK_RIGHT", nullptr, u"alt",       u"cmd_endLine"},          // Android
+    {u"keypress", u"VK_LEFT",  nullptr, u"shift,alt", u"cmd_selectBeginLine"},  // Android
+    {u"keypress", u"VK_RIGHT", nullptr, u"shift,alt", u"cmd_selectEndLine"},    // Android
+#endif // MOZ_WIDGET_ANDROID
+
 
 #if defined(USE_EMACS_KEY_BINDINGS)
     {u"keypress", u"VK_DELETE",    nullptr, u"shift",         u"cmd_cutOrDelete"},               // Emacs
@@ -75,20 +122,8 @@ ShortcutKeyData ShortcutKeys::sInputHandlers[] = {
     {u"keypress", u"VK_HOME",      nullptr, u"control,shift", u"cmd_selectBeginLine"},           // Emacs
     {u"keypress", u"VK_END",       nullptr, u"control,shift", u"cmd_selectEndLine"},             // Emacs
     {u"keypress", u"VK_BACK",      nullptr, u"control",       u"cmd_deleteWordBackward"},        // Emacs
-    {u"keypress", u"VK_LEFT",      nullptr, u"control",       u"cmd_wordPrevious"},              // Emacs
-    {u"keypress", u"VK_RIGHT",     nullptr, u"control",       u"cmd_wordNext"},                  // Emacs
-    {u"keypress", u"VK_LEFT",      nullptr, u"shift,control", u"cmd_selectWordPrevious"},        // Emacs
-    {u"keypress", u"VK_RIGHT",     nullptr, u"shift,control", u"cmd_selectWordNext"},            // Emacs
 #endif // USE_EMACS_KEY_BINDINGS
 #if defined(MOZ_WIDGET_ANDROID)
-    {u"keypress", u"VK_LEFT",      nullptr, u"control",        u"cmd_wordPrevious"},             // Android
-    {u"keypress", u"VK_RIGHT",     nullptr, u"control",        u"cmd_wordNext"},                 // Android
-    {u"keypress", u"VK_LEFT",      nullptr, u"shift,control",  u"cmd_selectWordPrevious"},       // Android
-    {u"keypress", u"VK_RIGHT",     nullptr, u"shift,control",  u"cmd_selectWordNext"},           // Android
-    {u"keypress", u"VK_LEFT",      nullptr, u"alt",            u"cmd_beginLine"},                // Android
-    {u"keypress", u"VK_RIGHT",     nullptr, u"alt",            u"cmd_endLine"},                  // Android
-    {u"keypress", u"VK_LEFT",      nullptr, u"shift,alt",      u"cmd_selectBeginLine"},          // Android
-    {u"keypress", u"VK_RIGHT",     nullptr, u"shift,alt",      u"cmd_selectEndLine"},            // Android
     {u"keypress", u"VK_HOME",      nullptr, nullptr,           u"cmd_beginLine"},                // Android
     {u"keypress", u"VK_END",       nullptr, nullptr,           u"cmd_endLine"},                  // Android
     {u"keypress", u"VK_HOME",      nullptr, u"shift",          u"cmd_selectBeginLine"},          // Android
@@ -107,14 +142,6 @@ ShortcutKeyData ShortcutKeys::sInputHandlers[] = {
     {u"keypress", u"VK_END",       nullptr, u"shift,control",  u"cmd_selectBottom"},             // Win
     {u"keypress", u"VK_HOME",      nullptr, u"control",        u"cmd_moveTop"},                  // Win
     {u"keypress", u"VK_END",       nullptr, u"control",        u"cmd_moveBottom"},               // Win
-    {u"keypress", u"VK_LEFT",      nullptr, u"control",        u"cmd_moveLeft2"},                // Win
-    {u"keypress", u"VK_RIGHT",     nullptr, u"control",        u"cmd_moveRight2"},               // Win
-    {u"keypress", u"VK_LEFT",      nullptr, u"shift,control",  u"cmd_selectLeft2"},              // Win
-    {u"keypress", u"VK_RIGHT",     nullptr, u"shift,control",  u"cmd_selectRight2"},             // Win
-    {u"keypress", u"VK_UP",        nullptr, u"control",        u"cmd_moveUp2"},                  // Win
-    {u"keypress", u"VK_DOWN",      nullptr, u"control",        u"cmd_moveDown2"},                // Win
-    {u"keypress", u"VK_UP",        nullptr, u"shift,control",  u"cmd_selectUp2"},                // Win
-    {u"keypress", u"VK_DOWN",      nullptr, u"shift,control",  u"cmd_selectDown2"},              // Win
     {u"keypress", u"VK_DELETE",    nullptr, u"shift",          u"cmd_cutOrDelete"},              // Win
     {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_deleteWordForward"},        // Win
     {u"keypress", u"VK_INSERT",    nullptr, u"control",        u"cmd_copy"},                     // Win
@@ -172,17 +199,70 @@ ShortcutKeyData ShortcutKeys::sInputHandlers[] = {
 
 ShortcutKeyData ShortcutKeys::sTextAreaHandlers[] = {
 // clang-format off
+    /**************************************************************************
+     * Arrow keys to move caret in <textarea>.
+     **************************************************************************/
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || \
     defined(MOZ_WIDGET_ANDROID) || defined(USE_EMACS_KEY_BINDINGS)
-    {u"keypress", u"VK_LEFT",      nullptr, nullptr,          u"cmd_moveLeft"},                  // Win, Linux, Android, Emacs
-    {u"keypress", u"VK_RIGHT",     nullptr, nullptr,          u"cmd_moveRight"},                 // Win, Linux, Android, Emacs
-    {u"keypress", u"VK_LEFT",      nullptr, u"shift",         u"cmd_selectLeft"},                // Win, Linux, Android, Emacs
-    {u"keypress", u"VK_RIGHT",     nullptr, u"shift",         u"cmd_selectRight"},               // Win, Linux, Android, Emacs
-    {u"keypress", u"VK_UP",        nullptr, nullptr,          u"cmd_moveUp"},                    // Win, Linux, Android, Emacs
-    {u"keypress", u"VK_DOWN",      nullptr, nullptr,          u"cmd_moveDown"},                  // Win, Linux, Android, Emacs
-    {u"keypress", u"VK_UP",        nullptr, u"shift",         u"cmd_selectUp"},                  // Win, Linux, Android, Emacs
-    {u"keypress", u"VK_DOWN",      nullptr, u"shift",         u"cmd_selectDown"},                // Win, Linux, Android, Emacs
-#endif
+    {u"keypress", u"VK_LEFT",  nullptr, nullptr, u"cmd_moveLeft"},   // Win, Linux, Android, Emacs
+    {u"keypress", u"VK_RIGHT", nullptr, nullptr, u"cmd_moveRight"},  // Win, Linux, Android, Emacs
+    {u"keypress", u"VK_UP",    nullptr, nullptr, u"cmd_moveUp"},     // Win, Linux, Android, Emacs
+    {u"keypress", u"VK_DOWN",  nullptr, nullptr, u"cmd_moveDown"},   // Win, Linux, Android, Emacs
+#endif  // Except MOZ_WIDGET_COCOA
+
+    /**************************************************************************
+     * Arrow keys to select a char/line in <textarea>.
+     **************************************************************************/
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || \
+    defined(MOZ_WIDGET_ANDROID) || defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", u"VK_LEFT",  nullptr, u"shift", u"cmd_selectLeft"},   // Win, Linux, Android, Emacs
+    {u"keypress", u"VK_RIGHT", nullptr, u"shift", u"cmd_selectRight"},  // Win, Linux, Android, Emacs
+    {u"keypress", u"VK_UP",    nullptr, u"shift", u"cmd_selectUp"},     // Win, Linux, Android, Emacs
+    {u"keypress", u"VK_DOWN",  nullptr, u"shift", u"cmd_selectDown"},   // Win, Linux, Android, Emacs
+#endif  // Except MOZ_WIDGET_COCOA
+
+    /**************************************************************************
+     * Arrow keys per word in <textarea>.
+     **************************************************************************/
+#if defined(MOZ_WIDGET_ANDROID) || defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", u"VK_LEFT",  nullptr, u"control",       u"cmd_wordPrevious"},        // Android, Emacs
+    {u"keypress", u"VK_RIGHT", nullptr, u"control",       u"cmd_wordNext"},            // Android, Emacs
+    {u"keypress", u"VK_LEFT",  nullptr, u"shift,control", u"cmd_selectWordPrevious"},  // Android, Emacs
+    {u"keypress", u"VK_RIGHT", nullptr, u"shift,control", u"cmd_selectWordNext"},      // Android, Emacs
+#endif // MOZ_WIDGET_ANDROID || USE_EMACS_KEY_BINDINGS
+#if defined(XP_WIN)
+    {u"keypress", u"VK_LEFT",  nullptr, u"control",       u"cmd_moveLeft2"},           // Win
+    {u"keypress", u"VK_RIGHT", nullptr, u"control",       u"cmd_moveRight2"},          // Win
+    {u"keypress", u"VK_LEFT",  nullptr, u"shift,control", u"cmd_selectLeft2"},         // Win
+    {u"keypress", u"VK_RIGHT", nullptr, u"shift,control", u"cmd_selectRight2"},        // Win
+#endif // XP_WIN
+
+    /**************************************************************************
+     * Arrow keys per block in <textarea>.
+     **************************************************************************/
+#if defined(MOZ_WIDGET_ANDROID)
+    {u"keypress", u"VK_UP",   nullptr, u"alt",           u"cmd_moveTop"},      // Android
+    {u"keypress", u"VK_DOWN", nullptr, u"alt",           u"cmd_moveBottom"},   // Android
+    {u"keypress", u"VK_UP",   nullptr, u"shift,alt",     u"cmd_selectTop"},    // Android
+    {u"keypress", u"VK_DOWN", nullptr, u"shift,alt",     u"cmd_selectBottom"}, // Android
+#endif // MOZ_WIDGET_ANDROID
+#if defined(XP_WIN)
+    {u"keypress", u"VK_UP",   nullptr, u"control",       u"cmd_moveUp2"},      // Win
+    {u"keypress", u"VK_DOWN", nullptr, u"control",       u"cmd_moveDown2"},    // Win
+    {u"keypress", u"VK_UP",   nullptr, u"shift,control", u"cmd_selectUp2"},    // Win
+    {u"keypress", u"VK_DOWN", nullptr, u"shift,control", u"cmd_selectDown2"},  // Win
+#endif // XP_WIN
+
+    /**************************************************************************
+     * Arrow keys to begin/end of a line in <textarea>.
+     **************************************************************************/
+#if defined(MOZ_WIDGET_ANDROID)
+    {u"keypress", u"VK_LEFT",  nullptr, u"alt",       u"cmd_beginLine"},        // Android
+    {u"keypress", u"VK_RIGHT", nullptr, u"alt",       u"cmd_endLine"},          // Android
+    {u"keypress", u"VK_LEFT",  nullptr, u"shift,alt", u"cmd_selectBeginLine"},  // Android
+    {u"keypress", u"VK_RIGHT", nullptr, u"shift,alt", u"cmd_selectEndLine"},    // Android
+#endif // MOZ_WIDGET_ANDROID
+
 
 #if defined(USE_EMACS_KEY_BINDINGS)
     {u"keypress", u"VK_DELETE",    nullptr, u"shift",          u"cmd_cutOrDelete"},              // Emacs
@@ -201,25 +281,9 @@ ShortcutKeyData ShortcutKeys::sTextAreaHandlers[] = {
     {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_movePageDown"},             // Emacs
     {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",          u"cmd_selectPageUp"},             // Emacs
     {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift",          u"cmd_selectPageDown"},           // Emacs
-    {u"keypress", u"VK_LEFT",      nullptr, u"control",        u"cmd_wordPrevious"},             // Emacs
-    {u"keypress", u"VK_RIGHT",     nullptr, u"control",        u"cmd_wordNext"},                 // Emacs
-    {u"keypress", u"VK_LEFT",      nullptr, u"shift,control",  u"cmd_selectWordPrevious"},       // Emacs
-    {u"keypress", u"VK_RIGHT",     nullptr, u"shift,control",  u"cmd_selectWordNext"},           // Emacs
     {u"keypress", u"VK_BACK",      nullptr, u"control",        u"cmd_deleteWordBackward"},       // Emacs
 #endif  // USE_EMACS_KEY_BINDINGS
 #if defined(MOZ_WIDGET_ANDROID)
-    {u"keypress", u"VK_LEFT",      nullptr, u"control",        u"cmd_wordPrevious"},             // Android
-    {u"keypress", u"VK_RIGHT",     nullptr, u"control",        u"cmd_wordNext"},                 // Android
-    {u"keypress", u"VK_LEFT",      nullptr, u"shift,control",  u"cmd_selectWordPrevious"},       // Android
-    {u"keypress", u"VK_RIGHT",     nullptr, u"shift,control",  u"cmd_selectWordNext"},           // Android
-    {u"keypress", u"VK_LEFT",      nullptr, u"alt",            u"cmd_beginLine"},                // Android
-    {u"keypress", u"VK_RIGHT",     nullptr, u"alt",            u"cmd_endLine"},                  // Android
-    {u"keypress", u"VK_LEFT",      nullptr, u"shift,alt",      u"cmd_selectBeginLine"},          // Android
-    {u"keypress", u"VK_RIGHT",     nullptr, u"shift,alt",      u"cmd_selectEndLine"},            // Android
-    {u"keypress", u"VK_UP",        nullptr, u"alt",            u"cmd_moveTop"},                  // Android
-    {u"keypress", u"VK_DOWN",      nullptr, u"alt",            u"cmd_moveBottom"},               // Android
-    {u"keypress", u"VK_UP",        nullptr, u"shift,alt",      u"cmd_selectTop"},                // Android
-    {u"keypress", u"VK_DOWN",      nullptr, u"shift,alt",      u"cmd_selectBottom"},             // Android
     {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,           u"cmd_movePageUp"},               // Android
     {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_movePageDown"},             // Android
     {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",          u"cmd_selectPageUp"},             // Android
@@ -250,14 +314,6 @@ ShortcutKeyData ShortcutKeys::sTextAreaHandlers[] = {
     {u"keypress", u"VK_END",       nullptr, u"shift,control",  u"cmd_selectBottom"},             // Win
     {u"keypress", u"VK_HOME",      nullptr, u"control",        u"cmd_moveTop"},                  // Win
     {u"keypress", u"VK_END",       nullptr, u"control",        u"cmd_moveBottom"},               // Win
-    {u"keypress", u"VK_LEFT",      nullptr, u"control",        u"cmd_moveLeft2"},                // Win
-    {u"keypress", u"VK_RIGHT",     nullptr, u"control",        u"cmd_moveRight2"},               // Win
-    {u"keypress", u"VK_LEFT",      nullptr, u"shift,control",  u"cmd_selectLeft2"},              // Win
-    {u"keypress", u"VK_RIGHT",     nullptr, u"shift,control",  u"cmd_selectRight2"},             // Win
-    {u"keypress", u"VK_UP",        nullptr, u"control",        u"cmd_moveUp2"},                  // Win
-    {u"keypress", u"VK_DOWN",      nullptr, u"control",        u"cmd_moveDown2"},                // Win
-    {u"keypress", u"VK_UP",        nullptr, u"shift,control",  u"cmd_selectUp2"},                // Win
-    {u"keypress", u"VK_DOWN",      nullptr, u"shift,control",  u"cmd_selectDown2"},              // Win
     {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,           u"cmd_movePageUp"},               // Win
     {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_movePageDown"},             // Win
     {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",          u"cmd_selectPageUp"},             // Win
@@ -321,27 +377,90 @@ ShortcutKeyData ShortcutKeys::sTextAreaHandlers[] = {
 
 ShortcutKeyData ShortcutKeys::sBrowserHandlers[] = {
     // clang-format off
-    {u"keypress", u"VK_UP",        nullptr, nullptr,           u"cmd_moveUp"},                   // Win, macOS, Linux, Android, Emacs
-    {u"keypress", u"VK_DOWN",      nullptr, nullptr,           u"cmd_moveDown"},                 // Win, macOS, Linux, Android, Emacs
-    {u"keypress", u"VK_LEFT",      nullptr, nullptr,           u"cmd_moveLeft"},                 // Win, macOS, Linux, Android, Emacs
-    {u"keypress", u"VK_RIGHT",     nullptr, nullptr,           u"cmd_moveRight"},                // Win, macOS, Linux, Android, Emacs
+    /**************************************************************************
+     * Arrow keys to move caret in non-editable element.
+     **************************************************************************/
+    {u"keypress", u"VK_LEFT",  nullptr, nullptr,  u"cmd_moveLeft"},   // Win, macOS, Linux, Android, Emacs
+    {u"keypress", u"VK_RIGHT", nullptr, nullptr,  u"cmd_moveRight"},  // Win, macOS, Linux, Android, Emacs
+    {u"keypress", u"VK_UP",    nullptr, nullptr,  u"cmd_moveUp"},     // Win, macOS, Linux, Android, Emacs
+    {u"keypress", u"VK_DOWN",  nullptr, nullptr,  u"cmd_moveDown"},   // Win, macOS, Linux, Android, Emacs
+
+    /**************************************************************************
+     * Arrow keys to select a char/line in non-editable element.
+     **************************************************************************/
+#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_GTK)
+    {u"keypress", u"VK_LEFT",  nullptr, u"shift", u"cmd_selectLeft"},          // Win, macOS, Linux
+    {u"keypress", u"VK_RIGHT", nullptr, u"shift", u"cmd_selectRight"},         // Win, macOS, Linux
+    {u"keypress", u"VK_UP",    nullptr, u"shift", u"cmd_selectUp"},            // Win, macOS, Linux
+    {u"keypress", u"VK_DOWN",  nullptr, u"shift", u"cmd_selectDown"},          // Win, macOS, Linux
+#endif  // XP_WIN || MOZ_WIDGET_COCOA || MOZ_WIDGET_GTK
+#if defined(MOZ_WIDGET_ANDROID) || defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", u"VK_LEFT",  nullptr, u"shift", u"cmd_selectCharPrevious"},  // Android, Emacs
+    {u"keypress", u"VK_RIGHT", nullptr, u"shift", u"cmd_selectCharNext"},      // Android, Emacs
+    {u"keypress", u"VK_UP",    nullptr, u"shift", u"cmd_selectLinePrevious"},  // Android, Emacs
+    {u"keypress", u"VK_DOWN",  nullptr, u"shift", u"cmd_selectLineNext"},      // Android, Emacs
+#endif  // MOZ_WIDGET_ANDROID || USE_EMACS_KEY_BINDINGS
+
+    /**************************************************************************
+     * Arrow keys per word in non-editable element.
+     **************************************************************************/
+#if defined(MOZ_WIDGET_ANDROID) || defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", u"VK_LEFT",  nullptr, u"control",       u"cmd_wordPrevious"},        // Android, Emacs
+    {u"keypress", u"VK_RIGHT", nullptr, u"control",       u"cmd_wordNext"},            // Android, Emacs
+    {u"keypress", u"VK_LEFT",  nullptr, u"control,shift", u"cmd_selectWordPrevious"},  // Android, Emacs
+    {u"keypress", u"VK_RIGHT", nullptr, u"control,shift", u"cmd_selectWordNext"},      // Android, Emacs
+#endif  // MOZ_WIDGET_ANDROID || USE_EMACS_KEY_BINDINGS
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+    {u"keypress", u"VK_LEFT",  nullptr, u"control",       u"cmd_moveLeft2"},           // Win, Linux
+    {u"keypress", u"VK_RIGHT", nullptr, u"control",       u"cmd_moveRight2"},          // Win, Linux
+    {u"keypress", u"VK_LEFT",  nullptr, u"control,shift", u"cmd_selectLeft2"},         // Win, Linux
+    {u"keypress", u"VK_RIGHT", nullptr, u"control,shift", u"cmd_selectRight2"},        // Win, Linux
+#endif  // XP_WIN || MOZ_WIDGET_GTK
+#if defined(MOZ_WIDGET_COCOA)
+    {u"keypress", u"VK_LEFT",  nullptr, u"alt",           u"cmd_moveLeft2"},           // macOS
+    {u"keypress", u"VK_RIGHT", nullptr, u"alt",           u"cmd_moveRight2"},          // macOS
+    {u"keypress", u"VK_LEFT",  nullptr, u"alt,shift",     u"cmd_selectLeft2"},         // macOS
+    {u"keypress", u"VK_RIGHT", nullptr, u"alt,shift",     u"cmd_selectRight2"},        // macOS
+#endif  // MOZ_WIDGET_COCOA
+
+    /**************************************************************************
+     * Arrow keys per block in non-editable element.
+     **************************************************************************/
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+    {u"keypress", u"VK_UP",   nullptr, u"control",       u"cmd_moveUp2"},       // Win, Linux
+    {u"keypress", u"VK_DOWN", nullptr, u"control",       u"cmd_moveDown2"},     // Win, Linux
+    {u"keypress", u"VK_UP",   nullptr, u"control,shift", u"cmd_selectUp2"},     // Win, Linux
+    {u"keypress", u"VK_DOWN", nullptr, u"control,shift", u"cmd_selectDown2"},   // Win, Linux
+#endif  // XP_WIN || MOZ_WIDGET_GTK
+#if defined(MOZ_WIDGET_COCOA)
+    {u"keypress", u"VK_UP",   nullptr, u"accel",         u"cmd_moveUp2"},       // macOS
+    {u"keypress", u"VK_DOWN", nullptr, u"accel",         u"cmd_moveDown2"},     // macOS
+    {u"keypress", u"VK_UP",   nullptr, u"alt,shift",     u"cmd_selectUp2"},     // macOS
+    {u"keypress", u"VK_DOWN", nullptr, u"alt,shift",     u"cmd_selectDown2"},   // macOS
+#endif  // MOZ_WIDGET_COCOA
+#if defined(MOZ_WIDGET_ANDROID)
+    {u"keypress", u"VK_UP",   nullptr, u"alt",           u"cmd_moveTop"},       // Android
+    {u"keypress", u"VK_DOWN", nullptr, u"alt",           u"cmd_moveBottom"},    // Android
+    {u"keypress", u"VK_UP",   nullptr, u"shift,alt",     u"cmd_selectTop"},     // Android
+    {u"keypress", u"VK_DOWN", nullptr, u"shift,alt",     u"cmd_selectBottom"},  // Android
+#endif  // MOZ_WIDGET_ANDROID
+
+    /**************************************************************************
+     * Arrow keys to begin/end of a line in non-editable element.
+     **************************************************************************/
+#if defined(MOZ_WIDGET_ANDROID)
+    {u"keypress", u"VK_LEFT",  nullptr, u"alt",       u"cmd_beginLine"},        // Android
+    {u"keypress", u"VK_RIGHT", nullptr, u"alt",       u"cmd_endLine"},          // Android
+    {u"keypress", u"VK_LEFT",  nullptr, u"shift,alt", u"cmd_selectBeginLine"},  // Android
+    {u"keypress", u"VK_RIGHT", nullptr, u"shift,alt", u"cmd_selectEndLine"},    // Android
+#endif  // MOZ_WIDGET_ANDROID
+
+
 #if defined(MOZ_WIDGET_COCOA)
     {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,           u"cmd_scrollPageUp"},             // macOS
     {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_scrollPageDown"},           // macOS
     {u"keypress", u"VK_HOME",      nullptr, nullptr,           u"cmd_scrollTop"},                // macOS
     {u"keypress", u"VK_END",       nullptr, nullptr,           u"cmd_scrollBottom"},             // macOS
-    {u"keypress", u"VK_LEFT",      nullptr, u"alt",            u"cmd_moveLeft2"},                // macOS
-    {u"keypress", u"VK_RIGHT",     nullptr, u"alt",            u"cmd_moveRight2"},               // macOS
-    {u"keypress", u"VK_LEFT",      nullptr, u"alt,shift",      u"cmd_selectLeft2"},              // macOS
-    {u"keypress", u"VK_RIGHT",     nullptr, u"alt,shift",      u"cmd_selectRight2"},             // macOS
-    {u"keypress", u"VK_LEFT",      nullptr, u"shift",          u"cmd_selectLeft"},               // macOS
-    {u"keypress", u"VK_RIGHT",     nullptr, u"shift",          u"cmd_selectRight"},              // macOS
-    {u"keypress", u"VK_UP",        nullptr, u"alt,shift",      u"cmd_selectUp2"},                // macOS
-    {u"keypress", u"VK_DOWN",      nullptr, u"alt,shift",      u"cmd_selectDown2"},              // macOS
-    {u"keypress", u"VK_UP",        nullptr, u"shift",          u"cmd_selectUp"},                 // macOS
-    {u"keypress", u"VK_DOWN",      nullptr, u"shift",          u"cmd_selectDown"},               // macOS
-    {u"keypress", u"VK_UP",        nullptr, u"accel",          u"cmd_moveUp2"},                  // macOS
-    {u"keypress", u"VK_DOWN",      nullptr, u"accel",          u"cmd_moveDown2"},                // macOS
 #endif  // MOZ_WIDGET_COCOA
 #if defined(USE_EMACS_KEY_BINDINGS)
     {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,           u"cmd_movePageUp"},               // Emacs
@@ -357,34 +476,10 @@ ShortcutKeyData ShortcutKeys::sBrowserHandlers[] = {
     {u"keypress", u"VK_END",       nullptr, u"control",        u"cmd_moveBottom"},               // Emacs
     {u"keypress", u"VK_HOME",      nullptr, u"shift,control",  u"cmd_selectTop"},                // Emacs
     {u"keypress", u"VK_END",       nullptr, u"shift,control",  u"cmd_selectBottom"},             // Emacs
-    {u"keypress", u"VK_LEFT",      nullptr, u"control",        u"cmd_wordPrevious"},             // Emacs
-    {u"keypress", u"VK_RIGHT",     nullptr, u"control",        u"cmd_wordNext"},                 // Emacs
-    {u"keypress", u"VK_LEFT",      nullptr, u"control,shift",  u"cmd_selectWordPrevious"},       // Emacs
-    {u"keypress", u"VK_RIGHT",     nullptr, u"control,shift",  u"cmd_selectWordNext"},           // Emacs
-    {u"keypress", u"VK_LEFT",      nullptr, u"shift",          u"cmd_selectCharPrevious"},       // Emacs
-    {u"keypress", u"VK_RIGHT",     nullptr, u"shift",          u"cmd_selectCharNext"},           // Emacs
     {u"keypress", u"VK_HOME",      nullptr, u"shift",          u"cmd_selectBeginLine"},          // Emacs
     {u"keypress", u"VK_END",       nullptr, u"shift",          u"cmd_selectEndLine"},            // Emacs
-    {u"keypress", u"VK_UP",        nullptr, u"shift",          u"cmd_selectLinePrevious"},       // Emacs
-    {u"keypress", u"VK_DOWN",      nullptr, u"shift",          u"cmd_selectLineNext"},           // Emacs
 #endif  // USE_EMACS_KEY_BINDINGS
 #if defined(MOZ_WIDGET_ANDROID)
-    {u"keypress", u"VK_LEFT",      nullptr, u"shift",          u"cmd_selectCharPrevious"},       // Android
-    {u"keypress", u"VK_RIGHT",     nullptr, u"shift",          u"cmd_selectCharNext"},           // Android
-    {u"keypress", u"VK_LEFT",      nullptr, u"control",        u"cmd_wordPrevious"},             // Android
-    {u"keypress", u"VK_RIGHT",     nullptr, u"control",        u"cmd_wordNext"},                 // Android
-    {u"keypress", u"VK_LEFT",      nullptr, u"control,shift",  u"cmd_selectWordPrevious"},       // Android
-    {u"keypress", u"VK_RIGHT",     nullptr, u"control,shift",  u"cmd_selectWordNext"},           // Android
-    {u"keypress", u"VK_LEFT",      nullptr, u"alt",            u"cmd_beginLine"},                // Android
-    {u"keypress", u"VK_RIGHT",     nullptr, u"alt",            u"cmd_endLine"},                  // Android
-    {u"keypress", u"VK_LEFT",      nullptr, u"shift,alt",      u"cmd_selectBeginLine"},          // Android
-    {u"keypress", u"VK_RIGHT",     nullptr, u"shift,alt",      u"cmd_selectEndLine"},            // Android
-    {u"keypress", u"VK_UP",        nullptr, u"shift",          u"cmd_selectLinePrevious"},       // Android
-    {u"keypress", u"VK_DOWN",      nullptr, u"shift",          u"cmd_selectLineNext"},           // Android
-    {u"keypress", u"VK_UP",        nullptr, u"alt",            u"cmd_moveTop"},                  // Android
-    {u"keypress", u"VK_DOWN",      nullptr, u"alt",            u"cmd_moveBottom"},               // Android
-    {u"keypress", u"VK_UP",        nullptr, u"shift,alt",      u"cmd_selectTop"},                // Android
-    {u"keypress", u"VK_DOWN",      nullptr, u"shift,alt",      u"cmd_selectBottom"},             // Android
     {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,           u"cmd_movePageUp"},               // Android
     {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_movePageDown"},             // Android
     {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",          u"cmd_selectPageUp"},             // Android
@@ -422,18 +517,6 @@ ShortcutKeyData ShortcutKeys::sBrowserHandlers[] = {
     {u"keypress", u"VK_END",       nullptr, u"control",        u"cmd_moveBottom"},               // Linux
     {u"keypress", u"VK_HOME",      nullptr, u"shift,control",  u"cmd_selectTop"},                // Linux
     {u"keypress", u"VK_END",       nullptr, u"shift,control",  u"cmd_selectBottom"},             // Linux
-    {u"keypress", u"VK_LEFT",      nullptr, u"shift",          u"cmd_selectLeft"},               // Linux
-    {u"keypress", u"VK_RIGHT",     nullptr, u"shift",          u"cmd_selectRight"},              // Linux
-    {u"keypress", u"VK_LEFT",      nullptr, u"control",        u"cmd_moveLeft2"},                // Linux
-    {u"keypress", u"VK_RIGHT",     nullptr, u"control",        u"cmd_moveRight2"},               // Linux
-    {u"keypress", u"VK_LEFT",      nullptr, u"control,shift",  u"cmd_selectLeft2"},              // Linux
-    {u"keypress", u"VK_RIGHT",     nullptr, u"control,shift",  u"cmd_selectRight2"},             // Linux
-    {u"keypress", u"VK_UP",        nullptr, u"shift",          u"cmd_selectUp"},                 // Linux
-    {u"keypress", u"VK_DOWN",      nullptr, u"shift",          u"cmd_selectDown"},               // Linux
-    {u"keypress", u"VK_UP",        nullptr, u"control",        u"cmd_moveUp2"},                  // Linux
-    {u"keypress", u"VK_DOWN",      nullptr, u"control",        u"cmd_moveDown2"},                // Linux
-    {u"keypress", u"VK_UP",        nullptr, u"control,shift",  u"cmd_selectUp2"},                // Linux
-    {u"keypress", u"VK_DOWN",      nullptr, u"control,shift",  u"cmd_selectDown2"},              // Linux
 #endif  // MOZ_WIDGET_GTK
 #if defined(XP_WIN)
     {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,           u"cmd_movePageUp"},               // Win
@@ -449,18 +532,6 @@ ShortcutKeyData ShortcutKeys::sBrowserHandlers[] = {
     {u"keypress", u"VK_END",       nullptr, u"control",        u"cmd_moveBottom"},               // Win
     {u"keypress", u"VK_HOME",      nullptr, u"shift,control",  u"cmd_selectTop"},                // Win
     {u"keypress", u"VK_END",       nullptr, u"shift,control",  u"cmd_selectBottom"},             // Win
-    {u"keypress", u"VK_LEFT",      nullptr, u"control",        u"cmd_moveLeft2"},                // Win
-    {u"keypress", u"VK_RIGHT",     nullptr, u"control",        u"cmd_moveRight2"},               // Win
-    {u"keypress", u"VK_LEFT",      nullptr, u"control,shift",  u"cmd_selectLeft2"},              // Win
-    {u"keypress", u"VK_RIGHT",     nullptr, u"control,shift",  u"cmd_selectRight2"},             // Win
-    {u"keypress", u"VK_LEFT",      nullptr, u"shift",          u"cmd_selectLeft"},               // Win
-    {u"keypress", u"VK_RIGHT",     nullptr, u"shift",          u"cmd_selectRight"},              // Win
-    {u"keypress", u"VK_UP",        nullptr, u"control",        u"cmd_moveUp2"},                  // Win
-    {u"keypress", u"VK_DOWN",      nullptr, u"control",        u"cmd_moveDown2"},                // Win
-    {u"keypress", u"VK_UP",        nullptr, u"control,shift",  u"cmd_selectUp2"},                // Win
-    {u"keypress", u"VK_DOWN",      nullptr, u"control,shift",  u"cmd_selectDown2"},              // Win
-    {u"keypress", u"VK_UP",        nullptr, u"shift",          u"cmd_selectUp"},                 // Win
-    {u"keypress", u"VK_DOWN",      nullptr, u"shift",          u"cmd_selectDown"},               // Win
     {u"keypress", u"VK_HOME",      nullptr, u"shift",          u"cmd_selectBeginLine"},          // Win
     {u"keypress", u"VK_END",       nullptr, u"shift",          u"cmd_selectEndLine"},            // Win
 #endif  // XP_WIN
@@ -488,27 +559,76 @@ ShortcutKeyData ShortcutKeys::sBrowserHandlers[] = {
 
 ShortcutKeyData ShortcutKeys::sEditorHandlers[] = {
 // clang-format off
+    /**************************************************************************
+     * Arrow keys to move caret in HTMLEditor.
+     **************************************************************************/
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || \
     defined(MOZ_WIDGET_ANDROID) || defined(USE_EMACS_KEY_BINDINGS)
-    {u"keypress", u"VK_LEFT",      nullptr, nullptr,           u"cmd_moveLeft"},                 // Win, Linux, Android, Emacs
-    {u"keypress", u"VK_RIGHT",     nullptr, nullptr,           u"cmd_moveRight"},                // Win, Linux, Android, Emacs
-    {u"keypress", u"VK_LEFT",      nullptr, u"shift",          u"cmd_selectLeft"},               // Win, Linux, Android, Emacs
-    {u"keypress", u"VK_RIGHT",     nullptr, u"shift",          u"cmd_selectRight"},              // Win, Linux, Android, Emacs
-    {u"keypress", u"VK_UP",        nullptr, nullptr,           u"cmd_moveUp"},                   // Win, Linux, Android, Emacs
-    {u"keypress", u"VK_DOWN",      nullptr, nullptr,           u"cmd_moveDown"},                 // Win, Linux, Android, Emacs
-    {u"keypress", u"VK_UP",        nullptr, u"shift",          u"cmd_selectUp"},                 // Win, Linux, Android, Emacs
-    {u"keypress", u"VK_DOWN",      nullptr, u"shift",          u"cmd_selectDown"},               // Win, Linux, Android, Emacs
-#endif
+    {u"keypress", u"VK_LEFT",  nullptr, nullptr,  u"cmd_moveLeft"},   // Win, Linux, Android, Emacs
+    {u"keypress", u"VK_RIGHT", nullptr, nullptr,  u"cmd_moveRight"},  // Win, Linux, Android, Emacs
+    {u"keypress", u"VK_UP",    nullptr, nullptr,  u"cmd_moveUp"},     // Win, Linux, Android, Emacs
+    {u"keypress", u"VK_DOWN",  nullptr, nullptr,  u"cmd_moveDown"},   // Win, Linux, Android, Emacs
+#endif  // Except MOZ_WIDGET_COCOA
+
+    /**************************************************************************
+     * Arrow keys to select a char/line in HTMLEditor.
+     **************************************************************************/
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || \
+    defined(MOZ_WIDGET_ANDROID) || defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", u"VK_LEFT",  nullptr, u"shift", u"cmd_selectLeft"},   // Win, Linux, Android, Emacs
+    {u"keypress", u"VK_RIGHT", nullptr, u"shift", u"cmd_selectRight"},  // Win, Linux, Android, Emacs
+    {u"keypress", u"VK_UP",    nullptr, u"shift", u"cmd_selectUp"},     // Win, Linux, Android, Emacs
+    {u"keypress", u"VK_DOWN",  nullptr, u"shift", u"cmd_selectDown"},   // Win, Linux, Android, Emacs
+#endif  // Except MOZ_WIDGET_COCOA
+
+    /**************************************************************************
+     * Arrow keys per word in HTMLEditor.
+     **************************************************************************/
+#if defined(MOZ_WIDGET_ANDROID) || defined(USE_EMACS_KEY_BINDINGS)
+    {u"keypress", u"VK_LEFT",  nullptr, u"control",       u"cmd_wordPrevious"},        // Android, Emacs
+    {u"keypress", u"VK_RIGHT", nullptr, u"control",       u"cmd_wordNext"},            // Android, Emacs
+    {u"keypress", u"VK_LEFT",  nullptr, u"shift,control", u"cmd_selectWordPrevious"},  // Android, Emacs
+    {u"keypress", u"VK_RIGHT", nullptr, u"shift,control", u"cmd_selectWordNext"},      // Android, Emacs
+#endif  // MOZ_WIDGET_ANDROID || USE_EMACS_KEY_BINDINGS
+#if defined(XP_WIN)
+    {u"keypress", u"VK_LEFT",  nullptr, u"accel",         u"cmd_moveLeft2"},           // Win
+    {u"keypress", u"VK_RIGHT", nullptr, u"accel",         u"cmd_moveRight2"},          // Win
+    {u"keypress", u"VK_LEFT",  nullptr, u"shift,accel",   u"cmd_selectLeft2"},         // Win
+    {u"keypress", u"VK_RIGHT", nullptr, u"shift,accel",   u"cmd_selectRight2"},        // Win
+#endif  // XP_WIN
+
+    /**************************************************************************
+     * Arrow keys per block in HTMLEditor.
+     **************************************************************************/
+#if defined(MOZ_WIDGET_ANDROID)
+    {u"keypress", u"VK_UP",   nullptr, u"alt",         u"cmd_moveTop"},       // Android
+    {u"keypress", u"VK_DOWN", nullptr, u"alt",         u"cmd_moveBottom"},    // Android
+    {u"keypress", u"VK_UP",   nullptr, u"shift,alt",   u"cmd_selectTop"},     // Android
+    {u"keypress", u"VK_DOWN", nullptr, u"shift,alt",   u"cmd_selectBottom"},  // Android
+#endif  // MOZ_WIDGET_ANDROID
+#if defined(XP_WIN)
+    {u"keypress", u"VK_UP",   nullptr, u"accel",       u"cmd_moveUp2"},       // Win
+    {u"keypress", u"VK_DOWN", nullptr, u"accel",       u"cmd_moveDown2"},     // Win
+    {u"keypress", u"VK_UP",   nullptr, u"shift,accel", u"cmd_selectUp2"},     // Win
+    {u"keypress", u"VK_DOWN", nullptr, u"shift,accel", u"cmd_selectDown2"},   // Win
+#endif  // XP_WIN
+
+    /**************************************************************************
+     * Arrow keys to begin/end of a line in HTMLEditor.
+     **************************************************************************/
+#if defined(MOZ_WIDGET_ANDROID)
+    {u"keypress", u"VK_LEFT",  nullptr, u"alt",       u"cmd_beginLine"},        // Android
+    {u"keypress", u"VK_RIGHT", nullptr, u"alt",       u"cmd_endLine"},          // Android
+    {u"keypress", u"VK_LEFT",  nullptr, u"shift,alt", u"cmd_selectBeginLine"},  // Android
+    {u"keypress", u"VK_RIGHT", nullptr, u"shift,alt", u"cmd_selectEndLine"},    // Android
+#endif  // MOZ_WIDGET_ANDROID
+
 
 #if defined(USE_EMACS_KEY_BINDINGS)
     {u"keypress", u"VK_DELETE",    nullptr, u"shift",          u"cmd_cutOrDelete"},              // Emacs
     {u"keypress", u"VK_DELETE",    nullptr, u"control",        u"cmd_copyOrDelete"},             // Emacs
     {u"keypress", u"VK_INSERT",    nullptr, u"control",        u"cmd_copy"},                     // Emacs
     {u"keypress", u"VK_INSERT",    nullptr, u"shift",          u"cmd_paste"},                    // Emacs
-    {u"keypress", u"VK_LEFT",      nullptr, u"control",        u"cmd_wordPrevious"},             // Emacs
-    {u"keypress", u"VK_RIGHT",     nullptr, u"control",        u"cmd_wordNext"},                 // Emacs
-    {u"keypress", u"VK_LEFT",      nullptr, u"shift,control",  u"cmd_selectWordPrevious"},       // Emacs
-    {u"keypress", u"VK_RIGHT",     nullptr, u"shift,control",  u"cmd_selectWordNext"},           // Emacs
     {u"keypress", u"VK_BACK",      nullptr, u"control",        u"cmd_deleteWordBackward"},       // Emacs
     {u"keypress", u"VK_HOME",      nullptr, nullptr,           u"cmd_beginLine"},                // Emacs
     {u"keypress", u"VK_END",       nullptr, nullptr,           u"cmd_endLine"},                  // Emacs
@@ -524,18 +644,6 @@ ShortcutKeyData ShortcutKeys::sEditorHandlers[] = {
     {u"keypress", u"VK_PAGE_DOWN", nullptr, u"shift",          u"cmd_selectPageDown"},           // Emacs
 #endif  // USE_EMACS_KEY_BINDINGS
 #if defined(MOZ_WIDGET_ANDROID)
-    {u"keypress", u"VK_LEFT",      nullptr, u"control",        u"cmd_wordPrevious"},             // Android
-    {u"keypress", u"VK_RIGHT",     nullptr, u"control",        u"cmd_wordNext"},                 // Android
-    {u"keypress", u"VK_LEFT",      nullptr, u"shift,control",  u"cmd_selectWordPrevious"},       // Android
-    {u"keypress", u"VK_RIGHT",     nullptr, u"shift,control",  u"cmd_selectWordNext"},           // Android
-    {u"keypress", u"VK_LEFT",      nullptr, u"alt",            u"cmd_beginLine"},                // Android
-    {u"keypress", u"VK_RIGHT",     nullptr, u"alt",            u"cmd_endLine"},                  // Android
-    {u"keypress", u"VK_LEFT",      nullptr, u"shift,alt",      u"cmd_selectBeginLine"},          // Android
-    {u"keypress", u"VK_RIGHT",     nullptr, u"shift,alt",      u"cmd_selectEndLine"},            // Android
-    {u"keypress", u"VK_UP",        nullptr, u"alt",            u"cmd_moveTop"},                  // Android
-    {u"keypress", u"VK_DOWN",      nullptr, u"alt",            u"cmd_moveBottom"},               // Android
-    {u"keypress", u"VK_UP",        nullptr, u"shift,alt",      u"cmd_selectTop"},                // Android
-    {u"keypress", u"VK_DOWN",      nullptr, u"shift,alt",      u"cmd_selectBottom"},             // Android
     {u"keypress", u"VK_PAGE_UP",   nullptr, nullptr,           u"cmd_movePageUp"},               // Android
     {u"keypress", u"VK_PAGE_DOWN", nullptr, nullptr,           u"cmd_movePageDown"},             // Android
     {u"keypress", u"VK_PAGE_UP",   nullptr, u"shift",          u"cmd_selectPageUp"},             // Android
@@ -564,14 +672,6 @@ ShortcutKeyData ShortcutKeys::sEditorHandlers[] = {
     {u"keypress", u"VK_INSERT",    nullptr, u"shift",          u"cmd_paste"},                    // Win
     {u"keypress", u"VK_BACK",      nullptr, u"alt",            u"cmd_undo"},                     // Win
     {u"keypress", u"VK_BACK",      nullptr, u"alt,shift",      u"cmd_redo"},                     // Win
-    {u"keypress", u"VK_LEFT",      nullptr, u"accel",          u"cmd_moveLeft2"},                // Win
-    {u"keypress", u"VK_RIGHT",     nullptr, u"accel",          u"cmd_moveRight2"},               // Win
-    {u"keypress", u"VK_LEFT",      nullptr, u"shift,accel",    u"cmd_selectLeft2"},              // Win
-    {u"keypress", u"VK_RIGHT",     nullptr, u"shift,accel",    u"cmd_selectRight2"},             // Win
-    {u"keypress", u"VK_UP",        nullptr, u"accel",          u"cmd_moveUp2"},                  // Win
-    {u"keypress", u"VK_DOWN",      nullptr, u"accel",          u"cmd_moveDown2"},                // Win
-    {u"keypress", u"VK_UP",        nullptr, u"shift,accel",    u"cmd_selectUp2"},                // Win
-    {u"keypress", u"VK_DOWN",      nullptr, u"shift,accel",    u"cmd_selectDown2"},              // Win
     {u"keypress", u"VK_HOME",      nullptr, u"shift,control",  u"cmd_selectTop"},                // Win
     {u"keypress", u"VK_END",       nullptr, u"shift,control",  u"cmd_selectBottom"},             // Win
     {u"keypress", u"VK_HOME",      nullptr, u"control",        u"cmd_moveTop"},                  // Win
