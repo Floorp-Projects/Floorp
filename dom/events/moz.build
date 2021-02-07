@@ -32,6 +32,8 @@ MOCHITEST_MANIFESTS += [
 
 MOCHITEST_CHROME_MANIFESTS += ["test/chrome.ini"]
 
+TEST_DIRS += ["test/gtest"]
+
 XPIDL_SOURCES += [
     "nsIEventListenerService.idl",
 ]

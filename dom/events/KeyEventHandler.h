@@ -87,6 +87,8 @@ class KeyEventHandler final {
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
+  void GetCommand(nsAString& aCommand) const;
+
  public:
   static uint32_t gRefCnt;
 

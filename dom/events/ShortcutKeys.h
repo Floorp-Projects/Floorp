@@ -40,6 +40,8 @@ class ShortcutKeys : public nsIObserver {
   static nsAtom* ConvertEventToDOMEventType(
       const WidgetKeyboardEvent* aWidgetKeyboardEvent);
 
+  static void Shutdown();
+
  protected:
   ShortcutKeys();
   virtual ~ShortcutKeys();
