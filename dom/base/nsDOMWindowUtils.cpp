@@ -1608,6 +1608,53 @@ nsDOMWindowUtils::TransformRectLayoutToVisual(float aX, float aY, float aWidth,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::ToScreenRect(float aX, float aY, float aWidth, float aHeight,
+                               DOMRect** aResult) {
+  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
+  NS_ENSURE_STATE(window);
+
+  PresShell* presShell = GetPresShell();
+  NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_AVAILABLE);
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  NS_ENSURE_TRUE(widget, NS_ERROR_NOT_AVAILABLE);
+
+  // Note that if the document is NOT in OOP iframes, i.e. it's in the top level
+  // content subtree in the same process,
+  // nsIWidget::WidgetToTopLevelWidgetTransform() doesn't include the desktop
+  // zoom value, so for documents in the top level content document subtree,
+  // this ViewportUtils::DocumentRelativeLayoutToVisual call applies the desktop
+  // zoom value via PresShell::GetResolution() in the function.
+  CSSRect rect(aX, aY, aWidth, aHeight);
+  rect = ViewportUtils::DocumentRelativeLayoutToVisual(rect, presShell);
+
+  nsPresContext* presContext = presShell->GetPresContext();
+  MOZ_ASSERT(presContext);
+
+  // For OOP iframe documents, we don't have desktop zoom value specifically in
+  // each iframe documents (i.e. the in-process root presshell's resolution is
+  // 1.0), instead nsIWidget::WidgetToTopLevelWidgetTransform() includes the
+  // desktop zoom scale value along with translations by ancestor scroll
+  // containers, ancestor CSS transforms, etc.
+  nsRect appUnitsRect = CSSPixel::ToAppUnits(rect);
+  LayoutDeviceRect devPixelsRect = LayoutDeviceRect::FromAppUnits(
+      appUnitsRect, presContext->AppUnitsPerDevPixel());
+  devPixelsRect =
+      widget->WidgetToTopLevelWidgetTransform().TransformBounds(devPixelsRect) +
+      widget->TopLevelWidgetToScreenOffset();
+
+  appUnitsRect = LayoutDeviceRect::ToAppUnits(
+      devPixelsRect,
+      presContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
+  rect = CSSRect::FromAppUnits(appUnitsRect);
+
+  RefPtr<DOMRect> outRect = new DOMRect(window);
+  outRect->SetRect(rect.x, rect.y, rect.width, rect.height);
+  outRect.forget(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::SetDynamicToolbarMaxHeight(uint32_t aHeightInScreen) {
   if (aHeightInScreen > INT32_MAX) {
     return NS_ERROR_INVALID_ARG;
