@@ -139,7 +139,7 @@ void RenderTextureHostSWGL::CleanupPlanes() {
 RenderTextureHostSWGL::~RenderTextureHostSWGL() { CleanupPlanes(); }
 
 bool RenderTextureHostSWGL::LockSWGLCompositeSurface(
-    void* aContext, wr::WrSWGLCompositeSurfaceInfo* aInfo) {
+    void* aContext, wr::SWGLCompositeSurfaceInfo* aInfo) {
   if (!SetContext(aContext)) {
     return false;
   }
@@ -179,7 +179,7 @@ bool RenderTextureHostSWGL::LockSWGLCompositeSurface(
 }
 
 bool wr_swgl_lock_composite_surface(void* aContext, wr::ExternalImageId aId,
-                                    wr::WrSWGLCompositeSurfaceInfo* aInfo) {
+                                    wr::SWGLCompositeSurfaceInfo* aInfo) {
   RenderTextureHost* texture = RenderThread::Get()->GetRenderTexture(aId);
   if (!texture) {
     return false;

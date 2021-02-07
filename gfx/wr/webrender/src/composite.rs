@@ -4,6 +4,7 @@
 
 use api::{ColorF, YuvColorSpace, YuvFormat, ImageRendering, ExternalImageId, ImageBufferKind};
 use api::units::*;
+use api::ColorDepth;
 use crate::batch::{resolve_image};
 use euclid::Transform3D;
 use crate::gpu_cache::GpuCache;
@@ -1065,6 +1066,22 @@ pub struct MappedTileInfo {
     pub stride: i32,
 }
 
+/// Descriptor for a locked surface that will be directly composited by SWGL.
+#[repr(C)]
+pub struct SWGLCompositeSurfaceInfo {
+    /// The number of YUV planes in the surface. 0 indicates non-YUV BGRA.
+    /// 1 is interleaved YUV. 2 is NV12. 3 is planar YUV.
+    pub yuv_planes: u32,
+    /// Textures for planes of the surface, or 0 if not applicable.
+    pub textures: [u32; 3],
+    /// Color space of surface if using a YUV format.
+    pub color_space: YuvColorSpace,
+    /// Color depth of surface if using a YUV format.
+    pub color_depth: ColorDepth,
+    /// The actual source surface size before transformation.
+    pub size: DeviceIntSize,
+}
+
 /// A Compositor variant that supports mapping tiles into CPU memory.
 pub trait MappableCompositor: Compositor {
     /// Map a tile's underlying buffer so it can be used as the backing for
@@ -1081,6 +1098,14 @@ pub trait MappableCompositor: Compositor {
     /// Unmap a tile that was was previously mapped via map_tile to signal
     /// that SWGL is done rendering to the buffer.
     fn unmap_tile(&mut self);
+
+    fn lock_composite_surface(
+        &mut self,
+        ctx: *mut c_void,
+        external_image_id: ExternalImageId,
+        composite_info: *mut SWGLCompositeSurfaceInfo,
+    ) -> bool;
+    fn unlock_composite_surface(&mut self, ctx: *mut c_void, external_image_id: ExternalImageId);
 }
 
 /// Defines an interface to a non-native (application-level) Compositor which handles
