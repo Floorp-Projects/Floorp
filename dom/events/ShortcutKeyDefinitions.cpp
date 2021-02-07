@@ -552,9 +552,13 @@ ShortcutKeyData ShortcutKeys::sBrowserHandlers[] = {
     {u"keypress", nullptr, u"z", u"accel",       u"cmd_undo"},   // Win, macOS, Linux, Android, Emacs
     {u"keypress", nullptr, u"z", u"accel,shift", u"cmd_redo"},   // Win, macOS, Linux, Android, Emacs
 
+    /**************************************************************************
+     * Space key in non-editable element.
+     **************************************************************************/
+    {u"keypress", nullptr, u" ", nullptr,  u"cmd_scrollPageDown"},  // Win, macOS, Linux, Android, Emacs
+    {u"keypress", nullptr, u" ", u"shift", u"cmd_scrollPageUp"},    // Win, macOS, Linux, Android, Emacs
 
-    {u"keypress", nullptr, u" ", u"shift",       u"cmd_scrollPageUp"},    // Win, macOS, Linux, Android, Emacs
-    {u"keypress", nullptr, u" ", nullptr,        u"cmd_scrollPageDown"},  // Win, macOS, Linux, Android, Emacs
+
     {u"keypress", nullptr, u"a", u"accel",       u"cmd_selectAll"},       // Win, macOS, Linux, Android, Emacs
 #if defined(USE_EMACS_KEY_BINDINGS)
     {u"keypress", nullptr, u"a", u"alt",         u"cmd_selectAll"},       // Emacs
@@ -715,15 +719,14 @@ ShortcutKeyData ShortcutKeys::sEditorHandlers[] = {
     {u"keypress", nullptr, u"z", u"accel",       u"cmd_undo"},               // Win, macOS, Linux, Android, Emacs
     {u"keypress", nullptr, u"z", u"accel,shift", u"cmd_redo"},               // Win, macOS, Linux, Android, Emacs
 
+    /**************************************************************************
+     * Space key in HTMLEditor.
+     **************************************************************************/
+    {u"keypress", nullptr, u" ", nullptr,  u"cmd_scrollPageDown"},  // Win, macOS, Linux, Android, Emacs
+    {u"keypress", nullptr, u" ", u"shift", u"cmd_scrollPageUp"},    // Win, macOS, Linux, Android, Emacs
 
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || \
-    defined(MOZ_WIDGET_ANDROID) || defined(USE_EMACS_KEY_BINDINGS)
-    {u"keypress", nullptr, u" ", u"shift",           u"cmd_scrollPageUp"},             // Win, Linux, Android, Emacs
-    {u"keypress", nullptr, u" ", nullptr,            u"cmd_scrollPageDown"},           // Win, Linux, Android, Emacs
-#endif
+
 #if defined(MOZ_WIDGET_COCOA)
-    {u"keypress", nullptr, u" ", u"shift",           u"cmd_scrollPageUp"},             // macOS
-    {u"keypress", nullptr, u" ", nullptr,            u"cmd_scrollPageDown"},           // macOS
     {u"keypress", nullptr, u"a", u"accel",           u"cmd_selectAll"},                // macOS
     {u"keypress", nullptr, u"v", u"accel,alt,shift", u"cmd_pasteNoFormatting"},        // macOS
 #endif  // MOZ_WIDGET_COCOA
