@@ -228,6 +228,13 @@ static void TestAllKeyCodes(KeyEventHandler* aFirstHandler,
   }
   ASSERT_EQ(foundCommand, expectedCommandCount)
       << "Some expected shortcut keys have not been tested";
+  uint32_t countOfHandler = 0;
+  for (KeyEventHandler* handler = aFirstHandler; handler;
+       handler = handler->GetNextHandler()) {
+    countOfHandler++;
+  }
+  ASSERT_EQ(countOfHandler, expectedCommandCount)
+      << "Some unnecessary key handlers found";
 }
 
 TEST(ShortcutKeyDefinitions, HTMLInputElement)
