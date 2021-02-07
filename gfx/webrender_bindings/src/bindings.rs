@@ -39,7 +39,7 @@ use webrender::{
     NativeSurfaceInfo, NativeTileId, PartialPresentCompositor, PipelineInfo, ProfilerHooks, RecordedFrameHandle,
     Renderer, RendererOptions, RendererStats, SceneBuilderHooks, ShaderPrecacheFlags, Shaders, SharedShaders,
     TextureCacheConfig, UploadMethod, ONE_TIME_USAGE_HINT, host_utils::{thread_started, thread_stopped},
-    MappableCompositor, MappedTileInfo,
+    MappableCompositor, MappedTileInfo, SWGLCompositeSurfaceInfo,
 };
 use wr_malloc_size_of::MallocSizeOfOps;
 
@@ -1385,6 +1385,15 @@ impl Compositor for WrCompositor {
     }
 }
 
+extern "C" {
+    fn wr_swgl_lock_composite_surface(
+        ctx: *mut c_void,
+        external_image_id: ExternalImageId,
+        composite_info: *mut SWGLCompositeSurfaceInfo,
+    ) -> bool;
+    fn wr_swgl_unlock_composite_surface(ctx: *mut c_void, external_image_id: ExternalImageId);
+}
+
 impl MappableCompositor for WrCompositor {
     /// Map a tile's underlying buffer so it can be used as the backing for
     /// a SWGL framebuffer. This is intended to be a replacement for 'bind'
@@ -1425,6 +1434,18 @@ impl MappableCompositor for WrCompositor {
         unsafe {
             wr_compositor_unmap_tile(self.0);
         }
+    }
+
+    fn lock_composite_surface(
+        &mut self,
+        ctx: *mut c_void,
+        external_image_id: ExternalImageId,
+        composite_info: *mut SWGLCompositeSurfaceInfo,
+    ) -> bool {
+        unsafe { wr_swgl_lock_composite_surface(ctx, external_image_id, composite_info) }
+    }
+    fn unlock_composite_surface(&mut self, ctx: *mut c_void, external_image_id: ExternalImageId) {
+        unsafe { wr_swgl_unlock_composite_surface(ctx, external_image_id) }
     }
 }
 
