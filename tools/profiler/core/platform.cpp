@@ -3017,6 +3017,10 @@ static void PrintUsageThenExit(int aExitCode) {
       "  Ignored if  MOZ_PROFILER_STARTUP_FEATURES_BITFIELD is set.\n"
       "  If unset, the platform default is used.\n"
       "\n"
+      "  MOZ_PROFILER_STARTUP_ACTIVE_BROWSING_CONTEXT_ID=<Number>\n"
+      "  This variable is used to propagate the activeBrowsingContextID of\n"
+      "  the profiler init params to subprocesses.\n"
+      "\n"
       "    Features: (x=unavailable, D/d=default/unavailable,\n"
       "               S/s=MOZ_PROFILER_STARTUP extra default/unavailable)\n",
       unsigned(ActivePS::scMinimumBufferEntries),
@@ -4096,6 +4100,8 @@ void profiler_init(void* aStackTop) {
   PowerOfTwo32 capacity = PROFILER_DEFAULT_ENTRIES;
   Maybe<double> duration = Nothing();
   double interval = PROFILER_DEFAULT_INTERVAL;
+  uint64_t activeBrowsingContextID =
+      PROFILER_DEFAULT_ACTIVE_BROWSING_CONTEXT_ID;
 
   {
     PSAutoLock lock(gPSMutex);
@@ -4223,8 +4229,26 @@ void profiler_init(void* aStackTop) {
       LOG("- MOZ_PROFILER_STARTUP_FILTERS = %s", startupFilters);
     }
 
+    const char* startupActiveBrowsingContextID =
+        getenv("MOZ_PROFILER_STARTUP_ACTIVE_BROWSING_CONTEXT_ID");
+    if (startupActiveBrowsingContextID &&
+        startupActiveBrowsingContextID[0] != '\0') {
+      errno = 0;
+      activeBrowsingContextID =
+          strtoull(startupActiveBrowsingContextID, nullptr, 10);
+      if (errno == 0 && activeBrowsingContextID != 0) {
+        LOG("- MOZ_PROFILER_STARTUP_ACTIVE_BROWSING_CONTEXT_ID = %" PRIu64,
+            activeBrowsingContextID);
+      } else {
+        LOG("- MOZ_PROFILER_STARTUP_ACTIVE_BROWSING_CONTEXT_ID not a valid "
+            "integer: %s",
+            startupActiveBrowsingContextID);
+        PrintUsageThenExit(1);
+      }
+    }
+
     locked_profiler_start(lock, capacity, interval, features, filters.begin(),
-                          filters.length(), 0, duration);
+                          filters.length(), activeBrowsingContextID, duration);
   }
 
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
@@ -4462,6 +4486,11 @@ void GetProfilerEnvVarsForChildProcess(
     filtersString += filters[i];
   }
   aSetEnv("MOZ_PROFILER_STARTUP_FILTERS", filtersString.c_str());
+
+  auto activeBrowsingContextIDString =
+      Smprintf("%" PRIu64, ActivePS::ActiveBrowsingContextID(lock));
+  aSetEnv("MOZ_PROFILER_STARTUP_ACTIVE_BROWSING_CONTEXT_ID",
+          activeBrowsingContextIDString.get());
 }
 
 }  // namespace mozilla
