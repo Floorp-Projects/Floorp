@@ -191,26 +191,33 @@ class nsTableWrapperFrame : public nsContainerFrame {
                                ClassID aID = kClassID);
   virtual ~nsTableWrapperFrame();
 
-  // Get a NS_STYLE_CAPTION_SIDE_* value, or NO_SIDE if no caption is present.
+  using MaybeCaptionSide = Maybe<mozilla::StyleCaptionSide>;
+
+  // Get a StyleCaptionSide value, or Nothing if no caption is present.
+  //
   // (Remember that caption-side values are interpreted logically, despite
   // having "physical" names.)
-  uint8_t GetCaptionSide() const;
+  MaybeCaptionSide GetCaptionSide() const;
 
   bool HasSideCaption() const {
-    uint8_t captionSide = GetCaptionSide();
-    return captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
-           captionSide == NS_STYLE_CAPTION_SIDE_RIGHT;
+    auto captionSide = GetCaptionSide();
+    return captionSide && IsSideCaption(*captionSide);
+  }
+
+  static bool IsSideCaption(const mozilla::StyleCaptionSide aCaptionSide) {
+    return aCaptionSide == mozilla::StyleCaptionSide::Left ||
+           aCaptionSide == mozilla::StyleCaptionSide::Right;
   }
 
   mozilla::StyleVerticalAlignKeyword GetCaptionVerticalAlign() const;
 
-  nscoord ComputeFinalBSize(uint8_t aCaptionSide,
+  nscoord ComputeFinalBSize(const MaybeCaptionSide&,
                             const mozilla::LogicalSize& aInnerSize,
                             const mozilla::LogicalSize& aCaptionSize,
                             const mozilla::LogicalMargin& aCaptionMargin,
                             const mozilla::WritingMode aWM) const;
 
-  nsresult GetCaptionOrigin(uint32_t aCaptionSide,
+  nsresult GetCaptionOrigin(mozilla::StyleCaptionSide,
                             const mozilla::LogicalSize& aContainBlockSize,
                             const mozilla::LogicalSize& aInnerSize,
                             const mozilla::LogicalSize& aCaptionSize,
@@ -218,7 +225,7 @@ class nsTableWrapperFrame : public nsContainerFrame {
                             mozilla::LogicalPoint& aOrigin,
                             mozilla::WritingMode aWM);
 
-  nsresult GetInnerOrigin(uint32_t aCaptionSide,
+  nsresult GetInnerOrigin(const MaybeCaptionSide&,
                           const mozilla::LogicalSize& aContainBlockSize,
                           const mozilla::LogicalSize& aCaptionSize,
                           const mozilla::LogicalMargin& aCaptionMargin,

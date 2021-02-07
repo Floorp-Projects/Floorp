@@ -4866,7 +4866,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
     use style::properties::PropertyDeclaration;
     use style::values::generics::box_::{VerticalAlign, VerticalAlignKeyword};
     use style::values::generics::font::FontStyle;
-    use style::values::specified::{BorderStyle, Clear, Display, Float, TextAlign};
+    use style::values::specified::{BorderStyle, Clear, Display, Float, TextAlign, table::CaptionSide};
 
     fn get_from_computed<T>(value: u32) -> T
     where
@@ -4907,7 +4907,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
         MathStyle => longhands::math_style::SpecifiedValue::from_gecko_keyword(value),
         MozMathVariant => longhands::_moz_math_variant::SpecifiedValue::from_gecko_keyword(value),
         WhiteSpace => longhands::white_space::SpecifiedValue::from_gecko_keyword(value),
-        CaptionSide => longhands::caption_side::SpecifiedValue::from_gecko_keyword(value),
+        CaptionSide => get_from_computed::<CaptionSide>(value),
         BorderTopStyle => get_from_computed::<BorderStyle>(value),
         BorderRightStyle => get_from_computed::<BorderStyle>(value),
         BorderBottomStyle => get_from_computed::<BorderStyle>(value),

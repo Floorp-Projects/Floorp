@@ -25,8 +25,6 @@
 using namespace mozilla;
 using namespace mozilla::layout;
 
-#define NO_SIDE 100
-
 /* virtual */
 nscoord nsTableWrapperFrame::GetLogicalBaseline(
     WritingMode aWritingMode) const {
@@ -268,11 +266,10 @@ nscoord nsTableWrapperFrame::GetPrefISize(gfxContext* aRenderingContext) {
 
   maxISize = nsLayoutUtils::IntrinsicForContainer(
       aRenderingContext, InnerTableFrame(), IntrinsicISizeType::PrefISize);
-  if (mCaptionFrames.NotEmpty()) {
-    uint8_t captionSide = GetCaptionSide();
-    switch (captionSide) {
-      case NS_STYLE_CAPTION_SIDE_LEFT:
-      case NS_STYLE_CAPTION_SIDE_RIGHT: {
+  if (Maybe<StyleCaptionSide> captionSide = GetCaptionSide()) {
+    switch (*captionSide) {
+      case StyleCaptionSide::Left:
+      case StyleCaptionSide::Right: {
         nscoord capMin = nsLayoutUtils::IntrinsicForContainer(
             aRenderingContext, mCaptionFrames.FirstChild(),
             IntrinsicISizeType::MinISize);
@@ -280,15 +277,15 @@ nscoord nsTableWrapperFrame::GetPrefISize(gfxContext* aRenderingContext) {
       } break;
       default: {
         IntrinsicISizeType iwt;
-        if (captionSide == NS_STYLE_CAPTION_SIDE_TOP ||
-            captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM) {
+        if (*captionSide == StyleCaptionSide::Top ||
+            *captionSide == StyleCaptionSide::Bottom) {
           // Don't let the caption's pref isize expand the table's pref
           // isize.
           iwt = IntrinsicISizeType::MinISize;
         } else {
-          NS_ASSERTION(captionSide == NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE ||
-                           captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE,
-                       "unexpected caption side");
+          MOZ_ASSERT(*captionSide == StyleCaptionSide::TopOutside ||
+                         *captionSide == StyleCaptionSide::BottomOutside,
+                     "unexpected caption side");
           iwt = IntrinsicISizeType::PrefISize;
         }
         nscoord capPref = nsLayoutUtils::IntrinsicForContainer(
@@ -351,14 +348,14 @@ LogicalSize nsTableWrapperFrame::ComputeAutoSize(
   // GetPrefISize.  See bug 349457 for an example.
 
   // Match the availableISize logic in Reflow.
-  uint8_t captionSide = GetCaptionSide();
+  Maybe<StyleCaptionSide> captionSide = GetCaptionSide();
   nscoord inlineSize;
-  if (captionSide == NO_SIDE) {
+  if (!captionSide) {
     inlineSize =
         ChildShrinkWrapISize(aRenderingContext, InnerTableFrame(), aWM, aCBSize,
                              kidAvailableISize, aSizeOverrides);
-  } else if (captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
-             captionSide == NS_STYLE_CAPTION_SIDE_RIGHT) {
+  } else if (*captionSide == StyleCaptionSide::Left ||
+             *captionSide == StyleCaptionSide::Right) {
     nscoord capISize =
         ChildShrinkWrapISize(aRenderingContext, mCaptionFrames.FirstChild(),
                              aWM, aCBSize, kidAvailableISize, aSizeOverrides);
@@ -366,8 +363,8 @@ LogicalSize nsTableWrapperFrame::ComputeAutoSize(
         capISize +
         ChildShrinkWrapISize(aRenderingContext, InnerTableFrame(), aWM, aCBSize,
                              kidAvailableISize - capISize, aSizeOverrides);
-  } else if (captionSide == NS_STYLE_CAPTION_SIDE_TOP ||
-             captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM) {
+  } else if (*captionSide == StyleCaptionSide::Top ||
+             *captionSide == StyleCaptionSide::Bottom) {
     nscoord margin;
     inlineSize =
         ChildShrinkWrapISize(aRenderingContext, InnerTableFrame(), aWM, aCBSize,
@@ -379,9 +376,9 @@ LogicalSize nsTableWrapperFrame::ComputeAutoSize(
       inlineSize = capISize;
     }
   } else {
-    NS_ASSERTION(captionSide == NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE ||
-                     captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE,
-                 "unexpected caption-side");
+    MOZ_ASSERT(*captionSide == StyleCaptionSide::TopOutside ||
+                   *captionSide == StyleCaptionSide::BottomOutside,
+               "unexpected caption-side");
     inlineSize =
         ChildShrinkWrapISize(aRenderingContext, InnerTableFrame(), aWM, aCBSize,
                              kidAvailableISize, aSizeOverrides);
@@ -396,12 +393,11 @@ LogicalSize nsTableWrapperFrame::ComputeAutoSize(
   return LogicalSize(aWM, inlineSize, NS_UNCONSTRAINEDSIZE);
 }
 
-uint8_t nsTableWrapperFrame::GetCaptionSide() const {
-  if (mCaptionFrames.NotEmpty()) {
-    return mCaptionFrames.FirstChild()->StyleTableBorder()->mCaptionSide;
-  } else {
-    return NO_SIDE;  // no caption
+Maybe<StyleCaptionSide> nsTableWrapperFrame::GetCaptionSide() const {
+  if (mCaptionFrames.IsEmpty()) {
+    return Nothing();
   }
+  return Some(mCaptionFrames.FirstChild()->StyleTableBorder()->mCaptionSide);
 }
 
 StyleVerticalAlignKeyword nsTableWrapperFrame::GetCaptionVerticalAlign() const {
@@ -410,30 +406,28 @@ StyleVerticalAlignKeyword nsTableWrapperFrame::GetCaptionVerticalAlign() const {
 }
 
 nscoord nsTableWrapperFrame::ComputeFinalBSize(
-    uint8_t aCaptionSide, const LogicalSize& aInnerSize,
+    const MaybeCaptionSide& aCaptionSide, const LogicalSize& aInnerSize,
     const LogicalSize& aCaptionSize, const LogicalMargin& aCaptionMargin,
     const WritingMode aWM) const {
-  nscoord bSize = 0;
+  nscoord bSize = aInnerSize.BSize(aWM);
 
   // compute the overall block-size
-  switch (aCaptionSide) {
-    case NS_STYLE_CAPTION_SIDE_TOP:
-    case NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE:
-    case NS_STYLE_CAPTION_SIDE_BOTTOM:
-    case NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE:
-      bSize =
-          aInnerSize.BSize(aWM) +
-          std::max(0, aCaptionSize.BSize(aWM) + aCaptionMargin.BStartEnd(aWM));
-      break;
-    case NS_STYLE_CAPTION_SIDE_LEFT:
-    case NS_STYLE_CAPTION_SIDE_RIGHT:
-      bSize = std::max(aInnerSize.BSize(aWM),
-                       aCaptionSize.BSize(aWM) + aCaptionMargin.BEnd(aWM));
-      break;
-    default:
-      NS_ASSERTION(aCaptionSide == NO_SIDE, "unexpected caption side");
-      bSize = aInnerSize.BSize(aWM);
-      break;
+  if (aCaptionSide) {
+    switch (*aCaptionSide) {
+      case StyleCaptionSide::Top:
+      case StyleCaptionSide::TopOutside:
+      case StyleCaptionSide::Bottom:
+      case StyleCaptionSide::BottomOutside:
+        bSize = aInnerSize.BSize(aWM) +
+                std::max(
+                    0, aCaptionSize.BSize(aWM) + aCaptionMargin.BStartEnd(aWM));
+        break;
+      case StyleCaptionSide::Left:
+      case StyleCaptionSide::Right:
+        bSize = std::max(aInnerSize.BSize(aWM),
+                         aCaptionSize.BSize(aWM) + aCaptionMargin.BEnd(aWM));
+        break;
+    }
   }
 
   // negative sizes can upset overflow-area code
@@ -441,7 +435,7 @@ nscoord nsTableWrapperFrame::ComputeFinalBSize(
 }
 
 nsresult nsTableWrapperFrame::GetCaptionOrigin(
-    uint32_t aCaptionSide, const LogicalSize& aContainBlockSize,
+    StyleCaptionSide aCaptionSide, const LogicalSize& aContainBlockSize,
     const LogicalSize& aInnerSize, const LogicalSize& aCaptionSize,
     LogicalMargin& aCaptionMargin, LogicalPoint& aOrigin, WritingMode aWM) {
   aOrigin.I(aWM) = aOrigin.B(aWM) = 0;
@@ -462,27 +456,24 @@ nsresult nsTableWrapperFrame::GetCaptionOrigin(
 
   // inline-dir computation
   switch (aCaptionSide) {
-    case NS_STYLE_CAPTION_SIDE_TOP:
-    case NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE:
-    case NS_STYLE_CAPTION_SIDE_BOTTOM:
-    case NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE:
+    case StyleCaptionSide::Top:
+    case StyleCaptionSide::TopOutside:
+    case StyleCaptionSide::Bottom:
+    case StyleCaptionSide::BottomOutside:
       aOrigin.I(aWM) = aCaptionMargin.IStart(aWM);
       break;
-    case NS_STYLE_CAPTION_SIDE_LEFT:
-    case NS_STYLE_CAPTION_SIDE_RIGHT:
+    case StyleCaptionSide::Left:
+    case StyleCaptionSide::Right:
       aOrigin.I(aWM) = aCaptionMargin.IStart(aWM);
-      if (aWM.IsBidiLTR() == (aCaptionSide == NS_STYLE_CAPTION_SIDE_RIGHT)) {
+      if (aWM.IsBidiLTR() == (aCaptionSide == StyleCaptionSide::Right)) {
         aOrigin.I(aWM) += aInnerSize.ISize(aWM);
       }
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown caption alignment type");
       break;
   }
   // block-dir computation
   switch (aCaptionSide) {
-    case NS_STYLE_CAPTION_SIDE_RIGHT:
-    case NS_STYLE_CAPTION_SIDE_LEFT:
+    case StyleCaptionSide::Right:
+    case StyleCaptionSide::Left:
       aOrigin.B(aWM) = 0;
       switch (GetCaptionVerticalAlign()) {
         case StyleVerticalAlignKeyword::Middle:
@@ -497,23 +488,20 @@ nsresult nsTableWrapperFrame::GetCaptionOrigin(
           break;
       }
       break;
-    case NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE:
-    case NS_STYLE_CAPTION_SIDE_BOTTOM:
+    case StyleCaptionSide::BottomOutside:
+    case StyleCaptionSide::Bottom:
       aOrigin.B(aWM) = aInnerSize.BSize(aWM) + aCaptionMargin.BStart(aWM);
       break;
-    case NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE:
-    case NS_STYLE_CAPTION_SIDE_TOP:
+    case StyleCaptionSide::TopOutside:
+    case StyleCaptionSide::Top:
       aOrigin.B(aWM) = aCaptionMargin.BStart(aWM);
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown caption alignment type");
       break;
   }
   return NS_OK;
 }
 
 nsresult nsTableWrapperFrame::GetInnerOrigin(
-    uint32_t aCaptionSide, const LogicalSize& aContainBlockSize,
+    const MaybeCaptionSide& aCaptionSide, const LogicalSize& aContainBlockSize,
     const LogicalSize& aCaptionSize, const LogicalMargin& aCaptionMargin,
     const LogicalSize& aInnerSize, LogicalPoint& aOrigin, WritingMode aWM) {
   NS_ASSERTION(NS_AUTOMARGIN != aCaptionMargin.IStart(aWM) &&
@@ -531,55 +519,42 @@ nsresult nsTableWrapperFrame::GetInnerOrigin(
   nscoord minCapISize = aCaptionSize.ISize(aWM) + aCaptionMargin.IStartEnd(aWM);
 
   // inline-dir computation
-  switch (aCaptionSide) {
-    case NS_STYLE_CAPTION_SIDE_LEFT:
-    case NS_STYLE_CAPTION_SIDE_RIGHT:
-      aOrigin.I(aWM) =
-          (aWM.IsBidiLTR() == (aCaptionSide == NS_STYLE_CAPTION_SIDE_LEFT))
-              ? minCapISize
-              : 0;
-      break;
-    default:
-      NS_ASSERTION(aCaptionSide == NS_STYLE_CAPTION_SIDE_TOP ||
-                       aCaptionSide == NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE ||
-                       aCaptionSide == NS_STYLE_CAPTION_SIDE_BOTTOM ||
-                       aCaptionSide == NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE ||
-                       aCaptionSide == NO_SIDE,
-                   "unexpected caption side");
-      aOrigin.I(aWM) = 0;
-      break;
+  if (aCaptionSide && IsSideCaption(*aCaptionSide)) {
+    aOrigin.I(aWM) =
+        (aWM.IsBidiLTR() == (*aCaptionSide == StyleCaptionSide::Left))
+            ? minCapISize
+            : 0;
   }
 
   // block-dir computation
-  switch (aCaptionSide) {
-    case NS_STYLE_CAPTION_SIDE_BOTTOM:
-    case NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE:
-      aOrigin.B(aWM) = 0;
-      break;
-    case NS_STYLE_CAPTION_SIDE_LEFT:
-    case NS_STYLE_CAPTION_SIDE_RIGHT:
-      aOrigin.B(aWM) = 0;
-      switch (GetCaptionVerticalAlign()) {
-        case StyleVerticalAlignKeyword::Middle:
-          aOrigin.B(aWM) = std::max(
-              0, (aCaptionSize.BSize(aWM) - aInnerSize.BSize(aWM)) / 2);
-          break;
-        case StyleVerticalAlignKeyword::Bottom:
-          aOrigin.B(aWM) =
-              std::max(0, aCaptionSize.BSize(aWM) - aInnerSize.BSize(aWM));
-          break;
-        default:
-          break;
-      }
-      break;
-    case NO_SIDE:
-    case NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE:
-    case NS_STYLE_CAPTION_SIDE_TOP:
-      aOrigin.B(aWM) = aCaptionSize.BSize(aWM) + aCaptionMargin.BStartEnd(aWM);
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown caption alignment type");
-      break;
+  if (aCaptionSide) {
+    switch (*aCaptionSide) {
+      case StyleCaptionSide::Bottom:
+      case StyleCaptionSide::BottomOutside:
+        // Leave at zero.
+        break;
+      case StyleCaptionSide::Left:
+      case StyleCaptionSide::Right:
+        switch (GetCaptionVerticalAlign()) {
+          case StyleVerticalAlignKeyword::Middle:
+            aOrigin.B(aWM) = std::max(
+                0, (aCaptionSize.BSize(aWM) - aInnerSize.BSize(aWM)) / 2);
+            break;
+          case StyleVerticalAlignKeyword::Bottom:
+            aOrigin.B(aWM) =
+                std::max(0, aCaptionSize.BSize(aWM) - aInnerSize.BSize(aWM));
+            break;
+          default:
+            // Leave at zero.
+            break;
+        }
+        break;
+      case StyleCaptionSide::TopOutside:
+      case StyleCaptionSide::Top:
+        aOrigin.B(aWM) =
+            aCaptionSize.BSize(aWM) + aCaptionMargin.BStartEnd(aWM);
+        break;
+    }
   }
   return NS_OK;
 }
@@ -635,10 +610,11 @@ void nsTableWrapperFrame::CreateReflowInputForCaption(
 
   // See if we need to reset mIsTopOfPage flag.
   if (aChildRI->mFlags.mIsTopOfPage) {
-    uint8_t captionSide = GetCaptionSide();
-    if (captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM ||
-        captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE) {
-      aChildRI->mFlags.mIsTopOfPage = false;
+    if (auto captionSide = GetCaptionSide()) {
+      if (*captionSide == StyleCaptionSide::Bottom ||
+          *captionSide == StyleCaptionSide::BottomOutside) {
+        aChildRI->mFlags.mIsTopOfPage = false;
+      }
     }
   }
 }
@@ -713,16 +689,18 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
 
   // ComputeAutoSize has to match this logic.
   WritingMode wm = aOuterRI.GetWritingMode();
-  uint8_t captionSide = GetCaptionSide();
+  Maybe<StyleCaptionSide> captionSide = GetCaptionSide();
   WritingMode captionWM = wm;  // will be changed below if necessary
   const nscoord contentBoxISize = aOuterRI.ComputedSize(wm).ISize(wm);
 
-  if (captionSide == NO_SIDE) {
+  MOZ_ASSERT(mCaptionFrames.NotEmpty() == captionSide.isSome());
+
+  if (!captionSide) {
     // We don't have a caption.
     CreateReflowInputForInnerTable(aPresContext, InnerTableFrame(), aOuterRI,
                                    innerRI, contentBoxISize);
-  } else if (captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
-             captionSide == NS_STYLE_CAPTION_SIDE_RIGHT) {
+  } else if (*captionSide == StyleCaptionSide::Left ||
+             *captionSide == StyleCaptionSide::Right) {
     // ComputeAutoSize takes care of making side captions small. Compute
     // the caption's size first, and tell the table to fit in what's left.
     CreateReflowInputForCaption(aPresContext, mCaptionFrames.FirstChild(),
@@ -733,8 +711,8 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
         captionRI->ComputedSizeWithMarginBorderPadding(wm).ISize(wm);
     CreateReflowInputForInnerTable(aPresContext, InnerTableFrame(), aOuterRI,
                                    innerRI, innerAvailISize);
-  } else if (captionSide == NS_STYLE_CAPTION_SIDE_TOP ||
-             captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM) {
+  } else if (*captionSide == StyleCaptionSide::Top ||
+             *captionSide == StyleCaptionSide::Bottom) {
     // Compute the table's size first, and then prevent the caption from
     // being larger in the inline dir unless it has to be.
     //
@@ -756,9 +734,9 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
                                 aOuterRI, captionRI, innerBorderISize);
     captionWM = captionRI->GetWritingMode();
   } else {
-    NS_ASSERTION(captionSide == NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE ||
-                     captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE,
-                 "unexpected caption-side");
+    MOZ_ASSERT(*captionSide == StyleCaptionSide::TopOutside ||
+                   *captionSide == StyleCaptionSide::BottomOutside,
+               "unexpected caption-side");
     // Size the table and the caption independently.
     captionWM = mCaptionFrames.FirstChild()->GetWritingMode();
     CreateReflowInputForCaption(
@@ -772,7 +750,7 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
   Maybe<ReflowOutput> captionMet;
   LogicalSize captionSize(wm);
   LogicalMargin captionMargin(wm);
-  if (mCaptionFrames.NotEmpty()) {
+  if (captionSide) {
     captionMet.emplace(wm);
     // We intentionally don't merge capStatus into aStatus, since we currently
     // can't handle caption continuations, but we probably should.
@@ -790,15 +768,15 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
     if (NS_UNCONSTRAINEDSIZE != aOuterRI.AvailableBSize() || cbSize) {
       nscoord captionBSize = 0;
       nscoord captionISize = 0;
-      switch (captionSide) {
-        case NS_STYLE_CAPTION_SIDE_TOP:
-        case NS_STYLE_CAPTION_SIDE_BOTTOM:
-        case NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE:
-        case NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE:
+      switch (*captionSide) {
+        case StyleCaptionSide::Top:
+        case StyleCaptionSide::Bottom:
+        case StyleCaptionSide::TopOutside:
+        case StyleCaptionSide::BottomOutside:
           captionBSize = captionSize.BSize(wm) + captionMargin.BStartEnd(wm);
           break;
-        case NS_STYLE_CAPTION_SIDE_LEFT:
-        case NS_STYLE_CAPTION_SIDE_RIGHT:
+        case StyleCaptionSide::Left:
+        case StyleCaptionSide::Right:
           captionISize = captionSize.ISize(wm) + captionMargin.IStartEnd(wm);
           break;
       }
@@ -850,9 +828,10 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
   // XXX It's possible for this to be NS_UNCONSTRAINEDSIZE, which will result
   // in assertions from FinishReflowChild.
 
+  MOZ_ASSERT(mCaptionFrames.NotEmpty() == captionSide.isSome());
   if (mCaptionFrames.NotEmpty()) {
     LogicalPoint captionOrigin(wm);
-    GetCaptionOrigin(captionSide, containSize, innerSize, captionSize,
+    GetCaptionOrigin(*captionSide, containSize, innerSize, captionSize,
                      captionMargin, captionOrigin, wm);
     FinishReflowChild(mCaptionFrames.FirstChild(), aPresContext, *captionMet,
                       captionRI.ptr(), wm, captionOrigin, containerSize,

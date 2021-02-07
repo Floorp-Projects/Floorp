@@ -79,6 +79,7 @@ include = [
   "BreakWithin",
   "BorderStyle",
   "OutlineStyle",
+  "CaptionSide",
   "ComputedFontStretchRange",
   "ComputedFontStyleDescriptor",
   "ComputedFontWeightRange",

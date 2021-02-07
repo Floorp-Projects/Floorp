@@ -124,6 +124,7 @@ pub mod position;
 pub mod rect;
 pub mod resolution;
 pub mod svg;
+pub mod table;
 pub mod text;
 pub mod time;
 pub mod transform;
