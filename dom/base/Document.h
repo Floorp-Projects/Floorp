@@ -3529,6 +3529,14 @@ class Document : public nsINode,
 
   Promise* GetDocumentReadyForIdle(ErrorResult& aRv);
 
+  void BlockUnblockOnloadForPDFJS(bool aBlock) {
+    if (aBlock) {
+      BlockOnload();
+    } else {
+      UnblockOnload(/* aFireSync = */ false);
+    }
+  }
+
   nsIDOMXULCommandDispatcher* GetCommandDispatcher();
   bool HasXULBroadcastManager() const { return mXULBroadcastManager; };
   void InitializeXULBroadcastManager();
