@@ -726,10 +726,12 @@
     <string name="download_delete_all">Suprimeix les baixades</string>
     <!-- Text for the dialog to confirm clearing all downloads -->
     <string name="download_delete_all_dialog">Segur que voleu esborrar les baixades?</string>
-    <!-- Text for the snackbar to confirm that multiple downloads items have been deleted -->
-    <string name="download_delete_multiple_items_snackbar">S’han suprimit les baixades</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">S’han eliminat les baixades</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">S’ha eliminat %1$s</string>
     <!-- Text shown when no download exists -->
-    <string name="download_empty_message">No hi ha cap baixada</string>
+    <string name="download_empty_message_1">No hi ha cap fitxer baixat</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d seleccionades</string>
@@ -737,8 +739,10 @@
 
     <!-- History overflow menu open in new tab button -->
     <string name="download_menu_open">Obre</string>
-    <!-- Text for the button to delete a single history item -->
-    <string name="download_delete_item">Suprimeix</string>
+
+
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Elimina</string>
 
 
     <!-- Crashes -->
@@ -862,6 +866,8 @@
     <string name="preference_phone_feature_notification">Notificació</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Emmagatzematge persistent</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">Contingut controlat per DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Demana-m’ho</string>
 
@@ -1086,6 +1092,8 @@
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Permisos dels llocs</string>
 
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Baixades</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Suprimeix les dades de navegació</string>
     <!-- Title for the Delete browsing data on quit preference -->
@@ -1208,8 +1216,7 @@
     <string name="onboarding_privacy_notice_header">La vostra privadesa</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">Hem dissenyat el %s per donar-vos el control sobre tot allò que compartiu en línia i que compartiu amb nosaltres.
-    </string>
+    <string name="onboarding_privacy_notice_description2">Hem dissenyat el %s per donar-vos el control sobre tot allò que compartiu en línia i que compartiu amb nosaltres.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Mostra l’avís de privadesa</string>
 
