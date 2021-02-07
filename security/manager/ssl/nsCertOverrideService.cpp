@@ -18,9 +18,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCRT.h"
 #include "nsILineInputStream.h"
-#ifdef ENABLE_MARIONETTE
-#  include "nsIMarionette.h"
-#endif
+#include "nsIMarionette.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIOutputStream.h"
@@ -725,12 +723,10 @@ static bool IsDebugger() {
   bool marionetteRunning = false;
   bool remoteAgentListening = false;
 
-#ifdef ENABLE_MARIONETTE
   nsCOMPtr<nsIMarionette> marionette = do_GetService(NS_MARIONETTE_CONTRACTID);
   if (marionette) {
     marionette->GetRunning(&marionetteRunning);
   }
-#endif
 
 #ifdef ENABLE_REMOTE_AGENT
   nsCOMPtr<nsIRemoteAgent> agent = do_GetService(NS_REMOTEAGENT_CONTRACTID);
