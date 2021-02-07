@@ -20,6 +20,7 @@ serialize_program = ["serde", "webrender_build/serialize_program"]
 no_static_freetype = []
 leak_checks = []
 gecko = []
+sw_compositor = ["swgl"]
 
 [build-dependencies]
 build-parallel = "0.1.2"
@@ -58,6 +59,7 @@ svg_fmt = "0.4"
 tracy-rs = "0.1.2"
 derive_more = "0.99"
 etagere = "0.2.4"
+swgl = { path = "../swgl", optional = true }
 
 [dev-dependencies]
 mozangle = "0.3.2"
