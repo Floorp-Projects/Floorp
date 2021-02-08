@@ -602,10 +602,6 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
     atom = fun->displayAtom();
   }
 
-  // Everything added below can substituted by the non-lazy-script version of
-  // this function later.
-  js::AutoXDRTree funTree(xdr, xdr->getTreeKey(fun));
-
   MOZ_TRY(xdr->codeUint8(&xdrFlags));
 
   MOZ_TRY(xdr->codeUint16(&nargs));
