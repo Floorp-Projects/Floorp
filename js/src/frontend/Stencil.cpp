@@ -1888,7 +1888,7 @@ void frontend::DumpTaggedParserAtomIndex(
 
 void frontend::DumpTaggedParserAtomIndexNoQuote(
     GenericPrinter& out, TaggedParserAtomIndex taggedIndex,
-    BaseCompilationStencil* stencil) {
+    const BaseCompilationStencil* stencil) {
   if (taggedIndex.isParserAtomIndex()) {
     auto index = taggedIndex.toParserAtomIndex();
     if (stencil && stencil->parserAtomData[index]) {
@@ -1946,21 +1946,21 @@ void frontend::DumpTaggedParserAtomIndexNoQuote(
   out.put("#<null name>");
 }
 
-void RegExpStencil::dump() {
+void RegExpStencil::dump() const {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
   dump(json, nullptr);
 }
 
 void RegExpStencil::dump(js::JSONPrinter& json,
-                         BaseCompilationStencil* stencil) {
+                         const BaseCompilationStencil* stencil) const {
   json.beginObject();
   dumpFields(json, stencil);
   json.endObject();
 }
 
 void RegExpStencil::dumpFields(js::JSONPrinter& json,
-                               BaseCompilationStencil* stencil) {
+                               const BaseCompilationStencil* stencil) const {
   json.beginObjectProperty("pattern");
   DumpTaggedParserAtomIndex(json, atom_, stencil);
   json.endObject();
@@ -1989,41 +1989,41 @@ void RegExpStencil::dumpFields(js::JSONPrinter& json,
   json.endStringProperty();
 }
 
-void BigIntStencil::dump() {
+void BigIntStencil::dump() const {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
   dump(json);
 }
 
-void BigIntStencil::dump(js::JSONPrinter& json) {
+void BigIntStencil::dump(js::JSONPrinter& json) const {
   GenericPrinter& out = json.beginString();
   dumpCharsNoQuote(out);
   json.endString();
 }
 
-void BigIntStencil::dumpCharsNoQuote(GenericPrinter& out) {
+void BigIntStencil::dumpCharsNoQuote(GenericPrinter& out) const {
   for (char16_t c : source_) {
     out.putChar(char(c));
   }
 }
 
-void ScopeStencil::dump() {
+void ScopeStencil::dump() const {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
   dump(json, nullptr, nullptr);
 }
 
 void ScopeStencil::dump(js::JSONPrinter& json,
-                        BaseParserScopeData* baseScopeData,
-                        BaseCompilationStencil* stencil) {
+                        const BaseParserScopeData* baseScopeData,
+                        const BaseCompilationStencil* stencil) const {
   json.beginObject();
   dumpFields(json, baseScopeData, stencil);
   json.endObject();
 }
 
 void ScopeStencil::dumpFields(js::JSONPrinter& json,
-                              BaseParserScopeData* baseScopeData,
-                              BaseCompilationStencil* stencil) {
+                              const BaseParserScopeData* baseScopeData,
+                              const BaseCompilationStencil* stencil) const {
   json.property("kind", ScopeKindString(kind_));
 
   if (hasEnclosing()) {
@@ -2060,12 +2060,14 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
 
   json.beginObjectProperty("data");
 
-  AbstractTrailingNamesArray<TaggedParserAtomIndex>* trailingNames = nullptr;
+  const AbstractTrailingNamesArray<TaggedParserAtomIndex>* trailingNames =
+      nullptr;
   uint32_t length = 0;
 
   switch (kind_) {
     case ScopeKind::Function: {
-      auto* data = static_cast<FunctionScope::ParserData*>(baseScopeData);
+      const auto* data =
+          static_cast<const FunctionScope::ParserData*>(baseScopeData);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
       json.property("hasParameterExprs", data->slotInfo.hasParameterExprs());
       json.property("nonPositionalFormalStart",
@@ -2078,7 +2080,8 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
     }
 
     case ScopeKind::FunctionBodyVar: {
-      auto* data = static_cast<VarScope::ParserData*>(baseScopeData);
+      const auto* data =
+          static_cast<const VarScope::ParserData*>(baseScopeData);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
 
       trailingNames = &data->trailingNames;
@@ -2093,7 +2096,8 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
     case ScopeKind::StrictNamedLambda:
     case ScopeKind::FunctionLexical:
     case ScopeKind::ClassBody: {
-      auto* data = static_cast<LexicalScope::ParserData*>(baseScopeData);
+      const auto* data =
+          static_cast<const LexicalScope::ParserData*>(baseScopeData);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
       json.property("constStart", data->slotInfo.constStart);
 
@@ -2108,7 +2112,8 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
 
     case ScopeKind::Eval:
     case ScopeKind::StrictEval: {
-      auto* data = static_cast<EvalScope::ParserData*>(baseScopeData);
+      const auto* data =
+          static_cast<const EvalScope::ParserData*>(baseScopeData);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
 
       trailingNames = &data->trailingNames;
@@ -2118,7 +2123,8 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
 
     case ScopeKind::Global:
     case ScopeKind::NonSyntactic: {
-      auto* data = static_cast<GlobalScope::ParserData*>(baseScopeData);
+      const auto* data =
+          static_cast<const GlobalScope::ParserData*>(baseScopeData);
       json.property("letStart", data->slotInfo.letStart);
       json.property("constStart", data->slotInfo.constStart);
 
@@ -2128,7 +2134,8 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
     }
 
     case ScopeKind::Module: {
-      auto* data = static_cast<ModuleScope::ParserData*>(baseScopeData);
+      const auto* data =
+          static_cast<const ModuleScope::ParserData*>(baseScopeData);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
       json.property("varStart", data->slotInfo.varStart);
       json.property("letStart", data->slotInfo.letStart);
@@ -2140,7 +2147,8 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
     }
 
     case ScopeKind::WasmInstance: {
-      auto* data = static_cast<WasmInstanceScope::ParserData*>(baseScopeData);
+      const auto* data =
+          static_cast<const WasmInstanceScope::ParserData*>(baseScopeData);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
       json.property("globalsStart", data->slotInfo.globalsStart);
 
@@ -2150,7 +2158,8 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
     }
 
     case ScopeKind::WasmFunction: {
-      auto* data = static_cast<WasmFunctionScope::ParserData*>(baseScopeData);
+      const auto* data =
+          static_cast<const WasmFunctionScope::ParserData*>(baseScopeData);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
 
       trailingNames = &data->trailingNames;
@@ -2168,7 +2177,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
     char index[64];
     json.beginObjectProperty("trailingNames");
     for (size_t i = 0; i < length; i++) {
-      auto& name = (*trailingNames)[i];
+      const auto& name = (*trailingNames)[i];
       SprintfLiteral(index, "%zu", i);
       json.beginObjectProperty(index);
 
@@ -2190,7 +2199,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
 
 static void DumpModuleEntryVectorItems(
     js::JSONPrinter& json, const StencilModuleMetadata::EntryVector& entries,
-    BaseCompilationStencil* stencil) {
+    const BaseCompilationStencil* stencil) {
   for (const auto& entry : entries) {
     json.beginObject();
     if (entry.specifier) {
@@ -2217,21 +2226,21 @@ static void DumpModuleEntryVectorItems(
   }
 }
 
-void StencilModuleMetadata::dump() {
+void StencilModuleMetadata::dump() const {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
   dump(json, nullptr);
 }
 
 void StencilModuleMetadata::dump(js::JSONPrinter& json,
-                                 BaseCompilationStencil* stencil) {
+                                 const BaseCompilationStencil* stencil) const {
   json.beginObject();
   dumpFields(json, stencil);
   json.endObject();
 }
 
-void StencilModuleMetadata::dumpFields(js::JSONPrinter& json,
-                                       BaseCompilationStencil* stencil) {
+void StencilModuleMetadata::dumpFields(
+    js::JSONPrinter& json, const BaseCompilationStencil* stencil) const {
   json.beginListProperty("requestedModules");
   DumpModuleEntryVectorItems(json, requestedModules, stencil);
   json.endList();
@@ -2253,7 +2262,7 @@ void StencilModuleMetadata::dumpFields(js::JSONPrinter& json,
   json.endList();
 
   json.beginListProperty("functionDecls");
-  for (auto& index : functionDecls) {
+  for (const auto& index : functionDecls) {
     json.value("ScriptIndex(%zu)", size_t(index));
   }
   json.endList();
@@ -2443,8 +2452,8 @@ static void DumpFunctionFlagsItems(js::JSONPrinter& json,
 }
 
 static void DumpScriptThing(js::JSONPrinter& json,
-                            BaseCompilationStencil* stencil,
-                            TaggedScriptThingIndex& thing) {
+                            const BaseCompilationStencil* stencil,
+                            TaggedScriptThingIndex thing) {
   switch (thing.tag()) {
     case TaggedScriptThingIndex::Kind::ParserAtomIndex:
     case TaggedScriptThingIndex::Kind::WellKnown:
@@ -2477,28 +2486,28 @@ static void DumpScriptThing(js::JSONPrinter& json,
   }
 }
 
-void ScriptStencil::dump() {
+void ScriptStencil::dump() const {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
   dump(json, nullptr);
 }
 
 void ScriptStencil::dump(js::JSONPrinter& json,
-                         BaseCompilationStencil* stencil) {
+                         const BaseCompilationStencil* stencil) const {
   json.beginObject();
   dumpFields(json, stencil);
   json.endObject();
 }
 
 void ScriptStencil::dumpFields(js::JSONPrinter& json,
-                               BaseCompilationStencil* stencil) {
+                               const BaseCompilationStencil* stencil) const {
   json.formatProperty("gcThingsOffset", "CompilationGCThingIndex(%u)",
                       gcThingsOffset.index);
   json.property("gcThingsLength", gcThingsLength);
 
   if (stencil) {
     json.beginListProperty("gcThings");
-    for (auto& thing : gcthings(*stencil)) {
+    for (const auto& thing : gcthings(*stencil)) {
       DumpScriptThing(json, stencil, thing);
     }
     json.endList();
@@ -2535,19 +2544,19 @@ void ScriptStencil::dumpFields(js::JSONPrinter& json,
   }
 }
 
-void ScriptStencilExtra::dump() {
+void ScriptStencilExtra::dump() const {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
   dump(json);
 }
 
-void ScriptStencilExtra::dump(js::JSONPrinter& json) {
+void ScriptStencilExtra::dump(js::JSONPrinter& json) const {
   json.beginObject();
   dumpFields(json);
   json.endObject();
 }
 
-void ScriptStencilExtra::dumpFields(js::JSONPrinter& json) {
+void ScriptStencilExtra::dumpFields(js::JSONPrinter& json) const {
   json.beginListProperty("immutableFlags");
   DumpImmutableScriptFlags(json, immutableFlags);
   json.endList();
@@ -2566,19 +2575,19 @@ void ScriptStencilExtra::dumpFields(js::JSONPrinter& json) {
   json.property("nargs", nargs);
 }
 
-void SharedDataContainer::dump() {
+void SharedDataContainer::dump() const {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
   dump(json);
 }
 
-void SharedDataContainer::dump(js::JSONPrinter& json) {
+void SharedDataContainer::dump(js::JSONPrinter& json) const {
   json.beginObject();
   dumpFields(json);
   json.endObject();
 }
 
-void SharedDataContainer::dumpFields(js::JSONPrinter& json) {
+void SharedDataContainer::dumpFields(js::JSONPrinter& json) const {
   if (isEmpty()) {
     json.nullProperty("ScriptIndex(0)");
     return;
@@ -2616,20 +2625,20 @@ void SharedDataContainer::dumpFields(js::JSONPrinter& json) {
   }
 }
 
-void BaseCompilationStencil::dump() {
+void BaseCompilationStencil::dump() const {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
   dump(json);
   out.put("\n");
 }
 
-void BaseCompilationStencil::dump(js::JSONPrinter& json) {
+void BaseCompilationStencil::dump(js::JSONPrinter& json) const {
   json.beginObject();
   dumpFields(json);
   json.endObject();
 }
 
-void BaseCompilationStencil::dumpFields(js::JSONPrinter& json) {
+void BaseCompilationStencil::dumpFields(js::JSONPrinter& json) const {
   char index[64];
 
   json.beginObjectProperty("scriptData");
@@ -2691,20 +2700,20 @@ void BaseCompilationStencil::dumpAtom(TaggedParserAtomIndex index) const {
   json.endObject();
 }
 
-void CompilationStencil::dump() {
+void CompilationStencil::dump() const {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
   dump(json);
   out.put("\n");
 }
 
-void CompilationStencil::dump(js::JSONPrinter& json) {
+void CompilationStencil::dump(js::JSONPrinter& json) const {
   json.beginObject();
   dumpFields(json);
   json.endObject();
 }
 
-void CompilationStencil::dumpFields(js::JSONPrinter& json) {
+void CompilationStencil::dumpFields(js::JSONPrinter& json) const {
   BaseCompilationStencil::dumpFields(json);
 
   char index[64];
