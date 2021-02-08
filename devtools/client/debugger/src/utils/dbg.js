@@ -11,7 +11,7 @@ import type { Source, URL } from "../types";
 import type { ThreadFront } from "../client/firefox/types";
 
 function getThreadFront(dbg: Object): ThreadFront {
-  return dbg.connection.targetList.targetFront.threadFront;
+  return dbg.targetList.targetFront.threadFront;
 }
 
 function findSource(dbg: any, url: URL): Source {

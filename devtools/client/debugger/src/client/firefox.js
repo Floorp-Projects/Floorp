@@ -20,15 +20,12 @@ let targetList;
 let resourceWatcher;
 
 export async function onConnect(
-  connection: any,
+  devToolsClient: any,
+  _targetList: any,
+  _resourceWatcher: any,
   _actions: Object,
   store: any
 ): Promise<void> {
-  const {
-    devToolsClient,
-    targetList: _targetList,
-    resourceWatcher: _resourceWatcher,
-  } = connection;
   actions = _actions;
   targetList = _targetList;
   resourceWatcher = _resourceWatcher;
