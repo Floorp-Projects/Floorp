@@ -510,7 +510,7 @@ max-width: ${width}px; max-height: ${height}px`;
     let msg = null;
 
     if (lhsCount != rhsCount) {
-      passed = relation == '!=';
+      passed = relation == "!=";
       if (!passed) {
         msg = `Got different numbers of pages; test has ${lhsCount}, ref has ${rhsCount}`;
       }
