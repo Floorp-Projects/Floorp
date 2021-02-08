@@ -290,36 +290,6 @@ static XDRResult XDRAtomCount(XDRState<mode>* xdr, uint32_t* atomCount) {
 }
 
 template <XDRMode mode>
-static XDRResult AtomTable(XDRState<mode>* xdr) {
-  // FIXME: hasAtomMap is alwas false.
-  uint8_t atomHeader = false;
-  if (mode == XDR_ENCODE) {
-    if (xdr->hasAtomMap()) {
-      atomHeader = true;
-    }
-  }
-
-  MOZ_TRY(xdr->codeUint8(&atomHeader));
-
-  if (atomHeader && mode == XDR_DECODE) {
-    uint32_t atomCount;
-    MOZ_TRY(XDRAtomCount(xdr, &atomCount));
-    MOZ_ASSERT(!xdr->hasAtomTable());
-
-    for (uint32_t i = 0; i < atomCount; i++) {
-      RootedAtom atom(xdr->cx());
-      MOZ_TRY(XDRAtom(xdr, &atom));
-      if (!xdr->atomTable().append(atom)) {
-        return xdr->fail(JS::TranscodeResult_Throw);
-      }
-    }
-    xdr->finishAtomTable();
-  }
-
-  return Ok();
-}
-
-template <XDRMode mode>
 static XDRResult XDRParserAtomTable(XDRState<mode>* xdr,
                                     frontend::BaseCompilationStencil& stencil) {
   if (mode == XDR_ENCODE) {
@@ -428,16 +398,7 @@ XDRResult XDRState<mode>::codeScript(MutableHandleScript scriptp) {
     MOZ_ASSERT(!scriptp->enclosingScope());
   }
 
-  // Only write to separate header buffer if we are incrementally encoding.
-  bool useHeader = this->hasAtomMap();
-  if (useHeader) {
-    switchToHeaderBuf();
-  }
   MOZ_TRY(VersionCheck(this, XDRFormatType::JSScript));
-  MOZ_TRY(AtomTable(this));
-  if (useHeader) {
-    switchToMainBuf();
-  }
   MOZ_ASSERT(isMainBuf());
   MOZ_TRY(XDRScript(this, nullptr, nullptr, nullptr, scriptp));
 
