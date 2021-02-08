@@ -56,6 +56,7 @@ class PrintHelper {
       Services.prefs.clearUserPref(name);
     }
     Services.prefs.clearUserPref("print_printer");
+    Services.prefs.clearUserPref("print.more-settings.open");
   }
 
   static getTestPageUrl(pathName) {
