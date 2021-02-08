@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body onload="run()">
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+async function run() {
+  try {
+    let printerList = Cc["@mozilla.org/gfx/printerlist;1"].getService(
+      Ci.nsIPrinterList
+    );
+    var settingsSvc = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
+      Ci.nsIPrintSettingsService
+    );
+
+    let printers = await printerList.printers;
+    for (let printer of printers) {
+      printer.QueryInterface(Ci.nsIPrinter);
+      let printerInfo = await printer.printerInfo;
+
+      // Look up the printer's defaultSettings:
+      let defaultSettings = printerInfo.defaultSettings;
+
+      // Let the printer impose its defaults onto a fresh settings object:
+      let freshSettings = settingsSvc.newPrintSettings;
+      printerList.initPrintSettingsFromPrinter(printer.name, freshSettings);
+
+      // Make sure they agree on the default orientation:
+      is(freshSettings.orientation, defaultSettings.orientation,
+         "initPrintSettingsFromPrinter should produce the same orientation " +
+         "as the printer's defaultSettings");
+    }
+
+    // This ok() just lets us avoid failure-due-to-no-tests-being-run, on
+    // devices that have no printers available & hence skip the loop above:
+    ok(true, "Finished traversing printers.");
+  } catch (e) {
+    ok(false, `Error thrown while retrieving printer info: ${e}.`);
+    Cu.reportError(e);
+  }
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>
