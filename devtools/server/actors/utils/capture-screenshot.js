@@ -57,9 +57,13 @@ function simulateCameraFlash(browsingContext) {
  *                      be rendered. If null, the current viewport of the element will be rendered.
  * @param {Boolean} args.fullpage: Should the screenshot be the height of the whole page
  * @param {String} args.filename: Expected filename for the screenshot
- * @param {Number} args.dpr: Scale of the screenshot. ⚠️ Note that the scale might be
- *                 decreased if the resulting image would be too big to draw safely.
- *                 Warning message will be returned if that's the case.
+ * @param {Number} args.snapshotScale: Scale that will be used by `drawSnapshot` to take the screenshot.
+ *                 ⚠️ Note that the scale might be decreased if the resulting image would
+ *                 be too big to draw safely. A warning message will be returned if that's
+ *                 the case.
+ * @param {Number} args.fileScale: Scale of the exported file. Defaults to args.snapshotScale.
+ * @param {Boolean} args.disableFlash: Set to true to disable the flash animation when the
+ *                  screenshot is taken.
  * @param {BrowsingContext} browsingContext
  * @returns {Object} object with the following properties:
  *          - data {String}: The dataURL representing the screenshot
@@ -100,8 +104,6 @@ async function captureScreenshot(args, browsingContext) {
     );
   }
 
-  const ratio = args.dpr ? args.dpr : 1;
-
   const document = browsingContext.topChromeWindow.document;
   const canvas = document.createElementNS(
     "http://www.w3.org/1999/xhtml",
@@ -119,12 +121,15 @@ async function captureScreenshot(args, browsingContext) {
         "rgb(255,255,255)"
       );
 
-      canvas.width = snapshot.width;
-      canvas.height = snapshot.height;
-      width = snapshot.width;
-      height = snapshot.height;
+      const fileScale = args.fileScale || actualRatio;
+      const renderingWidth = (snapshot.width / actualRatio) * fileScale;
+      const renderingHeight = (snapshot.height / actualRatio) * fileScale;
+      canvas.width = renderingWidth;
+      canvas.height = renderingHeight;
+      width = renderingWidth;
+      height = renderingHeight;
       const ctx = canvas.getContext("2d");
-      ctx.drawImage(snapshot, 0, 0);
+      ctx.drawImage(snapshot, 0, 0, renderingWidth, renderingHeight);
 
       // Bug 1574935 - Huge dimensions can trigger an OOM because multiple copies
       // of the bitmap will exist in memory. Force the removal of the snapshot
@@ -137,6 +142,7 @@ async function captureScreenshot(args, browsingContext) {
     }
   };
 
+  const ratio = args.snapshotScale;
   let data = await drawToCanvas(ratio);
   if (!data && ratio > 1.0) {
     // If the user provided DPR or the window.devicePixelRatio was higher than 1,
@@ -154,7 +160,7 @@ async function captureScreenshot(args, browsingContext) {
     });
   }
 
-  if (data) {
+  if (data && args.disableFlash !== true) {
     simulateCameraFlash(browsingContext);
   }
 
