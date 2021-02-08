@@ -11335,3 +11335,9 @@ bool BytecodeEmitter::allowSelfHostedIter(ParseNode* parseNode) {
          parseNode->as<BinaryNode>().left()->isName(
              TaggedParserAtomIndex::WellKnown::allowContentIter());
 }
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+void BytecodeEmitter::dumpAtom(TaggedParserAtomIndex index) const {
+  parserAtoms().dump(index);
+}
+#endif

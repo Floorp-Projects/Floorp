@@ -846,6 +846,7 @@ class ParserAtomsTable {
 
  public:
 #if defined(DEBUG) || defined(JS_JITSPEW)
+  void dump(TaggedParserAtomIndex index) const;
   void dumpCharsNoQuote(js::GenericPrinter& out,
                         TaggedParserAtomIndex index) const;
 #endif
