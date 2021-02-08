@@ -48,7 +48,7 @@ namespace js {
 
 namespace frontend {
 
-class ParserAtom;
+class ParserAtomsTable;
 class TaggedParserAtomIndex;
 class WellKnownParserAtoms_ROM;
 struct CompilationAtomCache;
@@ -1261,7 +1261,7 @@ class LittleEndianChars {
 class StaticStrings {
   // NOTE: The WellKnownParserAtoms rely on these tables and may need to be
   //       update if these tables are changed.
-  friend class js::frontend::ParserAtom;
+  friend class js::frontend::ParserAtomsTable;
   friend class js::frontend::TaggedParserAtomIndex;
   friend class js::frontend::WellKnownParserAtoms_ROM;
   friend struct js::frontend::CompilationAtomCache;
