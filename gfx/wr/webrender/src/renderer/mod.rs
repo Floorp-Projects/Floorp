@@ -84,7 +84,7 @@ use crate::profiler::{Profiler, add_event_marker, add_text_marker, thread_is_bei
 use crate::device::query::{GpuProfiler, GpuDebugMethod};
 use crate::render_backend::{FrameId, RenderBackend};
 use crate::render_task_graph::RenderTaskGraph;
-use crate::render_task::{RenderTask, RenderTaskKind};
+use crate::render_task::{RenderTask, RenderTaskKind, ReadbackTask};
 use crate::resource_cache::ResourceCache;
 use crate::scene_builder_thread::{SceneBuilderThread, SceneBuilderThreadChannels, LowPrioritySceneBuilderThread};
 use crate::screen_capture::AsyncScreenshotGrabber;
@@ -2489,10 +2489,22 @@ impl Renderer {
         &mut self,
         draw_target: DrawTarget,
         uses_scissor: bool,
-        source: &RenderTask,
         backdrop: &RenderTask,
         readback: &RenderTask,
     ) {
+        // Extract the rectangle in the backdrop surface's device space of where
+        // we need to read from.
+        let readback_origin = match readback.kind {
+            RenderTaskKind::Readback(ReadbackTask { readback_origin: Some(o), .. }) => o,
+            RenderTaskKind::Readback(ReadbackTask { readback_origin: None, .. }) => {
+                // If this is a dummy readback, just early out. We know that the
+                // clear of the target will ensure the task rect is already zero alpha,
+                // so it won't affect the rendering output.
+                return;
+            }
+            _ => unreachable!(),
+        };
+
         if uses_scissor {
             self.device.disable_scissor();
         }
@@ -2509,11 +2521,7 @@ impl Renderer {
         // composite operation in this batch.
         let (readback_rect, readback_layer) = readback.get_target_rect();
         let (backdrop_rect, _) = backdrop.get_target_rect();
-        let (backdrop_screen_origin, backdrop_scale) = match backdrop.kind {
-            RenderTaskKind::Picture(ref task_info) => (task_info.content_origin, task_info.device_pixel_scale),
-            _ => panic!("bug: composite on non-picture?"),
-        };
-        let (source_screen_origin, source_scale) = match source.kind {
+        let (backdrop_screen_origin, _) = match backdrop.kind {
             RenderTaskKind::Picture(ref task_info) => (task_info.content_origin, task_info.device_pixel_scale),
             _ => panic!("bug: composite on non-picture?"),
         };
@@ -2528,30 +2536,55 @@ impl Renderer {
             false,
         );
 
-        let source_in_backdrop_space = source_screen_origin * (backdrop_scale.0 / source_scale.0);
-
-        let mut src = DeviceIntRect::new(
-            (source_in_backdrop_space + (backdrop_rect.origin.to_f32() - backdrop_screen_origin)).to_i32(),
-            readback_rect.size,
+        // Get the rect that we ideally want, in space of the parent surface
+        let wanted_rect = DeviceRect::new(
+            readback_origin,
+            readback_rect.size.to_f32(),
         );
-        let mut dest = readback_rect.to_i32();
-        let device_to_framebuffer = Scale::new(1i32);
 
-        // Need to invert the y coordinates and flip the image vertically when
-        // reading back from the framebuffer.
-        if draw_target.is_default() {
-            src.origin.y = draw_target.dimensions().height as i32 - src.size.height - src.origin.y;
-            dest.origin.y += dest.size.height;
-            dest.size.height = -dest.size.height;
+        // Get the rect that is available on the parent surface. It may be smaller
+        // than desired because this is a picture cache tile covering only part of
+        // the wanted rect and/or because the parent surface was clipped.
+        let avail_rect = DeviceRect::new(
+            backdrop_screen_origin,
+            backdrop_rect.size.to_f32(),
+        );
+
+        if let Some(int_rect) = wanted_rect.intersection(&avail_rect) {
+            // If there is a valid intersection, work out the correct origins and
+            // sizes of the copy rects, and do the blit.
+            let copy_size = int_rect.size.to_i32();
+
+            let src_origin = backdrop_rect.origin.to_f32() +
+                int_rect.origin.to_vector() -
+                backdrop_screen_origin.to_vector();
+
+            let src = DeviceIntRect::new(
+                src_origin.to_i32(),
+                copy_size,
+            );
+
+            let dest_origin = readback_rect.origin.to_f32() +
+                int_rect.origin.to_vector() -
+                readback_origin.to_vector();
+
+            let dest = DeviceIntRect::new(
+                dest_origin.to_i32(),
+                copy_size,
+            );
+
+            // Should always be drawing to picture cache tiles or off-screen surface!
+            debug_assert!(!draw_target.is_default());
+            let device_to_framebuffer = Scale::new(1i32);
+
+            self.device.blit_render_target(
+                draw_target.into(),
+                src * device_to_framebuffer,
+                cache_draw_target,
+                dest * device_to_framebuffer,
+                TextureFilter::Linear,
+            );
         }
-
-        self.device.blit_render_target(
-            draw_target.into(),
-            src * device_to_framebuffer,
-            cache_draw_target,
-            dest * device_to_framebuffer,
-            TextureFilter::Linear,
-        );
 
         // Restore draw target to current pass render target + layer, and reset
         // the read target.
@@ -2899,14 +2932,13 @@ impl Renderer {
                 }
 
                 // Handle special case readback for composites.
-                if let BatchKind::Brush(BrushBatchKind::MixBlend { task_id, source_id, backdrop_id }) = batch.key.kind {
+                if let BatchKind::Brush(BrushBatchKind::MixBlend { task_id, backdrop_id }) = batch.key.kind {
                     // composites can't be grouped together because
                     // they may overlap and affect each other.
                     debug_assert_eq!(batch.instances.len(), 1);
                     self.handle_readback_composite(
                         draw_target,
                         uses_scissor,
-                        &render_tasks[source_id],
                         &render_tasks[task_id],
                         &render_tasks[backdrop_id],
                     );
