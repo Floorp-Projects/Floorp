@@ -91,7 +91,7 @@ struct FrameMetrics {
         mDevPixelsPerCSSPixel(1),
         mScrollOffset(0, 0),
         mZoom(),
-        mRootCompositionSize(0, 0),
+        mBoundingCompositionSize(0, 0),
         mPresShellId(-1),
         mLayoutViewport(0, 0, 0, 0),
         mExtraResolution(),
@@ -119,7 +119,7 @@ struct FrameMetrics {
            mScrollOffset == aOther.mScrollOffset &&
            // don't compare mZoom
            mScrollGeneration == aOther.mScrollGeneration &&
-           mRootCompositionSize == aOther.mRootCompositionSize &&
+           mBoundingCompositionSize == aOther.mBoundingCompositionSize &&
            mPresShellId == aOther.mPresShellId &&
            mLayoutViewport.IsEqualEdges(aOther.mLayoutViewport) &&
            mExtraResolution == aOther.mExtraResolution &&
@@ -221,8 +221,8 @@ struct FrameMetrics {
 
   CSSSize CalculateBoundedCompositedSizeInCssPixels() const {
     CSSSize size = CalculateCompositedSizeInCssPixels();
-    size.width = std::min(size.width, mRootCompositionSize.width);
-    size.height = std::min(size.height, mRootCompositionSize.height);
+    size.width = std::min(size.width, mBoundingCompositionSize.width);
+    size.height = std::min(size.height, mBoundingCompositionSize.height);
     return size;
   }
 
@@ -362,11 +362,13 @@ struct FrameMetrics {
 
   void SetScrollId(ViewID scrollId) { mScrollId = scrollId; }
 
-  void SetRootCompositionSize(const CSSSize& aRootCompositionSize) {
-    mRootCompositionSize = aRootCompositionSize;
+  void SetBoundingCompositionSize(const CSSSize& aBoundingCompositionSize) {
+    mBoundingCompositionSize = aBoundingCompositionSize;
   }
 
-  const CSSSize& GetRootCompositionSize() const { return mRootCompositionSize; }
+  const CSSSize& GetBoundingCompositionSize() const {
+    return mBoundingCompositionSize;
+  }
 
   uint32_t GetPresShellId() const { return mPresShellId; }
 
@@ -576,9 +578,9 @@ struct FrameMetrics {
   // The scroll generation counter used to acknowledge the scroll offset update.
   ScrollGeneration mScrollGeneration;
 
-  // The size of the root scrollable's composition bounds, but in local CSS
-  // pixels.
-  CSSSize mRootCompositionSize;
+  // A bounding size for our composition bounds (no larger than the
+  // cross-process RCD-RSF's composition size), in local CSS pixels.
+  CSSSize mBoundingCompositionSize;
 
   uint32_t mPresShellId;
 
