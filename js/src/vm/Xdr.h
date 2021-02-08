@@ -253,14 +253,6 @@ class XDRState : public XDRCoderBase {
   virtual LifoAlloc& stencilAlloc() { MOZ_CRASH("does not have stencilAlloc"); }
   virtual void finishAtomTable() { MOZ_CRASH("does not have atomTable"); }
 
-  virtual bool isMainBuf() { return true; }
-
-  virtual void switchToAtomBuf() { MOZ_CRASH("cannot switch to atom buffer."); }
-  virtual void switchToMainBuf() { MOZ_CRASH("cannot switch to main buffer."); }
-  virtual void switchToHeaderBuf() {
-    MOZ_CRASH("cannot switch to header buffer.");
-  }
-
   virtual XDRResult codeDelazificationStencils(
       frontend::CompilationStencilSet& stencilSet) {
     MOZ_CRASH("cannot code delazification stencils.");
@@ -621,11 +613,6 @@ class XDRIncrementalEncoderBase : public XDREncoder {
       : XDREncoder(cx, slices_, 0) {}
 
   void switchToBuffer(XDRBuffer<XDR_ENCODE>* target) { buf = target; }
-
-  bool isMainBuf() override { return buf == &mainBuf; }
-
-  // Switch to streaming into the main buffer.
-  void switchToMainBuf() override { switchToBuffer(&mainBuf); }
 
   virtual XDRResult linearize(JS::TranscodeBuffer& buffer,
                               js::ScriptSource* ss) {
