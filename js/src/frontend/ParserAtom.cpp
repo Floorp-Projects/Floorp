@@ -728,6 +728,12 @@ UniqueChars ParserAtomsTable::toQuotedString(
                    cx, mozilla::Range(atom->twoByteChars(), length), '\"');
 }
 
+JSAtom* ParserAtomsTable::toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
+                                   CompilationAtomCache& atomCache) const {
+  const auto* atom = getParserAtom(index);
+  return atom->toJSAtom(cx, index, atomCache);
+}
+
 bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
                             CompilationAtomCache& atomCache) {
   for (size_t i = 0; i < entries.size(); i++) {

@@ -416,8 +416,7 @@ NameLocation ScopeContext::searchInDelazificationEnclosingScope(
   JSAtom* jsname = nullptr;
   {
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    const ParserAtom* atom = parserAtoms.getParserAtom(name);
-    jsname = atom->toJSAtom(cx, name, input.atomCache);
+    jsname = parserAtoms.toJSAtom(cx, name, input.atomCache);
     if (!jsname) {
       oomUnsafe.crash("EmitterScope::searchAndCache");
     }
@@ -604,11 +603,9 @@ RegExpObject* RegExpStencil::createRegExp(
 }
 
 RegExpObject* RegExpStencil::createRegExpAndEnsureAtom(
-    JSContext* cx, CompilationAtomCache& atomCache,
-    BaseCompilationStencil& stencil) const {
-  const ParserAtom* parserAtom = stencil.getParserAtomAt(cx, atom_);
-  MOZ_ASSERT(parserAtom);
-  RootedAtom atom(cx, parserAtom->toJSAtom(cx, atom_, atomCache));
+    JSContext* cx, ParserAtomsTable& parserAtoms,
+    CompilationAtomCache& atomCache) const {
+  RootedAtom atom(cx, parserAtoms.toJSAtom(cx, atom_, atomCache));
   if (!atom) {
     return nullptr;
   }

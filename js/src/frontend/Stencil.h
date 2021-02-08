@@ -196,8 +196,8 @@ class RegExpStencil {
   // This is used by `Reflect.parse` when we need the RegExpObject but are not
   // doing a complete instantiation of the BaseCompilationStencil.
   RegExpObject* createRegExpAndEnsureAtom(
-      JSContext* cx, CompilationAtomCache& atomCache,
-      BaseCompilationStencil& stencil) const;
+      JSContext* cx, ParserAtomsTable& parserAtoms,
+      CompilationAtomCache& atomCache) const;
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump();

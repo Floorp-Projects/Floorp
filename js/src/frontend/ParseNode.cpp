@@ -393,10 +393,11 @@ TaggedParserAtomIndex NumericLiteral::toAtom(
 }
 
 RegExpObject* RegExpLiteral::create(JSContext* cx,
+                                    ParserAtomsTable& parserAtoms,
                                     CompilationAtomCache& atomCache,
                                     BaseCompilationStencil& stencil) const {
-  return stencil.regExpData[index_].createRegExpAndEnsureAtom(cx, atomCache,
-                                                              stencil);
+  return stencil.regExpData[index_].createRegExpAndEnsureAtom(cx, parserAtoms,
+                                                              atomCache);
 }
 
 bool js::frontend::IsAnonymousFunctionDefinition(ParseNode* pn) {

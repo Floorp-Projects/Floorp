@@ -454,12 +454,12 @@ class alignas(alignof(uint32_t)) ParserAtom {
     length_ = length;
   }
 
- public:
   // Convert this entry to a js-atom.  The first time this method is called
   // the entry will cache the JSAtom pointer to return later.
   JSAtom* toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
                    CompilationAtomCache& atomCache) const;
 
+ public:
   // Convert NotInstantiated and usedByStencil entry to a js-atom.
   JSAtom* instantiate(JSContext* cx, TaggedParserAtomIndex index,
                       CompilationAtomCache& atomCache) const;
@@ -853,6 +853,8 @@ class ParserAtomsTable {
   UniqueChars toPrintableString(JSContext* cx,
                                 TaggedParserAtomIndex index) const;
   UniqueChars toQuotedString(JSContext* cx, TaggedParserAtomIndex index) const;
+  JSAtom* toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
+                   CompilationAtomCache& atomCache) const;
 
  public:
 #if defined(DEBUG) || defined(JS_JITSPEW)
