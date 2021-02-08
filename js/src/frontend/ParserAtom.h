@@ -840,11 +840,10 @@ class ParserAtomsTable {
   const ParserAtom* getWellKnown(WellKnownAtomId atomId) const;
   const ParserAtom* getStatic1(StaticParserString1 s) const;
   const ParserAtom* getStatic2(StaticParserString2 s) const;
-
- public:
   const ParserAtom* getParserAtom(ParserAtomIndex index) const;
   const ParserAtom* getParserAtom(TaggedParserAtomIndex index) const;
 
+ public:
   void markUsedByStencil(TaggedParserAtomIndex index) const;
 
   const ParserAtomVector& entries() const { return entries_; }
