@@ -1479,14 +1479,6 @@ bool AutoStableStringChars::copyTwoByteChars(JSContext* cx,
   return true;
 }
 
-UniqueChars js::ParserAtomToNewUTF8CharsZ(
-    JSContext* maybecx, const js::frontend::ParserAtom* atom) {
-  return UniqueChars(
-      atom->hasLatin1Chars()
-          ? JS::CharsToNewUTF8CharsZ(maybecx, atom->latin1Range()).c_str()
-          : JS::CharsToNewUTF8CharsZ(maybecx, atom->twoByteRange()).c_str());
-}
-
 #if defined(DEBUG) || defined(JS_JITSPEW)
 void JSAtom::dump(js::GenericPrinter& out) {
   out.printf("JSAtom* (%p) = ", (void*)this);
