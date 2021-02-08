@@ -21,6 +21,7 @@ import sys
 import tarfile
 from contextlib import contextmanager
 from distutils.dir_util import copy_tree
+from distutils.file_util import copy_file
 
 from shutil import which
 
@@ -196,10 +197,13 @@ def install_libgcc(gcc_dir, clang_dir, is_final_stage):
     mkdir_p(clang_lib_dir)
     copy_tree(libgcc_dir, clang_lib_dir, preserve_symlinks=True)
     libgcc_dir = os.path.join(gcc_dir, "lib64")
-    clang_lib_dir = os.path.join(clang_dir, "lib")
+    # This is necessary as long as CI runs on debian8 docker images.
+    copy_file(
+        os.path.join(libgcc_dir, "libstdc++.so.6"), os.path.join(clang_dir, "lib")
+    )
     copy_tree(libgcc_dir, clang_lib_dir, preserve_symlinks=True)
     libgcc_dir = os.path.join(gcc_dir, "lib32")
-    clang_lib_dir = os.path.join(clang_dir, "lib32")
+    clang_lib_dir = os.path.join(clang_lib_dir, "32")
     copy_tree(libgcc_dir, clang_lib_dir, preserve_symlinks=True)
     include_dir = os.path.join(gcc_dir, "include")
     clang_include_dir = os.path.join(clang_dir, "include")
