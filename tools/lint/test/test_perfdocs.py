@@ -74,7 +74,17 @@ suites:
     suite:
         description: "Performance tests from the 'suite' folder."
         tests:
-            Example: ""
+            Example: "Performance test Example from suite."
+    another_suite:
+        description: "Performance tests from the 'another_suite' folder."
+        tests:
+            Example: "Performance test Example from another_suite."
+"""
+
+
+SAMPLE_INI = """
+[Example]
+test_url = Example_url
 """
 
 
@@ -470,6 +480,64 @@ def test_perfdocs_framework_gatherers(logger, structured_logger, perfdocs_sample
             for test, manifest in suitetests.items():
                 assert test == "Example"
                 assert manifest == perfdocs_sample["manifest"]
+
+
+@mock.patch("perfdocs.logger.PerfDocLogger")
+def test_perfdocs_framework_gatherers_urls(logger, structured_logger, perfdocs_sample):
+    top_dir = perfdocs_sample["top_dir"]
+    setup_sample_logger(logger, structured_logger, top_dir)
+
+    from perfdocs.gatherer import frameworks
+    from perfdocs.verifier import Verifier
+    from perfdocs.generator import Generator
+    from perfdocs.utils import read_yaml
+
+    # This test is only for raptor
+    gatherer = frameworks["raptor"]
+    with open(perfdocs_sample["config"], "w") as f:
+        f.write(DYNAMIC_SAMPLE_CONFIG.format("raptor"))
+
+    fg = gatherer(perfdocs_sample["config_2"], top_dir)
+    fg.get_suite_list = mock.Mock()
+    fg.get_suite_list.return_value = {
+        "suite": [perfdocs_sample["example1_manifest"]],
+        "another_suite": [perfdocs_sample["example2_manifest"]],
+    }
+
+    v = Verifier(top_dir)
+    gn = Generator(v, generate=True, workspace=top_dir)
+
+    # Check to make sure that if a test is present under multiple
+    # suties the urls are generated correctly for the test under
+    # every suite
+    for suite, suitetests in fg.get_test_list().items():
+        url = fg._urls.get(suite)
+        assert url is not None
+        assert url[0]["test_name"] == "Example"
+        assert url[0]["url"] == "Example_url"
+
+    perfdocs_tree = gn._perfdocs_tree[0]
+    yaml_content = read_yaml(
+        os.path.join(os.path.join(perfdocs_tree["path"], perfdocs_tree["yml"]))
+    )
+    suites = yaml_content["suites"]
+
+    # Check that the sections for each suite are generated correctly
+    for suite_name, suite_details in suites.items():
+        gn._verifier._gatherer = mock.Mock(framework_gatherers={"raptor": gatherer})
+        section = gn._verifier._gatherer.framework_gatherers[
+            "raptor"
+        ].build_suite_section(fg, suite_name, suites.get(suite_name)["description"])
+        assert suite_name.capitalize() == section[0]
+        assert suite_name in section[2]
+
+        tests = suites.get(suite_name).get("tests", {})
+        for test_name in tests.keys():
+            desc = gn._verifier._gatherer.framework_gatherers[
+                "raptor"
+            ].build_test_description(fg, test_name, tests[test_name], suite_name)
+            assert suite_name in desc[0]
+            assert test_name in desc[0]
 
 
 def test_perfdocs_logger_failure(config, paths):

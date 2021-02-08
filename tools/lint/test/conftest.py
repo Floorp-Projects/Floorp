@@ -200,29 +200,46 @@ def perfdocs_sample():
     from test_perfdocs import (
         SAMPLE_TEST,
         SAMPLE_CONFIG,
+        DYNAMIC_SAMPLE_CONFIG,
+        SAMPLE_INI,
         temp_dir,
         temp_file,
     )
 
     with temp_dir() as tmpdir:
         suite_dir = os.path.join(tmpdir, "suite")
+        raptor_dir = os.path.join(tmpdir, "raptor")
+        raptor_suitedir = os.path.join(tmpdir, "raptor", "suite")
+        raptor_another_suitedir = os.path.join(tmpdir, "raptor", "another_suite")
         perfdocs_dir = os.path.join(tmpdir, "perfdocs")
         os.mkdir(perfdocs_dir)
         os.mkdir(suite_dir)
+        os.mkdir(raptor_dir)
+        os.mkdir(raptor_suitedir)
+        os.mkdir(raptor_another_suitedir)
 
         with temp_file(
             "perftest.ini", tempdir=suite_dir, content="[perftest_sample.js]"
         ) as tmpmanifest, temp_file(
+            "raptor_example1.ini", tempdir=raptor_suitedir, content=SAMPLE_INI
+        ) as tmpexample1manifest, temp_file(
+            "raptor_example2.ini", tempdir=raptor_another_suitedir, content=SAMPLE_INI
+        ) as tmpexample2manifest, temp_file(
             "perftest_sample.js", tempdir=suite_dir, content=SAMPLE_TEST
         ) as tmptest, temp_file(
             "config.yml", tempdir=perfdocs_dir, content=SAMPLE_CONFIG
         ) as tmpconfig, temp_file(
+            "config_2.yml", tempdir=perfdocs_dir, content=DYNAMIC_SAMPLE_CONFIG
+        ) as tmpconfig_2, temp_file(
             "index.rst", tempdir=perfdocs_dir, content="{documentation}"
         ) as tmpindex:
             yield {
                 "top_dir": tmpdir.replace("\\", "\\\\"),
                 "manifest": tmpmanifest,
+                "example1_manifest": tmpexample1manifest,
+                "example2_manifest": tmpexample2manifest,
                 "test": tmptest,
                 "config": tmpconfig,
+                "config_2": tmpconfig_2,
                 "index": tmpindex,
             }
