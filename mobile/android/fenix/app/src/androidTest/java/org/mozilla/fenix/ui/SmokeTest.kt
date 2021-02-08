@@ -14,7 +14,6 @@ import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
@@ -50,10 +49,6 @@ class SmokeTest {
     private var recentlyClosedTabsListIdlingResource: RecyclerViewIdlingResource? = null
     private var readerViewNotification: ViewVisibilityIdlingResource? = null
     private val downloadFileName = "Globe.svg"
-    private val searchEngine = object {
-        var title = "Ecosia"
-        var url = "https://www.ecosia.org/search?q=%s"
-    }
     val collectionName = "First Collection"
     private var bookmarksListIdlingResource: RecyclerViewIdlingResource? = null
 
@@ -519,32 +514,6 @@ class SmokeTest {
             IdlingRegistry.getInstance().register(searchSuggestionsIdlingResource!!)
             verifySearchSuggestionsAreEqualTo(0)
             IdlingRegistry.getInstance().unregister(searchSuggestionsIdlingResource!!)
-        }
-    }
-
-    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/17847")
-    @Test
-    // Verifies setting as default a customized search engine name and URL
-    fun editCustomSearchEngineTest() {
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openSearchSubMenu {
-            openAddSearchEngineMenu()
-            selectAddCustomSearchEngine()
-            typeCustomEngineDetails(searchEngine.title, searchEngine.url)
-            saveNewSearchEngine()
-            openEngineOverflowMenu("Ecosia")
-            clickEdit()
-            typeCustomEngineDetails("Test", searchEngine.url)
-            saveEditSearchEngine()
-            changeDefaultSearchEngine("Test")
-        }.goBack {
-        }.goBack {
-        }.openSearch {
-            verifyDefaultSearchEngine("Test")
-            clickSearchEngineShortcutButton()
-            verifyEnginesListShortcutContains("Test")
         }
     }
 
