@@ -441,7 +441,7 @@ If no timestamp is set, any call to ``.get()`` will trigger the load of initial 
 
 .. code-block:: js
 
-    await db.saveLastModified(42);
+    await db.importChanges({}, 42);
 
 In order to bypass the potential target filtering of ``RemoteSettings("key").get()``, the low-level listing of records can be obtained with ``collection.list()``:
 
