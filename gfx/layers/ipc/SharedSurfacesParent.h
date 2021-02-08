@@ -67,7 +67,6 @@ class SharedSurfacesParent final {
 
   static void AddSameProcess(const wr::ExternalImageId& aId,
                              gfx::SourceSurfaceSharedData* aSurface);
-  static void RemoveSameProcess(const wr::ExternalImageId& aId);
 
   static StaticMutex sMutex;
 
