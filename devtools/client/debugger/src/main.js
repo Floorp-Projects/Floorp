@@ -4,15 +4,9 @@
 
 // @flow
 
-import ReactDOM from "react-dom";
 import { onConnect, onDisconnect } from "./client";
 import { teardownWorkers } from "./utils/bootstrap";
 import sourceQueue from "./utils/source-queue";
-
-function unmountRoot() {
-  const mount = document.querySelector("#mount");
-  ReactDOM.unmountComponentAtNode(mount);
-}
 
 module.exports = {
   bootstrap: ({
@@ -34,7 +28,6 @@ module.exports = {
     ),
   destroy: () => {
     onDisconnect();
-    unmountRoot();
     sourceQueue.clear();
     teardownWorkers();
   },
