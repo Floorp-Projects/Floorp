@@ -30,6 +30,8 @@ using mozilla::dom::quota::Client;
 using mozilla::dom::quota::CloneFileAndAppend;
 using mozilla::dom::quota::FileInputStream;
 using mozilla::dom::quota::FileOutputStream;
+using mozilla::dom::quota::GetDirEntryKind;
+using mozilla::dom::quota::nsIFileKind;
 using mozilla::dom::quota::PERSISTENCE_TYPE_DEFAULT;
 using mozilla::dom::quota::QuotaManager;
 using mozilla::dom::quota::QuotaObject;
@@ -346,41 +348,52 @@ nsresult BodyDeleteOrphanedFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBaseDir,
       *dir,
       [&aQuotaInfo, &aKnownBodyIdList](
           const nsCOMPtr<nsIFile>& subdir) -> Result<Ok, nsresult> {
-        CACHE_TRY_INSPECT(const bool& isDir,
-                          MOZ_TO_RESULT_INVOKE(subdir, IsDirectory));
+        CACHE_TRY_INSPECT(const auto& dirEntryKind, GetDirEntryKind(*subdir));
 
-        // If a file got in here somehow, try to remove it and move on
-        CACHE_TRY(OkIf(isDir), Ok{}, ([&aQuotaInfo, &subdir](const auto&) {
-                    DebugOnly<nsresult> result = RemoveNsIFile(
-                        aQuotaInfo, *subdir, /* aTrackQuota */ false);
-                    MOZ_ASSERT(NS_SUCCEEDED(result));
-                  }));
+        switch (dirEntryKind) {
+          case nsIFileKind::ExistsAsDirectory: {
+            const auto removeOrphanedFiles =
+                [&aQuotaInfo, &aKnownBodyIdList](
+                    nsIFile& bodyFile,
+                    const nsACString& leafName) -> Result<bool, nsresult> {
+              // Finally, parse the uuid out of the name.  If it fails to parse,
+              // then ignore the file.
+              auto cleanup = MakeScopeExit([&aQuotaInfo, &bodyFile] {
+                DebugOnly<nsresult> result =
+                    RemoveNsIFile(aQuotaInfo, bodyFile);
+                MOZ_ASSERT(NS_SUCCEEDED(result));
+              });
 
-        const auto removeOrphanedFiles =
-            [&aQuotaInfo, &aKnownBodyIdList](
-                nsIFile& bodyFile,
-                const nsACString& leafName) -> Result<bool, nsresult> {
-          // Finally, parse the uuid out of the name.  If it fails to parse,
-          // then ignore the file.
-          auto cleanup = MakeScopeExit([&aQuotaInfo, &bodyFile] {
-            DebugOnly<nsresult> result = RemoveNsIFile(aQuotaInfo, bodyFile);
-            MOZ_ASSERT(NS_SUCCEEDED(result));
-          });
+              nsID id;
+              CACHE_TRY(OkIf(id.Parse(leafName.BeginReading())), true);
 
-          nsID id;
-          CACHE_TRY(OkIf(id.Parse(leafName.BeginReading())), true);
+              if (!aKnownBodyIdList.Contains(id)) {
+                return true;
+              }
 
-          if (!aKnownBodyIdList.Contains(id)) {
-            return true;
+              cleanup.release();
+
+              return false;
+            };
+            CACHE_TRY(BodyTraverseFiles(aQuotaInfo, *subdir,
+                                        removeOrphanedFiles,
+                                        /* aCanRemoveFiles */ true,
+                                        /* aTrackQuota */ true));
+            break;
           }
 
-          cleanup.release();
-
-          return false;
-        };
-        CACHE_TRY(BodyTraverseFiles(aQuotaInfo, *subdir, removeOrphanedFiles,
-                                    /* aCanRemoveFiles */ true,
-                                    /* aTrackQuota */ true));
+          case nsIFileKind::ExistsAsFile: {
+            // If a file got in here somehow, try to remove it and move on
+            DebugOnly<nsresult> result =
+                RemoveNsIFile(aQuotaInfo, *subdir, /* aTrackQuota */ false);
+            MOZ_ASSERT(NS_SUCCEEDED(result));
+            break;
+          }
+          
+          case nsIFileKind::DoesNotExist:
+            // Ignore files that got removed externally while iterating.
+            break;
+        }
 
         return Ok{};
       }));
@@ -440,31 +453,34 @@ bool MarkerFileExists(const QuotaInfo& aQuotaInfo) {
 
 nsresult RemoveNsIFileRecursively(const QuotaInfo& aQuotaInfo, nsIFile& aFile,
                                   const bool aTrackQuota) {
-  CACHE_TRY_INSPECT(const Maybe<bool>& maybeIsDirectory,
-                    MOZ_TO_RESULT_INVOKE(aFile, IsDirectory)
-                        .map(Some<bool>)
-                        .orElse(MapNotFoundToDefault<Maybe<bool>>));
-  if (!maybeIsDirectory) {
-    return NS_OK;
+  CACHE_TRY_INSPECT(const auto& dirEntryKind, GetDirEntryKind(aFile));
+
+  switch (dirEntryKind) {
+    case nsIFileKind::ExistsAsDirectory:
+      // Unfortunately, we need to traverse all the entries and delete files one
+      // by
+      // one to update their usages to the QuotaManager.
+      CACHE_TRY(quota::CollectEachFile(
+          aFile,
+          [&aQuotaInfo, &aTrackQuota](
+              const nsCOMPtr<nsIFile>& file) -> Result<Ok, nsresult> {
+            CACHE_TRY(RemoveNsIFileRecursively(aQuotaInfo, *file, aTrackQuota));
+
+            return Ok{};
+          }));
+
+      // In the end, remove the folder
+      CACHE_TRY(aFile.Remove(/* recursive */ false));
+
+      break;
+
+    case nsIFileKind::ExistsAsFile:
+      return RemoveNsIFile(aQuotaInfo, aFile, aTrackQuota);
+
+    case nsIFileKind::DoesNotExist:
+      // Ignore files that got removed externally while iterating.
+      break;
   }
-
-  if (!maybeIsDirectory.value()) {
-    return RemoveNsIFile(aQuotaInfo, aFile, aTrackQuota);
-  }
-
-  // Unfortunately, we need to traverse all the entries and delete files one by
-  // one to update their usages to the QuotaManager.
-  CACHE_TRY(quota::CollectEachFile(
-      aFile,
-      [&aQuotaInfo,
-       &aTrackQuota](const nsCOMPtr<nsIFile>& file) -> Result<Ok, nsresult> {
-        CACHE_TRY(RemoveNsIFileRecursively(aQuotaInfo, *file, aTrackQuota));
-
-        return Ok{};
-      }));
-
-  // In the end, remove the folder
-  CACHE_TRY(aFile.Remove(/* recursive */ false));
 
   return NS_OK;
 }

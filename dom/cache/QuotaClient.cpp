@@ -415,43 +415,51 @@ Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOriginInternal(
                 const auto& leafName,
                 MOZ_TO_RESULT_INVOKE_TYPED(nsAutoString, file, GetLeafName));
 
-            CACHE_TRY_INSPECT(const bool& isDir,
-                              MOZ_TO_RESULT_INVOKE(file, IsDirectory));
+            CACHE_TRY_INSPECT(const auto& dirEntryKind, GetDirEntryKind(*file));
 
-            if (isDir) {
-              if (leafName.EqualsLiteral("morgue")) {
-                CACHE_TRY_RETURN(GetBodyUsage(*file, aCanceled, aInitializing));
-              } else {
-                NS_WARNING("Unknown Cache directory found!");
-              }
+            switch (dirEntryKind) {
+              case nsIFileKind::ExistsAsDirectory:
+                if (leafName.EqualsLiteral("morgue")) {
+                  CACHE_TRY_RETURN(
+                      GetBodyUsage(*file, aCanceled, aInitializing));
+                } else {
+                  NS_WARNING("Unknown Cache directory found!");
+                }
 
-              return UsageInfo{};
+                break;
+
+              case nsIFileKind::ExistsAsFile:
+                // Ignore transient sqlite files and marker files
+                if (leafName.EqualsLiteral("caches.sqlite-journal") ||
+                    leafName.EqualsLiteral("caches.sqlite-shm") ||
+                    leafName.Find("caches.sqlite-mj"_ns, false, 0, 0) == 0 ||
+                    leafName.EqualsLiteral("context_open.marker")) {
+                  break;
+                }
+
+                if (leafName.Equals(kCachesSQLiteFilename) ||
+                    leafName.EqualsLiteral("caches.sqlite-wal")) {
+                  CACHE_TRY_INSPECT(const int64_t& fileSize,
+                                    MOZ_TO_RESULT_INVOKE(file, GetFileSize));
+                  MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
+
+                  return UsageInfo{DatabaseUsageType(Some(fileSize))};
+                }
+
+                // Ignore directory padding file
+                if (leafName.EqualsLiteral(PADDING_FILE_NAME) ||
+                    leafName.EqualsLiteral(PADDING_TMP_FILE_NAME)) {
+                  break;
+                }
+
+                NS_WARNING("Unknown Cache file found!");
+
+                break;
+
+              case nsIFileKind::DoesNotExist:
+                // Ignore files that got removed externally while iterating.
+                break;
             }
-
-            // Ignore transient sqlite files and marker files
-            if (leafName.EqualsLiteral("caches.sqlite-journal") ||
-                leafName.EqualsLiteral("caches.sqlite-shm") ||
-                leafName.Find("caches.sqlite-mj"_ns, false, 0, 0) == 0 ||
-                leafName.EqualsLiteral("context_open.marker")) {
-              return UsageInfo{};
-            }
-
-            if (leafName.Equals(kCachesSQLiteFilename) ||
-                leafName.EqualsLiteral("caches.sqlite-wal")) {
-              CACHE_TRY_INSPECT(const int64_t& fileSize,
-                                MOZ_TO_RESULT_INVOKE(file, GetFileSize));
-              MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
-
-              return UsageInfo{DatabaseUsageType(Some(fileSize))};
-            }
-
-            // Ignore directory padding file
-            if (leafName.EqualsLiteral(PADDING_FILE_NAME) ||
-                leafName.EqualsLiteral(PADDING_TMP_FILE_NAME)) {
-              return UsageInfo{};
-            }
-
-            NS_WARNING("Unknown Cache file found!");
 
             return UsageInfo{};
           }));
