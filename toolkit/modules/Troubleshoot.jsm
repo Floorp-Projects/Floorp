@@ -953,7 +953,7 @@ if (AppConstants.MOZ_SANDBOX) {
 if (AppConstants.ENABLE_REMOTE_AGENT) {
   dataProviders.remoteAgent = function remoteAgent(done) {
     const { RemoteAgent } = ChromeUtils.import(
-      "chrome://remote/content/RemoteAgent.jsm"
+      "chrome://remote/content/components/RemoteAgent.jsm"
     );
     const { listening, scheme, host, port } = RemoteAgent;
     let url = "";
