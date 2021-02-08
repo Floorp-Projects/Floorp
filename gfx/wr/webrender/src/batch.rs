@@ -1173,12 +1173,11 @@ impl BatchBuilder {
                 };
 
                 let glyph_keys = &ctx.scratch.glyph_keys[run.glyph_keys_range];
-                let raster_scale = run.raster_space.local_scale().unwrap_or(1.0).max(0.001);
                 let prim_header_index = prim_headers.push(
                     &prim_header,
                     z_id,
                     [
-                        (raster_scale * 65535.0).round() as i32,
+                        (run.raster_scale * 65535.0).round() as i32,
                         0,
                         0,
                         0,
@@ -1316,7 +1315,7 @@ impl BatchBuilder {
                             } else {
                                 let mut local_bounding_rect = LayoutRect::default();
 
-                                let glyph_raster_scale = raster_scale * ctx.global_device_pixel_scale.get();
+                                let glyph_raster_scale = run.raster_scale * ctx.global_device_pixel_scale.get();
 
                                 for glyph in glyphs {
                                     let glyph_offset = prim_data.glyphs[glyph.index_in_text_run as usize].point + prim_header.local_rect.origin.to_vector();
