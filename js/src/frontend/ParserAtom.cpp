@@ -687,12 +687,13 @@ UniqueChars ParserAtomsTable::toNewUTF8CharsZ(
 }
 
 template <typename CharT>
-UniqueChars ToPrintableStringImpl(JSContext* cx, mozilla::Range<CharT> str) {
+UniqueChars ToPrintableStringImpl(JSContext* cx, mozilla::Range<CharT> str,
+                                  char quote = '\0') {
   Sprinter sprinter(cx);
   if (!sprinter.init()) {
     return nullptr;
   }
-  if (!QuoteString<QuoteTarget::String>(&sprinter, str)) {
+  if (!QuoteString<QuoteTarget::String>(&sprinter, str, quote)) {
     return nullptr;
   }
   return sprinter.release();
@@ -707,6 +708,17 @@ UniqueChars ParserAtomsTable::toPrintableString(
                    cx, mozilla::Range(atom->latin1Chars(), length))
              : ToPrintableStringImpl(
                    cx, mozilla::Range(atom->twoByteChars(), length));
+}
+
+UniqueChars ParserAtomsTable::toQuotedString(
+    JSContext* cx, TaggedParserAtomIndex index) const {
+  const auto* atom = getParserAtom(index);
+  size_t length = atom->length();
+  return atom->hasLatin1Chars()
+             ? ToPrintableStringImpl(
+                   cx, mozilla::Range(atom->latin1Chars(), length), '\"')
+             : ToPrintableStringImpl(
+                   cx, mozilla::Range(atom->twoByteChars(), length), '\"');
 }
 
 bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
