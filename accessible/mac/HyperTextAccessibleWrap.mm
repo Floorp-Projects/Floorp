@@ -13,6 +13,7 @@
 #include "nsFrameSelection.h"
 #include "TextRange.h"
 #include "TreeWalker.h"
+#include "nsPersistentProperties.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -250,6 +251,57 @@ void HyperTextAccessibleWrap::TextForRange(nsAString& aText,
     iter.mCurrentContainer->TextSubstring(iter.mCurrentStartOffset,
                                           iter.mCurrentEndOffset, text);
     aText.Append(text);
+  }
+}
+
+void HyperTextAccessibleWrap::AttributedTextForRange(
+    nsTArray<nsString>& aStrings,
+    nsTArray<nsCOMPtr<nsIPersistentProperties>>& aProperties,
+    nsTArray<Accessible*>& aContainers, int32_t aStartOffset,
+    HyperTextAccessible* aEndContainer, int32_t aEndOffset) {
+  if (IsHTMLListItem()) {
+    Accessible* maybeBullet = GetChildAtOffset(aStartOffset - 1);
+    if (maybeBullet) {
+      Accessible* bullet = AsHTMLListItem()->Bullet();
+      if (maybeBullet == bullet) {
+        nsAutoString text;
+        TextSubstring(0, nsAccUtils::TextLength(bullet), text);
+
+        int32_t unusedAttrStartOffset, unusedAttrEndOffset;
+        nsCOMPtr<nsIPersistentProperties> props =
+            TextAttributes(true, aStartOffset - 1, &unusedAttrStartOffset,
+                           &unusedAttrEndOffset);
+        nsTArray<Attribute> textAttrArray;
+        nsAccUtils::PersistentPropertiesToArray(props, &textAttrArray);
+
+        aStrings.AppendElement(text);
+        aProperties.AppendElement(props);
+        aContainers.AppendElement(this);
+      }
+    }
+  }
+
+  HyperTextIterator iter(this, aStartOffset, aEndContainer, aEndOffset);
+  while (iter.Next()) {
+    int32_t attrStartOffset = 0;
+    int32_t attrEndOffset = iter.mCurrentStartOffset;
+    do {
+      nsCOMPtr<nsIPersistentProperties> props =
+          iter.mCurrentContainer->TextAttributes(
+              true, attrEndOffset, &attrStartOffset, &attrEndOffset);
+
+      nsAutoString text;
+      iter.mCurrentContainer->TextSubstring(
+          attrStartOffset < iter.mCurrentStartOffset ? iter.mCurrentStartOffset
+                                                     : attrStartOffset,
+          attrEndOffset < iter.mCurrentEndOffset ? attrEndOffset
+                                                 : iter.mCurrentEndOffset,
+          text);
+
+      aStrings.AppendElement(text);
+      aProperties.AppendElement(props);
+      aContainers.AppendElement(iter.mCurrentContainer);
+    } while (attrEndOffset < iter.mCurrentEndOffset);
   }
 }
 

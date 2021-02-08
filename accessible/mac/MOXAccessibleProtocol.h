@@ -388,7 +388,7 @@
 // AXStyleRangeForIndex
 - (NSValue* _Nullable)moxStyleRangeForIndex:(NSNumber* _Nonnull)index;
 
-// AttributedStringForRange
+// AXAttributedStringForRange
 - (NSAttributedString* _Nullable)moxAttributedStringForRange:
     (NSValue* _Nonnull)range;
 
