@@ -46,9 +46,7 @@ class JSLinearString;
   _(BytecodeFoldConstants)                     \
   _(BytecodeNameFunctions)                     \
   _(DecodeScript)                              \
-  _(DecodeFunction)                            \
   _(EncodeScript)                              \
-  _(EncodeFunction)                            \
   _(Scripts)                                   \
   _(VM)                                        \
   _(CompressSource)                            \
