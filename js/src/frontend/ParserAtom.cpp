@@ -152,10 +152,10 @@ void TaggedParserAtomIndex::validateRaw() {
 #endif
 
 template <typename CharT, typename SeqCharT>
-/* static */ ParserAtomEntry* ParserAtomEntry::allocate(
+/* static */ ParserAtom* ParserAtom::allocate(
     JSContext* cx, LifoAlloc& alloc, InflatedChar16Sequence<SeqCharT> seq,
     uint32_t length, HashNumber hash) {
-  constexpr size_t HeaderSize = sizeof(ParserAtomEntry);
+  constexpr size_t HeaderSize = sizeof(ParserAtom);
   void* raw = alloc.alloc(HeaderSize + (sizeof(CharT) * length));
   if (!raw) {
     js::ReportOutOfMemory(cx);
@@ -165,16 +165,16 @@ template <typename CharT, typename SeqCharT>
   constexpr bool hasTwoByteChars = (sizeof(CharT) == 2);
   static_assert(sizeof(CharT) == 1 || sizeof(CharT) == 2,
                 "CharT should be 1 or 2 byte type");
-  ParserAtomEntry* entry =
-      new (raw) ParserAtomEntry(length, hash, hasTwoByteChars);
+  ParserAtom* entry = new (raw) ParserAtom(length, hash, hasTwoByteChars);
   CharT* entryBuf = entry->chars<CharT>();
   drainChar16Seq(entryBuf, seq, length);
   return entry;
 }
 
-/* static */ ParserAtomEntry* ParserAtomEntry::allocateRaw(
-    JSContext* cx, LifoAlloc& alloc, const uint8_t* srcRaw,
-    size_t totalLength) {
+/* static */ ParserAtom* ParserAtom::allocateRaw(JSContext* cx,
+                                                 LifoAlloc& alloc,
+                                                 const uint8_t* srcRaw,
+                                                 size_t totalLength) {
   void* raw = alloc.alloc(totalLength);
   if (!raw) {
     js::ReportOutOfMemory(cx);
@@ -183,10 +183,10 @@ template <typename CharT, typename SeqCharT>
 
   memcpy(raw, srcRaw, totalLength);
 
-  return static_cast<ParserAtomEntry*>(raw);
+  return static_cast<ParserAtom*>(raw);
 }
 
-bool ParserAtomEntry::equalsJSAtom(JSAtom* other) const {
+bool ParserAtom::equalsJSAtom(JSAtom* other) const {
   // Compare hashes and lengths first.
   if (hash_ != other->hash() || length_ != other->length()) {
     return false;
@@ -232,7 +232,7 @@ UniqueChars ParserAtomToPrintableString(JSContext* cx,
                    cx, mozilla::Range(atom->twoByteChars(), length));
 }
 
-bool ParserAtomEntry::isIndex(uint32_t* indexp) const {
+bool ParserAtom::isIndex(uint32_t* indexp) const {
   size_t len = length();
   if (len == 0 || len > UINT32_CHAR_BUFFER_LENGTH) {
     return false;
@@ -245,13 +245,13 @@ bool ParserAtomEntry::isIndex(uint32_t* indexp) const {
          js::CheckStringIsIndex(twoByteChars(), len, indexp);
 }
 
-bool ParserAtomEntry::isPrivateName() const {
+bool ParserAtom::isPrivateName() const {
   return length() > 0 && (hasLatin1Chars() ? latin1Chars()[0] == '#'
                                            : twoByteChars()[0] == '#');
 }
 
-JSAtom* ParserAtomEntry::toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
-                                  CompilationAtomCache& atomCache) const {
+JSAtom* ParserAtom::toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
+                             CompilationAtomCache& atomCache) const {
   if (index.isParserAtomIndex()) {
     JSAtom* atom = atomCache.getAtomAt(index.toParserAtomIndex());
     if (atom) {
@@ -275,8 +275,8 @@ JSAtom* ParserAtomEntry::toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
   return cx->staticStrings().getLength2FromIndex(s);
 }
 
-JSAtom* ParserAtomEntry::instantiate(JSContext* cx, TaggedParserAtomIndex index,
-                                     CompilationAtomCache& atomCache) const {
+JSAtom* ParserAtom::instantiate(JSContext* cx, TaggedParserAtomIndex index,
+                                CompilationAtomCache& atomCache) const {
   MOZ_ASSERT(index.isParserAtomIndex());
 
   JSAtom* atom;
@@ -296,20 +296,20 @@ JSAtom* ParserAtomEntry::instantiate(JSContext* cx, TaggedParserAtomIndex index,
   return atom;
 }
 
-bool ParserAtomEntry::toNumber(JSContext* cx, double* result) const {
+bool ParserAtom::toNumber(JSContext* cx, double* result) const {
   return hasLatin1Chars() ? CharsToNumber(cx, latin1Chars(), length(), result)
                           : CharsToNumber(cx, twoByteChars(), length(), result);
 }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-void ParserAtomEntry::dump() const {
+void ParserAtom::dump() const {
   js::Fprinter out(stderr);
   out.put("\"");
   dumpCharsNoQuote(out);
   out.put("\"\n");
 }
 
-void ParserAtomEntry::dumpCharsNoQuote(js::GenericPrinter& out) const {
+void ParserAtom::dumpCharsNoQuote(js::GenericPrinter& out) const {
   if (hasLatin1Chars()) {
     JSString::dumpCharsNoQuote<Latin1Char>(latin1Chars(), length(), out);
   } else {
@@ -323,7 +323,7 @@ ParserAtomsTable::ParserAtomsTable(JSRuntime* rt, LifoAlloc& alloc)
 
 TaggedParserAtomIndex ParserAtomsTable::addEntry(JSContext* cx,
                                                  EntryMap::AddPtr& addPtr,
-                                                 ParserAtomEntry* entry) {
+                                                 ParserAtom* entry) {
   MOZ_ASSERT(!addPtr);
   ParserAtomIndex index = ParserAtomIndex(entries_.length());
   if (size_t(index) >= TaggedParserAtomIndex::IndexLimit) {
@@ -348,8 +348,8 @@ TaggedParserAtomIndex ParserAtomsTable::internChar16Seq(
     InflatedChar16Sequence<SeqCharT> seq, uint32_t length) {
   MOZ_ASSERT(!addPtr);
 
-  ParserAtomEntry* entry =
-      ParserAtomEntry::allocate<AtomCharT>(cx, alloc_, seq, length, hash);
+  ParserAtom* entry =
+      ParserAtom::allocate<AtomCharT>(cx, alloc_, seq, length, hash);
   if (!entry) {
     return TaggedParserAtomIndex::null();
   }
@@ -400,7 +400,7 @@ bool ParserAtomSpanBuilder::allocate(JSContext* cx, LifoAlloc& alloc,
     return false;
   }
 
-  auto* p = alloc.newArrayUninitialized<ParserAtomEntry*>(count);
+  auto* p = alloc.newArrayUninitialized<ParserAtom*>(count);
   if (!p) {
     js::ReportOutOfMemory(cx);
     return false;
@@ -544,7 +544,7 @@ TaggedParserAtomIndex ParserAtomsTable::concatAtoms(
       catLatin1 = false;
     }
     // Overflow check here, length
-    if (atom->length() >= (ParserAtomEntry::MAX_LENGTH - catLen)) {
+    if (atom->length() >= (ParserAtom::MAX_LENGTH - catLen)) {
       js::ReportOutOfMemory(cx);
       return TaggedParserAtomIndex::null();
     }
@@ -603,12 +603,12 @@ const ParserAtom* WellKnownParserAtoms::getWellKnown(
 
 /* static */
 const ParserAtom* WellKnownParserAtoms::getStatic1(StaticParserString1 s) {
-  return WellKnownParserAtoms::rom_.length1Table[size_t(s)].asAtom();
+  return &WellKnownParserAtoms::rom_.length1Table[size_t(s)];
 }
 
 /* static */
 const ParserAtom* WellKnownParserAtoms::getStatic2(StaticParserString2 s) {
-  return WellKnownParserAtoms::rom_.length2Table[size_t(s)].asAtom();
+  return &WellKnownParserAtoms::rom_.length2Table[size_t(s)];
 }
 
 const ParserAtom* ParserAtomSpanBuilder::getWellKnown(
@@ -628,7 +628,7 @@ const ParserAtom* ParserAtomSpanBuilder::getStatic2(
 
 const ParserAtom* ParserAtomSpanBuilder::getParserAtom(
     ParserAtomIndex index) const {
-  return entries_[index]->asAtom();
+  return entries_[index];
 }
 
 template <class T>
@@ -671,7 +671,7 @@ const ParserAtom* ParserAtomsTable::getStatic2(StaticParserString2 s) const {
 }
 
 const ParserAtom* ParserAtomsTable::getParserAtom(ParserAtomIndex index) const {
-  return entries_[index]->asAtom();
+  return entries_[index];
 }
 
 const ParserAtom* ParserAtomsTable::getParserAtom(
@@ -712,8 +712,8 @@ TaggedParserAtomIndex WellKnownParserAtoms::lookupChar16Seq(
   return TaggedParserAtomIndex::null();
 }
 
-bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserName** name,
-                                      const ParserAtomEntry& romEntry,
+bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserAtom** name,
+                                      const ParserAtom& romEntry,
                                       TaggedParserAtomIndex index) {
   MOZ_ASSERT(name != nullptr);
 
@@ -739,12 +739,12 @@ bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserName** name,
     return false;
   }
 
-  *name = romEntry.asName();
+  *name = &romEntry;
   return true;
 }
 
 bool WellKnownParserAtoms::initTinyStringAlias(JSContext* cx,
-                                               const ParserName** name,
+                                               const ParserAtom** name,
                                                const char* str) {
   MOZ_ASSERT(name != nullptr);
 
@@ -761,7 +761,7 @@ bool WellKnownParserAtoms::initTinyStringAlias(JSContext* cx,
   MOZ_ASSERT(tiny, "Tiny common name was not found");
 
   // Set alias to existing atom.
-  *name = tiny->asName();
+  *name = tiny;
   return true;
 }
 
@@ -803,33 +803,30 @@ bool WellKnownParserAtoms::init(JSContext* cx) {
 namespace js {
 
 template <XDRMode mode>
-XDRResult XDRParserAtomEntry(XDRState<mode>* xdr, ParserAtomEntry** entryp) {
-  static_assert(CanCopyDataToDisk<ParserAtomEntry>::value,
-                "ParserAtomEntry cannot be bulk-copied to disk.");
+XDRResult XDRParserAtom(XDRState<mode>* xdr, ParserAtom** atomp) {
+  static_assert(CanCopyDataToDisk<ParserAtom>::value,
+                "ParserAtom cannot be bulk-copied to disk.");
 
   MOZ_TRY(xdr->align32());
 
-  const ParserAtomEntry* header;
+  const ParserAtom* header;
   if (mode == XDR_ENCODE) {
-    header = *entryp;
+    header = *atomp;
   } else {
     MOZ_TRY(xdr->peekData(&header));
   }
 
   const uint32_t CharSize =
       header->hasLatin1Chars() ? sizeof(JS::Latin1Char) : sizeof(char16_t);
-  uint32_t totalLength =
-      sizeof(ParserAtomEntry) + (CharSize * header->length());
+  uint32_t totalLength = sizeof(ParserAtom) + (CharSize * header->length());
 
-  MOZ_TRY(xdr->borrowedData(entryp, totalLength));
+  MOZ_TRY(xdr->borrowedData(atomp, totalLength));
 
   return Ok();
 }
 
-template XDRResult XDRParserAtomEntry(XDRState<XDR_ENCODE>* xdr,
-                                      ParserAtomEntry** atomp);
-template XDRResult XDRParserAtomEntry(XDRState<XDR_DECODE>* xdr,
-                                      ParserAtomEntry** atomp);
+template XDRResult XDRParserAtom(XDRState<XDR_ENCODE>* xdr, ParserAtom** atomp);
+template XDRResult XDRParserAtom(XDRState<XDR_DECODE>* xdr, ParserAtom** atomp);
 
 } /* namespace js */
 

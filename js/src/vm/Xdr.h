@@ -656,8 +656,7 @@ template <XDRMode mode>
 XDRResult XDRAtomData(XDRState<mode>* xdr, js::MutableHandleAtom atomp);
 
 template <XDRMode mode>
-XDRResult XDRParserAtomEntry(XDRState<mode>* xdr,
-                             frontend::ParserAtomEntry** atomp);
+XDRResult XDRParserAtom(XDRState<mode>* xdr, frontend::ParserAtom** atomp);
 
 template <XDRMode mode>
 XDRResult XDRBaseCompilationStencil(XDRState<mode>* xdr,

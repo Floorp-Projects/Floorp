@@ -2905,7 +2905,7 @@ const ParserAtom* BaseCompilationStencil::getParserAtomAt(
   if (taggedIndex.isParserAtomIndex()) {
     auto index = taggedIndex.toParserAtomIndex();
     MOZ_ASSERT(index < parserAtomData.size());
-    return parserAtomData[index]->asAtom();
+    return parserAtomData[index];
   }
 
   return GetWellKnownParserAtomAt(cx, taggedIndex);
