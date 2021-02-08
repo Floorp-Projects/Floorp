@@ -1893,7 +1893,8 @@ class RegExpLiteral : public ParseNode {
       : ParseNode(ParseNodeKind::RegExpExpr, pos), index_(dataIndex) {}
 
   // Create a RegExp object of this RegExp literal.
-  RegExpObject* create(JSContext* cx, CompilationAtomCache& atomCache,
+  RegExpObject* create(JSContext* cx, ParserAtomsTable& parserAtoms,
+                       CompilationAtomCache& atomCache,
                        BaseCompilationStencil& stencil) const;
 
 #ifdef DEBUG
