@@ -6485,7 +6485,6 @@ static bool GetDataProperty(JSContext* cx, HandleValue objVal,
 static bool GetDataProperty(JSContext* cx, HandleValue objVal,
                             const ImmutablePropertyNamePtr& field,
                             MutableHandleValue v) {
-  // Help the conversion along for all the cx->parserNames().* users.
   HandlePropertyName fieldHandle = field;
   return GetDataProperty(cx, objVal, fieldHandle, v);
 }

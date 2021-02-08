@@ -282,9 +282,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
   // Accessors for immutable runtime data.
   JSAtomState& names() { return *runtime_->commonNames; }
-  js::frontend::WellKnownParserAtoms& parserNames() {
-    return *runtime_->commonParserNames;
-  }
   js::StaticStrings& staticStrings() { return *runtime_->staticStrings; }
   js::SharedImmutableStringsCache& sharedImmutableStrings() {
     return runtime_->sharedImmutableStrings();
