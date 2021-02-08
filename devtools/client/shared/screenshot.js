@@ -32,6 +32,12 @@ const L10N = new LocalizationHelper(STRINGS_URI);
  * @param {Number} args.delay: Number of seconds to wait before taking the screenshot
  * @param {Boolean} args.help: Set to true to receive a message with the screenshot command
  *                             documentation.
+ * @param {Boolean} args.disableFlash: Set to true to disable the flash animation when the
+ *                  screenshot is taken.
+ * @param {Boolean} args.ignoreDprForFileScale: Set to true to if the resulting screenshot
+ *                  file size shouldn't be impacted by the dpr. Note that the dpr will still
+ *                  be taken into account when taking the screenshot, only the size of the
+ *                  file will be different.
  * @returns {Array<Object{text, level}>} An array of object representing the different
  *          messages emitted throught the process, that should be displayed to the user.
  */
@@ -41,58 +47,7 @@ async function captureAndSaveScreenshot(targetFront, window, args = {}) {
     return [{ text: getFormattedHelpData() }];
   }
 
-  // @backward-compat { version 87 } The screenshot-content actor was introduced in 87,
-  // so we can always use it once 87 reaches release.
-  const supportsContentScreenshot = targetFront.hasActor("screenshotContent");
-
-  let captureResponse;
-  if (supportsContentScreenshot) {
-    if (args.delay > 0) {
-      await new Promise(res => setTimeout(res, args.delay * 1000));
-    }
-
-    const screenshotContentFront = await targetFront.getFront(
-      "screenshot-content"
-    );
-
-    // Call the content-process on the server to retrieve informations that will be needed
-    // by the parent process.
-    const {
-      rect,
-      windowDpr,
-      messages,
-      error,
-    } = await screenshotContentFront.prepareCapture(args);
-
-    if (error) {
-      return messages;
-    }
-
-    if (rect) {
-      args.rect = rect;
-    }
-
-    if (!args.dpr) {
-      args.dpr = windowDpr;
-    }
-
-    args.browsingContextID = targetFront.browsingContextID;
-
-    // We can now call the parent process which will take the screenshot via
-    // the drawSnapshot API
-    const rootFront = targetFront.client.mainRoot;
-    const parentProcessScreenshotFront = await rootFront.getFront("screenshot");
-    captureResponse = await parentProcessScreenshotFront.capture(args);
-    messages.push(...(captureResponse.messages || []));
-
-    // Reset the page to the state it was in before taking the screenshot (e.g. set the
-    // scroll position as it was before). This is a oneway method so there's nothing to
-    // wait for.
-    screenshotContentFront.captureDone();
-  } else {
-    const screenshotFront = await targetFront.getFront("screenshot");
-    captureResponse = await screenshotFront.capture(args);
-  }
+  const captureResponse = await captureScreenshot(targetFront, args);
 
   if (captureResponse.error) {
     return captureResponse.messages || [];
@@ -100,6 +55,72 @@ async function captureAndSaveScreenshot(targetFront, window, args = {}) {
 
   const saveMessages = await saveScreenshot(window, args, captureResponse);
   return (captureResponse.messages || []).concat(saveMessages);
+}
+
+/**
+ * Take a screenshot of a browser element matching the passed target
+ * @param {TargetFront} targetFront: The targetFront of the frame we want to take a screenshot of.
+ * @param {Object} args: See args param in captureAndSaveScreenshot
+ */
+async function captureScreenshot(targetFront, args) {
+  // @backward-compat { version 87 } The screenshot-content actor was introduced in 87,
+  // so we can always use it once 87 reaches release.
+  const supportsContentScreenshot = targetFront.hasActor("screenshotContent");
+  if (!supportsContentScreenshot) {
+    const screenshotFront = await targetFront.getFront("screenshot");
+    return screenshotFront.capture(args);
+  }
+
+  if (args.delay > 0) {
+    await new Promise(res => setTimeout(res, args.delay * 1000));
+  }
+
+  const screenshotContentFront = await targetFront.getFront(
+    "screenshot-content"
+  );
+
+  // Call the content-process on the server to retrieve informations that will be needed
+  // by the parent process.
+  const {
+    rect,
+    windowDpr,
+    windowZoom,
+    messages,
+    error,
+  } = await screenshotContentFront.prepareCapture(args);
+
+  if (error) {
+    return { error, messages };
+  }
+
+  if (rect) {
+    args.rect = rect;
+  }
+
+  args.dpr ||= windowDpr;
+
+  args.snapshotScale = args.dpr * windowZoom;
+  if (args.ignoreDprForFileScale) {
+    args.fileScale = windowZoom;
+  }
+
+  args.browsingContextID = targetFront.browsingContextID;
+
+  // We can now call the parent process which will take the screenshot via
+  // the drawSnapshot API
+  const rootFront = targetFront.client.mainRoot;
+  const parentProcessScreenshotFront = await rootFront.getFront("screenshot");
+  const captureResponse = await parentProcessScreenshotFront.capture(args);
+
+  // Reset the page to the state it was in before taking the screenshot (e.g. set the
+  // scroll position as it was before). This is a oneway method so there's nothing to
+  // wait for.
+  screenshotContentFront.captureDone();
+
+  return {
+    ...captureResponse,
+    messages: (messages || []).concat(captureResponse.messages || []),
+  };
 }
 
 const screenshotDescription = L10N.getStr("screenshotDesc");
@@ -362,4 +383,8 @@ async function saveToFile(image) {
   }
 }
 
-module.exports = { captureAndSaveScreenshot, saveScreenshot };
+module.exports = {
+  captureAndSaveScreenshot,
+  captureScreenshot,
+  saveScreenshot,
+};
