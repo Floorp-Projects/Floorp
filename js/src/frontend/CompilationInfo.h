@@ -17,7 +17,7 @@
 
 #include "builtin/ModuleObject.h"
 #include "ds/LifoAlloc.h"
-#include "frontend/ParserAtom.h"  // ParserAtom, ParserAtomsTable, TaggedParserAtomIndex
+#include "frontend/ParserAtom.h"   // ParserAtomsTable, TaggedParserAtomIndex
 #include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "frontend/SharedContext.h"
 #include "frontend/Stencil.h"
@@ -486,9 +486,6 @@ struct BaseCompilationStencil {
 
   // We need a move-constructor to work with Rooted.
   BaseCompilationStencil(BaseCompilationStencil&& other) = default;
-
-  const ParserAtom* getParserAtomAt(JSContext* cx,
-                                    TaggedParserAtomIndex taggedIndex) const;
 
   bool prepareStorageFor(JSContext* cx, CompilationState& compilationState) {
     // NOTE: At this point CompilationState shouldn't be finished, and
