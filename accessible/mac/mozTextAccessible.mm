@@ -135,8 +135,7 @@ inline NSString* ToNSString(id aValue) {
 }
 
 - (NSString*)moxRole {
-  if ([self ARIARole] == nsGkAtoms::textbox ||
-      [self stateWithMask:states::MULTI_LINE]) {
+  if ([self stateWithMask:states::MULTI_LINE]) {
     return NSAccessibilityTextAreaRole;
   }
 
