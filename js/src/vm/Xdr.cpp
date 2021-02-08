@@ -20,7 +20,7 @@
 #include "builtin/ModuleObject.h"
 #include "debugger/DebugAPI.h"
 #include "frontend/CompilationInfo.h"  // frontend::BaseCompilationStencil, frontend::CompilationStencil, frontend::CompilationStencilSet
-#include "frontend/ParserAtom.h"       // frontend::ParserAtomEntry
+#include "frontend/ParserAtom.h"       // frontend::ParserAtom
 #include "js/BuildId.h"                // JS::BuildIdCharVector
 #include "vm/JSContext.h"
 #include "vm/JSScript.h"
@@ -314,7 +314,7 @@ static XDRResult XDRParserAtomTable(XDRState<mode>* xdr,
       }
       if (entry->isUsedByStencil()) {
         MOZ_TRY(xdr->codeUint32(&i));
-        MOZ_TRY(XDRParserAtomEntry(xdr, &entry));
+        MOZ_TRY(XDRParserAtom(xdr, &entry));
       }
     }
 
@@ -334,10 +334,10 @@ static XDRResult XDRParserAtomTable(XDRState<mode>* xdr,
   MOZ_ASSERT(!xdr->hasAtomTable());
 
   for (uint32_t i = 0; i < atomCount; i++) {
-    frontend::ParserAtomEntry* entry = nullptr;
+    frontend::ParserAtom* entry = nullptr;
     uint32_t index;
     MOZ_TRY(xdr->codeUint32(&index));
-    MOZ_TRY(XDRParserAtomEntry(xdr, &entry));
+    MOZ_TRY(XDRParserAtom(xdr, &entry));
     xdr->frontendAtoms().set(frontend::ParserAtomIndex(index), entry);
   }
   xdr->finishAtomTable();
