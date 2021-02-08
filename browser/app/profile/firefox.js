@@ -2167,7 +2167,7 @@ pref("devtools.inspector.compatibility.enabled", true);
 pref("devtools.inspector.compatibility.enabled", false);
 #endif
 // Enable color scheme simulation in the inspector.
-pref("devtools.inspector.color-scheme-simulation.enabled", false);
+pref("devtools.inspector.color-scheme-simulation.enabled", true);
 // Enable overflow debugging in the inspector.
 pref("devtools.overflow.debugging.enabled", true);
 
