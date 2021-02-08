@@ -873,8 +873,6 @@ struct xdg_output_v1_info {
   struct {
     int32_t width, height;
   } logical;
-
-  char *name, *description;
 };
 
 struct xdg_output_manager_v1_info {
@@ -911,8 +909,6 @@ static void print_output_info(void* data) {}
 static void destroy_xdg_output_v1_info(struct xdg_output_v1_info* info) {
   wl_list_remove(&info->link);
   zxdg_output_v1_destroy(info->xdg_output);
-  free(info->name);
-  free(info->description);
   free(info);
 }
 
@@ -928,8 +924,8 @@ static void print_xdg_output_manager_v1_info(void* data) {
 
   int screen_count = wl_list_length(&info->outputs);
   if (screen_count > 0) {
-    struct xdg_output_v1_info* infos = (struct xdg_output_v1_info*)malloc(
-        screen_count * sizeof(xdg_output_v1_info));
+    struct xdg_output_v1_info* infos = (struct xdg_output_v1_info*)calloc(
+        1, screen_count * sizeof(xdg_output_v1_info));
 
     int pos = 0;
     wl_list_for_each(output, &info->outputs, link) {
@@ -959,8 +955,9 @@ static void destroy_xdg_output_manager_v1_info(void* data) {
 
   zxdg_output_manager_v1_destroy(info->manager);
 
-  wl_list_for_each_safe(output, tmp, &info->outputs, link)
-      destroy_xdg_output_v1_info(output);
+  wl_list_for_each_safe(output, tmp, &info->outputs, link) {
+    destroy_xdg_output_v1_info(output);
+  }
 }
 
 static void handle_xdg_output_v1_logical_position(void* data,
@@ -979,17 +976,11 @@ static void handle_xdg_output_v1_done(void* data,
                                       struct zxdg_output_v1* output) {}
 
 static void handle_xdg_output_v1_name(void* data, struct zxdg_output_v1* output,
-                                      const char* name) {
-  struct xdg_output_v1_info* xdg_output = (struct xdg_output_v1_info*)data;
-  xdg_output->name = strdup(name);
-}
+                                      const char* name) {}
 
 static void handle_xdg_output_v1_description(void* data,
                                              struct zxdg_output_v1* output,
-                                             const char* description) {
-  struct xdg_output_v1_info* xdg_output = (struct xdg_output_v1_info*)data;
-  xdg_output->description = strdup(description);
-}
+                                             const char* description) {}
 
 static const struct zxdg_output_v1_listener xdg_output_v1_listener = {
     .logical_position = handle_xdg_output_v1_logical_position,
@@ -1003,7 +994,7 @@ static void add_xdg_output_v1_info(
     struct xdg_output_manager_v1_info* manager_info,
     struct output_info* output) {
   struct xdg_output_v1_info* xdg_output =
-      (struct xdg_output_v1_info*)malloc(sizeof *xdg_output);
+      (struct xdg_output_v1_info*)calloc(1, sizeof *xdg_output);
 
   wl_list_insert(&manager_info->outputs, &xdg_output->link);
   xdg_output->xdg_output = zxdg_output_manager_v1_get_xdg_output(
@@ -1020,7 +1011,7 @@ static void add_xdg_output_manager_v1_info(struct weston_info* info,
                                            uint32_t id, uint32_t version) {
   struct output_info* output;
   struct xdg_output_manager_v1_info* manager =
-      (struct xdg_output_manager_v1_info*)malloc(sizeof *manager);
+      (struct xdg_output_manager_v1_info*)calloc(1, sizeof *manager);
 
   wl_list_init(&manager->outputs);
   manager->info = info;
@@ -1034,8 +1025,9 @@ static void add_xdg_output_manager_v1_info(struct weston_info* info,
       info->registry, id, &zxdg_output_manager_v1_interface,
       version > 2 ? 2 : version);
 
-  wl_list_for_each(output, &info->outputs, global_link)
-      add_xdg_output_v1_info(manager, output);
+  wl_list_for_each(output, &info->outputs, global_link) {
+    add_xdg_output_v1_info(manager, output);
+  }
 
   info->xdg_output_manager_v1_info = manager;
 }
@@ -1074,7 +1066,7 @@ static void destroy_output_info(void* data) {
 
 static void add_output_info(struct weston_info* info, uint32_t id,
                             uint32_t version) {
-  struct output_info* output = (struct output_info*)malloc(sizeof *output);
+  struct output_info* output = (struct output_info*)calloc(1, sizeof *output);
 
   init_global_info(info, &output->global, id, "wl_output", version);
   output->global.print = print_output_info;
