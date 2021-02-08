@@ -46,6 +46,8 @@ class SettingsSubMenuPrivateBrowsingRobot {
 
     fun verifyPrivateBrowsingShortcutIcon() = assertPrivateBrowsingShortcutIcon()
 
+    fun clickPrivateModeScreenshotsSwitch() = screenshotsInPrivateModeSwitch().click()
+
     fun clickOpenLinksInPrivateTabSwitch() = openLinksInPrivateTabSwitch().click()
 
     fun addPrivateShortcutToHomescreen() {
@@ -91,6 +93,9 @@ private fun assertNavigationToolBarHeader() {
 
 private fun openLinksInPrivateTabSwitch() =
     onView(withText("Open links in a private tab"))
+
+private fun screenshotsInPrivateModeSwitch() =
+    onView(withText("Allow screenshots in private browsing"))
 
 private fun addPrivateBrowsingShortcutButton() = onView(withText("Add private browsing shortcut"))
 

@@ -44,9 +44,13 @@ class DefaultHomeScreenTest : ScreenshotTest() {
             SystemClock.sleep(TestAssetHelper.waitingTimeShort)
             Screengrab.screenshot("HomeScreenRobot_home-screen")
         }.openThreeDotMenu {
-        }.openSettings { }
+        }.openSettings {
+        }.openPrivateBrowsingSubMenu {
+            clickPrivateModeScreenshotsSwitch()
+        }
         // To get private screenshot,
         // dismiss onboarding going to settings and back
+        mDevice.pressBack()
         mDevice.pressBack()
         homeScreen {
             togglePrivateBrowsingModeOnOff()
