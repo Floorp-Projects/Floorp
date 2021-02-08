@@ -145,8 +145,7 @@ class QuotaManager final : public BackgroundThreadObject {
 
   static const char kReplaceChars[];
 
-  static void GetOrCreate(nsIRunnable* aCallback,
-                          nsIEventTarget* aMainEventTarget = nullptr);
+  static void GetOrCreate(nsIRunnable* aCallback);
 
   // Returns a non-owning reference.
   static QuotaManager* Get();
