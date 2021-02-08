@@ -2421,15 +2421,21 @@ class TwistySummary extends PrintUIControlMixin(HTMLElement) {
     this.label = this.querySelector(".label");
 
     this.addEventListener("click", this);
-    this.updateSummary();
+    let shouldOpen = Services.prefs.getBoolPref(
+      "print.more-settings.open",
+      false
+    );
+    this.closest("details").open = shouldOpen;
+    this.updateSummary(shouldOpen);
   }
 
   handleEvent(e) {
     let willOpen = !this.isOpen;
+    Services.prefs.setBoolPref("print.more-settings.open", willOpen);
     this.updateSummary(willOpen);
   }
 
-  updateSummary(open = false) {
+  updateSummary(open) {
     document.l10n.setAttributes(
       this.label,
       open
