@@ -20,7 +20,7 @@
 #include "frontend/AbstractScopePtr.h"    // AbstractScopePtr, ScopeIndex
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/ObjLiteral.h"          // ObjLiteralStencil
-#include "frontend/ParserAtom.h"          // ParserAtom, TaggedParserAtomIndex
+#include "frontend/ParserAtom.h"          // TaggedParserAtomIndex
 #include "frontend/ScriptIndex.h"         // ScriptIndex
 #include "frontend/TypedIndex.h"          // TypedIndex
 #include "js/AllocPolicy.h"               // SystemAllocPolicy
