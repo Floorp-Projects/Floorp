@@ -45,4 +45,5 @@ jobs-from:
     - rust.yml
     - rust-size.yml
     - sccache.yml
+    - sysroot.yml
     - dist-toolchains.yml

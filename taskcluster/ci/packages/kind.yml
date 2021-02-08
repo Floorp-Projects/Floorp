@@ -235,3 +235,19 @@ jobs:
                 sha256: 2df90698e22f0da49cdd360438479f363e58eb8c3ac6e8bac84d831cf8e7baf4
             name: python-zstandard
             pre-build-command: debchange -v 0.11.1-1.deb10moz --distribution buster "Mozilla backport for buster"
+
+    deb10-mmdebstrap:
+        # Only a more recent version of mmdebstrap than what is in buster has the
+        # features we want.
+        description: "mmdebstrap 0.7.4 for Debian buster"
+        treeherder:
+            symbol: Deb10(python-mmdebstrap)
+        run:
+            using: debian-package
+            dist: buster
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20210116T145421Z/pool/main/m/mmdebstrap/mmdebstrap_0.7.4-1.dsc
+                sha256: 202adf5b93a31d281d0444bab2df52330e650b94e74c66aeb59b1beeda0f9df2
+            pre-build-command: >-
+              sed -i "s/debhelper-compat (= 13)/debhelper/" debian/control &&
+              echo 12 > debian/compat
