@@ -157,6 +157,16 @@ void ParserAtom::dumpCharsNoQuote(js::GenericPrinter& out) const {
   }
 }
 
+void ParserAtomsTable::dump(TaggedParserAtomIndex index) const {
+  if (!index) {
+    js::Fprinter out(stderr);
+    out.put("#<null>");
+    return;
+  }
+  const auto* atom = getParserAtom(index);
+  atom->dump();
+}
+
 void ParserAtomsTable::dumpCharsNoQuote(js::GenericPrinter& out,
                                         TaggedParserAtomIndex index) const {
   const auto* atom = getParserAtom(index);

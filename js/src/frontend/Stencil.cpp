@@ -1812,9 +1812,9 @@ MOZ_MUST_USE bool BigIntStencil::init(JSContext* cx, LifoAlloc& alloc,
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
 
-void frontend::DumpTaggedParserAtomIndex(js::JSONPrinter& json,
-                                         TaggedParserAtomIndex taggedIndex,
-                                         BaseCompilationStencil* stencil) {
+void frontend::DumpTaggedParserAtomIndex(
+    js::JSONPrinter& json, TaggedParserAtomIndex taggedIndex,
+    const BaseCompilationStencil* stencil) {
   if (taggedIndex.isParserAtomIndex()) {
     json.property("tag", "AtomIndex");
     auto index = taggedIndex.toParserAtomIndex();
@@ -2680,6 +2680,14 @@ void BaseCompilationStencil::dumpFields(js::JSONPrinter& json) {
 
   json.beginObjectProperty("sharedData");
   sharedData.dumpFields(json);
+  json.endObject();
+}
+
+void BaseCompilationStencil::dumpAtom(TaggedParserAtomIndex index) const {
+  js::Fprinter out(stderr);
+  js::JSONPrinter json(out);
+  json.beginObject();
+  DumpTaggedParserAtomIndex(json, index, this);
   json.endObject();
 }
 

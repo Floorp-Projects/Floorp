@@ -870,7 +870,7 @@ class ScriptStencilExtra {
 #if defined(DEBUG) || defined(JS_JITSPEW)
 void DumpTaggedParserAtomIndex(js::JSONPrinter& json,
                                TaggedParserAtomIndex taggedIndex,
-                               BaseCompilationStencil* stencil);
+                               const BaseCompilationStencil* stencil);
 
 void DumpTaggedParserAtomIndexNoQuote(GenericPrinter& out,
                                       TaggedParserAtomIndex taggedIndex,
