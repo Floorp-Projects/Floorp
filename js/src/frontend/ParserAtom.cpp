@@ -593,53 +593,6 @@ const ParserAtom* WellKnownParserAtoms::getStatic2(StaticParserString2 s) {
   return &WellKnownParserAtoms::rom_.length2Table[size_t(s)];
 }
 
-const ParserAtom* ParserAtomSpanBuilder::getWellKnown(
-    WellKnownAtomId atomId) const {
-  return wellKnownTable_.getWellKnown(atomId);
-}
-
-const ParserAtom* ParserAtomSpanBuilder::getStatic1(
-    StaticParserString1 s) const {
-  return WellKnownParserAtoms::getStatic1(s);
-}
-
-const ParserAtom* ParserAtomSpanBuilder::getStatic2(
-    StaticParserString2 s) const {
-  return WellKnownParserAtoms::getStatic2(s);
-}
-
-const ParserAtom* ParserAtomSpanBuilder::getParserAtom(
-    ParserAtomIndex index) const {
-  return entries_[index];
-}
-
-template <class T>
-const ParserAtom* GetParserAtom(T self, TaggedParserAtomIndex index) {
-  if (index.isParserAtomIndex()) {
-    return self->getParserAtom(index.toParserAtomIndex());
-  }
-
-  if (index.isWellKnownAtomId()) {
-    return self->getWellKnown(index.toWellKnownAtomId());
-  }
-
-  if (index.isStaticParserString1()) {
-    return self->getStatic1(index.toStaticParserString1());
-  }
-
-  if (index.isStaticParserString2()) {
-    return self->getStatic2(index.toStaticParserString2());
-  }
-
-  MOZ_ASSERT(index.isNull());
-  return nullptr;
-}
-
-const ParserAtom* ParserAtomSpanBuilder::getParserAtom(
-    TaggedParserAtomIndex index) const {
-  return GetParserAtom(this, index);
-}
-
 const ParserAtom* ParserAtomsTable::getWellKnown(WellKnownAtomId atomId) const {
   return wellKnownTable_.getWellKnown(atomId);
 }
@@ -658,11 +611,28 @@ const ParserAtom* ParserAtomsTable::getParserAtom(ParserAtomIndex index) const {
 
 const ParserAtom* ParserAtomsTable::getParserAtom(
     TaggedParserAtomIndex index) const {
-  return GetParserAtom(this, index);
+  if (index.isParserAtomIndex()) {
+    return getParserAtom(index.toParserAtomIndex());
+  }
+
+  if (index.isWellKnownAtomId()) {
+    return getWellKnown(index.toWellKnownAtomId());
+  }
+
+  if (index.isStaticParserString1()) {
+    return getStatic1(index.toStaticParserString1());
+  }
+
+  if (index.isStaticParserString2()) {
+    return getStatic2(index.toStaticParserString2());
+  }
+
+  MOZ_ASSERT(index.isNull());
+  return nullptr;
 }
 
 void ParserAtomsTable::markUsedByStencil(TaggedParserAtomIndex index) const {
-  GetParserAtom(this, index)->markUsedByStencil();
+  getParserAtom(index)->markUsedByStencil();
 }
 
 bool ParserAtomsTable::isPrivateName(TaggedParserAtomIndex index) const {
