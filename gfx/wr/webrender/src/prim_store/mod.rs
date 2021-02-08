@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, ClipMode, ColorF, ColorU};
+use api::{BorderRadius, ClipMode, ColorF, ColorU, RasterSpace};
 use api::{ImageRendering, RepeatMode, PrimitiveFlags};
 use api::{PremultipliedColorF, PropertyBinding, Shadow};
 use api::{PrimitiveKeyKind};
@@ -906,6 +906,8 @@ impl CreateShadow for PrimitiveKeyKind {
     fn create_shadow(
         &self,
         shadow: &Shadow,
+        _: bool,
+        _: RasterSpace,
     ) -> PrimitiveKeyKind {
         match *self {
             PrimitiveKeyKind::Rectangle { .. } => {

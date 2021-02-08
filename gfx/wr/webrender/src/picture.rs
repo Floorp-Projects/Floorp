@@ -96,7 +96,7 @@
 
 use api::{MixBlendMode, PremultipliedColorF, FilterPrimitiveKind};
 use api::{PropertyBinding, PropertyBindingId, FilterPrimitive};
-use api::{DebugFlags, RasterSpace, ImageKey, ColorF, ColorU, PrimitiveFlags};
+use api::{DebugFlags, ImageKey, ColorF, ColorU, PrimitiveFlags};
 use api::{ImageRendering, ColorDepth, YuvColorSpace, YuvFormat};
 use api::units::*;
 use crate::box_shadow::BLUR_SAMPLE_SCALE;
@@ -4504,9 +4504,6 @@ pub struct PicturePrimitive {
     /// How this picture should be composited.
     /// If None, don't composite - just draw directly on parent surface.
     pub requested_composite_mode: Option<PictureCompositeMode>,
-    /// Requested rasterization space for this picture. It is
-    /// a performance hint only.
-    pub requested_raster_space: RasterSpace,
 
     pub raster_config: Option<RasterConfig>,
     pub context_3d: Picture3DContext<OrderedPictureChild>,
@@ -4637,7 +4634,6 @@ impl PicturePrimitive {
         context_3d: Picture3DContext<OrderedPictureChild>,
         apply_local_clip_rect: bool,
         flags: PrimitiveFlags,
-        requested_raster_space: RasterSpace,
         prim_list: PrimitiveList,
         spatial_node_index: SpatialNodeIndex,
         options: PictureOptions,
@@ -4652,7 +4648,6 @@ impl PicturePrimitive {
             extra_gpu_data_handles: SmallVec::new(),
             apply_local_clip_rect,
             is_backface_visible: flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE),
-            requested_raster_space,
             spatial_node_index,
             estimated_local_rect: LayoutRect::zero(),
             precise_local_rect: LayoutRect::zero(),
@@ -4660,32 +4655,6 @@ impl PicturePrimitive {
             options,
             segments_are_valid: false,
             is_opaque: false,
-        }
-    }
-
-    /// Gets the raster space to use when rendering a primitive in this picture.
-    /// Usually this would be the picture's requested raster space. However, if
-    /// the primitive's spatial node or one of its ancestors is being pinch zoomed
-    /// then we round it. This prevents us rasterizing glyphs for every minor
-    /// change in zoom level, as that would be too expensive.
-    pub fn get_raster_space_for_prim(
-        &self,
-        prim_spatial_node_index: SpatialNodeIndex,
-        spatial_tree: &SpatialTree,
-    ) -> RasterSpace {
-        let prim_spatial_node = &spatial_tree.spatial_nodes[prim_spatial_node_index.0 as usize];
-        if prim_spatial_node.is_ancestor_or_self_zooming {
-            let scale_factors = spatial_tree
-                .get_relative_transform(prim_spatial_node_index, ROOT_SPATIAL_NODE_INDEX)
-                .scale_factors();
-
-            // Round the scale up to the nearest power of 2, but don't exceed 8.
-            let scale = scale_factors.0.max(scale_factors.1).min(8.0);
-            let rounded_up = 2.0f32.powf(scale.log2().ceil());
-
-            RasterSpace::Local(rounded_up)
-        } else {
-            self.requested_raster_space
         }
     }
 

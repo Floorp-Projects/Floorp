@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{
-    ColorF, ColorU,
+    ColorF, ColorU, RasterSpace,
     LineOrientation, LineStyle, PremultipliedColorF, Shadow,
 };
 use api::units::*;
@@ -154,7 +154,12 @@ impl InternablePrimitive for LineDecoration {
 }
 
 impl CreateShadow for LineDecoration {
-    fn create_shadow(&self, shadow: &Shadow) -> Self {
+    fn create_shadow(
+        &self,
+        shadow: &Shadow,
+        _: bool,
+        _: RasterSpace,
+    ) -> Self {
         LineDecoration {
             color: shadow.color.into(),
             cache_key: self.cache_key.clone(),
