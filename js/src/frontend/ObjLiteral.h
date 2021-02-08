@@ -375,9 +375,11 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
   }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-  void dump();
-  void dump(JSONPrinter& json, frontend::BaseCompilationStencil* stencil);
-  void dumpFields(JSONPrinter& json, frontend::BaseCompilationStencil* stencil);
+  void dump() const;
+  void dump(JSONPrinter& json,
+            const frontend::BaseCompilationStencil* stencil) const;
+  void dumpFields(JSONPrinter& json,
+                  const frontend::BaseCompilationStencil* stencil) const;
 #endif
 
  private:
@@ -592,9 +594,11 @@ class ObjLiteralStencil {
                    const frontend::CompilationAtomCache& atomCache) const;
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-  void dump();
-  void dump(JSONPrinter& json, frontend::BaseCompilationStencil* stencil);
-  void dumpFields(JSONPrinter& json, frontend::BaseCompilationStencil* stencil);
+  void dump() const;
+  void dump(JSONPrinter& json,
+            const frontend::BaseCompilationStencil* stencil) const;
+  void dumpFields(JSONPrinter& json,
+                  const frontend::BaseCompilationStencil* stencil) const;
 
 #endif
 };
