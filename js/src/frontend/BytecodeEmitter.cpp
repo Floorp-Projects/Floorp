@@ -9323,9 +9323,8 @@ bool BytecodeEmitter::emitPrivateMethodInitializers(ClassEmitter& ce,
     // Synthesize a name for the lexical variable that will store the
     // private method body.
     StringBuffer storedMethodName(cx);
-    const ParserAtom* prop =
-        parserAtoms().getParserAtom(propName->as<NameNode>().atom());
-    if (!storedMethodName.append(prop)) {
+    if (!storedMethodName.append(parserAtoms(),
+                                 propName->as<NameNode>().atom())) {
       return false;
     }
     AccessorType accessorType = propdef->as<ClassMethod>().accessorType();
