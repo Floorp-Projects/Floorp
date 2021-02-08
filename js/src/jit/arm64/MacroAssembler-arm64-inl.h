@@ -2780,6 +2780,18 @@ void MacroAssembler::unsignedConvertInt32x4ToFloat32x4(FloatRegister src,
   Ucvtf(Simd4S(dest), Simd4S(src));
 }
 
+void MacroAssembler::convertInt32x4ToFloat64x2(FloatRegister src,
+                                               FloatRegister dest) {
+  Sshll(Simd2D(dest), Simd2S(src), 0);
+  Scvtf(Simd2D(dest), Simd2D(dest));
+}
+
+void MacroAssembler::unsignedConvertInt32x4ToFloat64x2(FloatRegister src,
+                                                       FloatRegister dest) {
+  Ushll(Simd2D(dest), Simd2S(src), 0);
+  Ucvtf(Simd2D(dest), Simd2D(dest));
+}
+
 // Floating point to integer with saturation
 
 void MacroAssembler::truncSatFloat32x4ToInt32x4(FloatRegister src,
@@ -2791,6 +2803,32 @@ void MacroAssembler::unsignedTruncSatFloat32x4ToInt32x4(FloatRegister src,
                                                         FloatRegister dest,
                                                         FloatRegister temp) {
   Fcvtzu(Simd4S(dest), Simd4S(src));
+}
+
+void MacroAssembler::truncSatFloat64x2ToInt32x4(FloatRegister src,
+                                                FloatRegister dest,
+                                                FloatRegister temp) {
+  Fcvtzs(Simd2D(dest), Simd2D(src));
+  Sqxtn(Simd2S(dest), Simd2D(dest));
+}
+
+void MacroAssembler::unsignedTruncSatFloat64x2ToInt32x4(FloatRegister src,
+                                                        FloatRegister dest,
+                                                        FloatRegister temp) {
+  Fcvtzu(Simd2D(dest), Simd2D(src));
+  Uqxtn(Simd2S(dest), Simd2D(dest));
+}
+
+// Floating point widening
+
+void MacroAssembler::convertFloat64x2ToFloat32x4(FloatRegister src,
+                                                 FloatRegister dest) {
+  Fcvtn(Simd2S(dest), Simd2D(src));
+}
+
+void MacroAssembler::convertFloat32x4ToFloat64x2(FloatRegister src,
+                                                 FloatRegister dest) {
+  Fcvtl(Simd2D(dest), Simd2S(src));
 }
 
 // Integer to integer narrowing

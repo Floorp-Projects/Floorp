@@ -2582,6 +2582,16 @@ void MacroAssembler::unsignedConvertInt32x4ToFloat32x4(FloatRegister src,
   MacroAssemblerX86Shared::unsignedConvertInt32x4ToFloat32x4(src, dest);
 }
 
+void MacroAssembler::convertInt32x4ToFloat64x2(FloatRegister src,
+                                               FloatRegister dest) {
+  vcvtdq2pd(src, dest);
+}
+
+void MacroAssembler::unsignedConvertInt32x4ToFloat64x2(FloatRegister src,
+                                                       FloatRegister dest) {
+  MacroAssemblerX86Shared::unsignedConvertInt32x4ToFloat64x2(src, dest);
+}
+
 // Floating point to integer with saturation
 
 void MacroAssembler::truncSatFloat32x4ToInt32x4(FloatRegister src,
@@ -2593,6 +2603,30 @@ void MacroAssembler::unsignedTruncSatFloat32x4ToInt32x4(FloatRegister src,
                                                         FloatRegister dest,
                                                         FloatRegister temp) {
   MacroAssemblerX86Shared::unsignedTruncSatFloat32x4ToInt32x4(src, temp, dest);
+}
+
+void MacroAssembler::truncSatFloat64x2ToInt32x4(FloatRegister src,
+                                                FloatRegister dest,
+                                                FloatRegister temp) {
+  MacroAssemblerX86Shared::truncSatFloat64x2ToInt32x4(src, temp, dest);
+}
+
+void MacroAssembler::unsignedTruncSatFloat64x2ToInt32x4(FloatRegister src,
+                                                        FloatRegister dest,
+                                                        FloatRegister temp) {
+  MacroAssemblerX86Shared::unsignedTruncSatFloat64x2ToInt32x4(src, temp, dest);
+}
+
+// Floating point widening
+
+void MacroAssembler::convertFloat64x2ToFloat32x4(FloatRegister src,
+                                                 FloatRegister dest) {
+  vcvtpd2ps(src, dest);
+}
+
+void MacroAssembler::convertFloat32x4ToFloat64x2(FloatRegister src,
+                                                 FloatRegister dest) {
+  vcvtps2pd(src, dest);
 }
 
 // Integer to integer narrowing

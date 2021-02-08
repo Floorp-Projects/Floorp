@@ -529,11 +529,11 @@ enum class SimdOp {
   V128Or = 0x50,
   V128Xor = 0x51,
   V128Bitselect = 0x52,
-  // Unused = 0x53
-  // Unused = 0x54
-  // Unused = 0x55
-  // Unused = 0x56
-  // Unused = 0x57
+  F64x2ConvertLowI32x4S = 0x53,
+  F64x2ConvertLowI32x4U = 0x54,
+  I32x4TruncSatF64x2SZero = 0x55,
+  I32x4TruncSatF64x2UZero = 0x56,
+  F32x4DemoteF64x2Zero = 0x57,
   // Unused = 0x58
   // Unused = 0x59
   // Unused = 0x5a
@@ -551,7 +551,7 @@ enum class SimdOp {
   I8x16NarrowUI16x8 = 0x66,
   // Widen = 0x67
   // Widen = 0x68
-  // Widen = 0x69
+  F64x2PromoteLowF32x4 = 0x69,
   // Widen = 0x6a
   I8x16Shl = 0x6b,
   I8x16ShrS = 0x6c,

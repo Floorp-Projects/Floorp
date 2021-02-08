@@ -1280,6 +1280,8 @@ void LIRGenerator::visitWasmUnarySimd128(MWasmUnarySimd128* ins) {
       reuseInput = true;
       break;
     case wasm::SimdOp::I32x4TruncUSatF32x4:
+    case wasm::SimdOp::I32x4TruncSatF64x2SZero:
+    case wasm::SimdOp::I32x4TruncSatF64x2UZero:
       tempReg = tempSimd128();
       // Prefer src == dest to avoid an unconditional src->dest move.
       useAtStart = true;
@@ -1306,6 +1308,10 @@ void LIRGenerator::visitWasmUnarySimd128(MWasmUnarySimd128* ins) {
     case wasm::SimdOp::F64x2Floor:
     case wasm::SimdOp::F64x2Trunc:
     case wasm::SimdOp::F64x2Nearest:
+    case wasm::SimdOp::F32x4DemoteF64x2Zero:
+    case wasm::SimdOp::F64x2PromoteLowF32x4:
+    case wasm::SimdOp::F64x2ConvertLowI32x4S:
+    case wasm::SimdOp::F64x2ConvertLowI32x4U:
       // Prefer src == dest to exert the lowest register pressure on the
       // surrounding code.
       useAtStart = true;
