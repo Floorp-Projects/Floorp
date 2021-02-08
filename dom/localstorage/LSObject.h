@@ -112,13 +112,6 @@ class LSObject final : public Storage {
                                      bool aPrivate, LSObject** aObject);
 
   /**
-   * Used for requests from the parent process to the parent process; in that
-   * case we want ActorsParent to know our event-target and this is better than
-   * trying to tunnel the pointer through IPC.
-   */
-  static already_AddRefed<nsISerialEventTarget> GetSyncLoopEventTarget();
-
-  /**
    * Helper invoked by ContentChild::OnChannelReceivedMessage when a sync IPC
    * message is received.  This will be invoked on the IPC I/O thread and it
    * will set the gPendingSyncMessage flag to true.  It will also force the sync

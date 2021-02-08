@@ -3678,8 +3678,7 @@ nsresult QuotaManager::Initialize() {
   return NS_OK;
 }
 
-void QuotaManager::GetOrCreate(nsIRunnable* aCallback,
-                               nsIEventTarget* aMainEventTarget) {
+void QuotaManager::GetOrCreate(nsIRunnable* aCallback) {
   AssertIsOnBackgroundThread();
 
   if (IsShuttingDown()) {

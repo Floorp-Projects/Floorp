@@ -483,20 +483,6 @@ nsresult LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
 }  // namespace dom
 
 // static
-already_AddRefed<nsISerialEventTarget> LSObject::GetSyncLoopEventTarget() {
-  MOZ_ASSERT(XRE_IsParentProcess());
-
-  nsCOMPtr<nsISerialEventTarget> target;
-
-  {
-    StaticMutexAutoLock lock(gRequestHelperMutex);
-    target = gSyncLoopEventTarget;
-  }
-
-  return target.forget();
-}
-
-// static
 void LSObject::OnSyncMessageReceived() {
   nsCOMPtr<nsISerialEventTarget> target;
 
