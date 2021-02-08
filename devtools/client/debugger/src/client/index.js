@@ -13,6 +13,7 @@ import {
   bootstrapApp,
   bootstrapStore,
   bootstrapWorkers,
+  unmountRoot,
 } from "../utils/bootstrap";
 
 import { initialBreakpointsState } from "../reducers/breakpoints";
@@ -100,6 +101,7 @@ export async function onConnect(
   return { store, actions, selectors, client: commands };
 }
 
-export function onDisconnect() {
-  return firefox.onDisconnect();
+export async function onDisconnect() {
+  firefox.onDisconnect();
+  unmountRoot();
 }
