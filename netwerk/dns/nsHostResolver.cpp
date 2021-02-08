@@ -214,7 +214,7 @@ void nsHostRecord::Cancel() {
   }
 
   if (query) {
-    query->Cancel();
+    query->Cancel(NS_ERROR_ABORT);
   }
 }
 

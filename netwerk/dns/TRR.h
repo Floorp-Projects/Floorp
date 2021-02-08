@@ -95,7 +95,7 @@ class TRR : public Runnable,
   }
 
   NS_IMETHOD Run() override;
-  void Cancel();
+  void Cancel(nsresult aStatus);
   enum TrrType Type() { return mType; }
   nsCString mHost;
   RefPtr<nsHostRecord> mRec;

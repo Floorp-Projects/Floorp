@@ -34,18 +34,18 @@ static already_AddRefed<AddrInfo> merge_rrset(AddrInfo* rrto,
   return builder.Finish();
 }
 
-void TRRQuery::Cancel() {
+void TRRQuery::Cancel(nsresult aStatus) {
   MutexAutoLock trrlock(mTrrLock);
   if (mTrrA) {
-    mTrrA->Cancel();
+    mTrrA->Cancel(aStatus);
     mTrrA = nullptr;
   }
   if (mTrrAAAA) {
-    mTrrAAAA->Cancel();
+    mTrrAAAA->Cancel(aStatus);
     mTrrAAAA = nullptr;
   }
   if (mTrrByType) {
-    mTrrByType->Cancel();
+    mTrrByType->Cancel(aStatus);
     mTrrByType = nullptr;
   }
 }
