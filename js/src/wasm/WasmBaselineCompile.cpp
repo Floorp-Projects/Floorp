@@ -14171,6 +14171,32 @@ static void ConvertF32x4ToUI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd,
   masm.unsignedTruncSatFloat32x4ToInt32x4(rs, rd, temp);
 }
 
+static void ConvertI32x4ToF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
+  masm.convertInt32x4ToFloat64x2(rs, rd);
+}
+
+static void ConvertUI32x4ToF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
+  masm.unsignedConvertInt32x4ToFloat64x2(rs, rd);
+}
+
+static void ConvertF64x2ToI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd,
+                                RegV128 temp) {
+  masm.truncSatFloat64x2ToInt32x4(rs, rd, temp);
+}
+
+static void ConvertF64x2ToUI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd,
+                                 RegV128 temp) {
+  masm.unsignedTruncSatFloat64x2ToInt32x4(rs, rd, temp);
+}
+
+static void DemoteF64x2ToF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
+  masm.convertFloat64x2ToFloat32x4(rs, rd);
+}
+
+static void PromoteF32x4ToF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
+  masm.convertFloat32x4ToFloat64x2(rs, rd);
+}
+
 template <typename SourceType, typename DestType>
 void BaseCompiler::emitVectorUnop(void (*op)(MacroAssembler& masm,
                                              SourceType rs, DestType rd)) {
@@ -15699,6 +15725,18 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorUnary(ConvertI32x4ToF32x4));
           case uint32_t(SimdOp::F32x4ConvertUI32x4):
             CHECK_NEXT(dispatchVectorUnary(ConvertUI32x4ToF32x4));
+          case uint32_t(SimdOp::F32x4DemoteF64x2Zero):
+            CHECK_NEXT(dispatchVectorUnary(DemoteF64x2ToF32x4));
+          case uint32_t(SimdOp::F64x2PromoteLowF32x4):
+            CHECK_NEXT(dispatchVectorUnary(PromoteF32x4ToF64x2));
+          case uint32_t(SimdOp::F64x2ConvertLowI32x4S):
+            CHECK_NEXT(dispatchVectorUnary(ConvertI32x4ToF64x2));
+          case uint32_t(SimdOp::F64x2ConvertLowI32x4U):
+            CHECK_NEXT(dispatchVectorUnary(ConvertUI32x4ToF64x2));
+          case uint32_t(SimdOp::I32x4TruncSatF64x2SZero):
+            CHECK_NEXT(dispatchVectorUnary(ConvertF64x2ToI32x4));
+          case uint32_t(SimdOp::I32x4TruncSatF64x2UZero):
+            CHECK_NEXT(dispatchVectorUnary(ConvertF64x2ToUI32x4));
           case uint32_t(SimdOp::F64x2Abs):
             CHECK_NEXT(dispatchVectorUnary(AbsF64x2));
           case uint32_t(SimdOp::F64x2Neg):

@@ -2860,8 +2860,28 @@ class BaseAssembler : public GenericAssembler {
                   dst);
   }
 
+  void vcvttpd2dq_rr(XMMRegisterID src, XMMRegisterID dst) {
+    twoByteOpSimd("vcvttpd2dq", VEX_PD, OP2_CVTTPD2DQ_VdqWpd, src, invalid_xmm,
+                  dst);
+  }
+
   void vcvtdq2ps_rr(XMMRegisterID src, XMMRegisterID dst) {
     twoByteOpSimd("vcvtdq2ps", VEX_PS, OP2_CVTDQ2PS_VpsWdq, src, invalid_xmm,
+                  dst);
+  }
+
+  void vcvtdq2pd_rr(XMMRegisterID src, XMMRegisterID dst) {
+    twoByteOpSimd("vcvtdq2pd", VEX_SS, OP2_CVTDQ2PD_VpdWdq, src, invalid_xmm,
+                  dst);
+  }
+
+  void vcvtpd2ps_rr(XMMRegisterID src, XMMRegisterID dst) {
+    twoByteOpSimd("vcvtpd2ps", VEX_PD, OP2_CVTPD2PS_VpsWpd, src, invalid_xmm,
+                  dst);
+  }
+
+  void vcvtps2pd_rr(XMMRegisterID src, XMMRegisterID dst) {
+    twoByteOpSimd("vcvtps2pd", VEX_PS, OP2_CVTPS2PD_VpdWps, src, invalid_xmm,
                   dst);
   }
 

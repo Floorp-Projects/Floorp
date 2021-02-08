@@ -1298,3 +1298,47 @@ void MacroAssemblerX86Shared::unsignedTruncSatFloat32x4ToInt32x4(
   // unchanged.
   vpaddd(Operand(temp), dest, dest);
 }
+
+void MacroAssemblerX86Shared::unsignedConvertInt32x4ToFloat64x2(
+    FloatRegister src, FloatRegister dest) {
+  ScratchSimd128Scope scratch(asMasm());
+  vmovaps(src, dest);
+
+  asMasm().loadConstantSimd128Float(SimdConstant::SplatX4(0x43300000), scratch);
+  vunpcklps(scratch, dest, dest);
+
+  asMasm().loadConstantSimd128Float(SimdConstant::SplatX2(4503599627370496.0),
+                                    scratch);
+  vsubpd(Operand(scratch), dest, dest);
+}
+
+void MacroAssemblerX86Shared::truncSatFloat64x2ToInt32x4(FloatRegister src,
+                                                         FloatRegister temp,
+                                                         FloatRegister dest) {
+  ScratchSimd128Scope scratch(asMasm());
+
+  vmovapd(src, scratch);
+  vcmpeqpd(Operand(scratch), scratch);
+  asMasm().moveSimd128Float(src, dest);
+  asMasm().loadConstantSimd128Float(SimdConstant::SplatX2(2147483647.0), temp);
+  vandpd(Operand(temp), scratch, scratch);
+  vminpd(Operand(scratch), dest, dest);
+  vcvttpd2dq(dest, dest);
+}
+
+void MacroAssemblerX86Shared::unsignedTruncSatFloat64x2ToInt32x4(
+    FloatRegister src, FloatRegister temp, FloatRegister dest) {
+  ScratchSimd128Scope scratch(asMasm());
+  asMasm().moveSimd128Float(src, dest);
+
+  vxorpd(scratch, scratch, scratch);
+  vmaxpd(Operand(scratch), dest, dest);
+
+  asMasm().loadConstantSimd128Float(SimdConstant::SplatX2(4294967295.0), temp);
+  vminpd(Operand(temp), dest, dest);
+  vroundpd(SSERoundingMode::Trunc, Operand(dest), dest);
+  asMasm().loadConstantSimd128Float(SimdConstant::SplatX2(4503599627370496.0),
+                                    temp);
+  vaddpd(Operand(temp), dest, dest);
+  vshufps(0x88, scratch, dest, dest);
+}
