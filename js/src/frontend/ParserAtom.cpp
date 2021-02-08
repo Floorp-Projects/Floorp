@@ -120,27 +120,6 @@ template <typename CharT, typename SeqCharT>
   return entry;
 }
 
-bool ParserAtom::equalsJSAtom(JSAtom* other) const {
-  // Compare hashes and lengths first.
-  if (hash_ != other->hash() || length_ != other->length()) {
-    return false;
-  }
-
-  JS::AutoCheckCannotGC nogc;
-
-  if (hasTwoByteChars()) {
-    // Compare heap-allocated 16-bit chars to atom.
-    return other->hasLatin1Chars()
-               ? EqualChars(twoByteChars(), other->latin1Chars(nogc), length_)
-               : EqualChars(twoByteChars(), other->twoByteChars(nogc), length_);
-  }
-
-  MOZ_ASSERT(hasLatin1Chars());
-  return other->hasLatin1Chars()
-             ? EqualChars(latin1Chars(), other->latin1Chars(nogc), length_)
-             : EqualChars(latin1Chars(), other->twoByteChars(nogc), length_);
-}
-
 bool ParserAtom::isIndex(uint32_t* indexp) const {
   size_t len = length();
   if (len == 0 || len > UINT32_CHAR_BUFFER_LENGTH) {

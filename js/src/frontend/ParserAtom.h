@@ -449,8 +449,6 @@ class alignas(alignof(uint32_t)) ParserAtom {
     }
   }
 
-  bool equalsJSAtom(JSAtom* other) const;
-
   template <typename CharT>
   bool equalsSeq(HashNumber hash, InflatedChar16Sequence<CharT> seq) const;
 
