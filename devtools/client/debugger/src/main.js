@@ -6,7 +6,6 @@
 
 import { onConnect, onDisconnect } from "./client";
 import { teardownWorkers } from "./utils/bootstrap";
-import sourceQueue from "./utils/source-queue";
 
 module.exports = {
   bootstrap: ({
@@ -28,7 +27,6 @@ module.exports = {
     ),
   destroy: () => {
     onDisconnect();
-    sourceQueue.clear();
     teardownWorkers();
   },
 };
