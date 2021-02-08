@@ -57,6 +57,9 @@ export async function onConnect(
   await resourceWatcher.watchResources([resourceWatcher.TYPES.THREAD_STATE], {
     onAvailable: onBreakpointAvailable,
   });
+  await resourceWatcher.watchResources([resourceWatcher.TYPES.ERROR_MESSAGE], {
+    onAvailable: actions.addExceptionFromResources,
+  });
 }
 
 export function onDisconnect() {
@@ -70,6 +73,9 @@ export function onDisconnect() {
   });
   resourceWatcher.unwatchResources([resourceWatcher.TYPES.THREAD_STATE], {
     onAvailable: onBreakpointAvailable,
+  });
+  resourceWatcher.unwatchResources([resourceWatcher.TYPES.ERROR_MESSAGE], {
+    onAvailable: actions.addExceptionFromResources,
   });
   sourceQueue.clear();
 }
