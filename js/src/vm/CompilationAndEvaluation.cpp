@@ -113,7 +113,7 @@ static JSScript* CompileSourceBufferAndStartIncrementalEncoding(
 
   MOZ_DIAGNOSTIC_ASSERT(options.useStencilXDR);
 
-  UniquePtr<XDRIncrementalEncoderBase> xdrEncoder;
+  UniquePtr<XDRIncrementalStencilEncoder> xdrEncoder;
 
   if (!stencil.get().input.source()->xdrEncodeInitialStencil(cx, stencil.get(),
                                                              xdrEncoder)) {

@@ -604,23 +604,7 @@ class XDROffThreadDecoder : public XDRDecoder {
   }
 };
 
-class XDRIncrementalEncoderBase : public XDREncoder {
- protected:
-  JS::TranscodeBuffer slices_;
-
- public:
-  explicit XDRIncrementalEncoderBase(JSContext* cx)
-      : XDREncoder(cx, slices_, 0) {}
-
-  void switchToBuffer(XDRBuffer<XDR_ENCODE>* target) { buf = target; }
-
-  virtual XDRResult linearize(JS::TranscodeBuffer& buffer,
-                              js::ScriptSource* ss) {
-    MOZ_CRASH("cannot linearize.");
-  }
-};
-
-class XDRIncrementalStencilEncoder : public XDRIncrementalEncoderBase {
+class XDRIncrementalStencilEncoder : public XDREncoder {
   // The structure of the resulting buffer is:
   //
   // 1. Header
@@ -637,6 +621,8 @@ class XDRIncrementalStencilEncoder : public XDRIncrementalEncoderBase {
   //   a. ParseAtomTable
   //   b. BaseCompilationStencil
 
+  JS::TranscodeBuffer slices_;
+
   // A set of functions that is passed to codeFunctionStencil.
   // Used to avoid encoding delazification for same function twice.
   // NOTE: This is not a set of all encoded functions.
@@ -645,7 +631,7 @@ class XDRIncrementalStencilEncoder : public XDRIncrementalEncoderBase {
 
  public:
   explicit XDRIncrementalStencilEncoder(JSContext* cx)
-      : XDRIncrementalEncoderBase(cx), encodedFunctions_(cx) {}
+      : XDREncoder(cx, slices_, 0), encodedFunctions_(cx) {}
 
   virtual ~XDRIncrementalStencilEncoder() = default;
 
@@ -654,10 +640,12 @@ class XDRIncrementalStencilEncoder : public XDRIncrementalEncoderBase {
 
   bool isForStencil() const override { return true; }
 
-  XDRResult linearize(JS::TranscodeBuffer& buffer,
-                      js::ScriptSource* ss) override;
+  XDRResult linearize(JS::TranscodeBuffer& buffer, js::ScriptSource* ss);
 
   XDRResult codeStencils(frontend::CompilationStencilSet& stencilSet);
+
+ private:
+  void switchToBuffer(XDRBuffer<XDR_ENCODE>* target) { buf = target; }
 };
 
 template <XDRMode mode>
