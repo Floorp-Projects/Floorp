@@ -1736,7 +1736,7 @@ PendingLookup::Notify(nsITimer* aTimer) {
   MOZ_ASSERT(aTimer == mTimeoutTimer);
   Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_REMOTE_LOOKUP_TIMEOUT,
              true);
-  mChannel->Cancel(NS_ERROR_NET_TIMEOUT);
+  mChannel->Cancel(NS_ERROR_NET_TIMEOUT_EXTERNAL);
   mTimeoutTimer->Cancel();
   return NS_OK;
 }
@@ -1784,7 +1784,7 @@ NS_IMETHODIMP
 PendingLookup::OnStopRequest(nsIRequest* aRequest, nsresult aResult) {
   NS_ENSURE_STATE(mCallback);
 
-  if (aResult != NS_ERROR_NET_TIMEOUT) {
+  if (aResult != NS_ERROR_NET_TIMEOUT_EXTERNAL) {
     Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_REMOTE_LOOKUP_TIMEOUT,
                false);
 

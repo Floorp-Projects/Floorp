@@ -336,6 +336,8 @@ with modules["NETWORK"]:
     errors["NS_ERROR_NET_HTTP2_SENT_GOAWAY"] = FAILURE(83)
     # HTTP/3 protocol internal error
     errors["NS_ERROR_NET_HTTP3_PROTOCOL_ERROR"] = FAILURE(84)
+    # A timeout error code that can be used to cancel requests.
+    errors["NS_ERROR_NET_TIMEOUT_EXTERNAL"] = FAILURE(85)
 
     # XXX really need to better rationalize these error codes.  are consumers of
     # necko really expected to know how to discern the meaning of these??

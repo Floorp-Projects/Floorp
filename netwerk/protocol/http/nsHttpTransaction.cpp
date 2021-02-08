@@ -1445,6 +1445,9 @@ void nsHttpTransaction::Close(nsresult reason) {
   mConnected = false;
   mTunnelProvider = nullptr;
 
+  bool shouldRestartTransactionForHTTPSRR =
+      mOrigConnInfo && AllowedErrorForHTTPSRRFallback(reason);
+
   //
   // if the connection was reset or closed before we wrote any part of the
   // request or if we wrote the request but didn't receive any part of the
@@ -1476,7 +1479,7 @@ void nsHttpTransaction::Close(nsresult reason) {
   if ((reason == NS_ERROR_NET_RESET || reason == NS_OK ||
        reason ==
            psm::GetXPCOMFromNSSError(SSL_ERROR_DOWNGRADE_WITH_EARLY_DATA) ||
-       mOrigConnInfo) &&
+       shouldRestartTransactionForHTTPSRR) &&
       (!(mCaps & NS_HTTP_STICKY_CONNECTION) ||
        (mCaps & NS_HTTP_CONNECTION_RESTARTABLE) ||
        (mEarlyDataDisposition == EARLY_425))) {
@@ -1515,14 +1518,14 @@ void nsHttpTransaction::Close(nsresult reason) {
     // If this is true, it means we failed to use the HTTPSSVC connection info
     // to connect to the server. We need to retry with the original connection
     // info.
-    bool restartToFallbackConnInfo = !reallySentData && mOrigConnInfo;
+    shouldRestartTransactionForHTTPSRR &= !reallySentData;
 
     if (reason ==
             psm::GetXPCOMFromNSSError(SSL_ERROR_DOWNGRADE_WITH_EARLY_DATA) ||
         (!mReceivedData && ((mRequestHead && mRequestHead->IsSafeMethod()) ||
                             !reallySentData || connReused)) ||
-        restartToFallbackConnInfo) {
-      if (restartToFallbackConnInfo) {
+        shouldRestartTransactionForHTTPSRR) {
+      if (shouldRestartTransactionForHTTPSRR) {
         MaybeReportFailedSVCDomain(reason, mConnInfo);
         PrepareConnInfoForRetry(reason);
         mDontRetryWithDirectRoute = true;
@@ -1539,7 +1542,7 @@ void nsHttpTransaction::Close(nsresult reason) {
       if (mConnInfo && NS_SUCCEEDED(Restart())) {
         // Only record the first restart attempt.
         if (!mRestartCount) {
-          if (restartToFallbackConnInfo) {
+          if (shouldRestartTransactionForHTTPSRR) {
             Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_RESTART_REASON,
                                   TRANSACTION_RESTART_HTTPSSVC_INVOLVED);
           } else if (!reallySentData) {
@@ -3217,7 +3220,7 @@ void nsHttpTransaction::OnFastFallbackTimer() {
   HandleFallback(fallbackConnInfo);
   mOrigConnInfo.swap(backup);
 
-  if (mResolver) {
+  if (mResolver && fallbackConnInfo) {
     mResolver->PrefetchAddrRecord(fallbackConnInfo->GetRoutedHost(),
                                   mCaps & NS_HTTP_REFRESH_DNS);
   }
