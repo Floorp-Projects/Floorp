@@ -118,9 +118,9 @@ function test_titlebar_step2(mousedownListener)
   SimpleTest.is(window.screenY, origoldy + 20, "move window vertical");
   synthesizeMouse(label, 22, 22, { type: "mouseup" });
 
-  // with allowEvents set to true, the mouse should target the label instead
+  // with allowevents set to true, the mouse should target the label instead
   // and not move the window
-  titlebar.allowEvents = true;
+  titlebar.setAttribute("allowevents", "true");
 
   synthesizeMouse(label, 2, 2, { type: "mousedown" });
   SimpleTest.is(mouseDownTarget, label, "movedown on titlebar with allowevents");
