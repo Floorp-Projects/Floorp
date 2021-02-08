@@ -38,7 +38,6 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
-using mozilla::dom::Document;
 
 #define MAX_COMPOSITE_BORDER_WIDTH LayoutDeviceIntCoord(10000)
 
@@ -149,13 +148,12 @@ typedef enum {
 } CornerStyle;
 
 nsCSSBorderRenderer::nsCSSBorderRenderer(
-    nsPresContext* aPresContext, const Document* aDocument,
-    DrawTarget* aDrawTarget, const Rect& aDirtyRect, Rect& aOuterRect,
+    nsPresContext* aPresContext, DrawTarget* aDrawTarget,
+    const Rect& aDirtyRect, Rect& aOuterRect,
     const StyleBorderStyle* aBorderStyles, const Float* aBorderWidths,
     RectCornerRadii& aBorderRadii, const nscolor* aBorderColors,
     bool aBackfaceIsVisible, const Maybe<Rect>& aClipRect)
     : mPresContext(aPresContext),
-      mDocument(aDocument),
       mDrawTarget(aDrawTarget),
       mDirtyRect(aDirtyRect),
       mOuterRect(aOuterRect),
@@ -2533,16 +2531,14 @@ void nsCSSBorderRenderer::DrawFallbackSolidCorner(mozilla::Side aSide,
   RefPtr<Path> path = builder->Finish();
   mDrawTarget->Fill(path, ColorPattern(ToDeviceColor(borderColor)));
 
-  if (mDocument) {
-    if (!mPresContext->HasWarnedAboutTooLargeDashedOrDottedRadius()) {
-      mPresContext->SetHasWarnedAboutTooLargeDashedOrDottedRadius();
-      nsContentUtils::ReportToConsole(
-          nsIScriptError::warningFlag, "CSS"_ns, mDocument,
-          nsContentUtils::eCSS_PROPERTIES,
-          mBorderStyles[aSide] == StyleBorderStyle::Dashed
-              ? "TooLargeDashedRadius"
-              : "TooLargeDottedRadius");
-    }
+  if (!mPresContext->HasWarnedAboutTooLargeDashedOrDottedRadius()) {
+    mPresContext->SetHasWarnedAboutTooLargeDashedOrDottedRadius();
+    nsContentUtils::ReportToConsole(
+        nsIScriptError::warningFlag, "CSS"_ns, mPresContext->Document(),
+        nsContentUtils::eCSS_PROPERTIES,
+        mBorderStyles[aSide] == StyleBorderStyle::Dashed
+            ? "TooLargeDashedRadius"
+            : "TooLargeDottedRadius");
   }
 }
 
