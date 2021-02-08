@@ -37,9 +37,7 @@ const targetList = {
 };
 
 const devToolsClient = {
-  mainRoot: {
-    traits: {},
-  },
+  mainRoot: {},
 };
 
 const actions = {
