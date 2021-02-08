@@ -40,7 +40,7 @@ TESTING_JS_MODULES.services.common += [
     "modules-testing/logging.js",
 ]
 
-SPHINX_TREES["services"] = "docs"
+SPHINX_TREES["/services/common"] = "docs"
 
 XPCOM_MANIFESTS += [
     "app_services_logger/components.conf",
