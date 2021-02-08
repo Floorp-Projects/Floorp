@@ -57,8 +57,6 @@ interface XULElement : Element {
   [SetterThrows]
   attribute DOMString src;
 
-  attribute boolean allowEvents;
-
   [Throws, ChromeOnly]
   readonly attribute XULControllers             controllers;
 
