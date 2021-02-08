@@ -441,9 +441,9 @@ struct SharedDataContainer {
                    js::SharedImmutableScriptData* data);
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-  void dump();
-  void dump(js::JSONPrinter& json);
-  void dumpFields(js::JSONPrinter& json);
+  void dump() const;
+  void dump(js::JSONPrinter& json) const;
+  void dumpFields(js::JSONPrinter& json) const;
 #endif
 };
 
@@ -514,9 +514,9 @@ struct BaseCompilationStencil {
   inline const CompilationStencil& asCompilationStencil() const;
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-  void dump();
-  void dump(js::JSONPrinter& json);
-  void dumpFields(js::JSONPrinter& json);
+  void dump() const;
+  void dump(js::JSONPrinter& json) const;
+  void dumpFields(js::JSONPrinter& json) const;
 
   void dumpAtom(TaggedParserAtomIndex index) const;
 #endif
@@ -728,9 +728,9 @@ struct CompilationStencil : public BaseCompilationStencil {
   void trace(JSTracer* trc);
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-  void dump();
-  void dump(js::JSONPrinter& json);
-  void dumpFields(js::JSONPrinter& json);
+  void dump() const;
+  void dump(js::JSONPrinter& json) const;
+  void dumpFields(js::JSONPrinter& json) const;
 #endif
 };
 

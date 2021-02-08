@@ -200,9 +200,10 @@ class RegExpStencil {
       CompilationAtomCache& atomCache) const;
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-  void dump();
-  void dump(JSONPrinter& json, BaseCompilationStencil* stencil);
-  void dumpFields(JSONPrinter& json, BaseCompilationStencil* stencil);
+  void dump() const;
+  void dump(JSONPrinter& json, const BaseCompilationStencil* stencil) const;
+  void dumpFields(JSONPrinter& json,
+                  const BaseCompilationStencil* stencil) const;
 #endif
 };
 
@@ -233,9 +234,9 @@ class BigIntStencil {
   }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-  void dump();
-  void dump(JSONPrinter& json);
-  void dumpCharsNoQuote(GenericPrinter& out);
+  void dump() const;
+  void dump(JSONPrinter& json) const;
+  void dumpCharsNoQuote(GenericPrinter& out) const;
 #endif
 };
 
@@ -395,11 +396,11 @@ class ScopeStencil {
                      BaseParserScopeData* baseScopeData) const;
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-  void dump();
-  void dump(JSONPrinter& json, BaseParserScopeData* baseScopeData,
-            BaseCompilationStencil* stencil);
-  void dumpFields(JSONPrinter& json, BaseParserScopeData* baseScopeData,
-                  BaseCompilationStencil* stencil);
+  void dump() const;
+  void dump(JSONPrinter& json, const BaseParserScopeData* baseScopeData,
+            const BaseCompilationStencil* stencil) const;
+  void dumpFields(JSONPrinter& json, const BaseParserScopeData* baseScopeData,
+                  const BaseCompilationStencil* stencil) const;
 #endif
 
  private:
@@ -565,9 +566,10 @@ class StencilModuleMetadata {
                   JS::Handle<ModuleObject*> module) const;
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-  void dump();
-  void dump(JSONPrinter& json, BaseCompilationStencil* stencil);
-  void dumpFields(JSONPrinter& json, BaseCompilationStencil* stencil);
+  void dump() const;
+  void dump(JSONPrinter& json, const BaseCompilationStencil* stencil) const;
+  void dumpFields(JSONPrinter& json,
+                  const BaseCompilationStencil* stencil) const;
 #endif
 };
 
@@ -814,9 +816,10 @@ class ScriptStencil {
   }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-  void dump();
-  void dump(JSONPrinter& json, BaseCompilationStencil* stencil);
-  void dumpFields(JSONPrinter& json, BaseCompilationStencil* stencil);
+  void dump() const;
+  void dump(JSONPrinter& json, const BaseCompilationStencil* stencil) const;
+  void dumpFields(JSONPrinter& json,
+                  const BaseCompilationStencil* stencil) const;
 #endif
 };
 
@@ -861,9 +864,9 @@ class ScriptStencilExtra {
   }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
-  void dump();
-  void dump(JSONPrinter& json);
-  void dumpFields(JSONPrinter& json);
+  void dump() const;
+  void dump(JSONPrinter& json) const;
+  void dumpFields(JSONPrinter& json) const;
 #endif
 };
 
@@ -874,7 +877,7 @@ void DumpTaggedParserAtomIndex(js::JSONPrinter& json,
 
 void DumpTaggedParserAtomIndexNoQuote(GenericPrinter& out,
                                       TaggedParserAtomIndex taggedIndex,
-                                      BaseCompilationStencil* stencil);
+                                      const BaseCompilationStencil* stencil);
 #endif
 
 } /* namespace frontend */

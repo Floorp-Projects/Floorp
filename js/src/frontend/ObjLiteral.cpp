@@ -206,7 +206,7 @@ static void DumpObjLiteralFlagsItems(js::JSONPrinter& json,
 }
 
 static void DumpObjLiteral(js::JSONPrinter& json,
-                           frontend::BaseCompilationStencil* stencil,
+                           const frontend::BaseCompilationStencil* stencil,
                            mozilla::Span<const uint8_t> code,
                            const ObjLiteralFlags& flags,
                            uint32_t propertyCount) {
@@ -269,39 +269,43 @@ static void DumpObjLiteral(js::JSONPrinter& json,
   json.property("propertyCount", propertyCount);
 }
 
-void ObjLiteralWriter::dump() {
+void ObjLiteralWriter::dump() const {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
   dump(json, nullptr);
 }
 
-void ObjLiteralWriter::dump(js::JSONPrinter& json,
-                            frontend::BaseCompilationStencil* stencil) {
+void ObjLiteralWriter::dump(
+    js::JSONPrinter& json,
+    const frontend::BaseCompilationStencil* stencil) const {
   json.beginObject();
   dumpFields(json, stencil);
   json.endObject();
 }
 
-void ObjLiteralWriter::dumpFields(js::JSONPrinter& json,
-                                  frontend::BaseCompilationStencil* stencil) {
+void ObjLiteralWriter::dumpFields(
+    js::JSONPrinter& json,
+    const frontend::BaseCompilationStencil* stencil) const {
   DumpObjLiteral(json, stencil, getCode(), flags_, propertyCount_);
 }
 
-void ObjLiteralStencil::dump() {
+void ObjLiteralStencil::dump() const {
   js::Fprinter out(stderr);
   js::JSONPrinter json(out);
   dump(json, nullptr);
 }
 
-void ObjLiteralStencil::dump(js::JSONPrinter& json,
-                             frontend::BaseCompilationStencil* stencil) {
+void ObjLiteralStencil::dump(
+    js::JSONPrinter& json,
+    const frontend::BaseCompilationStencil* stencil) const {
   json.beginObject();
   dumpFields(json, stencil);
   json.endObject();
 }
 
-void ObjLiteralStencil::dumpFields(js::JSONPrinter& json,
-                                   frontend::BaseCompilationStencil* stencil) {
+void ObjLiteralStencil::dumpFields(
+    js::JSONPrinter& json,
+    const frontend::BaseCompilationStencil* stencil) const {
   DumpObjLiteral(json, stencil, code_, flags_, propertyCount_);
 }
 
