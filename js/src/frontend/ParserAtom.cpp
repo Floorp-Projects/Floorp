@@ -649,6 +649,10 @@ bool ParserAtomsTable::isIndex(TaggedParserAtomIndex index,
   return getParserAtom(index)->isIndex(indexp);
 }
 
+uint32_t ParserAtomsTable::length(TaggedParserAtomIndex index) const {
+  return getParserAtom(index)->length();
+}
+
 bool ParserAtomsTable::toNumber(JSContext* cx, TaggedParserAtomIndex index,
                                 double* result) const {
   return getParserAtom(index)->toNumber(cx, result);

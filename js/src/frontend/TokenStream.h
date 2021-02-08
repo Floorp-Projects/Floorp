@@ -754,8 +754,7 @@ class TokenStreamAnyChars : public TokenStreamShared {
     if (isCurrentTokenType(TokenKind::Name) ||
         isCurrentTokenType(TokenKind::PrivateName)) {
       TokenPos pos = currentToken().pos;
-      const ParserAtom* name = parserAtoms.getParserAtom(currentToken().name());
-      return (pos.end - pos.begin) != name->length();
+      return (pos.end - pos.begin) != parserAtoms.length(currentToken().name());
     }
 
     MOZ_ASSERT(TokenKindIsPossibleIdentifierName(currentToken().type));
