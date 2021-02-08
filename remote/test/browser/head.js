@@ -5,11 +5,11 @@
 
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
+const { RemoteAgent } = ChromeUtils.import(
+  "chrome://remote/content/components/RemoteAgent.jsm"
+);
 const { RemoteAgentError } = ChromeUtils.import(
   "chrome://remote/content/Error.jsm"
-);
-const { RemoteAgent } = ChromeUtils.import(
-  "chrome://remote/content/RemoteAgent.jsm"
 );
 
 const TIMEOUT_MULTIPLIER = SpecialPowers.isDebugBuild ? 4 : 1;
