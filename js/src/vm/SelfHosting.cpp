@@ -3069,7 +3069,7 @@ static ScriptSourceObject* SelfHostingScriptSourceObject(JSContext* cx) {
   if (!ss) {
     return nullptr;
   }
-  Rooted<ScriptSourceHolder> ssHolder(cx, ss);
+  ScriptSourceHolder ssHolder(ss);
 
   if (!ss->initFromOptions(cx, options)) {
     return nullptr;
