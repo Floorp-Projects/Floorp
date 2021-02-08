@@ -339,7 +339,7 @@ nsresult TransceiverImpl::SyncWithMatchingVideoConduits(
 }
 
 bool TransceiverImpl::ConduitHasPluginID(uint64_t aPluginID) {
-  return mConduit ? mConduit->CodecPluginID() == aPluginID : false;
+  return mConduit && mConduit->HasCodecPluginID(aPluginID);
 }
 
 bool TransceiverImpl::HasSendTrack(
