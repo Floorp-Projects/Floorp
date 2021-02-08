@@ -9,5 +9,4 @@ DIRS += [
 
 CompiledModules(
     "firefox.js",
-    "index.js",
 )
