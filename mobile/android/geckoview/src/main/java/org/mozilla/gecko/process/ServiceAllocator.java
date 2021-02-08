@@ -25,7 +25,7 @@ import java.util.Map.Entry;
 
 /* package */ final class ServiceAllocator {
     private static final String LOGTAG = "ServiceAllocator";
-    private static final int MAX_NUM_ISOLATED_CONTENT_SERVICES = 50;
+    private static final int MAX_NUM_ISOLATED_CONTENT_SERVICES = GeckoChildProcessServices.MAX_NUM_ISOLATED_CONTENT_SERVICES;
 
     private static boolean hasQApis() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q;
