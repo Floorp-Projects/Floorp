@@ -831,9 +831,6 @@ class ParserAtomsTable {
   const ParserAtom* getStatic1(StaticParserString1 s) const;
   const ParserAtom* getStatic2(StaticParserString2 s) const;
 
-  template <class T>
-  friend const ParserAtom* GetParserAtom(T self, TaggedParserAtomIndex index);
-
  public:
   const ParserAtom* getParserAtom(ParserAtomIndex index) const;
   const ParserAtom* getParserAtom(TaggedParserAtomIndex index) const;
@@ -881,17 +878,7 @@ class ParserAtomSpanBuilder {
     entries_[index] = const_cast<ParserAtom*>(atom);
   }
 
- private:
-  const ParserAtom* getWellKnown(WellKnownAtomId atomId) const;
-  const ParserAtom* getStatic1(StaticParserString1 s) const;
-  const ParserAtom* getStatic2(StaticParserString2 s) const;
-
-  template <class T>
-  friend const ParserAtom* GetParserAtom(T self, TaggedParserAtomIndex index);
-
- public:
-  const ParserAtom* getParserAtom(ParserAtomIndex index) const;
-  const ParserAtom* getParserAtom(TaggedParserAtomIndex index) const;
+  const ParserAtom* get(ParserAtomIndex index) const { return entries_[index]; }
 };
 
 template <typename CharT>
