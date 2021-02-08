@@ -2,7 +2,7 @@
 Services
 ========
 
-This is the nascent documentation of the Firefox services.
+This is the nascent documentation of the Common Firefox services.
 
 .. toctree::
    :maxdepth: 1
