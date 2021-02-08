@@ -416,8 +416,10 @@ class alignas(alignof(uint32_t)) ParserAtom {
     return isIndex(&index);
   }
 
+ private:
   bool isPrivateName() const;
 
+ public:
   bool isAscii() const {
     if (hasTwoByteChars()) {
       return false;
@@ -846,6 +848,9 @@ class ParserAtomsTable {
   void markUsedByStencil(TaggedParserAtomIndex index) const;
 
   const ParserAtomVector& entries() const { return entries_; }
+
+  // Accessors for querying atom properties.
+  bool isPrivateName(TaggedParserAtomIndex index) const;
 };
 
 // Lightweight version of ParserAtomsTable.

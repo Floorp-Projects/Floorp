@@ -1784,7 +1784,7 @@ bool BytecodeEmitter::emitTDZCheckIfNeeded(TaggedParserAtomIndex name,
 
   // Private names are implemented as lexical bindings, but it's just an
   // implementation detail. Per spec there's no TDZ check when using them.
-  if (compilationState.parserAtoms.getParserAtom(name)->isPrivateName()) {
+  if (compilationState.parserAtoms.isPrivateName(name)) {
     return true;
   }
 
