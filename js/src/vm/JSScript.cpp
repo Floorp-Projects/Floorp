@@ -2708,40 +2708,6 @@ void ScriptSource::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
   info->numScripts++;
 }
 
-bool ScriptSource::xdrEncodeTopLevel(JSContext* cx, HandleScript script) {
-  // Encoding failures are reported by the xdrFinalizeEncoder function.
-  if (containsAsmJS()) {
-    return true;
-  }
-
-  xdrEncoder_ = js::MakeUnique<XDRIncrementalEncoder>(cx);
-  if (!xdrEncoder_) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  MOZ_ASSERT(hasEncoder());
-  AutoIncrementalTimer timer(cx->realm()->timers.xdrEncodingTime);
-
-  auto failureCase =
-      mozilla::MakeScopeExit([&] { xdrEncoder_.reset(nullptr); });
-
-  RootedScript s(cx, script);
-  XDRResult res = xdrEncoder_->codeScript(&s);
-  if (res.isErr()) {
-    // On encoding failure, let failureCase destroy encoder and return true
-    // to avoid failing any currently executing script.
-    if (res.unwrapErr() & JS::TranscodeResult_Failure) {
-      return true;
-    }
-
-    return false;
-  }
-
-  failureCase.release();
-  return true;
-}
-
 bool ScriptSource::xdrEncodeInitialStencil(
     JSContext* cx, frontend::CompilationStencil& stencil,
     UniquePtr<XDRIncrementalEncoderBase>& xdrEncoder) {
@@ -2793,30 +2759,6 @@ bool ScriptSource::xdrEncodeStencils(
 void ScriptSource::setIncrementalEncoder(
     XDRIncrementalEncoderBase* xdrEncoder) {
   xdrEncoder_.reset(xdrEncoder);
-}
-
-bool ScriptSource::xdrEncodeFunction(JSContext* cx, HandleFunction fun,
-                                     HandleScriptSourceObject sourceObject) {
-  MOZ_ASSERT(sourceObject->source() == this);
-  MOZ_ASSERT(hasEncoder());
-  AutoIncrementalTimer timer(cx->realm()->timers.xdrEncodingTime);
-
-  auto failureCase =
-      mozilla::MakeScopeExit([&] { xdrEncoder_.reset(nullptr); });
-
-  RootedFunction f(cx, fun);
-  XDRResult res = xdrEncoder_->codeFunction(&f, sourceObject);
-  if (res.isErr()) {
-    // On encoding failure, let failureCase destroy encoder and return true
-    // to avoid failing any currently executing script.
-    if (res.unwrapErr() & JS::TranscodeResult_Failure) {
-      return true;
-    }
-    return false;
-  }
-
-  failureCase.release();
-  return true;
 }
 
 bool ScriptSource::xdrEncodeFunctionStencil(

@@ -2312,6 +2312,11 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
             " at the same time.");
         return false;
       }
+      if (saveIncrementalBytecode && js::UseOffThreadParseGlobal()) {
+        JS_ReportErrorASCII(
+            cx, "saveIncrementalBytecode cannot be used with legacy XDR.");
+        return false;
+      }
     }
   }
 
