@@ -7,6 +7,7 @@
 #include "frontend/FoldConstants.h"
 
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/Maybe.h"  // mozilla::Maybe
 #include "mozilla/Range.h"
 
 #include "jslibmath.h"
@@ -16,10 +17,11 @@
 #include "frontend/ParseNode.h"
 #include "frontend/ParseNodeVisitor.h"
 #include "frontend/Parser.h"
-#include "frontend/ParserAtom.h"  // ParserAtom, ParserAtomsTable, TaggedParserAtomIndex
+#include "frontend/ParserAtom.h"  // ParserAtomsTable, TaggedParserAtomIndex
 #include "js/Conversions.h"
 #include "js/friend/StackLimits.h"  // js::CheckRecursionLimit
 #include "js/Vector.h"
+#include "util/StringBuffer.h"  // StringBuffer
 #include "vm/StringType.h"
 
 using namespace js;
@@ -1209,17 +1211,15 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
       break;
     }
 
-    Vector<const ParserAtom*, 8> accum(info.cx);
     do {
-      // Create a vector of all the folded strings and concatenate them.
+      // Concat all strings.
       MOZ_ASSERT((*current)->isKind(ParseNodeKind::StringExpr));
 
-      accum.clear();
-      const auto* atom =
-          info.parserAtoms.getParserAtom((*current)->as<NameNode>().atom());
-      if (!accum.append(atom)) {
-        return false;
-      }
+      // To avoid unnecessarily copy when there's no strings after the
+      // first item, lazily construct StringBuffer and append the first item.
+      mozilla::Maybe<StringBuffer> accum;
+      TaggedParserAtomIndex firstAtom;
+      firstAtom = (*current)->as<NameNode>().atom();
 
       do {
         // Try folding the next operand to a string.
@@ -1232,10 +1232,14 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
           break;
         }
 
-        // Add this string to the accumulator and remove the node.
-        const auto* nextAtom =
-            info.parserAtoms.getParserAtom((*next)->as<NameNode>().atom());
-        if (!accum.append(nextAtom)) {
+        if (!accum) {
+          accum.emplace(info.cx);
+          if (!accum->append(info.parserAtoms, firstAtom)) {
+            return false;
+          }
+        }
+        // Append this string and remove the node.
+        if (!accum->append(info.parserAtoms, (*next)->as<NameNode>().atom())) {
           return false;
         }
 
@@ -1246,10 +1250,8 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
       } while (*next);
 
       // Replace with concatenation if we multiple nodes.
-      if (accum.length() > 1) {
-        // Construct the concatenated atom.
-        auto combination = info.parserAtoms.concatAtoms(
-            info.cx, mozilla::Range(accum.begin(), accum.length()));
+      if (accum) {
+        auto combination = accum->finishParserAtom(info.parserAtoms);
         if (!combination) {
           return false;
         }
