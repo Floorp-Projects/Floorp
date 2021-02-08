@@ -491,10 +491,6 @@ class nsXULElement : public nsStyledElement {
   void SetSrc(const nsAString& aValue, mozilla::ErrorResult& rv) {
     SetXULAttr(nsGkAtoms::src, aValue, rv);
   }
-  bool AllowEvents() const { return BoolAttrIsTrue(nsGkAtoms::allowevents); }
-  void SetAllowEvents(bool aAllowEvents) {
-    SetXULBoolAttr(nsGkAtoms::allowevents, aAllowEvents);
-  }
   nsIControllers* GetControllers(mozilla::ErrorResult& rv);
   void Click(mozilla::dom::CallerType aCallerType);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void DoCommand();
