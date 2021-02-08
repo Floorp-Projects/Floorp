@@ -6699,6 +6699,12 @@
   value: true
   mirror: always
 
+# Whether outline should follow the border radius.
+- name: layout.css.outline-follows-border-radius.enabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Pref to control enabling scroll anchoring.
 - name: layout.css.scroll-anchoring.enabled
   type: bool
