@@ -8158,26 +8158,34 @@ Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
   LS_TRY(CollectEachFileAtomicCancelable(
       *directory, aCanceled,
       [](const nsCOMPtr<nsIFile>& file) -> Result<Ok, nsresult> {
-        LS_TRY_INSPECT(const bool& isDirectory,
-                       MOZ_TO_RESULT_INVOKE(file, IsDirectory));
+        LS_TRY_INSPECT(const auto& dirEntryKind, GetDirEntryKind(*file));
 
-        if (isDirectory) {
-          Unused << WARN_IF_FILE_IS_UNKNOWN(*file);
-          return Ok{};
+        switch (dirEntryKind) {
+          case nsIFileKind::ExistsAsDirectory:
+            Unused << WARN_IF_FILE_IS_UNKNOWN(*file);
+            break;
+
+          case nsIFileKind::ExistsAsFile: {
+            LS_TRY_INSPECT(
+                const auto& leafName,
+                MOZ_TO_RESULT_INVOKE_TYPED(nsString, file, GetLeafName));
+
+            if (leafName.Equals(kDataFileName) ||
+                leafName.Equals(kJournalFileName) ||
+                leafName.Equals(kUsageFileName) ||
+                leafName.Equals(kUsageJournalFileName)) {
+              return Ok{};
+            }
+
+            Unused << WARN_IF_FILE_IS_UNKNOWN(*file);
+
+            break;
+          }
+
+          case nsIFileKind::DoesNotExist:
+            // Ignore files that got removed externally while iterating.
+            break;
         }
-
-        LS_TRY_INSPECT(const auto& leafName,
-                       MOZ_TO_RESULT_INVOKE_TYPED(nsString, file, GetLeafName));
-
-        if (leafName.Equals(kDataFileName) ||
-            leafName.Equals(kJournalFileName) ||
-            leafName.Equals(kUsageFileName) ||
-            leafName.Equals(kUsageJournalFileName)) {
-          return Ok{};
-        }
-
-        Unused << WARN_IF_FILE_IS_UNKNOWN(*file);
-
         return Ok{};
       }));
 #endif
