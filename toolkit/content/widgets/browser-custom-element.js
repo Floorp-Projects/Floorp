@@ -49,6 +49,25 @@
     "dom.beforeunload_timeout_ms"
   );
 
+  Object.defineProperty(LazyModules, "ProcessHangMonitor", {
+    configurable: true,
+    get() {
+      // Import if we can - this is a browser/ module so it may not be
+      // available, in which case we return null. We replace this getter
+      // when the module becomes available (should be on delayed startup
+      // when the first browser window loads, via BrowserGlue.jsm ).
+      const kURL = "resource:///modules/ProcessHangMonitor.jsm";
+      if (Cu.isModuleLoaded(kURL)) {
+        let { ProcessHangMonitor } = ChromeUtils.import(kURL);
+        Object.defineProperty(LazyModules, "ProcessHangMonitor", {
+          value: ProcessHangMonitor,
+        });
+        return ProcessHangMonitor;
+      }
+      return null;
+    },
+  });
+
   const elementsToDestroyOnUnload = new Set();
 
   window.addEventListener(
@@ -1658,6 +1677,15 @@
     permitUnload(action) {
       if (this.isRemoteBrowser) {
         if (!this.hasBeforeUnload) {
+          return { permitUnload: true };
+        }
+
+        // Don't bother asking if this browser is hung:
+        let { ProcessHangMonitor } = LazyModules;
+        if (
+          ProcessHangMonitor?.findActiveReport(this) ||
+          ProcessHangMonitor?.findPausedReport(this)
+        ) {
           return { permitUnload: true };
         }
 
