@@ -489,9 +489,26 @@ NSAttributedString* GeckoTextMarkerRange::AttributedText() const {
       [[[NSMutableAttributedString alloc] init] autorelease];
 
   if (mStart.mContainer.IsProxy() && mEnd.mContainer.IsProxy()) {
-    NSAttributedString* substr =
-        [[[NSAttributedString alloc] initWithString:Text()] autorelease];
-    [str appendAttributedString:substr];
+    nsTArray<TextAttributesRun> textAttributesRuns;
+    DocAccessibleParent* ipcDoc = mStart.mContainer.AsProxy()->Document();
+    Unused << ipcDoc->GetPlatformExtension()->SendAttributedTextForRange(
+        mStart.mContainer.AsProxy()->ID(), mStart.mOffset,
+        mEnd.mContainer.AsProxy()->ID(), mEnd.mOffset, &textAttributesRuns);
+
+    for (size_t i = 0; i < textAttributesRuns.Length(); i++) {
+      nsTArray<Attribute>& attributes =
+          textAttributesRuns.ElementAt(i).TextAttributes();
+      ProxyAccessible* container =
+          ipcDoc->GetAccessible(textAttributesRuns.ElementAt(i).ContainerID());
+
+      NSAttributedString* substr = [[[NSAttributedString alloc]
+          initWithString:nsCocoaUtils::ToNSString(
+                             textAttributesRuns.ElementAt(i).Text())
+              attributes:StringAttributesFromAttributes(attributes, container)]
+          autorelease];
+
+      [str appendAttributedString:substr];
+    }
   } else if (auto htWrap = mStart.ContainerAsHyperTextWrap()) {
     nsTArray<nsString> texts;
     nsTArray<Accessible*> containers;
