@@ -1019,12 +1019,6 @@ class ScriptSource {
   // Return wether an XDR encoder is present or not.
   bool hasEncoder() const { return bool(xdrEncoder_); }
 
-  // Create a new XDR encoder, and encode the top-level JSScript. The result
-  // of the encoding would be available in the |buffer| provided as argument,
-  // as soon as |xdrFinalize| is called and all xdr function calls returned
-  // successfully.
-  bool xdrEncodeTopLevel(JSContext* cx, HandleScript script);
-
   // Create a new XDR encoder, and encode the stencil for the initial
   // compilation. The created XDR encoder isn't stored into `xdrEncoder_`
   // field. Caller is responsible for calling `setIncrementalEncoder` after
@@ -1044,15 +1038,6 @@ class ScriptSource {
                          UniquePtr<XDRIncrementalEncoderBase>& xdrEncoder);
 
   void setIncrementalEncoder(XDRIncrementalEncoderBase* xdrEncoder);
-
-  // Encode a delazified JSFunction.  In case of errors, the XDR encoder is
-  // freed and the |buffer| provided as argument to |xdrEncodeTopLevel| is
-  // considered undefined.
-  //
-  // The |sourceObject| argument is the object holding the current
-  // ScriptSource.
-  bool xdrEncodeFunction(JSContext* cx, HandleFunction fun,
-                         HandleScriptSourceObject sourceObject);
 
   // Encode a delazified function's stencil.  In case of errors, the XDR
   // encoder is freed.

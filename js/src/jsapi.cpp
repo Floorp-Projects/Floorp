@@ -5821,19 +5821,7 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     TranscodeBuffer& buffer, JS::MutableHandleScript scriptp,
     size_t cursorIndex) {
-  if (!options.useStencilXDR) {
-    JS::TranscodeResult res =
-        JS::DecodeScript(cx, options, buffer, scriptp, cursorIndex);
-    if (res != JS::TranscodeResult_Ok) {
-      return res;
-    }
-
-    if (!scriptp->scriptSource()->xdrEncodeTopLevel(cx, scriptp)) {
-      return JS::TranscodeResult_Throw;
-    }
-
-    return JS::TranscodeResult_Ok;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(options.useStencilXDR);
 
   Rooted<frontend::CompilationStencilSet> stencilSet(
       cx, frontend::CompilationStencilSet(cx, options));
