@@ -2818,25 +2818,6 @@ void CompilationAtomCache::releaseBuffer(AtomCacheVector& atoms) {
   atoms = std::move(atoms_);
 }
 
-const ParserAtom* GetWellKnownParserAtomAt(JSContext* cx,
-                                           TaggedParserAtomIndex taggedIndex) {
-  MOZ_ASSERT(!taggedIndex.isParserAtomIndex());
-
-  if (taggedIndex.isWellKnownAtomId()) {
-    auto index = taggedIndex.toWellKnownAtomId();
-    return cx->runtime()->commonParserNames->getWellKnown(index);
-  }
-
-  if (taggedIndex.isStaticParserString1()) {
-    auto index = taggedIndex.toStaticParserString1();
-    return WellKnownParserAtoms::getStatic1(index);
-  }
-
-  MOZ_ASSERT(taggedIndex.isStaticParserString2());
-  auto index = taggedIndex.toStaticParserString2();
-  return WellKnownParserAtoms::getStatic2(index);
-}
-
 bool CompilationState::allocateGCThingsUninitialized(
     JSContext* cx, ScriptIndex scriptIndex, size_t length,
     TaggedScriptThingIndex** cursor) {
@@ -2895,17 +2876,6 @@ bool CompilationState::appendGCThings(
   script.gcThingsOffset = gcThingsOffset;
   script.gcThingsLength = gcThingsLength;
   return true;
-}
-
-const ParserAtom* BaseCompilationStencil::getParserAtomAt(
-    JSContext* cx, TaggedParserAtomIndex taggedIndex) const {
-  if (taggedIndex.isParserAtomIndex()) {
-    auto index = taggedIndex.toParserAtomIndex();
-    MOZ_ASSERT(index < parserAtomData.size());
-    return parserAtomData[index];
-  }
-
-  return GetWellKnownParserAtomAt(cx, taggedIndex);
 }
 
 CompilationStencil::RewindToken CompilationStencil::getRewindToken(
