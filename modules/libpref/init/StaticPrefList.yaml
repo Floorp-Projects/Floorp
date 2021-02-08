@@ -8911,7 +8911,7 @@
   mirror: always
 
 - name: media.webrtc.platformencoder
-  type: bool
+  type: RelaxedAtomicBool
 #if defined(MOZ_WIDGET_ANDROID)
   value: true
 #elif defined(NIGHTLY_BUILD) && !defined(MOZ_WIDGET_GTK)
