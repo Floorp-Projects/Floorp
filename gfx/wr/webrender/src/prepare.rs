@@ -393,10 +393,6 @@ fn prepare_interned_prim_for_render(
             let prim_offset = prim_data.common.prim_rect.origin.to_vector() - run.reference_frame_relative_offset;
 
             let pic = &store.pictures[pic_context.pic_index.0];
-            let raster_space = pic.get_raster_space_for_prim(
-                prim_spatial_node_index,
-                frame_context.spatial_tree
-            );
             let surface = &frame_state.surfaces[pic_context.surface_index.0];
             let prim_info = &prim_instance.vis;
             let root_scaling_factor = match pic.raster_config {
@@ -412,7 +408,6 @@ fn prepare_interned_prim_for_render(
                 &transform.to_transform().with_destination::<_>(),
                 surface,
                 prim_spatial_node_index,
-                raster_space,
                 root_scaling_factor,
                 &pic_context.subpixel_mode,
                 frame_state.resource_cache,
