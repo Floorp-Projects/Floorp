@@ -853,6 +853,7 @@ class ParserAtomsTable {
   const ParserAtomVector& entries() const { return entries_; }
 
   // Accessors for querying atom properties.
+  bool isIdentifier(TaggedParserAtomIndex index) const;
   bool isPrivateName(TaggedParserAtomIndex index) const;
   bool isExtendedUnclonedSelfHostedFunctionName(
       TaggedParserAtomIndex index) const;
