@@ -120,21 +120,6 @@ template <typename CharT, typename SeqCharT>
   return entry;
 }
 
-/* static */ ParserAtom* ParserAtom::allocateRaw(JSContext* cx,
-                                                 LifoAlloc& alloc,
-                                                 const uint8_t* srcRaw,
-                                                 size_t totalLength) {
-  void* raw = alloc.alloc(totalLength);
-  if (!raw) {
-    js::ReportOutOfMemory(cx);
-    return nullptr;
-  }
-
-  memcpy(raw, srcRaw, totalLength);
-
-  return static_cast<ParserAtom*>(raw);
-}
-
 bool ParserAtom::equalsJSAtom(JSAtom* other) const {
   // Compare hashes and lengths first.
   if (hash_ != other->hash() || length_ != other->length()) {

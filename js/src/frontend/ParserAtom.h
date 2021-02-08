@@ -386,9 +386,6 @@ class alignas(alignof(uint32_t)) ParserAtom {
                               InflatedChar16Sequence<SeqCharT> seq,
                               uint32_t length, HashNumber hash);
 
-  static ParserAtom* allocateRaw(JSContext* cx, LifoAlloc& alloc,
-                                 const uint8_t* srcRaw, size_t totalLength);
-
   bool hasLatin1Chars() const { return !(flags_ & HasTwoByteCharsFlag); }
   bool hasTwoByteChars() const { return flags_ & HasTwoByteCharsFlag; }
 
