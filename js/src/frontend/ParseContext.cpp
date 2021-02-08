@@ -181,8 +181,7 @@ void ParseContext::Scope::dump(ParseContext* pc, ParserBase* parser) {
   fprintf(stdout, "\n  decls:\n");
   for (DeclaredNameMap::Range r = declared_->all(); !r.empty(); r.popFront()) {
     auto index = r.front().key();
-    const auto* name = parser->parserAtoms().getParserAtom(index);
-    UniqueChars bytes = QuoteString(cx, name);
+    UniqueChars bytes = parser->parserAtoms().toPrintableString(cx, index);
     if (!bytes) {
       return;
     }

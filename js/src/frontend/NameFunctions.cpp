@@ -59,13 +59,14 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
    * given code like a["b c"], the front end will produce a ParseNodeKind::Dot
    * with a ParseNodeKind::Name child whose name contains spaces.
    */
-  bool appendPropertyReference(const ParserAtom* name) {
-    if (IsIdentifier(name)) {
-      return buf_.append('.') && buf_.append(name);
+  bool appendPropertyReference(TaggedParserAtomIndex name) {
+    const auto* atom = parserAtoms_.getParserAtom(name);
+    if (IsIdentifier(atom)) {
+      return buf_.append('.') && buf_.append(atom);
     }
 
     /* Quote the string as needed. */
-    UniqueChars source = QuoteString(cx_, name, '"');
+    UniqueChars source = parserAtoms_.toQuotedString(cx_, name);
     return source && buf_.append('[') &&
            buf_.append(source.get(), strlen(source.get())) && buf_.append(']');
   }
@@ -98,9 +99,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
         if (!*foundName) {
           return true;
         }
-        const auto* name =
-            parserAtoms_.getParserAtom(prop->right()->as<NameNode>().atom());
-        return appendPropertyReference(name);
+        return appendPropertyReference(prop->right()->as<NameNode>().atom());
       }
 
       case ParseNodeKind::Name:
@@ -285,9 +284,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
         ParseNode* left = node->as<BinaryNode>().left();
         if (left->isKind(ParseNodeKind::ObjectPropertyName) ||
             left->isKind(ParseNodeKind::StringExpr)) {
-          const auto* name =
-              parserAtoms_.getParserAtom(left->as<NameNode>().atom());
-          if (!appendPropertyReference(name)) {
+          if (!appendPropertyReference(left->as<NameNode>().atom())) {
             return false;
           }
         } else if (left->isKind(ParseNodeKind::NumberExpr)) {
