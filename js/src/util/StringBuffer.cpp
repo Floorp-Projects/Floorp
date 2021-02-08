@@ -12,7 +12,7 @@
 
 #include <algorithm>
 
-#include "frontend/ParserAtom.h"  // frontend::{ParserAtom, ParserAtomsTable, TaggedParserAtomIndex
+#include "frontend/ParserAtom.h"  // frontend::{ParserAtomsTable, TaggedParserAtomIndex
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "vm/JSObject-inl.h"
 #include "vm/StringType-inl.h"
@@ -76,18 +76,9 @@ bool StringBuffer::inflateChars() {
   return true;
 }
 
-bool StringBuffer::append(const frontend::ParserAtom* ent) {
-  if (isLatin1()) {
-    if (ent->hasLatin1Chars()) {
-      return latin1Chars().append(ent->latin1Chars(), ent->length());
-    }
-    if (!inflateChars()) {
-      return false;
-    }
-  }
-  return ent->hasLatin1Chars()
-             ? twoByteChars().append(ent->latin1Chars(), ent->length())
-             : twoByteChars().append(ent->twoByteChars(), ent->length());
+bool StringBuffer::append(const frontend::ParserAtomsTable& parserAtoms,
+                          frontend::TaggedParserAtomIndex atom) {
+  return parserAtoms.appendTo(*this, atom);
 }
 
 template <typename CharT>

@@ -11,7 +11,7 @@
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/Utf8.h"
 
-#include "frontend/ParserAtom.h"  // ParserAtom, ParserAtomsTable, TaggedParserAtomIndex
+#include "frontend/ParserAtom.h"  // ParserAtomsTable, TaggedParserAtomIndex
 #include "js/Vector.h"
 #include "vm/JSContext.h"
 
@@ -237,7 +237,8 @@ class StringBuffer {
                                            size_t len);
   inline MOZ_MUST_USE bool appendSubstring(JSLinearString* base, size_t off,
                                            size_t len);
-  MOZ_MUST_USE bool append(const frontend::ParserAtom* atom);
+  MOZ_MUST_USE bool append(const frontend::ParserAtomsTable& parserAtoms,
+                           frontend::TaggedParserAtomIndex atom);
 
   MOZ_MUST_USE bool append(const char* chars, size_t len) {
     return append(reinterpret_cast<const Latin1Char*>(chars), len);
