@@ -39,8 +39,9 @@ static VideoStreamFactory::ResolutionAndBitrateLimits
         // clang-format on
 };
 
-static VideoStreamFactory::ResolutionAndBitrateLimits GetLimitsFor(
-    unsigned int aWidth, unsigned int aHeight, int aCapBps = 0) {
+auto VideoStreamFactory::GetLimitsFor(unsigned int aWidth, unsigned int aHeight,
+                                      int aCapBps /* = 0 */)
+    -> ResolutionAndBitrateLimits {
   // max bandwidth should be proportional (not linearly!) to resolution, and
   // proportional (perhaps linearly, or close) to current frame rate.
   int fs = MB_OF(aWidth, aHeight);
@@ -77,7 +78,7 @@ static void SelectBitrates(unsigned short width, unsigned short height, int min,
   int& out_max = aVideoStream.max_bitrate_bps;
 
   VideoStreamFactory::ResolutionAndBitrateLimits resAndLimits =
-      GetLimitsFor(width, height);
+      VideoStreamFactory::GetLimitsFor(width, height);
   out_min = MinIgnoreZero(resAndLimits.min_bitrate_bps, cap);
   out_start = MinIgnoreZero(resAndLimits.start_bitrate_bps, cap);
   out_max = MinIgnoreZero(resAndLimits.max_bitrate_bps, cap);
@@ -218,6 +219,7 @@ std::vector<webrtc::VideoStream> VideoStreamFactory::CreateEncoderStreams(
                    mStartBitrate, encoding.constraints.maxBr, mPrefMaxBitrate,
                    mNegotiatedMaxBitrate, video_stream);
 
+    video_stream.bitrate_priority = config.bitrate_priority;
     video_stream.max_qp = kQpMax;
 
     if (streamCount > 1) {

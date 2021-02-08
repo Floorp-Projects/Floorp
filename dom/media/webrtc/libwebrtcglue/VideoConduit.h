@@ -21,7 +21,6 @@
 // conflicts with #include of scoped_ptr.h
 #undef FF
 // Video Engine Includes
-#include "api/video_codecs/video_encoder_factory.h"
 #include "api/video_codecs/video_decoder.h"
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/sdp_video_format.h"
@@ -65,7 +64,6 @@ class WebrtcVideoDecoder : public VideoDecoder, public webrtc::VideoDecoder {};
 class WebrtcVideoConduit
     : public VideoSessionConduit,
       public webrtc::Transport,
-      public webrtc::VideoEncoderFactory,
       public rtc::VideoSinkInterface<webrtc::VideoFrame>,
       public rtc::VideoSourceInterface<webrtc::VideoFrame> {
  public:
@@ -202,14 +200,7 @@ class WebrtcVideoConduit
    */
   void AddOrUpdateSink(rtc::VideoSinkInterface<webrtc::VideoFrame>* sink,
                        const rtc::VideoSinkWants& wants) override;
-  void AddOrUpdateSinkNotLocked(
-      rtc::VideoSinkInterface<webrtc::VideoFrame>* sink,
-      const rtc::VideoSinkWants& wants);
-
   void RemoveSink(rtc::VideoSinkInterface<webrtc::VideoFrame>* sink) override;
-  void RemoveSinkNotLocked(rtc::VideoSinkInterface<webrtc::VideoFrame>* sink);
-
-  void OnSinkWantsChanged(const rtc::VideoSinkWants& wants);
 
   bool HasCodecPluginID(uint64_t aPluginID) override;
 
@@ -285,20 +276,6 @@ class WebrtcVideoConduit
   MediaConduitErrorCode CreateRecvStream();
   void DeleteRecvStream();
 
-  std::unique_ptr<webrtc::VideoDecoder> CreateDecoder(
-      webrtc::VideoCodecType aType);
-  std::unique_ptr<webrtc::VideoEncoder> CreateEncoder(
-      webrtc::VideoCodecType aType);
-
-  // webrtc::VideoEncoderFactory
-  std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override;
-
-  CodecInfo QueryVideoEncoder(
-      const webrtc::SdpVideoFormat& format) const override;
-
-  std::unique_ptr<webrtc::VideoEncoder> CreateVideoEncoder(
-      const webrtc::SdpVideoFormat& format) override;
-
   MediaConduitErrorCode DeliverPacket(const void* data, int len) override;
 
   bool RequiresNewSendStream(const VideoCodecConfig& newConfig) const;
@@ -326,6 +303,16 @@ class WebrtcVideoConduit
 
   Mutex mMutex;
 
+  // Decoder factory used by mRecvStream when it needs new decoders. This is
+  // not shared broader like some state in the WebrtcCallWrapper because it
+  // handles CodecPluginID plumbing tied to this VideoConduit.
+  const UniquePtr<WebrtcVideoDecoderFactory> mDecoderFactory;
+
+  // Encoder factory used by mSendStream when it needs new encoders. This is
+  // not shared broader like some state in the WebrtcCallWrapper because it
+  // handles CodecPluginID plumbing tied to this VideoConduit.
+  const UniquePtr<WebrtcVideoEncoderFactory> mEncoderFactory;
+
   // Adapter handling resolution constraints from signaling and sinks.
   // Written only on main thread. Guarded by mMutex, except for reads on main.
   UniquePtr<cricket::VideoAdapter> mVideoAdapter;
@@ -335,9 +322,12 @@ class WebrtcVideoConduit
   AutoTArray<rtc::VideoSinkInterface<webrtc::VideoFrame>*, 1> mRegisteredSinks;
 
   // Broadcaster that distributes our frames to all registered sinks.
-  // Sinks can only be added, updated and removed on main thread.
-  // Frames can be passed in on any thread.
+  // Threadsafe.
   rtc::VideoBroadcaster mVideoBroadcaster;
+
+  // When true the send resolution needs to be updated next time we process a
+  // video frame. Set on various threads.
+  Atomic<bool> mUpdateSendResolution{false};
 
   // Buffer pool used for scaling frames.
   // Accessed on the frame-feeding thread only.
@@ -355,9 +345,6 @@ class WebrtcVideoConduit
 
   // Written only on main thread. Guarded by mMutex, except for reads on main.
   UniquePtr<VideoCodecConfig> mCurSendCodecConfig;
-
-  bool mUpdateResolution = false;
-  int mSinkWantsPixelCount = std::numeric_limits<int>::max();
 
   // Bookkeeping of stats for telemetry. Main thread only.
   RunningStat mSendFramerate;
@@ -459,15 +446,15 @@ class WebrtcVideoConduit
   // Accessed only on mStsThread.
   RtpPacketQueue mRtpPacketQueue;
 
-  // The lifetime of these codecs are maintained by the VideoConduit instance.
-  // They are passed to the webrtc::VideoSendStream or VideoReceiveStream,
-  // on construction.
-  std::unique_ptr<webrtc::VideoEncoder> mEncoder;  // only one encoder for now
-  std::vector<std::unique_ptr<webrtc::VideoDecoder>> mDecoders;
   // Main thread only
   nsTArray<uint64_t> mSendCodecPluginIDs;
   // Main thread only
   nsTArray<uint64_t> mRecvCodecPluginIDs;
+
+  MediaEventListener mSendPluginCreated;
+  MediaEventListener mSendPluginReleased;
+  MediaEventListener mRecvPluginCreated;
+  MediaEventListener mRecvPluginReleased;
 
   // Main thread only
   std::string mPCHandle;

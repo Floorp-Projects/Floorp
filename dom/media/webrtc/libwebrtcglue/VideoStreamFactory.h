@@ -27,6 +27,10 @@ class VideoStreamFactory
     int max_bitrate_bps;
   };
 
+  static ResolutionAndBitrateLimits GetLimitsFor(unsigned int aWidth,
+                                                 unsigned int aHeight,
+                                                 int aCapBps = 0);
+
   VideoStreamFactory(VideoCodecConfig aConfig,
                      webrtc::VideoCodecMode aCodecMode, int aMinBitrate,
                      int aStartBitrate, int aPrefMaxBitrate,
