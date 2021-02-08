@@ -64,13 +64,7 @@ export async function bootstrap({
   devToolsClient,
   workers: panelWorkers,
   panel,
-} : any) {
-  const connection = {
-    tab: { clientType: "firefox" },
-    targetList,
-    resourceWatcher,
-    devToolsClient,
-  };
+}: any) {
   verifyPrefSchema();
 
   const commands = firefox.clientCommands;
@@ -85,7 +79,13 @@ export async function bootstrap({
     initialState
   );
 
-  const connected = firefox.onConnect(connection, actions, store);
+  const connected = firefox.onConnect(
+    devToolsClient,
+    targetList,
+    resourceWatcher,
+    actions,
+    store
+  );
 
   await syncBreakpoints();
   syncXHRBreakpoints();
@@ -94,7 +94,7 @@ export async function bootstrap({
     actions,
     selectors,
     workers,
-    connection,
+    targetList,
     client: firefox.clientCommands,
   });
 
