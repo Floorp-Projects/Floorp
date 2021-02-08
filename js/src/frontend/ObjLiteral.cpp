@@ -11,18 +11,18 @@
 
 #include "builtin/Array.h"             // NewDenseCopiedArray
 #include "frontend/CompilationInfo.h"  // frontend::CompilationAtomCache
-#include "frontend/ParserAtom.h"  // frontend::ParserAtom, frontend::ParserAtomTable
-#include "gc/AllocKind.h"         // gc::AllocKind
-#include "gc/Rooting.h"           // RootedPlainObject
-#include "js/Id.h"                // INT_TO_JSID
-#include "js/RootingAPI.h"        // Rooted
-#include "js/TypeDecls.h"         // RootedId, RootedValue
-#include "vm/JSAtom.h"            // JSAtom
-#include "vm/JSONPrinter.h"       // js::JSONPrinter
-#include "vm/NativeObject.h"      // NativeDefineDataProperty
-#include "vm/ObjectGroup.h"       // TenuredObject
-#include "vm/PlainObject.h"       // PlainObject
-#include "vm/Printer.h"           // js::Fprinter
+#include "frontend/ParserAtom.h"       // frontend::ParserAtomTable
+#include "gc/AllocKind.h"              // gc::AllocKind
+#include "gc/Rooting.h"                // RootedPlainObject
+#include "js/Id.h"                     // INT_TO_JSID
+#include "js/RootingAPI.h"             // Rooted
+#include "js/TypeDecls.h"              // RootedId, RootedValue
+#include "vm/JSAtom.h"                 // JSAtom
+#include "vm/JSONPrinter.h"            // js::JSONPrinter
+#include "vm/NativeObject.h"           // NativeDefineDataProperty
+#include "vm/ObjectGroup.h"            // TenuredObject
+#include "vm/PlainObject.h"            // PlainObject
+#include "vm/Printer.h"                // js::Fprinter
 
 #include "gc/ObjectKind-inl.h"    // gc::GetGCObjectKind
 #include "vm/JSAtom-inl.h"        // AtomToId
