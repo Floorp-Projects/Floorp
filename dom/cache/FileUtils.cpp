@@ -389,7 +389,7 @@ nsresult BodyDeleteOrphanedFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBaseDir,
             MOZ_ASSERT(NS_SUCCEEDED(result));
             break;
           }
-          
+
           case nsIFileKind::DoesNotExist:
             // Ignore files that got removed externally while iterating.
             break;
