@@ -9180,6 +9180,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   const bool shouldTakeFocus =
       aLoadState->SourceBrowsingContext() &&
       aLoadState->SourceBrowsingContext()->IsActive() &&
+      !mBrowsingContext->IsActive() &&
       !Preferences::GetBool("browser.tabs.loadDivertedInBackground", false);
 
   mOriginalUriString.Truncate();
