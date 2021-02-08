@@ -38,7 +38,7 @@ class SearchOneOffs {
       <box class="search-panel-one-offs-container">
         <hbox class="search-panel-one-offs" role="group"/>
         <hbox class="search-one-offs-spacer"/>
-        <button class="searchbar-engine-one-off-item search-setting-button-compact" tabindex="-1" data-l10n-id="search-one-offs-change-settings-compact-button"/>
+        <button class="searchbar-engine-one-off-item search-setting-button-compact" data-l10n-id="search-one-offs-change-settings-compact-button"/>
       </box>
       <vbox class="search-add-engines"/>
       <button class="search-setting-button" data-l10n-id="search-one-offs-change-settings-button"/>
@@ -566,7 +566,6 @@ class SearchOneOffs {
         "chrome://browser/skin/search-engine-placeholder.png";
       button.setAttribute("image", iconURI);
       button.setAttribute("class", "searchbar-engine-one-off-item");
-      button.setAttribute("tabindex", "-1");
       this.setTooltipForEngineButton(button);
       this.buttons.appendChild(button);
     }
