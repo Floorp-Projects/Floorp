@@ -45,7 +45,7 @@ class BaseType(object):
             del config["exclude"]
 
         if not paths:
-            return []
+            return {"results": [], "fixed": 0}
 
         log.debug(
             "Passing the following paths:\n{paths}".format(

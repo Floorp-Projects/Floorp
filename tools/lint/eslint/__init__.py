@@ -86,10 +86,19 @@ def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
         + paths
     )
     log.debug("Command: {}".format(" ".join(cmd_args)))
-
+    results = run(cmd_args, config)
+    fixed = 0
     # eslint requires that --fix be set before the --ext argument.
     if fix:
+        fixed += len(results)
         cmd_args.insert(2, "--fix")
+        results = run(cmd_args, config)
+        fixed = fixed - len(results)
+
+    return {"results": results, "fixed": fixed}
+
+
+def run(cmd_args, config):
 
     shell = False
     if os.environ.get("MSYSTEM") in ("MINGW32", "MINGW64"):

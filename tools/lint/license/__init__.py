@@ -172,13 +172,14 @@ def fix_me(log, filename):
 def lint(paths, config, fix=None, **lintargs):
     log = lintargs["log"]
     files = list(expand_exclusions(paths, config, lintargs["root"]))
+    fixed = 0
 
     licenses = load_valid_license()
-
     for f in files:
         if is_test(f):
             # For now, do not do anything with test (too many)
             continue
+
         if not is_valid_license(licenses, f):
             res = {
                 "path": f,
@@ -188,4 +189,6 @@ def lint(paths, config, fix=None, **lintargs):
             results.append(result.from_config(config, **res))
             if fix:
                 fix_me(log, f)
-    return results
+                fixed += 1
+
+    return {"results": results, "fixed": fixed}

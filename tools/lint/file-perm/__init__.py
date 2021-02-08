@@ -11,11 +11,12 @@ from mozlint.pathutils import expand_exclusions
 
 def lint(paths, config, fix=None, **lintargs):
     results = []
+    fixed = 0
 
     if platform.system() == "Windows":
         # Windows doesn't have permissions in files
         # Exit now
-        return results
+        return {"results": results, "fixed": fixed}
 
     files = list(expand_exclusions(paths, config, lintargs["root"]))
     for f in files:
@@ -32,6 +33,7 @@ def lint(paths, config, fix=None, **lintargs):
             if fix:
                 # We want to fix it, do it and leave
                 os.chmod(f, 0o644)
+                fixed += 1
                 continue
 
             res = {
@@ -40,4 +42,4 @@ def lint(paths, config, fix=None, **lintargs):
                 "level": "error",
             }
             results.append(result.from_config(config, **res))
-    return results
+    return {"results": results, "fixed": fixed}

@@ -98,7 +98,7 @@ def run_setup(config):
 
 
 @pytest.fixture
-def lint(config, root):
+def lint(config, root, request):
     """Find and return the 'lint' function for the external linter named in the
     LINTER global variable.
 
@@ -119,7 +119,13 @@ def lint(config, root):
         lintargs["log"] = logging.LoggerAdapter(
             logger, {"lintname": config.get("name"), "pid": os.getpid()}
         )
+
         results = func(paths, config, root=root, **lintargs)
+        if hasattr(request.module, "fixed") and isinstance(results, dict):
+            request.module.fixed += results["fixed"]
+
+        if isinstance(results, dict):
+            results = results["results"]
 
         if isinstance(results, (list, tuple)):
             results = sorted(results)
