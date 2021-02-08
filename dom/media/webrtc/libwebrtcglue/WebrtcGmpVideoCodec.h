@@ -347,7 +347,7 @@ class WebrtcVideoEncoderProxy : public WebrtcVideoEncoder {
   }
 
  private:
-  RefPtr<RefCountedWebrtcVideoEncoder> mEncoderImpl;
+  const RefPtr<RefCountedWebrtcVideoEncoder> mEncoderImpl;
 };
 
 class WebrtcGmpVideoDecoder : public GMPVideoDecoderCallbackProxy {
@@ -477,7 +477,7 @@ class WebrtcVideoDecoderProxy : public WebrtcVideoDecoder {
   int32_t Release() override { return mDecoderImpl->ReleaseGmp(); }
 
  private:
-  RefPtr<WebrtcGmpVideoDecoder> mDecoderImpl;
+  const RefPtr<WebrtcGmpVideoDecoder> mDecoderImpl;
 };
 
 }  // namespace mozilla

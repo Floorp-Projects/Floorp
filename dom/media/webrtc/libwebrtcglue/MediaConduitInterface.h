@@ -16,8 +16,10 @@
 #include "mozilla/RefCounted.h"
 #include "TaskQueueWrapper.h"
 #include "VideoTypes.h"
+#include "WebrtcVideoCodecFactory.h"
 
 // libwebrtc includes
+#include "api/video/builtin_video_bitrate_allocator_factory.h"
 #include "api/video/video_frame_buffer.h"
 #include "call/call.h"
 
@@ -267,8 +269,10 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
         MakeUnique<SharedThreadPoolWebRtcTaskQueueFactory>();
     config.task_queue_factory = taskQueueFactory.get();
     config.trials = aTrials;
+    auto videoBitrateAllocatorFactory = WrapUnique(
+        webrtc::CreateBuiltinVideoBitrateAllocatorFactory().release());
     return new WebRtcCallWrapper(
-        aAudioDecoderFactory,
+        aAudioDecoderFactory, std::move(videoBitrateAllocatorFactory),
         WrapUnique(webrtc::Call::Create(config, aModuleThread)),
         std::move(eventLog), std::move(taskQueueFactory), aTimestampMaker);
   }
@@ -342,12 +346,15 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
 
  private:
   WebRtcCallWrapper(RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory,
+                    UniquePtr<webrtc::VideoBitrateAllocatorFactory>
+                        aVideoBitrateAllocatorFactory,
                     UniquePtr<webrtc::Call> aCall,
                     UniquePtr<webrtc::RtcEventLog> aEventLog,
                     UniquePtr<webrtc::TaskQueueFactory> aTaskQueueFactory,
                     const dom::RTCStatsTimestampMaker& aTimestampMaker)
       : mTimestampMaker(aTimestampMaker),
         mAudioDecoderFactory(std::move(aAudioDecoderFactory)),
+        mVideoBitrateAllocatorFactory(std::move(aVideoBitrateAllocatorFactory)),
         mEventLog(std::move(aEventLog)),
         mTaskQueueFactory(std::move(aTaskQueueFactory)),
         mCall(std::move(aCall)) {}
@@ -364,6 +371,8 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
 
  public:
   const RefPtr<webrtc::AudioDecoderFactory> mAudioDecoderFactory;
+  const UniquePtr<webrtc::VideoBitrateAllocatorFactory>
+      mVideoBitrateAllocatorFactory;
   const UniquePtr<webrtc::RtcEventLog> mEventLog;
   const UniquePtr<webrtc::TaskQueueFactory> mTaskQueueFactory;
 

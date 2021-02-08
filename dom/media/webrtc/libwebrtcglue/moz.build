@@ -26,6 +26,7 @@ UNIFIED_SOURCES += [
     "WebrtcGmpVideoCodec.cpp",
     "WebrtcMediaDataDecoderCodec.cpp",
     "WebrtcMediaDataEncoderCodec.cpp",
+    "WebrtcVideoCodecFactory.cpp",
 ]
 
 if CONFIG["OS_TARGET"] == "Android":
