@@ -1,4 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* clang-format off */
+/* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* clang-format on */
 /* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -256,6 +258,35 @@ nsresult xpcAccessibleMacInterface::NSObjectToJsValue(id aObj, JSContext* aCx,
       JS_SetUCProperty(aCx, obj, strKey.get(), strKey.Length(), value);
     }
     aResult.setObject(*obj);
+  } else if ([aObj isKindOfClass:[NSAttributedString class]]) {
+    NSAttributedString* attrStr = (NSAttributedString*)aObj;
+    __block NSMutableArray* attrRunArray = [[NSMutableArray alloc] init];
+
+    [attrStr
+        enumerateAttributesInRange:NSMakeRange(0, [attrStr length])
+                           options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired
+                        usingBlock:^(NSDictionary* attributes, NSRange range, BOOL* stop) {
+                          NSString* str = [[attrStr string] substringWithRange:range];
+                          if (!str || !attributes) {
+                            return;
+                          }
+
+                          NSMutableDictionary* attrRun = [attributes mutableCopy];
+                          attrRun[@"string"] = str;
+
+                          [attrRunArray addObject:attrRun];
+                        }];
+
+    // The attributed string is represented in js as an array of objects.
+    // Each object represents a run of text where the "string" property is the
+    // string value and all the AX* properties are the attributes.
+    return NSObjectToJsValue(attrRunArray, aCx, aResult);
+  } else if (CFGetTypeID(aObj) == CGColorGetTypeID()) {
+    const CGFloat* components = CGColorGetComponents((CGColorRef)aObj);
+    NSString* hexString =
+        [NSString stringWithFormat:@"#%02x%02x%02x", (int)(components[0] * 0xff),
+                                   (int)(components[1] * 0xff), (int)(components[2] * 0xff)];
+    return NSObjectToJsValue(hexString, aCx, aResult);
   } else if ([aObj respondsToSelector:@selector(isAccessibilityElement)]) {
     // We expect all of our accessibility objects to implement isAccessibilityElement
     // at the very least. If it is implemented we will assume its an accessibility object.

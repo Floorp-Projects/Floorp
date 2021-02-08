@@ -91,6 +91,11 @@ class GeckoTextMarkerRange final {
   NSString* Text() const;
 
   /**
+   * Return the attributed text enclosed by the range.
+   */
+  NSAttributedString* AttributedText() const;
+
+  /**
    * Return length of characters enclosed by the range.
    */
   int32_t Length() const;
