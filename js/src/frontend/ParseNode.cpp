@@ -207,27 +207,15 @@ void RegExpLiteral::dumpImpl(ParserBase* parser, GenericPrinter& out,
   out.printf("(%s)", parseNodeNames[getKindAsIndex()]);
 }
 
-static void DumpCharsNoNewline(const ParserAtom* atom,
-                               js::GenericPrinter& out) {
-  if (atom->hasLatin1Chars()) {
-    out.put("[Latin 1]");
-    JSString::dumpChars(atom->latin1Chars(), atom->length(), out);
-  } else {
-    out.put("[2 byte]");
-    JSString::dumpChars(atom->twoByteChars(), atom->length(), out);
-  }
-}
-
 static void DumpCharsNoNewline(ParserBase* parser, TaggedParserAtomIndex index,
                                GenericPrinter& out) {
+  out.put("\"");
   if (parser) {
-    const auto* atom = parser->parserAtoms().getParserAtom(index);
-    DumpCharsNoNewline(atom, out);
+    parser->parserAtoms().dumpCharsNoQuote(out, index);
   } else {
-    out.put("\"");
     DumpTaggedParserAtomIndexNoQuote(out, index, nullptr);
-    out.put("\"");
   }
+  out.put("\"");
 }
 
 void LoopControlStatement::dumpImpl(ParserBase* parser, GenericPrinter& out,
