@@ -282,8 +282,7 @@ void EmitterScope::dump(BytecodeEmitter* bce) {
     const NameLocation& l = r.front().value();
 
     auto atom = r.front().key();
-    UniqueChars bytes =
-        ParserAtomToPrintableString(bce->cx, bce->parserAtoms(), atom);
+    UniqueChars bytes = bce->parserAtoms().toPrintableString(bce->cx, atom);
     if (!bytes) {
       return;
     }

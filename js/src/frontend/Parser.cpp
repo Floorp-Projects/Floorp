@@ -465,8 +465,7 @@ template <class ParseHandler, typename Unit>
 void GeneralParser<ParseHandler, Unit>::reportRedeclaration(
     TaggedParserAtomIndex name, DeclarationKind prevKind, TokenPos pos,
     uint32_t prevPos) {
-  UniqueChars bytes =
-      ParserAtomToPrintableString(cx_, this->parserAtoms(), name);
+  UniqueChars bytes = this->parserAtoms().toPrintableString(cx_, name);
   if (!bytes) {
     return;
   }
@@ -527,8 +526,7 @@ bool GeneralParser<ParseHandler, Unit>::notePositionalFormalParameter(
     // In such cases, report will queue up the potential error and return
     // 'true'.
     if (pc_->sc()->strict()) {
-      UniqueChars bytes =
-          ParserAtomToPrintableString(cx_, this->parserAtoms(), name);
+      UniqueChars bytes = this->parserAtoms().toPrintableString(cx_, name);
       if (!bytes) {
         return false;
       }
@@ -1501,8 +1499,7 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
   if (!evalSc) {
     // The unbound private names are sorted, so just grab the first one.
     UnboundPrivateName minimum = unboundPrivateNames[0];
-    UniqueChars str =
-        ParserAtomToPrintableString(cx_, this->parserAtoms(), minimum.atom);
+    UniqueChars str = this->parserAtoms().toPrintableString(cx_, minimum.atom);
     if (!str) {
       return false;
     }
@@ -1520,8 +1517,8 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
     // the scopeContext.
     if (!this->compilationState_.scopeContext
              .effectiveScopePrivateFieldCacheHas(unboundName.atom)) {
-      UniqueChars str = ParserAtomToPrintableString(cx_, this->parserAtoms(),
-                                                    unboundName.atom);
+      UniqueChars str =
+          this->parserAtoms().toPrintableString(cx_, unboundName.atom);
       if (!str) {
         return false;
       }
@@ -1751,8 +1748,8 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   for (auto entry : moduleMetadata.localExportEntries) {
     DeclaredNamePtr p = modulepc.varScope().lookupDeclaredName(entry.localName);
     if (!p) {
-      UniqueChars str = ParserAtomToPrintableString(cx_, this->parserAtoms(),
-                                                    entry.localName);
+      UniqueChars str =
+          this->parserAtoms().toPrintableString(cx_, entry.localName);
       if (!str) {
         return null();
       }
@@ -5055,8 +5052,7 @@ bool Parser<FullParseHandler, Unit>::checkExportedName(
     return true;
   }
 
-  UniqueChars str =
-      ParserAtomToPrintableString(cx_, this->parserAtoms(), exportName);
+  UniqueChars str = this->parserAtoms().toPrintableString(cx_, exportName);
   if (!str) {
     return false;
   }
@@ -7747,8 +7743,8 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
       return null();
     }
     if (maybeUnboundName) {
-      UniqueChars str = ParserAtomToPrintableString(cx_, this->parserAtoms(),
-                                                    maybeUnboundName->atom);
+      UniqueChars str =
+          this->parserAtoms().toPrintableString(cx_, maybeUnboundName->atom);
       if (!str) {
         return null();
       }
