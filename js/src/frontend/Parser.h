@@ -271,12 +271,19 @@ class MOZ_STACK_CLASS ParserSharedBase {
   CompilationState& getCompilationState() { return compilationState_; }
 
   ParserAtomsTable& parserAtoms() { return compilationState_.parserAtoms; }
+  const ParserAtomsTable& parserAtoms() const {
+    return compilationState_.parserAtoms;
+  }
 
   LifoAlloc& stencilAlloc() { return stencil_.alloc; }
 
   JSAtom* liftParserAtomToJSAtom(TaggedParserAtomIndex index) {
     return parserAtoms().toJSAtom(cx_, index, stencil_.input.atomCache);
   }
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  void dumpAtom(TaggedParserAtomIndex index) const;
+#endif
 };
 
 class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,

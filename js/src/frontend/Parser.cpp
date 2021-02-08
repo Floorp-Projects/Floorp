@@ -162,6 +162,12 @@ ParserSharedBase::~ParserSharedBase() {
   cx_->frontendCollectionPool().removeActiveCompilation();
 }
 
+#if defined(DEBUG) || defined(JS_JITSPEW)
+void ParserSharedBase::dumpAtom(TaggedParserAtomIndex index) const {
+  parserAtoms().dump(index);
+}
+#endif
+
 ParserBase::ParserBase(JSContext* cx, const ReadOnlyCompileOptions& options,
                        bool foldConstants, CompilationStencil& stencil,
                        CompilationState& compilationState)

@@ -517,6 +517,8 @@ struct BaseCompilationStencil {
   void dump();
   void dump(js::JSONPrinter& json);
   void dumpFields(js::JSONPrinter& json);
+
+  void dumpAtom(TaggedParserAtomIndex index) const;
 #endif
 };
 
