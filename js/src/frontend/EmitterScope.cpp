@@ -176,8 +176,7 @@ NameLocation EmitterScope::searchAndCache(BytecodeEmitter* bce,
     inCurrentScript = false;
     loc = Some(
         bce->compilationState.scopeContext.searchInDelazificationEnclosingScope(
-            bce->cx, bce->stencil.input, bce->compilationState.parserAtoms,
-            name, hops));
+            bce->cx, bce->stencil.input, bce->parserAtoms(), name, hops));
   }
 
   // Each script has its own frame. A free name that is accessed
@@ -283,8 +282,8 @@ void EmitterScope::dump(BytecodeEmitter* bce) {
     const NameLocation& l = r.front().value();
 
     auto atom = r.front().key();
-    UniqueChars bytes = ParserAtomToPrintableString(
-        bce->cx, bce->compilationState.parserAtoms, atom);
+    UniqueChars bytes =
+        ParserAtomToPrintableString(bce->cx, bce->parserAtoms(), atom);
     if (!bytes) {
       return;
     }

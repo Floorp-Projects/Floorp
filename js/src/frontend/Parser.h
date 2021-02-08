@@ -270,10 +270,12 @@ class MOZ_STACK_CLASS ParserSharedBase {
   CompilationStencil& getCompilationStencil() { return stencil_; }
   CompilationState& getCompilationState() { return compilationState_; }
 
+  ParserAtomsTable& parserAtoms() { return compilationState_.parserAtoms; }
+
   LifoAlloc& stencilAlloc() { return stencil_.alloc; }
 
   JSAtom* liftParserAtomToJSAtom(TaggedParserAtomIndex index) {
-    const auto* atom = compilationState_.parserAtoms.getParserAtom(index);
+    const auto* atom = parserAtoms().getParserAtom(index);
     return atom->toJSAtom(cx_, index, stencil_.input.atomCache);
   }
 };
