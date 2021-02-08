@@ -5,7 +5,6 @@
 // @flow
 
 import { onConnect, onDisconnect } from "./client";
-import { teardownWorkers } from "./utils/bootstrap";
 
 module.exports = {
   bootstrap: ({
@@ -27,6 +26,5 @@ module.exports = {
     ),
   destroy: () => {
     onDisconnect();
-    teardownWorkers();
   },
 };
