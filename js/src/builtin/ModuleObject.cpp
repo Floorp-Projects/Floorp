@@ -1875,7 +1875,7 @@ bool ModuleBuilder::maybeAppendRequestedModule(
 }
 
 void ModuleBuilder::markUsedByStencil(frontend::TaggedParserAtomIndex name) {
-  eitherParser_.getCompilationState().parserAtoms.markUsedByStencil(name);
+  eitherParser_.parserAtoms().markUsedByStencil(name);
 }
 
 template <typename T>

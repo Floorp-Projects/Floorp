@@ -692,6 +692,11 @@ bool ParserAtomsTable::isPrivateName(TaggedParserAtomIndex index) const {
   return getParserAtom(index.toParserAtomIndex())->isPrivateName();
 }
 
+bool ParserAtomsTable::isIndex(TaggedParserAtomIndex index,
+                               uint32_t* indexp) const {
+  return getParserAtom(index)->isIndex(indexp);
+}
+
 bool ParserAtomsTable::toNumber(JSContext* cx, TaggedParserAtomIndex index,
                                 double* result) const {
   return getParserAtom(index)->toNumber(cx, result);

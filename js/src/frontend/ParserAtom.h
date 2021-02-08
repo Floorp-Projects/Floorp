@@ -410,13 +410,8 @@ class alignas(alignof(uint32_t)) ParserAtom {
     return mozilla::Range(twoByteChars(), length_);
   }
 
-  bool isIndex(uint32_t* indexp) const;
-  bool isIndex() const {
-    uint32_t index;
-    return isIndex(&index);
-  }
-
  private:
+  bool isIndex(uint32_t* indexp) const;
   bool isPrivateName() const;
 
  public:
@@ -853,6 +848,7 @@ class ParserAtomsTable {
 
   // Accessors for querying atom properties.
   bool isPrivateName(TaggedParserAtomIndex index) const;
+  bool isIndex(TaggedParserAtomIndex index, uint32_t* indexp) const;
 
   // Methods for atom.
   bool toNumber(JSContext* cx, TaggedParserAtomIndex index,

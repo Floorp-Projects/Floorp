@@ -126,6 +126,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   friend class AutoCheckUnstableEmitterScope;
 #endif
 
+  ParserAtomsTable& parserAtoms() { return compilationState.parserAtoms; }
+
   EmitterScope* innermostEmitterScope() const {
     MOZ_ASSERT(!unstableEmitterScope);
     return innermostEmitterScopeNoCheck();
