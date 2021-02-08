@@ -22,6 +22,7 @@ bugzilla-components:
     description: Generate metadata about source files and Bugzilla
     treeherder:
         symbol: Bugzilla
+        tier: 2
     index:
         product: source
         job-name: source-bugzilla-info
