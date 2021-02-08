@@ -945,6 +945,10 @@ pref("print.cups.monochrome.extra_settings", "");
 // Save the Printings after each print job
 pref("print.save_print_settings", true);
 
+// Enables the "more settings" in Print Preview to match previous
+// configuration.
+pref("print.more-settings.open", false);
+
 // Enables you to specify the amount of the paper that is to be treated
 // as unwriteable.  The print_edge_XXX and print_margin_XXX preferences
 // are treated as offsets that are added to this pref.
