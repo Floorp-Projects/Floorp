@@ -226,7 +226,11 @@ class MozbuildFileCommands(MachCommandBase):
         for p, m in sorted(self._get_files_info(["**"]).items()):
             if "BUG_COMPONENT" not in m:
                 missing_component.add(p)
-                print("Missing Bugzilla component: %s" % p)
+                print(
+                    "FileToBugzillaMappingError: Missing Bugzilla component: "
+                    "%s - Set the BUG_COMPONENT in the moz.build file to fix "
+                    "the issue." % p
+                )
                 continue
 
             c = m["BUG_COMPONENT"]
