@@ -5924,6 +5924,9 @@ nsHttpChannel::Cancel(nsresult status) {
 
   LOG(("nsHttpChannel::Cancel [this=%p status=%" PRIx32 "]\n", this,
        static_cast<uint32_t>(status)));
+  MOZ_ASSERT_IF(!(mConnectionInfo && mConnectionInfo->UsingConnect()) &&
+                    NS_SUCCEEDED(mStatus),
+                !AllowedErrorForHTTPSRRFallback(status));
   if (mCanceled) {
     LOG(("  ignoring; already canceled\n"));
     return NS_OK;

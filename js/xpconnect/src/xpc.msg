@@ -156,6 +156,7 @@ XPC_MSG_DEF(NS_ERROR_PROXY_SERVICE_UNAVAILABLE          , "The proxy is not avai
 XPC_MSG_DEF(NS_ERROR_PROXY_UNAVAILABLE_FOR_LEGAL_REASONS, "The desired destination is unavailable for legal reasons")
 
 XPC_MSG_DEF(NS_ERROR_NET_TIMEOUT                    , "The connection has timed out")
+XPC_MSG_DEF(NS_ERROR_NET_TIMEOUT_EXTERNAL           , "The request has been cancelled because of a timeout")
 XPC_MSG_DEF(NS_ERROR_OFFLINE                        , "The requested action could not be completed in the offline state")
 XPC_MSG_DEF(NS_ERROR_PORT_ACCESS_NOT_ALLOWED        , "Establishing a connection to an unsafe or otherwise banned port was prohibited")
 XPC_MSG_DEF(NS_ERROR_NET_RESET                      , "The connection was established, but no data was ever received")

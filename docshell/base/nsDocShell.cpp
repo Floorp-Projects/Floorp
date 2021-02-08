@@ -3602,7 +3602,8 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
     addHostPort = true;
     error = "netInterrupt";
   } else if (NS_ERROR_NET_TIMEOUT == aError ||
-             NS_ERROR_PROXY_GATEWAY_TIMEOUT == aError) {
+             NS_ERROR_PROXY_GATEWAY_TIMEOUT == aError ||
+             NS_ERROR_NET_TIMEOUT_EXTERNAL == aError) {
     NS_ENSURE_ARG_POINTER(aURI);
     // Get the host
     nsAutoCString host;
@@ -6381,6 +6382,7 @@ nsresult nsDocShell::FilterStatusForErrorPage(
   }
 
   if (aStatus == NS_ERROR_NET_TIMEOUT ||
+      aStatus == NS_ERROR_NET_TIMEOUT_EXTERNAL ||
       aStatus == NS_ERROR_PROXY_GATEWAY_TIMEOUT ||
       aStatus == NS_ERROR_REDIRECT_LOOP ||
       aStatus == NS_ERROR_UNKNOWN_SOCKET_TYPE ||

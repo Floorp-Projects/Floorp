@@ -92,9 +92,10 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
 
   // Get the local and remote address neqo needs it.
   NetAddr selfAddr;
-  if (NS_FAILED(mSocketTransport->GetSelfAddr(&selfAddr))) {
+  nsresult rv = mSocketTransport->GetSelfAddr(&selfAddr);
+  if (NS_FAILED(rv)) {
     LOG3(("Http3Session::Init GetSelfAddr failed [this=%p]", this));
-    return NS_ERROR_FAILURE;
+    return rv;
   }
   char buf[kIPv6CStrBufSize];
   selfAddr.ToStringBuffer(buf, kIPv6CStrBufSize);
@@ -114,9 +115,10 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
   }
 
   NetAddr peerAddr;
-  if (NS_FAILED(mSocketTransport->GetPeerAddr(&peerAddr))) {
+  rv = mSocketTransport->GetPeerAddr(&peerAddr);
+  if (NS_FAILED(rv)) {
     LOG3(("Http3Session::Init GetPeerAddr failed [this=%p]", this));
-    return NS_ERROR_FAILURE;
+    return rv;
   }
   peerAddr.ToStringBuffer(buf, kIPv6CStrBufSize);
 
@@ -142,7 +144,7 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
        peerAddrStr.get(), gHttpHandler->DefaultQpackTableSize(),
        gHttpHandler->DefaultHttp3MaxBlockedStreams(), this));
 
-  nsresult rv = NeqoHttp3Conn::Init(
+  rv = NeqoHttp3Conn::Init(
       mConnInfo->GetOrigin(), mConnInfo->GetNPNToken(), selfAddrStr,
       peerAddrStr, gHttpHandler->DefaultQpackTableSize(),
       gHttpHandler->DefaultHttp3MaxBlockedStreams(),

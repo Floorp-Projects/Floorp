@@ -448,7 +448,7 @@ TestHTTPAnswerRunnable::OnStartRequest(nsIRequest* aRequest) {
       nsresult httpsOnlyChannelStatus;
       httpsOnlyChannel->GetStatus(&httpsOnlyChannelStatus);
       if (httpsOnlyChannelStatus == NS_OK) {
-        httpsOnlyChannel->Cancel(NS_ERROR_NET_TIMEOUT);
+        httpsOnlyChannel->Cancel(NS_ERROR_NET_TIMEOUT_EXTERNAL);
       }
     }
   }
