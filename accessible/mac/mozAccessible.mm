@@ -810,14 +810,9 @@ struct RoleDescrComparator {
 }
 
 - (id)moxEditableAncestor {
-  for (id element = self; [element conformsToProtocol:@protocol(MOXAccessible)];
-       element = [element moxUnignoredParent]) {
-    if ([element isKindOfClass:[mozTextAccessible class]]) {
-      return element;
-    }
-  }
-
-  return nil;
+  return [self moxFindAncestor:^BOOL(id moxAcc, BOOL* stop) {
+    return [moxAcc isKindOfClass:[mozTextAccessible class]];
+  }];
 }
 
 - (id)moxHighestEditableAncestor {
@@ -962,12 +957,13 @@ struct RoleDescrComparator {
 }
 
 - (void)maybePostLiveRegionChanged {
-  for (id element = self; [element conformsToProtocol:@protocol(MOXAccessible)];
-       element = [element moxUnignoredParent]) {
-    if ([element moxIsLiveRegion]) {
-      [element moxPostNotification:@"AXLiveRegionChanged"];
-      return;
-    }
+  id<MOXAccessible> liveRegion =
+      [self moxFindAncestor:^BOOL(id<MOXAccessible> moxAcc, BOOL* stop) {
+        return [moxAcc moxIsLiveRegion];
+      }];
+
+  if (liveRegion) {
+    [liveRegion moxPostNotification:@"AXLiveRegionChanged"];
   }
 }
 

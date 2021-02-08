@@ -596,16 +596,12 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 }
 
 - (NSNumber*)moxIndex {
-  mozAccessible* parent = (mozAccessible*)[self moxUnignoredParent];
-  while (parent) {
-    if ([[parent moxRole] isEqualToString:@"AXOutline"]) {
-      break;
-    }
-    parent = (mozAccessible*)[parent moxUnignoredParent];
-  }
+  id<MOXAccessible> outline =
+      [self moxFindAncestor:^BOOL(id<MOXAccessible> moxAcc, BOOL* stop) {
+        return [[moxAcc moxRole] isEqualToString:@"AXOutline"];
+      }];
 
-  NSUInteger index =
-      [[(mozOutlineAccessible*)parent moxRows] indexOfObjectIdenticalTo:self];
+  NSUInteger index = [[outline moxRows] indexOfObjectIdenticalTo:self];
   return index == NSNotFound ? nil : @(index);
 }
 
