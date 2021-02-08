@@ -5405,8 +5405,10 @@ void HTMLMediaElement::DecodeError(const MediaResult& aError) {
     }
   } else if (mReadyState == HAVE_NOTHING) {
     NoSupportedMediaSourceError(aError.Description());
-  } else {
+  } else if (IsCORSSameOrigin()) {
     Error(MEDIA_ERR_DECODE, aError.Description());
+  } else {
+    Error(MEDIA_ERR_DECODE, "Failed to decode media"_ns);
   }
 }
 
