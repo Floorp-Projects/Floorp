@@ -118,11 +118,12 @@ SizeComputationInput::SizeComputationInput(nsIFrame* aFrame,
 
 SizeComputationInput::SizeComputationInput(
     nsIFrame* aFrame, gfxContext* aRenderingContext,
-    WritingMode aContainingBlockWritingMode, nscoord aContainingBlockISize)
+    WritingMode aContainingBlockWritingMode, nscoord aContainingBlockISize,
+    const Maybe<LogicalMargin>& aBorder, const Maybe<LogicalMargin>& aPadding)
     : SizeComputationInput(aFrame, aRenderingContext) {
   MOZ_ASSERT(!mFrame->IsTableColFrame());
   InitOffsets(aContainingBlockWritingMode, aContainingBlockISize,
-              mFrame->Type());
+              mFrame->Type(), {}, aBorder, aPadding);
 }
 
 // Initialize a <b>root</b> reflow input with a rendering context to
@@ -2490,18 +2491,6 @@ void SizeComputationInput::InitOffsets(WritingMode aCBWM, nscoord aPercentBasis,
   SetComputedLogicalBorderPadding(wm, border + ComputedLogicalPadding(wm));
 
   if (aFrameType == LayoutFrameType::Table) {
-    nsTableFrame* tableFrame = static_cast<nsTableFrame*>(mFrame);
-
-    if (tableFrame->IsBorderCollapse()) {
-      // border-collapsed tables don't use any of their padding, and
-      // only part of their border.  We need to do this here before we
-      // try to do anything like handling 'auto' widths,
-      // 'box-sizing', or 'auto' margins.
-      SetComputedLogicalPadding(wm, LogicalMargin(wm));
-      SetComputedLogicalBorderPadding(wm,
-                                      tableFrame->GetIncludedOuterBCBorder(wm));
-    }
-
     // The margin is inherited to the table wrapper frame via
     // the ::-moz-table-wrapper rule in ua.css.
     SetComputedLogicalMargin(wm, LogicalMargin(wm));
