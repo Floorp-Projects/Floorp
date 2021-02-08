@@ -58,7 +58,6 @@ LIVE_SITES = [
     "google",
     "google-accounts",
     "imdb-firefox",
-    "jianshu",
     "medium-article",
     "microsoft-support",
     "nytimes",

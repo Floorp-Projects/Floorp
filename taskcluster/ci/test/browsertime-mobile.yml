@@ -320,7 +320,6 @@ browsertime-tp6m-live:
                 - instagram
                 - imdb
                 - [imdb-firefox, imdb-f]
-                - jianshu
                 - [medium-article, medium]
                 - [microsoft-support, micros-sup]
                 - nytimes
