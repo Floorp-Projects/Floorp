@@ -271,7 +271,8 @@ class nsTableWrapperFrame : public nsContainerFrame {
       gfxContext* aRenderingContext, nsIFrame* aChildFrame,
       mozilla::WritingMode aWM, mozilla::LogicalSize aCBSize,
       nscoord aAvailableISize,
-      const mozilla::StyleSizeOverrides& aSizeOverrides) const;
+      const mozilla::StyleSizeOverrides& aSizeOverrides,
+      mozilla::ComputeSizeFlags aFlag) const;
 
  private:
   nsFrameList mCaptionFrames;
