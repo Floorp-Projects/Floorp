@@ -196,6 +196,14 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvLeafAtOffset(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+DocAccessiblePlatformExtChild::RecvAttributedTextForRange(
+    const uint64_t& aID, const int32_t& aStartOffset,
+    const uint64_t& aEndContainer, const int32_t& aEndOffset,
+    nsTArray<TextAttributesRun>* aAttributes) {
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvSelectRange(
     const uint64_t& aID, const int32_t& aStartOffset,
     const uint64_t& aEndContainer, const int32_t& aEndOffset) {
