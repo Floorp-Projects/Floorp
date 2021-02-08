@@ -171,49 +171,6 @@ class XDRBuffer<XDR_DECODE> : public XDRBufferBase {
   const JS::TranscodeRange buffer_;
 };
 
-class XDRCoderBase;
-
-// An AutoXDRTree is used to identify section encoded by an
-// XDRIncrementalEncoder.
-//
-// Its primary goal is to identify functions, such that we can first encode them
-// as a lazy BaseScript, and later replaced by them by their corresponding
-// bytecode once delazified.
-//
-// As a convenience, this is also used to identify the top-level of the content
-// encoded by an XDRIncrementalEncoder.
-//
-// Sections can be encoded any number of times in an XDRIncrementalEncoder, and
-// the latest encoded version would replace all the previous one.
-class MOZ_RAII AutoXDRTree {
- public:
-  // For a JSFunction, a tree key is defined as being:
-  //     script()->begin << 32 | script()->end
-  //
-  // Based on the invariant that |begin <= end|, we can make special
-  // keys, such as the top-level script.
-  using Key = uint64_t;
-
-  AutoXDRTree(XDRCoderBase* xdr, Key key);
-  ~AutoXDRTree();
-
-  // Indicate the lack of a key for the current tree.
-  static constexpr Key noKey = 0;
-
-  // Used to end the slices when there is no children.
-  static constexpr Key noSubTree = Key(1) << 32;
-
-  // Used as the root key of the tree in the hash map.
-  static constexpr Key topLevel = Key(2) << 32;
-
- private:
-  friend class XDRIncrementalEncoder;
-
-  Key key_;
-  AutoXDRTree* parent_;
-  XDRCoderBase* xdr_;
-};
-
 template <typename CharT>
 using XDRTranscodeString =
     mozilla::MaybeOneOf<const CharT*, js::UniquePtr<CharT[], JS::FreePolicy>>;
@@ -233,15 +190,6 @@ class XDRCoderBase {
   }
 
  public:
-  virtual AutoXDRTree::Key getTopLevelTreeKey() const {
-    return AutoXDRTree::noKey;
-  }
-  virtual AutoXDRTree::Key getTreeKey(JSFunction* fun) const {
-    return AutoXDRTree::noKey;
-  }
-  virtual void createOrReplaceSubTree(AutoXDRTree* child){};
-  virtual void endSubTree(){};
-
 #ifdef DEBUG
   // Record logical failures of XDR.
   JS::TranscodeResult resultCode() const { return resultCode_; }

@@ -397,9 +397,6 @@ XDRResult XDRState<mode>::codeFunction(MutableHandleFunction funp,
   if (mode == XDR_DECODE) {
     MOZ_ASSERT(!sourceObject);
     funp.set(nullptr);
-  } else if (getTreeKey(funp) != AutoXDRTree::noKey) {
-    MOZ_ASSERT(sourceObject);
-    scope = funp->enclosingScope();
   } else {
     MOZ_ASSERT(!sourceObject);
     MOZ_ASSERT(funp->enclosingScope()->is<GlobalScope>());
@@ -424,8 +421,6 @@ XDRResult XDRState<mode>::codeScript(MutableHandleScript scriptp) {
       [&] { MOZ_ASSERT(validateResultCode(cx(), resultCode())); });
 #endif
   auto guard = mozilla::MakeScopeExit([&] { scriptp.set(nullptr); });
-
-  AutoXDRTree scriptTree(this, getTopLevelTreeKey());
 
   if (mode == XDR_DECODE) {
     scriptp.set(nullptr);
@@ -521,23 +516,6 @@ XDRResult XDRState<mode>::codeFunctionStencil(
 
 template class js::XDRState<XDR_ENCODE>;
 template class js::XDRState<XDR_DECODE>;
-
-AutoXDRTree::AutoXDRTree(XDRCoderBase* xdr, AutoXDRTree::Key key)
-    : key_(key), parent_(this), xdr_(xdr) {
-  if (key_ != AutoXDRTree::noKey) {
-    xdr->createOrReplaceSubTree(this);
-  }
-}
-
-AutoXDRTree::~AutoXDRTree() {
-  if (key_ != AutoXDRTree::noKey) {
-    xdr_->endSubTree();
-  }
-}
-
-constexpr AutoXDRTree::Key AutoXDRTree::noKey;
-constexpr AutoXDRTree::Key AutoXDRTree::noSubTree;
-constexpr AutoXDRTree::Key AutoXDRTree::topLevel;
 
 XDRResult XDRIncrementalStencilEncoder::linearize(JS::TranscodeBuffer& buffer,
                                                   ScriptSource* ss) {
