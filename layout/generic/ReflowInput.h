@@ -161,7 +161,8 @@ struct SizeComputationInput {
    *    for resolving percentage margin values in the inline and block axes.
    * @return true if the margin is dependent on the containing block size.
    */
-  bool ComputeMargin(mozilla::WritingMode aCBWM, nscoord aPercentBasis);
+  bool ComputeMargin(mozilla::WritingMode aCBWM, nscoord aPercentBasis,
+                     mozilla::LayoutFrameType aFrameType);
 
   /**
    * Computes padding values from the specified padding style information, and
