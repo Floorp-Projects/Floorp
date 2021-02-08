@@ -130,7 +130,11 @@ struct SizeComputationInput {
 
   SizeComputationInput(nsIFrame* aFrame, gfxContext* aRenderingContext,
                        mozilla::WritingMode aContainingBlockWritingMode,
-                       nscoord aContainingBlockISize);
+                       nscoord aContainingBlockISize,
+                       const mozilla::Maybe<mozilla::LogicalMargin>& aBorder =
+                           mozilla::Nothing(),
+                       const mozilla::Maybe<mozilla::LogicalMargin>& aPadding =
+                           mozilla::Nothing());
 
 #ifdef DEBUG
   // Reflow trace methods.  Defined in nsFrame.cpp so they have access

@@ -303,8 +303,16 @@ nscoord nsTableWrapperFrame::ChildShrinkWrapISize(
     const StyleSizeOverrides& aSizeOverrides, ComputeSizeFlags aFlags) const {
   AutoMaybeDisableFontInflation an(aChildFrame);
 
+  Maybe<LogicalMargin> collapseBorder;
+  Maybe<LogicalMargin> collapsePadding;
+  if (aChildFrame == InnerTableFrame()) {
+    InnerTableFrame()->GetCollapsedBorderPadding(collapseBorder,
+                                                 collapsePadding);
+  }
+
   SizeComputationInput offsets(aChildFrame, aRenderingContext, aWM,
-                               aCBSize.ISize(aWM));
+                               aCBSize.ISize(aWM), collapseBorder,
+                               collapsePadding);
   LogicalSize marginSize = offsets.ComputedLogicalMargin(aWM).Size(aWM);
   LogicalSize bpSize = offsets.ComputedLogicalBorderPadding(aWM).Size(aWM);
 
@@ -568,11 +576,9 @@ void nsTableWrapperFrame::CreateReflowInputForInnerTable(
 
   Maybe<LogicalMargin> collapseBorder;
   Maybe<LogicalMargin> collapsePadding;
+  aTableFrame->GetCollapsedBorderPadding(collapseBorder, collapsePadding);
+
   Maybe<LogicalSize> cbSize;
-  if (InnerTableFrame()->IsBorderCollapse()) {
-    collapseBorder.emplace(InnerTableFrame()->GetIncludedOuterBCBorder(wm));
-    collapsePadding.emplace(wm);
-  }
   // Propagate our stored CB size if present, minus any margins.
   //
   // Note that inner table computed margins are always zero, they're inherited
