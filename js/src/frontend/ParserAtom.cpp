@@ -9,7 +9,7 @@
 #include <memory>  // std::uninitialized_fill_n
 #include <type_traits>
 
-#include "jsnum.h"
+#include "jsnum.h"  // CharsToNumber
 
 #include "frontend/CompilationInfo.h"
 #include "frontend/NameCollections.h"
@@ -690,6 +690,11 @@ bool ParserAtomsTable::isPrivateName(TaggedParserAtomIndex index) const {
   }
 
   return getParserAtom(index.toParserAtomIndex())->isPrivateName();
+}
+
+bool ParserAtomsTable::toNumber(JSContext* cx, TaggedParserAtomIndex index,
+                                double* result) const {
+  return getParserAtom(index)->toNumber(cx, result);
 }
 
 bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
