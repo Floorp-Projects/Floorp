@@ -853,6 +853,12 @@ class ParserAtomsTable {
   UniqueChars toPrintableString(JSContext* cx,
                                 TaggedParserAtomIndex index) const;
   UniqueChars toQuotedString(JSContext* cx, TaggedParserAtomIndex index) const;
+
+ public:
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  void dumpCharsNoQuote(js::GenericPrinter& out,
+                        TaggedParserAtomIndex index) const;
+#endif
 };
 
 // Lightweight version of ParserAtomsTable.
