@@ -17,7 +17,7 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { RemoteAgent } = ChromeUtils.import(
-  "chrome://remote/content/RemoteAgent.jsm"
+  "chrome://remote/content/components/RemoteAgent.jsm"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
