@@ -338,9 +338,9 @@ sphinxcontrib-jsmath==1.0.1 \
     # via
     #   -r requirements.in
     #   sphinx
-sphinxcontrib-mermaid==0.5.0 \
-    --hash=sha256:80a4754d71c3f66a5b4ccb320868eb12f5eb0f2d25102e77886ce7ce327ec827
-    # via -r requirements.in
+sphinxcontrib-mermaid==0.6.0 \
+    --hash=sha256:31a8842b0cc37251138b6ef513d90a837798136c30b06981408b6c4ab30013dc \
+    --hash=sha256:e23d7bf90603814cf099434576994558f1e083ae21c2d7d136412957dfd9ddb6
 sphinxcontrib-qthelp==1.0.3 \
     --hash=sha256:4c33767ee058b70dba89a6fc5c1892c0d57a54be67ddd3e7875a18d14cba5a72 \
     --hash=sha256:bd9fc24bcb748a8d51fd4ecaade681350aa63009a347a8c14e637895444dfab6
