@@ -67,3 +67,5 @@ TESTING_JS_MODULES.services.sync += [
     "modules-testing/rotaryengine.js",
     "modules-testing/utils.js",
 ]
+
+SPHINX_TREES["/services/sync"] = "docs"

@@ -21,7 +21,7 @@ categories:
         - dom/bindings/webidl
         - modules/libpref
         - remote
-        - services/common/services
+        - services
         - uriloader
         - widget/cocoa
         - code-quality
