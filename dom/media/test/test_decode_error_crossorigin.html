@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Invalid formats raise decode errors with default messages for CORS cross-origin media</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+const manager = new MediaTestManager;
+let gotErrSrcNotSupported = false;
+let gotErrDecode = false;
+
+function startTest(test, token) {
+  const is = function(a, b, name) {
+    SimpleTest.is(a, b, `${test.name}: ${name}`);
+  };
+  const v = document.createElement("video");
+  manager.started(token);
+  v.addEventListener("error", event => {
+    if (v.readyState == v.HAVE_NOTHING) {
+      is(v.error.code, MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED,
+        "Expected code for a load error");
+      is(v.error.message, "Failed to open media",
+        "Expected message for a load error");
+      gotErrSrcNotSupported = true;
+    } else {
+      is(v.error.code, MediaError.MEDIA_ERR_DECODE,
+        "Expected code for a decode error");
+      is(v.error.message, "Failed to decode media",
+        "Expected message for a decode error");
+      gotErrDecode = true;
+    }
+    manager.finished(token);
+  });
+
+  v.autoplay = true;
+
+  // CORS-cross-origin URL.
+  v.src = `http://example.com/tests/dom/media/test/${test.name}`;
+}
+
+gTestPrefs.push(["media.cache_size", 40000]);
+manager.onFinished = () => {
+  ok(gotErrSrcNotSupported, "At least one test led to src-not-supported");
+  ok(gotErrDecode, "At least one test led to a decode error");
+};
+manager.runTests(gErrorTests, startTest);
+</script>
+</pre>
+</body>
+</html>
