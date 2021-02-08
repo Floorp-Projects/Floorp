@@ -16,6 +16,13 @@ interface AddonsProvider {
      * from a previously cached response, defaults to true.
      * @param readTimeoutInSeconds optional timeout in seconds to use when fetching
      * available add-ons from a remote endpoint.
+     * @param language indicates in which language the translatable fields should be in, if no
+     * matching language is found then a fallback translation is returned using the default language.
+     * When it is null all translations available will be returned.
      */
-    suspend fun getAvailableAddons(allowCache: Boolean = true, readTimeoutInSeconds: Long? = null): List<Addon>
+    suspend fun getAvailableAddons(
+        allowCache: Boolean = true,
+        readTimeoutInSeconds: Long? = null,
+        language: String? = null
+    ): List<Addon>
 }

@@ -24,6 +24,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.verify
 import java.lang.IllegalArgumentException
 
@@ -63,7 +64,7 @@ class AddonMigrationTest {
         val addonCollectionProvider: AddonCollectionProvider = mock()
         val supportedAddons = listOf(Addon(addon1.id), Addon(addon2.id))
         whenever(
-            addonCollectionProvider.getAvailableAddons(anyBoolean(), eq(AMO_READ_TIMEOUT_IN_SECONDS))
+            addonCollectionProvider.getAvailableAddons(anyBoolean(), eq(AMO_READ_TIMEOUT_IN_SECONDS), language = anyString())
         ).thenReturn(supportedAddons)
 
         val listSuccessCallback = argumentCaptor<((List<WebExtension>) -> Unit)>()
@@ -164,7 +165,7 @@ class AddonMigrationTest {
         val addonCollectionProvider: AddonCollectionProvider = mock()
         // No supported add-on
         whenever(
-            addonCollectionProvider.getAvailableAddons(anyBoolean(), eq(AMO_READ_TIMEOUT_IN_SECONDS))
+            addonCollectionProvider.getAvailableAddons(anyBoolean(), eq(AMO_READ_TIMEOUT_IN_SECONDS), language = anyString())
         ).thenReturn(emptyList())
 
         val listSuccessCallback = argumentCaptor<((List<WebExtension>) -> Unit)>()

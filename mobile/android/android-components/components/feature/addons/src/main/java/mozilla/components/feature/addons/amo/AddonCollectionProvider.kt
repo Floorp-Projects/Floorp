@@ -37,6 +37,8 @@ internal const val DEFAULT_COLLECTION_USER = "mozilla"
 internal const val DEFAULT_COLLECTION_NAME = "7e8d6dc651b54ab385fb8791bf9dac"
 internal const val COLLECTION_FILE_NAME_PREFIX = "mozilla_components_addon_collection"
 internal const val COLLECTION_FILE_NAME = "${COLLECTION_FILE_NAME_PREFIX}_%s.json"
+internal const val COLLECTION_FILE_NAME_WITH_LANGUAGE = "${COLLECTION_FILE_NAME_PREFIX}_%s_%s.json"
+internal const val REGEX_FILE_NAMES = "$COLLECTION_FILE_NAME_PREFIX(_\\w+)?_%s.json"
 internal const val MINUTE_IN_MS = 60 * 1000
 internal const val DEFAULT_READ_TIMEOUT_IN_SECONDS = 20L
 internal const val PAGE_SIZE = 50
@@ -84,14 +86,24 @@ class AddonCollectionProvider(
      * @param readTimeoutInSeconds optional timeout in seconds to use when fetching
      * available add-ons from a remote endpoint. If not specified [DEFAULT_READ_TIMEOUT_IN_SECONDS]
      * will be used.
+     * @param language indicates in which language the translatable fields should be in, if no
+     * matching language is found then a fallback translation is returned using the default language.
+     * When it is null all translations available will be returned.
      * @throws IOException if the request failed, or could not be executed due to cancellation,
      * a connectivity problem or a timeout.
      */
     @Throws(IOException::class)
     @Suppress("NestedBlockDepth")
-    override suspend fun getAvailableAddons(allowCache: Boolean, readTimeoutInSeconds: Long?): List<Addon> {
-        val cachedAvailableAddons = if (allowCache && !cacheExpired(context)) {
-            readFromDiskCache()
+    override suspend fun getAvailableAddons(
+        allowCache: Boolean,
+        readTimeoutInSeconds: Long?,
+        language: String?
+    ): List<Addon> {
+        // We want to make sure we always use useFallbackFile = false here, as it warranties
+        // that we are trying to fetch the latest localized add-ons when the user changes
+        // language from the previous one.
+        val cachedAvailableAddons = if (allowCache && !cacheExpired(context, language, useFallbackFile = false)) {
+            readFromDiskCache(language, useFallbackFile = false)
         } else {
             null
         }
@@ -101,13 +113,13 @@ class AddonCollectionProvider(
         }
 
         return try {
-            fetchAvailableAddons(readTimeoutInSeconds)
+            fetchAvailableAddons(readTimeoutInSeconds, language)
         } catch (e: IOException) {
             logger.error("Failed to fetch available add-ons", e)
             if (allowCache) {
-                val cacheLastUpdated = getCacheLastUpdated(context)
+                val cacheLastUpdated = getCacheLastUpdated(context, language, useFallbackFile = true)
                 if (cacheLastUpdated > -1) {
-                    val cache = readFromDiskCache()
+                    val cache = readFromDiskCache(language, useFallbackFile = true)
                     cache?.let {
                         logger.info("Falling back to available add-ons cache from ${
                             SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'", Locale.US).format(cacheLastUpdated)
@@ -120,13 +132,19 @@ class AddonCollectionProvider(
         }
     }
 
-    private fun fetchAvailableAddons(readTimeoutInSeconds: Long?): List<Addon> {
+    private fun fetchAvailableAddons(readTimeoutInSeconds: Long?, language: String?): List<Addon> {
+        val langParam = if (!language.isNullOrEmpty()) {
+            "&lang=$language"
+        } else {
+            ""
+        }
         client.fetch(
             Request(
                 // NB: The trailing slash after addons is important to prevent a redirect and additional request
                 url = "$serverURL/$API_VERSION/accounts/account/$collectionUser/collections/$collectionName/addons/" +
                     "?page_size=$PAGE_SIZE" +
-                    "&sort=${sortOption.value}",
+                    "&sort=${sortOption.value}" +
+                    langParam,
                 readTimeout = Pair(readTimeoutInSeconds ?: DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
             )
         )
@@ -134,11 +152,11 @@ class AddonCollectionProvider(
             if (response.isSuccess) {
                 val responseBody = response.body.string(Charsets.UTF_8)
                 return try {
-                    JSONObject(responseBody).getAddons().also {
+                    JSONObject(responseBody).getAddons(language).also {
                         if (maxCacheAgeInMinutes > 0) {
-                            writeToDiskCache(responseBody)
+                            writeToDiskCache(responseBody, language)
                         }
-                        deleteUnusedCacheFiles()
+                        deleteUnusedCacheFiles(language)
                     }
                 } catch (e: JSONException) {
                     throw IOException(e)
@@ -175,17 +193,17 @@ class AddonCollectionProvider(
     }
 
     @VisibleForTesting
-    internal fun writeToDiskCache(collectionResponse: String) {
+    internal fun writeToDiskCache(collectionResponse: String, language: String?) {
         synchronized(diskCacheLock) {
-            getCacheFile(context).writeString { collectionResponse }
+            getCacheFile(context, language, useFallbackFile = false).writeString { collectionResponse }
         }
     }
 
     @VisibleForTesting
-    internal fun readFromDiskCache(): List<Addon>? {
+    internal fun readFromDiskCache(language: String?, useFallbackFile: Boolean): List<Addon>? {
         synchronized(diskCacheLock) {
-            return getCacheFile(context).readAndDeserialize {
-                JSONObject(it).getAddons()
+            return getCacheFile(context, language, useFallbackFile).readAndDeserialize {
+                JSONObject(it).getAddons(language)
             }
         }
     }
@@ -194,8 +212,9 @@ class AddonCollectionProvider(
      * Deletes cache files from previous (now unused) collections.
      */
     @VisibleForTesting
-    internal fun deleteUnusedCacheFiles() {
-        val currentCacheFileName = getCacheFileName()
+    internal fun deleteUnusedCacheFiles(language: String?) {
+        val currentCacheFileName = getBaseCacheFile(context, language, useFallbackFile = true).name
+
         context.filesDir
             .listFiles {
                 _, s -> s.startsWith(COLLECTION_FILE_NAME_PREFIX) && s != currentCacheFileName
@@ -207,26 +226,55 @@ class AddonCollectionProvider(
     }
 
     @VisibleForTesting
-    internal fun cacheExpired(context: Context): Boolean {
-        return getCacheLastUpdated(context) < Date().time - maxCacheAgeInMinutes * MINUTE_IN_MS
+    internal fun cacheExpired(context: Context, language: String?, useFallbackFile: Boolean): Boolean {
+        return getCacheLastUpdated(
+            context,
+            language,
+            useFallbackFile
+        ) < Date().time - maxCacheAgeInMinutes * MINUTE_IN_MS
     }
 
     @VisibleForTesting
-    internal fun getCacheLastUpdated(context: Context): Long {
-        val file = getBaseCacheFile(context)
+    internal fun getCacheLastUpdated(context: Context, language: String?, useFallbackFile: Boolean): Long {
+        val file = getBaseCacheFile(context, language, useFallbackFile)
         return if (file.exists()) file.lastModified() else -1
     }
 
-    private fun getCacheFile(context: Context): AtomicFile {
-        return AtomicFile(getBaseCacheFile(context))
-    }
-
-    private fun getBaseCacheFile(context: Context): File {
-        return File(context.filesDir, getCacheFileName())
+    private fun getCacheFile(context: Context, language: String?, useFallbackFile: Boolean): AtomicFile {
+        return AtomicFile(getBaseCacheFile(context, language, useFallbackFile))
     }
 
     @VisibleForTesting
-    internal fun getCacheFileName(): String {
+    internal fun getBaseCacheFile(context: Context, language: String?, useFallbackFile: Boolean): File {
+        var file = File(context.filesDir, getCacheFileName(language))
+        if (!file.exists() && useFallbackFile) {
+            // In situations, where users change languages and we can't retrieve the new one,
+            // we always want to fallback to the previous localized file.
+            // Try to find first available localized file.
+            val regex = Regex(REGEX_FILE_NAMES.format(getCollectionName()))
+            val fallbackFile = context.filesDir.listFiles()?.find { it.name.matches(regex) }
+
+            if (fallbackFile?.exists() == true) {
+                file = fallbackFile
+            }
+        }
+        return file
+    }
+
+    @VisibleForTesting
+    internal fun getCacheFileName(language: String? = ""): String {
+        val collection = getCollectionName()
+
+        val fileName = if (language.isNullOrEmpty()) {
+            COLLECTION_FILE_NAME.format(collection)
+        } else {
+            COLLECTION_FILE_NAME_WITH_LANGUAGE.format(language, collection)
+        }
+        return fileName.sanitizeFileName()
+    }
+
+    @VisibleForTesting
+    internal fun getCollectionName(): String {
         val collectionUser = collectionUser.sanitizeFileName()
         val collectionName = collectionName.sanitizeFileName()
 
@@ -234,13 +282,11 @@ class AddonCollectionProvider(
         // to do this for the default "mozilla" user so we don't break out of
         // the existing cache when we're introducing this. Plus mozilla is
         // already in the file name anyway.
-        val collection = if (collectionUser != DEFAULT_COLLECTION_USER) {
+        return if (collectionUser != DEFAULT_COLLECTION_USER) {
             "${collectionUser}_$collectionName"
         } else {
             collectionName
         }
-
-        return COLLECTION_FILE_NAME.format(collection).sanitizeFileName()
     }
 }
 
@@ -257,16 +303,19 @@ enum class SortOption(val value: String) {
     DATE_ADDED_DESC("-added")
 }
 
-internal fun JSONObject.getAddons(): List<Addon> {
+internal fun JSONObject.getAddons(language: String? = null): List<Addon> {
     val addonsJson = getJSONArray("results")
     return (0 until addonsJson.length()).map { index ->
-        addonsJson.getJSONObject(index).toAddons()
+        addonsJson.getJSONObject(index).toAddons(language)
     }
 }
 
-internal fun JSONObject.toAddons(): Addon {
+internal fun JSONObject.toAddons(language: String? = null): Addon {
     return with(getJSONObject("addon")) {
         val download = getDownload()
+        val safeLanguage = language?.toLowerCase(Locale.getDefault())
+        val summary = getSafeTranslations("summary", safeLanguage)
+        val isLanguageInTranslations = summary.containsKey(safeLanguage)
         Addon(
             id = getSafeString("guid"),
             authors = getAuthors(),
@@ -277,13 +326,17 @@ internal fun JSONObject.toAddons(): Addon {
             downloadUrl = download?.getDownloadUrl() ?: "",
             version = getCurrentVersion(),
             permissions = getPermissions(),
-            translatableName = getSafeMap("name"),
-            translatableDescription = getSafeMap("description"),
-            translatableSummary = getSafeMap("summary"),
+            translatableName = getSafeTranslations("name", safeLanguage),
+            translatableDescription = getSafeTranslations("description", safeLanguage),
+            translatableSummary = summary,
             iconUrl = getSafeString("icon_url"),
             siteUrl = getSafeString("url"),
             rating = getRating(),
-            defaultLocale = getSafeString("default_locale").ifEmpty { Addon.DEFAULT_LOCALE }
+            defaultLocale = (if (!safeLanguage.isNullOrEmpty() && isLanguageInTranslations) {
+                safeLanguage
+            } else {
+                getSafeString("default_locale").ifEmpty { Addon.DEFAULT_LOCALE }
+            }).toLowerCase(Locale.ROOT)
         )
     }
 }
@@ -370,7 +423,18 @@ internal fun JSONObject.getSafeJSONArray(key: String): JSONArray {
         getJSONArray(key)
     }
 }
-
+internal fun JSONObject.getSafeTranslations(valueKey: String, language: String?): Map<String, String> {
+    // We can have two different versions of the JSON structure for translatable fields:
+    // 1) A string with only one language, when we provide a language parameter.
+    // 2) An object containing all the languages available when a language parameter is NOT present.
+    // For this reason, we have to be specific about how we parse the JSON.
+    return if (get(valueKey) is String) {
+        val safeLanguage = (language ?: Addon.DEFAULT_LOCALE).toLowerCase(Locale.ROOT)
+        mapOf(safeLanguage to getSafeString(valueKey))
+    } else {
+        getSafeMap(valueKey)
+    }
+}
 internal fun JSONObject.getSafeMap(valueKey: String): Map<String, String> {
     return if (isNull(valueKey)) {
         emptyMap()
@@ -380,7 +444,7 @@ internal fun JSONObject.getSafeMap(valueKey: String): Map<String, String> {
 
         jsonObject.keys()
             .forEach { key ->
-                map[key] = jsonObject.getSafeString(key)
+                map[key.toLowerCase(Locale.ROOT)] = jsonObject.getSafeString(key)
             }
         map
     }

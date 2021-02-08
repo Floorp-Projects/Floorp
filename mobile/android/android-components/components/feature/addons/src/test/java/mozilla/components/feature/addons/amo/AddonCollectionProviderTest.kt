@@ -133,6 +133,77 @@ class AddonCollectionProviderTest {
     }
 
     @Test
+    fun `getAvailableAddons - with a language`() = runBlocking {
+        val client = prepareClient(loadResourceAsString("/localized_collection.json"))
+        val provider = AddonCollectionProvider(testContext, client = client)
+
+        val addons = provider.getAvailableAddons(language = "en")
+        val addon = addons.first()
+
+        assertTrue(addons.isNotEmpty())
+
+        // Add-on
+        assertEquals("uBlock0@raymondhill.net", addon.id)
+        assertEquals("2015-04-25T07:26:22Z", addon.createdAt)
+        assertEquals("2021-02-04T12:05:14Z", addon.updatedAt)
+        assertEquals(
+                "https://addons.cdn.mozilla.net/user-media/addon_icons/607/607454-64.png?modified=mcrushed",
+                addon.iconUrl
+        )
+        assertEquals(
+                "https://addons.mozilla.org/en-US/firefox/addon/ublock-origin/",
+                addon.siteUrl
+        )
+        assertEquals(
+                "3719054",
+                addon.downloadId
+        )
+        assertEquals(
+                "https://addons.mozilla.org/firefox/downloads/file/3719054/ublock_origin-1.33.2-an+fx.xpi",
+                addon.downloadUrl
+        )
+        assertEquals(
+                "dns",
+                addon.permissions.first()
+        )
+        assertEquals(
+                "uBlock Origin",
+                addon.translatableName["en"]
+        )
+
+        assertEquals(
+                "Finally, an efficient wide-spectrum content blocker. Easy on CPU and memory.",
+                addon.translatableSummary["en"]
+        )
+
+        assertTrue(addon.translatableDescription.getValue("en").isNotBlank())
+        assertTrue(addon.translatableDescription.getValue("en").isNotBlank())
+        assertEquals("1.33.2", addon.version)
+        assertEquals("en", addon.defaultLocale)
+
+        // Authors
+        assertEquals("11423598", addon.authors.first().id)
+        assertEquals("Raymond Hill", addon.authors.first().name)
+        assertEquals("gorhill", addon.authors.first().username)
+        assertEquals(
+                "https://addons.mozilla.org/en-US/firefox/user/11423598/",
+                addon.authors.first().url
+        )
+
+        // Ratings
+        assertEquals(4.7003F, addon.rating!!.average, 0.7003F)
+        assertEquals(13324, addon.rating!!.reviews)
+
+        verify(client).fetch(Request(
+                url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
+                        "7e8d6dc651b54ab385fb8791bf9dac/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}&lang=en",
+                readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+        ))
+
+        Unit
+    }
+
+    @Test
     fun `getAvailableAddons - read timeout can be configured`() = runBlocking {
         val mockedClient = prepareClient()
 
@@ -160,15 +231,15 @@ class AddonCollectionProviderTest {
 
         val provider = spy(AddonCollectionProvider(testContext, client = mockedClient))
         provider.getAvailableAddons(false)
-        verify(provider, never()).readFromDiskCache()
+        verify(provider, never()).readFromDiskCache(null, useFallbackFile = false)
 
-        whenever(provider.cacheExpired(testContext)).thenReturn(true)
+        whenever(provider.cacheExpired(testContext, null, useFallbackFile = false)).thenReturn(true)
         provider.getAvailableAddons(true)
-        verify(provider, never()).readFromDiskCache()
+        verify(provider, never()).readFromDiskCache(null, useFallbackFile = false)
 
-        whenever(provider.cacheExpired(testContext)).thenReturn(false)
+        whenever(provider.cacheExpired(testContext, null, useFallbackFile = false)).thenReturn(false)
         provider.getAvailableAddons(true)
-        verify(provider).readFromDiskCache()
+        verify(provider).readFromDiskCache(null, useFallbackFile = false)
         Unit
     }
 
@@ -199,16 +270,22 @@ class AddonCollectionProviderTest {
 
         try {
             // allowCache = true, cache present, but we fail to read
-            whenever(provider.getCacheLastUpdated(testContext)).thenReturn(Date().time)
+            whenever(provider.getCacheLastUpdated(testContext, null, useFallbackFile = false)).thenReturn(Date().time)
             provider.getAvailableAddons(allowCache = true)
             fail("Expected IOException")
         } catch (e: IOException) {
             assertSame(exception, e)
         }
 
+//        // allowCache = true, cache present for a fallback file, and reading successfully
+        whenever(provider.getCacheLastUpdated(testContext, null, useFallbackFile = true)).thenReturn(Date().time)
+        whenever(provider.readFromDiskCache(null, useFallbackFile = true)).thenReturn(cachedAddons)
+        assertSame(cachedAddons, provider.getAvailableAddons(allowCache = true))
+
         // allowCache = true, cache present, and reading successfully
-        whenever(provider.getCacheLastUpdated(testContext)).thenReturn(Date().time)
-        whenever(provider.readFromDiskCache()).thenReturn(cachedAddons)
+        whenever(provider.getCacheLastUpdated(testContext, null, useFallbackFile = false)).thenReturn(Date().time)
+        whenever(provider.cacheExpired(testContext, null, useFallbackFile = false)).thenReturn(false)
+        whenever(provider.readFromDiskCache(null, useFallbackFile = false)).thenReturn(cachedAddons)
         assertSame(cachedAddons, provider.getAvailableAddons(allowCache = true))
     }
 
@@ -221,10 +298,10 @@ class AddonCollectionProviderTest {
         val cachingProvider = spy(AddonCollectionProvider(testContext, client = mockedClient, maxCacheAgeInMinutes = 1))
 
         provider.getAvailableAddons()
-        verify(provider, never()).writeToDiskCache(jsonResponse)
+        verify(provider, never()).writeToDiskCache(jsonResponse, null)
 
         cachingProvider.getAvailableAddons()
-        verify(cachingProvider).writeToDiskCache(jsonResponse)
+        verify(cachingProvider).writeToDiskCache(jsonResponse, null)
     }
 
     @Test
@@ -235,7 +312,7 @@ class AddonCollectionProviderTest {
         val provider = spy(AddonCollectionProvider(testContext, client = mockedClient, maxCacheAgeInMinutes = 1))
 
         provider.getAvailableAddons()
-        verify(provider).deleteUnusedCacheFiles()
+        verify(provider).deleteUnusedCacheFiles(null)
     }
 
     @Test
@@ -253,30 +330,81 @@ class AddonCollectionProviderTest {
         assertTrue(collectionFile.exists())
 
         val provider = AddonCollectionProvider(testContext, client = prepareClient(), maxCacheAgeInMinutes = 1)
-        provider.deleteUnusedCacheFiles()
+        provider.deleteUnusedCacheFiles(null)
         assertTrue(regularFile.exists())
         assertTrue(regularDir.exists())
         assertFalse(collectionFile.exists())
     }
 
     @Test
+    fun `deleteUnusedCacheFiles - will not remove the fallback localized file`() {
+        val regularFile = File(testContext.filesDir, "test.json")
+        regularFile.createNewFile()
+        assertTrue(regularFile.exists())
+
+        val regularDir = File(testContext.filesDir, "testDir")
+        regularDir.mkdir()
+        assertTrue(regularDir.exists())
+
+        val provider = AddonCollectionProvider(testContext, client = prepareClient(), maxCacheAgeInMinutes = 1)
+        val enFile = File(testContext.filesDir, provider.getCacheFileName("en"))
+
+        enFile.createNewFile()
+
+        assertTrue(enFile.exists())
+
+        provider.deleteUnusedCacheFiles("es")
+
+        val file = provider.getBaseCacheFile(testContext, "es", useFallbackFile = true)
+
+        assertTrue(file.name.contains("en"))
+        assertTrue(file.exists())
+        assertEquals(enFile.name, file.name)
+        assertTrue(regularFile.exists())
+        assertTrue(regularDir.exists())
+        assertTrue(enFile.delete())
+        assertFalse(file.exists())
+        assertTrue(regularFile.delete())
+        assertTrue(regularDir.delete())
+    }
+
+    @Test
+    fun `getBaseCacheFile - will return a first localized file WHEN the provided language file is not available`() {
+        val provider = AddonCollectionProvider(testContext, client = prepareClient(), maxCacheAgeInMinutes = 1)
+        val enFile = File(testContext.filesDir, provider.getCacheFileName("en"))
+
+        enFile.createNewFile()
+
+        assertTrue(enFile.exists())
+
+        val file = provider.getBaseCacheFile(testContext, "es", useFallbackFile = true)
+
+        assertTrue(file.name.contains("en"))
+        assertTrue(file.exists())
+        assertEquals(enFile.name, file.name)
+
+        assertTrue(enFile.delete())
+        assertFalse(file.exists())
+    }
+
+    @Test
     fun `getAvailableAddons - cache expiration check`() {
         var provider = spy(AddonCollectionProvider(testContext, client = mock(), maxCacheAgeInMinutes = -1))
-        whenever(provider.getCacheLastUpdated(testContext)).thenReturn(Date().time)
-        assertTrue(provider.cacheExpired(testContext))
+        whenever(provider.getCacheLastUpdated(testContext, null, useFallbackFile = false)).thenReturn(Date().time)
+        assertTrue(provider.cacheExpired(testContext, null, useFallbackFile = false))
 
-        whenever(provider.getCacheLastUpdated(testContext)).thenReturn(-1)
-        assertTrue(provider.cacheExpired(testContext))
+        whenever(provider.getCacheLastUpdated(testContext, null, useFallbackFile = false)).thenReturn(-1)
+        assertTrue(provider.cacheExpired(testContext, null, useFallbackFile = false))
 
         provider = spy(AddonCollectionProvider(testContext, client = mock(), maxCacheAgeInMinutes = 10))
-        whenever(provider.getCacheLastUpdated(testContext)).thenReturn(-1)
-        assertTrue(provider.cacheExpired(testContext))
+        whenever(provider.getCacheLastUpdated(testContext, null, useFallbackFile = false)).thenReturn(-1)
+        assertTrue(provider.cacheExpired(testContext, null, useFallbackFile = false))
 
-        whenever(provider.getCacheLastUpdated(testContext)).thenReturn(Date().time - 60 * MINUTE_IN_MS)
-        assertTrue(provider.cacheExpired(testContext))
+        whenever(provider.getCacheLastUpdated(testContext, null, useFallbackFile = false)).thenReturn(Date().time - 60 * MINUTE_IN_MS)
+        assertTrue(provider.cacheExpired(testContext, null, useFallbackFile = false))
 
-        whenever(provider.getCacheLastUpdated(testContext)).thenReturn(Date().time + 60 * MINUTE_IN_MS)
-        assertFalse(provider.cacheExpired(testContext))
+        whenever(provider.getCacheLastUpdated(testContext, null, useFallbackFile = false)).thenReturn(Date().time + 60 * MINUTE_IN_MS)
+        assertFalse(provider.cacheExpired(testContext, null, useFallbackFile = false))
     }
 
     @Test

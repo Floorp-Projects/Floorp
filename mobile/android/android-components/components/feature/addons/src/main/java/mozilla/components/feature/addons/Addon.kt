@@ -320,6 +320,6 @@ data class Addon(
         /**
          * The default fallback locale in case the [Addon] does not have its own [Addon.defaultLocale].
          */
-        const val DEFAULT_LOCALE = "en-US"
+        const val DEFAULT_LOCALE = "en-us"
     }
 }
