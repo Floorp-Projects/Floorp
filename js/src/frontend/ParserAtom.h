@@ -22,6 +22,9 @@
 #include "vm/StringType.h"  // CompareChars, StringEqualsAscii
 
 namespace js {
+
+class StringBuffer;
+
 namespace frontend {
 
 struct CompilationAtomCache;
@@ -853,6 +856,7 @@ class ParserAtomsTable {
   UniqueChars toQuotedString(JSContext* cx, TaggedParserAtomIndex index) const;
   JSAtom* toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
                    CompilationAtomCache& atomCache) const;
+  bool appendTo(StringBuffer& buffer, TaggedParserAtomIndex index) const;
 
  public:
 #if defined(DEBUG) || defined(JS_JITSPEW)

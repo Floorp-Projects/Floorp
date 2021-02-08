@@ -14,6 +14,7 @@
 #include "frontend/CompilationInfo.h"
 #include "frontend/NameCollections.h"
 #include "frontend/StencilXdr.h"  // CanCopyDataToDisk
+#include "util/StringBuffer.h"    // StringBuffer
 #include "vm/JSContext.h"
 #include "vm/Printer.h"  // Sprinter, QuoteString
 #include "vm/Runtime.h"
@@ -706,6 +707,14 @@ JSAtom* ParserAtomsTable::toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
                                    CompilationAtomCache& atomCache) const {
   const auto* atom = getParserAtom(index);
   return atom->toJSAtom(cx, index, atomCache);
+}
+
+bool ParserAtomsTable::appendTo(StringBuffer& buffer,
+                                TaggedParserAtomIndex index) const {
+  const auto* atom = getParserAtom(index);
+  size_t length = atom->length();
+  return atom->hasLatin1Chars() ? buffer.append(atom->latin1Chars(), length)
+                                : buffer.append(atom->twoByteChars(), length);
 }
 
 bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,

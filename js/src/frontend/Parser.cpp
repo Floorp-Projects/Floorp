@@ -7421,8 +7421,7 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       // Synthesize a name for the lexical variable that will store the
       // private method body.
       StringBuffer storedMethodName(cx_);
-      if (!storedMethodName.append(
-              this->parserAtoms().getParserAtom(propAtom))) {
+      if (!storedMethodName.append(this->parserAtoms(), propAtom)) {
         return false;
       }
       switch (atype) {
