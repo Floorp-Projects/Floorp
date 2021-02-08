@@ -87,7 +87,6 @@ class nsCSSBorderRenderer final {
 
  public:
   nsCSSBorderRenderer(nsPresContext* aPresContext,
-                      const mozilla::dom::Document* aDocument,
                       DrawTarget* aDrawTarget, const Rect& aDirtyRect,
                       Rect& aOuterRect,
                       const mozilla::StyleBorderStyle* aBorderStyles,
@@ -121,9 +120,7 @@ class nsCSSBorderRenderer final {
  private:
   RectCornerRadii mBorderCornerDimensions;
 
-  // Target document to report warning
   nsPresContext* mPresContext;
-  const mozilla::dom::Document* mDocument;
 
   // destination DrawTarget and dirty rect
   DrawTarget* mDrawTarget;
