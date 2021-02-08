@@ -1322,36 +1322,11 @@ static XDRResult XDRAtomIndex(XDRState<mode>* xdr, uint32_t* index) {
 
 template <XDRMode mode>
 XDRResult js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp) {
-  if (!xdr->hasAtomMap() && !xdr->hasAtomTable()) {
+  if (!xdr->hasAtomTable()) {
     return XDRAtomData(xdr, atomp);
   }
 
-  if (mode == XDR_ENCODE) {
-    MOZ_ASSERT(xdr->hasAtomMap());
-
-    // Atom contents are encoded in a separate buffer, which is joined to the
-    // final result in XDRIncrementalEncoder::linearize. References to atoms
-    // are encoded as indices into the atom stream.
-    uint32_t atomIndex;
-    XDRAtomMap::AddPtr p = xdr->atomMap().lookupForAdd(atomp.get());
-    if (p) {
-      atomIndex = p->value();
-    } else {
-      xdr->switchToAtomBuf();
-      MOZ_TRY(XDRAtomData(xdr, atomp));
-      xdr->switchToMainBuf();
-
-      atomIndex = xdr->natoms();
-      xdr->natoms() += 1;
-      if (!xdr->atomMap().add(p, atomp.get(), atomIndex)) {
-        return xdr->fail(JS::TranscodeResult_Throw);
-      }
-    }
-    MOZ_TRY(XDRAtomIndex(xdr, &atomIndex));
-    return Ok();
-  }
-
-  MOZ_ASSERT(mode == XDR_DECODE && xdr->hasAtomTable());
+  MOZ_ASSERT(mode == XDR_DECODE);
 
   uint32_t atomIndex;
   MOZ_TRY(XDRAtomIndex(xdr, &atomIndex));

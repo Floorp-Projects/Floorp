@@ -43,7 +43,6 @@ using XDRResultT = mozilla::Result<T, JS::TranscodeResult>;
 using XDRResult = XDRResultT<mozilla::Ok>;
 
 using XDRAtomTable = JS::GCVector<PreBarriered<JSAtom*>>;
-using XDRAtomMap = JS::GCHashMap<PreBarriered<JSAtom*>, uint32_t>;
 
 class XDRBufferBase {
  public:
@@ -243,12 +242,8 @@ class XDRState : public XDRCoderBase {
     MOZ_CRASH("does not have scriptSourceObjectOut.");
   }
 
-  virtual bool hasAtomMap() const { return false; }
-  virtual XDRAtomMap& atomMap() { MOZ_CRASH("does not have atomMap"); }
-  virtual uint32_t& natoms() { MOZ_CRASH("does not have atomMap."); }
-
   // The number of chunks (BaseCompilationStencils) in the buffer.
-  virtual uint32_t& nchunks() { MOZ_CRASH("does not have atomMap."); }
+  virtual uint32_t& nchunks() { MOZ_CRASH("does not have nchunks."); }
 
   virtual bool hasAtomTable() const { return false; }
   virtual XDRAtomTable& atomTable() { MOZ_CRASH("does not have atomTable"); }
