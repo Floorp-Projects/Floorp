@@ -164,6 +164,11 @@ class WRUserData : public layers::LayerUserData,
   static UserDataKey sWRUserDataKey;
 };
 
+static void DestroyImageKey(void* aClosure) {
+  auto* key = static_cast<wr::ImageKey*>(aClosure);
+  delete key;
+}
+
 static RefPtr<SourceSurface> gWRGlyphAtlas[8];
 static LinkedList<WRUserData> gWRUsers;
 UserDataKey WRUserData::sWRUserDataKey;
@@ -221,11 +226,10 @@ static void PurgeWRGlyphAtlas() {
     auto* manager = user->mManager;
     for (size_t i = 0; i < 8; i++) {
       if (gWRGlyphAtlas[i]) {
-        uint32_t handle = (uint32_t)(uintptr_t)gWRGlyphAtlas[i]->GetUserData(
-            reinterpret_cast<UserDataKey*>(manager));
-        if (handle) {
-          manager->GetRenderRootStateManager()->AddImageKeyForDiscard(
-              wr::ImageKey{manager->WrBridge()->GetNamespace(), handle});
+        auto* key = static_cast<wr::ImageKey*>(gWRGlyphAtlas[i]->GetUserData(
+            reinterpret_cast<UserDataKey*>(manager)));
+        if (key) {
+          manager->GetRenderRootStateManager()->AddImageKeyForDiscard(*key);
         }
       }
     }
@@ -279,10 +283,12 @@ static already_AddRefed<SourceSurface> GetWRGlyphAtlas(DrawTarget& aDrawTarget,
   }
 
   // The atlas may exist, but an image key may not be assigned for it to
-  // the given layer manager.
+  // the given layer manager, or it may no longer be valid.
   auto* tdt = static_cast<layout::TextDrawTarget*>(&aDrawTarget);
   auto* manager = tdt->WrLayerManager();
-  if (!atlas->GetUserData(reinterpret_cast<UserDataKey*>(manager))) {
+  auto* imageKey = static_cast<wr::ImageKey*>(
+      atlas->GetUserData(reinterpret_cast<UserDataKey*>(manager)));
+  if (!imageKey || !manager->WrBridge()->MatchesNamespace(*imageKey)) {
     // No image key, so we need to map the atlas' data for transfer to WR.
     RefPtr<DataSourceSurface> dataSurface = atlas->GetDataSurface();
     if (!dataSurface) {
@@ -300,7 +306,7 @@ static already_AddRefed<SourceSurface> GetWRGlyphAtlas(DrawTarget& aDrawTarget,
     }
     // Assign the image key to the atlas.
     atlas->AddUserData(reinterpret_cast<UserDataKey*>(manager),
-                       (void*)(uintptr_t)result.value().mHandle, nullptr);
+                       new wr::ImageKey(result.ref()), DestroyImageKey);
     // Create a user data notification for when the layer manager is
     // destroyed so we can clean up any assigned image keys.
     WRUserData::Assign(manager);
@@ -318,9 +324,9 @@ static void DrawHexChar(uint32_t aDigit, Float aLeft, Float aTop,
     // manager for referencing the image.
     auto* tdt = static_cast<layout::TextDrawTarget*>(&aDrawTarget);
     auto* manager = tdt->WrLayerManager();
-    wr::ImageKey key = {manager->WrBridge()->GetNamespace(),
-                        (uint32_t)(uintptr_t)aAtlas->GetUserData(
-                            reinterpret_cast<UserDataKey*>(manager))};
+    auto* key = static_cast<wr::ImageKey*>(
+        aAtlas->GetUserData(reinterpret_cast<UserDataKey*>(manager)));
+    MOZ_ASSERT(key);
     // Transform the bounds of the atlas into the given orientation, and then
     // also transform a small clip rect which will be used to select the given
     // digit from the atlas.
@@ -341,7 +347,7 @@ static void DrawHexChar(uint32_t aDigit, Float aLeft, Float aTop,
       dest.height = fabs(dest.height);
     }
     // Finally, push the colored image with point filtering.
-    tdt->PushImage(key, bounds, dest, wr::ImageRendering::Pixelated,
+    tdt->PushImage(*key, bounds, dest, wr::ImageRendering::Pixelated,
                    wr::ToColorF(aColor));
   } else {
     // For the normal case, just draw the given digit from the atlas. Point
