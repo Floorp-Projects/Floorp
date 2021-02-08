@@ -129,6 +129,8 @@ browsertime-benchmark:
     raptor-subtests:
         - [speedometer, sp]
         - ares6
+        - [motionmark-animometer, mm-a]
+        - [motionmark-htmlsuite, mm-h]
     variants: ["fission"]
     apps: ["firefox"]
     treeherder-symbol: Btime()
