@@ -28,6 +28,8 @@
 #include "js/PropertySpec.h"
 #include "js/SourceText.h"  // JS::SourceText
 #include "nsCOMPtr.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsExceptionHandler.h"
 #include "nsIComponentManager.h"
 #include "mozilla/Module.h"
@@ -183,6 +185,8 @@ static nsresult MOZ_FORMAT_PRINTF(2, 3)
   va_end(ap);
   return NS_OK;
 }
+
+NS_IMPL_ISUPPORTS(mozJSComponentLoader, nsIMemoryReporter)
 
 mozJSComponentLoader::mozJSComponentLoader()
     : mModules(16),
@@ -505,6 +509,7 @@ void mozJSComponentLoader::FindTargetObject(JSContext* aCx,
 void mozJSComponentLoader::InitStatics() {
   MOZ_ASSERT(!sSelf);
   sSelf = new mozJSComponentLoader();
+  RegisterWeakMemoryReporter(sSelf);
 }
 
 void mozJSComponentLoader::Unload() {
@@ -515,6 +520,7 @@ void mozJSComponentLoader::Unload() {
 
 void mozJSComponentLoader::Shutdown() {
   MOZ_ASSERT(sSelf);
+  UnregisterWeakMemoryReporter(sSelf);
   sSelf = nullptr;
 }
 
@@ -538,6 +544,73 @@ size_t mozJSComponentLoader::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
   n += mLocations.ShallowSizeOfExcludingThis(aMallocSizeOf);
   n += SizeOfTableExcludingThis(mInProgressImports, aMallocSizeOf);
   return n;
+}
+
+// Memory report paths are split on '/', with each component displayed as a
+// separate layer of a visual tree. Any slashes which are meant to belong to a
+// particular path component, rather than be used to build a hierarchy,
+// therefore need to be replaced with backslashes, which are displayed as
+// slashes in the UI.
+//
+// If `aAnonymize` is true, this function also attempts to translate any file:
+// URLs to replace the path of the GRE directory with a placeholder containing
+// no private information, and strips all other file: URIs of everything upto
+// their last `/`.
+static nsAutoCString MangleURL(const char* aURL, bool aAnonymize) {
+  nsAutoCString url(aURL);
+
+  if (aAnonymize) {
+    static nsCString greDirURI;
+    if (greDirURI.IsEmpty()) {
+      nsCOMPtr<nsIFile> file;
+      Unused << NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(file));
+      if (file) {
+        nsCOMPtr<nsIURI> uri;
+        NS_NewFileURI(getter_AddRefs(uri), file);
+        if (uri) {
+          uri->GetSpec(greDirURI);
+          RunOnShutdown([&]() { greDirURI.Truncate(0); });
+        }
+      }
+    }
+
+    url.ReplaceSubstring(greDirURI, "<GREDir>/"_ns);
+
+    if (FindInReadable("file:"_ns, url)) {
+      if (StringBeginsWith(url, "jar:file:"_ns)) {
+        int32_t idx = url.RFindChar('!');
+        url = "jar:file://<anonymized>!"_ns + Substring(url, idx);
+      } else {
+        int32_t idx = url.RFindChar('/');
+        url = "file://<anonymized>/"_ns + Substring(url, idx);
+      }
+    }
+  }
+
+  url.ReplaceChar('/', '\\');
+  return url;
+}
+
+NS_IMETHODIMP
+mozJSComponentLoader::CollectReports(nsIHandleReportCallback* aHandleReport,
+                                     nsISupports* aData, bool aAnonymize) {
+  for (const auto& entry : mImports) {
+    nsAutoCString path("js-component-loader/modules/");
+    path.Append(MangleURL(entry.GetData()->location, aAnonymize));
+
+    aHandleReport->Callback(""_ns, path, KIND_NONHEAP, UNITS_COUNT, 1,
+                            "Loaded JS modules"_ns, aData);
+  }
+
+  for (const auto& entry : mModules) {
+    nsAutoCString path("js-component-loader/components/");
+    path.Append(MangleURL(entry.GetData()->location, aAnonymize));
+
+    aHandleReport->Callback(""_ns, path, KIND_NONHEAP, UNITS_COUNT, 1,
+                            "Loaded JS components"_ns, aData);
+  }
+
+  return NS_OK;
 }
 
 void mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
