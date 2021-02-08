@@ -50,8 +50,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.8.43';
-const pdfjsBuild = 'a447d0529';
+const pdfjsVersion = '2.8.61';
+const pdfjsBuild = '884c65c60';
 
 /***/ }),
 /* 1 */
@@ -145,7 +145,7 @@ class WorkerMessageHandler {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.8.43';
+    const workerVersion = '2.8.61';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -6587,7 +6587,12 @@ const ObjectLoader = function () {
             currentNode = this.xref.fetch(currentNode);
           } catch (ex) {
             if (!(ex instanceof _core_utils.MissingDataException)) {
-              throw ex;
+              (0, _util.warn)(`ObjectLoader._walk - requesting all data: "${ex}".`);
+              this.refSet = null;
+              const {
+                manager
+              } = this.xref.stream;
+              return manager.requestAllChunks();
             }
 
             nodesToRevisit.push(currentNode);
@@ -21598,6 +21603,8 @@ var _cmap = __w_pdfjs_require__(28);
 
 var _primitives = __w_pdfjs_require__(5);
 
+var _stream = __w_pdfjs_require__(12);
+
 var _fonts = __w_pdfjs_require__(29);
 
 var _encodings = __w_pdfjs_require__(32);
@@ -21619,8 +21626,6 @@ var _image_utils = __w_pdfjs_require__(24);
 var _bidi = __w_pdfjs_require__(41);
 
 var _colorspace = __w_pdfjs_require__(23);
-
-var _stream = __w_pdfjs_require__(12);
 
 var _glyphlist = __w_pdfjs_require__(33);
 
@@ -22541,7 +22546,7 @@ class PartialEvaluator {
     try {
       preEvaluatedFont = this.preEvaluateFont(font);
     } catch (reason) {
-      (0, _util.warn)(`loadFont - ignoring preEvaluateFont errors: "${reason}".`);
+      (0, _util.warn)(`loadFont - preEvaluateFont failed: "${reason}".`);
       return errorFont();
     }
 
@@ -22612,6 +22617,7 @@ class PartialEvaluator {
       this.handler.send("UnsupportedFeature", {
         featureId: _util.UNSUPPORTED_FEATURES.errorFontTranslate
       });
+      (0, _util.warn)(`loadFont - translateFont failed: "${reason}".`);
 
       try {
         var fontFile3 = descriptor && descriptor.get("FontFile3");
@@ -24653,7 +24659,18 @@ class PartialEvaluator {
       throw new _util.FormatError("invalid font name");
     }
 
-    var fontFile = descriptor.get("FontFile", "FontFile2", "FontFile3");
+    let fontFile;
+
+    try {
+      fontFile = descriptor.get("FontFile", "FontFile2", "FontFile3");
+    } catch (ex) {
+      if (!this.options.ignoreErrors) {
+        throw ex;
+      }
+
+      (0, _util.warn)(`translateFont - fetching "${fontName.name}" font file: "${ex}".`);
+      fontFile = new _stream.NullStream();
+    }
 
     if (fontFile) {
       if (fontFile.dict) {
