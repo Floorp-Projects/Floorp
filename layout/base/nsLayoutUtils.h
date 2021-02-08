@@ -316,7 +316,8 @@ class nsLayoutUtils {
   /**
    * Returns the placeholder size for when the scrollbar is unthemed.
    */
-  static mozilla::CSSIntCoord UnthemedScrollbarSize(mozilla::StyleScrollbarWidth);
+  static mozilla::CSSIntCoord UnthemedScrollbarSize(
+      mozilla::StyleScrollbarWidth);
 
   /**
    * The inverse of GetStyleFrame. Returns |aStyleFrame| unless it is an inner
@@ -2533,17 +2534,20 @@ class nsLayoutUtils {
       const nsSize* aOverrideScrollPortSize = nullptr);
 
   /**
-   * Calculate the composition size for the root scroll frame of the root
-   * content document.
-   * @param aFrame A frame in the root content document (or a descendant of it).
-   * @param aIsRootContentDocRootScrollFrame Whether aFrame is already the root
-   *          scroll frame of the root content document. In this case we just
-   *          use aFrame's own composition size.
+   * Calculate a size suitable for bounding the size of the composition bounds
+   * of scroll frames in the current process. This should be at most the
+   * composition size of the cross-process RCD-RSF, but it may be a tighter
+   * bounding size.
+   * @param aFrame A frame in the (in-process) root content document (or a
+   *          descendant of it).
+   * @param aIsRootContentDocRootScrollFrame Whether aFrame is the root
+   *          scroll frame of the *cross-process* root content document.
+   *          In this case we just use aFrame's own composition size.
    * @param aMetrics A partially populated FrameMetrics for aFrame. Must have at
    *          least mCompositionBounds, mCumulativeResolution, and
    *          mDevPixelsPerCSSPixel set.
    */
-  static CSSSize CalculateRootCompositionSize(
+  static CSSSize CalculateBoundingCompositionSize(
       const nsIFrame* aFrame, bool aIsRootContentDocRootScrollFrame,
       const FrameMetrics& aMetrics);
 

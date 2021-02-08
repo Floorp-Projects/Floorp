@@ -4833,7 +4833,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(
           aLayerMetrics.GetCompositionSizeWithoutDynamicToolbar());
       needToReclampScroll = true;
     }
-    Metrics().SetRootCompositionSize(aLayerMetrics.GetRootCompositionSize());
+    Metrics().SetBoundingCompositionSize(
+        aLayerMetrics.GetBoundingCompositionSize());
     Metrics().SetPresShellResolution(aLayerMetrics.GetPresShellResolution());
     Metrics().SetCumulativeResolution(aLayerMetrics.GetCumulativeResolution());
     mScrollMetadata.SetHasScrollgrab(aScrollMetadata.GetHasScrollgrab());
