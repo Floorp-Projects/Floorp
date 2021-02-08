@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{
-    AlphaType, ColorDepth, ColorF, ColorU,
+    AlphaType, ColorDepth, ColorF, ColorU, RasterSpace,
     ImageKey as ApiImageKey, ImageRendering,
     PremultipliedColorF, Shadow, YuvColorSpace, ColorRange, YuvFormat,
 };
@@ -327,7 +327,12 @@ impl InternablePrimitive for Image {
 }
 
 impl CreateShadow for Image {
-    fn create_shadow(&self, shadow: &Shadow) -> Self {
+    fn create_shadow(
+        &self,
+        shadow: &Shadow,
+        _: bool,
+        _: RasterSpace,
+    ) -> Self {
         Image {
             tile_spacing: self.tile_spacing,
             stretch_size: self.stretch_size,

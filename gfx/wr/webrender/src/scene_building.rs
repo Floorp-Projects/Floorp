@@ -294,8 +294,6 @@ struct PictureChainBuilder {
     spatial_node_index: SpatialNodeIndex,
     /// Prim flags for any pictures in this chain
     flags: PrimitiveFlags,
-    /// Whether client requested screen or local raster space
-    requested_raster_space: RasterSpace,
 }
 
 impl PictureChainBuilder {
@@ -303,7 +301,6 @@ impl PictureChainBuilder {
     fn from_prim_list(
         prim_list: PrimitiveList,
         flags: PrimitiveFlags,
-        requested_raster_space: RasterSpace,
         spatial_node_index: SpatialNodeIndex,
     ) -> Self {
         PictureChainBuilder {
@@ -312,7 +309,6 @@ impl PictureChainBuilder {
             },
             spatial_node_index,
             flags,
-            requested_raster_space,
         }
     }
 
@@ -320,7 +316,6 @@ impl PictureChainBuilder {
     fn from_instance(
         instance: PrimitiveInstance,
         flags: PrimitiveFlags,
-        requested_raster_space: RasterSpace,
         spatial_node_index: SpatialNodeIndex,
     ) -> Self {
         PictureChainBuilder {
@@ -328,7 +323,6 @@ impl PictureChainBuilder {
                 instance,
             },
             flags,
-            requested_raster_space,
             spatial_node_index,
         }
     }
@@ -368,7 +362,6 @@ impl PictureChainBuilder {
                 context_3d,
                 true,
                 self.flags,
-                self.requested_raster_space,
                 prim_list,
                 self.spatial_node_index,
                 options,
@@ -388,7 +381,6 @@ impl PictureChainBuilder {
             },
             spatial_node_index: self.spatial_node_index,
             flags: self.flags,
-            requested_raster_space: self.requested_raster_space,
         }
     }
 
@@ -415,7 +407,6 @@ impl PictureChainBuilder {
                         Picture3DContext::Out,
                         true,
                         self.flags,
-                        self.requested_raster_space,
                         prim_list,
                         self.spatial_node_index,
                         PictureOptions::default(),
@@ -460,6 +451,9 @@ pub struct SceneBuilder<'a> {
 
     /// Stack of spatial node indices forming containing block for 3d contexts
     containing_block_stack: Vec<SpatialNodeIndex>,
+
+    /// Stack of requested raster spaces for stacking contexts
+    raster_space_stack: Vec<RasterSpace>,
 
     /// Maintains state for any currently active shadows
     pending_shadow_items: VecDeque<ShadowItem>,
@@ -544,6 +538,7 @@ impl<'a> SceneBuilder<'a> {
             pending_shadow_items: VecDeque::new(),
             sc_stack: Vec::new(),
             containing_block_stack: Vec::new(),
+            raster_space_stack: vec![RasterSpace::Screen],
             prim_store: PrimitiveStore::new(&stats.prim_store_stats),
             clip_store: ClipStore::new(),
             interners,
@@ -1742,6 +1737,9 @@ impl<'a> SceneBuilder<'a> {
     ) -> StackingContextInfo {
         profile_scope!("push_stacking_context");
 
+        // Push current requested raster space on stack for prims to access
+        self.raster_space_stack.push(requested_raster_space);
+
         // Get the transform-style of the parent stacking context,
         // which determines if we *might* need to draw this on
         // an intermediate surface for plane splitting purposes.
@@ -1899,7 +1897,6 @@ impl<'a> SceneBuilder<'a> {
             self.sc_stack.push(FlattenedStackingContext {
                 prim_list: PrimitiveList::empty(),
                 prim_flags,
-                requested_raster_space,
                 spatial_node_index,
                 clip_chain_id,
                 composite_ops,
@@ -1919,6 +1916,9 @@ impl<'a> SceneBuilder<'a> {
         info: StackingContextInfo,
     ) {
         profile_scope!("pop_stacking_context");
+
+        // Pop off current raster space (pushed unconditionally in push_stacking_context)
+        self.raster_space_stack.pop().unwrap();
 
         // If the stacking context formed a containing block, pop off the stack
         if info.pop_containing_block {
@@ -1971,7 +1971,6 @@ impl<'a> SceneBuilder<'a> {
                         Picture3DContext::In { root_data: None, ancestor_index },
                         true,
                         stacking_context.prim_flags,
-                        stacking_context.requested_raster_space,
                         stacking_context.prim_list,
                         stacking_context.spatial_node_index,
                         PictureOptions::default(),
@@ -1988,7 +1987,6 @@ impl<'a> SceneBuilder<'a> {
                 PictureChainBuilder::from_instance(
                     instance,
                     stacking_context.prim_flags,
-                    stacking_context.requested_raster_space,
                     stacking_context.spatial_node_index,
                 )
             }
@@ -1997,7 +1995,6 @@ impl<'a> SceneBuilder<'a> {
                     PictureChainBuilder::from_prim_list(
                         stacking_context.prim_list,
                         stacking_context.prim_flags,
-                        stacking_context.requested_raster_space,
                         stacking_context.spatial_node_index,
                     )
                 } else {
@@ -2013,7 +2010,6 @@ impl<'a> SceneBuilder<'a> {
                             Picture3DContext::Out,
                             true,
                             stacking_context.prim_flags,
-                            stacking_context.requested_raster_space,
                             stacking_context.prim_list,
                             stacking_context.spatial_node_index,
                             PictureOptions::default(),
@@ -2030,7 +2026,6 @@ impl<'a> SceneBuilder<'a> {
                     PictureChainBuilder::from_instance(
                         instance,
                         stacking_context.prim_flags,
-                        stacking_context.requested_raster_space,
                         stacking_context.spatial_node_index,
                     )
                 }
@@ -2074,7 +2069,6 @@ impl<'a> SceneBuilder<'a> {
                     },
                     true,
                     stacking_context.prim_flags,
-                    stacking_context.requested_raster_space,
                     prim_list,
                     stacking_context.spatial_node_index,
                     PictureOptions::default(),
@@ -2091,7 +2085,6 @@ impl<'a> SceneBuilder<'a> {
             source = PictureChainBuilder::from_instance(
                 instance,
                 stacking_context.prim_flags,
-                stacking_context.requested_raster_space,
                 stacking_context.spatial_node_index,
             );
         }
@@ -2534,30 +2527,35 @@ impl<'a> SceneBuilder<'a> {
                                 self.create_shadow_prim(
                                     &pending_shadow,
                                     pending_image,
+                                    blur_is_noop,
                                 )
                             }
                             ShadowItem::LineDecoration(ref pending_line_dec) => {
                                 self.create_shadow_prim(
                                     &pending_shadow,
                                     pending_line_dec,
+                                    blur_is_noop,
                                 )
                             }
                             ShadowItem::NormalBorder(ref pending_border) => {
                                 self.create_shadow_prim(
                                     &pending_shadow,
                                     pending_border,
+                                    blur_is_noop,
                                 )
                             }
                             ShadowItem::Primitive(ref pending_primitive) => {
                                 self.create_shadow_prim(
                                     &pending_shadow,
                                     pending_primitive,
+                                    blur_is_noop,
                                 )
                             }
                             ShadowItem::TextRun(ref pending_text_run) => {
                                 self.create_shadow_prim(
                                     &pending_shadow,
                                     pending_text_run,
+                                    blur_is_noop,
                                 )
                             }
                             _ => {
@@ -2608,7 +2606,6 @@ impl<'a> SceneBuilder<'a> {
                                 Picture3DContext::Out,
                                 false,
                                 PrimitiveFlags::IS_BACKFACE_VISIBLE,
-                                RasterSpace::Local(1.0),
                                 prim_list,
                                 pending_shadow.spatial_node_index,
                                 options,
@@ -2679,6 +2676,7 @@ impl<'a> SceneBuilder<'a> {
         &mut self,
         pending_shadow: &PendingShadow,
         pending_primitive: &PendingPrimitive<P>,
+        blur_is_noop: bool,
     ) -> (PrimitiveInstance, LayoutPrimitiveInfo, SpatialNodeIndex)
     where
         P: InternablePrimitive + CreateShadow,
@@ -2704,7 +2702,11 @@ impl<'a> SceneBuilder<'a> {
             &info,
             pending_primitive.spatial_node_index,
             pending_primitive.clip_chain_id,
-            pending_primitive.prim.create_shadow(&pending_shadow.shadow),
+            pending_primitive.prim.create_shadow(
+                &pending_shadow.shadow,
+                blur_is_noop,
+                self.raster_space_stack.last().cloned().unwrap(),
+            ),
         );
 
         (shadow_prim_instance, info, pending_primitive.spatial_node_index)
@@ -3156,10 +3158,18 @@ impl<'a> SceneBuilder<'a> {
                 })
                 .collect();
 
+            // Query the current requested raster space (stack handled by push/pop
+            // stacking context).
+            let requested_raster_space = self.raster_space_stack
+                .last()
+                .cloned()
+                .unwrap();
+
             TextRun {
                 glyphs: Arc::new(glyphs),
                 font,
                 shadow: false,
+                requested_raster_space,
             }
         };
 
@@ -3274,7 +3284,6 @@ impl<'a> SceneBuilder<'a> {
         };
 
         let backdrop_spatial_node_index = self.prim_store.pictures[backdrop_pic_index.0].spatial_node_index;
-        let requested_raster_space = self.sc_stack.last().expect("no active stacking context").requested_raster_space;
 
         let mut instance = self.create_primitive(
             info,
@@ -3315,7 +3324,6 @@ impl<'a> SceneBuilder<'a> {
                     Picture3DContext::Out,
                     true,
                     prim_flags,
-                    requested_raster_space,
                     prim_list,
                     backdrop_spatial_node_index,
                     PictureOptions {
@@ -3335,7 +3343,6 @@ impl<'a> SceneBuilder<'a> {
         let mut source = PictureChainBuilder::from_instance(
             instance,
             info.flags,
-            requested_raster_space,
             backdrop_spatial_node_index,
         );
 
@@ -3540,7 +3547,12 @@ impl<'a> SceneBuilder<'a> {
 
 
 pub trait CreateShadow {
-    fn create_shadow(&self, shadow: &Shadow) -> Self;
+    fn create_shadow(
+        &self,
+        shadow: &Shadow,
+        blur_is_noop: bool,
+        current_raster_space: RasterSpace,
+    ) -> Self;
 }
 
 pub trait IsVisible {
@@ -3578,10 +3590,6 @@ struct FlattenedStackingContext {
 
     /// Primitive instance flags for compositing this stacking context
     prim_flags: PrimitiveFlags,
-
-    /// Whether or not the caller wants this drawn in
-    /// screen space (quality) or local space (performance)
-    requested_raster_space: RasterSpace,
 
     /// The positioning node for this stacking context
     spatial_node_index: SpatialNodeIndex,
@@ -3677,7 +3685,6 @@ impl FlattenedStackingContext {
                 flat_items_context_3d,
                 true,
                 self.prim_flags,
-                self.requested_raster_space,
                 mem::replace(&mut self.prim_list, PrimitiveList::empty()),
                 self.spatial_node_index,
                 PictureOptions::default(),
