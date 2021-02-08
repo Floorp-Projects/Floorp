@@ -42,6 +42,7 @@ import org.hamcrest.Matcher
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.helpers.idlingresource.BottomSheetBehaviorStateIdlingResource
@@ -326,6 +327,11 @@ private fun threeDotMenu() = onView(withId(R.id.tab_tray_overflow))
 
 private fun assertExistingOpenTabs(title: String) {
     try {
+        mDevice.findObject(UiSelector()
+            .resourceId("$packageName:id/mozac_browser_tabstray_title")
+            .textContains(title))
+            .waitForExists(waitingTime)
+
         tab(title).check(matches(isDisplayed()))
     } catch (e: NoMatchingViewException) {
         onView(withId(R.id.tabsTray)).perform(

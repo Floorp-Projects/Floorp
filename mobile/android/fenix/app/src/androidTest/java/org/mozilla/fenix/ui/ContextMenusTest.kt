@@ -69,6 +69,7 @@ class ContextMenusTest {
             snackBarButtonClick("Switch")
             verifyUrl(genericURL.url.toString())
         }.openTabDrawer {
+            verifyNormalModeSelected()
             verifyExistingOpenTabs("Test_Page_1")
             verifyExistingOpenTabs("Test_Page_4")
         }
