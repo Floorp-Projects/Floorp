@@ -77,12 +77,6 @@ class DebuggerPanel {
 
     registerStoreObserver(this._store, this._onDebuggerStateChange.bind(this));
 
-    const resourceWatcher = this.toolbox.resourceWatcher;
-    await resourceWatcher.watchResources(
-      [resourceWatcher.TYPES.ERROR_MESSAGE],
-      { onAvailable: actions.addExceptionFromResources }
-    );
-
     return this;
   }
 
@@ -273,11 +267,6 @@ class DebuggerPanel {
   }
 
   destroy() {
-    const resourceWatcher = this.toolbox.resourceWatcher;
-    resourceWatcher.unwatchResources([resourceWatcher.TYPES.ERROR_MESSAGE], {
-      onAvailable: this._actions.addExceptionFromResources,
-    });
-
     this.panelWin.Debugger.destroy();
     this.emit("destroyed");
   }
