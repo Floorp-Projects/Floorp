@@ -14,9 +14,40 @@
 <div id="output"></div>
 <script class="testbody" type="text/javascript">
 
-  var output = document.getElementById("output");
-
   var worker;
+  var finish = false;
+  var bc = new BroadcastChannel("suspendWindow");
+  bc.onmessage = (msgEvent) => {
+    var msg = msgEvent.data;
+    var command = msg.command;
+    if (command == "startWorker") {
+      startWorker();
+    } else if (command == "navigate") {
+      window.location = "suspend_blank.html";
+    } else if (command == "finish") {
+      finish = true;
+      terminateWorker();
+      bc.postMessage({command: "finished"});
+      bc.close();
+      window.close();
+    }
+  }
+
+  function messageCallback(data) {
+    if (finish) {
+      return;
+    }
+    bc.postMessage({command: "messageCallback", data});
+  }
+
+  function errorCallback(msg) {
+    if (finish) {
+      return;
+    }
+    bc.postMessage({command: "errorCallback", data: msg});
+  }
+
+  var output = document.getElementById("output");
 
   function terminateWorker() {
     if (worker) {
@@ -25,7 +56,7 @@
     }
   }
 
-  function startWorker(messageCallback, errorCallback) {
+  function startWorker() {
     var lastData;
     worker = new Worker("suspend_worker.js");
 
@@ -39,6 +70,10 @@
       this.terminate();
       errorCallback(event.message);
     };
+  }
+
+  window.onload = () => {
+    bc.postMessage({command: "loaded"});
   }
 
 </script>

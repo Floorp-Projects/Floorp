@@ -18,51 +18,89 @@
 
   SimpleTest.waitForExplicitFinish();
 
-  const BLANK_URI = location.href.replace("test_suspend.html", "blank.html").split("?")[0];
+  /**
+   * - main page tells subpage to call startWorker()
+   * - subpage starts worker
+   * - worker calls setInterval() and keeps calling postMessage()
+   * - onmessage(), as setup by the subpage, calls messageCallback
+   * - when messageCallback gets called more than 25 times
+   *    - subpage gets navigated to blank.html
+   * - blank page posts message to main page, and main page calls suspendCallback()
+   * - suspendCallback() schedules waitInterval() to be fired off every second
+   * - after 5 times, it clears the interval and navigates subpage back
+   * - suspend_window subpage starts receiving messages again and
+   *    does a final call to messageCallback()
+   * - finishTest() is called
+   */
 
   var lastCount;
 
   var suspended = false;
   var resumed = false;
   var finished = false;
+  var suspendBlankPageCurrentlyShowing = false;
 
   var interval;
   var oldMessageCount;
   var waitCount = 0;
 
-  var testWin = window.open("suspend_window.html", "testWin");
-  testWin.onload = testWinLoaded;
-
-  window.addEventListener("message", msg => {
-    if (suspended) {
-      badOnloadCallback();
-    } else {
-      suspendCallback();
+  var bcSuspendWindow = new BroadcastChannel("suspendWindow");
+  bcSuspendWindow.onmessage = (msgEvent) => {
+    var msg = msgEvent.data;
+    var command = msg.command;
+    var data = msg.data;
+    if (command == "loaded") {
+      if (finished) {
+        return;
+      }
+      bcSuspendWindow.postMessage({command: "startWorker"});
+    } else if (command == "messageCallback") {
+      messageCallback(data);
+    } else if (command == "errorCallback") {
+      errorCallback(data);
+    } else if (command == "finished") {
+      SimpleTest.finish();
     }
-  })
+  }
+
+  var bcSuspendBlank = new BroadcastChannel("suspendBlank");
+  bcSuspendBlank.onmessage = (msgEvent) => {
+    var msg = msgEvent.data;
+    var command = msg.command;
+    if (command == "loaded") {
+      suspendBlankPageCurrentlyShowing = true;
+      if (suspended) {
+        badOnloadCallback();
+      } else {
+        suspendCallback();
+      }
+    } else if (command == "pagehide") {
+      suspendBlankPageCurrentlyShowing = false;
+    }
+  }
+
+  window.open("suspend_window.html", "testWin", "noopener");
 
   function finishTest() {
     if (finished) {
       return;
     }
     finished = true;
-    testWin.terminateWorker();
-    testWin.close();
-    SimpleTest.finish();
+    bcSuspendWindow.postMessage({command: "finish"});
   }
 
   function waitInterval() {
     if (finished) {
       return;
     }
-    is(testWin.location.href, BLANK_URI, "Wrong url!");
+    ok(suspendBlankPageCurrentlyShowing, "correct page is showing");
     is(suspended, true, "Not suspended?");
     is(resumed, false, "Already resumed?!");
     is(lastCount, oldMessageCount, "Received a message while suspended!");
     if (++waitCount == 5) {
       clearInterval(interval);
       resumed = true;
-      testWin.history.back();
+      bcSuspendBlank.postMessage({command: "navigateBack"});
     }
   }
 
@@ -78,7 +116,7 @@
     if (finished) {
       return;
     }
-    is(testWin.location.href, BLANK_URI, "Wrong url!");
+    ok(suspendBlankPageCurrentlyShowing, "correct page is showing");
     is(suspended, false, "Already suspended?");
     is(resumed, false, "Already resumed?");
     suspended = true;
@@ -96,18 +134,12 @@
          "Got good data, lastCount = " + lastCount + ", data = " + data);
       lastCount = data;
       if (lastCount == 25) {
-        testWin.location = "blank.html";
-        // We want suspend_window.html to go into bfcache, so we need to flush
-        // out all pending notifications. Otherwise, if they're flushed too
-        // late, they could kick us out of the bfcache again.
-        testWin.document.body.offsetTop;
+        bcSuspendWindow.postMessage({command: "navigate"});
       }
       return;
     }
 
-    var newLocation = location.href.replace("test_suspend.html",
-                                            "suspend_window.html");
-    is(testWin.location.href, newLocation.split("?")[0], "Wrong url!");
+    ok(!suspendBlankPageCurrentlyShowing, "correct page is showing");
     is(resumed, true, "Got message before resumed!");
     is(lastCount, data - 1, "Missed a message, suspend failed!");
     finishTest();
@@ -119,13 +151,6 @@
     }
     ok(false, "testWin had an error: '" + data + "'");
     finishTest();
-  }
-
-  function testWinLoaded() {
-    if (finished) {
-      return;
-    }
-    testWin.startWorker(messageCallback, errorCallback);
   }
 
 </script>

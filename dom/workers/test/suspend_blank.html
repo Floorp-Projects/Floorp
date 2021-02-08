@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<script>
+  var interval;
+  var finish = false;
+  var bc = new BroadcastChannel("suspendBlank");
+  bc.onmessage = (msgEvent) => {
+    var msg = msgEvent.data;
+    var command = msg.command;
+    if (command == "navigateBack") {
+      finish = true;
+      history.back();
+    }
+  }
+  window.onpagehide = () => {
+    bc.postMessage({command: "pagehide"});
+    if (finish) {
+      bc.close();
+    }
+  }
+  window.onload = () => {
+    bc.postMessage({command: "loaded"});
+  }
+</script>
