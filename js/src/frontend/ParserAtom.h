@@ -852,6 +852,7 @@ class ParserAtomsTable {
   UniqueChars toNewUTF8CharsZ(JSContext* cx, TaggedParserAtomIndex index) const;
   UniqueChars toPrintableString(JSContext* cx,
                                 TaggedParserAtomIndex index) const;
+  UniqueChars toQuotedString(JSContext* cx, TaggedParserAtomIndex index) const;
 };
 
 // Lightweight version of ParserAtomsTable.
