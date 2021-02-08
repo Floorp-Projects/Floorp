@@ -63,6 +63,11 @@ class DocAccessiblePlatformExtChild : public PDocAccessiblePlatformExtChild {
                                            const int32_t& aOffset,
                                            uint64_t* aLeaf);
 
+  mozilla::ipc::IPCResult RecvAttributedTextForRange(
+      const uint64_t& aID, const int32_t& aStartOffset,
+      const uint64_t& aEndContainer, const int32_t& aEndOffset,
+      nsTArray<TextAttributesRun>* aAttributes);
+
   MOZ_CAN_RUN_SCRIPT_BOUNDARY mozilla::ipc::IPCResult RecvSelectRange(
       const uint64_t& aID, const int32_t& aStartOffset,
       const uint64_t& aEndContainer, const int32_t& aEndOffset);

@@ -6,6 +6,8 @@
 
 include protocol PDocAccessible;
 
+include DocAccessibleTypes;
+
 include "mozilla/GfxMessageUtils.h";
 
 using mozilla::a11y::EWhichRange from "mozilla/a11y/IPCTypes.h";
@@ -48,6 +50,9 @@ child:
 
   nested(inside_sync) sync LeafAtOffset(uint64_t aID, int32_t aOffset)
       returns(uint64_t aLeaf);
+
+  nested(inside_sync) sync AttributedTextForRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset)
+      returns(TextAttributesRun[] aAttributedText);
 
   async SelectRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset);
 

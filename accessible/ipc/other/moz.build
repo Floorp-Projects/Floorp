@@ -6,7 +6,10 @@
 
 
 if CONFIG["ACCESSIBILITY"]:
-    IPDL_SOURCES += ["PDocAccessible.ipdl"]
+    IPDL_SOURCES += [
+        "DocAccessibleTypes.ipdlh",
+        "PDocAccessible.ipdl",
+    ]
 
     EXPORTS.mozilla.a11y += [
         "DocAccessibleChild.h",
