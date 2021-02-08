@@ -250,8 +250,8 @@ var _text_layer = __w_pdfjs_require__(21);
 
 var _svg = __w_pdfjs_require__(22);
 
-const pdfjsVersion = '2.8.43';
-const pdfjsBuild = 'a447d0529';
+const pdfjsVersion = '2.8.61';
+const pdfjsBuild = '884c65c60';
 ;
 
 /***/ }),
@@ -1946,7 +1946,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.8.43',
+    apiVersion: '2.8.61',
     source: {
       data: source.data,
       url: source.url,
@@ -3939,9 +3939,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.8.43';
+const version = '2.8.61';
 exports.version = version;
-const build = 'a447d0529';
+const build = '884c65c60';
 exports.build = build;
 
 /***/ }),
@@ -10440,7 +10440,7 @@ class PopupElement {
     const wrapper = document.createElement("div");
     wrapper.className = "popupWrapper";
     this.hideElement = this.hideWrapper ? wrapper : this.container;
-    this.hideElement.setAttribute("hidden", true);
+    this.hideElement.hidden = true;
     const popup = document.createElement("div");
     popup.className = "popup";
     const color = this.color;
@@ -10516,8 +10516,8 @@ class PopupElement {
       this.pinned = true;
     }
 
-    if (this.hideElement.hasAttribute("hidden")) {
-      this.hideElement.removeAttribute("hidden");
+    if (this.hideElement.hidden) {
+      this.hideElement.hidden = false;
       this.container.style.zIndex += 1;
     }
   }
@@ -10527,8 +10527,8 @@ class PopupElement {
       this.pinned = false;
     }
 
-    if (!this.hideElement.hasAttribute("hidden") && !this.pinned) {
-      this.hideElement.setAttribute("hidden", true);
+    if (!this.hideElement.hidden && !this.pinned) {
+      this.hideElement.hidden = true;
       this.container.style.zIndex -= 1;
     }
   }
@@ -11014,7 +11014,7 @@ class AnnotationLayer {
       }
     }
 
-    parameters.div.removeAttribute("hidden");
+    parameters.div.hidden = false;
   }
 
 }
