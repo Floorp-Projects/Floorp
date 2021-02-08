@@ -702,6 +702,15 @@ bool ParserAtomsTable::toNumber(JSContext* cx, TaggedParserAtomIndex index,
   return getParserAtom(index)->toNumber(cx, result);
 }
 
+UniqueChars ParserAtomsTable::toNewUTF8CharsZ(
+    JSContext* cx, TaggedParserAtomIndex index) const {
+  const auto* atom = getParserAtom(index);
+  return UniqueChars(
+      atom->hasLatin1Chars()
+          ? JS::CharsToNewUTF8CharsZ(cx, atom->latin1Range()).c_str()
+          : JS::CharsToNewUTF8CharsZ(cx, atom->twoByteRange()).c_str());
+}
+
 bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
                             CompilationAtomCache& atomCache) {
   for (size_t i = 0; i < entries.size(); i++) {

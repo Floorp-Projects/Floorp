@@ -1037,12 +1037,6 @@ class Type {
 
 static const unsigned VALIDATION_LIFO_DEFAULT_CHUNK_SIZE = 4 * 1024;
 
-static UniqueChars ParserAtomToNewUTF8CharsZ(JSContext* cx,
-                                             ParserAtomsTable& parserAtoms,
-                                             TaggedParserAtomIndex index) {
-  return ParserAtomToNewUTF8CharsZ(cx, parserAtoms.getParserAtom(index));
-}
-
 class MOZ_STACK_CLASS ModuleValidatorShared {
  public:
   class Func {
@@ -1466,8 +1460,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
   [[nodiscard]] bool initGlobalArgumentName(TaggedParserAtomIndex n) {
     globalArgumentName_ = n;
     if (n) {
-      asmJSMetadata_->globalArgumentName =
-          ParserAtomToNewUTF8CharsZ(cx_, parserAtoms_, n);
+      asmJSMetadata_->globalArgumentName = parserAtoms_.toNewUTF8CharsZ(cx_, n);
       if (!asmJSMetadata_->globalArgumentName) {
         return false;
       }
@@ -1477,8 +1470,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
   [[nodiscard]] bool initImportArgumentName(TaggedParserAtomIndex n) {
     importArgumentName_ = n;
     if (n) {
-      asmJSMetadata_->importArgumentName =
-          ParserAtomToNewUTF8CharsZ(cx_, parserAtoms_, n);
+      asmJSMetadata_->importArgumentName = parserAtoms_.toNewUTF8CharsZ(cx_, n);
       if (!asmJSMetadata_->importArgumentName) {
         return false;
       }
@@ -1488,8 +1480,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
   [[nodiscard]] bool initBufferArgumentName(TaggedParserAtomIndex n) {
     bufferArgumentName_ = n;
     if (n) {
-      asmJSMetadata_->bufferArgumentName =
-          ParserAtomToNewUTF8CharsZ(cx_, parserAtoms_, n);
+      asmJSMetadata_->bufferArgumentName = parserAtoms_.toNewUTF8CharsZ(cx_, n);
       if (!asmJSMetadata_->bufferArgumentName) {
         return false;
       }
@@ -1531,8 +1522,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
                           bool isConst) {
     MOZ_ASSERT(type.isGlobalVarType());
 
-    UniqueChars fieldChars =
-        ParserAtomToNewUTF8CharsZ(cx_, parserAtoms_, field);
+    UniqueChars fieldChars = parserAtoms_.toNewUTF8CharsZ(cx_, field);
     if (!fieldChars) {
       return false;
     }
@@ -1563,7 +1553,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
                     TaggedParserAtomIndex maybeField) {
     UniqueChars fieldChars;
     if (maybeField) {
-      fieldChars = ParserAtomToNewUTF8CharsZ(cx_, parserAtoms_, maybeField);
+      fieldChars = parserAtoms_.toNewUTF8CharsZ(cx_, maybeField);
       if (!fieldChars) {
         return false;
       }
@@ -1589,8 +1579,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
   bool addMathBuiltinFunction(TaggedParserAtomIndex var,
                               AsmJSMathBuiltinFunction func,
                               TaggedParserAtomIndex field) {
-    UniqueChars fieldChars =
-        ParserAtomToNewUTF8CharsZ(cx_, parserAtoms_, field);
+    UniqueChars fieldChars = parserAtoms_.toNewUTF8CharsZ(cx_, field);
     if (!fieldChars) {
       return false;
     }
@@ -1622,8 +1611,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
  public:
   bool addMathBuiltinConstant(TaggedParserAtomIndex var, double constant,
                               TaggedParserAtomIndex field) {
-    UniqueChars fieldChars =
-        ParserAtomToNewUTF8CharsZ(cx_, parserAtoms_, field);
+    UniqueChars fieldChars = parserAtoms_.toNewUTF8CharsZ(cx_, field);
     if (!fieldChars) {
       return false;
     }
@@ -1639,8 +1627,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
   }
   bool addGlobalConstant(TaggedParserAtomIndex var, double constant,
                          TaggedParserAtomIndex field) {
-    UniqueChars fieldChars =
-        ParserAtomToNewUTF8CharsZ(cx_, parserAtoms_, field);
+    UniqueChars fieldChars = parserAtoms_.toNewUTF8CharsZ(cx_, field);
     if (!fieldChars) {
       return false;
     }
@@ -1656,8 +1643,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
   }
   bool addArrayViewCtor(TaggedParserAtomIndex var, Scalar::Type vt,
                         TaggedParserAtomIndex field) {
-    UniqueChars fieldChars =
-        ParserAtomToNewUTF8CharsZ(cx_, parserAtoms_, field);
+    UniqueChars fieldChars = parserAtoms_.toNewUTF8CharsZ(cx_, field);
     if (!fieldChars) {
       return false;
     }
@@ -1676,8 +1662,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
     return asmJSMetadata_->asmJSGlobals.append(std::move(g));
   }
   bool addFFI(TaggedParserAtomIndex var, TaggedParserAtomIndex field) {
-    UniqueChars fieldChars =
-        ParserAtomToNewUTF8CharsZ(cx_, parserAtoms_, field);
+    UniqueChars fieldChars = parserAtoms_.toNewUTF8CharsZ(cx_, field);
     if (!fieldChars) {
       return false;
     }
@@ -1704,7 +1689,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
     // Record the field name of this export.
     CacheableChars fieldChars;
     if (maybeField) {
-      fieldChars = ParserAtomToNewUTF8CharsZ(cx_, parserAtoms_, maybeField);
+      fieldChars = parserAtoms_.toNewUTF8CharsZ(cx_, maybeField);
     } else {
       fieldChars = DuplicateString("");
     }
@@ -2105,8 +2090,7 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
       return nullptr;
     }
     for (const Func& func : funcDefs_) {
-      CacheableChars funcName =
-          ParserAtomToNewUTF8CharsZ(cx_, parserAtoms_, func.name());
+      CacheableChars funcName = parserAtoms_.toNewUTF8CharsZ(cx_, func.name());
       if (!funcName ||
           !asmJSMetadata_->asmJSFuncNames.emplaceBack(std::move(funcName))) {
         return nullptr;
