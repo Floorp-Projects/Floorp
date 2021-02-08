@@ -123,7 +123,12 @@ inline id<mozAccessible> GetObjectOrRepresentedView(id<mozAccessible> aObject) {
 // override
 - (id<MOXTextMarkerSupport>)moxTextMarkerDelegate;
 
+// override
 - (BOOL)moxIsLiveRegion;
+
+// override
+- (id<MOXAccessible>)moxFindAncestor:(BOOL (^)(id<MOXAccessible> moxAcc,
+                                               BOOL* stop))findBlock;
 
 #pragma mark -
 

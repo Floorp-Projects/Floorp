@@ -543,6 +543,23 @@ mozilla::LogModule* GetMacAccessibilityLog() {
   [self moxPostNotification:NSAccessibilityUIElementDestroyedNotification];
 }
 
+- (id<MOXAccessible>)moxFindAncestor:(BOOL (^)(id<MOXAccessible> moxAcc,
+                                               BOOL* stop))findBlock {
+  for (id element = self; [element conformsToProtocol:@protocol(MOXAccessible)];
+       element = [element moxUnignoredParent]) {
+    BOOL stop = NO;
+    if (findBlock(element, &stop)) {
+      return element;
+    }
+
+    if (stop) {
+      break;
+    }
+  }
+
+  return nil;
+}
+
 #pragma mark - Private
 
 - (BOOL)isSelectorSupported:(SEL)selector {
