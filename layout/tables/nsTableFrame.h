@@ -264,6 +264,14 @@ class nsTableFrame : public nsContainerFrame {
   LogicalMargin GetExcludedOuterBCBorder(const WritingMode aWM) const;
 
   /**
+   * Emplace our border and padding in aBorder and aPadding if we are
+   * border-collapsed. Otherwise, do nothing.
+   */
+  void GetCollapsedBorderPadding(
+      mozilla::Maybe<mozilla::LogicalMargin>& aBorder,
+      mozilla::Maybe<mozilla::LogicalMargin>& aPadding) const;
+
+  /**
    * In quirks mode, the size of the table background is reduced
    * by the outer BC border. Compute the reduction needed.
    */
