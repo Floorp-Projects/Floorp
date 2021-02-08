@@ -1229,6 +1229,9 @@
     <string name="onboarding_private_browsing_button">設定を開く</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">あなたのプライバシー</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description2">%s は、あなたがオンラインで共有するものと、私たちと共有するものをコントロールできるように設計されています。</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">個人情報保護方針を読む</string>
 

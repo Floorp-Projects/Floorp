@@ -40,11 +40,11 @@
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
     <string name="tab_tray_item_selected_multiselect_content_description">ᱵᱟᱪᱷᱟᱣᱮᱱᱟ %1$s</string>
     <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
-    <string name="tab_tray_item_unselected_multiselect_content_description">ᱵᱟᱝ ᱪᱚᱭᱚᱱᱟᱜ%1$s</string>
+    <string name="tab_tray_item_unselected_multiselect_content_description">ᱵᱟᱝ ᱵᱟᱪᱷᱟᱣᱟᱜ%1$s</string>
     <!-- Content description announcement when exiting multiselect mode in tab tray -->
     <string name="tab_tray_exit_multiselect_content_description">ᱵᱟᱹᱰ ᱟᱠᱟᱱᱟ ᱢᱟᱹᱴᱤᱥᱤᱞᱮᱼᱴ ᱢᱳᱰ</string>
     <!-- Content description announcement when entering multiselect mode in tab tray -->
-    <string name="tab_tray_enter_multiselect_content_description">ᱢᱟᱹᱞᱴᱤᱥᱤᱞᱮᱠᱼᱴ ᱢᱳᱰ ᱵᱚᱞᱚ ᱮᱱᱟᱢ, ᱛᱩᱢᱟᱹᱞ ᱥᱟᱸᱪᱟᱣ ᱞᱟᱹᱜᱤᱫ ᱨᱮᱵ ᱠᱚ ᱪᱚᱭᱚᱱ ᱢᱮ </string>
+    <string name="tab_tray_enter_multiselect_content_description">ᱢᱟᱹᱞᱴᱤᱥᱤᱞᱮᱠᱼᱴ ᱢᱳᱰ ᱵᱚᱞᱚ ᱮᱱᱟᱢ, ᱛᱩᱢᱟᱹᱞ ᱥᱟᱸᱪᱟᱣ ᱞᱟᱹᱜᱤᱫ ᱨᱮᱵ ᱠᱚ ᱵᱟᱪᱷᱟᱣ ᱢᱮ </string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">ᱵᱟᱪᱷᱟᱣᱮᱱᱟ</string>
 
@@ -95,7 +95,7 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">ᱵᱟᱹᱰ</string>
 
     <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">ᱠᱷᱩᱞᱟᱹ ᱴᱮᱵ ᱞᱮᱭᱟᱩᱴ ᱠᱚ ᱵᱚᱫᱚᱞ ᱢᱮ ᱾ ᱥᱟᱡᱟᱣ ᱴᱷᱮᱱ ᱪᱟᱞᱟᱣ ᱠᱟᱛᱮᱫᱽ ᱴᱮᱵ ᱣᱤᱣ ᱞᱟᱛᱟᱨ ᱨᱮ ᱜᱨᱤᱰ ᱪᱚᱭᱚᱱ ᱢᱮ ᱾ </string>
+    <string name="tab_tray_grid_view_banner_message">ᱠᱷᱩᱞᱟᱹ ᱴᱮᱵ ᱞᱮᱭᱟᱩᱴ ᱠᱚ ᱵᱚᱫᱚᱞ ᱢᱮ ᱾ ᱥᱟᱡᱟᱣ ᱴᱷᱮᱱ ᱪᱟᱞᱟᱣ ᱠᱟᱛᱮᱫᱽ ᱴᱮᱵ ᱣᱤᱣ ᱞᱟᱛᱟᱨ ᱨᱮ ᱜᱨᱤᱰ ᱵᱟᱪᱷᱟᱣ ᱢᱮ ᱾ </string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_grid_view_banner_positive_button_text">ᱥᱟᱡᱟᱣ ᱛᱮ ᱪᱟᱞᱟᱜᱽ ᱢᱮ</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
@@ -361,7 +361,7 @@
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">ᱱᱤᱛᱚᱜ ᱥᱭᱸᱠ ᱢᱮ</string>
     <!-- Preference category for sync -->
-    <string name="preferences_sync_category">ᱚᱠᱟ ᱥᱭᱸᱠ ᱨᱮᱭᱟᱜ ᱛᱟᱦᱮᱸᱱᱟ ᱪᱚᱭᱚᱱ ᱢᱮ </string>
+    <string name="preferences_sync_category">ᱚᱠᱟ ᱥᱭᱸᱠ ᱨᱮᱭᱟᱜ ᱛᱟᱦᱮᱸᱱᱟ ᱵᱟᱪᱷᱟᱣ ᱢᱮ </string>
     <!-- Preference for syncing history -->
     <string name="preferences_sync_history">ᱦᱤᱛᱟᱹᱞ</string>
     <!-- Preference for syncing bookmarks -->
@@ -419,7 +419,7 @@
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">ᱡᱷᱚᱛᱚ ᱠᱚ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱛ ᱛᱮ ᱚᱱ ᱢᱮ</string>
     <!-- Text displayed when there are no exceptions -->
-    <string name="exceptions_empty_message_description">ᱪᱚᱭᱚᱱᱟᱠᱟᱱ ᱫᱟᱭᱤᱴ ᱠᱚᱨᱮ ᱟᱢ ᱤᱪᱷᱟᱹ ᱚᱱᱩᱥᱟᱨ ᱜᱷᱮᱨ ᱮᱥᱮᱫ ᱵᱚᱸᱫᱚ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱢ ᱾</string>
+    <string name="exceptions_empty_message_description">ᱵᱟᱪᱷᱟᱣᱟᱠᱟᱱ ᱫᱟᱭᱤᱴ ᱠᱚᱨᱮ ᱟᱢ ᱤᱪᱷᱟᱹ ᱚᱱᱩᱥᱟᱨ ᱜᱷᱮᱨ ᱮᱥᱮᱫ ᱵᱚᱸᱫᱚ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱢ ᱾</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
 
@@ -595,7 +595,7 @@
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">ᱛᱩᱢᱟᱹᱞ ᱨᱮ ᱥᱟᱸᱪᱟᱣ ᱢᱮ</string>
     <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">ᱪᱚᱭᱚᱱ</string>
+    <string name="tab_tray_menu_select">ᱵᱟᱪᱷᱟᱣ</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">ᱡᱷᱚᱛᱚ ᱴᱮᱵ ᱠᱚ ᱦᱟᱹᱴᱧ ᱢᱮ</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -615,13 +615,13 @@
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_close">ᱵᱚᱸᱫᱽ</string>
     <!-- Content description for tabs tray multiselect share button -->
-    <string name="tab_tray_multiselect_share_content_description">ᱪᱚᱭᱚᱱ ᱟᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
+    <string name="tab_tray_multiselect_share_content_description">ᱵᱟᱪᱷᱟᱣ ᱟᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
     <!-- Content description for tabs tray multiselect menu -->
-    <string name="tab_tray_multiselect_menu_content_description">ᱪᱚᱭᱚᱱ ᱟᱠᱟᱱ ᱴᱮᱵ ᱢᱮᱱᱭᱩ ᱠᱚ</string>
+    <string name="tab_tray_multiselect_menu_content_description">ᱵᱟᱪᱷᱟᱣ ᱟᱠᱟᱱ ᱴᱮᱵ ᱢᱮᱱᱭᱩ ᱠᱚ</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">ᱴᱮᱵ ᱛᱩᱢᱟᱹᱞ ᱠᱷᱚᱱ ᱚᱪᱚᱜ ᱢᱮ</string>
     <!-- Text for button to enter multiselect mode in tabs tray -->
-    <string name="tabs_tray_select_tabs">ᱴᱮᱵ ᱠᱚ ᱪᱚᱭᱚᱱ ᱢᱮ</string>
+    <string name="tabs_tray_select_tabs">ᱴᱮᱵ ᱠᱚ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">ᱴᱮᱵ ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -1203,11 +1203,6 @@
 
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">ᱟᱢᱟᱜ ᱱᱤᱥᱚᱱ</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">ᱟᱞᱮ  %s ᱞᱮ ᱰᱤᱡᱟᱭᱤᱱ ᱟᱠᱟᱫᱼᱟ ᱚᱠᱟ ᱫᱚ ᱡᱟᱦᱟᱱᱟᱜ ᱠᱚ ᱚᱱᱞᱟᱭᱤᱱ ᱦᱟᱹᱴᱤᱧ ᱨᱮ 
-        ᱟᱨ ᱚᱠᱟ ᱠᱚ ᱟᱞᱮ ᱦᱟᱹᱤᱧ ᱟᱞᱮᱭᱟᱢ, ᱜᱚᱲᱚ ᱮᱢᱟᱭ ᱾
-    </string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">ᱟᱞᱮᱭᱟᱜ ᱱᱤᱥᱚᱱ ᱱᱚᱴᱤᱥ ᱯᱟᱲᱦᱟᱣ ᱯᱮ</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
@@ -1218,7 +1213,7 @@
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">ᱩᱭᱦᱟᱹᱨ ᱪᱚᱭᱚᱱ ᱛᱟᱢ</string>
+    <string name="onboarding_theme_picker_header">ᱩᱭᱦᱟᱹᱨ ᱵᱟᱪᱷᱟᱣ ᱛᱟᱢ</string>
     <!-- text for the theme picker onboarding card description -->
     <string name="onboarding_theme_picker_description1">ᱛᱤᱱᱟᱹᱜ ᱜᱟᱱ ᱵᱮᱴᱨᱭ ᱵᱚᱪᱚᱛ ᱢᱮ ᱟᱨ ᱟᱢᱟᱜ ᱢᱮᱫ ᱵᱟᱸᱪᱟᱣ ᱛᱟᱢ ᱧᱩᱛ ᱩᱭᱦᱟᱹᱨ ᱪᱟᱹᱞᱩ ᱠᱟᱛᱮ ᱾</string>
     <!-- Automatic theme setting (will follow device setting) -->
@@ -1287,7 +1282,7 @@
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">ᱠᱩᱥᱤᱭᱟᱜ</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description_2">ᱪᱚᱭᱚᱱ ᱢᱮ ᱚᱠᱟ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱟᱨ ᱥᱠᱨᱤᱯᱴ ᱞᱚ ᱵᱞᱚᱠ ᱠᱚᱣᱟ ᱾</string>
+    <string name="preference_enhanced_tracking_protection_custom_description_2">ᱵᱟᱪᱷᱟᱣ ᱢᱮ ᱚᱠᱟ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱟᱨ ᱥᱠᱨᱤᱯᱴ ᱞᱚ ᱵᱞᱚᱠ ᱠᱚᱣᱟ ᱾</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">ᱠᱚᱥᱴᱚᱢ ᱜᱷᱮᱨ ᱮᱥᱮᱫ ᱯᱨᱚᱴᱮᱠᱥᱚᱱ ᱛᱮ ᱪᱮᱫ ᱵᱞᱚᱠ ᱟᱹᱠᱟᱱᱟ </string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1658,7 +1653,7 @@
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_title">ᱴᱚᱯ ᱥᱟᱭᱤᱴ ᱞᱤᱢᱤᱴ ᱥᱮᱴᱮᱨᱮᱱᱟ</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content_2">ᱱᱟᱶᱟ ᱴᱟᱹᱯ ᱥᱟᱭᱤᱴ ᱥᱮᱞᱮᱫᱽ ᱞᱟᱹᱜᱤᱫ, ᱢᱤᱫᱴᱟᱹᱝ ᱚᱰᱚᱠ ᱢᱮ ᱾ ᱥᱟᱭᱤᱴ ᱴᱤᱯᱟᱹᱣ ᱟᱨ ᱚᱛᱟ ᱛᱷᱤᱨ ᱠᱟᱛᱮ ᱪᱚᱭᱚᱱ ᱢᱮ ᱟᱨ ᱚᱰᱚᱠ ᱢᱮ ᱾</string>
+    <string name="top_sites_max_limit_content_2">ᱱᱟᱶᱟ ᱴᱟᱹᱯ ᱥᱟᱭᱤᱴ ᱥᱮᱞᱮᱫᱽ ᱞᱟᱹᱜᱤᱫ, ᱢᱤᱫᱴᱟᱹᱝ ᱚᱰᱚᱠ ᱢᱮ ᱾ ᱥᱟᱭᱤᱴ ᱴᱤᱯᱟᱹᱣ ᱟᱨ ᱚᱛᱟ ᱛᱷᱤᱨ ᱠᱟᱛᱮ ᱵᱟᱪᱷᱟᱣ ᱢᱮ ᱟᱨ ᱚᱰᱚᱠ ᱢᱮ ᱾</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ᱴᱷᱤᱠ, ᱵᱟᱰᱟᱭ ᱠᱮᱜᱼᱟᱹᱧ</string>
     <!-- Label for the show most visited sites preference -->
