@@ -8,6 +8,8 @@
 
 #include "DocAccessibleChild.h"
 #include "HyperTextAccessibleWrap.h"
+#include "nsPersistentProperties.h"
+#include "nsAccUtils.h"
 
 #define UNIQUE_ID(acc)               \
   !acc || acc->Document() == acc ? 0 \
@@ -201,6 +203,30 @@ DocAccessiblePlatformExtChild::RecvAttributedTextForRange(
     const uint64_t& aID, const int32_t& aStartOffset,
     const uint64_t& aEndContainer, const int32_t& aEndOffset,
     nsTArray<TextAttributesRun>* aAttributes) {
+  HyperTextAccessibleWrap* acc = IdToHyperTextAccessibleWrap(aID);
+  HyperTextAccessibleWrap* endContainer =
+      IdToHyperTextAccessibleWrap(aEndContainer);
+  if (!acc || !endContainer) {
+    return IPC_OK();
+  }
+
+  nsTArray<nsString> texts;
+  nsTArray<Accessible*> containers;
+  nsTArray<nsCOMPtr<nsIPersistentProperties>> props;
+
+  acc->AttributedTextForRange(texts, props, containers, aStartOffset,
+                              endContainer, aEndOffset);
+
+  MOZ_ASSERT(texts.Length() == props.Length() &&
+             texts.Length() == containers.Length());
+
+  for (size_t i = 0; i < texts.Length(); i++) {
+    nsTArray<Attribute> textAttrArray;
+    nsAccUtils::PersistentPropertiesToArray(props.ElementAt(i), &textAttrArray);
+    aAttributes->AppendElement(TextAttributesRun(
+        texts.ElementAt(i), UNIQUE_ID(containers.ElementAt(i)), textAttrArray));
+  }
+
   return IPC_OK();
 }
 
