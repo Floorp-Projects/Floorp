@@ -408,7 +408,7 @@ XDRResult XDRState<mode>::codeScript(MutableHandleScript scriptp) {
 template <XDRMode mode>
 static XDRResult XDRStencilHeader(
     XDRState<mode>* xdr, const JS::ReadOnlyCompileOptions* maybeOptions,
-    MutableHandle<ScriptSourceHolder> source, uint32_t* pNumChunks) {
+    ScriptSourceHolder& source, uint32_t* pNumChunks) {
   // The XDR-Stencil header is inserted at beginning of buffer, but it is
   // computed at the end the incremental-encoding process.
 
@@ -441,10 +441,9 @@ XDRResult XDRState<mode>::codeStencil(frontend::CompilationStencil& stencil) {
   // the header data until the `linearize` call, but still prepend it to final
   // buffer before giving to the caller.
   if (mode == XDR_DECODE) {
-    Rooted<ScriptSourceHolder> holder(cx());
-    MOZ_TRY(
-        XDRStencilHeader(this, &stencil.input.options, &holder, &nchunks()));
-    stencil.input.setSource(holder.get().get());
+    ScriptSourceHolder holder;
+    MOZ_TRY(XDRStencilHeader(this, &stencil.input.options, holder, &nchunks()));
+    stencil.input.setSource(holder.get());
   }
 
   MOZ_TRY(XDRParserAtomTable(this, stencil));
@@ -490,9 +489,9 @@ XDRResult XDRIncrementalStencilEncoder::linearize(JS::TranscodeBuffer& buffer,
   {
     switchToBuffer(&outputBuf);
 
-    Rooted<ScriptSourceHolder> holder(cx(), ss);
+    ScriptSourceHolder holder(ss);
     uint32_t nchunks = 1 + encodedFunctions_.count();
-    MOZ_TRY(XDRStencilHeader(this, nullptr, &holder, &nchunks));
+    MOZ_TRY(XDRStencilHeader(this, nullptr, holder, &nchunks));
 
     switchToBuffer(&mainBuf);
   }

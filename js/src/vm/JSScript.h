@@ -1082,9 +1082,7 @@ class ScriptSource {
   template <XDRMode mode>
   static MOZ_MUST_USE XDRResult
   XDR(XDRState<mode>* xdr, const JS::ReadOnlyCompileOptions* maybeOptions,
-      MutableHandle<ScriptSourceHolder> holder);
-
-  void trace(JSTracer* trc);
+      ScriptSourceHolder& holder);
 };
 
 class ScriptSourceHolder {
@@ -1109,12 +1107,6 @@ class ScriptSourceHolder {
     ss = newss;
   }
   ScriptSource* get() const { return ss; }
-
-  void trace(JSTracer* trc) {
-    if (ss) {
-      ss->trace(trc);
-    }
-  }
 };
 
 // [SMDOC] ScriptSourceObject
@@ -1150,7 +1142,6 @@ class ScriptSourceObject : public NativeObject {
  public:
   static const JSClass class_;
 
-  static void trace(JSTracer* trc, JSObject* obj);
   static void finalize(JSFreeOp* fop, JSObject* obj);
 
   static ScriptSourceObject* create(JSContext* cx, ScriptSource* source);

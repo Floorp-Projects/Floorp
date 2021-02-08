@@ -1141,7 +1141,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   }
 
   if (xdrFlags & OwnSource) {
-    Rooted<ScriptSourceHolder> ssHolder(cx);
+    ScriptSourceHolder ssHolder;
 
     // We are relying on the script's ScriptSource so the caller should not
     // have passed in an explicit one.
@@ -1149,13 +1149,13 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
     if (mode == XDR_ENCODE) {
       sourceObject = script->sourceObject();
-      ssHolder.get().reset(sourceObject->source());
+      ssHolder.reset(sourceObject->source());
     }
 
-    MOZ_TRY(ScriptSource::XDR(xdr, options.ptrOr(nullptr), &ssHolder));
+    MOZ_TRY(ScriptSource::XDR(xdr, options.ptrOr(nullptr), ssHolder));
 
     if (mode == XDR_DECODE) {
-      sourceObject = ScriptSourceObject::create(cx, ssHolder.get().get());
+      sourceObject = ScriptSourceObject::create(cx, ssHolder.get());
       if (!sourceObject) {
         return xdr->fail(JS::TranscodeResult_Throw);
       }
@@ -1586,15 +1586,6 @@ void ScriptSourceObject::finalize(JSFreeOp* fop, JSObject* obj) {
   sso->setPrivate(fop->runtime(), UndefinedValue());
 }
 
-void ScriptSourceObject::trace(JSTracer* trc, JSObject* obj) {
-  // This can be invoked during allocation of the SSO itself, before we've had a
-  // chance to initialize things properly. In that case, there's nothing to
-  // trace.
-  if (obj->as<ScriptSourceObject>().hasSource()) {
-    obj->as<ScriptSourceObject>().source()->trace(trc);
-  }
-}
-
 static const JSClassOps ScriptSourceObjectClassOps = {
     nullptr,                       // addProperty
     nullptr,                       // delProperty
@@ -1606,7 +1597,7 @@ static const JSClassOps ScriptSourceObjectClassOps = {
     nullptr,                       // call
     nullptr,                       // hasInstance
     nullptr,                       // construct
-    ScriptSourceObject::trace,     // trace
+    nullptr,                       // trace
 };
 
 const JSClass ScriptSourceObject::class_ = {
@@ -2457,13 +2448,6 @@ template bool ScriptSource::assignSource(JSContext* cx,
                                          const ReadOnlyCompileOptions& options,
                                          SourceText<Utf8Unit>& srcBuf);
 
-void ScriptSource::trace(JSTracer* trc) {
-  // This should be kept in sync with ScriptSource::finalizeGCData below.
-  if (xdrEncoder_) {
-    xdrEncoder_->trace(trc);
-  }
-}
-
 void ScriptSource::finalizeGCData() {
   // This should be kept in sync with ScriptSource::trace above.
 
@@ -3139,19 +3123,19 @@ template <XDRMode mode>
 /* static */
 XDRResult ScriptSource::XDR(XDRState<mode>* xdr,
                             const ReadOnlyCompileOptions* maybeOptions,
-                            MutableHandle<ScriptSourceHolder> holder) {
+                            ScriptSourceHolder& holder) {
   JSContext* cx = xdr->cx();
   ScriptSource* ss = nullptr;
 
   if (mode == XDR_ENCODE) {
-    ss = holder.get().get();
+    ss = holder.get();
   } else {
     // Allocate a new ScriptSource and root it with the holder.
     ss = cx->new_<ScriptSource>();
     if (!ss) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
-    holder.get().reset(ss);
+    holder.reset(ss);
 
     // We use this CompileOptions only to initialize the ScriptSourceObject.
     // Most CompileOptions fields aren't used by ScriptSourceObject, and those
@@ -3226,12 +3210,12 @@ template /* static */
     XDRResult
     ScriptSource::XDR(XDRState<XDR_ENCODE>* xdr,
                       const ReadOnlyCompileOptions* maybeOptions,
-                      MutableHandle<ScriptSourceHolder> holder);
+                      ScriptSourceHolder& holder);
 template /* static */
     XDRResult
     ScriptSource::XDR(XDRState<XDR_DECODE>* xdr,
                       const ReadOnlyCompileOptions* maybeOptions,
-                      MutableHandle<ScriptSourceHolder> holder);
+                      ScriptSourceHolder& holder);
 
 // Format and return a cx->pod_malloc'ed URL for a generated script like:
 //   {filename} line {lineno} > {introducer}

@@ -582,7 +582,6 @@ bool CompilationInput::initForStandaloneFunctionInNonSyntacticScope(
 void CompilationInput::trace(JSTracer* trc) {
   atomCache.trace(trc);
   TraceNullableRoot(trc, &lazy, "compilation-input-lazy");
-  source_.trace(trc);
   TraceNullableRoot(trc, &enclosingScope, "compilation-input-enclosing-scope");
 }
 

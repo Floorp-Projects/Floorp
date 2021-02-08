@@ -618,8 +618,6 @@ class XDRIncrementalEncoderBase : public XDREncoder {
                               js::ScriptSource* ss) {
     MOZ_CRASH("cannot linearize.");
   }
-
-  virtual void trace(JSTracer* trc) {}
 };
 
 class XDRIncrementalStencilEncoder : public XDRIncrementalEncoderBase {
