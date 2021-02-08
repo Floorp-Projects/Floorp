@@ -169,8 +169,6 @@ def append_result(log, suites, test_name, name, result, extra_options):
         missing = set(extra_options) - set(suites[test_name]["extraOptions"])
         test_name = test_name + "-".join(list(missing))
 
-    if "visual" not in extra_options:
-        extra_options.append("visual")
     subtests = suites.setdefault(
         test_name,
         {"name": orig_test_name, "subtests": {}, "extraOptions": extra_options},
