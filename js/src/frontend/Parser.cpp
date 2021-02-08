@@ -2913,9 +2913,9 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
   }
 
   bool isSelfHosting = options().selfHostingMode;
-  bool hasUnclonedName = isSelfHosting && funName &&
-                         IsExtendedUnclonedSelfHostedFunctionName(
-                             this->parserAtoms().getParserAtom(funName));
+  bool hasUnclonedName =
+      isSelfHosting && funName &&
+      this->parserAtoms().isExtendedUnclonedSelfHostedFunctionName(funName);
   MOZ_ASSERT_IF(hasUnclonedName, !pc_->isFunctionBox());
 
   FunctionFlags flags = InitialFunctionFlags(kind, generatorKind, asyncKind,
