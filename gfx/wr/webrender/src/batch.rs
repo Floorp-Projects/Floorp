@@ -59,7 +59,6 @@ pub enum BrushBatchKind {
     Blend,
     MixBlend {
         task_id: RenderTaskId,
-        source_id: RenderTaskId,
         backdrop_id: RenderTaskId,
     },
     YuvImage(ImageBufferKind, YuvFormat, ColorDepth, YuvColorSpace, ColorRange),
@@ -1966,62 +1965,74 @@ impl BatchBuilder {
                                 let cache_task_id = ctx.resolve_surface(raster_config.surface_index);
                                 let backdrop_id = picture.secondary_render_task_id.expect("no backdrop!?");
 
-                                // TODO(gw): For now, mix-blend is not supported as a picture
-                                //           caching root, so we can safely assume there is
-                                //           only a single batcher present.
-                                assert_eq!(self.batchers.len(), 1);
-
                                 let color0 = render_tasks[backdrop_id].get_target_texture();
                                 let color1 = render_tasks[cache_task_id].get_target_texture();
 
-                                let key = BatchKey::new(
-                                    BatchKind::Brush(
-                                        BrushBatchKind::MixBlend {
-                                            task_id: self.batchers[0].render_task_id,
-                                            source_id: cache_task_id,
-                                            backdrop_id,
-                                        },
-                                    ),
-                                    BlendMode::PremultipliedAlpha,
-                                    BatchTextures {
-                                        input: TextureSet {
-                                            colors: [
-                                                TextureSource::TextureCache(
-                                                    color0,
-                                                    Swizzle::default(),
-                                                ),
-                                                TextureSource::TextureCache(
-                                                    color1,
-                                                    Swizzle::default(),
-                                                ),
-                                                TextureSource::Invalid,
-                                            ],
-                                        },
-                                        clip_mask: clip_mask_texture_id,
-                                    },
-                                );
-                                let backdrop_task_address: RenderTaskAddress = backdrop_id.into();
-                                let source_task_address: RenderTaskAddress = cache_task_id.into();
-                                let prim_header_index = prim_headers.push(&prim_header, z_id, [
-                                    mode as u32 as i32,
-                                    backdrop_task_address.0 as i32,
-                                    source_task_address.0 as i32,
-                                    0,
-                                ]);
+                                // Create a separate brush instance for each batcher. For most cases,
+                                // there is only one batcher. However, in the case of drawing onto
+                                // a picture cache, there is one batcher per tile. Although not
+                                // currently used, the implementation of mix-blend-mode now supports
+                                // doing partial readbacks per-tile. In future, this will be enabled
+                                // and allow mix-blends to operate on picture cache surfaces without
+                                // a separate isolated intermediate surface.
 
-                                self.add_brush_instance_to_batches(
-                                    key,
-                                    batch_features,
-                                    bounding_rect,
-                                    z_id,
-                                    INVALID_SEGMENT_INDEX,
-                                    EdgeAaSegmentMask::empty(),
-                                    clip_task_address,
-                                    brush_flags,
-                                    prim_header_index,
-                                    0,
-                                    prim_vis_mask,
-                                );
+                                for batcher in &mut self.batchers {
+                                    if batcher.vis_mask.intersects(prim_vis_mask) {
+                                        let render_task_address = batcher.render_task_address;
+
+                                        let batch_key = BatchKey::new(
+                                            BatchKind::Brush(
+                                                BrushBatchKind::MixBlend {
+                                                    task_id: batcher.render_task_id,
+                                                    backdrop_id,
+                                                },
+                                            ),
+                                            BlendMode::PremultipliedAlpha,
+                                            BatchTextures {
+                                                input: TextureSet {
+                                                    colors: [
+                                                        TextureSource::TextureCache(
+                                                            color0,
+                                                            Swizzle::default(),
+                                                        ),
+                                                        TextureSource::TextureCache(
+                                                            color1,
+                                                            Swizzle::default(),
+                                                        ),
+                                                        TextureSource::Invalid,
+                                                    ],
+                                                },
+                                                clip_mask: clip_mask_texture_id,
+                                            },
+                                        );
+                                        let src_uv_address = render_tasks[cache_task_id].get_texture_address(gpu_cache);
+                                        let readback_uv_address = render_tasks[backdrop_id].get_texture_address(gpu_cache);
+                                        let prim_header_index = prim_headers.push(&prim_header, z_id, [
+                                            mode as u32 as i32,
+                                            readback_uv_address.as_int(),
+                                            src_uv_address.as_int(),
+                                            0,
+                                        ]);
+
+                                        let instance = BrushInstance {
+                                            segment_index: INVALID_SEGMENT_INDEX,
+                                            edge_flags: EdgeAaSegmentMask::empty(),
+                                            clip_task_address,
+                                            render_task_address,
+                                            brush_flags,
+                                            prim_header_index,
+                                            resource_address: 0,
+                                        };
+
+                                        batcher.push_single_instance(
+                                            batch_key,
+                                            batch_features,
+                                            bounding_rect,
+                                            z_id,
+                                            PrimitiveInstanceData::from(instance),
+                                        );
+                                    }
+                                }
                             }
                             PictureCompositeMode::Blit(_) => {
                                 let cache_task_id = ctx.resolve_surface(raster_config.surface_index);
