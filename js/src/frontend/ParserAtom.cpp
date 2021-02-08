@@ -120,23 +120,6 @@ template <typename CharT, typename SeqCharT>
   return entry;
 }
 
-bool ParserAtom::isIndex(uint32_t* indexp) const {
-  size_t len = length();
-  if (len == 0 || len > UINT32_CHAR_BUFFER_LENGTH) {
-    return false;
-  }
-  if (hasLatin1Chars()) {
-    return mozilla::IsAsciiDigit(*latin1Chars()) &&
-           js::CheckStringIsIndex(latin1Chars(), len, indexp);
-  }
-  return mozilla::IsAsciiDigit(*twoByteChars()) &&
-         js::CheckStringIsIndex(twoByteChars(), len, indexp);
-}
-
-bool ParserAtom::isPrivateName() const {
-  return length() >= 2 && charAt(0) == '#';
-}
-
 JSAtom* ParserAtom::instantiate(JSContext* cx, ParserAtomIndex index,
                                 CompilationAtomCache& atomCache) const {
   MOZ_ASSERT(!isWellKnownOrStatic());
@@ -156,11 +139,6 @@ JSAtom* ParserAtom::instantiate(JSContext* cx, ParserAtomIndex index,
   }
 
   return atom;
-}
-
-bool ParserAtom::toNumber(JSContext* cx, double* result) const {
-  return hasLatin1Chars() ? CharsToNumber(cx, latin1Chars(), length(), result)
-                          : CharsToNumber(cx, twoByteChars(), length(), result);
 }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
@@ -484,11 +462,15 @@ bool ParserAtomsTable::isIdentifier(TaggedParserAtomIndex index) const {
 
 bool ParserAtomsTable::isPrivateName(TaggedParserAtomIndex index) const {
   if (!index.isParserAtomIndex()) {
-    MOZ_ASSERT(getParserAtom(index)->isPrivateName() == false);
     return false;
   }
 
-  return getParserAtom(index.toParserAtomIndex())->isPrivateName();
+  const auto* atom = getParserAtom(index.toParserAtomIndex());
+  if (atom->length() < 2) {
+    return false;
+  }
+
+  return atom->charAt(0) == '#';
 }
 
 bool ParserAtomsTable::isExtendedUnclonedSelfHostedFunctionName(
@@ -503,7 +485,17 @@ bool ParserAtomsTable::isExtendedUnclonedSelfHostedFunctionName(
 
 bool ParserAtomsTable::isIndex(TaggedParserAtomIndex index,
                                uint32_t* indexp) const {
-  return getParserAtom(index)->isIndex(indexp);
+  const auto* atom = getParserAtom(index);
+  size_t len = atom->length();
+  if (len == 0 || len > UINT32_CHAR_BUFFER_LENGTH) {
+    return false;
+  }
+  if (atom->hasLatin1Chars()) {
+    return mozilla::IsAsciiDigit(*atom->latin1Chars()) &&
+           js::CheckStringIsIndex(atom->latin1Chars(), len, indexp);
+  }
+  return mozilla::IsAsciiDigit(*atom->twoByteChars()) &&
+         js::CheckStringIsIndex(atom->twoByteChars(), len, indexp);
 }
 
 uint32_t ParserAtomsTable::length(TaggedParserAtomIndex index) const {
@@ -512,7 +504,11 @@ uint32_t ParserAtomsTable::length(TaggedParserAtomIndex index) const {
 
 bool ParserAtomsTable::toNumber(JSContext* cx, TaggedParserAtomIndex index,
                                 double* result) const {
-  return getParserAtom(index)->toNumber(cx, result);
+  const auto* atom = getParserAtom(index);
+  size_t len = atom->length();
+  return atom->hasLatin1Chars()
+             ? CharsToNumber(cx, atom->latin1Chars(), len, result)
+             : CharsToNumber(cx, atom->twoByteChars(), len, result);
 }
 
 UniqueChars ParserAtomsTable::toNewUTF8CharsZ(

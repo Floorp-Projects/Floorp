@@ -459,12 +459,6 @@ class alignas(alignof(uint32_t)) ParserAtom {
     return twoByteChars()[index];
   }
 
-  bool isIndex(uint32_t* indexp) const;
-  bool isPrivateName() const;
-
-  // Convert this entry to a number.
-  bool toNumber(JSContext* cx, double* result) const;
-
  public:
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump() const;
