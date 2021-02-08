@@ -164,22 +164,15 @@ add_task(async function test_import_with_duplicate_columns() {
     "https://mozilla.org,https://mozilla.org,jdoe@example.com,qwerty",
   ]);
 
-  await LoginCSVImport.importFromCSV(csvFilePath);
+  await Assert.rejects(
+    LoginCSVImport.importFromCSV(csvFilePath),
+    /CONFLICTING_VALUES_ERROR/,
+    "Check that the errorType is file format error"
+  );
 
   LoginTestUtils.checkLogins(
-    [
-      TestData.formLogin({
-        formActionOrigin: "",
-        httpRealm: null,
-        origin: "https://mozilla.org",
-        password: "qwerty",
-        passwordField: "",
-        timesUsed: 1,
-        username: "jdoe@example.com",
-        usernameField: "",
-      }),
-    ],
-    "Check that no login was added with duplicate columns of differing values"
+    [],
+    "Check that no login was added from a file with duplicated columns"
   );
 });
 
@@ -515,36 +508,90 @@ add_task(async function test_import_summary_contains_added_login() {
 });
 
 /**
- * Imports login data summary contains modified logins.
+ * Imports login data summary contains modified logins without guid.
  */
-add_task(async function test_import_summary_contains_modified_login() {
+add_task(async function test_import_summary_modified_login_without_guid() {
+  let initialDataFile = await setupCsv([
+    "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
+    "https://modifiedwithoutguid.example.com,gini@example.com,initial_password,My realm,,,1589617814635,1589710449871,1589617846802",
+  ]);
+  await LoginCSVImport.importFromCSV(initialDataFile);
+
+  let csvFile = await LoginTestUtils.file.setupCsvFileWithLines([
+    "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
+    "https://modifiedwithoutguid.example.com,gini@example.com,modified_password,My realm,,,1589617814635,1589710449871,1589617846999",
+  ]);
+
+  let [modifiedWithoutGuid] = await LoginCSVImport.importFromCSV(csvFile.path);
+
+  equal(
+    modifiedWithoutGuid.result,
+    "modified",
+    `Check that the login was modified when there was no guid data`
+  );
+  LoginTestUtils.checkLogins(
+    [
+      TestData.authLogin({
+        formActionOrigin: null,
+        guid: null,
+        httpRealm: "My realm",
+        origin: "https://modifiedwithoutguid.example.com",
+        password: "modified_password",
+        passwordField: "",
+        timeCreated: 1589617814635,
+        timeLastUsed: 1589710449871,
+        timePasswordChanged: 1589617846999,
+        timesUsed: 1,
+        username: "gini@example.com",
+        usernameField: "",
+      }),
+    ],
+    "Check that logins were updated with the correct fields",
+    (a, e) => a.equals(e) && checkMetaInfo(a, e)
+  );
+});
+
+/**
+ * Imports login data summary contains modified logins with guid.
+ */
+add_task(async function test_import_summary_modified_login_with_guid() {
   let initialDataFile = await setupCsv([
     "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
     "https://modifiedwithguid.example.com,jane@example.com,initial_password,My realm,,{5ec0d12f-e194-4279-ae1b-d7d281bb0001},1589617814635,1589710449871,1589617846802",
-    "https://modifiedwithoutguid.example.com,jane@example.com,initial_password,My realm,,,1589617814635,1589710449871,1589617846802",
   ]);
   await LoginCSVImport.importFromCSV(initialDataFile);
 
   let csvFile = await LoginTestUtils.file.setupCsvFileWithLines([
     "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
     "https://modified.example.com,jane@example.com,modified_password,My realm,,{5ec0d12f-e194-4279-ae1b-d7d281bb0001},1589617814635,1589710449871,1589617846999",
-    "https://modifiedwithoutguid.example.com,jane@example.com,modified_password,My realm,,,1589617814635,1589710449871,1589617846999",
   ]);
 
-  let [
-    modifiedWithGuid,
-    modifiedWithoutGuid,
-  ] = await LoginCSVImport.importFromCSV(csvFile.path);
+  let [modifiedWithGuid] = await LoginCSVImport.importFromCSV(csvFile.path);
 
   equal(
     modifiedWithGuid.result,
     "modified",
     `Check that the login was modified when it had the same guid`
   );
-  equal(
-    modifiedWithoutGuid.result,
-    "modified",
-    `Check that the login was modified when there was no guid data`
+  LoginTestUtils.checkLogins(
+    [
+      TestData.authLogin({
+        formActionOrigin: null,
+        guid: "{5ec0d12f-e194-4279-ae1b-d7d281bb0001}",
+        httpRealm: "My realm",
+        origin: "https://modified.example.com",
+        password: "modified_password",
+        passwordField: "",
+        timeCreated: 1589617814635,
+        timeLastUsed: 1589710449871,
+        timePasswordChanged: 1589617846999,
+        timesUsed: 1,
+        username: "jane@example.com",
+        usernameField: "",
+      }),
+    ],
+    "Check that logins were updated with the correct fields",
+    (a, e) => a.equals(e) && checkMetaInfo(a, e)
   );
 });
 
@@ -632,7 +679,7 @@ add_task(async function test_import_summary_with_non_csv_file() {
 });
 
 /**
- * Imports login with wrong file type will have correct errorType.
+ * Imports login multiple url and user will import the first and skip the second.
  */
 add_task(async function test_import_summary_with_url_user_multiple_values() {
   let csvFilePath = await setupCsv([
@@ -641,44 +688,103 @@ add_task(async function test_import_summary_with_url_user_multiple_values() {
     "https://example.com,jane@example.com,password2,My realm",
   ]);
 
-  let errorType;
-  try {
-    await LoginCSVImport.importFromCSV(csvFilePath);
-  } catch (e) {
-    if (e instanceof ImportFailedException) {
-      errorType = e.errorType;
-    }
-  }
+  let initialLoginCount = Services.logins.getAllLogins().length;
 
+  let results = await LoginCSVImport.importFromCSV(csvFilePath);
+  let afterImportLoginCount = Services.logins.getAllLogins().length;
+
+  equal(results.length, 2, `Check that we got a result for each imported row`);
+  equal(results[0].result, "added", `Check that the first login was added`);
   equal(
-    errorType,
-    ImportFailedErrorType.CONFLICTING_VALUES_ERROR,
-    `Check that the errorType is file format error in case of duplicate entries`
+    results[1].result,
+    "no_change",
+    `Check that the second login was skipped`
   );
-}).skip(); // TODO: Bug 1687852, resolve duplicates when importing
+  equal(initialLoginCount, 0, `Check that initially we had no logins`);
+  equal(afterImportLoginCount, 1, `Check that we imported only one login`);
+});
 
 /**
- * Imports login with wrong file type will have correct errorType.
+ * Imports login with duplicated guid values throws error.
  */
-add_task(async function test_import_summary_with_multiple_guid_values() {
+add_task(async function test_import_summary_with_duplicated_guid_values() {
   let csvFilePath = await setupCsv([
     "url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged",
     "https://example1.com,jane1@example.com,password1,My realm,,{5ec0d12f-e194-4279-ae1b-d7d281bb0004},1589617814635,1589710449871,1589617846802",
     "https://example2.com,jane2@example.com,password2,My realm,,{5ec0d12f-e194-4279-ae1b-d7d281bb0004},1589617814635,1589710449871,1589617846802",
   ]);
+  let initialLoginCount = Services.logins.getAllLogins().length;
 
-  let errorType;
-  try {
-    await LoginCSVImport.importFromCSV(csvFilePath);
-  } catch (e) {
-    if (e instanceof ImportFailedException) {
-      errorType = e.errorType;
-    }
-  }
+  let results = await LoginCSVImport.importFromCSV(csvFilePath);
+  let afterImportLoginCount = Services.logins.getAllLogins().length;
 
+  equal(results.length, 2, `Check that we got a result for each imported row`);
+  equal(results[0].result, "added", `Check that the first login was added`);
+  equal(results[1].result, "error", `Check that the second login was an error`);
+  equal(initialLoginCount, 0, `Check that initially we had no logins`);
+  equal(afterImportLoginCount, 1, `Check that we imported only one login`);
+});
+
+/**
+ * Imports login with different passwords will pick up the newest one and ignore the oldest one.
+ */
+add_task(async function test_import_summary_with_different_time_changed() {
+  let csvFilePath = await setupCsv([
+    "url,username,password,timeCreated,timeLastUsed,timePasswordChanged",
+    "https://example.com,eve@example.com,old password,1589617814635,1589710449800,1589617846800",
+    "https://example.com,eve@example.com,new password,1589617814635,1589710449801,1589617846801",
+  ]);
+  let initialLoginCount = Services.logins.getAllLogins().length;
+
+  let results = await LoginCSVImport.importFromCSV(csvFilePath);
+  let afterImportLoginCount = Services.logins.getAllLogins().length;
+
+  equal(results.length, 2, `Check that we got a result for each imported row`);
   equal(
-    errorType,
-    ImportFailedErrorType.CONFLICTING_VALUES_ERROR,
-    `Check that the errorType is file format error in case of duplicate entries`
+    results[0].result,
+    "no_change",
+    `Check that the oldest password is skipped`
   );
+  equal(
+    results[1].login.password,
+    "new password",
+    `Check that the newest password is imported`
+  );
+  equal(
+    results[1].result,
+    "added",
+    `Check that the newest password result is correct`
+  );
+  equal(initialLoginCount, 0, `Check that initially we had no logins`);
+  equal(afterImportLoginCount, 1, `Check that we imported only one login`);
+});
+
+/**
+ * Imports duplicate logins as one without an error.
+ */
+add_task(async function test_import_duplicate_logins_as_one() {
+  let csvFilePath = await setupCsv([
+    "name,url,username,password",
+    "somesite,https://example.com/,user@example.com,asdasd123123",
+    "somesite,https://example.com/,user@example.com,asdasd123123",
+  ]);
+  let initialLoginCount = Services.logins.getAllLogins().length;
+
+  let results = await LoginCSVImport.importFromCSV(csvFilePath);
+  let afterImportLoginCount = Services.logins.getAllLogins().length;
+
+  equal(results.length, 2, `Check that we got a result for each imported row`);
+  equal(
+    results[0].result,
+    "added",
+    `Check that the first login login was added`
+  );
+  equal(
+    results[1].result,
+    "no_change",
+    `Check that the second login was not changed`
+  );
+
+  equal(initialLoginCount, 0, `Check that initially we had no logins`);
+  equal(afterImportLoginCount, 1, `Check that we imported only one login`);
 });
