@@ -1708,12 +1708,12 @@ bool BytecodeEmitter::iteratorResultShape(GCThingIndex* outShape) {
   ObjLiteralWriter writer;
   writer.beginObject(flags);
 
-  writer.setPropNameNoDuplicateCheck(compilationState.parserAtoms,
+  writer.setPropNameNoDuplicateCheck(parserAtoms(),
                                      TaggedParserAtomIndex::WellKnown::value());
   if (!writer.propWithUndefinedValue(cx)) {
     return false;
   }
-  writer.setPropNameNoDuplicateCheck(compilationState.parserAtoms,
+  writer.setPropNameNoDuplicateCheck(parserAtoms(),
                                      TaggedParserAtomIndex::WellKnown::done());
   if (!writer.propWithUndefinedValue(cx)) {
     return false;
@@ -1784,7 +1784,7 @@ bool BytecodeEmitter::emitTDZCheckIfNeeded(TaggedParserAtomIndex name,
 
   // Private names are implemented as lexical bindings, but it's just an
   // implementation detail. Per spec there's no TDZ check when using them.
-  if (compilationState.parserAtoms.isPrivateName(name)) {
+  if (parserAtoms().isPrivateName(name)) {
     return true;
   }
 
@@ -2619,7 +2619,7 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
     return false;
   }
 
-  if (!NameFunctions(cx, compilationState.parserAtoms, body)) {
+  if (!NameFunctions(cx, parserAtoms(), body)) {
     return false;
   }
 
@@ -2697,7 +2697,7 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode) {
   }
 
   if (funbox->index() == CompilationStencil::TopLevelIndex) {
-    if (!NameFunctions(cx, compilationState.parserAtoms, funNode)) {
+    if (!NameFunctions(cx, parserAtoms(), funNode)) {
       return false;
     }
   }
@@ -8765,8 +8765,7 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         if (key->isKind(ParseNodeKind::NumberExpr)) {
           MOZ_ASSERT(accessorType == AccessorType::None);
 
-          auto keyAtom = key->as<NumericLiteral>().toAtom(
-              cx, compilationState.parserAtoms);
+          auto keyAtom = key->as<NumericLiteral>().toAtom(cx, parserAtoms());
           if (!keyAtom) {
             return false;
           }
@@ -8959,8 +8958,7 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
     ParseNode* key = prop->left();
 
     if (key->is<NameNode>()) {
-      if (!writer.setPropName(cx, compilationState.parserAtoms,
-                              key->as<NameNode>().atom())) {
+      if (!writer.setPropName(cx, parserAtoms(), key->as<NameNode>().atom())) {
         return false;
       }
     } else {
@@ -9025,7 +9023,7 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
       atom = key->as<NameNode>().atom();
     }
 
-    if (!writer.setPropName(cx, compilationState.parserAtoms, atom)) {
+    if (!writer.setPropName(cx, parserAtoms(), atom)) {
       return false;
     }
 
@@ -9124,7 +9122,7 @@ bool BytecodeEmitter::emitObjLiteralValue(ObjLiteralWriter& writer,
     }
   } else if (value->isKind(ParseNodeKind::StringExpr) ||
              value->isKind(ParseNodeKind::TemplateStringExpr)) {
-    if (!writer.propWithAtomValue(cx, compilationState.parserAtoms,
+    if (!writer.propWithAtomValue(cx, parserAtoms(),
                                   value->as<NameNode>().atom())) {
       return false;
     }
@@ -9325,8 +9323,8 @@ bool BytecodeEmitter::emitPrivateMethodInitializers(ClassEmitter& ce,
     // Synthesize a name for the lexical variable that will store the
     // private method body.
     StringBuffer storedMethodName(cx);
-    const ParserAtom* prop = compilationState.parserAtoms.getParserAtom(
-        propName->as<NameNode>().atom());
+    const ParserAtom* prop =
+        parserAtoms().getParserAtom(propName->as<NameNode>().atom());
     if (!storedMethodName.append(prop)) {
       return false;
     }
@@ -9350,8 +9348,7 @@ bool BytecodeEmitter::emitPrivateMethodInitializers(ClassEmitter& ce,
       default:
         MOZ_CRASH("Invalid private method accessor type");
     }
-    auto storedMethodAtom =
-        storedMethodName.finishParserAtom(compilationState.parserAtoms);
+    auto storedMethodAtom = storedMethodName.finishParserAtom(parserAtoms());
 
     // Emit the private method body and store it as a lexical var.
     if (!emitFunction(&propdef->as<ClassMethod>().method())) {
@@ -10534,8 +10531,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitInstrumentationSlow(
   }
   //            [stack] CALLBACK UNDEFINED
 
-  auto atom = RealmInstrumentation::getInstrumentationKindName(
-      cx, compilationState.parserAtoms, kind);
+  auto atom =
+      RealmInstrumentation::getInstrumentationKindName(cx, parserAtoms(), kind);
   if (!atom) {
     return false;
   }

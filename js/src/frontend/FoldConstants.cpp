@@ -1093,10 +1093,8 @@ static bool FoldElement(FoldInfo info, ParseNode** nodePtr) {
   TaggedParserAtomIndex name;
   if (key->isKind(ParseNodeKind::StringExpr)) {
     auto keyIndex = key->as<NameNode>().atom();
-    const ParserAtom* atom = info.parserAtoms.getParserAtom(keyIndex);
     uint32_t index;
-
-    if (atom->isIndex(&index)) {
+    if (info.parserAtoms.isIndex(keyIndex, &index)) {
       // Optimization 1: We have something like expr["100"]. This is
       // equivalent to expr[100] which is faster.
       if (!TryReplaceNode(

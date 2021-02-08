@@ -221,8 +221,7 @@ static void DumpCharsNoNewline(const ParserAtom* atom,
 static void DumpCharsNoNewline(ParserBase* parser, TaggedParserAtomIndex index,
                                GenericPrinter& out) {
   if (parser) {
-    const auto* atom =
-        parser->getCompilationState().parserAtoms.getParserAtom(index);
+    const auto* atom = parser->parserAtoms().getParserAtom(index);
     DumpCharsNoNewline(atom, out);
   } else {
     out.put("\"");
@@ -353,8 +352,7 @@ void NameNode::dumpImpl(ParserBase* parser, GenericPrinter& out, int indent) {
       if (!atom_) {
         out.put("#<null name>");
       } else if (parser) {
-        const auto* atom =
-            parser->getCompilationState().parserAtoms.getParserAtom(atom_);
+        const auto* atom = parser->parserAtoms().getParserAtom(atom_);
         if (atom->hasLatin1Chars()) {
           DumpName(out, atom->latin1Chars(), atom->length());
         } else {
@@ -386,8 +384,7 @@ void LabeledStatement::dumpImpl(ParserBase* parser, GenericPrinter& out,
   out.printf(" ");
   indent += strlen(name) + 3;
   if (parser) {
-    const auto* labelAtom =
-        parser->getCompilationState().parserAtoms.getParserAtom(label());
+    const auto* labelAtom = parser->parserAtoms().getParserAtom(label());
     indent += labelAtom->length();
   }
   DumpParseTree(parser, statement(), out, indent);
@@ -404,8 +401,7 @@ void LexicalScopeNode::dumpImpl(ParserBase* parser, GenericPrinter& out,
     for (uint32_t i = 0; i < bindings->slotInfo.length; i++) {
       auto index = bindings->trailingNames[i].name();
       if (parser) {
-        const auto* name =
-            parser->getCompilationState().parserAtoms.getParserAtom(index);
+        const auto* name = parser->parserAtoms().getParserAtom(index);
         if (name->hasLatin1Chars()) {
           DumpName(out, name->latin1Chars(), name->length());
         } else {
