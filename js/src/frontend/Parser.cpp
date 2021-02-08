@@ -2386,18 +2386,20 @@ bool ParserBase::leaveInnerFunction(ParseContext* outerpc) {
 
 TaggedParserAtomIndex ParserBase::prefixAccessorName(
     PropertyType propType, TaggedParserAtomIndex propAtom) {
-  const ParserAtom* prefix = nullptr;
+  StringBuffer prefixed(cx_);
   if (propType == PropertyType::Setter) {
-    prefix = cx_->parserNames().setPrefix;
+    if (!prefixed.append("set ", 4)) {
+      return TaggedParserAtomIndex::null();
+    }
   } else {
-    MOZ_ASSERT(propType == PropertyType::Getter);
-    prefix = cx_->parserNames().getPrefix;
+    if (!prefixed.append("get ", 4)) {
+      return TaggedParserAtomIndex::null();
+    }
   }
-
-  const ParserAtom* atoms[2] = {prefix,
-                                this->parserAtoms().getParserAtom(propAtom)};
-  auto atomsRange = mozilla::Range(atoms, 2);
-  return this->parserAtoms().concatAtoms(cx_, atomsRange);
+  if (!prefixed.append(this->parserAtoms(), propAtom)) {
+    return TaggedParserAtomIndex::null();
+  }
+  return prefixed.finishParserAtom(this->parserAtoms());
 }
 
 template <class ParseHandler, typename Unit>
