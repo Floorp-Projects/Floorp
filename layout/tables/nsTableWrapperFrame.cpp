@@ -300,7 +300,7 @@ nscoord nsTableWrapperFrame::GetPrefISize(gfxContext* aRenderingContext) {
 nscoord nsTableWrapperFrame::ChildShrinkWrapISize(
     gfxContext* aRenderingContext, nsIFrame* aChildFrame, WritingMode aWM,
     LogicalSize aCBSize, nscoord aAvailableISize,
-    const StyleSizeOverrides& aSizeOverrides, nscoord* aMarginResult) const {
+    const StyleSizeOverrides& aSizeOverrides) const {
   AutoMaybeDisableFontInflation an(aChildFrame);
 
   SizeComputationInput offsets(aChildFrame, aRenderingContext, aWM,
@@ -325,9 +325,6 @@ nscoord nsTableWrapperFrame::ChildShrinkWrapISize(
   auto size =
       aChildFrame->ComputeSize(aRenderingContext, aWM, aCBSize, aAvailableISize,
                                marginSize, bpSize, aSizeOverrides, flags);
-  if (aMarginResult) {
-    *aMarginResult = offsets.ComputedLogicalMargin(aWM).IStartEnd(aWM);
-  }
   return size.mLogicalSize.ISize(aWM) + marginSize.ISize(aWM) +
          bpSize.ISize(aWM);
 }
@@ -365,13 +362,12 @@ LogicalSize nsTableWrapperFrame::ComputeAutoSize(
                              kidAvailableISize - capISize, aSizeOverrides);
   } else if (*captionSide == StyleCaptionSide::Top ||
              *captionSide == StyleCaptionSide::Bottom) {
-    nscoord margin;
     inlineSize =
         ChildShrinkWrapISize(aRenderingContext, InnerTableFrame(), aWM, aCBSize,
-                             kidAvailableISize, aSizeOverrides, &margin);
+                             kidAvailableISize, aSizeOverrides);
     nscoord capISize =
         ChildShrinkWrapISize(aRenderingContext, mCaptionFrames.FirstChild(),
-                             aWM, aCBSize, inlineSize - margin, aSizeOverrides);
+                             aWM, aCBSize, inlineSize, aSizeOverrides);
     if (capISize > inlineSize) {
       inlineSize = capISize;
     }
