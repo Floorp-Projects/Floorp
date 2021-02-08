@@ -1530,9 +1530,6 @@ static inline UniqueChars StringToNewUTF8CharsZ(JSContext* maybecx,
                 .c_str());
 }
 
-UniqueChars ParserAtomToNewUTF8CharsZ(JSContext* maybecx,
-                                      const js::frontend::ParserAtom* atom);
-
 /**
  * Allocate a string with the given contents.  If |allowGC == CanGC|, this may
  * trigger a GC.
