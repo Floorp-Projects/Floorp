@@ -291,6 +291,13 @@ void ParserAtom::dumpCharsNoQuote(js::GenericPrinter& out) const {
     JSString::dumpCharsNoQuote<char16_t>(twoByteChars(), length(), out);
   }
 }
+
+void ParserAtomsTable::dumpCharsNoQuote(js::GenericPrinter& out,
+                                        TaggedParserAtomIndex index) const {
+  const auto* atom = getParserAtom(index);
+  atom->dumpCharsNoQuote(out);
+}
+
 #endif
 
 ParserAtomsTable::ParserAtomsTable(JSRuntime* rt, LifoAlloc& alloc)
