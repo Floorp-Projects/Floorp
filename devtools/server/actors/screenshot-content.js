@@ -11,7 +11,12 @@ const {
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const STRINGS_URI = "devtools/shared/locales/screenshot.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
-loader.lazyRequireGetter(this, "getRect", "devtools/shared/layout/utils", true);
+loader.lazyRequireGetter(
+  this,
+  ["getCurrentZoom", "getRect"],
+  "devtools/shared/layout/utils",
+  true
+);
 
 exports.ScreenshotContentActor = ActorClassWithSpec(screenshotContentSpec, {
   initialize: function(conn, targetActor) {
@@ -41,6 +46,7 @@ exports.ScreenshotContentActor = ActorClassWithSpec(screenshotContentSpec, {
    *          - messages {Array<Object{text, level}>}: An array of objects representing
    *            the messages emitted throught the process and their level.
    *          - windowDpr {Number}: Value of window.devicePixelRatio
+   *          - windowZoom {Number}: The page current zoom level
    *          - rect {Object}: Object with left, top, width and height properties
    *            representing the rect **inside the browser element** that should be rendered.
    *            For screenshot of the current viewport, we return null, as expected by the
@@ -51,6 +57,7 @@ exports.ScreenshotContentActor = ActorClassWithSpec(screenshotContentSpec, {
 
     const { window } = this.targetActor;
     const windowDpr = window.devicePixelRatio;
+    const windowZoom = getCurrentZoom(window);
     const messages = [];
 
     // If we're going to take the current view of the page, we don't need to compute a rect,
@@ -60,6 +67,7 @@ exports.ScreenshotContentActor = ActorClassWithSpec(screenshotContentSpec, {
         rect: null,
         messages,
         windowDpr,
+        windowZoom,
       };
     }
 
@@ -127,6 +135,7 @@ exports.ScreenshotContentActor = ActorClassWithSpec(screenshotContentSpec, {
 
     return {
       windowDpr,
+      windowZoom,
       rect: { left, top, width, height },
       messages,
     };

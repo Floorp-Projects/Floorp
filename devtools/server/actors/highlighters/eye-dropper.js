@@ -134,9 +134,13 @@ class EyeDropper {
 
   /**
    * Show the eye-dropper highlighter.
+   *
    * @param {DOMNode} node The node which document the highlighter should be inserted in.
    * @param {Object} options The options object may contain the following properties:
-   * - {Boolean} copyOnSelect Whether selecting a color should copy it to the clipboard.
+   * - {Boolean} copyOnSelect: Whether selecting a color should copy it to the clipboard.
+   * - {String|null} screenshot: a dataURL representation of the page screenshot. If null,
+   *                 the eyedropper will use `drawWindow` to get the the screenshot
+   *                 (⚠️ but it won't handle remote frames).
    */
   show(node, options = {}) {
     if (this.highlighterEnv.isXUL) {
@@ -152,7 +156,7 @@ class EyeDropper {
     // eyedropper UI will appear in the screenshot itself (since the UI is injected as
     // native anonymous content in the page).
     // Once the screenshot is ready, the magnified area will be drawn.
-    this.prepareImageCapture();
+    this.prepareImageCapture(options.screenshot);
 
     // Start listening for user events.
     const { pageListenerTarget } = this.highlighterEnv;
@@ -216,22 +220,41 @@ class EyeDropper {
     this.win.document.setSuppressedEventListener(null);
   }
 
-  prepareImageCapture() {
-    // Get the image data from the content window.
-    const imageData = getWindowAsImageData(this.win);
+  /**
+   * Create an image bitmap from the page screenshot, draw the eyedropper and set the
+   * "drawn" attribute on the "root" element once it's done.
+   *
+   * @params {String|null} screenshot: a dataURL representation of the page screenshot.
+   *                       If null, we'll use `drawWindow` to get the the page screenshot
+   *                       (⚠️ but it won't handle remote frames).
+   */
+  async prepareImageCapture(screenshot) {
+    let imgData;
+    if (screenshot) {
+      // If a screenshot data URL was passed, we create an image tag with it which we
+      // use to create an image bitmap.
+      imgData = this.win.document.createElement("img");
+      const onImgLoaded = new Promise(resolve =>
+        imgData.addEventListener("load", resolve, { once: true })
+      );
+      imgData.src = screenshot;
+      await onImgLoaded;
+    } else {
+      imgData = getWindowAsImageData(this.win);
+    }
 
     // We need to transform imageData to something drawWindow will consume. An ImageBitmap
     // works well. We could have used an Image, but doing so results in errors if the page
     // defines CSP headers.
-    this.win.createImageBitmap(imageData).then(image => {
-      this.pageImage = image;
-      // We likely haven't drawn anything yet (no mousemove events yet), so start now.
-      this.draw();
+    const image = await this.win.createImageBitmap(imgData);
 
-      // Set an attribute on the root element to be able to run tests after the first draw
-      // was done.
-      this.getElement("root").setAttribute("drawn", "true");
-    });
+    this.pageImage = image;
+    // We likely haven't drawn anything yet (no mousemove events yet), so start now.
+    this.draw();
+
+    // Set an attribute on the root element to be able to run tests after the first draw
+    // was done.
+    this.getElement("root").setAttribute("drawn", "true");
   }
 
   /**
