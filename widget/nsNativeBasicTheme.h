@@ -238,8 +238,9 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
 
   void PaintRoundedFocusRect(DrawTarget* aDrawTarget,
                              const LayoutDeviceRect& aRect, DPIRatio aDpiRatio,
-                             CSSCoord aRadius, CSSCoord aOffset,
-                             bool aInnerOnly = false);
+                             CSSCoord aRadius, CSSCoord aOffset);
+  void PaintAutoStyleOutline(nsIFrame*, DrawTarget*, const LayoutDeviceRect&,
+                             DPIRatio);
   void PaintRoundedRectWithRadius(DrawTarget* aDrawTarget,
                                   const LayoutDeviceRect& aRect,
                                   const sRGBColor& aBackgroundColor,
