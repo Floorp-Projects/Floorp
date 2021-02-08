@@ -8895,7 +8895,7 @@
 # available.
 - name: network.dns.upgrade_with_https_rr
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Whether to use HTTPS RR as AltSvc
