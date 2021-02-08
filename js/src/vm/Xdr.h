@@ -475,8 +475,6 @@ class XDRState : public XDRCoderBase {
   XDRResult codeCharsZ(XDRTranscodeString<char16_t>& buffer);
 
   XDRResult codeModuleObject(MutableHandleModuleObject modp);
-  XDRResult codeFunction(JS::MutableHandleFunction objp,
-                         HandleScriptSourceObject sourceObject = nullptr);
   XDRResult codeScript(MutableHandleScript scriptp);
   XDRResult codeStencil(frontend::CompilationStencil& stencil);
   XDRResult codeFunctionStencil(frontend::BaseCompilationStencil& stencil);

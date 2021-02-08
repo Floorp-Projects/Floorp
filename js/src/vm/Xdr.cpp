@@ -351,35 +351,6 @@ static XDRResult XDRChunkCount(XDRState<mode>* xdr, uint32_t* sliceCount) {
 }
 
 template <XDRMode mode>
-XDRResult XDRState<mode>::codeFunction(MutableHandleFunction funp,
-                                       HandleScriptSourceObject sourceObject) {
-  TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx());
-  TraceLoggerTextId event = mode == XDR_DECODE ? TraceLogger_DecodeFunction
-                                               : TraceLogger_EncodeFunction;
-  AutoTraceLog tl(logger, event);
-
-#ifdef DEBUG
-  auto sanityCheck = mozilla::MakeScopeExit(
-      [&] { MOZ_ASSERT(validateResultCode(cx(), resultCode())); });
-#endif
-  auto guard = mozilla::MakeScopeExit([&] { funp.set(nullptr); });
-  RootedScope scope(cx(), &cx()->global()->emptyGlobalScope());
-  if (mode == XDR_DECODE) {
-    MOZ_ASSERT(!sourceObject);
-    funp.set(nullptr);
-  } else {
-    MOZ_ASSERT(!sourceObject);
-    MOZ_ASSERT(funp->enclosingScope()->is<GlobalScope>());
-  }
-
-  MOZ_TRY(VersionCheck(this, XDRFormatType::JSScript));
-  MOZ_TRY(XDRInterpretedFunction(this, scope, sourceObject, funp));
-
-  guard.release();
-  return Ok();
-}
-
-template <XDRMode mode>
 XDRResult XDRState<mode>::codeScript(MutableHandleScript scriptp) {
   TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx());
   TraceLoggerTextId event =
