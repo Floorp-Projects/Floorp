@@ -223,7 +223,7 @@ class MediaSessionConduit {
 
   virtual void GetRtpSources(nsTArray<dom::RTCRtpSourceEntry>& outSources) = 0;
 
-  virtual uint64_t CodecPluginID() = 0;
+  virtual bool HasCodecPluginID(uint64_t aPluginID) = 0;
 
   virtual void SetPCHandle(const std::string& aPCHandle) = 0;
 

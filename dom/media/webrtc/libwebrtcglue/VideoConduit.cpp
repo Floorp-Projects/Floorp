@@ -1212,7 +1212,7 @@ std::unique_ptr<webrtc::VideoDecoder> WebrtcVideoConduit::CreateDecoder(
   MOZ_ASSERT(NS_IsMainThread());
 
   std::unique_ptr<webrtc::VideoDecoder> decoder = nullptr;
-  mRecvCodecPluginID = 0;
+  mRecvCodecPluginIDs.Clear();
 
 #ifdef MOZ_WEBRTC_MEDIACODEC
   bool enabled = false;
@@ -1229,8 +1229,8 @@ std::unique_ptr<webrtc::VideoDecoder> WebrtcVideoConduit::CreateDecoder(
       // get an external decoder
       decoder.reset(GmpVideoCodec::CreateDecoder());
       if (decoder) {
-        mRecvCodecPluginID =
-            static_cast<WebrtcVideoDecoder*>(decoder.get())->PluginID();
+        mRecvCodecPluginIDs.AppendElement(
+            static_cast<WebrtcVideoDecoder*>(decoder.get())->PluginID());
       }
       break;
 
@@ -1281,7 +1281,7 @@ std::unique_ptr<webrtc::VideoEncoder> WebrtcVideoConduit::CreateEncoder(
   MOZ_ASSERT(NS_IsMainThread());
 
   std::unique_ptr<webrtc::VideoEncoder> encoder = nullptr;
-  mSendCodecPluginID = 0;
+  mSendCodecPluginIDs.Clear();
 
 #ifdef MOZ_WEBRTC_MEDIACODEC
   bool enabled = false;
@@ -1299,8 +1299,8 @@ std::unique_ptr<webrtc::VideoEncoder> WebrtcVideoConduit::CreateEncoder(
       // get an external encoder
       encoder.reset(GmpVideoCodec::CreateEncoder());
       if (encoder) {
-        mSendCodecPluginID =
-            static_cast<WebrtcVideoEncoder*>(encoder.get())->PluginID();
+        mSendCodecPluginIDs.AppendElement(
+            static_cast<WebrtcVideoEncoder*>(encoder.get())->PluginID());
       }
       break;
 
@@ -1969,17 +1969,11 @@ void WebrtcVideoConduit::CollectTelemetryData() {
   }
 }
 
-uint64_t WebrtcVideoConduit::CodecPluginID() {
+bool WebrtcVideoConduit::HasCodecPluginID(uint64_t aPluginID) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mSendCodecPluginID) {
-    return mSendCodecPluginID;
-  }
-  if (mRecvCodecPluginID) {
-    return mRecvCodecPluginID;
-  }
-
-  return 0;
+  return mSendCodecPluginIDs.Contains(aPluginID) ||
+         mRecvCodecPluginIDs.Contains(aPluginID);
 }
 
 bool WebrtcVideoConduit::RequiresNewSendStream(
