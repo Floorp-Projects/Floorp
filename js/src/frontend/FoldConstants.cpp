@@ -466,9 +466,8 @@ static bool FoldType(FoldInfo info, ParseNode** pnp, ParseNodeKind kind) {
       case ParseNodeKind::NumberExpr:
         if (pn->isKind(ParseNodeKind::StringExpr)) {
           double d;
-          const ParserAtom* atom =
-              info.parserAtoms.getParserAtom(pn->as<NameNode>().atom());
-          if (!atom->toNumber(info.cx, &d)) {
+          auto atom = pn->as<NameNode>().atom();
+          if (!info.parserAtoms.toNumber(info.cx, atom, &d)) {
             return false;
           }
           if (!TryReplaceNode(
