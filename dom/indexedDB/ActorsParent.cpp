@@ -515,16 +515,6 @@ uint32_t HashName(const nsAString& aName) {
                          });
 }
 
-Result<Ok, nsresult> AssertExists(const nsCOMPtr<nsIFile>& aDirectory) {
-#ifdef DEBUG
-  IDB_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(aDirectory, Exists));
-
-  MOZ_ASSERT(exists);
-#endif
-
-  return Ok{};
-};
-
 nsresult ClampResultCode(nsresult aResultCode) {
   if (NS_SUCCEEDED(aResultCode) ||
       NS_ERROR_GET_MODULE(aResultCode) == NS_ERROR_MODULE_DOM_INDEXEDDB) {
@@ -12694,23 +12684,32 @@ nsresult QuotaClient::UpgradeStorageFrom2_1To2_2(nsIFile* aDirectory) {
 
   IDB_TRY(CollectEachFile(
       *aDirectory, [](const nsCOMPtr<nsIFile>& file) -> Result<Ok, nsresult> {
-        IDB_TRY_INSPECT(const auto& leafName, MOZ_TO_RESULT_INVOKE_TYPED(
-                                                  nsString, file, GetLeafName));
+        IDB_TRY_INSPECT(const auto& dirEntryKind, GetDirEntryKind(*file));
 
-        IDB_TRY_INSPECT(const bool& isDirectory,
-                        MOZ_TO_RESULT_INVOKE(file, IsDirectory));
+        switch (dirEntryKind) {
+          case nsIFileKind::ExistsAsDirectory:
+            break;
 
-        if (isDirectory) {
-          return Ok{};
-        }
+          case nsIFileKind::ExistsAsFile: {
+            IDB_TRY_INSPECT(
+                const auto& leafName,
+                MOZ_TO_RESULT_INVOKE_TYPED(nsString, file, GetLeafName));
 
-        // It's reported that files ending with ".tmp" somehow live in the
-        // indexedDB directories in Bug 1503883. Such files shouldn't exist in
-        // the indexedDB directory so remove them in this upgrade.
-        if (StringEndsWith(leafName, u".tmp"_ns)) {
-          IDB_WARNING("Deleting unknown temporary file!");
+            // It's reported that files ending with ".tmp" somehow live in the
+            // indexedDB directories in Bug 1503883. Such files shouldn't exist
+            // in the indexedDB directory so remove them in this upgrade.
+            if (StringEndsWith(leafName, u".tmp"_ns)) {
+              IDB_WARNING("Deleting unknown temporary file!");
 
-          IDB_TRY(file->Remove(false));
+              IDB_TRY(file->Remove(false));
+            }
+
+            break;
+          }
+
+          case nsIFileKind::DoesNotExist:
+            // Ignore files that got removed externally while iterating.
+            break;
         }
 
         return Ok{};
@@ -13116,55 +13115,64 @@ QuotaClient::GetDatabaseFilenames(nsIFile& aDirectory,
       [&result](const nsCOMPtr<nsIFile>& file) -> Result<Ok, nsresult> {
         IDB_TRY_INSPECT(const auto& leafName, MOZ_TO_RESULT_INVOKE_TYPED(
                                                   nsString, file, GetLeafName));
-        IDB_TRY_INSPECT(const auto& isDirectory,
-                        MOZ_TO_RESULT_INVOKE(file, IsDirectory));
 
-        if (isDirectory) {
-          result.subdirsToProcess.AppendElement(leafName);
-          return Ok{};
-        }
+        IDB_TRY_INSPECT(const auto& dirEntryKind, GetDirEntryKind(*file));
 
-        if constexpr (ObsoleteFilenames == ObsoleteFilenamesHandling::Include) {
-          if (StringBeginsWith(leafName, kIdbDeletionMarkerFilePrefix)) {
-            result.obsoleteFilenames.PutEntry(
-                Substring(leafName, kIdbDeletionMarkerFilePrefix.Length()));
-            return Ok{};
+        switch (dirEntryKind) {
+          case nsIFileKind::ExistsAsDirectory:
+            result.subdirsToProcess.AppendElement(leafName);
+            break;
+
+          case nsIFileKind::ExistsAsFile: {
+            if constexpr (ObsoleteFilenames ==
+                          ObsoleteFilenamesHandling::Include) {
+              if (StringBeginsWith(leafName, kIdbDeletionMarkerFilePrefix)) {
+                result.obsoleteFilenames.PutEntry(
+                    Substring(leafName, kIdbDeletionMarkerFilePrefix.Length()));
+                break;
+              }
+            }
+
+            // Skip OS metadata files. These files are only used in different
+            // platforms, but the profile can be shared across different
+            // operating systems, so we check it on all platforms.
+            if (QuotaManager::IsOSMetadata(leafName)) {
+              break;
+            }
+
+            // Skip files starting with ".".
+            if (QuotaManager::IsDotFile(leafName)) {
+              break;
+            }
+
+            // Skip SQLite temporary files. These files take up space on disk
+            // but will be deleted as soon as the database is opened, so we
+            // don't count them towards quota.
+            if (StringEndsWith(leafName, kSQLiteJournalSuffix) ||
+                StringEndsWith(leafName, kSQLiteSHMSuffix)) {
+              break;
+            }
+
+            // The SQLite WAL file does count towards quota, but it is handled
+            // below once we find the actual database file.
+            if (StringEndsWith(leafName, kSQLiteWALSuffix)) {
+              break;
+            }
+
+            nsDependentSubstring leafNameBase;
+            if (!GetFilenameBase(leafName, kSQLiteSuffix, leafNameBase)) {
+              UNKNOWN_FILE_WARNING(leafName);
+              break;
+            }
+
+            result.databaseFilenames.PutEntry(leafNameBase);
+            break;
           }
-        }
 
-        // Skip OS metadata files. These files are only used in different
-        // platforms, but the profile can be shared across different operating
-        // systems, so we check it on all platforms.
-        if (QuotaManager::IsOSMetadata(leafName)) {
-          return Ok{};
+          case nsIFileKind::DoesNotExist:
+            // Ignore files that got removed externally while iterating.
+            break;
         }
-
-        // Skip files starting with ".".
-        if (QuotaManager::IsDotFile(leafName)) {
-          return Ok{};
-        }
-
-        // Skip SQLite temporary files. These files take up space on disk but
-        // will be deleted as soon as the database is opened, so we don't count
-        // them towards quota.
-        if (StringEndsWith(leafName, kSQLiteJournalSuffix) ||
-            StringEndsWith(leafName, kSQLiteSHMSuffix)) {
-          return Ok{};
-        }
-
-        // The SQLite WAL file does count towards quota, but it is handled below
-        // once we find the actual database file.
-        if (StringEndsWith(leafName, kSQLiteWALSuffix)) {
-          return Ok{};
-        }
-
-        nsDependentSubstring leafNameBase;
-        if (!GetFilenameBase(leafName, kSQLiteSuffix, leafNameBase)) {
-          UNKNOWN_FILE_WARNING(leafName);
-          return Ok{};
-        }
-
-        result.databaseFilenames.PutEntry(leafNameBase);
 
         return Ok{};
       }));
@@ -13567,118 +13575,126 @@ nsresult Maintenance::DirectoryWork() {
             return Err(NS_ERROR_ABORT);
           }
 
-          // XXX This looks an unfortunate combination of error propagation and
-          // asserting... Can't we better assert also in case of an error?
-          IDB_TRY(AssertExists(originDir));
+          IDB_TRY_INSPECT(const auto& dirEntryKind,
+                          GetDirEntryKind(*originDir));
 
-          {
-            IDB_TRY_INSPECT(const bool& isDirectory,
-                            MOZ_TO_RESULT_INVOKE(originDir, IsDirectory));
+          switch (dirEntryKind) {
+            case nsIFileKind::ExistsAsFile:
+              break;
 
-            if (!isDirectory) {
-              return Ok{};
-            }
-          }
+            case nsIFileKind::ExistsAsDirectory: {
+              // Get the necessary information about the origin
+              // (GetDirectoryMetadata2WithRestore also checks if it's a valid
+              // origin).
 
-          // Get the necessary information about the origin
-          // (GetDirectoryMetadata2WithRestore also checks if it's a valid
-          // origin).
+              IDB_TRY_INSPECT(
+                  const auto& metadata,
+                  quotaManager->GetDirectoryMetadataWithQuotaInfo2WithRestore(
+                      originDir, persistent),
+                  // Not much we can do here...
+                  Ok{});
 
-          IDB_TRY_INSPECT(
-              const auto& metadata,
-              quotaManager->GetDirectoryMetadataWithQuotaInfo2WithRestore(
-                  originDir, persistent),
-              // Not much we can do here...
-              Ok{});
+              // Don't do any maintenance for private browsing databases, which
+              // are only temporary.
+              if (OriginAttributes::IsPrivateBrowsing(
+                      metadata.mQuotaInfo.mOrigin)) {
+                return Ok{};
+              }
 
-          // Don't do any maintenance for private browsing databases, which are
-          // only temporary.
-          if (OriginAttributes::IsPrivateBrowsing(
-                  metadata.mQuotaInfo.mOrigin)) {
-            return Ok{};
-          }
-
-          if (persistent) {
-            // We have to check that all persistent origins are cleaned up, but
-            // there's no way to do that by one call, we need to initialize (and
-            // possibly clean up) them one by one
-            // (EnsureTemporaryStorageIsInitialized cleans up only
-            // non-persistent origins).
-
-            IDB_TRY_UNWRAP(
-                const DebugOnly<bool> created,
-                quotaManager
-                    ->EnsurePersistentOriginIsInitialized(metadata.mQuotaInfo)
-                    .map([](const auto& res) { return res.second; }),
-                // Not much we can do here...
-                Ok{});
-
-            // We found this origin directory by traversing the repository, so
-            // EnsurePersistentOriginIsInitialized shouldn't report that a new
-            // directory has been created.
-            MOZ_ASSERT(!created);
-          }
-
-          IDB_TRY_INSPECT(const auto& idbDir,
-                          CloneFileAndAppend(*originDir, idbDirName));
-
-          IDB_TRY_INSPECT(const bool& exists,
-                          MOZ_TO_RESULT_INVOKE(idbDir, Exists));
-
-          if (!exists) {
-            return Ok{};
-          }
-
-          IDB_TRY_INSPECT(const bool& isDirectory,
-                          MOZ_TO_RESULT_INVOKE(idbDir, IsDirectory));
-
-          IDB_TRY(OkIf(isDirectory), Ok{});
-
-          nsTArray<nsString> databasePaths;
-
-          // Loop over files in the "idb" directory.
-          IDB_TRY(CollectEachFile(
-              *idbDir,
-              [this, &databasePaths](
-                  const nsCOMPtr<nsIFile>& idbDirFile) -> Result<Ok, nsresult> {
-                if (NS_WARN_IF(
-                        QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
-                    IsAborted()) {
-                  return Err(NS_ERROR_ABORT);
-                }
+              if (persistent) {
+                // We have to check that all persistent origins are cleaned up,
+                // but there's no way to do that by one call, we need to
+                // initialize (and possibly clean up) them one by one
+                // (EnsureTemporaryStorageIsInitialized cleans up only
+                // non-persistent origins).
 
                 IDB_TRY_UNWRAP(
-                    auto idbFilePath,
-                    MOZ_TO_RESULT_INVOKE_TYPED(nsString, idbDirFile, GetPath));
+                    const DebugOnly<bool> created,
+                    quotaManager
+                        ->EnsurePersistentOriginIsInitialized(
+                            metadata.mQuotaInfo)
+                        .map([](const auto& res) { return res.second; }),
+                    // Not much we can do here...
+                    Ok{});
 
-                if (!StringEndsWith(idbFilePath, kSQLiteSuffix)) {
-                  return Ok{};
-                }
+                // We found this origin directory by traversing the repository,
+                // so EnsurePersistentOriginIsInitialized shouldn't report that
+                // a new directory has been created.
+                MOZ_ASSERT(!created);
+              }
 
-                // XXX This looks an unfortunate combination of error
-                // propagation and asserting... Can't we better assert also in
-                // case of an error?
-                IDB_TRY(AssertExists(idbDirFile));
+              IDB_TRY_INSPECT(const auto& idbDir,
+                              CloneFileAndAppend(*originDir, idbDirName));
 
-                IDB_TRY_INSPECT(const bool& isDirectory,
-                                MOZ_TO_RESULT_INVOKE(idbDirFile, IsDirectory));
+              IDB_TRY_INSPECT(const bool& exists,
+                              MOZ_TO_RESULT_INVOKE(idbDir, Exists));
 
-                if (isDirectory) {
-                  return Ok{};
-                }
-
-                // Found a database.
-
-                MOZ_ASSERT(!databasePaths.Contains(idbFilePath));
-
-                databasePaths.AppendElement(std::move(idbFilePath));
-
+              if (!exists) {
                 return Ok{};
-              }));
+              }
 
-          if (!databasePaths.IsEmpty()) {
-            mDirectoryInfos.EmplaceBack(persistenceType, metadata.mQuotaInfo,
-                                        std::move(databasePaths));
+              IDB_TRY_INSPECT(const bool& isDirectory,
+                              MOZ_TO_RESULT_INVOKE(idbDir, IsDirectory));
+
+              IDB_TRY(OkIf(isDirectory), Ok{});
+
+              nsTArray<nsString> databasePaths;
+
+              // Loop over files in the "idb" directory.
+              IDB_TRY(CollectEachFile(
+                  *idbDir,
+                  [this, &databasePaths](const nsCOMPtr<nsIFile>& idbDirFile)
+                      -> Result<Ok, nsresult> {
+                    if (NS_WARN_IF(QuotaClient::
+                                       IsShuttingDownOnNonBackgroundThread()) ||
+                        IsAborted()) {
+                      return Err(NS_ERROR_ABORT);
+                    }
+
+                    IDB_TRY_UNWRAP(auto idbFilePath,
+                                   MOZ_TO_RESULT_INVOKE_TYPED(
+                                       nsString, idbDirFile, GetPath));
+
+                    if (!StringEndsWith(idbFilePath, kSQLiteSuffix)) {
+                      return Ok{};
+                    }
+
+                    IDB_TRY_INSPECT(const auto& dirEntryKind,
+                                    GetDirEntryKind(*idbDirFile));
+
+                    switch (dirEntryKind) {
+                      case nsIFileKind::ExistsAsDirectory:
+                        break;
+
+                      case nsIFileKind::ExistsAsFile:
+                        // Found a database.
+
+                        MOZ_ASSERT(!databasePaths.Contains(idbFilePath));
+
+                        databasePaths.AppendElement(std::move(idbFilePath));
+                        break;
+
+                      case nsIFileKind::DoesNotExist:
+                        // Ignore files that got removed externally while
+                        // iterating.
+                        break;
+                    }
+
+                    return Ok{};
+                  }));
+
+              if (!databasePaths.IsEmpty()) {
+                mDirectoryInfos.EmplaceBack(persistenceType,
+                                            metadata.mQuotaInfo,
+                                            std::move(databasePaths));
+              }
+
+              break;
+            }
+
+            case nsIFileKind::DoesNotExist:
+              // Ignore files that got removed externally while iterating.
+              break;
           }
 
           return Ok{};
