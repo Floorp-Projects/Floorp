@@ -55,7 +55,6 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
       document.documentElement.classList.remove(
         "master-password-auth-required"
       );
-      document.documentElement.classList.remove("login-selected");
       setKeyboardAccessForNonDialogElements(true);
       handleAllLogins(event.detail.value);
       break;
@@ -82,10 +81,16 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
       updateNoLogins();
       break;
     }
-    case "MasterPasswordAuthRequired":
+    case "MasterPasswordAuthRequired": {
       document.documentElement.classList.add("master-password-auth-required");
       setKeyboardAccessForNonDialogElements(false);
       break;
+    }
+    case "RemoveAllLogins": {
+      handleAllLogins(event.detail.value);
+      document.documentElement.classList.remove("login-selected");
+      break;
+    }
     case "SendFavicons": {
       gElements.loginList.addFavicons(event.detail.value);
       break;
