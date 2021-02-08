@@ -28,7 +28,7 @@ std::ostream& operator<<(std::ostream& aStream, const FrameMetrics& aMetrics) {
   }
   aStream << "] [dp=" << aMetrics.GetDisplayPort()
           << "] [cdp=" << aMetrics.GetCriticalDisplayPort()
-          << "] [rcs=" << aMetrics.GetRootCompositionSize()
+          << "] [rcs=" << aMetrics.GetBoundingCompositionSize()
           << "] [v=" << aMetrics.GetLayoutViewport()
           << nsPrintfCString("] [z=(ld=%.3f r=%.3f",
                              aMetrics.GetDevPixelsPerCSSPixel().scale,

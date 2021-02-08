@@ -2790,8 +2790,8 @@ FrameMetrics nsLayoutUtils::CalculateBasicFrameMetrics(
                                      presContext->AppUnitsPerDevPixel()) *
       compBoundsScale);
 
-  metrics.SetRootCompositionSize(
-      nsLayoutUtils::CalculateRootCompositionSize(frame, false, metrics));
+  metrics.SetBoundingCompositionSize(
+      nsLayoutUtils::CalculateBoundingCompositionSize(frame, false, metrics));
 
   metrics.SetLayoutViewport(
       CSSRect::FromAppUnits(nsRect(aScrollFrame->GetScrollPosition(),
@@ -7890,7 +7890,7 @@ nsSize nsLayoutUtils::CalculateCompositionSizeForFrame(
 }
 
 /* static */
-CSSSize nsLayoutUtils::CalculateRootCompositionSize(
+CSSSize nsLayoutUtils::CalculateBoundingCompositionSize(
     const nsIFrame* aFrame, bool aIsRootContentDocRootScrollFrame,
     const FrameMetrics& aMetrics) {
   if (aIsRootContentDocRootScrollFrame) {
@@ -7954,13 +7954,6 @@ CSSSize nsLayoutUtils::CalculateRootCompositionSize(
   // composition size may still be arbitrarily large, so bound it further by
   // how much of the in-process RCD is visible in the top-level (cross-process
   // RCD) viewport.
-  // Note: the size of GetTopLevelViewportVisibleRectInSelfCoords() is not
-  // the full composition size of the cross-process RCD-RSF, but rather the portion
-  // of the subdocument that's visible in it. That makes it suitable as a bounding
-  // size for the displayports of the scroll frames in the subdocument (which is
-  // what CalculateRootCompositionSize() is used for) -- in fact, it's a *better*
-  // bounding size -- but the name of this function is not strictly accurate any
-  // more and should probably be renamed to CalculateBoundingCompositionSize().
   if (rootPresShell) {
     if (BrowserChild* bc = BrowserChild::GetFrom(rootPresShell)) {
       if (const auto& visibleRect =
@@ -8566,9 +8559,10 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
 
   metrics.SetCompositionBounds(frameBounds);
 
-  metrics.SetRootCompositionSize(nsLayoutUtils::CalculateRootCompositionSize(
-      aScrollFrame ? aScrollFrame : aForFrame, isRootContentDocRootScrollFrame,
-      metrics));
+  metrics.SetBoundingCompositionSize(
+      nsLayoutUtils::CalculateBoundingCompositionSize(
+          aScrollFrame ? aScrollFrame : aForFrame,
+          isRootContentDocRootScrollFrame, metrics));
 
   if (StaticPrefs::apz_printtree() || StaticPrefs::apz_test_logging_enabled()) {
     if (const nsIContent* content =
