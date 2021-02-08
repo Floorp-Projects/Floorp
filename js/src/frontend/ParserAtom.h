@@ -405,13 +405,6 @@ class alignas(alignof(uint32_t)) ParserAtom {
   uint32_t length() const { return length_; }
 
   bool isUsedByStencil() const { return flags_ & UsedByStencilFlag; }
-  void markUsedByStencil() const {
-    if (!isWellKnownOrStatic()) {
-      // Use const method + const_cast here to avoid marking static strings'
-      // field mutable.
-      const_cast<ParserAtom*>(this)->flags_ |= UsedByStencilFlag;
-    }
-  }
 
   template <typename CharT>
   bool equalsSeq(HashNumber hash, InflatedChar16Sequence<CharT> seq) const;
@@ -421,6 +414,11 @@ class alignas(alignof(uint32_t)) ParserAtom {
                       CompilationAtomCache& atomCache) const;
 
  private:
+  void markUsedByStencil() {
+    MOZ_ASSERT(!isWellKnownOrStatic());
+    flags_ |= UsedByStencilFlag;
+  }
+
   bool isWellKnownOrStatic() const { return flags_ & WellKnownOrStaticFlag; }
 
   constexpr void setWellKnownOrStatic() { flags_ |= WellKnownOrStaticFlag; }
@@ -831,7 +829,7 @@ class ParserAtomsTable {
   const ParserAtom* getWellKnown(WellKnownAtomId atomId) const;
   const ParserAtom* getStatic1(StaticParserString1 s) const;
   const ParserAtom* getStatic2(StaticParserString2 s) const;
-  const ParserAtom* getParserAtom(ParserAtomIndex index) const;
+  ParserAtom* getParserAtom(ParserAtomIndex index) const;
   const ParserAtom* getParserAtom(TaggedParserAtomIndex index) const;
 
  public:

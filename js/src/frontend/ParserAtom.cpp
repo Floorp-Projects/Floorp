@@ -467,7 +467,7 @@ const ParserAtom* ParserAtomsTable::getStatic2(StaticParserString2 s) const {
   return WellKnownParserAtoms::getStatic2(s);
 }
 
-const ParserAtom* ParserAtomsTable::getParserAtom(ParserAtomIndex index) const {
+ParserAtom* ParserAtomsTable::getParserAtom(ParserAtomIndex index) const {
   return entries_[index];
 }
 
@@ -494,7 +494,11 @@ const ParserAtom* ParserAtomsTable::getParserAtom(
 }
 
 void ParserAtomsTable::markUsedByStencil(TaggedParserAtomIndex index) const {
-  getParserAtom(index)->markUsedByStencil();
+  if (!index.isParserAtomIndex()) {
+    return;
+  }
+
+  getParserAtom(index.toParserAtomIndex())->markUsedByStencil();
 }
 
 bool ParserAtomsTable::isIdentifier(TaggedParserAtomIndex index) const {
