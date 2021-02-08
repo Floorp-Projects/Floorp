@@ -2092,7 +2092,7 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
   if (startEncoding == StartEncoding::Yes) {
     MOZ_DIAGNOSTIC_ASSERT(parseTask->options.useStencilXDR);
 
-    UniquePtr<XDRIncrementalEncoderBase> xdrEncoder;
+    UniquePtr<XDRIncrementalStencilEncoder> xdrEncoder;
 
     if (parseTask->stencil_.get()) {
       auto* stencil = parseTask->stencil_.get();
