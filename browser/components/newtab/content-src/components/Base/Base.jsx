@@ -153,8 +153,8 @@ export class BaseContent extends React.PureComponent {
   closeCustomizationMenu() {
     if (this.state.customizeMenuVisible) {
       this.setState({ customizeMenuVisible: false });
+      this.props.dispatch(ac.UserEvent({ event: "HIDE_PERSONALIZE" }));
     }
-    this.props.dispatch(ac.UserEvent({ event: "HIDE_PERSONALIZE" }));
   }
 
   handleOnKeyDown(e) {
