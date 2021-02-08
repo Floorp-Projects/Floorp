@@ -5164,6 +5164,7 @@ class nsDisplayOutline final : public nsPaintedDisplayItem {
 
  private:
   bool IsThemedOutline() const;
+  bool HasRadius() const;
 };
 
 /**
