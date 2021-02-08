@@ -137,34 +137,9 @@ bool ParserAtom::isPrivateName() const {
   return length() >= 2 && charAt(0) == '#';
 }
 
-JSAtom* ParserAtom::toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
-                             CompilationAtomCache& atomCache) const {
-  if (index.isParserAtomIndex()) {
-    JSAtom* atom = atomCache.getAtomAt(index.toParserAtomIndex());
-    if (atom) {
-      return atom;
-    }
-
-    return instantiate(cx, index, atomCache);
-  }
-
-  if (index.isWellKnownAtomId()) {
-    return GetWellKnownAtom(cx, index.toWellKnownAtomId());
-  }
-
-  if (index.isStaticParserString1()) {
-    char16_t ch = static_cast<char16_t>(index.toStaticParserString1());
-    return cx->staticStrings().getUnit(ch);
-  }
-
-  MOZ_ASSERT(index.isStaticParserString2());
-  size_t s = static_cast<size_t>(index.toStaticParserString2());
-  return cx->staticStrings().getLength2FromIndex(s);
-}
-
-JSAtom* ParserAtom::instantiate(JSContext* cx, TaggedParserAtomIndex index,
+JSAtom* ParserAtom::instantiate(JSContext* cx, ParserAtomIndex index,
                                 CompilationAtomCache& atomCache) const {
-  MOZ_ASSERT(index.isParserAtomIndex());
+  MOZ_ASSERT(!isWellKnownOrStatic());
 
   JSAtom* atom;
   if (hasLatin1Chars()) {
@@ -176,7 +151,7 @@ JSAtom* ParserAtom::instantiate(JSContext* cx, TaggedParserAtomIndex index,
     js::ReportOutOfMemory(cx);
     return nullptr;
   }
-  if (!atomCache.setAtomAt(cx, index.toParserAtomIndex(), atom)) {
+  if (!atomCache.setAtomAt(cx, index, atom)) {
     return nullptr;
   }
 
@@ -419,8 +394,7 @@ TaggedParserAtomIndex ParserAtomsTable::internJSAtom(
   }
 
   // We should (infallibly) map back to the same JSAtom.
-  MOZ_ASSERT(getParserAtom(parserAtom)->toJSAtom(cx, parserAtom, atomCache) ==
-             atom);
+  MOZ_ASSERT(toJSAtom(cx, parserAtom, atomCache) == atom);
 
   return parserAtom;
 }
@@ -587,8 +561,28 @@ UniqueChars ParserAtomsTable::toQuotedString(
 
 JSAtom* ParserAtomsTable::toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
                                    CompilationAtomCache& atomCache) const {
-  const auto* atom = getParserAtom(index);
-  return atom->toJSAtom(cx, index, atomCache);
+  if (index.isParserAtomIndex()) {
+    auto atomIndex = index.toParserAtomIndex();
+    JSAtom* atom = atomCache.getAtomAt(atomIndex);
+    if (atom) {
+      return atom;
+    }
+
+    return getParserAtom(atomIndex)->instantiate(cx, atomIndex, atomCache);
+  }
+
+  if (index.isWellKnownAtomId()) {
+    return GetWellKnownAtom(cx, index.toWellKnownAtomId());
+  }
+
+  if (index.isStaticParserString1()) {
+    char16_t ch = static_cast<char16_t>(index.toStaticParserString1());
+    return cx->staticStrings().getUnit(ch);
+  }
+
+  MOZ_ASSERT(index.isStaticParserString2());
+  size_t s = static_cast<size_t>(index.toStaticParserString2());
+  return cx->staticStrings().getLength2FromIndex(s);
 }
 
 bool ParserAtomsTable::appendTo(StringBuffer& buffer,
@@ -609,7 +603,7 @@ bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
     if (entry->isUsedByStencil()) {
       auto index = ParserAtomIndex(i);
       if (!atomCache.hasAtomAt(index)) {
-        if (!entry->instantiate(cx, TaggedParserAtomIndex(index), atomCache)) {
+        if (!entry->instantiate(cx, index, atomCache)) {
           return false;
         }
       }
