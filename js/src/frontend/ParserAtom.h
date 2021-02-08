@@ -842,6 +842,7 @@ class ParserAtomsTable {
   // Accessors for querying atom properties.
   bool isPrivateName(TaggedParserAtomIndex index) const;
   bool isIndex(TaggedParserAtomIndex index, uint32_t* indexp) const;
+  uint32_t length(TaggedParserAtomIndex index) const;
 
   // Methods for atom.
   bool toNumber(JSContext* cx, TaggedParserAtomIndex index,
