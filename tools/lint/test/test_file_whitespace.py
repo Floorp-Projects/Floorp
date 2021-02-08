@@ -2,7 +2,9 @@ from __future__ import absolute_import, print_function
 
 import mozunit
 
+
 LINTER = "file-whitespace"
+fixed = 0
 
 
 def test_lint_file_whitespace(lint, paths):
@@ -31,6 +33,21 @@ def test_lint_file_whitespace(lint, paths):
     assert results[4].level == "error"
     assert "bad.c" in results[4].relpath
     assert results[4].lineno == 2
+
+
+def test_lint_file_whitespace_fix(lint, paths, create_temp_file):
+
+    contents = """int main() {  \n
+    return 0;  \n
+}
+
+
+"""
+
+    path = create_temp_file(contents, "bad.cpp")
+    lint([path], fix=True)
+    # Gives a different answer on Windows. Probably because of Windows CR
+    assert fixed == 3 or fixed == 2
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@ import os
 import mozunit
 
 LINTER = "flake8"
+fixed = 0
 
 
 def test_lint_single_file(lint, paths):
@@ -26,6 +27,7 @@ def test_lint_custom_config_ignored(lint, paths):
 
 
 def test_lint_fix(lint, create_temp_file):
+    global fixed
     contents = """
 import distutils
 
@@ -40,12 +42,16 @@ def foobar():
     # Make sure the missing blank line is fixed, but the unused import isn't.
     results = lint([path], fix=True)
     assert len(results) == 1
+    assert fixed == 1
+
+    fixed = 0
 
     # Also test with a directory
     path = os.path.dirname(create_temp_file(contents, name="bad2.py"))
     results = lint([path], fix=True)
     # There should now be two files with 2 combined errors
     assert len(results) == 2
+    assert fixed == 1
     assert all(r.rule != "E501" for r in results)
 
 

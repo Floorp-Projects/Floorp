@@ -11,6 +11,7 @@ results = []
 def lint(paths, config, fix=None, **lintargs):
     files = list(expand_exclusions(paths, config, lintargs["root"]))
     log = lintargs["log"]
+    fixed = 0
 
     for f in files:
         with open(f, "rb") as open_file:
@@ -24,6 +25,7 @@ def lint(paths, config, fix=None, **lintargs):
                     # return file pointer to first
                     open_file.seek(0)
                     if fix:
+                        fixed += 1
                         # fix Empty lines at end of file
                         for i, line in reversed(list(enumerate(open_file))):
                             # determine if line is empty
@@ -55,6 +57,7 @@ def lint(paths, config, fix=None, **lintargs):
             # Detect missing newline at the end of the file
             if lines[:].__len__() != 0 and not lines[-1].endswith(b"\n"):
                 if fix:
+                    fixed += 1
                     with open(f, "wb") as write_file:
                         # add a newline character at end of file
                         lines[-1] = lines[-1] + b"\n"
@@ -79,6 +82,7 @@ def lint(paths, config, fix=None, **lintargs):
                     if fix:
                         # We want to fix it, strip the trailing spaces
                         content_to_write.append(line.rstrip() + b"\n")
+                        fixed += 1
                         hasFix = True
                     else:
                         res = {
@@ -105,7 +109,7 @@ def lint(paths, config, fix=None, **lintargs):
 
             if b"\r\n" in content:
                 if fix:
-                    # replace \r\n by \n
+                    fixed += 1
                     content = content.replace(b"\r\n", b"\n")
                     with open(f, "wb") as open_file_to_write:
                         open_file_to_write.write(content)
@@ -117,4 +121,4 @@ def lint(paths, config, fix=None, **lintargs):
                     }
                     results.append(result.from_config(config, **res))
 
-    return results
+    return {"results": results, "fixed": fixed}

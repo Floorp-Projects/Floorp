@@ -86,14 +86,17 @@ def setup(root, **lintargs):
 
 
 def lint(paths, config, **lintargs):
-    from flake8.main.application import Application
 
-    log = lintargs["log"]
     root = lintargs["root"]
     virtualenv_bin_path = lintargs.get("virtualenv_bin_path")
     config_path = os.path.join(root, ".flake8")
 
+    results = run(paths, config, **lintargs)
+    fixed = 0
+
     if lintargs.get("fix"):
+        # fix and run again to count remaining issues
+        fixed = len(results)
         fix_cmd = [
             os.path.join(virtualenv_bin_path or default_bindir(), "autopep8"),
             "--global-config",
@@ -106,6 +109,19 @@ def lint(paths, config, **lintargs):
             fix_cmd.extend(["--exclude", ",".join(config["exclude"])])
 
         subprocess.call(fix_cmd + paths)
+        results = run(paths, config, **lintargs)
+
+        fixed = fixed - len(results)
+
+    return {"results": results, "fixed": fixed}
+
+
+def run(paths, config, **lintargs):
+    from flake8.main.application import Application
+
+    log = lintargs["log"]
+    root = lintargs["root"]
+    config_path = os.path.join(root, ".flake8")
 
     # Run flake8.
     app = Application()

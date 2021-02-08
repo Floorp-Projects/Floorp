@@ -117,6 +117,7 @@ def setup(root, **lintargs):
 
 
 def run_black(config, paths, fix=None, *, log, virtualenv_bin_path):
+    fixed = 0
     binary = os.path.join(virtualenv_bin_path or default_bindir(), "black")
 
     log.debug("Black version {}".format(get_black_version(binary)))
@@ -124,9 +125,17 @@ def run_black(config, paths, fix=None, *, log, virtualenv_bin_path):
     cmd_args = [binary]
     if not fix:
         cmd_args.append("--check")
+
     base_command = cmd_args + paths
     log.debug("Command: {}".format(" ".join(base_command)))
-    return parse_issues(config, run_process(config, base_command), paths, log=log)
+    output = parse_issues(config, run_process(config, base_command), paths, log=log)
+
+    # black returns an issue for fixed files as well
+    for eachIssue in output:
+        if eachIssue.message == "reformatted":
+            fixed += 1
+
+    return {"results": output, "fixed": fixed}
 
 
 def lint(paths, config, fix=None, **lintargs):

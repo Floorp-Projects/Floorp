@@ -73,7 +73,7 @@ def parse_issues(config, output, paths):
                 "lineno": issue.line,
             }
             results.append(result.from_config(config, **res))
-    return results
+    return {"results": results, "fixed": 0}
 
 
 class RustfmtProcess(ProcessHandler):
@@ -159,13 +159,20 @@ def lint(paths, config, fix=None, **lintargs):
         return 1
 
     cmd_args = [binary]
-    if not fix:
-        cmd_args.append("--check")
+    cmd_args.append("--check")
     base_command = cmd_args + paths
     log.debug("Command: {}".format(" ".join(cmd_args)))
     output = run_process(config, base_command)
 
+    issues = parse_issues(config, output, paths)
+
     if fix:
-        # Rustfmt is able to fix all issues so don't bother parsing the output.
-        return []
-    return parse_issues(config, output, paths)
+        issues["fixed"] = len(issues["results"])
+        issues["results"] = []
+        cmd_args.remove("--check")
+
+        base_command = cmd_args + paths
+        log.debug("Command: {}".format(" ".join(cmd_args)))
+        output = run_process(config, base_command)
+
+    return issues

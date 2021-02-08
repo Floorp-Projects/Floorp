@@ -45,7 +45,7 @@ EXPECTED = {
 /fake/root/d/e/f.txt
   4:2  warning  oh no bar  bar-not-allowed (bar)
 
-\u2716 4 problems (3 errors, 1 warning)
+\u2716 4 problems (3 errors, 1 warning, 0 fixed)
 """.strip(),
     },
     "treeherder": {
