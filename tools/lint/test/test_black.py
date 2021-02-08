@@ -7,13 +7,40 @@
 import mozunit
 
 LINTER = "black"
+fixed = 0
+
+
+def test_lint_fix(lint, create_temp_file):
+
+    contents = """def is_unique(
+               s
+               ):
+    s = list(s
+                )
+    s.sort()
+
+
+    for i in range(len(s) - 1):
+        if s[i] == s[i + 1]:
+            return 0
+    else:
+        return 1
+
+
+if __name__ == "__main__":
+    print(
+          is_unique(input())
+         ) """
+
+    path = create_temp_file(contents, "bad.py")
+    lint([path], fix=True)
+    assert fixed == 1
 
 
 def test_lint_black(lint, paths):
     results = lint(paths())
     assert len(results) == 2
 
-    print(results)
     assert results[0].level == "error"
     assert results[0].relpath == "bad.py"
 

@@ -149,10 +149,7 @@ def lint(paths, config, fix=None, **lintargs):
     version = run_process(config, base_command)
     log.debug("Version: {}".format(version))
 
-    if fix:
-        cmd_args.append("-i")
-    else:
-        cmd_args.append("--dry-run")
+    cmd_args.append("--dry-run")
     base_command = cmd_args + paths
     log.debug("Command: {}".format(" ".join(cmd_args)))
     output = run_process(config, base_command)
@@ -163,6 +160,16 @@ def lint(paths, config, fix=None, **lintargs):
             "clang-format output should be a multiple of 3. Output: %s" % output
         )
 
+    fixed = (int)(len(output) / 3)
+    if fix:
+        cmd_args.remove("--dry-run")
+        cmd_args.append("-i")
+        base_command = cmd_args + paths
+        log.debug("Command: {}".format(" ".join(cmd_args)))
+        output = run_process(config, base_command)
+    else:
+        fixed = 0
+
     for i in range(0, len(output), 3):
         # Merge the element 3 by 3 (clang-format output)
         line = output[i]
@@ -172,5 +179,5 @@ def lint(paths, config, fix=None, **lintargs):
 
     if fix:
         # clang-format is able to fix all issues so don't bother parsing the output.
-        return []
-    return parse_issues(config, output_list, paths, log)
+        return {"results": [], "fixed": fixed}
+    return {"results": parse_issues(config, output_list, paths, log), "fixed": fixed}

@@ -30,7 +30,9 @@ class StylishFormatter(object):
 {diff}""".lstrip(
         "\n"
     )
-    fmt_summary = "{t.bold}{c}\u2716 {problem} ({error}, {warning}{failure}){t.normal}"
+    fmt_summary = (
+        "{t.bold}{c}\u2716 {problem} ({error}, {warning}{failure}, {fixed}){t.normal}"
+    )
 
     def __init__(self, disable_colors=False):
         self.term = Terminal(disable_styling=disable_colors)
@@ -77,6 +79,7 @@ class StylishFormatter(object):
 
         num_errors = 0
         num_warnings = 0
+        num_fixed = result.fixed
         for path, errors in sorted(result.issues.items()):
             self._reset_max()
 
@@ -139,6 +142,7 @@ class StylishFormatter(object):
                 failure=", {}".format(pluralize("failure", len(failed)))
                 if failed
                 else "",
+                fixed="{} fixed".format(num_fixed),
             )
         )
 

@@ -3,12 +3,16 @@ import mozunit
 from conftest import build
 
 LINTER = "clang-format"
+fixed = 0
 
 
 def test_good(lint, config, paths):
     results = lint(paths("good/"), root=build.topsrcdir, use_filters=False)
     print(results)
     assert len(results) == 0
+
+    results = lint(paths("good/"), root=build.topsrcdir, use_filters=False, fix=True)
+    assert fixed == len(results)
 
 
 def test_basic(lint, config, paths):
@@ -42,6 +46,19 @@ def test_dir(lint, config, paths):
     assert results[5].column == 18
     assert "bad2.c" in results[5].path
     assert "#include" in results[5].diff
+
+
+def test_fixed(lint, create_temp_file):
+
+    contents = """int  main ( ) { \n
+return 0; \n
+
+}"""
+
+    path = create_temp_file(contents, "ignore.cpp")
+    lint([path], use_filters=False, fix=True)
+
+    assert fixed == 5
 
 
 if __name__ == "__main__":
