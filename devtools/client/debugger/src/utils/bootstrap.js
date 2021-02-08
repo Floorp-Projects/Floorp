@@ -81,7 +81,7 @@ export function teardownWorkers(): void {
 }
 
 export function bootstrapApp(store: any, panel: Panel): void {
-  const mount = document.querySelector("#mount");
+  const mount = getMountElement();
   if (!mount) {
     return;
   }
@@ -100,6 +100,15 @@ export function bootstrapApp(store: any, panel: Panel): void {
     ),
     mount
   );
+}
+
+function getMountElement() {
+  return document.querySelector("#mount");
+}
+
+// This is the opposite of bootstrapApp
+export function unmountRoot() {
+  ReactDOM.unmountComponentAtNode(getMountElement());
 }
 
 function registerStoreObserver(store, subscriber) {
