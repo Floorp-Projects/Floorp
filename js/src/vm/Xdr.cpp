@@ -399,7 +399,6 @@ XDRResult XDRState<mode>::codeScript(MutableHandleScript scriptp) {
   }
 
   MOZ_TRY(VersionCheck(this, XDRFormatType::JSScript));
-  MOZ_ASSERT(isMainBuf());
   MOZ_TRY(XDRScript(this, nullptr, nullptr, nullptr, scriptp));
 
   guard.release();
@@ -448,8 +447,6 @@ XDRResult XDRState<mode>::codeStencil(frontend::CompilationStencil& stencil) {
     stencil.input.setSource(holder.get().get());
   }
 
-  MOZ_ASSERT(isMainBuf());
-
   MOZ_TRY(XDRParserAtomTable(this, stencil));
   MOZ_TRY(XDRCompilationStencil(this, stencil));
 
@@ -497,7 +494,7 @@ XDRResult XDRIncrementalStencilEncoder::linearize(JS::TranscodeBuffer& buffer,
     uint32_t nchunks = 1 + encodedFunctions_.count();
     MOZ_TRY(XDRStencilHeader(this, nullptr, &holder, &nchunks));
 
-    switchToMainBuf();
+    switchToBuffer(&mainBuf);
   }
 
   // The accumlated transcode data can now be copied to the output buffer.
