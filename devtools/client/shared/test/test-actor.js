@@ -303,6 +303,32 @@ var testSpec = protocol.generateActorSpec({
       },
       response: {},
     },
+    isEyeDropperVisible: {
+      request: {
+        inspectorActorID: Arg(0, "string"),
+      },
+      response: {
+        value: RetVal("boolean"),
+      },
+    },
+    getEyeDropperElementAttribute: {
+      request: {
+        inspectorActorID: Arg(0, "string"),
+        elementId: Arg(1, "string"),
+        attributeName: Arg(2, "string"),
+      },
+      response: {
+        value: RetVal("string"),
+      },
+    },
+    getEyeDropperColorValue: {
+      request: {
+        inspectorActorID: Arg(0, "string"),
+      },
+      response: {
+        value: RetVal("string"),
+      },
+    },
   },
 });
 
@@ -883,6 +909,41 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
     // We're directly calling `handleEvent` on the pause overlay, which is the mouse events
     // listener callback on the overlay.
     pauseOverlay.handleEvent({ type: "mousedown", target: { id } });
+  },
+
+  /**
+   * @returns {EyeDropper}
+   */
+  _getEyeDropper(inspectorActorID) {
+    const inspectorActor = this.conn.getActor(inspectorActorID);
+    return inspectorActor?._eyeDropper;
+  },
+
+  isEyeDropperVisible(inspectorActorID) {
+    const eyeDropper = this._getEyeDropper(inspectorActorID);
+    if (!eyeDropper) {
+      return false;
+    }
+
+    return eyeDropper.getElement("root").getAttribute("hidden") !== "true";
+  },
+
+  getEyeDropperElementAttribute(inspectorActorID, elementId, attributeName) {
+    const eyeDropper = this._getEyeDropper(inspectorActorID);
+    if (!eyeDropper) {
+      return null;
+    }
+
+    return eyeDropper.getElement(elementId).getAttribute(attributeName);
+  },
+
+  getEyeDropperColorValue(inspectorActorID) {
+    const eyeDropper = this._getEyeDropper(inspectorActorID);
+    if (!eyeDropper) {
+      return null;
+    }
+
+    return eyeDropper.getElement("color-value").getTextContent();
   },
 });
 exports.TestActor = TestActor;
