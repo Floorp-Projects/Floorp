@@ -46,30 +46,30 @@ const DEFAULT_START_POS_Y = 100;
 const CLOSE_DELAY = 750;
 
 /**
- * The EyeDropper is the class that draws the gradient line and
- * color stops as an overlay on top of a linear-gradient background-image.
+ * The EyeDropper allows the user to select a color of a pixel within the content page,
+ * showing a magnified circle and color preview while the user hover the page.
  */
-function EyeDropper(highlighterEnv) {
-  EventEmitter.decorate(this);
+class EyeDropper {
+  constructor(highlighterEnv) {
+    EventEmitter.decorate(this);
 
-  this.highlighterEnv = highlighterEnv;
-  this.markup = new CanvasFrameAnonymousContentHelper(
-    this.highlighterEnv,
-    this._buildMarkup.bind(this)
-  );
-  this.isReady = this.markup.initialize();
+    this.highlighterEnv = highlighterEnv;
+    this.markup = new CanvasFrameAnonymousContentHelper(
+      this.highlighterEnv,
+      this._buildMarkup.bind(this)
+    );
+    this.isReady = this.markup.initialize();
 
-  // Get a couple of settings from prefs.
-  this.format = Services.prefs.getCharPref(FORMAT_PREF);
-  this.eyeDropperZoomLevel = Services.prefs.getIntPref(ZOOM_LEVEL_PREF);
-}
+    // Get a couple of settings from prefs.
+    this.format = Services.prefs.getCharPref(FORMAT_PREF);
+    this.eyeDropperZoomLevel = Services.prefs.getIntPref(ZOOM_LEVEL_PREF);
+  }
 
-EyeDropper.prototype = {
-  ID_CLASS_PREFIX: "eye-dropper-",
+  ID_CLASS_PREFIX = "eye-dropper-";
 
   get win() {
     return this.highlighterEnv.window;
-  },
+  }
 
   _buildMarkup() {
     // Highlighter main container.
@@ -121,16 +121,16 @@ EyeDropper.prototype = {
     });
 
     return container;
-  },
+  }
 
   destroy() {
     this.hide();
     this.markup.destroy();
-  },
+  }
 
   getElement(id) {
     return this.markup.getElement(this.ID_CLASS_PREFIX + id);
-  },
+  }
 
   /**
    * Show the eye-dropper highlighter.
@@ -186,7 +186,7 @@ EyeDropper.prototype = {
     this.win.document.setSuppressedEventListener(this);
 
     return true;
-  },
+  }
 
   /**
    * Hide the eye-dropper highlighter.
@@ -214,7 +214,7 @@ EyeDropper.prototype = {
     this.emit("hidden");
 
     this.win.document.setSuppressedEventListener(null);
-  },
+  }
 
   prepareImageCapture() {
     // Get the image data from the content window.
@@ -232,7 +232,7 @@ EyeDropper.prototype = {
       // was done.
       this.getElement("root").setAttribute("drawn", "true");
     });
-  },
+  }
 
   /**
    * Get the number of cells (blown-up pixels) per direction in the grid.
@@ -246,21 +246,21 @@ EyeDropper.prototype = {
     cellsWide += cellsWide % 2;
 
     return cellsWide;
-  },
+  }
 
   /**
    * Get the size of each cell (blown-up pixel) in the grid.
    */
   get cellSize() {
     return this.magnifiedArea.width / this.cellsWide;
-  },
+  }
 
   /**
    * Get index of cell in the center of the grid.
    */
   get centerCell() {
     return Math.floor(this.cellsWide / 2);
-  },
+  }
 
   /**
    * Get color of center cell in the grid.
@@ -269,7 +269,7 @@ EyeDropper.prototype = {
     const pos = this.centerCell * this.cellSize + this.cellSize / 2;
     const rgb = this.ctx.getImageData(pos, pos, 1, 1).data;
     return rgb;
-  },
+  }
 
   draw() {
     // If the image of the page isn't ready yet, bail out, we'll draw later on mousemove.
@@ -305,7 +305,7 @@ EyeDropper.prototype = {
     this.getElement("color-value").setTextContent(
       toColorString(rgb, this.format)
     );
-  },
+  }
 
   /**
    * Draw a grid on the canvas representing pixel boundaries.
@@ -327,7 +327,7 @@ EyeDropper.prototype = {
       this.ctx.lineTo(width, i - 0.5);
       this.ctx.stroke();
     }
-  },
+  }
 
   /**
    * Draw a box on the canvas to highlight the center cell.
@@ -347,7 +347,7 @@ EyeDropper.prototype = {
 
     this.ctx.strokeStyle = "rgba(255, 255, 255, 1)";
     this.ctx.strokeRect(pos - 0.5, pos - 0.5, this.cellSize, this.cellSize);
-  },
+  }
 
   handleEvent(e) {
     switch (e.type) {
@@ -385,7 +385,7 @@ EyeDropper.prototype = {
         this.show();
         break;
     }
-  },
+  }
 
   moveTo(x, y) {
     const root = this.getElement("root");
@@ -407,7 +407,7 @@ EyeDropper.prototype = {
     } else if (x >= this.win.innerWidth - MAGNIFIER_WIDTH) {
       root.setAttribute("left", "");
     }
-  },
+  }
 
   /**
    * Select the current color that's being previewed. Depending on the current options,
@@ -421,7 +421,7 @@ EyeDropper.prototype = {
 
     this.emit("selected", toColorString(this.centerColor, this.format));
     onColorSelected.then(() => this.hide(), console.error);
-  },
+  }
 
   /**
    * Handler for the keydown event. Either select the color or move the panel in a
@@ -489,7 +489,7 @@ EyeDropper.prototype = {
 
       e.preventDefault();
     }
-  },
+  }
 
   /**
    * Copy the currently inspected color to the clipboard.
@@ -511,8 +511,8 @@ EyeDropper.prototype = {
     return new Promise(resolve => {
       this._copyTimeout = setTimeout(resolve, CLOSE_DELAY);
     });
-  },
-};
+  }
+}
 
 exports.EyeDropper = EyeDropper;
 
