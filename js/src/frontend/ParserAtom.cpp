@@ -18,6 +18,7 @@
 #include "vm/JSContext.h"
 #include "vm/Printer.h"  // Sprinter, QuoteString
 #include "vm/Runtime.h"
+#include "vm/SelfHosting.h"  // ExtendedUnclonedSelfHostedFunctionNamePrefix
 #include "vm/StringType.h"
 
 using namespace js;
@@ -57,8 +58,7 @@ class InflatedChar16Sequence<const ParserAtom*> {
 
   char16_t next() {
     MOZ_ASSERT(hasMore());
-    char16_t ch = (*cur_)->hasLatin1Chars() ? (*cur_)->latin1Chars()[index_]
-                                            : (*cur_)->twoByteChars()[index_];
+    char16_t ch = (*cur_)->charAt(index_);
     index_++;
     settle();
     return ch;
@@ -222,8 +222,7 @@ bool ParserAtom::isIndex(uint32_t* indexp) const {
 }
 
 bool ParserAtom::isPrivateName() const {
-  return length() >= 2 && (hasLatin1Chars() ? latin1Chars()[0] == '#'
-                                            : twoByteChars()[0] == '#');
+  return length() >= 2 && charAt(0) == '#';
 }
 
 JSAtom* ParserAtom::toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
@@ -643,6 +642,16 @@ bool ParserAtomsTable::isPrivateName(TaggedParserAtomIndex index) const {
   }
 
   return getParserAtom(index.toParserAtomIndex())->isPrivateName();
+}
+
+bool ParserAtomsTable::isExtendedUnclonedSelfHostedFunctionName(
+    TaggedParserAtomIndex index) const {
+  const auto* atom = getParserAtom(index);
+  if (atom->length() < 2) {
+    return false;
+  }
+
+  return atom->charAt(0) == ExtendedUnclonedSelfHostedFunctionNamePrefix;
 }
 
 bool ParserAtomsTable::isIndex(TaggedParserAtomIndex index,

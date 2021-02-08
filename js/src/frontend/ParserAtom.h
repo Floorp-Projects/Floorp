@@ -413,6 +413,16 @@ class alignas(alignof(uint32_t)) ParserAtom {
     return mozilla::Range(twoByteChars(), length_);
   }
 
+  // Returns index-th char.
+  // Boundary check isn't performed.
+  char16_t charAt(size_t index) const {
+    MOZ_ASSERT(index < length());
+    if (hasLatin1Chars()) {
+      return latin1Chars()[index];
+    }
+    return twoByteChars()[index];
+  }
+
  private:
   bool isIndex(uint32_t* indexp) const;
   bool isPrivateName() const;
@@ -844,6 +854,8 @@ class ParserAtomsTable {
 
   // Accessors for querying atom properties.
   bool isPrivateName(TaggedParserAtomIndex index) const;
+  bool isExtendedUnclonedSelfHostedFunctionName(
+      TaggedParserAtomIndex index) const;
   bool isIndex(TaggedParserAtomIndex index, uint32_t* indexp) const;
   uint32_t length(TaggedParserAtomIndex index) const;
 
