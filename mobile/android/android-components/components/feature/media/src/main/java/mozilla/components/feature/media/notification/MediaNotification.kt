@@ -40,6 +40,10 @@ internal class MediaNotification(
         return buildNotification(data, mediaSessionCompat, sessionState !is CustomTabSessionState)
     }
 
+    fun createDummy(mediaSessionCompat: MediaSessionCompat): Notification {
+        return buildNotification(NotificationData(), mediaSessionCompat, false)
+    }
+
     private fun buildNotification(
         data: NotificationData,
         mediaSession: MediaSessionCompat,

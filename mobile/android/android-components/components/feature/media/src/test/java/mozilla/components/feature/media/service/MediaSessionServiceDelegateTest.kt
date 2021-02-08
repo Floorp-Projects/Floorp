@@ -44,6 +44,7 @@ class MediaSessionServiceDelegateTest {
         delegate.onCreate()
 
         verify(service).startForeground(ArgumentMatchers.anyInt(), any())
+        assert(delegate.isForegroundService)
 
         delegate.onDestroy()
     }
@@ -64,6 +65,7 @@ class MediaSessionServiceDelegateTest {
 
         verify(service).startForeground(ArgumentMatchers.anyInt(), any())
         verify(service, never()).stopSelf()
+        assert(delegate.isForegroundService)
 
         store.dispatch(MediaSessionAction.DeactivatedMediaSessionAction(store.state.tabs[0].id))
 
@@ -92,6 +94,7 @@ class MediaSessionServiceDelegateTest {
         verify(service).startForeground(ArgumentMatchers.anyInt(), any())
         verify(service, never()).stopSelf()
         verify(delegate, never()).shutdown()
+        assert(delegate.isForegroundService)
 
         store.dispatch(MediaSessionAction.DeactivatedMediaSessionAction(store.state.customTabs[0].id))
 
@@ -126,6 +129,7 @@ class MediaSessionServiceDelegateTest {
         verify(service, never()).stopSelf()
         verify(delegate, never()).shutdown()
         verify(controller, never()).pause()
+        assert(delegate.isForegroundService)
 
         delegate.onStartCommand(AbstractMediaSessionService.pauseIntent(
             testContext,
@@ -157,6 +161,8 @@ class MediaSessionServiceDelegateTest {
         verify(service, never()).stopSelf()
         verify(delegate, never()).shutdown()
         verify(controller, never()).pause()
+        verify(service).stopForeground(false)
+        assert(!delegate.isForegroundService)
 
         delegate.onStartCommand(AbstractMediaSessionService.playIntent(
             testContext,
@@ -190,6 +196,8 @@ class MediaSessionServiceDelegateTest {
         verify(service).startForeground(ArgumentMatchers.anyInt(), any())
         verify(service, never()).stopSelf()
         verify(controller, never()).pause()
+        verify(service).stopForeground(false)
+        assert(!delegate.isForegroundService)
 
         delegate.onStartCommand(AbstractMediaSessionService.playIntent(
             testContext,
@@ -238,6 +246,7 @@ class MediaSessionServiceDelegateTest {
         verify(delegate, never()).shutdown()
         verify(controller, never()).pause()
         verify(controller, never()).play()
+        assert(delegate.isForegroundService)
 
         mediaSessionCallback.onPause()
         verify(controller).pause()

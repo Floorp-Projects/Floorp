@@ -42,6 +42,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
  *
  * The implementation was moved from [AbstractMediaSessionService] to this delegate for better testability.
  */
+@Suppress("TooManyFunctions")
 internal class MediaSessionServiceDelegate(
     private val context: Context,
     private val service: AbstractMediaSessionService,
@@ -53,14 +54,22 @@ internal class MediaSessionServiceDelegate(
     private val audioFocus: AudioFocus by lazy {
         AudioFocus(context.getSystemService(Context.AUDIO_SERVICE) as AudioManager, store)
     }
+    private val notificationId by lazy {
+        SharedIdsHelper.getIdForTag(context, AbstractMediaSessionService.NOTIFICATION_TAG)
+    }
     private var scope: CoroutineScope? = null
     private var controller: MediaSession.Controller? = null
     private var notificationScope: CoroutineScope? = null
+
+    @VisibleForTesting
+    internal var isForegroundService: Boolean = false
 
     fun onCreate() {
         logger.debug("Service created")
         mediaSession.setCallback(MediaSessionCallback(store))
         notificationScope = MainScope()
+
+        startForegroundNotification()
 
         scope = store.flowScoped { flow ->
             flow.map { state -> state.findActiveMediaTab() }
@@ -106,10 +115,6 @@ internal class MediaSessionServiceDelegate(
 
     private fun processMediaSessionState(state: SessionState?) {
         if (state == null) {
-            notificationScope?.launch() {
-                updateNotification(state)
-            }
-
             shutdown()
             return
         }
@@ -118,9 +123,18 @@ internal class MediaSessionServiceDelegate(
             MediaSession.PlaybackState.PLAYING -> {
                 audioFocus.request(state.id)
                 emitStatePlayFact()
+                if (!isForegroundService) {
+                    startForegroundNotification()
+                }
             }
-            MediaSession.PlaybackState.PAUSED -> emitStatePauseFact()
-            else -> emitStateStopFact()
+            MediaSession.PlaybackState.PAUSED -> {
+                emitStatePauseFact()
+                stopForeground()
+            }
+            else -> {
+                emitStateStopFact()
+                stopForeground()
+            }
         }
 
         updateMediaSession(state)
@@ -144,32 +158,24 @@ internal class MediaSessionServiceDelegate(
                 .build())
     }
 
-    private suspend fun updateNotification(sessionState: SessionState?) {
-        controller = sessionState?.mediaSessionState?.controller
-        val notificationId = SharedIdsHelper.getIdForTag(
-            context,
-            AbstractMediaSessionService.NOTIFICATION_TAG
-        )
+    private fun startForegroundNotification() {
+        val notification = notification.createDummy(mediaSession)
+        service.startForeground(notificationId, notification)
+        isForegroundService = true
+    }
 
+    private fun stopForeground() {
+        service.stopForeground(false)
+        isForegroundService = false
+    }
+
+    private suspend fun updateNotification(sessionState: SessionState?) {
         val notification = notification.create(sessionState, mediaSession)
 
-        // Android wants us to always, always, ALWAYS call startForeground() if
-        // startForegroundService() was invoked. Even if we already did that for this service or
-        // if we are stopping foreground or stopping the whole service. No matter what. Always
-        // call startForeground().
-        service.startForeground(notificationId, notification)
+        sessionState?.mediaSessionState?.let {
+            controller = it.controller
 
-        val mediaSessionState = sessionState?.mediaSessionState
-        if (mediaSessionState != null &&
-            mediaSessionState.playbackState != MediaSession.PlaybackState.PLAYING) {
-            service.stopForeground(false)
-
-            NotificationManagerCompat.from(context)
-                .notify(notificationId, notification)
-        }
-
-        if (mediaSessionState == null) {
-            service.stopForeground(true)
+            NotificationManagerCompat.from(context).notify(notificationId, notification)
         }
     }
 
