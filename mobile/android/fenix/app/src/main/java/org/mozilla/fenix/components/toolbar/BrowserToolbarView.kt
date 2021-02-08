@@ -215,6 +215,17 @@ class BrowserToolbarView(
         }
     }
 
+    fun collapse() {
+        // collapse only for normal tabs and custom tabs not for PWA or TWA. Mirror expand()
+        if (isPwaTabOrTwaTab) {
+            return
+        }
+
+        (view.layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
+            (behavior as? BrowserToolbarBehavior)?.forceCollapse(view)
+        }
+    }
+
     fun dismissMenu() {
         view.dismissMenu()
     }

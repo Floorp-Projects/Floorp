@@ -1220,6 +1220,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 .setText(getString(R.string.full_screen_notification))
                 .show()
             activity?.enterToImmersiveMode()
+            browserToolbarView.collapse()
             browserToolbarView.view.isVisible = false
             val browserEngine = swipeRefresh.layoutParams as CoordinatorLayout.LayoutParams
             browserEngine.bottomMargin = 0
@@ -1227,7 +1228,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
             swipeRefresh.translationY = 0f
 
             engineView.setDynamicToolbarMaxHeight(0)
-            browserToolbarView.expand()
             // Without this, fullscreen has a margin at the top.
             engineView.setVerticalClipping(0)
 
@@ -1241,6 +1241,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 browserToolbarView.view.isVisible = true
                 val toolbarHeight = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
                 initializeEngineView(toolbarHeight)
+                browserToolbarView.expand()
             }
         }
 

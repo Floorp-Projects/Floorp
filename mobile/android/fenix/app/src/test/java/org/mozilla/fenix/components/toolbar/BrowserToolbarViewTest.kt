@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components.toolbar
 
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import io.mockk.confirmVerified
 
 import io.mockk.every
 import io.mockk.mockk
@@ -192,5 +193,51 @@ class BrowserToolbarViewTest {
         toolbarViewSpy.setDynamicToolbarBehavior(MozacToolbarPosition.TOP)
 
         assertNotNull((toolbar.layoutParams as CoordinatorLayout.LayoutParams).behavior)
+    }
+
+    @Test
+    fun `expand should not do anything if isPwaTabOrTwaTab`() {
+        val toolbarViewSpy = spyk(toolbarView)
+        every { toolbarViewSpy.isPwaTabOrTwaTab } returns true
+
+        toolbarViewSpy.expand()
+
+        verify { toolbarViewSpy.expand() }
+        verify { toolbarViewSpy.isPwaTabOrTwaTab }
+        // verify that no other interactions than the expected ones took place
+        confirmVerified(toolbarViewSpy)
+    }
+
+    @Test
+    fun `expand should call forceExpand if not isPwaTabOrTwaTab`() {
+        val toolbarViewSpy = spyk(toolbarView)
+        every { toolbarViewSpy.isPwaTabOrTwaTab } returns false
+
+        toolbarViewSpy.expand()
+
+        verify { behavior.forceExpand(toolbar) }
+    }
+
+    @Test
+    fun `collapse should not do anything if isPwaTabOrTwaTab`() {
+        val toolbarViewSpy = spyk(toolbarView)
+        every { toolbarViewSpy.isPwaTabOrTwaTab } returns true
+
+        toolbarViewSpy.collapse()
+
+        verify { toolbarViewSpy.collapse() }
+        verify { toolbarViewSpy.isPwaTabOrTwaTab }
+        // verify that no other interactions than the expected ones took place
+        confirmVerified(toolbarViewSpy)
+    }
+
+    @Test
+    fun `collapse should call forceExpand if not isPwaTabOrTwaTab`() {
+        val toolbarViewSpy = spyk(toolbarView)
+        every { toolbarViewSpy.isPwaTabOrTwaTab } returns false
+
+        toolbarViewSpy.collapse()
+
+        verify { behavior.forceCollapse(toolbar) }
     }
 }
