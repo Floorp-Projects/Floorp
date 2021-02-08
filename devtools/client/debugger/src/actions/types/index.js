@@ -84,7 +84,6 @@ type UpdateTabAction = {|
 type NavigateAction =
   | {|
       +type: "CONNECT",
-      +traits: Object,
       +isWebExtension: boolean,
       +mainThreadActorID: ThreadId,
     |}

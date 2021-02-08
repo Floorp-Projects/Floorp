@@ -130,11 +130,9 @@ async function onTargetAvailable({
   // they are active once attached.
   actions.addEventListenerBreakpoints([]).catch(e => console.error(e));
 
-  const { traits } = targetFront;
   await actions.connect(
     targetFront.url,
     threadFront.actor,
-    traits,
     targetFront.isWebExtension
   );
 
