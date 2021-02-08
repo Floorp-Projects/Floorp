@@ -334,8 +334,9 @@ void nsPrintSettingsWin::CopyFromNative(HDC aHdc, DEVMODEW* aDevMode) {
     const bool arePagesPortraitMode =
         (areSheetsOfPaperPortraitMode != HasOrthogonalSheetsAndPages());
 
-    mOrientation = int32_t(arePagesPortraitMode ? kLandscapeOrientation
-                                                : kPortraitOrientation);
+    // Record the orientation of the pages (determined above) in mOrientation:
+    mOrientation = int32_t(arePagesPortraitMode ? kPortraitOrientation
+                                                : kLandscapeOrientation);
   }
 
   if (aDevMode->dmFields & DM_COPIES) {
