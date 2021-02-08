@@ -111,20 +111,16 @@ static JSScript* CompileSourceBufferAndStartIncrementalEncoding(
     return nullptr;
   }
 
-  if (options.useStencilXDR) {
-    UniquePtr<XDRIncrementalEncoderBase> xdrEncoder;
+  MOZ_DIAGNOSTIC_ASSERT(options.useStencilXDR);
 
-    if (!stencil.get().input.source()->xdrEncodeInitialStencil(
-            cx, stencil.get(), xdrEncoder)) {
-      return nullptr;
-    }
+  UniquePtr<XDRIncrementalEncoderBase> xdrEncoder;
 
-    script->scriptSource()->setIncrementalEncoder(xdrEncoder.release());
-  } else {
-    if (!script->scriptSource()->xdrEncodeTopLevel(cx, script)) {
-      return nullptr;
-    }
+  if (!stencil.get().input.source()->xdrEncodeInitialStencil(cx, stencil.get(),
+                                                             xdrEncoder)) {
+    return nullptr;
   }
+
+  script->scriptSource()->setIncrementalEncoder(xdrEncoder.release());
 
   return script;
 }

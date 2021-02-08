@@ -2090,29 +2090,25 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
 
   // Start the incremental-XDR encoder.
   if (startEncoding == StartEncoding::Yes) {
-    if (parseTask->options.useStencilXDR) {
-      UniquePtr<XDRIncrementalEncoderBase> xdrEncoder;
+    MOZ_DIAGNOSTIC_ASSERT(parseTask->options.useStencilXDR);
 
-      if (parseTask->stencil_.get()) {
-        auto* stencil = parseTask->stencil_.get();
-        if (!stencil->input.source()->xdrEncodeInitialStencil(cx, *stencil,
-                                                              xdrEncoder)) {
-          return nullptr;
-        }
-      } else {
-        auto* stencilSet = parseTask->stencilSet_.get();
-        if (!stencilSet->input.source()->xdrEncodeStencils(cx, *stencilSet,
-                                                           xdrEncoder)) {
-          return nullptr;
-        }
+    UniquePtr<XDRIncrementalEncoderBase> xdrEncoder;
+
+    if (parseTask->stencil_.get()) {
+      auto* stencil = parseTask->stencil_.get();
+      if (!stencil->input.source()->xdrEncodeInitialStencil(cx, *stencil,
+                                                            xdrEncoder)) {
+        return nullptr;
       }
-
-      script->scriptSource()->setIncrementalEncoder(xdrEncoder.release());
     } else {
-      if (!script->scriptSource()->xdrEncodeTopLevel(cx, script)) {
+      auto* stencilSet = parseTask->stencilSet_.get();
+      if (!stencilSet->input.source()->xdrEncodeStencils(cx, *stencilSet,
+                                                         xdrEncoder)) {
         return nullptr;
       }
     }
+
+    script->scriptSource()->setIncrementalEncoder(xdrEncoder.release());
   }
 
   return script;
