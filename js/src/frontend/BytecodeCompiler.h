@@ -110,7 +110,6 @@ struct CompilationGCOutput;
 class ErrorReporter;
 class FunctionBox;
 class ParseNode;
-class ParserAtom;
 
 // Compile a module of the given source using the given options.
 ModuleObject* CompileModule(JSContext* cx,
@@ -187,10 +186,8 @@ MOZ_MUST_USE JSFunction* CompileStandaloneFunctionInNonSyntacticScope(
  * Defined in TokenStream.cpp.
  */
 bool IsIdentifier(JSLinearString* str);
-bool IsIdentifier(const ParserAtom* atom);
 
 bool IsIdentifierNameOrPrivateName(JSLinearString* str);
-bool IsIdentifierNameOrPrivateName(const ParserAtom* atom);
 
 /*
  * As above, but taking chars + length.

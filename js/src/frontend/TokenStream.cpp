@@ -199,12 +199,6 @@ bool IsIdentifier(JSLinearString* str) {
   }
   return IsIdentifier(str->twoByteChars(nogc), str->length());
 }
-bool IsIdentifier(const ParserAtom* atom) {
-  MOZ_ASSERT(atom);
-  return atom->hasLatin1Chars()
-             ? IsIdentifier(atom->latin1Chars(), atom->length())
-             : IsIdentifier(atom->twoByteChars(), atom->length());
-}
 
 bool IsIdentifierNameOrPrivateName(JSLinearString* str) {
   JS::AutoCheckCannotGC nogc;
@@ -213,12 +207,6 @@ bool IsIdentifierNameOrPrivateName(JSLinearString* str) {
     return IsIdentifierNameOrPrivateName(str->latin1Chars(nogc), str->length());
   }
   return IsIdentifierNameOrPrivateName(str->twoByteChars(nogc), str->length());
-}
-bool IsIdentifierNameOrPrivateName(const ParserAtom* atom) {
-  if (atom->hasLatin1Chars()) {
-    return IsIdentifierNameOrPrivateName(atom->latin1Chars(), atom->length());
-  }
-  return IsIdentifierNameOrPrivateName(atom->twoByteChars(), atom->length());
 }
 
 bool IsIdentifier(const Latin1Char* chars, size_t length) {

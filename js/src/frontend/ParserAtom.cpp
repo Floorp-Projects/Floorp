@@ -11,6 +11,7 @@
 
 #include "jsnum.h"  // CharsToNumber
 
+#include "frontend/BytecodeCompiler.h"  // IsIdentifier
 #include "frontend/CompilationInfo.h"
 #include "frontend/NameCollections.h"
 #include "frontend/StencilXdr.h"  // CanCopyDataToDisk
@@ -633,6 +634,13 @@ const ParserAtom* ParserAtomsTable::getParserAtom(
 
 void ParserAtomsTable::markUsedByStencil(TaggedParserAtomIndex index) const {
   getParserAtom(index)->markUsedByStencil();
+}
+
+bool ParserAtomsTable::isIdentifier(TaggedParserAtomIndex index) const {
+  const auto* atom = getParserAtom(index);
+  return atom->hasLatin1Chars()
+             ? IsIdentifier(atom->latin1Chars(), atom->length())
+             : IsIdentifier(atom->twoByteChars(), atom->length());
 }
 
 bool ParserAtomsTable::isPrivateName(TaggedParserAtomIndex index) const {
