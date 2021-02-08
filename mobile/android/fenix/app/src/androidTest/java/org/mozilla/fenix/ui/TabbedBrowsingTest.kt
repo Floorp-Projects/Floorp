@@ -72,8 +72,6 @@ class TabbedBrowsingTest {
 
     @Test
     fun openNewTabTest() {
-        homeScreen { }.dismissOnboarding()
-
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -81,11 +79,18 @@ class TabbedBrowsingTest {
             mDevice.waitForIdle()
             verifyTabCounter("1")
         }.openTabDrawer {
-            verifyExistingTabList()
-        }.openTabsListThreeDotMenu {
-            verifyCloseAllTabsButton()
-            verifyShareTabButton()
-            verifySelectTabs()
+            verifyNormalModeSelected()
+            verifyExistingOpenTabs("Test_Page_1")
+            closeTab()
+        }.openTabDrawer {
+            verifyNoTabsOpened()
+        }.openNewTab {
+        }.submitQuery(defaultWebPage.url.toString()) {
+            mDevice.waitForIdle()
+            verifyTabCounter("1")
+        }.openTabDrawer {
+            verifyNormalModeSelected()
+            verifyExistingOpenTabs("Test_Page_1")
         }
     }
 
