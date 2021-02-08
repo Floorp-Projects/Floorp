@@ -300,7 +300,7 @@ nscoord nsTableWrapperFrame::GetPrefISize(gfxContext* aRenderingContext) {
 nscoord nsTableWrapperFrame::ChildShrinkWrapISize(
     gfxContext* aRenderingContext, nsIFrame* aChildFrame, WritingMode aWM,
     LogicalSize aCBSize, nscoord aAvailableISize,
-    const StyleSizeOverrides& aSizeOverrides) const {
+    const StyleSizeOverrides& aSizeOverrides, ComputeSizeFlags aFlags) const {
   AutoMaybeDisableFontInflation an(aChildFrame);
 
   SizeComputationInput offsets(aChildFrame, aRenderingContext, aWM,
@@ -308,23 +308,9 @@ nscoord nsTableWrapperFrame::ChildShrinkWrapISize(
   LogicalSize marginSize = offsets.ComputedLogicalMargin(aWM).Size(aWM);
   LogicalSize bpSize = offsets.ComputedLogicalBorderPadding(aWM).Size(aWM);
 
-  // Shrink-wrap aChildFrame by default, except if we're a stretched grid item.
-  ComputeSizeFlags flags(ComputeSizeFlag::ShrinkWrap);
-  if (MOZ_UNLIKELY(IsGridItem()) && !StyleMargin()->HasInlineAxisAuto(aWM)) {
-    const auto* parent = GetParent();
-    auto inlineAxisAlignment =
-        aWM.IsOrthogonalTo(parent->GetWritingMode())
-            ? StylePosition()->UsedAlignSelf(parent->Style())._0
-            : StylePosition()->UsedJustifySelf(parent->Style())._0;
-    if (inlineAxisAlignment == StyleAlignFlags::NORMAL ||
-        inlineAxisAlignment == StyleAlignFlags::STRETCH) {
-      flags -= ComputeSizeFlag::ShrinkWrap;
-    }
-  }
-
   auto size =
       aChildFrame->ComputeSize(aRenderingContext, aWM, aCBSize, aAvailableISize,
-                               marginSize, bpSize, aSizeOverrides, flags);
+                               marginSize, bpSize, aSizeOverrides, aFlags);
   return size.mLogicalSize.ISize(aWM) + marginSize.ISize(aWM) +
          bpSize.ISize(aWM);
 }
@@ -344,30 +330,44 @@ LogicalSize nsTableWrapperFrame::ComputeAutoSize(
   // could be something that is not reflected in our GetMinISize and
   // GetPrefISize.  See bug 349457 for an example.
 
+  // Shrink-wrap aChildFrame by default, except if we're a stretched grid item.
+  ComputeSizeFlags flags(ComputeSizeFlag::ShrinkWrap);
+  if (MOZ_UNLIKELY(IsGridItem()) && !StyleMargin()->HasInlineAxisAuto(aWM)) {
+    const auto* parent = GetParent();
+    auto inlineAxisAlignment =
+        aWM.IsOrthogonalTo(parent->GetWritingMode())
+            ? StylePosition()->UsedAlignSelf(parent->Style())._0
+            : StylePosition()->UsedJustifySelf(parent->Style())._0;
+    if (inlineAxisAlignment == StyleAlignFlags::NORMAL ||
+        inlineAxisAlignment == StyleAlignFlags::STRETCH) {
+      flags -= ComputeSizeFlag::ShrinkWrap;
+    }
+  }
+
   // Match the availableISize logic in Reflow.
   Maybe<StyleCaptionSide> captionSide = GetCaptionSide();
   nscoord inlineSize;
   if (!captionSide) {
     inlineSize =
         ChildShrinkWrapISize(aRenderingContext, InnerTableFrame(), aWM, aCBSize,
-                             kidAvailableISize, aSizeOverrides);
+                             kidAvailableISize, aSizeOverrides, flags);
   } else if (*captionSide == StyleCaptionSide::Left ||
              *captionSide == StyleCaptionSide::Right) {
-    nscoord capISize =
-        ChildShrinkWrapISize(aRenderingContext, mCaptionFrames.FirstChild(),
-                             aWM, aCBSize, kidAvailableISize, aSizeOverrides);
-    inlineSize =
-        capISize +
-        ChildShrinkWrapISize(aRenderingContext, InnerTableFrame(), aWM, aCBSize,
-                             kidAvailableISize - capISize, aSizeOverrides);
+    nscoord capISize = ChildShrinkWrapISize(
+        aRenderingContext, mCaptionFrames.FirstChild(), aWM, aCBSize,
+        kidAvailableISize, aSizeOverrides, flags);
+    inlineSize = capISize +
+                 ChildShrinkWrapISize(aRenderingContext, InnerTableFrame(), aWM,
+                                      aCBSize, kidAvailableISize - capISize,
+                                      aSizeOverrides, flags);
   } else if (*captionSide == StyleCaptionSide::Top ||
              *captionSide == StyleCaptionSide::Bottom) {
     inlineSize =
         ChildShrinkWrapISize(aRenderingContext, InnerTableFrame(), aWM, aCBSize,
-                             kidAvailableISize, aSizeOverrides);
+                             kidAvailableISize, aSizeOverrides, flags);
     nscoord capISize =
         ChildShrinkWrapISize(aRenderingContext, mCaptionFrames.FirstChild(),
-                             aWM, aCBSize, inlineSize, aSizeOverrides);
+                             aWM, aCBSize, inlineSize, aSizeOverrides, flags);
     if (capISize > inlineSize) {
       inlineSize = capISize;
     }
@@ -377,10 +377,10 @@ LogicalSize nsTableWrapperFrame::ComputeAutoSize(
                "unexpected caption-side");
     inlineSize =
         ChildShrinkWrapISize(aRenderingContext, InnerTableFrame(), aWM, aCBSize,
-                             kidAvailableISize, aSizeOverrides);
-    nscoord capISize =
-        ChildShrinkWrapISize(aRenderingContext, mCaptionFrames.FirstChild(),
-                             aWM, aCBSize, kidAvailableISize, aSizeOverrides);
+                             kidAvailableISize, aSizeOverrides, flags);
+    nscoord capISize = ChildShrinkWrapISize(
+        aRenderingContext, mCaptionFrames.FirstChild(), aWM, aCBSize,
+        kidAvailableISize, aSizeOverrides, flags);
     if (capISize > inlineSize) {
       inlineSize = capISize;
     }
