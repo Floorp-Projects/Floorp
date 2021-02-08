@@ -207,7 +207,6 @@
   MACRO(getOwnPropertyDescriptor, getOwnPropertyDescriptor,                    \
         "getOwnPropertyDescriptor")                                            \
   MACRO(getOwnPropertyNames, getOwnPropertyNames, "getOwnPropertyNames")       \
-  MACRO(getPrefix, getPrefix, "get ")                                          \
   MACRO(getPropertySuper, getPropertySuper, "getPropertySuper")                \
   MACRO(getPrototypeOf, getPrototypeOf, "getPrototypeOf")                      \
   MACRO(GetTypeError, GetTypeError, "GetTypeError")                            \
@@ -409,7 +408,6 @@
   MACRO(setBigUint64, setBigUint64, "setBigUint64")                            \
   MACRO(SetConstructorInit, SetConstructorInit, "SetConstructorInit")          \
   MACRO(SetIterator, SetIterator, "Set Iterator")                              \
-  MACRO(setPrefix, setPrefix, "set ")                                          \
   MACRO(setPrototypeOf, setPrototypeOf, "setPrototypeOf")                      \
   MACRO(shape, shape, "shape")                                                 \
   MACRO(shared, shared, "shared")                                              \
