@@ -861,9 +861,15 @@ class ParserAtomsTable {
   TaggedParserAtomIndex concatAtoms(JSContext* cx,
                                     mozilla::Range<const ParserAtom*> atoms);
 
+ private:
   const ParserAtom* getWellKnown(WellKnownAtomId atomId) const;
   const ParserAtom* getStatic1(StaticParserString1 s) const;
   const ParserAtom* getStatic2(StaticParserString2 s) const;
+
+  template <class T>
+  friend const ParserAtom* GetParserAtom(T self, TaggedParserAtomIndex index);
+
+ public:
   const ParserAtom* getParserAtom(ParserAtomIndex index) const;
   const ParserAtom* getParserAtom(TaggedParserAtomIndex index) const;
 
@@ -890,10 +896,15 @@ class ParserAtomSpanBuilder {
     entries_[index] = const_cast<ParserAtomEntry*>(atom);
   }
 
- public:
+ private:
   const ParserAtom* getWellKnown(WellKnownAtomId atomId) const;
   const ParserAtom* getStatic1(StaticParserString1 s) const;
   const ParserAtom* getStatic2(StaticParserString2 s) const;
+
+  template <class T>
+  friend const ParserAtom* GetParserAtom(T self, TaggedParserAtomIndex index);
+
+ public:
   const ParserAtom* getParserAtom(ParserAtomIndex index) const;
   const ParserAtom* getParserAtom(TaggedParserAtomIndex index) const;
 };
