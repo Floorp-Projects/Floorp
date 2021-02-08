@@ -434,8 +434,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
                 Preference.OnPreferenceClickListener {
                     requireContext().getSystemService(RoleManager::class.java).also {
-                        if (!it.isRoleHeld(RoleManager.ROLE_BROWSER)) {
-                            startActivityForResult(it.createRequestRoleIntent(RoleManager.ROLE_BROWSER), 0)
+                        if (it.isRoleAvailable(RoleManager.ROLE_BROWSER) && !it.isRoleHeld(
+                                RoleManager.ROLE_BROWSER
+                            )
+                        ) {
+                            startActivityForResult(
+                                it.createRequestRoleIntent(RoleManager.ROLE_BROWSER),
+                                REQUEST_CODE_BROWSER_ROLE
+                            )
                         } else {
                             navigateUserToDefaultAppsSettings()
                         }
@@ -452,12 +458,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
             else -> {
                 Preference.OnPreferenceClickListener {
                     (activity as HomeActivity).openToBrowserAndLoad(
-                            searchTermOrURL = SupportUtils.getSumoURLForTopic(
-                                    requireContext(),
-                                    SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER
-                            ),
-                            newTab = true,
-                            from = BrowserDirection.FromSettings
+                        searchTermOrURL = SupportUtils.getSumoURLForTopic(
+                            requireContext(),
+                            SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER
+                        ),
+                        newTab = true,
+                        from = BrowserDirection.FromSettings
                     )
                     true
                 }
@@ -468,12 +474,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        /*
-        If role manager doesn't show in-app browser changing dialog for a reason, navigate user to
-        Default Apps Settings.
-         */
-        if (resultCode == Activity.RESULT_CANCELED && requestCode == 0) {
-            navigateUserToDefaultAppsSettings()
+        // If the user made us the default browser, update the switch
+        if (resultCode == Activity.RESULT_OK && requestCode == REQUEST_CODE_BROWSER_ROLE) {
+            updateMakeDefaultBrowserPreference()
         }
     }
 
@@ -547,6 +550,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     companion object {
+        private const val REQUEST_CODE_BROWSER_ROLE = 1
         private const val SCROLL_INDICATOR_DELAY = 10L
         private const val FXA_SYNC_OVERRIDE_EXIT_DELAY = 2000L
         private const val AMO_COLLECTION_OVERRIDE_EXIT_DELAY = 3000L
