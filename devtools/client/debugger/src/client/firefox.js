@@ -74,6 +74,7 @@ export function onDisconnect() {
   resourceWatcher.unwatchResources([resourceWatcher.TYPES.THREAD_STATE], {
     onAvailable: onBreakpointAvailable,
   });
+  sourceQueue.clear();
 }
 
 async function onTargetAvailable({
