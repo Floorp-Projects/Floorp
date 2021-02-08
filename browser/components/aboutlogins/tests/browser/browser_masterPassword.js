@@ -19,6 +19,14 @@ function waitForLoginCountToReach(browser, loginCount) {
   );
 }
 
+add_task(async function setup() {
+  await addLogin(TEST_LOGIN1);
+  registerCleanupFunction(() => {
+    Services.logins.removeAllUserFacingLogins();
+    LoginTestUtils.masterPassword.disable();
+  });
+});
+
 add_task(async function test() {
   // Confirm that the mocking of the OS auth dialog isn't enabled so the
   // test will timeout if a real OS auth dialog is shown. We don't show
@@ -31,8 +39,6 @@ add_task(async function test() {
     "",
     "Pref should be set to default value of empty string to start the test"
   );
-
-  TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
   LoginTestUtils.masterPassword.enable();
 
   let mpDialogShown = forceAuthTimeoutAndWaitForMPDialog("cancel");
@@ -41,11 +47,6 @@ add_task(async function test() {
     url: "about:logins",
   });
   await mpDialogShown;
-
-  registerCleanupFunction(async function() {
-    Services.logins.removeAllUserFacingLogins();
-    BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  });
 
   let browser = gBrowser.selectedBrowser;
   let logins = await waitForLoginCountToReach(browser, 0);
@@ -227,4 +228,42 @@ add_task(async function test() {
       "login-list should show login with matching password since MP is disabled"
     );
   });
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(async function test_login_item_after_successful_auth() {
+  // Confirm that the mocking of the OS auth dialog isn't enabled so the
+  // test will timeout if a real OS auth dialog is shown. We don't show
+  // the OS auth dialog when Master Password is enabled.
+  is(
+    Services.prefs.getStringPref(
+      "toolkit.osKeyStore.unofficialBuildOnlyLogin",
+      ""
+    ),
+    "",
+    "Pref should be set to default value of empty string to start the test"
+  );
+  LoginTestUtils.masterPassword.enable();
+
+  let mpDialogShown = forceAuthTimeoutAndWaitForMPDialog("authenticate");
+  await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    url: "about:logins",
+  });
+  await mpDialogShown;
+
+  let browser = gBrowser.selectedBrowser;
+  let logins = await waitForLoginCountToReach(browser, 1);
+  is(logins, 1, "Logins should be displayed when MP is set and authenticated");
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+    let loginItem = content.document.querySelector("login-item");
+    ok(
+      !loginItem.classList.contains("no-logins"),
+      "Login item should have content after MP is authenticated"
+    );
+  });
+
+  LoginTestUtils.masterPassword.disable();
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

@@ -601,7 +601,7 @@ var AboutLogins = {
         break;
       }
       case "removeAllLogins": {
-        this.messageSubscribers("AboutLogins:AllLogins", []);
+        this.messageSubscribers("AboutLogins:RemoveAllLogins", []);
         break;
       }
     }
