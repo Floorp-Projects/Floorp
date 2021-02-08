@@ -327,7 +327,6 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
       let button = this.document.createXULElement("button");
       button.id = `urlbar-engine-one-off-item-${name}`;
       button.setAttribute("class", "searchbar-engine-one-off-item");
-      button.setAttribute("tabindex", "-1");
       this.document.l10n.setAttributes(button, `search-one-offs-${name}`, {
         restrict,
       });

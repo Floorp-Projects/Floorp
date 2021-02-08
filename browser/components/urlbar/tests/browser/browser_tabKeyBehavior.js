@@ -246,34 +246,6 @@ add_task(async function tabNoSearchStringSearchMode() {
   await UrlbarTestUtils.promisePopupClose(window);
 });
 
-add_task(async function tabOnTopSites() {
-  info("Tab through the toolbar when focusing the Address Bar on top sites.");
-  for (let val of [true, false]) {
-    info(`Test with keyboard_navigation set to "${val}"`);
-    await SpecialPowers.pushPrefEnv({
-      set: [["browser.toolbars.keyboard_navigation", val]],
-    });
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      value: "",
-      fireInputEvent: true,
-    });
-    Assert.ok(
-      UrlbarTestUtils.getResultCount(window) > 0,
-      "There should be some results"
-    );
-    Assert.deepEqual(
-      UrlbarTestUtils.getSelectedElement(window),
-      null,
-      "There should be no selection"
-    );
-
-    await expectTabThroughToolbar();
-    await UrlbarTestUtils.promisePopupClose(window);
-    await SpecialPowers.popPrefEnv();
-  }
-});
-
 async function expectTabThroughResults(options = { reverse: false }) {
   let resultCount = UrlbarTestUtils.getResultCount(window);
   Assert.ok(resultCount > 0, "There should be results");
@@ -324,17 +296,11 @@ async function expectTabThroughToolbar(options = { reverse: false }) {
 }
 
 async function waitForFocusOnNextFocusableElement(reverse = false) {
-  if (
-    !Services.prefs.getBoolPref("browser.toolbars.keyboard_navigation", true)
-  ) {
-    return BrowserTestUtils.waitForCondition(
-      () => document.activeElement == gBrowser.selectedBrowser
-    );
-  }
   let urlbar = document.getElementById("urlbar-container");
   let nextFocusableElement = reverse
     ? urlbar.previousElementSibling
     : urlbar.nextElementSibling;
+  info(nextFocusableElement);
   while (
     nextFocusableElement &&
     (!nextFocusableElement.classList.contains("toolbarbutton-1") ||
@@ -344,9 +310,6 @@ async function waitForFocusOnNextFocusableElement(reverse = false) {
       ? nextFocusableElement.previousElementSibling
       : nextFocusableElement.nextElementSibling;
   }
-  info(
-    `Next focusable element: ${nextFocusableElement.localName}.#${nextFocusableElement.id}`
-  );
 
   Assert.ok(
     nextFocusableElement.classList.contains("toolbarbutton-1"),
