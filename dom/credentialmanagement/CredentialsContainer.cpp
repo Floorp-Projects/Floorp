@@ -7,6 +7,8 @@
 #include "mozilla/dom/CredentialsContainer.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WebAuthnManager.h"
+#include "mozilla/dom/WindowGlobalChild.h"
+#include "mozilla/dom/WindowContext.h"
 #include "nsContentUtils.h"
 #include "nsFocusManager.h"
 #include "nsIDocShell.h"
@@ -60,32 +62,18 @@ static bool IsSameOriginWithAncestors(nsPIDOMWindowInner* aParent) {
   // iframes, but not break mochitests (which use iframes to embed the tests).
   MOZ_ASSERT(aParent);
 
-  if (aParent->IsTopInnerWindow()) {
-    // Not in a frame or iframe
-    return true;
-  }
-
-  // We're in some kind of frame, so let's get the parent and start checking
-  // the same origin policy
-  nsINode* node =
-      nsContentUtils::GetCrossDocParentNode(aParent->GetExtantDoc());
-  if (NS_WARN_IF(!node)) {
-    // This is a sanity check, since there has to be a parent. Fail safe.
-    return false;
-  }
+  WindowGlobalChild* wgc = aParent->GetWindowGlobalChild();
 
   // Check that all ancestors are the same origin, repeating until we find a
   // null parent
-  do {
-    nsresult rv =
-        nsContentUtils::CheckSameOrigin(aParent->GetExtantDoc(), node);
-    if (NS_FAILED(rv)) {
+  for (WindowContext* parentContext =
+           wgc->WindowContext()->GetParentWindowContext();
+       parentContext; parentContext = parentContext->GetParentWindowContext()) {
+    if (!wgc->IsSameOriginWith(parentContext)) {
       // same-origin policy is violated
       return false;
     }
-
-    node = nsContentUtils::GetCrossDocParentNode(node);
-  } while (node);
+  }
 
   return true;
 }
