@@ -836,9 +836,6 @@ class ParserAtomsTable {
                                      CompilationAtomCache& atomCache,
                                      JSAtom* atom);
 
-  TaggedParserAtomIndex concatAtoms(JSContext* cx,
-                                    mozilla::Range<const ParserAtom*> atoms);
-
  private:
   const ParserAtom* getWellKnown(WellKnownAtomId atomId) const;
   const ParserAtom* getStatic1(StaticParserString1 s) const;

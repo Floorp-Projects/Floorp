@@ -27,59 +27,6 @@ using namespace js::frontend;
 
 namespace js {
 
-// Iterates over a sequence of ParserAtoms and yield their sequence of
-// characters in order. This simulates concatenation of atoms. The underlying
-// ParserAtoms may be a mix of Latin1 and char16_t atoms.
-template <>
-class InflatedChar16Sequence<const ParserAtom*> {
- private:
-  const ParserAtom** cur_ = nullptr;
-  const ParserAtom** lim_ = nullptr;
-  size_t index_ = 0;
-
-  void settle() {
-    // Check if we are out-of-bounds for current ParserAtom.
-    auto outOfBounds = [this]() { return index_ >= (*cur_)->length(); };
-
-    while (hasMore() && outOfBounds()) {
-      // Advance to start of next ParserAtom.
-      cur_++;
-      index_ = 0;
-    }
-  }
-
- public:
-  explicit InflatedChar16Sequence(
-      const mozilla::Range<const ParserAtom*>& atoms)
-      : cur_(atoms.begin().get()), lim_(atoms.end().get()) {
-    settle();
-  }
-
-  bool hasMore() { return cur_ < lim_; }
-
-  char16_t next() {
-    MOZ_ASSERT(hasMore());
-    char16_t ch = (*cur_)->charAt(index_);
-    index_++;
-    settle();
-    return ch;
-  }
-
-  HashNumber computeHash() const {
-    auto copy = *this;
-    HashNumber hash = 0;
-
-    while (copy.hasMore()) {
-      hash = mozilla::AddToHash(hash, copy.next());
-    }
-    return hash;
-  }
-};
-
-}  // namespace js
-
-namespace js {
-
 template <>
 class InflatedChar16Sequence<LittleEndianChars> {
  private:
@@ -512,56 +459,6 @@ TaggedParserAtomIndex ParserAtomsTable::internJSAtom(
              atom);
 
   return parserAtom;
-}
-
-TaggedParserAtomIndex ParserAtomsTable::concatAtoms(
-    JSContext* cx, mozilla::Range<const ParserAtom*> atoms) {
-  MOZ_ASSERT(atoms.length() >= 2,
-             "concatAtoms should only be used for multiple inputs");
-
-  // Compute final length and encoding.
-  bool catLatin1 = true;
-  uint32_t catLen = 0;
-  for (const ParserAtom* atom : atoms) {
-    if (atom->hasTwoByteChars()) {
-      catLatin1 = false;
-    }
-    // Overflow check here, length
-    if (atom->length() >= (ParserAtom::MAX_LENGTH - catLen)) {
-      js::ReportOutOfMemory(cx);
-      return TaggedParserAtomIndex::null();
-    }
-    catLen += atom->length();
-  }
-
-  // Short Latin1 strings must check for both Tiny and WellKnown atoms so simple
-  // concatenate onto stack and use `internLatin1`.
-  if (catLatin1 && (catLen <= WellKnownParserAtoms::MaxWellKnownLength)) {
-    Latin1Char buf[WellKnownParserAtoms::MaxWellKnownLength];
-    size_t offset = 0;
-    for (const ParserAtom* atom : atoms) {
-      mozilla::PodCopy(buf + offset, atom->latin1Chars(), atom->length());
-      offset += atom->length();
-    }
-    return internLatin1(cx, buf, catLen);
-  }
-
-  // NOTE: We have ruled out Tiny and WellKnown atoms and can ignore below.
-
-  InflatedChar16Sequence<const ParserAtom*> seq(atoms);
-  SpecificParserAtomLookup<const ParserAtom*> lookup(seq);
-
-  // Check for existing atom.
-  auto addPtr = entryMap_.lookupForAdd(lookup);
-  if (addPtr) {
-    return addPtr->value();
-  }
-
-  // Otherwise, add new entry.
-  return catLatin1 ? internChar16Seq<Latin1Char>(cx, addPtr, lookup.hash(), seq,
-                                                 catLen)
-                   : internChar16Seq<char16_t>(cx, addPtr, lookup.hash(), seq,
-                                               catLen);
 }
 
 const ParserAtom* WellKnownParserAtoms::getWellKnown(
