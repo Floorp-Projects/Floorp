@@ -424,7 +424,7 @@ class RefTestImplementation(object):
 
         if len(lhs_hashes) != len(rhs_hashes):
             self.logger.info("Got different number of pages")
-            return False
+            return relation == "!="
 
         assert len(lhs_screenshots) == len(lhs_hashes) == len(rhs_screenshots) == len(rhs_hashes)
 
