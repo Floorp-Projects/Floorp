@@ -177,3 +177,105 @@ for ( let [as, bs] of cross(Int16Array.inputs) ) {
     assertSame(get(mem16, 0, 8),
                iota(8).map((i) => signed_saturate((as[i] * bs[i] + 0x4000) >> 15, 16)));
 }
+
+
+/// Double-precision conversion instructions.
+/// f64x2.convert_low_i32x4_{u,s} / i32x4.trunc_sat_f64x2_{u,s}_zero
+/// f32x4.demote_f64x2_zero / f64x2.promote_low_f32x4
+
+var ins = wasmEvalText(`
+  (module
+    (memory (export "mem") 1 1)
+    (func (export "f64x2_convert_low_i32x4_s")
+      (v128.store (i32.const 0) (f64x2.convert_low_i32x4_s (v128.load (i32.const 16)) )))
+    (func (export "f64x2_convert_low_i32x4_u")
+      (v128.store (i32.const 0) (f64x2.convert_low_i32x4_u (v128.load (i32.const 16)) )))
+
+    (func (export "i32x4_trunc_sat_f64x2_s_zero")
+      (v128.store (i32.const 0) (i32x4.trunc_sat_f64x2_s_zero (v128.load (i32.const 16)) )))
+    (func (export "i32x4_trunc_sat_f64x2_u_zero")
+      (v128.store (i32.const 0) (i32x4.trunc_sat_f64x2_u_zero (v128.load (i32.const 16)) )))
+
+    (func (export "f32x4_demote_f64x2")
+      (v128.store (i32.const 0) (f32x4.demote_f64x2_zero (v128.load (i32.const 16)) )))
+    (func (export "f64x2_protomote_f32x4")
+      (v128.store (i32.const 0) (f64x2.promote_low_f32x4 (v128.load (i32.const 16)) )))
+  )`);
+
+var mem32 = new Int32Array(ins.exports.mem.buffer);
+var memU32 = new Uint32Array(ins.exports.mem.buffer);
+var memF32 = new Float32Array(ins.exports.mem.buffer);
+var memF64 = new Float64Array(ins.exports.mem.buffer);
+
+// f64x2.convert_low_i32x4_u / f64x2.convert_low_i32x4_s
+
+set(mem32, 4, [1, -2, 0, -2]);
+ins.exports.f64x2_convert_low_i32x4_s();
+assertSame(get(memF64, 0, 2), [1, -2]);
+set(mem32, 4, [-1, 0, 5, -212312312]);
+ins.exports.f64x2_convert_low_i32x4_s();
+assertSame(get(memF64, 0, 2), [-1, 0]);
+
+set(memU32, 4, [1, 4045646797, 4, 0]);
+ins.exports.f64x2_convert_low_i32x4_u();
+assertSame(get(memF64, 0, 2), [1, 4045646797]);
+set(memU32, 4, [0, 2, 4, 3]);
+ins.exports.f64x2_convert_low_i32x4_u();
+assertSame(get(memF64, 0, 2), [0, 2]);
+
+// i32x4.trunc_sat_f64x2_u_zero / i32x4.trunc_sat_f64x2_s_zero
+
+set(memF64, 2, [0,0])
+ins.exports.i32x4_trunc_sat_f64x2_s_zero();
+assertSame(get(mem32, 0, 4), [0,0,0,0]);
+ins.exports.i32x4_trunc_sat_f64x2_u_zero();
+assertSame(get(memU32, 0, 4), [0,0,0,0]);
+
+set(memF64, 2, [-1.23,65535.12])
+ins.exports.i32x4_trunc_sat_f64x2_s_zero();
+assertSame(get(mem32, 0, 4), [-1,65535,0,0]);
+set(memF64, 2, [1.99,65535.12])
+ins.exports.i32x4_trunc_sat_f64x2_u_zero();
+assertSame(get(memU32, 0, 4), [1,65535,0,0]);
+
+set(memF64, 2, [10e+100,-10e+100])
+ins.exports.i32x4_trunc_sat_f64x2_s_zero();
+assertSame(get(mem32, 0, 4), [0x7fffffff,-0x80000000,0,0]);
+ins.exports.i32x4_trunc_sat_f64x2_u_zero();
+assertSame(get(memU32, 0, 4), [0xffffffff,0,0,0]);
+
+// f32x4.demote_f64x2_zero
+
+set(memF64, 2, [1, 2])
+ins.exports.f32x4_demote_f64x2();
+assertSame(get(memF32, 0, 4), [1,2,0,0]);
+
+set(memF64, 2, [-4e38, 4e38])
+ins.exports.f32x4_demote_f64x2();
+assertSame(get(memF32, 0, 4), [-Infinity,Infinity,0,0]);
+
+set(memF64, 2, [-1e-46, 1e-46])
+ins.exports.f32x4_demote_f64x2();
+assertSame(get(memF32, 0, 4), [1/-Infinity,0,0,0]);
+
+set(memF64, 2, [0, NaN])
+ins.exports.f32x4_demote_f64x2();
+assertSame(get(memF32, 0, 4), [0, NaN,0,0]);
+
+set(memF64, 2, [Infinity, -Infinity])
+ins.exports.f32x4_demote_f64x2();
+assertSame(get(memF32, 0, 4), [Infinity, -Infinity,0,0]);
+
+// f64x2.promote_low_f32x4
+
+set(memF32, 4, [4, 3, 1, 2])
+ins.exports.f64x2_protomote_f32x4();
+assertSame(get(memF64, 0, 2), [4, 3]);
+
+set(memF32, 4, [NaN, 0, 0, 0])
+ins.exports.f64x2_protomote_f32x4();
+assertSame(get(memF64, 0, 2), [NaN, 0]);
+
+set(memF32, 4, [Infinity, -Infinity, 0, 0])
+ins.exports.f64x2_protomote_f32x4();
+assertSame(get(memF64, 0, 2), [Infinity, -Infinity]);

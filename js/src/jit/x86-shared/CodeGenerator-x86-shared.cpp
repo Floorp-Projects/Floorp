@@ -3383,6 +3383,25 @@ void CodeGenerator::visitWasmUnarySimd128(LWasmUnarySimd128* ins) {
     case wasm::SimdOp::F64x2Nearest:
       masm.nearestFloat64x2(src, dest);
       break;
+    case wasm::SimdOp::F32x4DemoteF64x2Zero:
+      masm.convertFloat64x2ToFloat32x4(src, dest);
+      break;
+    case wasm::SimdOp::F64x2PromoteLowF32x4:
+      masm.convertFloat32x4ToFloat64x2(src, dest);
+      break;
+    case wasm::SimdOp::F64x2ConvertLowI32x4S:
+      masm.convertInt32x4ToFloat64x2(src, dest);
+      break;
+    case wasm::SimdOp::F64x2ConvertLowI32x4U:
+      masm.unsignedConvertInt32x4ToFloat64x2(src, dest);
+      break;
+    case wasm::SimdOp::I32x4TruncSatF64x2SZero:
+      masm.truncSatFloat64x2ToInt32x4(src, dest, ToFloatRegister(ins->temp()));
+      break;
+    case wasm::SimdOp::I32x4TruncSatF64x2UZero:
+      masm.unsignedTruncSatFloat64x2ToInt32x4(src, dest,
+                                              ToFloatRegister(ins->temp()));
+      break;
     default:
       MOZ_CRASH("Unary SimdOp not implemented");
   }

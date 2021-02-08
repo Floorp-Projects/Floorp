@@ -1111,6 +1111,12 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(SimdOp::F64x2Floor):
           case uint32_t(SimdOp::F64x2Trunc):
           case uint32_t(SimdOp::F64x2Nearest):
+          case uint32_t(SimdOp::F32x4DemoteF64x2Zero):
+          case uint32_t(SimdOp::F64x2PromoteLowF32x4):
+          case uint32_t(SimdOp::F64x2ConvertLowI32x4S):
+          case uint32_t(SimdOp::F64x2ConvertLowI32x4U):
+          case uint32_t(SimdOp::I32x4TruncSatF64x2SZero):
+          case uint32_t(SimdOp::I32x4TruncSatF64x2UZero):
             CHECK(iter.readUnary(ValType::V128, &nothing));
 
           case uint32_t(SimdOp::I8x16Shl):
