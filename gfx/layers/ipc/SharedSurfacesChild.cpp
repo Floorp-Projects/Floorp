@@ -416,20 +416,11 @@ void SharedSurfacesChild::Unshare(const wr::ExternalImageId& aId,
     return;
   }
 
-  if (manager->OtherPid() == base::GetCurrentProcId()) {
-    // We are in the combined UI/GPU process. Call directly to it to remove its
-    // wrapper surface to free the underlying buffer, but only if the external
-    // image ID is owned by the manager. It can be different if the surface was
-    // last shared with the GPU process, which crashed several times, and its
-    // job was moved into the parent process.
-    if (manager->OwnsExternalImageId(aId)) {
-      SharedSurfacesParent::RemoveSameProcess(aId);
-    }
-  } else if (manager->OwnsExternalImageId(aId)) {
-    // Only attempt to release current mappings in the GPU process. It is
-    // possible we had a surface that was previously shared, the GPU process
-    // crashed / was restarted, and then we freed the surface. In that case
-    // we know the mapping has already been freed.
+  if (manager->OwnsExternalImageId(aId)) {
+    // Only attempt to release current mappings in the compositor process. It is
+    // possible we had a surface that was previously shared, the compositor
+    // process crashed / was restarted, and then we freed the surface. In that
+    // case we know the mapping has already been freed.
     manager->SendRemoveSharedSurface(aId);
   }
 }
