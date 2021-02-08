@@ -5285,7 +5285,7 @@ startup:
           A first run of the application created a new profile to use.
         default:
           The default profile was selected as normal.
-    expires: "88"
+    expires: "99"
     keyed: false
     kind: string
     notification_emails:
@@ -5294,6 +5294,7 @@ startup:
       - gkaberere@mozilla.com
       - jhollek@mozilla.com
       - echo@mozilla.com
+      - wlachance@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
