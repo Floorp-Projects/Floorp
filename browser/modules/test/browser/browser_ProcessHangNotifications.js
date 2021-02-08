@@ -117,6 +117,11 @@ TestHangReport.prototype = {
   get scriptBrowser() {
     return this._browser;
   },
+
+  // Shut up warnings about this property missing:
+  get scriptFileName() {
+    return "chrome://browser/content/browser.js";
+  },
 };
 
 // on dev edition we add a button for js debugging of hung scripts.
@@ -512,4 +517,51 @@ add_task(async function terminateClosedWindow() {
     TEST_ACTION_TERMGLOBAL,
     "When closing window, should have terminated global for add-on hang."
   );
+});
+
+/**
+ * Test that permitUnload (used for closing or discarding tabs) does not
+ * try to talk to the hung child
+ */
+add_task(async function permitUnload() {
+  let testWin = await BrowserTestUtils.openNewBrowserWindow();
+  let testTab = testWin.gBrowser.selectedTab;
+
+  // Ensure we don't close the window:
+  BrowserTestUtils.addTab(testWin.gBrowser, "about:blank");
+
+  // Set up the test tab and another tab so we can check what happens when
+  // they are closed:
+  let otherTab = BrowserTestUtils.addTab(testWin.gBrowser, "about:blank");
+  let permitUnloadCount = 0;
+  for (let tab of [testTab, otherTab]) {
+    let browser = tab.linkedBrowser;
+    // Fake before unload state:
+    Object.defineProperty(browser, "hasBeforeUnload", { value: true });
+    // Increment permitUnloadCount if we ask for unload permission:
+    browser.asyncPermitUnload = () => {
+      permitUnloadCount++;
+      return Promise.resolve({ permitUnload: true });
+    };
+  }
+
+  // Set up a hang for the selected tab:
+  let testBrowser = testTab.linkedBrowser;
+  let pausedHang = new TestHangReport(SLOW_SCRIPT, testBrowser);
+  Services.obs.notifyObservers(pausedHang, "process-hang-report");
+  ProcessHangMonitor.waitLonger(testWin);
+  ok(
+    ProcessHangMonitor.findPausedReport(testWin.gBrowser.selectedBrowser),
+    "There should be a paused report for the browser we're about to remove."
+  );
+
+  BrowserTestUtils.removeTab(otherTab);
+  BrowserTestUtils.removeTab(testWin.gBrowser.getTabForBrowser(testBrowser));
+  is(
+    permitUnloadCount,
+    1,
+    "Should have called asyncPermitUnload once (not for the hung tab)."
+  );
+
+  await BrowserTestUtils.closeWindow(testWin);
 });
