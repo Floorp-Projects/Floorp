@@ -6,13 +6,12 @@ job-defaults:
     worker-type: b-linux
     worker:
         max-run-time: 1800
+        docker-image: {in-tree: deb10-toolchain-build}
 
 linux64-aarch64-compiler-rt-11:
     description: "linux aarch64 Compiler-rt for Clang 11 toolchain build"
     treeherder:
         symbol: TL(aarch64-crt)
-    worker:
-        docker-image: {in-tree: toolchain-arm64-build}
     run:
         using: toolchain-script
         script: build-compiler-rt.sh
@@ -30,6 +29,7 @@ linux64-aarch64-compiler-rt-11:
         toolchain:
             - linux64-binutils
             - linux64-clang-11
+            - linux64-aarch64-sysroot
 
 macosx64-x64-compiler-rt-11:
     description: "macOS x64 Compiler-rt for Clang 11 toolchain build"
