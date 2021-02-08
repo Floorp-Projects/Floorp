@@ -45,17 +45,11 @@ export function willNavigate(event: Object) {
   };
 }
 
-export function connect(
-  url: URL,
-  actor: ActorId,
-  traits: Object,
-  isWebExtension: boolean
-) {
+export function connect(url: URL, actor: ActorId, isWebExtension: boolean) {
   return async function({ dispatch, getState }: ThunkArgs) {
     await dispatch(
       ({
         type: "CONNECT",
-        traits,
         mainThreadActorID: actor,
         isWebExtension,
       }: Action)

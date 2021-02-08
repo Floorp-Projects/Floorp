@@ -18,14 +18,12 @@ import type { Action } from "../actions/types";
 
 export type ThreadsState = {
   threads: ThreadList,
-  traits: Object,
   isWebExtension: boolean,
 };
 
 export function initialThreadsState(): ThreadsState {
   return {
     threads: [],
-    traits: {},
     isWebExtension: false,
   };
 }
@@ -38,7 +36,6 @@ export default function update(
     case "CONNECT":
       return {
         ...state,
-        traits: action.traits,
         isWebExtension: action.isWebExtension,
       };
     case "INSERT_THREAD":
