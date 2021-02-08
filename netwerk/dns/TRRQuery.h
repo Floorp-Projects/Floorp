@@ -21,7 +21,7 @@ class TRRQuery : public AHostResolver {
 
   nsresult DispatchLookup(TRR* pushedTRR = nullptr, bool aUseODoHProxy = false);
 
-  void Cancel();
+  void Cancel(nsresult aStatus);
 
   enum TRRState { INIT, STARTED, OK, FAILED };
   TRRState mTrrAUsed = INIT;
