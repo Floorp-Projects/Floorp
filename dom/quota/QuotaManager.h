@@ -61,58 +61,13 @@ class PrincipalInfo;
 namespace mozilla::dom::quota {
 
 class ClientUsageArray;
+class DirectoryLock;
 class DirectoryLockImpl;
 class GroupInfo;
 class GroupInfoPair;
 class OriginInfo;
 class OriginScope;
 class QuotaObject;
-
-class NS_NO_VTABLE RefCountedObject {
- public:
-  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
-};
-
-class OpenDirectoryListener;
-
-class DirectoryLock : public RefCountedObject {
-  friend class DirectoryLockImpl;
-
- public:
-  int64_t Id() const;
-
-  // 'Get' prefix is to avoid name collisions with the enum
-  PersistenceType GetPersistenceType() const;
-
-  quota::GroupAndOrigin GroupAndOrigin() const;
-
-  const nsACString& Origin() const;
-
-  Client::Type ClientType() const;
-
-  void Acquire(RefPtr<OpenDirectoryListener> aOpenListener);
-
-  RefPtr<DirectoryLock> Specialize(PersistenceType aPersistenceType,
-                                   const quota::GroupAndOrigin& aGroupAndOrigin,
-                                   Client::Type aClientType) const;
-
-  void Log() const;
-
- private:
-  DirectoryLock() = default;
-
-  ~DirectoryLock() = default;
-};
-
-class NS_NO_VTABLE OpenDirectoryListener : public RefCountedObject {
- public:
-  virtual void DirectoryLockAcquired(DirectoryLock* aLock) = 0;
-
-  virtual void DirectoryLockFailed() = 0;
-
- protected:
-  virtual ~OpenDirectoryListener() = default;
-};
 
 class QuotaManager final : public BackgroundThreadObject {
   friend class DirectoryLockImpl;
