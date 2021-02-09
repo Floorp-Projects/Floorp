@@ -142,6 +142,15 @@ class Http3Session final : public nsAHttpTransaction,
   void CloseConnectionTelemetry(CloseError& aError, bool aClosing);
   void Finish0Rtt(bool aRestart);
 
+  enum ZeroRttOutcome {
+    NOT_USED,
+    USED_SUCCEEDED,
+    USED_REJECTED,
+    USED_CONN_ERROR,
+    USED_CONN_CLOSED_BY_NECKO
+  };
+  void ZeroRttTelemetry(ZeroRttOutcome aOutcome);
+
   RefPtr<NeqoHttp3Conn> mHttp3Connection;
   RefPtr<nsAHttpConnection> mConnection;
   nsRefPtrHashtable<nsUint64HashKey, Http3Stream> mStreamIdHash;
@@ -199,6 +208,7 @@ class Http3Session final : public nsAHttpTransaction,
   TimeStamp mConnectionIdleEnd;
   Maybe<uint64_t> mFirstStreamIdReuseIdleConnection;
   TimeStamp mTimerShouldTrigger;
+  TimeStamp mZeroRttStarted;
   uint64_t mBlockedByStreamLimitCount = 0;
   uint64_t mTransactionsBlockedByStreamLimitCount = 0;
   uint64_t mTransactionsSenderBlockedByFlowControlCount = 0;
