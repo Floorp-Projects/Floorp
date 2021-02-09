@@ -437,7 +437,7 @@ void DocManager::RemoveListeners(Document* aDocument) {
 DocAccessible* DocManager::CreateDocOrRootAccessible(Document* aDocument) {
   // Ignore hidden documents, resource documents, static clone
   // (printing) documents and documents without a docshell.
-  if (!aDocument->IsVisibleConsideringAncestors() ||
+  if (!nsCoreUtils::IsDocumentVisibleConsideringInProcessAncestors(aDocument) ||
       aDocument->IsResourceDoc() || aDocument->IsStaticDocument() ||
       !aDocument->IsActive()) {
     return nullptr;

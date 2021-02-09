@@ -323,6 +323,13 @@ class nsCoreUtils {
   static void DispatchAccEvent(RefPtr<nsIAccessibleEvent> aEvent);
 
   static bool IsDisplayContents(nsIContent* aContent);
+
+  /**
+   * Return whether the document and all its in-process ancestors are visible in
+   * the sense of pageshow / hide.
+   */
+  static bool IsDocumentVisibleConsideringInProcessAncestors(
+      const Document* aDocument);
 };
 
 #endif

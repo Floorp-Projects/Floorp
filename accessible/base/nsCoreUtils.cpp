@@ -585,3 +585,14 @@ bool nsCoreUtils::IsDisplayContents(nsIContent* aContent) {
   return aContent && aContent->IsElement() &&
          aContent->AsElement()->IsDisplayContents();
 }
+
+bool nsCoreUtils::IsDocumentVisibleConsideringInProcessAncestors(
+    const Document* aDocument) {
+  const Document* parent = aDocument;
+  do {
+    if (!parent->IsVisible()) {
+      return false;
+    }
+  } while ((parent = parent->GetInProcessParentDocument()));
+  return true;
+}
