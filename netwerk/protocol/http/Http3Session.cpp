@@ -163,6 +163,7 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
       LOG(("Can send ZeroRtt data"));
       RefPtr<Http3Session> self(this);
       mState = ZERORTT;
+      mZeroRttStarted = TimeStamp::Now();
       // Let the nsHttpConnectionMgr know that the connection can accept
       // transactions.
       // We need to dispatch the following function to this thread so that
@@ -176,6 +177,10 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                            "NS_DispatchToCurrentThread failed");
     }
+  }
+
+  if (mState != ZERORTT) {
+    ZeroRttTelemetry(ZeroRttOutcome::NOT_USED);
   }
 
   // After this line, Http3Session and HttpConnectionUDP become a cycle. We put
@@ -438,6 +443,7 @@ nsresult Http3Session::ProcessEvents(uint32_t count) {
         if (mState == ZERORTT) {
           mState = INITIALIZING;
           Finish0Rtt(true);
+          ZeroRttTelemetry(ZeroRttOutcome::USED_REJECTED);
         }
         break;
       case Http3Event::Tag::ResumptionToken: {
@@ -461,6 +467,7 @@ nsresult Http3Session::ProcessEvents(uint32_t count) {
         mSocketControl->HandshakeCompleted();
         if (was0RTT) {
           Finish0Rtt(false);
+          ZeroRttTelemetry(ZeroRttOutcome::USED_SUCCEEDED);
         }
 
         OnTransportStatus(mSocketTransport, NS_NET_STATUS_CONNECTED_TO, 0);
@@ -1155,6 +1162,12 @@ void Http3Session::CloseInternal(bool aCallNeqoClose) {
   if (mState != CONNECTED) {
     mBeforeConnectedError = true;
   }
+
+  if (mState == ZERORTT) {
+    ZeroRttTelemetry(aCallNeqoClose ? ZeroRttOutcome::USED_CONN_CLOSED_BY_NECKO
+                                    : ZeroRttOutcome::USED_CONN_ERROR);
+  }
+
   mState = CLOSING;
   Shutdown();
 
@@ -1710,6 +1723,35 @@ void Http3Session::ReportHttp3Connection() {
     mHttp3ConnectionReported = true;
     gHttpHandler->ConnMgr()->ReportHttp3Connection(mSegmentReaderWriter);
     MaybeResumeSend();
+  }
+}
+
+void Http3Session::ZeroRttTelemetry(ZeroRttOutcome aOutcome) {
+  Telemetry::Accumulate(Telemetry::HTTP3_0RTT_STATE, aOutcome);
+
+  nsAutoCString key;
+
+  switch (aOutcome) {
+    case USED_SUCCEEDED:
+      key = "succeeded"_ns;
+      break;
+    case USED_REJECTED:
+      key = "rejected"_ns;
+      break;
+    case USED_CONN_ERROR:
+      key = "conn_error"_ns;
+      break;
+    case USED_CONN_CLOSED_BY_NECKO:
+      key = "conn_closed_by_necko"_ns;
+      break;
+    default:
+      break;
+  }
+
+  if (!key.IsEmpty()) {
+    MOZ_ASSERT(mZeroRttStarted);
+    Telemetry::AccumulateTimeDelta(Telemetry::HTTP3_0RTT_STATE_DURATION, key,
+                                   mZeroRttStarted, TimeStamp::Now());
   }
 }
 
