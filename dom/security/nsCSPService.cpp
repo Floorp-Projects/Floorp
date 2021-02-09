@@ -172,11 +172,29 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
   nsCOMPtr<nsIContentSecurityPolicy> csp = aLoadInfo->GetCsp();
 
   if (csp) {
+    // Generally aOriginalURI denotes the URI before a redirect and hence
+    // will always be a nullptr here. Only exception are frame navigations
+    // which we want to treat as a redirect for the purpose of CSP reporting
+    // and in particular the `blocked-uri` in the CSP report where we want
+    // to report the prePath information.
+    nsCOMPtr<nsIURI> originalURI = nullptr;
+    ExtContentPolicyType extType =
+        nsContentUtils::InternalContentPolicyTypeToExternal(contentType);
+    if (extType == ExtContentPolicy::TYPE_SUBDOCUMENT &&
+        !aLoadInfo->GetOriginalFrameSrcLoad()) {
+      nsAutoCString prePathStr;
+      nsresult rv = aContentLocation->GetPrePath(prePathStr);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = NS_NewURI(getter_AddRefs(originalURI), prePathStr);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
     // obtain the enforcement decision
-    rv = csp->ShouldLoad(contentType, cspEventListener, aContentLocation,
-                         nullptr,  // no redirect, aOriginal URL is null.
-                         !isPreload && aLoadInfo->GetSendCSPViolationEvents(),
-                         cspNonce, parserCreatedScript, aDecision);
+    rv = csp->ShouldLoad(
+        contentType, cspEventListener, aContentLocation,
+        originalURI,  // no redirect, unless it's a frame navigation.
+        !isPreload && aLoadInfo->GetSendCSPViolationEvents(), cspNonce,
+        parserCreatedScript, aDecision);
 
     if (NS_CP_REJECTED(*aDecision)) {
       NS_SetRequestBlockingReason(
