@@ -28,6 +28,7 @@ class PerformanceObserver;
 class PerformanceService;
 class PerformanceStorage;
 class PerformanceTiming;
+class PerformanceEventTiming;
 class WorkerPrivate;
 
 // Base class for main-thread and worker Performance API
@@ -110,14 +111,24 @@ class Performance : public DOMEventTargetHelper {
 
   size_t SizeOfUserEntries(mozilla::MallocSizeOf aMallocSizeOf) const;
   size_t SizeOfResourceEntries(mozilla::MallocSizeOf aMallocSizeOf) const;
+  virtual size_t SizeOfEventEntries(mozilla::MallocSizeOf aMallocSizeOf) const {
+    return 0;
+  }
 
   void InsertResourceEntry(PerformanceEntry* aEntry);
+
+  virtual void InsertEventTimingEntry(PerformanceEventTiming* aEntry) = 0;
+
+  virtual void BufferEventTimingEntryIfNeeded(
+      PerformanceEventTiming* aEntry) = 0;
 
   virtual void QueueNavigationTimingEntry() = 0;
 
   virtual void UpdateNavigationTimingEntry() = 0;
 
   virtual bool CrossOriginIsolated() const = 0;
+
+  virtual void DispatchPendingEventTimingEntries() = 0;
 
   void QueueNotificationObserversTask();
 
