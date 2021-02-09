@@ -13,6 +13,7 @@ add_task(async function setup() {
 
 add_task(async function test_search() {
   await AboutConfigTest.withNewTab(async function() {
+    await this.document.l10n.translateFragment(this.document.documentElement);
     let prefArray = Services.prefs.getChildList("");
 
     // The total number of preferences may change at any time because of
@@ -47,17 +48,11 @@ add_task(async function test_search() {
     Assert.greater(this.rows.length, prefArray.length - 50);
 
     // Check if "Only show modified" feature works.
-    await EventUtils.sendMouseEvent(
-      { type: "click" },
-      this.showOnlyModifiedCheckbox
-    );
+    EventUtils.sendMouseEvent({ type: "click" }, this.showOnlyModifiedCheckbox);
     Assert.ok(this.rows.every(r => r.hasClass("has-user-value")));
 
     // Uncheck checkbox
-    await EventUtils.sendMouseEvent(
-      { type: "click" },
-      this.showOnlyModifiedCheckbox
-    );
+    EventUtils.sendMouseEvent({ type: "click" }, this.showOnlyModifiedCheckbox);
     Assert.ok(!this.rows.every(r => r.hasClass("has-user-value")));
 
     // Pressing ESC while showing all preferences returns to the initial page.

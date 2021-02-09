@@ -923,7 +923,7 @@ add_task(async function checkTelemetryClickEventsVPN() {
       () => ContentTaskUtils.is_visible(getVPNLink),
       "get vpn link is visible"
     );
-    await EventUtils.sendMouseEvent(
+    EventUtils.sendMouseEvent(
       { type: "click", button: 1 },
       getVPNLink,
       content
@@ -960,7 +960,7 @@ add_task(async function checkTelemetryClickEventsVPN() {
         .classList.contains("subscribed");
     }, "subscribed class is added to the vpn card");
 
-    await EventUtils.sendMouseEvent(
+    EventUtils.sendMouseEvent(
       { type: "click", button: 1 },
       androidVPNLink,
       content
@@ -990,7 +990,7 @@ add_task(async function checkTelemetryClickEventsVPN() {
         .classList.contains("subscribed");
     }, "subscribed class is added to the vpn card");
 
-    await EventUtils.sendMouseEvent(
+    EventUtils.sendMouseEvent(
       { type: "click", button: 1 },
       iosVPNLink,
       content
@@ -1064,7 +1064,7 @@ add_task(async function checkTelemetryEventsVPNBanner() {
       () => ContentTaskUtils.is_visible(bannerVPNLink),
       "vpn banner link is visible"
     );
-    await EventUtils.sendMouseEvent(
+    EventUtils.sendMouseEvent(
       { type: "click", button: 1 },
       bannerVPNLink,
       content
@@ -1094,7 +1094,7 @@ add_task(async function checkTelemetryEventsVPNBanner() {
       () => ContentTaskUtils.is_visible(bannerExitLink),
       "vpn banner exit link is visible"
     );
-    await EventUtils.sendMouseEvent(
+    EventUtils.sendMouseEvent(
       { type: "click", button: 1 },
       bannerExitLink,
       content

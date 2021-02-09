@@ -40,7 +40,7 @@ add_task(async function() {
     "The details panel should at this point be visible."
   );
 
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".sidebar-toggle")
   );

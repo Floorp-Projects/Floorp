@@ -46,34 +46,34 @@ add_task(async function() {
   await wait;
 
   info("Test with the first request in the list visible");
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-all-button")
   );
-  await testDetailsPanel(true, 0);
+  testDetailsPanel(true, 0);
 
   info("Test with first request in the list not visible");
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-all-button")
   );
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-js-button")
   );
   testFilterButtons(monitor, "js");
-  await testDetailsPanel(true, 2);
+  testDetailsPanel(true, 2);
 
   info(
     "Test with no request in the list visible i.e. no request match the filters"
   );
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click" },
     document.querySelector(".requests-list-filter-all-button")
   );
   setFreetextFilter("foobar");
   // The network details panel should not open as there are no available requests visible
-  await testDetailsPanel(false);
+  testDetailsPanel(false);
 
   await teardown(monitor);
 
@@ -86,7 +86,7 @@ add_task(async function() {
     );
   }
 
-  async function testDetailsPanel(shouldPanelOpen, selectedItemIndex = 0) {
+  function testDetailsPanel(shouldPanelOpen, selectedItemIndex = 0) {
     // Expected default state should be panel closed
     ok(
       !document.querySelector(".sidebar-toggle"),
@@ -131,7 +131,7 @@ add_task(async function() {
         `The item index ${selectedItemIndex} should be selected in the requests menu.`
       );
       // Close the panel
-      await EventUtils.sendMouseEvent({ type: "click" }, toggleButton);
+      EventUtils.sendMouseEvent({ type: "click" }, toggleButton);
     } else {
       ok(!toggleButton, "The pane toggle button should be not visible.");
       is(

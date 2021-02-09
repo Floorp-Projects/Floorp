@@ -27,7 +27,7 @@ add_task(async function() {
 
   const requestItem = document.querySelector(".request-list-item");
   const requestsListStatus = requestItem.querySelector(".status-code");
-  await EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
+  EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
   await waitUntil(() => requestsListStatus.title);
   await waitForDOMIfNeeded(requestItem, ".requests-list-timings-total");
 
@@ -47,7 +47,7 @@ add_task(async function() {
 
   const wait = waitForDOM(document, "#response-panel .CodeMirror-code");
   store.dispatch(Actions.toggleNetworkDetails());
-  await clickOnSidebarTab(document, "response");
+  clickOnSidebarTab(document, "response");
   await wait;
 
   const tabpanel = document.querySelector("#response-panel");
