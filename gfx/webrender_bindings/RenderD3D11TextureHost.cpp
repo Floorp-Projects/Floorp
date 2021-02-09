@@ -76,6 +76,10 @@ static bool MapTexture(T* aHost, RenderCompositor* aCompositor,
                        RefPtr<ID3D11DeviceContext>& aDeviceContext,
                        RefPtr<ID3D11Texture2D>& aCpuTexture,
                        D3D11_MAPPED_SUBRESOURCE& aMappedSubresource) {
+  if (!aCompositor) {
+    return false;
+  }
+
   RenderCompositorD3D11SWGL* compositor =
       aCompositor->AsRenderCompositorD3D11SWGL();
   if (!compositor) {
