@@ -404,21 +404,16 @@ ProcessPriorityManagerImpl::Observe(nsISupports* aSubject, const char* aTopic,
 already_AddRefed<ParticularProcessPriorityManager>
 ProcessPriorityManagerImpl::GetParticularProcessPriorityManager(
     ContentParent* aContentParent) {
-  uint64_t cpId = aContentParent->ChildID();
-  auto entry = mParticularManagers.LookupForAdd(cpId);
-  RefPtr<ParticularProcessPriorityManager> pppm =
-      entry.OrInsert([aContentParent]() {
-        return new ParticularProcessPriorityManager(aContentParent);
-      });
-
-  if (!entry) {
-    // We created a new entry.
-    pppm->Init();
-    FireTestOnlyObserverNotification("process-created",
-                                     nsPrintfCString("%" PRIu64, cpId));
-  }
-
-  return pppm.forget();
+  const uint64_t cpId = aContentParent->ChildID();
+  return mParticularManagers.WithEntryHandle(cpId, [&](auto&& entry) {
+    if (!entry) {
+      entry.Insert(new ParticularProcessPriorityManager(aContentParent));
+      entry.Data()->Init();
+      FireTestOnlyObserverNotification("process-created",
+                                       nsPrintfCString("%" PRIu64, cpId));
+    }
+    return do_AddRef(entry.Data());
+  });
 }
 
 void ProcessPriorityManagerImpl::SetProcessPriority(

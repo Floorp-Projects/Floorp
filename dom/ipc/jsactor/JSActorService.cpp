@@ -61,22 +61,31 @@ void JSActorService::RegisterWindowActor(const nsACString& aName,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  auto entry = mWindowActorDescriptors.LookupForAdd(aName);
-  if (entry) {
-    aRv.ThrowNotSupportedError(nsPrintfCString(
-        "'%s' actor is already registered.", PromiseFlatCString(aName).get()));
+  const auto proto = mWindowActorDescriptors.WithEntryHandle(
+      aName, [&](auto&& entry) -> RefPtr<JSWindowActorProtocol> {
+        if (entry) {
+          aRv.ThrowNotSupportedError(
+              nsPrintfCString("'%s' actor is already registered.",
+                              PromiseFlatCString(aName).get()));
+          return nullptr;
+        }
+
+        // Insert a new entry for the protocol.
+        RefPtr<JSWindowActorProtocol> protocol =
+            JSWindowActorProtocol::FromWebIDLOptions(aName, aOptions, aRv);
+        if (NS_WARN_IF(aRv.Failed())) {
+          return nullptr;
+        }
+
+        entry.Insert(protocol);
+
+        return protocol;
+      });
+
+  if (!proto) {
+    MOZ_ASSERT(aRv.Failed());
     return;
   }
-
-  // Insert a new entry for the protocol.
-  RefPtr<JSWindowActorProtocol> proto =
-      JSWindowActorProtocol::FromWebIDLOptions(aName, aOptions, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    entry.OrRemove();
-    return;
-  }
-
-  entry.OrInsert([&] { return proto; });
 
   // Send information about the newly added entry to every existing content
   // process.
@@ -220,22 +229,31 @@ void JSActorService::RegisterProcessActor(const nsACString& aName,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  auto entry = mProcessActorDescriptors.LookupForAdd(aName);
-  if (entry) {
-    aRv.ThrowNotSupportedError(nsPrintfCString(
-        "'%s' actor is already registered.", PromiseFlatCString(aName).get()));
+  const auto proto = mProcessActorDescriptors.WithEntryHandle(
+      aName, [&](auto&& entry) -> RefPtr<JSProcessActorProtocol> {
+        if (entry) {
+          aRv.ThrowNotSupportedError(
+              nsPrintfCString("'%s' actor is already registered.",
+                              PromiseFlatCString(aName).get()));
+          return nullptr;
+        }
+
+        // Insert a new entry for the protocol.
+        RefPtr<JSProcessActorProtocol> protocol =
+            JSProcessActorProtocol::FromWebIDLOptions(aName, aOptions, aRv);
+        if (NS_WARN_IF(aRv.Failed())) {
+          return nullptr;
+        }
+
+        entry.Insert(protocol);
+
+        return protocol;
+      });
+
+  if (!proto) {
+    MOZ_ASSERT(aRv.Failed());
     return;
   }
-
-  // Insert a new entry for the protocol.
-  RefPtr<JSProcessActorProtocol> proto =
-      JSProcessActorProtocol::FromWebIDLOptions(aName, aOptions, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    entry.OrRemove();
-    return;
-  }
-
-  entry.OrInsert([&] { return proto; });
 
   // Send information about the newly added entry to every existing content
   // process.
