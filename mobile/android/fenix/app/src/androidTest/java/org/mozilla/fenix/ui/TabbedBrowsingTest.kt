@@ -16,7 +16,6 @@ import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
-import org.mozilla.fenix.helpers.TestHelper.sendSingleTapToScreen
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -254,8 +253,6 @@ class TabbedBrowsingTest {
         notificationShade {
             verifyPrivateTabsNotification()
         }.clickClosePrivateTabsNotification {
-            // Tap an empty spot on the app homescreen to make sure it's into focus
-            sendSingleTapToScreen(20, 20)
             verifyHomeScreen()
         }
     }

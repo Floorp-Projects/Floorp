@@ -67,7 +67,7 @@ class NotificationRobot {
 
         fun clickClosePrivateTabsNotification(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
             NotificationRobot().verifySystemNotificationExists("Close private tabs")
-            closePrivateTabsNotification().clickAndWaitForNewWindow()
+            closePrivateTabsNotification().click()
 
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
