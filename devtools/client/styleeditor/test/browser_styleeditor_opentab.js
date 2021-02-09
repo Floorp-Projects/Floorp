@@ -16,11 +16,7 @@ add_task(async function() {
     "false",
     "The menu item is not disabled"
   );
-  is(
-    ui._openLinkNewTabItem.getAttribute("hidden"),
-    "false",
-    "The menu item is not hidden"
-  );
+  ok(!ui._openLinkNewTabItem.hidden, "The menu item is not hidden");
 
   const url =
     "https://example.com/browser/devtools/client/styleeditor/test/" +
@@ -52,18 +48,10 @@ add_task(async function() {
     "true",
     "The menu item is disabled"
   );
-  is(
-    ui._openLinkNewTabItem.getAttribute("hidden"),
-    "false",
-    "The menu item is not hidden"
-  );
+  ok(!ui._openLinkNewTabItem.hidden, "The menu item should not be hidden");
 
   await rightClickNoStyleSheet(ui);
-  is(
-    ui._openLinkNewTabItem.getAttribute("hidden"),
-    "true",
-    "The menu item is not hidden"
-  );
+  ok(ui._openLinkNewTabItem.hidden, "The menu item should be hidden");
 });
 
 function onPopupShow(contextMenu) {
