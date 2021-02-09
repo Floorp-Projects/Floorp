@@ -1026,7 +1026,6 @@ impl RenderBackend {
         frame_counter: &mut u32,
     ) -> RenderBackendStatus {
         match msg {
-            ApiMsg::WakeUp => {}
             ApiMsg::CloneApi(sender) => {
                 assert!(!self.namespace_alloc_by_client);
                 sender.send(self.next_namespace_id()).unwrap();
