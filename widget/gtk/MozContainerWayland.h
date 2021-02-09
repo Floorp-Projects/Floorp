@@ -42,6 +42,7 @@ struct MozContainerWayland {
   gboolean opaque_region_fullscreen;
   gboolean surface_needs_clear;
   gboolean ready_to_draw;
+  gboolean before_first_size_alloc;
   std::vector<std::function<void(void)>> initial_draw_cbs;
   // mozcontainer is used from Compositor and Rendering threads
   // so we need to control access to mozcontainer where wayland internals
