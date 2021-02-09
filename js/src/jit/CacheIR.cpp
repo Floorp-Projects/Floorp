@@ -6830,8 +6830,11 @@ AttachDecision CallIRGenerator::tryAttachReflectGetPrototypeOf(
   return AttachDecision::Attach;
 }
 
-static bool AtomicsMeetsPreconditions(TypedArrayObject* typedArray,
-                                      const Value& index) {
+enum class BigIntAtomics : bool { No, Yes };
+
+static bool AtomicsMeetsPreconditions(
+    TypedArrayObject* typedArray, const Value& index,
+    BigIntAtomics bigInt = BigIntAtomics::No) {
   switch (typedArray->type()) {
     case Scalar::Int8:
     case Scalar::Uint8:
@@ -6844,7 +6847,10 @@ static bool AtomicsMeetsPreconditions(TypedArrayObject* typedArray,
     case Scalar::BigInt64:
     case Scalar::BigUint64:
       // Bug 1638295: Not yet implemented.
-      return false;
+      if (bigInt == BigIntAtomics::No) {
+        return false;
+      }
+      break;
 
     case Scalar::Float32:
     case Scalar::Float64:
