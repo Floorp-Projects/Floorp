@@ -2665,6 +2665,31 @@ AtomicsReadWriteModifyFn AtomicsXor(Scalar::Type elementType) {
   }
 }
 
+template <typename AtomicOp, typename... Args>
+static BigInt* AtomicAccess64(JSContext* cx, TypedArrayObject* typedArray,
+                              size_t index, AtomicOp op, Args... args) {
+  MOZ_ASSERT(Scalar::isBigIntType(typedArray->type()));
+  MOZ_ASSERT(!typedArray->hasDetachedBuffer());
+  MOZ_ASSERT(index < typedArray->length().get());
+
+  if (typedArray->type() == Scalar::BigInt64) {
+    SharedMem<int64_t*> addr = typedArray->dataPointerEither().cast<int64_t*>();
+    int64_t v = op(addr + index, BigInt::toInt64(args)...);
+    return BigInt::createFromInt64(cx, v);
+  }
+
+  SharedMem<uint64_t*> addr = typedArray->dataPointerEither().cast<uint64_t*>();
+  uint64_t v = op(addr + index, BigInt::toUint64(args)...);
+  return BigInt::createFromUint64(cx, v);
+}
+
+BigInt* AtomicsLoad64(JSContext* cx, TypedArrayObject* typedArray,
+                      size_t index) {
+  return AtomicAccess64(cx, typedArray, index, [](auto addr) {
+    return jit::AtomicOperations::loadSeqCst(addr);
+  });
+}
+
 void AssumeUnreachable(const char* output) {
   MOZ_ReportAssertionFailure(output, __FILE__, __LINE__);
 }

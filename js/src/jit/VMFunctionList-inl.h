@@ -42,6 +42,7 @@ namespace jit {
   _(ArraySliceDense, js::ArraySliceDense)                                      \
   _(AsyncFunctionAwait, js::AsyncFunctionAwait)                                \
   _(AsyncFunctionResolve, js::AsyncFunctionResolve)                            \
+  _(AtomicsLoad64, js::jit::AtomicsLoad64)                                     \
   _(BaselineCompileFromBaselineInterpreter,                                    \
     js::jit::BaselineCompileFromBaselineInterpreter)                           \
   _(BaselineDebugPrologue, js::jit::DebugPrologue)                             \

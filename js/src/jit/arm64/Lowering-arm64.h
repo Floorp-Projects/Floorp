@@ -90,6 +90,8 @@ class LIRGeneratorARM64 : public LIRGeneratorShared {
   void lowerBigIntDiv(MBigIntDiv* ins);
   void lowerBigIntMod(MBigIntMod* ins);
 
+  void lowerAtomicLoad64(MLoadUnboxedScalar* ins);
+
   LTableSwitchV* newLTableSwitchV(MTableSwitch* ins);
   LTableSwitch* newLTableSwitch(const LAllocation& in,
                                 const LDefinition& inputCopy,

@@ -1104,6 +1104,7 @@ class MOZ_RAII AutoCallVM {
     leaveBaselineStubFrame();
   }
 
+  const AutoOutputRegister& output() const { return *output_; }
   ValueOperand outputValueReg() const { return output_->valueReg(); }
 };
 

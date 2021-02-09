@@ -2168,6 +2168,8 @@ void CodeGenerator::visitAtomicExchangeTypedArrayElement(
   }
 }
 
+void CodeGenerator::visitAtomicLoad64(LAtomicLoad64* lir) { MOZ_CRASH("NYI"); }
+
 void CodeGenerator::visitWasmCompareExchangeI64(LWasmCompareExchangeI64* lir) {
   Register ptr = ToRegister(lir->ptr());
   Register64 oldValue = ToRegister64(lir->oldValue());

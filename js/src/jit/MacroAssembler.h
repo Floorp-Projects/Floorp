@@ -3376,6 +3376,24 @@ class MacroAssembler : public MacroAssemblerSpecific {
                        Register64 value, const Address& mem, Register64 temp,
                        Register64 output) DEFINED_ON(arm64, x64);
 
+  // 64-bit atomic load. On 64-bit systems, use regular load with
+  // Synchronization::Load, not this method.
+  //
+  // x86: `temp` must be ecx:ebx; `output` must be edx:eax.
+  // ARM: `output` must be (even,odd) pair.
+
+  void atomicLoad64(const Synchronization& sync, const Address& mem,
+                    Register64 temp, Register64 output) DEFINED_ON(x86);
+
+  void atomicLoad64(const Synchronization& sync, const BaseIndex& mem,
+                    Register64 temp, Register64 output) DEFINED_ON(x86);
+
+  void atomicLoad64(const Synchronization& sync, const Address& mem,
+                    Register64 output) DEFINED_ON(arm);
+
+  void atomicLoad64(const Synchronization& sync, const BaseIndex& mem,
+                    Register64 output) DEFINED_ON(arm);
+
   // ========================================================================
   // Wasm atomic operations.
   //

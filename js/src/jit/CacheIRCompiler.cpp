@@ -7674,10 +7674,17 @@ bool CacheIRCompiler::emitAtomicsLoadResult(ObjOperandId objId,
                                             Scalar::Type elementType) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
-  AutoOutputRegister output(*this);
+  Maybe<AutoOutputRegister> output;
+  Maybe<AutoCallVM> callvm;
+  if (!Scalar::isBigIntType(elementType)) {
+    output.emplace(*this);
+  } else {
+    callvm.emplace(masm, this, allocator);
+  }
   Register obj = allocator.useRegister(masm, objId);
   Register index = allocator.useRegister(masm, indexId);
-  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm,
+                                         output ? *output : callvm->output());
   AutoSpectreBoundsScratchRegister spectreTemp(allocator, masm);
   AutoAvailableFloatRegister floatReg(*this, FloatReg0);
 
@@ -7686,9 +7693,28 @@ bool CacheIRCompiler::emitAtomicsLoadResult(ObjOperandId objId,
     return false;
   }
 
+  // AutoCallVM's AutoSaveLiveRegisters aren't accounted for in FailurePath, so
+  // we can't use both at the same time. This isn't an issue here, because Ion
+  // doesn't support CallICs. If that ever changes, this code must be updated.
+  MOZ_ASSERT(isBaseline(), "Can't use FailurePath with AutoCallVM in Ion ICs");
+
   // Bounds check.
   masm.loadArrayBufferViewLengthPtr(obj, scratch);
   masm.spectreBoundsCheckPtr(index, scratch, spectreTemp, failure->label());
+
+  // Atomic operations are highly platform-dependent, for example x86/arm32 has
+  // specific requirements on which registers are used. Therefore we're using a
+  // VM call here instead of handling each platform separately.
+  if (Scalar::isBigIntType(elementType)) {
+    callvm->prepare();
+
+    masm.Push(index);
+    masm.Push(obj);
+
+    using Fn = BigInt* (*)(JSContext*, TypedArrayObject*, size_t);
+    callvm->call<Fn, jit::AtomicsLoad64>();
+    return true;
+  }
 
   // Load the elements vector.
   masm.loadPtr(Address(obj, ArrayBufferViewObject::dataOffset()), scratch);
@@ -7704,14 +7730,14 @@ bool CacheIRCompiler::emitAtomicsLoadResult(ObjOperandId objId,
     Register tempUint32 = Register::Invalid();
     Label* failUint32 = nullptr;
 
-    masm.loadFromTypedArray(elementType, source, output.valueReg(), allowDouble,
-                            tempUint32, failUint32);
+    masm.loadFromTypedArray(elementType, source, output->valueReg(),
+                            allowDouble, tempUint32, failUint32);
   } else {
     Label* failUint32 = nullptr;
 
     masm.loadFromTypedArray(elementType, source, AnyRegister(floatReg), scratch,
                             failUint32);
-    masm.boxDouble(floatReg, output.valueReg(), floatReg);
+    masm.boxDouble(floatReg, output->valueReg(), floatReg);
   }
   masm.memoryBarrierAfter(sync);
 
