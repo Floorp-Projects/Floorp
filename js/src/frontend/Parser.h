@@ -536,6 +536,7 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
 
   inline bool processExport(Node node);
   inline bool processExportFrom(BinaryNodeType node);
+  inline bool processImport(BinaryNodeType node);
 
   // If ParseHandler is SyntaxParseHandler:
   //   Do nothing.
@@ -770,6 +771,9 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::privateNameReference;
   using Base::processExport;
   using Base::processExportFrom;
+ protected:
+  using Base::processImport;
+ private:
   using Base::setFunctionEndFromCurrentToken;
 
  private:
@@ -1696,6 +1700,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   // Parse a module.
   ModuleNodeType moduleBody(ModuleSharedContext* modulesc);
 
+  using Base::processImport;
   using Base::moduleExportName;
   BinaryNodeType importDeclaration();
   bool checkLocalExportNames(ListNodeType node);

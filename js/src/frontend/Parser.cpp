@@ -5049,7 +5049,7 @@ BinaryNode* Parser<FullParseHandler, Unit>::importDeclaration() {
 
   BinaryNode* node = handler_.newImportDeclaration(importSpecSet, moduleSpec,
                                                    TokenPos(begin, pos().end));
-  if (!node || !pc_->sc()->asModuleContext()->builder.processImport(node)) {
+  if (!node || !processImport(node)) {
     return null();
   }
 
@@ -5349,6 +5349,19 @@ inline bool PerHandlerParser<FullParseHandler>::processExportFrom(
 
 template <>
 inline bool PerHandlerParser<SyntaxParseHandler>::processExportFrom(
+    BinaryNodeType node) {
+  MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
+  return false;
+}
+
+template <>
+inline bool PerHandlerParser<FullParseHandler>::processImport(
+    BinaryNodeType node) {
+  return pc_->sc()->asModuleContext()->builder.processImport(node);
+}
+
+template <>
+inline bool PerHandlerParser<SyntaxParseHandler>::processImport(
     BinaryNodeType node) {
   MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
   return false;
