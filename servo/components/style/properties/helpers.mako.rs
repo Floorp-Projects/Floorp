@@ -9,7 +9,7 @@
 %>
 
 <%def name="predefined_type(name, type, initial_value, parse_method='parse',
-            vector=False,
+            needs_context=True, vector=False,
             computed_type=None, initial_specified_value=None,
             allow_quirks='No', allow_empty=False, **kwargs)">
     <%def name="predefined_type_inner(name, type, initial_value, parse_method)">
@@ -45,10 +45,10 @@
         ) -> Result<SpecifiedValue, ParseError<'i>> {
             % if allow_quirks != "No":
             specified::${type}::${parse_method}_quirky(context, input, AllowQuirks::${allow_quirks})
-            % elif parse_method != "parse":
+            % elif needs_context:
             specified::${type}::${parse_method}(context, input)
             % else:
-            <specified::${type} as crate::parser::Parse>::parse(context, input)
+            specified::${type}::${parse_method}(input)
             % endif
         }
     </%def>
@@ -971,21 +971,25 @@
     name,
     first_property,
     second_property,
-    parser_function='crate::parser::Parse::parse',
+    parser_function,
+    needs_context=True,
     **kwargs
 )">
 <%call expr="self.shorthand(name, sub_properties=' '.join([first_property, second_property]), **kwargs)">
     #[allow(unused_imports)]
     use crate::parser::Parse;
-    #[allow(unused_imports)]
     use crate::values::specified;
 
     pub fn parse_value<'i, 't>(
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Longhands, ParseError<'i>> {
-        let parse_one = |c: &ParserContext, input: &mut Parser<'i, 't>| -> Result<crate::properties::longhands::${to_rust_ident(first_property)}::SpecifiedValue, ParseError<'i>> {
-            ${parser_function}(c, input)
+        let parse_one = |_c: &ParserContext, input: &mut Parser<'i, 't>| {
+            % if needs_context:
+            ${parser_function}(_c, input)
+            % else:
+            ${parser_function}(input)
+            % endif
         };
 
         let first = parse_one(context, input)?;
@@ -1013,26 +1017,26 @@
 </%call>
 </%def>
 
-<%def name="four_sides_shorthand(name, sub_property_pattern,
-                                 parser_function='crate::parser::Parse::parse',
-                                 allow_quirks='No', **kwargs)">
+<%def name="four_sides_shorthand(name, sub_property_pattern, parser_function,
+                                 needs_context=True, allow_quirks='No', **kwargs)">
     <% sub_properties=' '.join(sub_property_pattern % side for side in PHYSICAL_SIDES) %>
     <%call expr="self.shorthand(name, sub_properties=sub_properties, **kwargs)">
         #[allow(unused_imports)]
         use crate::parser::Parse;
         use crate::values::generics::rect::Rect;
-        #[allow(unused_imports)]
         use crate::values::specified;
 
         pub fn parse_value<'i, 't>(
             context: &ParserContext,
             input: &mut Parser<'i, 't>,
         ) -> Result<Longhands, ParseError<'i>> {
-            let rect = Rect::parse_with(context, input, |c, i| -> Result<crate::properties::longhands::${to_rust_ident(sub_property_pattern % "top")}::SpecifiedValue, ParseError<'i>> {
+            let rect = Rect::parse_with(context, input, |_c, i| {
             % if allow_quirks != "No":
-                ${parser_function}_quirky(c, i, specified::AllowQuirks::${allow_quirks})
+                ${parser_function}_quirky(_c, i, specified::AllowQuirks::${allow_quirks})
+            % elif needs_context:
+                ${parser_function}(_c, i)
             % else:
-                ${parser_function}(c, i)
+                ${parser_function}(i)
             % endif
             })?;
             Ok(expanded! {
