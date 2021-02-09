@@ -241,19 +241,21 @@ void EffectCompositor::RequestRestyle(dom::Element* aElement,
   PseudoElementHashEntry::KeyType key = {aElement, aPseudoType};
 
   if (aRestyleType == RestyleType::Throttled) {
-    elementsToRestyle.LookupForAdd(key).OrInsert([]() { return false; });
+    elementsToRestyle.WithEntryHandle(
+        key, [](auto&& entry) { entry.OrInsert(false); });
     mPresContext->PresShell()->SetNeedThrottledAnimationFlush();
   } else {
-    bool skipRestyle;
     // Update hashtable first in case PostRestyleForAnimation mutates it.
     // (It shouldn't, but just to be sure.)
-    if (auto p = elementsToRestyle.LookupForAdd(key)) {
-      skipRestyle = p.Data();
-      p.Data() = true;
-    } else {
-      skipRestyle = false;
-      p.OrInsert([]() { return true; });
-    }
+    const bool skipRestyle =
+        elementsToRestyle.WithEntryHandle(key, [](auto&& p) {
+          if (p) {
+            return std::exchange(p.Data(), true);
+          }
+
+          p.Insert(true);
+          return false;
+        });
 
     if (!skipRestyle) {
       PostRestyleForAnimation(aElement, aPseudoType, aCascadeLevel);
