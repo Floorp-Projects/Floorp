@@ -264,6 +264,7 @@ class nsWindow final : public nsBaseWidget {
 
   void UpdateClientOffsetFromFrameExtents();
   void UpdateClientOffsetFromCSDWindow();
+  bool GetCSDDecorationOffset(int* aDx, int* aDy);
 
   void DispatchContextMenuEventFromMouseEvent(uint16_t domButton,
                                               GdkEventButton* aEvent);
