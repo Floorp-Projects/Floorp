@@ -469,20 +469,6 @@ class QuotaManager final : public BackgroundThreadObject {
 
   void Shutdown();
 
-  // XXX This will be moved out of QuotaManager once directory locks are created
-  //     using factories defined in DirectoryLockImpl class, for example:
-  //     DirectoryLockImpl::Create(...).
-  enum class ShouldUpdateLockIdTableFlag { No, Yes };
-
-  RefPtr<DirectoryLockImpl> CreateDirectoryLock(
-      const Nullable<PersistenceType>& aPersistenceType,
-      const nsACString& aGroup, const OriginScope& aOriginScope,
-      const Nullable<Client::Type>& aClientType, bool aExclusive,
-      bool aInternal, ShouldUpdateLockIdTableFlag aShouldUpdateLockIdTableFlag);
-
-  RefPtr<DirectoryLockImpl> CreateDirectoryLockForEviction(
-      PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin);
-
   void RegisterDirectoryLock(DirectoryLockImpl& aLock);
 
   void UnregisterDirectoryLock(DirectoryLockImpl& aLock);
