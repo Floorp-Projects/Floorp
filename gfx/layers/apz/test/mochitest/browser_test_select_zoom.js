@@ -4,21 +4,11 @@
      https://searchfox.org/mozilla-central/rev/559b25eb41c1cbffcb90a34e008b8288312fcd25/browser/base/content/test/forms/browser_selectpopup.js
 */
 
-// For hideSelectPopup.
+/* import-globals-from helper_browser_test_utils.js */
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/browser/base/content/test/forms/head.js",
+  new URL("helper_browser_test_utils.js", gTestPath).href,
   this
 );
-
-function openSelectPopup(selectPopup, selector = "select", win = window) {
-  let popupShownPromise = BrowserTestUtils.waitForEvent(
-    selectPopup,
-    "popupshown"
-  );
-
-  EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true }, win);
-  return popupShownPromise;
-}
 
 add_task(async function setup_pref() {
   await SpecialPowers.pushPrefEnv({
