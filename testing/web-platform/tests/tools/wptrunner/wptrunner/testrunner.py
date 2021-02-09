@@ -776,14 +776,19 @@ class TestRunnerManager(threading.Thread):
             # This might leak a file handle from the queue
             self.logger.warning("Forcibly terminating runner process")
             self.test_runner_proc.terminate()
+            self.logger.debug("After terminating runner process")
 
             # Multiprocessing queues are backed by operating system pipes. If
             # the pipe in the child process had buffered data at the time of
             # forced termination, the queue is no longer in a usable state
             # (subsequent attempts to retrieve items may block indefinitely).
             # Discard the potentially-corrupted queue and create a new one.
+            self.logger.debug("Recreating command queue")
+            self.command_queue.cancel_join_thread()
             self.command_queue.close()
             self.command_queue = mp.Queue()
+            self.logger.debug("Recreating remote queue")
+            self.remote_queue.cancel_join_thread()
             self.remote_queue.close()
             self.remote_queue = mp.Queue()
         else:
