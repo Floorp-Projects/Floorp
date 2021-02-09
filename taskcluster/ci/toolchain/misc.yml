@@ -203,6 +203,8 @@ linux64-lucetc:
         local-toolchain: true
     treeherder:
         symbol: TL(lucetc)
+    worker:
+        docker-image: {in-tree: deb10-toolchain-build}
     run-on-projects: [trunk]
     run:
         script: build-lucetc.sh
@@ -215,6 +217,7 @@ linux64-lucetc:
             - linux64-binutils
             - linux64-clang
             - linux64-rust
+            - linux64-sysroot
 
 linux64-liblowercase:
     description: "liblowercase"
