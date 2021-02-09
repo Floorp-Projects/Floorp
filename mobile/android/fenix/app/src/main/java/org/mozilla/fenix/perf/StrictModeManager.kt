@@ -10,6 +10,7 @@
 package org.mozilla.fenix.perf
 
 import android.os.Build
+import android.os.Handler
 import android.os.Looper
 import android.os.StrictMode
 import androidx.annotation.VisibleForTesting
@@ -21,7 +22,10 @@ import org.mozilla.fenix.Config
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.utils.ManufacturerCodes
 import org.mozilla.fenix.utils.Mockable
+import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicLong
+
+private const val DELAY_TO_REMOVE_STRICT_MODE_MILLIS = 1000L
 
 private val logger = Performance.logger
 private val mainLooper = Looper.getMainLooper()
@@ -64,7 +68,7 @@ class StrictModeManager(
                 .detectAll()
                 .penaltyLog()
             if (setPenaltyDeath && Build.MANUFACTURER !in strictModeExceptionList) {
-                threadPolicy.penaltyDeath()
+                threadPolicy.penaltyDeathWithIgnores()
             }
             StrictMode.setThreadPolicy(threadPolicy.build())
 
@@ -94,10 +98,18 @@ class StrictModeManager(
         fragmentManager.registerFragmentLifecycleCallbacks(object :
             FragmentManager.FragmentLifecycleCallbacks() {
             override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {
-                enableStrictMode(setPenaltyDeath = false)
                 fm.unregisterFragmentLifecycleCallbacks(this)
-            }
-        }, false)
+
+                // If we don't post when using penaltyListener on P+, the violation listener is never
+                // called. My best guess is that, unlike penaltyDeath, the violations are not
+                // delivered instantaneously so posting gives time for the violation listeners to
+                // run before they are removed here. This may be a race so we give the listeners a
+                // little extra time to run too though this way we may accidentally trigger
+                // violations for non-startup, which we haven't planned to do yet.
+                Handler(mainLooper).postDelayed({
+                    enableStrictMode(setPenaltyDeath = false)
+                }, DELAY_TO_REMOVE_STRICT_MODE_MILLIS)
+            } }, false)
     }
 
     /**
@@ -144,4 +156,19 @@ class StrictModeManager(
      * exact name of the manufacturer.
      */
     private val strictModeExceptionList = setOf(ManufacturerCodes.HUAWEI, ManufacturerCodes.ONE_PLUS)
+}
+
+private fun StrictMode.ThreadPolicy.Builder.penaltyDeathWithIgnores(): StrictMode.ThreadPolicy.Builder {
+    // If we want to apply ignores based on stack trace contents to APIs below P, we can use this methodology:
+    // https://medium.com/@tokudu/how-to-whitelist-strictmode-violations-on-android-based-on-stacktrace-eb0018e909aa
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+        penaltyDeath()
+    } else {
+        // Ideally, we'd use a shared thread pool but we don't have any on the system currently
+        // (all shared ones are coroutine dispatchers).
+        val executor = Executors.newSingleThreadExecutor()
+        penaltyListener(executor, ThreadPenaltyDeathWithIgnoresListener())
+    }
+
+    return this
 }
