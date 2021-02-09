@@ -60,6 +60,7 @@ UNIFIED_SOURCES += [
     "CachingDatabaseConnection.cpp",
     "Client.cpp",
     "DecryptingInputStream.cpp",
+    "DirectoryLockImpl.cpp",
     "EncryptingOutputStream.cpp",
     "FileStreams.cpp",
     "MemoryOutputStream.cpp",
