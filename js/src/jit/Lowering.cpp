@@ -2251,7 +2251,7 @@ void LIRGenerator::visitInt32ToIntPtr(MInt32ToIntPtr* ins) {
   }
 
   if (ins->canBeNegative()) {
-    auto* lir = new (alloc()) LInt32ToIntPtr(useRegisterAtStart(input));
+    auto* lir = new (alloc()) LInt32ToIntPtr(useAnyAtStart(input));
     define(lir, ins);
   } else {
     auto* lir = new (alloc()) LInt32ToIntPtr(useRegisterAtStart(input));

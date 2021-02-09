@@ -166,6 +166,7 @@ class LIRGeneratorShared {
   // "Any" is architecture dependent, and will include registers and stack
   // slots on X86, and only registers on ARM.
   inline LAllocation useAny(MDefinition* mir);
+  inline LAllocation useAnyAtStart(MDefinition* mir);
   inline LAllocation useAnyOrConstant(MDefinition* mir);
   // "Storable" is architecture dependend, and will include registers and
   // constants on X86 and only registers on ARM.  This is a generic "things
