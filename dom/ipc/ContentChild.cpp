@@ -3728,7 +3728,8 @@ mozilla::ipc::IPCResult ContentChild::RecvWindowFocus(
         ("ChildIPC: Trying to send a message to a context without a window"));
     return IPC_OK();
   }
-  nsGlobalWindowOuter::Cast(window)->FocusOuter(aCallerType, aActionId);
+  nsGlobalWindowOuter::Cast(window)->FocusOuter(
+      aCallerType, /* aFromOtherProcess */ true, aActionId);
   return IPC_OK();
 }
 
