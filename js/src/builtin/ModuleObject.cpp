@@ -86,6 +86,10 @@ static bool ModuleValueGetter(JSContext* cx, unsigned argc, Value* vp) {
     return JS::ToUint32(value.toDouble());       \
   }
 
+static Value StringOrNullValue(JSString* maybeString) {
+  return maybeString ? StringValue(maybeString) : NullValue();
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // ImportEntryObject
 
@@ -99,7 +103,7 @@ DEFINE_GETTER_FUNCTIONS(ImportEntryObject, lineNumber, LineNumberSlot)
 DEFINE_GETTER_FUNCTIONS(ImportEntryObject, columnNumber, ColumnNumberSlot)
 
 DEFINE_ATOM_ACCESSOR_METHOD(ImportEntryObject, moduleRequest)
-DEFINE_ATOM_ACCESSOR_METHOD(ImportEntryObject, importName)
+DEFINE_ATOM_OR_NULL_ACCESSOR_METHOD(ImportEntryObject, importName)
 DEFINE_ATOM_ACCESSOR_METHOD(ImportEntryObject, localName)
 DEFINE_UINT32_ACCESSOR_METHOD(ImportEntryObject, lineNumber)
 DEFINE_UINT32_ACCESSOR_METHOD(ImportEntryObject, columnNumber)
@@ -136,7 +140,7 @@ bool GlobalObject::initImportEntryProto(JSContext* cx,
 
 /* static */
 ImportEntryObject* ImportEntryObject::create(
-    JSContext* cx, HandleAtom moduleRequest, HandleAtom importName,
+    JSContext* cx, HandleAtom moduleRequest, HandleAtom maybeImportName,
     HandleAtom localName, uint32_t lineNumber, uint32_t columnNumber) {
   RootedObject proto(
       cx, GlobalObject::getOrCreateImportEntryPrototype(cx, cx->global()));
@@ -151,7 +155,7 @@ ImportEntryObject* ImportEntryObject::create(
   }
 
   self->initReservedSlot(ModuleRequestSlot, StringValue(moduleRequest));
-  self->initReservedSlot(ImportNameSlot, StringValue(importName));
+  self->initReservedSlot(ImportNameSlot, StringOrNullValue(maybeImportName));
   self->initReservedSlot(LocalNameSlot, StringValue(localName));
   self->initReservedSlot(LineNumberSlot, NumberValue(lineNumber));
   self->initReservedSlot(ColumnNumberSlot, NumberValue(columnNumber));
@@ -207,10 +211,6 @@ bool GlobalObject::initExportEntryProto(JSContext* cx,
 
   global->initReservedSlot(EXPORT_ENTRY_PROTO, ObjectValue(*proto));
   return true;
-}
-
-static Value StringOrNullValue(JSString* maybeString) {
-  return maybeString ? StringValue(maybeString) : NullValue();
 }
 
 /* static */
@@ -1343,8 +1343,7 @@ bool ModuleBuilder::buildTables(frontend::StencilModuleMetadata& metadata) {
           return false;
         }
       } else {
-        if (importEntry->importName ==
-            frontend::TaggedParserAtomIndex::WellKnown::star()) {
+        if (!importEntry->importName) {
           if (!metadata.localExportEntries.append(exp)) {
             js::ReportOutOfMemory(cx_);
             return false;
@@ -1360,9 +1359,7 @@ bool ModuleBuilder::buildTables(frontend::StencilModuleMetadata& metadata) {
           }
         }
       }
-    } else if (exp.importName ==
-                   frontend::TaggedParserAtomIndex::WellKnown::star() &&
-               !exp.exportName) {
+    } else if (!exp.importName && !exp.exportName) {
       if (!metadata.starExportEntries.append(exp)) {
         js::ReportOutOfMemory(cx_);
         return false;
@@ -1413,31 +1410,38 @@ static ArrayObject* ModuleBuilderInitArray(
     if (entry.specifier) {
       specifier = atomCache.getExistingAtomAt(cx, entry.specifier);
       MOZ_ASSERT(specifier);
+    } else {
+      MOZ_ASSERT(!specifier);
     }
 
     if (entry.localName) {
       localName = atomCache.getExistingAtomAt(cx, entry.localName);
       MOZ_ASSERT(localName);
+    } else {
+      MOZ_ASSERT(!localName);
     }
 
     if (entry.importName) {
       importName = atomCache.getExistingAtomAt(cx, entry.importName);
       MOZ_ASSERT(importName);
+    } else {
+      importName = nullptr;
     }
 
     if (entry.exportName) {
       exportName = atomCache.getExistingAtomAt(cx, entry.exportName);
       MOZ_ASSERT(exportName);
+    } else {
+      MOZ_ASSERT(!exportName);
     }
 
     switch (arrayType) {
       case ModuleArrayType::ImportEntryObject:
-        MOZ_ASSERT(localName && importName);
+        MOZ_ASSERT(localName);
         req = ImportEntryObject::create(cx, specifier, importName, localName,
                                         entry.lineno, entry.column);
         break;
       case ModuleArrayType::ExportEntryObject:
-        MOZ_ASSERT(localName || importName || exportName);
         req = ExportEntryObject::create(cx, exportName, specifier, importName,
                                         localName, entry.lineno, entry.column);
         break;
@@ -1532,10 +1536,10 @@ bool ModuleBuilder::processImport(frontend::BinaryNode* importNode) {
 
   MOZ_ASSERT(importNode->isKind(ParseNodeKind::ImportDecl));
 
-  ListNode* specList = &importNode->left()->as<ListNode>();
+  auto* specList = &importNode->left()->as<ListNode>();
   MOZ_ASSERT(specList->isKind(ParseNodeKind::ImportSpecList));
 
-  NameNode* moduleSpec = &importNode->right()->as<NameNode>();
+  auto* moduleSpec = &importNode->right()->as<NameNode>();
   MOZ_ASSERT(moduleSpec->isKind(ParseNodeKind::StringExpr));
 
   auto module = moduleSpec->atom();
@@ -1544,34 +1548,39 @@ bool ModuleBuilder::processImport(frontend::BinaryNode* importNode) {
   }
 
   for (ParseNode* item : specList->contents()) {
-    BinaryNode* spec = &item->as<BinaryNode>();
-    MOZ_ASSERT(spec->isKind(ParseNodeKind::ImportSpec) ||
-               spec->isKind(ParseNodeKind::ImportNamespaceSpec));
-
-    NameNode* importNameNode = &spec->left()->as<NameNode>();
-    NameNode* localNameNode = &spec->right()->as<NameNode>();
-
-    auto importName = importNameNode->atom();
-    auto localName = localNameNode->atom();
-
     uint32_t line;
     uint32_t column;
-    eitherParser_.computeLineAndColumn(importNameNode->pn_pos.begin, &line,
-                                       &column);
-
-    markUsedByStencil(module);
-    markUsedByStencil(localName);
-    markUsedByStencil(importName);
+    eitherParser_.computeLineAndColumn(item->pn_pos.begin, &line, &column);
 
     StencilModuleEntry entry;
-    if (spec->isKind(ParseNodeKind::ImportSpec)) {
+    TaggedParserAtomIndex localName;
+    if (item->isKind(ParseNodeKind::ImportSpec)) {
+      auto* spec = &item->as<BinaryNode>();
+
+      auto* importNameNode = &spec->left()->as<NameNode>();
+      auto* localNameNode = &spec->right()->as<NameNode>();
+
+      auto importName = importNameNode->atom();
+      localName = localNameNode->atom();
+
+      markUsedByStencil(module);
+      markUsedByStencil(localName);
+      markUsedByStencil(importName);
       entry = StencilModuleEntry::importEntry(module, localName, importName,
                                               line, column);
     } else {
-      entry = StencilModuleEntry::importNamespaceEntry(
-          module, localName, importName, line, column);
-    }
+      MOZ_ASSERT(item->isKind(ParseNodeKind::ImportNamespaceSpec));
+      auto* spec = &item->as<UnaryNode>();
 
+      auto* localNameNode = &spec->kid()->as<NameNode>();
+
+      localName = localNameNode->atom();
+
+      markUsedByStencil(module);
+      markUsedByStencil(localName);
+      entry = StencilModuleEntry::importNamespaceEntry(module, localName, line,
+                                                       column);
+    }
     if (!importEntries_.put(localName, entry)) {
       return false;
     }
@@ -1791,26 +1800,19 @@ bool ModuleBuilder::processExportFrom(frontend::BinaryNode* exportNode) {
       entry = StencilModuleEntry::exportFromEntry(module, importName,
                                                   exportName, line, column);
     } else if (spec->isKind(ParseNodeKind::ExportNamespaceSpec)) {
-      auto* importNameNode = &spec->as<BinaryNode>().left()->as<NameNode>();
-      auto* exportNameNode = &spec->as<BinaryNode>().right()->as<NameNode>();
+      auto* exportNameNode = &spec->as<UnaryNode>().kid()->as<NameNode>();
 
-      auto importName = importNameNode->atom();
       exportName = exportNameNode->atom();
 
       markUsedByStencil(module);
-      markUsedByStencil(importName);
       markUsedByStencil(exportName);
-      entry = StencilModuleEntry::exportNamespaceFromEntry(
-          module, importName, exportName, line, column);
+      entry = StencilModuleEntry::exportNamespaceFromEntry(module, exportName,
+                                                           line, column);
     } else {
       MOZ_ASSERT(spec->isKind(ParseNodeKind::ExportBatchSpecStmt));
 
-      auto importName = TaggedParserAtomIndex::WellKnown::star();
-
       markUsedByStencil(module);
-      markUsedByStencil(importName);
-      entry = StencilModuleEntry::exportBatchFromEntry(module, importName, line,
-                                                       column);
+      entry = StencilModuleEntry::exportBatchFromEntry(module, line, column);
     }
 
     if (!exportEntries_.append(entry)) {

@@ -482,7 +482,7 @@ class StencilModuleEntry {
   //              |--------------------------------------------------------------------------------------------------------------------|
   // specifier    | required      | required    | required             | null     | required   | required            | required        |
   // localName    | null          | required    | required             | required | null       | null                | null            |
-  // importName   | null          | required    | required             | null     | required   | required            | required        |
+  // importName   | null          | required    | null                 | null     | required   | null                | null            |
   // exportName   | null          | null        | null                 | required | required   | required            | null            |
   //
   // clang-format on
@@ -528,12 +528,11 @@ class StencilModuleEntry {
 
   static StencilModuleEntry importNamespaceEntry(
       TaggedParserAtomIndex specifier, TaggedParserAtomIndex localName,
-      TaggedParserAtomIndex importName, uint32_t lineno, uint32_t column) {
-    MOZ_ASSERT(specifier && localName && importName);
+      uint32_t lineno, uint32_t column) {
+    MOZ_ASSERT(specifier && localName);
     StencilModuleEntry entry(lineno, column);
     entry.specifier = specifier;
     entry.localName = localName;
-    entry.importName = importName;
     return entry;
   }
 
@@ -560,23 +559,20 @@ class StencilModuleEntry {
   }
 
   static StencilModuleEntry exportNamespaceFromEntry(
-      TaggedParserAtomIndex specifier, TaggedParserAtomIndex importName,
-      TaggedParserAtomIndex exportName, uint32_t lineno, uint32_t column) {
-    MOZ_ASSERT(specifier && importName && exportName);
+      TaggedParserAtomIndex specifier, TaggedParserAtomIndex exportName,
+      uint32_t lineno, uint32_t column) {
+    MOZ_ASSERT(specifier && exportName);
     StencilModuleEntry entry(lineno, column);
     entry.specifier = specifier;
-    entry.importName = importName;
     entry.exportName = exportName;
     return entry;
   }
 
   static StencilModuleEntry exportBatchFromEntry(
-      TaggedParserAtomIndex specifier, TaggedParserAtomIndex importName,
-      uint32_t lineno, uint32_t column) {
-    MOZ_ASSERT(specifier && importName);
+      TaggedParserAtomIndex specifier, uint32_t lineno, uint32_t column) {
+    MOZ_ASSERT(specifier);
     StencilModuleEntry entry(lineno, column);
     entry.specifier = specifier;
-    entry.importName = importName;
     return entry;
   }
 };
