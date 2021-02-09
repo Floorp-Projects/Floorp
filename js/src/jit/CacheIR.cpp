@@ -7004,12 +7004,12 @@ CallIRGenerator::emitAtomicsReadWriteModifyOperands(HandleFunction callee,
 
 AttachDecision CallIRGenerator::tryAttachAtomicsExchange(
     HandleFunction callee) {
-  if (!canAttachAtomicsReadWriteModify()) {
+  if (!canAttachAtomicsReadWriteModify(bool(BigIntAtomics::Yes))) {
     return AttachDecision::NoAction;
   }
 
   auto [objId, intPtrIndexId, numericValueId] =
-      emitAtomicsReadWriteModifyOperands(callee);
+      emitAtomicsReadWriteModifyOperands(callee, bool(BigIntAtomics::Yes));
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
 

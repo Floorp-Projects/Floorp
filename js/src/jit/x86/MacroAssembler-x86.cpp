@@ -1511,6 +1511,18 @@ void MacroAssembler::compareExchange64(const Synchronization&,
   CompareExchange64(*this, nullptr, mem, expected, replacement, output);
 }
 
+void MacroAssembler::atomicExchange64(const Synchronization&,
+                                      const Address& mem, Register64 value,
+                                      Register64 output) {
+  AtomicExchange64(*this, nullptr, mem, value, output);
+}
+
+void MacroAssembler::atomicExchange64(const Synchronization&,
+                                      const BaseIndex& mem, Register64 value,
+                                      Register64 output) {
+  AtomicExchange64(*this, nullptr, mem, value, output);
+}
+
 // ========================================================================
 // Convert floating point.
 

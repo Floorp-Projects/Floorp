@@ -241,6 +241,23 @@ void LIRGenerator::visitCompareExchangeTypedArrayElement(
 
 void LIRGenerator::visitAtomicExchangeTypedArrayElement(
     MAtomicExchangeTypedArrayElement* ins) {
+  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
+  MOZ_ASSERT(ins->index()->type() == MIRType::IntPtr);
+
+  if (Scalar::isBigIntType(ins->arrayType())) {
+    LUse elements = useRegister(ins->elements());
+    LAllocation index =
+        useRegisterOrIndexConstant(ins->index(), ins->arrayType());
+    LAllocation value = useFixed(ins->value(), edx);
+    LInt64Definition temp = tempInt64Fixed(Register64(ecx, ebx));
+
+    auto* lir = new (alloc())
+        LAtomicExchangeTypedArrayElement64(elements, index, value, temp);
+    defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
+    assignSafepoint(lir, ins);
+    return;
+  }
+
   lowerAtomicExchangeTypedArrayElement(ins, /*useI386ByteRegisters=*/true);
 }
 
