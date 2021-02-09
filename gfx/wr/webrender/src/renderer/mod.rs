@@ -2235,6 +2235,8 @@ impl Renderer {
                 surface_origin_is_top_left,
             );
         }
+
+        self.staging_texture_pool.end_frame(&mut self.device);
         self.texture_upload_pbo_pool.end_frame(&mut self.device);
         self.device.end_frame();
 
