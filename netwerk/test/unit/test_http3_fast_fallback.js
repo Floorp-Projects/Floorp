@@ -595,3 +595,67 @@ add_task(async function testFastfallbackWithpartialEchConfig() {
 
   await trrServer.stop();
 });
+
+add_task(async function testFastfallbackWithoutEchConfig() {
+  trrServer = new TRRServer();
+  await trrServer.start();
+  Services.prefs.setBoolPref("network.dns.upgrade_with_https_rr", true);
+  Services.prefs.setBoolPref("network.dns.use_https_rr_as_altsvc", true);
+
+  Services.prefs.setIntPref("network.trr.mode", 3);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${trrServer.port}/dns-query`
+  );
+  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+
+  Services.prefs.setIntPref(
+    "network.dns.httpssvc.http3_fast_fallback_timeout",
+    1000
+  );
+
+  await trrServer.registerDoHAnswers("test.no_ech_h2.org", "HTTPS", [
+    {
+      name: "test.no_ech_h2.org",
+      ttl: 55,
+      type: "HTTPS",
+      flush: false,
+      data: {
+        priority: 1,
+        name: "test.no_ech_h3.org",
+        values: [
+          { key: "alpn", value: "h3-27" },
+          { key: "port", value: h3Port },
+        ],
+      },
+    },
+  ]);
+
+  await trrServer.registerDoHAnswers("test.no_ech_h3.org", "A", [
+    {
+      name: "test.no_ech_h3.org",
+      ttl: 55,
+      type: "A",
+      flush: false,
+      data: "127.0.0.1",
+    },
+  ]);
+
+  await trrServer.registerDoHAnswers("test.no_ech_h2.org", "A", [
+    {
+      name: "test.no_ech_h2.org",
+      ttl: 55,
+      type: "A",
+      flush: false,
+      data: "127.0.0.1",
+    },
+  ]);
+
+  let chan = makeChan(`https://test.no_ech_h2.org:${h2Port}/server-timing`);
+  let [req] = await channelOpenPromise(chan);
+  Assert.equal(req.protocolVersion, "h2");
+  let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
+  Assert.equal(internal.remotePort, h2Port);
+
+  await trrServer.stop();
+});

@@ -1213,7 +1213,9 @@ nsHttpTransaction::PrepareFastFallbackConnInfo(bool aEchConfigUsed) {
            this));
       return nullptr;
     }
+
     fallbackConnInfo = mOrigConnInfo;
+    return fallbackConnInfo.forget();
   }
 
   fallbackConnInfo =
@@ -1792,7 +1794,8 @@ nsresult nsHttpTransaction::Restart() {
   // to the next
   mReuseOnRestart = false;
 
-  if (!mDoNotRemoveAltSvc && (!mConnInfo->GetRoutedHost().IsEmpty() || mConnInfo->IsHttp3()) &&
+  if (!mDoNotRemoveAltSvc &&
+      (!mConnInfo->GetRoutedHost().IsEmpty() || mConnInfo->IsHttp3()) &&
       !mDontRetryWithDirectRoute) {
     RefPtr<nsHttpConnectionInfo> ci;
     mConnInfo->CloneAsDirectRoute(getter_AddRefs(ci));
