@@ -39,7 +39,7 @@ index de99d076..47031e12 100644
      if (is_elf32()) {
          WRITELONG(pbuf,0);  /* null  beginning offset */
 EOF
-        ./configure
+        ./configure CC="$MOZ_FETCHES_DIR/clang/bin/clang" CFLAGS="--sysroot=$MOZ_FETCHES_DIR/sysroot"
         EXE=
         ;;
 esac
