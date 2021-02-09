@@ -17,16 +17,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 const PREF_URLBAR_BRANCH = "browser.urlbar.";
-
-// The two possible default values for matchBuckets, depending on whether
-// suggestions come before general.
-const MATCH_BUCKETS_SUGGESTIONS_FIRST = "suggestion:4,general:Infinity";
-const MATCH_BUCKETS_GENERAL_FIRST = "general:5,suggestion:Infinity";
 
 // Prefs are defined as [pref name, default value] or [pref name, [default
 // value, type]].  In the former case, the getter method name is inferred from
@@ -102,15 +96,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether the results panel should be kept open during IME composition.
   ["keepPanelOpenDuringImeComposition", false],
 
-  // Controls the composition of search results.  The relative ordering of the
-  // `suggestion` and `general` buckets should match the default value of
-  // `showSearchSuggestionsFirst`.
-  ["matchBuckets", MATCH_BUCKETS_SUGGESTIONS_FIRST],
-
-  // If the heuristic result is a search engine result, we use this instead of
-  // matchBuckets.
-  ["matchBucketsSearch", ""],
-
   // For search suggestion results, we truncate the user's search string to this
   // number of characters before fetching results.
   ["maxCharsForSearchSuggestions", 20],
@@ -130,6 +115,16 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // results.
   ["restyleSearches", false],
 
+  // Controls the composition of results.  The default value is computed by
+  // calling:
+  //   makeResultBuckets({
+  //     showSearchSuggestionsFirst: UrlbarPrefs.get(
+  //       "showSearchSuggestionsFirst"
+  //     ),
+  //   });
+  // The value of this pref is a JSON string of the root bucket.  See below.
+  ["resultBuckets", ""],
+
   // If true, we show tail suggestions when available.
   ["richSuggestions.tail", true],
 
@@ -143,9 +138,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   ["shortcuts.tabs", true],
   ["shortcuts.history", true],
 
-  // Whether to show search suggestions before general results.  This default
-  // value should match the relative ordering of the `suggestion` and `general`
-  // buckets in `matchBuckets`.
+  // Whether to show search suggestions before general results.
   ["showSearchSuggestionsFirst", true],
 
   // Whether speculative connections should be enabled.
@@ -223,30 +216,111 @@ const PREF_TYPES = new Map([
   ["string", "Char"],
 ]);
 
-// Buckets for result insertion.
-// Every time a new result is returned, we go through each bucket in array order,
-// and look for the first one having available space for the given result type.
-// Each bucket is an array containing the following indices:
-//   0: The result type of the acceptable entries.
-//   1: available number of slots in this bucket.
-// There are different matchBuckets definition for different contexts, currently
-// a general one (matchBuckets) and a search one (matchBucketsSearch).
-//
-// First buckets. Anything with an Infinity frecency ends up here.
-const DEFAULT_BUCKETS_BEFORE = [
-  [UrlbarUtils.RESULT_GROUP.HEURISTIC, 1],
-  [
-    UrlbarUtils.RESULT_GROUP.EXTENSION,
-    UrlbarUtils.MAXIMUM_ALLOWED_EXTENSION_MATCHES - 1,
-  ],
-];
-// => USER DEFINED BUCKETS WILL BE INSERTED HERE <=
-//
-// Catch-all buckets. Anything remaining ends up here.
-const DEFAULT_BUCKETS_AFTER = [
-  [UrlbarUtils.RESULT_GROUP.SUGGESTION, Infinity],
-  [UrlbarUtils.RESULT_GROUP.GENERAL, Infinity],
-];
+/**
+ * Builds the standard result buckets and returns the root bucket.  Result
+ * buckets determine the composition of results in the muxer, i.e., how they're
+ * grouped and sorted.  Each bucket is an object that looks like this:
+ *
+ * {
+ *   {UrlbarUtils.RESULT_GROUP} [group]
+ *     This is defined only on buckets without children, and it determines the
+ *     result group that the bucket will contain.
+ *   {number} [maxResultCount]
+ *     An optional maximum number of results the bucket can contain.  If it's
+ *     not defined and the parent bucket does not define `flexChildren: true`,
+ *     then the max is the parent's max.  If the parent bucket defines
+ *     `flexChildren: true`, then `maxResultCount` is ignored.
+ *   {boolean} [flexChildren]
+ *     If true, then child buckets are "flexed", similar to flex in HTML.  Each
+ *     child bucket should define the `flex` property (or, if they don't, `flex`
+ *     is assumed to be zero).  `flex` is a number that defines the ratio of a
+ *     child's result count to the total result count of all children.  More
+ *     specifically, `flex: X` on a child means that the initial maximum result
+ *     count of the child is `parentMaxResultCount * (X / N)`, where `N` is the
+ *     sum of the `flex` values of all children.  If there are any child buckets
+ *     that cannot be completely filled, then the muxer will attempt to overfill
+ *     the children that were completely filled, while still respecting their
+ *     relative `flex` values.  `flex: 0` is a special value that means the
+ *     child will be filled only if its previous siblings remain empty.
+ *   {number} [flex]
+ *     The flex value of the bucket.  This should be defined only on buckets
+ *     where the parent defines `flexChildren: true`.  See `flexChildren` for a
+ *     discussion of flex.
+ *   {array} [children]
+ *     An array of child bucket objects.
+ * }
+ *
+ * @param {boolean} showSearchSuggestionsFirst
+ *   If true, the suggestions bucket will come before the general bucket.
+ * @returns {object}
+ *   The root bucket.
+ */
+function makeResultBuckets({ showSearchSuggestionsFirst }) {
+  let rootBucket = {
+    children: [
+      // heuristic
+      {
+        maxResultCount: 1,
+        children: [
+          { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST },
+          { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_EXTENSION },
+          { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_SEARCH_TIP },
+          { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_OMNIBOX },
+          { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_UNIFIED_COMPLETE },
+          { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_AUTOFILL },
+          { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TOKEN_ALIAS_ENGINE },
+          { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_FALLBACK },
+        ],
+      },
+      // extensions using the omnibox API
+      {
+        group: UrlbarUtils.RESULT_GROUP.OMNIBOX,
+        maxResultCount: UrlbarUtils.MAX_OMNIBOX_RESULT_COUNT - 1,
+      },
+    ],
+  };
+
+  // Prepare the parent bucket for suggestions and general.
+  let mainBucket = {
+    flexChildren: true,
+    children: [
+      // suggestions
+      {
+        flexChildren: true,
+        children: [
+          {
+            // If maxHistoricalSearchSuggestions == 0, then the muxer forces
+            // maxResultCount to be zero and flex is ignored, per query.
+            flex: 2,
+            group: UrlbarUtils.RESULT_GROUP.FORM_HISTORY,
+          },
+          {
+            flex: 4,
+            group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,
+          },
+          {
+            // Zero flex means that results will be added to this bucket only if
+            // no results were added to previous sibling buckets.
+            flex: 0,
+            group: UrlbarUtils.RESULT_GROUP.TAIL_SUGGESTION,
+          },
+        ],
+      },
+      // general
+      {
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+    ],
+  };
+  if (!showSearchSuggestionsFirst) {
+    mainBucket.children.reverse();
+  }
+  mainBucket.children[0].flex = 2;
+  mainBucket.children[1].flex = 1;
+  rootBucket.children.push(mainBucket);
+
+  return rootBucket;
+}
 
 /**
  * Preferences class.  The exported object is a singleton instance.
@@ -299,11 +373,34 @@ class Preferences {
    * @param {*} value The preference value.
    */
   set(pref, value) {
-    let { defaultValue, setter } = this._getPrefDescriptor(pref);
+    let { defaultValue, set } = this._getPrefDescriptor(pref);
     if (typeof value != typeof defaultValue) {
       throw new Error(`Invalid value type ${typeof value} for pref ${pref}`);
     }
-    setter(pref, value);
+    set(pref, value);
+  }
+
+  /**
+   * Clears the value for the preference with the given name.
+   *
+   * @param {string} pref
+   *        The name of the preference to clear.
+   */
+  clear(pref) {
+    let { clear } = this._getPrefDescriptor(pref);
+    clear(pref);
+  }
+
+  /**
+   * Builds the standard result buckets.  See makeResultBuckets.
+   *
+   * @param {object} options
+   *   See makeResultBuckets.
+   * @returns {object}
+   *   The root bucket.
+   */
+  makeResultBuckets(options) {
+    return makeResultBuckets(options);
   }
 
   /**
@@ -356,15 +453,12 @@ class Preferences {
 
     // Some prefs may influence others.
     switch (pref) {
-      case "matchBuckets":
-        this._map.delete("matchBucketsSearch");
-        return;
       case "showSearchSuggestionsFirst":
         this.set(
-          "matchBuckets",
-          this.get(pref)
-            ? MATCH_BUCKETS_SUGGESTIONS_FIRST
-            : MATCH_BUCKETS_GENERAL_FIRST
+          "resultBuckets",
+          JSON.stringify(
+            makeResultBuckets({ showSearchSuggestionsFirst: this.get(pref) })
+          )
         );
         return;
     }
@@ -382,8 +476,8 @@ class Preferences {
    * @returns {*} The raw preference value.
    */
   _readPref(pref) {
-    let { defaultValue, getter } = this._getPrefDescriptor(pref);
-    return getter(pref, defaultValue);
+    let { defaultValue, get } = this._getPrefDescriptor(pref);
+    return get(pref, defaultValue);
   }
 
   /**
@@ -401,39 +495,6 @@ class Preferences {
    */
   _getPrefValue(pref) {
     switch (pref) {
-      case "matchBuckets": {
-        // Convert from pref char format to an array and add the default
-        // buckets.
-        let val = this._readPref(pref);
-        try {
-          val = PlacesUtils.convertMatchBucketsStringToArray(val);
-        } catch (ex) {
-          val = PlacesUtils.convertMatchBucketsStringToArray(
-            PREF_URLBAR_DEFAULTS.get(pref)
-          );
-        }
-        return [...DEFAULT_BUCKETS_BEFORE, ...val, ...DEFAULT_BUCKETS_AFTER];
-      }
-      case "matchBucketsSearch": {
-        // Convert from pref char format to an array and add the default
-        // buckets.
-        let val = this._readPref(pref);
-        if (val) {
-          // Convert from pref char format to an array and add the default
-          // buckets.
-          try {
-            val = PlacesUtils.convertMatchBucketsStringToArray(val);
-            return [
-              ...DEFAULT_BUCKETS_BEFORE,
-              ...val,
-              ...DEFAULT_BUCKETS_AFTER,
-            ];
-          } catch (ex) {
-            /* invalid format, will just return matchBuckets */
-          }
-        }
-        return this.get("matchBuckets");
-      }
       case "defaultBehavior": {
         let val = 0;
         for (let type of Object.keys(SUGGEST_PREF_TO_BEHAVIOR)) {
@@ -445,6 +506,13 @@ class Preferences {
         }
         return val;
       }
+      case "resultBuckets":
+        try {
+          return JSON.parse(this._readPref(pref));
+        } catch (ex) {}
+        return makeResultBuckets({
+          showSearchSuggestionsFirst: this.get("showSearchSuggestionsFirst"),
+        });
     }
     return this._readPref(pref);
   }
@@ -453,7 +521,7 @@ class Preferences {
    * Returns a descriptor of the given preference.
    * @param {string} pref The preference to examine.
    * @returns {object} An object describing the pref with the following shape:
-   *          { defaultValue, getter, setter }
+   *          { defaultValue, get, set, clear }
    */
   _getPrefDescriptor(pref) {
     let branch = Services.prefs.getBranch(PREF_URLBAR_BRANCH);
@@ -481,9 +549,10 @@ class Preferences {
     }
     return {
       defaultValue,
-      getter: branch[`get${type}Pref`],
+      get: branch[`get${type}Pref`],
       // Float prefs are stored as Char.
-      setter: branch[`set${type == "Float" ? "Char" : type}Pref`],
+      set: branch[`set${type == "Float" ? "Char" : type}Pref`],
+      clear: branch.clearUserPref,
     };
   }
 
@@ -496,7 +565,10 @@ class Preferences {
     let matchBuckets = [];
     let pref = Services.prefs.getCharPref("browser.urlbar.matchBuckets", "");
     try {
-      matchBuckets = PlacesUtils.convertMatchBucketsStringToArray(pref);
+      matchBuckets = pref.split(",").map(v => {
+        let bucket = v.split(":");
+        return [bucket[0].trim().toLowerCase(), Number(bucket[1])];
+      });
     } catch (ex) {}
     let bucketNames = matchBuckets.map(bucket => bucket[0]);
     let suggestionIndex = bucketNames.indexOf("suggestion");

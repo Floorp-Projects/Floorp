@@ -629,10 +629,11 @@ SearchSuggestionController.prototype = {
     }
 
     // Trim the number of results to the maximum requested (now that we've pruned dupes).
-    results.remote = results.remote.slice(
-      0,
-      this.maxRemoteResults - results.local.length
-    );
+    let maxRemoteCount = this.maxRemoteResults;
+    if (dedupeRemoteAndLocal) {
+      maxRemoteCount -= results.local.length;
+    }
+    results.remote = results.remote.slice(0, maxRemoteCount);
 
     if (this._callback) {
       this._callback(results);
