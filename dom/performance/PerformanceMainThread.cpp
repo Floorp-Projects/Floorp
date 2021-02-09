@@ -13,6 +13,8 @@
 #include "PerformanceEventTiming.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/EventCounts.h"
+#include "mozilla/dom/PerformanceEventTimingBinding.h"
 #include "mozilla/dom/PerformanceNavigationTiming.h"
 #include "mozilla/dom/PerformanceResourceTiming.h"
 #include "mozilla/dom/PerformanceTiming.h"
@@ -56,18 +58,20 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(PerformanceMainThread)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PerformanceMainThread,
                                                 Performance)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(
-      mTiming, mNavigation, mDocEntry, mFCPTiming, mEventTimingEntries,
-      mFirstInputEvent, mPendingPointerDown, mPendingEventTimingEntries)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTiming, mNavigation, mDocEntry, mFCPTiming,
+                                  mEventTimingEntries, mFirstInputEvent,
+                                  mPendingPointerDown,
+                                  mPendingEventTimingEntries, mEventCounts)
   tmp->mMozMemory = nullptr;
   mozilla::DropJSObjects(this);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PerformanceMainThread,
                                                   Performance)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(
-      mTiming, mNavigation, mDocEntry, mFCPTiming, mEventTimingEntries,
-      mFirstInputEvent, mPendingPointerDown, mPendingEventTimingEntries)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTiming, mNavigation, mDocEntry, mFCPTiming,
+                                    mEventTimingEntries, mFirstInputEvent,
+                                    mPendingPointerDown,
+                                    mPendingEventTimingEntries, mEventCounts)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(PerformanceMainThread,
@@ -91,7 +95,8 @@ PerformanceMainThread::PerformanceMainThread(nsPIDOMWindowInner* aWindow,
     : Performance(aWindow, aPrincipal),
       mDOMTiming(aDOMTiming),
       mChannel(aChannel),
-      mCrossOriginIsolated(aWindow->AsGlobal()->CrossOriginIsolated()) {
+      mCrossOriginIsolated(aWindow->AsGlobal()->CrossOriginIsolated()),
+      mEventCounts(new class EventCounts(GetParentObject())) {
   MOZ_ASSERT(aWindow, "Parent window object should be provided");
   CreateNavigationTimingEntry();
 }
@@ -239,6 +244,7 @@ void PerformanceMainThread::DispatchPendingEventTimingEntries() {
         mPendingEventTimingEntries.popFirst();
 
     entry->SetDuration(renderingTime - entry->StartTime());
+    IncEventCount(entry->GetName());
 
     if (entry->Duration() >= kDefaultEventTimingMinDuration) {
       QueueEntry(entry);
@@ -477,6 +483,8 @@ bool PerformanceMainThread::CrossOriginIsolated() const {
   return mCrossOriginIsolated;
 }
 
+EventCounts* PerformanceMainThread::EventCounts() { return mEventCounts; }
+
 void PerformanceMainThread::GetEntries(
     nsTArray<RefPtr<PerformanceEntry>>& aRetval) {
   // We return an empty list when 'privacy.resistFingerprinting' is on.
@@ -574,6 +582,16 @@ mozilla::PresShell* PerformanceMainThread::GetPresShell() {
     return doc->GetPresShell();
   }
   return nullptr;
+}
+
+void PerformanceMainThread::IncEventCount(const nsAtom* aType) {
+  ErrorResult rv;
+  uint64_t count = EventCounts_Binding::MaplikeHelpers::Get(
+      mEventCounts, nsDependentAtomString(aType), rv);
+  MOZ_ASSERT(!rv.Failed());
+  EventCounts_Binding::MaplikeHelpers::Set(
+      mEventCounts, nsDependentAtomString(aType), ++count, rv);
+  MOZ_ASSERT(!rv.Failed());
 }
 
 size_t PerformanceMainThread::SizeOfEventEntries(
