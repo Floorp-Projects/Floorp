@@ -862,7 +862,7 @@ child:
      * IPC message to suspend consuming the pending events in the input event
      * queue.
      */
-    prio(input) async SuspendInputEventQueue();
+    [Priority=input] async SuspendInputEventQueue();
 
     /*
      * IPC message to propagate dynamic scalar definitions, added after the
@@ -1009,7 +1009,7 @@ parent:
     async AccumulateMixedContentHSTS(nsIURI aURI, bool aActive,
                                      OriginAttributes aOriginAttributes);
 
-    nested(inside_cpow) async PHal();
+    [Nested=inside_cpow] async PHal();
 
     async PHeapSnapshotTempFileHelper();
 

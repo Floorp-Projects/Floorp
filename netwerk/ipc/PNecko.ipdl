@@ -72,7 +72,7 @@ nested(upto inside_cpow) sync protocol PNecko
 parent:
   async __delete__();
 
-  nested(inside_cpow) async PCookieService();
+  [Nested=inside_cpow] async PCookieService();
   async PHttpChannel(nullable PBrowser browser,
                      SerializedLoadContext loadContext,
                      HttpChannelCreationArgs args);
@@ -175,7 +175,7 @@ child:
 
   // Using medium high priority to deliver this notification possibly sooner than we
   // enter poll() on the child process with infinite timeout.
-  prio(mediumhigh) async NetworkChangeNotification(nsCString type);
+  [Priority=mediumhigh] async NetworkChangeNotification(nsCString type);
 
   async PTransportProvider();
 

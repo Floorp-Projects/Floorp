@@ -4,14 +4,14 @@ namespace _ipdltest {
 nested(upto inside_cpow) sync protocol PTestHighestPrio
 {
 parent:
-  nested(inside_cpow) async Msg1();
-  nested(inside_sync) sync Msg2();
-  nested(inside_cpow) async Msg3();
-  nested(inside_cpow) sync Msg4();
+  [Nested=inside_cpow] async Msg1();
+  [Nested=inside_sync] sync Msg2();
+  [Nested=inside_cpow] async Msg3();
+  [Nested=inside_cpow] sync Msg4();
 
 child:
   async Start();
-  nested(inside_sync) sync StartInner();
+  [Nested=inside_sync] sync StartInner();
 };
 
 }
