@@ -150,6 +150,13 @@ class BrowserToolbarBehavior(
         yTranslator.expandWithAnimation(toolbar)
     }
 
+    /**
+     * Used to collapse the [BrowserToolbar]
+     */
+    fun forceCollapse(toolbar: BrowserToolbar) {
+        yTranslator.collapseWithAnimation(toolbar)
+    }
+
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun positionSnackbar(child: View, snackbarLayout: Snackbar.SnackbarLayout) {
         val params = snackbarLayout.layoutParams as CoordinatorLayout.LayoutParams

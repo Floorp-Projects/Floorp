@@ -17,7 +17,7 @@ import mozilla.components.browser.toolbar.BrowserToolbar
  */
 class BrowserToolbarYTranslator(toolbarPosition: ToolbarPosition) {
     @VisibleForTesting
-    internal val strategy = getTranslationStrategy(toolbarPosition)
+    internal var strategy = getTranslationStrategy(toolbarPosition)
 
     /**
      * Snap the [BrowserToolbar] to be collapsed or expanded, depending on whatever state is closer
@@ -39,6 +39,13 @@ class BrowserToolbarYTranslator(toolbarPosition: ToolbarPosition) {
      */
     internal fun expandWithAnimation(toolbar: BrowserToolbar) {
         strategy.expandWithAnimation(toolbar)
+    }
+
+    /**
+     * Translate the [BrowserToolbar] to be hidden from view over a short amount of time.
+     */
+    internal fun collapseWithAnimation(toolbar: BrowserToolbar) {
+        strategy.collapseWithAnimation(toolbar)
     }
 
     /**

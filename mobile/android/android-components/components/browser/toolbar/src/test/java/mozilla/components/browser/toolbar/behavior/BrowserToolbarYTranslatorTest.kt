@@ -10,7 +10,6 @@ import mozilla.components.support.test.mock
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
@@ -31,60 +30,84 @@ class BrowserToolbarYTranslatorTest {
 
     @Test
     fun `yTranslator should delegate it's strategy for snapWithAnimation`() {
-        val yTranslator = spy(BrowserToolbarYTranslator(ToolbarPosition.BOTTOM))
+        val yTranslator = BrowserToolbarYTranslator(ToolbarPosition.BOTTOM)
+        val strategy: BrowserToolbarYTranslationStrategy = mock()
+        yTranslator.strategy = strategy
         val toolbar: BrowserToolbar = mock()
 
         yTranslator.snapWithAnimation(toolbar)
 
-        verify(yTranslator).snapWithAnimation(toolbar)
+        verify(strategy).snapWithAnimation(toolbar)
     }
 
     @Test
     fun `yTranslator should delegate it's strategy for expandWithAnimation`() {
-        val yTranslator = spy(BrowserToolbarYTranslator(ToolbarPosition.BOTTOM))
+        val yTranslator = BrowserToolbarYTranslator(ToolbarPosition.BOTTOM)
+        val strategy: BrowserToolbarYTranslationStrategy = mock()
+        yTranslator.strategy = strategy
         val toolbar: BrowserToolbar = mock()
 
         yTranslator.expandWithAnimation(toolbar)
 
-        verify(yTranslator).expandWithAnimation(toolbar)
+        verify(strategy).expandWithAnimation(toolbar)
+    }
+
+    @Test
+    fun `yTranslator should delegate it's strategy for collapseWithAnimation`() {
+        val yTranslator = BrowserToolbarYTranslator(ToolbarPosition.BOTTOM)
+        val strategy: BrowserToolbarYTranslationStrategy = mock()
+        yTranslator.strategy = strategy
+        val toolbar: BrowserToolbar = mock()
+
+        yTranslator.collapseWithAnimation(toolbar)
+
+        verify(strategy).collapseWithAnimation(toolbar)
     }
 
     @Test
     fun `yTranslator should delegate it's strategy for forceExpandIfNotAlready`() {
-        val yTranslator = spy(BrowserToolbarYTranslator(ToolbarPosition.BOTTOM))
+        val yTranslator = BrowserToolbarYTranslator(ToolbarPosition.BOTTOM)
+        val strategy: BrowserToolbarYTranslationStrategy = mock()
+        yTranslator.strategy = strategy
         val toolbar: BrowserToolbar = mock()
 
         yTranslator.forceExpandIfNotAlready(toolbar, 14f)
 
-        verify(yTranslator).forceExpandIfNotAlready(toolbar, 14f)
+        verify(strategy).forceExpandWithAnimation(toolbar, 14f)
     }
 
     @Test
     fun `yTranslator should delegate it's strategy for translate`() {
-        val yTranslator = spy(BrowserToolbarYTranslator(ToolbarPosition.BOTTOM))
+        val yTranslator = BrowserToolbarYTranslator(ToolbarPosition.BOTTOM)
+        val strategy: BrowserToolbarYTranslationStrategy = mock()
+        yTranslator.strategy = strategy
         val toolbar: BrowserToolbar = mock()
 
         yTranslator.translate(toolbar, 23f)
 
-        verify(yTranslator).translate(toolbar, 23f)
+        verify(strategy).translate(toolbar, 23f)
     }
 
     @Test
     fun `yTranslator should delegate it's strategy for cancelInProgressTranslation`() {
-        val yTranslator = spy(BrowserToolbarYTranslator(ToolbarPosition.BOTTOM))
+        val yTranslator = BrowserToolbarYTranslator(ToolbarPosition.BOTTOM)
+        val strategy: BrowserToolbarYTranslationStrategy = mock()
+        yTranslator.strategy = strategy
 
         yTranslator.cancelInProgressTranslation()
 
-        verify(yTranslator).cancelInProgressTranslation()
+        verify(strategy).cancelInProgressTranslation()
     }
 
     @Test
     fun `yTranslator should delegate it's strategy for snapImmediately`() {
-        val yTranslator = spy(BrowserToolbarYTranslator(ToolbarPosition.BOTTOM))
+        val yTranslator = BrowserToolbarYTranslator(ToolbarPosition.BOTTOM)
+        val strategy: BrowserToolbarYTranslationStrategy = mock()
+        yTranslator.strategy = strategy
         val toolbar: BrowserToolbar = mock()
 
         yTranslator.snapImmediately(toolbar)
 
-        verify(yTranslator).snapImmediately(toolbar)
+        verify(strategy).snapImmediately(toolbar)
     }
 }

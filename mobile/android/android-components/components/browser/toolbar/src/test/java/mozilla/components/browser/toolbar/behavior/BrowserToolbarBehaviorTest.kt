@@ -210,6 +210,7 @@ class BrowserToolbarBehaviorTest {
         assertTrue(behavior.shouldSnapAfterScroll)
         verify(yTranslator).cancelInProgressTranslation()
         verify(yTranslator, never()).expandWithAnimation(any())
+        verify(yTranslator, never()).collapseWithAnimation(any())
 
         behavior.stopNestedScroll(0, child)
 
@@ -239,6 +240,7 @@ class BrowserToolbarBehaviorTest {
         assertTrue(behavior.shouldSnapAfterScroll)
         verify(yTranslator).cancelInProgressTranslation()
         verify(yTranslator, never()).expandWithAnimation(any())
+        verify(yTranslator, never()).collapseWithAnimation(any())
 
         behavior.stopNestedScroll(0, child)
 
@@ -381,66 +383,27 @@ class BrowserToolbarBehaviorTest {
     }
 
     @Test
-    fun `Behavior will snap toolbar first finishing translation animations if they are in progress`() {
-        // val behavior = BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM)
-        // val yTranslator: BrowserToolbarYTranslator = mock()
-        // behavior.yTranslator = yTranslatorr
-        // val child = mock<BrowserToolbar>()
-        // behavior.browserToolbar = child
-        // doReturn(100).`when`(child).height
-        // doReturn(40f).`when`(child).translationY
-        //
-        // behavior.snapToolbarVertically()
-        //
-        // verify(animator).end()
+    fun `forceExpand should delegate the translator`() {
+        val behavior = spy(BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM))
+        val yTranslator: BrowserToolbarYTranslator = mock()
+        behavior.yTranslator = yTranslator
+        val toolbar: BrowserToolbar = mock()
+
+        behavior.forceExpand(toolbar)
+
+        verify(yTranslator).expandWithAnimation(toolbar)
     }
 
     @Test
-    fun `Behavior can snap toolbar if it is translated to the bottom half`() {
-        // val behavior = BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM)
-        // val animator: ValueAnimator = mock()
-        // behavior.snapAnimator = animator
-        // doReturn(false).`when`(animator).isStarted
-        // val child = mock<BrowserToolbar>()
-        // behavior.browserToolbar = child
-        // doReturn(100).`when`(child).height
-        // doReturn(40f).`when`(child).translationY
-        //
-        // behavior.snapToolbarVertically()
-        //
-        // verify(child).translationY = 0f
-    }
+    fun `forceCollapse should delegate the translator`() {
+        val behavior = spy(BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM))
+        val yTranslator: BrowserToolbarYTranslator = mock()
+        behavior.yTranslator = yTranslator
+        val toolbar: BrowserToolbar = mock()
 
-    @Test
-    fun `Behavior can snap toolbar if it is translated to the top half`() {
-        // val behavior = BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM)
-        // val animator: ValueAnimator = mock()
-        // behavior.snapAnimator = animator
-        // doReturn(false).`when`(animator).isStarted
-        // val child = mock<BrowserToolbar>()
-        // behavior.browserToolbar = child
-        // doReturn(100).`when`(child).height
-        // doReturn(60f).`when`(child).translationY
-        //
-        // behavior.snapToolbarVertically()
-        //
-        // verify(child).translationY = 100f
-    }
+        behavior.forceCollapse(toolbar)
 
-    @Test
-    fun `Behavior will snap toolbar to top if it is translated to exactly half`() {
-        // val behavior = BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM)
-        // val animator: ValueAnimator = mock()
-        // behavior.snapAnimator = animator
-        // doReturn(false).`when`(animator).isStarted
-        // val child = mock<BrowserToolbar>()
-        // doReturn(100).`when`(child).height
-        // doReturn(50f).`when`(child).translationY
-        // behavior.browserToolbar = child
-        //
-        // behavior.snapToolbarVertically()
-        //
-        // verify(child).translationY = 100f
+        verify(yTranslator).collapseWithAnimation(toolbar)
     }
 
     @Test
