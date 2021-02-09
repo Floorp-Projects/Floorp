@@ -136,16 +136,11 @@ nsresult ChildDNSService::AsyncResolveInternal(
     nsCString key;
     GetDNSRecordHashKey(hostname, DNSResolverInfo::URL(aResolver), type,
                         aOriginAttributes, flags, originalListenerAddr, key);
-    auto entry = mPendingRequests.LookupForAdd(key);
-    if (entry) {
-      entry.Data()->AppendElement(sender);
-    } else {
-      entry.OrInsert([&]() {
-        auto* hashEntry = new nsTArray<RefPtr<DNSRequestSender>>();
-        hashEntry->AppendElement(sender);
-        return hashEntry;
-      });
-    }
+    mPendingRequests.WithEntryHandle(key, [&](auto&& entry) {
+      entry
+          .OrInsertWith([] { return new nsTArray<RefPtr<DNSRequestSender>>(); })
+          ->AppendElement(sender);
+    });
   }
 
   sender->StartRequest();
