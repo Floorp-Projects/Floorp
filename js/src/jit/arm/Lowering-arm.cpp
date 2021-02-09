@@ -824,7 +824,6 @@ void LIRGeneratorARM::lowerTruncateFToInt32(MTruncateToInt32* ins) {
 void LIRGenerator::visitAtomicExchangeTypedArrayElement(
     MAtomicExchangeTypedArrayElement* ins) {
   MOZ_ASSERT(HasLDSTREXBHD());
-  MOZ_ASSERT(ins->arrayType() <= Scalar::Uint32);
 
   MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
   MOZ_ASSERT(ins->index()->type() == MIRType::IntPtr);
@@ -832,11 +831,25 @@ void LIRGenerator::visitAtomicExchangeTypedArrayElement(
   const LUse elements = useRegister(ins->elements());
   const LAllocation index =
       useRegisterOrIndexConstant(ins->index(), ins->arrayType());
+  const LAllocation value = useRegister(ins->value());
+
+  if (Scalar::isBigIntType(ins->arrayType())) {
+    // The two register pairs must be distinct.
+    LInt64Definition temp1 = tempInt64Fixed(Register64(IntArgReg3, IntArgReg2));
+    LDefinition temp2 = tempFixed(IntArgReg1);
+
+    auto* lir = new (alloc()) LAtomicExchangeTypedArrayElement64(
+        elements, index, value, temp1, temp2);
+    defineFixed(lir, ins, LAllocation(AnyRegister(IntArgReg0)));
+    assignSafepoint(lir, ins);
+    return;
+  }
+
+  MOZ_ASSERT(ins->arrayType() <= Scalar::Uint32);
 
   // If the target is a floating register then we need a temp at the
   // CodeGenerator level for creating the result.
 
-  const LAllocation value = useRegister(ins->value());
   LDefinition tempDef = LDefinition::BogusTemp();
   if (ins->arrayType() == Scalar::Uint32) {
     MOZ_ASSERT(ins->type() == MIRType::Double);

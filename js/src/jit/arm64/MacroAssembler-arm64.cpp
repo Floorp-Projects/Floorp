@@ -1998,6 +1998,8 @@ static void AtomicExchange(MacroAssembler& masm,
                            Scalar::Type type, Width targetWidth,
                            const Synchronization& sync, const T& mem,
                            Register value, Register output) {
+  MOZ_ASSERT(value != output);
+
   Label again;
 
   vixl::UseScratchRegisterScope temps(&masm);
@@ -2095,6 +2097,13 @@ void MacroAssembler::compareExchange64(const Synchronization& sync,
 
 void MacroAssembler::atomicExchange64(const Synchronization& sync,
                                       const Address& mem, Register64 value,
+                                      Register64 output) {
+  AtomicExchange(*this, nullptr, Scalar::Int64, Width::_64, sync, mem,
+                 value.reg, output.reg);
+}
+
+void MacroAssembler::atomicExchange64(const Synchronization& sync,
+                                      const BaseIndex& mem, Register64 value,
                                       Register64 output) {
   AtomicExchange(*this, nullptr, Scalar::Int64, Width::_64, sync, mem,
                  value.reg, output.reg);
