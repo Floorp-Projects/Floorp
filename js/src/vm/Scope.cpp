@@ -13,9 +13,9 @@
 #include <new>
 
 #include "builtin/ModuleObject.h"
-#include "frontend/CompilationInfo.h"  // CompiltionAtomCache, CompilationInput, BaseCompilationStencil, CompilationGCOutput
-#include "frontend/Parser.h"           // Copy*ScopeData
-#include "frontend/ScriptIndex.h"      // ScriptIndex
+#include "frontend/CompilationStencil.h"  // CompiltionAtomCache, CompilationInput, BaseCompilationStencil, CompilationGCOutput
+#include "frontend/Parser.h"              // Copy*ScopeData
+#include "frontend/ScriptIndex.h"         // ScriptIndex
 #include "frontend/SharedContext.h"
 #include "frontend/Stencil.h"
 #include "gc/Allocator.h"

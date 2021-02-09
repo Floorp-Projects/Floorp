@@ -20,7 +20,7 @@
 #include "jsapi.h"
 
 #include "ds/Fifo.h"
-#include "frontend/CompilationInfo.h"  // CompilationStencil, CompilationStencilSet, CompilationGCOutput
+#include "frontend/CompilationStencil.h"  // CompilationStencil, CompilationStencilSet, CompilationGCOutput
 #include "js/CompileOptions.h"
 #include "js/TypeDecls.h"
 #include "threading/ConditionVariable.h"

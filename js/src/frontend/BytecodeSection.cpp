@@ -10,7 +10,7 @@
 #include "mozilla/ReverseIterator.h"  // mozilla::Reversed
 
 #include "frontend/AbstractScopePtr.h"  // ScopeIndex
-#include "frontend/CompilationInfo.h"
+#include "frontend/CompilationStencil.h"
 #include "frontend/SharedContext.h"  // FunctionBox
 #include "vm/BytecodeUtil.h"         // INDEX_LIMIT, StackUses, StackDefs
 #include "vm/GlobalObject.h"

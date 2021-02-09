@@ -19,9 +19,9 @@
 
 #include "builtin/ModuleObject.h"
 #include "debugger/DebugAPI.h"
-#include "frontend/CompilationInfo.h"  // frontend::BaseCompilationStencil, frontend::CompilationStencil, frontend::CompilationStencilSet
-#include "frontend/ParserAtom.h"       // frontend::ParserAtom
-#include "js/BuildId.h"                // JS::BuildIdCharVector
+#include "frontend/CompilationStencil.h"  // frontend::BaseCompilationStencil, frontend::CompilationStencil, frontend::CompilationStencilSet
+#include "frontend/ParserAtom.h"          // frontend::ParserAtom
+#include "js/BuildId.h"                   // JS::BuildIdCharVector
 #include "vm/JSContext.h"
 #include "vm/JSScript.h"
 #include "vm/SharedStencil.h"  // js::SourceExtent

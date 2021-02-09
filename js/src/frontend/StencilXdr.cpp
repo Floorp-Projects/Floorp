@@ -14,10 +14,10 @@
 #include <type_traits>  // std::has_unique_object_representations
 #include <utility>      // std::forward
 
-#include "frontend/CompilationInfo.h"  // BaseCompilationStencil
-#include "frontend/ScriptIndex.h"      // ScriptIndex
-#include "vm/JSScript.h"               // js::CheckCompileOptionsMatch
-#include "vm/StencilEnums.h"           // js::ImmutableScriptFlagsEnum
+#include "frontend/CompilationStencil.h"  // BaseCompilationStencil
+#include "frontend/ScriptIndex.h"         // ScriptIndex
+#include "vm/JSScript.h"                  // js::CheckCompileOptionsMatch
+#include "vm/StencilEnums.h"              // js::ImmutableScriptFlagsEnum
 
 using namespace js;
 using namespace js::frontend;
