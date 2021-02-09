@@ -102,6 +102,13 @@ async function runPopupPositionTest(parentDocumentFileName) {
 }
 
 add_task(async function() {
+  if (!SpecialPowers.useRemoteSubframes) {
+    ok(
+      true,
+      "popup window position in non OOP iframe will be fixed by bug 1691346"
+    );
+    return;
+  }
   await runPopupPositionTest(
     "helper_test_select_popup_position_transformed_in_parent.html"
   );
