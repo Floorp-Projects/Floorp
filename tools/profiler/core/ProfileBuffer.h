@@ -190,15 +190,26 @@ class ProfileBuffer final {
  */
 class ProfileBufferCollector final : public ProfilerStackCollector {
  public:
-  ProfileBufferCollector(ProfileBuffer& aBuf, uint64_t aSamplePos)
-      : mBuf(aBuf), mSamplePositionInBuffer(aSamplePos) {}
+  ProfileBufferCollector(ProfileBuffer& aBuf, uint64_t aSamplePos,
+                         uint64_t aBufferRangeStart)
+      : mBuf(aBuf),
+        mSamplePositionInBuffer(aSamplePos),
+        mBufferRangeStart(aBufferRangeStart) {
+    MOZ_ASSERT(
+        mSamplePositionInBuffer >= mBufferRangeStart,
+        "The sample position should always be after the buffer range start");
+  }
 
+  // Position at which the sample starts in the profiler buffer (which may be
+  // different from the buffer in which the sample data is collected here).
   mozilla::Maybe<uint64_t> SamplePositionInBuffer() override {
     return mozilla::Some(mSamplePositionInBuffer);
   }
 
+  // Profiler buffer's range start (which may be different from the buffer in
+  // which the sample data is collected here).
   mozilla::Maybe<uint64_t> BufferRangeStart() override {
-    return mozilla::Some(mBuf.BufferRangeStart());
+    return mozilla::Some(mBufferRangeStart);
   }
 
   virtual void CollectNativeLeafAddr(void* aAddr) override;
@@ -210,6 +221,7 @@ class ProfileBufferCollector final : public ProfilerStackCollector {
  private:
   ProfileBuffer& mBuf;
   uint64_t mSamplePositionInBuffer;
+  uint64_t mBufferRangeStart;
 };
 
 #endif

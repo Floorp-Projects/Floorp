@@ -160,15 +160,26 @@ class ProfileBuffer final {
  */
 class ProfileBufferCollector final : public ProfilerStackCollector {
  public:
-  ProfileBufferCollector(ProfileBuffer& aBuf, uint64_t aSamplePos)
-      : mBuf(aBuf), mSamplePositionInBuffer(aSamplePos) {}
+  ProfileBufferCollector(ProfileBuffer& aBuf, uint64_t aSamplePos,
+                         uint64_t aBufferRangeStart)
+      : mBuf(aBuf),
+        mSamplePositionInBuffer(aSamplePos),
+        mBufferRangeStart(aBufferRangeStart) {
+    MOZ_ASSERT(
+        mSamplePositionInBuffer >= mBufferRangeStart,
+        "The sample position should always be after the buffer range start");
+  }
 
+  // Position at which the sample starts in the profiler buffer (which may be
+  // different from the buffer in which the sample data is collected here).
   Maybe<uint64_t> SamplePositionInBuffer() override {
     return Some(mSamplePositionInBuffer);
   }
 
+  // Profiler buffer's range start (which may be different from the buffer in
+  // which the sample data is collected here).
   Maybe<uint64_t> BufferRangeStart() override {
-    return Some(mBuf.BufferRangeStart());
+    return Some(mBufferRangeStart);
   }
 
   virtual void CollectNativeLeafAddr(void* aAddr) override;
@@ -178,6 +189,7 @@ class ProfileBufferCollector final : public ProfilerStackCollector {
  private:
   ProfileBuffer& mBuf;
   uint64_t mSamplePositionInBuffer;
+  uint64_t mBufferRangeStart;
 };
 
 }  // namespace baseprofiler
