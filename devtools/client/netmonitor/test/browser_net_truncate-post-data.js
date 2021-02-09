@@ -41,7 +41,7 @@ add_task(async function() {
   );
 
   store.dispatch(Actions.toggleNetworkDetails());
-  await clickOnSidebarTab(document, "request");
+  clickOnSidebarTab(document, "request");
 
   await Promise.all([waitAccordionItems, waitSourceEditor]);
 

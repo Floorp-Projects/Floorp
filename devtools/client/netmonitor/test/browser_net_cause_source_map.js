@@ -32,12 +32,12 @@ add_task(async function() {
   info("Clicking item and waiting for details panel to open");
   waitPromise = waitForDOM(document, ".network-details-bar");
   const xhrRequestItem = document.querySelectorAll(".request-list-item")[3];
-  await EventUtils.sendMouseEvent({ type: "mousedown" }, xhrRequestItem);
+  EventUtils.sendMouseEvent({ type: "mousedown" }, xhrRequestItem);
   await waitPromise;
 
   info("Clicking stack tab and waiting for stack panel to open");
   waitPromise = waitForDOM(document, "#stack-trace-panel");
-  await clickOnSidebarTab(document, "stack-trace");
+  clickOnSidebarTab(document, "stack-trace");
   await waitPromise;
 
   info("Waiting for source maps to be applied");

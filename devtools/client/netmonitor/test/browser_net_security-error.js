@@ -28,7 +28,7 @@ add_task(async function() {
   store.dispatch(Actions.toggleNetworkDetails());
 
   await waitUntil(() => document.querySelector("#security-tab"));
-  await clickOnSidebarTab(document, "security");
+  clickOnSidebarTab(document, "security");
   await securityInfoLoaded;
 
   const errormsg = document.querySelector(".security-info-value");

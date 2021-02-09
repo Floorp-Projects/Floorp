@@ -44,7 +44,7 @@ add_task(async function() {
   onTabLoaded = BrowserTestUtils.waitForNewTab(gBrowser, secondURL, true);
 
   const isMacOS = Services.appinfo.OS === "Darwin";
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     {
       type: "click",
       [isMacOS ? "metaKey" : "ctrlKey"]: true,
@@ -80,7 +80,7 @@ add_task(async function() {
     // focused/active state.
     nonNegativeTabIndexRule: false,
   });
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     {
       type: "click",
       [isMacOS ? "metaKey" : "ctrlKey"]: true,

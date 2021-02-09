@@ -21,13 +21,13 @@ add_task(async function() {
   await performRequests(monitor, tab, 1);
 
   const wait = waitForDOM(document, ".headers-overview");
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
   await wait;
 
-  await clickOnSidebarTab(document, "request");
+  clickOnSidebarTab(document, "request");
 
   // The Params panel should render the following
   // POSTed JSON data structure:

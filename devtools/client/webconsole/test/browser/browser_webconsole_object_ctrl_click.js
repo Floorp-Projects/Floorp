@@ -32,7 +32,7 @@ add_task(async function() {
     // container level.
     mustHaveAccessibleRule: false,
   });
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     {
       type: "click",
       [isMacOS ? "metaKey" : "ctrlKey"]: true,
@@ -89,7 +89,7 @@ add_task(async function() {
     interactiveRule: false,
     labelRule: false,
   });
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     {
       type: "click",
       [isMacOS ? "metaKey" : "ctrlKey"]: true,
