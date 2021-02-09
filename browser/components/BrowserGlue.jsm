@@ -2070,17 +2070,6 @@ BrowserGlue.prototype = {
     );
   },
 
-  _sendMediaTelemetry() {
-    let win = Services.wm.getMostRecentWindow("navigator:browser");
-    if (win) {
-      let v = win.document.createElementNS(
-        "http://www.w3.org/1999/xhtml",
-        "video"
-      );
-      v.reportCanPlayTelemetry();
-    }
-  },
-
   /**
    * Application shutdown handler.
    */
@@ -2711,10 +2700,6 @@ BrowserGlue.prototype = {
    */
   _scheduleBestEffortUserIdleTasks() {
     const idleTasks = [
-      () => {
-        this._sendMediaTelemetry();
-      },
-
       () => {
         // Telemetry for master-password - we do this after a delay as it
         // can cause IO if NSS/PSM has not already initialized.
