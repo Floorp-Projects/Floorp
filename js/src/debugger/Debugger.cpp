@@ -28,32 +28,32 @@
 #include "jsapi.h"    // for CallArgs, CallArgsFromVp
 #include "jstypes.h"  // for JS_PUBLIC_API
 
-#include "builtin/Array.h"               // for NewDenseFullyAllocatedArray
-#include "debugger/DebugAPI.h"           // for ResumeMode, DebugAPI
-#include "debugger/DebuggerMemory.h"     // for DebuggerMemory
-#include "debugger/DebugScript.h"        // for DebugScript
-#include "debugger/Environment.h"        // for DebuggerEnvironment
-#include "debugger/Frame.h"              // for DebuggerFrame
-#include "debugger/NoExecute.h"          // for EnterDebuggeeNoExecute
-#include "debugger/Object.h"             // for DebuggerObject
-#include "debugger/Script.h"             // for DebuggerScript
-#include "debugger/Source.h"             // for DebuggerSource
-#include "frontend/CompilationInfo.h"    // for CompilationStencil
-#include "frontend/NameAnalysisTypes.h"  // for ParseGoal, ParseGoal::Script
-#include "frontend/ParseContext.h"       // for UsedNameTracker
-#include "frontend/Parser.h"             // for Parser
-#include "gc/FreeOp.h"                   // for JSFreeOp
-#include "gc/GC.h"                       // for IterateScripts
-#include "gc/GCMarker.h"                 // for GCMarker
-#include "gc/GCRuntime.h"                // for GCRuntime, AutoEnterIteration
-#include "gc/HashUtil.h"                 // for DependentAddPtr
-#include "gc/Marking.h"                  // for IsMarkedUnbarriered, IsMarked
-#include "gc/PublicIterators.h"          // for RealmsIter, CompartmentsIter
-#include "gc/Rooting.h"                  // for RootedNativeObject
-#include "gc/Statistics.h"               // for Statistics::SliceData
-#include "gc/Tracer.h"                   // for TraceEdge
-#include "gc/Zone.h"                     // for Zone
-#include "gc/ZoneAllocator.h"            // for ZoneAllocPolicy
+#include "builtin/Array.h"                // for NewDenseFullyAllocatedArray
+#include "debugger/DebugAPI.h"            // for ResumeMode, DebugAPI
+#include "debugger/DebuggerMemory.h"      // for DebuggerMemory
+#include "debugger/DebugScript.h"         // for DebugScript
+#include "debugger/Environment.h"         // for DebuggerEnvironment
+#include "debugger/Frame.h"               // for DebuggerFrame
+#include "debugger/NoExecute.h"           // for EnterDebuggeeNoExecute
+#include "debugger/Object.h"              // for DebuggerObject
+#include "debugger/Script.h"              // for DebuggerScript
+#include "debugger/Source.h"              // for DebuggerSource
+#include "frontend/CompilationStencil.h"  // for CompilationStencil
+#include "frontend/NameAnalysisTypes.h"   // for ParseGoal, ParseGoal::Script
+#include "frontend/ParseContext.h"        // for UsedNameTracker
+#include "frontend/Parser.h"              // for Parser
+#include "gc/FreeOp.h"                    // for JSFreeOp
+#include "gc/GC.h"                        // for IterateScripts
+#include "gc/GCMarker.h"                  // for GCMarker
+#include "gc/GCRuntime.h"                 // for GCRuntime, AutoEnterIteration
+#include "gc/HashUtil.h"                  // for DependentAddPtr
+#include "gc/Marking.h"                   // for IsMarkedUnbarriered, IsMarked
+#include "gc/PublicIterators.h"           // for RealmsIter, CompartmentsIter
+#include "gc/Rooting.h"                   // for RootedNativeObject
+#include "gc/Statistics.h"                // for Statistics::SliceData
+#include "gc/Tracer.h"                    // for TraceEdge
+#include "gc/Zone.h"                      // for Zone
+#include "gc/ZoneAllocator.h"             // for ZoneAllocPolicy
 #include "jit/BaselineDebugModeOSR.h"  // for RecompileOnStackBaselineScriptsForDebugMode
 #include "jit/BaselineJIT.h"           // for FinishDiscardBaselineScript
 #include "jit/Invalidation.h"         // for RecompileInfoVector

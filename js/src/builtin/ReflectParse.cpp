@@ -16,7 +16,7 @@
 
 #include "builtin/Array.h"
 #include "builtin/Reflect.h"
-#include "frontend/CompilationInfo.h"
+#include "frontend/CompilationStencil.h"
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"

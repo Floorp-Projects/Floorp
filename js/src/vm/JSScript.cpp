@@ -34,7 +34,7 @@
 
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
-#include "frontend/CompilationInfo.h"  // frontend::BaseCompilationStencil
+#include "frontend/CompilationStencil.h"  // frontend::BaseCompilationStencil
 #include "frontend/SharedContext.h"
 #include "frontend/SourceNotes.h"  // SrcNote, SrcNoteType, SrcNoteIterator
 #include "frontend/StencilXdr.h"  // frontend::StencilXdr::SharedData, CanCopyDataToDisk

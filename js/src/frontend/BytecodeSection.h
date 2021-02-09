@@ -19,8 +19,8 @@
 
 #include "frontend/AbstractScopePtr.h"  // AbstractScopePtr, ScopeIndex
 #include "frontend/BytecodeOffset.h"    // BytecodeOffset
-#include "frontend/CompilationInfo.h"  // CompilationStencil, CompilationGCOutput
-#include "frontend/JumpList.h"         // JumpTarget
+#include "frontend/CompilationStencil.h"  // CompilationStencil, CompilationGCOutput
+#include "frontend/JumpList.h"            // JumpTarget
 #include "frontend/NameCollections.h"  // AtomIndexMap, PooledMapPtr
 #include "frontend/ObjLiteral.h"       // ObjLiteralStencil
 #include "frontend/ParseNode.h"        // BigIntLiteral
