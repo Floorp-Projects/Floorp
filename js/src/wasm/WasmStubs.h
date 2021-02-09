@@ -264,9 +264,6 @@ extern bool GenerateEntryStubs(jit::MacroAssembler& masm,
 extern void GenerateTrapExitMachineState(jit::MachineState* machine,
                                          size_t* numWords);
 
-extern bool GenerateProvisionalJitEntryStub(MacroAssembler& masm,
-                                            Offsets* offsets);
-
 // A value that is written into the trap exit frame, which is useful for
 // cross-checking during garbage collection.
 static constexpr uintptr_t TrapExitDummyValue = 1337;
