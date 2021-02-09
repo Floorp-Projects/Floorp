@@ -666,6 +666,8 @@ VIRTUAL_CALL_CLASSES = set(
         ("PColorPicker", "child"),
         ("PColorPicker", "parent"),
         ("PDataChannel", "child"),
+        ("PGIOChannel", "child"),
+        ("PGIOChannel", "parent"),
         ("PFileChannel", "child"),
         ("PFilePicker", "child"),
         ("PFunctionBroker", "child"),
