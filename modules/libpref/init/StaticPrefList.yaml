@@ -8729,12 +8729,6 @@
   value: false
   mirror: always
 
-# Allow AAAA entries to be used "early", before the A results are in
-- name: network.trr.early-AAAA
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # When true, it only sends AAAA when the system has IPv6 connectivity
 - name: network.trr.skip-AAAA-when-not-supported
   type: RelaxedAtomicBool
@@ -8744,14 +8738,6 @@
 # Whether to apply split horizon mitigations when using TRR.
 # These include adding the DNS suffix to the excluded domains
 - name: network.trr.split_horizon_mitigations
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
-# When true, the DNS request will wait for both A and AAAA responses
-# (if both have been requested) before notifying the listeners.
-# When true, it effectively cancels `network.trr.early-AAAA`
-- name: network.trr.wait-for-A-and-AAAA
   type: RelaxedAtomicBool
   value: true
   mirror: always
