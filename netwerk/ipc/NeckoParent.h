@@ -153,7 +153,7 @@ class NeckoParent : public PNeckoParent {
       const uint16_t& aType, const OriginAttributes& aOriginAttributes,
       const uint32_t& aFlags);
   virtual mozilla::ipc::IPCResult RecvPDNSRequestConstructor(
-      PDNSRequestParent* actor, const nsCString& aHost,
+      PDNSRequestParent* actor, const nsCString& hostName,
       const nsCString& trrServer, const uint16_t& type,
       const OriginAttributes& aOriginAttributes,
       const uint32_t& flags) override;
@@ -177,18 +177,8 @@ class NeckoParent : public PNeckoParent {
   virtual mozilla::ipc::IPCResult RecvPDataChannelConstructor(
       PDataChannelParent* aActor, const uint32_t& channelId) override;
 
-  PGIOChannelParent* AllocPGIOChannelParent(
-      PBrowserParent* aBrowser, const SerializedLoadContext& aSerialized,
-      const GIOChannelCreationArgs& aOpenArgs);
-  bool DeallocPGIOChannelParent(PGIOChannelParent* channel);
-
-  virtual mozilla::ipc::IPCResult RecvPGIOChannelConstructor(
-      PGIOChannelParent* aActor, PBrowserParent* aBrowser,
-      const SerializedLoadContext& aSerialized,
-      const GIOChannelCreationArgs& aOpenArgs) override;
-
   PSimpleChannelParent* AllocPSimpleChannelParent(const uint32_t& channelId);
-  bool DeallocPSimpleChannelParent(PSimpleChannelParent* actor);
+  bool DeallocPSimpleChannelParent(PSimpleChannelParent* parent);
 
   virtual mozilla::ipc::IPCResult RecvPSimpleChannelConstructor(
       PSimpleChannelParent* aActor, const uint32_t& channelId) override;
@@ -242,7 +232,7 @@ class NeckoParent : public PNeckoParent {
       const Maybe<LoadInfoArgs>& aLoadInfo);
 
   bool DeallocPClassifierDummyChannelParent(
-      PClassifierDummyChannelParent* aActor);
+      PClassifierDummyChannelParent* aParent);
 
   virtual mozilla::ipc::IPCResult RecvPClassifierDummyChannelConstructor(
       PClassifierDummyChannelParent* aActor, nsIURI* aURI,

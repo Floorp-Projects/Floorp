@@ -18,7 +18,6 @@
 #include "mozilla/net/WebSocketChannelParent.h"
 #include "mozilla/net/WebSocketEventListenerParent.h"
 #include "mozilla/net/DataChannelParent.h"
-#include "mozilla/net/GIOChannelParent.h"
 #include "mozilla/net/DocumentChannelParent.h"
 #include "mozilla/net/SimpleChannelParent.h"
 #include "mozilla/net/AltDataOutputStreamParent.h"
@@ -405,56 +404,6 @@ mozilla::ipc::IPCResult NeckoParent::RecvPDataChannelConstructor(
     PDataChannelParent* actor, const uint32_t& channelId) {
   DataChannelParent* p = static_cast<DataChannelParent*>(actor);
   DebugOnly<bool> rv = p->Init(channelId);
-  MOZ_ASSERT(rv);
-  return IPC_OK();
-}
-
-static already_AddRefed<nsIPrincipal> GetRequestingPrincipal(
-    const GIOChannelCreationArgs& aArgs) {
-  if (aArgs.type() != GIOChannelCreationArgs::TGIOChannelOpenArgs) {
-    return nullptr;
-  }
-
-  const GIOChannelOpenArgs& args = aArgs.get_GIOChannelOpenArgs();
-  return GetRequestingPrincipal(args.loadInfo());
-}
-
-PGIOChannelParent* NeckoParent::AllocPGIOChannelParent(
-    PBrowserParent* aBrowser, const SerializedLoadContext& aSerialized,
-    const GIOChannelCreationArgs& aOpenArgs) {
-  nsCOMPtr<nsIPrincipal> requestingPrincipal =
-      GetRequestingPrincipal(aOpenArgs);
-
-  nsCOMPtr<nsILoadContext> loadContext;
-  const char* error = CreateChannelLoadContext(
-      aBrowser, Manager(), aSerialized, requestingPrincipal, loadContext);
-  if (error) {
-    printf_stderr(
-        "NeckoParent::AllocPGIOChannelParent: "
-        "FATAL error: %s: KILLING CHILD PROCESS\n",
-        error);
-    return nullptr;
-  }
-  PBOverrideStatus overrideStatus =
-      PBOverrideStatusFromLoadContext(aSerialized);
-  GIOChannelParent* p = new GIOChannelParent(BrowserParent::GetFrom(aBrowser),
-                                             loadContext, overrideStatus);
-  p->AddRef();
-  return p;
-}
-
-bool NeckoParent::DeallocPGIOChannelParent(PGIOChannelParent* channel) {
-  GIOChannelParent* p = static_cast<GIOChannelParent*>(channel);
-  p->Release();
-  return true;
-}
-
-mozilla::ipc::IPCResult NeckoParent::RecvPGIOChannelConstructor(
-    PGIOChannelParent* actor, PBrowserParent* aBrowser,
-    const SerializedLoadContext& aSerialized,
-    const GIOChannelCreationArgs& aOpenArgs) {
-  GIOChannelParent* p = static_cast<GIOChannelParent*>(actor);
-  DebugOnly<bool> rv = p->Init(aOpenArgs);
   MOZ_ASSERT(rv);
   return IPC_OK();
 }
