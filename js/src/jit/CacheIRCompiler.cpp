@@ -7494,23 +7494,38 @@ bool CacheIRCompiler::emitGetFirstDollarIndexResult(StringOperandId strId) {
 }
 
 bool CacheIRCompiler::emitAtomicsCompareExchangeResult(
-    ObjOperandId objId, IntPtrOperandId indexId, Int32OperandId expectedId,
-    Int32OperandId replacementId, Scalar::Type elementType) {
+    ObjOperandId objId, IntPtrOperandId indexId, uint32_t expectedId,
+    uint32_t replacementId, Scalar::Type elementType) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
-  AutoOutputRegister output(*this);
+  Maybe<AutoOutputRegister> output;
+  Maybe<AutoCallVM> callvm;
+  if (!Scalar::isBigIntType(elementType)) {
+    output.emplace(*this);
+  } else {
+    callvm.emplace(masm, this, allocator);
+  }
 #ifdef JS_CODEGEN_X86
   // Use a scratch register to avoid running out of registers.
-  Register obj = output.valueReg().typeReg();
+  Register obj = output ? output->valueReg().typeReg()
+                        : callvm->outputValueReg().typeReg();
   allocator.copyToScratchRegister(masm, objId, obj);
 #else
   Register obj = allocator.useRegister(masm, objId);
 #endif
   Register index = allocator.useRegister(masm, indexId);
-  Register expected = allocator.useRegister(masm, expectedId);
-  Register replacement = allocator.useRegister(masm, replacementId);
+  Register expected;
+  Register replacement;
+  if (!Scalar::isBigIntType(elementType)) {
+    expected = allocator.useRegister(masm, Int32OperandId(expectedId));
+    replacement = allocator.useRegister(masm, Int32OperandId(replacementId));
+  } else {
+    expected = allocator.useRegister(masm, BigIntOperandId(expectedId));
+    replacement = allocator.useRegister(masm, BigIntOperandId(replacementId));
+  }
 
-  Register scratch = output.valueReg().scratchReg();
+  Register scratch = output ? output->valueReg().scratchReg()
+                            : callvm->outputValueReg().scratchReg();
   MOZ_ASSERT(scratch != obj, "scratchReg must not be typeReg");
 
   // Not enough registers on X86.
@@ -7521,18 +7536,38 @@ bool CacheIRCompiler::emitAtomicsCompareExchangeResult(
     return false;
   }
 
+  // AutoCallVM's AutoSaveLiveRegisters aren't accounted for in FailurePath, so
+  // we can't use both at the same time. This isn't an issue here, because Ion
+  // doesn't support CallICs. If that ever changes, this code must be updated.
+  MOZ_ASSERT(isBaseline(), "Can't use FailurePath with AutoCallVM in Ion ICs");
+
   // Bounds check.
   masm.loadArrayBufferViewLengthPtr(obj, scratch);
   masm.spectreBoundsCheckPtr(index, scratch, spectreTemp, failure->label());
 
   // Atomic operations are highly platform-dependent, for example x86/x64 has
   // specific requirements on which registers are used; MIPS needs multiple
-  // additional temporaries. Therefore we're using an ABI call here instead of
-  // handling each platform separately.
+  // additional temporaries. Therefore we're using either an ABI or VM call here
+  // instead of handling each platform separately.
+
+  if (Scalar::isBigIntType(elementType)) {
+    callvm->prepare();
+
+    masm.Push(replacement);
+    masm.Push(expected);
+    masm.Push(index);
+    masm.Push(obj);
+
+    using Fn =
+        BigInt* (*)(JSContext*, TypedArrayObject*, size_t, BigInt*, BigInt*);
+    callvm->call<Fn, jit::AtomicsCompareExchange64>();
+    return true;
+  }
+
   {
     LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(),
                                  liveVolatileFloatRegs());
-    volatileRegs.takeUnchecked(output.valueReg());
+    volatileRegs.takeUnchecked(output->valueReg());
     volatileRegs.takeUnchecked(scratch);
     masm.PushRegsInMask(volatileRegs);
 
@@ -7549,11 +7584,11 @@ bool CacheIRCompiler::emitAtomicsCompareExchangeResult(
   }
 
   if (elementType != Scalar::Uint32) {
-    masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
+    masm.tagValue(JSVAL_TYPE_INT32, scratch, output->valueReg());
   } else {
     ScratchDoubleScope fpscratch(masm);
     masm.convertUInt32ToDouble(scratch, fpscratch);
-    masm.boxDouble(fpscratch, output.valueReg(), fpscratch);
+    masm.boxDouble(fpscratch, output->valueReg(), fpscratch);
   }
 
   return true;

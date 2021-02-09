@@ -1330,8 +1330,8 @@
   args:
     obj: ObjId
     index: IntPtrId
-    expected: Int32Id
-    replacement: Int32Id
+    expected: RawId
+    replacement: RawId
     elementType: ScalarTypeImm
 
 - name: AtomicsExchangeResult

@@ -218,6 +218,24 @@ void LIRGeneratorX86::lowerForMulInt64(LMulI64* ins, MMul* mir,
 
 void LIRGenerator::visitCompareExchangeTypedArrayElement(
     MCompareExchangeTypedArrayElement* ins) {
+  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
+  MOZ_ASSERT(ins->index()->type() == MIRType::IntPtr);
+
+  if (Scalar::isBigIntType(ins->arrayType())) {
+    LUse elements = useFixed(ins->elements(), esi);
+    LAllocation index =
+        useRegisterOrIndexConstant(ins->index(), ins->arrayType());
+    LUse oldval = useFixed(ins->oldval(), eax);
+    LUse newval = useFixed(ins->newval(), edx);
+    LDefinition temp = tempFixed(ebx);
+
+    auto* lir = new (alloc()) LCompareExchangeTypedArrayElement64(
+        elements, index, oldval, newval, temp);
+    defineFixed(lir, ins, LAllocation(AnyRegister(ecx)));
+    assignSafepoint(lir, ins);
+    return;
+  }
+
   lowerCompareExchangeTypedArrayElement(ins, /* useI386ByteRegisters = */ true);
 }
 

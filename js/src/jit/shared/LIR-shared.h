@@ -4948,6 +4948,78 @@ class LAtomicStore64 : public LInstructionHelper<0, 3, 2 * INT64_PIECES + 1> {
   const LDefinition* tempLow() { return getTemp(2 * INT64_PIECES); }
 };
 
+class LCompareExchangeTypedArrayElement64
+    : public LInstructionHelper<1, 4, 3 * INT64_PIECES + 1> {
+ public:
+  LIR_HEADER(CompareExchangeTypedArrayElement64)
+
+  // x64, ARM64
+  LCompareExchangeTypedArrayElement64(const LAllocation& elements,
+                                      const LAllocation& index,
+                                      const LAllocation& oldval,
+                                      const LAllocation& newval,
+                                      const LInt64Definition& temp1,
+                                      const LInt64Definition& temp2)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, elements);
+    setOperand(1, index);
+    setOperand(2, oldval);
+    setOperand(3, newval);
+    setInt64Temp(0, temp1);
+    setInt64Temp(INT64_PIECES, temp2);
+    setInt64Temp(2 * INT64_PIECES, LInt64Definition::BogusTemp());
+    setTemp(3 * INT64_PIECES, LDefinition::BogusTemp());
+  }
+
+  // x86
+  LCompareExchangeTypedArrayElement64(const LAllocation& elements,
+                                      const LAllocation& index,
+                                      const LAllocation& oldval,
+                                      const LAllocation& newval,
+                                      const LDefinition& tempLow)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, elements);
+    setOperand(1, index);
+    setOperand(2, oldval);
+    setOperand(3, newval);
+    setInt64Temp(0, LInt64Definition::BogusTemp());
+    setInt64Temp(INT64_PIECES, LInt64Definition::BogusTemp());
+    setInt64Temp(2 * INT64_PIECES, LInt64Definition::BogusTemp());
+    setTemp(3 * INT64_PIECES, tempLow);
+  }
+
+  // ARM
+  LCompareExchangeTypedArrayElement64(const LAllocation& elements,
+                                      const LAllocation& index,
+                                      const LAllocation& oldval,
+                                      const LAllocation& newval,
+                                      const LInt64Definition& temp1,
+                                      const LInt64Definition& temp2,
+                                      const LInt64Definition& temp3)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, elements);
+    setOperand(1, index);
+    setOperand(2, oldval);
+    setOperand(3, newval);
+    setInt64Temp(0, temp1);
+    setInt64Temp(INT64_PIECES, temp2);
+    setInt64Temp(2 * INT64_PIECES, temp3);
+    setTemp(3 * INT64_PIECES, LDefinition::BogusTemp());
+  }
+
+  const MCompareExchangeTypedArrayElement* mir() const {
+    return mir_->toCompareExchangeTypedArrayElement();
+  }
+  const LAllocation* elements() { return getOperand(0); }
+  const LAllocation* index() { return getOperand(1); }
+  const LAllocation* oldval() { return getOperand(2); }
+  const LAllocation* newval() { return getOperand(3); }
+  LInt64Definition temp1() { return getInt64Temp(0); }
+  LInt64Definition temp2() { return getInt64Temp(INT64_PIECES); }
+  LInt64Definition temp3() { return getInt64Temp(2 * INT64_PIECES); }
+  const LDefinition* tempLow() { return getTemp(3 * INT64_PIECES); }
+};
+
 class LEffectiveAddress : public LInstructionHelper<1, 2, 0> {
  public:
   LIR_HEADER(EffectiveAddress);

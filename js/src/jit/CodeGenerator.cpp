@@ -4545,9 +4545,10 @@ void CodeGenerator::visitTruncateBigIntToInt64(LTruncateBigIntToInt64* lir) {
   masm.loadBigInt64(operand, output);
 }
 
-void CodeGenerator::emitCreateBigInt(LInstruction* lir, Scalar::Type type,
-                                     Register64 input, Register output,
-                                     Register maybeTemp) {
+OutOfLineCode* CodeGenerator::createBigIntOutOfLine(LInstruction* lir,
+                                                    Scalar::Type type,
+                                                    Register64 input,
+                                                    Register output) {
 #if JS_BITS_PER_WORD == 32
   using Fn = BigInt* (*)(JSContext*, uint32_t, uint32_t);
   auto args = ArgList(input.low, input.high);
@@ -4556,15 +4557,19 @@ void CodeGenerator::emitCreateBigInt(LInstruction* lir, Scalar::Type type,
   auto args = ArgList(input);
 #endif
 
-  OutOfLineCode* ool;
   if (type == Scalar::BigInt64) {
-    ool = oolCallVM<Fn, jit::CreateBigIntFromInt64>(lir, args,
-                                                    StoreRegisterTo(output));
-  } else {
-    MOZ_ASSERT(type == Scalar::BigUint64);
-    ool = oolCallVM<Fn, jit::CreateBigIntFromUint64>(lir, args,
+    return oolCallVM<Fn, jit::CreateBigIntFromInt64>(lir, args,
                                                      StoreRegisterTo(output));
   }
+  MOZ_ASSERT(type == Scalar::BigUint64);
+  return oolCallVM<Fn, jit::CreateBigIntFromUint64>(lir, args,
+                                                    StoreRegisterTo(output));
+}
+
+void CodeGenerator::emitCreateBigInt(LInstruction* lir, Scalar::Type type,
+                                     Register64 input, Register output,
+                                     Register maybeTemp) {
+  OutOfLineCode* ool = createBigIntOutOfLine(lir, type, input, output);
 
   if (maybeTemp != InvalidReg) {
     masm.newGCBigInt(output, maybeTemp, ool->entry(), bigIntsCanBeInNursery());

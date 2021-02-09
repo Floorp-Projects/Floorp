@@ -6894,15 +6894,17 @@ AttachDecision CallIRGenerator::tryAttachAtomicsCompareExchange(
   if (!args_[1].isNumber()) {
     return AttachDecision::NoAction;
   }
-  if (!args_[2].isNumber()) {
-    return AttachDecision::NoAction;
-  }
-  if (!args_[3].isNumber()) {
+
+  auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
+  if (!AtomicsMeetsPreconditions(typedArray, args_[1], BigIntAtomics::Yes)) {
     return AttachDecision::NoAction;
   }
 
-  auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
-  if (!AtomicsMeetsPreconditions(typedArray, args_[1])) {
+  Scalar::Type elementType = typedArray->type();
+  if (!ValueIsNumeric(elementType, args_[2])) {
+    return AttachDecision::NoAction;
+  }
+  if (!ValueIsNumeric(elementType, args_[3])) {
     return AttachDecision::NoAction;
   }
 
@@ -6922,19 +6924,18 @@ AttachDecision CallIRGenerator::tryAttachAtomicsCompareExchange(
   IntPtrOperandId intPtrIndexId =
       guardToIntPtrIndex(args_[1], indexId, /* supportOOB = */ false);
 
-  // Convert expected value to int32.
+  // Convert expected value to int32/BigInt.
   ValOperandId expectedId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_);
-  Int32OperandId int32ExpectedId = writer.guardToInt32ModUint32(expectedId);
+  OperandId numericExpectedId = emitNumericGuard(expectedId, elementType);
 
-  // Convert replacement value to int32.
+  // Convert replacement value to int32/BigInt.
   ValOperandId replacementId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg3, argc_);
-  Int32OperandId int32ReplacementId =
-      writer.guardToInt32ModUint32(replacementId);
+  OperandId numericReplacementId = emitNumericGuard(replacementId, elementType);
 
-  writer.atomicsCompareExchangeResult(objId, intPtrIndexId, int32ExpectedId,
-                                      int32ReplacementId, typedArray->type());
+  writer.atomicsCompareExchangeResult(objId, intPtrIndexId, numericExpectedId,
+                                      numericReplacementId, typedArray->type());
   writer.returnFromIC();
 
   trackAttached("AtomicsCompareExchange");
