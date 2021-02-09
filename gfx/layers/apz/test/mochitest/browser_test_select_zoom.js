@@ -4,6 +4,12 @@
      https://searchfox.org/mozilla-central/rev/559b25eb41c1cbffcb90a34e008b8288312fcd25/browser/base/content/test/forms/browser_selectpopup.js
 */
 
+// For hideSelectPopup.
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/browser/base/content/test/forms/head.js",
+  this
+);
+
 function openSelectPopup(selectPopup, selector = "select", win = window) {
   let popupShownPromise = BrowserTestUtils.waitForEvent(
     selectPopup,
@@ -12,21 +18,6 @@ function openSelectPopup(selectPopup, selector = "select", win = window) {
 
   EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true }, win);
   return popupShownPromise;
-}
-
-function hideSelectPopup(selectPopup, win = window) {
-  let browser = win.gBrowser.selectedBrowser;
-  let selectClosedPromise = SpecialPowers.spawn(browser, [], async function() {
-    let { SelectContentHelper } = ChromeUtils.import(
-      "resource://gre/actors/SelectChild.jsm",
-      null
-    );
-    return ContentTaskUtils.waitForCondition(() => !SelectContentHelper.open);
-  });
-
-  EventUtils.synthesizeKey("KEY_Enter", {}, win);
-
-  return selectClosedPromise;
 }
 
 add_task(async function setup_pref() {
