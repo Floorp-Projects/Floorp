@@ -4785,8 +4785,13 @@ GeneralParser<ParseHandler, Unit>::moduleExportName() {
   return handler_.newStringLiteral(name, pos());
 }
 
-template <typename Unit>
-bool Parser<FullParseHandler, Unit>::namedImports(ListNodeType importSpecSet) {
+template <class ParseHandler, typename Unit>
+bool GeneralParser<ParseHandler, Unit>::namedImports(
+    ListNodeType importSpecSet) {
+  if (!abortIfSyntaxParser()) {
+    return false;
+  }
+
   while (true) {
     // Handle the forms |import {} from 'a'| and
     // |import { ..., } from 'a'| (where ... is non empty), by
@@ -4886,9 +4891,13 @@ bool Parser<FullParseHandler, Unit>::namedImports(ListNodeType importSpecSet) {
   return true;
 }
 
-template <typename Unit>
-bool Parser<FullParseHandler, Unit>::namespaceImport(
+template <class ParseHandler, typename Unit>
+bool GeneralParser<ParseHandler, Unit>::namespaceImport(
     ListNodeType importSpecSet) {
+  if (!abortIfSyntaxParser()) {
+    return false;
+  }
+
   if (!mustMatchToken(TokenKind::As, JSMSG_AS_AFTER_IMPORT_STAR)) {
     return false;
   }
@@ -4934,8 +4943,13 @@ bool Parser<FullParseHandler, Unit>::namespaceImport(
   return true;
 }
 
-template <typename Unit>
-BinaryNode* Parser<FullParseHandler, Unit>::importDeclaration() {
+template <class ParseHandler, typename Unit>
+typename ParseHandler::BinaryNodeType
+GeneralParser<ParseHandler, Unit>::importDeclaration() {
+  if (!abortIfSyntaxParser()) {
+    return null();
+  }
+
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Import));
 
   if (!pc_->atModuleLevel()) {
@@ -4958,7 +4972,7 @@ BinaryNode* Parser<FullParseHandler, Unit>::importDeclaration() {
   if (tt == TokenKind::String) {
     // Handle the form |import 'a'| by leaving the list empty. This is
     // equivalent to |import {} from 'a'|.
-    importSpecSet->pn_pos.end = importSpecSet->pn_pos.begin;
+    handler_.setEndPosition(importSpecSet, pos().begin);
   } else {
     if (tt == TokenKind::LeftCurly) {
       if (!namedImports(importSpecSet)) {
@@ -5047,26 +5061,13 @@ BinaryNode* Parser<FullParseHandler, Unit>::importDeclaration() {
     return null();
   }
 
-  BinaryNode* node = handler_.newImportDeclaration(importSpecSet, moduleSpec,
-                                                   TokenPos(begin, pos().end));
+  BinaryNodeType node = handler_.newImportDeclaration(
+      importSpecSet, moduleSpec, TokenPos(begin, pos().end));
   if (!node || !processImport(node)) {
     return null();
   }
 
   return node;
-}
-
-template <typename Unit>
-inline SyntaxParseHandler::BinaryNodeType
-Parser<SyntaxParseHandler, Unit>::importDeclaration() {
-  MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
-  return SyntaxParseHandler::NodeFailure;
-}
-
-template <class ParseHandler, typename Unit>
-inline typename ParseHandler::BinaryNodeType
-GeneralParser<ParseHandler, Unit>::importDeclaration() {
-  return asFinalParser()->importDeclaration();
 }
 
 template <class ParseHandler, typename Unit>
@@ -5375,10 +5376,6 @@ GeneralParser<ParseHandler, Unit>::exportFrom(uint32_t begin, Node specList) {
   }
 
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::From));
-
-  if (!abortIfSyntaxParser()) {
-    return null();
-  }
 
   if (!mustMatchToken(TokenKind::String, JSMSG_MODULE_SPEC_AFTER_FROM)) {
     return null();
