@@ -117,32 +117,48 @@ class _RemoteSettingsExperimentLoader {
     this._initialized = false;
   }
 
+  async evaluateJexl(jexlString, customContext) {
+    if (customContext && !customContext.experiment) {
+      throw new Error(
+        "Expected an .experiment property in second param of this function"
+      );
+    }
+
+    const context = TargetingContext.combineContexts(
+      customContext,
+      this.manager.createTargetingContext(),
+      ASRouterTargeting.Environment
+    );
+
+    log.debug("Testing targeting expression:", jexlString);
+    const targetingContext = new TargetingContext(context);
+
+    let result = false;
+    try {
+      result = await targetingContext.evalWithDefault(jexlString);
+    } catch (e) {
+      log.debug("Targeting failed because of an error");
+      Cu.reportError(e);
+    }
+    return result;
+  }
+
   /**
    * Checks targeting of a recipe if it is defined
    * @param {Recipe} recipe
    * @param {{[key: string]: any}} customContext A custom filter context
    * @returns {Promise<boolean>} Should we process the recipe?
    */
-  async checkTargeting(recipe, customContext = {}) {
-    const context = TargetingContext.combineContexts(
-      { experiment: recipe },
-      customContext,
-      ASRouterTargeting.Environment
-    );
-    const { targeting } = recipe;
-    if (!targeting) {
+  async checkTargeting(recipe) {
+    if (!recipe.targeting) {
       log.debug("No targeting for recipe, so it matches automatically");
       return true;
     }
-    log.debug("Testing targeting expression:", targeting);
-    const targetingContext = new TargetingContext(context);
-    let result = false;
-    try {
-      result = await targetingContext.evalWithDefault(targeting);
-    } catch (e) {
-      log.debug("Targeting failed because of an error");
-      Cu.reportError(e);
-    }
+
+    const result = await this.evaluateJexl(recipe.targeting, {
+      experiment: recipe,
+    });
+
     return Boolean(result);
   }
 
@@ -172,10 +188,8 @@ class _RemoteSettingsExperimentLoader {
 
     let matches = 0;
     if (recipes && !loadingError) {
-      const context = this.manager.createTargetingContext();
-
       for (const r of recipes) {
-        if (await this.checkTargeting(r, context)) {
+        if (await this.checkTargeting(r)) {
           matches++;
           log.debug(`${r.id} matched`);
           await this.manager.onRecipe(r, "rs-loader");
