@@ -731,14 +731,14 @@ nsresult LSSnapshot::GetItemInternal(const nsAString& aKey,
       if (aValue.WasPassed()) {
         const nsString& value = aValue.Value();
         if (!value.IsVoid()) {
-          auto entry = mValues.LookupForAdd(aKey);
-          if (entry) {
-            result = entry.Data();
-            entry.Data() = value;
-          } else {
-            result.SetIsVoid(true);
-            entry.OrInsert([value]() { return value; });
-          }
+          mValues.WithEntryHandle(aKey, [&](auto&& entry) {
+            if (entry) {
+              result = std::exchange(entry.Data(), value);
+            } else {
+              result.SetIsVoid(true);
+              entry.Insert(value);
+            }
+          });
         } else {
           if (auto entry = mValues.Lookup(aKey)) {
             result = entry.Data();
