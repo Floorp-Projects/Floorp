@@ -195,7 +195,7 @@ class nsBaseHashtable
    * This function can only be used if DataType is default-constructible. Use
    * LookupForAdd with non-default-constructible DataType for now.
    *
-   * TODO: Add a function GetOrInsertFrom that will use a function for
+   * TODO: Add a function GetOrInsertWith that will use a function for
    *       DataType construction.
    */
   DataType& GetOrInsert(const KeyType& aKey) {
@@ -477,12 +477,24 @@ class nsBaseHashtable
     return EntryPtr(*this, ent, count == Count());
   }
 
- protected:
-  /*
-   * The new API for LookupForAdd (WithEntryHandle).
+  /**
+   * Used by WithEntryHandle as the argument type to its functor. It is
+   * associated with the Key passed to WithEntryHandle and manages only the
+   * potential entry with that key. Note that in case no modifying operations
+   * are called on the handle, the state of the hashtable remains unchanged,
+   * i.e. WithEntryHandle does not modify the hashtable itself.
    *
-   * TODO: Merge with the old API, bug 1688833.
-   *
+   * Provides query functions (Key, HasEntry/operator bool, Data) and
+   * modifying operations for inserting new entries (Insert), updating existing
+   * entries (Update) and removing existing entries (Remove). They have
+   * debug-only assertion that fail when the state of the entry doesn't match
+   * the expectation. There are variants prefixed with "Or" (OrInsert, OrUpdate,
+   * OrRemove) that are a no-op in case the entry does already exist resp. does
+   * not exist. There are also variants OrInsertWith and OrUpdateWith that don't
+   * accept a value, but a functor, which is only called if the operation takes
+   * place, which should be used if the provision of the value is not trivial
+   * (e.g. allocates a heap object). Finally, there's InsertOrUpdate that
+   * handles both existing and non-existing entries.
    */
   class EntryHandle : protected nsTHashtable<EntryType>::EntryHandle {
    public:
@@ -503,28 +515,67 @@ class nsBaseHashtable
 
     using Base::Entry;
 
+    /**
+     * Inserts a new entry with the handle's key and the value passed to this
+     * function.
+     *
+     * \pre !HasEntry()
+     * \post HasEntry()
+     */
     template <typename U>
-    void Insert(U&& aData) {
+    DataType& Insert(U&& aData) {
       Base::InsertInternal(Converter::Wrap(std::forward<U>(aData)));
+      return Data();
     }
 
+    /**
+     * If it doesn't yet exist, inserts a new entry with the handle's key and
+     * the value passed to this function. The value is not consumed if no insert
+     * takes place.
+     *
+     * \post HasEntry()
+     */
     template <typename U>
     DataType& OrInsert(U&& aData) {
       if (!HasEntry()) {
-        Insert(std::forward<U>(aData));
+        return Insert(std::forward<U>(aData));
       }
       return Data();
     }
 
-    // TODO: Add functions InsertFrom and OrInsertFrom which will use a function
-    //       for DataType construction.
-
-    template <typename U>
-    void Update(U&& aData) {
-      MOZ_ASSERT(HasEntry());
-      Data() = Converter::Wrap(std::forward<U>(aData));
+    /**
+     * If it doesn't yet exist, inserts a new entry with the handle's key and
+     * the result of the functor passed to this function. The functor is not
+     * called if no insert takes place.
+     *
+     * \post HasEntry()
+     */
+    template <typename F>
+    DataType& OrInsertWith(F&& aFunc) {
+      if (!HasEntry()) {
+        return Insert(std::forward<F>(aFunc)());
+      }
+      return Data();
     }
 
+    /**
+     * Updates the entry with the handle's key by the value passed to this
+     * function.
+     *
+     * \pre HasEntry()
+     */
+    template <typename U>
+    DataType& Update(U&& aData) {
+      MOZ_RELEASE_ASSERT(HasEntry());
+      Data() = Converter::Wrap(std::forward<U>(aData));
+      return Data();
+    }
+
+    /**
+     * If an entry with the handle's key already exists, updates its value by
+     * the value passed to this function. The value is not consumed if no update
+     * takes place.
+     */
     template <typename U>
     void OrUpdate(U&& aData) {
       if (HasEntry()) {
@@ -532,6 +583,25 @@ class nsBaseHashtable
       }
     }
 
+    /**
+     * If an entry with the handle's key already exists, updates its value by
+     * the the result of the functor passed to this function. The functor is not
+     * called if no update takes place.
+     */
+    template <typename F>
+    void OrUpdateWith(F&& aFunc) {
+      if (HasEntry()) {
+        Update(std::forward<F>(aFunc)());
+      }
+    }
+
+    /**
+     * If it does not yet, inserts a new entry with the handle's key and the
+     * value passed to this function. Otherwise, it updates the entry by the
+     * value passed to this function.
+     *
+     * \post HasEntry()
+     */
     template <typename U>
     DataType& InsertOrUpdate(U&& aData) {
       if (!HasEntry()) {
@@ -546,6 +616,11 @@ class nsBaseHashtable
 
     using Base::OrRemove;
 
+    /**
+     * Returns a reference to the value of the entry.
+     *
+     * \pre HasEntry()
+     */
     DataType& Data() { return Entry()->mData; }
 
    private:
@@ -554,14 +629,39 @@ class nsBaseHashtable
     explicit EntryHandle(Base&& aBase) : Base(std::move(aBase)) {}
   };
 
+  /**
+   * Performs a scoped operation on the entry for aKey, which may or may not
+   * exist when the function is called. It calls aFunc with an EntryHandle. The
+   * result of aFunc is returned as the result of this function. Its return type
+   * may be void. See the documentation of EntryHandle for the query and
+   * modifying operations it offers.
+   *
+   * A simple use of this function is, e.g.,
+   *
+   *   hashtable.WithEntryHandle(key, [](auto&& entry) { entry.OrInsert(42); });
+   *
+   * \attention It is not safe to perform modifying operations on the hashtable
+   * other than through the EntryHandle within aFunc, and trying to do so will
+   * trigger debug assertions, and result in undefined behaviour otherwise.
+   */
   template <class F>
   auto WithEntryHandle(KeyType aKey, F&& aFunc)
       -> std::invoke_result_t<F, EntryHandle&&> {
-    return Base::WithEntryHandle(aKey, [&aFunc](auto entryHandle) {
-      return std::forward<F>(aFunc)(EntryHandle{std::move(entryHandle)});
-    });
+    return Base::WithEntryHandle(
+        aKey, [&aFunc](auto entryHandle) -> decltype(auto) {
+          return std::forward<F>(aFunc)(EntryHandle{std::move(entryHandle)});
+        });
   }
 
+  /**
+   * Fallible variant of WithEntryHandle, with the following differences:
+   * - The functor aFunc must accept a Maybe<EntryHandle> (instead of an
+   *   EntryHandle).
+   * - In case allocation of the slot for the entry fails, Nothing is passed to
+   *   the functor.
+   *
+   * For more details, see the explanation on the non-fallible overload above.
+   */
   template <class F>
   auto WithEntryHandle(KeyType aKey, const fallible_t& aFallible, F&& aFunc)
       -> std::invoke_result_t<F, mozilla::Maybe<EntryHandle>&&> {

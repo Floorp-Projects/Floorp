@@ -840,6 +840,80 @@ TYPED_TEST_P(BaseHashtableTest, LookupForAdd_OrRemove) {
   }
 }
 
+TYPED_TEST_P(BaseHashtableTest, WithEntryHandle_NoOp) {
+  auto table = MakeEmptyBaseHashtable<TypeParam>();
+
+  table.WithEntryHandle(1, [](auto&&) {});
+
+  EXPECT_FALSE(table.Contains(1));
+}
+
+TYPED_TEST_P(BaseHashtableTest, WithEntryHandle_NotFound_OrInsert) {
+  auto table = MakeEmptyBaseHashtable<TypeParam>();
+
+  table.WithEntryHandle(1, [](auto&& entry) {
+    entry.OrInsert(typename TypeParam::UserDataType(
+        MakeRefPtr<TestUniCharRefCounted>(42)));
+  });
+
+  EXPECT_TRUE(table.Contains(1));
+}
+
+TYPED_TEST_P(BaseHashtableTest, WithEntryHandle_NotFound_OrInsertFrom) {
+  auto table = MakeEmptyBaseHashtable<TypeParam>();
+
+  table.WithEntryHandle(1, [](auto&& entry) {
+    entry.OrInsertWith([] {
+      return typename TypeParam::UserDataType(
+          MakeRefPtr<TestUniCharRefCounted>(42));
+    });
+  });
+
+  EXPECT_TRUE(table.Contains(1));
+}
+
+TYPED_TEST_P(BaseHashtableTest, WithEntryHandle_NotFound_OrInsertFrom_Exists) {
+  auto table = MakeEmptyBaseHashtable<TypeParam>();
+
+  table.WithEntryHandle(1, [](auto&& entry) {
+    entry.OrInsertWith([] {
+      return typename TypeParam::UserDataType(
+          MakeRefPtr<TestUniCharRefCounted>(42));
+    });
+  });
+  table.WithEntryHandle(1, [](auto&& entry) {
+    entry.OrInsertWith([]() -> typename TypeParam::UserDataType {
+      ADD_FAILURE();
+      return typename TypeParam::UserDataType(
+          MakeRefPtr<TestUniCharRefCounted>(42));
+    });
+  });
+
+  EXPECT_TRUE(table.Contains(1));
+}
+
+TYPED_TEST_P(BaseHashtableTest, WithEntryHandle_NotFound_OrRemove) {
+  auto table = MakeEmptyBaseHashtable<TypeParam>();
+
+  table.WithEntryHandle(1, [](auto&& entry) { entry.OrRemove(); });
+
+  EXPECT_FALSE(table.Contains(1));
+}
+
+TYPED_TEST_P(BaseHashtableTest, WithEntryHandle_NotFound_OrRemove_Exists) {
+  auto table = MakeEmptyBaseHashtable<TypeParam>();
+
+  table.WithEntryHandle(1, [](auto&& entry) {
+    entry.OrInsertWith([] {
+      return typename TypeParam::UserDataType(
+          MakeRefPtr<TestUniCharRefCounted>(42));
+    });
+  });
+  table.WithEntryHandle(1, [](auto&& entry) { entry.OrRemove(); });
+
+  EXPECT_FALSE(table.Contains(1));
+}
+
 TYPED_TEST_P(BaseHashtableTest, Iter) {
   auto table = MakeBaseHashtable<TypeParam>(TypeParam::kExpectedAddRefCnt_Iter);
 
@@ -924,8 +998,12 @@ REGISTER_TYPED_TEST_CASE_P(
     SizeOfIncludingThis, Count, IsEmpty, Get_OutputParam, Get, MaybeGet,
     GetOrInsert, Put, Put_Fallible, Put_Rvalue, Put_Rvalue_Fallible,
     Remove_OutputParam, Remove, GetAndRemove, RemoveIf, Lookup, Lookup_Remove,
-    LookupForAdd, LookupForAdd_OrInsert, LookupForAdd_OrRemove, Iter, ConstIter,
-    begin_end, cbegin_cend, Clear, ShallowSizeOfExcludingThis,
+    LookupForAdd, LookupForAdd_OrInsert, LookupForAdd_OrRemove,
+    WithEntryHandle_NoOp, WithEntryHandle_NotFound_OrInsert,
+    WithEntryHandle_NotFound_OrInsertFrom,
+    WithEntryHandle_NotFound_OrInsertFrom_Exists,
+    WithEntryHandle_NotFound_OrRemove, WithEntryHandle_NotFound_OrRemove_Exists,
+    Iter, ConstIter, begin_end, cbegin_cend, Clear, ShallowSizeOfExcludingThis,
     ShallowSizeOfIncludingThis, SwapElements, MarkImmutable);
 
 using BaseHashtableTestTypes =
@@ -991,8 +1069,8 @@ TEST(Hashtables, DataHashtable_STLIterators)
   ++ci;
   ASSERT_TRUE(&*ci == &*otherCi);
 
-  // STL algorithms (just to check that the iterator sufficiently conforms with
-  // the actual syntactical requirements of those algorithms).
+  // STL algorithms (just to check that the iterator sufficiently conforms
+  // with the actual syntactical requirements of those algorithms).
   std::for_each(UniToEntity.cbegin(), UniToEntity.cend(),
                 [](const auto& entry) {});
   Unused << std::find_if(
