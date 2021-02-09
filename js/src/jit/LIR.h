@@ -1429,13 +1429,13 @@ class LSafepoint : public TempObject {
   // List of slots which have gcthing pointers.
   SlotList gcSlots_;
 
-  // List of slots which have Values.
-  SlotList valueSlots_;
-
 #ifdef JS_NUNBOX32
   // List of registers (in liveRegs) and slots which contain pieces of Values.
   NunboxList nunboxParts_;
 #elif JS_PUNBOX64
+  // List of slots which have Values.
+  SlotList valueSlots_;
+
   // The subset of liveRegs which have Values.
   LiveGeneralRegisterSet valueRegs_;
 #endif
@@ -1478,12 +1478,11 @@ class LSafepoint : public TempObject {
       : safepointOffset_(INVALID_SAFEPOINT_OFFSET),
         osiCallPointOffset_(0),
         gcSlots_(alloc),
-        valueSlots_(alloc)
 #ifdef JS_NUNBOX32
-        ,
-        nunboxParts_(alloc)
+        nunboxParts_(alloc),
+#else
+        valueSlots_(alloc),
 #endif
-        ,
         slotsOrElementsSlots_(alloc),
         isWasmTrap_(false),
         framePushedAtStackMapBase_(0) {
@@ -1590,26 +1589,7 @@ class LSafepoint : public TempObject {
     return true;
   }
 
-  [[nodiscard]] bool addValueSlot(bool stack, uint32_t slot) {
-    bool result = valueSlots_.append(SlotEntry(stack, slot));
-    if (result) {
-      assertInvariants();
-    }
-    return result;
-  }
-  SlotList& valueSlots() { return valueSlots_; }
-
-  bool hasValueSlot(bool stack, uint32_t slot) const {
-    for (size_t i = 0; i < valueSlots_.length(); i++) {
-      if (valueSlots_[i].stack == stack && valueSlots_[i].slot == slot) {
-        return true;
-      }
-    }
-    return false;
-  }
-
 #ifdef JS_NUNBOX32
-
   [[nodiscard]] bool addNunboxParts(uint32_t typeVreg, LAllocation type,
                                     LAllocation payload) {
     bool result = nunboxParts_.append(NunboxEntry(typeVreg, type, payload));
@@ -1678,10 +1658,6 @@ class LSafepoint : public TempObject {
 
 #  ifdef DEBUG
   bool hasNunboxPayload(LAllocation payload) const {
-    if (payload.isMemory() &&
-        hasValueSlot(payload.isStackSlot(), payload.memorySlot())) {
-      return true;
-    }
     for (size_t i = 0; i < nunboxParts_.length(); i++) {
       if (nunboxParts_[i].payload == payload) {
         return true;
@@ -1694,6 +1670,23 @@ class LSafepoint : public TempObject {
   NunboxList& nunboxParts() { return nunboxParts_; }
 
 #elif JS_PUNBOX64
+  [[nodiscard]] bool addValueSlot(bool stack, uint32_t slot) {
+    bool result = valueSlots_.append(SlotEntry(stack, slot));
+    if (result) {
+      assertInvariants();
+    }
+    return result;
+  }
+  SlotList& valueSlots() { return valueSlots_; }
+
+  bool hasValueSlot(bool stack, uint32_t slot) const {
+    for (size_t i = 0; i < valueSlots_.length(); i++) {
+      if (valueSlots_[i].stack == stack && valueSlots_[i].slot == slot) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   void addValueRegister(Register reg) {
     valueRegs_.add(reg);
