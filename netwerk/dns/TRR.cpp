@@ -754,10 +754,19 @@ nsresult TRR::FollowCname(nsIChannel* aChannel) {
          cname.get()));
     nsClassHashtable<nsCStringHashKey, DOHresp> additionalRecords;
     rv = GetOrCreateDNSPacket()->Decode(
-        cname, mType, mCname, StaticPrefs::network_trr_allow_rfc1918(),
-        mTRRSkippedReason, mDNS, mResult, additionalRecords, mTTL);
+        cname, mType, mCname, StaticPrefs::network_trr_allow_rfc1918(), mDNS,
+        mResult, additionalRecords, mTTL);
     if (NS_FAILED(rv)) {
       LOG(("TRR::On200Response DohDecode %x\n", (int)rv));
+
+      auto rcode = mPacket->GetRCode();
+      if (rcode.isOk() && rcode.unwrap() != 0) {
+        RecordReason(nsHostRecord::TRR_RCODE_FAIL);
+      } else if (rv == NS_ERROR_UNKNOWN_HOST || rv == NS_ERROR_DEFINITIVE_UNKNOWN_HOST) {
+        RecordReason(nsHostRecord::TRR_NO_ANSWERS);
+      } else {
+        RecordReason(nsHostRecord::TRR_DECODE_FAILED);
+      }
     }
   }
 
@@ -787,12 +796,18 @@ nsresult TRR::On200Response(nsIChannel* aChannel) {
   // decode body and create an AddrInfo struct for the response
   nsClassHashtable<nsCStringHashKey, DOHresp> additionalRecords;
   nsresult rv = GetOrCreateDNSPacket()->Decode(
-      mHost, mType, mCname, StaticPrefs::network_trr_allow_rfc1918(),
-      mTRRSkippedReason, mDNS, mResult, additionalRecords, mTTL);
-
+      mHost, mType, mCname, StaticPrefs::network_trr_allow_rfc1918(), mDNS,
+      mResult, additionalRecords, mTTL);
   if (NS_FAILED(rv)) {
     LOG(("TRR::On200Response DohDecode %x\n", (int)rv));
-    RecordReason(nsHostRecord::TRR_DECODE_FAILED);
+    auto rcode = mPacket->GetRCode();
+    if (rcode.isOk() && rcode.unwrap() != 0) {
+      RecordReason(nsHostRecord::TRR_RCODE_FAIL);
+    } else if (rv == NS_ERROR_UNKNOWN_HOST || rv == NS_ERROR_DEFINITIVE_UNKNOWN_HOST) {
+      RecordReason(nsHostRecord::TRR_NO_ANSWERS);
+    } else {
+      RecordReason(nsHostRecord::TRR_DECODE_FAILED);
+    }
     return rv;
   }
   SaveAdditionalRecords(additionalRecords);
