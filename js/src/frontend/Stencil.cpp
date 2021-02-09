@@ -83,6 +83,11 @@ bool ScopeContext::init(JSContext* cx, CompilationInput& input,
     if (!cachePrivateFieldsForEval(cx, input, effectiveScope, parserAtoms)) {
       return false;
     }
+  } else if (input.target ==
+             CompilationInput::CompilationTarget::Delazification) {
+    if (!cacheEnclosingNameLocationForDelazification(cx, input, parserAtoms)) {
+      return false;
+    }
   }
 
   return true;
@@ -366,65 +371,30 @@ bool ScopeContext::cachePrivateFieldsForEval(JSContext* cx,
   return true;
 }
 
-#ifdef DEBUG
-static bool NameIsOnEnvironment(Scope* scope, JSAtom* name) {
-  for (BindingIter bi(scope); bi; bi++) {
-    // If found, the name must already be on the environment or an import,
-    // or else there is a bug in the closed-over name analysis in the
-    // Parser.
-    if (bi.name() == name) {
-      BindingLocation::Kind kind = bi.location().kind();
+// Cache the set of bindings which could be accessed during a delazification.
+//
+// Walks the scope chain outwards, looking for bindings in environments or
+// import, and stores their associated locations in the
+// `enclosingNameLocationCache_`.
+//
+// The hops count in EnvironmentCoordinate is calculated from
+// `input.enclosingScope`, and `searchInDelazificationEnclosingScope` is
+// responsible for adding hops from the reference to the enclosing scope.
+//
+// The algorithm terminates when we determine the fallback location, which is
+// where the remaining names are directed (ie. `NameLocation::Dynamic` if one of
+// our enclosing scopes is a function with an extensible scope.)
+//
+// On debug build, this collects all bindings, and
+// `searchInDelazificationEnclosingScope` asserts that the queried name is
+// on environment or import.
+bool ScopeContext::cacheEnclosingNameLocationForDelazification(
+    JSContext* cx, CompilationInput& input, ParserAtomsTable& parserAtoms) {
+  enclosingNameLocationCache_.emplace();
 
-      if (bi.hasArgumentSlot()) {
-        JSScript* script = scope->as<FunctionScope>().script();
-        if (script->functionAllowsParameterRedeclaration()) {
-          // Check for duplicate positional formal parameters.
-          for (BindingIter bi2(bi); bi2 && bi2.hasArgumentSlot(); bi2++) {
-            if (bi2.name() == name) {
-              kind = bi2.location().kind();
-            }
-          }
-        }
-      }
-
-      return kind == BindingLocation::Kind::Global ||
-             kind == BindingLocation::Kind::Environment ||
-             kind == BindingLocation::Kind::Import;
-    }
-  }
-
-  // If not found, assume it's on the global or dynamically accessed.
-  return true;
-}
-#endif
-
-/* static */
-NameLocation ScopeContext::searchInDelazificationEnclosingScope(
-    JSContext* cx, CompilationInput& input, ParserAtomsTable& parserAtoms,
-    TaggedParserAtomIndex name, uint8_t hops) {
-  MOZ_ASSERT(input.target ==
-             CompilationInput::CompilationTarget::Delazification);
-
-  // TODO-Stencil
-  //   Here, we convert our name into a JSAtom*, and hard-crash on failure
-  //   to allocate.  This conversion should not be required as we should be
-  //   able to iterate up snapshotted scope chains that use parser atoms.
-  //
-  //   This will be fixed when the enclosing scopes are snapshotted.
-  //
-  //   See bug 1690277.
-  JSAtom* jsname = nullptr;
-  {
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    jsname = parserAtoms.toJSAtom(cx, name, input.atomCache);
-    if (!jsname) {
-      oomUnsafe.crash("EmitterScope::searchAndCache");
-    }
-  }
+  uint8_t hops = 0;
 
   for (ScopeIter si(input.enclosingScope); si; si++) {
-    MOZ_ASSERT(NameIsOnEnvironment(si.scope(), jsname));
-
     bool hasEnv = si.hasSyntacticEnvironment();
 
     switch (si.kind()) {
@@ -432,28 +402,44 @@ NameLocation ScopeContext::searchInDelazificationEnclosingScope(
         if (hasEnv) {
           JSScript* script = si.scope()->as<FunctionScope>().script();
           if (script->funHasExtensibleScope()) {
-            return NameLocation::Dynamic();
+            fallbackNameLocation_ = NameLocation::Dynamic();
+            return true;
           }
 
           for (BindingIter bi(si.scope()); bi; bi++) {
-            if (bi.name() != jsname) {
-              continue;
-            }
-
             BindingLocation bindLoc = bi.location();
             if (bi.hasArgumentSlot() &&
                 script->functionAllowsParameterRedeclaration()) {
               // Check for duplicate positional formal parameters.
               for (BindingIter bi2(bi); bi2 && bi2.hasArgumentSlot(); bi2++) {
-                if (bi2.name() == jsname) {
+                if (bi2.name() == bi.name()) {
                   bindLoc = bi2.location();
                 }
               }
             }
 
-            MOZ_ASSERT(bindLoc.kind() == BindingLocation::Kind::Environment);
-            return NameLocation::EnvironmentCoordinate(bi.kind(), hops,
-                                                       bindLoc.slot());
+            if (bindLoc.kind() != BindingLocation::Kind::Environment) {
+#ifdef DEBUG
+              // For debugging purpose, store the name location in the map.
+              // See the assertion in searchInDelazificationEnclosingScope.
+              auto loc = NameLocation::fromBinding(bi.kind(), bindLoc);
+              MOZ_ASSERT(loc.kind() !=
+                             NameLocation::Kind::EnvironmentCoordinate &&
+                         loc.kind() != NameLocation::Kind::Import);
+              if (!addToEnclosingNameLocationCache(cx, input, parserAtoms,
+                                                   bi.name(), loc)) {
+                return false;
+              }
+#endif
+              continue;
+            }
+
+            if (!addToEnclosingNameLocationCache(
+                    cx, input, parserAtoms, bi.name(),
+                    NameLocation::EnvironmentCoordinate(bi.kind(), hops,
+                                                        bindLoc.slot()))) {
+              return false;
+            }
           }
         }
         break;
@@ -468,17 +454,27 @@ NameLocation ScopeContext::searchInDelazificationEnclosingScope(
       case ScopeKind::ClassBody:
         if (hasEnv) {
           for (BindingIter bi(si.scope()); bi; bi++) {
-            if (bi.name() != jsname) {
+            BindingLocation bindLoc = bi.location();
+            if (bindLoc.kind() != BindingLocation::Kind::Environment) {
+#ifdef DEBUG
+              auto loc = NameLocation::fromBinding(bi.kind(), bindLoc);
+              MOZ_ASSERT(loc.kind() !=
+                             NameLocation::Kind::EnvironmentCoordinate &&
+                         loc.kind() != NameLocation::Kind::Import);
+              if (!addToEnclosingNameLocationCache(cx, input, parserAtoms,
+                                                   bi.name(), loc)) {
+                return false;
+              }
+#endif
               continue;
             }
 
-            // The name must already have been marked as closed
-            // over. If this assertion is hit, there is a bug in the
-            // name analysis.
-            BindingLocation bindLoc = bi.location();
-            MOZ_ASSERT(bindLoc.kind() == BindingLocation::Kind::Environment);
-            return NameLocation::EnvironmentCoordinate(bi.kind(), hops,
-                                                       bindLoc.slot());
+            if (!addToEnclosingNameLocationCache(
+                    cx, input, parserAtoms, bi.name(),
+                    NameLocation::EnvironmentCoordinate(bi.kind(), hops,
+                                                        bindLoc.slot()))) {
+              return false;
+            }
           }
         }
         break;
@@ -489,23 +485,40 @@ NameLocation ScopeContext::searchInDelazificationEnclosingScope(
         // Initial compilation of module doesn't have enlcosing scope.
         if (hasEnv) {
           for (BindingIter bi(si.scope()); bi; bi++) {
-            if (bi.name() != jsname) {
-              continue;
-            }
-
             BindingLocation bindLoc = bi.location();
 
             // Imports are on the environment but are indirect
             // bindings and must be accessed dynamically instead of
             // using an EnvironmentCoordinate.
             if (bindLoc.kind() == BindingLocation::Kind::Import) {
-              MOZ_ASSERT(si.kind() == ScopeKind::Module);
-              return NameLocation::Import();
+              if (!addToEnclosingNameLocationCache(cx, input, parserAtoms,
+                                                   bi.name(),
+                                                   NameLocation::Import())) {
+                return false;
+              }
+              continue;
             }
 
-            MOZ_ASSERT(bindLoc.kind() == BindingLocation::Kind::Environment);
-            return NameLocation::EnvironmentCoordinate(bi.kind(), hops,
-                                                       bindLoc.slot());
+            if (bindLoc.kind() != BindingLocation::Kind::Environment) {
+#ifdef DEBUG
+              auto loc = NameLocation::fromBinding(bi.kind(), bindLoc);
+              MOZ_ASSERT(loc.kind() !=
+                             NameLocation::Kind::EnvironmentCoordinate &&
+                         loc.kind() != NameLocation::Kind::Import);
+              if (!addToEnclosingNameLocationCache(cx, input, parserAtoms,
+                                                   bi.name(), loc)) {
+                return false;
+              }
+#endif
+              continue;
+            }
+
+            if (!addToEnclosingNameLocationCache(
+                    cx, input, parserAtoms, bi.name(),
+                    NameLocation::EnvironmentCoordinate(bi.kind(), hops,
+                                                        bindLoc.slot()))) {
+              return false;
+            }
           }
         }
         break;
@@ -516,20 +529,24 @@ NameLocation ScopeContext::searchInDelazificationEnclosingScope(
         // environment and its immediate enclosing scope is a global
         // scope, all accesses are global.
         if (!hasEnv && si.scope()->enclosing()->is<GlobalScope>()) {
-          return NameLocation::Global(BindingKind::Var);
+          fallbackNameLocation_ = NameLocation::Global(BindingKind::Var);
+          return true;
         }
-        return NameLocation::Dynamic();
+        fallbackNameLocation_ = NameLocation::Dynamic();
+        return true;
 
       case ScopeKind::Global:
-        return NameLocation::Global(BindingKind::Var);
+        fallbackNameLocation_ = NameLocation::Global(BindingKind::Var);
+        return true;
 
       case ScopeKind::With:
       case ScopeKind::NonSyntactic:
-        return NameLocation::Dynamic();
+        fallbackNameLocation_ = NameLocation::Dynamic();
+        return true;
 
       case ScopeKind::WasmInstance:
       case ScopeKind::WasmFunction:
-        MOZ_CRASH("No direct eval inside wasm functions");
+        MOZ_CRASH("No delazification inside wasm functions");
     }
 
     if (hasEnv) {
@@ -538,7 +555,59 @@ NameLocation ScopeContext::searchInDelazificationEnclosingScope(
     }
   }
 
-  MOZ_CRASH("Malformed scope chain");
+  MOZ_CRASH("Fallback location isn't found");
+  return false;
+}
+
+bool ScopeContext::addToEnclosingNameLocationCache(
+    JSContext* cx, CompilationInput& input, ParserAtomsTable& parserAtoms,
+    JSAtom* name, NameLocation loc) {
+  auto parserName = parserAtoms.internJSAtom(cx, input.atomCache, name);
+  if (!parserName) {
+    return false;
+  }
+
+  // Inner most scope's name should be closed over.
+  //
+  // cacheEnclosingNameLocationForDelazification iterates from inner scope, and
+  // inner-most name is added to the map first.
+  //
+  // Do not overwrite the value with outer name.
+  //
+  // On debug build, all other names are stored into the cache, and even if
+  // there's on-environment name in outer scope, the outer name's location
+  // isn't stored into the cache, and if the name is queried by
+  // searchInDelazificationEnclosingScope, it will hit the assertion there.
+  auto p = enclosingNameLocationCache_->lookupForAdd(parserName);
+  if (!p) {
+    if (!enclosingNameLocationCache_->add(p, parserName, loc)) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+  }
+
+  return true;
+}
+
+NameLocation ScopeContext::searchInDelazificationEnclosingScope(
+    TaggedParserAtomIndex name, uint8_t hops) {
+  auto p = enclosingNameLocationCache_->lookup(name);
+  if (!p) {
+    return fallbackNameLocation_;
+  }
+
+  NameLocation& loc = p->value();
+
+  // The name must already have been marked as closed over and it should be on
+  // environment, or it should be import.
+  // If this assertion is hit, there is a bug in the name analysis.
+  MOZ_ASSERT(loc.kind() == NameLocation::Kind::EnvironmentCoordinate ||
+             loc.kind() == NameLocation::Kind::Import);
+
+  if (loc.kind() == NameLocation::Kind::EnvironmentCoordinate) {
+    return loc.addHops(hops);
+  }
+  return loc;
 }
 
 mozilla::Maybe<ScopeContext::EnclosingLexicalBindingKind>
