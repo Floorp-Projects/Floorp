@@ -752,10 +752,6 @@ bool InvokeFunction(JSContext* cx, HandleObject obj, bool constructing,
   return Call(cx, fval, thisv, args, rval);
 }
 
-void* GetContextSensitiveInterpreterStub() {
-  return TlsContext.get()->runtime()->jitRuntime()->interpreterStub().value;
-}
-
 bool InvokeFromInterpreterStub(JSContext* cx,
                                InterpreterStubExitFrameLayout* frame) {
   JitFrameLayout* jsFrame = frame->jsFrame();
