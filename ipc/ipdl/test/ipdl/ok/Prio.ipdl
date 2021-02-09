@@ -1,8 +1,8 @@
 async protocol Prio
 {
 child:
-  prio(normal) async NormalPrio();
-  prio(high) async HighPrio();
-  prio(input) async InputPrio();
-  prio(mediumhigh) async MediumHighPrio();
+  [Priority=normal] async NormalPrio();
+  [Priority=high] async HighPrio();
+  [Priority=input] async InputPrio();
+  [Priority=mediumhigh] async MediumHighPrio();
 };

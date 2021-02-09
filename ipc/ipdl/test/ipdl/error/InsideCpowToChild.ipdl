@@ -5,5 +5,5 @@
 
 protocol InsideCpowToChild {
 child:
-    nested(inside_cpow) sync Msg();
+    [Nested=inside_cpow] sync Msg();
 };

@@ -322,8 +322,6 @@ class MessageDecl(Node):
         self.name = None
         self.attributes = {}
         self.sendSemantics = ASYNC
-        self.nested = NOT_NESTED
-        self.prio = NORMAL_PRIORITY
         self.direction = None
         self.inParams = []
         self.outParams = []
@@ -333,6 +331,27 @@ class MessageDecl(Node):
 
     def addOutParams(self, outParamsList):
         self.outParams += outParamsList
+
+    def nested(self):
+        if "Nested" not in self.attributes:
+            return NOT_NESTED
+
+        return {
+            "not": NOT_NESTED,
+            "inside_sync": INSIDE_SYNC_NESTED,
+            "inside_cpow": INSIDE_CPOW_NESTED,
+        }[self.attributes["Nested"].value]
+
+    def priority(self):
+        if "Priority" not in self.attributes:
+            return NORMAL_PRIORITY
+
+        return {
+            "normal": NORMAL_PRIORITY,
+            "input": INPUT_PRIORITY,
+            "high": HIGH_PRIORITY,
+            "mediumhigh": MEDIUMHIGH_PRIORITY,
+        }[self.attributes["Priority"].value]
 
 
 class Param(Node):

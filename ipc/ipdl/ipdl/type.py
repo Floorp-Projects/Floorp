@@ -861,7 +861,7 @@ class GatherDecls(TcheckVisitor):
                         attr.loc,
                         "invalid value for attribute `%s', expected one of: %s",
                         attr.name,
-                        ", ".join(aspec),
+                        ", ".join(str(s) for s in aspec),
                     )
             elif callable(aspec):
                 if not aspec(attr.value):
@@ -1242,8 +1242,16 @@ class GatherDecls(TcheckVisitor):
             {
                 "Tainted": None,
                 "Compress": (None, "all"),
+                "Priority": ("normal", "input", "high", "mediumhigh"),
+                "Nested": ("not", "inside_sync", "inside_cpow"),
             },
         )
+
+        if md.sendSemantics is INTR and "Priority" in md.attributes:
+            self.error(loc, "intr message `%s' cannot specify [Priority]", msgname)
+
+        if md.sendSemantics is INTR and "Nested" in md.attributes:
+            self.error(loc, "intr message `%s' cannot specify [Nested]", msgname)
 
         isctor = False
         isdtor = False
@@ -1272,8 +1280,8 @@ class GatherDecls(TcheckVisitor):
         self.symtab.enterScope()
 
         msgtype = MessageType(
-            md.nested,
-            md.prio,
+            md.nested(),
+            md.priority(),
             md.sendSemantics,
             md.direction,
             ctor=isctor,

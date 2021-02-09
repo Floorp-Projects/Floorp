@@ -23,42 +23,42 @@ nested(upto inside_sync) sync protocol PDocAccessiblePlatformExt {
 child:
   async __delete__();
 
-  nested(inside_sync) sync RangeAt(uint64_t aID, int32_t aOffset, EWhichRange aRangeType)
+  [Nested=inside_sync] sync RangeAt(uint64_t aID, int32_t aOffset, EWhichRange aRangeType)
       returns(uint64_t aStartContainer, int32_t aStartOffset,
               uint64_t aEndContainer, int32_t aEndOffset);
 
-  nested(inside_sync) sync NextClusterAt(uint64_t aID, int32_t aOffset)
+  [Nested=inside_sync] sync NextClusterAt(uint64_t aID, int32_t aOffset)
       returns(uint64_t aNextContainer, int32_t aNextOffset);
 
-  nested(inside_sync) sync PreviousClusterAt(uint64_t aID, int32_t aOffset)
+  [Nested=inside_sync] sync PreviousClusterAt(uint64_t aID, int32_t aOffset)
       returns(uint64_t aNextContainer, int32_t aNextOffset);
 
-  nested(inside_sync) sync TextForRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset)
+  [Nested=inside_sync] sync TextForRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset)
       returns(nsString aText);
 
-  nested(inside_sync) sync BoundsForRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset)
+  [Nested=inside_sync] sync BoundsForRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset)
       returns(nsIntRect aRetVal);
 
-  nested(inside_sync) sync LengthForRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset)
+  [Nested=inside_sync] sync LengthForRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset)
       returns(int32_t aLength);
 
-  nested(inside_sync) sync OffsetAtIndex(uint64_t aID, int32_t aIndex)
+  [Nested=inside_sync] sync OffsetAtIndex(uint64_t aID, int32_t aIndex)
       returns(uint64_t aContainer, int32_t aOffset);
 
-  nested(inside_sync) sync RangeOfChild(uint64_t aID, uint64_t aChild)
+  [Nested=inside_sync] sync RangeOfChild(uint64_t aID, uint64_t aChild)
       returns(int32_t aStartOffset, int32_t aEndOffset);
 
-  nested(inside_sync) sync LeafAtOffset(uint64_t aID, int32_t aOffset)
+  [Nested=inside_sync] sync LeafAtOffset(uint64_t aID, int32_t aOffset)
       returns(uint64_t aLeaf);
 
-  nested(inside_sync) sync AttributedTextForRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset)
+  [Nested=inside_sync] sync AttributedTextForRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset)
       returns(TextAttributesRun[] aAttributedText);
 
   async SelectRange(uint64_t aID, int32_t aStartOffset, uint64_t aEndContainer, int32_t aEndOffset);
 
   // A filter that can be applied to search predicate results.
-  nested(inside_sync) sync ApplyPostSearchFilter(uint64_t[] aAccessibles, int32_t aLimit,
-                                             EWhichPostFilter aSearchKey, nsString aSearchText)
+  [Nested=inside_sync] sync ApplyPostSearchFilter(uint64_t[] aAccessibles, int32_t aLimit,
+                                                  EWhichPostFilter aSearchKey, nsString aSearchText)
       returns(uint64_t[] aMatches);
 
 };

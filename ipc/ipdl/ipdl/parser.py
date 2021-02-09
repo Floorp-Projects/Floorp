@@ -135,7 +135,6 @@ reserved = set(
         "nullable",
         "or",
         "parent",
-        "prio",
         "protocol",
         "refcounted",
         "returns",
@@ -494,12 +493,10 @@ def p_MessageDirectionLabel(p):
 
 
 def p_MessageDecl(p):
-    """MessageDecl : Attributes SendSemanticsQual MessageBody"""
+    """MessageDecl : Attributes SendSemantics MessageBody"""
     msg = p[3]
     msg.attributes = p[1]
-    msg.nested = p[2][0]
-    msg.prio = p[2][1]
-    msg.sendSemantics = p[2][2]
+    msg.sendSemantics = p[2]
 
     if Parser.current.direction is None:
         _error(msg.loc, "missing message direction")
@@ -582,54 +579,17 @@ def p_Nested(p):
     p[0] = {"nested": kinds[p[1]]}
 
 
-def p_Priority(p):
-    """Priority : ID"""
-    kinds = {"normal": 1, "input": 2, "high": 3, "mediumhigh": 4}
-    if p[1] not in kinds:
-        _error(
-            locFromTok(p, 1), "Expected normal, input, high or mediumhigh for prio()"
-        )
-
-    p[0] = {"prio": kinds[p[1]]}
-
-
-def p_SendQualifier(p):
-    """SendQualifier : NESTED '(' Nested ')'
-    | PRIO '(' Priority ')'"""
-    p[0] = p[3]
-
-
-def p_SendQualifierList(p):
-    """SendQualifierList : SendQualifier SendQualifierList
-    |"""
-    if len(p) > 1:
-        p[0] = p[1]
-        p[0].update(p[2])
-    else:
-        p[0] = {}
-
-
-def p_SendSemanticsQual(p):
-    """SendSemanticsQual : SendQualifierList ASYNC
-    | SendQualifierList SYNC
+def p_SendSemantics(p):
+    """SendSemantics : ASYNC
+    | SYNC
     | INTR"""
-    quals = {}
-    if len(p) == 3:
-        quals = p[1]
-        mtype = p[2]
+    if p[1] == "async":
+        p[0] = ASYNC
+    elif p[1] == "sync":
+        p[0] = SYNC
     else:
-        mtype = "intr"
-
-    if mtype == "async":
-        mtype = ASYNC
-    elif mtype == "sync":
-        mtype = SYNC
-    elif mtype == "intr":
-        mtype = INTR
-    else:
-        assert 0
-
-    p[0] = [quals.get("nested", NOT_NESTED), quals.get("prio", NORMAL_PRIORITY), mtype]
+        assert p[1] == "intr"
+        p[0] = INTR
 
 
 def p_OptionalProtocolSendSemanticsQual(p):
