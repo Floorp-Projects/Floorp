@@ -578,6 +578,11 @@ nsresult HTMLFormElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
             // to forget it and the form element will build a new one
             mPendingSubmission = nullptr;
           }
+          if (!aVisitor.mEvent->IsTrusted()) {
+            // Warning about the form submission is from untrusted event.
+            OwnerDoc()->WarnOnceAbout(
+                DeprecatedOperations::eFormSubmissionUntrustedEvent);
+          }
           DoSubmit(aVisitor.mDOMEvent);
           break;
         }
