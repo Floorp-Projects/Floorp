@@ -876,6 +876,28 @@ void LIRGenerator::visitAtomicTypedArrayElementBinop(
       useRegisterOrIndexConstant(ins->index(), ins->arrayType());
   const LAllocation value = useRegister(ins->value());
 
+  if (Scalar::isBigIntType(ins->arrayType())) {
+    // Wasm additionally pins the value register to `FetchOpVal64`, but it's
+    // unclear why this was deemed necessary.
+    LInt64Definition temp1 = tempInt64();
+    LInt64Definition temp2 = tempInt64Fixed(FetchOpTmp64);
+
+    if (!ins->hasUses()) {
+      auto* lir = new (alloc()) LAtomicTypedArrayElementBinopForEffect64(
+          elements, index, value, temp1, temp2);
+      add(lir, ins);
+      return;
+    }
+
+    LInt64Definition temp3 = tempInt64Fixed(FetchOpOut64);
+
+    auto* lir = new (alloc()) LAtomicTypedArrayElementBinop64(
+        elements, index, value, temp1, temp2, temp3);
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+    return;
+  }
+
   if (!ins->hasUses()) {
     LAtomicTypedArrayElementBinopForEffect* lir = new (alloc())
         LAtomicTypedArrayElementBinopForEffect(elements, index, value,

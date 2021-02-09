@@ -2026,6 +2026,10 @@ static void AtomicFetchOp(MacroAssembler& masm,
                           const Synchronization& sync, AtomicOp op,
                           const T& mem, Register value, Register temp,
                           Register output) {
+  MOZ_ASSERT(value != output);
+  MOZ_ASSERT(value != temp);
+  MOZ_ASSERT_IF(wantResult, output != temp);
+
   Label again;
 
   vixl::UseScratchRegisterScope temps(&masm);
@@ -2114,6 +2118,27 @@ void MacroAssembler::atomicFetchOp64(const Synchronization& sync, AtomicOp op,
                                      Register64 temp, Register64 output) {
   AtomicFetchOp<true>(*this, nullptr, Scalar::Int64, Width::_64, sync, op, mem,
                       value.reg, temp.reg, output.reg);
+}
+
+void MacroAssembler::atomicFetchOp64(const Synchronization& sync, AtomicOp op,
+                                     Register64 value, const BaseIndex& mem,
+                                     Register64 temp, Register64 output) {
+  AtomicFetchOp<true>(*this, nullptr, Scalar::Int64, Width::_64, sync, op, mem,
+                      value.reg, temp.reg, output.reg);
+}
+
+void MacroAssembler::atomicEffectOp64(const Synchronization& sync, AtomicOp op,
+                                      Register64 value, const Address& mem,
+                                      Register64 temp) {
+  AtomicFetchOp<false>(*this, nullptr, Scalar::Int64, Width::_64, sync, op, mem,
+                       value.reg, temp.reg, temp.reg);
+}
+
+void MacroAssembler::atomicEffectOp64(const Synchronization& sync, AtomicOp op,
+                                      Register64 value, const BaseIndex& mem,
+                                      Register64 temp) {
+  AtomicFetchOp<false>(*this, nullptr, Scalar::Int64, Width::_64, sync, op, mem,
+                       value.reg, temp.reg, temp.reg);
 }
 
 void MacroAssembler::wasmCompareExchange(const wasm::MemoryAccessDesc& access,

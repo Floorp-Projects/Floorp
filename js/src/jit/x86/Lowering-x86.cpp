@@ -263,6 +263,38 @@ void LIRGenerator::visitAtomicExchangeTypedArrayElement(
 
 void LIRGenerator::visitAtomicTypedArrayElementBinop(
     MAtomicTypedArrayElementBinop* ins) {
+  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
+  MOZ_ASSERT(ins->index()->type() == MIRType::IntPtr);
+
+  if (Scalar::isBigIntType(ins->arrayType())) {
+    LUse elements = useRegister(ins->elements());
+    LAllocation index =
+        useRegisterOrIndexConstant(ins->index(), ins->arrayType());
+    LAllocation value = useFixed(ins->value(), edx);
+    LInt64Definition temp = tempInt64Fixed(Register64(ecx, ebx));
+
+    // Case 1: the result of the operation is not used.
+    //
+    // We can omit allocating the result BigInt.
+
+    if (!ins->hasUses()) {
+      LDefinition tempLow = tempFixed(eax);
+
+      auto* lir = new (alloc()) LAtomicTypedArrayElementBinopForEffect64(
+          elements, index, value, temp, tempLow);
+      add(lir, ins);
+      return;
+    }
+
+    // Case 2: the result of the operation is used.
+
+    auto* lir = new (alloc())
+        LAtomicTypedArrayElementBinop64(elements, index, value, temp);
+    defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
+    assignSafepoint(lir, ins);
+    return;
+  }
+
   lowerAtomicTypedArrayElementBinop(ins, /* useI386ByteRegisters = */ true);
 }
 

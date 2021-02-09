@@ -1322,6 +1322,9 @@ static void AtomicFetchOp64(MacroAssembler& masm,
   } else {
     Label again;
     MOZ_ASSERT(output == rax);
+    MOZ_ASSERT(value != output);
+    MOZ_ASSERT(value != temp);
+    MOZ_ASSERT(temp != output);
     if (access) {
       masm.append(*access, masm.size());
     }
@@ -1360,29 +1363,38 @@ void MacroAssembler::wasmAtomicFetchOp64(const wasm::MemoryAccessDesc& access,
   AtomicFetchOp64(*this, &access, op, value.reg, mem, temp.reg, output.reg);
 }
 
-void MacroAssembler::wasmAtomicEffectOp64(const wasm::MemoryAccessDesc& access,
-                                          AtomicOp op, Register64 value,
-                                          const BaseIndex& mem) {
-  append(access, size());
+template <typename T>
+static void AtomicEffectOp64(MacroAssembler& masm,
+                             const wasm::MemoryAccessDesc* access, AtomicOp op,
+                             Register value, const T& mem) {
+  if (access) {
+    masm.append(*access, masm.size());
+  }
   switch (op) {
     case AtomicFetchAddOp:
-      lock_addq(value.reg, Operand(mem));
+      masm.lock_addq(value, Operand(mem));
       break;
     case AtomicFetchSubOp:
-      lock_subq(value.reg, Operand(mem));
+      masm.lock_subq(value, Operand(mem));
       break;
     case AtomicFetchAndOp:
-      lock_andq(value.reg, Operand(mem));
+      masm.lock_andq(value, Operand(mem));
       break;
     case AtomicFetchOrOp:
-      lock_orq(value.reg, Operand(mem));
+      masm.lock_orq(value, Operand(mem));
       break;
     case AtomicFetchXorOp:
-      lock_xorq(value.reg, Operand(mem));
+      masm.lock_xorq(value, Operand(mem));
       break;
     default:
       MOZ_CRASH();
   }
+}
+
+void MacroAssembler::wasmAtomicEffectOp64(const wasm::MemoryAccessDesc& access,
+                                          AtomicOp op, Register64 value,
+                                          const BaseIndex& mem) {
+  AtomicEffectOp64(*this, &access, op, value.reg, mem);
 }
 
 void MacroAssembler::compareExchange64(const Synchronization&,
@@ -1430,6 +1442,22 @@ void MacroAssembler::atomicFetchOp64(const Synchronization& sync, AtomicOp op,
                                      Register64 value, const Address& mem,
                                      Register64 temp, Register64 output) {
   AtomicFetchOp64(*this, nullptr, op, value.reg, mem, temp.reg, output.reg);
+}
+
+void MacroAssembler::atomicFetchOp64(const Synchronization& sync, AtomicOp op,
+                                     Register64 value, const BaseIndex& mem,
+                                     Register64 temp, Register64 output) {
+  AtomicFetchOp64(*this, nullptr, op, value.reg, mem, temp.reg, output.reg);
+}
+
+void MacroAssembler::atomicEffectOp64(const Synchronization& sync, AtomicOp op,
+                                      Register64 value, const Address& mem) {
+  AtomicEffectOp64(*this, nullptr, op, value.reg, mem);
+}
+
+void MacroAssembler::atomicEffectOp64(const Synchronization& sync, AtomicOp op,
+                                      Register64 value, const BaseIndex& mem) {
+  AtomicEffectOp64(*this, nullptr, op, value.reg, mem);
 }
 
 CodeOffset MacroAssembler::moveNearAddressWithPatch(Register dest) {
