@@ -367,6 +367,10 @@ scheme host and port.""")
     webkit_group.add_argument("--webkit-port", dest="webkit_port",
                               help="WebKit port")
 
+    safari_group = parser.add_argument_group("Safari-specific")
+    safari_group.add_argument("--kill-safari", dest="kill_safari", action="store_true", default=False,
+                              help="Kill Safari when stopping the browser")
+
     parser.add_argument("test_list", nargs="*",
                         help="List of URLs for tests to run, or paths including tests to run. "
                              "(equivalent to --include)")
