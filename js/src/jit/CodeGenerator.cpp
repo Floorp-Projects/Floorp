@@ -1235,42 +1235,48 @@ void CodeGenerator::visitFloat32ToIntegerInt32(LFloat32ToIntegerInt32* lir) {
 }
 
 void CodeGenerator::visitInt32ToIntPtr(LInt32ToIntPtr* lir) {
-  Register input = ToRegister(lir->input());
+#ifdef JS_64BIT
   Register output = ToRegister(lir->output());
 
-  // Zero-extension is more efficient than sign-extension, so use that if the
-  // input can't be negative.
-  if (lir->mir()->canBeNegative()) {
-    masm.move32SignExtendToPtr(input, output);
-  } else {
-#ifdef DEBUG
+  // This is a no-op if the input can't be negative. In debug builds assert
+  // (1) the upper 32 bits are zero and (2) the value <= INT32_MAX so that sign
+  // extension isn't needed.
+  if (!lir->mir()->canBeNegative()) {
+    MOZ_ASSERT(ToRegister(lir->input()) == output);
+#  ifdef DEBUG
     Label ok;
-    masm.branch32(Assembler::NotSigned, input, input, &ok);
-    masm.assumeUnreachable("LInt32ToIntPtr: Unexpected negative input");
+    masm.branchPtr(Assembler::BelowOrEqual, output, ImmWord(INT32_MAX), &ok);
+    masm.assumeUnreachable("LInt32ToIntPtr: unexpected range for value");
     masm.bind(&ok);
-#endif
-    masm.move32ZeroExtendToPtr(input, output);
+#  endif
+    return;
   }
+
+  Register input = ToRegister(lir->input());
+  masm.move32SignExtendToPtr(input, output);
+#else
+  MOZ_CRASH("Not used on 32-bit platforms");
+#endif
 }
 
 void CodeGenerator::visitNonNegativeIntPtrToInt32(
     LNonNegativeIntPtrToInt32* lir) {
+#ifdef JS_64BIT
   Register output = ToRegister(lir->output());
   MOZ_ASSERT(ToRegister(lir->input()) == output);
 
-#ifdef DEBUG
+#  ifdef DEBUG
   Label ok;
   masm.branchPtr(Assembler::NotSigned, output, output, &ok);
   masm.assumeUnreachable("Unexpected negative value");
   masm.bind(&ok);
-#endif
+#  endif
 
-#ifdef JS_64BIT
   Label bail;
   masm.branchPtr(Assembler::Above, output, Imm32(INT32_MAX), &bail);
   bailoutFrom(&bail, lir->snapshot());
 #else
-  mozilla::Unused << output;
+  MOZ_CRASH("Not used on 32-bit platforms");
 #endif
 }
 
