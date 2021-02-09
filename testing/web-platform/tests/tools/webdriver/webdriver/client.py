@@ -2,8 +2,7 @@ from . import error
 from . import protocol
 from . import transport
 
-from six import string_types
-from six.moves.urllib import parse as urlparse
+from urllib import parse as urlparse
 
 
 def command(func):
@@ -435,7 +434,7 @@ class Cookies(object):
         cookie = {"name": name,
                   "value": None}
 
-        if isinstance(name, string_types):
+        if isinstance(name, str):
             cookie["value"] = value
         elif hasattr(value, "value"):
             cookie["value"] = value.value
