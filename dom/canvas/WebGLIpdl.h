@@ -7,6 +7,8 @@
 #define WEBGLIPDL_H_
 
 #include "ipc/EnumSerializer.h"
+#include "mozilla/ipc/IPDLParamTraits.h"
+#include "mozilla/ipc/Shmem.h"
 #include "mozilla/layers/LayersSurfaces.h"
 #include "WebGLTypes.h"
 
@@ -24,7 +26,7 @@ class RaiiShmem final {
   /// Returns zeroed data.
   static RaiiShmem Alloc(mozilla::ipc::IProtocol* const allocator,
                          const size_t size,
-                         const Shmem::SharedMemory::SharedMemoryType type) {
+                         const mozilla::ipc::SharedMemory::SharedMemoryType type) {
     mozilla::ipc::Shmem shmem;
     if (!allocator->AllocShmem(size, type, &shmem)) return {};
     return {allocator, shmem};

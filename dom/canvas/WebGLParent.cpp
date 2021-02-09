@@ -6,7 +6,6 @@
 #include "WebGLParent.h"
 
 #include "WebGLChild.h"
-#include "mozilla/dom/WebGLCrossProcessCommandQueue.h"
 #include "mozilla/layers/LayerTransactionParent.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
 #include "ImageContainer.h"
@@ -17,19 +16,9 @@ namespace mozilla::dom {
 
 mozilla::ipc::IPCResult WebGLParent::RecvInitialize(
     const webgl::InitContextDesc& desc,
-    UniquePtr<HostWebGLCommandSinkP>&& aSinkP,
-    UniquePtr<HostWebGLCommandSinkI>&& aSinkI,
     webgl::InitContextResult* const out) {
-  auto remotingData = Some(HostWebGLContext::RemotingData{
-      *this, {},  // std::move(commandSink),
-  });
-
   mHost = HostWebGLContext::Create(
-      {
-          {},
-          std::move(remotingData),
-      },
-      desc, out);
+      {nullptr, this}, desc, out);
 
   if (!mHost && !out->error.size()) {
     return IPC_FAIL(this, "Abnormally failed to create HostWebGLContext.");

@@ -9,7 +9,6 @@
 #include <type_traits>
 
 #include "ipc/EnumSerializer.h"
-#include "mozilla/dom/ProducerConsumerQueue.h"
 #include "TexUnpackBlob.h"
 #include "WebGLContext.h"
 #include "WebGLTypes.h"

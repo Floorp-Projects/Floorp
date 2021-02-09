@@ -17,24 +17,13 @@
 #include "WebGLFramebuffer.h"
 #include "WebGLTypes.h"
 #include "WebGLCommandQueue.h"
-#include "WebGLCrossProcessCommandQueue.h"
-#include "ProducerConsumerQueue.h"
 #include "IpdlQueue.h"
 
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
-#ifndef WEBGL_BRIDGE_LOG_
-#  define WEBGL_BRIDGE_LOG_(lvl, ...) \
-    MOZ_LOG(mozilla::gWebGLBridgeLog, lvl, (__VA_ARGS__))
-#  define WEBGL_BRIDGE_LOGD(...) WEBGL_BRIDGE_LOG_(LogLevel::Debug, __VA_ARGS__)
-#  define WEBGL_BRIDGE_LOGE(...) WEBGL_BRIDGE_LOG_(LogLevel::Error, __VA_ARGS__)
-#endif  // WEBGL_BRIDGE_LOG_
-
 namespace mozilla {
-
-extern LazyLogModule gWebGLBridgeLog;
 
 namespace dom {
 class WebGLParent;
@@ -80,22 +69,17 @@ class HostWebGLContext final : public SupportsWeakPtr {
   }
 
  public:
-  struct RemotingData final {
-    dom::WebGLParent& mParent;
-    UniquePtr<HostWebGLCommandSinkP> mCommandSinkP;
-    UniquePtr<HostWebGLCommandSinkI> mCommandSinkI;
-  };
   struct OwnerData final {
-    Maybe<ClientWebGLContext*> inProcess;
-    Maybe<RemotingData> outOfProcess;
+    ClientWebGLContext* inProcess = nullptr;
+    dom::WebGLParent* outOfProcess = nullptr;
   };
 
-  static UniquePtr<HostWebGLContext> Create(OwnerData&&,
+  static UniquePtr<HostWebGLContext> Create(const OwnerData&,
                                             const webgl::InitContextDesc&,
                                             webgl::InitContextResult* out);
 
  private:
-  explicit HostWebGLContext(OwnerData&&);
+  explicit HostWebGLContext(const OwnerData&);
 
  public:
   virtual ~HostWebGLContext();
@@ -794,9 +778,6 @@ class HostWebGLContext final : public SupportsWeakPtr {
     MOZ_RELEASE_ASSERT(mContext->IsWebGL2(), "Requires WebGL2 context");
     return static_cast<WebGL2Context*>(mContext.get());
   }
-
-  // mozilla::ipc::Shmem PopShmem() { return mShmemStack.PopLastElement(); }
-  // nsTArray<mozilla::ipc::Shmem> mShmemStack;
 };
 
 }  // namespace mozilla
