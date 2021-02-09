@@ -581,14 +581,12 @@ class WellKnownParserAtoms_ROM {
     }
 
     // Initialize each well-known property atoms
-#define PROPERTYNAME_FIELD_(_, NAME, TEXT) \
-  init(NAME, NAME.storage(), u"" TEXT, WellKnownAtomId::NAME);
+#define PROPERTYNAME_FIELD_(_, NAME, TEXT) init(NAME, NAME.storage(), u"" TEXT);
     FOR_EACH_NONTINY_COMMON_PROPERTYNAME(PROPERTYNAME_FIELD_)
 #undef PROPERTYNAME_FIELD_
 
     // Initialize each well-known prototype atoms
-#define PROPERTYNAME_FIELD_(NAME, _) \
-  init(NAME, NAME.storage(), u"" #NAME, WellKnownAtomId::NAME);
+#define PROPERTYNAME_FIELD_(NAME, _) init(NAME, NAME.storage(), u"" #NAME);
     JS_FOR_EACH_PROTOTYPE(PROPERTYNAME_FIELD_)
 #undef PROPERTYNAME_FIELD_
   }
@@ -616,7 +614,7 @@ class WellKnownParserAtoms_ROM {
   }
 
   static constexpr void init(ParserAtom& entry, char* storage,
-                             const char16_t* text, WellKnownAtomId id) {
+                             const char16_t* text) {
     size_t len = Char16Traits::length(text);
     entry.setHashAndLength(mozilla::HashString(text), len);
     entry.setWellKnownOrStatic();
