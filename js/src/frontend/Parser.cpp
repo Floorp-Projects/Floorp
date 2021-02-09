@@ -4786,148 +4786,150 @@ GeneralParser<ParseHandler, Unit>::moduleExportName() {
 }
 
 template <typename Unit>
-bool Parser<FullParseHandler, Unit>::namedImportsOrNamespaceImport(
-    TokenKind tt, ListNodeType importSpecSet) {
-  if (tt == TokenKind::LeftCurly) {
-    while (true) {
-      // Handle the forms |import {} from 'a'| and
-      // |import { ..., } from 'a'| (where ... is non empty), by
-      // escaping the loop early if the next token is }.
-      if (!tokenStream.getToken(&tt)) {
-        return false;
-      }
-
-      if (tt == TokenKind::RightCurly) {
-        break;
-      }
-
-      TaggedParserAtomIndex importName;
-      NameNodeType importNameNode = null();
-      if (TokenKindIsPossibleIdentifierName(tt)) {
-        importName = anyChars.currentName();
-        importNameNode = newName(importName);
-      } else if (tt == TokenKind::String) {
-        importNameNode = moduleExportName();
-      } else {
-        error(JSMSG_NO_IMPORT_NAME);
-      }
-      if (!importNameNode) {
-        return false;
-      }
-
-      bool matched;
-      if (!tokenStream.matchToken(&matched, TokenKind::As)) {
-        return false;
-      }
-
-      if (matched) {
-        TokenKind afterAs;
-        if (!tokenStream.getToken(&afterAs)) {
-          return false;
-        }
-
-        if (!TokenKindIsPossibleIdentifierName(afterAs)) {
-          error(JSMSG_NO_BINDING_NAME);
-          return false;
-        }
-      } else {
-        // String export names can't refer to local bindings.
-        if (tt == TokenKind::String) {
-          error(JSMSG_AS_AFTER_STRING);
-          return false;
-        }
-
-        // Keywords cannot be bound to themselves, so an import name
-        // that is a keyword is a syntax error if it is not followed
-        // by the keyword 'as'.
-        // See the ImportSpecifier production in ES6 section 15.2.2.
-        MOZ_ASSERT(importName);
-        if (IsKeyword(importName)) {
-          error(JSMSG_AS_AFTER_RESERVED_WORD, ReservedWordToCharZ(importName));
-          return false;
-        }
-      }
-
-      TaggedParserAtomIndex bindingAtom = importedBinding();
-      if (!bindingAtom) {
-        return false;
-      }
-
-      NameNodeType bindingName = newName(bindingAtom);
-      if (!bindingName) {
-        return false;
-      }
-      if (!noteDeclaredName(bindingAtom, DeclarationKind::Import, pos())) {
-        return false;
-      }
-
-      BinaryNodeType importSpec =
-          handler_.newImportSpec(importNameNode, bindingName);
-      if (!importSpec) {
-        return false;
-      }
-
-      handler_.addList(importSpecSet, importSpec);
-
-      TokenKind next;
-      if (!tokenStream.getToken(&next)) {
-        return false;
-      }
-
-      if (next == TokenKind::RightCurly) {
-        break;
-      }
-
-      if (next != TokenKind::Comma) {
-        error(JSMSG_RC_AFTER_IMPORT_SPEC_LIST);
-        return false;
-      }
-    }
-  } else {
-    MOZ_ASSERT(tt == TokenKind::Mul);
-
-    if (!mustMatchToken(TokenKind::As, JSMSG_AS_AFTER_IMPORT_STAR)) {
+bool Parser<FullParseHandler, Unit>::namedImports(ListNodeType importSpecSet) {
+  while (true) {
+    // Handle the forms |import {} from 'a'| and
+    // |import { ..., } from 'a'| (where ... is non empty), by
+    // escaping the loop early if the next token is }.
+    TokenKind tt;
+    if (!tokenStream.getToken(&tt)) {
       return false;
     }
 
-    if (!mustMatchToken(TokenKindIsPossibleIdentifierName,
-                        JSMSG_NO_BINDING_NAME)) {
+    if (tt == TokenKind::RightCurly) {
+      break;
+    }
+
+    TaggedParserAtomIndex importName;
+    NameNodeType importNameNode = null();
+    if (TokenKindIsPossibleIdentifierName(tt)) {
+      importName = anyChars.currentName();
+      importNameNode = newName(importName);
+    } else if (tt == TokenKind::String) {
+      importNameNode = moduleExportName();
+    } else {
+      error(JSMSG_NO_IMPORT_NAME);
+    }
+    if (!importNameNode) {
       return false;
     }
 
-    NameNodeType importName = newName(TaggedParserAtomIndex::WellKnown::star());
-    if (!importName) {
+    bool matched;
+    if (!tokenStream.matchToken(&matched, TokenKind::As)) {
       return false;
     }
 
-    // Namespace imports are are not indirect bindings but lexical
-    // definitions that hold a module namespace object. They are treated
-    // as const variables which are initialized during the
-    // ModuleInstantiate step.
-    TaggedParserAtomIndex bindingName = importedBinding();
+    if (matched) {
+      TokenKind afterAs;
+      if (!tokenStream.getToken(&afterAs)) {
+        return false;
+      }
+
+      if (!TokenKindIsPossibleIdentifierName(afterAs)) {
+        error(JSMSG_NO_BINDING_NAME);
+        return false;
+      }
+    } else {
+      // String export names can't refer to local bindings.
+      if (tt == TokenKind::String) {
+        error(JSMSG_AS_AFTER_STRING);
+        return false;
+      }
+
+      // Keywords cannot be bound to themselves, so an import name
+      // that is a keyword is a syntax error if it is not followed
+      // by the keyword 'as'.
+      // See the ImportSpecifier production in ES6 section 15.2.2.
+      MOZ_ASSERT(importName);
+      if (IsKeyword(importName)) {
+        error(JSMSG_AS_AFTER_RESERVED_WORD, ReservedWordToCharZ(importName));
+        return false;
+      }
+    }
+
+    TaggedParserAtomIndex bindingAtom = importedBinding();
+    if (!bindingAtom) {
+      return false;
+    }
+
+    NameNodeType bindingName = newName(bindingAtom);
     if (!bindingName) {
       return false;
     }
-    NameNodeType bindingNameNode = newName(bindingName);
-    if (!bindingNameNode) {
+    if (!noteDeclaredName(bindingAtom, DeclarationKind::Import, pos())) {
       return false;
     }
-    if (!noteDeclaredName(bindingName, DeclarationKind::Const, pos())) {
-      return false;
-    }
-
-    // The namespace import name is currently required to live on the
-    // environment.
-    pc_->varScope().lookupDeclaredName(bindingName)->value()->setClosedOver();
 
     BinaryNodeType importSpec =
-        handler_.newImportSpec(importName, bindingNameNode);
+        handler_.newImportSpec(importNameNode, bindingName);
     if (!importSpec) {
       return false;
     }
 
     handler_.addList(importSpecSet, importSpec);
+
+    TokenKind next;
+    if (!tokenStream.getToken(&next)) {
+      return false;
+    }
+
+    if (next == TokenKind::RightCurly) {
+      break;
+    }
+
+    if (next != TokenKind::Comma) {
+      error(JSMSG_RC_AFTER_IMPORT_SPEC_LIST);
+      return false;
+    }
   }
+
+  return true;
+}
+
+template <typename Unit>
+bool Parser<FullParseHandler, Unit>::namespaceImport(
+    ListNodeType importSpecSet) {
+  if (!mustMatchToken(TokenKind::As, JSMSG_AS_AFTER_IMPORT_STAR)) {
+    return false;
+  }
+
+  if (!mustMatchToken(TokenKindIsPossibleIdentifierName,
+                      JSMSG_NO_BINDING_NAME)) {
+    return false;
+  }
+
+  NameNodeType importName = newName(TaggedParserAtomIndex::WellKnown::star());
+  if (!importName) {
+    return false;
+  }
+
+  // Namespace imports are are not indirect bindings but lexical
+  // definitions that hold a module namespace object. They are treated
+  // as const variables which are initialized during the
+  // ModuleInstantiate step.
+  TaggedParserAtomIndex bindingName = importedBinding();
+  if (!bindingName) {
+    return false;
+  }
+  NameNodeType bindingNameNode = newName(bindingName);
+  if (!bindingNameNode) {
+    return false;
+  }
+  if (!noteDeclaredName(bindingName, DeclarationKind::Const, pos())) {
+    return false;
+  }
+
+  // The namespace import name is currently required to live on the
+  // environment.
+  pc_->varScope().lookupDeclaredName(bindingName)->value()->setClosedOver();
+
+  BinaryNodeType importSpec =
+      handler_.newImportSpec(importName, bindingNameNode);
+  if (!importSpec) {
+    return false;
+  }
+
+  handler_.addList(importSpecSet, importSpec);
 
   return true;
 }
@@ -4958,8 +4960,12 @@ BinaryNode* Parser<FullParseHandler, Unit>::importDeclaration() {
     // equivalent to |import {} from 'a'|.
     importSpecSet->pn_pos.end = importSpecSet->pn_pos.begin;
   } else {
-    if (tt == TokenKind::LeftCurly || tt == TokenKind::Mul) {
-      if (!namedImportsOrNamespaceImport(tt, importSpecSet)) {
+    if (tt == TokenKind::LeftCurly) {
+      if (!namedImports(importSpecSet)) {
+        return null();
+      }
+    } else if (tt == TokenKind::Mul) {
+      if (!namespaceImport(importSpecSet)) {
         return null();
       }
     } else if (TokenKindIsPossibleIdentifierName(tt)) {
@@ -5005,12 +5011,16 @@ BinaryNode* Parser<FullParseHandler, Unit>::importDeclaration() {
           return null();
         }
 
-        if (tt != TokenKind::LeftCurly && tt != TokenKind::Mul) {
+        if (tt == TokenKind::LeftCurly) {
+          if (!namedImports(importSpecSet)) {
+            return null();
+          }
+        } else if (tt == TokenKind::Mul) {
+          if (!namespaceImport(importSpecSet)) {
+            return null();
+          }
+        } else {
           error(JSMSG_NAMED_IMPORTS_OR_NAMESPACE_IMPORT);
-          return null();
-        }
-
-        if (!namedImportsOrNamespaceImport(tt, importSpecSet)) {
           return null();
         }
       }
