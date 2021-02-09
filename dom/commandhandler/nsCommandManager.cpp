@@ -80,9 +80,9 @@ nsCommandManager::AddCommandObserver(nsIObserver* aCommandObserver,
   // XXX todo: handle special cases of aCommandToObserve being null, or empty
 
   // for each command in the table, we make a list of observers for that command
-  const auto& commandObservers =
-      mObserversTable.LookupForAdd(aCommandToObserve).OrInsert([]() {
-        return new ObserverList;
+  auto* const commandObservers =
+      mObserversTable.WithEntryHandle(aCommandToObserve, [](auto&& entry) {
+        return entry.OrInsertWith([] { return new ObserverList; }).get();
       });
 
   // need to check that this command observer hasn't already been registered
