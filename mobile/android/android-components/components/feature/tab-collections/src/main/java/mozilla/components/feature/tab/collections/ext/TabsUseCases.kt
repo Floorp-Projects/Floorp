@@ -18,7 +18,7 @@ operator fun TabsUseCases.RestoreUseCase.invoke(
     context: Context,
     engine: Engine,
     tab: Tab,
-    onTabRestored: () -> Unit,
+    onTabRestored: (String) -> Unit,
     onFailure: () -> Unit
 ) {
     val item = tab.restore(
@@ -32,8 +32,7 @@ operator fun TabsUseCases.RestoreUseCase.invoke(
         onFailure()
     } else {
         invoke(listOf(item), item.id)
-
-        onTabRestored()
+        onTabRestored(item.id)
     }
 }
 
