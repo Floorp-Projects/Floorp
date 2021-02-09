@@ -14,7 +14,6 @@
 #include "WebGL2Context.h"
 #include "WebGLBuffer.h"
 #include "WebGLContext.h"
-#include "WebGLCrossProcessCommandQueue.h"
 #include "WebGLFramebuffer.h"
 #include "WebGLMemoryTracker.h"
 #include "WebGLParent.h"
@@ -31,8 +30,6 @@
 #include "mozilla/StaticMutex.h"
 
 namespace mozilla {
-
-LazyLogModule gWebGLBridgeLog("webglbridge");
 
 // -
 
@@ -56,30 +53,19 @@ LockedOutstandingContexts::~LockedOutstandingContexts() {
 
 /*static*/
 UniquePtr<HostWebGLContext> HostWebGLContext::Create(
-    OwnerData&& ownerData, const webgl::InitContextDesc& desc,
+    const OwnerData& ownerData, const webgl::InitContextDesc& desc,
     webgl::InitContextResult* const out) {
-  auto host = WrapUnique(new HostWebGLContext(std::move(ownerData)));
+  auto host = WrapUnique(new HostWebGLContext(ownerData));
   auto webgl = WebGLContext::Create(*host, desc, out);
   if (!webgl) return nullptr;
   return host;
 }
 
-HostWebGLContext::HostWebGLContext(OwnerData&& ownerData)
-    : mOwnerData(std::move(ownerData)) {
-  if (mOwnerData.outOfProcess) {
-    if (mOwnerData.outOfProcess->mCommandSinkP) {
-      mOwnerData.outOfProcess->mCommandSinkP->mHostContext = this;
-    }
-    if (mOwnerData.outOfProcess->mCommandSinkI) {
-      mOwnerData.outOfProcess->mCommandSinkI->mHostContext = this;
-    }
-  }
-
-  {
-    StaticMutexAutoLock lock(sContextSetLock);
-    auto& contexts = DeferredStaticContextSet();
-    (void)contexts.insert(this);
-  }
+HostWebGLContext::HostWebGLContext(const OwnerData& ownerData)
+    : mOwnerData(ownerData) {
+  StaticMutexAutoLock lock(sContextSetLock);
+  auto& contexts = DeferredStaticContextSet();
+  (void)contexts.insert(this);
 }
 
 HostWebGLContext::~HostWebGLContext() {
@@ -92,18 +78,18 @@ HostWebGLContext::~HostWebGLContext() {
 
 void HostWebGLContext::OnContextLoss(const webgl::ContextLossReason reason) {
   if (mOwnerData.inProcess) {
-    (*mOwnerData.inProcess)->OnContextLoss(reason);
+    mOwnerData.inProcess->OnContextLoss(reason);
   } else {
-    (void)mOwnerData.outOfProcess->mParent.SendOnContextLoss(reason);
+    (void)mOwnerData.outOfProcess->SendOnContextLoss(reason);
   }
 }
 
 void HostWebGLContext::JsWarning(const std::string& text) const {
   if (mOwnerData.inProcess) {
-    (*mOwnerData.inProcess)->JsWarning(text);
+    mOwnerData.inProcess->JsWarning(text);
     return;
   }
-  (void)mOwnerData.outOfProcess->mParent.SendJsWarning(text);
+  (void)mOwnerData.outOfProcess->SendJsWarning(text);
 }
 
 Maybe<layers::SurfaceDescriptor> HostWebGLContext::GetFrontBuffer(

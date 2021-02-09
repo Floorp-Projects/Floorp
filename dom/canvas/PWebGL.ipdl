@@ -25,8 +25,6 @@ using mozilla::webgl::ShaderPrecisionFormat from "mozilla/dom/WebGLIpdl.h";
 using mozilla::webgl::OpaqueFramebufferOptions from "mozilla/dom/WebGLIpdl.h";
 using mozilla::webgl::ReadPixelsDesc from "mozilla/dom/WebGLIpdl.h";
 using mozilla::webgl::ReadPixelsResultIpc from "mozilla/dom/WebGLIpdl.h";
-using mozilla::HostWebGLCommandSinkP from "mozilla/dom/WebGLCrossProcessCommandQueue.h";
-using mozilla::HostWebGLCommandSinkI from "mozilla/dom/WebGLCrossProcessCommandQueue.h";
 using mozilla::dom::IpdlQueueBuffer from "mozilla/dom/IpdlQueue.h";
 using mozilla::dom::IpdlQueueBuffers from "mozilla/dom/IpdlQueue.h";
 
@@ -43,8 +41,7 @@ sync refcounted protocol PWebGL
   manager PCompositorBridge;
 
 parent:
-  sync Initialize(InitContextDesc desc, UniquePtr<HostWebGLCommandSinkP> sinkP,
-      UniquePtr<HostWebGLCommandSinkI> sinkI)
+  sync Initialize(InitContextDesc desc)
     returns (InitContextResult res);
 
   async __delete__();
