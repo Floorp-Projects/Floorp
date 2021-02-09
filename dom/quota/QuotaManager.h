@@ -61,13 +61,15 @@ class PrincipalInfo;
 namespace mozilla::dom::quota {
 
 class ClientUsageArray;
-class DirectoryLock;
+class ClientDirectoryLock;
 class DirectoryLockImpl;
 class GroupInfo;
 class GroupInfoPair;
+class OriginDirectoryLock;
 class OriginInfo;
 class OriginScope;
 class QuotaObject;
+class UniversalDirectoryLock;
 
 class QuotaManager final : public BackgroundThreadObject {
   friend class DirectoryLockImpl;
@@ -253,19 +255,20 @@ class QuotaManager final : public BackgroundThreadObject {
   // Unlocking is simply done by dropping all references to the lock object.
   // In other words, protection which the lock represents dies with the lock
   // object itself.
-  RefPtr<DirectoryLock> CreateDirectoryLock(
+  RefPtr<ClientDirectoryLock> CreateDirectoryLock(
       PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
       Client::Type aClientType, bool aExclusive);
 
   // XXX RemoveMe once bug 1170279 gets fixed.
-  RefPtr<DirectoryLock> CreateDirectoryLockInternal(
+  RefPtr<UniversalDirectoryLock> CreateDirectoryLockInternal(
       const Nullable<PersistenceType>& aPersistenceType,
       const OriginScope& aOriginScope,
       const Nullable<Client::Type>& aClientType, bool aExclusive);
 
   // Collect inactive and the least recently used origins.
   uint64_t CollectOriginsForEviction(
-      uint64_t aMinSizeToBeFreed, nsTArray<RefPtr<DirectoryLockImpl>>& aLocks);
+      uint64_t aMinSizeToBeFreed,
+      nsTArray<RefPtr<OriginDirectoryLock>>& aLocks);
 
   /**
    * Helper method to invoke the provided predicate on all "pending" OriginInfo
@@ -433,7 +436,8 @@ class QuotaManager final : public BackgroundThreadObject {
   void RemovePendingDirectoryLock(DirectoryLockImpl& aLock);
 
   uint64_t LockedCollectOriginsForEviction(
-      uint64_t aMinSizeToBeFreed, nsTArray<RefPtr<DirectoryLockImpl>>& aLocks);
+      uint64_t aMinSizeToBeFreed,
+      nsTArray<RefPtr<OriginDirectoryLock>>& aLocks);
 
   void LockedRemoveQuotaForOrigin(PersistenceType aPersistenceType,
                                   const GroupAndOrigin& aGroupAndOrigin);
@@ -519,7 +523,7 @@ class QuotaManager final : public BackgroundThreadObject {
   void DeleteFilesForOrigin(PersistenceType aPersistenceType,
                             const nsACString& aOrigin);
 
-  void FinalizeOriginEviction(nsTArray<RefPtr<DirectoryLockImpl>>&& aLocks);
+  void FinalizeOriginEviction(nsTArray<RefPtr<OriginDirectoryLock>>&& aLocks);
 
   void ReleaseIOThreadObjects() {
     AssertIsOnIOThread();
