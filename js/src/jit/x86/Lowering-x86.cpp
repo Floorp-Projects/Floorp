@@ -277,7 +277,7 @@ void LIRGenerator::visitAtomicTypedArrayElementBinop(
     //
     // We can omit allocating the result BigInt.
 
-    if (!ins->hasUses()) {
+    if (ins->isForEffect()) {
       LDefinition tempLow = tempFixed(eax);
 
       auto* lir = new (alloc()) LAtomicTypedArrayElementBinopForEffect64(

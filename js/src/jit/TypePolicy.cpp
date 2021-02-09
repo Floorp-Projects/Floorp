@@ -471,10 +471,20 @@ template bool ConvertToInt32Policy<0>::staticAdjustInputs(TempAllocator& alloc,
 template <unsigned Op>
 bool TruncateToInt32OrToBigIntPolicy<Op>::staticAdjustInputs(
     TempAllocator& alloc, MInstruction* def) {
-  MIRType type = def->type();
-  MOZ_ASSERT(IsNumericType(type));
+  MOZ_ASSERT(def->isCompareExchangeTypedArrayElement() ||
+             def->isAtomicExchangeTypedArrayElement() ||
+             def->isAtomicTypedArrayElementBinop());
 
-  if (type == MIRType::BigInt) {
+  Scalar::Type type;
+  if (def->isCompareExchangeTypedArrayElement()) {
+    type = def->toCompareExchangeTypedArrayElement()->arrayType();
+  } else if (def->isAtomicExchangeTypedArrayElement()) {
+    type = def->toAtomicExchangeTypedArrayElement()->arrayType();
+  } else {
+    type = def->toAtomicTypedArrayElementBinop()->arrayType();
+  }
+
+  if (Scalar::isBigIntType(type)) {
     return ConvertOperand<MToBigInt>(alloc, def, Op, MIRType::BigInt);
   }
   return ConvertOperand<MTruncateToInt32>(alloc, def, Op, MIRType::Int32);

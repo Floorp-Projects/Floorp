@@ -1643,7 +1643,7 @@ void CodeGenerator::visitAtomicExchangeTypedArrayElement(
 
 void CodeGenerator::visitAtomicTypedArrayElementBinop(
     LAtomicTypedArrayElementBinop* lir) {
-  MOZ_ASSERT(lir->mir()->hasUses());
+  MOZ_ASSERT(!lir->mir()->isForEffect());
 
   AnyRegister output = ToAnyRegister(lir->output());
   Register elements = ToRegister(lir->elements());
@@ -1670,7 +1670,7 @@ void CodeGenerator::visitAtomicTypedArrayElementBinop(
 
 void CodeGenerator::visitAtomicTypedArrayElementBinopForEffect(
     LAtomicTypedArrayElementBinopForEffect* lir) {
-  MOZ_ASSERT(!lir->mir()->hasUses());
+  MOZ_ASSERT(lir->mir()->isForEffect());
 
   Register elements = ToRegister(lir->elements());
   Register flagTemp = ToRegister(lir->flagTemp());
@@ -1786,7 +1786,7 @@ void CodeGenerator::visitAtomicExchangeTypedArrayElement64(
 
 void CodeGenerator::visitAtomicTypedArrayElementBinop64(
     LAtomicTypedArrayElementBinop64* lir) {
-  MOZ_ASSERT(lir->mir()->hasUses());
+  MOZ_ASSERT(!lir->mir()->isForEffect());
 
   Register elements = ToRegister(lir->elements());
   Register value = ToRegister(lir->value());
@@ -1816,7 +1816,7 @@ void CodeGenerator::visitAtomicTypedArrayElementBinop64(
 
 void CodeGenerator::visitAtomicTypedArrayElementBinopForEffect64(
     LAtomicTypedArrayElementBinopForEffect64* lir) {
-  MOZ_ASSERT(!lir->mir()->hasUses());
+  MOZ_ASSERT(lir->mir()->isForEffect());
 
   Register elements = ToRegister(lir->elements());
   Register value = ToRegister(lir->value());
