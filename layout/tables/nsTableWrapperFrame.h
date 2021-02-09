@@ -179,12 +179,6 @@ class nsTableWrapperFrame : public nsContainerFrame {
     return map->GetEffectiveRowSpan(aRowIdx, aColIdx);
   }
 
-  /**
-   * The CB size to use for the inner table frame if we're a grid item.
-   */
-  NS_DECLARE_FRAME_PROPERTY_DELETABLE(GridItemCBSizeProperty,
-                                      mozilla::LogicalSize);
-
  protected:
   explicit nsTableWrapperFrame(ComputedStyle* aStyle,
                                nsPresContext* aPresContext,
@@ -235,11 +229,12 @@ class nsTableWrapperFrame : public nsContainerFrame {
 
   // Create and init the child reflow input, using passed-in aChildRI, so that
   // caller can use it after we return.
-  void CreateReflowInputForInnerTable(nsPresContext* aPresContext,
-                                      nsTableFrame* aTableFrame,
-                                      const ReflowInput& aOuterRI,
-                                      Maybe<ReflowInput>& aChildRI,
-                                      const nscoord aAvailISize) const;
+  void CreateReflowInputForInnerTable(
+      nsPresContext* aPresContext, nsTableFrame* aTableFrame,
+      const ReflowInput& aOuterRI, Maybe<ReflowInput>& aChildRI,
+      const nscoord aAvailISize,
+      const mozilla::Maybe<mozilla::LogicalSize>& aContainingBlockSize =
+          mozilla::Nothing()) const;
   void CreateReflowInputForCaption(nsPresContext* aPresContext,
                                    nsIFrame* aCaptionFrame,
                                    const ReflowInput& aOuterRI,
