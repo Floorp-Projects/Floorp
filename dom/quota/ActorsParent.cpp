@@ -719,6 +719,8 @@ Result<mozilla::Ok, nsresult> CollectEachFileEntry(
 
 }  // namespace
 
+enum class ShouldUpdateLockIdTableFlag { No, Yes };
+
 class DirectoryLockImpl final : public DirectoryLock {
   const NotNull<RefPtr<QuotaManager>> mQuotaManager;
 
@@ -748,13 +750,51 @@ class DirectoryLockImpl final : public DirectoryLock {
   FlippedOnce<false> mInvalidated;
 
  public:
-  DirectoryLockImpl(
-      MovingNotNull<RefPtr<QuotaManager>> aQuotaManager, const int64_t aId,
+  DirectoryLockImpl(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
+                    const Nullable<PersistenceType>& aPersistenceType,
+                    const nsACString& aGroup, const OriginScope& aOriginScope,
+                    const Nullable<Client::Type>& aClientType, bool aExclusive,
+                    bool aInternal,
+                    ShouldUpdateLockIdTableFlag aShouldUpdateLockIdTableFlag);
+
+  static RefPtr<DirectoryLockImpl> Create(
+      MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
+      PersistenceType aPersistenceType,
+      const quota::GroupAndOrigin& aGroupAndOrigin, Client::Type aClientType,
+      bool aExclusive) {
+    return Create(std::move(aQuotaManager),
+                  Nullable<PersistenceType>(aPersistenceType),
+                  aGroupAndOrigin.mGroup,
+                  OriginScope::FromOrigin(aGroupAndOrigin.mOrigin),
+                  Nullable<Client::Type>(aClientType), aExclusive, false,
+                  ShouldUpdateLockIdTableFlag::Yes);
+  }
+
+  static RefPtr<DirectoryLockImpl> CreateForEviction(
+      MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
+      PersistenceType aPersistenceType,
+      const quota::GroupAndOrigin& aGroupAndOrigin) {
+    MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_INVALID);
+    MOZ_ASSERT(!aGroupAndOrigin.mOrigin.IsEmpty());
+
+    return Create(std::move(aQuotaManager),
+                  Nullable<PersistenceType>(aPersistenceType),
+                  aGroupAndOrigin.mGroup,
+                  OriginScope::FromOrigin(aGroupAndOrigin.mOrigin),
+                  Nullable<Client::Type>(),
+                  /* aExclusive */ true, /* aInternal */ true,
+                  ShouldUpdateLockIdTableFlag::No);
+  }
+
+  static RefPtr<DirectoryLockImpl> CreateInternal(
+      MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
       const Nullable<PersistenceType>& aPersistenceType,
-      const nsACString& aGroup, const OriginScope& aOriginScope,
-      const Nullable<Client::Type>& aClientType, bool aExclusive,
-      bool aInternal,
-      QuotaManager::ShouldUpdateLockIdTableFlag aShouldUpdateLockIdTableFlag);
+      const OriginScope& aOriginScope,
+      const Nullable<Client::Type>& aClientType, bool aExclusive) {
+    return Create(std::move(aQuotaManager), aPersistenceType, ""_ns,
+                  aOriginScope, aClientType, aExclusive, true,
+                  ShouldUpdateLockIdTableFlag::Yes);
+  }
 
   void AssertIsOnOwningThread() const
 #ifdef DEBUG
@@ -876,6 +916,27 @@ class DirectoryLockImpl final : public DirectoryLock {
 
  private:
   ~DirectoryLockImpl();
+
+  static RefPtr<DirectoryLockImpl> Create(
+      MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
+      const Nullable<PersistenceType>& aPersistenceType,
+      const nsACString& aGroup, const OriginScope& aOriginScope,
+      const Nullable<Client::Type>& aClientType, bool aExclusive,
+      bool aInternal,
+      ShouldUpdateLockIdTableFlag aShouldUpdateLockIdTableFlag) {
+    MOZ_ASSERT_IF(aOriginScope.IsOrigin(), !aOriginScope.GetOrigin().IsEmpty());
+    MOZ_ASSERT_IF(!aInternal, !aPersistenceType.IsNull());
+    MOZ_ASSERT_IF(!aInternal,
+                  aPersistenceType.Value() != PERSISTENCE_TYPE_INVALID);
+    MOZ_ASSERT_IF(!aInternal, !aGroup.IsEmpty());
+    MOZ_ASSERT_IF(!aInternal, aOriginScope.IsOrigin());
+    MOZ_ASSERT_IF(!aInternal, !aClientType.IsNull());
+    MOZ_ASSERT_IF(!aInternal, aClientType.Value() < Client::TypeMax());
+
+    return MakeRefPtr<DirectoryLockImpl>(
+        std::move(aQuotaManager), aPersistenceType, aGroup, aOriginScope,
+        aClientType, aExclusive, aInternal, aShouldUpdateLockIdTableFlag);
+  }
 };
 
 const DirectoryLockImpl* AsDirectoryLockImpl(
@@ -2828,22 +2889,21 @@ RefPtr<DirectoryLock> DirectoryLock::Specialize(
 void DirectoryLock::Log() const { AsDirectoryLockImpl(this)->Log(); }
 
 DirectoryLockImpl::DirectoryLockImpl(
-    MovingNotNull<RefPtr<QuotaManager>> aQuotaManager, const int64_t aId,
+    MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
     const Nullable<PersistenceType>& aPersistenceType, const nsACString& aGroup,
     const OriginScope& aOriginScope, const Nullable<Client::Type>& aClientType,
     const bool aExclusive, const bool aInternal,
-    const QuotaManager::ShouldUpdateLockIdTableFlag
-        aShouldUpdateLockIdTableFlag)
+    const ShouldUpdateLockIdTableFlag aShouldUpdateLockIdTableFlag)
     : mQuotaManager(std::move(aQuotaManager)),
       mPersistenceType(aPersistenceType),
       mGroup(aGroup),
       mOriginScope(aOriginScope),
       mClientType(aClientType),
-      mId(aId),
+      mId(mQuotaManager->GenerateDirectoryLockId()),
       mExclusive(aExclusive),
       mInternal(aInternal),
       mShouldUpdateLockIdTable(aShouldUpdateLockIdTableFlag ==
-                               QuotaManager::ShouldUpdateLockIdTableFlag::Yes),
+                               ShouldUpdateLockIdTableFlag::Yes),
       mRegistered(false) {
   AssertIsOnOwningThread();
   MOZ_ASSERT_IF(aOriginScope.IsOrigin(), !aOriginScope.GetOrigin().IsEmpty());
@@ -3022,13 +3082,11 @@ RefPtr<DirectoryLock> DirectoryLockImpl::Specialize(
     return nullptr;
   }
 
-  RefPtr<DirectoryLockImpl> lock = new DirectoryLockImpl(
-      mQuotaManager, mQuotaManager->GenerateDirectoryLockId(),
-      Nullable<PersistenceType>(aPersistenceType), aGroupAndOrigin.mGroup,
-      OriginScope::FromOrigin(aGroupAndOrigin.mOrigin),
+  RefPtr<DirectoryLockImpl> lock = Create(
+      mQuotaManager, Nullable<PersistenceType>(aPersistenceType),
+      aGroupAndOrigin.mGroup, OriginScope::FromOrigin(aGroupAndOrigin.mOrigin),
       Nullable<Client::Type>(aClientType),
-      /* aExclusive */ false, mInternal,
-      QuotaManager::ShouldUpdateLockIdTableFlag::Yes);
+      /* aExclusive */ false, mInternal, ShouldUpdateLockIdTableFlag::Yes);
   if (NS_WARN_IF(!Overlaps(*lock))) {
     return nullptr;
   }
@@ -3761,41 +3819,6 @@ bool QuotaManager::IsDotFile(const nsAString& aFileName) {
   return aFileName.First() == char16_t('.');
 }
 
-RefPtr<DirectoryLockImpl> QuotaManager::CreateDirectoryLock(
-    const Nullable<PersistenceType>& aPersistenceType, const nsACString& aGroup,
-    const OriginScope& aOriginScope, const Nullable<Client::Type>& aClientType,
-    bool aExclusive, bool aInternal,
-    const ShouldUpdateLockIdTableFlag aShouldUpdateLockIdTableFlag) {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT_IF(aOriginScope.IsOrigin(), !aOriginScope.GetOrigin().IsEmpty());
-  MOZ_ASSERT_IF(!aInternal, !aPersistenceType.IsNull());
-  MOZ_ASSERT_IF(!aInternal,
-                aPersistenceType.Value() != PERSISTENCE_TYPE_INVALID);
-  MOZ_ASSERT_IF(!aInternal, !aGroup.IsEmpty());
-  MOZ_ASSERT_IF(!aInternal, aOriginScope.IsOrigin());
-  MOZ_ASSERT_IF(!aInternal, !aClientType.IsNull());
-  MOZ_ASSERT_IF(!aInternal, aClientType.Value() < Client::TypeMax());
-
-  return MakeRefPtr<DirectoryLockImpl>(
-      WrapNotNullUnchecked(this), GenerateDirectoryLockId(), aPersistenceType,
-      aGroup, aOriginScope, aClientType, aExclusive, aInternal,
-      aShouldUpdateLockIdTableFlag);
-}
-
-RefPtr<DirectoryLockImpl> QuotaManager::CreateDirectoryLockForEviction(
-    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin) {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_INVALID);
-  MOZ_ASSERT(!aGroupAndOrigin.mOrigin.IsEmpty());
-
-  return CreateDirectoryLock(Nullable<PersistenceType>(aPersistenceType),
-                             aGroupAndOrigin.mGroup,
-                             OriginScope::FromOrigin(aGroupAndOrigin.mOrigin),
-                             Nullable<Client::Type>(),
-                             /* aExclusive */ true, /* aInternal */ true,
-                             QuotaManager::ShouldUpdateLockIdTableFlag::No);
-}
-
 void QuotaManager::RegisterDirectoryLock(DirectoryLockImpl& aLock) {
   AssertIsOnOwningThread();
 
@@ -4004,8 +4027,8 @@ uint64_t QuotaManager::CollectOriginsForEviction(
     // operations for them will be delayed (until origin eviction is finalized).
 
     for (const auto& originInfo : inactiveOrigins) {
-      RefPtr<DirectoryLockImpl> lock = CreateDirectoryLockForEviction(
-          originInfo->mGroupInfo->mPersistenceType,
+      RefPtr<DirectoryLockImpl> lock = DirectoryLockImpl::CreateForEviction(
+          WrapNotNullUnchecked(this), originInfo->mGroupInfo->mPersistenceType,
           GroupAndOrigin{originInfo->mGroupInfo->mGroup, originInfo->mOrigin});
 
       lock->Acquire();
@@ -6440,11 +6463,8 @@ RefPtr<DirectoryLock> QuotaManager::CreateDirectoryLock(
     Client::Type aClientType, bool aExclusive) {
   AssertIsOnOwningThread();
 
-  return CreateDirectoryLock(Nullable<PersistenceType>(aPersistenceType),
-                             aGroupAndOrigin.mGroup,
-                             OriginScope::FromOrigin(aGroupAndOrigin.mOrigin),
-                             Nullable<Client::Type>(aClientType), aExclusive,
-                             false, ShouldUpdateLockIdTableFlag::Yes);
+  return DirectoryLockImpl::Create(WrapNotNullUnchecked(this), aPersistenceType,
+                                   aGroupAndOrigin, aClientType, aExclusive);
 }
 
 RefPtr<DirectoryLock> QuotaManager::CreateDirectoryLockInternal(
@@ -6453,9 +6473,9 @@ RefPtr<DirectoryLock> QuotaManager::CreateDirectoryLockInternal(
     bool aExclusive) {
   AssertIsOnOwningThread();
 
-  return CreateDirectoryLock(aPersistenceType, ""_ns, aOriginScope,
-                             Nullable<Client::Type>(aClientType), aExclusive,
-                             true, ShouldUpdateLockIdTableFlag::Yes);
+  return DirectoryLockImpl::CreateInternal(WrapNotNullUnchecked(this),
+                                           aPersistenceType, aOriginScope,
+                                           aClientType, aExclusive);
 }
 
 Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
