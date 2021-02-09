@@ -238,7 +238,6 @@ class nsWindow final : public nsBaseWidget {
   void SetProgress(unsigned long progressPercent);
 
 #ifdef MOZ_WAYLAND
-  bool GetCSDDecorationOffset(int* aDx, int* aDy);
   void SetEGLNativeWindowSize(const LayoutDeviceIntSize& aEGLWindowSize);
   static nsWindow* GetFocusedWindow();
 #endif

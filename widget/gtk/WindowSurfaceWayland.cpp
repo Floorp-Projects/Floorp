@@ -661,8 +661,10 @@ WindowBackBuffer* WindowSurfaceWayland::GetWaylandBuffer() {
 }
 
 already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::LockWaylandBuffer() {
-  // Allocated wayland buffer must match mozcontainer widget size.
-  mWLBufferRect = mWindow->GetMozContainerSize();
+  // Allocated wayland buffer can't be bigger than mozilla widget size.
+  LayoutDeviceIntRegion region;
+  region.And(mLockedScreenRect, mWindow->GetMozContainerSize());
+  mWLBufferRect = LayoutDeviceIntRect(region.GetBounds());
 
   LOGWAYLAND(
       ("WindowSurfaceWayland::LockWaylandBuffer [%p] Requesting buffer %d x "
@@ -749,7 +751,7 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
   // until next WindowSurfaceWayland::Commit() call.
   mBufferCommitAllowed = false;
 
-  LayoutDeviceIntRect lockedScreenRect = mWindow->GetMozContainerSize();
+  LayoutDeviceIntRect lockedScreenRect = mWindow->GetBounds();
   // The window bounds of popup windows contains relative position to
   // the transient window. We need to remove that effect because by changing
   // position of the popup window the buffer has not changed its size.
@@ -824,14 +826,20 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
     mLockedScreenRect = lockedScreenRect;
   }
 
+  // We can draw directly only when widget has the same size as wl_buffer
+  LayoutDeviceIntRect size = mWindow->GetMozContainerSize();
+  mDrawToWaylandBufferDirectly = (size.width >= mLockedScreenRect.width &&
+                                  size.height >= mLockedScreenRect.height);
+
   // We can draw directly only when we redraw significant part of the window
   // to avoid flickering or do only fullscreen updates in smooth mode.
-  mDrawToWaylandBufferDirectly =
-      mSmoothRendering
-          ? windowRedraw
-          : (windowRedraw || (lockSize.width * 2 > lockedScreenRect.width &&
-                              lockSize.height * 2 > lockedScreenRect.height));
-
+  if (mDrawToWaylandBufferDirectly) {
+    mDrawToWaylandBufferDirectly =
+        mSmoothRendering
+            ? windowRedraw
+            : (windowRedraw || (lockSize.width * 2 > lockedScreenRect.width &&
+                                lockSize.height * 2 > lockedScreenRect.height));
+  }
   if (!mDrawToWaylandBufferDirectly) {
     // Don't switch wl_buffers when we cache drawings.
     mCanSwitchWaylandBuffer = false;
@@ -1013,9 +1021,8 @@ bool WindowSurfaceWayland::FlushPendingCommitsLocked() {
   MozContainer* container = mWindow->GetMozContainer();
   wl_surface* waylandSurface = moz_container_wayland_surface_lock(container);
   if (!waylandSurface) {
-    LOGWAYLAND(
-        ("    moz_container_wayland_surface_lock() failed, delay commit.\n",
-         (void*)this));
+    LOGWAYLAND(("    [%p] mWindow->GetWaylandSurface() failed, delay commit.\n",
+                (void*)this));
 
     // Target window is not created yet - delay the commit. This can happen only
     // when the window is newly created and there's no active

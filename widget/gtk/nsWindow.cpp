@@ -1072,27 +1072,12 @@ void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints) {
 }
 
 void nsWindow::AddCSDDecorationSize(int* aWidth, int* aHeight) {
-  if (mSizeState == nsSizeMode_Normal &&
-      mCSDSupportLevel == GTK_DECORATION_CLIENT && mDrawInTitlebar) {
+  if (mCSDSupportLevel == GTK_DECORATION_CLIENT && mDrawInTitlebar) {
     GtkBorder decorationSize = GetCSDDecorationSize(!mIsTopLevel);
     *aWidth += decorationSize.left + decorationSize.right;
     *aHeight += decorationSize.top + decorationSize.bottom;
   }
 }
-
-#ifdef MOZ_WAYLAND
-bool nsWindow::GetCSDDecorationOffset(int* aDx, int* aDy) {
-  if (mSizeState == nsSizeMode_Normal &&
-      mCSDSupportLevel == GTK_DECORATION_CLIENT && mDrawInTitlebar) {
-    GtkBorder decorationSize = GetCSDDecorationSize(!mIsTopLevel);
-    *aDx = decorationSize.left;
-    *aDy = decorationSize.top;
-    return true;
-  } else {
-    return false;
-  }
-}
-#endif
 
 void nsWindow::ApplySizeConstraints(void) {
   if (mShell) {
