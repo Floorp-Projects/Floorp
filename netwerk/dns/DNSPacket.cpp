@@ -419,10 +419,18 @@ nsresult DNSPacket::EncodeRequest(nsCString& aBody, const nsACString& aHost,
   return NS_OK;
 }
 
+Result<uint8_t, nsresult> DNSPacket::GetRCode() const {
+  if (mBodySize < 12) {
+    LOG(("DNSPacket::GetRCode - packet too small"));
+    return Err(NS_ERROR_ILLEGAL_VALUE);
+  }
+
+  return mResponse[3] & 0x0F;
+}
+
 nsresult DNSPacket::DecodeInternal(
     nsCString& aHost, enum TrrType aType, nsCString& aCname, bool aAllowRFC1918,
-    nsHostRecord::TRRSkippedReason& aReason, DOHresp& aResp,
-    TypeRecordResultType& aTypeResult,
+    DOHresp& aResp, TypeRecordResultType& aTypeResult,
     nsClassHashtable<nsCStringHashKey, DOHresp>& aAdditionalRecords,
     uint32_t& aTTL, const unsigned char* aBuffer, uint32_t aLen) {
   // The response has a 12 byte header followed by the question (returned)
@@ -452,14 +460,8 @@ nsresult DNSPacket::DecodeInternal(
     LOG(("TRR bad incoming DOH, eject!\n"));
     return NS_ERROR_ILLEGAL_VALUE;
   }
-  uint8_t rcode = aBuffer[3] & 0x0F;
-  LOG(("TRR Decode %s RCODE %d\n", aHost.get(), rcode));
-  if (rcode) {
-    if (aReason == nsHostRecord::TRR_UNSET) {
-      aReason = rcode == 0x03 ? nsHostRecord::TRR_NXDOMAIN
-                              : nsHostRecord::TRR_RCODE_FAIL;
-    }
-  }
+  uint8_t rcode = mResponse[3] & 0x0F;
+  LOG(("TRR Decode %s RCODE %d\n", PromiseFlatCString(aHost).get(), rcode));
 
   uint16_t questionRecords = get16bit(aBuffer, 4);  // qdcount
   // iterate over the single(?) host name in question
@@ -955,14 +957,11 @@ nsresult DNSPacket::DecodeInternal(
       aTypeResult.is<TypeRecordEmpty>()) {
     // no entries were stored!
     LOG(("TRR: No entries were stored!\n"));
-    if (aReason == nsHostRecord::TRR_UNSET) {
-      aReason = nsHostRecord::TRR_NO_ANSWERS;
-    }
 
     if (extendedError != UINT16_MAX && hardFail(extendedError)) {
       return NS_ERROR_DEFINITIVE_UNKNOWN_HOST;
     }
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_UNKNOWN_HOST;
   }
 
   // https://tools.ietf.org/html/draft-ietf-dnsop-svcb-httpssvc-03#page-14
@@ -982,13 +981,11 @@ nsresult DNSPacket::DecodeInternal(
 //
 nsresult DNSPacket::Decode(
     nsCString& aHost, enum TrrType aType, nsCString& aCname, bool aAllowRFC1918,
-    nsHostRecord::TRRSkippedReason& aReason, DOHresp& aResp,
-    TypeRecordResultType& aTypeResult,
+    DOHresp& aResp, TypeRecordResultType& aTypeResult,
     nsClassHashtable<nsCStringHashKey, DOHresp>& aAdditionalRecords,
     uint32_t& aTTL) {
-  return DecodeInternal(aHost, aType, aCname, aAllowRFC1918, aReason, aResp,
-                        aTypeResult, aAdditionalRecords, aTTL, mResponse,
-                        mBodySize);
+  return DecodeInternal(aHost, aType, aCname, aAllowRFC1918, aResp, aTypeResult,
+                        aAdditionalRecords, aTTL, mResponse, mBodySize);
 }
 
 static SECItem* CreateRawConfig(const ObliviousDoHConfig& aConfig) {
@@ -1289,8 +1286,7 @@ bool ODoHDNSPacket::EncryptDNSQuery(const nsACString& aQuery,
 
 nsresult ODoHDNSPacket::Decode(
     nsCString& aHost, enum TrrType aType, nsCString& aCname, bool aAllowRFC1918,
-    nsHostRecord::TRRSkippedReason& aReason, DOHresp& aResp,
-    TypeRecordResultType& aTypeResult,
+    DOHresp& aResp, TypeRecordResultType& aTypeResult,
     nsClassHashtable<nsCStringHashKey, DOHresp>& aAdditionalRecords,
     uint32_t& aTTL) {
   // This function could be called multiple times when we are checking CNAME
@@ -1323,8 +1319,8 @@ nsresult ODoHDNSPacket::Decode(
     mDecryptedResponseRange.emplace(range);
   }
 
-  return DecodeInternal(aHost, aType, aCname, aAllowRFC1918, aReason, aResp,
-                        aTypeResult, aAdditionalRecords, aTTL,
+  return DecodeInternal(aHost, aType, aCname, aAllowRFC1918, aResp, aTypeResult,
+                        aAdditionalRecords, aTTL,
                         &mResponse[mDecryptedResponseRange->mStart],
                         mDecryptedResponseRange->mLength);
 }
