@@ -23,13 +23,14 @@ bool ProcessHashKey::operator==(const ProcessHashKey& aOther) const {
 PLDHashNumber ProcessHashKey::Hash() const { return HashGeneric(mPid, mType); }
 
 void UntrustedModulesBackupData::Add(UntrustedModulesData&& aData) {
-  auto p = LookupForAdd(ProcessHashKey(aData.mProcessType, aData.mPid));
-  if (p) {
-    p.Data()->mData.Merge(std::move(aData));
-  } else {
-    auto data = MakeRefPtr<UntrustedModulesDataContainer>(std::move(aData));
-    p.OrInsert([data = std::move(data)]() { return data; });
-  }
+  WithEntryHandle(
+      ProcessHashKey(aData.mProcessType, aData.mPid), [&](auto&& p) {
+        if (p) {
+          p.Data()->mData.Merge(std::move(aData));
+        } else {
+          p.Insert(MakeRefPtr<UntrustedModulesDataContainer>(std::move(aData)));
+        }
+      });
 }
 
 /* static */
