@@ -530,8 +530,11 @@ StyleEditorUI.prototype = {
    * below the list): hide the context menu
    */
   _updateContextMenuItems: function() {
-    this._openLinkNewTabItem.hidden = !this._contextMenuStyleSheet;
-    this._copyUrlItem.hidden = !this._contextMenuStyleSheet;
+    this._openLinkNewTabItem.setAttribute(
+      "hidden",
+      !this._contextMenuStyleSheet
+    );
+    this._copyUrlItem.setAttribute("hidden", !this._contextMenuStyleSheet);
 
     if (this._contextMenuStyleSheet) {
       this._openLinkNewTabItem.setAttribute(

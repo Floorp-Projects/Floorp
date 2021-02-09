@@ -1644,13 +1644,18 @@ Toolbox.prototype = {
     const openedConsolePanel = this.currentToolId === "webconsole";
 
     if (openedConsolePanel) {
-      deck.collapsed = true;
-      splitter.hidden = true;
-      webconsolePanel.collapsed = false;
+      deck.setAttribute("collapsed", "true");
+      splitter.setAttribute("hidden", "true");
+      webconsolePanel.removeAttribute("collapsed");
     } else {
-      deck.collapsed = false;
-      splitter.hidden = !this.splitConsole;
-      webconsolePanel.collapsed = !this.splitConsole;
+      deck.removeAttribute("collapsed");
+      if (this.splitConsole) {
+        webconsolePanel.removeAttribute("collapsed");
+        splitter.removeAttribute("hidden");
+      } else {
+        webconsolePanel.setAttribute("collapsed", "true");
+        splitter.setAttribute("hidden", "true");
+      }
     }
   },
 

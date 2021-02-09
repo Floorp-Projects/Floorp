@@ -51,7 +51,14 @@ function appendStatusMessage(msg) {
 }
 
 function toggleStatusMessage(visible = true) {
-  document.getElementById("status-message-container").hidden = !visible;
+  const statusMessageContainer = document.getElementById(
+    "status-message-container"
+  );
+  if (visible) {
+    statusMessageContainer.removeAttribute("hidden");
+  } else {
+    statusMessageContainer.setAttribute("hidden", "true");
+  }
 }
 
 function revealStatusMessage() {
