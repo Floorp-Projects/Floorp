@@ -3,7 +3,7 @@
 
 intr protocol intrMessageCompress {
 parent:
-    intr foo() compress;
+    [Compress] intr foo();
 child:
-    intr bar() compress;
+    [Compress] intr bar();
 };

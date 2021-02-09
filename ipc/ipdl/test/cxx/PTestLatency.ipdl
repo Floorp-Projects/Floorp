@@ -12,7 +12,7 @@ child:
     intr Rpc();
     async Spam();
     intr Synchro();
-    async CompressedSpam(uint32_t seqno) compress;
+    [Compress] async CompressedSpam(uint32_t seqno);
     intr Synchro2() returns (uint32_t lastSeqno,
                             uint32_t numMessagesDispatched);
 

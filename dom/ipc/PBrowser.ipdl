@@ -704,7 +704,7 @@ child:
 
     async ResumeLoad(uint64_t pendingSwitchID, ParentShowInfo info);
 
-    async UpdateDimensions(DimensionInfo dimensions) compressall;
+    [Compress=all] async UpdateDimensions(DimensionInfo dimensions);
 
     async SizeModeChanged(nsSizeMode sizeMode);
 
@@ -739,18 +739,20 @@ child:
      * When two consecutive mouse move events would be added to the message queue,
      * they are 'compressed' by dumping the oldest one.
      */
+    [Compress]
     prio(input) async RealMouseMoveEvent(WidgetMouseEvent event,
                                          ScrollableLayerGuid aGuid,
-                                         uint64_t aInputBlockId) compress;
+                                         uint64_t aInputBlockId);
+    [Compress]
     async NormalPriorityRealMouseMoveEvent(WidgetMouseEvent event,
                                            ScrollableLayerGuid aGuid,
-                                           uint64_t aInputBlockId) compress;
+                                           uint64_t aInputBlockId);
 
     /**
      * But don't compress mousemove events for tests since every event is
      * important for the test since synthesizing various input events may
      * be faster than what the user operates same things.  If you need to
-     * test the `compress`, send mouse move events with setting `isSyntehsized`
+     * test the `Compress`, send mouse move events with setting `isSyntehsized`
      * of `aEvent` of `EventUtils#syntehsizeMouse*()`.
      */
     prio(input) async RealMouseMoveEventForTests(WidgetMouseEvent event,
@@ -763,7 +765,7 @@ child:
     /**
      * Mouse move events with |reason == eSynthesized| are sent via a separate
      * message because they do not generate DOM 'mousemove' events, and the
-     * 'compress' attribute on RealMouseMoveEvent() could result in a
+     * 'Compress' attribute on RealMouseMoveEvent() could result in a
      * |reason == eReal| event being dropped in favour of an |eSynthesized|
      * event, and thus a DOM 'mousemove' event to be lost.
      */
@@ -807,22 +809,26 @@ child:
                                   Modifiers aModifiers, ScrollableLayerGuid aGuid,
                                   uint64_t aInputBlockId);
 
+    [Compress]
     prio(input) async RealTouchMoveEvent(WidgetTouchEvent aEvent,
                                          ScrollableLayerGuid aGuid,
                                          uint64_t aInputBlockId,
-                                         nsEventStatus aApzResponse) compress;
+                                         nsEventStatus aApzResponse);
+    [Compress]
     async NormalPriorityRealTouchMoveEvent(WidgetTouchEvent aEvent,
                                            ScrollableLayerGuid aGuid,
                                            uint64_t aInputBlockId,
-                                           nsEventStatus aApzResponse) compress;
+                                           nsEventStatus aApzResponse);
+    [Compress]
     prio(input) async RealTouchMoveEvent2(WidgetTouchEvent aEvent,
                                           ScrollableLayerGuid aGuid,
                                           uint64_t aInputBlockId,
-                                          nsEventStatus aApzResponse) compress;
+                                          nsEventStatus aApzResponse);
+    [Compress]
     async NormalPriorityRealTouchMoveEvent2(WidgetTouchEvent aEvent,
                                             ScrollableLayerGuid aGuid,
                                             uint64_t aInputBlockId,
-                                            nsEventStatus aApzResponse) compress;
+                                            nsEventStatus aApzResponse);
 
     /*
      * We disable the input event queue when there is an active dnd session. We

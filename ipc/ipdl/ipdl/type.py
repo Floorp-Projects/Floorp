@@ -1237,6 +1237,14 @@ class GatherDecls(TcheckVisitor):
         msgname = md.name
         loc = md.loc
 
+        self.checkAttributes(
+            md.attributes,
+            {
+                "Tainted": None,
+                "Compress": (None, "all"),
+            },
+        )
+
         isctor = False
         isdtor = False
         cdtype = None
@@ -1271,8 +1279,8 @@ class GatherDecls(TcheckVisitor):
             ctor=isctor,
             dtor=isdtor,
             cdtype=cdtype,
-            compress=md.compress,
-            tainted=md.tainted,
+            compress=md.attributes.get("Compress"),
+            tainted="Tainted" in md.attributes,
         )
 
         # replace inparam Param nodes with proper Decls
