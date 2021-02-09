@@ -5640,6 +5640,25 @@ networking:
       - 'main'
       - 'content'
 
+  https_rr_prefs_usage:
+    bug_numbers:
+      - 1686421
+    description: >
+      A bitfield representation for the usage of HTTPS RR prefs.
+      bit 0: network.dns.upgrade_with_https_rr is enabled or not.
+      bit 1: network.dns.use_https_rr_as_altsvc is enabled or not.
+      bit 2: network.dns.echconfig.enabled is enabled or not.
+    expires: never
+    kind: uint
+    keyed: false
+    notification_emails:
+      - necko@mozilla.com
+      - kershaw@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
 blocklist:
   lastModified_rs_addons:
     bug_numbers:
