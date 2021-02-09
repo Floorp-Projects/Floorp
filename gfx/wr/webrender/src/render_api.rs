@@ -1529,6 +1529,7 @@ pub struct MemoryReport {
     pub shader_cache: usize,
     pub interning: InterningMemoryReport,
     pub display_list: usize,
+    pub upload_staging_memory: usize,
 
     //
     // GPU memory.
@@ -1542,4 +1543,5 @@ pub struct MemoryReport {
     pub texture_upload_pbos: usize,
     pub swap_chain: usize,
     pub render_texture_hosts: usize,
+    pub upload_staging_textures: usize,
 }

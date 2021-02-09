@@ -19,6 +19,7 @@
 use std::mem;
 use euclid::Transform3D;
 use time::precise_time_ns;
+use malloc_size_of::MallocSizeOfOps;
 use api::units::*;
 use api::{ExternalImageSource, PremultipliedColorF, ImageBufferKind, ImageRendering, ImageFormat};
 use crate::renderer::{
@@ -37,6 +38,7 @@ use crate::batch::BatchTextures;
 use crate::texture_pack::{GuillotineAllocator, FreeRectSlice};
 use crate::composite::CompositeSurfaceFormat;
 use crate::profiler;
+use crate::render_api::MemoryReport;
 
 pub const BATCH_UPLOAD_TEXTURE_SIZE: DeviceIntSize = DeviceIntSize::new(512, 512);
 
@@ -677,6 +679,20 @@ impl UploadTexturePool {
             }
         }
         self.temporary_buffers.clear();
+    }
+
+    pub fn report_memory_to(&self, report: &mut MemoryReport, size_op_funs: &MallocSizeOfOps) {
+        for buf in &self.temporary_buffers {
+            report.upload_staging_memory += unsafe { (size_op_funs.size_of_op)(buf.as_ptr() as *const _) };
+        }
+
+        for frame in &self.frames {
+            for format in frame {
+                for texture in format {
+                    report.upload_staging_textures += texture.size_in_bytes();
+                }
+            }
+        }
     }
 }
 
