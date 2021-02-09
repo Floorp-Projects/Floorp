@@ -1074,6 +1074,10 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   ListNodeType lexicalDeclaration(YieldHandling yieldHandling,
                                   DeclarationKind kind);
 
+ protected:
+  NameNodeType moduleExportName();
+
+ private:
   inline BinaryNodeType importDeclaration();
   Node importDeclarationOrImportExpr(YieldHandling yieldHandling);
 
@@ -1546,6 +1550,7 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
   // Parse a module.
   ModuleNodeType moduleBody(ModuleSharedContext* modulesc);
 
+  using Base::moduleExportName;
   inline BinaryNodeType importDeclaration();
   inline bool checkLocalExportNames(ListNodeType node);
   inline bool checkExportedName(TaggedParserAtomIndex exportName);
@@ -1691,6 +1696,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   // Parse a module.
   ModuleNodeType moduleBody(ModuleSharedContext* modulesc);
 
+  using Base::moduleExportName;
   BinaryNodeType importDeclaration();
   bool checkLocalExportNames(ListNodeType node);
   bool checkExportedName(TaggedParserAtomIndex exportName);

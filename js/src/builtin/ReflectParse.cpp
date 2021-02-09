@@ -1727,6 +1727,7 @@ class ASTSerializer {
 
   bool identifier(HandleAtom atom, TokenPos* pos, MutableHandleValue dst);
   bool identifier(NameNode* id, MutableHandleValue dst);
+  bool identifierOrLiteral(ParseNode* id, MutableHandleValue dst);
   bool literal(ParseNode* pn, MutableHandleValue dst);
 
   bool optPattern(ParseNode* pn, MutableHandleValue dst) {
@@ -2069,7 +2070,7 @@ bool ASTSerializer::importSpecifier(BinaryNode* importSpec,
 
   RootedValue importName(cx);
   RootedValue bindingName(cx);
-  return identifier(importNameNode, &importName) &&
+  return identifierOrLiteral(importNameNode, &importName) &&
          identifier(bindingNameNode, &bindingName) &&
          builder.importSpecifier(importName, bindingName, &importSpec->pn_pos,
                                  dst);
@@ -2167,8 +2168,8 @@ bool ASTSerializer::exportSpecifier(BinaryNode* exportSpec,
 
   RootedValue bindingName(cx);
   RootedValue exportName(cx);
-  return identifier(bindingNameNode, &bindingName) &&
-         identifier(exportNameNode, &exportName) &&
+  return identifierOrLiteral(bindingNameNode, &bindingName) &&
+         identifierOrLiteral(exportNameNode, &exportName) &&
          builder.exportSpecifier(bindingName, exportName, &exportSpec->pn_pos,
                                  dst);
 }
@@ -3455,6 +3456,13 @@ bool ASTSerializer::identifier(NameNode* id, MutableHandleValue dst) {
     return false;
   }
   return identifier(pnAtom, &id->pn_pos, dst);
+}
+
+bool ASTSerializer::identifierOrLiteral(ParseNode* id, MutableHandleValue dst) {
+  if (id->getKind() == ParseNodeKind::Name) {
+    return identifier(&id->as<NameNode>(), dst);
+  }
+  return literal(id, dst);
 }
 
 bool ASTSerializer::function(FunctionNode* funNode, ASTType type,

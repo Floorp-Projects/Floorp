@@ -411,8 +411,8 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
  private:
   // Speed hack: this type of node can't contain functions, so skip walking it.
   MOZ_MUST_USE bool internalVisitSpecList(ListNode* pn) {
-    // Import/export spec lists contain import/export specs containing
-    // only pairs of names. Alternatively, an export spec list may
+    // Import/export spec lists contain import/export specs containing only
+    // pairs of names or strings. Alternatively, an export spec list may
     // contain a single export batch specifier.
 #ifdef DEBUG
     bool isImport = pn->isKind(ParseNodeKind::ImportSpecList);
@@ -424,8 +424,10 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
         BinaryNode* spec = &item->as<BinaryNode>();
         MOZ_ASSERT(spec->isKind(isImport ? ParseNodeKind::ImportSpec
                                          : ParseNodeKind::ExportSpec));
-        MOZ_ASSERT(spec->left()->isKind(ParseNodeKind::Name));
-        MOZ_ASSERT(spec->right()->isKind(ParseNodeKind::Name));
+        MOZ_ASSERT(spec->left()->isKind(ParseNodeKind::Name) ||
+                   spec->left()->isKind(ParseNodeKind::StringExpr));
+        MOZ_ASSERT(spec->right()->isKind(ParseNodeKind::Name) ||
+                   spec->right()->isKind(ParseNodeKind::StringExpr));
       }
     }
 #endif

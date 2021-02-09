@@ -4773,6 +4773,18 @@ GeneralParser<ParseHandler, Unit>::lexicalDeclaration(
   return decl;
 }
 
+template <class ParseHandler, typename Unit>
+typename ParseHandler::NameNodeType
+GeneralParser<ParseHandler, Unit>::moduleExportName() {
+  MOZ_ASSERT(anyChars.currentToken().type == TokenKind::String);
+  TaggedParserAtomIndex name = anyChars.currentToken().atom();
+  if (!this->parserAtoms().isModuleExportName(name)) {
+    error(JSMSG_UNPAIRED_SURROGATE_EXPORT);
+    return null();
+  }
+  return handler_.newStringLiteral(name, pos());
+}
+
 template <typename Unit>
 bool Parser<FullParseHandler, Unit>::namedImportsOrNamespaceImport(
     TokenKind tt, ListNodeType importSpecSet) {
@@ -4789,13 +4801,19 @@ bool Parser<FullParseHandler, Unit>::namedImportsOrNamespaceImport(
         break;
       }
 
-      if (!TokenKindIsPossibleIdentifierName(tt)) {
+      TaggedParserAtomIndex importName;
+      NameNodeType importNameNode = null();
+      if (TokenKindIsPossibleIdentifierName(tt)) {
+        importName = anyChars.currentName();
+        importNameNode = newName(importName);
+      } else if (tt == TokenKind::String) {
+        importNameNode = moduleExportName();
+      } else {
         error(JSMSG_NO_IMPORT_NAME);
+      }
+      if (!importNameNode) {
         return false;
       }
-
-      auto importName = anyChars.currentName();
-      TokenPos importNamePos = pos();
 
       bool matched;
       if (!tokenStream.matchToken(&matched, TokenKind::As)) {
@@ -4813,10 +4831,17 @@ bool Parser<FullParseHandler, Unit>::namedImportsOrNamespaceImport(
           return false;
         }
       } else {
+        // String export names can't refer to local bindings.
+        if (tt == TokenKind::String) {
+          error(JSMSG_AS_AFTER_STRING);
+          return false;
+        }
+
         // Keywords cannot be bound to themselves, so an import name
         // that is a keyword is a syntax error if it is not followed
         // by the keyword 'as'.
         // See the ImportSpecifier production in ES6 section 15.2.2.
+        MOZ_ASSERT(importName);
         if (IsKeyword(importName)) {
           error(JSMSG_AS_AFTER_RESERVED_WORD, ReservedWordToCharZ(importName));
           return false;
@@ -4833,11 +4858,6 @@ bool Parser<FullParseHandler, Unit>::namedImportsOrNamespaceImport(
         return false;
       }
       if (!noteDeclaredName(bindingAtom, DeclarationKind::Import, pos())) {
-        return false;
-      }
-
-      NameNodeType importNameNode = newName(importName, importNamePos);
-      if (!importNameNode) {
         return false;
       }
 
@@ -5383,12 +5403,19 @@ GeneralParser<ParseHandler, Unit>::exportBatch(uint32_t begin) {
   }
 
   if (foundAs) {
-    if (!mustMatchToken(TokenKindIsPossibleIdentifierName,
-                        JSMSG_NO_EXPORT_NAME)) {
+    TokenKind tt;
+    if (!tokenStream.getToken(&tt)) {
       return null();
     }
 
-    NameNodeType exportName = newName(anyChars.currentName());
+    NameNodeType exportName = null();
+    if (TokenKindIsPossibleIdentifierName(tt)) {
+      exportName = newName(anyChars.currentName());
+    } else if (tt == TokenKind::String) {
+      exportName = moduleExportName();
+    } else {
+      error(JSMSG_NO_EXPORT_NAME);
+    }
     if (!exportName) {
       return null();
     }
@@ -5431,6 +5458,12 @@ bool Parser<FullParseHandler, Unit>::checkLocalExportNames(ListNode* node) {
   // ES 2017 draft 15.2.3.1.
   for (ParseNode* next : node->contents()) {
     ParseNode* name = next->as<BinaryNode>().left();
+
+    if (name->isKind(ParseNodeKind::StringExpr)) {
+      errorAt(name->pn_pos.begin, JSMSG_BAD_LOCAL_STRING_EXPORT);
+      return false;
+    }
+
     MOZ_ASSERT(name->isKind(ParseNodeKind::Name));
 
     TaggedParserAtomIndex ident = name->as<NameNode>().atom();
@@ -5481,12 +5514,14 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::exportClause(
       break;
     }
 
-    if (!TokenKindIsPossibleIdentifierName(tt)) {
+    NameNodeType bindingName = null();
+    if (TokenKindIsPossibleIdentifierName(tt)) {
+      bindingName = newName(anyChars.currentName());
+    } else if (tt == TokenKind::String) {
+      bindingName = moduleExportName();
+    } else {
       error(JSMSG_NO_BINDING_NAME);
-      return null();
     }
-
-    NameNodeType bindingName = newName(anyChars.currentName());
     if (!bindingName) {
       return null();
     }
@@ -5495,14 +5530,28 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::exportClause(
     if (!tokenStream.matchToken(&foundAs, TokenKind::As)) {
       return null();
     }
+
+    NameNodeType exportName = null();
     if (foundAs) {
-      if (!mustMatchToken(TokenKindIsPossibleIdentifierName,
-                          JSMSG_NO_EXPORT_NAME)) {
+      TokenKind tt;
+      if (!tokenStream.getToken(&tt)) {
         return null();
       }
-    }
 
-    NameNodeType exportName = newName(anyChars.currentName());
+      if (TokenKindIsPossibleIdentifierName(tt)) {
+        exportName = newName(anyChars.currentName());
+      } else if (tt == TokenKind::String) {
+        exportName = moduleExportName();
+      } else {
+        error(JSMSG_NO_EXPORT_NAME);
+      }
+    } else {
+      if (tt != TokenKind::String) {
+        exportName = newName(anyChars.currentName());
+      } else {
+        exportName = moduleExportName();
+      }
+    }
     if (!exportName) {
       return null();
     }
