@@ -231,6 +231,17 @@ void LIRGenerator::visitAtomicTypedArrayElementBinop(
   lowerAtomicTypedArrayElementBinop(ins, /* useI386ByteRegisters = */ true);
 }
 
+void LIRGeneratorX86::lowerAtomicLoad64(MLoadUnboxedScalar* ins) {
+  const LUse elements = useRegister(ins->elements());
+  const LAllocation index =
+      useRegisterOrIndexConstant(ins->index(), ins->storageType());
+
+  auto* lir = new (alloc()) LAtomicLoad64(elements, index, tempFixed(ebx),
+                                          tempInt64Fixed(Register64(edx, eax)));
+  defineFixed(lir, ins, LAllocation(AnyRegister(ecx)));
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitWasmUnsignedToDouble(MWasmUnsignedToDouble* ins) {
   MOZ_ASSERT(ins->input()->type() == MIRType::Int32);
   LWasmUint32ToDouble* lir = new (alloc())

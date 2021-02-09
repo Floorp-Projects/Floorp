@@ -5333,23 +5333,34 @@ void MacroAssembler::wasmAtomicEffectOp(const wasm::MemoryAccessDesc& access,
 }
 
 template <typename T>
-static void WasmAtomicLoad64(MacroAssembler& masm,
-                             const wasm::MemoryAccessDesc& access, const T& mem,
-                             Register64 temp, Register64 output) {
-  MOZ_ASSERT(temp.low == InvalidReg && temp.high == InvalidReg);
+static void AtomicLoad64(MacroAssembler& masm,
+                         const wasm::MemoryAccessDesc* access,
+                         const Synchronization& sync, const T& mem,
+                         Register64 output) {
   MOZ_ASSERT((output.low.code() & 1) == 0);
   MOZ_ASSERT(output.low.code() + 1 == output.high.code());
 
-  masm.memoryBarrierBefore(access.sync());
+  masm.memoryBarrierBefore(sync);
 
   SecondScratchRegisterScope scratch2(masm);
   Register ptr = ComputePointerForAtomic(masm, mem, scratch2);
 
   BufferOffset load = masm.as_ldrexd(output.low, output.high, ptr);
-  masm.append(access, load.getOffset());
+  if (access) {
+    masm.append(*access, load.getOffset());
+  }
   masm.as_clrex();
 
-  masm.memoryBarrierAfter(access.sync());
+  masm.memoryBarrierAfter(sync);
+}
+
+template <typename T>
+static void WasmAtomicLoad64(MacroAssembler& masm,
+                             const wasm::MemoryAccessDesc& access, const T& mem,
+                             Register64 temp, Register64 output) {
+  MOZ_ASSERT(temp.low == InvalidReg && temp.high == InvalidReg);
+
+  AtomicLoad64(masm, &access, access.sync(), mem, output);
 }
 
 void MacroAssembler::wasmAtomicLoad64(const wasm::MemoryAccessDesc& access,
@@ -5652,6 +5663,19 @@ void MacroAssembler::atomicEffectOpJS(Scalar::Type arrayType,
                                       Register value, const Address& mem,
                                       Register temp) {
   AtomicEffectOp(*this, nullptr, arrayType, sync, op, value, mem, temp);
+}
+
+// ========================================================================
+// Primitive atomic operations.
+
+void MacroAssembler::atomicLoad64(const Synchronization& sync,
+                                  const Address& mem, Register64 output) {
+  AtomicLoad64(*this, nullptr, sync, mem, output);
+}
+
+void MacroAssembler::atomicLoad64(const Synchronization& sync,
+                                  const BaseIndex& mem, Register64 output) {
+  AtomicLoad64(*this, nullptr, sync, mem, output);
 }
 
 // ========================================================================

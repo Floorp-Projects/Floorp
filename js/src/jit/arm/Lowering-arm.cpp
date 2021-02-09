@@ -925,6 +925,18 @@ void LIRGenerator::visitCompareExchangeTypedArrayElement(
   define(lir, ins);
 }
 
+void LIRGeneratorARM::lowerAtomicLoad64(MLoadUnboxedScalar* ins) {
+  const LUse elements = useRegister(ins->elements());
+  const LAllocation index =
+      useRegisterOrIndexConstant(ins->index(), ins->storageType());
+
+  auto* lir = new (alloc())
+      LAtomicLoad64(elements, index, temp(),
+                    tempInt64Fixed(Register64(IntArgReg1, IntArgReg0)));
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins) {
   MDefinition* base = ins->base();
   MOZ_ASSERT(base->type() == MIRType::Int32);

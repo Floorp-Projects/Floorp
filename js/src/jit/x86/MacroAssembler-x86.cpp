@@ -1145,7 +1145,7 @@ void MacroAssembler::wasmStoreI64(const wasm::MemoryAccessDesc& access,
 
 template <typename T>
 static void AtomicLoad64(MacroAssembler& masm,
-                         const wasm::MemoryAccessDesc& access, const T& address,
+                         const wasm::MemoryAccessDesc* access, const T& address,
                          Register64 temp, Register64 output) {
   MOZ_ASSERT(temp.low == ebx);
   MOZ_ASSERT(temp.high == ecx);
@@ -1157,20 +1157,22 @@ static void AtomicLoad64(MacroAssembler& masm,
   masm.movl(edx, ecx);
   masm.movl(eax, ebx);
 
-  masm.append(access, masm.size());
+  if (access) {
+    masm.append(*access, masm.size());
+  }
   masm.lock_cmpxchg8b(edx, eax, ecx, ebx, Operand(address));
 }
 
 void MacroAssembler::wasmAtomicLoad64(const wasm::MemoryAccessDesc& access,
                                       const Address& mem, Register64 temp,
                                       Register64 output) {
-  AtomicLoad64(*this, access, mem, temp, output);
+  AtomicLoad64(*this, &access, mem, temp, output);
 }
 
 void MacroAssembler::wasmAtomicLoad64(const wasm::MemoryAccessDesc& access,
                                       const BaseIndex& mem, Register64 temp,
                                       Register64 output) {
-  AtomicLoad64(*this, access, mem, temp, output);
+  AtomicLoad64(*this, &access, mem, temp, output);
 }
 
 template <typename T>
@@ -1459,6 +1461,19 @@ void MacroAssembler::wasmTruncateFloat32ToUInt64(
   if (isSaturating) {
     bind(oolRejoin);
   }
+}
+
+// ========================================================================
+// Primitive atomic operations.
+
+void MacroAssembler::atomicLoad64(const Synchronization&, const Address& mem,
+                                  Register64 temp, Register64 output) {
+  AtomicLoad64(*this, nullptr, mem, temp, output);
+}
+
+void MacroAssembler::atomicLoad64(const Synchronization&, const BaseIndex& mem,
+                                  Register64 temp, Register64 output) {
+  AtomicLoad64(*this, nullptr, mem, temp, output);
 }
 
 // ========================================================================
