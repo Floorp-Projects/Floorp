@@ -182,8 +182,18 @@ class BugBugPushSchedules(OptimizationStrategy):
 
             config_groups = data.get("config_groups", defaultdict(list))
 
+            # Configurations returned by bugbug are in a format such as
+            # `test-windows10-64/opt-*-e10s`, while task labels are like
+            # test-windows10-64-qr/opt-mochitest-browser-chrome-e10s-6.
+            # In order to match the strings, we need to ignore the chunk number
+            # from the task label.
+            parts = task.label.split("-")
+            label_without_chunk_number = "-".join(
+                parts[:-1] if parts[-1].isdigit() else parts
+            )
+
             if not any(
-                fnmatch(task.label, config)
+                fnmatch(label_without_chunk_number, config)
                 for group in selected_groups
                 for config in config_groups[group]
             ):
