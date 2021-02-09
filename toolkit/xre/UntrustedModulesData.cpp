@@ -318,14 +318,8 @@ void UntrustedModulesData::AddNewLoads(
       continue;
     }
 
-    auto addPtr = mModules.LookupForAdd(iter.Key());
-    if (addPtr) {
-      // |mModules| already contains this record
-      continue;
-    }
-
-    RefPtr<ModuleRecord> rec(iter.Data());
-    addPtr.OrInsert([rec = std::move(rec)]() { return rec; });
+    mModules.WithEntryHandle(
+        iter.Key(), [&](auto&& addPtr) { addPtr.OrInsert(iter.Data()); });
   }
 
   // This constant matches the maximum in Telemetry::CombinedStacks
@@ -373,15 +367,18 @@ void UntrustedModulesData::Merge(UntrustedModulesData&& aNewData) {
 
   Unused << mEvents.reserve(mEvents.length() + newData.mEvents.length());
   for (auto&& event : newData.mEvents) {
-    auto addPtr = mModules.LookupForAdd(event.mModule->mResolvedNtName);
-    if (addPtr) {
-      // Even though the path of a ModuleRecord matches, the object of
-      // ModuleRecord can be different.
-      // Make sure the event's mModule points to an object in mModules.
-      event.mModule = addPtr.Data();
-    } else {
-      addPtr.OrInsert([modRef = event.mModule]() { return modRef; });
-    }
+    mModules.WithEntryHandle(event.mModule->mResolvedNtName,
+                             [&](auto&& addPtr) {
+                               if (addPtr) {
+                                 // Even though the path of a ModuleRecord
+                                 // matches, the object of ModuleRecord can be
+                                 // different. Make sure the event's mModule
+                                 // points to an object in mModules.
+                                 event.mModule = addPtr.Data();
+                               } else {
+                                 addPtr.Insert(event.mModule);
+                               }
+                             });
 
     Unused << mEvents.emplaceBack(std::move(event));
   }
