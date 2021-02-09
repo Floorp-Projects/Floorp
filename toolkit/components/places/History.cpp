@@ -1730,15 +1730,7 @@ void History::Shutdown() {
 void History::AppendToRecentlyVisitedURIs(nsIURI* aURI, bool aHidden) {
   PRTime now = PR_Now();
 
-  {
-    RecentURIVisit& visit =
-        mRecentlyVisitedURIs.LookupForAdd(aURI).OrInsert([] {
-          return RecentURIVisit{0, false};
-        });
-
-    visit.mTime = now;
-    visit.mHidden = aHidden;
-  }
+  mRecentlyVisitedURIs.Put(aURI, RecentURIVisit{now, aHidden});
 
   // Remove entries older than RECENTLY_VISITED_URIS_MAX_AGE.
   for (auto iter = mRecentlyVisitedURIs.Iter(); !iter.Done(); iter.Next()) {
