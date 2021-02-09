@@ -70,7 +70,6 @@
 #include "mozilla/Variant.h"
 #include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/LocalStorageCommon.h"
-#include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/StorageActivityService.h"
 #include "mozilla/dom/StorageDBUpdater.h"
 #include "mozilla/dom/StorageTypeBinding.h"
@@ -718,19 +717,6 @@ Result<mozilla::Ok, nsresult> CollectEachFileEntry(
 
 }  // namespace
 
-const DirectoryLockImpl* AsDirectoryLockImpl(
-    const DirectoryLock* aDirectoryLock) {
-  MOZ_ASSERT(aDirectoryLock);
-
-  return static_cast<const DirectoryLockImpl*>(aDirectoryLock);
-}
-
-DirectoryLockImpl* AsDirectoryLockImpl(DirectoryLock* aDirectoryLock) {
-  MOZ_ASSERT(aDirectoryLock);
-
-  return static_cast<DirectoryLockImpl*>(aDirectoryLock);
-}
-
 class QuotaManager::Observer final : public nsIObserver {
   static Observer* sInstance;
 
@@ -999,7 +985,7 @@ class CollectOriginsHelper final : public Runnable {
   CondVar mCondVar;
 
   // The members below are protected by mMutex.
-  nsTArray<RefPtr<DirectoryLockImpl>> mLocks;
+  nsTArray<RefPtr<OriginDirectoryLock>> mLocks;
   uint64_t mSizeToBeFreed;
   bool mWaiting;
 
@@ -1009,7 +995,7 @@ class CollectOriginsHelper final : public Runnable {
   // Blocks the current thread until origins are collected on the main thread.
   // The returned value contains an aggregate size of those origins.
   int64_t BlockAndReturnOriginsForEviction(
-      nsTArray<RefPtr<DirectoryLockImpl>>& aLocks);
+      nsTArray<RefPtr<OriginDirectoryLock>>& aLocks);
 
  private:
   ~CollectOriginsHelper() = default;
@@ -1135,11 +1121,11 @@ class OriginOperationBase : public BackgroundThreadObject, public Runnable {
 };
 
 class FinalizeOriginEvictionOp : public OriginOperationBase {
-  nsTArray<RefPtr<DirectoryLockImpl>> mLocks;
+  nsTArray<RefPtr<OriginDirectoryLock>> mLocks;
 
  public:
   FinalizeOriginEvictionOp(nsIEventTarget* aBackgroundThread,
-                           nsTArray<RefPtr<DirectoryLockImpl>>&& aLocks)
+                           nsTArray<RefPtr<OriginDirectoryLock>>&& aLocks)
       : OriginOperationBase(aBackgroundThread), mLocks(std::move(aLocks)) {
     MOZ_ASSERT(!NS_IsMainThread());
   }
@@ -2631,42 +2617,6 @@ bool RecvShutdownQuotaManager() {
   return true;
 }
 
-/*******************************************************************************
- * Directory lock
- ******************************************************************************/
-
-int64_t DirectoryLock::Id() const { return AsDirectoryLockImpl(this)->Id(); }
-
-PersistenceType DirectoryLock::GetPersistenceType() const {
-  return AsDirectoryLockImpl(this)->GetPersistenceType();
-}
-
-quota::GroupAndOrigin DirectoryLock::GroupAndOrigin() const {
-  return AsDirectoryLockImpl(this)->GroupAndOrigin();
-}
-
-const nsACString& DirectoryLock::Origin() const {
-  return AsDirectoryLockImpl(this)->Origin();
-}
-
-Client::Type DirectoryLock::ClientType() const {
-  return AsDirectoryLockImpl(this)->ClientType();
-}
-
-void DirectoryLock::Acquire(RefPtr<OpenDirectoryListener> aOpenListener) {
-  AsDirectoryLockImpl(this)->Acquire(std::move(aOpenListener));
-}
-
-RefPtr<DirectoryLock> DirectoryLock::Specialize(
-    PersistenceType aPersistenceType,
-    const quota::GroupAndOrigin& aGroupAndOrigin,
-    Client::Type aClientType) const {
-  return AsDirectoryLockImpl(this)->Specialize(aPersistenceType,
-                                               aGroupAndOrigin, aClientType);
-}
-
-void DirectoryLock::Log() const { AsDirectoryLockImpl(this)->Log(); }
-
 QuotaManager::Observer* QuotaManager::Observer::sInstance = nullptr;
 
 // static
@@ -3062,7 +3012,7 @@ bool QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate) {
   if (newTemporaryStorageUsage > quotaManager->mTemporaryStorageLimit) {
     // This will block the thread without holding the lock while waitting.
 
-    AutoTArray<RefPtr<DirectoryLockImpl>, 10> locks;
+    AutoTArray<RefPtr<OriginDirectoryLock>, 10> locks;
     uint64_t sizeToBeFreed;
 
     if (IsOnBackgroundThread()) {
@@ -3089,7 +3039,7 @@ bool QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate) {
     {
       MutexAutoUnlock autoUnlock(quotaManager->mQuotaMutex);
 
-      for (RefPtr<DirectoryLockImpl>& lock : locks) {
+      for (const auto& lock : locks) {
         quotaManager->DeleteFilesForOrigin(lock->GetPersistenceType(),
                                            lock->Origin());
       }
@@ -3099,7 +3049,7 @@ bool QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate) {
 
     NS_ASSERTION(mOriginInfo, "How come?!");
 
-    for (DirectoryLockImpl* lock : locks) {
+    for (const auto& lock : locks) {
       MOZ_ASSERT(!(lock->GetPersistenceType() == groupInfo->mPersistenceType &&
                    lock->Origin() == mOriginInfo->mOrigin),
                  "Deleted itself!");
@@ -3394,7 +3344,7 @@ void QuotaManager::RemovePendingDirectoryLock(DirectoryLockImpl& aLock) {
 }
 
 uint64_t QuotaManager::CollectOriginsForEviction(
-    uint64_t aMinSizeToBeFreed, nsTArray<RefPtr<DirectoryLockImpl>>& aLocks) {
+    uint64_t aMinSizeToBeFreed, nsTArray<RefPtr<OriginDirectoryLock>>& aLocks) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aLocks.IsEmpty());
 
@@ -3520,11 +3470,11 @@ uint64_t QuotaManager::CollectOriginsForEviction(
     // operations for them will be delayed (until origin eviction is finalized).
 
     for (const auto& originInfo : inactiveOrigins) {
-      RefPtr<DirectoryLockImpl> lock = DirectoryLockImpl::CreateForEviction(
+      auto lock = DirectoryLockImpl::CreateForEviction(
           WrapNotNullUnchecked(this), originInfo->mGroupInfo->mPersistenceType,
           GroupAndOrigin{originInfo->mGroupInfo->mGroup, originInfo->mOrigin});
 
-      lock->Acquire();
+      lock->AcquireImmediately();
 
       aLocks.AppendElement(lock.forget());
     }
@@ -5951,7 +5901,7 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
   return NS_OK;
 }
 
-RefPtr<DirectoryLock> QuotaManager::CreateDirectoryLock(
+RefPtr<ClientDirectoryLock> QuotaManager::CreateDirectoryLock(
     PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
     Client::Type aClientType, bool aExclusive) {
   AssertIsOnOwningThread();
@@ -5960,7 +5910,7 @@ RefPtr<DirectoryLock> QuotaManager::CreateDirectoryLock(
                                    aGroupAndOrigin, aClientType, aExclusive);
 }
 
-RefPtr<DirectoryLock> QuotaManager::CreateDirectoryLockInternal(
+RefPtr<UniversalDirectoryLock> QuotaManager::CreateDirectoryLockInternal(
     const Nullable<PersistenceType>& aPersistenceType,
     const OriginScope& aOriginScope, const Nullable<Client::Type>& aClientType,
     bool aExclusive) {
@@ -6594,7 +6544,7 @@ Result<PrincipalInfo, nsresult> QuotaManager::ParseOrigin(
 void QuotaManager::InvalidateQuotaCache() { gInvalidateQuotaCache = true; }
 
 uint64_t QuotaManager::LockedCollectOriginsForEviction(
-    uint64_t aMinSizeToBeFreed, nsTArray<RefPtr<DirectoryLockImpl>>& aLocks) {
+    uint64_t aMinSizeToBeFreed, nsTArray<RefPtr<OriginDirectoryLock>>& aLocks) {
   mQuotaMutex.AssertCurrentThreadOwns();
 
   RefPtr<CollectOriginsHelper> helper =
@@ -6878,7 +6828,7 @@ void QuotaManager::DeleteFilesForOrigin(PersistenceType aPersistenceType,
 }
 
 void QuotaManager::FinalizeOriginEviction(
-    nsTArray<RefPtr<DirectoryLockImpl>>&& aLocks) {
+    nsTArray<RefPtr<OriginDirectoryLock>>&& aLocks) {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
   RefPtr<FinalizeOriginEvictionOp> op =
@@ -7220,7 +7170,7 @@ CollectOriginsHelper::CollectOriginsHelper(mozilla::Mutex& aMutex,
 }
 
 int64_t CollectOriginsHelper::BlockAndReturnOriginsForEviction(
-    nsTArray<RefPtr<DirectoryLockImpl>>& aLocks) {
+    nsTArray<RefPtr<OriginDirectoryLock>>& aLocks) {
   MOZ_ASSERT(!NS_IsMainThread(), "Wrong thread!");
   mMutex.AssertCurrentThreadOwns();
 
@@ -7241,7 +7191,7 @@ CollectOriginsHelper::Run() {
 
   // We use extra stack vars here to avoid race detector warnings (the same
   // memory accessed with and without the lock held).
-  nsTArray<RefPtr<DirectoryLockImpl>> locks;
+  nsTArray<RefPtr<OriginDirectoryLock>> locks;
   uint64_t sizeToBeFreed =
       quotaManager->CollectOriginsForEviction(mMinSizeToBeFreed, locks);
 
@@ -7410,7 +7360,7 @@ nsresult FinalizeOriginEvictionOp::DoDirectoryWork(
 
   AUTO_PROFILER_LABEL("FinalizeOriginEvictionOp::DoDirectoryWork", OTHER);
 
-  for (RefPtr<DirectoryLockImpl>& lock : mLocks) {
+  for (const auto& lock : mLocks) {
     aQuotaManager.OriginClearCompleted(
         lock->GetPersistenceType(), lock->Origin(), Nullable<Client::Type>());
   }

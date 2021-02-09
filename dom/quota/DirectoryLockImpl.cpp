@@ -108,7 +108,8 @@ void DirectoryLockImpl::NotifyOpenListener() {
   if (mInvalidated) {
     (*mOpenListener)->DirectoryLockFailed();
   } else {
-    (*mOpenListener)->DirectoryLockAcquired(this);
+    (*mOpenListener)
+        ->DirectoryLockAcquired(static_cast<UniversalDirectoryLock*>(this));
   }
 
   mOpenListener.destroy();
@@ -177,7 +178,7 @@ void DirectoryLockImpl::Acquire(RefPtr<OpenDirectoryListener> aOpenListener) {
   mQuotaManager->AbortOperationsForLocks(lockIds);
 }
 
-void DirectoryLockImpl::Acquire() {
+void DirectoryLockImpl::AcquireImmediately() {
   AssertIsOnOwningThread();
 
 #ifdef DEBUG
@@ -190,7 +191,7 @@ void DirectoryLockImpl::Acquire() {
   mQuotaManager->RegisterDirectoryLock(*this);
 }
 
-RefPtr<DirectoryLock> DirectoryLockImpl::Specialize(
+RefPtr<ClientDirectoryLock> DirectoryLockImpl::Specialize(
     PersistenceType aPersistenceType,
     const quota::GroupAndOrigin& aGroupAndOrigin,
     Client::Type aClientType) const {
