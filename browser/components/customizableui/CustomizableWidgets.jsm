@@ -186,19 +186,23 @@ const CustomizableWidgets = [
       let body = document.createXULElement("vbox");
       body.className = "panel-subview-body";
       body.appendChild(fragment);
+      let separator = document.createXULElement("toolbarseparator");
       let footer;
       while (--elementCount >= 0) {
         let element = body.children[elementCount];
-        CustomizableUI.addShortcut(element);
         element.classList.add("subviewbutton");
         if (element.classList.contains("restoreallitem")) {
           footer = element;
-          element.classList.add("panel-subview-footer");
+          element.classList.add(
+            "subviewbutton-iconic",
+            "panel-subview-footer-button"
+          );
         } else {
           element.classList.add("subviewbutton-iconic", "bookmark-item");
         }
       }
       panelview.appendChild(body);
+      panelview.appendChild(separator);
       panelview.appendChild(footer);
     },
   },

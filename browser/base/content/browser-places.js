@@ -731,7 +731,9 @@ HistoryMenu.prototype = {
     // populate menu
     let tabsFragment = RecentlyClosedTabsAndWindowsMenuUtils.getTabsFragment(
       window,
-      "menuitem"
+      "menuitem",
+      /* aPrefixRestoreAll = */ false,
+      "menu-history-reopen-all-tabs"
     );
     undoPopup.appendChild(tabsFragment);
   },
@@ -769,7 +771,9 @@ HistoryMenu.prototype = {
     // populate menu
     let windowsFragment = RecentlyClosedTabsAndWindowsMenuUtils.getWindowsFragment(
       window,
-      "menuitem"
+      "menuitem",
+      /* aPrefixRestoreAll = */ false,
+      "menu-history-reopen-all-windows"
     );
     undoPopup.appendChild(windowsFragment);
   },
