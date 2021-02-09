@@ -45,3 +45,7 @@ with Files("pipewire/**"):
 
 with Files('WinToast/**'):
     BUG_COMPONENT = ('Toolkit', 'General')
+
+with Files('libsrtp/**'):
+    BUG_COMPONENT = ('Core', 'WeebRTC: Network')
+
