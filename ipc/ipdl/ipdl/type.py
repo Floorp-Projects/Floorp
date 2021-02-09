@@ -1049,6 +1049,8 @@ class GatherDecls(TcheckVisitor):
         self.symtab.enterScope()
         sd.visited = True
 
+        self.checkAttributes(sd.attributes, {"Comparable": None})
+
         for f in sd.fields:
             ftypedecl = self.symtab.lookup(str(f.typespec))
             if ftypedecl is None:
@@ -1077,6 +1079,8 @@ class GatherDecls(TcheckVisitor):
         # If we've already processed this union, don't do it again.
         if len(utype.components):
             return
+
+        self.checkAttributes(ud.attributes, {"Comparable": None})
 
         for c in ud.components:
             cdecl = self.symtab.lookup(str(c))

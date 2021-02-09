@@ -8,14 +8,14 @@ using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 namespace mozilla {
 namespace ipc {
 
-comparable struct ContentSecurityPolicy
+[Comparable] struct ContentSecurityPolicy
 {
   nsString policy;
   bool reportOnlyFlag;
   bool deliveredViaMetaTagFlag;
 };
 
-comparable struct ContentPrincipalInfo
+[Comparable] struct ContentPrincipalInfo
 {
   OriginAttributes attrs;
 
@@ -36,22 +36,22 @@ comparable struct ContentPrincipalInfo
   nsCString baseDomain;
 };
 
-comparable struct SystemPrincipalInfo
+[Comparable] struct SystemPrincipalInfo
 { };
 
-comparable struct NullPrincipalInfo
+[Comparable] struct NullPrincipalInfo
 {
   OriginAttributes attrs;
   nsCString spec;
 };
 
-comparable struct ExpandedPrincipalInfo
+[Comparable] struct ExpandedPrincipalInfo
 {
   OriginAttributes attrs;
   PrincipalInfo[] allowlist;
 };
 
-comparable union PrincipalInfo
+[Comparable] union PrincipalInfo
 {
   ContentPrincipalInfo;
   SystemPrincipalInfo;
@@ -59,7 +59,7 @@ comparable union PrincipalInfo
   ExpandedPrincipalInfo;
 };
 
-comparable struct CSPInfo
+[Comparable] struct CSPInfo
 {
   ContentSecurityPolicy[] policyInfos;
   PrincipalInfo requestPrincipalInfo;

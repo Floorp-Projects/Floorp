@@ -2674,7 +2674,7 @@ def _generateCxxStruct(sd):
     # The default copy, move, and assignment constructors, and the default
     # destructor, will do the right thing.
 
-    if sd.comparable:
+    if "Comparable" in sd.attributes:
         # bool operator==(const Struct& _o)
         ovar = ExprVar("_o")
         opeqeq = MethodDefn(
@@ -3272,7 +3272,7 @@ def _generateCxxUnion(ud):
     )
     cls.addstmts([opeq, Whitespace.NL])
 
-    if ud.comparable:
+    if "Comparable" in ud.attributes:
         # bool operator==(const T&)
         for c in ud.components:
             opeqeq = MethodDefn(
