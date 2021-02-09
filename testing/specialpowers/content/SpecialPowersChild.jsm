@@ -2095,6 +2095,11 @@ class SpecialPowersChild extends JSWindowActorChild {
     });
   }
 
+  /**
+   * Which commands are available can be determined by checking which commands
+   * are registered. See \ref
+   * nsIControllerCommandTable.registerCommand(in String, in nsIControllerCommand).
+   */
   doCommand(window, cmd, param) {
     switch (cmd) {
       case "cmd_align":
