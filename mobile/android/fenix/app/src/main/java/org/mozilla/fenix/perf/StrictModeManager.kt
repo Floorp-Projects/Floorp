@@ -19,11 +19,9 @@ import androidx.fragment.app.FragmentManager
 import mozilla.components.support.ktx.android.os.resetAfter
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.components.Components
+import org.mozilla.fenix.utils.ManufacturerCodes
 import org.mozilla.fenix.utils.Mockable
 import java.util.concurrent.atomic.AtomicLong
-
-private const val MANUFACTURE_HUAWEI: String = "HUAWEI"
-private const val MANUFACTURE_ONE_PLUS: String = "OnePlus"
 
 private val logger = Performance.logger
 private val mainLooper = Looper.getMainLooper()
@@ -145,5 +143,5 @@ class StrictModeManager(
      * To add a new manufacturer to the list, log "Build.MANUFACTURER" from the device to get the
      * exact name of the manufacturer.
      */
-    private val strictModeExceptionList = setOf(MANUFACTURE_HUAWEI, MANUFACTURE_ONE_PLUS)
+    private val strictModeExceptionList = setOf(ManufacturerCodes.HUAWEI, ManufacturerCodes.ONE_PLUS)
 }
