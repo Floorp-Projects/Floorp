@@ -12,8 +12,8 @@ LOCAL_INCLUDES += [
     "/ipc/chromium/src",
     "/media/libyuv/libyuv/include",
     "/media/webrtc",
-    "/netwerk/srtp/src/crypto/include",
-    "/netwerk/srtp/src/include",
+    "/third_party/libsrtp/src/crypto/include",
+    "/third_party/libsrtp/src/include",
     "/third_party/libwebrtc",
     "/third_party/libwebrtc/webrtc",
 ]

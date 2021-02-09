@@ -12,7 +12,7 @@ LOCAL_INCLUDES += [
     "/dom/media/webrtc",
     "/ipc/chromium/src",
     "/media/webrtc",
-    "/netwerk/srtp/src/include",
+    "/third_party/libsrtp/src/include",
     "/third_party/libwebrtc",
     "/third_party/libwebrtc/webrtc",
 ]

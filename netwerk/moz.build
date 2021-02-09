@@ -22,9 +22,6 @@ DIRS += [
     "url-classifier",
 ]
 
-if CONFIG["MOZ_SRTP"]:
-    DIRS += ["srtp/src"]
-
 if CONFIG["MOZ_SCTP"]:
     DIRS += ["sctp/src", "sctp/datachannel"]
 

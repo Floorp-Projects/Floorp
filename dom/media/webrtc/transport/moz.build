@@ -13,6 +13,7 @@ DIRS += [
     "/dom/media/webrtc/transport/third_party",
     "/dom/media/webrtc/transport/build",
     "/dom/media/webrtc/transport/ipc",
+    "/dom/media/webrtc/transport/srtp",
 ]
 
 # Add libFuzzer configuration directives
