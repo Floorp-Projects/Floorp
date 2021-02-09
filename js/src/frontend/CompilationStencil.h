@@ -28,6 +28,7 @@
 #include "js/RealmOptions.h"
 #include "js/SourceText.h"
 #include "js/Transcoding.h"
+#include "js/UniquePtr.h"  // js::UniquePtr
 #include "js/Vector.h"
 #include "js/WasmModule.h"
 #include "vm/GlobalObject.h"  // GlobalObject
@@ -549,7 +550,7 @@ struct CompilationStencil : public BaseCompilationStencil {
   CompilationInput input;
 
   // Module metadata if this is a module compile.
-  mozilla::Maybe<StencilModuleMetadata> moduleMetadata;
+  UniquePtr<StencilModuleMetadata> moduleMetadata;
 
   // Immutable data computed during initial compilation and never updated during
   // delazification.
