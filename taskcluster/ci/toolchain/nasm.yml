@@ -53,6 +53,8 @@ linux64-nasm:
     description: "nasm linux64 build"
     attributes:
         local-toolchain: true
+    worker:
+        docker-image: {in-tree: deb10-toolchain-build}
     treeherder:
         symbol: TL(nasm)
     run:
@@ -61,14 +63,22 @@ linux64-nasm:
     fetches:
         fetch:
             - nasm-2.14.02
+        toolchain:
+            - linux64-clang-11
+            - linux64-sysroot
 
 linux64-nasm-2.14.02:
     description: "nasm linux64 minimum supported version build"
     treeherder:
         symbol: TL(nasm-2.14.02)
+    worker:
+        docker-image: {in-tree: deb10-toolchain-build}
     run:
         script: build-nasm.sh
         arguments: ['linux64']
     fetches:
         fetch:
             - nasm-2.14.02
+        toolchain:
+            - linux64-clang-11
+            - linux64-sysroot
