@@ -1187,12 +1187,6 @@ class nsIWidget : public nsISupports {
   virtual void SetDrawsTitle(bool aDrawTitle) {}
 
   /**
-   * Indicates whether the widget should attempt to make titlebar controls
-   * easier to see on dark titlebar backgrounds.
-   */
-  virtual void SetUseBrightTitlebarForeground(bool aBrightForeground) {}
-
-  /**
    * Hide window chrome (borders, buttons) for this widget.
    *
    */

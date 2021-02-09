@@ -102,19 +102,6 @@ void ChromeObserver::SetDrawsTitle(bool aState) {
   }
 }
 
-void ChromeObserver::UpdateBrightTitlebarForeground() {
-  nsIWidget* mainWidget = GetWindowWidget();
-  if (mainWidget) {
-    // We can do this synchronously because SetBrightTitlebarForeground doesn't
-    // have any synchronous effects apart from a harmless invalidation.
-    mainWidget->SetUseBrightTitlebarForeground(
-        mDocument->GetDocumentLWTheme() == Document::Doc_Theme_Bright ||
-        mDocument->GetRootElement()->AttrValueIs(
-            kNameSpaceID_None, nsGkAtoms::brighttitlebarforeground, u"true"_ns,
-            eCaseMatters));
-  }
-}
-
 class MarginSetter : public Runnable {
  public:
   explicit MarginSetter(nsIWidget* aWidget)
@@ -196,9 +183,6 @@ void ChromeObserver::AttributeChanged(dom::Element* aElement,
       // if the lwtheme changed, make sure to reset the document lwtheme
       // cache
       mDocument->ResetDocumentLWTheme();
-      UpdateBrightTitlebarForeground();
-    } else if (aName == nsGkAtoms::brighttitlebarforeground) {
-      UpdateBrightTitlebarForeground();
     }
   } else {
     if (aName == nsGkAtoms::hidechrome) {
@@ -213,9 +197,6 @@ void ChromeObserver::AttributeChanged(dom::Element* aElement,
                 aName == nsGkAtoms::lwthemetextcolor)) {
       // if the lwtheme changed, make sure to restyle appropriately
       mDocument->ResetDocumentLWTheme();
-      UpdateBrightTitlebarForeground();
-    } else if (aName == nsGkAtoms::brighttitlebarforeground) {
-      UpdateBrightTitlebarForeground();
     } else if (aName == nsGkAtoms::drawintitlebar) {
       SetDrawsInTitlebar(false);
     } else if (aName == nsGkAtoms::drawtitle) {

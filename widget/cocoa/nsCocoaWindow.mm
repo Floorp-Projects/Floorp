@@ -2475,14 +2475,6 @@ void nsCocoaWindow::SetDrawsTitle(bool aDrawTitle) {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-void nsCocoaWindow::SetUseBrightTitlebarForeground(bool aBrightForeground) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  [mWindow setUseBrightTitlebarForeground:aBrightForeground];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
 nsresult nsCocoaWindow::SetNonClientMargins(LayoutDeviceIntMargin& margins) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -3162,7 +3154,6 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
   mDirtyRect = NSZeroRect;
   mBeingShown = NO;
   mDrawTitle = NO;
-  mBrightTitlebarForeground = NO;
   mUseMenuStyle = NO;
   mTouchBar = nil;
   mIsAnimationSuppressed = NO;
@@ -3342,15 +3333,6 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 
 - (BOOL)wantsTitleDrawn {
   return mDrawTitle;
-}
-
-- (void)setUseBrightTitlebarForeground:(BOOL)aBrightForeground {
-  mBrightTitlebarForeground = aBrightForeground;
-  [[self standardWindowButton:NSWindowFullScreenButton] setNeedsDisplay:YES];
-}
-
-- (BOOL)useBrightTitlebarForeground {
-  return mBrightTitlebarForeground;
 }
 
 - (NSView*)trackingAreaView {
