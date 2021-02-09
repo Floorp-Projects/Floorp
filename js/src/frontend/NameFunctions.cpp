@@ -421,9 +421,13 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
       MOZ_ASSERT(item->is<NullaryNode>());
     } else {
       for (ParseNode* item : pn->contents()) {
-        BinaryNode* spec = &item->as<BinaryNode>();
-        MOZ_ASSERT(spec->isKind(isImport ? ParseNodeKind::ImportSpec
-                                         : ParseNodeKind::ExportSpec));
+        auto* spec = &item->as<BinaryNode>();
+        MOZ_ASSERT_IF(isImport,
+                      spec->isKind(ParseNodeKind::ImportSpec) ||
+                          spec->isKind(ParseNodeKind::ImportNamespaceSpec));
+        MOZ_ASSERT_IF(!isImport,
+                      spec->isKind(ParseNodeKind::ExportSpec) ||
+                          spec->isKind(ParseNodeKind::ExportNamespaceSpec));
         MOZ_ASSERT(spec->left()->isKind(ParseNodeKind::Name) ||
                    spec->left()->isKind(ParseNodeKind::StringExpr));
         MOZ_ASSERT(spec->right()->isKind(ParseNodeKind::Name) ||
