@@ -37,3 +37,18 @@ size_t PerformanceEntry::SizeOfIncludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
+
+bool PerformanceEntry::ShouldAddEntryToObserverBuffer(
+    PerformanceObserverInit& aOption) const {
+  if (aOption.mType.WasPassed()) {
+    if (GetEntryType()->Equals(aOption.mType.Value())) {
+      return true;
+    }
+  } else {
+    if (aOption.mEntryTypes.Value().Contains(
+            nsDependentAtomString(GetEntryType()))) {
+      return true;
+    }
+  }
+  return false;
+}
