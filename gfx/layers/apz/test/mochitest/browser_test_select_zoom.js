@@ -40,9 +40,6 @@ add_task(async function setup_pref() {
       // want those pans to turn into fling animations, so we increase the
       // fling-min threshold velocity to an arbitrarily large value.
       ["apz.fling_min_velocity_threshold", "10000"],
-      // Explicitly enable pinch-zooming, so this test can run on desktop
-      // even though zooming isn't enabled by default on desktop yet.
-      ["apz.allow_zooming", true],
     ],
   });
 });
