@@ -30,6 +30,7 @@ class PerformanceStorage;
 class PerformanceTiming;
 class PerformanceEventTiming;
 class WorkerPrivate;
+class EventCounts;
 
 // Base class for main-thread and worker Performance API
 class Performance : public DOMEventTargetHelper {
@@ -124,6 +125,8 @@ class Performance : public DOMEventTargetHelper {
 
   virtual void BufferEventTimingEntryIfNeeded(
       PerformanceEventTiming* aEntry) = 0;
+
+  virtual class EventCounts* EventCounts() = 0;
 
   virtual void QueueNavigationTimingEntry() = 0;
 
