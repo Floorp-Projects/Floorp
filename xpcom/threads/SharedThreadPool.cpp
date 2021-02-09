@@ -100,42 +100,44 @@ already_AddRefed<SharedThreadPool> SharedThreadPool::Get(
   MOZ_ASSERT(sMonitor && sPools);
   ReentrantMonitorAutoEnter mon(*sMonitor);
   RefPtr<SharedThreadPool> pool;
-  nsresult rv;
 
-  if (auto entry = sPools->LookupForAdd(aName)) {
-    pool = entry.Data();
-    if (NS_FAILED(pool->EnsureThreadLimitIsAtLeast(aThreadLimit))) {
-      NS_WARNING("Failed to set limits on thread pool");
-    }
-  } else {
-    nsCOMPtr<nsIThreadPool> threadPool(CreateThreadPool(aName));
-    if (NS_WARN_IF(!threadPool)) {
-      sPools->Remove(aName);  // XXX entry.Remove()
-      return nullptr;
-    }
-    pool = new SharedThreadPool(aName, threadPool);
+  return sPools->WithEntryHandle(
+      aName, [&](auto&& entry) -> already_AddRefed<SharedThreadPool> {
+        if (entry) {
+          pool = entry.Data();
+          if (NS_FAILED(pool->EnsureThreadLimitIsAtLeast(aThreadLimit))) {
+            NS_WARNING("Failed to set limits on thread pool");
+          }
+        } else {
+          nsCOMPtr<nsIThreadPool> threadPool(CreateThreadPool(aName));
+          if (NS_WARN_IF(!threadPool)) {
+            sPools->Remove(aName);  // XXX entry.Remove()
+            return nullptr;
+          }
+          pool = new SharedThreadPool(aName, threadPool);
 
-    // Set the thread and idle limits. Note that we don't rely on the
-    // EnsureThreadLimitIsAtLeast() call below, as the default thread limit
-    // is 4, and if aThreadLimit is less than 4 we'll end up with a pool
-    // with 4 threads rather than what we expected; so we'll have unexpected
-    // behaviour.
-    rv = pool->SetThreadLimit(aThreadLimit);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      sPools->Remove(aName);  // XXX entry.Remove()
-      return nullptr;
-    }
+          // Set the thread and idle limits. Note that we don't rely on the
+          // EnsureThreadLimitIsAtLeast() call below, as the default thread
+          // limit is 4, and if aThreadLimit is less than 4 we'll end up with a
+          // pool with 4 threads rather than what we expected; so we'll have
+          // unexpected behaviour.
+          nsresult rv = pool->SetThreadLimit(aThreadLimit);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            sPools->Remove(aName);  // XXX entry.Remove()
+            return nullptr;
+          }
 
-    rv = pool->SetIdleThreadLimit(aThreadLimit);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      sPools->Remove(aName);  // XXX entry.Remove()
-      return nullptr;
-    }
+          rv = pool->SetIdleThreadLimit(aThreadLimit);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            sPools->Remove(aName);  // XXX entry.Remove()
+            return nullptr;
+          }
 
-    entry.OrInsert([pool]() { return pool.get(); });
-  }
+          entry.Insert(pool.get());
+        }
 
-  return pool.forget();
+        return pool.forget();
+      });
 }
 
 NS_IMETHODIMP_(MozExternalRefCountType) SharedThreadPool::AddRef(void) {
