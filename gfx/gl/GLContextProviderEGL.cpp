@@ -868,8 +868,10 @@ EGLSurface GLContextEGL::CreateWaylandBufferSurface(
   if (surface) {
 #ifdef MOZ_GTK_WAYLAND
     WaylandGLSurface* waylandData = new WaylandGLSurface(wlsurface, eglwindow);
-    auto entry = sWaylandGLSurface.LookupForAdd(surface);
-    entry.OrInsert([&waylandData]() { return waylandData; });
+    // XXX This looks as if this should unconditionally insert. Otherwise,
+    // waylandData would be leaked.
+    sWaylandGLSurface.WithEntryHandle(
+        surface, [&](auto&& entry) { entry.OrInsert(waylandData); });
 #endif
   }
 
