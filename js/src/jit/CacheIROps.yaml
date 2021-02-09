@@ -1341,7 +1341,7 @@
   args:
     obj: ObjId
     index: IntPtrId
-    value: Int32Id
+    value: RawId
     elementType: ScalarTypeImm
 
 - name: AtomicsAddResult
@@ -1351,7 +1351,7 @@
   args:
     obj: ObjId
     index: IntPtrId
-    value: Int32Id
+    value: RawId
     elementType: ScalarTypeImm
 
 - name: AtomicsSubResult
@@ -1361,7 +1361,7 @@
   args:
     obj: ObjId
     index: IntPtrId
-    value: Int32Id
+    value: RawId
     elementType: ScalarTypeImm
 
 - name: AtomicsAndResult
@@ -1371,7 +1371,7 @@
   args:
     obj: ObjId
     index: IntPtrId
-    value: Int32Id
+    value: RawId
     elementType: ScalarTypeImm
 
 - name: AtomicsOrResult
@@ -1381,7 +1381,7 @@
   args:
     obj: ObjId
     index: IntPtrId
-    value: Int32Id
+    value: RawId
     elementType: ScalarTypeImm
 
 - name: AtomicsXorResult
@@ -1391,7 +1391,7 @@
   args:
     obj: ObjId
     index: IntPtrId
-    value: Int32Id
+    value: RawId
     elementType: ScalarTypeImm
 
 - name: AtomicsLoadResult

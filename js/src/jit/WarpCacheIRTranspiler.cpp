@@ -223,7 +223,7 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
 
   [[nodiscard]] bool emitAtomicsBinaryOp(ObjOperandId objId,
                                          IntPtrOperandId indexId,
-                                         Int32OperandId valueId,
+                                         uint32_t valueId,
                                          Scalar::Type elementType, AtomicOp op);
 
   [[nodiscard]] bool emitLoadArgumentSlot(ValOperandId resultId,
@@ -3552,11 +3552,11 @@ bool WarpCacheIRTranspiler::emitAtomicsCompareExchangeResult(
 }
 
 bool WarpCacheIRTranspiler::emitAtomicsExchangeResult(
-    ObjOperandId objId, IntPtrOperandId indexId, Int32OperandId valueId,
+    ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
     Scalar::Type elementType) {
   MDefinition* obj = getOperand(objId);
   MDefinition* index = getOperand(indexId);
-  MDefinition* value = getOperand(valueId);
+  MDefinition* value = getOperand(ValOperandId(valueId));
 
   auto* length = MArrayBufferViewLength::New(alloc(), obj);
   add(length);
@@ -3581,12 +3581,12 @@ bool WarpCacheIRTranspiler::emitAtomicsExchangeResult(
 
 bool WarpCacheIRTranspiler::emitAtomicsBinaryOp(ObjOperandId objId,
                                                 IntPtrOperandId indexId,
-                                                Int32OperandId valueId,
+                                                uint32_t valueId,
                                                 Scalar::Type elementType,
                                                 AtomicOp op) {
   MDefinition* obj = getOperand(objId);
   MDefinition* index = getOperand(indexId);
-  MDefinition* value = getOperand(valueId);
+  MDefinition* value = getOperand(ValOperandId(valueId));
 
   auto* length = MArrayBufferViewLength::New(alloc(), obj);
   add(length);
@@ -3611,7 +3611,7 @@ bool WarpCacheIRTranspiler::emitAtomicsBinaryOp(ObjOperandId objId,
 
 bool WarpCacheIRTranspiler::emitAtomicsAddResult(ObjOperandId objId,
                                                  IntPtrOperandId indexId,
-                                                 Int32OperandId valueId,
+                                                 uint32_t valueId,
                                                  Scalar::Type elementType) {
   return emitAtomicsBinaryOp(objId, indexId, valueId, elementType,
                              AtomicFetchAddOp);
@@ -3619,7 +3619,7 @@ bool WarpCacheIRTranspiler::emitAtomicsAddResult(ObjOperandId objId,
 
 bool WarpCacheIRTranspiler::emitAtomicsSubResult(ObjOperandId objId,
                                                  IntPtrOperandId indexId,
-                                                 Int32OperandId valueId,
+                                                 uint32_t valueId,
                                                  Scalar::Type elementType) {
   return emitAtomicsBinaryOp(objId, indexId, valueId, elementType,
                              AtomicFetchSubOp);
@@ -3627,7 +3627,7 @@ bool WarpCacheIRTranspiler::emitAtomicsSubResult(ObjOperandId objId,
 
 bool WarpCacheIRTranspiler::emitAtomicsAndResult(ObjOperandId objId,
                                                  IntPtrOperandId indexId,
-                                                 Int32OperandId valueId,
+                                                 uint32_t valueId,
                                                  Scalar::Type elementType) {
   return emitAtomicsBinaryOp(objId, indexId, valueId, elementType,
                              AtomicFetchAndOp);
@@ -3635,7 +3635,7 @@ bool WarpCacheIRTranspiler::emitAtomicsAndResult(ObjOperandId objId,
 
 bool WarpCacheIRTranspiler::emitAtomicsOrResult(ObjOperandId objId,
                                                 IntPtrOperandId indexId,
-                                                Int32OperandId valueId,
+                                                uint32_t valueId,
                                                 Scalar::Type elementType) {
   return emitAtomicsBinaryOp(objId, indexId, valueId, elementType,
                              AtomicFetchOrOp);
@@ -3643,7 +3643,7 @@ bool WarpCacheIRTranspiler::emitAtomicsOrResult(ObjOperandId objId,
 
 bool WarpCacheIRTranspiler::emitAtomicsXorResult(ObjOperandId objId,
                                                  IntPtrOperandId indexId,
-                                                 Int32OperandId valueId,
+                                                 uint32_t valueId,
                                                  Scalar::Type elementType) {
   return emitAtomicsBinaryOp(objId, indexId, valueId, elementType,
                              AtomicFetchXorOp);

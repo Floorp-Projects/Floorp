@@ -15,6 +15,10 @@
 #include "jit/SharedICRegisters.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 
+namespace JS {
+class BigInt;
+}
+
 namespace js {
 
 class TypedArrayObject;
@@ -810,8 +814,17 @@ class MOZ_RAII CacheIRCompiler {
                                                int32_t);
 
   [[nodiscard]] bool emitAtomicsReadModifyWriteResult(
-      ObjOperandId objId, IntPtrOperandId indexId, Int32OperandId valueId,
+      ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
       Scalar::Type elementType, AtomicsReadWriteModifyFn fn);
+
+  using AtomicsReadWriteModify64Fn = JS::BigInt* (*)(JSContext*,
+                                                     TypedArrayObject*, size_t,
+                                                     JS::BigInt*);
+
+  template <AtomicsReadWriteModify64Fn fn>
+  [[nodiscard]] bool emitAtomicsReadModifyWriteResult64(ObjOperandId objId,
+                                                        IntPtrOperandId indexId,
+                                                        uint32_t valueId);
 
   CACHE_IR_COMPILER_SHARED_GENERATED
 

@@ -7595,12 +7595,12 @@ bool CacheIRCompiler::emitAtomicsCompareExchangeResult(
 }
 
 bool CacheIRCompiler::emitAtomicsReadModifyWriteResult(
-    ObjOperandId objId, IntPtrOperandId indexId, Int32OperandId valueId,
+    ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
     Scalar::Type elementType, AtomicsReadWriteModifyFn fn) {
   AutoOutputRegister output(*this);
   Register obj = allocator.useRegister(masm, objId);
   Register index = allocator.useRegister(masm, indexId);
-  Register value = allocator.useRegister(masm, valueId);
+  Register value = allocator.useRegister(masm, Int32OperandId(valueId));
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   // Not enough registers on X86.
@@ -7644,62 +7644,124 @@ bool CacheIRCompiler::emitAtomicsReadModifyWriteResult(
   return true;
 }
 
+template <CacheIRCompiler::AtomicsReadWriteModify64Fn fn>
+bool CacheIRCompiler::emitAtomicsReadModifyWriteResult64(
+    ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId) {
+  AutoCallVM callvm(masm, this, allocator);
+  Register obj = allocator.useRegister(masm, objId);
+  Register index = allocator.useRegister(masm, indexId);
+  Register value = allocator.useRegister(masm, BigIntOperandId(valueId));
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, callvm.output());
+
+  // Not enough registers on X86.
+  Register spectreTemp = Register::Invalid();
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // AutoCallVM's AutoSaveLiveRegisters aren't accounted for in FailurePath, so
+  // we can't use both at the same time. This isn't an issue here, because Ion
+  // doesn't support CallICs. If that ever changes, this code must be updated.
+  MOZ_ASSERT(isBaseline(), "Can't use FailurePath with AutoCallVM in Ion ICs");
+
+  // Bounds check.
+  masm.loadArrayBufferViewLengthPtr(obj, scratch);
+  masm.spectreBoundsCheckPtr(index, scratch, spectreTemp, failure->label());
+
+  // See comment in emitAtomicsCompareExchange for why we use a VM call.
+
+  callvm.prepare();
+
+  masm.Push(value);
+  masm.Push(index);
+  masm.Push(obj);
+
+  callvm.call<AtomicsReadWriteModify64Fn, fn>();
+  return true;
+}
+
 bool CacheIRCompiler::emitAtomicsExchangeResult(ObjOperandId objId,
                                                 IntPtrOperandId indexId,
-                                                Int32OperandId valueId,
+                                                uint32_t valueId,
                                                 Scalar::Type elementType) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
+  if (Scalar::isBigIntType(elementType)) {
+    return emitAtomicsReadModifyWriteResult64<jit::AtomicsExchange64>(
+        objId, indexId, valueId);
+  }
   return emitAtomicsReadModifyWriteResult(objId, indexId, valueId, elementType,
                                           AtomicsExchange(elementType));
 }
 
 bool CacheIRCompiler::emitAtomicsAddResult(ObjOperandId objId,
                                            IntPtrOperandId indexId,
-                                           Int32OperandId valueId,
+                                           uint32_t valueId,
                                            Scalar::Type elementType) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
+  if (Scalar::isBigIntType(elementType)) {
+    return emitAtomicsReadModifyWriteResult64<jit::AtomicsAdd64>(objId, indexId,
+                                                                 valueId);
+  }
   return emitAtomicsReadModifyWriteResult(objId, indexId, valueId, elementType,
                                           AtomicsAdd(elementType));
 }
 
 bool CacheIRCompiler::emitAtomicsSubResult(ObjOperandId objId,
                                            IntPtrOperandId indexId,
-                                           Int32OperandId valueId,
+                                           uint32_t valueId,
                                            Scalar::Type elementType) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
+  if (Scalar::isBigIntType(elementType)) {
+    return emitAtomicsReadModifyWriteResult64<jit::AtomicsSub64>(objId, indexId,
+                                                                 valueId);
+  }
   return emitAtomicsReadModifyWriteResult(objId, indexId, valueId, elementType,
                                           AtomicsSub(elementType));
 }
 
 bool CacheIRCompiler::emitAtomicsAndResult(ObjOperandId objId,
                                            IntPtrOperandId indexId,
-                                           Int32OperandId valueId,
+                                           uint32_t valueId,
                                            Scalar::Type elementType) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
+  if (Scalar::isBigIntType(elementType)) {
+    return emitAtomicsReadModifyWriteResult64<jit::AtomicsAnd64>(objId, indexId,
+                                                                 valueId);
+  }
   return emitAtomicsReadModifyWriteResult(objId, indexId, valueId, elementType,
                                           AtomicsAnd(elementType));
 }
 
 bool CacheIRCompiler::emitAtomicsOrResult(ObjOperandId objId,
                                           IntPtrOperandId indexId,
-                                          Int32OperandId valueId,
+                                          uint32_t valueId,
                                           Scalar::Type elementType) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
+  if (Scalar::isBigIntType(elementType)) {
+    return emitAtomicsReadModifyWriteResult64<jit::AtomicsOr64>(objId, indexId,
+                                                                valueId);
+  }
   return emitAtomicsReadModifyWriteResult(objId, indexId, valueId, elementType,
                                           AtomicsOr(elementType));
 }
 
 bool CacheIRCompiler::emitAtomicsXorResult(ObjOperandId objId,
                                            IntPtrOperandId indexId,
-                                           Int32OperandId valueId,
+                                           uint32_t valueId,
                                            Scalar::Type elementType) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
+  if (Scalar::isBigIntType(elementType)) {
+    return emitAtomicsReadModifyWriteResult64<jit::AtomicsXor64>(objId, indexId,
+                                                                 valueId);
+  }
   return emitAtomicsReadModifyWriteResult(objId, indexId, valueId, elementType,
                                           AtomicsXor(elementType));
 }
