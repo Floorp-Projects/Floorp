@@ -1964,6 +1964,8 @@ static void CompareExchange(MacroAssembler& masm,
                             Scalar::Type type, Width targetWidth,
                             const Synchronization& sync, const T& mem,
                             Register oldval, Register newval, Register output) {
+  MOZ_ASSERT(oldval != output && newval != output);
+
   Label again;
   Label done;
 
@@ -2079,6 +2081,13 @@ void MacroAssembler::compareExchange(Scalar::Type type,
 
 void MacroAssembler::compareExchange64(const Synchronization& sync,
                                        const Address& mem, Register64 expect,
+                                       Register64 replace, Register64 output) {
+  CompareExchange(*this, nullptr, Scalar::Int64, Width::_64, sync, mem,
+                  expect.reg, replace.reg, output.reg);
+}
+
+void MacroAssembler::compareExchange64(const Synchronization& sync,
+                                       const BaseIndex& mem, Register64 expect,
                                        Register64 replace, Register64 output) {
   CompareExchange(*this, nullptr, Scalar::Int64, Width::_64, sync, mem,
                   expect.reg, replace.reg, output.reg);

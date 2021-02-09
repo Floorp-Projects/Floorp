@@ -3523,12 +3523,12 @@ bool WarpCacheIRTranspiler::emitNewTypedArrayFromArrayResult(
 }
 
 bool WarpCacheIRTranspiler::emitAtomicsCompareExchangeResult(
-    ObjOperandId objId, IntPtrOperandId indexId, Int32OperandId expectedId,
-    Int32OperandId replacementId, Scalar::Type elementType) {
+    ObjOperandId objId, IntPtrOperandId indexId, uint32_t expectedId,
+    uint32_t replacementId, Scalar::Type elementType) {
   MDefinition* obj = getOperand(objId);
   MDefinition* index = getOperand(indexId);
-  MDefinition* expected = getOperand(expectedId);
-  MDefinition* replacement = getOperand(replacementId);
+  MDefinition* expected = getOperand(ValOperandId(expectedId));
+  MDefinition* replacement = getOperand(ValOperandId(replacementId));
 
   auto* length = MArrayBufferViewLength::New(alloc(), obj);
   add(length);
