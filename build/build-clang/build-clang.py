@@ -323,6 +323,9 @@ def build_one_stage(
         if is_linux():
             cmake_args += ["-DLLVM_BINUTILS_INCDIR=%s/include" % gcc_dir]
             cmake_args += ["-DLLVM_ENABLE_LIBXML2=FORCE_ON"]
+            sysroot = os.path.join(os.environ.get("MOZ_FETCHES_DIR", ""), "sysroot")
+            if os.path.exists(sysroot):
+                cmake_args += ["-DCMAKE_SYSROOT=%s" % sysroot]
         if is_windows():
             cmake_args.insert(-1, "-DLLVM_EXPORT_SYMBOLS_FOR_PLUGINS=ON")
             cmake_args.insert(-1, "-DLLVM_USE_CRT_RELEASE=MT")

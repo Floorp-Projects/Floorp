@@ -44,3 +44,13 @@ linux64-aarch64-sysroot:
     run:
         arguments:
             - arm64
+
+linux64-toolchain-sysroot:
+    description: "Sysroot for linux64 toolchain builds"
+    treeherder:
+        symbol: TL(sysroot64-toolchain)
+    run:
+        arguments:
+            - amd64
+            # For clang
+            - libxml2-dev
