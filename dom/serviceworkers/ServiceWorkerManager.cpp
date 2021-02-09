@@ -1585,8 +1585,8 @@ ServiceWorkerManager::GetOrCreateJobQueue(const nsACString& aKey,
                                           const nsACString& aScope) {
   MOZ_ASSERT(!aKey.IsEmpty());
   ServiceWorkerManager::RegistrationDataPerPrincipal* data;
-  // XXX we could use LookupForAdd here to avoid a hashtable lookup, except that
-  // leads to a false positive assertion, see bug 1370674 comment 7.
+  // XXX we could use WithEntryHandle here to avoid a hashtable lookup, except
+  // that leads to a false positive assertion, see bug 1370674 comment 7.
   if (!mRegistrationInfos.Get(aKey, &data)) {
     data = new RegistrationDataPerPrincipal();
     mRegistrationInfos.Put(aKey, data);
