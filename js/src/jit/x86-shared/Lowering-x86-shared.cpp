@@ -635,7 +635,7 @@ void LIRGeneratorX86Shared::lowerAtomicTypedArrayElementBinop(
   // We'll emit a single instruction: LOCK ADD, LOCK SUB, LOCK AND,
   // LOCK OR, or LOCK XOR.  We can do this even for the Uint32 case.
 
-  if (!ins->hasUses()) {
+  if (ins->isForEffect()) {
     LAllocation value;
     if (useI386ByteRegisters && ins->isByteArray() &&
         !ins->value()->isConstant()) {

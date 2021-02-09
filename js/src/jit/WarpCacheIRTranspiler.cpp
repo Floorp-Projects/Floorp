@@ -224,7 +224,8 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   [[nodiscard]] bool emitAtomicsBinaryOp(ObjOperandId objId,
                                          IntPtrOperandId indexId,
                                          uint32_t valueId,
-                                         Scalar::Type elementType, AtomicOp op);
+                                         Scalar::Type elementType,
+                                         bool forEffect, AtomicOp op);
 
   [[nodiscard]] bool emitLoadArgumentSlot(ValOperandId resultId,
                                           uint32_t slotIndex);
@@ -3583,7 +3584,7 @@ bool WarpCacheIRTranspiler::emitAtomicsBinaryOp(ObjOperandId objId,
                                                 IntPtrOperandId indexId,
                                                 uint32_t valueId,
                                                 Scalar::Type elementType,
-                                                AtomicOp op) {
+                                                bool forEffect, AtomicOp op) {
   MDefinition* obj = getOperand(objId);
   MDefinition* index = getOperand(indexId);
   MDefinition* value = getOperand(ValOperandId(valueId));
@@ -3600,52 +3601,63 @@ bool WarpCacheIRTranspiler::emitAtomicsBinaryOp(ObjOperandId objId,
   MIRType knownType =
       MIRTypeForArrayBufferViewRead(elementType, allowDoubleForUint32);
 
-  auto* binop = MAtomicTypedArrayElementBinop::New(alloc(), op, elements, index,
-                                                   elementType, value);
-  binop->setResultType(knownType);
+  auto* binop = MAtomicTypedArrayElementBinop::New(
+      alloc(), op, elements, index, elementType, value, forEffect);
+  if (!forEffect) {
+    binop->setResultType(knownType);
+  }
   addEffectful(binop);
 
-  pushResult(binop);
+  if (!forEffect) {
+    pushResult(binop);
+  } else {
+    pushResult(constant(UndefinedValue()));
+  }
   return resumeAfter(binop);
 }
 
 bool WarpCacheIRTranspiler::emitAtomicsAddResult(ObjOperandId objId,
                                                  IntPtrOperandId indexId,
                                                  uint32_t valueId,
-                                                 Scalar::Type elementType) {
-  return emitAtomicsBinaryOp(objId, indexId, valueId, elementType,
+                                                 Scalar::Type elementType,
+                                                 bool forEffect) {
+  return emitAtomicsBinaryOp(objId, indexId, valueId, elementType, forEffect,
                              AtomicFetchAddOp);
 }
 
 bool WarpCacheIRTranspiler::emitAtomicsSubResult(ObjOperandId objId,
                                                  IntPtrOperandId indexId,
                                                  uint32_t valueId,
-                                                 Scalar::Type elementType) {
-  return emitAtomicsBinaryOp(objId, indexId, valueId, elementType,
+                                                 Scalar::Type elementType,
+                                                 bool forEffect) {
+  return emitAtomicsBinaryOp(objId, indexId, valueId, elementType, forEffect,
                              AtomicFetchSubOp);
 }
 
 bool WarpCacheIRTranspiler::emitAtomicsAndResult(ObjOperandId objId,
                                                  IntPtrOperandId indexId,
                                                  uint32_t valueId,
-                                                 Scalar::Type elementType) {
-  return emitAtomicsBinaryOp(objId, indexId, valueId, elementType,
+                                                 Scalar::Type elementType,
+                                                 bool forEffect) {
+  return emitAtomicsBinaryOp(objId, indexId, valueId, elementType, forEffect,
                              AtomicFetchAndOp);
 }
 
 bool WarpCacheIRTranspiler::emitAtomicsOrResult(ObjOperandId objId,
                                                 IntPtrOperandId indexId,
                                                 uint32_t valueId,
-                                                Scalar::Type elementType) {
-  return emitAtomicsBinaryOp(objId, indexId, valueId, elementType,
+                                                Scalar::Type elementType,
+                                                bool forEffect) {
+  return emitAtomicsBinaryOp(objId, indexId, valueId, elementType, forEffect,
                              AtomicFetchOrOp);
 }
 
 bool WarpCacheIRTranspiler::emitAtomicsXorResult(ObjOperandId objId,
                                                  IntPtrOperandId indexId,
                                                  uint32_t valueId,
-                                                 Scalar::Type elementType) {
-  return emitAtomicsBinaryOp(objId, indexId, valueId, elementType,
+                                                 Scalar::Type elementType,
+                                                 bool forEffect) {
+  return emitAtomicsBinaryOp(objId, indexId, valueId, elementType, forEffect,
                              AtomicFetchXorOp);
 }
 

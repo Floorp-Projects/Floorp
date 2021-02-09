@@ -11542,14 +11542,16 @@ class MAtomicTypedArrayElementBinop
  private:
   AtomicOp op_;
   Scalar::Type arrayType_;
+  bool forEffect_;
 
   explicit MAtomicTypedArrayElementBinop(AtomicOp op, MDefinition* elements,
                                          MDefinition* index,
                                          Scalar::Type arrayType,
-                                         MDefinition* value)
+                                         MDefinition* value, bool forEffect)
       : MTernaryInstruction(classOpcode, elements, index, value),
         op_(op),
-        arrayType_(arrayType) {
+        arrayType_(arrayType),
+        forEffect_(forEffect) {
     MOZ_ASSERT(elements->type() == MIRType::Elements);
     MOZ_ASSERT(index->type() == MIRType::IntPtr);
     MOZ_ASSERT(arrayType <= Scalar::Uint32 || Scalar::isBigIntType(arrayType));
@@ -11566,6 +11568,7 @@ class MAtomicTypedArrayElementBinop
   }
   AtomicOp operation() const { return op_; }
   Scalar::Type arrayType() const { return arrayType_; }
+  bool isForEffect() const { return forEffect_; }
   AliasSet getAliasSet() const override {
     return AliasSet::Store(AliasSet::UnboxedElement);
   }

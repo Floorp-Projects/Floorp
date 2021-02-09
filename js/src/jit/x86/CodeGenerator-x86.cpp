@@ -330,7 +330,7 @@ void CodeGenerator::visitAtomicExchangeTypedArrayElement64(
 
 void CodeGenerator::visitAtomicTypedArrayElementBinop64(
     LAtomicTypedArrayElementBinop64* lir) {
-  MOZ_ASSERT(lir->mir()->hasUses());
+  MOZ_ASSERT(!lir->mir()->isForEffect());
 
   Register elements = ToRegister(lir->elements());
   Register value = ToRegister(lir->value());
@@ -404,7 +404,7 @@ void CodeGenerator::visitAtomicTypedArrayElementBinop64(
 
 void CodeGenerator::visitAtomicTypedArrayElementBinopForEffect64(
     LAtomicTypedArrayElementBinopForEffect64* lir) {
-  MOZ_ASSERT(!lir->mir()->hasUses());
+  MOZ_ASSERT(lir->mir()->isForEffect());
 
   Register elements = ToRegister(lir->elements());
   Register value = ToRegister(lir->value());

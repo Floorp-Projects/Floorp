@@ -798,7 +798,7 @@ void LIRGenerator::visitAtomicTypedArrayElementBinop(
     maskTemp = temp();
   }
 
-  if (!ins->hasUses()) {
+  if (ins->isForEffect()) {
     LAtomicTypedArrayElementBinopForEffect* lir =
         new (alloc()) LAtomicTypedArrayElementBinopForEffect(
             elements, index, value, valueTemp, offsetTemp, maskTemp);

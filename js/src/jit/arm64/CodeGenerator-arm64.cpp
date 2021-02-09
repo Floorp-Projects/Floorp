@@ -1801,7 +1801,7 @@ void CodeGenerator::visitAtomicExchangeTypedArrayElement64(
 
 void CodeGenerator::visitAtomicTypedArrayElementBinop64(
     LAtomicTypedArrayElementBinop64* lir) {
-  MOZ_ASSERT(lir->mir()->hasUses());
+  MOZ_ASSERT(!lir->mir()->isForEffect());
 
   Register elements = ToRegister(lir->elements());
   Register value = ToRegister(lir->value());
@@ -1831,7 +1831,7 @@ void CodeGenerator::visitAtomicTypedArrayElementBinop64(
 
 void CodeGenerator::visitAtomicTypedArrayElementBinopForEffect64(
     LAtomicTypedArrayElementBinopForEffect64* lir) {
-  MOZ_ASSERT(!lir->mir()->hasUses());
+  MOZ_ASSERT(lir->mir()->isForEffect());
 
   Register elements = ToRegister(lir->elements());
   Register value = ToRegister(lir->value());
@@ -1949,7 +1949,7 @@ void CodeGenerator::visitWasmReinterpretFromI64(LWasmReinterpretFromI64*) {
 
 void CodeGenerator::visitAtomicTypedArrayElementBinop(
     LAtomicTypedArrayElementBinop* lir) {
-  MOZ_ASSERT(lir->mir()->hasUses());
+  MOZ_ASSERT(!lir->mir()->isForEffect());
 
   AnyRegister output = ToAnyRegister(lir->output());
   Register elements = ToRegister(lir->elements());
@@ -1980,8 +1980,25 @@ void CodeGenerator::visitWasmAtomicBinopHeapForEffect(
 }
 
 void CodeGenerator::visitAtomicTypedArrayElementBinopForEffect(
-    LAtomicTypedArrayElementBinopForEffect*) {
-  MOZ_CRASH("NYI");
+    LAtomicTypedArrayElementBinopForEffect* lir) {
+  MOZ_ASSERT(lir->mir()->isForEffect());
+
+  Register elements = ToRegister(lir->elements());
+  Register flagTemp = ToRegister(lir->flagTemp());
+  Register value = ToRegister(lir->value());
+
+  Scalar::Type arrayType = lir->mir()->arrayType();
+
+  if (lir->index()->isConstant()) {
+    Address mem = ToAddress(elements, lir->index(), arrayType);
+    masm.atomicEffectOpJS(arrayType, Synchronization::Full(),
+                          lir->mir()->operation(), value, mem, flagTemp);
+  } else {
+    BaseIndex mem(elements, ToRegister(lir->index()),
+                  ScaleFromScalarType(arrayType));
+    masm.atomicEffectOpJS(arrayType, Synchronization::Full(),
+                          lir->mir()->operation(), value, mem, flagTemp);
+  }
 }
 
 void CodeGenerator::visitSimd128(LSimd128* ins) { MOZ_CRASH("No SIMD"); }
