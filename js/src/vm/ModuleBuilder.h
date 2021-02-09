@@ -94,11 +94,6 @@ class MOZ_STACK_CLASS ModuleBuilder {
                          frontend::TaggedParserAtomIndex localName,
                          frontend::ParseNode* node = nullptr);
 
-  bool appendExportFromEntry(frontend::TaggedParserAtomIndex exportName,
-                             frontend::TaggedParserAtomIndex moduleRequest,
-                             frontend::TaggedParserAtomIndex importName,
-                             frontend::ParseNode* node);
-
   bool maybeAppendRequestedModule(frontend::TaggedParserAtomIndex specifier,
                                   frontend::ParseNode* node);
 
