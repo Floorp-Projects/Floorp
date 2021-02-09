@@ -120,14 +120,15 @@ class QuotaManager final : public BackgroundThreadObject {
   friend class OriginInfo;
   friend class QuotaObject;
 
-  typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
-  typedef nsClassHashtable<nsCStringHashKey,
-                           nsTArray<NotNull<DirectoryLockImpl*>>>
-      DirectoryLockTable;
+  using PrincipalInfo = mozilla::ipc::PrincipalInfo;
+  using DirectoryLockTable =
+      nsClassHashtable<nsCStringHashKey, nsTArray<NotNull<DirectoryLockImpl*>>>;
 
   class Observer;
 
  public:
+  QuotaManager(const nsAString& aBasePath, const nsAString& aStorageName);
+
   NS_INLINE_DECL_REFCOUNTING(QuotaManager)
 
   static nsresult Initialize();
@@ -145,6 +146,9 @@ class QuotaManager final : public BackgroundThreadObject {
 
   static const char kReplaceChars[];
 
+  static Result<MovingNotNull<RefPtr<QuotaManager>>, nsresult> GetOrCreate();
+
+  // TODO: Remove this overload once all clients use the synchronous GetOrCreate
   static void GetOrCreate(nsIRunnable* aCallback);
 
   // Returns a non-owning reference.
@@ -459,8 +463,6 @@ class QuotaManager final : public BackgroundThreadObject {
   static void InvalidateQuotaCache();
 
  private:
-  QuotaManager(const nsAString& aBasePath, const nsAString& aStorageName);
-
   virtual ~QuotaManager();
 
   nsresult Init();
