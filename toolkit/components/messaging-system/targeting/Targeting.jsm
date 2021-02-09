@@ -15,6 +15,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FilterExpressions:
     "resource://gre/modules/components-utils/FilterExpressions.jsm",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
+  ClientEnvironmentBase:
+    "resource://gre/modules/components-utils/ClientEnvironment.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
 });
 
@@ -55,6 +57,10 @@ const TargetingEnvironment = {
 
   get platform() {
     return AppConstants.platform;
+  },
+
+  get os() {
+    return ClientEnvironmentBase.os;
   },
 };
 
