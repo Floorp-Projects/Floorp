@@ -11507,8 +11507,9 @@ class MCompareExchangeTypedArrayElement
   }
 };
 
-class MAtomicExchangeTypedArrayElement : public MTernaryInstruction,
-                                         public TruncateToInt32Policy<2>::Data {
+class MAtomicExchangeTypedArrayElement
+    : public MTernaryInstruction,
+      public TruncateToInt32OrToBigIntPolicy<2>::Data {
   Scalar::Type arrayType_;
 
   MAtomicExchangeTypedArrayElement(MDefinition* elements, MDefinition* index,
@@ -11517,7 +11518,7 @@ class MAtomicExchangeTypedArrayElement : public MTernaryInstruction,
         arrayType_(arrayType) {
     MOZ_ASSERT(elements->type() == MIRType::Elements);
     MOZ_ASSERT(index->type() == MIRType::IntPtr);
-    MOZ_ASSERT(arrayType <= Scalar::Uint32);
+    MOZ_ASSERT(arrayType <= Scalar::Uint32 || Scalar::isBigIntType(arrayType));
     setGuard();  // Not removable
   }
 
