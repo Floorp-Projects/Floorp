@@ -787,6 +787,7 @@ class ParserAtomsTable {
   bool isPrivateName(TaggedParserAtomIndex index) const;
   bool isExtendedUnclonedSelfHostedFunctionName(
       TaggedParserAtomIndex index) const;
+  bool isModuleExportName(TaggedParserAtomIndex index) const;
   bool isIndex(TaggedParserAtomIndex index, uint32_t* indexp) const;
   uint32_t length(TaggedParserAtomIndex index) const;
 

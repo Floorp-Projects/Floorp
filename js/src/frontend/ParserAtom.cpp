@@ -16,6 +16,7 @@
 #include "frontend/NameCollections.h"
 #include "frontend/StencilXdr.h"  // CanCopyDataToDisk
 #include "util/StringBuffer.h"    // StringBuffer
+#include "util/Unicode.h"
 #include "vm/JSContext.h"
 #include "vm/Printer.h"  // Sprinter, QuoteString
 #include "vm/Runtime.h"
@@ -495,6 +496,36 @@ bool ParserAtomsTable::isExtendedUnclonedSelfHostedFunctionName(
   }
 
   return atom->charAt(0) == ExtendedUnclonedSelfHostedFunctionNamePrefix;
+}
+
+static bool HasUnpairedSurrogate(mozilla::Range<const char16_t> chars) {
+  for (auto ptr = chars.begin(); ptr < chars.end();) {
+    char16_t ch = *ptr++;
+    if (unicode::IsLeadSurrogate(ch)) {
+      if (ptr == chars.end() || !unicode::IsTrailSurrogate(*ptr++)) {
+        return true;
+      }
+    } else if (unicode::IsTrailSurrogate(ch)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool ParserAtomsTable::isModuleExportName(TaggedParserAtomIndex index) const {
+  const ParserAtom* name = getParserAtom(index);
+  if (name->hasTwoByteChars() && HasUnpairedSurrogate(name->twoByteRange())) {
+    return false;
+  }
+  // FIXME: Need to implement https://github.com/tc39/ecma262/pull/2155
+  if (name->length() == 1) {
+    char16_t ch = name->hasLatin1Chars() ? name->latin1Chars()[0]
+                                         : name->twoByteChars()[0];
+    if (ch == '*') {
+      return false;
+    }
+  }
+  return true;
 }
 
 bool ParserAtomsTable::isIndex(TaggedParserAtomIndex index,
