@@ -6,8 +6,6 @@ import mock
 import hypothesis as h
 import hypothesis.strategies as hs
 
-from six import iteritems
-
 here = os.path.dirname(__file__)
 root = os.path.abspath(os.path.join(here, "..", "..", ".."))
 sys.path.insert(0, root)
@@ -99,11 +97,11 @@ def manifest_tree(draw):
 
     reftest_urls = []
     output = []
-    stack = [((k,), v) for k, v in iteritems(generated_root)]
+    stack = [((k,), v) for k, v in generated_root.items()]
     while stack:
         path, node = stack.pop()
         if isinstance(node, dict):
-            stack.extend((path + (k,), v) for k, v in iteritems(node))
+            stack.extend((path + (k,), v) for k, v in node.items())
         else:
             rel_path = os.path.sep.join(path)
             node.rel_path = rel_path
