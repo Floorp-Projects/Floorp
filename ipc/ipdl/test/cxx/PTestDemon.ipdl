@@ -8,13 +8,13 @@ child:
 
 both:
     async AsyncMessage(int n);
-    nested(inside_sync) sync HiPrioSyncMessage();
+    [Nested=inside_sync] sync HiPrioSyncMessage();
 
 parent:
     sync SyncMessage(int n);
 
-    nested(inside_cpow) async UrgentAsyncMessage(int n);
-    nested(inside_cpow) sync UrgentSyncMessage(int n);
+    [Nested=inside_cpow] async UrgentAsyncMessage(int n);
+    [Nested=inside_cpow] sync UrgentSyncMessage(int n);
 };
 
 } // namespace _ipdltest

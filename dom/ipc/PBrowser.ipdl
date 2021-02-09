@@ -283,8 +283,8 @@ parent:
      *  notification Whole data of the notification
      *  requests     Requests of notification for IME of the native widget
      */
-    nested(inside_cpow) async NotifyIMEFocus(ContentCache contentCache,
-                                             IMENotification notification)
+    [Nested=inside_cpow] async NotifyIMEFocus(ContentCache contentCache,
+                                              IMENotification notification)
       returns (IMENotificationRequests requests);
 
     /**
@@ -295,16 +295,16 @@ parent:
      *  contentCache Cache of content
      *  notification Whole data of the notification
      */
-    nested(inside_cpow) async NotifyIMETextChange(ContentCache contentCache,
-                                                  IMENotification notification);
+    [Nested=inside_cpow] async NotifyIMETextChange(ContentCache contentCache,
+                                                   IMENotification notification);
 
     /**
      * Notifies chrome that there is a IME compostion rect updated
      *
      *  contentCache Cache of content
      */
-    nested(inside_cpow) async NotifyIMECompositionUpdate(ContentCache contentCache,
-                                                         IMENotification notification);
+    [Nested=inside_cpow] async NotifyIMECompositionUpdate(ContentCache contentCache,
+                                                          IMENotification notification);
 
     /**
      * Notifies chrome that there has been a change in selection
@@ -313,8 +313,8 @@ parent:
      *  contentCache Cache of content
      *  notification Whole data of the notification
      */
-    nested(inside_cpow) async NotifyIMESelection(ContentCache contentCache,
-                                                 IMENotification notification);
+    [Nested=inside_cpow] async NotifyIMESelection(ContentCache contentCache,
+                                                  IMENotification notification);
 
     /**
      * Notifies chrome of updating its content cache.
@@ -322,14 +322,14 @@ parent:
      *
      *  contentCache Cache of content
      */
-    nested(inside_cpow) async UpdateContentCache(ContentCache contentCache);
+    [Nested=inside_cpow] async UpdateContentCache(ContentCache contentCache);
 
     /**
      * Notifies IME of mouse button event on a character in focused editor.
      *
      * Returns true if the mouse button event is consumed by IME.
      */
-    nested(inside_cpow) sync NotifyIMEMouseButtonEvent(IMENotification notification)
+    [Nested=inside_cpow] sync NotifyIMEMouseButtonEvent(IMENotification notification)
       returns (bool consumedByIME);
 
     /**
@@ -337,8 +337,8 @@ parent:
      *
      *  contentCache Cache of content
      */
-    nested(inside_cpow) async NotifyIMEPositionChange(ContentCache contentCache,
-                                                      IMENotification notification);
+    [Nested=inside_cpow] async NotifyIMEPositionChange(ContentCache contentCache,
+                                                       IMENotification notification);
 
     /**
      * Requests chrome to commit or cancel composition of IME.
@@ -352,8 +352,8 @@ parent:
      *                        try to restore selected string which was
      *                        replaced with the composition.
      */
-    nested(inside_cpow) sync RequestIMEToCommitComposition(bool cancel)
-                        returns (bool isCommitted, nsString committedString);
+    [Nested=inside_cpow] sync RequestIMEToCommitComposition(bool cancel)
+      returns (bool isCommitted, nsString committedString);
 
     /**
      * OnEventNeedingAckHandled() is called after a child process dispatches a
@@ -362,7 +362,7 @@ parent:
      *
      * message      The message value of the handled event.
      */
-    nested(inside_cpow) async OnEventNeedingAckHandled(EventMessage message);
+    [Nested=inside_cpow] async OnEventNeedingAckHandled(EventMessage message);
 
     /**
      * Request that the parent process move focus to the browser's frame. If
@@ -385,10 +385,10 @@ parent:
                                 nsCString[] enabledCommands,
                                 nsCString[] disabledCommands);
 
-    nested(inside_cpow) sync GetInputContext() returns (IMEState state);
+    [Nested=inside_cpow] sync GetInputContext() returns (IMEState state);
 
-    nested(inside_cpow) async SetInputContext(InputContext context,
-                                              InputContextAction action);
+    [Nested=inside_cpow] async SetInputContext(InputContext context,
+                                               InputContextAction action);
 
     /**
      * Set the native cursor.
@@ -595,7 +595,7 @@ child:
     /**
      * Parent informs the child to release all pointer capture.
      */
-    prio(input) async ReleaseAllPointerCapture();
+    [Priority=input] async ReleaseAllPointerCapture();
 
 parent:
 
@@ -635,9 +635,9 @@ parent:
     async SetDimensions(uint32_t aFlags, int32_t aX, int32_t aY,
                         int32_t aCx, int32_t aCy, double aScale);
 
-    nested(inside_sync) sync DispatchWheelEvent(WidgetWheelEvent event);
-    nested(inside_sync) sync DispatchMouseEvent(WidgetMouseEvent event);
-    nested(inside_sync) sync DispatchKeyboardEvent(WidgetKeyboardEvent event);
+    [Nested=inside_sync] sync DispatchWheelEvent(WidgetWheelEvent event);
+    [Nested=inside_sync] sync DispatchMouseEvent(WidgetMouseEvent event);
+    [Nested=inside_sync] sync DispatchKeyboardEvent(WidgetKeyboardEvent event);
 
     async InvokeDragSession(IPCDataTransfer[] transfers, uint32_t action,
                             Shmem? visualData,
@@ -739,10 +739,10 @@ child:
      * When two consecutive mouse move events would be added to the message queue,
      * they are 'compressed' by dumping the oldest one.
      */
-    [Compress]
-    prio(input) async RealMouseMoveEvent(WidgetMouseEvent event,
-                                         ScrollableLayerGuid aGuid,
-                                         uint64_t aInputBlockId);
+    [Compress, Priority=input]
+    async RealMouseMoveEvent(WidgetMouseEvent event,
+                             ScrollableLayerGuid aGuid,
+                             uint64_t aInputBlockId);
     [Compress]
     async NormalPriorityRealMouseMoveEvent(WidgetMouseEvent event,
                                            ScrollableLayerGuid aGuid,
@@ -755,9 +755,10 @@ child:
      * test the `Compress`, send mouse move events with setting `isSyntehsized`
      * of `aEvent` of `EventUtils#syntehsizeMouse*()`.
      */
-    prio(input) async RealMouseMoveEventForTests(WidgetMouseEvent event,
-                                                 ScrollableLayerGuid aGuid,
-                                                 uint64_t aInputBlockId);
+    [Priority=input]
+    async RealMouseMoveEventForTests(WidgetMouseEvent event,
+                                     ScrollableLayerGuid aGuid,
+                                     uint64_t aInputBlockId);
     async NormalPriorityRealMouseMoveEventForTests(WidgetMouseEvent event,
                                                    ScrollableLayerGuid aGuid,
                                                    uint64_t aInputBlockId);
@@ -769,61 +770,67 @@ child:
      * |reason == eReal| event being dropped in favour of an |eSynthesized|
      * event, and thus a DOM 'mousemove' event to be lost.
      */
-    prio(input) async SynthMouseMoveEvent(WidgetMouseEvent event,
-                                          ScrollableLayerGuid aGuid,
-                                          uint64_t aInputBlockId);
+    [Priority=input]
+    async SynthMouseMoveEvent(WidgetMouseEvent event,
+                              ScrollableLayerGuid aGuid,
+                              uint64_t aInputBlockId);
     async NormalPrioritySynthMouseMoveEvent(WidgetMouseEvent event,
                                             ScrollableLayerGuid aGuid,
                                             uint64_t aInputBlockId);
 
-    prio(input) async RealMouseButtonEvent(WidgetMouseEvent event,
-                                           ScrollableLayerGuid aGuid,
-                                           uint64_t aInputBlockId);
+    [Priority=input]
+    async RealMouseButtonEvent(WidgetMouseEvent event,
+                               ScrollableLayerGuid aGuid,
+                               uint64_t aInputBlockId);
     async NormalPriorityRealMouseButtonEvent(WidgetMouseEvent event,
                                              ScrollableLayerGuid aGuid,
                                              uint64_t aInputBlockId);
 
-    prio(input) async RealKeyEvent(WidgetKeyboardEvent event);
+    [Priority=input]
+    async RealKeyEvent(WidgetKeyboardEvent event);
     async NormalPriorityRealKeyEvent(WidgetKeyboardEvent event);
 
-    prio(input) async MouseWheelEvent(WidgetWheelEvent event,
-                                      ScrollableLayerGuid aGuid,
-                                      uint64_t aInputBlockId);
+    [Priority=input]
+    async MouseWheelEvent(WidgetWheelEvent event,
+                          ScrollableLayerGuid aGuid,
+                          uint64_t aInputBlockId);
     async NormalPriorityMouseWheelEvent(WidgetWheelEvent event,
                                         ScrollableLayerGuid aGuid,
                                         uint64_t aInputBlockId);
 
-    prio(input) async RealTouchEvent(WidgetTouchEvent aEvent,
-                                     ScrollableLayerGuid aGuid,
-                                     uint64_t aInputBlockId,
-                                     nsEventStatus aApzResponse);
+    [Priority=input]
+    async RealTouchEvent(WidgetTouchEvent aEvent,
+                         ScrollableLayerGuid aGuid,
+                         uint64_t aInputBlockId,
+                         nsEventStatus aApzResponse);
     async NormalPriorityRealTouchEvent(WidgetTouchEvent aEvent,
                                        ScrollableLayerGuid aGuid,
                                        uint64_t aInputBlockId,
                                        nsEventStatus aApzResponse);
 
-    prio(input) async HandleTap(GeckoContentController_TapType aType, LayoutDevicePoint point,
-                                Modifiers aModifiers, ScrollableLayerGuid aGuid,
-                                uint64_t aInputBlockId);
+    [Priority=input]
+    async HandleTap(GeckoContentController_TapType aType, LayoutDevicePoint point,
+                    Modifiers aModifiers, ScrollableLayerGuid aGuid,
+                    uint64_t aInputBlockId);
     async NormalPriorityHandleTap(GeckoContentController_TapType aType, LayoutDevicePoint point,
                                   Modifiers aModifiers, ScrollableLayerGuid aGuid,
                                   uint64_t aInputBlockId);
 
-    [Compress]
-    prio(input) async RealTouchMoveEvent(WidgetTouchEvent aEvent,
-                                         ScrollableLayerGuid aGuid,
-                                         uint64_t aInputBlockId,
-                                         nsEventStatus aApzResponse);
+    [Compress, Priority=input]
+    async RealTouchMoveEvent(WidgetTouchEvent aEvent,
+                             ScrollableLayerGuid aGuid,
+                             uint64_t aInputBlockId,
+                             nsEventStatus aApzResponse);
     [Compress]
     async NormalPriorityRealTouchMoveEvent(WidgetTouchEvent aEvent,
                                            ScrollableLayerGuid aGuid,
                                            uint64_t aInputBlockId,
                                            nsEventStatus aApzResponse);
-    [Compress]
-    prio(input) async RealTouchMoveEvent2(WidgetTouchEvent aEvent,
-                                          ScrollableLayerGuid aGuid,
-                                          uint64_t aInputBlockId,
-                                          nsEventStatus aApzResponse);
+    [Compress, Priority=input]
+    async RealTouchMoveEvent2(WidgetTouchEvent aEvent,
+                              ScrollableLayerGuid aGuid,
+                              uint64_t aInputBlockId,
+                              nsEventStatus aApzResponse);
     [Compress]
     async NormalPriorityRealTouchMoveEvent2(WidgetTouchEvent aEvent,
                                             ScrollableLayerGuid aGuid,
@@ -838,10 +845,10 @@ child:
                         uint32_t aDropEffect, nsIPrincipal aPrincipal,
                         nsIContentSecurityPolicy csp);
 
-    prio(input) async CompositionEvent(WidgetCompositionEvent event);
+    [Priority=input] async CompositionEvent(WidgetCompositionEvent event);
     async NormalPriorityCompositionEvent(WidgetCompositionEvent event);
 
-    prio(input) async SelectionEvent(WidgetSelectionEvent event);
+    [Priority=input] async SelectionEvent(WidgetSelectionEvent event);
     async NormalPrioritySelectionEvent(WidgetSelectionEvent event);
 
     /**

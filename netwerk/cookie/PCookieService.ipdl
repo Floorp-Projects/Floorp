@@ -32,11 +32,11 @@ nested(upto inside_cpow) sync protocol PCookieService
   manager PNecko;
 
 parent:
-  nested(inside_cpow) async SetCookies(nsCString baseDomain,
-                                       OriginAttributes attrs,
-                                       nsIURI host,
-                                       bool fromHttp,
-                                       CookieStruct[] cookies);
+  [Nested=inside_cpow] async SetCookies(nsCString baseDomain,
+                                        OriginAttributes attrs,
+                                        nsIURI host,
+                                        bool fromHttp,
+                                        CookieStruct[] cookies);
 
   async PrepareCookieList(nsIURI host,
                           bool isForeign,
