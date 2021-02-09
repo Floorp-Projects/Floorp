@@ -355,6 +355,7 @@ struct LastArg<HeadType, TailTypes...> {
 class InterpreterStubExitFrameLayout;
 bool InvokeFromInterpreterStub(JSContext* cx,
                                InterpreterStubExitFrameLayout* frame);
+void* GetContextSensitiveInterpreterStub();
 
 bool CheckOverRecursed(JSContext* cx);
 bool CheckOverRecursedBaseline(JSContext* cx, BaselineFrame* frame);

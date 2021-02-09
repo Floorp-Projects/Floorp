@@ -98,6 +98,8 @@ void* HandleThrow(JSContext* cx, WasmFrameIter& iter);
 
 void* SymbolicAddressTarget(SymbolicAddress sym);
 
+void* ProvisionalJitEntryStub();
+
 void* MaybeGetBuiltinThunk(JSFunction* f, const FuncType& funcType);
 
 void ReleaseBuiltinThunks();
