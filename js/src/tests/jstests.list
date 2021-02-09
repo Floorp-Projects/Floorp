@@ -671,6 +671,7 @@ skip script test262/built-ins/TypedArray/prototype/findIndex/BigInt/predicate-ma
 # Tests not yet updated for https://github.com/tc39/ecma262/pull/2216
 skip script test262/language/statements/class/constructor-inferred-observable-iteration.js
 skip script test262/language/statements/class/subclass/default-constructor-spread-override.js
+skip script test262/built-ins/Function/internals/Call/class-ctor-realm.js
 
 
 ##############################################
