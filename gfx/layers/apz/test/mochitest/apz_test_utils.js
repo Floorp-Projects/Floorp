@@ -419,6 +419,9 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
         w.dump = function(msg) {
           return dump(aFile + " | " + msg);
         };
+        w.info = function(msg) {
+          return info(aFile + " | " + msg);
+        };
         w.is = function(a, b, msg) {
           return is(a, b, aFile + " | " + msg);
         };
