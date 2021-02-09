@@ -664,6 +664,10 @@ void LIRGeneratorMIPSShared::lowerAtomicLoad64(MLoadUnboxedScalar* ins) {
   MOZ_CRASH("NYI");
 }
 
+void LIRGeneratorMIPSShared::lowerAtomicStore64(MStoreUnboxedScalar* ins) {
+  MOZ_CRASH("NYI");
+}
+
 void LIRGenerator::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins) {
   MOZ_ASSERT(ins->base()->type() == MIRType::Int32);
 

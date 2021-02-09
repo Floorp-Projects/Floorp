@@ -549,6 +549,15 @@ void LIRGeneratorARM64::lowerAtomicLoad64(MLoadUnboxedScalar* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGeneratorARM64::lowerAtomicStore64(MStoreUnboxedScalar* ins) {
+  LUse elements = useRegister(ins->elements());
+  LAllocation index =
+      useRegisterOrIndexConstant(ins->index(), ins->writeType());
+  LAllocation value = useRegister(ins->value());
+
+  add(new (alloc()) LAtomicStore64(elements, index, value, tempInt64()), ins);
+}
+
 void LIRGenerator::visitSubstr(MSubstr* ins) {
   LSubstr* lir = new (alloc())
       LSubstr(useRegister(ins->string()), useRegister(ins->begin()),

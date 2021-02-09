@@ -66,6 +66,7 @@ class LIRGeneratorMIPSShared : public LIRGeneratorShared {
   void lowerBigIntRsh(MBigIntRsh* ins);
 
   void lowerAtomicLoad64(MLoadUnboxedScalar* ins);
+  void lowerAtomicStore64(MStoreUnboxedScalar* ins);
 
   LTableSwitch* newLTableSwitch(const LAllocation& in,
                                 const LDefinition& inputCopy,

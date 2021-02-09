@@ -937,6 +937,17 @@ void LIRGeneratorARM::lowerAtomicLoad64(MLoadUnboxedScalar* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGeneratorARM::lowerAtomicStore64(MStoreUnboxedScalar* ins) {
+  LUse elements = useRegister(ins->elements());
+  LAllocation index =
+      useRegisterOrIndexConstant(ins->index(), ins->writeType());
+  LAllocation value = useRegister(ins->value());
+  LInt64Definition temp1 = tempInt64Fixed(Register64(IntArgReg1, IntArgReg0));
+  LInt64Definition temp2 = tempInt64Fixed(Register64(IntArgReg3, IntArgReg2));
+
+  add(new (alloc()) LAtomicStore64(elements, index, value, temp1, temp2), ins);
+}
+
 void LIRGenerator::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins) {
   MDefinition* base = ins->base();
   MOZ_ASSERT(base->type() == MIRType::Int32);
