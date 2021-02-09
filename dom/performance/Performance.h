@@ -54,6 +54,9 @@ class Performance : public DOMEventTargetHelper {
   virtual void GetEntriesByType(const nsAString& aEntryType,
                                 nsTArray<RefPtr<PerformanceEntry>>& aRetval);
 
+  virtual void GetEntriesByTypeForObserver(
+      const nsAString& aEntryType, nsTArray<RefPtr<PerformanceEntry>>& aRetval);
+
   virtual void GetEntriesByName(const nsAString& aName,
                                 const Optional<nsAString>& aEntryType,
                                 nsTArray<RefPtr<PerformanceEntry>>& aRetval);

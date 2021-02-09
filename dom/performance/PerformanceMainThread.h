@@ -76,6 +76,12 @@ class PerformanceMainThread final : public Performance,
   virtual void GetEntriesByType(
       const nsAString& aEntryType,
       nsTArray<RefPtr<PerformanceEntry>>& aRetval) override;
+
+  // There are entries that we don't want expose via performance, however
+  // we do want PerformanceObserver to get them
+  void GetEntriesByTypeForObserver(
+      const nsAString& aEntryType,
+      nsTArray<RefPtr<PerformanceEntry>>& aRetval) override;
   virtual void GetEntriesByName(
       const nsAString& aName, const Optional<nsAString>& aEntryType,
       nsTArray<RefPtr<PerformanceEntry>>& aRetval) override;
