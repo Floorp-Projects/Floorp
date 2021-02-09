@@ -29,6 +29,10 @@ if [ "$TARGET" == "x86_64-apple-darwin" ]; then
   export PATH="$MOZ_FETCHES_DIR/llvm-dsymutil/bin:$PATH"
   export PATH="$MOZ_FETCHES_DIR/cctools/bin:$PATH"
   export RUSTFLAGS="-C linker=$GECKO_PATH/taskcluster/scripts/misc/osx-cross-linker"
+elif [ "$TARGET" == "x86_64-unknown-linux-gnu" ]; then
+  export CC="$MOZ_FETCHES_DIR/clang/bin/clang"
+  export CFLAGS_x86_64_unknown_linux_gnu="--sysroot=$MOZ_FETCHES_DIR/sysroot"
+  export RUSTFLAGS="-C linker=$CC -C link-arg=--sysroot=$MOZ_FETCHES_DIR/sysroot"
 fi
 
 export PATH="$(cd $MOZ_FETCHES_DIR && pwd)/rustc/bin:$PATH"
