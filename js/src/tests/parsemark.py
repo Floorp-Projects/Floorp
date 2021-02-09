@@ -47,9 +47,9 @@ for (var i = 0; i < $warmup_run_count; i++)
     $func(contents, $options);
 var results = [];
 for (var i = 0; i < $real_run_count; i++) {
-    var start = new Date();
+    var start = elapsed() / 1000;
     $func(contents, $options);
-    var end = new Date();
+    var end = elapsed() / 1000;
     results.push(end - start);
 }
 print(results);
