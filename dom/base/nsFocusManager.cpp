@@ -280,6 +280,14 @@ bool nsFocusManager::IsFocused(nsIContent* aContent) {
 
 bool nsFocusManager::IsTestMode() { return sTestMode; }
 
+bool nsFocusManager::IsInActiveWindow(BrowsingContext* aBC) const {
+  RefPtr<BrowsingContext> top = aBC->Top();
+  if (XRE_IsParentProcess()) {
+    top = top->Canonical()->TopCrossChromeBoundary();
+  }
+  return IsSameOrAncestor(top, GetActiveBrowsingContext());
+}
+
 // get the current window for the given content node
 static nsPIDOMWindowOuter* GetCurrentWindow(nsIContent* aContent) {
   Document* doc = aContent->GetComposedDoc();
@@ -1731,7 +1739,7 @@ static already_AddRefed<BrowsingContext> GetParentIgnoreChromeBoundary(
 }
 
 bool nsFocusManager::IsSameOrAncestor(BrowsingContext* aPossibleAncestor,
-                                      BrowsingContext* aContext) {
+                                      BrowsingContext* aContext) const {
   if (!aPossibleAncestor) {
     return false;
   }
@@ -1747,7 +1755,7 @@ bool nsFocusManager::IsSameOrAncestor(BrowsingContext* aPossibleAncestor,
 }
 
 bool nsFocusManager::IsSameOrAncestor(nsPIDOMWindowOuter* aPossibleAncestor,
-                                      nsPIDOMWindowOuter* aWindow) {
+                                      nsPIDOMWindowOuter* aWindow) const {
   if (aWindow && aPossibleAncestor) {
     return IsSameOrAncestor(aPossibleAncestor->GetBrowsingContext(),
                             aWindow->GetBrowsingContext());
@@ -1756,7 +1764,7 @@ bool nsFocusManager::IsSameOrAncestor(nsPIDOMWindowOuter* aPossibleAncestor,
 }
 
 bool nsFocusManager::IsSameOrAncestor(nsPIDOMWindowOuter* aPossibleAncestor,
-                                      BrowsingContext* aContext) {
+                                      BrowsingContext* aContext) const {
   if (aPossibleAncestor) {
     return IsSameOrAncestor(aPossibleAncestor->GetBrowsingContext(), aContext);
   }
@@ -1764,7 +1772,7 @@ bool nsFocusManager::IsSameOrAncestor(nsPIDOMWindowOuter* aPossibleAncestor,
 }
 
 bool nsFocusManager::IsSameOrAncestor(BrowsingContext* aPossibleAncestor,
-                                      nsPIDOMWindowOuter* aWindow) {
+                                      nsPIDOMWindowOuter* aWindow) const {
   if (aWindow) {
     return IsSameOrAncestor(aPossibleAncestor, aWindow->GetBrowsingContext());
   }
