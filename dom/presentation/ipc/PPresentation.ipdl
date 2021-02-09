@@ -12,7 +12,7 @@ include InputStreamParams;
 
 include "mozilla/dom/PermissionMessageUtils.h";
 
-using refcounted class nsIPrincipal from "nsIPrincipal.h";
+[RefCounted] using class nsIPrincipal from "nsIPrincipal.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 
 namespace mozilla {

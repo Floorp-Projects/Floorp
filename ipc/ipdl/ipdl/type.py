@@ -839,6 +839,38 @@ class GatherDecls(TcheckVisitor):
         self.symtab.declare(d)
         return d
 
+    # Check that only attributes allowed by an attribute spec are present
+    # within the given attribute dictionary. The spec value may be either
+    # `None`, for a valueless attribute, a list of valid attribute values, or a
+    # callable which returns a truthy value if the attribute is valid.
+    def checkAttributes(self, attributes, spec):
+        for attr in attributes.values():
+            if attr.name not in spec:
+                self.error(attr.loc, "unknown attribute `%s'", attr.name)
+                continue
+
+            aspec = spec[attr.name]
+            if aspec is None:
+                if attr.value is not None:
+                    self.error(
+                        attr.loc,
+                        "unexpected value for valueless attribute `%s'",
+                        attr.name,
+                    )
+            elif isinstance(aspec, (list, tuple)):
+                if attr.value not in aspec:
+                    self.error(
+                        attr.loc,
+                        "invalid value for attribute `%s', expected one of: %s",
+                        attr.name,
+                        ", ".join(aspec),
+                    )
+            elif callable(aspec):
+                if not aspec(attr.value):
+                    self.error(attr.loc, "invalid value for attribute `%s'", attr.name)
+            else:
+                raise Exception("INTERNAL ERROR: Invalid attribute spec")
+
     def visitTranslationUnit(self, tu):
         # all TranslationUnits declare symbols in global scope
         if hasattr(tu, "visited"):
@@ -1064,6 +1096,15 @@ class GatherDecls(TcheckVisitor):
             # there is nothing to typedef.  With UniquePtrs, basenames
             # are generic so typedefs would be illegal.
             fullname = None
+
+        self.checkAttributes(
+            using.attributes,
+            {
+                "MoveOnly": None,
+                "RefCounted": None,
+            },
+        )
+
         if fullname == "mozilla::ipc::Shmem":
             ipdltype = ShmemType(using.type.spec)
         elif fullname == "mozilla::ipc::ByteBuf":

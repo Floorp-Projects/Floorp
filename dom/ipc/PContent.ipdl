@@ -83,8 +83,8 @@ include "mozilla/ipc/ByteBufUtils.h";
 include "mozilla/ipc/URIUtils.h";
 include "mozilla/PermissionDelegateIPCUtils.h";
 
-using refcounted class nsIDOMGeoPosition from "nsGeoPositionIPCSerialiser.h";
-using refcounted class nsIAlertNotification from "mozilla/AlertNotificationIPCSerializer.h";
+[RefCounted] using class nsIDOMGeoPosition from "nsGeoPositionIPCSerialiser.h";
+[RefCounted] using class nsIAlertNotification from "mozilla/AlertNotificationIPCSerializer.h";
 
 using struct ChromePackage from "mozilla/chrome/RegistryMessageUtils.h";
 using struct SubstitutionMapping from "mozilla/chrome/RegistryMessageUtils.h";
@@ -112,9 +112,9 @@ using mozilla::Telemetry::ScalarAction from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::KeyedScalarAction from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::DynamicScalarDefinition from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
-using moveonly mozilla::UntrustedModulesData from "mozilla/UntrustedModulesData.h";
-using moveonly mozilla::ModulePaths from "mozilla/UntrustedModulesData.h";
-using moveonly mozilla::ModulesMapResult from "mozilla/UntrustedModulesData.h";
+[MoveOnly] using mozilla::UntrustedModulesData from "mozilla/UntrustedModulesData.h";
+[MoveOnly] using mozilla::ModulePaths from "mozilla/UntrustedModulesData.h";
+[MoveOnly] using mozilla::ModulesMapResult from "mozilla/UntrustedModulesData.h";
 using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
 using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
 using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
@@ -134,7 +134,7 @@ using mozilla::dom::MediaMetadataBase from "mozilla/dom/MediaMetadata.h";
 using mozilla::dom::MediaSessionAction from "mozilla/dom/MediaSessionBinding.h";
 using mozilla::dom::MediaSessionPlaybackState from "mozilla/dom/MediaSessionBinding.h";
 using mozilla::dom::PositionState from "mozilla/dom/MediaSession.h";
-using refcounted class nsDocShellLoadState from "nsDocShellLoadState.h";
+[RefCounted] using class nsDocShellLoadState from "nsDocShellLoadState.h";
 using mozilla::dom::ServiceWorkerShutdownState::Progress from "mozilla/dom/ServiceWorkerShutdownState.h";
 using mozilla::ContentBlockingNotifier::StorageAccessPermissionGrantedReason from "mozilla/ContentBlockingNotifier.h";
 using mozilla::ContentBlockingNotifier::BlockingDecision from "mozilla/ContentBlockingNotifier.h";
@@ -142,14 +142,14 @@ using mozilla::ContentBlocking::StorageAccessPromptChoices from "mozilla/Content
 using JSActorMessageKind from "mozilla/dom/JSActor.h";
 using JSActorMessageMeta from "mozilla/dom/PWindowGlobal.h";
 using mozilla::PermissionDelegateHandler::DelegatedPermissionList from "mozilla/PermissionDelegateHandler.h";
-using refcounted class nsILayoutHistoryState from "nsILayoutHistoryState.h";
+[RefCounted] using class nsILayoutHistoryState from "nsILayoutHistoryState.h";
 using class mozilla::dom::SessionHistoryInfo from "mozilla/dom/SessionHistoryEntry.h";
 using struct nsPoint from "nsPoint.h";
 using struct mozilla::dom::LoadingSessionHistoryInfo from "mozilla/dom/SessionHistoryEntry.h";
 using mozilla::PDMFactory::MediaCodecsSupported from "PDMFactory.h";
 using mozilla::RemoteDecodeIn from "mozilla/RemoteDecoderManagerChild.h";
 using mozilla::dom::PerformanceTimingData from "mozilla/dom/PerformanceTiming.h";
-using refcounted mozilla::dom::FeaturePolicy from "mozilla/dom/FeaturePolicy.h";
+[RefCounted] using mozilla::dom::FeaturePolicy from "mozilla/dom/FeaturePolicy.h";
 
 union ChromeRegistryItem
 {

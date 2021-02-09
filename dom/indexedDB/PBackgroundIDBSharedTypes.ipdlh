@@ -35,7 +35,7 @@ using class mozilla::dom::indexedDB::KeyPath
 using mozilla::dom::quota::PersistenceType
   from "mozilla/dom/quota/PersistenceType.h";
 
-using moveonly mozilla::SerializedStructuredCloneBuffer
+[MoveOnly] using mozilla::SerializedStructuredCloneBuffer
   from "mozilla/ipc/SerializedStructuredCloneBuffer.h";
 
 namespace mozilla {

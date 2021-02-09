@@ -2,17 +2,17 @@ using SomeType from "SomeFile.h";
 using class SomeClass from "SomeFile.h";
 using struct SomeStruct from "SomeFile.h";
 
-using refcounted SomeRefcountedType from "SomeFile.h";
-using refcounted class SomeRefcountedClass from "SomeFile.h";
-using refcounted struct SomeRefcountedStruct from "SomeFile.h";
+[RefCounted] using SomeRefcountedType from "SomeFile.h";
+[RefCounted] using class SomeRefcountedClass from "SomeFile.h";
+[RefCounted] using struct SomeRefcountedStruct from "SomeFile.h";
 
-using moveonly SomeMoveonlyType from "SomeFile.h";
-using moveonly class SomeMoveonlyClass from "SomeFile.h";
-using moveonly struct SomeMoveonlyStruct from "SomeFile.h";
+[MoveOnly] using SomeMoveonlyType from "SomeFile.h";
+[MoveOnly] using class SomeMoveonlyClass from "SomeFile.h";
+[MoveOnly] using struct SomeMoveonlyStruct from "SomeFile.h";
 
-using refcounted moveonly SomeRefcountedMoveonlyType from "SomeFile.h";
-using refcounted moveonly class SomeRefcountedMoveonlyClass from "SomeFile.h";
-using refcounted moveonly struct SomeRefcountedMoveonlyStruct from "SomeFile.h";
+[RefCounted, MoveOnly] using SomeRefcountedMoveonlyType from "SomeFile.h";
+[RefCounted, MoveOnly] using class SomeRefcountedMoveonlyClass from "SomeFile.h";
+[RefCounted, MoveOnly] using struct SomeRefcountedMoveonlyStruct from "SomeFile.h";
 
 union SomeUnion
 {

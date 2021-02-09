@@ -55,6 +55,8 @@ class Visitor:
             t.accept(self)
 
     def visitUsingStmt(self, using):
+        for a in using.attributes.values():
+            a.accept(self)
         pass
 
     def visitProtocol(self, p):
@@ -86,6 +88,9 @@ class Visitor:
         pass
 
     def visitTypeSpec(self, ts):
+        pass
+
+    def visitAttribute(self, a):
         pass
 
     def visitDecl(self, d):
@@ -193,8 +198,7 @@ class UsingStmt(Node):
         cxxTypeSpec,
         cxxHeader=None,
         kind=None,
-        refcounted=False,
-        moveonly=False,
+        attributes={},
     ):
         Node.__init__(self, loc)
         assert not isinstance(cxxTypeSpec, str)
@@ -203,8 +207,7 @@ class UsingStmt(Node):
         self.type = cxxTypeSpec
         self.header = cxxHeader
         self.kind = kind
-        self.refcounted = refcounted
-        self.moveonly = moveonly
+        self.attributes = attributes
 
     def canBeForwardDeclared(self):
         return self.isClass() or self.isStruct()
@@ -216,10 +219,10 @@ class UsingStmt(Node):
         return self.kind == "struct"
 
     def isRefcounted(self):
-        return self.refcounted
+        return "RefCounted" in self.attributes
 
     def isMoveonly(self):
-        return self.moveonly
+        return "MoveOnly" in self.attributes
 
 
 # "singletons"
@@ -370,6 +373,13 @@ class TypeSpec(Node):
 
     def __str__(self):
         return str(self.spec)
+
+
+class Attribute(Node):
+    def __init__(self, loc, name, value):
+        Node.__init__(self, loc)
+        self.name = name
+        self.value = value
 
 
 class QualifiedId:  # FIXME inherit from node?

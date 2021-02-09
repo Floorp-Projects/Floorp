@@ -1,0 +1,5 @@
+//error: bad syntax near `]'
+
+[ ] using SomeType from "SomeFile.h";
+
+struct ExtendedAttrEmpty {};
