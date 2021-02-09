@@ -1799,7 +1799,8 @@ both:
                       bool aTrustedCaller);
     async WindowFocus(MaybeDiscardedBrowsingContext aContext,
                       CallerType aCallerType, uint64_t aActionId);
-    async WindowBlur(MaybeDiscardedBrowsingContext aContext);
+    async WindowBlur(MaybeDiscardedBrowsingContext aContext,
+                     CallerType aCallerType);
     async RaiseWindow(MaybeDiscardedBrowsingContext aContext, CallerType aCallerType, uint64_t aActionId);
     async ClearFocus(MaybeDiscardedBrowsingContext aContext);
     async SetFocusedBrowsingContext(MaybeDiscardedBrowsingContext aContext);
