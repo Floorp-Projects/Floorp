@@ -2228,6 +2228,7 @@ void LIRGenerator::visitInt32ToIntPtr(MInt32ToIntPtr* ins) {
   MOZ_ASSERT(input->type() == MIRType::Int32);
   MOZ_ASSERT(ins->type() == MIRType::IntPtr);
 
+#ifdef JS_64BIT
   // If the result is only used by instructions that expect a bounds-checked
   // index, we must have eliminated or hoisted a bounds check and we can assume
   // the index is non-negative. This lets us generate more efficient code.
@@ -2249,8 +2250,17 @@ void LIRGenerator::visitInt32ToIntPtr(MInt32ToIntPtr* ins) {
     }
   }
 
-  auto* lir = new (alloc()) LInt32ToIntPtr(useRegisterAtStart(input));
-  define(lir, ins);
+  if (ins->canBeNegative()) {
+    auto* lir = new (alloc()) LInt32ToIntPtr(useRegisterAtStart(input));
+    define(lir, ins);
+  } else {
+    auto* lir = new (alloc()) LInt32ToIntPtr(useRegisterAtStart(input));
+    defineReuseInput(lir, ins, 0);
+  }
+#else
+  // On 32-bit platforms this is a no-op.
+  redefine(ins, input);
+#endif
 }
 
 void LIRGenerator::visitNonNegativeIntPtrToInt32(
@@ -2259,12 +2269,15 @@ void LIRGenerator::visitNonNegativeIntPtrToInt32(
   MOZ_ASSERT(input->type() == MIRType::IntPtr);
   MOZ_ASSERT(ins->type() == MIRType::Int32);
 
+#ifdef JS_64BIT
   auto* lir =
       new (alloc()) LNonNegativeIntPtrToInt32(useRegisterAtStart(input));
-#ifdef JS_64BIT
   assignSnapshot(lir, ins->bailoutKind());
-#endif
   defineReuseInput(lir, ins, 0);
+#else
+  // On 32-bit platforms this is a no-op.
+  redefine(ins, input);
+#endif
 }
 
 void LIRGenerator::visitAdjustDataViewLength(MAdjustDataViewLength* ins) {
