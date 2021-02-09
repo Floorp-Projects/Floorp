@@ -57,28 +57,6 @@ Assert.equal(aboutPrincipal.originNoSuffix, "about:preferences");
 Assert.equal(aboutPrincipal.siteOrigin, "about:preferences^userContextId=66");
 Assert.equal(aboutPrincipal.siteOriginNoSuffix, "about:preferences");
 
-let viewSourceURI = Services.io.newURI(
-  "view-source:https://test1.test2.example.com"
-);
-let viewSourcePrincipal = scriptSecMan.createContentPrincipal(viewSourceURI, {
-  userContextId: 101,
-});
-Assert.ok(viewSourcePrincipal.isContentPrincipal);
-Assert.ok(viewSourcePrincipal.schemeIs("view-source"));
-Assert.equal(
-  viewSourcePrincipal.origin,
-  "https://test1.test2.example.com^userContextId=101"
-);
-Assert.equal(
-  viewSourcePrincipal.originNoSuffix,
-  "https://test1.test2.example.com"
-);
-Assert.equal(
-  viewSourcePrincipal.siteOrigin,
-  "https://example.com^userContextId=101"
-);
-Assert.equal(viewSourcePrincipal.siteOriginNoSuffix, "https://example.com");
-
 // NullPrincipal checks
 let nullPrincipal = scriptSecMan.createNullPrincipal({ userContextId: 33 });
 Assert.ok(nullPrincipal.isNullPrincipal);
