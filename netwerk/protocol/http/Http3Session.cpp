@@ -1115,6 +1115,8 @@ nsresult Http3Session::WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
   return NS_OK;
 }
 
+const uint32_t HTTP3_TELEMETRY_APP_NECKO = 23;
+
 void Http3Session::Close(nsresult aReason) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
@@ -1124,10 +1126,10 @@ void Http3Session::Close(nsresult aReason) {
     CloseInternal(false);
   } else {
     mError = aReason;
-    // If necko closes connection, this will map to "closing" key and 37 in the
-    // graph.
-    Telemetry::Accumulate(Telemetry::HTTP3_CONNECTTION_CLOSE_CODE, "closing"_ns,
-                          37);
+    // If necko closes connection, this will map to the "closing" key and the value
+    // HTTP3_TELEMETRY_APP_NECKO.
+    Telemetry::Accumulate(Telemetry::HTTP3_CONNECTION_CLOSE_CODE, "app_closing"_ns,
+                          HTTP3_TELEMETRY_APP_NECKO);
     CloseInternal(true);
   }
 
@@ -1607,56 +1609,104 @@ void Http3Session::SetSecInfo() {
   }
 }
 
+// Transport error have values from 0x0 to 0x11.
+// (https://tools.ietf.org/html/draft-ietf-quic-transport-34#section-20.1)
+// We will map this error to 0-16.
+// 17 will capture error codes between and including 0x12 and 0x0ff. This
+// error codes are not define by the spec but who know peer may sent them.
+// CryptoAlerts have value 0x100 + alert code. For now we will map them
+// to 18. (https://tools.ietf.org/html/draft-ietf-quic-tls_34#section-4.8)
+// (telemetry does not allow more than 100 bucket and to easily map alerts
+// we need 256. If we find problem with too many alerts we could map
+// them.)
+const uint32_t HTTP3_TELEMETRY_TRANSPORT_END = 16;
+const uint32_t HTTP3_TELEMETRY_TRANSPORT_UNKNOWN = 17;
+const uint32_t HTTP3_TELEMETRY_TRANSPORT_CRYPTO = 18;
+// All errors from CloseError::Tag::CryptoError will be map to 19
+const uint32_t HTTP3_TELEMETRY_CRYPTO_ERROR = 19;
+// All errors from CloseError::Tag::CryptoAlerts will be map to 20
+const uint32_t HTTP3_TELEMETRY_CRYPTO_ALERT = 20;
+
+uint64_t GetTransportErrorCodeForTelemetry(uint64_t error) {
+  if (error <= HTTP3_TELEMETRY_TRANSPORT_END) {
+    return error;
+  }
+  if (error < 0x100) {
+    return HTTP3_TELEMETRY_TRANSPORT_UNKNOWN;
+  }
+  return HTTP3_TELEMETRY_TRANSPORT_CRYPTO;
+}
+
+// Http3 error codes are 0x100-0x110.
+// (https://tools.ietf.org/html/draft-ietf-quic-http-33#section-8.1)
+// They will be mapped to 1-17. Error code 0 will be resereved for
+// values 0x00-0xff
+const uint32_t HTTP3_TELEMETRY_APP_UNKNOWN_1 = 0;
+const uint32_t HTTP3_TELEMETRY_APP_START = 1;
+// Values between 0x111 and 0x1ff are no definded and will be map to 18.
+const uint32_t HTTP3_TELEMETRY_APP_UNKNOWN_2 = 18;
+// Error codes between 0x200 and 0x202 are related to qpack.
+// (https://tools.ietf.org/html/draft-ietf-quic-qpack-20#section-6)
+// They will be mapped to 19-21
+const uint32_t HTTP3_TELEMETRY_APP_QPACK_START = 19;
+// Values greater or equal to 0x203 are no definded and will be map to 22.
+const uint32_t HTTP3_TELEMETRY_APP_UNKNOWN_3 = 22;
+
+uint64_t GetAppErrorCodeForTelemetry(uint64_t error) {
+      if (error < 0x100) {
+          return HTTP3_TELEMETRY_APP_UNKNOWN_1;
+      }
+      if (error <= 0x110) {
+        return error - 0x100 + HTTP3_TELEMETRY_APP_START;
+      }
+      if (error < 0x200) {
+        return HTTP3_TELEMETRY_APP_UNKNOWN_2;
+      }
+      if (error <= 0x202) {
+        return error - 0x200 + HTTP3_TELEMETRY_APP_QPACK_START;
+      }
+      return HTTP3_TELEMETRY_APP_UNKNOWN_3;
+}
+
 void Http3Session::CloseConnectionTelemetry(CloseError& aError, bool aClosing) {
   uint64_t value = 0;
+  nsCString key = EmptyCString();
 
   switch (aError.tag) {
-    case CloseError::Tag::QuicTransportError:
-      // Transport error have values from 0 to 12.
-      // (https://tools.ietf.org/html/draft-ietf-quic-transport-24#section-20)
-      // We will map this error to 0-12.
-      // 13 wil capture error codes between and including 13 and 0x0ff. This
-      // error codes are not define by the spec but who know peer may sent them.
-      // CryptoAlerts have value 0x100 + alert code. For now we will map them
-      // to 14. (https://tools.ietf.org/html/draft-ietf-quic-tls-24#section-4.9)
-      // (telemetry does not allow more than 100 bucket and to easily map alerts
-      // we need 256. If we find problem with too many alerts we could map
-      // them.)
-      if (aError.quic_transport_error._0 <= 12) {
-        value = aError.quic_transport_error._0;
-      } else if (aError.quic_transport_error._0 < 0x100) {
-        value = 13;
-      } else {
-        value = 14;
-      }
+    case CloseError::Tag::TransportInternalError:
+      key = "transport_internal"_ns;
+      value = aError.transport_internal_error._0;
       break;
-    case CloseError::Tag::Http3AppError:
-      if (aError.http3_app_error._0 <= 0x110) {
-        // Http3 error codes are 0x100-0x110.
-        // (https://tools.ietf.org/html/draft-ietf-quic-http-24#section-8.1)
-        // The will be mapped to 15-31.
-        value = (aError.http3_app_error._0 - 0x100) + 15;
-      } else if (aError.http3_app_error._0 < 0x200) {
-        // Error codes between 0x111 and 0x1ff are not defined and will be
-        // mapped int 32
-        value = 32;  // 0x11 + 15
-      } else if (aError.http3_app_error._0 < 0x203) {
-        // Error codes between 0x200 and 0x202 are related to qpack.
-        // (https://tools.ietf.org/html/draft-ietf-quic-qpack-11#section-6)
-        // They will be mapped to 33-35
-        value = aError.http3_app_error._0 - 0x200 + 33;
-      } else {
-        value = 36;
-      }
+    case CloseError::Tag::TransportError:
+      key = "transport"_ns;
+      value = GetTransportErrorCodeForTelemetry(aError.transport_error._0);
+      break;
+    case CloseError::Tag::CryptoError:
+      key = "transport"_ns;
+      value = HTTP3_TELEMETRY_CRYPTO_ERROR;
+      break;
+    case CloseError::Tag::CryptoAlert:
+      key = "transport"_ns;
+      value = HTTP3_TELEMETRY_CRYPTO_ALERT;
+      break;
+    case CloseError::Tag::PeerAppError:
+      key = "peer_app"_ns;
+      value = GetAppErrorCodeForTelemetry(aError.peer_app_error._0);
+      break;
+    case CloseError::Tag::PeerError:
+      key = "peer_transport"_ns;
+      value = GetTransportErrorCodeForTelemetry(aError.peer_error._0);
+      break;
+    case CloseError::Tag::AppError:
+      key = "app"_ns;
+      value = GetAppErrorCodeForTelemetry(aError.app_error._0);
+      break;
   }
 
-  // A connection may be closed in two ways: client side closes connection or
-  // server side. In former case http3 state will first change to closing state
-  // in the later case itt will change to closed. In tthis way we can
-  // distinguish which side is closing connecttion first. If necko closes
-  // connection, this will map to "closing" key and 37 in the graph.
-  Telemetry::Accumulate(Telemetry::HTTP3_CONNECTTION_CLOSE_CODE,
-                        aClosing ? "closing"_ns : "closed"_ns, value);
+  key.Append(aClosing ? "_closing"_ns : "_closed"_ns);
+
+  Telemetry::Accumulate(Telemetry::HTTP3_CONNECTION_CLOSE_CODE,
+                        key, value);
 
   Http3Stats stats;
   mHttp3Connection->GetStats(&stats);
