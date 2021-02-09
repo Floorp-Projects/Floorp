@@ -30,7 +30,7 @@ p {
   margin-right: calc(100% - 100vw);
 }
 
-.wrapper {
+.wrapper:not([hidden]) {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -144,10 +144,6 @@ button {
 /* Remove light gray outline when clicking on the button */
 button::-moz-focus-inner {
   border: 0;
-}
-
-[hidden="true"] {
-  display: none;
 }
 
 footer {
