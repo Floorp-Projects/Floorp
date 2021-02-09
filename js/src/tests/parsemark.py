@@ -42,11 +42,11 @@ JS_CODE_TEMPLATE = Template(
 if (typeof snarf !== 'undefined') read = snarf
 var contents = read("$filepath");
 for (var i = 0; i < $warmup_run_count; i++)
-    parse(contents);
+    $func(contents, $options);
 var results = [];
 for (var i = 0; i < $real_run_count; i++) {
     var start = new Date();
-    parse(contents);
+    $func(contents, $options);
     var end = new Date();
     results.push(end - start);
 }
@@ -70,11 +70,15 @@ def stddev(seq, mean):
     return math.sqrt(sum(diffs) / len(seq))
 
 
-def bench(shellpath, filepath, warmup_runs, counted_runs, stfu=False):
+def bench(shellpath, filepath, warmup_runs, counted_runs, func, options, stfu=False):
     """Return a list of milliseconds for the counted runs."""
     assert '"' not in filepath
     code = JS_CODE_TEMPLATE.substitute(
-        filepath=filepath, warmup_run_count=warmup_runs, real_run_count=counted_runs
+        filepath=filepath,
+        warmup_run_count=warmup_runs,
+        real_run_count=counted_runs,
+        func=func,
+        options=options,
     )
     proc = subp.Popen([shellpath, "-e", code], stdout=subp.PIPE)
     stdout, _ = proc.communicate()
@@ -143,6 +147,21 @@ def main():
         help="json file with baseline values to " "compare against",
     )
     parser.add_option(
+        "--mode",
+        dest="mode",
+        type="choice",
+        choices=("parse", "dumpStencil", "compile"),
+        default="parse",
+        help="The target of the benchmark (parse/dumpStencil/compile), defaults to parse",
+    )
+    parser.add_option(
+        "--lazy",
+        dest="lazy",
+        action="store_true",
+        default=False,
+        help="Use lazy parsing when compiling",
+    )
+    parser.add_option(
         "-q",
         "--quiet",
         dest="stfu",
@@ -179,12 +198,26 @@ def main():
             )
             return -1
 
+    if options.lazy and options.mode == "parse":
+        print(
+            "error: parse mode doesn't support lazy",
+            file=sys.stderr,
+        )
+        return -1
+
+    if options.lazy:
+        funcOpt = "{}"
+    else:
+        funcOpt = "{ forceFullParse: true }"
+
     def benchfile(filepath):
         return bench(
             shellpath,
             filepath,
             options.warmup_runs,
             options.counted_runs,
+            options.mode,
+            funcOpt,
             stfu=options.stfu,
         )
 
