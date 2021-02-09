@@ -50,7 +50,7 @@ add_task(async function withAMultiSelectedTab() {
   is(gBrowser.multiSelectedTabsCount, 2, "Two multiselected tabs");
   is(gBrowser.selectedTab, initialTab, "InitialTab is still the active tab");
 
-  gBrowser.clearMultiSelectedTabs({ isLastMultiSelectChange: false });
+  gBrowser.clearMultiSelectedTabs();
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab4);
 });
