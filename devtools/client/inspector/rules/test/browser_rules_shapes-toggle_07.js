@@ -30,7 +30,7 @@ add_task(async function() {
 
   info("Toggling ON the CSS shapes highlighter with transform mode on.");
   let onHighlighterShown = highlighters.once("shapes-highlighter-shown");
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click", metaKey: true, ctrlKey: true },
     shapesToggle,
     view.styleWindow
@@ -49,11 +49,7 @@ add_task(async function() {
 
   info("Toggling OFF the CSS shapes highlighter from the rule-view.");
   const onHighlighterHidden = highlighters.once("shapes-highlighter-hidden");
-  await EventUtils.sendMouseEvent(
-    { type: "click" },
-    shapesToggle,
-    view.styleWindow
-  );
+  EventUtils.sendMouseEvent({ type: "click" }, shapesToggle, view.styleWindow);
   await onHighlighterHidden;
 
   info("Checking the CSS shapes highlighter is not shown.");
@@ -64,11 +60,7 @@ add_task(async function() {
 
   info("Toggling ON the CSS shapes highlighter with transform mode off.");
   onHighlighterShown = highlighters.once("shapes-highlighter-shown");
-  await EventUtils.sendMouseEvent(
-    { type: "click" },
-    shapesToggle,
-    view.styleWindow
-  );
+  EventUtils.sendMouseEvent({ type: "click" }, shapesToggle, view.styleWindow);
   await onHighlighterShown;
 
   info(
@@ -88,7 +80,7 @@ add_task(async function() {
     "Clicking shapes toggle to turn on transform mode while highlighter is shown."
   );
   onHighlighterShown = highlighters.once("shapes-highlighter-shown");
-  await EventUtils.sendMouseEvent(
+  EventUtils.sendMouseEvent(
     { type: "click", metaKey: true, ctrlKey: true },
     shapesToggle,
     view.styleWindow
