@@ -3736,8 +3736,8 @@ nsresult nsGlobalWindowInner::Focus(CallerType aCallerType) {
   return rv.StealNSResult();
 }
 
-void nsGlobalWindowInner::Blur(CallerType aCallerType, ErrorResult& aError) {
-  FORWARD_TO_OUTER_OR_THROW(BlurOuter, (aCallerType), aError, );
+void nsGlobalWindowInner::Blur(ErrorResult& aError) {
+  FORWARD_TO_OUTER_OR_THROW(BlurOuter, (), aError, );
 }
 
 void nsGlobalWindowInner::Stop(ErrorResult& aError) {
