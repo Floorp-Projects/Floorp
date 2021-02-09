@@ -44,11 +44,12 @@ class SafepointWriter {
   void writeOsiCallPointOffset(uint32_t osiPointOffset);
   void writeGcRegs(LSafepoint* safepoint);
   void writeGcSlots(LSafepoint* safepoint);
-  void writeValueSlots(LSafepoint* safepoint);
 
   void writeSlotsOrElementsSlots(LSafepoint* safepoint);
 
-#ifdef JS_NUNBOX32
+#ifdef JS_PUNBOX64
+  void writeValueSlots(LSafepoint* safepoint);
+#else
   void writeNunboxParts(LSafepoint* safepoint);
 #endif
 
@@ -81,8 +82,7 @@ class SafepointReader {
  private:
   void advanceFromGcRegs();
   void advanceFromGcSlots();
-  void advanceFromValueSlots();
-  void advanceFromNunboxSlots();
+  void advanceFromNunboxOrValueSlots();
   [[nodiscard]] bool getSlotFromBitmap(SafepointSlotEntry* entry);
 
  public:

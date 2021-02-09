@@ -882,11 +882,6 @@ static void TraceIonJSFrame(JSTracer* trc, const JSJitFrameIter& frame) {
                             "ion-gc-slot");
   }
 
-  while (safepoint.getValueSlot(&entry)) {
-    Value* v = (Value*)layout->slotRef(entry);
-    TraceRoot(trc, v, "ion-gc-slot");
-  }
-
   uintptr_t* spill = frame.spillBase();
   LiveGeneralRegisterSet gcRegs = safepoint.gcSpills();
   LiveGeneralRegisterSet valueRegs = safepoint.valueSpills();
@@ -901,7 +896,12 @@ static void TraceIonJSFrame(JSTracer* trc, const JSJitFrameIter& frame) {
     }
   }
 
-#ifdef JS_NUNBOX32
+#ifdef JS_PUNBOX64
+  while (safepoint.getValueSlot(&entry)) {
+    Value* v = (Value*)layout->slotRef(entry);
+    TraceRoot(trc, v, "ion-gc-slot");
+  }
+#else
   LAllocation type, payload;
   while (safepoint.getNunboxSlot(&type, &payload)) {
     JSValueTag tag = JSValueTag(ReadAllocation(frame, &type));
@@ -989,14 +989,16 @@ static void UpdateIonJSFrameForMinorGC(JSRuntime* rt,
 
   // Skip to the right place in the safepoint
   SafepointSlotEntry entry;
-  while (safepoint.getGcSlot(&entry))
-    ;
-  while (safepoint.getValueSlot(&entry))
-    ;
-#ifdef JS_NUNBOX32
+  while (safepoint.getGcSlot(&entry)) {
+  }
+
+#ifdef JS_PUNBOX64
+  while (safepoint.getValueSlot(&entry)) {
+  }
+#else
   LAllocation type, payload;
-  while (safepoint.getNunboxSlot(&type, &payload))
-    ;
+  while (safepoint.getNunboxSlot(&type, &payload)) {
+  }
 #endif
 
   while (safepoint.getSlotsOrElementsSlot(&entry)) {
