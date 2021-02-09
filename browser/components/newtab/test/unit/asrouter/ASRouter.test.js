@@ -1976,11 +1976,10 @@ describe("ASRouter", () => {
       });
 
       assert.calledOnce(global.ExperimentAPI.recordExposureEvent);
-      assert.calledWithExactly(
-        global.ExperimentAPI.recordExposureEvent,
-        "cfr",
-        messages[0].forExposureEvent
-      );
+      assert.calledWithExactly(global.ExperimentAPI.recordExposureEvent, {
+        featureId: "cfr",
+        ...messages[0].forExposureEvent,
+      });
     });
   });
 
@@ -2659,7 +2658,6 @@ describe("ASRouter", () => {
       assert.calledOnce(global.ExperimentAPI.getExperiment);
       assert.calledWithExactly(global.ExperimentAPI.getExperiment, {
         featureId: "asrouter",
-        sendExposurePing: false,
       });
     });
     it("should handle the case of no experiments in the ExperimentAPI", async () => {
