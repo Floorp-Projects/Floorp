@@ -31,7 +31,7 @@ var RecentlyClosedTabsAndWindowsMenuUtils = {
    * @param   aPrefixRestoreAll (defaults to false)
    *          Whether the 'restore all tabs' item is suffixed or prefixed to the list.
    *          If suffixed (the default) a separator will be inserted before it.
-   * @param   aRestoreAllLabel (defaults to "menuRestoreAllTabs.label")
+   * @param   aRestoreAllLabel (defaults to "appmenu-reopen-all-tabs")
    *          Which localizable string to use for the 'restore all tabs' item.
    * @returns A document fragment with UI items for each recently closed tab.
    */
@@ -39,7 +39,7 @@ var RecentlyClosedTabsAndWindowsMenuUtils = {
     aWindow,
     aTagName,
     aPrefixRestoreAll = false,
-    aRestoreAllLabel = "menuRestoreAllTabs.label"
+    aRestoreAllLabel = "appmenu-reopen-all-tabs"
   ) {
     let doc = aWindow.document;
     let fragment = doc.createDocumentFragment();
@@ -79,7 +79,7 @@ var RecentlyClosedTabsAndWindowsMenuUtils = {
    * @param   aPrefixRestoreAll (defaults to false)
    *          Whether the 'restore all windows' item is suffixed or prefixed to the list.
    *          If suffixed (the default) a separator will be inserted before it.
-   * @param   aRestoreAllLabel (defaults to "menuRestoreAllWindows.label")
+   * @param   aRestoreAllLabel (defaults to "appmenu-reopen-all-windows")
    *          Which localizable string to use for the 'restore all windows' item.
    * @returns A document fragment with UI items for each recently closed window.
    */
@@ -87,7 +87,7 @@ var RecentlyClosedTabsAndWindowsMenuUtils = {
     aWindow,
     aTagName,
     aPrefixRestoreAll = false,
-    aRestoreAllLabel = "menuRestoreAllWindows.label"
+    aRestoreAllLabel = "appmenu-reopen-all-windows"
   ) {
     let closedWindowData = SessionStore.getClosedWindowData(false);
     let doc = aWindow.document;
@@ -145,6 +145,14 @@ var RecentlyClosedTabsAndWindowsMenuUtils = {
     if (ancestorPanel) {
       ancestorPanel.hidePopup();
     }
+  },
+
+  get strings() {
+    delete this.strings;
+    return (this.strings = new Localization(
+      ["branding/brand.ftl", "browser/menubar.ftl", "browser/appmenu.ftl"],
+      true
+    ));
   },
 };
 
@@ -221,12 +229,6 @@ function createEntry(
       RecentlyClosedTabsAndWindowsMenuUtils._undoCloseMiddleClick
     );
   }
-  if (aIndex == 0) {
-    element.setAttribute(
-      "key",
-      "key_undoClose" + (aIsWindowsFragment ? "Window" : "Tab")
-    );
-  }
 
   aFragment.appendChild(element);
 }
@@ -260,10 +262,16 @@ function createRestoreAllEntry(
 ) {
   let restoreAllElements = aDocument.createXULElement(aTagName);
   restoreAllElements.classList.add("restoreallitem");
+
+  // We cannot use aDocument.l10n.setAttributes because the menubar label is not
+  // updated in time and displays a blank string (see Bug 1691553).
   restoreAllElements.setAttribute(
     "label",
-    navigatorBundle.GetStringFromName(aRestoreAllLabel)
+    RecentlyClosedTabsAndWindowsMenuUtils.strings.formatValueSync(
+      aRestoreAllLabel
+    )
   );
+
   restoreAllElements.setAttribute(
     "oncommand",
     "for (var i = 0; i < " +
