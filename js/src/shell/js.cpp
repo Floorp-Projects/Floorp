@@ -2222,6 +2222,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
   bool loadBytecode = false;
   bool saveBytecode = false;
   bool saveIncrementalBytecode = false;
+  bool transcodeOnly = false;
   bool assertEqBytecode = false;
   JS::RootedObjectVector envChain(cx);
   RootedObject callerGlobal(cx, cx->global());
@@ -2305,6 +2306,13 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
     }
     if (!v.isUndefined()) {
       saveIncrementalBytecode = ToBoolean(v);
+    }
+
+    if (!JS_GetProperty(cx, opts, "transcodeOnly", &v)) {
+      return false;
+    }
+    if (!v.isUndefined()) {
+      transcodeOnly = ToBoolean(v);
     }
 
     if (!JS_GetProperty(cx, opts, "assertEqBytecode", &v)) {
@@ -2483,19 +2491,21 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       }
     }
 
-    if (!(envChain.empty()
-              ? JS_ExecuteScript(cx, script, args.rval())
-              : JS_ExecuteScript(cx, envChain, script, args.rval()))) {
-      if (catchTermination && !JS_IsExceptionPending(cx)) {
-        JSAutoRealm ar1(cx, callerGlobal);
-        JSString* str = JS_NewStringCopyZ(cx, "terminated");
-        if (!str) {
-          return false;
+    if (!transcodeOnly) {
+      if (!(envChain.empty()
+                ? JS_ExecuteScript(cx, script, args.rval())
+                : JS_ExecuteScript(cx, envChain, script, args.rval()))) {
+        if (catchTermination && !JS_IsExceptionPending(cx)) {
+          JSAutoRealm ar1(cx, callerGlobal);
+          JSString* str = JS_NewStringCopyZ(cx, "terminated");
+          if (!str) {
+            return false;
+          }
+          args.rval().setString(str);
+          return true;
         }
-        args.rval().setString(str);
-        return true;
+        return false;
       }
-      return false;
     }
 
     // Encode the bytecode after the execution of the script.
@@ -8786,6 +8796,7 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "         If both loadBytecode and saveIncrementalBytecode are set,\n"
 "         and --off-thread-parse-global is not used, the input bytecode's\n"
 "         kind should be 'stencil'."
+"      transcodeOnly: if true, do not execute the script.\n"
 "      assertEqBytecode: if true, and if both loadBytecode and either\n"
 "         saveBytecode or saveIncrementalBytecode is true, then the loaded\n"
 "         bytecode and the encoded bytecode are compared.\n"
