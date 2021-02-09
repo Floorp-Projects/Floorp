@@ -6817,7 +6817,7 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowFocus(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvWindowBlur(
-    const MaybeDiscarded<BrowsingContext>& aContext, CallerType aCallerType) {
+    const MaybeDiscarded<BrowsingContext>& aContext) {
   if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(
         BrowsingContext::GetLog(), LogLevel::Debug,
@@ -6829,7 +6829,7 @@ mozilla::ipc::IPCResult ContentParent::RecvWindowBlur(
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
   ContentParent* cp =
       cpm->GetContentProcessById(ContentParentId(context->OwnerProcessId()));
-  Unused << cp->SendWindowBlur(context, aCallerType);
+  Unused << cp->SendWindowBlur(context);
   return IPC_OK();
 }
 
