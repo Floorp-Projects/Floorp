@@ -97,6 +97,8 @@ class PerformanceMainThread final : public Performance,
   static constexpr uint32_t kDefaultEventTimingDurationThreshold = 104;
   static constexpr double kDefaultEventTimingMinDuration = 16.0;
 
+  class EventCounts* EventCounts() override;
+
  protected:
   ~PerformanceMainThread();
 
@@ -133,6 +135,9 @@ class PerformanceMainThread final : public Performance,
 
  private:
   bool mHasQueuedRefreshdriverObserver = false;
+
+  RefPtr<class EventCounts> mEventCounts;
+  void IncEventCount(const nsAtom* aType);
 
   PresShell* GetPresShell();
 };

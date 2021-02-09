@@ -12,6 +12,12 @@
 
 [Pref="dom.enable_event_timing",
  Exposed=Window]
+interface EventCounts {
+    readonly maplike<DOMString, unsigned long long>;
+};
+
+[Pref="dom.enable_event_timing",
+ Exposed=Window]
 interface PerformanceEventTiming : PerformanceEntry {
     readonly attribute DOMHighResTimeStamp processingStart;
     readonly attribute DOMHighResTimeStamp processingEnd;
