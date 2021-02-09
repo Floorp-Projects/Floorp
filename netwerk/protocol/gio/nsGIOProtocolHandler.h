@@ -10,9 +10,6 @@
 #include "nsIPrefBranch.h"
 #include "nsStringFwd.h"
 
-#include "mozilla/Logging.h"
-extern mozilla::LazyLogModule gGIOLog;
-
 class nsGIOProtocolHandler final : public nsIProtocolHandler,
                                    public nsIObserver {
  public:
@@ -21,13 +18,11 @@ class nsGIOProtocolHandler final : public nsIProtocolHandler,
   NS_DECL_NSIOBSERVER
 
   static already_AddRefed<nsGIOProtocolHandler> GetSingleton();
-  bool IsSupportedProtocol(const nsCString& aScheme);
-
- protected:
-  ~nsGIOProtocolHandler() = default;
+  bool IsSupportedProtocol(const nsCString& spec);
 
  private:
   nsresult Init();
+  ~nsGIOProtocolHandler() = default;
 
   void InitSupportedProtocolsPref(nsIPrefBranch* prefs);
 
