@@ -29,7 +29,6 @@ struct SourceExtent;
 
 namespace frontend {
 struct CompilationStencil;
-struct CompilationStencilSet;
 struct CompilationInput;
 struct BaseCompilationStencil;
 }  // namespace frontend
@@ -254,7 +253,7 @@ class XDRState : public XDRCoderBase {
   virtual void finishAtomTable() { MOZ_CRASH("does not have atomTable"); }
 
   virtual XDRResult codeDelazificationStencils(
-      frontend::CompilationStencilSet& stencilSet) {
+      frontend::CompilationStencil& stencil) {
     MOZ_CRASH("cannot code delazification stencils.");
   }
 
@@ -557,7 +556,7 @@ class XDRStencilDecoder : public XDRDecoderBase {
   bool hasOptions() const override { return true; }
   const JS::ReadOnlyCompileOptions& options() override { return *options_; }
 
-  XDRResult codeStencils(frontend::CompilationStencilSet& stencilSet);
+  XDRResult codeStencils(frontend::CompilationStencil& stencil);
 
  private:
   const JS::ReadOnlyCompileOptions* options_;
@@ -640,7 +639,7 @@ class XDRIncrementalStencilEncoder : public XDREncoder {
 
   XDRResult linearize(JS::TranscodeBuffer& buffer, js::ScriptSource* ss);
 
-  XDRResult codeStencils(frontend::CompilationStencilSet& stencilSet);
+  XDRResult codeStencils(frontend::CompilationStencil& stencil);
 
  private:
   void switchToBuffer(XDRBuffer<XDR_ENCODE>* target) { buf = target; }

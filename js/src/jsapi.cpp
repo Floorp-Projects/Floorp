@@ -42,7 +42,7 @@
 #include "builtin/Symbol.h"
 #include "frontend/BytecodeCompilation.h"  // frontend::CompileGlobalScriptToStencil, frontend::InstantiateStencils
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/CompilationStencil.h"  // frontend::CompilationStencilSet, frontend::CompilationGCOutput
+#include "frontend/CompilationStencil.h"  // frontend::CompilationStencil, frontend::CompilationGCOutput
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "gc/Policy.h"
@@ -5747,16 +5747,17 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScript(
   return JS::TranscodeResult_Ok;
 }
 
-static JS::TranscodeResult DecodeStencil(
-    JSContext* cx, JS::TranscodeBuffer& buffer,
-    frontend::CompilationStencilSet& stencilSet, size_t cursorIndex) {
-  XDRStencilDecoder decoder(cx, &stencilSet.input.options, buffer, cursorIndex);
+static JS::TranscodeResult DecodeStencil(JSContext* cx,
+                                         JS::TranscodeBuffer& buffer,
+                                         frontend::CompilationStencil& stencil,
+                                         size_t cursorIndex) {
+  XDRStencilDecoder decoder(cx, &stencil.input.options, buffer, cursorIndex);
 
-  if (!stencilSet.input.initForGlobal(cx)) {
+  if (!stencil.input.initForGlobal(cx)) {
     return JS::TranscodeResult_Throw;
   }
 
-  XDRResult res = decoder.codeStencils(stencilSet);
+  XDRResult res = decoder.codeStencils(stencil);
   if (res.isErr()) {
     return res.unwrapErr();
   }
@@ -5778,19 +5779,19 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptMaybeStencil(
 
   // The buffer contains stencil.
 
-  Rooted<frontend::CompilationStencilSet> stencilSet(
-      cx, frontend::CompilationStencilSet(cx, options));
+  Rooted<frontend::CompilationStencil> stencil(
+      cx, frontend::CompilationStencil(cx, options));
 
   JS::TranscodeResult res =
-      DecodeStencil(cx, buffer, stencilSet.get(), cursorIndex);
+      DecodeStencil(cx, buffer, stencil.get(), cursorIndex);
   if (res != JS::TranscodeResult_Ok) {
     return res;
   }
 
   Rooted<frontend::CompilationGCOutput> gcOutput(cx);
   Rooted<frontend::CompilationGCOutput> gcOutputForDelazification(cx);
-  if (!frontend::InstantiateStencils(cx, stencilSet.get(), gcOutput.get(),
-                                     gcOutputForDelazification.get())) {
+  if (!frontend::InstantiateStencils(cx, stencil.get(), gcOutput.get(),
+                                     gcOutputForDelazification.address())) {
     return JS::TranscodeResult_Throw;
   }
 
@@ -5823,25 +5824,25 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
     size_t cursorIndex) {
   MOZ_DIAGNOSTIC_ASSERT(options.useStencilXDR);
 
-  Rooted<frontend::CompilationStencilSet> stencilSet(
-      cx, frontend::CompilationStencilSet(cx, options));
+  Rooted<frontend::CompilationStencil> stencil(
+      cx, frontend::CompilationStencil(cx, options));
 
   JS::TranscodeResult res =
-      DecodeStencil(cx, buffer, stencilSet.get(), cursorIndex);
+      DecodeStencil(cx, buffer, stencil.get(), cursorIndex);
   if (res != JS::TranscodeResult_Ok) {
     return res;
   }
 
   UniquePtr<XDRIncrementalStencilEncoder> xdrEncoder;
-  if (!stencilSet.get().input.source()->xdrEncodeStencils(cx, stencilSet.get(),
-                                                          xdrEncoder)) {
+  if (!stencil.get().input.source()->xdrEncodeStencils(cx, stencil.get(),
+                                                       xdrEncoder)) {
     return JS::TranscodeResult_Throw;
   }
 
   Rooted<frontend::CompilationGCOutput> gcOutput(cx);
   Rooted<frontend::CompilationGCOutput> gcOutputForDelazification(cx);
-  if (!frontend::InstantiateStencils(cx, stencilSet.get(), gcOutput.get(),
-                                     gcOutputForDelazification.get())) {
+  if (!frontend::InstantiateStencils(cx, stencil.get(), gcOutput.get(),
+                                     gcOutputForDelazification.address())) {
     return JS::TranscodeResult_Throw;
   }
 

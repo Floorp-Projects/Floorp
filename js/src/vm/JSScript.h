@@ -1033,8 +1033,7 @@ class ScriptSource {
   // Caller is responsible for calling `setIncrementalEncoder` after
   // instantiating stencil (so, corresponding canonical ScriptSourceObject
   // gets created).
-  bool xdrEncodeStencils(JSContext* cx,
-                         frontend::CompilationStencilSet& stencilSet,
+  bool xdrEncodeStencils(JSContext* cx, frontend::CompilationStencil& stencil,
                          UniquePtr<XDRIncrementalStencilEncoder>& xdrEncoder);
 
   void setIncrementalEncoder(XDRIncrementalStencilEncoder* xdrEncoder);

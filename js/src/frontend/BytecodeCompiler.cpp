@@ -305,13 +305,15 @@ UniquePtr<CompilationStencil> frontend::CompileGlobalScriptToStencil(
   return CompileGlobalScriptToStencilImpl(cx, options, srcBuf, scopeKind);
 }
 
-bool frontend::InstantiateStencils(JSContext* cx, CompilationStencil& stencil,
-                                   CompilationGCOutput& gcOutput) {
+bool frontend::InstantiateStencils(
+    JSContext* cx, CompilationStencil& stencil, CompilationGCOutput& gcOutput,
+    CompilationGCOutput* gcOutputForDelazification) {
   {
     AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
-    if (!CompilationStencil::instantiateStencils(cx, stencil, gcOutput)) {
+    if (!CompilationStencil::instantiateStencils(cx, stencil, gcOutput,
+                                                 gcOutputForDelazification)) {
       return false;
     }
   }
@@ -330,53 +332,14 @@ bool frontend::InstantiateStencils(JSContext* cx, CompilationStencil& stencil,
 
   return true;
 }
-
-bool frontend::InstantiateStencils(
-    JSContext* cx, CompilationStencilSet& stencilSet,
-    CompilationGCOutput& gcOutput,
-    CompilationGCOutput& gcOutputForDelazification_) {
-  {
-    AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
-                                       JS::ProfilingCategoryPair::JS_Parsing);
-
-    if (!stencilSet.instantiateStencils(cx, gcOutput,
-                                        gcOutputForDelazification_)) {
-      return false;
-    }
-  }
-
-  // Enqueue an off-thread source compression task after finishing parsing.
-  if (!cx->isHelperThreadContext()) {
-    if (!stencilSet.input.source()->tryCompressOffThread(cx)) {
-      return false;
-    }
-
-    Rooted<JSScript*> script(cx, gcOutput.script);
-    if (!stencilSet.input.options.hideScriptFromDebugger) {
-      DebugAPI::onNewScript(cx, script);
-    }
-  }
-
-  return true;
-}
-
-bool frontend::PrepareForInstantiate(JSContext* cx, CompilationStencil& stencil,
-                                     CompilationGCOutput& gcOutput) {
-  AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
-                                     JS::ProfilingCategoryPair::JS_Parsing);
-
-  return CompilationStencil::prepareForInstantiate(cx, stencil, gcOutput);
-}
-
 bool frontend::PrepareForInstantiate(
-    JSContext* cx, CompilationStencilSet& stencilSet,
-    CompilationGCOutput& gcOutput,
-    CompilationGCOutput& gcOutputForDelazification_) {
+    JSContext* cx, CompilationStencil& stencil, CompilationGCOutput& gcOutput,
+    CompilationGCOutput* gcOutputForDelazification) {
   AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
                                      JS::ProfilingCategoryPair::JS_Parsing);
 
-  return stencilSet.prepareForInstantiate(cx, gcOutput,
-                                          gcOutputForDelazification_);
+  return CompilationStencil::prepareForInstantiate(cx, stencil, gcOutput,
+                                                   gcOutputForDelazification);
 }
 
 template <typename Unit>

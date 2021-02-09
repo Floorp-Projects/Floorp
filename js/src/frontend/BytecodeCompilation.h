@@ -17,8 +17,8 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "frontend/CompilationStencil.h"  // CompilationStencil, CompilationStencilSet, CompilationGCOutput
-#include "frontend/ParseContext.h"  // js::frontend::UsedNameTracker
+#include "frontend/CompilationStencil.h"  // CompilationStencil, CompilationGCOutput
+#include "frontend/ParseContext.h"        // js::frontend::UsedNameTracker
 #include "frontend/SharedContext.h"  // js::frontend::Directives, js::frontend::{,Eval,Global}SharedContext
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
 #include "js/RootingAPI.h"      // JS::{,Mutable}Handle, JS::Rooted
@@ -72,20 +72,13 @@ extern UniquePtr<CompilationStencil> CompileGlobalScriptToStencil(
 // Part of InstantiateStencils can be done by calling PrepareForInstantiate.
 // PrepareForInstantiate is GC-free operation that can be performed
 // off-main-thread without parse global.
-extern bool PrepareForInstantiate(JSContext* cx, CompilationStencil& stencil,
-                                  CompilationGCOutput& gcOutput);
 extern bool PrepareForInstantiate(
-    JSContext* cx, CompilationStencilSet& stencilSet,
-    CompilationGCOutput& gcOutput,
-    CompilationGCOutput& gcOutputForDelazification);
+    JSContext* cx, CompilationStencil& stencil, CompilationGCOutput& gcOutput,
+    CompilationGCOutput* gcOutputForDelazification = nullptr);
 
-extern bool InstantiateStencils(JSContext* cx, CompilationStencil& stencil,
-                                CompilationGCOutput& gcOutput);
-
-extern bool InstantiateStencils(JSContext* cx,
-                                CompilationStencilSet& stencilSet,
-                                CompilationGCOutput& gcOutput,
-                                CompilationGCOutput& gcOutputForDelazification);
+extern bool InstantiateStencils(
+    JSContext* cx, CompilationStencil& stencil, CompilationGCOutput& gcOutput,
+    CompilationGCOutput* gcOutputForDelazification = nullptr);
 
 extern JSScript* CompileGlobalScript(JSContext* cx,
                                      const JS::ReadOnlyCompileOptions& options,
