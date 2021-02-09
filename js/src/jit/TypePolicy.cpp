@@ -469,17 +469,6 @@ template bool ConvertToInt32Policy<0>::staticAdjustInputs(TempAllocator& alloc,
                                                           MInstruction* def);
 
 template <unsigned Op>
-bool TruncateToInt32Policy<Op>::staticAdjustInputs(TempAllocator& alloc,
-                                                   MInstruction* def) {
-  return ConvertOperand<MTruncateToInt32>(alloc, def, Op, MIRType::Int32);
-}
-
-template bool TruncateToInt32Policy<2>::staticAdjustInputs(TempAllocator& alloc,
-                                                           MInstruction* def);
-template bool TruncateToInt32Policy<3>::staticAdjustInputs(TempAllocator& alloc,
-                                                           MInstruction* def);
-
-template <unsigned Op>
 bool TruncateToInt32OrToBigIntPolicy<Op>::staticAdjustInputs(
     TempAllocator& alloc, MInstruction* def) {
   MIRType type = def->type();
@@ -1023,7 +1012,6 @@ bool ClampPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
   _(FloatingPointPolicy<0>)                                                   \
   _(UnboxedInt32Policy<0>)                                                    \
   _(UnboxedInt32Policy<1>)                                                    \
-  _(TruncateToInt32Policy<2>)                                                 \
   _(TruncateToInt32OrToBigIntPolicy<2>)                                       \
   _(MixPolicy<ObjectPolicy<0>, StringPolicy<1>, BoxPolicy<2>>)                \
   _(MixPolicy<ObjectPolicy<0>, BoxPolicy<1>, BoxPolicy<2>>)                   \
@@ -1039,7 +1027,6 @@ bool ClampPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
   _(MixPolicy<ObjectPolicy<0>, StringPolicy<1>, UnboxedInt32Policy<2>>)       \
   _(MixPolicy<ObjectPolicy<0>, UnboxedInt32Policy<1>, UnboxedInt32Policy<2>,  \
               UnboxedInt32Policy<3>>)                                         \
-  _(MixPolicy<TruncateToInt32Policy<2>, TruncateToInt32Policy<3>>)            \
   _(MixPolicy<TruncateToInt32OrToBigIntPolicy<2>,                             \
               TruncateToInt32OrToBigIntPolicy<3>>)                            \
   _(MixPolicy<ObjectPolicy<0>, CacheIdPolicy<1>, NoFloatPolicy<2>>)           \
