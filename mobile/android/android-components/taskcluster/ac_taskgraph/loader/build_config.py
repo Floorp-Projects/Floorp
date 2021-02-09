@@ -36,6 +36,7 @@ CONFIGURATIONS_WITH_DEPENDENCIES = (
 #    "geckoBetaImplementation",
 #    "geckoReleaseImplementation",
     "implementation",
+    "testImplementation"
 )
 ALL_COMPONENTS = object()
 
