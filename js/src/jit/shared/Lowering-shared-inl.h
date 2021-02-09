@@ -328,20 +328,29 @@ void LIRGeneratorShared::defineReturn(LInstruction* lir, MDefinition* mir) {
   add(lir);
 }
 
-// In LIR, we treat booleans and integers as the same low-level type (INTEGER).
-// When snapshotting, we recover the actual JS type from MIR. This function
-// checks that when making redefinitions, we don't accidentally coerce two
-// incompatible types.
+#ifdef DEBUG
+// This function checks that when making redefinitions, we don't accidentally
+// coerce two incompatible types.
 static inline bool IsCompatibleLIRCoercion(MIRType to, MIRType from) {
   if (to == from) {
     return true;
   }
+  // In LIR, we treat boolean and int32 as the same low-level type (INTEGER).
+  // When snapshotting, we recover the actual JS type from MIR.
   if ((to == MIRType::Int32 || to == MIRType::Boolean) &&
       (from == MIRType::Int32 || from == MIRType::Boolean)) {
     return true;
   }
+#  ifndef JS_64BIT
+  // On 32-bit platforms Int32 can be redefined as IntPtr and vice versa.
+  if ((to == MIRType::Int32 || to == MIRType::IntPtr) &&
+      (from == MIRType::IntPtr || from == MIRType::Int32)) {
+    return true;
+  }
+#  endif
   return false;
 }
+#endif
 
 void LIRGeneratorShared::redefine(MDefinition* def, MDefinition* as) {
   MOZ_ASSERT(IsCompatibleLIRCoercion(def->type(), as->type()));
