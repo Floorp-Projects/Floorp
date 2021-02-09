@@ -125,11 +125,6 @@ class JitContext {
 
 #ifdef DEBUG
   bool isCompilingWasm() { return isCompilingWasm_; }
-  bool setIsCompilingWasm(bool flag) {
-    bool oldFlag = isCompilingWasm_;
-    isCompilingWasm_ = flag;
-    return oldFlag;
-  }
   bool hasOOM() { return oom_; }
   void setOOM() { oom_ = true; }
 
