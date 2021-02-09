@@ -16,7 +16,7 @@ use euclid::Angle;
 use gleam::gl;
 use std::ffi::CString;
 use std::sync::mpsc;
-use webrender::api::*;
+use webrender::{CompositorSurfaceTransform, Transaction, api::*, euclid::point2};
 use webrender::api::units::*;
 #[cfg(target_os = "windows")]
 use compositor_windows as compositor;
@@ -42,6 +42,7 @@ impl webrender::Compositor for DirectCompositeInterface {
     fn create_surface(
         &mut self,
         id: webrender::NativeSurfaceId,
+        _virtual_offset: DeviceIntPoint,
         tile_size: DeviceIntSize,
         is_opaque: bool,
     ) {
@@ -89,6 +90,7 @@ impl webrender::Compositor for DirectCompositeInterface {
         &mut self,
         id: webrender::NativeTileId,
         dirty_rect: DeviceIntRect,
+        _valid_rect: DeviceIntRect,
     ) -> webrender::NativeSurfaceInfo {
         let (fbo_id, x, y) = compositor::bind_surface(
             self.window,
@@ -118,14 +120,15 @@ impl webrender::Compositor for DirectCompositeInterface {
     fn add_surface(
         &mut self,
         id: webrender::NativeSurfaceId,
-        position: DeviceIntPoint,
+        transform: CompositorSurfaceTransform,
         clip_rect: DeviceIntRect,
+        _image_rendering: ImageRendering,
     ) {
         compositor::add_surface(
             self.window,
             id.0,
-            position.x,
-            position.y,
+            transform.transform_point2d(point2(0., 0.)).unwrap().x as i32,
+            transform.transform_point2d(point2(0., 0.)).unwrap().y as i32,
             clip_rect.origin.x,
             clip_rect.origin.y,
             clip_rect.size.width,
@@ -136,6 +139,39 @@ impl webrender::Compositor for DirectCompositeInterface {
     fn end_frame(&mut self) {
         compositor::end_transaction(self.window);
     }
+    fn create_external_surface(&mut self, _: webrender::NativeSurfaceId, _: bool) { todo!() }
+
+    fn attach_external_image(
+        &mut self,
+        _id: webrender::NativeSurfaceId,
+        _external_image: ExternalImageId
+    ) {
+        todo!()
+    }
+
+    fn enable_native_compositor(&mut self, _enable: bool) {
+        todo!()
+    }
+
+    fn deinit(&mut self) {
+        todo!()
+    }
+
+    fn get_capabilities(&self) -> webrender::CompositorCapabilities {
+        webrender::CompositorCapabilities { virtual_surface_size: 1024 * 1024 }
+    }
+
+    fn invalidate_tile(
+        &mut self,
+        _id: webrender::NativeTileId,
+        _valid_rect: DeviceIntRect,
+    ) {}
+
+    fn start_compositing(
+        &mut self,
+        _dirty_rects: &[DeviceIntRect],
+        _opaque_rects: &[DeviceIntRect],
+    ) {}
 }
 
 // Simplisitic implementation of the WR notifier interface to know when a frame
@@ -181,7 +217,7 @@ fn push_rotated_rect(
     time: f32,
 ) {
     let color = color.scale_rgb(time);
-    let rotation = LayoutTransform::create_rotation(
+    let rotation = LayoutTransform::rotation(
         0.0,
         0.0,
         1.0,
@@ -194,7 +230,7 @@ fn push_rotated_rect(
     );
     let transform = rotation
         .pre_translate(-transform_origin)
-        .post_translate(transform_origin);
+        .then_translate(transform_origin);
     let spatial_id = builder.push_reference_frame(
         LayoutPoint::zero(),
         spatial_id,
@@ -289,6 +325,32 @@ fn build_display_list(
         0.1,
         time,
     );
+
+    push_rotated_rect(
+        builder,
+        LayoutRect::new(
+            LayoutPoint::new(100.0, 600.0),
+            LayoutSize::new(size_factor * 400.0, size_factor * 400.0),
+        ),
+        ColorF::new(1.0, 1.0, 0.0, 1.0),
+        scroll_space_info.spatial_id,
+        root_pipeline_id,
+        time,
+        time,
+    );
+
+    push_rotated_rect(
+        builder,
+        LayoutRect::new(
+            LayoutPoint::new(700.0, 600.0),
+            LayoutSize::new(size_factor * 400.0, size_factor * 400.0),
+        ),
+        ColorF::new(0.0, 1.0, 1.0, 1.0),
+        scroll_space_info.spatial_id,
+        root_pipeline_id,
+        time,
+        time,
+    );
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -358,6 +420,8 @@ fn main() {
     } else {
         webrender::CompositorConfig::Draw {
             max_partial_present_rects: 0,
+            draw_previous_partial_present_regions: false,
+            partial_present: None,
         }
     };
     let opts = webrender::RendererOptions {
@@ -383,7 +447,7 @@ fn main() {
         opts,
         None,
     ).unwrap();
-    let api = sender.create_api();
+    let mut api = sender.create_api();
     let document_id = api.add_document(device_size);
     let device_pixel_ratio = 1.0;
     let mut current_epoch = Epoch(0);
@@ -427,7 +491,7 @@ fn main() {
             // Update and render. This will invoke the native compositor interface implemented above
             // as required.
             renderer.update();
-            renderer.render(device_size).unwrap();
+            renderer.render(device_size, 0).unwrap();
             let _ = renderer.flush_pipeline_info();
 
             // Construct a simple display list that can be drawn and composited by DC.
