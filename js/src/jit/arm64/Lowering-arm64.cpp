@@ -481,7 +481,7 @@ void LIRGenerator::visitAtomicTypedArrayElementBinop(
     //
     // We can omit allocating the result BigInt.
 
-    if (!ins->hasUses()) {
+    if (ins->isForEffect()) {
       auto* lir = new (alloc()) LAtomicTypedArrayElementBinopForEffect64(
           elements, index, value, temp1, temp2);
       add(lir, ins);
@@ -494,6 +494,13 @@ void LIRGenerator::visitAtomicTypedArrayElementBinop(
         LAtomicTypedArrayElementBinop64(elements, index, value, temp1, temp2);
     define(lir, ins);
     assignSafepoint(lir, ins);
+    return;
+  }
+
+  if (ins->isForEffect()) {
+    auto* lir = new (alloc())
+        LAtomicTypedArrayElementBinopForEffect(elements, index, value, temp());
+    add(lir, ins);
     return;
   }
 

@@ -7019,9 +7019,10 @@ AttachDecision CallIRGenerator::tryAttachAtomicsAdd(HandleFunction callee) {
       emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
+  bool forEffect = (op_ == JSOp::CallIgnoresRv);
 
   writer.atomicsAddResult(objId, intPtrIndexId, numericValueId,
-                          typedArray->type());
+                          typedArray->type(), forEffect);
   writer.returnFromIC();
 
   trackAttached("AtomicsAdd");
@@ -7037,9 +7038,10 @@ AttachDecision CallIRGenerator::tryAttachAtomicsSub(HandleFunction callee) {
       emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
+  bool forEffect = (op_ == JSOp::CallIgnoresRv);
 
   writer.atomicsSubResult(objId, intPtrIndexId, numericValueId,
-                          typedArray->type());
+                          typedArray->type(), forEffect);
   writer.returnFromIC();
 
   trackAttached("AtomicsSub");
@@ -7055,9 +7057,10 @@ AttachDecision CallIRGenerator::tryAttachAtomicsAnd(HandleFunction callee) {
       emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
+  bool forEffect = (op_ == JSOp::CallIgnoresRv);
 
   writer.atomicsAndResult(objId, intPtrIndexId, numericValueId,
-                          typedArray->type());
+                          typedArray->type(), forEffect);
   writer.returnFromIC();
 
   trackAttached("AtomicsAnd");
@@ -7073,9 +7076,10 @@ AttachDecision CallIRGenerator::tryAttachAtomicsOr(HandleFunction callee) {
       emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
+  bool forEffect = (op_ == JSOp::CallIgnoresRv);
 
   writer.atomicsOrResult(objId, intPtrIndexId, numericValueId,
-                         typedArray->type());
+                         typedArray->type(), forEffect);
   writer.returnFromIC();
 
   trackAttached("AtomicsOr");
@@ -7091,9 +7095,10 @@ AttachDecision CallIRGenerator::tryAttachAtomicsXor(HandleFunction callee) {
       emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
+  bool forEffect = (op_ == JSOp::CallIgnoresRv);
 
   writer.atomicsXorResult(objId, intPtrIndexId, numericValueId,
-                          typedArray->type());
+                          typedArray->type(), forEffect);
   writer.returnFromIC();
 
   trackAttached("AtomicsXor");

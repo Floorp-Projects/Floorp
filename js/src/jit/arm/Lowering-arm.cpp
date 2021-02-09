@@ -882,7 +882,7 @@ void LIRGenerator::visitAtomicTypedArrayElementBinop(
     LInt64Definition temp1 = tempInt64();
     LInt64Definition temp2 = tempInt64Fixed(FetchOpTmp64);
 
-    if (!ins->hasUses()) {
+    if (ins->isForEffect()) {
       auto* lir = new (alloc()) LAtomicTypedArrayElementBinopForEffect64(
           elements, index, value, temp1, temp2);
       add(lir, ins);
@@ -898,7 +898,7 @@ void LIRGenerator::visitAtomicTypedArrayElementBinop(
     return;
   }
 
-  if (!ins->hasUses()) {
+  if (ins->isForEffect()) {
     LAtomicTypedArrayElementBinopForEffect* lir = new (alloc())
         LAtomicTypedArrayElementBinopForEffect(elements, index, value,
                                                /* flagTemp= */ temp());

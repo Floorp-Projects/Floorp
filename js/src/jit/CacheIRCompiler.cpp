@@ -7699,7 +7699,8 @@ bool CacheIRCompiler::emitAtomicsExchangeResult(ObjOperandId objId,
 bool CacheIRCompiler::emitAtomicsAddResult(ObjOperandId objId,
                                            IntPtrOperandId indexId,
                                            uint32_t valueId,
-                                           Scalar::Type elementType) {
+                                           Scalar::Type elementType,
+                                           bool forEffect) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   if (Scalar::isBigIntType(elementType)) {
@@ -7713,7 +7714,8 @@ bool CacheIRCompiler::emitAtomicsAddResult(ObjOperandId objId,
 bool CacheIRCompiler::emitAtomicsSubResult(ObjOperandId objId,
                                            IntPtrOperandId indexId,
                                            uint32_t valueId,
-                                           Scalar::Type elementType) {
+                                           Scalar::Type elementType,
+                                           bool forEffect) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   if (Scalar::isBigIntType(elementType)) {
@@ -7727,7 +7729,8 @@ bool CacheIRCompiler::emitAtomicsSubResult(ObjOperandId objId,
 bool CacheIRCompiler::emitAtomicsAndResult(ObjOperandId objId,
                                            IntPtrOperandId indexId,
                                            uint32_t valueId,
-                                           Scalar::Type elementType) {
+                                           Scalar::Type elementType,
+                                           bool forEffect) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   if (Scalar::isBigIntType(elementType)) {
@@ -7741,7 +7744,8 @@ bool CacheIRCompiler::emitAtomicsAndResult(ObjOperandId objId,
 bool CacheIRCompiler::emitAtomicsOrResult(ObjOperandId objId,
                                           IntPtrOperandId indexId,
                                           uint32_t valueId,
-                                          Scalar::Type elementType) {
+                                          Scalar::Type elementType,
+                                          bool forEffect) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   if (Scalar::isBigIntType(elementType)) {
@@ -7755,7 +7759,8 @@ bool CacheIRCompiler::emitAtomicsOrResult(ObjOperandId objId,
 bool CacheIRCompiler::emitAtomicsXorResult(ObjOperandId objId,
                                            IntPtrOperandId indexId,
                                            uint32_t valueId,
-                                           Scalar::Type elementType) {
+                                           Scalar::Type elementType,
+                                           bool forEffect) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   if (Scalar::isBigIntType(elementType)) {

@@ -1353,6 +1353,7 @@
     index: IntPtrId
     value: RawId
     elementType: ScalarTypeImm
+    forEffect: BoolImm
 
 - name: AtomicsSubResult
   shared: true
@@ -1363,6 +1364,7 @@
     index: IntPtrId
     value: RawId
     elementType: ScalarTypeImm
+    forEffect: BoolImm
 
 - name: AtomicsAndResult
   shared: true
@@ -1373,6 +1375,7 @@
     index: IntPtrId
     value: RawId
     elementType: ScalarTypeImm
+    forEffect: BoolImm
 
 - name: AtomicsOrResult
   shared: true
@@ -1383,6 +1386,7 @@
     index: IntPtrId
     value: RawId
     elementType: ScalarTypeImm
+    forEffect: BoolImm
 
 - name: AtomicsXorResult
   shared: true
@@ -1393,6 +1397,7 @@
     index: IntPtrId
     value: RawId
     elementType: ScalarTypeImm
+    forEffect: BoolImm
 
 - name: AtomicsLoadResult
   shared: true
