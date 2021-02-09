@@ -182,7 +182,7 @@ struct CompilationAtomCache {
   void releaseBuffer(AtomCacheVector& atoms);
 
   void trace(JSTracer* trc);
-} JS_HAZ_GC_POINTER;
+};
 
 // Input of the compilation, including source and enclosing context.
 struct CompilationInput {
@@ -312,7 +312,7 @@ struct CompilationInput {
   }
 
   void trace(JSTracer* trc);
-} JS_HAZ_GC_POINTER;
+};
 
 struct MOZ_RAII CompilationState {
   // Until we have dealt with Atoms in the front end, we need to hold
@@ -712,7 +712,7 @@ struct CompilationGCOutput {
   CompilationGCOutput() = default;
 
   void trace(JSTracer* trc);
-} JS_HAZ_GC_POINTER;
+};
 
 // Iterator over functions that make up a CompilationStencil. This abstracts
 // over the parallel arrays in stencil and gc-output that use the same index
