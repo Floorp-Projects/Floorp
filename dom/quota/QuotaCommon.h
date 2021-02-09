@@ -75,6 +75,9 @@ class NotNull;
     NS_WARNING(str.get());                                                   \
   } while (0)
 
+#define QM_LOG_TEST() MOZ_LOG_TEST(GetQuotaManagerLogger(), LogLevel::Info)
+#define QM_LOG(_args) MOZ_LOG(GetQuotaManagerLogger(), LogLevel::Info, _args)
+
 #define UNKNOWN_FILE_WARNING(_leafName)                                       \
   NS_WARNING(                                                                 \
       nsPrintfCString("Something (%s) in the directory that doesn't belong!", \
