@@ -21,13 +21,16 @@ linux64-sccache:
         symbol: TL(sccache)
     worker-type: b-linux
     worker:
+        docker-image: {in-tree: deb10-toolchain-build}
         max-run-time: 1800
     run:
         toolchain-artifact: public/build/sccache.tar.xz
     fetches:
         toolchain:
             - linux64-rust-1.47
+            - linux64-clang-11
             - linux64-binutils
+            - linux64-sysroot
 
 macosx64-sccache:
     treeherder:
