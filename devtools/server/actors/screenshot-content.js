@@ -26,7 +26,7 @@ exports.ScreenshotContentActor = ActorClassWithSpec(screenshotContentSpec, {
   },
 
   _getRectForNode(node) {
-    return getRect(null, node, node.ownerGlobal);
+    return getRect(node.ownerGlobal.top, node, node.ownerGlobal);
   },
 
   /**
