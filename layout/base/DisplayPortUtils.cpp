@@ -635,6 +635,32 @@ bool DisplayPortUtils::HasNonMinimalDisplayPort(nsIContent* aContent) {
          !aContent->GetProperty(nsGkAtoms::MinimalDisplayPort);
 }
 
+bool DisplayPortUtils::HasNonMinimalNonZeroDisplayPort(nsIContent* aContent) {
+  if (!HasDisplayPort(aContent)) {
+    return false;
+  }
+  if (aContent->GetProperty(nsGkAtoms::MinimalDisplayPort)) {
+    return false;
+  }
+
+  DisplayPortMarginsPropertyData* currentData =
+      static_cast<DisplayPortMarginsPropertyData*>(
+          aContent->GetProperty(nsGkAtoms::DisplayPortMargins));
+
+  if (!currentData) {
+    // We have a display port, so if we don't have margin data we must have rect
+    // data. We consider such as non zero and non minimal, it's probably not too
+    // important as display port rects are only used in tests.
+    return true;
+  }
+
+  if (currentData->mMargins.mMargins != ScreenMargin()) {
+    return true;
+  }
+
+  return false;
+}
+
 /* static */
 bool DisplayPortUtils::GetDisplayPortForVisibilityTesting(nsIContent* aContent,
                                                           nsRect* aResult) {
@@ -948,7 +974,7 @@ bool DisplayPortUtils::MaybeCreateDisplayPort(nsDisplayListBuilder* aBuilder,
     return false;
   }
 
-  bool haveDisplayPort = HasNonMinimalDisplayPort(content);
+  bool haveDisplayPort = HasNonMinimalNonZeroDisplayPort(content);
 
   // We perform an optimization where we ensure that at least one
   // async-scrollable frame (i.e. one that WantsAsyncScroll()) has a

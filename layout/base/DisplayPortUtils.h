@@ -186,6 +186,12 @@ class DisplayPortUtils {
   static bool HasNonMinimalDisplayPort(nsIContent* aContent);
 
   /**
+   * Check whether the given element has a non-minimal displayport that also has
+   * non-zero margins. A display port rect is considered non-minimal non-zero.
+   */
+  static bool HasNonMinimalNonZeroDisplayPort(nsIContent* aContent);
+
+  /**
    * Check if the given element has a margins based displayport but is missing a
    * displayport base rect that it needs to properly compute a displayport rect.
    */
