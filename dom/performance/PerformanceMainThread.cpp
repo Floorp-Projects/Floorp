@@ -530,6 +530,14 @@ void PerformanceMainThread::GetEntriesByType(
 
   Performance::GetEntriesByType(aEntryType, aRetval);
 }
+void PerformanceMainThread::GetEntriesByTypeForObserver(
+    const nsAString& aEntryType, nsTArray<RefPtr<PerformanceEntry>>& aRetval) {
+  if (aEntryType.EqualsLiteral("event")) {
+    aRetval.AppendElements(mEventTimingEntries);
+    return;
+  }
+  return GetEntriesByType(aEntryType, aRetval);
+}
 
 void PerformanceMainThread::GetEntriesByName(
     const nsAString& aName, const Optional<nsAString>& aEntryType,

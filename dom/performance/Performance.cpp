@@ -205,6 +205,11 @@ void Performance::GetEntriesByName(
   aRetval.Sort(PerformanceEntryComparator());
 }
 
+void Performance::GetEntriesByTypeForObserver(
+    const nsAString& aEntryType, nsTArray<RefPtr<PerformanceEntry>>& aRetval) {
+  GetEntriesByType(aEntryType, aRetval);
+}
+
 void Performance::ClearUserEntries(const Optional<nsAString>& aEntryName,
                                    const nsAString& aEntryType) {
   MOZ_ASSERT(!aEntryType.IsEmpty());

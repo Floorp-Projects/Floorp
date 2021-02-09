@@ -288,7 +288,7 @@ void PerformanceObserver::Observe(const PerformanceObserverInit& aOptions,
     /* 3.3.1.6.5 */
     if (maybeBuffered.WasPassed() && maybeBuffered.Value()) {
       nsTArray<RefPtr<PerformanceEntry>> existingEntries;
-      mPerformance->GetEntriesByType(type, existingEntries);
+      mPerformance->GetEntriesByTypeForObserver(type, existingEntries);
       if (!existingEntries.IsEmpty()) {
         mQueuedEntries.AppendElements(existingEntries);
         needQueueNotificationObserverTask = true;
