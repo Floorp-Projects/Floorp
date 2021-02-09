@@ -1252,8 +1252,12 @@ void CodeGenerator::visitInt32ToIntPtr(LInt32ToIntPtr* lir) {
     return;
   }
 
-  Register input = ToRegister(lir->input());
-  masm.move32SignExtendToPtr(input, output);
+  const LAllocation* input = lir->input();
+  if (input->isRegister()) {
+    masm.move32SignExtendToPtr(ToRegister(input), output);
+  } else {
+    masm.load32SignExtendToPtr(ToAddress(input), output);
+  }
 #else
   MOZ_CRASH("Not used on 32-bit platforms");
 #endif

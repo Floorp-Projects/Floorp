@@ -519,12 +519,18 @@ LAllocation LIRGeneratorShared::useStorableAtStart(MDefinition* mir) {
 LAllocation LIRGeneratorShared::useAny(MDefinition* mir) {
   return useRegister(mir);
 }
+LAllocation LIRGeneratorShared::useAnyAtStart(MDefinition* mir) {
+  return useRegisterAtStart(mir);
+}
 #else
 LAllocation LIRGeneratorShared::useAnyOrConstant(MDefinition* mir) {
   return useOrConstant(mir);
 }
 
 LAllocation LIRGeneratorShared::useAny(MDefinition* mir) { return use(mir); }
+LAllocation LIRGeneratorShared::useAnyAtStart(MDefinition* mir) {
+  return useAtStart(mir);
+}
 LAllocation LIRGeneratorShared::useStorable(MDefinition* mir) {
   return useRegisterOrConstant(mir);
 }
