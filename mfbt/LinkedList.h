@@ -636,6 +636,26 @@ class LinkedList {
 };
 
 template <typename T>
+inline void ImplCycleCollectionUnlink(LinkedList<RefPtr<T>>& aField) {
+  aField.clear();
+}
+
+template <typename T>
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback,
+    LinkedList<RefPtr<T>>& aField, const char* aName, uint32_t aFlags = 0) {
+  typedef typename detail::LinkedListElementTraits<T> Traits;
+  typedef typename Traits::RawType RawType;
+  for (RawType element : aField) {
+    // RefPtr is stored as a raw pointer in LinkedList.
+    // So instead of creating a new RefPtr from the raw
+    // pointer (which is not allowed), we simply call
+    // CycleCollectionNoteChild against the raw pointer
+    CycleCollectionNoteChild(aCallback, element, aName, aFlags);
+  }
+}
+
+template <typename T>
 class AutoCleanLinkedList : public LinkedList<T> {
  private:
   using Traits = detail::LinkedListElementTraits<T>;
