@@ -497,11 +497,22 @@ void LIRGenerator::visitCompareExchangeTypedArrayElement(
   const LAllocation index =
       useRegisterOrIndexConstant(ins->index(), ins->arrayType());
 
-  // If the target is an FPReg then we need a temporary at the CodeGenerator
-  // level for creating the result.
-
   const LAllocation newval = useRegister(ins->newval());
   const LAllocation oldval = useRegister(ins->oldval());
+
+  if (Scalar::isBigIntType(ins->arrayType())) {
+    LInt64Definition temp1 = tempInt64();
+    LInt64Definition temp2 = tempInt64();
+
+    auto* lir = new (alloc()) LCompareExchangeTypedArrayElement64(
+        elements, index, oldval, newval, temp1, temp2);
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+    return;
+  }
+
+  // If the target is an FPReg then we need a temporary at the CodeGenerator
+  // level for creating the result.
 
   LDefinition outTemp = LDefinition::BogusTemp();
   if (ins->arrayType() == Scalar::Uint32) {

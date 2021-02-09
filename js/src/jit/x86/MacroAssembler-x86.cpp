@@ -1176,17 +1176,19 @@ void MacroAssembler::wasmAtomicLoad64(const wasm::MemoryAccessDesc& access,
 }
 
 template <typename T>
-static void WasmCompareExchange64(MacroAssembler& masm,
-                                  const wasm::MemoryAccessDesc& access,
-                                  const T& mem, Register64 expected,
-                                  Register64 replacement, Register64 output) {
+static void CompareExchange64(MacroAssembler& masm,
+                              const wasm::MemoryAccessDesc* access,
+                              const T& mem, Register64 expected,
+                              Register64 replacement, Register64 output) {
   MOZ_ASSERT(expected == output);
   MOZ_ASSERT(expected.high == edx);
   MOZ_ASSERT(expected.low == eax);
   MOZ_ASSERT(replacement.high == ecx);
   MOZ_ASSERT(replacement.low == ebx);
 
-  masm.append(access, masm.size());
+  if (access) {
+    masm.append(*access, masm.size());
+  }
   masm.lock_cmpxchg8b(edx, eax, ecx, ebx, Operand(mem));
 }
 
@@ -1195,7 +1197,7 @@ void MacroAssembler::wasmCompareExchange64(const wasm::MemoryAccessDesc& access,
                                            Register64 expected,
                                            Register64 replacement,
                                            Register64 output) {
-  WasmCompareExchange64(*this, access, mem, expected, replacement, output);
+  CompareExchange64(*this, &access, mem, expected, replacement, output);
 }
 
 void MacroAssembler::wasmCompareExchange64(const wasm::MemoryAccessDesc& access,
@@ -1203,7 +1205,7 @@ void MacroAssembler::wasmCompareExchange64(const wasm::MemoryAccessDesc& access,
                                            Register64 expected,
                                            Register64 replacement,
                                            Register64 output) {
-  WasmCompareExchange64(*this, access, mem, expected, replacement, output);
+  CompareExchange64(*this, &access, mem, expected, replacement, output);
 }
 
 template <typename T>
@@ -1492,6 +1494,21 @@ void MacroAssembler::atomicStore64(const Synchronization&, const Address& mem,
 void MacroAssembler::atomicStore64(const Synchronization&, const BaseIndex& mem,
                                    Register64 value, Register64 temp) {
   AtomicExchange64(*this, nullptr, mem, value, temp);
+}
+
+void MacroAssembler::compareExchange64(const Synchronization&,
+                                       const Address& mem, Register64 expected,
+                                       Register64 replacement,
+                                       Register64 output) {
+  CompareExchange64(*this, nullptr, mem, expected, replacement, output);
+}
+
+void MacroAssembler::compareExchange64(const Synchronization&,
+                                       const BaseIndex& mem,
+                                       Register64 expected,
+                                       Register64 replacement,
+                                       Register64 output) {
+  CompareExchange64(*this, nullptr, mem, expected, replacement, output);
 }
 
 // ========================================================================

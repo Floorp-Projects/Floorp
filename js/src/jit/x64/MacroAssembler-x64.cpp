@@ -1396,6 +1396,18 @@ void MacroAssembler::compareExchange64(const Synchronization&,
   lock_cmpxchgq(replacement.reg, Operand(mem));
 }
 
+void MacroAssembler::compareExchange64(const Synchronization&,
+                                       const BaseIndex& mem,
+                                       Register64 expected,
+                                       Register64 replacement,
+                                       Register64 output) {
+  MOZ_ASSERT(output.reg == rax);
+  if (expected != output) {
+    movq(expected.reg, output.reg);
+  }
+  lock_cmpxchgq(replacement.reg, Operand(mem));
+}
+
 void MacroAssembler::atomicExchange64(const Synchronization&,
                                       const Address& mem, Register64 value,
                                       Register64 output) {

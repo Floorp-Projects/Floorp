@@ -593,6 +593,10 @@ void LIRGenerator::visitCompareExchangeTypedArrayElement(
   const LAllocation index =
       useRegisterOrIndexConstant(ins->index(), ins->arrayType());
 
+  if (Scalar::isBigIntType(ins->arrayType())) {
+    MOZ_CRASH("NYI");
+  }
+
   // If the target is a floating register then we need a temp at the
   // CodeGenerator level for creating the result.
 

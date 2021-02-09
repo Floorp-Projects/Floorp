@@ -99,6 +99,8 @@ static constexpr Register64 CmpXchgNew64 =
     Register64(CmpXchgNewHi, CmpXchgNewLo);
 static constexpr Register CmpXchgOutLo = IntArgReg0;
 static constexpr Register CmpXchgOutHi = IntArgReg1;
+static constexpr Register64 CmpXchgOut64 =
+    Register64(CmpXchgOutHi, CmpXchgOutLo);
 
 // Exchange: Any two non-equal odd/even pairs would do for `new` and `out`.
 

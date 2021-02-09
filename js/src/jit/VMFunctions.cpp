@@ -2717,6 +2717,18 @@ void AtomicsStore64(TypedArrayObject* typedArray, size_t index, BigInt* value) {
       value);
 }
 
+BigInt* AtomicsCompareExchange64(JSContext* cx, TypedArrayObject* typedArray,
+                                 size_t index, BigInt* expected,
+                                 BigInt* replacement) {
+  return AtomicAccess64(
+      cx, typedArray, index,
+      [](auto addr, auto oldval, auto newval) {
+        return jit::AtomicOperations::compareExchangeSeqCst(addr, oldval,
+                                                            newval);
+      },
+      expected, replacement);
+}
+
 void AssumeUnreachable(const char* output) {
   MOZ_ReportAssertionFailure(output, __FILE__, __LINE__);
 }

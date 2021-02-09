@@ -5442,6 +5442,12 @@ void MacroAssembler::compareExchange64(const Synchronization& sync,
   CompareExchange64(*this, nullptr, sync, mem, expect, replace, output);
 }
 
+void MacroAssembler::compareExchange64(const Synchronization& sync,
+                                       const BaseIndex& mem, Register64 expect,
+                                       Register64 replace, Register64 output) {
+  CompareExchange64(*this, nullptr, sync, mem, expect, replace, output);
+}
+
 template <typename T>
 static void AtomicExchange64(MacroAssembler& masm,
                              const wasm::MemoryAccessDesc* access,
