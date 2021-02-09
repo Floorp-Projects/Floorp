@@ -391,22 +391,61 @@ pub extern "C" fn neqo_htttp3conn_send_request_body(
     }
 }
 
+fn crypto_error_code(err: neqo_crypto::Error) -> u64 {
+    match err {
+        neqo_crypto::Error::AeadInitFailure => 0,
+        neqo_crypto::Error::AeadError => 1,
+        neqo_crypto::Error::CertificateLoading => 2,
+        neqo_crypto::Error::CreateSslSocket => 3,
+        neqo_crypto::Error::HkdfError => 4,
+        neqo_crypto::Error::InternalError => 5,
+        neqo_crypto::Error::IntegerOverflow => 6,
+        neqo_crypto::Error::InvalidEpoch => 7,
+        neqo_crypto::Error::MixedHandshakeMethod => 8,
+        neqo_crypto::Error::NoDataAvailable => 9,
+        neqo_crypto::Error::NssError { .. } => 10,
+        neqo_crypto::Error::OverrunError => 11,
+        neqo_crypto::Error::SelfEncryptFailure => 12,
+        neqo_crypto::Error::TimeTravelError => 13,
+        neqo_crypto::Error::UnsupportedCipher => 14,
+        neqo_crypto::Error::UnsupportedVersion => 15,
+    }
+}
+
 // This is only used for telemetry. Therefore we only return error code
 // numbers and do not label them. Recording telemetry is easier with a
 // number.
 #[repr(C)]
 pub enum CloseError {
-    QuicTransportError(u64),
-    Http3AppError(u64),
+    TransportInternalError(u16),
+    TransportError(u64),
+    CryptoError(u64),
+    CryptoAlert(u8),
+    PeerAppError(u64),
+    PeerError(u64),
+    AppError(u64),
 }
 
 impl From<neqo_transport::ConnectionError> for CloseError {
     fn from(error: neqo_transport::ConnectionError) -> CloseError {
         match error {
-            neqo_transport::ConnectionError::Transport(c) => {
-                CloseError::QuicTransportError(c.code())
+            neqo_transport::ConnectionError::Transport(TransportError::InternalError(c)) => {
+                CloseError::TransportInternalError(c)
             }
-            neqo_transport::ConnectionError::Application(c) => CloseError::Http3AppError(c),
+            neqo_transport::ConnectionError::Transport(TransportError::CryptoError(c)) => {
+                CloseError::CryptoError(crypto_error_code(c))
+            }
+            neqo_transport::ConnectionError::Transport(TransportError::CryptoAlert(c)) => {
+                CloseError::CryptoAlert(c)
+            }
+            neqo_transport::ConnectionError::Transport(TransportError::PeerApplicationError(c)) => {
+                CloseError::PeerAppError(c)
+            }
+            neqo_transport::ConnectionError::Transport(TransportError::PeerError(c)) => {
+                CloseError::PeerError(c)
+            }
+            neqo_transport::ConnectionError::Transport(c) => CloseError::TransportError(c.code()),
+            neqo_transport::ConnectionError::Application(c) => CloseError::AppError(c),
         }
     }
 }
