@@ -10,14 +10,18 @@
 #include "js/GCAPI.h"
 #include "jsapi.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "PerformanceEventTiming.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/PerformanceNavigationTiming.h"
 #include "mozilla/dom/PerformanceResourceTiming.h"
 #include "mozilla/dom/PerformanceTiming.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_privacy.h"
+#include "mozilla/PresShell.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
+#include "nsIDocShell.h"
 
 namespace mozilla::dom {
 
@@ -52,14 +56,18 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(PerformanceMainThread)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PerformanceMainThread,
                                                 Performance)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTiming, mNavigation, mDocEntry, mFCPTiming)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(
+      mTiming, mNavigation, mDocEntry, mFCPTiming, mEventTimingEntries,
+      mFirstInputEvent, mPendingPointerDown, mPendingEventTimingEntries)
   tmp->mMozMemory = nullptr;
   mozilla::DropJSObjects(this);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PerformanceMainThread,
                                                   Performance)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTiming, mNavigation, mDocEntry, mFCPTiming)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(
+      mTiming, mNavigation, mDocEntry, mFCPTiming, mEventTimingEntries,
+      mFirstInputEvent, mPendingPointerDown, mPendingEventTimingEntries)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(PerformanceMainThread,
@@ -114,8 +122,9 @@ void PerformanceMainThread::GetMozMemory(JSContext* aCx,
 PerformanceTiming* PerformanceMainThread::Timing() {
   if (!mTiming) {
     // For navigation timing, the third argument (an nsIHttpChannel) is null
-    // since the cross-domain redirect were already checked.  The last argument
-    // (zero time) for performance.timing is the navigation start value.
+    // since the cross-domain redirect were already checked.  The last
+    // argument (zero time) for performance.timing is the navigation start
+    // value.
     mTiming = new PerformanceTiming(this, mChannel, nullptr,
                                     mDOMTiming->GetNavigationStart());
   }
@@ -182,6 +191,90 @@ void PerformanceMainThread::SetFCPTimingEntry(PerformancePaintTiming* aEntry) {
     mFCPTiming = aEntry;
     QueueEntry(aEntry);
   }
+}
+
+void PerformanceMainThread::InsertEventTimingEntry(
+    PerformanceEventTiming* aEventEntry) {
+  mPendingEventTimingEntries.insertBack(aEventEntry);
+
+  if (mHasQueuedRefreshdriverObserver) {
+    return;
+  }
+
+  PresShell* presShell = GetPresShell();
+  if (!presShell) {
+    return;
+  }
+
+  nsPresContext* presContext = presShell->GetPresContext();
+  if (!presContext) {
+    return;
+  }
+
+  // Using PostRefreshObserver is fine because we don't
+  // run any JS between the `mark paint timing` step and the
+  // `pending Event Timing entries` step. So mixing the order
+  // here is fine.
+  mHasQueuedRefreshdriverObserver =
+      presContext->RegisterOneShotPostRefreshObserver(
+          new OneShotPostRefreshObserver(
+              presShell, [performance = RefPtr<PerformanceMainThread>(this)](
+                             PresShell*, OneShotPostRefreshObserver*) {
+                performance->DispatchPendingEventTimingEntries();
+              }));
+}
+
+void PerformanceMainThread::BufferEventTimingEntryIfNeeded(
+    PerformanceEventTiming* aEventEntry) {
+  if (mEventTimingEntries.Length() < kDefaultEventTimingBufferSize) {
+    mEventTimingEntries.AppendElement(aEventEntry);
+  }
+}
+
+void PerformanceMainThread::DispatchPendingEventTimingEntries() {
+  DOMHighResTimeStamp renderingTime = NowUnclamped();
+
+  while (!mPendingEventTimingEntries.isEmpty()) {
+    RefPtr<PerformanceEventTiming> entry =
+        mPendingEventTimingEntries.popFirst();
+
+    entry->SetDuration(renderingTime - entry->StartTime());
+
+    if (entry->Duration() >= kDefaultEventTimingMinDuration) {
+      QueueEntry(entry);
+    }
+
+    if (!mHasDispatchedInputEvent) {
+      switch (entry->GetMessage()) {
+        case ePointerDown: {
+          mPendingPointerDown = entry->Clone();
+          mPendingPointerDown->SetEntryType(u"first-input"_ns);
+          break;
+        }
+        case ePointerUp: {
+          if (mPendingPointerDown) {
+            MOZ_ASSERT(!mFirstInputEvent);
+            mFirstInputEvent = mPendingPointerDown.forget();
+            QueueEntry(mFirstInputEvent);
+            mHasDispatchedInputEvent = true;
+          }
+          break;
+        }
+        case eMouseClick:
+        case eKeyDown:
+        case eMouseDown: {
+          mFirstInputEvent = entry->Clone();
+          mFirstInputEvent->SetEntryType(u"first-input"_ns);
+          QueueEntry(mFirstInputEvent);
+          mHasDispatchedInputEvent = true;
+          break;
+        }
+        default:
+          break;
+      }
+    }
+  }
+  mHasQueuedRefreshdriverObserver = false;
 }
 
 // To be removed once bug 1124165 lands
@@ -430,6 +523,11 @@ void PerformanceMainThread::GetEntriesByType(
     }
   }
 
+  if (type == nsGkAtoms::firstInput && mFirstInputEvent) {
+    aRetval.AppendElement(mFirstInputEvent);
+    return;
+  }
+
   Performance::GetEntriesByType(aEntryType, aRetval);
 }
 
@@ -459,4 +557,23 @@ void PerformanceMainThread::GetEntriesByName(
   }
 }
 
+mozilla::PresShell* PerformanceMainThread::GetPresShell() {
+  nsIGlobalObject* ownerGlobal = GetOwnerGlobal();
+  if (!ownerGlobal) {
+    return nullptr;
+  }
+  if (Document* doc = ownerGlobal->AsInnerWindow()->GetExtantDoc()) {
+    return doc->GetPresShell();
+  }
+  return nullptr;
+}
+
+size_t PerformanceMainThread::SizeOfEventEntries(
+    mozilla::MallocSizeOf aMallocSizeOf) const {
+  size_t eventEntries = 0;
+  for (const PerformanceEventTiming* entry : mEventTimingEntries) {
+    eventEntries += entry->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  return eventEntries;
+}
 }  // namespace mozilla::dom

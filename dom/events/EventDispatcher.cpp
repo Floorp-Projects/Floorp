@@ -40,6 +40,7 @@
 #include "mozilla/dom/MutationEvent.h"
 #include "mozilla/dom/NotifyPaintEvent.h"
 #include "mozilla/dom/PageTransitionEvent.h"
+#include "mozilla/dom/PerformanceEventTiming.h"
 #include "mozilla/dom/PointerEvent.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ScrollAreaEvent.h"
@@ -762,6 +763,14 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
 
   nsCOMPtr<EventTarget> target = do_QueryInterface(aTarget);
 
+  RefPtr<PerformanceEventTiming> eventTimingEntry;
+  // Similar to PerformancePaintTiming, we don't need to
+  // expose them for printing documents
+  if (aPresContext && !aPresContext->IsPrintingOrPrintPreview()) {
+    eventTimingEntry =
+        PerformanceEventTiming::TryGenerateEventTiming(target, aEvent);
+  }
+
   bool retargeted = false;
 
   if (aEvent->mFlags.mRetargetToNonNativeAnonymous) {
@@ -1118,6 +1127,9 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
   aEvent->mFlags.mIsBeingDispatched = false;
   aEvent->mFlags.mDispatchedAtLeastOnce = true;
 
+  if (eventTimingEntry) {
+    eventTimingEntry->FinalizeEventTiming(aEvent->mTarget);
+  }
   // https://dom.spec.whatwg.org/#concept-event-dispatch
   // step 10. If clearTargets, then:
   //          1. Set event's target to null.

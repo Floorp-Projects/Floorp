@@ -64,6 +64,8 @@ class PerformanceEntry : public nsISupports, public nsWrapperCache {
   virtual bool ShouldAddEntryToObserverBuffer(
       PerformanceObserverInit& aOption) const;
 
+  virtual void BufferEntryIfNeeded() {}
+
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
  protected:

@@ -10,6 +10,7 @@ with Files("**"):
 EXPORTS.mozilla.dom += [
     "Performance.h",
     "PerformanceEntry.h",
+    "PerformanceEventTiming.h",
     "PerformanceMainThread.h",
     "PerformanceMark.h",
     "PerformanceMeasure.h",
@@ -29,6 +30,7 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES += [
     "Performance.cpp",
     "PerformanceEntry.cpp",
+    "PerformanceEventTiming.cpp",
     "PerformanceMainThread.cpp",
     "PerformanceMark.cpp",
     "PerformanceMeasure.cpp",

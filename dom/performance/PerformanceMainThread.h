@@ -14,6 +14,7 @@ namespace mozilla {
 namespace dom {
 
 class PerformanceNavigationTiming;
+class PerformanceEventTiming;
 
 class PerformanceMainThread final : public Performance,
                                     public PerformanceStorage {
@@ -46,6 +47,10 @@ class PerformanceMainThread final : public Performance,
                    const nsAString& aEntryName);
   virtual void SetFCPTimingEntry(PerformancePaintTiming* aEntry) override;
 
+  void InsertEventTimingEntry(PerformanceEventTiming*) override;
+  void BufferEventTimingEntryIfNeeded(PerformanceEventTiming*) override;
+  void DispatchPendingEventTimingEntries() override;
+
   TimeStamp CreationTimeStamp() const override;
 
   DOMHighResTimeStamp CreationTime() const override;
@@ -66,6 +71,8 @@ class PerformanceMainThread final : public Performance,
   // The GetEntries* methods need to be overriden in order to add the
   // the document entry of type navigation.
   virtual void GetEntries(nsTArray<RefPtr<PerformanceEntry>>& aRetval) override;
+
+  // Return entries which qualify availableFromTimeline boolean check
   virtual void GetEntriesByType(
       const nsAString& aEntryType,
       nsTArray<RefPtr<PerformanceEntry>>& aRetval) override;
@@ -77,6 +84,12 @@ class PerformanceMainThread final : public Performance,
   void QueueNavigationTimingEntry() override;
 
   bool CrossOriginIsolated() const override;
+
+  size_t SizeOfEventEntries(mozilla::MallocSizeOf aMallocSizeOf) const override;
+
+  static constexpr uint32_t kDefaultEventTimingBufferSize = 150;
+  static constexpr uint32_t kDefaultEventTimingDurationThreshold = 104;
+  static constexpr double kDefaultEventTimingMinDuration = 16.0;
 
  protected:
   ~PerformanceMainThread();
@@ -101,6 +114,21 @@ class PerformanceMainThread final : public Performance,
   JS::Heap<JSObject*> mMozMemory;
 
   const bool mCrossOriginIsolated;
+
+  AutoTArray<RefPtr<PerformanceEventTiming>, kDefaultEventTimingBufferSize>
+      mEventTimingEntries;
+
+  AutoCleanLinkedList<RefPtr<PerformanceEventTiming>>
+      mPendingEventTimingEntries;
+  bool mHasDispatchedInputEvent = false;
+
+  RefPtr<PerformanceEventTiming> mFirstInputEvent;
+  RefPtr<PerformanceEventTiming> mPendingPointerDown;
+
+ private:
+  bool mHasQueuedRefreshdriverObserver = false;
+
+  PresShell* GetPresShell();
 };
 
 }  // namespace dom
