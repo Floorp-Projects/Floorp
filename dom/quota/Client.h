@@ -97,21 +97,11 @@ class Client {
 
   template <typename T>
   static bool IsLockForObjectContainedInLockTable(
-      const T& aObject, const DirectoryLockIdTable& aIds) {
-    const auto& maybeDirectoryLock = aObject.MaybeDirectoryLockRef();
-
-    MOZ_ASSERT(maybeDirectoryLock.isSome());
-
-    return aIds.Has(maybeDirectoryLock->Id());
-  }
+      const T& aObject, const DirectoryLockIdTable& aIds);
 
   template <typename T>
   static bool IsLockForObjectAcquiredAndContainedInLockTable(
-      const T& aObject, const DirectoryLockIdTable& aIds) {
-    const auto& maybeDirectoryLock = aObject.MaybeDirectoryLockRef();
-
-    return maybeDirectoryLock && aIds.Has(maybeDirectoryLock->Id());
-  }
+      const T& aObject, const DirectoryLockIdTable& aIds);
 
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
