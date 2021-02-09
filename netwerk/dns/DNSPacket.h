@@ -38,6 +38,8 @@ class DNSPacket {
   DNSPacket() = default;
   virtual ~DNSPacket() = default;
 
+  Result<uint8_t, nsresult> GetRCode() const;
+
   // Called in order to feed data into the buffer.
   nsresult OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInputStream,
                            uint64_t aOffset, const uint32_t aCount);
@@ -51,8 +53,7 @@ class DNSPacket {
   // output parameters and have a common format for different record types.
   virtual nsresult Decode(
       nsCString& aHost, enum TrrType aType, nsCString& aCname,
-      bool aAllowRFC1918, nsHostRecord::TRRSkippedReason& reason,
-      DOHresp& aResp, TypeRecordResultType& aTypeResult,
+      bool aAllowRFC1918, DOHresp& aResp, TypeRecordResultType& aTypeResult,
       nsClassHashtable<nsCStringHashKey, DOHresp>& aAdditionalRecords,
       uint32_t& aTTL);
 
@@ -69,8 +70,7 @@ class DNSPacket {
                          const unsigned char* aBuffer);
   nsresult DecodeInternal(
       nsCString& aHost, enum TrrType aType, nsCString& aCname,
-      bool aAllowRFC1918, nsHostRecord::TRRSkippedReason& reason,
-      DOHresp& aResp, TypeRecordResultType& aTypeResult,
+      bool aAllowRFC1918, DOHresp& aResp, TypeRecordResultType& aTypeResult,
       nsClassHashtable<nsCStringHashKey, DOHresp>& aAdditionalRecords,
       uint32_t& aTTL, const unsigned char* aBuffer, uint32_t aLen);
 
@@ -92,8 +92,7 @@ class ODoHDNSPacket final : public DNSPacket {
 
   virtual nsresult Decode(
       nsCString& aHost, enum TrrType aType, nsCString& aCname,
-      bool aAllowRFC1918, nsHostRecord::TRRSkippedReason& reason,
-      DOHresp& aResp, TypeRecordResultType& aTypeResult,
+      bool aAllowRFC1918, DOHresp& aResp, TypeRecordResultType& aTypeResult,
       nsClassHashtable<nsCStringHashKey, DOHresp>& aAdditionalRecords,
       uint32_t& aTTL) override;
 
