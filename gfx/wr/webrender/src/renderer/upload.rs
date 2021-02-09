@@ -584,6 +584,9 @@ pub struct UploadTexturePool {
     ///
     /// The outer array corresponds to each of teh three supported texture formats.
     textures: [VecDeque<(Texture, u64)>; 3],
+    // Frame at which to deallocate some textures if there are too many in the pool,
+    // for each format.
+    delay_texture_deallocation: [u64; 3],
     current_frame: u64,
 
     /// Temporary buffers that are used when using staging uploads + glTexImage2D.
@@ -592,14 +595,19 @@ pub struct UploadTexturePool {
     /// To keep things simple we always allocate enough memory for formats with four bytes
     /// per pixel (more than we need for alpha-only textures but it works just as well).
     temporary_buffers: Vec<Vec<mem::MaybeUninit<u8>>>,
+    used_temporary_buffers: usize,
+    delay_buffer_deallocation: u64,
 }
 
 impl UploadTexturePool {
     pub fn new() -> Self {
         UploadTexturePool {
             textures: [VecDeque::new(), VecDeque::new(), VecDeque::new()],
+            delay_texture_deallocation: [0; 3],
             current_frame: 0,
             temporary_buffers: Vec::new(),
+            used_temporary_buffers: 0,
+            delay_buffer_deallocation: 0,
         }
     }
 
@@ -664,6 +672,7 @@ impl UploadTexturePool {
     /// Content is first written to the temporary buffer and uploaded via a single
     /// glTexSubImage2D call.
     pub fn get_temporary_buffer(&mut self) -> Vec<mem::MaybeUninit<u8>> {
+        self.used_temporary_buffers += 1;
         self.temporary_buffers.pop().unwrap_or_else(|| {
             vec![mem::MaybeUninit::new(0); BATCH_UPLOAD_TEXTURE_SIZE.area() as usize * 4]
         })
@@ -683,6 +692,56 @@ impl UploadTexturePool {
             }
         }
         self.temporary_buffers.clear();
+    }
+
+    /// Deallocate some textures if there are too many for a long time.
+    pub fn end_frame(&mut self, device: &mut Device) {
+        for format_idx in 0..self.textures.len() {
+            // Count the number of reusable staging textures.
+            // if it stays high for a large number of frames, truncate it back to 8-ish
+            // over multiple frames.
+
+            let mut num_reusable_textures = 0;
+            for texture in &self.textures[format_idx] {
+                if self.current_frame - texture.1 > 2 {
+                    num_reusable_textures += 1;
+                }
+            }
+
+            if num_reusable_textures < 8 {
+                // Don't deallocate textures for another 120 frames.
+                self.delay_texture_deallocation[format_idx] = self.current_frame + 120;
+            }
+
+            // Deallocate up to 4 staging textures every frame.
+            let to_remove = if self.current_frame > self.delay_texture_deallocation[format_idx] {
+                num_reusable_textures.min(4)
+            } else {
+                0
+            };
+
+            for _ in 0..to_remove {
+                let texture = self.textures[format_idx].pop_front().unwrap().0;
+                device.delete_texture(texture);
+            }
+        }
+
+        // Similar logic for temporary CPU buffers.
+        let unused_buffers = self.temporary_buffers.len() - self.used_temporary_buffers;
+        if unused_buffers < 8 {
+            self.delay_buffer_deallocation = self.current_frame + 120;
+        }
+        let to_remove = if self.current_frame > self.delay_buffer_deallocation  {
+            unused_buffers.min(4)
+        } else {
+            0
+        };
+        for _ in 0..to_remove {
+            // Unlike textures it doesn't matter whether we pop from the front or back
+            // of the vector.
+            self.temporary_buffers.pop();
+        }
+        self.used_temporary_buffers = 0;
     }
 
     pub fn report_memory_to(&self, report: &mut MemoryReport, size_op_funs: &MallocSizeOfOps) {
