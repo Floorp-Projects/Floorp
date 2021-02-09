@@ -52,8 +52,8 @@ LOCAL_INCLUDES += [
     "/dom/media/webrtc/transport/third_party/nrappkit/src/share",
     "/dom/media/webrtc/transport/third_party/nrappkit/src/stats",
     "/dom/media/webrtc/transport/third_party/nrappkit/src/util/libekr",
-    "/netwerk/srtp/src/crypto/include",
-    "/netwerk/srtp/src/include",
+    "/third_party/libsrtp/src/crypto/include",
+    "/third_party/libsrtp/src/include",
 ]
 
 if CONFIG["OS_TARGET"] in ["Darwin", "DragonFly", "FreeBSD", "NetBSD", "OpenBSD"]:
