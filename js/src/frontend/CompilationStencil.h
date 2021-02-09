@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef frontend_CompilationInfo_h
-#define frontend_CompilationInfo_h
+#ifndef frontend_CompilationStencil_h
+#define frontend_CompilationStencil_h
 
 #include "mozilla/AlreadyAddRefed.h"  // already_AddRefed
 #include "mozilla/Assertions.h"       // MOZ_ASSERT
@@ -804,4 +804,4 @@ struct CompilationStencilSet : public CompilationStencil {
 }  // namespace frontend
 }  // namespace js
 
-#endif  // frontend_CompilationInfo_h
+#endif  // frontend_CompilationStencil_h

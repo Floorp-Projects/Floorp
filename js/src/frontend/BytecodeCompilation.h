@@ -17,7 +17,7 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "frontend/CompilationInfo.h"  // CompilationStencil, CompilationStencilSet, CompilationGCOutput
+#include "frontend/CompilationStencil.h"  // CompilationStencil, CompilationStencilSet, CompilationGCOutput
 #include "frontend/ParseContext.h"  // js::frontend::UsedNameTracker
 #include "frontend/SharedContext.h"  // js::frontend::Directives, js::frontend::{,Eval,Global}SharedContext
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions

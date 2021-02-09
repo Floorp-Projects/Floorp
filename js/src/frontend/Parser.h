@@ -177,7 +177,7 @@
 
 #include "ds/Nestable.h"
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/CompilationInfo.h"
+#include "frontend/CompilationStencil.h"
 #include "frontend/ErrorReporter.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind

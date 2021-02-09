@@ -46,7 +46,7 @@
 #  include "frontend/TokenStream.h"
 #endif
 #include "frontend/BytecodeCompilation.h"
-#include "frontend/CompilationInfo.h"  // frontend::CompilationStencil, frontend::CompilationStencilSet
+#include "frontend/CompilationStencil.h"  // frontend::CompilationStencil, frontend::CompilationStencilSet
 #include "gc/Allocator.h"
 #include "gc/Zone.h"
 #include "jit/BaselineJIT.h"

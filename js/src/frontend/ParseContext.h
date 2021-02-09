@@ -9,7 +9,7 @@
 
 #include "ds/Nestable.h"
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/CompilationInfo.h"
+#include "frontend/CompilationStencil.h"
 #include "frontend/ErrorReporter.h"
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/NameAnalysisTypes.h"  // DeclaredNameInfo, FunctionBoxVector

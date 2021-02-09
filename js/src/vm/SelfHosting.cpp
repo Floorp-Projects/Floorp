@@ -43,7 +43,7 @@
 #include "builtin/String.h"
 #include "builtin/WeakMapObject.h"
 #include "frontend/BytecodeCompilation.h"  // CompileGlobalScriptToStencil
-#include "frontend/CompilationInfo.h"      // js::frontend::CompilationStencil
+#include "frontend/CompilationStencil.h"   // js::frontend::CompilationStencil
 #include "gc/Marking.h"
 #include "gc/Policy.h"
 #include "jit/AtomicOperations.h"

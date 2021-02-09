@@ -12,7 +12,7 @@
 #include "jsnum.h"  // CharsToNumber
 
 #include "frontend/BytecodeCompiler.h"  // IsIdentifier
-#include "frontend/CompilationInfo.h"
+#include "frontend/CompilationStencil.h"
 #include "frontend/NameCollections.h"
 #include "frontend/StencilXdr.h"  // CanCopyDataToDisk
 #include "util/StringBuffer.h"    // StringBuffer

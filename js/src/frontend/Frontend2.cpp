@@ -17,9 +17,9 @@
 
 #include "jsapi.h"
 
-#include "frontend/AbstractScopePtr.h"  // ScopeIndex
-#include "frontend/BytecodeSection.h"   // EmitScriptThingsVector
-#include "frontend/CompilationInfo.h"   // CompilationState, CompilationStencil
+#include "frontend/AbstractScopePtr.h"    // ScopeIndex
+#include "frontend/BytecodeSection.h"     // EmitScriptThingsVector
+#include "frontend/CompilationStencil.h"  // CompilationState, CompilationStencil
 #include "frontend/Parser.h"  // NewEmptyLexicalScopeData, NewEmptyGlobalScopeData, NewEmptyVarScopeData, NewEmptyFunctionScopeData
 #include "frontend/ParserAtom.h"   // ParserAtomsTable, TaggedParserAtomIndex
 #include "frontend/ScriptIndex.h"  // ScriptIndex
