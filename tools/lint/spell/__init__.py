@@ -51,7 +51,8 @@ class CodespellProcess(LintProcess):
             match = CODESPELL_FORMAT_REGEX.match(line)
             abspath, line, typo, correct = match.groups()
         except AttributeError:
-            print("Unable to match regex against output: {}".format(line))
+            if "FIXED: " not in line:
+                print("Unable to match regex against output: {}".format(line))
             return
 
         # Ignore false positive like aParent (which would be fixed to apparent)
