@@ -31,6 +31,8 @@ mingw32)
     MINIDUMP_STACKWALK=minidump_stackwalk.exe
     ;;
 *)
+    echo export CFLAGS=--sysroot=$MOZ_FETCHES_DIR/sysroot >> .mozconfig
+    echo export CXXFLAGS=--sysroot=$MOZ_FETCHES_DIR/sysroot >> .mozconfig
     TOOLCHAINS="binutils rustc clang"
     ;;
 esac
