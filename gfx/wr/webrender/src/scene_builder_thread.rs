@@ -754,8 +754,6 @@ impl SceneBuilderThread {
         #[cfg(not(feature = "capture"))]
         self.send(SceneBuilderResult::Transactions(txns, result_tx));
 
-        let _ = self.tx.send(ApiMsg::WakeUp);
-
         if let Some(pipeline_info) = pipeline_info {
             // Block until the swap is done, then invoke the hook.
             let swap_result = result_rx.unwrap().recv();

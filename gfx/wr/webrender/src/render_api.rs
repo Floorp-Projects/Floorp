@@ -964,9 +964,6 @@ pub enum ApiMsg {
     ReportMemory(Sender<Box<MemoryReport>>),
     /// Change debugging options.
     DebugCommand(DebugCommand),
-    /// Wakes the render backend's event loop up. Needed when an event is communicated
-    /// through another channel.
-    WakeUp,
     /// Message from the scene builder thread.
     SceneBuilderResult(SceneBuilderResult),
 }
@@ -981,7 +978,6 @@ impl fmt::Debug for ApiMsg {
             ApiMsg::MemoryPressure => "ApiMsg::MemoryPressure",
             ApiMsg::ReportMemory(..) => "ApiMsg::ReportMemory",
             ApiMsg::DebugCommand(..) => "ApiMsg::DebugCommand",
-            ApiMsg::WakeUp => "ApiMsg::WakeUp",
             ApiMsg::SceneBuilderResult(..) => "ApiMsg::SceneBuilderResult",
         })
     }
@@ -1022,18 +1018,7 @@ impl RenderApiSender {
         let (sync_tx, sync_rx) = single_msg_channel();
         let msg = ApiMsg::CloneApi(sync_tx);
         self.api_sender.send(msg).expect("Failed to send CloneApi message");
-        let namespace_id = match sync_rx.recv() {
-            Ok(id) => id,
-            Err(e) => {
-                // This is used to discover the underlying cause of https://github.com/servo/servo/issues/13480.
-                let webrender_is_alive = self.api_sender.send(ApiMsg::WakeUp);
-                if webrender_is_alive.is_err() {
-                    panic!("WebRender was shut down before processing CloneApi: {}", e);
-                } else {
-                    panic!("CloneApi message response was dropped while WebRender was still alive: {}", e);
-                }
-            }
-        };
+        let namespace_id = sync_rx.recv().expect("Failed to receive CloneApi reply");
         RenderApi {
             api_sender: self.api_sender.clone(),
             scene_sender: self.scene_sender.clone(),
