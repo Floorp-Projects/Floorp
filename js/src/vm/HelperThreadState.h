@@ -598,7 +598,7 @@ class SourceCompressionTask : public HelperThreadTask {
   uint64_t majorGCNumber_;
 
   // The source to be compressed.
-  ScriptSourceHolder sourceHolder_;
+  RefPtr<ScriptSource> source_;
 
   // The resultant compressed string. If the compressed string is larger
   // than the original, or we OOM'd during compression, or nothing else
@@ -609,9 +609,7 @@ class SourceCompressionTask : public HelperThreadTask {
  public:
   // The majorGCNumber is used for scheduling tasks.
   SourceCompressionTask(JSRuntime* rt, ScriptSource* source)
-      : runtime_(rt),
-        majorGCNumber_(rt->gc.majorGCCount()),
-        sourceHolder_(source) {}
+      : runtime_(rt), majorGCNumber_(rt->gc.majorGCCount()), source_(source) {}
   virtual ~SourceCompressionTask() = default;
 
   bool runtimeMatches(JSRuntime* runtime) const { return runtime == runtime_; }
@@ -624,7 +622,7 @@ class SourceCompressionTask : public HelperThreadTask {
   bool shouldCancel() const {
     // If the refcount is exactly 1, then nothing else is holding on to the
     // ScriptSource, so no reason to compress it and we should cancel the task.
-    return sourceHolder_.get()->refs == 1;
+    return source_->refs == 1;
   }
 
   void runTask();
