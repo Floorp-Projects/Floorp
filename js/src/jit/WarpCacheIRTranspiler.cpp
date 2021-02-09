@@ -3678,11 +3678,11 @@ bool WarpCacheIRTranspiler::emitAtomicsLoadResult(ObjOperandId objId,
 
 bool WarpCacheIRTranspiler::emitAtomicsStoreResult(ObjOperandId objId,
                                                    IntPtrOperandId indexId,
-                                                   Int32OperandId valueId,
+                                                   uint32_t valueId,
                                                    Scalar::Type elementType) {
   MDefinition* obj = getOperand(objId);
   MDefinition* index = getOperand(indexId);
-  MDefinition* value = getOperand(valueId);
+  MDefinition* value = getOperand(ValOperandId(valueId));
 
   auto* length = MArrayBufferViewLength::New(alloc(), obj);
   add(length);

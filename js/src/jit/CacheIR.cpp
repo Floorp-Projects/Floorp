@@ -7181,12 +7181,21 @@ AttachDecision CallIRGenerator::tryAttachAtomicsStore(HandleFunction callee) {
   if (!args_[1].isNumber()) {
     return AttachDecision::NoAction;
   }
-  if (op_ == JSOp::CallIgnoresRv ? !args_[2].isNumber() : !args_[2].isInt32()) {
+
+  auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
+  if (!AtomicsMeetsPreconditions(typedArray, args_[1], BigIntAtomics::Yes)) {
     return AttachDecision::NoAction;
   }
 
-  auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
-  if (!AtomicsMeetsPreconditions(typedArray, args_[1])) {
+  Scalar::Type elementType = typedArray->type();
+  if (!ValueIsNumeric(elementType, args_[2])) {
+    return AttachDecision::NoAction;
+  }
+
+  bool guardIsInt32 =
+      !Scalar::isBigIntType(elementType) && op_ != JSOp::CallIgnoresRv;
+
+  if (guardIsInt32 && !args_[2].isInt32()) {
     return AttachDecision::NoAction;
   }
 
@@ -7206,17 +7215,17 @@ AttachDecision CallIRGenerator::tryAttachAtomicsStore(HandleFunction callee) {
   IntPtrOperandId intPtrIndexId =
       guardToIntPtrIndex(args_[1], indexId, /* supportOOB = */ false);
 
-  // Ensure value is int32.
+  // Ensure value is int32 or BigInt.
   ValOperandId valueId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_);
-  Int32OperandId int32ValueId;
-  if (op_ == JSOp::CallIgnoresRv) {
-    int32ValueId = writer.guardToInt32ModUint32(valueId);
+  OperandId numericValueId;
+  if (guardIsInt32) {
+    numericValueId = writer.guardToInt32(valueId);
   } else {
-    int32ValueId = writer.guardToInt32(valueId);
+    numericValueId = emitNumericGuard(valueId, elementType);
   }
 
-  writer.atomicsStoreResult(objId, intPtrIndexId, int32ValueId,
+  writer.atomicsStoreResult(objId, intPtrIndexId, numericValueId,
                             typedArray->type());
   writer.returnFromIC();
 

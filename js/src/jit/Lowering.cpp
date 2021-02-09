@@ -3501,6 +3501,11 @@ void LIRGenerator::visitStoreUnboxedScalar(MStoreUnboxedScalar* ins) {
     MOZ_ASSERT(ins->value()->type() == MIRType::Int32);
   }
 
+  if (ins->isBigIntWrite() && ins->requiresMemoryBarrier()) {
+    lowerAtomicStore64(ins);
+    return;
+  }
+
   LUse elements = useRegister(ins->elements());
   LAllocation index =
       useRegisterOrIndexConstant(ins->index(), ins->writeType());

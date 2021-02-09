@@ -110,6 +110,7 @@ namespace jit {
   _(js::jit::AssertValidSymbolPtr)                                    \
   _(js::jit::AssertValidValue)                                        \
   _(js::jit::AssumeUnreachable)                                       \
+  _(js::jit::AtomicsStore64)                                          \
   _(js::jit::Bailout)                                                 \
   _(js::jit::BigIntNumberEqual<EqualityKind::Equal>)                  \
   _(js::jit::BigIntNumberEqual<EqualityKind::NotEqual>)               \

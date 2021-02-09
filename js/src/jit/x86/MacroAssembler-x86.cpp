@@ -1207,10 +1207,9 @@ void MacroAssembler::wasmCompareExchange64(const wasm::MemoryAccessDesc& access,
 }
 
 template <typename T>
-static void WasmAtomicExchange64(MacroAssembler& masm,
-                                 const wasm::MemoryAccessDesc& access,
-                                 const T& mem, Register64 value,
-                                 Register64 output) {
+static void AtomicExchange64(MacroAssembler& masm,
+                             const wasm::MemoryAccessDesc* access, const T& mem,
+                             Register64 value, Register64 output) {
   MOZ_ASSERT(value.low == ebx);
   MOZ_ASSERT(value.high == ecx);
   MOZ_ASSERT(output.high == edx);
@@ -1219,9 +1218,18 @@ static void WasmAtomicExchange64(MacroAssembler& masm,
   // edx:eax has garbage initially, and that is the best we can do unless
   // we can guess with high probability what's in memory.
 
+  MOZ_ASSERT(mem.base != edx && mem.base != eax);
+  if constexpr (std::is_same_v<T, BaseIndex>) {
+    MOZ_ASSERT(mem.index != edx && mem.index != eax);
+  } else {
+    static_assert(std::is_same_v<T, Address>);
+  }
+
   Label again;
   masm.bind(&again);
-  masm.append(access, masm.size());
+  if (access) {
+    masm.append(*access, masm.size());
+  }
   masm.lock_cmpxchg8b(edx, eax, ecx, ebx, Operand(mem));
   masm.j(MacroAssembler::NonZero, &again);
 }
@@ -1229,13 +1237,13 @@ static void WasmAtomicExchange64(MacroAssembler& masm,
 void MacroAssembler::wasmAtomicExchange64(const wasm::MemoryAccessDesc& access,
                                           const Address& mem, Register64 value,
                                           Register64 output) {
-  WasmAtomicExchange64(*this, access, mem, value, output);
+  AtomicExchange64(*this, &access, mem, value, output);
 }
 
 void MacroAssembler::wasmAtomicExchange64(const wasm::MemoryAccessDesc& access,
                                           const BaseIndex& mem,
                                           Register64 value, Register64 output) {
-  WasmAtomicExchange64(*this, access, mem, value, output);
+  AtomicExchange64(*this, &access, mem, value, output);
 }
 
 template <typename T>
@@ -1474,6 +1482,16 @@ void MacroAssembler::atomicLoad64(const Synchronization&, const Address& mem,
 void MacroAssembler::atomicLoad64(const Synchronization&, const BaseIndex& mem,
                                   Register64 temp, Register64 output) {
   AtomicLoad64(*this, nullptr, mem, temp, output);
+}
+
+void MacroAssembler::atomicStore64(const Synchronization&, const Address& mem,
+                                   Register64 value, Register64 temp) {
+  AtomicExchange64(*this, nullptr, mem, value, temp);
+}
+
+void MacroAssembler::atomicStore64(const Synchronization&, const BaseIndex& mem,
+                                   Register64 value, Register64 temp) {
+  AtomicExchange64(*this, nullptr, mem, value, temp);
 }
 
 // ========================================================================

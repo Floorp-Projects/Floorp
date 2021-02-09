@@ -151,6 +151,31 @@ void CodeGenerator::visitAtomicLoad64(LAtomicLoad64* lir) {
   emitCreateBigInt(lir, storageType, temp64, out, temp);
 }
 
+void CodeGenerator::visitAtomicStore64(LAtomicStore64* lir) {
+  Register elements = ToRegister(lir->elements());
+  Register value = ToRegister(lir->value());
+  Register64 temp1 = ToRegister64(lir->temp1());
+  Register64 temp2 = Register64(value, ToRegister(lir->tempLow()));
+
+  MOZ_ASSERT(temp1 == Register64(ecx, ebx));
+  MOZ_ASSERT(temp2 == Register64(edx, eax));
+
+  Scalar::Type writeType = lir->mir()->writeType();
+
+  masm.loadBigInt64(value, temp1);
+
+  masm.push(value);
+  if (lir->index()->isConstant()) {
+    Address dest = ToAddress(elements, lir->index(), writeType);
+    masm.atomicStore64(Synchronization::Store(), dest, temp1, temp2);
+  } else {
+    BaseIndex dest(elements, ToRegister(lir->index()),
+                   ScaleFromScalarType(writeType));
+    masm.atomicStore64(Synchronization::Store(), dest, temp1, temp2);
+  }
+  masm.pop(value);
+}
+
 // See ../CodeGenerator.cpp for more information.
 void CodeGenerator::visitWasmRegisterResult(LWasmRegisterResult* lir) {}
 
@@ -385,7 +410,7 @@ void CodeGeneratorX86::emitWasmStoreOrExchangeAtomicI64(
   MOZ_ASSERT(ToRegister64(value).low == ebx);
   MOZ_ASSERT(ToRegister64(value).high == ecx);
 
-  // eax and ebx will be overwritten every time through the loop but
+  // eax and edx will be overwritten every time through the loop but
   // memoryBase and ptr must remain live for a possible second iteration.
 
   MOZ_ASSERT(ToRegister(memoryBase) != edx && ToRegister(memoryBase) != eax);

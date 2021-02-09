@@ -320,6 +320,29 @@ void CodeGenerator::visitAtomicLoad64(LAtomicLoad64* lir) {
   emitCreateBigInt(lir, storageType, temp64, out, temp);
 }
 
+void CodeGenerator::visitAtomicStore64(LAtomicStore64* lir) {
+  Register elements = ToRegister(lir->elements());
+  Register value = ToRegister(lir->value());
+  Register64 temp1 = ToRegister64(lir->temp1());
+
+  Scalar::Type writeType = lir->mir()->writeType();
+
+  masm.loadBigInt64(value, temp1);
+
+  auto sync = Synchronization::Store();
+
+  masm.memoryBarrierBefore(sync);
+  if (lir->index()->isConstant()) {
+    Address dest = ToAddress(elements, lir->index(), writeType);
+    masm.store64(temp1, dest);
+  } else {
+    BaseIndex dest(elements, ToRegister(lir->index()),
+                   ScaleFromScalarType(writeType));
+    masm.store64(temp1, dest);
+  }
+  masm.memoryBarrierAfter(sync);
+}
+
 void CodeGenerator::visitWasmRegisterResult(LWasmRegisterResult* lir) {
   if (JitOptions.spectreIndexMasking) {
     if (MWasmRegisterResult* mir = lir->mir()) {
