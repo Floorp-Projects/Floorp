@@ -10,8 +10,8 @@
 #define vm_CommonPropertyNames_h
 
 // The following common atoms are reserved by the js::StaticStrigs /
-// WellKnownParserAtoms::lookupTiny mechanisms. We still use a named reference
-// for the parser and VM to use.
+// js::frontend::WellKnownParserAtoms{,_ROM} mechanisms. We still use a named
+// reference for the parser and VM to use.
 
 #define FOR_EACH_LENGTH1_PROPERTYNAME(MACRO) \
   MACRO(comma, comma, ",")                   \

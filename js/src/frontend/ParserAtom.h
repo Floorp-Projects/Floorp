@@ -626,41 +626,6 @@ class WellKnownParserAtoms_ROM {
   }
 
  public:
-  // Fast-path tiny strings since they are abundant in minified code.
-  template <typename CharsT>
-  const ParserAtom* lookupTiny(CharsT chars, size_t length) const {
-    static_assert(std::is_same_v<CharsT, const Latin1Char*> ||
-                      std::is_same_v<CharsT, const char16_t*> ||
-                      std::is_same_v<CharsT, const char*> ||
-                      std::is_same_v<CharsT, char16_t*> ||
-                      std::is_same_v<CharsT, LittleEndianChars>,
-                  "This assert mostly explicitly documents the calling types, "
-                  "and forces that to be updated if new types show up.");
-    switch (length) {
-      case 0:
-        return &emptyAtom;
-
-      case 1: {
-        if (char16_t(chars[0]) < ASCII_STATIC_LIMIT) {
-          size_t index = static_cast<size_t>(chars[0]);
-          return &length1Table[index];
-        }
-        break;
-      }
-
-      case 2:
-        if (StaticStrings::fitsInSmallChar(chars[0]) &&
-            StaticStrings::fitsInSmallChar(chars[1])) {
-          size_t index = StaticStrings::getLength2Index(chars[0], chars[1]);
-          return &length2Table[index];
-        }
-        break;
-    }
-
-    // No match on tiny Atoms
-    return nullptr;
-  }
-
   template <typename CharsT>
   TaggedParserAtomIndex lookupTinyIndex(CharsT chars, size_t length) const {
     static_assert(std::is_same_v<CharsT, const Latin1Char*> ||
@@ -733,8 +698,6 @@ class WellKnownParserAtoms {
                            ParserAtomLookupHasher, js::SystemAllocPolicy>;
   EntryMap wellKnownMap_;
 
-  bool initTinyStringAlias(JSContext* cx, const ParserAtom** name,
-                           const char* str);
   bool initSingle(JSContext* cx, const ParserAtom** name,
                   const ParserAtom& romEntry, TaggedParserAtomIndex index);
 
@@ -747,11 +710,6 @@ class WellKnownParserAtoms {
   template <typename CharT>
   TaggedParserAtomIndex lookupChar16Seq(
       const SpecificParserAtomLookup<CharT>& lookup) const;
-
-  template <typename CharsT>
-  const ParserAtom* lookupTiny(CharsT chars, size_t length) const {
-    return rom_.lookupTiny(chars, length);
-  }
 
   template <typename CharsT>
   TaggedParserAtomIndex lookupTinyIndex(CharsT chars, size_t length) const {
