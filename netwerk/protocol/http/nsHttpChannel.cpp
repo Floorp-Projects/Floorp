@@ -627,7 +627,7 @@ nsresult nsHttpChannel::MaybeUseHTTPSRRForUpgrade(bool aShouldUpgrade,
         this));
     StoreWaitHTTPSSVCRecord(false);
     bool hasHTTPSRR = (mHTTPSSVCRecord.ref() != nullptr);
-    return ContinueOnBeforeConnect(hasHTTPSRR, aStatus);
+    return ContinueOnBeforeConnect(hasHTTPSRR, aStatus, hasHTTPSRR);
   }
 
   LOG(("nsHttpChannel::MaybeUseHTTPSRRForUpgrade [%p] wait for HTTPS RR",
@@ -637,7 +637,8 @@ nsresult nsHttpChannel::MaybeUseHTTPSRRForUpgrade(bool aShouldUpgrade,
 }
 
 nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
-                                                nsresult aStatus) {
+                                                nsresult aStatus,
+                                                bool aUpgradeWithHTTPSRR) {
   LOG(
       ("nsHttpChannel::ContinueOnBeforeConnect "
        "[this=%p aShouldUpgrade=%d rv=%" PRIx32 "]\n",
@@ -650,6 +651,8 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
   }
 
   if (aShouldUpgrade) {
+    Telemetry::Accumulate(Telemetry::HTTPS_UPGRADE_WITH_HTTPS_RR,
+                          aUpgradeWithHTTPSRR);
     return AsyncCall(&nsHttpChannel::HandleAsyncRedirectChannelToHttps);
   }
 
@@ -7563,6 +7566,26 @@ nsresult nsHttpChannel::ContinueOnStartRequest4(nsresult result) {
   return CallOnStartRequest();
 }
 
+static void ReportHTTPSRRTelemetry(
+    const Maybe<nsCOMPtr<nsIDNSHTTPSSVCRecord>>& aMaybeRecord) {
+  bool hasHTTPSRR = aMaybeRecord && (aMaybeRecord.ref() != nullptr);
+  Telemetry::Accumulate(Telemetry::HTTPS_RR_PRESENTED, hasHTTPSRR);
+  if (!hasHTTPSRR) {
+    return;
+  }
+
+  const nsCOMPtr<nsIDNSHTTPSSVCRecord>& record = aMaybeRecord.ref();
+  nsCOMPtr<nsISVCBRecord> svcbRecord;
+  if (NS_SUCCEEDED(record->GetServiceModeRecord(false, false,
+                                                getter_AddRefs(svcbRecord)))) {
+    MOZ_ASSERT(svcbRecord);
+
+    Maybe<Tuple<nsCString, bool>> alpn = svcbRecord->GetAlpn();
+    bool isHttp3 = alpn ? Get<1>(*alpn) : false;
+    Telemetry::Accumulate(Telemetry::HTTPS_RR_WITH_HTTP3_PRESENTED, isHttp3);
+  }
+}
+
 NS_IMETHODIMP
 nsHttpChannel::OnStopRequest(nsIRequest* request, nsresult status) {
   AUTO_PROFILER_LABEL("nsHttpChannel::OnStopRequest", NETWORK);
@@ -7578,6 +7601,12 @@ nsHttpChannel::OnStopRequest(nsIRequest* request, nsresult status) {
 
   if (WRONG_RACING_RESPONSE_SOURCE(request)) {
     return NS_OK;
+  }
+
+  // It's possible that LoadUseHTTPSSVC() is false, but we already have
+  // mHTTPSSVCRecord.
+  if (LoadUseHTTPSSVC() || mHTTPSSVCRecord) {
+    ReportHTTPSRRTelemetry(mHTTPSSVCRecord);
   }
 
   // If this load failed because of a security error, it may be because we
@@ -9000,7 +9029,7 @@ void nsHttpChannel::OnHTTPSRRAvailable(nsIDNSHTTPSSVCRecord* aRecord) {
     MOZ_ASSERT(mURI->SchemeIs("http"));
 
     StoreWaitHTTPSSVCRecord(false);
-    nsresult rv = ContinueOnBeforeConnect(!!httprr, mStatus);
+    nsresult rv = ContinueOnBeforeConnect(!!httprr, mStatus, !!httprr);
     if (NS_FAILED(rv)) {
       CloseCacheEntry(false);
       Unused << AsyncAbort(rv);
