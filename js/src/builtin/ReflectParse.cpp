@@ -608,6 +608,11 @@ class NodeBuilder {
                                     HandleValue bindingName, TokenPos* pos,
                                     MutableHandleValue dst);
 
+  MOZ_MUST_USE bool importNamespaceSpecifier(HandleValue importName,
+                                             HandleValue bindingName,
+                                             TokenPos* pos,
+                                             MutableHandleValue dst);
+
   MOZ_MUST_USE bool exportDeclaration(HandleValue decl, NodeVector& elts,
                                       HandleValue moduleSpec,
                                       HandleValue isDefault, TokenPos* pos,
@@ -616,6 +621,11 @@ class NodeBuilder {
   MOZ_MUST_USE bool exportSpecifier(HandleValue bindingName,
                                     HandleValue exportName, TokenPos* pos,
                                     MutableHandleValue dst);
+
+  MOZ_MUST_USE bool exportNamespaceSpecifier(HandleValue bindingName,
+                                             HandleValue exportName,
+                                             TokenPos* pos,
+                                             MutableHandleValue dst);
 
   MOZ_MUST_USE bool exportBatchSpecifier(TokenPos* pos, MutableHandleValue dst);
 
@@ -1395,6 +1405,19 @@ bool NodeBuilder::importSpecifier(HandleValue importName,
                  dst);
 }
 
+bool NodeBuilder::importNamespaceSpecifier(HandleValue importName,
+                                           HandleValue bindingName,
+                                           TokenPos* pos,
+                                           MutableHandleValue dst) {
+  RootedValue cb(cx, callbacks[AST_IMPORT_NAMESPACE_SPEC]);
+  if (!cb.isNull()) {
+    return callback(cb, importName, bindingName, pos, dst);
+  }
+
+  return newNode(AST_IMPORT_NAMESPACE_SPEC, pos, "id", importName, "name",
+                 bindingName, dst);
+}
+
 bool NodeBuilder::exportDeclaration(HandleValue decl, NodeVector& elts,
                                     HandleValue moduleSpec,
                                     HandleValue isDefault, TokenPos* pos,
@@ -1424,6 +1447,19 @@ bool NodeBuilder::exportSpecifier(HandleValue bindingName,
 
   return newNode(AST_EXPORT_SPEC, pos, "id", bindingName, "name", exportName,
                  dst);
+}
+
+bool NodeBuilder::exportNamespaceSpecifier(HandleValue bindingName,
+                                           HandleValue exportName,
+                                           TokenPos* pos,
+                                           MutableHandleValue dst) {
+  RootedValue cb(cx, callbacks[AST_EXPORT_NAMESPACE_SPEC]);
+  if (!cb.isNull()) {
+    return callback(cb, bindingName, exportName, pos, dst);
+  }
+
+  return newNode(AST_EXPORT_NAMESPACE_SPEC, pos, "id", bindingName, "name",
+                 exportName, dst);
 }
 
 bool NodeBuilder::exportBatchSpecifier(TokenPos* pos, MutableHandleValue dst) {
@@ -1677,8 +1713,10 @@ class ASTSerializer {
   bool variableDeclarator(ParseNode* pn, MutableHandleValue dst);
   bool importDeclaration(BinaryNode* importNode, MutableHandleValue dst);
   bool importSpecifier(BinaryNode* importSpec, MutableHandleValue dst);
+  bool importNamespaceSpecifier(BinaryNode* importSpec, MutableHandleValue dst);
   bool exportDeclaration(ParseNode* exportNode, MutableHandleValue dst);
   bool exportSpecifier(BinaryNode* exportSpec, MutableHandleValue dst);
+  bool exportNamespaceSpecifier(BinaryNode* exportSpec, MutableHandleValue dst);
   bool classDefinition(ClassNode* pn, bool expr, MutableHandleValue dst);
 
   bool optStatement(ParseNode* pn, MutableHandleValue dst) {
@@ -2049,10 +2087,16 @@ bool ASTSerializer::importDeclaration(BinaryNode* importNode,
   }
 
   for (ParseNode* item : specList->contents()) {
-    BinaryNode* spec = &item->as<BinaryNode>();
+    auto* spec = &item->as<BinaryNode>();
     RootedValue elt(cx);
-    if (!importSpecifier(spec, &elt)) {
-      return false;
+    if (spec->isKind(ParseNodeKind::ImportNamespaceSpec)) {
+      if (!importNamespaceSpecifier(spec, &elt)) {
+        return false;
+      }
+    } else {
+      if (!importSpecifier(spec, &elt)) {
+        return false;
+      }
     }
     elts.infallibleAppend(elt);
   }
@@ -2074,6 +2118,20 @@ bool ASTSerializer::importSpecifier(BinaryNode* importSpec,
          identifier(bindingNameNode, &bindingName) &&
          builder.importSpecifier(importName, bindingName, &importSpec->pn_pos,
                                  dst);
+}
+
+bool ASTSerializer::importNamespaceSpecifier(BinaryNode* importSpec,
+                                             MutableHandleValue dst) {
+  MOZ_ASSERT(importSpec->isKind(ParseNodeKind::ImportNamespaceSpec));
+  NameNode* importNameNode = &importSpec->left()->as<NameNode>();
+  NameNode* bindingNameNode = &importSpec->right()->as<NameNode>();
+
+  RootedValue importName(cx);
+  RootedValue bindingName(cx);
+  return identifierOrLiteral(importNameNode, &importName) &&
+         identifier(bindingNameNode, &bindingName) &&
+         builder.importNamespaceSpecifier(importName, bindingName,
+                                          &importSpec->pn_pos, dst);
 }
 
 bool ASTSerializer::exportDeclaration(ParseNode* exportNode,
@@ -2106,7 +2164,12 @@ bool ASTSerializer::exportDeclaration(ParseNode* exportNode,
           if (!exportSpecifier(&spec->as<BinaryNode>(), &elt)) {
             return false;
           }
+        } else if (spec->isKind(ParseNodeKind::ExportNamespaceSpec)) {
+          if (!exportNamespaceSpecifier(&spec->as<BinaryNode>(), &elt)) {
+            return false;
+          }
         } else {
+          MOZ_ASSERT(spec->isKind(ParseNodeKind::ExportBatchSpecStmt));
           if (!builder.exportBatchSpecifier(&exportNode->pn_pos, &elt)) {
             return false;
           }
@@ -2172,6 +2235,20 @@ bool ASTSerializer::exportSpecifier(BinaryNode* exportSpec,
          identifierOrLiteral(exportNameNode, &exportName) &&
          builder.exportSpecifier(bindingName, exportName, &exportSpec->pn_pos,
                                  dst);
+}
+
+bool ASTSerializer::exportNamespaceSpecifier(BinaryNode* exportSpec,
+                                             MutableHandleValue dst) {
+  MOZ_ASSERT(exportSpec->isKind(ParseNodeKind::ExportNamespaceSpec));
+  NameNode* bindingNameNode = &exportSpec->left()->as<NameNode>();
+  NameNode* exportNameNode = &exportSpec->right()->as<NameNode>();
+
+  RootedValue bindingName(cx);
+  RootedValue exportName(cx);
+  return identifierOrLiteral(bindingNameNode, &bindingName) &&
+         identifierOrLiteral(exportNameNode, &exportName) &&
+         builder.exportNamespaceSpecifier(bindingName, exportName,
+                                          &exportSpec->pn_pos, dst);
 }
 
 bool ASTSerializer::switchCase(CaseClause* caseClause, MutableHandleValue dst) {

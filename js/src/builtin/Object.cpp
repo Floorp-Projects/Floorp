@@ -690,14 +690,14 @@ bool js::obj_toString(JSContext* cx, unsigned argc, Value* vp) {
   if (!tag.isString()) {
     if (!builtinTag) {
       builtinTag = GetBuiltinTagFast(obj, clasp, cx);
-  #ifdef DEBUG
+#ifdef DEBUG
       // Assert this fast path is correct and matches BuiltinTagSlow.
       JSString* builtinTagSlow = GetBuiltinTagSlow(cx, obj);
       if (!builtinTagSlow) {
         return false;
       }
       MOZ_ASSERT(builtinTagSlow == builtinTag);
-  #endif
+#endif
     }
 
     args.rval().setString(builtinTag);

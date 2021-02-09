@@ -1536,9 +1536,11 @@ restart:
     case ParseNodeKind::ClassMemberList:      // by ParseNodeKind::ClassDecl
     case ParseNodeKind::ImportSpecList:       // by ParseNodeKind::Import
     case ParseNodeKind::ImportSpec:           // by ParseNodeKind::Import
+    case ParseNodeKind::ImportNamespaceSpec:  // by ParseNodeKind::Import
     case ParseNodeKind::ExportBatchSpecStmt:  // by ParseNodeKind::Export
     case ParseNodeKind::ExportSpecList:       // by ParseNodeKind::Export
     case ParseNodeKind::ExportSpec:           // by ParseNodeKind::Export
+    case ParseNodeKind::ExportNamespaceSpec:  // by ParseNodeKind::Export
     case ParseNodeKind::CallSiteObj:       // by ParseNodeKind::TaggedTemplate
     case ParseNodeKind::PosHolder:         // by ParseNodeKind::NewTarget
     case ParseNodeKind::SuperBase:         // by ParseNodeKind::Elem and others

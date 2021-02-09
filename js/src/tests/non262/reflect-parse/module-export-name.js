@@ -34,6 +34,14 @@ function exportSpec(id, name) {
   };
 }
 
+function exportNamespaceSpec(id, name) {
+  return {
+    type: "ExportNamespaceSpecifier",
+    id,
+    name,
+  };
+}
+
 function assertModule(src, patt) {
   program(patt).assert(Reflect.parse(src, {target: "module"}));
 }
@@ -79,7 +87,7 @@ assertModule(`
 assertModule(`
   export * as "x" from "module";
 `, [
-  exportDecl(null, [exportSpec(ident("*"), literal("x"))], literal("module"), false),
+  exportDecl(null, [exportNamespaceSpec(ident("*"), literal("x"))], literal("module"), false),
 ]);
 
 if (typeof reportCompare === "function")
