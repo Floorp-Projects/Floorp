@@ -157,8 +157,11 @@ static void LogDocState(dom::Document* aDocumentNode) {
   printf(", %sinitial", aDocumentNode->IsInitialDocument() ? "" : "not ");
   printf(", %sshowing", aDocumentNode->IsShowing() ? "" : "not ");
   printf(", %svisible", aDocumentNode->IsVisible() ? "" : "not ");
-  printf(", %svisible considering ancestors",
-         aDocumentNode->IsVisibleConsideringAncestors() ? "" : "not ");
+  printf(
+      ", %svisible considering ancestors",
+      nsCoreUtils::IsDocumentVisibleConsideringInProcessAncestors(aDocumentNode)
+          ? ""
+          : "not ");
   printf(", %sactive", aDocumentNode->IsActive() ? "" : "not ");
   printf(", %sresource", aDocumentNode->IsResourceDoc() ? "" : "not ");
 

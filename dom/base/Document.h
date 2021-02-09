@@ -2638,12 +2638,6 @@ class Document : public nsINode,
    */
   bool IsVisible() const { return mVisible; }
 
-  /**
-   * Return whether the document and all its ancestors are visible in the sense
-   * of pageshow / hide.
-   */
-  bool IsVisibleConsideringAncestors() const;
-
   void SetSuppressedEventListener(EventListener* aListener);
 
   EventListener* GetSuppressedEventListener() {
