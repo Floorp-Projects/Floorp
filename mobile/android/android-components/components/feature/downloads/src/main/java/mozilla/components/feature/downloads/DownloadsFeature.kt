@@ -336,6 +336,12 @@ class DownloadsFeature(
                 .firstOrNull { it.activityInfo.packageName == context.packageName }
                 ?.toDownloaderApp(context, download)
 
+        // Check for data URL that can cause a TransactionTooLargeException when querying for apps
+        // See https://github.com/mozilla-mobile/android-components/issues/9665
+        if (download.url.startsWith("data:")) {
+            return listOfNotNull(thisApp)
+        }
+
         val apps = Browsers.findResolvers(
                 context,
                 packageManager,
