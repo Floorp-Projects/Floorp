@@ -310,8 +310,6 @@ class AboutWelcomeChild extends JSWindowActorChild {
     // about:welcome loads outside of the "FirstStartup" scenario this will likely not be ready
     let experimentData = ExperimentAPI.getExperiment({
       featureId: "aboutwelcome",
-      // Telemetry handled in AboutNewTabService.jsm
-      sendExposurePing: false,
     });
 
     if (experimentData?.slug) {

@@ -729,7 +729,7 @@ normandy:
     release_channel_collection: opt-out
     products:
       - "firefox"
-    record_in_processes: ["main"]
+    record_in_processes: ["main", "content"]
     description: >
       This records an event at the moment the user is exposed to an experiment
       treatment. The event is triggered either by the code checking that a

@@ -3849,7 +3849,6 @@ BrowserGlue.prototype = {
       );
       let isFeatureEnabled = ExperimentAPI.getExperiment({
         featureId: "infobar",
-        sendExposurePing: false,
       })?.branch.feature.enabled;
       if (willPrompt) {
         // Prevent the related notification from appearing and
