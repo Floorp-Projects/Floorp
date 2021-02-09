@@ -648,6 +648,9 @@ impl Texture {
 /// works as a container that can only grow.
 #[must_use]
 pub struct GpuDataRequest<'a> {
+    //TODO: remove this, see
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1690546
+    #[allow(dead_code)]
     handle: &'a mut GpuCacheHandle,
     frame_stamp: FrameStamp,
     start_index: usize,
