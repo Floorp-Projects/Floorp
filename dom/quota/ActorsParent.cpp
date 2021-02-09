@@ -6860,22 +6860,21 @@ auto QuotaManager::GetDirectoryLockTable(PersistenceType aPersistenceType)
 bool QuotaManager::IsSanitizedOriginValid(const nsACString& aSanitizedOrigin) {
   AssertIsOnIOThread();
 
-  bool valid;
-  if (auto entry = mValidOrigins.LookupForAdd(aSanitizedOrigin)) {
-    // We already parsed this sanitized origin string.
-    valid = entry.Data();
-  } else {
-    nsCString spec;
-    OriginAttributes attrs;
-    nsCString originalSuffix;
-    OriginParser::ResultType result = OriginParser::ParseOrigin(
-        aSanitizedOrigin, spec, &attrs, originalSuffix);
+  return mValidOrigins.WithEntryHandle(
+      aSanitizedOrigin, [&aSanitizedOrigin](auto&& entry) {
+        if (entry) {
+          // We already parsed this sanitized origin string.
+          return entry.Data();
+        }
 
-    valid = result == OriginParser::ValidOrigin;
-    entry.OrInsert([valid]() { return valid; });
-  }
+        nsCString spec;
+        OriginAttributes attrs;
+        nsCString originalSuffix;
+        const auto result = OriginParser::ParseOrigin(aSanitizedOrigin, spec,
+                                                      &attrs, originalSuffix);
 
-  return valid;
+        return entry.Insert(result == OriginParser::ValidOrigin);
+      });
 }
 
 int64_t QuotaManager::GenerateDirectoryLockId() {
