@@ -1,4 +1,4 @@
-// |reftest| error:SyntaxError module
+// |reftest| module
 
 var x = "ok";
 
