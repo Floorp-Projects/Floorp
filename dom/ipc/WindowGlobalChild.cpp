@@ -167,9 +167,10 @@ void WindowGlobalChild::Init() {
     gWindowGlobalChildById = new WGCByIdMap();
     ClearOnShutdown(&gWindowGlobalChildById);
   }
-  auto entry = gWindowGlobalChildById->LookupForAdd(InnerWindowId());
-  MOZ_RELEASE_ASSERT(!entry, "Duplicate WindowGlobalChild entry for ID!");
-  entry.OrInsert([&] { return this; });
+  gWindowGlobalChildById->WithEntryHandle(InnerWindowId(), [&](auto&& entry) {
+    MOZ_RELEASE_ASSERT(!entry, "Duplicate WindowGlobalChild entry for ID!");
+    entry.Insert(this);
+  });
 }
 
 void WindowGlobalChild::InitWindowGlobal(nsGlobalWindowInner* aWindow) {
