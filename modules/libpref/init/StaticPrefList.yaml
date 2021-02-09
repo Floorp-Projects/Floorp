@@ -8615,6 +8615,13 @@
   value: false
   mirror: always
 
+# When receiving a network change event, the time (in ms) we wait to reload the
+# PAC url.
+- name: network.proxy.reload_pac_delay
+  type: RelaxedAtomicUint32
+  value: 2000
+  mirror: always
+
 # Some requests during a page load are marked as "tail", mainly trackers, but not only.
 # This pref controls whether such requests are put to the tail, behind other requests
 # emerging during page loading process.

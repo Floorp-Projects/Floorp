@@ -15,6 +15,7 @@
 #include "nsIObserver.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
+#include "nsITimer.h"
 #include "prio.h"
 #include "mozilla/Attributes.h"
 
@@ -40,12 +41,14 @@ struct nsProtocolInfo;
   }
 
 class nsProtocolProxyService final : public nsIProtocolProxyService2,
-                                     public nsIObserver {
+                                     public nsIObserver,
+                                     public nsITimerCallback {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROTOCOLPROXYSERVICE2
   NS_DECL_NSIPROTOCOLPROXYSERVICE
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSITIMERCALLBACK
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PROTOCOL_PROXY_SERVICE_IMPL_CID)
 
@@ -402,7 +405,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
                                 nsICancelable** result, bool isSyncOK,
                                 nsISerialEventTarget* mainThreadEventTarget);
   bool mIsShutdown;
-  nsCOMPtr<nsISerialEventTarget> mProxySettingTarget;
+  nsCOMPtr<nsITimer> mReloadPACTimer;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsProtocolProxyService,
