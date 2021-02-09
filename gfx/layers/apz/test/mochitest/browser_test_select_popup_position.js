@@ -10,7 +10,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-add_task(async function() {
+async function runPopupPositionTest(parentDocumentFileName) {
   function httpURL(filename) {
     let chromeURL = getRootDirectory(gTestPath) + filename;
     return chromeURL.replace(
@@ -27,9 +27,7 @@ add_task(async function() {
     );
   }
 
-  const pageUrl = httpURL(
-    "helper_test_select_popup_position_transformed_in_parent.html"
-  );
+  const pageUrl = httpURL(parentDocumentFileName);
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
 
   // Load the OOP iframe.
@@ -101,4 +99,14 @@ add_task(async function() {
   await hideSelectPopup(selectPopup);
 
   BrowserTestUtils.removeTab(tab);
+}
+
+add_task(async function() {
+  await runPopupPositionTest(
+    "helper_test_select_popup_position_transformed_in_parent.html"
+  );
+});
+
+add_task(async function() {
+  await runPopupPositionTest("helper_test_select_popup_position_zoomed.html");
 });
