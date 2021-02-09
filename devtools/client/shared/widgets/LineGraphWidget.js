@@ -389,7 +389,7 @@ LineGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
   _createGutter: function() {
     const gutter = this._document.createElementNS(HTML_NS, "div");
     gutter.className = "line-graph-widget-gutter";
-    gutter.hidden = true;
+    gutter.setAttribute("hidden", true);
     this._container.appendChild(gutter);
 
     return gutter;
@@ -417,7 +417,7 @@ LineGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
     tooltip.className = "line-graph-widget-tooltip";
     tooltip.setAttribute("type", type);
     tooltip.setAttribute("arrow", arrow);
-    tooltip.hidden = true;
+    tooltip.setAttribute("hidden", true);
 
     const infoNode = this._document.createElementNS(HTML_NS, "span");
     infoNode.textContent = info;

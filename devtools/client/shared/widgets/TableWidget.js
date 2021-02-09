@@ -724,7 +724,7 @@ TableWidget.prototype = {
       menuitem.setAttribute("label", column.header.getAttribute("value"));
       menuitem.setAttribute("data-id", column.id);
       menuitem.setAttribute("type", "checkbox");
-      menuitem.setAttribute("checked", !column.wrapper.hidden);
+      menuitem.setAttribute("checked", !column.wrapper.getAttribute("hidden"));
       if (column.id == this.uniqueId) {
         menuitem.setAttribute("disabled", "true");
       }
@@ -1164,7 +1164,7 @@ Column.prototype = {
    * Returns a boolean indicating whether the column is hidden.
    */
   get hidden() {
-    return this.wrapper.hidden;
+    return this.wrapper.hasAttribute("hidden");
   },
 
   /**
@@ -1435,16 +1435,16 @@ Column.prototype = {
     if (arguments.length == 0) {
       // Act like a toggling method when called with no params
       id = this.id;
-      checked = this.wrapper.hidden;
+      checked = this.wrapper.hasAttribute("hidden");
     }
     if (id != this.id) {
       return;
     }
     if (checked) {
-      this.wrapper.hidden = false;
+      this.wrapper.removeAttribute("hidden");
       this.tbody.insertBefore(this.splitter, this.wrapper.nextSibling);
     } else {
-      this.wrapper.hidden = true;
+      this.wrapper.setAttribute("hidden", "true");
       this.splitter.remove();
     }
   },
@@ -1657,11 +1657,15 @@ Cell.prototype = {
   },
 
   get hidden() {
-    return this.label.hidden;
+    return this.label.hasAttribute("hidden");
   },
 
   set hidden(value) {
-    this.label.hidden = value;
+    if (value) {
+      this.label.setAttribute("hidden", "hidden");
+    } else {
+      this.label.removeAttribute("hidden");
+    }
   },
 
   set value(value) {

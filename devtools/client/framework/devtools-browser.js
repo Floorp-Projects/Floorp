@@ -128,11 +128,12 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
 
     function toggleMenuItem(id, isEnabled) {
       const cmd = doc.getElementById(id);
-      cmd.hidden = !isEnabled;
       if (isEnabled) {
         cmd.removeAttribute("disabled");
+        cmd.removeAttribute("hidden");
       } else {
         cmd.setAttribute("disabled", "true");
+        cmd.setAttribute("hidden", "true");
       }
     }
 

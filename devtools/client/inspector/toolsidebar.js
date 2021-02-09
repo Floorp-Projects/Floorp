@@ -282,7 +282,7 @@ ToolSidebar.prototype = {
    *         The sidebar tab id to select.
    */
   show: function(id) {
-    this._tabbox.hidden = false;
+    this._tabbox.removeAttribute("hidden");
 
     // If an id is given, select the corresponding sidebar tab.
     if (id) {
@@ -296,7 +296,7 @@ ToolSidebar.prototype = {
    * Show the sidebar.
    */
   hide: function() {
-    this._tabbox.hidden = true;
+    this._tabbox.setAttribute("hidden", "true");
 
     this.emit("hide");
   },
