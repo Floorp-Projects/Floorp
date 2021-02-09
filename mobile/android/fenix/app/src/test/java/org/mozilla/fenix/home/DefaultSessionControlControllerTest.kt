@@ -182,8 +182,8 @@ class DefaultSessionControlControllerTest {
     }
 
     @Test
-    fun `handleCollectionOpenTabClicked onTabRestored`() {
-        val restoredTab = RecoverableTab(
+    fun `handleCollectionOpenTabClicked with existing selected tab`() {
+        val recoverableTab = RecoverableTab(
             id = "test",
             parentId = null,
             url = "https://www.mozilla.org",
@@ -196,13 +196,42 @@ class DefaultSessionControlControllerTest {
         )
 
         val tab = mockk<ComponentTab> {
-            every { restore(activity, engine, restoreSessionId = false) } returns restoredTab
+            every { restore(activity, engine, restoreSessionId = false) } returns recoverableTab
         }
 
-        store.dispatch(TabListAction.AddTabAction(
-            createTab(id = restoredTab.id, url = restoredTab.url))
-        ).joinBlocking()
-        store.dispatch(TabListAction.SelectTabAction(restoredTab.id)).joinBlocking()
+        val restoredTab = createTab(id = recoverableTab.id, url = recoverableTab.url)
+        val otherTab = createTab(id = "otherTab", url = "https://mozilla.org")
+        store.dispatch(TabListAction.AddTabAction(otherTab)).joinBlocking()
+        store.dispatch(TabListAction.SelectTabAction(otherTab.id)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(restoredTab)).joinBlocking()
+
+        controller.handleCollectionOpenTabClicked(tab)
+        verify { metrics.track(Event.CollectionTabRestored) }
+        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+        verify { selectTabUseCase.selectTab.invoke(restoredTab.id) }
+        verify { reloadUrlUseCase.reload.invoke(restoredTab.id) }
+    }
+
+    @Test
+    fun `handleCollectionOpenTabClicked without existing selected tab`() {
+        val recoverableTab = RecoverableTab(
+            id = "test",
+            parentId = null,
+            url = "https://www.mozilla.org",
+            title = "Mozilla",
+            state = null,
+            contextId = null,
+            readerState = ReaderState(),
+            lastAccess = 0,
+            private = false
+        )
+
+        val tab = mockk<ComponentTab> {
+            every { restore(activity, engine, restoreSessionId = false) } returns recoverableTab
+        }
+
+        val restoredTab = createTab(id = recoverableTab.id, url = recoverableTab.url)
+        store.dispatch(TabListAction.AddTabAction(restoredTab)).joinBlocking()
 
         controller.handleCollectionOpenTabClicked(tab)
         verify { metrics.track(Event.CollectionTabRestored) }

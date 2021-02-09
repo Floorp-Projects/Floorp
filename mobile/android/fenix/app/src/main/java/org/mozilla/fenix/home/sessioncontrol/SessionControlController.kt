@@ -215,10 +215,8 @@ class DefaultSessionControlController(
             tab,
             onTabRestored = {
                 activity.openToBrowser(BrowserDirection.FromHome)
-                store.state.selectedTabId?.let {
-                    selectTabUseCase.invoke(it)
-                    reloadUrlUseCase.invoke(it)
-                }
+                selectTabUseCase.invoke(it)
+                reloadUrlUseCase.invoke(it)
             },
             onFailure = {
                 activity.openToBrowserAndLoad(
