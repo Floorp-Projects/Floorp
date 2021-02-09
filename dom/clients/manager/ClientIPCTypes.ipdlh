@@ -31,7 +31,7 @@ struct ClientSourceConstructorArgs
   TimeStamp creationTime;
 };
 
-comparable struct IPCClientInfo
+[Comparable] struct IPCClientInfo
 {
   nsID id;
   nsID? agentClusterId;
