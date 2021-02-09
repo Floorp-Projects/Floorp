@@ -34,6 +34,8 @@ class RenderMacIOSurfaceTextureHost final : public RenderTextureHostSWGL {
     return this;
   }
 
+  size_t Bytes() override;
+
   MacIOSurface* GetSurface() { return mSurface; }
 
   // RenderTextureHostSWGL

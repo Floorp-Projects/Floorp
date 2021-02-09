@@ -46,6 +46,10 @@ class RenderTextureHostWrapper final : public RenderTextureHostSWGL {
                 PlaneInfo& aPlaneInfo) override;
   void UnmapPlanes() override;
 
+  // This is just a wrapper, so doesn't need to report the
+  // size of the wrapped object (which reports itself).
+  size_t Bytes() override { return 0; }
+
  private:
   ~RenderTextureHostWrapper() override;
 

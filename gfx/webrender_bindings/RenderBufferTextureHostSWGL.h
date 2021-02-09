@@ -30,6 +30,8 @@ class RenderBufferTextureHostSWGL final : public RenderTextureHostSWGL {
 
   void UnmapPlanes() override;
 
+  size_t Bytes() override { return BytesFromPlanes(); }
+
  private:
   virtual ~RenderBufferTextureHostSWGL();
 

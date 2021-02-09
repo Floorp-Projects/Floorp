@@ -72,6 +72,10 @@ gfx::IntSize RenderMacIOSurfaceTextureHost::GetSize(
                       mSurface->GetDevicePixelHeight(aChannelIndex));
 }
 
+size_t RenderMacIOSurfaceTextureHost::Bytes() {
+  return mSurface->GetAllocSize();
+}
+
 wr::WrExternalImage RenderMacIOSurfaceTextureHost::Lock(
     uint8_t aChannelIndex, gl::GLContext* aGL, wr::ImageRendering aRendering) {
   if (mGL.get() != aGL) {
