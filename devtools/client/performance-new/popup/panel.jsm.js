@@ -160,25 +160,25 @@ function createViewControllers(state, elements) {
 
       switch (profilerState) {
         case "active":
-          elements.inactive.hidden = true;
-          elements.active.hidden = false;
-          elements.settingsSection.hidden = true;
-          elements.contentRecording.hidden = false;
-          elements.locked.hidden = true;
+          elements.inactive.setAttribute("hidden", "true");
+          elements.active.setAttribute("hidden", "false");
+          elements.settingsSection.setAttribute("hidden", "true");
+          elements.contentRecording.setAttribute("hidden", "false");
+          elements.locked.setAttribute("hidden", "true");
           break;
         case "inactive":
-          elements.inactive.hidden = false;
-          elements.active.hidden = true;
-          elements.settingsSection.hidden = false;
-          elements.contentRecording.hidden = true;
-          elements.locked.hidden = true;
+          elements.inactive.setAttribute("hidden", "false");
+          elements.active.setAttribute("hidden", "true");
+          elements.settingsSection.setAttribute("hidden", "false");
+          elements.contentRecording.setAttribute("hidden", "true");
+          elements.locked.setAttribute("hidden", "true");
           break;
         case "locked": {
-          elements.inactive.hidden = true;
-          elements.active.hidden = true;
-          elements.settingsSection.hidden = true;
-          elements.contentRecording.hidden = true;
-          elements.locked.hidden = false;
+          elements.inactive.setAttribute("hidden", "true");
+          elements.active.setAttribute("hidden", "true");
+          elements.settingsSection.setAttribute("hidden", "true");
+          elements.contentRecording.setAttribute("hidden", "true");
+          elements.locked.setAttribute("hidden", "false");
           // This works around XULElement height issues.
           const { height } = elements.locked.getBoundingClientRect();
           elements.locked.style.height = `${height}px`;
