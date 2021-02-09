@@ -456,18 +456,19 @@ static intptr_t GetSerialNumber(void* aPtr, bool aCreate) {
     return record ? record->serialNumber : 0;
   }
 
-  auto entry = gSerialNumbers->LookupForAdd(aPtr);
-  if (entry) {
-    MOZ_CRASH(
-        "If an object already has a serial number, we should be destroying "
-        "it.");
-  }
+  gSerialNumbers->WithEntryHandle(aPtr, [](auto&& entry) {
+    if (entry) {
+      MOZ_CRASH(
+          "If an object already has a serial number, we should be destroying "
+          "it.");
+    }
 
-  auto& record = entry.OrInsert([]() { return new SerialNumberRecord(); });
-  WalkTheStackSavingLocations(record->allocationStack);
-  if (gLogJSStacks) {
-    record->SaveJSStack();
-  }
+    auto& record = entry.Insert(new SerialNumberRecord());
+    WalkTheStackSavingLocations(record->allocationStack);
+    if (gLogJSStacks) {
+      record->SaveJSStack();
+    }
+  });
   return gNextSerialNumber;
 }
 
