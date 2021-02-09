@@ -1545,7 +1545,8 @@ bool ModuleBuilder::processImport(frontend::BinaryNode* importNode) {
 
   for (ParseNode* item : specList->contents()) {
     BinaryNode* spec = &item->as<BinaryNode>();
-    MOZ_ASSERT(spec->isKind(ParseNodeKind::ImportSpec));
+    MOZ_ASSERT(spec->isKind(ParseNodeKind::ImportSpec) ||
+               spec->isKind(ParseNodeKind::ImportNamespaceSpec));
 
     NameNode* importNameNode = &spec->left()->as<NameNode>();
     NameNode* localNameNode = &spec->right()->as<NameNode>();
@@ -1561,8 +1562,16 @@ bool ModuleBuilder::processImport(frontend::BinaryNode* importNode) {
     markUsedByStencil(module);
     markUsedByStencil(localName);
     markUsedByStencil(importName);
-    auto entry = frontend::StencilModuleEntry::importEntry(
-        module, localName, importName, line, column);
+
+    StencilModuleEntry entry;
+    if (spec->isKind(ParseNodeKind::ImportSpec)) {
+      entry = StencilModuleEntry::importEntry(module, localName, importName,
+                                              line, column);
+    } else {
+      entry = StencilModuleEntry::importNamespaceEntry(
+          module, localName, importName, line, column);
+    }
+
     if (!importEntries_.put(localName, entry)) {
       return false;
     }
@@ -1768,33 +1777,46 @@ bool ModuleBuilder::processExportFrom(frontend::BinaryNode* exportNode) {
     eitherParser_.computeLineAndColumn(spec->pn_pos.begin, &line, &column);
 
     StencilModuleEntry entry;
+    TaggedParserAtomIndex exportName;
     if (spec->isKind(ParseNodeKind::ExportSpec)) {
       auto* importNameNode = &spec->as<BinaryNode>().left()->as<NameNode>();
       auto* exportNameNode = &spec->as<BinaryNode>().right()->as<NameNode>();
 
       auto importName = importNameNode->atom();
-      auto exportName = exportNameNode->atom();
+      exportName = exportNameNode->atom();
 
       markUsedByStencil(module);
       markUsedByStencil(importName);
       markUsedByStencil(exportName);
       entry = StencilModuleEntry::exportFromEntry(module, importName,
                                                   exportName, line, column);
+    } else if (spec->isKind(ParseNodeKind::ExportNamespaceSpec)) {
+      auto* importNameNode = &spec->as<BinaryNode>().left()->as<NameNode>();
+      auto* exportNameNode = &spec->as<BinaryNode>().right()->as<NameNode>();
 
-      if (!exportNames_.put(exportName)) {
-        return false;
-      }
+      auto importName = importNameNode->atom();
+      exportName = exportNameNode->atom();
+
+      markUsedByStencil(module);
+      markUsedByStencil(importName);
+      markUsedByStencil(exportName);
+      entry = StencilModuleEntry::exportNamespaceFromEntry(
+          module, importName, exportName, line, column);
     } else {
       MOZ_ASSERT(spec->isKind(ParseNodeKind::ExportBatchSpecStmt));
+
       auto importName = TaggedParserAtomIndex::WellKnown::star();
 
       markUsedByStencil(module);
       markUsedByStencil(importName);
-      entry = StencilModuleEntry::exportFromEntry(
-          module, importName, TaggedParserAtomIndex::null(), line, column);
+      entry = StencilModuleEntry::exportBatchFromEntry(module, importName, line,
+                                                       column);
     }
 
     if (!exportEntries_.append(entry)) {
+      return false;
+    }
+    if (exportName && !exportNames_.put(exportName)) {
       return false;
     }
   }

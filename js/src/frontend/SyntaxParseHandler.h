@@ -415,6 +415,9 @@ class SyntaxParseHandler {
   BinaryNodeType newImportSpec(Node importNameNode, Node bindingName) {
     return NodeGeneric;
   }
+  BinaryNodeType newImportNamespaceSpec(Node importNameNode, Node bindingName) {
+    return NodeGeneric;
+  }
   UnaryNodeType newExportDeclaration(Node kid, const TokenPos& pos) {
     return NodeGeneric;
   }
@@ -427,6 +430,9 @@ class SyntaxParseHandler {
     return NodeGeneric;
   }
   BinaryNodeType newExportSpec(Node bindingName, Node exportName) {
+    return NodeGeneric;
+  }
+  BinaryNodeType newExportNamespaceSpec(Node bindingName, Node exportName) {
     return NodeGeneric;
   }
   NullaryNodeType newExportBatchSpec(const TokenPos& pos) {

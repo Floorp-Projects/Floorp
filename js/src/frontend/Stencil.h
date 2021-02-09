@@ -476,12 +476,16 @@ using FunctionDeclarationVector =
 //       for readability.
 class StencilModuleEntry {
  public:
-  //              | ModuleRequest | ImportEntry | ExportAs | ExportFrom |
-  //              |-----------------------------------------------------|
-  // specifier    | required      | required    | nullptr  | required   |
-  // localName    | null          | required    | required | nullptr    |
-  // importName   | null          | required    | nullptr  | required   |
-  // exportName   | null          | null        | required | optional   |
+  // clang-format off
+  //
+  //              | ModuleRequest | ImportEntry | ImportNamespaceEntry | ExportAs | ExportFrom | ExportNamespaceFrom | ExportBatchFrom |
+  //              |--------------------------------------------------------------------------------------------------------------------|
+  // specifier    | required      | required    | required             | null     | required   | required            | required        |
+  // localName    | null          | required    | required             | required | null       | null                | null            |
+  // importName   | null          | required    | required             | null     | required   | required            | required        |
+  // exportName   | null          | null        | null                 | required | required   | required            | null            |
+  //
+  // clang-format on
   TaggedParserAtomIndex specifier;
   TaggedParserAtomIndex localName;
   TaggedParserAtomIndex importName;
@@ -522,6 +526,17 @@ class StencilModuleEntry {
     return entry;
   }
 
+  static StencilModuleEntry importNamespaceEntry(
+      TaggedParserAtomIndex specifier, TaggedParserAtomIndex localName,
+      TaggedParserAtomIndex importName, uint32_t lineno, uint32_t column) {
+    MOZ_ASSERT(specifier && localName && importName);
+    StencilModuleEntry entry(lineno, column);
+    entry.specifier = specifier;
+    entry.localName = localName;
+    entry.importName = importName;
+    return entry;
+  }
+
   static StencilModuleEntry exportAsEntry(TaggedParserAtomIndex localName,
                                           TaggedParserAtomIndex exportName,
                                           uint32_t lineno, uint32_t column) {
@@ -536,12 +551,32 @@ class StencilModuleEntry {
                                             TaggedParserAtomIndex importName,
                                             TaggedParserAtomIndex exportName,
                                             uint32_t lineno, uint32_t column) {
-    // NOTE: The `export * from "mod";` syntax generates nullptr exportName.
-    MOZ_ASSERT(specifier && importName);
+    MOZ_ASSERT(specifier && importName && exportName);
     StencilModuleEntry entry(lineno, column);
     entry.specifier = specifier;
     entry.importName = importName;
     entry.exportName = exportName;
+    return entry;
+  }
+
+  static StencilModuleEntry exportNamespaceFromEntry(
+      TaggedParserAtomIndex specifier, TaggedParserAtomIndex importName,
+      TaggedParserAtomIndex exportName, uint32_t lineno, uint32_t column) {
+    MOZ_ASSERT(specifier && importName && exportName);
+    StencilModuleEntry entry(lineno, column);
+    entry.specifier = specifier;
+    entry.importName = importName;
+    entry.exportName = exportName;
+    return entry;
+  }
+
+  static StencilModuleEntry exportBatchFromEntry(
+      TaggedParserAtomIndex specifier, TaggedParserAtomIndex importName,
+      uint32_t lineno, uint32_t column) {
+    MOZ_ASSERT(specifier && importName);
+    StencilModuleEntry entry(lineno, column);
+    entry.specifier = specifier;
+    entry.importName = importName;
     return entry;
   }
 };

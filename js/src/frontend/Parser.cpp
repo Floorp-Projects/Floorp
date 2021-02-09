@@ -4933,7 +4933,7 @@ bool GeneralParser<ParseHandler, Unit>::namespaceImport(
   pc_->varScope().lookupDeclaredName(bindingName)->value()->setClosedOver();
 
   BinaryNodeType importSpec =
-      handler_.newImportSpec(importName, bindingNameNode);
+      handler_.newImportNamespaceSpec(importName, bindingNameNode);
   if (!importSpec) {
     return false;
   }
@@ -5449,7 +5449,8 @@ GeneralParser<ParseHandler, Unit>::exportBatch(uint32_t begin) {
       return null();
     }
 
-    BinaryNodeType exportSpec = handler_.newExportSpec(importName, exportName);
+    BinaryNodeType exportSpec =
+        handler_.newExportNamespaceSpec(importName, exportName);
     if (!exportSpec) {
       return null();
     }
