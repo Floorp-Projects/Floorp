@@ -57,24 +57,6 @@ buildscript {
                 }
             }
         }
-
-        if (project.hasProperty("jcenterRepo")) {
-            maven {
-                name "BintrayJCenter"
-                url project.property("jcenterRepo")
-            }
-        } else {
-            jcenter() {
-                content {
-                    // Improve security: don't search deps with known repos.
-                    excludeGroupByRegex RepoMatching.mozilla
-                    excludeGroupByRegex RepoMatching.androidx
-                    excludeGroupByRegex RepoMatching.comGoogleAndroid
-                    excludeGroupByRegex RepoMatching.comGoogleFirebase
-                    excludeGroupByRegex RepoMatching.comAndroid
-                }
-            }
-        }
     }
 
     dependencies {
