@@ -23,15 +23,6 @@ buildscript {
         } else {
             mavenCentral()
         }
-
-        if (project.hasProperty("jcenterRepo")) {
-            maven {
-                name "BintrayJCenter"
-                url project.property("jcenterRepo")
-            }
-        } else {
-            jcenter()
-        }
     }
 
     dependencies {
