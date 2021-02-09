@@ -42,6 +42,7 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Tokenizer.h"
 #include "mozilla/Unused.h"
+#include "mozilla/StaticPrefs_network.h"
 
 //----------------------------------------------------------------------------
 
@@ -755,6 +756,7 @@ NS_INTERFACE_MAP_BEGIN(nsProtocolProxyService)
   NS_INTERFACE_MAP_ENTRY(nsIProtocolProxyService)
   NS_INTERFACE_MAP_ENTRY(nsIProtocolProxyService2)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(nsProtocolProxyService)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIProtocolProxyService)
   NS_IMPL_QUERY_CLASSINFO(nsProtocolProxyService)
@@ -789,8 +791,6 @@ nsProtocolProxyService::~nsProtocolProxyService() {
 
 // nsProtocolProxyService methods
 nsresult nsProtocolProxyService::Init() {
-  mProxySettingTarget = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-
   // failure to access prefs is non-fatal
   nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefBranch) {
@@ -873,10 +873,8 @@ nsresult nsProtocolProxyService::AsyncConfigureFromPAC(bool aForceReload,
     return req->Run();
   }
 
-  if (NS_WARN_IF(!mProxySettingTarget)) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return mProxySettingTarget->Dispatch(req, nsIEventTarget::DISPATCH_NORMAL);
+  return NS_DispatchBackgroundTask(req.forget(),
+                                   nsIEventTarget::DISPATCH_NORMAL);
 }
 
 nsresult nsProtocolProxyService::OnAsyncGetPACURI(bool aForceReload,
@@ -910,8 +908,9 @@ nsProtocolProxyService::Observe(nsISupports* aSubject, const char* aTopic,
       mPACMan = nullptr;
     }
 
-    if (mProxySettingTarget) {
-      mProxySettingTarget = nullptr;
+    if (mReloadPACTimer) {
+      mReloadPACTimer->Cancel();
+      mReloadPACTimer = nullptr;
     }
 
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
@@ -924,7 +923,20 @@ nsProtocolProxyService::Observe(nsISupports* aSubject, const char* aTopic,
     nsCString converted = NS_ConvertUTF16toUTF8(aData);
     const char* state = converted.get();
     if (!strcmp(state, NS_NETWORK_LINK_DATA_CHANGED)) {
-      ReloadNetworkPAC();
+      uint32_t delay = StaticPrefs::network_proxy_reload_pac_delay();
+      LOG(("nsProtocolProxyService::Observe call ReloadNetworkPAC() delay=%u",
+           delay));
+
+      if (delay) {
+        if (mReloadPACTimer) {
+          mReloadPACTimer->Cancel();
+          mReloadPACTimer = nullptr;
+        }
+        NS_NewTimerWithCallback(getter_AddRefs(mReloadPACTimer), this, delay,
+                                nsITimer::TYPE_ONE_SHOT);
+      } else {
+        ReloadNetworkPAC();
+      }
     }
   } else {
     NS_ASSERTION(strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0,
@@ -932,6 +944,13 @@ nsProtocolProxyService::Observe(nsISupports* aSubject, const char* aTopic,
     nsCOMPtr<nsIPrefBranch> prefs = do_QueryInterface(aSubject);
     if (prefs) PrefsChanged(prefs, NS_LossyConvertUTF16toASCII(aData).get());
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProtocolProxyService::Notify(nsITimer* aTimer) {
+  MOZ_ASSERT(aTimer == mReloadPACTimer);
+  ReloadNetworkPAC();
   return NS_OK;
 }
 
