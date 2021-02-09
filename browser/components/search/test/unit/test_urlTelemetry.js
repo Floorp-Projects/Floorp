@@ -210,6 +210,8 @@ async function testAdUrlClicked(serpUrl, adUrl, expectedAdKey) {
   }
 }
 
+do_get_profile();
+
 add_task(async function setup() {
   Services.prefs.setBoolPref(SearchUtils.BROWSER_SEARCH_PREF + "log", true);
   await SearchSERPTelemetry.init();

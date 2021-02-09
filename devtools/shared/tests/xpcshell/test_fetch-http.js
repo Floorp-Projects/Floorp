@@ -26,6 +26,8 @@ function cacheRequestHandler(request, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
+do_get_profile();
+
 registerCleanupFunction(() => {
   return new Promise(resolve => server.stop(resolve));
 });
