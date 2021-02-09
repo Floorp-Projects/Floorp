@@ -67,7 +67,7 @@ class StrictModeManager(
             val threadPolicy = StrictMode.ThreadPolicy.Builder()
                 .detectAll()
                 .penaltyLog()
-            if (setPenaltyDeath && Build.MANUFACTURER !in strictModeExceptionList) {
+            if (setPenaltyDeath) {
                 threadPolicy.penaltyDeathWithIgnores()
             }
             StrictMode.setThreadPolicy(threadPolicy.build())
@@ -147,18 +147,25 @@ class StrictModeManager(
             functionBlock()
         }
     }
-
-    /**
-     * There are certain manufacturers that have custom font classes for the OS systems.
-     * These classes violates the [StrictMode] policies on startup. As a workaround, we create
-     * an exception list for these manufacturers so that dialogs do not show up on start up.
-     * To add a new manufacturer to the list, log "Build.MANUFACTURER" from the device to get the
-     * exact name of the manufacturer.
-     */
-    private val strictModeExceptionList = setOf(ManufacturerCodes.HUAWEI, ManufacturerCodes.ONE_PLUS)
 }
 
+/**
+ * There are certain manufacturers that have custom font classes for the OS systems.
+ * These classes violates the [StrictMode] policies on startup. As a workaround, we create
+ * an exception list for these manufacturers so that dialogs do not show up on start up.
+ * To add a new manufacturer to the list, log "Build.MANUFACTURER" from the device to get the
+ * exact name of the manufacturer.
+ */
+private val strictModeExceptionList = setOf(ManufacturerCodes.HUAWEI, ManufacturerCodes.ONE_PLUS)
+
 private fun StrictMode.ThreadPolicy.Builder.penaltyDeathWithIgnores(): StrictMode.ThreadPolicy.Builder {
+    // This workaround was added before we realized we can ignored based on violation contents
+    // (see code below). This solution - blanket disabling StrictMode on some manufacturers - isn't
+    // great so, if we have time, we should consider reimplementing these fixes using the methods below.
+    if (Build.MANUFACTURER in strictModeExceptionList) {
+        return this
+    }
+
     // If we want to apply ignores based on stack trace contents to APIs below P, we can use this methodology:
     // https://medium.com/@tokudu/how-to-whitelist-strictmode-violations-on-android-based-on-stacktrace-eb0018e909aa
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
