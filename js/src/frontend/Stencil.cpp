@@ -1864,20 +1864,20 @@ void frontend::DumpTaggedParserAtomIndex(
     return;
   }
 
-  if (taggedIndex.isStaticParserString1()) {
-    json.property("tag", "Static1");
-    auto index = taggedIndex.toStaticParserString1();
+  if (taggedIndex.isLength1StaticParserString()) {
+    json.property("tag", "Length1Static");
+    auto index = taggedIndex.toLength1StaticParserString();
     GenericPrinter& out = json.beginStringProperty("atom");
-    WellKnownParserAtoms::getStatic1(index)->dumpCharsNoQuote(out);
+    WellKnownParserAtoms::getLength1Static(index)->dumpCharsNoQuote(out);
     json.endString();
     return;
   }
 
-  if (taggedIndex.isStaticParserString2()) {
-    json.property("tag", "Static2");
-    auto index = taggedIndex.toStaticParserString2();
+  if (taggedIndex.isLength2StaticParserString()) {
+    json.property("tag", "Length2Static");
+    auto index = taggedIndex.toLength2StaticParserString();
     GenericPrinter& out = json.beginStringProperty("atom");
-    WellKnownParserAtoms::getStatic2(index)->dumpCharsNoQuote(out);
+    WellKnownParserAtoms::getLength2Static(index)->dumpCharsNoQuote(out);
     json.endString();
     return;
   }
@@ -1930,15 +1930,15 @@ void frontend::DumpTaggedParserAtomIndexNoQuote(
     return;
   }
 
-  if (taggedIndex.isStaticParserString1()) {
-    auto index = taggedIndex.toStaticParserString1();
-    WellKnownParserAtoms::getStatic1(index)->dumpCharsNoQuote(out);
+  if (taggedIndex.isLength1StaticParserString()) {
+    auto index = taggedIndex.toLength1StaticParserString();
+    WellKnownParserAtoms::getLength1Static(index)->dumpCharsNoQuote(out);
     return;
   }
 
-  if (taggedIndex.isStaticParserString2()) {
-    auto index = taggedIndex.toStaticParserString2();
-    WellKnownParserAtoms::getStatic2(index)->dumpCharsNoQuote(out);
+  if (taggedIndex.isLength2StaticParserString()) {
+    auto index = taggedIndex.toLength2StaticParserString();
+    WellKnownParserAtoms::getLength2Static(index)->dumpCharsNoQuote(out);
     return;
   }
 
@@ -2758,13 +2758,13 @@ JSAtom* CompilationAtomCache::getExistingAtomAt(
     return GetWellKnownAtom(cx, index);
   }
 
-  if (taggedIndex.isStaticParserString1()) {
-    auto index = taggedIndex.toStaticParserString1();
+  if (taggedIndex.isLength1StaticParserString()) {
+    auto index = taggedIndex.toLength1StaticParserString();
     return cx->staticStrings().getUnit(char16_t(index));
   }
 
-  MOZ_ASSERT(taggedIndex.isStaticParserString2());
-  auto index = taggedIndex.toStaticParserString2();
+  MOZ_ASSERT(taggedIndex.isLength2StaticParserString());
+  auto index = taggedIndex.toLength2StaticParserString();
   return cx->staticStrings().getLength2FromIndex(size_t(index));
 }
 

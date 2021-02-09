@@ -88,11 +88,11 @@ void TaggedParserAtomIndex::validateRaw() {
   } else if (isWellKnownAtomId()) {
     MOZ_ASSERT(uint32_t(toWellKnownAtomId()) <
                uint32_t(WellKnownAtomId::Limit));
-  } else if (isStaticParserString1()) {
-    MOZ_ASSERT(size_t(toStaticParserString1()) <
+  } else if (isLength1StaticParserString()) {
+    MOZ_ASSERT(size_t(toLength1StaticParserString()) <
                WellKnownParserAtoms_ROM::ASCII_STATIC_LIMIT);
-  } else if (isStaticParserString2()) {
-    MOZ_ASSERT(size_t(toStaticParserString2()) <
+  } else if (isLength2StaticParserString()) {
+    MOZ_ASSERT(size_t(toLength2StaticParserString()) <
                WellKnownParserAtoms_ROM::NUM_LENGTH2_ENTRIES);
   } else {
     MOZ_ASSERT(isNull());
@@ -408,12 +408,14 @@ const ParserAtom* WellKnownParserAtoms::getWellKnown(
 }
 
 /* static */
-const ParserAtom* WellKnownParserAtoms::getStatic1(StaticParserString1 s) {
+const ParserAtom* WellKnownParserAtoms::getLength1Static(
+    Length1StaticParserString s) {
   return &WellKnownParserAtoms::rom_.length1Table[size_t(s)];
 }
 
 /* static */
-const ParserAtom* WellKnownParserAtoms::getStatic2(StaticParserString2 s) {
+const ParserAtom* WellKnownParserAtoms::getLength2Static(
+    Length2StaticParserString s) {
   return &WellKnownParserAtoms::rom_.length2Table[size_t(s)];
 }
 
@@ -421,12 +423,14 @@ const ParserAtom* ParserAtomsTable::getWellKnown(WellKnownAtomId atomId) const {
   return wellKnownTable_.getWellKnown(atomId);
 }
 
-const ParserAtom* ParserAtomsTable::getStatic1(StaticParserString1 s) const {
-  return WellKnownParserAtoms::getStatic1(s);
+const ParserAtom* ParserAtomsTable::getLength1Static(
+    Length1StaticParserString s) const {
+  return WellKnownParserAtoms::getLength1Static(s);
 }
 
-const ParserAtom* ParserAtomsTable::getStatic2(StaticParserString2 s) const {
-  return WellKnownParserAtoms::getStatic2(s);
+const ParserAtom* ParserAtomsTable::getLength2Static(
+    Length2StaticParserString s) const {
+  return WellKnownParserAtoms::getLength2Static(s);
 }
 
 ParserAtom* ParserAtomsTable::getParserAtom(ParserAtomIndex index) const {
@@ -443,12 +447,12 @@ const ParserAtom* ParserAtomsTable::getParserAtom(
     return getWellKnown(index.toWellKnownAtomId());
   }
 
-  if (index.isStaticParserString1()) {
-    return getStatic1(index.toStaticParserString1());
+  if (index.isLength1StaticParserString()) {
+    return getLength1Static(index.toLength1StaticParserString());
   }
 
-  if (index.isStaticParserString2()) {
-    return getStatic2(index.toStaticParserString2());
+  if (index.isLength2StaticParserString()) {
+    return getLength2Static(index.toLength2StaticParserString());
   }
 
   MOZ_ASSERT(index.isNull());
@@ -581,13 +585,13 @@ JSAtom* ParserAtomsTable::toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
     return GetWellKnownAtom(cx, index.toWellKnownAtomId());
   }
 
-  if (index.isStaticParserString1()) {
-    char16_t ch = static_cast<char16_t>(index.toStaticParserString1());
+  if (index.isLength1StaticParserString()) {
+    char16_t ch = static_cast<char16_t>(index.toLength1StaticParserString());
     return cx->staticStrings().getUnit(ch);
   }
 
-  MOZ_ASSERT(index.isStaticParserString2());
-  size_t s = static_cast<size_t>(index.toStaticParserString2());
+  MOZ_ASSERT(index.isLength2StaticParserString());
+  size_t s = static_cast<size_t>(index.toLength2StaticParserString());
   return cx->staticStrings().getLength2FromIndex(s);
 }
 
