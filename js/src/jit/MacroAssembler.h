@@ -3394,6 +3394,18 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void atomicLoad64(const Synchronization& sync, const BaseIndex& mem,
                     Register64 output) DEFINED_ON(arm);
 
+  // 64-bit atomic store. On 64-bit systems, use regular store with
+  // Synchronization::Store, not this method.
+  //
+  // x86: `value` must be ecx:ebx; `temp` must be edx:eax.
+  // ARM: `value` and `temp` must be (even,odd) pairs.
+
+  void atomicStore64(const Synchronization& sync, const Address& mem,
+                     Register64 value, Register64 temp) DEFINED_ON(x86, arm);
+
+  void atomicStore64(const Synchronization& sync, const BaseIndex& mem,
+                     Register64 value, Register64 temp) DEFINED_ON(x86, arm);
+
   // ========================================================================
   // Wasm atomic operations.
   //

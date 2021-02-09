@@ -4895,6 +4895,59 @@ class LAtomicLoad64 : public LInstructionHelper<1, 2, 1 + INT64_PIECES> {
   LInt64Definition temp64() { return getInt64Temp(1); }
 };
 
+class LAtomicStore64 : public LInstructionHelper<0, 3, 2 * INT64_PIECES + 1> {
+ public:
+  LIR_HEADER(AtomicStore64)
+
+  // x64, ARM64
+  LAtomicStore64(const LAllocation& elements, const LAllocation& index,
+                 const LAllocation& value, const LInt64Definition& temp1)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, elements);
+    setOperand(1, index);
+    setOperand(2, value);
+    setInt64Temp(0, temp1);
+    setInt64Temp(INT64_PIECES, LInt64Definition::BogusTemp());
+    setTemp(2 * INT64_PIECES, LDefinition::BogusTemp());
+  }
+
+  // ARM32
+  LAtomicStore64(const LAllocation& elements, const LAllocation& index,
+                 const LAllocation& value, const LInt64Definition& temp1,
+                 const LInt64Definition& temp2)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, elements);
+    setOperand(1, index);
+    setOperand(2, value);
+    setInt64Temp(0, temp1);
+    setInt64Temp(INT64_PIECES, temp2);
+    setTemp(2 * INT64_PIECES, LDefinition::BogusTemp());
+  }
+
+  // x86
+  LAtomicStore64(const LAllocation& elements, const LAllocation& index,
+                 const LAllocation& value, const LInt64Definition& temp1,
+                 const LDefinition& tempLow)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, elements);
+    setOperand(1, index);
+    setOperand(2, value);
+    setInt64Temp(0, temp1);
+    setInt64Temp(INT64_PIECES, LInt64Definition::BogusTemp());
+    setTemp(2 * INT64_PIECES, tempLow);
+  }
+
+  const MStoreUnboxedScalar* mir() const {
+    return mir_->toStoreUnboxedScalar();
+  }
+  const LAllocation* elements() { return getOperand(0); }
+  const LAllocation* index() { return getOperand(1); }
+  const LAllocation* value() { return getOperand(2); }
+  LInt64Definition temp1() { return getInt64Temp(0); }
+  LInt64Definition temp2() { return getInt64Temp(INT64_PIECES); }
+  const LDefinition* tempLow() { return getTemp(2 * INT64_PIECES); }
+};
+
 class LEffectiveAddress : public LInstructionHelper<1, 2, 0> {
  public:
   LIR_HEADER(EffectiveAddress);

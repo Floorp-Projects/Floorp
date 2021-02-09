@@ -61,6 +61,7 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared {
   void lowerBigIntMod(MBigIntMod* ins);
 
   void lowerAtomicLoad64(MLoadUnboxedScalar* ins);
+  void lowerAtomicStore64(MStoreUnboxedScalar* ins);
 
   void lowerPhi(MPhi* phi);
 

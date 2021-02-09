@@ -149,6 +149,15 @@ void LIRGeneratorX64::lowerAtomicLoad64(MLoadUnboxedScalar* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGeneratorX64::lowerAtomicStore64(MStoreUnboxedScalar* ins) {
+  LUse elements = useRegister(ins->elements());
+  LAllocation index =
+      useRegisterOrIndexConstant(ins->index(), ins->writeType());
+  LAllocation value = useRegister(ins->value());
+
+  add(new (alloc()) LAtomicStore64(elements, index, value, tempInt64()), ins);
+}
+
 void LIRGenerator::visitWasmUnsignedToDouble(MWasmUnsignedToDouble* ins) {
   MOZ_ASSERT(ins->input()->type() == MIRType::Int32);
   LWasmUint32ToDouble* lir =

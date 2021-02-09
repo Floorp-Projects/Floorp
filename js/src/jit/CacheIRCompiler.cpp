@@ -7746,14 +7746,20 @@ bool CacheIRCompiler::emitAtomicsLoadResult(ObjOperandId objId,
 
 bool CacheIRCompiler::emitAtomicsStoreResult(ObjOperandId objId,
                                              IntPtrOperandId indexId,
-                                             Int32OperandId valueId,
+                                             uint32_t valueId,
                                              Scalar::Type elementType) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   AutoOutputRegister output(*this);
   Register obj = allocator.useRegister(masm, objId);
   Register index = allocator.useRegister(masm, indexId);
-  Register value = allocator.useRegister(masm, valueId);
+  Maybe<Register> valueInt32;
+  Maybe<Register> valueBigInt;
+  if (!Scalar::isBigIntType(elementType)) {
+    valueInt32.emplace(allocator.useRegister(masm, Int32OperandId(valueId)));
+  } else {
+    valueBigInt.emplace(allocator.useRegister(masm, BigIntOperandId(valueId)));
+  }
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   // Not enough registers on X86.
@@ -7768,19 +7774,40 @@ bool CacheIRCompiler::emitAtomicsStoreResult(ObjOperandId objId,
   masm.loadArrayBufferViewLengthPtr(obj, scratch);
   masm.spectreBoundsCheckPtr(index, scratch, spectreTemp, failure->label());
 
-  // Load the elements vector.
-  masm.loadPtr(Address(obj, ArrayBufferViewObject::dataOffset()), scratch);
+  if (!Scalar::isBigIntType(elementType)) {
+    // Load the elements vector.
+    masm.loadPtr(Address(obj, ArrayBufferViewObject::dataOffset()), scratch);
 
-  // Store the value.
-  BaseIndex dest(scratch, index, ScaleFromScalarType(elementType));
+    // Store the value.
+    BaseIndex dest(scratch, index, ScaleFromScalarType(elementType));
 
-  auto sync = Synchronization::Store();
+    auto sync = Synchronization::Store();
 
-  masm.memoryBarrierBefore(sync);
-  masm.storeToTypedIntArray(elementType, value, dest);
-  masm.memoryBarrierAfter(sync);
+    masm.memoryBarrierBefore(sync);
+    masm.storeToTypedIntArray(elementType, *valueInt32, dest);
+    masm.memoryBarrierAfter(sync);
 
-  masm.tagValue(JSVAL_TYPE_INT32, value, output.valueReg());
+    masm.tagValue(JSVAL_TYPE_INT32, *valueInt32, output.valueReg());
+  } else {
+    // See comment in emitAtomicsCompareExchange for why we use an ABI call.
+
+    LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(),
+                                 liveVolatileFloatRegs());
+    volatileRegs.takeUnchecked(output.valueReg());
+    volatileRegs.takeUnchecked(scratch);
+    masm.PushRegsInMask(volatileRegs);
+
+    using Fn = void (*)(TypedArrayObject*, size_t, BigInt*);
+    masm.setupUnalignedABICall(scratch);
+    masm.passABIArg(obj);
+    masm.passABIArg(index);
+    masm.passABIArg(*valueBigInt);
+    masm.callWithABI<Fn, jit::AtomicsStore64>();
+
+    masm.PopRegsInMask(volatileRegs);
+
+    masm.tagValue(JSVAL_TYPE_BIGINT, *valueBigInt, output.valueReg());
+  }
 
   return true;
 }

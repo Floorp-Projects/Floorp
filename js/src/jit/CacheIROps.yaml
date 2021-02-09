@@ -1410,7 +1410,7 @@
   args:
     obj: ObjId
     index: IntPtrId
-    value: Int32Id
+    value: RawId
     elementType: ScalarTypeImm
 
 - name: AtomicsIsLockFreeResult
