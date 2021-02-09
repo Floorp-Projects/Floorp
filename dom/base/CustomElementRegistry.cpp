@@ -1105,14 +1105,12 @@ already_AddRefed<Promise> CustomElementRegistry::WhenDefined(
     return promise.forget();
   }
 
-  auto entry = mWhenDefinedPromiseMap.LookupForAdd(nameAtom);
-  if (entry) {
-    promise = entry.Data();
-  } else {
-    entry.OrInsert([&promise]() { return promise; });
-  }
-
-  return promise.forget();
+  return mWhenDefinedPromiseMap
+      .WithEntryHandle(nameAtom,
+                       [&promise](auto&& entry) -> RefPtr<Promise> {
+                         return entry.OrInsert(std::move(promise));
+                       })
+      .forget();
 }
 
 namespace {
