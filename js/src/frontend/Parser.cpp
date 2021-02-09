@@ -1692,7 +1692,11 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
     ModuleSharedContext* modulesc) {
   MOZ_ASSERT(checkOptionsCalled_);
 
-  this->stencil_.moduleMetadata.emplace();
+  this->stencil_.moduleMetadata = MakeUnique<StencilModuleMetadata>();
+  if (!this->stencil_.moduleMetadata) {
+    js::ReportOutOfMemory(cx_);
+    return null();
+  }
 
   SourceParseContext modulepc(this, modulesc, nullptr);
   if (!modulepc.init()) {
@@ -1701,7 +1705,7 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
 
   ParseContext::VarScope varScope(this);
   if (!varScope.init(pc_)) {
-    return nullptr;
+    return null();
   }
 
   ModuleNodeType moduleNode = handler_.newModule(pos());
