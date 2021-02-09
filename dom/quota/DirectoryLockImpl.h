@@ -17,7 +17,8 @@ namespace mozilla::dom::quota {
 
 enum class ShouldUpdateLockIdTableFlag { No, Yes };
 
-class DirectoryLockImpl final : public DirectoryLock {
+class DirectoryLockImpl final : public ClientDirectoryLock,
+                                public UniversalDirectoryLock {
   const NotNull<RefPtr<QuotaManager>> mQuotaManager;
 
   const Nullable<PersistenceType> mPersistenceType;
@@ -53,7 +54,7 @@ class DirectoryLockImpl final : public DirectoryLock {
                     bool aInternal,
                     ShouldUpdateLockIdTableFlag aShouldUpdateLockIdTableFlag);
 
-  static RefPtr<DirectoryLockImpl> Create(
+  static RefPtr<ClientDirectoryLock> Create(
       MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
       PersistenceType aPersistenceType,
       const quota::GroupAndOrigin& aGroupAndOrigin, Client::Type aClientType,
@@ -66,7 +67,7 @@ class DirectoryLockImpl final : public DirectoryLock {
                   ShouldUpdateLockIdTableFlag::Yes);
   }
 
-  static RefPtr<DirectoryLockImpl> CreateForEviction(
+  static RefPtr<OriginDirectoryLock> CreateForEviction(
       MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
       PersistenceType aPersistenceType,
       const quota::GroupAndOrigin& aGroupAndOrigin) {
@@ -82,7 +83,7 @@ class DirectoryLockImpl final : public DirectoryLock {
                   ShouldUpdateLockIdTableFlag::No);
   }
 
-  static RefPtr<DirectoryLockImpl> CreateInternal(
+  static RefPtr<UniversalDirectoryLock> CreateInternal(
       MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
       const Nullable<PersistenceType>& aPersistenceType,
       const OriginScope& aOriginScope,
@@ -99,16 +100,6 @@ class DirectoryLockImpl final : public DirectoryLock {
   {
   }
 #endif
-
-  const Nullable<PersistenceType>& NullablePersistenceType() const {
-    return mPersistenceType;
-  }
-
-  const OriginScope& GetOriginScope() const { return mOriginScope; }
-
-  const Nullable<Client::Type>& NullableClientType() const {
-    return mClientType;
-  }
 
   bool IsInternal() const { return mInternal; }
 
@@ -170,47 +161,64 @@ class DirectoryLockImpl final : public DirectoryLock {
     mInvalidated.EnsureFlipped();
   }
 
-  NS_INLINE_DECL_REFCOUNTING(DirectoryLockImpl, override)
-
   // DirectoryLock interface
 
-  int64_t Id() const { return mId; }
+  NS_INLINE_DECL_REFCOUNTING(DirectoryLockImpl, override)
 
-  PersistenceType GetPersistenceType() const {
+  int64_t Id() const override { return mId; }
+
+  void Acquire(RefPtr<OpenDirectoryListener> aOpenListener) override;
+
+  void AcquireImmediately() override;
+
+  RefPtr<ClientDirectoryLock> Specialize(
+      PersistenceType aPersistenceType,
+      const quota::GroupAndOrigin& aGroupAndOrigin,
+      Client::Type aClientType) const override;
+
+  void Log() const override;
+
+  // OriginDirectoryLock interface
+
+  PersistenceType GetPersistenceType() const override {
     MOZ_DIAGNOSTIC_ASSERT(!mPersistenceType.IsNull());
 
     return mPersistenceType.Value();
   }
 
-  quota::GroupAndOrigin GroupAndOrigin() const {
+  quota::GroupAndOrigin GroupAndOrigin() const override {
     MOZ_DIAGNOSTIC_ASSERT(!mGroup.IsEmpty());
 
     return quota::GroupAndOrigin{mGroup, nsCString(Origin())};
   }
 
-  const nsACString& Origin() const {
+  const nsACString& Origin() const override {
     MOZ_DIAGNOSTIC_ASSERT(mOriginScope.IsOrigin());
     MOZ_DIAGNOSTIC_ASSERT(!mOriginScope.GetOrigin().IsEmpty());
 
     return mOriginScope.GetOrigin();
   }
 
-  Client::Type ClientType() const {
+  // ClientDirectoryLock interface
+
+  Client::Type ClientType() const override {
     MOZ_DIAGNOSTIC_ASSERT(!mClientType.IsNull());
     MOZ_DIAGNOSTIC_ASSERT(mClientType.Value() < Client::TypeMax());
 
     return mClientType.Value();
   }
 
-  void Acquire(RefPtr<OpenDirectoryListener> aOpenListener);
+  // UniversalDirectoryLock interface
 
-  void Acquire();
+  const Nullable<PersistenceType>& NullablePersistenceType() const override {
+    return mPersistenceType;
+  }
 
-  RefPtr<DirectoryLock> Specialize(PersistenceType aPersistenceType,
-                                   const quota::GroupAndOrigin& aGroupAndOrigin,
-                                   Client::Type aClientType) const;
+  const OriginScope& GetOriginScope() const override { return mOriginScope; }
 
-  void Log() const;
+  const Nullable<Client::Type>& NullableClientType() const override {
+    return mClientType;
+  }
 
  private:
   ~DirectoryLockImpl();
