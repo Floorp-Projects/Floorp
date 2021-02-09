@@ -334,6 +334,7 @@ class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable {
    protected:
     template <typename... Args>
     void InsertInternal(Args&&... aArgs) {
+      MOZ_RELEASE_ASSERT(!HasEntry());
       mEntryHandle.Insert([&](PLDHashEntryHdr* entry) {
         new (mozilla::KnownNotNull, entry) EntryType(
             EntryType::KeyToPointer(mKey), std::forward<Args>(aArgs)...);
@@ -354,7 +355,8 @@ class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable {
   auto WithEntryHandle(KeyType aKey, F&& aFunc)
       -> std::invoke_result_t<F, EntryHandle&&> {
     return this->mTable.WithEntryHandle(
-        EntryType::KeyToPointer(aKey), [&aKey, &aFunc](auto entryHandle) {
+        EntryType::KeyToPointer(aKey),
+        [&aKey, &aFunc](auto entryHandle) -> decltype(auto) {
           return std::forward<F>(aFunc)(
               EntryHandle{aKey, std::move(entryHandle)});
         });
