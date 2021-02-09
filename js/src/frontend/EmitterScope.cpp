@@ -176,7 +176,7 @@ NameLocation EmitterScope::searchAndCache(BytecodeEmitter* bce,
     inCurrentScript = false;
     loc = Some(
         bce->compilationState.scopeContext.searchInDelazificationEnclosingScope(
-            bce->cx, bce->stencil.input, bce->parserAtoms(), name, hops));
+            name, hops));
   }
 
   // Each script has its own frame. A free name that is accessed
