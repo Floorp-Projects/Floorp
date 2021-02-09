@@ -78,6 +78,7 @@ bool DoTrialInlining(JSContext* cx, BaselineFrame* frame) {
           "Trial inlining for %s script %s:%u:%u (%p) (inliningRoot=%p)",
           (isRecursive ? "inner" : "outer"), script->filename(),
           script->lineno(), script->column(), frame->script(), root);
+  JitSpewIndent spewIndent(JitSpew_WarpTrialInlining);
 
   TrialInliner inliner(cx, script, icScript, root);
   return inliner.tryInlining();
@@ -400,16 +401,33 @@ Maybe<InlinableSetterData> FindInlinableSetterData(ICCacheIRStub* stub) {
 /*static*/
 bool TrialInliner::canInline(JSFunction* target, HandleScript caller) {
   if (!target->hasJitScript()) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: no JIT script");
     return false;
   }
   JSScript* script = target->nonLazyScript();
-  if (!script->jitScript()->hasBaselineScript() || script->uninlineable() ||
-      !script->canIonCompile() || script->needsArgsObj() ||
-      script->isDebuggee()) {
+  if (!script->jitScript()->hasBaselineScript()) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: no BaselineScript");
+    return false;
+  }
+  if (script->uninlineable()) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: uninlineable flag");
+    return false;
+  }
+  if (!script->canIonCompile()) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: can't ion-compile");
+    return false;
+  }
+  if (script->needsArgsObj()) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: needs args obj");
+    return false;
+  }
+  if (script->isDebuggee()) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: is debuggee");
     return false;
   }
   // Don't inline cross-realm calls.
   if (target->realm() != caller->realm()) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: cross-realm call");
     return false;
   }
   return true;
@@ -417,13 +435,14 @@ bool TrialInliner::canInline(JSFunction* target, HandleScript caller) {
 
 bool TrialInliner::shouldInline(JSFunction* target, ICCacheIRStub* stub,
                                 BytecodeLocation loc) {
-  if (!canInline(target, script_)) {
-    return false;
-  }
   JitSpew(JitSpew_WarpTrialInlining,
           "Inlining candidate JSOp::%s: callee script %s:%u:%u",
           CodeName(loc.getOp()), target->nonLazyScript()->filename(),
           target->nonLazyScript()->lineno(), target->nonLazyScript()->column());
+
+  if (!canInline(target, script_)) {
+    return false;
+  }
 
   // Don't inline (direct) recursive calls. This still allows recursion if
   // called through another function (f => g => f).
