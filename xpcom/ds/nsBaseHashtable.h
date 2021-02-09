@@ -193,7 +193,7 @@ class nsBaseHashtable
    * constructed.
    *
    * This function can only be used if DataType is default-constructible. Use
-   * LookupForAdd with non-default-constructible DataType for now.
+   * WithEntryHandle with non-default-constructible DataType for now.
    *
    * TODO: Add a function GetOrInsertWith that will use a function for
    *       DataType construction.
@@ -376,105 +376,10 @@ class nsBaseHashtable
    * This is useful for cases where you want to read/write the value of an entry
    * and (optionally) remove the entry without having to do multiple hashtable
    * lookups.  If you want to insert a new entry if one does not exist, then use
-   * LookupForAdd instead, see below.
+   * WithEntryHandle instead, see below.
    */
   [[nodiscard]] LookupResult Lookup(KeyType aKey) {
     return LookupResult(this->GetEntry(aKey), *this);
-  }
-
-  struct EntryPtr {
-   private:
-    EntryType* mEntry;
-    bool mExistingEntry;
-    nsBaseHashtable& mTable;
-    // For debugging purposes
-#ifdef DEBUG
-    uint32_t mTableGeneration;
-    bool mDidInitNewEntry;
-#endif
-
-   public:
-    EntryPtr(nsBaseHashtable& aTable, EntryType* aEntry, bool aExistingEntry)
-        : mEntry(aEntry),
-          mExistingEntry(aExistingEntry),
-          mTable(aTable)
-#ifdef DEBUG
-          ,
-          mTableGeneration(aTable.GetGeneration()),
-          mDidInitNewEntry(false)
-#endif
-    {
-    }
-    ~EntryPtr() {
-      MOZ_ASSERT(mExistingEntry || mDidInitNewEntry || !mEntry,
-                 "Forgot to call OrInsert() or OrRemove() on a new entry");
-    }
-
-    // Is there something stored in the table already?
-    explicit operator bool() const {
-      MOZ_ASSERT(mTableGeneration == mTable.GetGeneration());
-      return mExistingEntry;
-    }
-
-    template <class F>
-    DataType& OrInsert(F func) {
-      MOZ_ASSERT(mTableGeneration == mTable.GetGeneration());
-      MOZ_ASSERT(mEntry);
-      if (!mExistingEntry) {
-        mEntry->mData = Converter::Wrap(func());
-#ifdef DEBUG
-        mDidInitNewEntry = true;
-#endif
-      }
-      return mEntry->mData;
-    }
-
-    void OrRemove() {
-      MOZ_ASSERT(mTableGeneration == mTable.GetGeneration());
-      MOZ_ASSERT(mEntry);
-      mTable.RemoveEntry(mEntry);
-      mEntry = nullptr;
-    }
-
-    [[nodiscard]] DataType& Data() {
-      MOZ_ASSERT(mTableGeneration == mTable.GetGeneration());
-      MOZ_ASSERT(mEntry);
-      return mEntry->mData;
-    }
-  };
-
-  /**
-   * Looks up aKey in the hashtable and returns an object that allows you to
-   * insert a new entry into the hashtable for that key if an existing entry
-   * isn't found for it.
-   *
-   * This function can only be used if DataType is default-constructible at the
-   * moment.
-   *
-   * A typical usage of this API looks like this:
-   *
-   *   auto insertedValue = table.LookupForAdd(key).OrInsert([]() {
-   *     return newValue;
-   *   });
-   *
-   *   auto p = table.LookupForAdd(key);
-   *   if (p) {
-   *     // The entry already existed in the table.
-   *     DoSomething(p.Data());
-   *   } else {
-   *     // An existing entry wasn't found, store a new entry in the hashtable.
-   *     p.OrInsert([]() { return newValue; });
-   *   }
-   *
-   * We ensure that the hashtable isn't modified before EntryPtr method calls.
-   * This is useful for cases where you want to insert a new entry into the
-   * hashtable if one doesn't exist before but would like to avoid two hashtable
-   * lookups.
-   */
-  [[nodiscard]] EntryPtr LookupForAdd(KeyType aKey) {
-    auto count = Count();
-    EntryType* ent = this->PutEntry(aKey);
-    return EntryPtr(*this, ent, count == Count());
   }
 
   /**
