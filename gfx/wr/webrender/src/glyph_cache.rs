@@ -56,6 +56,8 @@ pub enum CachedGlyphData {
 #[derive(Default)]
 pub struct GlyphKeyCacheInfo {
     eviction_notice: EvictionNotice,
+    #[cfg(debug_assertions)]
+    #[allow(dead_code)]
     last_frame_used: FrameId,
 }
 
@@ -102,7 +104,10 @@ impl GlyphCache {
         let cache = self.glyph_key_caches
                         .entry(font)
                         .or_insert_with(GlyphKeyCache::new);
-        cache.user_data.last_frame_used = self.current_frame;
+        #[cfg(debug_assertions)]
+        {
+            cache.user_data.last_frame_used = self.current_frame;
+        }
         cache
     }
 
