@@ -104,10 +104,14 @@ static bool DocAllResultMatch(Element* aElement, int32_t aNamespaceID,
 }
 
 nsContentList* HTMLAllCollection::GetDocumentAllList(const nsAString& aID) {
-  return mNamedMap.LookupForAdd(aID).OrInsert([this, &aID]() {
-    RefPtr<nsAtom> id = NS_Atomize(aID);
-    return new nsContentList(mDocument, DocAllResultMatch, nullptr, nullptr,
-                             true, id);
+  return mNamedMap.WithEntryHandle(aID, [&](auto&& entry) {
+    return entry
+        .OrInsertWith([this, &aID] {
+          RefPtr<nsAtom> id = NS_Atomize(aID);
+          return new nsContentList(mDocument, DocAllResultMatch, nullptr,
+                                   nullptr, true, id);
+        })
+        .get();
   });
 }
 
