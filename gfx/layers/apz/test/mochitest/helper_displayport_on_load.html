@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html id="rcd_docelement">
+<head>
+  <title>The RCD-RSF should get a displayport with non-empty margins on page load</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+<style>
+    .spacer {
+        height: 500vh;
+    }
+</style>
+</head>
+<body>
+ <div class="spacer"></div>
+</body>
+<script type="application/javascript">
+async function test() {
+  let heightMultiplier = SpecialPowers.getCharPref("apz.y_stationary_size_multiplier");
+  if (getHitTestConfig().isWebRender) {
+    // With WebRender, the effective height multiplier can be reduced
+    // for alignment reasons. The reduction should be no more than a
+    // factor of two.
+    heightMultiplier /= 2;
+  }
+  info("effective displayport height multipler is " + heightMultiplier + "\n");
+  let clientHeight = document.documentElement.clientHeight;
+  info("clientHeight is " + clientHeight + "\n");
+  let scrollHeight = document.documentElement.scrollHeight;
+  ok(scrollHeight >= (heightMultiplier * clientHeight),
+     "For this test to work, the page needs to have enough vertical scroll range " +
+     "to get the maximum allowed displayport");
+  let dp = getLastContentDisplayportFor("rcd_docelement");
+  info("displayport is " + JSON.stringify(dp) + "\n");
+  ok(dp.h >= (heightMultiplier * clientHeight),
+     "Page's root scroll frame should get nonempty displayport margins on page load");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>
