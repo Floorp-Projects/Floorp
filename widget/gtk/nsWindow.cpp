@@ -1080,6 +1080,7 @@ void nsWindow::AddCSDDecorationSize(int* aWidth, int* aHeight) {
   }
 }
 
+#ifdef MOZ_WAYLAND
 bool nsWindow::GetCSDDecorationOffset(int* aDx, int* aDy) {
   if (mSizeState == nsSizeMode_Normal &&
       mCSDSupportLevel == GTK_DECORATION_CLIENT && mDrawInTitlebar) {
@@ -1091,6 +1092,7 @@ bool nsWindow::GetCSDDecorationOffset(int* aDx, int* aDy) {
     return false;
   }
 }
+#endif
 
 void nsWindow::ApplySizeConstraints(void) {
   if (mShell) {

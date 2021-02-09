@@ -29,7 +29,7 @@
  *  We need to wait until wl_surface of mContainer is created
  *  and then we create and attach our wl_subsurface to it.
  *
- *  wl_subsurface creation has these steps:
+ *  First wl_subsurface creation has these steps:
  *
  *  1) moz_container_wayland_size_allocate() handler is called when
  *     mContainer size/position is known.
@@ -41,6 +41,11 @@
  *     when wl_surface owned by mozContainer is ready.
  *     We call initial_draw_cbs() handler and we can create our wl_subsurface
  *     on top of wl_surface owned by mozContainer.
+ *
+ *  When MozContainer hides/show again, moz_container_wayland_size_allocate()
+ *  handler may not be called as MozContainer size is set. So after first
+ *  show/hide sequence use moz_container_wayland_map_event() to create
+ *  wl_subsurface of MozContainer.
  */
 
 #include "MozContainer.h"
@@ -76,6 +81,8 @@ static void moz_container_wayland_destroy(GtkWidget* widget);
 
 /* widget class methods */
 static void moz_container_wayland_map(GtkWidget* widget);
+static gboolean moz_container_wayland_map_event(GtkWidget* widget,
+                                                GdkEventAny* event);
 static void moz_container_wayland_unmap(GtkWidget* widget);
 static void moz_container_wayland_size_allocate(GtkWidget* widget,
                                                 GtkAllocation* allocation);
@@ -94,6 +101,22 @@ static nsWindow* moz_container_get_nsWindow(MozContainer* container) {
 // Imlemented in MozContainer.cpp
 void moz_container_realize(GtkWidget* widget);
 
+// Invalidate gtk wl_surface to commit changes to wl_subsurface.
+// wl_subsurface changes are effective when parent surface is commited.
+static void moz_container_wayland_invalidate(MozContainer* container) {
+  LOGWAYLAND(("moz_container_wayland_invalidate [%p]\n", (void*)container));
+
+  GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
+  if (!window) {
+    LOGWAYLAND(("    Failed - missing GdkWindow!\n"));
+    return;
+  }
+
+  GdkRectangle rect = (GdkRectangle){0, 0, gdk_window_get_width(window),
+                                     gdk_window_get_height(window)};
+  gdk_window_invalidate_rect(window, &rect, true);
+}
+
 static void moz_container_wayland_move_locked(MozContainer* container, int dx,
                                               int dy) {
   LOGWAYLAND(
@@ -110,15 +133,6 @@ static void moz_container_wayland_move_locked(MozContainer* container, int dx,
   wl_subsurface_set_position(wl_container->subsurface,
                              wl_container->subsurface_dx,
                              wl_container->subsurface_dy);
-
-  GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
-  if (window) {
-    GdkRectangle rect = (GdkRectangle){0, 0, gdk_window_get_width(window),
-                                       gdk_window_get_height(window)};
-    // wl_subsurface_set_position is actually property of parent surface
-    // which is effective when parent surface is commited.
-    gdk_window_invalidate_rect(window, &rect, true);
-  }
 }
 
 // This is called from layout/compositor code only with
@@ -140,6 +154,7 @@ void moz_container_wayland_class_init(MozContainerClass* klass) {
   GtkWidgetClass* widget_class = GTK_WIDGET_CLASS(klass);
 
   widget_class->map = moz_container_wayland_map;
+  widget_class->map_event = moz_container_wayland_map_event;
   widget_class->destroy = moz_container_wayland_destroy;
   widget_class->unmap = moz_container_wayland_unmap;
   widget_class->realize = moz_container_realize;
@@ -157,6 +172,7 @@ void moz_container_wayland_init(MozContainerWayland* container) {
   container->surface_needs_clear = true;
   container->subsurface_dx = 0;
   container->subsurface_dy = 0;
+  container->before_first_size_alloc = true;
   container->initial_draw_cbs.clear();
   container->container_lock = new mozilla::Mutex("MozContainer lock");
 }
@@ -212,6 +228,30 @@ static void moz_container_wayland_unmap_internal(MozContainer* container) {
   LOGWAYLAND(("%s [%p]\n", __FUNCTION__, (void*)container));
 }
 
+static gboolean moz_container_wayland_map_event(GtkWidget* widget,
+                                                GdkEventAny* event) {
+  MozContainerWayland* wl_container = &MOZ_CONTAINER(widget)->wl_container;
+  LOGWAYLAND(("%s [%p]\n", __FUNCTION__, (void*)MOZ_CONTAINER(widget)));
+
+  // Don't create wl_subsurface in map_event when it's already created or
+  // if we create it for the first time.
+  if (wl_container->ready_to_draw || wl_container->before_first_size_alloc) {
+    return FALSE;
+  }
+
+  MutexAutoLock lock(*wl_container->container_lock);
+  if (!wl_container->surface) {
+    if (!moz_container_wayland_surface_create_locked(MOZ_CONTAINER(widget))) {
+      return FALSE;
+    }
+  }
+
+  moz_container_wayland_set_scale_factor_locked(MOZ_CONTAINER(widget));
+  moz_container_wayland_set_opaque_region_locked(MOZ_CONTAINER(widget));
+  moz_container_wayland_invalidate(MOZ_CONTAINER(widget));
+  return FALSE;
+}
+
 void moz_container_wayland_map(GtkWidget* widget) {
   LOGWAYLAND(("%s [%p]\n", __FUNCTION__, (void*)widget));
 
@@ -264,18 +304,17 @@ void moz_container_wayland_size_allocate(GtkWidget* widget,
     // We need to position our subsurface according to GdkWindow
     // when offset changes (GdkWindow is maximized for instance).
     // see gtk-clutter-embed.c for reference.
-    if (gfxPlatformGtk::GetPlatform()->IsWaylandDisplay()) {
-      MutexAutoLock lock(*container->wl_container.container_lock);
-      if (!container->wl_container.surface) {
-        if (!moz_container_wayland_surface_create_locked(container)) {
-          return;
-        }
+    MutexAutoLock lock(*container->wl_container.container_lock);
+    if (!container->wl_container.surface) {
+      if (!moz_container_wayland_surface_create_locked(container)) {
+        return;
       }
-      moz_container_wayland_set_scale_factor_locked(container);
-      moz_container_wayland_set_opaque_region_locked(container);
-      moz_container_wayland_move_locked(container, allocation->x,
-                                        allocation->y);
     }
+    moz_container_wayland_set_scale_factor_locked(container);
+    moz_container_wayland_set_opaque_region_locked(container);
+    moz_container_wayland_move_locked(container, allocation->x, allocation->y);
+    moz_container_wayland_invalidate(MOZ_CONTAINER(widget));
+    container->wl_container.before_first_size_alloc = false;
   }
 }
 
@@ -398,7 +437,7 @@ static bool moz_container_wayland_surface_create_locked(
   wl_surface_commit(wl_container->surface);
   wl_display_flush(WaylandDisplayGet()->GetDisplay());
 
-  LOGWAYLAND(("    created surface %p ID %p\n", (void*)wl_container->surface,
+  LOGWAYLAND(("    created surface %p ID %d\n", (void*)wl_container->surface,
               wl_proxy_get_id((struct wl_proxy*)wl_container->surface)));
   return true;
 }
