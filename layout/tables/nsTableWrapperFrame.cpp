@@ -566,7 +566,8 @@ nsresult nsTableWrapperFrame::GetInnerOrigin(
 void nsTableWrapperFrame::CreateReflowInputForInnerTable(
     nsPresContext* aPresContext, nsTableFrame* aTableFrame,
     const ReflowInput& aOuterRI, Maybe<ReflowInput>& aChildRI,
-    const nscoord aAvailISize) const {
+    const nscoord aAvailISize,
+    const Maybe<LogicalSize>& aContainingBlockSize) const {
   MOZ_ASSERT(InnerTableFrame() == aTableFrame);
 
   const WritingMode wm = aTableFrame->GetWritingMode();
@@ -578,21 +579,22 @@ void nsTableWrapperFrame::CreateReflowInputForInnerTable(
   Maybe<LogicalMargin> collapsePadding;
   aTableFrame->GetCollapsedBorderPadding(collapseBorder, collapsePadding);
 
-  Maybe<LogicalSize> cbSize;
-  // Propagate our stored CB size if present, minus any margins.
+  // For inner table frames, the containing block is the same as for the outer
+  // table frame, unless our caller wants a different CB size.
+  Maybe<LogicalSize> cbSize = aContainingBlockSize
+                                  ? aContainingBlockSize
+                                  : Some(aOuterRI.mContainingBlockSize);
+
+  // However, if we are a grid item, the CB size needs to subtract our margins.
   //
   // Note that inner table computed margins are always zero, they're inherited
   // by the table wrapper, so we need to get our margin from aOuterRI.
-  if (!HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
-    if (LogicalSize* cb = GetProperty(GridItemCBSizeProperty())) {
-      cbSize.emplace(*cb);
-      *cbSize -= aOuterRI.ComputedLogicalMargin(wm).Size(wm);
+  if (IsGridItem()) {
+    const LogicalMargin margin = aOuterRI.ComputedLogicalMargin(wm);
+    cbSize->ISize(wm) -= margin.IStartEnd(wm);
+    if (cbSize->BSize(wm) != NS_UNCONSTRAINEDSIZE) {
+      cbSize->BSize(wm) -= margin.BStartEnd(wm);
     }
-  }
-  if (!cbSize) {
-    // For inner table frames, the containing block is the same as for
-    // the outer table frame.
-    cbSize.emplace(aOuterRI.mContainingBlockSize);
   }
   aChildRI->Init(aPresContext, cbSize, collapseBorder, collapsePadding);
 }
@@ -766,7 +768,8 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
     // for the table frame if we are bsize constrained and the caption is above
     // or below the inner table.  Also reduce the CB size that we store for
     // our children in case we're a grid item, by the same amount.
-    LogicalSize* cbSize = GetProperty(GridItemCBSizeProperty());
+    Maybe<LogicalSize> cbSize =
+        IsGridItem() ? Some(aOuterRI.mContainingBlockSize) : Nothing();
     if (NS_UNCONSTRAINEDSIZE != aOuterRI.AvailableBSize() || cbSize) {
       nscoord captionBSize = 0;
       nscoord captionISize = 0;
@@ -790,12 +793,15 @@ void nsTableWrapperFrame::Reflow(nsPresContext* aPresContext,
         // Shrink the CB size by the size reserved for the caption.
         LogicalSize oldCBSize = *cbSize;
         cbSize->ISize(wm) = std::max(0, cbSize->ISize(wm) - captionISize);
-        cbSize->BSize(wm) = std::max(0, cbSize->BSize(wm) - captionBSize);
+        if (cbSize->BSize(wm) != NS_UNCONSTRAINEDSIZE) {
+          cbSize->BSize(wm) = std::max(0, cbSize->BSize(wm) - captionBSize);
+        }
         if (oldCBSize != *cbSize) {
           // Reset the inner table's ReflowInput to stretch it to the new size.
           innerRI.reset();
           CreateReflowInputForInnerTable(aPresContext, InnerTableFrame(),
-                                         aOuterRI, innerRI, contentBoxISize);
+                                         aOuterRI, innerRI, contentBoxISize,
+                                         cbSize);
         }
       }
     }
