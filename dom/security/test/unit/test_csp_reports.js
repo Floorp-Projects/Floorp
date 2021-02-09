@@ -112,6 +112,8 @@ function makeTest(id, expectedJSON, useReportOnlyPolicy, callback) {
 }
 
 function run_test() {
+  do_get_profile();
+
   var selfuri = NetUtil.newURI(
     REPORT_SERVER_URI + ":" + REPORT_SERVER_PORT + "/foo/self"
   );
