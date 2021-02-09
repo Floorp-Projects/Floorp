@@ -1749,7 +1749,8 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   // Parse the body of a global script.
   ListNodeType globalBody(GlobalSharedContext* globalsc);
 
-  bool namedImportsOrNamespaceImport(TokenKind tt, ListNodeType importSpecSet);
+  bool namedImports(ListNodeType importSpecSet);
+  bool namespaceImport(ListNodeType importSpecSet);
 
   TaggedParserAtomIndex importedBinding() {
     return bindingIdentifier(YieldIsName);
