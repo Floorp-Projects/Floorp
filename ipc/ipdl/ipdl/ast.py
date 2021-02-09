@@ -332,7 +332,6 @@ class MessageDecl(Node):
         self.outParams = []
         self.compress = ""
         self.tainted = ""
-        self.verify = ""
 
     def addInParams(self, inParamsList):
         self.inParams += inParamsList
@@ -344,8 +343,6 @@ class MessageDecl(Node):
         for modifier in modifiers:
             if modifier.startswith("compress"):
                 self.compress = modifier
-            elif modifier == "verify":
-                self.verify = modifier
             elif modifier.startswith("tainted"):
                 self.tainted = modifier
             elif modifier != "":

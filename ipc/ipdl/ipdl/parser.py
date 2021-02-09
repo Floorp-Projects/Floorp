@@ -148,7 +148,6 @@ reserved = set(
         "UniquePtr",
         "upto",
         "using",
-        "verify",
     )
 )
 tokens = [
@@ -552,14 +551,8 @@ def p_OptionalMessageModifiers(p):
 
 
 def p_MessageModifier(p):
-    """MessageModifier : MessageVerify
-    | MessageCompress
+    """MessageModifier : MessageCompress
     | MessageTainted"""
-    p[0] = p[1]
-
-
-def p_MessageVerify(p):
-    """MessageVerify : VERIFY"""
     p[0] = p[1]
 
 

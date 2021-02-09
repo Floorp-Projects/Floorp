@@ -302,7 +302,6 @@ class MessageType(IPDLType):
         cdtype=None,
         compress=False,
         tainted=False,
-        verify=False,
     ):
         assert not (ctor and dtor)
         assert not (ctor or dtor) or cdtype is not None
@@ -319,7 +318,6 @@ class MessageType(IPDLType):
         self.cdtype = cdtype
         self.compress = compress
         self.tainted = tainted
-        self.verify = verify
 
     def isMessage(self):
         return True
@@ -1275,7 +1273,6 @@ class GatherDecls(TcheckVisitor):
             cdtype=cdtype,
             compress=md.compress,
             tainted=md.tainted,
-            verify=md.verify,
         )
 
         # replace inparam Param nodes with proper Decls
