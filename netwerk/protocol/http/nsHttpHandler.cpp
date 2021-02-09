@@ -80,6 +80,8 @@
 #include "nsNSSComponent.h"
 #include "TRRServiceChannel.h"
 
+#include <bitset>
+
 #if defined(XP_UNIX)
 #  include <sys/utsname.h>
 #endif
@@ -385,6 +387,12 @@ nsresult nsHttpHandler::Init() {
   if (!IsNeckoChild()) {
     mActiveTabPriority =
         Preferences::GetBool(HTTP_PREF("active_tab_priority"), true);
+    std::bitset<3> usageOfHTTPSRRPrefs;
+    usageOfHTTPSRRPrefs[0] = StaticPrefs::network_dns_upgrade_with_https_rr();
+    usageOfHTTPSRRPrefs[1] = StaticPrefs::network_dns_use_https_rr_as_altsvc();
+    usageOfHTTPSRRPrefs[2] = StaticPrefs::network_dns_echconfig_enabled();
+    Telemetry::ScalarSet(Telemetry::ScalarID::NETWORKING_HTTPS_RR_PREFS_USAGE,
+                         static_cast<uint32_t>(usageOfHTTPSRRPrefs.to_ulong()));
   }
 
   auto initQLogDir = [&]() {
