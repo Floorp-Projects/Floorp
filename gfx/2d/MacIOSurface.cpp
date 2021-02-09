@@ -323,6 +323,10 @@ size_t MacIOSurface::GetBytesPerRow(size_t plane) const {
   return ::IOSurfaceGetBytesPerRowOfPlane(mIOSurfaceRef.get(), plane);
 }
 
+size_t MacIOSurface::GetAllocSize() const {
+  return ::IOSurfaceGetAllocSize(mIOSurfaceRef.get());
+}
+
 OSType MacIOSurface::GetPixelFormat() const {
   return ::IOSurfaceGetPixelFormat(mIOSurfaceRef.get());
 }
