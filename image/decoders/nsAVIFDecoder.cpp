@@ -17,17 +17,18 @@
 #include "SurfacePipeFactory.h"
 
 #include "mozilla/Telemetry.h"
+#include "mozilla/TelemetryComms.h"
 
 using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace image {
 
+using Telemetry::LABELS_AVIF_AOM_DECODE_ERROR;
 using Telemetry::LABELS_AVIF_BIT_DEPTH;
 using Telemetry::LABELS_AVIF_DECODE_RESULT;
 using Telemetry::LABELS_AVIF_DECODER;
 using Telemetry::LABELS_AVIF_YUV_COLOR_SPACE;
-using Telemetry::ScalarID;
 
 static LazyLogModule sAVIFLog("AVIFDecoder");
 
@@ -270,12 +271,20 @@ class Dav1dDecoder final : AVIFDecoderInterface {
     MOZ_LOG(sAVIFLog, r == 0 ? LogLevel::Debug : LogLevel::Error,
             ("[this=%p] dav1d_get_picture -> %d", this, r));
 
-    // Discard the value outside of the range of uint32
-    if (!aIsMetadataDecode && std::numeric_limits<int>::digits <= 31) {
-      // De-negate POSIX error code returned from DAV1D. This must be sync with
-      // DAV1D_ERR macro.
-      uint32_t value = r < 0 ? -r : r;
-      ScalarSet(ScalarID::AVIF_DAV1D_DECODE_ERROR, value);
+    // When bug 1682662 is fixed, revise this assert and subsequent condition
+    MOZ_ASSERT(aIsMetadataDecode || r == 0);
+
+    // We already have the AVIF_DECODE_RESULT histogram to record all the
+    // successful calls, so only bother recording what type of errors we see
+    // via events. Unlike AOM, dav1d returns an int, not an enum, so this is the
+    // easiest way to see if we're getting unexpected behavior to investigate.
+    if (aIsMetadataDecode && r != 0) {
+      // Uncomment once bug 1691156 is fixed
+      // mozilla::Telemetry::SetEventRecordingEnabled("avif"_ns, true);
+
+      mozilla::Telemetry::RecordEvent(
+          mozilla::Telemetry::EventID::Avif_Dav1dGetPicture_ReturnValue,
+          Some(nsPrintfCString("%d", r)), Nothing());
     }
 
     return r;
@@ -422,8 +431,38 @@ class AOMDecoder final : AVIFDecoderInterface {
             ("[this=%p] aom_codec_decode -> %d", this, r));
 
     if (aIsMetadataDecode) {
-      uint32_t value = static_cast<uint32_t>(r);
-      ScalarSet(ScalarID::AVIF_AOM_DECODE_ERROR, value);
+      switch (r) {
+        case AOM_CODEC_OK:
+          // No need to record any telemetry for the common case
+          break;
+        case AOM_CODEC_ERROR:
+          AccumulateCategorical(LABELS_AVIF_AOM_DECODE_ERROR::error);
+          break;
+        case AOM_CODEC_MEM_ERROR:
+          AccumulateCategorical(LABELS_AVIF_AOM_DECODE_ERROR::mem_error);
+          break;
+        case AOM_CODEC_ABI_MISMATCH:
+          AccumulateCategorical(LABELS_AVIF_AOM_DECODE_ERROR::abi_mismatch);
+          break;
+        case AOM_CODEC_INCAPABLE:
+          AccumulateCategorical(LABELS_AVIF_AOM_DECODE_ERROR::incapable);
+          break;
+        case AOM_CODEC_UNSUP_BITSTREAM:
+          AccumulateCategorical(LABELS_AVIF_AOM_DECODE_ERROR::unsup_bitstream);
+          break;
+        case AOM_CODEC_UNSUP_FEATURE:
+          AccumulateCategorical(LABELS_AVIF_AOM_DECODE_ERROR::unsup_feature);
+          break;
+        case AOM_CODEC_CORRUPT_FRAME:
+          AccumulateCategorical(LABELS_AVIF_AOM_DECODE_ERROR::corrupt_frame);
+          break;
+        case AOM_CODEC_INVALID_PARAM:
+          AccumulateCategorical(LABELS_AVIF_AOM_DECODE_ERROR::invalid_param);
+          break;
+        default:
+          MOZ_ASSERT_UNREACHABLE(
+              "Unknown aom_codec_err_t value from aom_codec_decode");
+      }
     }
 
     if (r != AOM_CODEC_OK) {
