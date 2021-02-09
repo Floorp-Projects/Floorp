@@ -34,7 +34,6 @@
 #include "mozilla/dom/PBackgroundSDBRequestParent.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/dom/quota/Client.h"
-#include "mozilla/dom/quota/DirectoryLock.h"
 #include "mozilla/dom/quota/FileStreams.h"
 #include "mozilla/dom/quota/MemoryOutputStream.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
