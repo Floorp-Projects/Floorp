@@ -83,6 +83,7 @@ ${helpers.predefined_type(
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-text/#propdef-overflow-wrap",
     alias="word-wrap",
+    needs_context=False,
     servo_restyle_damage="rebuild_and_reflow",
 )}
 
@@ -94,6 +95,7 @@ ${helpers.predefined_type(
     servo_2020_pref="layout.2020.unimplemented",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-text/#propdef-word-break",
+    needs_context=False,
     servo_restyle_damage="rebuild_and_reflow",
 )}
 
@@ -141,6 +143,7 @@ ${helpers.predefined_type(
     "text-align-last",
     "TextAlignLast",
     "computed::text::TextAlignLast::Auto",
+    needs_context=False,
     engines="gecko",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-text/#propdef-text-align-last",
@@ -284,6 +287,7 @@ ${helpers.predefined_type(
     engines="gecko",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-text-3/#line-break-property",
+    needs_context=False,
 )}
 
 // CSS Compatibility
@@ -399,6 +403,7 @@ ${helpers.predefined_type(
     "TextDecorationSkipInk",
     "computed::TextDecorationSkipInk::Auto",
     engines="gecko",
+    needs_context=False,
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-text-decor-4/#text-decoration-skip-ink-property",
 )}

@@ -42,6 +42,7 @@
         animation_value_type="discrete" if not is_logical else "none",
         logical=is_logical,
         logical_group="border-style",
+        needs_context=False,
     )}
 
     ${helpers.predefined_type(
