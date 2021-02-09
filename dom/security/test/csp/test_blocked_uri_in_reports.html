@@ -19,9 +19,9 @@ SimpleTest.waitForExplicitFinish();
  * which gets redirected to:
  *  http://test1.example.com/tests/dom/security//test/csp/file_path_matching.js
  *
- * The blocked-uri in the csp-report should be:
- *   test1.example.com
- * instead of:
+ * The blocked-uri in the csp-report should be the original URI:
+ *   http://example.com/tests/dom/security/test/csp/file_path_matching_redirect_server.sjs
+ * instead of the redirected URI:
  *  http://test1.example.com/tests/com/security/test/csp/file_path_matching.js
  *
  * see also: http://www.w3.org/TR/CSP/#violation-reports
