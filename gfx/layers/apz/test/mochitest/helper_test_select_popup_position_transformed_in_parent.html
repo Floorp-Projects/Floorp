@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src='/tests/SimpleTest/paint_listener.js'></script>
+<script src='apz_test_utils.js'></script>
+<style>
+html, body {
+  /* To calculate the popup window position easily. */
+  margin: 0;
+  padding: 0;
+}
+iframe {
+  width: 300px;
+  height: 300px;
+  /* To calculate the popup window position easily. */
+  border: none;
+}
+</style>
+<div style="transform: scale(2); transform-origin: top left;">
+  <iframe></iframe>
+</div>
+<script>
+  // Silence SimpleTest warning about missing assertions by having it wait
+  // indefinitely.
+  SimpleTest.waitForExplicitFinish();
+</script>
