@@ -7414,44 +7414,6 @@ bool HasDebuggerOrTabsPrivilege(JSContext* aCx, JSObject* aObj) {
          nsContentUtils::CallerHasPermission(aCx, nsGkAtoms::tabs);
 }
 
-void HTMLMediaElement::ReportCanPlayTelemetry() {
-  LOG(LogLevel::Debug, ("%s", __func__));
-
-  RefPtr<nsIThread> thread;
-  nsresult rv = NS_NewNamedThread("MediaTelemetry", getter_AddRefs(thread));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  RefPtr<AbstractThread> abstractThread = mAbstractMainThread;
-
-  thread->Dispatch(
-      NS_NewRunnableFunction(
-          "dom::HTMLMediaElement::ReportCanPlayTelemetry",
-          [thread, abstractThread]() {
-#if XP_WIN
-            // Windows Media Foundation requires MSCOM to be inited.
-            DebugOnly<HRESULT> hr = CoInitializeEx(0, COINIT_MULTITHREADED);
-            MOZ_ASSERT(hr == S_OK);
-#endif
-            bool aac = MP4Decoder::IsSupportedType(
-                MediaContainerType(MEDIAMIMETYPE(AUDIO_MP4)), nullptr);
-            bool h264 = MP4Decoder::IsSupportedType(
-                MediaContainerType(MEDIAMIMETYPE(VIDEO_MP4)), nullptr);
-#if XP_WIN
-            CoUninitialize();
-#endif
-            abstractThread->Dispatch(NS_NewRunnableFunction(
-                "dom::HTMLMediaElement::ReportCanPlayTelemetry",
-                [thread, aac, h264]() {
-                  LOG(LogLevel::Debug,
-                      ("MediaTelemetry aac=%d h264=%d", aac, h264));
-                  thread->AsyncShutdown();
-                }));
-          }),
-      NS_DISPATCH_NORMAL);
-}
-
 already_AddRefed<Promise> HTMLMediaElement::SetSinkId(const nsAString& aSinkId,
                                                       ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> win = OwnerDoc()->GetInnerWindow();
