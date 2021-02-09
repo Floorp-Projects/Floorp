@@ -319,11 +319,15 @@ void nsMutationReceiver::ContentRemoved(nsIContent* aChild,
     if (Observer()->GetReceiverFor(aChild, false, false) != orig) {
       bool transientExists = false;
       bool isNewEntry = false;
-      const auto& transientReceivers =
-          Observer()->mTransientReceivers.LookupForAdd(aChild).OrInsert(
-              [&isNewEntry]() {
-                isNewEntry = true;
-                return new nsCOMArray<nsMutationReceiver>();
+      auto* const transientReceivers =
+          Observer()->mTransientReceivers.WithEntryHandle(
+              aChild, [&isNewEntry](auto&& entry) {
+                return entry
+                    .OrInsertWith([&isNewEntry] {
+                      isNewEntry = true;
+                      return new nsCOMArray<nsMutationReceiver>();
+                    })
+                    .get();
               });
       if (!isNewEntry) {
         for (int32_t i = 0; i < transientReceivers->Count(); ++i) {
@@ -1034,9 +1038,13 @@ void nsAutoMutationBatch::Done() {
       }
 
       if (allObservers.Length()) {
-        const auto& transientReceivers =
-            ob->mTransientReceivers.LookupForAdd(removed).OrInsert(
-                []() { return new nsCOMArray<nsMutationReceiver>(); });
+        auto* const transientReceivers =
+            ob->mTransientReceivers.WithEntryHandle(removed, [](auto&& entry) {
+              return entry
+                  .OrInsertWith(
+                      [] { return new nsCOMArray<nsMutationReceiver>(); })
+                  .get();
+            });
         for (uint32_t k = 0; k < allObservers.Length(); ++k) {
           nsMutationReceiver* r = allObservers[k];
           nsMutationReceiver* orig = r->GetParent() ? r->GetParent() : r;

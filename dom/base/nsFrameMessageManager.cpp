@@ -239,9 +239,14 @@ void nsFrameMessageManager::AddMessageListener(const nsAString& aMessageName,
                                                MessageListener& aListener,
                                                bool aListenWhenClosed,
                                                ErrorResult& aError) {
-  auto& listeners = mListeners.LookupForAdd(aMessageName).OrInsert([]() {
-    return new nsAutoTObserverArray<nsMessageListenerInfo, 1>();
-  });
+  auto* const listeners =
+      mListeners.WithEntryHandle(aMessageName, [](auto&& entry) {
+        return entry
+            .OrInsertWith([] {
+              return new nsAutoTObserverArray<nsMessageListenerInfo, 1>();
+            })
+            .get();
+      });
   uint32_t len = listeners->Length();
   for (uint32_t i = 0; i < len; ++i) {
     MessageListener* strongListener = listeners->ElementAt(i).mStrongListener;
@@ -308,9 +313,14 @@ void nsFrameMessageManager::AddWeakMessageListener(
   }
 #endif
 
-  auto& listeners = mListeners.LookupForAdd(aMessageName).OrInsert([]() {
-    return new nsAutoTObserverArray<nsMessageListenerInfo, 1>();
-  });
+  auto* const listeners =
+      mListeners.WithEntryHandle(aMessageName, [](auto&& entry) {
+        return entry
+            .OrInsertWith([] {
+              return new nsAutoTObserverArray<nsMessageListenerInfo, 1>();
+            })
+            .get();
+      });
   uint32_t len = listeners->Length();
   for (uint32_t i = 0; i < len; ++i) {
     if (listeners->ElementAt(i).mWeakListener == weak) {
