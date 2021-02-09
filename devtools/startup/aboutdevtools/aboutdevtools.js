@@ -48,16 +48,9 @@ function onCloseButtonClick() {
 }
 
 function updatePage() {
-  const installPage = document.getElementById("install-page");
-  const welcomePage = document.getElementById("welcome-page");
   const isEnabled = Services.prefs.getBoolPref("devtools.enabled");
-  if (isEnabled) {
-    installPage.setAttribute("hidden", "true");
-    welcomePage.removeAttribute("hidden");
-  } else {
-    welcomePage.setAttribute("hidden", "true");
-    installPage.removeAttribute("hidden");
-  }
+  document.getElementById("install-page").hidden = isEnabled;
+  document.getElementById("welcome-page").hidden = !isEnabled;
 }
 
 /**
