@@ -38,9 +38,9 @@ include "mozilla/dom/PermissionMessageUtils.h";
 using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
 using class IPC::SerializedLoadContext from "SerializedLoadContext.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
-using refcounted class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
-using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
-using refcounted class nsIPrincipal from "nsIPrincipal.h";
+[RefCounted] using class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
+[RefCounted] using class nsIURI from "mozilla/ipc/URIUtils.h";
+[RefCounted] using class nsIPrincipal from "nsIPrincipal.h";
 
 
 namespace mozilla {

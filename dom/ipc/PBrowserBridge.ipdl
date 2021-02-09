@@ -26,7 +26,7 @@ using struct nsRect from "nsRect.h";
 using CallerType from "mozilla/dom/BindingDeclarations.h";
 using nsIntRect from "nsRect.h";
 using mozilla::dom::EmbedderElementEventType from "mozilla/dom/TabMessageTypes.h";
-using refcounted class nsDocShellLoadState from "nsDocShellLoadState.h";
+[RefCounted] using class nsDocShellLoadState from "nsDocShellLoadState.h";
 using mozilla::IntrinsicSize from "nsIFrame.h";
 using mozilla::AspectRatio from "mozilla/AspectRatio.h";
 

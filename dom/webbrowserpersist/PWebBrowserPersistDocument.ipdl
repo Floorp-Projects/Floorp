@@ -16,7 +16,7 @@ include NeckoChannelParams;
 
 include "mozilla/dom/ReferrerInfoUtils.h";
 
-using refcounted class nsIReferrerInfo from "nsIReferrerInfo.h";
+[RefCounted] using class nsIReferrerInfo from "nsIReferrerInfo.h";
 
 namespace mozilla {
 
