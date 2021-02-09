@@ -514,18 +514,7 @@ static bool HasUnpairedSurrogate(mozilla::Range<const char16_t> chars) {
 
 bool ParserAtomsTable::isModuleExportName(TaggedParserAtomIndex index) const {
   const ParserAtom* name = getParserAtom(index);
-  if (name->hasTwoByteChars() && HasUnpairedSurrogate(name->twoByteRange())) {
-    return false;
-  }
-  // FIXME: Need to implement https://github.com/tc39/ecma262/pull/2155
-  if (name->length() == 1) {
-    char16_t ch = name->hasLatin1Chars() ? name->latin1Chars()[0]
-                                         : name->twoByteChars()[0];
-    if (ch == '*') {
-      return false;
-    }
-  }
-  return true;
+  return name->hasLatin1Chars() || !HasUnpairedSurrogate(name->twoByteRange());
 }
 
 bool ParserAtomsTable::isIndex(TaggedParserAtomIndex index,
