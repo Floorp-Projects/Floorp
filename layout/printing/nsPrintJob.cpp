@@ -2029,9 +2029,10 @@ void SelectionRangeState::SelectNodesExceptInSubtree(const Position& aStart,
   static constexpr auto kEllipsis = u"\x2026"_ns;
 
   nsINode* root = aStart.mNode->SubtreeRoot();
-  auto& start = mPositions.LookupForAdd(root).OrInsert([&] {
-    return Position{root, 0};
-  });
+  auto& start =
+      mPositions.WithEntryHandle(root, [&](auto&& entry) -> Position& {
+        return entry.OrInsertWith([&] { return Position{root, 0}; });
+      });
 
   bool ellipsizedStart = false;
   if (auto* text = Text::FromNode(aStart.mNode)) {
