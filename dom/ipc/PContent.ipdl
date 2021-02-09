@@ -1149,9 +1149,9 @@ parent:
 
     // 'Play', 'Beep' and 'PlayEventSound' are the only nsISound methods used in
     // the content process.
-    async PlaySound(nsIURI aURL) compress;
-    async Beep() compress;
-    async PlayEventSound(uint32_t aEventId) compress;
+    [Compress] async PlaySound(nsIURI aURL);
+    [Compress] async Beep();
+    [Compress] async PlayEventSound(uint32_t aEventId);
 
     sync GetIconForExtension(nsCString aFileExt, uint32_t aIconSize)
         returns (uint8_t[] bits);

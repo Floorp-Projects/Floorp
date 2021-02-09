@@ -242,10 +242,6 @@ class ASYNC(PrettyPrinted):
     pretty = "async"
 
 
-class TAINTED(PrettyPrinted):
-    pretty = "tainted"
-
-
 class INTR(PrettyPrinted):
     pretty = "intr"
 
@@ -324,29 +320,19 @@ class MessageDecl(Node):
     def __init__(self, loc):
         Node.__init__(self, loc)
         self.name = None
+        self.attributes = {}
         self.sendSemantics = ASYNC
         self.nested = NOT_NESTED
         self.prio = NORMAL_PRIORITY
         self.direction = None
         self.inParams = []
         self.outParams = []
-        self.compress = ""
-        self.tainted = ""
 
     def addInParams(self, inParamsList):
         self.inParams += inParamsList
 
     def addOutParams(self, outParamsList):
         self.outParams += outParamsList
-
-    def addModifiers(self, modifiers):
-        for modifier in modifiers:
-            if modifier.startswith("compress"):
-                self.compress = modifier
-            elif modifier.startswith("tainted"):
-                self.tainted = modifier
-            elif modifier != "":
-                raise Exception("Unexpected message modifier `%s'" % modifier)
 
 
 class Param(Node):

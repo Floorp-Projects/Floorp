@@ -7,5 +7,5 @@ intr protocol compressCtorManagee {
     manager compressCtor;
 
 child:
-    async __delete__() compress;
+    [Compress] async __delete__();
 };

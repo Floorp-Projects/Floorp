@@ -15,11 +15,11 @@ refcounted protocol PGamepadEventChannel {
   parent:
     async __delete__();
 
-    async VibrateHaptic(GamepadHandle aHandle, uint32_t aHapticIndex,
-                        double aIntensity, double aDuration, uint32_t aPromiseID) tainted;
-    async StopVibrateHaptic(GamepadHandle aHandle) tainted;
-    async LightIndicatorColor(GamepadHandle aHandle, uint32_t aLightColorIndex,
-                              uint8_t aRed, uint8_t aGreen, uint8_t aBlue, uint32_t aPromiseID) tainted;
+    [Tainted] async VibrateHaptic(GamepadHandle aHandle, uint32_t aHapticIndex,
+                                  double aIntensity, double aDuration, uint32_t aPromiseID);
+    [Tainted] async StopVibrateHaptic(GamepadHandle aHandle);
+    [Tainted] async LightIndicatorColor(GamepadHandle aHandle, uint32_t aLightColorIndex,
+                                        uint8_t aRed, uint8_t aGreen, uint8_t aBlue, uint32_t aPromiseID);
 
   child:
     async GamepadUpdate(GamepadChangeEvent aGamepadEvent);

@@ -1,4 +1,5 @@
 intr protocol PmessageCompress {
 child:
-    async foo() compress;
+    [Compress] async foo();
+    [Compress=all] async bar();
 };
