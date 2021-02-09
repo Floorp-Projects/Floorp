@@ -217,24 +217,8 @@ AHostResolver::LookupStatus TRRQuery::CompleteLookup(
     mFirstTRR.swap(newRRSet);  // autoPtr.swap()
     MOZ_ASSERT(mFirstTRR && !newRRSet);
 
-    if (StaticPrefs::network_trr_wait_for_A_and_AAAA()) {
-      LOG(("CompleteLookup: waiting for all responses!\n"));
-      return LOOKUP_OK;
-    }
-
-    if (pendingARequest && !StaticPrefs::network_trr_early_AAAA()) {
-      // This is an early AAAA with a pending A response. Allowed
-      // only by pref.
-      LOG(("CompleteLookup: avoiding early use of TRR AAAA!\n"));
-      return LOOKUP_OK;
-    }
-
-    // we can do some callbacks with this partial result which requires
-    // a deep copy
-    newRRSet = mFirstTRR;
-
-    // Increment mResolving so we wait for the next resolve too.
-    rec->mResolving++;
+    LOG(("CompleteLookup: waiting for all responses!\n"));
+    return LOOKUP_OK;
   } else {
     // no more outstanding TRRs
     // If mFirstTRR is set, merge those addresses into current set!
