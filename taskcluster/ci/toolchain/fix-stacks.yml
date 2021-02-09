@@ -8,6 +8,7 @@ job-defaults:
         local-toolchain: true
     worker-type: b-linux
     worker:
+        docker-image: {in-tree: deb10-toolchain-build}
         max-run-time: 1800
     run:
         script: build-fix-stacks.sh
@@ -28,6 +29,7 @@ linux64-fix-stacks:
             - linux64-binutils
             - linux64-clang-11
             - linux64-rust-1.47
+            - linux64-sysroot
 
 macosx64-fix-stacks:
     treeherder:
