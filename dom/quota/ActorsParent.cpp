@@ -2094,7 +2094,6 @@ bool gQuotaManagerInitialized = false;
 #endif
 
 StaticRefPtr<QuotaManager> gInstance;
-bool gCreateFailed = false;
 mozilla::Atomic<bool> gShutdown(false);
 
 // A time stamp that can only be accessed on the main thread.
@@ -3678,29 +3677,39 @@ nsresult QuotaManager::Initialize() {
   return NS_OK;
 }
 
+// static
+Result<MovingNotNull<RefPtr<QuotaManager>>, nsresult>
+QuotaManager::GetOrCreate() {
+  AssertIsOnBackgroundThread();
+
+  if (gInstance) {
+    return WrapMovingNotNullUnchecked(RefPtr<QuotaManager>{gInstance});
+  }
+
+  QM_TRY(OkIf(gBasePath), Err(NS_ERROR_FAILURE), [](const auto&) {
+    NS_WARNING(
+        "Trying to create QuotaManager before profile-do-change! "
+        "Forgot to call do_get_profile()?");
+  });
+
+  QM_TRY(OkIf(!IsShuttingDown()), Err(NS_ERROR_FAILURE), [](const auto&) {
+    MOZ_ASSERT(false,
+               "Trying to create QuotaManager after profile-before-change-qm!");
+  });
+
+  auto instance = MakeRefPtr<QuotaManager>(*gBasePath, *gStorageName);
+
+  QM_TRY(instance->Init());
+
+  gInstance = instance;
+
+  return WrapMovingNotNullUnchecked(std::move(instance));
+}
+
 void QuotaManager::GetOrCreate(nsIRunnable* aCallback) {
   AssertIsOnBackgroundThread();
 
-  if (IsShuttingDown()) {
-    MOZ_ASSERT(false, "Calling QuotaManager::GetOrCreate() after shutdown!");
-    return;
-  }
-
-  if (NS_WARN_IF(!gBasePath)) {
-    NS_WARNING("profile-do-change must precede QuotaManager::GetOrCreate()");
-    MOZ_ASSERT(!gInstance);
-  } else if (gInstance || gCreateFailed) {
-    MOZ_ASSERT_IF(gCreateFailed, !gInstance);
-  } else {
-    RefPtr<QuotaManager> manager = new QuotaManager(*gBasePath, *gStorageName);
-
-    nsresult rv = manager->Init();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      gCreateFailed = true;
-    } else {
-      gInstance = manager;
-    }
-  }
+  Unused << GetOrCreate();
 
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(aCallback));
 }
