@@ -200,7 +200,6 @@ STATIC_ATOMS = [
     Atom("browser", "browser"),
     Atom("mozbrowser", "mozbrowser"),
     Atom("button", "button"),
-    Atom("brighttitlebarforeground", "brighttitlebarforeground"),
     Atom("callTemplate", "call-template"),
     Atom("canvas", "canvas"),
     Atom("caption", "caption"),
