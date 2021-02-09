@@ -129,6 +129,8 @@ this.menusInternal = class extends ExtensionAPI {
     let api = {
       menus: {
         create(createProperties, callback) {
+          let caller = context.getCaller();
+
           if (createProperties.id === null) {
             createProperties.id = ++gNextMenuItemID;
           }
@@ -145,7 +147,7 @@ this.menusInternal = class extends ExtensionAPI {
               }
             })
             .catch(error => {
-              context.withLastError(error, null, () => {
+              context.withLastError(error, caller, () => {
                 if (callback) {
                   context.runSafeWithoutClone(callback);
                 }
