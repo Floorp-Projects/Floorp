@@ -1633,16 +1633,16 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   void emitNativeCalleeGuard(HandleFunction callee);
   void emitCalleeGuard(ObjOperandId calleeId, HandleFunction callee);
 
-  bool canAttachAtomicsReadWriteModify();
+  bool canAttachAtomicsReadWriteModify(bool supportBigInt = false);
 
   struct AtomicsReadWriteModifyOperands {
     ObjOperandId objId;
     IntPtrOperandId intPtrIndexId;
-    Int32OperandId int32ValueId;
+    OperandId numericValueId;
   };
 
   AtomicsReadWriteModifyOperands emitAtomicsReadWriteModifyOperands(
-      HandleFunction callee);
+      HandleFunction callee, bool supportBigInt = false);
 
   AttachDecision tryAttachArrayPush(HandleFunction callee);
   AttachDecision tryAttachArrayPopShift(HandleFunction callee,

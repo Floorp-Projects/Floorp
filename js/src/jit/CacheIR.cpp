@@ -6942,7 +6942,7 @@ AttachDecision CallIRGenerator::tryAttachAtomicsCompareExchange(
   return AttachDecision::Attach;
 }
 
-bool CallIRGenerator::canAttachAtomicsReadWriteModify() {
+bool CallIRGenerator::canAttachAtomicsReadWriteModify(bool supportBigInt) {
   if (!JitSupportsAtomics()) {
     return false;
   }
@@ -6959,21 +6959,22 @@ bool CallIRGenerator::canAttachAtomicsReadWriteModify() {
   if (!args_[1].isNumber()) {
     return false;
   }
-  if (!args_[2].isNumber()) {
-    return false;
-  }
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
-  if (!AtomicsMeetsPreconditions(typedArray, args_[1])) {
+  if (!AtomicsMeetsPreconditions(typedArray, args_[1],
+                                 BigIntAtomics{supportBigInt})) {
     return false;
   }
-
+  if (!ValueIsNumeric(typedArray->type(), args_[2])) {
+    return false;
+  }
   return true;
 }
 
 CallIRGenerator::AtomicsReadWriteModifyOperands
-CallIRGenerator::emitAtomicsReadWriteModifyOperands(HandleFunction callee) {
-  MOZ_ASSERT(canAttachAtomicsReadWriteModify());
+CallIRGenerator::emitAtomicsReadWriteModifyOperands(HandleFunction callee,
+                                                    bool supportBigInt) {
+  MOZ_ASSERT(canAttachAtomicsReadWriteModify(supportBigInt));
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
 
@@ -6993,12 +6994,12 @@ CallIRGenerator::emitAtomicsReadWriteModifyOperands(HandleFunction callee) {
   IntPtrOperandId intPtrIndexId =
       guardToIntPtrIndex(args_[1], indexId, /* supportOOB = */ false);
 
-  // Convert value to int32.
+  // Convert value to int32/BigInt.
   ValOperandId valueId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_);
-  Int32OperandId int32ValueId = writer.guardToInt32ModUint32(valueId);
+  OperandId numericValueId = emitNumericGuard(valueId, typedArray->type());
 
-  return {objId, intPtrIndexId, int32ValueId};
+  return {objId, intPtrIndexId, numericValueId};
 }
 
 AttachDecision CallIRGenerator::tryAttachAtomicsExchange(
@@ -7007,12 +7008,12 @@ AttachDecision CallIRGenerator::tryAttachAtomicsExchange(
     return AttachDecision::NoAction;
   }
 
-  auto [objId, intPtrIndexId, int32ValueId] =
+  auto [objId, intPtrIndexId, numericValueId] =
       emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
 
-  writer.atomicsExchangeResult(objId, intPtrIndexId, int32ValueId,
+  writer.atomicsExchangeResult(objId, intPtrIndexId, numericValueId,
                                typedArray->type());
   writer.returnFromIC();
 
@@ -7025,12 +7026,12 @@ AttachDecision CallIRGenerator::tryAttachAtomicsAdd(HandleFunction callee) {
     return AttachDecision::NoAction;
   }
 
-  auto [objId, intPtrIndexId, int32ValueId] =
+  auto [objId, intPtrIndexId, numericValueId] =
       emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
 
-  writer.atomicsAddResult(objId, intPtrIndexId, int32ValueId,
+  writer.atomicsAddResult(objId, intPtrIndexId, numericValueId,
                           typedArray->type());
   writer.returnFromIC();
 
@@ -7043,12 +7044,12 @@ AttachDecision CallIRGenerator::tryAttachAtomicsSub(HandleFunction callee) {
     return AttachDecision::NoAction;
   }
 
-  auto [objId, intPtrIndexId, int32ValueId] =
+  auto [objId, intPtrIndexId, numericValueId] =
       emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
 
-  writer.atomicsSubResult(objId, intPtrIndexId, int32ValueId,
+  writer.atomicsSubResult(objId, intPtrIndexId, numericValueId,
                           typedArray->type());
   writer.returnFromIC();
 
@@ -7061,12 +7062,12 @@ AttachDecision CallIRGenerator::tryAttachAtomicsAnd(HandleFunction callee) {
     return AttachDecision::NoAction;
   }
 
-  auto [objId, intPtrIndexId, int32ValueId] =
+  auto [objId, intPtrIndexId, numericValueId] =
       emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
 
-  writer.atomicsAndResult(objId, intPtrIndexId, int32ValueId,
+  writer.atomicsAndResult(objId, intPtrIndexId, numericValueId,
                           typedArray->type());
   writer.returnFromIC();
 
@@ -7079,12 +7080,12 @@ AttachDecision CallIRGenerator::tryAttachAtomicsOr(HandleFunction callee) {
     return AttachDecision::NoAction;
   }
 
-  auto [objId, intPtrIndexId, int32ValueId] =
+  auto [objId, intPtrIndexId, numericValueId] =
       emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
 
-  writer.atomicsOrResult(objId, intPtrIndexId, int32ValueId,
+  writer.atomicsOrResult(objId, intPtrIndexId, numericValueId,
                          typedArray->type());
   writer.returnFromIC();
 
@@ -7097,12 +7098,12 @@ AttachDecision CallIRGenerator::tryAttachAtomicsXor(HandleFunction callee) {
     return AttachDecision::NoAction;
   }
 
-  auto [objId, intPtrIndexId, int32ValueId] =
+  auto [objId, intPtrIndexId, numericValueId] =
       emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
 
-  writer.atomicsXorResult(objId, intPtrIndexId, int32ValueId,
+  writer.atomicsXorResult(objId, intPtrIndexId, numericValueId,
                           typedArray->type());
   writer.returnFromIC();
 
