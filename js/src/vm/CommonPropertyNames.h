@@ -12,526 +12,551 @@
 // The following common atoms are reserved by the js::StaticStrigs /
 // js::frontend::WellKnownParserAtoms{,_ROM} mechanisms. We still use a named
 // reference for the parser and VM to use.
+//
+// Parameter list is (IDPART, ID, TEXT).
+//
+// Each entry should use one of MACRO* based on the length of TEXT
+//   * MACRO0: length-0 text
+//   * MACRO1: length-1 text
+//   * MACRO2: length-2 text
+//   * MACRO_: other text
+#define FOR_EACH_COMMON_PROPERTYNAME_(MACRO0, MACRO1, MACRO2, MACRO_)          \
+  MACRO_(abort, abort, "abort")                                                \
+  MACRO_(add, add, "add")                                                      \
+  MACRO_(allowContentIter, allowContentIter, "allowContentIter")               \
+  MACRO_(anonymous, anonymous, "anonymous")                                    \
+  MACRO_(Any, Any, "Any")                                                      \
+  MACRO_(apply, apply, "apply")                                                \
+  MACRO_(args, args, "args")                                                   \
+  MACRO_(arguments, arguments, "arguments")                                    \
+  MACRO_(ArrayBufferSpecies, ArrayBufferSpecies, "$ArrayBufferSpecies")        \
+  MACRO_(ArrayIterator, ArrayIterator, "Array Iterator")                       \
+  MACRO_(ArrayIteratorNext, ArrayIteratorNext, "ArrayIteratorNext")            \
+  MACRO_(ArraySort, ArraySort, "ArraySort")                                    \
+  MACRO_(ArraySpecies, ArraySpecies, "$ArraySpecies")                          \
+  MACRO_(ArraySpeciesCreate, ArraySpeciesCreate, "ArraySpeciesCreate")         \
+  MACRO_(ArrayToLocaleString, ArrayToLocaleString, "ArrayToLocaleString")      \
+  MACRO_(ArrayType, ArrayType, "ArrayType")                                    \
+  MACRO_(ArrayValues, ArrayValues, "$ArrayValues")                             \
+  MACRO2(as, as, "as")                                                         \
+  MACRO_(Async, Async, "Async")                                                \
+  MACRO_(AsyncFromSyncIterator, AsyncFromSyncIterator,                         \
+         "Async-from-Sync Iterator")                                           \
+  MACRO_(AsyncFunctionNext, AsyncFunctionNext, "AsyncFunctionNext")            \
+  MACRO_(AsyncFunctionThrow, AsyncFunctionThrow, "AsyncFunctionThrow")         \
+  MACRO_(AsyncGenerator, AsyncGenerator, "AsyncGenerator")                     \
+  MACRO_(AsyncGeneratorNext, AsyncGeneratorNext, "AsyncGeneratorNext")         \
+  MACRO_(AsyncGeneratorReturn, AsyncGeneratorReturn, "AsyncGeneratorReturn")   \
+  MACRO_(AsyncGeneratorThrow, AsyncGeneratorThrow, "AsyncGeneratorThrow")      \
+  MACRO_(AsyncWrapped, AsyncWrapped, "AsyncWrapped")                           \
+  MACRO_(async, async, "async")                                                \
+  MACRO2(at, at, "at")                                                         \
+  MACRO_(autoAllocateChunkSize, autoAllocateChunkSize,                         \
+         "autoAllocateChunkSize")                                              \
+  MACRO_(await, await, "await")                                                \
+  MACRO_(bigint64, bigint64, "bigint64")                                       \
+  MACRO_(biguint64, biguint64, "biguint64")                                    \
+  MACRO_(boundWithSpace, boundWithSpace, "bound ")                             \
+  MACRO_(break, break_, "break")                                               \
+  MACRO_(breakdown, breakdown, "breakdown")                                    \
+  MACRO_(buffer, buffer, "buffer")                                             \
+  MACRO_(builder, builder, "builder")                                          \
+  MACRO2(by, by, "by")                                                         \
+  MACRO_(byob, byob, "byob")                                                   \
+  MACRO_(byteAlignment, byteAlignment, "byteAlignment")                        \
+  MACRO_(byteLength, byteLength, "byteLength")                                 \
+  MACRO_(byteOffset, byteOffset, "byteOffset")                                 \
+  MACRO_(bytes, bytes, "bytes")                                                \
+  MACRO_(BYTES_PER_ELEMENT, BYTES_PER_ELEMENT, "BYTES_PER_ELEMENT")            \
+  MACRO_(calendar, calendar, "calendar")                                       \
+  MACRO_(call, call, "call")                                                   \
+  MACRO_(callContentFunction, callContentFunction, "callContentFunction")      \
+  MACRO_(callee, callee, "callee")                                             \
+  MACRO_(caller, caller, "caller")                                             \
+  MACRO_(callFunction, callFunction, "callFunction")                           \
+  MACRO_(cancel, cancel, "cancel")                                             \
+  MACRO_(case, case_, "case")                                                  \
+  MACRO_(caseFirst, caseFirst, "caseFirst")                                    \
+  MACRO_(catch, catch_, "catch")                                               \
+  MACRO_(class, class_, "class")                                               \
+  MACRO_(cleanupSome, cleanupSome, "cleanupSome")                              \
+  MACRO_(close, close, "close")                                                \
+  MACRO_(collation, collation, "collation")                                    \
+  MACRO_(collections, collections, "collections")                              \
+  MACRO_(columnNumber, columnNumber, "columnNumber")                           \
+  MACRO1(comma, comma, ",")                                                    \
+  MACRO_(compare, compare, "compare")                                          \
+  MACRO_(configurable, configurable, "configurable")                           \
+  MACRO_(const, const_, "const")                                               \
+  MACRO_(construct, construct, "construct")                                    \
+  MACRO_(constructContentFunction, constructContentFunction,                   \
+         "constructContentFunction")                                           \
+  MACRO_(constructor, constructor, "constructor")                              \
+  MACRO_(continue, continue_, "continue")                                      \
+  MACRO_(CopyDataProperties, CopyDataProperties, "CopyDataProperties")         \
+  MACRO_(CopyDataPropertiesUnfiltered, CopyDataPropertiesUnfiltered,           \
+         "CopyDataPropertiesUnfiltered")                                       \
+  MACRO_(copyWithin, copyWithin, "copyWithin")                                 \
+  MACRO_(compact, compact, "compact")                                          \
+  MACRO_(compactDisplay, compactDisplay, "compactDisplay")                     \
+  MACRO_(count, count, "count")                                                \
+  MACRO_(CreateResolvingFunctions, CreateResolvingFunctions,                   \
+         "CreateResolvingFunctions")                                           \
+  MACRO_(currency, currency, "currency")                                       \
+  MACRO_(currencyDisplay, currencyDisplay, "currencyDisplay")                  \
+  MACRO_(currencySign, currencySign, "currencySign")                           \
+  MACRO_(day, day, "day")                                                      \
+  MACRO_(dayPeriod, dayPeriod, "dayPeriod")                                    \
+  MACRO_(debugger, debugger, "debugger")                                       \
+  MACRO_(decimal, decimal, "decimal")                                          \
+  MACRO_(decodeURI, decodeURI, "decodeURI")                                    \
+  MACRO_(decodeURIComponent, decodeURIComponent, "decodeURIComponent")         \
+  MACRO_(default, default_, "default")                                         \
+  MACRO_(defineGetter, defineGetter, "__defineGetter__")                       \
+  MACRO_(defineProperty, defineProperty, "defineProperty")                     \
+  MACRO_(defineSetter, defineSetter, "__defineSetter__")                       \
+  MACRO_(delete, delete_, "delete")                                            \
+  MACRO_(deleteProperty, deleteProperty, "deleteProperty")                     \
+  MACRO_(direction, direction, "direction")                                    \
+  MACRO_(displayURL, displayURL, "displayURL")                                 \
+  MACRO2(do, do_, "do")                                                        \
+  MACRO_(domNode, domNode, "domNode")                                          \
+  MACRO_(done, done, "done")                                                   \
+  MACRO_(dotAll, dotAll, "dotAll")                                             \
+  MACRO_(dotGenerator, dotGenerator, ".generator")                             \
+  MACRO_(dotThis, dotThis, ".this")                                            \
+  MACRO_(dotInitializers, dotInitializers, ".initializers")                    \
+  MACRO_(dotFieldKeys, dotFieldKeys, ".fieldKeys")                             \
+  MACRO_(dotStaticInitializers, dotStaticInitializers, ".staticInitializers")  \
+  MACRO_(dotStaticFieldKeys, dotStaticFieldKeys, ".staticFieldKeys")           \
+  MACRO_(each, each, "each")                                                   \
+  MACRO_(element, element, "element")                                          \
+  MACRO_(elementType, elementType, "elementType")                              \
+  MACRO_(else, else_, "else")                                                  \
+  MACRO0(empty, empty, "")                                                     \
+  MACRO_(emptyRegExp, emptyRegExp, "(?:)")                                     \
+  MACRO_(encodeURI, encodeURI, "encodeURI")                                    \
+  MACRO_(encodeURIComponent, encodeURIComponent, "encodeURIComponent")         \
+  MACRO_(endRange, endRange, "endRange")                                       \
+  MACRO_(endTimestamp, endTimestamp, "endTimestamp")                           \
+  MACRO_(entries, entries, "entries")                                          \
+  MACRO_(enum, enum_, "enum")                                                  \
+  MACRO_(enumerable, enumerable, "enumerable")                                 \
+  MACRO_(enumerate, enumerate, "enumerate")                                    \
+  MACRO_(era, era, "era")                                                      \
+  MACRO_(ErrorToStringWithTrailingNewline, ErrorToStringWithTrailingNewline,   \
+         "ErrorToStringWithTrailingNewline")                                   \
+  MACRO_(errors, errors, "errors")                                             \
+  MACRO_(escape, escape, "escape")                                             \
+  MACRO_(eval, eval, "eval")                                                   \
+  MACRO_(exec, exec, "exec")                                                   \
+  MACRO_(exponentInteger, exponentInteger, "exponentInteger")                  \
+  MACRO_(exponentMinusSign, exponentMinusSign, "exponentMinusSign")            \
+  MACRO_(exponentSeparator, exponentSeparator, "exponentSeparator")            \
+  MACRO_(export, export_, "export")                                            \
+  MACRO_(extends, extends, "extends")                                          \
+  MACRO_(false, false_, "false")                                               \
+  MACRO_(fieldOffsets, fieldOffsets, "fieldOffsets")                           \
+  MACRO_(fieldTypes, fieldTypes, "fieldTypes")                                 \
+  MACRO_(fileName, fileName, "fileName")                                       \
+  MACRO_(fill, fill, "fill")                                                   \
+  MACRO_(finally, finally_, "finally")                                         \
+  MACRO_(find, find, "find")                                                   \
+  MACRO_(findIndex, findIndex, "findIndex")                                    \
+  MACRO_(firstDayOfWeek, firstDayOfWeek, "firstDayOfWeek")                     \
+  MACRO_(fix, fix, "fix")                                                      \
+  MACRO_(flags, flags, "flags")                                                \
+  MACRO_(flat, flat, "flat")                                                   \
+  MACRO_(flatMap, flatMap, "flatMap")                                          \
+  MACRO_(float32, float32, "float32")                                          \
+  MACRO_(float64, float64, "float64")                                          \
+    MACRO_(for, for_, "for")                                                   \
+  MACRO_(forceInterpreter, forceInterpreter, "forceInterpreter")               \
+  MACRO_(forEach, forEach, "forEach")                                          \
+  MACRO_(format, format, "format")                                             \
+  MACRO_(fraction, fraction, "fraction")                                       \
+  MACRO_(fractionalSecond, fractionalSecond, "fractionalSecond")               \
+  MACRO_(frame, frame, "frame")                                                \
+  MACRO_(from, from, "from")                                                   \
+  MACRO_(fulfilled, fulfilled, "fulfilled")                                    \
+  MACRO_(futexNotEqual, futexNotEqual, "not-equal")                            \
+  MACRO2(futexOK, futexOK, "ok")                                               \
+  MACRO_(futexTimedOut, futexTimedOut, "timed-out")                            \
+  MACRO_(gcCycleNumber, gcCycleNumber, "gcCycleNumber")                        \
+  MACRO_(Generator, Generator, "Generator")                                    \
+  MACRO_(GeneratorNext, GeneratorNext, "GeneratorNext")                        \
+  MACRO_(GeneratorReturn, GeneratorReturn, "GeneratorReturn")                  \
+  MACRO_(GeneratorThrow, GeneratorThrow, "GeneratorThrow")                     \
+  MACRO_(get, get, "get")                                                      \
+  MACRO_(GetAggregateError, GetAggregateError, "GetAggregateError")            \
+  MACRO_(GetBuiltinConstructor, GetBuiltinConstructor,                         \
+         "GetBuiltinConstructor")                                              \
+  MACRO_(GetBuiltinPrototype, GetBuiltinPrototype, "GetBuiltinPrototype")      \
+  MACRO_(GetInternalError, GetInternalError, "GetInternalError")               \
+  MACRO_(getBigInt64, getBigInt64, "getBigInt64")                              \
+  MACRO_(getBigUint64, getBigUint64, "getBigUint64")                           \
+  MACRO_(getInternals, getInternals, "getInternals")                           \
+  MACRO_(GetModuleNamespace, GetModuleNamespace, "GetModuleNamespace")         \
+  MACRO_(getOwnPropertyDescriptor, getOwnPropertyDescriptor,                   \
+         "getOwnPropertyDescriptor")                                           \
+  MACRO_(getOwnPropertyNames, getOwnPropertyNames, "getOwnPropertyNames")      \
+  MACRO_(getPropertySuper, getPropertySuper, "getPropertySuper")               \
+  MACRO_(getPrototypeOf, getPrototypeOf, "getPrototypeOf")                     \
+  MACRO_(GetTypeError, GetTypeError, "GetTypeError")                           \
+  MACRO_(global, global, "global")                                             \
+  MACRO_(globalThis, globalThis, "globalThis")                                 \
+  MACRO_(group, group, "group")                                                \
+  MACRO_(groups, groups, "groups")                                             \
+  MACRO_(h11, h11, "h11")                                                      \
+  MACRO_(h12, h12, "h12")                                                      \
+  MACRO_(h23, h23, "h23")                                                      \
+  MACRO_(h24, h24, "h24")                                                      \
+  MACRO_(Handle, Handle, "Handle")                                             \
+  MACRO_(has, has, "has")                                                      \
+  MACRO_(hashConstructor, hashConstructor, "#constructor")                     \
+  MACRO_(hasOwn, hasOwn, "hasOwn")                                             \
+  MACRO_(hasOwnProperty, hasOwnProperty, "hasOwnProperty")                     \
+  MACRO_(highWaterMark, highWaterMark, "highWaterMark")                        \
+  MACRO_(hour, hour, "hour")                                                   \
+  MACRO_(hourCycle, hourCycle, "hourCycle")                                    \
+  MACRO2(if, if_, "if")                                                        \
+  MACRO_(ignoreCase, ignoreCase, "ignoreCase")                                 \
+  MACRO_(ignorePunctuation, ignorePunctuation, "ignorePunctuation")            \
+  MACRO_(implements, implements, "implements")                                 \
+  MACRO_(import, import, "import")                                             \
+  MACRO2(in, in, "in")                                                         \
+  MACRO_(includes, includes, "includes")                                       \
+  MACRO_(incumbentGlobal, incumbentGlobal, "incumbentGlobal")                  \
+  MACRO_(index, index, "index")                                                \
+  MACRO_(infinity, infinity, "infinity")                                       \
+  MACRO_(Infinity, Infinity, "Infinity")                                       \
+  MACRO_(initial, initial, "initial")                                          \
+  MACRO_(InitializeCollator, InitializeCollator, "InitializeCollator")         \
+  MACRO_(InitializeDateTimeFormat, InitializeDateTimeFormat,                   \
+         "InitializeDateTimeFormat")                                           \
+  MACRO_(InitializeDisplayNames, InitializeDisplayNames,                       \
+         "InitializeDisplayNames")                                             \
+  MACRO_(InitializeListFormat, InitializeListFormat, "InitializeListFormat")   \
+  MACRO_(InitializeLocale, InitializeLocale, "InitializeLocale")               \
+  MACRO_(InitializeNumberFormat, InitializeNumberFormat,                       \
+         "InitializeNumberFormat")                                             \
+  MACRO_(InitializePluralRules, InitializePluralRules,                         \
+         "InitializePluralRules")                                              \
+  MACRO_(InitializeRelativeTimeFormat, InitializeRelativeTimeFormat,           \
+         "InitializeRelativeTimeFormat")                                       \
+  MACRO_(innermost, innermost, "innermost")                                    \
+  MACRO_(inNursery, inNursery, "inNursery")                                    \
+  MACRO_(input, input, "input")                                                \
+  MACRO_(instanceof, instanceof, "instanceof")                                 \
+  MACRO_(int8, int8, "int8")                                                   \
+  MACRO_(int16, int16, "int16")                                                \
+  MACRO_(int32, int32, "int32")                                                \
+  MACRO_(integer, integer, "integer")                                          \
+  MACRO_(interface, interface, "interface")                                    \
+  MACRO_(InterpretGeneratorResume, InterpretGeneratorResume,                   \
+         "InterpretGeneratorResume")                                           \
+  MACRO_(InvalidDate, InvalidDate, "Invalid Date")                             \
+  MACRO_(isBreakpoint, isBreakpoint, "isBreakpoint")                           \
+  MACRO_(isEntryPoint, isEntryPoint, "isEntryPoint")                           \
+  MACRO_(isExtensible, isExtensible, "isExtensible")                           \
+  MACRO_(isFinite, isFinite, "isFinite")                                       \
+  MACRO_(isNaN, isNaN, "isNaN")                                                \
+  MACRO_(isPrototypeOf, isPrototypeOf, "isPrototypeOf")                        \
+  MACRO_(isStepStart, isStepStart, "isStepStart")                              \
+  MACRO_(IterableToList, IterableToList, "IterableToList")                     \
+  MACRO_(iterate, iterate, "iterate")                                          \
+  MACRO_(join, join, "join")                                                   \
+  MACRO2(js, js, "js")                                                         \
+  MACRO_(keys, keys, "keys")                                                   \
+  MACRO_(label, label, "label")                                                \
+  MACRO_(language, language, "language")                                       \
+  MACRO_(lastIndex, lastIndex, "lastIndex")                                    \
+  MACRO_(length, length, "length")                                             \
+  MACRO_(let, let, "let")                                                      \
+  MACRO_(line, line, "line")                                                   \
+  MACRO_(lineNumber, lineNumber, "lineNumber")                                 \
+  MACRO_(literal, literal, "literal")                                          \
+  MACRO_(loc, loc, "loc")                                                      \
+  MACRO_(locale, locale, "locale")                                             \
+  MACRO_(lookupGetter, lookupGetter, "__lookupGetter__")                       \
+  MACRO_(lookupSetter, lookupSetter, "__lookupSetter__")                       \
+  MACRO_(ltr, ltr, "ltr")                                                      \
+  MACRO_(MapConstructorInit, MapConstructorInit, "MapConstructorInit")         \
+  MACRO_(MapIterator, MapIterator, "Map Iterator")                             \
+  MACRO_(maxColumn, maxColumn, "maxColumn")                                    \
+  MACRO_(maximum, maximum, "maximum")                                          \
+  MACRO_(maximumFractionDigits, maximumFractionDigits,                         \
+         "maximumFractionDigits")                                              \
+  MACRO_(maximumSignificantDigits, maximumSignificantDigits,                   \
+         "maximumSignificantDigits")                                           \
+  MACRO_(maxLine, maxLine, "maxLine")                                          \
+  MACRO_(maxOffset, maxOffset, "maxOffset")                                    \
+  MACRO_(message, message, "message")                                          \
+  MACRO_(meta, meta, "meta")                                                   \
+  MACRO_(minColumn, minColumn, "minColumn")                                    \
+  MACRO_(minDays, minDays, "minDays")                                          \
+  MACRO_(minimum, minimum, "minimum")                                          \
+  MACRO_(minimumFractionDigits, minimumFractionDigits,                         \
+         "minimumFractionDigits")                                              \
+  MACRO_(minimumIntegerDigits, minimumIntegerDigits, "minimumIntegerDigits")   \
+  MACRO_(minimumSignificantDigits, minimumSignificantDigits,                   \
+         "minimumSignificantDigits")                                           \
+  MACRO_(minLine, minLine, "minLine")                                          \
+  MACRO_(minOffset, minOffset, "minOffset")                                    \
+  MACRO_(minusSign, minusSign, "minusSign")                                    \
+  MACRO_(minute, minute, "minute")                                             \
+  MACRO_(missingArguments, missingArguments, "missingArguments")               \
+  MACRO_(mode, mode, "mode")                                                   \
+  MACRO_(module, module, "module")                                             \
+  MACRO_(Module, Module, "Module")                                             \
+  MACRO_(ModuleInstantiate, ModuleInstantiate, "ModuleInstantiate")            \
+  MACRO_(ModuleEvaluate, ModuleEvaluate, "ModuleEvaluate")                     \
+  MACRO_(month, month, "month")                                                \
+  MACRO_(multiline, multiline, "multiline")                                    \
+  MACRO_(mutable, mutable_, "mutable")                                         \
+  MACRO_(name, name, "name")                                                   \
+  MACRO_(nan, nan, "nan")                                                      \
+  MACRO_(NaN, NaN, "NaN")                                                      \
+  MACRO_(NegativeInfinity, NegativeInfinity, "-Infinity")                      \
+  MACRO_(new, new_, "new")                                                     \
+  MACRO_(NewPrivateName, NewPrivateName, "NewPrivateName")                     \
+  MACRO_(next, next, "next")                                                   \
+  MACRO_(NFC, NFC, "NFC")                                                      \
+  MACRO_(NFD, NFD, "NFD")                                                      \
+  MACRO_(NFKC, NFKC, "NFKC")                                                   \
+  MACRO_(NFKD, NFKD, "NFKD")                                                   \
+  MACRO_(noFilename, noFilename, "noFilename")                                 \
+  MACRO_(nonincrementalReason, nonincrementalReason, "nonincrementalReason")   \
+  MACRO_(NoPrivateGetter, NoPrivateGetter, "NoPrivateGetter")                  \
+  MACRO_(noStack, noStack, "noStack")                                          \
+  MACRO_(notation, notation, "notation")                                       \
+  MACRO_(notes, notes, "notes")                                                \
+  MACRO_(numberingSystem, numberingSystem, "numberingSystem")                  \
+  MACRO_(numeric, numeric, "numeric")                                          \
+  MACRO_(objectArguments, objectArguments, "[object Arguments]")               \
+  MACRO_(objectArray, objectArray, "[object Array]")                           \
+  MACRO_(objectBigInt, objectBigInt, "[object BigInt]")                        \
+  MACRO_(objectBoolean, objectBoolean, "[object Boolean]")                     \
+  MACRO_(objectDate, objectDate, "[object Date]")                              \
+  MACRO_(objectError, objectError, "[object Error]")                           \
+  MACRO_(objectFunction, objectFunction, "[object Function]")                  \
+  MACRO_(objectNull, objectNull, "[object Null]")                              \
+  MACRO_(objectNumber, objectNumber, "[object Number]")                        \
+  MACRO_(objectObject, objectObject, "[object Object]")                        \
+  MACRO_(objectRegExp, objectRegExp, "[object RegExp]")                        \
+  MACRO_(objects, objects, "objects")                                          \
+  MACRO_(objectString, objectString, "[object String]")                        \
+  MACRO_(objectSymbol, objectSymbol, "[object Symbol]")                        \
+  MACRO_(objectUndefined, objectUndefined, "[object Undefined]")               \
+  MACRO2(of, of, "of")                                                         \
+  MACRO_(offset, offset, "offset")                                             \
+  MACRO_(optimizedOut, optimizedOut, "optimizedOut")                           \
+  MACRO_(other, other, "other")                                                \
+  MACRO_(outOfMemory, outOfMemory, "out of memory")                            \
+  MACRO_(ownKeys, ownKeys, "ownKeys")                                          \
+  MACRO_(Object_valueOf, Object_valueOf, "Object_valueOf")                     \
+  MACRO_(package, package, "package")                                          \
+  MACRO_(parseFloat, parseFloat, "parseFloat")                                 \
+  MACRO_(parseInt, parseInt, "parseInt")                                       \
+  MACRO_(pattern, pattern, "pattern")                                          \
+  MACRO_(pending, pending, "pending")                                          \
+  MACRO_(percentSign, percentSign, "percentSign")                              \
+  MACRO_(pipeTo, pipeTo, "pipeTo")                                             \
+  MACRO_(plusSign, plusSign, "plusSign")                                       \
+  MACRO_(public, public_, "public")                                            \
+  MACRO_(pull, pull, "pull")                                                   \
+  MACRO_(preventAbort, preventAbort, "preventAbort")                           \
+  MACRO_(preventClose, preventClose, "preventClose")                           \
+  MACRO_(preventCancel, preventCancel, "preventCancel")                        \
+  MACRO_(preventExtensions, preventExtensions, "preventExtensions")            \
+  MACRO_(private, private_, "private")                                         \
+  MACRO_(promise, promise, "promise")                                          \
+  MACRO_(propertyIsEnumerable, propertyIsEnumerable, "propertyIsEnumerable")   \
+  MACRO_(protected, protected_, "protected")                                   \
+  MACRO_(proto, proto, "__proto__")                                            \
+  MACRO_(prototype, prototype, "prototype")                                    \
+  MACRO_(proxy, proxy, "proxy")                                                \
+  MACRO_(quarter, quarter, "quarter")                                          \
+  MACRO_(raw, raw, "raw")                                                      \
+  MACRO_(reason, reason, "reason")                                             \
+  MACRO_(RegExpFlagsGetter, RegExpFlagsGetter, "$RegExpFlagsGetter")           \
+  MACRO_(RegExpStringIterator, RegExpStringIterator, "RegExp String Iterator") \
+  MACRO_(RegExpToString, RegExpToString, "$RegExpToString")                    \
+  MACRO_(region, region, "region")                                             \
+  MACRO_(register, register_, "register")                                      \
+  MACRO_(Reify, Reify, "Reify")                                                \
+  MACRO_(reject, reject, "reject")                                             \
+  MACRO_(rejected, rejected, "rejected")                                       \
+  MACRO_(relatedYear, relatedYear, "relatedYear")                              \
+  MACRO_(RelativeTimeFormatFormat, RelativeTimeFormatFormat,                   \
+         "Intl_RelativeTimeFormat_Format")                                     \
+  MACRO_(RequireObjectCoercible, RequireObjectCoercible,                       \
+         "RequireObjectCoercible")                                             \
+  MACRO_(resolve, resolve, "resolve")                                          \
+  MACRO_(result, result, "result")                                             \
+  MACRO_(resumeGenerator, resumeGenerator, "resumeGenerator")                  \
+  MACRO_(return, return_, "return")                                            \
+  MACRO_(revoke, revoke, "revoke")                                             \
+  MACRO_(rtl, rtl, "rtl")                                                      \
+  MACRO_(script, script, "script")                                             \
+  MACRO_(scripts, scripts, "scripts")                                          \
+  MACRO_(second, second, "second")                                             \
+  MACRO_(selfHosted, selfHosted, "self-hosted")                                \
+  MACRO_(sensitivity, sensitivity, "sensitivity")                              \
+  MACRO_(set, set, "set")                                                      \
+  MACRO_(setBigInt64, setBigInt64, "setBigInt64")                              \
+  MACRO_(setBigUint64, setBigUint64, "setBigUint64")                           \
+  MACRO_(SetConstructorInit, SetConstructorInit, "SetConstructorInit")         \
+  MACRO_(SetIterator, SetIterator, "Set Iterator")                             \
+  MACRO_(setPrototypeOf, setPrototypeOf, "setPrototypeOf")                     \
+  MACRO_(shape, shape, "shape")                                                \
+  MACRO_(shared, shared, "shared")                                             \
+  MACRO_(signal, signal, "signal")                                             \
+  MACRO_(signDisplay, signDisplay, "signDisplay")                              \
+  MACRO_(size, size, "size")                                                   \
+  MACRO_(skeleton, skeleton, "skeleton")                                       \
+  MACRO_(source, source, "source")                                             \
+  MACRO_(SpeciesConstructor, SpeciesConstructor, "SpeciesConstructor")         \
+  MACRO_(stack, stack, "stack")                                                \
+  MACRO1(star, star, "*")                                                      \
+  MACRO_(starNamespaceStar, starNamespaceStar, "*namespace*")                  \
+  MACRO_(start, start, "start")                                                \
+  MACRO_(startRange, startRange, "startRange")                                 \
+  MACRO_(startTimestamp, startTimestamp, "startTimestamp")                     \
+  MACRO_(state, state, "state")                                                \
+  MACRO_(static, static_, "static")                                            \
+  MACRO_(status, status, "status")                                             \
+  MACRO_(std_Function_apply, std_Function_apply, "std_Function_apply")         \
+  MACRO_(sticky, sticky, "sticky")                                             \
+  MACRO_(StringIterator, StringIterator, "String Iterator")                    \
+  MACRO_(strings, strings, "strings")                                          \
+  MACRO_(String_split, String_split, "String_split")                           \
+  MACRO_(StructType, StructType, "StructType")                                 \
+  MACRO_(style, style, "style")                                                \
+  MACRO_(super, super, "super")                                                \
+  MACRO_(switch, switch_, "switch")                                            \
+  MACRO_(Symbol_iterator_fun, Symbol_iterator_fun, "[Symbol.iterator]")        \
+  MACRO_(target, target, "target")                                             \
+  MACRO_(test, test, "test")                                                   \
+  MACRO_(then, then, "then")                                                   \
+  MACRO_(this, this_, "this")                                                  \
+  MACRO_(throw, throw_, "throw")                                               \
+  MACRO_(timestamp, timestamp, "timestamp")                                    \
+  MACRO_(timeZone, timeZone, "timeZone")                                       \
+  MACRO_(timeZoneName, timeZoneName, "timeZoneName")                           \
+  MACRO_(trimEnd, trimEnd, "trimEnd")                                          \
+  MACRO_(trimLeft, trimLeft, "trimLeft")                                       \
+  MACRO_(trimRight, trimRight, "trimRight")                                    \
+  MACRO_(trimStart, trimStart, "trimStart")                                    \
+  MACRO_(toGMTString, toGMTString, "toGMTString")                              \
+  MACRO_(toISOString, toISOString, "toISOString")                              \
+  MACRO_(toJSON, toJSON, "toJSON")                                             \
+  MACRO_(toLocaleString, toLocaleString, "toLocaleString")                     \
+  MACRO_(ToNumeric, ToNumeric, "ToNumeric")                                    \
+  MACRO_(toSource, toSource, "toSource")                                       \
+  MACRO_(toString, toString, "toString")                                       \
+  MACRO_(ToString, ToString, "ToString")                                       \
+  MACRO_(toUTCString, toUTCString, "toUTCString")                              \
+  MACRO_(true, true_, "true")                                                  \
+  MACRO_(try, try_, "try")                                                     \
+  MACRO_(type, type, "type")                                                   \
+  MACRO_(typeof, typeof_, "typeof")                                            \
+  MACRO_(uint8, uint8, "uint8")                                                \
+  MACRO_(uint8Clamped, uint8Clamped, "uint8Clamped")                           \
+  MACRO_(uint16, uint16, "uint16")                                             \
+  MACRO_(uint32, uint32, "uint32")                                             \
+  MACRO_(Uint8x16, Uint8x16, "Uint8x16")                                       \
+  MACRO_(Uint16x8, Uint16x8, "Uint16x8")                                       \
+  MACRO_(Uint32x4, Uint32x4, "Uint32x4")                                       \
+  MACRO_(unescape, unescape, "unescape")                                       \
+  MACRO_(uneval, uneval, "uneval")                                             \
+  MACRO_(unicode, unicode, "unicode")                                          \
+  MACRO_(unit, unit, "unit")                                                   \
+  MACRO_(unitDisplay, unitDisplay, "unitDisplay")                              \
+  MACRO_(uninitialized, uninitialized, "uninitialized")                        \
+  MACRO_(unknown, unknown, "unknown")                                          \
+  MACRO_(unregister, unregister, "unregister")                                 \
+  MACRO_(UnsafeGetReservedSlot, UnsafeGetReservedSlot,                         \
+         "UnsafeGetReservedSlot")                                              \
+  MACRO_(UnsafeGetObjectFromReservedSlot, UnsafeGetObjectFromReservedSlot,     \
+         "UnsafeGetObjectFromReservedSlot")                                    \
+  MACRO_(UnsafeGetInt32FromReservedSlot, UnsafeGetInt32FromReservedSlot,       \
+         "UnsafeGetInt32FromReservedSlot")                                     \
+  MACRO_(UnsafeGetStringFromReservedSlot, UnsafeGetStringFromReservedSlot,     \
+         "UnsafeGetStringFromReservedSlot")                                    \
+  MACRO_(UnsafeGetBooleanFromReservedSlot, UnsafeGetBooleanFromReservedSlot,   \
+         "UnsafeGetBooleanFromReservedSlot")                                   \
+  MACRO_(UnsafeSetReservedSlot, UnsafeSetReservedSlot,                         \
+         "UnsafeSetReservedSlot")                                              \
+  MACRO_(unsized, unsized, "unsized")                                          \
+  MACRO_(unwatch, unwatch, "unwatch")                                          \
+  MACRO_(url, url, "url")                                                      \
+  MACRO_(usage, usage, "usage")                                                \
+  MACRO_(useAsm, useAsm, "use asm")                                            \
+  MACRO_(useGrouping, useGrouping, "useGrouping")                              \
+  MACRO_(useStrict, useStrict, "use strict")                                   \
+  MACRO_(void, void_, "void")                                                  \
+  MACRO_(value, value, "value")                                                \
+  MACRO_(valueOf, valueOf, "valueOf")                                          \
+  MACRO_(values, values, "values")                                             \
+  MACRO_(var, var, "var")                                                      \
+  MACRO_(variable, variable, "variable")                                       \
+  MACRO_(void0, void0, "(void 0)")                                             \
+  MACRO_(wasm, wasm, "wasm")                                                   \
+  MACRO_(WasmAnyRef, WasmAnyRef, "WasmAnyRef")                                 \
+  MACRO_(wasmcall, wasmcall, "wasmcall")                                       \
+  MACRO_(watch, watch, "watch")                                                \
+  MACRO_(WeakMapConstructorInit, WeakMapConstructorInit,                       \
+         "WeakMapConstructorInit")                                             \
+  MACRO_(WeakSetConstructorInit, WeakSetConstructorInit,                       \
+         "WeakSetConstructorInit")                                             \
+  MACRO_(WeakSet_add, WeakSet_add, "WeakSet_add")                              \
+  MACRO_(week, week, "week")                                                   \
+  MACRO_(weekday, weekday, "weekday")                                          \
+  MACRO_(weekendEnd, weekendEnd, "weekendEnd")                                 \
+  MACRO_(weekendStart, weekendStart, "weekendStart")                           \
+  MACRO_(while, while_, "while")                                               \
+  MACRO_(with, with, "with")                                                   \
+  MACRO_(writable, writable, "writable")                                       \
+  MACRO_(write, write, "write")                                                \
+  MACRO_(year, year, "year")                                                   \
+  MACRO_(yearName, yearName, "yearName")                                       \
+  MACRO_(yield, yield, "yield")                                                \
+  /* Type names must be contiguous and ordered; see js::TypeName. */           \
+  MACRO_(undefined, undefined, "undefined")                                    \
+  MACRO_(object, object, "object")                                             \
+  MACRO_(function, function, "function")                                       \
+  MACRO_(string, string, "string")                                             \
+  MACRO_(number, number, "number")                                             \
+  MACRO_(boolean, boolean, "boolean")                                          \
+  MACRO_(null, null, "null")                                                   \
+  MACRO_(symbol, symbol, "symbol")                                             \
+  MACRO_(bigint, bigint, "bigint")                                             \
+  MACRO_(defineDataPropertyIntrinsic, defineDataPropertyIntrinsic,             \
+         "_DefineDataProperty")
 
-#define FOR_EACH_LENGTH1_PROPERTYNAME(MACRO) MACRO(comma, comma, ",")
+#define PROPERTY_NAME_IGNORE(IDPART, ID, TEXT)
 
-#define FOR_EACH_LENGTH2_PROPERTYNAME(MACRO) \
-  MACRO(as, as, "as")                        \
-  MACRO(at, at, "at")                        \
-  MACRO(by, by, "by")                        \
-  MACRO(do, do_, "do")                       \
-  MACRO(futexOK, futexOK, "ok")              \
-  MACRO(if, if_, "if")                       \
-  MACRO(in, in, "in")                        \
-  MACRO(js, js, "js")                        \
-  MACRO(of, of, "of")
+#define FOR_EACH_LENGTH1_PROPERTYNAME(MACRO)                 \
+  FOR_EACH_COMMON_PROPERTYNAME_(PROPERTY_NAME_IGNORE, MACRO, \
+                                PROPERTY_NAME_IGNORE, PROPERTY_NAME_IGNORE)
 
-#define FOR_EACH_NON_EMPTY_TINY_PROPERTYNAME(MACRO) \
-  FOR_EACH_LENGTH1_PROPERTYNAME(MACRO)              \
-  FOR_EACH_LENGTH2_PROPERTYNAME(MACRO)
+#define FOR_EACH_LENGTH2_PROPERTYNAME(MACRO)                                \
+  FOR_EACH_COMMON_PROPERTYNAME_(PROPERTY_NAME_IGNORE, PROPERTY_NAME_IGNORE, \
+                                MACRO, PROPERTY_NAME_IGNORE)
+
+#define FOR_EACH_NON_EMPTY_TINY_PROPERTYNAME(MACRO)                 \
+  FOR_EACH_COMMON_PROPERTYNAME_(PROPERTY_NAME_IGNORE, MACRO, MACRO, \
+                                PROPERTY_NAME_IGNORE)
 
 #define FOR_EACH_TINY_PROPERTYNAME(MACRO) \
-  MACRO(empty, empty, "")                 \
-  FOR_EACH_NON_EMPTY_TINY_PROPERTYNAME(MACRO)
+  FOR_EACH_COMMON_PROPERTYNAME_(MACRO, MACRO, MACRO, PROPERTY_NAME_IGNORE)
 
-#define FOR_EACH_NONTINY_COMMON_PROPERTYNAME(MACRO)                            \
-  MACRO(abort, abort, "abort")                                                 \
-  MACRO(add, add, "add")                                                       \
-  MACRO(allowContentIter, allowContentIter, "allowContentIter")                \
-  MACRO(anonymous, anonymous, "anonymous")                                     \
-  MACRO(Any, Any, "Any")                                                       \
-  MACRO(apply, apply, "apply")                                                 \
-  MACRO(args, args, "args")                                                    \
-  MACRO(arguments, arguments, "arguments")                                     \
-  MACRO(ArrayBufferSpecies, ArrayBufferSpecies, "$ArrayBufferSpecies")         \
-  MACRO(ArrayIterator, ArrayIterator, "Array Iterator")                        \
-  MACRO(ArrayIteratorNext, ArrayIteratorNext, "ArrayIteratorNext")             \
-  MACRO(ArraySort, ArraySort, "ArraySort")                                     \
-  MACRO(ArraySpecies, ArraySpecies, "$ArraySpecies")                           \
-  MACRO(ArraySpeciesCreate, ArraySpeciesCreate, "ArraySpeciesCreate")          \
-  MACRO(ArrayToLocaleString, ArrayToLocaleString, "ArrayToLocaleString")       \
-  MACRO(ArrayType, ArrayType, "ArrayType")                                     \
-  MACRO(ArrayValues, ArrayValues, "$ArrayValues")                              \
-  MACRO(Async, Async, "Async")                                                 \
-  MACRO(AsyncFromSyncIterator, AsyncFromSyncIterator,                          \
-        "Async-from-Sync Iterator")                                            \
-  MACRO(AsyncFunctionNext, AsyncFunctionNext, "AsyncFunctionNext")             \
-  MACRO(AsyncFunctionThrow, AsyncFunctionThrow, "AsyncFunctionThrow")          \
-  MACRO(AsyncGenerator, AsyncGenerator, "AsyncGenerator")                      \
-  MACRO(AsyncGeneratorNext, AsyncGeneratorNext, "AsyncGeneratorNext")          \
-  MACRO(AsyncGeneratorReturn, AsyncGeneratorReturn, "AsyncGeneratorReturn")    \
-  MACRO(AsyncGeneratorThrow, AsyncGeneratorThrow, "AsyncGeneratorThrow")       \
-  MACRO(AsyncWrapped, AsyncWrapped, "AsyncWrapped")                            \
-  MACRO(async, async, "async")                                                 \
-  MACRO(autoAllocateChunkSize, autoAllocateChunkSize, "autoAllocateChunkSize") \
-  MACRO(await, await, "await")                                                 \
-  MACRO(bigint64, bigint64, "bigint64")                                        \
-  MACRO(biguint64, biguint64, "biguint64")                                     \
-  MACRO(boundWithSpace, boundWithSpace, "bound ")                              \
-  MACRO(break, break_, "break")                                                \
-  MACRO(breakdown, breakdown, "breakdown")                                     \
-  MACRO(buffer, buffer, "buffer")                                              \
-  MACRO(builder, builder, "builder")                                           \
-  MACRO(byob, byob, "byob")                                                    \
-  MACRO(byteAlignment, byteAlignment, "byteAlignment")                         \
-  MACRO(byteLength, byteLength, "byteLength")                                  \
-  MACRO(byteOffset, byteOffset, "byteOffset")                                  \
-  MACRO(bytes, bytes, "bytes")                                                 \
-  MACRO(BYTES_PER_ELEMENT, BYTES_PER_ELEMENT, "BYTES_PER_ELEMENT")             \
-  MACRO(calendar, calendar, "calendar")                                        \
-  MACRO(call, call, "call")                                                    \
-  MACRO(callContentFunction, callContentFunction, "callContentFunction")       \
-  MACRO(callee, callee, "callee")                                              \
-  MACRO(caller, caller, "caller")                                              \
-  MACRO(callFunction, callFunction, "callFunction")                            \
-  MACRO(cancel, cancel, "cancel")                                              \
-  MACRO(case, case_, "case")                                                   \
-  MACRO(caseFirst, caseFirst, "caseFirst")                                     \
-  MACRO(catch, catch_, "catch")                                                \
-  MACRO(class, class_, "class")                                                \
-  MACRO(cleanupSome, cleanupSome, "cleanupSome")                               \
-  MACRO(close, close, "close")                                                 \
-  MACRO(collation, collation, "collation")                                     \
-  MACRO(collections, collections, "collections")                               \
-  MACRO(columnNumber, columnNumber, "columnNumber")                            \
-  MACRO(compare, compare, "compare")                                           \
-  MACRO(configurable, configurable, "configurable")                            \
-  MACRO(const, const_, "const")                                                \
-  MACRO(construct, construct, "construct")                                     \
-  MACRO(constructContentFunction, constructContentFunction,                    \
-        "constructContentFunction")                                            \
-  MACRO(constructor, constructor, "constructor")                               \
-  MACRO(continue, continue_, "continue")                                       \
-  MACRO(CopyDataProperties, CopyDataProperties, "CopyDataProperties")          \
-  MACRO(CopyDataPropertiesUnfiltered, CopyDataPropertiesUnfiltered,            \
-        "CopyDataPropertiesUnfiltered")                                        \
-  MACRO(copyWithin, copyWithin, "copyWithin")                                  \
-  MACRO(compact, compact, "compact")                                           \
-  MACRO(compactDisplay, compactDisplay, "compactDisplay")                      \
-  MACRO(count, count, "count")                                                 \
-  MACRO(CreateResolvingFunctions, CreateResolvingFunctions,                    \
-        "CreateResolvingFunctions")                                            \
-  MACRO(currency, currency, "currency")                                        \
-  MACRO(currencyDisplay, currencyDisplay, "currencyDisplay")                   \
-  MACRO(currencySign, currencySign, "currencySign")                            \
-  MACRO(day, day, "day")                                                       \
-  MACRO(dayPeriod, dayPeriod, "dayPeriod")                                     \
-  MACRO(debugger, debugger, "debugger")                                        \
-  MACRO(decimal, decimal, "decimal")                                           \
-  MACRO(decodeURI, decodeURI, "decodeURI")                                     \
-  MACRO(decodeURIComponent, decodeURIComponent, "decodeURIComponent")          \
-  MACRO(default, default_, "default")                                          \
-  MACRO(defineGetter, defineGetter, "__defineGetter__")                        \
-  MACRO(defineProperty, defineProperty, "defineProperty")                      \
-  MACRO(defineSetter, defineSetter, "__defineSetter__")                        \
-  MACRO(delete, delete_, "delete")                                             \
-  MACRO(deleteProperty, deleteProperty, "deleteProperty")                      \
-  MACRO(direction, direction, "direction")                                     \
-  MACRO(displayURL, displayURL, "displayURL")                                  \
-  MACRO(domNode, domNode, "domNode")                                           \
-  MACRO(done, done, "done")                                                    \
-  MACRO(dotAll, dotAll, "dotAll")                                              \
-  MACRO(dotGenerator, dotGenerator, ".generator")                              \
-  MACRO(dotThis, dotThis, ".this")                                             \
-  MACRO(dotInitializers, dotInitializers, ".initializers")                     \
-  MACRO(dotFieldKeys, dotFieldKeys, ".fieldKeys")                              \
-  MACRO(dotStaticInitializers, dotStaticInitializers, ".staticInitializers")   \
-  MACRO(dotStaticFieldKeys, dotStaticFieldKeys, ".staticFieldKeys")            \
-  MACRO(each, each, "each")                                                    \
-  MACRO(element, element, "element")                                           \
-  MACRO(elementType, elementType, "elementType")                               \
-  MACRO(else, else_, "else")                                                   \
-  MACRO(emptyRegExp, emptyRegExp, "(?:)")                                      \
-  MACRO(encodeURI, encodeURI, "encodeURI")                                     \
-  MACRO(encodeURIComponent, encodeURIComponent, "encodeURIComponent")          \
-  MACRO(endRange, endRange, "endRange")                                        \
-  MACRO(endTimestamp, endTimestamp, "endTimestamp")                            \
-  MACRO(entries, entries, "entries")                                           \
-  MACRO(enum, enum_, "enum")                                                   \
-  MACRO(enumerable, enumerable, "enumerable")                                  \
-  MACRO(enumerate, enumerate, "enumerate")                                     \
-  MACRO(era, era, "era")                                                       \
-  MACRO(ErrorToStringWithTrailingNewline, ErrorToStringWithTrailingNewline,    \
-        "ErrorToStringWithTrailingNewline")                                    \
-  MACRO(errors, errors, "errors")                                              \
-  MACRO(escape, escape, "escape")                                              \
-  MACRO(eval, eval, "eval")                                                    \
-  MACRO(exec, exec, "exec")                                                    \
-  MACRO(exponentInteger, exponentInteger, "exponentInteger")                   \
-  MACRO(exponentMinusSign, exponentMinusSign, "exponentMinusSign")             \
-  MACRO(exponentSeparator, exponentSeparator, "exponentSeparator")             \
-  MACRO(export, export_, "export")                                             \
-  MACRO(extends, extends, "extends")                                           \
-  MACRO(false, false_, "false")                                                \
-  MACRO(fieldOffsets, fieldOffsets, "fieldOffsets")                            \
-  MACRO(fieldTypes, fieldTypes, "fieldTypes")                                  \
-  MACRO(fileName, fileName, "fileName")                                        \
-  MACRO(fill, fill, "fill")                                                    \
-  MACRO(finally, finally_, "finally")                                          \
-  MACRO(find, find, "find")                                                    \
-  MACRO(findIndex, findIndex, "findIndex")                                     \
-  MACRO(firstDayOfWeek, firstDayOfWeek, "firstDayOfWeek")                      \
-  MACRO(fix, fix, "fix")                                                       \
-  MACRO(flags, flags, "flags")                                                 \
-  MACRO(flat, flat, "flat")                                                    \
-  MACRO(flatMap, flatMap, "flatMap")                                           \
-  MACRO(float32, float32, "float32")                                           \
-  MACRO(float64, float64, "float64")                                           \
-    MACRO(for, for_, "for")                                                    \
-  MACRO(forceInterpreter, forceInterpreter, "forceInterpreter")                \
-  MACRO(forEach, forEach, "forEach")                                           \
-  MACRO(format, format, "format")                                              \
-  MACRO(fraction, fraction, "fraction")                                        \
-  MACRO(fractionalSecond, fractionalSecond, "fractionalSecond")                \
-  MACRO(frame, frame, "frame")                                                 \
-  MACRO(from, from, "from")                                                    \
-  MACRO(fulfilled, fulfilled, "fulfilled")                                     \
-  MACRO(futexNotEqual, futexNotEqual, "not-equal")                             \
-  MACRO(futexTimedOut, futexTimedOut, "timed-out")                             \
-  MACRO(gcCycleNumber, gcCycleNumber, "gcCycleNumber")                         \
-  MACRO(Generator, Generator, "Generator")                                     \
-  MACRO(GeneratorNext, GeneratorNext, "GeneratorNext")                         \
-  MACRO(GeneratorReturn, GeneratorReturn, "GeneratorReturn")                   \
-  MACRO(GeneratorThrow, GeneratorThrow, "GeneratorThrow")                      \
-  MACRO(get, get, "get")                                                       \
-  MACRO(GetAggregateError, GetAggregateError, "GetAggregateError")             \
-  MACRO(GetBuiltinConstructor, GetBuiltinConstructor, "GetBuiltinConstructor") \
-  MACRO(GetBuiltinPrototype, GetBuiltinPrototype, "GetBuiltinPrototype")       \
-  MACRO(GetInternalError, GetInternalError, "GetInternalError")                \
-  MACRO(getBigInt64, getBigInt64, "getBigInt64")                               \
-  MACRO(getBigUint64, getBigUint64, "getBigUint64")                            \
-  MACRO(getInternals, getInternals, "getInternals")                            \
-  MACRO(GetModuleNamespace, GetModuleNamespace, "GetModuleNamespace")          \
-  MACRO(getOwnPropertyDescriptor, getOwnPropertyDescriptor,                    \
-        "getOwnPropertyDescriptor")                                            \
-  MACRO(getOwnPropertyNames, getOwnPropertyNames, "getOwnPropertyNames")       \
-  MACRO(getPropertySuper, getPropertySuper, "getPropertySuper")                \
-  MACRO(getPrototypeOf, getPrototypeOf, "getPrototypeOf")                      \
-  MACRO(GetTypeError, GetTypeError, "GetTypeError")                            \
-  MACRO(global, global, "global")                                              \
-  MACRO(globalThis, globalThis, "globalThis")                                  \
-  MACRO(group, group, "group")                                                 \
-  MACRO(groups, groups, "groups")                                              \
-  MACRO(h11, h11, "h11")                                                       \
-  MACRO(h12, h12, "h12")                                                       \
-  MACRO(h23, h23, "h23")                                                       \
-  MACRO(h24, h24, "h24")                                                       \
-  MACRO(Handle, Handle, "Handle")                                              \
-  MACRO(has, has, "has")                                                       \
-  MACRO(hashConstructor, hashConstructor, "#constructor")                      \
-  MACRO(hasOwn, hasOwn, "hasOwn")                                              \
-  MACRO(hasOwnProperty, hasOwnProperty, "hasOwnProperty")                      \
-  MACRO(highWaterMark, highWaterMark, "highWaterMark")                         \
-  MACRO(hour, hour, "hour")                                                    \
-  MACRO(hourCycle, hourCycle, "hourCycle")                                     \
-  MACRO(ignoreCase, ignoreCase, "ignoreCase")                                  \
-  MACRO(ignorePunctuation, ignorePunctuation, "ignorePunctuation")             \
-  MACRO(implements, implements, "implements")                                  \
-  MACRO(import, import, "import")                                              \
-  MACRO(includes, includes, "includes")                                        \
-  MACRO(incumbentGlobal, incumbentGlobal, "incumbentGlobal")                   \
-  MACRO(index, index, "index")                                                 \
-  MACRO(infinity, infinity, "infinity")                                        \
-  MACRO(Infinity, Infinity, "Infinity")                                        \
-  MACRO(initial, initial, "initial")                                           \
-  MACRO(InitializeCollator, InitializeCollator, "InitializeCollator")          \
-  MACRO(InitializeDateTimeFormat, InitializeDateTimeFormat,                    \
-        "InitializeDateTimeFormat")                                            \
-  MACRO(InitializeDisplayNames, InitializeDisplayNames,                        \
-        "InitializeDisplayNames")                                              \
-  MACRO(InitializeListFormat, InitializeListFormat, "InitializeListFormat")    \
-  MACRO(InitializeLocale, InitializeLocale, "InitializeLocale")                \
-  MACRO(InitializeNumberFormat, InitializeNumberFormat,                        \
-        "InitializeNumberFormat")                                              \
-  MACRO(InitializePluralRules, InitializePluralRules, "InitializePluralRules") \
-  MACRO(InitializeRelativeTimeFormat, InitializeRelativeTimeFormat,            \
-        "InitializeRelativeTimeFormat")                                        \
-  MACRO(innermost, innermost, "innermost")                                     \
-  MACRO(inNursery, inNursery, "inNursery")                                     \
-  MACRO(input, input, "input")                                                 \
-  MACRO(instanceof, instanceof, "instanceof")                                  \
-  MACRO(int8, int8, "int8")                                                    \
-  MACRO(int16, int16, "int16")                                                 \
-  MACRO(int32, int32, "int32")                                                 \
-  MACRO(integer, integer, "integer")                                           \
-  MACRO(interface, interface, "interface")                                     \
-  MACRO(InterpretGeneratorResume, InterpretGeneratorResume,                    \
-        "InterpretGeneratorResume")                                            \
-  MACRO(InvalidDate, InvalidDate, "Invalid Date")                              \
-  MACRO(isBreakpoint, isBreakpoint, "isBreakpoint")                            \
-  MACRO(isEntryPoint, isEntryPoint, "isEntryPoint")                            \
-  MACRO(isExtensible, isExtensible, "isExtensible")                            \
-  MACRO(isFinite, isFinite, "isFinite")                                        \
-  MACRO(isNaN, isNaN, "isNaN")                                                 \
-  MACRO(isPrototypeOf, isPrototypeOf, "isPrototypeOf")                         \
-  MACRO(isStepStart, isStepStart, "isStepStart")                               \
-  MACRO(IterableToList, IterableToList, "IterableToList")                      \
-  MACRO(iterate, iterate, "iterate")                                           \
-  MACRO(join, join, "join")                                                    \
-  MACRO(keys, keys, "keys")                                                    \
-  MACRO(label, label, "label")                                                 \
-  MACRO(language, language, "language")                                        \
-  MACRO(lastIndex, lastIndex, "lastIndex")                                     \
-  MACRO(length, length, "length")                                              \
-  MACRO(let, let, "let")                                                       \
-  MACRO(line, line, "line")                                                    \
-  MACRO(lineNumber, lineNumber, "lineNumber")                                  \
-  MACRO(literal, literal, "literal")                                           \
-  MACRO(loc, loc, "loc")                                                       \
-  MACRO(locale, locale, "locale")                                              \
-  MACRO(lookupGetter, lookupGetter, "__lookupGetter__")                        \
-  MACRO(lookupSetter, lookupSetter, "__lookupSetter__")                        \
-  MACRO(ltr, ltr, "ltr")                                                       \
-  MACRO(MapConstructorInit, MapConstructorInit, "MapConstructorInit")          \
-  MACRO(MapIterator, MapIterator, "Map Iterator")                              \
-  MACRO(maxColumn, maxColumn, "maxColumn")                                     \
-  MACRO(maximum, maximum, "maximum")                                           \
-  MACRO(maximumFractionDigits, maximumFractionDigits, "maximumFractionDigits") \
-  MACRO(maximumSignificantDigits, maximumSignificantDigits,                    \
-        "maximumSignificantDigits")                                            \
-  MACRO(maxLine, maxLine, "maxLine")                                           \
-  MACRO(maxOffset, maxOffset, "maxOffset")                                     \
-  MACRO(message, message, "message")                                           \
-  MACRO(meta, meta, "meta")                                                    \
-  MACRO(minColumn, minColumn, "minColumn")                                     \
-  MACRO(minDays, minDays, "minDays")                                           \
-  MACRO(minimum, minimum, "minimum")                                           \
-  MACRO(minimumFractionDigits, minimumFractionDigits, "minimumFractionDigits") \
-  MACRO(minimumIntegerDigits, minimumIntegerDigits, "minimumIntegerDigits")    \
-  MACRO(minimumSignificantDigits, minimumSignificantDigits,                    \
-        "minimumSignificantDigits")                                            \
-  MACRO(minLine, minLine, "minLine")                                           \
-  MACRO(minOffset, minOffset, "minOffset")                                     \
-  MACRO(minusSign, minusSign, "minusSign")                                     \
-  MACRO(minute, minute, "minute")                                              \
-  MACRO(missingArguments, missingArguments, "missingArguments")                \
-  MACRO(mode, mode, "mode")                                                    \
-  MACRO(module, module, "module")                                              \
-  MACRO(Module, Module, "Module")                                              \
-  MACRO(ModuleInstantiate, ModuleInstantiate, "ModuleInstantiate")             \
-  MACRO(ModuleEvaluate, ModuleEvaluate, "ModuleEvaluate")                      \
-  MACRO(month, month, "month")                                                 \
-  MACRO(multiline, multiline, "multiline")                                     \
-  MACRO(mutable, mutable_, "mutable")                                          \
-  MACRO(name, name, "name")                                                    \
-  MACRO(nan, nan, "nan")                                                       \
-  MACRO(NaN, NaN, "NaN")                                                       \
-  MACRO(NegativeInfinity, NegativeInfinity, "-Infinity")                       \
-  MACRO(new, new_, "new")                                                      \
-  MACRO(NewPrivateName, NewPrivateName, "NewPrivateName")                      \
-  MACRO(next, next, "next")                                                    \
-  MACRO(NFC, NFC, "NFC")                                                       \
-  MACRO(NFD, NFD, "NFD")                                                       \
-  MACRO(NFKC, NFKC, "NFKC")                                                    \
-  MACRO(NFKD, NFKD, "NFKD")                                                    \
-  MACRO(noFilename, noFilename, "noFilename")                                  \
-  MACRO(nonincrementalReason, nonincrementalReason, "nonincrementalReason")    \
-  MACRO(NoPrivateGetter, NoPrivateGetter, "NoPrivateGetter")                   \
-  MACRO(noStack, noStack, "noStack")                                           \
-  MACRO(notation, notation, "notation")                                        \
-  MACRO(notes, notes, "notes")                                                 \
-  MACRO(numberingSystem, numberingSystem, "numberingSystem")                   \
-  MACRO(numeric, numeric, "numeric")                                           \
-  MACRO(objectArguments, objectArguments, "[object Arguments]")                \
-  MACRO(objectArray, objectArray, "[object Array]")                            \
-  MACRO(objectBigInt, objectBigInt, "[object BigInt]")                         \
-  MACRO(objectBoolean, objectBoolean, "[object Boolean]")                      \
-  MACRO(objectDate, objectDate, "[object Date]")                               \
-  MACRO(objectError, objectError, "[object Error]")                            \
-  MACRO(objectFunction, objectFunction, "[object Function]")                   \
-  MACRO(objectNull, objectNull, "[object Null]")                               \
-  MACRO(objectNumber, objectNumber, "[object Number]")                         \
-  MACRO(objectObject, objectObject, "[object Object]")                         \
-  MACRO(objectRegExp, objectRegExp, "[object RegExp]")                         \
-  MACRO(objects, objects, "objects")                                           \
-  MACRO(objectString, objectString, "[object String]")                         \
-  MACRO(objectSymbol, objectSymbol, "[object Symbol]")                         \
-  MACRO(objectUndefined, objectUndefined, "[object Undefined]")                \
-  MACRO(offset, offset, "offset")                                              \
-  MACRO(optimizedOut, optimizedOut, "optimizedOut")                            \
-  MACRO(other, other, "other")                                                 \
-  MACRO(outOfMemory, outOfMemory, "out of memory")                             \
-  MACRO(ownKeys, ownKeys, "ownKeys")                                           \
-  MACRO(Object_valueOf, Object_valueOf, "Object_valueOf")                      \
-  MACRO(package, package, "package")                                           \
-  MACRO(parseFloat, parseFloat, "parseFloat")                                  \
-  MACRO(parseInt, parseInt, "parseInt")                                        \
-  MACRO(pattern, pattern, "pattern")                                           \
-  MACRO(pending, pending, "pending")                                           \
-  MACRO(percentSign, percentSign, "percentSign")                               \
-  MACRO(pipeTo, pipeTo, "pipeTo")                                              \
-  MACRO(plusSign, plusSign, "plusSign")                                        \
-  MACRO(public, public_, "public")                                             \
-  MACRO(pull, pull, "pull")                                                    \
-  MACRO(preventAbort, preventAbort, "preventAbort")                            \
-  MACRO(preventClose, preventClose, "preventClose")                            \
-  MACRO(preventCancel, preventCancel, "preventCancel")                         \
-  MACRO(preventExtensions, preventExtensions, "preventExtensions")             \
-  MACRO(private, private_, "private")                                          \
-  MACRO(promise, promise, "promise")                                           \
-  MACRO(propertyIsEnumerable, propertyIsEnumerable, "propertyIsEnumerable")    \
-  MACRO(protected, protected_, "protected")                                    \
-  MACRO(proto, proto, "__proto__")                                             \
-  MACRO(prototype, prototype, "prototype")                                     \
-  MACRO(proxy, proxy, "proxy")                                                 \
-  MACRO(quarter, quarter, "quarter")                                           \
-  MACRO(raw, raw, "raw")                                                       \
-  MACRO(reason, reason, "reason")                                              \
-  MACRO(RegExpFlagsGetter, RegExpFlagsGetter, "$RegExpFlagsGetter")            \
-  MACRO(RegExpStringIterator, RegExpStringIterator, "RegExp String Iterator")  \
-  MACRO(RegExpToString, RegExpToString, "$RegExpToString")                     \
-  MACRO(region, region, "region")                                              \
-  MACRO(register, register_, "register")                                       \
-  MACRO(Reify, Reify, "Reify")                                                 \
-  MACRO(reject, reject, "reject")                                              \
-  MACRO(rejected, rejected, "rejected")                                        \
-  MACRO(relatedYear, relatedYear, "relatedYear")                               \
-  MACRO(RelativeTimeFormatFormat, RelativeTimeFormatFormat,                    \
-        "Intl_RelativeTimeFormat_Format")                                      \
-  MACRO(RequireObjectCoercible, RequireObjectCoercible,                        \
-        "RequireObjectCoercible")                                              \
-  MACRO(resolve, resolve, "resolve")                                           \
-  MACRO(result, result, "result")                                              \
-  MACRO(resumeGenerator, resumeGenerator, "resumeGenerator")                   \
-  MACRO(return, return_, "return")                                             \
-  MACRO(revoke, revoke, "revoke")                                              \
-  MACRO(rtl, rtl, "rtl")                                                       \
-  MACRO(script, script, "script")                                              \
-  MACRO(scripts, scripts, "scripts")                                           \
-  MACRO(second, second, "second")                                              \
-  MACRO(selfHosted, selfHosted, "self-hosted")                                 \
-  MACRO(sensitivity, sensitivity, "sensitivity")                               \
-  MACRO(set, set, "set")                                                       \
-  MACRO(setBigInt64, setBigInt64, "setBigInt64")                               \
-  MACRO(setBigUint64, setBigUint64, "setBigUint64")                            \
-  MACRO(SetConstructorInit, SetConstructorInit, "SetConstructorInit")          \
-  MACRO(SetIterator, SetIterator, "Set Iterator")                              \
-  MACRO(setPrototypeOf, setPrototypeOf, "setPrototypeOf")                      \
-  MACRO(shape, shape, "shape")                                                 \
-  MACRO(shared, shared, "shared")                                              \
-  MACRO(signal, signal, "signal")                                              \
-  MACRO(signDisplay, signDisplay, "signDisplay")                               \
-  MACRO(size, size, "size")                                                    \
-  MACRO(skeleton, skeleton, "skeleton")                                        \
-  MACRO(source, source, "source")                                              \
-  MACRO(SpeciesConstructor, SpeciesConstructor, "SpeciesConstructor")          \
-  MACRO(stack, stack, "stack")                                                 \
-  MACRO(starNamespaceStar, starNamespaceStar, "*namespace*")                   \
-  MACRO(start, start, "start")                                                 \
-  MACRO(startRange, startRange, "startRange")                                  \
-  MACRO(startTimestamp, startTimestamp, "startTimestamp")                      \
-  MACRO(state, state, "state")                                                 \
-  MACRO(static, static_, "static")                                             \
-  MACRO(status, status, "status")                                              \
-  MACRO(std_Function_apply, std_Function_apply, "std_Function_apply")          \
-  MACRO(sticky, sticky, "sticky")                                              \
-  MACRO(StringIterator, StringIterator, "String Iterator")                     \
-  MACRO(strings, strings, "strings")                                           \
-  MACRO(String_split, String_split, "String_split")                            \
-  MACRO(StructType, StructType, "StructType")                                  \
-  MACRO(style, style, "style")                                                 \
-  MACRO(super, super, "super")                                                 \
-  MACRO(switch, switch_, "switch")                                             \
-  MACRO(Symbol_iterator_fun, Symbol_iterator_fun, "[Symbol.iterator]")         \
-  MACRO(target, target, "target")                                              \
-  MACRO(test, test, "test")                                                    \
-  MACRO(then, then, "then")                                                    \
-  MACRO(this, this_, "this")                                                   \
-  MACRO(throw, throw_, "throw")                                                \
-  MACRO(timestamp, timestamp, "timestamp")                                     \
-  MACRO(timeZone, timeZone, "timeZone")                                        \
-  MACRO(timeZoneName, timeZoneName, "timeZoneName")                            \
-  MACRO(trimEnd, trimEnd, "trimEnd")                                           \
-  MACRO(trimLeft, trimLeft, "trimLeft")                                        \
-  MACRO(trimRight, trimRight, "trimRight")                                     \
-  MACRO(trimStart, trimStart, "trimStart")                                     \
-  MACRO(toGMTString, toGMTString, "toGMTString")                               \
-  MACRO(toISOString, toISOString, "toISOString")                               \
-  MACRO(toJSON, toJSON, "toJSON")                                              \
-  MACRO(toLocaleString, toLocaleString, "toLocaleString")                      \
-  MACRO(ToNumeric, ToNumeric, "ToNumeric")                                     \
-  MACRO(toSource, toSource, "toSource")                                        \
-  MACRO(toString, toString, "toString")                                        \
-  MACRO(ToString, ToString, "ToString")                                        \
-  MACRO(toUTCString, toUTCString, "toUTCString")                               \
-  MACRO(true, true_, "true")                                                   \
-  MACRO(try, try_, "try")                                                      \
-  MACRO(type, type, "type")                                                    \
-  MACRO(typeof, typeof_, "typeof")                                             \
-  MACRO(uint8, uint8, "uint8")                                                 \
-  MACRO(uint8Clamped, uint8Clamped, "uint8Clamped")                            \
-  MACRO(uint16, uint16, "uint16")                                              \
-  MACRO(uint32, uint32, "uint32")                                              \
-  MACRO(Uint8x16, Uint8x16, "Uint8x16")                                        \
-  MACRO(Uint16x8, Uint16x8, "Uint16x8")                                        \
-  MACRO(Uint32x4, Uint32x4, "Uint32x4")                                        \
-  MACRO(unescape, unescape, "unescape")                                        \
-  MACRO(uneval, uneval, "uneval")                                              \
-  MACRO(unicode, unicode, "unicode")                                           \
-  MACRO(unit, unit, "unit")                                                    \
-  MACRO(unitDisplay, unitDisplay, "unitDisplay")                               \
-  MACRO(uninitialized, uninitialized, "uninitialized")                         \
-  MACRO(unknown, unknown, "unknown")                                           \
-  MACRO(unregister, unregister, "unregister")                                  \
-  MACRO(UnsafeGetReservedSlot, UnsafeGetReservedSlot, "UnsafeGetReservedSlot") \
-  MACRO(UnsafeGetObjectFromReservedSlot, UnsafeGetObjectFromReservedSlot,      \
-        "UnsafeGetObjectFromReservedSlot")                                     \
-  MACRO(UnsafeGetInt32FromReservedSlot, UnsafeGetInt32FromReservedSlot,        \
-        "UnsafeGetInt32FromReservedSlot")                                      \
-  MACRO(UnsafeGetStringFromReservedSlot, UnsafeGetStringFromReservedSlot,      \
-        "UnsafeGetStringFromReservedSlot")                                     \
-  MACRO(UnsafeGetBooleanFromReservedSlot, UnsafeGetBooleanFromReservedSlot,    \
-        "UnsafeGetBooleanFromReservedSlot")                                    \
-  MACRO(UnsafeSetReservedSlot, UnsafeSetReservedSlot, "UnsafeSetReservedSlot") \
-  MACRO(unsized, unsized, "unsized")                                           \
-  MACRO(unwatch, unwatch, "unwatch")                                           \
-  MACRO(url, url, "url")                                                       \
-  MACRO(usage, usage, "usage")                                                 \
-  MACRO(useAsm, useAsm, "use asm")                                             \
-  MACRO(useGrouping, useGrouping, "useGrouping")                               \
-  MACRO(useStrict, useStrict, "use strict")                                    \
-  MACRO(void, void_, "void")                                                   \
-  MACRO(value, value, "value")                                                 \
-  MACRO(valueOf, valueOf, "valueOf")                                           \
-  MACRO(values, values, "values")                                              \
-  MACRO(var, var, "var")                                                       \
-  MACRO(variable, variable, "variable")                                        \
-  MACRO(void0, void0, "(void 0)")                                              \
-  MACRO(wasm, wasm, "wasm")                                                    \
-  MACRO(WasmAnyRef, WasmAnyRef, "WasmAnyRef")                                  \
-  MACRO(wasmcall, wasmcall, "wasmcall")                                        \
-  MACRO(watch, watch, "watch")                                                 \
-  MACRO(WeakMapConstructorInit, WeakMapConstructorInit,                        \
-        "WeakMapConstructorInit")                                              \
-  MACRO(WeakSetConstructorInit, WeakSetConstructorInit,                        \
-        "WeakSetConstructorInit")                                              \
-  MACRO(WeakSet_add, WeakSet_add, "WeakSet_add")                               \
-  MACRO(week, week, "week")                                                    \
-  MACRO(weekday, weekday, "weekday")                                           \
-  MACRO(weekendEnd, weekendEnd, "weekendEnd")                                  \
-  MACRO(weekendStart, weekendStart, "weekendStart")                            \
-  MACRO(while, while_, "while")                                                \
-  MACRO(with, with, "with")                                                    \
-  MACRO(writable, writable, "writable")                                        \
-  MACRO(write, write, "write")                                                 \
-  MACRO(year, year, "year")                                                    \
-  MACRO(yearName, yearName, "yearName")                                        \
-  MACRO(yield, yield, "yield")                                                 \
-  /* Type names must be contiguous and ordered; see js::TypeName. */           \
-  MACRO(undefined, undefined, "undefined")                                     \
-  MACRO(object, object, "object")                                              \
-  MACRO(function, function, "function")                                        \
-  MACRO(string, string, "string")                                              \
-  MACRO(number, number, "number")                                              \
-  MACRO(boolean, boolean, "boolean")                                           \
-  MACRO(null, null, "null")                                                    \
-  MACRO(symbol, symbol, "symbol")                                              \
-  MACRO(bigint, bigint, "bigint")                                              \
-  MACRO(defineDataPropertyIntrinsic, defineDataPropertyIntrinsic,              \
-        "_DefineDataProperty")
+#define FOR_EACH_NONTINY_COMMON_PROPERTYNAME(MACRO)                         \
+  FOR_EACH_COMMON_PROPERTYNAME_(PROPERTY_NAME_IGNORE, PROPERTY_NAME_IGNORE, \
+                                PROPERTY_NAME_IGNORE, MACRO)
 
-#define FOR_EACH_COMMON_PROPERTYNAME(MACRO)   \
-  FOR_EACH_NONTINY_COMMON_PROPERTYNAME(MACRO) \
-  FOR_EACH_TINY_PROPERTYNAME(MACRO)
+#define FOR_EACH_COMMON_PROPERTYNAME(MACRO) \
+  FOR_EACH_COMMON_PROPERTYNAME_(MACRO, MACRO, MACRO, MACRO)
 
 #endif /* vm_CommonPropertyNames_h */
