@@ -19,9 +19,9 @@
 
 #include "builtin/ModuleObject.h"
 #include "debugger/DebugAPI.h"
-#include "frontend/CompilationStencil.h"  // frontend::BaseCompilationStencil, frontend::CompilationStencil, frontend::CompilationStencilSet
-#include "frontend/ParserAtom.h"          // frontend::ParserAtom
-#include "js/BuildId.h"                   // JS::BuildIdCharVector
+#include "frontend/CompilationStencil.h"  // frontend::BaseCompilationStencil, frontend::CompilationStencil
+#include "frontend/ParserAtom.h"  // frontend::ParserAtom
+#include "js/BuildId.h"           // JS::BuildIdCharVector
 #include "vm/JSContext.h"
 #include "vm/JSScript.h"
 #include "vm/SharedStencil.h"  // js::SourceExtent
@@ -478,45 +478,58 @@ XDRResult XDRIncrementalStencilEncoder::linearize(JS::TranscodeBuffer& buffer,
 void XDRDecoder::trace(JSTracer* trc) { atomTable_.trace(trc); }
 
 XDRResult XDRStencilDecoder::codeStencils(
-    frontend::CompilationStencilSet& stencilSet) {
-  MOZ_ASSERT(stencilSet.delazifications.length() == 0);
+    frontend::CompilationStencil& stencil) {
+  MOZ_ASSERT(!stencil.delazificationSet);
 
   frontend::ParserAtomSpanBuilder parserAtomBuilder(cx()->runtime(),
-                                                    stencilSet.parserAtomData);
+                                                    stencil.parserAtomData);
   parserAtomBuilder_ = &parserAtomBuilder;
-  stencilAlloc_ = &stencilSet.alloc;
+  stencilAlloc_ = &stencil.alloc;
 
-  MOZ_TRY(codeStencil(stencilSet));
+  MOZ_TRY(codeStencil(stencil));
 
-  if (!stencilSet.delazifications.reserve(nchunks_ - 1)) {
-    ReportOutOfMemory(cx());
-    return fail(JS::TranscodeResult_Throw);
-  }
+  // Decode any delazification stencil from XDR.
+  if (nchunks_ > 1) {
+    auto delazificationSet = MakeUnique<frontend::StencilDelazificationSet>();
+    if (!delazificationSet) {
+      ReportOutOfMemory(cx());
+      return fail(JS::TranscodeResult_Throw);
+    }
 
-  for (size_t i = 1; i < nchunks_; i++) {
-    stencilSet.delazifications.infallibleEmplaceBack();
-    auto& delazification = stencilSet.delazifications[i - 1];
+    if (!delazificationSet->delazifications.reserve(nchunks_ - 1)) {
+      ReportOutOfMemory(cx());
+      return fail(JS::TranscodeResult_Throw);
+    }
 
-    hasFinishedAtomTable_ = false;
+    for (size_t i = 1; i < nchunks_; i++) {
+      delazificationSet->delazifications.infallibleEmplaceBack();
+      auto& delazification = delazificationSet->delazifications[i - 1];
 
-    frontend::ParserAtomSpanBuilder parserAtomBuilder(
-        cx()->runtime(), delazification.parserAtomData);
-    parserAtomBuilder_ = &parserAtomBuilder;
+      hasFinishedAtomTable_ = false;
 
-    MOZ_TRY(codeFunctionStencil(delazification));
+      frontend::ParserAtomSpanBuilder parserAtomBuilder(
+          cx()->runtime(), delazification.parserAtomData);
+      parserAtomBuilder_ = &parserAtomBuilder;
+
+      MOZ_TRY(codeFunctionStencil(delazification));
+    }
+
+    stencil.delazificationSet = std::move(delazificationSet);
   }
 
   return Ok();
 }
 
 XDRResult XDRIncrementalStencilEncoder::codeStencils(
-    frontend::CompilationStencilSet& stencilSet) {
+    frontend::CompilationStencil& stencil) {
   MOZ_ASSERT(encodedFunctions_.count() == 0);
 
-  MOZ_TRY(codeStencil(stencilSet));
+  MOZ_TRY(codeStencil(stencil));
 
-  for (auto& delazification : stencilSet.delazifications) {
-    MOZ_TRY(codeFunctionStencil(delazification));
+  if (stencil.delazificationSet) {
+    for (auto& delazification : stencil.delazificationSet->delazifications) {
+      MOZ_TRY(codeFunctionStencil(delazification));
+    }
   }
 
   return Ok();

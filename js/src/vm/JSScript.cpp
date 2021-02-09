@@ -2725,15 +2725,17 @@ bool ScriptSource::xdrEncodeInitialStencil(
 }
 
 bool ScriptSource::xdrEncodeStencils(
-    JSContext* cx, frontend::CompilationStencilSet& stencilSet,
+    JSContext* cx, frontend::CompilationStencil& stencil,
     UniquePtr<XDRIncrementalStencilEncoder>& xdrEncoder) {
-  if (!xdrEncodeInitialStencil(cx, stencilSet, xdrEncoder)) {
+  if (!xdrEncodeInitialStencil(cx, stencil, xdrEncoder)) {
     return false;
   }
 
-  for (auto& delazification : stencilSet.delazifications) {
-    if (!xdrEncodeFunctionStencilWith(cx, delazification, xdrEncoder)) {
-      return false;
+  if (stencil.delazificationSet) {
+    for (auto& delazification : stencil.delazificationSet->delazifications) {
+      if (!xdrEncodeFunctionStencilWith(cx, delazification, xdrEncoder)) {
+        return false;
+      }
     }
   }
 

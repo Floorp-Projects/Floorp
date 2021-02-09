@@ -2771,10 +2771,10 @@ static bool VerifyGlobalNames(JSContext* cx, Handle<GlobalObject*> shg) {
   return true;
 }
 
-bool JSRuntime::initSelfHostingFromXDR(
-    JSContext* cx, const CompileOptions& options,
-    frontend::CompilationStencilSet& stencilSet,
-    MutableHandle<JSScript*> scriptOut) {
+bool JSRuntime::initSelfHostingFromXDR(JSContext* cx,
+                                       const CompileOptions& options,
+                                       frontend::CompilationStencil& stencil,
+                                       MutableHandle<JSScript*> scriptOut) {
   MOZ_ASSERT(selfHostingGlobal_);
   MOZ_ASSERT(selfHostedXDR.length() > 0);
   scriptOut.set(nullptr);
@@ -2782,7 +2782,7 @@ bool JSRuntime::initSelfHostingFromXDR(
   // Deserialize the stencil from XDR.
   JS::TranscodeRange xdrRange(selfHostedXDR);
   bool decodeOk = false;
-  if (!stencilSet.deserializeStencils(cx, xdrRange, &decodeOk)) {
+  if (!stencil.deserializeStencils(cx, xdrRange, &decodeOk)) {
     return false;
   }
   // If XDR decode failed, it's not a propagated error.
@@ -2793,7 +2793,7 @@ bool JSRuntime::initSelfHostingFromXDR(
 
   // Instantiate the stencil.
   Rooted<frontend::CompilationGCOutput> output(cx);
-  if (!frontend::CompilationStencil::instantiateStencils(cx, stencilSet,
+  if (!frontend::CompilationStencil::instantiateStencils(cx, stencil,
                                                          output.get())) {
     return false;
   }
@@ -2836,13 +2836,13 @@ bool JSRuntime::initSelfHosting(JSContext* cx) {
   // Try initializing from Stencil XDR.
   if (selfHostedXDR.length() > 0) {
     // Initialize the compilation info that houses the stencil.
-    Rooted<frontend::CompilationStencilSet> stencilSet(
-        cx, frontend::CompilationStencilSet(cx, options));
-    if (!stencilSet.get().input.initForSelfHostingGlobal(cx)) {
+    Rooted<frontend::CompilationStencil> stencil(
+        cx, frontend::CompilationStencil(cx, options));
+    if (!stencil.get().input.initForSelfHostingGlobal(cx)) {
       return false;
     }
 
-    if (!initSelfHostingFromXDR(cx, options, stencilSet.get(), &script)) {
+    if (!initSelfHostingFromXDR(cx, options, stencil.get(), &script)) {
       return false;
     }
   }
