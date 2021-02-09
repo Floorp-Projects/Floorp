@@ -5049,8 +5049,7 @@ bool CacheIRCompiler::emitStoreTypedArrayElement(ObjOperandId objId,
   // Load the elements vector.
   masm.loadPtr(Address(obj, ArrayBufferViewObject::dataOffset()), scratch1);
 
-  BaseIndex dest(scratch1, index,
-                 ScaleFromElemWidth(Scalar::byteSize(elementType)));
+  BaseIndex dest(scratch1, index, ScaleFromScalarType(elementType));
 
   if (Scalar::isBigIntType(elementType)) {
 #ifdef JS_PUNBOX64
@@ -5160,8 +5159,7 @@ bool CacheIRCompiler::emitLoadTypedArrayElementResult(
   masm.loadPtr(Address(obj, ArrayBufferViewObject::dataOffset()), scratch1);
 
   // Load the value.
-  BaseIndex source(scratch1, index,
-                   ScaleFromElemWidth(Scalar::byteSize(elementType)));
+  BaseIndex source(scratch1, index, ScaleFromScalarType(elementType));
 
   if (Scalar::isBigIntType(elementType)) {
 #ifdef JS_PUNBOX64
@@ -7696,8 +7694,7 @@ bool CacheIRCompiler::emitAtomicsLoadResult(ObjOperandId objId,
   masm.loadPtr(Address(obj, ArrayBufferViewObject::dataOffset()), scratch);
 
   // Load the value.
-  BaseIndex source(scratch, index,
-                   ScaleFromElemWidth(Scalar::byteSize(elementType)));
+  BaseIndex source(scratch, index, ScaleFromScalarType(elementType));
 
   auto sync = Synchronization::Load();
 
@@ -7749,8 +7746,7 @@ bool CacheIRCompiler::emitAtomicsStoreResult(ObjOperandId objId,
   masm.loadPtr(Address(obj, ArrayBufferViewObject::dataOffset()), scratch);
 
   // Store the value.
-  BaseIndex dest(scratch, index,
-                 ScaleFromElemWidth(Scalar::byteSize(elementType)));
+  BaseIndex dest(scratch, index, ScaleFromScalarType(elementType));
 
   auto sync = Synchronization::Store();
 
