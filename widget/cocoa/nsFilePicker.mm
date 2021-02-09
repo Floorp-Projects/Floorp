@@ -593,7 +593,7 @@ NS_IMETHODIMP nsFilePicker::GetFileURL(nsIURI** aFileURL) {
 }
 
 NS_IMETHODIMP nsFilePicker::GetFiles(nsISimpleEnumerator** aFiles) {
-  return NS_NewArrayEnumerator(aFiles, mFiles);
+  return NS_NewArrayEnumerator(aFiles, mFiles, NS_GET_IID(nsIFile));
 }
 
 NS_IMETHODIMP nsFilePicker::SetDefaultString(const nsAString& aString) {
