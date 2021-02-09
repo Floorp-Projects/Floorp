@@ -771,9 +771,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::privateNameReference;
   using Base::processExport;
   using Base::processExportFrom;
- protected:
   using Base::processImport;
- private:
   using Base::setFunctionEndFromCurrentToken;
 
  private:
@@ -1078,12 +1076,16 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   ListNodeType lexicalDeclaration(YieldHandling yieldHandling,
                                   DeclarationKind kind);
 
- protected:
   NameNodeType moduleExportName();
 
- private:
-  inline BinaryNodeType importDeclaration();
+  BinaryNodeType importDeclaration();
   Node importDeclarationOrImportExpr(YieldHandling yieldHandling);
+  bool namedImports(ListNodeType importSpecSet);
+  bool namespaceImport(ListNodeType importSpecSet);
+
+  TaggedParserAtomIndex importedBinding() {
+    return bindingIdentifier(YieldIsName);
+  }
 
   BinaryNodeType exportFrom(uint32_t begin, Node specList);
   BinaryNodeType exportBatch(uint32_t begin);
@@ -1554,8 +1556,6 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
   // Parse a module.
   ModuleNodeType moduleBody(ModuleSharedContext* modulesc);
 
-  using Base::moduleExportName;
-  inline BinaryNodeType importDeclaration();
   inline bool checkLocalExportNames(ListNodeType node);
   inline bool checkExportedName(TaggedParserAtomIndex exportName);
   inline bool checkExportedNamesForArrayBinding(ListNodeType array);
@@ -1700,9 +1700,6 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   // Parse a module.
   ModuleNodeType moduleBody(ModuleSharedContext* modulesc);
 
-  using Base::processImport;
-  using Base::moduleExportName;
-  BinaryNodeType importDeclaration();
   bool checkLocalExportNames(ListNodeType node);
   bool checkExportedName(TaggedParserAtomIndex exportName);
   bool checkExportedNamesForArrayBinding(ListNodeType array);
@@ -1753,13 +1750,6 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
 
   // Parse the body of a global script.
   ListNodeType globalBody(GlobalSharedContext* globalsc);
-
-  bool namedImports(ListNodeType importSpecSet);
-  bool namespaceImport(ListNodeType importSpecSet);
-
-  TaggedParserAtomIndex importedBinding() {
-    return bindingIdentifier(YieldIsName);
-  }
 
   bool checkLocalExportName(TaggedParserAtomIndex ident, uint32_t offset) {
     return checkLabelOrIdentifierReference(ident, offset, YieldIsName);

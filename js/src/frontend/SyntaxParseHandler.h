@@ -408,6 +408,13 @@ class SyntaxParseHandler {
     return NodeEmptyStatement;
   }
 
+  BinaryNodeType newImportDeclaration(Node importSpecSet, Node moduleSpec,
+                                      const TokenPos& pos) {
+    return NodeGeneric;
+  }
+  BinaryNodeType newImportSpec(Node importNameNode, Node bindingName) {
+    return NodeGeneric;
+  }
   UnaryNodeType newExportDeclaration(Node kid, const TokenPos& pos) {
     return NodeGeneric;
   }
