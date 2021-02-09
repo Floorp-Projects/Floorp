@@ -473,6 +473,30 @@ void LIRGenerator::visitAtomicTypedArrayElementBinop(
 
   LAllocation value = useRegister(ins->value());
 
+  if (Scalar::isBigIntType(ins->arrayType())) {
+    LInt64Definition temp1 = tempInt64();
+    LInt64Definition temp2 = tempInt64();
+
+    // Case 1: the result of the operation is not used.
+    //
+    // We can omit allocating the result BigInt.
+
+    if (!ins->hasUses()) {
+      auto* lir = new (alloc()) LAtomicTypedArrayElementBinopForEffect64(
+          elements, index, value, temp1, temp2);
+      add(lir, ins);
+      return;
+    }
+
+    // Case 2: the result of the operation is used.
+
+    auto* lir = new (alloc())
+        LAtomicTypedArrayElementBinop64(elements, index, value, temp1, temp2);
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+    return;
+  }
+
   LDefinition tempDef1 = temp();
   LDefinition tempDef2 = LDefinition::BogusTemp();
   if (ins->arrayType() == Scalar::Uint32) {

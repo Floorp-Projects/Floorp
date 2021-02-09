@@ -119,8 +119,12 @@ static constexpr Register64 FetchOpVal64 =
     Register64(FetchOpValHi, FetchOpValLo);
 static constexpr Register FetchOpTmpLo = IntArgReg2;
 static constexpr Register FetchOpTmpHi = IntArgReg3;
+static constexpr Register64 FetchOpTmp64 =
+    Register64(FetchOpTmpHi, FetchOpTmpLo);
 static constexpr Register FetchOpOutLo = IntArgReg0;
 static constexpr Register FetchOpOutHi = IntArgReg1;
+static constexpr Register64 FetchOpOut64 =
+    Register64(FetchOpOutHi, FetchOpOutLo);
 
 class ABIArgGenerator {
   unsigned intRegIndex_;

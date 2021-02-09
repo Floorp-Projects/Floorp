@@ -11536,8 +11536,9 @@ class MAtomicExchangeTypedArrayElement
   }
 };
 
-class MAtomicTypedArrayElementBinop : public MTernaryInstruction,
-                                      public TruncateToInt32Policy<2>::Data {
+class MAtomicTypedArrayElementBinop
+    : public MTernaryInstruction,
+      public TruncateToInt32OrToBigIntPolicy<2>::Data {
  private:
   AtomicOp op_;
   Scalar::Type arrayType_;
@@ -11551,6 +11552,7 @@ class MAtomicTypedArrayElementBinop : public MTernaryInstruction,
         arrayType_(arrayType) {
     MOZ_ASSERT(elements->type() == MIRType::Elements);
     MOZ_ASSERT(index->type() == MIRType::IntPtr);
+    MOZ_ASSERT(arrayType <= Scalar::Uint32 || Scalar::isBigIntType(arrayType));
     setGuard();  // Not removable
   }
 

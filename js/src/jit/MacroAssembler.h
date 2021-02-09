@@ -3380,14 +3380,52 @@ class MacroAssembler : public MacroAssemblerSpecific {
                      Register valueTemp, Register offsetTemp, Register maskTemp,
                      Register output) DEFINED_ON(mips_shared);
 
+  // x86:
+  //   `temp` must be ecx:ebx; `output` must be edx:eax.
   // x64:
-  //   For Add and Sub, `temp` must be invalid.
-  //   For And, Or, and Xor, `output` must be eax and `temp` must have a byte
-  //   subregister.
+  //   For Add and Sub, `temp` is ignored.
+  //   For And, Or, and Xor, `output` must be rax.
+  // ARM:
+  //   `temp` and `output` must be (even,odd) pairs and distinct from `value`.
+  // ARM64:
+  //   Registers `value`, `temp`, and `output` must all differ.
 
   void atomicFetchOp64(const Synchronization& sync, AtomicOp op,
                        Register64 value, const Address& mem, Register64 temp,
-                       Register64 output) DEFINED_ON(arm64, x64);
+                       Register64 output) DEFINED_ON(arm, arm64, x64);
+
+  void atomicFetchOp64(const Synchronization& sync, AtomicOp op,
+                       const Address& value, const Address& mem,
+                       Register64 temp, Register64 output) DEFINED_ON(x86);
+
+  void atomicFetchOp64(const Synchronization& sync, AtomicOp op,
+                       Register64 value, const BaseIndex& mem, Register64 temp,
+                       Register64 output) DEFINED_ON(arm, arm64, x64);
+
+  void atomicFetchOp64(const Synchronization& sync, AtomicOp op,
+                       const Address& value, const BaseIndex& mem,
+                       Register64 temp, Register64 output) DEFINED_ON(x86);
+
+  // x64:
+  //   `value` can be any register.
+  // ARM:
+  //   `temp` must be an (even,odd) pair and distinct from `value`.
+  // ARM64:
+  //   Registers `value` and `temp` must differ.
+
+  void atomicEffectOp64(const Synchronization& sync, AtomicOp op,
+                        Register64 value, const Address& mem) DEFINED_ON(x64);
+
+  void atomicEffectOp64(const Synchronization& sync, AtomicOp op,
+                        Register64 value, const Address& mem, Register64 temp)
+      DEFINED_ON(arm, arm64);
+
+  void atomicEffectOp64(const Synchronization& sync, AtomicOp op,
+                        Register64 value, const BaseIndex& mem) DEFINED_ON(x64);
+
+  void atomicEffectOp64(const Synchronization& sync, AtomicOp op,
+                        Register64 value, const BaseIndex& mem, Register64 temp)
+      DEFINED_ON(arm, arm64);
 
   // 64-bit atomic load. On 64-bit systems, use regular load with
   // Synchronization::Load, not this method.

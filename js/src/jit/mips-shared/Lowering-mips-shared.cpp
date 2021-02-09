@@ -784,6 +784,10 @@ void LIRGenerator::visitAtomicTypedArrayElementBinop(
       useRegisterOrIndexConstant(ins->index(), ins->arrayType());
   const LAllocation value = useRegister(ins->value());
 
+  if (Scalar::isBigIntType(ins->arrayType())) {
+    MOZ_CRASH("NYI");
+  }
+
   LDefinition valueTemp = LDefinition::BogusTemp();
   LDefinition offsetTemp = LDefinition::BogusTemp();
   LDefinition maskTemp = LDefinition::BogusTemp();
