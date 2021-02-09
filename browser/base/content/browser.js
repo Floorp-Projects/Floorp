@@ -478,6 +478,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.toolbars.keyboard_navigation",
   false,
   (aPref, aOldVal, aNewVal) => {
+    if (window.closed) {
+      return;
+    }
     if (aNewVal) {
       ToolbarKeyboardNavigator.init();
     } else {
