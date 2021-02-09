@@ -421,17 +421,22 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
       MOZ_ASSERT(item->is<NullaryNode>());
     } else {
       for (ParseNode* item : pn->contents()) {
-        auto* spec = &item->as<BinaryNode>();
-        MOZ_ASSERT_IF(isImport,
-                      spec->isKind(ParseNodeKind::ImportSpec) ||
-                          spec->isKind(ParseNodeKind::ImportNamespaceSpec));
-        MOZ_ASSERT_IF(!isImport,
-                      spec->isKind(ParseNodeKind::ExportSpec) ||
-                          spec->isKind(ParseNodeKind::ExportNamespaceSpec));
-        MOZ_ASSERT(spec->left()->isKind(ParseNodeKind::Name) ||
-                   spec->left()->isKind(ParseNodeKind::StringExpr));
-        MOZ_ASSERT(spec->right()->isKind(ParseNodeKind::Name) ||
-                   spec->right()->isKind(ParseNodeKind::StringExpr));
+        if (item->is<UnaryNode>()) {
+          auto* spec = &item->as<UnaryNode>();
+          MOZ_ASSERT(spec->isKind(isImport
+                                      ? ParseNodeKind::ImportNamespaceSpec
+                                      : ParseNodeKind::ExportNamespaceSpec));
+          MOZ_ASSERT(spec->kid()->isKind(ParseNodeKind::Name) ||
+                     spec->kid()->isKind(ParseNodeKind::StringExpr));
+        } else {
+          auto* spec = &item->as<BinaryNode>();
+          MOZ_ASSERT(spec->isKind(isImport ? ParseNodeKind::ImportSpec
+                                           : ParseNodeKind::ExportSpec));
+          MOZ_ASSERT(spec->left()->isKind(ParseNodeKind::Name) ||
+                     spec->left()->isKind(ParseNodeKind::StringExpr));
+          MOZ_ASSERT(spec->right()->isKind(ParseNodeKind::Name) ||
+                     spec->right()->isKind(ParseNodeKind::StringExpr));
+        }
       }
     }
 #endif

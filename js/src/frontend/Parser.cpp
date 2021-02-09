@@ -4901,18 +4901,14 @@ bool GeneralParser<ParseHandler, Unit>::namespaceImport(
   if (!mustMatchToken(TokenKind::As, JSMSG_AS_AFTER_IMPORT_STAR)) {
     return false;
   }
+  uint32_t begin = pos().begin;
 
   if (!mustMatchToken(TokenKindIsPossibleIdentifierName,
                       JSMSG_NO_BINDING_NAME)) {
     return false;
   }
 
-  NameNodeType importName = newName(TaggedParserAtomIndex::WellKnown::star());
-  if (!importName) {
-    return false;
-  }
-
-  // Namespace imports are are not indirect bindings but lexical
+  // Namespace imports are not indirect bindings but lexical
   // definitions that hold a module namespace object. They are treated
   // as const variables which are initialized during the
   // ModuleInstantiate step.
@@ -4932,8 +4928,8 @@ bool GeneralParser<ParseHandler, Unit>::namespaceImport(
   // environment.
   pc_->varScope().lookupDeclaredName(bindingName)->value()->setClosedOver();
 
-  BinaryNodeType importSpec =
-      handler_.newImportNamespaceSpec(importName, bindingNameNode);
+  UnaryNodeType importSpec =
+      handler_.newImportNamespaceSpec(begin, bindingNameNode);
   if (!importSpec) {
     return false;
   }
@@ -5411,6 +5407,7 @@ GeneralParser<ParseHandler, Unit>::exportBatch(uint32_t begin) {
   }
 
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Mul));
+  uint32_t beginExportSpec = pos().begin;
 
   ListNodeType kid = handler_.newList(ParseNodeKind::ExportSpecList, pos());
   if (!kid) {
@@ -5444,13 +5441,8 @@ GeneralParser<ParseHandler, Unit>::exportBatch(uint32_t begin) {
       return null();
     }
 
-    NameNodeType importName = newName(TaggedParserAtomIndex::WellKnown::star());
-    if (!importName) {
-      return null();
-    }
-
-    BinaryNodeType exportSpec =
-        handler_.newExportNamespaceSpec(importName, exportName);
+    UnaryNodeType exportSpec =
+        handler_.newExportNamespaceSpec(beginExportSpec, exportName);
     if (!exportSpec) {
       return null();
     }
