@@ -124,7 +124,6 @@ reserved = set(
         "both",
         "child",
         "class",
-        "comparable",
         "from",
         "include",
         "intr",
@@ -295,12 +294,6 @@ def p_UsingKind(p):
     p[0] = p[1] if 2 == len(p) else None
 
 
-def p_MaybeComparable(p):
-    """MaybeComparable : COMPARABLE
-    |"""
-    p[0] = 2 == len(p)
-
-
 def p_MaybeRefcounted(p):
     """MaybeRefcounted : REFCOUNTED
     |"""
@@ -346,8 +339,8 @@ def p_NamespaceThing(p):
 
 
 def p_StructDecl(p):
-    """StructDecl : MaybeComparable STRUCT ID '{' StructFields '}' ';'
-    | MaybeComparable STRUCT ID '{' '}' ';'"""
+    """StructDecl : Attributes STRUCT ID '{' StructFields '}' ';'
+    | Attributes STRUCT ID '{' '}' ';'"""
     if 8 == len(p):
         p[0] = StructDecl(locFromTok(p, 2), p[3], p[5], p[1])
     else:
@@ -370,7 +363,7 @@ def p_StructField(p):
 
 
 def p_UnionDecl(p):
-    """UnionDecl : MaybeComparable UNION ID '{' ComponentTypes  '}' ';'"""
+    """UnionDecl : Attributes UNION ID '{' ComponentTypes  '}' ';'"""
     p[0] = UnionDecl(locFromTok(p, 2), p[3], p[5], p[1])
 
 

@@ -286,10 +286,10 @@ class StructField(Node):
 
 
 class StructDecl(NamespacedNode):
-    def __init__(self, loc, name, fields, comparable):
+    def __init__(self, loc, name, fields, attributes):
         NamespacedNode.__init__(self, loc, name)
         self.fields = fields
-        self.comparable = comparable
+        self.attributes = attributes
         # A list of indices into `fields` for determining the order in
         # which fields are laid out in memory.  We don't just reorder
         # `fields` itself so as to keep the ordering reasonably stable
@@ -298,10 +298,10 @@ class StructDecl(NamespacedNode):
 
 
 class UnionDecl(NamespacedNode):
-    def __init__(self, loc, name, components, comparable):
+    def __init__(self, loc, name, components, attributes):
         NamespacedNode.__init__(self, loc, name)
         self.components = components
-        self.comparable = comparable
+        self.attributes = attributes
 
 
 class Manager(Node):
