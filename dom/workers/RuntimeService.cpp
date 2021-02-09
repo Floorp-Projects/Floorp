@@ -1149,14 +1149,18 @@ bool RuntimeService::RegisterWorker(WorkerPrivate& aWorkerPrivate) {
   {
     MutexAutoLock lock(mMutex);
 
-    const auto& domainInfo =
-        mDomainMap.LookupForAdd(domain).OrInsert([&domain, parent]() {
-          NS_ASSERTION(!parent, "Shouldn't have a parent here!");
-          Unused
-              << parent;  // silence clang -Wunused-lambda-capture in opt builds
-          WorkerDomainInfo* wdi = new WorkerDomainInfo();
-          wdi->mDomain = domain;
-          return wdi;
+    auto* const domainInfo =
+        mDomainMap.WithEntryHandle(domain, [&](auto&& entry) {
+          return entry
+              .OrInsertWith([&domain, parent] {
+                NS_ASSERTION(!parent, "Shouldn't have a parent here!");
+                Unused << parent;  // silence clang -Wunused-lambda-capture in
+                                   // opt builds
+                WorkerDomainInfo* wdi = new WorkerDomainInfo();
+                wdi->mDomain = domain;
+                return wdi;
+              })
+              .get();
         });
 
     queued = gMaxWorkersPerDomain &&
@@ -1218,9 +1222,15 @@ bool RuntimeService::RegisterWorker(WorkerPrivate& aWorkerPrivate) {
     if (!isServiceWorker) {
       // Service workers are excluded since their lifetime is separate from
       // that of dom windows.
-      const auto& windowArray = mWindowMap.LookupForAdd(window).OrInsert(
-          []() { return new nsTArray<WorkerPrivate*>(1); });
-      if (!windowArray->Contains(&aWorkerPrivate)) {
+      if (auto* const windowArray = mWindowMap.WithEntryHandle(
+              window,
+              [](auto&& entry) {
+                return entry
+                    .OrInsertWith(
+                        [] { return new nsTArray<WorkerPrivate*>(1); })
+                    .get();
+              });
+          !windowArray->Contains(&aWorkerPrivate)) {
         windowArray->AppendElement(&aWorkerPrivate);
       } else {
         MOZ_ASSERT(aWorkerPrivate.IsSharedWorker());
