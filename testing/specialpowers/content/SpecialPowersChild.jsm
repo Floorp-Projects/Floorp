@@ -2118,6 +2118,9 @@ class SpecialPowersChild extends JSWindowActorChild {
     return window.docShell.isCommandEnabled(cmd);
   }
 
+  /**
+   * See \ref nsIContentViewerEdit.setCommandNode(in Node).
+   */
   setCommandNode(window, node) {
     return window.docShell.contentViewer
       .QueryInterface(Ci.nsIContentViewerEdit)
