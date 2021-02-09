@@ -65,6 +65,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
   COLLECTION_ID_PREF,
   COLLECTION_ID_FALLBACK
 );
+const EXPOSURE_EVENT_CATEGORY = "normandy";
+const EXPOSURE_EVENT_METHOD = "expose";
 
 function parseJSON(value) {
   if (value) {
@@ -91,7 +93,7 @@ const ExperimentAPI = {
    *
    * @param {{slug?: string, featureId?: string}} options slug = An experiment identifier
    * or feature = a stable identifier for a type of experiment
-   * @returns {{slug: string, active: bool, exposurePingSent: bool}} A matching experiment if one is found.
+   * @returns {{slug: string, active: bool}} A matching experiment if one is found.
    */
   getExperiment({ slug, featureId, sendExposurePing } = {}) {
     if (!slug && !featureId) {
@@ -113,7 +115,6 @@ const ExperimentAPI = {
       return {
         slug: experimentData.slug,
         active: experimentData.active,
-        exposurePingSent: experimentData.exposurePingSent,
         branch: this.activateBranch({ featureId, sendExposurePing }),
       };
     }
@@ -146,7 +147,6 @@ const ExperimentAPI = {
       return {
         slug: experimentData.slug,
         active: experimentData.active,
-        exposurePingSent: experimentData.exposurePingSent,
         branch: { slug: experimentData.branch.slug },
       };
     }
@@ -159,7 +159,7 @@ const ExperimentAPI = {
    * @param {{slug: string, featureId: string, sendExposurePing: bool}}
    * @returns {Branch | null}
    */
-  activateBranch({ slug, featureId, sendExposurePing = true }) {
+  activateBranch({ slug, featureId, sendExposurePing }) {
     let experiment = null;
     try {
       if (slug) {
@@ -176,9 +176,9 @@ const ExperimentAPI = {
     }
 
     if (sendExposurePing) {
-      this._store._emitExperimentExposure({
+      this.recordExposureEvent({
         experimentSlug: experiment.slug,
-        branchSlug: experiment?.branch?.slug,
+        branchSlug: experiment.branch.slug,
         featureId,
       });
     }
@@ -285,23 +285,22 @@ const ExperimentAPI = {
     return recipe?.branches;
   },
 
-  recordExposureEvent(name, { sent, experimentSlug, branchSlug }) {
-    if (!IS_MAIN_PROCESS) {
-      Cu.reportError("Need to call from Parent process");
-      return false;
+  recordExposureEvent({ featureId, experimentSlug, branchSlug }) {
+    Services.telemetry.setEventRecordingEnabled(EXPOSURE_EVENT_CATEGORY, true);
+    try {
+      Services.telemetry.recordEvent(
+        EXPOSURE_EVENT_CATEGORY,
+        EXPOSURE_EVENT_METHOD,
+        "feature_study",
+        experimentSlug,
+        {
+          branchSlug,
+          featureId,
+        }
+      );
+    } catch (e) {
+      Cu.reportError(e);
     }
-    if (sent) {
-      return false;
-    }
-
-    // Notify listener to record that the ping was sent
-    this._store._emitExperimentExposure({
-      featureId: name,
-      experimentSlug,
-      branchSlug,
-    });
-
-    return true;
   },
 };
 

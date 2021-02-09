@@ -143,13 +143,6 @@ class ExperimentStore extends SharedDataMap {
   }
 
   /**
-   * @param {{featureId: string, experimentSlug: string, branchSlug: string}} experimentData
-   */
-  _emitExperimentExposure(experimentData) {
-    this.emit("exposure", experimentData);
-  }
-
-  /**
    * @param {Enrollment} experiment
    */
   _updateSyncStore(experiment) {

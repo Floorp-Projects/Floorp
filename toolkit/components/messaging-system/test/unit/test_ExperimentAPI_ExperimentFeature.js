@@ -185,7 +185,7 @@ add_task(
 
     manager.store.addExperiment(expected);
 
-    const emitSpy = sandbox.spy(manager.store, "emit");
+    const exposureSpy = sandbox.spy(ExperimentAPI, "recordExposureEvent");
     Services.prefs.setBoolPref("testprefbranch.enabled", false);
 
     Assert.equal(
@@ -194,7 +194,11 @@ add_task(
       "should return the enabled value defined in the experiment, not the default pref"
     );
 
-    Assert.ok(emitSpy.calledWith("exposure"), "should emit an exposure event");
+    Assert.ok(exposureSpy.notCalled, "should emit exposure by default event");
+
+    featureInstance.isEnabled({ sendExposurePing: true });
+
+    Assert.ok(exposureSpy.calledOnce, "should emit exposure event");
 
     Services.prefs.clearUserPref("testprefbranch.enabled");
     sandbox.restore();
@@ -219,13 +223,13 @@ add_task(async function test_ExperimentFeature_isEnabled_no_exposure() {
 
   manager.store.addExperiment(expected);
 
-  const emitSpy = sandbox.spy(manager.store, "emit");
+  const exposureSpy = sandbox.spy(ExperimentAPI, "recordExposureEvent");
 
   const actual = featureInstance.isEnabled({ sendExposurePing: false });
 
   Assert.deepEqual(actual, false, "should return feature as disabled");
   Assert.ok(
-    emitSpy.neverCalledWith("exposure"),
+    exposureSpy.notCalled,
     "should not emit an exposure event when options = { sendExposurePing: false}"
   );
 
