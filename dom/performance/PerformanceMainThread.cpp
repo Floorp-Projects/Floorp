@@ -413,7 +413,8 @@ void PerformanceMainThread::GetEntriesByType(
     return;
   }
 
-  if (aEntryType.EqualsLiteral("navigation")) {
+  RefPtr<nsAtom> type = NS_Atomize(aEntryType);
+  if (type == nsGkAtoms::navigation) {
     aRetval.Clear();
 
     if (mDocEntry) {
@@ -422,7 +423,7 @@ void PerformanceMainThread::GetEntriesByType(
     return;
   }
 
-  if (aEntryType.EqualsLiteral("paint")) {
+  if (type == nsGkAtoms::paint) {
     if (mFCPTiming) {
       aRetval.AppendElement(mFCPTiming);
       return;
