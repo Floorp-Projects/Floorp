@@ -13,6 +13,7 @@
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/FTPChannelChild.h"
 #include "mozilla/net/DataChannelChild.h"
+#include "mozilla/net/GIOChannelChild.h"
 #include "mozilla/net/FileChannelChild.h"
 #include "mozilla/net/WebSocketChannelChild.h"
 #include "mozilla/net/WebSocketEventListenerChild.h"
@@ -137,6 +138,22 @@ bool NeckoChild::DeallocPFTPChannelChild(PFTPChannelChild* channel) {
   MOZ_ASSERT(IsNeckoChild(), "DeallocPFTPChannelChild called by non-child!");
 
   FTPChannelChild* child = static_cast<FTPChannelChild*>(channel);
+  child->ReleaseIPDLReference();
+  return true;
+}
+
+PGIOChannelChild* NeckoChild::AllocPGIOChannelChild(
+    PBrowserChild* aBrowser, const SerializedLoadContext& aSerialized,
+    const GIOChannelCreationArgs& aOpenArgs) {
+  // We don't allocate here: see GIOChannelChild::AsyncOpen()
+  MOZ_CRASH("AllocPGIOChannelChild should not be called");
+  return nullptr;
+}
+
+bool NeckoChild::DeallocPGIOChannelChild(PGIOChannelChild* channel) {
+  MOZ_ASSERT(IsNeckoChild(), "DeallocPGIOChannelChild called by non-child!");
+
+  GIOChannelChild* child = static_cast<GIOChannelChild*>(channel);
   child->ReleaseIPDLReference();
   return true;
 }
