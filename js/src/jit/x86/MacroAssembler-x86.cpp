@@ -1249,10 +1249,10 @@ void MacroAssembler::wasmAtomicExchange64(const wasm::MemoryAccessDesc& access,
 }
 
 template <typename T>
-static void WasmAtomicFetchOp64(MacroAssembler& masm,
-                                const wasm::MemoryAccessDesc& access,
-                                AtomicOp op, const Address& value, const T& mem,
-                                Register64 temp, Register64 output) {
+static void AtomicFetchOp64(MacroAssembler& masm,
+                            const wasm::MemoryAccessDesc* access, AtomicOp op,
+                            const Address& value, const T& mem, Register64 temp,
+                            Register64 output) {
   // We don't have enough registers for all the operands on x86, so the rhs
   // operand is in memory.
 
@@ -1262,7 +1262,9 @@ static void WasmAtomicFetchOp64(MacroAssembler& masm,
     MOZ_ASSERT(output.high == edx);                        \
     MOZ_ASSERT(temp.low == ebx);                           \
     MOZ_ASSERT(temp.high == ecx);                          \
-    masm.append(access, masm.size());                      \
+    if (access) {                                          \
+      masm.append(*access, masm.size());                   \
+    }                                                      \
     masm.load64(mem, output);                              \
     Label again;                                           \
     masm.bind(&again);                                     \
@@ -1299,14 +1301,14 @@ void MacroAssembler::wasmAtomicFetchOp64(const wasm::MemoryAccessDesc& access,
                                          AtomicOp op, const Address& value,
                                          const Address& mem, Register64 temp,
                                          Register64 output) {
-  WasmAtomicFetchOp64(*this, access, op, value, mem, temp, output);
+  AtomicFetchOp64(*this, &access, op, value, mem, temp, output);
 }
 
 void MacroAssembler::wasmAtomicFetchOp64(const wasm::MemoryAccessDesc& access,
                                          AtomicOp op, const Address& value,
                                          const BaseIndex& mem, Register64 temp,
                                          Register64 output) {
-  WasmAtomicFetchOp64(*this, access, op, value, mem, temp, output);
+  AtomicFetchOp64(*this, &access, op, value, mem, temp, output);
 }
 
 void MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input,
@@ -1521,6 +1523,18 @@ void MacroAssembler::atomicExchange64(const Synchronization&,
                                       const BaseIndex& mem, Register64 value,
                                       Register64 output) {
   AtomicExchange64(*this, nullptr, mem, value, output);
+}
+
+void MacroAssembler::atomicFetchOp64(const Synchronization&, AtomicOp op,
+                                     const Address& value, const Address& mem,
+                                     Register64 temp, Register64 output) {
+  AtomicFetchOp64(*this, nullptr, op, value, mem, temp, output);
+}
+
+void MacroAssembler::atomicFetchOp64(const Synchronization&, AtomicOp op,
+                                     const Address& value, const BaseIndex& mem,
+                                     Register64 temp, Register64 output) {
+  AtomicFetchOp64(*this, nullptr, op, value, mem, temp, output);
 }
 
 // ========================================================================

@@ -173,6 +173,52 @@ void LIRGenerator::visitAtomicExchangeTypedArrayElement(
 
 void LIRGenerator::visitAtomicTypedArrayElementBinop(
     MAtomicTypedArrayElementBinop* ins) {
+  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
+  MOZ_ASSERT(ins->index()->type() == MIRType::IntPtr);
+
+  if (Scalar::isBigIntType(ins->arrayType())) {
+    LUse elements = useRegister(ins->elements());
+    LAllocation index =
+        useRegisterOrIndexConstant(ins->index(), ins->arrayType());
+    LAllocation value = useRegister(ins->value());
+
+    // Case 1: the result of the operation is not used.
+    //
+    // We can omit allocating the result BigInt.
+
+    if (!ins->hasUses()) {
+      LInt64Definition temp = tempInt64();
+
+      auto* lir = new (alloc()) LAtomicTypedArrayElementBinopForEffect64(
+          elements, index, value, temp);
+      add(lir, ins);
+      return;
+    }
+
+    // Case 2: the result of the operation is used.
+    //
+    // For ADD and SUB we'll use XADD.
+    //
+    // For AND/OR/XOR we need to use a CMPXCHG loop with rax as a temp register.
+
+    bool bitOp = !(ins->operation() == AtomicFetchAddOp ||
+                   ins->operation() == AtomicFetchSubOp);
+
+    LInt64Definition temp1 = tempInt64();
+    LInt64Definition temp2;
+    if (bitOp) {
+      temp2 = tempInt64Fixed(Register64(rax));
+    } else {
+      temp2 = tempInt64();
+    }
+
+    auto* lir = new (alloc())
+        LAtomicTypedArrayElementBinop64(elements, index, value, temp1, temp2);
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+    return;
+  }
+
   lowerAtomicTypedArrayElementBinop(ins, /* useI386ByteRegisters = */ false);
 }
 

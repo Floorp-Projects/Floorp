@@ -6830,11 +6830,8 @@ AttachDecision CallIRGenerator::tryAttachReflectGetPrototypeOf(
   return AttachDecision::Attach;
 }
 
-enum class BigIntAtomics : bool { No, Yes };
-
-static bool AtomicsMeetsPreconditions(
-    TypedArrayObject* typedArray, const Value& index,
-    BigIntAtomics bigInt = BigIntAtomics::No) {
+static bool AtomicsMeetsPreconditions(TypedArrayObject* typedArray,
+                                      const Value& index) {
   switch (typedArray->type()) {
     case Scalar::Int8:
     case Scalar::Uint8:
@@ -6842,14 +6839,8 @@ static bool AtomicsMeetsPreconditions(
     case Scalar::Uint16:
     case Scalar::Int32:
     case Scalar::Uint32:
-      break;
-
     case Scalar::BigInt64:
     case Scalar::BigUint64:
-      // Bug 1638295: Not yet implemented.
-      if (bigInt == BigIntAtomics::No) {
-        return false;
-      }
       break;
 
     case Scalar::Float32:
@@ -6896,7 +6887,7 @@ AttachDecision CallIRGenerator::tryAttachAtomicsCompareExchange(
   }
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
-  if (!AtomicsMeetsPreconditions(typedArray, args_[1], BigIntAtomics::Yes)) {
+  if (!AtomicsMeetsPreconditions(typedArray, args_[1])) {
     return AttachDecision::NoAction;
   }
 
@@ -6942,7 +6933,7 @@ AttachDecision CallIRGenerator::tryAttachAtomicsCompareExchange(
   return AttachDecision::Attach;
 }
 
-bool CallIRGenerator::canAttachAtomicsReadWriteModify(bool supportBigInt) {
+bool CallIRGenerator::canAttachAtomicsReadWriteModify() {
   if (!JitSupportsAtomics()) {
     return false;
   }
@@ -6961,8 +6952,7 @@ bool CallIRGenerator::canAttachAtomicsReadWriteModify(bool supportBigInt) {
   }
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
-  if (!AtomicsMeetsPreconditions(typedArray, args_[1],
-                                 BigIntAtomics{supportBigInt})) {
+  if (!AtomicsMeetsPreconditions(typedArray, args_[1])) {
     return false;
   }
   if (!ValueIsNumeric(typedArray->type(), args_[2])) {
@@ -6972,9 +6962,8 @@ bool CallIRGenerator::canAttachAtomicsReadWriteModify(bool supportBigInt) {
 }
 
 CallIRGenerator::AtomicsReadWriteModifyOperands
-CallIRGenerator::emitAtomicsReadWriteModifyOperands(HandleFunction callee,
-                                                    bool supportBigInt) {
-  MOZ_ASSERT(canAttachAtomicsReadWriteModify(supportBigInt));
+CallIRGenerator::emitAtomicsReadWriteModifyOperands(HandleFunction callee) {
+  MOZ_ASSERT(canAttachAtomicsReadWriteModify());
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
 
@@ -7004,12 +6993,12 @@ CallIRGenerator::emitAtomicsReadWriteModifyOperands(HandleFunction callee,
 
 AttachDecision CallIRGenerator::tryAttachAtomicsExchange(
     HandleFunction callee) {
-  if (!canAttachAtomicsReadWriteModify(bool(BigIntAtomics::Yes))) {
+  if (!canAttachAtomicsReadWriteModify()) {
     return AttachDecision::NoAction;
   }
 
   auto [objId, intPtrIndexId, numericValueId] =
-      emitAtomicsReadWriteModifyOperands(callee, bool(BigIntAtomics::Yes));
+      emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
 
@@ -7130,7 +7119,7 @@ AttachDecision CallIRGenerator::tryAttachAtomicsLoad(HandleFunction callee) {
   }
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
-  if (!AtomicsMeetsPreconditions(typedArray, args_[1], BigIntAtomics::Yes)) {
+  if (!AtomicsMeetsPreconditions(typedArray, args_[1])) {
     return AttachDecision::NoAction;
   }
 
@@ -7185,7 +7174,7 @@ AttachDecision CallIRGenerator::tryAttachAtomicsStore(HandleFunction callee) {
   }
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
-  if (!AtomicsMeetsPreconditions(typedArray, args_[1], BigIntAtomics::Yes)) {
+  if (!AtomicsMeetsPreconditions(typedArray, args_[1])) {
     return AttachDecision::NoAction;
   }
 

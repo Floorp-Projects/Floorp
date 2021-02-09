@@ -328,6 +328,123 @@ void CodeGenerator::visitAtomicExchangeTypedArrayElement64(
   masm.bind(ool->rejoin());
 }
 
+void CodeGenerator::visitAtomicTypedArrayElementBinop64(
+    LAtomicTypedArrayElementBinop64* lir) {
+  MOZ_ASSERT(lir->mir()->hasUses());
+
+  Register elements = ToRegister(lir->elements());
+  Register value = ToRegister(lir->value());
+  Register64 temp1 = ToRegister64(lir->temp1());
+  Register out = ToRegister(lir->output());
+  Register64 temp2 = Register64(value, out);
+
+  MOZ_ASSERT(value == edx);
+  MOZ_ASSERT(temp1 == Register64(ecx, ebx));
+  MOZ_ASSERT(temp2 == Register64(edx, eax));
+  MOZ_ASSERT(out == eax);
+
+  Scalar::Type arrayType = lir->mir()->arrayType();
+  AtomicOp atomicOp = lir->mir()->operation();
+
+  DebugOnly<uint32_t> framePushed = masm.framePushed();
+
+  // Save edx before it's clobbered below.
+  masm.push(edx);
+
+  auto restoreSavedRegisters = [&]() { masm.pop(edx); };
+
+  masm.loadBigInt64(value, temp1);
+
+  masm.Push(temp1);
+
+  Address addr(masm.getStackPointer(), 0);
+
+  if (lir->index()->isConstant()) {
+    Address dest = ToAddress(elements, lir->index(), arrayType);
+    masm.atomicFetchOp64(Synchronization::Full(), atomicOp, addr, dest, temp1,
+                         temp2);
+  } else {
+    BaseIndex dest(elements, ToRegister(lir->index()),
+                   ScaleFromScalarType(arrayType));
+    masm.atomicFetchOp64(Synchronization::Full(), atomicOp, addr, dest, temp1,
+                         temp2);
+  }
+
+  masm.freeStack(sizeof(uint64_t));
+
+  // Move the result from `edx:eax` to `ecx:ebx`.
+  masm.move64(temp2, temp1);
+
+  // OutOfLineCallVM tracks the currently pushed stack entries as reported by
+  // |masm.framePushed()|. We mustn't have any additional entries on the stack
+  // which weren't previously recorded by the safepoint, otherwise the GC
+  // complains when tracing the Ion frames, because the stack frames don't
+  // have their expected layout.
+  MOZ_ASSERT(framePushed == masm.framePushed());
+
+  OutOfLineCode* ool = createBigIntOutOfLine(lir, arrayType, temp1, out);
+
+  // Use `edx`, which is already on the stack, as a temp register.
+  Register temp = edx;
+
+  Label fail;
+  masm.newGCBigInt(out, temp, &fail, bigIntsCanBeInNursery());
+  masm.initializeBigInt64(arrayType, out, temp1);
+  restoreSavedRegisters();
+  masm.jump(ool->rejoin());
+
+  // Couldn't create the BigInt. Restore `edx` and call into the VM.
+  masm.bind(&fail);
+  restoreSavedRegisters();
+  masm.jump(ool->entry());
+
+  // At this point `edx` must have been restored to its original value.
+  masm.bind(ool->rejoin());
+}
+
+void CodeGenerator::visitAtomicTypedArrayElementBinopForEffect64(
+    LAtomicTypedArrayElementBinopForEffect64* lir) {
+  MOZ_ASSERT(!lir->mir()->hasUses());
+
+  Register elements = ToRegister(lir->elements());
+  Register value = ToRegister(lir->value());
+  Register64 temp1 = ToRegister64(lir->temp1());
+  Register tempLow = ToRegister(lir->tempLow());
+  Register64 temp2 = Register64(value, tempLow);
+
+  MOZ_ASSERT(value == edx);
+  MOZ_ASSERT(temp1 == Register64(ecx, ebx));
+  MOZ_ASSERT(temp2 == Register64(edx, eax));
+  MOZ_ASSERT(tempLow == eax);
+
+  Scalar::Type arrayType = lir->mir()->arrayType();
+  AtomicOp atomicOp = lir->mir()->operation();
+
+  // Save edx before it's clobbered below.
+  masm.push(edx);
+
+  masm.loadBigInt64(value, temp1);
+
+  masm.Push(temp1);
+
+  Address addr(masm.getStackPointer(), 0);
+
+  if (lir->index()->isConstant()) {
+    Address dest = ToAddress(elements, lir->index(), arrayType);
+    masm.atomicFetchOp64(Synchronization::Full(), atomicOp, addr, dest, temp1,
+                         temp2);
+  } else {
+    BaseIndex dest(elements, ToRegister(lir->index()),
+                   ScaleFromScalarType(arrayType));
+    masm.atomicFetchOp64(Synchronization::Full(), atomicOp, addr, dest, temp1,
+                         temp2);
+  }
+
+  masm.freeStack(sizeof(uint64_t));
+
+  masm.pop(edx);
+}
+
 // See ../CodeGenerator.cpp for more information.
 void CodeGenerator::visitWasmRegisterResult(LWasmRegisterResult* lir) {}
 
