@@ -610,7 +610,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void Close(CallerType aCallerType, ErrorResult& aError);
   bool GetClosed(ErrorResult&) { return GetClosed(); }
   void Focus(CallerType aCallerType, ErrorResult& aError);
-  void Blur(CallerType aCallerType, ErrorResult& aError);
+  void Blur(ErrorResult& aError);
   WindowProxyHolder GetFrames(ErrorResult& aError);
   int32_t Length() const { return Children().Length(); }
   Nullable<WindowProxyHolder> GetTop(ErrorResult& aError);
@@ -783,8 +783,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   // Returns canFocus, isActive
   std::tuple<bool, bool> CanFocusCheck(CallerType aCallerType);
-
-  bool CanBlurCheck(CallerType aCallerType);
 
   PopupBlocker::PopupControlState RevisePopupAbuseLevel(
       PopupBlocker::PopupControlState aControl);

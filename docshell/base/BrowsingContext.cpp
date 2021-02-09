@@ -2148,22 +2148,11 @@ void BrowsingContext::Focus(CallerType aCallerType, ErrorResult& aError) {
   }
 }
 
-bool BrowsingContext::CanBlurCheck(CallerType aCallerType) {
-  // If dom.disable_window_flip == true, then content should not be allowed
-  // to do blur (this would allow popunders, bug 369306)
-  return aCallerType == CallerType::System ||
-         !Preferences::GetBool("dom.disable_window_flip", true);
-}
-
-void BrowsingContext::Blur(CallerType aCallerType, ErrorResult& aError) {
-  if (!CanBlurCheck(aCallerType)) {
-    return;
-  }
-
+void BrowsingContext::Blur(ErrorResult& aError) {
   if (ContentChild* cc = ContentChild::GetSingleton()) {
-    cc->SendWindowBlur(this, aCallerType);
+    cc->SendWindowBlur(this);
   } else if (ContentParent* cp = Canonical()->GetContentParent()) {
-    Unused << cp->SendWindowBlur(this, aCallerType);
+    Unused << cp->SendWindowBlur(this);
   }
 }
 

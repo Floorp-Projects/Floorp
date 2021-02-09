@@ -535,7 +535,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   void FocusOuter(mozilla::dom::CallerType aCallerType, bool aFromOtherProcess,
                   uint64_t aActionId);
   nsresult Focus(mozilla::dom::CallerType aCallerType) override;
-  void BlurOuter(mozilla::dom::CallerType aCallerType);
+  void BlurOuter();
   mozilla::dom::WindowProxyHolder GetFramesOuter();
   uint32_t Length();
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> GetTopOuter();

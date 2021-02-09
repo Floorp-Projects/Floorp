@@ -712,7 +712,7 @@ class ContentChild final : public PContentChild,
       const MaybeDiscarded<BrowsingContext>& aContext, CallerType aCallerType,
       uint64_t aActionId);
   mozilla::ipc::IPCResult RecvWindowBlur(
-      const MaybeDiscarded<BrowsingContext>& aContext, CallerType aCallerType);
+      const MaybeDiscarded<BrowsingContext>& aContext);
   mozilla::ipc::IPCResult RecvRaiseWindow(
       const MaybeDiscarded<BrowsingContext>& aContext, CallerType aCallerType,
       uint64_t aActionId);
