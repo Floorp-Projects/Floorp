@@ -140,7 +140,6 @@ reserved = set(
         "prio",
         "protocol",
         "refcounted",
-        "moveonly",
         "returns",
         "struct",
         "sync",
@@ -160,7 +159,7 @@ tokens = [
 
 t_COLONCOLON = "::"
 
-literals = "(){}[]<>;:,?"
+literals = "(){}[]<>;:,?="
 t_ignore = " \f\t\v"
 
 
@@ -313,21 +312,14 @@ def p_MaybeRefcounted(p):
     p[0] = 2 == len(p)
 
 
-def p_MaybeMoveOnly(p):
-    """MaybeMoveOnly : MOVEONLY
-    |"""
-    p[0] = 2 == len(p)
-
-
 def p_UsingStmt(p):
-    """UsingStmt : USING MaybeRefcounted MaybeMoveOnly UsingKind CxxType FROM STRING"""
+    """UsingStmt : Attributes USING UsingKind CxxType FROM STRING"""
     p[0] = UsingStmt(
-        locFromTok(p, 1),
-        refcounted=p[2],
-        moveonly=p[3],
-        kind=p[4],
-        cxxTypeSpec=p[5],
-        cxxHeader=p[7],
+        locFromTok(p, 2),
+        attributes=p[1],
+        kind=p[3],
+        cxxTypeSpec=p[4],
+        cxxHeader=p[6],
     )
 
 
@@ -580,6 +572,41 @@ def p_MessageCompress(p):
 def p_MessageTainted(p):
     """MessageTainted : TAINTED"""
     p[0] = p[1]
+
+
+# --------------------
+# Attributes
+def p_Attributes(p):
+    """Attributes : '[' AttributeList ']'
+    |"""
+    p[0] = {}
+    if 4 == len(p):
+        for attr in p[2]:
+            if attr.name in p[0]:
+                _error(attr.loc, "Repeated extended attribute `%s'", attr.name)
+            p[0][attr.name] = attr
+
+
+def p_AttributeList(p):
+    """AttributeList : Attribute ',' AttributeList
+    | Attribute"""
+    p[0] = [p[1]]
+    if 4 == len(p):
+        p[0] += p[3]
+
+
+def p_Attribute(p):
+    """Attribute : ID AttributeValue"""
+    p[0] = Attribute(locFromTok(p, 1), p[1], p[2])
+
+
+def p_AttributeValue(p):
+    """AttributeValue : '=' ID
+    |"""
+    if 1 == len(p):
+        p[0] = None
+    else:
+        p[0] = p[2]
 
 
 # --------------------

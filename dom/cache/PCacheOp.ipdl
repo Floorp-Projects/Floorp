@@ -13,7 +13,7 @@ include CacheTypes;
 
 include "ipc/ErrorIPCUtils.h";
 
-using moveonly mozilla::ErrorResult from "mozilla/ErrorResult.h";
+[MoveOnly] using mozilla::ErrorResult from "mozilla/ErrorResult.h";
 
 namespace mozilla {
 namespace dom {

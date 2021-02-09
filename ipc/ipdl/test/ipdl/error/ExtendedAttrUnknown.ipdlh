@@ -1,0 +1,5 @@
+//error: unknown attribute `InvalidAttribute'
+
+[InvalidAttribute] using SomeType from "SomeFile.h";
+
+struct ExtendedAttrUnknown {};

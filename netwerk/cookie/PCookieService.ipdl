@@ -9,7 +9,7 @@ include protocol PNecko;
 include NeckoChannelParams;
 
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
-using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
+[RefCounted] using class nsIURI from "mozilla/ipc/URIUtils.h";
 
 namespace mozilla {
 namespace net {

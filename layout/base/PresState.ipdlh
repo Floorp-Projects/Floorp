@@ -9,7 +9,7 @@ include "mozilla/dom/IPCBlobUtils.h";
 
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 using struct nsPoint from "nsPoint.h";
-using refcounted class mozilla::dom::BlobImpl from "mozilla/dom/BlobImpl.h";
+[RefCounted] using class mozilla::dom::BlobImpl from "mozilla/dom/BlobImpl.h";
 
 namespace mozilla {
 

@@ -1,0 +1,5 @@
+//error: unexpected value for valueless attribute `RefCounted'
+
+[RefCounted=Invalid] using SomeType from "SomeFile.h";
+
+struct ExtendedAttrBadValue {};
