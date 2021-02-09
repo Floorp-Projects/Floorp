@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1690747
+-->
+<head>
+  <title>Test for Bug 1690747</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1690747">Mozilla Bug 1690747</a>
+<p id="display"></p>
+<div id='content'>
+</div>
+<pre id="test">
+<iframe src="https://example.org/tests/dom/base/test/file_focus_design_mode_inner.html"></iframe>
+<script type="application/javascript">
+
+/** Test for Bug 1690747 **/
+
+let iframe = document.querySelector("iframe");
+
+function waitForEvent(target, event, checkFn) {
+  return new Promise(resolve => {
+    target.addEventListener(event, e => {
+      if (checkFn && !checkFn(e)) {
+        return;
+      }
+      resolve();
+    }, { once: true });
+  });
+}
+
+async function getLog() {
+  let log = "";
+  SimpleTest.executeSoon(function() {
+    iframe.contentWindow.postMessage("getlog", "*");
+  });
+  await waitForEvent(window, "message", (e) => {
+    log = e.data;
+    return true;
+  });
+  return log;
+}
+
+add_task(async function init() {
+  await SpecialPowers.pushPrefEnv({ set: [["dom.disable_window_flip", true]] });
+});
+
+add_task(async function activeElementAfterBluring() {
+  iframe.contentWindow.postMessage("focus", "*");
+  is(await getLog(), "innerlog:windowfocus,activeElement:HTML,", "check activeElement");
+  iframe.contentWindow.blur();
+  is(await getLog(), "innerlog:windowfocus,activeElement:HTML,activeElement:HTML,", "check activeElement after bluring");
+});
+
+</script>
+</pre>
+</body>
+</html>
