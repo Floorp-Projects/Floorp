@@ -443,7 +443,8 @@ class GCMarker final : public JSTracer {
   inline void processMarkStackTop(SliceBudget& budget);
 
   void markDelayedChildren(gc::Arena* arena, gc::MarkColor color);
-  MOZ_MUST_USE bool markAllDelayedChildren(SliceBudget& budget);
+  MOZ_MUST_USE bool markAllDelayedChildren(SliceBudget& budget,
+                                           ShouldReportMarkTime reportTime);
   bool processDelayedMarkingList(gc::MarkColor color, SliceBudget& budget);
   bool hasDelayedChildren() const { return !!delayedMarkingList; }
   void rebuildDelayedMarkingList();

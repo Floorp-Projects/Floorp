@@ -1825,7 +1825,7 @@ bool GCMarker::markUntilBudgetExhausted(SliceBudget& budget,
      * above tracing. Don't do this until we're done with everything
      * else.
      */
-    if (!markAllDelayedChildren(budget)) {
+    if (!markAllDelayedChildren(budget, reportTime)) {
       return false;
     }
   }
@@ -2691,13 +2691,14 @@ bool GCMarker::processDelayedMarkingList(MarkColor color, SliceBudget& budget) {
   return true;
 }
 
-bool GCMarker::markAllDelayedChildren(SliceBudget& budget) {
+bool GCMarker::markAllDelayedChildren(SliceBudget& budget,
+                                      ShouldReportMarkTime reportTime) {
   MOZ_ASSERT(!hasBlackEntries());
   MOZ_ASSERT(markColor() == MarkColor::Black);
 
   GCRuntime& gc = runtime()->gc;
   mozilla::Maybe<gcstats::AutoPhase> ap;
-  if (gc.state() == State::Mark) {
+  if (reportTime) {
     ap.emplace(gc.stats(), gcstats::PhaseKind::MARK_DELAYED);
   }
 
