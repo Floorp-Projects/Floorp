@@ -34,10 +34,9 @@ function exportSpec(id, name) {
   };
 }
 
-function exportNamespaceSpec(id, name) {
+function exportNamespaceSpec(name) {
   return {
     type: "ExportNamespaceSpecifier",
-    id,
     name,
   };
 }
@@ -87,7 +86,7 @@ assertModule(`
 assertModule(`
   export * as "x" from "module";
 `, [
-  exportDecl(null, [exportNamespaceSpec(ident("*"), literal("x"))], literal("module"), false),
+  exportDecl(null, [exportNamespaceSpec(literal("x"))], literal("module"), false),
 ]);
 
 if (typeof reportCompare === "function")
