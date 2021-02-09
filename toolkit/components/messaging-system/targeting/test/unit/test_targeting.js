@@ -243,3 +243,15 @@ add_task(async function test_default_targeting() {
     );
   }
 });
+
+add_task(async function test_targeting_os() {
+  const targeting = new TargetingContext();
+  let res = await targeting.eval(
+    "ctx.os.isWindows || ctx.os.isMac || ctx.os.isLinux"
+  );
+  Assert.ok(res, `Should detect a platform got: ${res}`);
+  res = await targeting.eval(
+    "(ctx.os.windowsVersion && ctx.os.windowsBuildNumber) || ctx.os.macVersion || ctx.os.darwinVersion"
+  );
+  Assert.ok(res, `Should detect platform version got: ${res}`);
+});
