@@ -13,6 +13,7 @@ buildscript {
                 includeGroupByRegex RepoMatching.mozilla
             }
         }
+
         maven {
             name "Mozilla"
             url "https://maven.mozilla.org/maven2"
@@ -21,6 +22,7 @@ buildscript {
                 includeGroupByRegex RepoMatching.mozilla
             }
         }
+
         if (project.hasProperty("googleRepo")) {
             maven {
                 name "Google"
@@ -34,6 +36,24 @@ buildscript {
                     includeGroupByRegex RepoMatching.comGoogleAndroid
                     includeGroupByRegex RepoMatching.comGoogleFirebase
                     includeGroupByRegex RepoMatching.comAndroid
+                }
+            }
+        }
+
+        if (project.hasProperty("centralRepo")) {
+            maven {
+                name "MavenCentral"
+                url project.property("centralRepo")
+            }
+        } else {
+            mavenCentral() {
+                content {
+                    // Improve security: don't search deps with known repos.
+                    excludeGroupByRegex RepoMatching.mozilla
+                    excludeGroupByRegex RepoMatching.androidx
+                    excludeGroupByRegex RepoMatching.comGoogleAndroid
+                    excludeGroupByRegex RepoMatching.comGoogleFirebase
+                    excludeGroupByRegex RepoMatching.comAndroid
                 }
             }
         }
@@ -86,6 +106,7 @@ allprojects {
                 includeGroupByRegex RepoMatching.mozilla
             }
         }
+
         maven {
             name "Mozilla"
             url "https://maven.mozilla.org/maven2"
@@ -94,6 +115,7 @@ allprojects {
                 includeGroupByRegex RepoMatching.mozilla
             }
         }
+
         if (project.hasProperty("googleRepo")) {
             maven {
                 name "Google"
@@ -110,6 +132,25 @@ allprojects {
                 }
             }
         }
+
+        if (project.hasProperty("centralRepo")) {
+            maven {
+                name "MavenCentral"
+                url project.property("centralRepo")
+            }
+        } else {
+            mavenCentral() {
+                content {
+                    // Improve security: don't search deps with known repos.
+                    excludeGroupByRegex RepoMatching.mozilla
+                    excludeGroupByRegex RepoMatching.androidx
+                    excludeGroupByRegex RepoMatching.comGoogleAndroid
+                    excludeGroupByRegex RepoMatching.comGoogleFirebase
+                    excludeGroupByRegex RepoMatching.comAndroid
+                }
+            }
+        }
+
         if (project.hasProperty("jcenterRepo")) {
             maven {
                 name "BintrayJCenter"
