@@ -1889,13 +1889,13 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
         )
     )
 
-    if compress == "compress":
-        compression = "COMPRESSION_ENABLED"
-    elif compress:
-        assert compress == "compressall"
+    if not compress:
+        compression = "COMPRESSION_NONE"
+    elif compress.value == "all":
         compression = "COMPRESSION_ALL"
     else:
-        compression = "COMPRESSION_NONE"
+        assert compress.value is None
+        compression = "COMPRESSION_ENABLED"
 
     if nested == ipdl.ast.NOT_NESTED:
         nestedEnum = "NOT_NESTED"

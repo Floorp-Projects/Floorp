@@ -7,5 +7,5 @@ intr protocol compressCtor {
     manages compressCtorManagee;
 
 parent:
-    async compressCtorManagee() compress;
+    [Compress] async compressCtorManagee();
 };

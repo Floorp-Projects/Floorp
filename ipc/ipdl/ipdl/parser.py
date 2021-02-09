@@ -125,8 +125,6 @@ reserved = set(
         "child",
         "class",
         "comparable",
-        "compress",
-        "compressall",
         "from",
         "include",
         "intr",
@@ -143,7 +141,6 @@ reserved = set(
         "returns",
         "struct",
         "sync",
-        "tainted",
         "union",
         "UniquePtr",
         "upto",
@@ -497,11 +494,12 @@ def p_MessageDirectionLabel(p):
 
 
 def p_MessageDecl(p):
-    """MessageDecl : SendSemanticsQual MessageBody"""
-    msg = p[2]
-    msg.nested = p[1][0]
-    msg.prio = p[1][1]
-    msg.sendSemantics = p[1][2]
+    """MessageDecl : Attributes SendSemanticsQual MessageBody"""
+    msg = p[3]
+    msg.attributes = p[1]
+    msg.nested = p[2][0]
+    msg.prio = p[2][1]
+    msg.sendSemantics = p[2][2]
 
     if Parser.current.direction is None:
         _error(msg.loc, "missing message direction")
@@ -511,14 +509,13 @@ def p_MessageDecl(p):
 
 
 def p_MessageBody(p):
-    """MessageBody : ID MessageInParams MessageOutParams OptionalMessageModifiers"""
+    """MessageBody : ID MessageInParams MessageOutParams"""
     # FIXME/cjones: need better loc info: use one of the quals
     name = p[1]
     msg = MessageDecl(locFromTok(p, 1))
     msg.name = name
     msg.addInParams(p[2])
     msg.addOutParams(p[3])
-    msg.addModifiers(p[4])
 
     p[0] = msg
 
@@ -535,36 +532,6 @@ def p_MessageOutParams(p):
         p[0] = []
     else:
         p[0] = p[3]
-
-
-def p_OptionalMessageModifiers(p):
-    """OptionalMessageModifiers : OptionalMessageModifiers MessageModifier
-    | MessageModifier
-    |"""
-    if 1 == len(p):
-        p[0] = []
-    elif 2 == len(p):
-        p[0] = [p[1]]
-    else:
-        p[1].append(p[2])
-        p[0] = p[1]
-
-
-def p_MessageModifier(p):
-    """MessageModifier : MessageCompress
-    | MessageTainted"""
-    p[0] = p[1]
-
-
-def p_MessageCompress(p):
-    """MessageCompress : COMPRESS
-    | COMPRESSALL"""
-    p[0] = p[1]
-
-
-def p_MessageTainted(p):
-    """MessageTainted : TAINTED"""
-    p[0] = p[1]
 
 
 # --------------------

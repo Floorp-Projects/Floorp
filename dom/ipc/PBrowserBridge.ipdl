@@ -88,7 +88,7 @@ parent:
   // Out of process rendering.
   async Show(OwnerShowInfo info);
   async ScrollbarPreferenceChanged(ScrollbarPreference pref);
-  async UpdateDimensions(nsIntRect rect, ScreenIntSize size) compressall;
+  [Compress=all] async UpdateDimensions(nsIntRect rect, ScreenIntSize size);
   async RenderLayers(bool aEnabled, LayersObserverEpoch aEpoch);
 
   async UpdateEffects(EffectsInfo aEffects);
