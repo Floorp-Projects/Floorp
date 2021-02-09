@@ -517,7 +517,6 @@ function String_substring(start, end) {
     // double. Eagerly truncate since SubstringKernel only accepts int32.
     return SubstringKernel(str, from | 0, (to - from) | 0);
 }
-_SetIsInlinableLargeFunction(String_substring);
 
 // ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 // B.2.3.1 String.prototype.substr ( start, length )
@@ -555,7 +554,6 @@ function String_substr(start, length) {
     // double. Eagerly truncate since SubstringKernel only accepts int32.
     return SubstringKernel(str, intStart | 0, resultLength | 0);
 }
-_SetIsInlinableLargeFunction(String_substr);
 
 // ES2021 draft rev 12a546b92275a0e2f834017db2727bb9c6f6c8fd
 // 21.1.3.4 String.prototype.concat ( ...args )
@@ -629,7 +627,6 @@ function String_slice(start, end) {
     // double. Eagerly truncate since SubstringKernel only accepts int32.
     return SubstringKernel(str, from | 0, span | 0);
 }
-_SetIsInlinableLargeFunction(String_slice);
 
 // ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 // 21.1.3.3 String.prototype.codePointAt ( pos )
