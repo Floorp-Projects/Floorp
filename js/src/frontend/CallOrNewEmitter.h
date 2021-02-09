@@ -258,7 +258,7 @@ class MOZ_STACK_CLASS CallOrNewEmitter {
 
   MOZ_MUST_USE bool isFunCall() const { return op_ == JSOp::FunCall; }
 
-  MOZ_MUST_USE bool isSpread() const { return JOF_OPTYPE(op_) == JOF_BYTE; }
+  MOZ_MUST_USE bool isSpread() const { return IsSpreadOp(op_); }
 
   MOZ_MUST_USE bool isSingleSpread() const {
     return argumentsKind_ == ArgumentsKind::SingleSpread;
