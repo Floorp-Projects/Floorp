@@ -28,13 +28,6 @@ body {
   background-color: Field;
 }
 
-/**
- * Helper for hiding/showing the status message.
- */
-#status-message-container[hidden="true"] {
-  display: none;
-}
-
 #status-message-title {
   font-size: 14px;
   font-weight: bold;
