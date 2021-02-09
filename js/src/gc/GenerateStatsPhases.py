@@ -138,6 +138,7 @@ PhaseKindGraphRoots = [
                 "Mark During Sweeping",
                 10,
                 [
+                    getPhaseKind("MARK_DELAYED"),
                     addPhaseKind(
                         "SWEEP_MARK_INCOMING_BLACK", "Mark Incoming Black Pointers", 12
                     ),
