@@ -954,6 +954,7 @@ STATIC_ATOMS = [
     Atom("pack", "pack"),
     Atom("page", "page"),
     Atom("pageincrement", "pageincrement"),
+    Atom("paint", "paint"),
     Atom("paint_order", "paint-order"),
     Atom("panel", "panel"),
     Atom("paragraph", "paragraph"),
