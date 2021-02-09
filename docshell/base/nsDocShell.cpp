@@ -9163,6 +9163,39 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   return NS_OK;
 }
 
+static bool NavigationShouldTakeFocus(nsDocShell* aDocShell,
+                                      nsDocShellLoadState* aLoadState) {
+  const auto& sourceBC = aLoadState->SourceBrowsingContext();
+  if (!sourceBC || !sourceBC->IsActive()) {
+    // If the navigation didn't come from a foreground tab, then we don't steal
+    // focus.
+    return false;
+  }
+  auto* bc = aDocShell->GetBrowsingContext();
+  if (sourceBC.get() == bc) {
+    // If it comes from the same tab / frame, don't steal focus either.
+    return false;
+  }
+  auto* fm = nsFocusManager::GetFocusManager();
+  if (fm && bc->IsActive() && fm->IsInActiveWindow(bc)) {
+    // If we're already on the foreground tab of the foreground window, then we
+    // don't need to do this. This helps to e.g. not steal focus from the
+    // browser chrome unnecessarily.
+    return false;
+  }
+  if (auto* doc = aDocShell->GetExtantDocument()) {
+    if (doc->IsInitialDocument()) {
+      // If we're the initial load for the browsing context, the browser
+      // chrome determines what to focus. This is important because the
+      // browser chrome may want to e.g focus the url-bar
+      return false;
+    }
+  }
+  // Take loadDivertedInBackground into account so the behavior would be the
+  // same as how the tab first opened.
+  return !Preferences::GetBool("browser.tabs.loadDivertedInBackground", false);
+}
+
 nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
                                   Maybe<uint32_t> aCacheKey) {
   MOZ_ASSERT(aLoadState, "need a load state!");
@@ -9177,13 +9210,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  // Take loadDivertedInBackground into account so the behavior would be the
-  // same as how the tab first opened.
-  const bool shouldTakeFocus =
-      aLoadState->SourceBrowsingContext() &&
-      aLoadState->SourceBrowsingContext()->IsActive() &&
-      !mBrowsingContext->IsActive() &&
-      !Preferences::GetBool("browser.tabs.loadDivertedInBackground", false);
+  const bool shouldTakeFocus = NavigationShouldTakeFocus(this, aLoadState);
 
   mOriginalUriString.Truncate();
 
