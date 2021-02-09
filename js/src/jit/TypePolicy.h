@@ -259,20 +259,6 @@ class ConvertToInt32Policy final : public TypePolicy {
   }
 };
 
-// Expect an Int for operand Op. Else a TruncateToInt32 instruction is inserted.
-template <unsigned Op>
-class TruncateToInt32Policy final : public TypePolicy {
- public:
-  constexpr TruncateToInt32Policy() = default;
-  EMPTY_DATA_;
-  [[nodiscard]] static bool staticAdjustInputs(TempAllocator& alloc,
-                                               MInstruction* def);
-  [[nodiscard]] bool adjustInputs(TempAllocator& alloc,
-                                  MInstruction* def) const override {
-    return staticAdjustInputs(alloc, def);
-  }
-};
-
 // Expect either an Int or BigInt for operand Op. Else a TruncateToInt32 or
 // ToBigInt instruction is inserted.
 template <unsigned Op>
