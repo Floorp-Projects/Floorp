@@ -2964,6 +2964,47 @@ bool wasm::GenerateEntryStubs(MacroAssembler& masm, size_t funcExportIndex,
   return true;
 }
 
+bool wasm::GenerateProvisionalJitEntryStub(MacroAssembler& masm,
+                                           Offsets* offsets) {
+  AssertExpectedSP(masm);
+  masm.setFramePushed(0);
+  offsets->begin = masm.currentOffset();
+
+#ifdef JS_CODEGEN_ARM64
+  // Unaligned ABI calls require SP+PSP, but our mode here is SP-only
+  masm.SetStackPointer64(PseudoStackPointer64);
+  masm.Mov(PseudoStackPointer64, sp);
+#endif
+
+#ifdef JS_USE_LINK_REGISTER
+  masm.pushReturnAddress();
+#endif
+
+  AllocatableGeneralRegisterSet regs(GeneralRegisterSet::Volatile());
+  Register temp = regs.takeAny();
+
+  using Fn = void* (*)();
+  masm.setupUnalignedABICall(temp);
+  masm.callWithABI<Fn, GetContextSensitiveInterpreterStub>(
+      MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+
+#ifdef JS_USE_LINK_REGISTER
+  masm.popReturnAddress();
+#endif
+
+  masm.jump(ReturnReg);
+
+#ifdef JS_CODEGEN_ARM64
+  // Undo the SP+PSP mode
+  masm.SetStackPointer64(sp);
+#endif
+
+  if (!FinishOffsets(masm, offsets)) {
+    return false;
+  }
+  return true;
+}
+
 bool wasm::GenerateStubs(const ModuleEnvironment& env,
                          const FuncImportVector& imports,
                          const FuncExportVector& exports, CompiledCode* code) {
