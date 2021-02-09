@@ -37,12 +37,13 @@ struct MozContainerWayland {
   int subsurface_dx, subsurface_dy;
   struct wl_egl_window* eglwindow;
   struct wl_callback* frame_callback_handler;
-  gboolean opaque_region_updates;
+  int frame_callback_handler_surface_id;
+  gboolean opaque_region_needs_update;
   gboolean opaque_region_subtract_corners;
   gboolean opaque_region_fullscreen;
+  gboolean surface_position_needs_update;
   gboolean surface_needs_clear;
   gboolean ready_to_draw;
-  gboolean before_first_size_alloc;
   std::vector<std::function<void(void)>> initial_draw_cbs;
   // mozcontainer is used from Compositor and Rendering threads
   // so we need to control access to mozcontainer where wayland internals
@@ -67,6 +68,8 @@ struct wl_egl_window* moz_container_wayland_get_egl_window(
 
 gboolean moz_container_wayland_has_egl_window(MozContainer* container);
 gboolean moz_container_wayland_surface_needs_clear(MozContainer* container);
+void moz_container_wayland_move_resize(MozContainer* container, int dx, int dy,
+                                       int width, int height);
 void moz_container_wayland_egl_window_set_size(MozContainer* container,
                                                int width, int height);
 void moz_container_wayland_set_scale_factor(MozContainer* container);
