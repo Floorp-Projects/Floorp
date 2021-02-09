@@ -20,7 +20,6 @@
 #include "WebGLTypes.h"
 
 #include "mozilla/Logging.h"
-#include "WebGLCrossProcessCommandQueue.h"
 #include "WebGLCommandQueue.h"
 
 #include <memory>
@@ -28,19 +27,10 @@
 #include <unordered_set>
 #include <vector>
 
-#ifndef WEBGL_BRIDGE_LOG_
-#  define WEBGL_BRIDGE_LOG_(lvl, ...) \
-    MOZ_LOG(mozilla::gWebGLBridgeLog, lvl, (__VA_ARGS__))
-#  define WEBGL_BRIDGE_LOGV(...) \
-    WEBGL_BRIDGE_LOG_(LogLevel::Verbose, __VA_ARGS__)
-#  define WEBGL_BRIDGE_LOGD(...) WEBGL_BRIDGE_LOG_(LogLevel::Debug, __VA_ARGS__)
-#  define WEBGL_BRIDGE_LOGI(...) WEBGL_BRIDGE_LOG_(LogLevel::Info, __VA_ARGS__)
-#  define WEBGL_BRIDGE_LOGE(...) WEBGL_BRIDGE_LOG_(LogLevel::Error, __VA_ARGS__)
-#endif  // WEBGL_BRIDGE_LOG_
-
 namespace mozilla {
 
 class ClientWebGLExtensionBase;
+class HostWebGLContext;
 
 namespace dom {
 class WebGLChild;
@@ -186,24 +176,19 @@ class ContextGenerationInfo final {
 
 // -
 
-struct RemotingData final {
-  // In the cross process case, the WebGL actor's ownership relationship looks
-  // like this:
-  // ---------------------------------------------------------------------
-  // | ClientWebGLContext -> WebGLChild -> WebGLParent -> HostWebGLContext
-  // ---------------------------------------------------------------------
-  //
-  // where 'A -> B' means "A owns B"
-  RefPtr<mozilla::dom::WebGLChild> mWebGLChild;
-  UniquePtr<ClientWebGLCommandSourceP> mCommandSourcePcq;
-  UniquePtr<ClientWebGLCommandSourceI> mCommandSourceIpdl;
-};
+// In the cross process case, the WebGL actor's ownership relationship looks
+// like this:
+// ---------------------------------------------------------------------
+// | ClientWebGLContext -> WebGLChild -> WebGLParent -> HostWebGLContext
+// ---------------------------------------------------------------------
+//
+// where 'A -> B' means "A owns B"
 
 struct NotLostData final {
   ClientWebGLContext& context;
   webgl::InitContextResult info;
 
-  Maybe<RemotingData> outOfProcess;
+  RefPtr<mozilla::dom::WebGLChild> outOfProcess;
   UniquePtr<HostWebGLContext> inProcess;
 
   webgl::ContextGenerationInfo state;
@@ -793,7 +778,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   mozilla::dom::WebGLChild* GetChild() const {
     if (!mNotLost) return nullptr;
     if (!mNotLost->outOfProcess) return nullptr;
-    return mNotLost->outOfProcess->mWebGLChild.get();
+    return mNotLost->outOfProcess.get();
   }
 
   // -------------------------------------------------------------------------

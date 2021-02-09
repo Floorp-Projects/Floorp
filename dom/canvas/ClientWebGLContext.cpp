@@ -41,8 +41,7 @@ webgl::NotLostData::NotLostData(ClientWebGLContext& _context)
 
 webgl::NotLostData::~NotLostData() {
   if (outOfProcess) {
-    const auto& pwebgl = outOfProcess->mWebGLChild;
-    Unused << dom::WebGLChild::Send__delete__(pwebgl.get());
+    Unused << dom::WebGLChild::Send__delete__(outOfProcess.get());
   }
 }
 
@@ -212,7 +211,6 @@ void ClientWebGLContext::OnContextLoss(
 }
 
 void ClientWebGLContext::Event_webglcontextlost() const {
-  WEBGL_BRIDGE_LOGD("[%p] Posting webglcontextlost event", this);
   const bool useDefaultHandler = DispatchEvent(u"webglcontextlost"_ns);
   if (useDefaultHandler) {
     mLossStatus = webgl::LossStatus::LostForever;
@@ -263,7 +261,6 @@ void ClientWebGLContext::Event_webglcontextrestored() const {
     return;
   }
 
-  WEBGL_BRIDGE_LOGD("[%p] Posting webglcontextrestored event", this);
   (void)DispatchEvent(u"webglcontextrestored"_ns);
 }
 
@@ -282,7 +279,6 @@ void ClientWebGLContext::ThrowEvent_WebGLContextCreationError(
     return;
   }
 
-  WEBGL_BRIDGE_LOGD("[%p] Posting webglcontextcreationerror event", this);
   const auto kEventName = u"webglcontextcreationerror"_ns;
 
   dom::WebGLContextEventInit eventInit;
@@ -311,7 +307,7 @@ void ClientWebGLContext::Run(Args&&... args) const {
     return (inProcess.get()->*method)(std::forward<Args>(args)...);
   }
 
-  const auto& child = notLost->outOfProcess->mWebGLChild;
+  const auto& child = notLost->outOfProcess;
 
   const auto id = IdByMethod<MethodType, method>();
 
@@ -371,7 +367,7 @@ Maybe<layers::SurfaceDescriptor> ClientWebGLContext::GetFrontBuffer(
     return inProcess->GetFrontBuffer(fb ? fb->mId : 0, vr);
   }
 
-  const auto& child = mNotLost->outOfProcess->mWebGLChild;
+  const auto& child = mNotLost->outOfProcess;
   child->FlushPendingCmds();
   Maybe<layers::SurfaceDescriptor> ret;
   if (!child->SendGetFrontBuffer(fb ? fb->mId : 0, vr, &ret)) return {};
@@ -388,8 +384,6 @@ already_AddRefed<layers::Layer> ClientWebGLContext::GetCanvasLayer(
     RefPtr<layers::Layer> ret = oldLayer;
     return ret.forget();
   }
-
-  WEBGL_BRIDGE_LOGI("[%p] Creating WebGL CanvasLayer/Renderer", this);
 
   RefPtr<CanvasLayer> canvasLayer = manager->CreateCanvasLayer();
   if (!canvasLayer) {
@@ -418,7 +412,6 @@ bool ClientWebGLContext::UpdateWebRenderCanvasData(
     return true;
   }
 
-  WEBGL_BRIDGE_LOGI("[%p] Creating WebGL WR CanvasLayer/Renderer", this);
   renderer = aCanvasData->CreateCanvasRenderer();
   if (!InitializeCanvasRenderer(aBuilder, renderer)) {
     // Clear CanvasRenderer of WebRenderCanvasData
@@ -522,9 +515,6 @@ NS_IMETHODIMP
 ClientWebGLContext::SetDimensions(const int32_t signedWidth,
                                   const int32_t signedHeight) {
   const FuncScope funcScope(*this, "<SetDimensions>");
-  WEBGL_BRIDGE_LOGI("[%p] SetDimensions: (%d, %d)", this, signedWidth,
-                    signedHeight);
-
   MOZ_ASSERT(mInitialOptions);
 
   if (mLossStatus != webgl::LossStatus::Ready) {
@@ -626,10 +616,7 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
     }
 
     if (!useOop) {
-      auto ownerData = HostWebGLContext::OwnerData{
-          Some(this),
-      };
-      notLost.inProcess = HostWebGLContext::Create(std::move(ownerData),
+      notLost.inProcess = HostWebGLContext::Create({this, nullptr},
                                                    initDesc, &notLost.info);
       return Ok();
     }
@@ -638,61 +625,25 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
 
     ScopedGfxFeatureReporter reporter("IpcWebGL");
 
-    webgl::RemotingData outOfProcess;
-
     auto* const cbc = layers::CompositorBridgeChild::Get();
     MOZ_ASSERT(cbc);
     if (!cbc) {
       return Err("!CompositorBridgeChild::Get()");
     }
 
-    outOfProcess.mWebGLChild = new dom::WebGLChild(*this);
-    outOfProcess.mWebGLChild = static_cast<dom::WebGLChild*>(
-        cbc->SendPWebGLConstructor(outOfProcess.mWebGLChild));
-    if (!outOfProcess.mWebGLChild) {
+    RefPtr<dom::WebGLChild> outOfProcess = new dom::WebGLChild(*this);
+    outOfProcess = static_cast<dom::WebGLChild*>(
+        cbc->SendPWebGLConstructor(outOfProcess));
+    if (!outOfProcess) {
       return Err("SendPWebGLConstructor failed");
     }
 
-    UniquePtr<HostWebGLCommandSinkP> sinkP;
-    UniquePtr<HostWebGLCommandSinkI> sinkI;
-    if (StaticPrefs::webgl_oop_via_pcq()) {
-      using mozilla::webgl::ProducerConsumerQueue;
-      static constexpr size_t CommandQueueSize = 256 * 1024;  // 256K
-      static constexpr size_t ResponseQueueSize = 8 * 1024;   // 8K
-      auto command = ProducerConsumerQueue::Create(cbc, CommandQueueSize);
-      auto response = ProducerConsumerQueue::Create(cbc, ResponseQueueSize);
-      if (!command || !response) {
-        return Err("Failed to create command/response PCQ");
-      }
-
-      outOfProcess.mCommandSourcePcq = MakeUnique<ClientWebGLCommandSourceP>(
-          command->TakeProducer(), response->TakeConsumer());
-      sinkP = MakeUnique<HostWebGLCommandSinkP>(command->TakeConsumer(),
-                                                response->TakeProducer());
-
-    } else {
-      using mozilla::IpdlWebGLCommandQueue;
-      using mozilla::IpdlWebGLResponseQueue;
-      auto command =
-          IpdlWebGLCommandQueue::Create(outOfProcess.mWebGLChild.get());
-      auto response =
-          IpdlWebGLResponseQueue::Create(outOfProcess.mWebGLChild.get());
-      if (!command || !response) {
-        return Err("Failed to create command/response IpdlQueue");
-      }
-
-      outOfProcess.mCommandSourceIpdl = MakeUnique<ClientWebGLCommandSourceI>(
-          command->TakeProducer(), response->TakeConsumer());
-      sinkI = MakeUnique<HostWebGLCommandSinkI>(command->TakeConsumer(),
-                                                response->TakeProducer());
-    }
-
-    if (!outOfProcess.mWebGLChild->SendInitialize(
-            initDesc, std::move(sinkP), std::move(sinkI), &notLost.info)) {
+    if (!outOfProcess->SendInitialize(
+            initDesc, &notLost.info)) {
       return Err("WebGL actor Initialize failed");
     }
 
-    notLost.outOfProcess = Some(std::move(outOfProcess));
+    notLost.outOfProcess = outOfProcess;
     reporter.SetSuccessful();
     return Ok();
   }();
@@ -771,7 +722,7 @@ uvec2 ClientWebGLContext::DrawingBufferSize() {
     if (inProcess) {
       size = Some(inProcess->DrawingBufferSize());
     } else {
-      const auto& child = mNotLost->outOfProcess->mWebGLChild;
+      const auto& child = mNotLost->outOfProcess;
       child->FlushPendingCmds();
       uvec2 actual = {};
       if (!child->SendDrawingBufferSize(&actual)) return {};
@@ -789,7 +740,7 @@ void ClientWebGLContext::OnMemoryPressure() {
   if (inProcess) {
     return inProcess->OnMemoryPressure();
   }
-  const auto& child = mNotLost->outOfProcess->mWebGLChild;
+  const auto& child = mNotLost->outOfProcess;
   (void)child->SendOnMemoryPressure();
 }
 
@@ -933,7 +884,7 @@ RefPtr<gfx::SourceSurface> ClientWebGLContext::GetFrontBufferSnapshot(
       }
       return surf;
     }
-    const auto& child = mNotLost->outOfProcess->mWebGLChild;
+    const auto& child = mNotLost->outOfProcess;
     child->FlushPendingCmds();
     webgl::FrontBufferSnapshotIpc res;
     if (!child->SendGetFrontBufferSnapshot(&res)) {
@@ -1137,7 +1088,7 @@ ClientWebGLContext::CreateOpaqueFramebuffer(
     }
     return ret.forget();
   }
-  const auto& child = mNotLost->outOfProcess->mWebGLChild;
+  const auto& child = mNotLost->outOfProcess;
   child->FlushPendingCmds();
   bool ok = false;
   if (!child->SendCreateOpaqueFramebuffer(ret->mId, options, &ok))
@@ -1669,7 +1620,7 @@ bool ClientWebGLContext::IsEnabled(GLenum cap) const {
   if (inProcess) {
     return inProcess->IsEnabled(cap);
   }
-  const auto& child = notLost->outOfProcess->mWebGLChild;
+  const auto& child = notLost->outOfProcess;
   child->FlushPendingCmds();
   bool ret = {};
   if (!child->SendIsEnabled(cap, &ret)) return false;
@@ -1691,7 +1642,7 @@ void ClientWebGLContext::GetInternalformatParameter(
     maybe = inProcessContext->GetInternalformatParameter(target, internalformat,
                                                          pname);
   } else {
-    const auto& child = notLost->outOfProcess->mWebGLChild;
+    const auto& child = notLost->outOfProcess;
     child->FlushPendingCmds();
     if (!child->SendGetInternalformatParameter(target, internalformat, pname,
                                                &maybe)) {
@@ -1757,7 +1708,7 @@ Maybe<double> ClientWebGLContext::GetNumber(const GLenum pname) {
     return inProcess->GetNumber(pname);
   }
 
-  const auto& child = mNotLost->outOfProcess->mWebGLChild;
+  const auto& child = mNotLost->outOfProcess;
   child->FlushPendingCmds();
 
   Maybe<double> ret;
@@ -1775,7 +1726,7 @@ Maybe<std::string> ClientWebGLContext::GetString(const GLenum pname) {
     return inProcess->GetString(pname);
   }
 
-  const auto& child = mNotLost->outOfProcess->mWebGLChild;
+  const auto& child = mNotLost->outOfProcess;
   child->FlushPendingCmds();
 
   Maybe<std::string> ret;
@@ -2203,7 +2154,7 @@ void ClientWebGLContext::GetBufferParameter(
     if (inProcess) {
       return inProcess->GetBufferParameter(target, pname);
     }
-    const auto& child = mNotLost->outOfProcess->mWebGLChild;
+    const auto& child = mNotLost->outOfProcess;
     child->FlushPendingCmds();
     Maybe<double> ret;
     if (!child->SendGetBufferParameter(target, pname, &ret)) {
@@ -2257,7 +2208,7 @@ void ClientWebGLContext::GetFramebufferAttachmentParameter(
       return inProcess->GetFramebufferAttachmentParameter(fbId, attachment,
                                                           pname);
     }
-    const auto& child = mNotLost->outOfProcess->mWebGLChild;
+    const auto& child = mNotLost->outOfProcess;
     child->FlushPendingCmds();
     Maybe<double> ret;
     if (!child->SendGetFramebufferAttachmentParameter(fbId, attachment, pname,
@@ -2332,7 +2283,7 @@ void ClientWebGLContext::GetRenderbufferParameter(
     if (inProcess) {
       return inProcess->GetRenderbufferParameter(rbId, pname);
     }
-    const auto& child = mNotLost->outOfProcess->mWebGLChild;
+    const auto& child = mNotLost->outOfProcess;
     child->FlushPendingCmds();
     Maybe<double> ret;
     if (!child->SendGetRenderbufferParameter(rbId, pname, &ret)) {
@@ -2384,7 +2335,7 @@ void ClientWebGLContext::GetIndexedParameter(
     if (inProcess) {
       return inProcess->GetIndexedParameter(target, index);
     }
-    const auto& child = mNotLost->outOfProcess->mWebGLChild;
+    const auto& child = mNotLost->outOfProcess;
     child->FlushPendingCmds();
     Maybe<double> ret;
     if (!child->SendGetIndexedParameter(target, index, &ret)) {
@@ -2424,7 +2375,7 @@ void ClientWebGLContext::GetUniform(JSContext* const cx,
     if (inProcess) {
       return inProcess->GetUniform(prog.mId, loc.mLocation);
     }
-    const auto& child = mNotLost->outOfProcess->mWebGLChild;
+    const auto& child = mNotLost->outOfProcess;
     child->FlushPendingCmds();
     webgl::GetUniformData ret;
     if (!child->SendGetUniform(prog.mId, loc.mLocation, &ret)) {
@@ -2540,7 +2491,7 @@ ClientWebGLContext::GetShaderPrecisionFormat(const GLenum shadertype,
     if (inProcess) {
       return inProcess->GetShaderPrecisionFormat(shadertype, precisiontype);
     }
-    const auto& child = mNotLost->outOfProcess->mWebGLChild;
+    const auto& child = mNotLost->outOfProcess;
     child->FlushPendingCmds();
     Maybe<webgl::ShaderPrecisionFormat> ret;
     if (!child->SendGetShaderPrecisionFormat(shadertype, precisiontype, &ret)) {
@@ -2585,7 +2536,7 @@ GLenum ClientWebGLContext::CheckFramebufferStatus(GLenum target) {
   if (inProcess) {
     return inProcess->CheckFramebufferStatus(target);
   }
-  const auto& child = mNotLost->outOfProcess->mWebGLChild;
+  const auto& child = mNotLost->outOfProcess;
   child->FlushPendingCmds();
   GLenum ret = 0;
   if (!child->SendCheckFramebufferStatus(target, &ret)) {
@@ -2711,7 +2662,7 @@ void ClientWebGLContext::Flush() {
   Run<RPROC(Flush)>();
 
   if (notLost->inProcess) return;
-  const auto& child = mNotLost->outOfProcess->mWebGLChild;
+  const auto& child = mNotLost->outOfProcess;
   child->FlushPendingCmds();
 }
 
@@ -2723,7 +2674,7 @@ void ClientWebGLContext::Finish() {
     inProcess->Finish();
     return;
   }
-  const auto& child = mNotLost->outOfProcess->mWebGLChild;
+  const auto& child = mNotLost->outOfProcess;
   child->FlushPendingCmds();
   (void)child->SendFinish();
 }
@@ -2743,7 +2694,7 @@ GLenum ClientWebGLContext::GetError() {
   if (inProcess) {
     return inProcess->GetError();
   }
-  const auto& child = notLost->outOfProcess->mWebGLChild;
+  const auto& child = notLost->outOfProcess;
   child->FlushPendingCmds();
   GLenum ret = 0;
   if (!child->SendGetError(&ret)) {
@@ -3116,7 +3067,7 @@ void ClientWebGLContext::GetBufferSubData(GLenum target, GLintptr srcByteOffset,
     return;
   }
 
-  const auto& child = notLost->outOfProcess->mWebGLChild;
+  const auto& child = notLost->outOfProcess;
   child->FlushPendingCmds();
   mozilla::ipc::Shmem rawShmem;
   if (!child->SendGetBufferSubData(target, srcByteOffset, destView.length(),
@@ -3688,7 +3639,7 @@ void ClientWebGLContext::GetTexParameter(
     if (inProcess) {
       return inProcess->GetTexParameter(tex->mId, pname);
     }
-    const auto& child = mNotLost->outOfProcess->mWebGLChild;
+    const auto& child = mNotLost->outOfProcess;
     child->FlushPendingCmds();
     Maybe<double> ret;
     if (!child->SendGetTexParameter(tex->mId, pname, &ret)) {
@@ -4198,7 +4149,7 @@ void ClientWebGLContext::ValidateProgram(WebGLProgramJS& prog) const {
     if (inProcess) {
       return inProcess->ValidateProgram(prog.mId);
     }
-    const auto& child = mNotLost->outOfProcess->mWebGLChild;
+    const auto& child = mNotLost->outOfProcess;
     child->FlushPendingCmds();
     bool ret = {};
     if (!child->SendValidateProgram(prog.mId, &ret)) {
@@ -4216,7 +4167,7 @@ Maybe<double> ClientWebGLContext::GetVertexAttribPriv(const GLuint index,
   if (inProcess) {
     return inProcess->GetVertexAttrib(index, pname);
   }
-  const auto& child = mNotLost->outOfProcess->mWebGLChild;
+  const auto& child = mNotLost->outOfProcess;
   child->FlushPendingCmds();
   Maybe<double> ret;
   if (!child->SendGetVertexAttrib(index, pname, &ret)) {
@@ -4613,7 +4564,7 @@ void ClientWebGLContext::DoReadPixels(const webgl::ReadPixelsDesc& desc,
     inProcess->ReadPixelsInto(desc, dest);
     return;
   }
-  const auto& child = notLost->outOfProcess->mWebGLChild;
+  const auto& child = notLost->outOfProcess;
   child->FlushPendingCmds();
   webgl::ReadPixelsResultIpc res = {};
   if (!child->SendReadPixels(desc, dest.length(), &res)) {
@@ -4738,7 +4689,7 @@ void ClientWebGLContext::GetQueryParameter(
     if (inProcess) {
       return inProcess->GetQueryParameter(query.mId, pname);
     }
-    const auto& child = mNotLost->outOfProcess->mWebGLChild;
+    const auto& child = mNotLost->outOfProcess;
     child->FlushPendingCmds();
     Maybe<double> ret;
     if (!child->SendGetQueryParameter(query.mId, pname, &ret)) {
@@ -4871,7 +4822,7 @@ void ClientWebGLContext::GetSamplerParameter(
     if (inProcess) {
       return inProcess->GetSamplerParameter(sampler.mId, pname);
     }
-    const auto& child = mNotLost->outOfProcess->mWebGLChild;
+    const auto& child = mNotLost->outOfProcess;
     child->FlushPendingCmds();
     Maybe<double> ret;
     if (!child->SendGetSamplerParameter(sampler.mId, pname, &ret)) {
@@ -4977,7 +4928,7 @@ GLenum ClientWebGLContext::ClientWaitSync(WebGLSyncJS& sync,
     if (inProcess) {
       return inProcess->ClientWaitSync(sync.mId, flags, timeout);
     }
-    const auto& child = mNotLost->outOfProcess->mWebGLChild;
+    const auto& child = mNotLost->outOfProcess;
     child->FlushPendingCmds();
     GLenum ret = {};
     if (!child->SendClientWaitSync(sync.mId, flags, timeout, &ret)) {
@@ -5672,7 +5623,7 @@ GLint ClientWebGLContext::GetFragDataLocation(const WebGLProgramJS& prog,
     if (inProcess) {
       return inProcess->GetFragDataLocation(prog.mId, nameU8);
     }
-    const auto& child = mNotLost->outOfProcess->mWebGLChild;
+    const auto& child = mNotLost->outOfProcess;
     child->FlushPendingCmds();
     GLint ret = {};
     if (!child->SendGetFragDataLocation(prog.mId, nameU8, &ret)) {
@@ -6019,7 +5970,7 @@ const webgl::CompileResult& ClientWebGLContext::GetCompileResult(
       if (inProcess) {
         return inProcess->GetCompileResult(shader.mId);
       }
-      const auto& child = mNotLost->outOfProcess->mWebGLChild;
+      const auto& child = mNotLost->outOfProcess;
       child->FlushPendingCmds();
       webgl::CompileResult ret = {};
       if (!child->SendGetCompileResult(shader.mId, &ret)) {
@@ -6043,7 +5994,7 @@ const webgl::LinkResult& ClientWebGLContext::GetLinkResult(
       if (inProcess) {
         return inProcess->GetLinkResult(prog.mId);
       }
-      const auto& child = mNotLost->outOfProcess->mWebGLChild;
+      const auto& child = mNotLost->outOfProcess;
       child->FlushPendingCmds();
       webgl::LinkResult ret;
       if (!child->SendGetLinkResult(prog.mId, &ret)) {
