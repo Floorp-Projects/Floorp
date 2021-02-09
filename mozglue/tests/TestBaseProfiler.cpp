@@ -4414,9 +4414,9 @@ void TestProfiler() {
   MOZ_RELEASE_ASSERT(!mozilla::baseprofiler::profiler_get_backtrace(),
                      "profiler_get_backtrace should return nullptr");
   mozilla::ProfileChunkedBuffer buffer;
-  MOZ_RELEASE_ASSERT(
-      !mozilla::baseprofiler::profiler_capture_backtrace_into(buffer),
-      "profiler_capture_backtrace_into should return false");
+  MOZ_RELEASE_ASSERT(!mozilla::baseprofiler::profiler_capture_backtrace_into(
+                         buffer, mozilla::StackCaptureOptions::Full),
+                     "profiler_capture_backtrace_into should return false");
   MOZ_RELEASE_ASSERT(!mozilla::baseprofiler::profiler_capture_backtrace(),
                      "profiler_capture_backtrace should return nullptr");
 }

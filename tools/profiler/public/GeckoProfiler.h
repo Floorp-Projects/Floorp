@@ -80,7 +80,7 @@ static inline UniqueProfilerBacktrace profiler_get_backtrace() {
 
 static inline bool profiler_capture_backtrace_into(
     mozilla::ProfileChunkedBuffer& aChunkedBuffer,
-    StackCaptureOptions aCaptureOptions) {
+    mozilla::StackCaptureOptions aCaptureOptions) {
   return false;
 }
 static inline mozilla::UniquePtr<mozilla::ProfileChunkedBuffer>
