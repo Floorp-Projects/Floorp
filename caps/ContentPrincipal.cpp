@@ -441,30 +441,16 @@ ContentPrincipal::GetBaseDomain(nsACString& aBaseDomain) {
 
 NS_IMETHODIMP
 ContentPrincipal::GetSiteOriginNoSuffix(nsACString& aSiteOrigin) {
-  nsresult rv = GetOriginNoSuffix(aSiteOrigin);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // It is possible for two principals with the same origin to have different
-  // mURI values. In order to ensure that two principals with matching origins
-  // also have matching siteOrigins, we derive the siteOrigin entirely from the
-  // origin string and do not rely on mURI at all here.
-  nsCOMPtr<nsIURI> origin;
-  if (NS_FAILED(NS_NewURI(getter_AddRefs(origin), aSiteOrigin))) {
-    // We got an error parsing the origin as a URI? siteOrigin == origin
-    // aSiteOrigin was already filled with `OriginNoSuffix`
-    return NS_OK;
-  }
-
   // Handle some special URIs first.
   nsAutoCString baseDomain;
   bool handled;
-  rv = GetSpecialBaseDomain(origin, &handled, baseDomain);
+  nsresult rv = GetSpecialBaseDomain(mURI, &handled, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (handled) {
     // This is a special URI ("file:", "about:", "view-source:", etc). Just
     // return the origin.
-    return NS_OK;
+    return GetOriginNoSuffix(aSiteOrigin);
   }
 
   // For everything else, we ask the TLD service. Note that, unlike in
@@ -479,7 +465,7 @@ ContentPrincipal::GetSiteOriginNoSuffix(nsACString& aSiteOrigin) {
   }
 
   bool gotBaseDomain = false;
-  rv = tldService->GetBaseDomain(origin, 0, baseDomain);
+  rv = tldService->GetBaseDomain(mURI, 0, baseDomain);
   if (NS_SUCCEEDED(rv)) {
     gotBaseDomain = true;
   } else {
@@ -494,7 +480,7 @@ ContentPrincipal::GetSiteOriginNoSuffix(nsACString& aSiteOrigin) {
   // NOTE: Calling `SetHostPort` with a portless domain is insufficient to clear
   // the port, so an extra `SetPort` call has to be made.
   nsCOMPtr<nsIURI> siteUri;
-  NS_MutateURI mutator(origin);
+  NS_MutateURI mutator(mURI);
   mutator.SetUserPass(""_ns).SetPort(-1);
   if (gotBaseDomain) {
     mutator.SetHost(baseDomain);
@@ -503,7 +489,6 @@ ContentPrincipal::GetSiteOriginNoSuffix(nsACString& aSiteOrigin) {
   MOZ_ASSERT(NS_SUCCEEDED(rv), "failed to create siteUri");
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aSiteOrigin.Truncate();
   rv = GenerateOriginNoSuffixFromURI(siteUri, aSiteOrigin);
   MOZ_ASSERT(NS_SUCCEEDED(rv), "failed to create siteOriginNoSuffix");
   return rv;
