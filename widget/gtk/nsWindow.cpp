@@ -4662,13 +4662,11 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
         SetDefaultIcon();
         gtk_window_set_type_hint(GTK_WINDOW(mShell),
                                  GDK_WINDOW_TYPE_HINT_DIALOG);
-
+        LOG(("nsWindow::Create(): dialog [%p]\n", this));
         if (parentnsWindow) {
           gtk_window_set_transient_for(
               GTK_WINDOW(mShell), GTK_WINDOW(parentnsWindow->GetGtkWidget()));
-          LOG((
-              "nsWindow::Create(): dialog [%p], parent window %p [GdkWindow]\n",
-              this, aNativeParent));
+          LOG(("    parent window %p [GdkWindow]\n", this));
         }
 
       } else if (mWindowType == eWindowType_popup) {
@@ -4721,9 +4719,13 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
           }
         }
         gtk_window_set_type_hint(GTK_WINDOW(mShell), gtkTypeHint);
+        LOG(("nsWindow::Create() popup [%p] type %s\n", this,
+             aInitData->mPopupHint == ePopupTypeMenu
+                 ? "Menu"
+                 : (aInitData->mPopupHint == ePopupTypeTooltip ? "Tooltip"
+                                                               : "Utility")));
         if (parentnsWindow) {
-          LOG(("nsWindow::Create() [%p]: parent window for popup: %p\n", this,
-               parentnsWindow));
+          LOG(("    parent window for popup: %p\n", parentnsWindow));
           gtk_window_set_transient_for(
               GTK_WINDOW(mShell), GTK_WINDOW(parentnsWindow->GetGtkWidget()));
         }
@@ -4739,7 +4741,10 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
         mGtkWindowRoleName = "Toplevel";
         SetDefaultIcon();
 
+        LOG(("nsWindow::Create() Toplevel [%p]\n", this));
+
         if (mIsPIPWindow) {
+          LOG(("    Is PIP Window\n"));
           gtk_window_set_type_hint(GTK_WINDOW(mShell),
                                    GDK_WINDOW_TYPE_HINT_UTILITY);
         }
