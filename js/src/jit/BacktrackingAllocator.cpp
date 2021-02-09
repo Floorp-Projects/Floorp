@@ -65,6 +65,17 @@ static inline void InsertSortedList(InlineForwardList<T>& list, T* value) {
   }
 }
 
+static bool CanMergeTypesInBundle(LDefinition::Type a, LDefinition::Type b) {
+  // Fast path for the common case.
+  if (a == b) {
+    return true;
+  }
+
+  // Only merge if the sizes match, so that we don't get confused about the
+  // width of spill slots.
+  return StackSlotAllocator::width(a) == StackSlotAllocator::width(b);
+}
+
 /////////////////////////////////////////////////////////////////////
 // LiveRange
 /////////////////////////////////////////////////////////////////////
@@ -956,9 +967,8 @@ bool BacktrackingAllocator::tryMergeBundles(LiveBundle* bundle0,
   VirtualRegister& reg0 = vregs[bundle0->firstRange()->vreg()];
   VirtualRegister& reg1 = vregs[bundle1->firstRange()->vreg()];
 
-  if (!reg0.isCompatible(reg1)) {
-    return true;
-  }
+  MOZ_ASSERT(CanMergeTypesInBundle(reg0.type(), reg1.type()));
+  MOZ_ASSERT(reg0.isCompatible(reg1));
 
   // Registers which might spill to the frame's |this| slot can only be
   // grouped with other such registers. The frame's |this| slot must always
@@ -1074,6 +1084,11 @@ bool BacktrackingAllocator::tryMergeReusedRegister(VirtualRegister& def,
 
   if (def.rangeFor(inputOf(def.ins()))) {
     MOZ_ASSERT(def.isTemp());
+    def.setMustCopyInput();
+    return true;
+  }
+
+  if (!CanMergeTypesInBundle(def.type(), input.type())) {
     def.setMustCopyInput();
     return true;
   }
