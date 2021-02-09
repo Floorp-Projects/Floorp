@@ -89,6 +89,10 @@ class StackSlotAllocator {
       case LDefinition::OBJECT:
       case LDefinition::SLOTS:
 #endif
+#ifdef JS_NUNBOX32
+      case LDefinition::TYPE:
+      case LDefinition::PAYLOAD:
+#endif
       case LDefinition::INT32:
       case LDefinition::FLOAT32:
         return 4;
@@ -99,10 +103,6 @@ class StackSlotAllocator {
 #endif
 #ifdef JS_PUNBOX64
       case LDefinition::BOX:
-#endif
-#ifdef JS_NUNBOX32
-      case LDefinition::TYPE:
-      case LDefinition::PAYLOAD:
 #endif
       case LDefinition::DOUBLE:
         return 8;
