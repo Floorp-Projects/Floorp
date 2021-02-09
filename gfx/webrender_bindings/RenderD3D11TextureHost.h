@@ -64,6 +64,20 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
   bool EnsureD3D11Texture2D(ID3D11Device* aDevice);
   bool LockInternal();
 
+  size_t Bytes() override {
+    size_t bytes = 0;
+
+    size_t bpp = GetPlaneCount() > 1
+                     ? (GetColorDepth() == gfx::ColorDepth::COLOR_8 ? 1 : 2)
+                     : 4;
+
+    for (size_t i = 0; i < GetPlaneCount(); i++) {
+      gfx::IntSize size = GetSize(i);
+      bytes += size.width * size.height * bpp;
+    }
+    return bytes;
+  }
+
  private:
   virtual ~RenderDXGITextureHost();
 
@@ -141,6 +155,18 @@ class RenderDXGIYCbCrTextureHost final : public RenderTextureHostSWGL {
 
   ID3D11Texture2D* GetD3D11Texture2D(uint8_t aChannelIndex) {
     return mTextures[aChannelIndex];
+  }
+
+  size_t Bytes() override {
+    size_t bytes = 0;
+
+    size_t bpp = mColorDepth == gfx::ColorDepth::COLOR_8 ? 1 : 2;
+
+    for (size_t i = 0; i < GetPlaneCount(); i++) {
+      gfx::IntSize size = GetSize(i);
+      bytes += size.width * size.height * bpp;
+    }
+    return bytes;
   }
 
  private:
