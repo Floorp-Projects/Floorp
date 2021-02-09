@@ -28,6 +28,7 @@ import optparse
 import os
 import subprocess as subp
 import sys
+import json
 from string import Template
 
 try:
@@ -41,6 +42,7 @@ JS_CODE_TEMPLATE = Template(
     """
 if (typeof snarf !== 'undefined') read = snarf
 var contents = read("$filepath");
+$prepare
 for (var i = 0; i < $warmup_run_count; i++)
     $func(contents, $options);
 var results = [];
@@ -70,13 +72,16 @@ def stddev(seq, mean):
     return math.sqrt(sum(diffs) / len(seq))
 
 
-def bench(shellpath, filepath, warmup_runs, counted_runs, func, options, stfu=False):
+def bench(
+    shellpath, filepath, warmup_runs, counted_runs, prepare, func, options, stfu=False
+):
     """Return a list of milliseconds for the counted runs."""
     assert '"' not in filepath
     code = JS_CODE_TEMPLATE.substitute(
         filepath=filepath,
         warmup_run_count=warmup_runs,
         real_run_count=counted_runs,
+        prepare=prepare,
         func=func,
         options=options,
     )
@@ -150,9 +155,9 @@ def main():
         "--mode",
         dest="mode",
         type="choice",
-        choices=("parse", "dumpStencil", "compile"),
+        choices=("parse", "dumpStencil", "compile", "decode"),
         default="parse",
-        help="The target of the benchmark (parse/dumpStencil/compile), defaults to parse",
+        help="The target of the benchmark (parse/dumpStencil/compile/decode), defaults to parse",
     )
     parser.add_option(
         "--lazy",
@@ -205,10 +210,30 @@ def main():
         )
         return -1
 
-    if options.lazy:
-        funcOpt = "{}"
+    funcOpt = {}
+    if options.mode == "decode":
+        encodeOpt = {}
+        encodeOpt["transcodeOnly"] = True
+        encodeOpt["saveIncrementalBytecode"] = True
+        if not options.lazy:
+            encodeOpt["forceFullParse"] = True
+
+        # In order to test the decoding, we first have to encode the content.
+        prepare = Template(
+            """
+contents = cacheEntry(contents);
+evaluate(contents, $options);
+"""
+        ).substitute(options=json.dumps(encodeOpt))
+
+        func = "evaluate"
+        funcOpt["transcodeOnly"] = True
+        funcOpt["loadBytecode"] = True
     else:
-        funcOpt = "{ forceFullParse: true }"
+        prepare = ""
+        func = options.mode
+        if not options.lazy:
+            funcOpt["forceFullParse"] = True
 
     def benchfile(filepath):
         return bench(
@@ -216,8 +241,9 @@ def main():
             filepath,
             options.warmup_runs,
             options.counted_runs,
-            options.mode,
-            funcOpt,
+            prepare,
+            func,
+            json.dumps(funcOpt),
             stfu=options.stfu,
         )
 
