@@ -660,6 +660,10 @@ void LIRGenerator::visitAtomicExchangeTypedArrayElement(
   define(lir, ins);
 }
 
+void LIRGeneratorMIPSShared::lowerAtomicLoad64(MLoadUnboxedScalar* ins) {
+  MOZ_CRASH("NYI");
+}
+
 void LIRGenerator::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins) {
   MOZ_ASSERT(ins->base()->type() == MIRType::Int32);
 

@@ -122,6 +122,35 @@ void CodeGenerator::visitUnbox(LUnbox* unbox) {
   masm.unboxNonDouble(type, payload, output, ValueTypeFromMIRType(mir->type()));
 }
 
+void CodeGenerator::visitAtomicLoad64(LAtomicLoad64* lir) {
+  Register elements = ToRegister(lir->elements());
+  Register temp = ToRegister(lir->temp());
+  Register64 temp64 = ToRegister64(lir->temp64());
+  Register out = ToRegister(lir->output());
+
+  MOZ_ASSERT(out == ecx);
+  MOZ_ASSERT(temp == ebx);
+  MOZ_ASSERT(temp64 == Register64(edx, eax));
+
+  const MLoadUnboxedScalar* mir = lir->mir();
+
+  Scalar::Type storageType = mir->storageType();
+
+  if (lir->index()->isConstant()) {
+    Address source =
+        ToAddress(elements, lir->index(), storageType, mir->offsetAdjustment());
+    masm.atomicLoad64(Synchronization::Load(), source, Register64(ecx, ebx),
+                      Register64(edx, eax));
+  } else {
+    BaseIndex source(elements, ToRegister(lir->index()),
+                     ScaleFromScalarType(storageType), mir->offsetAdjustment());
+    masm.atomicLoad64(Synchronization::Load(), source, Register64(ecx, ebx),
+                      Register64(edx, eax));
+  }
+
+  emitCreateBigInt(lir, storageType, temp64, out, temp);
+}
+
 // See ../CodeGenerator.cpp for more information.
 void CodeGenerator::visitWasmRegisterResult(LWasmRegisterResult* lir) {}
 

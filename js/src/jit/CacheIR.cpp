@@ -7128,7 +7128,7 @@ AttachDecision CallIRGenerator::tryAttachAtomicsLoad(HandleFunction callee) {
   }
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
-  if (!AtomicsMeetsPreconditions(typedArray, args_[1])) {
+  if (!AtomicsMeetsPreconditions(typedArray, args_[1], BigIntAtomics::Yes)) {
     return AttachDecision::NoAction;
   }
 
