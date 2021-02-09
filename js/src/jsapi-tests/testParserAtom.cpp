@@ -60,8 +60,6 @@ BEGIN_TEST(testParserAtom_tiny1) {
   const uint8_t bytes[] = {'a', 0};
   const js::LittleEndianChars leTwoByte(bytes);
 
-  auto ref = cx->runtime()->commonParserNames->lookupTiny(&a, 1);
-  CHECK(ref);
   auto refIndex = cx->runtime()->commonParserNames->lookupTinyIndex(&a, 1);
   CHECK(refIndex);
   CHECK(atomTable.internAscii(cx, ascii, 1) == refIndex);
@@ -72,7 +70,7 @@ BEGIN_TEST(testParserAtom_tiny1) {
   // Note: If Latin1-Extended characters become supported, then UTF-8 behaviour
   // should be tested.
   char16_t ae = 0x00E6;
-  CHECK(cx->runtime()->commonParserNames->lookupTiny(&ae, 1) == nullptr);
+  CHECK(!cx->runtime()->commonParserNames->lookupTinyIndex(&ae, 1));
 
   return true;
 }
@@ -106,7 +104,7 @@ BEGIN_TEST(testParserAtom_tiny2) {
   // Note: If Latin1-Extended characters become supported, then UTF-8 behaviour
   // should be tested.
   char16_t ae0[] = {0x00E6, '0'};
-  CHECK(cx->runtime()->commonParserNames->lookupTiny(ae0, 2) == nullptr);
+  CHECK(!cx->runtime()->commonParserNames->lookupTinyIndex(ae0, 2));
 
   return true;
 }

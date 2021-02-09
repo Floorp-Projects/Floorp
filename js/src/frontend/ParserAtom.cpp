@@ -644,8 +644,8 @@ bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserAtom** name,
   MOZ_ASSERT(len <= MaxWellKnownLength);
   MOZ_ASSERT(romEntry.isAscii());
 
-  // Strings matched by lookupTiny are stored in static table and aliases should
-  // only be added using initTinyStringAlias.
+  // Strings matched by lookupTinyIndex are stored in static table and aliases
+  // should be initialized directly in WellKnownParserAtoms::init.
   MOZ_ASSERT(lookupTinyIndex(str, len) == TaggedParserAtomIndex::null(),
              "Well-known atom matches a tiny StaticString. Did you add it to "
              "the wrong CommonPropertyNames.h list?");
@@ -663,36 +663,21 @@ bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserAtom** name,
   return true;
 }
 
-bool WellKnownParserAtoms::initTinyStringAlias(JSContext* cx,
-                                               const ParserAtom** name,
-                                               const char* str) {
-  MOZ_ASSERT(name != nullptr);
-
-  unsigned int len = strlen(str);
-
-  // Well-known atoms are all currently ASCII with length <= MaxWellKnownLength.
-  MOZ_ASSERT(len <= MaxWellKnownLength);
-  MOZ_ASSERT(FindSmallestEncoding(JS::UTF8Chars(str, len)) ==
-             JS::SmallestEncoding::ASCII);
-
-  // NOTE: If this assert fails, you may need to change which list is it belongs
-  //       to in CommonPropertyNames.h.
-  auto tiny = lookupTiny(str, len);
-  MOZ_ASSERT(tiny, "Tiny common name was not found");
-
-  // Set alias to existing atom.
-  *name = tiny;
-  return true;
-}
-
 bool WellKnownParserAtoms::init(JSContext* cx) {
   // Tiny strings with a common name need a named alias to an entry in the
   // WellKnownParserAtoms_ROM.
-#define COMMON_NAME_INIT_(_, NAME, TEXT)         \
-  if (!initTinyStringAlias(cx, &(NAME), TEXT)) { \
-    return false;                                \
-  }
-  FOR_EACH_TINY_PROPERTYNAME(COMMON_NAME_INIT_)
+
+  empty = &rom_.emptyAtom;
+
+#define COMMON_NAME_INIT_(_, NAME, TEXT) \
+  (NAME) = &rom_.length1Table[static_cast<size_t>((TEXT)[0])];
+  FOR_EACH_LENGTH1_PROPERTYNAME(COMMON_NAME_INIT_)
+#undef COMMON_NAME_INIT_
+
+#define COMMON_NAME_INIT_(_, NAME, TEXT)                                \
+  (NAME) = &rom_.length2Table[StaticStrings::getLength2Index((TEXT)[0], \
+                                                             (TEXT)[1])];
+  FOR_EACH_LENGTH2_PROPERTYNAME(COMMON_NAME_INIT_)
 #undef COMMON_NAME_INIT_
 
   // Initialize the named fields to point to entries in the ROM. This also adds
