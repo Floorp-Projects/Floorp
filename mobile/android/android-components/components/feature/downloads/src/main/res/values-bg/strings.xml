@@ -40,4 +40,6 @@
     <string name="mozac_feature_downloads_button_close">Затваряне</string>
     <!-- Title for the third party download app chooser dialog -->
     <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">Завършване на действието използвайки</string>
-    </resources>
+    <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
+    <string name="mozac_feature_downloads_unable_to_open_third_party_app">Не успя да се отвори %1$s</string>
+</resources>

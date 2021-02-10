@@ -63,7 +63,7 @@
     <!-- Description for tab_hide permission. -->
     <string name="mozac_feature_addons_permissions_tab_hide_description">Veşartin û nîşandana hilpekînên gerokê</string>
     <!-- Description for top_sites permission. -->
-    <string name="mozac_feature_addons_permissions_top_sites_description">Xwegihandina mêjûya gerê</string>
+    <string name="mozac_feature_addons_permissions_top_sites_description">Xwegihandina raboriya gerînê</string>
     <!-- Description for devtools permission. -->
     <string name="mozac_feature_addons_permissions_devtools_description">Pêşvebirina amûrên pêşvebir yên ji bo xwegihandina daneyên hipekînên vekirî</string>
     <!-- The version on of add-on. -->

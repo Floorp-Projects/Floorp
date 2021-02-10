@@ -3,13 +3,13 @@
     <!-- Title of a dialog for a notification permission request. -->
     <string name="mozac_feature_sitepermissions_notification_title">Разрешение %1$s да изпраща известия?</string>
     <!-- Title of a dialog for a camera permission request. -->
-    <string name="mozac_feature_sitepermissions_camera_title">Разрешение %1$s да използва камерата?</string>
+    <string name="mozac_feature_sitepermissions_camera_title">Разрешение %1$s да използва камера?</string>
     <!-- Title of a dialog for a microphone permission request. -->
-    <string name="mozac_feature_sitepermissions_microfone_title">Разрешение %1$s да използва микрофона?</string>
+    <string name="mozac_feature_sitepermissions_microfone_title">Разрешение %1$s да използва микрофон?</string>
     <!-- Title of a dialog for a location permission request. -->
-    <string name="mozac_feature_sitepermissions_location_title">Разрешение %1$s да използва местоположението?</string>
+    <string name="mozac_feature_sitepermissions_location_title">Разрешение %1$s да използва местоположение?</string>
     <!-- Title of a dialog for a camera and microphone permission request. -->
-    <string name="mozac_feature_sitepermissions_camera_and_microphone">Разрешение %1$s да използва камерата и микрофона?</string>
+    <string name="mozac_feature_sitepermissions_camera_and_microphone">Разрешение %1$s да използва камера и микрофон?</string>
     <!-- Option in a dialog for requesting a microphone permission, this option will give access to
          the first microphone-->
     <string name="mozac_feature_sitepermissions_option_microphone_one">Микрофон 1</string>
@@ -26,9 +26,13 @@
     access to this permission-->
     <string name="mozac_feature_sitepermissions_not_allow">Забраняване</string>
     <!-- Text for a checkbox in a permission request dialog, this will allow to not show again the prompt-->
-    <string name="mozac_feature_sitepermissions_do_not_ask_again_on_this_site2">Запомняне на решението за този сайт</string>
+    <string name="mozac_feature_sitepermissions_do_not_ask_again_on_this_site2">Запомняне на решение за страницата</string>
     <!-- Text for a positive button in a permission request dialog. This will always allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
     <string name="mozac_feature_sitepermissions_always_allow">Винаги</string>
     <!-- Text for a negative button in a permission request dialog. This will never allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
     <string name="mozac_feature_sitepermissions_never_allow">Никога</string>
+    <!-- Title of a dialog to require to save data in persistent storage. %1$s will be replaced with the URL of the current page -->
+    <string name="mozac_feature_sitepermissions_persistent_storage_title">Разрешение %1$s да запазва в постоянно хранилище?</string>
+    <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
+    <string name="mozac_feature_sitepermissions_media_key_system_access_title">Разрешение %1$s да възпроизвежда контролирано с DRM съдържание?</string>
 </resources>

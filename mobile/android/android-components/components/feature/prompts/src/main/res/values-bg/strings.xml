@@ -18,6 +18,8 @@
     <string name="mozac_feature_prompt_password_hint">Парола</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
     <string name="mozac_feature_prompt_dont_save">Без запазване</string>
+    <!-- Negative confirmation that we should never save a login for this site -->
+    <string name="mozac_feature_prompt_never_save">Без запазване</string>
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">Запазване</string>
     <!-- Negative confirmation that we should not save the updated login -->
@@ -81,4 +83,12 @@
     <string name="mozac_feature_prompts_manage_logins">Управление на регистрации</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">Предложени регистрации</string>
+
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">Повторно изпращане на данни до страницата?</string>
+    <string name="mozac_feature_prompt_repost_message">Презареждането на страницата може да дублира скорошни действия, като заплащане или публикуване на коментар два пъти.</string>
+    <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
+    <string name="mozac_feature_prompt_repost_positive_button_text">Повторно изпращане на данни</string>
+    <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
+    <string name="mozac_feature_prompt_repost_negative_button_text">Отказ</string>
 </resources>
