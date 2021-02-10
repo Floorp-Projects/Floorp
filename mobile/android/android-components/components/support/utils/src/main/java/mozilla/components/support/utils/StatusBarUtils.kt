@@ -5,6 +5,7 @@
 package mozilla.components.support.utils
 
 import android.view.View
+import mozilla.components.support.utils.ext.top
 
 object StatusBarUtils {
     private var statusBarSize = -1
@@ -12,14 +13,13 @@ object StatusBarUtils {
     /**
      * Determine the height of the status bar asynchronously.
      */
-    // Deprecation will be handled in https://github.com/mozilla-mobile/android-components/issues/9552
-    @Suppress("unused", "DEPRECATION")
+    @Suppress("unused")
     fun getStatusBarHeight(view: View, block: (Int) -> Unit) {
         if (statusBarSize > 0) {
             block(statusBarSize)
         } else {
             view.setOnApplyWindowInsetsListener { _, insets ->
-                statusBarSize = insets.systemWindowInsetTop
+                statusBarSize = insets.top()
                 block(statusBarSize)
                 view.setOnApplyWindowInsetsListener(null)
                 insets
