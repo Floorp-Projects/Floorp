@@ -20,6 +20,23 @@
   --short-notification-gradient: #9059FF;
 }
 
+@supports -moz-bool-pref("browser.proton.enabled") {
+  :root {
+    --focus-outline-color: currentColor;
+    --focus-outline: 2px solid var(--focus-outline-color);
+  }
+
+  @media not (prefers-contrast) {
+    :root {
+      --focus-outline-color: #0061E0;
+    }
+
+    :root:-moz-lwtheme-brighttext {
+      --focus-outline-color: #00DDFF;
+    }
+  }
+} /*** END !proton ***/
+
 :root[extradragspace][tabsintitlebar]:not([inFullscreen]) {
   --space-above-tabbar: 8px;
 }
