@@ -3829,6 +3829,8 @@ class nsIFrame : public nsQueryFrame {
     /** whether we met selectable text frame that isn't editable during the
      *  search */
     bool mHasSelectableFrame = false;
+    /** whether we ignored a br frame */
+    bool mIgnoredBrFrame = false;
 
     FrameSearchResult PeekOffsetNoAmount(bool aForward) {
       return mFrame->PeekOffsetNoAmount(aForward, &mOffset);
