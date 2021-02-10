@@ -145,11 +145,6 @@ appmenu-help-not-deceptive =
     .label = This Isn’t a Deceptive Site…
     .accesskey = D
 
-##
-
-appmenu-help-check-for-update =
-    .label = Check for Updates…
-
 ## More Tools
 
 appmenu-customizetoolbar =

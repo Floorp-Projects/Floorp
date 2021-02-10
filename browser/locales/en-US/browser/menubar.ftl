@@ -318,6 +318,3 @@ menu-help-report-deceptive-site =
 menu-help-not-deceptive =
     .label = This Isn’t a Deceptive Site…
     .accesskey = D
-menu-help-check-for-update =
-    .label = Check for Updates…
-    .accesskey = C
