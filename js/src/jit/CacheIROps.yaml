@@ -1330,8 +1330,8 @@
   args:
     obj: ObjId
     index: IntPtrId
-    expected: Int32Id
-    replacement: Int32Id
+    expected: RawId
+    replacement: RawId
     elementType: ScalarTypeImm
 
 - name: AtomicsExchangeResult
@@ -1341,7 +1341,7 @@
   args:
     obj: ObjId
     index: IntPtrId
-    value: Int32Id
+    value: RawId
     elementType: ScalarTypeImm
 
 - name: AtomicsAddResult
@@ -1351,8 +1351,9 @@
   args:
     obj: ObjId
     index: IntPtrId
-    value: Int32Id
+    value: RawId
     elementType: ScalarTypeImm
+    forEffect: BoolImm
 
 - name: AtomicsSubResult
   shared: true
@@ -1361,8 +1362,9 @@
   args:
     obj: ObjId
     index: IntPtrId
-    value: Int32Id
+    value: RawId
     elementType: ScalarTypeImm
+    forEffect: BoolImm
 
 - name: AtomicsAndResult
   shared: true
@@ -1371,8 +1373,9 @@
   args:
     obj: ObjId
     index: IntPtrId
-    value: Int32Id
+    value: RawId
     elementType: ScalarTypeImm
+    forEffect: BoolImm
 
 - name: AtomicsOrResult
   shared: true
@@ -1381,8 +1384,9 @@
   args:
     obj: ObjId
     index: IntPtrId
-    value: Int32Id
+    value: RawId
     elementType: ScalarTypeImm
+    forEffect: BoolImm
 
 - name: AtomicsXorResult
   shared: true
@@ -1391,8 +1395,9 @@
   args:
     obj: ObjId
     index: IntPtrId
-    value: Int32Id
+    value: RawId
     elementType: ScalarTypeImm
+    forEffect: BoolImm
 
 - name: AtomicsLoadResult
   shared: true
@@ -1410,7 +1415,7 @@
   args:
     obj: ObjId
     index: IntPtrId
-    value: Int32Id
+    value: RawId
     elementType: ScalarTypeImm
 
 - name: AtomicsIsLockFreeResult

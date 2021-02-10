@@ -302,7 +302,6 @@ class MessageType(IPDLType):
         cdtype=None,
         compress=False,
         tainted=False,
-        verify=False,
     ):
         assert not (ctor and dtor)
         assert not (ctor or dtor) or cdtype is not None
@@ -319,7 +318,6 @@ class MessageType(IPDLType):
         self.cdtype = cdtype
         self.compress = compress
         self.tainted = tainted
-        self.verify = verify
 
     def isMessage(self):
         return True
@@ -839,6 +837,38 @@ class GatherDecls(TcheckVisitor):
         self.symtab.declare(d)
         return d
 
+    # Check that only attributes allowed by an attribute spec are present
+    # within the given attribute dictionary. The spec value may be either
+    # `None`, for a valueless attribute, a list of valid attribute values, or a
+    # callable which returns a truthy value if the attribute is valid.
+    def checkAttributes(self, attributes, spec):
+        for attr in attributes.values():
+            if attr.name not in spec:
+                self.error(attr.loc, "unknown attribute `%s'", attr.name)
+                continue
+
+            aspec = spec[attr.name]
+            if aspec is None:
+                if attr.value is not None:
+                    self.error(
+                        attr.loc,
+                        "unexpected value for valueless attribute `%s'",
+                        attr.name,
+                    )
+            elif isinstance(aspec, (list, tuple)):
+                if attr.value not in aspec:
+                    self.error(
+                        attr.loc,
+                        "invalid value for attribute `%s', expected one of: %s",
+                        attr.name,
+                        ", ".join(str(s) for s in aspec),
+                    )
+            elif callable(aspec):
+                if not aspec(attr.value):
+                    self.error(attr.loc, "invalid value for attribute `%s'", attr.name)
+            else:
+                raise Exception("INTERNAL ERROR: Invalid attribute spec")
+
     def visitTranslationUnit(self, tu):
         # all TranslationUnits declare symbols in global scope
         if hasattr(tu, "visited"):
@@ -1019,6 +1049,8 @@ class GatherDecls(TcheckVisitor):
         self.symtab.enterScope()
         sd.visited = True
 
+        self.checkAttributes(sd.attributes, {"Comparable": None})
+
         for f in sd.fields:
             ftypedecl = self.symtab.lookup(str(f.typespec))
             if ftypedecl is None:
@@ -1048,6 +1080,8 @@ class GatherDecls(TcheckVisitor):
         if len(utype.components):
             return
 
+        self.checkAttributes(ud.attributes, {"Comparable": None})
+
         for c in ud.components:
             cdecl = self.symtab.lookup(str(c))
             if cdecl is None:
@@ -1064,6 +1098,15 @@ class GatherDecls(TcheckVisitor):
             # there is nothing to typedef.  With UniquePtrs, basenames
             # are generic so typedefs would be illegal.
             fullname = None
+
+        self.checkAttributes(
+            using.attributes,
+            {
+                "MoveOnly": None,
+                "RefCounted": None,
+            },
+        )
+
         if fullname == "mozilla::ipc::Shmem":
             ipdltype = ShmemType(using.type.spec)
         elif fullname == "mozilla::ipc::ByteBuf":
@@ -1198,6 +1241,22 @@ class GatherDecls(TcheckVisitor):
         msgname = md.name
         loc = md.loc
 
+        self.checkAttributes(
+            md.attributes,
+            {
+                "Tainted": None,
+                "Compress": (None, "all"),
+                "Priority": ("normal", "input", "high", "mediumhigh"),
+                "Nested": ("not", "inside_sync", "inside_cpow"),
+            },
+        )
+
+        if md.sendSemantics is INTR and "Priority" in md.attributes:
+            self.error(loc, "intr message `%s' cannot specify [Priority]", msgname)
+
+        if md.sendSemantics is INTR and "Nested" in md.attributes:
+            self.error(loc, "intr message `%s' cannot specify [Nested]", msgname)
+
         isctor = False
         isdtor = False
         cdtype = None
@@ -1225,16 +1284,15 @@ class GatherDecls(TcheckVisitor):
         self.symtab.enterScope()
 
         msgtype = MessageType(
-            md.nested,
-            md.prio,
+            md.nested(),
+            md.priority(),
             md.sendSemantics,
             md.direction,
             ctor=isctor,
             dtor=isdtor,
             cdtype=cdtype,
-            compress=md.compress,
-            tainted=md.tainted,
-            verify=md.verify,
+            compress=md.attributes.get("Compress"),
+            tainted="Tainted" in md.attributes,
         )
 
         # replace inparam Param nodes with proper Decls

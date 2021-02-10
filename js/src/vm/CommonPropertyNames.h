@@ -13,9 +13,7 @@
 // js::frontend::WellKnownParserAtoms{,_ROM} mechanisms. We still use a named
 // reference for the parser and VM to use.
 
-#define FOR_EACH_LENGTH1_PROPERTYNAME(MACRO) \
-  MACRO(comma, comma, ",")                   \
-  MACRO(star, star, "*")
+#define FOR_EACH_LENGTH1_PROPERTYNAME(MACRO) MACRO(comma, comma, ",")
 
 #define FOR_EACH_LENGTH2_PROPERTYNAME(MACRO) \
   MACRO(as, as, "as")                        \

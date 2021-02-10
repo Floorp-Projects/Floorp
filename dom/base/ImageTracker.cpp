@@ -23,28 +23,31 @@ ImageTracker::~ImageTracker() { SetLockingState(false); }
 nsresult ImageTracker::Add(imgIRequest* aImage) {
   MOZ_ASSERT(aImage);
 
-  nsresult rv = NS_OK;
-  auto entry = mImages.LookupForAdd(aImage);
-  if (entry) {
-    // The image is already in the hashtable.  Increment its count.
-    uint32_t oldCount = entry.Data();
-    MOZ_ASSERT(oldCount > 0, "Entry in the image tracker with count 0!");
-    entry.Data() = oldCount + 1;
-  } else {
-    // A new entry was inserted - set the count to 1.
-    entry.OrInsert([]() { return 1; });
+  const nsresult rv = mImages.WithEntryHandle(aImage, [&](auto&& entry) {
+    nsresult rv = NS_OK;
+    if (entry) {
+      // The image is already in the hashtable.  Increment its count.
+      uint32_t oldCount = entry.Data();
+      MOZ_ASSERT(oldCount > 0, "Entry in the image tracker with count 0!");
+      entry.Data() = oldCount + 1;
+    } else {
+      // A new entry was inserted - set the count to 1.
+      entry.Insert(1);
 
-    // If we're locking images, lock this image too.
-    if (mLocking) {
-      rv = aImage->LockImage();
+      // If we're locking images, lock this image too.
+      if (mLocking) {
+        rv = aImage->LockImage();
+      }
+
+      // If we're animating images, request that this image be animated too.
+      if (mAnimating) {
+        nsresult rv2 = aImage->IncrementAnimationConsumers();
+        rv = NS_SUCCEEDED(rv) ? rv2 : rv;
+      }
     }
 
-    // If we're animating images, request that this image be animated too.
-    if (mAnimating) {
-      nsresult rv2 = aImage->IncrementAnimationConsumers();
-      rv = NS_SUCCEEDED(rv) ? rv2 : rv;
-    }
-  }
+    return rv;
+  });
 
   return rv;
 }

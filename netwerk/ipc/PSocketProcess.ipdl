@@ -37,7 +37,7 @@ using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
 using base::ProcessId from "base/process.h";
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 using PRTime from "prtime.h";
-using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
+[RefCounted] using class nsIURI from "mozilla/ipc/URIUtils.h";
 using struct nsID from "nsID.h";
 using mozilla::net::SocketInfo from "mozilla/net/DashboardTypes.h";
 using mozilla::net::DNSCacheEntries from "mozilla/net/DashboardTypes.h";

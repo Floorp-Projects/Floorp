@@ -135,20 +135,20 @@ child:
   async RestoreFocus();
 
   // Accessible
-  nested(inside_sync) sync State(uint64_t aID) returns(uint64_t states);
-  nested(inside_sync) sync NativeState(uint64_t aID) returns(uint64_t states);
-  nested(inside_sync) sync Name(uint64_t aID) returns(nsString name, uint32_t flag);
-  nested(inside_sync) sync Value(uint64_t aID) returns(nsString value);
-  nested(inside_sync) sync Help(uint64_t aID) returns(nsString help);
-  nested(inside_sync) sync Description(uint64_t aID) returns(nsString desc);
-  nested(inside_sync) sync Attributes(uint64_t aID) returns(Attribute[] attributes);
-  nested(inside_sync) sync RelationByType(uint64_t aID, uint32_t aRelationType)
+  [Nested=inside_sync] sync State(uint64_t aID) returns(uint64_t states);
+  [Nested=inside_sync] sync NativeState(uint64_t aID) returns(uint64_t states);
+  [Nested=inside_sync] sync Name(uint64_t aID) returns(nsString name, uint32_t flag);
+  [Nested=inside_sync] sync Value(uint64_t aID) returns(nsString value);
+  [Nested=inside_sync] sync Help(uint64_t aID) returns(nsString help);
+  [Nested=inside_sync] sync Description(uint64_t aID) returns(nsString desc);
+  [Nested=inside_sync] sync Attributes(uint64_t aID) returns(Attribute[] attributes);
+  [Nested=inside_sync] sync RelationByType(uint64_t aID, uint32_t aRelationType)
     returns(uint64_t[] targets);
-  nested(inside_sync) sync Relations(uint64_t aID) returns(RelationTargets[] relations);
-  nested(inside_sync) sync IsSearchbox(uint64_t aID) returns(bool retval);
-  nested(inside_sync) sync LandmarkRole(uint64_t aID) returns(nsString landmark);
-  nested(inside_sync) sync ARIARoleAtom(uint64_t aID) returns(nsString ariaRole);
-  nested(inside_sync) sync GroupPosition(uint64_t aID)
+  [Nested=inside_sync] sync Relations(uint64_t aID) returns(RelationTargets[] relations);
+  [Nested=inside_sync] sync IsSearchbox(uint64_t aID) returns(bool retval);
+  [Nested=inside_sync] sync LandmarkRole(uint64_t aID) returns(nsString landmark);
+  [Nested=inside_sync] sync ARIARoleAtom(uint64_t aID) returns(nsString ariaRole);
+  [Nested=inside_sync] sync GroupPosition(uint64_t aID)
     returns(int32_t groupLevel, int32_t similarItemsInGroup, int32_t positionInGroup);
   async ScrollTo(uint64_t aID, uint32_t aScrollType);
   async ScrollToPoint(uint64_t aID, uint32_t aScrollType, int32_t aX,
@@ -158,43 +158,43 @@ child:
   // AccessibleText
 
   // TextSubstring is getText in IDL.
-  nested(inside_sync) sync CaretLineNumber(uint64_t aID) returns(int32_t aLineNumber);
-  nested(inside_sync) sync CaretOffset(uint64_t aID) returns(int32_t aOffset);
+  [Nested=inside_sync] sync CaretLineNumber(uint64_t aID) returns(int32_t aLineNumber);
+  [Nested=inside_sync] sync CaretOffset(uint64_t aID) returns(int32_t aOffset);
    async SetCaretOffset(uint64_t aID, int32_t aOffset);
-  nested(inside_sync) sync CharacterCount(uint64_t aID) returns(int32_t aCount);
-  nested(inside_sync) sync SelectionCount(uint64_t aID) returns(int32_t aCount);
-  nested(inside_sync) sync TextSubstring(uint64_t aID, int32_t aStartOffset, int32_t
+  [Nested=inside_sync] sync CharacterCount(uint64_t aID) returns(int32_t aCount);
+  [Nested=inside_sync] sync SelectionCount(uint64_t aID) returns(int32_t aCount);
+  [Nested=inside_sync] sync TextSubstring(uint64_t aID, int32_t aStartOffset, int32_t
                                          aEndOffset) returns(nsString aText, bool aValid);
-  nested(inside_sync) sync GetTextAfterOffset(uint64_t aID, int32_t aOffset, int32_t aBoundaryType)
+  [Nested=inside_sync] sync GetTextAfterOffset(uint64_t aID, int32_t aOffset, int32_t aBoundaryType)
     returns(nsString aText, int32_t aStartOffset, int32_t aEndOffset);
-  nested(inside_sync) sync GetTextAtOffset(uint64_t aID, int32_t aOffset, int32_t aBoundaryType)
+  [Nested=inside_sync] sync GetTextAtOffset(uint64_t aID, int32_t aOffset, int32_t aBoundaryType)
     returns(nsString aText, int32_t aStartOffset, int32_t aEndOffset);
 
-  nested(inside_sync) sync GetTextBeforeOffset(uint64_t aID, int32_t aOffset, int32_t aBoundaryType)
+  [Nested=inside_sync] sync GetTextBeforeOffset(uint64_t aID, int32_t aOffset, int32_t aBoundaryType)
     returns(nsString aText, int32_t aStartOffset, int32_t aEndOffset);
-  nested(inside_sync) sync CharAt(uint64_t aID, int32_t aOffset) returns(uint16_t aChar);
+  [Nested=inside_sync] sync CharAt(uint64_t aID, int32_t aOffset) returns(uint16_t aChar);
 
-  nested(inside_sync) sync TextAttributes(uint64_t aID, bool aIncludeDefAttrs, int32_t aOffset)
+  [Nested=inside_sync] sync TextAttributes(uint64_t aID, bool aIncludeDefAttrs, int32_t aOffset)
     returns(Attribute[] aAttributes, int32_t aStartOffset, int32_t aEndOffset);
-  nested(inside_sync) sync DefaultTextAttributes(uint64_t aID) returns(Attribute[] aAttributes);
+  [Nested=inside_sync] sync DefaultTextAttributes(uint64_t aID) returns(Attribute[] aAttributes);
 
-  nested(inside_sync) sync TextBounds(uint64_t aID, int32_t aStartOffset, int32_t aEndOffset,
+  [Nested=inside_sync] sync TextBounds(uint64_t aID, int32_t aStartOffset, int32_t aEndOffset,
                              uint32_t aCoordType)
     returns(nsIntRect aRetVal);
-  nested(inside_sync) sync CharBounds(uint64_t aID, int32_t aOffset, uint32_t aCoordType)
+  [Nested=inside_sync] sync CharBounds(uint64_t aID, int32_t aOffset, uint32_t aCoordType)
     returns(nsIntRect aRetVal);
 
-  nested(inside_sync) sync OffsetAtPoint(uint64_t aID, int32_t aX, int32_t aY, uint32_t aCoordType)
+  [Nested=inside_sync] sync OffsetAtPoint(uint64_t aID, int32_t aX, int32_t aY, uint32_t aCoordType)
     returns(int32_t aRetVal);
 
-  nested(inside_sync) sync SelectionBoundsAt(uint64_t aID, int32_t aSelectionNum)
+  [Nested=inside_sync] sync SelectionBoundsAt(uint64_t aID, int32_t aSelectionNum)
     returns(bool aSucceeded, nsString aData, int32_t aStartOffset, int32_t aEndOffset);
-  nested(inside_sync) sync SetSelectionBoundsAt(uint64_t aID, int32_t aSelectionNum,
+  [Nested=inside_sync] sync SetSelectionBoundsAt(uint64_t aID, int32_t aSelectionNum,
                                        int32_t aStartOffset, int32_t aEndOffset)
     returns(bool aSucceeded);
-  nested(inside_sync) sync AddToSelection(uint64_t aID, int32_t aStartOffset, int32_t aEndOffset)
+  [Nested=inside_sync] sync AddToSelection(uint64_t aID, int32_t aStartOffset, int32_t aEndOffset)
     returns(bool aSucceeded);
-  nested(inside_sync) sync RemoveFromSelection(uint64_t aID, int32_t aSelectionNum)
+  [Nested=inside_sync] sync RemoveFromSelection(uint64_t aID, int32_t aSelectionNum)
     returns(bool aSucceeded);
 
   async ScrollSubstringTo(uint64_t aID, int32_t aStartOffset, int32_t aEndOffset,
@@ -205,124 +205,124 @@ child:
                                uint32_t aCoordinateType,
                                int32_t aX, int32_t aY);
 
-  nested(inside_sync) sync Text(uint64_t aID) returns(nsString aText);
-  nested(inside_sync) sync ReplaceText(uint64_t aID, nsString aText);
-  nested(inside_sync) sync InsertText(uint64_t aID, nsString aText, int32_t aPosition)
+  [Nested=inside_sync] sync Text(uint64_t aID) returns(nsString aText);
+  [Nested=inside_sync] sync ReplaceText(uint64_t aID, nsString aText);
+  [Nested=inside_sync] sync InsertText(uint64_t aID, nsString aText, int32_t aPosition)
     returns(bool aValid);
-  nested(inside_sync) sync CopyText(uint64_t aID, int32_t aStartPos, int32_t aEndPos)
+  [Nested=inside_sync] sync CopyText(uint64_t aID, int32_t aStartPos, int32_t aEndPos)
     returns(bool aValid);
-  nested(inside_sync) sync CutText(uint64_t aID, int32_t aStartPos, int32_t aEndPos)
+  [Nested=inside_sync] sync CutText(uint64_t aID, int32_t aStartPos, int32_t aEndPos)
     returns(bool aValid);
-  nested(inside_sync) sync DeleteText(uint64_t aID, int32_t aStartPos, int32_t aEndPos)
+  [Nested=inside_sync] sync DeleteText(uint64_t aID, int32_t aStartPos, int32_t aEndPos)
     returns(bool aValid);
-  nested(inside_sync) sync PasteText(uint64_t aID, int32_t aPosition)
+  [Nested=inside_sync] sync PasteText(uint64_t aID, int32_t aPosition)
     returns(bool aValid);
 
-  nested(inside_sync) sync ImagePosition(uint64_t aID, uint32_t aCoordType) returns(IntPoint aRetVal);
-  nested(inside_sync) sync ImageSize(uint64_t aID) returns(IntSize aRetVal);
+  [Nested=inside_sync] sync ImagePosition(uint64_t aID, uint32_t aCoordType) returns(IntPoint aRetVal);
+  [Nested=inside_sync] sync ImageSize(uint64_t aID) returns(IntSize aRetVal);
 
-  nested(inside_sync) sync StartOffset(uint64_t aID) returns(uint32_t aRetVal, bool aOk);
-  nested(inside_sync) sync EndOffset(uint64_t aID) returns(uint32_t aRetVal, bool aOk);
-  nested(inside_sync) sync IsLinkValid(uint64_t aID) returns(bool aRetVal);
-  nested(inside_sync) sync AnchorCount(uint64_t aID) returns(uint32_t aRetVal, bool aOk);
-  nested(inside_sync) sync AnchorURIAt(uint64_t aID, uint32_t aIndex) returns(nsCString aURI, bool aOk);
-  nested(inside_sync) sync AnchorAt(uint64_t aID, uint32_t aIndex) returns(uint64_t aIDOfAnchor, bool aOk);
+  [Nested=inside_sync] sync StartOffset(uint64_t aID) returns(uint32_t aRetVal, bool aOk);
+  [Nested=inside_sync] sync EndOffset(uint64_t aID) returns(uint32_t aRetVal, bool aOk);
+  [Nested=inside_sync] sync IsLinkValid(uint64_t aID) returns(bool aRetVal);
+  [Nested=inside_sync] sync AnchorCount(uint64_t aID) returns(uint32_t aRetVal, bool aOk);
+  [Nested=inside_sync] sync AnchorURIAt(uint64_t aID, uint32_t aIndex) returns(nsCString aURI, bool aOk);
+  [Nested=inside_sync] sync AnchorAt(uint64_t aID, uint32_t aIndex) returns(uint64_t aIDOfAnchor, bool aOk);
 
-  nested(inside_sync) sync LinkCount(uint64_t aID) returns(uint32_t aCount);
-  nested(inside_sync) sync LinkAt(uint64_t aID, uint32_t aIndex) returns(uint64_t aIDOfLink, bool aOk);
-  nested(inside_sync) sync LinkIndexOf(uint64_t aID, uint64_t aLinkID) returns(int32_t aIndex);
-  nested(inside_sync) sync LinkIndexAtOffset(uint64_t aID, uint32_t aOffset) returns(int32_t aIndex);
+  [Nested=inside_sync] sync LinkCount(uint64_t aID) returns(uint32_t aCount);
+  [Nested=inside_sync] sync LinkAt(uint64_t aID, uint32_t aIndex) returns(uint64_t aIDOfLink, bool aOk);
+  [Nested=inside_sync] sync LinkIndexOf(uint64_t aID, uint64_t aLinkID) returns(int32_t aIndex);
+  [Nested=inside_sync] sync LinkIndexAtOffset(uint64_t aID, uint32_t aOffset) returns(int32_t aIndex);
 
-  nested(inside_sync) sync TableOfACell(uint64_t aID) returns(uint64_t aTableID, bool aOk);
-  nested(inside_sync) sync ColIdx(uint64_t aID) returns(uint32_t aIndex);
-  nested(inside_sync) sync RowIdx(uint64_t aID) returns(uint32_t aIndex);
-  nested(inside_sync) sync GetPosition(uint64_t aID) returns(uint32_t aRow, uint32_t aCol);
-  nested(inside_sync) sync ColExtent(uint64_t aID) returns(uint32_t aExtent);
-  nested(inside_sync) sync RowExtent(uint64_t aID) returns(uint32_t aExtent);
-  nested(inside_sync) sync GetColRowExtents(uint64_t aID)
+  [Nested=inside_sync] sync TableOfACell(uint64_t aID) returns(uint64_t aTableID, bool aOk);
+  [Nested=inside_sync] sync ColIdx(uint64_t aID) returns(uint32_t aIndex);
+  [Nested=inside_sync] sync RowIdx(uint64_t aID) returns(uint32_t aIndex);
+  [Nested=inside_sync] sync GetPosition(uint64_t aID) returns(uint32_t aRow, uint32_t aCol);
+  [Nested=inside_sync] sync ColExtent(uint64_t aID) returns(uint32_t aExtent);
+  [Nested=inside_sync] sync RowExtent(uint64_t aID) returns(uint32_t aExtent);
+  [Nested=inside_sync] sync GetColRowExtents(uint64_t aID)
     returns(uint32_t aCol, uint32_t aRow, uint32_t aColExtent, uint32_t aRowExtent);
-  nested(inside_sync) sync ColHeaderCells(uint64_t aID) returns(uint64_t[] aCells);
-  nested(inside_sync) sync RowHeaderCells(uint64_t aID) returns(uint64_t[] aCells);
-  nested(inside_sync) sync IsCellSelected(uint64_t aID) returns(bool aSelected);
+  [Nested=inside_sync] sync ColHeaderCells(uint64_t aID) returns(uint64_t[] aCells);
+  [Nested=inside_sync] sync RowHeaderCells(uint64_t aID) returns(uint64_t[] aCells);
+  [Nested=inside_sync] sync IsCellSelected(uint64_t aID) returns(bool aSelected);
 
-  nested(inside_sync) sync TableCaption(uint64_t aID) returns(uint64_t aCaptionID, bool aOk);
-  nested(inside_sync) sync TableSummary(uint64_t aID) returns(nsString aSummary);
-  nested(inside_sync) sync TableColumnCount(uint64_t aID) returns(uint32_t aColCount);
-  nested(inside_sync) sync TableRowCount(uint64_t aID) returns(uint32_t aRowCount);
-  nested(inside_sync) sync TableCellAt(uint64_t aID, uint32_t aRow, uint32_t aCol) returns(uint64_t aCellID, bool aOk);
-  nested(inside_sync) sync TableCellIndexAt(uint64_t aID, uint32_t aRow, uint32_t aCol) returns(int32_t aIndex);
-  nested(inside_sync) sync TableColumnIndexAt(uint64_t aID, uint32_t aCellIndex) returns(int32_t aCol);
-  nested(inside_sync) sync TableRowIndexAt(uint64_t aID, uint32_t aCellIndex) returns(int32_t aRow);
-  nested(inside_sync) sync TableRowAndColumnIndicesAt(uint64_t aID, uint32_t aCellIndex) returns(int32_t aRow, int32_t aCol);
-  nested(inside_sync) sync TableColumnExtentAt(uint64_t aID, uint32_t aRow, uint32_t aCol) returns(uint32_t aExtent);
-  nested(inside_sync) sync TableRowExtentAt(uint64_t aID, uint32_t aRow, uint32_t aCol) returns(uint32_t aExtent);
-  nested(inside_sync) sync TableColumnDescription(uint64_t aID, uint32_t aCol) returns(nsString aDescription);
-  nested(inside_sync) sync TableRowDescription(uint64_t aID, uint32_t aRow) returns(nsString aDescription);
-  nested(inside_sync) sync TableColumnSelected(uint64_t aID, uint32_t aCol) returns(bool aSelected);
-  nested(inside_sync) sync TableRowSelected(uint64_t aID, uint32_t aRow) returns(bool aSelected);
-  nested(inside_sync) sync TableCellSelected(uint64_t aID, uint32_t aRow, uint32_t aCol) returns(bool aSelected);
-  nested(inside_sync) sync TableSelectedCellCount(uint64_t aID) returns(uint32_t aSelectedCells);
-  nested(inside_sync) sync TableSelectedColumnCount(uint64_t aID) returns(uint32_t aSelectedColumns);
-  nested(inside_sync) sync TableSelectedRowCount(uint64_t aID) returns(uint32_t aSelectedRows);
-  nested(inside_sync) sync TableSelectedCells(uint64_t aID) returns(uint64_t[] aCellIDs);
-  nested(inside_sync) sync TableSelectedCellIndices(uint64_t aID) returns(uint32_t[] aCellIndeces);
-  nested(inside_sync) sync TableSelectedColumnIndices(uint64_t aID) returns(uint32_t[] aColumnIndeces);
-  nested(inside_sync) sync TableSelectedRowIndices(uint64_t aID) returns(uint32_t[] aRowIndeces);
-  nested(inside_sync) sync TableSelectColumn(uint64_t aID, uint32_t aCol);
-  nested(inside_sync) sync TableSelectRow(uint64_t aID, uint32_t aRow);
-  nested(inside_sync) sync TableUnselectColumn(uint64_t aID, uint32_t aCol);
-  nested(inside_sync) sync TableUnselectRow(uint64_t aID, uint32_t aRow);
-  nested(inside_sync) sync TableIsProbablyForLayout(uint64_t aID) returns(bool aForLayout);
-  nested(inside_sync) sync AtkTableColumnHeader(uint64_t aID, int32_t aCol)
+  [Nested=inside_sync] sync TableCaption(uint64_t aID) returns(uint64_t aCaptionID, bool aOk);
+  [Nested=inside_sync] sync TableSummary(uint64_t aID) returns(nsString aSummary);
+  [Nested=inside_sync] sync TableColumnCount(uint64_t aID) returns(uint32_t aColCount);
+  [Nested=inside_sync] sync TableRowCount(uint64_t aID) returns(uint32_t aRowCount);
+  [Nested=inside_sync] sync TableCellAt(uint64_t aID, uint32_t aRow, uint32_t aCol) returns(uint64_t aCellID, bool aOk);
+  [Nested=inside_sync] sync TableCellIndexAt(uint64_t aID, uint32_t aRow, uint32_t aCol) returns(int32_t aIndex);
+  [Nested=inside_sync] sync TableColumnIndexAt(uint64_t aID, uint32_t aCellIndex) returns(int32_t aCol);
+  [Nested=inside_sync] sync TableRowIndexAt(uint64_t aID, uint32_t aCellIndex) returns(int32_t aRow);
+  [Nested=inside_sync] sync TableRowAndColumnIndicesAt(uint64_t aID, uint32_t aCellIndex) returns(int32_t aRow, int32_t aCol);
+  [Nested=inside_sync] sync TableColumnExtentAt(uint64_t aID, uint32_t aRow, uint32_t aCol) returns(uint32_t aExtent);
+  [Nested=inside_sync] sync TableRowExtentAt(uint64_t aID, uint32_t aRow, uint32_t aCol) returns(uint32_t aExtent);
+  [Nested=inside_sync] sync TableColumnDescription(uint64_t aID, uint32_t aCol) returns(nsString aDescription);
+  [Nested=inside_sync] sync TableRowDescription(uint64_t aID, uint32_t aRow) returns(nsString aDescription);
+  [Nested=inside_sync] sync TableColumnSelected(uint64_t aID, uint32_t aCol) returns(bool aSelected);
+  [Nested=inside_sync] sync TableRowSelected(uint64_t aID, uint32_t aRow) returns(bool aSelected);
+  [Nested=inside_sync] sync TableCellSelected(uint64_t aID, uint32_t aRow, uint32_t aCol) returns(bool aSelected);
+  [Nested=inside_sync] sync TableSelectedCellCount(uint64_t aID) returns(uint32_t aSelectedCells);
+  [Nested=inside_sync] sync TableSelectedColumnCount(uint64_t aID) returns(uint32_t aSelectedColumns);
+  [Nested=inside_sync] sync TableSelectedRowCount(uint64_t aID) returns(uint32_t aSelectedRows);
+  [Nested=inside_sync] sync TableSelectedCells(uint64_t aID) returns(uint64_t[] aCellIDs);
+  [Nested=inside_sync] sync TableSelectedCellIndices(uint64_t aID) returns(uint32_t[] aCellIndeces);
+  [Nested=inside_sync] sync TableSelectedColumnIndices(uint64_t aID) returns(uint32_t[] aColumnIndeces);
+  [Nested=inside_sync] sync TableSelectedRowIndices(uint64_t aID) returns(uint32_t[] aRowIndeces);
+  [Nested=inside_sync] sync TableSelectColumn(uint64_t aID, uint32_t aCol);
+  [Nested=inside_sync] sync TableSelectRow(uint64_t aID, uint32_t aRow);
+  [Nested=inside_sync] sync TableUnselectColumn(uint64_t aID, uint32_t aCol);
+  [Nested=inside_sync] sync TableUnselectRow(uint64_t aID, uint32_t aRow);
+  [Nested=inside_sync] sync TableIsProbablyForLayout(uint64_t aID) returns(bool aForLayout);
+  [Nested=inside_sync] sync AtkTableColumnHeader(uint64_t aID, int32_t aCol)
     returns(uint64_t aHeaderID, bool aOk);
-  nested(inside_sync) sync AtkTableRowHeader(uint64_t aID, int32_t aRow)
+  [Nested=inside_sync] sync AtkTableRowHeader(uint64_t aID, int32_t aRow)
     returns(uint64_t aHeaderID, bool aOk);
 
-  nested(inside_sync) sync SelectedItems(uint64_t aID) returns(uint64_t[] aSelectedItemIDs);
-  nested(inside_sync) sync SelectedItemCount(uint64_t aID) returns(uint32_t aCount);
-  nested(inside_sync) sync GetSelectedItem(uint64_t aID, uint32_t aIndex) returns(uint64_t aSelected, bool aOk);
-  nested(inside_sync) sync IsItemSelected(uint64_t aID, uint32_t aIndex) returns(bool aSelected);
-  nested(inside_sync) sync AddItemToSelection(uint64_t aID, uint32_t aIndex) returns(bool aSuccess);
-  nested(inside_sync) sync RemoveItemFromSelection(uint64_t aID, uint32_t aIndex) returns(bool aSuccess);
-  nested(inside_sync) sync SelectAll(uint64_t aID) returns(bool aSuccess);
-  nested(inside_sync) sync UnselectAll(uint64_t aID) returns(bool aSuccess);
+  [Nested=inside_sync] sync SelectedItems(uint64_t aID) returns(uint64_t[] aSelectedItemIDs);
+  [Nested=inside_sync] sync SelectedItemCount(uint64_t aID) returns(uint32_t aCount);
+  [Nested=inside_sync] sync GetSelectedItem(uint64_t aID, uint32_t aIndex) returns(uint64_t aSelected, bool aOk);
+  [Nested=inside_sync] sync IsItemSelected(uint64_t aID, uint32_t aIndex) returns(bool aSelected);
+  [Nested=inside_sync] sync AddItemToSelection(uint64_t aID, uint32_t aIndex) returns(bool aSuccess);
+  [Nested=inside_sync] sync RemoveItemFromSelection(uint64_t aID, uint32_t aIndex) returns(bool aSuccess);
+  [Nested=inside_sync] sync SelectAll(uint64_t aID) returns(bool aSuccess);
+  [Nested=inside_sync] sync UnselectAll(uint64_t aID) returns(bool aSuccess);
 
   async TakeSelection(uint64_t aID);
   async SetSelected(uint64_t aID, bool aSelected);
 
-  nested(inside_sync) sync DoAction(uint64_t aID, uint8_t aIndex) returns(bool aSuccess);
-  nested(inside_sync) sync ActionCount(uint64_t aID) returns(uint8_t aCount);
-  nested(inside_sync) sync ActionDescriptionAt(uint64_t aID, uint8_t aIndex) returns(nsString aDescription);
-  nested(inside_sync) sync ActionNameAt(uint64_t aID, uint8_t aIndex) returns(nsString aName);
-  nested(inside_sync) sync AccessKey(uint64_t aID) returns(uint32_t aKey, uint32_t aModifierMask);
-  nested(inside_sync) sync KeyboardShortcut(uint64_t aID) returns(uint32_t aKey, uint32_t aModifierMask);
-  nested(inside_sync) sync AtkKeyBinding(uint64_t aID) returns(nsString aResult);
+  [Nested=inside_sync] sync DoAction(uint64_t aID, uint8_t aIndex) returns(bool aSuccess);
+  [Nested=inside_sync] sync ActionCount(uint64_t aID) returns(uint8_t aCount);
+  [Nested=inside_sync] sync ActionDescriptionAt(uint64_t aID, uint8_t aIndex) returns(nsString aDescription);
+  [Nested=inside_sync] sync ActionNameAt(uint64_t aID, uint8_t aIndex) returns(nsString aName);
+  [Nested=inside_sync] sync AccessKey(uint64_t aID) returns(uint32_t aKey, uint32_t aModifierMask);
+  [Nested=inside_sync] sync KeyboardShortcut(uint64_t aID) returns(uint32_t aKey, uint32_t aModifierMask);
+  [Nested=inside_sync] sync AtkKeyBinding(uint64_t aID) returns(nsString aResult);
 
-  nested(inside_sync) sync CurValue(uint64_t aID) returns(double aValue);
-  nested(inside_sync) sync SetCurValue(uint64_t aID, double aValue) returns(bool aRetVal);
-  nested(inside_sync) sync MinValue(uint64_t aID) returns(double aValue);
-  nested(inside_sync) sync MaxValue(uint64_t aID) returns(double aValue);
-  nested(inside_sync) sync Step(uint64_t aID) returns(double aStep);
+  [Nested=inside_sync] sync CurValue(uint64_t aID) returns(double aValue);
+  [Nested=inside_sync] sync SetCurValue(uint64_t aID, double aValue) returns(bool aRetVal);
+  [Nested=inside_sync] sync MinValue(uint64_t aID) returns(double aValue);
+  [Nested=inside_sync] sync MaxValue(uint64_t aID) returns(double aValue);
+  [Nested=inside_sync] sync Step(uint64_t aID) returns(double aStep);
 
   async TakeFocus(uint64_t aID);
-  nested(inside_sync) sync FocusedChild(uint64_t aID)
+  [Nested=inside_sync] sync FocusedChild(uint64_t aID)
     returns(nullable PDocAccessible aResultDoc, uint64_t aResultID);
 
-  nested(inside_sync) sync Language(uint64_t aID) returns(nsString aLocale);
-  nested(inside_sync) sync DocType(uint64_t aID) returns(nsString aType);
-  nested(inside_sync) sync Title(uint64_t aID) returns(nsString aTitle);
-  nested(inside_sync) sync URL(uint64_t aID) returns(nsString aURL);
-  nested(inside_sync) sync MimeType(uint64_t aID) returns(nsString aMime);
-  nested(inside_sync) sync URLDocTypeMimeType(uint64_t aID) returns(nsString aURL, nsString aDocType, nsString aMimeType);
+  [Nested=inside_sync] sync Language(uint64_t aID) returns(nsString aLocale);
+  [Nested=inside_sync] sync DocType(uint64_t aID) returns(nsString aType);
+  [Nested=inside_sync] sync Title(uint64_t aID) returns(nsString aTitle);
+  [Nested=inside_sync] sync URL(uint64_t aID) returns(nsString aURL);
+  [Nested=inside_sync] sync MimeType(uint64_t aID) returns(nsString aMime);
+  [Nested=inside_sync] sync URLDocTypeMimeType(uint64_t aID) returns(nsString aURL, nsString aDocType, nsString aMimeType);
 
-  nested(inside_sync) sync ChildAtPoint(uint64_t aID, int32_t aX, int32_t aY, uint32_t aWhich)
+  [Nested=inside_sync] sync ChildAtPoint(uint64_t aID, int32_t aX, int32_t aY, uint32_t aWhich)
     returns(nullable PDocAccessible aResultDoc, uint64_t aResultID);
 
-  nested(inside_sync) sync Extents(uint64_t aID, bool aNeedsScreenCoords)
+  [Nested=inside_sync] sync Extents(uint64_t aID, bool aNeedsScreenCoords)
     returns(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight);
-  nested(inside_sync) sync ExtentsInCSSPixels(uint64_t aID)
+  [Nested=inside_sync] sync ExtentsInCSSPixels(uint64_t aID)
     returns(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight);
-  nested(inside_sync) sync DOMNodeID(uint64_t aID) returns(nsString aDOMNodeID);
+  [Nested=inside_sync] sync DOMNodeID(uint64_t aID) returns(nsString aDOMNodeID);
 };
 
 }

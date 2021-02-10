@@ -501,12 +501,6 @@ fn get_proc_address(glcontext_ptr: *mut c_void, name: &str) -> *const c_void {
 
     let symbol_name = CString::new(name).unwrap();
     let symbol = unsafe { get_proc_address_from_glcontext(glcontext_ptr, symbol_name.as_ptr()) };
-
-    if symbol.is_null() {
-        // XXX Bug 1322949 Make whitelist for extensions
-        warn!("Could not find symbol {:?} by glcontext", symbol_name);
-    }
-
     symbol as *const _
 }
 

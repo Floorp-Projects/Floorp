@@ -148,8 +148,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   void Init();
 
-  void ReportCanPlayTelemetry();
-
   // `eMandatory`: `timeupdate` occurs according to the spec requirement.
   // Eg.
   // https://html.spec.whatwg.org/multipage/media.html#seeking:event-media-timeupdate

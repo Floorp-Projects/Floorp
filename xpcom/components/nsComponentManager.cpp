@@ -595,26 +595,27 @@ void nsComponentManagerImpl::RegisterCIDEntryLocked(
   }
 #endif
 
-  if (auto entry = mFactories.LookupForAdd(aEntry->cid)) {
-    nsFactoryEntry* f = entry.Data();
-    NS_WARNING("Re-registering a CID?");
+  mFactories.WithEntryHandle(aEntry->cid, [&](auto&& entry) {
+    if (entry) {
+      nsFactoryEntry* f = entry.Data();
+      NS_WARNING("Re-registering a CID?");
 
-    nsCString existing;
-    if (f->mModule) {
-      existing = f->mModule->Description();
+      nsCString existing;
+      if (f->mModule) {
+        existing = f->mModule->Description();
+      } else {
+        existing = "<unknown module>";
+      }
+      MonitorAutoUnlock unlock(mLock);
+      LogMessage(
+          "While registering XPCOM module %s, trying to re-register CID '%s' "
+          "already registered by %s.",
+          aModule->Description().get(), AutoIDString(*aEntry->cid).get(),
+          existing.get());
     } else {
-      existing = "<unknown module>";
+      entry.Insert(new nsFactoryEntry(aEntry, aModule));
     }
-    MonitorAutoUnlock unlock(mLock);
-    LogMessage(
-        "While registering XPCOM module %s, trying to re-register CID '%s' "
-        "already registered by %s.",
-        aModule->Description().get(), AutoIDString(*aEntry->cid).get(),
-        existing.get());
-  } else {
-    entry.OrInsert(
-        [aEntry, aModule]() { return new nsFactoryEntry(aEntry, aModule); });
-  }
+  });
 }
 
 void nsComponentManagerImpl::RegisterContractIDLocked(
@@ -1507,11 +1508,11 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass, const char* aName,
   auto f = MakeUnique<nsFactoryEntry>(aClass, aFactory);
 
   MonitorAutoLock lock(mLock);
-  if (auto entry = mFactories.LookupForAdd(f->mCIDEntry->cid)) {
-    return NS_ERROR_FACTORY_EXISTS;
-  } else {
+  return mFactories.WithEntryHandle(f->mCIDEntry->cid, [&](auto&& entry) {
+    if (entry) {
+      return NS_ERROR_FACTORY_EXISTS;
+    }
     if (StaticComponents::LookupByCID(*f->mCIDEntry->cid)) {
-      entry.OrRemove();
       return NS_ERROR_FACTORY_EXISTS;
     }
     if (aContractID) {
@@ -1521,10 +1522,10 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass, const char* aName,
       // entries, so invalidate any static entry for this contract ID.
       StaticComponents::InvalidateContractID(contractID);
     }
-    entry.OrInsert([&f]() { return f.release(); });
-  }
+    entry.Insert(f.release());
 
-  return NS_OK;
+    return NS_OK;
+  });
 }
 
 NS_IMETHODIMP

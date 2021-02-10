@@ -1637,6 +1637,26 @@
     "description": "Decode result of AVIF image",
     "bug_numbers": [1670827]
   },
+  "AVIF_AOM_DECODE_ERROR": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "geckoview_streaming"],
+    "alert_emails": ["cchang@mozilla.com", "jbauman@mozilla.com"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": [
+      "error",
+      "mem_error",
+      "abi_mismatch",
+      "incapable",
+      "unsup_bitstream",
+      "unsup_feature",
+      "corrupt_frame",
+      "invalid_param"
+    ],
+    "description": "Error code from aom_codec_decode when decoding AVIF image",
+    "bug_numbers": [1690406]
+  },
   "AVIF_DECODER": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "geckoview_streaming"],
@@ -15999,7 +16019,7 @@
     "record_in_processes": ["main"],
     "products": ["firefox"],
     "alert_emails": ["nika@mozilla.com"],
-    "expires_in_version": "89",
+    "expires_in_version": "96",
     "kind": "categorical",
     "labels": [
       "EnabledByAutostart",
@@ -16007,7 +16027,7 @@
       "DisabledByAutostart",
       "DisabledByUser"
     ],
-    "bug_numbers": [1602903],
+    "bug_numbers": [1602903, 1656132, 1690329],
     "description": "Fission enabled status of individual windows in fission.autostart and non-fission.autostart profiles"
   },
   "BASE_FONT_FAMILIES_PER_PAGE": {

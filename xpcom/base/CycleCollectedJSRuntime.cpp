@@ -1544,12 +1544,13 @@ void CycleCollectedJSRuntime::DeferredFinalize(
     void* aThing) {
   // Tell the analysis that the function pointers will not GC.
   JS::AutoSuppressGCAnalysis suppress;
-  if (auto entry = mDeferredFinalizerTable.LookupForAdd(aFunc)) {
-    aAppendFunc(entry.Data(), aThing);
-  } else {
-    entry.OrInsert(
-        [aAppendFunc, aThing]() { return aAppendFunc(nullptr, aThing); });
-  }
+  mDeferredFinalizerTable.WithEntryHandle(aFunc, [&](auto&& entry) {
+    if (entry) {
+      aAppendFunc(entry.Data(), aThing);
+    } else {
+      entry.Insert(aAppendFunc(nullptr, aThing));
+    }
+  });
 }
 
 void CycleCollectedJSRuntime::DeferredFinalize(nsISupports* aSupports) {

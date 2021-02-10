@@ -23,13 +23,14 @@ PreloadService::~PreloadService() = default;
 
 bool PreloadService::RegisterPreload(const PreloadHashKey& aKey,
                                      PreloaderBase* aPreload) {
-  auto lookup = mPreloads.LookupForAdd(aKey);
-  if (lookup) {
-    lookup.Data() = aPreload;
-    return true;
-  }
-  lookup.OrInsert([&] { return aPreload; });
-  return false;
+  return mPreloads.WithEntryHandle(aKey, [&](auto&& lookup) {
+    if (lookup) {
+      lookup.Data() = aPreload;
+      return true;
+    }
+    lookup.Insert(aPreload);
+    return false;
+  });
 }
 
 void PreloadService::DeregisterPreload(const PreloadHashKey& aKey) {

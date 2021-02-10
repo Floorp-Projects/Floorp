@@ -1725,6 +1725,12 @@
   value: true
   mirror: always
 
+# Whether event timing will be gathered and returned by performance observer*
+- name: dom.enable_event_timing
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Whether performance.GetEntries* will contain an entry for the active document
 - name: dom.enable_performance_navigation_timing
   type: bool

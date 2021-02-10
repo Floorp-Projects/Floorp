@@ -25,8 +25,8 @@ using mozilla::wr::BuiltDisplayListDescriptor from "mozilla/webrender/webrender_
 using mozilla::wr::IdNamespace from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::MaybeIdNamespace from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ExternalImageKeyPair from "mozilla/webrender/WebRenderTypes.h";
-using moveonly mozilla::layers::DisplayListData from "mozilla/layers/RenderRootTypes.h";
-using moveonly mozilla::layers::MaybeTransactionData from "mozilla/layers/RenderRootTypes.h";
+[MoveOnly] using mozilla::layers::DisplayListData from "mozilla/layers/RenderRootTypes.h";
+[MoveOnly] using mozilla::layers::MaybeTransactionData from "mozilla/layers/RenderRootTypes.h";
 using mozilla::layers::FocusTarget from "mozilla/layers/FocusTarget.h";
 using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::TransactionId from "mozilla/layers/LayersTypes.h";

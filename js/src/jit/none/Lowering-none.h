@@ -96,6 +96,9 @@ class LIRGeneratorNone : public LIRGeneratorShared {
   void lowerBigIntDiv(MBigIntDiv*) { MOZ_CRASH(); }
   void lowerBigIntMod(MBigIntMod*) { MOZ_CRASH(); }
 
+  void lowerAtomicLoad64(MLoadUnboxedScalar*) { MOZ_CRASH(); }
+  void lowerAtomicStore64(MStoreUnboxedScalar*) { MOZ_CRASH(); }
+
   LTableSwitch* newLTableSwitch(LAllocation, LDefinition, MTableSwitch*) {
     MOZ_CRASH();
   }

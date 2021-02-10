@@ -332,7 +332,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     this._suggestionsController.maxLocalResults = queryContext.maxResults + 1;
 
     // Request maxResults + 1 remote suggestions for the same reason we request
-    // maxHistoricalSearchSuggestions + 1 form history entries.
+    // maxResults + 1 form history entries.
     let allowRemote = this._allowRemoteSuggestions(queryContext, searchString);
     this._suggestionsController.maxRemoteResults = allowRemote
       ? queryContext.maxResults + 1
@@ -357,20 +357,15 @@ class ProviderSearchSuggestions extends UrlbarProvider {
 
     let results = [];
 
-    // We use this to discard remote suggestions that duplicate form history.
-    let seenSuggestions = new Set();
-
-    // Add maxHistoricalSearchSuggestions form history results to the beginning
-    // of the array.  Below we'll add the remainder after remote suggestions.
-    // Any excess results that are not discarded by the muxer will appear below
-    // the remote suggestions in the final results.
-    let maxInitialFormHistory = UrlbarPrefs.get(
-      "maxHistoricalSearchSuggestions"
-    );
-    while (results.length < maxInitialFormHistory && fetchData.local.length) {
-      let entry = fetchData.local.shift();
-      results.push(makeFormHistoryResult(queryContext, engine, entry));
-      seenSuggestions.add(entry.value);
+    // maxHistoricalSearchSuggestions used to determine the initial number of
+    // form history results, with the special case where zero means to never
+    // show form history at all.  With the introduction of flexed result
+    // buckets, we now use it only as a boolean: Zero means don't show form
+    // history at all (as before), non-zero means show it.
+    if (UrlbarPrefs.get("maxHistoricalSearchSuggestions")) {
+      for (let entry of fetchData.local) {
+        results.push(makeFormHistoryResult(queryContext, engine, entry));
+      }
     }
 
     // If we don't return many results, then keep track of the query. If the
@@ -395,7 +390,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     });
 
     for (let entry of fetchData.remote) {
-      if (looksLikeUrl(entry.value) || seenSuggestions.has(entry.value)) {
+      if (looksLikeUrl(entry.value)) {
         continue;
       }
 
@@ -436,23 +431,9 @@ class ProviderSearchSuggestions extends UrlbarProvider {
             })
           )
         );
-        seenSuggestions.add(entry.value);
       } catch (err) {
         Cu.reportError(err);
         continue;
-      }
-    }
-
-    // Add the remaining form history results.  maxHistoricalSearchSuggestions
-    // == 0 is an opt-out mechanism, so do this only if it's non-zero.
-    while (
-      maxInitialFormHistory &&
-      results.length < queryContext.maxResults + 1 &&
-      fetchData.local.length
-    ) {
-      let entry = fetchData.local.shift();
-      if (!seenSuggestions.has(entry.value)) {
-        results.push(makeFormHistoryResult(queryContext, engine, entry));
       }
     }
 

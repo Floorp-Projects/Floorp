@@ -27,7 +27,6 @@ UNSUPPORTED_FEATURES = set(
         "Intl.Segmenter",
         "Atomics.waitAsync",
         "legacy-regexp",
-        "arbitrary-module-namespace-names",
     ]
 )
 FEATURE_CHECK_NEEDED = {
