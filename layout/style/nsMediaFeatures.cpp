@@ -280,12 +280,6 @@ StyleContrastPref Gecko_MediaFeatures_PrefersContrast(
   // Neither Linux, Windows, nor Mac have a way to indicate that low
   // contrast is prefered so the presence of an accessibility theme
   // implies that high contrast is prefered.
-  //
-  // Note that MacOS does not expose whether or not high contrast is
-  // enabled so for MacOS users this will always evaluate to
-  // false. For more information and discussion see:
-  // https://github.com/w3c/csswg-drafts/issues/3856#issuecomment-642313572
-  // https://github.com/w3c/csswg-drafts/issues/2943
   if (!!LookAndFeel::GetInt(LookAndFeel::IntID::UseAccessibilityTheme, 0)) {
     return StyleContrastPref::More;
   }
