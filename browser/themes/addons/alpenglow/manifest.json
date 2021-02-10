@@ -64,7 +64,8 @@
       "sidebar_text": "hsla(261, 53%, 15%, 1)",
       "sidebar_border": "hsla(261, 53%, 15%, .24)",
       "sidebar_highlight": "hsla(265, 100%, 72%, 1)",
-      "sidebar_highlight_text": "hsla(0, 0%, 100%, 1)"
+      "sidebar_highlight_text": "hsla(0, 0%, 100%, 1)",
+      "focus_outline": "hsla(258, 65%, 48%, 1)"
     }
   },
   "dark_theme": {
@@ -119,7 +120,14 @@
       "sidebar_text": "hsla(255, 100%, 94%, 1)",
       "sidebar_border": "hsla(255, 100%, 94%, .24)",
       "sidebar_highlight": "hsla(259, 76%, 58%, 1)",
-      "sidebar_highlight_text": "hsla(0, 0%, 100%, 1)"
+      "sidebar_highlight_text": "hsla(0, 0%, 100%, 1)",
+      "focus_outline": "hsla(265, 100%, 72%, 1)"
+    }
+  },
+
+  "theme_experiment": {
+    "colors": {
+      "focus_outline": "--focus-outline-color"
     }
   }
 }
