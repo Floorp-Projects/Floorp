@@ -459,8 +459,6 @@ class nsDocumentViewer final : public nsIContentViewer,
 
   nsIntRect mBounds;
 
-  float mOverrideDPPX;  // DPPX overrided, defaults to 0.0
-
   int16_t mNumURLStarts;
   int16_t mDestroyBlockedCount;
 
@@ -537,7 +535,6 @@ void nsDocumentViewer::PrepareToStartLoad() {
 nsDocumentViewer::nsDocumentViewer()
     : mParentWidget(nullptr),
       mAttachedToParent(false),
-      mOverrideDPPX(0.0),
       mNumURLStarts(0),
       mDestroyBlockedCount(0),
       mStopped(false),
@@ -758,7 +755,6 @@ nsresult nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow) {
     mPresContext->SetVisibleArea(nsRect(0, 0, width, height));
     // We rely on the default zoom not being initialized until here.
     mPresContext->RecomputeBrowsingContextDependentData();
-    mPresContext->SetOverrideDPPX(mOverrideDPPX);
   }
 
   if (mWindow && mDocument->IsTopLevelContentDocument()) {
@@ -2607,34 +2603,6 @@ nsDocumentViewer::GetDeviceFullZoomForTest(float* aDeviceFullZoom) {
   NS_ENSURE_ARG_POINTER(aDeviceFullZoom);
   nsPresContext* pc = GetPresContext();
   *aDeviceFullZoom = pc ? pc->GetDeviceFullZoom() : 1.0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::SetOverrideDPPX(float aDPPX) {
-  // If we don't have a document, then we need to bail.
-  if (!mDocument) {
-    return NS_ERROR_FAILURE;
-  }
-
-  mOverrideDPPX = aDPPX;
-
-  auto childFn = [aDPPX](nsDocumentViewer* aChild) {
-    aChild->SetOverrideDPPX(aDPPX);
-  };
-  auto presContextFn = [aDPPX](nsPresContext* aPc) {
-    aPc->SetOverrideDPPX(aDPPX);
-  };
-  PropagateToPresContextsHelper(childFn, presContextFn);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::GetOverrideDPPX(float* aDPPX) {
-  NS_ENSURE_ARG_POINTER(aDPPX);
-
-  nsPresContext* pc = GetPresContext();
-  *aDPPX = pc ? pc->GetOverrideDPPX() : mOverrideDPPX;
   return NS_OK;
 }
 

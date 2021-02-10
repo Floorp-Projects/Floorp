@@ -3020,16 +3020,6 @@ void nsDisplayItem::FuseClipChainUpTo(nsDisplayListBuilder* aBuilder,
   }
 }
 
-bool nsDisplayItem::ShouldUseAdvancedLayer(LayerManager* aManager,
-                                           PrefFunc aFunc) const {
-  return CanUseAdvancedLayer(aManager) ? aFunc() : false;
-}
-
-bool nsDisplayItem::CanUseAdvancedLayer(LayerManager* aManager) const {
-  return StaticPrefs::layers_advanced_basic_layer_enabled() || !aManager ||
-         aManager->GetBackendType() == layers::LayersBackend::LAYERS_WR;
-}
-
 static const DisplayItemClipChain* FindCommonAncestorClipForIntersection(
     const DisplayItemClipChain* aOne, const DisplayItemClipChain* aTwo) {
   for (const ActiveScrolledRoot* asr =

@@ -5,6 +5,7 @@
 
 #include "nsNativeBasicThemeCocoa.h"
 #include "mozilla/gfx/Helpers.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/LookAndFeel.h"
 
 already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly() {

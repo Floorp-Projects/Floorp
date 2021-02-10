@@ -1917,7 +1917,7 @@ static bool LoadScriptRelativeToScript(JSContext* cx, unsigned argc,
 // need to convert a filename to a C string, let fileNameBytes own the
 // bytes.
 static bool ParseCompileOptions(JSContext* cx, CompileOptions& options,
-                                HandleObject opts, UniqueChars& fileNameBytes) {
+                                HandleObject opts, UniqueChars* fileNameBytes) {
   RootedValue v(cx);
   RootedString s(cx);
 
@@ -1945,11 +1945,13 @@ static bool ParseCompileOptions(JSContext* cx, CompileOptions& options,
     if (!s) {
       return false;
     }
-    fileNameBytes = JS_EncodeStringToLatin1(cx, s);
-    if (!fileNameBytes) {
-      return false;
+    if (fileNameBytes) {
+      *fileNameBytes = JS_EncodeStringToLatin1(cx, s);
+      if (!*fileNameBytes) {
+        return false;
+      }
+      options.setFile(fileNameBytes->get());
     }
-    options.setFile(fileNameBytes.get());
   }
 
   if (!JS_GetProperty(cx, opts, "skipFileNameValidation", &v)) {
@@ -2220,6 +2222,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
   bool loadBytecode = false;
   bool saveBytecode = false;
   bool saveIncrementalBytecode = false;
+  bool transcodeOnly = false;
   bool assertEqBytecode = false;
   JS::RootedObjectVector envChain(cx);
   RootedObject callerGlobal(cx, cx->global());
@@ -2234,7 +2237,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
     RootedObject opts(cx, &args[1].toObject());
     RootedValue v(cx);
 
-    if (!ParseCompileOptions(cx, options, opts, fileNameBytes)) {
+    if (!ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
       return false;
     }
 
@@ -2303,6 +2306,13 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
     }
     if (!v.isUndefined()) {
       saveIncrementalBytecode = ToBoolean(v);
+    }
+
+    if (!JS_GetProperty(cx, opts, "transcodeOnly", &v)) {
+      return false;
+    }
+    if (!v.isUndefined()) {
+      transcodeOnly = ToBoolean(v);
     }
 
     if (!JS_GetProperty(cx, opts, "assertEqBytecode", &v)) {
@@ -2481,19 +2491,21 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       }
     }
 
-    if (!(envChain.empty()
-              ? JS_ExecuteScript(cx, script, args.rval())
-              : JS_ExecuteScript(cx, envChain, script, args.rval()))) {
-      if (catchTermination && !JS_IsExceptionPending(cx)) {
-        JSAutoRealm ar1(cx, callerGlobal);
-        JSString* str = JS_NewStringCopyZ(cx, "terminated");
-        if (!str) {
-          return false;
+    if (!transcodeOnly) {
+      if (!(envChain.empty()
+                ? JS_ExecuteScript(cx, script, args.rval())
+                : JS_ExecuteScript(cx, envChain, script, args.rval()))) {
+        if (catchTermination && !JS_IsExceptionPending(cx)) {
+          JSAutoRealm ar1(cx, callerGlobal);
+          JSString* str = JS_NewStringCopyZ(cx, "terminated");
+          if (!str) {
+            return false;
+          }
+          args.rval().setString(str);
+          return true;
         }
-        args.rval().setString(str);
-        return true;
+        return false;
       }
-      return false;
     }
 
     // Encode the bytecode after the execution of the script.
@@ -5077,7 +5089,7 @@ static bool Compile(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
-  JSString* scriptContents = args[0].toString();
+  RootedString scriptContents(cx, args[0].toString());
 
   AutoStableStringChars stableChars(cx);
   if (!stableChars.initTwoByte(cx, scriptContents)) {
@@ -5089,6 +5101,19 @@ static bool Compile(JSContext* cx, unsigned argc, Value* vp) {
       .setFileAndLine("<string>", 1)
       .setIsRunOnce(true)
       .setNoScriptRval(true);
+
+  if (args.length() >= 2) {
+    if (args[1].isPrimitive()) {
+      JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
+                                JSSMSG_INVALID_ARGS, "compile");
+      return false;
+    }
+
+    RootedObject opts(cx, &args[1].toObject());
+    if (!ParseCompileOptions(cx, options, opts, nullptr)) {
+      return false;
+    }
+  }
 
   JS::SourceText<char16_t> srcBuf;
   if (!srcBuf.init(cx, stableChars.twoByteRange().begin().get(),
@@ -5451,7 +5476,12 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
 #ifdef JS_ENABLE_SMOOSH
   bool smoosh = false;
 #endif
-  bool forceFullParse = false;
+
+  CompileOptions options(cx);
+  options.setIntroductionType("js shell parse")
+      .setFileAndLine("<string>", 1)
+      .setIsRunOnce(true)
+      .setNoScriptRval(true);
 
   if (args.length() >= 2) {
     if (!args[1].isObject()) {
@@ -5478,14 +5508,8 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
       return false;
     }
 
-    RootedValue forceFullParseValue(cx);
-    if (!JS_GetProperty(cx, objOptions, "forceFullParse",
-                        &forceFullParseValue)) {
+    if (!ParseCompileOptions(cx, options, objOptions, nullptr)) {
       return false;
-    }
-
-    if (forceFullParseValue.isBoolean() && forceFullParseValue.toBoolean()) {
-      forceFullParse = true;
     }
 
 #ifdef JS_ENABLE_SMOOSH
@@ -5565,16 +5589,6 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
     }
   }
 #endif  // JS_ENABLE_SMOOSH
-
-  CompileOptions options(cx);
-  options.setIntroductionType("js shell parse")
-      .setFileAndLine("<string>", 1)
-      .setIsRunOnce(true)
-      .setNoScriptRval(true);
-
-  if (forceFullParse) {
-    options.setForceFullParse();
-  }
 
   if (goal == frontend::ParseGoal::Module) {
     // See frontend::CompileModule.
@@ -5793,7 +5807,7 @@ static bool OffThreadCompileScript(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     RootedObject opts(cx, &args[1].toObject());
-    if (!ParseCompileOptions(cx, options, opts, fileNameBytes)) {
+    if (!ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
       return false;
     }
   }
@@ -6018,7 +6032,7 @@ static bool OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     RootedObject opts(cx, &args[1].toObject());
-    if (!ParseCompileOptions(cx, options, opts, fileNameBytes)) {
+    if (!ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
       return false;
     }
   }
@@ -8782,6 +8796,7 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "         If both loadBytecode and saveIncrementalBytecode are set,\n"
 "         and --off-thread-parse-global is not used, the input bytecode's\n"
 "         kind should be 'stencil'."
+"      transcodeOnly: if true, do not execute the script.\n"
 "      assertEqBytecode: if true, and if both loadBytecode and either\n"
 "         saveBytecode or saveIncrementalBytecode is true, then the loaded\n"
 "         bytecode and the encoded bytecode are compared.\n"
@@ -8947,8 +8962,10 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Sleep for dt seconds."),
 
     JS_FN_HELP("compile", Compile, 1, 0,
-"compile(code)",
-"  Compiles a string to bytecode, potentially throwing."),
+"compile(code, [options])",
+"  Compiles a string to bytecode, potentially throwing.\n"
+"  If present, |options| may have CompileOptions-related properties of\n"
+"  evaluate function"),
 
     JS_FN_HELP("parseModule", ParseModule, 1, 0,
 "parseModule(code)",
@@ -8972,15 +8989,21 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("dumpStencil", DumpStencil, 1, 0,
 "dumpStencil(code, [options])",
 "  Parses a string and returns string that represents stencil.\n"
-"  See parse function's help for options"),
+"  If present, |options| may have properties saying how the code should be\n"
+"  compiled:\n"
+"      module: if present and true, compile the source as module.\n"
+"      smoosh: if present and true, use SmooshMonkey.\n"
+"  CompileOptions-related properties of evaluate function's option can also\n"
+"  be used."),
 
     JS_FN_HELP("parse", Parse, 1, 0,
 "parse(code, [options])",
 "  Parses a string, potentially throwing. If present, |options| may\n"
 "  have properties saying how the code should be compiled:\n"
 "      module: if present and true, compile the source as module.\n"
-"      forceFullParse: if present and true, disable syntax-parse.\n"
-"      smoosh: if present and true, use SmooshMonkey."),
+"      smoosh: if present and true, use SmooshMonkey.\n"
+"  CompileOptions-related properties of evaluate function's option can also\n"
+"  be used. except forceFullParse. This function always use full parse."),
 
     JS_FN_HELP("syntaxParse", SyntaxParse, 1, 0,
 "syntaxParse(code)",

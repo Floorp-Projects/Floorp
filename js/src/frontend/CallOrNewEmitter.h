@@ -131,7 +131,17 @@ class MOZ_STACK_CLASS CallOrNewEmitter {
     // for spread operation.
     //
     // wantSpreadOperand() returns true when this is specified.
-    SingleSpread
+    SingleSpread,
+
+    // Used for default derived class constructors:
+    //
+    //   constructor(...args) {
+    //      super(...args);
+    //   }
+    //
+    // The rest-parameter is directly passed through to the `super` call without
+    // using the iteration protocol.
+    PassthroughRest,
   };
 
  private:
@@ -189,8 +199,11 @@ class MOZ_STACK_CLASS CallOrNewEmitter {
   // +------------------------------->+->| Arguments |-------->| End |
   // |                                ^  +-----------+         +-----+
   // |                                |
-  // |                                +----------------------------------+
-  // |                                                                   |
+  // |                                | wantSpreadIteration
+  // |                                |
+  // |                                |         +-----------------+
+  // |                                +---------| SpreadIteration |------+
+  // |                                          +-----------------+      |
   // | [isSpread]                                                        |
   // |   wantSpreadOperand +-------------------+ emitSpreadArgumentsTest |
   // +-------------------->| WantSpreadOperand |-------------------------+
@@ -222,6 +235,9 @@ class MOZ_STACK_CLASS CallOrNewEmitter {
 
     // After calling wantSpreadOperand.
     WantSpreadOperand,
+
+    // After calling emitSpreadArgumentsTest.
+    SpreadIteration,
 
     // After calling prepareForNonSpreadArguments.
     Arguments,
@@ -258,10 +274,14 @@ class MOZ_STACK_CLASS CallOrNewEmitter {
 
   MOZ_MUST_USE bool isFunCall() const { return op_ == JSOp::FunCall; }
 
-  MOZ_MUST_USE bool isSpread() const { return JOF_OPTYPE(op_) == JOF_BYTE; }
+  MOZ_MUST_USE bool isSpread() const { return IsSpreadOp(op_); }
 
   MOZ_MUST_USE bool isSingleSpread() const {
     return argumentsKind_ == ArgumentsKind::SingleSpread;
+  }
+
+  MOZ_MUST_USE bool isPassthroughRest() const {
+    return argumentsKind_ == ArgumentsKind::PassthroughRest;
   }
 
  public:
@@ -284,6 +304,7 @@ class MOZ_STACK_CLASS CallOrNewEmitter {
   // See the usage in the comment at the top of the class.
   MOZ_MUST_USE bool wantSpreadOperand();
   MOZ_MUST_USE bool emitSpreadArgumentsTest();
+  MOZ_MUST_USE bool wantSpreadIteration();
 
   // Parameters are the offset in the source code for each character below:
   //

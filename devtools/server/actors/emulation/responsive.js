@@ -104,13 +104,14 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
       this._previousDPPXOverride = this.getDPPXOverride();
     }
 
-    this.docShell.contentViewer.overrideDPPX = dppx;
+    // FIXME: This should be set in the parent process.
+    this.docShell.browsingContext.overrideDPPX = dppx;
 
     return true;
   },
 
   getDPPXOverride() {
-    return this.docShell.contentViewer.overrideDPPX;
+    return this.docShell.browsingContext.overrideDPPX;
   },
 
   clearDPPXOverride() {

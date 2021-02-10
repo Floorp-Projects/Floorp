@@ -150,7 +150,6 @@ static const uint32_t kDefaultGlyphCacheSize = -1;
 #include "VRManager.h"
 #include "VRManagerChild.h"
 #include "mozilla/gfx/GPUParent.h"
-#include "mozilla/layers/MemoryReportingMLGPU.h"
 #include "prsystem.h"
 
 using namespace mozilla;
@@ -1066,7 +1065,6 @@ void gfxPlatform::Init() {
 #ifdef USE_SKIA
   RegisterStrongMemoryReporter(new SkMemoryReporter());
 #endif
-  mlg::InitializeMemoryReporters();
 
 #ifdef USE_SKIA
   uint32_t skiaCacheSize = GetSkiaGlyphCacheSize();
@@ -3506,7 +3504,6 @@ void gfxPlatform::ImportGPUDeviceData(
   MOZ_ASSERT(XRE_IsParentProcess());
 
   gfxConfig::ImportChange(Feature::OPENGL_COMPOSITING, aData.oglCompositing());
-  gfxConfig::ImportChange(Feature::ADVANCED_LAYERS, aData.advancedLayers());
 }
 
 bool gfxPlatform::SupportsApzTouchInput() const {
