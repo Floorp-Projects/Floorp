@@ -1208,7 +1208,14 @@ NativeOSFileInternalsService::WriteAtomic(
     return NS_ERROR_INVALID_ARG;
   }
 
-  bytes = JS::GetArrayBufferByteLength(bufferObject.get());
+  {
+    // Throw for large ArrayBuffers to prevent truncation.
+    size_t len = JS::GetArrayBufferByteLength(bufferObject.get());
+    if (len > INT32_MAX) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    bytes = len;
+  }
   buffer.reset(
       static_cast<char*>(JS::StealArrayBufferContents(cx, bufferObject)));
 
