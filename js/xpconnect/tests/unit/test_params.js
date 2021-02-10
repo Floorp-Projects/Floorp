@@ -234,4 +234,40 @@ function test_component(contractid) {
   ret = {};
   o.testOmittedOptionalOut(ret);
   Assert.equal(ret.value.spec, "http://example.com/")
+
+  // Tests for large ArrayBuffers.
+  var ab = null;
+  try {
+    ab = new ArrayBuffer(4.5 * 1024 * 1024 * 1024); // 4.5 GB.
+  } catch (e) {
+    // Large ArrayBuffers not available (32-bit or disabled).
+  }
+  if (ab) {
+    var uint8 = new Uint8Array(ab);
+
+    // Test length check in JSArray2Native.
+    var ex = null;
+    try {
+      o.testOptionalSequence(uint8);
+    } catch (e) {
+      ex = e;
+    }
+    Assert.ok(ex.message.includes("Could not convert JavaScript argument arg 0"));
+
+    // Test length check for optional length argument in GetArraySizeFromParam.
+    ex = null;
+    try {
+      o.testByteArrayOptionalLength(uint8);
+    } catch (e) {
+      ex = e;
+    }
+    Assert.ok(ex.message.includes("Cannot convert JavaScript object into an array"));
+
+    // Smaller array views on the buffer are fine.
+    uint8 = new Uint8Array(ab, ab.byteLength - 3);
+    uint8[0] = 123;
+    Assert.equal(uint8.byteLength, 3);
+    Assert.equal(o.testOptionalSequence(uint8).toString(), "123,0,0");
+    Assert.equal(o.testByteArrayOptionalLength(uint8), 3);
+  }
 }

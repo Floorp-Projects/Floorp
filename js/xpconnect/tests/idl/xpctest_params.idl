@@ -76,6 +76,9 @@ interface nsIXPCTestParams : nsISupports {
                                            inout unsigned long bLength, [array, size_is(bLength)] inout nsIXPCTestInterfaceA b,
                                            out unsigned long rvLength, [retval, array, size_is(rvLength)] out nsIXPCTestInterfaceA rv);
 
+  // uint8 array with optional length. Returns array length.
+  unsigned long         testByteArrayOptionalLength([array, size_is(aLength)] in uint8_t a, [optional] in unsigned long aLength);
+
   // Test sized strings.
   void                  testSizedString(in unsigned long aLength, [size_is(aLength)] in string a,
                                         inout unsigned long bLength, [size_is(bLength)] inout string b,
