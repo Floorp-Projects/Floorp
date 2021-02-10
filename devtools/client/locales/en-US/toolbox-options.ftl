@@ -93,7 +93,7 @@ options-sourceeditor-keybinding-default-label = Default
 
 ## Advanced section
 
-# The heading
+# The heading (this item is also used in perftools.ftl)
 options-context-advanced-settings = Advanced settings
 
 # The label for the checkbox that toggles the HTTP cache on or off
