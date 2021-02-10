@@ -10,9 +10,7 @@
 #include <mozilla/Assertions.h>
 #include <cxxabi.h>
 
-/* GLIBCXX_3.4.16 is from gcc 4.6.1 (172240)
-   GLIBCXX_3.4.17 is from gcc 4.7.0 (174383)
-   GLIBCXX_3.4.18 is from gcc 4.8.0 (190787)
+/*
    GLIBCXX_3.4.19 is from gcc 4.8.1 (199309)
    GLIBCXX_3.4.20 is from gcc 4.9.0 (199307)
    GLIBCXX_3.4.21 is from gcc 5.0 (210290)
@@ -20,40 +18,14 @@
    GLIBCXX_3.4.23 is from gcc 7.0
 
 This file adds the necessary compatibility tricks to avoid symbols with
-version GLIBCXX_3.4.17 and bigger, keeping binary compatibility with
-libstdc++ 4.7.
+version GLIBCXX_3.4.20 and bigger, keeping binary compatibility with
+libstdc++ 4.8.1.
 
 WARNING: all symbols from this file must be defined weak when they
 overlap with libstdc++.
 */
 
 #define GLIBCXX_VERSION(a, b, c) (((a) << 16) | ((b) << 8) | (c))
-
-#if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 18)
-// Implementation of utility functions for the prime rehash policy used in
-// unordered_map and unordered_set.
-#  include <unordered_map>
-#  include <tr1/unordered_map>
-namespace std {
-size_t __attribute__((weak))
-__detail::_Prime_rehash_policy::_M_next_bkt(size_t __n) const {
-  tr1::__detail::_Prime_rehash_policy policy(_M_max_load_factor);
-  size_t ret = policy._M_next_bkt(__n);
-  _M_next_resize = policy._M_next_resize;
-  return ret;
-}
-
-pair<bool, size_t> __attribute__((weak))
-__detail::_Prime_rehash_policy::_M_need_rehash(size_t __n_bkt, size_t __n_elt,
-                                               size_t __n_ins) const {
-  tr1::__detail::_Prime_rehash_policy policy(_M_max_load_factor);
-  policy._M_next_resize = _M_next_resize;
-  pair<bool, size_t> ret = policy._M_need_rehash(__n_bkt, __n_elt, __n_ins);
-  _M_next_resize = policy._M_next_resize;
-  return ret;
-}
-}  // namespace std
-#endif
 
 #if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 20)
 namespace std {
