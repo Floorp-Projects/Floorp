@@ -185,6 +185,14 @@ BrowsingContext* BrowsingContext::Top() {
   return bc;
 }
 
+const BrowsingContext* BrowsingContext::Top() const {
+  const BrowsingContext* bc = this;
+  while (bc->mParentWindow) {
+    bc = bc->GetParent();
+  }
+  return bc;
+}
+
 int32_t BrowsingContext::IndexOf(BrowsingContext* aChild) {
   int32_t index = -1;
   for (BrowsingContext* child : Children()) {
@@ -2563,6 +2571,28 @@ void BrowsingContext::DidSet(FieldIndex<IDX_Muted>) {
     nsPIDOMWindowOuter* win = aContext->GetDOMWindow();
     if (win) {
       win->RefreshMediaElementsVolume();
+    }
+  });
+}
+
+bool BrowsingContext::CanSet(FieldIndex<IDX_OverrideDPPX>, const float& aValue,
+                             ContentParent* aSource) {
+  // FIXME: Should only be settable by the parent process, but devtools code
+  // currently sets it from the child.
+  return IsTop() && LegacyCheckOnlyOwningProcessCanSet(aSource);
+}
+
+void BrowsingContext::DidSet(FieldIndex<IDX_OverrideDPPX>, float aOldValue) {
+  MOZ_ASSERT(IsTop());
+  if (GetOverrideDPPX() == aOldValue) {
+    return;
+  }
+
+  PreOrderWalk([&](BrowsingContext* aContext) {
+    if (nsIDocShell* shell = aContext->GetDocShell()) {
+      if (nsPresContext* pc = shell->GetPresContext()) {
+        pc->RecomputeBrowsingContextDependentData();
+      }
     }
   });
 }
