@@ -7,7 +7,6 @@ It does not contain any logic for saving or communication with the extension or 
 */
 
 var PKT_SIGNUP_OVERLAY = function(options) {
-  var myself = this;
   this.inited = false;
   this.active = false;
   this.delayedStateSaved = false;
@@ -28,12 +27,11 @@ var PKT_SIGNUP_OVERLAY = function(options) {
   this.initCloseTabEvents = function() {
     function clickHelper(e, linkData) {
       e.preventDefault();
-      thePKT_SIGNUP.sendMessage("openTabWithUrl", {
+      thePKT_SIGNUP.sendMessage("PKT_openTabWithUrl", {
         url: linkData.url,
         activate: true,
         source: linkData.source || "",
       });
-      myself.closePopup();
     }
     $(".pkt_ext_learnmore").click(function(e) {
       clickHelper(e, {
@@ -66,9 +64,6 @@ var PKT_SIGNUP_OVERLAY = function(options) {
         url: $(this).attr("href"),
       });
     });
-  };
-  this.closePopup = function() {
-    thePKT_SIGNUP.sendMessage("close");
   };
   this.sanitizeText = function(s) {
     var sanitizeMap = {
@@ -188,9 +183,6 @@ PKT_SIGNUP_OVERLAY.prototype = {
       );
     }
 
-    // tell background we're ready
-    thePKT_SIGNUP.sendMessage("show");
-
     // close events
     this.initCloseTabEvents();
   },
@@ -210,19 +202,15 @@ PKT_SIGNUP.prototype = {
     this.inited = true;
   },
 
-  addMessageListener(messageId, callback) {
-    pktPanelMessaging.addMessageListener(this.panelId, messageId, callback);
-  },
-
   sendMessage(messageId, payload, callback) {
-    pktPanelMessaging.sendMessage(this.panelId, messageId, payload, callback);
+    pktPanelMessaging.sendMessage(messageId, this.panelId, payload, callback);
   },
 
   create() {
     this.overlay.create();
 
     // tell back end we're ready
-    thePKT_SIGNUP.sendMessage("show");
+    thePKT_SIGNUP.sendMessage("PKT_show_signup");
   },
 };
 
@@ -237,7 +225,7 @@ $(function() {
   var pocketHost = thePKT_SIGNUP.overlay.pockethost;
   // send an async message to get string data
   thePKT_SIGNUP.sendMessage(
-    "initL10N",
+    "PKT_initL10N",
     {
       tos: [
         "https://" + pocketHost + "/tos?s=ffi&t=tos&tv=panel_tryit",
@@ -247,9 +235,10 @@ $(function() {
       ],
     },
     function(resp) {
-      window.pocketStrings = resp.strings;
+      const { data } = resp;
+      window.pocketStrings = data.strings;
       // Set the writing system direction
-      document.documentElement.setAttribute("dir", resp.dir);
+      document.documentElement.setAttribute("dir", data.dir);
       window.thePKT_SIGNUP.create();
     }
   );
