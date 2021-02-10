@@ -15,7 +15,9 @@ add_task(async function() {
 
       let engine;
       await promiseContentSearchChange(browser, async () => {
-        engine = await promiseNewEngine("searchSuggestionEngine.xml");
+        engine = await SearchTestUtils.promiseNewSearchEngine(
+          getRootDirectory(gTestPath) + "searchSuggestionEngine.xml"
+        );
         await Services.search.setDefault(engine);
         return engine.name;
       });

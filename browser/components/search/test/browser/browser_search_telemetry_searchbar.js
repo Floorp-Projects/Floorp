@@ -8,6 +8,8 @@ ChromeUtils.defineModuleGetter(
   "resource://testing-common/UrlbarTestUtils.jsm"
 );
 
+let suggestionEngine;
+
 function checkHistogramResults(resultIndexes, expected, histogram) {
   for (let [i, val] of Object.entries(resultIndexes.values)) {
     if (i == expected) {
@@ -67,6 +69,9 @@ function clickSearchbarSuggestion(entryName, clickOptions = {}) {
 
 add_task(async function setup() {
   await gCUITestUtils.addSearchBar();
+  const url = getRootDirectory(gTestPath) + "telemetrySearchSuggestions.xml";
+  suggestionEngine = await SearchTestUtils.promiseNewSearchEngine(url, "");
+
   registerCleanupFunction(() => {
     gCUITestUtils.removeSearchBar();
   });
@@ -259,10 +264,6 @@ add_task(async function test_oneOff_enterSelection() {
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD"
   );
 
-  // Create an engine to generate search suggestions and add it as default
-  // for this test.
-  const url = getRootDirectory(gTestPath) + "telemetrySearchSuggestions.xml";
-  let suggestionEngine = await Services.search.addOpenSearchEngine(url, "");
   let previousEngine = await Services.search.getDefault();
   await Services.search.setDefault(suggestionEngine);
 
@@ -291,7 +292,6 @@ add_task(async function test_oneOff_enterSelection() {
   );
 
   await Services.search.setDefault(previousEngine);
-  await Services.search.removeEngine(suggestionEngine);
   BrowserTestUtils.removeTab(tab);
 });
 
@@ -340,10 +340,6 @@ async function checkSuggestionClick(clickOptions, waitForActionFn) {
     "SEARCH_COUNTS"
   );
 
-  // Create an engine to generate search suggestions and add it as default
-  // for this test.
-  const url = getRootDirectory(gTestPath) + "telemetrySearchSuggestions.xml";
-  let suggestionEngine = await Services.search.addOpenSearchEngine(url, "");
   let previousEngine = await Services.search.getDefault();
   await Services.search.setDefault(suggestionEngine);
 
@@ -402,7 +398,6 @@ async function checkSuggestionClick(clickOptions, waitForActionFn) {
   );
 
   await Services.search.setDefault(previousEngine);
-  await Services.search.removeEngine(suggestionEngine);
   BrowserTestUtils.removeTab(tab);
 }
 
@@ -434,10 +429,6 @@ add_task(async function test_suggestion_enterSelection() {
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD"
   );
 
-  // Create an engine to generate search suggestions and add it as default
-  // for this test.
-  const url = getRootDirectory(gTestPath) + "telemetrySearchSuggestions.xml";
-  let suggestionEngine = await Services.search.addOpenSearchEngine(url, "");
   let previousEngine = await Services.search.getDefault();
   await Services.search.setDefault(suggestionEngine);
 
@@ -462,6 +453,5 @@ add_task(async function test_suggestion_enterSelection() {
   );
 
   await Services.search.setDefault(previousEngine);
-  await Services.search.removeEngine(suggestionEngine);
   BrowserTestUtils.removeTab(tab);
 });

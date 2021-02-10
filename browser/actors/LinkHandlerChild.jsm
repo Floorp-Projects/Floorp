@@ -146,6 +146,8 @@ class LinkHandlerChild extends JSWindowActorChild {
             let type = link.type && link.type.toLowerCase();
             type = type.replace(/^\s+|\s*(?:;.*)?$/g, "");
 
+            // Note: This protocol list should be kept in sync with
+            // the one in OpenSearchEngine's install function.
             let re = /^(?:https?|ftp):/i;
             if (
               type == "application/opensearchdescription+xml" &&

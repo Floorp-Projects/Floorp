@@ -9,9 +9,16 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
+  "SearchTestUtils",
+  "resource://testing-common/SearchTestUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "UrlbarTestUtils",
   "resource://testing-common/UrlbarTestUtils.jsm"
 );
+
+SearchTestUtils.init(this);
 
 const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
@@ -43,21 +50,13 @@ async function addBookmark(bookmark) {
   });
 }
 
-async function addSearchEngine(basename) {
-  info("Waiting for engine to be added: " + basename);
-  let url = getRootDirectory(gTestPath) + basename;
-  let engine = await Services.search.addOpenSearchEngine(url, "");
-
-  info(`Search engine added: ${basename}`);
-  registerCleanupFunction(async () => Services.search.removeEngine(engine));
-  return engine;
-}
-
 async function prepareSearchEngine() {
   let oldDefaultEngine = await Services.search.getDefault();
   let suggestionsEnabled = Services.prefs.getBoolPref(SUGGEST_URLBAR_PREF);
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
-  let engine = await addSearchEngine(TEST_ENGINE_BASENAME);
+  let engine = await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
+  );
   await Services.search.setDefault(engine);
 
   registerCleanupFunction(async function() {

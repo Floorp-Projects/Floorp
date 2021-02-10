@@ -4,7 +4,14 @@
 
 add_task(async function test_setup() {
   await gCUITestUtils.addSearchBar();
-  registerCleanupFunction(() => {
+  let engine = await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + "426329.xml"
+  );
+
+  const current = await Services.search.getDefault();
+  await Services.search.setDefault(engine);
+  registerCleanupFunction(async () => {
+    await Services.search.setDefault(current);
     gCUITestUtils.removeSearchBar();
   });
 });
@@ -35,8 +42,6 @@ add_task(async function() {
     windowsToClose.push(win);
     return win;
   }
-
-  await promiseNewEngine("426329.xml", { iconURL: "data:image/x-icon,%00" });
 
   let newWindow = await testOnWindow(false);
   await performSearch(newWindow, false);

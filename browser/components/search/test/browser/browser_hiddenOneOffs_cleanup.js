@@ -3,17 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 const testPref = "Foo,FooDupe";
 
-async function promiseNewEngine(basename) {
-  info("Waiting for engine to be added: " + basename);
-  let url = getRootDirectory(gTestPath) + basename;
-  let engine = await Services.search.addOpenSearchEngine(url, "");
-  info("Search engine added: " + basename);
-  return engine;
-}
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("browser.search.hiddenOneOffs");
+});
 
 add_task(async function test_remove() {
-  await promiseNewEngine("testEngine_dupe.xml");
-  await promiseNewEngine("testEngine.xml");
+  await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + "testEngine_dupe.xml"
+  );
+  await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + "testEngine.xml"
+  );
   Services.prefs.setCharPref("browser.search.hiddenOneOffs", testPref);
 
   info("Removing testEngine_dupe.xml");
@@ -52,11 +52,14 @@ add_task(async function test_remove() {
 });
 
 add_task(async function test_add() {
-  await promiseNewEngine("testEngine.xml");
+  await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + "testEngine.xml"
+  );
   info("setting prefs to " + testPref);
   Services.prefs.setCharPref("browser.search.hiddenOneOffs", testPref);
-  await promiseNewEngine("testEngine_dupe.xml");
-
+  await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + "testEngine_dupe.xml"
+  );
   let hiddenOneOffs = Services.prefs
     .getCharPref("browser.search.hiddenOneOffs")
     .split(",");
@@ -86,7 +89,9 @@ add_task(async function test_diacritics() {
   ).Preferences;
 
   Preferences.set("browser.search.hiddenOneOffs", diacritic_engine);
-  await promiseNewEngine("testEngine_diacritics.xml");
+  await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + "testEngine_diacritics.xml"
+  );
 
   let hiddenOneOffs = Preferences.get("browser.search.hiddenOneOffs").split(
     ","
@@ -110,14 +115,4 @@ add_task(async function test_diacritics() {
     false,
     "Observer cleans up removed hidden engines that include a diacritic."
   );
-});
-
-registerCleanupFunction(async () => {
-  info("Removing testEngine.xml");
-  await Services.search.removeEngine(Services.search.getEngineByName("Foo"));
-  info("Removing testEngine_dupe.xml");
-  await Services.search.removeEngine(
-    Services.search.getEngineByName("FooDupe")
-  );
-  Services.prefs.clearUserPref("browser.search.hiddenOneOffs");
 });
