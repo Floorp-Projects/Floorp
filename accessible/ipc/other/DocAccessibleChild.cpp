@@ -1535,8 +1535,17 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvFocusedChild(
 
   Accessible* result = acc->FocusedChild();
   if (result) {
-    // Accessible::FocusedChild can return an Accessible from a descendant
-    // document.
+    // Accessible::FocusedChild can return an Accessible from any document,
+    // not just a descendant of the caller's document.
+    // Check that it is really a descendant.
+    DocAccessible* doc = result->Document();
+    while (doc != mDoc) {
+      doc = doc->ParentDocument();
+      if (!doc) {
+        // result's document is not a descendant.
+        return IPC_OK();
+      }
+    }
     DocAccessibleChild* resultDoc = result->Document()->IPCDoc();
     // We've sent the constructor for this document to the parent process.
     // However, because the constructor is async, the parent process might
