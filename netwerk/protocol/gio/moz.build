@@ -4,16 +4,33 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SOURCES += [
-    "nsGIOProtocolHandler.cpp",
-]
-
 XPCOM_MANIFESTS += [
     "components.conf",
 ]
 
 EXPORTS += [
     "nsGIOProtocolHandler.h",
+]
+
+EXPORTS.mozilla.net += [
+    "GIOChannelChild.h",
+    "GIOChannelParent.h",
+]
+
+UNIFIED_SOURCES += [
+    "GIOChannelChild.cpp",
+    "GIOChannelParent.cpp",
+    "nsGIOProtocolHandler.cpp",
+]
+
+IPDL_SOURCES = [
+    "PGIOChannel.ipdl",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+LOCAL_INCLUDES += [
+    "/netwerk/base",
 ]
 
 FINAL_LIBRARY = "xul"
