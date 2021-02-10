@@ -6,6 +6,7 @@ package mozilla.components.browser.thumbnails.utils
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.os.Build
 import androidx.annotation.VisibleForTesting
 import com.jakewharton.disklrucache.DiskLruCache
 import mozilla.components.support.base.log.logger.Logger
@@ -23,6 +24,7 @@ private const val WEBP_QUALITY = 90
  */
 class ThumbnailDiskCache {
     private val logger = Logger("ThumbnailDiskCache")
+
     @VisibleForTesting
     internal var thumbnailCache: DiskLruCache? = null
     private val thumbnailCacheWriteLock = Any()
@@ -66,15 +68,20 @@ class ThumbnailDiskCache {
      * @param bitmap the thumbnail [Bitmap] to store.
      */
     internal fun putThumbnailBitmap(context: Context, request: ImageSaveRequest, bitmap: Bitmap) {
+        val compressFormat = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Bitmap.CompressFormat.WEBP_LOSSY
+        } else {
+            @Suppress("DEPRECATION")
+            Bitmap.CompressFormat.WEBP
+        }
+
         try {
             synchronized(thumbnailCacheWriteLock) {
                 val editor = getThumbnailCache(context)
                     .edit(request) ?: return
 
                 editor.newOutputStream(0).use { stream ->
-                    @Suppress("DEPRECATION")
-                    // Deprecation will be handled in https://github.com/mozilla-mobile/android-components/issues/9555
-                    bitmap.compress(Bitmap.CompressFormat.WEBP, WEBP_QUALITY, stream)
+                    bitmap.compress(compressFormat, WEBP_QUALITY, stream)
                 }
 
                 editor.commit()
