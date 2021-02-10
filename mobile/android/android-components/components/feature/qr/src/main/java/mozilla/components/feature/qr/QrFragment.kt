@@ -28,8 +28,11 @@ import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
 import android.hardware.camera2.CameraManager
 import android.hardware.camera2.CaptureRequest
+import android.hardware.camera2.params.OutputConfiguration
+import android.hardware.camera2.params.SessionConfiguration
 import android.media.Image
 import android.media.ImageReader
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
@@ -64,6 +67,9 @@ import java.util.Collections
 import java.util.Comparator
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
+import java.util.concurrent.ExecutorService
 import kotlin.math.max
 import kotlin.math.min
 
@@ -171,6 +177,7 @@ class QrFragment : Fragment() {
      */
     private var backgroundThread: HandlerThread? = null
     private var backgroundHandler: Handler? = null
+    private var backgroundExecutor: ExecutorService? = null
     private var previewRequestBuilder: CaptureRequest.Builder? = null
     private var previewRequest: CaptureRequest? = null
 
@@ -229,6 +236,9 @@ class QrFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         startBackgroundThread()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            startExecutorService()
+        }
         // When the screen is turned off and turned back on, the SurfaceTexture is already
         // available, and "onSurfaceTextureAvailable" will not be called. In that case, we can open
         // a camera and start preview from here (otherwise, we wait until the surface is ready in
@@ -243,6 +253,7 @@ class QrFragment : Fragment() {
     override fun onPause() {
         closeCamera()
         stopBackgroundThread()
+        stopExecutorService()
         super.onPause()
     }
 
@@ -269,6 +280,15 @@ class QrFragment : Fragment() {
         } catch (e: InterruptedException) {
             logger.debug("Interrupted while stopping background thread", e)
         }
+    }
+
+    internal fun startExecutorService() {
+        backgroundExecutor = Executors.newSingleThreadExecutor()
+    }
+
+    internal fun stopExecutorService() {
+        backgroundExecutor?.shutdownNow()
+        backgroundExecutor = null
     }
 
     /**
@@ -495,9 +515,21 @@ class QrFragment : Fragment() {
                         logger.error("Failed to configure CameraCaptureSession")
                     }
                 }
-                // Deprecation of createCaptureSession() will be handled in https://github.com/mozilla-mobile/android-components/issues/8510
-                @Suppress("DEPRECATION")
-                it.createCaptureSession(Arrays.asList(mImageSurface, surface), stateCallback, null)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    if (backgroundExecutor == null) startExecutorService()
+                    val sessionConfig = SessionConfiguration(
+                        SessionConfiguration.SESSION_REGULAR,
+                        listOf(OutputConfiguration(mImageSurface as Surface), OutputConfiguration(surface)),
+                        backgroundExecutor as Executor,
+                        stateCallback
+                    )
+
+                    it.createCaptureSession(sessionConfig)
+                } else {
+                    // Deprecation of createCaptureSession() will be handled in https://github.com/mozilla-mobile/android-components/issues/8510
+                    @Suppress("DEPRECATION")
+                    it.createCaptureSession(Arrays.asList(mImageSurface, surface), stateCallback, null)
+                }
             }
         }
     }

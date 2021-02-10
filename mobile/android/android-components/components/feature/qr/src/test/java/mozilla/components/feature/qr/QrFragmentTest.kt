@@ -57,16 +57,17 @@ class QrFragmentTest {
     }
 
     @Test
-    fun `onPause closes camera and stops background thread`() {
+    fun `onPause closes camera, stops background thread, and shuts down executor service`() {
         val qrFragment = spy(QrFragment.newInstance(mock()))
         qrFragment.onPause()
 
         verify(qrFragment).stopBackgroundThread()
+        verify(qrFragment).stopExecutorService()
         verify(qrFragment).closeCamera()
     }
 
     @Test
-    fun `onResume opens camera and starts background thread`() {
+    fun `onResume opens camera, starts background thread and starts executor service`() {
         val qrFragment = spy(QrFragment.newInstance(mock()))
         whenever(qrFragment.setUpCameraOutputs(anyInt(), anyInt())).then { }
 
@@ -80,6 +81,7 @@ class QrFragmentTest {
         qrFragment.cameraId = "mockCamera"
         qrFragment.onResume()
         verify(qrFragment, times(2)).startBackgroundThread()
+        verify(qrFragment, times(2)).startExecutorService()
         verify(qrFragment).tryOpenCamera(anyInt(), anyInt(), anyBoolean())
     }
 
