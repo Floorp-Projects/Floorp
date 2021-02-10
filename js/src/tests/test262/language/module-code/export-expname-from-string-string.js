@@ -1,4 +1,4 @@
-// |reftest| skip module -- arbitrary-module-namespace-names is not supported
+// |reftest| module
 // Copyright (C) 2020 Bradley Farias. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---

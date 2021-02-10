@@ -240,6 +240,9 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 
   void emitStringToInt64(LInstruction* lir, Register input, Register64 output);
 
+  OutOfLineCode* createBigIntOutOfLine(LInstruction* lir, Scalar::Type type,
+                                       Register64 input, Register output);
+
   void emitCreateBigInt(LInstruction* lir, Scalar::Type type, Register64 input,
                         Register output, Register maybeTemp);
 

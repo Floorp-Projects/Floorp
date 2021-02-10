@@ -824,7 +824,6 @@ void LIRGeneratorARM::lowerTruncateFToInt32(MTruncateToInt32* ins) {
 void LIRGenerator::visitAtomicExchangeTypedArrayElement(
     MAtomicExchangeTypedArrayElement* ins) {
   MOZ_ASSERT(HasLDSTREXBHD());
-  MOZ_ASSERT(ins->arrayType() <= Scalar::Uint32);
 
   MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
   MOZ_ASSERT(ins->index()->type() == MIRType::IntPtr);
@@ -832,11 +831,25 @@ void LIRGenerator::visitAtomicExchangeTypedArrayElement(
   const LUse elements = useRegister(ins->elements());
   const LAllocation index =
       useRegisterOrIndexConstant(ins->index(), ins->arrayType());
+  const LAllocation value = useRegister(ins->value());
+
+  if (Scalar::isBigIntType(ins->arrayType())) {
+    // The two register pairs must be distinct.
+    LInt64Definition temp1 = tempInt64Fixed(Register64(IntArgReg3, IntArgReg2));
+    LDefinition temp2 = tempFixed(IntArgReg1);
+
+    auto* lir = new (alloc()) LAtomicExchangeTypedArrayElement64(
+        elements, index, value, temp1, temp2);
+    defineFixed(lir, ins, LAllocation(AnyRegister(IntArgReg0)));
+    assignSafepoint(lir, ins);
+    return;
+  }
+
+  MOZ_ASSERT(ins->arrayType() <= Scalar::Uint32);
 
   // If the target is a floating register then we need a temp at the
   // CodeGenerator level for creating the result.
 
-  const LAllocation value = useRegister(ins->value());
   LDefinition tempDef = LDefinition::BogusTemp();
   if (ins->arrayType() == Scalar::Uint32) {
     MOZ_ASSERT(ins->type() == MIRType::Double);
@@ -863,7 +876,29 @@ void LIRGenerator::visitAtomicTypedArrayElementBinop(
       useRegisterOrIndexConstant(ins->index(), ins->arrayType());
   const LAllocation value = useRegister(ins->value());
 
-  if (!ins->hasUses()) {
+  if (Scalar::isBigIntType(ins->arrayType())) {
+    // Wasm additionally pins the value register to `FetchOpVal64`, but it's
+    // unclear why this was deemed necessary.
+    LInt64Definition temp1 = tempInt64();
+    LInt64Definition temp2 = tempInt64Fixed(FetchOpTmp64);
+
+    if (ins->isForEffect()) {
+      auto* lir = new (alloc()) LAtomicTypedArrayElementBinopForEffect64(
+          elements, index, value, temp1, temp2);
+      add(lir, ins);
+      return;
+    }
+
+    LInt64Definition temp3 = tempInt64Fixed(FetchOpOut64);
+
+    auto* lir = new (alloc()) LAtomicTypedArrayElementBinop64(
+        elements, index, value, temp1, temp2, temp3);
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+    return;
+  }
+
+  if (ins->isForEffect()) {
     LAtomicTypedArrayElementBinopForEffect* lir = new (alloc())
         LAtomicTypedArrayElementBinopForEffect(elements, index, value,
                                                /* flagTemp= */ temp());
@@ -904,6 +939,22 @@ void LIRGenerator::visitCompareExchangeTypedArrayElement(
   const LAllocation index =
       useRegisterOrIndexConstant(ins->index(), ins->arrayType());
 
+  const LAllocation newval = useRegister(ins->newval());
+  const LAllocation oldval = useRegister(ins->oldval());
+
+  if (Scalar::isBigIntType(ins->arrayType())) {
+    // The three register pairs must be distinct.
+    LInt64Definition temp1 = tempInt64Fixed(CmpXchgOld64);
+    LInt64Definition temp2 = tempInt64Fixed(CmpXchgNew64);
+    LInt64Definition temp3 = tempInt64Fixed(CmpXchgOut64);
+
+    auto* lir = new (alloc()) LCompareExchangeTypedArrayElement64(
+        elements, index, oldval, newval, temp1, temp2, temp3);
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+    return;
+  }
+
   // If the target is a floating register then we need a temp at the
   // CodeGenerator level for creating the result.
   //
@@ -911,8 +962,6 @@ void LIRGenerator::visitCompareExchangeTypedArrayElement(
   // allowing oldval to remain an immediate, if it is small enough
   // to fit in an instruction.
 
-  const LAllocation newval = useRegister(ins->newval());
-  const LAllocation oldval = useRegister(ins->oldval());
   LDefinition tempDef = LDefinition::BogusTemp();
   if (ins->arrayType() == Scalar::Uint32 && IsFloatingPointType(ins->type())) {
     tempDef = temp();
@@ -923,6 +972,29 @@ void LIRGenerator::visitCompareExchangeTypedArrayElement(
                                                       newval, tempDef);
 
   define(lir, ins);
+}
+
+void LIRGeneratorARM::lowerAtomicLoad64(MLoadUnboxedScalar* ins) {
+  const LUse elements = useRegister(ins->elements());
+  const LAllocation index =
+      useRegisterOrIndexConstant(ins->index(), ins->storageType());
+
+  auto* lir = new (alloc())
+      LAtomicLoad64(elements, index, temp(),
+                    tempInt64Fixed(Register64(IntArgReg1, IntArgReg0)));
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
+void LIRGeneratorARM::lowerAtomicStore64(MStoreUnboxedScalar* ins) {
+  LUse elements = useRegister(ins->elements());
+  LAllocation index =
+      useRegisterOrIndexConstant(ins->index(), ins->writeType());
+  LAllocation value = useRegister(ins->value());
+  LInt64Definition temp1 = tempInt64Fixed(Register64(IntArgReg1, IntArgReg0));
+  LInt64Definition temp2 = tempInt64Fixed(Register64(IntArgReg3, IntArgReg2));
+
+  add(new (alloc()) LAtomicStore64(elements, index, value, temp1, temp2), ins);
 }
 
 void LIRGenerator::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins) {

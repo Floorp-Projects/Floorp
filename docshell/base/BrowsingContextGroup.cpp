@@ -34,10 +34,11 @@ already_AddRefed<BrowsingContextGroup> BrowsingContextGroup::GetOrCreate(
     ClearOnShutdown(&sBrowsingContextGroups);
   }
 
-  auto entry = sBrowsingContextGroups->LookupForAdd(aId);
-  RefPtr<BrowsingContextGroup> group =
-      entry.OrInsert([&] { return do_AddRef(new BrowsingContextGroup(aId)); });
-  return group.forget();
+  return sBrowsingContextGroups->WithEntryHandle(aId, [&aId](auto&& entry) {
+    RefPtr<BrowsingContextGroup> group = entry.OrInsertWith(
+        [&aId] { return do_AddRef(new BrowsingContextGroup(aId)); });
+    return group.forget();
+  });
 }
 
 already_AddRefed<BrowsingContextGroup> BrowsingContextGroup::Create() {
@@ -75,21 +76,23 @@ void BrowsingContextGroup::EnsureHostProcess(ContentParent* aProcess) {
   MOZ_DIAGNOSTIC_ASSERT(!aProcess->GetRemoteType().IsEmpty(),
                         "host process must have remote type");
 
-  if (!aProcess->IsDead()) {
-    auto entry = mHosts.LookupForAdd(aProcess->GetRemoteType());
-    if (entry) {
-      MOZ_DIAGNOSTIC_ASSERT(
-          entry.Data() == aProcess,
-          "There's already another host process for this remote type");
-      return;
-    }
+  if (aProcess->IsDead() ||
+      mHosts.WithEntryHandle(aProcess->GetRemoteType(), [&](auto&& entry) {
+        if (entry) {
+          MOZ_DIAGNOSTIC_ASSERT(
+              entry.Data() == aProcess,
+              "There's already another host process for this remote type");
+          return false;
+        }
 
-    // This process wasn't already marked as our host, so insert it, and begin
-    // subscribing, unless the process is still launching.
-    entry.OrInsert([&] { return do_AddRef(aProcess); });
+        // This process wasn't already marked as our host, so insert it, and
+        // begin subscribing, unless the process is still launching.
+        entry.Insert(do_AddRef(aProcess));
+
+        return true;
+      })) {
+    aProcess->AddBrowsingContextGroup(this);
   }
-
-  aProcess->AddBrowsingContextGroup(this);
 }
 
 void BrowsingContextGroup::RemoveHostProcess(ContentParent* aProcess) {

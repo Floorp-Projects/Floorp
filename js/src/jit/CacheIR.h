@@ -1638,7 +1638,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   struct AtomicsReadWriteModifyOperands {
     ObjOperandId objId;
     IntPtrOperandId intPtrIndexId;
-    Int32OperandId int32ValueId;
+    OperandId numericValueId;
   };
 
   AtomicsReadWriteModifyOperands emitAtomicsReadWriteModifyOperands(

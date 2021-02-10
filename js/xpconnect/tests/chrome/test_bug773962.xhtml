@@ -60,13 +60,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=773962
     ok(true, "Didn't crash!");
 
     // Now, make sure everything is set up how we expect.
-    const {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
-    if (AppConstants.NIGHTLY_BUILD) {
-      ok(Cu.isDeadWrapper(win1Waiver), "window waiver should go away after navigation");
-    } else {
-      ok(win1Waiver === win1.wrappedJSObject, "waivers still work");
-      ok(XPCNativeWrapper(win1Waiver) === win1, "waivers still work");
-    }
+    ok(Cu.isDeadWrapper(win1Waiver), "window waiver should go away after navigation");
     ok(node1Waiver === node1.wrappedJSObject, "waivers still work");
     ok(XPCNativeWrapper(node1Waiver) === node1, "waivers still work");
 

@@ -5,12 +5,13 @@
 
 #include "nsSandboxViolationSink.h"
 
+#import <Foundation/NSObjCRuntime.h>
+
 #include <unistd.h>
 #include <time.h>
 #include <asl.h>
 #include <dispatch/dispatch.h>
 #include <notify.h>
-#include "nsCocoaDebugUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Sprintf.h"
 
@@ -98,9 +99,8 @@ void nsSandboxViolationSink::ViolationHandler() {
 
       const char* pid_str = asl_get(found, ASL_KEY_REF_PID);
       const char* message_str = asl_get(found, ASL_KEY_MSG);
-      nsCocoaDebugUtils::DebugLog(
-          "nsSandboxViolationSink::ViolationHandler(): id %s, pid %s, message %s", id_str, pid_str,
-          message_str);
+      NSLog(@"nsSandboxViolationSink::ViolationHandler(): id %s, pid %s, message %s", id_str,
+            pid_str, message_str);
     }
     aslresponse_free(response);
   }

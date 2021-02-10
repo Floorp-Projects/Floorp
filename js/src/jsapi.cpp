@@ -5489,7 +5489,7 @@ namespace JS {
 
 void AutoFilename::reset() {
   if (ss_) {
-    ss_->decref();
+    ss_->Release();
     ss_ = nullptr;
   }
   if (filename_.is<const char*>()) {
@@ -5504,7 +5504,7 @@ void AutoFilename::setScriptSource(js::ScriptSource* p) {
   MOZ_ASSERT(!get());
   ss_ = p;
   if (p) {
-    p->incref();
+    p->AddRef();
     setUnowned(p->filename());
   }
 }

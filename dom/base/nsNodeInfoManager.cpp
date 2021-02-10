@@ -143,8 +143,8 @@ already_AddRefed<mozilla::dom::NodeInfo> nsNodeInfoManager::GetNodeInfo(
     return nodeInfo.forget();
   }
 
-  // We don't use LookupForAdd here as that would end up storing the temporary
-  // key instead of using `mInner`.
+  // We don't use WithEntryHandle here as that would end up storing the
+  // temporary key instead of using `mInner`.
   RefPtr<NodeInfo> nodeInfo = mNodeInfoHash.Get(&tmpKey);
   if (!nodeInfo) {
     ++mNonDocumentNodeInfos;

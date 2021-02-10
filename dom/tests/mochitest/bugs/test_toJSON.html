@@ -26,6 +26,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=760851
   window.performance.onresourcetimingbufferfull = function() {};
 
   function checkAttributesMatch(obj, jsonObj) {
+    // EventCounts isn't going to converted to a JSON string
+    if (obj instanceof EventCounts) {
+      return;
+    }
     if (typeof(obj) !== "object") {
       throw "Expected obj to be of type \"object\". Test failed.";
     }

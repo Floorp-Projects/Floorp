@@ -229,20 +229,19 @@ nsDirectoryService::Set(const char* aProp, nsISupports* aValue) {
     return NS_ERROR_FAILURE;
   }
 
-  nsDependentCString key(aProp);
-  if (auto entry = mHashtable.LookupForAdd(key)) {
-    return NS_ERROR_FAILURE;
-  } else {
-    nsCOMPtr<nsIFile> ourFile = do_QueryInterface(aValue);
-    if (ourFile) {
-      nsCOMPtr<nsIFile> cloneFile;
-      ourFile->Clone(getter_AddRefs(cloneFile));
-      entry.OrInsert([&cloneFile]() { return cloneFile.forget(); });
-      return NS_OK;
+  const nsDependentCString key(aProp);
+  return mHashtable.WithEntryHandle(key, [&](auto&& entry) {
+    if (!entry) {
+      nsCOMPtr<nsIFile> ourFile = do_QueryInterface(aValue);
+      if (ourFile) {
+        nsCOMPtr<nsIFile> cloneFile;
+        ourFile->Clone(getter_AddRefs(cloneFile));
+        entry.Insert(std::move(cloneFile));
+        return NS_OK;
+      }
     }
-    mHashtable.Remove(key);  // another hashtable lookup, but should be rare
-  }
-  return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
+  });
 }
 
 NS_IMETHODIMP

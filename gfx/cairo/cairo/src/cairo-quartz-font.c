@@ -364,7 +364,12 @@ CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont, CGFloat aSize)
     // XXX Does this need to behave differently for installed fonts on High
     // Sierra, as in other similar places (bug 1455569)?
 
-    if (!Gecko_OnSierraExactly()) {
+    CFStringRef name = CGFontCopyPostScriptName(aCGFont);
+    // CTFontCreateWithGraphicsFont seems to give "LastResort"
+    // when used on a system CGFont with variation applied
+    bool system_font = CFStringHasPrefix(name, CFSTR("."));
+
+    if (!Gecko_OnSierraExactly() && !system_font) {
         return CTFontCreateWithGraphicsFont(aCGFont, aSize, NULL, NULL);
     }
 

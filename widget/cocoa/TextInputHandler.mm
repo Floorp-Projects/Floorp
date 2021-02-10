@@ -2156,7 +2156,7 @@ void TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent) {
                                      modifierFlags:modifiers
                                          timestamp:[aNativeEvent timestamp]
                                       windowNumber:[aNativeEvent windowNumber]
-                                           context:[aNativeEvent context]
+                                           context:nil
                                         characters:@""
                        charactersIgnoringModifiers:@""
                                          isARepeat:NO
@@ -4754,7 +4754,7 @@ nsresult TextInputHandlerBase::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardL
                                    modifierFlags:modifierFlags
                                        timestamp:0
                                     windowNumber:windowNumber
-                                         context:[NSGraphicsContext currentContext]
+                                         context:nil
                                       characters:nsCocoaUtils::ToNSString(aCharacters)
                      charactersIgnoringModifiers:nsCocoaUtils::ToNSString(aUnmodifiedCharacters)
                                        isARepeat:NO
@@ -5007,7 +5007,7 @@ void TextInputHandlerBase::KeyEventState::InitKeyEvent(TextInputHandlerBase* aHa
                               modifierFlags:[mKeyEvent modifierFlags]
                                   timestamp:[mKeyEvent timestamp]
                                windowNumber:[mKeyEvent windowNumber]
-                                    context:[mKeyEvent context]
+                                    context:nil
                                  characters:unhandledNSString
                 charactersIgnoringModifiers:[mKeyEvent charactersIgnoringModifiers]
                                   isARepeat:[mKeyEvent isARepeat]

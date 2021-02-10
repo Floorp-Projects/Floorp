@@ -895,8 +895,7 @@ add_task(async function sendToDevice_title() {
 
         // Add the other tab to the selection.
         gBrowser.addToMultiSelectedTabs(
-          gBrowser.getTabForBrowser(otherBrowser),
-          { isLastMultiSelectChange: true }
+          gBrowser.getTabForBrowser(otherBrowser)
         );
 
         // Open the panel again.  Now the action's title should be "Send 2 Tabs to

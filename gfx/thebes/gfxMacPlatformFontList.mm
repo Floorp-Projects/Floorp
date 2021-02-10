@@ -822,28 +822,30 @@ gfxMacPlatformFontList::gfxMacPlatformFontList()
     : gfxPlatformFontList(false), mDefaultFont(nullptr), mUseSizeSensitiveSystemFont(false) {
   CheckFamilyList(kBaseFonts, ArrayLength(kBaseFonts));
 
-#ifdef MOZ_BUNDLED_FONTS
-  // We activate bundled fonts if the pref is > 0 (on) or < 0 (auto), only an
-  // explicit value of 0 (off) will disable them.
-  if (StaticPrefs::gfx_bundled_fonts_activate_AtStartup() != 0) {
-    ActivateBundledFonts();
-  }
-#endif
-
-  for (const auto& dir : kLangFontsDirs) {
-    nsresult rv;
-    nsCOMPtr<nsIFile> langFonts(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv)) {
-      rv = langFonts->InitWithNativePath(dir);
-      if (NS_SUCCEEDED(rv)) {
-        ActivateFontsFromDir(langFonts);
-      }
-    }
-  }
-
-  // Only the parent process listens for OS font-changed notifications;
+  // It appears to be sufficient to activate fonts in the parent process;
+  // they are then also usable in child processes.
+  // Likewise, only the parent process listens for OS font-changed notifications;
   // after rebuilding its list, it will update the content processes.
   if (XRE_IsParentProcess()) {
+#ifdef MOZ_BUNDLED_FONTS
+    // We activate bundled fonts if the pref is > 0 (on) or < 0 (auto), only an
+    // explicit value of 0 (off) will disable them.
+    if (StaticPrefs::gfx_bundled_fonts_activate_AtStartup() != 0) {
+      ActivateBundledFonts();
+    }
+#endif
+
+    for (const auto& dir : kLangFontsDirs) {
+      nsresult rv;
+      nsCOMPtr<nsIFile> langFonts(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+      if (NS_SUCCEEDED(rv)) {
+        rv = langFonts->InitWithNativePath(dir);
+        if (NS_SUCCEEDED(rv)) {
+          ActivateFontsFromDir(langFonts);
+        }
+      }
+    }
+
     ::CFNotificationCenterAddObserver(::CFNotificationCenterGetLocalCenter(), this,
                                       RegisteredFontsChangedNotificationCallback,
                                       kCTFontManagerRegisteredFontsChangedNotification, 0,

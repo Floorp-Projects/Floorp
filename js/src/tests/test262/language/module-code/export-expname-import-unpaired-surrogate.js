@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError module -- arbitrary-module-namespace-names is not supported
+// |reftest| error:SyntaxError module
 // Copyright (C) 2020 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---

@@ -205,6 +205,11 @@ void Performance::GetEntriesByName(
   aRetval.Sort(PerformanceEntryComparator());
 }
 
+void Performance::GetEntriesByTypeForObserver(
+    const nsAString& aEntryType, nsTArray<RefPtr<PerformanceEntry>>& aRetval) {
+  GetEntriesByType(aEntryType, aRetval);
+}
+
 void Performance::ClearUserEntries(const Optional<nsAString>& aEntryName,
                                    const nsAString& aEntryType) {
   MOZ_ASSERT(!aEntryType.IsEmpty());
@@ -656,25 +661,23 @@ void Performance::RunNotificationObserversTask() {
 }
 
 void Performance::QueueEntry(PerformanceEntry* aEntry) {
-  if (mObservers.IsEmpty()) {
-    return;
-  }
-
   nsTObserverArray<PerformanceObserver*> interestedObservers;
-  const auto [begin, end] = mObservers.NonObservingRange();
-  std::copy_if(begin, end, MakeBackInserter(interestedObservers),
-               [aEntry](PerformanceObserver* observer) {
-                 return observer->ObservesTypeOfEntry(aEntry);
-               });
-
-  if (interestedObservers.IsEmpty()) {
-    return;
+  if (!mObservers.IsEmpty()) {
+    const auto [begin, end] = mObservers.NonObservingRange();
+    std::copy_if(begin, end, MakeBackInserter(interestedObservers),
+                 [aEntry](PerformanceObserver* observer) {
+                   return observer->ObservesTypeOfEntry(aEntry);
+                 });
   }
 
   NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(interestedObservers, QueueEntry,
                                            (aEntry));
 
-  QueueNotificationObserversTask();
+  aEntry->BufferEntryIfNeeded();
+
+  if (!interestedObservers.IsEmpty()) {
+    QueueNotificationObserversTask();
+  }
 }
 
 void Performance::MemoryPressure() { mUserEntries.Clear(); }

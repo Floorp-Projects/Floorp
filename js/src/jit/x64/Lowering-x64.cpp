@@ -125,18 +125,120 @@ void LIRGeneratorX64::lowerInt64PhiInput(MPhi* phi, uint32_t inputPosition,
 
 void LIRGenerator::visitCompareExchangeTypedArrayElement(
     MCompareExchangeTypedArrayElement* ins) {
+  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
+  MOZ_ASSERT(ins->index()->type() == MIRType::IntPtr);
+
+  if (Scalar::isBigIntType(ins->arrayType())) {
+    LUse elements = useRegister(ins->elements());
+    LAllocation index =
+        useRegisterOrIndexConstant(ins->index(), ins->arrayType());
+    LUse oldval = useRegister(ins->oldval());
+    LUse newval = useRegister(ins->newval());
+    LInt64Definition temp1 = tempInt64Fixed(Register64(rax));
+    LInt64Definition temp2 = tempInt64();
+
+    auto* lir = new (alloc()) LCompareExchangeTypedArrayElement64(
+        elements, index, oldval, newval, temp1, temp2);
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+    return;
+  }
+
   lowerCompareExchangeTypedArrayElement(ins,
                                         /* useI386ByteRegisters = */ false);
 }
 
 void LIRGenerator::visitAtomicExchangeTypedArrayElement(
     MAtomicExchangeTypedArrayElement* ins) {
+  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
+  MOZ_ASSERT(ins->index()->type() == MIRType::IntPtr);
+
+  if (Scalar::isBigIntType(ins->arrayType())) {
+    LUse elements = useRegister(ins->elements());
+    LAllocation index =
+        useRegisterOrIndexConstant(ins->index(), ins->arrayType());
+    LAllocation value = useRegister(ins->value());
+    LInt64Definition temp1 = tempInt64();
+    LDefinition temp2 = temp();
+
+    auto* lir = new (alloc()) LAtomicExchangeTypedArrayElement64(
+        elements, index, value, temp1, temp2);
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+    return;
+  }
+
   lowerAtomicExchangeTypedArrayElement(ins, /* useI386ByteRegisters = */ false);
 }
 
 void LIRGenerator::visitAtomicTypedArrayElementBinop(
     MAtomicTypedArrayElementBinop* ins) {
+  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
+  MOZ_ASSERT(ins->index()->type() == MIRType::IntPtr);
+
+  if (Scalar::isBigIntType(ins->arrayType())) {
+    LUse elements = useRegister(ins->elements());
+    LAllocation index =
+        useRegisterOrIndexConstant(ins->index(), ins->arrayType());
+    LAllocation value = useRegister(ins->value());
+
+    // Case 1: the result of the operation is not used.
+    //
+    // We can omit allocating the result BigInt.
+
+    if (ins->isForEffect()) {
+      LInt64Definition temp = tempInt64();
+
+      auto* lir = new (alloc()) LAtomicTypedArrayElementBinopForEffect64(
+          elements, index, value, temp);
+      add(lir, ins);
+      return;
+    }
+
+    // Case 2: the result of the operation is used.
+    //
+    // For ADD and SUB we'll use XADD.
+    //
+    // For AND/OR/XOR we need to use a CMPXCHG loop with rax as a temp register.
+
+    bool bitOp = !(ins->operation() == AtomicFetchAddOp ||
+                   ins->operation() == AtomicFetchSubOp);
+
+    LInt64Definition temp1 = tempInt64();
+    LInt64Definition temp2;
+    if (bitOp) {
+      temp2 = tempInt64Fixed(Register64(rax));
+    } else {
+      temp2 = tempInt64();
+    }
+
+    auto* lir = new (alloc())
+        LAtomicTypedArrayElementBinop64(elements, index, value, temp1, temp2);
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+    return;
+  }
+
   lowerAtomicTypedArrayElementBinop(ins, /* useI386ByteRegisters = */ false);
+}
+
+void LIRGeneratorX64::lowerAtomicLoad64(MLoadUnboxedScalar* ins) {
+  const LUse elements = useRegister(ins->elements());
+  const LAllocation index =
+      useRegisterOrIndexConstant(ins->index(), ins->storageType());
+
+  auto* lir = new (alloc()) LAtomicLoad64(elements, index, temp(), tempInt64());
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
+void LIRGeneratorX64::lowerAtomicStore64(MStoreUnboxedScalar* ins) {
+  LUse elements = useRegister(ins->elements());
+  LAllocation index =
+      useRegisterOrIndexConstant(ins->index(), ins->writeType());
+  LAllocation value = useRegister(ins->value());
+
+  add(new (alloc()) LAtomicStore64(elements, index, value, tempInt64()), ins);
 }
 
 void LIRGenerator::visitWasmUnsignedToDouble(MWasmUnsignedToDouble* ins) {

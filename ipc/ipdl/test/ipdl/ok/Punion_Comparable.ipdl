@@ -1,4 +1,4 @@
-comparable union Basic {
+[Comparable] union Basic {
     int;
     double;
 };

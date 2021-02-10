@@ -1,4 +1,4 @@
-comparable struct S {
+[Comparable] struct S {
     int i;
     double d;
 };

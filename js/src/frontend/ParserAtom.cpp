@@ -16,6 +16,7 @@
 #include "frontend/NameCollections.h"
 #include "frontend/StencilXdr.h"  // CanCopyDataToDisk
 #include "util/StringBuffer.h"    // StringBuffer
+#include "util/Unicode.h"
 #include "vm/JSContext.h"
 #include "vm/Printer.h"  // Sprinter, QuoteString
 #include "vm/Runtime.h"
@@ -495,6 +496,25 @@ bool ParserAtomsTable::isExtendedUnclonedSelfHostedFunctionName(
   }
 
   return atom->charAt(0) == ExtendedUnclonedSelfHostedFunctionNamePrefix;
+}
+
+static bool HasUnpairedSurrogate(mozilla::Range<const char16_t> chars) {
+  for (auto ptr = chars.begin(); ptr < chars.end();) {
+    char16_t ch = *ptr++;
+    if (unicode::IsLeadSurrogate(ch)) {
+      if (ptr == chars.end() || !unicode::IsTrailSurrogate(*ptr++)) {
+        return true;
+      }
+    } else if (unicode::IsTrailSurrogate(ch)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool ParserAtomsTable::isModuleExportName(TaggedParserAtomIndex index) const {
+  const ParserAtom* name = getParserAtom(index);
+  return name->hasLatin1Chars() || !HasUnpairedSurrogate(name->twoByteRange());
 }
 
 bool ParserAtomsTable::isIndex(TaggedParserAtomIndex index,

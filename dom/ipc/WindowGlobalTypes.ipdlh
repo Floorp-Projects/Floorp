@@ -12,7 +12,7 @@ include NeckoChannelParams;
 include DOMTypes;
 
 using mozilla::dom::WindowContextInitializer from "mozilla/dom/WindowContext.h";
-using refcounted class nsITransportSecurityInfo from "nsITransportSecurityInfo.h";
+[RefCounted] using class nsITransportSecurityInfo from "nsITransportSecurityInfo.h";
 
 namespace mozilla {
 namespace dom {

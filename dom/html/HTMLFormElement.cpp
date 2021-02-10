@@ -2169,12 +2169,10 @@ HTMLFormElement::WalkRadioGroup(const nsAString& aName,
 void HTMLFormElement::AddToRadioGroup(const nsAString& aName,
                                       HTMLInputElement* aRadio) {
   if (aRadio->IsRequired()) {
-    auto entry = mRequiredRadioButtonCounts.LookupForAdd(aName);
-    if (!entry) {
-      entry.OrInsert([]() { return 1; });
-    } else {
-      ++entry.Data();
-    }
+    mRequiredRadioButtonCounts.WithEntryHandle(aName, [](auto&& entry) {
+      uint32_t& value = entry.OrInsert(0);
+      ++value;
+    });
   }
 }
 
@@ -2276,81 +2274,83 @@ struct RadioNodeListAdaptor {
 nsresult HTMLFormElement::AddElementToTableInternal(
     nsInterfaceHashtable<nsStringHashKey, nsISupports>& aTable,
     nsIContent* aChild, const nsAString& aName) {
-  auto entry = aTable.LookupForAdd(aName);
-  if (!entry) {
-    // No entry found, add the element
-    entry.OrInsert([&aChild]() { return aChild; });
-    ++mExpandoAndGeneration.generation;
-  } else {
-    // Found something in the hash, check its type
-    nsCOMPtr<nsIContent> content = do_QueryInterface(entry.Data());
-
-    if (content) {
-      // Check if the new content is the same as the one we found in the
-      // hash, if it is then we leave it in the hash as it is, this will
-      // happen if a form control has both a name and an id with the same
-      // value
-      if (content == aChild) {
-        return NS_OK;
-      }
-
-      // Found an element, create a list, add the element to the list and put
-      // the list in the hash
-      RadioNodeList* list = new RadioNodeList(this);
-
-      // If an element has a @form, we can assume it *might* be able to not have
-      // a parent and still be in the form.
-      NS_ASSERTION(
-          (content->IsElement() &&
-           content->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::form)) ||
-              content->GetParent(),
-          "Item in list without parent");
-
-      // Determine the ordering between the new and old element.
-      bool newFirst = nsContentUtils::PositionIsBefore(aChild, content);
-
-      list->AppendElement(newFirst ? aChild : content.get());
-      list->AppendElement(newFirst ? content.get() : aChild);
-
-      nsCOMPtr<nsISupports> listSupports = do_QueryObject(list);
-
-      // Replace the element with the list.
-      entry.Data() = listSupports;
+  return aTable.WithEntryHandle(aName, [&](auto&& entry) {
+    if (!entry) {
+      // No entry found, add the element
+      entry.Insert(aChild);
+      ++mExpandoAndGeneration.generation;
     } else {
-      // There's already a list in the hash, add the child to the list.
-      MOZ_ASSERT(nsCOMPtr<RadioNodeList>(do_QueryInterface(entry.Data())));
-      auto* list = static_cast<RadioNodeList*>(entry.Data().get());
+      // Found something in the hash, check its type
+      nsCOMPtr<nsIContent> content = do_QueryInterface(entry.Data());
 
-      NS_ASSERTION(list->Length() > 1,
-                   "List should have been converted back to a single element");
+      if (content) {
+        // Check if the new content is the same as the one we found in the
+        // hash, if it is then we leave it in the hash as it is, this will
+        // happen if a form control has both a name and an id with the same
+        // value
+        if (content == aChild) {
+          return NS_OK;
+        }
 
-      // Fast-path appends; this check is ok even if the child is
-      // already in the list, since if it tests true the child would
-      // have come at the end of the list, and the PositionIsBefore
-      // will test false.
-      if (nsContentUtils::PositionIsBefore(list->Item(list->Length() - 1),
-                                           aChild)) {
-        list->AppendElement(aChild);
-        return NS_OK;
+        // Found an element, create a list, add the element to the list and put
+        // the list in the hash
+        RadioNodeList* list = new RadioNodeList(this);
+
+        // If an element has a @form, we can assume it *might* be able to not
+        // have a parent and still be in the form.
+        NS_ASSERTION(
+            (content->IsElement() && content->AsElement()->HasAttr(
+                                         kNameSpaceID_None, nsGkAtoms::form)) ||
+                content->GetParent(),
+            "Item in list without parent");
+
+        // Determine the ordering between the new and old element.
+        bool newFirst = nsContentUtils::PositionIsBefore(aChild, content);
+
+        list->AppendElement(newFirst ? aChild : content.get());
+        list->AppendElement(newFirst ? content.get() : aChild);
+
+        nsCOMPtr<nsISupports> listSupports = do_QueryObject(list);
+
+        // Replace the element with the list.
+        entry.Data() = listSupports;
+      } else {
+        // There's already a list in the hash, add the child to the list.
+        MOZ_ASSERT(nsCOMPtr<RadioNodeList>(do_QueryInterface(entry.Data())));
+        auto* list = static_cast<RadioNodeList*>(entry.Data().get());
+
+        NS_ASSERTION(
+            list->Length() > 1,
+            "List should have been converted back to a single element");
+
+        // Fast-path appends; this check is ok even if the child is
+        // already in the list, since if it tests true the child would
+        // have come at the end of the list, and the PositionIsBefore
+        // will test false.
+        if (nsContentUtils::PositionIsBefore(list->Item(list->Length() - 1),
+                                             aChild)) {
+          list->AppendElement(aChild);
+          return NS_OK;
+        }
+
+        // If a control has a name equal to its id, it could be in the
+        // list already.
+        if (list->IndexOf(aChild) != -1) {
+          return NS_OK;
+        }
+
+        size_t idx;
+        DebugOnly<bool> found =
+            BinarySearchIf(RadioNodeListAdaptor(list), 0, list->Length(),
+                           PositionComparator(aChild), &idx);
+        MOZ_ASSERT(!found, "should not have found an element");
+
+        list->InsertElementAt(aChild, idx);
       }
-
-      // If a control has a name equal to its id, it could be in the
-      // list already.
-      if (list->IndexOf(aChild) != -1) {
-        return NS_OK;
-      }
-
-      size_t idx;
-      DebugOnly<bool> found =
-          BinarySearchIf(RadioNodeListAdaptor(list), 0, list->Length(),
-                         PositionComparator(aChild), &idx);
-      MOZ_ASSERT(!found, "should not have found an element");
-
-      list->InsertElementAt(aChild, idx);
     }
-  }
 
-  return NS_OK;
+    return NS_OK;
+  });
 }
 
 nsresult HTMLFormElement::AddImageElement(HTMLImageElement* aChild) {

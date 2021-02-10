@@ -3055,17 +3055,17 @@ static ScriptSourceObject* SelfHostingScriptSourceObject(JSContext* cx) {
   CompileOptions options(cx);
   FillSelfHostingCompileOptions(options);
 
-  ScriptSource* ss = cx->new_<ScriptSource>();
-  if (!ss) {
-    return nullptr;
-  }
-  ScriptSourceHolder ssHolder(ss);
-
-  if (!ss->initFromOptions(cx, options)) {
+  RefPtr<ScriptSource> source(cx->new_<ScriptSource>());
+  if (!source) {
     return nullptr;
   }
 
-  RootedScriptSourceObject sourceObject(cx, ScriptSourceObject::create(cx, ss));
+  if (!source->initFromOptions(cx, options)) {
+    return nullptr;
+  }
+
+  RootedScriptSourceObject sourceObject(
+      cx, ScriptSourceObject::create(cx, source.get()));
   if (!sourceObject) {
     return nullptr;
   }

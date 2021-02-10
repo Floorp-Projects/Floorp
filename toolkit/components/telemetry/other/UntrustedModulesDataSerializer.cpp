@@ -421,18 +421,22 @@ nsresult UntrustedModulesDataSerializer::AddSingleData(
   // Serialize each entry in the modules hashtable out to the "modules" array
   // and store the indices in |mIndexMap|
   for (auto iter = aData.mModules.ConstIter(); !iter.Done(); iter.Next()) {
-    auto addPtr = mIndexMap.LookupForAdd(iter.Key());
-    if (!addPtr) {
-      addPtr.OrInsert([idx = mCurModulesArrayIdx]() { return idx; });
+    if (!mIndexMap.WithEntryHandle(iter.Key(), [&](auto&& addPtr) {
+          if (!addPtr) {
+            addPtr.Insert(mCurModulesArrayIdx);
 
-      JS::RootedValue jsModule(mCx);
-      if (!SerializeModule(mCx, &jsModule, iter.Data(), mFlags) ||
-          !JS_DefineElement(mCx, mModulesArray, mCurModulesArrayIdx, jsModule,
-                            JSPROP_ENUMERATE)) {
-        return NS_ERROR_FAILURE;
-      }
+            JS::RootedValue jsModule(mCx);
+            if (!SerializeModule(mCx, &jsModule, iter.Data(), mFlags) ||
+                !JS_DefineElement(mCx, mModulesArray, mCurModulesArrayIdx,
+                                  jsModule, JSPROP_ENUMERATE)) {
+              return false;
+            }
 
-      ++mCurModulesArrayIdx;
+            ++mCurModulesArrayIdx;
+          }
+          return true;
+        })) {
+      return NS_ERROR_FAILURE;
     }
   }
 

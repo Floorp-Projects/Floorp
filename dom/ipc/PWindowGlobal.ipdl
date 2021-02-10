@@ -22,16 +22,16 @@ include "mozilla/layers/LayersMessageUtils.h";
 
 using JSActorMessageKind from "mozilla/dom/JSActor.h";
 using mozilla::gfx::IntRect from "mozilla/gfx/Rect.h";
-using moveonly mozilla::gfx::PaintFragment from "mozilla/gfx/CrossProcessPaint.h";
+[MoveOnly] using mozilla::gfx::PaintFragment from "mozilla/gfx/CrossProcessPaint.h";
 using nscolor from "nsColor.h";
-using refcounted class nsDocShellLoadState from "nsDocShellLoadState.h";
+[RefCounted] using class nsDocShellLoadState from "nsDocShellLoadState.h";
 using mozilla::dom::XPCOMPermitUnloadAction from "nsIContentViewer.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
-using refcounted class nsITransportSecurityInfo from "nsITransportSecurityInfo.h";
+[RefCounted] using class nsITransportSecurityInfo from "nsITransportSecurityInfo.h";
 using mozilla::UseCounters from "mozilla/UseCounter.h";
 using mozilla::dom::MaybeDiscardedWindowContext from "mozilla/dom/WindowContext.h";
-using refcounted mozilla::dom::FeaturePolicy from "mozilla/dom/FeaturePolicy.h";
+[RefCounted] using mozilla::dom::FeaturePolicy from "mozilla/dom/FeaturePolicy.h";
 
 namespace mozilla {
 namespace dom {

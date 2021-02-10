@@ -841,7 +841,7 @@ class OriginInfo final {
 
   void LockedPersist();
 
-  nsDataHashtable<nsStringHashKey, QuotaObject*> mQuotaObjects;
+  nsDataHashtable<nsStringHashKey, NotNull<QuotaObject*>> mQuotaObjects;
   ClientUsageArray mClientUsages;
   GroupInfo* mGroupInfo;
   const nsCString mOrigin;
@@ -4341,15 +4341,16 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
     // We need this extra raw pointer because we can't assign to the smart
     // pointer directly since QuotaObject::AddRef would try to acquire the same
     // mutex.
-    QuotaObject* quotaObject;
-    if (!originInfo->mQuotaObjects.Get(path, &quotaObject)) {
-      // Create a new QuotaObject.
-      quotaObject = new QuotaObject(originInfo, aClientType, path, fileSize);
-
-      // Put it to the hashtable. The hashtable is not responsible to delete
-      // the QuotaObject.
-      originInfo->mQuotaObjects.Put(path, quotaObject);
-    }
+    const NotNull<QuotaObject*> quotaObject =
+        originInfo->mQuotaObjects.WithEntryHandle(
+            path, [&](auto&& entryHandle) {
+              return entryHandle.OrInsertWith([&] {
+                // Create a new QuotaObject. The hashtable is not responsible to
+                // delete the QuotaObject.
+                return WrapNotNullUnchecked(
+                    new QuotaObject(originInfo, aClientType, path, fileSize));
+              });
+            });
 
     // Addref the QuotaObject and move the ownership to the result. This must
     // happen before we unlock!
@@ -6859,22 +6860,21 @@ auto QuotaManager::GetDirectoryLockTable(PersistenceType aPersistenceType)
 bool QuotaManager::IsSanitizedOriginValid(const nsACString& aSanitizedOrigin) {
   AssertIsOnIOThread();
 
-  bool valid;
-  if (auto entry = mValidOrigins.LookupForAdd(aSanitizedOrigin)) {
-    // We already parsed this sanitized origin string.
-    valid = entry.Data();
-  } else {
-    nsCString spec;
-    OriginAttributes attrs;
-    nsCString originalSuffix;
-    OriginParser::ResultType result = OriginParser::ParseOrigin(
-        aSanitizedOrigin, spec, &attrs, originalSuffix);
+  return mValidOrigins.WithEntryHandle(
+      aSanitizedOrigin, [&aSanitizedOrigin](auto&& entry) {
+        if (entry) {
+          // We already parsed this sanitized origin string.
+          return entry.Data();
+        }
 
-    valid = result == OriginParser::ValidOrigin;
-    entry.OrInsert([valid]() { return valid; });
-  }
+        nsCString spec;
+        OriginAttributes attrs;
+        nsCString originalSuffix;
+        const auto result = OriginParser::ParseOrigin(aSanitizedOrigin, spec,
+                                                      &attrs, originalSuffix);
 
-  return valid;
+        return entry.Insert(result == OriginParser::ValidOrigin);
+      });
 }
 
 int64_t QuotaManager::GenerateDirectoryLockId() {

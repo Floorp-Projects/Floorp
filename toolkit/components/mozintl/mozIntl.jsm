@@ -608,6 +608,7 @@ const availableLocaleDisplayNames = {
     "su",
     "sv",
     "sw",
+    "szl",
     "ta",
     "te",
     "tg",

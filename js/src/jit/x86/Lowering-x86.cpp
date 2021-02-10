@@ -218,17 +218,106 @@ void LIRGeneratorX86::lowerForMulInt64(LMulI64* ins, MMul* mir,
 
 void LIRGenerator::visitCompareExchangeTypedArrayElement(
     MCompareExchangeTypedArrayElement* ins) {
+  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
+  MOZ_ASSERT(ins->index()->type() == MIRType::IntPtr);
+
+  if (Scalar::isBigIntType(ins->arrayType())) {
+    LUse elements = useFixed(ins->elements(), esi);
+    LAllocation index =
+        useRegisterOrIndexConstant(ins->index(), ins->arrayType());
+    LUse oldval = useFixed(ins->oldval(), eax);
+    LUse newval = useFixed(ins->newval(), edx);
+    LDefinition temp = tempFixed(ebx);
+
+    auto* lir = new (alloc()) LCompareExchangeTypedArrayElement64(
+        elements, index, oldval, newval, temp);
+    defineFixed(lir, ins, LAllocation(AnyRegister(ecx)));
+    assignSafepoint(lir, ins);
+    return;
+  }
+
   lowerCompareExchangeTypedArrayElement(ins, /* useI386ByteRegisters = */ true);
 }
 
 void LIRGenerator::visitAtomicExchangeTypedArrayElement(
     MAtomicExchangeTypedArrayElement* ins) {
+  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
+  MOZ_ASSERT(ins->index()->type() == MIRType::IntPtr);
+
+  if (Scalar::isBigIntType(ins->arrayType())) {
+    LUse elements = useRegister(ins->elements());
+    LAllocation index =
+        useRegisterOrIndexConstant(ins->index(), ins->arrayType());
+    LAllocation value = useFixed(ins->value(), edx);
+    LInt64Definition temp = tempInt64Fixed(Register64(ecx, ebx));
+
+    auto* lir = new (alloc())
+        LAtomicExchangeTypedArrayElement64(elements, index, value, temp);
+    defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
+    assignSafepoint(lir, ins);
+    return;
+  }
+
   lowerAtomicExchangeTypedArrayElement(ins, /*useI386ByteRegisters=*/true);
 }
 
 void LIRGenerator::visitAtomicTypedArrayElementBinop(
     MAtomicTypedArrayElementBinop* ins) {
+  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
+  MOZ_ASSERT(ins->index()->type() == MIRType::IntPtr);
+
+  if (Scalar::isBigIntType(ins->arrayType())) {
+    LUse elements = useRegister(ins->elements());
+    LAllocation index =
+        useRegisterOrIndexConstant(ins->index(), ins->arrayType());
+    LAllocation value = useFixed(ins->value(), edx);
+    LInt64Definition temp = tempInt64Fixed(Register64(ecx, ebx));
+
+    // Case 1: the result of the operation is not used.
+    //
+    // We can omit allocating the result BigInt.
+
+    if (ins->isForEffect()) {
+      LDefinition tempLow = tempFixed(eax);
+
+      auto* lir = new (alloc()) LAtomicTypedArrayElementBinopForEffect64(
+          elements, index, value, temp, tempLow);
+      add(lir, ins);
+      return;
+    }
+
+    // Case 2: the result of the operation is used.
+
+    auto* lir = new (alloc())
+        LAtomicTypedArrayElementBinop64(elements, index, value, temp);
+    defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
+    assignSafepoint(lir, ins);
+    return;
+  }
+
   lowerAtomicTypedArrayElementBinop(ins, /* useI386ByteRegisters = */ true);
+}
+
+void LIRGeneratorX86::lowerAtomicLoad64(MLoadUnboxedScalar* ins) {
+  const LUse elements = useRegister(ins->elements());
+  const LAllocation index =
+      useRegisterOrIndexConstant(ins->index(), ins->storageType());
+
+  auto* lir = new (alloc()) LAtomicLoad64(elements, index, tempFixed(ebx),
+                                          tempInt64Fixed(Register64(edx, eax)));
+  defineFixed(lir, ins, LAllocation(AnyRegister(ecx)));
+  assignSafepoint(lir, ins);
+}
+
+void LIRGeneratorX86::lowerAtomicStore64(MStoreUnboxedScalar* ins) {
+  LUse elements = useRegister(ins->elements());
+  LAllocation index =
+      useRegisterOrIndexConstant(ins->index(), ins->writeType());
+  LAllocation value = useFixed(ins->value(), edx);
+  LInt64Definition temp1 = tempInt64Fixed(Register64(ecx, ebx));
+  LDefinition temp2 = tempFixed(eax);
+
+  add(new (alloc()) LAtomicStore64(elements, index, value, temp1, temp2), ins);
 }
 
 void LIRGenerator::visitWasmUnsignedToDouble(MWasmUnsignedToDouble* ins) {

@@ -244,3 +244,307 @@ add_task(async function test_suggestions() {
 
   Services.prefs.clearUserPref("browser.urlbar.maxHistoricalSearchSuggestions");
 });
+
+// These results are used in the badHeuristicBuckets tests below.  The order of
+// the results in the array isn't important because they all get added at the
+// same time.  It's the resultBuckets in each test that are important.
+const BAD_HEURISTIC_RESULTS = [
+  // heuristic
+  Object.assign(
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.URL,
+      UrlbarUtils.RESULT_SOURCE.HISTORY,
+      { url: "http://mozilla.org/heuristic-0" }
+    ),
+    { heuristic: true }
+  ),
+  // heuristic
+  Object.assign(
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.URL,
+      UrlbarUtils.RESULT_SOURCE.HISTORY,
+      { url: "http://mozilla.org/heuristic-1" }
+    ),
+    { heuristic: true }
+  ),
+  // non-heuristic
+  new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.URL,
+    UrlbarUtils.RESULT_SOURCE.HISTORY,
+    { url: "http://mozilla.org/non-heuristic-0" }
+  ),
+  // non-heuristic
+  new UrlbarResult(
+    UrlbarUtils.RESULT_TYPE.URL,
+    UrlbarUtils.RESULT_SOURCE.HISTORY,
+    { url: "http://mozilla.org/non-heuristic-1" }
+  ),
+];
+
+const BAD_HEURISTIC_RESULTS_FIRST_HEURISTIC = BAD_HEURISTIC_RESULTS[0];
+const BAD_HEURISTIC_RESULTS_GENERAL = [
+  BAD_HEURISTIC_RESULTS[2],
+  BAD_HEURISTIC_RESULTS[3],
+];
+
+add_task(async function test_badHeuristicBuckets_multiple_0() {
+  await doBadHeuristicBucketsTest(
+    [
+      // 2 heuristics with child buckets
+      {
+        maxResultCount: 2,
+        children: [{ group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST }],
+      },
+      // infinite general
+      {
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+    ],
+    [BAD_HEURISTIC_RESULTS_FIRST_HEURISTIC, ...BAD_HEURISTIC_RESULTS_GENERAL]
+  );
+});
+
+add_task(async function test_badHeuristicBuckets_multiple_1() {
+  await doBadHeuristicBucketsTest(
+    [
+      // infinite heuristics with child buckets
+      {
+        children: [{ group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST }],
+      },
+      // infinite general
+      {
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+    ],
+    [BAD_HEURISTIC_RESULTS_FIRST_HEURISTIC, ...BAD_HEURISTIC_RESULTS_GENERAL]
+  );
+});
+
+add_task(async function test_badHeuristicBuckets_multiple_2() {
+  await doBadHeuristicBucketsTest(
+    [
+      // 2 heuristics
+      {
+        maxResultCount: 2,
+        group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST,
+      },
+      // infinite general
+      {
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+    ],
+    [BAD_HEURISTIC_RESULTS_FIRST_HEURISTIC, ...BAD_HEURISTIC_RESULTS_GENERAL]
+  );
+});
+
+add_task(async function test_badHeuristicBuckets_multiple_3() {
+  await doBadHeuristicBucketsTest(
+    [
+      // infinite heuristics
+      {
+        group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST,
+      },
+      // infinite general
+      {
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+    ],
+    [BAD_HEURISTIC_RESULTS_FIRST_HEURISTIC, ...BAD_HEURISTIC_RESULTS_GENERAL]
+  );
+});
+
+add_task(async function test_badHeuristicBuckets_multiple_4() {
+  await doBadHeuristicBucketsTest(
+    [
+      // 1 heuristic with child buckets
+      {
+        maxResultCount: 1,
+        children: [{ group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST }],
+      },
+      // infinite general
+      {
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+      // 1 heuristic with child buckets
+      {
+        maxResultCount: 1,
+        children: [{ group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST }],
+      },
+    ],
+    [BAD_HEURISTIC_RESULTS_FIRST_HEURISTIC, ...BAD_HEURISTIC_RESULTS_GENERAL]
+  );
+});
+
+add_task(async function test_badHeuristicBuckets_multiple_5() {
+  await doBadHeuristicBucketsTest(
+    [
+      // infinite heuristics with child buckets
+      {
+        children: [{ group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST }],
+      },
+      // infinite general
+      {
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+      // infinite heuristics with child buckets
+      {
+        children: [{ group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST }],
+      },
+    ],
+    [BAD_HEURISTIC_RESULTS_FIRST_HEURISTIC, ...BAD_HEURISTIC_RESULTS_GENERAL]
+  );
+});
+
+add_task(async function test_badHeuristicBuckets_multiple_6() {
+  await doBadHeuristicBucketsTest(
+    [
+      // 1 heuristic
+      {
+        maxResultCount: 1,
+        group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST,
+      },
+      // infinite general
+      {
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+      // 1 heuristic
+      {
+        maxResultCount: 1,
+        group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST,
+      },
+    ],
+    [BAD_HEURISTIC_RESULTS_FIRST_HEURISTIC, ...BAD_HEURISTIC_RESULTS_GENERAL]
+  );
+});
+
+add_task(async function test_badHeuristicBuckets_multiple_7() {
+  await doBadHeuristicBucketsTest(
+    [
+      // infinite heuristics
+      {
+        group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST,
+      },
+      // infinite general
+      {
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+      // infinite heuristics
+      {
+        group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST,
+      },
+    ],
+    [BAD_HEURISTIC_RESULTS_FIRST_HEURISTIC, ...BAD_HEURISTIC_RESULTS_GENERAL]
+  );
+});
+
+add_task(async function test_badHeuristicsBuckets_notFirst_0() {
+  await doBadHeuristicBucketsTest(
+    [
+      // infinite general first
+      {
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+      // 1 heuristic with child buckets second
+      {
+        maxResultCount: 1,
+        children: [{ group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST }],
+      },
+    ],
+    [...BAD_HEURISTIC_RESULTS_GENERAL]
+  );
+});
+
+add_task(async function test_badHeuristicsBuckets_notFirst_1() {
+  await doBadHeuristicBucketsTest(
+    [
+      // infinite general first
+      {
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+      // infinite heuristics with child buckets second
+      {
+        children: [{ group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST }],
+      },
+    ],
+    [...BAD_HEURISTIC_RESULTS_GENERAL]
+  );
+});
+
+add_task(async function test_badHeuristicsBuckets_notFirst_2() {
+  await doBadHeuristicBucketsTest(
+    [
+      // infinite general first
+      {
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+      // 1 heuristic second
+      {
+        maxResultCount: 1,
+        group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST,
+      },
+    ],
+    [...BAD_HEURISTIC_RESULTS_GENERAL]
+  );
+});
+
+add_task(async function test_badHeuristicsBuckets_notFirst_3() {
+  await doBadHeuristicBucketsTest(
+    [
+      // infinite general first
+      {
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+      // infinite heuristics second
+      {
+        group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST,
+      },
+    ],
+    [...BAD_HEURISTIC_RESULTS_GENERAL]
+  );
+});
+
+add_task(async function test_badHeuristicsBuckets_notFirst_4() {
+  await doBadHeuristicBucketsTest(
+    [
+      // 1 general first
+      {
+        maxResultCount: 1,
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+      // infinite heuristics second
+      {
+        group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST,
+      },
+      // infinite general third
+      {
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+    ],
+    [...BAD_HEURISTIC_RESULTS_GENERAL]
+  );
+});
+
+/**
+ * Sets the resultBuckets pref, performs a search, and then checks the results.
+ * Regardless of the buckets, the muxer should include at most one heuristic in
+ * its results and it should always be the first result.
+ *
+ * @param {array} resultBuckets
+ *   The result buckets.
+ * @param {array} expectedResults
+ *   The expected results.
+ */
+async function doBadHeuristicBucketsTest(resultBuckets, expectedResults) {
+  Services.prefs.setCharPref(
+    "browser.urlbar.resultBuckets",
+    JSON.stringify({ children: resultBuckets })
+  );
+
+  let providerName = registerBasicTestProvider(BAD_HEURISTIC_RESULTS);
+  let context = createContext("foo", { providers: [providerName] });
+  let controller = UrlbarTestUtils.newMockController();
+  await UrlbarProvidersManager.startQuery(context, controller);
+  Assert.deepEqual(context.results, expectedResults);
+
+  Services.prefs.clearUserPref("browser.urlbar.resultBuckets");
+}

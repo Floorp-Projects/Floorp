@@ -1145,7 +1145,7 @@ void MacroAssembler::wasmStoreI64(const wasm::MemoryAccessDesc& access,
 
 template <typename T>
 static void AtomicLoad64(MacroAssembler& masm,
-                         const wasm::MemoryAccessDesc& access, const T& address,
+                         const wasm::MemoryAccessDesc* access, const T& address,
                          Register64 temp, Register64 output) {
   MOZ_ASSERT(temp.low == ebx);
   MOZ_ASSERT(temp.high == ecx);
@@ -1157,34 +1157,38 @@ static void AtomicLoad64(MacroAssembler& masm,
   masm.movl(edx, ecx);
   masm.movl(eax, ebx);
 
-  masm.append(access, masm.size());
+  if (access) {
+    masm.append(*access, masm.size());
+  }
   masm.lock_cmpxchg8b(edx, eax, ecx, ebx, Operand(address));
 }
 
 void MacroAssembler::wasmAtomicLoad64(const wasm::MemoryAccessDesc& access,
                                       const Address& mem, Register64 temp,
                                       Register64 output) {
-  AtomicLoad64(*this, access, mem, temp, output);
+  AtomicLoad64(*this, &access, mem, temp, output);
 }
 
 void MacroAssembler::wasmAtomicLoad64(const wasm::MemoryAccessDesc& access,
                                       const BaseIndex& mem, Register64 temp,
                                       Register64 output) {
-  AtomicLoad64(*this, access, mem, temp, output);
+  AtomicLoad64(*this, &access, mem, temp, output);
 }
 
 template <typename T>
-static void WasmCompareExchange64(MacroAssembler& masm,
-                                  const wasm::MemoryAccessDesc& access,
-                                  const T& mem, Register64 expected,
-                                  Register64 replacement, Register64 output) {
+static void CompareExchange64(MacroAssembler& masm,
+                              const wasm::MemoryAccessDesc* access,
+                              const T& mem, Register64 expected,
+                              Register64 replacement, Register64 output) {
   MOZ_ASSERT(expected == output);
   MOZ_ASSERT(expected.high == edx);
   MOZ_ASSERT(expected.low == eax);
   MOZ_ASSERT(replacement.high == ecx);
   MOZ_ASSERT(replacement.low == ebx);
 
-  masm.append(access, masm.size());
+  if (access) {
+    masm.append(*access, masm.size());
+  }
   masm.lock_cmpxchg8b(edx, eax, ecx, ebx, Operand(mem));
 }
 
@@ -1193,7 +1197,7 @@ void MacroAssembler::wasmCompareExchange64(const wasm::MemoryAccessDesc& access,
                                            Register64 expected,
                                            Register64 replacement,
                                            Register64 output) {
-  WasmCompareExchange64(*this, access, mem, expected, replacement, output);
+  CompareExchange64(*this, &access, mem, expected, replacement, output);
 }
 
 void MacroAssembler::wasmCompareExchange64(const wasm::MemoryAccessDesc& access,
@@ -1201,14 +1205,13 @@ void MacroAssembler::wasmCompareExchange64(const wasm::MemoryAccessDesc& access,
                                            Register64 expected,
                                            Register64 replacement,
                                            Register64 output) {
-  WasmCompareExchange64(*this, access, mem, expected, replacement, output);
+  CompareExchange64(*this, &access, mem, expected, replacement, output);
 }
 
 template <typename T>
-static void WasmAtomicExchange64(MacroAssembler& masm,
-                                 const wasm::MemoryAccessDesc& access,
-                                 const T& mem, Register64 value,
-                                 Register64 output) {
+static void AtomicExchange64(MacroAssembler& masm,
+                             const wasm::MemoryAccessDesc* access, const T& mem,
+                             Register64 value, Register64 output) {
   MOZ_ASSERT(value.low == ebx);
   MOZ_ASSERT(value.high == ecx);
   MOZ_ASSERT(output.high == edx);
@@ -1217,9 +1220,18 @@ static void WasmAtomicExchange64(MacroAssembler& masm,
   // edx:eax has garbage initially, and that is the best we can do unless
   // we can guess with high probability what's in memory.
 
+  MOZ_ASSERT(mem.base != edx && mem.base != eax);
+  if constexpr (std::is_same_v<T, BaseIndex>) {
+    MOZ_ASSERT(mem.index != edx && mem.index != eax);
+  } else {
+    static_assert(std::is_same_v<T, Address>);
+  }
+
   Label again;
   masm.bind(&again);
-  masm.append(access, masm.size());
+  if (access) {
+    masm.append(*access, masm.size());
+  }
   masm.lock_cmpxchg8b(edx, eax, ecx, ebx, Operand(mem));
   masm.j(MacroAssembler::NonZero, &again);
 }
@@ -1227,20 +1239,20 @@ static void WasmAtomicExchange64(MacroAssembler& masm,
 void MacroAssembler::wasmAtomicExchange64(const wasm::MemoryAccessDesc& access,
                                           const Address& mem, Register64 value,
                                           Register64 output) {
-  WasmAtomicExchange64(*this, access, mem, value, output);
+  AtomicExchange64(*this, &access, mem, value, output);
 }
 
 void MacroAssembler::wasmAtomicExchange64(const wasm::MemoryAccessDesc& access,
                                           const BaseIndex& mem,
                                           Register64 value, Register64 output) {
-  WasmAtomicExchange64(*this, access, mem, value, output);
+  AtomicExchange64(*this, &access, mem, value, output);
 }
 
 template <typename T>
-static void WasmAtomicFetchOp64(MacroAssembler& masm,
-                                const wasm::MemoryAccessDesc& access,
-                                AtomicOp op, const Address& value, const T& mem,
-                                Register64 temp, Register64 output) {
+static void AtomicFetchOp64(MacroAssembler& masm,
+                            const wasm::MemoryAccessDesc* access, AtomicOp op,
+                            const Address& value, const T& mem, Register64 temp,
+                            Register64 output) {
   // We don't have enough registers for all the operands on x86, so the rhs
   // operand is in memory.
 
@@ -1250,7 +1262,9 @@ static void WasmAtomicFetchOp64(MacroAssembler& masm,
     MOZ_ASSERT(output.high == edx);                        \
     MOZ_ASSERT(temp.low == ebx);                           \
     MOZ_ASSERT(temp.high == ecx);                          \
-    masm.append(access, masm.size());                      \
+    if (access) {                                          \
+      masm.append(*access, masm.size());                   \
+    }                                                      \
     masm.load64(mem, output);                              \
     Label again;                                           \
     masm.bind(&again);                                     \
@@ -1287,14 +1301,14 @@ void MacroAssembler::wasmAtomicFetchOp64(const wasm::MemoryAccessDesc& access,
                                          AtomicOp op, const Address& value,
                                          const Address& mem, Register64 temp,
                                          Register64 output) {
-  WasmAtomicFetchOp64(*this, access, op, value, mem, temp, output);
+  AtomicFetchOp64(*this, &access, op, value, mem, temp, output);
 }
 
 void MacroAssembler::wasmAtomicFetchOp64(const wasm::MemoryAccessDesc& access,
                                          AtomicOp op, const Address& value,
                                          const BaseIndex& mem, Register64 temp,
                                          Register64 output) {
-  WasmAtomicFetchOp64(*this, access, op, value, mem, temp, output);
+  AtomicFetchOp64(*this, &access, op, value, mem, temp, output);
 }
 
 void MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input,
@@ -1459,6 +1473,68 @@ void MacroAssembler::wasmTruncateFloat32ToUInt64(
   if (isSaturating) {
     bind(oolRejoin);
   }
+}
+
+// ========================================================================
+// Primitive atomic operations.
+
+void MacroAssembler::atomicLoad64(const Synchronization&, const Address& mem,
+                                  Register64 temp, Register64 output) {
+  AtomicLoad64(*this, nullptr, mem, temp, output);
+}
+
+void MacroAssembler::atomicLoad64(const Synchronization&, const BaseIndex& mem,
+                                  Register64 temp, Register64 output) {
+  AtomicLoad64(*this, nullptr, mem, temp, output);
+}
+
+void MacroAssembler::atomicStore64(const Synchronization&, const Address& mem,
+                                   Register64 value, Register64 temp) {
+  AtomicExchange64(*this, nullptr, mem, value, temp);
+}
+
+void MacroAssembler::atomicStore64(const Synchronization&, const BaseIndex& mem,
+                                   Register64 value, Register64 temp) {
+  AtomicExchange64(*this, nullptr, mem, value, temp);
+}
+
+void MacroAssembler::compareExchange64(const Synchronization&,
+                                       const Address& mem, Register64 expected,
+                                       Register64 replacement,
+                                       Register64 output) {
+  CompareExchange64(*this, nullptr, mem, expected, replacement, output);
+}
+
+void MacroAssembler::compareExchange64(const Synchronization&,
+                                       const BaseIndex& mem,
+                                       Register64 expected,
+                                       Register64 replacement,
+                                       Register64 output) {
+  CompareExchange64(*this, nullptr, mem, expected, replacement, output);
+}
+
+void MacroAssembler::atomicExchange64(const Synchronization&,
+                                      const Address& mem, Register64 value,
+                                      Register64 output) {
+  AtomicExchange64(*this, nullptr, mem, value, output);
+}
+
+void MacroAssembler::atomicExchange64(const Synchronization&,
+                                      const BaseIndex& mem, Register64 value,
+                                      Register64 output) {
+  AtomicExchange64(*this, nullptr, mem, value, output);
+}
+
+void MacroAssembler::atomicFetchOp64(const Synchronization&, AtomicOp op,
+                                     const Address& value, const Address& mem,
+                                     Register64 temp, Register64 output) {
+  AtomicFetchOp64(*this, nullptr, op, value, mem, temp, output);
+}
+
+void MacroAssembler::atomicFetchOp64(const Synchronization&, AtomicOp op,
+                                     const Address& value, const BaseIndex& mem,
+                                     Register64 temp, Register64 output) {
+  AtomicFetchOp64(*this, nullptr, op, value, mem, temp, output);
 }
 
 // ========================================================================

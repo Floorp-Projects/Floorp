@@ -11477,8 +11477,8 @@ class MAtomicIsLockFree : public MUnaryInstruction,
 
 class MCompareExchangeTypedArrayElement
     : public MQuaternaryInstruction,
-      public MixPolicy<TruncateToInt32Policy<2>,
-                       TruncateToInt32Policy<3>>::Data {
+      public MixPolicy<TruncateToInt32OrToBigIntPolicy<2>,
+                       TruncateToInt32OrToBigIntPolicy<3>>::Data {
   Scalar::Type arrayType_;
 
   explicit MCompareExchangeTypedArrayElement(MDefinition* elements,
@@ -11501,15 +11501,15 @@ class MCompareExchangeTypedArrayElement
   bool isByteArray() const {
     return (arrayType_ == Scalar::Int8 || arrayType_ == Scalar::Uint8);
   }
-  int oldvalOperand() { return 2; }
   Scalar::Type arrayType() const { return arrayType_; }
   AliasSet getAliasSet() const override {
     return AliasSet::Store(AliasSet::UnboxedElement);
   }
 };
 
-class MAtomicExchangeTypedArrayElement : public MTernaryInstruction,
-                                         public TruncateToInt32Policy<2>::Data {
+class MAtomicExchangeTypedArrayElement
+    : public MTernaryInstruction,
+      public TruncateToInt32OrToBigIntPolicy<2>::Data {
   Scalar::Type arrayType_;
 
   MAtomicExchangeTypedArrayElement(MDefinition* elements, MDefinition* index,
@@ -11518,7 +11518,7 @@ class MAtomicExchangeTypedArrayElement : public MTernaryInstruction,
         arrayType_(arrayType) {
     MOZ_ASSERT(elements->type() == MIRType::Elements);
     MOZ_ASSERT(index->type() == MIRType::IntPtr);
-    MOZ_ASSERT(arrayType <= Scalar::Uint32);
+    MOZ_ASSERT(arrayType <= Scalar::Uint32 || Scalar::isBigIntType(arrayType));
     setGuard();  // Not removable
   }
 
@@ -11536,21 +11536,25 @@ class MAtomicExchangeTypedArrayElement : public MTernaryInstruction,
   }
 };
 
-class MAtomicTypedArrayElementBinop : public MTernaryInstruction,
-                                      public TruncateToInt32Policy<2>::Data {
+class MAtomicTypedArrayElementBinop
+    : public MTernaryInstruction,
+      public TruncateToInt32OrToBigIntPolicy<2>::Data {
  private:
   AtomicOp op_;
   Scalar::Type arrayType_;
+  bool forEffect_;
 
   explicit MAtomicTypedArrayElementBinop(AtomicOp op, MDefinition* elements,
                                          MDefinition* index,
                                          Scalar::Type arrayType,
-                                         MDefinition* value)
+                                         MDefinition* value, bool forEffect)
       : MTernaryInstruction(classOpcode, elements, index, value),
         op_(op),
-        arrayType_(arrayType) {
+        arrayType_(arrayType),
+        forEffect_(forEffect) {
     MOZ_ASSERT(elements->type() == MIRType::Elements);
     MOZ_ASSERT(index->type() == MIRType::IntPtr);
+    MOZ_ASSERT(arrayType <= Scalar::Uint32 || Scalar::isBigIntType(arrayType));
     setGuard();  // Not removable
   }
 
@@ -11564,6 +11568,7 @@ class MAtomicTypedArrayElementBinop : public MTernaryInstruction,
   }
   AtomicOp operation() const { return op_; }
   Scalar::Type arrayType() const { return arrayType_; }
+  bool isForEffect() const { return forEffect_; }
   AliasSet getAliasSet() const override {
     return AliasSet::Store(AliasSet::UnboxedElement);
   }

@@ -934,20 +934,18 @@ void nsCSPContext::logToConsole(const char* aName,
 
 /**
  * Strip URI for reporting according to:
- * http://www.w3.org/TR/CSP/#violation-reports
+ * https://w3c.github.io/webappsec-csp/#security-violation-reports
  *
  * @param aURI
- *        The uri to be stripped for reporting
- * @param aSelfURI
- *        The uri of the protected resource
- *        which is needed to enforce the SOP.
- * @return ASCII serialization of the uri to be reported.
+ *        The URI of the blocked resource. In case of a redirect, this it the
+ *        initial URI the request started out with, not the redirected URI.
+ * @return The ASCII serialization of the uri to be reported ignoring
+ *         the ref part of the URI.
  */
-void StripURIForReporting(nsIURI* aURI, nsIURI* aSelfURI,
-                          nsACString& outStrippedURI) {
-  // 1) If the origin of uri is a globally unique identifier (for example,
-  // aURI has a scheme of data, blob, or filesystem), then return the
-  // ASCII serialization of uri’s scheme.
+void StripURIForReporting(nsIURI* aURI, nsACString& outStrippedURI) {
+  // If the origin of aURI is a globally unique identifier (for example,
+  // aURI has a scheme of data, blob, or filesystem), then
+  // return the ASCII serialization of uri’s scheme.
   bool isHttpFtpOrWs =
       (aURI->SchemeIs("http") || aURI->SchemeIs("https") ||
        aURI->SchemeIs("ftp") || aURI->SchemeIs("ws") || aURI->SchemeIs("wss"));
@@ -960,7 +958,7 @@ void StripURIForReporting(nsIURI* aURI, nsIURI* aSelfURI,
     return;
   }
 
-  // Return uri, with any fragment component removed.
+  // Return aURI, with any fragment component removed.
   aURI->GetSpecIgnoringRef(outStrippedURI);
 }
 
@@ -980,7 +978,7 @@ nsresult nsCSPContext::GatherSecurityPolicyViolationEventData(
 
   // document-uri
   nsAutoCString reportDocumentURI;
-  StripURIForReporting(mSelfURI, mSelfURI, reportDocumentURI);
+  StripURIForReporting(mSelfURI, reportDocumentURI);
   CopyUTF8toUTF16(reportDocumentURI, aViolationEventInit.mDocumentURI);
 
   // referrer
@@ -988,17 +986,9 @@ nsresult nsCSPContext::GatherSecurityPolicyViolationEventData(
 
   // blocked-uri
   if (aBlockedURI) {
-    // in case of blocking a browsing context (frame) we have to report
-    // the final URI in case of a redirect. For subresources we report
-    // the URI before redirects.
-    nsCOMPtr<nsIURI> uriToReport;
-    if (aViolatedDirective.EqualsLiteral("frame-src")) {
-      uriToReport = aBlockedURI;
-    } else {
-      uriToReport = aOriginalURI ? aOriginalURI : aBlockedURI;
-    }
     nsAutoCString reportBlockedURI;
-    StripURIForReporting(uriToReport, mSelfURI, reportBlockedURI);
+    StripURIForReporting(aOriginalURI ? aOriginalURI : aBlockedURI,
+                         reportBlockedURI);
     CopyUTF8toUTF16(reportBlockedURI, aViolationEventInit.mBlockedURI);
   } else {
     CopyUTF8toUTF16(aBlockedString, aViolationEventInit.mBlockedURI);
