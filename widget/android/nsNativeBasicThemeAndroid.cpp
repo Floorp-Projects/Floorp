@@ -5,8 +5,10 @@
 
 #include "nsNativeBasicThemeAndroid.h"
 
+#include "mozilla/ClearOnShutdown.h"
+
 already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly() {
-  static StaticRefPtr<nsITheme> gInstance;
+  static mozilla::StaticRefPtr<nsITheme> gInstance;
   if (MOZ_UNLIKELY(!gInstance)) {
     gInstance = new nsNativeBasicThemeAndroid();
     ClearOnShutdown(&gInstance);

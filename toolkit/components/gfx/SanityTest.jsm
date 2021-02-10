@@ -22,14 +22,11 @@ const VIDEO_HEIGHT = 132;
 const DRIVER_PREF = "sanity-test.driver-version";
 const DEVICE_PREF = "sanity-test.device-id";
 const VERSION_PREF = "sanity-test.version";
-const ADVANCED_LAYERS_PREF = "sanity-test.advanced-layers";
 const WEBRENDER_DISABLED_PREF = "sanity-test.webrender.force-disabled";
 const DISABLE_VIDEO_PREF = "media.hardware-video-decoding.failed";
 const RUNNING_PREF = "sanity-test.running";
 const TIMEOUT_SEC = 20;
 
-const AL_ENABLED_PREF = "layers.mlgpu.enabled";
-const AL_TEST_FAILED_PREF = "layers.mlgpu.sanity-test-failed";
 const WR_DISABLED_PREF = "gfx.webrender.force-disabled";
 
 // GRAPHICS_SANITY_TEST histogram enumeration values
@@ -44,7 +41,6 @@ const REASON_FIRST_RUN = 0;
 const REASON_FIREFOX_CHANGED = 1;
 const REASON_DEVICE_CHANGED = 2;
 const REASON_DRIVER_CHANGED = 3;
-const REASON_AL_CONFIG_CHANGED = 4;
 const REASON_WR_CONFIG_CHANGED = 5;
 
 function testPixel(ctx, x, y, r, g, b, a, fuzz) {
@@ -210,11 +206,7 @@ function verifyLayersRendering(ctx) {
 function testCompositor(test, win, ctx) {
   if (win.windowUtils.layerManagerType.startsWith("WebRender")) {
     // When layer manger type is WebRender, drawWindow() is skipped, since
-    // drawWindow() could take long time and
-    // advanced layer is disabled from fallback candidate.
-    if (Services.prefs.getBoolPref(AL_ENABLED_PREF, false)) {
-      Services.prefs.setBoolPref(AL_TEST_FAILED_PREF, true);
-    }
+    // drawWindow() could take long time.
     reportResult(TEST_PASSED);
     return true;
   }
@@ -223,25 +215,12 @@ function testCompositor(test, win, ctx) {
   var testPassed = true;
 
   if (!verifyLayersRendering(ctx)) {
-    // Try disabling advanced layers if it was enabled. Also trigger
-    // a device reset so the screen redraws.
-    if (Services.prefs.getBoolPref(AL_ENABLED_PREF, false)) {
-      Services.prefs.setBoolPref(AL_TEST_FAILED_PREF, true);
-      // Do not need to reset device when WebRender is used.
-      // When WebRender is used, advanced layers are not used.
-      if (test.utils.layerManagerType != "WebRender") {
-        test.utils.triggerDeviceReset();
-      }
-    }
     reportResult(TEST_FAILED_RENDER);
     testPassed = false;
-  } else {
-    Services.prefs.setBoolPref(AL_TEST_FAILED_PREF, false);
-    if (!verifyVideoRendering(ctx)) {
-      reportResult(TEST_FAILED_VIDEO);
-      Services.prefs.setBoolPref(DISABLE_VIDEO_PREF, true);
-      testPassed = false;
-    }
+  } else if (!verifyVideoRendering(ctx)) {
+    reportResult(TEST_FAILED_VIDEO);
+    Services.prefs.setBoolPref(DISABLE_VIDEO_PREF, true);
+    testPassed = false;
   }
 
   if (testPassed) {
@@ -357,7 +336,6 @@ SanityTest.prototype = {
     // gpu or drivers.
     var buildId = Services.appinfo.platformBuildID;
     var gfxinfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
-    var hasAL = Services.prefs.getBoolPref(AL_ENABLED_PREF, false);
     var disableWR = Services.prefs.getBoolPref(WR_DISABLED_PREF, false);
 
     if (Services.prefs.getBoolPref(RUNNING_PREF, false)) {
@@ -408,7 +386,6 @@ SanityTest.prototype = {
       ) &&
       checkPref(DEVICE_PREF, gfxinfo.adapterDeviceID, REASON_DEVICE_CHANGED) &&
       checkPref(VERSION_PREF, buildId, REASON_FIREFOX_CHANGED) &&
-      checkPref(ADVANCED_LAYERS_PREF, hasAL, REASON_AL_CONFIG_CHANGED) &&
       checkPref(WEBRENDER_DISABLED_PREF, disableWR, REASON_WR_CONFIG_CHANGED)
     ) {
       return false;
@@ -420,7 +397,6 @@ SanityTest.prototype = {
     Services.prefs.setStringPref(DRIVER_PREF, gfxinfo.adapterDriverVersion);
     Services.prefs.setStringPref(DEVICE_PREF, gfxinfo.adapterDeviceID);
     Services.prefs.setStringPref(VERSION_PREF, buildId);
-    Services.prefs.setBoolPref(ADVANCED_LAYERS_PREF, hasAL);
     Services.prefs.setBoolPref(WEBRENDER_DISABLED_PREF, disableWR);
 
     // Update the prefs so that this test doesn't run again until the next update.

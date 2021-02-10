@@ -129,6 +129,13 @@ interface BrowsingContext {
 
   [SetterThrows] attribute float textZoom;
 
+  // Override the dots-per-CSS-pixel scaling factor in this BrowsingContext
+  // and all of its descendants. May only be set on the top BC, and should
+  // only be set from the parent process.
+  //
+  // A value of 0.0 causes us to use the global default scaling factor.
+  [SetterThrows] attribute float overrideDPPX;
+
   [SetterThrows] attribute boolean suspendMediaWhenInactive;
 
   // Default value for nsIContentViewer::authorStyleDisabled in any new

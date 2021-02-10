@@ -190,9 +190,6 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
     case nsIGfxInfo::FEATURE_WEBGL2:
       name = BLOCKLIST_PREF_BRANCH "webgl2";
       break;
-    case nsIGfxInfo::FEATURE_ADVANCED_LAYERS:
-      name = BLOCKLIST_PREF_BRANCH "layers.advanced";
-      break;
     case nsIGfxInfo::FEATURE_D3D11_KEYED_MUTEX:
       name = BLOCKLIST_PREF_BRANCH "d3d11.keyed.mutex";
       break;
@@ -407,8 +404,6 @@ static int32_t BlocklistFeatureToGfxFeature(const nsAString& aFeature) {
     return nsIGfxInfo::FEATURE_GPU_PROCESS;
   else if (aFeature.EqualsLiteral("WEBGL2"))
     return nsIGfxInfo::FEATURE_WEBGL2;
-  else if (aFeature.EqualsLiteral("ADVANCED_LAYERS"))
-    return nsIGfxInfo::FEATURE_ADVANCED_LAYERS;
   else if (aFeature.EqualsLiteral("D3D11_KEYED_MUTEX"))
     return nsIGfxInfo::FEATURE_D3D11_KEYED_MUTEX;
   else if (aFeature.EqualsLiteral("WEBRENDER"))
@@ -1281,7 +1276,6 @@ void GfxInfoBase::EvaluateDownloadedBlocklist(
                         nsIGfxInfo::FEATURE_DX_INTEROP2,
                         nsIGfxInfo::FEATURE_GPU_PROCESS,
                         nsIGfxInfo::FEATURE_WEBGL2,
-                        nsIGfxInfo::FEATURE_ADVANCED_LAYERS,
                         nsIGfxInfo::FEATURE_D3D11_KEYED_MUTEX,
                         nsIGfxInfo::FEATURE_WEBRENDER,
                         nsIGfxInfo::FEATURE_WEBRENDER_COMPOSITOR,
@@ -1660,18 +1654,6 @@ void GfxInfoBase::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj) {
 
   gfx::FeatureState& omtp = gfxConfig::GetFeature(gfx::Feature::OMTP);
   InitFeatureObject(aCx, aObj, "omtp", omtp, &obj);
-
-  // Only include AL if the platform attempted to use it.
-  gfx::FeatureState& advancedLayers =
-      gfxConfig::GetFeature(gfx::Feature::ADVANCED_LAYERS);
-  if (advancedLayers.GetValue() != FeatureStatus::Unused) {
-    InitFeatureObject(aCx, aObj, "advancedLayers", advancedLayers, &obj);
-
-    if (gfxConfig::UseFallback(Fallback::NO_CONSTANT_BUFFER_OFFSETTING)) {
-      JS::Rooted<JS::Value> trueVal(aCx, JS::BooleanValue(true));
-      JS_SetProperty(aCx, obj, "noConstantBufferOffsetting", trueVal);
-    }
-  }
 }
 
 bool GfxInfoBase::InitFeatureObject(JSContext* aCx,

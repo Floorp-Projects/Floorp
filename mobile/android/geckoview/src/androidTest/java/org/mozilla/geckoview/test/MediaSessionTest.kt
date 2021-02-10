@@ -540,13 +540,16 @@ class MediaSessionTest : BaseSessionTest() {
                         equalTo(true))
             }
 
-            @AssertCalled(count = 2)
+            @AssertCalled
             override fun onMetadata(
                     session: GeckoSession,
                     mediaSession: MediaSession,
                     meta: MediaSession.Metadata) {
-                onMetadataCalled[0][sessionRule.currentCall.counter - 1]
-                        .complete(null)
+                val count = sessionRule.currentCall.counter
+                if (count < 3) {
+                        // Ignore redundant calls.
+                        onMetadataCalled[0][count - 1].complete(null)
+                }
 
                 assertThat(
                         "Title should match",
@@ -608,13 +611,16 @@ class MediaSessionTest : BaseSessionTest() {
                         equalTo(true))
             }
 
-            @AssertCalled(count = 1)
+            @AssertCalled
             override fun onMetadata(
                     session: GeckoSession,
                     mediaSession: MediaSession,
                     meta: MediaSession.Metadata) {
-                onMetadataCalled[1][sessionRule.currentCall.counter - 1]
-                        .complete(null)
+                val count = sessionRule.currentCall.counter
+                if (count < 2) {
+                        // Ignore redundant calls.
+                        onMetadataCalled[1][0].complete(null)
+                }
 
                 assertThat(
                         "Title should match",

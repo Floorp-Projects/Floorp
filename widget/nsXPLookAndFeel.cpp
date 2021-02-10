@@ -15,6 +15,7 @@
 #include "nsCRT.h"
 #include "nsFont.h"
 #include "nsIXULRuntime.h"
+#include "nsNativeBasicTheme.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -294,6 +295,7 @@ nsXPLookAndFeel* nsXPLookAndFeel::GetInstance() {
     *lnfData = widget::LookAndFeelData{};
   }
 
+  nsNativeBasicTheme::Init();
   return sInstance;
 }
 
@@ -305,6 +307,7 @@ void nsXPLookAndFeel::Shutdown() {
   sShutdown = true;
   delete sInstance;
   sInstance = nullptr;
+  nsNativeBasicTheme::Shutdown();
 }
 
 // static
@@ -1104,7 +1107,10 @@ uint32_t LookAndFeel::GetPasswordMaskDelay() {
 }
 
 // static
-void LookAndFeel::Refresh() { nsLookAndFeel::GetInstance()->RefreshImpl(); }
+void LookAndFeel::Refresh() {
+  nsLookAndFeel::GetInstance()->RefreshImpl();
+  nsNativeBasicTheme::LookAndFeelChanged();
+}
 
 // static
 void LookAndFeel::NativeInit() { nsLookAndFeel::GetInstance()->NativeInit(); }

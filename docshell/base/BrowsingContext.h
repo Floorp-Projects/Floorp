@@ -169,6 +169,7 @@ enum class ExplicitActiveStatus : uint8_t {
   FIELD(FullZoom, float)                                                      \
   FIELD(WatchedByDevToolsInternal, bool)                                      \
   FIELD(TextZoom, float)                                                      \
+  FIELD(OverrideDPPX, float)                                                  \
   /* The current in-progress load. */                                         \
   FIELD(CurrentLoadIdentifier, Maybe<uint64_t>)                               \
   /* See nsIRequest for possible flags. */                                    \
@@ -389,6 +390,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   BrowsingContext* GetParent() const;
   BrowsingContext* Top();
+  const BrowsingContext* Top() const;
   int32_t IndexOf(BrowsingContext* aChild);
 
   // NOTE: Unlike `GetEmbedderWindowGlobal`, `GetParentWindowContext` does not
@@ -489,6 +491,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   float FullZoom() const { return GetFullZoom(); }
   float TextZoom() const { return GetTextZoom(); }
+
+  float OverrideDPPX() const { return Top()->GetOverrideDPPX(); }
 
   bool SuspendMediaWhenInactive() const {
     return GetSuspendMediaWhenInactive();
@@ -935,6 +939,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // And then, we do a pre-order walk in the tree to refresh the
   // volume of all media elements.
   void DidSet(FieldIndex<IDX_Muted>);
+
+  bool CanSet(FieldIndex<IDX_OverrideDPPX>, const float& aValue,
+              ContentParent* aSource);
+  void DidSet(FieldIndex<IDX_OverrideDPPX>, float aOldValue);
 
   bool CanSet(FieldIndex<IDX_EmbedderInnerWindowId>, const uint64_t& aValue,
               ContentParent* aSource);

@@ -72,8 +72,6 @@ class TextureSourceProvider;
 class CompositingRenderTarget;
 struct FPSState;
 class PaintCounter;
-class LayerMLGPU;
-class LayerManagerMLGPU;
 class UiCompositorControllerParent;
 class Layer;
 struct LayerProperties;
@@ -126,7 +124,6 @@ class HostLayerManager : public LayerManager {
   virtual void InvalidateAll() = 0;
 
   HostLayerManager* AsHostLayerManager() override { return this; }
-  virtual LayerManagerMLGPU* AsLayerManagerMLGPU() { return nullptr; }
 
   void ExtractImageCompositeNotifications(
       nsTArray<ImageCompositeNotificationInfo>* aNotifications) {
@@ -550,8 +547,6 @@ class HostLayer {
   virtual LayerComposite* GetFirstChildComposite() { return nullptr; }
 
   virtual Layer* GetLayer() = 0;
-
-  virtual LayerMLGPU* AsLayerMLGPU() { return nullptr; }
 
   virtual bool SetCompositableHost(CompositableHost*) {
     // We must handle this gracefully, see bug 967824

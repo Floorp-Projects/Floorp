@@ -566,7 +566,16 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
         nsAutoCString tmpPath;
         rv = workDir->GetNativePath(tmpPath);
         if (NS_SUCCEEDED(rv)) {
-          policy->AddDir(rdonly, tmpPath.get());
+          bool exists;
+          rv = workDir->Exists(&exists);
+          if (NS_SUCCEEDED(rv)) {
+            if (!exists) {
+              policy->AddPrefix(rdonly, tmpPath.get());
+              policy->AddPath(rdonly, tmpPath.get());
+            } else {
+              policy->AddDir(rdonly, tmpPath.get());
+            }
+          }
         }
       }
     }

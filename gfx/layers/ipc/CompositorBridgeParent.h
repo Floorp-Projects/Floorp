@@ -745,8 +745,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   void CompositeToTarget(VsyncId aId, gfx::DrawTarget* aTarget,
                          const gfx::IntRect* aRect = nullptr) override;
 
-  bool InitializeAdvancedLayers(const nsTArray<LayersBackend>& aBackendHints,
-                                TextureFactoryIdentifier* aOutIdentifier);
   RefPtr<Compositor> NewCompositor(
       const nsTArray<LayersBackend>& aBackendHints);
 

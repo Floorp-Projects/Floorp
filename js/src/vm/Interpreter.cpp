@@ -508,12 +508,6 @@ bool js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args,
 
   /* Invoke native functions. */
   RootedFunction fun(cx, &args.callee().as<JSFunction>());
-  if (construct != CONSTRUCT && fun->isClassConstructor()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_CANT_CALL_CLASS_CONSTRUCTOR);
-    return false;
-  }
-
   if (fun->isNative()) {
     MOZ_ASSERT_IF(construct, !fun->isConstructor());
     JSNative native = fun->native();
@@ -545,6 +539,13 @@ bool js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args,
   // ensure this object has the correct realm.
   AutoRealm ar(cx, state.script());
   if (construct && !MaybeCreateThisForConstructor(cx, args)) {
+    return false;
+  }
+
+  // Calling class constructors throws an error from the callee's realm.
+  if (construct != CONSTRUCT && fun->isClassConstructor()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_CANT_CALL_CLASS_CONSTRUCTOR);
     return false;
   }
 

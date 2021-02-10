@@ -531,6 +531,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
     UpdateEffectiveTextZoom();
   }
   void SetFullZoom(float aZoom);
+  void SetOverrideDPPX(float);
 
  public:
   float GetFullZoom() { return mFullZoom; }
@@ -542,7 +543,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   float GetDeviceFullZoom();
 
   float GetOverrideDPPX() const { return mMediaEmulationData.mDPPX; }
-  void SetOverrideDPPX(float);
 
   /**
    * Recomputes the data dependent on the browsing context, like zoom and text

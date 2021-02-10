@@ -37,8 +37,4 @@ class Emulation extends ContentProcessDomain {
       });
     });
   }
-
-  _setDPPXOverride(dppx) {
-    this.docShell.contentViewer.overrideDPPX = dppx;
-  }
 }
