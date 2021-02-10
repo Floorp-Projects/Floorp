@@ -3223,6 +3223,15 @@ bool RangeAnalysis::truncate() {
         return false;
       }
 
+      // TruncateAfterBailouts keeps the bailout code as-is and
+      // continues with truncated operations, with the expectation
+      // that we are unlikely to bail out. If we do bail out, then we
+      // will set a flag in FinishBailoutToBaseline to prevent eager
+      // truncation when we recompile, to avoid bailout loops.
+      if (kind == TruncateKind::TruncateAfterBailouts) {
+        iter->setBailoutKind(BailoutKind::EagerTruncation);
+      }
+
       iter->truncate();
 
       // Delay updates of inputs/outputs to avoid creating node which
