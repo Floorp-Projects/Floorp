@@ -8,21 +8,11 @@
 #define nsNativeBasicTheme_h
 
 #include "Units.h"
-#include "mozilla/StaticPrefs_layout.h"
-#include "mozilla/ClearOnShutdown.h"
-#include "mozilla/dom/HTMLMeterElement.h"
-#include "mozilla/dom/HTMLProgressElement.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/Types.h"
-#include "nsColorControlFrame.h"
-#include "nsDateTimeControlFrame.h"
-#include "nsDeviceContext.h"
 #include "nsITheme.h"
-#include "nsMeterFrame.h"
 #include "nsNativeTheme.h"
-#include "nsProgressFrame.h"
-#include "nsRangeFrame.h"
 
 namespace mozilla {
 namespace widget {
@@ -52,15 +42,6 @@ static const gfx::sRGBColor sColorGrey60(
     gfx::sRGBColor::UnusualFromARGB(0xff484851));
 static const gfx::sRGBColor sColorGrey60Alpha50(
     gfx::sRGBColor::UnusualFromARGB(0x7f484851));
-
-static const gfx::sRGBColor sColorAccentLight(
-    gfx::sRGBColor::UnusualFromARGB(0x4d008deb));
-static const gfx::sRGBColor sColorAccent(
-    gfx::sRGBColor::UnusualFromARGB(0xff0060df));
-static const gfx::sRGBColor sColorAccentDark(
-    gfx::sRGBColor::UnusualFromARGB(0xff0250bb));
-static const gfx::sRGBColor sColorAccentDarker(
-    gfx::sRGBColor::UnusualFromARGB(0xff054096));
 
 static const gfx::sRGBColor sColorMeterGreen10(
     gfx::sRGBColor::UnusualFromARGB(0xff00ab60));
@@ -141,6 +122,10 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   using LayoutDeviceRect = mozilla::LayoutDeviceRect;
 
  public:
+  static void Init();
+  static void Shutdown();
+  static void LookAndFeelChanged();
+
   using DPIRatio = mozilla::CSSToLayoutDeviceScale;
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -323,6 +308,20 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
       const LayoutDeviceRect& aRect, nsIFrame* aFrame,
       const ComputedStyle& aStyle, const EventStates& aElementState,
       const EventStates& aDocumentState, DPIRatio aDpiRatio);
+
+  static sRGBColor sAccentColor;
+  static sRGBColor sAccentColorForeground;
+
+  // Note that depending on the exact accent color, lighter/darker might really
+  // be inverted.
+  static sRGBColor sAccentColorLight;
+  static sRGBColor sAccentColorDark;
+  static sRGBColor sAccentColorDarker;
+
+  static void PrefChangedCallback(const char*, void*) {
+    RecomputeAccentColors();
+  }
+  static void RecomputeAccentColors();
 };
 
 #endif
