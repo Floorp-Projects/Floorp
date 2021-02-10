@@ -15,7 +15,6 @@ import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 import org.mozilla.fenix.collections.CollectionCreationAction.StepChanged
 import org.mozilla.fenix.components.TabCollectionStorage
-import org.mozilla.fenix.ext.getMediaStateForSession
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.home.Tab
 
@@ -87,12 +86,11 @@ internal fun BrowserState.getTabs(
 ): List<Tab> {
     return tabIds
         ?.mapNotNull { id -> findTab(id) }
-        ?.map { it.toTab(this, publicSuffixList) }
+        ?.map { it.toTab(publicSuffixList) }
         .orEmpty()
 }
 
 private fun TabSessionState.toTab(
-    state: BrowserState,
     publicSuffixList: PublicSuffixList
 ): Tab {
     val url = readerState.activeUrl ?: content.url
@@ -102,8 +100,7 @@ private fun TabSessionState.toTab(
         hostname = url.toShortUrl(publicSuffixList),
         title = content.title,
         selected = null,
-        icon = content.icon,
-        mediaState = state.getMediaStateForSession(this.id)
+        icon = content.icon
     )
 }
 

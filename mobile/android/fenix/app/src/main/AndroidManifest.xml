@@ -232,9 +232,6 @@
         <activity android:name=".settings.account.AuthIntentReceiverActivity"
             android:exported="false" />
 
-        <service android:name=".media.MediaService"
-            android:exported="false" />
-
         <service android:name=".media.MediaSessionService"
             android:exported="false" />
 

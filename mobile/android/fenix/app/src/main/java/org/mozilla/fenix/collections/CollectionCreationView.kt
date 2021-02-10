@@ -19,7 +19,6 @@ import androidx.transition.Transition
 import androidx.transition.TransitionManager
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_collection_creation.*
-import mozilla.components.browser.state.state.MediaState
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.showKeyboard
@@ -197,8 +196,7 @@ class CollectionCreationView(
                     sessionId = tab.id.toString(),
                     url = tab.url,
                     hostname = tab.url.toShortUrl(publicSuffixList),
-                    title = tab.title,
-                    mediaState = MediaState.State.NONE
+                    title = tab.title
                 )
             }.let { tabs ->
                 collectionCreationTabListAdapter.updateData(tabs, tabs.toSet(), true)

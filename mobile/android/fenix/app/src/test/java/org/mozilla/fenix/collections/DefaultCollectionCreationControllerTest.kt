@@ -15,7 +15,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.action.TabListAction
-import mozilla.components.browser.state.state.MediaState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.tab.collections.TabCollection
@@ -80,8 +79,8 @@ class DefaultCollectionCreationControllerTest {
         ).joinBlocking()
 
         val tabs = listOf(
-            Tab("session-1", "", "", "", mediaState = MediaState.State.NONE),
-            Tab("null-session", "", "", "", mediaState = MediaState.State.NONE)
+            Tab("session-1", "", "", ""),
+            Tab("null-session", "", "", "")
         )
 
         controller.saveCollectionName(tabs, "name")
@@ -173,7 +172,7 @@ class DefaultCollectionCreationControllerTest {
         ).joinBlocking()
 
         val tabs = listOf(
-            Tab("session-1", "", "", "", mediaState = MediaState.State.NONE)
+            Tab("session-1", "", "", "")
         )
         val collection = mockk<TabCollection>()
 
