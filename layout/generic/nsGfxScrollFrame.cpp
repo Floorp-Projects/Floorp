@@ -4720,7 +4720,7 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit,
         ScrollPositionUpdate::NewPureRelativeScroll(aOrigin, aMode, delta));
 
     nsIContent* content = mOuter->GetContent();
-    if (!DisplayPortUtils::HasNonMinimalDisplayPort(content)) {
+    if (!DisplayPortUtils::HasNonMinimalNonZeroDisplayPort(content)) {
       if (MOZ_LOG_TEST(sDisplayportLog, LogLevel::Debug)) {
         mozilla::layers::ScrollableLayerGuid::ViewID viewID =
             mozilla::layers::ScrollableLayerGuid::NULL_SCROLL_ID;
@@ -7829,7 +7829,7 @@ void ScrollFrameHelper::ApzSmoothScrollTo(const nsPoint& aDestination,
       ScrollPositionUpdate::NewSmoothScroll(aOrigin, aDestination));
 
   nsIContent* content = mOuter->GetContent();
-  if (!DisplayPortUtils::HasNonMinimalDisplayPort(content)) {
+  if (!DisplayPortUtils::HasNonMinimalNonZeroDisplayPort(content)) {
     // If this frame doesn't have a displayport then there won't be an
     // APZC instance for it and so there won't be anything to process
     // this smooth scroll request. We should set a displayport on this
