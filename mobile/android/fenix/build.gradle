@@ -146,13 +146,6 @@ allprojects {
                     // https://jfrog.com/blog/into-the-sunset-bintray-jcenter-gocenter-and-chartcenter/
                     ////////////////////////////////////////////////////////////////////////////////
 
-                    // Leanplum
-                    // The docs mention a custom repository (repo.leanplum.com) that we may be able
-                    // to switch to.
-                    includeVersion("com.leanplum", "leanplum-core", "5.4.0")
-                    includeVersion("com.leanplum", "leanplum-push", "5.4.0")
-                    includeVersion("com.leanplum", "leanplum-fcm", "5.4.0")
-
                     // Used by Android Gradle Plugin
                     // Issue for publishing to maven central: https://youtrack.jetbrains.com/issue/IDEA-261387
                     // Related plugin issue: https://issuetracker.google.com/issues/179291081
@@ -172,6 +165,18 @@ allprojects {
                     // https://github.com/jraska/Falcon/issues/52
                     includeVersion("com.jraska", "falcon", "2.1.1")
                 }
+            }
+        }
+
+        maven {
+            name "LeanplumRepo"
+            if (project.hasProperty("leanplumRepo")) {
+                url project.property("leanplumRepo")
+            } else {
+                url "https://repo.leanplum.com"
+            }
+            content {
+                includeGroup("com.leanplum")
             }
         }
     }
