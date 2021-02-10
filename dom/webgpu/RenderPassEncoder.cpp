@@ -214,6 +214,37 @@ void RenderPassEncoder::DrawIndexedIndirect(const Buffer& aIndirectBuffer,
   }
 }
 
+void RenderPassEncoder::SetViewport(float x, float y,
+                                    float width, float height,
+                                    float minDepth, float maxDepth) {
+  if (mValid) {
+    ffi::wgpu_render_pass_set_viewport(mPass,
+                                       x, y,
+                                       width, height,
+                                       minDepth, maxDepth);
+  }
+}
+
+void RenderPassEncoder::SetScissorRect(uint32_t x, uint32_t y,
+                                       uint32_t width, uint32_t height) {
+  if (mValid) {
+    ffi::wgpu_render_pass_set_scissor_rect(mPass, x, y, width, height);
+  }
+}
+
+void RenderPassEncoder::SetBlendColor(const dom::DoubleSequenceOrGPUColorDict& color) {
+  if (mValid) {
+    ffi::WGPUColor aColor = ConvertColor(color.GetAsGPUColorDict());
+    ffi::wgpu_render_pass_set_blend_color(mPass, &aColor);
+  }
+}
+
+void RenderPassEncoder::SetStencilReference(uint32_t reference) {
+  if (mValid) {
+    ffi::wgpu_render_pass_set_stencil_reference(mPass, reference);
+  }
+}
+
 void RenderPassEncoder::EndPass(ErrorResult& aRv) {
   if (mValid) {
     mValid = false;
