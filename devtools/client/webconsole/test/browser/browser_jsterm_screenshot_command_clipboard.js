@@ -20,9 +20,6 @@ add_task(async function() {
   await testClipboard(hud);
   await testFullpageClipboard(hud);
   await testSelectorClipboard(hud);
-
-  // overflow
-  await createScrollbarOverflow();
   await testFullpageClipboardScrollbar(hud);
 });
 
@@ -85,6 +82,9 @@ async function testSelectorClipboard(hud) {
 }
 
 async function testFullpageClipboardScrollbar(hud) {
+  info("Test taking a fullpage image that overflows");
+  await createScrollbarOverflow();
+
   const command = `:screenshot --fullpage --clipboard ${dpr}`;
   await executeScreenshotClipboardCommand(hud, command);
   const contentSize = await getContentSize();
@@ -133,6 +133,9 @@ async function createScrollbarOverflow() {
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.document.body.classList.add("overflow");
   });
+
+  // Let's wait for next tick so scrollbars have the time to be rendered
+  await waitForTick();
 }
 
 async function getScrollbarSize() {
