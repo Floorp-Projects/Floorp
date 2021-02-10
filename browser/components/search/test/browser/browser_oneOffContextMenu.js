@@ -23,9 +23,9 @@ add_task(async function init() {
   });
   searchIcon = searchbar.querySelector(".searchbar-search-button");
 
-  await promiseNewEngine(TEST_ENGINE_BASENAME, {
-    setAsCurrent: false,
-  });
+  await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
+  );
 });
 
 add_task(async function telemetry() {

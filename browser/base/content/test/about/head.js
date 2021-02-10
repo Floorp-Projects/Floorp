@@ -2,7 +2,10 @@
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   FormHistory: "resource://gre/modules/FormHistory.jsm",
+  SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
 });
+
+SearchTestUtils.init(this);
 
 function getSecurityInfo(securityInfoAsString) {
   const serhelper = Cc[
@@ -208,32 +211,6 @@ async function promiseContentSearchChange(browser, searchEngineChangeFn) {
       delete content._searchDetails;
     }
   );
-}
-
-/**
- * Wait for the search engine to be added.
- */
-async function promiseNewEngine(basename) {
-  info("Waiting for engine to be added: " + basename);
-  let url = getRootDirectory(gTestPath) + basename;
-  let engine;
-  try {
-    engine = await Services.search.addOpenSearchEngine(url, "");
-  } catch (errCode) {
-    ok(false, "addEngine failed with error code " + errCode);
-    throw errCode;
-  }
-
-  info("Search engine added: " + basename);
-  registerCleanupFunction(async () => {
-    try {
-      await Services.search.removeEngine(engine);
-    } catch (ex) {
-      /* Can't remove the engine more than once */
-    }
-  });
-
-  return engine;
 }
 
 async function waitForBookmarksToolbarVisibility({

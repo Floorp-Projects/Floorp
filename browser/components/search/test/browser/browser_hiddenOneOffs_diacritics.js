@@ -22,7 +22,9 @@ add_task(async function init() {
   searchIcon = searchbar.querySelector(".searchbar-search-button");
 
   let defaultEngine = await Services.search.getDefault();
-  await promiseNewEngine("testEngine_diacritics.xml", { setAsCurrent: false });
+  await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + "testEngine_diacritics.xml"
+  );
   registerCleanupFunction(async () => {
     await Services.search.setDefault(defaultEngine);
     Services.prefs.clearUserPref("browser.search.hiddenOneOffs");

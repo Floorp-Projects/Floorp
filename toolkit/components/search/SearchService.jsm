@@ -1848,13 +1848,10 @@ SearchService.prototype = {
     await this.init();
     let errCode;
     try {
-      var engine = new OpenSearchEngine({
-        uri: engineURL,
-        isAppProvided: false,
-      });
+      var engine = new OpenSearchEngine();
       engine._setIcon(iconURL, false);
       errCode = await new Promise(resolve => {
-        engine._initFromURIAndLoad(engineURL, errorCode => {
+        engine._install(engineURL, errorCode => {
           resolve(errorCode);
         });
       });
@@ -2775,12 +2772,13 @@ var engineUpdateService = {
       }
 
       logConsole.debug("updating", engine.name, updateURI.spec);
-      testEngine = new OpenSearchEngine({
-        uri: updateURI,
-        isAppProvided: false,
-      });
+      testEngine = new OpenSearchEngine();
       testEngine._engineToUpdate = engine;
-      testEngine._initFromURIAndLoad(updateURI);
+      try {
+        testEngine._install(updateURI);
+      } catch (ex) {
+        logConsole.error("Failed to update", engine.name, ex);
+      }
     } else {
       logConsole.debug("invalid updateURI");
     }
