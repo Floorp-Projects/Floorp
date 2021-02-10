@@ -39,7 +39,7 @@ class DoubleToStringConverter {
   // or a requested_digits parameter > kMaxFixedDigitsAfterPoint then the
   // function returns false.
   static const int kMaxFixedDigitsBeforePoint = 308;
-  static const int kMaxFixedDigitsAfterPoint = 60;
+  static const int kMaxFixedDigitsAfterPoint = 100;
 
   // When calling ToExponential with a requested_digits
   // parameter > kMaxExponentialDigits then the function returns false.
