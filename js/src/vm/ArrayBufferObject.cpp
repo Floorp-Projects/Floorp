@@ -985,7 +985,7 @@ size_t ArrayBufferObject::wasmMappedSize() const {
   if (isWasm()) {
     return contents().wasmBuffer()->mappedSize();
   }
-  return byteLength().deprecatedGetUint32();
+  return byteLength().get();
 }
 
 size_t js::WasmArrayBufferMappedSize(const ArrayBufferObjectMaybeShared* buf) {
@@ -999,7 +999,7 @@ Maybe<uint64_t> ArrayBufferObject::wasmMaxSize() const {
   if (isWasm()) {
     return contents().wasmBuffer()->maxSize();
   }
-  return Some<uint64_t>(byteLength().deprecatedGetUint32());
+  return Some<uint64_t>(byteLength().get());
 }
 
 Maybe<uint64_t> js::WasmArrayBufferMaxSize(
