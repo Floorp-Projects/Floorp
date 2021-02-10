@@ -256,7 +256,6 @@ class gfxWindowsPlatform final : public gfxPlatform {
   void InitializeD3D11Config();
   void InitializeD2DConfig();
   void InitializeDirectDrawConfig();
-  void InitializeAdvancedLayersConfig();
 
   void RecordStartupTelemetry();
 

@@ -3111,8 +3111,6 @@ class nsDisplayItem : public nsDisplayItemBase {
 
  protected:
   typedef bool (*PrefFunc)(void);
-  bool ShouldUseAdvancedLayer(LayerManager* aManager, PrefFunc aFunc) const;
-  bool CanUseAdvancedLayer(LayerManager* aManager) const;
   void SetHasHitTestInfo() { mItemFlags += ItemFlag::HasHitTestInfo; }
 
   RefPtr<const DisplayItemClipChain> mClipChain;
