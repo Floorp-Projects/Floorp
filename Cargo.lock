@@ -3105,7 +3105,7 @@ dependencies = [
 [[package]]
 name = "minidump_writer_linux"
 version = "0.1.0"
-source = "git+https://github.com/msirringhaus/minidump_writer_linux.git?rev=7559100418e720f77ee06e1938c0ed08dbbe1c99#7559100418e720f77ee06e1938c0ed08dbbe1c99"
+source = "git+https://github.com/msirringhaus/minidump_writer_linux.git?rev=9191af36343846b2c7ada65b9602b481b717c4d8#9191af36343846b2c7ada65b9602b481b717c4d8"
 dependencies = [
  "byteorder",
  "goblin",
@@ -3114,6 +3114,7 @@ dependencies = [
  "memoffset 0.5.1",
  "nix",
  "tempfile",
+ "thiserror",
 ]
 
 [[package]]
@@ -4474,8 +4475,10 @@ dependencies = [
 name = "rust_minidump_writer_linux"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "libc",
  "minidump_writer_linux",
+ "nsstring",
 ]
 
 [[package]]

@@ -1,11 +1,16 @@
 // This binary shouldn't be under /src, but under /tests, but that is
 // currently not possible (https://github.com/rust-lang/cargo/issues/4356)
 use minidump_writer_linux::linux_ptrace_dumper::{LinuxPtraceDumper, AT_SYSINFO_EHDR};
-use minidump_writer_linux::{linux_ptrace_dumper, Result, LINUX_GATE_LIBRARY_NAME};
+use minidump_writer_linux::{linux_ptrace_dumper, LINUX_GATE_LIBRARY_NAME};
 use nix::sys::mman::{mmap, MapFlags, ProtFlags};
 use nix::unistd::getppid;
 use std::convert::TryInto;
 use std::env;
+use std::error;
+use std::result;
+
+type Error = Box<dyn error::Error + std::marker::Send + std::marker::Sync>;
+pub type Result<T> = result::Result<T, Error>;
 
 macro_rules! test {
     ($x:expr, $errmsg:expr) => {

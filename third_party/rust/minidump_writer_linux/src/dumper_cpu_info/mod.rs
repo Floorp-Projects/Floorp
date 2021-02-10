@@ -12,11 +12,13 @@ pub mod imp;
 
 pub use imp::write_cpu_information;
 
+use crate::errors::MemoryWriterError;
 use crate::minidump_format::{MDOSPlatform, MDRawSystemInfo};
 use crate::sections::write_string_to_location;
-use crate::Result;
 use nix::sys::utsname::uname;
 use std::io::Cursor;
+
+type Result<T> = std::result::Result<T, MemoryWriterError>;
 
 pub fn write_os_information(
     buffer: &mut Cursor<Vec<u8>>,

@@ -43,7 +43,7 @@ fn has_android_packed_relocations(pid: Pid, load_bias: usize, vaddrs: DynVaddres
     let dyn_addr = load_bias + vaddrs.dyn_vaddr;
     for idx in 0..vaddrs.dyn_count {
         let addr = (dyn_addr + SIZEOF_DYN * idx) as *mut c_void;
-        let dyn_data = LinuxPtraceDumper::copy_from_process(pid, addr, SIZEOF_DYN as isize)?;
+        let dyn_data = LinuxPtraceDumper::copy_from_process(pid, addr, SIZEOF_DYN)?;
         // TODO: Couldn't find a nice way to use goblin for that, to avoid the unsafe-block
         let dyn_obj: Dyn;
         unsafe {
@@ -86,7 +86,7 @@ fn parse_loaded_elf_program_headers(
     let phdr_opt = LinuxPtraceDumper::copy_from_process(
         pid,
         phdr_addr as *mut c_void,
-        elf_header::SIZEOF_EHDR as isize * ehdr.e_phnum as isize,
+        elf_header::SIZEOF_EHDR as isize * ehdr.e_phnum,
     );
     if let Ok(ph_data) = phdr_opt {
         // TODO: The original C code doesn't have error-handling here at all.
@@ -123,7 +123,7 @@ pub fn late_process_mappings(pid: Pid, mappings: &mut [MappingInfo]) -> Result<(
         let ehdr_opt = LinuxPtraceDumper::copy_from_process(
             pid,
             map.start_address as *mut c_void,
-            elf_header::SIZEOF_EHDR as isize,
+            elf_header::SIZEOF_EHDR,
         )
         .ok()
         .and_then(|x| elf_header::Header::parse(&x).ok());

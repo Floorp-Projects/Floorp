@@ -1,7 +1,9 @@
+use crate::errors::SectionExceptionStreamError;
 use crate::minidump_format::*;
 use crate::minidump_writer::{CrashingThreadContext, DumpBuf, MinidumpWriter};
 use crate::sections::MemoryWriter;
-use crate::Result;
+
+type Result<T> = std::result::Result<T, SectionExceptionStreamError>;
 
 #[allow(non_camel_case_types, unused)]
 #[repr(u32)]

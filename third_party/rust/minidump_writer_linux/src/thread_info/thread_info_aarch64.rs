@@ -1,6 +1,9 @@
 use super::Pid;
+use crate::errors::ThreadInfoError;
 use crate::minidump_cpu::imp::{MDARM64RegisterNumbers, MD_FLOATINGSAVEAREA_ARM64_FPR_COUNT};
 use libc;
+
+type Result<T> = std::result::Result<T, ThreadInfoError>;
 
 #[cfg(target_arch = "aarch64")]
 #[derive(Debug)]
