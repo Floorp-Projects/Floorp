@@ -55,8 +55,10 @@ mmdebstrap \
   http://snapshot.debian.org/archive/debian/$SNAPSHOT/ \
   --dpkgopt=path-exclude="*" \
   --dpkgopt=path-include="/lib/*" \
+  --dpkgopt=path-include="/lib32/*" \
   --dpkgopt=path-include="/usr/include/*" \
   --dpkgopt=path-include="/usr/lib/*" \
+  --dpkgopt=path-include="/usr/lib32/*" \
   --dpkgopt=path-exclude="/usr/lib/debug/*" \
   --dpkgopt=path-exclude="/usr/lib/valgrind/*" \
   --dpkgopt=path-include="/usr/share/pkgconfig/*" \
