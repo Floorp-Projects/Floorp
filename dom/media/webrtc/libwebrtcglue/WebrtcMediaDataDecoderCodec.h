@@ -31,9 +31,6 @@ class WebrtcMediaDataDecoder : public WebrtcVideoDecoder {
  public:
   explicit WebrtcMediaDataDecoder(nsACString& aCodecMimeType);
 
-  // Implement VideoDecoder interface.
-  uint64_t PluginID() const override { return 0; }
-
   int32_t InitDecode(const webrtc::VideoCodec* codecSettings,
                      int32_t numberOfCores) override;
 

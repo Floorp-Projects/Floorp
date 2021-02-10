@@ -125,8 +125,6 @@ class RefCountedWebrtcVideoEncoder {
 
   // Implement sort of WebrtcVideoEncoder interface and support refcounting.
   // (We cannot use |Release|, since that's needed for nsRefPtr)
-  virtual uint64_t PluginID() const = 0;
-
   virtual int32_t InitEncode(const webrtc::VideoCodec* aCodecSettings,
                              int32_t aNumberOfCores,
                              size_t aMaxPayloadSize) = 0;
@@ -145,6 +143,10 @@ class RefCountedWebrtcVideoEncoder {
 
   virtual int32_t SetRates(uint32_t aNewBitRate, uint32_t aFrameRate) = 0;
 
+  virtual MediaEventSource<uint64_t>* InitPluginEvent() = 0;
+
+  virtual MediaEventSource<uint64_t>* ReleasePluginEvent() = 0;
+
  protected:
   virtual ~RefCountedWebrtcVideoEncoder() = default;
 };
@@ -156,8 +158,6 @@ class WebrtcGmpVideoEncoder : public GMPVideoEncoderCallbackProxy,
 
   // Implement VideoEncoder interface, sort of.
   // (We cannot use |Release|, since that's needed for nsRefPtr)
-  uint64_t PluginID() const override { return mCachedPluginId; }
-
   int32_t InitEncode(const webrtc::VideoCodec* aCodecSettings,
                      int32_t aNumberOfCores, size_t aMaxPayloadSize) override;
 
@@ -174,6 +174,14 @@ class WebrtcGmpVideoEncoder : public GMPVideoEncoderCallbackProxy,
   int32_t SetChannelParameters(uint32_t aPacketLoss, int64_t aRTT) override;
 
   int32_t SetRates(uint32_t aNewBitRate, uint32_t aFrameRate) override;
+
+  MediaEventSource<uint64_t>* InitPluginEvent() override {
+    return &mInitPluginEvent;
+  }
+
+  MediaEventSource<uint64_t>* ReleasePluginEvent() override {
+    return &mReleasePluginEvent;
+  }
 
   // GMPVideoEncoderCallback virtual functions.
   virtual void Terminated() override;
@@ -281,8 +289,11 @@ class WebrtcGmpVideoEncoder : public GMPVideoEncoderCallbackProxy,
   // Protects mCallback
   Mutex mCallbackMutex;
   webrtc::EncodedImageCallback* mCallback;
-  uint64_t mCachedPluginId;
+  Maybe<uint64_t> mCachedPluginId;
   const std::string mPCHandle;
+
+  MediaEventProducer<uint64_t> mInitPluginEvent;
+  MediaEventProducer<uint64_t> mReleasePluginEvent;
 };
 
 // Basically a strong ref to a RefCountedWebrtcVideoEncoder, that also
@@ -300,7 +311,13 @@ class WebrtcVideoEncoderProxy : public WebrtcVideoEncoder {
     RegisterEncodeCompleteCallback(nullptr);
   }
 
-  uint64_t PluginID() const override { return mEncoderImpl->PluginID(); }
+  MediaEventSource<uint64_t>* InitPluginEvent() override {
+    return mEncoderImpl->InitPluginEvent();
+  }
+
+  MediaEventSource<uint64_t>* ReleasePluginEvent() override {
+    return mEncoderImpl->ReleasePluginEvent();
+  }
 
   int32_t InitEncode(const webrtc::VideoCodec* aCodecSettings,
                      const WebrtcVideoEncoder::Settings& aSettings) override {
@@ -337,8 +354,6 @@ class WebrtcGmpVideoDecoder : public GMPVideoDecoderCallbackProxy {
 
   // Implement VideoEncoder interface, sort of.
   // (We cannot use |Release|, since that's needed for nsRefPtr)
-  virtual uint64_t PluginID() const { return mCachedPluginId; }
-
   virtual int32_t InitDecode(const webrtc::VideoCodec* aCodecSettings,
                              int32_t aNumberOfCores);
   virtual int32_t Decode(const webrtc::EncodedImage& aInputImage,
@@ -347,6 +362,12 @@ class WebrtcGmpVideoDecoder : public GMPVideoDecoderCallbackProxy {
       webrtc::DecodedImageCallback* aCallback);
 
   virtual int32_t ReleaseGmp();
+
+  MediaEventSource<uint64_t>* InitPluginEvent() { return &mInitPluginEvent; }
+
+  MediaEventSource<uint64_t>* ReleasePluginEvent() {
+    return &mReleasePluginEvent;
+  }
 
   // GMPVideoDecoderCallbackProxy
   virtual void Terminated() override;
@@ -415,9 +436,12 @@ class WebrtcGmpVideoDecoder : public GMPVideoDecoderCallbackProxy {
   // Protects mCallback
   Mutex mCallbackMutex;
   webrtc::DecodedImageCallback* mCallback;
-  Atomic<uint64_t> mCachedPluginId;
+  Maybe<uint64_t> mCachedPluginId;
   Atomic<GMPErr, ReleaseAcquire> mDecoderStatus;
   const std::string mPCHandle;
+
+  MediaEventProducer<uint64_t> mInitPluginEvent;
+  MediaEventProducer<uint64_t> mReleasePluginEvent;
 };
 
 // Basically a strong ref to a WebrtcGmpVideoDecoder, that also translates
@@ -434,7 +458,13 @@ class WebrtcVideoDecoderProxy : public WebrtcVideoDecoder {
     RegisterDecodeCompleteCallback(nullptr);
   }
 
-  uint64_t PluginID() const override { return mDecoderImpl->PluginID(); }
+  MediaEventSource<uint64_t>* InitPluginEvent() override {
+    return mDecoderImpl->InitPluginEvent();
+  }
+
+  MediaEventSource<uint64_t>* ReleasePluginEvent() override {
+    return mDecoderImpl->ReleasePluginEvent();
+  }
 
   int32_t InitDecode(const webrtc::VideoCodec* aCodecSettings,
                      int32_t aNumberOfCores) override {
