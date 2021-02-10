@@ -30,11 +30,6 @@ var openInspector = async function(hostType) {
   );
   const inspector = toolbox.getPanel("inspector");
 
-  if (inspector._updateProgress) {
-    info("Need to wait for the inspector to update");
-    await inspector.once("inspector-updated");
-  }
-
   const testActor = await getTestActor(toolbox);
 
   return { toolbox, inspector, testActor };
