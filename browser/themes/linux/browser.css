@@ -264,11 +264,13 @@ menuitem.bookmark-item {
   }
 }
 
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 .keyboard-focused-tab > .tab-stack > .tab-content,
 .tabbrowser-tab:focus:not([aria-activedescendant]) > .tab-stack > .tab-content {
   outline: 1px dotted;
   outline-offset: -6px;
 }
+} /*** END !proton ***/
 
 #context_reloadTab {
   list-style-image: url("moz-icon://stock/gtk-refresh?size=menu");
