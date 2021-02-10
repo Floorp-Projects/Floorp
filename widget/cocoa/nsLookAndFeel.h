@@ -50,6 +50,9 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   int32_t mPrefersReducedMotion = -1;
   bool mPrefersReducedMotionCached = false;
 
+  int32_t mUseAccessibilityTheme;
+  bool mUseAccessibilityThemeCached;
+
   nscolor mColorTextSelectBackground;
   nscolor mColorTextSelectBackgroundDisabled;
   nscolor mColorHighlight;
