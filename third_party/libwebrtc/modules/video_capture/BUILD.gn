@@ -88,16 +88,7 @@ if (!build_with_chromium) {
         "strmiids.lib",
         "user32.lib",
       ]
-
-      if (build_with_mozilla) {
-        sources += [
-          "windows/BaseFilter.cpp",
-          "windows/BaseInputPin.cpp",
-          "windows/BasePin.cpp",
-          "windows/MediaType.cpp",
-        ]
-      }
-    }
+   }
 
     if (build_with_mozilla && is_android) {
       include_dirs = [
