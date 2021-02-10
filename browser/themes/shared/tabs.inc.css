@@ -3,19 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
-%filter substitution
-%define horizontalTabPadding 9px
 
 :root {
   --tab-min-height: 33px;
+  --inline-tab-padding: 9px;
 }
 
 @supports -moz-bool-pref("browser.proton.tabs.enabled") {
 :root {
-  --tab-min-height: calc(1.2em + 1.7em); /* line-heights of both lines of text when visible */
+  --tab-min-height: 36px;
   --proton-tab-radius: 4px;
   --proton-shadow-blur-radius: 6px;
-  --proton-tab-block-margin: 2px;
+  --proton-tab-block-margin: 4px;
+  --inline-tab-padding: 12.5px;
 }
 } /*** END proton ***/
 
@@ -60,12 +60,13 @@
   min-height: var(--tab-min-height);
 }
 
+.tab-background,
 .tab-stack {
   min-height: inherit;
 }
 
 @supports -moz-bool-pref("browser.proton.tabs.enabled") {
-#tabbrowser-arrowscrollbox::part(scrollbox) {
+#tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox::part(scrollbox) {
   /* Add padding to match the shadow's blur radius so the
     shadow doesn't get clipped when either the first or
     last tab is selected */
@@ -101,6 +102,15 @@
 .tabbrowser-tab {
   border-radius: var(--proton-tab-radius);
   min-height: var(--tab-min-height);
+  margin-inline: 2px !important;
+}
+
+.tabbrowser-tab[first-visible-tab] {
+  margin-inline-start: 0 !important;
+}
+
+.tabbrowser-tab[last-visible-tab] {
+  margin-inline-end: 0 !important;
 }
 
 /* tabbrowser-tab keyboard focus */
@@ -120,7 +130,7 @@
 }
 
 .tab-content {
-  padding: 0 @horizontalTabPadding@;
+  padding: 0 var(--inline-tab-padding);
 }
 
 :root:not([uidensity=compact]) .tab-content[pinned] {
@@ -190,16 +200,13 @@
   }
 }
 
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 .tab-throbber,
 .tab-icon-pending,
 .tab-icon-image,
+.tab-icon-sound,
 .tab-sharing-icon-overlay,
 .tab-close-button {
-  margin-top: 1px;
-}
-
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
-.tab-icon-sound {
   margin-top: 1px;
 }
 } /*** END !proton ***/
@@ -213,12 +220,23 @@
   width: 16px;
 }
 
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 .tab-throbber:not([pinned]),
 .tab-sharing-icon-overlay:not([pinned]),
 .tab-icon-pending:not([pinned]),
 .tab-icon-image:not([pinned]) {
   margin-inline-end: 6px;
 }
+} /*** END !proton ***/
+
+@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+.tab-throbber:not([pinned]),
+.tab-sharing-icon-overlay:not([pinned]),
+.tab-icon-pending:not([pinned]),
+.tab-icon-image:not([pinned]) {
+  margin-inline-end: 5.5px;
+}
+} /*** END proton ***/
 
 @media (prefers-reduced-motion: reduce) {
   .tab-throbber[busy] {
@@ -429,19 +447,34 @@
 
 .tab-label {
   margin-inline: 0;
+}
+
+.tab-close-button {
+  -moz-context-properties: fill, fill-opacity, stroke-opacity;
+  stroke-opacity: var(--toolbarbutton-icon-fill-opacity);
+}
+
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+.tab-label {
   /* Maintain consistent alignment in case of font fallback for non-Latin characters. */
   line-height: 1.7em;
 }
 
 .tab-close-button {
   margin-inline-end: -2px;
-  -moz-context-properties: fill, fill-opacity, stroke-opacity;
-  stroke-opacity: var(--toolbarbutton-icon-fill-opacity);
 }
+} /*** END !proton ***/
+
+@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+.tab-close-button {
+  margin-inline-end: 0;
+  width: 16px;
+}
+} /*** END proton ***/
 
 :root[uidensity=touch] .tab-close-button {
-  margin-inline-end: -@horizontalTabPadding@;
-  padding: 10px calc(@horizontalTabPadding@ - 2px);
+  margin-inline-end: calc(-1 * var(--inline-tab-padding));
+  padding: 10px calc(var(--inline-tab-padding) - 2px);
 }
 
 @supports not -moz-bool-pref("browser.proton.tabs.enabled") {
@@ -466,18 +499,26 @@
 }
 
 .tab-icon-sound {
-  font-size: .9em;
-  line-height: 1.2em;
   -moz-box-align: center;
+  font-size: .75em;
+}
+
+.tab-icon-sound-image,
+.tab-icon-sound-label {
+  /* Set height back to equivalent of parent's 1em based
+     on the .tab-icon-sound having a reduced font-size */
+  height: 1.3333em;
 }
 
 .tab-icon-sound-image {
-  margin-block: 1px;
-  width: 16px;
-  height: 16px;
   padding: 0;
   -moz-context-properties: fill;
   fill: currentColor;
+}
+
+.tab-icon-sound-label {
+  margin: 0;
+  padding-inline-start: 3px;
 }
 } /*** END proton ***/
 
@@ -641,6 +682,10 @@
 .tabbrowser-tab[visuallyselected=true] > .tab-stack > .tab-background {
   box-shadow: 0 2px var(--proton-shadow-blur-radius) rgba(58,57,68,.2);
 }
+
+.tabbrowser-tab[visuallyselected=true] > .tab-stack > .tab-background:-moz-lwtheme-brighttext {
+  box-shadow: 0 2px var(--proton-shadow-blur-radius) rgba(58,57,68,.1);
+}
 } /*** END proton ***/
 
 %ifdef MENUBAR_CAN_AUTOHIDE
@@ -733,6 +778,7 @@
 
 /* Pinned tabs */
 
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 /* Pinned tab separators need position: absolute when positioned (during overflow). */
 #tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned]::after {
   display: block;
@@ -744,6 +790,7 @@
 #tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned] > .tab-stack {
   border-inline-end: 1px solid transparent;
 }
+} /*** END !proton ***/
 
 .tabbrowser-tab:is([image], [pinned]) > .tab-stack > .tab-content[attention]:not([selected="true"]),
 .tabbrowser-tab > .tab-stack > .tab-content[pinned][titlechanged]:not([selected="true"]) {

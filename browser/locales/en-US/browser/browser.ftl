@@ -354,8 +354,10 @@ browser-window-close-button =
 
 ## Tab actions
 
-browser-tab-audio-playing = Playing
-browser-tab-audio-muted = Muted
+# This label should be written in all capital letters if your locale supports them.
+browser-tab-audio-playing2 = PLAYING
+# This label should be written in all capital letters if your locale supports them.
+browser-tab-audio-muted2 = MUTED
 # This label should be written in all capital letters if your locale supports them.
 browser-tab-audio-blocked = AUTOPLAY BLOCKED
 # This label should be written in all capital letters if your locale supports them.
