@@ -86,7 +86,6 @@ toolkit.jar:
   skin/classic/global/illustrations/about-rights.svg       (../../shared/illustrations/about-rights.svg)
   skin/classic/global/icons/blocked.svg                    (../../shared/incontent-icons/blocked.svg)
   skin/classic/global/illustrations/about-license.svg      (../../shared/illustrations/about-license.svg)
-  skin/classic/global/menus/submenu.svg                    (../../shared/icons/menus/submenu.svg)
   skin/classic/global/narrate.css                          (../../shared/narrate.css)
   skin/classic/global/narrate/arrow.svg                    (../../shared/narrate/arrow.svg)
   skin/classic/global/narrate/back.svg                     (../../shared/narrate/back.svg)
