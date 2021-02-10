@@ -42,8 +42,10 @@ const setOverrideDPPX = (value) => {
     info(`restore window's dppx to default value`);
   }
 
-  SpecialPowers.setOverrideDPPX(window, value);
-}
+  return SpecialPowers.spawnChrome([value], dppx => {
+    browsingContext.top.overrideDPPX = dppx;
+  });
+};
 
 const setFullZoom = (value) => {
   info(`set window's fullZoom to ${value}`);
@@ -95,17 +97,17 @@ const waitForMediaQueryListEvent = (mediaQueryList) => {
 }
 
 const gTests = {
-  "test overrideDPPX with devicePixelRatio": (done) => {
+  "test overrideDPPX with devicePixelRatio": async (done) => {
     assertValuesAreInitial();
 
-    setOverrideDPPX(dppx);
+    await setOverrideDPPX(dppx);
 
     is(window.devicePixelRatio, dppx,
       "devicePixelRatio overridden.");
     is(frameWindow.devicePixelRatio, dppx,
       "frame's devicePixelRatio overridden.");
 
-    setOverrideDPPX(0);
+    await setOverrideDPPX(0);
 
     is(window.devicePixelRatio, originalDPR,
       "devicePixelRatio back to default.");
@@ -114,18 +116,18 @@ const gTests = {
 
     done();
   },
-  "test overrideDPPX with devicePixelRatio and fullZoom": (done) => {
+  "test overrideDPPX with devicePixelRatio and fullZoom": async (done) => {
     assertValuesAreInitial();
 
     setFullZoom(zoom);
-    setOverrideDPPX(dppx);
+    await setOverrideDPPX(dppx);
 
     is(window.devicePixelRatio, dppx,
       "devicePixelRatio overridden; fullZoom ignored");
     is(frameWindow.devicePixelRatio, dppx,
       "frame's devicePixelRatio overridden; fullZoom ignored");
 
-    setOverrideDPPX(0);
+    await setOverrideDPPX(0);
 
     is(window.devicePixelRatio, originalDPR * zoom,
       "devicePixelRatio now is affected by fullZoom");
@@ -144,7 +146,7 @@ const gTests = {
     done();
 
   },
-  "test overrideDPPX with media queries": (done) => {
+  "test overrideDPPX with media queries": async (done) => {
     assertValuesAreInitial();
 
     let frameDoc = frameWindow.document;
@@ -163,7 +165,7 @@ const gTests = {
     is(frameCurrentFontSize, frameOriginalFontSize,
       "frame's media queries are not applied yet");
 
-    setOverrideDPPX(dppx);
+    await setOverrideDPPX(dppx);
 
     currentFontSize = getBodyFontSize(window);
     frameCurrentFontSize = getBodyFontSize(frameWindow);
@@ -178,7 +180,7 @@ const gTests = {
     is(frameCurrentFontSize, "32px",
       "frame's font size has the expected value.");
 
-    setOverrideDPPX(0);
+    await setOverrideDPPX(0);
 
     currentFontSize = getBodyFontSize(window);
     frameCurrentFontSize = getBodyFontSize(frameWindow);
@@ -193,7 +195,7 @@ const gTests = {
 
     done();
   },
-  "test overrideDPPX with media queries and fullZoom": (done) => {
+  "test overrideDPPX with media queries and fullZoom": async (done) => {
     assertValuesAreInitial();
 
     let frameDoc = frameWindow.document;
@@ -215,7 +217,7 @@ const gTests = {
       "frame's media queries are not applied yet");
 
     setFullZoom(zoom);
-    setOverrideDPPX(dppx);
+    await setOverrideDPPX(dppx);
 
     currentFontSize = getBodyFontSize(window);
     frameCurrentFontSize = getBodyFontSize(frameWindow);
@@ -224,7 +226,7 @@ const gTests = {
     is(frameCurrentFontSize, "32px",
       "frame's media queries are applied for overridden DDPX; fullZoom ignored.");
 
-    setOverrideDPPX(0);
+    await setOverrideDPPX(0);
 
     currentFontSize = getBodyFontSize(window);
     frameCurrentFontSize = getBodyFontSize(frameWindow);
@@ -262,7 +264,7 @@ const gTests = {
 
     setOverrideDPPX(dppx);
   },
-  "test OverrideDPPX with MediaQueryList and fullZoom": (done) => {
+  "test OverrideDPPX with MediaQueryList and fullZoom": async (done) => {
     assertValuesAreInitial();
 
     let promises = [
@@ -272,7 +274,7 @@ const gTests = {
         window.matchMedia(`(resolution: ${originalDPR * zoom}dppx)`)),
     ];
 
-    setOverrideDPPX(dppx);
+    await setOverrideDPPX(dppx);
     setFullZoom(zoom);
 
     promises[0]
@@ -281,7 +283,7 @@ const gTests = {
       .then(() => setFullZoom(originalZoom))
       .then(done, e => {throw e});
   },
-  "test OverrideDPPX is kept on document navigation": (done) => {
+  "test OverrideDPPX is kept on document navigation": async (done) => {
     assertValuesAreInitial();
 
     let frameOriginalFontSize = getBodyFontSize(frameWindow);
@@ -291,7 +293,7 @@ const gTests = {
     is(frameCurrentFontSize, frameOriginalFontSize,
       "frame's media queries are not applied yet");
 
-    setOverrideDPPX(dppx);
+    await setOverrideDPPX(dppx);
 
     frameCurrentFontSize = getBodyFontSize(frameWindow);
 
@@ -302,7 +304,7 @@ const gTests = {
     is(frameCurrentFontSize, "32px",
       "frame's font size has the expected value.");
 
-    frameWindow.frameElement.addEventListener("load", function() {
+    frameWindow.frameElement.addEventListener("load", async function() {
       frameStyle = createFontStyleForDPPX(frameWindow.document, dppx, "32");
 
       frameCurrentFontSize = getBodyFontSize(frameWindow);
@@ -316,7 +318,7 @@ const gTests = {
 
       frameStyle.remove();
 
-      setOverrideDPPX(0);
+      await setOverrideDPPX(0);
 
       done();
     }, {once: true});
@@ -343,28 +345,28 @@ const gTests = {
     // so that the first override will always trigger a load.
     isnot(originalDPR, 8, "originalDPR differs from final test value");
     loaded = new Promise(resolve => image.onload = resolve);
-    setOverrideDPPX(8);
+    await setOverrideDPPX(8);
     await loaded;
 
     is(image.currentSrc, imageSets["8x"],
       "Image is properly set for 8dppx.");
 
     loaded = new Promise(resolve => image.onload = resolve);
-    setOverrideDPPX(1);
+    await setOverrideDPPX(1);
     await loaded;
 
     is(image.currentSrc, imageSets["1x"],
       "Image url is properly set for 1dppx.");
 
     loaded = new Promise(resolve => image.onload = resolve);
-    setOverrideDPPX(1.5);
+    await setOverrideDPPX(1.5);
     await loaded;
 
     is(image.currentSrc, imageSets["1.5x"],
       "Image url is properly set for 1.5dppx.");
 
     loaded = new Promise(resolve => image.onload = resolve);
-    setOverrideDPPX(2);
+    await setOverrideDPPX(2);
     await loaded;
 
     is(image.currentSrc, imageSets["2x"],
@@ -374,14 +376,14 @@ const gTests = {
     // so that resetting to the default will always trigger a load.
     isnot(originalDPR, 8, "originalDPR differs from final test value");
     loaded = new Promise(resolve => image.onload = resolve);
-    setOverrideDPPX(8);
+    await setOverrideDPPX(8);
     await loaded;
 
     is(image.currentSrc, imageSets["8x"],
       "Image is properly set for 8dppx.");
 
     loaded = new Promise(resolve => image.onload = resolve);
-    setOverrideDPPX(0);
+    await setOverrideDPPX(0);
     await loaded;
 
     is(image.currentSrc, originalSrc,

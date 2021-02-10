@@ -1072,19 +1072,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
    * highlighter features correctly.
    */
   get pixelRatio() {
-    const { contentViewer } = this.targetActor.docShell;
-    const { windowUtils } = this.rootWin;
-    const overrideDPPX = contentViewer.overrideDPPX;
-    let ratio;
-    if (overrideDPPX) {
-      contentViewer.overrideDPPX = 0;
-      ratio = windowUtils.screenPixelsPerCSSPixel;
-      contentViewer.overrideDPPX = overrideDPPX;
-    } else {
-      ratio = windowUtils.screenPixelsPerCSSPixel;
-    }
-
-    return ratio;
+    return this.rootWin.windowUtils.screenPixelsPerCSSPixelNoOverride;
   },
 
   /**
