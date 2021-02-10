@@ -74,6 +74,7 @@ TestParams.prototype = {
   testShortArray: f_is,
   testDoubleArray: f_is,
   testStringArray: f_is,
+  testByteArrayOptionalLength(arr) { return arr.length; },
   testWstringArray: f_is,
   testInterfaceArray: f_is,
   testJsvalArray: f_is,
