@@ -58,10 +58,7 @@
 }
 
 %if defined(XP_MACOSX) || defined(XP_WIN)
-%ifdef XP_WIN
-@media (-moz-windows-default-theme) {
-%endif
-
+@media not (prefers-contrast) {
 .customizationmode-button {
   border: 1px solid #b1b1b1;
   border-radius: 2px;
@@ -144,10 +141,7 @@
 .customizationmode-button[disabled="true"] {
   opacity: .5;
 }
-
-%ifdef XP_WIN
-} /* @media (-moz-windows-default-theme) */
-%endif
+}
 %endif /* defined(XP_MACOSX) || defined(XP_WIN) */
 
 .customizationmode-button > .box-inherit > .box-inherit > .button-icon,
