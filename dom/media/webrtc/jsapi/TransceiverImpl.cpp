@@ -73,8 +73,6 @@ TransceiverImpl::TransceiverImpl(
     return;
   }
 
-  mConduit->SetPCHandle(mPCHandle);
-
   mReceiver = new RTCRtpReceiver(aWindow, aPrivacyNeeded, aPCHandle,
                                  aTransportHandler, aJsepTransceiver,
                                  aMainThread, aStsThread, mConduit, this);
@@ -145,7 +143,7 @@ void TransceiverImpl::InitAudio() {
 }
 
 void TransceiverImpl::InitVideo() {
-  mConduit = VideoSessionConduit::Create(mCallWrapper, mStsThread);
+  mConduit = VideoSessionConduit::Create(mCallWrapper, mStsThread, mPCHandle);
 
   if (!mConduit) {
     MOZ_MTLOG(ML_ERROR, mPCHandle << "[" << mMid << "]: " << __FUNCTION__
@@ -465,7 +463,6 @@ void TransceiverImpl::SyncWithJS(dom::RTCRtpTransceiver& aJsTransceiver,
 
   if (mJsepTransceiver->mSendTrack.SetJsConstraints(constraints)) {
     if (mTransmitPipeline->Transmitting()) {
-      WebrtcGmpPCHandleSetter setter(mPCHandle);
       DebugOnly<nsresult> rv = UpdateConduit();
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }

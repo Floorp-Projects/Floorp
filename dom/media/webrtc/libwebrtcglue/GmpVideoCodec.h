@@ -12,8 +12,8 @@ class WebrtcVideoEncoder;
 
 class GmpVideoCodec {
  public:
-  static WebrtcVideoEncoder* CreateEncoder();
-  static WebrtcVideoDecoder* CreateDecoder();
+  static WebrtcVideoEncoder* CreateEncoder(std::string aPCHandle);
+  static WebrtcVideoDecoder* CreateDecoder(std::string aPCHandle);
 };
 
 }  // namespace mozilla
