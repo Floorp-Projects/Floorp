@@ -1,6 +1,6 @@
 use crate::auxv_reader::AuxvType;
+use crate::errors::MapsReaderError;
 use crate::thread_info::Pid;
-use crate::Result;
 use byteorder::{NativeEndian, ReadBytesExt};
 use goblin::elf;
 use memmap::{Mmap, MmapOptions};
@@ -13,6 +13,8 @@ pub const LINUX_GATE_LIBRARY_NAME: &'static str = "linux-gate.so";
 pub const DELETED_SUFFIX: &'static str = " (deleted)";
 pub const MOZILLA_IPC_PREFIX: &'static str = "org.mozilla.ipc.";
 pub const RESERVED_FLAGS: &'static str = " ---p";
+
+type Result<T> = std::result::Result<T, MapsReaderError>;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct SystemMappingInfo {
@@ -98,12 +100,24 @@ impl MappingInfo {
             })
             .map(str::trim);
 
-        let address = splits.next().ok_or("maps malformed: No address found")?;
-        let perms = splits.next().ok_or("maps malformed: No perms found")?;
-        let mut offset =
-            usize::from_str_radix(splits.next().ok_or("maps malformed: No offset found")?, 16)?;
-        let _dev = splits.next().ok_or("maps malformed: No dev found")?;
-        let _inode = splits.next().ok_or("maps malformed: No inode found")?;
+        let address = splits
+            .next()
+            .ok_or(MapsReaderError::MapEntryMalformed("address"))?;
+        let perms = splits
+            .next()
+            .ok_or(MapsReaderError::MapEntryMalformed("permissions"))?;
+        let mut offset = usize::from_str_radix(
+            splits
+                .next()
+                .ok_or(MapsReaderError::MapEntryMalformed("offset"))?,
+            16,
+        )?;
+        let _dev = splits
+            .next()
+            .ok_or(MapsReaderError::MapEntryMalformed("dev"))?;
+        let _inode = splits
+            .next()
+            .ok_or(MapsReaderError::MapEntryMalformed("inode"))?;
         let mut pathname = splits.next(); // Optional
 
         // Due to our ugly `splitn_whitespace()` hack from above, we might have
@@ -186,7 +200,9 @@ impl MappingInfo {
 
     pub fn get_mmap(name: &Option<String>, offset: usize) -> Result<Mmap> {
         if !MappingInfo::is_mapped_file_safe_to_open(&name) {
-            return Err("Not safe to open mapping".into());
+            return Err(MapsReaderError::NotSafeToOpenMapping(
+                name.clone().unwrap_or_default(),
+            ));
         }
 
         // Not doing this as root_prefix is always "" at the moment
@@ -194,14 +210,13 @@ impl MappingInfo {
         let filename = name.clone().unwrap_or(String::new());
         let mapped_file = unsafe {
             MmapOptions::new()
-                .offset(offset.try_into()?)
+                .offset(offset.try_into()?) // try_into() to work for both 32 and 64 bit
                 .map(&File::open(filename)?)?
         };
 
         if mapped_file.is_empty() || mapped_file.len() < elf::header::SELFMAG {
-            return Err("mmap failed".into());
+            return Err(MapsReaderError::MmapSanityCheckFailed);
         }
-
         Ok(mapped_file)
     }
 
@@ -221,7 +236,10 @@ impl MappingInfo {
         //   return false;
 
         if link_path != PathBuf::from(path) {
-            return Err("symlink does not match".into());
+            return Err(MapsReaderError::SymlinkError(
+                PathBuf::from(path),
+                link_path,
+            ));
         }
 
         // Check to see if someone actually named their executable 'foo (deleted)'.
@@ -289,7 +307,9 @@ impl MappingInfo {
 
         let elf_obj = elf::Elf::parse(&mapped_file)?;
 
-        let soname = elf_obj.soname.ok_or("No soname found")?;
+        let soname = elf_obj.soname.ok_or(MapsReaderError::NoSoName(
+            self.name.clone().unwrap_or("None".to_string()),
+        ))?;
         Ok(soname.to_string())
     }
 

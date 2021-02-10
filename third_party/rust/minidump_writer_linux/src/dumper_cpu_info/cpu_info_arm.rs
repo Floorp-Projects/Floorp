@@ -1,9 +1,12 @@
 use crate::cpu_set::*;
+use crate::errors::CpuInfoError;
 use crate::minidump_format::*;
 use crate::Result;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path;
+
+type Result<T> = std::result::Result<T, CpuInfoError>;
 
 struct CpuInfoEntry {
     field: &'static str,

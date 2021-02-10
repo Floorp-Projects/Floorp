@@ -1,9 +1,11 @@
+use crate::errors::SectionMappingsError;
 use crate::linux_ptrace_dumper::LinuxPtraceDumper;
 use crate::maps_reader::MappingInfo;
 use crate::minidump_format::*;
 use crate::minidump_writer::{DumpBuf, MinidumpWriter};
 use crate::sections::{write_string_to_location, MemoryArrayWriter, MemoryWriter};
-use crate::Result;
+
+type Result<T> = std::result::Result<T, SectionMappingsError>;
 
 /// Write information about the mappings in effect. Because we are using the
 /// minidump format, the information about the mappings is pretty limited.
@@ -89,7 +91,9 @@ fn fill_raw_module(
         cv_record = sig_section.location();
     }
 
-    let (file_path, _) = mapping.get_mapping_effective_name_and_path()?;
+    let (file_path, _) = mapping
+        .get_mapping_effective_name_and_path()
+        .map_err(|e| SectionMappingsError::GetEffectivePathError(mapping.clone(), e))?;
     let name_header = write_string_to_location(buffer, &file_path)?;
 
     Ok(MDRawModule {

@@ -306,6 +306,11 @@ DOMIPCEnabled:
     Set to 1 when a tab is running in a content process
   type: boolean
 
+DumperError:
+  description: >
+    Error message of the minidump writer, in case there was an error during dumping.
+  type: string
+
 EMCheckCompatibility:
   description: >
     Set to 1 if add-on compatibility checking is enabled.

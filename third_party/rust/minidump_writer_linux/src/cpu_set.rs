@@ -1,7 +1,9 @@
-use crate::Result;
+use crate::errors::CpuSetError;
 use core::mem::size_of;
 use std::fs::File;
 use std::io::Read;
+
+pub type Result<T> = std::result::Result<T, CpuSetError>;
 
 type MaskWordType = u32;
 const MAX_CPUS: usize = 1024;
@@ -29,7 +31,6 @@ impl CpuSet {
     }
 
     pub fn set_bit(&mut self, idx: usize) {
-        println!("Setting2 {}", idx);
         if idx < MAX_CPUS {
             self.mask[idx / MASK_WORD_BITS] |= 1 << (idx % MASK_WORD_BITS);
         }
@@ -64,7 +65,7 @@ impl CpuSet {
                     }
                 }
                 _ => {
-                    return Err(format!("Unparsable cores: {:?}", cores).into());
+                    return Err(CpuSetError::UnparsableCores(format!("{:?}", cores)));
                 }
             }
         }

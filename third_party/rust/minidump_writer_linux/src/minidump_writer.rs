@@ -1,12 +1,12 @@
 use crate::app_memory::AppMemoryList;
 use crate::crash_context::CrashContext;
 use crate::dso_debug;
+use crate::errors::{FileWriterError, InitError, MemoryWriterError, WriterError};
 use crate::linux_ptrace_dumper::LinuxPtraceDumper;
 use crate::maps_reader::{MappingInfo, MappingList};
 use crate::minidump_format::*;
 use crate::sections::*;
 use crate::thread_info::Pid;
-use crate::Result;
 use std::io::{Cursor, Read, Seek, SeekFrom, Write};
 
 pub type DumpBuf = Cursor<Vec<u8>>;
@@ -28,7 +28,11 @@ impl<'a, W> DirSection<'a, W>
 where
     W: Write + Seek,
 {
-    fn new(buffer: &mut DumpBuf, index_length: u32, destination: &'a mut W) -> Result<Self> {
+    fn new(
+        buffer: &mut DumpBuf,
+        index_length: u32,
+        destination: &'a mut W,
+    ) -> std::result::Result<Self, FileWriterError> {
         let dir_section =
             MemoryArrayWriter::<MDRawDirectory>::alloc_array(buffer, index_length as usize)?;
         Ok(DirSection {
@@ -44,7 +48,11 @@ where
         self.section.position
     }
 
-    fn dump_dir_entry(&mut self, buffer: &mut DumpBuf, dirent: MDRawDirectory) -> Result<()> {
+    fn dump_dir_entry(
+        &mut self,
+        buffer: &mut DumpBuf,
+        dirent: MDRawDirectory,
+    ) -> std::result::Result<(), FileWriterError> {
         self.section.set_value_at(buffer, dirent, self.curr_idx)?;
 
         // Now write it to file
@@ -75,7 +83,7 @@ where
         &mut self,
         buffer: &mut DumpBuf,
         dirent: Option<MDRawDirectory>,
-    ) -> Result<()> {
+    ) -> std::result::Result<(), FileWriterError> {
         if let Some(dirent) = dirent {
             self.dump_dir_entry(buffer, dirent)?;
         }
@@ -116,6 +124,8 @@ pub struct MinidumpWriter {
 //     file.write_all(&bytes)?;
 //     Ok(())
 // }
+
+type Result<T> = std::result::Result<T, WriterError>;
 
 impl MinidumpWriter {
     pub fn new(process: Pid, blamed_thread: Pid) -> Self {
@@ -183,7 +193,7 @@ impl MinidumpWriter {
             }
 
             if !self.crash_thread_references_principal_mapping(&dumper) {
-                return Err("!crash_thread_references_principal_mapping".into());
+                return Err(InitError::PrincipalMappingNotReferenced.into());
             }
         }
 
@@ -235,7 +245,7 @@ impl MinidumpWriter {
         let stack_copy = match LinuxPtraceDumper::copy_from_process(
             self.blamed_thread,
             stack_ptr as *mut libc::c_void,
-            stack_len as isize,
+            stack_len,
         ) {
             Ok(x) => x,
             Err(_) => {
@@ -393,7 +403,11 @@ impl MinidumpWriter {
         Ok(())
     }
 
-    fn write_file(&self, buffer: &mut DumpBuf, filename: &str) -> Result<MDLocationDescriptor> {
+    fn write_file(
+        &self,
+        buffer: &mut DumpBuf,
+        filename: &str,
+    ) -> std::result::Result<MDLocationDescriptor, MemoryWriterError> {
         let mut file = std::fs::File::open(std::path::PathBuf::from(filename))?;
         let mut content = Vec::new();
         file.read_to_end(&mut content)?;

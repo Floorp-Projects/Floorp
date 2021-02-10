@@ -53,6 +53,7 @@
 
 #if defined(MOZ_OXIDIZED_BREAKPAD)
 #include "mozilla/toolkit/crashreporter/rust_minidump_writer_linux_ffi_generated.h"
+#include "nsString.h"
 #endif
 
 static const char kCommandQuit = 'x';
@@ -274,8 +275,9 @@ CrashGenerationServer::ClientEvent(short revents)
   // Ignoring the return-value here for now.
   // The function always creates an empty minidump file even in case of an error.
   // So we'll report that as well via the callback-functions.
-  write_minidump_linux_with_context(minidump_filename.c_str(),
-                                    crashing_pid, crash_context);
+  nsCString error_msg;
+  bool res = write_minidump_linux_with_context(minidump_filename.c_str(),
+                                    crashing_pid, crash_context, &error_msg);
 #else
   if (!google_breakpad::WriteMinidump(minidump_filename.c_str(),
                                       crashing_pid, crash_context,
@@ -286,6 +288,11 @@ CrashGenerationServer::ClientEvent(short revents)
 #endif
 
   ClientInfo info(crashing_pid, this);
+#if defined(MOZ_OXIDIZED_BREAKPAD)
+  if (!res) {
+    info.set_error_msg(error_msg);
+  }
+#endif
   if (dump_callback_) {
     dump_callback_(dump_context_, info, minidump_filename);
   }

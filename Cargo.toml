@@ -81,7 +81,7 @@ spirv_cross = { git = "https://github.com/kvark/spirv_cross", branch = "wgpu4" }
 # failure's backtrace feature might break our builds, see bug 1608157.
 failure = { git = "https://github.com/badboy/failure", rev = "64af847bc5fdcb6d2438bec8a6030812a80519a5" }
 failure_derive = { git = "https://github.com/badboy/failure", rev = "64af847bc5fdcb6d2438bec8a6030812a80519a5" }
-minidump_writer_linux = { git = "https://github.com/msirringhaus/minidump_writer_linux.git", rev = "7559100418e720f77ee06e1938c0ed08dbbe1c99" }
+minidump_writer_linux = { git = "https://github.com/msirringhaus/minidump_writer_linux.git", rev = "9191af36343846b2c7ada65b9602b481b717c4d8" }
 
 [patch.crates-io.cranelift-codegen]
 git = "https://github.com/mozilla-spidermonkey/wasmtime"
