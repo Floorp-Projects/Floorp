@@ -20,7 +20,7 @@ import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -39,8 +39,8 @@ class NimbusTest {
     @get:Rule
     val gleanRule = GleanTestRule(context)
 
-    @Test
-    fun `recordExperimentTelemetry correctly records the experiment and branch`() {
+    @Before
+    fun setupGlean() {
         // Glean needs to be initialized for the experiments API to accept enrollment events, so we
         // init it with a mock client so we don't upload anything.
         val mockClient: Client = mock()
@@ -53,7 +53,10 @@ class NimbusTest {
                 httpClient = ConceptFetchHttpUploader(lazy { mockClient })
             )
         )
+    }
 
+    @Test
+    fun `recordExperimentTelemetry correctly records the experiment and branch`() {
         // Create a list of experiments to test the telemetry enrollment recording
         val enrolledExperiments = listOf(EnrolledExperiment(
             enrollmentId = "enrollment-id",
@@ -71,19 +74,6 @@ class NimbusTest {
 
     @Test
     fun `recordExperimentTelemetryEvents records telemetry`() {
-        // Glean needs to be initialized for the events to be recorded, so we
-        // init it with a mock client so we don't upload anything.
-        val mockClient: Client = mock()
-        `when`(mockClient.fetch(any())).thenReturn(
-            Response("URL", 200, mock(), mock()))
-        Glean.initialize(
-            context,
-            true,
-            Configuration(
-                httpClient = ConceptFetchHttpUploader(lazy { mockClient })
-            )
-        )
-
         // Create a bespoke list of events to record, one of each type, all with the same parameters
         val events = listOf(
             EnrollmentChangeEvent(
@@ -143,24 +133,10 @@ class NimbusTest {
     }
 
     @Test
-    @Ignore("https://github.com/mozilla-mobile/android-components/issues/9635")
     fun `recordExposure records telemetry`() {
-        // Glean needs to be initialized for the events to be recorded, so we
-        // init it with a mock client so we don't upload anything.
-        val mockClient: Client = mock()
-        `when`(mockClient.fetch(any())).thenReturn(
-            Response("URL", 200, mock(), mock()))
-        Glean.initialize(
-            context,
-            true,
-            Configuration(
-                httpClient = ConceptFetchHttpUploader(lazy { mockClient })
-            )
-        )
-
         // Load the experiment in nimbus so and optIn so that it will be active. This is necessary
         // because recordExposure checks for active experiments before recording.
-        nimbus.setExperimentsLocally("""
+        nimbus.setExperimentsLocallyOnThisThread("""
             {"data": [{
               "schemaVersion": "1.0.0",
               "slug": "test-experiment",
@@ -190,22 +166,10 @@ class NimbusTest {
               "last_modified": 1602197324372
             }]}
         """.trimIndent())
-        nimbus.applyPendingExperiments()
-
-        var waitCount = 10
-        while (nimbus.getActiveExperiments().count() == 0 && waitCount > 0) {
-            // Waiting for updates up to 1 second
-            Thread.sleep(10)
-            --waitCount
-        }
-
-        assertTrue("Timeout waiting on applying updates", waitCount > 0)
+        nimbus.applyPendingExperimentsOnThisThread()
 
         // Record the exposure event in Glean
-        nimbus.getExperimentBranch("test-experiment")
-        // Test is failing here because we are recording exposure events on another thread,
-        // and we aren't exposing the dbScope to mock it, or use it to run tests on.
-        // https://github.com/mozilla-mobile/android-components/issues/9635
+        nimbus.recordExposureOnThisThread("test-experiment")
 
         // Use the Glean test API to check the recorded event
         assertTrue("Event must have a value", NimbusEvents.exposure.testHasValue())
