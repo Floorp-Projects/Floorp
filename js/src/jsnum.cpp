@@ -1120,26 +1120,6 @@ static bool ComputePrecisionInRange(JSContext* cx, int minPrecision,
   return false;
 }
 
-static bool DToStrResult(JSContext* cx, double d, JSDToStrMode mode,
-                         int precision, const CallArgs& args) {
-  if (!EnsureDtoaState(cx)) {
-    return false;
-  }
-
-  char buf[DTOSTR_VARIABLE_BUFFER_SIZE(MAX_PRECISION + 1)];
-  char* numStr = js_dtostr(cx->dtoaState, buf, sizeof buf, mode, precision, d);
-  if (!numStr) {
-    JS_ReportOutOfMemory(cx);
-    return false;
-  }
-  JSString* str = NewStringCopyZ<CanGC>(cx, numStr);
-  if (!str) {
-    return false;
-  }
-  args.rval().setString(str);
-  return true;
-}
-
 static constexpr size_t DoubleToStrResultBufSize = 128;
 
 template <typename Op>
@@ -1166,11 +1146,7 @@ template <typename Op>
   return true;
 }
 
-/*
- * In the following three implementations, we allow a larger range of precision
- * than ECMA requires; this is permitted by ECMA-262.
- */
-// ES 2017 draft rev f8a9be8ea4bd97237d176907a1e3080dce20c68f 20.1.3.3.
+// ES 2021 draft 21.1.3.3.
 static bool num_toFixed(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -1180,7 +1156,7 @@ static bool num_toFixed(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  // Steps 2-3.
+  // Steps 2-5.
   int precision;
   if (args.length() == 0) {
     precision = 0;
@@ -1195,13 +1171,11 @@ static bool num_toFixed(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  // Step 4.
+  // Step 6.
   if (mozilla::IsNaN(d)) {
     args.rval().setString(cx->names().NaN);
     return true;
   }
-
-  // Steps 5-7, 9 (optimized path for Infinity).
   if (mozilla::IsInfinite(d)) {
     if (d > 0) {
       args.rval().setString(cx->names().Infinity);
@@ -1212,8 +1186,38 @@ static bool num_toFixed(JSContext* cx, unsigned argc, Value* vp) {
     return true;
   }
 
-  // Steps 5-9.
-  return DToStrResult(cx, d, DTOSTR_FIXED, precision, args);
+  // Steps 7-10 for very large numbers.
+  if (d <= -1e21 || d >= 1e+21) {
+    JSString* s = NumberToString<CanGC>(cx, d);
+    if (!s) {
+      return false;
+    }
+
+    args.rval().setString(s);
+    return true;
+  }
+
+  // Steps 7-12.
+
+  // DoubleToStringConverter::ToFixed is documented as requiring a buffer size
+  // of:
+  //
+  //   1 + kMaxFixedDigitsBeforePoint + 1 + kMaxFixedDigitsAfterPoint + 1
+  //   (one additional character for the sign, one for the decimal point,
+  //      and one for the null terminator)
+  //
+  // We already ensured there are at most 21 digits before the point, and
+  // MAX_PRECISION digits after the point.
+  static_assert(1 + 21 + 1 + MAX_PRECISION + 1 <= DoubleToStrResultBufSize);
+
+  // The double-conversion library by default has a kMaxFixedDigitsAfterPoint of
+  // 60. Assert our modified version supports at least MAX_PRECISION (100).
+  using DToSConverter = double_conversion::DoubleToStringConverter;
+  static_assert(DToSConverter::kMaxFixedDigitsAfterPoint >= MAX_PRECISION);
+
+  return DoubleToStrResult(cx, args, [&](auto& converter, auto& builder) {
+    return converter.ToFixed(d, precision, &builder);
+  });
 }
 
 // ES 2021 draft 21.1.3.2.
