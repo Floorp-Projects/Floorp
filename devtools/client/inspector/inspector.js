@@ -198,10 +198,12 @@ Inspector.prototype = {
     this._fluentL10n = new FluentL10n();
     await this._fluentL10n.init(["devtools/client/compatibility.ftl"]);
 
-    // The markup view will be initialized in onRootNodeAvailable, which will be
-    // called through watchTargets and _onTargetAvailable, when a root node is
-    // available for the top-level target.
-    this._onFirstMarkupLoaded = this.once("markuploaded");
+    // This promise should be resolved once the markupview frame has been loaded
+    // and the inspector has fully initialized it (for instance expanding the
+    // initially selected node).
+    this._onMarkupViewInitialized = new Promise(
+      r => (this._resolveMarkupViewInitialized = r)
+    );
 
     // If the server-side stylesheet watcher is enabled, we should start to watch
     // stylesheet resources before instanciating the inspector front since pageStyle
@@ -396,7 +398,7 @@ Inspector.prototype = {
     // Setup the sidebar panels.
     this.setupSidebar();
 
-    await this._onFirstMarkupLoaded;
+    await this._onMarkupViewInitialized;
     this.isReady = true;
 
     // All the components are initialized. Take care of the remaining initialization
@@ -1391,6 +1393,14 @@ Inspector.prototype = {
         histogram.add(delay);
       }
       delete this._newRootStart;
+    }
+
+    // The initial inspector open() waits for the markup view to be initialized
+    // via the _onMarkupViewInitialized promise. Resolve it now.
+    if (this._resolveMarkupViewInitialized) {
+      this._resolveMarkupViewInitialized();
+      // Should only be done for the first load, remove the `resolve` method.
+      delete this._resolveMarkupViewInitialized;
     }
   },
 
