@@ -1283,9 +1283,8 @@ async function takeNodeScreenshot(inspector) {
 
   info("Create an image using the downloaded fileas source");
   const image = new Image();
-  const onImageLoad = once(image, "load");
   image.src = OS.Path.toFileURI(filePath);
-  await onImageLoad;
+  await once(image, "load");
 
   info("Remove the downloaded screenshot file");
   await OS.File.remove(filePath);

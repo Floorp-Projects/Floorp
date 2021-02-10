@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test global screenshot button
+// Test global exit button
 
 const TEST_URL = "data:text/html;charset=utf-8,";
 
