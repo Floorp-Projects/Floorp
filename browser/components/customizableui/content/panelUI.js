@@ -381,6 +381,22 @@ const PanelUI = {
   },
 
   /**
+   * Switch the panel to the "More Tools" view.
+   *
+   * @param moreTools The panel showing the "More Tools" view.
+   */
+  showMoreToolsPanel(moreTools) {
+    this.showSubView("appmenu-moreTools", moreTools);
+
+    // Notify DevTools the panel view is showing and need it to populate the
+    // "Browser Tools" section of the panel. We notify the observer setup by
+    // DevTools because we want to ensure the same menuitem list is shared
+    // between both the AppMenu and toolbar button views.
+    let view = document.getElementById("appmenu-developer-tools-view");
+    Services.obs.notifyObservers(view, "web-developer-tools-view-showing");
+  },
+
+  /**
    * Shows a subview in the panel with a given ID.
    *
    * @param aViewId the ID of the subview to show.
