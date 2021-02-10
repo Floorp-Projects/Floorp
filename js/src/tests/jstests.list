@@ -208,9 +208,6 @@ skip script test262/language/expressions/logical-assignment/lgcl-nullish-assignm
 skip script test262/language/expressions/logical-assignment/lgcl-and-assignment-operator-lhs-before-rhs.js
 skip script test262/language/expressions/logical-assignment/lgcl-or-assignment-operator-lhs-before-rhs.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=944846
-skip script test262/built-ins/Number/prototype/toExponential/return-values.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=605515
 skip script test262/language/identifier-resolution/assign-to-global-undefined-strict.js
 skip script test262/language/expressions/postfix-decrement/operator-x-postfix-decrement-calls-putvalue-lhs-newvalue-.js
