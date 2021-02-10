@@ -1227,8 +1227,11 @@ bool CallMethodHelper::GetArraySizeFromParam(const nsXPTType& type,
     if (JS::IsArrayObject(mCallContext, maybeArray, &isArray) && isArray) {
       ok = JS::GetArrayLength(mCallContext, arrayOrNull, lengthp);
     } else if (JS_IsTypedArrayObject(&maybeArray.toObject())) {
-      *lengthp = JS_GetTypedArrayLength(&maybeArray.toObject());
-      ok = true;
+      size_t len = JS_GetTypedArrayLength(&maybeArray.toObject());
+      if (len <= UINT32_MAX) {
+        *lengthp = len;
+        ok = true;
+      }
     }
 
     if (!ok) {
