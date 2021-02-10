@@ -1273,7 +1273,7 @@ static bool num_toExponential(JSContext* cx, unsigned argc, Value* vp) {
   });
 }
 
-// ES 2017 draft rev f8a9be8ea4bd97237d176907a1e3080dce20c68f 20.1.3.5.
+// ES 2021 draft 21.1.3.5.
 static bool num_toPrecision(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -1305,8 +1305,6 @@ static bool num_toPrecision(JSContext* cx, unsigned argc, Value* vp) {
     args.rval().setString(cx->names().NaN);
     return true;
   }
-
-  // Steps 5-7.
   if (mozilla::IsInfinite(d)) {
     if (d > 0) {
       args.rval().setString(cx->names().Infinity);
@@ -1317,13 +1315,24 @@ static bool num_toPrecision(JSContext* cx, unsigned argc, Value* vp) {
     return true;
   }
 
-  // Steps 5-6, 8-14.
+  // Step 5.
   int precision = 0;
   if (!ComputePrecisionInRange(cx, 1, MAX_PRECISION, prec, &precision)) {
     return false;
   }
 
-  return DToStrResult(cx, d, DTOSTR_PRECISION, precision, args);
+  // Steps 6-14.
+
+  // DoubleToStringConverter::ToPrecision is documented as adding at most 7
+  // characters on top of the requested digits: "the sign, the decimal point,
+  // the exponent character, the exponent's sign, and at most 3 exponent
+  // digits". In addition, the buffer must be able to hold the trailing '\0'
+  // character.
+  static_assert(MAX_PRECISION + 7 + 1 <= DoubleToStrResultBufSize);
+
+  return DoubleToStrResult(cx, args, [&](auto& converter, auto& builder) {
+    return converter.ToPrecision(d, precision, &builder);
+  });
 }
 
 static const JSFunctionSpec number_methods[] = {
