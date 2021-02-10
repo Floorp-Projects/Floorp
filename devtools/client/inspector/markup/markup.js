@@ -1767,7 +1767,9 @@ MarkupView.prototype = {
     this.cancelReselectOnRemoved();
 
     // Get the removedNode index in its parent node to reselect the right node.
-    const isHTMLTag = removedNode.tagName.toLowerCase() === "html";
+    const isRootElement = ["html", "svg"].includes(
+      removedNode.tagName.toLowerCase()
+    );
     const oldContainer = this.getContainer(removedNode);
     const parentContainer = this.getContainer(removedNode.parentNode());
     const childIndex = parentContainer
@@ -1781,7 +1783,7 @@ MarkupView.prototype = {
           mutation.removed && mutation.removed.some(n => n === removedNode);
         if (
           mutation.type === "childList" &&
-          (containsRemovedNode || isHTMLTag)
+          (containsRemovedNode || isRootElement)
         ) {
           isNodeRemovalMutation = true;
           break;
@@ -1798,7 +1800,7 @@ MarkupView.prototype = {
       // selection.
       if (
         this.inspector.selection.nodeFront === parentContainer.node ||
-        (this.inspector.selection.nodeFront === removedNode && isHTMLTag)
+        (this.inspector.selection.nodeFront === removedNode && isRootElement)
       ) {
         const childContainers = parentContainer.getChildContainers();
         if (childContainers?.[childIndex]) {
