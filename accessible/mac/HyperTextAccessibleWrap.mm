@@ -25,10 +25,17 @@ class HyperTextIterator {
   HyperTextIterator(HyperTextAccessible* aStartContainer, int32_t aStartOffset,
                     HyperTextAccessible* aEndContainer, int32_t aEndOffset)
       : mCurrentContainer(aStartContainer),
-        mCurrentStartOffset(aStartOffset),
-        mCurrentEndOffset(aStartOffset),
+        mCurrentStartOffset(0),
+        mCurrentEndOffset(0),
         mEndContainer(aEndContainer),
-        mEndOffset(aEndOffset) {}
+        mEndOffset(0) {
+    mCurrentStartOffset =
+        std::min(aStartOffset,
+                 static_cast<int32_t>(mCurrentContainer->CharacterCount()));
+    mCurrentEndOffset = mCurrentStartOffset;
+    mEndOffset = std::min(
+        aEndOffset, static_cast<int32_t>(mEndContainer->CharacterCount()));
+  }
 
   bool Next();
 
@@ -286,9 +293,15 @@ void HyperTextAccessibleWrap::AttributedTextForRange(
     int32_t attrStartOffset = 0;
     int32_t attrEndOffset = iter.mCurrentStartOffset;
     do {
+      int32_t oldEndOffset = attrEndOffset;
       nsCOMPtr<nsIPersistentProperties> props =
           iter.mCurrentContainer->TextAttributes(
               true, attrEndOffset, &attrStartOffset, &attrEndOffset);
+
+      if (oldEndOffset == attrEndOffset) {
+        MOZ_ASSERT_UNREACHABLE("new attribute end offset should be different");
+        break;
+      }
 
       nsAutoString text;
       iter.mCurrentContainer->TextSubstring(
