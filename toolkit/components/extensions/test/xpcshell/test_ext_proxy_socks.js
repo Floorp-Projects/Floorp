@@ -360,7 +360,7 @@ class SocksTestServer {
 
 /**
  * Tests the basic socks logic using a simple socket connection and the
- * protocol proxy service.  Before 902346, TCPSocket has no way to tie proxy
+ * protocol proxy service.  It seems TCPSocket has no way to tie proxy
  * data to it, so we go old school here.
  */
 class SocksTestClient {
@@ -479,67 +479,6 @@ add_task(async function test_socks_server() {
     .catch(result => {
       ok(false, `socks test failed ${result}`);
     });
-});
-
-// Register a proxy to be used by TCPSocket connections later.
-function registerProxy(socks) {
-  let pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService(
-    Ci.nsIProtocolProxyService
-  );
-  let filter = {
-    QueryInterface: ChromeUtils.generateQI(["nsIProtocolProxyFilter"]),
-    applyFilter(uri, proxyInfo, callback) {
-      callback.onProxyFilterResult(
-        pps.newProxyInfoWithAuth(
-          socks.version,
-          socks.host,
-          socks.port,
-          socks.username,
-          socks.password,
-          "",
-          "",
-          socks.dns == "remote"
-            ? Ci.nsIProxyInfo.TRANSPARENT_PROXY_RESOLVES_HOST
-            : 0,
-          -1,
-          null
-        )
-      );
-    },
-  };
-  pps.registerFilter(filter, 0);
-  registerCleanupFunction(() => {
-    pps.unregisterFilter(filter);
-  });
-}
-
-// A simple ping/pong to test the socks server with TCPSocket.
-add_task(async function test_tcpsocket_proxy() {
-  let socks = {
-    version: "socks",
-    host: "127.0.0.1",
-    port: socksServer.listener.localPort,
-    username: "foo",
-    password: "bar",
-    dns: false,
-  };
-  let dest = {
-    host: "localhost",
-    port: 8888,
-  };
-
-  registerProxy(socks);
-  await new Promise((resolve, reject) => {
-    let client = new TCPSocket(dest.host, dest.port);
-    client.onopen = () => {
-      client.send("PING!");
-    };
-    client.ondata = e => {
-      equal("PONG!", e.data, "socks test ok");
-      resolve();
-    };
-    client.onerror = () => reject();
-  });
 });
 
 add_task(async function test_webRequest_socks_proxy() {
