@@ -52,6 +52,7 @@ BEGIN_TEST(testLargeArrayBuffers) {
     CHECK_EQUAL(JS_GetArrayBufferViewByteLength(tarr), nbytes);
     CHECK_EQUAL(JS_GetTypedArrayByteOffset(tarr), 0u);
     CHECK_EQUAL(JS_GetTypedArrayByteLength(tarr), nbytes);
+    CHECK_EQUAL(JS_GetTypedArrayLength(tarr), nbytes);
 
     length = 0;
     js::GetArrayBufferViewLengthAndData(tarr, &length, &isShared, &data);
@@ -79,6 +80,7 @@ BEGIN_TEST(testLargeArrayBuffers) {
     CHECK_EQUAL(JS_GetArrayBufferViewByteLength(tarr), nbytes);
     CHECK_EQUAL(JS_GetTypedArrayByteOffset(tarr), 0u);
     CHECK_EQUAL(JS_GetTypedArrayByteLength(tarr), nbytes);
+    CHECK_EQUAL(JS_GetTypedArrayLength(tarr), nbytes / 2);
 
     length = 0;
     js::GetArrayBufferViewLengthAndData(tarr, &length, &isShared, &data);
@@ -123,6 +125,7 @@ BEGIN_TEST(testLargeArrayBuffers) {
     CHECK_EQUAL(JS_GetArrayBufferViewByteLength(tarr), 32u);
     CHECK_EQUAL(JS_GetTypedArrayByteOffset(tarr), nbytes - 200);
     CHECK_EQUAL(JS_GetTypedArrayByteLength(tarr), 32u);
+    CHECK_EQUAL(JS_GetTypedArrayLength(tarr), 32u);
   }
 
   // DataView with large byteOffset.

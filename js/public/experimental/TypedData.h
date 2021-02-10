@@ -299,7 +299,7 @@ extern JS_FRIEND_API js::Scalar::Type JS_GetArrayBufferViewType(JSObject* obj);
  * be known that it would pass such a test: it is a typed array or a wrapper of
  * a typed array, and the unwrapping will succeed.
  */
-extern JS_FRIEND_API uint32_t JS_GetTypedArrayLength(JSObject* obj);
+extern JS_FRIEND_API size_t JS_GetTypedArrayLength(JSObject* obj);
 
 /**
  * Return the byte offset from the start of an ArrayBuffer to the start of a

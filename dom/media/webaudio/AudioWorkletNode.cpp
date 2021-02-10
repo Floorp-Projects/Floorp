@@ -370,7 +370,7 @@ static bool PrepareBufferArrays(JSContext* aCx, Span<const AudioBlock> aBlocks,
 
     auto& float32ArraysRef = portRef.mFloat32Arrays;
     for (auto& channelRef : float32ArraysRef) {
-      uint32_t length = JS_GetTypedArrayLength(channelRef);
+      size_t length = JS_GetTypedArrayLength(channelRef);
       if (length != WEBAUDIO_BLOCK_SIZE) {
         // Script has detached array buffers.  Create new objects.
         JSObject* array = JS_NewFloat32Array(aCx, WEBAUDIO_BLOCK_SIZE);
@@ -542,7 +542,7 @@ void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
   // Compute and copy parameter values to JS objects.
   for (size_t i = 0; i < mParamTimelines.Length(); ++i) {
     const auto& float32Arrays = mParameters.mFloat32Arrays[i];
-    uint32_t length = JS_GetTypedArrayLength(float32Arrays);
+    size_t length = JS_GetTypedArrayLength(float32Arrays);
 
     // If the Float32Array that is supposed to hold the values for a particular
     // AudioParam has been detached, error out. This is being worked on in
@@ -581,7 +581,7 @@ void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
     size_t channelCount = output->ChannelCount();
     const auto& float32Arrays = mOutputs.mPorts[o].mFloat32Arrays;
     for (size_t c = 0; c < channelCount; ++c) {
-      uint32_t length = JS_GetTypedArrayLength(float32Arrays[c]);
+      size_t length = JS_GetTypedArrayLength(float32Arrays[c]);
       if (length != WEBAUDIO_BLOCK_SIZE) {
         // ArrayBuffer has been detached.  Behavior is unspecified.
         // https://github.com/WebAudio/web-audio-api/issues/1933 and
