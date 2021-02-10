@@ -68,13 +68,6 @@ class Theme {
             images: {},
             properties: {},
           };
-          if (this.lwtDarkStyles) {
-            this.lwtDarkStyles.experimental = {
-              colors: {},
-              images: {},
-              properties: {},
-            };
-          }
           const { baseURI } = this.extension;
           if (experiment.stylesheet) {
             experiment.stylesheet = baseURI.resolve(experiment.stylesheet);
