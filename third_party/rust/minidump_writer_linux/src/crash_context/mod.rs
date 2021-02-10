@@ -27,7 +27,6 @@ pub type fpstate_t = libc::fpsimd_context; // Currently not part of libc! This w
     target_arch = "mips",
     target_arch = "arm-eabi"
 )))]
-
 #[cfg(target_arch = "x86")]
 #[allow(non_camel_case_types)]
 pub type fpstate_t = libc::_libc_fpstate;
@@ -44,6 +43,6 @@ pub struct CrashContext {
     // #ifdef this out because FP state is not part of user ABI for Linux ARM.
     // In case of MIPS Linux FP state is already part of ucontext_t so
     // 'float_state' is not required.
-    #[cfg(not(any(target_arch = "mips", target_arch = "arm-eabi")))]
+    #[cfg(not(any(target_arch = "mips", target_arch = "arm")))]
     pub float_state: fpstate_t,
 }

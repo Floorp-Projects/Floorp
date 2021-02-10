@@ -7,14 +7,22 @@ use libc;
 use std::collections::HashMap;
 use std::io::Cursor;
 
-#[cfg(target_pointer_width = "64")]
-type ElfPhdr = libc::Elf64_Phdr;
-#[cfg(target_pointer_width = "32")]
+#[cfg(all(target_pointer_width = "64", target_arch = "arm"))]
+type ElfPhdr = u64;
+#[cfg(all(target_pointer_width = "64", not(target_arch = "arm")))]
+type ElfPhdr = libc::Elf64_Phdr; // Not defined on ARM
+#[cfg(all(target_pointer_width = "32", target_arch = "arm"))]
+type ElfPhdr = u32;
+#[cfg(all(target_pointer_width = "32", not(target_arch = "arm")))]
 type ElfPhdr = libc::Elf32_Phdr;
 
-#[cfg(target_pointer_width = "64")]
+#[cfg(all(target_pointer_width = "64", target_arch = "arm"))]
+type ElfAddr = u64;
+#[cfg(all(target_pointer_width = "64", not(target_arch = "arm")))]
 type ElfAddr = libc::Elf64_Addr;
-#[cfg(target_pointer_width = "32")]
+#[cfg(all(target_pointer_width = "32", target_arch = "arm"))]
+type ElfAddr = u32;
+#[cfg(all(target_pointer_width = "32", not(target_arch = "arm")))]
 type ElfAddr = libc::Elf32_Addr;
 
 // COPY from <link.h>
@@ -69,8 +77,20 @@ pub fn write_dso_debug_stream(
     blamed_thread: i32,
     auxv: &HashMap<AuxvType, AuxvType>,
 ) -> Result<MDRawDirectory> {
-    let phnum_max = *auxv.get(&libc::AT_PHNUM).ok_or("Could not find AT_PHNUM")? as usize;
-    let phdr = *auxv.get(&libc::AT_PHDR).ok_or("Could not find AT_PHDR")? as usize;
+    let at_phnum;
+    let at_phdr;
+    #[cfg(target_arch = "arm")]
+    {
+        at_phdr = 3;
+        at_phnum = 5;
+    }
+    #[cfg(not(target_arch = "arm"))]
+    {
+        at_phdr = libc::AT_PHDR;
+        at_phnum = libc::AT_PHNUM;
+    }
+    let phnum_max = *auxv.get(&at_phnum).ok_or("Could not find AT_PHNUM")? as usize;
+    let phdr = *auxv.get(&at_phdr).ok_or("Could not find AT_PHDR")? as usize;
 
     let phdr_size = std::mem::size_of::<ElfPhdr>();
     let ph = LinuxPtraceDumper::copy_from_process(
