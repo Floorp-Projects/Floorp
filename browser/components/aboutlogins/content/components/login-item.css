@@ -465,12 +465,6 @@ input[name="password"] {
   font-weight: 600;
 }
 
-@media (prefers-contrast) {
-  .alert-icon {
-    fill: currentColor;
-  }
-}
-
 @media (prefers-color-scheme: dark) {
   :host {
     --reveal-checkbox-opacity: .8;

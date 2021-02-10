@@ -190,7 +190,9 @@ ol {
   fill-opacity: 0.75;
 }
 
-.breached > .alert-icon {
-  fill: var(--red-60);
-  fill-opacity: 1;
+@media not (prefers-contrast) {
+  .breached > .alert-icon {
+    fill: var(--red-60);
+    fill-opacity: 1;
+  }
 }

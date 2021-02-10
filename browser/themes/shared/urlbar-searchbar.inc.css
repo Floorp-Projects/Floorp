@@ -300,6 +300,15 @@
   color: #d6ebff;
 }
 
+/* Use system colors for low/high contrast mode */
+@media (prefers-contrast) {
+  #urlbar-search-mode-indicator {
+    background-color: Highlight;
+    outline-color: Highlight;
+    color: HighlightText;
+  }
+}
+
 #urlbar-search-mode-indicator-title {
   padding-inline: 5px;
 }
@@ -327,21 +336,14 @@
   background-color: var(--lwt-toolbar-field-focus);
 }
 
-#urlbar-search-mode-indicator:hover > #urlbar-search-mode-indicator-close {
-  display: block;
-}
-
-/* Low/high-contrast themes */
 @media (prefers-contrast) {
-  #urlbar-search-mode-indicator {
-    background-color: Highlight;
-    outline-color: Highlight;
-    color: HighlightText;
-  }
-
   #urlbar-search-mode-indicator-close {
     stroke-opacity: 1.0;
   }
+}
+
+#urlbar-search-mode-indicator:hover > #urlbar-search-mode-indicator-close {
+  display: block;
 }
 
 @supports -moz-bool-pref("browser.urlbar.experimental.searchModeIndicatorHover") {
