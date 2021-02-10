@@ -102,6 +102,14 @@
   border-radius: var(--proton-tab-radius);
   min-height: var(--tab-min-height);
 }
+
+/* tabbrowser-tab keyboard focus */
+.keyboard-focused-tab > .tab-stack > .tab-background,
+.tabbrowser-tab:focus:not([aria-activedescendant]) > .tab-stack > .tab-background {
+  outline: var(--focus-outline);
+  -moz-outline-radius: var(--proton-tab-radius);
+  outline-offset: -2px;
+}
 } /*** END proton ***/
 
 /* The selected tab should appear above the border between the tabs toolbar and
