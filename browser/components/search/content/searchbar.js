@@ -485,6 +485,10 @@
       this.addEventListener(
         "blur",
         event => {
+          // Reset the flag since we can't capture enter keyup event if the event happens
+          // after moving the focus.
+          this._needBrowserFocusAtEnterKeyUp = false;
+
           // If the input field is still focused then a different window has
           // received focus, ignore the next focus event.
           this._ignoreFocus = document.activeElement == this._textbox;
