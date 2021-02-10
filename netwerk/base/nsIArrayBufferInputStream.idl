@@ -21,5 +21,5 @@ interface nsIArrayBufferInputStream : nsIInputStream
      * @param byteOffset - stream data offset
      * @param byteLen - stream data length
      */
-    void setData(in jsval buffer, in unsigned long byteOffset, in unsigned long byteLen);
+    void setData(in jsval buffer, in uint64_t byteOffset, in uint64_t byteLen);
 };

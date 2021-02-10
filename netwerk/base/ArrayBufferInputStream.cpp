@@ -22,7 +22,7 @@ ArrayBufferInputStream::ArrayBufferInputStream()
 
 NS_IMETHODIMP
 ArrayBufferInputStream::SetData(JS::Handle<JS::Value> aBuffer,
-                                uint32_t aByteOffset, uint32_t aLength) {
+                                uint64_t aByteOffset, uint64_t aLength) {
   NS_ASSERT_OWNINGTHREAD(ArrayBufferInputStream);
 
   if (!aBuffer.isObject()) {
@@ -33,9 +33,14 @@ ArrayBufferInputStream::SetData(JS::Handle<JS::Value> aBuffer,
     return NS_ERROR_FAILURE;
   }
 
-  uint32_t buflen = JS::GetArrayBufferByteLength(arrayBuffer);
-  uint32_t offset = std::min(buflen, aByteOffset);
-  uint32_t bufferLength = std::min(buflen - offset, aLength);
+  uint64_t buflen = JS::GetArrayBufferByteLength(arrayBuffer);
+  uint64_t offset = std::min(buflen, aByteOffset);
+  uint64_t bufferLength = std::min(buflen - offset, aLength);
+
+  // Prevent truncation.
+  if (bufferLength > UINT32_MAX) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   mArrayBuffer = mozilla::MakeUniqueFallible<char[]>(bufferLength);
   if (!mArrayBuffer) {
