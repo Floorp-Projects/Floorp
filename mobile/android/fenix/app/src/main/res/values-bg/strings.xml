@@ -72,14 +72,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Не, благодаря</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Стигнете по-бързо до Firefox. Добавете джаджа към началния си екран.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">Добавяне на джаджа</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">Не сега</string>
-
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
     <string name="open_in_app_cfr_info_message">Може да настроите Firefox автоматично да отваря препратки в приложения</string>
@@ -88,6 +80,8 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Прекратяване</string>
 
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Необходим е достъп до камерата. Отворете настройките на Android, докоснете разрешения и изберете разрешаване.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">Към настройки</string>
     <!-- Text for the negative action button to dismiss the dialog. -->
@@ -99,6 +93,13 @@
     <string name="tab_tray_close_tabs_banner_positive_button_text">Настройки</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Прекратяване</string>
+
+    <!-- Text for the banner message to tell users about our grid view feature. -->
+    <string name="tab_tray_grid_view_banner_message">Променете изгледа на отворените раздели. Отворете настройки и изберете „мрежа“ в „преглед на раздел“.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_grid_view_banner_positive_button_text">Към настройки</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_grid_view_banner_negative_button_text">Отхвърляне</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -143,12 +144,12 @@
     <string name="browser_menu_install_on_homescreen">Инсталиране</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Синхронизирани раздели</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Повторно синхронизиране</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Търсене в страницата</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Поверителен раздел</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Нов раздел</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Добавяне към списък</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -213,6 +214,8 @@
     <string name="search_suggestions_onboarding_learn_more_link">Научете повече</string>
 
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Отваряне на раздел във Firefox</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Търсене</string>
 
@@ -262,7 +265,7 @@
     <string name="preferences_category_privacy_security">Поверителност и сигурност</string>
 
     <!-- Preference for advanced site permissions -->
-    <string name="preferences_site_permissions">Права на страницата</string>
+    <string name="preferences_site_permissions">Права на страници</string>
     <!-- Preference for private browsing options -->
     <string name="preferences_private_browsing_options">Поверително разглеждане</string>
     <!-- Preference for opening links in a private tab-->
@@ -279,6 +282,8 @@
     <string name="preferences_override_fxa_server">Личен сървър за Firefox Account</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Личен сървър за Sync</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Сървърът на Firefox Account/Sync е променен. Излизане от приложението за прилагане на промените…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Сметка</string>
     <!-- Preference shown on banner to sign into account -->
@@ -340,6 +345,20 @@
 
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Известия</string>
+
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Персонализиран списък от добавки</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">Добре</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Отказ</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Наименование на списък</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Собственик на списък (User ID)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Списъкът с добавки е променен. Излизане от приложението за прилагане на промените…</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -418,6 +437,10 @@
     <string name="preferences_marketing_data">Маркетингови данни</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Споделя данни за използваните от вас възможности на %1$s чрез Leanplum, нашият партньор за мобилен маркетинг.</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Проучвания</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Позволява на Mozilla да инсталира и изпълнява проучвания</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">Експерименти</string>
     <!-- Summary for experiments preferences -->
@@ -466,11 +489,19 @@
     <!-- Preference for using using dark or light theme automatically set by battery -->
     <string name="preference_auto_battery_theme">Зададена от приложение за пестене на батерия</string>
     <!-- Preference for using following device theme -->
-    <string name="preference_follow_device_theme">Следва темата на устройството</string>
+    <string name="preference_follow_device_theme">Като темата на устройството</string>
 
     <!-- Gestures Preferences-->
     <!-- Preferences for using pull to refresh in a webpage -->
-    <string name="preference_gestures_website_pull_to_refresh">Издърпайте за презареждане</string>
+    <string name="preference_gestures_website_pull_to_refresh">Издърпване за презареждане</string>
+
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Плъзване скрива лентата с инструменти</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Плъзване на лентата с инструменти настрани сменя раздели</string>
+
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Плъзване нагоре на лентата с инструменти отваря раздели</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -519,6 +550,14 @@
     <string name="recently_closed_empty_message">Няма затворени раздели</string>
 
     <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Раздели</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Изглед на раздели</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Списък</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Решетка</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Затваряне на раздели</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -529,6 +568,15 @@
     <string name="close_tabs_after_one_week">След една седмица</string>
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">След един месец</string>
+
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Ръчно затваряне</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Затваряне след един ден</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Затваряне след една седмица</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Затваряне след един месец</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -547,6 +595,8 @@
     <string name="tab_tray_title">Отворени раздели</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Добавяне към списък</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">Избиране</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Споделяне на всички раздели</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -561,6 +611,12 @@
     <string name="tab_tray_menu_home">Начален екран</string>
     <!-- Shortcut action to toggle private mode -->
     <string name="tab_tray_menu_toggle">Превключване режима на раздела</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">Отметка</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">Затваряне</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">Споделяне на избраните раздели</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Премахване на раздела от спъсъка</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -596,8 +652,10 @@
     <string name="collection_rename">Преименуване на списък</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Отваряне на раздели</string>
-    <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">Премахване</string>
+    <!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Преименуване</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Премахване</string>
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Премахване от историята</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
@@ -633,6 +691,10 @@
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Изтриване на %1$d записа</string>
 
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Днес</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Вчера</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">Последните 24 часа</string>
     <!-- Text for the header that groups the history the past 7 days -->
@@ -646,11 +708,18 @@
     <string name="history_empty_message">Липсва история</string>
 
     <!-- Downloads -->
-    <!-- Text shown when no download exists -->
-    <string name="download_empty_message">Няма изтегляния</string>
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Изтриване на изтеглени файлове</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">Сигурни ли сте, че желаете да изтриете изтеглените файлове?</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d избрани</string>
+
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">Отваряне</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -774,6 +843,8 @@
     <string name="preference_phone_feature_location">Местоположение</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Известие</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Постоянно хранилище</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Винаги да пита</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -905,6 +976,11 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">Адресът е копиран</string>
 
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">Направи текста в уебсайтовете по-голям или по-малък</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">Размер на шрифт</string>
+
     <!-- Title for the tabs item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_tabs_title_2">Отворени раздели</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
@@ -919,6 +995,14 @@
     <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d страници</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Бисквитки</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Буферирани изображения и файлове</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">Освобождава място за съхранение</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">Права на страницата</string>
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">Изтриване на история на разглеждане и изход</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Изход</string>
 
@@ -987,10 +1071,6 @@
     <string name="onboarding_private_browsing_button">Отваряне на настройки</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Поверителност</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">Проектирали сме %s така, че да ви предоставя контрол върху това, което споделяте както онлайн, така и с нас.
-    </string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Бележка за поверителността</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
@@ -1254,9 +1334,33 @@
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">Добре дошли в един чисто нов %s</string>
 
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">Обновяване на %s…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">Стартиране на %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">Миграцията е завършена</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">Пароли</string>
+
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Редактиране</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Паролата е задължителна</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Гласово търсене</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Говорете сега</string>
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Регистрация с това потребителско име вече съществува</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Добавете друго на устройство.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Моля, удостоверете се отново.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Моля, включете синхронизиране на раздели.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">Няма отворени раздели във Firefox на други ваши устройства.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
@@ -1270,6 +1374,13 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Добре, разбрах</string>
 
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Наименование</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">Добре</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Отказ</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Премахване</string>
 
@@ -1277,4 +1388,11 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Извлечете максимума от %s</string>
 
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Натиснете за подробности</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">Съберете нещата, които са важни за вас</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Групирайте заедно подобни търсения, сайтове и раздели за бърз достъп по-късно.</string>
     </resources>
