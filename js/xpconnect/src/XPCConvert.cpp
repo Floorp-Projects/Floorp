@@ -1444,7 +1444,16 @@ bool XPCConvert::JSArray2Native(JSContext* cx, JS::HandleValue aJSVal,
 
     // Allocate the backing buffer before getting the view data in case
     // allocFixupLen can cause GCs.
-    uint32_t length = JS_GetTypedArrayLength(jsarray);
+    uint32_t length;
+    {
+      // nsTArray and code below uses uint32_t lengths, so reject large typed
+      // arrays.
+      size_t fullLength = JS_GetTypedArrayLength(jsarray);
+      if (fullLength > UINT32_MAX) {
+        return false;
+      }
+      length = uint32_t(fullLength);
+    }
     void* buf = allocFixupLen(&length);
     if (!buf) {
       return false;
