@@ -1203,6 +1203,9 @@ var Policies = {
             "pref.browser.homepage.disable_button.restore_default",
             true
           );
+          if (param.URL != "about:blank") {
+            manager.disallowFeature("removeHomeButtonByDefault");
+          }
         } else {
           // Clear out old run once modification that is no longer used.
           clearRunOnceModification("setHomepage");

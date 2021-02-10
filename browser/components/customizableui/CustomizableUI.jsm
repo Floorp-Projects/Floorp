@@ -22,6 +22,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
+  HomePage: "resource:///modules/HomePage.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "gWidgetsBundle", function() {
@@ -44,6 +45,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gProtonToolbarEnabled",
+  "browser.proton.toolbar.enabled",
+  false
+);
+
 const kDefaultThemeID = "default-theme@mozilla.org";
 
 const kSpecialWidgetPfx = "customizableui-special-";
@@ -56,6 +64,8 @@ const kPrefExtraDragSpace = "browser.tabs.extraDragSpace";
 const kPrefUIDensity = "browser.uidensity";
 const kPrefAutoTouchMode = "browser.touchmode.auto";
 const kPrefAutoHideDownloadsButton = "browser.download.autohideButton";
+const kPrefProtonToolbarVersion = "browser.proton.toolbar.version";
+const kPrefHomeButtonUsed = "browser.engagement.home-button.has-used";
 
 const kExpectedWindowURL = AppConstants.BROWSER_CHROME_URL;
 
@@ -228,6 +238,7 @@ var CustomizableUIInternal = {
     this._defineBuiltInWidgets();
     this.loadSavedState();
     this._updateForNewVersion();
+    this._updateForNewProtonVersion();
     this._markObsoleteBuiltinButtonsSeen();
 
     this.registerArea(
@@ -244,19 +255,16 @@ var CustomizableUIInternal = {
       "back-button",
       "forward-button",
       "stop-reload-button",
-      "home-button",
+      gProtonToolbarEnabled ? null : "home-button",
       "spring",
       "urlbar-container",
       "spring",
       "downloads-button",
       "library-button",
+      AppConstants.MOZ_DEV_EDITION ? "developer-button" : null,
       "sidebar-button",
       "fxa-toolbar-menu-button",
-    ];
-
-    if (AppConstants.MOZ_DEV_EDITION) {
-      navbarPlacements.splice(7, 0, "developer-button");
-    }
+    ].filter(name => name);
 
     this.registerArea(
       CustomizableUI.AREA_NAVBAR,
@@ -589,6 +597,33 @@ var CustomizableUIInternal = {
       if (navbarPlacements) {
         navbarPlacements.push("fxa-toolbar-menu-button");
       }
+    }
+  },
+
+  _updateForNewProtonVersion() {
+    const VERSION = 1;
+    let currentVersion = Services.prefs.getIntPref(
+      kPrefProtonToolbarVersion,
+      0
+    );
+    if (!gProtonToolbarEnabled || currentVersion >= VERSION) {
+      return;
+    }
+
+    // Remove the home button if it hasn't been used and is set to about:home
+    if (currentVersion < 1) {
+      let placements = gSavedState.placements[CustomizableUI.AREA_NAVBAR];
+      let homePage = HomePage.get();
+      if (
+        placements.includes("home-button") &&
+        !Services.prefs.getBoolPref(kPrefHomeButtonUsed) &&
+        (homePage == "about:home" || homePage == "about:blank") &&
+        Services.policies.isAllowed("removeHomeButtonByDefault")
+      ) {
+        placements.splice(placements.indexOf("home-button"), 1);
+      }
+
+      Services.prefs.setIntPref(kPrefProtonToolbarVersion, VERSION);
     }
   },
 
