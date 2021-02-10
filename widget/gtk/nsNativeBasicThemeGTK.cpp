@@ -6,7 +6,9 @@
 #include "nsNativeBasicThemeGTK.h"
 
 #include "nsLayoutUtils.h"
+#include "nsIFrame.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPrefs_widget.h"
 
 using namespace mozilla;

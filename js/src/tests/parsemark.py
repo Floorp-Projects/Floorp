@@ -28,6 +28,7 @@ import optparse
 import os
 import subprocess as subp
 import sys
+import json
 from string import Template
 
 try:
@@ -41,13 +42,14 @@ JS_CODE_TEMPLATE = Template(
     """
 if (typeof snarf !== 'undefined') read = snarf
 var contents = read("$filepath");
+$prepare
 for (var i = 0; i < $warmup_run_count; i++)
-    parse(contents);
+    $func(contents, $options);
 var results = [];
 for (var i = 0; i < $real_run_count; i++) {
-    var start = new Date();
-    parse(contents);
-    var end = new Date();
+    var start = elapsed() / 1000;
+    $func(contents, $options);
+    var end = elapsed() / 1000;
     results.push(end - start);
 }
 print(results);
@@ -70,15 +72,22 @@ def stddev(seq, mean):
     return math.sqrt(sum(diffs) / len(seq))
 
 
-def bench(shellpath, filepath, warmup_runs, counted_runs, stfu=False):
+def bench(
+    shellpath, filepath, warmup_runs, counted_runs, prepare, func, options, stfu=False
+):
     """Return a list of milliseconds for the counted runs."""
     assert '"' not in filepath
     code = JS_CODE_TEMPLATE.substitute(
-        filepath=filepath, warmup_run_count=warmup_runs, real_run_count=counted_runs
+        filepath=filepath,
+        warmup_run_count=warmup_runs,
+        real_run_count=counted_runs,
+        prepare=prepare,
+        func=func,
+        options=options,
     )
     proc = subp.Popen([shellpath, "-e", code], stdout=subp.PIPE)
     stdout, _ = proc.communicate()
-    milliseconds = [float(val) for val in stdout.split(",")]
+    milliseconds = [float(val) for val in stdout.decode().split(",")]
     mean = avg(milliseconds)
     sigma = stddev(milliseconds, mean)
     if not stfu:
@@ -97,7 +106,7 @@ def parsemark(filepaths, fbench, stfu=False):
             print("Parsemarking {}...".format(filename))
         bench_map[filename] = fbench(filepath)
     print("{")
-    for i, (filename, (avg, stddev)) in enumerate(bench_map.iteritems()):
+    for i, (filename, (avg, stddev)) in enumerate(iter(bench_map.items())):
         assert '"' not in filename
         fmt = '    {:30s}: {{"average_ms": {:6.2f}, "stddev_ms": {:6.2f}}}'
         if i != len(bench_map) - 1:
@@ -107,7 +116,7 @@ def parsemark(filepaths, fbench, stfu=False):
     print("}")
     return dict(
         (filename, dict(average_ms=avg, stddev_ms=stddev))
-        for filename, (avg, stddev) in bench_map.iteritems()
+        for filename, (avg, stddev) in iter(bench_map.items())
     )
 
 
@@ -141,6 +150,21 @@ def main():
         metavar="JSON_PATH",
         dest="baseline_path",
         help="json file with baseline values to " "compare against",
+    )
+    parser.add_option(
+        "--mode",
+        dest="mode",
+        type="choice",
+        choices=("parse", "dumpStencil", "compile", "decode"),
+        default="parse",
+        help="The target of the benchmark (parse/dumpStencil/compile/decode), defaults to parse",
+    )
+    parser.add_option(
+        "--lazy",
+        dest="lazy",
+        action="store_true",
+        default=False,
+        help="Use lazy parsing when compiling",
     )
     parser.add_option(
         "-q",
@@ -179,12 +203,47 @@ def main():
             )
             return -1
 
+    if options.lazy and options.mode == "parse":
+        print(
+            "error: parse mode doesn't support lazy",
+            file=sys.stderr,
+        )
+        return -1
+
+    funcOpt = {}
+    if options.mode == "decode":
+        encodeOpt = {}
+        encodeOpt["transcodeOnly"] = True
+        encodeOpt["saveIncrementalBytecode"] = True
+        if not options.lazy:
+            encodeOpt["forceFullParse"] = True
+
+        # In order to test the decoding, we first have to encode the content.
+        prepare = Template(
+            """
+contents = cacheEntry(contents);
+evaluate(contents, $options);
+"""
+        ).substitute(options=json.dumps(encodeOpt))
+
+        func = "evaluate"
+        funcOpt["transcodeOnly"] = True
+        funcOpt["loadBytecode"] = True
+    else:
+        prepare = ""
+        func = options.mode
+        if not options.lazy:
+            funcOpt["forceFullParse"] = True
+
     def benchfile(filepath):
         return bench(
             shellpath,
             filepath,
             options.warmup_runs,
             options.counted_runs,
+            prepare,
+            func,
+            json.dumps(funcOpt),
             stfu=options.stfu,
         )
 

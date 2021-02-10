@@ -446,6 +446,18 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
             getSettings().mForceUserScalable.set(flag);
             return this;
         }
+
+        /**
+         * Sets whether and where insecure (non-HTTPS) connections are allowed.
+         *
+         * @param level One of the {@link GeckoRuntimeSettings#ALLOW_ALL HttpsOnlyMode} constants.
+         *
+         * @return This Builder instance.
+         */
+        public @NonNull Builder allowInsecureConnections(final @HttpsOnlyMode int level) {
+            getSettings().setAllowInsecureConnections(level);
+            return this;
+        }
     }
 
     private GeckoRuntime mRuntime;
@@ -494,6 +506,10 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
             "browser.ui.zoom.force-user-scalable", false);
     /* package */ final Pref<Boolean> mAutofillLogins = new Pref<Boolean>(
         "signon.autofillForms", true);
+    /* package */ final Pref<Boolean> mHttpsOnly = new Pref<Boolean>(
+        "dom.security.https_only_mode", false);
+    /* package */ final Pref<Boolean> mHttpsOnlyPrivateMode = new Pref<Boolean>(
+        "dom.security.https_only_mode_pbm", false);
 
     /* package */ int mPreferredColorScheme = COLOR_SCHEME_SYSTEM;
 
@@ -1133,6 +1149,62 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     public @NonNull GeckoRuntimeSettings setLoginAutofillEnabled(
             final boolean enabled) {
         mAutofillLogins.commit(enabled);
+        return this;
+    }
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({ALLOW_ALL,
+             HTTPS_ONLY_PRIVATE,
+             HTTPS_ONLY})
+    /* package */ @interface HttpsOnlyMode {}
+
+    /** Allow all insecure connections */
+    public static final int ALLOW_ALL = 0;
+    /** Allow insecure connections in normal browsing, but only HTTPS in private browsing. */
+    public static final int HTTPS_ONLY_PRIVATE = 1;
+    /** Only allow HTTPS connections. */
+    public static final int HTTPS_ONLY = 2;
+
+    /**
+     * Get whether and where insecure (non-HTTPS) connections are allowed.
+     *
+     * @return One of the {@link GeckoRuntimeSettings#ALLOW_ALL HttpsOnlyMode} constants.
+     */
+    public @HttpsOnlyMode int getAllowInsecureConnections() {
+        boolean httpsOnly = mHttpsOnly.get();
+        boolean httpsOnlyPrivate = mHttpsOnlyPrivateMode.get();
+        if (httpsOnly) {
+            return HTTPS_ONLY;
+        } else if (httpsOnlyPrivate) {
+            return HTTPS_ONLY_PRIVATE;
+        }
+        return ALLOW_ALL;
+    }
+
+    /**
+     * Set whether and where insecure (non-HTTPS) connections are allowed.
+     *
+     * @param level One of the {@link GeckoRuntimeSettings#ALLOW_ALL HttpsOnlyMode} constants.
+     *
+     * @return This GeckoRuntimeSettings instance.
+     */
+    public @NonNull GeckoRuntimeSettings setAllowInsecureConnections(final @HttpsOnlyMode int level) {
+        switch (level) {
+            case ALLOW_ALL:
+                mHttpsOnly.commit(false);
+                mHttpsOnlyPrivateMode.commit(false);
+                break;
+            case HTTPS_ONLY_PRIVATE:
+                mHttpsOnly.commit(false);
+                mHttpsOnlyPrivateMode.commit(true);
+                break;
+            case HTTPS_ONLY:
+                mHttpsOnly.commit(true);
+                mHttpsOnlyPrivateMode.commit(false);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid setting for setAllowInsecureConnections");
+        }
         return this;
     }
 

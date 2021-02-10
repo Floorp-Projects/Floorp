@@ -35,16 +35,7 @@ add_task(async function() {
 
 async function assertDocshell(tab, expectedRDMMode, expectedDPPX) {
   await asyncWaitUntil(async () => {
-    const { overrideDPPX, inRDMPane } = await SpecialPowers.spawn(
-      tab.linkedBrowser,
-      [],
-      () => {
-        return {
-          overrideDPPX: content.docShell.contentViewer.overrideDPPX,
-          inRDMPane: content.docShell.browsingContext.inRDMPane,
-        };
-      }
-    );
+    const { overrideDPPX, inRDMPane } = tab.linkedBrowser.browsingContext;
     return inRDMPane === expectedRDMMode && overrideDPPX === expectedDPPX;
   });
   ok(true, "The state of the docshell is correct");

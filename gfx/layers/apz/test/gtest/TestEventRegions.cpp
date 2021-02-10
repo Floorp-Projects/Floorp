@@ -183,9 +183,12 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
   }
 };
 
-TEST_F(APZEventRegionsTester, HitRegionImmediateResponse) {
-  SCOPED_GFX_VAR(UseWebRender, bool, false);
+class APZEventRegionsTesterLayersOnly : public APZEventRegionsTester {
+ public:
+  APZEventRegionsTesterLayersOnly() { mLayersOnly = true; }
+};
 
+TEST_F(APZEventRegionsTesterLayersOnly, HitRegionImmediateResponse) {
   CreateEventRegionsLayerTree1();
 
   TestAsyncPanZoomController* root = ApzcOf(layers[0]);
@@ -260,9 +263,7 @@ TEST_F(APZEventRegionsTester, HitRegionAccumulatesChildren) {
   Tap(manager, ScreenIntPoint(10, 160), TimeDuration::FromMilliseconds(100));
 }
 
-TEST_F(APZEventRegionsTester, Obscuration) {
-  SCOPED_GFX_VAR(UseWebRender, bool, false);
-
+TEST_F(APZEventRegionsTesterLayersOnly, Obscuration) {
   CreateObscuringLayerTree();
   ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
 
@@ -313,7 +314,7 @@ TEST_F(APZEventRegionsTester, Bug1117712) {
 
 // Test that APZEventResult::mHandledResult is correctly
 // populated.
-TEST_F(APZEventRegionsTester, HandledByRootApzcFlag) {
+TEST_F(APZEventRegionsTesterLayersOnly, HandledByRootApzcFlag) {
   // Create simple layer tree containing a dispatch-to-content region
   // that covers part but not all of its area.
   const char* layerTreeSyntax = "c";

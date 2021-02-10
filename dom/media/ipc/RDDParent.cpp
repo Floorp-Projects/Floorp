@@ -198,7 +198,6 @@ mozilla::ipc::IPCResult RDDParent::RecvInitVideoBridge(
           Feature::HW_COMPOSITING,
           Feature::D3D11_COMPOSITING,
           Feature::OPENGL_COMPOSITING,
-          Feature::ADVANCED_LAYERS,
           Feature::DIRECT2D,
           Feature::WEBGPU,
       },

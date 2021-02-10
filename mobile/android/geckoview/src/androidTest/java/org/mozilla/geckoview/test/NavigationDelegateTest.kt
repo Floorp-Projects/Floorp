@@ -277,6 +277,102 @@ class NavigationDelegateTest : BaseSessionTest() {
         mainSession.waitForPageStop()
     }
 
+    @Test fun loadWithHTTPSOnlyMode() {
+        sessionRule.runtime.settings.setAllowInsecureConnections(GeckoRuntimeSettings.HTTPS_ONLY)
+
+        val insecureUri = if (sessionRule.env.isAutomation) {
+            "http://nocert.example.com/"
+        } else {
+            "http://neverssl.com"
+        }
+
+        val secureUri = if (sessionRule.env.isAutomation) {
+            "http://example.com/"
+        } else {
+            "http://neverssl.com"
+        }
+
+        mainSession.loadUri(insecureUri)
+        mainSession.waitForPageStop()
+
+        mainSession.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 1)
+            override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
+                assertThat("categories should match", error.category, equalTo(WebRequestError.ERROR_CATEGORY_SECURITY))
+                assertThat("codes should match", error.code, equalTo(WebRequestError.ERROR_SECURITY_BAD_CERT))
+                return null
+            }
+        })
+
+        sessionRule.runtime.settings.setAllowInsecureConnections(GeckoRuntimeSettings.ALLOW_ALL)
+
+        mainSession.loadUri(secureUri)
+        mainSession.waitForPageStop()
+
+        mainSession.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 0)
+            override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
+                return null
+            }
+
+            @AssertCalled(count = 1)
+            override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
+                return null
+            }
+        })
+
+        val privateSession = sessionRule.createOpenSession(
+                GeckoSessionSettings.Builder(mainSession.settings)
+                        .usePrivateMode(true)
+                        .build())
+
+        privateSession.loadUri(secureUri)
+        privateSession.waitForPageStop()
+
+        privateSession.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 0)
+            override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
+                return null
+            }
+
+            @AssertCalled(count = 1)
+            override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
+                return null
+            }
+        })
+
+        sessionRule.runtime.settings.setAllowInsecureConnections(GeckoRuntimeSettings.HTTPS_ONLY_PRIVATE)
+
+        privateSession.loadUri(insecureUri)
+        privateSession.waitForPageStop()
+
+        privateSession.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 1)
+            override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
+                assertThat("categories should match", error.category, equalTo(WebRequestError.ERROR_CATEGORY_SECURITY))
+                assertThat("codes should match", error.code, equalTo(WebRequestError.ERROR_SECURITY_BAD_CERT))
+                return null
+            }
+        })
+
+        mainSession.loadUri(secureUri)
+        mainSession.waitForPageStop()
+
+        mainSession.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 0)
+            override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
+                return null
+            }
+
+            @AssertCalled(count = 1)
+            override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
+                return null
+            }
+        })
+
+        sessionRule.runtime.settings.setAllowInsecureConnections(GeckoRuntimeSettings.ALLOW_ALL)
+    }
+
     @Ignore // Disabled for bug 1619344.
     @Test fun loadUnknownProtocol() {
         testLoadEarlyError(UNKNOWN_PROTOCOL_URI,
