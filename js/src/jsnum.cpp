@@ -1140,6 +1140,32 @@ static bool DToStrResult(JSContext* cx, double d, JSDToStrMode mode,
   return true;
 }
 
+static constexpr size_t DoubleToStrResultBufSize = 128;
+
+template <typename Op>
+[[nodiscard]] static bool DoubleToStrResult(JSContext* cx, const CallArgs& args,
+                                            Op op) {
+  char buf[DoubleToStrResultBufSize];
+
+  const auto& converter =
+      double_conversion::DoubleToStringConverter::EcmaScriptConverter();
+  double_conversion::StringBuilder builder(buf, sizeof(buf));
+
+  bool ok = op(converter, builder);
+  MOZ_RELEASE_ASSERT(ok);
+
+  const char* numStr = builder.Finalize();
+  MOZ_ASSERT(numStr == buf);
+
+  JSString* str = NewStringCopyZ<CanGC>(cx, numStr);
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
 /*
  * In the following three implementations, we allow a larger range of precision
  * than ECMA requires; this is permitted by ECMA-262.
@@ -1190,7 +1216,7 @@ static bool num_toFixed(JSContext* cx, unsigned argc, Value* vp) {
   return DToStrResult(cx, d, DTOSTR_FIXED, precision, args);
 }
 
-// ES 2017 draft rev f8a9be8ea4bd97237d176907a1e3080dce20c68f 20.1.3.2.
+// ES 2021 draft 21.1.3.2.
 static bool num_toExponential(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -1202,9 +1228,7 @@ static bool num_toExponential(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 2.
   double prec = 0;
-  JSDToStrMode mode = DTOSTR_STANDARD_EXPONENTIAL;
   if (args.hasDefined(0)) {
-    mode = DTOSTR_EXPONENTIAL;
     if (!ToInteger(cx, args[0], &prec)) {
       return false;
     }
@@ -1218,8 +1242,6 @@ static bool num_toExponential(JSContext* cx, unsigned argc, Value* vp) {
     args.rval().setString(cx->names().NaN);
     return true;
   }
-
-  // Steps 5-7.
   if (mozilla::IsInfinite(d)) {
     if (d > 0) {
       args.rval().setString(cx->names().Infinity);
@@ -1230,15 +1252,25 @@ static bool num_toExponential(JSContext* cx, unsigned argc, Value* vp) {
     return true;
   }
 
-  // Steps 5-6, 8-15.
+  // Step 5.
   int precision = 0;
-  if (mode == DTOSTR_EXPONENTIAL) {
-    if (!ComputePrecisionInRange(cx, 0, MAX_PRECISION, prec, &precision)) {
-      return false;
-    }
+  if (!ComputePrecisionInRange(cx, 0, MAX_PRECISION, prec, &precision)) {
+    return false;
   }
 
-  return DToStrResult(cx, d, mode, precision + 1, args);
+  // Steps 6-15.
+
+  // DoubleToStringConverter::ToExponential is documented as adding at most 8
+  // characters on top of the requested digits: "the sign, the digit before the
+  // decimal point, the decimal point, the exponent character, the exponent's
+  // sign, and at most 3 exponent digits". In addition, the buffer must be able
+  // to hold the trailing '\0' character.
+  static_assert(MAX_PRECISION + 8 + 1 <= DoubleToStrResultBufSize);
+
+  return DoubleToStrResult(cx, args, [&](auto& converter, auto& builder) {
+    int requestedDigits = args.hasDefined(0) ? precision : -1;
+    return converter.ToExponential(d, requestedDigits, &builder);
+  });
 }
 
 // ES 2017 draft rev f8a9be8ea4bd97237d176907a1e3080dce20c68f 20.1.3.5.
