@@ -8544,7 +8544,8 @@ nsresult nsIFrame::PeekOffsetForCharacter(nsPeekOffsetStruct* aPos,
   // we're placed before the linefeed character on the previous line.
   if (current.mOffset < 0 && current.mJumpedLine &&
       aPos->mDirection == eDirPrevious &&
-      current.mFrame->HasSignificantTerminalNewline()) {
+      current.mFrame->HasSignificantTerminalNewline() &&
+      !current.mIgnoredBrFrame) {
     --aPos->mContentOffset;
   }
   return NS_OK;
@@ -9071,21 +9072,20 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
       return !aForceEditableRegion || aFrame->GetContent()->IsEditable();
     };
 
-    // Skip brFrames, but only we can select something before hitting the end of
-    // the line or a non-selectable region.
+    // Skip br frames, but only if we can select something before hitting the
+    // end of the line or a non-selectable region.
     if (atLineEdge && aDirection == eDirPrevious &&
         traversedFrame->IsBrFrame()) {
-      bool canSkipBr = false;
       for (nsIFrame* current = traversedFrame->GetPrevSibling(); current;
            current = current->GetPrevSibling()) {
         if (!current->IsBlockOutside() && IsSelectable(current)) {
           if (!current->IsBrFrame()) {
-            canSkipBr = true;
+            result.mIgnoredBrFrame = true;
           }
           break;
         }
       }
-      if (canSkipBr) {
+      if (result.mIgnoredBrFrame) {
         continue;
       }
     }
