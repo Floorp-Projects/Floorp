@@ -120,6 +120,10 @@ class FinderChild extends JSWindowActorChild {
       case "Finder:ModalHighlightChange":
         this.finder.onModalHighlightChange(data.useModalHighlight);
         break;
+
+      case "Finder:EnableMarkTesting":
+        this.finder.highlighter.enableTesting(data.enable);
+        break;
     }
 
     return null;
