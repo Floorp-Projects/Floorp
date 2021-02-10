@@ -14,7 +14,6 @@ import io.mockk.verifyOrder
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.feature.media.service.AbstractMediaService
 import mozilla.components.feature.media.service.AbstractMediaSessionService
 import mozilla.components.feature.tabs.TabsUseCases
 import org.junit.Assert.assertFalse
@@ -67,8 +66,13 @@ class OpenSpecificTabIntentProcessorTest {
     @Test
     fun `GIVEN an intent with null extra string WHEN it is processed THEN openToBrowser should not be called`() {
         val intent = Intent().apply {
-            action = AbstractMediaService.Companion.ACTION_SWITCH_TAB
+            action = AbstractMediaSessionService.Companion.ACTION_SWITCH_TAB
         }
+
+        val store = BrowserStore(BrowserState(tabs = listOf(createTab(id = TEST_SESSION_ID, url = "https:mozilla.org"))))
+        val tabUseCases: TabsUseCases = mockk(relaxed = true)
+        every { activity.components.core.store } returns store
+        every { activity.components.useCases.tabsUseCases } returns tabUseCases
 
         assertFalse(processor.process(intent, navController, out))
 
