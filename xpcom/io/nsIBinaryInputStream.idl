@@ -78,7 +78,7 @@ interface nsIBinaryInputStream : nsIInputStream {
      * @return The number of bytes actually read into aArrayBuffer.
      */
     [implicit_jscontext]
-    unsigned long readArrayBuffer(in uint32_t aLength, in jsval aArrayBuffer);
+    uint64_t readArrayBuffer(in uint64_t aLength, in jsval aArrayBuffer);
 };
 
 %{C++
