@@ -41,7 +41,6 @@ class WebConsoleConnectionProxy {
     this._onLastPrivateContextExited = this._onLastPrivateContextExited.bind(
       this
     );
-    this._clearLogpointMessages = this._clearLogpointMessages.bind(this);
   }
 
   /**
@@ -141,10 +140,6 @@ class WebConsoleConnectionProxy {
       "lastPrivateContextExited",
       this._onLastPrivateContextExited
     );
-    this.webConsoleFront.on(
-      "clearLogpointMessages",
-      this._clearLogpointMessages
-    );
   }
 
   /**
@@ -157,17 +152,6 @@ class WebConsoleConnectionProxy {
       "lastPrivateContextExited",
       this._onLastPrivateContextExited
     );
-    this.webConsoleFront.off(
-      "clearLogpointMessages",
-      this._clearLogpointMessages
-    );
-  }
-
-  _clearLogpointMessages(logpointId) {
-    // Some message might try to update while we are closing the toolbox.
-    if (this.webConsoleUI?.wrapper) {
-      this.webConsoleUI.wrapper.dispatchClearLogpointMessages(logpointId);
-    }
   }
 
   /**
