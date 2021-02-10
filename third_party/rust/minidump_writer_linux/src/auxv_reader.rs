@@ -86,7 +86,17 @@ impl Iterator for ProcfsAuxvIter {
             Err(x) => return Some(Err(Box::new(x))),
         };
 
-        if aux_key == libc::AT_NULL {
+        let at_null;
+        #[cfg(target_arch = "arm")]
+        {
+            at_null = 0;
+        }
+        #[cfg(not(target_arch = "arm"))]
+        {
+            at_null = libc::AT_NULL;
+        }
+
+        if aux_key == at_null {
             return None;
         }
 

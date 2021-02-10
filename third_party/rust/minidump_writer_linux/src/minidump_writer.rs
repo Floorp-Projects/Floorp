@@ -175,8 +175,7 @@ impl MinidumpWriter {
     pub fn dump(&mut self, destination: &mut (impl Write + Seek)) -> Result<Vec<u8>> {
         let mut dumper = LinuxPtraceDumper::new(self.process_id)?;
         dumper.suspend_threads()?;
-        // TODO: Doesn't exist yet
-        //self.dumper.late_init()?;
+        dumper.late_init()?;
 
         if self.skip_stacks_if_mapping_unreferenced {
             if let Some(address) = self.principal_mapping_address {
@@ -223,7 +222,7 @@ impl MinidumpWriter {
             .get_instruction_pointer();
         let stack_pointer = self.crash_context.as_ref().unwrap().get_stack_pointer();
 
-        if pc >= low_addr as libc::greg_t && pc < high_addr as libc::greg_t {
+        if pc >= low_addr && pc < high_addr {
             return true;
         }
 

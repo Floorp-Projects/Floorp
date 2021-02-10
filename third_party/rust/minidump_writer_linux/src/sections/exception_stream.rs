@@ -45,11 +45,33 @@ enum MDExceptionCodeLinux {
 
 pub fn write(config: &mut MinidumpWriter, buffer: &mut DumpBuf) -> Result<MDRawDirectory> {
     let exception = if let Some(context) = &config.crash_context {
+        let sig_addr;
+        #[cfg(target_arch = "arm")]
+        {
+            // Not part of libc-crate, but thats how the Linux-variant does it
+            // and according to the systemheaders, android as well.
+            #[allow(non_camel_case_types)]
+            #[repr(C)]
+            struct siginfo_sigfault {
+                _si_signo: libc::c_int,
+                _si_errno: libc::c_int,
+                _si_code: libc::c_int,
+                si_addr: *mut libc::c_void,
+            }
+
+            sig_addr = unsafe {
+                (*(&context.siginfo as *const libc::siginfo_t as *const siginfo_sigfault)).si_addr
+            } as u64;
+        }
+        #[cfg(not(target_arch = "arm"))]
+        {
+            sig_addr = unsafe { context.siginfo.si_addr() } as u64;
+        }
         MDException {
             exception_code: context.siginfo.si_signo as u32,
             exception_flags: context.siginfo.si_code as u32,
             exception_record: 0,
-            exception_address: unsafe { context.siginfo.si_addr() } as u64,
+            exception_address: sig_addr,
             number_parameters: 0,
             __align: 0,
             exception_information: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],

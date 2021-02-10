@@ -1,7 +1,9 @@
 use minidump::*;
 use minidump_common::format::{GUID, MINIDUMP_STREAM_TYPE::*};
 use minidump_writer_linux::app_memory::AppMemory;
-use minidump_writer_linux::crash_context::{fpstate_t, CrashContext};
+#[cfg(not(any(target_arch = "mips", target_arch = "arm")))]
+use minidump_writer_linux::crash_context::fpstate_t;
+use minidump_writer_linux::crash_context::CrashContext;
 use minidump_writer_linux::linux_ptrace_dumper::LinuxPtraceDumper;
 use minidump_writer_linux::maps_reader::{MappingEntry, MappingInfo, SystemMappingInfo};
 use minidump_writer_linux::minidump_writer::MinidumpWriter;
@@ -24,6 +26,7 @@ enum Context {
     Without,
 }
 
+#[cfg(not(any(target_arch = "mips", target_arch = "arm")))]
 fn get_ucontext() -> Result<libc::ucontext_t> {
     let mut context = std::mem::MaybeUninit::<libc::ucontext_t>::uninit();
     let res = unsafe { libc::getcontext(context.as_mut_ptr()) };
@@ -32,14 +35,28 @@ fn get_ucontext() -> Result<libc::ucontext_t> {
 }
 
 fn get_crash_context(tid: Pid) -> CrashContext {
-    let context = get_ucontext().expect("Failed to get ucontext");
     let siginfo: libc::siginfo_t = unsafe { std::mem::zeroed() };
-    let float_state: fpstate_t = unsafe { std::mem::zeroed() };
-    CrashContext {
-        siginfo,
-        tid,
-        context,
-        float_state,
+    #[cfg(not(any(target_arch = "mips", target_arch = "arm")))]
+    {
+        let context = get_ucontext().expect("Failed to get ucontext");
+        let float_state: fpstate_t = unsafe { std::mem::zeroed() };
+        CrashContext {
+            siginfo,
+            tid,
+            context,
+            float_state,
+        }
+    }
+    #[cfg(any(target_arch = "mips", target_arch = "arm"))]
+    {
+        // TODO: `libc` doesn't provide `getcontext()` for ARM and mips, so
+        //       for now I just use zeroes. But this should be filled in properly!
+        let context: libc::ucontext_t = unsafe { std::mem::zeroed() };
+        CrashContext {
+            siginfo,
+            tid,
+            context,
+        }
     }
 }
 
@@ -501,9 +518,18 @@ fn test_skip_if_requested_helper(context: Context) {
         tmp.set_crash_context(crash_context);
     }
 
+    let pr_mapping_addr;
+    #[cfg(target_pointer_width = "64")]
+    {
+        pr_mapping_addr = 0x0102030405060708;
+    }
+    #[cfg(target_pointer_width = "32")]
+    {
+        pr_mapping_addr = 0x010203040;
+    };
     let res = tmp
         .skip_stacks_if_mapping_unreferenced()
-        .set_principal_mapping_address(0x0102030405060708)
+        .set_principal_mapping_address(pr_mapping_addr)
         .dump(&mut tmpfile);
     child.kill().expect("Failed to kill process");
 
@@ -556,10 +582,14 @@ fn test_sanitized_stacks_helper(context: Context) {
     let thread_list: MinidumpThreadList =
         dump.get_stream().expect("Couldn't find MinidumpThreadList");
 
-    let defaced = if cfg!(target_pointer_width = "64") {
-        0x0defaced0defacedusize.to_ne_bytes()
-    } else {
-        0x0defacedusize.to_ne_bytes()
+    let defaced;
+    #[cfg(target_pointer_width = "64")]
+    {
+        defaced = 0x0defaced0defacedusize.to_ne_bytes();
+    }
+    #[cfg(target_pointer_width = "32")]
+    {
+        defaced = 0x0defacedusize.to_ne_bytes()
     };
 
     for thread in thread_list.threads {

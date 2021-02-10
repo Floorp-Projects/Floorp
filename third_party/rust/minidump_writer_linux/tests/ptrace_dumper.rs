@@ -1,6 +1,7 @@
 use minidump_writer_linux::linux_ptrace_dumper;
 use nix::sys::mman::{mmap, MapFlags, ProtFlags};
 use nix::sys::signal::Signal;
+use std::convert::TryInto;
 use std::io::{BufRead, BufReader};
 use std::mem::size_of;
 use std::os::unix::io::AsRawFd;
@@ -136,7 +137,7 @@ fn test_merged_mappings() {
             file.as_raw_fd(),
             // Map a different offset just to
             // better test real-world conditions.
-            page_size as i64,
+            page_size.try_into().unwrap(), // try_into() in order to work for 32 and 64 bit
         )
     };
 
@@ -203,10 +204,14 @@ fn test_sanitize_stack_copy() {
         .get_thread_info_by_index(0)
         .expect("Couldn't find thread_info");
 
-    let defaced = if cfg!(target_pointer_width = "64") {
-        0x0defaced0defacedusize.to_ne_bytes()
-    } else {
-        0x0defacedusize.to_ne_bytes()
+    let defaced;
+    #[cfg(target_pointer_width = "64")]
+    {
+        defaced = 0x0defaced0defacedusize.to_ne_bytes()
+    }
+    #[cfg(target_pointer_width = "32")]
+    {
+        defaced = 0x0defacedusize.to_ne_bytes()
     };
 
     let mut simulated_stack = vec![0xffu8; 2 * size_of::<usize>()];
