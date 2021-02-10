@@ -96,9 +96,6 @@ const key = (id, win = window) => {
   // intermittents for the performance tests.
   Services.prefs.setIntPref(PrefUtils.PROFILER_BUFFER_SIZE_PREF, 100000);
 
-  // Force the old panel
-  Services.prefs.setBoolPref("devtools.performance.new-panel-enabled", false);
-
   registerCleanupFunction(() => {
     info("finish() was called, cleaning up...");
 

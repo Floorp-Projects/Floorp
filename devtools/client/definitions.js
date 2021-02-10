@@ -278,11 +278,12 @@ function switchPerformancePanel() {
       return new NewPerformancePanel(frame, target);
     };
     Tools.performance.isTargetSupported = function(target) {
-      // Only use the new performance panel on local tab toolboxes, as they are guaranteed
-      // to have a performance actor.
-      // Remote tab toolboxes (eg about:devtools-toolbox from about:debugging) should not
-      // use the performance panel; about:debugging provides a "Profile performance" button
-      // which can be used instead, without having the overhead of starting a remote toolbox.
+      // Root actors are lazily initialized, so we can't check if the target has
+      // the perf actor yet. Also this function is not async, so we can't initialize
+      // the actor yet.
+      // We don't display the new performance panel for remote context in the
+      // toolbox, because this has an overhead. Instead we should use
+      // about:debugging.
       return target.isLocalTab;
     };
   } else {
