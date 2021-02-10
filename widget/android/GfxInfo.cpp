@@ -25,7 +25,6 @@ class GfxInfo::GLStrings {
   nsCString mVendor;
   nsCString mRenderer;
   nsCString mVersion;
-  nsTArray<nsCString> mExtensions;
   bool mReady;
 
  public:
@@ -57,11 +56,6 @@ class GfxInfo::GLStrings {
   // This spoofed value wins, even if the environment variable
   // MOZ_GFX_SPOOF_GL_VERSION was set.
   void SpoofVersion(const nsCString& s) { mVersion = s; }
-
-  const nsTArray<nsCString>& Extensions() {
-    EnsureInitialized();
-    return mExtensions;
-  }
 
   void EnsureInitialized() {
     if (mReady) {
@@ -107,15 +101,6 @@ class GfxInfo::GLStrings {
         mVersion.Assign(spoofedVersion);
       } else {
         mVersion.Assign((const char*)gl->fGetString(LOCAL_GL_VERSION));
-      }
-    }
-
-    if (mExtensions.IsEmpty()) {
-      int numExtensions;
-      gl->fGetIntegerv(LOCAL_GL_NUM_EXTENSIONS, &numExtensions);
-      mExtensions.SetLength(numExtensions);
-      for (int i = 0; i < numExtensions; i++) {
-        mExtensions[i].Assign((const char*)gl->fGetStringi(LOCAL_GL_EXTENSIONS, i));
       }
     }
 
@@ -620,16 +605,9 @@ nsresult GfxInfo::GetFeatureStatusImpl(
                      gpu.Find("Mali-G76", /*ignoreCase*/ true) == kNotFound &&
                      gpu.Find("Mali-G31", /*ignoreCase*/ true) == kNotFound;
 
-      // Currently webrender requires the extension GL_OES_EGL_image_external_essl3
-      // to render video. Bug 1507074 tracks removing this requirement.
-      bool supportsImageExternalEssl3 = mGLStrings->Extensions().Contains("GL_OES_EGL_image_external_essl3"_ns);
-
       if (!isUnblocked) {
         *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
         aFailureId = "FEATURE_FAILURE_WEBRENDER_BLOCKED_DEVICE";
-      } else if (!supportsImageExternalEssl3) {
-        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
-        aFailureId = "FEATURE_FAILURE_WEBRENDER_NO_IMAGE_EXTERNAL";
       } else {
         *aStatus = nsIGfxInfo::FEATURE_ALLOW_QUALIFIED;
       }
