@@ -1708,7 +1708,9 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       // created nodes can be adopted into rawNode.parentNode.
       parser = new win.DOMParser();
     }
-    const parsedDOM = parser.parseFromString(value, "text/html");
+
+    const mimeType = rawNode.tagName === "svg" ? "image/svg+xml" : "text/html";
+    const parsedDOM = parser.parseFromString(value, mimeType);
     const parentNode = rawNode.parentNode;
 
     // Special case for head and body.  Setting document.body.outerHTML
@@ -1730,8 +1732,8 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
         rawNode.outerHTML = value;
       }
     } else if (node.isDocumentElement()) {
-      // Unable to set outerHTML on the document element.  Fall back by
-      // setting attributes manually, then replace the body and head elements.
+      // Unable to set outerHTML on the document element. Fall back by
+      // setting attributes manually. Then replace all the child nodes.
       const finalAttributeModifications = [];
       const attributeModifications = {};
       for (const attribute of rawNode.attributes) {
@@ -1747,8 +1749,8 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
         });
       }
       node.modifyAttributes(finalAttributeModifications);
-      rawNode.replaceChild(parsedDOM.head, rawNode.querySelector("head"));
-      rawNode.replaceChild(parsedDOM.body, rawNode.querySelector("body"));
+
+      rawNode.replaceChildren(...parsedDOM.firstElementChild.childNodes);
     } else {
       // eslint-disable-next-line no-unsanitized/property
       rawNode.outerHTML = value;
