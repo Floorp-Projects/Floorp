@@ -154,8 +154,7 @@ UniquePtr<RenderCompositor> RenderCompositor::Create(
     return RenderCompositorNativeSWGL::Create(std::move(aWidget), aError);
 #elif defined(XP_WIN)
     if (StaticPrefs::gfx_webrender_software_d3d11_AtStartup() &&
-        gfx::gfxConfig::IsEnabled(gfx::Feature::D3D11_COMPOSITING) &&
-        !gfxPlatform::IsHeadless()) {
+        gfx::gfxConfig::IsEnabled(gfx::Feature::D3D11_COMPOSITING)) {
       UniquePtr<RenderCompositor> comp =
           RenderCompositorD3D11SWGL::Create(std::move(aWidget), aError);
       if (comp) {
