@@ -12,10 +12,21 @@
 #include "mozilla/gfx/Types.h"
 #include "mozilla/gfx/Filters.h"
 #include "mozilla/RelativeLuminanceUtils.h"
+#include "mozilla/StaticPrefs_widget.h"
 #include "nsCSSColorUtils.h"
 #include "nsCSSRendering.h"
 #include "nsLayoutUtils.h"
 #include "PathHelpers.h"
+
+#include "nsDeviceContext.h"
+
+#include "nsColorControlFrame.h"
+#include "nsDateTimeControlFrame.h"
+#include "nsMeterFrame.h"
+#include "nsProgressFrame.h"
+#include "nsRangeFrame.h"
+#include "mozilla/dom/HTMLMeterElement.h"
+#include "mozilla/dom/HTMLProgressElement.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -52,7 +63,91 @@ static LayoutDeviceIntCoord SnapBorderWidth(
   return std::max(LayoutDeviceIntCoord(1), (aCssWidth * aDpiRatio).Truncated());
 }
 
+[[nodiscard]] static float ScaleLuminanceBy(float aLuminance, float aFactor) {
+  return aLuminance >= 0.18f ? aLuminance * aFactor : aLuminance / aFactor;
+}
+
+static nscolor ThemedAccentColor(bool aDarker) {
+  MOZ_ASSERT(StaticPrefs::widget_non_native_use_theme_accent());
+  nscolor a = LookAndFeel::GetColor(LookAndFeel::ColorID::Highlight);
+  nscolor b = LookAndFeel::GetColor(LookAndFeel::ColorID::Highlighttext);
+  const bool darker =
+      RelativeLuminanceUtils::Compute(b) > RelativeLuminanceUtils::Compute(a);
+  nscolor color = darker == aDarker ? a : b;
+  if (NS_GET_A(color) != 0xff) {
+    // Blend with white, ensuring the color is opaque to avoid surprises if we
+    // overdraw.
+    color = NS_ComposeColors(NS_RGB(0xff, 0xff, 0xff), color);
+  }
+  return color;
+}
+
 }  // namespace
+
+sRGBColor nsNativeBasicTheme::sAccentColor = sRGBColor::OpaqueWhite();
+sRGBColor nsNativeBasicTheme::sAccentColorForeground = sRGBColor::OpaqueWhite();
+sRGBColor nsNativeBasicTheme::sAccentColorLight = sRGBColor::OpaqueWhite();
+sRGBColor nsNativeBasicTheme::sAccentColorDark = sRGBColor::OpaqueWhite();
+sRGBColor nsNativeBasicTheme::sAccentColorDarker = sRGBColor::OpaqueWhite();
+
+void nsNativeBasicTheme::Init() {
+  Preferences::RegisterCallbackAndCall(PrefChangedCallback,
+                                       "widget.non-native.use-theme-accent");
+}
+
+void nsNativeBasicTheme::Shutdown() {
+  Preferences::UnregisterCallback(PrefChangedCallback,
+                                  "widget.non-native.use-theme-accent");
+}
+
+void nsNativeBasicTheme::LookAndFeelChanged() { RecomputeAccentColors(); }
+
+void nsNativeBasicTheme::RecomputeAccentColors() {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (!StaticPrefs::widget_non_native_use_theme_accent()) {
+    sAccentColorForeground = sColorWhite;
+    sAccentColor =
+        sRGBColor::UnusualFromARGB(0xff0060df);  // Luminance: 13.69346%
+    sAccentColorLight =
+        sRGBColor::UnusualFromARGB(0x4d008deb);  // Luminance: 25.04791%
+    sAccentColorDark =
+        sRGBColor::UnusualFromARGB(0xff0250bb);  // Luminance: 9.33808%
+    sAccentColorDarker =
+        sRGBColor::UnusualFromARGB(0xff054096);  // Luminance: 5.90106%
+    return;
+  }
+
+  sAccentColorForeground = sRGBColor::FromABGR(ThemedAccentColor(false));
+  const nscolor accent = ThemedAccentColor(true);
+  const float luminance = RelativeLuminanceUtils::Compute(accent);
+
+  constexpr float kLightLuminanceScale = 25.048f / 13.693f;
+  constexpr float kDarkLuminanceScale = 9.338f / 13.693f;
+  constexpr float kDarkerLuminanceScale = 5.901f / 13.693f;
+
+  const float lightLuminanceAdjust =
+      ScaleLuminanceBy(luminance, kLightLuminanceScale);
+  const float darkLuminanceAdjust =
+      ScaleLuminanceBy(luminance, kDarkLuminanceScale);
+  const float darkerLuminanceAdjust =
+      ScaleLuminanceBy(luminance, kDarkerLuminanceScale);
+
+  sAccentColor = sRGBColor::FromABGR(accent);
+
+  {
+    nscolor lightColor =
+        RelativeLuminanceUtils::Adjust(accent, lightLuminanceAdjust);
+    lightColor = NS_RGBA(NS_GET_R(lightColor), NS_GET_G(lightColor),
+                         NS_GET_B(lightColor), 0x4d);
+    sAccentColorLight = sRGBColor::FromABGR(lightColor);
+  }
+
+  sAccentColorDark = sRGBColor::FromABGR(
+      RelativeLuminanceUtils::Adjust(accent, darkLuminanceAdjust));
+  sAccentColorDarker = sRGBColor::FromABGR(
+      RelativeLuminanceUtils::Adjust(accent, darkerLuminanceAdjust));
+}
 
 static bool IsScrollbarWidthThin(nsIFrame* aFrame) {
   ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
@@ -152,13 +247,10 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeCheckboxColors(
     }
   } else {
     if (isChecked || isIndeterminate) {
-      if (isPressed) {
-        backgroundColor = borderColor = sColorAccentDarker;
-      } else if (isHovered) {
-        backgroundColor = borderColor = sColorAccentDark;
-      } else {
-        backgroundColor = borderColor = sColorAccent;
-      }
+      const auto& color = isPressed   ? sAccentColorDarker
+                          : isHovered ? sAccentColorDark
+                                      : sAccentColor;
+      backgroundColor = borderColor = color;
     } else if (isPressed) {
       backgroundColor = sColorGrey20;
       borderColor = sColorGrey60;
@@ -175,8 +267,10 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeCheckboxColors(
 }
 
 sRGBColor nsNativeBasicTheme::ComputeCheckmarkColor(const EventStates& aState) {
-  bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
-  return isDisabled ? sColorWhiteAlpha50 : sColorWhite;
+  if (aState.HasState(NS_EVENT_STATE_DISABLED)) {
+    return sColorWhiteAlpha50;
+  }
+  return sAccentColorForeground;
 }
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRadioCheckmarkColors(
@@ -184,8 +278,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRadioCheckmarkColors(
   auto [unusedColor, checkColor] =
       ComputeCheckboxColors(aState, StyleAppearance::Radio);
   Unused << unusedColor;
-
-  return std::make_pair(sColorWhite, checkColor);
+  return std::make_pair(ComputeCheckmarkColor(aState), checkColor);
 }
 
 sRGBColor nsNativeBasicTheme::ComputeBorderColor(const EventStates& aState) {
@@ -198,7 +291,7 @@ sRGBColor nsNativeBasicTheme::ComputeBorderColor(const EventStates& aState) {
     return sColorGrey40Alpha50;
   }
   if (isFocused) {
-    return sColorAccent;
+    return sAccentColor;
   }
   if (isActive) {
     return sColorGrey60;
@@ -257,9 +350,9 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeProgressColors(
     return std::make_pair(sColorGrey40Alpha50, sColorGrey40Alpha50);
   }
   if (isActive || isHovered) {
-    return std::make_pair(sColorAccentDark, sColorAccentDarker);
+    return std::make_pair(sAccentColorDark, sAccentColorDarker);
   }
-  return std::make_pair(sColorAccent, sColorAccentDark);
+  return std::make_pair(sAccentColor, sAccentColorDark);
 }
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeTrackColors(
@@ -290,7 +383,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeThumbColors(
       return sColorGrey50Alpha50;
     }
     if (isActive) {
-      return sColorAccent;
+      return sAccentColor;
     }
     if (isHovered) {
       return sColorGrey60;
@@ -304,7 +397,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeThumbColors(
 }
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeProgressColors() {
-  return std::make_pair(sColorAccent, sColorAccentDark);
+  return std::make_pair(sAccentColor, sAccentColorDark);
 }
 
 std::pair<sRGBColor, sRGBColor>
@@ -339,7 +432,7 @@ sRGBColor nsNativeBasicTheme::ComputeMenulistArrowButtonColor(
 }
 
 std::array<sRGBColor, 3> nsNativeBasicTheme::ComputeFocusRectColors() {
-  return {sColorAccent, sColorWhiteAlpha80, sColorAccentLight};
+  return {sAccentColor, sColorWhiteAlpha80, sAccentColorLight};
 }
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeScrollbarColors(
@@ -377,17 +470,11 @@ nscolor nsNativeBasicTheme::AdjustUnthemedScrollbarThumbColor(
   }
   float luminance = RelativeLuminanceUtils::Compute(aFaceColor);
   if (isActive) {
-    if (luminance >= 0.18f) {
-      luminance *= 0.192f;
-    } else {
-      luminance /= 0.192f;
-    }
+    // 11.7 / 61.0
+    luminance = ScaleLuminanceBy(luminance, 0.192f);
   } else {
-    if (luminance >= 0.18f) {
-      luminance *= 0.625f;
-    } else {
-      luminance /= 0.625f;
-    }
+    // 38.1 / 61.0
+    luminance = ScaleLuminanceBy(luminance, 0.625f);
   }
   return RelativeLuminanceUtils::Adjust(aFaceColor, luminance);
 }

@@ -6,6 +6,7 @@
 #include "nsNativeBasicThemeWin.h"
 
 #include "LookAndFeel.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "ScrollbarUtil.h"
 
 nsITheme::Transparency nsNativeBasicThemeWin::GetWidgetTransparency(
