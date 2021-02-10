@@ -20,7 +20,6 @@ const {
   NETWORK_MESSAGES_UPDATE,
   NETWORK_UPDATES_REQUEST,
   MESSAGES_CLEAR,
-  MESSAGES_CLEAR_LOGPOINT,
   MESSAGE_OPEN,
   MESSAGE_CLOSE,
   MESSAGE_TYPE,
@@ -61,13 +60,6 @@ function messagesAdd(packets, idGenerator = null) {
 function messagesClear() {
   return {
     type: MESSAGES_CLEAR,
-  };
-}
-
-function messagesClearLogpoint(logpointId) {
-  return {
-    type: MESSAGES_CLEAR_LOGPOINT,
-    logpointId,
   };
 }
 
@@ -169,7 +161,6 @@ function networkUpdateRequests(updates) {
 module.exports = {
   messagesAdd,
   messagesClear,
-  messagesClearLogpoint,
   messageOpen,
   messageClose,
   messageRemove,

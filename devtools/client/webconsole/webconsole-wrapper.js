@@ -270,10 +270,6 @@ class WebConsoleWrapper {
     this.networkDataProvider.requestData(id, type);
   }
 
-  dispatchClearLogpointMessages(logpointId) {
-    store.dispatch(actions.messagesClearLogpoint(logpointId));
-  }
-
   dispatchClearHistory() {
     store.dispatch(actions.clearHistory());
   }
