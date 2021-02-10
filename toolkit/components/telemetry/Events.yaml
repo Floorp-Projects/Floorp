@@ -2621,6 +2621,35 @@ dom.quota.try:
       source_file: The name of the source code file where the error occured.
       source_line: The line within source_file where the error occured.
 
+zero_byte_load:
+  load:
+    bug_numbers:
+      - 1675823
+    description: >-
+        Collection of zero_byte_load events as part of the Yellow Screen of Death analysis.
+        When a file is loaded synchronously, this event gets recorded in nsJARChannel::Open if the content length is zero.
+        For asynchronous loads, this event gets recorded in onStopRequest.
+    products:
+      - "firefox"
+    record_in_processes: ["main", "content"]
+    release_channel_collection: opt-out
+    expiry_version: "never"
+    notification_emails:
+      - zbraniecki@mozilla.com
+      - vchin@mozilla.com
+      - kershaw@mozilla.com
+    objects:
+      - "ftl"
+      - "dtd"
+      - "properties"
+      - "js"
+      - "xml"
+      - "xhtml"
+      - "others"
+    extra_keys:
+      sync: Was the load synchronous
+      file_name: The name of the file being loaded.
+
 avif:
   dav1d_get_picture:
     objects: ["return_value"]
