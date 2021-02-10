@@ -171,7 +171,12 @@ def append_result(log, suites, test_name, name, result, extra_options):
 
     subtests = suites.setdefault(
         test_name,
-        {"name": orig_test_name, "subtests": {}, "extraOptions": extra_options},
+        {
+            "name": orig_test_name,
+            "tags": extra_options + ["visual"],
+            "subtests": {},
+            "extraOptions": extra_options,
+        },
     )["subtests"]
 
     if name not in subtests:
