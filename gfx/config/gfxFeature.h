@@ -16,24 +16,25 @@
 namespace mozilla {
 namespace gfx {
 
-#define GFX_FEATURE_MAP(_)                                           \
-  /* Name,                        Type,         Description */       \
-  _(HW_COMPOSITING, Feature, "Compositing")                          \
-  _(D3D11_COMPOSITING, Feature, "Direct3D11 Compositing")            \
-  _(OPENGL_COMPOSITING, Feature, "OpenGL Compositing")               \
-  _(DIRECT2D, Feature, "Direct2D")                                   \
-  _(D3D11_HW_ANGLE, Feature, "Direct3D11 hardware ANGLE")            \
-  _(DIRECT_DRAW, Feature, "DirectDraw")                              \
-  _(GPU_PROCESS, Feature, "GPU Process")                             \
-  _(WEBRENDER, Feature, "WebRender")                                 \
-  _(WEBRENDER_QUALIFIED, Feature, "WebRender qualified")             \
-  _(WEBRENDER_COMPOSITOR, Feature, "WebRender native compositor")    \
-  _(WEBRENDER_PARTIAL, Feature, "WebRender partial present")         \
-  _(WEBRENDER_ANGLE, Feature, "WebRender ANGLE")                     \
-  _(WEBRENDER_DCOMP_PRESENT, Feature, "WebRender DirectComposition") \
-  _(WEBRENDER_SOFTWARE, Feature, "WebRender software fallback")      \
-  _(OMTP, Feature, "Off Main Thread Painting")                       \
-  _(WEBGPU, Feature, "WebGPU")                                       \
+#define GFX_FEATURE_MAP(_)                                               \
+  /* Name,                        Type,         Description */           \
+  _(HW_COMPOSITING, Feature, "Compositing")                              \
+  _(D3D11_COMPOSITING, Feature, "Direct3D11 Compositing")                \
+  _(OPENGL_COMPOSITING, Feature, "OpenGL Compositing")                   \
+  _(DIRECT2D, Feature, "Direct2D")                                       \
+  _(D3D11_HW_ANGLE, Feature, "Direct3D11 hardware ANGLE")                \
+  _(DIRECT_DRAW, Feature, "DirectDraw")                                  \
+  _(GPU_PROCESS, Feature, "GPU Process")                                 \
+  _(WEBRENDER, Feature, "WebRender")                                     \
+  _(WEBRENDER_QUALIFIED, Feature, "WebRender qualified")                 \
+  _(WEBRENDER_COMPOSITOR, Feature, "WebRender native compositor")        \
+  _(WEBRENDER_PARTIAL, Feature, "WebRender partial present")             \
+  _(WEBRENDER_OPTIMIZED_SHADERS, Feature, "WebRender optimized shaders") \
+  _(WEBRENDER_ANGLE, Feature, "WebRender ANGLE")                         \
+  _(WEBRENDER_DCOMP_PRESENT, Feature, "WebRender DirectComposition")     \
+  _(WEBRENDER_SOFTWARE, Feature, "WebRender software fallback")          \
+  _(OMTP, Feature, "Off Main Thread Painting")                           \
+  _(WEBGPU, Feature, "WebGPU")                                           \
   /* Add new entries above this comment */
 
 enum class Feature : uint32_t {
