@@ -16,7 +16,7 @@ struct LookAndFeelInt {
     int32_t value;
 };
 
-comparable struct LookAndFeelFont {
+[Comparable] struct LookAndFeelFont {
     bool haveFont;
     nsString name;
     float size;

@@ -6839,12 +6839,9 @@ static bool AtomicsMeetsPreconditions(TypedArrayObject* typedArray,
     case Scalar::Uint16:
     case Scalar::Int32:
     case Scalar::Uint32:
-      break;
-
     case Scalar::BigInt64:
     case Scalar::BigUint64:
-      // Bug 1638295: Not yet implemented.
-      return false;
+      break;
 
     case Scalar::Float32:
     case Scalar::Float64:
@@ -6888,15 +6885,17 @@ AttachDecision CallIRGenerator::tryAttachAtomicsCompareExchange(
   if (!args_[1].isNumber()) {
     return AttachDecision::NoAction;
   }
-  if (!args_[2].isNumber()) {
-    return AttachDecision::NoAction;
-  }
-  if (!args_[3].isNumber()) {
-    return AttachDecision::NoAction;
-  }
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
   if (!AtomicsMeetsPreconditions(typedArray, args_[1])) {
+    return AttachDecision::NoAction;
+  }
+
+  Scalar::Type elementType = typedArray->type();
+  if (!ValueIsNumeric(elementType, args_[2])) {
+    return AttachDecision::NoAction;
+  }
+  if (!ValueIsNumeric(elementType, args_[3])) {
     return AttachDecision::NoAction;
   }
 
@@ -6916,19 +6915,18 @@ AttachDecision CallIRGenerator::tryAttachAtomicsCompareExchange(
   IntPtrOperandId intPtrIndexId =
       guardToIntPtrIndex(args_[1], indexId, /* supportOOB = */ false);
 
-  // Convert expected value to int32.
+  // Convert expected value to int32/BigInt.
   ValOperandId expectedId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_);
-  Int32OperandId int32ExpectedId = writer.guardToInt32ModUint32(expectedId);
+  OperandId numericExpectedId = emitNumericGuard(expectedId, elementType);
 
-  // Convert replacement value to int32.
+  // Convert replacement value to int32/BigInt.
   ValOperandId replacementId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg3, argc_);
-  Int32OperandId int32ReplacementId =
-      writer.guardToInt32ModUint32(replacementId);
+  OperandId numericReplacementId = emitNumericGuard(replacementId, elementType);
 
-  writer.atomicsCompareExchangeResult(objId, intPtrIndexId, int32ExpectedId,
-                                      int32ReplacementId, typedArray->type());
+  writer.atomicsCompareExchangeResult(objId, intPtrIndexId, numericExpectedId,
+                                      numericReplacementId, typedArray->type());
   writer.returnFromIC();
 
   trackAttached("AtomicsCompareExchange");
@@ -6952,15 +6950,14 @@ bool CallIRGenerator::canAttachAtomicsReadWriteModify() {
   if (!args_[1].isNumber()) {
     return false;
   }
-  if (!args_[2].isNumber()) {
-    return false;
-  }
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
   if (!AtomicsMeetsPreconditions(typedArray, args_[1])) {
     return false;
   }
-
+  if (!ValueIsNumeric(typedArray->type(), args_[2])) {
+    return false;
+  }
   return true;
 }
 
@@ -6986,12 +6983,12 @@ CallIRGenerator::emitAtomicsReadWriteModifyOperands(HandleFunction callee) {
   IntPtrOperandId intPtrIndexId =
       guardToIntPtrIndex(args_[1], indexId, /* supportOOB = */ false);
 
-  // Convert value to int32.
+  // Convert value to int32/BigInt.
   ValOperandId valueId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_);
-  Int32OperandId int32ValueId = writer.guardToInt32ModUint32(valueId);
+  OperandId numericValueId = emitNumericGuard(valueId, typedArray->type());
 
-  return {objId, intPtrIndexId, int32ValueId};
+  return {objId, intPtrIndexId, numericValueId};
 }
 
 AttachDecision CallIRGenerator::tryAttachAtomicsExchange(
@@ -7000,12 +6997,12 @@ AttachDecision CallIRGenerator::tryAttachAtomicsExchange(
     return AttachDecision::NoAction;
   }
 
-  auto [objId, intPtrIndexId, int32ValueId] =
+  auto [objId, intPtrIndexId, numericValueId] =
       emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
 
-  writer.atomicsExchangeResult(objId, intPtrIndexId, int32ValueId,
+  writer.atomicsExchangeResult(objId, intPtrIndexId, numericValueId,
                                typedArray->type());
   writer.returnFromIC();
 
@@ -7018,13 +7015,14 @@ AttachDecision CallIRGenerator::tryAttachAtomicsAdd(HandleFunction callee) {
     return AttachDecision::NoAction;
   }
 
-  auto [objId, intPtrIndexId, int32ValueId] =
+  auto [objId, intPtrIndexId, numericValueId] =
       emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
+  bool forEffect = (op_ == JSOp::CallIgnoresRv);
 
-  writer.atomicsAddResult(objId, intPtrIndexId, int32ValueId,
-                          typedArray->type());
+  writer.atomicsAddResult(objId, intPtrIndexId, numericValueId,
+                          typedArray->type(), forEffect);
   writer.returnFromIC();
 
   trackAttached("AtomicsAdd");
@@ -7036,13 +7034,14 @@ AttachDecision CallIRGenerator::tryAttachAtomicsSub(HandleFunction callee) {
     return AttachDecision::NoAction;
   }
 
-  auto [objId, intPtrIndexId, int32ValueId] =
+  auto [objId, intPtrIndexId, numericValueId] =
       emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
+  bool forEffect = (op_ == JSOp::CallIgnoresRv);
 
-  writer.atomicsSubResult(objId, intPtrIndexId, int32ValueId,
-                          typedArray->type());
+  writer.atomicsSubResult(objId, intPtrIndexId, numericValueId,
+                          typedArray->type(), forEffect);
   writer.returnFromIC();
 
   trackAttached("AtomicsSub");
@@ -7054,13 +7053,14 @@ AttachDecision CallIRGenerator::tryAttachAtomicsAnd(HandleFunction callee) {
     return AttachDecision::NoAction;
   }
 
-  auto [objId, intPtrIndexId, int32ValueId] =
+  auto [objId, intPtrIndexId, numericValueId] =
       emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
+  bool forEffect = (op_ == JSOp::CallIgnoresRv);
 
-  writer.atomicsAndResult(objId, intPtrIndexId, int32ValueId,
-                          typedArray->type());
+  writer.atomicsAndResult(objId, intPtrIndexId, numericValueId,
+                          typedArray->type(), forEffect);
   writer.returnFromIC();
 
   trackAttached("AtomicsAnd");
@@ -7072,13 +7072,14 @@ AttachDecision CallIRGenerator::tryAttachAtomicsOr(HandleFunction callee) {
     return AttachDecision::NoAction;
   }
 
-  auto [objId, intPtrIndexId, int32ValueId] =
+  auto [objId, intPtrIndexId, numericValueId] =
       emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
+  bool forEffect = (op_ == JSOp::CallIgnoresRv);
 
-  writer.atomicsOrResult(objId, intPtrIndexId, int32ValueId,
-                         typedArray->type());
+  writer.atomicsOrResult(objId, intPtrIndexId, numericValueId,
+                         typedArray->type(), forEffect);
   writer.returnFromIC();
 
   trackAttached("AtomicsOr");
@@ -7090,13 +7091,14 @@ AttachDecision CallIRGenerator::tryAttachAtomicsXor(HandleFunction callee) {
     return AttachDecision::NoAction;
   }
 
-  auto [objId, intPtrIndexId, int32ValueId] =
+  auto [objId, intPtrIndexId, numericValueId] =
       emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
+  bool forEffect = (op_ == JSOp::CallIgnoresRv);
 
-  writer.atomicsXorResult(objId, intPtrIndexId, int32ValueId,
-                          typedArray->type());
+  writer.atomicsXorResult(objId, intPtrIndexId, numericValueId,
+                          typedArray->type(), forEffect);
   writer.returnFromIC();
 
   trackAttached("AtomicsXor");
@@ -7175,12 +7177,21 @@ AttachDecision CallIRGenerator::tryAttachAtomicsStore(HandleFunction callee) {
   if (!args_[1].isNumber()) {
     return AttachDecision::NoAction;
   }
-  if (op_ == JSOp::CallIgnoresRv ? !args_[2].isNumber() : !args_[2].isInt32()) {
-    return AttachDecision::NoAction;
-  }
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
   if (!AtomicsMeetsPreconditions(typedArray, args_[1])) {
+    return AttachDecision::NoAction;
+  }
+
+  Scalar::Type elementType = typedArray->type();
+  if (!ValueIsNumeric(elementType, args_[2])) {
+    return AttachDecision::NoAction;
+  }
+
+  bool guardIsInt32 =
+      !Scalar::isBigIntType(elementType) && op_ != JSOp::CallIgnoresRv;
+
+  if (guardIsInt32 && !args_[2].isInt32()) {
     return AttachDecision::NoAction;
   }
 
@@ -7200,17 +7211,17 @@ AttachDecision CallIRGenerator::tryAttachAtomicsStore(HandleFunction callee) {
   IntPtrOperandId intPtrIndexId =
       guardToIntPtrIndex(args_[1], indexId, /* supportOOB = */ false);
 
-  // Ensure value is int32.
+  // Ensure value is int32 or BigInt.
   ValOperandId valueId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_);
-  Int32OperandId int32ValueId;
-  if (op_ == JSOp::CallIgnoresRv) {
-    int32ValueId = writer.guardToInt32ModUint32(valueId);
+  OperandId numericValueId;
+  if (guardIsInt32) {
+    numericValueId = writer.guardToInt32(valueId);
   } else {
-    int32ValueId = writer.guardToInt32(valueId);
+    numericValueId = emitNumericGuard(valueId, elementType);
   }
 
-  writer.atomicsStoreResult(objId, intPtrIndexId, int32ValueId,
+  writer.atomicsStoreResult(objId, intPtrIndexId, numericValueId,
                             typedArray->type());
   writer.returnFromIC();
 

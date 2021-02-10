@@ -12,9 +12,9 @@ include protocol PRemoteDecoderManager;
 include protocol PVideoBridge;
 
 using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
-using moveonly mozilla::UntrustedModulesData from "mozilla/UntrustedModulesData.h";
-using moveonly mozilla::ModulePaths from "mozilla/UntrustedModulesData.h";
-using moveonly mozilla::ModulesMapResult from "mozilla/UntrustedModulesData.h";
+[MoveOnly] using mozilla::UntrustedModulesData from "mozilla/UntrustedModulesData.h";
+[MoveOnly] using mozilla::ModulePaths from "mozilla/UntrustedModulesData.h";
+[MoveOnly] using mozilla::ModulesMapResult from "mozilla/UntrustedModulesData.h";
 using mozilla::PDMFactory::MediaCodecsSupported from "PDMFactory.h";
 
 namespace mozilla {

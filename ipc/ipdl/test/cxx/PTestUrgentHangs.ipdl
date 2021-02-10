@@ -4,24 +4,24 @@ namespace _ipdltest {
 nested(upto inside_cpow) sync protocol PTestUrgentHangs
 {
 parent:
-    nested(inside_sync) sync Test1_2();
+    [Nested=inside_sync] sync Test1_2();
 
-    nested(inside_sync) sync TestInner();
-    nested(inside_cpow) sync TestInnerUrgent();
+    [Nested=inside_sync] sync TestInner();
+    [Nested=inside_cpow] sync TestInnerUrgent();
 
 child:
-    nested(inside_sync) sync Test1_1();
-    nested(inside_sync) sync Test1_3();
+    [Nested=inside_sync] sync Test1_1();
+    [Nested=inside_sync] sync Test1_3();
 
-    nested(inside_sync) sync Test2();
+    [Nested=inside_sync] sync Test2();
 
-    nested(inside_sync) sync Test3();
+    [Nested=inside_sync] sync Test3();
 
     async Test4();
-    nested(inside_sync) sync Test4_1();
+    [Nested=inside_sync] sync Test4_1();
 
     async Test5();
-    nested(inside_sync) sync Test5_1();
+    [Nested=inside_sync] sync Test5_1();
 };
 
 } // namespace _ipdltest

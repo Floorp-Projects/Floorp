@@ -3121,7 +3121,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
                                        modifierFlags:theEvent.modifierFlags
                                            timestamp:theEvent.timestamp
                                         windowNumber:theEvent.windowNumber
-                                             context:theEvent.context
+                                             context:nil
                                          eventNumber:theEvent.eventNumber
                                           clickCount:theEvent.clickCount
                                             pressure:theEvent.pressure];

@@ -118,4 +118,4 @@ testStarExportEntries(
 
 testStarExportEntries(
     'export * from "mod";',
-    [{exportName: null, moduleRequest: 'mod', importName: '*', localName: null}]);
+    [{exportName: null, moduleRequest: 'mod', importName: null, localName: null}]);

@@ -19,7 +19,7 @@ using namespace mozilla::widget;
 static const int kSystemDefinedEventMediaKeysSubtype = 8;
 
 static void SendFakeEvent(RefPtr<MediaHardwareKeysEventSourceMac>& aSource, int aKeyData) {
-  NSEvent* event = [NSEvent otherEventWithType:NSSystemDefined
+  NSEvent* event = [NSEvent otherEventWithType:NSEventTypeSystemDefined
                                       location:NSZeroPoint
                                  modifierFlags:0
                                      timestamp:0

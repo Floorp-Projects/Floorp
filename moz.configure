@@ -208,10 +208,25 @@ def moz_fetches_dir(value):
         return value[0]
 
 
-@depends(developer_options, moz_fetches_dir)
-def bootstrap_search_path_order(developer_options, moz_fetches_dir):
+option(
+    "--enable-bootstrap",
+    nargs="?",
+    choices=("install", "update"),
+    help="Automatically update/bootstrap some toolchains when they are present but out of date",
+)
+
+
+@depends(developer_options, "--enable-bootstrap", moz_fetches_dir)
+def bootstrap_search_path_order(developer_options, bootstrap, moz_fetches_dir):
     if moz_fetches_dir:
         log.debug("Prioritizing MOZ_FETCHES_DIR in toolchain path.")
+        return "prepend"
+
+    if bootstrap:
+        log.debug(
+            "Prioritizing mozbuild state dir in toolchain paths because "
+            "bootstrap mode is enabled."
+        )
         return "prepend"
 
     if developer_options:
@@ -239,16 +254,7 @@ def original_path():
     return environ["PATH"].split(os.pathsep)
 
 
-option(
-    "--enable-bootstrap",
-    nargs="?",
-    choices=("install", "update"),
-    when=developer_options,
-    help="Automatically update/bootstrap some toolchains when they are present but out of date",
-)
-
-
-@depends("--enable-bootstrap", when=developer_options)
+@depends("--enable-bootstrap")
 def bootstrap(value):
     if value:
         # value here is either an empty tuple, or a tuple containing either

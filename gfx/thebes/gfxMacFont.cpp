@@ -462,7 +462,7 @@ int32_t gfxMacFont::GetGlyphWidth(uint16_t aGID) {
   }
 
   CGSize advance;
-  ::CTFontGetAdvancesForGlyphs(mCTFont, kCTFontDefaultOrientation, &aGID,
+  ::CTFontGetAdvancesForGlyphs(mCTFont, kCTFontOrientationDefault, &aGID,
                                &advance, 1);
   return advance.width * 0x10000;
 }

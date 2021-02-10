@@ -21,7 +21,7 @@ include ProtocolTypes;
 
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 
-using moveonly struct mozilla::SerializedStructuredCloneBuffer
+[MoveOnly] using struct mozilla::SerializedStructuredCloneBuffer
   from "mozilla/ipc/SerializedStructuredCloneBuffer.h";
 
 using class mozilla::dom::LoadingSessionHistoryInfo
@@ -39,15 +39,15 @@ using nsSizeMode from "nsIWidgetListener.h";
 using ScrollbarPreference from "mozilla/ScrollbarPreferences.h";
 using hal::ScreenOrientation from "mozilla/HalScreenConfiguration.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
-using refcounted class nsIPrincipal from "nsIPrincipal.h";
+[RefCounted] using class nsIPrincipal from "nsIPrincipal.h";
 using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
-using refcounted class nsIURI from "nsIURI.h";
-using refcounted class nsIContentSecurityPolicy from "nsIContentSecurityPolicy.h";
-using refcounted class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
-using refcounted class nsIReferrerInfo from "nsIReferrerInfo.h";
-using refcounted class nsIVariant from "nsIVariant.h";
+[RefCounted] using class nsIURI from "nsIURI.h";
+[RefCounted] using class nsIContentSecurityPolicy from "nsIContentSecurityPolicy.h";
+[RefCounted] using class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
+[RefCounted] using class nsIReferrerInfo from "nsIReferrerInfo.h";
+[RefCounted] using class nsIVariant from "nsIVariant.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
-using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
+[RefCounted] using class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
 
 namespace mozilla {
 namespace dom {

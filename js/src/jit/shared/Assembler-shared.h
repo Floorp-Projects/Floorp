@@ -87,6 +87,10 @@ static inline Scale ScaleFromElemWidth(int shift) {
   MOZ_CRASH("Invalid scale");
 }
 
+static inline Scale ScaleFromScalarType(Scalar::Type type) {
+  return ScaleFromElemWidth(Scalar::byteSize(type));
+}
+
 // Used for 32-bit immediates which do not require relocation.
 struct Imm32 {
   int32_t value;

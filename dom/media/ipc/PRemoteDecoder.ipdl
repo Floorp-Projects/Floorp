@@ -11,9 +11,9 @@ using mozilla::MediaDataDecoder::ConversionRequired from "PlatformDecoderModule.
 using mozilla::TrackInfo::TrackType from "MediaInfo.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::MediaResult from "MediaResult.h";
-using refcounted class mozilla::ArrayOfRemoteMediaRawData from "mozilla/RemoteMediaData.h";
-using refcounted class mozilla::ArrayOfRemoteAudioData from "mozilla/RemoteMediaData.h";
-using refcounted class mozilla::ArrayOfRemoteVideoData from "mozilla/RemoteMediaData.h";
+[RefCounted] using class mozilla::ArrayOfRemoteMediaRawData from "mozilla/RemoteMediaData.h";
+[RefCounted] using class mozilla::ArrayOfRemoteAudioData from "mozilla/RemoteMediaData.h";
+[RefCounted] using class mozilla::ArrayOfRemoteVideoData from "mozilla/RemoteMediaData.h";
 include PMediaDecoderParams;
 include LayersSurfaces;
 

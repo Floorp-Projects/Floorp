@@ -66,6 +66,22 @@ class PerformanceWorker final : public Performance {
     MOZ_CRASH("This should not be called on workers.");
   }
 
+  void InsertEventTimingEntry(PerformanceEventTiming*) override {
+    MOZ_CRASH("This should not be called on workers.");
+  }
+
+  void BufferEventTimingEntryIfNeeded(PerformanceEventTiming*) override {
+    MOZ_CRASH("This should not be called on workers.");
+  }
+
+  void DispatchPendingEventTimingEntries() override {
+    MOZ_CRASH("This should not be called on workders.");
+  }
+
+  class EventCounts* EventCounts() override {
+    MOZ_CRASH("This should not be called on workers");
+  }
+
   bool CrossOriginIsolated() const override;
 
  protected:

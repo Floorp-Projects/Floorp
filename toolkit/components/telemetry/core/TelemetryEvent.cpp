@@ -712,6 +712,9 @@ void TelemetryEvent::InitializeGlobalState(bool aCanRecordBase,
     gCategoryNames.PutEntry(info.common_info.category());
   }
 
+  // A hack until bug 1691156 is fixed
+  gEnabledCategories.PutEntry("avif"_ns);
+
   gInitDone = true;
 }
 

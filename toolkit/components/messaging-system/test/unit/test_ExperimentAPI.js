@@ -9,6 +9,9 @@ const { ExperimentFakes } = ChromeUtils.import(
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
 const COLLECTION_ID_PREF = "messaging-system.rsexperimentloader.collection_id";
 
 /**
@@ -64,6 +67,7 @@ add_task(async function test_getExperimentMetaData() {
   const sandbox = sinon.createSandbox();
   const manager = ExperimentFakes.manager();
   const expected = ExperimentFakes.experiment("foo");
+  let exposureStub = sandbox.stub(ExperimentAPI, "recordExposureEvent");
 
   await manager.onStartup();
   sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
@@ -84,11 +88,14 @@ add_task(async function test_getExperimentMetaData() {
     "Should have the slug prop"
   );
 
+  Assert.ok(exposureStub.notCalled, "Not called for this method");
+
   sandbox.restore();
 });
 
 add_task(function test_getExperimentMetaData_safe() {
   const sandbox = sinon.createSandbox();
+  let exposureStub = sandbox.stub(ExperimentAPI, "recordExposureEvent");
 
   sandbox.stub(ExperimentAPI._store, "get").throws();
   sandbox.stub(ExperimentAPI._store, "getExperimentForFeature").throws();
@@ -114,6 +121,8 @@ add_task(function test_getExperimentMetaData_safe() {
     "Sanity check"
   );
 
+  Assert.ok(exposureStub.notCalled, "Not called for this feature");
+
   sandbox.restore();
 });
 
@@ -131,6 +140,7 @@ add_task(async function test_getExperiment_feature() {
   await manager.onStartup();
 
   sandbox.stub(ExperimentAPI, "_store").get(() => ExperimentFakes.childStore());
+  let exposureStub = sandbox.stub(ExperimentAPI, "recordExposureEvent");
 
   manager.store.addExperiment(expected);
 
@@ -145,6 +155,12 @@ add_task(async function test_getExperiment_feature() {
     expected.slug,
     "should return an experiment by featureId"
   );
+
+  Assert.ok(exposureStub.notCalled, "Not called by default");
+
+  ExperimentAPI.getExperiment({ featureId: "cfr", sendExposurePing: true });
+
+  Assert.ok(exposureStub.calledOnce, "Called explicitly.");
 
   sandbox.restore();
 });
@@ -385,15 +401,24 @@ add_task(async function test_activateBranch_activationEvent() {
   await store.init();
   store.addExperiment(experiment);
   // Adding stub later because `addExperiment` emits update events
-  const stub = sandbox.stub(store, "emit");
-  // Call activateBranch to trigger an activation event
+  const stub = sandbox.stub(ExperimentAPI, "recordExposureEvent");
   ExperimentAPI.activateBranch({ featureId: "green" });
+  Assert.equal(
+    stub.callCount,
+    0,
+    "Exposure is not sent by default by activateBranch"
+  );
+
+  ExperimentAPI.activateBranch({ featureId: "green", sendExposurePing: true });
 
   Assert.equal(stub.callCount, 1, "Called by doing activateBranch");
-  Assert.equal(stub.firstCall.args[0], "exposure", "Has correct event name");
-  Assert.equal(
-    stub.firstCall.args[1].experimentSlug,
-    experiment.slug,
+  Assert.deepEqual(
+    stub.firstCall.args[0],
+    {
+      featureId: experiment.branch.feature.featureId,
+      experimentSlug: experiment.slug,
+      branchSlug: experiment.branch.slug,
+    },
     "Has correct payload"
   );
   sandbox.restore();
@@ -442,8 +467,26 @@ add_task(async function test_activateBranch_noActivationEvent() {
   // Adding stub later because `addExperiment` emits update events
   const stub = sandbox.stub(store, "emit");
   // Call activateBranch to trigger an activation event
-  ExperimentAPI.activateBranch({ featureId: "green", sendExposurePing: false });
+  ExperimentAPI.activateBranch({ featureId: "green" });
 
   Assert.equal(stub.callCount, 0, "Not called: sendExposurePing is false");
   sandbox.restore();
+});
+
+add_task(function test_recordExposureEvent() {
+  Services.telemetry.clearScalars();
+
+  ExperimentAPI.recordExposureEvent({
+    featureId: "aboutwelcome",
+    experimentSlug: "my-xpcshell-experiment",
+    branchSlug: "treatment-a",
+  });
+
+  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    "telemetry.event_counts",
+    "normandy#expose#feature_study",
+    1
+  );
 });

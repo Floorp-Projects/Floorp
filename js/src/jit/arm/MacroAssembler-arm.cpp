@@ -5333,23 +5333,34 @@ void MacroAssembler::wasmAtomicEffectOp(const wasm::MemoryAccessDesc& access,
 }
 
 template <typename T>
-static void WasmAtomicLoad64(MacroAssembler& masm,
-                             const wasm::MemoryAccessDesc& access, const T& mem,
-                             Register64 temp, Register64 output) {
-  MOZ_ASSERT(temp.low == InvalidReg && temp.high == InvalidReg);
+static void AtomicLoad64(MacroAssembler& masm,
+                         const wasm::MemoryAccessDesc* access,
+                         const Synchronization& sync, const T& mem,
+                         Register64 output) {
   MOZ_ASSERT((output.low.code() & 1) == 0);
   MOZ_ASSERT(output.low.code() + 1 == output.high.code());
 
-  masm.memoryBarrierBefore(access.sync());
+  masm.memoryBarrierBefore(sync);
 
   SecondScratchRegisterScope scratch2(masm);
   Register ptr = ComputePointerForAtomic(masm, mem, scratch2);
 
   BufferOffset load = masm.as_ldrexd(output.low, output.high, ptr);
-  masm.append(access, load.getOffset());
+  if (access) {
+    masm.append(*access, load.getOffset());
+  }
   masm.as_clrex();
 
-  masm.memoryBarrierAfter(access.sync());
+  masm.memoryBarrierAfter(sync);
+}
+
+template <typename T>
+static void WasmAtomicLoad64(MacroAssembler& masm,
+                             const wasm::MemoryAccessDesc& access, const T& mem,
+                             Register64 temp, Register64 output) {
+  MOZ_ASSERT(temp.low == InvalidReg && temp.high == InvalidReg);
+
+  AtomicLoad64(masm, &access, access.sync(), mem, output);
 }
 
 void MacroAssembler::wasmAtomicLoad64(const wasm::MemoryAccessDesc& access,
@@ -5431,11 +5442,17 @@ void MacroAssembler::compareExchange64(const Synchronization& sync,
   CompareExchange64(*this, nullptr, sync, mem, expect, replace, output);
 }
 
+void MacroAssembler::compareExchange64(const Synchronization& sync,
+                                       const BaseIndex& mem, Register64 expect,
+                                       Register64 replace, Register64 output) {
+  CompareExchange64(*this, nullptr, sync, mem, expect, replace, output);
+}
+
 template <typename T>
-static void WasmAtomicExchange64(MacroAssembler& masm,
-                                 const wasm::MemoryAccessDesc& access,
-                                 const T& mem, Register64 value,
-                                 Register64 output) {
+static void AtomicExchange64(MacroAssembler& masm,
+                             const wasm::MemoryAccessDesc* access,
+                             const Synchronization& sync, const T& mem,
+                             Register64 value, Register64 output) {
   MOZ_ASSERT(output != value);
 
   MOZ_ASSERT((value.low.code() & 1) == 0);
@@ -5449,11 +5466,13 @@ static void WasmAtomicExchange64(MacroAssembler& masm,
   SecondScratchRegisterScope scratch2(masm);
   Register ptr = ComputePointerForAtomic(masm, mem, scratch2);
 
-  masm.memoryBarrierBefore(access.sync());
+  masm.memoryBarrierBefore(sync);
 
   masm.bind(&again);
   BufferOffset load = masm.as_ldrexd(output.low, output.high, ptr);
-  masm.append(access, load.getOffset());
+  if (access) {
+    masm.append(*access, load.getOffset());
+  }
 
   ScratchRegisterScope scratch(masm);
 
@@ -5461,7 +5480,15 @@ static void WasmAtomicExchange64(MacroAssembler& masm,
   masm.as_cmp(scratch, Imm8(1));
   masm.as_b(&again, MacroAssembler::Equal);
 
-  masm.memoryBarrierAfter(access.sync());
+  masm.memoryBarrierAfter(sync);
+}
+
+template <typename T>
+static void WasmAtomicExchange64(MacroAssembler& masm,
+                                 const wasm::MemoryAccessDesc& access,
+                                 const T& mem, Register64 value,
+                                 Register64 output) {
+  AtomicExchange64(masm, &access, access.sync(), mem, value, output);
 }
 
 void MacroAssembler::wasmAtomicExchange64(const wasm::MemoryAccessDesc& access,
@@ -5476,13 +5503,27 @@ void MacroAssembler::wasmAtomicExchange64(const wasm::MemoryAccessDesc& access,
   WasmAtomicExchange64(*this, access, mem, value, output);
 }
 
+void MacroAssembler::atomicExchange64(const Synchronization& sync,
+                                      const Address& mem, Register64 value,
+                                      Register64 output) {
+  AtomicExchange64(*this, nullptr, sync, mem, value, output);
+}
+
+void MacroAssembler::atomicExchange64(const Synchronization& sync,
+                                      const BaseIndex& mem, Register64 value,
+                                      Register64 output) {
+  AtomicExchange64(*this, nullptr, sync, mem, value, output);
+}
+
 template <typename T>
-static void WasmAtomicFetchOp64(MacroAssembler& masm,
-                                const wasm::MemoryAccessDesc& access,
-                                AtomicOp op, Register64 value, const T& mem,
-                                Register64 temp, Register64 output) {
+static void AtomicFetchOp64(MacroAssembler& masm,
+                            const wasm::MemoryAccessDesc* access,
+                            const Synchronization& sync, AtomicOp op,
+                            Register64 value, const T& mem, Register64 temp,
+                            Register64 output) {
   MOZ_ASSERT(temp.low != InvalidReg && temp.high != InvalidReg);
   MOZ_ASSERT(output != value);
+  MOZ_ASSERT(temp != value);
 
   MOZ_ASSERT((temp.low.code() & 1) == 0);
   MOZ_ASSERT(temp.low.code() + 1 == temp.high.code());
@@ -5500,11 +5541,13 @@ static void WasmAtomicFetchOp64(MacroAssembler& masm,
   SecondScratchRegisterScope scratch2(masm);
   Register ptr = ComputePointerForAtomic(masm, mem, scratch2);
 
-  masm.memoryBarrierBefore(access.sync());
+  masm.memoryBarrierBefore(sync);
 
   masm.bind(&again);
   BufferOffset load = masm.as_ldrexd(output.low, output.high, ptr);
-  masm.append(access, load.getOffset());
+  if (access) {
+    masm.append(*access, load.getOffset());
+  }
   switch (op) {
     case AtomicFetchAddOp:
       masm.as_add(temp.low, output.low, O2Reg(value.low), SetCC);
@@ -5535,7 +5578,15 @@ static void WasmAtomicFetchOp64(MacroAssembler& masm,
   masm.as_cmp(scratch, Imm8(1));
   masm.as_b(&again, MacroAssembler::Equal);
 
-  masm.memoryBarrierAfter(access.sync());
+  masm.memoryBarrierAfter(sync);
+}
+
+template <typename T>
+static void WasmAtomicFetchOp64(MacroAssembler& masm,
+                                const wasm::MemoryAccessDesc& access,
+                                AtomicOp op, Register64 value, const T& mem,
+                                Register64 temp, Register64 output) {
+  AtomicFetchOp64(masm, &access, access.sync(), op, value, mem, temp, output);
 }
 
 void MacroAssembler::wasmAtomicFetchOp64(const wasm::MemoryAccessDesc& access,
@@ -5550,6 +5601,30 @@ void MacroAssembler::wasmAtomicFetchOp64(const wasm::MemoryAccessDesc& access,
                                          const BaseIndex& mem, Register64 temp,
                                          Register64 output) {
   WasmAtomicFetchOp64(*this, access, op, value, mem, temp, output);
+}
+
+void MacroAssembler::atomicFetchOp64(const Synchronization& sync, AtomicOp op,
+                                     Register64 value, const Address& mem,
+                                     Register64 temp, Register64 output) {
+  AtomicFetchOp64(*this, nullptr, sync, op, value, mem, temp, output);
+}
+
+void MacroAssembler::atomicFetchOp64(const Synchronization& sync, AtomicOp op,
+                                     Register64 value, const BaseIndex& mem,
+                                     Register64 temp, Register64 output) {
+  AtomicFetchOp64(*this, nullptr, sync, op, value, mem, temp, output);
+}
+
+void MacroAssembler::atomicEffectOp64(const Synchronization& sync, AtomicOp op,
+                                      Register64 value, const Address& mem,
+                                      Register64 temp) {
+  AtomicFetchOp64(*this, nullptr, sync, op, value, mem, temp, temp);
+}
+
+void MacroAssembler::atomicEffectOp64(const Synchronization& sync, AtomicOp op,
+                                      Register64 value, const BaseIndex& mem,
+                                      Register64 temp) {
+  AtomicFetchOp64(*this, nullptr, sync, op, value, mem, temp, temp);
 }
 
 // ========================================================================
@@ -5652,6 +5727,31 @@ void MacroAssembler::atomicEffectOpJS(Scalar::Type arrayType,
                                       Register value, const Address& mem,
                                       Register temp) {
   AtomicEffectOp(*this, nullptr, arrayType, sync, op, value, mem, temp);
+}
+
+// ========================================================================
+// Primitive atomic operations.
+
+void MacroAssembler::atomicLoad64(const Synchronization& sync,
+                                  const Address& mem, Register64 output) {
+  AtomicLoad64(*this, nullptr, sync, mem, output);
+}
+
+void MacroAssembler::atomicLoad64(const Synchronization& sync,
+                                  const BaseIndex& mem, Register64 output) {
+  AtomicLoad64(*this, nullptr, sync, mem, output);
+}
+
+void MacroAssembler::atomicStore64(const Synchronization& sync,
+                                   const Address& mem, Register64 value,
+                                   Register64 temp) {
+  AtomicExchange64(*this, nullptr, sync, mem, value, temp);
+}
+
+void MacroAssembler::atomicStore64(const Synchronization& sync,
+                                   const BaseIndex& mem, Register64 value,
+                                   Register64 temp) {
+  AtomicExchange64(*this, nullptr, sync, mem, value, temp);
 }
 
 // ========================================================================

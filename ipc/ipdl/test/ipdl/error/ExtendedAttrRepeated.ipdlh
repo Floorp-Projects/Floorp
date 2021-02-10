@@ -1,0 +1,5 @@
+//error: Repeated extended attribute `RefCounted'
+
+[RefCounted, RefCounted] using SomeType from "SomeFile.h";
+
+struct ExtendedAttrRepeated {};

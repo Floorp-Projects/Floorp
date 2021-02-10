@@ -1633,9 +1633,13 @@ class Document : public nsINode,
     // If we have an entry and the selector list returned has a null
     // RawServoSelectorList*, that indicates that aSelector has already been
     // parsed and is not a syntactically valid selector.
-    Table::EntryPtr GetList(const nsACString& aSelector) {
+    template <typename F>
+    RawServoSelectorList* GetListOrInsertFrom(const nsACString& aSelector,
+                                              F&& aFrom) {
       MOZ_ASSERT(NS_IsMainThread());
-      return mTable.LookupForAdd(aSelector);
+      return mTable.WithEntryHandle(aSelector, [&aFrom](auto&& entry) {
+        return entry.OrInsertWith(std::forward<F>(aFrom)).get();
+      });
     }
 
     ~SelectorCache();

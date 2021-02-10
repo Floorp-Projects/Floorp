@@ -244,6 +244,7 @@ class NativeLayerCA : public NativeLayer {
   typedef NativeLayerRootCA::WhichRepresentation WhichRepresentation;
   CALayer* UnderlyingCALayer(WhichRepresentation aRepresentation);
   void ApplyChanges(WhichRepresentation aRepresentation);
+  bool HasUpdate(WhichRepresentation aRepresentation);
   void SetBackingScale(float aBackingScale);
 
   // Invalidates the specified region in all surfaces that are tracked by this
@@ -297,6 +298,13 @@ class NativeLayerCA : public NativeLayer {
                       bool aSurfaceIsFlipped,
                       gfx::SamplingFilter aSamplingFilter,
                       CFTypeRefPtr<IOSurfaceRef> aFrontSurface);
+
+    // Return whether any aspects of this layer representation have been mutated
+    // since the last call to ApplyChanges, i.e. whether ApplyChanges needs to
+    // be called.
+    // This is used to optimize away a CATransaction commit if no layers have
+    // changed.
+    bool HasUpdate();
 
     // Lazily initialized by first call to ApplyChanges. mWrappingLayer is the
     // layer that applies the intersection of mDisplayRect and mClipRect (if

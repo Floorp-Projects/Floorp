@@ -33,7 +33,7 @@ testImportEntries('import v from "mod";',
                   [{moduleRequest: 'mod', importName: 'default', localName: 'v'}]);
 
 testImportEntries('import * as ns from "mod";',
-                  [{moduleRequest: 'mod', importName: '*', localName: 'ns'}]);
+                  [{moduleRequest: 'mod', importName: null, localName: 'ns'}]);
 
 testImportEntries('import {x} from "mod";',
                   [{moduleRequest: 'mod', importName: 'x', localName: 'x'}]);

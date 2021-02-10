@@ -1889,13 +1889,13 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
         )
     )
 
-    if compress == "compress":
-        compression = "COMPRESSION_ENABLED"
-    elif compress:
-        assert compress == "compressall"
+    if not compress:
+        compression = "COMPRESSION_NONE"
+    elif compress.value == "all":
         compression = "COMPRESSION_ALL"
     else:
-        compression = "COMPRESSION_NONE"
+        assert compress.value is None
+        compression = "COMPRESSION_ENABLED"
 
     if nested == ipdl.ast.NOT_NESTED:
         nestedEnum = "NOT_NESTED"
@@ -2674,7 +2674,7 @@ def _generateCxxStruct(sd):
     # The default copy, move, and assignment constructors, and the default
     # destructor, will do the right thing.
 
-    if sd.comparable:
+    if "Comparable" in sd.attributes:
         # bool operator==(const Struct& _o)
         ovar = ExprVar("_o")
         opeqeq = MethodDefn(
@@ -3272,7 +3272,7 @@ def _generateCxxUnion(ud):
     )
     cls.addstmts([opeq, Whitespace.NL])
 
-    if ud.comparable:
+    if "Comparable" in ud.attributes:
         # bool operator==(const T&)
         for c in ud.components:
             opeqeq = MethodDefn(
@@ -4577,9 +4577,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             """
             $*{bind}
 
-            // Build our constructor message & verify it.
+            // Build our constructor message.
             $*{stmts}
-            $*{verify}
 
             // Notify the other side about the newly created actor. This can
             // fail if our manager has already been destroyed.
@@ -4600,9 +4599,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             """,
             bind=self.bindManagedActor(actor),
             stmts=stmts,
-            verify=self.genVerifyMessage(
-                md.decl.type.verify, md.params, errfnSendCtor, ExprVar("msg__")
-            ),
             sendstmts=sendstmts,
             sendok=sendok,
             destroy=self.destroyActor(
@@ -4625,9 +4621,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         method = MethodDefn(self.makeSendMethodDecl(md))
 
         msgvar, stmts = self.makeMessage(md, errfnSendCtor)
-        verify = self.genVerifyMessage(
-            md.decl.type.verify, md.params, errfnSendCtor, ExprVar("msg__")
-        )
 
         replyvar = self.replyvar
         sendok, sendstmts = self.sendBlocking(md, msgvar, replyvar)
@@ -4643,9 +4636,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             """
             $*{bind}
 
-            // Build our constructor message & verify it.
+            // Build our constructor message.
             $*{stmts}
-            $*{verify}
 
             // Synchronously send the constructor message to the other side. If
             // the send fails, e.g. due to the remote side shutting down, the
@@ -4666,7 +4658,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             """,
             bind=self.bindManagedActor(actor),
             stmts=stmts,
-            verify=verify,
             replyvar=replyvar,
             sendstmts=sendstmts,
             sendok=sendok,
@@ -4731,9 +4722,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         sendok, sendstmts = self.sendAsync(md, msgvar, actorvar)
         method.addstmts(
             stmts
-            + self.genVerifyMessage(
-                md.decl.type.verify, md.params, errfnSendDtor, ExprVar("msg__")
-            )
             + sendstmts
             + [Whitespace.NL]
             + self.dtorEpilogue(md, actor.var())
@@ -4761,9 +4749,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         sendok, sendstmts = self.sendBlocking(md, msgvar, replyvar, actorvar)
         method.addstmts(
             stmts
-            + self.genVerifyMessage(
-                md.decl.type.verify, md.params, errfnSendDtor, ExprVar("msg__")
-            )
             + [Whitespace.NL, StmtDecl(Decl(Type("Message"), replyvar.name))]
             + sendstmts
         )
@@ -4875,15 +4860,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         msgvar, stmts = self.makeMessage(md, errfnSend)
         retvar, sendstmts = self.sendAsync(md, msgvar)
 
-        method.addstmts(
-            stmts
-            + [Whitespace.NL]
-            + self.genVerifyMessage(
-                md.decl.type.verify, md.params, errfnSend, ExprVar("msg__")
-            )
-            + sendstmts
-            + [StmtReturn(retvar)]
-        )
+        method.addstmts(stmts + [Whitespace.NL] + sendstmts + [StmtReturn(retvar)])
 
         movemethod = None
 
@@ -4915,9 +4892,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         method.addstmts(
             serstmts
-            + self.genVerifyMessage(
-                md.decl.type.verify, md.params, errfnSend, ExprVar("msg__")
-            )
             + [Whitespace.NL, StmtDecl(Decl(Type("Message"), replyvar.name))]
             + sendstmts
             + [failif]
@@ -4954,9 +4928,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + saveIdStmts
             + self.invokeRecvHandler(md)
             + self.makeReply(md, errfnRecv, idvar)
-            + self.genVerifyMessage(
-                md.decl.type.verify, md.returns, errfnRecv, self.replyvar
-            )
             + [Whitespace.NL, StmtReturn(_Result.Processed)]
         )
 
@@ -4982,9 +4953,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + saveIdStmts
             + self.makeReply(md, errfnRecv, routingId=idvar)
             + [Whitespace.NL]
-            + self.genVerifyMessage(
-                md.decl.type.verify, md.returns, errfnRecv, self.replyvar
-            )
             + self.dtorEpilogue(md, md.actorDecl().var())
             + [Whitespace.NL, StmtReturn(_Result.Processed)]
         )
@@ -5013,9 +4981,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + self.invokeRecvHandler(md)
             + [Whitespace.NL]
             + self.makeReply(md, errfnRecv, routingId=idvar)
-            + self.genVerifyMessage(
-                md.decl.type.verify, md.returns, errfnRecv, self.replyvar
-            )
             + [StmtReturn(_Result.Processed)]
         )
 
@@ -5159,60 +5124,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + self.setMessageFlags(md, replyvar)
             + [self.logMessage(md, replyvar, "Sending reply ")]
         )
-
-    def genVerifyMessage(self, verify, params, errfn, msgsrcVar):
-        stmts = []
-        if not verify:
-            return stmts
-        if len(params) == 0:
-            return stmts
-
-        msgvar = ExprVar("msgverify__")
-        side = self.side
-
-        msgexpr = ExprAddrOf(msgvar)
-        itervar = ExprVar("msgverifyIter__")
-        # IPC::Message msgverify__ = Move(*(reply__)); or
-        # IPC::Message msgverify__ = Move(*(msg__));
-        stmts.append(
-            StmtDecl(
-                Decl(Type("IPC::Message", ptr=False), "msgverify__"),
-                init=ExprMove(ExprDeref(msgsrcVar)),
-            )
-        )
-
-        stmts.extend(
-            (
-                # PickleIterator msgverifyIter__(msgverify__);
-                [StmtDecl(Decl(_iterType(ptr=False), itervar.name), initargs=[msgvar])]
-                # declare varCopy for each variable to deserialize.
-                + [
-                    StmtDecl(Decl(p.bareType(side), p.var().name + "Copy"), initargs=[])
-                    for p in params
-                ]
-                + [Whitespace.NL]
-                #  checked Read(&(varCopy), &(msgverify__), &(msgverifyIter__))
-                + [
-                    _ParamTraits.checkedRead(
-                        p.ipdltype,
-                        ExprAddrOf(ExprVar(p.var().name + "Copy")),
-                        msgexpr,
-                        ExprAddrOf(itervar),
-                        errfn,
-                        p.ipdltype.name(),
-                        sentinelKey=p.name,
-                        errfnSentinel=errfnSentinel(),
-                        actor=ExprVar.THIS,
-                    )
-                    for p in params
-                ]
-                + [self.endRead(msgvar, itervar)]
-                # Move the message back to its source before sending.
-                + [StmtExpr(ExprAssn(ExprDeref(msgsrcVar), ExprMove(msgvar)))]
-            )
-        )
-
-        return stmts
 
     def setMessageFlags(self, md, var, seqno=None):
         stmts = []

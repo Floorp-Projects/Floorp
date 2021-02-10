@@ -638,11 +638,11 @@ class MOZ_RAII SharedPrefMapBuilder {
     ValueIdx Add(const ValueType& aDefaultValue) {
       auto index = uint16_t(mDefaultEntries.Count());
 
-      auto entry = mDefaultEntries.LookupForAdd(aDefaultValue).OrInsert([&]() {
-        return Entry{index, false, aDefaultValue};
-      });
+      return mDefaultEntries.WithEntryHandle(aDefaultValue, [&](auto&& entry) {
+        entry.OrInsertWith([&] { return Entry{index, false, aDefaultValue}; });
 
-      return {entry.mIndex, false};
+        return ValueIdx{entry.Data().mIndex, false};
+      });
     }
 
     // Adds an entry for a preference with a user value to the array. Regardless

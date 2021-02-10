@@ -609,26 +609,6 @@ var PlacesUtils = {
   },
 
   /**
-   * Parses matchBuckets strings (for example, "suggestion:4,general:Infinity")
-   * like those used in the browser.urlbar.matchBuckets preference.
-   *
-   * @param   str
-   *          A matchBuckets string.
-   * @returns An array of the form: [
-   *            [bucketName_0, bucketPriority_0],
-   *            [bucketName_1, bucketPriority_1],
-   *            ...
-   *            [bucketName_n, bucketPriority_n]
-   *          ]
-   */
-  convertMatchBucketsStringToArray(str) {
-    return str.split(",").map(v => {
-      let bucket = v.split(":");
-      return [bucket[0].trim().toLowerCase(), Number(bucket[1])];
-    });
-  },
-
-  /**
    * Determines if a folder is generated from a query.
    * @param aNode a result true.
    * @returns true if the node is a folder generated from a query.

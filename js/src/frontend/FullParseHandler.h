@@ -649,6 +649,10 @@ class FullParseHandler {
     return newBinary(ParseNodeKind::ImportSpec, importNameNode, bindingName);
   }
 
+  UnaryNodeType newImportNamespaceSpec(uint32_t begin, Node bindingName) {
+    return newUnary(ParseNodeKind::ImportNamespaceSpec, begin, bindingName);
+  }
+
   UnaryNodeType newExportDeclaration(Node kid, const TokenPos& pos) {
     return new_<UnaryNode>(ParseNodeKind::ExportStmt, pos, kid);
   }
@@ -679,6 +683,10 @@ class FullParseHandler {
 
   BinaryNodeType newExportSpec(Node bindingName, Node exportName) {
     return newBinary(ParseNodeKind::ExportSpec, bindingName, exportName);
+  }
+
+  UnaryNodeType newExportNamespaceSpec(uint32_t begin, Node exportName) {
+    return newUnary(ParseNodeKind::ExportNamespaceSpec, begin, exportName);
   }
 
   NullaryNodeType newExportBatchSpec(const TokenPos& pos) {

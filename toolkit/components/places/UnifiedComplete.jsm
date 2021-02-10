@@ -417,6 +417,13 @@ function makeActionUrl(type, params) {
   return `moz-action:${type},${JSON.stringify(encodedParams)}`;
 }
 
+const MATCH_TYPE = {
+  HEURISTIC: "heuristic",
+  GENERAL: "general",
+  SUGGESTION: "suggestion",
+  EXTENSION: "extension",
+};
+
 /**
  * Manages a single instance of an autocomplete search.
  *
@@ -596,8 +603,8 @@ function Search(
   this._usedURLs = [];
   this._usedPlaceIds = new Set();
 
-  // Counters for the number of results per RESULT_GROUP.
-  this._counts = Object.values(UrlbarUtils.RESULT_GROUP).reduce((o, p) => {
+  // Counters for the number of results per MATCH_TYPE.
+  this._counts = Object.values(MATCH_TYPE).reduce((o, p) => {
     o[p] = 0;
     return o;
   }, {});
@@ -877,8 +884,7 @@ Search.prototype = {
     // If we do not have enough matches search again with MATCH_ANYWHERE, to
     // get more matches.
     let count =
-      this._counts[UrlbarUtils.RESULT_GROUP.GENERAL] +
-      this._counts[UrlbarUtils.RESULT_GROUP.HEURISTIC];
+      this._counts[MATCH_TYPE.GENERAL] + this._counts[MATCH_TYPE.HEURISTIC];
     if (count < this._maxResults) {
       this._matchBehavior = Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE;
       let queries = [this._adaptiveQuery, this._searchQuery];
@@ -1219,8 +1225,7 @@ Search.prototype = {
     // If the search has been canceled by the user or by _addMatch, or we
     // fetched enough results, we can stop the underlying Sqlite query.
     let count =
-      this._counts[UrlbarUtils.RESULT_GROUP.GENERAL] +
-      this._counts[UrlbarUtils.RESULT_GROUP.HEURISTIC];
+      this._counts[MATCH_TYPE.GENERAL] + this._counts[MATCH_TYPE.HEURISTIC];
     if (!this.pending || count >= this._maxResults) {
       cancel();
     }
@@ -1300,9 +1305,9 @@ Search.prototype = {
     }
 
     if (this._addingHeuristicResult) {
-      match.type = UrlbarUtils.RESULT_GROUP.HEURISTIC;
+      match.type = MATCH_TYPE.HEURISTIC;
     } else if (typeof match.type != "string") {
-      match.type = UrlbarUtils.RESULT_GROUP.GENERAL;
+      match.type = MATCH_TYPE.GENERAL;
     }
 
     // A search could be canceled between a query start and its completion,
@@ -1350,7 +1355,7 @@ Search.prototype = {
     );
     this._counts[match.type]++;
 
-    this.notifyResult(true, match.type == UrlbarUtils.RESULT_GROUP.HEURISTIC);
+    this.notifyResult(true, match.type == MATCH_TYPE.HEURISTIC);
   },
 
   /**
@@ -1390,7 +1395,7 @@ Search.prototype = {
             // Don't replace the match if the existing one is heuristic and the
             // new one is a switchtab, instead also add the switchtab match.
             if (
-              matchType == UrlbarUtils.RESULT_GROUP.HEURISTIC &&
+              matchType == MATCH_TYPE.HEURISTIC &&
               action.type == "switchtab"
             ) {
               isDupe = false;
@@ -1440,7 +1445,7 @@ Search.prototype = {
             if (prefix == existingPrefix) {
               // The URLs are identical. Throw out the new result, unless it's
               // the heuristic.
-              if (match.type != UrlbarUtils.RESULT_GROUP.HEURISTIC) {
+              if (match.type != MATCH_TYPE.HEURISTIC) {
                 break; // Replace match.
               } else {
                 this._usedURLs[i] = {
@@ -1457,14 +1462,14 @@ Search.prototype = {
             if (prefix.endsWith("www.") == existingPrefix.endsWith("www.")) {
               // The results differ only by protocol.
 
-              if (match.type == UrlbarUtils.RESULT_GROUP.HEURISTIC) {
+              if (match.type == MATCH_TYPE.HEURISTIC) {
                 isDupe = false;
                 continue;
               }
 
               if (prefixRank <= existingPrefixRank) {
                 break; // Replace match.
-              } else if (existingType != UrlbarUtils.RESULT_GROUP.HEURISTIC) {
+              } else if (existingType != MATCH_TYPE.HEURISTIC) {
                 this._usedURLs[i] = {
                   key: urlMapKey,
                   action,
@@ -1506,26 +1511,9 @@ Search.prototype = {
     }
 
     let index = 0;
-    // The buckets change depending on the context, that is currently decided by
-    // the first added match (the heuristic one).
     if (!this._buckets) {
-      // Convert the buckets to readable objects with a count property.
-      let buckets =
-        match.type == UrlbarUtils.RESULT_GROUP.HEURISTIC &&
-        match.style.includes("searchengine")
-          ? UrlbarPrefs.get("matchBucketsSearch")
-          : UrlbarPrefs.get("matchBuckets");
-      // - available is the number of available slots in the bucket
-      // - insertIndex is the index of the first available slot in the bucket
-      // - count is the number of matches in the bucket, note that it also
-      //   account for matches from the previous search, while available and
-      //   insertIndex don't.
-      this._buckets = buckets.map(([type, available]) => ({
-        type,
-        available,
-        insertIndex: 0,
-        count: 0,
-      }));
+      this._buckets = [];
+      this._makeBuckets(UrlbarPrefs.get("resultBuckets"), this._maxResults);
     }
 
     let replace = 0;
@@ -1555,6 +1543,63 @@ Search.prototype = {
       comment: match.comment || "",
     };
     return { index, replace };
+  },
+
+  _makeBuckets(resultBucket, maxResultCount) {
+    if (!resultBucket.children) {
+      let type;
+      switch (resultBucket.group) {
+        case UrlbarUtils.RESULT_GROUP.FORM_HISTORY:
+        case UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION:
+        case UrlbarUtils.RESULT_GROUP.TAIL_SUGGESTION:
+          type = MATCH_TYPE.SUGGESTION;
+          break;
+        case UrlbarUtils.RESULT_GROUP.HEURISTIC_AUTOFILL:
+        case UrlbarUtils.RESULT_GROUP.HEURISTIC_EXTENSION:
+        case UrlbarUtils.RESULT_GROUP.HEURISTIC_FALLBACK:
+        case UrlbarUtils.RESULT_GROUP.HEURISTIC_OMNIBOX:
+        case UrlbarUtils.RESULT_GROUP.HEURISTIC_SEARCH_TIP:
+        case UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST:
+        case UrlbarUtils.RESULT_GROUP.HEURISTIC_TOKEN_ALIAS_ENGINE:
+        case UrlbarUtils.RESULT_GROUP.HEURISTIC_UNIFIED_COMPLETE:
+          type = MATCH_TYPE.HEURISTIC;
+          break;
+        case UrlbarUtils.RESULT_GROUP.OMNIBOX:
+          type = MATCH_TYPE.EXTENSION;
+          break;
+        default:
+          type = MATCH_TYPE.GENERAL;
+          break;
+      }
+      if (this._buckets.length) {
+        let last = this._buckets[this._buckets.length - 1];
+        if (last.type == type) {
+          return;
+        }
+      }
+      // - `available` is the number of available slots in the bucket
+      // - `insertIndex` is the index of the first available slot in the bucket
+      // - `count` is the number of matches in the bucket, note that it also
+      //   accounts for matches from the previous search, while `available` and
+      //   `insertIndex` don't.
+      this._buckets.push({
+        type,
+        available: maxResultCount,
+        insertIndex: 0,
+        count: 0,
+      });
+      return;
+    }
+
+    let childMaxResultCount = Math.min(
+      typeof resultBucket.maxResultCount == "number"
+        ? resultBucket.maxResultCount
+        : this._maxResults,
+      maxResultCount
+    );
+    for (let child of resultBucket.children) {
+      this._makeBuckets(child, childMaxResultCount);
+    }
   },
 
   _addAutofillMatch(

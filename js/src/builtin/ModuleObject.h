@@ -68,8 +68,9 @@ class ImportEntryObject : public NativeObject {
   static const JSClass class_;
   static bool isInstance(HandleValue value);
   static ImportEntryObject* create(JSContext* cx, HandleAtom moduleRequest,
-                                   HandleAtom importName, HandleAtom localName,
-                                   uint32_t lineNumber, uint32_t columnNumber);
+                                   HandleAtom maybeImportName,
+                                   HandleAtom localName, uint32_t lineNumber,
+                                   uint32_t columnNumber);
   JSAtom* moduleRequest() const;
   JSAtom* importName() const;
   JSAtom* localName() const;

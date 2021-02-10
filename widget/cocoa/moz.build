@@ -25,7 +25,6 @@ EXPORTS += [
     "mozView.h",
     "nsBidiKeyboard.h",
     "nsChangeObserver.h",
-    "nsCocoaDebugUtils.h",
     "nsCocoaFeatures.h",
     "nsCocoaUtils.h",
 ]
@@ -87,7 +86,6 @@ SOURCES += [
     "MediaKeysEventSourceFactory.cpp",
     "nsChildView.mm",
     "nsClipboard.mm",
-    "nsCocoaDebugUtils.mm",
     "nsDragService.mm",
     "nsNativeThemeCocoa.mm",
 ]

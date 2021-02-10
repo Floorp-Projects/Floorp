@@ -145,11 +145,13 @@ class FunctionBox;
   F(ImportDecl, BinaryNode)                                      \
   F(ImportSpecList, ListNode)                                    \
   F(ImportSpec, BinaryNode)                                      \
+  F(ImportNamespaceSpec, UnaryNode)                              \
   F(ExportStmt, UnaryNode)                                       \
   F(ExportFromStmt, BinaryNode)                                  \
   F(ExportDefaultStmt, BinaryNode)                               \
   F(ExportSpecList, ListNode)                                    \
   F(ExportSpec, BinaryNode)                                      \
+  F(ExportNamespaceSpec, UnaryNode)                              \
   F(ExportBatchSpecStmt, NullaryNode)                            \
   F(ForIn, TernaryNode)                                          \
   F(ForOf, TernaryNode)                                          \
@@ -401,6 +403,8 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  * ImportSpec (BinaryNode)
  *   left: import name
  *   right: local binding name
+ * ImportNamespaceSpec (UnaryNode)
+ *   kid: local binding name
  * ExportStmt (UnaryNode)
  *   kid: declaration expression
  * ExportFromStmt (BinaryNode)
@@ -412,6 +416,8 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  * ExportSpec (BinaryNode)
  *   left: local binding name
  *   right: export name
+ * ExportNamespaceSpec (UnaryNode)
+ *   kid: export name
  * ExportDefaultStmt (BinaryNode)
  *   left: export default declaration or expression
  *   right: Name node for assignment

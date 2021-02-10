@@ -35,27 +35,28 @@ void TemporaryAccessGrantObserver::Create(PermissionManager* aPM,
   if (!sObservers) {
     sObservers = MakeUnique<ObserversTable>();
   }
-  Unused << sObservers
-                ->LookupForAdd(std::make_pair(
-                    nsCOMPtr<nsIPrincipal>(aPrincipal), nsCString(aType)))
-                .OrInsert([&]() -> nsITimer* {
-                  // Only create a new observer if we don't have a matching
-                  // entry in our hashtable.
-                  nsCOMPtr<nsITimer> timer;
-                  RefPtr<TemporaryAccessGrantObserver> observer =
-                      new TemporaryAccessGrantObserver(aPM, aPrincipal, aType);
-                  nsresult rv =
-                      NS_NewTimerWithObserver(getter_AddRefs(timer), observer,
-                                              24 * 60 * 60 * 1000,  // 24 hours
-                                              nsITimer::TYPE_ONE_SHOT);
+  sObservers->WithEntryHandle(
+      std::make_pair(nsCOMPtr<nsIPrincipal>(aPrincipal), nsCString(aType)),
+      [&](auto&& entry) {
+        entry.OrInsertWith([&]() -> nsITimer* {
+          // Only create a new observer if we don't have a matching
+          // entry in our hashtable.
+          nsCOMPtr<nsITimer> timer;
+          RefPtr<TemporaryAccessGrantObserver> observer =
+              new TemporaryAccessGrantObserver(aPM, aPrincipal, aType);
+          nsresult rv =
+              NS_NewTimerWithObserver(getter_AddRefs(timer), observer,
+                                      24 * 60 * 60 * 1000,  // 24 hours
+                                      nsITimer::TYPE_ONE_SHOT);
 
-                  if (NS_SUCCEEDED(rv)) {
-                    observer->SetTimer(timer);
-                    return timer;
-                  }
-                  timer->Cancel();
-                  return nullptr;
-                });
+          if (NS_SUCCEEDED(rv)) {
+            observer->SetTimer(timer);
+            return timer;
+          }
+          timer->Cancel();
+          return nullptr;
+        });
+      });
 }
 
 void TemporaryAccessGrantObserver::SetTimer(nsITimer* aTimer) {

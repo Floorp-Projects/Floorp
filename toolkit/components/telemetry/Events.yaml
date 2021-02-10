@@ -729,7 +729,7 @@ normandy:
     release_channel_collection: opt-out
     products:
       - "firefox"
-    record_in_processes: ["main"]
+    record_in_processes: ["main", "content"]
     description: >
       This records an event at the moment the user is exposed to an experiment
       treatment. The event is triggered either by the code checking that a
@@ -2620,6 +2620,20 @@ dom.quota.try:
       seq: Sequence number.
       source_file: The name of the source code file where the error occured.
       source_line: The line within source_file where the error occured.
+
+avif:
+  dav1d_get_picture:
+    objects: ["return_value"]
+    bug_numbers: [1690406]
+    description: Return value from dav1d_get_picture
+    products:
+      - firefox # event telemetry is not supported on fenix
+    record_in_processes: ["all"]
+    release_channel_collection: opt-out
+    expiry_version: never
+    notification_emails:
+      - cchang@mozilla.com
+      - jbauman@mozilla.com
 
 installation:
   first_seen:

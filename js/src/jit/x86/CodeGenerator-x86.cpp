@@ -122,6 +122,329 @@ void CodeGenerator::visitUnbox(LUnbox* unbox) {
   masm.unboxNonDouble(type, payload, output, ValueTypeFromMIRType(mir->type()));
 }
 
+void CodeGenerator::visitAtomicLoad64(LAtomicLoad64* lir) {
+  Register elements = ToRegister(lir->elements());
+  Register temp = ToRegister(lir->temp());
+  Register64 temp64 = ToRegister64(lir->temp64());
+  Register out = ToRegister(lir->output());
+
+  MOZ_ASSERT(out == ecx);
+  MOZ_ASSERT(temp == ebx);
+  MOZ_ASSERT(temp64 == Register64(edx, eax));
+
+  const MLoadUnboxedScalar* mir = lir->mir();
+
+  Scalar::Type storageType = mir->storageType();
+
+  if (lir->index()->isConstant()) {
+    Address source =
+        ToAddress(elements, lir->index(), storageType, mir->offsetAdjustment());
+    masm.atomicLoad64(Synchronization::Load(), source, Register64(ecx, ebx),
+                      Register64(edx, eax));
+  } else {
+    BaseIndex source(elements, ToRegister(lir->index()),
+                     ScaleFromScalarType(storageType), mir->offsetAdjustment());
+    masm.atomicLoad64(Synchronization::Load(), source, Register64(ecx, ebx),
+                      Register64(edx, eax));
+  }
+
+  emitCreateBigInt(lir, storageType, temp64, out, temp);
+}
+
+void CodeGenerator::visitAtomicStore64(LAtomicStore64* lir) {
+  Register elements = ToRegister(lir->elements());
+  Register value = ToRegister(lir->value());
+  Register64 temp1 = ToRegister64(lir->temp1());
+  Register64 temp2 = Register64(value, ToRegister(lir->tempLow()));
+
+  MOZ_ASSERT(temp1 == Register64(ecx, ebx));
+  MOZ_ASSERT(temp2 == Register64(edx, eax));
+
+  Scalar::Type writeType = lir->mir()->writeType();
+
+  masm.loadBigInt64(value, temp1);
+
+  masm.push(value);
+  if (lir->index()->isConstant()) {
+    Address dest = ToAddress(elements, lir->index(), writeType);
+    masm.atomicStore64(Synchronization::Store(), dest, temp1, temp2);
+  } else {
+    BaseIndex dest(elements, ToRegister(lir->index()),
+                   ScaleFromScalarType(writeType));
+    masm.atomicStore64(Synchronization::Store(), dest, temp1, temp2);
+  }
+  masm.pop(value);
+}
+
+void CodeGenerator::visitCompareExchangeTypedArrayElement64(
+    LCompareExchangeTypedArrayElement64* lir) {
+  Register elements = ToRegister(lir->elements());
+  Register oldval = ToRegister(lir->oldval());
+  DebugOnly<Register> newval = ToRegister(lir->newval());
+  DebugOnly<Register> temp = ToRegister(lir->tempLow());
+  Register out = ToRegister(lir->output());
+
+  MOZ_ASSERT(elements == esi);
+  MOZ_ASSERT(oldval == eax);
+  MOZ_ASSERT(newval.inspect() == edx);
+  MOZ_ASSERT(temp.inspect() == ebx);
+  MOZ_ASSERT(out == ecx);
+
+  Scalar::Type arrayType = lir->mir()->arrayType();
+
+  DebugOnly<uint32_t> framePushed = masm.framePushed();
+
+  // Save eax and edx before they're clobbered below.
+  masm.push(eax);
+  masm.push(edx);
+
+  auto restoreSavedRegisters = [&]() {
+    masm.pop(edx);
+    masm.pop(eax);
+  };
+
+  Register64 expected = Register64(edx, eax);
+  Register64 replacement = Register64(ecx, ebx);
+
+  // Load |oldval| and |newval| into |expected| resp. |replacement|.
+  {
+    // Use `esi` as a temp register.
+    Register bigInt = esi;
+    masm.push(bigInt);
+
+    masm.mov(oldval, bigInt);
+    masm.loadBigInt64(bigInt, expected);
+
+    // |newval| is stored in `edx`, which is already pushed onto the stack.
+    masm.loadPtr(Address(masm.getStackPointer(), sizeof(uintptr_t)), bigInt);
+    masm.loadBigInt64(bigInt, replacement);
+
+    masm.pop(bigInt);
+  }
+
+  if (lir->index()->isConstant()) {
+    Address dest = ToAddress(elements, lir->index(), arrayType);
+    masm.compareExchange64(Synchronization::Full(), dest, expected, replacement,
+                           expected);
+  } else {
+    BaseIndex dest(elements, ToRegister(lir->index()),
+                   ScaleFromScalarType(arrayType));
+    masm.compareExchange64(Synchronization::Full(), dest, expected, replacement,
+                           expected);
+  }
+
+  // Move the result from `edx:eax` to `ecx:ebx`.
+  masm.move64(expected, replacement);
+
+  // OutOfLineCallVM tracks the currently pushed stack entries as reported by
+  // |masm.framePushed()|. We mustn't have any additional entries on the stack
+  // which weren't previously recorded by the safepoint, otherwise the GC
+  // complains when tracing the Ion frames, because the stack frames don't
+  // have their expected layout.
+  MOZ_ASSERT(framePushed == masm.framePushed());
+
+  OutOfLineCode* ool = createBigIntOutOfLine(lir, arrayType, replacement, out);
+
+  // Use `edx:eax`, which are both already on the stack, as temp registers.
+  Register bigInt = eax;
+  Register temp2 = edx;
+
+  Label fail;
+  masm.newGCBigInt(bigInt, temp2, &fail, bigIntsCanBeInNursery());
+  masm.initializeBigInt64(arrayType, bigInt, replacement);
+  masm.mov(bigInt, out);
+  restoreSavedRegisters();
+  masm.jump(ool->rejoin());
+
+  // Couldn't create the BigInt. Restore `edx:eax` and call into the VM.
+  masm.bind(&fail);
+  restoreSavedRegisters();
+  masm.jump(ool->entry());
+
+  // At this point `edx:eax` must have been restored to their original values.
+  masm.bind(ool->rejoin());
+}
+
+void CodeGenerator::visitAtomicExchangeTypedArrayElement64(
+    LAtomicExchangeTypedArrayElement64* lir) {
+  Register elements = ToRegister(lir->elements());
+  Register value = ToRegister(lir->value());
+  Register64 temp1 = ToRegister64(lir->temp1());
+  Register out = ToRegister(lir->output());
+  Register64 temp2 = Register64(value, out);
+
+  MOZ_ASSERT(value == edx);
+  MOZ_ASSERT(temp1 == Register64(ecx, ebx));
+  MOZ_ASSERT(temp2 == Register64(edx, eax));
+  MOZ_ASSERT(out == eax);
+
+  Scalar::Type arrayType = lir->mir()->arrayType();
+
+  DebugOnly<uint32_t> framePushed = masm.framePushed();
+
+  // Save edx before it's clobbered below.
+  masm.push(edx);
+
+  auto restoreSavedRegisters = [&]() { masm.pop(edx); };
+
+  masm.loadBigInt64(value, temp1);
+
+  if (lir->index()->isConstant()) {
+    Address dest = ToAddress(elements, lir->index(), arrayType);
+    masm.atomicExchange64(Synchronization::Full(), dest, temp1, temp2);
+  } else {
+    BaseIndex dest(elements, ToRegister(lir->index()),
+                   ScaleFromScalarType(arrayType));
+    masm.atomicExchange64(Synchronization::Full(), dest, temp1, temp2);
+  }
+
+  // Move the result from `edx:eax` to `ecx:ebx`.
+  masm.move64(temp2, temp1);
+
+  // OutOfLineCallVM tracks the currently pushed stack entries as reported by
+  // |masm.framePushed()|. We mustn't have any additional entries on the stack
+  // which weren't previously recorded by the safepoint, otherwise the GC
+  // complains when tracing the Ion frames, because the stack frames don't
+  // have their expected layout.
+  MOZ_ASSERT(framePushed == masm.framePushed());
+
+  OutOfLineCode* ool = createBigIntOutOfLine(lir, arrayType, temp1, out);
+
+  // Use `edx`, which is already on the stack, as a temp register.
+  Register temp = edx;
+
+  Label fail;
+  masm.newGCBigInt(out, temp, &fail, bigIntsCanBeInNursery());
+  masm.initializeBigInt64(arrayType, out, temp1);
+  restoreSavedRegisters();
+  masm.jump(ool->rejoin());
+
+  // Couldn't create the BigInt. Restore `edx` and call into the VM.
+  masm.bind(&fail);
+  restoreSavedRegisters();
+  masm.jump(ool->entry());
+
+  // At this point `edx` must have been restored to its original value.
+  masm.bind(ool->rejoin());
+}
+
+void CodeGenerator::visitAtomicTypedArrayElementBinop64(
+    LAtomicTypedArrayElementBinop64* lir) {
+  MOZ_ASSERT(!lir->mir()->isForEffect());
+
+  Register elements = ToRegister(lir->elements());
+  Register value = ToRegister(lir->value());
+  Register64 temp1 = ToRegister64(lir->temp1());
+  Register out = ToRegister(lir->output());
+  Register64 temp2 = Register64(value, out);
+
+  MOZ_ASSERT(value == edx);
+  MOZ_ASSERT(temp1 == Register64(ecx, ebx));
+  MOZ_ASSERT(temp2 == Register64(edx, eax));
+  MOZ_ASSERT(out == eax);
+
+  Scalar::Type arrayType = lir->mir()->arrayType();
+  AtomicOp atomicOp = lir->mir()->operation();
+
+  DebugOnly<uint32_t> framePushed = masm.framePushed();
+
+  // Save edx before it's clobbered below.
+  masm.push(edx);
+
+  auto restoreSavedRegisters = [&]() { masm.pop(edx); };
+
+  masm.loadBigInt64(value, temp1);
+
+  masm.Push(temp1);
+
+  Address addr(masm.getStackPointer(), 0);
+
+  if (lir->index()->isConstant()) {
+    Address dest = ToAddress(elements, lir->index(), arrayType);
+    masm.atomicFetchOp64(Synchronization::Full(), atomicOp, addr, dest, temp1,
+                         temp2);
+  } else {
+    BaseIndex dest(elements, ToRegister(lir->index()),
+                   ScaleFromScalarType(arrayType));
+    masm.atomicFetchOp64(Synchronization::Full(), atomicOp, addr, dest, temp1,
+                         temp2);
+  }
+
+  masm.freeStack(sizeof(uint64_t));
+
+  // Move the result from `edx:eax` to `ecx:ebx`.
+  masm.move64(temp2, temp1);
+
+  // OutOfLineCallVM tracks the currently pushed stack entries as reported by
+  // |masm.framePushed()|. We mustn't have any additional entries on the stack
+  // which weren't previously recorded by the safepoint, otherwise the GC
+  // complains when tracing the Ion frames, because the stack frames don't
+  // have their expected layout.
+  MOZ_ASSERT(framePushed == masm.framePushed());
+
+  OutOfLineCode* ool = createBigIntOutOfLine(lir, arrayType, temp1, out);
+
+  // Use `edx`, which is already on the stack, as a temp register.
+  Register temp = edx;
+
+  Label fail;
+  masm.newGCBigInt(out, temp, &fail, bigIntsCanBeInNursery());
+  masm.initializeBigInt64(arrayType, out, temp1);
+  restoreSavedRegisters();
+  masm.jump(ool->rejoin());
+
+  // Couldn't create the BigInt. Restore `edx` and call into the VM.
+  masm.bind(&fail);
+  restoreSavedRegisters();
+  masm.jump(ool->entry());
+
+  // At this point `edx` must have been restored to its original value.
+  masm.bind(ool->rejoin());
+}
+
+void CodeGenerator::visitAtomicTypedArrayElementBinopForEffect64(
+    LAtomicTypedArrayElementBinopForEffect64* lir) {
+  MOZ_ASSERT(lir->mir()->isForEffect());
+
+  Register elements = ToRegister(lir->elements());
+  Register value = ToRegister(lir->value());
+  Register64 temp1 = ToRegister64(lir->temp1());
+  Register tempLow = ToRegister(lir->tempLow());
+  Register64 temp2 = Register64(value, tempLow);
+
+  MOZ_ASSERT(value == edx);
+  MOZ_ASSERT(temp1 == Register64(ecx, ebx));
+  MOZ_ASSERT(temp2 == Register64(edx, eax));
+  MOZ_ASSERT(tempLow == eax);
+
+  Scalar::Type arrayType = lir->mir()->arrayType();
+  AtomicOp atomicOp = lir->mir()->operation();
+
+  // Save edx before it's clobbered below.
+  masm.push(edx);
+
+  masm.loadBigInt64(value, temp1);
+
+  masm.Push(temp1);
+
+  Address addr(masm.getStackPointer(), 0);
+
+  if (lir->index()->isConstant()) {
+    Address dest = ToAddress(elements, lir->index(), arrayType);
+    masm.atomicFetchOp64(Synchronization::Full(), atomicOp, addr, dest, temp1,
+                         temp2);
+  } else {
+    BaseIndex dest(elements, ToRegister(lir->index()),
+                   ScaleFromScalarType(arrayType));
+    masm.atomicFetchOp64(Synchronization::Full(), atomicOp, addr, dest, temp1,
+                         temp2);
+  }
+
+  masm.freeStack(sizeof(uint64_t));
+
+  masm.pop(edx);
+}
+
 // See ../CodeGenerator.cpp for more information.
 void CodeGenerator::visitWasmRegisterResult(LWasmRegisterResult* lir) {}
 
@@ -356,7 +679,7 @@ void CodeGeneratorX86::emitWasmStoreOrExchangeAtomicI64(
   MOZ_ASSERT(ToRegister64(value).low == ebx);
   MOZ_ASSERT(ToRegister64(value).high == ecx);
 
-  // eax and ebx will be overwritten every time through the loop but
+  // eax and edx will be overwritten every time through the loop but
   // memoryBase and ptr must remain live for a possible second iteration.
 
   MOZ_ASSERT(ToRegister(memoryBase) != edx && ToRegister(memoryBase) != eax);
