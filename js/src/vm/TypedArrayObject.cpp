@@ -2704,12 +2704,12 @@ JS_FRIEND_API bool JS_IsTypedArrayObject(JSObject* obj) {
   return obj->canUnwrapAs<TypedArrayObject>();
 }
 
-JS_FRIEND_API uint32_t JS_GetTypedArrayLength(JSObject* obj) {
+JS_FRIEND_API size_t JS_GetTypedArrayLength(JSObject* obj) {
   TypedArrayObject* tarr = obj->maybeUnwrapAs<TypedArrayObject>();
   if (!tarr) {
     return 0;
   }
-  return tarr->length().deprecatedGetUint32();
+  return tarr->length().get();
 }
 
 JS_FRIEND_API size_t JS_GetTypedArrayByteOffset(JSObject* obj) {
