@@ -133,7 +133,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   bool SendRtcp(const uint8_t* data, size_t len) override;
 
   bool HasCodecPluginID(uint64_t aPluginID) override { return false; }
-  void SetPCHandle(const std::string& aPCHandle) override {}
   MediaConduitErrorCode DeliverPacket(const void* data, int len) override;
 
   void DeleteStreams() override;

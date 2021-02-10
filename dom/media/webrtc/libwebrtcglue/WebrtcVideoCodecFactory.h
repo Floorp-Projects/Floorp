@@ -13,6 +13,9 @@
 namespace mozilla {
 class WebrtcVideoDecoderFactory : public webrtc::VideoDecoderFactory {
  public:
+  explicit WebrtcVideoDecoderFactory(std::string aPCHandle)
+      : mPCHandle(std::move(aPCHandle)) {}
+
   std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override {
     MOZ_CRASH("Unexpected call");
     return std::vector<webrtc::SdpVideoFormat>();
@@ -20,11 +23,17 @@ class WebrtcVideoDecoderFactory : public webrtc::VideoDecoderFactory {
 
   std::unique_ptr<webrtc::VideoDecoder> CreateVideoDecoder(
       const webrtc::SdpVideoFormat& aFormat) override;
+
+ private:
+  const std::string mPCHandle;
 };
 
 class WebrtcVideoEncoderFactory : public webrtc::VideoEncoderFactory {
   class InternalFactory : public webrtc::VideoEncoderFactory {
    public:
+    explicit InternalFactory(std::string aPCHandle)
+        : mPCHandle(std::move(aPCHandle)) {}
+
     std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override {
       MOZ_CRASH("Unexpected call");
       return std::vector<webrtc::SdpVideoFormat>();
@@ -34,11 +43,14 @@ class WebrtcVideoEncoderFactory : public webrtc::VideoEncoderFactory {
         const webrtc::SdpVideoFormat& aFormat) override;
 
     bool Supports(const webrtc::SdpVideoFormat& aFormat);
+
+   private:
+    const std::string mPCHandle;
   };
 
  public:
-  WebrtcVideoEncoderFactory()
-      : mInternalFactory(MakeUnique<InternalFactory>()) {}
+  explicit WebrtcVideoEncoderFactory(std::string aPCHandle)
+      : mInternalFactory(MakeUnique<InternalFactory>(std::move(aPCHandle))) {}
 
   std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override {
     MOZ_CRASH("Unexpected call");

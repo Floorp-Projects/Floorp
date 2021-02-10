@@ -227,8 +227,6 @@ class MediaSessionConduit {
 
   virtual bool HasCodecPluginID(uint64_t aPluginID) = 0;
 
-  virtual void SetPCHandle(const std::string& aPCHandle) = 0;
-
   virtual MediaConduitErrorCode DeliverPacket(const void* data, int len) = 0;
 
   virtual void DeleteStreams() = 0;
@@ -415,7 +413,7 @@ class VideoSessionConduit : public MediaSessionConduit {
    */
   static RefPtr<VideoSessionConduit> Create(
       RefPtr<WebRtcCallWrapper> aCall,
-      nsCOMPtr<nsISerialEventTarget> aStsThread);
+      nsCOMPtr<nsISerialEventTarget> aStsThread, std::string aPCHandle);
 
   enum FrameRequestType {
     FrameRequestNone,

@@ -24,44 +24,16 @@
 
 namespace mozilla {
 
-WebrtcGmpPCHandleSetter::WebrtcGmpPCHandleSetter(const std::string& aPCHandle) {
-  if (!NS_IsMainThread()) {
-    MOZ_ASSERT(false, "WebrtcGmpPCHandleSetter can only be used on main");
-    return;
-  }
-  MOZ_ASSERT(sCurrentHandle.empty());
-  sCurrentHandle = aPCHandle;
-}
-
-WebrtcGmpPCHandleSetter::~WebrtcGmpPCHandleSetter() {
-  if (!NS_IsMainThread()) {
-    MOZ_ASSERT(false, "WebrtcGmpPCHandleSetter can only be used on main");
-    return;
-  }
-
-  sCurrentHandle.clear();
-}
-
-/* static */ std::string WebrtcGmpPCHandleSetter::GetCurrentHandle() {
-  if (!NS_IsMainThread()) {
-    MOZ_ASSERT(false, "WebrtcGmpPCHandleSetter can only be used on main");
-    return "";
-  }
-
-  return sCurrentHandle;
-}
-
-std::string WebrtcGmpPCHandleSetter::sCurrentHandle;
-
 // Encoder.
-WebrtcGmpVideoEncoder::WebrtcGmpVideoEncoder()
+WebrtcGmpVideoEncoder::WebrtcGmpVideoEncoder(std::string aPCHandle)
     : mGMP(nullptr),
       mInitting(false),
       mHost(nullptr),
       mMaxPayloadSize(0),
       mCallbackMutex("WebrtcGmpVideoEncoder encoded callback mutex"),
       mCallback(nullptr),
-      mCachedPluginId(0) {
+      mCachedPluginId(0),
+      mPCHandle(std::move(aPCHandle)) {
   mCodecParams.mGMPApiVersion = 0;
   mCodecParams.mCodecType = kGMPVideoCodecInvalid;
   mCodecParams.mPLType = 0;
@@ -76,9 +48,6 @@ WebrtcGmpVideoEncoder::WebrtcGmpVideoEncoder()
   mCodecParams.mQPMax = 0;
   mCodecParams.mNumberOfSimulcastStreams = 0;
   mCodecParams.mMode = kGMPCodecModeInvalid;
-  if (mPCHandle.empty()) {
-    mPCHandle = WebrtcGmpPCHandleSetter::GetCurrentHandle();
-  }
   MOZ_ASSERT(!mPCHandle.empty());
 }
 
@@ -643,17 +612,15 @@ void WebrtcGmpVideoEncoder::Encoded(
 }
 
 // Decoder.
-WebrtcGmpVideoDecoder::WebrtcGmpVideoDecoder()
+WebrtcGmpVideoDecoder::WebrtcGmpVideoDecoder(std::string aPCHandle)
     : mGMP(nullptr),
       mInitting(false),
       mHost(nullptr),
       mCallbackMutex("WebrtcGmpVideoDecoder decoded callback mutex"),
       mCallback(nullptr),
       mCachedPluginId(0),
-      mDecoderStatus(GMPNoErr) {
-  if (mPCHandle.empty()) {
-    mPCHandle = WebrtcGmpPCHandleSetter::GetCurrentHandle();
-  }
+      mDecoderStatus(GMPNoErr),
+      mPCHandle(std::move(aPCHandle)) {
   MOZ_ASSERT(!mPCHandle.empty());
 }
 

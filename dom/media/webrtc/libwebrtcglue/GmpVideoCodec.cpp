@@ -7,12 +7,13 @@
 
 namespace mozilla {
 
-WebrtcVideoEncoder* GmpVideoCodec::CreateEncoder() {
-  return new WebrtcVideoEncoderProxy(new WebrtcGmpVideoEncoder());
+WebrtcVideoEncoder* GmpVideoCodec::CreateEncoder(std::string aPCHandle) {
+  return new WebrtcVideoEncoderProxy(
+      new WebrtcGmpVideoEncoder(std::move(aPCHandle)));
 }
 
-WebrtcVideoDecoder* GmpVideoCodec::CreateDecoder() {
-  return new WebrtcVideoDecoderProxy();
+WebrtcVideoDecoder* GmpVideoCodec::CreateDecoder(std::string aPCHandle) {
+  return new WebrtcVideoDecoderProxy(std::move(aPCHandle));
 }
 
 }  // namespace mozilla
