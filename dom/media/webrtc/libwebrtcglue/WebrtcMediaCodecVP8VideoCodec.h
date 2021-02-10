@@ -35,8 +35,6 @@ class WebrtcMediaCodecVP8VideoEncoder : public WebrtcVideoEncoder {
   virtual ~WebrtcMediaCodecVP8VideoEncoder() override;
 
   // Implement VideoEncoder interface.
-  virtual uint64_t PluginID() const override { return 0; }
-
   virtual int32_t InitEncode(const webrtc::VideoCodec* codecSettings,
                              int32_t numberOfCores,
                              size_t maxPayloadSize) override;
@@ -81,8 +79,6 @@ class WebrtcMediaCodecVP8VideoRemoteEncoder : public WebrtcVideoEncoder {
   ~WebrtcMediaCodecVP8VideoRemoteEncoder() override;
 
   // Implement VideoEncoder interface.
-  uint64_t PluginID() const override { return 0; }
-
   int32_t InitEncode(const webrtc::VideoCodec* codecSettings,
                      int32_t numberOfCores, size_t maxPayloadSize) override;
 

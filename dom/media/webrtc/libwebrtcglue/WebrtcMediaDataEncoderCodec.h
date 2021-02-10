@@ -26,8 +26,6 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
 
   WebrtcMediaDataEncoder();
 
-  uint64_t PluginID() const override { return 0; }
-
   int32_t InitEncode(const webrtc::VideoCodec* aCodecSettings,
                      int32_t aNumberOfCores, size_t aMaxPayloadSize) override;
 

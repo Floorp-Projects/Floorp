@@ -333,6 +333,23 @@ WebrtcVideoConduit::WebrtcVideoConduit(
       mRecvSSRC(0),
       mRemoteSSRC(0) {
   mRecvStreamConfig.renderer = this;
+
+  mSendPluginCreated = mEncoderFactory->CreatedGmpPluginEvent().Connect(
+      GetMainThreadSerialEventTarget(), [this](uint64_t aPluginID) {
+        mSendCodecPluginIDs.AppendElement(aPluginID);
+      });
+  mSendPluginReleased = mEncoderFactory->ReleasedGmpPluginEvent().Connect(
+      GetMainThreadSerialEventTarget(), [this](uint64_t aPluginID) {
+        mSendCodecPluginIDs.RemoveElement(aPluginID);
+      });
+  mRecvPluginCreated = mDecoderFactory->CreatedGmpPluginEvent().Connect(
+      GetMainThreadSerialEventTarget(), [this](uint64_t aPluginID) {
+        mRecvCodecPluginIDs.AppendElement(aPluginID);
+      });
+  mRecvPluginReleased = mDecoderFactory->ReleasedGmpPluginEvent().Connect(
+      GetMainThreadSerialEventTarget(), [this](uint64_t aPluginID) {
+        mRecvCodecPluginIDs.RemoveElement(aPluginID);
+      });
 }
 
 WebrtcVideoConduit::~WebrtcVideoConduit() {
@@ -1000,6 +1017,10 @@ void WebrtcVideoConduit::DeleteStreams() {
   }
 
   mCall->UnregisterConduit(this);
+  mSendPluginCreated.Disconnect();
+  mSendPluginReleased.Disconnect();
+  mRecvPluginCreated.Disconnect();
+  mRecvPluginReleased.Disconnect();
   {
     MutexAutoLock lock(mMutex);
     DeleteSendStream();

@@ -23,7 +23,8 @@ WebrtcVideoDecoderFactory::CreateVideoDecoder(
     case webrtc::VideoCodecType::kVideoCodecH264: {
       // Get an external decoder
       auto gmpDecoder = WrapUnique(GmpVideoCodec::CreateDecoder(mPCHandle));
-      // XXX Hook up gmpDecoder's PluginID
+      mCreatedGmpPluginEvent.Forward(*gmpDecoder->InitPluginEvent());
+      mReleasedGmpPluginEvent.Forward(*gmpDecoder->ReleasePluginEvent());
       decoder.reset(gmpDecoder.release());
       break;
     }
@@ -116,7 +117,8 @@ WebrtcVideoEncoderFactory::InternalFactory::CreateVideoEncoder(
     case webrtc::VideoCodecType::kVideoCodecH264: {
       // get an external encoder
       auto gmpEncoder = WrapUnique(GmpVideoCodec::CreateEncoder(mPCHandle));
-      // XXX Hook up gmpEncoder's PluginID
+      mCreatedGmpPluginEvent.Forward(*gmpEncoder->InitPluginEvent());
+      mReleasedGmpPluginEvent.Forward(*gmpEncoder->ReleasePluginEvent());
       encoder.reset(gmpEncoder.release());
       break;
     }

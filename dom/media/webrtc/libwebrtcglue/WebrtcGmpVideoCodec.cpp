@@ -32,7 +32,6 @@ WebrtcGmpVideoEncoder::WebrtcGmpVideoEncoder(std::string aPCHandle)
       mMaxPayloadSize(0),
       mCallbackMutex("WebrtcGmpVideoEncoder encoded callback mutex"),
       mCallback(nullptr),
-      mCachedPluginId(0),
       mPCHandle(std::move(aPCHandle)) {
   mCodecParams.mGMPApiVersion = 0;
   mCodecParams.mCodecType = kGMPVideoCodecInvalid;
@@ -200,7 +199,8 @@ int32_t WebrtcGmpVideoEncoder::GmpInitDone(GMPVideoEncoderProxy* aGMP,
 
   mGMP = aGMP;
   mHost = aHost;
-  mCachedPluginId = mGMP->GetPluginId();
+  mCachedPluginId = Some(mGMP->GetPluginId());
+  mInitPluginEvent.Notify(*mCachedPluginId);
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -225,6 +225,11 @@ void WebrtcGmpVideoEncoder::Close_g() {
   mGMP = nullptr;
   mHost = nullptr;
   mInitting = false;
+
+  if (mCachedPluginId) {
+    mReleasePluginEvent.Notify(*mCachedPluginId);
+  }
+  mCachedPluginId = Nothing();
 
   if (gmp) {
     // Do this last, since this could cause us to be destroyed
@@ -618,7 +623,6 @@ WebrtcGmpVideoDecoder::WebrtcGmpVideoDecoder(std::string aPCHandle)
       mHost(nullptr),
       mCallbackMutex("WebrtcGmpVideoDecoder decoded callback mutex"),
       mCallback(nullptr),
-      mCachedPluginId(0),
       mDecoderStatus(GMPNoErr),
       mPCHandle(std::move(aPCHandle)) {
   MOZ_ASSERT(!mPCHandle.empty());
@@ -694,7 +698,8 @@ int32_t WebrtcGmpVideoDecoder::GmpInitDone(GMPVideoDecoderProxy* aGMP,
 
   mGMP = aGMP;
   mHost = aHost;
-  mCachedPluginId = mGMP->GetPluginId();
+  mCachedPluginId = Some(mGMP->GetPluginId());
+  mInitPluginEvent.Notify(*mCachedPluginId);
   // Bug XXXXXX: transfer settings from codecSettings to codec.
   GMPVideoCodec codec;
   memset(&codec, 0, sizeof(codec));
@@ -740,6 +745,11 @@ void WebrtcGmpVideoDecoder::Close_g() {
   mGMP = nullptr;
   mHost = nullptr;
   mInitting = false;
+
+  if (mCachedPluginId) {
+    mReleasePluginEvent.Notify(*mCachedPluginId);
+  }
+  mCachedPluginId = Nothing();
 
   if (gmp) {
     // Do this last, since this could cause us to be destroyed

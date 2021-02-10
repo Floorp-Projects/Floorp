@@ -380,11 +380,13 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
 };
 
 // Abstract base classes for external encoder/decoder.
+
+// Interface to help signal PluginIDs
 class CodecPluginID {
  public:
+  virtual MediaEventSource<uint64_t>* InitPluginEvent() { return nullptr; }
+  virtual MediaEventSource<uint64_t>* ReleasePluginEvent() { return nullptr; }
   virtual ~CodecPluginID() {}
-
-  virtual uint64_t PluginID() const = 0;
 };
 
 class VideoEncoder : public CodecPluginID {
