@@ -62,7 +62,6 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.hasCamera
 import java.io.Serializable
 import java.util.ArrayList
-import java.util.Arrays
 import java.util.Collections
 import java.util.Comparator
 import java.util.concurrent.Semaphore
@@ -177,7 +176,8 @@ class QrFragment : Fragment() {
      */
     private var backgroundThread: HandlerThread? = null
     private var backgroundHandler: Handler? = null
-    private var backgroundExecutor: ExecutorService? = null
+    @VisibleForTesting
+    internal var backgroundExecutor: ExecutorService? = null
     private var previewRequestBuilder: CaptureRequest.Builder? = null
     private var previewRequest: CaptureRequest? = null
 
@@ -515,24 +515,37 @@ class QrFragment : Fragment() {
                         logger.error("Failed to configure CameraCaptureSession")
                     }
                 }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    if (backgroundExecutor == null) startExecutorService()
-                    val sessionConfig = SessionConfiguration(
-                        SessionConfiguration.SESSION_REGULAR,
-                        listOf(OutputConfiguration(mImageSurface as Surface), OutputConfiguration(surface)),
-                        backgroundExecutor as Executor,
-                        stateCallback
-                    )
-
-                    it.createCaptureSession(sessionConfig)
-                } else {
-                    // Deprecation of createCaptureSession() will be handled in https://github.com/mozilla-mobile/android-components/issues/8510
-                    @Suppress("DEPRECATION")
-                    it.createCaptureSession(Arrays.asList(mImageSurface, surface), stateCallback, null)
-                }
+                createCaptureSessionCompat(it, mImageSurface as Surface, surface, stateCallback)
             }
         }
     }
+
+    @VisibleForTesting
+    internal fun createCaptureSessionCompat(
+        camera: CameraDevice,
+        imageSurface: Surface,
+        surface: Surface,
+        stateCallback: CameraCaptureSession.StateCallback
+    ) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            if (shouldStartExecutorService()) {
+                startExecutorService()
+            }
+            val sessionConfig = SessionConfiguration(
+                SessionConfiguration.SESSION_REGULAR,
+                listOf(OutputConfiguration(imageSurface), OutputConfiguration(surface)),
+                backgroundExecutor as Executor,
+                stateCallback
+            )
+            camera.createCaptureSession(sessionConfig)
+        } else {
+            @Suppress("DEPRECATION")
+            camera.createCaptureSession(listOf(imageSurface, surface), stateCallback, null)
+        }
+    }
+
+    @VisibleForTesting
+    internal fun shouldStartExecutorService(): Boolean = backgroundExecutor == null
 
     @Suppress("TooGenericExceptionCaught")
     private fun handleCaptureException(msg: String, block: () -> Unit) {

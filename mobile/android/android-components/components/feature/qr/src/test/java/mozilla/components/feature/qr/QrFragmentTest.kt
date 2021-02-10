@@ -6,10 +6,14 @@ package mozilla.components.feature.qr
 
 import android.content.Context
 import android.hardware.camera2.CameraAccessException
+import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraDevice
 import android.hardware.camera2.CameraManager
+import android.hardware.camera2.params.SessionConfiguration
 import android.media.Image
+import android.os.Build
 import android.util.Size
+import android.view.Surface
 import android.view.View
 import android.widget.TextView
 import androidx.fragment.app.FragmentActivity
@@ -38,10 +42,12 @@ import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.robolectric.annotation.Config
 import java.nio.ByteBuffer
 
 @RunWith(AndroidJUnit4::class)
@@ -83,6 +89,66 @@ class QrFragmentTest {
         verify(qrFragment, times(2)).startBackgroundThread()
         verify(qrFragment, times(2)).startExecutorService()
         verify(qrFragment).tryOpenCamera(anyInt(), anyInt(), anyBoolean())
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.N])
+    fun `WHEN running a device lower than P THEN startExecutorService should not be executed`() {
+        val qrFragment = spy(QrFragment.newInstance(mock()))
+
+        qrFragment.textureView = mock()
+        qrFragment.cameraErrorView = mock()
+        qrFragment.customViewFinder = mock()
+        whenever(qrFragment.textureView.isAvailable).thenReturn(true)
+        doNothing().`when`(qrFragment).startBackgroundThread()
+        doNothing().`when`(qrFragment).tryOpenCamera(anyInt(), anyInt(), anyBoolean())
+
+        qrFragment.onResume()
+
+        verify(qrFragment, never()).startExecutorService()
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.N])
+    fun `WHEN calling createCaptureSessionCompat on a device lower than P THEN use older API`() {
+        val qrFragment = spy(QrFragment.newInstance(mock()))
+        val camera = mock<CameraDevice>()
+        val imageSurface = mock<Surface>()
+        val surface = mock<Surface>()
+        val stateCallback = mock<CameraCaptureSession.StateCallback>()
+
+        qrFragment.textureView = mock()
+        qrFragment.cameraErrorView = mock()
+        qrFragment.customViewFinder = mock()
+        whenever(qrFragment.textureView.isAvailable).thenReturn(true)
+
+        qrFragment.createCaptureSessionCompat(camera, imageSurface, surface, stateCallback)
+
+        @Suppress("DEPRECATION")
+        verify(camera).createCaptureSession(listOf(imageSurface, surface), stateCallback, null)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    fun `WHEN calling createCaptureSessionCompat on a device higher than P THEN use newer api`() {
+        val qrFragment = spy(QrFragment.newInstance(mock()))
+        val camera = mock<CameraDevice>()
+        val imageSurface = mock<Surface>()
+        val surface = mock<Surface>()
+        val stateCallback = mock<CameraCaptureSession.StateCallback>()
+
+        doNothing().`when`(qrFragment).startExecutorService()
+        whenever(qrFragment.shouldStartExecutorService()).thenReturn(true)
+
+        qrFragment.backgroundExecutor = mock()
+        qrFragment.textureView = mock()
+        qrFragment.cameraErrorView = mock()
+        qrFragment.customViewFinder = mock()
+        whenever(qrFragment.textureView.isAvailable).thenReturn(true)
+
+        qrFragment.createCaptureSessionCompat(camera, imageSurface, surface, stateCallback)
+
+        verify(camera).createCaptureSession(any<SessionConfiguration>())
     }
 
     @Test
