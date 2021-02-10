@@ -207,7 +207,7 @@ extern JS_PUBLIC_API JSObject* GetObjectAsArrayBuffer(JSObject* obj,
  * that it would pass such a test: it is an ArrayBuffer or a wrapper of an
  * ArrayBuffer, and the unwrapping will succeed.
  */
-extern JS_PUBLIC_API uint32_t GetArrayBufferByteLength(JSObject* obj);
+extern JS_PUBLIC_API size_t GetArrayBufferByteLength(JSObject* obj);
 
 // This one isn't inlined because there are a bunch of different ArrayBuffer
 // classes that would have to be individually handled here.
