@@ -1349,20 +1349,35 @@ SearchService.prototype = {
         );
       } else {
         let policy = await this._getExtensionPolicy(engine._extensionID);
-        let manifest = policy.extension.manifest;
+        let providerSettings =
+          policy.extension.manifest?.chrome_settings_overrides?.search_provider;
 
-        if (
-          !engine.checkSearchUrlMatchesManifest(
-            manifest?.chrome_settings_overrides?.search_provider
-          )
-        ) {
+        if (!providerSettings) {
+          logConsole.debug(
+            `Add-on ${engine._extensionID} for search engine ${engine.name} no longer has an engine defined`
+          );
+          Services.telemetry.keyedScalarSet(
+            "browser.searchinit.engine_invalid_webextension",
+            engine._extensionID,
+            4
+          );
+        } else if (engine.name != providerSettings.name) {
+          logConsole.debug(
+            `Add-on ${engine._extensionID} for search engine ${engine.name} has a different name!`
+          );
+          Services.telemetry.keyedScalarSet(
+            "browser.searchinit.engine_invalid_webextension",
+            engine._extensionID,
+            5
+          );
+        } else if (!engine.checkSearchUrlMatchesManifest(providerSettings)) {
           logConsole.debug(
             `Add-on ${engine._extensionID} for search engine ${engine.name} has out-of-date manifest!`
           );
           Services.telemetry.keyedScalarSet(
             "browser.searchinit.engine_invalid_webextension",
             engine._extensionID,
-            3
+            6
           );
         }
       }
