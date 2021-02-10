@@ -8,8 +8,6 @@
   --toolbarbutton-outer-padding: 2px;
   --toolbarbutton-inner-padding: 6px;
 
-  --toolbarbutton-focus-outline: 2px solid currentColor;
-
   /* These hover and active colors should work on both light and dark
      backgrounds. We'll later set colors that cater for light and dark
      backgrounds specifically when we can detect them. */
@@ -30,6 +28,18 @@
      as a more specific value should be set when the value will be used. */
   --toolbarbutton-height: 0;
 }
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
+:root {
+  --toolbarbutton-focus-outline: 2px solid currentColor;
+}
+} /*** END !proton ***/
+
+@supports -moz-bool-pref("browser.proton.enabled") {
+:root {
+  --toolbarbutton-focus-outline: var(--focus-outline);
+}
+} /*** END !proton ***/
 
 :root[uidensity=compact] {
   --toolbarbutton-outer-padding: 1px;
