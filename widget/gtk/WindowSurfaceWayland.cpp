@@ -661,10 +661,8 @@ WindowBackBuffer* WindowSurfaceWayland::GetWaylandBuffer() {
 }
 
 already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::LockWaylandBuffer() {
-  // Allocated wayland buffer can't be bigger than mozilla widget size.
-  LayoutDeviceIntRegion region;
-  region.And(mLockedScreenRect, mWindow->GetMozContainerSize());
-  mWLBufferRect = LayoutDeviceIntRect(region.GetBounds());
+  // Allocated wayland buffer must match mozcontainer widget size.
+  mWLBufferRect = mWindow->GetMozContainerSize();
 
   LOGWAYLAND(
       ("WindowSurfaceWayland::LockWaylandBuffer [%p] Requesting buffer %d x "
@@ -751,7 +749,7 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
   // until next WindowSurfaceWayland::Commit() call.
   mBufferCommitAllowed = false;
 
-  LayoutDeviceIntRect lockedScreenRect = mWindow->GetBounds();
+  LayoutDeviceIntRect lockedScreenRect = mWindow->GetMozContainerSize();
   // The window bounds of popup windows contains relative position to
   // the transient window. We need to remove that effect because by changing
   // position of the popup window the buffer has not changed its size.
@@ -826,20 +824,14 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
     mLockedScreenRect = lockedScreenRect;
   }
 
-  // We can draw directly only when widget has the same size as wl_buffer
-  LayoutDeviceIntRect size = mWindow->GetMozContainerSize();
-  mDrawToWaylandBufferDirectly = (size.width >= mLockedScreenRect.width &&
-                                  size.height >= mLockedScreenRect.height);
-
   // We can draw directly only when we redraw significant part of the window
   // to avoid flickering or do only fullscreen updates in smooth mode.
-  if (mDrawToWaylandBufferDirectly) {
-    mDrawToWaylandBufferDirectly =
-        mSmoothRendering
-            ? windowRedraw
-            : (windowRedraw || (lockSize.width * 2 > lockedScreenRect.width &&
-                                lockSize.height * 2 > lockedScreenRect.height));
-  }
+  mDrawToWaylandBufferDirectly =
+      mSmoothRendering
+          ? windowRedraw
+          : (windowRedraw || (lockSize.width * 2 > lockedScreenRect.width &&
+                              lockSize.height * 2 > lockedScreenRect.height));
+
   if (!mDrawToWaylandBufferDirectly) {
     // Don't switch wl_buffers when we cache drawings.
     mCanSwitchWaylandBuffer = false;
