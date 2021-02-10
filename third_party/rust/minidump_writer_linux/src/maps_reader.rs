@@ -367,6 +367,7 @@ impl MappingInfo {
 }
 
 #[cfg(test)]
+#[cfg(target_pointer_width = "64")] // All addresses are 64 bit and I'm currently too lazy to adjust it to work for both
 mod tests {
     use super::*;
 
