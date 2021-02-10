@@ -3509,6 +3509,7 @@ gfx.hdr:
   windows_display_colorspace_bitfield:
     bug_numbers:
       - 1514840
+      - 1690597
     description: >
       A bitfield representation of the available DXGI color spaces of the connected displays on Windows.
       See (https://docs.microsoft.com/en-us/windows/desktop/api/dxgicommon/ne-dxgicommon-dxgi_color_space_type)
@@ -3516,13 +3517,12 @@ gfx.hdr:
       index 'N' is available on at least one connected monitor.
     keyed: false
     kind: uint
-    expires: "70"
+    expires: never
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
-      - rhunt@mozilla.com
+      - jmuizelaaar@mozilla.com
     products:
       - 'firefox'
-      - 'fennec'
     record_in_processes:
       - 'main'
 
