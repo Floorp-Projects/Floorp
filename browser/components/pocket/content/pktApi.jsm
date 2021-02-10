@@ -611,11 +611,9 @@ var pktApi = (function() {
   }
 
   /**
-   * Get all cached tags and used tags within the callback
-   * @param {function(Array, Array, Boolean)} callback
-   *                           Function with tags and used tags as parameter.
+   * Return all cached tags and used tags.
    */
-  function getTags(callback) {
+  function getTags() {
     var tagsFromSettings = function() {
       var tagsJSON = getSetting("tags");
       if (typeof tagsJSON !== "undefined") {
@@ -655,11 +653,10 @@ var pktApi = (function() {
       return usedTags;
     };
 
-    if (callback) {
-      var tags = tagsFromSettings();
-      var usedTags = sortedUsedTagsFromSettings();
-      callback(tags, usedTags);
-    }
+    return {
+      tags: tagsFromSettings(),
+      usedTags: sortedUsedTagsFromSettings(),
+    };
   }
 
   /**

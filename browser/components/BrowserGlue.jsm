@@ -261,6 +261,21 @@ let JSWINDOWACTORS = {
     matches: ["about:plugins"],
   },
 
+  AboutPocket: {
+    parent: {
+      moduleURI: "resource:///actors/AboutPocketParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/AboutPocketChild.jsm",
+
+      events: {
+        DOMWindowCreated: { capture: true },
+      },
+    },
+
+    matches: ["about:pocket-saved*", "about:pocket-signup*"],
+  },
+
   AboutPrivateBrowsing: {
     parent: {
       moduleURI: "resource:///actors/AboutPrivateBrowsingParent.jsm",
