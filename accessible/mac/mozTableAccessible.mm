@@ -165,9 +165,14 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 
 - (void)invalidateLayoutTableCache {
   mozAccessible* parent = (mozAccessible*)[self moxUnignoredParent];
-  MOZ_ASSERT([parent isKindOfClass:[mozTablePartAccessible class]],
-             "Trying to invalidate table cache but cannot find table!");
-  [(mozTablePartAccessible*)parent invalidateLayoutTableCache];
+  if ([parent isKindOfClass:[mozTablePartAccessible class]]) {
+    // We do this to prevent dispatching invalidateLayoutTableCache
+    // on outlines or outline parts. This is possible here because
+    // outline rows subclass table rows, which are a table part.
+    // This means `parent` could be an outline, and there is no
+    // cache on outlines to invalidate.
+    [(mozTablePartAccessible*)parent invalidateLayoutTableCache];
+  }
 }
 @end
 
