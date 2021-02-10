@@ -299,7 +299,6 @@ NS_IMPL_ISUPPORTS(ConsumeBodyDoneObserver, nsIStreamLoaderObserver)
         StrongWorkerRef::Create(workerPrivate, "BodyConsumer", [consumer]() {
           consumer->mConsumePromise = nullptr;
           consumer->mBodyConsumed = true;
-          consumer->mShuttingDown = true;
           consumer->ReleaseObject();
           consumer->ShutDownMainThreadConsuming();
         });
