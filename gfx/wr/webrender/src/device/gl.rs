@@ -3802,6 +3802,24 @@ impl Device {
             (gl::ONE, gl::ONE_MINUS_SRC1_ALPHA),
         );
     }
+    pub fn set_blend_mode_multiply_dual_source(&mut self) {
+        self.set_blend_factors(
+            (gl::ONE_MINUS_DST_ALPHA, gl::ONE_MINUS_SRC1_COLOR),
+            (gl::ONE, gl::ONE_MINUS_SRC_ALPHA),
+        );
+    }
+    pub fn set_blend_mode_screen(&mut self) {
+        self.set_blend_factors(
+            (gl::ONE, gl::ONE_MINUS_SRC_COLOR),
+            (gl::ONE, gl::ONE_MINUS_SRC_ALPHA),
+        );
+    }
+    pub fn set_blend_mode_exclusion(&mut self) {
+        self.set_blend_factors(
+            (gl::ONE_MINUS_DST_COLOR, gl::ONE_MINUS_SRC_COLOR),
+            (gl::ONE, gl::ONE_MINUS_SRC_ALPHA),
+        );
+    }
     pub fn set_blend_mode_show_overdraw(&mut self) {
         self.set_blend_factors(
             (gl::ONE, gl::ONE_MINUS_SRC_ALPHA),
