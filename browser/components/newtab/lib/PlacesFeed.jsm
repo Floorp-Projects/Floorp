@@ -107,6 +107,8 @@ class PlacesObserver extends Observer {
   }
 
   handlePlacesEvent(events) {
+    const removedURLs = [];
+
     for (const {
       itemType,
       source,
@@ -156,14 +158,18 @@ class PlacesObserver extends Observer {
               source !== PlacesUtils.bookmarks.SOURCES.RESTORE_ON_STARTUP &&
               source !== PlacesUtils.bookmarks.SOURCES.SYNC)
           ) {
-            this.dispatch({ type: at.PLACES_LINKS_CHANGED });
-            this.dispatch({
-              type: at.PLACES_BOOKMARK_REMOVED,
-              data: { url, bookmarkGuid: guid },
-            });
+            removedURLs.push(url);
           }
           break;
       }
+    }
+
+    if (removedURLs.length) {
+      this.dispatch({ type: at.PLACES_LINKS_CHANGED });
+      this.dispatch({
+        type: at.PLACES_BOOKMARKS_REMOVED,
+        data: { urls: removedURLs },
+      });
     }
   }
 }
