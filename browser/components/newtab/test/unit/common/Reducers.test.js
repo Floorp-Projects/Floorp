@@ -168,7 +168,7 @@ describe("Reducers", () => {
       const nextState = TopSites(undefined, { type: at.PLACES_BOOKMARK_ADDED });
       assert.equal(nextState, INITIAL_STATE.TopSites);
     });
-    it("should remove a bookmark on PLACES_BOOKMARK_REMOVED", () => {
+    it("should remove a bookmark on PLACES_BOOKMARKS_REMOVED", () => {
       const oldState = {
         rows: [
           { url: "foo.com" },
@@ -181,8 +181,8 @@ describe("Reducers", () => {
         ],
       };
       const action = {
-        type: at.PLACES_BOOKMARK_REMOVED,
-        data: { url: "bar.com" },
+        type: at.PLACES_BOOKMARKS_REMOVED,
+        data: { urls: ["bar.com"] },
       };
       const nextState = TopSites(oldState, action);
       const [, newRow] = nextState.rows;
@@ -195,9 +195,9 @@ describe("Reducers", () => {
       // old row is unchanged
       assert.deepEqual(nextState.rows[0], oldState.rows[0]);
     });
-    it("should not update state for empty action.data on PLACES_BOOKMARK_REMOVED", () => {
+    it("should not update state for empty action.data on PLACES_BOOKMARKS_REMOVED", () => {
       const nextState = TopSites(undefined, {
-        type: at.PLACES_BOOKMARK_REMOVED,
+        type: at.PLACES_BOOKMARKS_REMOVED,
       });
       assert.equal(nextState, INITIAL_STATE.TopSites);
     });
@@ -662,17 +662,17 @@ describe("Reducers", () => {
       // old row is unchanged
       assert.equal(oldRow, oldState[0].rows[1]);
     });
-    it("should not update state for empty action.data on PLACES_BOOKMARK_REMOVED", () => {
+    it("should not update state for empty action.data on PLACES_BOOKMARKS_REMOVED", () => {
       const nextState = Sections(undefined, {
-        type: at.PLACES_BOOKMARK_REMOVED,
+        type: at.PLACES_BOOKMARKS_REMOVED,
       });
       assert.equal(nextState, INITIAL_STATE.Sections);
     });
-    it("should remove the bookmark when PLACES_BOOKMARK_REMOVED is received", () => {
+    it("should remove the bookmark when PLACES_BOOKMARKS_REMOVED is received", () => {
       const action = {
-        type: at.PLACES_BOOKMARK_REMOVED,
+        type: at.PLACES_BOOKMARKS_REMOVED,
         data: {
-          url: "www.foo.bar",
+          urls: ["www.foo.bar"],
           bookmarkGuid: "bookmark123",
         },
       };
@@ -688,7 +688,7 @@ describe("Reducers", () => {
       const [newRow, oldRow] = nextState[0].rows;
 
       // new row isn't a bookmark
-      assert.equal(newRow.url, action.data.url);
+      assert.equal(newRow.url, action.data.urls[0]);
       assert.equal(newRow.type, "history");
       assert.isUndefined(newRow.bookmarkGuid);
       assert.isUndefined(newRow.bookmarkTitle);
@@ -1457,7 +1457,7 @@ describe("Reducers", () => {
       );
     });
 
-    it("should remove boookmark details on PLACES_BOOKMARK_REMOVED in both feeds and spocs", () => {
+    it("should remove boookmark details on PLACES_BOOKMARKS_REMOVED in both feeds and spocs", () => {
       const oldState = {
         feeds: {
           data: {
@@ -1494,9 +1494,9 @@ describe("Reducers", () => {
         },
       };
       const action = {
-        type: at.PLACES_BOOKMARK_REMOVED,
+        type: at.PLACES_BOOKMARKS_REMOVED,
         data: {
-          url: "https://foo.com",
+          urls: ["https://foo.com"],
         },
       };
 

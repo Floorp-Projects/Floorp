@@ -242,12 +242,12 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         return site;
       });
       return Object.assign({}, prevState, { rows: newRows });
-    case at.PLACES_BOOKMARK_REMOVED:
+    case at.PLACES_BOOKMARKS_REMOVED:
       if (!action.data) {
         return prevState;
       }
       newRows = prevState.rows.map(site => {
-        if (site && site.url === action.data.url) {
+        if (site && action.data.urls.includes(site.url)) {
           const newSite = Object.assign({}, site);
           delete newSite.bookmarkGuid;
           delete newSite.bookmarkTitle;
@@ -443,7 +443,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
           }),
         })
       );
-    case at.PLACES_BOOKMARK_REMOVED:
+    case at.PLACES_BOOKMARKS_REMOVED:
       if (!action.data) {
         return prevState;
       }
@@ -451,7 +451,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
         Object.assign({}, section, {
           rows: section.rows.map(item => {
             // find the bookmark within the rows that is attempted to be removed
-            if (item.url === action.data.url) {
+            if (action.data.urls.includes(item.url)) {
               const newSite = Object.assign({}, item);
               delete newSite.bookmarkGuid;
               delete newSite.bookmarkTitle;
@@ -764,9 +764,9 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
         ? prevState
         : nextState(items => items.map(updateBookmarkInfo));
 
-    case at.PLACES_BOOKMARK_REMOVED:
+    case at.PLACES_BOOKMARKS_REMOVED:
       const removeBookmarkInfo = item => {
-        if (item.url === action.data.url) {
+        if (action.data.urls.includes(item.url)) {
           const newSite = Object.assign({}, item);
           delete newSite.bookmarkGuid;
           delete newSite.bookmarkTitle;
