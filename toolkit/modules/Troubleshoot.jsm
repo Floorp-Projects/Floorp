@@ -79,6 +79,7 @@ const PREFS_WHITELIST = [
   "layers.",
   "layout.css.dpi",
   "layout.display-list.",
+  "layout.frame_rate",
   "media.",
   "mousewheel.",
   "network.",
