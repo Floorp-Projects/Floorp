@@ -71,7 +71,7 @@ add_task(async function test_not_found() {
   );
 
   // Search for the first word.
-  await promiseFindFinished(gBrowser, "--- THIS SHOULD NEVER MATCH ---", false);
+  await promiseFindFinished("--- THIS SHOULD NEVER MATCH ---", false);
   let findbar = gBrowser.getCachedFindBar();
   is(
     findbar._findStatusDesc.textContent,
@@ -89,7 +89,7 @@ add_task(async function test_found() {
   );
 
   // Search for a string that WILL be found, with 'Highlight All' on
-  await promiseFindFinished(gBrowser, "S", true);
+  await promiseFindFinished("S", true);
   ok(
     !gBrowser.getCachedFindBar()._findStatusDesc.textContent,
     "Findbar status should be empty"
@@ -119,7 +119,7 @@ add_task(async function test_tabwise_case_sensitive() {
   gBrowser.selectedTab = tab1;
 
   // Not found for first tab.
-  await promiseFindFinished(gBrowser, "S", true);
+  await promiseFindFinished("S", true);
   is(
     findbar1._findStatusDesc.textContent,
     findbar1._notFoundStr,
@@ -129,7 +129,7 @@ add_task(async function test_tabwise_case_sensitive() {
   gBrowser.selectedTab = tab2;
 
   // But it didn't affect the second findbar.
-  await promiseFindFinished(gBrowser, "S", true);
+  await promiseFindFinished("S", true);
   ok(!findbar2._findStatusDesc.textContent, "Findbar status should be empty");
 
   gBrowser.removeTab(tab1);
@@ -161,14 +161,14 @@ add_task(async function test_reinitialization_at_remoteness_change() {
   let findbar = await gBrowser.getFindBar();
 
   // Findbar should operate normally.
-  await promiseFindFinished(gBrowser, "z", false);
+  await promiseFindFinished("z", false);
   is(
     findbar._findStatusDesc.textContent,
     findbar._notFoundStr,
     "Findbar status text should be 'Phrase not found'"
   );
 
-  await promiseFindFinished(gBrowser, "s", false);
+  await promiseFindFinished("s", false);
   ok(!findbar._findStatusDesc.textContent, "Findbar status should be empty");
 
   // Moving browser into the parent process and reloading sample data.
@@ -186,14 +186,14 @@ add_task(async function test_reinitialization_at_remoteness_change() {
   browser.contentDocument.body.clientHeight; // Force flush.
 
   // Findbar should keep operating normally after remoteness change.
-  await promiseFindFinished(gBrowser, "z", false);
+  await promiseFindFinished("z", false);
   is(
     findbar._findStatusDesc.textContent,
     findbar._notFoundStr,
     "Findbar status text should be 'Phrase not found'"
   );
 
-  await promiseFindFinished(gBrowser, "s", false);
+  await promiseFindFinished("s", false);
   ok(!findbar._findStatusDesc.textContent, "Findbar status should be empty");
 
   BrowserTestUtils.removeTab(tab);
@@ -373,7 +373,7 @@ add_task(async function test_preservestate_on_reload() {
 
     // Find some text.
     let promiseMatches = promiseGetMatchCount(findbar);
-    await promiseFindFinished(gBrowser, "The", true);
+    await promiseFindFinished("The", true);
 
     let matches = await promiseMatches;
     is(matches.current, 1, "Correct match position " + stateChange);
@@ -444,6 +444,49 @@ add_task(async function test_preservestate_on_reload() {
     gBrowser.removeTab(tab);
   }
 });
+
+async function promiseFindFinished(searchText, highlightOn) {
+  let findbar = await gBrowser.getFindBar();
+  findbar.startFind(findbar.FIND_NORMAL);
+  let highlightElement = findbar.getElement("highlight");
+  if (highlightElement.checked != highlightOn) {
+    highlightElement.click();
+  }
+  return new Promise(resolve => {
+    executeSoon(() => {
+      findbar._findField.value = searchText;
+
+      let resultListener;
+      // When highlighting is on the finder sends a second "FOUND" message after
+      // the search wraps. This causes timing problems with e10s. waitMore
+      // forces foundOrTimeout wait for the second "FOUND" message before
+      // resolving the promise.
+      let waitMore = highlightOn;
+      let findTimeout = setTimeout(() => foundOrTimedout(null), 2000);
+      let foundOrTimedout = function(aData) {
+        if (aData !== null && waitMore) {
+          waitMore = false;
+          return;
+        }
+        if (aData === null) {
+          info("Result listener not called, timeout reached.");
+        }
+        clearTimeout(findTimeout);
+        findbar.browser.finder.removeResultListener(resultListener);
+        resolve();
+      };
+
+      resultListener = {
+        onFindResult: foundOrTimedout,
+        onCurrentSelection() {},
+        onMatchesCountResult() {},
+        onHighlightFinished() {},
+      };
+      findbar.browser.finder.addResultListener(resultListener);
+      findbar._find();
+    });
+  });
+}
 
 function promiseGetMatchCount(findbar) {
   return new Promise(resolve => {
