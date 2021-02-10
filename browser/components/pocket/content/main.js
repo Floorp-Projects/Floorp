@@ -76,6 +76,9 @@ var pktUI = (function() {
   // wrong
   var _panelId = 0;
 
+  let _titleToSave = "";
+  let _urlToSave = "";
+
   var overflowMenuWidth = 230;
   var overflowMenuHeight = 475;
   var savePanelWidth = 350;
@@ -105,9 +108,16 @@ var pktUI = (function() {
   }
 
   function tryToSaveUrl(url, title) {
+    // Validate input parameter
+    if (typeof url !== "undefined" && url.startsWith("about:reader?url=")) {
+      url = ReaderMode.getOriginalUrl(url);
+    }
+
     // If the user is logged in, go ahead and save the current page
     if (pktApi.isUserLoggedIn()) {
-      saveAndShowConfirmation(url, title);
+      _titleToSave = title;
+      _urlToSave = url;
+      saveAndShowConfirmation();
       return;
     }
 
@@ -181,19 +191,6 @@ var pktUI = (function() {
         {
           width: inOverflowMenu ? overflowMenuWidth : 300,
           height: startheight,
-          onShow() {
-            // A successful button click, for logged out users.
-            pktTelemetry.sendStructuredIngestionEvent(
-              pktTelemetry.createPingPayload({
-                events: [
-                  {
-                    action: "click",
-                    source: "save_button",
-                  },
-                ],
-              })
-            );
-          },
         }
       );
     });
@@ -219,19 +216,10 @@ var pktUI = (function() {
   /**
    * Show the logged-out state / sign-up panel
    */
-  function saveAndShowConfirmation(url, title) {
-    // Validate input parameter
-    if (typeof url !== "undefined" && url.startsWith("about:reader?url=")) {
-      url = ReaderMode.getOriginalUrl(url);
-    }
-
-    var isValidURL =
-      typeof url !== "undefined" &&
-      (url.startsWith("http") || url.startsWith("https"));
-
+  function saveAndShowConfirmation() {
     var inOverflowMenu = isInOverflowMenu();
     var startheight =
-      pktApi.isPremiumUser() && isValidURL
+      pktApi.isPremiumUser() && isValidURL()
         ? savePanelHeights.expanded
         : savePanelHeights.collapsed;
     if (inOverflowMenu) {
@@ -239,7 +227,7 @@ var pktUI = (function() {
     }
 
     getFirefoxAccountSignedInUser(function(userdata) {
-      var panelId = showPanel(
+      showPanel(
         "about:pocket-saved?pockethost=" +
           Services.prefs.getCharPref("extensions.pocket.site") +
           "&premiumStatus=" +
@@ -251,130 +239,6 @@ var pktUI = (function() {
           "&locale=" +
           getUILocale(),
         {
-          onShow() {
-            var saveLinkMessageId = "saveLink";
-            getPanelFrame().setAttribute("itemAdded", "false");
-
-            // Send error message for invalid url
-            if (!isValidURL) {
-              // TODO: Pass key for localized error in error object
-              let error = {
-                message: "Only links can be saved",
-                localizedKey: "onlylinkssaved",
-              };
-              pktUIMessaging.sendErrorMessageToPanel(
-                panelId,
-                saveLinkMessageId,
-                error
-              );
-              return;
-            }
-
-            // Check online state
-            if (!navigator.onLine) {
-              // TODO: Pass key for localized error in error object
-              let error = {
-                message:
-                  "You must be connected to the Internet in order to save to Pocket. Please connect to the Internet and try again.",
-              };
-              pktUIMessaging.sendErrorMessageToPanel(
-                panelId,
-                saveLinkMessageId,
-                error
-              );
-              return;
-            }
-
-            // A successful button click, for logged in users.
-            pktTelemetry.sendStructuredIngestionEvent(
-              pktTelemetry.createPingPayload({
-                events: [
-                  {
-                    action: "click",
-                    source: "save_button",
-                  },
-                ],
-              })
-            );
-
-            // Add url
-            var options = {
-              success(data, request) {
-                var item = data.item;
-                var ho2 = data.ho2;
-                var accountState = data.account_state;
-                var displayName = data.display_name;
-                var successResponse = {
-                  status: "success",
-                  accountState,
-                  displayName,
-                  item,
-                  ho2,
-                };
-                pktUIMessaging.sendMessageToPanel(
-                  panelId,
-                  saveLinkMessageId,
-                  successResponse
-                );
-                getPanelFrame().setAttribute("itemAdded", "true");
-
-                getAndShowRecsForItem(item, {
-                  success(data) {
-                    pktUIMessaging.sendMessageToPanel(
-                      panelId,
-                      "renderItemRecs",
-                      data
-                    );
-                    if (data?.recommendations?.[0]?.experiment) {
-                      const payload = pktTelemetry.createPingPayload({
-                        // This is the ML model used to recommend the story.
-                        // Right now this value is the same for all three items returned together,
-                        // so we can just use the first item's value for all.
-                        model: data.recommendations[0].experiment,
-                        // Create an impression event for each item rendered.
-                        events: data.recommendations.map((item, index) => ({
-                          action: "impression",
-                          position: index,
-                          source: "on_save_recs",
-                        })),
-                      });
-                      // Send view impression ping.
-                      pktTelemetry.sendStructuredIngestionEvent(payload);
-                    }
-                  },
-                });
-              },
-              error(error, request) {
-                // If user is not authorized show singup page
-                if (request.status === 401) {
-                  showSignUp();
-                  return;
-                }
-
-                // If there is no error message in the error use a
-                // complete catch-all
-                var errorMessage =
-                  error.message ||
-                  "There was an error when trying to save to Pocket.";
-                var panelError = { message: errorMessage };
-
-                // Send error message to panel
-                pktUIMessaging.sendErrorMessageToPanel(
-                  panelId,
-                  saveLinkMessageId,
-                  panelError
-                );
-              },
-            };
-
-            // Add title if given
-            if (typeof title !== "undefined") {
-              options.title = title;
-            }
-
-            // Send the link
-            pktApi.addLink(url, options);
-          },
           width: inOverflowMenu ? overflowMenuWidth : savePanelWidth,
           height: startheight,
         }
@@ -394,35 +258,152 @@ var pktUI = (function() {
     // as if the user tries to click again on the toolbar button the overlay
     // will close instead of the button will be clicked
     var iframe = getPanelFrame();
-    options.onShow = options.onShow || (() => {});
-
-    // Register event handlers
-    registerEventMessages();
 
     // Load the iframe
     iframe.setAttribute("src", url);
-
-    if (
-      iframe.contentDocument &&
-      iframe.contentDocument.readyState == "complete" &&
-      iframe.contentDocument.documentURI != "about:blank"
-    ) {
-      options.onShow();
-    } else {
-      // iframe didn't load yet. This seems to always be the case when in
-      // the toolbar panel, but never the case for a subview.
-      // XXX this only being fired when it's a _capturing_ listener!
-      iframe.addEventListener("load", options.onShow, {
-        once: true,
-        capture: true,
-      });
-    }
 
     resizePanel({
       width: options.width,
       height: options.height,
     });
-    return _panelId;
+  }
+
+  function onShowSignup() {
+    // A successful button click, for logged out users.
+    pktTelemetry.sendStructuredIngestionEvent(
+      pktTelemetry.createPingPayload({
+        events: [
+          {
+            action: "click",
+            source: "save_button",
+          },
+        ],
+      })
+    );
+  }
+
+  function onShowSaved() {
+    var saveLinkMessageId = "PKT_saveLink";
+    getPanelFrame().setAttribute("itemAdded", "false");
+
+    // Send error message for invalid url
+    if (!isValidURL()) {
+      // TODO: Pass key for localized error in error object
+      let error = {
+        message: "Only links can be saved",
+        localizedKey: "onlylinkssaved",
+      };
+      pktUIMessaging.sendErrorMessageToPanel(
+        saveLinkMessageId,
+        _panelId,
+        error
+      );
+      return;
+    }
+
+    // Check online state
+    if (!navigator.onLine) {
+      // TODO: Pass key for localized error in error object
+      let error = {
+        message:
+          "You must be connected to the Internet in order to save to Pocket. Please connect to the Internet and try again.",
+      };
+      pktUIMessaging.sendErrorMessageToPanel(
+        saveLinkMessageId,
+        _panelId,
+        error
+      );
+      return;
+    }
+
+    // A successful button click, for logged in users.
+    pktTelemetry.sendStructuredIngestionEvent(
+      pktTelemetry.createPingPayload({
+        events: [
+          {
+            action: "click",
+            source: "save_button",
+          },
+        ],
+      })
+    );
+
+    // Add url
+    var options = {
+      success(data, request) {
+        var item = data.item;
+        var ho2 = data.ho2;
+        var accountState = data.account_state;
+        var displayName = data.display_name;
+        var successResponse = {
+          status: "success",
+          accountState,
+          displayName,
+          item,
+          ho2,
+        };
+        pktUIMessaging.sendMessageToPanel(
+          saveLinkMessageId,
+          _panelId,
+          successResponse
+        );
+        getPanelFrame().setAttribute("itemAdded", "true");
+
+        getAndShowRecsForItem(item, {
+          success(data) {
+            pktUIMessaging.sendMessageToPanel(
+              "PKT_renderItemRecs",
+              _panelId,
+              data
+            );
+            if (data?.recommendations?.[0]?.experiment) {
+              const payload = pktTelemetry.createPingPayload({
+                // This is the ML model used to recommend the story.
+                // Right now this value is the same for all three items returned together,
+                // so we can just use the first item's value for all.
+                model: data.recommendations[0].experiment,
+                // Create an impression event for each item rendered.
+                events: data.recommendations.map((item, index) => ({
+                  action: "impression",
+                  position: index,
+                  source: "on_save_recs",
+                })),
+              });
+              // Send view impression ping.
+              pktTelemetry.sendStructuredIngestionEvent(payload);
+            }
+          },
+        });
+      },
+      error(error, request) {
+        // If user is not authorized show singup page
+        if (request.status === 401) {
+          showSignUp();
+          return;
+        }
+
+        // If there is no error message in the error use a
+        // complete catch-all
+        var errorMessage =
+          error.message || "There was an error when trying to save to Pocket.";
+        var panelError = { message: errorMessage };
+
+        // Send error message to panel
+        pktUIMessaging.sendErrorMessageToPanel(
+          saveLinkMessageId,
+          _panelId,
+          panelError
+        );
+      },
+    };
+
+    // Add title if given
+    if (typeof _titleToSave !== "undefined") {
+      options.title = _titleToSave;
+    }
+
+    // Send the link
+    pktApi.addLink(_urlToSave, options);
   }
 
   /**
@@ -430,7 +411,6 @@ var pktUI = (function() {
    * options = {
    *  width: ,
    *  height: ,
-   *  animate [default false]
    * }
    */
   function resizePanel(options) {
@@ -441,334 +421,13 @@ var pktUI = (function() {
     iframe.style.height = options.height + "px";
   }
 
-  /**
-   * Register all of the messages needed for the panels
-   */
-  function registerEventMessages() {
-    var iframe = getPanelFrame();
-
-    // Only register the messages once
-    var didInitAttributeKey = "did_init";
-    var didInitMessageListener = iframe.getAttribute(didInitAttributeKey);
-    if (
-      typeof didInitMessageListener !== "undefined" &&
-      didInitMessageListener == 1
-    ) {
-      return;
+  function expandSavePanel(data) {
+    if (!isInOverflowMenu()) {
+      resizePanel({
+        width: savePanelWidth,
+        height: savePanelHeights.expanded,
+      });
     }
-    iframe.setAttribute(didInitAttributeKey, 1);
-
-    // When the panel is displayed it generated an event called
-    // "show": we will listen for that event and when it happens,
-    // send our own "show" event to the panel's script, so the
-    // script can prepare the panel for display.
-    var _showMessageId = "show";
-    pktUIMessaging.addMessageListener(iframe, _showMessageId, function(
-      panelId,
-      data
-    ) {
-      // Let panel know that it is ready
-      pktUIMessaging.sendMessageToPanel(panelId, _showMessageId);
-    });
-
-    // Open a new tab with a given url
-    var _openTabWithUrlMessageId = "openTabWithUrl";
-    pktUIMessaging.addMessageListener(
-      iframe,
-      _openTabWithUrlMessageId,
-      function(panelId, data, contentPrincipal, csp) {
-        try {
-          urlSecurityCheck(
-            data.url,
-            contentPrincipal,
-            Services.scriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL
-          );
-        } catch (ex) {
-          return;
-        }
-
-        // We don't track every click, only clicks with a known source.
-        if (data.source) {
-          const payload = pktTelemetry.createPingPayload({
-            events: [
-              {
-                action: "click",
-                source: data.source,
-              },
-            ],
-          });
-          // Send click event ping.
-          pktTelemetry.sendStructuredIngestionEvent(payload);
-        }
-
-        var url = data.url;
-        openTabWithUrl(url, contentPrincipal, csp);
-        pktUIMessaging.sendResponseMessageToPanel(
-          panelId,
-          _openTabWithUrlMessageId,
-          url
-        );
-      }
-    );
-
-    // Open a new tab with a Pocket story url
-    var _openTabWithPocketUrlMessageId = "openTabWithPocketUrl";
-    pktUIMessaging.addMessageListener(
-      iframe,
-      _openTabWithPocketUrlMessageId,
-      function(panelId, data, contentPrincipal, csp) {
-        try {
-          urlSecurityCheck(
-            data.url,
-            contentPrincipal,
-            Services.scriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL
-          );
-        } catch (ex) {
-          return;
-        }
-
-        const { url, position, model } = data;
-        // Check to see if we need to and can fire valid telemetry.
-        if (model && (position || position === 0)) {
-          const payload = pktTelemetry.createPingPayload({
-            model,
-            events: [
-              {
-                action: "click",
-                position,
-                source: "on_save_recs",
-              },
-            ],
-          });
-          // Send click event ping.
-          pktTelemetry.sendStructuredIngestionEvent(payload);
-        }
-
-        openTabWithUrl(url, contentPrincipal, csp);
-      }
-    );
-
-    // Close the panel
-    var _closeMessageId = "close";
-    pktUIMessaging.addMessageListener(iframe, _closeMessageId, function(
-      panelId,
-      data
-    ) {
-      getPanel().hidePopup();
-    });
-
-    // Send the current url to the panel
-    var _getCurrentURLMessageId = "getCurrentURL";
-    pktUIMessaging.addMessageListener(iframe, _getCurrentURLMessageId, function(
-      panelId,
-      data
-    ) {
-      pktUIMessaging.sendResponseMessageToPanel(
-        panelId,
-        _getCurrentURLMessageId,
-        getCurrentUrl()
-      );
-    });
-
-    // Get article info
-    var _getArticleInfoMessageId = "getArticleInfo";
-    pktUIMessaging.addMessageListener(
-      iframe,
-      _getArticleInfoMessageId,
-      function(panelId, data) {
-        pktApi.getArticleInfo(getCurrentUrl(), {
-          success(res, req) {
-            pktUIMessaging.sendResponseMessageToPanel(
-              panelId,
-              _getArticleInfoMessageId,
-              res
-            );
-          },
-          error(err, req) {
-            err.fallback_title = getCurrentTitle();
-            err.fallback_domain = new URL(getCurrentUrl()).hostname;
-            pktUIMessaging.sendResponseMessageToPanel(
-              panelId,
-              _getArticleInfoMessageId,
-              err
-            );
-          },
-        });
-      }
-    );
-
-    // getMobileDownload
-    var _getMobileDownloadMessageId = "getMobileDownload";
-    pktUIMessaging.addMessageListener(
-      iframe,
-      _getMobileDownloadMessageId,
-      function(panelId, data) {
-        pktApi.getMobileDownload({
-          success(res, req) {
-            pktUIMessaging.sendResponseMessageToPanel(
-              panelId,
-              _getMobileDownloadMessageId,
-              res
-            );
-          },
-          error(err, req) {
-            pktUIMessaging.sendResponseMessageToPanel(
-              panelId,
-              _getMobileDownloadMessageId,
-              err
-            );
-          },
-        });
-      }
-    );
-
-    var _resizePanelMessageId = "resizePanel";
-    pktUIMessaging.addMessageListener(iframe, _resizePanelMessageId, function(
-      panelId,
-      data
-    ) {
-      resizePanel(data);
-    });
-
-    // Callback post initialization to tell background script that panel is "ready" for communication.
-    pktUIMessaging.addMessageListener(iframe, "listenerReady", function(
-      panelId,
-      data
-    ) {});
-
-    pktUIMessaging.addMessageListener(iframe, "expandSavePanel", function(
-      panelId,
-      data
-    ) {
-      if (!isInOverflowMenu()) {
-        resizePanel({
-          width: savePanelWidth,
-          height: savePanelHeights.expanded,
-        });
-      }
-    });
-
-    // Ask for recently accessed/used tags for auto complete
-    var _getTagsMessageId = "getTags";
-    pktUIMessaging.addMessageListener(iframe, _getTagsMessageId, function(
-      panelId,
-      data
-    ) {
-      pktApi.getTags(function(tags, usedTags) {
-        pktUIMessaging.sendResponseMessageToPanel(panelId, _getTagsMessageId, {
-          tags,
-          usedTags,
-        });
-      });
-    });
-
-    // Ask for suggested tags based on passed url
-    var _getSuggestedTagsMessageId = "getSuggestedTags";
-    pktUIMessaging.addMessageListener(
-      iframe,
-      _getSuggestedTagsMessageId,
-      function(panelId, data) {
-        pktApi.getSuggestedTagsForURL(data.url, {
-          success(data, response) {
-            var suggestedTags = data.suggested_tags;
-            var successResponse = {
-              status: "success",
-              value: {
-                suggestedTags,
-              },
-            };
-            pktUIMessaging.sendResponseMessageToPanel(
-              panelId,
-              _getSuggestedTagsMessageId,
-              successResponse
-            );
-          },
-          error(error, response) {
-            pktUIMessaging.sendErrorResponseMessageToPanel(
-              panelId,
-              _getSuggestedTagsMessageId,
-              error
-            );
-          },
-        });
-      }
-    );
-
-    // Pass url and array list of tags, add to existing save item accordingly
-    var _addTagsMessageId = "addTags";
-    pktUIMessaging.addMessageListener(iframe, _addTagsMessageId, function(
-      panelId,
-      data
-    ) {
-      pktApi.addTagsToURL(data.url, data.tags, {
-        success(data, response) {
-          var successResponse = { status: "success" };
-          pktUIMessaging.sendResponseMessageToPanel(
-            panelId,
-            _addTagsMessageId,
-            successResponse
-          );
-        },
-        error(error, response) {
-          pktUIMessaging.sendErrorResponseMessageToPanel(
-            panelId,
-            _addTagsMessageId,
-            error
-          );
-        },
-      });
-    });
-
-    // Based on clicking "remove page" CTA, and passed unique item id, remove the item
-    var _deleteItemMessageId = "deleteItem";
-    pktUIMessaging.addMessageListener(iframe, _deleteItemMessageId, function(
-      panelId,
-      data
-    ) {
-      pktApi.deleteItem(data.itemId, {
-        success(data, response) {
-          var successResponse = { status: "success" };
-          pktUIMessaging.sendResponseMessageToPanel(
-            panelId,
-            _deleteItemMessageId,
-            successResponse
-          );
-          getPanelFrame().setAttribute("itemAdded", "false");
-        },
-        error(error, response) {
-          pktUIMessaging.sendErrorResponseMessageToPanel(
-            panelId,
-            _deleteItemMessageId,
-            error
-          );
-        },
-      });
-    });
-
-    var _initL10NMessageId = "initL10N";
-    pktUIMessaging.addMessageListener(iframe, _initL10NMessageId, function(
-      panelId,
-      data
-    ) {
-      var strings = {};
-      var bundle = Services.strings.createBundle(
-        "chrome://browser/locale/pocket.properties"
-      );
-      for (let str of bundle.getSimpleEnumeration()) {
-        if (str.key in data) {
-          strings[str.key] = bundle.formatStringFromName(
-            str.key,
-            data[str.key]
-          );
-        } else {
-          strings[str.key] = str.value;
-        }
-      }
-      pktUIMessaging.sendResponseMessageToPanel(panelId, _initL10NMessageId, {
-        strings,
-        dir: Services.locale.isAppLocaleRTL ? "rtl" : "ltr",
-      });
-    });
   }
 
   // -- Browser Navigation -- //
@@ -815,6 +474,68 @@ var pktUI = (function() {
     });
   }
 
+  // Open a new tab with a given url
+  function onOpenTabWithUrl(panelId, data, contentPrincipal, csp) {
+    try {
+      urlSecurityCheck(
+        data.url,
+        contentPrincipal,
+        Services.scriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL
+      );
+    } catch (ex) {
+      return;
+    }
+
+    // We don't track every click, only clicks with a known source.
+    if (data.source) {
+      const payload = pktTelemetry.createPingPayload({
+        events: [
+          {
+            action: "click",
+            source: data.source,
+          },
+        ],
+      });
+      // Send click event ping.
+      pktTelemetry.sendStructuredIngestionEvent(payload);
+    }
+
+    var url = data.url;
+    openTabWithUrl(url, contentPrincipal, csp);
+  }
+
+  // Open a new tab with a Pocket story url
+  function onOpenTabWithPocketUrl(panelId, data, contentPrincipal, csp) {
+    try {
+      urlSecurityCheck(
+        data.url,
+        contentPrincipal,
+        Services.scriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL
+      );
+    } catch (ex) {
+      return;
+    }
+
+    const { url, position, model } = data;
+    // Check to see if we need to and can fire valid telemetry.
+    if (model && (position || position === 0)) {
+      const payload = pktTelemetry.createPingPayload({
+        model,
+        events: [
+          {
+            action: "click",
+            position,
+            source: "on_save_recs",
+          },
+        ],
+      });
+      // Send click event ping.
+      pktTelemetry.sendStructuredIngestionEvent(payload);
+    }
+
+    openTabWithUrl(url, contentPrincipal, csp);
+  }
+
   // -- Helper Functions -- //
 
   function getCurrentUrl() {
@@ -823,6 +544,10 @@ var pktUI = (function() {
 
   function getCurrentTitle() {
     return gBrowser.contentTitle;
+  }
+
+  function closePanel() {
+    getPanel().hidePopup();
   }
 
   function getPanel() {
@@ -846,6 +571,13 @@ var pktUI = (function() {
 
   function isInOverflowMenu() {
     return false;
+  }
+
+  function isValidURL() {
+    return (
+      typeof _urlToSave !== "undefined" &&
+      (_urlToSave.startsWith("http") || _urlToSave.startsWith("https"))
+    );
   }
 
   function getFirefoxAccountSignedInUser(callback) {
@@ -872,55 +604,26 @@ var pktUI = (function() {
     initPrefs,
 
     openTabWithUrl,
+    onOpenTabWithUrl,
+    onOpenTabWithPocketUrl,
+    onShowSaved,
+    onShowSignup,
 
     getAndShowRecsForItem,
     tryToSaveUrl,
     tryToSaveCurrentPage,
+    resizePanel,
+    expandSavePanel,
+    closePanel,
   };
 })();
 
 // -- Communication to Background -- //
-// https://developer.mozilla.org/en-US/Add-ons/Code_snippets/Interaction_between_privileged_and_non-privileged_pages
 var pktUIMessaging = (function() {
-  /**
-   * Prefix message id for message listening
-   */
-  function prefixedMessageId(messageId) {
-    return "PKT_" + messageId;
-  }
-
-  /**
-   * Register a listener and callback for a specific messageId
-   */
-  function addMessageListener(iframe, messageId, callback) {
-    iframe.addEventListener(
-      prefixedMessageId(messageId),
-      function(e) {
-        var nodePrincipal = e.target.nodePrincipal;
-        // ignore to ensure we do not pick up other events in the browser
-        if (!nodePrincipal || !nodePrincipal.spec.startsWith("about:pocket")) {
-          return;
-        }
-
-        // Pass in information to callback
-        var payload = JSON.parse(e.target.getAttribute("payload"))[0];
-        var panelId = payload.panelId;
-        var data = payload.data;
-        var csp = e.target.ownerDocument.csp;
-        callback(panelId, data, nodePrincipal, csp);
-
-        // Cleanup the element
-        e.target.remove();
-      },
-      false,
-      true
-    );
-  }
-
   /**
    * Send a message to the panel's iframe
    */
-  function sendMessageToPanel(panelId, messageId, payload) {
+  function sendMessageToPanel(messageId, panelId, payload) {
     if (!isPanelIdValid(panelId)) {
       return;
     }
@@ -930,38 +633,21 @@ var pktUIMessaging = (function() {
       return;
     }
 
-    var doc = panelFrame.contentWindow.document;
-    var documentElement = doc.documentElement;
+    const aboutPocketActor = panelFrame?.browsingContext?.currentWindowGlobal?.getActor(
+      "AboutPocket"
+    );
 
     // Send message to panel
-    var panelMessageId = prefixedMessageId(panelId + "_" + messageId);
-
-    var AnswerEvt = doc.createElement("PKTMessage");
-    AnswerEvt.setAttribute("payload", JSON.stringify([payload]));
-    documentElement.appendChild(AnswerEvt);
-
-    var event = doc.createEvent("HTMLEvents");
-    event.initEvent(panelMessageId, true, false);
-    AnswerEvt.dispatchEvent(event);
-  }
-
-  function sendResponseMessageToPanel(panelId, messageId, payload) {
-    var responseMessageId = messageId + "Response";
-    sendMessageToPanel(panelId, responseMessageId, payload);
+    aboutPocketActor?.sendAsyncMessage(`${messageId}_${panelId}`, payload);
   }
 
   /**
    * Helper function to package an error object and send it to the panel
    * iframe as a message response
    */
-  function sendErrorMessageToPanel(panelId, messageId, error) {
+  function sendErrorMessageToPanel(messageId, panelId, error) {
     var errorResponse = { status: "error", error };
-    sendMessageToPanel(panelId, messageId, errorResponse);
-  }
-
-  function sendErrorResponseMessageToPanel(panelId, messageId, error) {
-    var errorResponse = { status: "error", error };
-    sendResponseMessageToPanel(panelId, messageId, errorResponse);
+    sendMessageToPanel(messageId, panelId, errorResponse);
   }
 
   /**
@@ -1018,10 +704,7 @@ var pktUIMessaging = (function() {
    * Public
    */
   return {
-    addMessageListener,
     sendMessageToPanel,
-    sendResponseMessageToPanel,
     sendErrorMessageToPanel,
-    sendErrorResponseMessageToPanel,
   };
 })();

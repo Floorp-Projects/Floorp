@@ -104,6 +104,16 @@ let RemotePageAccessManager = {
     "about:plugins": {
       RPMSendQuery: ["RequestPlugins"],
     },
+    "about:pocket-saved": {
+      RPMSendAsyncMessage: ["*"],
+      RPMAddMessageListener: ["*"],
+      RPMRemoveMessageListener: ["*"],
+    },
+    "about:pocket-signup": {
+      RPMSendAsyncMessage: ["*"],
+      RPMAddMessageListener: ["*"],
+      RPMRemoveMessageListener: ["*"],
+    },
     "about:privatebrowsing": {
       RPMSendAsyncMessage: [
         "OpenPrivateWindow",

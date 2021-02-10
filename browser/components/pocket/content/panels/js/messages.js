@@ -1,5 +1,4 @@
-// Documentation of methods used here are at:
-// https://developer.mozilla.org/en-US/Add-ons/Code_snippets/Interaction_between_privileged_and_non-privileged_pages
+/* global RPMRemoveMessageListener:false, RPMAddMessageListener:false, RPMSendAsyncMessage:false */
 
 var pktPanelMessaging = (function() {
   function panelIdFromURL(url) {
@@ -11,69 +10,51 @@ var pktPanelMessaging = (function() {
     return 0;
   }
 
-  function prefixedMessageId(messageId) {
-    return "PKT_" + messageId;
+  function removeMessageListener(messageId, panelId, callback) {
+    RPMRemoveMessageListener(`${messageId}_${panelId}`, callback);
   }
 
-  function panelPrefixedMessageId(panelId, messageId) {
-    return prefixedMessageId(panelId + "_" + messageId);
+  function addMessageListener(messageId, panelId, callback = () => {}) {
+    RPMAddMessageListener(`${messageId}_${panelId}`, callback);
   }
 
-  function addMessageListener(panelId, messageId, callback) {
-    document.addEventListener(
-      panelPrefixedMessageId(panelId, messageId),
-      function(e) {
-        callback(JSON.parse(e.target.getAttribute("payload"))[0]);
-
-        // TODO: Figure out why e.target.parentNode is null
-        // e.target.parentNode.removeChild(e.target);
-      }
-    );
-  }
-
-  function removeMessageListener(panelId, messageId, callback) {
-    document.removeEventListener(
-      panelPrefixedMessageId(panelId, messageId),
-      callback
-    );
-  }
-
-  function sendMessage(panelId, messageId, payload, callback) {
+  function sendMessage(messageId, panelId, payload = {}, callback) {
     // Payload needs to be an object in format:
-    // { panelId: panelId, data: {} }
+    // { panelId: panelId, payload: {} }
     var messagePayload = {
       panelId,
-      data: payload || {},
+      payload,
     };
 
-    // Create a callback to listen for a response
     if (callback) {
-      var messageResponseId = messageId + "Response";
+      // If we expect something back, we use RPMSendAsyncMessage and not RPMSendQuery.
+      // Even though RPMSendQuery returns something, our frame could be closed at any moment,
+      // and we don't want to close a RPMSendQuery promise loop unexpectedly.
+      // So instead we setup a response event.
+      const responseMessageId = `${messageId}_response`;
       var responseListener = function(responsePayload) {
         callback(responsePayload);
-        removeMessageListener(panelId, messageResponseId, responseListener);
+        removeMessageListener(responseMessageId, panelId, responseListener);
       };
 
-      addMessageListener(panelId, messageResponseId, responseListener);
+      addMessageListener(responseMessageId, panelId, responseListener);
     }
 
     // Send message
-    var element = document.createElement("PKTMessageFromPanelElement");
-    element.setAttribute("payload", JSON.stringify([messagePayload]));
-    document.documentElement.appendChild(element);
+    RPMSendAsyncMessage(messageId, messagePayload);
+  }
 
-    var evt = document.createEvent("Events");
-    evt.initEvent(prefixedMessageId(messageId), true, false);
-    element.dispatchEvent(evt);
+  function log() {
+    RPMSendAsyncMessage("PKT_log", arguments);
   }
 
   /**
    * Public functions
    */
   return {
+    log,
     panelIdFromURL,
     addMessageListener,
-    removeMessageListener,
     sendMessage,
   };
 })();

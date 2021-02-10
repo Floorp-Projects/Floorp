@@ -35,6 +35,8 @@ FINAL_TARGET_FILES.actors += [
     "AboutNewTabParent.jsm",
     "AboutPluginsChild.jsm",
     "AboutPluginsParent.jsm",
+    "AboutPocketChild.jsm",
+    "AboutPocketParent.jsm",
     "AboutPrivateBrowsingChild.jsm",
     "AboutPrivateBrowsingParent.jsm",
     "AboutProtectionsChild.jsm",
