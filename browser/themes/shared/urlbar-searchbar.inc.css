@@ -331,9 +331,8 @@
   display: block;
 }
 
-/* Windows high-contrast themes */
-%ifdef XP_WIN
-@media (-moz-windows-default-theme: 0) {
+/* Low/high-contrast themes */
+@media (prefers-contrast) {
   #urlbar-search-mode-indicator {
     background-color: Highlight;
     outline-color: Highlight;
@@ -344,7 +343,6 @@
     stroke-opacity: 1.0;
   }
 }
-%endif
 
 @supports -moz-bool-pref("browser.urlbar.experimental.searchModeIndicatorHover") {
   #urlbar-search-mode-indicator-close:hover {
