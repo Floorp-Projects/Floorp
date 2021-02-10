@@ -1879,6 +1879,15 @@ var gBrowserInit = {
       document.getElementById("key_privatebrowsing").remove();
     }
 
+    if (BrowserUIUtils.quitShortcutDisabled) {
+      document.getElementById("key_quitApplication").remove();
+      document.getElementById("menu_FileQuitItem").removeAttribute("key");
+      PanelMultiView.getViewNode(
+        document,
+        "appMenu-quit-button"
+      )?.removeAttribute("key");
+    }
+
     this._loadHandled = true;
   },
 
