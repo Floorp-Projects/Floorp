@@ -35,6 +35,8 @@ nsLookAndFeel::nsLookAndFeel(const LookAndFeelCache* aCache)
       mAllowOverlayScrollbarsOverlapCached(false),
       mSystemUsesDarkTheme(-1),
       mSystemUsesDarkThemeCached(false),
+      mUseAccessibilityTheme(-1),
+      mUseAccessibilityThemeCached(false),
       mColorTextSelectBackground(0),
       mColorTextSelectBackgroundDisabled(0),
       mColorHighlight(0),
@@ -105,6 +107,7 @@ void nsLookAndFeel::RefreshImpl() {
     mAllowOverlayScrollbarsOverlapCached = false;
     mPrefersReducedMotionCached = false;
     mSystemUsesDarkThemeCached = false;
+    mUseAccessibilityThemeCached = false;
   }
 
   // Fetch colors next time they are requested.
@@ -585,6 +588,21 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       }
       aResult = mPrefersReducedMotion;
       break;
+    case IntID::UseAccessibilityTheme:
+      // Without native event loops,
+      // NSWorkspace.accessibilityDisplayShouldIncreaseContrast returns stale
+      // information, so we get the information only on the parent processes
+      // or when it's the initial query on child processes.  Otherwise we will
+      // get the info via LookAndFeel::SetIntCache on child processes.
+      if (!mUseAccessibilityThemeCached &&
+          [[NSWorkspace sharedWorkspace]
+              respondsToSelector:@selector(accessibilityDisplayShouldIncreaseContrast)]) {
+        mUseAccessibilityTheme =
+            [[NSWorkspace sharedWorkspace] accessibilityDisplayShouldIncreaseContrast] ? 1 : 0;
+        mUseAccessibilityThemeCached = true;
+      }
+      aResult = mUseAccessibilityTheme;
+      break;
     default:
       aResult = 0;
       res = NS_ERROR_FAILURE;
@@ -669,6 +687,11 @@ mozilla::widget::LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
   prefersReducedMotion.value() = GetInt(IntID::PrefersReducedMotion);
   cache.mInts().AppendElement(prefersReducedMotion);
 
+  LookAndFeelInt useAccessibilityTheme;
+  useAccessibilityTheme.id() = IntID::UseAccessibilityTheme;
+  useAccessibilityTheme.value() = GetInt(IntID::UseAccessibilityTheme);
+  cache.mInts().AppendElement(useAccessibilityTheme);
+
   LookAndFeelInt systemUsesDarkTheme;
   systemUsesDarkTheme.id() = IntID::SystemUsesDarkTheme;
   systemUsesDarkTheme.value() = GetInt(IntID::SystemUsesDarkTheme);
@@ -697,6 +720,10 @@ void nsLookAndFeel::DoSetCache(const LookAndFeelCache& aCache) {
       case IntID::PrefersReducedMotion:
         mPrefersReducedMotion = entry.value();
         mPrefersReducedMotionCached = true;
+        break;
+      case IntID::UseAccessibilityTheme:
+        mUseAccessibilityTheme = entry.value();
+        mUseAccessibilityThemeCached = true;
         break;
       default:
         MOZ_ASSERT_UNREACHABLE("Bogus Int ID in cache");
