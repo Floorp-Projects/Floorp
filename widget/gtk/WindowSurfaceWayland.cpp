@@ -1014,8 +1014,7 @@ bool WindowSurfaceWayland::FlushPendingCommitsLocked() {
   wl_surface* waylandSurface = moz_container_wayland_surface_lock(container);
   if (!waylandSurface) {
     LOGWAYLAND(
-        ("    moz_container_wayland_surface_lock() failed, delay commit.\n",
-         (void*)this));
+        ("    moz_container_wayland_surface_lock() failed, delay commit.\n"));
 
     // Target window is not created yet - delay the commit. This can happen only
     // when the window is newly created and there's no active
