@@ -431,6 +431,7 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureCodecMode(
 
 void WebrtcVideoConduit::DeleteSendStream() {
   MOZ_ASSERT(NS_IsMainThread());
+  auto current = TaskQueueWrapper::MainAsCurrent();
   mMutex.AssertCurrentThreadOwns();
 
   if (mSendStream) {
@@ -441,6 +442,7 @@ void WebrtcVideoConduit::DeleteSendStream() {
 
 MediaConduitErrorCode WebrtcVideoConduit::CreateSendStream() {
   MOZ_ASSERT(NS_IsMainThread());
+  auto current = TaskQueueWrapper::MainAsCurrent();
   mMutex.AssertCurrentThreadOwns();
 
   nsAutoString codecName;
@@ -471,6 +473,7 @@ MediaConduitErrorCode WebrtcVideoConduit::CreateSendStream() {
 
 void WebrtcVideoConduit::DeleteRecvStream() {
   MOZ_ASSERT(NS_IsMainThread());
+  auto current = TaskQueueWrapper::MainAsCurrent();
   mMutex.AssertCurrentThreadOwns();
 
   if (mRecvStream) {
@@ -481,6 +484,7 @@ void WebrtcVideoConduit::DeleteRecvStream() {
 
 MediaConduitErrorCode WebrtcVideoConduit::CreateRecvStream() {
   MOZ_ASSERT(NS_IsMainThread());
+  auto current = TaskQueueWrapper::MainAsCurrent();
   mMutex.AssertCurrentThreadOwns();
 
   mRecvStreamConfig.decoders.clear();
@@ -530,6 +534,7 @@ MediaConduitErrorCode WebrtcVideoConduit::CreateRecvStream() {
 MediaConduitErrorCode WebrtcVideoConduit::ConfigureSendMediaCodec(
     const VideoCodecConfig* codecConfig, const RtpRtcpConfig& aRtpRtcpConfig) {
   MOZ_ASSERT(NS_IsMainThread());
+  auto current = TaskQueueWrapper::MainAsCurrent();
   MutexAutoLock lock(mMutex);
 
   mUpdateSendResolution = true;
@@ -726,6 +731,7 @@ bool WebrtcVideoConduit::SetRemoteSSRC(uint32_t ssrc, uint32_t rtxSsrc) {
 
 bool WebrtcVideoConduit::SetRemoteSSRCLocked(uint32_t ssrc, uint32_t rtxSsrc) {
   MOZ_ASSERT(NS_IsMainThread());
+  auto current = TaskQueueWrapper::MainAsCurrent();
   mMutex.AssertCurrentThreadOwns();
 
   if (mRecvStreamConfig.rtp.remote_ssrc == ssrc &&
@@ -814,6 +820,7 @@ bool WebrtcVideoConduit::GetRemoteSSRC(uint32_t* ssrc) {
 Maybe<webrtc::VideoReceiveStream::Stats> WebrtcVideoConduit::GetReceiverStats()
     const {
   MOZ_ASSERT(NS_IsMainThread());
+  auto current = TaskQueueWrapper::MainAsCurrent();
   if (!mRecvStream) {
     return Nothing();
   }
@@ -823,6 +830,7 @@ Maybe<webrtc::VideoReceiveStream::Stats> WebrtcVideoConduit::GetReceiverStats()
 Maybe<webrtc::VideoSendStream::Stats> WebrtcVideoConduit::GetSenderStats()
     const {
   MOZ_ASSERT(NS_IsMainThread());
+  auto current = TaskQueueWrapper::MainAsCurrent();
   if (!mSendStream) {
     return Nothing();
   }
@@ -831,12 +839,14 @@ Maybe<webrtc::VideoSendStream::Stats> WebrtcVideoConduit::GetSenderStats()
 
 webrtc::Call::Stats WebrtcVideoConduit::GetCallStats() const {
   MOZ_ASSERT(NS_IsMainThread());
+  auto current = TaskQueueWrapper::MainAsCurrent();
   return mCall->Call()->GetStats();
 }
 
 void WebrtcVideoConduit::GetRtpSources(
     nsTArray<dom::RTCRtpSourceEntry>& outSources) {
   MOZ_ASSERT(NS_IsMainThread());
+  auto current = TaskQueueWrapper::MainAsCurrent();
   std::vector<webrtc::RtpSource> sources = mRecvStream->GetSources();
   outSources.Clear();
   for (const auto& source : sources) {
@@ -953,6 +963,7 @@ MediaConduitErrorCode WebrtcVideoConduit::Init() {
 
 void WebrtcVideoConduit::DeleteStreams() {
   MOZ_ASSERT(NS_IsMainThread());
+  auto current = TaskQueueWrapper::MainAsCurrent();
 
   using namespace Telemetry;
   if (mSendBitrate.NumDataValues() > 0) {
@@ -1129,6 +1140,7 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureRecvMediaCodecs(
        (mRecvStreamConfig.rtp.ulpfec_payload_type != ulpfec_payload_type ||
         mRecvStreamConfig.rtp.red_payload_type != red_payload_type))) {
     MutexAutoLock lock(mMutex);
+    auto current = TaskQueueWrapper::MainAsCurrent();
 
     condError = StopReceivingLocked();
     if (condError != kMediaConduitNoError) {
@@ -1362,11 +1374,30 @@ MediaConduitErrorCode WebrtcVideoConduit::DeliverPacket(const void* data,
                                                         int len) {
   ASSERT_ON_THREAD(mStsThread);
 
-  // Bug 1499796 - we need to get passed the time the packet was received
+  using PacketPromise =
+      MozPromise<webrtc::PacketReceiver::DeliveryStatus, bool, true>;
+
+  auto syncPromise =
+      InvokeAsync(GetMainThreadSerialEventTarget(), __func__, [&] {
+        auto current = TaskQueueWrapper::MainAsCurrent();
+        if (!mCall->Call()) {
+          return PacketPromise::CreateAndResolve(
+              webrtc::PacketReceiver::DELIVERY_PACKET_ERROR, __func__);
+        }
+        // Bug 1499796 - we need to get passed the time the
+        // packet was received
+        webrtc::PacketReceiver::DeliveryStatus status =
+            mCall->Call()->Receiver()->DeliverPacket(
+                webrtc::MediaType::VIDEO,
+                rtc::CopyOnWriteBuffer(static_cast<const uint8_t*>(data), len),
+                -1);
+        return PacketPromise::CreateAndResolve(status, __func__);
+      });
+
   webrtc::PacketReceiver::DeliveryStatus status =
-      mCall->Call()->Receiver()->DeliverPacket(
-          webrtc::MediaType::VIDEO,
-          rtc::CopyOnWriteBuffer(static_cast<const uint8_t*>(data), len), -1);
+      media::Await(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
+                   syncPromise)
+          .ResolveValue();
 
   if (status != webrtc::PacketReceiver::DELIVERY_OK) {
     CSFLogError(LOGTAG, "%s DeliverPacket Failed, %d", __FUNCTION__, status);
@@ -1514,6 +1545,7 @@ MediaConduitErrorCode WebrtcVideoConduit::StartReceiving() {
 
 MediaConduitErrorCode WebrtcVideoConduit::StopTransmittingLocked() {
   MOZ_ASSERT(NS_IsMainThread());
+  auto current = TaskQueueWrapper::MainAsCurrent();
   mMutex.AssertCurrentThreadOwns();
 
   if (mEngineTransmitting) {
@@ -1530,6 +1562,7 @@ MediaConduitErrorCode WebrtcVideoConduit::StopTransmittingLocked() {
 
 MediaConduitErrorCode WebrtcVideoConduit::StartTransmittingLocked() {
   MOZ_ASSERT(NS_IsMainThread());
+  auto current = TaskQueueWrapper::MainAsCurrent();
   mMutex.AssertCurrentThreadOwns();
 
   if (mEngineTransmitting) {
@@ -1557,6 +1590,7 @@ MediaConduitErrorCode WebrtcVideoConduit::StartTransmittingLocked() {
 
 MediaConduitErrorCode WebrtcVideoConduit::StopReceivingLocked() {
   MOZ_ASSERT(NS_IsMainThread());
+  auto current = TaskQueueWrapper::MainAsCurrent();
   mMutex.AssertCurrentThreadOwns();
 
   // Are we receiving already? If so, stop receiving and playout
@@ -1574,6 +1608,7 @@ MediaConduitErrorCode WebrtcVideoConduit::StopReceivingLocked() {
 
 MediaConduitErrorCode WebrtcVideoConduit::StartReceivingLocked() {
   MOZ_ASSERT(NS_IsMainThread());
+  auto current = TaskQueueWrapper::MainAsCurrent();
   mMutex.AssertCurrentThreadOwns();
 
   if (mEngineReceiving) {
@@ -1766,6 +1801,7 @@ uint64_t WebrtcVideoConduit::MozVideoLatencyAvg() {
 
 void WebrtcVideoConduit::CollectTelemetryData() {
   MOZ_ASSERT(NS_IsMainThread());
+  auto current = TaskQueueWrapper::MainAsCurrent();
 
   if (mEngineTransmitting) {
     webrtc::VideoSendStream::Stats stats = mSendStream->GetStats();
