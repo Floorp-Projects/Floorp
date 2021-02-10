@@ -461,13 +461,6 @@
               <menupopup id="menu_HelpPopup" onpopupshowing="buildHelpMenu();">
 <!-- Note: Items under here are cloned to the AppMenu Help submenu. The cloned items
      have their strings defined by appmenu-data-l10n-id. -->
-#ifdef MOZ_UPDATER
-                <menuitem id="checkForUpdates"
-                          data-l10n-id="menu-help-check-for-update"
-                          appmenu-data-l10n-id="appmenu-help-check-for-update"
-                          class="menuitem-iconic"
-                          oncommand="openAboutDialog();"/>
-#endif
                 <menuitem id="menu_openHelp"
                           oncommand="openHelpLink('firefox-help')"
                           onclick="checkForMiddleClick(this, event);"
