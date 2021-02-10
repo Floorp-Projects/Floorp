@@ -65,27 +65,78 @@ already_AddRefed<Promise> Clipboard::ReadHelper(
   RefPtr<DataTransfer> dataTransfer = new DataTransfer(
       this, ePaste, /* is external */ true, nsIClipboard::kGlobalClipboard);
 
+  RefPtr<nsPIDOMWindowInner> owner = GetOwner();
+
   // Create a new runnable
   RefPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      "Clipboard::Read",
-      [p, dataTransfer, &aSubjectPrincipal, aClipboardReadType]() {
+      "Clipboard::Read", [p, dataTransfer, aClipboardReadType, owner,
+                          principal = RefPtr{&aSubjectPrincipal}]() {
         IgnoredErrorResult ier;
         switch (aClipboardReadType) {
-          case eRead:
+          case eRead: {
             MOZ_LOG(GetClipboardLog(), LogLevel::Debug,
                     ("Clipboard, ReadHelper, read case\n"));
             dataTransfer->FillAllExternalData();
-            // If there are items on the clipboard, data transfer will contain
-            // those, else, data transfer will be empty and we will be resolving
-            // with an empty data transfer
-            p->MaybeResolve(dataTransfer);
+
+            // Convert the DataTransferItems to ClipboardItems.
+            // FIXME(bug 1691825): This is only suitable for testing!
+            // A real implementation would only read from the clipboard
+            // in ClipboardItem::getType instead of doing it here.
+            nsTArray<ClipboardItem::ItemEntry> entries;
+            DataTransferItemList* items = dataTransfer->Items();
+            for (size_t i = 0; i < items->Length(); i++) {
+              bool found = false;
+              DataTransferItem* item = items->IndexedGetter(i, found);
+
+              // Only allow strings and files.
+              if (!found || item->Kind() == DataTransferItem::KIND_OTHER) {
+                continue;
+              }
+
+              nsAutoString type;
+              item->GetType(type);
+
+              if (item->Kind() == DataTransferItem::KIND_STRING) {
+                // We just ignore items that we can't access.
+                IgnoredErrorResult ignored;
+                nsCOMPtr<nsIVariant> data = item->Data(principal, ignored);
+                if (NS_WARN_IF(!data || ignored.Failed())) {
+                  continue;
+                }
+
+                nsAutoString string;
+                if (NS_WARN_IF(NS_FAILED(data->GetAsAString(string)))) {
+                  continue;
+                }
+
+                ClipboardItem::ItemEntry* entry = entries.AppendElement();
+                entry->mType = type;
+                entry->mData.SetAsString() = string;
+              } else {
+                IgnoredErrorResult ignored;
+                RefPtr<File> file = item->GetAsFile(*principal, ignored);
+                if (NS_WARN_IF(!file || ignored.Failed())) {
+                  continue;
+                }
+
+                ClipboardItem::ItemEntry* entry = entries.AppendElement();
+                entry->mType = type;
+                entry->mData.SetAsBlob() = file;
+              }
+            }
+
+            nsTArray<RefPtr<ClipboardItem>> sequence;
+            sequence.AppendElement(MakeRefPtr<ClipboardItem>(
+                owner, PresentationStyle::Unspecified, std::move(entries)));
+            p->MaybeResolve(sequence);
             break;
+          }
           case eReadText:
             MOZ_LOG(GetClipboardLog(), LogLevel::Debug,
                     ("Clipboard, ReadHelper, read text case\n"));
             nsAutoString str;
             dataTransfer->GetData(NS_LITERAL_STRING_FROM_CSTRING(kTextMime),
-                                  str, aSubjectPrincipal, ier);
+                                  str, *principal, ier);
             // Either resolve with a string extracted from data transfer item
             // or resolve with an empty string if nothing was found
             p->MaybeResolve(str);

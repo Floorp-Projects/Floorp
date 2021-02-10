@@ -59,7 +59,6 @@ function clearClipboard() {
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({"set": [
     ["dom.events.asyncClipboard", true],
-    ["dom.events.asyncClipboard.dataTransfer", true],
     ["dom.events.asyncClipboard.clipboardItem", true],
   ]});
 });
@@ -241,8 +240,9 @@ add_task(async function test_contentscript_clipboard_permission_write() {
 // Test that with enough permissions, we are allowed to use read in content script
 add_task(async function test_contentscript_clipboard_permission_read() {
   function contentScript() {
-    clipboardRead().then(function(dt) {
-      let s = dt.getData("text/plain");
+    clipboardRead().then(async function(items) {
+      let blob = await items[0].getType("text/plain");
+      let s = await blob.text();
       if (s == "HELLO") {
         browser.test.succeed("Read promise successfully read the right thing");
       } else {
@@ -323,24 +323,15 @@ add_task(async function test_contentscript_clipboard_nocontents_readtext() {
   await extension.unload();
 });
 
-// Test that performing read(...) when the clipboard is empty returns an empty data transfer
+// Test that performing read(...) when the clipboard is empty returns an empty ClipboardItem
 add_task(async function test_contentscript_clipboard_nocontents_read() {
   function contentScript() {
-    clipboardRead().then(function(dataT) {
-      // On macOS if we clear the clipboard and read from it, there will be
-      // no items in the data transfer object.
-      // On linux with e10s enabled clearing of the clipboard does not happen in
-      // the same way as it does on other platforms. So when we clear  the clipboard
-      // and read from it, the data transfer object contains an item of type
-      // text/plain and kind string, but we can't call getAsString on it to verify
-      // that at least it is an empty string because the callback never gets invoked.
-      if (!dataT.items.length ||
-        (dataT.items.length == 1 && dataT.items[0].type == "text/plain" &&
-         dataT.items[0].kind == "string")) {
-        browser.test.succeed("Read promise successfully resolved");
-      } else {
+    clipboardRead().then(function(items) {
+      if (items[0].types.length) {
         browser.test.fail("Read read the wrong thing from clipboard, " +
-          "data transfer has this many items:" + dataT.items.length);
+          "ClipboardItem has this many entries: " + items[0].types.length);
+      } else {
+        browser.test.succeed("Read promise successfully resolved");
       }
       browser.test.sendMessage("ready");
     }, function(err) {
