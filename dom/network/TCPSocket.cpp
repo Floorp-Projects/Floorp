@@ -36,14 +36,7 @@
 #include "nsIOutputStream.h"
 #include "nsINSSErrorsService.h"
 #include "nsISSLSocketControl.h"
-#include "nsIProtocolProxyService.h"
-#include "nsICancelable.h"
-#include "nsIChannel.h"
-#include "nsIURIMutator.h"
-#include "nsNetCID.h"
-#include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
-#include "nsString.h"
 #include "nsStringStream.h"
 #include "secerr.h"
 #include "sslerr.h"
@@ -228,7 +221,7 @@ nsresult TCPSocket::InitWithUnconnectedTransport(
   return NS_OK;
 }
 
-nsresult TCPSocket::Init(nsIProxyInfo* aProxyInfo) {
+nsresult TCPSocket::Init() {
   nsCOMPtr<nsIObserverService> obs =
       do_GetService("@mozilla.org/observer-service;1");
   if (obs) {
@@ -259,9 +252,8 @@ nsresult TCPSocket::Init(nsIProxyInfo* aProxyInfo) {
     socketTypes.AppendElement("starttls"_ns);
   }
   nsCOMPtr<nsISocketTransport> transport;
-  nsresult rv =
-      sts->CreateTransport(socketTypes, NS_ConvertUTF16toUTF8(mHost), mPort,
-                           aProxyInfo, getter_AddRefs(transport));
+  nsresult rv = sts->CreateTransport(socketTypes, NS_ConvertUTF16toUTF8(mHost),
+                                     mPort, nullptr, getter_AddRefs(transport));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return InitWithUnconnectedTransport(transport);
@@ -715,11 +707,6 @@ void TCPSocket::CloseHelper(bool waitForUnsentData) {
 
   mReadyState = TCPReadyState::Closing;
 
-  if (mProxyRequest) {
-    mProxyRequest->Cancel(NS_BINDING_ABORTED);
-    mProxyRequest = nullptr;
-  }
-
   if (mSocketBridgeChild) {
     mSocketBridgeChild->SendClose();
     return;
@@ -841,8 +828,9 @@ TCPReadyState TCPSocket::ReadyState() { return mReadyState; }
 TCPSocketBinaryType TCPSocket::BinaryType() {
   if (mUseArrayBuffers) {
     return TCPSocketBinaryType::Arraybuffer;
+  } else {
+    return TCPSocketBinaryType::String;
   }
-  return TCPSocketBinaryType::String;
 }
 
 already_AddRefed<TCPSocket> TCPSocket::CreateAcceptedSocket(
@@ -870,55 +858,13 @@ already_AddRefed<TCPSocket> TCPSocket::Constructor(
   RefPtr<TCPSocket> socket =
       new TCPSocket(global, aHost, aPort, aOptions.mUseSecureTransport,
                     aOptions.mBinaryType == TCPSocketBinaryType::Arraybuffer);
-  socket->ResolveProxy();
+  nsresult rv = socket->Init();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
 
   return socket.forget();
-}
-
-nsresult TCPSocket::ResolveProxy() {
-  nsresult rv;
-  nsCOMPtr<nsIProtocolProxyService> pps =
-      do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  nsCString spec = mSsl ? "https://"_ns : "http://"_ns;
-  if (!AppendUTF16toUTF8(mHost, spec, fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  rv = NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
-           .SetSpec(spec)
-           .SetPort(mPort)
-           .Finalize(uri);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel), uri,
-                     nsContentUtils::GetSystemPrincipal(),
-                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
-                     nsIContentPolicy::TYPE_OTHER);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = pps->AsyncResolve(channel, 0, this, nullptr,
-                         getter_AddRefs(mProxyRequest));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TCPSocket::OnProxyAvailable(nsICancelable* aRequest, nsIChannel* aChannel,
-                            nsIProxyInfo* aProxyInfo, nsresult aResult) {
-  mProxyRequest = nullptr;
-  return Init(aProxyInfo);
 }
 
 nsresult TCPSocket::CreateInputStreamPump() {
