@@ -1010,12 +1010,13 @@ static const char kExternalProtocolDefaultPref[] =
 NS_IMETHODIMP
 nsExternalHelperAppService::LoadURI(nsIURI* aURI,
                                     nsIPrincipal* aTriggeringPrincipal,
-                                    BrowsingContext* aBrowsingContext) {
+                                    BrowsingContext* aBrowsingContext,
+                                    bool aTriggeredExternally) {
   NS_ENSURE_ARG_POINTER(aURI);
 
   if (XRE_IsContentProcess()) {
     mozilla::dom::ContentChild::GetSingleton()->SendLoadURIExternal(
-        aURI, aTriggeringPrincipal, aBrowsingContext);
+        aURI, aTriggeringPrincipal, aBrowsingContext, aTriggeredExternally);
     return NS_OK;
   }
 
@@ -1117,7 +1118,7 @@ nsExternalHelperAppService::LoadURI(nsIURI* aURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return chooser->HandleURI(handler, uri, aTriggeringPrincipal,
-                            aBrowsingContext);
+                            aBrowsingContext, aTriggeredExternally);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////

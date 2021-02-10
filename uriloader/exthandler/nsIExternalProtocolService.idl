@@ -109,13 +109,17 @@ interface nsIExternalProtocolService : nsISupports
    *        handlers will fail.  We need to do better than that; bug 394483
    *        filed in order to track.
    *
+   * @param aWasTriggeredExternally
+   *        If true, indicates the load was initiated by an external app.
+   *
    * @note  Embedders that do not expose the http protocol should not currently
    *        use web-based protocol handlers, as handoff won't work correctly
    *        (bug 394479).
    */
   void loadURI(in nsIURI aURI,
                [optional] in nsIPrincipal aTriggeringPrincipal,
-               [optional] in BrowsingContext aBrowsingContext);
+               [optional] in BrowsingContext aBrowsingContext,
+               [optional] in bool aWasTriggeredExternally);
 
   /**
    * Gets a human-readable description for the application responsible for
