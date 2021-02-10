@@ -1349,12 +1349,11 @@ void nsTreeSanitizer::SanitizeChildren(nsINode* aRoot) {
         node = next;
         continue;
       }
-      if (nsGkAtoms::_template == localName) {
+      if (auto* templateEl = HTMLTemplateElement::FromNode(elt)) {
         // traverse into the DocFragment content attribute of template elements
         bool wasFullDocument = mFullDocument;
         mFullDocument = false;
-        RefPtr<DocumentFragment> frag =
-            static_cast<HTMLTemplateElement*>(elt)->Content();
+        RefPtr<DocumentFragment> frag = templateEl->Content();
         SanitizeChildren(frag);
         mFullDocument = wasFullDocument;
       }
