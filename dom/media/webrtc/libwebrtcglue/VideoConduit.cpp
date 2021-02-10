@@ -287,8 +287,8 @@ bool operator!=(const rtc::VideoSinkWants& aThis,
  * Factory Method for VideoConduit
  */
 RefPtr<VideoSessionConduit> VideoSessionConduit::Create(
-    RefPtr<WebRtcCallWrapper> aCall,
-    nsCOMPtr<nsISerialEventTarget> aStsThread) {
+    RefPtr<WebRtcCallWrapper> aCall, nsCOMPtr<nsISerialEventTarget> aStsThread,
+    std::string aPCHandle) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aCall, "missing required parameter: aCall");
   CSFLogVerbose(LOGTAG, "%s", __FUNCTION__);
@@ -297,7 +297,8 @@ RefPtr<VideoSessionConduit> VideoSessionConduit::Create(
     return nullptr;
   }
 
-  auto obj = MakeRefPtr<WebrtcVideoConduit>(aCall, aStsThread);
+  auto obj =
+      MakeRefPtr<WebrtcVideoConduit>(aCall, aStsThread, std::move(aPCHandle));
   if (obj->Init() != kMediaConduitNoError) {
     CSFLogError(LOGTAG, "%s VideoConduit Init Failed ", __FUNCTION__);
     return nullptr;
@@ -307,12 +308,14 @@ RefPtr<VideoSessionConduit> VideoSessionConduit::Create(
 }
 
 WebrtcVideoConduit::WebrtcVideoConduit(
-    RefPtr<WebRtcCallWrapper> aCall, nsCOMPtr<nsISerialEventTarget> aStsThread)
+    RefPtr<WebRtcCallWrapper> aCall, nsCOMPtr<nsISerialEventTarget> aStsThread,
+    std::string aPCHandle)
     : mTransportMonitor("WebrtcVideoConduit"),
       mStsThread(aStsThread),
       mMutex("WebrtcVideoConduit::mMutex"),
-      mDecoderFactory(MakeUnique<WebrtcVideoDecoderFactory>()),
-      mEncoderFactory(MakeUnique<WebrtcVideoEncoderFactory>()),
+      mDecoderFactory(MakeUnique<WebrtcVideoDecoderFactory>(aPCHandle)),
+      mEncoderFactory(
+          MakeUnique<WebrtcVideoEncoderFactory>(std::move(aPCHandle))),
       mVideoAdapter(MakeUnique<cricket::VideoAdapter>()),
       mBufferPool(false, SCALER_BUFFER_POOL_SIZE),
       mEngineTransmitting(false),
@@ -1449,15 +1452,9 @@ MediaConduitErrorCode WebrtcVideoConduit::ReceivedRTPPacket(
 
       // Ensure lamba captures refs
       NS_DispatchToMainThread(NS_NewRunnableFunction(
-          "WebrtcVideoConduit::WebrtcGmpPCHandleSetter",
+          "WebrtcVideoConduit::SetRemoteSSRC",
           [this, self = RefPtr<WebrtcVideoConduit>(this),
            ssrc = header.ssrc]() mutable {
-            // Normally this is done in CreateOrUpdateMediaPipeline() for
-            // initial creation and renegotiation, but here we're rebuilding the
-            // Receive channel at a lower level.  This is needed whenever we're
-            // creating a GMPVideoCodec (in particular, H264) so it can
-            // communicate errors to the PC.
-            WebrtcGmpPCHandleSetter setter(mPCHandle);
             // TODO: This is problematic with rtx enabled, we don't know if
             // new ssrc is for rtx or not. This is fixed in a later patch in
             // this series.

@@ -204,11 +204,6 @@ class WebrtcVideoConduit
 
   bool HasCodecPluginID(uint64_t aPluginID) override;
 
-  void SetPCHandle(const std::string& aPCHandle) override {
-    MOZ_ASSERT(NS_IsMainThread());
-    mPCHandle = aPCHandle;
-  }
-
   void DeleteStreams() override;
 
   bool Denoising() const { return mDenoising; }
@@ -223,7 +218,8 @@ class WebrtcVideoConduit
   }
 
   WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall,
-                     nsCOMPtr<nsISerialEventTarget> aStsThread);
+                     nsCOMPtr<nsISerialEventTarget> aStsThread,
+                     std::string aPCHandle);
   virtual ~WebrtcVideoConduit();
 
   MediaConduitErrorCode InitMain();
@@ -455,9 +451,6 @@ class WebrtcVideoConduit
   MediaEventListener mSendPluginReleased;
   MediaEventListener mRecvPluginCreated;
   MediaEventListener mRecvPluginReleased;
-
-  // Main thread only
-  std::string mPCHandle;
 
   // Accessed only on mStsThread
   Maybe<DOMHighResTimeStamp> mLastRtcpReceived;

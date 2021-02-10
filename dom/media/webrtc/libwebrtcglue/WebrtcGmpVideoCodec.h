@@ -55,32 +55,12 @@
 
 namespace mozilla {
 
-// Class that allows code on the other side of webrtc.org to tell
-// WebrtcGmpVideoEncoder/Decoder what PC they should send errors to.
-// This is necessary because webrtc.org gives us no way to plumb the handle
-// through, nor does it give us any way to inform it of an error that will
-// make it back to the PC that cares (except for errors encountered
-// synchronously in functions like InitEncode/Decode, which will not happen
-// because GMP init is async).
-// Right now, this is used in MediaPipelineFactory.
-class WebrtcGmpPCHandleSetter {
- public:
-  explicit WebrtcGmpPCHandleSetter(const std::string& aPCHandle);
-
-  ~WebrtcGmpPCHandleSetter();
-
-  static std::string GetCurrentHandle();
-
- private:
-  static std::string sCurrentHandle;
-};
-
 class GmpInitDoneRunnable : public Runnable {
  public:
-  explicit GmpInitDoneRunnable(const std::string& aPCHandle)
+  explicit GmpInitDoneRunnable(std::string aPCHandle)
       : Runnable("GmpInitDoneRunnable"),
         mResult(WEBRTC_VIDEO_CODEC_OK),
-        mPCHandle(aPCHandle) {}
+        mPCHandle(std::move(aPCHandle)) {}
 
   NS_IMETHOD Run() override {
     if (mResult == WEBRTC_VIDEO_CODEC_OK) {
@@ -113,7 +93,7 @@ class GmpInitDoneRunnable : public Runnable {
 
  private:
   int32_t mResult;
-  std::string mPCHandle;
+  const std::string mPCHandle;
   std::string mError;
 };
 
@@ -172,7 +152,7 @@ class RefCountedWebrtcVideoEncoder {
 class WebrtcGmpVideoEncoder : public GMPVideoEncoderCallbackProxy,
                               public RefCountedWebrtcVideoEncoder {
  public:
-  WebrtcGmpVideoEncoder();
+  explicit WebrtcGmpVideoEncoder(std::string aPCHandle);
 
   // Implement VideoEncoder interface, sort of.
   // (We cannot use |Release|, since that's needed for nsRefPtr)
@@ -302,7 +282,7 @@ class WebrtcGmpVideoEncoder : public GMPVideoEncoderCallbackProxy,
   Mutex mCallbackMutex;
   webrtc::EncodedImageCallback* mCallback;
   uint64_t mCachedPluginId;
-  std::string mPCHandle;
+  const std::string mPCHandle;
 };
 
 // Basically a strong ref to a RefCountedWebrtcVideoEncoder, that also
@@ -352,7 +332,7 @@ class WebrtcVideoEncoderProxy : public WebrtcVideoEncoder {
 
 class WebrtcGmpVideoDecoder : public GMPVideoDecoderCallbackProxy {
  public:
-  WebrtcGmpVideoDecoder();
+  explicit WebrtcGmpVideoDecoder(std::string aPCHandle);
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcGmpVideoDecoder);
 
   // Implement VideoEncoder interface, sort of.
@@ -437,7 +417,7 @@ class WebrtcGmpVideoDecoder : public GMPVideoDecoderCallbackProxy {
   webrtc::DecodedImageCallback* mCallback;
   Atomic<uint64_t> mCachedPluginId;
   Atomic<GMPErr, ReleaseAcquire> mDecoderStatus;
-  std::string mPCHandle;
+  const std::string mPCHandle;
 };
 
 // Basically a strong ref to a WebrtcGmpVideoDecoder, that also translates
@@ -447,7 +427,8 @@ class WebrtcGmpVideoDecoder : public GMPVideoDecoderCallbackProxy {
 // the "real" encoder.
 class WebrtcVideoDecoderProxy : public WebrtcVideoDecoder {
  public:
-  WebrtcVideoDecoderProxy() : mDecoderImpl(new WebrtcGmpVideoDecoder) {}
+  explicit WebrtcVideoDecoderProxy(std::string aPCHandle)
+      : mDecoderImpl(new WebrtcGmpVideoDecoder(std::move(aPCHandle))) {}
 
   virtual ~WebrtcVideoDecoderProxy() {
     RegisterDecodeCompleteCallback(nullptr);

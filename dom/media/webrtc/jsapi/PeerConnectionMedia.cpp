@@ -299,12 +299,6 @@ void PeerConnectionMedia::UpdateTransport(const JsepTransceiver& aTransceiver,
 }
 
 nsresult PeerConnectionMedia::UpdateMediaPipelines() {
-  // The GMP code is all the way on the other side of webrtc.org, and it is not
-  // feasible to plumb error information all the way back. So, we set up a
-  // handle to the PC (for the duration of this call) in a global variable.
-  // This allows the GMP code to report errors to the PC.
-  WebrtcGmpPCHandleSetter setter(mParentHandle);
-
   for (RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
     transceiver->ResetSync();
   }
