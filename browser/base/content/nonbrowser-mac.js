@@ -110,6 +110,10 @@ function nonBrowserWindowStartup() {
     if (!PrivateBrowsingUtils.enabled) {
       document.getElementById("macDockMenuNewPrivateWindow").hidden = true;
     }
+    if (BrowserUIUtils.quitShortcutDisabled) {
+      document.getElementById("key_quitApplication").remove();
+      document.getElementById("menu_FileQuitItem").removeAttribute("key");
+    }
   }
 
   delayedStartupTimeoutId = setTimeout(nonBrowserWindowDelayedStartup, 0);
