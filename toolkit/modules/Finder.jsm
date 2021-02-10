@@ -366,9 +366,6 @@ Finder.prototype = {
     );
 
     let results = await Promise.all([highlightPromise, matchCountPromise]);
-
-    this.highlighter.updateScrollMarks();
-
     if (results[1]) {
       return Object.assign(results[1], results[0]);
     } else if (results[0]) {
@@ -456,7 +453,6 @@ Finder.prototype = {
       this.highlighter.clearCurrentOutline(window);
     } else {
       this.highlighter.clear(window);
-      this.highlighter.removeScrollMarks();
     }
   },
 
