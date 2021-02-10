@@ -506,10 +506,7 @@ async function getDevicePixelRatio() {
 }
 
 async function setDevicePixelRatio(dppx) {
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [dppx], function(dppx) {
-    content.docShell.contentViewer.overrideDPPX = dppx;
-    is(content.devicePixelRatio, dppx, "devicePixelRatio override set");
-  });
+  gBrowser.selectedBrowser.browsingContext.overrideDPPX = dppx;
 }
 
 async function getImageDetails(image) {

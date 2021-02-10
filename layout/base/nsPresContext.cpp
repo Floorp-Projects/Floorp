@@ -773,6 +773,7 @@ void nsPresContext::RecomputeBrowsingContextDependentData() {
   }
   SetFullZoom(browsingContext->FullZoom());
   SetTextZoom(browsingContext->TextZoom());
+  SetOverrideDPPX(browsingContext->OverrideDPPX());
   if (doc == mDocument) {
     // Medium doesn't apply to resource documents, etc.
     auto* top = browsingContext->Top();
