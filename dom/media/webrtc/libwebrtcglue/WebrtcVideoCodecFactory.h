@@ -11,7 +11,41 @@
 #include "MediaEventSource.h"
 
 namespace mozilla {
-class WebrtcVideoDecoderFactory : public webrtc::VideoDecoderFactory {
+class GmpPluginNotifier {
+ public:
+  GmpPluginNotifier()
+      : mOwningThread(GetCurrentSerialEventTarget()),
+        mCreatedGmpPluginEvent(mOwningThread),
+        mReleasedGmpPluginEvent(mOwningThread) {}
+
+  ~GmpPluginNotifier() {
+    mOwningThread->Dispatch(NS_NewRunnableFunction(
+        "~GmpPluginNotifier",
+        [createdEvent = std::move(mCreatedGmpPluginEvent),
+         releasedEvent = std::move(mReleasedGmpPluginEvent)]() mutable {
+          createdEvent.DisconnectAll();
+          releasedEvent.DisconnectAll();
+        }));
+  }
+
+  MediaEventSource<uint64_t>& CreatedGmpPluginEvent() {
+    MOZ_ASSERT(mOwningThread->IsOnCurrentThread());
+    return mCreatedGmpPluginEvent;
+  }
+
+  MediaEventSource<uint64_t>& ReleasedGmpPluginEvent() {
+    MOZ_ASSERT(mOwningThread->IsOnCurrentThread());
+    return mReleasedGmpPluginEvent;
+  }
+
+ protected:
+  const nsCOMPtr<nsISerialEventTarget> mOwningThread;
+  MediaEventForwarder<uint64_t> mCreatedGmpPluginEvent;
+  MediaEventForwarder<uint64_t> mReleasedGmpPluginEvent;
+};
+
+class WebrtcVideoDecoderFactory : public GmpPluginNotifier,
+                                  public webrtc::VideoDecoderFactory {
  public:
   explicit WebrtcVideoDecoderFactory(std::string aPCHandle)
       : mPCHandle(std::move(aPCHandle)) {}
@@ -28,8 +62,10 @@ class WebrtcVideoDecoderFactory : public webrtc::VideoDecoderFactory {
   const std::string mPCHandle;
 };
 
-class WebrtcVideoEncoderFactory : public webrtc::VideoEncoderFactory {
-  class InternalFactory : public webrtc::VideoEncoderFactory {
+class WebrtcVideoEncoderFactory : public GmpPluginNotifier,
+                                  public webrtc::VideoEncoderFactory {
+  class InternalFactory : public GmpPluginNotifier,
+                          public webrtc::VideoEncoderFactory {
    public:
     explicit InternalFactory(std::string aPCHandle)
         : mPCHandle(std::move(aPCHandle)) {}
@@ -50,7 +86,10 @@ class WebrtcVideoEncoderFactory : public webrtc::VideoEncoderFactory {
 
  public:
   explicit WebrtcVideoEncoderFactory(std::string aPCHandle)
-      : mInternalFactory(MakeUnique<InternalFactory>(std::move(aPCHandle))) {}
+      : mInternalFactory(MakeUnique<InternalFactory>(std::move(aPCHandle))) {
+    mCreatedGmpPluginEvent.Forward(mInternalFactory->CreatedGmpPluginEvent());
+    mReleasedGmpPluginEvent.Forward(mInternalFactory->ReleasedGmpPluginEvent());
+  }
 
   std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override {
     MOZ_CRASH("Unexpected call");
