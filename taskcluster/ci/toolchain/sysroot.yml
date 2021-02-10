@@ -53,6 +53,7 @@ linux64-toolchain-sysroot:
         arguments:
             - amd64
             # For clang
+            - gcc-multilib
             - libxml2-dev
             # For minidump-stackwalk
             - libcurl4-openssl-dev
