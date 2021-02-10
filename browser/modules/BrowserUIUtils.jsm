@@ -5,6 +5,10 @@
 
 "use strict";
 
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
 var EXPORTED_SYMBOLS = ["BrowserUIUtils"];
 
 var BrowserUIUtils = {
@@ -202,3 +206,10 @@ var BrowserUIUtils = {
       : url;
   },
 };
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  BrowserUIUtils,
+  "quitShortcutDisabled",
+  "browser.quitShortcut.disabled",
+  false
+);

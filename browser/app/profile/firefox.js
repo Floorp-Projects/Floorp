@@ -955,6 +955,9 @@ pref("browser.sessionstore.max_write_failures", 5);
 // Whether to warn the user when quitting, even though their tabs will be restored.
 pref("browser.sessionstore.warnOnQuit", false);
 
+// Don't quit the browser when Ctrl + Q is pressed.
+pref("browser.quitShortcut.disabled", false);
+
 // allow META refresh by default
 pref("accessibility.blockautorefresh", false);
 
