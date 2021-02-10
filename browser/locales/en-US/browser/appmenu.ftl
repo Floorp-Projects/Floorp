@@ -7,8 +7,6 @@
 appmenuitem-update-banner =
     .label-update-downloading = Downloading { -brand-shorter-name } update
 appmenuitem-protection-dashboard-title = Protections Dashboard
-appmenuitem-customize-mode =
-    .label = Customize…
 appmenuitem-new-window =
     .label = New Window
 appmenuitem-new-private-window =
@@ -151,3 +149,10 @@ appmenu-help-not-deceptive =
 
 appmenu-help-check-for-update =
     .label = Check for Updates…
+
+## More Tools
+
+appmenu-customizetoolbar =
+    .label = Customize Toolbar…
+
+appmenu-developer-tools-subheader = Browser Tools

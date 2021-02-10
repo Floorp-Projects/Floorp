@@ -883,7 +883,7 @@
                        />
         <toolbarbutton id="appMenu-customize-button"
                        class="subviewbutton subviewbutton-iconic"
-                       data-l10n-id="appmenuitem-customize-mode"
+                       data-l10n-id="appmenu-customizetoolbar"
                        command="cmd_CustomizeToolbars"
                        />
         <toolbarseparator/>
@@ -1056,7 +1056,7 @@
                        class="subviewbutton subviewbutton-iconic subviewbutton-nav"
                        data-l10n-id="appmenuitem-more-tools"
                        closemenu="none"
-                       oncommand="PanelUI.showSubView('appMenu-moreView', this)"/>
+                       oncommand="PanelUI.showMoreToolsPanel(this);"/>
         <toolbarbutton id="appMenu-help-button2"
                        class="subviewbutton subviewbutton-iconic subviewbutton-nav"
                        label="&appMenuHelp.label;"
@@ -1307,6 +1307,22 @@
                        data-l10n-id="more-menu-go-offline"
                        type="checkbox"
                        command="cmd_toggleOfflineStatus"/>
+      </vbox>
+    </panelview>
+
+    <panelview id="appmenu-moreTools" class="PanelUI-subView">
+      <vbox class="panel-subview-body">
+        <toolbarbutton id="appmenu-moreTools-button"
+                       class="subviewbutton subviewbutton-iconic"
+                       data-l10n-id="appmenu-customizetoolbar"
+                       command="cmd_CustomizeToolbars"/>
+        <toolbarseparator/>
+        <label id="appmenu-developer-tools"
+               data-l10n-id="appmenu-developer-tools-subheader"
+               class="subview-subheader"/>
+        <vbox id="appmenu-developer-tools-view" class="panel-subview-body">
+          <!-- Developer Tools menu items are inserted here -->
+        </vbox>
       </vbox>
     </panelview>
 

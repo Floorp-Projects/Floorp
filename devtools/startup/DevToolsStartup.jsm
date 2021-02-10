@@ -313,6 +313,8 @@ XPCOMUtils.defineLazyGetter(this, "ProfilerPopupBackground", function() {
 function DevToolsStartup() {
   this.onEnabledPrefChanged = this.onEnabledPrefChanged.bind(this);
   this.onWindowReady = this.onWindowReady.bind(this);
+  this.addDevToolsItemsToSubview = this.addDevToolsItemsToSubview.bind(this);
+  this.onMoreToolsViewShowing = this.onMoreToolsViewShowing.bind(this);
   this.toggleProfilerKeyShortcuts = this.toggleProfilerKeyShortcuts.bind(this);
 }
 
@@ -387,6 +389,12 @@ DevToolsStartup.prototype = {
       Services.prefs.addObserver(
         DEVTOOLS_ENABLED_PREF,
         this.onEnabledPrefChanged
+      );
+
+      // Add DevTools menu items to the "More Tools" view.
+      Services.obs.addObserver(
+        this.onMoreToolsViewShowing,
+        "web-developer-tools-view-showing"
       );
       /* eslint-enable mozilla/balanced-observers */
 
@@ -559,33 +567,12 @@ DevToolsStartup.prototype = {
       shortcutId: "key_toggleToolbox",
       tooltiptext: "developer-button.tooltiptext2",
       onViewShowing: event => {
-        if (Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF)) {
-          // If DevTools are enabled, initialize DevTools to create all menuitems in the
-          // system menu before trying to copy them.
-          this.initDevTools("HamburgerMenu");
-        }
-
-        // Populate the subview with whatever menuitems are in the developer
-        // menu. We skip menu elements, because the menu panel has no way
-        // of dealing with those right now.
         const doc = event.target.ownerDocument;
-
-        const menu = doc.getElementById("menuWebDeveloperPopup");
-
-        const itemsToDisplay = [...menu.children];
-        // Hardcode the addition of the "work offline" menuitem at the bottom:
-        itemsToDisplay.push({
-          localName: "menuseparator",
-          getAttribute: () => {},
-        });
-        itemsToDisplay.push(doc.getElementById("goOfflineMenuitem"));
-
         const developerItems = PanelMultiView.getViewNode(
           doc,
           "PanelUI-developerItems"
         );
-        CustomizableUI.clearSubview(developerItems);
-        CustomizableUI.fillSubviewFromMenuItems(itemsToDisplay, developerItems);
+        this.addDevToolsItemsToSubview(developerItems);
       },
       onInit(anchor) {
         // Since onBeforeCreated already bails out when initialized, we can call
@@ -613,6 +600,36 @@ DevToolsStartup.prototype = {
     CustomizableWidgets.push(item);
 
     this.developerToggleCreated = true;
+  },
+
+  addDevToolsItemsToSubview(subview) {
+    if (Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF)) {
+      // If DevTools are enabled, initialize DevTools to create all menuitems in the
+      // system menu before trying to copy them.
+      this.initDevTools("HamburgerMenu");
+    }
+
+    // Populate the subview with whatever menuitems are in the developer
+    // menu. We skip menu elements, because the menu panel has no way
+    // of dealing with those right now.
+    const doc = subview.ownerDocument;
+
+    const menu = doc.getElementById("menuWebDeveloperPopup");
+
+    const itemsToDisplay = [...menu.children];
+    // Hardcode the addition of the "work offline" menuitem at the bottom:
+    itemsToDisplay.push({
+      localName: "menuseparator",
+      getAttribute: () => {},
+    });
+    itemsToDisplay.push(doc.getElementById("goOfflineMenuitem"));
+
+    CustomizableUI.clearSubview(subview);
+    CustomizableUI.fillSubviewFromMenuItems(itemsToDisplay, subview);
+  },
+
+  onMoreToolsViewShowing(moreToolsView) {
+    this.addDevToolsItemsToSubview(moreToolsView);
   },
 
   /**
