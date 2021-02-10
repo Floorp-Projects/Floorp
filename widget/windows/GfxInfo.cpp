@@ -1838,17 +1838,6 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         V(0, 0, 0, 0), "FEATURE_FAILURE_BUG_1603515");
 
     ////////////////////////////////////
-    // FEATURE_WEBRENDER_SOFTWARE
-
-    // TODO(aosmond): Bug 1678044 - wdspec tests ignore enable/disable-webrender
-    // Once the test infrastructure is fixed, we can remove this blocklist rule
-    APPEND_TO_DRIVER_BLOCKLIST2(
-        OperatingSystem::Windows, DeviceFamily::AmazonAll,
-        nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
-        nsIGfxInfo::FEATURE_BLOCKED_DEVICE, DRIVER_COMPARISON_IGNORED,
-        V(0, 0, 0, 0), "FEATURE_FAILURE_BUG_1678044");
-
-    ////////////////////////////////////
     // FEATURE_WEBRENDER_SOFTWARE - ALLOWLIST
 #ifdef EARLY_BETA_OR_EARLIER
 #  if defined(_M_IX86) || defined(_M_X64) || defined(__i386__) || \
@@ -1857,7 +1846,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
                                 nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
                                 nsIGfxInfo::FEATURE_ALLOW_ALWAYS,
                                 DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0),
-                                "FEATURE_ROLLOUT_NIGHTLY_SOFTWARE_WR_S_M_SCRN");
+                                "FEATURE_ROLLOUT_EARLY_BETA_SOFTWARE_WR");
 #  endif
 #endif
   }
