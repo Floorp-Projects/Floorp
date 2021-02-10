@@ -49,6 +49,9 @@ permalink: /changelog/
 * **lib-state**
   * Add `threadNamePrefix` parameter to `Store` to give threads created by the `Store` a specific name.
 
+* **service-glean**
+  * 🆙 Updated Glean to version 34.0.0 ([changelog](https://github.com/mozilla/glean/releases/tag/v34.0.0))
+
 # 72.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v71.0.0...v72.0.0)
