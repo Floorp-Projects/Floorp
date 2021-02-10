@@ -10,11 +10,12 @@
 #include "InputUtils.h"
 #include "mozilla/StaticPrefs_layout.h"
 
-class APZCSnappingOnMomentumTester : public APZCTreeManagerTester {};
+class APZCSnappingOnMomentumTesterLayersOnly : public APZCTreeManagerTester {
+ public:
+  APZCSnappingOnMomentumTesterLayersOnly() { mLayersOnly = true; }
+};
 
-TEST_F(APZCSnappingOnMomentumTester, Snap_On_Momentum) {
-  SCOPED_GFX_VAR(UseWebRender, bool, false);
-
+TEST_F(APZCSnappingOnMomentumTesterLayersOnly, Snap_On_Momentum) {
   const char* layerTreeSyntax = "c";
   nsIntRegion layerVisibleRegion[] = {
       nsIntRegion(IntRect(0, 0, 100, 100)),
