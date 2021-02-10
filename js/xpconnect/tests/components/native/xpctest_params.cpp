@@ -198,6 +198,13 @@ NS_IMETHODIMP nsXPCTestParams::TestDoubleArray(uint32_t aLength, double* a,
   BUFFER_METHOD_IMPL(double, 0, TAKE_OWNERSHIP_NOOP);
 }
 
+NS_IMETHODIMP nsXPCTestParams::TestByteArrayOptionalLength(uint8_t* a,
+                                                           uint32_t aLength,
+                                                           uint32_t* rv) {
+  *rv = aLength;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsXPCTestParams::TestStringArray(uint32_t aLength, const char** a,
                                                uint32_t* bLength, char*** b,
                                                uint32_t* rvLength, char*** rv) {
