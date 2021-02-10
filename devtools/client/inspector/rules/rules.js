@@ -507,6 +507,12 @@ CssRuleView.prototype = {
    * if they are supported in the current target.
    */
   async _initSimulationFeatures() {
+    // @backward-compat { version 87 } Print & color scheme simulations should
+    // now be set using reconfigure.
+    if (!this.currentTarget.getTrait("reconfigureSupportsSimulationFeatures")) {
+      return;
+    }
+
     if (!this.currentTarget.chrome) {
       this.printSimulationButton.removeAttribute("hidden");
       this.printSimulationButton.addEventListener(
