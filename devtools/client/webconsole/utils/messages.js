@@ -274,7 +274,6 @@ function transformConsoleAPICallResource(consoleMessageResource) {
     userProvidedStyles: message.styles,
     prefix: message.prefix,
     private: message.private,
-    logpointId: message.logpointId,
     chromeContext: message.chromeContext,
   });
 }
