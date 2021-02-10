@@ -1022,7 +1022,7 @@ describe("PlacesFeed", () => {
         await observer.handlePlacesEvent(args);
         assert.notCalled(dispatch);
       });
-      it("should not dispatch a PLACES_BOOKMARK_REMOVED action - has SYNC source", async () => {
+      it("should not dispatch a PLACES_BOOKMARKS_REMOVED action - has SYNC source", async () => {
         const args = [
           {
             id: null,
@@ -1040,7 +1040,7 @@ describe("PlacesFeed", () => {
 
         assert.notCalled(dispatch);
       });
-      it("should not dispatch a PLACES_BOOKMARK_REMOVED action - has IMPORT source", async () => {
+      it("should not dispatch a PLACES_BOOKMARKS_REMOVED action - has IMPORT source", async () => {
         const args = [
           {
             id: null,
@@ -1058,7 +1058,7 @@ describe("PlacesFeed", () => {
 
         assert.notCalled(dispatch);
       });
-      it("should not dispatch a PLACES_BOOKMARK_REMOVED action - has RESTORE source", async () => {
+      it("should not dispatch a PLACES_BOOKMARKS_REMOVED action - has RESTORE source", async () => {
         const args = [
           {
             id: null,
@@ -1076,7 +1076,7 @@ describe("PlacesFeed", () => {
 
         assert.notCalled(dispatch);
       });
-      it("should not dispatch a PLACES_BOOKMARK_REMOVED action - has RESTORE_ON_STARTUP source", async () => {
+      it("should not dispatch a PLACES_BOOKMARKS_REMOVED action - has RESTORE_ON_STARTUP source", async () => {
         const args = [
           {
             id: null,
@@ -1094,7 +1094,7 @@ describe("PlacesFeed", () => {
 
         assert.notCalled(dispatch);
       });
-      it("should dispatch a PLACES_BOOKMARK_REMOVED action with the right URL and bookmarkGuid", async () => {
+      it("should dispatch a PLACES_BOOKMARKS_REMOVED action with the right URL and bookmarkGuid", async () => {
         const args = [
           {
             id: null,
@@ -1110,8 +1110,8 @@ describe("PlacesFeed", () => {
         ];
         await observer.handlePlacesEvent(args);
         assert.calledWith(dispatch, {
-          type: at.PLACES_BOOKMARK_REMOVED,
-          data: { bookmarkGuid: "123foo", url: "foo.com" },
+          type: at.PLACES_BOOKMARKS_REMOVED,
+          data: { urls: ["foo.com"] },
         });
       });
     });
