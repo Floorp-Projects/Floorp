@@ -21,7 +21,6 @@ import mozilla.components.feature.tabs.toolbar.TabCounterToolbarButton
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
 import mozilla.components.feature.toolbar.ToolbarPresenter
-import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
@@ -45,7 +44,7 @@ abstract class ToolbarIntegration(
         store,
         sessionId,
         ToolbarFeature.UrlRenderConfiguration(
-            PublicSuffixList(context),
+            context.components.publicSuffixList,
             ThemeManager.resolveAttribute(R.attr.primaryText, context),
             renderStyle = renderStyle
         )
