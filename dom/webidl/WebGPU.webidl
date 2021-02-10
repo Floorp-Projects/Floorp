@@ -873,16 +873,26 @@ interface mixin GPURenderEncoderBase {
 [Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPURenderPassEncoder {
-    //void setViewport(float x, float y,
-    //                 float width, float height,
-    //                 float minDepth, float maxDepth);
+    void setViewport(float x, float y,
+                     float width, float height,
+                     float minDepth, float maxDepth);
 
-    //void setScissorRect(u32 x, u32 y, u32 width, u32 height);
+    void setScissorRect(GPUIntegerCoordinate x, GPUIntegerCoordinate y,
+                        GPUIntegerCoordinate width, GPUIntegerCoordinate height);
 
-    //void setBlendColor(GPUColor color);
-    //void setStencilReference(u32 reference);
+    void setBlendColor(GPUColor color);
+    void setStencilReference(GPUStencilValue reference);
+
+    //void beginOcclusionQuery(GPUSize32 queryIndex);
+    //void endOcclusionQuery();
+
+    //void beginPipelineStatisticsQuery(GPUQuerySet querySet, GPUSize32 queryIndex);
+    //void endPipelineStatisticsQuery();
+
+    //void writeTimestamp(GPUQuerySet querySet, GPUSize32 queryIndex);
 
     //void executeBundles(sequence<GPURenderBundle> bundles);
+
     [Throws]
     void endPass();
 };
