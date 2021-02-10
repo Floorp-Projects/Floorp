@@ -719,7 +719,10 @@ impl AlphaBatchBuilder {
             BlendMode::SubpixelConstantTextColor(..) |
             BlendMode::SubpixelWithBgColor |
             BlendMode::SubpixelDualSource |
-            BlendMode::Advanced(_) => {
+            BlendMode::Advanced(_) |
+            BlendMode::MultiplyDualSource |
+            BlendMode::Screen |
+            BlendMode::Exclusion => {
                 self.alpha_batch_list
                     .set_params_and_get_batch(key, features, bounding_rect, z_id)
             }
@@ -1915,7 +1918,12 @@ impl BatchBuilder {
                                     prim_vis_mask,
                                 );
                             }
-                            PictureCompositeMode::MixBlend(mode) if ctx.use_advanced_blending => {
+                            PictureCompositeMode::MixBlend(mode) if BlendMode::from_mix_blend_mode(
+                                mode,
+                                ctx.use_advanced_blending,
+                                !ctx.break_advanced_blend_batches,
+                                ctx.use_dual_source_blending,
+                            ).is_some() => {
                                 let (clip_task_address, clip_mask_texture_id) = ctx.get_prim_clip_task_and_texture(
                                     prim_info.clip_task_index,
                                     render_tasks,
@@ -1929,14 +1937,22 @@ impl BatchBuilder {
                                     BatchKind::Brush(
                                         BrushBatchKind::Image(ImageBufferKind::Texture2D),
                                     ),
-                                    BlendMode::Advanced(mode),
+                                    BlendMode::from_mix_blend_mode(
+                                        mode,
+                                        ctx.use_advanced_blending,
+                                        !ctx.break_advanced_blend_batches,
+                                        ctx.use_dual_source_blending,
+                                    ).unwrap(),
                                     textures,
                                 );
                                 let prim_header_index = prim_headers.push(
                                     &prim_header,
                                     z_id,
                                     ImageBrushData {
-                                        color_mode: ShaderColorMode::Image,
+                                        color_mode: match key.blend_mode {
+                                            BlendMode::MultiplyDualSource => ShaderColorMode::MultiplyDualSource,
+                                            _ => ShaderColorMode::Image,
+                                        },
                                         alpha_type: AlphaType::PremultipliedAlpha,
                                         raster_space: RasterizationSpace::Local,
                                         opacity: 1.0,

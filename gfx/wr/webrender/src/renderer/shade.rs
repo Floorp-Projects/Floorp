@@ -398,7 +398,9 @@ impl BrushShader {
             BlendMode::PremultipliedAlpha |
             BlendMode::PremultipliedDestOut |
             BlendMode::SubpixelConstantTextColor(..) |
-            BlendMode::SubpixelWithBgColor => {
+            BlendMode::SubpixelWithBgColor |
+            BlendMode::Screen |
+            BlendMode::Exclusion => {
                 if features.contains(BatchFeatures::ALPHA_PASS) {
                     &mut self.alpha
                 } else {
@@ -410,7 +412,8 @@ impl BrushShader {
                     .as_mut()
                     .expect("bug: no advanced blend shader loaded")
             }
-            BlendMode::SubpixelDualSource => {
+            BlendMode::SubpixelDualSource |
+            BlendMode::MultiplyDualSource => {
                 self.dual_source
                     .as_mut()
                     .expect("bug: no dual source shader loaded")

@@ -244,7 +244,6 @@ void brush_vs(
             v_color = image_data.color;
             break;
         case COLOR_MODE_SUBPX_BG_PASS2:
-        case COLOR_MODE_SUBPX_DUAL_SOURCE:
         case COLOR_MODE_IMAGE:
             v_mask_swizzle = vec2(1.0, 0.0);
             v_color = image_data.color;
@@ -258,6 +257,14 @@ void brush_vs(
         case COLOR_MODE_SUBPX_BG_PASS1:
             v_mask_swizzle = vec2(-1.0, 1.0);
             v_color = vec4(image_data.color.a) * image_data.background_color;
+            break;
+        case COLOR_MODE_SUBPX_DUAL_SOURCE:
+            v_mask_swizzle = vec2(image_data.color.a, 0.0);
+            v_color = image_data.color;
+            break;
+        case COLOR_MODE_MULTIPLY_DUAL_SOURCE:
+            v_mask_swizzle = vec2(-image_data.color.a, image_data.color.a);
+            v_color = image_data.color;
             break;
         default:
             v_mask_swizzle = vec2(0.0);
@@ -321,13 +328,15 @@ Fragment brush_fs() {
     #else
         float alpha = 1.0;
     #endif
-    texel.rgb = texel.rgb * v_mask_swizzle.x + texel.aaa * v_mask_swizzle.y;
+    #ifndef WR_FEATURE_DUAL_SOURCE_BLENDING
+        texel.rgb = texel.rgb * v_mask_swizzle.x + texel.aaa * v_mask_swizzle.y;
+    #endif
 
     vec4 alpha_mask = texel * alpha;
     frag.color = v_color * alpha_mask;
 
     #ifdef WR_FEATURE_DUAL_SOURCE_BLENDING
-        frag.blend = alpha_mask * v_color.a;
+        frag.blend = alpha_mask * v_mask_swizzle.x + alpha_mask.aaaa * v_mask_swizzle.y;
     #endif
 #else
     frag.color = texel;
