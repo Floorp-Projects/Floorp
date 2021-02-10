@@ -1670,9 +1670,9 @@ bool JSObject::is<js::ArrayBufferObjectMaybeShared>() const {
   return is<ArrayBufferObject>() || is<SharedArrayBufferObject>();
 }
 
-JS_FRIEND_API uint32_t JS::GetArrayBufferByteLength(JSObject* obj) {
+JS_FRIEND_API size_t JS::GetArrayBufferByteLength(JSObject* obj) {
   ArrayBufferObject* aobj = obj->maybeUnwrapAs<ArrayBufferObject>();
-  return aobj ? aobj->byteLength().deprecatedGetUint32() : 0;
+  return aobj ? aobj->byteLength().get() : 0;
 }
 
 JS_FRIEND_API uint8_t* JS::GetArrayBufferData(JSObject* obj,

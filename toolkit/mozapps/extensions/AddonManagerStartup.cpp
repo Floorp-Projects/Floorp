@@ -576,9 +576,11 @@ nsresult AddonManagerStartup::DecodeBlob(JS::HandleValue value, JSContext* cx,
     auto obj = &value.toObject();
     bool isShared;
 
+    size_t len = JS::GetArrayBufferByteLength(obj);
+    NS_ENSURE_TRUE(len <= INT32_MAX, NS_ERROR_INVALID_ARG);
     nsDependentCSubstring lz4(
         reinterpret_cast<char*>(JS::GetArrayBufferData(obj, &isShared, nogc)),
-        JS::GetArrayBufferByteLength(obj));
+        uint32_t(len));
 
     MOZ_TRY_VAR(data, DecodeLZ4(lz4, STRUCTURED_CLONE_MAGIC));
   }
