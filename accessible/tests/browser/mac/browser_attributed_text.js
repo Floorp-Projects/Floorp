@@ -71,16 +71,27 @@ addAccessibleTask(
     let textArea = getNativeInterface(accDoc, "t");
     let spellDone = waitForEvent(EVENT_TEXT_ATTRIBUTE_CHANGED, "t");
     textArea.setAttributeValue("AXFocused", true);
-    await spellDone;
 
-    let range = textArea.getAttributeValue("AXVisibleCharacterRange");
+    let attributedText = [];
 
-    let attributedText = textArea.getParameterizedAttributeValue(
-      "AXAttributedStringForRange",
-      NSRange(...range)
-    );
+    // For some internal reason we get several text attribute change events
+    // before the attributed text returned provides the misspelling attributes.
+    while (true) {
+      await spellDone;
 
-    is(attributedText.length, 2);
+      let range = textArea.getAttributeValue("AXVisibleCharacterRange");
+      attributedText = textArea.getParameterizedAttributeValue(
+        "AXAttributedStringForRange",
+        NSRange(...range)
+      );
+
+      if (attributedText.length != 2) {
+        spellDone = waitForEvent(EVENT_TEXT_ATTRIBUTE_CHANGED, "t");
+      } else {
+        break;
+      }
+    }
+
     ok(attributedText[1].AXMarkedMisspelled);
   }
 );
