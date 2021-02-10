@@ -456,37 +456,38 @@ struct sRGBColor {
   constexpr sRGBColor(Float aR, Float aG, Float aB)
       : r(aR), g(aG), b(aB), a(1.0f) {}
 
-  static sRGBColor White(float aA) { return sRGBColor(1.f, 1.f, 1.f, aA); }
+  static constexpr sRGBColor White(float aA) {
+    return sRGBColor(1.f, 1.f, 1.f, aA);
+  }
 
-  static sRGBColor Black(float aA) { return sRGBColor(0.f, 0.f, 0.f, aA); }
+  static constexpr sRGBColor Black(float aA) {
+    return sRGBColor(0.f, 0.f, 0.f, aA);
+  }
 
-  static sRGBColor OpaqueWhite() { return White(1.f); }
+  static constexpr sRGBColor OpaqueWhite() { return White(1.f); }
 
-  static sRGBColor OpaqueBlack() { return Black(1.f); }
+  static constexpr sRGBColor OpaqueBlack() { return Black(1.f); }
 
-  static sRGBColor FromU8(uint8_t aR, uint8_t aG, uint8_t aB, uint8_t aA) {
+  static constexpr sRGBColor FromU8(uint8_t aR, uint8_t aG, uint8_t aB,
+                                    uint8_t aA) {
     return sRGBColor(float(aR) / 255.f, float(aG) / 255.f, float(aB) / 255.f,
                      float(aA) / 255.f);
   }
 
-  static sRGBColor FromABGR(uint32_t aColor) {
-    sRGBColor newColor(((aColor >> 0) & 0xff) * (1.0f / 255.0f),
-                       ((aColor >> 8) & 0xff) * (1.0f / 255.0f),
-                       ((aColor >> 16) & 0xff) * (1.0f / 255.0f),
-                       ((aColor >> 24) & 0xff) * (1.0f / 255.0f));
-
-    return newColor;
+  static constexpr sRGBColor FromABGR(uint32_t aColor) {
+    return sRGBColor(((aColor >> 0) & 0xff) * (1.0f / 255.0f),
+                     ((aColor >> 8) & 0xff) * (1.0f / 255.0f),
+                     ((aColor >> 16) & 0xff) * (1.0f / 255.0f),
+                     ((aColor >> 24) & 0xff) * (1.0f / 255.0f));
   }
 
   // The "Unusual" prefix is to avoid unintentionally using this function when
   // FromABGR(), which is much more common, is needed.
-  static sRGBColor UnusualFromARGB(uint32_t aColor) {
-    sRGBColor newColor(((aColor >> 16) & 0xff) * (1.0f / 255.0f),
-                       ((aColor >> 8) & 0xff) * (1.0f / 255.0f),
-                       ((aColor >> 0) & 0xff) * (1.0f / 255.0f),
-                       ((aColor >> 24) & 0xff) * (1.0f / 255.0f));
-
-    return newColor;
+  static constexpr sRGBColor UnusualFromARGB(uint32_t aColor) {
+    return sRGBColor(((aColor >> 16) & 0xff) * (1.0f / 255.0f),
+                     ((aColor >> 8) & 0xff) * (1.0f / 255.0f),
+                     ((aColor >> 0) & 0xff) * (1.0f / 255.0f),
+                     ((aColor >> 24) & 0xff) * (1.0f / 255.0f));
   }
 
   uint32_t ToABGR() const {

@@ -10544,6 +10544,19 @@
   value: false
   mirror: always
 
+# Whether we should use the default accent color or the theme-provided one.
+#
+# TODO(emilio): This should probably do the right thing in most other
+# platforms, but stick to the standard colors on those.
+- name: widget.non-native.use-theme-accent
+  type: bool
+#ifdef MOZ_WIDGET_GTK
+  value: true
+#else
+  value: false
+#endif
+  mirror: always
+
 # Preference to disable dark scrollbar implementation.
 # This is mainly for testing because dark scrollbars have to be semi-
 # transparent, but many reftests expect scrollbars to look identical
