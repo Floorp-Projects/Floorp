@@ -22,54 +22,59 @@ static def getGitHash() {
     return process.inputStream.getText().trim()
 }
 
+
+
 ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
-    apply plugin: 'digital.wup.android-maven-publish'
+    apply plugin: 'maven-publish'
 
     task sourcesJar(type: Jar) {
         from android.sourceSets.main.java.srcDirs
         classifier = 'sources'
     }
 
-    publishing {
-        publications {
-            aar(MavenPublication) {
-                from components.android
-                artifact sourcesJar
+    afterEvaluate {
+        publishing {
+            publications {
+                release(MavenPublication) {
+                    from components.release
 
-                pom {
+                    artifact sourcesJar
+
                     groupId = groupIdArg
                     artifactId = artifactIdArg
-                    description = descriptionArg
                     // 'local' is for streamlining local publication workflow.
                     version = config.componentsVersion + (project.hasProperty('local') ? '-local' + getLocalPublicationTimestamp() : '')
 
-                    licenses {
-                        license {
-                            name = libLicense
-                            url = libLicenseUrl
-                        }
-                    }
+                    pom {
+                        description = descriptionArg
 
-                    developers {
-                        developer {
-                            name = 'Mozilla Android Components Team'
-                            email = 'android-components@lists.mozilla.org'
+                        licenses {
+                            license {
+                                name = libLicense
+                                url = libLicenseUrl
+                            }
                         }
-                    }
 
-                    scm {
-                        connection = libVcsUrl
-                        developerConnection = libVcsUrl
-                        url = libUrl
-                        tag = getGitHash()
+                        developers {
+                            developer {
+                                name = 'Mozilla Android Components Team'
+                                email = 'android-components@lists.mozilla.org'
+                            }
+                        }
+
+                        scm {
+                            connection = libVcsUrl
+                            developerConnection = libVcsUrl
+                            url = libUrl
+                            tag = getGitHash()
+                        }
                     }
                 }
             }
-        }
-
-        repositories {
-            maven {
-                url = "$buildDir/maven"
+            repositories {
+                maven {
+                    url = "$buildDir/maven"
+                }
             }
         }
     }
