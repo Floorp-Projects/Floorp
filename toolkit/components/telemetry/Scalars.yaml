@@ -5183,11 +5183,14 @@ browser.searchinit:
   engine_invalid_webextension:
     bug_numbers:
       - 1665938
+      - 1691050
     description: >
       Records the WebExtension ID of a search engine where the WebExtension
-      is not installed (= 1), disabled (= 2) or where the submission URL
-      is different between the search engine and the WebExtension (= 3)
-    expires: "89"
+      is not installed (= 1), disabled (= 2), search engine no longer specified (= 4),
+      a different name (= 5), where the submission URL is different between the
+      search engine and the WebExtension (= 6). The value '3' has been replaced
+      by '6' to distinguish newer entries.
+    expires: "94"
     keyed: true
     kind: uint
     notification_emails:
