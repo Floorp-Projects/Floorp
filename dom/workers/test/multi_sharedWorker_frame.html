@@ -7,23 +7,13 @@
   <head>
     <title>Test for SharedWorker</title>
   </head>
-  <body onload="notifyOpenerLoadEvent();">
+  <body>
     <script type="text/javascript">
       "use strict";
 
       function postMessageToParentOrOpener(message) {
         if (parent != window) {
           parent.postMessage(message, "*");
-        }
-        if (opener) {
-          opener.postMessage(message, "*");
-        }
-      }
-
-      // Used by test_multi_sharedWorker_lifetimes.html
-      function notifyOpenerLoadEvent() {
-        if (opener) {
-          opener.postMessage({event: "load"}, "*");
         }
       }
 
