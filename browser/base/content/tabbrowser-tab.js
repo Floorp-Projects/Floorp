@@ -38,8 +38,10 @@
             <label class="tab-text tab-label" role="presentation"/>
             <hbox class="tab-icon-sound">
               <image class="tab-icon-sound-image" role="presentation"/>
-              <label class="tab-icon-sound-playing-label" data-l10n-id="browser-tab-audio-playing" role="presentation"/>
-              <label class="tab-icon-sound-muted-label" data-l10n-id="browser-tab-audio-muted" role="presentation"/>
+              <label class="tab-icon-sound-label tab-icon-sound-playing-label" data-l10n-id="browser-tab-audio-playing" role="presentation"/>
+              <label class="tab-icon-sound-label tab-icon-sound-muted-label" data-l10n-id="browser-tab-audio-muted" role="presentation"/>
+              <label class="tab-icon-sound-label tab-icon-sound-blocked-label" data-l10n-id="browser-tab-audio-blocked" role="presentation"/>
+              <label class="tab-icon-sound-label tab-icon-sound-pip-label" data-l10n-id="browser-tab-audio-pip" role="presentation"/>
             </hbox>
           </vbox>
           <image class="tab-close-button close-icon" role="presentation"/>
