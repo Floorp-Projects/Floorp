@@ -566,7 +566,36 @@ exports.ToolboxButtons = [
         args.clipboard = true;
       }
 
-      await captureAndSaveScreenshot(toolbox.target, toolbox.win, args);
+      const messages = await captureAndSaveScreenshot(
+        toolbox.target,
+        toolbox.win,
+        args
+      );
+      const notificationBox = toolbox.getNotificationBox();
+      const priorityMap = {
+        error: notificationBox.PRIORITY_CRITICAL_HIGH,
+        warn: notificationBox.PRIORITY_WARNING_HIGH,
+      };
+      for (const { text, level } of messages) {
+        // captureAndSaveScreenshot returns "saved" messages, that indicate where the
+        // screenshot was saved. In regular toolbox, we don't want to display them as
+        // the download UI can be used to open them.
+        // But in the browser toolbox, we can't see the download UI, so we'll display the
+        // saved message so the user knows there the file was saved.
+        if (
+          !toolbox.target.isParentProcess &&
+          level !== "warn" &&
+          level !== "error"
+        ) {
+          continue;
+        }
+        notificationBox.appendNotification(
+          text,
+          null,
+          null,
+          priorityMap[level] || notificationBox.PRIORITY_INFO_MEDIUM
+        );
+      }
     },
   },
   createHighlightButton("RulersHighlighter", "rulers"),
