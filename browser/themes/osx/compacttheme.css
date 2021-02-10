@@ -4,6 +4,14 @@
 
 %include ../shared/compacttheme.inc.css
 
+/**
+ * macOS vibrancy effects only work when there is no background colour behind
+ * the effect.
+ */
+:root:-moz-lwtheme-darktext {
+  background-color: transparent;
+}
+
 #TabsToolbar:-moz-lwtheme-darktext {
   appearance: auto;
   -moz-default-appearance: -moz-mac-vibrant-titlebar-light;
