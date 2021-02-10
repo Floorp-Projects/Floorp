@@ -819,6 +819,55 @@ nsJARChannel::SetContentLength(int64_t aContentLength) {
   return NS_OK;
 }
 
+static void RecordZeroLengthEvent(const nsCString& aSpec) {
+  // The event can only hold 80 characters.
+  // We only save the file name and path inside the jar.
+  auto findFilenameStart = [](const nsCString& aSpec) -> uint32_t {
+    int32_t pos = aSpec.Find("!/");
+    if (pos == kNotFound) {
+      MOZ_ASSERT(false, "This should not happen");
+      return 0;
+    }
+    int32_t from = aSpec.RFindChar('/', pos);
+    if (from == kNotFound) {
+      MOZ_ASSERT(false, "This should not happen");
+      return 0;
+    }
+    // Skip over the slash
+    from++;
+    return from;
+  };
+
+  // If for some reason we are unable to extract the filename we report the
+  // entire string, or 80 characters of it, to make sure we don't miss any
+  // events.
+  uint32_t from = findFilenameStart(aSpec);
+  nsAutoCString fileName(Substring(aSpec, from));
+
+  Telemetry::SetEventRecordingEnabled("zero_byte_load"_ns, true);
+  Telemetry::EventID eventType = Telemetry::EventID::Zero_byte_load_Load_Others;
+  if (StringEndsWith(fileName, ".ftl"_ns)) {
+    eventType = Telemetry::EventID::Zero_byte_load_Load_Ftl;
+  } else if (StringEndsWith(fileName, ".dtd"_ns)) {
+    eventType = Telemetry::EventID::Zero_byte_load_Load_Dtd;
+  } else if (StringEndsWith(fileName, ".properties"_ns)) {
+    eventType = Telemetry::EventID::Zero_byte_load_Load_Properties;
+  } else if (StringEndsWith(fileName, ".js"_ns) ||
+             StringEndsWith(fileName, ".jsm"_ns)) {
+    eventType = Telemetry::EventID::Zero_byte_load_Load_Js;
+  } else if (StringEndsWith(fileName, ".xml"_ns)) {
+    eventType = Telemetry::EventID::Zero_byte_load_Load_Xml;
+  } else if (StringEndsWith(fileName, ".xhtml"_ns)) {
+    eventType = Telemetry::EventID::Zero_byte_load_Load_Xhtml;
+  }
+
+  auto res = CopyableTArray<Telemetry::EventExtraEntry>{};
+  res.SetCapacity(2);
+  res.AppendElement(Telemetry::EventExtraEntry{"sync"_ns, "true"_ns});
+  res.AppendElement(Telemetry::EventExtraEntry{"file_name"_ns, fileName});
+  Telemetry::RecordEvent(eventType, Nothing{}, Some(res));
+}
+
 NS_IMETHODIMP
 nsJARChannel::Open(nsIInputStream** aStream) {
   LOG(("nsJARChannel::Open [this=%p]\n", this));
@@ -849,6 +898,10 @@ nsJARChannel::Open(nsIInputStream** aStream) {
 
   input.forget(aStream);
   mOpened = true;
+
+  if (mContentLength <= 0) {
+    RecordZeroLengthEvent(mSpec);
+  }
   return NS_OK;
 }
 
