@@ -116,7 +116,7 @@
         // `current` will now be a valid root directory.
         ok(await IOUtils.exists(current), "Root directory should exist");
 
-        const DRIVE_RE = /^[A-Z]:$/;
+        const DRIVE_RE = /^[A-Za-z]:$/;
         ok(
           current.startsWith("\\\\") || DRIVE_RE.test(current),
           `Root directory (${current}) should be a UNC path or drive`,
