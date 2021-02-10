@@ -121,9 +121,11 @@ class ScopedGfxSetting {
       [=](float aPrefValue) { Preferences::SetFloat(prefName, aPrefValue); }, \
       prefValue)
 
-#define SCOPED_GFX_VAR(varBase, varType, varValue)         \
-  ScopedGfxSetting<const varType&, varType> var_##varBase( \
-      &(gfxVars::varBase), &(gfxVars::Set##varBase), varValue)
+#define SCOPED_GFX_VAR_MAYBE_TYPE(varType) \
+  Maybe<ScopedGfxSetting<const varType&, varType>>
+
+#define SCOPED_GFX_VAR_MAYBE_EMPLACE(varName, varBase, varValue) \
+  varName.emplace(&(gfxVars::varBase), &(gfxVars::Set##varBase), varValue)
 
 class MockContentController : public GeckoContentController {
  public:

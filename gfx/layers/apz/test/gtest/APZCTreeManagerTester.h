@@ -20,7 +20,15 @@
 
 class APZCTreeManagerTester : public APZCTesterBase {
  protected:
+  APZCTreeManagerTester() : mLayersOnly(false) {}
+
   virtual void SetUp() {
+    if (mLayersOnly) {
+      SCOPED_GFX_VAR_MAYBE_EMPLACE(mVarWebRender, UseWebRender, false);
+      SCOPED_GFX_VAR_MAYBE_EMPLACE(mVarSoftwareWebRender, UseSoftwareWebRender,
+                                   false);
+    }
+
     APZCTesterBase::SetUp();
     APZThreadUtils::SetThreadAssertionsEnabled(false);
     APZThreadUtils::SetControllerThread(NS_GetCurrentThread());
@@ -35,6 +43,8 @@ class APZCTreeManagerTester : public APZCTesterBase {
       ;
     manager->ClearTree();
     manager->ClearContentController();
+    mVarWebRender.reset();
+    mVarSoftwareWebRender.reset();
   }
 
   /**
@@ -76,6 +86,10 @@ class APZCTreeManagerTester : public APZCTesterBase {
   RefPtr<TestAPZCTreeManager> manager;
   RefPtr<APZSampler> sampler;
   RefPtr<APZUpdater> updater;
+
+  SCOPED_GFX_VAR_MAYBE_TYPE(bool) mVarWebRender;
+  SCOPED_GFX_VAR_MAYBE_TYPE(bool) mVarSoftwareWebRender;
+  bool mLayersOnly;
 
  protected:
   static ScrollMetadata BuildScrollMetadata(
