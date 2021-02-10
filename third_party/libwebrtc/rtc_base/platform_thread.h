@@ -21,7 +21,12 @@
 #include "rtc_base/platform_thread_types.h"
 #include "rtc_base/thread_checker.h"
 
+#include "rtc_base/deprecated/recursive_critical_section.h"
+
 namespace rtc {
+
+// Bug 1691641
+class PlatformUIThread;
 
 // Callback function that the spawned thread will enter once spawned.
 typedef void (*ThreadRunFunction)(void*);
@@ -91,12 +96,14 @@ class PlatformThread {
 
   HANDLE thread_ = nullptr;
   DWORD thread_id_ = 0;
-  CriticalSection cs_;
+  RecursiveCriticalSection cs_;
 #else
   static void* StartThread(void* param);
 
   pthread_t thread_ = 0;
 #endif  // defined(WEBRTC_WIN)
+  // Bug 1691641
+  friend PlatformUIThread;
   RTC_DISALLOW_COPY_AND_ASSIGN(PlatformThread);
 };
 
