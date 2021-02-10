@@ -11,7 +11,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
@@ -431,8 +430,7 @@ class UrlbarValueFormatter {
     // nsTextPaintStyle::GetHighlightColors for details.
     if (
       this.document.documentElement.querySelector(":-moz-lwtheme") ||
-      (AppConstants.platform == "win" &&
-        this.window.matchMedia("(-moz-windows-default-theme: 0)").matches)
+      this.window.matchMedia("(prefers-contrast)").matches
     ) {
       // non-default theme(s)
       selection.setColors(fg, bg, "currentColor", "currentColor");
