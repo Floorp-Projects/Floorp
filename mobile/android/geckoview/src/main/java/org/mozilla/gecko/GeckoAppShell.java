@@ -26,7 +26,6 @@ import java.util.StringTokenizer;
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.util.BitmapUtils;
 import org.mozilla.gecko.util.HardwareCodecCapabilityUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.InputDeviceUtils;
@@ -49,10 +48,12 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.ImageFormat;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
 import android.hardware.Sensor;
@@ -1391,7 +1392,7 @@ public class GeckoAppShell {
                 icon = ResourcesCompat.getDrawable(getApplicationContext().getResources(), R.drawable.ic_generic_file, getApplicationContext().getTheme());
             }
 
-            Bitmap bitmap = BitmapUtils.getBitmapFromDrawable(icon);
+            Bitmap bitmap = getBitmapFromDrawable(icon);
             if (bitmap.getWidth() != resolvedIconSize || bitmap.getHeight() != resolvedIconSize) {
                 bitmap = Bitmap.createScaledBitmap(bitmap, resolvedIconSize, resolvedIconSize, true);
             }
@@ -1404,6 +1405,24 @@ public class GeckoAppShell {
             Log.w(LOGTAG, "getIconForExtension failed.",  e);
             return null;
         }
+    }
+
+    private static Bitmap getBitmapFromDrawable(final Drawable drawable) {
+        if (drawable instanceof BitmapDrawable) {
+            return ((BitmapDrawable) drawable).getBitmap();
+        }
+
+        int width = drawable.getIntrinsicWidth();
+        width = width > 0 ? width : 1;
+        int height = drawable.getIntrinsicHeight();
+        height = height > 0 ? height : 1;
+
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+
+        return bitmap;
     }
 
     public static String getMimeTypeFromExtension(final String ext) {
@@ -1786,7 +1805,7 @@ public class GeckoAppShell {
                     final String pkg = splits[1];
                     final PackageManager pm = getApplicationContext().getPackageManager();
                     final Drawable d = pm.getApplicationIcon(pkg);
-                    final Bitmap bitmap = BitmapUtils.getBitmapFromDrawable(d);
+                    final Bitmap bitmap = getBitmapFromDrawable(d);
                     return new BitmapConnection(bitmap);
                 }
             } catch (Exception ex) {
