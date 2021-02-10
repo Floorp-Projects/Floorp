@@ -539,6 +539,9 @@ const browsingContextTargetPrototype = {
         // @backward-compat { version 64 } Exposes a new trait to help identify
         // BrowsingContextActor's inherited actors from the client side.
         isBrowsingContext: true,
+        // @backward-compat { version 87 } Print & color scheme simulations
+        // should now be set using reconfigure.
+        reconfigureSupportsSimulationFeatures: true,
       },
     };
 
