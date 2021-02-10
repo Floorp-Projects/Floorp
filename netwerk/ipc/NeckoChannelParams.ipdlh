@@ -543,5 +543,29 @@ struct SpeculativeConnectionOverriderArgs {
   bool allow1918;
 };
 
+//-----------------------------------------------------------------------------
+// GIO IPDL structs
+//-----------------------------------------------------------------------------
+
+struct GIOChannelOpenArgs
+{
+  URIParams                 uri;
+  uint64_t                  startPos;
+  nsCString                 entityID;
+  IPCStream?                uploadStream;
+  LoadInfoArgs?             loadInfo;
+  uint32_t                  loadFlags;
+};
+
+struct GIOChannelConnectArgs
+{
+  uint32_t channelId;
+};
+
+union GIOChannelCreationArgs
+{
+  GIOChannelOpenArgs;      // For AsyncOpen: the common case.
+  GIOChannelConnectArgs;   // Used for redirected-to channels
+};
 } // namespace net
 } // namespace mozilla

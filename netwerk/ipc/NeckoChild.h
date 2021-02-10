@@ -42,6 +42,12 @@ class NeckoChild : public PNeckoChild {
       PBrowserChild* aBrowser, const SerializedLoadContext& aSerialized,
       const FTPChannelCreationArgs& aOpenArgs);
   bool DeallocPFTPChannelChild(PFTPChannelChild*);
+#ifdef MOZ_WIDGET_GTK
+  PGIOChannelChild* AllocPGIOChannelChild(
+      PBrowserChild* aBrowser, const SerializedLoadContext& aSerialized,
+      const GIOChannelCreationArgs& aOpenArgs);
+  bool DeallocPGIOChannelChild(PGIOChannelChild*);
+#endif
   PWebSocketChild* AllocPWebSocketChild(PBrowserChild*,
                                         const SerializedLoadContext&,
                                         const uint32_t&);
@@ -81,7 +87,7 @@ class NeckoChild : public PNeckoChild {
       const Maybe<LoadInfoArgs>& aLoadInfo);
 
   bool DeallocPClassifierDummyChannelChild(
-      PClassifierDummyChannelChild* aChannel);
+      PClassifierDummyChannelChild* aActor);
 };
 
 /**
