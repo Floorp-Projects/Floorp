@@ -33,7 +33,6 @@ namespace gfx {
   _(WEBRENDER_DCOMP_PRESENT, Feature, "WebRender DirectComposition") \
   _(WEBRENDER_SOFTWARE, Feature, "WebRender software fallback")      \
   _(OMTP, Feature, "Off Main Thread Painting")                       \
-  _(ADVANCED_LAYERS, Feature, "Advanced Layers")                     \
   _(WEBGPU, Feature, "WebGPU")                                       \
   /* Add new entries above this comment */
 

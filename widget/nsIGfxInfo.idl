@@ -151,28 +151,26 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_GPU_PROCESS = 20;
   /* Whether the WebGL2 is supported, starting in 54 */
   const long FEATURE_WEBGL2 = 21;
-  /* Whether Advanced Layers is supported, starting in 56 */
-  const long FEATURE_ADVANCED_LAYERS = 22;
   /* Whether D3D11 keyed mutex is supported, starting in 56 */
-  const long FEATURE_D3D11_KEYED_MUTEX = 23;
+  const long FEATURE_D3D11_KEYED_MUTEX = 22;
   /* Whether WebRender is supported, starting in 62 */
-  const long FEATURE_WEBRENDER = 24;
+  const long FEATURE_WEBRENDER = 23;
   /* Whether WebRender is supported, starting in 62 */
-  const long FEATURE_DX_NV12 = 25;
-  const long FEATURE_DX_P010 = 26;
-  const long FEATURE_DX_P016 = 27;
+  const long FEATURE_DX_NV12 = 24;
+  const long FEATURE_DX_P010 = 25;
+  const long FEATURE_DX_P016 = 26;
   /* Whether OpenGL swizzle configuration of texture units is supported, starting in 70 */
-  const long FEATURE_GL_SWIZZLE = 28;
+  const long FEATURE_GL_SWIZZLE = 27;
   /* Whether WebRender native compositor is supported, starting in 73 */
-  const long FEATURE_WEBRENDER_COMPOSITOR = 29;
+  const long FEATURE_WEBRENDER_COMPOSITOR = 28;
   /* Whether WebRender can use scissored clears for cached surfaces, staring in 79 */
-  const long FEATURE_WEBRENDER_SCISSORED_CACHE_CLEARS = 30;
+  const long FEATURE_WEBRENDER_SCISSORED_CACHE_CLEARS = 29;
   /* Support webgl.out-of-process: true (starting in 83) */
-  const long FEATURE_ALLOW_WEBGL_OUT_OF_PROCESS = 31;
+  const long FEATURE_ALLOW_WEBGL_OUT_OF_PROCESS = 30;
   /* Is OpenGL threadsafe (starting in 83) */
-  const long FEATURE_THREADSAFE_GL = 32;
+  const long FEATURE_THREADSAFE_GL = 31;
   /* Support running WebRender using the software backend, starting in 84. */
-  const long FEATURE_WEBRENDER_SOFTWARE = 33;
+  const long FEATURE_WEBRENDER_SOFTWARE = 32;
   /* the maximum feature value. */
   const long FEATURE_MAX_VALUE = FEATURE_WEBRENDER_SOFTWARE;
 

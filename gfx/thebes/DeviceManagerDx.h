@@ -41,7 +41,6 @@ namespace mozilla {
 class ScopedGfxFeatureReporter;
 namespace layers {
 class DeviceAttachmentsD3D11;
-class MLGDevice;
 }  // namespace layers
 
 namespace gfx {
@@ -63,7 +62,6 @@ class DeviceManagerDx final {
   RefPtr<IDCompositionDevice2> GetDirectCompositionDevice();
   RefPtr<ID3D11Device> GetVRDevice();
   RefPtr<ID3D11Device> CreateDecoderDevice();
-  RefPtr<layers::MLGDevice> GetMLGDevice();
   IDirectDraw7* GetDirectDraw();
 
   unsigned GetCompositorFeatureLevel() const;
@@ -144,7 +142,6 @@ class DeviceManagerDx final {
                                     RefPtr<ID3D11Device>& aOutDevice);
 
   void CreateWARPCompositorDevice();
-  void CreateMLGDevice();
   bool CreateVRDevice();
 
   mozilla::gfx::FeatureStatus CreateContentDevice();
@@ -184,7 +181,6 @@ class DeviceManagerDx final {
   RefPtr<ID3D11Device> mDecoderDevice;
   RefPtr<IDCompositionDevice2> mDirectCompositionDevice;
   RefPtr<layers::DeviceAttachmentsD3D11> mCompositorAttachments;
-  RefPtr<layers::MLGDevice> mMLGDevice;
   bool mCompositorDeviceSupportsVideo;
 
   Maybe<D3D11DeviceStatus> mDeviceStatus;
