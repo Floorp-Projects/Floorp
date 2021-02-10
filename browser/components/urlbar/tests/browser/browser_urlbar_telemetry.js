@@ -72,9 +72,9 @@ async function clickURLBarSuggestion(resultTitle, button = 1) {
  *   The function to run with the new search engine as default.
  */
 async function withNewSearchEngine(taskFn) {
-  const url =
-    getRootDirectory(gTestPath) + "urlbarTelemetrySearchSuggestions.xml";
-  let suggestionEngine = await Services.search.addOpenSearchEngine(url, "");
+  let suggestionEngine = await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + "urlbarTelemetrySearchSuggestions.xml"
+  );
   let previousEngine = await Services.search.getDefault();
   await Services.search.setDefault(suggestionEngine);
 

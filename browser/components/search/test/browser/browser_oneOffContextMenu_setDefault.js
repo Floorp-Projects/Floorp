@@ -28,9 +28,9 @@ add_task(async function init() {
     await resetEngines();
   });
 
-  await promiseNewEngine(TEST_ENGINE_BASENAME, {
-    setAsCurrent: false,
-  });
+  await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME
+  );
 });
 
 async function testSearchBarChangeEngine(win, testPrivate, isPrivateWindow) {

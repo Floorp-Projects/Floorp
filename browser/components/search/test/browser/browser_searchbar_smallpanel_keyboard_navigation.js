@@ -24,7 +24,7 @@ let searchbar;
 let textbox;
 let searchIcon;
 
-add_task(async function init() {
+add_task(async function setup() {
   searchbar = await gCUITestUtils.addSearchBar();
   registerCleanupFunction(() => {
     gCUITestUtils.removeSearchBar();
@@ -32,7 +32,11 @@ add_task(async function init() {
   textbox = searchbar.textbox;
   searchIcon = searchbar.querySelector(".searchbar-search-button");
 
-  await promiseNewEngine("testEngine.xml");
+  let defaultEngine = await Services.search.getDefault();
+  let engine = await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + "testEngine.xml"
+  );
+  await Services.search.setDefault(engine);
 
   // First cleanup the form history in case other tests left things there.
   await new Promise((resolve, reject) => {
@@ -52,6 +56,11 @@ add_task(async function init() {
       handleCompletion: resolve,
       handleError: reject,
     });
+  });
+
+  registerCleanupFunction(async () => {
+    await Services.search.setDefault(defaultEngine);
+    gCUITestUtils.removeSearchBar();
   });
 });
 

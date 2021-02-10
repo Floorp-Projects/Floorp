@@ -384,9 +384,6 @@ class EngineURL {
     switch (templateURI.scheme) {
       case "http":
       case "https":
-        // Disable these for now, see bug 295018
-        // case "file":
-        // case "resource":
         this.template = template;
         break;
       default:
