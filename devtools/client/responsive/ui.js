@@ -44,12 +44,6 @@ loader.lazyRequireGetter(
   "devtools/client/responsive/utils/notification",
   true
 );
-loader.lazyRequireGetter(
-  this,
-  "PriorityLevels",
-  "devtools/client/shared/components/NotificationBox",
-  true
-);
 loader.lazyRequireGetter(this, "l10n", "devtools/client/responsive/utils/l10n");
 loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
 loader.lazyRequireGetter(
@@ -704,29 +698,7 @@ class ResponsiveUI {
   }
 
   async onScreenshot() {
-    const messages = await captureAndSaveScreenshot(
-      this.currentTarget,
-      this.browserWindow
-    );
-
-    const priorityMap = {
-      error: PriorityLevels.PRIORITY_CRITICAL_HIGH,
-      warn: PriorityLevels.PRIORITY_WARNING_HIGH,
-    };
-    for (const { text, level } of messages) {
-      // captureAndSaveScreenshot returns "saved" messages, that indicate where the
-      // screenshot was saved. We don't want to display them as the download UI can be
-      // used to open the file.
-      if (level !== "warn" && level !== "error") {
-        continue;
-      }
-
-      showNotification(this.browserWindow, this.tab, {
-        msg: text,
-        priority: priorityMap[level],
-      });
-    }
-
+    await captureAndSaveScreenshot(this.currentTarget, this.browserWindow);
     message.post(this.rdmFrame.contentWindow, "screenshot-captured");
   }
 

@@ -1909,25 +1909,11 @@ Inspector.prototype = {
       clipboard: clipboardEnabled,
     };
 
-    const messages = await captureAndSaveScreenshot(
+    await captureAndSaveScreenshot(
       this.selection.nodeFront.targetFront,
       this.panelWin,
       args
     );
-    const notificationBox = this.toolbox.getNotificationBox();
-    const priorityMap = {
-      error: notificationBox.PRIORITY_CRITICAL_HIGH,
-      warn: notificationBox.PRIORITY_WARNING_HIGH,
-    };
-    for (const { text, level } of messages) {
-      // captureAndSaveScreenshot returns "saved" messages, that indicate where the
-      // screenshot was saved. We don't want to display them as the download UI can be
-      // used to open the file.
-      if (level !== "warn" && level !== "error") {
-        continue;
-      }
-      notificationBox.appendNotification(text, null, null, priorityMap[level]);
-    }
   },
 
   /**
