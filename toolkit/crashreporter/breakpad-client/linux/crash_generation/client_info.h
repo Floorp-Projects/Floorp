@@ -42,10 +42,25 @@ class ClientInfo {
 
   CrashGenerationServer* crash_server() const { return crash_server_; }
   pid_t pid() const { return pid_; }
+  void set_error_msg(nsCString &error_msg) {
+      had_error_ = true;
+      error_msg_ = error_msg;
+  }
+
+  const nsCString* error_msg() const {
+      return &error_msg_;
+  }
+
+  bool had_error() const {
+      return had_error_;
+  }
 
  private:
   CrashGenerationServer* crash_server_;
   pid_t pid_;
+  bool had_error_ = false;
+  nsCString error_msg_; // Possible error message of the minidumper in
+                         // case there was an error during dumping
 };
 
 }

@@ -1,5 +1,12 @@
+use std::error;
 use std::io::{BufRead, BufReader, Write};
 use std::process::{Child, Command, Stdio};
+use std::result;
+
+#[allow(unused)]
+type Error = Box<dyn error::Error + std::marker::Send + std::marker::Sync>;
+#[allow(unused)]
+pub type Result<T> = result::Result<T, Error>;
 
 #[allow(unused)]
 pub fn spawn_child(command: &str, args: &[&str]) {

@@ -1,5 +1,8 @@
 use super::Pid;
+use crate::errors::ThreadInfoError;
 use libc;
+
+type Result<T> = std::result::Result<T, ThreadInfoError>;
 
 #[derive(Debug)]
 pub struct ThreadInfoMips {

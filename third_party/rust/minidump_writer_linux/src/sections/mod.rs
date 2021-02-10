@@ -5,10 +5,12 @@ pub mod memory_list_stream;
 pub mod systeminfo_stream;
 pub mod thread_list_stream;
 
+use crate::errors::MemoryWriterError;
 use crate::minidump_format::*;
-use crate::Result;
 use std::convert::TryInto;
 use std::io::{Cursor, Write};
+
+type Result<T> = std::result::Result<T, MemoryWriterError>;
 
 #[derive(Debug, PartialEq)]
 pub struct MemoryWriter<T: Default + Sized> {

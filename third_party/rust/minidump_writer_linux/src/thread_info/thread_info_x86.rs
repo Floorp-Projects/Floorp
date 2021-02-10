@@ -1,9 +1,9 @@
 use super::{CommonThreadInfo, NT_Elf, Pid};
+use crate::errors::ThreadInfoError;
 use crate::minidump_cpu::imp::*;
 use crate::minidump_cpu::RawContextCPU;
 #[cfg(target_arch = "x86_64")]
 use crate::thread_info::to_u128;
-use crate::Result;
 use core::mem::size_of_val;
 use libc;
 use libc::user;
@@ -12,6 +12,8 @@ use nix::sys::ptrace;
 use nix::unistd;
 #[cfg(target_arch = "x86")]
 use std::convert::TryInto;
+
+type Result<T> = std::result::Result<T, ThreadInfoError>;
 
 const NUM_DEBUG_REGISTERS: usize = 8;
 

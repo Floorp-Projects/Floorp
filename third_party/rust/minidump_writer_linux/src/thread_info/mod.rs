@@ -1,10 +1,12 @@
-use crate::Result;
+use crate::errors::ThreadInfoError;
 use nix::errno::Errno;
 use nix::sys::ptrace;
 use nix::unistd;
 use std::convert::TryInto;
 use std::io::{self, BufRead};
 use std::path;
+
+type Result<T> = std::result::Result<T, ThreadInfoError>;
 
 pub type Pid = i32;
 
@@ -75,7 +77,11 @@ trait CommonThreadInfo {
             }
         }
         if ppid == -1 || tgid == -1 {
-            return Err("ppid or tgid is -1".into());
+            return Err(ThreadInfoError::InvalidPid(
+                format!("/proc/{}/status", tid),
+                ppid,
+                tgid,
+            ));
         }
         Ok((ppid, tgid))
     }
@@ -153,7 +159,7 @@ trait CommonThreadInfo {
     }
 }
 impl ThreadInfo {
-    pub fn create(pid: Pid, tid: Pid) -> Result<Self> {
+    pub fn create(pid: Pid, tid: Pid) -> std::result::Result<Self, ThreadInfoError> {
         Self::create_impl(pid, tid)
     }
 }
