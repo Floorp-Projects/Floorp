@@ -668,6 +668,14 @@ RegExpRunStatus RegExpShared::execute(JSContext* cx,
           return RegExpRunStatus_Error;
         }
         if (interruptRetries++ < maxInterruptRetries) {
+          // The initial execution may have been interpreted, or the
+          // interrupt may have triggered a GC that discarded jitcode.
+          // To maximize the chance of succeeding before being
+          // interrupted again, we want to ensure we are compiled.
+          if (!compileIfNecessary(cx, re, input,
+                                  RegExpShared::CodeKind::Jitcode)) {
+            return RegExpRunStatus_Error;
+          }
           continue;
         }
       }
