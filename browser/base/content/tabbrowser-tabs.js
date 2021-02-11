@@ -1314,12 +1314,12 @@
     }
 
     _positionPinnedTabs() {
-      let numPinned = gBrowser._numPinnedTabs;
+      let tabs = this._getVisibleTabs();
+      let numPinned = tabs.filter(t => t.pinned).length;
       let doPosition =
         this.getAttribute("overflow") == "true" &&
-        this._getVisibleTabs().length > numPinned &&
+        tabs.length > numPinned &&
         numPinned > 0;
-      let tabs = this.allTabs;
 
       if (doPosition) {
         this.setAttribute("positionpinnedtabs", "true");
@@ -1328,9 +1328,21 @@
         let uiDensity = document.documentElement.getAttribute("uidensity");
         if (!layoutData || layoutData.uiDensity != uiDensity) {
           let arrowScrollbox = this.arrowScrollbox;
+          let firstTab = tabs[0];
+          let firstTabCS = getComputedStyle(firstTab);
+          let scrollbox = this.arrowScrollbox.shadowRoot.querySelector(
+            `[part="scrollbox"]`
+          );
+          let scrollboxCS = getComputedStyle(scrollbox);
           layoutData = this._pinnedTabsLayoutCache = {
             uiDensity,
-            pinnedTabWidth: this.allTabs[0].getBoundingClientRect().width,
+            scrollboxPadding: parseFloat(scrollboxCS.paddingInlineStart),
+            pinnedTabWidth:
+              firstTab.getBoundingClientRect().width +
+              /* Re-use the first tabs margin-inline-end because we remove
+                 the margin-inline-start from the first tab. All tabs
+                 (excluding first and last) should have equal start and end margins. */
+              2 * parseFloat(firstTabCS.marginInlineEnd),
             scrollButtonWidth: arrowScrollbox._scrollButtonDown.getBoundingClientRect()
               .width,
           };
@@ -1342,7 +1354,11 @@
           width += layoutData.pinnedTabWidth;
           tab.style.setProperty(
             "margin-inline-start",
-            -(width + layoutData.scrollButtonWidth) + "px",
+            -(
+              width +
+              layoutData.scrollButtonWidth +
+              layoutData.scrollboxPadding
+            ) + "px",
             "important"
           );
           tab._pinnedUnscrollable = true;
