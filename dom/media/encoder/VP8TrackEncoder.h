@@ -23,7 +23,7 @@ class VP8Metadata;
 /**
  * VP8TrackEncoder implements VideoTrackEncoder by using the libvpx library.
  * We implement a realtime and variable frame rate encoder. In order to achieve
- * that, there is a frame-drop encoding policy implemented in GetEncodedTrack.
+ * that, there is a frame-drop encoding policy implemented in Encode().
  */
 class VP8TrackEncoder : public VideoTrackEncoder {
   enum EncodeOperation {
@@ -34,13 +34,13 @@ class VP8TrackEncoder : public VideoTrackEncoder {
 
  public:
   VP8TrackEncoder(RefPtr<DriftCompensator> aDriftCompensator,
-                  TrackRate aTrackRate, FrameDroppingMode aFrameDroppingMode,
+                  TrackRate aTrackRate,
+                  MediaQueue<EncodedFrame>& aEncodedDataQueue,
+                  FrameDroppingMode aFrameDroppingMode,
                   Maybe<float> aKeyFrameIntervalFactor = Nothing());
   virtual ~VP8TrackEncoder();
 
   already_AddRefed<TrackMetadataBase> GetMetadata() final;
-
-  nsresult GetEncodedTrack(nsTArray<RefPtr<EncodedFrame>>& aData) final;
 
   void SetKeyFrameInterval(Maybe<TimeDuration> aKeyFrameInterval) final;
 
@@ -57,12 +57,16 @@ class VP8TrackEncoder : public VideoTrackEncoder {
   EncodeOperation GetNextEncodeOperation(TimeDuration aTimeElapsed,
                                          TimeDuration aProcessedDuration);
 
-  // Get the encoded data from encoder to aData.
-  // Return value: NS_ERROR_NOT_AVAILABABLE if the vpx_codec_get_cx_data returns
-  //                                        null for EOS detection.
-  //               NS_OK if some data was appended to aData.
+  // Extracts the encoded data from the underlying encoder and returns it.
+  // Return value: An EncodedFrame if a frame was extracted.
+  //               nullptr if we reached end-of-stream or nothing was available
+  //                       from the underlying encoder.
   //               An error nsresult otherwise.
-  nsresult GetEncodedPartitions(nsTArray<RefPtr<EncodedFrame>>& aData);
+  Result<RefPtr<EncodedFrame>, nsresult> ExtractEncodedData();
+
+  // Takes the data in aSegment, encodes it, extracts it, and pushes it to
+  // mEncodedDataQueue.
+  nsresult Encode(VideoSegment* aSegment) final;
 
   // Prepare the input data to the mVPXImageWrapper for encoding.
   nsresult PrepareRawFrame(VideoChunk& aChunk);
@@ -98,10 +102,10 @@ class VP8TrackEncoder : public VideoTrackEncoder {
   // Encoded timestamp.
   TrackTime mEncodedTimestamp = 0;
 
-  // Total duration in mTrackRate extracted by GetEncodedPartitions().
+  // Total duration in mTrackRate extracted from the underlying encoder.
   CheckedInt64 mExtractedDuration;
 
-  // Total duration extracted by GetEncodedPartitions().
+  // Total duration extracted from the underlying encoder.
   media::TimeUnit mExtractedDurationUs;
 
   // Muted frame, we only create it once.
@@ -142,12 +146,6 @@ class VP8TrackEncoder : public VideoTrackEncoder {
    * The frame duration value last used to configure kf_max_dist.
    */
   Maybe<int32_t> mMaxKeyFrameDistance;
-
-  /**
-   * A local segment queue which takes the raw data out from mRawSegment in the
-   * call of GetEncodedTrack().
-   */
-  VideoSegment mSourceSegment;
 
   /**
    * The mean duration of recent frames.

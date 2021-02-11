@@ -124,8 +124,9 @@ bool IsSampleRateSupported(TrackRate aSampleRate) {
 
 }  // Anonymous namespace.
 
-OpusTrackEncoder::OpusTrackEncoder(TrackRate aTrackRate)
-    : AudioTrackEncoder(aTrackRate),
+OpusTrackEncoder::OpusTrackEncoder(TrackRate aTrackRate,
+                                   MediaQueue<EncodedFrame>& aEncodedDataQueue)
+    : AudioTrackEncoder(aTrackRate, aEncodedDataQueue),
       mOutputSampleRate(IsSampleRateSupported(aTrackRate) ? aTrackRate
                                                           : kOpusSamplingRate),
       mEncoder(nullptr),
@@ -221,7 +222,7 @@ already_AddRefed<TrackMetadataBase> OpusTrackEncoder::GetMetadata() {
 
   MOZ_ASSERT(mInitialized || mCanceled);
 
-  if (mCanceled || mEncodingComplete) {
+  if (mCanceled || IsEncodingComplete()) {
     return nullptr;
   }
 
@@ -250,13 +251,13 @@ already_AddRefed<TrackMetadataBase> OpusTrackEncoder::GetMetadata() {
   return meta.forget();
 }
 
-nsresult OpusTrackEncoder::GetEncodedTrack(
-    nsTArray<RefPtr<EncodedFrame>>& aData) {
-  AUTO_PROFILER_LABEL("OpusTrackEncoder::GetEncodedTrack", OTHER);
+nsresult OpusTrackEncoder::Encode(AudioSegment* aSegment) {
+  AUTO_PROFILER_LABEL("OpusTrackEncoder::Encode", OTHER);
 
+  MOZ_ASSERT(aSegment);
   MOZ_ASSERT(mInitialized || mCanceled);
 
-  if (mCanceled || mEncodingComplete) {
+  if (mCanceled || IsEncodingComplete()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -265,11 +266,9 @@ nsresult OpusTrackEncoder::GetEncodedTrack(
     return NS_ERROR_FAILURE;
   }
 
-  TakeTrackData(mSourceSegment);
-
   int result = 0;
   // Loop until we run out of packets of input data
-  while (result >= 0 && !mEncodingComplete) {
+  while (result >= 0 && !IsEncodingComplete()) {
     // re-sampled frames left last time which didn't fit into an Opus packet
     // duration.
     const int framesLeft = mResampledLeftover.Length() / mChannels;
@@ -280,7 +279,7 @@ nsresult OpusTrackEncoder::GetEncodedTrack(
                               (framesLeft * mTrackRate / kOpusSamplingRate) +
                               (NeedsResampler() ? 1 : 0);
 
-    if (!mEndOfStream && mSourceSegment.GetDuration() < framesToFetch) {
+    if (!mEndOfStream && aSegment->GetDuration() < framesToFetch) {
       // Not enough raw data
       return NS_OK;
     }
@@ -291,7 +290,7 @@ nsresult OpusTrackEncoder::GetEncodedTrack(
 
     int frameCopied = 0;
 
-    for (AudioSegment::ChunkIterator iter(mSourceSegment);
+    for (AudioSegment::ChunkIterator iter(*aSegment);
          !iter.IsEnded() && frameCopied < framesToFetch; iter.Next()) {
       AudioChunk chunk = *iter;
 
@@ -378,11 +377,12 @@ nsresult OpusTrackEncoder::GetEncodedTrack(
     // Remove the raw data which has been pulled to pcm buffer.
     // The value of frameCopied should be equal to (or smaller than, if eos)
     // NumOutputFramesPerPacket().
-    mSourceSegment.RemoveLeading(frameCopied);
+    aSegment->RemoveLeading(frameCopied);
 
     // Has reached the end of input stream and all queued data has pulled for
     // encoding.
-    if (mSourceSegment.GetDuration() == 0 && mEndOfStream &&
+    bool isFinalPacket = false;
+    if (aSegment->GetDuration() == 0 && mEndOfStream &&
         framesInPCM < NumOutputFramesPerPacket()) {
       // Pad |mLookahead| samples to the end of the track to prevent loss of
       // original data.
@@ -392,17 +392,15 @@ nsresult OpusTrackEncoder::GetEncodedTrack(
       mLookaheadWritten += toWrite;
       framesInPCM += toWrite;
       if (mLookaheadWritten == mLookahead) {
-        mEncodingComplete = true;
-        LOG("[Opus] Done encoding.");
+        isFinalPacket = true;
       }
     }
 
-    MOZ_ASSERT_IF(!mEncodingComplete,
-                  framesInPCM == NumOutputFramesPerPacket());
+    MOZ_ASSERT_IF(!isFinalPacket, framesInPCM == NumOutputFramesPerPacket());
 
     // Append null data to pcm buffer if the leftover data is not enough for
     // opus encoder.
-    if (framesInPCM < NumOutputFramesPerPacket() && mEncodingComplete) {
+    if (framesInPCM < NumOutputFramesPerPacket() && isFinalPacket) {
       PodZero(pcm.Elements() + framesInPCM * mChannels,
               (NumOutputFramesPerPacket() - framesInPCM) * mChannels);
     }
@@ -425,7 +423,7 @@ nsresult OpusTrackEncoder::GetEncodedTrack(
     if (result < 0) {
       LOG("[Opus] Fail to encode data! Result: %s.", opus_strerror(result));
     }
-    if (mEncodingComplete) {
+    if (isFinalPacket) {
       if (mResampler) {
         speex_resampler_destroy(mResampler);
         mResampler = nullptr;
@@ -434,7 +432,7 @@ nsresult OpusTrackEncoder::GetEncodedTrack(
     }
 
     // timestamp should be the time of the first sample
-    aData.AppendElement(MakeRefPtr<EncodedFrame>(
+    mEncodedDataQueue.Push(MakeAndAddRef<EncodedFrame>(
         FramesToTimeUnit(mNumOutputFrames + mLookahead, mOutputSampleRate),
         static_cast<uint64_t>(framesInPCM) * kOpusSamplingRate /
             mOutputSampleRate,
@@ -444,6 +442,11 @@ nsresult OpusTrackEncoder::GetEncodedTrack(
     mNumOutputFrames += NumOutputFramesPerPacket();
     LOG("[Opus] mOutputTimeStamp %.3f.",
         FramesToTimeUnit(mNumOutputFrames, mOutputSampleRate).ToSeconds());
+
+    if (isFinalPacket) {
+      LOG("[Opus] Done encoding.");
+      mEncodedDataQueue.Finish();
+    }
   }
 
   return result >= 0 ? NS_OK : NS_ERROR_FAILURE;

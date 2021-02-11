@@ -631,13 +631,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       }
     }
 
-    void DataAvailable() override {
-      MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
-      if (mSession) {
-        mSession->MediaEncoderDataAvailable();
-      }
-    }
-
     void Error() override {
       MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
       if (mSession) {
@@ -1242,12 +1235,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       }
       return NS_OK;
     }));
-  }
-
-  void MediaEncoderDataAvailable() {
-    MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
-
-    Extract(TimeStamp::Now(), false);
   }
 
   void MediaEncoderError() {
