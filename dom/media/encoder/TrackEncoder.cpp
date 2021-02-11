@@ -549,16 +549,8 @@ void VideoTrackEncoder::Cancel() {
 void VideoTrackEncoder::NotifyEndOfStream() {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
 
-  if (!mCanceled && !mInitialized) {
-    // Try to init without waiting for an accurate framerate.
-    Init(mOutgoingBuffer, mCurrentTime, 0);
-    if (!mInitialized) {
-      // Still not initialized. There was probably no real frame at all, perhaps
-      // by muting. Initialize the encoder with default frame width, frame
-      // height, and frame rate.
-      Init(DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT, DEFAULT_FRAME_WIDTH,
-           DEFAULT_FRAME_HEIGHT, DEFAULT_FRAME_RATE);
-    }
+  if (mCanceled) {
+    return;
   }
 
   if (mEndOfStream) {
@@ -594,12 +586,25 @@ void VideoTrackEncoder::NotifyEndOfStream() {
           mLastChunk.mTimeStamp);
       mOutgoingBuffer.ExtendLastFrameBy(duration.value());
     }
+
+    if (!mInitialized) {
+      // Try to init without waiting for an accurate framerate.
+      Init(mOutgoingBuffer, currentTime, 0);
+    }
   }
 
   mIncomingBuffer.Clear();
   mLastChunk.SetNull(0);
 
-  if (mInitialized && !mCanceled) {
+  if (NS_WARN_IF(!mInitialized)) {
+    // Still not initialized. There was probably no real frame at all, perhaps
+    // by muting. Initialize the encoder with default frame width, frame
+    // height, and frame rate.
+    Init(DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT, DEFAULT_FRAME_WIDTH,
+         DEFAULT_FRAME_HEIGHT, DEFAULT_FRAME_RATE);
+  }
+
+  if (mInitialized) {
     OnDataAvailable();
   }
 }
