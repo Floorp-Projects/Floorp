@@ -191,6 +191,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       aColor = ProcessSelectionBackground(mColorTextSelectBackgroundDisabled);
       break;
     case ColorID::Highlight:  // CSS2 color
+    case ColorID::MozAccentColor:
       aColor = mColorHighlight;
       break;
     case ColorID::MozMenuhover:
@@ -200,6 +201,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       aColor = mColorTextSelectForeground;
       break;
     case ColorID::Highlighttext:  // CSS2 color
+    case ColorID::MozAccentColorForeground:
     case ColorID::MozMenuhovertext:
       aColor = mColorMenuHoverText;
       break;

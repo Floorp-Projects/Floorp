@@ -227,6 +227,8 @@ const char nsXPLookAndFeel::sColorPrefs[][41] = {
     "ui.-moz-mac-source-list-selection",
     "ui.-moz-mac-active-source-list-selection",
     "ui.-moz-mac-tooltip",
+    "ui.-moz-accent-color",
+    "ui.-moz-accent-color-foreground",
     "ui.-moz-win-accentcolor",
     "ui.-moz-win-accentcolortext",
     "ui.-moz-win-mediatext",

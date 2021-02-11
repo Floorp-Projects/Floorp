@@ -226,6 +226,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       idx = COLOR_GRAYTEXT;
       break;
     case ColorID::Highlight:
+    case ColorID::MozAccentColor:
     case ColorID::MozHtmlCellhighlight:
     case ColorID::MozMenuhover:
       idx = COLOR_HIGHLIGHT;
@@ -244,6 +245,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       }
       // Fall through
     case ColorID::Highlighttext:
+    case ColorID::MozAccentColorForeground:
     case ColorID::MozHtmlCellhighlighttext:
       idx = COLOR_HIGHLIGHTTEXT;
       break;
