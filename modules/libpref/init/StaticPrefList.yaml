@@ -9491,6 +9491,11 @@
   value: 40
   mirror: always
 
+- name: security.csp.truncate_blocked_uri_for_frame_navigations
+  type: bool
+  value: true
+  mirror: always
+
 # Allows loading ui resources in CheckLoadURIFlags
 # TODO Bug 1654488: Remove pref in CheckLoadURIFlags
 #      which allows all UI resources to load

@@ -25,6 +25,12 @@ Services.prefs.setIntPref(
   4096
 );
 
+// Do not trunacate the blocked-uri in CSP reports for frame navigations.
+Services.prefs.setBoolPref(
+  "security.csp.truncate_blocked_uri_for_frame_navigations",
+  false
+);
+
 // ExtensionContent.jsm needs to know when it's running from xpcshell,
 // to use the right timeout for content scripts executed at document_idle.
 ExtensionTestUtils.mockAppInfo();
@@ -830,6 +836,8 @@ function computeBaseURLs(tests, expectedSources, forbiddenSources = {}) {
 
   function* iterSources(test, sources) {
     for (let [source, attrs] of Object.entries(sources)) {
+      // if a source defines attributes (e.g. liveSrc in PAGE_SOURCES etc.) then all
+      // attributes in the source must be matched by the test (see const TEST).
       if (Object.keys(attrs).every(attr => attrs[attr] === test[attr])) {
         yield `${BASE_URL}/${test.src}?source=${source}`;
       }
@@ -1082,6 +1090,9 @@ const TESTS = [
   },
   // TODO: <frame> element, which requires a frameset document.
   {
+    // the blocked-uri for frame-navigations is the pre-path URI. For the
+    // purpose of this test we do not strip the blocked-uri by setting the
+    // preference 'truncate_blocked_uri_for_frame_navigations'
     element: ["iframe", {}],
     src: "iframe.html",
   },
