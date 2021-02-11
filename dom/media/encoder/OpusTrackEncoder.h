@@ -29,12 +29,11 @@ class OpusMetadata : public TrackMetadataBase {
 
 class OpusTrackEncoder : public AudioTrackEncoder {
  public:
-  explicit OpusTrackEncoder(TrackRate aTrackRate);
+  OpusTrackEncoder(TrackRate aTrackRate,
+                   MediaQueue<EncodedFrame>& aEncodedDataQueue);
   virtual ~OpusTrackEncoder();
 
   already_AddRefed<TrackMetadataBase> GetMetadata() override;
-
-  nsresult GetEncodedTrack(nsTArray<RefPtr<EncodedFrame>>& aData) override;
 
   /**
    * The encoder lookahead at 48k rate.
@@ -49,6 +48,11 @@ class OpusTrackEncoder : public AudioTrackEncoder {
   int NumInputFramesPerPacket() const override;
 
   nsresult Init(int aChannels) override;
+
+  /**
+   * Encodes buffered data and pushes it to mEncodedDataQueue.
+   */
+  nsresult Encode(AudioSegment* aSegment) override;
 
   /**
    * The number of frames, in the output rate (see GetOutputSampleRate), needed
@@ -74,14 +78,6 @@ class OpusTrackEncoder : public AudioTrackEncoder {
    * The Opus encoder from libopus.
    */
   OpusEncoder* mEncoder;
-
-  /**
-   * A local segment queue which takes the raw data out from mRawSegment in the
-   * call of GetEncodedTrack(). Opus encoder only accepts GetPacketDuration()
-   * samples from mSourceSegment every encoding cycle, thus it needs to be
-   * global in order to store the leftover segments taken from mRawSegment.
-   */
-  AudioSegment mSourceSegment;
 
   /**
    * Total samples of delay added by codec (in rate mOutputSampleRate), can

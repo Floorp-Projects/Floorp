@@ -17,19 +17,21 @@ using namespace mozilla;
 class WebMOpusTrackEncoder : public OpusTrackEncoder {
  public:
   explicit WebMOpusTrackEncoder(TrackRate aTrackRate)
-      : OpusTrackEncoder(aTrackRate) {}
+      : OpusTrackEncoder(aTrackRate, mEncodedAudioQueue) {}
   bool TestOpusCreation(int aChannels) {
     if (NS_SUCCEEDED(Init(aChannels))) {
       return true;
     }
     return false;
   }
+  MediaQueue<EncodedFrame> mEncodedAudioQueue;
 };
 
 class WebMVP8TrackEncoder : public VP8TrackEncoder {
  public:
   explicit WebMVP8TrackEncoder(TrackRate aTrackRate = 90000)
-      : VP8TrackEncoder(nullptr, aTrackRate, FrameDroppingMode::DISALLOW) {}
+      : VP8TrackEncoder(nullptr, aTrackRate, mEncodedVideoQueue,
+                        FrameDroppingMode::DISALLOW) {}
 
   bool TestVP8Creation(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
                        int32_t aDisplayHeight) {
@@ -39,6 +41,7 @@ class WebMVP8TrackEncoder : public VP8TrackEncoder {
     }
     return false;
   }
+  MediaQueue<EncodedFrame> mEncodedVideoQueue;
 };
 
 static void GetOpusMetadata(int aChannels, TrackRate aTrackRate,

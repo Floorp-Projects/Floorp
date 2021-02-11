@@ -12,8 +12,19 @@ namespace mozilla {
 LazyLogModule gMuxerLog("Muxer");
 #define LOG(type, ...) MOZ_LOG(gMuxerLog, type, (__VA_ARGS__))
 
-Muxer::Muxer(UniquePtr<ContainerWriter> aWriter)
-    : mWriter(std::move(aWriter)) {}
+Muxer::Muxer(UniquePtr<ContainerWriter> aWriter,
+             MediaQueue<EncodedFrame>& aEncodedAudioQueue,
+             MediaQueue<EncodedFrame>& aEncodedVideoQueue)
+    : mEncodedAudioQueue(aEncodedAudioQueue),
+      mEncodedVideoQueue(aEncodedVideoQueue),
+      mWriter(std::move(aWriter)) {}
+
+void Muxer::Disconnect() {
+  mAudioPushListener.DisconnectIfExists();
+  mAudioFinishListener.DisconnectIfExists();
+  mVideoPushListener.DisconnectIfExists();
+  mVideoFinishListener.DisconnectIfExists();
+}
 
 bool Muxer::IsFinished() { return mWriter->IsWritingComplete(); }
 
@@ -49,51 +60,11 @@ nsresult Muxer::SetMetadata(
   }
   mMetadataSet = true;
   MOZ_ASSERT(mHasAudio || mHasVideo);
-  if (!mHasAudio) {
-    mEncodedAudioQueue.Finish();
-    MOZ_ASSERT(mEncodedAudioQueue.AtEndOfStream());
-  }
-  if (!mHasVideo) {
-    mEncodedVideoQueue.Finish();
-    MOZ_ASSERT(mEncodedVideoQueue.AtEndOfStream());
-  }
+  MOZ_ASSERT(mHasAudio != mEncodedAudioQueue.AtEndOfStream());
+  MOZ_ASSERT(mHasVideo != mEncodedVideoQueue.AtEndOfStream());
   LOG(LogLevel::Info, "%p Metadata set; audio=%d, video=%d", this, mHasAudio,
       mHasVideo);
-  return rv;
-}
-
-void Muxer::AddEncodedAudioFrame(EncodedFrame* aFrame) {
-  MOZ_ASSERT(mMetadataSet);
-  MOZ_ASSERT(mHasAudio);
-  mEncodedAudioQueue.Push(aFrame);
-  LOG(LogLevel::Verbose,
-      "%p Added audio frame of type %u, [start %.2f, end %.2f)", this,
-      aFrame->mFrameType, aFrame->mTime.ToSeconds(),
-      aFrame->GetEndTime().ToSeconds());
-}
-
-void Muxer::AddEncodedVideoFrame(EncodedFrame* aFrame) {
-  MOZ_ASSERT(mMetadataSet);
-  MOZ_ASSERT(mHasVideo);
-  mEncodedVideoQueue.Push(aFrame);
-  LOG(LogLevel::Verbose,
-      "%p Added audio frame of type %u, [start %.2f, end %.2f)", this,
-      aFrame->mFrameType, aFrame->mTime.ToSeconds(),
-      aFrame->GetEndTime().ToSeconds());
-}
-
-void Muxer::AudioEndOfStream() {
-  MOZ_ASSERT(mMetadataSet);
-  MOZ_ASSERT(mHasAudio);
-  LOG(LogLevel::Info, "%p Reached audio EOS", this);
-  mEncodedAudioQueue.Finish();
-}
-
-void Muxer::VideoEndOfStream() {
-  MOZ_ASSERT(mMetadataSet);
-  MOZ_ASSERT(mHasVideo);
-  LOG(LogLevel::Info, "%p Reached video EOS", this);
-  mEncodedVideoQueue.Finish();
+  return NS_OK;
 }
 
 nsresult Muxer::GetData(nsTArray<nsTArray<uint8_t>>* aOutputBuffers) {

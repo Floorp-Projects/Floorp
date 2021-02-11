@@ -98,8 +98,11 @@ class MockContainerWriter : public ContainerWriter {
 
 TEST(MuxerTest, AudioOnly)
 {
+  MediaQueue<EncodedFrame> audioQueue;
+  MediaQueue<EncodedFrame> videoQueue;
+  videoQueue.Finish();
   MockContainerWriter* writer = new MockContainerWriter();
-  Muxer muxer(WrapUnique<ContainerWriter>(writer));
+  Muxer muxer(WrapUnique<ContainerWriter>(writer), audioQueue, videoQueue);
 
   // Prepare data
 
@@ -125,16 +128,18 @@ TEST(MuxerTest, AudioOnly)
 
   EXPECT_EQ(muxer.SetMetadata(nsTArray<RefPtr<TrackMetadataBase>>({opusMeta})),
             NS_OK);
-  muxer.AddEncodedAudioFrame(audioFrame);
-  muxer.AudioEndOfStream();
+  audioQueue.Push(audioFrame);
+  audioQueue.Finish();
   nsTArray<nsTArray<uint8_t>> buffers;
   EXPECT_EQ(muxer.GetData(&buffers), NS_OK);
 }
 
 TEST(MuxerTest, AudioVideo)
 {
+  MediaQueue<EncodedFrame> audioQueue;
+  MediaQueue<EncodedFrame> videoQueue;
   MockContainerWriter* writer = new MockContainerWriter();
-  Muxer muxer(WrapUnique<ContainerWriter>(writer));
+  Muxer muxer(WrapUnique<ContainerWriter>(writer), audioQueue, videoQueue);
 
   // Prepare data
 
@@ -165,18 +170,20 @@ TEST(MuxerTest, AudioVideo)
   EXPECT_EQ(muxer.SetMetadata(
                 nsTArray<RefPtr<TrackMetadataBase>>({opusMeta, vp8Meta})),
             NS_OK);
-  muxer.AddEncodedAudioFrame(audioFrame);
-  muxer.AudioEndOfStream();
-  muxer.AddEncodedVideoFrame(videoFrame);
-  muxer.VideoEndOfStream();
+  audioQueue.Push(audioFrame);
+  audioQueue.Finish();
+  videoQueue.Push(videoFrame);
+  videoQueue.Finish();
   nsTArray<nsTArray<uint8_t>> buffers;
   EXPECT_EQ(muxer.GetData(&buffers), NS_OK);
 }
 
 TEST(MuxerTest, AudioVideoOutOfOrder)
 {
+  MediaQueue<EncodedFrame> audioQueue;
+  MediaQueue<EncodedFrame> videoQueue;
   MockContainerWriter* writer = new MockContainerWriter();
-  Muxer muxer(WrapUnique<ContainerWriter>(writer));
+  Muxer muxer(WrapUnique<ContainerWriter>(writer), audioQueue, videoQueue);
 
   // Prepare data
 
@@ -213,12 +220,12 @@ TEST(MuxerTest, AudioVideoOutOfOrder)
   EXPECT_EQ(muxer.SetMetadata(
                 nsTArray<RefPtr<TrackMetadataBase>>({opusMeta, vp8Meta})),
             NS_OK);
-  muxer.AddEncodedAudioFrame(a0);
-  muxer.AddEncodedVideoFrame(v0);
-  muxer.AddEncodedVideoFrame(v50);
-  muxer.VideoEndOfStream();
-  muxer.AddEncodedAudioFrame(a48);
-  muxer.AudioEndOfStream();
+  audioQueue.Push(a0);
+  videoQueue.Push(v0);
+  videoQueue.Push(v50);
+  videoQueue.Finish();
+  audioQueue.Push(a48);
+  audioQueue.Finish();
   nsTArray<nsTArray<uint8_t>> buffers;
   EXPECT_EQ(muxer.GetData(&buffers), NS_OK);
 }

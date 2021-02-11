@@ -42,10 +42,6 @@ class MediaEncoderListener {
    */
   virtual void Started() = 0;
   /**
-   * There is data available to extract.
-   */
-  virtual void DataAvailable() = 0;
-  /**
    * There was a fatal error in an encoder.
    */
   virtual void Error() = 0;
@@ -127,8 +123,10 @@ class MediaEncoder {
                RefPtr<DriftCompensator> aDriftCompensator,
                UniquePtr<ContainerWriter> aWriter,
                UniquePtr<AudioTrackEncoder> aAudioEncoder,
-               UniquePtr<VideoTrackEncoder> aVideoEncoder, TrackRate aTrackRate,
-               const nsAString& aMIMEType);
+               UniquePtr<VideoTrackEncoder> aVideoEncoder,
+               UniquePtr<MediaQueue<EncodedFrame>> aEncodedAudioQueue,
+               UniquePtr<MediaQueue<EncodedFrame>> aEncodedVideoQueue,
+               TrackRate aTrackRate, const nsAString& aMIMEType);
 
   /**
    * Called on main thread from MediaRecorder::Pause.
@@ -207,12 +205,6 @@ class MediaEncoder {
   void NotifyStarted();
 
   /**
-   * Notifies listeners that this MediaEncoder has data available in some
-   * TrackEncoders.
-   */
-  void NotifyDataAvailable();
-
-  /**
    * Registers a listener to events from this MediaEncoder.
    * We hold a strong reference to the listener.
    */
@@ -266,6 +258,9 @@ class MediaEncoder {
 
   const RefPtr<TaskQueue> mEncoderThread;
   const RefPtr<DriftCompensator> mDriftCompensator;
+
+  const UniquePtr<MediaQueue<EncodedFrame>> mEncodedAudioQueue;
+  const UniquePtr<MediaQueue<EncodedFrame>> mEncodedVideoQueue;
 
   const UniquePtr<Muxer> mMuxer;
   const UniquePtr<AudioTrackEncoder> mAudioEncoder;
