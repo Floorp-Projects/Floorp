@@ -36,6 +36,7 @@ jobs-from:
     - gn.yml
     - grcov.yml
     - llvm-symbolizer.yml
+    - macos-sdk.yml
     - mingw.yml
     - minidump_stackwalk.yml
     - misc.yml
