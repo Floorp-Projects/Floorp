@@ -86,11 +86,15 @@ interface nsIPrintSettings : nsISupports
   const short kOutputFormatPDF    = 2;
 
   /**
-   * Simplex/Duplex printing options
+   * Simplex/Duplex printing options.
+   *
+   * NOTE: These names correspond to the GTK duplex keywords.  But as noted
+   * alongside the options, Windows's enum constants use names whose semantics
+   * are *reversed* with respect to ours.
    */
   const short kSimplex          = 0;
-  const short kDuplexHorizontal = 1;
-  const short kDuplexVertical   = 2;
+  const short kDuplexHorizontal = 1; /* Maps to DMDUP_VERTICAL on Windows */
+  const short kDuplexVertical   = 2; /* Maps to DMDUP_HORIZONTAL on Windows */
 
   /**
    * Get the page size in twips, considering the

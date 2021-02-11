@@ -225,10 +225,10 @@ void nsPrintSettingsWin::InitWithInitializer(
       case DMDUP_SIMPLEX:
         SetDuplex(kSimplex);
         break;
-      case DMDUP_HORIZONTAL:
+      case DMDUP_VERTICAL:
         SetDuplex(kDuplexHorizontal);
         break;
-      case DMDUP_VERTICAL:
+      case DMDUP_HORIZONTAL:
         SetDuplex(kDuplexVertical);
         break;
     }
@@ -351,10 +351,10 @@ void nsPrintSettingsWin::CopyFromNative(HDC aHdc, DEVMODEW* aDevMode) {
       case DMDUP_SIMPLEX:
         mDuplex = kSimplex;
         break;
-      case DMDUP_HORIZONTAL:
+      case DMDUP_VERTICAL:
         mDuplex = kDuplexHorizontal;
         break;
-      case DMDUP_VERTICAL:
+      case DMDUP_HORIZONTAL:
         mDuplex = kDuplexVertical;
         break;
     }
@@ -482,11 +482,11 @@ void nsPrintSettingsWin::CopyToNative(DEVMODEW* aDevMode) {
       aDevMode->dmFields |= DM_DUPLEX;
       break;
     case kDuplexHorizontal:
-      aDevMode->dmDuplex = DMDUP_HORIZONTAL;
+      aDevMode->dmDuplex = DMDUP_VERTICAL;
       aDevMode->dmFields |= DM_DUPLEX;
       break;
     case kDuplexVertical:
-      aDevMode->dmDuplex = DMDUP_VERTICAL;
+      aDevMode->dmDuplex = DMDUP_HORIZONTAL;
       aDevMode->dmFields |= DM_DUPLEX;
       break;
     default:
