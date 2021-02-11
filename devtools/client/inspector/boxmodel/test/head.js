@@ -95,3 +95,21 @@ selectNode = async function(node, inspector, reason) {
   await _selectNode(node, inspector, reason);
   await onUpdate;
 };
+
+/**
+ * Wait until the provided element's text content matches the provided text.
+ * Based on the waitFor helper, see documentation in
+ * devtools/client/shared/test/shared-head.js
+ *
+ * @param {DOMNode} element
+ *        The element to check.
+ * @param {String} expectedText
+ *        The text that is expected to be set as textContent of the element.
+ */
+async function waitForElementTextContent(element, expectedText) {
+  await waitFor(
+    () => element.textContent === expectedText,
+    `Couldn't get "${expectedText}" as the text content of the given element`
+  );
+  ok(true, `Found the expected text (${expectedText}) for the given element`);
+}

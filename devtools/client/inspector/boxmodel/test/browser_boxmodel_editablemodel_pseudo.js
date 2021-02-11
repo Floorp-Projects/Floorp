@@ -62,11 +62,7 @@ add_task(async function() {
 
 async function checkValueInBoxModel(selector, expectedValue, doc) {
   const span = doc.querySelector(selector + " > span");
-  is(
-    span.textContent,
-    expectedValue,
-    "Should have the right value in the box model."
-  );
+  await waitForElementTextContent(span, expectedValue);
 
   EventUtils.synthesizeMouseAtCenter(span, {}, doc.defaultView);
   const editor = doc.querySelector(".styleinspector-propertyeditor");

@@ -48,7 +48,7 @@ async function testEditingMargins(inspector, boxmodel, testActor) {
   const span = boxmodel.document.querySelector(
     ".boxmodel-margin.boxmodel-top > span"
   );
-  is(span.textContent, "5", "Should have the right value in the box model.");
+  await waitForElementTextContent(span, "5");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
   const editor = boxmodel.document.querySelector(
@@ -74,7 +74,8 @@ async function testEditingMargins(inspector, boxmodel, testActor) {
     "",
     "Should be no margin-top on the element."
   );
-  is(span.textContent, "5", "Should have the right value in the box model.");
+
+  await waitForElementTextContent(span, "5");
 }
 
 async function testKeyBindings(inspector, boxmodel, testActor) {
@@ -142,7 +143,8 @@ async function testKeyBindings(inspector, boxmodel, testActor) {
     "20px",
     "Should be the right margin-top on the element."
   );
-  is(span.textContent, "20", "Should have the right value in the box model.");
+
+  await waitForElementTextContent(span, "20");
 }
 
 async function testEscapeToUndo(inspector, boxmodel, testActor) {
@@ -228,7 +230,7 @@ async function testDeletingValue(inspector, boxmodel, testActor) {
     "",
     "Should be the right margin-top on the element."
   );
-  is(span.textContent, "10", "Should have the right value in the box model.");
+  await waitForElementTextContent(span, "10");
 }
 
 async function testRefocusingOnClick(inspector, boxmodel, testActor) {
@@ -272,5 +274,5 @@ async function testRefocusingOnClick(inspector, boxmodel, testActor) {
     "2px",
     "Should be the right margin-top on the element."
   );
-  is(span.textContent, "2", "Should have the right value in the box model.");
+  await waitForElementTextContent(span, "2");
 }
