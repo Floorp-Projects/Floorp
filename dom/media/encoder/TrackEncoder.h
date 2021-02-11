@@ -373,11 +373,15 @@ class VideoTrackEncoder : public TrackEncoder {
    * This can be re-called often, as it will exit early should we already be
    * initiated. mInitiated will only be set if there was enough data in
    * aSegment to infer metadata. If mInitiated gets set, listeners are notified.
+   * The amount of chunks needed can be controlled by
+   * aFrameRateDetectionMinChunks which denotes the minimum number of chunks
+   * needed to infer the framerate.
    *
    * Failing to initiate the encoder for an accumulated aDuration of 30 seconds
    * is seen as an error and will cancel the current encoding.
    */
-  void Init(const VideoSegment& aSegment, const TimeStamp& aTime);
+  void Init(const VideoSegment& aSegment, const TimeStamp& aTime,
+            size_t aFrameRateDetectionMinChunks);
 
   TrackTime SecondsToMediaTime(double aS) const {
     NS_ASSERTION(0 <= aS && aS <= TRACK_TICKS_MAX / TRACK_RATE_MAX,
