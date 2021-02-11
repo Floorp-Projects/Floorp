@@ -300,8 +300,6 @@ VideoTrackEncoder::VideoTrackEncoder(RefPtr<DriftCompensator> aDriftCompensator,
                                      FrameDroppingMode aFrameDroppingMode)
     : TrackEncoder(aTrackRate),
       mDriftCompensator(std::move(aDriftCompensator)),
-      mFrameWidth(0),
-      mFrameHeight(0),
       mEncodedTicks(0),
       mVideoBitrate(0),
       mFrameDroppingMode(aFrameDroppingMode),
