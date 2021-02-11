@@ -59,7 +59,7 @@ class ConsoleMessageWatcher {
     // Create the consoleAPIListener
     // (and apply the filtering options defined in the target actor).
     const listener = new ConsoleAPIListener(
-      targetActor.window,
+      targetActor.isRootActor ? null : targetActor.window,
       onConsoleAPICall,
       targetActor.consoleAPIListenerOptions
     );
