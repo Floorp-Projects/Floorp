@@ -3983,14 +3983,14 @@ void MacroAssembler::emitPreBarrierFastPath(JSRuntime* rt, MIRType type,
 
 void MacroAssembler::atomicIsLockFreeJS(Register value, Register output) {
   // Keep this in sync with isLockfreeJS() in jit/AtomicOperations.h.
-  MOZ_ASSERT(AtomicOperations::isLockfreeJS(1));  // Implementation artifact
-  MOZ_ASSERT(AtomicOperations::isLockfreeJS(2));  // Implementation artifact
-  MOZ_ASSERT(AtomicOperations::isLockfreeJS(4));  // Spec requirement
-  MOZ_ASSERT(
-      !AtomicOperations::isLockfreeJS(8));  // Implementation invariant, for now
+  static_assert(AtomicOperations::isLockfreeJS(1));  // Implementation artifact
+  static_assert(AtomicOperations::isLockfreeJS(2));  // Implementation artifact
+  static_assert(AtomicOperations::isLockfreeJS(4));  // Spec requirement
+  static_assert(AtomicOperations::isLockfreeJS(8));  // Implementation artifact
 
   Label done;
   move32(Imm32(1), output);
+  branch32(Assembler::Equal, value, Imm32(8), &done);
   branch32(Assembler::Equal, value, Imm32(4), &done);
   branch32(Assembler::Equal, value, Imm32(2), &done);
   branch32(Assembler::Equal, value, Imm32(1), &done);

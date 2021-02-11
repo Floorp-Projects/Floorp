@@ -49,15 +49,15 @@ END_TEST(testAtomicLockFree8)
 // The JS spec requires specific behavior for all but 1 and 2.
 
 BEGIN_REUSABLE_TEST(testAtomicLockFreeJS) {
-  CHECK(jit::AtomicOperations::isLockfreeJS(1) ==
-        true);  // false is allowed by spec but not in SpiderMonkey
-  CHECK(jit::AtomicOperations::isLockfreeJS(2) == true);   // ditto
-  CHECK(jit::AtomicOperations::isLockfreeJS(3) == false);  // required
-  CHECK(jit::AtomicOperations::isLockfreeJS(4) == true);   // required
-  CHECK(jit::AtomicOperations::isLockfreeJS(5) == false);  // required
-  CHECK(jit::AtomicOperations::isLockfreeJS(6) == false);  // required
-  CHECK(jit::AtomicOperations::isLockfreeJS(7) == false);  // required
-  CHECK(jit::AtomicOperations::isLockfreeJS(8) == false);  // required
+  static_assert(jit::AtomicOperations::isLockfreeJS(1) ==
+                true);  // false is allowed by spec but not in SpiderMonkey
+  static_assert(jit::AtomicOperations::isLockfreeJS(2) == true);   // ditto
+  static_assert(jit::AtomicOperations::isLockfreeJS(8) == true);   // ditto
+  static_assert(jit::AtomicOperations::isLockfreeJS(3) == false);  // required
+  static_assert(jit::AtomicOperations::isLockfreeJS(4) == true);   // required
+  static_assert(jit::AtomicOperations::isLockfreeJS(5) == false);  // required
+  static_assert(jit::AtomicOperations::isLockfreeJS(6) == false);  // required
+  static_assert(jit::AtomicOperations::isLockfreeJS(7) == false);  // required
   return true;
 }
 END_TEST(testAtomicLockFreeJS)
