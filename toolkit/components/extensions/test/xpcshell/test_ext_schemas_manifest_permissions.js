@@ -1,8 +1,5 @@
 "use strict";
 
-const { ExtensionCommon } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionCommon.jsm"
-);
 const { ExtensionAPI } = ExtensionCommon;
 
 add_task(async function() {

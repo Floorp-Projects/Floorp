@@ -1,9 +1,6 @@
 "use strict";
 
 const { Schemas } = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
-const { ExtensionCommon } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionCommon.jsm"
-);
 
 let { LocalAPIImplementation, SchemaAPIInterface } = ExtensionCommon;
 

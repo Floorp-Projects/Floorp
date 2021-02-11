@@ -9,7 +9,9 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-ChromeUtils.import("resource://gre/modules/Integration.jsm", this);
+const { Integration } = ChromeUtils.import(
+  "resource://gre/modules/Integration.jsm"
+);
 
 XPCOMUtils.defineLazyServiceGetter(
   this,

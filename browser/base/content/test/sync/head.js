@@ -1,4 +1,4 @@
-ChromeUtils.import("resource://services-sync/UIState.jsm", this);
+const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 function promiseSyncReady() {

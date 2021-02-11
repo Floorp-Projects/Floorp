@@ -1,9 +1,14 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/IndexedDB.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
-ChromeUtils.import("resource://normandy/lib/PreferenceRollouts.jsm", this);
-ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm", this);
+const { IndexedDB } = ChromeUtils.import(
+  "resource://gre/modules/IndexedDB.jsm"
+);
+const { TelemetryEnvironment } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryEnvironment.jsm"
+);
+const { PreferenceRollouts } = ChromeUtils.import(
+  "resource://normandy/lib/PreferenceRollouts.jsm"
+);
 
 decorate_task(
   PreferenceRollouts.withTestMock(),

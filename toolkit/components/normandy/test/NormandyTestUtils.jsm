@@ -3,9 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.import("resource://normandy/lib/AddonStudies.jsm", this);
-ChromeUtils.import("resource://normandy/lib/NormandyUtils.jsm", this);
-ChromeUtils.import("resource://normandy/lib/RecipeRunner.jsm", this);
+const { AddonStudies } = ChromeUtils.import(
+  "resource://normandy/lib/AddonStudies.jsm"
+);
+const { NormandyUtils } = ChromeUtils.import(
+  "resource://normandy/lib/NormandyUtils.jsm"
+);
+const { RecipeRunner } = ChromeUtils.import(
+  "resource://normandy/lib/RecipeRunner.jsm"
+);
 
 const FIXTURE_ADDON_ID = "normandydriver-a@example.com";
 const UUID_REGEX = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;

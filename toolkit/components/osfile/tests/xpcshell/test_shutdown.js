@@ -1,6 +1,5 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://gre/modules/Promise.jsm", this);
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Promise } = ChromeUtils.import("resource://gre/modules/Promise.jsm");
 
 add_task(function init() {
   do_get_profile();

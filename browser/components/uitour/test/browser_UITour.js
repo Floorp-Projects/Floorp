@@ -7,12 +7,15 @@ var gTestTab;
 var gContentAPI;
 var gContentWindow;
 
-ChromeUtils.import(
-  "resource://testing-common/TelemetryArchiveTesting.jsm",
-  this
+const { TelemetryArchiveTesting } = ChromeUtils.import(
+  "resource://testing-common/TelemetryArchiveTesting.jsm"
 );
-ChromeUtils.import("resource://gre/modules/ProfileAge.jsm", this);
-ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm", this);
+const { ProfileAge } = ChromeUtils.import(
+  "resource://gre/modules/ProfileAge.jsm"
+);
+const { UpdateUtils } = ChromeUtils.import(
+  "resource://gre/modules/UpdateUtils.jsm"
+);
 
 function test() {
   UITourTest();

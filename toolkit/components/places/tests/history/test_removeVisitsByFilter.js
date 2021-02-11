@@ -5,7 +5,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm", this);
+const { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
 
 add_task(async function test_removeVisitsByFilter() {
   let referenceDate = new Date(1999, 9, 9, 9, 9);

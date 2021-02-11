@@ -1,25 +1,29 @@
 "use strict";
 
-ChromeUtils.import("resource://testing-common/TestUtils.jsm", this);
-ChromeUtils.import("resource://testing-common/NormandyTestUtils.jsm", this);
-ChromeUtils.import(
-  "resource://gre/modules/components-utils/FilterExpressions.jsm",
-  this
+const { NormandyTestUtils } = ChromeUtils.import(
+  "resource://testing-common/NormandyTestUtils.jsm"
 );
-ChromeUtils.import(
-  "resource://gre/modules/components-utils/FilterExpressions.jsm",
-  this
+const { FilterExpressions } = ChromeUtils.import(
+  "resource://gre/modules/components-utils/FilterExpressions.jsm"
 );
 
-ChromeUtils.import("resource://normandy/Normandy.jsm", this);
-ChromeUtils.import("resource://normandy/actions/BaseAction.jsm", this);
-ChromeUtils.import("resource://normandy/lib/RecipeRunner.jsm", this);
-ChromeUtils.import("resource://normandy/lib/ClientEnvironment.jsm", this);
-ChromeUtils.import("resource://normandy/lib/CleanupManager.jsm", this);
-ChromeUtils.import("resource://normandy/lib/NormandyApi.jsm", this);
-ChromeUtils.import("resource://normandy/lib/ActionsManager.jsm", this);
-ChromeUtils.import("resource://normandy/lib/AddonStudies.jsm", this);
-ChromeUtils.import("resource://normandy/lib/Uptake.jsm", this);
+const { Normandy } = ChromeUtils.import("resource://normandy/Normandy.jsm");
+const { BaseAction } = ChromeUtils.import(
+  "resource://normandy/actions/BaseAction.jsm"
+);
+const { RecipeRunner } = ChromeUtils.import(
+  "resource://normandy/lib/RecipeRunner.jsm"
+);
+const { ClientEnvironment } = ChromeUtils.import(
+  "resource://normandy/lib/ClientEnvironment.jsm"
+);
+const { CleanupManager } = ChromeUtils.import(
+  "resource://normandy/lib/CleanupManager.jsm"
+);
+const { ActionsManager } = ChromeUtils.import(
+  "resource://normandy/lib/ActionsManager.jsm"
+);
+const { Uptake } = ChromeUtils.import("resource://normandy/lib/Uptake.jsm");
 
 const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"

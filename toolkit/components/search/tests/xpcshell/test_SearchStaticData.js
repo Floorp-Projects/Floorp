@@ -7,7 +7,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/SearchStaticData.jsm", this);
+const { SearchStaticData } = ChromeUtils.import(
+  "resource://gre/modules/SearchStaticData.jsm"
+);
 
 function run_test() {
   Assert.ok(

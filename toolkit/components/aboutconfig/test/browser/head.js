@@ -3,7 +3,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
 
 // List of default preferences that can be used for tests, chosen because they
 // have little or no side-effects when they are modified for a brief time. If

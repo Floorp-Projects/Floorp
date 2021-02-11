@@ -10,12 +10,20 @@
 
 var EXPORTED_SYMBOLS = ["FileTestUtils"];
 
-ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm", this);
-ChromeUtils.import("resource://gre/modules/DownloadPaths.jsm", this);
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-ChromeUtils.import("resource://testing-common/Assert.jsm", this);
+const { AsyncShutdown } = ChromeUtils.import(
+  "resource://gre/modules/AsyncShutdown.jsm"
+);
+const { DownloadPaths } = ChromeUtils.import(
+  "resource://gre/modules/DownloadPaths.jsm"
+);
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
 
 let gFileCounter = 1;
 let gPathsToRemove = [];

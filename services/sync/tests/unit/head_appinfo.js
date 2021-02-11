@@ -35,7 +35,9 @@ function getOS() {
   }
 }
 
-ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
+const { updateAppInfo } = ChromeUtils.import(
+  "resource://testing-common/AppInfo.jsm"
+);
 updateAppInfo({
   name: "XPCShell",
   ID: "xpcshell@tests.mozilla.org",

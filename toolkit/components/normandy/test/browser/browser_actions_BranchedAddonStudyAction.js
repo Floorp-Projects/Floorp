@@ -1,14 +1,12 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://testing-common/TestUtils.jsm", this);
-ChromeUtils.import("resource://normandy/actions/BaseAction.jsm", this);
-ChromeUtils.import(
-  "resource://normandy/actions/BranchedAddonStudyAction.jsm",
-  this
+const { BaseAction } = ChromeUtils.import(
+  "resource://normandy/actions/BaseAction.jsm"
 );
-ChromeUtils.import("resource://normandy/lib/AddonStudies.jsm", this);
-ChromeUtils.import("resource://normandy/lib/Uptake.jsm", this);
+const { BranchedAddonStudyAction } = ChromeUtils.import(
+  "resource://normandy/actions/BranchedAddonStudyAction.jsm"
+);
+const { Uptake } = ChromeUtils.import("resource://normandy/lib/Uptake.jsm");
 
 const { NormandyTestUtils } = ChromeUtils.import(
   "resource://testing-common/NormandyTestUtils.jsm"

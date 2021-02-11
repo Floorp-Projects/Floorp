@@ -2,9 +2,8 @@
 
 // This test checks whether applied WebExtension themes that attempt to change
 // the color of the font and background in a selection are applied properly.
-ChromeUtils.import(
-  "resource://testing-common/CustomizableUITestUtils.jsm",
-  this
+const { CustomizableUITestUtils } = ChromeUtils.import(
+  "resource://testing-common/CustomizableUITestUtils.jsm"
 );
 let gCUITestUtils = new CustomizableUITestUtils(window);
 add_task(async function setup() {

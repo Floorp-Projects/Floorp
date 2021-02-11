@@ -3,13 +3,13 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://featuregates/FeatureGate.jsm", this);
-ChromeUtils.import(
-  "resource://featuregates/FeatureGateImplementation.jsm",
-  this
+const { FeatureGate } = ChromeUtils.import(
+  "resource://featuregates/FeatureGate.jsm"
 );
-ChromeUtils.import("resource://testing-common/httpd.js", this);
+const { FeatureGateImplementation } = ChromeUtils.import(
+  "resource://featuregates/FeatureGateImplementation.jsm"
+);
+const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 const kDefinitionDefaults = {
   id: "test-feature",

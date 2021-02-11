@@ -13,8 +13,12 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/OSKeyStore.jsm", this);
-ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm", this);
+const { OSKeyStore } = ChromeUtils.import(
+  "resource://gre/modules/OSKeyStore.jsm"
+);
+const { OSKeyStoreTestUtils } = ChromeUtils.import(
+  "resource://testing-common/OSKeyStoreTestUtils.jsm"
+);
 
 const MANAGE_ADDRESSES_DIALOG_URL =
   "chrome://formautofill/content/manageAddresses.xhtml";

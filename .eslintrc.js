@@ -516,6 +516,7 @@ module.exports = {
         "browser/components/customizableui/test/browser_1042100_default_placements_update.js",
         "browser/components/customizableui/test/browser_1096763_seen_widgets_post_reset.js",
         "browser/components/customizableui/test/browser_1161838_inserted_new_default_buttons.js",
+        "browser/components/customizableui/test/browser_1686523_hide_home_button.js",
         "browser/components/customizableui/test/browser_989338_saved_placements_not_resaved.js",
         "browser/components/customizableui/test/browser_currentset_post_reset.js",
         "browser/components/customizableui/test/browser_panel_keyboard_navigation.js",

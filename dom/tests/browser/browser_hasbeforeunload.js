@@ -229,7 +229,9 @@ function controlFrameAt(browser, frameDepth, command) {
   return SpecialPowers.spawn(browser, [{ frameDepth, command }], async function(
     args
   ) {
-    ChromeUtils.import("resource://testing-common/TestUtils.jsm", this);
+    const { TestUtils } = ChromeUtils.import(
+      "resource://testing-common/TestUtils.jsm"
+    );
 
     let { command: contentCommand, frameDepth: contentFrameDepth } = args;
 

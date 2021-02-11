@@ -25,7 +25,9 @@ ChromeUtils.defineModuleGetter(
 );
 
 // Needed by some test that relies on having an app registered.
-ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
+const { updateAppInfo } = ChromeUtils.import(
+  "resource://testing-common/AppInfo.jsm"
+);
 updateAppInfo({
   name: "PlacesTest",
   ID: "{230de50e-4cd1-11dc-8314-0800200c9a66}",

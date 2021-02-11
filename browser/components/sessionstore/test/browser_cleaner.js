@@ -8,9 +8,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
-
 const LONG_TIME_AGO = 1;
 
 const URL_TAB1 =

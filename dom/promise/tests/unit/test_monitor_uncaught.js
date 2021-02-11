@@ -4,8 +4,10 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
-ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
 
 // Prevent test failures due to the unhandled rejections in this test file.
 PromiseTestUtils.disableUncaughtRejectionObserverForSelfTest();

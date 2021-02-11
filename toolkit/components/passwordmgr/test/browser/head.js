@@ -1,13 +1,23 @@
 const DIRECTORY_PATH = "/browser/toolkit/components/passwordmgr/test/browser/";
 
-ChromeUtils.import("resource://gre/modules/LoginHelper.jsm", this);
+const { LoginHelper } = ChromeUtils.import(
+  "resource://gre/modules/LoginHelper.jsm"
+);
 const { LoginManagerParent } = ChromeUtils.import(
   "resource://gre/modules/LoginManagerParent.jsm"
 );
-ChromeUtils.import("resource://testing-common/LoginTestUtils.jsm", this);
-ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", this);
-ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm", this);
-ChromeUtils.import("resource://testing-common/PromptTestUtils.jsm", this);
+const { LoginTestUtils } = ChromeUtils.import(
+  "resource://testing-common/LoginTestUtils.jsm"
+);
+const { ContentTaskUtils } = ChromeUtils.import(
+  "resource://testing-common/ContentTaskUtils.jsm"
+);
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
+const { PromptTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromptTestUtils.jsm"
+);
 
 add_task(async function common_initialize() {
   await SpecialPowers.pushPrefEnv({
@@ -113,8 +123,7 @@ async function submitFormAndGetResults(
 ) {
   async function contentSubmitForm([contentFormAction, contentSelectorValues]) {
     const { WrapPrivileged } = ChromeUtils.import(
-      "resource://specialpowers/WrapPrivileged.jsm",
-      this
+      "resource://specialpowers/WrapPrivileged.jsm"
     );
     let doc = content.document;
     let form = doc.querySelector("form");
@@ -416,8 +425,7 @@ async function cleanupPasswordNotifications(
 async function clearMessageCache(browser) {
   await SpecialPowers.spawn(browser, [], async () => {
     const { LoginManagerChild } = ChromeUtils.import(
-      "resource://gre/modules/LoginManagerChild.jsm",
-      this
+      "resource://gre/modules/LoginManagerChild.jsm"
     );
     let docState = LoginManagerChild.forWindow(content).stateForDocument(
       content.document

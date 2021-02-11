@@ -1,6 +1,8 @@
 "use strict";
 
-ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", this);
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
 
 AddonTestUtils.initMochitest(this);
 

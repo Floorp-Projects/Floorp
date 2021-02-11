@@ -4,7 +4,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource:///modules/SitePermissions.jsm", this);
+const { SitePermissions } = ChromeUtils.import(
+  "resource:///modules/SitePermissions.jsm"
+);
 
 function newPrincipal(origin) {
   return Services.scriptSecurityManager.createContentPrincipalFromOrigin(

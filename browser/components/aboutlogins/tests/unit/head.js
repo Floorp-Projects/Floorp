@@ -3,7 +3,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://testing-common/LoginTestUtils.jsm", this);
+const { LoginTestUtils } = ChromeUtils.import(
+  "resource://testing-common/LoginTestUtils.jsm"
+);
 const { LoginHelper } = ChromeUtils.import(
   "resource://gre/modules/LoginHelper.jsm"
 );

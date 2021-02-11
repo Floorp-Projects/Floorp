@@ -1,5 +1,9 @@
-ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/OSKeyStore.jsm", this);
+const { OSKeyStoreTestUtils } = ChromeUtils.import(
+  "resource://testing-common/OSKeyStoreTestUtils.jsm"
+);
+const { OSKeyStore } = ChromeUtils.import(
+  "resource://gre/modules/OSKeyStore.jsm"
+);
 var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
