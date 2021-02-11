@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* eslint max-len: ["error", 80] */
-/* exported hideView, initializeView, showView */
+/* exported initializeView, showView */
 /* import-globals-from aboutaddonsCommon.js */
 /* import-globals-from abuse-reports.js */
 /* global MozXULElement, MessageBarStackElement, windowRoot */
@@ -4807,13 +4807,4 @@ async function showView(type, param, { historyEntryId }) {
       resolve();
     });
   });
-}
-
-async function hideView() {
-  if (!mainEl) {
-    return;
-  }
-  ScrollOffsets.save();
-  ScrollOffsets.setView(null);
-  mainEl.textContent = "";
 }
