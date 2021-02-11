@@ -65,6 +65,7 @@ import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.toSafeIntent
 import mozilla.components.support.webextensions.WebExtensionPopupFeature
 import org.mozilla.fenix.GleanMetrics.Metrics
+import org.mozilla.fenix.GleanMetrics.PerfStartup
 import org.mozilla.fenix.addons.AddonDetailsFragmentDirections
 import org.mozilla.fenix.addons.AddonPermissionsDetailsFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -163,7 +164,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
     private lateinit var navigationToolbar: Toolbar
 
-    final override fun onCreate(savedInstanceState: Bundle?) {
+    final override fun onCreate(savedInstanceState: Bundle?): Unit = PerfStartup.homeActivityOnCreate.measure {
         // DO NOT MOVE ANYTHING ABOVE THIS addMarker CALL.
         components.core.engine.profiler?.addMarker("Activity.onCreate", "HomeActivity")
 

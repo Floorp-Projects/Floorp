@@ -3962,6 +3962,38 @@ startup.timeline:
       - mcomella@mozilla.com
     expires: "2021-08-01"
 
+perf.startup:
+  application_on_create:
+    type: timing_distribution
+    time_unit: millisecond
+    description: |
+      The duration of `FenixApplication.onCreate` in the main process.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/17969
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/17973#issue-572183889
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - perf-android-fe@mozilla.com
+      - mcomella@mozilla.com
+    expires: "2021-08-11"
+  home_activity_on_create:
+    type: timing_distribution
+    time_unit: millisecond
+    description: |
+      The duration of `HomeActivity.onCreate`.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/17969
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/17973#issue-572183889
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - perf-android-fe@mozilla.com
+      - mcomella@mozilla.com
+    expires: "2021-08-11"
+
 perf.awesomebar:
   history_suggestions:
     send_in_pings:
