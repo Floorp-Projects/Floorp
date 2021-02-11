@@ -96,8 +96,8 @@ static int GmpFrameTypeToWebrtcFrameType(GMPVideoFrameType aIn,
 }
 
 int32_t WebrtcGmpVideoEncoder::InitEncode(
-    const webrtc::VideoCodec* aCodecSettings, int32_t aNumberOfCores,
-    size_t aMaxPayloadSize) {
+    const webrtc::VideoCodec* aCodecSettings,
+    const webrtc::VideoEncoder::Settings& aSettings) {
   if (!mMPS) {
     mMPS = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
   }
@@ -109,6 +109,9 @@ int32_t WebrtcGmpVideoEncoder::InitEncode(
     }
   }
 
+  MOZ_ASSERT(aCodecSettings->numberOfSimulcastStreams == 1,
+             "Simulcast not implemented for GMP-H264");
+
   // Bug XXXXXX: transfer settings from codecSettings to codec.
   GMPVideoCodec codecParams;
   memset(&codecParams, 0, sizeof(codecParams));
@@ -118,7 +121,6 @@ int32_t WebrtcGmpVideoEncoder::InitEncode(
   codecParams.mMinBitrate = aCodecSettings->minBitrate;
   codecParams.mMaxBitrate = aCodecSettings->maxBitrate;
   codecParams.mMaxFramerate = aCodecSettings->maxFramerate;
-  mMaxPayloadSize = aMaxPayloadSize;
 
   memset(&mCodecSpecificInfo.codecSpecific, 0,
          sizeof(mCodecSpecificInfo.codecSpecific));
@@ -128,9 +130,10 @@ int32_t WebrtcGmpVideoEncoder::InitEncode(
           ? webrtc::H264PacketizationMode::NonInterleaved
           : webrtc::H264PacketizationMode::SingleNalUnit;
 
+  uint32_t maxPayloadSize = aSettings.max_payload_size;
   if (mCodecSpecificInfo.codecSpecific.H264.packetization_mode ==
       webrtc::H264PacketizationMode::NonInterleaved) {
-    mMaxPayloadSize = 0;  // No limit, use FUAs
+    maxPayloadSize = 0;  // No limit, use FUAs
   }
 
   if (aCodecSettings->mode == webrtc::VideoCodecMode::kScreensharing) {
@@ -146,7 +149,7 @@ int32_t WebrtcGmpVideoEncoder::InitEncode(
   mGMPThread->Dispatch(
       WrapRunnableNM(WebrtcGmpVideoEncoder::InitEncode_g,
                      RefPtr<WebrtcGmpVideoEncoder>(this), codecParams,
-                     aNumberOfCores, aMaxPayloadSize, initDone),
+                     aSettings.number_of_cores, maxPayloadSize, initDone),
       NS_DISPATCH_NORMAL);
 
   // Since init of the GMP encoder is a multi-step async dispatch (including
@@ -164,8 +167,9 @@ void WebrtcGmpVideoEncoder::InitEncode_g(
   nsTArray<nsCString> tags;
   tags.AppendElement("h264"_ns);
   UniquePtr<GetGMPVideoEncoderCallback> callback(
-      new InitDoneCallback(aThis, aInitDone, aCodecParams, aMaxPayloadSize));
+      new InitDoneCallback(aThis, aInitDone, aCodecParams));
   aThis->mInitting = true;
+  aThis->mMaxPayloadSize = aMaxPayloadSize;
   nsresult rv = aThis->mMPS->GetGMPVideoEncoder(nullptr, &tags, ""_ns,
                                                 std::move(callback));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -207,7 +211,6 @@ int32_t WebrtcGmpVideoEncoder::GmpInitDone(GMPVideoEncoderProxy* aGMP,
 int32_t WebrtcGmpVideoEncoder::GmpInitDone(GMPVideoEncoderProxy* aGMP,
                                            GMPVideoHost* aHost,
                                            const GMPVideoCodec& aCodecParams,
-                                           uint32_t aMaxPayloadSize,
                                            std::string* aErrorOut) {
   int32_t r = GmpInitDone(aGMP, aHost, aErrorOut);
   if (r != WEBRTC_VIDEO_CODEC_OK) {
@@ -257,7 +260,6 @@ int32_t WebrtcGmpVideoEncoder::InitEncoderForSize(unsigned short aWidth,
 
 int32_t WebrtcGmpVideoEncoder::Encode(
     const webrtc::VideoFrame& aInputImage,
-    const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
     const std::vector<webrtc::VideoFrameType>* aFrameTypes) {
   MOZ_ASSERT(aInputImage.width() >= 0 && aInputImage.height() >= 0);
   if (!aFrameTypes) {
@@ -411,35 +413,42 @@ int32_t WebrtcGmpVideoEncoder::Shutdown() {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t WebrtcGmpVideoEncoder::SetChannelParameters(uint32_t aPacketLoss,
-                                                    int64_t aRTT) {
-  return WEBRTC_VIDEO_CODEC_OK;
-}
-
-int32_t WebrtcGmpVideoEncoder::SetRates(uint32_t aNewBitRate,
-                                        uint32_t aFrameRate) {
+int32_t WebrtcGmpVideoEncoder::SetRates(
+    const webrtc::VideoEncoder::RateControlParameters& aParameters) {
   MOZ_ASSERT(mGMPThread);
-  if (aFrameRate == 0) {
-    aFrameRate = 30;  // Assume 30fps if we don't know the rate
-  }
-  mGMPThread->Dispatch(WrapRunnableNM(&WebrtcGmpVideoEncoder::SetRates_g,
-                                      RefPtr<WebrtcGmpVideoEncoder>(this),
-                                      aNewBitRate, aFrameRate),
-                       NS_DISPATCH_NORMAL);
+  MOZ_ASSERT(aParameters.bitrate.IsSpatialLayerUsed(0));
+  MOZ_ASSERT(!aParameters.bitrate.HasBitrate(0, 1),
+             "No simulcast support for H264");
+  MOZ_ASSERT(!aParameters.bitrate.IsSpatialLayerUsed(1),
+             "No simulcast support for H264");
+  mGMPThread->Dispatch(
+      WrapRunnableNM(&WebrtcGmpVideoEncoder::SetRates_g,
+                     RefPtr<WebrtcGmpVideoEncoder>(this),
+                     aParameters.bitrate.GetBitrate(0, 0) / 1000,
+                     aParameters.framerate_fps > 0.0
+                         ? Some(aParameters.framerate_fps)
+                         : Nothing()),
+      NS_DISPATCH_NORMAL);
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
 /* static */
 int32_t WebrtcGmpVideoEncoder::SetRates_g(RefPtr<WebrtcGmpVideoEncoder> aThis,
-                                          uint32_t aNewBitRate,
-                                          uint32_t aFrameRate) {
+                                          uint32_t aNewBitRateKbps,
+                                          Maybe<double> aFrameRate) {
   if (!aThis->mGMP) {
     // destroyed via Terminate()
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  GMPErr err = aThis->mGMP->SetRates(aNewBitRate, aFrameRate);
+  GMPErr err = aThis->mGMP->SetRates(
+      aNewBitRateKbps, aFrameRate
+                           .map([](double aFr) {
+                             // Avoid rounding to 0
+                             return std::max(1U, static_cast<uint32_t>(aFr));
+                           })
+                           .valueOr(aThis->mCodecParams.mMaxFramerate));
   if (err != GMPNoErr) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }

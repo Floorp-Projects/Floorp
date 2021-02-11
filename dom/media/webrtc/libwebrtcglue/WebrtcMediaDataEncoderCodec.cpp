@@ -145,10 +145,11 @@ static void InitCodecSpecficInfo(webrtc::CodecSpecificInfo& aInfo,
 }
 
 int32_t WebrtcMediaDataEncoder::InitEncode(
-    const webrtc::VideoCodec* aCodecSettings, int32_t aNumberOfCores,
-    size_t aMaxPayloadSize) {
+    const webrtc::VideoCodec* aCodecSettings,
+    const webrtc::VideoEncoder::Settings& aSettings) {
   MOZ_ASSERT(aCodecSettings);
-  MOZ_ASSERT(aCodecSettings->numberOfSimulcastStreams == 1);
+  MOZ_ASSERT(aCodecSettings->numberOfSimulcastStreams == 1,
+             "Simulcast not implemented for H264");
 
   if (mEncoder) {
     // Clean existing encoder.
@@ -349,7 +350,6 @@ static void GetVPXQp(const webrtc::VideoCodecType aType,
 
 int32_t WebrtcMediaDataEncoder::Encode(
     const webrtc::VideoFrame& aInputFrame,
-    const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
     const std::vector<webrtc::VideoFrameType>* aFrameTypes) {
   if (!aInputFrame.size() || !aInputFrame.video_frame_buffer() ||
       aFrameTypes->empty()) {
@@ -457,18 +457,15 @@ webrtc::RTPFragmentationHeader WebrtcMediaDataEncoder::GetFragHeader(
 }
 */
 
-int32_t WebrtcMediaDataEncoder::SetChannelParameters(uint32_t aPacketLoss,
-                                                     int64_t aRtt) {
-  return WEBRTC_VIDEO_CODEC_OK;
-}
+int32_t WebrtcMediaDataEncoder::SetRates(
+    const webrtc::VideoEncoder::RateControlParameters& aParameters) {
+  MOZ_ASSERT(aParameters.bitrate.IsSpatialLayerUsed(0));
+  MOZ_ASSERT(!aParameters.bitrate.HasBitrate(0, 1),
+             "No simulcast support for H264");
+  MOZ_ASSERT(!aParameters.bitrate.IsSpatialLayerUsed(1),
+             "No simulcast support for H264");
 
-int32_t WebrtcMediaDataEncoder::SetRates(uint32_t aNewBitrateKbps,
-                                         uint32_t aFrameRate) {
-  if (!aFrameRate) {
-    return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
-  }
-
-  const uint32_t newBitrateBps = aNewBitrateKbps * 1000;
+  const uint32_t newBitrateBps = aParameters.bitrate.GetBitrate(0, 0);
   if (newBitrateBps < mMinBitrateBps || newBitrateBps > mMaxBitrateBps) {
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }

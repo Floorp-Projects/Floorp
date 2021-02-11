@@ -27,7 +27,7 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
   WebrtcMediaDataEncoder();
 
   int32_t InitEncode(const webrtc::VideoCodec* aCodecSettings,
-                     int32_t aNumberOfCores, size_t aMaxPayloadSize) override;
+                     const webrtc::VideoEncoder::Settings& aSettings) override;
 
   int32_t RegisterEncodeCompleteCallback(
       webrtc::EncodedImageCallback* aCallback) override;
@@ -36,12 +36,10 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
 
   int32_t Encode(
       const webrtc::VideoFrame& aFrame,
-      const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
       const std::vector<webrtc::VideoFrameType>* aFrameTypes) override;
 
-  int32_t SetChannelParameters(uint32_t aPacketLoss, int64_t aRtt) override;
-
-  int32_t SetRates(uint32_t aNewBitrateKbps, uint32_t aFrameRate) override;
+  int32_t SetRates(
+      const webrtc::VideoEncoder::RateControlParameters& aParameters) override;
 
  private:
   virtual ~WebrtcMediaDataEncoder() = default;
