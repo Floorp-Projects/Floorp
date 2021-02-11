@@ -27,6 +27,7 @@ The plugin implements the following rules:
    eslint-plugin-mozilla/no-define-cc-etc
    eslint-plugin-mozilla/no-throw-cr-literal
    eslint-plugin-mozilla/no-useless-parameters
+   eslint-plugin-mozilla/reject-chromeutils-import-params
    eslint-plugin-mozilla/use-chromeutils-import
 
 avoid-removeChild
