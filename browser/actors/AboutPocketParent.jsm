@@ -51,19 +51,19 @@ class AboutPocketParent extends JSWindowActorParent {
         break;
       }
       case "PKT_show_signup": {
-        this.browsingContext.topChromeWindow.pktUI.onShowSignup();
+        this.browsingContext.topChromeWindow?.pktUI.onShowSignup();
         break;
       }
       case "PKT_show_saved": {
-        this.browsingContext.topChromeWindow.pktUI.onShowSaved();
+        this.browsingContext.topChromeWindow?.pktUI.onShowSaved();
         break;
       }
       case "PKT_close": {
-        this.browsingContext.topChromeWindow.pktUI.closePanel();
+        this.browsingContext.topChromeWindow?.pktUI.closePanel();
         break;
       }
       case "PKT_openTabWithUrl": {
-        this.browsingContext.topChromeWindow.pktUI.onOpenTabWithUrl(
+        this.browsingContext.topChromeWindow?.pktUI.onOpenTabWithUrl(
           message.data.panelId,
           message.data.payload,
           this.browsingContext.embedderElement.contentDocument.nodePrincipal,
@@ -72,7 +72,7 @@ class AboutPocketParent extends JSWindowActorParent {
         break;
       }
       case "PKT_openTabWithPocketUrl": {
-        this.browsingContext.topChromeWindow.pktUI.onOpenTabWithPocketUrl(
+        this.browsingContext.topChromeWindow?.pktUI.onOpenTabWithPocketUrl(
           message.data.panelId,
           message.data.payload,
           this.browsingContext.embedderElement.contentDocument.nodePrincipal,
@@ -81,7 +81,7 @@ class AboutPocketParent extends JSWindowActorParent {
         break;
       }
       case "PKT_resizePanel": {
-        this.browsingContext.topChromeWindow.pktUI.resizePanel(
+        this.browsingContext.topChromeWindow?.pktUI.resizePanel(
           message.data.payload
         );
         this.sendResponseMessageToPanel(
@@ -91,7 +91,7 @@ class AboutPocketParent extends JSWindowActorParent {
         break;
       }
       case "PKT_expandSavePanel": {
-        this.browsingContext.topChromeWindow.pktUI.expandSavePanel(
+        this.browsingContext.topChromeWindow?.pktUI.expandSavePanel(
           message.data.payload
         );
         break;
@@ -160,7 +160,7 @@ class AboutPocketParent extends JSWindowActorParent {
           pktApi.deleteItem(message.data.payload.itemId, {
             success: () => {
               resolve({ status: "success" });
-              this.browsingContext.topChromeWindow.pktUI
+              this.browsingContext.topChromeWindow?.pktUI
                 .getPanelFrame()
                 .setAttribute("itemAdded", "false");
             },
