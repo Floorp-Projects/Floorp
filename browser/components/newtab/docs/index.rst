@@ -24,12 +24,12 @@ You will need the following:
 - Node.js 10+ (On Mac, the best way to install Node.js is to use the install link on the `Node.js homepage`_)
 - npm (packaged with Node.js)
 
-To install dependencies, run the following from the root of the mozilla-central repository
-(or cd into browser/components/newtab to omit the `--prefix` in any of these commands):
+To install dependencies, run the following from the root of the mozilla-central repository.
+(Using `mach` to call `npm` and `node` commands will ensure you're using the correct versions of Node and npm.)
 
 .. code-block:: shell
 
-  npm install --prefix browser/components/newtab
+  ./mach npm install --prefix=browser/components/newtab
 
 
 Which files should you edit?
@@ -47,11 +47,11 @@ To build assets and run Firefox, run the following from the root of the mozilla-
 
 .. code-block:: shell
 
-  npm run bundle --prefix browser/components/newtab && ./mach build && ./mach run
+  ./mach npm run bundle --prefix=browser/components/newtab && ./mach build && ./mach run
 
 Continuous development / debugging
 ----------------------------------
-Running `npm run watchmc` will start a process that watches files in
+Running `./mach npm run watchmc --prefix=browser/components/newtab` will start a process that watches files in
 `activity-stream` and rebuilds the bundled files when JS or CSS files change.
 
 **IMPORTANT NOTE**: This task will add inline source maps to help with debugging, which changes the memory footprint.
@@ -68,8 +68,7 @@ that slug turns red, these tests are what is failing.  To execute them, do this:
 
 .. code-block:: shell
 
-  cd browser/components/newtab
-  npm test
+  ./mach npm test --prefix=browser/components/newtab
 
 These tests are not currently run by `mach test`, but there's a
 `task filed to fix that <https://bugzilla.mozilla.org/show_bug.cgi?id=1581165>`_.
@@ -86,7 +85,8 @@ running
 
 .. code-block:: shell
 
-  npm test && npm run debugcoverage
+  ./mach npm test --prefix=browser/components/newtab && 
+  ./mach npm run debugcoverage --prefix=browser/components/newtab
 
 Detailed Docs
 -------------
