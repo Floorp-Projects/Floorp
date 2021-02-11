@@ -10,22 +10,22 @@ var uint8cProxy = new Proxy(uint8c, {});
 var g = newGlobal({newCompartment: true});
 var uint8cWrapped = g.evaluate("new Uint8ClampedArray(10)");
 
-var TypedArrayElementShift = getSelfHostedValue("TypedArrayElementShift");
+var TypedArrayElementSize = getSelfHostedValue("TypedArrayElementSize");
 var TypedArrayByteOffset = getSelfHostedValue("TypedArrayByteOffset");
 var IsTypedArray = getSelfHostedValue("IsTypedArray");
 var IsPossiblyWrappedTypedArray = getSelfHostedValue("IsPossiblyWrappedTypedArray");
 var TypedArrayLength = getSelfHostedValue("TypedArrayLength");
 
-function testElementShift() {
-    function getShift(ta) {
-        return TypedArrayElementShift(ta);
+function testElementSize() {
+    function getSize(ta) {
+        return TypedArrayElementSize(ta);
     }
-    assertEq(getShift(uint8c), 0);
-    assertEq(getShift(int16), 1);
-    assertEq(getShift(int32), 2);
-    assertEq(getShift(float32), 2);
-    assertEq(getShift(float64), 3);
-    assertEq(getShift(bigInt64), 3);
+    assertEq(getSize(uint8c), 1);
+    assertEq(getSize(int16), 2);
+    assertEq(getSize(int32), 4);
+    assertEq(getSize(float32), 4);
+    assertEq(getSize(float64), 8);
+    assertEq(getSize(bigInt64), 8);
 }
 
 function testByteOffset() {
@@ -85,7 +85,7 @@ function testTypedArrayLength() {
 }
 
 for (var i = 0; i < 40; i++) {
-    testElementShift();
+    testElementSize();
     testByteOffset();
     testIsTypedArray();
     testIsPossiblyWrappedTypedArray();

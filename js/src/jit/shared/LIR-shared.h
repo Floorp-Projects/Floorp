@@ -4068,12 +4068,12 @@ class LArrayBufferViewElements : public LInstructionHelper<1, 1, 0> {
   const LAllocation* object() { return getOperand(0); }
 };
 
-// Return the element shift of a typed array.
-class LTypedArrayElementShift : public LInstructionHelper<1, 1, 0> {
+// Return the element size of a typed array.
+class LTypedArrayElementSize : public LInstructionHelper<1, 1, 0> {
  public:
-  LIR_HEADER(TypedArrayElementShift)
+  LIR_HEADER(TypedArrayElementSize)
 
-  explicit LTypedArrayElementShift(const LAllocation& obj)
+  explicit LTypedArrayElementSize(const LAllocation& obj)
       : LInstructionHelper(classOpcode) {
     setOperand(0, obj);
   }

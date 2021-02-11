@@ -7723,7 +7723,7 @@ AttachDecision CallIRGenerator::tryAttachTypedArrayByteOffset(
   return AttachDecision::Attach;
 }
 
-AttachDecision CallIRGenerator::tryAttachTypedArrayElementShift(
+AttachDecision CallIRGenerator::tryAttachTypedArrayElementSize(
     HandleFunction callee) {
   // Self-hosted code calls this with a single TypedArrayObject argument.
   MOZ_ASSERT(argc_ == 1);
@@ -7737,10 +7737,10 @@ AttachDecision CallIRGenerator::tryAttachTypedArrayElementShift(
 
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   ObjOperandId objArgId = writer.guardToObject(argId);
-  writer.typedArrayElementShiftResult(objArgId);
+  writer.typedArrayElementSizeResult(objArgId);
   writer.returnFromIC();
 
-  trackAttached("TypedArrayElementShift");
+  trackAttached("TypedArrayElementSize");
   return AttachDecision::Attach;
 }
 
@@ -8776,8 +8776,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachIsTypedArrayConstructor(callee);
     case InlinableNative::IntrinsicTypedArrayByteOffset:
       return tryAttachTypedArrayByteOffset(callee);
-    case InlinableNative::IntrinsicTypedArrayElementShift:
-      return tryAttachTypedArrayElementShift(callee);
+    case InlinableNative::IntrinsicTypedArrayElementSize:
+      return tryAttachTypedArrayElementSize(callee);
     case InlinableNative::IntrinsicTypedArrayLength:
       return tryAttachTypedArrayLength(callee, /* isPossiblyWrapped = */ false);
     case InlinableNative::IntrinsicPossiblyWrappedTypedArrayLength:
