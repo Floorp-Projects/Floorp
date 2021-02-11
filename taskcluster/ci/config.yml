@@ -188,6 +188,7 @@ treeherder:
         'perftest': 'Performance tests'
         'perftest-http3': 'Performance tests with HTTP/3'
         'fuzzing': 'Fuzzing checks'
+        'l10n': 'Localization checks'
 
 index:
     products:

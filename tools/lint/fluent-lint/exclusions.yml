@@ -1,0 +1,85 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Warning: Only exclusions for identifiers (ID01) are currently allowed.
+---
+# Only add exceptions to this file if the ID is generated programmatically and
+# can't easily be changed to follow the naming convention.
+# Only lowercase letters and hyphens should be used in Fluent IDs.
+ID01:
+    messages:
+        - trademarkInfo
+        - crashed-include-URL-2
+        - blocklist-item-moz-std-listName
+        - blocklist-item-moz-full-listName
+        - shortcuts-browserAction2
+        - shortcuts-pageAction
+        - shortcuts-sidebarAction
+        - about-networking-originAttributesSuffix
+        - size-KB
+        - size-MB
+        - size-GB
+        - state-dd-Disabled
+        - state-dd-Disabled-block-list-state
+        - memory-unit-B
+        - memory-unit-KB
+        - memory-unit-MB
+        - memory-unit-GB
+        - memory-unit-TB
+        - memory-unit-PB
+        - memory-unit-EB
+        - enableSafeBrowsing-label
+        - about-telemetry-show-in-Firefox-json-viewer
+        - url-classifier-search-listType
+        # aboutDialog.ftl: Do not add new exceptions for this file,
+        # new strings should follow the naming convention.
+        - aboutDialog-title
+        - releaseNotes-link
+        - update-checkForUpdatesButton
+        - update-updateButton
+        - update-checkingForUpdates
+        - update-adminDisabled
+        - update-noUpdatesFound
+        - update-otherInstanceHandlingUpdates
+        - warningDesc-version
+        - bottomLinks-license
+        - bottomLinks-rights
+        - bottomLinks-privacy
+        - aboutDialog-version
+        - aboutDialog-version-nightly
+        # aboutCertError.ftl: These IDs are generated programmatically
+        # from certificate error codes.
+        - connectionFailure-title
+        - deniedPortAccess-title
+        - dnsNotFound-title
+        - fileNotFound-title
+        - fileAccessDenied-title
+        - captivePortal-title
+        - malformedURI-title
+        - netInterrupt-title
+        - notCached-title
+        - netOffline-title
+        - contentEncodingError-title
+        - unsafeContentType-title
+        - netReset-title
+        - netTimeout-title
+        - unknownProtocolFound-title
+        - proxyConnectFailure-title
+        - proxyResolveFailure-title
+        - redirectLoop-title
+        - unknownSocketType-title
+        - nssFailure2-title
+        - corruptedContentError-title
+        - remoteXUL-title
+        - sslv3Used-title
+        - inadequateSecurityError-title
+        - blockedByPolicy-title
+        - clockSkewError-title
+        - networkProtocolError-title
+        - nssBadCert-title
+        - nssBadCert-sts-title
+    files:
+        # policies-descriptions.ftl: These IDs are generated programmatically
+        # from policy names.
+        - browser/locales/en-US/browser/policies/policies-descriptions.ftl
