@@ -16,7 +16,6 @@ py2commands="
     firefox-ui-functional
     jsshell-bench
     marionette-test
-    jstests
     mozharness
     raptor
     raptor-test
