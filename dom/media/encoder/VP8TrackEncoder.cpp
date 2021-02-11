@@ -170,7 +170,45 @@ void VP8TrackEncoder::SetKeyFrameInterval(
 
 nsresult VP8TrackEncoder::Init(int32_t aWidth, int32_t aHeight,
                                int32_t aDisplayWidth, int32_t aDisplayHeight) {
-  if (aWidth < 1 || aHeight < 1 || aDisplayWidth < 1 || aDisplayHeight < 1) {
+  if (aDisplayWidth < 1 || aDisplayHeight < 1) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = InitInternal(aWidth, aHeight);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  MOZ_ASSERT(!mI420Frame);
+  MOZ_ASSERT(mI420FrameSize == 0);
+  const size_t neededSize = I420Size<I420_STRIDE_ALIGN>(aWidth, aHeight);
+  mI420Frame.reset(new (fallible) uint8_t[neededSize]);
+  mI420FrameSize = mI420Frame ? neededSize : 0;
+  if (!mI420Frame) {
+    VP8LOG(LogLevel::Warning, "Allocating I420 frame of size %zu failed",
+           neededSize);
+    return NS_ERROR_FAILURE;
+  }
+  vpx_img_wrap(&mVPXImageWrapper, VPX_IMG_FMT_I420, aWidth, aHeight,
+               I420_STRIDE_ALIGN, mI420Frame.get());
+
+  if (!mMetadata) {
+    mMetadata = MakeAndAddRef<VP8Metadata>();
+    mMetadata->mWidth = aWidth;
+    mMetadata->mHeight = aHeight;
+    mMetadata->mDisplayWidth = aDisplayWidth;
+    mMetadata->mDisplayHeight = aDisplayHeight;
+
+    VP8LOG(LogLevel::Info,
+           "%p Init() created metadata. width=%d, height=%d, displayWidth=%d, "
+           "displayHeight=%d",
+           this, mMetadata->mWidth, mMetadata->mHeight,
+           mMetadata->mDisplayWidth, mMetadata->mDisplayHeight);
+  }
+
+  return NS_OK;
+}
+
+nsresult VP8TrackEncoder::InitInternal(int32_t aWidth, int32_t aHeight) {
+  if (aWidth < 1 || aHeight < 1) {
     return NS_ERROR_FAILURE;
   }
 
@@ -178,6 +216,9 @@ nsresult VP8TrackEncoder::Init(int32_t aWidth, int32_t aHeight,
     MOZ_ASSERT(false);
     return NS_ERROR_FAILURE;
   }
+
+  VP8LOG(LogLevel::Debug, "%p InitInternal(). width=%d, height=%d", this,
+         aWidth, aHeight);
 
   // Encoder configuration structure.
   vpx_codec_enc_cfg_t config;
@@ -196,20 +237,6 @@ nsresult VP8TrackEncoder::Init(int32_t aWidth, int32_t aHeight,
   vpx_codec_control(&mVPXContext, VP8E_SET_TOKEN_PARTITIONS,
                     VP8_TWO_TOKENPARTITION);
 
-  if (!mMetadata) {
-    mMetadata = MakeAndAddRef<VP8Metadata>();
-    mMetadata->mWidth = aWidth;
-    mMetadata->mHeight = aHeight;
-    mMetadata->mDisplayWidth = aDisplayWidth;
-    mMetadata->mDisplayHeight = aDisplayHeight;
-
-    VP8LOG(LogLevel::Info,
-           "%p Init() created metadata. width=%d, height=%d, displayWidth=%d, "
-           "displayHeight=%d",
-           this, mMetadata->mWidth, mMetadata->mHeight,
-           mMetadata->mDisplayWidth, mMetadata->mDisplayHeight);
-  }
-
   mFrameWidth = aWidth;
   mFrameHeight = aHeight;
 
@@ -218,11 +245,8 @@ nsresult VP8TrackEncoder::Init(int32_t aWidth, int32_t aHeight,
   return NS_OK;
 }
 
-nsresult VP8TrackEncoder::Reconfigure(int32_t aWidth, int32_t aHeight,
-                                      int32_t aDisplayWidth,
-                                      int32_t aDisplayHeight) {
-  if (aWidth <= 0 || aHeight <= 0 || aDisplayWidth <= 0 ||
-      aDisplayHeight <= 0) {
+nsresult VP8TrackEncoder::Reconfigure(int32_t aWidth, int32_t aHeight) {
+  if (aWidth <= 0 || aHeight <= 0) {
     MOZ_ASSERT(false);
     return NS_ERROR_FAILURE;
   }
@@ -230,6 +254,34 @@ nsresult VP8TrackEncoder::Reconfigure(int32_t aWidth, int32_t aHeight,
   if (!mInitialized) {
     MOZ_ASSERT(false);
     return NS_ERROR_FAILURE;
+  }
+
+  bool needsReInit = false;
+
+  if (aWidth != mFrameWidth || aHeight != mFrameHeight) {
+    VP8LOG(LogLevel::Info, "Dynamic resolution change (%dx%d -> %dx%d).",
+           mFrameWidth, mFrameHeight, aWidth, aHeight);
+    const size_t neededSize = I420Size<I420_STRIDE_ALIGN>(aWidth, aHeight);
+    if (neededSize > mI420FrameSize) {
+      needsReInit = true;
+      mI420Frame.reset(new (fallible) uint8_t[neededSize]);
+      mI420FrameSize = mI420Frame ? neededSize : 0;
+    }
+    if (!mI420Frame) {
+      VP8LOG(LogLevel::Warning, "Allocating I420 frame of size %zu failed",
+             neededSize);
+      return NS_ERROR_FAILURE;
+    }
+    vpx_img_wrap(&mVPXImageWrapper, VPX_IMG_FMT_I420, aWidth, aHeight,
+                 I420_STRIDE_ALIGN, mI420Frame.get());
+  }
+
+  if (needsReInit) {
+    Destroy();
+    nsresult rv = InitInternal(aWidth, aHeight);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    mInitialized = true;
+    return NS_OK;
   }
 
   // Encoder configuration structure.
@@ -364,45 +416,13 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk& aChunk) {
   }
 
   gfx::IntSize imgSize = img->GetSize();
-
   if (imgSize != IntSize(mFrameWidth, mFrameHeight)) {
-    VP8LOG(LogLevel::Info, "Dynamic resolution change (was %dx%d, now %dx%d).",
-           mFrameWidth, mFrameHeight, imgSize.width, imgSize.height);
-
-    if (imgSize <= IntSize(mFrameWidth,
-                           mFrameHeight) &&  // check buffer size instead
-                                             // If the new size is less than or
-                                             // equal to old, the existing
-                                             // encoder instance can continue.
-        NS_SUCCEEDED(Reconfigure(imgSize.width, imgSize.height,
-                                 intrinsicSize.width, intrinsicSize.height))) {
-      VP8LOG(LogLevel::Info, "Reconfigured VP8 encoder.");
-    } else {
-      // New frame size is larger; re-create the encoder.
-      Destroy();
-      nsresult rv = Init(imgSize.width, imgSize.height, intrinsicSize.width,
-                         intrinsicSize.height);
-      VP8LOG(LogLevel::Info, "Recreated VP8 encoder.");
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    nsresult rv = Reconfigure(imgSize.width, imgSize.height);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  const size_t neededSize =
-      I420Size<I420_STRIDE_ALIGN>(mFrameWidth, mFrameHeight);
-  if (neededSize > mI420FrameSize) {
-    mI420Frame.reset(new (fallible) uint8_t[neededSize]);
-  }
-
-  if (!mI420Frame) {
-    VP8LOG(LogLevel::Warning, "Allocating I420 frame of size %zu failed",
-           neededSize);
-    mI420FrameSize = 0;
-    return NS_ERROR_FAILURE;
-  }
-  mI420FrameSize = neededSize;
-
-  vpx_img_wrap(&mVPXImageWrapper, VPX_IMG_FMT_I420, mFrameWidth, mFrameHeight,
-               I420_STRIDE_ALIGN, mI420Frame.get());
+  MOZ_ASSERT(mFrameWidth == imgSize.width);
+  MOZ_ASSERT(mFrameHeight == imgSize.height);
 
   nsresult rv = ConvertToI420(img, mVPXImageWrapper.planes[VPX_PLANE_Y],
                               mVPXImageWrapper.stride[VPX_PLANE_Y],
