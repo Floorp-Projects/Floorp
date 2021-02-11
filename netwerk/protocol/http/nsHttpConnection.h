@@ -328,6 +328,8 @@ class nsHttpConnection final : public HttpConnectionBase,
   nsCString mEarlyNegotiatedALPN;
   bool mDid0RTTSpdy;
 
+  nsresult mErrorBeforeConnect = NS_OK;
+
  private:
   bool mThroughCaptivePortal;
 };

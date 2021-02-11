@@ -8,7 +8,7 @@
 
 #include "PendingTransactionInfo.h"
 #include "PendingTransactionQueue.h"
-#include "HalfOpenSocket.h"
+#include "DnsAndConnectSocket.h"
 #include "DashboardTypes.h"
 
 namespace mozilla {
@@ -79,11 +79,13 @@ class ConnectionEntry {
 
   void MoveConnection(HttpConnectionBase* proxyConn, ConnectionEntry* otherEnt);
 
-  size_t HalfOpensLength() const { return mHalfOpens.Length(); }
+  size_t DnsAndConnectSocketsLength() const {
+    return mDnsAndConnectSockets.Length();
+  }
 
-  void InsertIntoHalfOpens(HalfOpenSocket* sock);
-  void CloseAllHalfOpens();
-  bool IsInHalfOpens(HalfOpenSocket* sock);
+  void InsertIntoDnsAndConnectSockets(DnsAndConnectSocket* sock);
+  void CloseAllDnsAndConnectSockets();
+  bool IsInDnsAndConnectSockets(DnsAndConnectSocket* sock);
 
   HttpRetParams GetConnectionData();
   void LogConnections();
@@ -94,10 +96,10 @@ class ConnectionEntry {
 
   // calculate the number of half open sockets that have not had at least 1
   // connection complete
-  uint32_t UnconnectedHalfOpens() const;
+  uint32_t UnconnectedDnsAndConnectSockets() const;
 
-  // Remove a particular half open socket from the mHalfOpens array
-  bool RemoveHalfOpen(HalfOpenSocket*);
+  // Remove a particular DnsAndConnectSocket from the mDnsAndConnectSocket array
+  bool RemoveDnsAndConnectSocket(DnsAndConnectSocket*);
 
   // Spdy sometimes resolves the address in the socket manager in order
   // to re-coalesce sharded HTTP hosts. The dotted decimal address is
@@ -188,7 +190,8 @@ class ConnectionEntry {
   nsTArray<RefPtr<nsHttpConnection>> mIdleConns;  // idle persistent connections
   nsTArray<RefPtr<HttpConnectionBase>> mActiveConns;  // active connections
 
-  nsTArray<HalfOpenSocket*> mHalfOpens;  // half open connections
+  nsTArray<DnsAndConnectSocket*>
+      mDnsAndConnectSockets;  // dns resolution and half open connections
 
   PendingTransactionQueue mPendingQ;
   ~ConnectionEntry();
