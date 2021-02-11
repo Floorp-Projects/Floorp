@@ -26,8 +26,9 @@ LazyLogModule gVP8TrackEncoderLog("VP8TrackEncoder");
   MOZ_LOG(gVP8TrackEncoderLog, level, (msg, ##__VA_ARGS__))
 
 #define DEFAULT_BITRATE_BPS 2500000
+constexpr int DEFAULT_KEYFRAME_INTERVAL_MS = 1000;
 constexpr int I420_STRIDE_ALIGN = 16;
-#define MAX_KEYFRAME_INTERVAL 600
+constexpr int MAX_KEYFRAME_DISTANCE = 600;
 
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
@@ -128,7 +129,7 @@ nsresult CreateEncoderConfig(int32_t aWidth, int32_t aHeight,
   // mKeyFrameInterval milliseconds (which will encode with VPX_EFLAG_FORCE_KF
   // when reached).
   config->kf_mode = VPX_KF_AUTO;
-  config->kf_max_dist = MAX_KEYFRAME_INTERVAL;
+  config->kf_max_dist = MAX_KEYFRAME_DISTANCE;
 
   return NS_OK;
 }
@@ -138,7 +139,9 @@ VP8TrackEncoder::VP8TrackEncoder(RefPtr<DriftCompensator> aDriftCompensator,
                                  TrackRate aTrackRate,
                                  FrameDroppingMode aFrameDroppingMode)
     : VideoTrackEncoder(std::move(aDriftCompensator), aTrackRate,
-                        aFrameDroppingMode) {
+                        aFrameDroppingMode),
+      mKeyFrameInterval(
+          TimeDuration::FromMilliseconds(DEFAULT_KEYFRAME_INTERVAL_MS)) {
   MOZ_COUNT_CTOR(VP8TrackEncoder);
 }
 
@@ -153,6 +156,16 @@ void VP8TrackEncoder::Destroy() {
   }
 
   mInitialized = false;
+}
+
+void VP8TrackEncoder::SetKeyFrameInterval(
+    Maybe<TimeDuration> aKeyFrameInterval) {
+  const TimeDuration defaultInterval =
+      TimeDuration::FromMilliseconds(DEFAULT_KEYFRAME_INTERVAL_MS);
+  mKeyFrameInterval =
+      std::min(aKeyFrameInterval.valueOr(defaultInterval), defaultInterval);
+  VP8LOG(LogLevel::Debug, "%p, keyframe interval is now %.2fs", this,
+         mKeyFrameInterval.ToSeconds());
 }
 
 nsresult VP8TrackEncoder::Init(int32_t aWidth, int32_t aHeight,
@@ -281,6 +294,16 @@ nsresult VP8TrackEncoder::GetEncodedPartitions(
   }
 
   if (!frameData->IsEmpty()) {
+    if (pkt->data.frame.flags & VPX_FRAME_IS_KEY) {
+      // Update the since-last-keyframe counter, and account for this frame's
+      // time.
+      TrackTime frameTime = pkt->data.frame.pts;
+      DebugOnly<TrackTime> frameDuration = pkt->data.frame.duration;
+      MOZ_ASSERT(frameTime + frameDuration <= mEncodedTimestamp);
+      mDurationSinceLastKeyframe =
+          std::min(mDurationSinceLastKeyframe, mEncodedTimestamp - frameTime);
+    }
+
     // Convert the timestamp and duration to Usecs.
     media::TimeUnit timestamp =
         FramesToTimeUnit(pkt->data.frame.pts, mTrackRate);
@@ -481,11 +504,17 @@ nsresult VP8TrackEncoder::GetEncodedTrack(
         flags |= VPX_EFLAG_FORCE_KF;
       }
 
-      // Sum duration of non-key frames and force keyframe if exceeded the given
-      // keyframe interval
-      if (mKeyFrameInterval > 0) {
-        if ((mDurationSinceLastKeyframe * 1000 / mTrackRate) >=
-            mKeyFrameInterval) {
+      // Sum duration of non-key frames and force keyframe if exceeded the
+      // given keyframe interval
+      if (mKeyFrameInterval > TimeDuration::FromSeconds(0)) {
+        if (FramesToTimeUnit(mDurationSinceLastKeyframe, mTrackRate)
+                .ToTimeDuration() >= mKeyFrameInterval) {
+          VP8LOG(LogLevel::Warning,
+                 "Reached mKeyFrameInterval without seeing a keyframe. Forcing "
+                 "one. time: %.2f, interval: %.2f",
+                 FramesToTimeUnit(mDurationSinceLastKeyframe, mTrackRate)
+                     .ToSeconds(),
+                 mKeyFrameInterval.ToSeconds());
           mDurationSinceLastKeyframe = 0;
           flags |= VPX_EFLAG_FORCE_KF;
         }
@@ -498,6 +527,10 @@ nsresult VP8TrackEncoder::GetEncodedTrack(
         VP8LOG(LogLevel::Error, "vpx_codec_encode failed to encode the frame.");
         return NS_ERROR_FAILURE;
       }
+
+      // Move forward the mEncodedTimestamp.
+      mEncodedTimestamp += chunk.GetDuration();
+
       // Get the encoded data from VP8 encoder.
       rv = GetEncodedPartitions(aData);
       if (rv != NS_OK && rv != NS_ERROR_NOT_AVAILABLE) {
@@ -506,6 +539,10 @@ nsresult VP8TrackEncoder::GetEncodedTrack(
       }
     } else {
       // SKIP_FRAME
+
+      // Move forward the mEncodedTimestamp.
+      mEncodedTimestamp += chunk.GetDuration();
+
       // Extend the duration of the last encoded data in aData
       // because this frame will be skipped.
       VP8LOG(LogLevel::Warning,
@@ -539,8 +576,6 @@ nsresult VP8TrackEncoder::GetEncodedTrack(
       }
     }
 
-    // Move forward the mEncodedTimestamp.
-    mEncodedTimestamp += chunk.GetDuration();
     totalProcessedDuration += chunk.GetDuration();
 
     // Check what to do next.
