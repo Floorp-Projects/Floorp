@@ -19,7 +19,7 @@ function checkAttributes(elem, label, accesskey, disabled, hidden, isAfter)
   is(elem.getAttribute("label"), label, elem.id + " label " + (isAfter ? "after" : "before") + " open");
   is(elem.getAttribute("accesskey"), accesskey, elem.id + " accesskey " + (isAfter ? "after" : "before") + " open");
   is(elem.getAttribute("disabled"), disabled, elem.id + " disabled " + (isAfter ? "after" : "before") + " open");
-  is(elem.getAttribute("hidden"), hidden, elem.id + " hidden " + (isAfter ? "after" : "before") + " open");
+  is(elem.hidden, hidden, elem.id + " hidden " + (isAfter ? "after" : "before") + " open");
 }
 
 function runOrOpen()
@@ -49,10 +49,10 @@ function runTestSet(suffix)
   var three = $("three" + suffix);
   var four = $("four" + suffix);
 
-  checkAttributes(one, "One", "", "", "true", false);
-  checkAttributes(two, "", "", "false", "", false);
-  checkAttributes(three, "Three", "T", "true", "", false);
-  checkAttributes(four, "Four", "F", "", "", false);
+  checkAttributes(one, "One", "", "", true, false);
+  checkAttributes(two, "", "", "false", false, false);
+  checkAttributes(three, "Three", "T", "true", false, false);
+  checkAttributes(four, "Four", "F", "", false, false);
 
   if (isMac && suffix) {
     var utils = window.windowUtils;
@@ -62,10 +62,10 @@ function runTestSet(suffix)
     $("menu" + suffix).open = true;
   }
 
-  checkAttributes(one, "One", "", "", "false", true);
-  checkAttributes(two, "Cat", "C", "", "", true);
-  checkAttributes(three, "Dog", "D", "false", "true", true);
-  checkAttributes(four, "Four", "F", "true", "", true);
+  checkAttributes(one, "One", "", "", false, true);
+  checkAttributes(two, "Cat", "C", "", false, true);
+  checkAttributes(three, "Dog", "D", "false", true, true);
+  checkAttributes(four, "Four", "F", "true", false, true);
 
   $("menu" + suffix).open = false;
 }

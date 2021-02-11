@@ -179,7 +179,8 @@
     }
 
     get hidden() {
-      return this.getAttribute("hidden") == "true";
+      // This getter makes `hidden` read-only
+      return super.hidden;
     }
 
     get muted() {
