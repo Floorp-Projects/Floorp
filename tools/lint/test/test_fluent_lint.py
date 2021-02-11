@@ -1,0 +1,50 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import mozunit
+
+LINTER = "fluent-lint"
+
+
+def test_lint_exclusions(lint, paths):
+    results = lint(paths("excluded.ftl"))
+    assert len(results) == 1
+    assert results[0].rule == "TE01"
+    assert results[0].lineno == 6
+    assert results[0].column == 20
+
+
+def test_lint_single_file(lint, paths):
+    results = lint(paths("bad.ftl"))
+    assert len(results) == 9
+    assert results[0].rule == "ID01"
+    assert results[0].lineno == 1
+    assert results[0].column == 1
+    assert results[1].rule == "ID01"
+    assert results[1].lineno == 3
+    assert results[1].column == 1
+    assert results[2].rule == "TE01"
+    assert results[2].lineno == 5
+    assert results[2].column == 20
+    assert results[3].rule == "TE02"
+    assert results[3].lineno == 6
+    assert results[3].column == 20
+    assert results[4].rule == "TE03"
+    assert results[4].lineno == 7
+    assert results[4].column == 20
+    assert results[5].rule == "TE04"
+    assert results[5].lineno == 10
+    assert results[5].column == 20
+    assert results[6].rule == "TE05"
+    assert results[6].lineno == 12
+    assert results[6].column == 16
+    assert results[7].rule == "TE03"
+    assert results[7].lineno == 16
+    assert results[7].column == 20
+    assert results[8].rule == "TE03"
+    assert results[8].lineno == 24
+    assert results[8].column == 18
+
+
+if __name__ == "__main__":
+    mozunit.main()
