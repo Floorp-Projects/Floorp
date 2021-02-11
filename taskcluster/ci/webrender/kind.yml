@@ -98,8 +98,6 @@ jobs:
         worker-type: b-linux
         worker:
             docker-image: {in-tree: webrender}
-            env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
             chain-of-trust: true
             artifacts:
                 - type: file
@@ -116,13 +114,13 @@ jobs:
                 - linux64-cctools-port
                 - linux64-clang-11-macosx-cross
                 - linux64-llvm-dsymutil
+                - macosx64-sdk-10.12
                 - wrench-deps
             macosx64-clang-11:
                 - artifact: clang.tar.zst
                   dest: clang-mac
         run:
             using: run-task
-            tooltool-downloads: internal
             command: '$HOME/checkouts/gecko/taskcluster/scripts/misc/wrench-macos-build.sh'
         treeherder:
             platform: osx-cross/opt
@@ -130,7 +128,6 @@ jobs:
         when:
             files-changed:
                 - 'gfx/wr/**'
-                - 'taskcluster/scripts/misc/tooltool-download.sh'
                 - 'taskcluster/scripts/misc/wr-macos-cross-build-setup.sh'
                 - 'taskcluster/scripts/misc/wrench-macos-build.sh'
 
@@ -167,8 +164,6 @@ jobs:
         worker-type: b-linux
         worker:
             docker-image: {in-tree: webrender}
-            env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
             chain-of-trust: true
             artifacts:
                 - type: file
@@ -180,10 +175,10 @@ jobs:
                 - linux64-cctools-port
                 - linux64-clang
                 - linux64-llvm-dsymutil
+                - macosx64-sdk-10.12
                 - wrench-deps
         run:
             using: run-task
-            tooltool-downloads: internal
             command: '$HOME/checkouts/gecko/taskcluster/scripts/misc/wr-cargotest-macos-build.sh'
         treeherder:
             platform: osx-cross/debug
@@ -191,7 +186,6 @@ jobs:
         when:
             files-changed:
                 - 'gfx/wr/**'
-                - 'taskcluster/scripts/misc/tooltool-download.sh'
                 - 'taskcluster/scripts/misc/wr-cargotest-macos-build.sh'
                 - 'taskcluster/scripts/misc/wr-macos-cross-build-setup.sh'
 

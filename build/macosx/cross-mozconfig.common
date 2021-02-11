@@ -10,13 +10,7 @@ mk_add_options "export PATH=$MOZ_FETCHES_DIR/cctools/bin:$MOZ_FETCHES_DIR/binuti
 # dsymutil needs a libstdc++ more recent than what's on the system.
 mk_add_options "export LD_LIBRARY_PATH=$MOZ_FETCHES_DIR/clang/lib"
 
-# This SDK was copied from a local XCode install and uploaded to tooltool.
-# Generate the tarball by running this command with the proper SDK version:
-#   sdk_path=$(xcrun --sdk macosx10.12 --show-sdk-path)
-#   tar -C $(dirname ${sdk_path}) -cHjf /tmp/$(basename ${sdk_path}).tar.bz2 $(basename ${sdk_path})
-# Upload the resulting tarball from /tmp to tooltool, and change the entry in
-# `browser/config/tooltool-manifests/macosx64/cross-releng.manifest`.
-CROSS_SYSROOT=$topsrcdir/MacOSX10.12.sdk
+CROSS_SYSROOT=$MOZ_FETCHES_DIR/MacOSX10.12.sdk
 
 export CFLAGS="$CFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
 export CXXFLAGS="$CXXFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
