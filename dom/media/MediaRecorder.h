@@ -31,17 +31,23 @@ class DOMException;
 
 /**
  * Implementation of
- * https://dvcs.w3.org/hg/dap/raw-file/default/media-stream-capture/MediaRecorder.html
- * The MediaRecorder accepts a mediaStream as input source passed from UA. When
- * recorder starts, a MediaEncoder will be created and accept the mediaStream as
- * input source. Encoder will get the raw data by track data changes, encode it
- * by selected MIME Type, then store the encoded in a MutableBlobStorage object.
- * The encoded data will be extracted on every timeslice passed from Start
- * function call or by RequestData function. Thread model: When the recorder
- * starts, it creates a "Media Encoder" thread to read data from MediaEncoder
- * object and store buffer in MutableBlobStorage object. Also extract the
- * encoded data and create blobs on every timeslice passed from start function
- * or RequestData function called by UA.
+ * https://w3c.github.io/mediacapture-record/MediaRecorder.html
+ *
+ * The MediaRecorder accepts a MediaStream as input passed from an application.
+ * When the MediaRecorder starts, a MediaEncoder will be created and accepts the
+ * MediaStreamTracks in the MediaStream as input source. For each track it
+ * creates a TrackEncoder.
+ *
+ * The MediaEncoder automatically encodes and muxes data from the tracks by the
+ * given MIME type, then it stores this data into a MutableBlobStorage object.
+ * When a timeslice is set and the MediaEncoder has stored enough data to fill
+ * the timeslice, it extracts a Blob from the storage and passes it to
+ * MediaRecorder. On RequestData() or Stop(), the MediaEncoder extracts the blob
+ * from the storage and returns it to MediaRecorder through a MozPromise.
+ *
+ * Thread model: When the recorder starts, it creates a worker thread (called
+ * the encoder thread) that does all the heavy lifting - encoding, time keeping,
+ * muxing.
  */
 
 class MediaRecorder final : public DOMEventTargetHelper,
@@ -61,13 +67,9 @@ class MediaRecorder final : public DOMEventTargetHelper,
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaRecorder, DOMEventTargetHelper)
 
   // WebIDL
-  // Start recording. If timeSlice has been provided, mediaRecorder will
-  // raise a dataavailable event containing the Blob of collected data on every
-  // timeSlice milliseconds. If timeSlice isn't provided, UA should call the
-  // RequestData to obtain the Blob data, also set the mTimeSlice to zero.
+  // Start recording.
   void Start(const Optional<uint32_t>& timeSlice, ErrorResult& aResult);
-  // Stop the recording activiy. Including stop the Media Encoder thread,
-  // un-hook the mediaStreamListener to encoder.
+  // Stop recording.
   void Stop(ErrorResult& aResult);
   // Pause a recording.
   void Pause(ErrorResult& aResult);
