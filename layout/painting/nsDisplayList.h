@@ -553,6 +553,13 @@ class nsDisplayListBuilder {
    */
   void ForceLayerForScrollParent() { mForceLayerForScrollParent = true; }
   /**
+   * Set the flag that indicates there is a non-minimal display port in the
+   * current subtree. This is used to determine display port expiry.
+   */
+  void SetContainsNonMinimalDisplayPort() {
+    mContainsNonMinimalDisplayPort = true;
+  }
+  /**
    * Get the ViewID and the scrollbar flags corresponding to the scrollbar for
    * which we are building display items at the moment.
    */
@@ -1221,7 +1228,9 @@ class nsDisplayListBuilder {
                                     ViewID aScrollId)
         : mBuilder(aBuilder),
           mOldValue(aBuilder->mCurrentScrollParentId),
-          mOldForceLayer(aBuilder->mForceLayerForScrollParent) {
+          mOldForceLayer(aBuilder->mForceLayerForScrollParent),
+          mOldContainsNonMinimalDisplayPort(
+              mBuilder->mContainsNonMinimalDisplayPort) {
       // If this AutoCurrentScrollParentIdSetter has the same scrollId as the
       // previous one on the stack, then that means the scrollframe that
       // created this isn't actually scrollable and cannot participate in
@@ -1229,12 +1238,19 @@ class nsDisplayListBuilder {
       mCanBeScrollParent = (mOldValue != aScrollId);
       aBuilder->mCurrentScrollParentId = aScrollId;
       aBuilder->mForceLayerForScrollParent = false;
+      aBuilder->mContainsNonMinimalDisplayPort = false;
     }
 
     bool ShouldForceLayerForScrollParent() const {
       // Only scrollframes participating in scroll handoff can be forced to
       // layerize
       return mCanBeScrollParent && mBuilder->mForceLayerForScrollParent;
+    }
+
+    bool GetContainsNonMinimalDisplayPort() const {
+      // Only for scrollframes participating in scroll handoff can we return
+      // true.
+      return mCanBeScrollParent && mBuilder->mContainsNonMinimalDisplayPort;
     }
 
     ~AutoCurrentScrollParentIdSetter() {
@@ -1250,12 +1266,15 @@ class nsDisplayListBuilder {
         // scroll handoff.
         mBuilder->mForceLayerForScrollParent |= mOldForceLayer;
       }
+      mBuilder->mContainsNonMinimalDisplayPort |=
+          mOldContainsNonMinimalDisplayPort;
     }
 
    private:
     nsDisplayListBuilder* mBuilder;
     ViewID mOldValue;
     bool mOldForceLayer;
+    bool mOldContainsNonMinimalDisplayPort;
     bool mCanBeScrollParent;
   };
 
@@ -2004,6 +2023,7 @@ class nsDisplayListBuilder {
   bool mWindowDraggingAllowed;
   bool mIsBuildingForPopup;
   bool mForceLayerForScrollParent;
+  bool mContainsNonMinimalDisplayPort;
   bool mAsyncPanZoomEnabled;
   bool mBuildingInvisibleItems;
   bool mIsBuilding;
