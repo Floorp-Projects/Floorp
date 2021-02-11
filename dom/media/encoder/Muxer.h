@@ -54,9 +54,9 @@ class Muxer {
   nsresult Mux();
 
   // Audio frames that have been encoded and are pending write to the muxer.
-  MediaQueue<EncodedFrame> mEncodedAudioFrames;
+  MediaQueue<EncodedFrame> mEncodedAudioQueue;
   // Video frames that have been encoded and are pending write to the muxer.
-  MediaQueue<EncodedFrame> mEncodedVideoFrames;
+  MediaQueue<EncodedFrame> mEncodedVideoQueue;
   // The writer for the specific container we're recording into.
   UniquePtr<ContainerWriter> mWriter;
   // True once metadata has been set in the muxer.
