@@ -114,5 +114,30 @@ NS_IMETHODIMP nsSyncSection::Run() {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsTimeupdateRunner::Run() {
+  if (IsCancelled() || !ShouldDispatchTimeupdate()) {
+    return NS_OK;
+  }
+  // TODO (bug 1688128) : update time after we dispatch the event. Although
+  // current behavior matches the spec closely, but doing that would avoid the
+  // issue where timeupdate event listener takes lots of time and then we end
+  // up spending all time handling just timeupdate events.
+  mElement->UpdateLastTimeupdateDispatchTime();
+  return DispatchEvent(mEventName);
+}
+
+bool nsTimeupdateRunner::ShouldDispatchTimeupdate() const {
+  if (mIsMandatory) {
+    return true;
+  }
+
+  // If the main thread is busy, tasks may be delayed and dispatched at
+  // unexpected times. Ensure we don't dispatch `timeupdate` more often
+  // than once per `TIMEUPDATE_MS`.
+  const TimeStamp& lastTime = mElement->LastTimeupdateDispatchTime();
+  return lastTime.IsNull() || TimeStamp::Now() - lastTime >
+                                  TimeDuration::FromMilliseconds(TIMEUPDATE_MS);
+}
+
 #undef LOG_EVENT
 }  // namespace mozilla::dom

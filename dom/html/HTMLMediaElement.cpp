@@ -6045,10 +6045,12 @@ void HTMLMediaElement::PrincipalHandleChangedForVideoFrameContainer(
 }
 
 already_AddRefed<nsMediaEventRunner> HTMLMediaElement::GetEventRunner(
-    const nsAString& aName) {
+    const nsAString& aName, EventFlag aFlag) {
   RefPtr<nsMediaEventRunner> runner;
   if (aName.EqualsLiteral("playing")) {
     runner = new nsNotifyAboutPlayingRunner(this, TakePendingPlayPromises());
+  } else if (aName.EqualsLiteral("timeupdate")) {
+    runner = new nsTimeupdateRunner(this, aFlag == EventFlag::eMandatory);
   } else {
     runner = new nsAsyncEventRunner(aName, this);
   }
@@ -6071,18 +6073,19 @@ nsresult HTMLMediaElement::DispatchEvent(const nsAString& aName) {
 }
 
 void HTMLMediaElement::DispatchAsyncEvent(const nsAString& aName) {
-  LOG_EVENT(LogLevel::Debug,
-            ("%p Queuing event %s", this, NS_ConvertUTF16toUTF8(aName).get()));
-  DDLOG(DDLogCategory::Event, "HTMLMediaElement",
-        nsCString(NS_ConvertUTF16toUTF8(aName)));
-
   RefPtr<nsMediaEventRunner> runner = GetEventRunner(aName);
+  DispatchAsyncEvent(std::move(runner));
+}
+
+void HTMLMediaElement::DispatchAsyncEvent(RefPtr<nsMediaEventRunner> aRunner) {
+  NS_ConvertUTF16toUTF8 eventName(aRunner->EventName());
+  LOG_EVENT(LogLevel::Debug, ("%p Queuing event %s", this, eventName.get()));
+  DDLOG(DDLogCategory::Event, "HTMLMediaElement", nsCString(eventName.get()));
   if (mEventBlocker->ShouldBlockEventDelivery()) {
-    mEventBlocker->PostponeEvent(runner);
+    mEventBlocker->PostponeEvent(aRunner);
     return;
   }
-
-  mMainThreadEventTarget->Dispatch(runner.forget());
+  mMainThreadEventTarget->Dispatch(aRunner.forget());
 }
 
 bool HTMLMediaElement::IsPotentiallyPlaying() const {
@@ -6464,6 +6467,16 @@ void HTMLMediaElement::SetRequestHeaders(nsIHttpChannel* aChannel) {
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
+const TimeStamp& HTMLMediaElement::LastTimeupdateDispatchTime() const {
+  MOZ_ASSERT(NS_IsMainThread());
+  return mLastTimeUpdateDispatchTime;
+}
+
+void HTMLMediaElement::UpdateLastTimeupdateDispatchTime() {
+  MOZ_ASSERT(NS_IsMainThread());
+  mLastTimeUpdateDispatchTime = TimeStamp::Now();
+}
+
 bool HTMLMediaElement::ShouldQueueTimeupdateAsyncTask(
     TimeupdateType aType) const {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -6491,7 +6504,11 @@ void HTMLMediaElement::FireTimeUpdate(TimeupdateType aType) {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
   if (ShouldQueueTimeupdateAsyncTask(aType)) {
-    DispatchAsyncEvent(u"timeupdate"_ns);
+    RefPtr<nsMediaEventRunner> runner =
+        GetEventRunner(u"timeupdate"_ns, aType == TimeupdateType::eMandatory
+                                             ? EventFlag::eMandatory
+                                             : EventFlag::eNone);
+    DispatchAsyncEvent(std::move(runner));
     mQueueTimeUpdateRunnerTime = TimeStamp::Now();
     mLastCurrentTime = CurrentTime();
   }

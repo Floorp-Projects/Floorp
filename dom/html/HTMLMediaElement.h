@@ -160,6 +160,14 @@ class HTMLMediaElement : public nsGenericHTMLElement,
     ePeriodic = true,
   };
 
+  // This is used for event runner creation. Currently only timeupdate needs
+  // that, but it can be used to extend for other events in the future if
+  // necessary.
+  enum class EventFlag : uint8_t {
+    eNone = 0,
+    eMandatory = 1,
+  };
+
   /**
    * This is used when the browser is constructing a video element to play
    * a channel that we've already started loading. The src attribute and
@@ -294,6 +302,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   // Dispatch events
   void DispatchAsyncEvent(const nsAString& aName) final;
+  void DispatchAsyncEvent(RefPtr<nsMediaEventRunner> aRunner);
 
   // Triggers a recomputation of readyState.
   void UpdateReadyState() override {
@@ -452,6 +461,9 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   void MaybeQueueTimeupdateEvent() final {
     FireTimeUpdate(TimeupdateType::ePeriodic);
   }
+
+  const TimeStamp& LastTimeupdateDispatchTime() const;
+  void UpdateLastTimeupdateDispatchTime();
 
   // WebIDL
 
@@ -1282,7 +1294,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // For nsAsyncEventRunner.
   nsresult DispatchEvent(const nsAString& aName);
 
-  already_AddRefed<nsMediaEventRunner> GetEventRunner(const nsAString& aName);
+  already_AddRefed<nsMediaEventRunner> GetEventRunner(
+      const nsAString& aName, EventFlag aFlag = EventFlag::eNone);
 
   // This method moves the mPendingPlayPromises into a temperate object. So the
   // mPendingPlayPromises is cleared after this method call.
@@ -1532,6 +1545,10 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // Time that the last timeupdate event was queued. Read/Write from the
   // main thread only.
   TimeStamp mQueueTimeUpdateRunnerTime;
+
+  // Time that the last timeupdate event was fired. Read/Write from the
+  // main thread only.
+  TimeStamp mLastTimeUpdateDispatchTime;
 
   // Time that the last progress event was fired. Read/Write from the
   // main thread only.
