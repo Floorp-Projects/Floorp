@@ -19,6 +19,11 @@ class PlayPromise : public Promise {
  public:
   static already_AddRefed<PlayPromise> Create(nsIGlobalObject* aGlobal,
                                               ErrorResult& aRv);
+
+  using PlayPromiseArr = nsTArray<RefPtr<PlayPromise>>;
+  static void ResolvePromisesWithUndefined(const PlayPromiseArr& aPromises);
+  static void RejectPromises(const PlayPromiseArr& aPromises, nsresult aError);
+
   ~PlayPromise();
   void MaybeResolveWithUndefined();
   void MaybeReject(nsresult aReason);
