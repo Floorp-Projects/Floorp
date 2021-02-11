@@ -149,6 +149,35 @@ class MediaMemoryTracker : public nsIMemoryReporter {
   }
 };
 
+// When media is looping back to the head position, the spec [1] mentions that
+// MediaElement should dispatch `seeking` first, `timeupdate`, and `seeked` in
+// the end. This guard should be created before we fire `timeupdate` so that it
+// can ensure the event order.
+// [1]
+// https://html.spec.whatwg.org/multipage/media.html#playing-the-media-resource:attr-media-loop-2
+// https://html.spec.whatwg.org/multipage/media.html#seeking:dom-media-seek
+class MOZ_RAII SeekEventsGuard {
+ public:
+  explicit SeekEventsGuard(MediaDecoderOwner* aOwner, bool aIsLoopingBack)
+      : mOwner(aOwner), mIsLoopingBack(aIsLoopingBack) {
+    MOZ_ASSERT(mOwner);
+    if (mIsLoopingBack) {
+      mOwner->SeekStarted();
+    }
+  }
+
+  ~SeekEventsGuard() {
+    MOZ_ASSERT(mOwner);
+    if (mIsLoopingBack) {
+      mOwner->SeekCompleted();
+    }
+  }
+
+ private:
+  MediaDecoderOwner* mOwner;
+  bool mIsLoopingBack;
+};
+
 StaticRefPtr<MediaMemoryTracker> MediaMemoryTracker::sUniqueInstance;
 
 RefPtr<MediaMemoryPromise> GetMediaMemorySizes() {
@@ -868,17 +897,10 @@ void MediaDecoder::UpdateTelemetryHelperBasedOnPlayState(
   }
 }
 
-MediaDecoder::PositionUpdate MediaDecoder::GetPositionUpdateReason(
-    double aPrevPos, double aCurPos) const {
-  MOZ_ASSERT(NS_IsMainThread());
-  // If current position is earlier than previous position and we didn't do
-  // seek, that means we looped back to the start position, which currently
-  // happens on audio only.
-  if (mLooping && !mSeekRequest.Exists() && aCurPos < aPrevPos) {
-    return PositionUpdate::eSeamlessLoopingSeeking;
-  }
-  return aPrevPos != aCurPos ? PositionUpdate::ePeriodicUpdate
-                             : PositionUpdate::eOther;
+bool MediaDecoder::IsLoopingBack(double aPrevPos, double aCurPos) const {
+  // If current position is early than previous position and we didn't do seek,
+  // that means we looped back to the start position.
+  return mLooping && !mSeekRequest.Exists() && aCurPos < aPrevPos;
 }
 
 void MediaDecoder::UpdateLogicalPositionInternal() {
@@ -889,46 +911,21 @@ void MediaDecoder::UpdateLogicalPositionInternal() {
   if (mPlayState == PLAY_STATE_ENDED) {
     currentPosition = std::max(currentPosition, mDuration);
   }
-
-  const PositionUpdate reason =
-      GetPositionUpdateReason(mLogicalPosition, currentPosition);
-  switch (reason) {
-    case PositionUpdate::ePeriodicUpdate:
-      SetLogicalPosition(currentPosition);
-      // This is actually defined in `TimeMarchesOn`, but we do that in decoder.
-      // https://html.spec.whatwg.org/multipage/media.html#playing-the-media-resource:event-media-timeupdate-7
-      // TODO (bug 1688137): should we move it back to `TimeMarchesOn`?
-      GetOwner()->MaybeQueueTimeupdateEvent();
-      break;
-    case PositionUpdate::eSeamlessLoopingSeeking:
-      // When seamless seeking occurs, seeking was performed on the demuxer so
-      // the decoder doesn't know. That means decoder still thinks it's in
-      // playing. Therefore, we have to manually call those methods to notify
-      // the owner about seeking.
-      GetOwner()->SeekStarted();
-      SetLogicalPosition(currentPosition);
-      GetOwner()->SeekCompleted();
-      break;
-    default:
-      MOZ_ASSERT(reason == PositionUpdate::eOther);
-      SetLogicalPosition(currentPosition);
-      break;
-  }
+  bool logicalPositionChanged = mLogicalPosition != currentPosition;
+  SeekEventsGuard guard(GetOwner(),
+                        IsLoopingBack(mLogicalPosition, currentPosition));
+  mLogicalPosition = currentPosition;
+  DDLOG(DDLogCategory::Property, "currentTime", mLogicalPosition);
 
   // Invalidate the frame so any video data is displayed.
   // Do this before the timeupdate event so that if that
   // event runs JavaScript that queries the media size, the
   // frame has reflowed and the size updated beforehand.
   Invalidate();
-}
 
-void MediaDecoder::SetLogicalPosition(double aNewPosition) {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mLogicalPosition == aNewPosition) {
-    return;
+  if (logicalPositionChanged) {
+    FireTimeUpdate();
   }
-  mLogicalPosition = aNewPosition;
-  DDLOG(DDLogCategory::Property, "currentTime", mLogicalPosition);
 }
 
 void MediaDecoder::DurationChanged() {
@@ -1258,6 +1255,12 @@ void MediaDecoder::NotifyReaderDataArrived() {
 MediaDecoderStateMachine* MediaDecoder::GetStateMachine() const {
   MOZ_ASSERT(NS_IsMainThread());
   return mDecoderStateMachine;
+}
+
+void MediaDecoder::FireTimeUpdate() {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
+  GetOwner()->MaybeQueueTimeupdateEvent();
 }
 
 bool MediaDecoder::CanPlayThrough() {
