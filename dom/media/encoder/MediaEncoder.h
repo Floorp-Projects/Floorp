@@ -186,7 +186,11 @@ class MediaEncoder {
   /**
    * Cancels the encoding and shuts down the encoder using Shutdown().
    */
-  RefPtr<GenericNonExclusivePromise::AllPromiseType> Cancel();
+  /**
+   * Cancels (discarding any data currently buffered) the encoding and shuts
+   * down the encoder using Shutdown().
+   */
+  RefPtr<GenericNonExclusivePromise> Cancel();
 
   bool HasError();
 
@@ -248,7 +252,7 @@ class MediaEncoder {
    * Shuts down the MediaEncoder and cleans up track encoders.
    * Listeners will be notified of the shutdown unless we were Cancel()ed first.
    */
-  RefPtr<GenericNonExclusivePromise::AllPromiseType> Shutdown();
+  RefPtr<GenericNonExclusivePromise> Shutdown();
 
   /**
    * Sets mError to true, notifies listeners of the error if mError changed,
@@ -297,7 +301,7 @@ class MediaEncoder {
   bool mCompleted;
   bool mError;
   // Set when shutdown starts.
-  RefPtr<GenericNonExclusivePromise::AllPromiseType> mShutdownPromise;
+  RefPtr<GenericNonExclusivePromise> mShutdownPromise;
   // Get duration from create encoder, for logging purpose
   double GetEncodeTimeStamp() {
     TimeDuration decodeTime;

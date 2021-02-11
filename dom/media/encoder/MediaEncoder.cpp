@@ -728,7 +728,7 @@ nsresult MediaEncoder::GetEncodedData(
   return rv;
 }
 
-RefPtr<GenericNonExclusivePromise::AllPromiseType> MediaEncoder::Shutdown() {
+RefPtr<GenericNonExclusivePromise> MediaEncoder::Shutdown() {
   MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
   if (mShutdownPromise) {
     return mShutdownPromise;
@@ -762,7 +762,17 @@ RefPtr<GenericNonExclusivePromise::AllPromiseType> MediaEncoder::Shutdown() {
   }
 
   mShutdownPromise =
-      GenericNonExclusivePromise::All(mEncoderThread, shutdownPromises);
+      GenericNonExclusivePromise::All(mEncoderThread, shutdownPromises)
+          ->Then(mEncoderThread, __func__,
+                 [](const GenericNonExclusivePromise::AllPromiseType::
+                        ResolveOrRejectValue& aValue) {
+                   if (aValue.IsResolve()) {
+                     return GenericNonExclusivePromise::CreateAndResolve(
+                         true, __func__);
+                   }
+                   return GenericNonExclusivePromise::CreateAndReject(
+                       aValue.RejectValue(), __func__);
+                 });
 
   mShutdownPromise->Then(
       mEncoderThread, __func__,
@@ -771,7 +781,7 @@ RefPtr<GenericNonExclusivePromise::AllPromiseType> MediaEncoder::Shutdown() {
   return mShutdownPromise;
 }
 
-RefPtr<GenericNonExclusivePromise::AllPromiseType> MediaEncoder::Cancel() {
+RefPtr<GenericNonExclusivePromise> MediaEncoder::Cancel() {
   MOZ_ASSERT(NS_IsMainThread());
 
   DisconnectTracks();
