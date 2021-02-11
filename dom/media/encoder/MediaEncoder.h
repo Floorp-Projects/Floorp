@@ -252,6 +252,11 @@ class MediaEncoder {
   void RunOnGraph(already_AddRefed<Runnable> aRunnable);
 
   /**
+   * Calls Shutdown() if there is no remaining live track encoder.
+   */
+  void MaybeShutdown();
+
+  /**
    * Shuts down the MediaEncoder and cleans up track encoders.
    * Listeners will be notified of the shutdown unless we were Cancel()ed first.
    */
@@ -277,6 +282,9 @@ class MediaEncoder {
   const RefPtr<EncoderListener> mEncoderListener;
 
   nsTArray<RefPtr<MediaEncoderListener>> mListeners;
+
+  MediaEventListener mAudioFinishListener;
+  MediaEventListener mVideoFinishListener;
 
   // The AudioNode we are encoding.
   // Will be null when input is media stream or destination node.
