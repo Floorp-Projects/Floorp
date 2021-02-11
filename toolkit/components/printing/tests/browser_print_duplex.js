@@ -3,6 +3,28 @@
 
 "use strict";
 
+function changeToOption(helper, index) {
+  return helper.waitForSettingsEvent(function() {
+    let select = helper.get("duplex-select");
+    select.focus();
+    select.scrollIntoView({ block: "center" });
+
+    EventUtils.sendKey("space", helper.win);
+    let selectedIndex = select.selectedIndex;
+    info(`Looking for ${index} from ${selectedIndex}`);
+    while (selectedIndex != index) {
+      if (index > selectedIndex) {
+        EventUtils.sendKey("down", helper.win);
+        selectedIndex++;
+      } else {
+        EventUtils.sendKey("up", helper.win);
+        selectedIndex--;
+      }
+    }
+    EventUtils.sendKey("return", helper.win);
+  });
+}
+
 add_task(async function testPDFPrinterIsNonDuplex() {
   await PrintHelper.withTestPage(async helper => {
     await helper.startPrint();
@@ -54,13 +76,19 @@ add_task(async function testToggleDuplexWithPortraitOrientation() {
       duplex: Ci.nsIPrintSettings.kDuplexNone,
     });
 
-    await helper.click(helper.get("duplex-enabled"));
+    await changeToOption(helper, 1);
     helper.assertSettingsMatch({
       orientation: Ci.nsIPrintSettings.kPortraitOrientation,
       duplex: Ci.nsIPrintSettings.kDuplexFlipOnSideEdge,
     });
 
-    await helper.click(helper.get("duplex-enabled"));
+    await changeToOption(helper, 2);
+    helper.assertSettingsMatch({
+      orientation: Ci.nsIPrintSettings.kPortraitOrientation,
+      duplex: Ci.nsIPrintSettings.kDuplexFlipOnTopEdge,
+    });
+
+    await changeToOption(helper, 0);
     helper.assertSettingsMatch({
       orientation: Ci.nsIPrintSettings.kPortraitOrientation,
       duplex: Ci.nsIPrintSettings.kDuplexNone,
@@ -105,14 +133,20 @@ add_task(async function testToggleDuplexWithLandscapeOrientation() {
       duplex: Ci.nsIPrintSettings.kDuplexNone,
     });
 
-    await helper.click(helper.get("duplex-enabled"));
-    await helper.assertSettingsMatch({
+    await changeToOption(helper, 1);
+    helper.assertSettingsMatch({
       orientation: Ci.nsIPrintSettings.kLandscapeOrientation,
       duplex: Ci.nsIPrintSettings.kDuplexFlipOnSideEdge,
     });
 
-    await helper.click(helper.get("duplex-enabled"));
-    await helper.assertSettingsMatch({
+    await changeToOption(helper, 2);
+    helper.assertSettingsMatch({
+      orientation: Ci.nsIPrintSettings.kLandscapeOrientation,
+      duplex: Ci.nsIPrintSettings.kDuplexFlipOnTopEdge,
+    });
+
+    await changeToOption(helper, 0);
+    helper.assertSettingsMatch({
       orientation: Ci.nsIPrintSettings.kLandscapeOrientation,
       duplex: Ci.nsIPrintSettings.kDuplexNone,
     });
@@ -149,7 +183,8 @@ add_task(async function testSwitchOrientationWithDuplexEnabled() {
       duplex: Ci.nsIPrintSettings.kDuplexNone,
     });
 
-    await helper.click(helper.get("duplex-enabled"));
+    await changeToOption(helper, 1);
+
     await helper.assertSettingsMatch({
       orientation: Ci.nsIPrintSettings.kPortraitOrientation,
       duplex: Ci.nsIPrintSettings.kDuplexFlipOnSideEdge,
