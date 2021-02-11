@@ -47,18 +47,6 @@ static nsIContent* sAboutItemContent = nullptr;
 static nsIContent* sPrefItemContent = nullptr;
 static nsIContent* sQuitItemContent = nullptr;
 
-NS_IMPL_ISUPPORTS(nsNativeMenuServiceX, nsINativeMenuService)
-
-NS_IMETHODIMP nsNativeMenuServiceX::CreateNativeMenuBar(nsIWidget* aParent,
-                                                        mozilla::dom::Element* aMenuBarElement) {
-  NS_ASSERTION(NS_IsMainThread(), "Attempting to create native menu bar on wrong thread!");
-
-  RefPtr<nsMenuBarX> mb = new nsMenuBarX();
-  if (!mb) return NS_ERROR_OUT_OF_MEMORY;
-
-  return mb->Create(aParent, aMenuBarElement);
-}
-
 //
 // ApplicationMenuDelegate Objective-C class
 //
