@@ -26,9 +26,11 @@ LazyLogModule gVP8TrackEncoderLog("VP8TrackEncoder");
   MOZ_LOG(gVP8TrackEncoderLog, level, (msg, ##__VA_ARGS__))
 
 #define DEFAULT_BITRATE_BPS 2500000
-constexpr int DEFAULT_KEYFRAME_INTERVAL_MS = 1000;
+constexpr int DEFAULT_KEYFRAME_INTERVAL_MS = 10000;
+constexpr int DYNAMIC_MAXKFDIST_CHECK_INTERVAL = 5;
+constexpr float DYNAMIC_MAXKFDIST_DIFFACTOR = 0.4;
+constexpr float DYNAMIC_MAXKFDIST_KFINTERVAL_FACTOR = 0.75;
 constexpr int I420_STRIDE_ALIGN = 16;
-constexpr int MAX_KEYFRAME_DISTANCE = 600;
 
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
@@ -62,6 +64,7 @@ size_t I420Size(int aWidth, int aHeight) {
 
 nsresult CreateEncoderConfig(int32_t aWidth, int32_t aHeight,
                              uint32_t aVideoBitrate, TrackRate aTrackRate,
+                             int32_t aMaxKeyFrameDistance,
                              vpx_codec_enc_cfg_t* config) {
   // Encoder configuration structure.
   memset(config, 0, sizeof(vpx_codec_enc_cfg_t));
@@ -126,10 +129,9 @@ nsresult CreateEncoderConfig(int32_t aWidth, int32_t aHeight,
 
   // We set key frame interval to automatic and try to set kf_max_dist so that
   // the encoder chooses to put keyframes slightly more often than
-  // mKeyFrameInterval milliseconds (which will encode with VPX_EFLAG_FORCE_KF
-  // when reached).
+  // mKeyFrameInterval (which will encode with VPX_EFLAG_FORCE_KF when reached).
   config->kf_mode = VPX_KF_AUTO;
-  config->kf_max_dist = MAX_KEYFRAME_DISTANCE;
+  config->kf_max_dist = aMaxKeyFrameDistance;
 
   return NS_OK;
 }
@@ -137,11 +139,14 @@ nsresult CreateEncoderConfig(int32_t aWidth, int32_t aHeight,
 
 VP8TrackEncoder::VP8TrackEncoder(RefPtr<DriftCompensator> aDriftCompensator,
                                  TrackRate aTrackRate,
-                                 FrameDroppingMode aFrameDroppingMode)
+                                 FrameDroppingMode aFrameDroppingMode,
+                                 Maybe<float> aKeyFrameIntervalFactor)
     : VideoTrackEncoder(std::move(aDriftCompensator), aTrackRate,
                         aFrameDroppingMode),
       mKeyFrameInterval(
-          TimeDuration::FromMilliseconds(DEFAULT_KEYFRAME_INTERVAL_MS)) {
+          TimeDuration::FromMilliseconds(DEFAULT_KEYFRAME_INTERVAL_MS)),
+      mKeyFrameIntervalFactor(aKeyFrameIntervalFactor.valueOr(
+          DYNAMIC_MAXKFDIST_KFINTERVAL_FACTOR)) {
   MOZ_COUNT_CTOR(VP8TrackEncoder);
 }
 
@@ -158,6 +163,42 @@ void VP8TrackEncoder::Destroy() {
   mInitialized = false;
 }
 
+Maybe<int32_t> VP8TrackEncoder::CalculateMaxKeyFrameDistance(
+    Maybe<float> aEstimatedFrameRate /* = Nothing() */) const {
+  if (!aEstimatedFrameRate && mMeanFrameDuration.empty()) {
+    // Not enough data to make a new calculation.
+    return Nothing();
+  }
+
+  // Calculate an estimation of our current framerate
+  const float estimatedFrameRate = aEstimatedFrameRate.valueOrFrom(
+      [&] { return 1.0f / mMeanFrameDuration.mean().ToSeconds(); });
+  // Set a kf_max_dist that should avoid triggering the VPX_EFLAG_FORCE_KF flag
+  return Some(std::max(
+      1, static_cast<int32_t>(estimatedFrameRate * mKeyFrameIntervalFactor *
+                              mKeyFrameInterval.ToSeconds())));
+}
+
+void VP8TrackEncoder::SetMaxKeyFrameDistance(int32_t aMaxKeyFrameDistance) {
+  if (mInitialized) {
+    VP8LOG(
+        LogLevel::Debug,
+        "%p SetMaxKeyFrameDistance() set kf_max_dist to %d based on estimated "
+        "framerate %.2ffps keyframe-factor %.2f and keyframe-interval %.2fs",
+        this, aMaxKeyFrameDistance, 1 / mMeanFrameDuration.mean().ToSeconds(),
+        mKeyFrameIntervalFactor, mKeyFrameInterval.ToSeconds());
+    DebugOnly<nsresult> rv =
+        Reconfigure(mFrameWidth, mFrameHeight, aMaxKeyFrameDistance);
+    MOZ_ASSERT(
+        NS_SUCCEEDED(rv),
+        "Reconfig for new key frame distance with proven size should succeed");
+  } else {
+    VP8LOG(LogLevel::Debug, "%p SetMaxKeyFrameDistance() distance=%d", this,
+           aMaxKeyFrameDistance);
+    mMaxKeyFrameDistance = Some(aMaxKeyFrameDistance);
+  }
+}
+
 void VP8TrackEncoder::SetKeyFrameInterval(
     Maybe<TimeDuration> aKeyFrameInterval) {
   const TimeDuration defaultInterval =
@@ -166,15 +207,25 @@ void VP8TrackEncoder::SetKeyFrameInterval(
       std::min(aKeyFrameInterval.valueOr(defaultInterval), defaultInterval);
   VP8LOG(LogLevel::Debug, "%p, keyframe interval is now %.2fs", this,
          mKeyFrameInterval.ToSeconds());
+  CalculateMaxKeyFrameDistance().apply(
+      [&](auto aKfd) { SetMaxKeyFrameDistance(aKfd); });
 }
 
 nsresult VP8TrackEncoder::Init(int32_t aWidth, int32_t aHeight,
-                               int32_t aDisplayWidth, int32_t aDisplayHeight) {
+                               int32_t aDisplayWidth, int32_t aDisplayHeight,
+                               float aEstimatedFrameRate) {
   if (aDisplayWidth < 1 || aDisplayHeight < 1) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = InitInternal(aWidth, aHeight);
+  if (aEstimatedFrameRate <= 0) {
+    return NS_ERROR_FAILURE;
+  }
+
+  int32_t maxKeyFrameDistance =
+      *CalculateMaxKeyFrameDistance(Some(aEstimatedFrameRate));
+
+  nsresult rv = InitInternal(aWidth, aHeight, maxKeyFrameDistance);
   NS_ENSURE_SUCCESS(rv, rv);
 
   MOZ_ASSERT(!mI420Frame);
@@ -199,15 +250,19 @@ nsresult VP8TrackEncoder::Init(int32_t aWidth, int32_t aHeight,
 
     VP8LOG(LogLevel::Info,
            "%p Init() created metadata. width=%d, height=%d, displayWidth=%d, "
-           "displayHeight=%d",
+           "displayHeight=%d, framerate=%.2f",
            this, mMetadata->mWidth, mMetadata->mHeight,
-           mMetadata->mDisplayWidth, mMetadata->mDisplayHeight);
+           mMetadata->mDisplayWidth, mMetadata->mDisplayHeight,
+           aEstimatedFrameRate);
+
+    SetInitialized();
   }
 
   return NS_OK;
 }
 
-nsresult VP8TrackEncoder::InitInternal(int32_t aWidth, int32_t aHeight) {
+nsresult VP8TrackEncoder::InitInternal(int32_t aWidth, int32_t aHeight,
+                                       int32_t aMaxKeyFrameDistance) {
   if (aWidth < 1 || aHeight < 1) {
     return NS_ERROR_FAILURE;
   }
@@ -217,13 +272,14 @@ nsresult VP8TrackEncoder::InitInternal(int32_t aWidth, int32_t aHeight) {
     return NS_ERROR_FAILURE;
   }
 
-  VP8LOG(LogLevel::Debug, "%p InitInternal(). width=%d, height=%d", this,
-         aWidth, aHeight);
+  VP8LOG(LogLevel::Debug,
+         "%p InitInternal(). width=%d, height=%d, kf_max_dist=%d", this, aWidth,
+         aHeight, aMaxKeyFrameDistance);
 
   // Encoder configuration structure.
   vpx_codec_enc_cfg_t config;
-  nsresult rv =
-      CreateEncoderConfig(aWidth, aHeight, mVideoBitrate, mTrackRate, &config);
+  nsresult rv = CreateEncoderConfig(aWidth, aHeight, mVideoBitrate, mTrackRate,
+                                    aMaxKeyFrameDistance, &config);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
   vpx_codec_flags_t flags = 0;
@@ -239,13 +295,13 @@ nsresult VP8TrackEncoder::InitInternal(int32_t aWidth, int32_t aHeight) {
 
   mFrameWidth = aWidth;
   mFrameHeight = aHeight;
-
-  SetInitialized();
+  mMaxKeyFrameDistance = Some(aMaxKeyFrameDistance);
 
   return NS_OK;
 }
 
-nsresult VP8TrackEncoder::Reconfigure(int32_t aWidth, int32_t aHeight) {
+nsresult VP8TrackEncoder::Reconfigure(int32_t aWidth, int32_t aHeight,
+                                      int32_t aMaxKeyFrameDistance) {
   if (aWidth <= 0 || aHeight <= 0) {
     MOZ_ASSERT(false);
     return NS_ERROR_FAILURE;
@@ -256,7 +312,7 @@ nsresult VP8TrackEncoder::Reconfigure(int32_t aWidth, int32_t aHeight) {
     return NS_ERROR_FAILURE;
   }
 
-  bool needsReInit = false;
+  bool needsReInit = aMaxKeyFrameDistance != *mMaxKeyFrameDistance;
 
   if (aWidth != mFrameWidth || aHeight != mFrameHeight) {
     VP8LOG(LogLevel::Info, "Dynamic resolution change (%dx%d -> %dx%d).",
@@ -278,7 +334,8 @@ nsresult VP8TrackEncoder::Reconfigure(int32_t aWidth, int32_t aHeight) {
 
   if (needsReInit) {
     Destroy();
-    nsresult rv = InitInternal(aWidth, aHeight);
+    mMaxKeyFrameDistance = Some(aMaxKeyFrameDistance);
+    nsresult rv = InitInternal(aWidth, aHeight, aMaxKeyFrameDistance);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
     mInitialized = true;
     return NS_OK;
@@ -286,8 +343,8 @@ nsresult VP8TrackEncoder::Reconfigure(int32_t aWidth, int32_t aHeight) {
 
   // Encoder configuration structure.
   vpx_codec_enc_cfg_t config;
-  nsresult rv =
-      CreateEncoderConfig(aWidth, aHeight, mVideoBitrate, mTrackRate, &config);
+  nsresult rv = CreateEncoderConfig(aWidth, aHeight, mVideoBitrate, mTrackRate,
+                                    aMaxKeyFrameDistance, &config);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   // Set new configuration
   if (vpx_codec_enc_config_set(&mVPXContext, &config) != VPX_CODEC_OK) {
@@ -393,6 +450,23 @@ nsresult VP8TrackEncoder::GetEncodedPartitions(
     aData.AppendElement(MakeRefPtr<EncodedFrame>(
         timestamp, duration.ToMicroseconds(), PR_USEC_PER_SEC, frameType,
         std::move(frameData)));
+
+    if (static_cast<int>(totalDuration.ToSeconds()) /
+            DYNAMIC_MAXKFDIST_CHECK_INTERVAL >
+        static_cast<int>(mLastKeyFrameDistanceUpdate.ToSeconds()) /
+            DYNAMIC_MAXKFDIST_CHECK_INTERVAL) {
+      // The interval has passed since the last keyframe update. Update again.
+      mLastKeyFrameDistanceUpdate = totalDuration;
+      const int32_t maxKfDistance =
+          CalculateMaxKeyFrameDistance().valueOr(*mMaxKeyFrameDistance);
+      const float diffFactor =
+          static_cast<float>(maxKfDistance) / *mMaxKeyFrameDistance;
+      VP8LOG(LogLevel::Debug, "maxKfDistance: %d, factor: %.2f", maxKfDistance,
+             diffFactor);
+      if (std::abs(1.0 - diffFactor) > DYNAMIC_MAXKFDIST_DIFFACTOR) {
+        SetMaxKeyFrameDistance(maxKfDistance);
+      }
+    }
   }
 
   return pkt ? NS_OK : NS_ERROR_NOT_AVAILABLE;
@@ -417,7 +491,8 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk& aChunk) {
 
   gfx::IntSize imgSize = img->GetSize();
   if (imgSize != IntSize(mFrameWidth, mFrameHeight)) {
-    nsresult rv = Reconfigure(imgSize.width, imgSize.height);
+    nsresult rv =
+        Reconfigure(imgSize.width, imgSize.height, *mMaxKeyFrameDistance);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
