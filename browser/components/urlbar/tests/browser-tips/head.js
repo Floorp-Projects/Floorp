@@ -520,52 +520,6 @@ async function awaitNoTip(searchString, win = window) {
 }
 
 /**
- * Copied from BrowserTestUtils.jsm, but lets you listen for any one of multiple
- * dialog URIs instead of only one.
- * @param {string} buttonAction
- *   What button should be pressed on the alert dialog.
- * @param {array} uris
- *   The URIs for the alert dialogs.
- * @param {function} [func]
- *   An optional callback.
- */
-async function promiseAlertDialogOpen(buttonAction, uris, func) {
-  let win = await BrowserTestUtils.domWindowOpened(null, async aWindow => {
-    // The test listens for the "load" event which guarantees that the alert
-    // class has already been added (it is added when "DOMContentLoaded" is
-    // fired).
-    await BrowserTestUtils.waitForEvent(aWindow, "load");
-
-    return uris.includes(aWindow.document.documentURI);
-  });
-
-  if (func) {
-    await func(win);
-    return win;
-  }
-
-  let dialog = win.document.querySelector("dialog");
-  dialog.getButton(buttonAction).click();
-
-  return win;
-}
-
-/**
- * Copied from BrowserTestUtils.jsm, but lets you listen for any one of multiple
- * dialog URIs instead of only one.
- * @param {string} buttonAction
- *   What button should be pressed on the alert dialog.
- * @param {array} uris
- *   The URIs for the alert dialogs.
- * @param {function} [func]
- *   An optional callback.
- */
-async function promiseAlertDialog(buttonAction, uris, func) {
-  let win = await promiseAlertDialogOpen(buttonAction, uris, func);
-  return BrowserTestUtils.windowClosed(win);
-}
-
-/**
  * Search tips helper.  Asserts that a particular search tip is shown or that no
  * search tip is shown.
  *
