@@ -732,12 +732,7 @@ uint32_t ConnectionEntry::TimeoutTick() {
       if (delta > maxConnectTime_ms) {
         LOG(("Force timeout of DnsAndConnectSocket to %s after %.2fms.\n",
              mConnInfo->HashKey().get(), delta));
-        if (dnsAndSock->SocketTransport()) {
-          dnsAndSock->SocketTransport()->Close(NS_ERROR_NET_TIMEOUT);
-        }
-        if (dnsAndSock->BackupTransport()) {
-          dnsAndSock->BackupTransport()->Close(NS_ERROR_NET_TIMEOUT);
-        }
+        dnsAndSock->CloseTransports(NS_ERROR_NET_TIMEOUT);
       }
 
       // If this DnsAndConnectSocket hangs around for 5 seconds after we've

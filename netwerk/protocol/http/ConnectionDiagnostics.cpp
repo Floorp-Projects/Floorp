@@ -117,20 +117,23 @@ void DnsAndConnectSocket::PrintDiagnostics(nsCString& log) {
 
   TimeStamp now = TimeStamp::Now();
 
-  if (mPrimarySynStarted.IsNull())
+  if (mPrimaryTransport.mSynStarted.IsNull()) {
     log.AppendPrintf("    primary not started\n");
-  else
+  } else {
     log.AppendPrintf("    primary started %.2fms ago\n",
-                     (now - mPrimarySynStarted).ToMilliseconds());
+                     (now - mPrimaryTransport.mSynStarted).ToMilliseconds());
+  }
 
-  if (mBackupSynStarted.IsNull())
+  if (mBackupTransport.mSynStarted.IsNull()) {
     log.AppendPrintf("    backup not started\n");
-  else
+  } else {
     log.AppendPrintf("    backup started %.2f ago\n",
-                     (now - mBackupSynStarted).ToMilliseconds());
+                     (now - mBackupTransport.mSynStarted).ToMilliseconds());
+  }
 
   log.AppendPrintf("    primary transport %d, backup transport %d\n",
-                   !!mSocketTransport.get(), !!mBackupTransport.get());
+                   !!mPrimaryTransport.mSocketTransport,
+                   !!mBackupTransport.mSocketTransport);
 }
 
 void nsHttpConnection::PrintDiagnostics(nsCString& log) {
