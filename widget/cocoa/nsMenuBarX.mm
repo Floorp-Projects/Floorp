@@ -321,7 +321,7 @@ void nsMenuBarX::ForceUpdateNativeMenuAt(const nsAString& indexString) {
     return;
   }
 
-  nsMenuX* currentMenu = NULL;
+  nsMenuX* currentMenu = nullptr;
   int targetIndex = [[indexes objectAtIndex:0] intValue];
   int visible = 0;
   uint32_t length = mMenuArray.Length();
@@ -386,7 +386,7 @@ void nsMenuBarX::ForceNativeMenuReload() {
 nsMenuX* nsMenuBarX::GetMenuAt(uint32_t aIndex) {
   if (mMenuArray.Length() <= aIndex) {
     NS_ERROR("Requesting menu at invalid index!");
-    return NULL;
+    return nullptr;
   }
   return mMenuArray[aIndex].get();
 }
@@ -893,26 +893,32 @@ static BOOL gMenuItemsExecuteCommands = YES;
     }
     nsMenuUtilsX::DispatchCommandTo(mostSpecificContent);
     return;
-  } else if (tag == eCommand_ID_Prefs) {
+  }
+  if (tag == eCommand_ID_Prefs) {
     nsIContent* mostSpecificContent = sPrefItemContent;
     if (menuBar && menuBar->mPrefItemContent) {
       mostSpecificContent = menuBar->mPrefItemContent;
     }
     nsMenuUtilsX::DispatchCommandTo(mostSpecificContent);
     return;
-  } else if (tag == eCommand_ID_HideApp) {
+  }
+  if (tag == eCommand_ID_HideApp) {
     [NSApp hide:sender];
     return;
-  } else if (tag == eCommand_ID_HideOthers) {
+  }
+  if (tag == eCommand_ID_HideOthers) {
     [NSApp hideOtherApplications:sender];
     return;
-  } else if (tag == eCommand_ID_ShowAll) {
+  }
+  if (tag == eCommand_ID_ShowAll) {
     [NSApp unhideAllApplications:sender];
     return;
-  } else if (tag == eCommand_ID_TouchBar) {
+  }
+  if (tag == eCommand_ID_TouchBar) {
     [NSApp toggleTouchBarCustomizationPalette:sender];
     return;
-  } else if (tag == eCommand_ID_Quit) {
+  }
+  if (tag == eCommand_ID_Quit) {
     nsIContent* mostSpecificContent = sQuitItemContent;
     if (menuBar && menuBar->mQuitItemContent) {
       mostSpecificContent = menuBar->mQuitItemContent;
@@ -957,18 +963,16 @@ static BOOL gMenuItemsExecuteCommands = YES;
   id realTarget = [super target];
   if (gMenuItemsExecuteCommands) {
     return realTarget;
-  } else {
-    return realTarget ? self : nil;
   }
+  return realTarget ? self : nil;
 }
 
 - (SEL)action {
   SEL realAction = [super action];
   if (gMenuItemsExecuteCommands) {
     return realAction;
-  } else {
-    return realAction ? @selector(_doNothing:) : NULL;
   }
+  return realAction ? @selector(_doNothing:) : nullptr;
 }
 
 - (void)_doNothing:(id)sender {
