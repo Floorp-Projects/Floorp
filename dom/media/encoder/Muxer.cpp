@@ -60,15 +60,12 @@ nsresult Muxer::SetMetadata(
   }
   mMetadataSet = true;
   MOZ_ASSERT(mHasAudio || mHasVideo);
-  MOZ_ASSERT(mHasAudio != mEncodedAudioQueue.AtEndOfStream());
-  MOZ_ASSERT(mHasVideo != mEncodedVideoQueue.AtEndOfStream());
   LOG(LogLevel::Info, "%p Metadata set; audio=%d, video=%d", this, mHasAudio,
       mHasVideo);
   return NS_OK;
 }
 
 nsresult Muxer::GetData(nsTArray<nsTArray<uint8_t>>* aOutputBuffers) {
-  MOZ_ASSERT(mMetadataSet);
   MOZ_ASSERT(mHasAudio || mHasVideo);
 
   nsresult rv;

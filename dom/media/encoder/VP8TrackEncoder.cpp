@@ -362,11 +362,7 @@ nsresult VP8TrackEncoder::Reconfigure(int32_t aWidth, int32_t aHeight,
 already_AddRefed<TrackMetadataBase> VP8TrackEncoder::GetMetadata() {
   AUTO_PROFILER_LABEL("VP8TrackEncoder::GetMetadata", OTHER);
 
-  MOZ_ASSERT(mInitialized || mCanceled);
-
-  if (mCanceled || IsEncodingComplete()) {
-    return nullptr;
-  }
+  MOZ_ASSERT(mInitialized);
 
   if (!mInitialized) {
     return nullptr;
