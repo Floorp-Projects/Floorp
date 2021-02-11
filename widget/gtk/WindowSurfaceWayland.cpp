@@ -749,11 +749,11 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
   // until next WindowSurfaceWayland::Commit() call.
   mBufferCommitAllowed = false;
 
-  LayoutDeviceIntRect lockedScreenRect = mWindow->GetMozContainerSize();
+  LayoutDeviceIntRect mozContainerSize = mWindow->GetMozContainerSize();
   // The window bounds of popup windows contains relative position to
   // the transient window. We need to remove that effect because by changing
   // position of the popup window the buffer has not changed its size.
-  lockedScreenRect.x = lockedScreenRect.y = 0;
+  mozContainerSize.x = mozContainerSize.y = 0;
   gfx::IntRect lockSize = aRegion.GetBounds().ToUnknownRect();
 
   bool isTransparentPopup =
@@ -761,8 +761,8 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
       (eTransparencyTransparent == mWindow->GetTransparencyMode());
 
   bool windowRedraw = isTransparentPopup
-                          ? IsPopupFullScreenUpdate(lockedScreenRect, aRegion)
-                          : IsWindowFullScreenUpdate(lockedScreenRect, aRegion);
+                          ? IsPopupFullScreenUpdate(mozContainerSize, aRegion)
+                          : IsWindowFullScreenUpdate(mozContainerSize, aRegion);
   if (windowRedraw) {
     // Clear buffer when we (re)draw new transparent popup window,
     // otherwise leave it as-is, mBufferNeedsClear can be set from previous
@@ -789,22 +789,22 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
 
   LOGWAYLAND(
       ("WindowSurfaceWayland::Lock [%p] [%d,%d] -> [%d x %d] rects %d "
-       "windowSize [%d x %d]\n",
+       "MozContainer size [%d x %d]\n",
        (void*)this, lockSize.x, lockSize.y, lockSize.width, lockSize.height,
-       aRegion.GetNumRects(), lockedScreenRect.width, lockedScreenRect.height));
+       aRegion.GetNumRects(), mozContainerSize.width, mozContainerSize.height));
   LOGWAYLAND(("   nsWindow = %p\n", mWindow));
   LOGWAYLAND(("   isPopup = %d\n", mWindow->IsWaylandPopup()));
   LOGWAYLAND(("   isTransparentPopup = %d\n", isTransparentPopup));
   LOGWAYLAND(("   IsPopupFullScreenUpdate = %d\n",
-              IsPopupFullScreenUpdate(lockedScreenRect, aRegion)));
+              IsPopupFullScreenUpdate(mozContainerSize, aRegion)));
   LOGWAYLAND(("   IsWindowFullScreenUpdate = %d\n",
-              IsWindowFullScreenUpdate(lockedScreenRect, aRegion)));
+              IsWindowFullScreenUpdate(mozContainerSize, aRegion)));
   LOGWAYLAND(("   mBufferNeedsClear = %d\n", mBufferNeedsClear));
   LOGWAYLAND(("   mBufferPendingCommit = %d\n", mBufferPendingCommit));
   LOGWAYLAND(("   mCanSwitchWaylandBuffer = %d\n", mCanSwitchWaylandBuffer));
   LOGWAYLAND(("   windowRedraw = %d\n", windowRedraw));
 
-  if (!(mLockedScreenRect == lockedScreenRect)) {
+  if (!(mMozContainerRect == mozContainerSize)) {
     LOGWAYLAND(("   screen size changed\n"));
 
     // Screen (window) size changed and we still have some painting pending
@@ -821,7 +821,7 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
       // as it produces artifacts.
       return nullptr;
     }
-    mLockedScreenRect = lockedScreenRect;
+    mMozContainerRect = mozContainerSize;
   }
 
   // We can draw directly only when we redraw significant part of the window
@@ -829,8 +829,8 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
   mDrawToWaylandBufferDirectly =
       mSmoothRendering
           ? windowRedraw
-          : (windowRedraw || (lockSize.width * 2 > lockedScreenRect.width &&
-                              lockSize.height * 2 > lockedScreenRect.height));
+          : (windowRedraw || (lockSize.width * 2 > mozContainerSize.width &&
+                              lockSize.height * 2 > mozContainerSize.height));
 
   if (!mDrawToWaylandBufferDirectly) {
     // Don't switch wl_buffers when we cache drawings.
@@ -1009,7 +1009,6 @@ bool WindowSurfaceWayland::FlushPendingCommitsLocked() {
              "We can't draw to attached wayland buffer!");
 
   LOGWAYLAND(("    Drawing pending commits.\n"));
-
   MozContainer* container = mWindow->GetMozContainer();
   wl_surface* waylandSurface = moz_container_wayland_surface_lock(container);
   if (!waylandSurface) {
@@ -1103,7 +1102,7 @@ void WindowSurfaceWayland::Commit(const LayoutDeviceIntRegion& aInvalidRegion) {
         ("WindowSurfaceWayland::Commit [%p] damage size [%d, %d] -> [%d x %d]"
          "screenSize [%d x %d]\n",
          (void*)this, lockSize.x, lockSize.y, lockSize.width, lockSize.height,
-         mLockedScreenRect.width, mLockedScreenRect.height));
+         mMozContainerRect.width, mMozContainerRect.height));
     LOGWAYLAND(("    mDrawToWaylandBufferDirectly = %d\n",
                 mDrawToWaylandBufferDirectly));
   }
