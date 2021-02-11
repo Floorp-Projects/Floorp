@@ -21,6 +21,7 @@ geckoview:
     gecko_datapoint: gecko.version
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1611240
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1687219
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1611240#c2
     notification_emails:
@@ -38,6 +39,7 @@ geckoview:
     gecko_datapoint: gecko.build_id
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1611240
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1687219
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1611240#c2
     notification_emails:
@@ -556,6 +558,7 @@ gfx.display:
     gecko_datapoint: gfx.display.count
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1687219
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -573,6 +576,7 @@ gfx.display:
     gecko_datapoint: gfx.display.primary_width
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1687219
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -590,6 +594,7 @@ gfx.display:
     gecko_datapoint: gfx.display.primary_height
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1687219
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -607,6 +612,7 @@ gfx.adapter.primary:
     gecko_datapoint: gfx.adapter.description
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1687219
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -623,6 +629,7 @@ gfx.adapter.primary:
     gecko_datapoint: gfx.adapter.vendor_id
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1687219
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -639,6 +646,7 @@ gfx.adapter.primary:
     gecko_datapoint: gfx.adapter.device_id
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1687219
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -655,6 +663,7 @@ gfx.adapter.primary:
     gecko_datapoint: gfx.adapter.subsystem_id
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1687219
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -672,6 +681,7 @@ gfx.adapter.primary:
     gecko_datapoint: gfx.adapter.ram
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1687219
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -688,11 +698,12 @@ gfx.adapter.primary:
     gecko_datapoint: gfx.adapter.driver_files
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1687219
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
-    expires: 2022-02-01
+    expires: never
   driver_vendor:
     description: >
       Graphics adapter driver vendor identification
@@ -704,6 +715,7 @@ gfx.adapter.primary:
     gecko_datapoint: gfx.adapter.driver_vendor
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1687219
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -720,6 +732,7 @@ gfx.adapter.primary:
     gecko_datapoint: gfx.adapter.driver_version
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1687219
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
@@ -736,11 +749,12 @@ gfx.adapter.primary:
     gecko_datapoint: gfx.adapter.driver_date
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1687219
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
-    expires: 2023-02-01
+    expires: never
 
 gfx.status:
   compositor:
@@ -755,11 +769,12 @@ gfx.status:
     gecko_datapoint: gfx.compositor
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1687219
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
-    expires: 2022-02-01
+    expires: never
   headless:
     description: >
       Boolean indicated whether graphics is running in
@@ -772,11 +787,12 @@ gfx.status:
     gecko_datapoint: gfx.headless
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1687219
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1594145#c4
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
-    expires: 2022-02-01
+    expires: never
 
 gfx.feature:
   webrender:
