@@ -38,10 +38,10 @@ class DriftCompensator;
 
 /**
  * MediaEncoder is the framework of encoding module, it controls and manages
- * procedures between ContainerWriter and TrackEncoder. ContainerWriter packs
- * the encoded track data with a specific container (e.g. ogg, webm).
+ * procedures between Muxer, ContainerWriter and TrackEncoder. ContainerWriter
+ * writes the encoded track data into a specific container (e.g. ogg, webm).
  * AudioTrackEncoder and VideoTrackEncoder are subclasses of TrackEncoder, and
- * are responsible for encoding raw data coming from MediaTrackGraph.
+ * are responsible for encoding raw data coming from MediaStreamTracks.
  *
  * MediaEncoder solves threading issues by doing message passing to a TaskQueue
  * (the "encoder thread") as passed in to the constructor. Each
@@ -53,16 +53,20 @@ class DriftCompensator;
  *
  * The MediaEncoder listens to events from all TrackEncoders, and in turn
  * signals events to interested parties. Typically a MediaRecorder::Session.
- * The event that there's data available in the TrackEncoders is what typically
- * drives the extraction and muxing of data.
+ * The MediaEncoder automatically encodes incoming data, muxes it, writes it
+ * into a container and stores the container data into a MutableBlobStorage.
+ * It is timeslice-aware so that it can notify listeners when it's time to
+ * expose a blob due to filling the timeslice.
  *
  * MediaEncoder is designed to be a passive component, neither does it own or is
  * in charge of managing threads. Instead this is done by its owner.
  *
  * For example, usage from MediaRecorder of this component would be:
- * 1) Create an encoder with a valid MIME type.
+ * 1) Create an encoder with a valid MIME type. Note that there are more
+ *    configuration options, see the docs on MediaEncoder::CreateEncoder.
  *    => encoder = MediaEncoder::CreateEncoder(aMIMEType);
- *    It then creates a ContainerWriter according to the MIME type
+ *    It then creates track encoders and the appropriate ContainerWriter
+ *    according to the MIME type
  *
  * 2) Connect handlers through MediaEventListeners to the MediaEncoder's
  *    MediaEventSources, StartedEvent(), DataAvailableEvent(), ErrorEvent() and
@@ -150,9 +154,14 @@ class MediaEncoder {
   void RemoveMediaStreamTrack(dom::MediaStreamTrack* aTrack);
 
   /**
-   * Creates an encoder with a given MIME type. Returns null if we are unable
-   * to create the encoder. For now, default aMIMEType to "audio/ogg" and use
-   * Ogg+Opus if it is empty.
+   * Creates an encoder with the given MIME type. This must be a valid MIME type
+   * or we will crash hard.
+   * Bitrates are given either explicit, or with 0 for defaults.
+   * aTrackRate is the rate in which data will be fed to the TrackEncoders.
+   * aMaxMemory is the maximum number of bytes of muxed data allowed in memory.
+   * Beyond that the blob is moved to a temporary file.
+   * aTimeslice is the minimum duration of muxed data we gather before
+   * automatically issuing a dataavailable event.
    */
   static already_AddRefed<MediaEncoder> CreateEncoder(
       RefPtr<TaskQueue> aEncoderThread, const nsAString& aMimeType,
