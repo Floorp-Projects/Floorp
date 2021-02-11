@@ -195,12 +195,14 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
     case ColorID::MozCellhighlight:
     case ColorID::MozHtmlCellhighlight:
     case ColorID::Highlight:
+    case ColorID::MozAccentColor:
       // background of selected item
       aColor = NS_RGB(0xfa, 0xd1, 0x84);
       break;
     case ColorID::MozCellhighlighttext:
     case ColorID::MozHtmlCellhighlighttext:
     case ColorID::Highlighttext:
+    case ColorID::MozAccentColorForeground:
     case ColorID::Fieldtext:
       aColor = NS_RGB(0x1a, 0x1a, 0x1a);
       break;

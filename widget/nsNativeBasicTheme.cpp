@@ -67,13 +67,11 @@ static LayoutDeviceIntCoord SnapBorderWidth(
   return aLuminance >= 0.18f ? aLuminance * aFactor : aLuminance / aFactor;
 }
 
-static nscolor ThemedAccentColor(bool aDarker) {
+static nscolor ThemedAccentColor(bool aBackground) {
   MOZ_ASSERT(StaticPrefs::widget_non_native_use_theme_accent());
-  nscolor a = LookAndFeel::GetColor(LookAndFeel::ColorID::Highlight);
-  nscolor b = LookAndFeel::GetColor(LookAndFeel::ColorID::Highlighttext);
-  const bool darker =
-      RelativeLuminanceUtils::Compute(b) > RelativeLuminanceUtils::Compute(a);
-  nscolor color = darker == aDarker ? a : b;
+  nscolor color = LookAndFeel::GetColor(
+      aBackground ? LookAndFeel::ColorID::MozAccentColor
+                  : LookAndFeel::ColorID::MozAccentColorForeground);
   if (NS_GET_A(color) != 0xff) {
     // Blend with white, ensuring the color is opaque to avoid surprises if we
     // overdraw.

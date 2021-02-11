@@ -10,7 +10,7 @@
 %define urlbarSearchButtonWidth calc(16px + 2 * @identityBoxPaddingInline@)
 
 :root {
-  --toolbar-field-focus-border-color: Highlight;
+  --toolbar-field-focus-border-color: -moz-accent-color;
 
   /* 28x28 box - 16x16 image = 12x12 padding, 6 on each side */
   --urlbar-icon-padding: 6px;

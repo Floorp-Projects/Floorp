@@ -32,7 +32,7 @@
 }
 
 #tabbrowser-tabs {
-  --tab-line-color: highlight;
+  --tab-line-color: -moz-accent-color;
 }
 
 :root:-moz-lwtheme {
