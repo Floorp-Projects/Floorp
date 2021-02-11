@@ -73,7 +73,7 @@ class MediaRecorder final : public DOMEventTargetHelper,
   void Pause(ErrorResult& aResult);
   // Resume a paused recording.
   void Resume(ErrorResult& aResult);
-  // Extract encoded data Blob from MutableBlobStorage.
+  // Extracts buffered data and fires the dataavailable event.
   void RequestData(ErrorResult& aResult);
   // Return the The DOMMediaStream passed from UA.
   DOMMediaStream* Stream() const { return mStream; }

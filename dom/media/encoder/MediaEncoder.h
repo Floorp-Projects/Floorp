@@ -13,6 +13,7 @@
 #include "MediaTrackListener.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIMemoryReporter.h"
 #include "TrackEncoder.h"
@@ -27,7 +28,9 @@ class TaskQueue;
 namespace dom {
 class AudioNode;
 class AudioStreamTrack;
+class BlobImpl;
 class MediaStreamTrack;
+class MutableBlobStorage;
 class VideoStreamTrack;
 }  // namespace dom
 
@@ -117,16 +120,21 @@ class MediaEncoder {
   class EncoderListener;
 
  public:
+  using BlobPromise =
+      MozPromise<RefPtr<dom::BlobImpl>, nsresult, false /* IsExclusive */>;
+  using SizeOfPromise = MozPromise<size_t, size_t, true /* IsExclusive */>;
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaEncoder)
 
-  MediaEncoder(TaskQueue* aEncoderThread,
+  MediaEncoder(RefPtr<TaskQueue> aEncoderThread,
                RefPtr<DriftCompensator> aDriftCompensator,
                UniquePtr<ContainerWriter> aWriter,
                UniquePtr<AudioTrackEncoder> aAudioEncoder,
                UniquePtr<VideoTrackEncoder> aVideoEncoder,
                UniquePtr<MediaQueue<EncodedFrame>> aEncodedAudioQueue,
                UniquePtr<MediaQueue<EncodedFrame>> aEncodedVideoQueue,
-               TrackRate aTrackRate, const nsAString& aMIMEType);
+               TrackRate aTrackRate, const nsAString& aMIMEType,
+               uint64_t aMaxMemory, TimeDuration aTimeslice);
 
   /**
    * Called on main thread from MediaRecorder::Pause.
@@ -164,9 +172,9 @@ class MediaEncoder {
    * Ogg+Opus if it is empty.
    */
   static already_AddRefed<MediaEncoder> CreateEncoder(
-      TaskQueue* aEncoderThread, const nsAString& aMIMEType,
+      RefPtr<TaskQueue> aEncoderThread, const nsAString& aMimeType,
       uint32_t aAudioBitrate, uint32_t aVideoBitrate, uint8_t aTrackTypes,
-      TrackRate aTrackRate);
+      TrackRate aTrackRate, uint64_t aMaxMemory, TimeDuration aTimeslice);
 
   /**
    * Encodes raw data for all tracks to aOutputBufs. The buffer of container
@@ -229,12 +237,19 @@ class MediaEncoder {
    * Measure the size of the buffer, and heap memory in bytes occupied by
    * mAudioEncoder and mVideoEncoder.
    */
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf);
+  RefPtr<SizeOfPromise> SizeOfExcludingThis(
+      mozilla::MallocSizeOf aMallocSizeOf);
 
-  /**
-   * Set desired video keyframe interval.
-   */
-  void SetVideoKeyFrameInterval(Maybe<TimeDuration> aVideoKeyFrameInterval);
+  // Extracts encoded and muxed data into the current blob storage, creating one
+  // if it doesn't exist. The returned promise resolves when data has been
+  // stored into the blob.
+  RefPtr<GenericPromise> Extract();
+
+  // Stops gathering data into the current blob and resolves when the current
+  // blob is available. Future data will be stored in a new blob.
+  // Should a previous async GatherBlob() operation still be in progress, we'll
+  // wait for it to finish before starting this one.
+  RefPtr<BlobPromise> GatherBlob();
 
  protected:
   ~MediaEncoder();
@@ -269,6 +284,14 @@ class MediaEncoder {
    */
   void SetError();
 
+  /**
+   * Creates a new MutableBlobStorage if one doesn't exist.
+   */
+  void MaybeCreateMutableBlobStorage();
+
+  RefPtr<BlobPromise> GatherBlobImpl();
+
+  const RefPtr<nsISerialEventTarget> mMainThread;
   const RefPtr<TaskQueue> mEncoderThread;
   const RefPtr<DriftCompensator> mDriftCompensator;
 
@@ -282,6 +305,17 @@ class MediaEncoder {
   const RefPtr<VideoTrackListener> mVideoListener;
   const RefPtr<EncoderListener> mEncoderListener;
 
+ public:
+  const nsString mMimeType;
+
+  // Max memory to use for the MutableBlobStorage.
+  const uint64_t mMaxMemory;
+
+  // The interval of passing encoded data from MutableBlobStorage to
+  // onDataAvailable handler.
+  const TimeDuration mTimeslice;
+
+ private:
   nsTArray<RefPtr<MediaEncoderListener>> mListeners;
 
   MediaEventListener mAudioFinishListener;
@@ -306,8 +340,15 @@ class MediaEncoder {
   // A stream to keep the MediaTrackGraph alive while we're recording.
   RefPtr<SharedDummyTrack> mGraphTrack;
 
+  // A buffer to cache muxed encoded data.
+  RefPtr<dom::MutableBlobStorage> mMutableBlobStorage;
+  // If set, is a promise for the latest GatherBlob() operation. Allows
+  // GatherBlob() operations to be serialized in order to avoid races.
+  RefPtr<BlobPromise> mBlobPromise;
+  // Timestamp of the last fired dataavailable event.
+  TimeStamp mLastBlobTimeStamp;
+
   TimeStamp mStartTime;
-  const nsString mMIMEType;
   bool mInitialized;
   bool mStarted;
   bool mCompleted;
