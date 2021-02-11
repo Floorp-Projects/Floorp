@@ -96,7 +96,7 @@ UNIFIED_SOURCES += [
     "ConnectionEntry.cpp",
     "ConnectionHandle.cpp",
     "DelayHttpChannelQueue.cpp",
-    "HalfOpenSocket.cpp",
+    "DnsAndConnectSocket.cpp",
     "Http2Compression.cpp",
     "Http2Push.cpp",
     "Http2Session.cpp",

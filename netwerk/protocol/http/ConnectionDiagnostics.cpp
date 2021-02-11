@@ -70,7 +70,8 @@ void ConnectionEntry::PrintDiagnostics(nsCString& log,
   log.AppendPrintf("   Pending Q Length = %zu\n", PendingQueueLength());
   log.AppendPrintf("   Active Conns Length = %zu\n", mActiveConns.Length());
   log.AppendPrintf("   Idle Conns Length = %zu\n", mIdleConns.Length());
-  log.AppendPrintf("   Half Opens Length = %zu\n", mHalfOpens.Length());
+  log.AppendPrintf("   DnsAndSock Length = %zu\n",
+                   mDnsAndConnectSockets.Length());
   log.AppendPrintf("   Coalescing Keys Length = %zu\n",
                    mCoalescingKeys.Length());
   log.AppendPrintf("   Spdy using = %d\n", mUsingSpdy);
@@ -84,9 +85,9 @@ void ConnectionEntry::PrintDiagnostics(nsCString& log,
     log.AppendPrintf("   :: Idle Connection #%u\n", i);
     mIdleConns[i]->PrintDiagnostics(log);
   }
-  for (i = 0; i < mHalfOpens.Length(); ++i) {
+  for (i = 0; i < mDnsAndConnectSockets.Length(); ++i) {
     log.AppendPrintf("   :: Half Open #%u\n", i);
-    mHalfOpens[i]->PrintDiagnostics(log);
+    mDnsAndConnectSockets[i]->PrintDiagnostics(log);
   }
 
   mPendingQ.PrintDiagnostics(log);
@@ -110,7 +111,7 @@ void PendingTransactionQueue::PrintDiagnostics(nsCString& log) {
   }
 }
 
-void HalfOpenSocket::PrintDiagnostics(nsCString& log) {
+void DnsAndConnectSocket::PrintDiagnostics(nsCString& log) {
   log.AppendPrintf("     has connected = %d, isSpeculative = %d\n",
                    HasConnected(), IsSpeculative());
 
@@ -227,9 +228,9 @@ void nsHttpTransaction::PrintDiagnostics(nsCString& log) {
 void PendingTransactionInfo::PrintDiagnostics(nsCString& log) {
   log.AppendPrintf("     ::: Pending transaction\n");
   mTransaction->PrintDiagnostics(log);
-  RefPtr<HalfOpenSocket> halfOpen = do_QueryReferent(mHalfOpen);
+  RefPtr<DnsAndConnectSocket> dnsAndSock = do_QueryReferent(mDnsAndSock);
   log.AppendPrintf("     Waiting for half open sock: %p or connection: %p\n",
-                   halfOpen.get(), mActiveConn.get());
+                   dnsAndSock.get(), mActiveConn.get());
 }
 
 }  // namespace net
