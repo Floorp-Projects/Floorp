@@ -14,4 +14,8 @@ function test() {
 
   var func = is;
   func(1, 1, "pass indirect is");
+
+  stringMatches("hello world", /llo\s/);
+  stringMatches("hello world", "llo\\s");
+  stringContains("hello world", "llo");
 }

@@ -45,6 +45,8 @@ module.exports = {
     registerCleanupFunction: false,
     requestLongerTimeout: false,
     setExpectedFailuresForSelfTest: false,
+    stringContains: false,
+    stringMatches: false,
     todo: false,
     todo_is: false,
     todo_isnot: false,
