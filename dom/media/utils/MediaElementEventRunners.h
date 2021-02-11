@@ -88,6 +88,7 @@ class nsMediaEventRunner : public nsIRunnable, public nsINamed {
  protected:
   virtual ~nsMediaEventRunner() = default;
   bool IsCancelled();
+  nsresult DispatchEvent(const nsAString& aName);
 
   RefPtr<HTMLMediaElement> mElement;
   nsString mName;
