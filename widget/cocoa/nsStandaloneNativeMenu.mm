@@ -84,10 +84,9 @@ nsStandaloneNativeMenu::GetNativeMenu(void** aVoidPointer) {
     *aVoidPointer = mMenu->NativeData();
     [[(NSObject*)(*aVoidPointer) retain] autorelease];
     return NS_OK;
-  } else {
-    *aVoidPointer = nullptr;
-    return NS_ERROR_NOT_INITIALIZED;
   }
+  *aVoidPointer = nullptr;
+  return NS_ERROR_NOT_INITIALIZED;
 }
 
 NS_IMETHODIMP
