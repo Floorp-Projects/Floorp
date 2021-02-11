@@ -30,13 +30,14 @@
  * @constructor
  */
 var Meta;
+let Services;
 if (typeof Components != "undefined") {
   // Global definition of |exports|, to keep everybody happy.
   // In non-main thread, |exports| is provided by the module
   // loader.
   this.exports = {};
-
-  ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+  ({ Services } = ChromeUtils.import("resource://gre/modules/Services.jsm"));
+  this.Services = Services;
   Meta = ChromeUtils.import("resource://gre/modules/PromiseWorker.jsm", {})
     .BasePromiseWorker.Meta;
 } else {

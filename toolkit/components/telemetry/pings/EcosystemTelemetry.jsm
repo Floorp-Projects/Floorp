@@ -27,7 +27,9 @@
 
 var EXPORTED_SYMBOLS = ["EcosystemTelemetry"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ONLOGIN_NOTIFICATION: "resource://gre/modules/FxAccountsCommon.js",

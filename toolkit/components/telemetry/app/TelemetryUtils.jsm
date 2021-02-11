@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["TelemetryUtils"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { TelemetryControllerBase } = ChromeUtils.import(
   "resource://gre/modules/TelemetryControllerBase.jsm"
 );

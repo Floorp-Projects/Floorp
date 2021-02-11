@@ -10,9 +10,6 @@
 
 /* import-globals-from ../../../content/contentAreaUtils.js */
 
-/* globals Services */
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-
 const gUpdateElevationDialog = {
   openUpdateURL(event) {
     if (event.button == 0) {

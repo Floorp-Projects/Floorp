@@ -26,7 +26,9 @@ ChromeUtils.import(
   "resource://gre/modules/osfile/osfile_shared_allthreads.jsm",
   SharedAll
 );
-ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
+const { clearInterval, setInterval } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm"
+);
 
 // Boilerplate, to simplify the transition to require()
 var LOG = SharedAll.LOG.bind(SharedAll, "Controller");
@@ -61,9 +63,13 @@ ChromeUtils.defineModuleGetter(
 );
 
 // The implementation of communications
-ChromeUtils.import("resource://gre/modules/PromiseWorker.jsm", this);
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm", this);
+const { BasePromiseWorker } = ChromeUtils.import(
+  "resource://gre/modules/PromiseWorker.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AsyncShutdown } = ChromeUtils.import(
+  "resource://gre/modules/AsyncShutdown.jsm"
+);
 var Native = ChromeUtils.import(
   "resource://gre/modules/osfile/osfile_native.jsm",
   null

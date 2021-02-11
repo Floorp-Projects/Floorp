@@ -11,7 +11,9 @@
 
 var EXPORTED_SYMBOLS = ["TelemetryEventPing"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
