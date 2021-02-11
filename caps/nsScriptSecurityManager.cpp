@@ -1119,17 +1119,16 @@ nsScriptSecurityManager::CheckLoadURIStrWithPrincipal(
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::CheckLoadURIWithPrincipalFromJS(nsIPrincipal* aPrincipal,
-                                                         nsIURI* aTargetURI,
-                                                         uint32_t aFlags,
-                                                         uint64_t aInnerWindowID,
-                                                         JSContext* aCx) {
+nsScriptSecurityManager::CheckLoadURIWithPrincipalFromJS(
+    nsIPrincipal* aPrincipal, nsIURI* aTargetURI, uint32_t aFlags,
+    uint64_t aInnerWindowID, JSContext* aCx) {
+  MOZ_ASSERT(aPrincipal,
+             "CheckLoadURIWithPrincipalFromJS must have a principal");
+  NS_ENSURE_ARG_POINTER(aPrincipal);
   NS_ENSURE_ARG_POINTER(aTargetURI);
 
-  nsresult rv = CheckLoadURIWithPrincipal(aPrincipal,
-                                          aTargetURI,
-                                          aFlags,
-                                          aInnerWindowID);
+  nsresult rv =
+      CheckLoadURIWithPrincipal(aPrincipal, aTargetURI, aFlags, aInnerWindowID);
   if (NS_FAILED(rv)) {
     nsAutoCString uriStr;
     Unused << aTargetURI->GetSpec(uriStr);
@@ -1153,8 +1152,8 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipalFromJS(nsIPrincipal* aPrincipa
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckLoadURIStrWithPrincipalFromJS(
-    nsIPrincipal* aPrincipal, const nsACString& aTargetURIStr,
-    uint32_t aFlags, JSContext* aCx) {
+    nsIPrincipal* aPrincipal, const nsACString& aTargetURIStr, uint32_t aFlags,
+    JSContext* aCx) {
   nsCOMPtr<nsIURI> targetURI;
   MOZ_TRY(NS_NewURI(getter_AddRefs(targetURI), aTargetURIStr));
 
