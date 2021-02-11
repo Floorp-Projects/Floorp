@@ -709,12 +709,13 @@ nsresult MediaEncoder::GetEncodedData(
   AUTO_PROFILER_LABEL("MediaEncoder::GetEncodedData", OTHER);
 
   MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
-  MOZ_ASSERT(mInitialized);
-  MOZ_ASSERT_IF(mAudioEncoder, mAudioEncoder->IsInitialized());
-  MOZ_ASSERT_IF(mVideoEncoder, mVideoEncoder->IsInitialized());
 
   LOG(LogLevel::Verbose,
       ("GetEncodedData TimeStamp = %f", GetEncodeTimeStamp()));
+
+  if (!mInitialized) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   nsresult rv = mMuxer->GetData(aOutputBufs);
   if (mMuxer->IsFinished()) {
