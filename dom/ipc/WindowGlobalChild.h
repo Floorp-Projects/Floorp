@@ -122,8 +122,6 @@ class WindowGlobalChild final : public WindowGlobalActor,
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  void MaybeSendUpdateDocumentWouldPreloadResources();
-
   dom::FeaturePolicy* GetContainerFeaturePolicy() const {
     return mContainerFeaturePolicy;
   }
@@ -186,7 +184,6 @@ class WindowGlobalChild final : public WindowGlobalActor,
   RefPtr<dom::FeaturePolicy> mContainerFeaturePolicy;
   nsCOMPtr<nsIURI> mDocumentURI;
   int64_t mBeforeUnloadListeners = 0;
-  bool mDocumentWouldPreloadResources = false;
 };
 
 }  // namespace dom

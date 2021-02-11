@@ -680,13 +680,6 @@ nsISupports* WindowGlobalChild::GetParentObject() {
   return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
 }
 
-void WindowGlobalChild::MaybeSendUpdateDocumentWouldPreloadResources() {
-  if (!mDocumentWouldPreloadResources) {
-    mDocumentWouldPreloadResources = true;
-    SendUpdateDocumentWouldPreloadResources();
-  }
-}
-
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WindowGlobalChild, mWindowGlobal,
                                       mContainerFeaturePolicy)
 
