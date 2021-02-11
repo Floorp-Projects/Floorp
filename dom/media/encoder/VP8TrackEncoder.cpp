@@ -26,12 +26,39 @@ LazyLogModule gVP8TrackEncoderLog("VP8TrackEncoder");
   MOZ_LOG(gVP8TrackEncoderLog, level, (msg, ##__VA_ARGS__))
 
 #define DEFAULT_BITRATE_BPS 2500000
+constexpr int I420_STRIDE_ALIGN = 16;
 #define MAX_KEYFRAME_INTERVAL 600
 
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 using namespace mozilla::media;
 using namespace mozilla::dom;
+
+namespace {
+
+template <int N>
+static int Aligned(int aValue) {
+  if (aValue < N) {
+    return N;
+  }
+
+  // The `- 1` avoids overreaching when `aValue % N == 0`.
+  return (((aValue - 1) / N) + 1) * N;
+}
+
+template <int Alignment>
+size_t I420Size(int aWidth, int aHeight) {
+  int yStride = Aligned<Alignment>(aWidth);
+  int yHeight = aHeight;
+  size_t yPlaneSize = yStride * yHeight;
+
+  int uvStride = Aligned<Alignment>((aWidth + 1) / 2);
+  int uvHeight = (aHeight + 1) / 2;
+  size_t uvPlaneSize = uvStride * uvHeight;
+
+  return yPlaneSize + uvPlaneSize * 2;
+}
+}  // namespace
 
 VP8TrackEncoder::VP8TrackEncoder(RefPtr<DriftCompensator> aDriftCompensator,
                                  TrackRate aTrackRate,
@@ -71,12 +98,6 @@ nsresult VP8TrackEncoder::Init(int32_t aWidth, int32_t aHeight,
                                        aDisplayHeight, config);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-  // Creating a wrapper to the image - setting image data to NULL. Actual
-  // pointer will be set in encode. Setting align to 1, as it is meaningless
-  // (actual memory is not allocated).
-  vpx_img_wrap(&mVPXImageWrapper, VPX_IMG_FMT_I420, mFrameWidth, mFrameHeight,
-               1, nullptr);
-
   vpx_codec_flags_t flags = 0;
   flags |= VPX_CODEC_USE_OUTPUT_PARTITION;
   if (vpx_codec_enc_init(&mVPXContext, vpx_codec_vp8_cx(), &config, flags)) {
@@ -107,9 +128,6 @@ nsresult VP8TrackEncoder::Reconfigure(int32_t aWidth, int32_t aHeight,
     return NS_ERROR_FAILURE;
   }
 
-  // Recreate image wrapper
-  vpx_img_wrap(&mVPXImageWrapper, VPX_IMG_FMT_I420, aWidth, aHeight, 1,
-               nullptr);
   // Encoder configuration structure.
   vpx_codec_enc_cfg_t config;
   nsresult rv = SetConfigurationValues(aWidth, aHeight, aDisplayWidth,
@@ -285,16 +303,6 @@ nsresult VP8TrackEncoder::GetEncodedPartitions(
   return pkt ? NS_OK : NS_ERROR_NOT_AVAILABLE;
 }
 
-template <int N>
-static int Aligned(int aValue) {
-  if (aValue < N) {
-    return N;
-  }
-
-  // The `- 1` avoids overreaching when `aValue % N == 0`.
-  return (((aValue - 1) / N) + 1) * N;
-}
-
 nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk& aChunk) {
   RefPtr<Image> img;
   if (aChunk.mFrame.GetForceBlack() || aChunk.IsNull()) {
@@ -337,24 +345,8 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk& aChunk) {
     }
   }
 
-  // Clear image state from last frame
-  mVPXImageWrapper.planes[VPX_PLANE_Y] = nullptr;
-  mVPXImageWrapper.stride[VPX_PLANE_Y] = 0;
-  mVPXImageWrapper.planes[VPX_PLANE_U] = nullptr;
-  mVPXImageWrapper.stride[VPX_PLANE_U] = 0;
-  mVPXImageWrapper.planes[VPX_PLANE_V] = nullptr;
-  mVPXImageWrapper.stride[VPX_PLANE_V] = 0;
-
-  int yStride = Aligned<16>(mFrameWidth);
-  int yHeight = mFrameHeight;
-  size_t yPlaneSize = yStride * yHeight;
-
-  int uvStride = Aligned<16>((mFrameWidth + 1) / 2);
-  int uvHeight = (mFrameHeight + 1) / 2;
-  size_t uvPlaneSize = uvStride * uvHeight;
-
-  size_t neededSize = yPlaneSize + uvPlaneSize * 2;
-
+  const size_t neededSize =
+      I420Size<I420_STRIDE_ALIGN>(mFrameWidth, mFrameHeight);
   if (neededSize > mI420FrameSize) {
     mI420Frame.reset(new (fallible) uint8_t[neededSize]);
   }
@@ -362,28 +354,24 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk& aChunk) {
   if (!mI420Frame) {
     VP8LOG(LogLevel::Warning, "Allocating I420 frame of size %zu failed",
            neededSize);
+    mI420FrameSize = 0;
     return NS_ERROR_FAILURE;
   }
   mI420FrameSize = neededSize;
 
-  uint8_t* yChannel = &mI420Frame[0];
-  uint8_t* uChannel = &mI420Frame[yPlaneSize];
-  uint8_t* vChannel = &mI420Frame[yPlaneSize + uvPlaneSize];
+  vpx_img_wrap(&mVPXImageWrapper, VPX_IMG_FMT_I420, mFrameWidth, mFrameHeight,
+               I420_STRIDE_ALIGN, mI420Frame.get());
 
-  nsresult rv = ConvertToI420(img, yChannel, yStride, uChannel, uvStride,
-                              vChannel, uvStride);
-
+  nsresult rv = ConvertToI420(img, mVPXImageWrapper.planes[VPX_PLANE_Y],
+                              mVPXImageWrapper.stride[VPX_PLANE_Y],
+                              mVPXImageWrapper.planes[VPX_PLANE_U],
+                              mVPXImageWrapper.stride[VPX_PLANE_U],
+                              mVPXImageWrapper.planes[VPX_PLANE_V],
+                              mVPXImageWrapper.stride[VPX_PLANE_V]);
   if (NS_FAILED(rv)) {
     VP8LOG(LogLevel::Error, "Converting to I420 failed");
     return rv;
   }
-
-  mVPXImageWrapper.planes[VPX_PLANE_Y] = yChannel;
-  mVPXImageWrapper.stride[VPX_PLANE_Y] = yStride;
-  mVPXImageWrapper.planes[VPX_PLANE_U] = uChannel;
-  mVPXImageWrapper.stride[VPX_PLANE_U] = uvStride;
-  mVPXImageWrapper.planes[VPX_PLANE_V] = vChannel;
-  mVPXImageWrapper.stride[VPX_PLANE_V] = uvStride;
 
   return NS_OK;
 }
@@ -549,6 +537,10 @@ nsresult VP8TrackEncoder::GetEncodedTrack(
   if (mEndOfStream) {
     VP8LOG(LogLevel::Debug, "mEndOfStream is true");
     mEncodingComplete = true;
+    if (mI420Frame) {
+      mI420Frame = nullptr;
+      mI420FrameSize = 0;
+    }
     // Bug 1243611, keep calling vpx_codec_encode and vpx_codec_get_cx_data
     // until vpx_codec_get_cx_data return null.
     while (true) {
