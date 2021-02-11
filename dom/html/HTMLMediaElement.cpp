@@ -129,7 +129,7 @@
 #include <type_traits>
 
 mozilla::LazyLogModule gMediaElementLog("nsMediaElement");
-static mozilla::LazyLogModule gMediaElementEventsLog("nsMediaElementEvents");
+mozilla::LazyLogModule gMediaElementEventsLog("nsMediaElementEvents");
 
 extern mozilla::LazyLogModule gAutoplayPermissionLog;
 #define AUTOPLAY_LOG(msg, ...) \
@@ -200,187 +200,101 @@ static const unsigned short MEDIA_ERR_NETWORK = 2;
 static const unsigned short MEDIA_ERR_DECODE = 3;
 static const unsigned short MEDIA_ERR_SRC_NOT_SUPPORTED = 4;
 
-static void ResolvePromisesWithUndefined(
-    const nsTArray<RefPtr<PlayPromise>>& aPromises) {
-  for (auto& promise : aPromises) {
-    promise->MaybeResolveWithUndefined();
-  }
-}
-
-static void RejectPromises(const nsTArray<RefPtr<PlayPromise>>& aPromises,
-                           nsresult aError) {
-  for (auto& promise : aPromises) {
-    promise->MaybeReject(aError);
-  }
-}
-
-// Under certain conditions there may be no-one holding references to
-// a media element from script, DOM parent, etc, but the element may still
-// fire meaningful events in the future so we can't destroy it yet:
-// 1) If the element is delaying the load event (or would be, if it were
-// in a document), then events up to loadeddata or error could be fired,
-// so we need to stay alive.
-// 2) If the element is not paused and playback has not ended, then
-// we will (or might) play, sending timeupdate and ended events and possibly
-// audio output, so we need to stay alive.
-// 3) if the element is seeking then we will fire seeking events and possibly
-// start playing afterward, so we need to stay alive.
-// 4) If autoplay could start playback in this element (if we got enough data),
-// then we need to stay alive.
-// 5) if the element is currently loading, not suspended, and its source is
-// not a MediaSource, then script might be waiting for progress events or a
-// 'stalled' or 'suspend' event, so we need to stay alive.
-// If we're already suspended then (all other conditions being met),
-// it's OK to just disappear without firing any more events,
-// since we have the freedom to remain suspended indefinitely. Note
-// that we could use this 'suspended' loophole to garbage-collect a suspended
-// element in case 4 even if it had 'autoplay' set, but we choose not to.
-// If someone throws away all references to a loading 'autoplay' element
-// sound should still eventually play.
-// 6) If the source is a MediaSource, most loading events will not fire unless
-// appendBuffer() is called on a SourceBuffer, in which case something is
-// already referencing the SourceBuffer, which keeps the associated media
-// element alive. Further, a MediaSource will never time out the resource
-// fetch, and so should not keep the media element alive if it is
-// unreferenced. A pending 'stalled' event keeps the media element alive.
-//
-// Media elements owned by inactive documents (i.e. documents not contained in
-// any document viewer) should never hold a self-reference because none of the
-// above conditions are allowed: the element will stop loading and playing
-// and never resume loading or playing unless its owner document changes to
-// an active document (which can only happen if there is an external reference
-// to the element).
-// Media elements with no owner doc should be able to hold a self-reference.
-// Something native must have created the element and may expect it to
-// stay alive to play.
-
-// It's very important that any change in state which could change the value of
-// needSelfReference in AddRemoveSelfReference be followed by a call to
-// AddRemoveSelfReference before this element could die!
-// It's especially important if needSelfReference would change to 'true',
-// since if we neglect to add a self-reference, this element might be
-// garbage collected while there are still event listeners that should
-// receive events. If we neglect to remove the self-reference then the element
-// just lives longer than it needs to.
-
-class nsMediaEvent : public Runnable {
- public:
-  explicit nsMediaEvent(const char* aName, HTMLMediaElement* aElement)
-      : Runnable(aName),
-        mElement(aElement),
-        mLoadID(mElement->GetCurrentLoadID()) {}
-  ~nsMediaEvent() = default;
-
-  NS_IMETHOD Run() override = 0;
-
- protected:
-  bool IsCancelled() { return mElement->GetCurrentLoadID() != mLoadID; }
-
-  RefPtr<HTMLMediaElement> mElement;
-  uint32_t mLoadID;
-};
-
-class HTMLMediaElement::nsAsyncEventRunner : public nsMediaEvent {
- private:
-  nsString mName;
-
- public:
-  nsAsyncEventRunner(const nsAString& aName, HTMLMediaElement* aElement)
-      : nsMediaEvent("HTMLMediaElement::nsAsyncEventRunner", aElement),
-        mName(aName) {}
-
-  NS_IMETHOD Run() override {
-    // Silently cancel if our load has been cancelled.
-    if (IsCancelled()) return NS_OK;
-
-    return mElement->DispatchEvent(mName);
-  }
-};
-
-/*
- * If no error is passed while constructing an instance, the instance will
- * resolve the passed promises with undefined; otherwise, the instance will
- * reject the passed promises with the passed error.
- *
- * The constructor appends the constructed instance into the passed media
- * element's mPendingPlayPromisesRunners member and once the the runner is run
- * (whether fulfilled or canceled), it removes itself from
- * mPendingPlayPromisesRunners.
+/**
+ * EventBlocker helps media element to postpone the event delivery by storing
+ * the event runner, and execute them once media element decides not to postpone
+ * the event delivery. If media element never resumes the event delivery, then
+ * those runner would be cancelled.
+ * For example, we postpone the event delivery when media element entering to
+ * the bf-cache.
  */
-class HTMLMediaElement::nsResolveOrRejectPendingPlayPromisesRunner
-    : public nsMediaEvent {
-  nsTArray<RefPtr<PlayPromise>> mPromises;
-  nsresult mError;
-
+class HTMLMediaElement::EventBlocker final : public nsISupports {
  public:
-  nsResolveOrRejectPendingPlayPromisesRunner(
-      HTMLMediaElement* aElement, nsTArray<RefPtr<PlayPromise>>&& aPromises,
-      nsresult aError = NS_OK)
-      : nsMediaEvent(
-            "HTMLMediaElement::nsResolveOrRejectPendingPlayPromisesRunner",
-            aElement),
-        mPromises(std::move(aPromises)),
-        mError(aError) {
-    mElement->mPendingPlayPromisesRunners.AppendElement(this);
-  }
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
+  NS_DECL_CYCLE_COLLECTION_CLASS(EventBlocker)
 
-  void ResolveOrReject() {
-    if (NS_SUCCEEDED(mError)) {
-      ResolvePromisesWithUndefined(mPromises);
-    } else {
-      RejectPromises(mPromises, mError);
+  explicit EventBlocker(HTMLMediaElement* aElement) : mElement(aElement) {}
+
+  void SetBlockEventDelivery(bool aShouldBlock) {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (mShouldBlockEventDelivery == aShouldBlock) {
+      return;
     }
-  }
-
-  NS_IMETHOD Run() override {
-    if (!IsCancelled()) {
-      ResolveOrReject();
-    }
-
-    mElement->mPendingPlayPromisesRunners.RemoveElement(this);
-    return NS_OK;
-  }
-};
-
-class HTMLMediaElement::nsNotifyAboutPlayingRunner
-    : public nsResolveOrRejectPendingPlayPromisesRunner {
- public:
-  nsNotifyAboutPlayingRunner(
-      HTMLMediaElement* aElement,
-      nsTArray<RefPtr<PlayPromise>>&& aPendingPlayPromises)
-      : nsResolveOrRejectPendingPlayPromisesRunner(
-            aElement, std::move(aPendingPlayPromises)) {}
-
-  NS_IMETHOD Run() override {
-    if (IsCancelled()) {
-      mElement->mPendingPlayPromisesRunners.RemoveElement(this);
-      return NS_OK;
-    }
-
-    mElement->DispatchEvent(u"playing"_ns);
-    return nsResolveOrRejectPendingPlayPromisesRunner::Run();
-  }
-};
-
-class nsSourceErrorEventRunner : public nsMediaEvent {
- private:
-  nsCOMPtr<nsIContent> mSource;
-
- public:
-  nsSourceErrorEventRunner(HTMLMediaElement* aElement, nsIContent* aSource)
-      : nsMediaEvent("dom::nsSourceErrorEventRunner", aElement),
-        mSource(aSource) {}
-
-  NS_IMETHOD Run() override {
-    // Silently cancel if our load has been cancelled.
-    if (IsCancelled()) return NS_OK;
     LOG_EVENT(LogLevel::Debug,
-              ("%p Dispatching simple event source error", mElement.get()));
-    return nsContentUtils::DispatchTrustedEvent(mElement->OwnerDoc(), mSource,
-                                                u"error"_ns, CanBubble::eNo,
-                                                Cancelable::eNo);
+              ("%p %s event delivery", mElement.get(),
+               mShouldBlockEventDelivery ? "block" : "unblock"));
+    mShouldBlockEventDelivery = aShouldBlock;
+    if (!mShouldBlockEventDelivery) {
+      DispatchPendingMediaEvents();
+    }
   }
+
+  void PostponeEvent(nsMediaEventRunner* aRunner) {
+    MOZ_ASSERT(NS_IsMainThread());
+    // Element has been CCed, which would break the weak pointer.
+    if (!mElement) {
+      return;
+    }
+    MOZ_ASSERT(mShouldBlockEventDelivery);
+    MOZ_ASSERT(mElement);
+    LOG_EVENT(LogLevel::Debug,
+              ("%p postpone runner %s for %s", mElement.get(),
+               NS_ConvertUTF16toUTF8(aRunner->Name()).get(),
+               NS_ConvertUTF16toUTF8(aRunner->EventName()).get()));
+    mPendingEventRunners.AppendElement(aRunner);
+  }
+
+  void Shutdown() {
+    MOZ_ASSERT(NS_IsMainThread());
+    for (auto& runner : mPendingEventRunners) {
+      runner->Cancel();
+    }
+    mPendingEventRunners.Clear();
+  }
+
+  bool ShouldBlockEventDelivery() const {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mShouldBlockEventDelivery;
+  }
+
+  size_t SizeOfExcludingThis(MallocSizeOf& aMallocSizeOf) const {
+    MOZ_ASSERT(NS_IsMainThread());
+    size_t total = 0;
+    for (const auto& runner : mPendingEventRunners) {
+      total += aMallocSizeOf(runner);
+    }
+    return total;
+  }
+
+ private:
+  ~EventBlocker() = default;
+
+  void DispatchPendingMediaEvents() {
+    MOZ_ASSERT(mElement);
+    for (auto& runner : mPendingEventRunners) {
+      LOG_EVENT(LogLevel::Debug,
+                ("%p execute runner %s for %s", mElement.get(),
+                 NS_ConvertUTF16toUTF8(runner->Name()).get(),
+                 NS_ConvertUTF16toUTF8(runner->EventName()).get()));
+      GetMainThreadSerialEventTarget()->Dispatch(runner.forget());
+    }
+    mPendingEventRunners.Clear();
+  }
+
+  WeakPtr<HTMLMediaElement> mElement;
+  bool mShouldBlockEventDelivery = false;
+  // Contains event runners which should not be run for now because we want
+  // to block all events delivery. They would be dispatched once media element
+  // decides unblocking them.
+  nsTArray<RefPtr<nsMediaEventRunner>> mPendingEventRunners;
 };
+
+NS_IMPL_CYCLE_COLLECTION(HTMLMediaElement::EventBlocker, mPendingEventRunners)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(HTMLMediaElement::EventBlocker)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(HTMLMediaElement::EventBlocker)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(HTMLMediaElement::EventBlocker)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
 /**
  * We use MediaControlKeyListener to listen to media control key in order to
@@ -2000,6 +1914,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLMediaElement,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingPlayPromises)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSeekDOMPromise)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSetMediaKeysDOMPromise)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEventBlocker)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement,
@@ -2054,6 +1969,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement,
   if (tmp->mMediaControlKeyListener) {
     tmp->mMediaControlKeyListener->StopIfNeeded();
   }
+  if (tmp->mEventBlocker) {
+    tmp->mEventBlocker->Shutdown();
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_PTR
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -2065,13 +1983,11 @@ void HTMLMediaElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
   nsGenericHTMLElement::AddSizeOfExcludingThis(aSizes, aNodeSize);
 
   // There are many other fields that might be worth reporting, but as seen in
-  // bug 1595603, mPendingEvents can grow to be very large sometimes, so at
-  // least report that.
-  *aNodeSize +=
-      mPendingEvents.ShallowSizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
-  for (const nsString& event : mPendingEvents) {
+  // bug 1595603, the event we postpone to dispatch can grow to be very large
+  // sometimes, so at least report that.
+  if (mEventBlocker) {
     *aNodeSize +=
-        event.SizeOfExcludingThisIfUnshared(aSizes.mState.mMallocSizeOf);
+        mEventBlocker->SizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
   }
 }
 
@@ -2304,7 +2220,8 @@ void HTMLMediaElement::AbortExistingLoads() {
     // indirectly which depends on mPaused. So we need to update mPaused first.
     if (!mPaused) {
       mPaused = true;
-      RejectPromises(TakePendingPlayPromises(), NS_ERROR_DOM_MEDIA_ABORT_ERR);
+      PlayPromise::RejectPromises(TakePendingPlayPromises(),
+                                  NS_ERROR_DOM_MEDIA_ABORT_ERR);
     }
     ChangeNetworkState(NETWORK_EMPTY);
     RemoveMediaTracks();
@@ -2345,9 +2262,6 @@ void HTMLMediaElement::AbortExistingLoads() {
 
   mIsRunningSelectResource = false;
 
-  mEventDeliveryPaused = false;
-  mPendingEvents.Clear();
-
   AssertReadyStateIsNothing();
 }
 
@@ -2377,30 +2291,11 @@ void HTMLMediaElement::NoSupportedMediaSourceError(
   RemoveMediaTracks();
   ChangeDelayLoadStatus(false);
   UpdateAudioChannelPlayingState();
-  RejectPromises(TakePendingPlayPromises(),
-                 NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR);
+  PlayPromise::RejectPromises(TakePendingPlayPromises(),
+                              NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR);
 }
 
 typedef void (HTMLMediaElement::*SyncSectionFn)();
-
-// Runs a "synchronous section", a function that must run once the event loop
-// has reached a "stable state". See:
-// http://www.whatwg.org/specs/web-apps/current-work/multipage/webappapis.html#synchronous-section
-class nsSyncSection : public nsMediaEvent {
- private:
-  nsCOMPtr<nsIRunnable> mRunnable;
-
- public:
-  nsSyncSection(HTMLMediaElement* aElement, nsIRunnable* aRunnable)
-      : nsMediaEvent("dom::nsSyncSection", aElement), mRunnable(aRunnable) {}
-
-  NS_IMETHOD Run() override {
-    // Silently cancel if our load has been cancelled.
-    if (IsCancelled()) return NS_OK;
-    mRunnable->Run();
-    return NS_OK;
-  }
-};
 
 void HTMLMediaElement::RunInStableState(nsIRunnable* aRunnable) {
   if (mShuttingDown) {
@@ -4153,6 +4048,7 @@ HTMLMediaElement::HTMLMediaElement(
       mAbstractMainThread(
           OwnerDoc()->AbstractMainThreadFor(TaskCategory::Other)),
       mShutdownObserver(new ShutdownObserver),
+      mEventBlocker(new EventBlocker(this)),
       mPlayed(new TimeRanges(ToSupports(OwnerDoc()))),
       mTracksCaptured(nullptr, "HTMLMediaElement::mTracksCaptured"),
       mErrorSink(new ErrorSink(this)),
@@ -6145,14 +6041,24 @@ void HTMLMediaElement::PrincipalHandleChangedForVideoFrameContainer(
   UpdateSrcStreamVideoPrincipal(aNewPrincipalHandle);
 }
 
+already_AddRefed<nsMediaEventRunner> HTMLMediaElement::GetEventRunner(
+    const nsAString& aName) {
+  RefPtr<nsMediaEventRunner> runner;
+  if (aName.EqualsLiteral("playing")) {
+    runner = new nsNotifyAboutPlayingRunner(this, TakePendingPlayPromises());
+  } else {
+    runner = new nsAsyncEventRunner(aName, this);
+  }
+  return runner.forget();
+}
+
 nsresult HTMLMediaElement::DispatchEvent(const nsAString& aName) {
   LOG_EVENT(LogLevel::Debug, ("%p Dispatching event %s", this,
                               NS_ConvertUTF16toUTF8(aName).get()));
 
-  // Save events that occur while in the bfcache. These will be dispatched
-  // if the page comes out of the bfcache.
-  if (mEventDeliveryPaused) {
-    mPendingEvents.AppendElement(aName);
+  if (mEventBlocker->ShouldBlockEventDelivery()) {
+    RefPtr<nsMediaEventRunner> runner = GetEventRunner(aName);
+    mEventBlocker->PostponeEvent(runner);
     return NS_OK;
   }
 
@@ -6167,35 +6073,13 @@ void HTMLMediaElement::DispatchAsyncEvent(const nsAString& aName) {
   DDLOG(DDLogCategory::Event, "HTMLMediaElement",
         nsCString(NS_ConvertUTF16toUTF8(aName)));
 
-  // Save events that occur while in the bfcache. These will be dispatched
-  // if the page comes out of the bfcache.
-  if (mEventDeliveryPaused) {
-    mPendingEvents.AppendElement(aName);
+  RefPtr<nsMediaEventRunner> runner = GetEventRunner(aName);
+  if (mEventBlocker->ShouldBlockEventDelivery()) {
+    mEventBlocker->PostponeEvent(runner);
     return;
   }
 
-  nsCOMPtr<nsIRunnable> event;
-
-  if (aName.EqualsLiteral("playing")) {
-    event = new nsNotifyAboutPlayingRunner(this, TakePendingPlayPromises());
-  } else {
-    event = new nsAsyncEventRunner(aName, this);
-  }
-
-  mMainThreadEventTarget->Dispatch(event.forget());
-}
-
-nsresult HTMLMediaElement::DispatchPendingMediaEvents() {
-  NS_ASSERTION(!mEventDeliveryPaused,
-               "Must not be in bfcache when dispatching pending media events");
-
-  uint32_t count = mPendingEvents.Length();
-  for (uint32_t i = 0; i < count; ++i) {
-    DispatchAsyncEvent(mPendingEvents[i]);
-  }
-  mPendingEvents.Clear();
-
-  return NS_OK;
+  mMainThreadEventTarget->Dispatch(runner.forget());
 }
 
 bool HTMLMediaElement::IsPotentiallyPlaying() const {
@@ -6324,7 +6208,7 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aSuspendElement) {
       mDecoder->Suspend();
       mDecoder->SetDelaySeekMode(true);
     }
-    mEventDeliveryPaused = true;
+    mEventBlocker->SetBlockEventDelivery(true);
     // We won't want to resume media element from the bfcache.
     ClearResumeDelayedMediaPlaybackAgentIfNeeded();
     mMediaControlKeyListener->StopIfNeeded();
@@ -6336,10 +6220,7 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aSuspendElement) {
       }
       mDecoder->SetDelaySeekMode(false);
     }
-    if (mEventDeliveryPaused) {
-      mEventDeliveryPaused = false;
-      DispatchPendingMediaEvents();
-    }
+    mEventBlocker->SetBlockEventDelivery(false);
     // If the media element has been blocked and isn't still allowed to play
     // when it comes back from the bfcache, we would notify front end to show
     // the blocking icon in order to inform user that the site is still being
