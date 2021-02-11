@@ -5381,6 +5381,9 @@ void HTMLMediaElement::SeekCompleted() {
   if (mTextTrackManager) {
     mTextTrackManager->DidSeek();
   }
+  // https://html.spec.whatwg.org/multipage/media.html#seeking:dom-media-seek
+  // (Step 16)
+  // TODO (bug 1688131): run these steps in a stable state.
   FireTimeUpdate(TimeupdateType::eMandatory);
   DispatchAsyncEvent(u"seeked"_ns);
   // We changed whether we're seeking so we need to AddRemoveSelfReference
