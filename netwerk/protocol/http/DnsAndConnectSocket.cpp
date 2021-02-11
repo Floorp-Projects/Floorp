@@ -41,18 +41,10 @@ DnsAndConnectSocket::DnsAndConnectSocket(ConnectionEntry* ent,
                                          uint32_t caps, bool speculative,
                                          bool isFromPredictor, bool urgentStart)
     : mTransaction(trans),
-      mDispatchedMTransaction(false),
       mCaps(caps),
       mSpeculative(speculative),
       mUrgentStart(urgentStart),
       mIsFromPredictor(isFromPredictor),
-      mAllow1918(true),
-      mHasConnected(false),
-      mPrimaryConnectedOK(false),
-      mBackupConnectedOK(false),
-      mBackupConnStatsSet(false),
-      mFreeToUse(true),
-      mPrimaryStreamStatus(NS_OK),
       mEnt(ent) {
   MOZ_ASSERT(ent && trans, "constructor with null arguments");
   LOG(("Creating DnsAndConnectSocket [this=%p trans=%p ent=%s key=%s]\n", this,
@@ -75,8 +67,8 @@ DnsAndConnectSocket::DnsAndConnectSocket(ConnectionEntry* ent,
 }
 
 DnsAndConnectSocket::~DnsAndConnectSocket() {
-  MOZ_ASSERT(!mStreamOut);
-  MOZ_ASSERT(!mBackupStreamOut);
+  MOZ_ASSERT(!mPrimaryTransport.mSocketTransport);
+  MOZ_ASSERT(!mBackupTransport.mSocketTransport);
   LOG(("Destroying DnsAndConnectSocket [this=%p]\n", this));
 
   if (mEnt) {
@@ -87,10 +79,7 @@ DnsAndConnectSocket::~DnsAndConnectSocket() {
   }
 }
 
-nsresult DnsAndConnectSocket::SetupStreams(nsISocketTransport** transport,
-                                           nsIAsyncInputStream** instream,
-                                           nsIAsyncOutputStream** outstream,
-                                           bool isBackup) {
+nsresult DnsAndConnectSocket::SetupStreams(bool isBackup) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   MOZ_ASSERT(mEnt);
@@ -269,11 +258,14 @@ nsresult DnsAndConnectSocket::SetupStreams(nsISocketTransport** transport,
                                         getter_AddRefs(sin));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  socketTransport.forget(transport);
-  CallQueryInterface(sin, instream);
-  CallQueryInterface(sout, outstream);
+  SocketTransport* tran = (!isBackup) ? &mPrimaryTransport : &mBackupTransport;
 
-  rv = (*outstream)->AsyncWait(this, 0, 0, nullptr);
+  tran->mSynStarted = TimeStamp::Now();
+  tran->mSocketTransport = socketTransport.forget();
+  tran->mStreamIn = do_QueryInterface(sin);
+  tran->mStreamOut = do_QueryInterface(sout);
+
+  rv = tran->mStreamOut->AsyncWait(this, 0, 0, nullptr);
   if (NS_SUCCEEDED(rv)) {
     gHttpHandler->ConnMgr()->StartedConnect();
   }
@@ -284,45 +276,23 @@ nsresult DnsAndConnectSocket::SetupStreams(nsISocketTransport** transport,
 nsresult DnsAndConnectSocket::SetupPrimaryStreams() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  nsresult rv;
-
-  mPrimarySynStarted = TimeStamp::Now();
-  rv = SetupStreams(getter_AddRefs(mSocketTransport), getter_AddRefs(mStreamIn),
-                    getter_AddRefs(mStreamOut), false);
+  nsresult rv = SetupStreams(false);
 
   LOG(("DnsAndConnectSocket::SetupPrimaryStream [this=%p ent=%s rv=%" PRIx32
        "]",
        this, mEnt->mConnInfo->Origin(), static_cast<uint32_t>(rv)));
-  if (NS_FAILED(rv)) {
-    if (mStreamOut) {
-      mStreamOut->AsyncWait(nullptr, 0, 0, nullptr);
-    }
 
-    mStreamOut = nullptr;
-    mStreamIn = nullptr;
-    mSocketTransport = nullptr;
-  }
   return rv;
 }
 
 nsresult DnsAndConnectSocket::SetupBackupStreams() {
   MOZ_ASSERT(mTransaction);
 
-  mBackupSynStarted = TimeStamp::Now();
-  nsresult rv = SetupStreams(getter_AddRefs(mBackupTransport),
-                             getter_AddRefs(mBackupStreamIn),
-                             getter_AddRefs(mBackupStreamOut), true);
+  nsresult rv = SetupStreams(true);
 
   LOG(("DnsAndConnectSocket::SetupBackupStream [this=%p ent=%s rv=%" PRIx32 "]",
        this, mEnt->mConnInfo->Origin(), static_cast<uint32_t>(rv)));
-  if (NS_FAILED(rv)) {
-    if (mBackupStreamOut) {
-      mBackupStreamOut->AsyncWait(nullptr, 0, 0, nullptr);
-    }
-    mBackupStreamOut = nullptr;
-    mBackupStreamIn = nullptr;
-    mBackupTransport = nullptr;
-  }
+
   return rv;
 }
 
@@ -366,46 +336,17 @@ void DnsAndConnectSocket::CancelBackupTimer() {
 
 void DnsAndConnectSocket::Abandon() {
   LOG(("DnsAndConnectSocket::Abandon [this=%p ent=%s] %p %p %p %p", this,
-       mEnt->mConnInfo->Origin(), mSocketTransport.get(),
-       mBackupTransport.get(), mStreamOut.get(), mBackupStreamOut.get()));
+       mEnt->mConnInfo->Origin(), mPrimaryTransport.mSocketTransport.get(),
+       mBackupTransport.mSocketTransport.get(),
+       mPrimaryTransport.mStreamOut.get(), mBackupTransport.mStreamOut.get()));
 
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   RefPtr<DnsAndConnectSocket> deleteProtector(this);
 
   // Tell socket (and backup socket) to forget the half open socket.
-  if (mSocketTransport) {
-    mSocketTransport->SetEventSink(nullptr, nullptr);
-    mSocketTransport->SetSecurityCallbacks(nullptr);
-    mSocketTransport = nullptr;
-  }
-  if (mBackupTransport) {
-    mBackupTransport->SetEventSink(nullptr, nullptr);
-    mBackupTransport->SetSecurityCallbacks(nullptr);
-    mBackupTransport = nullptr;
-  }
-
-  // Tell output stream (and backup) to forget the half open socket.
-  if (mStreamOut) {
-    gHttpHandler->ConnMgr()->RecvdConnect();
-    mStreamOut->AsyncWait(nullptr, 0, 0, nullptr);
-    mStreamOut = nullptr;
-  }
-  if (mBackupStreamOut) {
-    gHttpHandler->ConnMgr()->RecvdConnect();
-    mBackupStreamOut->AsyncWait(nullptr, 0, 0, nullptr);
-    mBackupStreamOut = nullptr;
-  }
-
-  // Lose references to input stream (and backup).
-  if (mStreamIn) {
-    mStreamIn->AsyncWait(nullptr, 0, 0, nullptr);
-    mStreamIn = nullptr;
-  }
-  if (mBackupStreamIn) {
-    mBackupStreamIn->AsyncWait(nullptr, 0, 0, nullptr);
-    mBackupStreamIn = nullptr;
-  }
+  mPrimaryTransport.Abandon();
+  mBackupTransport.Abandon();
 
   // Stop the timer - we don't want any new backups.
   CancelBackupTimer();
@@ -419,11 +360,11 @@ void DnsAndConnectSocket::Abandon() {
 }
 
 double DnsAndConnectSocket::Duration(TimeStamp epoch) {
-  if (mPrimarySynStarted.IsNull()) {
+  if (mPrimaryTransport.mSynStarted.IsNull()) {
     return 0;
   }
 
-  return (epoch - mPrimarySynStarted).ToMilliseconds();
+  return (epoch - mPrimaryTransport.mSynStarted).ToMilliseconds();
 }
 
 NS_IMETHODIMP  // method for nsITimerCallback
@@ -431,7 +372,7 @@ DnsAndConnectSocket::Notify(nsITimer* timer) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(timer == mSynTimer, "wrong timer");
 
-  MOZ_ASSERT(!mBackupTransport);
+  MOZ_ASSERT(!mBackupTransport.mSocketTransport);
   MOZ_ASSERT(mSynTimer);
   MOZ_ASSERT(mEnt);
 
@@ -454,12 +395,13 @@ DnsAndConnectSocket::GetName(nsACString& aName) {
 NS_IMETHODIMP
 DnsAndConnectSocket::OnOutputStreamReady(nsIAsyncOutputStream* out) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  MOZ_ASSERT(mStreamOut || mBackupStreamOut);
-  MOZ_ASSERT(out == mStreamOut || out == mBackupStreamOut, "stream mismatch");
+  MOZ_ASSERT(mPrimaryTransport.mSocketTransport ||
+             mBackupTransport.mSocketTransport);
+  MOZ_ASSERT(IsPrimary(out) || IsBackup(out), "stream mismatch");
   MOZ_ASSERT(mEnt);
 
   LOG(("DnsAndConnectSocket::OnOutputStreamReady [this=%p ent=%s %s]\n", this,
-       mEnt->mConnInfo->Origin(), out == mStreamOut ? "primary" : "backup"));
+       mEnt->mConnInfo->Origin(), IsPrimary(out) ? "primary" : "backup"));
 
   mEnt->mDoNotDestroy = true;
   gHttpHandler->ConnMgr()->RecvdConnect();
@@ -476,78 +418,19 @@ DnsAndConnectSocket::OnOutputStreamReady(nsIAsyncOutputStream* out) {
 nsresult DnsAndConnectSocket::SetupConn(nsIAsyncOutputStream* out) {
   // assign the new socket to the http connection
   RefPtr<HttpConnectionBase> conn;
-  if (!mIsHttp3) {
-    conn = new nsHttpConnection();
-  } else {
-    conn = new HttpConnectionUDP();
-  }
 
-  LOG(
-      ("DnsAndConnectSocket::SetupConn "
-       "Created new nshttpconnection %p %s\n",
-       conn.get(), mIsHttp3 ? "using http3" : ""));
-
-  NullHttpTransaction* nullTrans = mTransaction->QueryNullTransaction();
-  if (nullTrans) {
-    conn->BootstrapTimings(nullTrans->Timings());
-  }
-
-  // Some capabilities are needed before a transaciton actually gets
-  // scheduled (e.g. how to negotiate false start)
-  conn->SetTransactionCaps(mTransaction->Caps());
-
-  NetAddr peeraddr;
-  nsCOMPtr<nsIInterfaceRequestor> callbacks;
-  mTransaction->GetSecurityCallbacks(getter_AddRefs(callbacks));
-  nsresult rv;
-  if (out == mStreamOut) {
-    TimeDuration rtt = TimeStamp::Now() - mPrimarySynStarted;
-    rv = conn->Init(
-        mEnt->mConnInfo, gHttpHandler->ConnMgr()->mMaxRequestDelay,
-        mSocketTransport, mStreamIn, mStreamOut, mPrimaryConnectedOK, callbacks,
-        PR_MillisecondsToInterval(static_cast<uint32_t>(rtt.ToMilliseconds())));
-
-    bool resetPreference = false;
-    mSocketTransport->GetResetIPFamilyPreference(&resetPreference);
-    if (resetPreference) {
-      mEnt->ResetIPFamilyPreference();
-    }
-
-    if (NS_SUCCEEDED(mSocketTransport->GetPeerAddr(&peeraddr))) {
-      mEnt->RecordIPFamilyPreference(peeraddr.raw.family);
-    }
-
-    // The nsHttpConnection object now owns these streams and sockets
-    mStreamOut = nullptr;
-    mStreamIn = nullptr;
-    mSocketTransport = nullptr;
-
-  } else if (out == mBackupStreamOut) {
-    TimeDuration rtt = TimeStamp::Now() - mBackupSynStarted;
-    rv = conn->Init(
-        mEnt->mConnInfo, gHttpHandler->ConnMgr()->mMaxRequestDelay,
-        mBackupTransport, mBackupStreamIn, mBackupStreamOut, mBackupConnectedOK,
-        callbacks,
-        PR_MillisecondsToInterval(static_cast<uint32_t>(rtt.ToMilliseconds())));
-
-    bool resetPreference = false;
-    mBackupTransport->GetResetIPFamilyPreference(&resetPreference);
-    if (resetPreference) {
-      mEnt->ResetIPFamilyPreference();
-    }
-
-    if (NS_SUCCEEDED(mBackupTransport->GetPeerAddr(&peeraddr))) {
-      mEnt->RecordIPFamilyPreference(peeraddr.raw.family);
-    }
-
-    // The nsHttpConnection object now owns these streams and sockets
-    mBackupStreamOut = nullptr;
-    mBackupStreamIn = nullptr;
-    mBackupTransport = nullptr;
+  nsresult rv = NS_OK;
+  if (IsPrimary(out)) {
+    rv = mPrimaryTransport.SetupConn(mTransaction, mEnt, getter_AddRefs(conn));
+  } else if (IsBackup(out)) {
+    rv = mBackupTransport.SetupConn(mTransaction, mEnt, getter_AddRefs(conn));
   } else {
     MOZ_ASSERT(false, "unexpected stream");
     rv = NS_ERROR_UNEXPECTED;
   }
+
+  nsCOMPtr<nsIInterfaceRequestor> callbacks;
+  mTransaction->GetSecurityCallbacks(getter_AddRefs(callbacks));
 
   if (NS_FAILED(rv)) {
     LOG(
@@ -692,12 +575,12 @@ DnsAndConnectSocket::OnTransportStatus(nsITransport* trans, nsresult status,
                                        int64_t progress, int64_t progressMax) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  MOZ_ASSERT((trans == mSocketTransport) || (trans == mBackupTransport));
+  MOZ_ASSERT(IsPrimary(trans) || IsBackup(trans));
   MOZ_ASSERT(mEnt);
   if (mTransaction) {
-    if ((trans == mSocketTransport) ||
-        ((trans == mBackupTransport) &&
-         (status == NS_NET_STATUS_CONNECTED_TO) && mSocketTransport)) {
+    if (IsPrimary(trans) ||
+        (IsBackup(trans) && (status == NS_NET_STATUS_CONNECTED_TO) &&
+         mPrimaryTransport.mSocketTransport)) {
       // Send this status event only if the transaction is still pending,
       // i.e. it has not found a free already connected socket.
       // Sockets in halfOpen state can only get following events:
@@ -711,17 +594,16 @@ DnsAndConnectSocket::OnTransportStatus(nsITransport* trans, nsresult status,
     }
   }
 
-  MOZ_ASSERT(trans == mSocketTransport || trans == mBackupTransport);
   if (status == NS_NET_STATUS_CONNECTED_TO) {
-    if (trans == mSocketTransport) {
-      mPrimaryConnectedOK = true;
+    if (IsPrimary(trans)) {
+      mPrimaryTransport.mConnectedOK = true;
     } else {
-      mBackupConnectedOK = true;
+      mBackupTransport.mConnectedOK = true;
     }
   }
 
   // The rest of this method only applies to the primary transport
-  if (trans != mSocketTransport) {
+  if (!IsPrimary(trans)) {
     return NS_OK;
   }
 
@@ -736,7 +618,8 @@ DnsAndConnectSocket::OnTransportStatus(nsITransport* trans, nsresult status,
       gHttpHandler->CoalesceSpdy() && mEnt && mEnt->mConnInfo &&
       mEnt->mConnInfo->EndToEndSSL() && mEnt->AllowHttp2() &&
       !mEnt->mConnInfo->UsingProxy() && mEnt->mCoalescingKeys.IsEmpty()) {
-    nsCOMPtr<nsIDNSAddrRecord> dnsRecord(do_GetInterface(mSocketTransport));
+    nsCOMPtr<nsIDNSAddrRecord> dnsRecord(
+        do_GetInterface(mPrimaryTransport.mSocketTransport));
     nsTArray<NetAddr> addressSet;
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
     if (dnsRecord) {
@@ -794,7 +677,8 @@ DnsAndConnectSocket::OnTransportStatus(nsITransport* trans, nsresult status,
       // after that the second stops the socket thread.
       // Http3 has its own syn-retransmission, therefore it does not need a
       // backup connection.
-      if (mEnt && !mBackupTransport && !mSynTimer && !mIsHttp3) {
+      if (mEnt && !mBackupTransport.mSocketTransport && !mSynTimer &&
+          !mIsHttp3) {
         SetupBackupTimer();
       }
       break;
@@ -810,6 +694,22 @@ DnsAndConnectSocket::OnTransportStatus(nsITransport* trans, nsresult status,
   }
 
   return NS_OK;
+}
+
+bool DnsAndConnectSocket::IsPrimary(nsITransport* trans) {
+  return trans == mPrimaryTransport.mSocketTransport;
+}
+
+bool DnsAndConnectSocket::IsPrimary(nsIAsyncOutputStream* out) {
+  return out == mPrimaryTransport.mStreamOut;
+}
+
+bool DnsAndConnectSocket::IsBackup(nsITransport* trans) {
+  return trans == mBackupTransport.mSocketTransport;
+}
+
+bool DnsAndConnectSocket::IsBackup(nsIAsyncOutputStream* out) {
+  return out == mBackupTransport.mStreamOut;
 }
 
 // method for nsIInterfaceRequestor
@@ -835,10 +735,11 @@ bool DnsAndConnectSocket::Claim() {
   if (mSpeculative) {
     mSpeculative = false;
     uint32_t flags;
-    if (mSocketTransport &&
-        NS_SUCCEEDED(mSocketTransport->GetConnectionFlags(&flags))) {
+    if (mPrimaryTransport.mSocketTransport &&
+        NS_SUCCEEDED(
+            mPrimaryTransport.mSocketTransport->GetConnectionFlags(&flags))) {
       flags &= ~nsISocketTransport::DISABLE_RFC1918;
-      mSocketTransport->SetConnectionFlags(flags);
+      mPrimaryTransport.mSocketTransport->SetConnectionFlags(flags);
     }
 
     Telemetry::AutoCounter<Telemetry::HTTPCONNMGR_USED_SPECULATIVE_CONN>
@@ -854,7 +755,7 @@ bool DnsAndConnectSocket::Claim() {
     // Http3 has its own syn-retransmission, therefore it does not need a
     // backup connection.
     if ((mPrimaryStreamStatus == NS_NET_STATUS_CONNECTING_TO) && mEnt &&
-        !mBackupTransport && !mSynTimer && !mIsHttp3) {
+        !mBackupTransport.mSocketTransport && !mSynTimer && !mIsHttp3) {
       SetupBackupTimer();
     }
   }
@@ -872,6 +773,86 @@ void DnsAndConnectSocket::Unclaim() {
   // be used by a transaction from which this transaction took the halfOpen.
   // (this is happening because of the transaction priority.)
   mFreeToUse = true;
+}
+
+void DnsAndConnectSocket::CloseTransports(nsresult error) {
+  if (mPrimaryTransport.mSocketTransport) {
+    mPrimaryTransport.mSocketTransport->Close(error);
+  }
+  if (mBackupTransport.mSocketTransport) {
+    mBackupTransport.mSocketTransport->Close(error);
+  }
+}
+
+void DnsAndConnectSocket::SocketTransport::Abandon() {
+  // Tell socket (and backup socket) to forget the half open socket.
+  if (mSocketTransport) {
+    mSocketTransport->SetEventSink(nullptr, nullptr);
+    mSocketTransport->SetSecurityCallbacks(nullptr);
+    mSocketTransport = nullptr;
+  }
+
+  // Tell output stream (and backup) to forget the half open socket.
+  if (mStreamOut) {
+    gHttpHandler->ConnMgr()->RecvdConnect();
+    mStreamOut->AsyncWait(nullptr, 0, 0, nullptr);
+    mStreamOut = nullptr;
+  }
+
+  // Lose references to input stream (and backup).
+  if (mStreamIn) {
+    mStreamIn->AsyncWait(nullptr, 0, 0, nullptr);
+    mStreamIn = nullptr;
+  }
+}
+
+nsresult DnsAndConnectSocket::SocketTransport::SetupConn(
+    nsAHttpTransaction* transaction, ConnectionEntry* ent,
+    HttpConnectionBase** connection) {
+  RefPtr<HttpConnectionBase> conn;
+  if (!ent->mConnInfo->IsHttp3()) {
+    conn = new nsHttpConnection();
+  } else {
+    conn = new HttpConnectionUDP();
+  }
+
+  LOG(
+      ("DnsAndConnectSocket::SocketTransport::SetupConn "
+       "Created new nshttpconnection %p %s\n",
+       conn.get(), ent->mConnInfo->IsHttp3() ? "using http3" : ""));
+
+  NullHttpTransaction* nullTrans = transaction->QueryNullTransaction();
+  if (nullTrans) {
+    conn->BootstrapTimings(nullTrans->Timings());
+  }
+
+  // Some capabilities are needed before a transaction actually gets
+  // scheduled (e.g. how to negotiate false start)
+  conn->SetTransactionCaps(transaction->Caps());
+
+  nsCOMPtr<nsIInterfaceRequestor> callbacks;
+  transaction->GetSecurityCallbacks(getter_AddRefs(callbacks));
+  nsresult rv = conn->Init(
+      ent->mConnInfo, gHttpHandler->ConnMgr()->mMaxRequestDelay,
+      mSocketTransport, mStreamIn, mStreamOut, mConnectedOK, callbacks,
+      PR_MillisecondsToInterval(static_cast<uint32_t>(
+          (TimeStamp::Now() - mSynStarted).ToMilliseconds())));
+
+  bool resetPreference = false;
+  mSocketTransport->GetResetIPFamilyPreference(&resetPreference);
+  if (resetPreference) {
+    ent->ResetIPFamilyPreference();
+  }
+
+  NetAddr peeraddr;
+  if (NS_SUCCEEDED(mSocketTransport->GetPeerAddr(&peeraddr))) {
+    ent->RecordIPFamilyPreference(peeraddr.raw.family);
+  }
+  conn.forget(connection);
+  mSocketTransport = nullptr;
+  mStreamOut = nullptr;
+  mStreamIn = nullptr;
+  return rv;
 }
 
 }  // namespace net
