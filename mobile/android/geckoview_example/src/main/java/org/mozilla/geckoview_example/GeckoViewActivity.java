@@ -389,6 +389,7 @@ public class GeckoViewActivity
     private GeckoView mGeckoView;
     private boolean mFullAccessibilityTree;
     private boolean mUsePrivateBrowsing;
+    private boolean mCollapsed;
     private boolean mKillProcessOnDestroy;
     private boolean mDesktopMode;
     private boolean mTrackingProtectionException;
@@ -875,27 +876,27 @@ public class GeckoViewActivity
 
         ViewGroup.LayoutParams params = mPopupView.getLayoutParams();
         boolean shouldShow = force || params.width == 0;
-        setPopupVisibility(shouldShow);
+        setViewVisibility(mPopupView, shouldShow);
 
         return shouldShow ? mPopupSession : null;
     }
 
-    private void setPopupVisibility(boolean visible) {
-        if (mPopupView == null) {
+    private static void setViewVisibility(final View view, final boolean visible) {
+        if (view == null) {
             return;
         }
 
-        ViewGroup.LayoutParams params = mPopupView.getLayoutParams();
+        ViewGroup.LayoutParams params = view.getLayoutParams();
 
         if (visible) {
-            params.height = 1100;
-            params.width = 1200;
+            params.height = ViewGroup.LayoutParams.MATCH_PARENT;
+            params.width = ViewGroup.LayoutParams.MATCH_PARENT;
         } else {
             params.height = 0;
             params.width = 0;
         }
 
-        mPopupView.setLayoutParams(params);
+        view.setLayoutParams(params);
     }
 
     @Override
@@ -906,8 +907,8 @@ public class GeckoViewActivity
     private class PopupSessionContentDelegate implements GeckoSession.ContentDelegate {
         @Override
         public void onCloseRequest(final GeckoSession session) {
-          setPopupVisibility(false);
-          if (mPopupSession != null) {
+            setViewVisibility(mPopupView, false);
+            if (mPopupSession != null) {
               mPopupSession.close();
           }
           mPopupSession = null;
@@ -1097,6 +1098,7 @@ public class GeckoViewActivity
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.findItem(R.id.action_pb).setChecked(mUsePrivateBrowsing);
+        menu.findItem(R.id.collapse).setChecked(mCollapsed);
         menu.findItem(R.id.desktop_mode).setChecked(mDesktopMode);
         menu.findItem(R.id.action_tpe).setChecked(mTrackingProtectionException);
         menu.findItem(R.id.action_forward).setEnabled(mCanGoForward);
@@ -1131,6 +1133,10 @@ public class GeckoViewActivity
             case R.id.action_pb:
                 mUsePrivateBrowsing = !mUsePrivateBrowsing;
                 recreateSession();
+                break;
+            case R.id.collapse:
+                mCollapsed = !mCollapsed;
+                setViewVisibility(mGeckoView, !mCollapsed);
                 break;
             case R.id.install_addon:
                 installAddon();
@@ -1168,7 +1174,7 @@ public class GeckoViewActivity
 
             // We only suopport one extension at a time, so remove the currently installed
             // extension if there is one
-            setPopupVisibility(false);
+            setViewVisibility(mPopupView, false);
             mPopupView = null;
             mPopupSession = null;
             sExtensionManager.unregisterExtension().then(unused -> {
