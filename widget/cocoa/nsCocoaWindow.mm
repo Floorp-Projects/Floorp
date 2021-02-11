@@ -801,7 +801,7 @@ void nsCocoaWindow::Show(bool bState) {
       bool parentIsSheet = false;
       if (NS_SUCCEEDED(piParentWidget->GetIsSheet(&parentIsSheet)) && parentIsSheet) {
         piParentWidget->GetSheetWindowParent(&topNonSheetWindow);
-        [NSApp endSheet:nativeParentWindow];
+        [nativeParentWindow.sheetParent endSheet:nativeParentWindow];
       }
 
       nsCOMPtr<nsIWidget> sheetShown;
@@ -809,18 +809,27 @@ void nsCocoaWindow::Show(bool bState) {
           (!sheetShown || sheetShown == this)) {
         // If this sheet is already the sheet actually being shown, don't
         // tell it to show again. Otherwise the number of calls to
-        // [NSApp beginSheet...] won't match up with [NSApp endSheet...].
+        // [NSWindow beginSheet...] won't match up with [NSWindow endSheet...].
         if (![mWindow isVisible]) {
           mSheetNeedsShow = false;
           mSheetWindowParent = topNonSheetWindow;
-          // Only set contextInfo if our parent isn't a sheet.
-          NSWindow* contextInfo = parentIsSheet ? nil : mSheetWindowParent;
+          NSWindow* sheet = mWindow;
+          NSWindow* nonSheetParent = parentIsSheet ? nil : mSheetWindowParent;
           [TopLevelWindowData deactivateInWindow:mSheetWindowParent];
-          [NSApp beginSheet:mWindow
-              modalForWindow:mSheetWindowParent
-               modalDelegate:mDelegate
-              didEndSelector:@selector(didEndSheet:returnCode:contextInfo:)
-                 contextInfo:contextInfo];
+          [mSheetWindowParent beginSheet:sheet
+                       completionHandler:^(NSModalResponse returnCode) {
+                         // Note: 'nonSheetParent' (if it is set) is the window that is the parent
+                         // of the sheet. If it's set, 'nonSheetParent' is always the top- level
+                         // window, not another sheet itself.  But 'nonSheetParent' is nil if our
+                         // parent window is also a sheet -- in that case we shouldn't send the
+                         // top-level window any activate events (because it's our parent window
+                         // that needs to get these events, not the top-level window).
+                         [TopLevelWindowData deactivateInWindow:sheet];
+                         [sheet orderOut:nil];
+                         if (nonSheetParent) {
+                           [TopLevelWindowData activateInWindow:nonSheetParent];
+                         }
+                       }];
           [TopLevelWindowData activateInWindow:mWindow];
           SendSetZLevelEvent();
         }
@@ -909,7 +918,7 @@ void nsCocoaWindow::Show(bool bState) {
         NSWindow* sheetParent = mSheetWindowParent;
 
         // hide the sheet
-        [NSApp endSheet:mWindow];
+        [mSheetWindowParent endSheet:mWindow];
 
         [TopLevelWindowData deactivateInWindow:mWindow];
 
@@ -924,9 +933,9 @@ void nsCocoaWindow::Show(bool bState) {
           siblingSheetToShow->Show(true);
         } else if (nativeParentWindow && piParentWidget &&
                    NS_SUCCEEDED(piParentWidget->GetIsSheet(&parentIsSheet)) && parentIsSheet) {
-          // Only set contextInfo if the parent of the parent sheet we're about
+          // Only set nonSheetGrandparent if the parent of the parent sheet we're about
           // to restore isn't itself a sheet.
-          NSWindow* contextInfo = sheetParent;
+          NSWindow* nonSheetGrandparent = sheetParent;
           nsIWidget* grandparentWidget = nil;
           if (NS_SUCCEEDED(piParentWidget->GetRealParent(&grandparentWidget)) &&
               grandparentWidget) {
@@ -935,17 +944,26 @@ void nsCocoaWindow::Show(bool bState) {
             if (piGrandparentWidget &&
                 NS_SUCCEEDED(piGrandparentWidget->GetIsSheet(&grandparentIsSheet)) &&
                 grandparentIsSheet) {
-              contextInfo = nil;
+              nonSheetGrandparent = nil;
             }
           }
           // If there are no sibling sheets, but the parent is a sheet, restore
           // it.  It wasn't sent any deactivate events when it was hidden, so
           // don't call through Show, just let the OS put it back up.
-          [NSApp beginSheet:nativeParentWindow
-              modalForWindow:sheetParent
-               modalDelegate:[nativeParentWindow delegate]
-              didEndSelector:@selector(didEndSheet:returnCode:contextInfo:)
-                 contextInfo:contextInfo];
+          [nativeParentWindow beginSheet:sheetParent
+                       completionHandler:^(NSModalResponse returnCode) {
+                         // Note: 'nonSheetGrandparent' (if it is set) is the window that is the
+                         // parent of sheetParent. If it's set, 'nonSheetGrandparent' is always the
+                         // top-level window, not another sheet itself.  But 'nonSheetGrandparent'
+                         // is nil if our parent window is also a sheet -- in that case we shouldn't
+                         // send the top-level window any activate events (because it's our parent
+                         // window that needs to get these events, not the top-level window).
+                         [TopLevelWindowData deactivateInWindow:sheetParent];
+                         [sheetParent orderOut:nil];
+                         if (nonSheetGrandparent) {
+                           [TopLevelWindowData activateInWindow:nonSheetGrandparent];
+                         }
+                       }];
         } else {
           // Sheet, that was hard.  No more siblings or parents, going back
           // to a real window.
@@ -2917,23 +2935,6 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
     rect.origin.y = [(ToolbarWindow*)window sheetAttachmentPosition];
   }
   return rect;
-}
-
-- (void)didEndSheet:(NSWindow*)sheet returnCode:(int)returnCode contextInfo:(void*)contextInfo {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  // Note: 'contextInfo' (if it is set) is the window that is the parent of
-  // the sheet.  The value of contextInfo is determined in
-  // nsCocoaWindow::Show().  If it's set, 'contextInfo' is always the top-
-  // level window, not another sheet itself.  But 'contextInfo' is nil if
-  // our parent window is also a sheet -- in that case we shouldn't send
-  // the top-level window any activate events (because it's our parent
-  // window that needs to get these events, not the top-level window).
-  [TopLevelWindowData deactivateInWindow:sheet];
-  [sheet orderOut:self];
-  if (contextInfo) [TopLevelWindowData activateInWindow:(NSWindow*)contextInfo];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (void)windowDidChangeBackingProperties:(NSNotification*)aNotification {
