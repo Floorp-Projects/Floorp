@@ -638,7 +638,7 @@ enum class SimdOp {
   I32x4ExtMulHighSI16x8 = 0xbd,
   I32x4ExtMulLowUI16x8 = 0xbe,
   I32x4ExtMulHighUI16x8 = 0xbf,
-  // Abs = 0xc0
+  I64x2Eq = 0xc0,
   I64x2Neg = 0xc1,
   // AnyTrue = 0xc2
   // AllTrue = 0xc3
@@ -653,8 +653,8 @@ enum class SimdOp {
   I64x2ShrS = 0xcc,
   I64x2ShrU = 0xcd,
   I64x2Add = 0xce,
-  // AddSatS = 0xcf
-  // AddSatU = 0xd0
+  I64x2AllTrue = 0xcf,
+  I64x2Ne = 0xd0,
   I64x2Sub = 0xd1,
   I64x2ExtMulLowSI32x4 = 0xd2,
   I64x2ExtMulHighSI32x4 = 0xd3,

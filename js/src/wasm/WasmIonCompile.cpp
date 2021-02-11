@@ -4947,6 +4947,8 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           case uint32_t(SimdOp::I16x8Ne):
           case uint32_t(SimdOp::I32x4Eq):
           case uint32_t(SimdOp::I32x4Ne):
+          case uint32_t(SimdOp::I64x2Eq):
+          case uint32_t(SimdOp::I64x2Ne):
           case uint32_t(SimdOp::F32x4Eq):
           case uint32_t(SimdOp::F32x4Ne):
           case uint32_t(SimdOp::F64x2Eq):
@@ -5083,6 +5085,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           case uint32_t(SimdOp::I8x16AllTrue):
           case uint32_t(SimdOp::I16x8AllTrue):
           case uint32_t(SimdOp::I32x4AllTrue):
+          case uint32_t(SimdOp::I64x2AllTrue):
           case uint32_t(SimdOp::I8x16Bitmask):
           case uint32_t(SimdOp::I16x8Bitmask):
           case uint32_t(SimdOp::I32x4Bitmask):

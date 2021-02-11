@@ -2582,6 +2582,16 @@ void MacroAssembler::allTrueInt32x4(FloatRegister src, Register dest_) {
   Cset(dest, Assembler::Zero);
 }
 
+void MacroAssembler::allTrueInt64x2(FloatRegister src, Register dest_) {
+  ScratchSimd128Scope scratch(*this);
+  ARMRegister dest(dest_, 64);
+  Cmeq(Simd2D(scratch), Simd2D(src), 0);
+  Addp(Simd1D(scratch), Simd2D(scratch));
+  Umov(dest, Simd1D(scratch), 0);
+  Cmp(dest, Operand(0));
+  Cset(dest, Assembler::Zero);
+}
+
 // Bitmask, ie extract and compress high bits of all lanes
 //
 // There's no direct support for this on the chip.  These implementations come
@@ -2650,6 +2660,11 @@ void MacroAssembler::compareInt16x8(Assembler::Condition cond,
 void MacroAssembler::compareInt32x4(Assembler::Condition cond,
                                     FloatRegister rhs, FloatRegister lhsDest) {
   compareSimd128Int(cond, Simd4S(lhsDest), Simd4S(lhsDest), Simd4S(rhs));
+}
+
+void MacroAssembler::compareInt64x2(Assembler::Condition cond,
+                                    FloatRegister rhs, FloatRegister lhsDest) {
+  compareSimd128Int(cond, Simd2D(lhsDest), Simd2D(lhsDest), Simd2D(rhs));
 }
 
 void MacroAssembler::compareFloat32x4(Assembler::Condition cond,

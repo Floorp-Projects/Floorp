@@ -4418,7 +4418,7 @@ MDefinition* MWasmScalarToSimd128::foldsTo(TempAllocator& alloc) {
 template <typename T>
 static bool AllTrue(const T& v) {
   constexpr size_t count = sizeof(T) / sizeof(*v);
-  static_assert(count == 16 || count == 8 || count == 4);
+  static_assert(count == 16 || count == 8 || count == 4 || count == 2);
   bool result = true;
   for (unsigned i = 0; i < count; i++) {
     result = result && v[i] != 0;
@@ -4476,6 +4476,10 @@ MDefinition* MWasmReduceSimd128::foldsTo(TempAllocator& alloc) {
       case wasm::SimdOp::I32x4Bitmask:
         i32Result = Bitmask(
             SimdConstant::CreateSimd128((int32_t*)c.bytes()).asInt32x4());
+        break;
+      case wasm::SimdOp::I64x2AllTrue:
+        i32Result = AllTrue(
+            SimdConstant::CreateSimd128((int64_t*)c.bytes()).asInt64x2());
         break;
       case wasm::SimdOp::I64x2Bitmask:
         i32Result = Bitmask(

@@ -2508,6 +2508,24 @@ class AssemblerX86Shared : public AssemblerShared {
     }
   }
 
+  void vpcmpeqq(const Operand& rhs, FloatRegister lhs, FloatRegister dest) {
+    MOZ_ASSERT(HasSSE41());
+    switch (rhs.kind()) {
+      case Operand::FPREG:
+        masm.vpcmpeqq_rr(rhs.fpu(), lhs.encoding(), dest.encoding());
+        break;
+      case Operand::MEM_REG_DISP:
+        masm.vpcmpeqq_mr(rhs.disp(), rhs.base(), lhs.encoding(),
+                         dest.encoding());
+        break;
+      case Operand::MEM_ADDRESS32:
+        masm.vpcmpeqq_mr(rhs.address(), lhs.encoding(), dest.encoding());
+        break;
+      default:
+        MOZ_CRASH("unexpected operand kind");
+    }
+  }
+
   void vcmpps(uint8_t order, Operand rhs, FloatRegister srcDest) {
     MOZ_ASSERT(HasSSE2());
     switch (rhs.kind()) {

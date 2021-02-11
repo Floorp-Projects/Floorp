@@ -466,6 +466,10 @@ class MacroAssemblerX86Shared : public Assembler {
   void unsignedCompareInt32x4(FloatRegister lhs, Operand rhs,
                               Assembler::Condition cond, FloatRegister output,
                               FloatRegister tmp1, FloatRegister tmp2);
+  void compareInt64x2(FloatRegister lhs, Operand rhs, Assembler::Condition cond,
+                      FloatRegister output);
+  void compareInt64x2(Assembler::Condition cond, const SimdConstant& rhs,
+                      FloatRegister lhsDest);
   void compareFloat32x4(FloatRegister lhs, Operand rhs,
                         Assembler::Condition cond, FloatRegister output);
   void compareFloat32x4(Assembler::Condition cond, const SimdConstant& rhs,
