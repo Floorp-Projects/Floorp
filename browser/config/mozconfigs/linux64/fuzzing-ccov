@@ -2,3 +2,6 @@
 
 ac_add_options --enable-debug-symbols=-g1
 ac_add_options --enable-fuzzing
+
+# gold is required for libFuzzer to work properly
+ac_add_options --enable-linker=gold
