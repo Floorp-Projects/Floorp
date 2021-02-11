@@ -411,11 +411,6 @@ class VideoTrackEncoder : public TrackEncoder {
    */
   void AdvanceCurrentTime(const TimeStamp& aTime);
 
-  /**
-   * Set desired keyframe interval.
-   */
-  virtual void SetKeyFrameInterval(Maybe<TimeDuration> aKeyFrameInterval) = 0;
-
  protected:
   /**
    * Initialize the video encoder. In order to collect the value of width and
