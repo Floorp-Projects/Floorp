@@ -36,6 +36,7 @@ static const int FRAMERATE_DETECTION_MAX_DURATION_S = 6;
 TrackEncoder::TrackEncoder(TrackRate aTrackRate)
     : mEncodingComplete(false),
       mInitialized(false),
+      mStarted(false),
       mEndOfStream(false),
       mCanceled(false),
       mInitCounter(0),
@@ -45,6 +46,11 @@ TrackEncoder::TrackEncoder(TrackRate aTrackRate)
 bool TrackEncoder::IsInitialized() {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
   return mInitialized;
+}
+
+bool TrackEncoder::IsStarted() {
+  MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
+  return mStarted;
 }
 
 bool TrackEncoder::IsEncodingComplete() {
@@ -63,6 +69,20 @@ void TrackEncoder::SetInitialized() {
 
   for (auto& l : mListeners.Clone()) {
     l->Initialized(this);
+  }
+}
+
+void TrackEncoder::SetStarted() {
+  MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
+
+  if (mStarted) {
+    return;
+  }
+
+  mStarted = true;
+
+  for (auto& l : mListeners.Clone()) {
+    l->Started(this);
   }
 }
 
@@ -141,6 +161,7 @@ void AudioTrackEncoder::AppendAudioSegment(AudioSegment&& aSegment) {
   TryInit(mOutgoingBuffer, aSegment.GetDuration());
 
   if (!mSuspended) {
+    SetStarted();
     mOutgoingBuffer.AppendFrom(&aSegment);
   }
 
@@ -436,6 +457,7 @@ void VideoTrackEncoder::AppendVideoSegment(VideoSegment&& aSegment) {
         mIncomingBuffer.Clear();
       }
     }
+    SetStarted();
     mIncomingBuffer.AppendFrame(do_AddRef(iter->mFrame.GetImage()),
                                 iter->mFrame.GetIntrinsicSize(),
                                 iter->mFrame.GetPrincipalHandle(),

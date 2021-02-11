@@ -47,6 +47,8 @@ class OnlineSpeechRecognitionService : public nsISpeechRecognitionService,
     explicit SpeechEncoderListener(OnlineSpeechRecognitionService* aService)
         : mService(aService), mOwningThread(AbstractThread::GetCurrent()) {}
 
+    void Started(TrackEncoder* aEncoder) override {}
+
     void Initialized(TrackEncoder* aEncoder) override {
       MOZ_ASSERT(mOwningThread->IsCurrentThreadIn());
       mService->EncoderInitialized();

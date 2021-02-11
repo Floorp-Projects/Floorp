@@ -317,6 +317,21 @@ class MediaEncoder::EncoderListener : public TrackEncoderListener {
     Unused << rv;
   }
 
+  void Started(TrackEncoder* aTrackEncoder) override {
+    MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
+    MOZ_ASSERT(aTrackEncoder->IsStarted());
+
+    if (!mEncoder) {
+      return;
+    }
+
+    nsresult rv = mEncoderThread->Dispatch(
+        NewRunnableMethod("mozilla::MediaEncoder::NotifyStarted", mEncoder,
+                          &MediaEncoder::NotifyStarted));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
+  }
+
   void DataAvailable(TrackEncoder* aTrackEncoder) override {
     MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
     MOZ_ASSERT(aTrackEncoder->IsInitialized());
@@ -382,6 +397,7 @@ MediaEncoder::MediaEncoder(TaskQueue* aEncoderThread,
       mStartTime(TimeStamp::Now()),
       mMIMEType(aMIMEType),
       mInitialized(false),
+      mStarted(false),
       mCompleted(false),
       mError(false) {
   if (mAudioEncoder) {
@@ -879,7 +895,29 @@ void MediaEncoder::NotifyInitialized() {
   mInitialized = true;
 
   for (auto& l : mListeners.Clone()) {
-    l->Initialized();
+    l->DataAvailable();
+  }
+}
+
+void MediaEncoder::NotifyStarted() {
+  MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
+
+  if (mStarted) {
+    return;
+  }
+
+  if (mAudioEncoder && !mAudioEncoder->IsStarted()) {
+    return;
+  }
+
+  if (mVideoEncoder && !mVideoEncoder->IsStarted()) {
+    return;
+  }
+
+  mStarted = true;
+
+  for (auto& l : mListeners.Clone()) {
+    l->Started();
   }
 }
 
