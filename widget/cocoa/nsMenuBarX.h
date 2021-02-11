@@ -107,7 +107,6 @@ class nsMenuBarX : public nsMenuGroupOwnerX, public nsChangeObserver {
   nsresult Paint();
   void ForceUpdateNativeMenuAt(const nsAString& indexString);
   void ForceNativeMenuReload();  // used for testing
-  static char GetLocalizedAccelKey(const char* shortcutID);
   static void ResetNativeApplicationMenu();
   void SetNeedsRebuild();
   void ApplicationMenuOpened();
