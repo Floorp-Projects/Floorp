@@ -68,9 +68,6 @@ elif toolkit == "cocoa":
         "nsITouchBarInput.idl",
         "nsITouchBarUpdater.idl",
     ]
-    EXPORTS += [
-        "nsINativeMenuService.h",
-    ]
 
 TEST_DIRS += ["tests", "tests/gtest"]
 
