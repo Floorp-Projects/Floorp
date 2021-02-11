@@ -147,6 +147,9 @@ class WebConsoleUI {
 
     this._initializer = (async () => {
       this._initUI();
+      // Bug 1605763: It's important to call _attachTargets once the UI is initialized, as
+      // TargetList.startListening will start fetching additional targets
+      // and may overload the Browser Console.
       await this._attachTargets();
 
       this._commands = new ConsoleCommands({
@@ -329,6 +332,18 @@ class WebConsoleUI {
    */
   async _attachTargets() {
     this.additionalProxies = new Map();
+
+    if (this.isBrowserConsole) {
+      // Bug 1605763:
+      // TargetList.startListening will start fetching additional targets
+      // and may overload the Browser Console with loads of targets and resources.
+      // We can call it from here, as `_attchTargets` is called after the UI is initialized.
+      // Bug 1642599:
+      // TargetList.startListening ought to be called before watching for resources,
+      // in order to set TargetList.watcherFront which is used by ResourceWatcher.watchResources.
+      await this.hud.targetList.startListening();
+    }
+
     // Listen for all target types, including:
     // - frames, in order to get the parent process target
     // which is considered as a frame rather than a process.
