@@ -38,8 +38,9 @@ gcloud:
   performance-metrics: true
 
   test-targets:
-   - package org.mozilla.fenix.ui
-   - package org.mozilla.fenix.glean
+    - package org.mozilla.fenix.ui.TabbedBrowsingTest#verifyTabTrayNotShowingStateHalfExpanded
+#   - package org.mozilla.fenix.ui
+#   - package org.mozilla.fenix.glean
 
   device:
    - model: Pixel2
@@ -52,5 +53,4 @@ flank:
   max-test-shards: 50 
   # num-test-runs: the amount of times to run the tests.
   # 1 runs the tests once. 10 runs all the tests 10x
-  num-test-runs: 1
-
+  num-test-runs: 50

@@ -7,6 +7,8 @@
 package org.mozilla.fenix.ui.robots
 
 import android.content.Context
+import android.view.InputDevice
+import android.view.MotionEvent
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
@@ -15,7 +17,12 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.NoMatchingViewException
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
+import androidx.test.espresso.action.GeneralClickAction
+import androidx.test.espresso.action.GeneralLocation
+import androidx.test.espresso.action.Press
+import androidx.test.espresso.action.Tap
 import androidx.test.espresso.action.ViewActions
+import androidx.test.espresso.action.ViewActions.actionWithAssertions
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
@@ -255,7 +262,19 @@ class TabDrawerRobot {
         }
 
         fun clickTopBar(interact: TabDrawerRobot.() -> Unit): Transition {
-            onView(withId(R.id.topBar)).click()
+            // The topBar contains other views.
+            // Don't do the default click in the middle, rather click in some free space - top right.
+            onView(withId(R.id.topBar)).perform(
+                actionWithAssertions(
+                    GeneralClickAction(
+                        Tap.SINGLE,
+                        GeneralLocation.TOP_RIGHT,
+                        Press.FINGER,
+                        InputDevice.SOURCE_UNKNOWN,
+                        MotionEvent.BUTTON_PRIMARY
+                    )
+                )
+            )
             TabDrawerRobot().interact()
             return Transition()
         }
@@ -280,8 +299,11 @@ class TabDrawerRobot {
         }
 
         fun waitForTabTrayBehaviorToIdle(interact: TabDrawerRobot.() -> Unit): Transition {
+            // Need to get the behavior of tab_wrapper and wait for that to idle.
             var behavior: BottomSheetBehavior<*>? = null
-            onView(withId(R.id.tab_wrapper)).perform(object : ViewAction {
+
+            // Null check here since it's possible that the view is already animated away from the screen.
+            onView(withId(R.id.tab_wrapper))?.perform(object : ViewAction {
                 override fun getDescription(): String {
                     return "Postpone actions to after the BottomSheetBehavior has settled"
                 }
@@ -294,9 +316,13 @@ class TabDrawerRobot {
                     behavior = BottomSheetBehavior.from(view!!)
                 }
             })
-            runWithIdleRes(BottomSheetBehaviorStateIdlingResource(behavior!!)) {
-                TabDrawerRobot().interact()
+
+            behavior?.let {
+                runWithIdleRes(BottomSheetBehaviorStateIdlingResource(it)) {
+                    TabDrawerRobot().interact()
+                }
             }
+
             return Transition()
         }
 
