@@ -16,10 +16,12 @@ var EXPORTED_SYMBOLS = [
   "TestingCrashManager",
 ];
 
-ChromeUtils.import("resource://gre/modules/CrashManager.jsm", this);
-ChromeUtils.import("resource://gre/modules/Log.jsm", this);
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
-ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
+const { CrashManager } = ChromeUtils.import(
+  "resource://gre/modules/CrashManager.jsm"
+);
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 var loggingConfigured = false;
 

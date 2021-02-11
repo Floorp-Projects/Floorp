@@ -193,11 +193,10 @@
         this._spellCheckInitialized = true;
 
         try {
-          ChromeUtils.import(
-            "resource://gre/modules/InlineSpellChecker.jsm",
-            this
+          const { InlineSpellChecker } = ChromeUtils.import(
+            "resource://gre/modules/InlineSpellChecker.jsm"
           );
-          this.InlineSpellCheckerUI = new this.InlineSpellChecker(
+          this.InlineSpellCheckerUI = new InlineSpellChecker(
             this._input.editor
           );
         } catch (ex) {}

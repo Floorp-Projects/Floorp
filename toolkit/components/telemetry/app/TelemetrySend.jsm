@@ -13,17 +13,27 @@
 
 var EXPORTED_SYMBOLS = ["TelemetrySend"];
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm", this);
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm", this);
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
-ChromeUtils.import("resource://gre/modules/ServiceRequest.jsm", this);
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
+const { ServiceRequest } = ChromeUtils.import(
+  "resource://gre/modules/ServiceRequest.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { TelemetryUtils } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryUtils.jsm"
+);
+const { clearTimeout, setTimeout } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm"
+);
 
 ChromeUtils.defineModuleGetter(
   this,

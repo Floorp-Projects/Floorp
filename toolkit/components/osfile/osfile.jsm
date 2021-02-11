@@ -8,10 +8,10 @@
 
 if (typeof Components != "undefined") {
   this.EXPORTED_SYMBOLS = ["OS"];
-  ChromeUtils.import(
-    "resource://gre/modules/osfile/osfile_async_front.jsm",
-    this
+  const { OS } = ChromeUtils.import(
+    "resource://gre/modules/osfile/osfile_async_front.jsm"
   );
+  this.OS = OS;
 } else {
   /* eslint-env worker */
   importScripts("resource://gre/modules/workers/require.js");

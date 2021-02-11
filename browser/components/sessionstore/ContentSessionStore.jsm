@@ -6,9 +6,13 @@
 
 var EXPORTED_SYMBOLS = ["ContentSessionStore"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { clearTimeout, setTimeoutWithTarget } = ChromeUtils.import(
+  "resource://gre/modules/Timer.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function debug(msg) {
   Services.console.logStringMessage("SessionStoreContent: " + msg);
