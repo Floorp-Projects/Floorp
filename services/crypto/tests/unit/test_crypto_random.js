@@ -1,4 +1,6 @@
-ChromeUtils.import("resource://services-crypto/WeaveCrypto.js", this);
+const { WeaveCrypto } = ChromeUtils.import(
+  "resource://services-crypto/WeaveCrypto.js"
+);
 
 var cryptoSvc = new WeaveCrypto();
 

@@ -1,7 +1,8 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://normandy/lib/Heartbeat.jsm", this);
+const { Heartbeat } = ChromeUtils.import(
+  "resource://normandy/lib/Heartbeat.jsm"
+);
 
 /**
  * Assert an array is in non-descending order, and that every element is a number

@@ -4,7 +4,6 @@
 
 "use strict";
 
-/* eslint-disable-next-line mozilla/reject-chromeutils-import-null */
 let CustomizableUIBSPass = ChromeUtils.import(
   "resource:///modules/CustomizableUI.jsm",
   null

@@ -12,7 +12,9 @@ add_task(async function run_test() {
       crashReporter.annotateCrashReport("TestKey", "Yes");
     },
     function(mdump, extra) {
-      ChromeUtils.import("resource://gre/modules/AppConstants.jsm", this);
+      const { AppConstants } = ChromeUtils.import(
+        "resource://gre/modules/AppConstants.jsm"
+      );
       Assert.equal(extra.TestKey, "Yes");
 
       // A list of pairs [annotation name, must be > 0]

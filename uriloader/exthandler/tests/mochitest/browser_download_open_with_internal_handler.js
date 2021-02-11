@@ -3,7 +3,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Downloads.jsm", this);
+const { Downloads } = ChromeUtils.import(
+  "resource://gre/modules/Downloads.jsm"
+);
 const { DownloadIntegration } = ChromeUtils.import(
   "resource://gre/modules/DownloadIntegration.jsm"
 );

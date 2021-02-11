@@ -8,9 +8,13 @@
 //
 // NOTE: Allowing a whole class of rejections should be avoided. Normally you
 //       should use "expectUncaughtRejection" to flag individual failures.
-ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
+const { PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
 PromiseTestUtils.allowMatchingRejectionsGlobally(/aborted by the user agent/);
-ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm", this);
+const { BrowserWindowTracker } = ChromeUtils.import(
+  "resource:///modules/BrowserWindowTracker.jsm"
+);
 
 const permissionError =
   "error: NotAllowedError: The request is not allowed " +

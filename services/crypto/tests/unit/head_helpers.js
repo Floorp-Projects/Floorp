@@ -19,7 +19,9 @@ try {
     OS = "Linux";
   }
 
-  ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
+  const { updateAppInfo } = ChromeUtils.import(
+    "resource://testing-common/AppInfo.jsm"
+  );
   updateAppInfo({
     name: "XPCShell",
     ID: "{3e3ba16c-1675-4e88-b9c8-afef81b3d2ef}",

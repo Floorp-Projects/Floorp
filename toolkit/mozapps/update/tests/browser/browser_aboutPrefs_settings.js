@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
-
 // Changes, then verifies the value of app.update.auto via the about:preferences
 // UI. Requires a tab with about:preferences open to be passed in.
 async function changeAndVerifyPref(tab, newConfigValue) {

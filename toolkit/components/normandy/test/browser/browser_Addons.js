@@ -1,8 +1,10 @@
 "use strict";
 
-ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://normandy/lib/Addons.jsm", this);
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Addons } = ChromeUtils.import("resource://normandy/lib/Addons.jsm");
 
 // Initialize test utils
 AddonTestUtils.initMochitest(this);

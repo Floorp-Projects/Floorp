@@ -11,7 +11,9 @@
 // The following rejections should not be left uncaught. This test has been
 // whitelisted until the issue is fixed.
 if (!gMultiProcessBrowser) {
-  ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
+  const { PromiseTestUtils } = ChromeUtils.import(
+    "resource://testing-common/PromiseTestUtils.jsm"
+  );
   PromiseTestUtils.expectUncaughtRejection(/NetworkError/);
   PromiseTestUtils.expectUncaughtRejection(/NetworkError/);
 }

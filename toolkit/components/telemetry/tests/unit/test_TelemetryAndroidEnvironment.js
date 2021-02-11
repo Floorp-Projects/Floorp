@@ -4,7 +4,9 @@
 /* Android-only TelemetryEnvironment xpcshell test that ensures that the device data is stored in the Environment.
  */
 
-ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
+const { TelemetryEnvironment } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryEnvironment.jsm"
+);
 
 /**
  * Check that a value is a string and not empty.

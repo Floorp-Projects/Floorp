@@ -5,7 +5,9 @@
 var { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
-ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
 
 /**
  * Wait for view source tab after calling given function to open it.

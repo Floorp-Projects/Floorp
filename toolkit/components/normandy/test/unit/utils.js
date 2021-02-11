@@ -9,8 +9,10 @@ const { Preferences } = ChromeUtils.import(
 );
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
-ChromeUtils.import("resource://normandy/lib/NormandyApi.jsm", this);
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { NormandyApi } = ChromeUtils.import(
+  "resource://normandy/lib/NormandyApi.jsm"
+);
 
 const CryptoHash = Components.Constructor(
   "@mozilla.org/security/hash;1",

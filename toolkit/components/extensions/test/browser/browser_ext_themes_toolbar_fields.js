@@ -3,9 +3,8 @@
 // This test checks whether applied WebExtension themes that attempt to change
 // the background color and the color of the navbar text fields are applied properly.
 
-ChromeUtils.import(
-  "resource://testing-common/CustomizableUITestUtils.jsm",
-  this
+const { CustomizableUITestUtils } = ChromeUtils.import(
+  "resource://testing-common/CustomizableUITestUtils.jsm"
 );
 let gCUITestUtils = new CustomizableUITestUtils(window);
 

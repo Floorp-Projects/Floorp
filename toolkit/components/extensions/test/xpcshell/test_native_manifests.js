@@ -3,9 +3,6 @@
 const { AsyncShutdown } = ChromeUtils.import(
   "resource://gre/modules/AsyncShutdown.jsm"
 );
-const { ExtensionCommon } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionCommon.jsm"
-);
 const { NativeManifests } = ChromeUtils.import(
   "resource://gre/modules/NativeManifests.jsm"
 );

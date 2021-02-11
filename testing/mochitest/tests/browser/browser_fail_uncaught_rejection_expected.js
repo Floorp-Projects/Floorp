@@ -1,7 +1,9 @@
 setExpectedFailuresForSelfTest(1);
 
 // The test will fail because there is only one of two expected rejections.
-ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
+const { PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
 PromiseTestUtils.expectUncaughtRejection(/Promise rejection./);
 PromiseTestUtils.expectUncaughtRejection(/Promise rejection./);
 

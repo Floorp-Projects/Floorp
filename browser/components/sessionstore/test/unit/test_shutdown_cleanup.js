@@ -26,7 +26,9 @@ const MAX_ENTRIES = 9;
 const URL = "http://example.com/#";
 
 // We need a XULAppInfo to initialize SessionFile
-ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
+const { updateAppInfo } = ChromeUtils.import(
+  "resource://testing-common/AppInfo.jsm"
+);
 updateAppInfo({
   name: "SessionRestoreTest",
   ID: "{230de50e-4cd1-11dc-8314-0800200c9a66}",

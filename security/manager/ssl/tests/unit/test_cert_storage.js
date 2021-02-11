@@ -25,8 +25,10 @@ var id = "xpcshell@tests.mozilla.org";
 var appName = "XPCShell";
 var version = "1";
 var platformVersion = "1.9.2";
-ChromeUtils.import("resource://testing-common/AppInfo.jsm", this); // Imported via AppInfo.jsm.
-/* global updateAppInfo:false */ updateAppInfo({
+const { updateAppInfo } = ChromeUtils.import(
+  "resource://testing-common/AppInfo.jsm"
+);
+updateAppInfo({
   name: appName,
   ID: id,
   version,

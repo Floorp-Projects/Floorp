@@ -1,7 +1,8 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://normandy/lib/EventEmitter.jsm", this);
+const { EventEmitter } = ChromeUtils.import(
+  "resource://normandy/lib/EventEmitter.jsm"
+);
 
 const evidence = {
   a: 0,
