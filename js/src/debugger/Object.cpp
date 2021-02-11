@@ -1177,6 +1177,14 @@ bool DebuggerObject::CallData::createSource() {
     return false;
   }
 
+  Debugger* dbg = object->owner();
+  if (!dbg->isDebuggeeUnbarriered(referent->as<GlobalObject>().realm())) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_DEBUG_NOT_DEBUGGEE, "Debugger.Object",
+                              "global");
+    return false;
+  }
+
   RootedObject options(cx, ToObject(cx, args[0]));
   if (!options) {
     return false;
@@ -1268,7 +1276,7 @@ bool DebuggerObject::CallData::createSource() {
 
   RootedScript script(cx);
   {
-    AutoRealm ar(cx, object->referent());
+    AutoRealm ar(cx, referent);
     script = JS::Compile(cx, compileOptions, srcBuf);
     if (!script) {
       return false;
@@ -1276,7 +1284,7 @@ bool DebuggerObject::CallData::createSource() {
   }
 
   RootedScriptSourceObject sso(cx, script->sourceObject());
-  RootedObject wrapped(cx, object->owner()->wrapSource(cx, sso));
+  RootedObject wrapped(cx, dbg->wrapSource(cx, sso));
   if (!wrapped) {
     return false;
   }
