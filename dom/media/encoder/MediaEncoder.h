@@ -204,12 +204,13 @@ class MediaEncoder {
   /**
    * Updates internal state when track encoders are all initialized.
    */
-  void NotifyInitialized();
+  void UpdateInitialized();
 
   /**
-   * Notifies listeners that this MediaEncoder has been started.
+   * Updates internal state when track encoders are all initialized, and
+   * notifies listeners that this MediaEncoder has been started.
    */
-  void NotifyStarted();
+  void UpdateStarted();
 
   /**
    * Registers a listener to events from this MediaEncoder.
