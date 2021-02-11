@@ -147,9 +147,10 @@ PhaseKindGraphRoots = [
                         "Mark Weak",
                         13,
                         [
+                            getPhaseKind("MARK_DELAYED"),
                             addPhaseKind(
                                 "SWEEP_MARK_GRAY_WEAK", "Mark Gray and Weak", 16
-                            )
+                            ),
                         ],
                     ),
                     addPhaseKind(
