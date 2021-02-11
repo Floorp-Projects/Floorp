@@ -183,15 +183,15 @@ class WindowSurfaceWayland : public WindowSurface {
 
   // TODO: Do we need to hold a reference to nsWindow object?
   nsWindow* mWindow;
+
   // Buffer screen rects helps us understand if we operate on
   // the same window size as we're called on WindowSurfaceWayland::Lock().
-  // mLockedScreenRect is window size when our wayland buffer was allocated.
-  LayoutDeviceIntRect mLockedScreenRect;
+  // mMozContainerRect is MozContainer size when our wayland buffer was
+  // allocated.
+  LayoutDeviceIntRect mMozContainerRect;
 
-  // mWLBufferRect is an intersection of mozcontainer widgetsize and
-  // mLockedScreenRect size. It can be different than mLockedScreenRect
-  // during resize when mBounds are updated immediately but actual
-  // GtkWidget size is updated asynchronously (see Bug 1489463).
+  // mWLBufferRect is size of allocated wl_buffer where we paint to.
+  // It needs to match MozContainer widget size.
   LayoutDeviceIntRect mWLBufferRect;
   RefPtr<nsWaylandDisplay> mWaylandDisplay;
 
