@@ -228,12 +228,11 @@ add_task(async function open_empty_hiddenOneOffs() {
   await promise;
 
   Assert.ok(
-    oneOffButtons.getAttribute("hidden"),
+    oneOffButtons.hasAttribute("hidden"),
     "The one-offs buttons should have the hidden attribute."
   );
-  Assert.equal(
-    getComputedStyle(oneOffButtons).display,
-    "none",
+  Assert.ok(
+    BrowserTestUtils.is_hidden(oneOffButtons),
     "The one-off buttons should be hidden."
   );
 

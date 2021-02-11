@@ -231,11 +231,7 @@
             var column = tree.columns[colindex];
             if (column) {
               var element = column.element;
-              if (element.getAttribute("hidden") == "true") {
-                element.setAttribute("hidden", "false");
-              } else {
-                element.setAttribute("hidden", "true");
-              }
+              element.hidden = !element.hidden;
             }
           }
         }
