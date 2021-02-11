@@ -5,5 +5,9 @@
 
 add_task(async function test_policy_hardware_acceleration() {
   let winUtils = Services.wm.getMostRecentWindow("").windowUtils;
-  is(winUtils.layerManagerType, "Basic", "Hardware acceleration disabled");
+  let layerManager = winUtils.layerManagerType;
+  ok(
+    layerManager == "Basic" || layerManager == "WebRender (Software)",
+    "Hardware acceleration disabled"
+  );
 });
