@@ -7,9 +7,6 @@ const { Normandy } = ChromeUtils.import("resource://normandy/Normandy.jsm");
 const { AddonRollouts } = ChromeUtils.import(
   "resource://normandy/lib/AddonRollouts.jsm"
 );
-const { AddonStudies } = ChromeUtils.import(
-  "resource://normandy/lib/AddonStudies.jsm"
-);
 const { PreferenceExperiments } = ChromeUtils.import(
   "resource://normandy/lib/PreferenceExperiments.jsm"
 );
@@ -18,9 +15,6 @@ const { PreferenceRollouts } = ChromeUtils.import(
 );
 const { RecipeRunner } = ChromeUtils.import(
   "resource://normandy/lib/RecipeRunner.jsm"
-);
-const { TelemetryEvents } = ChromeUtils.import(
-  "resource://normandy/lib/TelemetryEvents.jsm"
 );
 const {
   NormandyTestUtils: { factories },

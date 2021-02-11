@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 // Checks both the value returned by the update service and the one written to
 // the app update config file.

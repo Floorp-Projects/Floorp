@@ -8,9 +8,13 @@
 
 function setup_crash() {
   /* global AsyncShutdown */
-  ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm", this);
-  ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-  ChromeUtils.import("resource://gre/modules/Promise.jsm", this);
+  const { AsyncShutdown } = ChromeUtils.import(
+    "resource://gre/modules/AsyncShutdown.jsm"
+  );
+  const { Services } = ChromeUtils.import(
+    "resource://gre/modules/Services.jsm"
+  );
+  const { Promise } = ChromeUtils.import("resource://gre/modules/Promise.jsm");
 
   Services.prefs.setBoolPref("toolkit.asyncshutdown.testing", true);
   Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 10);
@@ -42,9 +46,11 @@ function after_crash(mdump, extra) {
 // the latest operation succeeded
 
 function setup_osfile_crash_noerror() {
-  ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-  ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
-  ChromeUtils.import("resource://gre/modules/Promise.jsm", this);
+  const { Services } = ChromeUtils.import(
+    "resource://gre/modules/Services.jsm"
+  );
+  const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+  const { Promise } = ChromeUtils.import("resource://gre/modules/Promise.jsm");
 
   Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 1);
   Services.prefs.setBoolPref("toolkit.osfile.native", false);
@@ -76,9 +82,11 @@ function after_osfile_crash_noerror(mdump, extra) {
 // the latest operation failed
 
 function setup_osfile_crash_exn() {
-  ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-  ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
-  ChromeUtils.import("resource://gre/modules/Promise.jsm", this);
+  const { Services } = ChromeUtils.import(
+    "resource://gre/modules/Services.jsm"
+  );
+  const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+  const { Promise } = ChromeUtils.import("resource://gre/modules/Promise.jsm");
 
   Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 1);
   Services.prefs.setBoolPref("toolkit.osfile.native", false);

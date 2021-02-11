@@ -3,9 +3,6 @@
 "use strict";
 
 const { SchemaRoot } = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
-const { ExtensionCommon } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionCommon.jsm"
-);
 
 let { SchemaAPIInterface } = ExtensionCommon;
 

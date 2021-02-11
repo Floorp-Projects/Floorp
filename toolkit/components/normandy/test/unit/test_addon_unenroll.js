@@ -31,7 +31,8 @@ const { decorate_task } = NormandyTestUtils;
 
 const global = this;
 
-load("utils.js"); /* globals withMockApiServer, CryptoUtils */
+/* import-globals-from utils.js */
+load("utils.js");
 
 add_task(async () => {
   ExtensionTestUtils.init(global);

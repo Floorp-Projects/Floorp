@@ -3,9 +3,9 @@
 
 requestLongerTimeout(2);
 
-ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm", this);
-ChromeUtils.import("resource://testing-common/LoginTestUtils.jsm", this);
-ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm", this);
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
 
 EXPECTED_BREACH = {
   AddedDate: "2018-12-20T23:56:26Z",

@@ -11,7 +11,9 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm", this);
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("browser.display.document_color_use");

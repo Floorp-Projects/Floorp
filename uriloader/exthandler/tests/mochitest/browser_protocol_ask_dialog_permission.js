@@ -3,11 +3,6 @@
 
 "use strict";
 
-ChromeUtils.import(
-  "resource://testing-common/HandlerServiceTestUtils.jsm",
-  this
-);
-
 let gHandlerService = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
   Ci.nsIHandlerService
 );

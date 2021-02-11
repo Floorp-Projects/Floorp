@@ -1,8 +1,5 @@
 "use strict";
 
-const { ExtensionCommon } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionCommon.jsm"
-);
 const { Schemas } = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
 
 const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";

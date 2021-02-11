@@ -1,8 +1,7 @@
 "use strict";
 
-ChromeUtils.import(
-  "resource://normandy/lib/CleanupManager.jsm",
-  this
+const { CleanupManager } = ChromeUtils.import(
+  "resource://normandy/lib/CleanupManager.jsm"
 ); /* global CleanupManagerClass */
 
 add_task(async function testCleanupManager() {

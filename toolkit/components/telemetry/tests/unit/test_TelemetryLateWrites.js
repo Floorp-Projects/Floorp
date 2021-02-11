@@ -3,7 +3,7 @@
 */
 /* A testcase to make sure reading late writes stacks works.  */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Constants from prio.h for nsIFileOutputStream.init
 const PR_WRONLY = 0x2;

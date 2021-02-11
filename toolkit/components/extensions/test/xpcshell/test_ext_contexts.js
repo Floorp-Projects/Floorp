@@ -2,10 +2,6 @@
 
 const global = this;
 
-const { ExtensionCommon } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionCommon.jsm"
-);
-
 var { BaseContext, EventManager } = ExtensionCommon;
 
 class StubContext extends BaseContext {

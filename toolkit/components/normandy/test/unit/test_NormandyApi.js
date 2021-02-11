@@ -1,16 +1,17 @@
 /* globals sinon */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/CanonicalJSON.jsm", this);
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
-ChromeUtils.import("resource://normandy/lib/NormandyApi.jsm", this);
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm", this);
+const { CanonicalJSON } = ChromeUtils.import(
+  "resource://gre/modules/CanonicalJSON.jsm"
+);
+const { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
 
 Cu.importGlobalProperties(["fetch"]);
 
-load(
-  "utils.js"
-); /* globals withMockApiServer, MockResponse, withScriptServer, withServer, makeMockApiServer */
+/* import-globals-from utils.js */
+load("utils.js");
 
 add_task(
   withMockApiServer(async function test_get(serverUrl) {

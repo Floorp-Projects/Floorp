@@ -4,8 +4,10 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/PromiseWorker.jsm", this);
-ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
+const { BasePromiseWorker } = ChromeUtils.import(
+  "resource://gre/modules/PromiseWorker.jsm"
+);
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 // Worker must be loaded from a chrome:// uri, not a file://
 // uri, so we first need to load it.

@@ -3,9 +3,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://testing-common/AppData.jsm", this);
-
 add_task(async function test_setup() {
   do_get_profile();
   await makeFakeAppDir();

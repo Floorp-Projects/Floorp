@@ -5,7 +5,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource:///modules/SitePermissions.jsm", this);
+const { SitePermissions } = ChromeUtils.import(
+  "resource:///modules/SitePermissions.jsm"
+);
 
 const EXPIRE_TIME_MS = 100;
 const TIMEOUT_MS = 500;

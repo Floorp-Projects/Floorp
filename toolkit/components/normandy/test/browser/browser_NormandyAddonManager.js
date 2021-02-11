@@ -1,7 +1,11 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm", this);
-ChromeUtils.import("resource://normandy/lib/NormandyAddonManager.jsm", this);
+const { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
+const { NormandyAddonManager } = ChromeUtils.import(
+  "resource://normandy/lib/NormandyAddonManager.jsm"
+);
 
 decorate_task(ensureAddonCleanup, async function download_and_install() {
   const applyDeferred = PromiseUtils.defer();

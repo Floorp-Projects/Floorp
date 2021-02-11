@@ -1,4 +1,6 @@
-ChromeUtils.import("resource://normandy/NormandyMigrations.jsm", this);
+const { NormandyMigrations } = ChromeUtils.import(
+  "resource://normandy/NormandyMigrations.jsm"
+);
 
 decorate_task(withMockPreferences, async function testApplyMigrations(
   mockPreferences

@@ -4,8 +4,9 @@
 
 const PREF_DEPRECATION_WARNINGS = "devtools.errorconsole.deprecation_warnings";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://gre/modules/Deprecated.jsm", this);
+const { Deprecated } = ChromeUtils.import(
+  "resource://gre/modules/Deprecated.jsm"
+);
 
 // Using this named functions to test deprecation and the properly logged
 // callstacks.

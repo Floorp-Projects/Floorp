@@ -6,7 +6,9 @@
  */
 
 "use strict";
-ChromeUtils.import("resource://gre/modules/Integration.jsm", this);
+const { Integration } = ChromeUtils.import(
+  "resource://gre/modules/Integration.jsm"
+);
 
 const TestIntegration = {
   value: "value",

@@ -34,9 +34,6 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-/* import-globals-from ../general/head.js */
-Services.scriptloader.loadSubScript(head_base + "head.js", this);
-
 function getThisFrameSubMenu(base_menu) {
   if (AppConstants.NIGHTLY_BUILD) {
     let osPidItem = ["context-frameOsPid", false];
@@ -1373,11 +1370,13 @@ add_task(async function test_dom_full_screen() {
       maybeScreenshotsPresent: true,
       shiftkey: true,
       async preCheckContextMenuFn() {
-        await pushPrefs(
-          ["full-screen-api.allow-trusted-requests-only", false],
-          ["full-screen-api.transition-duration.enter", "0 0"],
-          ["full-screen-api.transition-duration.leave", "0 0"]
-        );
+        await SpecialPowers.pushPrefEnv({
+          set: [
+            ["full-screen-api.allow-trusted-requests-only", false],
+            ["full-screen-api.transition-duration.enter", "0 0"],
+            ["full-screen-api.transition-duration.leave", "0 0"],
+          ],
+        });
         await SpecialPowers.spawn(
           gBrowser.selectedBrowser,
           [],

@@ -8,10 +8,18 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Downloads.jsm", this);
-ChromeUtils.import("resource://gre/modules/DownloadPaths.jsm", this);
-ChromeUtils.import("resource://testing-common/FileTestUtils.jsm", this);
-ChromeUtils.import("resource://testing-common/MockRegistrar.jsm", this);
+const { Downloads } = ChromeUtils.import(
+  "resource://gre/modules/Downloads.jsm"
+);
+const { DownloadPaths } = ChromeUtils.import(
+  "resource://gre/modules/DownloadPaths.jsm"
+);
+const { FileTestUtils } = ChromeUtils.import(
+  "resource://testing-common/FileTestUtils.jsm"
+);
+const { MockRegistrar } = ChromeUtils.import(
+  "resource://testing-common/MockRegistrar.jsm"
+);
 
 add_task(async function test_setup() {
   // Save downloads to disk without showing the dialog.

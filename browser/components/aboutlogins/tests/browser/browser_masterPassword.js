@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://testing-common/LoginTestUtils.jsm", this);
-
 function waitForLoginCountToReach(browser, loginCount) {
   return SpecialPowers.spawn(
     browser,

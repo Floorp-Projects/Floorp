@@ -4,8 +4,10 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/ctypes.jsm", this);
-ChromeUtils.import("resource://testing-common/AppData.jsm", this);
+const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+const { makeFakeAppDir } = ChromeUtils.import(
+  "resource://testing-common/AppData.jsm"
+);
 
 function compare_paths(ospath, key) {
   let file;

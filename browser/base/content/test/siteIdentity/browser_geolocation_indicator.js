@@ -5,8 +5,12 @@
 
 requestLongerTimeout(2);
 
-ChromeUtils.import("resource:///modules/PermissionUI.jsm", this);
-ChromeUtils.import("resource:///modules/SitePermissions.jsm", this);
+const { PermissionUI } = ChromeUtils.import(
+  "resource:///modules/PermissionUI.jsm"
+);
+const { SitePermissions } = ChromeUtils.import(
+  "resource:///modules/SitePermissions.jsm"
+);
 const { PermissionTestUtils } = ChromeUtils.import(
   "resource://testing-common/PermissionTestUtils.jsm"
 );

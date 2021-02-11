@@ -1,6 +1,8 @@
 var { OS, require } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://testing-common/AppData.jsm", this);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { makeFakeAppDir } = ChromeUtils.import(
+  "resource://testing-common/AppData.jsm"
+);
 var { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );

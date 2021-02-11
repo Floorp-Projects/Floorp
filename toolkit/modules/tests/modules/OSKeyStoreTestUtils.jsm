@@ -5,7 +5,9 @@
 
 var EXPORTED_SYMBOLS = ["OSKeyStoreTestUtils"];
 
-ChromeUtils.import("resource://gre/modules/OSKeyStore.jsm", this);
+const { OSKeyStore } = ChromeUtils.import(
+  "resource://gre/modules/OSKeyStore.jsm"
+);
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
