@@ -270,7 +270,7 @@ uint32_t nsMenuX::GetItemCount() { return mMenuObjectsArray.Length(); }
 // Includes all items, including hidden/collapsed ones
 nsMenuObjectX* nsMenuX::GetItemAt(uint32_t aPos) {
   if (aPos >= (uint32_t)mMenuObjectsArray.Length()) {
-    return NULL;
+    return nullptr;
   }
 
   return mMenuObjectsArray[aPos].get();
@@ -287,7 +287,7 @@ nsresult nsMenuX::GetVisibleItemCount(uint32_t& aCount) {
 nsMenuObjectX* nsMenuX::GetVisibleItemAt(uint32_t aPos) {
   uint32_t count = mMenuObjectsArray.Length();
   if (aPos >= mVisibleItemsCount || aPos >= count) {
-    return NULL;
+    return nullptr;
   }
 
   // If there are no invisible items, can provide direct access
@@ -309,7 +309,7 @@ nsMenuObjectX* nsMenuX::GetVisibleItemAt(uint32_t aPos) {
     }
   }
 
-  return NULL;
+  return nullptr;
 }
 
 nsresult nsMenuX::RemoveAll() {

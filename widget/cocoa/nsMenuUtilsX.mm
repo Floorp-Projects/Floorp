@@ -62,7 +62,7 @@ uint8_t nsMenuUtilsX::GeckoModifiersForNodeAttribute(const nsString& modifiersAt
   char* str = ToNewCString(modifiersAttribute);
   char* newStr;
   char* token = strtok_r(str, ", \t", &newStr);
-  while (token != NULL) {
+  while (token != nullptr) {
     if (strcmp(token, "shift") == 0) {
       modifiers |= knsMenuItemShiftModifier;
     } else if (strcmp(token, "alt") == 0) {
@@ -102,9 +102,8 @@ nsMenuBarX* nsMenuUtilsX::GetHiddenWindowMenuBar() {
   nsIWidget* hiddenWindowWidgetNoCOMPtr = nsCocoaUtils::GetHiddenWindowWidget();
   if (hiddenWindowWidgetNoCOMPtr) {
     return static_cast<nsCocoaWindow*>(hiddenWindowWidgetNoCOMPtr)->GetMenuBar();
-  } else {
-    return nullptr;
   }
+  return nullptr;
 }
 
 // It would be nice if we could localize these edit menu names.
