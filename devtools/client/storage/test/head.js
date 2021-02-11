@@ -814,12 +814,7 @@ function checkCellUneditable(id, column) {
 function showColumn(id, state) {
   const columns = gUI.table.columns;
   const column = columns.get(id);
-
-  if (state) {
-    column.wrapper.removeAttribute("hidden");
-  } else {
-    column.wrapper.setAttribute("hidden", true);
-  }
+  column.wrapper.hidden = !state;
 }
 
 /**

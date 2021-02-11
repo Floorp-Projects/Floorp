@@ -646,14 +646,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
     const menu = win.document.getElementById("menu_devToolbox");
 
     // Hide the "Toggle Tools" menu item if we are on about:devtools-toolbox.
-    const isAboutDevtoolsToolbox = gDevToolsBrowser._isAboutDevtoolsToolbox(
-      win
-    );
-    if (isAboutDevtoolsToolbox) {
-      menu.setAttribute("hidden", "true");
-    } else {
-      menu.removeAttribute("hidden");
-    }
+    menu.hidden = gDevToolsBrowser._isAboutDevtoolsToolbox(win);
 
     // Add a checkmark for the "Toggle Tools" menu item if a toolbox is already opened.
     const hasToolbox = gDevToolsBrowser.hasToolboxOpened(win);
