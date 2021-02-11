@@ -215,3 +215,37 @@ int nsMenuUtilsX::CalculateNativeInsertionPoint(nsMenuObjectX* aParent, nsMenuOb
   }
   return insertionPoint;
 }
+
+NSMenuItem* nsMenuUtilsX::NativeMenuItemWithLocation(NSMenu* aRootMenu, NSString* aLocationString,
+                                                     bool aIsMenuBar) {
+  NSArray* indexes = [aLocationString componentsSeparatedByString:@"|"];
+  unsigned int pathLength = [indexes count];
+  if (pathLength == 0) {
+    return nil;
+  }
+
+  NSMenu* currentSubmenu = aRootMenu;
+  for (unsigned int depth = 0; depth < pathLength; depth++) {
+    NSInteger targetIndex = [[indexes objectAtIndex:depth] integerValue];
+    if (aIsMenuBar && depth == 0) {
+      // We remove the application menu from consideration for the top-level menu.
+      targetIndex++;
+    }
+    int itemCount = [currentSubmenu numberOfItems];
+    if (targetIndex < itemCount) {
+      NSMenuItem* menuItem = [currentSubmenu itemAtIndex:targetIndex];
+      // if this is the last index just return the menu item
+      if (depth == pathLength - 1) {
+        return menuItem;
+      }
+      // if this is not the last index find the submenu and keep going
+      if ([menuItem hasSubmenu]) {
+        currentSubmenu = [menuItem submenu];
+      } else {
+        return nil;
+      }
+    }
+  }
+
+  return nil;
+}

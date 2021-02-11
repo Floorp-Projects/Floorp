@@ -25,6 +25,15 @@ nsMenuBarX* GetHiddenWindowMenuBar();   // returned object is not retained
 NSMenuItem* GetStandardEditMenuItem();  // returned object is not retained
 bool NodeIsHiddenOrCollapsed(nsIContent* inContent);
 int CalculateNativeInsertionPoint(nsMenuObjectX* aParent, nsMenuObjectX* aChild);
+
+// Find the menu item by following the path aLocationString from aRootMenu.
+// aLocationString is a '|'-separated list of integers, where each integer is
+// the index of the menu item in the menu.
+// aIsMenuBar needs to be true if aRootMenu is the app's mainMenu, so that the
+// app menu can be skipped during the search.
+NSMenuItem* NativeMenuItemWithLocation(NSMenu* aRootMenu, NSString* aLocationString,
+                                       bool aIsMenuBar);
+
 }  // namespace nsMenuUtilsX
 
 #endif  // nsMenuUtilsX_h_
