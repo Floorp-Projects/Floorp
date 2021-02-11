@@ -66,7 +66,7 @@ add_task(async function test_different_name() {
 
   engine.wrappedJSObject._name = "Example Test";
 
-  await Services.search.runBackgroundChecks();
+  await Services.search.checkWebExtensionEngines();
 
   TelemetryTestUtils.assertKeyedScalar(
     TelemetryTestUtils.getProcessScalars("parent", true, true),
@@ -116,7 +116,7 @@ add_task(async function test_extension_no_longer_specifies_engine() {
 
   await extension.upgrade(extensionInfo);
 
-  await Services.search.runBackgroundChecks();
+  await Services.search.checkWebExtensionEngines();
 
   TelemetryTestUtils.assertKeyedScalar(
     TelemetryTestUtils.getProcessScalars("parent", true, true),
