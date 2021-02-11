@@ -179,6 +179,102 @@ for ( let [as, bs] of cross(Int16Array.inputs) ) {
 }
 
 
+// i64.all_true
+
+var ins = wasmEvalText(`
+  (module
+    (memory (export "mem") 1 1)
+    (func (export "i64_all_true") (result i32)
+      (i64x2.all_true (v128.load (i32.const 16)) ) ) )`);
+
+var mem32 = new Int32Array(ins.exports.mem.buffer);
+
+set(mem32, 4, [0, 0, 0, 0]);
+assertEq(0, ins.exports.i64_all_true());
+set(mem32, 4, [1, 0, 0, 0]);
+assertEq(0, ins.exports.i64_all_true());
+set(mem32, 4, [1, 0, 0, 1]);
+assertEq(1, ins.exports.i64_all_true());
+set(mem32, 4, [0, 0, 10, 0]);
+assertEq(0, ins.exports.i64_all_true());
+set(mem32, 4, [0, -250, 1, 0]);
+assertEq(1, ins.exports.i64_all_true());
+set(mem32, 4, [-1, -1, -1, -1]);
+assertEq(1, ins.exports.i64_all_true());
+
+if (this.wasmSimdAnalysis && wasmCompileMode() == "ion") {
+  const positive =
+      wasmCompile(
+          `(module
+              (memory (export "mem") 1 1)
+              (func $f (param v128) (result i32)
+                  (if (result i32) (i64x2.all_true (local.get 0))
+                      (i32.const 42)
+                      (i32.const 37)))
+              (func (export "run") (result i32)
+                (call $f (v128.load (i32.const 16)))))`);
+  assertEq(wasmSimdAnalysis(), "simd128-to-scalar-and-branch -> folded");
+
+  const negative =
+      wasmCompile(
+          `(module
+              (memory (export "mem") 1 1)
+              (func $f (param v128) (result i32)
+                  (if (result i32) (i32.eqz (i64x2.all_true (local.get 0)))
+                      (i32.const 42)
+                      (i32.const 37)))
+              (func (export "run") (result i32)
+                (call $f (v128.load (i32.const 16)))))`);
+  assertEq(wasmSimdAnalysis(), "simd128-to-scalar-and-branch -> folded");
+
+  for ( let inp of [[1n, 2n], [4n, 0n], [0n, 0n]]) {
+      const all_true = inp.every(v => v != 0n)
+      let mem = new BigInt64Array(positive.exports.mem.buffer);
+      set(mem, 2, inp);
+      assertEq(positive.exports.run(), all_true ? 42 : 37);
+
+      mem = new BigInt64Array(negative.exports.mem.buffer);
+      set(mem, 2, inp);
+      assertEq(negative.exports.run(), all_true ? 37 : 42);
+  }
+
+  wasmCompile(`(module (func (result i32) (i64x2.all_true (v128.const i64x2 0 0))))`);
+  assertEq(wasmSimdAnalysis(), "simd128-to-scalar -> constant folded");
+}
+
+
+// i64x2.eq and i64x2.ne
+
+var ins = wasmEvalText(`
+  (module
+    (memory (export "mem") 1 1)
+    (func (export "i64_eq")
+      (v128.store (i32.const 0)
+        (i64x2.eq (v128.load (i32.const 16)) (v128.load (i32.const 32))) ))
+    (func (export "i64_ne")
+      (v128.store (i32.const 0)
+         (i64x2.ne (v128.load (i32.const 16)) (v128.load (i32.const 32))) )) )`);
+
+var mem64 = new BigInt64Array(ins.exports.mem.buffer);
+
+set(mem64, 2, [0n, 1n, 0n, 1n]);
+ins.exports.i64_eq();
+assertSame(get(mem64, 0, 2), [-1n, -1n]);
+ins.exports.i64_ne();
+assertSame(get(mem64, 0, 2), [0n, 0n]);
+set(mem64, 2, [0x0n, -1n, 0x100000000n, -1n]);
+ins.exports.i64_eq();
+assertSame(get(mem64, 0, 2), [0n, -1n]);
+set(mem64, 2, [-1n, 0x0n, -1n, 0x100000000n]);
+ins.exports.i64_ne();
+assertSame(get(mem64, 0, 2), [0n, -1n]);
+
+
+function wasmCompile(text) {
+  return new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(text)))
+}
+
+
 /// Double-precision conversion instructions.
 /// f64x2.convert_low_i32x4_{u,s} / i32x4.trunc_sat_f64x2_{u,s}_zero
 /// f32x4.demote_f64x2_zero / f64x2.promote_low_f32x4
