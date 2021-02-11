@@ -105,15 +105,6 @@ NS_IMPL_RELEASE_INHERITED(nsSourceErrorEventRunner, nsMediaEventRunner)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSourceErrorEventRunner)
 NS_INTERFACE_MAP_END_INHERITING(nsMediaEventRunner)
 
-NS_IMETHODIMP nsSyncSection::Run() {
-  // Silently cancel if our load has been cancelled.
-  if (IsCancelled()) {
-    return NS_OK;
-  }
-  mRunnable->Run();
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsTimeupdateRunner::Run() {
   if (IsCancelled() || !ShouldDispatchTimeupdate()) {
     return NS_OK;

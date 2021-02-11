@@ -2295,15 +2295,24 @@ void HTMLMediaElement::NoSupportedMediaSourceError(
                               NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR);
 }
 
-typedef void (HTMLMediaElement::*SyncSectionFn)();
-
+// Runs a "synchronous section", a function that must run once the event loop
+// has reached a "stable state"
+// http://www.whatwg.org/specs/web-apps/current-work/multipage/webappapis.html#synchronous-section
 void HTMLMediaElement::RunInStableState(nsIRunnable* aRunnable) {
   if (mShuttingDown) {
     return;
   }
 
-  nsCOMPtr<nsIRunnable> event = new nsSyncSection(this, aRunnable);
-  nsContentUtils::RunInStableState(event.forget());
+  nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction(
+      "HTMLMediaElement::RunInStableState",
+      [self = RefPtr<HTMLMediaElement>(this), loadId = GetCurrentLoadID(),
+       runnable = RefPtr<nsIRunnable>(aRunnable)]() {
+        if (self->GetCurrentLoadID() != loadId) {
+          return;
+        }
+        runnable->Run();
+      });
+  nsContentUtils::RunInStableState(task.forget());
 }
 
 void HTMLMediaElement::QueueLoadFromSourceTask() {
