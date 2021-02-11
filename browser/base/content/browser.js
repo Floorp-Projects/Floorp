@@ -71,6 +71,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SimpleServiceDiscovery: "resource://gre/modules/SimpleServiceDiscovery.jsm",
   SiteDataManager: "resource:///modules/SiteDataManager.jsm",
   SitePermissions: "resource:///modules/SitePermissions.jsm",
+  SubDialog: "resource://gre/modules/SubDialog.jsm",
   SubDialogManager: "resource://gre/modules/SubDialog.jsm",
   TabModalPrompt: "chrome://global/content/tabprompts.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
@@ -9300,6 +9301,92 @@ TabModalPromptBox.prototype = {
     return browser;
   },
 };
+
+// Handle window-modal prompts that we want to display with the same style as
+// tab-modal prompts.
+var gDialogBox = {
+  _dialog: null,
+
+  get isOpen() {
+    return !!this._dialog;
+  },
+
+  async open(uri, args) {
+    try {
+      await this._open(uri, args);
+    } catch (ex) {
+      Cu.reportError(ex);
+    } finally {
+      let dialog = document.getElementById("window-modal-dialog");
+      dialog.close();
+      dialog.style.visibility = "hidden";
+      dialog.style.height = "0";
+      dialog.style.width = "0";
+      document.documentElement.removeAttribute("window-modal-open");
+      dialog.removeEventListener("dialogopen", this);
+      this._dialog = null;
+    }
+    return args;
+  },
+
+  handleEvent(event) {
+    if (event.type == "dialogopen") {
+      this._dialog.focus(true);
+    }
+  },
+
+  _open(uri, args) {
+    // Get this offset before we touch style below, as touching style seems
+    // to reset the cached layout bounds.
+    let offset = window.windowUtils.getBoundsWithoutFlushing(
+      gBrowser.selectedBrowser
+    ).top;
+    let parentElement = document.getElementById("window-modal-dialog");
+    // The dialog has 1em padding; compensate for that:
+    parentElement.style.marginTop = `calc(${offset}px - 1em)`;
+    parentElement.style.removeProperty("visibility");
+    parentElement.style.removeProperty("width");
+    parentElement.style.removeProperty("height");
+    document.documentElement.setAttribute("window-modal-open", true);
+    // Call this first so the contents show up and get layout, which is
+    // required for SubDialog to work.
+    parentElement.showModal();
+
+    // Now actually set up the dialog contents:
+    let template = document.getElementById("window-modal-dialog-template")
+      .content.firstElementChild;
+    parentElement.addEventListener("dialogopen", this);
+    this._dialog = new SubDialog({
+      template,
+      parentElement,
+      id: "window-modal-dialog-subdialog",
+      options: {
+        consumeOutsideClicks: false,
+      },
+    });
+    let closedPromise = new Promise(resolve => {
+      this._closedCallback = resolve;
+    });
+    this._dialog.open(
+      uri,
+      {
+        features: "resizable=no",
+        modalType: Ci.nsIPrompt.MODAL_TYPE_INTERNAL_WINDOW,
+        closedCallback: () => {
+          this._closedCallback();
+        },
+      },
+      args
+    );
+    return closedPromise;
+  },
+};
+
+// browser.js loads in the library window, too, but we can only show prompts
+// in the main browser window:
+if (window.location.href != AppConstants.BROWSER_CHROME_URL) {
+  gDialogBox = null;
+}
 
 var ConfirmationHint = {
   _timerID: null,

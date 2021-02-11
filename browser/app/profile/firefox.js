@@ -1370,6 +1370,15 @@ pref("prompts.tabChromePromptSubDialog", true);
   pref("prompts.contentPromptSubDialog", false);
 #endif
 
+// Whether to show window-modal dialogs opened for browser windows
+// in a SubDialog inside their parent, instead of an OS level window.
+#ifdef NIGHTLY_BUILD
+  pref("prompts.windowPromptSubDialog", true);
+#else
+  pref("prompts.windowPromptSubDialog", false);
+#endif
+
+
 // Activates preloading of the new tab url.
 pref("browser.newtab.preload", true);
 
