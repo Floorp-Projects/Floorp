@@ -37,9 +37,21 @@ class MediaEncoder;
 class MediaEncoderListener {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaEncoderListener)
-  virtual void Initialized() = 0;
+  /**
+   * All tracks have received data.
+   */
+  virtual void Started() = 0;
+  /**
+   * There is data available to extract.
+   */
   virtual void DataAvailable() = 0;
+  /**
+   * There was a fatal error in an encoder.
+   */
   virtual void Error() = 0;
+  /**
+   * The MediaEncoder has been shut down.
+   */
   virtual void Shutdown() = 0;
 
  protected:
@@ -75,7 +87,7 @@ class MediaEncoderListener {
  *    It then creates a ContainerWriter according to the MIME type
  *
  * 2) Connect a MediaEncoderListener to be notified when the MediaEncoder has
- *    been initialized and when there's data available.
+ *    been started and when there's data available.
  *    => encoder->RegisterListener(listener);
  *
  * 3) Connect the sources to be recorded. Either through:
@@ -185,9 +197,14 @@ class MediaEncoder {
   const nsString& MimeType() const;
 
   /**
-   * Notifies listeners that this MediaEncoder has been initialized.
+   * Updates internal state when track encoders are all initialized.
    */
   void NotifyInitialized();
+
+  /**
+   * Notifies listeners that this MediaEncoder has been started.
+   */
+  void NotifyStarted();
 
   /**
    * Notifies listeners that this MediaEncoder has data available in some
@@ -280,6 +297,7 @@ class MediaEncoder {
   TimeStamp mStartTime;
   const nsString mMIMEType;
   bool mInitialized;
+  bool mStarted;
   bool mCompleted;
   bool mError;
   // Set when shutdown starts.

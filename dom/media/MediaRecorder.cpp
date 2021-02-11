@@ -624,10 +624,10 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       mSession = nullptr;
     }
 
-    void Initialized() override {
+    void Started() override {
       MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
       if (mSession) {
-        mSession->MediaEncoderInitialized();
+        mSession->MediaEncoderStarted();
       }
     }
 
@@ -823,6 +823,14 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     } else if (mRunningState.isOk() &&
                (mRunningState.inspect() == RunningState::Starting ||
                 mRunningState.inspect() == RunningState::Running)) {
+      if (mRunningState.inspect() == RunningState::Starting) {
+        // The MediaEncoder might not report started, but by spec we must fire
+        // "start".
+        mStartFired = true;
+        NS_DispatchToMainThread(
+            NewRunnableMethod("MediaRecorder::Session::Stop", this,
+                              &Session::MediaEncoderStarted));
+      }
       mRunningState = RunningState::Stopping;
     }
   }
@@ -1204,14 +1212,12 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
         });
   }
 
-  void MediaEncoderInitialized() {
+  void MediaEncoderStarted() {
     MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
 
     // Start issuing timeslice-based blobs.
     MOZ_ASSERT(mLastBlobTimeStamp.IsNull());
     mLastBlobTimeStamp = TimeStamp::Now();
-
-    Extract(mLastBlobTimeStamp, false);
 
     NS_DispatchToMainThread(NewRunnableFrom([self = RefPtr<Session>(this), this,
                                              mime = mEncoder->MimeType()]() {
@@ -1228,6 +1234,9 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
           mRunningState = RunningState::Running;
 
           mRecorder->mMimeType = mMimeType;
+        }
+        if (mStartFired) {
+          return NS_OK;
         }
         mRecorder->DispatchSimpleEvent(u"start"_ns);
       }
@@ -1345,7 +1354,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   enum class RunningState {
     Idling,    // Session has been created
     Starting,  // MediaEncoder started, waiting for data
-    Running,   // MediaEncoder has produced data
+    Running,   // MediaEncoder has received data
     Stopping,  // Stop() has been called
     Stopped,   // Session has stopped without any error
   };
@@ -1394,6 +1403,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   // ending a recording with an error. An NS_OK error is invalid.
   // Main thread only.
   Result<RunningState, nsresult> mRunningState;
+  bool mStartFired = false;
   // Shutdown blocker unique for this Session. Main thread only.
   RefPtr<ShutdownBlocker> mShutdownBlocker;
 };

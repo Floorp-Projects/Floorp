@@ -23,6 +23,11 @@ class TrackEncoderListener {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TrackEncoderListener)
 
   /**
+   * Called when the TrackEncoder has received its first real data.
+   */
+  virtual void Started(TrackEncoder* aEncoder) = 0;
+
+  /**
    * Called when the TrackEncoder's underlying encoder has been successfully
    * initialized and there's non-null data ready to be encoded.
    */
@@ -89,26 +94,15 @@ class TrackEncoder {
   bool IsInitialized();
 
   /**
+   * Returns true once this TrackEncoder has received some data.
+   */
+  bool IsStarted();
+
+  /**
    * True if the track encoder has encoded all source segments coming from
    * MediaTrackGraph. Call on the worker thread.
    */
   bool IsEncodingComplete();
-
-  /**
-   * If this TrackEncoder was not already initialized, it is set to initialized
-   * and listeners are notified.
-   */
-  void SetInitialized();
-
-  /**
-   * Notifies listeners that there is data available for encoding.
-   */
-  void OnDataAvailable();
-
-  /**
-   * Called after an error. Cancels the encoding and notifies listeners.
-   */
-  void OnError();
 
   /**
    * Registers a listener to events from this TrackEncoder.
@@ -139,6 +133,28 @@ class TrackEncoder {
   virtual ~TrackEncoder() { MOZ_ASSERT(mListeners.IsEmpty()); }
 
   /**
+   * If this TrackEncoder was not already initialized, it is set to initialized
+   * and listeners are notified.
+   */
+  void SetInitialized();
+
+  /**
+   * If this TrackEncoder was not already marked started, its started state is
+   * set and listeners are notified.
+   */
+  void SetStarted();
+
+  /**
+   * Notifies listeners that there is data available for encoding.
+   */
+  void OnDataAvailable();
+
+  /**
+   * Called after an error. Cancels the encoding and notifies listeners.
+   */
+  void OnError();
+
+  /**
    * True if the track encoder has encoded all source data.
    */
   bool mEncodingComplete;
@@ -147,6 +163,11 @@ class TrackEncoder {
    * True if the track encoder has been initialized successfully.
    */
   bool mInitialized;
+
+  /**
+   * True if the track encoder has received data.
+   */
+  bool mStarted;
 
   /**
    * True once all data until the end of the input track has been received.
