@@ -1769,8 +1769,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   void NotifyTextTrackModeChanged();
 
  private:
-  friend class nsAsyncEventRunner;
-  friend class nsNotifyAboutPlayingRunner;
+  friend class nsMediaEventRunner;
   friend class nsResolveOrRejectPendingPlayPromisesRunner;
 
   already_AddRefed<PlayPromise> CreatePlayPromise(ErrorResult& aRv) const;
