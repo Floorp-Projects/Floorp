@@ -750,7 +750,6 @@ nsresult MediaEncoder::GetEncodedData(
   nsresult rv = mMuxer->GetData(aOutputBufs);
   if (mMuxer->IsFinished()) {
     mCompleted = true;
-    Shutdown();
   }
 
   LOG(LogLevel::Verbose,
@@ -788,23 +787,6 @@ RefPtr<GenericNonExclusivePromise> MediaEncoder::Shutdown() {
   }
 
   LOG(LogLevel::Info, ("MediaEncoder is shutting down."));
-  if (mAudioEncoder) {
-    mAudioEncoder->UnregisterListener(mEncoderListener);
-  }
-  if (mVideoEncoder) {
-    mVideoEncoder->UnregisterListener(mEncoderListener);
-  }
-  mEncoderListener->Forget();
-
-  for (auto& l : mListeners.Clone()) {
-    // We dispatch here since this method is typically called from a listener
-    // method already, and we don't want to call back in, synchronously.
-    nsresult rv = mEncoderThread->Dispatch(
-        NewRunnableMethod("mozilla::MediaEncoderListener::Shutdown", l,
-                          &MediaEncoderListener::Shutdown));
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    Unused << rv;
-  }
 
   AutoTArray<RefPtr<GenericNonExclusivePromise>, 2> shutdownPromises;
   if (mAudioListener) {
@@ -827,14 +809,24 @@ RefPtr<GenericNonExclusivePromise> MediaEncoder::Shutdown() {
                        aValue.RejectValue(), __func__);
                  });
 
-  mShutdownPromise->Then(mEncoderThread, __func__,
-                         [self = RefPtr<MediaEncoder>(this), this] {
-                           mMuxer->Disconnect();
-                           mAudioPushListener.DisconnectIfExists();
-                           mAudioFinishListener.DisconnectIfExists();
-                           mVideoPushListener.DisconnectIfExists();
-                           mVideoFinishListener.DisconnectIfExists();
-                         });
+  mShutdownPromise->Then(
+      mEncoderThread, __func__, [self = RefPtr<MediaEncoder>(this), this] {
+        for (auto& l : mListeners.Clone()) {
+          l->Shutdown();
+        }
+        if (mAudioEncoder) {
+          mAudioEncoder->UnregisterListener(mEncoderListener);
+        }
+        if (mVideoEncoder) {
+          mVideoEncoder->UnregisterListener(mEncoderListener);
+        }
+        mEncoderListener->Forget();
+        mMuxer->Disconnect();
+        mAudioPushListener.DisconnectIfExists();
+        mAudioFinishListener.DisconnectIfExists();
+        mVideoPushListener.DisconnectIfExists();
+        mVideoFinishListener.DisconnectIfExists();
+      });
 
   return mShutdownPromise;
 }

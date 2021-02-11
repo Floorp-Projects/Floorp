@@ -269,13 +269,13 @@ class MediaEncoder {
   void RunOnGraph(already_AddRefed<Runnable> aRunnable);
 
   /**
-   * Calls Shutdown() if there is no remaining live track encoder.
+   * Shuts down gracefully if there is no remaining live track encoder.
    */
   void MaybeShutdown();
 
   /**
-   * Shuts down the MediaEncoder and cleans up track encoders.
-   * Listeners will be notified of the shutdown unless we were Cancel()ed first.
+   * Waits for TrackEncoders to shut down, then shuts down the MediaEncoder and
+   * cleans up track encoders.
    */
   RefPtr<GenericNonExclusivePromise> Shutdown();
 
