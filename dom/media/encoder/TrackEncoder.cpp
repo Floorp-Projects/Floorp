@@ -24,6 +24,7 @@ LazyLogModule gTrackEncoderLog("TrackEncoder");
 static const int DEFAULT_CHANNELS = 1;
 static const int DEFAULT_FRAME_WIDTH = 640;
 static const int DEFAULT_FRAME_HEIGHT = 480;
+static const int DEFAULT_FRAME_RATE = 30;
 // 10 second threshold if the audio encoder cannot be initialized.
 static const int AUDIO_INIT_FAILED_DURATION = 10;
 // 30 second threshold if the video encoder cannot be initialized.
@@ -473,7 +474,7 @@ void VideoTrackEncoder::Init(const VideoSegment& aSegment,
     gfx::IntSize imgsize = iter->mFrame.GetImage()->GetSize();
     gfx::IntSize intrinsicSize = iter->mFrame.GetIntrinsicSize();
     nsresult rv = Init(imgsize.width, imgsize.height, intrinsicSize.width,
-                       intrinsicSize.height);
+                       intrinsicSize.height, /* TODO: no hardcode */ 30);
 
     if (NS_SUCCEEDED(rv)) {
       TRACK_LOG(LogLevel::Info,
@@ -514,9 +515,9 @@ void VideoTrackEncoder::NotifyEndOfStream() {
 
   if (!mCanceled && !mInitialized) {
     // If source video track is muted till the end of encoding, initialize the
-    // encoder with default frame width, frame height, and track rate.
+    // encoder with default frame width, frame height, and frame rate.
     Init(DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT, DEFAULT_FRAME_WIDTH,
-         DEFAULT_FRAME_HEIGHT);
+         DEFAULT_FRAME_HEIGHT, DEFAULT_FRAME_RATE);
   }
 
   if (mEndOfStream) {

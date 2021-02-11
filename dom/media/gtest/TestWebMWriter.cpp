@@ -33,7 +33,8 @@ class WebMVP8TrackEncoder : public VP8TrackEncoder {
 
   bool TestVP8Creation(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
                        int32_t aDisplayHeight) {
-    if (NS_SUCCEEDED(Init(aWidth, aHeight, aDisplayWidth, aDisplayHeight))) {
+    if (NS_SUCCEEDED(
+            Init(aWidth, aHeight, aDisplayWidth, aDisplayHeight, 30))) {
       return true;
     }
     return false;
