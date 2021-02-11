@@ -100,8 +100,8 @@ class MediaEncoderListener {
  *
  * 5) To stop encoding, there are multiple options:
  *
- *    5.1) Stop() for a graceful stop.
- *         => encoder->Stop();
+ *    5.1) DisconnectTracks() for a graceful stop.
+ *         => encoder->DisconnectTracks();
  *
  *    5.2) Cancel() for an immediate stop, if you don't need the data currently
  *         buffered.
@@ -139,9 +139,9 @@ class MediaEncoder {
   void Resume();
 
   /**
-   * Stops the current encoding, and disconnects the input tracks.
+   * Disconnects the input tracks, causing the encoding to stop.
    */
-  void Stop();
+  void DisconnectTracks();
 
   /**
    * Connects an AudioNode with the appropriate encoder.

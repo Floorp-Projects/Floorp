@@ -774,7 +774,7 @@ RefPtr<GenericNonExclusivePromise::AllPromiseType> MediaEncoder::Shutdown() {
 RefPtr<GenericNonExclusivePromise::AllPromiseType> MediaEncoder::Cancel() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  Stop();
+  DisconnectTracks();
 
   return InvokeAsync(mEncoderThread, __func__,
                      [self = RefPtr<MediaEncoder>(this), this]() {
@@ -806,7 +806,7 @@ void MediaEncoder::SetError() {
   }
 }
 
-void MediaEncoder::Stop() {
+void MediaEncoder::DisconnectTracks() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mAudioNode) {
