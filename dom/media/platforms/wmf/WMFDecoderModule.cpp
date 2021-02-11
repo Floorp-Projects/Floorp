@@ -74,6 +74,10 @@ static bool IsRemoteAcceleratedCompositor(
     return false;
   }
 
+  if (aKnowsCompositor->UsingSoftwareWebRenderD3D11()) {
+    return true;
+  }
+
   TextureFactoryIdentifier ident =
       aKnowsCompositor->GetTextureFactoryIdentifier();
   return ident.mParentBackend != LayersBackend::LAYERS_BASIC &&
