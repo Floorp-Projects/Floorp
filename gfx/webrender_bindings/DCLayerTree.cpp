@@ -592,7 +592,7 @@ bool DCSurface::Initialize() {
       mIsOpaque ? DXGI_ALPHA_MODE_IGNORE : DXGI_ALPHA_MODE_PREMULTIPLIED;
 
   hr = dCompDevice->CreateVirtualSurface(
-      VIRTUAL_SURFACE_SIZE, VIRTUAL_SURFACE_SIZE, DXGI_FORMAT_B8G8R8A8_UNORM,
+      VIRTUAL_SURFACE_SIZE, VIRTUAL_SURFACE_SIZE, DXGI_FORMAT_R8G8B8A8_UNORM,
       alpha_mode, getter_AddRefs(mVirtualSurface));
   MOZ_ASSERT(SUCCEEDED(hr));
 
