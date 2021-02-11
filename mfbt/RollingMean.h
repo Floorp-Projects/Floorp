@@ -69,12 +69,12 @@ class RollingMean {
   /**
    * Calculate the rolling mean.
    */
-  T mean() {
+  T mean() const {
     MOZ_ASSERT(!empty());
     return T(mTotal / int64_t(mValues.length()));
   }
 
-  bool empty() { return mValues.empty(); }
+  bool empty() const { return mValues.empty(); }
 
   /**
    * Remove all values from the rolling mean.
@@ -85,7 +85,7 @@ class RollingMean {
     mTotal = T(0);
   }
 
-  size_t maxValues() { return mMaxValues; }
+  size_t maxValues() const { return mMaxValues; }
 };
 
 }  // namespace mozilla
