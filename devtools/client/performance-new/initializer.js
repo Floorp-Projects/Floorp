@@ -107,7 +107,11 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
   }
 
   const l10n = new FluentL10n();
-  await l10n.init(["devtools/client/perftools.ftl"]);
+  await l10n.init([
+    "devtools/client/perftools.ftl",
+    // Needed for the onboarding UI
+    "devtools/client/toolbox-options.ftl",
+  ]);
 
   // Do some initialization, especially with privileged things that are part of the
   // the browser.
