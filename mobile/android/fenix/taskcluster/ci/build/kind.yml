@@ -63,6 +63,15 @@ jobs:
         treeherder:
             symbol: beta(Bf)
 
+    nightly-firebase:
+        disable-optimization: true
+        run-on-tasks-for: [github-push] # We want this on push so that we detect problem before triggering a new nightly
+        run:
+            gradle-build-type: nightly
+            test-build-type: nightly
+        treeherder:
+            symbol: nightly(Bf)
+
     android-test-debug:
         attributes:
             code-review: true
@@ -85,13 +94,16 @@ jobs:
     android-test-nightly:
         attributes:
             nightly: true
-        run:
-            gradle-build-type: androidTest
         apk-artifact-template:
             # 2 differences here:
             #  * "androidTest/" is added
             #  * "{gradle_build_type}" is forced to "debug"
-            path: '/builds/worker/checkouts/src/app/build/outputs/apk/androidTest/debug/{fileName}'
+            path: '/builds/worker/checkouts/src/app/build/outputs/apk/androidTest/nightly/app-nightly-androidTest.apk'
+        disable-optimization: true
+        run:
+            gradle-build-type: androidTest
+            test-build-type: nightly
+        run-on-tasks-for: [github-push]
         treeherder:
             symbol: nightly(Bat)
 
