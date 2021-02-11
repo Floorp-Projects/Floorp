@@ -267,12 +267,13 @@ class MediaEncoder {
   const RefPtr<TaskQueue> mEncoderThread;
   const RefPtr<DriftCompensator> mDriftCompensator;
 
-  UniquePtr<Muxer> mMuxer;
-  UniquePtr<AudioTrackEncoder> mAudioEncoder;
-  RefPtr<AudioTrackListener> mAudioListener;
-  UniquePtr<VideoTrackEncoder> mVideoEncoder;
-  RefPtr<VideoTrackListener> mVideoListener;
-  RefPtr<EncoderListener> mEncoderListener;
+  const UniquePtr<Muxer> mMuxer;
+  const UniquePtr<AudioTrackEncoder> mAudioEncoder;
+  const RefPtr<AudioTrackListener> mAudioListener;
+  const UniquePtr<VideoTrackEncoder> mVideoEncoder;
+  const RefPtr<VideoTrackListener> mVideoListener;
+  const RefPtr<EncoderListener> mEncoderListener;
+
   nsTArray<RefPtr<MediaEncoderListener>> mListeners;
 
   // The AudioNode we are encoding.
