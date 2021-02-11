@@ -186,10 +186,6 @@ var gViewController = {
       throw Components.Exception("Invalid view: " + view.type);
     }
 
-    if (aViewId != aPreviousView) {
-      hideView().catch(err => Cu.reportError(err));
-    }
-
     this.currentViewId = aViewId;
     this.isLoading = true;
 
