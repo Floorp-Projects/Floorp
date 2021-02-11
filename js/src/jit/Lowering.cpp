@@ -2977,10 +2977,10 @@ void LIRGenerator::visitArrayBufferViewElements(MArrayBufferViewElements* ins) {
          ins);
 }
 
-void LIRGenerator::visitTypedArrayElementShift(MTypedArrayElementShift* ins) {
+void LIRGenerator::visitTypedArrayElementSize(MTypedArrayElementSize* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
   define(new (alloc())
-             LTypedArrayElementShift(useRegisterAtStart(ins->object())),
+             LTypedArrayElementSize(useRegisterAtStart(ins->object())),
          ins);
 }
 

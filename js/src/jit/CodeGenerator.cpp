@@ -7874,11 +7874,11 @@ void CodeGenerator::visitArrayBufferViewElements(
   masm.loadPtr(Address(obj, ArrayBufferViewObject::dataOffset()), out);
 }
 
-void CodeGenerator::visitTypedArrayElementShift(LTypedArrayElementShift* lir) {
+void CodeGenerator::visitTypedArrayElementSize(LTypedArrayElementSize* lir) {
   Register obj = ToRegister(lir->object());
   Register out = ToRegister(lir->output());
 
-  masm.typedArrayElementShift(obj, out);
+  masm.typedArrayElementSize(obj, out);
 }
 
 class OutOfLineGuardNumberToIntPtrIndex

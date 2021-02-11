@@ -984,7 +984,7 @@
   args:
     obj: ObjId
 
-- name: TypedArrayElementShiftResult
+- name: TypedArrayElementSizeResult
   shared: true
   transpile: true
   cost_estimate: 2

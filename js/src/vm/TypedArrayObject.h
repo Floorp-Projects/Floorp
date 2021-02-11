@@ -309,7 +309,7 @@ static inline constexpr unsigned TypedArrayShift(Scalar::Type viewType) {
   }
 }
 
-static inline unsigned TypedArrayElemSize(Scalar::Type viewType) {
+static inline constexpr unsigned TypedArrayElemSize(Scalar::Type viewType) {
   return 1u << TypedArrayShift(viewType);
 }
 

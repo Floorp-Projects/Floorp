@@ -4298,58 +4298,62 @@ void MacroAssembler::branchArgumentsObjectHasOverridenIterator(Register obj,
                Imm32(ArgumentsObject::ITERATOR_OVERRIDDEN_BIT), label);
 }
 
-static constexpr bool ValidateShiftRange(Scalar::Type from, Scalar::Type to) {
+static constexpr bool ValidateSizeRange(Scalar::Type from, Scalar::Type to) {
   for (Scalar::Type type = from; type < to; type = Scalar::Type(type + 1)) {
-    if (TypedArrayShift(type) != TypedArrayShift(from)) {
+    if (TypedArrayElemSize(type) != TypedArrayElemSize(from)) {
       return false;
     }
   }
   return true;
 }
 
-void MacroAssembler::typedArrayElementShift(Register obj, Register output) {
+void MacroAssembler::typedArrayElementSize(Register obj, Register output) {
   static_assert(Scalar::Int8 == 0, "Int8 is the first typed array class");
   static_assert(
       (Scalar::BigUint64 - Scalar::Int8) == Scalar::MaxTypedArrayViewType - 1,
       "BigUint64 is the last typed array class");
 
-  Label zero, one, two, three, done;
+  Label one, two, four, eight, done;
 
   loadObjClassUnsafe(obj, output);
 
-  static_assert(ValidateShiftRange(Scalar::Int8, Scalar::Int16),
-                "shift amount is zero in [Int8, Int16)");
+  static_assert(ValidateSizeRange(Scalar::Int8, Scalar::Int16),
+                "element size is one in [Int8, Int16)");
   branchPtr(Assembler::Below, output,
-            ImmPtr(TypedArrayObject::classForType(Scalar::Int16)), &zero);
+            ImmPtr(TypedArrayObject::classForType(Scalar::Int16)), &one);
 
-  static_assert(ValidateShiftRange(Scalar::Int16, Scalar::Int32),
-                "shift amount is one in [Int16, Int32)");
+  static_assert(ValidateSizeRange(Scalar::Int16, Scalar::Int32),
+                "element size is two in [Int16, Int32)");
   branchPtr(Assembler::Below, output,
-            ImmPtr(TypedArrayObject::classForType(Scalar::Int32)), &one);
+            ImmPtr(TypedArrayObject::classForType(Scalar::Int32)), &two);
 
-  static_assert(ValidateShiftRange(Scalar::Int32, Scalar::Float64),
-                "shift amount is two in [Int32, Float64)");
+  static_assert(ValidateSizeRange(Scalar::Int32, Scalar::Float64),
+                "element size is four in [Int32, Float64)");
   branchPtr(Assembler::Below, output,
-            ImmPtr(TypedArrayObject::classForType(Scalar::Float64)), &two);
+            ImmPtr(TypedArrayObject::classForType(Scalar::Float64)), &four);
 
-  static_assert(ValidateShiftRange(Scalar::Float64, Scalar::Uint8Clamped),
-                "shift amount is three in [Float64, Uint8Clamped)");
+  static_assert(ValidateSizeRange(Scalar::Float64, Scalar::Uint8Clamped),
+                "element size is eight in [Float64, Uint8Clamped)");
   branchPtr(Assembler::Below, output,
             ImmPtr(TypedArrayObject::classForType(Scalar::Uint8Clamped)),
-            &three);
+            &eight);
 
-  static_assert(ValidateShiftRange(Scalar::Uint8Clamped, Scalar::BigInt64),
-                "shift amount is zero in [Uint8Clamped, BigInt64)");
+  static_assert(ValidateSizeRange(Scalar::Uint8Clamped, Scalar::BigInt64),
+                "element size is one in [Uint8Clamped, BigInt64)");
   branchPtr(Assembler::Below, output,
-            ImmPtr(TypedArrayObject::classForType(Scalar::BigInt64)), &zero);
+            ImmPtr(TypedArrayObject::classForType(Scalar::BigInt64)), &one);
 
   static_assert(
-      ValidateShiftRange(Scalar::BigInt64, Scalar::MaxTypedArrayViewType),
-      "shift amount is three in [BigInt64, MaxTypedArrayViewType)");
+      ValidateSizeRange(Scalar::BigInt64, Scalar::MaxTypedArrayViewType),
+      "element size is eight in [BigInt64, MaxTypedArrayViewType)");
   // Fall through for BigInt64 and BigUint64
 
-  bind(&three);
-  move32(Imm32(3), output);
+  bind(&eight);
+  move32(Imm32(8), output);
+  jump(&done);
+
+  bind(&four);
+  move32(Imm32(4), output);
   jump(&done);
 
   bind(&two);
@@ -4358,10 +4362,6 @@ void MacroAssembler::typedArrayElementShift(Register obj, Register output) {
 
   bind(&one);
   move32(Imm32(1), output);
-  jump(&done);
-
-  bind(&zero);
-  move32(Imm32(0), output);
 
   bind(&done);
 }

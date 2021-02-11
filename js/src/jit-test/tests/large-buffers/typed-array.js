@@ -78,6 +78,35 @@ function testSlice() {
 }
 testSlice();
 
+function testSubarray() {
+    // Large |start| and |end|.
+    ta[4 * gb + 0] = 11;
+    ta[4 * gb + 1] = 22;
+    ta[4 * gb + 2] = 33;
+    ta[4 * gb + 3] = 44;
+    var ta2 = ta.subarray(4 * gb, 4 * gb + 4);
+    assertEq(ta2.toString(), "11,22,33,44");
+
+    // Large |start|.
+    ta[ta.length - 3] = 99;
+    ta[ta.length - 2] = 88;
+    ta[ta.length - 1] = 77;
+    ta2 = ta.subarray(4 * gb + 8);
+    assertEq(ta2.toString(), "88,77");
+
+    // Relative values.
+    ta2 = ta.subarray(-3, -1);
+    assertEq(ta2.toString(), "99,88");
+
+    // Large relative values.
+    ta[0] = 100;
+    ta[1] = 101;
+    ta[2] = 102;
+    ta2 = ta.subarray(-ta.length, -ta.length + 3);
+    assertEq(ta2.toString(), "100,101,102");
+}
+testSubarray();
+
 function testIterators() {
     var ex;
 

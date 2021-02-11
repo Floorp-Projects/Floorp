@@ -1236,17 +1236,17 @@ static bool intrinsic_TypedArrayByteOffset(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool intrinsic_TypedArrayElementShift(JSContext* cx, unsigned argc,
-                                             Value* vp) {
+static bool intrinsic_TypedArrayElementSize(JSContext* cx, unsigned argc,
+                                            Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
   MOZ_ASSERT(TypedArrayObject::is(args[0]));
 
-  unsigned shift =
-      TypedArrayShift(args[0].toObject().as<TypedArrayObject>().type());
-  MOZ_ASSERT(shift == 0 || shift == 1 || shift == 2 || shift == 3);
+  unsigned size =
+      TypedArrayElemSize(args[0].toObject().as<TypedArrayObject>().type());
+  MOZ_ASSERT(size == 1 || size == 2 || size == 4 || size == 8);
 
-  args.rval().setInt32(mozilla::AssertedCast<int32_t>(shift));
+  args.rval().setInt32(mozilla::AssertedCast<int32_t>(size));
   return true;
 }
 
@@ -2416,8 +2416,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("TypedArrayBuffer", intrinsic_TypedArrayBuffer, 1, 0),
     JS_INLINABLE_FN("TypedArrayByteOffset", intrinsic_TypedArrayByteOffset, 1,
                     0, IntrinsicTypedArrayByteOffset),
-    JS_INLINABLE_FN("TypedArrayElementShift", intrinsic_TypedArrayElementShift,
-                    1, 0, IntrinsicTypedArrayElementShift),
+    JS_INLINABLE_FN("TypedArrayElementSize", intrinsic_TypedArrayElementSize, 1,
+                    0, IntrinsicTypedArrayElementSize),
 
     JS_INLINABLE_FN("TypedArrayLength", intrinsic_TypedArrayLength, 1, 0,
                     IntrinsicTypedArrayLength),
