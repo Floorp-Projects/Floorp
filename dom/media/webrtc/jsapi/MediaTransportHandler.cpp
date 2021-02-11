@@ -41,6 +41,7 @@
 #include "mozilla/PublicSSL.h"  // For psm::InitializeCipherSuite
 
 #include "nsISocketTransportService.h"
+#include "nsNetUtil.h"  // NS_CheckPortSafety
 
 #include <string>
 #include <vector>
@@ -285,6 +286,13 @@ static NrIceCtx::Policy toNrIcePolicy(dom::RTCIceTransportPolicy aPolicy) {
   return NrIceCtx::ICE_POLICY_ALL;
 }
 
+// list of known acceptable ports for webrtc
+int16_t gGoodWebrtcPortList[] = {
+    3478,  // stun or turn
+    5349,  // stuns or turns
+    0,     // Sentinel value: This MUST be zero
+};
+
 static nsresult addNrIceServer(const nsString& aIceUrl,
                                const dom::RTCIceServer& aIceServer,
                                std::vector<NrIceStunServer>* aStunServersOut,
@@ -352,6 +360,21 @@ static nsresult addNrIceServer(const nsString& aIceUrl,
     path.Mid(host, hostPos, hostLen);
   }
   if (port == -1) port = (isStuns || isTurns) ? 5349 : 3478;
+
+  // First check the known good ports for webrtc
+  bool goodPort = false;
+  for (int i = 0; !goodPort && gGoodWebrtcPortList[i]; i++) {
+    if (port == gGoodWebrtcPortList[i]) {
+      goodPort = true;
+    }
+  }
+
+  // if not in the list of known good ports for webrtc, check
+  // the generic block list using NS_CheckPortSafety.
+  if (!goodPort) {
+    rv = NS_CheckPortSafety(port, nullptr);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   if (isStuns || isTurns) {
     // Should we barf if transport is set to udp or something?
