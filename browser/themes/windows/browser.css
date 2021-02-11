@@ -754,6 +754,40 @@ panel[touchmode] .PanelUI-subView #appMenu-zoom-controls > .subviewbutton-iconic
   margin-top: -4px;
 }
 
+@supports (-moz-bool-pref("browser.proton.contextmenus.enabled")) {
+@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+  #context-navigation {
+    /* The Windows 10 version of the navigation area needs the scrollbox's
+       background color, not the builtin "menu" color. */
+    background-color: inherit;
+    /* The Win10 context menu wants the icons centered vertically in the
+       navigation group, not with a gap on the bottom. */
+    padding-bottom: 0;
+  }
+
+  /* Other menu separators don't extend all the way to the menu edges, but the
+     one below the navigation buttons in the content context menu should. */
+  #context-sep-navigation {
+    margin-top: 0;
+    margin-inline: 0;
+  }
+
+  /* We also have different navigation icons for Win10. */
+  #context-back {
+    list-style-image: url("chrome://browser/skin/menus/back.svg");
+  }
+  #context-forward {
+    list-style-image: url("chrome://browser/skin/menus/forward.svg");
+  }
+  #context-reload {
+    list-style-image: url("chrome://browser/skin/menus/reload.svg");
+  }
+  #context-bookmarkpage {
+    list-style-image: url("chrome://browser/skin/menus/bookmark-hollow.svg");
+  }
+}
+}
+
 %include browser-aero.css
 
 @media (-moz-os-version: windows-win7) {
