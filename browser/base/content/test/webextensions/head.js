@@ -263,17 +263,15 @@ function checkNotification(panel, checkIcon, permissions) {
     `Permissions list has ${permissions.length} entries`
   );
   if (!permissions.length) {
-    is(header.getAttribute("hidden"), "true", "Permissions header is hidden");
-    is(
-      learnMoreLink.getAttribute("hidden"),
-      "true",
+    ok(BrowserTestUtils.is_hidden(header), "Permissions header is hidden");
+    ok(
+      BrowserTestUtils.is_hidden(learnMoreLink),
       "Permissions learn more is hidden"
     );
   } else {
-    is(header.getAttribute("hidden"), "", "Permissions header is visible");
-    is(
-      learnMoreLink.getAttribute("hidden"),
-      "",
+    ok(BrowserTestUtils.is_visible(header), "Permissions header is visible");
+    ok(
+      BrowserTestUtils.is_visible(learnMoreLink),
       "Permissions learn more is visible"
     );
   }

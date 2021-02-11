@@ -79,7 +79,7 @@ add_task(async function() {
     const containerHeight = deck.parentNode.getBoundingClientRect().height;
     const deckHeight = deck.getBoundingClientRect().height;
     const webconsoleHeight = webconsolePanel.getBoundingClientRect().height;
-    const splitterVisibility = !splitter.getAttribute("hidden");
+    const splitterVisibility = !splitter.hidden;
     // Splitter height will be 1px since the margin is negative.
     const splitterHeight = splitterVisibility ? 1 : 0;
     const openedConsolePanel = toolbox.currentToolId === "webconsole";
