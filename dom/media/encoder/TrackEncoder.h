@@ -437,16 +437,6 @@ class VideoTrackEncoder : public TrackEncoder {
   int mFrameHeight;
 
   /**
-   * The display width of source video frame.
-   */
-  int mDisplayWidth;
-
-  /**
-   * The display height of source video frame.
-   */
-  int mDisplayHeight;
-
-  /**
    * The last unique frame and duration so far handled by
    * NotifyAdvanceCurrentTime. When a new frame is detected, mLastChunk is added
    * to mOutgoingBuffer.
