@@ -38,13 +38,8 @@ macosx64-sccache:
     worker-type: b-linux
     worker:
         max-run-time: 1800
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
     run:
         arguments: ['x86_64-apple-darwin']
-        resources:
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
-        tooltool-downloads: internal
         toolchain-artifact: public/build/sccache.tar.xz
     fetches:
         toolchain:
@@ -53,6 +48,7 @@ macosx64-sccache:
             - linux64-cctools-port-clang-11
             - linux64-llvm-dsymutil
             - linux64-binutils
+            - macosx64-sdk-10.12
 
 win64-sccache:
     treeherder:

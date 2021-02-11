@@ -258,18 +258,14 @@ macosx64-clang-11:
     worker-type: b-linux-large
     worker:
         max-run-time: 3600
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
     run-on-projects:
         - trunk
     run:
         script: build-clang.sh
-        tooltool-downloads: internal
         arguments:
             - 'build/build-clang/clang-11-macosx64.json'
         resources:
             - 'build/build-clang/clang-11-macosx64.json'
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-alias: macosx64-clang
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
@@ -281,6 +277,7 @@ macosx64-clang-11:
             - linux64-clang-11-macosx-cross
             - linux64-gcc-7
             - linux64-node
+            - macosx64-sdk-10.12
 
 win64-clang-11:
     description: "Clang-cl 11 toolchain build"

@@ -71,7 +71,6 @@ jobs:
             docker-image: {in-tree: debian10-amd64-build}
             max-run-time: 36000
             env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
                 PERFHERDER_EXTRA_OPTIONS: searchfox
                 RUSTC_BOOTSTRAP: "1"
                 MOZSEARCH_PLATFORM: "macosx"
@@ -84,7 +83,6 @@ jobs:
             script: "mozharness/scripts/fx_desktop_build.py"
             custom-build-variant-cfg: cross-debug-searchfox
             secrets: true
-            tooltool-downloads: internal
             keep-artifacts: false
         fetches:
             toolchain:
@@ -100,6 +98,7 @@ jobs:
                 - linux64-cbindgen
                 - linux64-dump-syms
                 - linux64-lucetc
+                - macosx64-sdk-10.12
                 - wasi-sysroot
 
     win64-searchfox/debug:

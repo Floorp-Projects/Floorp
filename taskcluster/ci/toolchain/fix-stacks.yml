@@ -34,20 +34,15 @@ linux64-fix-stacks:
 macosx64-fix-stacks:
     treeherder:
         symbol: TM(fix-stacks)
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
     run:
         arguments: ['x86_64-apple-darwin']
-        resources:
-            - taskcluster/scripts/misc/tooltool-download.sh
         toolchain-artifact: public/build/fix-stacks.tar.xz
-        tooltool-downloads: internal
     fetches:
         toolchain:
             - linux64-cctools-port-clang-11
             - linux64-clang-11
             - linux64-rust-macos-1.47
+            - macosx64-sdk-10.12
 
 win32-fix-stacks:
     treeherder:

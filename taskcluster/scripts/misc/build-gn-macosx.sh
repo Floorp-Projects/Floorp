@@ -28,8 +28,6 @@ export PATH=$WORKSPACE/python_bin:$PATH
 
 cd $GECKO_PATH
 
-. taskcluster/scripts/misc/tooltool-download.sh
-
 # The ninja templates used to bootstrap gn have hard-coded references to
 # 'libtool', make sure we find the right one.
 ln -s $CROSS_CCTOOLS_PATH/bin/x86_64-apple-darwin-libtool $CROSS_CCTOOLS_PATH/bin/libtool
