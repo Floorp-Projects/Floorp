@@ -17,27 +17,27 @@ namespace mozilla {
 // The Opus format supports up to 8 channels, and supports multitrack audio up
 // to 255 channels, but the current implementation supports only mono and
 // stereo, and downmixes any more than that.
-static const int MAX_SUPPORTED_AUDIO_CHANNELS = 8;
+constexpr int MAX_SUPPORTED_AUDIO_CHANNELS = 8;
 
 // http://www.opus-codec.org/docs/html_api-1.0.2/group__opus__encoder.html
 // In section "opus_encoder_init", channels must be 1 or 2 of input signal.
-static const int MAX_CHANNELS = 2;
+constexpr int MAX_CHANNELS = 2;
 
 // A maximum data bytes for Opus to encode.
-static const int MAX_DATA_BYTES = 4096;
+constexpr int MAX_DATA_BYTES = 4096;
 
 // http://tools.ietf.org/html/draft-ietf-codec-oggopus-00#section-4
 // Second paragraph, " The granule position of an audio data page is in units
 // of PCM audio samples at a fixed rate of 48 kHz."
-static const int kOpusSamplingRate = 48000;
+constexpr int kOpusSamplingRate = 48000;
 
 // The duration of an Opus frame, and it must be 2.5, 5, 10, 20, 40 or 60 ms.
-static const int kFrameDurationMs = 20;
+constexpr int kFrameDurationMs = 20;
 
 // The supported sampling rate of input signal (Hz),
 // must be one of the following. Will resampled to 48kHz otherwise.
-static const int kOpusSupportedInputSamplingRates[] = {8000, 12000, 16000,
-                                                       24000, 48000};
+constexpr int kOpusSupportedInputSamplingRates[] = {8000, 12000, 16000, 24000,
+                                                    48000};
 
 namespace {
 
@@ -62,7 +62,7 @@ static void SerializeOpusIdHeader(uint8_t aChannelCount, uint16_t aPreskip,
                                   uint32_t aInputSampleRate,
                                   nsTArray<uint8_t>* aOutput) {
   // The magic signature, null terminator has to be stripped off from strings.
-  static const uint8_t magic[] = "OpusHead";
+  constexpr uint8_t magic[] = "OpusHead";
   aOutput->AppendElements(magic, sizeof(magic) - 1);
 
   // The version must always be 1 (8 bits, unsigned).
@@ -91,7 +91,7 @@ static void SerializeOpusCommentHeader(const nsCString& aVendor,
                                        const nsTArray<nsCString>& aComments,
                                        nsTArray<uint8_t>* aOutput) {
   // The magic signature, null terminator has to be stripped off.
-  static const uint8_t magic[] = "OpusTags";
+  constexpr uint8_t magic[] = "OpusTags";
   aOutput->AppendElements(magic, sizeof(magic) - 1);
 
   // The vendor; Should append in the following order:
