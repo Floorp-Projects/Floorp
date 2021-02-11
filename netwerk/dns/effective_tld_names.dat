@@ -7123,7 +7123,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-12-21T16:35:44Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2021-02-07T16:47:40Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -7680,7 +7680,7 @@ cern
 // cfa : 2014-08-28 CFA Institute
 cfa
 
-// cfd : 2014-12-11 DotCFD Registry Limited
+// cfd : 2014-12-11 ShortDot SA
 cfd
 
 // chanel : 2015-04-09 Chanel International B.V.
@@ -10728,6 +10728,10 @@ us-west-2.elasticbeanstalk.com
 *.elb.amazonaws.com
 *.elb.amazonaws.com.cn
 
+// Amazon Global Accelerator : https://aws.amazon.com/global-accelerator/
+// Submitted by Daniel Massaguer <psl-maintainers@amazon.com>
+awsglobalaccelerator.com
+
 // Amazon S3 : https://aws.amazon.com/s3/
 // Submitted by Luke Wells <psl-maintainers@amazon.com>
 s3.amazonaws.com
@@ -12478,7 +12482,9 @@ mcpe.me
 
 // McHost : https://mchost.ru
 // Submitted by Evgeniy Subbotin <e.subbotin@mchost.ru>
+mcdir.me
 mcdir.ru
+mcpre.ru
 vps.mcdir.ru
 
 // Memset hosting : https://www.memset.com
@@ -12601,6 +12607,11 @@ nh-serv.co.uk
 // NFSN, Inc. : https://www.NearlyFreeSpeech.NET/
 // Submitted by Jeff Wheelhouse <support@nearlyfreespeech.net>
 nfshost.com
+
+// Northflank Ltd. : https://northflank.com/
+// Submitted by Marco Suter <marco@northflank.com>
+northflank.app
+code.run
 
 // Now-DNS : https://now-dns.com
 // Submitted by Steve Russell <steve@now-dns.com>
