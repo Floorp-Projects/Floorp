@@ -7,14 +7,11 @@
 #include "nsDOMNavigationTiming.h"
 
 #include "GeckoProfiler.h"
+#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Unused.h"
-#include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/PerformanceNavigation.h"
-#include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "nsCOMPtr.h"
@@ -30,7 +27,6 @@
 #endif
 
 using namespace mozilla;
-using namespace mozilla::dom;
 
 namespace mozilla {
 
@@ -143,22 +139,21 @@ void nsDOMNavigationTiming::NotifyLoadEventStart() {
                   Tracing, "Navigation");
 
   if (IsTopLevelContentDocumentInContentProcess()) {
-    mLoadEventStartForTelemetry = TimeStamp::Now();
+    TimeStamp now = TimeStamp::Now();
 
     Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_LOAD_EVENT_START_MS,
-                                   mNavigationStart,
-                                   mLoadEventStartForTelemetry);
+                                   mNavigationStart, now);
 
     if (mDocShellHasBeenActiveSinceNavigationStart) {
       if (net::nsHttp::IsBeforeLastActiveTabLoadOptimization(
               mNavigationStart)) {
         Telemetry::AccumulateTimeDelta(
             Telemetry::TIME_TO_LOAD_EVENT_START_ACTIVE_NETOPT_MS,
-            mNavigationStart, mLoadEventStartForTelemetry);
+            mNavigationStart, now);
       } else {
         Telemetry::AccumulateTimeDelta(
             Telemetry::TIME_TO_LOAD_EVENT_START_ACTIVE_MS, mNavigationStart,
-            mLoadEventStartForTelemetry);
+            now);
       }
     }
   }
@@ -197,12 +192,8 @@ void nsDOMNavigationTiming::NotifyLoadEventEnd() {
           marker);
     }
 #endif
-    TimeStamp loadEventEnd = TimeStamp::Now();
-
     Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_LOAD_EVENT_END_MS,
-                                   mNavigationStart, loadEventEnd);
-
-    MaybeSubmitTimeToLoadEventPreloadTelemetry(loadEventEnd);
+                                   mNavigationStart);
   }
 }
 
@@ -580,33 +571,6 @@ bool nsDOMNavigationTiming::IsTopLevelContentDocumentInContentProcess() const {
     return false;
   }
   return mDocShell->GetBrowsingContext()->IsTopContent();
-}
-
-void nsDOMNavigationTiming::MaybeSubmitTimeToLoadEventPreloadTelemetry(
-    mozilla::TimeStamp aLoadEventEnd) const {
-  if (!mDocShell) {
-    return;
-  }
-
-  if (const ContentChild* cc = ContentChild::GetSingleton();
-      cc && !(IsWebRemoteType(cc->GetRemoteType()) ||
-              IsPrivilegedMozillaRemoteType(cc->GetRemoteType()))) {
-    return;
-  }
-
-  Document* doc = mDocShell->GetExtantDocument();
-  if (!doc ||
-      !doc->ShouldIncludeInTelemetry(/* aAllowExtensionURIs = */ false)) {
-    return;
-  }
-
-  WindowGlobalChild* wgc = doc->GetWindowGlobalChild();
-  if (!wgc) {
-    return;
-  }
-
-  wgc->SendSubmitLoadEventPreloadTelemetry(
-      mNavigationStart, mLoadEventStartForTelemetry, aLoadEventEnd);
 }
 
 nsDOMNavigationTiming::nsDOMNavigationTiming(nsDocShell* aDocShell,
