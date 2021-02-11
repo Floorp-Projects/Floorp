@@ -7,7 +7,7 @@
 #include "HttpLog.h"
 
 #include "ConnectionHandle.h"
-#include "HalfOpenSocket.h"
+#include "DnsAndConnectSocket.h"
 #include "nsHttpConnection.h"
 #include "nsIDNSRecord.h"
 #include "nsIDNSService.h"
@@ -22,23 +22,24 @@
 namespace mozilla {
 namespace net {
 
-//////////////////////// HalfOpenSocket
-NS_IMPL_ADDREF(HalfOpenSocket)
-NS_IMPL_RELEASE(HalfOpenSocket)
+//////////////////////// DnsAndConnectSocket
+NS_IMPL_ADDREF(DnsAndConnectSocket)
+NS_IMPL_RELEASE(DnsAndConnectSocket)
 
-NS_INTERFACE_MAP_BEGIN(HalfOpenSocket)
+NS_INTERFACE_MAP_BEGIN(DnsAndConnectSocket)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIOutputStreamCallback)
   NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsINamed)
-  NS_INTERFACE_MAP_ENTRY_CONCRETE(HalfOpenSocket)
+  NS_INTERFACE_MAP_ENTRY_CONCRETE(DnsAndConnectSocket)
 NS_INTERFACE_MAP_END
 
-HalfOpenSocket::HalfOpenSocket(ConnectionEntry* ent, nsAHttpTransaction* trans,
-                               uint32_t caps, bool speculative,
-                               bool isFromPredictor, bool urgentStart)
+DnsAndConnectSocket::DnsAndConnectSocket(ConnectionEntry* ent,
+                                         nsAHttpTransaction* trans,
+                                         uint32_t caps, bool speculative,
+                                         bool isFromPredictor, bool urgentStart)
     : mTransaction(trans),
       mDispatchedMTransaction(false),
       mCaps(caps),
@@ -54,7 +55,7 @@ HalfOpenSocket::HalfOpenSocket(ConnectionEntry* ent, nsAHttpTransaction* trans,
       mPrimaryStreamStatus(NS_OK),
       mEnt(ent) {
   MOZ_ASSERT(ent && trans, "constructor with null arguments");
-  LOG(("Creating HalfOpenSocket [this=%p trans=%p ent=%s key=%s]\n", this,
+  LOG(("Creating DnsAndConnectSocket [this=%p trans=%p ent=%s key=%s]\n", this,
        trans, ent->mConnInfo->Origin(), ent->mConnInfo->HashKey().get()));
 
   mIsHttp3 = mEnt->mConnInfo->IsHttp3();
@@ -73,22 +74,23 @@ HalfOpenSocket::HalfOpenSocket(ConnectionEntry* ent, nsAHttpTransaction* trans,
   MOZ_ASSERT(mEnt);
 }
 
-HalfOpenSocket::~HalfOpenSocket() {
+DnsAndConnectSocket::~DnsAndConnectSocket() {
   MOZ_ASSERT(!mStreamOut);
   MOZ_ASSERT(!mBackupStreamOut);
-  LOG(("Destroying HalfOpenSocket [this=%p]\n", this));
+  LOG(("Destroying DnsAndConnectSocket [this=%p]\n", this));
 
   if (mEnt) {
-    bool inqueue = mEnt->RemoveHalfOpen(this);
-    LOG(("Destroying HalfOpenSocket was in the HalfOpenList=%d [this=%p]\n",
-         inqueue, this));
+    bool inqueue = mEnt->RemoveDnsAndConnectSocket(this);
+    LOG((
+        "Destroying DnsAndConnectSocket was in the HalfOpenList=%d [this=%p]\n",
+        inqueue, this));
   }
 }
 
-nsresult HalfOpenSocket::SetupStreams(nsISocketTransport** transport,
-                                      nsIAsyncInputStream** instream,
-                                      nsIAsyncOutputStream** outstream,
-                                      bool isBackup) {
+nsresult DnsAndConnectSocket::SetupStreams(nsISocketTransport** transport,
+                                           nsIAsyncInputStream** instream,
+                                           nsIAsyncOutputStream** outstream,
+                                           bool isBackup) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   MOZ_ASSERT(mEnt);
@@ -117,7 +119,7 @@ nsresult HalfOpenSocket::SetupStreams(nsISocketTransport** transport,
   }
 
   LOG(
-      ("HalfOpenSocket::SetupStreams [this=%p ent=%s] "
+      ("DnsAndConnectSocket::SetupStreams [this=%p ent=%s] "
        "setup routed transport to origin %s:%d via %s:%d\n",
        this, ci->HashKey().get(), ci->Origin(), ci->OriginPort(),
        ci->RoutedHost(), ci->RoutedPort()));
@@ -134,7 +136,7 @@ nsresult HalfOpenSocket::SetupStreams(nsISocketTransport** transport,
       // Origin should be reachable on origin host name, so this should
       // not be a problem - but log it.
       LOG(
-          ("HalfOpenSocket this=%p using legacy nsISocketTransportService "
+          ("DnsAndConnectSocket this=%p using legacy nsISocketTransportService "
            "means explicit route %s:%d will be ignored.\n",
            this, ci->RoutedHost(), ci->RoutedPort()));
     }
@@ -279,7 +281,7 @@ nsresult HalfOpenSocket::SetupStreams(nsISocketTransport** transport,
   return rv;
 }
 
-nsresult HalfOpenSocket::SetupPrimaryStreams() {
+nsresult DnsAndConnectSocket::SetupPrimaryStreams() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   nsresult rv;
@@ -288,7 +290,8 @@ nsresult HalfOpenSocket::SetupPrimaryStreams() {
   rv = SetupStreams(getter_AddRefs(mSocketTransport), getter_AddRefs(mStreamIn),
                     getter_AddRefs(mStreamOut), false);
 
-  LOG(("HalfOpenSocket::SetupPrimaryStream [this=%p ent=%s rv=%" PRIx32 "]",
+  LOG(("DnsAndConnectSocket::SetupPrimaryStream [this=%p ent=%s rv=%" PRIx32
+       "]",
        this, mEnt->mConnInfo->Origin(), static_cast<uint32_t>(rv)));
   if (NS_FAILED(rv)) {
     if (mStreamOut) {
@@ -302,7 +305,7 @@ nsresult HalfOpenSocket::SetupPrimaryStreams() {
   return rv;
 }
 
-nsresult HalfOpenSocket::SetupBackupStreams() {
+nsresult DnsAndConnectSocket::SetupBackupStreams() {
   MOZ_ASSERT(mTransaction);
 
   mBackupSynStarted = TimeStamp::Now();
@@ -310,7 +313,7 @@ nsresult HalfOpenSocket::SetupBackupStreams() {
                              getter_AddRefs(mBackupStreamIn),
                              getter_AddRefs(mBackupStreamOut), true);
 
-  LOG(("HalfOpenSocket::SetupBackupStream [this=%p ent=%s rv=%" PRIx32 "]",
+  LOG(("DnsAndConnectSocket::SetupBackupStream [this=%p ent=%s rv=%" PRIx32 "]",
        this, mEnt->mConnInfo->Origin(), static_cast<uint32_t>(rv)));
   if (NS_FAILED(rv)) {
     if (mBackupStreamOut) {
@@ -323,7 +326,7 @@ nsresult HalfOpenSocket::SetupBackupStreams() {
   return rv;
 }
 
-void HalfOpenSocket::SetupBackupTimer() {
+void DnsAndConnectSocket::SetupBackupTimer() {
   MOZ_ASSERT(mEnt);
   uint16_t timeout = gHttpHandler->GetIdleSynTimeout();
   MOZ_ASSERT(!mSynTimer, "timer already initd");
@@ -340,34 +343,35 @@ void HalfOpenSocket::SetupBackupTimer() {
     // so don't return an error in that case.
     NS_NewTimerWithCallback(getter_AddRefs(mSynTimer), this, timeout,
                             nsITimer::TYPE_ONE_SHOT);
-    LOG(("HalfOpenSocket::SetupBackupTimer() [this=%p]", this));
+    LOG(("DnsAndConnectSocket::SetupBackupTimer() [this=%p]", this));
   } else if (timeout) {
-    LOG(("HalfOpenSocket::SetupBackupTimer() [this=%p], did not arm\n", this));
+    LOG(("DnsAndConnectSocket::SetupBackupTimer() [this=%p], did not arm\n",
+         this));
   }
 }
 
-void HalfOpenSocket::CancelBackupTimer() {
+void DnsAndConnectSocket::CancelBackupTimer() {
   // If the syntimer is still armed, we can cancel it because no backup
   // socket should be formed at this point
   if (!mSynTimer) {
     return;
   }
 
-  LOG(("HalfOpenSocket::CancelBackupTimer()"));
+  LOG(("DnsAndConnectSocket::CancelBackupTimer()"));
   mSynTimer->Cancel();
 
   // Keeping the reference to the timer to remember we have already
   // performed the backup connection.
 }
 
-void HalfOpenSocket::Abandon() {
-  LOG(("HalfOpenSocket::Abandon [this=%p ent=%s] %p %p %p %p", this,
+void DnsAndConnectSocket::Abandon() {
+  LOG(("DnsAndConnectSocket::Abandon [this=%p ent=%s] %p %p %p %p", this,
        mEnt->mConnInfo->Origin(), mSocketTransport.get(),
        mBackupTransport.get(), mStreamOut.get(), mBackupStreamOut.get()));
 
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  RefPtr<HalfOpenSocket> deleteProtector(this);
+  RefPtr<DnsAndConnectSocket> deleteProtector(this);
 
   // Tell socket (and backup socket) to forget the half open socket.
   if (mSocketTransport) {
@@ -409,12 +413,12 @@ void HalfOpenSocket::Abandon() {
   // Remove the half open from the connection entry.
   if (mEnt) {
     mEnt->mDoNotDestroy = false;
-    mEnt->RemoveHalfOpen(this);
+    mEnt->RemoveDnsAndConnectSocket(this);
   }
   mEnt = nullptr;
 }
 
-double HalfOpenSocket::Duration(TimeStamp epoch) {
+double DnsAndConnectSocket::Duration(TimeStamp epoch) {
   if (mPrimarySynStarted.IsNull()) {
     return 0;
   }
@@ -423,7 +427,7 @@ double HalfOpenSocket::Duration(TimeStamp epoch) {
 }
 
 NS_IMETHODIMP  // method for nsITimerCallback
-HalfOpenSocket::Notify(nsITimer* timer) {
+DnsAndConnectSocket::Notify(nsITimer* timer) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(timer == mSynTimer, "wrong timer");
 
@@ -441,20 +445,20 @@ HalfOpenSocket::Notify(nsITimer* timer) {
 }
 
 NS_IMETHODIMP  // method for nsINamed
-HalfOpenSocket::GetName(nsACString& aName) {
-  aName.AssignLiteral("HalfOpenSocket");
+DnsAndConnectSocket::GetName(nsACString& aName) {
+  aName.AssignLiteral("DnsAndConnectSocket");
   return NS_OK;
 }
 
 // method for nsIAsyncOutputStreamCallback
 NS_IMETHODIMP
-HalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream* out) {
+DnsAndConnectSocket::OnOutputStreamReady(nsIAsyncOutputStream* out) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(mStreamOut || mBackupStreamOut);
   MOZ_ASSERT(out == mStreamOut || out == mBackupStreamOut, "stream mismatch");
   MOZ_ASSERT(mEnt);
 
-  LOG(("HalfOpenSocket::OnOutputStreamReady [this=%p ent=%s %s]\n", this,
+  LOG(("DnsAndConnectSocket::OnOutputStreamReady [this=%p ent=%s %s]\n", this,
        mEnt->mConnInfo->Origin(), out == mStreamOut ? "primary" : "backup"));
 
   mEnt->mDoNotDestroy = true;
@@ -469,7 +473,7 @@ HalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream* out) {
   return rv;
 }
 
-nsresult HalfOpenSocket::SetupConn(nsIAsyncOutputStream* out) {
+nsresult DnsAndConnectSocket::SetupConn(nsIAsyncOutputStream* out) {
   // assign the new socket to the http connection
   RefPtr<HttpConnectionBase> conn;
   if (!mIsHttp3) {
@@ -479,7 +483,7 @@ nsresult HalfOpenSocket::SetupConn(nsIAsyncOutputStream* out) {
   }
 
   LOG(
-      ("HalfOpenSocket::SetupConn "
+      ("DnsAndConnectSocket::SetupConn "
        "Created new nshttpconnection %p %s\n",
        conn.get(), mIsHttp3 ? "using http3" : ""));
 
@@ -547,7 +551,7 @@ nsresult HalfOpenSocket::SetupConn(nsIAsyncOutputStream* out) {
 
   if (NS_FAILED(rv)) {
     LOG(
-        ("HalfOpenSocket::SetupConn "
+        ("DnsAndConnectSocket::SetupConn "
          "conn->init (%p) failed %" PRIx32 "\n",
          conn.get(), static_cast<uint32_t>(rv)));
 
@@ -619,7 +623,7 @@ nsresult HalfOpenSocket::SetupConn(nsIAsyncOutputStream* out) {
         (mEnt->mConnInfo->FirstHopSSL() && !mEnt->UrgentStartQueueLength() &&
          !mEnt->PendingQueueLength() && !mEnt->mConnInfo->UsingConnect())) {
       LOG(
-          ("HalfOpenSocket::SetupConn null transaction will "
+          ("DnsAndConnectSocket::SetupConn null transaction will "
            "be used to finish SSL handshake on conn %p\n",
            conn.get()));
       RefPtr<nsAHttpTransaction> trans;
@@ -638,7 +642,7 @@ nsresult HalfOpenSocket::SetupConn(nsIAsyncOutputStream* out) {
     } else {
       // otherwise just put this in the persistent connection pool
       LOG(
-          ("HalfOpenSocket::SetupConn no transaction match "
+          ("DnsAndConnectSocket::SetupConn no transaction match "
            "returning conn %p to pool\n",
            conn.get()));
       gHttpHandler->ConnMgr()->OnMsgReclaimConnection(conn);
@@ -684,8 +688,8 @@ nsresult HalfOpenSocket::SetupConn(nsIAsyncOutputStream* out) {
 
 // method for nsITransportEventSink
 NS_IMETHODIMP
-HalfOpenSocket::OnTransportStatus(nsITransport* trans, nsresult status,
-                                  int64_t progress, int64_t progressMax) {
+DnsAndConnectSocket::OnTransportStatus(nsITransport* trans, nsresult status,
+                                       int64_t progress, int64_t progressMax) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   MOZ_ASSERT((trans == mSocketTransport) || (trans == mBackupTransport));
@@ -748,8 +752,9 @@ HalfOpenSocket::OnTransportStatus(nsITransport* trans, nsresult status,
              addressSet[i].inet6.ip.u64[1] == 0)) {
           // Bug 1680249 - Don't create the coalescing key if the ip address is
           // `0.0.0.0` or `::`.
-          LOG(("HalfOpenSocket: skip creating Coalescing Key for host [%s]",
-               mEnt->mConnInfo->Origin()));
+          LOG((
+              "DnsAndConnectSocket: skip creating Coalescing Key for host [%s]",
+              mEnt->mConnInfo->Origin()));
           continue;
         }
         nsCString* newKey = mEnt->mCoalescingKeys.AppendElement(nsCString());
@@ -768,7 +773,7 @@ HalfOpenSocket::OnTransportStatus(nsITransport* trans, nsresult status,
         newKey->Append(suffix);
         newKey->AppendLiteral("]viaDNS");
         LOG((
-            "HalfOpenSocket::OnTransportStatus "
+            "DnsAndConnectSocket::OnTransportStatus "
             "STATUS_CONNECTING_TO Established New Coalescing Key # %d for host "
             "%s [%s]",
             i, mEnt->mConnInfo->Origin(), newKey->get()));
@@ -809,7 +814,7 @@ HalfOpenSocket::OnTransportStatus(nsITransport* trans, nsresult status,
 
 // method for nsIInterfaceRequestor
 NS_IMETHODIMP
-HalfOpenSocket::GetInterface(const nsIID& iid, void** result) {
+DnsAndConnectSocket::GetInterface(const nsIID& iid, void** result) {
   if (mTransaction) {
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
     mTransaction->GetSecurityCallbacks(getter_AddRefs(callbacks));
@@ -820,13 +825,13 @@ HalfOpenSocket::GetInterface(const nsIID& iid, void** result) {
   return NS_ERROR_NO_INTERFACE;
 }
 
-bool HalfOpenSocket::AcceptsTransaction(nsHttpTransaction* trans) {
+bool DnsAndConnectSocket::AcceptsTransaction(nsHttpTransaction* trans) {
   // When marked as urgent start, only accept urgent start marked transactions.
   // Otherwise, accept any kind of transaction.
   return !mUrgentStart || (trans->Caps() & nsIClassOfService::UrgentStart);
 }
 
-bool HalfOpenSocket::Claim() {
+bool DnsAndConnectSocket::Claim() {
   if (mSpeculative) {
     mSpeculative = false;
     uint32_t flags;
@@ -861,7 +866,7 @@ bool HalfOpenSocket::Claim() {
   return false;
 }
 
-void HalfOpenSocket::Unclaim() {
+void DnsAndConnectSocket::Unclaim() {
   MOZ_ASSERT(!mSpeculative && !mFreeToUse);
   // We will keep the backup-timer running. Most probably this halfOpen will
   // be used by a transaction from which this transaction took the halfOpen.

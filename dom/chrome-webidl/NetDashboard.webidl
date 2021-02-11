@@ -27,7 +27,7 @@ dictionary HttpConnInfo {
   DOMString protocolVersion = "";
 };
 
-dictionary HalfOpenInfoDict {
+dictionary DnsAndSockInfoDict {
   boolean speculative = false;
 };
 
@@ -38,7 +38,7 @@ dictionary HttpConnectionElement {
   boolean ssl = false;
   sequence<HttpConnInfo> active;
   sequence<HttpConnInfo> idle;
-  sequence<HalfOpenInfoDict> halfOpens;
+  sequence<DnsAndSockInfoDict> dnsAndSocks;
 };
 
 [GenerateConversionToJS]

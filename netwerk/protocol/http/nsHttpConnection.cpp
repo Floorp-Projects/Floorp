@@ -748,10 +748,14 @@ nsresult nsHttpConnection::Activate(nsAHttpTransaction* trans, uint32_t caps,
   // If we don't have a confirmation of a connected socket then test it
   // with a write() to get relevant error code.
   if (!mConnectedTransport) {
-    uint32_t count;
-    mSocketOutCondition = NS_ERROR_FAILURE;
-    if (mSocketOut) {
-      mSocketOutCondition = mSocketOut->Write("", 0, &count);
+    if (NS_FAILED(mErrorBeforeConnect)) {
+      mSocketOutCondition = mErrorBeforeConnect;
+    } else {
+      uint32_t count;
+      mSocketOutCondition = NS_ERROR_FAILURE;
+      if (mSocketOut) {
+        mSocketOutCondition = mSocketOut->Write("", 0, &count);
+      }
     }
     if (NS_FAILED(mSocketOutCondition) &&
         mSocketOutCondition != NS_BASE_STREAM_WOULD_BLOCK) {

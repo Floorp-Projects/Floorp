@@ -73,7 +73,7 @@ nsHttpConnectionMgr::nsHttpConnectionMgr()
       mNumActiveConns(0),
       mNumIdleConns(0),
       mNumSpdyHttp3ActiveConns(0),
-      mNumHalfOpenConns(0),
+      mNumDnsAndConnectSockets(0),
       mTimeOfNextWakeUp(UINT64_MAX),
       mPruningNoTraffic(false),
       mTimeoutTickArmed(false),
@@ -593,8 +593,9 @@ void nsHttpConnectionMgr::OnMsgClearConnectionHistory(int32_t,
   for (auto iter = mCT.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<ConnectionEntry> ent = iter.Data();
     if (ent->IdleConnectionsLength() == 0 && ent->ActiveConnsLength() == 0 &&
-        ent->HalfOpensLength() == 0 && ent->UrgentStartQueueLength() == 0 &&
-        ent->PendingQueueLength() == 0 && !ent->mDoNotDestroy) {
+        ent->DnsAndConnectSocketsLength() == 0 &&
+        ent->UrgentStartQueueLength() == 0 && ent->PendingQueueLength() == 0 &&
+        !ent->mDoNotDestroy) {
       iter.Remove();
     }
   }
@@ -913,12 +914,12 @@ bool nsHttpConnectionMgr::DispatchPendingQ(
   for (uint32_t i = 0; i < pendingQ.Length();) {
     pendingTransInfo = pendingQ[i];
 
-    bool alreadyHalfOpenOrWaitingForTLS =
+    bool alreadyDnsAndConnectSocketOrWaitingForTLS =
         pendingTransInfo->IsAlreadyClaimedInitializingConn();
 
     rv = TryDispatchTransaction(
         ent,
-        alreadyHalfOpenOrWaitingForTLS ||
+        alreadyDnsAndConnectSocketOrWaitingForTLS ||
             !!pendingTransInfo->Transaction()->TunnelProvider(),
         pendingTransInfo);
     if (NS_SUCCEEDED(rv) || (rv != NS_ERROR_NOT_AVAILABLE)) {
@@ -1722,7 +1723,7 @@ nsresult nsHttpConnectionMgr::CreateTransport(
   MOZ_ASSERT((speculative && !pendingTransInfo) ||
              (!speculative && pendingTransInfo));
 
-  RefPtr<HalfOpenSocket> sock = new HalfOpenSocket(
+  RefPtr<DnsAndConnectSocket> sock = new DnsAndConnectSocket(
       ent, trans, caps, speculative, isFromPredictor, urgentStart);
 
   if (speculative) {
@@ -1735,11 +1736,12 @@ nsresult nsHttpConnectionMgr::CreateTransport(
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (pendingTransInfo) {
-    DebugOnly<bool> claimed = pendingTransInfo->TryClaimingHalfOpen(sock);
+    DebugOnly<bool> claimed =
+        pendingTransInfo->TryClaimingDnsAndConnectSocket(sock);
     MOZ_ASSERT(claimed);
   }
 
-  ent->InsertIntoHalfOpens(sock);
+  ent->InsertIntoDnsAndConnectSockets(sock);
   return NS_OK;
 }
 
@@ -1912,7 +1914,7 @@ void nsHttpConnectionMgr::AbortAndCloseAllConnections(int32_t, ARefBase*) {
     ent->CancelAllTransactions(NS_ERROR_ABORT);
 
     // Close all half open tcp connections.
-    ent->CloseAllHalfOpens();
+    ent->CloseAllDnsAndConnectSockets();
 
     MOZ_ASSERT(!ent->mDoNotDestroy);
     iter.Remove();
@@ -2178,7 +2180,8 @@ void nsHttpConnectionMgr::OnMsgPruneDeadConnections(int32_t, ARefBase*) {
       // If this entry is empty, we have too many entries busy then
       // we can clean it up and restart
       if (mCT.Count() > 125 && ent->IdleConnectionsLength() == 0 &&
-          ent->ActiveConnsLength() == 0 && ent->HalfOpensLength() == 0 &&
+          ent->ActiveConnsLength() == 0 &&
+          ent->DnsAndConnectSocketsLength() == 0 &&
           ent->PendingQueueLength() == 0 &&
           ent->UrgentStartQueueLength() == 0 && !ent->mDoNotDestroy &&
           (!ent->mUsingSpdy || mCT.Count() > 300)) {
@@ -3278,7 +3281,7 @@ void nsHttpConnectionMgr::DoSpeculativeConnection(
   bool allow1918 = aTrans->Allow1918() ? *aTrans->Allow1918() : false;
 
   bool keepAlive = aTrans->Caps() & NS_HTTP_ALLOW_KEEPALIVE;
-  if (mNumHalfOpenConns < parallelSpeculativeConnectLimit &&
+  if (mNumDnsAndConnectSockets < parallelSpeculativeConnectLimit &&
       ((ignoreIdle &&
         (ent->IdleConnectionsLength() < parallelSpeculativeConnectLimit)) ||
        !ent->IdleConnectionsLength()) &&
@@ -3433,13 +3436,13 @@ void nsHttpConnectionMgr::MoveToWildCardConnEntry(
       ("nsHttpConnectionMgr::MakeConnEntryWildCard ent %p "
        "idle=%zu active=%zu half=%zu pending=%zu\n",
        ent, ent->IdleConnectionsLength(), ent->ActiveConnsLength(),
-       ent->HalfOpensLength(), ent->PendingQueueLength()));
+       ent->DnsAndConnectSocketsLength(), ent->PendingQueueLength()));
 
   LOG(
       ("nsHttpConnectionMgr::MakeConnEntryWildCard wc-ent %p "
        "idle=%zu active=%zu half=%zu pending=%zu\n",
        wcEnt, wcEnt->IdleConnectionsLength(), wcEnt->ActiveConnsLength(),
-       wcEnt->HalfOpensLength(), wcEnt->PendingQueueLength()));
+       wcEnt->DnsAndConnectSocketsLength(), wcEnt->PendingQueueLength()));
 
   ent->MoveConnection(proxyConn, wcEnt);
 }
@@ -3468,12 +3471,14 @@ bool nsHttpConnectionMgr::MoveTransToNewConnEntry(
   return true;
 }
 
-void nsHttpConnectionMgr::IncreaseNumHalfOpenConns() { mNumHalfOpenConns++; }
+void nsHttpConnectionMgr::IncreaseNumDnsAndConnectSockets() {
+  mNumDnsAndConnectSockets++;
+}
 
-void nsHttpConnectionMgr::DecreaseNumHalfOpenConns() {
-  MOZ_ASSERT(mNumHalfOpenConns);
-  if (mNumHalfOpenConns) {  // just in case
-    mNumHalfOpenConns--;
+void nsHttpConnectionMgr::DecreaseNumDnsAndConnectSockets() {
+  MOZ_ASSERT(mNumDnsAndConnectSockets);
+  if (mNumDnsAndConnectSockets) {  // just in case
+    mNumDnsAndConnectSockets--;
   }
 }
 

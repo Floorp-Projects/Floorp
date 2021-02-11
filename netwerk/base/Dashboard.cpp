@@ -634,7 +634,7 @@ nsresult Dashboard::GetHttpConnections(HttpData* aHttpData) {
   mozilla::dom::HttpConnDict dict;
   dict.mConnections.Construct();
 
-  using mozilla::dom::HalfOpenInfoDict;
+  using mozilla::dom::DnsAndSockInfoDict;
   using mozilla::dom::HttpConnectionElement;
   using mozilla::dom::HttpConnInfo;
   Sequence<HttpConnectionElement>& connections = dict.mConnections.Value();
@@ -655,16 +655,16 @@ nsresult Dashboard::GetHttpConnections(HttpData* aHttpData) {
 
     connection.mActive.Construct();
     connection.mIdle.Construct();
-    connection.mHalfOpens.Construct();
+    connection.mDnsAndSocks.Construct();
 
     Sequence<HttpConnInfo>& active = connection.mActive.Value();
     Sequence<HttpConnInfo>& idle = connection.mIdle.Value();
-    Sequence<HalfOpenInfoDict>& halfOpens = connection.mHalfOpens.Value();
+    Sequence<DnsAndSockInfoDict>& dnsAndSocks = connection.mDnsAndSocks.Value();
 
     if (!active.SetCapacity(httpData->mData[i].active.Length(), fallible) ||
         !idle.SetCapacity(httpData->mData[i].idle.Length(), fallible) ||
-        !halfOpens.SetCapacity(httpData->mData[i].halfOpens.Length(),
-                               fallible)) {
+        !dnsAndSocks.SetCapacity(httpData->mData[i].dnsAndSocks.Length(),
+                                 fallible)) {
       JS_ReportOutOfMemory(cx);
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -683,9 +683,9 @@ nsresult Dashboard::GetHttpConnections(HttpData* aHttpData) {
       info.mProtocolVersion = httpData->mData[i].idle[j].protocolVersion;
     }
 
-    for (uint32_t j = 0; j < httpData->mData[i].halfOpens.Length(); j++) {
-      HalfOpenInfoDict& info = *halfOpens.AppendElement(fallible);
-      info.mSpeculative = httpData->mData[i].halfOpens[j].speculative;
+    for (uint32_t j = 0; j < httpData->mData[i].dnsAndSocks.Length(); j++) {
+      DnsAndSockInfoDict& info = *dnsAndSocks.AppendElement(fallible);
+      info.mSpeculative = httpData->mData[i].dnsAndSocks[j].speculative;
     }
   }
 
