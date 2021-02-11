@@ -16,7 +16,6 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /*
@@ -209,13 +208,6 @@ public class GeckoScreenOrientation {
     }
 
     /*
-     * @return The Android orientation (Configuration.orientation).
-     */
-    public int getAndroidOrientation() {
-        return screenOrientationToAndroidOrientation(getScreenOrientation());
-    }
-
-    /*
      * @return The Gecko screen orientation derived from Android orientation and
      *         rotation.
      */
@@ -337,55 +329,6 @@ public class GeckoScreenOrientation {
         final WindowManager windowManager =
                 (WindowManager) appContext.getSystemService(Context.WINDOW_SERVICE);
         return windowManager.getDefaultDisplay().getRotation();
-    }
-
-    /*
-     * Retrieve the screen orientation from an array string.
-     *
-     * @param aArray
-     *        String containing comma-delimited strings.
-     *
-     * @return First parsed Gecko screen orientation.
-     */
-    public static ScreenOrientation screenOrientationFromArrayString(final String aArray) {
-        List<String> orientations = Arrays.asList(aArray.split(","));
-        if ("".equals(aArray) || orientations.size() == 0) {
-            // If nothing is listed, return default.
-            Log.w(LOGTAG, "screenOrientationFromArrayString: no orientation in string");
-            return ScreenOrientation.DEFAULT;
-        }
-
-        // We don't support multiple orientations yet. To avoid developer
-        // confusion, just take the first one listed.
-        return screenOrientationFromString(orientations.get(0));
-    }
-
-    /*
-     * Retrieve the screen orientation from a string.
-     *
-     * @param aStr
-     *        String hopefully containing a screen orientation name.
-     * @return Gecko screen orientation if matched, DEFAULT_SCREEN_ORIENTATION
-     *         otherwise.
-     */
-    public static ScreenOrientation screenOrientationFromString(final String aStr) {
-        switch (aStr) {
-            case "portrait":
-                return ScreenOrientation.PORTRAIT;
-            case "landscape":
-                return ScreenOrientation.LANDSCAPE;
-            case "portrait-primary":
-                return ScreenOrientation.PORTRAIT_PRIMARY;
-            case "portrait-secondary":
-                return ScreenOrientation.PORTRAIT_SECONDARY;
-            case "landscape-primary":
-                return ScreenOrientation.LANDSCAPE_PRIMARY;
-            case "landscape-secondary":
-                return ScreenOrientation.LANDSCAPE_SECONDARY;
-        }
-
-        Log.w(LOGTAG, "screenOrientationFromString: unknown orientation string: " + aStr);
-        return ScreenOrientation.DEFAULT;
     }
 
     /*
