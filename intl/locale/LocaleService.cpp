@@ -378,8 +378,10 @@ LocaleService::GetDefaultLocale(nsACString& aRetVal) {
     // just use our hard-coded default below.
     GetGREFileContents("update.locale", &locale);
     locale.Trim(" \t\n\r");
+#ifdef MOZ_UPDATER
     // This should never be empty.
     MOZ_ASSERT(!locale.IsEmpty());
+#endif
     if (CanonicalizeLanguageId(locale)) {
       mDefaultLocale.Assign(locale);
     }
