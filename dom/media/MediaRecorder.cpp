@@ -41,13 +41,13 @@
 mozilla::LazyLogModule gMediaRecorderLog("MediaRecorder");
 #define LOG(type, msg) MOZ_LOG(gMediaRecorderLog, type, msg)
 
-#define MIN_VIDEO_BITRATE_BPS 10e3        // 10kbps
-#define DEFAULT_VIDEO_BITRATE_BPS 2500e3  // 2.5Mbps
-#define MAX_VIDEO_BITRATE_BPS 100e6       // 100Mbps
+constexpr int MIN_VIDEO_BITRATE_BPS = 10e3;        // 10kbps
+constexpr int DEFAULT_VIDEO_BITRATE_BPS = 2500e3;  // 2.5Mbps
+constexpr int MAX_VIDEO_BITRATE_BPS = 100e6;       // 100Mbps
 
-#define MIN_AUDIO_BITRATE_BPS 500        // 500bps
-#define DEFAULT_AUDIO_BITRATE_BPS 128e3  // 128kbps
-#define MAX_AUDIO_BITRATE_BPS 512e3      // 512kbps
+constexpr int MIN_AUDIO_BITRATE_BPS = 500;        // 500bps
+constexpr int DEFAULT_AUDIO_BITRATE_BPS = 128e3;  // 128kbps
+constexpr int MAX_AUDIO_BITRATE_BPS = 512e3;      // 512kbps
 
 namespace mozilla::dom {
 

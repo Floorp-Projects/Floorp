@@ -25,7 +25,7 @@ LazyLogModule gVP8TrackEncoderLog("VP8TrackEncoder");
 #define VP8LOG(level, msg, ...) \
   MOZ_LOG(gVP8TrackEncoderLog, level, (msg, ##__VA_ARGS__))
 
-#define DEFAULT_BITRATE_BPS 2500000
+constexpr int DEFAULT_BITRATE_BPS = 2500000;
 constexpr int DEFAULT_KEYFRAME_INTERVAL_MS = 10000;
 constexpr int DYNAMIC_MAXKFDIST_CHECK_INTERVAL = 5;
 constexpr float DYNAMIC_MAXKFDIST_DIFFACTOR = 0.4;

@@ -21,17 +21,17 @@ namespace mozilla {
 LazyLogModule gTrackEncoderLog("TrackEncoder");
 #define TRACK_LOG(type, msg) MOZ_LOG(gTrackEncoderLog, type, msg)
 
-static const int DEFAULT_CHANNELS = 1;
-static const int DEFAULT_FRAME_WIDTH = 640;
-static const int DEFAULT_FRAME_HEIGHT = 480;
-static const int DEFAULT_FRAME_RATE = 30;
+constexpr int DEFAULT_CHANNELS = 1;
+constexpr int DEFAULT_FRAME_WIDTH = 640;
+constexpr int DEFAULT_FRAME_HEIGHT = 480;
+constexpr int DEFAULT_FRAME_RATE = 30;
 // 10 second threshold if the audio encoder cannot be initialized.
-static const int AUDIO_INIT_FAILED_DURATION = 10;
+constexpr int AUDIO_INIT_FAILED_DURATION = 10;
 // 30 second threshold if the video encoder cannot be initialized.
-static const int VIDEO_INIT_FAILED_DURATION = 30;
-static const int FRAMERATE_DETECTION_ROLLING_WINDOW = 3;
-static const size_t FRAMERATE_DETECTION_MIN_CHUNKS = 5;
-static const int FRAMERATE_DETECTION_MAX_DURATION_S = 6;
+constexpr int VIDEO_INIT_FAILED_DURATION = 30;
+constexpr int FRAMERATE_DETECTION_ROLLING_WINDOW = 3;
+constexpr size_t FRAMERATE_DETECTION_MIN_CHUNKS = 5;
+constexpr int FRAMERATE_DETECTION_MAX_DURATION_S = 6;
 
 TrackEncoder::TrackEncoder(TrackRate aTrackRate,
                            MediaQueue<EncodedFrame>& aEncodedDataQueue)

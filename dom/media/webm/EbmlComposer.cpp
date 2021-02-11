@@ -15,11 +15,11 @@
 namespace mozilla {
 
 // Timecode scale in nanoseconds
-static const unsigned long TIME_CODE_SCALE = 1000000;
+constexpr unsigned long TIME_CODE_SCALE = 1000000;
 // The WebM header size without audio CodecPrivateData
-static const int32_t DEFAULT_HEADER_SIZE = 1024;
+constexpr int32_t DEFAULT_HEADER_SIZE = 1024;
 // Number of milliseconds after which we flush audio-only clusters
-static const int32_t FLUSH_AUDIO_ONLY_AFTER_MS = 1000;
+constexpr int32_t FLUSH_AUDIO_ONLY_AFTER_MS = 1000;
 
 void EbmlComposer::GenerateHeader() {
   MOZ_RELEASE_ASSERT(!mMetadataFinished);
