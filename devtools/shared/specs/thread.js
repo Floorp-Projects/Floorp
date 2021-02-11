@@ -179,6 +179,13 @@ const threadSpec = generateActorSpec({
         logEventBreakpoints: Arg(0, "string"),
       },
     },
+
+    isAttached: {
+      request: {},
+      response: {
+        value: RetVal("boolean"),
+      },
+    },
   },
 });
 
