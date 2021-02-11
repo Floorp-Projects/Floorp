@@ -1114,8 +1114,8 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     mEncoder->Cancel()
         ->Then(mEncoderThread, __func__,
                [this, self = RefPtr<Session>(this)](
-                   const GenericNonExclusivePromise::AllPromiseType::
-                       ResolveOrRejectValue& aValue) {
+                   const GenericNonExclusivePromise::ResolveOrRejectValue&
+                       aValue) {
                  MOZ_DIAGNOSTIC_ASSERT(aValue.IsResolve());
                  return Extract();
                })
