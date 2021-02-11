@@ -161,6 +161,7 @@ class MediaEncoder::VideoTrackListener : public DirectMediaTrackListener {
       : mDirectConnected(false),
         mInitialized(false),
         mRemoved(false),
+        mPendingAdvanceCurrentTime(false),
         mMediaEncoder(std::move(aMediaEncoder)),
         mEncoderThread(mMediaEncoder->mEncoderThread),
         mShutdownPromise(mShutdownHolder.Ensure(__func__)) {
@@ -195,11 +196,11 @@ class MediaEncoder::VideoTrackListener : public DirectMediaTrackListener {
     MOZ_ASSERT(mMediaEncoder->mVideoEncoder);
     MOZ_ASSERT(mEncoderThread);
 
-    const TimeStamp now = TimeStamp::Now();
+    mCurrentTime = TimeStamp::Now();
     if (!mInitialized) {
       nsresult rv = mEncoderThread->Dispatch(
           NS_NewRunnableFunction("mozilla::VideoTrackEncoder::SetStartOffset",
-                                 [encoder = mMediaEncoder, now] {
+                                 [encoder = mMediaEncoder, now = mCurrentTime] {
                                    encoder->mVideoEncoder->SetStartOffset(now);
                                  }));
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
@@ -207,13 +208,17 @@ class MediaEncoder::VideoTrackListener : public DirectMediaTrackListener {
       mInitialized = true;
     }
 
-    nsresult rv = mEncoderThread->Dispatch(NS_NewRunnableFunction(
-        "mozilla::VideoTrackEncoder::AdvanceCurrentTime",
-        [encoder = mMediaEncoder, now] {
-          encoder->mVideoEncoder->AdvanceCurrentTime(now);
-        }));
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    Unused << rv;
+    if (!mPendingAdvanceCurrentTime) {
+      mPendingAdvanceCurrentTime = true;
+      nsresult rv = mEncoderThread->Dispatch(NS_NewRunnableFunction(
+          "mozilla::VideoTrackEncoder::AdvanceCurrentTime",
+          [encoder = mMediaEncoder, now = mCurrentTime] {
+            encoder->mVideoListener->mPendingAdvanceCurrentTime = false;
+            encoder->mVideoEncoder->AdvanceCurrentTime(now);
+          }));
+      MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+      Unused << rv;
+    }
   }
 
   void NotifyRealtimeTrackData(MediaTrackGraph* aGraph, TrackTime aTrackOffset,
@@ -272,21 +277,27 @@ class MediaEncoder::VideoTrackListener : public DirectMediaTrackListener {
     MOZ_ASSERT(mMediaEncoder->mVideoEncoder);
     MOZ_ASSERT(mEncoderThread);
 
-    nsresult rv = mEncoderThread->Dispatch(
-        NS_NewRunnableFunction("mozilla::VideoTrackEncoder::NotifyEndOfStream",
-                               [encoder = mMediaEncoder] {
-                                 encoder->mVideoEncoder->NotifyEndOfStream();
-                               }));
+    nsresult rv = mEncoderThread->Dispatch(NS_NewRunnableFunction(
+        "mozilla::VideoTrackEncoder::NotifyEndOfStream",
+        [encoder = mMediaEncoder, now = mCurrentTime] {
+          if (!now.IsNull()) {
+            encoder->mVideoEncoder->AdvanceCurrentTime(now);
+          }
+          encoder->mVideoEncoder->NotifyEndOfStream();
+        }));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     Unused << rv;
   }
 
   void NotifyRemoved(MediaTrackGraph* aGraph) override {
-    nsresult rv = mEncoderThread->Dispatch(
-        NS_NewRunnableFunction("mozilla::VideoTrackEncoder::NotifyEndOfStream",
-                               [encoder = mMediaEncoder] {
-                                 encoder->mVideoEncoder->NotifyEndOfStream();
-                               }));
+    nsresult rv = mEncoderThread->Dispatch(NS_NewRunnableFunction(
+        "mozilla::VideoTrackEncoder::NotifyEndOfStream",
+        [encoder = mMediaEncoder, now = mCurrentTime] {
+          if (!now.IsNull()) {
+            encoder->mVideoEncoder->AdvanceCurrentTime(now);
+          }
+          encoder->mVideoEncoder->NotifyEndOfStream();
+        }));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     Unused << rv;
 
@@ -308,6 +319,8 @@ class MediaEncoder::VideoTrackListener : public DirectMediaTrackListener {
   bool mDirectConnected;
   bool mInitialized;
   bool mRemoved;
+  TimeStamp mCurrentTime;
+  Atomic<bool> mPendingAdvanceCurrentTime;
   RefPtr<MediaEncoder> mMediaEncoder;
   RefPtr<TaskQueue> mEncoderThread;
   MozPromiseHolder<GenericNonExclusivePromise> mShutdownHolder;
