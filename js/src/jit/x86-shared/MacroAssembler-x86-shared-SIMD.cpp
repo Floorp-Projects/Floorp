@@ -677,6 +677,23 @@ void MacroAssemblerX86Shared::unsignedCompareInt32x4(
   }
 }
 
+void MacroAssemblerX86Shared::compareInt64x2(FloatRegister lhs, Operand rhs,
+                                             Assembler::Condition cond,
+                                             FloatRegister output) {
+  static const SimdConstant allOnes = SimdConstant::SplatX4(-1);
+  switch (cond) {
+    case Assembler::Condition::Equal:
+      vpcmpeqq(rhs, lhs, lhs);
+      break;
+    case Assembler::Condition::NotEqual:
+      vpcmpeqq(rhs, lhs, lhs);
+      asMasm().bitwiseXorSimd128(allOnes, lhs);
+      break;
+    default:
+      MOZ_CRASH("unexpected condition op");
+  }
+}
+
 void MacroAssemblerX86Shared::compareFloat32x4(FloatRegister lhs, Operand rhs,
                                                Assembler::Condition cond,
                                                FloatRegister output) {

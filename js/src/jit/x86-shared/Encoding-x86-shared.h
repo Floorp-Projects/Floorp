@@ -364,6 +364,7 @@ enum ThreeByteOpcodeID {
   OP3_PMOVSXWD_VdqWdq = 0x23,
   OP3_PMOVSXDQ_VdqWdq = 0x25,
   OP3_PMULDQ_VdqWdq = 0x28,
+  OP3_PCMPEQQ_VdqWdq = 0x29,
   OP3_PACKUSDW_VdqWdq = 0x2B,
   OP3_PMOVZXBW_VdqWdq = 0x30,
   OP3_PMOVZXWD_VdqWdq = 0x33,

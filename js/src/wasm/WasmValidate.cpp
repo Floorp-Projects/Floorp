@@ -932,6 +932,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(SimdOp::I16x8AllTrue):
           case uint32_t(SimdOp::I32x4AnyTrue):
           case uint32_t(SimdOp::I32x4AllTrue):
+          case uint32_t(SimdOp::I64x2AllTrue):
           case uint32_t(SimdOp::I8x16Bitmask):
           case uint32_t(SimdOp::I16x8Bitmask):
           case uint32_t(SimdOp::I32x4Bitmask):
@@ -987,6 +988,8 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(SimdOp::I32x4LeU):
           case uint32_t(SimdOp::I32x4GeS):
           case uint32_t(SimdOp::I32x4GeU):
+          case uint32_t(SimdOp::I64x2Eq):
+          case uint32_t(SimdOp::I64x2Ne):
           case uint32_t(SimdOp::F32x4Eq):
           case uint32_t(SimdOp::F32x4Ne):
           case uint32_t(SimdOp::F32x4Lt):

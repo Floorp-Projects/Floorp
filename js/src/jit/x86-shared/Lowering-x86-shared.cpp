@@ -1339,6 +1339,7 @@ bool LIRGeneratorX86Shared::canFoldReduceSimd128AndBranch(wasm::SimdOp op) {
     case wasm::SimdOp::I8x16AllTrue:
     case wasm::SimdOp::I16x8AllTrue:
     case wasm::SimdOp::I32x4AllTrue:
+    case wasm::SimdOp::I64x2AllTrue:
     case wasm::SimdOp::I16x8Bitmask:
       return true;
     default:
