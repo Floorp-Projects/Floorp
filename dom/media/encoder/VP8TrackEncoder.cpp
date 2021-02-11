@@ -607,10 +607,15 @@ nsresult VP8TrackEncoder::Encode(VideoSegment* aSegment) {
   if (mEndOfStream) {
     // EOS: Extract the remaining frames from the underlying encoder.
     VP8LOG(LogLevel::Debug, "mEndOfStream is true");
+    // No more frames will be encoded. Clearing temporary frames saves some
+    // memory.
     if (mI420Frame) {
       mI420Frame = nullptr;
       mI420FrameSize = 0;
     }
+    // mMuteFrame must be released before gfx shutdown. We do it now since it
+    // may be too late when this VP8TrackEncoder gets destroyed.
+    mMuteFrame = nullptr;
     // Bug 1243611, keep calling vpx_codec_encode and vpx_codec_get_cx_data
     // until vpx_codec_get_cx_data return null.
     while (true) {
