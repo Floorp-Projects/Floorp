@@ -49,6 +49,7 @@ exports.DEFAULT_PREF_VALUES = [
   exports.UI_ENABLE_MEMORY_FLAME_CHART,
   "devtools.performance.ui.show-jit-optimizations",
   "devtools.performance.ui.show-triggers-for-gc-types",
+  "devtools.performance.new-panel-enabled",
 ].reduce((prefValues, prefName) => {
   prefValues[prefName] = Preferences.get(prefName);
   return prefValues;
