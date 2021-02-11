@@ -413,6 +413,8 @@ MediaEncoder::MediaEncoder(
       mCompleted(false),
       mError(false) {
   if (mAudioEncoder) {
+    mAudioFinishListener = mEncodedAudioQueue->FinishEvent().Connect(
+        mEncoderThread, this, &MediaEncoder::MaybeShutdown);
     nsresult rv = mEncoderThread->Dispatch(NS_NewRunnableFunction(
         "mozilla::AudioTrackEncoder::RegisterListener",
         [self = RefPtr<MediaEncoder>(this), this] {
@@ -424,6 +426,8 @@ MediaEncoder::MediaEncoder(
     mEncodedAudioQueue->Finish();
   }
   if (mVideoEncoder) {
+    mVideoFinishListener = mEncodedVideoQueue->FinishEvent().Connect(
+        mEncoderThread, this, &MediaEncoder::MaybeShutdown);
     nsresult rv = mEncoderThread->Dispatch(NS_NewRunnableFunction(
         "mozilla::VideoTrackEncoder::RegisterListener",
         [self = RefPtr<MediaEncoder>(this), this] {
@@ -728,6 +732,25 @@ nsresult MediaEncoder::GetEncodedData(
   return rv;
 }
 
+void MediaEncoder::MaybeShutdown() {
+  MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
+  if (!mEncodedAudioQueue->IsFinished()) {
+    LOG(LogLevel::Debug,
+        ("MediaEncoder %p not shutting down, audio is still live", this));
+    return;
+  }
+
+  if (!mEncodedVideoQueue->IsFinished()) {
+    LOG(LogLevel::Debug,
+        ("MediaEncoder %p not shutting down, video is still live", this));
+    return;
+  }
+
+  // Stop will Shutdown() gracefully.
+  Unused << InvokeAsync(GetMainThreadSerialEventTarget(), this, __func__,
+                        &MediaEncoder::Stop);
+}
+
 RefPtr<GenericNonExclusivePromise> MediaEncoder::Shutdown() {
   MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
   if (mShutdownPromise) {
@@ -774,9 +797,12 @@ RefPtr<GenericNonExclusivePromise> MediaEncoder::Shutdown() {
                        aValue.RejectValue(), __func__);
                  });
 
-  mShutdownPromise->Then(
-      mEncoderThread, __func__,
-      [self = RefPtr<MediaEncoder>(this), this] { mMuxer->Disconnect(); });
+  mShutdownPromise->Then(mEncoderThread, __func__,
+                         [self = RefPtr<MediaEncoder>(this), this] {
+                           mMuxer->Disconnect();
+                           mAudioFinishListener.DisconnectIfExists();
+                           mVideoFinishListener.DisconnectIfExists();
+                         });
 
   return mShutdownPromise;
 }
