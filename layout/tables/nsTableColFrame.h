@@ -261,7 +261,7 @@ class nsTableColFrame final : public nsSplittableFrame {
   nscoord GetFinalISize() { return mFinalISize; }
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override {
-    if (aFlags & eSupportsContainLayoutAndPaint) {
+    if (aFlags & (eSupportsContainLayoutAndPaint | eSupportsAspectRatio)) {
       return false;
     }
 

@@ -3297,6 +3297,9 @@ class nsIFrame : public nsQueryFrame {
     // other).
     eSupportsContainLayoutAndPaint = 1 << 12,
 
+    // Does this frame class support `aspect-ratio` property.
+    eSupportsAspectRatio = 1 << 13,
+
     // These are to allow nsIFrame::Init to assert that IsFrameOfType
     // implementations all call the base class method.  They are only
     // meaningful in DEBUG builds.
@@ -3317,7 +3320,8 @@ class nsIFrame : public nsQueryFrame {
                           nsIFrame::eDEBUGAllFrames |
 #endif
                           nsIFrame::eSupportsCSSTransforms |
-                          nsIFrame::eSupportsContainLayoutAndPaint));
+                          nsIFrame::eSupportsContainLayoutAndPaint |
+                          nsIFrame::eSupportsAspectRatio));
   }
 
   /**

@@ -47,7 +47,8 @@ nsresult nsRubyTextContainerFrame::GetFrameName(nsAString& aResult) const {
 
 /* virtual */
 bool nsRubyTextContainerFrame::IsFrameOfType(uint32_t aFlags) const {
-  if (aFlags & (eSupportsCSSTransforms | eSupportsContainLayoutAndPaint)) {
+  if (aFlags & (eSupportsCSSTransforms | eSupportsContainLayoutAndPaint |
+                eSupportsAspectRatio)) {
     return false;
   }
   return nsContainerFrame::IsFrameOfType(aFlags);

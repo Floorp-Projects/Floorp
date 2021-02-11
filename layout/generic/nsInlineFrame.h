@@ -45,7 +45,8 @@ class nsInlineFrame : public nsContainerFrame {
 #endif
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override {
-    if (aFlags & (eSupportsCSSTransforms | eSupportsContainLayoutAndPaint)) {
+    if (aFlags & (eSupportsCSSTransforms | eSupportsContainLayoutAndPaint |
+                  eSupportsAspectRatio)) {
       return false;
     }
     return nsContainerFrame::IsFrameOfType(

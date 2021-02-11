@@ -231,6 +231,10 @@ class nsTableCellFrame : public nsContainerFrame,
   bool ComputeCustomOverflow(mozilla::OverflowAreas& aOverflowAreas) override;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override {
+    if (aFlags & eSupportsAspectRatio) {
+      return false;
+    }
+
     return nsContainerFrame::IsFrameOfType(aFlags & ~(nsIFrame::eTablePart));
   }
 
