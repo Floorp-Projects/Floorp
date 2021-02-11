@@ -998,37 +998,6 @@ nsresult nsChildView::SynthesizeNativeTouchPoint(
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-// First argument has to be an NSMenu representing the application's top-level
-// menu bar. The returned item is *not* retained.
-static NSMenuItem* NativeMenuItemWithLocation(NSMenu* menubar, NSString* locationString) {
-  NSArray* indexes = [locationString componentsSeparatedByString:@"|"];
-  unsigned int indexCount = [indexes count];
-  if (indexCount == 0) return nil;
-
-  NSMenu* currentSubmenu = [NSApp mainMenu];
-  for (unsigned int i = 0; i < indexCount; i++) {
-    int targetIndex;
-    // We remove the application menu from consideration for the top-level menu
-    if (i == 0)
-      targetIndex = [[indexes objectAtIndex:i] intValue] + 1;
-    else
-      targetIndex = [[indexes objectAtIndex:i] intValue];
-    int itemCount = [currentSubmenu numberOfItems];
-    if (targetIndex < itemCount) {
-      NSMenuItem* menuItem = [currentSubmenu itemAtIndex:targetIndex];
-      // if this is the last index just return the menu item
-      if (i == (indexCount - 1)) return menuItem;
-      // if this is not the last index find the submenu and keep going
-      if ([menuItem hasSubmenu])
-        currentSubmenu = [menuItem submenu];
-      else
-        return nil;
-    }
-  }
-
-  return nil;
-}
-
 bool nsChildView::SendEventToNativeMenuSystem(NSEvent* aEvent) {
   bool handled = false;
   nsCocoaWindow* widget = GetAppWindowWidget();
@@ -1076,7 +1045,8 @@ nsresult nsChildView::ActivateNativeMenuItemAt(const nsAString& indexString) {
   NSString* locationString =
       [NSString stringWithCharacters:reinterpret_cast<const unichar*>(indexString.BeginReading())
                               length:indexString.Length()];
-  NSMenuItem* item = NativeMenuItemWithLocation([NSApp mainMenu], locationString);
+  NSMenuItem* item =
+      nsMenuUtilsX::NativeMenuItemWithLocation([NSApp mainMenu], locationString, true);
   // We can't perform an action on an item with a submenu, that will raise
   // an obj-c exception.
   if (item && ![item hasSubmenu]) {
