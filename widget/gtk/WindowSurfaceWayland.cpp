@@ -474,7 +474,7 @@ WindowSurfaceWayland::WindowSurfaceWayland(nsWindow* aWindow)
       mWaylandBuffer(nullptr),
       mWaylandFullscreenDamage(false),
       mFrameCallback(nullptr),
-      mLastCommittedSurface(nullptr),
+      mLastCommittedSurfaceID(-1),
       mLastCommitTime(0),
       mDrawToWaylandBufferDirectly(true),
       mCanSwitchWaylandBuffer(true),
@@ -812,6 +812,7 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
       mWaylandBufferDamage.SetEmpty();
       mCanSwitchWaylandBuffer = true;
       mWLBufferIsDirty = false;
+      mBufferNeedsClear = true;
     }
     mMozContainerRect = mozContainerSize;
   }
@@ -978,7 +979,7 @@ bool WindowSurfaceWayland::FlushPendingCommitsLocked() {
               mDrawToWaylandBufferDirectly));
   LOGWAYLAND(("    mCanSwitchWaylandBuffer = %d\n", mCanSwitchWaylandBuffer));
   LOGWAYLAND(("    mFrameCallback = %p\n", mFrameCallback));
-  LOGWAYLAND(("    mLastCommittedSurface = %p\n", mLastCommittedSurface));
+  LOGWAYLAND(("    mLastCommittedSurfaceID = %d\n", mLastCommittedSurfaceID));
   LOGWAYLAND(("    mWLBufferIsDirty = %d\n", mWLBufferIsDirty));
   LOGWAYLAND(("    mBufferCommitAllowed = %d\n", mBufferCommitAllowed));
 
@@ -1007,12 +1008,6 @@ bool WindowSurfaceWayland::FlushPendingCommitsLocked() {
     LOGWAYLAND(
         ("    moz_container_wayland_surface_lock() failed, delay commit.\n"));
 
-    // Target window is not created yet - delay the commit. This can happen only
-    // when the window is newly created and there's no active
-    // frame callback pending.
-    MOZ_ASSERT(!mFrameCallback || waylandSurface != mLastCommittedSurface,
-               "Missing wayland surface at frame callback!");
-
     if (!mSurfaceReadyTimerID) {
       mSurfaceReadyTimerID = g_timeout_add(
           EVENT_LOOP_DELAY, &WaylandBufferFlushPendingCommits, this);
@@ -1037,22 +1032,26 @@ bool WindowSurfaceWayland::FlushPendingCommitsLocked() {
 
   // We have an active frame callback request so handle it.
   if (mFrameCallback) {
-    if (waylandSurface == mLastCommittedSurface) {
-      LOGWAYLAND(("    [%p] wait for frame callback.\n", (void*)this));
+    int waylandSurfaceID = wl_proxy_get_id((struct wl_proxy*)waylandSurface);
+    if (waylandSurfaceID == mLastCommittedSurfaceID) {
+      LOGWAYLAND(("    [%p] wait for frame callback ID %d.\n", (void*)this,
+                  waylandSurfaceID));
       // We have an active frame callback pending from our recent surface.
       // It means we should defer the commit to FrameCallbackHandler().
       return true;
     }
-    LOGWAYLAND(("    Removing wrong frame callback [%p].\n", mFrameCallback));
+    LOGWAYLAND(("    Removing wrong frame callback [%p] ID %d.\n",
+                mFrameCallback,
+                wl_proxy_get_id((struct wl_proxy*)mFrameCallback)));
     // If our stored wl_surface does not match the actual one it means the frame
     // callback is no longer active and we should release it.
     wl_callback_destroy(mFrameCallback);
     mFrameCallback = nullptr;
-    mLastCommittedSurface = nullptr;
+    mLastCommittedSurfaceID = -1;
   }
 
   if (mWaylandFullscreenDamage) {
-    LOGWAYLAND(("   wl_surface_damage full screen\n"));
+    LOGWAYLAND(("    wl_surface_damage full screen\n"));
     wl_surface_damage(waylandSurface, 0, 0, INT_MAX, INT_MAX);
   } else {
     for (auto iter = mWaylandBufferDamage.RectIter(); !iter.Done();
@@ -1077,7 +1076,7 @@ bool WindowSurfaceWayland::FlushPendingCommitsLocked() {
   wl_callback_add_listener(mFrameCallback, &frame_listener, this);
 
   mWaylandBuffer->Attach(waylandSurface);
-  mLastCommittedSurface = waylandSurface;
+  mLastCommittedSurfaceID = wl_proxy_get_id((struct wl_proxy*)waylandSurface);
   mLastCommitTime = g_get_monotonic_time() / 1000;
 
   // There's no pending commit, all changes are sent to compositor.
@@ -1091,8 +1090,8 @@ void WindowSurfaceWayland::Commit(const LayoutDeviceIntRegion& aInvalidRegion) {
   {
     gfx::IntRect lockSize = aInvalidRegion.GetBounds().ToUnknownRect();
     LOGWAYLAND(
-        ("WindowSurfaceWayland::Commit [%p] damage size [%d, %d] -> [%d x %d]"
-         "screenSize [%d x %d]\n",
+        ("WindowSurfaceWayland::Commit [%p] damage size [%d, %d] -> [%d x %d] "
+         "MozContainer [%d x %d]\n",
          (void*)this, lockSize.x, lockSize.y, lockSize.width, lockSize.height,
          mMozContainerRect.width, mMozContainerRect.height));
     LOGWAYLAND(("    mDrawToWaylandBufferDirectly = %d\n",
@@ -1117,7 +1116,7 @@ void WindowSurfaceWayland::Commit(const LayoutDeviceIntRegion& aInvalidRegion) {
 void WindowSurfaceWayland::FrameCallbackHandler() {
   MOZ_ASSERT(mFrameCallback != nullptr,
              "FrameCallbackHandler() called without valid frame callback!");
-  MOZ_ASSERT(mLastCommittedSurface != nullptr,
+  MOZ_ASSERT(mLastCommittedSurfaceID != -1,
              "FrameCallbackHandler() called without valid wl_surface!");
   LOGWAYLAND(
       ("WindowSurfaceWayland::FrameCallbackHandler [%p]\n", (void*)this));
