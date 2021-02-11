@@ -23,6 +23,10 @@ bool nsMediaEventRunner::IsCancelled() {
   return !mElement || mElement->GetCurrentLoadID() != mLoadID;
 }
 
+nsresult nsMediaEventRunner::DispatchEvent(const nsAString& aName) {
+  return mElement ? mElement->DispatchEvent(aName) : NS_OK;
+}
+
 NS_IMPL_CYCLE_COLLECTION(nsMediaEventRunner, mElement)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsMediaEventRunner)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsMediaEventRunner)
@@ -34,7 +38,7 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP nsAsyncEventRunner::Run() {
   // Silently cancel if our load has been cancelled or element has been CCed.
-  return IsCancelled() ? NS_OK : mElement->DispatchEvent(mEventName);
+  return IsCancelled() ? NS_OK : DispatchEvent(mEventName);
 }
 
 nsResolveOrRejectPendingPlayPromisesRunner::
@@ -66,12 +70,9 @@ NS_IMETHODIMP nsResolveOrRejectPendingPlayPromisesRunner::Run() {
 }
 
 NS_IMETHODIMP nsNotifyAboutPlayingRunner::Run() {
-  if (IsCancelled()) {
-    mElement->mPendingPlayPromisesRunners.RemoveElement(this);
-    return NS_OK;
+  if (!IsCancelled()) {
+    DispatchEvent(u"playing"_ns);
   }
-
-  mElement->DispatchEvent(u"playing"_ns);
   return nsResolveOrRejectPendingPlayPromisesRunner::Run();
 }
 
