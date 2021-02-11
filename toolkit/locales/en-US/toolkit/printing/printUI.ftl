@@ -47,7 +47,11 @@ printui-scale-pcent = Scale
 
 # Section title (noun) for the two-sided print options
 printui-two-sided-printing = Two-sided printing
-printui-duplex-checkbox = Print on both sides
+printui-two-sided-printing-off = Off
+# Flip the page on the side (like a book).
+printui-two-sided-printing-side-edge = Flip on side edge
+# Flip the page on the top (like a vertical calendar).
+printui-two-sided-printing-top-edge = Flip on top edge
 
 # Section title for miscellaneous print options
 printui-options = Options

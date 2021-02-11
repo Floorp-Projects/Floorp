@@ -1332,8 +1332,17 @@ var PrintSettingsViewProxy = {
         return this.availablePrinters[target.printerName].supportsDuplex;
 
       case "printDuplex":
-        return target.duplex;
-
+        switch (target.duplex) {
+          case Ci.nsIPrintSettings.kDuplexNone:
+            break;
+          case Ci.nsIPrintSettings.kDuplexFlipOnSideEdge:
+            return "side-edge";
+          case Ci.nsIPrintSettings.kDuplexFlipOnTopEdge:
+            return "top-edge";
+          default:
+            logger.warn("Unexpected duplex value: ", target.duplex);
+        }
+        return "off";
       case "printBackgrounds":
         return target.printBGImages || target.printBGColors;
 
@@ -1420,11 +1429,24 @@ var PrintSettingsViewProxy = {
         target.printBGColors = value;
         break;
 
-      case "printDuplex":
-        target.duplex = value
-          ? Ci.nsIPrintSettings.kDuplexFlipOnSideEdge
-          : Ci.nsIPrintSettings.kDuplexNone;
+      case "printDuplex": {
+        let duplex = (function() {
+          switch (value) {
+            case "off":
+              break;
+            case "side-edge":
+              return Ci.nsIPrintSettings.kDuplexFlipOnSideEdge;
+            case "top-edge":
+              return Ci.nsIPrintSettings.kDuplexFlipOnTopEdge;
+            default:
+              logger.warn("Unexpected duplex name: ", value);
+          }
+          return Ci.nsIPrintSettings.kDuplexNone;
+        })();
+
+        target.duplex = duplex;
         break;
+      }
 
       case "printFootersHeaders":
         // To disable header & footers, set them all to empty.
