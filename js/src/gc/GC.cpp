@@ -3116,7 +3116,7 @@ TriggerResult GCRuntime::checkHeapThreshold(
   MOZ_ASSERT_IF(heapThreshold.hasSliceThreshold(), zone->wasGCStarted());
 
   size_t usedBytes = heapSize.bytes();
-  size_t thresholdBytes = zone->gcState() > Zone::Prepare
+  size_t thresholdBytes = heapThreshold.hasSliceThreshold()
                               ? heapThreshold.sliceBytes()
                               : heapThreshold.startBytes();
   size_t niThreshold = heapThreshold.incrementalLimitBytes();
@@ -6593,6 +6593,7 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
 
       for (GCZonesIter zone(this); !zone.done(); zone.next()) {
         zone->changeGCState(Zone::Prepare, Zone::NoGC);
+        zone->clearGCSliceThresholds();
       }
 
       incrementalState = State::NotActive;
@@ -7437,9 +7438,9 @@ struct MOZ_RAII AutoSetZoneSliceThresholds {
     // On entry, zones that are already collecting should have a slice threshold
     // set.
     for (ZonesIter zone(gc, WithAtoms); !zone.done(); zone.next()) {
-      MOZ_ASSERT((zone->gcState() > Zone::Prepare) ==
+      MOZ_ASSERT(zone->wasGCStarted() ==
                  zone->gcHeapThreshold.hasSliceThreshold());
-      MOZ_ASSERT((zone->gcState() > Zone::Prepare) ==
+      MOZ_ASSERT(zone->wasGCStarted() ==
                  zone->mallocHeapThreshold.hasSliceThreshold());
     }
   }
@@ -7447,7 +7448,7 @@ struct MOZ_RAII AutoSetZoneSliceThresholds {
   ~AutoSetZoneSliceThresholds() {
     // On exit, update the thresholds for all collecting zones.
     for (ZonesIter zone(gc, WithAtoms); !zone.done(); zone.next()) {
-      if (zone->gcState() > Zone::Prepare) {
+      if (zone->wasGCStarted()) {
         zone->setGCSliceThresholds(*gc);
       } else {
         MOZ_ASSERT(!zone->gcHeapThreshold.hasSliceThreshold());
