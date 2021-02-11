@@ -64,7 +64,6 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/UserActivation.h"
-#include "mozilla/dom/WindowGlobalChild.h"
 #include "nsAnimationManager.h"
 #include "nsNameSpaceManager.h"  // for Pref-related rule management (bugs 22963,20760,31816)
 #include "nsFlexContainerFrame.h"
@@ -8532,14 +8531,6 @@ void PresShell::EventHandler::RecordEventHandlingResponsePerformance(
   if (GetDocument() &&
       GetDocument()->GetReadyStateEnum() != Document::READYSTATE_COMPLETE) {
     Telemetry::Accumulate(Telemetry::LOAD_INPUT_EVENT_RESPONSE_MS, millis);
-
-    if (GetDocument()->ShouldIncludeInTelemetry(
-            /* aAllowExtensionURIs = */ false) &&
-        GetDocument()->IsTopLevelContentDocument()) {
-      if (auto* wgc = GetDocument()->GetWindowGlobalChild()) {
-        Unused << wgc->SendSubmitLoadInputEventResponsePreloadTelemetry(millis);
-      }
-    }
   }
 
   if (!sLastInputProcessed || sLastInputProcessed < aEvent->mTimeStamp) {
