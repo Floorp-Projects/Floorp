@@ -1786,6 +1786,9 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
   bool isWidgetVisible =
       (sGtkWidgetIsVisible != nullptr) && sGtkWidgetIsVisible(mShell);
   if (isWidgetVisible) {
+    LOG(
+        ("  temporary hide popup due to "
+         "https://gitlab.gnome.org/GNOME/gtk/issues/1986\n"));
     PauseRemoteRenderer();
     gtk_widget_hide(mShell);
   }
@@ -1840,6 +1843,9 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
   if (isWidgetVisible) {
     // We show the popup with the same configuration so no need to call
     // ConfigureWaylandPopupWindows() before gtk_widget_show().
+    LOG(
+        ("  show popup due to "
+         "https://gitlab.gnome.org/GNOME/gtk/issues/1986\n"));
     gtk_widget_show(mShell);
   }
 }

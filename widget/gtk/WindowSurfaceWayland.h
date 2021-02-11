@@ -211,7 +211,7 @@ class WindowSurfaceWayland : public WindowSurface {
   // Any next commit to wayland compositor will happen when frame callback
   // comes from wayland compositor back as it's the best time to do the commit.
   wl_callback* mFrameCallback;
-  wl_surface* mLastCommittedSurface;
+  int mLastCommittedSurfaceID;
 
   // Cached drawings. If we can't get WaylandBuffer (wl_buffer) at
   // WindowSurfaceWayland::Lock() we direct gecko rendering to
