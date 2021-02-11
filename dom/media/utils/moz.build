@@ -7,10 +7,12 @@ with Files("test/**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Playback")
 
 EXPORTS += [
+    "MediaElementEventRunners.h",
     "TelemetryProbesReporter.h",
 ]
 
 UNIFIED_SOURCES += [
+    "MediaElementEventRunners.cpp",
     "TelemetryProbesReporter.cpp",
 ]
 
