@@ -609,7 +609,8 @@ void DOMIntersectionObserver::Update(Document* aDocument,
       // NOTE(emilio): We also do this if target is the implicit root, pending
       // clarification in
       // https://github.com/w3c/IntersectionObserver/issues/456.
-      if (!nsLayoutUtils::IsAncestorFrameCrossDoc(rootFrame, targetFrame)) {
+      if (rootFrame == targetFrame ||
+          !nsLayoutUtils::IsAncestorFrameCrossDoc(rootFrame, targetFrame)) {
         return false;
       }
 
