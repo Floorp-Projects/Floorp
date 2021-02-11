@@ -781,8 +781,20 @@ RefPtr<GenericNonExclusivePromise> MediaEncoder::Shutdown() {
   return mShutdownPromise;
 }
 
+RefPtr<GenericNonExclusivePromise> MediaEncoder::Stop() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  LOG(LogLevel::Info, ("MediaEncoder %p Stop", this));
+
+  DisconnectTracks();
+
+  return InvokeAsync(mEncoderThread, this, __func__, &MediaEncoder::Shutdown);
+}
+
 RefPtr<GenericNonExclusivePromise> MediaEncoder::Cancel() {
   MOZ_ASSERT(NS_IsMainThread());
+
+  LOG(LogLevel::Info, ("MediaEncoder %p Cancel", this));
 
   DisconnectTracks();
 

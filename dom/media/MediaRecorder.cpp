@@ -1077,7 +1077,8 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   }
 
   // This is the task that will stop recording per spec:
-  // - Cancel the encoders
+  // - If rv is NS_ERROR_ABORT or NS_ERROR_DOM_SECURITY_ERR, cancel the encoders
+  // - Otherwise, stop the encoders gracefully, this still encodes buffered data
   // - Set state to "inactive"
   // - Fire an error event, if NS_FAILED(rv)
   // - Discard blob data if rv is NS_ERROR_DOM_SECURITY_ERR
@@ -1111,7 +1112,9 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       mRunningState = Err(rv);
     }
 
-    mEncoder->Cancel()
+    (rv == NS_ERROR_ABORT || rv == NS_ERROR_DOM_SECURITY_ERR
+         ? mEncoder->Cancel()
+         : mEncoder->Stop())
         ->Then(mEncoderThread, __func__,
                [this, self = RefPtr<Session>(this)](
                    const GenericNonExclusivePromise::ResolveOrRejectValue&
