@@ -142,6 +142,7 @@ TEST(VP8VideoTrackEncoder, FrameEncode)
   encoder.SetStartOffset(now);
   encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(images.Length()));
+  encoder.NotifyEndOfStream();
 
   // Pull Encoded Data back from encoder.
   nsTArray<RefPtr<EncodedFrame>> frames;
@@ -773,8 +774,8 @@ TEST(VP8VideoTrackEncoder, LongFramesReEncoded)
   TimeStamp now = TimeStamp::Now();
 
   // Pass a frame at t=0 and start encoding.
-  // Advancing the current time by 1.5s should encode a 1s frame.
-  // Advancing the current time by another 9.5s should encode another 10 1s
+  // Advancing the current time by 6.5s should encode six 1s frames.
+  // Advancing the current time by another 5.5s should encode another five 1s
   // frames.
 
   VideoSegment segment;
@@ -785,7 +786,7 @@ TEST(VP8VideoTrackEncoder, LongFramesReEncoded)
   encoder.AppendVideoSegment(std::move(segment));
 
   {
-    encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(1.5));
+    encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(6.5));
 
     nsTArray<RefPtr<EncodedFrame>> frames;
     ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(frames)));
@@ -795,9 +796,9 @@ TEST(VP8VideoTrackEncoder, LongFramesReEncoded)
     for (auto& frame : frames) {
       totalDuration += frame->mDuration;
     }
-    const uint64_t oneSec = PR_USEC_PER_SEC;
-    EXPECT_EQ(oneSec, totalDuration);
-    EXPECT_EQ(1U, frames.Length());
+    const uint64_t sixSec = 6 * PR_USEC_PER_SEC;
+    EXPECT_EQ(sixSec, totalDuration);
+    EXPECT_EQ(6U, frames.Length());
   }
 
   {
@@ -812,9 +813,9 @@ TEST(VP8VideoTrackEncoder, LongFramesReEncoded)
     for (auto& frame : frames) {
       totalDuration += frame->mDuration;
     }
-    const uint64_t tenSec = PR_USEC_PER_SEC * 10;
-    EXPECT_EQ(tenSec, totalDuration);
-    EXPECT_EQ(10U, frames.Length());
+    const uint64_t fiveSec = 5 * PR_USEC_PER_SEC;
+    EXPECT_EQ(fiveSec, totalDuration);
+    EXPECT_EQ(5U, frames.Length());
   }
 }
 
@@ -889,7 +890,7 @@ TEST(VP8VideoTrackEncoder, ShortKeyFrameInterval)
 }
 
 // Test that an encoding with a defined key frame interval encodes keyframes
-// as expected. Long here means longer than the default (1s).
+// as expected. Long here means longer than the default (10s).
 TEST(VP8VideoTrackEncoder, LongKeyFrameInterval)
 {
   // Set the factor high to only test the keyframe-forcing logic
@@ -898,68 +899,65 @@ TEST(VP8VideoTrackEncoder, LongKeyFrameInterval)
   generator.Init(mozilla::gfx::IntSize(640, 480));
   TimeStamp now = TimeStamp::Now();
 
-  // Give the encoder a keyframe interval of 2000ms.
-  // Pass frames at 0, 600ms, 900ms, 1100ms, 1900ms, 2100ms
-  // Expected keys: ^                ^^^^^^          ^^^^^^
+  // Give the encoder a keyframe interval of 11s. It should cap at 10s.
+  // Pass a frame at t=0, and the frame-duplication logic will encode frames
+  // every second. Keyframes are expected at t=0, 10s and 20s.
   VideoSegment segment;
   segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
                       PRINCIPAL_HANDLE_NONE, false, now);
-  segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
-                      PRINCIPAL_HANDLE_NONE, false,
-                      now + TimeDuration::FromMilliseconds(600));
-  segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
-                      PRINCIPAL_HANDLE_NONE, false,
-                      now + TimeDuration::FromMilliseconds(900));
-  segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
-                      PRINCIPAL_HANDLE_NONE, false,
-                      now + TimeDuration::FromMilliseconds(1100));
-  segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
-                      PRINCIPAL_HANDLE_NONE, false,
-                      now + TimeDuration::FromMilliseconds(1900));
-  segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
-                      PRINCIPAL_HANDLE_NONE, false,
-                      now + TimeDuration::FromMilliseconds(2100));
 
-  encoder.SetKeyFrameInterval(Some(TimeDuration::FromMilliseconds(2000)));
+  encoder.SetKeyFrameInterval(Some(TimeDuration::FromMilliseconds(11000)));
   encoder.SetStartOffset(now);
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(2.2));
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(21.5));
   encoder.NotifyEndOfStream();
 
-  nsTArray<RefPtr<EncodedFrame>> frames;
-  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(frames)));
+  nsTArray<RefPtr<EncodedFrame>> framesArray;
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(framesArray)));
+
+  auto frames = Span(framesArray);
 
   EXPECT_TRUE(encoder.IsEncodingComplete());
 
-  ASSERT_EQ(6UL, frames.Length());
+  ASSERT_EQ(22UL, frames.Length());
 
-  // [0, 600ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 600UL, frames[0]->mDuration);
+  // Duplication logic ensures no frame duration is longer than 1 second.
+
+  // [0, 1000ms) - key-frame.
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 1000UL, frames[0]->mDuration);
   EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[0]->mFrameType);
 
-  // [600ms, 900ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 300UL, frames[1]->mDuration);
-  EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frames[1]->mFrameType);
+  // [1000ms, 10000ms) - non-key-frames
+  for (const auto& frame : frames.Subspan<1, 8>()) {
+    EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 1000UL, frame->mDuration)
+        << "Start time: " << frame->mTime.ToMicroseconds() << "us";
+    EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frame->mFrameType)
+        << "Start time: " << frame->mTime.ToMicroseconds() << "us";
+  }
 
-  // [900ms, 1100ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 200UL, frames[2]->mDuration);
-  EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frames[2]->mFrameType);
+  // [10000ms, 11000ms) - key-frame
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 1000UL, frames[10]->mDuration);
+  EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[10]->mFrameType);
 
-  // [1100ms, 1900ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 800UL, frames[3]->mDuration);
-  EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[3]->mFrameType);
+  // [11000ms, 20000ms) - non-key-frames
+  for (const auto& frame : frames.FromTo(11, 20)) {
+    EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 1000UL, frame->mDuration)
+        << "Start time: " << frame->mTime.ToMicroseconds() << "us";
+    EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frame->mFrameType)
+        << "Start time: " << frame->mTime.ToMicroseconds() << "us";
+  }
 
-  // [1900ms, 2100ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 200UL, frames[4]->mDuration);
-  EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frames[4]->mFrameType);
+  // [20000ms, 21000ms) - key-frame
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 1000UL, frames[20]->mDuration);
+  EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[20]->mFrameType);
 
-  // [2100ms, 2200ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[5]->mDuration);
-  EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[5]->mFrameType);
+  // [21000ms, 21500ms) - non-key-frame
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 500UL, frames[21]->mDuration);
+  EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frames[21]->mFrameType);
 }
 
 // Test that an encoding with no defined key frame interval encodes keyframes
-// as expected. Default interval should be 1000ms.
+// as expected. Default interval should be 10s.
 TEST(VP8VideoTrackEncoder, DefaultKeyFrameInterval)
 {
   // Set the factor high to only test the keyframe-forcing logic
@@ -968,62 +966,58 @@ TEST(VP8VideoTrackEncoder, DefaultKeyFrameInterval)
   generator.Init(mozilla::gfx::IntSize(640, 480));
   TimeStamp now = TimeStamp::Now();
 
-  // Pass frames at 0, 600ms, 900ms, 1100ms, 1900ms, 2100ms
-  // Expected keys: ^                ^^^^^^          ^^^^^^
+  // Pass a frame at t=0, and the frame-duplication logic will encode frames
+  // every second. Keyframes are expected at t=0, 10s and 20s.
   VideoSegment segment;
   segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
                       PRINCIPAL_HANDLE_NONE, false, now);
-  segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
-                      PRINCIPAL_HANDLE_NONE, false,
-                      now + TimeDuration::FromMilliseconds(600));
-  segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
-                      PRINCIPAL_HANDLE_NONE, false,
-                      now + TimeDuration::FromMilliseconds(900));
-  segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
-                      PRINCIPAL_HANDLE_NONE, false,
-                      now + TimeDuration::FromMilliseconds(1100));
-  segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
-                      PRINCIPAL_HANDLE_NONE, false,
-                      now + TimeDuration::FromMilliseconds(1900));
-  segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
-                      PRINCIPAL_HANDLE_NONE, false,
-                      now + TimeDuration::FromMilliseconds(2100));
 
   encoder.SetStartOffset(now);
   encoder.AppendVideoSegment(std::move(segment));
-  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(2.2));
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(21.5));
   encoder.NotifyEndOfStream();
 
-  nsTArray<RefPtr<EncodedFrame>> frames;
-  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(frames)));
+  nsTArray<RefPtr<EncodedFrame>> framesArray;
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(framesArray)));
 
   EXPECT_TRUE(encoder.IsEncodingComplete());
 
-  ASSERT_EQ(6UL, frames.Length());
+  ASSERT_EQ(22UL, framesArray.Length());
+  auto frames = Span(framesArray);
 
-  // [0, 600ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 600UL, frames[0]->mDuration);
+  // Duplication logic ensures no frame duration is longer than 1 second.
+
+  // [0, 1000ms) - key-frame.
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 1000UL, frames[0]->mDuration);
   EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[0]->mFrameType);
 
-  // [600ms, 900ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 300UL, frames[1]->mDuration);
-  EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frames[1]->mFrameType);
+  // [1000ms, 10000ms) - non-key-frames
+  for (const auto& frame : frames.Subspan<1, 8>()) {
+    EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 1000UL, frame->mDuration)
+        << "Start time: " << frame->mTime.ToMicroseconds() << "us";
+    EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frame->mFrameType)
+        << "Start time: " << frame->mTime.ToMicroseconds() << "us";
+  }
 
-  // [900ms, 1100ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 200UL, frames[2]->mDuration);
-  EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frames[2]->mFrameType);
+  // [10000ms, 11000ms) - key-frame
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 1000UL, frames[10]->mDuration);
+  EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[10]->mFrameType);
 
-  // [1100ms, 1900ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 800UL, frames[3]->mDuration);
-  EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[3]->mFrameType);
+  // [11000ms, 20000ms) - non-key-frames
+  for (const auto& frame : frames.FromTo(11, 20)) {
+    EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 1000UL, frame->mDuration)
+        << "Start time: " << frame->mTime.ToMicroseconds() << "us";
+    EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frame->mFrameType)
+        << "Start time: " << frame->mTime.ToMicroseconds() << "us";
+  }
 
-  // [1900ms, 2100ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 200UL, frames[4]->mDuration);
-  EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frames[4]->mFrameType);
+  // [20000ms, 21000ms) - key-frame
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 1000UL, frames[20]->mDuration);
+  EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[20]->mFrameType);
 
-  // [2100ms, 2200ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[5]->mDuration);
-  EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[5]->mFrameType);
+  // [21000ms, 21500ms) - non-key-frame
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 500UL, frames[21]->mDuration);
+  EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frames[21]->mFrameType);
 }
 
 // Test that an encoding where the key frame interval is updated dynamically
@@ -1037,17 +1031,21 @@ TEST(VP8VideoTrackEncoder, DynamicKeyFrameIntervalChanges)
   nsTArray<RefPtr<EncodedFrame>> frames;
   TimeStamp now = TimeStamp::Now();
 
-  // Set keyframe interval to 100ms.
-  // Pass frames at 0, 100ms, 120ms, 130ms, 200ms, 300ms
-  // Expected keys: ^  ^^^^^                ^^^^^  ^^^^^
+  // Set keyframe interval to 1000ms.
+  // Pass frames at 0, 1000ms, 1200ms, 1300ms, 2000ms, 3000ms
+  // Expected keys: ^  ^^^^^^                  ^^^^^^  ^^^^^^
 
-  // Then increase keyframe interval to 1100ms. (default is 1000)
-  // Pass frames at 500ms, 1300ms, 1400ms, 2400ms
-  // Expected keys:        ^^^^^^          ^^^^^^
+  // Then increase keyframe interval to 11000ms. (default is 10000)
+  // This re-inits the encoder and inevitable starts with a keyframe.
+  // Pass frames at 3400ms, 13300ms, 13400ms
+  // Expected keys: ^^^^^^           ^^^^^^^
 
-  // Then decrease keyframe interval to 200ms.
-  // Pass frames at 2500ms, 2600ms, 2800ms, 2900ms
-  // Expected keys:         ^^^^^^  ^^^^^^
+  // Then decrease keyframe interval to 500ms.
+  // This re-inits the encoder and inevitable starts with a keyframe.
+  // Pass frames at 13500ms, 13900ms, 14000ms, 14400ms
+  // Expected keys: ^^^^^^^           ^^^^^^^
+
+  // EOS at 15000ms.
 
   {
     VideoSegment segment;
@@ -1055,81 +1053,78 @@ TEST(VP8VideoTrackEncoder, DynamicKeyFrameIntervalChanges)
                         PRINCIPAL_HANDLE_NONE, false, now);
     segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
                         PRINCIPAL_HANDLE_NONE, false,
-                        now + TimeDuration::FromMilliseconds(100));
+                        now + TimeDuration::FromMilliseconds(1000));
     segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
                         PRINCIPAL_HANDLE_NONE, false,
-                        now + TimeDuration::FromMilliseconds(120));
-    segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
-                        PRINCIPAL_HANDLE_NONE, false,
-                        now + TimeDuration::FromMilliseconds(130));
-    segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
-                        PRINCIPAL_HANDLE_NONE, false,
-                        now + TimeDuration::FromMilliseconds(200));
-    segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
-                        PRINCIPAL_HANDLE_NONE, false,
-                        now + TimeDuration::FromMilliseconds(300));
-
-    // The underlying encoder only gets passed frame N when frame N+1 is known,
-    // so we pass in the next frame *before* the keyframe interval change.
-    segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
-                        PRINCIPAL_HANDLE_NONE, false,
-                        now + TimeDuration::FromMilliseconds(500));
-
-    encoder.SetStartOffset(now);
-    encoder.SetKeyFrameInterval(Some(TimeDuration::FromMilliseconds(100)));
-    encoder.AppendVideoSegment(std::move(segment));
-  }
-
-  // Advancing 501ms, so the first bit of the frame starting at 500ms is
-  // included.
-  encoder.AdvanceCurrentTime(now + TimeDuration::FromMilliseconds(501));
-  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(frames)));
-
-  {
-    VideoSegment segment;
+                        now + TimeDuration::FromMilliseconds(1200));
     segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
                         PRINCIPAL_HANDLE_NONE, false,
                         now + TimeDuration::FromMilliseconds(1300));
     segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
                         PRINCIPAL_HANDLE_NONE, false,
-                        now + TimeDuration::FromMilliseconds(1400));
+                        now + TimeDuration::FromMilliseconds(2000));
     segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
                         PRINCIPAL_HANDLE_NONE, false,
-                        now + TimeDuration::FromMilliseconds(2400));
+                        now + TimeDuration::FromMilliseconds(3000));
 
     // The underlying encoder only gets passed frame N when frame N+1 is known,
     // so we pass in the next frame *before* the keyframe interval change.
     segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
                         PRINCIPAL_HANDLE_NONE, false,
-                        now + TimeDuration::FromMilliseconds(2500));
+                        now + TimeDuration::FromMilliseconds(3400));
 
-    encoder.SetKeyFrameInterval(Some(TimeDuration::FromMilliseconds(1100)));
+    encoder.SetStartOffset(now);
+    encoder.SetKeyFrameInterval(Some(TimeDuration::FromMilliseconds(1000)));
     encoder.AppendVideoSegment(std::move(segment));
   }
 
-  // Advancing 2000ms from 501ms to 2501ms
-  encoder.AdvanceCurrentTime(now + TimeDuration::FromMilliseconds(2501));
+  // Advancing 3401ms, so the first bit of the frame starting at 3400ms is
+  // included.
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromMilliseconds(3401));
   ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(frames)));
 
   {
     VideoSegment segment;
     segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
                         PRINCIPAL_HANDLE_NONE, false,
-                        now + TimeDuration::FromMilliseconds(2600));
+                        now + TimeDuration::FromMilliseconds(13300));
     segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
                         PRINCIPAL_HANDLE_NONE, false,
-                        now + TimeDuration::FromMilliseconds(2800));
-    segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
-                        PRINCIPAL_HANDLE_NONE, false,
-                        now + TimeDuration::FromMilliseconds(2900));
+                        now + TimeDuration::FromMilliseconds(13400));
 
-    encoder.SetKeyFrameInterval(Some(TimeDuration::FromMilliseconds(200)));
+    // The underlying encoder only gets passed frame N when frame N+1 is known,
+    // so we pass in the next frame *before* the keyframe interval change.
+    segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE, false,
+                        now + TimeDuration::FromMilliseconds(13500));
+
+    encoder.SetKeyFrameInterval(Some(TimeDuration::FromMilliseconds(11000)));
     encoder.AppendVideoSegment(std::move(segment));
   }
 
-  // Advancing 499ms (compensating back 1ms from the first advancement)
-  // from 2501ms to 3000ms.
-  encoder.AdvanceCurrentTime(now + TimeDuration::FromMilliseconds(3000));
+  // Advancing 10100ms from 3401ms to 13501ms
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromMilliseconds(13501));
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(frames)));
+
+  {
+    VideoSegment segment;
+    segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE, false,
+                        now + TimeDuration::FromMilliseconds(13900));
+    segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE, false,
+                        now + TimeDuration::FromMilliseconds(14000));
+    segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE, false,
+                        now + TimeDuration::FromMilliseconds(14400));
+
+    encoder.SetKeyFrameInterval(Some(TimeDuration::FromMilliseconds(500)));
+    encoder.AppendVideoSegment(std::move(segment));
+  }
+
+  // Advancing 2599ms (compensating back 1ms from the first advancement)
+  // from 13401ms to 15000ms.
+  encoder.AdvanceCurrentTime(now + TimeDuration::FromMilliseconds(15000));
 
   encoder.NotifyEndOfStream();
 
@@ -1137,63 +1132,71 @@ TEST(VP8VideoTrackEncoder, DynamicKeyFrameIntervalChanges)
 
   EXPECT_TRUE(encoder.IsEncodingComplete());
 
-  ASSERT_EQ(14UL, frames.Length());
+  ASSERT_EQ(22UL, frames.Length());
 
-  // [0, 100ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[0]->mDuration);
+  // [0, 1000ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 1000UL, frames[0]->mDuration);
   EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[0]->mFrameType);
 
-  // [100ms, 120ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 20UL, frames[1]->mDuration);
+  // [1000ms, 1200ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 200UL, frames[1]->mDuration);
   EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[1]->mFrameType);
 
-  // [120ms, 130ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 10UL, frames[2]->mDuration);
+  // [1200ms, 1300ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[2]->mDuration);
   EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frames[2]->mFrameType);
 
-  // [130ms, 200ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 70UL, frames[3]->mDuration);
+  // [1300ms, 2000ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 700UL, frames[3]->mDuration);
   EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frames[3]->mFrameType);
 
-  // [200ms, 300ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[4]->mDuration);
+  // [2000ms, 3000ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 1000UL, frames[4]->mDuration);
   EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[4]->mFrameType);
 
-  // [300ms, 500ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 200UL, frames[5]->mDuration);
+  // [3000ms, 3400ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 400UL, frames[5]->mDuration);
   EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[5]->mFrameType);
 
-  // [500ms, 1300ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 800UL, frames[6]->mDuration);
-  EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frames[6]->mFrameType);
+  // [3400ms, 4400ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 1000UL, frames[6]->mDuration);
+  EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[6]->mFrameType);
 
-  // [1300ms, 1400ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[7]->mDuration);
-  EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[7]->mFrameType);
+  // [4400ms, 12400ms)
+  for (const auto& frame : Span(frames).FromTo(7, 15)) {
+    EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 1000UL, frame->mDuration)
+        << "Start time: " << frame->mTime.ToMicroseconds() << "us";
+    EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frame->mFrameType)
+        << "Start time: " << frame->mTime.ToMicroseconds() << "us";
+  }
 
-  // [1400ms, 2400ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 1000UL, frames[8]->mDuration);
-  EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frames[8]->mFrameType);
+  // [12400ms, 13300ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 900UL, frames[15]->mDuration);
+  EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frames[15]->mFrameType);
 
-  // [2400ms, 2500ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[9]->mDuration);
-  EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[9]->mFrameType);
+  // [13300ms, 13400ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[16]->mDuration);
+  EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frames[16]->mFrameType);
 
-  // [2500ms, 2600ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[10]->mDuration);
-  EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frames[10]->mFrameType);
+  // [13400ms, 13500ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[17]->mDuration);
+  EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[17]->mFrameType);
 
-  // [2600ms, 2800ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 200UL, frames[11]->mDuration);
-  EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[11]->mFrameType);
+  // [13500ms, 13900ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 400UL, frames[18]->mDuration);
+  EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[18]->mFrameType);
 
-  // [2800ms, 2900ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[12]->mDuration);
-  EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[12]->mFrameType);
+  // [13900ms, 14000ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[19]->mDuration);
+  EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frames[19]->mFrameType);
 
-  // [2900ms, 3000ms)
-  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[13]->mDuration);
-  EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frames[13]->mFrameType);
+  // [14000ms, 14400ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 400UL, frames[20]->mDuration);
+  EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[20]->mFrameType);
+
+  // [14400ms, 15000ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 600UL, frames[21]->mDuration);
+  EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frames[21]->mFrameType);
 }
 
 // Test that an encoding which is disabled on a frame timestamp encodes
@@ -1554,6 +1557,192 @@ TEST(VP8VideoTrackEncoder, NullImageResets)
 
   // [250ms, 300ms)
   EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 50UL, frames[2]->mDuration);
+}
+
+TEST(VP8VideoTrackEncoder, MaxKeyFrameDistanceLowFramerate)
+{
+  TestVP8TrackEncoder encoder;
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(240, 180));
+  TimeStamp now = TimeStamp::Now();
+  nsTArray<RefPtr<EncodedFrame>> frames;
+
+  encoder.SetStartOffset(now);
+
+  // Pass 10s worth of frames at 2 fps and verify that the key frame interval is
+  // ~7.5s.
+  const TimeDuration duration = TimeDuration::FromSeconds(10);
+  const uint32_t numFrames = 10 * 2;
+  const TimeDuration frameDuration = duration / static_cast<int64_t>(numFrames);
+
+  {
+    VideoSegment segment;
+    for (uint32_t i = 0; i < numFrames; ++i) {
+      segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                          PRINCIPAL_HANDLE_NONE, false,
+                          now + frameDuration * i);
+    }
+    encoder.AppendVideoSegment(std::move(segment));
+  }
+
+  encoder.AdvanceCurrentTime(now + duration);
+  encoder.NotifyEndOfStream();
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(frames)));
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  ASSERT_EQ(numFrames, frames.Length());
+
+  for (uint32_t i = 0; i < frames.Length(); ++i) {
+    const auto& frame = frames[i];
+    EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 500UL, frame->mDuration)
+        << "Frame " << i << ", with start: " << frame->mTime.ToMicroseconds()
+        << "us";
+    // 7.5s key frame interval at 2 fps becomes the 15th frame.
+    EXPECT_EQ(
+        i % 15 == 0 ? EncodedFrame::VP8_I_FRAME : EncodedFrame::VP8_P_FRAME,
+        frame->mFrameType)
+        << "Frame " << i << ", with start: " << frame->mTime.ToMicroseconds()
+        << "us";
+  }
+}
+
+// This is "High" framerate, as in higher than the test for "Low" framerate.
+// We don't make it too high because the test takes considerably longer to run.
+TEST(VP8VideoTrackEncoder, MaxKeyFrameDistanceHighFramerate)
+{
+  TestVP8TrackEncoder encoder;
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(240, 180));
+  TimeStamp now = TimeStamp::Now();
+  nsTArray<RefPtr<EncodedFrame>> frames;
+
+  encoder.SetStartOffset(now);
+
+  // Pass 10s worth of frames at 8 fps and verify that the key frame interval
+  // is ~7.5s.
+  const TimeDuration duration = TimeDuration::FromSeconds(10);
+  const uint32_t numFrames = 10 * 8;
+  const TimeDuration frameDuration = duration / static_cast<int64_t>(numFrames);
+
+  {
+    VideoSegment segment;
+    for (uint32_t i = 0; i < numFrames; ++i) {
+      segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                          PRINCIPAL_HANDLE_NONE, false,
+                          now + frameDuration * i);
+    }
+    encoder.AppendVideoSegment(std::move(segment));
+  }
+
+  encoder.AdvanceCurrentTime(now + duration);
+  encoder.NotifyEndOfStream();
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(frames)));
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  ASSERT_EQ(numFrames, frames.Length());
+
+  for (uint32_t i = 0; i < frames.Length(); ++i) {
+    const auto& frame = frames[i];
+    EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 125UL, frame->mDuration)
+        << "Frame " << i << ", with start: " << frame->mTime.ToMicroseconds()
+        << "us";
+    // 7.5s key frame interval at 8 fps becomes the 60th frame.
+    EXPECT_EQ(
+        i % 60 == 0 ? EncodedFrame::VP8_I_FRAME : EncodedFrame::VP8_P_FRAME,
+        frame->mFrameType)
+        << "Frame " << i << ", with start: " << frame->mTime.ToMicroseconds()
+        << "us";
+  }
+}
+
+TEST(VP8VideoTrackEncoder, MaxKeyFrameDistanceAdaptiveFramerate)
+{
+  TestVP8TrackEncoder encoder;
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(240, 180));
+  TimeStamp now = TimeStamp::Now();
+  nsTArray<RefPtr<EncodedFrame>> frames;
+
+  encoder.SetStartOffset(now);
+
+  // Pass 11s worth of frames at 2 fps and verify that there is a key frame
+  // at 7.5s. Then pass 14s worth of frames at 10 fps and verify that there is a
+  // key frame at 15s (due to re-init) and then one at 22.5s.
+
+  const TimeDuration firstDuration = TimeDuration::FromSeconds(11);
+  const uint32_t firstNumFrames = 11 * 2;
+  const TimeDuration firstFrameDuration =
+      firstDuration / static_cast<int64_t>(firstNumFrames);
+  {
+    VideoSegment segment;
+    for (uint32_t i = 0; i < firstNumFrames; ++i) {
+      segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                          PRINCIPAL_HANDLE_NONE, false,
+                          now + firstFrameDuration * i);
+    }
+    encoder.AppendVideoSegment(std::move(segment));
+  }
+  encoder.AdvanceCurrentTime(now + firstDuration);
+
+  const TimeDuration secondDuration = TimeDuration::FromSeconds(14);
+  const uint32_t secondNumFrames = 14 * 10;
+  const TimeDuration secondFrameDuration =
+      secondDuration / static_cast<int64_t>(secondNumFrames);
+  {
+    VideoSegment segment;
+    for (uint32_t i = 0; i < secondNumFrames; ++i) {
+      segment.AppendFrame(generator.GenerateI420Image(), generator.GetSize(),
+                          PRINCIPAL_HANDLE_NONE, false,
+                          now + firstDuration + secondFrameDuration * i);
+    }
+    encoder.AppendVideoSegment(std::move(segment));
+  }
+  encoder.AdvanceCurrentTime(now + firstDuration + secondDuration);
+
+  encoder.NotifyEndOfStream();
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(frames)));
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  ASSERT_EQ(firstNumFrames + secondNumFrames, frames.Length());
+
+  // [0, 11s) - keyframe distance is now 7.5s@2fps = 15.
+  for (uint32_t i = 0; i < 22; ++i) {
+    const auto& frame = frames[i];
+    EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 500UL, frame->mDuration)
+        << "Frame " << i << ", with start: " << frame->mTime.ToMicroseconds()
+        << "us";
+    // 7.5s key frame interval at 2 fps becomes the 15th frame.
+    EXPECT_EQ(
+        i % 15 == 0 ? EncodedFrame::VP8_I_FRAME : EncodedFrame::VP8_P_FRAME,
+        frame->mFrameType)
+        << "Frame " << i << ", with start: " << frame->mTime.ToMicroseconds()
+        << "us";
+  }
+
+  // Input framerate is now 10fps.
+  // Framerate re-evaluation every 5s, so the keyframe distance changed at 15s.
+  for (uint32_t i = 22; i < frames.Length(); ++i) {
+    const auto& frame = frames[i];
+    EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frame->mDuration)
+        << "Frame " << i << ", with start: " << frame->mTime.ToMicroseconds()
+        << "us";
+    if (i < 22 + 40) {
+      // [11s, 15s) - 40 frames at 10fps but with the 2fps keyframe distance.
+      EXPECT_EQ(
+          i % 15 == 0 ? EncodedFrame::VP8_I_FRAME : EncodedFrame::VP8_P_FRAME,
+          frame->mFrameType)
+          << "Frame " << i << ", with start: " << frame->mTime.ToMicroseconds()
+          << "us";
+    } else {
+      // [15s, 25s) - 100 frames at 10fps. Keyframe distance 75. Starts with
+      // keyframe due to re-init.
+      EXPECT_EQ((i - 22 - 40) % 75 == 0 ? EncodedFrame::VP8_I_FRAME
+                                        : EncodedFrame::VP8_P_FRAME,
+                frame->mFrameType)
+          << "Frame " << i << ", with start: " << frame->mTime.ToMicroseconds()
+          << "us";
+    }
+  }
 }
 
 // EOS test
