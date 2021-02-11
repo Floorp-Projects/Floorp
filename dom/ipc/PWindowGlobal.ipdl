@@ -161,13 +161,6 @@ parent:
                                         TimeStamp aLoadStart,
                                         TimeStamp aLoadEnd);
 
-
-  /**
-   * Submit Time-to-First-Interaction telemetry correlated with whether or not
-   * the document tree preloaded any resources.
-   */
-  async SubmitTimeToFirstInteractionPreloadTelemetry(uint32_t aMillis);
-
   // Checks whether any "beforeunload" event listener in the document subtree
   // wants to block unload, and prompts the user to allow if any does (depending
   // on the action specified, using nsIContentViewer::PermitUnloadAction
