@@ -185,11 +185,12 @@
             </section>
 
             <section id="two-sided-printing" class="section-block">
-              <label class="block-label" data-l10n-id="printui-two-sided-printing"></label>
-              <div class="row cols-2">
-                <input is="setting-checkbox" id="duplex-enabled" data-setting-name="printDuplex">
-                <label for="duplex-enabled" data-l10n-id="printui-duplex-checkbox"></label>
-              </div>
+              <label class="block-label" for="duplex-select" data-l10n-id="printui-two-sided-printing"></label>
+              <select is="setting-select" id="duplex-select" name="duplex-type" class="row" data-setting-name="printDuplex">
+                <option value="off" data-l10n-id="printui-two-sided-printing-off" selected></option>
+                <option value="side-edge" data-l10n-id="printui-two-sided-printing-side-edge"></option>
+                <option value="top-edge" data-l10n-id="printui-two-sided-printing-top-edge"></option>
+              </select>
             </section>
 
             <section id="more-settings-options" class="section-block">
