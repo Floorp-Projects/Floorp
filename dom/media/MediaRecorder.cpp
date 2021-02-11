@@ -1111,8 +1111,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     // This allows users to get blobs regularly when the timeslice interval is
     // shorter than the default key frame interval, as we'd normally wait for a
     // key frame before sending data to the blob.
-    mEncoder->SetVideoKeyFrameInterval(
-        std::max(TimeDuration::FromSeconds(1), mTimeslice).ToMilliseconds());
+    mEncoder->SetVideoKeyFrameInterval(Some(mTimeslice));
 
     // Set mRunningState to Running so that DoSessionEndTask will
     // take the responsibility to end the session.

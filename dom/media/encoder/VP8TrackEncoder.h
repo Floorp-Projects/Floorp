@@ -40,6 +40,8 @@ class VP8TrackEncoder : public VideoTrackEncoder {
 
   nsresult GetEncodedTrack(nsTArray<RefPtr<EncodedFrame>>& aData) final;
 
+  void SetKeyFrameInterval(Maybe<TimeDuration> aKeyFrameInterval) final;
+
  protected:
   nsresult Init(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
                 int32_t aDisplayHeight) final;
@@ -96,9 +98,16 @@ class VP8TrackEncoder : public VideoTrackEncoder {
   size_t mI420FrameSize = 0;
 
   /**
-   * A duration of non-key frames in milliseconds.
+   * A duration of non-key frames in mTrackRate.
    */
   TrackTime mDurationSinceLastKeyframe = 0;
+
+  /**
+   * The max interval at which a keyframe gets forced (causing video quality
+   * degradation). The encoder is configured to encode keyframes more often than
+   * this, though it can vary based on frame rate.
+   */
+  TimeDuration mKeyFrameInterval;
 
   /**
    * A local segment queue which takes the raw data out from mRawSegment in the

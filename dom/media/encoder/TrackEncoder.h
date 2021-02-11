@@ -406,9 +406,9 @@ class VideoTrackEncoder : public TrackEncoder {
   void AdvanceCurrentTime(const TimeStamp& aTime);
 
   /**
-   * Set desired keyframe interval defined in milliseconds.
+   * Set desired keyframe interval.
    */
-  void SetKeyFrameInterval(uint32_t aKeyFrameInterval);
+  virtual void SetKeyFrameInterval(Maybe<TimeDuration> aKeyFrameInterval) = 0;
 
  protected:
   /**
@@ -482,11 +482,6 @@ class VideoTrackEncoder : public TrackEncoder {
    * DISALLOW to encode all frames, mainly for testing.
    */
   FrameDroppingMode mFrameDroppingMode;
-
-  /**
-   * The desired keyframe interval defined in milliseconds.
-   */
-  uint32_t mKeyFrameInterval;
 
   /**
    * True if the video MediaTrackTrack this VideoTrackEncoder is attached to is

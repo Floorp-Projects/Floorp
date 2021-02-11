@@ -848,7 +848,7 @@ TEST(VP8VideoTrackEncoder, ShortKeyFrameInterval)
                       PRINCIPAL_HANDLE_NONE, false,
                       now + TimeDuration::FromMilliseconds(1100));
 
-  encoder.SetKeyFrameInterval(500);
+  encoder.SetKeyFrameInterval(Some(TimeDuration::FromMilliseconds(500)));
   encoder.SetStartOffset(now);
   encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(1.2));
@@ -917,7 +917,7 @@ TEST(VP8VideoTrackEncoder, LongKeyFrameInterval)
                       PRINCIPAL_HANDLE_NONE, false,
                       now + TimeDuration::FromMilliseconds(2100));
 
-  encoder.SetKeyFrameInterval(2000);
+  encoder.SetKeyFrameInterval(Some(TimeDuration::FromMilliseconds(2000)));
   encoder.SetStartOffset(now);
   encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(now + TimeDuration::FromSeconds(2.2));
@@ -1071,7 +1071,7 @@ TEST(VP8VideoTrackEncoder, DynamicKeyFrameIntervalChanges)
                         now + TimeDuration::FromMilliseconds(500));
 
     encoder.SetStartOffset(now);
-    encoder.SetKeyFrameInterval(100);
+    encoder.SetKeyFrameInterval(Some(TimeDuration::FromMilliseconds(100)));
     encoder.AppendVideoSegment(std::move(segment));
   }
 
@@ -1098,7 +1098,7 @@ TEST(VP8VideoTrackEncoder, DynamicKeyFrameIntervalChanges)
                         PRINCIPAL_HANDLE_NONE, false,
                         now + TimeDuration::FromMilliseconds(2500));
 
-    encoder.SetKeyFrameInterval(1100);
+    encoder.SetKeyFrameInterval(Some(TimeDuration::FromMilliseconds(1100)));
     encoder.AppendVideoSegment(std::move(segment));
   }
 
@@ -1118,7 +1118,7 @@ TEST(VP8VideoTrackEncoder, DynamicKeyFrameIntervalChanges)
                         PRINCIPAL_HANDLE_NONE, false,
                         now + TimeDuration::FromMilliseconds(2900));
 
-    encoder.SetKeyFrameInterval(200);
+    encoder.SetKeyFrameInterval(Some(TimeDuration::FromMilliseconds(200)));
     encoder.AppendVideoSegment(std::move(segment));
   }
 
