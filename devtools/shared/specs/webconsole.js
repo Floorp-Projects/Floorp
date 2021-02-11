@@ -78,6 +78,7 @@ const webconsoleSpecPrototype = {
     },
     consoleAPICall: {
       message: Option(0, "json"),
+      clonedFromContentProcess: Option(0, "nullable:boolean"),
     },
     reflowActivity: {
       interruptible: Option(0, "boolean"),

@@ -866,6 +866,8 @@ ResourceWatcher.TYPES = ResourceWatcher.prototype.TYPES = {
   CSS_MESSAGE: "css-message",
   ERROR_MESSAGE: "error-message",
   PLATFORM_MESSAGE: "platform-message",
+  // Legacy listener only. Can be removed in Bug 1625937.
+  CLONED_CONTENT_PROCESS_MESSAGE: "cloned-content-process-message",
   DOCUMENT_EVENT: "document-event",
   ROOT_NODE: "root-node",
   STYLESHEET: "stylesheet",
@@ -898,6 +900,8 @@ const LegacyListeners = {
     .ERROR_MESSAGE]: require("devtools/shared/resources/legacy-listeners/error-messages"),
   [ResourceWatcher.TYPES
     .PLATFORM_MESSAGE]: require("devtools/shared/resources/legacy-listeners/platform-messages"),
+  [ResourceWatcher.TYPES
+    .CLONED_CONTENT_PROCESS_MESSAGE]: require("devtools/shared/resources/legacy-listeners/cloned-content-process-messages"),
   async [ResourceWatcher.TYPES.DOCUMENT_EVENT]({
     targetList,
     targetFront,
