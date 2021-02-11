@@ -149,7 +149,6 @@ const STATES = {
   // When paused on any type of breakpoint, or, when the client requested an interrupt.
   PAUSED: "paused",
 };
-exports.STATES = STATES;
 
 // Possible values for the `why.type` attribute in "paused" event
 const PAUSE_REASONS = {
@@ -399,22 +398,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     Actor.prototype.destroy.call(this);
   },
 
-  /**
-   * Tells if the thread actor has been initialized/attached on target creation
-   * by the server codebase. (And not late, from the frontend, by the TargetMixinFront class)
-   */
-  isAttached() {
-    return !!this.alreadyAttached;
-  },
-
   // Request handlers
   attach(options) {
-    // Note that the client avoids trying to call attach if already attached.
-    // But just in case, avoid any possible duplicate call to attach.
-    if (this.alreadyAttached) {
-      return;
-    }
-
     if (this.state === STATES.EXITED) {
       throw {
         error: "exited",
@@ -441,13 +426,11 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       thread: this,
     });
 
+    this.dbg.enable();
     this.reconfigure(options);
 
-    // Switch state from DETACHED to RUNNING
+    // Set everything up so that breakpoint can work
     this._state = STATES.RUNNING;
-
-    this.alreadyAttached = true;
-    this.dbg.enable();
 
     // Notify the parent that we've finished attaching. If this is a worker
     // thread which was paused until attaching, this will allow content to
