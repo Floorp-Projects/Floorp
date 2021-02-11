@@ -17,7 +17,6 @@
 
 #include "builtin/ModuleObject.h"
 #include "ds/LifoAlloc.h"
-#include "frontend/NameAnalysisTypes.h"  // NameLocation
 #include "frontend/ParserAtom.h"   // ParserAtomsTable, TaggedParserAtomIndex
 #include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "frontend/SharedContext.h"
@@ -81,27 +80,6 @@ struct ScopeContext {
   mozilla::Maybe<EffectiveScopePrivateFieldCache>
       effectiveScopePrivateFieldCache_;
 
-  using EnclosingNameLocationCache =
-      mozilla::HashMap<TaggedParserAtomIndex, NameLocation,
-                       TaggedParserAtomIndexHasher>;
-
-  // Cache of enclosing scope's name location.
-  // Used only for delazification.
-  //
-  // `fallbackNameLocation_` holds the name location of names not stored into
-  // `enclosingNameLocationCache_`.
-  //
-  // On non-debug build, the name in `enclosingNameLocationCache_` is
-  // either on environment (Kind::EnvironmentCoordinate) or import
-  // (Kind::Import).
-  //
-  // On debug build, all other names are also stored.
-  //
-  // If the same name appears multiple times in the scope chain, the inner-most
-  // name is stored into the map.
-  mozilla::Maybe<EnclosingNameLocationCache> enclosingNameLocationCache_;
-  NameLocation fallbackNameLocation_;
-
   uint32_t enclosingScopeEnvironmentChainLength = 0;
 
   // Eval and arrow scripts also inherit the "this" environment -- used by
@@ -153,8 +131,9 @@ struct ScopeContext {
   mozilla::Maybe<EnclosingLexicalBindingKind>
   lookupLexicalBindingInEnclosingScope(TaggedParserAtomIndex name);
 
-  NameLocation searchInDelazificationEnclosingScope(TaggedParserAtomIndex name,
-                                                    uint8_t hops);
+  NameLocation searchInDelazificationEnclosingScope(
+      JSContext* cx, CompilationInput& input, ParserAtomsTable& parserAtoms,
+      TaggedParserAtomIndex name, uint8_t hops);
 
   bool effectiveScopePrivateFieldCacheHas(TaggedParserAtomIndex name);
 
@@ -177,13 +156,6 @@ struct ScopeContext {
                                          ParserAtomsTable& parserAtoms,
                                          JSAtom* name,
                                          EnclosingLexicalBindingKind kind);
-
-  bool cacheEnclosingNameLocationForDelazification(
-      JSContext* cx, CompilationInput& input, ParserAtomsTable& parserAtoms);
-
-  bool addToEnclosingNameLocationCache(JSContext* cx, CompilationInput& input,
-                                       ParserAtomsTable& parserAtoms,
-                                       JSAtom* name, NameLocation loc);
 };
 
 struct CompilationAtomCache {
