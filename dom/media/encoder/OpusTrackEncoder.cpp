@@ -220,11 +220,7 @@ bool OpusTrackEncoder::NeedsResampler() const {
 already_AddRefed<TrackMetadataBase> OpusTrackEncoder::GetMetadata() {
   AUTO_PROFILER_LABEL("OpusTrackEncoder::GetMetadata", OTHER);
 
-  MOZ_ASSERT(mInitialized || mCanceled);
-
-  if (mCanceled || IsEncodingComplete()) {
-    return nullptr;
-  }
+  MOZ_ASSERT(mInitialized);
 
   if (!mInitialized) {
     return nullptr;
