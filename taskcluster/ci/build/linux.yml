@@ -1278,7 +1278,6 @@ linux64-ccov/opt:
         max-run-time: 7200
         env:
             MOZ_LOW_PARALLELISM_BUILD: '1'
-            FORCE_GCC: '1'
             RUSTC_BOOTSTRAP: '1'
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
@@ -1299,7 +1298,6 @@ linux64-ccov/opt:
             - linux64-binutils
             - linux64-clang
             - linux64-rust
-            - linux64-gcc-7
             - linux64-cbindgen
             - linux64-dump-syms
             - linux64-sccache
