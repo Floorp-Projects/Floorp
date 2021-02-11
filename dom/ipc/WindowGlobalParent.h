@@ -256,8 +256,6 @@ class WindowGlobalParent final : public WindowContext,
   mozilla::ipc::IPCResult RecvSubmitLoadEventPreloadTelemetry(
       TimeStamp aNavigationStart, TimeStamp aLoadEventStart,
       TimeStamp aLoadEventEnd);
-  mozilla::ipc::IPCResult RecvSubmitTimeToFirstInteractionPreloadTelemetry(
-      uint32_t aMillis);
 
   mozilla::ipc::IPCResult RecvCheckPermitUnload(
       bool aHasInProcessBlocker, XPCOMPermitUnloadAction aAction,

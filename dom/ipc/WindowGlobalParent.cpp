@@ -681,24 +681,6 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvSubmitLoadEventPreloadTelemetry(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-WindowGlobalParent::RecvSubmitTimeToFirstInteractionPreloadTelemetry(
-    uint32_t aMillis) {
-  if (!IsTop()) {
-    return IPC_FAIL(this, "submit preload telemetry on non-toplevel document");
-  }
-
-  if (mDocumentTreeWouldPreloadResources) {
-    Telemetry::Accumulate(Telemetry::TIME_TO_FIRST_INTERACTION_PRELOAD_MS,
-                          aMillis);
-  } else {
-    Telemetry::Accumulate(Telemetry::TIME_TO_FIRST_INTERACTION_NO_PRELOAD_MS,
-                          aMillis);
-  }
-
-  return IPC_OK();
-}
-
 namespace {
 
 class CheckPermitUnloadRequest final : public PromiseNativeHandler,
