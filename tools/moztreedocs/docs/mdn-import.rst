@@ -7,7 +7,8 @@ the documentation should be migrated in this repository.
 Fortunatelly, there is an easy way to import the doc from MDN
 to the firefox source docs.
 
-1. Install https://pandoc.org/
+1. Install https://pandoc.org/ - If you are using packages provided by your distribution,
+   make sure that the version is not too old.
 
 2. Add a ``?raw=1`` add the end of the MDN URL
 
