@@ -193,11 +193,16 @@ const PREF_URLBAR_DEFAULTS = new Map([
   ["update2.emptySearchBehavior", 0],
 ]);
 const PREF_OTHER_DEFAULTS = new Map([
-  ["keyword.enabled", true],
+  ["browser.fixup.dns_first_for_single_words", false],
+  // The Proton pref is here so it can follow a browser.proton.* structure like
+  // the other Proton subprefs, rather than a browser.urlbar.* structure.
+  // Once the address bar changes are stable, this pref will be replaed by the
+  // global Proton pref, browser.proton.enabled.
+  ["browser.proton.urlbar.enabled", false],
   ["browser.search.suggest.enabled", true],
   ["browser.search.suggest.enabled.private", false],
+  ["keyword.enabled", true],
   ["ui.popup.disable_autohide", false],
-  ["browser.fixup.dns_first_for_single_words", false],
 ]);
 
 // Maps preferences under browser.urlbar.suggest to behavior names, as defined
