@@ -535,7 +535,7 @@ bool ConnectionEntry::FindConnToClaim(
 
   uint32_t dnsAndSockLength = DnsAndConnectSocketsLength();
   for (uint32_t i = 0; i < dnsAndSockLength; i++) {
-    auto *dnsAndSock = mDnsAndConnectSockets[i];
+    auto* dnsAndSock = mDnsAndConnectSockets[i];
     if (dnsAndSock->AcceptsTransaction(trans) &&
         pendingTransInfo->TryClaimingDnsAndConnectSocket(dnsAndSock)) {
       // We've found a speculative connection or a connection that
