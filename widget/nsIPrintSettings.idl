@@ -94,9 +94,9 @@ interface nsIPrintSettings : nsISupports
    */
   // Equivalent to: Simplex
   const short kDuplexNone = 0;
-  // Equivalent to: Horizontal, NoTumble
+  // Equivalent to: DMDUP_VERTICAL, NoTumble
   const short kDuplexFlipOnSideEdge = 1;
-  // Equivalent to: Vertical, Tumble
+  // Equivalent to: DMDUP_HORIZONTAL, Tumble
   const short kDuplexFlipOnTopEdge = 2;
 
   /**
