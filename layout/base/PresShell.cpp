@@ -3249,8 +3249,7 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
     }
   } else {
     rv = NS_ERROR_FAILURE;
-    constexpr auto top = u"top"_ns;
-    if (nsContentUtils::EqualsIgnoreASCIICase(aAnchorName, top)) {
+    if (nsContentUtils::EqualsIgnoreASCIICase(aAnchorName, u"top"_ns)) {
       // Scroll to the top/left if aAnchorName is "top" and there is no element
       // with such a name or id.
       rv = NS_OK;
@@ -3258,8 +3257,10 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
       // Check |aScroll| after setting |rv| so we set |rv| to the same
       // thing whether or not |aScroll| is true.
       if (aScroll && sf) {
+        ScrollMode scrollMode =
+            sf->IsSmoothScroll() ? ScrollMode::SmoothMsd : ScrollMode::Instant;
         // Scroll to the top of the page
-        sf->ScrollTo(nsPoint(0, 0), ScrollMode::Instant);
+        sf->ScrollTo(nsPoint(0, 0), scrollMode);
       }
     }
   }
