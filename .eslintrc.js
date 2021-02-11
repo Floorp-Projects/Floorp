@@ -658,7 +658,7 @@ module.exports = {
         "toolkit/mozapps/installer/precompile_cache.js",
       ],
       rules: {
-        "mozilla/reject-chromeutils-import-null": "off",
+        "mozilla/reject-chromeutils-import-params": "off",
       },
     },
   ],
