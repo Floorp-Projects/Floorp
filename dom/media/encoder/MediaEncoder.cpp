@@ -345,11 +345,7 @@ class MediaEncoder::EncoderListener : public TrackEncoderListener {
       return;
     }
 
-    nsresult rv = mEncoderThread->Dispatch(
-        NewRunnableMethod("mozilla::MediaEncoder::NotifyInitialized", mEncoder,
-                          &MediaEncoder::NotifyInitialized));
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    Unused << rv;
+    mEncoder->UpdateInitialized();
   }
 
   void Started(TrackEncoder* aTrackEncoder) override {
@@ -360,11 +356,7 @@ class MediaEncoder::EncoderListener : public TrackEncoderListener {
       return;
     }
 
-    nsresult rv = mEncoderThread->Dispatch(
-        NewRunnableMethod("mozilla::MediaEncoder::NotifyStarted", mEncoder,
-                          &MediaEncoder::NotifyStarted));
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    Unused << rv;
+    mEncoder->UpdateStarted();
   }
 
   void Error(TrackEncoder* aTrackEncoder) override {
@@ -374,10 +366,7 @@ class MediaEncoder::EncoderListener : public TrackEncoderListener {
       return;
     }
 
-    nsresult rv = mEncoderThread->Dispatch(NewRunnableMethod(
-        "mozilla::MediaEncoder::SetError", mEncoder, &MediaEncoder::SetError));
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    Unused << rv;
+    mEncoder->SetError();
   }
 
  protected:
@@ -850,9 +839,14 @@ void MediaEncoder::SetError() {
   }
 
   mError = true;
-  for (auto& l : mListeners.Clone()) {
-    l->Error();
-  }
+  nsresult rv = mEncoderThread->Dispatch(NS_NewRunnableFunction(
+      "mozilla::MediaEncoder::SetError", [ls = mListeners.Clone()] {
+        for (const auto& l : ls) {
+          l->Error();
+        }
+      }));
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
 }
 
 void MediaEncoder::DisconnectTracks() {
@@ -894,7 +888,7 @@ const nsString& MediaEncoder::MimeType() const {
   return mMIMEType;
 }
 
-void MediaEncoder::NotifyInitialized() {
+void MediaEncoder::UpdateInitialized() {
   MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
 
   if (mInitialized) {
@@ -903,10 +897,14 @@ void MediaEncoder::NotifyInitialized() {
   }
 
   if (mAudioEncoder && !mAudioEncoder->IsInitialized()) {
+    LOG(LogLevel::Debug,
+        ("MediaEncoder %p UpdateInitialized waiting for audio", this));
     return;
   }
 
   if (mVideoEncoder && !mVideoEncoder->IsInitialized()) {
+    LOG(LogLevel::Debug,
+        ("MediaEncoder %p UpdateInitialized waiting for video", this));
     return;
   }
 
@@ -929,10 +927,13 @@ void MediaEncoder::NotifyInitialized() {
     return;
   }
 
+  LOG(LogLevel::Info,
+      ("MediaEncoder %p UpdateInitialized set metadata in muxer", this));
+
   mInitialized = true;
 }
 
-void MediaEncoder::NotifyStarted() {
+void MediaEncoder::UpdateStarted() {
   MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
 
   if (mStarted) {
@@ -949,9 +950,14 @@ void MediaEncoder::NotifyStarted() {
 
   mStarted = true;
 
-  for (auto& l : mListeners.Clone()) {
-    l->Started();
-  }
+  nsresult rv = mEncoderThread->Dispatch(NS_NewRunnableFunction(
+      "mozilla::MediaEncoder::NotifyStarted", [ls = mListeners.Clone()] {
+        for (const auto& l : ls) {
+          l->Started();
+        }
+      }));
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
 }
 
 void MediaEncoder::RegisterListener(MediaEncoderListener* aListener) {
