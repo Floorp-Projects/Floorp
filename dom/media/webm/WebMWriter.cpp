@@ -21,7 +21,8 @@ nsresult WebMWriter::WriteEncodedTrack(
     const nsTArray<RefPtr<EncodedFrame>>& aData, uint32_t aFlags) {
   AUTO_PROFILER_LABEL("WebMWriter::WriteEncodedTrack", OTHER);
   for (uint32_t i = 0; i < aData.Length(); i++) {
-    mEbmlComposer->WriteSimpleBlock(aData.ElementAt(i).get());
+    nsresult rv = mEbmlComposer->WriteSimpleBlock(aData.ElementAt(i).get());
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
 }

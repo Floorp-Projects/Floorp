@@ -952,6 +952,7 @@ RefPtr<GenericPromise> MediaEncoder::Extract() {
   // Pull encoded media data from MediaEncoder
   nsTArray<nsTArray<uint8_t>> buffer;
   nsresult rv = GetEncodedData(&buffer);
+  MOZ_ASSERT(rv != NS_ERROR_INVALID_ARG, "Invalid args can be prevented.");
   if (NS_FAILED(rv)) {
     MOZ_RELEASE_ASSERT(buffer.IsEmpty());
     // Even if we failed to encode more data, it might be time to push a blob
