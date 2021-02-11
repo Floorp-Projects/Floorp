@@ -30,7 +30,7 @@ static const int AUDIO_INIT_FAILED_DURATION = 10;
 // 30 second threshold if the video encoder cannot be initialized.
 static const int VIDEO_INIT_FAILED_DURATION = 30;
 static const int FRAMERATE_DETECTION_ROLLING_WINDOW = 3;
-static const int FRAMERATE_DETECTION_MIN_CHUNKS = 5;
+static const size_t FRAMERATE_DETECTION_MIN_CHUNKS = 5;
 static const int FRAMERATE_DETECTION_MAX_DURATION_S = 6;
 
 TrackEncoder::TrackEncoder(TrackRate aTrackRate)
@@ -456,7 +456,8 @@ void VideoTrackEncoder::TakeTrackData(VideoSegment& aSegment) {
 }
 
 void VideoTrackEncoder::Init(const VideoSegment& aSegment,
-                             const TimeStamp& aTime) {
+                             const TimeStamp& aTime,
+                             size_t aFrameRateDetectionMinChunks) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
 
   if (mInitialized) {
@@ -481,9 +482,14 @@ void VideoTrackEncoder::Init(const VideoSegment& aSegment,
       meanDuration.insert(iter->mTimeStamp - previousChunkTime);
       previousChunkTime = iter->mTimeStamp;
     }
-    if (frameCount >= FRAMERATE_DETECTION_MIN_CHUNKS) {
-      // We want some frames for estimating the framerate.
-      framerate = Some(1.0f / meanDuration.mean().ToSeconds());
+    if (frameCount >= aFrameRateDetectionMinChunks) {
+      if (meanDuration.empty()) {
+        // No whole frames available, use aTime as end time.
+        framerate = Some(1.0f / (aTime - mStartTime).ToSeconds());
+      } else {
+        // We want some frames for estimating the framerate.
+        framerate = Some(1.0f / meanDuration.mean().ToSeconds());
+      }
     } else if ((aTime - mStartTime).ToSeconds() >
                FRAMERATE_DETECTION_MAX_DURATION_S) {
       // Instead of failing init after the fail-timeout, we fallback to a very
@@ -544,10 +550,15 @@ void VideoTrackEncoder::NotifyEndOfStream() {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
 
   if (!mCanceled && !mInitialized) {
-    // If source video track is muted till the end of encoding, initialize the
-    // encoder with default frame width, frame height, and frame rate.
-    Init(DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT, DEFAULT_FRAME_WIDTH,
-         DEFAULT_FRAME_HEIGHT, DEFAULT_FRAME_RATE);
+    // Try to init without waiting for an accurate framerate.
+    Init(mOutgoingBuffer, mCurrentTime, 0);
+    if (!mInitialized) {
+      // Still not initialized. There was probably no real frame at all, perhaps
+      // by muting. Initialize the encoder with default frame width, frame
+      // height, and frame rate.
+      Init(DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT, DEFAULT_FRAME_WIDTH,
+           DEFAULT_FRAME_HEIGHT, DEFAULT_FRAME_RATE);
+    }
   }
 
   if (mEndOfStream) {
@@ -759,7 +770,7 @@ void VideoTrackEncoder::AdvanceCurrentTime(const TimeStamp& aTime) {
   }
 
   if (chunkAppended) {
-    Init(mOutgoingBuffer, mCurrentTime);
+    Init(mOutgoingBuffer, mCurrentTime, FRAMERATE_DETECTION_MIN_CHUNKS);
     if (mInitialized) {
       OnDataAvailable();
     }
