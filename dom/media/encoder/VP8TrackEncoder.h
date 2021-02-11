@@ -69,6 +69,16 @@ class VP8TrackEncoder : public VideoTrackEncoder {
   // VP8 Metadata, set on successfuly Init and never modified again.
   RefPtr<VP8Metadata> mMetadata;
 
+  // The width the encoder is currently configured with. The input frames to the
+  // underlying encoder must match this width, i.e., the underlying encoder will
+  // not do any resampling.
+  int mFrameWidth = 0;
+
+  // The height the encoder is currently configured with. The input frames to
+  // the underlying encoder must match this height, i.e., the underlying encoder
+  // will not do any resampling.
+  int mFrameHeight = 0;
+
   // Encoded timestamp.
   TrackTime mEncodedTimestamp = 0;
 

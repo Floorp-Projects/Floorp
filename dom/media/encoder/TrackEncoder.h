@@ -427,16 +427,6 @@ class VideoTrackEncoder : public TrackEncoder {
   const RefPtr<DriftCompensator> mDriftCompensator;
 
   /**
-   * The width of source video frame, ceiled if the source width is odd.
-   */
-  int mFrameWidth;
-
-  /**
-   * The height of source video frame, ceiled if the source height is odd.
-   */
-  int mFrameHeight;
-
-  /**
    * The last unique frame and duration so far handled by
    * NotifyAdvanceCurrentTime. When a new frame is detected, mLastChunk is added
    * to mOutgoingBuffer.
