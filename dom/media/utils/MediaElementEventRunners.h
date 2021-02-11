@@ -169,22 +169,6 @@ class nsSourceErrorEventRunner : public nsMediaEventRunner {
 };
 
 /**
- * This runner is used to runs a "synchronous section", a function that must run
- * once the event loop has reached a "stable state"
- * http://www.whatwg.org/specs/web-apps/current-work/multipage/webappapis.html#synchronous-section
- */
-class nsSyncSection : public nsMediaEventRunner {
- public:
-  nsSyncSection(HTMLMediaElement* aElement, nsIRunnable* aRunnable)
-      : nsMediaEventRunner(u"dom::nsSyncSection"_ns, aElement),
-        mRunnable(aRunnable) {}
-  NS_IMETHOD Run() override;
-
- private:
-  nsCOMPtr<nsIRunnable> mRunnable;
-};
-
-/**
  * This runner is used to dispatch `timeupdate` event and ensure we don't
  * dispatch `timeupdate` more often than once per `TIMEUPDATE_MS` if that is not
  * a mandatory event.
