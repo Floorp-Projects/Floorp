@@ -4,7 +4,6 @@
 
 #include "desktop_device_info_win.h"
 #include "modules/desktop_capture/win/screen_capture_utils.h"
-#include "modules/desktop_capture/win/win_shared.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <VersionHelpers.h>
