@@ -25,12 +25,41 @@ menucaption {
   -moz-image-region: auto;
 }
 
+@supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
+@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+  /* For Windows 10, prevent using native OS drawing of certain menu elements,
+     especially background colors and shadows. */
+  menu, menuitem, menucaption {
+    appearance: none;
+  }
+
+  /* Menu item text also needs native drawing disabled. */
+  menu > .menu-text,
+  menuitem > .menu-text,
+  menu > .menu-iconic-text,
+  menuitem > .menu-iconic-text {
+    appearance: none;
+  }
+}
+}
+
 menu[disabled="true"],
 menuitem[disabled="true"],
 menu[_moz-menuactive="true"][disabled="true"],
 menuitem[_moz-menuactive="true"][disabled="true"] {
   color: GrayText;
   text-shadow: none;
+}
+
+@supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
+@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+  menu[disabled="true"],
+  menuitem[disabled="true"],
+  menu[_moz-menuactive="true"][disabled="true"],
+  menuitem[_moz-menuactive="true"][disabled="true"] {
+    color: var(--menu-disabled-color);
+  }
+}
 }
 
 @media (-moz-windows-classic) {
@@ -91,6 +120,15 @@ menucaption {
   padding-top: 2px;
 }
 
+/* Don't leave space for icons on Win10. */
+@supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
+@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+  .menu-text {
+    padding-inline-start: 0 !important;
+  }
+}
+}
+
 /* ..... menu arrow box ..... */
 
 .menu-right {
@@ -100,6 +138,22 @@ menucaption {
   list-style-image: none;
   min-width: 1.28em;
   padding-top: 1px;
+}
+
+/* Override the native menu arrow with a custom one for Win10. */
+@supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
+@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+  .menu-right {
+    appearance: none;
+    list-style-image: url("chrome://global/skin/icons/menus/submenu.svg");
+    -moz-context-properties: fill;
+    fill: currentColor;
+  }
+
+  .menu-right:-moz-locale-dir(rtl) {
+    transform: scaleX(-1);
+  }
+}
 }
 
 /* ::::: menu/menuitems in menubar ::::: */
@@ -167,8 +221,17 @@ menupopup > menucaption {
 
 menu[_moz-menuactive="true"],
 menuitem[_moz-menuactive="true"] {
-  background-color: -moz-menuhover;
-  color: -moz-menuhovertext;
+  background-color: var(--menuitem-hover-background-color);
+  color: var(--menuitem-hover-color);
+}
+
+@supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
+@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+  menu[_moz-menuactive="true"][disabled="true"],
+  menuitem[_moz-menuactive="true"][disabled="true"] {
+    background-color: var(--menuitem-disabled-hover-background-color);
+  }
+}
 }
 
 /* ::::: menu/menuitems in menulist popups ::::: */
@@ -225,6 +288,16 @@ menulist > menupopup > :is(menuitem, menucaption):not(.menuitem-iconic) > .menu-
   margin: 0 !important;
 }
 
+@supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
+@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+  menulist > menupopup > menuitem,
+  menulist > menupopup > menucaption,
+  menulist > menupopup > menu {
+    color: var(--menu-color);
+  }
+}
+}
+
 /* ::::: checkbox and radio menuitems ::::: */
 
 menuitem[type="checkbox"],
@@ -257,6 +330,31 @@ menuitem[type="radio"] > .menu-iconic-left > .menu-iconic-icon {
   display: none;
 }
 
+@supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
+@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+  /* For Windows 10, checkbox and radio button menu items need the default
+     appearance disabled so they pick up our custom styles instead. */
+  menuitem[type="checkbox"],
+  menuitem[type="radio"] {
+    appearance: none;
+  }
+
+  /* We need to do something to override the default style for selected
+     checkboxes and radio buttons because the native drawing we use on other
+     Windows versions looks pretty bad with the Win10 styles, so for now we'll
+     insert a generic checkmark icon for both types. */
+  menuitem[checked="true"] > .menu-iconic-left {
+    appearance: none !important;
+    -moz-context-properties: fill;
+    fill: currentColor;
+    list-style-image: url("chrome://global/skin/icons/check.svg");
+  }
+  menuitem[checked="true"] > .menu-iconic-left > .menu-iconic-icon {
+    display: initial;
+  }
+}
+}
+
 /* ::::: menuseparator ::::: */
 
 menuseparator {
@@ -271,6 +369,22 @@ menulist > menupopup > menuseparator {
   padding: 6px 0 5px;
   border-top: 1px solid #000000;
   border-bottom: none;
+}
+
+/* On Windows 10, separators get entirely custom rendering. */
+@supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
+@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+  menuseparator {
+    appearance: none;
+
+    border-top: 1px solid var(--menu-border-color);
+    border-bottom: none;
+
+    padding: 0;
+    /* The side margins should align with the start of the menu item text. */
+    margin: 2px 1em;
+  }
+}
 }
 
 %include ../../shared/menu-scrolling.inc.css

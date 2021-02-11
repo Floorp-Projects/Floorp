@@ -19,10 +19,41 @@
   --arrowpanel-border-color: var(--default-arrowpanel-border-color);
   --panel-disabled-color: GrayText;
   --panel-description-color: GrayText;
+
+  /*
+   * Overridden below for the default windows 10 theme.
+   */
+  --menuitem-hover-background-color: -moz-menuhover;
+  --menuitem-hover-color: -moz-menuhovertext;
+
   /* ::::: Styles ::::: */
   background-color: -moz-Dialog;
   color: -moz-DialogText;
   font: message-box;
+}
+
+@supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
+@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+  :root {
+    --menuitem-hover-background-color: #0250bb;
+    --menuitem-disabled-hover-background-color: rgba(207, 207, 216, 0.3);
+    --menuitem-hover-color: white;
+    --menu-background-color: #f9f9fb;
+    --menu-color: black;
+    --menu-disabled-color: rgba(21, 20, 26, 0.4);
+    --menu-border-color: #f0f0f4;
+  }
+
+  :root:-moz-lwtheme-brighttext {
+    --menuitem-hover-background-color: #00b4f5;
+    --menuitem-disabled-hover-background-color: rgba(74, 74, 85, 0.5);
+    --menuitem-hover-color: black;
+    --menu-background-color: #15141a;
+    --menu-color: white;
+    --menu-disabled-color: rgba(251, 251, 254, 0.6);
+    --menu-border-color: #5b5b67;
+  }
+}
 }
 
 @media (-moz-windows-default-theme) {
