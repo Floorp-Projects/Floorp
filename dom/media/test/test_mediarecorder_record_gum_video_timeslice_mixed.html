@@ -21,7 +21,7 @@ function unexpected({type}) {
     // This is the memory limit per blob. If a blob is larger than this,
     // MediaRecorder will put it in a file. For this test we need to get at
     // least one blob under, and one blob over the limit.
-    const memoryLimit = 3000;
+    const memoryLimit = 50000;
     await SpecialPowers.pushPrefEnv({set: [
       ["media.recorder.max_memory", memoryLimit],
     ]});

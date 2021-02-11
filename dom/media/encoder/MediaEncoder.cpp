@@ -680,13 +680,13 @@ already_AddRefed<MediaEncoder> MediaEncoder::CreateEncoder(
     } else if (codec.EqualsLiteral("vp8") || codec.EqualsLiteral("vp8.0")) {
       MOZ_ASSERT(!videoEncoder);
       if (Preferences::GetBool("media.recorder.video.frame_drops", true)) {
-        videoEncoder = MakeUnique<VP8TrackEncoder>(
-            driftCompensator, aTrackRate, *encodedVideoQueue, aTimeslice,
-            FrameDroppingMode::ALLOW);
+        videoEncoder = MakeUnique<VP8TrackEncoder>(driftCompensator, aTrackRate,
+                                                   *encodedVideoQueue,
+                                                   FrameDroppingMode::ALLOW);
       } else {
-        videoEncoder = MakeUnique<VP8TrackEncoder>(
-            driftCompensator, aTrackRate, *encodedVideoQueue, aTimeslice,
-            FrameDroppingMode::DISALLOW);
+        videoEncoder = MakeUnique<VP8TrackEncoder>(driftCompensator, aTrackRate,
+                                                   *encodedVideoQueue,
+                                                   FrameDroppingMode::DISALLOW);
       }
     } else {
       MOZ_CRASH("Unknown codec");

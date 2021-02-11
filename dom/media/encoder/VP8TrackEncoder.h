@@ -36,7 +36,6 @@ class VP8TrackEncoder : public VideoTrackEncoder {
   VP8TrackEncoder(RefPtr<DriftCompensator> aDriftCompensator,
                   TrackRate aTrackRate,
                   MediaQueue<EncodedFrame>& aEncodedDataQueue,
-                  TimeDuration aKeyFrameInterval,
                   FrameDroppingMode aFrameDroppingMode,
                   Maybe<float> aKeyFrameIntervalFactor = Nothing());
   virtual ~VP8TrackEncoder();
