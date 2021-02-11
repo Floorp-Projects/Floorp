@@ -8,6 +8,7 @@
 
 #include "TrackEncoder.h"
 
+#include "mozilla/RollingMean.h"
 #include "TimeUnits.h"
 #include "vpx/vpx_codec.h"
 
@@ -49,7 +50,7 @@ class VP8TrackEncoder : public VideoTrackEncoder {
  private:
   // Get the EncodeOperation for next target frame.
   EncodeOperation GetNextEncodeOperation(TimeDuration aTimeElapsed,
-                                         TrackTime aProcessedDuration);
+                                         TimeDuration aProcessedDuration);
 
   // Get the encoded data from encoder to aData.
   // Return value: NS_ERROR_NOT_AVAILABABLE if the vpx_codec_get_cx_data returns
@@ -114,6 +115,16 @@ class VP8TrackEncoder : public VideoTrackEncoder {
    * call of GetEncodedTrack().
    */
   VideoSegment mSourceSegment;
+
+  /**
+   * The mean duration of recent frames.
+   */
+  RollingMean<TimeDuration, TimeDuration> mMeanFrameDuration{30};
+
+  /**
+   * The mean wall-clock time it took to encode recent frames.
+   */
+  RollingMean<TimeDuration, TimeDuration> mMeanFrameEncodeDuration{30};
 
   // VP8 relative members.
   // Codec context structure.
