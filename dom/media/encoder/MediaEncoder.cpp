@@ -15,7 +15,9 @@
 #include "MediaTrackListener.h"
 #include "mozilla/dom/AudioNode.h"
 #include "mozilla/dom/AudioStreamTrack.h"
+#include "mozilla/dom/Blob.h"
 #include "mozilla/dom/MediaStreamTrack.h"
+#include "mozilla/dom/MutableBlobStorage.h"
 #include "mozilla/dom/VideoStreamTrack.h"
 #include "mozilla/gfx/Point.h"  // IntSize
 #include "mozilla/Logging.h"
@@ -44,6 +46,34 @@ namespace mozilla {
 
 using namespace dom;
 using namespace media;
+
+namespace {
+class BlobStorer : public MutableBlobStorageCallback {
+  MozPromiseHolder<MediaEncoder::BlobPromise> mHolder;
+
+  virtual ~BlobStorer() = default;
+
+ public:
+  BlobStorer() = default;
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BlobStorer, override)
+
+  void BlobStoreCompleted(MutableBlobStorage*, BlobImpl* aBlobImpl,
+                          nsresult aRv) override {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (NS_FAILED(aRv)) {
+      mHolder.Reject(aRv, __func__);
+      return;
+    }
+
+    mHolder.Resolve(aBlobImpl, __func__);
+  }
+
+  RefPtr<MediaEncoder::BlobPromise> Promise() {
+    return mHolder.Ensure(__func__);
+  }
+};
+}  // namespace
 
 class MediaEncoder::AudioTrackListener : public DirectMediaTrackListener {
  public:
@@ -375,14 +405,17 @@ class MediaEncoder::EncoderListener : public TrackEncoderListener {
 };
 
 MediaEncoder::MediaEncoder(
-    TaskQueue* aEncoderThread, RefPtr<DriftCompensator> aDriftCompensator,
+    RefPtr<TaskQueue> aEncoderThread,
+    RefPtr<DriftCompensator> aDriftCompensator,
     UniquePtr<ContainerWriter> aWriter,
     UniquePtr<AudioTrackEncoder> aAudioEncoder,
     UniquePtr<VideoTrackEncoder> aVideoEncoder,
     UniquePtr<MediaQueue<EncodedFrame>> aEncodedAudioQueue,
     UniquePtr<MediaQueue<EncodedFrame>> aEncodedVideoQueue,
-    TrackRate aTrackRate, const nsAString& aMIMEType)
-    : mEncoderThread(aEncoderThread),
+    TrackRate aTrackRate, const nsAString& aMimeType, uint64_t aMaxMemory,
+    TimeDuration aTimeslice)
+    : mMainThread(GetMainThreadSerialEventTarget()),
+      mEncoderThread(std::move(aEncoderThread)),
       mEncodedAudioQueue(std::move(aEncodedAudioQueue)),
       mEncodedVideoQueue(std::move(aEncodedVideoQueue)),
       mMuxer(MakeUnique<Muxer>(std::move(aWriter), *mEncodedAudioQueue,
@@ -395,8 +428,10 @@ MediaEncoder::MediaEncoder(
       mVideoListener(mVideoEncoder ? MakeAndAddRef<VideoTrackListener>(this)
                                    : nullptr),
       mEncoderListener(MakeAndAddRef<EncoderListener>(mEncoderThread, this)),
+      mMimeType(aMimeType),
+      mMaxMemory(aMaxMemory),
+      mTimeslice(aTimeslice),
       mStartTime(TimeStamp::Now()),
-      mMIMEType(aMIMEType),
       mInitialized(false),
       mStarted(false),
       mCompleted(false),
@@ -614,9 +649,9 @@ void MediaEncoder::RemoveMediaStreamTrack(MediaStreamTrack* aTrack) {
 
 /* static */
 already_AddRefed<MediaEncoder> MediaEncoder::CreateEncoder(
-    TaskQueue* aEncoderThread, const nsAString& aMIMEType,
+    RefPtr<TaskQueue> aEncoderThread, const nsAString& aMimeType,
     uint32_t aAudioBitrate, uint32_t aVideoBitrate, uint8_t aTrackTypes,
-    TrackRate aTrackRate) {
+    TrackRate aTrackRate, uint64_t aMaxMemory, TimeDuration aTimeslice) {
   AUTO_PROFILER_LABEL("MediaEncoder::CreateEncoder", OTHER);
 
   UniquePtr<ContainerWriter> writer;
@@ -627,7 +662,7 @@ already_AddRefed<MediaEncoder> MediaEncoder::CreateEncoder(
   auto driftCompensator =
       MakeRefPtr<DriftCompensator>(aEncoderThread, aTrackRate);
 
-  Maybe<MediaContainerType> mimeType = MakeMediaContainerType(aMIMEType);
+  Maybe<MediaContainerType> mimeType = MakeMediaContainerType(aMimeType);
   if (!mimeType) {
     return nullptr;
   }
@@ -640,13 +675,13 @@ already_AddRefed<MediaEncoder> MediaEncoder::CreateEncoder(
     } else if (codec.EqualsLiteral("vp8") || codec.EqualsLiteral("vp8.0")) {
       MOZ_ASSERT(!videoEncoder);
       if (Preferences::GetBool("media.recorder.video.frame_drops", true)) {
-        videoEncoder = MakeUnique<VP8TrackEncoder>(driftCompensator, aTrackRate,
-                                                   *encodedVideoQueue,
-                                                   FrameDroppingMode::ALLOW);
+        videoEncoder = MakeUnique<VP8TrackEncoder>(
+            driftCompensator, aTrackRate, *encodedVideoQueue, aTimeslice,
+            FrameDroppingMode::ALLOW);
       } else {
-        videoEncoder = MakeUnique<VP8TrackEncoder>(driftCompensator, aTrackRate,
-                                                   *encodedVideoQueue,
-                                                   FrameDroppingMode::DISALLOW);
+        videoEncoder = MakeUnique<VP8TrackEncoder>(
+            driftCompensator, aTrackRate, *encodedVideoQueue, aTimeslice,
+            FrameDroppingMode::DISALLOW);
       }
     } else {
       MOZ_CRASH("Unknown codec");
@@ -672,7 +707,7 @@ already_AddRefed<MediaEncoder> MediaEncoder::CreateEncoder(
       ("Create encoder result:a[%p](%u bps) v[%p](%u bps) w[%p] mimeType = "
        "%s.",
        audioEncoder.get(), aAudioBitrate, videoEncoder.get(), aVideoBitrate,
-       writer.get(), NS_ConvertUTF16toUTF8(aMIMEType).get()));
+       writer.get(), NS_ConvertUTF16toUTF8(aMimeType).get()));
 
   if (audioEncoder) {
     audioEncoder->SetWorkerThread(aEncoderThread);
@@ -687,10 +722,10 @@ already_AddRefed<MediaEncoder> MediaEncoder::CreateEncoder(
     }
   }
   return MakeAndAddRef<MediaEncoder>(
-      aEncoderThread, std::move(driftCompensator), std::move(writer),
+      std::move(aEncoderThread), std::move(driftCompensator), std::move(writer),
       std::move(audioEncoder), std::move(videoEncoder),
       std::move(encodedAudioQueue), std::move(encodedVideoQueue), aTrackRate,
-      aMIMEType);
+      aMimeType, aMaxMemory, aTimeslice);
 }
 
 nsresult MediaEncoder::GetEncodedData(
@@ -737,8 +772,7 @@ void MediaEncoder::MaybeShutdown() {
   }
 
   // Stop will Shutdown() gracefully.
-  Unused << InvokeAsync(GetMainThreadSerialEventTarget(), this, __func__,
-                        &MediaEncoder::Stop);
+  Unused << InvokeAsync(mMainThread, this, __func__, &MediaEncoder::Stop);
 }
 
 RefPtr<GenericNonExclusivePromise> MediaEncoder::Shutdown() {
@@ -849,6 +883,82 @@ void MediaEncoder::SetError() {
   Unused << rv;
 }
 
+void MediaEncoder::MaybeCreateMutableBlobStorage() {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mMutableBlobStorage) {
+    mMutableBlobStorage = new MutableBlobStorage(
+        MutableBlobStorage::eCouldBeInTemporaryFile, nullptr, mMaxMemory);
+  }
+}
+
+// Pull encoded media data from MediaEncoder and put into MutableBlobStorage.
+RefPtr<GenericPromise> MediaEncoder::Extract() {
+  MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
+
+  LOG(LogLevel::Debug, ("MediaEncoder %p Extract", this));
+
+  AUTO_PROFILER_LABEL("MediaEncoder::Extract", OTHER);
+
+  // Pull encoded media data from MediaEncoder
+  nsTArray<nsTArray<uint8_t>> buffer;
+  nsresult rv = GetEncodedData(&buffer);
+  if (NS_FAILED(rv)) {
+    MOZ_RELEASE_ASSERT(buffer.IsEmpty());
+    // Even if we failed to encode more data, it might be time to push a blob
+    // with already encoded data.
+  }
+
+  // To ensure Extract() promises are resolved in calling order, we always
+  // invoke the main thread. Even when the encoded buffer is empty.
+  return InvokeAsync(
+      mMainThread, __func__,
+      [self = RefPtr<MediaEncoder>(this), this, buffer = std::move(buffer)] {
+        MaybeCreateMutableBlobStorage();
+        for (const auto& part : buffer) {
+          if (part.IsEmpty()) {
+            continue;
+          }
+
+          nsresult rv =
+              mMutableBlobStorage->Append(part.Elements(), part.Length());
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return GenericPromise::CreateAndReject(rv, __func__);
+          }
+        }
+        return GenericPromise::CreateAndResolve(true, __func__);
+      });
+}
+
+auto MediaEncoder::GatherBlob() -> RefPtr<BlobPromise> {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mBlobPromise) {
+    return mBlobPromise = GatherBlobImpl();
+  }
+  return mBlobPromise = mBlobPromise->Then(mMainThread, __func__,
+                                           [self = RefPtr<MediaEncoder>(this)] {
+                                             return self->GatherBlobImpl();
+                                           });
+}
+
+auto MediaEncoder::GatherBlobImpl() -> RefPtr<BlobPromise> {
+  RefPtr<BlobStorer> storer = MakeAndAddRef<BlobStorer>();
+  MaybeCreateMutableBlobStorage();
+  mMutableBlobStorage->GetBlobImplWhenReady(NS_ConvertUTF16toUTF8(mMimeType),
+                                            storer);
+  mMutableBlobStorage = nullptr;
+
+  storer->Promise()->Then(
+      mMainThread, __func__,
+      [self = RefPtr<MediaEncoder>(this), p = storer->Promise()] {
+        if (self->mBlobPromise == p) {
+          // Reset BlobPromise.
+          self->mBlobPromise = nullptr;
+        }
+      });
+
+  return storer->Promise();
+}
+
 void MediaEncoder::DisconnectTracks() {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -885,7 +995,7 @@ bool MediaEncoder::IsWebMEncoderEnabled() {
 
 const nsString& MediaEncoder::MimeType() const {
   MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
-  return mMIMEType;
+  return mMimeType;
 }
 
 void MediaEncoder::UpdateInitialized() {
@@ -950,6 +1060,10 @@ void MediaEncoder::UpdateStarted() {
 
   mStarted = true;
 
+  // Start issuing timeslice-based blobs.
+  MOZ_ASSERT(mLastBlobTimeStamp.IsNull());
+  mLastBlobTimeStamp = TimeStamp::Now();
+
   nsresult rv = mEncoderThread->Dispatch(NS_NewRunnableFunction(
       "mozilla::MediaEncoder::NotifyStarted", [ls = mListeners.Clone()] {
         for (const auto& l : ls) {
@@ -974,35 +1088,29 @@ bool MediaEncoder::UnregisterListener(MediaEncoderListener* aListener) {
 /*
  * SizeOfExcludingThis measures memory being used by the Media Encoder.
  * Currently it measures the size of the Encoder buffer and memory occupied
- * by mAudioEncoder and mVideoEncoder.
+ * by mAudioEncoder, mVideoEncoder, and any current blob storage.
  */
-size_t MediaEncoder::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) {
-  MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
+auto MediaEncoder::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+    -> RefPtr<SizeOfPromise> {
+  MOZ_ASSERT(NS_IsMainThread());
+  size_t blobStorageSize =
+      mMutableBlobStorage ? mMutableBlobStorage->SizeOfCurrentMemoryBuffer()
+                          : 0;
 
-  size_t size = 0;
-  if (mAudioEncoder) {
-    size += mAudioEncoder->SizeOfExcludingThis(aMallocSizeOf);
-  }
-  if (mVideoEncoder) {
-    size += mVideoEncoder->SizeOfExcludingThis(aMallocSizeOf);
-  }
-  return size;
-}
-
-void MediaEncoder::SetVideoKeyFrameInterval(
-    Maybe<TimeDuration> aVideoKeyFrameInterval) {
-  if (!mVideoEncoder) {
-    return;
-  }
-
-  MOZ_ASSERT(mEncoderThread);
-  nsresult rv = mEncoderThread->Dispatch(NS_NewRunnableFunction(
-      "mozilla::VideoTrackEncoder::SetKeyFrameInterval",
-      [self = RefPtr<MediaEncoder>(this), this, aVideoKeyFrameInterval] {
-        mVideoEncoder->SetKeyFrameInterval(aVideoKeyFrameInterval);
-      }));
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  Unused << rv;
+  return InvokeAsync(
+      mEncoderThread, __func__,
+      [self = RefPtr<MediaEncoder>(this), this, blobStorageSize,
+       aMallocSizeOf]() {
+        size_t size = 0;
+        if (mAudioEncoder) {
+          size += mAudioEncoder->SizeOfExcludingThis(aMallocSizeOf);
+        }
+        if (mVideoEncoder) {
+          size += mVideoEncoder->SizeOfExcludingThis(aMallocSizeOf);
+        }
+        return SizeOfPromise::CreateAndResolve(blobStorageSize + size,
+                                               __func__);
+      });
 }
 
 }  // namespace mozilla

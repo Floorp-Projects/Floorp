@@ -20,7 +20,6 @@
 #include "mozilla/dom/EmptyBlobImpl.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MediaRecorderErrorEvent.h"
-#include "mozilla/dom/MutableBlobStorage.h"
 #include "mozilla/dom/VideoStreamTrack.h"
 #include "mozilla/media/MediaUtils.h"
 #include "mozilla/MemoryReporting.h"
@@ -632,8 +631,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
  public:
   Session(MediaRecorder* aRecorder,
           nsTArray<RefPtr<MediaStreamTrack>> aMediaStreamTracks,
-          TimeDuration aTimeslice, uint32_t aVideoBitsPerSecond,
-          uint32_t aAudioBitsPerSecond)
+          uint32_t aVideoBitsPerSecond, uint32_t aAudioBitsPerSecond)
       : mRecorder(aRecorder),
         mMediaStreamTracks(std::move(aMediaStreamTracks)),
         mMainThread(mRecorder->GetOwner()->EventTargetFor(TaskCategory::Other)),
@@ -644,15 +642,11 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
                 mMediaStreamTracks.Contains(TrackTypeComparator::AUDIO,
                                             TrackTypeComparator()),
             mRecorder->mConstrainedMimeType)),
-        mTimeslice(aTimeslice),
         mVideoBitsPerSecond(aVideoBitsPerSecond),
         mAudioBitsPerSecond(aAudioBitsPerSecond),
         mStartTime(TimeStamp::Now()),
         mRunningState(RunningState::Idling) {
     MOZ_ASSERT(NS_IsMainThread());
-
-    mMaxMemory = Preferences::GetUint("media.recorder.max_memory",
-                                      MAX_ALLOW_MEMORY_BUFFER);
     Telemetry::ScalarAdd(Telemetry::ScalarID::MEDIARECORDER_RECORDING_COUNT, 1);
   }
 
@@ -696,7 +690,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     DoSessionEndTask(NS_ERROR_DOM_INVALID_MODIFICATION_ERR);
   }
 
-  void Start() {
+  void Start(TimeDuration aTimeslice) {
     LOG(LogLevel::Debug, ("Session.Start %p", this));
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -740,7 +734,8 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       }
 
       LOG(LogLevel::Debug, ("Session.Start track types = (%d)", trackTypes));
-      InitEncoder(trackTypes, mMediaStreamTracks[0]->Graph()->GraphRate());
+      InitEncoder(trackTypes, mMediaStreamTracks[0]->Graph()->GraphRate(),
+                  aTimeslice);
       return;
     }
 
@@ -749,7 +744,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
           mRecorder->mAudioNode->Context()->Graph()->GraphRate();
 
       // Web Audio node has only audio.
-      InitEncoder(ContainerWriter::CREATE_AUDIO_TRACK, trackRate);
+      InitEncoder(ContainerWriter::CREATE_AUDIO_TRACK, trackRate, aTimeslice);
       return;
     }
 
@@ -827,122 +822,45 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   void RequestData() {
     LOG(LogLevel::Debug, ("Session.RequestData"));
     MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mEncoder);
 
-    InvokeAsync(mEncoderThread, this, __func__, &Session::Extract)
+    InvokeAsync(mEncoderThread, mEncoder.get(), __func__,
+                &MediaEncoder::Extract)
         ->Then(mMainThread, __func__,
-               [this, self = RefPtr<Session>(this)](
+               [encoder = mEncoder](
                    const GenericPromise::ResolveOrRejectValue& aValue) {
                  // Even if rejected, we want to gather what has already been
                  // extracted into the current blob and expose that.
                  Unused << NS_WARN_IF(aValue.IsReject());
-                 return GatherBlob();
+                 return encoder->GatherBlob();
                })
         ->Then(
             mMainThread, __func__,
             [this, self = RefPtr<Session>(this)](
-                const BlobPromise::ResolveOrRejectValue& aResult) {
-              if (aResult.IsReject()) {
+                const MediaEncoder::BlobPromise::ResolveOrRejectValue& aRrv) {
+              if (aRrv.IsReject()) {
                 LOG(LogLevel::Warning, ("GatherBlob failed for RequestData()"));
-                DoSessionEndTask(aResult.RejectValue());
+                DoSessionEndTask(aRrv.RejectValue());
                 return;
               }
 
               nsresult rv =
-                  mRecorder->CreateAndDispatchBlobEvent(aResult.ResolveValue());
+                  mRecorder->CreateAndDispatchBlobEvent(aRrv.ResolveValue());
               if (NS_FAILED(rv)) {
                 DoSessionEndTask(NS_OK);
               }
             });
   }
 
-  void MaybeCreateMutableBlobStorage() {
-    if (!mMutableBlobStorage) {
-      mMutableBlobStorage = new MutableBlobStorage(
-          MutableBlobStorage::eCouldBeInTemporaryFile, nullptr, mMaxMemory);
-    }
-  }
-
-  static const bool IsExclusive = false;
-  using BlobPromise = MozPromise<RefPtr<BlobImpl>, nsresult, IsExclusive>;
-  class BlobStorer : public MutableBlobStorageCallback {
-    MozPromiseHolder<BlobPromise> mHolder;
-
-    virtual ~BlobStorer() = default;
-
-   public:
-    BlobStorer() = default;
-
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BlobStorer, override)
-
-    void BlobStoreCompleted(MutableBlobStorage*, BlobImpl* aBlobImpl,
-                            nsresult aRv) override {
-      MOZ_ASSERT(NS_IsMainThread());
-      if (NS_FAILED(aRv)) {
-        mHolder.Reject(aRv, __func__);
-        return;
-      }
-
-      mHolder.Resolve(aBlobImpl, __func__);
-    }
-
-    RefPtr<BlobPromise> Promise() { return mHolder.Ensure(__func__); }
-  };
-
- protected:
-  RefPtr<BlobPromise> GatherBlobImpl() {
-    RefPtr<BlobStorer> storer = MakeAndAddRef<BlobStorer>();
-    MaybeCreateMutableBlobStorage();
-    mMutableBlobStorage->GetBlobImplWhenReady(NS_ConvertUTF16toUTF8(mMimeType),
-                                              storer);
-    mMutableBlobStorage = nullptr;
-
-    storer->Promise()->Then(
-        mMainThread, __func__,
-        [self = RefPtr<Session>(this), p = storer->Promise()] {
-          if (self->mBlobPromise == p) {
-            // Reset BlobPromise.
-            self->mBlobPromise = nullptr;
-          }
-        });
-
-    return storer->Promise();
-  }
-
  public:
-  // Stops gathering data into the current blob and resolves when the current
-  // blob is available. Future data will be stored in a new blob.
-  // Should a previous async GatherBlob() operation still be in progress, we'll
-  // wait for it to finish before starting this one.
-  RefPtr<BlobPromise> GatherBlob() {
-    MOZ_ASSERT(NS_IsMainThread());
-    if (!mBlobPromise) {
-      return mBlobPromise = GatherBlobImpl();
-    }
-    return mBlobPromise = mBlobPromise->Then(mMainThread, __func__,
-                                             [self = RefPtr<Session>(this)] {
-                                               return self->GatherBlobImpl();
-                                             });
-  }
-
   RefPtr<SizeOfPromise> SizeOfExcludingThis(
       mozilla::MallocSizeOf aMallocSizeOf) {
     MOZ_ASSERT(NS_IsMainThread());
-    size_t encodedBufferSize =
-        mMutableBlobStorage ? mMutableBlobStorage->SizeOfCurrentMemoryBuffer()
-                            : 0;
-
     if (!mEncoder) {
-      return SizeOfPromise::CreateAndResolve(encodedBufferSize, __func__);
+      return SizeOfPromise::CreateAndResolve(0, __func__);
     }
 
-    auto& encoder = mEncoder;
-    return InvokeAsync(
-        mEncoderThread, __func__,
-        [encoder, encodedBufferSize, aMallocSizeOf]() {
-          return SizeOfPromise::CreateAndResolve(
-              encodedBufferSize + encoder->SizeOfExcludingThis(aMallocSizeOf),
-              __func__);
-        });
+    return mEncoder->SizeOfExcludingThis(aMallocSizeOf);
   }
 
  private:
@@ -953,45 +871,8 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     LOG(LogLevel::Debug, ("Session.~Session (%p)", this));
   }
 
-  // Pull encoded media data from MediaEncoder and put into MutableBlobStorage.
-  RefPtr<GenericPromise> Extract() {
-    MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
-
-    LOG(LogLevel::Debug, ("Session.Extract %p", this));
-
-    AUTO_PROFILER_LABEL("MediaRecorder::Session::Extract", OTHER);
-
-    // Pull encoded media data from MediaEncoder
-    nsTArray<nsTArray<uint8_t>> encodedBuf;
-    nsresult rv = mEncoder->GetEncodedData(&encodedBuf);
-    if (NS_FAILED(rv)) {
-      MOZ_RELEASE_ASSERT(encodedBuf.IsEmpty());
-      // Even if we failed to encode more data, it might be time to push a blob
-      // with already encoded data.
-    }
-
-    // To ensure Extract() promises are resolved in calling order, we always
-    // invoke the main thread. Even when the encoded buffer is empty.
-    return InvokeAsync(
-        mMainThread, __func__,
-        [self = RefPtr<Session>(this), this, buffer = std::move(encodedBuf)] {
-          MaybeCreateMutableBlobStorage();
-          for (const auto& part : buffer) {
-            if (part.IsEmpty()) {
-              continue;
-            }
-
-            nsresult rv =
-                mMutableBlobStorage->Append(part.Elements(), part.Length());
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              return GenericPromise::CreateAndReject(rv, __func__);
-            }
-          }
-          return GenericPromise::CreateAndResolve(true, __func__);
-        });
-  }
-
-  void InitEncoder(uint8_t aTrackTypes, TrackRate aTrackRate) {
+  void InitEncoder(uint8_t aTrackTypes, TrackRate aTrackRate,
+                   TimeDuration aTimeslice) {
     LOG(LogLevel::Debug, ("Session.InitEncoder %p", this));
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -1039,9 +920,12 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
         u"MediaRecorder::Session: shutdown"_ns);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
 
+    uint32_t maxMemory = Preferences::GetUint("media.recorder.max_memory",
+                                              MAX_ALLOW_MEMORY_BUFFER);
+
     mEncoder = MediaEncoder::CreateEncoder(
         mEncoderThread, mMimeType, mAudioBitsPerSecond, mVideoBitsPerSecond,
-        aTrackTypes, aTrackRate);
+        aTrackTypes, aTrackRate, maxMemory, aTimeslice);
 
     if (!mEncoder) {
       LOG(LogLevel::Error, ("Session.InitEncoder !mEncoder %p", this));
@@ -1064,12 +948,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     for (const auto& track : mMediaStreamTracks) {
       mEncoder->ConnectMediaStreamTrack(track);
     }
-
-    // If a timeslice is defined we set an appropriate video keyframe interval.
-    // This allows users to get blobs regularly when the timeslice interval is
-    // shorter than the default key frame interval, as we'd normally wait for a
-    // key frame before sending data to the blob.
-    mEncoder->SetVideoKeyFrameInterval(Some(mTimeslice));
 
     // Set mRunningState to Running so that DoSessionEndTask will
     // take the responsibility to end the session.
@@ -1116,24 +994,25 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
          ? mEncoder->Cancel()
          : mEncoder->Stop())
         ->Then(mEncoderThread, __func__,
-               [this, self = RefPtr<Session>(this)](
+               [encoder = mEncoder](
                    const GenericNonExclusivePromise::ResolveOrRejectValue&
                        aValue) {
                  MOZ_DIAGNOSTIC_ASSERT(aValue.IsResolve());
-                 return Extract();
+                 return encoder->Extract();
                })
         ->Then(mMainThread, __func__,
-               [this, self = RefPtr<Session>(this)](
+               [encoder = mEncoder](
                    const GenericPromise::ResolveOrRejectValue& aValue) {
                  // Even if rejected, we want to gather what has already been
                  // extracted into the current blob and expose that.
                  Unused << NS_WARN_IF(aValue.IsReject());
-                 return GatherBlob();
+                 return encoder->GatherBlob();
                })
         ->Then(
             mMainThread, __func__,
-            [this, self = RefPtr<Session>(this), rv, needsStartEvent](
-                const BlobPromise::ResolveOrRejectValue& aResult) {
+            [this, self = RefPtr<Session>(this), encoder = mEncoder, rv,
+             needsStartEvent](
+                const MediaEncoder::BlobPromise::ResolveOrRejectValue& aRrv) {
               if (mRecorder->mSessions.LastElement() == this) {
                 // Set state to inactive, but only if the recorder is not
                 // controlled by another session already.
@@ -1151,7 +1030,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
 
               // Fire a blob event named dataavailable
               RefPtr<BlobImpl> blobImpl;
-              if (rv == NS_ERROR_DOM_SECURITY_ERR || aResult.IsReject()) {
+              if (rv == NS_ERROR_DOM_SECURITY_ERR || aRrv.IsReject()) {
                 // In case of SecurityError, the blob data must be discarded.
                 // We create a new empty one and throw the blob with its data
                 // away.
@@ -1159,7 +1038,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
                 // memory blob instead.
                 blobImpl = new EmptyBlobImpl(mMimeType);
               } else {
-                blobImpl = aResult.ResolveValue();
+                blobImpl = aRrv.ResolveValue();
               }
               if (NS_FAILED(mRecorder->CreateAndDispatchBlobEvent(blobImpl))) {
                 // Failed to dispatch blob event. That's unexpected. It's
@@ -1184,10 +1063,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
 
   void MediaEncoderStarted() {
     MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
-
-    // Start issuing timeslice-based blobs.
-    MOZ_ASSERT(mLastBlobTimeStamp.IsNull());
-    mLastBlobTimeStamp = TimeStamp::Now();
 
     NS_DispatchToMainThread(NewRunnableFrom([self = RefPtr<Session>(this), this,
                                              mime = mEncoder->MimeType()]() {
@@ -1343,20 +1218,8 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   RefPtr<EncoderListener> mEncoderListener;
   // Set in Shutdown() and resolved when shutdown is complete.
   RefPtr<ShutdownPromise> mShutdownPromise;
-  // A buffer to cache encoded media data.
-  RefPtr<MutableBlobStorage> mMutableBlobStorage;
-  // Max memory to use for the MutableBlobStorage.
-  uint64_t mMaxMemory;
-  // If set, is a promise for the latest GatherBlob() operation. Allows
-  // GatherBlob() operations to be serialized in order to avoid races.
-  RefPtr<BlobPromise> mBlobPromise;
   // Session mimeType
   const nsString mMimeType;
-  // Timestamp of the last fired dataavailable event.
-  TimeStamp mLastBlobTimeStamp;
-  // The interval of passing encoded data from MutableBlobStorage to
-  // onDataAvailable handler.
-  const TimeDuration mTimeslice;
   // The video bitrate the recorder was configured with.
   const uint32_t mVideoBitsPerSecond;
   // The audio bitrate the recorder was configured with.
@@ -1549,9 +1412,9 @@ void MediaRecorder::Start(const Optional<uint32_t>& aTimeslice,
   MediaRecorderReporter::AddMediaRecorder(this);
   // Start a session.
   mSessions.AppendElement();
-  mSessions.LastElement() = new Session(this, std::move(tracks), timeslice,
-                                        videoBitrate, audioBitrate);
-  mSessions.LastElement()->Start();
+  mSessions.LastElement() =
+      new Session(this, std::move(tracks), videoBitrate, audioBitrate);
+  mSessions.LastElement()->Start(timeslice);
 }
 
 void MediaRecorder::Stop(ErrorResult& aResult) {

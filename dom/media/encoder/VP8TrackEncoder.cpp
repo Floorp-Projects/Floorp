@@ -140,15 +140,19 @@ nsresult CreateEncoderConfig(int32_t aWidth, int32_t aHeight,
 VP8TrackEncoder::VP8TrackEncoder(RefPtr<DriftCompensator> aDriftCompensator,
                                  TrackRate aTrackRate,
                                  MediaQueue<EncodedFrame>& aEncodedDataQueue,
+                                 TimeDuration aKeyFrameInterval,
                                  FrameDroppingMode aFrameDroppingMode,
                                  Maybe<float> aKeyFrameIntervalFactor)
     : VideoTrackEncoder(std::move(aDriftCompensator), aTrackRate,
                         aEncodedDataQueue, aFrameDroppingMode),
-      mKeyFrameInterval(
-          TimeDuration::FromMilliseconds(DEFAULT_KEYFRAME_INTERVAL_MS)),
+      mKeyFrameInterval(std::min(
+          aKeyFrameInterval,
+          TimeDuration::FromMilliseconds(DEFAULT_KEYFRAME_INTERVAL_MS))),
       mKeyFrameIntervalFactor(aKeyFrameIntervalFactor.valueOr(
           DYNAMIC_MAXKFDIST_KFINTERVAL_FACTOR)) {
   MOZ_COUNT_CTOR(VP8TrackEncoder);
+  CalculateMaxKeyFrameDistance().apply(
+      [&](auto aKfd) { SetMaxKeyFrameDistance(aKfd); });
 }
 
 VP8TrackEncoder::~VP8TrackEncoder() {
@@ -198,18 +202,6 @@ void VP8TrackEncoder::SetMaxKeyFrameDistance(int32_t aMaxKeyFrameDistance) {
            aMaxKeyFrameDistance);
     mMaxKeyFrameDistance = Some(aMaxKeyFrameDistance);
   }
-}
-
-void VP8TrackEncoder::SetKeyFrameInterval(
-    Maybe<TimeDuration> aKeyFrameInterval) {
-  const TimeDuration defaultInterval =
-      TimeDuration::FromMilliseconds(DEFAULT_KEYFRAME_INTERVAL_MS);
-  mKeyFrameInterval =
-      std::min(aKeyFrameInterval.valueOr(defaultInterval), defaultInterval);
-  VP8LOG(LogLevel::Debug, "%p, keyframe interval is now %.2fs", this,
-         mKeyFrameInterval.ToSeconds());
-  CalculateMaxKeyFrameDistance().apply(
-      [&](auto aKfd) { SetMaxKeyFrameDistance(aKfd); });
 }
 
 nsresult VP8TrackEncoder::Init(int32_t aWidth, int32_t aHeight,
