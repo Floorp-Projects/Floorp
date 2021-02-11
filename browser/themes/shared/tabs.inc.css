@@ -548,14 +548,9 @@
 }
 } /*** END !proton ***/
 
-.tab-icon-sound[muted] > .tab-icon-sound-playing-label,
-.tab-icon-sound:not([muted]) > .tab-icon-sound-muted-label {
-  display: none;
-}
-
 @supports -moz-bool-pref("browser.proton.tabs.enabled") {
-.tab-icon-sound:is([soundplaying], [muted], [activemedia-blocked]) > .tab-icon-sound-image:not(:hover),
-.tab-icon-sound:is([soundplaying], [muted], [activemedia-blocked]) > .tab-icon-sound-label:not(:hover) {
+.tab-icon-sound:is([soundplaying], [muted], [activemedia-blocked], [pictureinpicture]) > .tab-icon-sound-image:not(:hover),
+.tab-icon-sound:is([soundplaying], [muted], [activemedia-blocked], [pictureinpicture]) > .tab-icon-sound-label:not(:hover) {
   opacity: .8;
 }
 
