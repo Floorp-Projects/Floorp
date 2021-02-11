@@ -35,7 +35,7 @@ async function testEditing(inspector, boxmodel, testActor) {
   const span = boxmodel.document.querySelector(
     ".boxmodel-padding.boxmodel-bottom > span"
   );
-  is(span.textContent, 5, "Should have the right value in the box model.");
+  await waitForElementTextContent(span, "5");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
   const editor = boxmodel.document.querySelector(
@@ -61,7 +61,7 @@ async function testEditing(inspector, boxmodel, testActor) {
     "7px",
     "Should be the right padding."
   );
-  is(span.textContent, 7, "Should have the right value in the box model.");
+  await waitForElementTextContent(span, "7");
 }
 
 async function testEditingAndCanceling(inspector, boxmodel, testActor) {
@@ -78,7 +78,7 @@ async function testEditingAndCanceling(inspector, boxmodel, testActor) {
   const span = boxmodel.document.querySelector(
     ".boxmodel-padding.boxmodel-left > span"
   );
-  is(span.textContent, 5, "Should have the right value in the box model.");
+  await waitForElementTextContent(span, "5");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
   const editor = boxmodel.document.querySelector(
@@ -105,7 +105,7 @@ async function testEditingAndCanceling(inspector, boxmodel, testActor) {
     "5px",
     "Should be the right padding."
   );
-  is(span.textContent, 5, "Should have the right value in the box model.");
+  await waitForElementTextContent(span, "5");
 }
 
 async function testDeleting(inspector, boxmodel, testActor) {
@@ -116,7 +116,7 @@ async function testDeleting(inspector, boxmodel, testActor) {
   const span = boxmodel.document.querySelector(
     ".boxmodel-padding.boxmodel-left > span"
   );
-  is(span.textContent, 5, "Should have the right value in the box model.");
+  await waitForElementTextContent(span, "5");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
   const editor = boxmodel.document.querySelector(
@@ -142,7 +142,7 @@ async function testDeleting(inspector, boxmodel, testActor) {
     "",
     "Should be the right padding."
   );
-  is(span.textContent, 3, "Should have the right value in the box model.");
+  await waitForElementTextContent(span, "3");
 }
 
 async function testDeletingAndCanceling(inspector, boxmodel, testActor) {
@@ -159,7 +159,7 @@ async function testDeletingAndCanceling(inspector, boxmodel, testActor) {
   const span = boxmodel.document.querySelector(
     ".boxmodel-padding.boxmodel-left > span"
   );
-  is(span.textContent, 5, "Should have the right value in the box model.");
+  await waitForElementTextContent(span, "5");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
   const editor = boxmodel.document.querySelector(
@@ -186,5 +186,5 @@ async function testDeletingAndCanceling(inspector, boxmodel, testActor) {
     "5px",
     "Should be the right padding."
   );
-  is(span.textContent, 5, "Should have the right value in the box model.");
+  await waitForElementTextContent(span, "5");
 }
