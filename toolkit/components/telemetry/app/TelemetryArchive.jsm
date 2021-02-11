@@ -6,10 +6,13 @@
 
 var EXPORTED_SYMBOLS = ["TelemetryArchive"];
 
-ChromeUtils.import("resource://gre/modules/Log.jsm", this);
-ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
+const { TelemetryUtils } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryUtils.jsm"
+);
 
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetryArchive::";

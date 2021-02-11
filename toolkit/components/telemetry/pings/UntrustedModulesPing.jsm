@@ -13,7 +13,9 @@
 
 var EXPORTED_SYMBOLS = ["TelemetryUntrustedModulesPing"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "resource://gre/modules/Log.jsm",

@@ -6,8 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["SessionMigration"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 ChromeUtils.defineModuleGetter(
   this,

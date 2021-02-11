@@ -8,12 +8,15 @@
 const { GeckoViewChildModule } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewChildModule.jsm"
 );
+// TODO: Bug 1692217
+/* eslint-disable mozilla/reject-chromeutils-import-params */
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
 const { Services } = ChromeUtils.import(
   "resource://gre/modules/Services.jsm",
   this
 );
+/* eslint-enable mozilla/reject-chromeutils-import-params */
 
 ChromeUtils.defineModuleGetter(
   this,

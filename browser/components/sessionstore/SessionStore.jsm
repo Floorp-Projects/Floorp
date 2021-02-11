@@ -187,11 +187,16 @@ const BROWSER_STARTUP_RESUME_SESSION = 3;
 const kNoIndex = Number.MAX_SAFE_INTEGER;
 const kLastIndex = Number.MAX_SAFE_INTEGER - 1;
 
-ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryTimestamps.jsm", this);
-ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
+const { PrivateBrowsingUtils } = ChromeUtils.import(
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { TelemetryTimestamps } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryTimestamps.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 ChromeUtils.defineModuleGetter(
   this,

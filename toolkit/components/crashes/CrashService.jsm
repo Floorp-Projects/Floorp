@@ -4,9 +4,13 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm", this);
-ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm", this);
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { AsyncShutdown } = ChromeUtils.import(
+  "resource://gre/modules/AsyncShutdown.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Set to true if the application is quitting
 var gQuitting = false;
