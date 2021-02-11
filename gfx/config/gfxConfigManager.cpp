@@ -38,8 +38,6 @@ void gfxConfigManager::Init() {
       StaticPrefs::layers_gpu_process_allow_software_AtStartup();
   mWrPartialPresent =
       StaticPrefs::gfx_webrender_max_partial_present_rects_AtStartup() > 0;
-  mWrOptimizedShaders =
-      StaticPrefs::gfx_webrender_use_optimized_shaders_AtStartup();
 #ifdef XP_WIN
   mWrForceAngle = StaticPrefs::gfx_webrender_force_angle_AtStartup();
   mWrForceAngleNoGPUProcess = StaticPrefs::
@@ -78,8 +76,6 @@ void gfxConfigManager::Init() {
   mFeatureWrAngle = &gfxConfig::GetFeature(Feature::WEBRENDER_ANGLE);
   mFeatureWrDComp = &gfxConfig::GetFeature(Feature::WEBRENDER_DCOMP_PRESENT);
   mFeatureWrPartial = &gfxConfig::GetFeature(Feature::WEBRENDER_PARTIAL);
-  mFeatureWrOptimizedShaders =
-      &gfxConfig::GetFeature(Feature::WEBRENDER_OPTIMIZED_SHADERS);
   mFeatureWrSoftware = &gfxConfig::GetFeature(Feature::WEBRENDER_SOFTWARE);
 
   mFeatureHwCompositing = &gfxConfig::GetFeature(Feature::HW_COMPOSITING);
@@ -407,18 +403,6 @@ void gfxConfigManager::ConfigureWebRender() {
       }
     }
   }
-
-  mFeatureWrOptimizedShaders->EnableByDefault();
-  if (!mWrOptimizedShaders) {
-    mFeatureWrOptimizedShaders->UserDisable("User disabled via pref",
-                                            "FEATURE_FAILURE_PREF_DISABLED"_ns);
-  } else if (!mFeatureWr->IsEnabled()) {
-    mFeatureWrOptimizedShaders->ForceDisable(FeatureStatus::Unavailable,
-                                             "WebRender disabled",
-                                             "FEATURE_FAILURE_WR_DISABLED"_ns);
-  }
-  ConfigureFromBlocklist(nsIGfxInfo::FEATURE_WEBRENDER_OPTIMIZED_SHADERS,
-                         mFeatureWrOptimizedShaders);
 }
 
 }  // namespace gfx

@@ -2733,8 +2733,9 @@ void gfxPlatform::InitWebRenderConfig() {
     gfxVars::SetUseWebRenderProgramBinaryDisk(hasWebRender);
   }
 
-  gfxVars::SetUseWebRenderOptimizedShaders(
-      gfxConfig::IsEnabled(Feature::WEBRENDER_OPTIMIZED_SHADERS));
+  if (StaticPrefs::gfx_webrender_use_optimized_shaders_AtStartup()) {
+    gfxVars::SetUseWebRenderOptimizedShaders(hasWebRender);
+  }
 
   gfxVars::SetUseSoftwareWebRender(!hasHardware && hasSoftware);
 
