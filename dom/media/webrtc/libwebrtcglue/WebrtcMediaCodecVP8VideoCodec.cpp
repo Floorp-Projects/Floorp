@@ -740,9 +740,9 @@ int32_t WebrtcMediaCodecVP8VideoEncoder::VerifyAndAllocate(
 }
 
 int32_t WebrtcMediaCodecVP8VideoEncoder::InitEncode(
-    const webrtc::VideoCodec* codecSettings, int32_t numberOfCores,
-    size_t maxPayloadSize) {
-  mMaxPayloadSize = maxPayloadSize;
+    const webrtc::VideoCodec* codecSettings,
+    const webrtc::VideoEncoder::Settings& settings) {
+  mMaxPayloadSize = settings.max_payload_size;
   CSFLogDebug(LOGTAG, "%s, w = %d, h = %d", __FUNCTION__, codecSettings->width,
               codecSettings->height);
 
@@ -751,7 +751,6 @@ int32_t WebrtcMediaCodecVP8VideoEncoder::InitEncode(
 
 int32_t WebrtcMediaCodecVP8VideoEncoder::Encode(
     const webrtc::VideoFrame& inputImage,
-    const webrtc::CodecSpecificInfo* codecSpecificInfo,
     const std::vector<webrtc::FrameType>* frame_types) {
   CSFLogDebug(LOGTAG, "%s, w = %d, h = %d", __FUNCTION__, inputImage.width(),
               inputImage.height());
@@ -994,14 +993,8 @@ WebrtcMediaCodecVP8VideoEncoder::~WebrtcMediaCodecVP8VideoEncoder() {
   Release();
 }
 
-int32_t WebrtcMediaCodecVP8VideoEncoder::SetChannelParameters(
-    uint32_t packetLoss, int64_t rtt) {
-  CSFLogDebug(LOGTAG, "%s ", __FUNCTION__);
-  return WEBRTC_VIDEO_CODEC_OK;
-}
-
-int32_t WebrtcMediaCodecVP8VideoEncoder::SetRates(uint32_t newBitRate,
-                                                  uint32_t frameRate) {
+int32_t WebrtcMediaCodecVP8VideoEncoder::SetRates(
+    const webrtc::VideoEncoder::RateControlParameters& aParameters) {
   CSFLogDebug(LOGTAG, "%s ", __FUNCTION__);
   if (!mMediaCodecEncoder) {
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
@@ -1022,25 +1015,29 @@ WebrtcMediaCodecVP8VideoRemoteEncoder::
 }
 
 int32_t WebrtcMediaCodecVP8VideoRemoteEncoder::InitEncode(
-    const webrtc::VideoCodec* codecSettings, int32_t numberOfCores,
-    size_t maxPayloadSize) {
+    const webrtc::VideoCodec* codecSettings,
+    const webrtc::VideoEncoder::Settings& settings) {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t WebrtcMediaCodecVP8VideoRemoteEncoder::SetRates(uint32_t newBitRate,
-                                                        uint32_t frameRate) {
-  CSFLogDebug(LOGTAG, "%s, newBitRate: %d, frameRate: %d", __FUNCTION__,
-              newBitRate, frameRate);
+int32_t WebrtcMediaCodecVP8VideoRemoteEncoder::SetRates(
+    const webrtc::VideoEncoder::RateControlParameters& aParameters) {
+  MOZ_ASSERT(aParameters.bitrate.IsSpatialLayerUsed(0));
+  MOZ_ASSERT(!aParameters.bitrate.HasBitrate(0, 1),
+             "No simulcast support for MediaCodec impl");
+  MOZ_ASSERT(!aParameters.bitrate.IsSpatialLayerUsed(1),
+             "No simulcast support for MediaCodec impl");
+  CSFLogDebug(LOGTAG, "%s, newBitRate: %d bps, frameRate: %d fps", __FUNCTION__,
+              aParameters.bitrate.GetBitrate(0, 0), aParameters.framerate_fps);
   if (!mJavaEncoder) {
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
   }
-  mJavaEncoder->SetBitrate(newBitRate * 1000);
+  mJavaEncoder->SetBitrate(aParameters.bitrate.GetBitrate(0, 0));
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
 int32_t WebrtcMediaCodecVP8VideoRemoteEncoder::Encode(
     const webrtc::VideoFrame& inputImage,
-    const webrtc::CodecSpecificInfo* codecSpecificInfo,
     const std::vector<webrtc::FrameType>* frame_types) {
   CSFLogDebug(LOGTAG, "%s, w = %d, h = %d", __FUNCTION__, inputImage.width(),
               inputImage.height());

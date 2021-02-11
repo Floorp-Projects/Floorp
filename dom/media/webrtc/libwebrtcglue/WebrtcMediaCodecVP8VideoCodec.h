@@ -35,13 +35,12 @@ class WebrtcMediaCodecVP8VideoEncoder : public WebrtcVideoEncoder {
   virtual ~WebrtcMediaCodecVP8VideoEncoder() override;
 
   // Implement VideoEncoder interface.
-  virtual int32_t InitEncode(const webrtc::VideoCodec* codecSettings,
-                             int32_t numberOfCores,
-                             size_t maxPayloadSize) override;
+  virtual int32_t InitEncode(
+      const webrtc::VideoCodec* codecSettings,
+      const webrtc::VideoEncoder::Settings& settings) override;
 
   virtual int32_t Encode(
       const webrtc::VideoFrame& inputImage,
-      const webrtc::CodecSpecificInfo* codecSpecificInfo,
       const std::vector<webrtc::FrameType>* frame_types) override;
 
   virtual int32_t RegisterEncodeCompleteCallback(
@@ -49,10 +48,8 @@ class WebrtcMediaCodecVP8VideoEncoder : public WebrtcVideoEncoder {
 
   virtual int32_t Release() override;
 
-  virtual int32_t SetChannelParameters(uint32_t packetLoss,
-                                       int64_t rtt) override;
-
-  virtual int32_t SetRates(uint32_t newBitRate, uint32_t frameRate) override;
+  virtual int32_t SetRates(
+      const webrtc::VideoEncoder::RateControlParameters& aParameters) override;
 
  private:
   int32_t VerifyAndAllocate(const uint32_t minimumSize);
@@ -80,10 +77,9 @@ class WebrtcMediaCodecVP8VideoRemoteEncoder : public WebrtcVideoEncoder {
 
   // Implement VideoEncoder interface.
   int32_t InitEncode(const webrtc::VideoCodec* codecSettings,
-                     int32_t numberOfCores, size_t maxPayloadSize) override;
+                     const webrtc::VideoEncoder::Settings& settings) override;
 
   int32_t Encode(const webrtc::VideoFrame& inputImage,
-                 const webrtc::CodecSpecificInfo* codecSpecificInfo,
                  const std::vector<webrtc::FrameType>* frame_types) override;
 
   int32_t RegisterEncodeCompleteCallback(
@@ -91,11 +87,8 @@ class WebrtcMediaCodecVP8VideoRemoteEncoder : public WebrtcVideoEncoder {
 
   int32_t Release() override;
 
-  int32_t SetChannelParameters(uint32_t packetLoss, int64_t rtt) override {
-    return 0;
-  }
-
-  int32_t SetRates(uint32_t newBitRate, uint32_t frameRate) override;
+  int32_t SetRates(
+      const webrtc::VideoEncoder::RateControlParameters& aParameters) override;
 
  private:
   java::CodecProxy::GlobalRef mJavaEncoder;
