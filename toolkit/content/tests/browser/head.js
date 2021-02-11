@@ -3,6 +3,58 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 /**
+ * Set the findbar value to the given text, start a search for that text, and
+ * return a promise that resolves when the find has completed.
+ *
+ * @param gBrowser tabbrowser to search in the current tab.
+ * @param searchText text to search for.
+ * @param highlightOn true if highlight mode should be enabled before searching.
+ * @returns Promise resolves when find is complete.
+ */
+async function promiseFindFinished(gBrowser, searchText, highlightOn = false) {
+  let findbar = await gBrowser.getFindBar();
+  findbar.startFind(findbar.FIND_NORMAL);
+  let highlightElement = findbar.getElement("highlight");
+  if (highlightElement.checked != highlightOn) {
+    highlightElement.click();
+  }
+  return new Promise(resolve => {
+    executeSoon(() => {
+      findbar._findField.value = searchText;
+
+      let resultListener;
+      // When highlighting is on the finder sends a second "FOUND" message after
+      // the search wraps. This causes timing problems with e10s. waitMore
+      // forces foundOrTimeout wait for the second "FOUND" message before
+      // resolving the promise.
+      let waitMore = highlightOn;
+      let findTimeout = setTimeout(() => foundOrTimedout(null), 2000);
+      let foundOrTimedout = function(aData) {
+        if (aData !== null && waitMore) {
+          waitMore = false;
+          return;
+        }
+        if (aData === null) {
+          info("Result listener not called, timeout reached.");
+        }
+        clearTimeout(findTimeout);
+        findbar.browser.finder.removeResultListener(resultListener);
+        resolve();
+      };
+
+      resultListener = {
+        onFindResult: foundOrTimedout,
+        onCurrentSelection() {},
+        onMatchesCountResult() {},
+        onHighlightFinished() {},
+      };
+      findbar.browser.finder.addResultListener(resultListener);
+      findbar._find();
+    });
+  });
+}
+
+/**
  * A wrapper for the findbar's method "close", which is not synchronous
  * because of animation.
  */
