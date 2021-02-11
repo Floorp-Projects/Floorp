@@ -545,37 +545,27 @@ void SelectBitrates(uint32_t aBitsPerSecond, uint8_t aNumVideoTracks,
  * In original design, all recording context is stored in MediaRecorder, which
  * causes a problem if someone calls MediaRecorder::Stop and
  * MediaRecorder::Start quickly. To prevent blocking main thread, media encoding
- * is executed in a second thread, named as Read Thread. For the same reason, we
- * do not wait Read Thread shutdown in MediaRecorder::Stop. If someone call
- * MediaRecorder::Start before Read Thread shutdown, the same recording context
- * in MediaRecorder might be access by two Reading Threads, which cause a
- * problem. In the new design, we put recording context into Session object,
- * including Read Thread.  Each Session has its own recording context and Read
- * Thread, problem is been resolved.
- *
- * Life cycle of a Session object.
- * 1) Initialization Stage (in main thread)
- *    Setup media tracks in MTG, and bind MediaEncoder with Source Stream when
- * mStream is available. Resource allocation, such as encoded data cache buffer
- * and MediaEncoder. Create read thread. Automatically switch to Extract stage
- * in the end of this stage. 2) Extract Stage (in Read Thread) Pull encoded A/V
- * frames from MediaEncoder, dispatch to OnDataAvailable handler. Unless a
- * client calls Session::Stop, Session object keeps stay in this stage. 3)
- * Destroy Stage (in main thread) Switch from Extract stage to Destroy stage by
- * calling Session::Stop. Release session resource and remove associated tracks
- * from MTG.
+ * is executed in a second thread, named encoder thread. For the same reason, we
+ * do not await encoder thread shutdown in MediaRecorder::Stop.
+ * If someone calls MediaRecorder::Start before encoder thread shutdown, the
+ * same recording context in MediaRecorder might be accessed by two distinct
+ * encoder threads, which would be racy. With the recording context, including
+ * the encoder thread, in a Session object the problem is solved.
  *
  * Lifetime of MediaRecorder and Session objects.
- * 1) MediaRecorder creates a Session in MediaRecorder::Start function and holds
- *    a reference to Session. Then the Session registers itself to a
- *    ShutdownBlocker and also holds a reference to MediaRecorder.
+ * 1) MediaRecorder creates a Session in MediaRecorder::Start() and holds
+ *    a reference to it. Then the Session registers itself to a ShutdownBlocker
+ *    and also holds a reference to MediaRecorder.
  *    Therefore, the reference dependency in gecko is:
  *    ShutdownBlocker -> Session <-> MediaRecorder, note that there is a cycle
  *    reference between Session and MediaRecorder.
- * 2) A Session is destroyed after MediaRecorder::Stop has been called _and_ all
- * encoded media data has been passed to OnDataAvailable handler. 3)
- * MediaRecorder::Stop is called by user or the document is going to inactive or
- * invisible.
+ * 2) A Session is destroyed after Session::DoSessionEndTask() has been called
+ *    _and_ all encoded media data has been passed to OnDataAvailable handler.
+ *    In some cases the encoded media can be discarded before being passed to
+ *    the OnDataAvailable handler.
+ * 3) Session::DoSessionEndTask is called by an application through
+ *    MediaRecorder::Stop(), from a MediaEncoder Shutdown notification, from the
+ *    document going inactive or invisible, or from the ShutdownBlocker.
  */
 class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
                                public DOMMediaStream::TrackListener {
