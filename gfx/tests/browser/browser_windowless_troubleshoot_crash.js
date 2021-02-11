@@ -28,10 +28,10 @@ add_task(async function test_windowlessBrowserTroubleshootCrash() {
 
   let winUtils = webNav.document.defaultView.windowUtils;
   try {
-    is(
-      winUtils.layerManagerType,
-      "Basic",
-      "windowless browser's layerManagerType should be 'Basic'"
+    let layerManager = winUtils.layerManagerType;
+    ok(
+      layerManager == "Basic" || layerManager == "WebRender (Software)",
+      "windowless browser's layerManagerType should be 'Basic' or 'WebRender (Software)'"
     );
   } catch (e) {
     // The windowless browser may not have a layermanager at all yet, and that's ok.

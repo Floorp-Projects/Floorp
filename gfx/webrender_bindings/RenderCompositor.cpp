@@ -7,6 +7,7 @@
 #include "RenderCompositor.h"
 
 #include "gfxConfig.h"
+#include "gfxPlatform.h"
 #include "GLContext.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/gfx/Logging.h"
@@ -151,7 +152,9 @@ UniquePtr<RenderCompositor> RenderCompositor::Create(
   if (gfx::gfxVars::UseSoftwareWebRender()) {
 #ifdef XP_MACOSX
     // Mac uses NativeLayerCA
-    return RenderCompositorNativeSWGL::Create(std::move(aWidget), aError);
+    if (!gfxPlatform::IsHeadless()) {
+      return RenderCompositorNativeSWGL::Create(std::move(aWidget), aError);
+    }
 #elif defined(XP_WIN)
     if (StaticPrefs::gfx_webrender_software_d3d11_AtStartup() &&
         gfx::gfxConfig::IsEnabled(gfx::Feature::D3D11_COMPOSITING)) {

@@ -40,16 +40,17 @@ function runTest() {
   while (windows.hasMoreElements()) {
     windowutils = windows.getNext().windowUtils;
     try {
-      if (windowutils.layerManagerType != "Basic") {
+      var layerManager = windowutils.layerManagerType;
+      if (layerManager != "Basic" && layerManager != "WebRender (Software)") {
         acceleratedWindows++;
       }
-      if (windowutils.layerManagerType == "WebRender") {
+      if (layerManager.startsWith("WebRender")) {
         webrenderWindows++;
       }
       if (windowutils.usingAdvancedLayers) {
         advancedLayersWindows++;
       }
-      layerManagerLog.push(windowutils.layerManagerType + ":" +
+      layerManagerLog.push(layerManager + ":" +
                            windowutils.usingAdvancedLayers);
     } catch (e) {
       // The window may not have a layer manager, in which case we get an error.
