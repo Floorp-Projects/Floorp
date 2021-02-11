@@ -78,7 +78,7 @@ nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItem
     }
 
     if (!ourCommand.IsEmpty()) {
-      Element* commandElement = doc->GetElementById(ourCommand);
+      dom::Element* commandElement = doc->GetElementById(ourCommand);
 
       if (commandElement) {
         mCommandElement = commandElement;
@@ -226,7 +226,7 @@ void nsMenuItemX::SetKeyEquiv() {
   }
 
   if (!keyValue.IsEmpty() && mContent->GetUncomposedDoc()) {
-    Element* keyContent = mContent->GetUncomposedDoc()->GetElementById(keyValue);
+    dom::Element* keyContent = mContent->GetUncomposedDoc()->GetElementById(keyValue);
     if (keyContent) {
       nsAutoString keyChar;
       bool hasKey = keyContent->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyChar);
