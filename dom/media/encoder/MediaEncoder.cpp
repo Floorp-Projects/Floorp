@@ -471,7 +471,6 @@ MediaEncoder::MediaEncoder(
 }
 
 MediaEncoder::~MediaEncoder() {
-  MOZ_ASSERT(mListeners.IsEmpty());
   MOZ_ASSERT(!mAudioTrack);
   MOZ_ASSERT(!mVideoTrack);
   MOZ_ASSERT(!mAudioNode);
@@ -776,6 +775,8 @@ void MediaEncoder::MaybeShutdown() {
     return;
   }
 
+  mShutdownEvent.Notify();
+
   // Stop will Shutdown() gracefully.
   Unused << InvokeAsync(mMainThread, this, __func__, &MediaEncoder::Stop);
 }
@@ -811,9 +812,6 @@ RefPtr<GenericNonExclusivePromise> MediaEncoder::Shutdown() {
 
   mShutdownPromise->Then(
       mEncoderThread, __func__, [self = RefPtr<MediaEncoder>(this), this] {
-        for (auto& l : mListeners.Clone()) {
-          l->Shutdown();
-        }
         if (mAudioEncoder) {
           mAudioEncoder->UnregisterListener(mEncoderListener);
         }
@@ -873,14 +871,7 @@ void MediaEncoder::SetError() {
   }
 
   mError = true;
-  nsresult rv = mEncoderThread->Dispatch(NS_NewRunnableFunction(
-      "mozilla::MediaEncoder::SetError", [ls = mListeners.Clone()] {
-        for (const auto& l : ls) {
-          l->Error();
-        }
-      }));
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  Unused << rv;
+  mErrorEvent.Notify();
 }
 
 auto MediaEncoder::RequestData() -> RefPtr<BlobPromise> {
@@ -1052,11 +1043,6 @@ bool MediaEncoder::IsWebMEncoderEnabled() {
 #endif
 }
 
-const nsString& MediaEncoder::MimeType() const {
-  MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
-  return mMimeType;
-}
-
 void MediaEncoder::UpdateInitialized() {
   MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
 
@@ -1122,25 +1108,7 @@ void MediaEncoder::UpdateStarted() {
   // Start issuing timeslice-based blobs.
   MOZ_ASSERT(mLastBlobTime == TimeUnit::Zero());
 
-  nsresult rv = mEncoderThread->Dispatch(NS_NewRunnableFunction(
-      "mozilla::MediaEncoder::NotifyStarted", [ls = mListeners.Clone()] {
-        for (const auto& l : ls) {
-          l->Started();
-        }
-      }));
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  Unused << rv;
-}
-
-void MediaEncoder::RegisterListener(MediaEncoderListener* aListener) {
-  MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
-  MOZ_ASSERT(!mListeners.Contains(aListener));
-  mListeners.AppendElement(aListener);
-}
-
-bool MediaEncoder::UnregisterListener(MediaEncoderListener* aListener) {
-  MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
-  return mListeners.RemoveElement(aListener);
+  mStartedEvent.Notify();
 }
 
 /*
