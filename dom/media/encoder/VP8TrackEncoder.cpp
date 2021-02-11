@@ -37,9 +37,7 @@ VP8TrackEncoder::VP8TrackEncoder(RefPtr<DriftCompensator> aDriftCompensator,
                                  TrackRate aTrackRate,
                                  FrameDroppingMode aFrameDroppingMode)
     : VideoTrackEncoder(std::move(aDriftCompensator), aTrackRate,
-                        aFrameDroppingMode),
-      mVPXContext(new vpx_codec_ctx_t()),
-      mVPXImageWrapper(new vpx_image_t()) {
+                        aFrameDroppingMode) {
   MOZ_COUNT_CTOR(VP8TrackEncoder);
 }
 
@@ -50,12 +48,9 @@ VP8TrackEncoder::~VP8TrackEncoder() {
 
 void VP8TrackEncoder::Destroy() {
   if (mInitialized) {
-    vpx_codec_destroy(mVPXContext.get());
+    vpx_codec_destroy(&mVPXContext);
   }
 
-  if (mVPXImageWrapper) {
-    vpx_img_free(mVPXImageWrapper.get());
-  }
   mInitialized = false;
 }
 
@@ -79,20 +74,19 @@ nsresult VP8TrackEncoder::Init(int32_t aWidth, int32_t aHeight,
   // Creating a wrapper to the image - setting image data to NULL. Actual
   // pointer will be set in encode. Setting align to 1, as it is meaningless
   // (actual memory is not allocated).
-  vpx_img_wrap(mVPXImageWrapper.get(), VPX_IMG_FMT_I420, mFrameWidth,
-               mFrameHeight, 1, nullptr);
+  vpx_img_wrap(&mVPXImageWrapper, VPX_IMG_FMT_I420, mFrameWidth, mFrameHeight,
+               1, nullptr);
 
   vpx_codec_flags_t flags = 0;
   flags |= VPX_CODEC_USE_OUTPUT_PARTITION;
-  if (vpx_codec_enc_init(mVPXContext.get(), vpx_codec_vp8_cx(), &config,
-                         flags)) {
+  if (vpx_codec_enc_init(&mVPXContext, vpx_codec_vp8_cx(), &config, flags)) {
     return NS_ERROR_FAILURE;
   }
 
-  vpx_codec_control(mVPXContext.get(), VP8E_SET_STATIC_THRESHOLD, 1);
-  vpx_codec_control(mVPXContext.get(), VP8E_SET_CPUUSED, -6);
-  vpx_codec_control(mVPXContext.get(), VP8E_SET_TOKEN_PARTITIONS,
-                    VP8_ONE_TOKENPARTITION);
+  vpx_codec_control(&mVPXContext, VP8E_SET_STATIC_THRESHOLD, 1);
+  vpx_codec_control(&mVPXContext, VP8E_SET_CPUUSED, 15);
+  vpx_codec_control(&mVPXContext, VP8E_SET_TOKEN_PARTITIONS,
+                    VP8_TWO_TOKENPARTITION);
 
   SetInitialized();
 
@@ -114,8 +108,7 @@ nsresult VP8TrackEncoder::Reconfigure(int32_t aWidth, int32_t aHeight,
   }
 
   // Recreate image wrapper
-  vpx_img_free(mVPXImageWrapper.get());
-  vpx_img_wrap(mVPXImageWrapper.get(), VPX_IMG_FMT_I420, aWidth, aHeight, 1,
+  vpx_img_wrap(&mVPXImageWrapper, VPX_IMG_FMT_I420, aWidth, aHeight, 1,
                nullptr);
   // Encoder configuration structure.
   vpx_codec_enc_cfg_t config;
@@ -123,7 +116,7 @@ nsresult VP8TrackEncoder::Reconfigure(int32_t aWidth, int32_t aHeight,
                                        aDisplayHeight, config);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   // Set new configuration
-  if (vpx_codec_enc_config_set(mVPXContext.get(), &config) != VPX_CODEC_OK) {
+  if (vpx_codec_enc_config_set(&mVPXContext, &config) != VPX_CODEC_OK) {
     VP8LOG(LogLevel::Error, "Failed to set new configuration");
     return NS_ERROR_FAILURE;
   }
@@ -228,7 +221,7 @@ nsresult VP8TrackEncoder::GetEncodedPartitions(
   EncodedFrame::FrameType frameType = EncodedFrame::VP8_P_FRAME;
   auto frameData = MakeRefPtr<EncodedFrame::FrameData>();
   const vpx_codec_cx_pkt_t* pkt = nullptr;
-  while ((pkt = vpx_codec_get_cx_data(mVPXContext.get(), &iter)) != nullptr) {
+  while ((pkt = vpx_codec_get_cx_data(&mVPXContext, &iter)) != nullptr) {
     switch (pkt->kind) {
       case VPX_CODEC_CX_FRAME_PKT: {
         // Copy the encoded data from libvpx to frameData
@@ -345,12 +338,12 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk& aChunk) {
   }
 
   // Clear image state from last frame
-  mVPXImageWrapper->planes[VPX_PLANE_Y] = nullptr;
-  mVPXImageWrapper->stride[VPX_PLANE_Y] = 0;
-  mVPXImageWrapper->planes[VPX_PLANE_U] = nullptr;
-  mVPXImageWrapper->stride[VPX_PLANE_U] = 0;
-  mVPXImageWrapper->planes[VPX_PLANE_V] = nullptr;
-  mVPXImageWrapper->stride[VPX_PLANE_V] = 0;
+  mVPXImageWrapper.planes[VPX_PLANE_Y] = nullptr;
+  mVPXImageWrapper.stride[VPX_PLANE_Y] = 0;
+  mVPXImageWrapper.planes[VPX_PLANE_U] = nullptr;
+  mVPXImageWrapper.stride[VPX_PLANE_U] = 0;
+  mVPXImageWrapper.planes[VPX_PLANE_V] = nullptr;
+  mVPXImageWrapper.stride[VPX_PLANE_V] = 0;
 
   int yStride = Aligned<16>(mFrameWidth);
   int yHeight = mFrameHeight;
@@ -385,12 +378,12 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk& aChunk) {
     return rv;
   }
 
-  mVPXImageWrapper->planes[VPX_PLANE_Y] = yChannel;
-  mVPXImageWrapper->stride[VPX_PLANE_Y] = yStride;
-  mVPXImageWrapper->planes[VPX_PLANE_U] = uChannel;
-  mVPXImageWrapper->stride[VPX_PLANE_U] = uvStride;
-  mVPXImageWrapper->planes[VPX_PLANE_V] = vChannel;
-  mVPXImageWrapper->stride[VPX_PLANE_V] = uvStride;
+  mVPXImageWrapper.planes[VPX_PLANE_Y] = yChannel;
+  mVPXImageWrapper.stride[VPX_PLANE_Y] = yStride;
+  mVPXImageWrapper.planes[VPX_PLANE_U] = uChannel;
+  mVPXImageWrapper.stride[VPX_PLANE_U] = uvStride;
+  mVPXImageWrapper.planes[VPX_PLANE_V] = vChannel;
+  mVPXImageWrapper.stride[VPX_PLANE_V] = uvStride;
 
   return NS_OK;
 }
@@ -492,9 +485,9 @@ nsresult VP8TrackEncoder::GetEncodedTrack(
         mDurationSinceLastKeyframe += chunk.GetDuration();
       }
 
-      if (vpx_codec_encode(
-              mVPXContext.get(), mVPXImageWrapper.get(), mEncodedTimestamp,
-              (unsigned long)chunk.GetDuration(), flags, VPX_DL_REALTIME)) {
+      if (vpx_codec_encode(&mVPXContext, &mVPXImageWrapper, mEncodedTimestamp,
+                           (unsigned long)chunk.GetDuration(), flags,
+                           VPX_DL_REALTIME)) {
         VP8LOG(LogLevel::Error, "vpx_codec_encode failed to encode the frame.");
         return NS_ERROR_FAILURE;
       }
@@ -559,7 +552,7 @@ nsresult VP8TrackEncoder::GetEncodedTrack(
     // Bug 1243611, keep calling vpx_codec_encode and vpx_codec_get_cx_data
     // until vpx_codec_get_cx_data return null.
     while (true) {
-      if (vpx_codec_encode(mVPXContext.get(), nullptr, mEncodedTimestamp, 0, 0,
+      if (vpx_codec_encode(&mVPXContext, nullptr, mEncodedTimestamp, 0, 0,
                            VPX_DL_REALTIME)) {
         return NS_ERROR_FAILURE;
       }
