@@ -80,7 +80,7 @@
 #include "mozilla/dom/DocumentL10n.h"
 
 #ifdef XP_MACOSX
-#  include "nsINativeMenuService.h"
+#  include "mozilla/widget/NativeMenuSupport.h"
 #  define USE_NATIVE_MENUS
 #endif
 
@@ -2987,11 +2987,6 @@ static void LoadNativeMenus(Document* aDoc, nsIWidget* aParentWindow) {
   if (gfxPlatform::IsHeadless()) {
     return;
   }
-  nsCOMPtr<nsINativeMenuService> nms =
-      do_GetService("@mozilla.org/widget/nativemenuservice;1");
-  if (!nms) {
-    return;
-  }
 
   // Find the menubar tag (if there is more than one, we ignore all but
   // the first).
@@ -3005,11 +3000,12 @@ static void LoadNativeMenus(Document* aDoc, nsIWidget* aParentWindow) {
     menubarNode = menubarElements->Item(0);
   }
 
+  using widget::NativeMenuSupport;
   if (menubarNode) {
     nsCOMPtr<Element> menubarContent(do_QueryInterface(menubarNode));
-    nms->CreateNativeMenuBar(aParentWindow, menubarContent);
+    NativeMenuSupport::CreateNativeMenuBar(aParentWindow, menubarContent);
   } else {
-    nms->CreateNativeMenuBar(aParentWindow, nullptr);
+    NativeMenuSupport::CreateNativeMenuBar(aParentWindow, nullptr);
   }
 }
 
