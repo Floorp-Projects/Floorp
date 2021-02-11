@@ -24,6 +24,14 @@ const TOOLS = [
   "accessibility",
 ];
 
+// If the new performance panel is enabled, it's not available in about:debugging toolboxes.
+if (
+  Services.prefs.getBoolPref("devtools.performance.new-panel-enabled", false)
+) {
+  const perfIndex = TOOLS.indexOf("performance");
+  TOOLS.splice(perfIndex, 1);
+}
+
 /**
  * Test whether about:devtools-toolbox display correctly after reloading.
  */
