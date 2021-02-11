@@ -1629,9 +1629,11 @@ void nsHttpTransaction::Close(nsresult reason) {
     // sure we parse the remaining header line, and then hopefully, the
     // response will be usable (see bug 88792).
     if (!mHaveAllHeaders) {
-      char data = '\n';
+      char data[] = "\n\n";
       uint32_t unused = 0;
-      Unused << ParseHead(&data, 1, &unused);
+      // If we have a partial line already, we actually need two \ns to finish
+      // the headers section.
+      Unused << ParseHead(data, mLineBuf.IsEmpty() ? 1 : 2, &unused);
 
       if (mResponseHead->Version() == HttpVersion::v0_9) {
         // Reject 0 byte HTTP/0.9 Responses - bug 423506
