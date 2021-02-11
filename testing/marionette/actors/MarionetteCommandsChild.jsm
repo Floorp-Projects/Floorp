@@ -520,6 +520,11 @@ class MarionetteCommandsChild extends JSWindowActorChild {
       browsingContext = context;
     }
 
+    // For in-process iframes the window global is lazy-loaded for optimization
+    // reasons. As such force the currentWindowGlobal to be created so we always
+    // have a window (bug 1691348).
+    browsingContext.window;
+
     return { browsingContextId: browsingContext.id };
   }
 
