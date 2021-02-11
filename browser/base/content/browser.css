@@ -1479,7 +1479,7 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 }
 
 /**
- * Tab Dialogs
+ * Dialogs
  */
 
 .dialogStack {
@@ -1572,6 +1572,21 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   place-content: center;
 }
 
+/* Override default <html:dialog> styles */
+#window-modal-dialog {
+  border-width: 0;
+  background-color: transparent;
+}
+
+#window-modal-dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Hide tab-modal dialogs when a window-modal one is up. */
+:root[window-modal-open] .browserStack > .dialogStack {
+  visibility: hidden;
+}
+
 /**
- * End Tab Dialogs
+ * End Dialogs
  */
