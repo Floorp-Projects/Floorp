@@ -456,6 +456,7 @@ sealed class Event {
             data class Action(override val engineSource: EngineSource) : EventSource(engineSource)
             data class Widget(override val engineSource: EngineSource) : EventSource(engineSource)
             data class Shortcut(override val engineSource: EngineSource) : EventSource(engineSource)
+            data class TopSite(override val engineSource: EngineSource) : EventSource(engineSource)
             data class Other(override val engineSource: EngineSource) : EventSource(engineSource)
 
             private val label: String
@@ -464,6 +465,7 @@ sealed class Event {
                     is Action -> "action"
                     is Widget -> "widget"
                     is Shortcut -> "shortcut"
+                    is TopSite -> "topsite"
                     is Other -> "other"
                 }
 
@@ -475,7 +477,7 @@ sealed class Event {
         }
 
         enum class SearchAccessPoint {
-            SUGGESTION, ACTION, WIDGET, SHORTCUT, NONE
+            SUGGESTION, ACTION, WIDGET, SHORTCUT, TOPSITE, NONE
         }
 
         override val extras: Map<Events.performedSearchKeys, String>?

@@ -59,8 +59,9 @@ class InContentTelemetry(private val metrics: MetricController) : BaseSearchTele
 
                 // For Bing if it didn't have a valid cookie and for all the other search engines
                 if (resultNotComputedFromCookies(trackKey) && hasValidCode(code, provider)) {
+                    val channel = uri.getQueryParameter(CHANNEL_KEY)
                     val type = getSapType(provider.followOnParams, paramSet)
-                    trackKey = TrackKeyInfo(provider.name, type, code)
+                    trackKey = TrackKeyInfo(provider.name, type, code, channel)
                 }
             }
 
@@ -145,5 +146,7 @@ class InContentTelemetry(private val metrics: MetricController) : BaseSearchTele
         private const val SEARCH_TYPE_ORGANIC = "organic"
         private const val SEARCH_TYPE_SAP = "sap"
         private const val SEARCH_TYPE_SAP_FOLLOW_ON = "sap-follow-on"
+
+        private const val CHANNEL_KEY = "channel"
     }
 }

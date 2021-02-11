@@ -17,7 +17,6 @@ import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPoint
-import org.mozilla.fenix.ext.components
 import java.io.IOException
 import java.security.NoSuchAlgorithmException
 import java.security.spec.InvalidKeySpecException
@@ -55,6 +54,11 @@ object MetricsUtils {
             )
             SearchAccessPoint.SHORTCUT -> Event.PerformedSearch(
                 Event.PerformedSearch.EventSource.Shortcut(
+                    engineSource
+                )
+            )
+            SearchAccessPoint.TOPSITE -> Event.PerformedSearch(
+                Event.PerformedSearch.EventSource.TopSite(
                     engineSource
                 )
             )

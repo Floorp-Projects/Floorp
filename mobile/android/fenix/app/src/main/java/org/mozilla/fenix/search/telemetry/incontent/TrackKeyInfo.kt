@@ -9,11 +9,15 @@ import java.util.Locale
 internal data class TrackKeyInfo(
     var providerName: String,
     var type: String,
-    var code: String?
+    var code: String?,
+    var channel: String? = null
 ) {
     fun createTrackKey(): String {
         return "${providerName.toLowerCase(Locale.ROOT)}.in-content" +
                 ".${type.toLowerCase(Locale.ROOT)}" +
-                ".${code?.toLowerCase(Locale.ROOT) ?: "none"}"
+                ".${code?.toLowerCase(Locale.ROOT) ?: "none"}" +
+                if (!channel?.toLowerCase(Locale.ROOT).isNullOrBlank())
+                    ".${channel?.toLowerCase(Locale.ROOT)}"
+                else ""
     }
 }

@@ -110,6 +110,15 @@ class InContentTelemetryTest {
     }
 
     @Test
+    fun `track google sap-follow-on and topSite metric`() {
+        val url = "https://www.google.com/search?q=aaa&client=firefox-b-m&channel=ts&oq=random"
+
+        telemetry.trackPartnerUrlTypeMetric(url, listOf())
+
+        verify { metrics.track(Event.SearchInContent("google.in-content.sap-follow-on.firefox-b-m.ts")) }
+    }
+
+    @Test
     fun `track baidu sap-follow-on metric`() {
         val url = "https://www.baidu.com/from=844b/s?wd=aaa&tn=34046034_firefox&oq=random"
 

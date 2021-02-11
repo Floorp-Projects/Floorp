@@ -6,12 +6,14 @@ package org.mozilla.fenix.home.sessioncontrol
 
 import android.view.LayoutInflater
 import android.widget.EditText
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
+import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
@@ -378,6 +380,20 @@ class DefaultSessionControlController(
             metrics.track(Event.PocketTopSiteClicked)
         }
 
+        if (SupportUtils.GOOGLE_URL.equals(url, true)) {
+            val availableEngines = getAvailableSearchEngines()
+
+            val searchAccessPoint = Event.PerformedSearch.SearchAccessPoint.TOPSITE
+            val event =
+                availableEngines.firstOrNull { engine -> engine.suggestUrl?.contains(url) == true }
+                    ?.let { searchEngine ->
+                        searchAccessPoint.let { sap ->
+                            MetricsUtils.createSearchEvent(searchEngine, store, sap)
+                        }
+                    }
+            event?.let { activity.metrics.track(it) }
+        }
+
         addTabUseCase.invoke(
             url = appendSearchAttributionToUrlIfNeeded(url),
             selectTab = true,
@@ -385,6 +401,15 @@ class DefaultSessionControlController(
         )
         activity.openToBrowser(BrowserDirection.FromHome)
     }
+
+    @VisibleForTesting
+    internal fun getAvailableSearchEngines() = activity
+        .components
+        .core
+        .store
+        .state
+        .search
+        .searchEngines
 
     /**
      * Append a search attribution query to any provided search engine URL based on the
