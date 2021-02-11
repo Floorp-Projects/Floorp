@@ -171,10 +171,8 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_THREADSAFE_GL = 31;
   /* Support running WebRender using the software backend, starting in 84. */
   const long FEATURE_WEBRENDER_SOFTWARE = 32;
-  /* Whether webrender uses pre-optimized shaders, starting in 87. */
-  const long FEATURE_WEBRENDER_OPTIMIZED_SHADERS = 33;
   /* the maximum feature value. */
-  const long FEATURE_MAX_VALUE = FEATURE_WEBRENDER_OPTIMIZED_SHADERS;
+  const long FEATURE_MAX_VALUE = FEATURE_WEBRENDER_SOFTWARE;
 
   /*
    * A set of return values from GetFeatureStatus
