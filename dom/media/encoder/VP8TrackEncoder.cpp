@@ -429,24 +429,26 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk& aChunk) {
  * in order to set the nextEncodeOperation for next target frame.
  */
 VP8TrackEncoder::EncodeOperation VP8TrackEncoder::GetNextEncodeOperation(
-    TimeDuration aTimeElapsed, TrackTime aProcessedDuration) {
+    TimeDuration aTimeElapsed, TimeDuration aProcessedDuration) {
   if (mFrameDroppingMode == FrameDroppingMode::DISALLOW) {
     return ENCODE_NORMAL_FRAME;
   }
 
-  int64_t durationInUsec =
-      FramesToUsecs(aProcessedDuration, mTrackRate).value();
-  if (aTimeElapsed.ToMicroseconds() > (durationInUsec * SKIP_FRAME_RATIO)) {
+  if (aTimeElapsed.ToSeconds() >
+      aProcessedDuration.ToSeconds() * SKIP_FRAME_RATIO) {
     // The encoder is too slow.
     // We should skip next frame to consume the mSourceSegment.
     return SKIP_FRAME;
-  } else if (aTimeElapsed.ToMicroseconds() > (durationInUsec * I_FRAME_RATIO)) {
+  }
+
+  if (aTimeElapsed.ToSeconds() >
+      aProcessedDuration.ToSeconds() * I_FRAME_RATIO) {
     // The encoder is a little slow.
     // We force the encoder to encode an I-frame to accelerate.
     return ENCODE_I_FRAME;
-  } else {
-    return ENCODE_NORMAL_FRAME;
   }
+
+  return ENCODE_NORMAL_FRAME;
 }
 
 /**
@@ -480,12 +482,11 @@ nsresult VP8TrackEncoder::GetEncodedTrack(
 
   TakeTrackData(mSourceSegment);
 
-  TrackTime totalProcessedDuration = 0;
-  TimeStamp timebase = TimeStamp::Now();
   EncodeOperation nextEncodeOperation = ENCODE_NORMAL_FRAME;
 
   for (VideoSegment::ChunkIterator iter(mSourceSegment); !iter.IsEnded();
        iter.Next()) {
+    TimeStamp timebase = TimeStamp::Now();
     VideoChunk& chunk = *iter;
     VP8LOG(LogLevel::Verbose,
            "nextEncodeOperation is %d for frame of duration %" PRId64,
@@ -576,12 +577,11 @@ nsresult VP8TrackEncoder::GetEncodedTrack(
       }
     }
 
-    totalProcessedDuration += chunk.GetDuration();
-
-    // Check what to do next.
-    TimeDuration elapsedTime = TimeStamp::Now() - timebase;
-    nextEncodeOperation =
-        GetNextEncodeOperation(elapsedTime, totalProcessedDuration);
+    mMeanFrameEncodeDuration.insert(TimeStamp::Now() - timebase);
+    mMeanFrameDuration.insert(
+        FramesToTimeUnit(chunk.GetDuration(), mTrackRate).ToTimeDuration());
+    nextEncodeOperation = GetNextEncodeOperation(
+        mMeanFrameEncodeDuration.mean(), mMeanFrameDuration.mean());
   }
 
   // Remove the chunks we have processed.
