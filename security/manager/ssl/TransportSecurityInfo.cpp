@@ -541,10 +541,23 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
     return rv;
   }
 
+  int32_t serVersionParsedToInt = 0;
+
+  if (!serVersion.IsEmpty()) {
+    char first = serVersion.First();
+    // Check whether the first character of serVersion is a number
+    // since ToInteger() skipps some non integer values.
+    if (first >= '0' && first <= '9') {
+      nsresult error = NS_OK;
+      serVersionParsedToInt = serVersion.ToInteger(&error);
+      if (NS_FAILED(error)) {
+        return error;
+      }
+    }
+  }
+
   // moved from nsISSLStatus
-  if (!serVersion.EqualsASCII("1") && !serVersion.EqualsASCII("2") &&
-      !serVersion.EqualsASCII("3") && !serVersion.EqualsASCII("4") &&
-      !serVersion.EqualsASCII("5") && !serVersion.EqualsASCII("6")) {
+  if (serVersionParsedToInt < 1) {
     // nsISSLStatus may be present
     rv = ReadSSLStatus(aStream, lock);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
@@ -620,8 +633,7 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
                             "Deserialization should not fail");
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!serVersion.EqualsASCII("3") && !serVersion.EqualsASCII("4") &&
-        !serVersion.EqualsASCII("5") && !serVersion.EqualsASCII("6")) {
+    if (serVersionParsedToInt < 3) {
       // The old data structure of certList(nsIX509CertList) presents
       rv = ReadCertList(aStream, mSucceededCertChain, lock);
       CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
@@ -640,8 +652,7 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
     }
   }
   // END moved from nsISSLStatus
-  if (!serVersion.EqualsASCII("3") && !serVersion.EqualsASCII("4") &&
-      !serVersion.EqualsASCII("5") && !serVersion.EqualsASCII("6")) {
+  if (serVersionParsedToInt < 3) {
     // The old data structure of certList(nsIX509CertList) presents
     rv = ReadCertList(aStream, mFailedCertChain, lock);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
@@ -659,9 +670,7 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
   }
 
   // mIsDelegatedCredential added in bug 1562773
-  if (serVersion.EqualsASCII("2") || serVersion.EqualsASCII("3") ||
-      serVersion.EqualsASCII("4") || serVersion.EqualsASCII("5") ||
-      serVersion.EqualsASCII("6")) {
+  if (serVersionParsedToInt >= 2) {
     rv = ReadBoolAndSetAtomicFieldHelper(aStream, mIsDelegatedCredential);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
@@ -671,8 +680,7 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
   }
 
   // mNPNCompleted, mNegotiatedNPN, mResumed added in bug 1584104
-  if (serVersion.EqualsASCII("4") || serVersion.EqualsASCII("5") ||
-      serVersion.EqualsASCII("6")) {
+  if (serVersionParsedToInt >= 4) {
     rv = ReadBoolAndSetAtomicFieldHelper(aStream, mNPNCompleted);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
@@ -696,7 +704,7 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
   }
 
   // mIsBuiltCertChainRootBuiltInRoot added in bug 1485652
-  if (serVersion.EqualsASCII("5") || serVersion.EqualsASCII("6")) {
+  if (serVersionParsedToInt >= 5) {
     rv = ReadBoolAndSetAtomicFieldHelper(aStream,
                                          mIsBuiltCertChainRootBuiltInRoot);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
@@ -707,7 +715,7 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
   }
 
   // mIsAcceptedEch added in bug 1678079
-  if (serVersion.EqualsASCII("6")) {
+  if (serVersionParsedToInt >= 6) {
     rv = ReadBoolAndSetAtomicFieldHelper(aStream, mIsAcceptedEch);
     CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
                             "Deserialization should not fail");
