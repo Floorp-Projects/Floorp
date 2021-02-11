@@ -4,6 +4,8 @@
         android:id="@+id/action_tpe" app:showAsAction="never" />
     <item android:title="@string/desktop_mode" android:id="@+id/desktop_mode" android:checkable="true"
           app:showAsAction="never" />
+    <item android:title="@string/collapse" android:id="@+id/collapse" android:checkable="true"
+        app:showAsAction="never" />
     <item android:title="@string/private_browsing" android:checkable="true" android:id="@+id/action_pb"/>
     <item android:title="@string/new_tab" android:id="@+id/action_new_tab"/>
     <item android:title="@string/install_addon" android:id="@+id/install_addon"/>
