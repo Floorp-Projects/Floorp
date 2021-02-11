@@ -3119,23 +3119,11 @@ TriggerResult GCRuntime::checkHeapThreshold(
   size_t thresholdBytes = heapThreshold.hasSliceThreshold()
                               ? heapThreshold.sliceBytes()
                               : heapThreshold.startBytes();
-  size_t niThreshold = heapThreshold.incrementalLimitBytes();
-  MOZ_ASSERT(niThreshold >= thresholdBytes);
 
-  if (usedBytes < thresholdBytes) {
-    return TriggerResult{false, 0, 0};
-  }
+  // The incremental limit will be checked if we trigger a GC slice.
+  MOZ_ASSERT(thresholdBytes <= heapThreshold.incrementalLimitBytes());
 
-  // Don't trigger incremental slices during background sweeping or decommit, as
-  // these will have no effect. A slice will be triggered automatically when
-  // these tasks finish.
-  if (usedBytes < niThreshold && zone->wasGCStarted() &&
-      (state() == State::Finalize || state() == State::Decommit)) {
-    return TriggerResult{false, 0, 0};
-  }
-
-  // Start or continue an in progress incremental GC.
-  return TriggerResult{true, usedBytes, thresholdBytes};
+  return TriggerResult{usedBytes >= thresholdBytes, usedBytes, thresholdBytes};
 }
 
 bool GCRuntime::triggerZoneGC(Zone* zone, JS::GCReason reason, size_t used,
