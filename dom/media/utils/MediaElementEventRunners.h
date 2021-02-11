@@ -184,6 +184,24 @@ class nsSyncSection : public nsMediaEventRunner {
   nsCOMPtr<nsIRunnable> mRunnable;
 };
 
+/**
+ * This runner is used to dispatch `timeupdate` event and ensure we don't
+ * dispatch `timeupdate` more often than once per `TIMEUPDATE_MS` if that is not
+ * a mandatory event.
+ */
+class nsTimeupdateRunner : public nsMediaEventRunner {
+ public:
+  nsTimeupdateRunner(HTMLMediaElement* aElement, bool aIsMandatory)
+      : nsMediaEventRunner(u"nsTimeupdateRunner"_ns, aElement,
+                           u"timeupdate"_ns),
+        mIsMandatory(aIsMandatory) {}
+  NS_IMETHOD Run() override;
+
+ private:
+  bool ShouldDispatchTimeupdate() const;
+  bool mIsMandatory;
+};
+
 }  // namespace dom
 }  // namespace mozilla
 
