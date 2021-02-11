@@ -184,31 +184,25 @@ OnlineSpeechRecognitionService::Initialize(
   return NS_OK;
 }
 
-void OnlineSpeechRecognitionService::EncoderDataAvailable() {
+void OnlineSpeechRecognitionService::EncoderFinished() {
   MOZ_ASSERT(!NS_IsMainThread());
-  nsresult rv;
-  AutoTArray<RefPtr<EncodedFrame>, 4> container;
-  rv = mAudioEncoder->GetEncodedTrack(container);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    MOZ_ASSERT_UNREACHABLE();
-  }
+  MOZ_ASSERT(mEncodedAudioQueue.IsFinished());
 
-  rv = mWriter->WriteEncodedTrack(
-      container,
-      mAudioEncoder->IsEncodingComplete() ? ContainerWriter::END_OF_STREAM : 0);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    MOZ_ASSERT_UNREACHABLE();
-  }
-
-  mWriter->GetContainerData(&mEncodedData, mAudioEncoder->IsEncodingComplete()
-                                               ? ContainerWriter::FLUSH_NEEDED
+  while (RefPtr<EncodedFrame> frame = mEncodedAudioQueue.PopFront()) {
+    AutoTArray<RefPtr<EncodedFrame>, 1> frames({frame});
+    DebugOnly<nsresult> rv =
+        mWriter->WriteEncodedTrack(frames, mEncodedAudioQueue.AtEndOfStream()
+                                               ? ContainerWriter::END_OF_STREAM
                                                : 0);
-
-  if (mAudioEncoder->IsEncodingComplete()) {
-    NS_DispatchToMainThread(
-        NewRunnableMethod("OnlineSpeechRecognitionService::DoSTT", this,
-                          &OnlineSpeechRecognitionService::DoSTT));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
+
+  mWriter->GetContainerData(&mEncodedData, ContainerWriter::FLUSH_NEEDED);
+  MOZ_ASSERT(mWriter->IsWritingComplete());
+
+  NS_DispatchToMainThread(
+      NewRunnableMethod("OnlineSpeechRecognitionService::DoSTT", this,
+                        &OnlineSpeechRecognitionService::DoSTT));
 }
 
 void OnlineSpeechRecognitionService::EncoderInitialized() {
@@ -256,7 +250,8 @@ OnlineSpeechRecognitionService::ProcessAudioSegment(AudioSegment* aAudioSegment,
 
   if (!mAudioEncoder) {
     mSpeechEncoderListener = new SpeechEncoderListener(this);
-    mAudioEncoder = MakeUnique<OpusTrackEncoder>(aSampleRate);
+    mAudioEncoder =
+        MakeUnique<OpusTrackEncoder>(aSampleRate, mEncodedAudioQueue);
     RefPtr<AbstractThread> mEncoderThread = AbstractThread::GetCurrent();
     mAudioEncoder->SetWorkerThread(mEncoderThread);
     mAudioEncoder->RegisterListener(mSpeechEncoderListener);
@@ -436,6 +431,7 @@ OnlineSpeechRecognitionService::SoundEnd() {
           mAudioEncoder->UnregisterListener(mSpeechEncoderListener);
           mSpeechEncoderListener = nullptr;
           mAudioEncoder = nullptr;
+          EncoderFinished();
         }
       }));
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));

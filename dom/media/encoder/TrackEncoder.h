@@ -8,6 +8,7 @@
 
 #include "AudioSegment.h"
 #include "EncodedFrame.h"
+#include "MediaQueue.h"
 #include "MediaTrackGraph.h"
 #include "TrackMetadataBase.h"
 #include "VideoSegment.h"
@@ -34,12 +35,6 @@ class TrackEncoderListener {
   virtual void Initialized(TrackEncoder* aEncoder) = 0;
 
   /**
-   * Called when there's new data ready to be encoded.
-   * Always called after Initialized().
-   */
-  virtual void DataAvailable(TrackEncoder* aEncoder) = 0;
-
-  /**
    * Called after the TrackEncoder hit an unexpected error, causing it to
    * abort operation.
    */
@@ -53,15 +48,14 @@ class TrackEncoderListener {
  * Base class of AudioTrackEncoder and VideoTrackEncoder. Lifetime managed by
  * MediaEncoder. All methods are to be called only on the worker thread.
  *
- * MediaTrackListeners will get store raw data in mIncomingBuffer, so
- * mIncomingBuffer is protected by a lock. The control APIs are all called by
- * MediaEncoder on its dedicated thread, where GetEncodedTrack is called
- * periodically to swap out mIncomingBuffer, feed it to the encoder, and return
- * the encoded data.
+ * The control APIs are all called by MediaEncoder on its dedicated thread. Data
+ * is encoded as soon as it has been appended (and time has advanced past its
+ * end in case of video) and pushed to mEncodedDataQueue.
  */
 class TrackEncoder {
  public:
-  explicit TrackEncoder(TrackRate aTrackRate);
+  TrackEncoder(TrackRate aTrackRate,
+               MediaQueue<EncodedFrame>& aEncodedDataQueue);
 
   /**
    * Called by MediaEncoder to cancel the encoding.
@@ -81,10 +75,9 @@ class TrackEncoder {
   virtual already_AddRefed<TrackMetadataBase> GetMetadata() = 0;
 
   /**
-   * Encodes raw segments. Result data is returned in aData, and called on the
-   * worker thread.
+   * MediaQueue containing encoded data, that is pushed as soon as it's ready.
    */
-  virtual nsresult GetEncodedTrack(nsTArray<RefPtr<EncodedFrame>>& aData) = 0;
+  MediaQueue<EncodedFrame>& EncodedDataQueue() { return mEncodedDataQueue; }
 
   /**
    * Returns true once this TrackEncoder is initialized.
@@ -100,7 +93,7 @@ class TrackEncoder {
    * True if the track encoder has encoded all source segments coming from
    * MediaTrackGraph. Call on the worker thread.
    */
-  bool IsEncodingComplete();
+  bool IsEncodingComplete() const;
 
   /**
    * Registers a listener to events from this TrackEncoder.
@@ -143,19 +136,9 @@ class TrackEncoder {
   void SetStarted();
 
   /**
-   * Notifies listeners that there is data available for encoding.
-   */
-  void OnDataAvailable();
-
-  /**
    * Called after an error. Cancels the encoding and notifies listeners.
    */
   void OnError();
-
-  /**
-   * True if the track encoder has encoded all source data.
-   */
-  bool mEncodingComplete;
 
   /**
    * True if the track encoder has been initialized successfully.
@@ -195,13 +178,19 @@ class TrackEncoder {
    */
   RefPtr<AbstractThread> mWorkerThread;
 
+  /**
+   * MediaQueue where encoded data ends up. Note that metadata goes out of band.
+   */
+  MediaQueue<EncodedFrame>& mEncodedDataQueue;
+
   nsTArray<RefPtr<TrackEncoderListener>> mListeners;
 };
 
 class AudioTrackEncoder : public TrackEncoder {
  public:
-  explicit AudioTrackEncoder(TrackRate aTrackRate)
-      : TrackEncoder(aTrackRate),
+  AudioTrackEncoder(TrackRate aTrackRate,
+                    MediaQueue<EncodedFrame>& aEncodedDataQueue)
+      : TrackEncoder(aTrackRate, aEncodedDataQueue),
         mChannels(0),
         mNotInitDuration(0),
         mAudioBitrate(0) {}
@@ -222,12 +211,6 @@ class AudioTrackEncoder : public TrackEncoder {
    * Appends and consumes track data from aSegment.
    */
   void AppendAudioSegment(AudioSegment&& aSegment);
-
-  /**
-   * Takes all track data that has been played out from the last time
-   * TakeTrackData ran and moves it to aSegment.
-   */
-  void TakeTrackData(AudioSegment& aSegment);
 
   template <typename T>
   static void InterleaveTrackData(nsTArray<const T*>& aInput, int32_t aDuration,
@@ -293,7 +276,7 @@ class AudioTrackEncoder : public TrackEncoder {
 
   /**
    * Dispatched from MediaTrackGraph when we have finished feeding data to
-   * mIncomingBuffer.
+   * mOutgoingBuffer.
    */
   void NotifyEndOfStream() override;
 
@@ -310,6 +293,11 @@ class AudioTrackEncoder : public TrackEncoder {
    * have received the first valid track from MediaTrackGraph.
    */
   virtual nsresult Init(int aChannels) = 0;
+
+  /**
+   * Encodes buffered data and pushes it to mEncodedDataQueue.
+   */
+  virtual nsresult Encode(AudioSegment* aSegment) = 0;
 
   /**
    * The number of channels are used for processing PCM data in the audio
@@ -338,9 +326,10 @@ enum class FrameDroppingMode {
 
 class VideoTrackEncoder : public TrackEncoder {
  public:
-  explicit VideoTrackEncoder(RefPtr<DriftCompensator> aDriftCompensator,
-                             TrackRate aTrackRate,
-                             FrameDroppingMode aFrameDroppingMode);
+  VideoTrackEncoder(RefPtr<DriftCompensator> aDriftCompensator,
+                    TrackRate aTrackRate,
+                    MediaQueue<EncodedFrame>& aEncodedDataQueue,
+                    FrameDroppingMode aFrameDroppingMode);
 
   /**
    * Suspends encoding from aTime, i.e., all video frame with a timestamp
@@ -371,12 +360,6 @@ class VideoTrackEncoder : public TrackEncoder {
    * MediaTrackGraph thread.
    */
   void AppendVideoSegment(VideoSegment&& aSegment);
-
-  /**
-   * Takes track data from the last time TakeTrackData ran until mCurrentTime
-   * and moves it to aSegment.
-   */
-  void TakeTrackData(VideoSegment& aSegment);
 
   /**
    * Measure size of internal buffers.
@@ -442,6 +425,11 @@ class VideoTrackEncoder : public TrackEncoder {
    */
   virtual nsresult Init(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
                         int32_t aDisplayHeight, float aEstimatedFrameRate) = 0;
+
+  /**
+   * Encodes data in the outgoing buffer and pushes it to mEncodedDataQueue.
+   */
+  virtual nsresult Encode(VideoSegment* aSegment) = 0;
 
   /**
    * Drift compensator for re-clocking incoming video frame wall-clock
