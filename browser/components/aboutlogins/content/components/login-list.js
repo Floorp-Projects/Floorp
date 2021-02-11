@@ -550,8 +550,7 @@ export default class LoginList extends HTMLElement {
             (!!login.httpRealm &&
               login.httpRealm.toLocaleLowerCase().includes(this._filter)) ||
             login.username.toLocaleLowerCase().includes(this._filter) ||
-            (!window.AboutLoginsUtils.masterPasswordEnabled &&
-              login.password.toLocaleLowerCase().includes(this._filter))
+            login.password.toLocaleLowerCase().includes(this._filter)
           );
         })
       );
