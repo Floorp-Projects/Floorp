@@ -126,8 +126,8 @@ class MediaEncoder {
   MediaEncoder(TaskQueue* aEncoderThread,
                RefPtr<DriftCompensator> aDriftCompensator,
                UniquePtr<ContainerWriter> aWriter,
-               AudioTrackEncoder* aAudioEncoder,
-               VideoTrackEncoder* aVideoEncoder, TrackRate aTrackRate,
+               UniquePtr<AudioTrackEncoder> aAudioEncoder,
+               UniquePtr<VideoTrackEncoder> aVideoEncoder, TrackRate aTrackRate,
                const nsAString& aMIMEType);
 
   /**
@@ -268,9 +268,9 @@ class MediaEncoder {
   const RefPtr<DriftCompensator> mDriftCompensator;
 
   UniquePtr<Muxer> mMuxer;
-  RefPtr<AudioTrackEncoder> mAudioEncoder;
+  UniquePtr<AudioTrackEncoder> mAudioEncoder;
   RefPtr<AudioTrackListener> mAudioListener;
-  RefPtr<VideoTrackEncoder> mVideoEncoder;
+  UniquePtr<VideoTrackEncoder> mVideoEncoder;
   RefPtr<VideoTrackListener> mVideoListener;
   RefPtr<EncoderListener> mEncoderListener;
   nsTArray<RefPtr<MediaEncoderListener>> mListeners;
