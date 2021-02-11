@@ -5,6 +5,17 @@ const SYNC_DATA_PREF = "messaging-system.syncdatastore.data";
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/MSTestUtils.jsm"
 );
+const { ExperimentStore } = ChromeUtils.import(
+  "resource://messaging-system/experiments/ExperimentStore.jsm"
+);
+
+add_task(async function test_sharedDataMap_key() {
+  const store = new ExperimentStore();
+
+  // Outside of tests we use sharedDataKey for the profile dir filepath
+  // where we store experiments
+  Assert.ok(store._sharedDataKey, "Make sure it's defined");
+});
 
 add_task(async function test_usageBeforeInitialization() {
   const store = ExperimentFakes.store();
