@@ -478,7 +478,7 @@ WindowSurfaceWayland::WindowSurfaceWayland(nsWindow* aWindow)
       mLastCommitTime(0),
       mDrawToWaylandBufferDirectly(true),
       mCanSwitchWaylandBuffer(true),
-      mBufferPendingCommit(false),
+      mWLBufferIsDirty(false),
       mBufferCommitAllowed(false),
       mBufferNeedsClear(false),
       mSmoothRendering(StaticPrefs::widget_wayland_smooth_rendering()),
@@ -497,7 +497,7 @@ WindowSurfaceWayland::~WindowSurfaceWayland() {
     mSurfaceReadyTimerID = 0;
   }
 
-  if (mBufferPendingCommit) {
+  if (mWLBufferIsDirty) {
     NS_WARNING("Deleted WindowSurfaceWayland with a pending commit!");
   }
 
@@ -784,7 +784,7 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
   } else {
     // We can switch buffer if there isn't any content committed
     // to active buffer.
-    mCanSwitchWaylandBuffer = !mBufferPendingCommit;
+    mCanSwitchWaylandBuffer = !mWLBufferIsDirty;
   }
 
   LOGWAYLAND(
@@ -800,7 +800,7 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
   LOGWAYLAND(("   IsWindowFullScreenUpdate = %d\n",
               IsWindowFullScreenUpdate(mozContainerSize, aRegion)));
   LOGWAYLAND(("   mBufferNeedsClear = %d\n", mBufferNeedsClear));
-  LOGWAYLAND(("   mBufferPendingCommit = %d\n", mBufferPendingCommit));
+  LOGWAYLAND(("   mWLBufferIsDirty = %d\n", mWLBufferIsDirty));
   LOGWAYLAND(("   mCanSwitchWaylandBuffer = %d\n", mCanSwitchWaylandBuffer));
   LOGWAYLAND(("   windowRedraw = %d\n", windowRedraw));
 
@@ -815,7 +815,7 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
     mWaylandBufferDamage.SetEmpty();
 
     if (!windowRedraw) {
-      NS_WARNING("Partial screen update when window is resized!");
+      LOGWAYLAND(("   screen size changed without redraw!\n"));
       // This should not happen. Screen size changed but we got only
       // partal screen update instead of whole screen. Discard this painting
       // as it produces artifacts.
@@ -847,12 +847,11 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
       mWaylandBuffer->DumpToFile("Lock");
 #endif
       if (!windowRedraw) {
-        DrawDelayedImageCommits(dt, mWaylandBufferDamage);
+        mWLBufferIsDirty = DrawDelayedImageCommits(dt, mWaylandBufferDamage);
 #if MOZ_LOGGING
         mWaylandBuffer->DumpToFile("Lock-after-commit");
 #endif
       }
-      mBufferPendingCommit = true;
       return dt.forget();
     }
   }
@@ -894,7 +893,7 @@ WindowImageSurface::WindowImageSurface(
     const LayoutDeviceIntRegion& aUpdateRegion)
     : mImageSurface(aImageSurface), mUpdateRegion(aUpdateRegion) {}
 
-void WindowSurfaceWayland::DrawDelayedImageCommits(
+bool WindowSurfaceWayland::DrawDelayedImageCommits(
     gfx::DrawTarget* aDrawTarget, LayoutDeviceIntRegion& aWaylandBufferDamage) {
   unsigned int imagesNum = mDelayedImageCommits.Length();
   LOGWAYLAND(("WindowSurfaceWayland::DrawDelayedImageCommits [%p] len %d\n",
@@ -903,6 +902,8 @@ void WindowSurfaceWayland::DrawDelayedImageCommits(
     mDelayedImageCommits[i].DrawToTarget(aDrawTarget, aWaylandBufferDamage);
   }
   mDelayedImageCommits.Clear();
+
+  return (imagesNum != 0);
 }
 
 void WindowSurfaceWayland::CacheImageSurface(
@@ -957,9 +958,7 @@ bool WindowSurfaceWayland::CommitImageCacheToWaylandBuffer() {
   LOGWAYLAND(("   Flushing %ld cached WindowImageSurfaces to Wayland buffer\n",
               long(mDelayedImageCommits.Length())));
 
-  DrawDelayedImageCommits(dt, mWaylandBufferDamage);
-
-  return true;
+  return DrawDelayedImageCommits(dt, mWaylandBufferDamage);
 }
 
 void WindowSurfaceWayland::FlushPendingCommits() {
@@ -987,7 +986,7 @@ bool WindowSurfaceWayland::FlushPendingCommitsLocked() {
   LOGWAYLAND(("    mCanSwitchWaylandBuffer = %d\n", mCanSwitchWaylandBuffer));
   LOGWAYLAND(("    mFrameCallback = %p\n", mFrameCallback));
   LOGWAYLAND(("    mLastCommittedSurface = %p\n", mLastCommittedSurface));
-  LOGWAYLAND(("    mBufferPendingCommit = %d\n", mBufferPendingCommit));
+  LOGWAYLAND(("    mWLBufferIsDirty = %d\n", mWLBufferIsDirty));
   LOGWAYLAND(("    mBufferCommitAllowed = %d\n", mBufferCommitAllowed));
 
   if (!mBufferCommitAllowed) {
@@ -996,11 +995,11 @@ bool WindowSurfaceWayland::FlushPendingCommitsLocked() {
   }
 
   if (CommitImageCacheToWaylandBuffer()) {
-    mBufferPendingCommit = true;
+    mWLBufferIsDirty = true;
   }
 
   // There's nothing to do here
-  if (!mBufferPendingCommit) {
+  if (!mWLBufferIsDirty) {
     LOGWAYLAND(("    Quit - no pending commit.\n"));
     return false;
   }
@@ -1089,7 +1088,7 @@ bool WindowSurfaceWayland::FlushPendingCommitsLocked() {
   mLastCommitTime = g_get_monotonic_time() / 1000;
 
   // There's no pending commit, all changes are sent to compositor.
-  mBufferPendingCommit = false;
+  mWLBufferIsDirty = false;
 
   return true;
 }

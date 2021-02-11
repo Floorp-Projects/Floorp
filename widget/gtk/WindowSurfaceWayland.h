@@ -176,7 +176,7 @@ class WindowSurfaceWayland : public WindowSurface {
   void CacheImageSurface(const LayoutDeviceIntRegion& aRegion);
   bool CommitImageCacheToWaylandBuffer();
 
-  void DrawDelayedImageCommits(gfx::DrawTarget* aDrawTarget,
+  bool DrawDelayedImageCommits(gfx::DrawTarget* aDrawTarget,
                                LayoutDeviceIntRegion& aWaylandBufferDamage);
   // Return true if we need to sync Wayland events after this call.
   bool FlushPendingCommitsLocked();
@@ -198,7 +198,7 @@ class WindowSurfaceWayland : public WindowSurface {
   // Actual buffer (backed by wl_buffer) where all drawings go into.
   // Drawn areas are stored at mWaylandBufferDamage and if there's
   // any uncommited drawings which needs to be send to wayland compositor
-  // the mBufferPendingCommit is set.
+  // the mWLBufferIsDirty is set.
   WindowBackBuffer* mWaylandBuffer;
   WindowBackBuffer* mShmBackupBuffer[BACK_BUFFER_NUM];
 
@@ -238,7 +238,7 @@ class WindowSurfaceWayland : public WindowSurface {
 
   // Set when actual WaylandBuffer contains drawings which are not send to
   // wayland compositor yet.
-  bool mBufferPendingCommit;
+  bool mWLBufferIsDirty;
 
   // We can't send WaylandBuffer (wl_buffer) to compositor when gecko
   // is rendering into it (i.e. between WindowSurfaceWayland::Lock() /
