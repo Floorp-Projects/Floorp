@@ -192,7 +192,7 @@ class nsTableColGroupFrame final : public nsContainerFrame {
                                   BCPixelSize aPixelValue);
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override {
-    if (aFlags & eSupportsContainLayoutAndPaint) {
+    if (aFlags & (eSupportsContainLayoutAndPaint | eSupportsAspectRatio)) {
       return false;
     }
 
