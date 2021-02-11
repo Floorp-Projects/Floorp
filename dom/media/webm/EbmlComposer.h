@@ -47,27 +47,18 @@ class EbmlComposer {
    */
   void ExtractBuffer(nsTArray<nsTArray<uint8_t>>* aDestBufs,
                      uint32_t aFlag = 0);
-  /*
-   * True if we have an open cluster.
-   */
-  bool WritingCluster() const { return !mCurrentCluster.IsEmpty(); }
 
  private:
-  // Close current cluster and move data to mFinishedClusters. Idempotent.
-  void FinishCluster();
-  // The current cluster. Each element in the outer array corresponds to a block
-  // in the cluster. When the cluster is finished it is moved to
-  // mFinishedClusters.
-  nsTArray<nsTArray<uint8_t>> mCurrentCluster;
-  // The cluster length position.
-  uint64_t mCurrentClusterLengthLoc = 0;
+  // True once we have written the first cluster header. We cannot serialize any
+  // P-frames until this is true, since we start a new cluster every I-frame.
+  bool mHasWrittenCluster = false;
   // The timecode of the cluster.
   uint64_t mCurrentClusterTimecode = 0;
 
-  // Finished clusters to be flushed out by ExtractBuffer().
-  nsTArray<nsTArray<uint8_t>> mFinishedClusters;
+  // Written data to be flushed out by ExtractBuffer().
+  nsTArray<nsTArray<uint8_t>> mBuffer;
 
-  // True when Metadata has been serialized into mFinishedClusters.
+  // True when Metadata has been serialized into mBuffer.
   bool mMetadataFinished = false;
 
   // Video configuration

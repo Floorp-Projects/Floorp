@@ -31,7 +31,7 @@ class WebMVP8TrackEncoder : public VP8TrackEncoder {
  public:
   explicit WebMVP8TrackEncoder(TrackRate aTrackRate = 90000)
       : VP8TrackEncoder(nullptr, aTrackRate, mEncodedVideoQueue,
-                        TimeDuration::Forever(), FrameDroppingMode::DISALLOW) {}
+                        FrameDroppingMode::DISALLOW) {}
 
   bool TestVP8Creation(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
                        int32_t aDisplayHeight) {
@@ -88,7 +88,7 @@ class TestWebMWriter : public WebMWriter {
   bool HaveValidCluster() {
     nsTArray<nsTArray<uint8_t>> encodedBuf;
     GetContainerData(&encodedBuf, 0);
-    return (encodedBuf.Length() > 0) ? true : false;
+    return !encodedBuf.IsEmpty();
   }
 
   // Timestamp accumulator that increased by AppendDummyFrame.
@@ -152,22 +152,18 @@ TEST(WebMWriter, Cluster)
 
   // write the first I-Frame.
   writer.AppendDummyFrame(EncodedFrame::VP8_I_FRAME, FIXED_DURATION);
-  // No data because the cluster is not closed.
-  EXPECT_FALSE(writer.HaveValidCluster());
+  EXPECT_TRUE(writer.HaveValidCluster());
 
   // The second I-Frame.
   writer.AppendDummyFrame(EncodedFrame::VP8_I_FRAME, FIXED_DURATION);
-  // Should have data because the first cluster is closed.
   EXPECT_TRUE(writer.HaveValidCluster());
 
   // P-Frame.
   writer.AppendDummyFrame(EncodedFrame::VP8_P_FRAME, FIXED_DURATION);
-  // No data because the cluster is not closed.
-  EXPECT_FALSE(writer.HaveValidCluster());
+  EXPECT_TRUE(writer.HaveValidCluster());
 
   // The third I-Frame.
   writer.AppendDummyFrame(EncodedFrame::VP8_I_FRAME, FIXED_DURATION);
-  // Should have data because the second cluster is closed.
   EXPECT_TRUE(writer.HaveValidCluster());
 }
 
@@ -186,39 +182,38 @@ TEST(WebMWriter, FLUSH_NEEDED)
   int32_t displayHeight = 352;
   GetVP8Metadata(width, height, displayWidth, displayHeight, trackRate, meta);
   writer.SetMetadata(meta);
+  // Have data because the metadata is finished.
+  EXPECT_TRUE(writer.HaveValidCluster());
 
   // write the first I-Frame.
   writer.AppendDummyFrame(EncodedFrame::VP8_I_FRAME, FIXED_DURATION);
 
   // P-Frame
   writer.AppendDummyFrame(EncodedFrame::VP8_P_FRAME, FIXED_DURATION);
-  // Have data because the metadata is finished.
+  // Have data because frames were written.
   EXPECT_TRUE(writer.HaveValidCluster());
-  // No data because the cluster is not closed and the metatdata had been
-  // retrieved
+  // No data because the previous check emptied it.
   EXPECT_FALSE(writer.HaveValidCluster());
 
   nsTArray<nsTArray<uint8_t>> encodedBuf;
-  // Have data because the flag ContainerWriter::FLUSH_NEEDED
+  // No data because the flag ContainerWriter::FLUSH_NEEDED does nothing.
   writer.GetContainerData(&encodedBuf, ContainerWriter::FLUSH_NEEDED);
-  EXPECT_TRUE(encodedBuf.Length() > 0);
+  EXPECT_TRUE(encodedBuf.IsEmpty());
   encodedBuf.Clear();
 
   // P-Frame
   writer.AppendDummyFrame(EncodedFrame::VP8_P_FRAME, FIXED_DURATION);
-  // No data because there is no cluster right now. The I-Frame had been
-  // flushed out.
-  EXPECT_FALSE(writer.HaveValidCluster());
+  // Have data because we continue the previous cluster.
+  EXPECT_TRUE(writer.HaveValidCluster());
 
   // I-Frame
   writer.AppendDummyFrame(EncodedFrame::VP8_I_FRAME, FIXED_DURATION);
-  // No data because a cluster must starts form I-Frame and the
-  // cluster is not closed.
-  EXPECT_FALSE(writer.HaveValidCluster());
+  // Have data with a new cluster.
+  EXPECT_TRUE(writer.HaveValidCluster());
 
   // I-Frame
   writer.AppendDummyFrame(EncodedFrame::VP8_I_FRAME, FIXED_DURATION);
-  // Have data because the previous cluster is closed.
+  // Have data with a new cluster.
   EXPECT_TRUE(writer.HaveValidCluster());
 }
 
