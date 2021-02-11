@@ -7,8 +7,6 @@
 package org.mozilla.fenix.ui.robots
 
 import android.content.Context
-import android.view.InputDevice
-import android.view.MotionEvent
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
@@ -17,12 +15,8 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.NoMatchingViewException
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
-import androidx.test.espresso.action.GeneralClickAction
 import androidx.test.espresso.action.GeneralLocation
-import androidx.test.espresso.action.Press
-import androidx.test.espresso.action.Tap
 import androidx.test.espresso.action.ViewActions
-import androidx.test.espresso.action.ViewActions.actionWithAssertions
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
@@ -51,6 +45,7 @@ import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
+import org.mozilla.fenix.helpers.clickAtLocationInView
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.helpers.idlingresource.BottomSheetBehaviorStateIdlingResource
 import org.mozilla.fenix.helpers.matchers.BottomSheetBehaviorHalfExpandedMaxRatioMatcher
@@ -264,17 +259,7 @@ class TabDrawerRobot {
         fun clickTopBar(interact: TabDrawerRobot.() -> Unit): Transition {
             // The topBar contains other views.
             // Don't do the default click in the middle, rather click in some free space - top right.
-            onView(withId(R.id.topBar)).perform(
-                actionWithAssertions(
-                    GeneralClickAction(
-                        Tap.SINGLE,
-                        GeneralLocation.TOP_RIGHT,
-                        Press.FINGER,
-                        InputDevice.SOURCE_UNKNOWN,
-                        MotionEvent.BUTTON_PRIMARY
-                    )
-                )
-            )
+            onView(withId(R.id.topBar)).clickAtLocationInView(GeneralLocation.TOP_RIGHT)
             TabDrawerRobot().interact()
             return Transition()
         }
