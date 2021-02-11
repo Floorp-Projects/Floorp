@@ -515,8 +515,8 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk& aChunk) {
 
 // These two define value used in GetNextEncodeOperation to determine the
 // EncodeOperation for next target frame.
-#define I_FRAME_RATIO (0.5)
-#define SKIP_FRAME_RATIO (0.75)
+#define I_FRAME_RATIO (0.85)  // Effectively disabled, because perceived quality
+#define SKIP_FRAME_RATIO (0.85)
 
 /**
  * Compares the elapsed time from the beginning of GetEncodedTrack and
