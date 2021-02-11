@@ -246,6 +246,12 @@ class MediaEncoder {
    */
   RefPtr<BlobPromise> RequestData();
 
+  // Event that gets notified after we have muxed at least mTimeslice worth of
+  // data into the current blob storage.
+  MediaEventSource<RefPtr<dom::BlobImpl>>& DataAvailableEvent() {
+    return mDataAvailableEvent;
+  }
+
  protected:
   ~MediaEncoder();
 
@@ -283,6 +289,24 @@ class MediaEncoder {
    * Creates a new MutableBlobStorage if one doesn't exist.
    */
   void MaybeCreateMutableBlobStorage();
+
+  /**
+   * Called when an encoded audio frame has been pushed by the audio encoder.
+   */
+  void OnEncodedAudioPushed(const RefPtr<EncodedFrame>& aFrame);
+
+  /**
+   * Called when an encoded video frame has been pushed by the video encoder.
+   */
+  void OnEncodedVideoPushed(const RefPtr<EncodedFrame>& aFrame);
+
+  /**
+   * If enough data has been pushed to the muxer, extract it into the current
+   * blob storage. If more than mTimeslice data has been pushed to the muxer
+   * since the last DataAvailableEvent was notified, also gather the blob and
+   * notify MediaRecorder.
+   */
+  void MaybeExtractOrGatherBlob();
 
   // Extracts encoded and muxed data into the current blob storage, creating one
   // if it doesn't exist. The returned promise resolves when data has been
@@ -324,8 +348,12 @@ class MediaEncoder {
  private:
   nsTArray<RefPtr<MediaEncoderListener>> mListeners;
 
+  MediaEventListener mAudioPushListener;
   MediaEventListener mAudioFinishListener;
+  MediaEventListener mVideoPushListener;
   MediaEventListener mVideoFinishListener;
+
+  MediaEventProducer<RefPtr<dom::BlobImpl>> mDataAvailableEvent;
 
   // The AudioNode we are encoding.
   // Will be null when input is media stream or destination node.
@@ -351,8 +379,20 @@ class MediaEncoder {
   // If set, is a promise for the latest GatherBlob() operation. Allows
   // GatherBlob() operations to be serialized in order to avoid races.
   RefPtr<BlobPromise> mBlobPromise;
-  // Timestamp of the last fired dataavailable event.
-  TimeStamp mLastBlobTimeStamp;
+  // The end time of the muxed data in the last gathered blob. If more than one
+  // track is present, this is the end time of the track that ends the earliest
+  // in the last blob. Encoder thread only.
+  media::TimeUnit mLastBlobTime;
+  // The end time of the muxed data in the current blob storage. If more than
+  // one track is present, this is the end time of the track that ends the
+  // earliest in the current blob storage. Encoder thread only.
+  media::TimeUnit mLastExtractTime;
+  // The end time of encoded audio data sent to the muxer. Positive infinity if
+  // there is no audio encoder. Encoder thread only.
+  media::TimeUnit mMuxedAudioEndTime;
+  // The end time of encoded video data sent to the muxer. Positive infinity if
+  // there is no video encoder. Encoder thread only.
+  media::TimeUnit mMuxedVideoEndTime;
 
   TimeStamp mStartTime;
   bool mInitialized;

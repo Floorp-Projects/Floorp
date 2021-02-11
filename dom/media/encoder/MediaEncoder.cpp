@@ -437,6 +437,8 @@ MediaEncoder::MediaEncoder(
       mCompleted(false),
       mError(false) {
   if (mAudioEncoder) {
+    mAudioPushListener = mEncodedAudioQueue->PushEvent().Connect(
+        mEncoderThread, this, &MediaEncoder::OnEncodedAudioPushed);
     mAudioFinishListener = mEncodedAudioQueue->FinishEvent().Connect(
         mEncoderThread, this, &MediaEncoder::MaybeShutdown);
     nsresult rv = mEncoderThread->Dispatch(NS_NewRunnableFunction(
@@ -447,9 +449,12 @@ MediaEncoder::MediaEncoder(
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     Unused << rv;
   } else {
+    mMuxedAudioEndTime = TimeUnit::FromInfinity();
     mEncodedAudioQueue->Finish();
   }
   if (mVideoEncoder) {
+    mVideoPushListener = mEncodedVideoQueue->PushEvent().Connect(
+        mEncoderThread, this, &MediaEncoder::OnEncodedVideoPushed);
     mVideoFinishListener = mEncodedVideoQueue->FinishEvent().Connect(
         mEncoderThread, this, &MediaEncoder::MaybeShutdown);
     nsresult rv = mEncoderThread->Dispatch(NS_NewRunnableFunction(
@@ -460,6 +465,7 @@ MediaEncoder::MediaEncoder(
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     Unused << rv;
   } else {
+    mMuxedVideoEndTime = TimeUnit::FromInfinity();
     mEncodedVideoQueue->Finish();
   }
 }
@@ -824,7 +830,9 @@ RefPtr<GenericNonExclusivePromise> MediaEncoder::Shutdown() {
   mShutdownPromise->Then(mEncoderThread, __func__,
                          [self = RefPtr<MediaEncoder>(this), this] {
                            mMuxer->Disconnect();
+                           mAudioPushListener.DisconnectIfExists();
                            mAudioFinishListener.DisconnectIfExists();
+                           mVideoPushListener.DisconnectIfExists();
                            mVideoFinishListener.DisconnectIfExists();
                          });
 
@@ -884,6 +892,10 @@ void MediaEncoder::SetError() {
 }
 
 auto MediaEncoder::RequestData() -> RefPtr<BlobPromise> {
+  MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
+  TimeUnit muxedEndTime = std::min(mMuxedAudioEndTime, mMuxedVideoEndTime);
+  mLastBlobTime = muxedEndTime;
+  mLastExtractTime = muxedEndTime;
   return Extract()->Then(
       mMainThread, __func__,
       [this, self = RefPtr<MediaEncoder>(this)](
@@ -900,6 +912,49 @@ void MediaEncoder::MaybeCreateMutableBlobStorage() {
   if (!mMutableBlobStorage) {
     mMutableBlobStorage = new MutableBlobStorage(
         MutableBlobStorage::eCouldBeInTemporaryFile, nullptr, mMaxMemory);
+  }
+}
+
+void MediaEncoder::OnEncodedAudioPushed(const RefPtr<EncodedFrame>& aFrame) {
+  MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
+  mMuxedAudioEndTime = aFrame->GetEndTime();
+  MaybeExtractOrGatherBlob();
+}
+
+void MediaEncoder::OnEncodedVideoPushed(const RefPtr<EncodedFrame>& aFrame) {
+  MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
+  mMuxedVideoEndTime = aFrame->GetEndTime();
+  MaybeExtractOrGatherBlob();
+}
+
+void MediaEncoder::MaybeExtractOrGatherBlob() {
+  MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
+
+  TimeUnit muxedEndTime = std::min(mMuxedAudioEndTime, mMuxedVideoEndTime);
+  if ((muxedEndTime - mLastBlobTime).ToTimeDuration() >= mTimeslice) {
+    LOG(LogLevel::Verbose, ("MediaEncoder %p Muxed %.2fs of data since last "
+                            "blob. Issuing new blob.",
+                            this, (muxedEndTime - mLastBlobTime).ToSeconds()));
+    RequestData()->Then(mEncoderThread, __func__,
+                        [this, self = RefPtr<MediaEncoder>(this)](
+                            const BlobPromise::ResolveOrRejectValue& aValue) {
+                          if (aValue.IsReject()) {
+                            SetError();
+                            return;
+                          }
+                          RefPtr<BlobImpl> blob = aValue.ResolveValue();
+                          mDataAvailableEvent.Notify(std::move(blob));
+                        });
+  }
+
+  if (muxedEndTime - mLastExtractTime > TimeUnit::FromSeconds(1)) {
+    // Extract data from the muxer at least every second.
+    LOG(LogLevel::Verbose,
+        ("MediaEncoder %p Muxed %.2fs of data since last "
+         "extract. Extracting more data into blob.",
+         this, (muxedEndTime - mLastExtractTime).ToSeconds()));
+    mLastExtractTime = muxedEndTime;
+    Unused << Extract();
   }
 }
 
@@ -1073,8 +1128,7 @@ void MediaEncoder::UpdateStarted() {
   mStarted = true;
 
   // Start issuing timeslice-based blobs.
-  MOZ_ASSERT(mLastBlobTimeStamp.IsNull());
-  mLastBlobTimeStamp = TimeStamp::Now();
+  MOZ_ASSERT(mLastBlobTime == TimeUnit::Zero());
 
   nsresult rv = mEncoderThread->Dispatch(NS_NewRunnableFunction(
       "mozilla::MediaEncoder::NotifyStarted", [ls = mListeners.Clone()] {
