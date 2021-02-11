@@ -200,8 +200,8 @@ add_task(async function test() {
       loginList._list.querySelectorAll(
         ".login-list-item[data-guid]:not([hidden])"
       ).length,
-      0,
-      "login-list should not show any results since the filter won't search passwords when MP is enabled"
+      1,
+      "login-list should show corresponding result when primary password is enabled"
     );
     loginFilter.value = "";
     is(
