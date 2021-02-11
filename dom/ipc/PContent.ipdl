@@ -1047,10 +1047,7 @@ parent:
     async StartVisitedQueries(nsIURI[] uri);
     async SetURITitle(nsIURI uri, nsString title);
 
-    async LoadURIExternal(nsIURI uri,
-                          nsIPrincipal triggeringPrincipal,
-                          MaybeDiscardedBrowsingContext browsingContext,
-                          bool wasExternallyTriggered);
+    async LoadURIExternal(nsIURI uri, nsIPrincipal triggeringPrincipal, MaybeDiscardedBrowsingContext browsingContext);
     async ExtProtocolChannelConnectParent(uint64_t registrarId);
 
     // PrefService message
