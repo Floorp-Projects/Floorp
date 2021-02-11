@@ -252,11 +252,6 @@ class WindowGlobalParent final : public WindowContext,
   mozilla::ipc::IPCResult RecvShare(IPCWebShareData&& aData,
                                     ShareResolver&& aResolver);
 
-  mozilla::ipc::IPCResult RecvUpdateDocumentWouldPreloadResources();
-  mozilla::ipc::IPCResult RecvSubmitLoadEventPreloadTelemetry(
-      TimeStamp aNavigationStart, TimeStamp aLoadEventStart,
-      TimeStamp aLoadEventEnd);
-
   mozilla::ipc::IPCResult RecvCheckPermitUnload(
       bool aHasInProcessBlocker, XPCOMPermitUnloadAction aAction,
       CheckPermitUnloadResolver&& aResolver);
