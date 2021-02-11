@@ -8,14 +8,11 @@ job-defaults:
     worker-type: b-linux
     worker:
         docker-image: {in-tree: debian10-amd64-build}
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets, build]
         secrets: true
         script: "mozharness/scripts/fx_desktop_build.py"
-        tooltool-downloads: internal
     fetches:
         toolchain:
             - linux64-binutils
@@ -56,6 +53,7 @@ macosx64/debug:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - linux64-sccache
+            - macosx64-sdk-10.12
             - wasi-sysroot
 
 macosx64/opt:
@@ -84,6 +82,7 @@ macosx64/opt:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - linux64-sccache
+            - macosx64-sdk-10.12
             - wasi-sysroot
 
 macosx64-asan-fuzzing/opt:
@@ -110,6 +109,7 @@ macosx64-asan-fuzzing/opt:
             - linux64-clang-macosx-cross
             - linux64-sccache
             - macosx64-llvm-symbolizer
+            - macosx64-sdk-10.12
             - wasi-sysroot
     optimization:
         skip-unless-expanded: null
@@ -139,6 +139,7 @@ macosx64-fuzzing/debug:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - linux64-sccache
+            - macosx64-sdk-10.12
             - wasi-sysroot
     optimization:
         skip-unless-expanded: null
@@ -176,6 +177,7 @@ macosx64-x64-devedition/opt:
         toolchain:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
+            - macosx64-sdk-10.12
             - wasi-sysroot
 
 macosx64-aarch64-devedition/opt:
@@ -197,7 +199,6 @@ macosx64-aarch64-devedition/opt:
     worker:
         max-run-time: 7200
         env:
-            TOOLTOOL_MANIFEST: ""
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
             PERFHERDER_EXTRA_OPTIONS: aarch64
     run:
@@ -379,6 +380,7 @@ macosx64-noopt/debug:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - linux64-sccache
+            - macosx64-sdk-10.12
             - wasi-sysroot
 
 macosx64-add-on-devel/opt:
@@ -404,6 +406,7 @@ macosx64-add-on-devel/opt:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - linux64-sccache
+            - macosx64-sdk-10.12
             - wasi-sysroot
 
 macosx64-x64-shippable/opt:
@@ -435,6 +438,7 @@ macosx64-x64-shippable/opt:
         toolchain:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
+            - macosx64-sdk-10.12
             - wasi-sysroot
 
 macosx64-aarch64-shippable/opt:
@@ -456,7 +460,6 @@ macosx64-aarch64-shippable/opt:
     worker:
         max-run-time: 7200
         env:
-            TOOLTOOL_MANIFEST: ""
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
             PERFHERDER_EXTRA_OPTIONS: aarch64
     run:
@@ -636,6 +639,7 @@ macosx64-ccov/opt:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - linux64-sccache
+            - macosx64-sdk-10.12
             - wasi-sysroot
 
 macosx64-gcp/debug:
@@ -665,6 +669,7 @@ macosx64-gcp/debug:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - linux64-sccache
+            - macosx64-sdk-10.12
             - wasi-sysroot
     optimization:
         skip-unless-backstop: null
@@ -695,4 +700,5 @@ macosx64-gcp/opt:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - linux64-sccache
+            - macosx64-sdk-10.12
             - wasi-sysroot

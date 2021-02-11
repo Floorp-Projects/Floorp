@@ -54,14 +54,8 @@ macosx64-geckodriver:
     treeherder:
         symbol: TM(gd)
         platform: macosx64/opt
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
     run:
         arguments: ['x86_64-apple-darwin']
-        resources:
-            - taskcluster/scripts/misc/tooltool-download.sh
-        tooltool-downloads: internal
     attributes:
         build_platform: macosx64-geckodriver
     fetches:
@@ -70,6 +64,7 @@ macosx64-geckodriver:
             - linux64-clang
             - linux64-llvm-dsymutil
             - linux64-rust-macos
+            - macosx64-sdk-10.12
 
 win32-geckodriver:
     treeherder:
