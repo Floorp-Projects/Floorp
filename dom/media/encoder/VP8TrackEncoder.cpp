@@ -183,10 +183,22 @@ nsresult VP8TrackEncoder::Init(int32_t aWidth, int32_t aHeight,
   vpx_codec_control(&mVPXContext, VP8E_SET_TOKEN_PARTITIONS,
                     VP8_TWO_TOKENPARTITION);
 
+  if (!mMetadata) {
+    mMetadata = MakeAndAddRef<VP8Metadata>();
+    mMetadata->mWidth = aWidth;
+    mMetadata->mHeight = aHeight;
+    mMetadata->mDisplayWidth = aDisplayWidth;
+    mMetadata->mDisplayHeight = aDisplayHeight;
+
+    VP8LOG(LogLevel::Info,
+           "%p Init() created metadata. width=%d, height=%d, displayWidth=%d, "
+           "displayHeight=%d",
+           this, mMetadata->mWidth, mMetadata->mHeight,
+           mMetadata->mDisplayWidth, mMetadata->mDisplayHeight);
+  }
+
   mFrameWidth = aWidth;
   mFrameHeight = aHeight;
-  mDisplayWidth = aDisplayWidth;
-  mDisplayHeight = aDisplayHeight;
 
   SetInitialized();
 
@@ -237,19 +249,8 @@ already_AddRefed<TrackMetadataBase> VP8TrackEncoder::GetMetadata() {
     return nullptr;
   }
 
-  RefPtr<VP8Metadata> meta = new VP8Metadata();
-  meta->mWidth = mFrameWidth;
-  meta->mHeight = mFrameHeight;
-  meta->mDisplayWidth = mDisplayWidth;
-  meta->mDisplayHeight = mDisplayHeight;
-
-  VP8LOG(LogLevel::Info,
-         "GetMetadata() width=%d, height=%d, "
-         "displayWidht=%d, displayHeight=%d",
-         meta->mWidth, meta->mHeight, meta->mDisplayWidth,
-         meta->mDisplayHeight);
-
-  return meta.forget();
+  MOZ_ASSERT(mMetadata);
+  return do_AddRef(mMetadata);
 }
 
 nsresult VP8TrackEncoder::GetEncodedPartitions(

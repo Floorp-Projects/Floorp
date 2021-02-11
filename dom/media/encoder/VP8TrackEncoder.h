@@ -17,6 +17,8 @@ typedef struct vpx_codec_ctx vpx_codec_ctx_t;
 typedef struct vpx_codec_enc_cfg vpx_codec_enc_cfg_t;
 typedef struct vpx_image vpx_image_t;
 
+class VP8Metadata;
+
 /**
  * VP8TrackEncoder implements VideoTrackEncoder by using the libvpx library.
  * We implement a realtime and variable frame rate encoder. In order to achieve
@@ -63,6 +65,9 @@ class VP8TrackEncoder : public VideoTrackEncoder {
 
   // Destroys the context and image wrapper. Does not de-allocate the structs.
   void Destroy();
+
+  // VP8 Metadata, set on successfuly Init and never modified again.
+  RefPtr<VP8Metadata> mMetadata;
 
   // Encoded timestamp.
   TrackTime mEncodedTimestamp = 0;
