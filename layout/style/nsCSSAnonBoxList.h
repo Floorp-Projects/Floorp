@@ -70,10 +70,7 @@ CSS_NON_INHERITING_ANON_BOX(framesetBlank, ":-moz-frameset-blank")
 CSS_NON_INHERITING_ANON_BOX(tableColGroup, ":-moz-table-column-group")
 CSS_NON_INHERITING_ANON_BOX(tableCol, ":-moz-table-column")
 
-CSS_NON_INHERITING_ANON_BOX(page, ":-moz-page")
-CSS_NON_INHERITING_ANON_BOX(pageBreak, ":-moz-page-break")
-CSS_NON_INHERITING_ANON_BOX(pageContent, ":-moz-page-content")
-CSS_NON_INHERITING_ANON_BOX(printedSheet, ":-moz-printed-sheet")
+CSS_NON_INHERITING_ANON_BOX(pageBreak, ":-moz-pagebreak")
 
 // Applies to blocks that wrap contiguous runs of "column-span: all"
 // elements in multi-column subtrees, or the wrappers themselves, all the
@@ -111,7 +108,10 @@ CSS_WRAPPER_ANON_BOX(tableRowGroup, ":-moz-table-row-group")
 CSS_WRAPPER_ANON_BOX(tableRow, ":-moz-table-row")
 
 CSS_ANON_BOX(canvas, ":-moz-canvas")
+CSS_ANON_BOX(page, ":-moz-page")
+CSS_ANON_BOX(pageContent, ":-moz-pagecontent")
 CSS_ANON_BOX(pageSequence, ":-moz-page-sequence")
+CSS_ANON_BOX(printedSheet, ":-moz-printed-sheet")
 CSS_ANON_BOX(scrolledContent, ":-moz-scrolled-content")
 CSS_ANON_BOX(scrolledCanvas, ":-moz-scrolled-canvas")
 CSS_ANON_BOX(scrolledPageSequence, ":-moz-scrolled-page-sequence")

@@ -2691,9 +2691,12 @@ void nsCSSFrameConstructor::ConstructAnonymousContentForCanvas(
 PrintedSheetFrame* nsCSSFrameConstructor::ConstructPrintedSheetFrame(
     PresShell* aPresShell, nsContainerFrame* aParentFrame,
     nsIFrame* aPrevSheetFrame) {
+  ComputedStyle* parentComputedStyle = aParentFrame->Style();
+  ServoStyleSet* styleSet = aPresShell->StyleSet();
+
   RefPtr<ComputedStyle> printedSheetPseudoStyle =
-      aPresShell->StyleSet()->ResolveNonInheritingAnonymousBoxStyle(
-          PseudoStyleType::printedSheet);
+      styleSet->ResolveInheritingAnonymousBoxStyle(
+          PseudoStyleType::printedSheet, parentComputedStyle);
 
   auto* printedSheetFrame =
       NS_NewPrintedSheetFrame(aPresShell, printedSheetPseudoStyle);
@@ -2706,10 +2709,12 @@ PrintedSheetFrame* nsCSSFrameConstructor::ConstructPrintedSheetFrame(
 nsContainerFrame* nsCSSFrameConstructor::ConstructPageFrame(
     PresShell* aPresShell, nsContainerFrame* aParentFrame,
     nsIFrame* aPrevPageFrame, nsContainerFrame*& aCanvasFrame) {
+  ComputedStyle* parentComputedStyle = aParentFrame->Style();
   ServoStyleSet* styleSet = aPresShell->StyleSet();
 
   RefPtr<ComputedStyle> pagePseudoStyle =
-      styleSet->ResolveNonInheritingAnonymousBoxStyle(PseudoStyleType::page);
+      styleSet->ResolveInheritingAnonymousBoxStyle(PseudoStyleType::page,
+                                                   parentComputedStyle);
 
   nsContainerFrame* pageFrame = NS_NewPageFrame(aPresShell, pagePseudoStyle);
 
@@ -2718,8 +2723,8 @@ nsContainerFrame* nsCSSFrameConstructor::ConstructPageFrame(
   pageFrame->Init(nullptr, aParentFrame, aPrevPageFrame);
 
   RefPtr<ComputedStyle> pageContentPseudoStyle;
-  pageContentPseudoStyle = styleSet->ResolveNonInheritingAnonymousBoxStyle(
-      PseudoStyleType::pageContent);
+  pageContentPseudoStyle = styleSet->ResolveInheritingAnonymousBoxStyle(
+      PseudoStyleType::pageContent, pagePseudoStyle);
 
   nsContainerFrame* pageContentFrame =
       NS_NewPageContentFrame(aPresShell, pageContentPseudoStyle);
