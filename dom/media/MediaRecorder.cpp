@@ -825,21 +825,13 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     MOZ_ASSERT(mEncoder);
 
     InvokeAsync(mEncoderThread, mEncoder.get(), __func__,
-                &MediaEncoder::Extract)
-        ->Then(mMainThread, __func__,
-               [encoder = mEncoder](
-                   const GenericPromise::ResolveOrRejectValue& aValue) {
-                 // Even if rejected, we want to gather what has already been
-                 // extracted into the current blob and expose that.
-                 Unused << NS_WARN_IF(aValue.IsReject());
-                 return encoder->GatherBlob();
-               })
+                &MediaEncoder::RequestData)
         ->Then(
             mMainThread, __func__,
             [this, self = RefPtr<Session>(this)](
                 const MediaEncoder::BlobPromise::ResolveOrRejectValue& aRrv) {
               if (aRrv.IsReject()) {
-                LOG(LogLevel::Warning, ("GatherBlob failed for RequestData()"));
+                LOG(LogLevel::Warning, ("RequestData failed"));
                 DoSessionEndTask(aRrv.RejectValue());
                 return;
               }
@@ -998,15 +990,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
                    const GenericNonExclusivePromise::ResolveOrRejectValue&
                        aValue) {
                  MOZ_DIAGNOSTIC_ASSERT(aValue.IsResolve());
-                 return encoder->Extract();
-               })
-        ->Then(mMainThread, __func__,
-               [encoder = mEncoder](
-                   const GenericPromise::ResolveOrRejectValue& aValue) {
-                 // Even if rejected, we want to gather what has already been
-                 // extracted into the current blob and expose that.
-                 Unused << NS_WARN_IF(aValue.IsReject());
-                 return encoder->GatherBlob();
+                 return encoder->RequestData();
                })
         ->Then(
             mMainThread, __func__,

@@ -240,16 +240,11 @@ class MediaEncoder {
   RefPtr<SizeOfPromise> SizeOfExcludingThis(
       mozilla::MallocSizeOf aMallocSizeOf);
 
-  // Extracts encoded and muxed data into the current blob storage, creating one
-  // if it doesn't exist. The returned promise resolves when data has been
-  // stored into the blob.
-  RefPtr<GenericPromise> Extract();
-
-  // Stops gathering data into the current blob and resolves when the current
-  // blob is available. Future data will be stored in a new blob.
-  // Should a previous async GatherBlob() operation still be in progress, we'll
-  // wait for it to finish before starting this one.
-  RefPtr<BlobPromise> GatherBlob();
+  /**
+   * Encode, mux and store into blob storage what has been buffered until now,
+   * then return the blob backed by that storage.
+   */
+  RefPtr<BlobPromise> RequestData();
 
  protected:
   ~MediaEncoder();
@@ -288,6 +283,17 @@ class MediaEncoder {
    * Creates a new MutableBlobStorage if one doesn't exist.
    */
   void MaybeCreateMutableBlobStorage();
+
+  // Extracts encoded and muxed data into the current blob storage, creating one
+  // if it doesn't exist. The returned promise resolves when data has been
+  // stored into the blob.
+  RefPtr<GenericPromise> Extract();
+
+  // Stops gathering data into the current blob and resolves when the current
+  // blob is available. Future data will be stored in a new blob.
+  // Should a previous async GatherBlob() operation still be in progress, we'll
+  // wait for it to finish before starting this one.
+  RefPtr<BlobPromise> GatherBlob();
 
   RefPtr<BlobPromise> GatherBlobImpl();
 
