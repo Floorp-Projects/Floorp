@@ -256,7 +256,7 @@ OnlineSpeechRecognitionService::ProcessAudioSegment(AudioSegment* aAudioSegment,
 
   if (!mAudioEncoder) {
     mSpeechEncoderListener = new SpeechEncoderListener(this);
-    mAudioEncoder = MakeAndAddRef<OpusTrackEncoder>(aSampleRate);
+    mAudioEncoder = MakeUnique<OpusTrackEncoder>(aSampleRate);
     RefPtr<AbstractThread> mEncoderThread = AbstractThread::GetCurrent();
     mAudioEncoder->SetWorkerThread(mEncoderThread);
     mAudioEncoder->RegisterListener(mSpeechEncoderListener);

@@ -60,8 +60,6 @@ class TrackEncoderListener {
  * the encoded data.
  */
 class TrackEncoder {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TrackEncoder);
-
  public:
   explicit TrackEncoder(TrackRate aTrackRate);
 

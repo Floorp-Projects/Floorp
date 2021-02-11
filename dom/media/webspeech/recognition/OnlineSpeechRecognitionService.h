@@ -117,7 +117,7 @@ class OnlineSpeechRecognitionService : public nsISpeechRecognitionService,
   RefPtr<SpeechEncoderListener> mSpeechEncoderListener;
   // Encoder responsible for encoding the frames from pcm to opus which is the
   // format supported by our backend
-  RefPtr<AudioTrackEncoder> mAudioEncoder;
+  UniquePtr<AudioTrackEncoder> mAudioEncoder;
   // Object responsible for wrapping the opus frames into an ogg container
   UniquePtr<ContainerWriter> mWriter;
   // Member responsible for storing the json string returned by the endpoint
