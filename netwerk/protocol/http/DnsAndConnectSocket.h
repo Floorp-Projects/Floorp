@@ -75,7 +75,7 @@ class DnsAndConnectSocket final : public nsIOutputStreamCallback,
   void Unclaim();
 
  private:
-  struct SocketTransport {
+  struct TransportSetup {
     nsCOMPtr<nsISocketTransport> mSocketTransport;
     nsCOMPtr<nsIAsyncOutputStream> mStreamOut;
     nsCOMPtr<nsIAsyncInputStream> mStreamIn;
@@ -84,6 +84,8 @@ class DnsAndConnectSocket final : public nsIOutputStreamCallback,
     void Abandon();
     nsresult SetupConn(nsAHttpTransaction* transaction, ConnectionEntry* ent,
                        HttpConnectionBase** connection);
+    [[nodiscard]] nsresult SetupStreams(DnsAndConnectSocket* dnsAndSock,
+                                        bool isBackup);
   };
 
   [[nodiscard]] nsresult SetupBackupStreams();
@@ -106,7 +108,7 @@ class DnsAndConnectSocket final : public nsIOutputStreamCallback,
   RefPtr<nsAHttpTransaction> mTransaction;
   bool mDispatchedMTransaction = false;
 
-  SocketTransport mPrimaryTransport;
+  TransportSetup mPrimaryTransport;
   uint32_t mCaps;
 
   // mSpeculative is set if the socket was created from
@@ -144,7 +146,7 @@ class DnsAndConnectSocket final : public nsIOutputStreamCallback,
 
   RefPtr<ConnectionEntry> mEnt;
   nsCOMPtr<nsITimer> mSynTimer;
-  SocketTransport mBackupTransport;
+  TransportSetup mBackupTransport;
 
   bool mIsHttp3;
 };

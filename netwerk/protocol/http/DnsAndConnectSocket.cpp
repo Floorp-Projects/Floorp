@@ -79,204 +79,10 @@ DnsAndConnectSocket::~DnsAndConnectSocket() {
   }
 }
 
-nsresult DnsAndConnectSocket::SetupStreams(bool isBackup) {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-
-  MOZ_ASSERT(mEnt);
-  nsresult rv;
-  nsTArray<nsCString> socketTypes;
-  const nsHttpConnectionInfo* ci = mEnt->mConnInfo;
-  if (mIsHttp3) {
-    socketTypes.AppendElement("quic"_ns);
-  } else {
-    if (ci->FirstHopSSL()) {
-      socketTypes.AppendElement("ssl"_ns);
-    } else {
-      const nsCString& defaultType = gHttpHandler->DefaultSocketType();
-      if (!defaultType.IsVoid()) {
-        socketTypes.AppendElement(defaultType);
-      }
-    }
-  }
-
-  nsCOMPtr<nsISocketTransport> socketTransport;
-  nsCOMPtr<nsISocketTransportService> sts;
-
-  sts = services::GetSocketTransportService();
-  if (!sts) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  LOG(
-      ("DnsAndConnectSocket::SetupStreams [this=%p ent=%s] "
-       "setup routed transport to origin %s:%d via %s:%d\n",
-       this, ci->HashKey().get(), ci->Origin(), ci->OriginPort(),
-       ci->RoutedHost(), ci->RoutedPort()));
-
-  nsCOMPtr<nsIRoutedSocketTransportService> routedSTS(do_QueryInterface(sts));
-  if (routedSTS) {
-    rv = routedSTS->CreateRoutedTransport(
-        socketTypes, ci->GetOrigin(), ci->OriginPort(), ci->GetRoutedHost(),
-        ci->RoutedPort(), ci->ProxyInfo(), getter_AddRefs(socketTransport));
-  } else {
-    if (!ci->GetRoutedHost().IsEmpty()) {
-      // There is a route requested, but the legacy nsISocketTransportService
-      // can't handle it.
-      // Origin should be reachable on origin host name, so this should
-      // not be a problem - but log it.
-      LOG(
-          ("DnsAndConnectSocket this=%p using legacy nsISocketTransportService "
-           "means explicit route %s:%d will be ignored.\n",
-           this, ci->RoutedHost(), ci->RoutedPort()));
-    }
-
-    rv = sts->CreateTransport(socketTypes, ci->GetOrigin(), ci->OriginPort(),
-                              ci->ProxyInfo(), getter_AddRefs(socketTransport));
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  uint32_t tmpFlags = 0;
-  if (mCaps & NS_HTTP_REFRESH_DNS) {
-    tmpFlags = nsISocketTransport::BYPASS_CACHE;
-  }
-
-  tmpFlags |= nsISocketTransport::GetFlagsFromTRRMode(
-      NS_HTTP_TRR_MODE_FROM_FLAGS(mCaps));
-
-  if (mCaps & NS_HTTP_LOAD_ANONYMOUS) {
-    tmpFlags |= nsISocketTransport::ANONYMOUS_CONNECT;
-  }
-
-  if (ci->GetPrivate()) {
-    tmpFlags |= nsISocketTransport::NO_PERMANENT_STORAGE;
-  }
-
-  Unused << socketTransport->SetIsPrivate(ci->GetPrivate());
-
-  if (ci->GetLessThanTls13()) {
-    tmpFlags |= nsISocketTransport::DONT_TRY_ECH;
-  }
-
-  if (((mCaps & NS_HTTP_BE_CONSERVATIVE) || ci->GetBeConservative()) &&
-      gHttpHandler->ConnMgr()->BeConservativeIfProxied(ci->ProxyInfo())) {
-    LOG(("Setting Socket to BE_CONSERVATIVE"));
-    tmpFlags |= nsISocketTransport::BE_CONSERVATIVE;
-  }
-
-  if (ci->HasIPHintAddress()) {
-    nsCOMPtr<nsIDNSService> dns =
-        do_GetService("@mozilla.org/network/dns-service;1", &rv);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    // The spec says: "If A and AAAA records for TargetName are locally
-    // available, the client SHOULD ignore these hints.", so we check if the DNS
-    // record is in cache before setting USE_IP_HINT_ADDRESS.
-    nsCOMPtr<nsIDNSRecord> record;
-    rv = dns->ResolveNative(ci->GetRoutedHost(), nsIDNSService::RESOLVE_OFFLINE,
-                            mEnt->mConnInfo->GetOriginAttributes(),
-                            getter_AddRefs(record));
-    if (NS_FAILED(rv) || !record) {
-      LOG(("Setting Socket to use IP hint address"));
-      tmpFlags |= nsISocketTransport::USE_IP_HINT_ADDRESS;
-    }
-  }
-
-  if (mCaps & NS_HTTP_DISABLE_IPV4) {
-    tmpFlags |= nsISocketTransport::DISABLE_IPV4;
-  } else if (mCaps & NS_HTTP_DISABLE_IPV6) {
-    tmpFlags |= nsISocketTransport::DISABLE_IPV6;
-  } else if (mEnt->PreferenceKnown()) {
-    if (mEnt->mPreferIPv6) {
-      tmpFlags |= nsISocketTransport::DISABLE_IPV4;
-    } else if (mEnt->mPreferIPv4) {
-      tmpFlags |= nsISocketTransport::DISABLE_IPV6;
-    }
-
-    // In case the host is no longer accessible via the preferred IP family,
-    // try the opposite one and potentially restate the preference.
-    tmpFlags |= nsISocketTransport::RETRY_WITH_DIFFERENT_IP_FAMILY;
-
-    // From the same reason, let the backup socket fail faster to try the other
-    // family.
-    uint16_t fallbackTimeout =
-        isBackup ? gHttpHandler->GetFallbackSynTimeout() : 0;
-    if (fallbackTimeout) {
-      socketTransport->SetTimeout(nsISocketTransport::TIMEOUT_CONNECT,
-                                  fallbackTimeout);
-    }
-  } else if (isBackup && gHttpHandler->FastFallbackToIPv4()) {
-    // For backup connections, we disable IPv6. That's because some users have
-    // broken IPv6 connectivity (leading to very long timeouts), and disabling
-    // IPv6 on the backup connection gives them a much better user experience
-    // with dual-stack hosts, though they still pay the 250ms delay for each new
-    // connection. This strategy is also known as "happy eyeballs".
-    tmpFlags |= nsISocketTransport::DISABLE_IPV6;
-  }
-
-  if (!Allow1918()) {
-    tmpFlags |= nsISocketTransport::DISABLE_RFC1918;
-  }
-
-  MOZ_ASSERT(!(tmpFlags & nsISocketTransport::DISABLE_IPV4) ||
-                 !(tmpFlags & nsISocketTransport::DISABLE_IPV6),
-             "Both types should not be disabled at the same time.");
-  socketTransport->SetConnectionFlags(tmpFlags);
-  socketTransport->SetTlsFlags(ci->GetTlsFlags());
-
-  const OriginAttributes& originAttributes =
-      mEnt->mConnInfo->GetOriginAttributes();
-  if (originAttributes != OriginAttributes()) {
-    socketTransport->SetOriginAttributes(originAttributes);
-  }
-
-  socketTransport->SetQoSBits(gHttpHandler->GetQoSBits());
-
-  rv = socketTransport->SetEventSink(this, nullptr);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = socketTransport->SetSecurityCallbacks(this);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (gHttpHandler->EchConfigEnabled()) {
-    rv = socketTransport->SetEchConfig(ci->GetEchConfig());
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  Telemetry::Accumulate(Telemetry::HTTP_CONNECTION_ENTRY_CACHE_HIT_1,
-                        mEnt->mUsedForConnection);
-  mEnt->mUsedForConnection = true;
-
-  nsCOMPtr<nsIOutputStream> sout;
-  rv = socketTransport->OpenOutputStream(nsITransport::OPEN_UNBUFFERED, 0, 0,
-                                         getter_AddRefs(sout));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIInputStream> sin;
-  rv = socketTransport->OpenInputStream(nsITransport::OPEN_UNBUFFERED, 0, 0,
-                                        getter_AddRefs(sin));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  SocketTransport* tran = (!isBackup) ? &mPrimaryTransport : &mBackupTransport;
-
-  tran->mSynStarted = TimeStamp::Now();
-  tran->mSocketTransport = socketTransport.forget();
-  tran->mStreamIn = do_QueryInterface(sin);
-  tran->mStreamOut = do_QueryInterface(sout);
-
-  rv = tran->mStreamOut->AsyncWait(this, 0, 0, nullptr);
-  if (NS_SUCCEEDED(rv)) {
-    gHttpHandler->ConnMgr()->StartedConnect();
-  }
-
-  return rv;
-}
-
 nsresult DnsAndConnectSocket::SetupPrimaryStreams() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  nsresult rv = SetupStreams(false);
+  nsresult rv = mPrimaryTransport.SetupStreams(this, false);
 
   LOG(("DnsAndConnectSocket::SetupPrimaryStream [this=%p ent=%s rv=%" PRIx32
        "]",
@@ -288,7 +94,7 @@ nsresult DnsAndConnectSocket::SetupPrimaryStreams() {
 nsresult DnsAndConnectSocket::SetupBackupStreams() {
   MOZ_ASSERT(mTransaction);
 
-  nsresult rv = SetupStreams(true);
+  nsresult rv = mBackupTransport.SetupStreams(this, true);
 
   LOG(("DnsAndConnectSocket::SetupBackupStream [this=%p ent=%s rv=%" PRIx32 "]",
        this, mEnt->mConnInfo->Origin(), static_cast<uint32_t>(rv)));
@@ -784,7 +590,7 @@ void DnsAndConnectSocket::CloseTransports(nsresult error) {
   }
 }
 
-void DnsAndConnectSocket::SocketTransport::Abandon() {
+void DnsAndConnectSocket::TransportSetup::Abandon() {
   // Tell socket (and backup socket) to forget the half open socket.
   if (mSocketTransport) {
     mSocketTransport->SetEventSink(nullptr, nullptr);
@@ -806,7 +612,7 @@ void DnsAndConnectSocket::SocketTransport::Abandon() {
   }
 }
 
-nsresult DnsAndConnectSocket::SocketTransport::SetupConn(
+nsresult DnsAndConnectSocket::TransportSetup::SetupConn(
     nsAHttpTransaction* transaction, ConnectionEntry* ent,
     HttpConnectionBase** connection) {
   RefPtr<HttpConnectionBase> conn;
@@ -852,6 +658,200 @@ nsresult DnsAndConnectSocket::SocketTransport::SetupConn(
   mSocketTransport = nullptr;
   mStreamOut = nullptr;
   mStreamIn = nullptr;
+  return rv;
+}
+
+nsresult DnsAndConnectSocket::TransportSetup::SetupStreams(
+    DnsAndConnectSocket *dnsAndSock, bool isBackup) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  MOZ_ASSERT(dnsAndSock->mEnt);
+  nsresult rv;
+  nsTArray<nsCString> socketTypes;
+  const nsHttpConnectionInfo* ci = dnsAndSock->mEnt->mConnInfo;
+  if (dnsAndSock->mIsHttp3) {
+    socketTypes.AppendElement("quic"_ns);
+  } else {
+    if (ci->FirstHopSSL()) {
+      socketTypes.AppendElement("ssl"_ns);
+    } else {
+      const nsCString& defaultType = gHttpHandler->DefaultSocketType();
+      if (!defaultType.IsVoid()) {
+        socketTypes.AppendElement(defaultType);
+      }
+    }
+  }
+
+  nsCOMPtr<nsISocketTransport> socketTransport;
+  nsCOMPtr<nsISocketTransportService> sts;
+
+  sts = services::GetSocketTransportService();
+  if (!sts) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  LOG(
+      ("DnsAndConnectSocket::SetupStreams [this=%p ent=%s] "
+       "setup routed transport to origin %s:%d via %s:%d\n",
+       this, ci->HashKey().get(), ci->Origin(), ci->OriginPort(),
+       ci->RoutedHost(), ci->RoutedPort()));
+
+  nsCOMPtr<nsIRoutedSocketTransportService> routedSTS(do_QueryInterface(sts));
+  if (routedSTS) {
+    rv = routedSTS->CreateRoutedTransport(
+        socketTypes, ci->GetOrigin(), ci->OriginPort(), ci->GetRoutedHost(),
+        ci->RoutedPort(), ci->ProxyInfo(), getter_AddRefs(socketTransport));
+  } else {
+    if (!ci->GetRoutedHost().IsEmpty()) {
+      // There is a route requested, but the legacy nsISocketTransportService
+      // can't handle it.
+      // Origin should be reachable on origin host name, so this should
+      // not be a problem - but log it.
+      LOG(
+          ("DnsAndConnectSocket this=%p using legacy nsISocketTransportService "
+           "means explicit route %s:%d will be ignored.\n",
+           this, ci->RoutedHost(), ci->RoutedPort()));
+    }
+
+    rv = sts->CreateTransport(socketTypes, ci->GetOrigin(), ci->OriginPort(),
+                              ci->ProxyInfo(), getter_AddRefs(socketTransport));
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  uint32_t tmpFlags = 0;
+  if (dnsAndSock->mCaps & NS_HTTP_REFRESH_DNS) {
+    tmpFlags = nsISocketTransport::BYPASS_CACHE;
+  }
+
+  tmpFlags |= nsISocketTransport::GetFlagsFromTRRMode(
+      NS_HTTP_TRR_MODE_FROM_FLAGS(dnsAndSock->mCaps));
+
+  if (dnsAndSock->mCaps & NS_HTTP_LOAD_ANONYMOUS) {
+    tmpFlags |= nsISocketTransport::ANONYMOUS_CONNECT;
+  }
+
+  if (ci->GetPrivate()) {
+    tmpFlags |= nsISocketTransport::NO_PERMANENT_STORAGE;
+  }
+
+  Unused << socketTransport->SetIsPrivate(ci->GetPrivate());
+
+  if (ci->GetLessThanTls13()) {
+    tmpFlags |= nsISocketTransport::DONT_TRY_ECH;
+  }
+
+  if (((dnsAndSock->mCaps & NS_HTTP_BE_CONSERVATIVE) ||
+       ci->GetBeConservative()) &&
+      gHttpHandler->ConnMgr()->BeConservativeIfProxied(ci->ProxyInfo())) {
+    LOG(("Setting Socket to BE_CONSERVATIVE"));
+    tmpFlags |= nsISocketTransport::BE_CONSERVATIVE;
+  }
+
+  if (ci->HasIPHintAddress()) {
+    nsCOMPtr<nsIDNSService> dns =
+        do_GetService("@mozilla.org/network/dns-service;1", &rv);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    // The spec says: "If A and AAAA records for TargetName are locally
+    // available, the client SHOULD ignore these hints.", so we check if the DNS
+    // record is in cache before setting USE_IP_HINT_ADDRESS.
+    nsCOMPtr<nsIDNSRecord> record;
+    rv = dns->ResolveNative(ci->GetRoutedHost(), nsIDNSService::RESOLVE_OFFLINE,
+                            dnsAndSock->mEnt->mConnInfo->GetOriginAttributes(),
+                            getter_AddRefs(record));
+    if (NS_FAILED(rv) || !record) {
+      LOG(("Setting Socket to use IP hint address"));
+      tmpFlags |= nsISocketTransport::USE_IP_HINT_ADDRESS;
+    }
+  }
+
+  if (dnsAndSock->mCaps & NS_HTTP_DISABLE_IPV4) {
+    tmpFlags |= nsISocketTransport::DISABLE_IPV4;
+  } else if (dnsAndSock->mCaps & NS_HTTP_DISABLE_IPV6) {
+    tmpFlags |= nsISocketTransport::DISABLE_IPV6;
+  } else if (dnsAndSock->mEnt->PreferenceKnown()) {
+    if (dnsAndSock->mEnt->mPreferIPv6) {
+      tmpFlags |= nsISocketTransport::DISABLE_IPV4;
+    } else if (dnsAndSock->mEnt->mPreferIPv4) {
+      tmpFlags |= nsISocketTransport::DISABLE_IPV6;
+    }
+
+    // In case the host is no longer accessible via the preferred IP family,
+    // try the opposite one and potentially restate the preference.
+    tmpFlags |= nsISocketTransport::RETRY_WITH_DIFFERENT_IP_FAMILY;
+
+    // From the same reason, let the backup socket fail faster to try the other
+    // family.
+    uint16_t fallbackTimeout =
+        isBackup ? gHttpHandler->GetFallbackSynTimeout() : 0;
+    if (fallbackTimeout) {
+      socketTransport->SetTimeout(nsISocketTransport::TIMEOUT_CONNECT,
+                                  fallbackTimeout);
+    }
+  } else if (isBackup && gHttpHandler->FastFallbackToIPv4()) {
+    // For backup connections, we disable IPv6. That's because some users have
+    // broken IPv6 connectivity (leading to very long timeouts), and disabling
+    // IPv6 on the backup connection gives them a much better user experience
+    // with dual-stack hosts, though they still pay the 250ms delay for each new
+    // connection. This strategy is also known as "happy eyeballs".
+    tmpFlags |= nsISocketTransport::DISABLE_IPV6;
+  }
+
+  if (!dnsAndSock->Allow1918()) {
+    tmpFlags |= nsISocketTransport::DISABLE_RFC1918;
+  }
+
+  MOZ_ASSERT(!(tmpFlags & nsISocketTransport::DISABLE_IPV4) ||
+                 !(tmpFlags & nsISocketTransport::DISABLE_IPV6),
+             "Both types should not be disabled at the same time.");
+  socketTransport->SetConnectionFlags(tmpFlags);
+  socketTransport->SetTlsFlags(ci->GetTlsFlags());
+
+  const OriginAttributes& originAttributes =
+      dnsAndSock->mEnt->mConnInfo->GetOriginAttributes();
+  if (originAttributes != OriginAttributes()) {
+    socketTransport->SetOriginAttributes(originAttributes);
+  }
+
+  socketTransport->SetQoSBits(gHttpHandler->GetQoSBits());
+
+  rv = socketTransport->SetEventSink(dnsAndSock, nullptr);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = socketTransport->SetSecurityCallbacks(dnsAndSock);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (gHttpHandler->EchConfigEnabled()) {
+    rv = socketTransport->SetEchConfig(ci->GetEchConfig());
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  Telemetry::Accumulate(Telemetry::HTTP_CONNECTION_ENTRY_CACHE_HIT_1,
+                        dnsAndSock->mEnt->mUsedForConnection);
+  dnsAndSock->mEnt->mUsedForConnection = true;
+
+  nsCOMPtr<nsIOutputStream> sout;
+  rv = socketTransport->OpenOutputStream(nsITransport::OPEN_UNBUFFERED, 0, 0,
+                                         getter_AddRefs(sout));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIInputStream> sin;
+  rv = socketTransport->OpenInputStream(nsITransport::OPEN_UNBUFFERED, 0, 0,
+                                        getter_AddRefs(sin));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mSynStarted = TimeStamp::Now();
+  mSocketTransport = socketTransport.forget();
+  mStreamIn = do_QueryInterface(sin);
+  mStreamOut = do_QueryInterface(sout);
+
+  rv = mStreamOut->AsyncWait(dnsAndSock, 0, 0, nullptr);
+  if (NS_SUCCEEDED(rv)) {
+    gHttpHandler->ConnMgr()->StartedConnect();
+  }
+
   return rv;
 }
 
