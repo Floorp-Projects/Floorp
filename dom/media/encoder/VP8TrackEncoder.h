@@ -48,6 +48,9 @@ class VP8TrackEncoder : public VideoTrackEncoder {
                 int32_t aDisplayHeight) final;
 
  private:
+  // Initiates the underlying vpx encoder.
+  nsresult InitInternal(int32_t aWidth, int32_t aHeight);
+
   // Get the EncodeOperation for next target frame.
   EncodeOperation GetNextEncodeOperation(TimeDuration aTimeElapsed,
                                          TimeDuration aProcessedDuration);
@@ -63,8 +66,7 @@ class VP8TrackEncoder : public VideoTrackEncoder {
   nsresult PrepareRawFrame(VideoChunk& aChunk);
 
   // Re-configures an existing encoder with a new frame size.
-  nsresult Reconfigure(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
-                       int32_t aDisplayHeight);
+  nsresult Reconfigure(int32_t aWidth, int32_t aHeight);
 
   // Destroys the context and image wrapper. Does not de-allocate the structs.
   void Destroy();
