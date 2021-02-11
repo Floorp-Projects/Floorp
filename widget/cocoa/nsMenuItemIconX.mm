@@ -117,7 +117,9 @@ nsresult nsMenuItemIconX::SetupIcon() {
 }
 
 nsresult nsMenuItemIconX::GetIconURI(nsIURI** aIconURI) {
-  if (!mMenuObject) return NS_ERROR_FAILURE;
+  if (!mMenuObject) {
+    return NS_ERROR_FAILURE;
+  }
 
   // Mac native menu items support having both a checkmark and an icon
   // simultaneously, but this is unheard of in the cross-platform toolkit,
@@ -127,10 +129,14 @@ nsresult nsMenuItemIconX::GetIconURI(nsIURI** aIconURI) {
   // by pretending that no icon exists if this is a checkable menu item.
   if (mMenuObject->MenuObjectType() == eMenuItemObjectType) {
     nsMenuItemX* menuItem = static_cast<nsMenuItemX*>(mMenuObject);
-    if (menuItem->GetMenuItemType() != eRegularMenuItemType) return NS_ERROR_FAILURE;
+    if (menuItem->GetMenuItemType() != eRegularMenuItemType) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
-  if (!mContent) return NS_ERROR_FAILURE;
+  if (!mContent) {
+    return NS_ERROR_FAILURE;
+  }
 
   // First, look at the content node's "image" attribute.
   nsAutoString imageURIString;
@@ -167,7 +173,9 @@ nsresult nsMenuItemIconX::GetIconURI(nsIURI** aIconURI) {
     // If this menu item shouldn't have an icon, the string will be empty,
     // and NS_NewURI will fail.
     rv = NS_NewURI(getter_AddRefs(iconURI), imageURIString);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
 
   // Empty the mImageRegionRect initially as the image region CSS could
