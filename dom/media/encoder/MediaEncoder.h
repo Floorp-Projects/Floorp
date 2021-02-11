@@ -35,27 +35,6 @@ class VideoStreamTrack;
 }  // namespace dom
 
 class DriftCompensator;
-class MediaEncoder;
-
-class MediaEncoderListener {
- public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaEncoderListener)
-  /**
-   * All tracks have received data.
-   */
-  virtual void Started() = 0;
-  /**
-   * There was a fatal error in an encoder.
-   */
-  virtual void Error() = 0;
-  /**
-   * The MediaEncoder has been shut down.
-   */
-  virtual void Shutdown() = 0;
-
- protected:
-  virtual ~MediaEncoderListener() = default;
-};
 
 /**
  * MediaEncoder is the framework of encoding module, it controls and manages
@@ -85,9 +64,10 @@ class MediaEncoderListener {
  *    => encoder = MediaEncoder::CreateEncoder(aMIMEType);
  *    It then creates a ContainerWriter according to the MIME type
  *
- * 2) Connect a MediaEncoderListener to be notified when the MediaEncoder has
- *    been started and when there's data available.
- *    => encoder->RegisterListener(listener);
+ * 2) Connect handlers through MediaEventListeners to the MediaEncoder's
+ *    MediaEventSources, StartedEvent(), DataAvailableEvent(), ErrorEvent() and
+ *    ShutdownEvent().
+ *    => listener = encoder->DataAvailableEvent().Connect(mainThread, &OnBlob);
  *
  * 3) Connect the sources to be recorded. Either through:
  *    => encoder->ConnectAudioNode(node);
@@ -96,10 +76,13 @@ class MediaEncoderListener {
  *    These should not be mixed. When connecting MediaStreamTracks there is
  *    support for at most one of each kind.
  *
- * 4) When the MediaEncoderListener is notified that the MediaEncoder has
- *    data available, we can encode data. This also encodes metadata on its
- *    first invocation.
- *    => encoder->GetEncodedData(...);
+ * 4) MediaEncoder automatically encodes data from the connected tracks, muxes
+ *    them and writes it all into a blob, including metadata. When the blob
+ *    contains at least `timeslice` worth of data it notifies the
+ *    DataAvailableEvent that was connected in step 2.
+ *    => void OnBlob(RefPtr<BlobImpl> aBlob) {
+ *    =>   DispatchBlobEvent(Blob::Create(GetOwnerGlobal(), aBlob));
+ *    => };
  *
  * 5) To stop encoding, there are multiple options:
  *
@@ -207,8 +190,6 @@ class MediaEncoder {
 
   static bool IsWebMEncoderEnabled();
 
-  const nsString& MimeType() const;
-
   /**
    * Updates internal state when track encoders are all initialized.
    */
@@ -219,18 +200,6 @@ class MediaEncoder {
    * notifies listeners that this MediaEncoder has been started.
    */
   void UpdateStarted();
-
-  /**
-   * Registers a listener to events from this MediaEncoder.
-   * We hold a strong reference to the listener.
-   */
-  void RegisterListener(MediaEncoderListener* aListener);
-
-  /**
-   * Unregisters a listener from events from this MediaEncoder.
-   * The listener will stop receiving events synchronously.
-   */
-  bool UnregisterListener(MediaEncoderListener* aListener);
 
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
   /*
@@ -246,6 +215,13 @@ class MediaEncoder {
    */
   RefPtr<BlobPromise> RequestData();
 
+  // Event that gets notified when all track encoders have received data.
+  MediaEventSource<void>& StartedEvent() { return mStartedEvent; }
+  // Event that gets notified when there was an error preventing continued
+  // recording somewhere in the MediaEncoder stack.
+  MediaEventSource<void>& ErrorEvent() { return mErrorEvent; }
+  // Event that gets notified when the MediaEncoder stack has been shut down.
+  MediaEventSource<void>& ShutdownEvent() { return mShutdownEvent; }
   // Event that gets notified after we have muxed at least mTimeslice worth of
   // data into the current blob storage.
   MediaEventSource<RefPtr<dom::BlobImpl>>& DataAvailableEvent() {
@@ -346,13 +322,14 @@ class MediaEncoder {
   const TimeDuration mTimeslice;
 
  private:
-  nsTArray<RefPtr<MediaEncoderListener>> mListeners;
-
   MediaEventListener mAudioPushListener;
   MediaEventListener mAudioFinishListener;
   MediaEventListener mVideoPushListener;
   MediaEventListener mVideoFinishListener;
 
+  MediaEventProducer<void> mStartedEvent;
+  MediaEventProducer<void> mErrorEvent;
+  MediaEventProducer<void> mShutdownEvent;
   MediaEventProducer<RefPtr<dom::BlobImpl>> mDataAvailableEvent;
 
   // The AudioNode we are encoding.
