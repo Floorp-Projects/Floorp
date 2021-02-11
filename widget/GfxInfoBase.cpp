@@ -228,6 +228,9 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
     case nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE:
       name = BLOCKLIST_PREF_BRANCH "webrender.software";
       break;
+    case nsIGfxInfo::FEATURE_WEBRENDER_OPTIMIZED_SHADERS:
+      name = BLOCKLIST_PREF_BRANCH "webrender.optimized-shaders";
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected nsIGfxInfo feature?!");
       break;
