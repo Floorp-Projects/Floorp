@@ -793,7 +793,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     MOZ_ASSERT(NS_IsMainThread());
 
     if (mEncoder) {
-      mEncoder->Stop();
+      mEncoder->DisconnectTracks();
     }
 
     // Remove main thread state added in Start().
