@@ -424,7 +424,7 @@ function expectedException(actual, expected) {
  *
  * @param block
  *        (function) Function block to evaluate and catch eventual thrown errors
- * @param expected (optional)
+ * @param expected
  *        (mixed) This parameter can be either a RegExp or a function. The
  *        function is either the error type's constructor, or it's a method that returns a boolean
  *        that describes the test outcome.
@@ -595,4 +595,82 @@ proto.less = function less(lhs, rhs, message) {
  */
 proto.lessOrEqual = function lessOrEqual(lhs, rhs, message) {
   compareNumbers.call(this, lhs > rhs, lhs, rhs, message, "<=");
+};
+
+/**
+ * The lhs must be a string that matches the rhs regular expression.
+ * rhs can be specified either as a string or a RegExp object. If specified as a
+ * string it will be interpreted as a regular expression so take care to escape
+ * special characters such as "?" or "(" if you need the actual characters.
+ *
+ * @param lhs
+ *        (string) The string to be tested.
+ * @param rhs
+ *        (string | RegExp) The regular expression that the string will be
+ *        tested with. Note that if passed as a string, this will be interpreted
+ *        as a regular expression.
+ * @param message (optional)
+ *        (string) Short explanation of the comparison result
+ */
+proto.stringMatches = function stringMatches(lhs, rhs, message) {
+  if (typeof rhs != "string" && !instanceOf(rhs, "RegExp")) {
+    this.report(
+      true,
+      lhs,
+      String(rhs),
+      `Expected a string or a RegExp for rhs, but "${rhs}" isn't a string or a RegExp object.`
+    );
+    return;
+  }
+
+  if (typeof lhs != "string") {
+    this.report(
+      true,
+      lhs,
+      String(rhs),
+      `Expected a string for lhs, but "${lhs}" isn't a string.`
+    );
+    return;
+  }
+
+  if (typeof rhs == "string") {
+    try {
+      rhs = new RegExp(rhs);
+    } catch {
+      this.report(
+        true,
+        lhs,
+        rhs,
+        `Expected a valid regular expression for rhs, but "${rhs}" isn't one.`
+      );
+      return;
+    }
+  }
+
+  const isCorrect = rhs.test(lhs);
+  this.report(!isCorrect, lhs, rhs.toString(), message, "matches");
+};
+
+/**
+ * The lhs must be a string that contains the rhs string.
+ *
+ * @param lhs
+ *        (string) The string to be tested.
+ * @param rhs
+ *        (string) The string to be found.
+ * @param message (optional)
+ *        (string) Short explanation of the comparison result
+ */
+proto.stringContains = function stringContains(lhs, rhs, message) {
+  if (typeof lhs != "string" || typeof rhs != "string") {
+    this.report(
+      true,
+      lhs,
+      rhs,
+      `Expected a string for both lhs and rhs, but either "${lhs}" or "${rhs}" is not a string.`
+    );
+  }
+
+  const isCorrect = lhs.includes(rhs);
+  this.report(!isCorrect, lhs, rhs, message, "includes");
 };

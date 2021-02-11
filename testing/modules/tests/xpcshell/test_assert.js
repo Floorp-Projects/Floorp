@@ -409,6 +409,29 @@ function run_test() {
   }
   assert.equal(message, "AssertionError: 2 <= 1");
 
+  /* ---- stringMatches ---- */
+  assert.stringMatches("hello world", /llo\s/);
+  assert.stringMatches("hello world", "llo\\s");
+  assert.throws(
+    () => assert.stringMatches("hello world", /foo/),
+    /^AssertionError: "hello world" matches "\/foo\/"/
+  );
+  assert.throws(
+    () => assert.stringMatches(5, /foo/),
+    /^AssertionError: Expected a string for lhs, but "5" isn't a string./
+  );
+  assert.throws(
+    () => assert.stringMatches("foo bar", "+"),
+    /^AssertionError: Expected a valid regular expression for rhs, but "\+" isn't one./
+  );
+
+  /* ---- stringContains ---- */
+  assert.stringContains("hello world", "llo");
+  assert.throws(
+    () => assert.stringContains(5, "foo"),
+    /^AssertionError: Expected a string for both lhs and rhs, but either "5" or "foo" is not a string./
+  );
+
   run_next_test();
 }
 
