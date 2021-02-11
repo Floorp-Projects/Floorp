@@ -46,9 +46,10 @@ class MockDriftCompensator : public DriftCompensator {
 
 class TestVP8TrackEncoder : public VP8TrackEncoder {
  public:
-  explicit TestVP8TrackEncoder(TrackRate aTrackRate = VIDEO_TRACK_RATE)
+  explicit TestVP8TrackEncoder(Maybe<float> aKeyFrameIntervalFactor = Nothing())
       : VP8TrackEncoder(MakeRefPtr<NiceMock<MockDriftCompensator>>(),
-                        aTrackRate, FrameDroppingMode::DISALLOW) {}
+                        VIDEO_TRACK_RATE, FrameDroppingMode::DISALLOW,
+                        aKeyFrameIntervalFactor) {}
 
   MockDriftCompensator* DriftCompensator() {
     return static_cast<MockDriftCompensator*>(mDriftCompensator.get());
@@ -56,7 +57,7 @@ class TestVP8TrackEncoder : public VP8TrackEncoder {
 
   ::testing::AssertionResult TestInit(const InitParam& aParam) {
     nsresult result =
-        Init(aParam.mWidth, aParam.mHeight, aParam.mWidth, aParam.mHeight);
+        Init(aParam.mWidth, aParam.mHeight, aParam.mWidth, aParam.mHeight, 30);
 
     if (((NS_FAILED(result) && aParam.mShouldSucceed)) ||
         (NS_SUCCEEDED(result) && !aParam.mShouldSucceed)) {
@@ -821,7 +822,8 @@ TEST(VP8VideoTrackEncoder, LongFramesReEncoded)
 // as expected. Short here means shorter than the default (1s).
 TEST(VP8VideoTrackEncoder, ShortKeyFrameInterval)
 {
-  TestVP8TrackEncoder encoder;
+  // Set the factor high to only test the keyframe-forcing logic
+  TestVP8TrackEncoder encoder(Some(2.0));
   YUVBufferGenerator generator;
   generator.Init(mozilla::gfx::IntSize(640, 480));
   TimeStamp now = TimeStamp::Now();
@@ -890,7 +892,8 @@ TEST(VP8VideoTrackEncoder, ShortKeyFrameInterval)
 // as expected. Long here means longer than the default (1s).
 TEST(VP8VideoTrackEncoder, LongKeyFrameInterval)
 {
-  TestVP8TrackEncoder encoder;
+  // Set the factor high to only test the keyframe-forcing logic
+  TestVP8TrackEncoder encoder(Some(2.0));
   YUVBufferGenerator generator;
   generator.Init(mozilla::gfx::IntSize(640, 480));
   TimeStamp now = TimeStamp::Now();
@@ -959,7 +962,8 @@ TEST(VP8VideoTrackEncoder, LongKeyFrameInterval)
 // as expected. Default interval should be 1000ms.
 TEST(VP8VideoTrackEncoder, DefaultKeyFrameInterval)
 {
-  TestVP8TrackEncoder encoder;
+  // Set the factor high to only test the keyframe-forcing logic
+  TestVP8TrackEncoder encoder(Some(2.0));
   YUVBufferGenerator generator;
   generator.Init(mozilla::gfx::IntSize(640, 480));
   TimeStamp now = TimeStamp::Now();
@@ -1026,7 +1030,8 @@ TEST(VP8VideoTrackEncoder, DefaultKeyFrameInterval)
 // encodes keyframes as expected.
 TEST(VP8VideoTrackEncoder, DynamicKeyFrameIntervalChanges)
 {
-  TestVP8TrackEncoder encoder;
+  // Set the factor high to only test the keyframe-forcing logic
+  TestVP8TrackEncoder encoder(Some(10.0));
   YUVBufferGenerator generator;
   generator.Init(mozilla::gfx::IntSize(640, 480));
   nsTArray<RefPtr<EncodedFrame>> frames;

@@ -417,8 +417,8 @@ class VideoTrackEncoder : public TrackEncoder {
    * received the first valid video frame from MediaTrackGraph.
    * Listeners will be notified after it has been successfully initialized.
    */
-  virtual nsresult Init(int aWidth, int aHeight, int aDisplayWidth,
-                        int aDisplayHeight) = 0;
+  virtual nsresult Init(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
+                        int32_t aDisplayHeight, float aEstimatedFrameRate) = 0;
 
   /**
    * Drift compensator for re-clocking incoming video frame wall-clock

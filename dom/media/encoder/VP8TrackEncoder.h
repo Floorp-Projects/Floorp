@@ -34,7 +34,8 @@ class VP8TrackEncoder : public VideoTrackEncoder {
 
  public:
   VP8TrackEncoder(RefPtr<DriftCompensator> aDriftCompensator,
-                  TrackRate aTrackRate, FrameDroppingMode aFrameDroppingMode);
+                  TrackRate aTrackRate, FrameDroppingMode aFrameDroppingMode,
+                  Maybe<float> aKeyFrameIntervalFactor = Nothing());
   virtual ~VP8TrackEncoder();
 
   already_AddRefed<TrackMetadataBase> GetMetadata() final;
@@ -45,11 +46,12 @@ class VP8TrackEncoder : public VideoTrackEncoder {
 
  protected:
   nsresult Init(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
-                int32_t aDisplayHeight) final;
+                int32_t aDisplayHeight, float aEstimatedFrameRate) final;
 
  private:
   // Initiates the underlying vpx encoder.
-  nsresult InitInternal(int32_t aWidth, int32_t aHeight);
+  nsresult InitInternal(int32_t aWidth, int32_t aHeight,
+                        int32_t aMaxKeyFrameDistance);
 
   // Get the EncodeOperation for next target frame.
   EncodeOperation GetNextEncodeOperation(TimeDuration aTimeElapsed,
@@ -66,10 +68,19 @@ class VP8TrackEncoder : public VideoTrackEncoder {
   nsresult PrepareRawFrame(VideoChunk& aChunk);
 
   // Re-configures an existing encoder with a new frame size.
-  nsresult Reconfigure(int32_t aWidth, int32_t aHeight);
+  nsresult Reconfigure(int32_t aWidth, int32_t aHeight,
+                       int32_t aMaxKeyFrameDistance);
 
   // Destroys the context and image wrapper. Does not de-allocate the structs.
   void Destroy();
+
+  // Helper that calculates the desired max keyframe distance (vp8 config's
+  // max_kf_dist) based on configured key frame interval and recent framerate.
+  // Returns Nothing if not enough input data is available.
+  Maybe<int32_t> CalculateMaxKeyFrameDistance(
+      Maybe<float> aEstimatedFrameRate = Nothing()) const;
+
+  void SetMaxKeyFrameDistance(int32_t aMaxKeyFrameDistance);
 
   // VP8 Metadata, set on successfuly Init and never modified again.
   RefPtr<VP8Metadata> mMetadata;
@@ -111,6 +122,26 @@ class VP8TrackEncoder : public VideoTrackEncoder {
    * this, though it can vary based on frame rate.
    */
   TimeDuration mKeyFrameInterval;
+
+  /**
+   * A factor used to multiply the estimated key-frame-interval based on
+   * mKeyFrameInterval (ms) with when configuring kf_max_dist in the encoder.
+   * The goal is to set it a bit below 1.0 to avoid falling back to forcing
+   * keyframes.
+   * NB that for purposes of testing the mKeyFrameInterval fallback this may be
+   *    set to values higher than 1.0.
+   */
+  float mKeyFrameIntervalFactor;
+
+  /**
+   * Time when we last updated the key-frame-distance.
+   */
+  media::TimeUnit mLastKeyFrameDistanceUpdate;
+
+  /**
+   * The frame duration value last used to configure kf_max_dist.
+   */
+  Maybe<int32_t> mMaxKeyFrameDistance;
 
   /**
    * A local segment queue which takes the raw data out from mRawSegment in the
