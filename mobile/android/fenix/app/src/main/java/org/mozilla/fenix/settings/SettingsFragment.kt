@@ -14,6 +14,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.widget.Toast
 import androidx.annotation.VisibleForTesting
@@ -335,7 +336,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                             Toast.LENGTH_LONG
                         ).show()
 
-                        Handler().postDelayed({
+                        Handler(Looper.getMainLooper()).postDelayed({
                             exitProcess(0)
                         }, AMO_COLLECTION_OVERRIDE_EXIT_DELAY)
                     }
@@ -406,7 +407,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                         getString(R.string.toast_override_fxa_sync_server_done),
                         Toast.LENGTH_LONG
                     ).show()
-                    Handler().postDelayed({
+                    Handler(Looper.getMainLooper()).postDelayed({
                         exitProcess(0)
                     }, FXA_SYNC_OVERRIDE_EXIT_DELAY)
                 }

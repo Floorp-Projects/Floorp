@@ -5,6 +5,7 @@
 package org.mozilla.fenix.collections
 
 import android.os.Handler
+import android.os.Looper
 import android.text.InputFilter
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -168,7 +169,7 @@ class CollectionCreationView(
             text = context.getString(R.string.create_collection_name_collection)
             setOnClickListener {
                 name_collection_edittext.hideKeyboard()
-                val handler = Handler()
+                val handler = Handler(Looper.getMainLooper())
                 handler.postDelayed({
                     interactor.onBackPressed(SaveCollectionStep.NameCollection)
                 }, TRANSITION_DURATION)
@@ -214,7 +215,7 @@ class CollectionCreationView(
             text = context.getString(R.string.collection_rename)
             setOnClickListener {
                 name_collection_edittext.hideKeyboard()
-                val handler = Handler()
+                val handler = Handler(Looper.getMainLooper())
                 handler.postDelayed({
                     interactor.onBackPressed(SaveCollectionStep.RenameCollection)
                 }, TRANSITION_DURATION)
