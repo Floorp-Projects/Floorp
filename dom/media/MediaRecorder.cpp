@@ -932,6 +932,9 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     Unused << rv;
 
+    mDataAvailableListener = mEncoder->DataAvailableEvent().Connect(
+        mMainThread, this, &Session::OnDataAvailable);
+
     if (mRecorder->mAudioNode) {
       mEncoder->ConnectAudioNode(mRecorder->mAudioNode,
                                  mRecorder->mAudioNodeOutput);
@@ -1073,6 +1076,18 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     }));
   }
 
+  void OnDataAvailable(const RefPtr<BlobImpl>& aBlob) {
+    if (mRunningState.isErr() &&
+        mRunningState.unwrapErr() == NS_ERROR_DOM_SECURITY_ERR) {
+      return;
+    }
+    if (NS_WARN_IF(NS_FAILED(mRecorder->CreateAndDispatchBlobEvent(aBlob)))) {
+      LOG(LogLevel::Warning,
+          ("MediaRecorder %p Creating or dispatching BlobEvent failed", this));
+      DoSessionEndTask(NS_OK);
+    }
+  }
+
   void MediaEncoderError() {
     MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
     NS_DispatchToMainThread(NewRunnableMethod<nsresult>(
@@ -1125,7 +1140,10 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
                        return ShutdownPromise::CreateAndResolve(true, __func__);
                      })
               ->Then(mMainThread, __func__,
-                     [encoder = mEncoder] { return encoder->Cancel(); })
+                     [this, self = RefPtr<Session>(this)] {
+                       mDataAvailableListener.DisconnectIfExists();
+                       return mEncoder->Cancel();
+                     })
               ->Then(mEncoderThread, __func__, [] {
                 // Meh, this is just to convert the promise type to match
                 // mShutdownPromise.
@@ -1200,6 +1218,8 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   RefPtr<MediaEncoder> mEncoder;
   // Listener through which MediaEncoder signals us.
   RefPtr<EncoderListener> mEncoderListener;
+  // Listener connected to mMediaEncoder::DataAvailableEvent().
+  MediaEventListener mDataAvailableListener;
   // Set in Shutdown() and resolved when shutdown is complete.
   RefPtr<ShutdownPromise> mShutdownPromise;
   // Session mimeType
