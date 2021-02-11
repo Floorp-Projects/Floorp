@@ -653,6 +653,22 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       }
       return NS_OK;
     }
+
+    if (aFeature == FEATURE_WEBRENDER_OPTIMIZED_SHADERS) {
+      // Optimized shaders result in completely broken rendering in at least one
+      // Mali-T6xx device. Disable on all T6xx as a precaution until we know
+      // more specifically which devices are affected. See bug 1689064 for
+      // details.
+      const bool isMaliT6xx =
+          mGLStrings->Renderer().Find("Mali-T6", /*ignoreCase*/ true) >= 0;
+      if (isMaliT6xx) {
+        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+        aFailureId = "FEATURE_FAILURE_BUG_1689064";
+      } else {
+        *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
+      }
+      return NS_OK;
+    }
   }
 
   return GfxInfoBase::GetFeatureStatusImpl(
