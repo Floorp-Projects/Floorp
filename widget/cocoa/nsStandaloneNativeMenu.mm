@@ -20,7 +20,9 @@ NS_IMPL_ISUPPORTS_INHERITED(nsStandaloneNativeMenu, nsMenuGroupOwnerX, nsIMutati
 nsStandaloneNativeMenu::nsStandaloneNativeMenu() : mMenu(nullptr), mContainerStatusBarItem(nil) {}
 
 nsStandaloneNativeMenu::~nsStandaloneNativeMenu() {
-  if (mMenu) delete mMenu;
+  if (mMenu) {
+    delete mMenu;
+  }
 }
 
 NS_IMETHODIMP
@@ -29,10 +31,14 @@ nsStandaloneNativeMenu::Init(Element* aElement) {
 
   NS_ENSURE_ARG(aElement);
 
-  if (!aElement->IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menupopup)) return NS_ERROR_FAILURE;
+  if (!aElement->IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menupopup)) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsresult rv = nsMenuGroupOwnerX::Create(aElement);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   mMenu = new nsMenuX();
   rv = mMenu->Create(this, this, aElement);
@@ -88,7 +94,9 @@ NS_IMETHODIMP
 nsStandaloneNativeMenu::ActivateNativeMenuItemAt(const nsAString& indexString) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  if (!mMenu) return NS_ERROR_NOT_INITIALIZED;
+  if (!mMenu) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   NSString* locationString =
       [NSString stringWithCharacters:reinterpret_cast<const unichar*>(indexString.BeginReading())
@@ -115,14 +123,18 @@ nsStandaloneNativeMenu::ActivateNativeMenuItemAt(const nsAString& indexString) {
 
 NS_IMETHODIMP
 nsStandaloneNativeMenu::ForceUpdateNativeMenuAt(const nsAString& indexString) {
-  if (!mMenu) return NS_ERROR_NOT_INITIALIZED;
+  if (!mMenu) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   NSString* locationString =
       [NSString stringWithCharacters:reinterpret_cast<const unichar*>(indexString.BeginReading())
                               length:indexString.Length()];
   NSArray* indexes = [locationString componentsSeparatedByString:@"|"];
   unsigned int indexCount = [indexes count];
-  if (indexCount == 0) return NS_OK;
+  if (indexCount == 0) {
+    return NS_OK;
+  }
 
   nsMenuX* currentMenu = mMenu;
 
@@ -133,7 +145,9 @@ nsStandaloneNativeMenu::ForceUpdateNativeMenuAt(const nsAString& indexString) {
     uint32_t length = currentMenu->GetItemCount();
     for (unsigned int j = 0; j < length; j++) {
       nsMenuObjectX* targetMenu = currentMenu->GetItemAt(j);
-      if (!targetMenu) return NS_OK;
+      if (!targetMenu) {
+        return NS_OK;
+      }
       if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(targetMenu->Content())) {
         visible++;
         if (targetMenu->MenuObjectType() == eSubmenuObjectType && visible == (targetIndex + 1)) {
