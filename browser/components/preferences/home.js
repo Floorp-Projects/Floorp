@@ -699,6 +699,7 @@ var gHomePane = {
 
     this._updateUseCurrentButton();
     this._handleHomePageOverrides();
+    this.syncFromNewTabPref();
     window.addEventListener("focus", this._updateUseCurrentButton.bind(this));
 
     // Extension/override-related events
