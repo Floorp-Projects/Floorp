@@ -122,3 +122,10 @@ const WatchedDataHelpers = {
     return true;
   },
 };
+
+// Allow this JSM to also be loaded as a CommonJS module
+// Because this module is used from the worker thread,
+// (via target-actor-mixin), and workers can't load JSMs.
+if (typeof module == "object") {
+  module.exports.WatchedDataHelpers = WatchedDataHelpers;
+}
