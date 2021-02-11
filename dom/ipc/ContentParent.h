@@ -1087,8 +1087,7 @@ class ContentParent final
 
   mozilla::ipc::IPCResult RecvLoadURIExternal(
       nsIURI* uri, nsIPrincipal* triggeringPrincipal,
-      const MaybeDiscarded<BrowsingContext>& aContext,
-      bool aWasExternallyTriggered);
+      const MaybeDiscarded<BrowsingContext>& aContext);
   mozilla::ipc::IPCResult RecvExtProtocolChannelConnectParent(
       const uint64_t& registrarId);
 
