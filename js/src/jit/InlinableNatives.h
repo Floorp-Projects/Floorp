@@ -190,7 +190,7 @@
   _(IntrinsicTypedArrayLength)                     \
   _(IntrinsicPossiblyWrappedTypedArrayLength)      \
   _(IntrinsicTypedArrayByteOffset)                 \
-  _(IntrinsicTypedArrayElementShift)
+  _(IntrinsicTypedArrayElementSize)
 
 struct JSClass;
 class JSJitInfo;

@@ -4201,7 +4201,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void branchArgumentsObjectHasOverridenIterator(Register obj, Register temp,
                                                  Label* label);
 
-  void typedArrayElementShift(Register obj, Register output);
+  void typedArrayElementSize(Register obj, Register output);
   void branchIfClassIsNotTypedArray(Register clasp, Label* notTypedArray);
 
   void branchIfNativeIteratorNotReusable(Register ni, Label* notReusable);

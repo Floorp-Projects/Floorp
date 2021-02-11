@@ -1814,18 +1814,16 @@ void MArrayBufferViewByteOffset::computeRange(TempAllocator& alloc) {
   }
 }
 
-void MTypedArrayElementShift::computeRange(TempAllocator& alloc) {
-  using mozilla::tl::FloorLog2;
+void MTypedArrayElementSize::computeRange(TempAllocator& alloc) {
+  constexpr auto MaxTypedArraySize = sizeof(double);
 
-  constexpr auto MaxTypedArrayShift = FloorLog2<sizeof(double)>::value;
-
-#define ASSERT_MAX_SHIFT(T, N)                                     \
-  static_assert(FloorLog2<sizeof(T)>::value <= MaxTypedArrayShift, \
+#define ASSERT_MAX_SIZE(T, N)                   \
+  static_assert(sizeof(T) <= MaxTypedArraySize, \
                 "unexpected typed array type exceeding 64-bits storage");
-  JS_FOR_EACH_TYPED_ARRAY(ASSERT_MAX_SHIFT)
-#undef ASSERT_MAX_SHIFT
+  JS_FOR_EACH_TYPED_ARRAY(ASSERT_MAX_SIZE)
+#undef ASSERT_MAX_SIZE
 
-  setRange(Range::NewUInt32Range(alloc, 0, MaxTypedArrayShift));
+  setRange(Range::NewUInt32Range(alloc, 0, MaxTypedArraySize));
 }
 
 void MStringLength::computeRange(TempAllocator& alloc) {

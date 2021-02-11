@@ -3317,11 +3317,11 @@ bool WarpCacheIRTranspiler::emitTypedArrayByteOffsetInt32Result(
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitTypedArrayElementShiftResult(
+bool WarpCacheIRTranspiler::emitTypedArrayElementSizeResult(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
 
-  auto* ins = MTypedArrayElementShift::New(alloc(), obj);
+  auto* ins = MTypedArrayElementSize::New(alloc(), obj);
   add(ins);
 
   pushResult(ins);
