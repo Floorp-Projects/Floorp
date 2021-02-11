@@ -319,12 +319,12 @@
   }
 }
 
-*|*::-moz-page-content {
+*|*::-moz-pagecontent {
   display: block;
   margin: auto;
 }
 
-*|*::-moz-page-break {
+*|*::-moz-pagebreak {
   display: block;
 }
 
