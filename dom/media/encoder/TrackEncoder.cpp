@@ -12,8 +12,8 @@
 #include "MediaTrackListener.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Logging.h"
+#include "mozilla/RollingMean.h"
 #include "VideoUtils.h"
-#include "mozilla/Logging.h"
 #include "mozilla/Telemetry.h"
 
 namespace mozilla {
@@ -29,6 +29,9 @@ static const int DEFAULT_FRAME_RATE = 30;
 static const int AUDIO_INIT_FAILED_DURATION = 10;
 // 30 second threshold if the video encoder cannot be initialized.
 static const int VIDEO_INIT_FAILED_DURATION = 30;
+static const int FRAMERATE_DETECTION_ROLLING_WINDOW = 3;
+static const int FRAMERATE_DETECTION_MIN_CHUNKS = 5;
+static const int FRAMERATE_DETECTION_MAX_DURATION_S = 6;
 
 TrackEncoder::TrackEncoder(TrackRate aTrackRate)
     : mEncodingComplete(false),
@@ -465,28 +468,55 @@ void VideoTrackEncoder::Init(const VideoSegment& aSegment,
             ("[VideoTrackEncoder %p]: Init the video encoder %d times", this,
              mInitCounter));
 
-  for (VideoSegment::ConstChunkIterator iter(aSegment); !iter.IsEnded();
-       iter.Next()) {
-    if (iter->IsNull()) {
-      continue;
+  Maybe<float> framerate;
+  if (!aSegment.IsEmpty()) {
+    // The number of whole frames, i.e., with known duration.
+    size_t frameCount = 0;
+    RollingMean<TimeDuration, TimeDuration> meanDuration(
+        FRAMERATE_DETECTION_ROLLING_WINDOW);
+    VideoSegment::ConstChunkIterator iter(aSegment);
+    TimeStamp previousChunkTime = iter->mTimeStamp;
+    iter.Next();
+    for (; !iter.IsEnded(); iter.Next(), ++frameCount) {
+      meanDuration.insert(iter->mTimeStamp - previousChunkTime);
+      previousChunkTime = iter->mTimeStamp;
     }
+    if (frameCount >= FRAMERATE_DETECTION_MIN_CHUNKS) {
+      // We want some frames for estimating the framerate.
+      framerate = Some(1.0f / meanDuration.mean().ToSeconds());
+    } else if ((aTime - mStartTime).ToSeconds() >
+               FRAMERATE_DETECTION_MAX_DURATION_S) {
+      // Instead of failing init after the fail-timeout, we fallback to a very
+      // low rate.
+      framerate = Some(static_cast<float>(frameCount) /
+                       (aTime - mStartTime).ToSeconds());
+    }
+  }
 
-    gfx::IntSize imgsize = iter->mFrame.GetImage()->GetSize();
-    gfx::IntSize intrinsicSize = iter->mFrame.GetIntrinsicSize();
-    nsresult rv = Init(imgsize.width, imgsize.height, intrinsicSize.width,
-                       intrinsicSize.height, /* TODO: no hardcode */ 30);
+  if (framerate) {
+    for (VideoSegment::ConstChunkIterator iter(aSegment); !iter.IsEnded();
+         iter.Next()) {
+      if (iter->IsNull()) {
+        continue;
+      }
 
-    if (NS_SUCCEEDED(rv)) {
-      TRACK_LOG(LogLevel::Info,
-                ("[VideoTrackEncoder %p]: Successfully initialized!", this));
-      return;
-    } else {
+      gfx::IntSize imgsize = iter->mFrame.GetImage()->GetSize();
+      gfx::IntSize intrinsicSize = iter->mFrame.GetIntrinsicSize();
+      nsresult rv = Init(imgsize.width, imgsize.height, intrinsicSize.width,
+                         intrinsicSize.height, *framerate);
+
+      if (NS_SUCCEEDED(rv)) {
+        TRACK_LOG(LogLevel::Info,
+                  ("[VideoTrackEncoder %p]: Successfully initialized!", this));
+        return;
+      }
+
       TRACK_LOG(
           LogLevel::Error,
           ("[VideoTrackEncoder %p]: Failed to initialize the encoder!", this));
       OnError();
+      break;
     }
-    break;
   }
 
   if (((aTime - mStartTime).ToSeconds() > VIDEO_INIT_FAILED_DURATION) &&

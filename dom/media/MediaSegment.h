@@ -370,6 +370,13 @@ class MediaSegmentBase : public MediaSegment {
     return &mChunks[mChunks.Length() - 1];
   }
 
+  const Chunk* GetLastChunk() const {
+    if (mChunks.IsEmpty()) {
+      return nullptr;
+    }
+    return &mChunks[mChunks.Length() - 1];
+  }
+
  protected:
   explicit MediaSegmentBase(Type aType) : MediaSegment(aType), mChunks() {}
 
