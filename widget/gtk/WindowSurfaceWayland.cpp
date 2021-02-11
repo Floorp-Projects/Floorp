@@ -770,14 +770,11 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
     mBufferNeedsClear =
         mWindow->WaylandSurfaceNeedsClear() || isTransparentPopup;
 
-    // Store info that we can switch WaylandBuffer when we flush
-    // mImageSurface / mDelayedImageCommits. Don't clear it - it's cleared
-    // at LockWaylandBuffer() when we actualy switch the buffer.
-    mCanSwitchWaylandBuffer = true;
-
     // We do full buffer repaint so clear our cached drawings.
     mDelayedImageCommits.Clear();
     mWaylandBufferDamage.SetEmpty();
+    mCanSwitchWaylandBuffer = true;
+    mWLBufferIsDirty = false;
 
     // Store info that we can safely invalidate whole screen.
     mWaylandFullscreenDamage = true;
@@ -806,20 +803,15 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
 
   if (!(mMozContainerRect == mozContainerSize)) {
     LOGWAYLAND(("   screen size changed\n"));
-
-    // Screen (window) size changed and we still have some painting pending
-    // for the last window size. That can happen when window is resized.
-    // We can't commit them any more as they're for former window size, so
-    // scratch them.
-    mDelayedImageCommits.Clear();
-    mWaylandBufferDamage.SetEmpty();
-
     if (!windowRedraw) {
       LOGWAYLAND(("   screen size changed without redraw!\n"));
-      // This should not happen. Screen size changed but we got only
-      // partal screen update instead of whole screen. Discard this painting
-      // as it produces artifacts.
-      return nullptr;
+      // Screen (window) size changed and we still have some painting pending
+      // for the last window size. That can happen when window is resized.
+      // We won't draw it but wait for new content.
+      mDelayedImageCommits.Clear();
+      mWaylandBufferDamage.SetEmpty();
+      mCanSwitchWaylandBuffer = true;
+      mWLBufferIsDirty = false;
     }
     mMozContainerRect = mozContainerSize;
   }
@@ -847,11 +839,12 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
       mWaylandBuffer->DumpToFile("Lock");
 #endif
       if (!windowRedraw) {
-        mWLBufferIsDirty = DrawDelayedImageCommits(dt, mWaylandBufferDamage);
+        DrawDelayedImageCommits(dt, mWaylandBufferDamage);
 #if MOZ_LOGGING
         mWaylandBuffer->DumpToFile("Lock-after-commit");
 #endif
       }
+      mWLBufferIsDirty = true;
       return dt.forget();
     }
   }
