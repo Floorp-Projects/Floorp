@@ -102,7 +102,7 @@ void EbmlComposer::FinishCluster() {
   MOZ_ASSERT(mCurrentCluster.IsEmpty());
 }
 
-void EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame) {
+nsresult EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame) {
   MOZ_RELEASE_ASSERT(mMetadataFinished);
   auto frameType = aFrame->mFrameType;
   const bool isVP8IFrame = (frameType == EncodedFrame::FrameType::VP8_I_FRAME);
@@ -115,7 +115,7 @@ void EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame) {
 
   if (isVP8PFrame && !WritingCluster()) {
     // We ensure that clusters start with I-frames.
-    return;
+    return NS_ERROR_INVALID_ARG;
   }
 
   int64_t timeCode = aFrame->mTime.ToMicroseconds() / PR_USEC_PER_MSEC -
@@ -159,6 +159,8 @@ void EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame) {
   MOZ_ASSERT(ebml.offset <= DEFAULT_HEADER_SIZE + aFrame->mFrameData->Length(),
              "write more data > EBML_BUFFER_SIZE");
   block->SetLength(ebml.offset);
+
+  return NS_OK;
 }
 
 void EbmlComposer::SetVideoConfig(uint32_t aWidth, uint32_t aHeight,

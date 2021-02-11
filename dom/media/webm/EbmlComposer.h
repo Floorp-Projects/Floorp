@@ -41,7 +41,7 @@ class EbmlComposer {
    * writing. Frames passed to this function should already have any codec delay
    * applied.
    */
-  void WriteSimpleBlock(EncodedFrame* aFrame);
+  nsresult WriteSimpleBlock(EncodedFrame* aFrame);
   /*
    * Get valid cluster data.
    */
