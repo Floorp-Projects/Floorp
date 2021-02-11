@@ -2204,7 +2204,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mUpdateScrollbarAttributes(false),
       mHasBeenScrolledRecently(false),
       mWillBuildScrollableLayer(false),
-      mIsScrollParent(false),
+      mIsParentToActiveScrollFrames(false),
       mAddClipRectToLayer(false),
       mHasBeenScrolled(false),
       mIgnoreMomentumScroll(false),
@@ -2585,12 +2585,14 @@ static void RemoveDisplayPortCallback(nsITimer* aTimer, void* aClosure) {
   MOZ_ASSERT(helper->mDisplayPortExpiryTimer);
   helper->mDisplayPortExpiryTimer = nullptr;
 
-  if (!helper->AllowDisplayPortExpiration() || helper->mIsScrollParent) {
+  if (!helper->AllowDisplayPortExpiration() ||
+      helper->mIsParentToActiveScrollFrames) {
     // If this is a scroll parent for some other scrollable frame, don't
     // expire the displayport because it would break scroll handoff. Once the
     // descendant scrollframes have their displayports expired, they will
     // trigger the displayport expiration on this scrollframe as well, and
-    // mIsScrollParent will presumably be false when that kicks in.
+    // mIsParentToActiveScrollFrames will presumably be false when that kicks
+    // in.
     return;
   }
 
@@ -3941,7 +3943,10 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     }
 
     if (aBuilder->IsPaintingToWindow()) {
-      mIsScrollParent = idSetter.ShouldForceLayerForScrollParent();
+      mIsParentToActiveScrollFrames =
+          ShouldActivateAllScrollFrames()
+              ? idSetter.GetContainsNonMinimalDisplayPort()
+              : idSetter.ShouldForceLayerForScrollParent();
     }
     if (idSetter.ShouldForceLayerForScrollParent()) {
       // Note that forcing layerization of scroll parents follows the scroll
@@ -4050,6 +4055,16 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   if (mWillBuildScrollableLayer && aBuilder->IsPaintingToWindow()) {
     aBuilder->ForceLayerForScrollParent();
+  }
+
+  // We want to call SetContainsNonMinimalDisplayPort if
+  // mWillBuildScrollableLayer is true for any reason other than having a
+  // minimal display port.
+  if (aBuilder->IsPaintingToWindow()) {
+    if (DisplayPortUtils::HasNonMinimalDisplayPort(mOuter->GetContent()) ||
+        mZoomableByAPZ || nsContentUtils::HasScrollgrab(mOuter->GetContent())) {
+      aBuilder->SetContainsNonMinimalDisplayPort();
+    }
   }
 
   if (couldBuildLayer) {

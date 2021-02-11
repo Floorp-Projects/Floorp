@@ -674,10 +674,15 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // a scrollable layer. Used for asynchronous scrolling.
   bool mWillBuildScrollableLayer : 1;
 
-  // If true, the scroll frame is an ancestor of other scrolling frames, so
-  // we shouldn't expire the displayport on this scrollframe unless those
-  // descendant scrollframes also have their displayports removed.
-  bool mIsScrollParent : 1;
+  // If true, the scroll frame is an ancestor of other "active" scrolling
+  // frames, where "active" means has a non-minimal display port if
+  // ShouldActivateAllScrollFrames is true, or has a display port if
+  // ShouldActivateAllScrollFrames is false. And this means that we shouldn't
+  // expire the display port (if ShouldActivateAllScrollFrames is true then
+  // expiring a display port means making it minimal, otherwise it means
+  // removing the display port). If those descendant scrollframes have their
+  // display ports removed or made minimal, then we expire our display port.
+  bool mIsParentToActiveScrollFrames : 1;
 
   // If true, add clipping in ScrollFrameHelper::ClipLayerToDisplayPort.
   // XXX this flag needs some auditing and better documentation, bug 1646686.
