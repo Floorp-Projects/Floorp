@@ -128,6 +128,11 @@
 
       switch (ShortcutUtils.getSystemActionForEvent(event)) {
         case ShortcutUtils.CYCLE_TABS:
+          Services.telemetry.keyedScalarAdd(
+            "browser.ui.interaction.keyboard",
+            "ctrl-tab",
+            1
+          );
           Services.prefs.setBoolPref(
             "browser.engagement.ctrlTab.has-used",
             true
