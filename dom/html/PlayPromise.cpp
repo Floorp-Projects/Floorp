@@ -31,6 +31,22 @@ already_AddRefed<PlayPromise> PlayPromise::Create(nsIGlobalObject* aGlobal,
   return aRv.Failed() ? nullptr : promise.forget();
 }
 
+/* static */
+void PlayPromise::ResolvePromisesWithUndefined(
+    const PlayPromiseArr& aPromises) {
+  for (const auto& promise : aPromises) {
+    promise->MaybeResolveWithUndefined();
+  }
+}
+
+/* static */
+void PlayPromise::RejectPromises(const PlayPromiseArr& aPromises,
+                                 nsresult aError) {
+  for (const auto& promise : aPromises) {
+    promise->MaybeReject(aError);
+  }
+}
+
 void PlayPromise::MaybeResolveWithUndefined() {
   if (mFulfilled) {
     return;

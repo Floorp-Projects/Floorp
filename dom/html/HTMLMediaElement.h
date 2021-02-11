@@ -11,6 +11,7 @@
 #include "MediaEventSource.h"
 #include "SeekTarget.h"
 #include "MediaDecoderOwner.h"
+#include "MediaElementEventRunners.h"
 #include "MediaPlaybackDelayPolicy.h"
 #include "MediaPromiseDefs.h"
 #include "TelemetryProbesReporter.h"
@@ -1277,12 +1278,11 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // True if this element can be captured, false otherwise.
   bool CanBeCaptured(StreamCaptureType aCaptureType);
 
-  class nsAsyncEventRunner;
-  class nsNotifyAboutPlayingRunner;
-  class nsResolveOrRejectPendingPlayPromisesRunner;
   using nsGenericHTMLElement::DispatchEvent;
   // For nsAsyncEventRunner.
   nsresult DispatchEvent(const nsAString& aName);
+
+  already_AddRefed<nsMediaEventRunner> GetEventRunner(const nsAString& aName);
 
   // This method moves the mPendingPlayPromises into a temperate object. So the
   // mPendingPlayPromises is cleared after this method call.
@@ -1466,9 +1466,9 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // we're bound to when loading starts.
   nsCOMPtr<Document> mLoadBlockedDoc;
 
-  // Contains names of events that have been raised while in the bfcache.
-  // These events get re-dispatched when the bfcache is exited.
-  nsTArray<nsString> mPendingEvents;
+  // This is used to help us block/resume the event delivery.
+  class EventBlocker;
+  RefPtr<EventBlocker> mEventBlocker;
 
   // Media loading flags. See:
   //   http://www.whatwg.org/specs/web-apps/current-work/#video)
@@ -1640,10 +1640,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // inactive docshell is not allowing media to play.
   bool mSuspendedByInactiveDocOrDocshell = false;
 
-  // True if event delivery is suspended (mSuspendedByInactiveDocOrDocshell
-  // must also be true).
-  bool mEventDeliveryPaused = false;
-
   // True if we're running the "load()" method.
   bool mIsRunningLoadMethod = false;
 
@@ -1773,6 +1769,10 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   void NotifyTextTrackModeChanged();
 
  private:
+  friend class nsAsyncEventRunner;
+  friend class nsNotifyAboutPlayingRunner;
+  friend class nsResolveOrRejectPendingPlayPromisesRunner;
+
   already_AddRefed<PlayPromise> CreatePlayPromise(ErrorResult& aRv) const;
 
   virtual void MaybeBeginCloningVisually(){};
