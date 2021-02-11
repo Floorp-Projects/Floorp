@@ -100,8 +100,8 @@ class MediaEncoderListener {
  *
  * 5) To stop encoding, there are multiple options:
  *
- *    5.1) DisconnectTracks() for a graceful stop.
- *         => encoder->DisconnectTracks();
+ *    5.1) Stop() for a graceful stop.
+ *         => encoder->Stop();
  *
  *    5.2) Cancel() for an immediate stop, if you don't need the data currently
  *         buffered.
@@ -184,8 +184,11 @@ class MediaEncoder {
   void AssertShutdownCalled() { MOZ_ASSERT(mShutdownPromise); }
 
   /**
-   * Cancels the encoding and shuts down the encoder using Shutdown().
+   * Stops (encoding any data currently buffered) the encoding and shuts down
+   * the encoder using Shutdown().
    */
+  RefPtr<GenericNonExclusivePromise> Stop();
+
   /**
    * Cancels (discarding any data currently buffered) the encoding and shuts
    * down the encoder using Shutdown().
