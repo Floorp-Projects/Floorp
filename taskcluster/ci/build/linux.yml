@@ -943,7 +943,6 @@ linux64-fuzzing-ccov/opt:
         env:
             MOZ_LOW_PARALLELISM_BUILD: '1'
             PERFHERDER_EXTRA_OPTIONS: fuzzing-ccov
-            FORCE_GCC: '1'
             ASAN_OPTIONS: "detect_leaks=0"
             RUSTC_BOOTSTRAP: '1'
     run:
@@ -962,7 +961,6 @@ linux64-fuzzing-ccov/opt:
         toolchain:
             - linux64-binutils
             - linux64-clang
-            - linux64-gcc-7
             - linux64-cbindgen
             - linux64-dump-syms
             - linux64-rust
