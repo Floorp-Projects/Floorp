@@ -48,8 +48,8 @@ add_task(async function test_providers() {
     { url: "http://mozilla.org/foo/" }
   );
 
-  let providerName = registerBasicTestProvider([match]);
-  let context = createContext(undefined, { providers: [providerName] });
+  let provider = registerBasicTestProvider([match]);
+  let context = createContext(undefined, { providers: [provider.name] });
   let controller = UrlbarTestUtils.newMockController();
   let resultsPromise = promiseControllerNotification(
     controller,

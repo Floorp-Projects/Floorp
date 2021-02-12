@@ -27,6 +27,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "uuidGenerator",
+  "@mozilla.org/uuid-generator;1",
+  "nsIUUIDGenerator"
+);
+
 var UrlbarTestUtils = {
   /**
    * This maps the categories used by the FX_URLBAR_SELECTED_RESULT_METHOD and
@@ -857,7 +864,7 @@ class TestProvider extends UrlbarProvider {
    */
   constructor({
     results,
-    name = Math.floor(Math.random() * 100000),
+    name = "TestProvider" + uuidGenerator.generateUUID(),
     type = UrlbarUtils.PROVIDER_TYPE.PROFILE,
     priority = 0,
     addTimeout = 0,
@@ -874,7 +881,7 @@ class TestProvider extends UrlbarProvider {
     this._onSelection = onSelection;
   }
   get name() {
-    return "TestProvider" + this._name;
+    return this._name;
   }
   get type() {
     return this._type;

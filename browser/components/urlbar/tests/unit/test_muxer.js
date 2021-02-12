@@ -50,8 +50,8 @@ add_task(async function test_muxer() {
     ),
   ];
 
-  let providerName = registerBasicTestProvider(matches);
-  let context = createContext(undefined, { providers: [providerName] });
+  let provider = registerBasicTestProvider(matches);
+  let context = createContext(undefined, { providers: [provider.name] });
   let controller = UrlbarTestUtils.newMockController();
   /**
    * A test muxer.
@@ -106,9 +106,9 @@ add_task(async function test_preselectedHeuristic_singleProvider() {
   ];
   matches[1].heuristic = true;
 
-  let providerName = registerBasicTestProvider(matches);
+  let provider = registerBasicTestProvider(matches);
   let context = createContext(undefined, {
-    providers: [providerName],
+    providers: [provider.name],
   });
   let controller = UrlbarTestUtils.newMockController();
 
@@ -155,11 +155,11 @@ add_task(async function test_preselectedHeuristic_multiProviders() {
   ];
   matches2[1].heuristic = true;
 
-  let provider1Name = registerBasicTestProvider(matches1);
-  let provider2Name = registerBasicTestProvider(matches2);
+  let provider1 = registerBasicTestProvider(matches1);
+  let provider2 = registerBasicTestProvider(matches2);
 
   let context = createContext(undefined, {
-    providers: [provider1Name, provider2Name],
+    providers: [provider1.name, provider2.name],
   });
   let controller = UrlbarTestUtils.newMockController();
 
@@ -224,10 +224,10 @@ add_task(async function test_suggestions() {
     ),
   ];
 
-  let providerName = registerBasicTestProvider(matches);
+  let provider = registerBasicTestProvider(matches);
 
   let context = createContext(undefined, {
-    providers: [providerName],
+    providers: [provider.name],
   });
   let controller = UrlbarTestUtils.newMockController();
 
@@ -540,8 +540,8 @@ async function doBadHeuristicBucketsTest(resultBuckets, expectedResults) {
     JSON.stringify({ children: resultBuckets })
   );
 
-  let providerName = registerBasicTestProvider(BAD_HEURISTIC_RESULTS);
-  let context = createContext("foo", { providers: [providerName] });
+  let provider = registerBasicTestProvider(BAD_HEURISTIC_RESULTS);
+  let context = createContext("foo", { providers: [provider.name] });
   let controller = UrlbarTestUtils.newMockController();
   await UrlbarProvidersManager.startQuery(context, controller);
   Assert.deepEqual(context.results, expectedResults);

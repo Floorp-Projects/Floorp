@@ -158,7 +158,7 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
     }
   }
   cancelQuery(context) {
-    // If the query was created but didn't run, this_context will be undefined.
+    // If the query was created but didn't run, this._context will be undefined.
     if (this._context) {
       Assert.equal(this._context, context, "cancelQuery: context is the same");
     }
@@ -180,12 +180,15 @@ function convertToUtf8(str) {
  * @param {function} [onCancel] Optional, called when the query provider
  *                              receives a cancel instruction.
  * @param {UrlbarUtils.PROVIDER_TYPE} type The provider type.
- * @returns {string} name of the registered provider
+ * @returns {UrlbarProvider} The provider
  */
 function registerBasicTestProvider(results = [], onCancel, type) {
   let provider = new TestProvider({ results, onCancel, type });
   UrlbarProvidersManager.registerProvider(provider);
-  return provider.name;
+  registerCleanupFunction(() =>
+    UrlbarProvidersManager.unregisterProvider(provider)
+  );
+  return provider;
 }
 
 // Creates an HTTP server for the test.
