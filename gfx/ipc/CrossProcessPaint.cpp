@@ -298,6 +298,8 @@ RefPtr<CrossProcessPaint::ResolvePromise> CrossProcessPaint::Start(
   resolver->QueueDependencies(rootFragment.mDependencies);
   resolver->mReceivedFragments.Put(dom::TabId(0), std::move(rootFragment));
 
+  resolver->MaybeResolve();
+
   return promise;
 }
 
