@@ -59,6 +59,7 @@ bool ArgumentsObject::createRareData(JSContext* cx) {
   }
 
   data()->rareData = rareData;
+  markElementOverridden();
   return true;
 }
 

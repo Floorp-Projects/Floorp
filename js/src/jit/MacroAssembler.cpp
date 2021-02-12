@@ -4263,10 +4263,6 @@ void MacroAssembler::loadArgumentsObjectElement(Register obj, Register index,
   // Load ArgumentsData.
   loadPrivate(Address(obj, ArgumentsObject::getDataSlotOffset()), temp);
 
-  // Fail if we have a RareArgumentsData (elements were deleted).
-  branchPtr(Assembler::NotEqual,
-            Address(temp, offsetof(ArgumentsData, rareData)), ImmWord(0), fail);
-
   // Guard the argument is not a FORWARD_TO_CALL_SLOT MagicValue.
   BaseValueIndex argValue(temp, index, ArgumentsData::offsetOfArgs());
   branchTestMagic(Assembler::Equal, argValue, fail);
