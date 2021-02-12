@@ -3493,9 +3493,12 @@ JSString* js::TenuringTracer::moveToTenured(JSString* src) {
 
   auto* overlay = StringRelocationOverlay::forwardCell(src, dst);
   MOZ_ASSERT(dst->isDeduplicatable());
-  // The base root might be deduplicated, so the non-inlined chars might no
-  // longer be valid. Insert the overlay into this list to relocate it later.
-  insertIntoStringFixupList(overlay);
+
+  if (dst->hasBase() || dst->isRope()) {
+    // dst or one of its leaves might have a base that will be deduplicated.
+    // Insert the overlay into the fixup list to relocate it later.
+    insertIntoStringFixupList(overlay);
+  }
 
   gcprobes::PromoteToTenured(src, dst);
   return dst;
