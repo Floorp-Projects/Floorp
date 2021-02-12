@@ -942,13 +942,12 @@ nsresult nsXPLookAndFeel::GetColorValue(ColorID aID,
     return NS_OK;
   }
 
-  if (StaticPrefs::ui_use_native_colors() && aUseStandinsForNativeColors) {
+  if (aUseStandinsForNativeColors) {
     aResult = GetStandinForNativeColor(aID);
     return NS_OK;
   }
 
-  if (StaticPrefs::ui_use_native_colors() &&
-      NS_SUCCEEDED(NativeGetColor(aID, aResult))) {
+  if (NS_SUCCEEDED(NativeGetColor(aID, aResult))) {
     if (!mozilla::ServoStyleSet::IsInServoTraversal()) {
       MOZ_ASSERT(NS_IsMainThread());
       if ((gfxPlatform::GetCMSMode() == eCMSMode_All) &&
