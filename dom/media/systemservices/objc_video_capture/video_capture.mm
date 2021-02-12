@@ -14,9 +14,8 @@
 
 #include "device_info_objc.h"
 #include "rtc_video_capture_objc.h"
-#include "webrtc/rtc_base/refcount.h"
-#include "webrtc/rtc_base/refcountedobject.h"
-#include "webrtc/rtc_base/scoped_ref_ptr.h"
+#include "rtc_base/ref_counted_object.h"
+#include "api/scoped_refptr.h"
 
 using namespace webrtc;
 using namespace videocapturemodule;
@@ -47,7 +46,7 @@ rtc::scoped_refptr<VideoCaptureModule> VideoCaptureIos::Create(const char* devic
   rtc::scoped_refptr<VideoCaptureIos> capture_module(new rtc::RefCountedObject<VideoCaptureIos>());
 
   const int32_t name_length = strlen(deviceUniqueIdUTF8);
-  if (name_length >= kVideoCaptureUniqueNameSize) return nullptr;
+  if (name_length >= kVideoCaptureUniqueNameLength) return nullptr;
 
   capture_module->_deviceUniqueId = new char[name_length + 1];
   strncpy(capture_module->_deviceUniqueId, deviceUniqueIdUTF8, name_length + 1);

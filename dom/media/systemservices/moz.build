@@ -38,6 +38,7 @@ if CONFIG["MOZ_WEBRTC"]:
             "objc_video_capture/device_info_objc.mm",
             "objc_video_capture/rtc_video_capture_objc.mm",
             "objc_video_capture/video_capture.mm",
+            "video_engine/desktop_device_info_mac.mm",
         ]
         CMMFLAGS += [
             "-fobjc-arc",
