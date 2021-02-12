@@ -43,3 +43,42 @@ within the given rectangle, specified relative to the clip mask offset.
 Anything falling outside this rectangle will be clipped entirely. If the
 rectangle is empty, then the clip mask will be ignored.
 
+```
+void swgl_antiAlias(int edgeMask);
+```
+
+When called from the vertex shader, this enables anti-aliasing for the
+currently drawn primitive while blending is enabled. This setting will only
+apply to the current primitive. Anti-aliasing will be applied only to the
+edges corresponding to bits supplied in the mask. For simple use-cases,
+the edge mask can be set to all 1 bits to enable AA for the entire quad.
+
+The order of the bits in the edge mask must match the winding order in which
+the vertices are output in the vertex shader if processed as a quad, so that
+the edge ends on that vertex. The easiest way to understand this ordering
+is that for a rectangle (x0,y0,x1,y1) then the edge Nth edge bit corresponds
+to the edge where Nth coordinate in the rectangle is constant.
+
+SWGL tries to use an anti-aliasing method that is reasonably close to WR's
+signed-distance field approximation. WR would normally try to discern the
+2D local-space coordinates of a given destination pixel relative to the
+2D local-space bounding rectangle of a primitive. It then uses the screen-
+space derivative to try to determine the how many local-space units equate
+to a distance of around one screen-space pixel. A distance approximation
+of coverage is then used based on the distance in local-space from the
+the current pixel's center, roughly at half-intensity at pixel center
+and ranging to zero or full intensity within a radius of half a pixel
+away from the center. To account for AAing going outside the normal geometry
+boundaries of the primitive, WR has to extrude the primitive by a local-space
+estimate to allow some AA to happen within the extruded region.
+
+SWGL can ultimately do this approximation more simply and get around the
+extrusion limitations by just ensuring spans encompass any pixel that is
+partially covered when computing span boundaries. Further, since SWGL already
+knows the slope of an edge and the coordinate of the span relative to the span
+boundaries, finding the partial coverage of a given span becomes easy to do
+without requiring any extra interpolants to track against local-space bounds.
+Essentially, SWGL just performs anti-aliasing on the actual geometry bounds,
+but when the pixels on a span's edge are determined to be partially covered
+during span rasterization, it uses the same distance field method as WR on
+those span boundary pixels to estimate the coverage based on edge slope.

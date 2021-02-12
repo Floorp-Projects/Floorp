@@ -2998,7 +2998,13 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
         Type::new(BVec4),
         vec![Type::new(BVec2), Type::new(BVec2)],
     );
-
+    declare_function(
+        state,
+        "bvec4",
+        Some("make_bvec4"),
+        Type::new(BVec4),
+        vec![Type::new(Bool), Type::new(Bool), Type::new(Bool), Type::new(Bool)],
+    );
     declare_function(
         state,
         "int",
@@ -3486,7 +3492,7 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
         state,
         "greaterThanEqual",
         None,
-        Type::new(BVec2),
+        Type::new(BVec4),
         vec![Type::new(Vec4), Type::new(Vec4)],
     );
     declare_function(state, "any", None, Type::new(Bool), vec![Type::new(BVec2)]);
@@ -3742,6 +3748,20 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
         None,
         Type::new(Void),
         vec![Type::new(Sampler2D), Type::new(Vec2), Type::new(Vec2), Type::new(Vec2)],
+    );
+    declare_function(
+        state,
+        "swgl_antiAlias",
+        None,
+        Type::new(Void),
+        vec![Type::new(Int)],
+    );
+    declare_function(
+        state,
+        "swgl_antiAlias",
+        None,
+        Type::new(Void),
+        vec![Type::new(BVec4)],
     );
     declare_function_ext(
         state,

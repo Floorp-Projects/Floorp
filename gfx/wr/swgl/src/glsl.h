@@ -215,7 +215,13 @@ SI Float sqrt(Float v) {
 #endif
 }
 
-SI float recip(float x) { return 1.0f / x; }
+SI float recip(float x) {
+#if USE_SSE2
+  return _mm_cvtss_f32(_mm_rcp_ss(_mm_set_ss(x)));
+#else
+  return 1.0f / x;
+#endif
+}
 
 // Use a fast vector reciprocal approximation when available. This should only
 // be used in cases where it is okay that the approximation is imprecise -
@@ -233,7 +239,13 @@ SI Float recip(Float v) {
 #endif
 }
 
-SI float inversesqrt(float x) { return 1.0f / sqrtf(x); }
+SI float inversesqrt(float x) {
+#if USE_SSE2
+  return _mm_cvtss_f32(_mm_rsqrt_ss(_mm_set_ss(x)));
+#else
+  return 1.0f / sqrtf(x);
+#endif
+}
 
 SI Float inversesqrt(Float v) {
 #if USE_SSE2
@@ -674,8 +686,8 @@ SI I32 roundfast(Float v, Float scale) {
 }
 
 template <typename T>
-SI auto round_pixel(T v, float maxval = 1.0f) {
-  return roundfast(v, (255.0f / maxval));
+SI auto round_pixel(T v, float scale = 255.0f) {
+  return roundfast(v, scale);
 }
 
 #define round __glsl_round
@@ -1166,6 +1178,23 @@ struct bvec4_scalar {
   IMPLICIT constexpr bvec4_scalar(bool a) : x(a), y(a), z(a), w(a) {}
   constexpr bvec4_scalar(bool x, bool y, bool z, bool w)
       : x(x), y(y), z(z), w(w) {}
+
+  bool& select(XYZW c) {
+    switch (c) {
+      case X:
+        return x;
+      case Y:
+        return y;
+      case Z:
+        return z;
+      case W:
+        return w;
+    }
+  }
+  bool sel(XYZW c1) { return select(c1); }
+  bvec2_scalar sel(XYZW c1, XYZW c2) {
+    return bvec2_scalar(select(c1), select(c2));
+  }
 };
 
 struct bvec4_scalar1 {
@@ -1205,6 +1234,10 @@ bvec4_scalar1 make_bvec4(bool n) { return bvec4_scalar1(n); }
 
 bvec4_scalar make_bvec4(bool x, bool y, bool z, bool w) {
   return bvec4_scalar{x, y, z, w};
+}
+
+bvec4_scalar make_bvec4(bvec2_scalar a, bvec2_scalar b) {
+  return bvec4_scalar{a.x, a.y, b.x, b.y};
 }
 
 template <typename N>
@@ -1990,6 +2023,10 @@ SI bvec2 lessThan(vec2 x, vec2 y) {
   return bvec2(lessThan(x.x, y.x), lessThan(x.y, y.y));
 }
 
+SI bvec2_scalar lessThan(vec2_scalar x, vec2_scalar y) {
+  return bvec2_scalar(lessThan(x.x, y.x), lessThan(x.y, y.y));
+}
+
 template <typename T>
 auto greaterThan(T x, T y) -> decltype(x > y) {
   return x > y;
@@ -1997,6 +2034,10 @@ auto greaterThan(T x, T y) -> decltype(x > y) {
 
 bvec2 greaterThan(vec2 x, vec2 y) {
   return bvec2(greaterThan(x.x, y.x), greaterThan(x.y, y.y));
+}
+
+bvec2_scalar greaterThan(vec2_scalar x, vec2_scalar y) {
+  return bvec2_scalar(greaterThan(x.x, y.x), greaterThan(x.y, y.y));
 }
 
 template <typename T>
