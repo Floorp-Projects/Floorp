@@ -16,6 +16,7 @@
 #include "frontend/NameCollections.h"
 #include "frontend/StencilXdr.h"  // CanCopyDataToDisk
 #include "util/StringBuffer.h"    // StringBuffer
+#include "util/Text.h"            // AsciiDigitToNumber
 #include "util/Unicode.h"
 #include "vm/JSContext.h"
 #include "vm/Printer.h"  // Sprinter, QuoteString
@@ -630,17 +631,51 @@ bool ParserAtomsTable::isModuleExportName(TaggedParserAtomIndex index) const {
 
 bool ParserAtomsTable::isIndex(TaggedParserAtomIndex index,
                                uint32_t* indexp) const {
-  const auto* atom = getParserAtom(index);
-  size_t len = atom->length();
-  if (len == 0 || len > UINT32_CHAR_BUFFER_LENGTH) {
+  if (index.isParserAtomIndex()) {
+    const auto* atom = getParserAtom(index.toParserAtomIndex());
+    size_t len = atom->length();
+    if (len == 0 || len > UINT32_CHAR_BUFFER_LENGTH) {
+      return false;
+    }
+    if (atom->hasLatin1Chars()) {
+      return mozilla::IsAsciiDigit(*atom->latin1Chars()) &&
+             js::CheckStringIsIndex(atom->latin1Chars(), len, indexp);
+    }
+    return mozilla::IsAsciiDigit(*atom->twoByteChars()) &&
+           js::CheckStringIsIndex(atom->twoByteChars(), len, indexp);
+  }
+
+  if (index.isWellKnownAtomId()) {
+#ifdef DEBUG
+    // Well-known atom shouldn't start with digit.
+    const auto* atom = getWellKnown(index.toWellKnownAtomId());
+    MOZ_ASSERT(atom->length() == 0 || !mozilla::IsAsciiDigit(atom->charAt(0)));
+#endif
     return false;
   }
-  if (atom->hasLatin1Chars()) {
-    return mozilla::IsAsciiDigit(*atom->latin1Chars()) &&
-           js::CheckStringIsIndex(atom->latin1Chars(), len, indexp);
+
+  if (index.isLength1StaticParserString()) {
+    char content[1];
+    getLength1Content(index.toLength1StaticParserString(), content);
+    if (mozilla::IsAsciiDigit(content[0])) {
+      *indexp = AsciiDigitToNumber(content[0]);
+      return true;
+    }
+    return false;
   }
-  return mozilla::IsAsciiDigit(*atom->twoByteChars()) &&
-         js::CheckStringIsIndex(atom->twoByteChars(), len, indexp);
+
+  MOZ_ASSERT(index.isLength2StaticParserString());
+  char content[2];
+  getLength2Content(index.toLength2StaticParserString(), content);
+  // Leading '0' isn't allowed.
+  // See CheckStringIsIndex comment.
+  if (content[0] != '0' && mozilla::IsAsciiDigit(content[0]) &&
+      mozilla::IsAsciiDigit(content[1])) {
+    *indexp =
+        AsciiDigitToNumber(content[0]) * 10 + AsciiDigitToNumber(content[1]);
+    return true;
+  }
+  return false;
 }
 
 uint32_t ParserAtomsTable::length(TaggedParserAtomIndex index) const {
