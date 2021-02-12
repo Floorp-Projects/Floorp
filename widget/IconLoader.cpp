@@ -16,13 +16,7 @@ using namespace mozilla;
 
 namespace mozilla::widget {
 
-NS_IMPL_CYCLE_COLLECTION(mozilla::widget::IconLoader)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(mozilla::widget::IconLoader)
-  NS_INTERFACE_MAP_ENTRY(imgINotificationObserver)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-NS_IMPL_CYCLE_COLLECTING_ADDREF(mozilla::widget::IconLoader)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(mozilla::widget::IconLoader)
+NS_IMPL_ISUPPORTS(IconLoader, imgINotificationObserver)
 
 IconLoader::IconLoader(Helper* aHelper, const nsIntRect& aImageRegionRect)
     : mContentType(nsIContentPolicy::TYPE_INTERNAL_IMAGE),
