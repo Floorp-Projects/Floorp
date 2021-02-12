@@ -31,17 +31,6 @@ using namespace mozilla;
 // __gcov_flush is protected by a mutex in GCC, but not in LLVM, so we are using
 // a CrossProcessMutex to protect it.
 
-// We rename __gcov_flush to __custom_llvm_gcov_flush in our build of LLVM for
-// Linux, to avoid naming clashes in builds which mix GCC and LLVM. So, when we
-// are building with LLVM exclusively, we need to use __custom_llvm_gcov_flush
-// instead.
-#if !defined(XP_WIN) && defined(__clang__)
-#  define __gcov_flush __custom_llvm_gcov_flush
-// In clang 12, __gcov_flush was split into __gcov_dump and __gcov_reset.
-#  define __gcov_dump __custom_llvm_gcov_dump
-#  define __gcov_reset __custom_llvm_gcov_reset
-#endif
-
 extern "C" void __gcov_flush();
 extern "C" void __gcov_dump();
 extern "C" void __gcov_reset();
