@@ -8,6 +8,7 @@
   display: none;
 }
 
+@supports not -moz-bool-pref("browser.proton.appmenu.enabled") {
 .subviewbutton {
   padding-inline-start: 18px;
 }
@@ -15,6 +16,7 @@
 .subviewbutton.download {
   padding-inline-start: 14px;
 }
+} /** END not Proton **/
 
 panelmultiview .toolbaritem-combined-buttons > spacer.before-label {
   width: 42px; /* 18px toolbarbutton padding + 16px icon + 8px label padding start */

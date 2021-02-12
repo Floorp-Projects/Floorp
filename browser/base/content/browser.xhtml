@@ -968,50 +968,50 @@
                        wrap="true"
                        hidden="true"/>
         <toolbarbutton id="appMenu-new-tab-button2"
-                       class="subviewbutton subviewbutton-iconic"
+                       class="subviewbutton"
                        label="&tabCmd.label;"
                        key="key_newNavigatorTab"
                        command="cmd_newNavigatorTab"/>
         <toolbarbutton id="appMenu-new-window-button2"
-                       class="subviewbutton subviewbutton-iconic"
+                       class="subviewbutton"
                        data-l10n-id="appmenuitem-new-window"
                        key="key_newNavigator"
                        command="cmd_newNavigator"/>
         <toolbarbutton id="appMenu-new-private-window-button2"
-                       class="subviewbutton subviewbutton-iconic"
+                       class="subviewbutton"
                        data-l10n-id="appmenuitem-new-private-window"
                        key="key_privatebrowsing"
                        command="Tools:PrivateBrowsing"/>
         <toolbarseparator/>
         <toolbarbutton id="appMenu-bookmarks-button"
-                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       class="subviewbutton subviewbutton-nav"
                        data-l10n-id="library-bookmarks-menu"
                        closemenu="none"
                        oncommand="BookmarkingUI.showSubView(this);"/>
         <toolbarbutton id="appMenu-history-button"
-                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       class="subviewbutton subviewbutton-nav"
                        label="&historyMenu.label;"
                        closemenu="none"
                        oncommand="PanelUI.showSubView('PanelUI-history', this)"/>
         <toolbarbutton id="appMenu-downloads-button"
-                       class="subviewbutton subviewbutton-iconic"
+                       class="subviewbutton"
                        label="&libraryDownloads.label;"
                        key="key_openDownloads"
                        command="Tools:Downloads"/>
         <toolbarbutton id="appMenu-passwords-button"
-                       class="subviewbutton subviewbutton-iconic"
+                       class="subviewbutton"
                        data-l10n-id="appmenuitem-passwords"
                        oncommand="LoginHelper.openPasswordManager(window, { entryPoint: 'mainmenu' })"
                        />
         <toolbarbutton id="appMenu-extensions-themes-button"
-                       class="subviewbutton subviewbutton-iconic"
+                       class="subviewbutton"
                        data-l10n-id="appmenuitem-extensions-and-themes"
                        key="key_openAddons"
                        command="Tools:Addons"
                        />
         <toolbarseparator/>
         <toolbarbutton id="appMenu-print-button2"
-                       class="subviewbutton subviewbutton-iconic"
+                       class="subviewbutton"
                        label="&printCmd.label;"
                        key="printKb"
 #ifdef XP_MACOSX
@@ -1021,16 +1021,16 @@
 #endif
                        />
         <toolbarbutton id="appMenu-save-file-button2"
-                       class="subviewbutton subviewbutton-iconic"
+                       class="subviewbutton"
                        data-l10n-id="appmenuitem-save-page"
                        key="key_savePage"
                        command="Browser:SavePage"/>
         <toolbarbutton id="appMenu-find-button2"
-                       class="subviewbutton subviewbutton-iconic"
+                       class="subviewbutton"
                        data-l10n-id="appmenuitem-find-in-page"
                        key="key_find"
                        command="cmd_find"/>
-        <toolbaritem id="appMenu-zoom-controls2" class="subviewbutton subviewbutton-iconic toolbaritem-combined-buttons" closemenu="none">
+        <toolbaritem id="appMenu-zoom-controls2" class="subviewbutton toolbaritem-combined-buttons" closemenu="none">
           <label class="toolbarbutton-text" value="&fullZoom.label;"/>
           <toolbarbutton id="appMenu-zoomReduce-button2"
                          class="subviewbutton subviewbutton-iconic"
@@ -1057,26 +1057,26 @@
         </toolbaritem>
         <toolbarseparator/>
         <toolbarbutton id="appMenu-settings-button"
-                       class="subviewbutton subviewbutton-iconic"
+                       class="subviewbutton"
                        data-l10n-id="appmenuitem-settings"
 #ifdef XP_MACOSX
                        key="key_preferencesCmdMac"
 #endif
                        oncommand="openPreferences()"/>
         <toolbarbutton id="appMenu-more-button2"
-                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       class="subviewbutton subviewbutton-nav"
                        data-l10n-id="appmenuitem-more-tools"
                        closemenu="none"
                        oncommand="PanelUI.showMoreToolsPanel(this);"/>
         <toolbarbutton id="appMenu-help-button2"
-                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       class="subviewbutton subviewbutton-nav"
                        label="&appMenuHelp.label;"
                        closemenu="none"
                        oncommand="PanelUI.showSubView('PanelUI-helpView', this)"/>
 #ifndef XP_MACOSX
         <toolbarseparator/>
         <toolbarbutton id="appMenu-quit-button2"
-                       class="subviewbutton subviewbutton-iconic"
+                       class="subviewbutton"
                        data-l10n-id="appmenuitem-exit"
                        command="cmd_quitApplication"/>
 #endif
@@ -1324,7 +1324,7 @@
     <panelview id="appmenu-moreTools" class="PanelUI-subView">
       <vbox class="panel-subview-body">
         <toolbarbutton id="appmenu-moreTools-button"
-                       class="subviewbutton subviewbutton-iconic"
+                       class="subviewbutton"
                        data-l10n-id="appmenu-customizetoolbar"
                        command="cmd_CustomizeToolbars"/>
         <toolbarseparator/>

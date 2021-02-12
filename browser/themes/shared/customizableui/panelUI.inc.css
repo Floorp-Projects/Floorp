@@ -7,7 +7,9 @@
 %define menuPanelWidth 22.35em
 %define wideMenuPanelWidth 29em
 %define standaloneSubviewWidth 30em
-%define buttonStateHover :not([disabled],[open],:active):is(:hover,:focus)
+%define buttonStateHoverOrFocus :not([disabled],[open],:active):is(:hover,:focus)
+%define buttonStateHover :not([disabled],[open],:active):is(:hover)
+%define buttonStateFocus :not([disabled],[open],:active):is(:focus)
 %define menuStateHover :not([disabled],:active)[_moz-menuactive]
 %define buttonStateActive :not([disabled]):is([open],:hover:active)
 %define menuStateActive :not([disabled])[_moz-menuactive]:active
@@ -41,6 +43,9 @@
   --panel-banner-item-active-bgcolor: hsl(96,65%,75%);
   --panel-banner-item-update-supported-bgcolor: #74BF43;
   --panel-banner-item-update-unsupported-bgcolor: #FFE900;
+  --panel-separator-margin: 6px 0;
+  --panel-shortcut-color: inherit;
+  --panel-subview-body-padding: 6px 0;
 }
 
 :root[lwt-popup-brighttext] {
@@ -52,12 +57,16 @@
 
 @supports -moz-bool-pref("browser.proton.appmenu.enabled") {
 :root {
-  --panelview-toolbarbutton-hover-bgcolor: #0250BB;
-  --panelview-toolbarbutton-hover-color: #FFFFFF;
-  --panelview-toolbarbutton-active-bgcolor: #053E94;
-  --panelview-toolbarbutton-active-color: #FFFFFF;
-  --panel-banner-item-color: rgba(8,64,63,1);
-  --panel-banner-item-background-color: rgba(209,255,238,1);
+  --arrowpanel-menuitem-margin: 0 8px;
+  --arrowpanel-menuitem-padding: 8px;
+  --arrowpanel-menuitem-border-radius: 4px;
+
+  --panelview-toolbarbutton-hover-bgcolor: rgb(224,224,230);
+  --panelview-toolbarbutton-hover-color: inherit;
+  --panelview-toolbarbutton-active-bgcolor: rgb(207,207,216);
+  --panelview-toolbarbutton-active-color: inherit;
+  --panel-banner-item-color: rgb(8,64,63);
+  --panel-banner-item-background-color: rgb(209,255,238);
 
   /**
    * --panel-banner-item-hover-bgcolor, --panel-banner-item-active-bgcolor
@@ -69,10 +78,12 @@
   --panel-banner-item-active-bgcolor: hsl(96,65%,75%);
   --panel-banner-item-update-unsupported-bgcolor: #FFE900;
 
-  --panel-banner-item-update-supported-bgcolor: rgba(0,135,135,1);
-  --arrowpanel-menuitem-margin: 0 8px;
-  --arrowpanel-menuitem-padding: 8px 12px;
-  --arrowpanel-menuitem-border-radius: 4px;
+  --panel-banner-item-update-supported-bgcolor: rgb(0,135,135);
+  --panel-separator-margin: 4px 8px;
+  --panel-shortcut-color: rgb(91,91,102);
+  --panel-subview-body-padding: 8px 0;
+  --panelview-toolbarbutton-focus-box-shadow: inset 0 0 0 2px rgb(0,97,224);
+  --panel-disabled-color: rgba(21,20,26,0.4);
 }
 
 :root[lwt-popup-brighttext] {
@@ -293,7 +304,7 @@ panelmultiview[transitioning] > .panel-viewcontainer > .panel-viewstack > panelv
   overflow-y: auto;
   overflow-x: hidden;
   -moz-box-flex: 1;
-  padding: 6px 0;
+  padding: var(--panel-subview-body-padding);
 }
 
 .panel-view-body-unscrollable {
@@ -325,7 +336,7 @@ panelmultiview[transitioning] > .panel-viewcontainer > .panel-viewstack > panelv
   visibility: hidden;
 }
 
-.panel-info-button@buttonStateHover@ {
+.panel-info-button@buttonStateHoverOrFocus@ {
   background-color: var(--arrowpanel-dimmed);
 }
 
@@ -794,10 +805,24 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 .addon-banner-item > .toolbarbutton-text,
 .panel-banner-item > .toolbarbutton-text {
-  margin: 0;
-  padding: 0 6px;
   text-align: start;
 }
+
+@supports not -moz-bool-pref("browser.proton.appmenu.enabled") {
+.addon-banner-item > .toolbarbutton-text,
+.panel-banner-item > .toolbarbutton-text {
+  margin: 0;
+  padding: 0 6px;
+}
+} /** END not Proton **/
+
+@supports -moz-bool-pref("browser.proton.appmenu.enabled") {
+.addon-banner-item > .toolbarbutton-text,
+.panel-banner-item > .toolbarbutton-text {
+  margin-inline-start: 8px;
+  padding: 0;
+}
+} /** END Proton **/
 
 .addon-banner-item > .toolbarbutton-icon,
 .panel-banner-item > .toolbarbutton-icon {
@@ -1167,10 +1192,12 @@ panelview .toolbarbutton-1,
   color: var(--panel-disabled-color);
 }
 
+@supports not -moz-bool-pref("browser.proton.appmenu.enabled") {
 .subviewbutton > .toolbarbutton-text {
   padding: 0;
   padding-inline-start: 24px; /* This is 16px for the icon + 8px for the padding as defined below. */
 }
+} /** END not Proton **/
 
 .subviewbutton > .menu-right {
   appearance: none;
@@ -1213,10 +1240,6 @@ panelview .toolbarbutton-1,
 }
 
 @supports -moz-bool-pref("browser.proton.appmenu.enabled") {
-.subviewbutton-iconic:not(.subviewbutton-back) > .toolbarbutton-icon {
-  display: none;
-}
-
 #appMenu-zoomReduce-button2 > .toolbarbutton-icon,
 #appMenu-zoomEnlarge-button2 > .toolbarbutton-icon,
 #appMenu-fullscreen-button2 > .toolbarbutton-icon {
@@ -1263,6 +1286,7 @@ panelview .toolbarbutton-1,
 .subviewbutton[shortcut]::after {
   content: attr(shortcut);
   float: inline-end;
+  color: var(--panel-shortcut-color);
 }
 
 .PanelUI-subView .subviewbutton-nav::after {
@@ -1387,8 +1411,8 @@ panelmultiview .toolbaritem-combined-buttons > spacer.after-label {
   background-color: var(--arrowpanel-dimmed);
 }
 
-#appMenu-zoomReset-button@buttonStateHover@,
-#appMenu-zoomReset-button2@buttonStateHover@ {
+#appMenu-zoomReset-button@buttonStateHoverOrFocus@,
+#appMenu-zoomReset-button2@buttonStateHoverOrFocus@ {
   background-color: var(--arrowpanel-dimmed-further);
 }
 
@@ -1425,16 +1449,44 @@ panelview .toolbarbutton-1 {
   margin-top: 6px;
 }
 
-panelview .toolbarbutton-1@buttonStateHover@,
-toolbarbutton.subviewbutton@buttonStateHover@,
-.navigable.subviewbutton@buttonStateHover@,
-menu.subviewbutton@menuStateHover@,
-menuitem.subviewbutton@menuStateHover@,
-.widget-overflow-list .toolbarbutton-1@buttonStateHover@,
-.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateHover@ {
-  color: var(--panelview-toolbarbutton-hover-color);
-  background-color: var(--panelview-toolbarbutton-hover-bgcolor);
-}
+@supports not -moz-bool-pref("browser.proton.appmenu.enabled") {
+  panelview .toolbarbutton-1@buttonStateHoverOrFocus@,
+  toolbarbutton.subviewbutton@buttonStateHoverOrFocus@,
+  .navigable.subviewbutton@buttonStateHoverOrFocus@,
+  menu.subviewbutton@menuStateHover@,
+  menuitem.subviewbutton@menuStateHover@,
+  .widget-overflow-list .toolbarbutton-1@buttonStateHoverOrFocus@,
+  .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateHoverOrFocus@ {
+    color: var(--panelview-toolbarbutton-hover-color);
+    background-color: var(--panelview-toolbarbutton-hover-bgcolor);
+  }
+} /** END not Proton **/
+
+@supports -moz-bool-pref("browser.proton.appmenu.enabled") {
+  /**
+   * Focus in Proton uses a box-shadow because we want the stroke to be
+   * internal to the rect without affecting the surrounding layout. This
+   * seemed to be the simplest way to do that.
+   */
+  panelview .toolbarbutton-1@buttonStateFocus@,
+  toolbarbutton.subviewbutton@buttonStateFocus@,
+  .navigable.subviewbutton@buttonStateFocus@,
+  .widget-overflow-list .toolbarbutton-1@buttonStateFocus@,
+  .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateFocus@ {
+    box-shadow: var(--panelview-toolbarbutton-focus-box-shadow);
+  }
+
+  panelview .toolbarbutton-1@buttonStateHover@,
+  toolbarbutton.subviewbutton@buttonStateHover@,
+  .navigable.subviewbutton@buttonStateHover@,
+  menu.subviewbutton@menuStateHover@,
+  menuitem.subviewbutton@menuStateHover@,
+  .widget-overflow-list .toolbarbutton-1@buttonStateHover@,
+  .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateHover@ {
+    color: var(--panelview-toolbarbutton-hover-color);
+    background-color: var(--panelview-toolbarbutton-hover-bgcolor);
+  }
+} /** END Proton **/
 
 panelview .toolbarbutton-1@buttonStateActive@,
 toolbarbutton.subviewbutton@buttonStateActive@,
@@ -1456,7 +1508,7 @@ menuitem.subviewbutton@menuStateActive@,
 }
 
 menuitem.panel-subview-footer@menuStateHover@,
-.subviewbutton.panel-subview-footer@buttonStateHover@ {
+.subviewbutton.panel-subview-footer@buttonStateHoverOrFocus@ {
   background-color: var(--arrowpanel-dimmed-further);
 }
 
@@ -1492,7 +1544,7 @@ menuitem.panel-subview-footer@menuStateActive@,
   min-height: 0;
   border-top: 1px solid var(--panel-separator-color);
   border-bottom: none;
-  margin: 6px 0;
+  margin: var(--panel-separator-margin);
   padding: 0;
 }
 
@@ -1701,7 +1753,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   border: 1px solid transparent;
 }
 
-.subviewradio@buttonStateHover@ {
+.subviewradio@buttonStateHoverOrFocus@ {
   background-color: var(--arrowpanel-dimmed);
   border-color: var(--panel-separator-color);
 }
@@ -1935,7 +1987,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   fill-opacity: 0.4;
 }
 
-.subviewbutton.download:is([canShow],[canRetry]) > .action-button@buttonStateHover@ {
+.subviewbutton.download:is([canShow],[canRetry]) > .action-button@buttonStateHoverOrFocus@ {
   background-color: var(--arrowpanel-dimmed-further);
 }
 
