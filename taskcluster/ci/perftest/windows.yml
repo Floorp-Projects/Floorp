@@ -150,7 +150,7 @@ controlled:
         max-run-time: 14400
     attributes:
         batch: false
-        cron: true
+        cron: false
     run:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
