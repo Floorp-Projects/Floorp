@@ -192,6 +192,7 @@ inline bool isInIgnoredNamespaceForImplicitConversion(const Decl *Declaration) {
   return Name == "std" ||             // standard C++ lib
          Name == "__gnu_cxx" ||       // gnu C++ lib
          Name == "google_breakpad" || // breakpad
+         Name == "webrtc" ||          // libwebrtc
          Name == "testing" ||         // gtest
          Name == "rlbox";             // rlbox
 }
