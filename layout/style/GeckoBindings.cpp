@@ -731,7 +731,7 @@ nscolor Gecko_GetLookAndFeelSystemColor(int32_t aId, const Document* aDoc) {
        !nsContentUtils::IsChromeDoc(aDoc));
 
   AutoWriteLock guard(*sServoFFILock);
-  nscolor result;
+  nscolor result = 0;
   LookAndFeel::GetColor(colorId, useStandinsForNativeColors, &result);
   return result;
 }
