@@ -375,10 +375,24 @@ nsresult BodyDeleteOrphanedFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBaseDir,
 
               return false;
             };
-            CACHE_TRY(BodyTraverseFiles(aQuotaInfo, *subdir,
-                                        removeOrphanedFiles,
-                                        /* aCanRemoveFiles */ true,
-                                        /* aTrackQuota */ true));
+            CACHE_TRY(
+                ToResult(BodyTraverseFiles(aQuotaInfo, *subdir,
+                                           removeOrphanedFiles,
+                                           /* aCanRemoveFiles */ true,
+                                           /* aTrackQuota */ true))
+#ifdef WIN32
+                    .orElse([](const nsresult rv) -> Result<Ok, nsresult> {
+                      // We treat ERROR_FILE_CORRUPT as if the directory did
+                      // not exist at all.
+                      if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_WIN32 &&
+                          NS_ERROR_GET_CODE(rv) == ERROR_FILE_CORRUPT) {
+                        return Ok{};
+                      }
+
+                      return Err(rv);
+                    })
+#endif
+            );
             break;
           }
 
