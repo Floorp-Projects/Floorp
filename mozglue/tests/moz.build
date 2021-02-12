@@ -19,7 +19,6 @@ GeckoCppUnitTests(
 CppUnitTests(
     [
         "TestBaseProfiler",
-        "TestIntegerPrintfMacros",
         "TestPrintf",
     ]
 )
