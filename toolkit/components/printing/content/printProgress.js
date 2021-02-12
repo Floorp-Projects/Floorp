@@ -93,8 +93,8 @@ var progressListener = {
     aMaxTotalProgress
   ) {
     if (switchUI) {
-      dialog.tempLabel.setAttribute("hidden", "true");
-      dialog.progressBox.removeAttribute("hidden");
+      dialog.tempLabel.hidden = true;
+      dialog.progressBox.hidden = false;
 
       switchUI = false;
     }
@@ -192,7 +192,7 @@ function onLoad() {
   dialog.progressLabel = document.getElementById("dialog.progressLabel");
   dialog.tempLabel = document.getElementById("dialog.tempLabel");
 
-  dialog.progressBox.setAttribute("hidden", "true");
+  dialog.progressBox.hidden = true;
 
   document.l10n.setAttributes(dialog.tempLabel, "print-preparing");
 
