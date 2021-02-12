@@ -862,10 +862,30 @@ JSAtom* ParserAtomsTable::toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
 
 bool ParserAtomsTable::appendTo(StringBuffer& buffer,
                                 TaggedParserAtomIndex index) const {
-  const auto* atom = getParserAtom(index);
-  size_t length = atom->length();
-  return atom->hasLatin1Chars() ? buffer.append(atom->latin1Chars(), length)
-                                : buffer.append(atom->twoByteChars(), length);
+  if (index.isParserAtomIndex()) {
+    const auto* atom = getParserAtom(index.toParserAtomIndex());
+    size_t length = atom->length();
+    return atom->hasLatin1Chars() ? buffer.append(atom->latin1Chars(), length)
+                                  : buffer.append(atom->twoByteChars(), length);
+  }
+
+  if (index.isWellKnownAtomId()) {
+    const auto* atom = getWellKnown(index.toWellKnownAtomId());
+    size_t length = atom->length();
+    MOZ_ASSERT(atom->hasLatin1Chars());
+    return buffer.append(atom->latin1Chars(), length);
+  }
+
+  if (index.isLength1StaticParserString()) {
+    char content[1];
+    getLength1Content(index.toLength1StaticParserString(), content);
+    return buffer.append(content[0]);
+  }
+
+  MOZ_ASSERT(index.isLength2StaticParserString());
+  char content[2];
+  getLength2Content(index.toLength2StaticParserString(), content);
+  return buffer.append(content, 2);
 }
 
 bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
