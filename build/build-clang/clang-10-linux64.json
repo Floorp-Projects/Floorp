@@ -14,8 +14,6 @@
     "patches": [
       "static-llvm-symbolizer.patch",
       "find_symbolizer_linux_clang_10.patch",
-      "rename_gcov_flush_clang_10.patch",
-      "critical_section_on_gcov_flush-rG02ce9d8ef5a8.patch",
       "rG7e18aeba5062_clang_10.patch",
       "llvmorg-11-init-4265-g2dcbdba8540_clang_10.patch",
       "android-mangling-error.patch",
