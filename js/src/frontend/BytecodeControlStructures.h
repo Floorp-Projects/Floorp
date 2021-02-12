@@ -8,7 +8,6 @@
 #define frontend_BytecodeControlStructures_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
 #include "mozilla/Maybe.h"       // mozilla::Maybe
 
 #include <stdint.h>  // int32_t, uint32_t

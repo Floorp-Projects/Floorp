@@ -8,8 +8,6 @@
 
 #include "builtin/streams/ReadableStream.h"
 
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
-
 #include "jsapi.h"    // JS_ReportErrorNumberASCII
 #include "jspubtd.h"  // JSProto_ReadableStream
 

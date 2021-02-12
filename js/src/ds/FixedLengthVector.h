@@ -8,7 +8,6 @@
 #define ds_FixedLengthVector_h
 
 #include "mozilla/Assertions.h"             // MOZ_ASSERT
-#include "mozilla/Attributes.h"             // MOZ_MUST_USE
 #include "mozilla/OperatorNewExtensions.h"  // mozilla::KnownNotNull
 
 #include <stddef.h>  // size_t

@@ -7,7 +7,7 @@
 #ifndef frontend_AsyncEmitter_h
 #define frontend_AsyncEmitter_h
 
-#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS, MOZ_MUST_USE
+#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS
 
 #include "frontend/TryEmitter.h"  // TryEmitter
 

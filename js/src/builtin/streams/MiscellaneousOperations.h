@@ -9,8 +9,6 @@
 #ifndef builtin_streams_MiscellaneousOperations_h
 #define builtin_streams_MiscellaneousOperations_h
 
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
-
 #include "jstypes.h"           // JS_PUBLIC_API
 #include "js/CallArgs.h"       // JS::CallArgs
 #include "js/RootingAPI.h"     // JS::{,Mutable}Handle

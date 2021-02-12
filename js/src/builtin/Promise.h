@@ -9,8 +9,6 @@
 
 #include "js/Promise.h"
 
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
-
 #include "jsapi.h"    // js::CompletionKind
 #include "jstypes.h"  // JS_PUBLIC_API
 

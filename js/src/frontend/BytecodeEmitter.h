@@ -10,7 +10,7 @@
 #define frontend_BytecodeEmitter_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS, MOZ_MUST_USE, MOZ_ALWAYS_INLINE, MOZ_NEVER_INLINE, MOZ_RAII
+#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS, MOZ_ALWAYS_INLINE, MOZ_NEVER_INLINE, MOZ_RAII
 #include "mozilla/Maybe.h"   // mozilla::Maybe, mozilla::Some
 #include "mozilla/Span.h"    // mozilla::Span
 #include "mozilla/Vector.h"  // mozilla::Vector

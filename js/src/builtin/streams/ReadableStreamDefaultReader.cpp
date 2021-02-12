@@ -6,8 +6,6 @@
 
 /* Class ReadableStreamDefaultReader. */
 
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
-
 #include "jsapi.h"  // JS_ReportErrorNumberASCII
 
 #include "builtin/streams/ClassSpecMacro.h"  // JS_STREAMS_CLASS_SPEC

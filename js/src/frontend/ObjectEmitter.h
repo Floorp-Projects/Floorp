@@ -7,8 +7,8 @@
 #ifndef frontend_ObjectEmitter_h
 #define frontend_ObjectEmitter_h
 
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE, MOZ_STACK_CLASS, MOZ_ALWAYS_INLINE, MOZ_RAII
-#include "mozilla/Maybe.h"  // Maybe
+#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS, MOZ_ALWAYS_INLINE, MOZ_RAII
+#include "mozilla/Maybe.h"       // Maybe
 
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint32_t

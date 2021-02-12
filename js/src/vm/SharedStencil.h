@@ -9,7 +9,6 @@
 
 #include "mozilla/Assertions.h"     // MOZ_ASSERT, MOZ_CRASH
 #include "mozilla/Atomics.h"        // mozilla::{Atomic, SequentiallyConsistent}
-#include "mozilla/Attributes.h"     // MOZ_MUST_USE
 #include "mozilla/CheckedInt.h"     // mozilla::CheckedInt
 #include "mozilla/HashFunctions.h"  // mozilla::HahNumber, mozilla::HashBytes
 #include "mozilla/HashTable.h"      // mozilla::HashSet
