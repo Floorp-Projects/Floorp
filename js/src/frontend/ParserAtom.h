@@ -809,6 +809,15 @@ class ParserAtomsTable {
   void dumpCharsNoQuote(js::GenericPrinter& out,
                         TaggedParserAtomIndex index) const;
 #endif
+
+  static void getLength1Content(Length1StaticParserString s, char contents[1]) {
+    contents[0] = char(s);
+  }
+
+  static void getLength2Content(Length2StaticParserString s, char contents[2]) {
+    contents[0] = StaticStrings::firstCharOfLength2(size_t(s));
+    contents[1] = StaticStrings::secondCharOfLength2(size_t(s));
+  }
 };
 
 // Lightweight version of ParserAtomsTable.
