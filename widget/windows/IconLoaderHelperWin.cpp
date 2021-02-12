@@ -30,8 +30,6 @@ using mozilla::widget::IconLoaderListenerWin;
 
 namespace mozilla::widget {
 
-NS_IMPL_ISUPPORTS0(IconLoaderHelperWin)
-
 IconLoaderHelperWin::IconLoaderHelperWin(IconLoaderListenerWin* aListener)
     : mLoadListener(aListener) {
   MOZ_ASSERT(aListener);
