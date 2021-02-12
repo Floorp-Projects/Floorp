@@ -7,13 +7,12 @@
 #include "gfxPlatform.h"
 #include "imgIContainer.h"
 #include "imgLoader.h"
+#include "imgRequestProxy.h"
 #include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
 
 using namespace mozilla;
-
-using mozilla::gfx::SourceSurface;
 
 namespace mozilla::widget {
 
