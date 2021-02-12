@@ -29,8 +29,8 @@ registerCleanupFunction(function() {
   }
 });
 
-// NB: not using BrowserTestUtils.promiseAlertDialog here because there's no way to
-// undo waiting for a dialog. If we don't want the window to be opened, and
+// NB: not using BrowserTestUtils.domWindowOpened here because there's no way to
+// undo waiting for a window open. If we don't want the window to be opened, and
 // wait for it to verify that it indeed does not open, we need to be able to
 // then "stop" waiting so that when we next *do* want it to open, our "old"
 // listener doesn't fire and do things we don't want (like close the window...).
@@ -38,15 +38,20 @@ let gCaretPromptOpeningObserver;
 function promiseCaretPromptOpened() {
   return new Promise(resolve => {
     function observer(subject, topic, data) {
-      info("Dialog opened.");
-      resolve(subject);
-      gCaretPromptOpeningObserver();
+      if (topic == "domwindowopened") {
+        Services.ww.unregisterNotification(observer);
+        let win = subject;
+        BrowserTestUtils.waitForEvent(
+          win,
+          "load",
+          false,
+          e => e.target.location.href != "about:blank"
+        ).then(() => resolve(win));
+        gCaretPromptOpeningObserver = null;
+      }
     }
-    Services.obs.addObserver(observer, "common-dialog-loaded");
-    gCaretPromptOpeningObserver = () => {
-      Services.obs.removeObserver(observer, "common-dialog-loaded");
-      gCaretPromptOpeningObserver = () => {};
-    };
+    Services.ww.registerNotification(observer);
+    gCaretPromptOpeningObserver = observer;
   });
 }
 
@@ -77,7 +82,8 @@ function syncToggleCaretNoDialog(expected) {
   // Need to clean up if the dialog wasn't opened, so the observer doesn't get
   // re-triggered later on causing "issues".
   if (!openedDialog) {
-    gCaretPromptOpeningObserver();
+    Services.ww.unregisterNotification(gCaretPromptOpeningObserver);
+    gCaretPromptOpeningObserver = null;
   }
   let prefVal = Services.prefs.getBoolPref(kPrefCaretBrowsingOn);
   is(prefVal, expected, "Caret browsing should now be " + expectedStr);
