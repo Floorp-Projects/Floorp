@@ -430,7 +430,7 @@ class JS_PUBLIC_API DominatorTree {
                   postOrder.length() == retainedSizes->length());
   }
 
-  MOZ_MUST_USE bool computeRetainedSizes(mozilla::MallocSizeOf mallocSizeOf) {
+  [[nodiscard]] bool computeRetainedSizes(mozilla::MallocSizeOf mallocSizeOf) {
     MOZ_ASSERT(retainedSizes.isNothing());
     auto length = postOrder.length();
 
@@ -664,9 +664,9 @@ class JS_PUBLIC_API DominatorTree {
    * `outSize`, or 0 if `node` is not a member of the dominator tree. Returns
    * false on OOM failure, leaving `outSize` unchanged.
    */
-  MOZ_MUST_USE bool getRetainedSize(const Node& node,
-                                    mozilla::MallocSizeOf mallocSizeOf,
-                                    Node::Size& outSize) {
+  [[nodiscard]] bool getRetainedSize(const Node& node,
+                                     mozilla::MallocSizeOf mallocSizeOf,
+                                     Node::Size& outSize) {
     assertSanity();
     auto ptr = nodeToPostOrderIndex.lookup(node);
     if (!ptr) {

@@ -546,7 +546,8 @@ namespace js {
  * instances of type |T|.  Return false if the calculation overflowed.
  */
 template <typename T>
-MOZ_MUST_USE inline bool CalculateAllocSize(size_t numElems, size_t* bytesOut) {
+[[nodiscard]] inline bool CalculateAllocSize(size_t numElems,
+                                             size_t* bytesOut) {
   *bytesOut = numElems * sizeof(T);
   return (numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value) == 0;
 }
@@ -557,8 +558,8 @@ MOZ_MUST_USE inline bool CalculateAllocSize(size_t numElems, size_t* bytesOut) {
  * false if the calculation overflowed.
  */
 template <typename T, typename Extra>
-MOZ_MUST_USE inline bool CalculateAllocSizeWithExtra(size_t numExtra,
-                                                     size_t* bytesOut) {
+[[nodiscard]] inline bool CalculateAllocSizeWithExtra(size_t numExtra,
+                                                      size_t* bytesOut) {
   *bytesOut = sizeof(T) + numExtra * sizeof(Extra);
   return (numExtra & mozilla::tl::MulOverflowMask<sizeof(Extra)>::value) == 0 &&
          *bytesOut >= sizeof(T);

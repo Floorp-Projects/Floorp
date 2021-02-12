@@ -139,41 +139,43 @@ class MOZ_STACK_CLASS NameOpEmitter {
                 const NameLocation& loc, Kind kind);
 
  private:
-  MOZ_MUST_USE bool isCall() const { return kind_ == Kind::Call; }
+  [[nodiscard]] bool isCall() const { return kind_ == Kind::Call; }
 
-  MOZ_MUST_USE bool isSimpleAssignment() const {
+  [[nodiscard]] bool isSimpleAssignment() const {
     return kind_ == Kind::SimpleAssignment;
   }
 
-  MOZ_MUST_USE bool isCompoundAssignment() const {
+  [[nodiscard]] bool isCompoundAssignment() const {
     return kind_ == Kind::CompoundAssignment;
   }
 
-  MOZ_MUST_USE bool isIncDec() const { return isPostIncDec() || isPreIncDec(); }
+  [[nodiscard]] bool isIncDec() const {
+    return isPostIncDec() || isPreIncDec();
+  }
 
-  MOZ_MUST_USE bool isPostIncDec() const {
+  [[nodiscard]] bool isPostIncDec() const {
     return kind_ == Kind::PostIncrement || kind_ == Kind::PostDecrement;
   }
 
-  MOZ_MUST_USE bool isPreIncDec() const {
+  [[nodiscard]] bool isPreIncDec() const {
     return kind_ == Kind::PreIncrement || kind_ == Kind::PreDecrement;
   }
 
-  MOZ_MUST_USE bool isInc() const {
+  [[nodiscard]] bool isInc() const {
     return kind_ == Kind::PostIncrement || kind_ == Kind::PreIncrement;
   }
 
-  MOZ_MUST_USE bool isInitialize() const { return kind_ == Kind::Initialize; }
+  [[nodiscard]] bool isInitialize() const { return kind_ == Kind::Initialize; }
 
  public:
-  MOZ_MUST_USE bool emittedBindOp() const { return emittedBindOp_; }
+  [[nodiscard]] bool emittedBindOp() const { return emittedBindOp_; }
 
-  MOZ_MUST_USE const NameLocation& loc() const { return loc_; }
+  [[nodiscard]] const NameLocation& loc() const { return loc_; }
 
-  MOZ_MUST_USE bool emitGet();
-  MOZ_MUST_USE bool prepareForRhs();
-  MOZ_MUST_USE bool emitAssignment();
-  MOZ_MUST_USE bool emitIncDec();
+  [[nodiscard]] bool emitGet();
+  [[nodiscard]] bool prepareForRhs();
+  [[nodiscard]] bool emitAssignment();
+  [[nodiscard]] bool emitIncDec();
 };
 
 } /* namespace frontend */

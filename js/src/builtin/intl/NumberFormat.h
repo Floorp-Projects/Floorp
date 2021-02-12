@@ -164,7 +164,7 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
    *
    * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#unit
    */
-  MOZ_MUST_USE bool currency(JSLinearString* currency);
+  [[nodiscard]] bool currency(JSLinearString* currency);
 
   enum class CurrencyDisplay { Code, Name, Symbol, NarrowSymbol };
 
@@ -173,7 +173,7 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
    *
    * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#unit-width
    */
-  MOZ_MUST_USE bool currencyDisplay(CurrencyDisplay display);
+  [[nodiscard]] bool currencyDisplay(CurrencyDisplay display);
 
   /**
    * Set this skeleton to display a unit amount. |unit| must be a well-formed
@@ -182,7 +182,7 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
    * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#unit
    * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#per-unit
    */
-  MOZ_MUST_USE bool unit(JSLinearString* unit);
+  [[nodiscard]] bool unit(JSLinearString* unit);
 
   enum class UnitDisplay { Short, Narrow, Long };
 
@@ -191,7 +191,7 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
    *
    * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#unit-width
    */
-  MOZ_MUST_USE bool unitDisplay(UnitDisplay display);
+  [[nodiscard]] bool unitDisplay(UnitDisplay display);
 
   /**
    * Set this skeleton to display a percent number.
@@ -199,7 +199,7 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
    * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#unit
    * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#scale
    */
-  MOZ_MUST_USE bool percent();
+  [[nodiscard]] bool percent();
 
   /**
    * Set the fraction digits settings for this skeleton. |min| can be zero,
@@ -207,7 +207,7 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
    *
    * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#fraction-precision
    */
-  MOZ_MUST_USE bool fractionDigits(uint32_t min, uint32_t max);
+  [[nodiscard]] bool fractionDigits(uint32_t min, uint32_t max);
 
   /**
    * Set the integer-width settings for this skeleton. |min| must be a non-zero
@@ -215,7 +215,7 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
    *
    * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#integer-width
    */
-  MOZ_MUST_USE bool integerWidth(uint32_t min);
+  [[nodiscard]] bool integerWidth(uint32_t min);
 
   /**
    * Set the significant digits settings for this skeleton. |min| must be a
@@ -223,14 +223,14 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
    *
    * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#significant-digits-precision
    */
-  MOZ_MUST_USE bool significantDigits(uint32_t min, uint32_t max);
+  [[nodiscard]] bool significantDigits(uint32_t min, uint32_t max);
 
   /**
    * Enable or disable grouping for this skeleton.
    *
    * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#grouping
    */
-  MOZ_MUST_USE bool useGrouping(bool on);
+  [[nodiscard]] bool useGrouping(bool on);
 
   enum class Notation {
     Standard,
@@ -245,7 +245,7 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
    *
    * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#notation
    */
-  MOZ_MUST_USE bool notation(Notation style);
+  [[nodiscard]] bool notation(Notation style);
 
   enum class SignDisplay {
     Auto,
@@ -262,14 +262,14 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
    *
    * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#sign-display
    */
-  MOZ_MUST_USE bool signDisplay(SignDisplay display);
+  [[nodiscard]] bool signDisplay(SignDisplay display);
 
   /**
    * Set the rounding mode to 'half-up' for this skeleton.
    *
    * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#rounding-mode
    */
-  MOZ_MUST_USE bool roundingModeHalfUp();
+  [[nodiscard]] bool roundingModeHalfUp();
 };
 
 }  // namespace intl

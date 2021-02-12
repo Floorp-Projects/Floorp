@@ -181,8 +181,8 @@ struct Statistics {
                   const SliceBudget& budget, JS::GCReason reason);
   void endSlice();
 
-  MOZ_MUST_USE bool startTimingMutator();
-  MOZ_MUST_USE bool stopTimingMutator(double& mutator_ms, double& gc_ms);
+  [[nodiscard]] bool startTimingMutator();
+  [[nodiscard]] bool stopTimingMutator(double& mutator_ms, double& gc_ms);
 
   // Note when we sweep a zone or compartment.
   void sweptZone() { ++zoneStats.sweptZoneCount; }

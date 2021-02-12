@@ -270,7 +270,7 @@ class WeakMap
   void clear();
 
   template <typename KeyInput, typename ValueInput>
-  MOZ_MUST_USE bool add(AddPtr& p, KeyInput&& k, ValueInput&& v) {
+  [[nodiscard]] bool add(AddPtr& p, KeyInput&& k, ValueInput&& v) {
     MOZ_ASSERT(k);
     if (!Base::add(p, std::forward<KeyInput>(k), std::forward<ValueInput>(v))) {
       return false;
@@ -280,7 +280,7 @@ class WeakMap
   }
 
   template <typename KeyInput, typename ValueInput>
-  MOZ_MUST_USE bool relookupOrAdd(AddPtr& p, KeyInput&& k, ValueInput&& v) {
+  [[nodiscard]] bool relookupOrAdd(AddPtr& p, KeyInput&& k, ValueInput&& v) {
     MOZ_ASSERT(k);
     if (!Base::relookupOrAdd(p, std::forward<KeyInput>(k),
                              std::forward<ValueInput>(v))) {
@@ -291,7 +291,7 @@ class WeakMap
   }
 
   template <typename KeyInput, typename ValueInput>
-  MOZ_MUST_USE bool put(KeyInput&& k, ValueInput&& v) {
+  [[nodiscard]] bool put(KeyInput&& k, ValueInput&& v) {
     MOZ_ASSERT(k);
     AddPtr p = lookupForAdd(k);
     if (p) {
@@ -302,7 +302,7 @@ class WeakMap
   }
 
   template <typename KeyInput, typename ValueInput>
-  MOZ_MUST_USE bool putNew(KeyInput&& k, ValueInput&& v) {
+  [[nodiscard]] bool putNew(KeyInput&& k, ValueInput&& v) {
     MOZ_ASSERT(k);
     barrierForInsert(k, v);
     return Base::putNew(std::forward<KeyInput>(k), std::forward<ValueInput>(v));

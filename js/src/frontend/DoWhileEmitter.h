@@ -71,10 +71,10 @@ class MOZ_STACK_CLASS DoWhileEmitter {
   //   doPos
   //
   // Can be Nothing() if not available.
-  MOZ_MUST_USE bool emitBody(const mozilla::Maybe<uint32_t>& doPos,
-                             const mozilla::Maybe<uint32_t>& bodyPos);
-  MOZ_MUST_USE bool emitCond();
-  MOZ_MUST_USE bool emitEnd();
+  [[nodiscard]] bool emitBody(const mozilla::Maybe<uint32_t>& doPos,
+                              const mozilla::Maybe<uint32_t>& bodyPos);
+  [[nodiscard]] bool emitCond();
+  [[nodiscard]] bool emitEnd();
 };
 
 } /* namespace frontend */

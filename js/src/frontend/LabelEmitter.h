@@ -59,7 +59,7 @@ class MOZ_STACK_CLASS LabelEmitter {
   explicit LabelEmitter(BytecodeEmitter* bce) : bce_(bce) {}
 
   void emitLabel(TaggedParserAtomIndex name);
-  MOZ_MUST_USE bool emitEnd();
+  [[nodiscard]] bool emitEnd();
 };
 
 } /* namespace frontend */

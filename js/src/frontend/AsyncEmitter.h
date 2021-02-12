@@ -143,18 +143,18 @@ class MOZ_STACK_CLASS AsyncEmitter {
   State state_ = State::Start;
 #endif
 
-  MOZ_MUST_USE bool emitRejectCatch();
-  MOZ_MUST_USE bool emitFinalYield();
+  [[nodiscard]] bool emitRejectCatch();
+  [[nodiscard]] bool emitFinalYield();
 
  public:
   explicit AsyncEmitter(BytecodeEmitter* bce) : bce_(bce){};
 
-  MOZ_MUST_USE bool prepareForParamsWithoutExpression();
-  MOZ_MUST_USE bool prepareForParamsWithExpression();
-  MOZ_MUST_USE bool prepareForModule();
-  MOZ_MUST_USE bool emitParamsEpilogue();
-  MOZ_MUST_USE bool prepareForBody();
-  MOZ_MUST_USE bool emitEnd();
+  [[nodiscard]] bool prepareForParamsWithoutExpression();
+  [[nodiscard]] bool prepareForParamsWithExpression();
+  [[nodiscard]] bool prepareForModule();
+  [[nodiscard]] bool emitParamsEpilogue();
+  [[nodiscard]] bool prepareForBody();
+  [[nodiscard]] bool emitEnd();
 };
 
 } /* namespace frontend */

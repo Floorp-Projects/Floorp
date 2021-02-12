@@ -200,7 +200,7 @@ struct BufferIterator {
     return *this;
   }
 
-  MOZ_MUST_USE bool advance(size_t size = sizeof(T)) {
+  [[nodiscard]] bool advance(size_t size = sizeof(T)) {
     return mIter.AdvanceAcrossSegments(mBuffer, size);
   }
 
@@ -226,7 +226,7 @@ struct BufferIterator {
 
   bool done() const { return mIter.Done(); }
 
-  MOZ_MUST_USE bool readBytes(char* outData, size_t size) {
+  [[nodiscard]] bool readBytes(char* outData, size_t size) {
     return mBuffer.ReadBytes(mIter, outData, size);
   }
 
@@ -320,15 +320,15 @@ struct SCOutput {
   JS::StructuredCloneScope scope() const { return buf.scope(); }
   void sameProcessScopeRequired() { buf.sameProcessScopeRequired(); }
 
-  MOZ_MUST_USE bool write(uint64_t u);
-  MOZ_MUST_USE bool writePair(uint32_t tag, uint32_t data);
-  MOZ_MUST_USE bool writeDouble(double d);
-  MOZ_MUST_USE bool writeBytes(const void* p, size_t nbytes);
-  MOZ_MUST_USE bool writeChars(const Latin1Char* p, size_t nchars);
-  MOZ_MUST_USE bool writeChars(const char16_t* p, size_t nchars);
+  [[nodiscard]] bool write(uint64_t u);
+  [[nodiscard]] bool writePair(uint32_t tag, uint32_t data);
+  [[nodiscard]] bool writeDouble(double d);
+  [[nodiscard]] bool writeBytes(const void* p, size_t nbytes);
+  [[nodiscard]] bool writeChars(const Latin1Char* p, size_t nchars);
+  [[nodiscard]] bool writeChars(const char16_t* p, size_t nchars);
 
   template <class T>
-  MOZ_MUST_USE bool writeArray(const T* p, size_t nelems);
+  [[nodiscard]] bool writeArray(const T* p, size_t nelems);
 
   void setCallbacks(const JSStructuredCloneCallbacks* callbacks, void* closure,
                     OwnTransferablePolicy policy) {
@@ -358,20 +358,20 @@ class SCInput {
   static void getPtr(uint64_t data, void** ptr);
   static void getPair(uint64_t data, uint32_t* tagp, uint32_t* datap);
 
-  MOZ_MUST_USE bool read(uint64_t* p);
-  MOZ_MUST_USE bool readPair(uint32_t* tagp, uint32_t* datap);
-  MOZ_MUST_USE bool readDouble(double* p);
-  MOZ_MUST_USE bool readBytes(void* p, size_t nbytes);
-  MOZ_MUST_USE bool readChars(Latin1Char* p, size_t nchars);
-  MOZ_MUST_USE bool readChars(char16_t* p, size_t nchars);
-  MOZ_MUST_USE bool readPtr(void**);
+  [[nodiscard]] bool read(uint64_t* p);
+  [[nodiscard]] bool readPair(uint32_t* tagp, uint32_t* datap);
+  [[nodiscard]] bool readDouble(double* p);
+  [[nodiscard]] bool readBytes(void* p, size_t nbytes);
+  [[nodiscard]] bool readChars(Latin1Char* p, size_t nchars);
+  [[nodiscard]] bool readChars(char16_t* p, size_t nchars);
+  [[nodiscard]] bool readPtr(void**);
 
-  MOZ_MUST_USE bool get(uint64_t* p);
-  MOZ_MUST_USE bool getPair(uint32_t* tagp, uint32_t* datap);
+  [[nodiscard]] bool get(uint64_t* p);
+  [[nodiscard]] bool getPair(uint32_t* tagp, uint32_t* datap);
 
   const BufferIterator& tell() const { return point; }
   void seekTo(const BufferIterator& pos) { point = pos; }
-  MOZ_MUST_USE bool seekBy(size_t pos) {
+  [[nodiscard]] bool seekBy(size_t pos) {
     if (!point.advance(pos)) {
       reportTruncated();
       return false;
@@ -380,7 +380,7 @@ class SCInput {
   }
 
   template <class T>
-  MOZ_MUST_USE bool readArray(T* p, size_t nelems);
+  [[nodiscard]] bool readArray(T* p, size_t nelems);
 
   bool reportTruncated() {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
@@ -429,19 +429,19 @@ struct JSStructuredCloneReader {
 
   BigInt* readBigInt(uint32_t data);
 
-  MOZ_MUST_USE bool readTypedArray(uint32_t arrayType, uint64_t nelems,
-                                   MutableHandleValue vp, bool v1Read = false);
-  MOZ_MUST_USE bool readDataView(uint64_t byteLength, MutableHandleValue vp);
-  MOZ_MUST_USE bool readArrayBuffer(StructuredDataType type, uint32_t data,
-                                    MutableHandleValue vp);
-  MOZ_MUST_USE bool readSharedArrayBuffer(MutableHandleValue vp);
-  MOZ_MUST_USE bool readSharedWasmMemory(uint32_t nbytes,
-                                         MutableHandleValue vp);
-  MOZ_MUST_USE bool readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems,
-                                      MutableHandleValue vp);
+  [[nodiscard]] bool readTypedArray(uint32_t arrayType, uint64_t nelems,
+                                    MutableHandleValue vp, bool v1Read = false);
+  [[nodiscard]] bool readDataView(uint64_t byteLength, MutableHandleValue vp);
+  [[nodiscard]] bool readArrayBuffer(StructuredDataType type, uint32_t data,
+                                     MutableHandleValue vp);
+  [[nodiscard]] bool readSharedArrayBuffer(MutableHandleValue vp);
+  [[nodiscard]] bool readSharedWasmMemory(uint32_t nbytes,
+                                          MutableHandleValue vp);
+  [[nodiscard]] bool readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems,
+                                       MutableHandleValue vp);
   JSObject* readSavedFrame(uint32_t principalsTag);
-  MOZ_MUST_USE bool startRead(MutableHandleValue vp,
-                              gc::InitialHeap strHeap = gc::DefaultHeap);
+  [[nodiscard]] bool startRead(MutableHandleValue vp,
+                               gc::InitialHeap strHeap = gc::DefaultHeap);
 
   SCInput& in;
 

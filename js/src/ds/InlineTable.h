@@ -91,7 +91,7 @@ class InlineTable : private AllocPolicy {
 
   bool usingTable() const { return inlNext_ > InlineEntries; }
 
-  MOZ_MUST_USE bool switchToTable() {
+  [[nodiscard]] bool switchToTable() {
     MOZ_ASSERT(inlNext_ == InlineEntries);
 
     table_.clear();
@@ -447,7 +447,7 @@ class InlineMap {
       this->value = std::forward<ValueInput>(value);
     }
 
-    MOZ_MUST_USE bool moveTo(Map& map) {
+    [[nodiscard]] bool moveTo(Map& map) {
       return map.putNew(std::move(key), std::move(value));
     }
   };
@@ -527,7 +527,7 @@ class InlineMap {
   }
 
   template <typename KeyInput, typename ValueInput>
-  MOZ_MUST_USE bool put(KeyInput&& key, ValueInput&& value) {
+  [[nodiscard]] bool put(KeyInput&& key, ValueInput&& value) {
     AddPtr p = lookupForAdd(key);
     if (p) {
       p->value() = std::forward<ValueInput>(value);
@@ -562,7 +562,7 @@ class InlineSet {
       this->key = std::forward<TInput>(key);
     }
 
-    MOZ_MUST_USE bool moveTo(Set& set) { return set.putNew(std::move(key)); }
+    [[nodiscard]] bool moveTo(Set& set) { return set.putNew(std::move(key)); }
   };
 
   class Entry {
@@ -630,7 +630,7 @@ class InlineSet {
   }
 
   template <typename TInput>
-  MOZ_MUST_USE bool put(TInput&& key) {
+  [[nodiscard]] bool put(TInput&& key) {
     AddPtr p = lookupForAdd(key);
     return p ? true : add(p, std::forward<TInput>(key));
   }

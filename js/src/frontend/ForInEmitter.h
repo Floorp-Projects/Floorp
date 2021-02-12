@@ -107,10 +107,10 @@ class MOZ_STACK_CLASS ForInEmitter {
   //   forPos
   //
   // Can be Nothing() if not available.
-  MOZ_MUST_USE bool emitIterated();
-  MOZ_MUST_USE bool emitInitialize();
-  MOZ_MUST_USE bool emitBody();
-  MOZ_MUST_USE bool emitEnd(const mozilla::Maybe<uint32_t>& forPos);
+  [[nodiscard]] bool emitIterated();
+  [[nodiscard]] bool emitInitialize();
+  [[nodiscard]] bool emitBody();
+  [[nodiscard]] bool emitEnd(const mozilla::Maybe<uint32_t>& forPos);
 };
 
 } /* namespace frontend */

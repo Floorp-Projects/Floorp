@@ -582,8 +582,8 @@ void ArrayBufferObject::detach(JSContext* cx,
  *
  */
 
-MOZ_MUST_USE bool WasmArrayRawBuffer::growToSizeInPlace(BufferSize oldSize,
-                                                        BufferSize newSize) {
+[[nodiscard]] bool WasmArrayRawBuffer::growToSizeInPlace(BufferSize oldSize,
+                                                         BufferSize newSize) {
   MOZ_ASSERT(newSize.get() >= oldSize.get());
   MOZ_ASSERT_IF(maxSize(), newSize.get() <= maxSize().value());
   MOZ_ASSERT(newSize.get() <= mappedSize());

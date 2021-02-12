@@ -48,15 +48,15 @@ extern bool Promise_static_resolve(JSContext* cx, unsigned argc, JS::Value* vp);
  * Asserts that all objects in the `promises` vector are, maybe wrapped,
  * instances of `Promise` or a subclass of `Promise`.
  */
-MOZ_MUST_USE JSObject* GetWaitForAllPromise(JSContext* cx,
-                                            JS::HandleObjectVector promises);
+[[nodiscard]] JSObject* GetWaitForAllPromise(JSContext* cx,
+                                             JS::HandleObjectVector promises);
 
 /**
  * Enqueues resolve/reject reactions in the given Promise's reactions lists
  * as though by calling the original value of Promise.prototype.then, and
  * without regard to any Promise subclassing used in `promiseObj` itself.
  */
-MOZ_MUST_USE PromiseObject* OriginalPromiseThen(
+[[nodiscard]] PromiseObject* OriginalPromiseThen(
     JSContext* cx, JS::Handle<JSObject*> promiseObj,
     JS::Handle<JSObject*> onFulfilled, JS::Handle<JSObject*> onRejected);
 
@@ -95,9 +95,9 @@ extern MOZ_MUST_USE bool ReactToUnwrappedPromise(
  * The abstract operation PromiseResolve, given a constructor and a value,
  * returns a new promise resolved with that value.
  */
-MOZ_MUST_USE JSObject* PromiseResolve(JSContext* cx,
-                                      JS::Handle<JSObject*> constructor,
-                                      JS::Handle<JS::Value> value);
+[[nodiscard]] JSObject* PromiseResolve(JSContext* cx,
+                                       JS::Handle<JSObject*> constructor,
+                                       JS::Handle<JS::Value> value);
 
 /**
  * Reject |promise| with the value of the current pending exception.
@@ -105,60 +105,60 @@ MOZ_MUST_USE JSObject* PromiseResolve(JSContext* cx,
  * |promise| must be from the current realm.  Callers must enter the realm of
  * |promise| if they are not already in it.
  */
-MOZ_MUST_USE bool RejectPromiseWithPendingError(
+[[nodiscard]] bool RejectPromiseWithPendingError(
     JSContext* cx, JS::Handle<PromiseObject*> promise);
 
 /**
  * Create the promise object which will be used as the return value of an async
  * function.
  */
-MOZ_MUST_USE PromiseObject* CreatePromiseObjectForAsync(JSContext* cx);
+[[nodiscard]] PromiseObject* CreatePromiseObjectForAsync(JSContext* cx);
 
 /**
  * Returns true if the given object is a promise created by
  * either CreatePromiseObjectForAsync function or async generator's method.
  */
-MOZ_MUST_USE bool IsPromiseForAsyncFunctionOrGenerator(JSObject* promise);
+[[nodiscard]] bool IsPromiseForAsyncFunctionOrGenerator(JSObject* promise);
 
-MOZ_MUST_USE bool AsyncFunctionReturned(
+[[nodiscard]] bool AsyncFunctionReturned(
     JSContext* cx, JS::Handle<PromiseObject*> resultPromise,
     JS::Handle<JS::Value> value);
 
-MOZ_MUST_USE bool AsyncFunctionThrown(JSContext* cx,
-                                      JS::Handle<PromiseObject*> resultPromise,
-                                      JS::Handle<JS::Value> reason);
+[[nodiscard]] bool AsyncFunctionThrown(JSContext* cx,
+                                       JS::Handle<PromiseObject*> resultPromise,
+                                       JS::Handle<JS::Value> reason);
 
 // Start awaiting `value` in an async function (, but doesn't suspend the
 // async function's execution!). Returns the async function's result promise.
-MOZ_MUST_USE JSObject* AsyncFunctionAwait(
+[[nodiscard]] JSObject* AsyncFunctionAwait(
     JSContext* cx, JS::Handle<AsyncFunctionGeneratorObject*> genObj,
     JS::Handle<JS::Value> value);
 
 // If the await operation can be skipped and the resolution value for `val` can
 // be acquired, stored the resolved value to `resolved` and `true` to
 // `*canSkip`.  Otherwise, stores `false` to `*canSkip`.
-MOZ_MUST_USE bool CanSkipAwait(JSContext* cx, JS::Handle<JS::Value> val,
-                               bool* canSkip);
-MOZ_MUST_USE bool ExtractAwaitValue(JSContext* cx, JS::Handle<JS::Value> val,
-                                    JS::MutableHandle<JS::Value> resolved);
+[[nodiscard]] bool CanSkipAwait(JSContext* cx, JS::Handle<JS::Value> val,
+                                bool* canSkip);
+[[nodiscard]] bool ExtractAwaitValue(JSContext* cx, JS::Handle<JS::Value> val,
+                                     JS::MutableHandle<JS::Value> resolved);
 
-MOZ_MUST_USE bool AsyncGeneratorAwait(
+[[nodiscard]] bool AsyncGeneratorAwait(
     JSContext* cx, JS::Handle<AsyncGeneratorObject*> asyncGenObj,
     JS::Handle<JS::Value> value);
 
-MOZ_MUST_USE bool AsyncGeneratorResolve(
+[[nodiscard]] bool AsyncGeneratorResolve(
     JSContext* cx, JS::Handle<AsyncGeneratorObject*> asyncGenObj,
     JS::Handle<JS::Value> value, bool done);
 
-MOZ_MUST_USE bool AsyncGeneratorReject(
+[[nodiscard]] bool AsyncGeneratorReject(
     JSContext* cx, JS::Handle<AsyncGeneratorObject*> asyncGenObj,
     JS::Handle<JS::Value> exception);
 
-MOZ_MUST_USE bool AsyncGeneratorEnqueue(JSContext* cx,
-                                        JS::Handle<JS::Value> asyncGenVal,
-                                        CompletionKind completionKind,
-                                        JS::Handle<JS::Value> completionValue,
-                                        JS::MutableHandle<JS::Value> result);
+[[nodiscard]] bool AsyncGeneratorEnqueue(JSContext* cx,
+                                         JS::Handle<JS::Value> asyncGenVal,
+                                         CompletionKind completionKind,
+                                         JS::Handle<JS::Value> completionValue,
+                                         JS::MutableHandle<JS::Value> result);
 
 bool AsyncFromSyncIteratorMethod(JSContext* cx, JS::CallArgs& args,
                                  CompletionKind completionKind);

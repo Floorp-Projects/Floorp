@@ -243,8 +243,8 @@ class FunctionCompiler {
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
   }
 
-  MOZ_MUST_USE bool init(const char* name, unsigned nargs,
-                         const char* const* argnames) {
+  [[nodiscard]] bool init(const char* name, unsigned nargs,
+                          const char* const* argnames) {
     if (!funStr_.ensureTwoByteChars()) {
       return false;
     }

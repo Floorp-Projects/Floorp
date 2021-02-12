@@ -78,7 +78,7 @@ struct NurseryChunk : public ChunkBase {
   // The end of the range is always ChunkSize.
   void markPagesUnusedHard(size_t from);
   // The start of the range is always the beginning of the chunk.
-  MOZ_MUST_USE bool markPagesInUseHard(size_t to);
+  [[nodiscard]] bool markPagesInUseHard(size_t to);
 
   uintptr_t start() const { return uintptr_t(&data); }
   uintptr_t end() const { return uintptr_t(this) + ChunkSize; }

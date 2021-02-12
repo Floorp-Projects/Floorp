@@ -254,7 +254,7 @@ class MOZ_RAII AutoClearUnderlyingSource {
  * Version of SetUpReadableByteStreamController that's specialized for handling
  * external, embedding-provided, underlying sources.
  */
-MOZ_MUST_USE bool js::SetUpExternalReadableByteStreamController(
+[[nodiscard]] bool js::SetUpExternalReadableByteStreamController(
     JSContext* cx, Handle<ReadableStream*> stream,
     JS::ReadableStreamUnderlyingSource* source) {
   // Done elsewhere in the standard: Create the controller object.
@@ -581,7 +581,7 @@ static MOZ_MUST_USE PromiseObject* ReadableByteStreamControllerPullSteps(
  * and
  * Streams spec, 3.11.5.2. [[PullSteps]] ( forAuthorCode )
  */
-MOZ_MUST_USE PromiseObject* js::ReadableStreamControllerPullSteps(
+[[nodiscard]] PromiseObject* js::ReadableStreamControllerPullSteps(
     JSContext* cx, Handle<ReadableStreamController*> unwrappedController) {
   if (unwrappedController->is<ReadableStreamDefaultController>()) {
     Rooted<ReadableStreamDefaultController*> unwrappedDefaultController(
@@ -614,7 +614,7 @@ static MOZ_MUST_USE bool ReadableByteStreamControllerInvalidateBYOBRequest(
  * Streams spec, 3.13.5.
  *      ReadableByteStreamControllerClearPendingPullIntos ( controller )
  */
-MOZ_MUST_USE bool js::ReadableByteStreamControllerClearPendingPullIntos(
+[[nodiscard]] bool js::ReadableByteStreamControllerClearPendingPullIntos(
     JSContext* cx, Handle<ReadableByteStreamController*> unwrappedController) {
   // Step 1: Perform
   //         ! ReadableByteStreamControllerInvalidateBYOBRequest(controller).
@@ -632,7 +632,7 @@ MOZ_MUST_USE bool js::ReadableByteStreamControllerClearPendingPullIntos(
 /**
  * Streams spec, 3.13.6. ReadableByteStreamControllerClose ( controller )
  */
-MOZ_MUST_USE bool js::ReadableByteStreamControllerClose(
+[[nodiscard]] bool js::ReadableByteStreamControllerClose(
     JSContext* cx, Handle<ReadableByteStreamController*> unwrappedController) {
   // Step 1: Let stream be controller.[[controlledReadableByteStream]].
   Rooted<ReadableStream*> unwrappedStream(cx, unwrappedController->stream());
