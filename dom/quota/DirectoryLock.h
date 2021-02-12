@@ -14,8 +14,8 @@
 namespace mozilla::dom::quota {
 
 class ClientDirectoryLock;
-struct GroupAndOrigin;
 class OpenDirectoryListener;
+struct OriginMetadata;
 
 // Basic directory lock interface shared by all other directory lock classes.
 // The class must contain pure virtual functions only to avoid problems with
@@ -32,7 +32,7 @@ class NS_NO_VTABLE DirectoryLock {
 
   // XXX Move to the UniversalDirectoryLock class.
   virtual RefPtr<ClientDirectoryLock> Specialize(
-      PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+      PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
       Client::Type aClientType) const = 0;
 
   virtual void Log() const = 0;
@@ -44,7 +44,7 @@ class NS_NO_VTABLE OriginDirectoryLock : public DirectoryLock {
   // 'Get' prefix is to avoid name collisions with the enum
   virtual PersistenceType GetPersistenceType() const = 0;
 
-  virtual quota::GroupAndOrigin GroupAndOrigin() const = 0;
+  virtual quota::OriginMetadata OriginMetadata() const = 0;
 
   virtual const nsACString& Origin() const = 0;
 };

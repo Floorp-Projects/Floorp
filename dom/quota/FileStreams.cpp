@@ -53,7 +53,7 @@ nsresult FileQuotaStream<FileStreamBase>::DoOpen() {
 
   NS_ASSERTION(!mQuotaObject, "Creating quota object more than once?");
   mQuotaObject = quotaManager->GetQuotaObject(
-      mPersistenceType, mGroupAndOrigin, mClientType,
+      mPersistenceType, mOriginMetadata, mClientType,
       FileStreamBase::mOpenParams.localFile);
 
   QM_TRY(FileStreamBase::DoOpen());
@@ -89,11 +89,11 @@ NS_IMETHODIMP FileQuotaStreamWithWrite<FileStreamBase>::Write(
 }
 
 Result<NotNull<RefPtr<FileInputStream>>, nsresult> CreateFileInputStream(
-    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
     Client::Type aClientType, nsIFile* aFile, int32_t aIOFlags, int32_t aPerm,
     int32_t aBehaviorFlags) {
   const auto stream = MakeNotNull<RefPtr<FileInputStream>>(
-      aPersistenceType, aGroupAndOrigin, aClientType);
+      aPersistenceType, aOriginMetadata, aClientType);
 
   QM_TRY(stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags));
 
@@ -101,11 +101,11 @@ Result<NotNull<RefPtr<FileInputStream>>, nsresult> CreateFileInputStream(
 }
 
 Result<NotNull<RefPtr<FileOutputStream>>, nsresult> CreateFileOutputStream(
-    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
     Client::Type aClientType, nsIFile* aFile, int32_t aIOFlags, int32_t aPerm,
     int32_t aBehaviorFlags) {
   const auto stream = MakeNotNull<RefPtr<FileOutputStream>>(
-      aPersistenceType, aGroupAndOrigin, aClientType);
+      aPersistenceType, aOriginMetadata, aClientType);
 
   QM_TRY(stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags));
 
@@ -113,11 +113,11 @@ Result<NotNull<RefPtr<FileOutputStream>>, nsresult> CreateFileOutputStream(
 }
 
 Result<NotNull<RefPtr<FileStream>>, nsresult> CreateFileStream(
-    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
     Client::Type aClientType, nsIFile* aFile, int32_t aIOFlags, int32_t aPerm,
     int32_t aBehaviorFlags) {
   const auto stream = MakeNotNull<RefPtr<FileStream>>(
-      aPersistenceType, aGroupAndOrigin, aClientType);
+      aPersistenceType, aOriginMetadata, aClientType);
 
   QM_TRY(stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags));
 

@@ -141,7 +141,7 @@ class QuotaManager final : public BackgroundThreadObject {
    * methods.
    */
   void InitQuotaForOrigin(PersistenceType aPersistenceType,
-                          const GroupAndOrigin& aGroupAndOrigin,
+                          const OriginMetadata& aOriginMetadata,
                           const ClientUsageArray& aClientUsages,
                           uint64_t aUsageBytes, int64_t aAccessTime,
                           bool aPersisted);
@@ -157,7 +157,7 @@ class QuotaManager final : public BackgroundThreadObject {
    * LSNG's 0 usage to the QuotaObject).
    */
   void EnsureQuotaForOrigin(PersistenceType aPersistenceType,
-                            const GroupAndOrigin& aGroupAndOrigin);
+                            const OriginMetadata& aOriginMetadata);
 
   /**
    * For use when creating an origin directory. It's possible that origin usage
@@ -166,31 +166,31 @@ class QuotaManager final : public BackgroundThreadObject {
    * one.
    */
   void NoteOriginDirectoryCreated(PersistenceType aPersistenceType,
-                                  const GroupAndOrigin& aGroupAndOrigin,
+                                  const OriginMetadata& aOriginMetadata,
                                   bool aPersisted, int64_t& aTimestamp);
 
   // XXX clients can use QuotaObject instead of calling this method directly.
   void DecreaseUsageForOrigin(PersistenceType aPersistenceType,
-                              const GroupAndOrigin& aGroupAndOrigin,
+                              const OriginMetadata& aOriginMetadata,
                               Client::Type aClientType, int64_t aSize);
 
   void ResetUsageForClient(PersistenceType aPersistenceType,
-                           const GroupAndOrigin& aGroupAndOrigin,
+                           const OriginMetadata& aOriginMetadata,
                            Client::Type aClientType);
 
   UsageInfo GetUsageForClient(PersistenceType aPersistenceType,
-                              const GroupAndOrigin& aGroupAndOrigin,
+                              const OriginMetadata& aOriginMetadata,
                               Client::Type aClientType);
 
   void UpdateOriginAccessTime(PersistenceType aPersistenceType,
-                              const GroupAndOrigin& aGroupAndOrigin);
+                              const OriginMetadata& aOriginMetadata);
 
   void RemoveQuota();
 
   void RemoveQuotaForOrigin(PersistenceType aPersistenceType,
-                            const GroupAndOrigin& aGroupAndOrigin) {
+                            const OriginMetadata& aOriginMetadata) {
     MutexAutoLock lock(mQuotaMutex);
-    LockedRemoveQuotaForOrigin(aPersistenceType, aGroupAndOrigin);
+    LockedRemoveQuotaForOrigin(aPersistenceType, aOriginMetadata);
   }
 
   nsresult LoadQuota();
@@ -198,21 +198,21 @@ class QuotaManager final : public BackgroundThreadObject {
   void UnloadQuota();
 
   already_AddRefed<QuotaObject> GetQuotaObject(
-      PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+      PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
       Client::Type aClientType, nsIFile* aFile, int64_t aFileSize = -1,
       int64_t* aFileSizeOut = nullptr);
 
   already_AddRefed<QuotaObject> GetQuotaObject(
-      PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+      PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
       Client::Type aClientType, const nsAString& aPath, int64_t aFileSize = -1,
       int64_t* aFileSizeOut = nullptr);
 
   already_AddRefed<QuotaObject> GetQuotaObject(const int64_t aDirectoryLockId,
                                                const nsAString& aPath);
 
-  Nullable<bool> OriginPersisted(const GroupAndOrigin& aGroupAndOrigin);
+  Nullable<bool> OriginPersisted(const OriginMetadata& aOriginMetadata);
 
-  void PersistOrigin(const GroupAndOrigin& aGroupAndOrigin);
+  void PersistOrigin(const OriginMetadata& aOriginMetadata);
 
   using DirectoryLockIdTableArray =
       AutoTArray<Client::DirectoryLockIdTable, Client::TYPE_MAX>;
@@ -256,7 +256,7 @@ class QuotaManager final : public BackgroundThreadObject {
   // In other words, protection which the lock represents dies with the lock
   // object itself.
   RefPtr<ClientDirectoryLock> CreateDirectoryLock(
-      PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+      PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
       Client::Type aClientType, bool aExclusive);
 
   // XXX RemoveMe once bug 1170279 gets fixed.
@@ -375,7 +375,7 @@ class QuotaManager final : public BackgroundThreadObject {
 
   uint64_t GetGroupUsage(const nsACString& aGroup);
 
-  uint64_t GetOriginUsage(const GroupAndOrigin& aGroupAndOrigin);
+  uint64_t GetOriginUsage(const OriginMetadata& aOriginMetadata);
 
   void NotifyStoragePressure(uint64_t aUsage);
 
@@ -440,13 +440,13 @@ class QuotaManager final : public BackgroundThreadObject {
       nsTArray<RefPtr<OriginDirectoryLock>>& aLocks);
 
   void LockedRemoveQuotaForOrigin(PersistenceType aPersistenceType,
-                                  const GroupAndOrigin& aGroupAndOrigin);
+                                  const OriginMetadata& aOriginMetadata);
 
   already_AddRefed<GroupInfo> LockedGetOrCreateGroupInfo(
       PersistenceType aPersistenceType, const nsACString& aGroup);
 
   already_AddRefed<OriginInfo> LockedGetOriginInfo(
-      PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin);
+      PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata);
 
   nsresult UpgradeFromIndexedDBDirectoryToPersistentStorageDirectory(
       nsIFile* aIndexedDBDir);
@@ -502,7 +502,7 @@ class QuotaManager final : public BackgroundThreadObject {
   nsresult InitializeRepository(PersistenceType aPersistenceType);
 
   nsresult InitializeOrigin(PersistenceType aPersistenceType,
-                            const GroupAndOrigin& aGroupAndOrigin,
+                            const OriginMetadata& aOriginMetadata,
                             int64_t aAccessTime, bool aPersisted,
                             nsIFile* aDirectory);
 

@@ -12,17 +12,17 @@
 
 namespace mozilla::dom::quota {
 
-struct GroupAndOrigin {
+struct OriginMetadata {
   nsCString mGroup;
   nsCString mOrigin;
 };
 
-struct QuotaInfo : GroupAndOrigin {
+struct QuotaInfo : OriginMetadata {
   nsCString mSuffix;
 
   QuotaInfo() = default;
   QuotaInfo(nsCString aSuffix, nsCString aGroup, nsCString aOrigin)
-      : GroupAndOrigin{std::move(aGroup), std::move(aOrigin)},
+      : OriginMetadata{std::move(aGroup), std::move(aOrigin)},
         mSuffix{std::move(aSuffix)} {}
 };
 
