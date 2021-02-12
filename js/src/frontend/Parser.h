@@ -278,7 +278,8 @@ class MOZ_STACK_CLASS ParserSharedBase {
   LifoAlloc& stencilAlloc() { return stencil_.alloc; }
 
   JSAtom* liftParserAtomToJSAtom(TaggedParserAtomIndex index) {
-    return parserAtoms().toJSAtom(cx_, index, stencil_.input.atomCache);
+    return parserAtoms().toJSAtom(cx_, index,
+                                  compilationState_.input.atomCache);
   }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
