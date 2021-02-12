@@ -136,7 +136,7 @@ fn main() {
     cc::Build::new()
         .cpp(true)
         .file("src/gl.cc")
-        .flag("-std=c++14")
+        .flag("-std=c++17")
         .flag("-UMOZILLA_CONFIG_H")
         .flag("-fno-exceptions")
         .flag("-fno-rtti")
