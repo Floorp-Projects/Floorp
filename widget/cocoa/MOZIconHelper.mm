@@ -4,42 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Retrieves and displays icons in native menu items on Mac OS X.
+ * Creates icons for display in native menu items on macOS.
  */
 
-/* exception_defines.h defines 'try' to 'if (true)' which breaks objective-c
-   exceptions and produces errors like: error: unexpected '@' in program'.
-   If we define __EXCEPTIONS exception_defines.h will avoid doing this.
+#include "MOZIconHelper.h"
 
-   See bug 666609 for more information.
-
-   We use <limits> to get the libstdc++ version. */
-#include <limits>
-#if __GLIBCXX__ <= 20070719
-#  ifndef __EXCEPTIONS
-#    define __EXCEPTIONS
-#  endif
-#endif
-
-#include "gfxPlatform.h"
 #include "imgIContainer.h"
-#include "imgLoader.h"
-#include "imgRequestProxy.h"
-#include "mozilla/dom/Document.h"
 #include "nsCocoaUtils.h"
-#include "nsContentUtils.h"
-#include "nsIContent.h"
-#include "nsNameSpaceManager.h"
-#include "nsNetUtil.h"
-#include "nsObjCExceptions.h"
-#include "nsThreadUtils.h"
-#include "nsToolkit.h"
-#include "IconLoaderHelperCocoa.h"
-
-using namespace mozilla;
-
-using mozilla::gfx::SourceSurface;
-using mozilla::widget::IconLoaderListenerCocoa;
 
 @implementation MOZIconHelper
 
@@ -107,57 +78,3 @@ using mozilla::widget::IconLoaderListenerCocoa;
 }
 
 @end
-
-namespace mozilla::widget {
-
-IconLoaderHelperCocoa::IconLoaderHelperCocoa(IconLoaderListenerCocoa* aListener,
-                                             uint32_t aIconHeight, uint32_t aIconWidth,
-                                             CGFloat aScaleFactor)
-    : mLoadListener(aListener),
-      mIconHeight(aIconHeight),
-      mIconWidth(aIconWidth),
-      mScaleFactor(aScaleFactor) {
-  // Placeholder icon, which will later be replaced.
-  mNativeIconImage =
-      [[MOZIconHelper placeholderIconWithSize:NSMakeSize(mIconHeight, mIconWidth)] retain];
-  MOZ_ASSERT(aListener);
-}
-
-IconLoaderHelperCocoa::~IconLoaderHelperCocoa() { Destroy(); }
-
-nsresult IconLoaderHelperCocoa::OnComplete(imgIContainer* aImage, const nsIntRect& aRect) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
-
-  NS_ENSURE_ARG_POINTER(aImage);
-
-  NSImage* newImage = [MOZIconHelper iconImageFromImageContainer:aImage
-                                                        withSize:NSMakeSize(mIconWidth, mIconHeight)
-                                                         subrect:aRect
-                                                     scaleFactor:mScaleFactor];
-
-  if (!newImage) {
-    return NS_ERROR_FAILURE;
-  }
-
-  [mNativeIconImage release];
-  mNativeIconImage = [newImage retain];
-
-  if (mLoadListener) {
-    mLoadListener->OnComplete();
-  }
-
-  return NS_OK;
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT
-}
-
-NSImage* IconLoaderHelperCocoa::GetNativeIconImage() { return mNativeIconImage; }
-
-void IconLoaderHelperCocoa::Destroy() {
-  if (mNativeIconImage) {
-    [mNativeIconImage release];
-    mNativeIconImage = nil;
-  }
-  mLoadListener = nullptr;
-}
-
-}  // namespace mozilla::widget

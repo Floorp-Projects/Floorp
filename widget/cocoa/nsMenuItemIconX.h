@@ -10,7 +10,7 @@
 #ifndef nsMenuItemIconX_h_
 #define nsMenuItemIconX_h_
 
-#include "IconLoaderHelperCocoa.h"
+#include "mozilla/widget/IconLoader.h"
 
 class nsIconLoaderService;
 class nsIURI;

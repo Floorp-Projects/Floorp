@@ -12,9 +12,9 @@
 
 #import <Cocoa/Cocoa.h>
 
+#include "mozilla/widget/IconLoader.h"
 #include "nsTouchBarInput.h"
 #include "nsTouchBarNativeAPIDefines.h"
-#include "IconLoaderHelperCocoa.h"
 
 using namespace mozilla::dom;
 
