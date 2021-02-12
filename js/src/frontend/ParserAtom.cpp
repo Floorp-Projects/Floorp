@@ -209,17 +209,12 @@ void ParserAtomsTable::dumpCharsNoQuote(js::GenericPrinter& out,
   }
 
   if (index.isLength1StaticParserString()) {
-    char content[1];
-    getLength1Content(index.toLength1StaticParserString(), content);
-    out.putChar(content[0]);
+    dumpCharsNoQuote(out, index.toLength1StaticParserString());
     return;
   }
 
   if (index.isLength2StaticParserString()) {
-    char content[2];
-    getLength2Content(index.toLength2StaticParserString(), content);
-    out.putChar(content[0]);
-    out.putChar(content[1]);
+    dumpCharsNoQuote(out, index.toLength2StaticParserString());
     return;
   }
 
@@ -227,6 +222,22 @@ void ParserAtomsTable::dumpCharsNoQuote(js::GenericPrinter& out,
   out.put("#<null>");
 }
 
+/* static */
+void ParserAtomsTable::dumpCharsNoQuote(js::GenericPrinter& out,
+                                        Length1StaticParserString index) {
+  char content[1];
+  getLength1Content(index, content);
+  out.putChar(content[0]);
+}
+
+/* static */
+void ParserAtomsTable::dumpCharsNoQuote(js::GenericPrinter& out,
+                                        Length2StaticParserString index) {
+  char content[2];
+  getLength2Content(index, content);
+  out.putChar(content[0]);
+  out.putChar(content[1]);
+}
 #endif
 
 ParserAtomsTable::ParserAtomsTable(JSRuntime* rt, LifoAlloc& alloc)

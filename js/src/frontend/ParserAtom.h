@@ -807,6 +807,11 @@ class ParserAtomsTable {
   void dump(TaggedParserAtomIndex index) const;
   void dumpCharsNoQuote(js::GenericPrinter& out,
                         TaggedParserAtomIndex index) const;
+
+  static void dumpCharsNoQuote(js::GenericPrinter& out,
+                               Length1StaticParserString index);
+  static void dumpCharsNoQuote(js::GenericPrinter& out,
+                               Length2StaticParserString index);
 #endif
 
   static void getLength1Content(Length1StaticParserString s, char contents[1]) {
