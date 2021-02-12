@@ -54,9 +54,11 @@ nsTouchBarInputIcon::~nsTouchBarInputIcon() {
 void nsTouchBarInputIcon::Destroy() {
   ReleaseJSObjects();
   if (mIconLoader) {
+    mIconLoader->Destroy();
     mIconLoader = nullptr;
   }
   if (mIconLoaderHelper) {
+    mIconLoaderHelper->Destroy();
     mIconLoaderHelper = nullptr;
   }
 
@@ -130,5 +132,6 @@ nsresult nsTouchBarInputIcon::OnComplete() {
   [mPopoverItem setCollapsedRepresentationImage:image];
 
   mIconLoaderHelper->Destroy();
+  mIconLoader->Destroy();
   return NS_OK;
 }
