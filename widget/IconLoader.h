@@ -45,6 +45,10 @@ class IconLoader : public imgINotificationObserver {
     virtual ~Helper() = default;
   };
 
+  // Create the loader.
+  // aHelper will be notified when the load is complete.
+  // The loader does not keep an owning reference to the helper. Call Destroy
+  // before the helper goes away.
   IconLoader(Helper* aHelper, const nsIntRect& aImageRegionRect);
 
  public:
@@ -71,7 +75,12 @@ class IconLoader : public imgINotificationObserver {
   RefPtr<imgRequestProxy> mIconRequest;
   nsIntRect mImageRegionRect;
   bool mLoadedIcon;
-  RefPtr<Helper> mHelper;
+
+  // The helper, which is notified when loading completes.
+  // Can be null, after a call to Destroy.
+  // This is a non-owning reference and needs to be cleared with a call to
+  // Destroy before the helper goes away.
+  Helper* mHelper;
 };
 
 }  // namespace mozilla::widget
