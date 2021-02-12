@@ -8052,6 +8052,17 @@ nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel() {
     return sCSDSupportLevel;
   }
 
+  // GTK_CSD forces CSD mode - use also CSD because window manager
+  // decorations does not work with CSD.
+  // We check GTK_CSD as well as gtk_window_should_use_csd() does.
+  if (sCSDSupportLevel == GTK_DECORATION_SYSTEM) {
+    const char* csdOverride = getenv("GTK_CSD");
+    if (csdOverride && atoi(csdOverride)) {
+      sCSDSupportLevel = GTK_DECORATION_CLIENT;
+      return sCSDSupportLevel;
+    }
+  }
+
   const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
   if (currentDesktop) {
     // GNOME Flashback (fallback)
@@ -8091,28 +8102,11 @@ nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel() {
     } else if (strstr(currentDesktop, "Deepin") != nullptr) {
       sCSDSupportLevel = GTK_DECORATION_CLIENT;
     } else {
-// Release or beta builds are not supposed to be broken
-// so disable titlebar rendering on untested/unknown systems.
-#if defined(RELEASE_OR_BETA)
-      sCSDSupportLevel = GTK_DECORATION_NONE;
-#else
       sCSDSupportLevel = GTK_DECORATION_CLIENT;
-#endif
     }
   } else {
-    sCSDSupportLevel = GTK_DECORATION_NONE;
+    sCSDSupportLevel = GTK_DECORATION_CLIENT;
   }
-
-  // GTK_CSD forces CSD mode - use also CSD because window manager
-  // decorations does not work with CSD.
-  // We check GTK_CSD as well as gtk_window_should_use_csd() does.
-  if (sCSDSupportLevel == GTK_DECORATION_SYSTEM) {
-    const char* csdOverride = getenv("GTK_CSD");
-    if (csdOverride && g_strcmp0(csdOverride, "1") == 0) {
-      sCSDSupportLevel = GTK_DECORATION_CLIENT;
-    }
-  }
-
   return sCSDSupportLevel;
 }
 
