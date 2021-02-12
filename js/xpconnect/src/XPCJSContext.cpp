@@ -973,8 +973,13 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   bool useWasmSimd = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_simd");
 #endif
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
-  bool useWasmSimdWormhole =
+  bool useWasmSimdWormhole = false;
+#  ifdef EARLY_BETA_OR_EARLIER
+  // In late beta and release, the functionality is available but only to
+  // privileged content.
+  useWasmSimdWormhole =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_simd_wormhole");
+#  endif
 #endif
   bool useWasmVerbose = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_verbose");
   bool throwOnAsmJSValidationFailure = Preferences::GetBool(
