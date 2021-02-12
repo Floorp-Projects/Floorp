@@ -802,13 +802,6 @@ void nsPageFrame::SetSharedPageData(nsSharedPageData* aPD) {
   }
 }
 
-void nsPageFrame::AppendDirectlyOwnedAnonBoxes(
-    nsTArray<OwnedAnonBox>& aResult) {
-  MOZ_ASSERT(mFrames.FirstChild() && mFrames.FirstChild()->IsPageContentFrame(),
-             "pageFrame must have a pageContentFrame child");
-  aResult.AppendElement(mFrames.FirstChild());
-}
-
 nsIFrame* NS_NewPageBreakFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   MOZ_ASSERT(aPresShell, "null PresShell");
   // check that we are only creating page break frames when printing

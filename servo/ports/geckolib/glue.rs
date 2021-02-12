@@ -3593,33 +3593,32 @@ pub unsafe extern "C" fn Servo_ComputedValues_GetForAnonymousBox(
 
     let metrics = get_metrics_provider_for_product();
 
-    // If the pseudo element is PageContent, we should append the precomputed
-    // pseudo element declerations with specified page rules.
-    let page_decls = match pseudo {
-        PseudoElement::PageContent => {
-            let mut declarations = vec![];
-            let iter = data.stylist.iter_extra_data_origins_rev();
-            for (data, origin) in iter {
-                let level = match origin {
-                    Origin::UserAgent => CascadeLevel::UANormal,
-                    Origin::User => CascadeLevel::UserNormal,
-                    Origin::Author => CascadeLevel::same_tree_author_normal(),
-                };
-                for rule in data.pages.iter() {
-                    declarations.push(ApplicableDeclarationBlock::from_declarations(
-                        rule.read_with(level.guard(&guards)).block.clone(),
-                        level,
-                    ));
-                }
+    // If the pseudo element is PageContent, we should append @page rules to the
+    // precomputed pseudo.
+    //
+    // TODO(emilio): We'll need a separate code path or extra arguments for
+    // named pages, etc.
+    let mut extra_declarations = vec![];
+    if pseudo == PseudoElement::PageContent {
+        let iter = data.stylist.iter_extra_data_origins_rev();
+        for (data, origin) in iter {
+            let level = match origin {
+                Origin::UserAgent => CascadeLevel::UANormal,
+                Origin::User => CascadeLevel::UserNormal,
+                Origin::Author => CascadeLevel::same_tree_author_normal(),
+            };
+            for rule in data.pages.iter() {
+                extra_declarations.push(ApplicableDeclarationBlock::from_declarations(
+                    rule.read_with(level.guard(&guards)).block.clone(),
+                    level,
+                ));
             }
-            Some(declarations)
-        },
-        _ => None,
-    };
+        }
+    }
 
     let rule_node = data
         .stylist
-        .rule_node_for_precomputed_pseudo(&guards, &pseudo, page_decls);
+        .rule_node_for_precomputed_pseudo(&guards, &pseudo, extra_declarations);
 
     data.stylist
         .precomputed_values_for_pseudo_with_rule_node::<GeckoElement>(
