@@ -1,0 +1,26 @@
+diff --git a/clang/lib/Driver/ToolChains/Darwin.cpp b/clang/lib/Driver/ToolChains/Darwin.cpp
+index 7b879f8cb65..3810a2ceec2 100644
+--- a/clang/lib/Driver/ToolChains/Darwin.cpp
++++ b/clang/lib/Driver/ToolChains/Darwin.cpp
+@@ -1196,7 +1196,7 @@ void Darwin::addProfileRTLibs(const ArgList &Args,
+   // runtime's functionality.
+   if (hasExportSymbolDirective(Args)) {
+     if (ForGCOV) {
+-      addExportedSymbol(CmdArgs, "___gcov_flush");
++      addExportedSymbol(CmdArgs, "___custom_llvm_gcov_flush");
+       addExportedSymbol(CmdArgs, "_flush_fn_list");
+       addExportedSymbol(CmdArgs, "_writeout_fn_list");
+       addExportedSymbol(CmdArgs, "_reset_fn_list");
+diff --git a/compiler-rt/lib/profile/GCDAProfiling.c b/compiler-rt/lib/profile/GCDAProfiling.c
+index 57d8dec423c..2edfb6e19e9 100644
+--- a/compiler-rt/lib/profile/GCDAProfiling.c
++++ b/compiler-rt/lib/profile/GCDAProfiling.c
+@@ -644,7 +644,7 @@ void llvm_register_flush_function(fn_ptr fn) {
+   fn_list_insert(&flush_fn_list, fn);
+ }
+ 
+-void __gcov_flush() {
++void __custom_llvm_gcov_flush() {
+   struct fn_node* curr = flush_fn_list.head;
+ 
+   while (curr) {
