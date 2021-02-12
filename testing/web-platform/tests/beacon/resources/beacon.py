@@ -24,13 +24,8 @@ def main(request, response):
         nature of the stash, results for a given test are only guaranteed to be
         returned once, though they may be returned multiple times.
 
-        An entry may contain following members.
-            - error: An error string. null if there is no error.
-            - type: The content-type header of the request "(missing)" if there
-                    is no content-type header in the request.
-
         Example response bodies:
-            - [{error: null, type: "text/plain;charset=UTF8"}]
+            - [{error: null}]
             - [{error: "some validation details"}]
             - []
 
@@ -58,9 +53,8 @@ def main(request, response):
         # requests we may get.
         if request.method == u"POST":
             payload = b""
-            contentType = request.headers[b"Content-Type"] \
-                if b"Content-Type" in request.headers else b"(missing)"
-            if b"form-data" in contentType:
+            if b"Content-Type" in request.headers and \
+               b"form-data" in request.headers[b"Content-Type"]:
                 if b"payload" in request.POST:
                     # The payload was sent as a FormData.
                     payload = request.POST.first(b"payload")
@@ -77,26 +71,20 @@ def main(request, response):
 
                 # Confirm the payload size sent matches with the number of
                 # characters sent.
-                if payload_size != len(payload):
+                if payload_size != len(payload_parts[1]):
                     error = u"expected %d characters but got %d" % (
-                        payload_size, len(payload))
+                        payload_size, len(payload_parts[1]))
                 else:
                     # Confirm the payload contains the correct characters.
-                    for i in range(len(payload)):
-                        if i <= len(payload_parts[0]):
-                            continue
-                        c = payload[i:i+1]
-                        if c != b"*":
+                    for i in range(0, payload_size):
+                        if payload_parts[1][i:i+1] != b"*":
                             error = u"expected '*' at index %d but got '%s''" % (
-                                i, isomorphic_decode(c))
+                                i, isomorphic_decode(payload_parts[1][i:i+1]))
                             break
 
             # Store the result in the stash so that it can be retrieved
             # later with a 'stat' command.
-            request.server.stash.put(id, {
-                u"error": error,
-                u"type": isomorphic_decode(contentType)
-            })
+            request.server.stash.put(id, {u"error": error})
         elif request.method == u"OPTIONS":
             # If we expect a preflight, then add the cors headers we expect,
             # otherwise log an error as we shouldn't send a preflight for all
