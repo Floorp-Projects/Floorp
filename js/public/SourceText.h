@@ -138,9 +138,9 @@ class SourceText final {
    * |units| may be null if |unitsLength == 0|; if so, this will silently be
    * initialized using non-null, unowned units.
    */
-  MOZ_IS_CLASS_INIT MOZ_MUST_USE bool init(JSContext* cx, const Unit* units,
-                                           size_t unitsLength,
-                                           SourceOwnership ownership) {
+  [[nodiscard]] MOZ_IS_CLASS_INIT bool init(JSContext* cx, const Unit* units,
+                                            size_t unitsLength,
+                                            SourceOwnership ownership) {
     MOZ_ASSERT_IF(units == nullptr, unitsLength == 0);
 
     // Ideally we'd use |Unit| and not cast below, but the risk of a static
@@ -182,9 +182,9 @@ class SourceText final {
   template <typename Char,
             typename = std::enable_if_t<std::is_same_v<Char, CharT> &&
                                         !std::is_same_v<Char, Unit>>>
-  MOZ_IS_CLASS_INIT MOZ_MUST_USE bool init(JSContext* cx, const Char* chars,
-                                           size_t charsLength,
-                                           SourceOwnership ownership) {
+  [[nodiscard]] MOZ_IS_CLASS_INIT bool init(JSContext* cx, const Char* chars,
+                                            size_t charsLength,
+                                            SourceOwnership ownership) {
     return init(cx, reinterpret_cast<const Unit*>(chars), charsLength,
                 ownership);
   }

@@ -180,9 +180,9 @@ class RecyclableNameMap : public RecyclableNameMapBase<MapValue> {
 
  public:
   template <typename... Args>
-  MOZ_ALWAYS_INLINE MOZ_MUST_USE bool add(typename Base::AddPtr& p,
-                                          const TaggedParserAtomIndex& key,
-                                          Args&&... args) {
+  [[nodiscard]] MOZ_ALWAYS_INLINE bool add(typename Base::AddPtr& p,
+                                           const TaggedParserAtomIndex& key,
+                                           Args&&... args) {
     return Base::add(p, TrivialTaggedParserAtomIndex::from(key),
                      std::forward<Args>(args)...);
   }

@@ -848,7 +848,7 @@ class FullParseHandler {
     return true;
   }
 
-  inline MOZ_MUST_USE bool setLastFunctionFormalParameterDefault(
+  [[nodiscard]] inline bool setLastFunctionFormalParameterDefault(
       FunctionNodeType funNode, Node defaultValue);
 
   void checkAndSetIsDirectRHSAnonFunction(Node pn) {

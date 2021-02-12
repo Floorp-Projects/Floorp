@@ -456,10 +456,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   size_t wasmMappedSize() const;
   mozilla::Maybe<uint64_t> wasmMaxSize() const;
-  static MOZ_MUST_USE bool wasmGrowToSizeInPlace(
+  [[nodiscard]] static bool wasmGrowToSizeInPlace(
       BufferSize newSize, Handle<ArrayBufferObject*> oldBuf,
       MutableHandle<ArrayBufferObject*> newBuf, JSContext* cx);
-  static MOZ_MUST_USE bool wasmMovingGrowToSize(
+  [[nodiscard]] static bool wasmMovingGrowToSize(
       BufferSize newSize, Handle<ArrayBufferObject*> oldBuf,
       MutableHandle<ArrayBufferObject*> newBuf, JSContext* cx);
 

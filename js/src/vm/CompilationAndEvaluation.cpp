@@ -294,7 +294,7 @@ class FunctionCompiler {
   }
 
   template <typename Unit>
-  inline MOZ_MUST_USE bool addFunctionBody(const SourceText<Unit>& srcBuf) {
+  [[nodiscard]] inline bool addFunctionBody(const SourceText<Unit>& srcBuf) {
     return funStr_.append(srcBuf.get(), srcBuf.length());
   }
 

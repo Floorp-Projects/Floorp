@@ -57,8 +57,8 @@ extern bool str_endsWith(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: lowerCase = intl_toLocaleLowerCase(string, locale)
  */
-extern MOZ_MUST_USE bool intl_toLocaleLowerCase(JSContext* cx, unsigned argc,
-                                                Value* vp);
+[[nodiscard]] extern bool intl_toLocaleLowerCase(JSContext* cx, unsigned argc,
+                                                 Value* vp);
 
 /**
  * Returns the input string converted to upper case based on the language
@@ -66,8 +66,8 @@ extern MOZ_MUST_USE bool intl_toLocaleLowerCase(JSContext* cx, unsigned argc,
  *
  * Usage: upperCase = intl_toLocaleUpperCase(string, locale)
  */
-extern MOZ_MUST_USE bool intl_toLocaleUpperCase(JSContext* cx, unsigned argc,
-                                                Value* vp);
+[[nodiscard]] extern bool intl_toLocaleUpperCase(JSContext* cx, unsigned argc,
+                                                 Value* vp);
 #endif
 
 ArrayObject* StringSplitString(JSContext* cx, HandleString str,

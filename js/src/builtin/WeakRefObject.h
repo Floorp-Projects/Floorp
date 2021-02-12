@@ -26,7 +26,7 @@ class WeakRefObject : public NativeObject {
   static const JSPropertySpec properties[];
   static const JSFunctionSpec methods[];
 
-  static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
+  [[nodiscard]] static bool construct(JSContext* cx, unsigned argc, Value* vp);
   static void trace(JSTracer* trc, JSObject* obj);
   static void finalize(JSFreeOp* op, JSObject* obj);
 

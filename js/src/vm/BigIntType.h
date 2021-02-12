@@ -268,10 +268,10 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
 
   static size_t calculateMaximumCharactersRequired(HandleBigInt x,
                                                    unsigned radix);
-  static MOZ_MUST_USE bool calculateMaximumDigitsRequired(JSContext* cx,
-                                                          uint8_t radix,
-                                                          size_t charCount,
-                                                          size_t* result);
+  [[nodiscard]] static bool calculateMaximumDigitsRequired(JSContext* cx,
+                                                           uint8_t radix,
+                                                           size_t charCount,
+                                                           size_t* result);
 
   static bool absoluteDivWithDigitDivisor(
       JSContext* cx, Handle<BigInt*> x, Digit divisor,

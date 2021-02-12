@@ -746,7 +746,7 @@ static MOZ_ALWAYS_INLINE bool LookupOwnPropertyInline(
  * Simplified version of LookupOwnPropertyInline that doesn't call resolve
  * hooks.
  */
-static inline MOZ_MUST_USE bool NativeLookupOwnPropertyNoResolve(
+[[nodiscard]] static inline bool NativeLookupOwnPropertyNoResolve(
     JSContext* cx, HandleNativeObject obj, HandleId id,
     MutableHandle<PropertyResult> result) {
   // Check for a native dense element.

@@ -364,7 +364,7 @@ struct SourceTypeTraits<char16_t> {
 };
 
 // Synchronously compress the source of |script|, for testing purposes.
-extern MOZ_MUST_USE bool SynchronouslyCompressSource(
+[[nodiscard]] extern bool SynchronouslyCompressSource(
     JSContext* cx, JS::Handle<BaseScript*> script);
 
 // Retrievable source can be retrieved using the source hook (and therefore
@@ -1063,24 +1063,24 @@ class ScriptSource {
   static void codeRetrievable(ScriptSource* ss);
 
   template <typename Unit, XDRMode mode>
-  static MOZ_MUST_USE XDRResult codeUncompressedData(XDRState<mode>* const xdr,
-                                                     ScriptSource* const ss);
+  [[nodiscard]] static XDRResult codeUncompressedData(XDRState<mode>* const xdr,
+                                                      ScriptSource* const ss);
 
   template <typename Unit, XDRMode mode>
-  static MOZ_MUST_USE XDRResult codeCompressedData(XDRState<mode>* const xdr,
-                                                   ScriptSource* const ss);
+  [[nodiscard]] static XDRResult codeCompressedData(XDRState<mode>* const xdr,
+                                                    ScriptSource* const ss);
 
   template <typename Unit, XDRMode mode>
   static void codeRetrievableData(ScriptSource* ss);
 
   template <XDRMode mode>
-  static MOZ_MUST_USE XDRResult xdrData(XDRState<mode>* const xdr,
-                                        ScriptSource* const ss);
+  [[nodiscard]] static XDRResult xdrData(XDRState<mode>* const xdr,
+                                         ScriptSource* const ss);
 
  public:
   template <XDRMode mode>
-  static MOZ_MUST_USE XDRResult
-  XDR(XDRState<mode>* xdr, const JS::ReadOnlyCompileOptions* maybeOptions,
+  [[nodiscard]] static XDRResult XDR(
+      XDRState<mode>* xdr, const JS::ReadOnlyCompileOptions* maybeOptions,
       RefPtr<ScriptSource>& source);
 };
 
@@ -1345,11 +1345,11 @@ class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
   static PrivateScriptData* new_(JSContext* cx, uint32_t ngcthings);
 
   template <XDRMode mode>
-  static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
-                                    js::HandleScript script,
-                                    js::HandleScriptSourceObject sourceObject,
-                                    js::HandleScope scriptEnclosingScope,
-                                    js::HandleObject funOrMod);
+  [[nodiscard]] static XDRResult XDR(js::XDRState<mode>* xdr,
+                                     js::HandleScript script,
+                                     js::HandleScriptSourceObject sourceObject,
+                                     js::HandleScope scriptEnclosingScope,
+                                     js::HandleObject funOrMod);
 
   // Clone src script data into dst script.
   static bool Clone(JSContext* cx, js::HandleScript src, js::HandleScript dst,

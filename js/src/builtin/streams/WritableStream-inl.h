@@ -35,7 +35,7 @@ namespace js {
  * If the writer is a wrapper, it will be unwrapped, so the result might not be
  * an object from the currently active compartment.
  */
-inline MOZ_MUST_USE WritableStreamDefaultWriter* UnwrapWriterFromStream(
+[[nodiscard]] inline WritableStreamDefaultWriter* UnwrapWriterFromStream(
     JSContext* cx, JS::Handle<WritableStream*> unwrappedStream) {
   MOZ_ASSERT(unwrappedStream->hasWriter());
   return UnwrapInternalSlot<WritableStreamDefaultWriter>(

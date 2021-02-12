@@ -478,7 +478,7 @@ class AsyncGeneratorObject : public AbstractGeneratorObject {
   void setAwaitingReturn() { setState(State_AwaitingReturn); }
   void setCompleted() { setState(State_Completed); }
 
-  static MOZ_MUST_USE bool enqueueRequest(
+  [[nodiscard]] static bool enqueueRequest(
       JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
       Handle<AsyncGeneratorRequest*> request);
 

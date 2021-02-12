@@ -107,7 +107,7 @@ const JSClass ByteStreamChunk::class_ = {
  * Note: All arguments must be same-compartment with cx. ReadableStream
  * controllers are always created in the same compartment as the stream.
  */
-static MOZ_MUST_USE ReadableByteStreamController*
+[[nodiscard]] static ReadableByteStreamController*
 CreateReadableByteStreamController(JSContext* cx,
                                    Handle<ReadableStream*> stream,
                                    HandleValue underlyingByteSource,
@@ -390,13 +390,13 @@ JS_STREAMS_CLASS_SPEC(ReadableByteStreamController, 0, SlotCount,
 // Streams spec, 3.11.5.1. [[CancelSteps]] ()
 // Unified with 3.9.5.1 above.
 
-static MOZ_MUST_USE bool ReadableByteStreamControllerHandleQueueDrain(
+[[nodiscard]] static bool ReadableByteStreamControllerHandleQueueDrain(
     JSContext* cx, Handle<ReadableStreamController*> unwrappedController);
 
 /**
  * Streams spec, 3.11.5.2. [[PullSteps]] ( forAuthorCode )
  */
-static MOZ_MUST_USE PromiseObject* ReadableByteStreamControllerPullSteps(
+[[nodiscard]] static PromiseObject* ReadableByteStreamControllerPullSteps(
     JSContext* cx, Handle<ReadableByteStreamController*> unwrappedController) {
   // Step 1: Let stream be this.[[controlledReadableByteStream]].
   Rooted<ReadableStream*> unwrappedStream(cx, unwrappedController->stream());
@@ -607,7 +607,7 @@ static MOZ_MUST_USE PromiseObject* ReadableByteStreamControllerPullSteps(
 //      ReadableByteStreamControllerCallPullIfNeeded ( controller )
 // Unified with 3.9.2 above.
 
-static MOZ_MUST_USE bool ReadableByteStreamControllerInvalidateBYOBRequest(
+[[nodiscard]] static bool ReadableByteStreamControllerInvalidateBYOBRequest(
     JSContext* cx, Handle<ReadableByteStreamController*> unwrappedController);
 
 /**
@@ -709,7 +709,7 @@ static MOZ_MUST_USE bool ReadableByteStreamControllerInvalidateBYOBRequest(
  * Streams spec, 3.13.15.
  *      ReadableByteStreamControllerHandleQueueDrain ( controller )
  */
-static MOZ_MUST_USE bool ReadableByteStreamControllerHandleQueueDrain(
+[[nodiscard]] static bool ReadableByteStreamControllerHandleQueueDrain(
     JSContext* cx, Handle<ReadableStreamController*> unwrappedController) {
   MOZ_ASSERT(unwrappedController->is<ReadableByteStreamController>());
 
@@ -746,7 +746,7 @@ enum BYOBRequestSlots {
  * Streams spec 3.13.16.
  *      ReadableByteStreamControllerInvalidateBYOBRequest ( controller )
  */
-static MOZ_MUST_USE bool ReadableByteStreamControllerInvalidateBYOBRequest(
+[[nodiscard]] static bool ReadableByteStreamControllerInvalidateBYOBRequest(
     JSContext* cx, Handle<ReadableByteStreamController*> unwrappedController) {
   // Step 1: If controller.[[byobRequest]] is undefined, return.
   RootedValue unwrappedBYOBRequestVal(cx, unwrappedController->byobRequest());

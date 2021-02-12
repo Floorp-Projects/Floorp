@@ -103,7 +103,7 @@ class WritableStreamDefaultWriter : public NativeObject {
   static const JSClass protoClass_;
 };
 
-extern MOZ_MUST_USE WritableStreamDefaultWriter*
+[[nodiscard]] extern WritableStreamDefaultWriter*
 CreateWritableStreamDefaultWriter(JSContext* cx,
                                   JS::Handle<WritableStream*> unwrappedStream,
                                   JS::Handle<JSObject*> proto = nullptr);

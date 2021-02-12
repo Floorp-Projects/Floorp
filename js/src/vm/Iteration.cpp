@@ -869,8 +869,8 @@ static bool CanStoreInIteratorCache(JSObject* obj) {
   return true;
 }
 
-static MOZ_MUST_USE bool StoreInIteratorCache(JSContext* cx, JSObject* obj,
-                                              PropertyIteratorObject* iterobj) {
+[[nodiscard]] static bool StoreInIteratorCache(
+    JSContext* cx, JSObject* obj, PropertyIteratorObject* iterobj) {
   MOZ_ASSERT(CanStoreInIteratorCache(obj));
 
   NativeIterator* ni = iterobj->getNativeIterator();

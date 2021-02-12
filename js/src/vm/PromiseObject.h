@@ -167,12 +167,12 @@ class PromiseObject : public NativeObject {
     return getFixedSlot(PromiseSlot_ReactionsOrResult);
   }
 
-  static MOZ_MUST_USE bool resolve(JSContext* cx,
+  [[nodiscard]] static bool resolve(JSContext* cx,
+                                    JS::Handle<PromiseObject*> promise,
+                                    JS::Handle<JS::Value> resolutionValue);
+  [[nodiscard]] static bool reject(JSContext* cx,
                                    JS::Handle<PromiseObject*> promise,
-                                   JS::Handle<JS::Value> resolutionValue);
-  static MOZ_MUST_USE bool reject(JSContext* cx,
-                                  JS::Handle<PromiseObject*> promise,
-                                  JS::Handle<JS::Value> rejectionValue);
+                                   JS::Handle<JS::Value> rejectionValue);
 
   static void onSettled(JSContext* cx, JS::Handle<PromiseObject*> promise,
                         JS::Handle<js::SavedFrame*> rejectionStack);

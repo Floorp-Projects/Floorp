@@ -1656,7 +1656,7 @@ ScriptSourceObject* ScriptSourceObject::unwrappedCanonical() const {
   return &UncheckedUnwrap(obj)->as<ScriptSourceObject>();
 }
 
-static MOZ_MUST_USE bool MaybeValidateFilename(
+[[nodiscard]] static bool MaybeValidateFilename(
     JSContext* cx, HandleScriptSourceObject sso,
     const ReadOnlyCompileOptions& options) {
   // When parsing off-thread we want to do filename validation on the main
@@ -2471,7 +2471,7 @@ ScriptSource::~ScriptSource() {
   MOZ_ASSERT(!xdrEncoder_);
 }
 
-static MOZ_MUST_USE bool reallocUniquePtr(UniqueChars& unique, size_t size) {
+[[nodiscard]] static bool reallocUniquePtr(UniqueChars& unique, size_t size) {
   auto newPtr = static_cast<char*>(js_realloc(unique.get(), size));
   if (!newPtr) {
     return false;

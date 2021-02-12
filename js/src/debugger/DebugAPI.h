@@ -113,7 +113,7 @@ class DebugAPI {
   static void sweepAll(JSFreeOp* fop);
 
   // Add sweep group edges due to the presence of any debuggers.
-  static MOZ_MUST_USE bool findSweepGroupEdges(JSRuntime* rt);
+  [[nodiscard]] static bool findSweepGroupEdges(JSRuntime* rt);
 
   // Destroy the debugging information associated with a script.
   static void destroyDebugScript(JSFreeOp* fop, JSScript* script);
@@ -139,15 +139,15 @@ class DebugAPI {
 
   // Update Debugger frames when an interpreter frame is replaced with a
   // baseline frame.
-  static MOZ_MUST_USE bool handleBaselineOsr(JSContext* cx,
-                                             InterpreterFrame* from,
-                                             jit::BaselineFrame* to);
+  [[nodiscard]] static bool handleBaselineOsr(JSContext* cx,
+                                              InterpreterFrame* from,
+                                              jit::BaselineFrame* to);
 
   // Update Debugger frames when an Ion frame bails out and is replaced with a
   // baseline frame.
-  static MOZ_MUST_USE bool handleIonBailout(JSContext* cx,
-                                            jit::RematerializedFrame* from,
-                                            jit::BaselineFrame* to);
+  [[nodiscard]] static bool handleIonBailout(JSContext* cx,
+                                             jit::RematerializedFrame* from,
+                                             jit::BaselineFrame* to);
 
   // Detach any Debugger frames from an Ion frame after an error occurred while
   // it bailed out.
@@ -157,7 +157,7 @@ class DebugAPI {
   // When doing on-stack-replacement of a debuggee interpreter frame with a
   // baseline frame, ensure that the resulting frame can be observed by the
   // debugger.
-  static MOZ_MUST_USE bool ensureExecutionObservabilityOfOsrFrame(
+  [[nodiscard]] static bool ensureExecutionObservabilityOfOsrFrame(
       JSContext* cx, AbstractFramePtr osrSourceFrame);
 
   // Describes a set of scripts or frames whose execution observability can
@@ -194,8 +194,8 @@ class DebugAPI {
    * frame, |frame|. Call whatever hooks have been registered to observe new
    * frames.
    */
-  static inline MOZ_MUST_USE bool onEnterFrame(JSContext* cx,
-                                               AbstractFramePtr frame);
+  [[nodiscard]] static inline bool onEnterFrame(JSContext* cx,
+                                                AbstractFramePtr frame);
 
   /*
    * Like onEnterFrame, but for resuming execution of a generator or async
@@ -212,8 +212,8 @@ class DebugAPI {
    * JSOp::AfterYield, just after the generator resumes. The difference
    * should not be user-visible.
    */
-  static inline MOZ_MUST_USE bool onResumeFrame(JSContext* cx,
-                                                AbstractFramePtr frame);
+  [[nodiscard]] static inline bool onResumeFrame(JSContext* cx,
+                                                 AbstractFramePtr frame);
 
   static inline NativeResumeMode onNativeCall(JSContext* cx,
                                               const CallArgs& args,
@@ -227,15 +227,15 @@ class DebugAPI {
    * Note that this method is called for all |debugger;| statements,
    * regardless of the frame's debuggee-ness.
    */
-  static inline MOZ_MUST_USE bool onDebuggerStatement(JSContext* cx,
-                                                      AbstractFramePtr frame);
+  [[nodiscard]] static inline bool onDebuggerStatement(JSContext* cx,
+                                                       AbstractFramePtr frame);
 
   /*
    * Announce to the debugger that an exception has been thrown and propagated
    * to |frame|. Call whatever hooks have been registered to observe this.
    */
-  static inline MOZ_MUST_USE bool onExceptionUnwind(JSContext* cx,
-                                                    AbstractFramePtr frame);
+  [[nodiscard]] static inline bool onExceptionUnwind(JSContext* cx,
+                                                     AbstractFramePtr frame);
 
   /*
    * Announce to the debugger that the thread has exited a JavaScript frame,
@@ -252,15 +252,15 @@ class DebugAPI {
    * throw, or vice versa: we can redirect to a complete copy of the
    * alternative path, containing its own call to onLeaveFrame.)
    */
-  static inline MOZ_MUST_USE bool onLeaveFrame(JSContext* cx,
-                                               AbstractFramePtr frame,
-                                               jsbytecode* pc, bool ok);
+  [[nodiscard]] static inline bool onLeaveFrame(JSContext* cx,
+                                                AbstractFramePtr frame,
+                                                jsbytecode* pc, bool ok);
 
   // Call any breakpoint handlers for the current scripted location.
-  static MOZ_MUST_USE bool onTrap(JSContext* cx);
+  [[nodiscard]] static bool onTrap(JSContext* cx);
 
   // Call any stepping handlers for the current scripted location.
-  static MOZ_MUST_USE bool onSingleStep(JSContext* cx);
+  [[nodiscard]] static bool onSingleStep(JSContext* cx);
 
   // Notify any Debugger instances observing this promise's global that a new
   // promise was allocated.
@@ -314,8 +314,8 @@ class DebugAPI {
   /*** Assorted methods for interacting with the runtime. *********************/
 
   // Checks if the current compartment is allowed to execute code.
-  static inline MOZ_MUST_USE bool checkNoExecute(JSContext* cx,
-                                                 HandleScript script);
+  [[nodiscard]] static inline bool checkNoExecute(JSContext* cx,
+                                                  HandleScript script);
 
   /*
    * Announce to the debugger that a generator object has been created,
@@ -323,16 +323,16 @@ class DebugAPI {
    *
    * This does not fire user hooks, but it's needed for debugger bookkeeping.
    */
-  static inline MOZ_MUST_USE bool onNewGenerator(
+  [[nodiscard]] static inline bool onNewGenerator(
       JSContext* cx, AbstractFramePtr frame,
       Handle<AbstractGeneratorObject*> genObj);
 
   // If necessary, record an object that was just allocated for any observing
   // debuggers.
-  static inline MOZ_MUST_USE bool onLogAllocationSite(JSContext* cx,
-                                                      JSObject* obj,
-                                                      HandleSavedFrame frame,
-                                                      mozilla::TimeStamp when);
+  [[nodiscard]] static inline bool onLogAllocationSite(JSContext* cx,
+                                                       JSObject* obj,
+                                                       HandleSavedFrame frame,
+                                                       mozilla::TimeStamp when);
 
   // Announce to the debugger that a global object is being collected by the
   // specified major GC.
@@ -354,28 +354,28 @@ class DebugAPI {
                                         Handle<GlobalObject*> global);
   static void slowPathNotifyParticipatesInGC(uint64_t majorGCNumber,
                                              JS::Realm::DebuggerVector& dbgs);
-  static MOZ_MUST_USE bool slowPathOnLogAllocationSite(
+  [[nodiscard]] static bool slowPathOnLogAllocationSite(
       JSContext* cx, HandleObject obj, HandleSavedFrame frame,
       mozilla::TimeStamp when, JS::Realm::DebuggerVector& dbgs);
-  static MOZ_MUST_USE bool slowPathOnLeaveFrame(JSContext* cx,
-                                                AbstractFramePtr frame,
-                                                jsbytecode* pc, bool ok);
-  static MOZ_MUST_USE bool slowPathOnNewGenerator(
+  [[nodiscard]] static bool slowPathOnLeaveFrame(JSContext* cx,
+                                                 AbstractFramePtr frame,
+                                                 jsbytecode* pc, bool ok);
+  [[nodiscard]] static bool slowPathOnNewGenerator(
       JSContext* cx, AbstractFramePtr frame,
       Handle<AbstractGeneratorObject*> genObj);
-  static MOZ_MUST_USE bool slowPathCheckNoExecute(JSContext* cx,
-                                                  HandleScript script);
-  static MOZ_MUST_USE bool slowPathOnEnterFrame(JSContext* cx,
-                                                AbstractFramePtr frame);
-  static MOZ_MUST_USE bool slowPathOnResumeFrame(JSContext* cx,
+  [[nodiscard]] static bool slowPathCheckNoExecute(JSContext* cx,
+                                                   HandleScript script);
+  [[nodiscard]] static bool slowPathOnEnterFrame(JSContext* cx,
                                                  AbstractFramePtr frame);
+  [[nodiscard]] static bool slowPathOnResumeFrame(JSContext* cx,
+                                                  AbstractFramePtr frame);
   static NativeResumeMode slowPathOnNativeCall(JSContext* cx,
                                                const CallArgs& args,
                                                CallReason reason);
-  static MOZ_MUST_USE bool slowPathOnDebuggerStatement(JSContext* cx,
-                                                       AbstractFramePtr frame);
-  static MOZ_MUST_USE bool slowPathOnExceptionUnwind(JSContext* cx,
-                                                     AbstractFramePtr frame);
+  [[nodiscard]] static bool slowPathOnDebuggerStatement(JSContext* cx,
+                                                        AbstractFramePtr frame);
+  [[nodiscard]] static bool slowPathOnExceptionUnwind(JSContext* cx,
+                                                      AbstractFramePtr frame);
   static void slowPathOnNewWasmInstance(
       JSContext* cx, Handle<WasmInstanceObject*> wasmInstance);
   static void slowPathOnNewPromise(JSContext* cx,

@@ -37,24 +37,25 @@ class SymbolObject : public NativeObject {
     setFixedSlot(PRIMITIVE_VALUE_SLOT, SymbolValue(symbol));
   }
 
-  static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
+  [[nodiscard]] static bool construct(JSContext* cx, unsigned argc, Value* vp);
 
   // Static methods.
-  static MOZ_MUST_USE bool for_(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool keyFor(JSContext* cx, unsigned argc, Value* vp);
+  [[nodiscard]] static bool for_(JSContext* cx, unsigned argc, Value* vp);
+  [[nodiscard]] static bool keyFor(JSContext* cx, unsigned argc, Value* vp);
 
   // Methods defined on Symbol.prototype.
-  static MOZ_MUST_USE bool toString_impl(JSContext* cx, const CallArgs& args);
-  static MOZ_MUST_USE bool toString(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool valueOf_impl(JSContext* cx, const CallArgs& args);
-  static MOZ_MUST_USE bool valueOf(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE bool toPrimitive(JSContext* cx, unsigned argc, Value* vp);
+  [[nodiscard]] static bool toString_impl(JSContext* cx, const CallArgs& args);
+  [[nodiscard]] static bool toString(JSContext* cx, unsigned argc, Value* vp);
+  [[nodiscard]] static bool valueOf_impl(JSContext* cx, const CallArgs& args);
+  [[nodiscard]] static bool valueOf(JSContext* cx, unsigned argc, Value* vp);
+  [[nodiscard]] static bool toPrimitive(JSContext* cx, unsigned argc,
+                                        Value* vp);
 
   // Properties defined on Symbol.prototype.
-  static MOZ_MUST_USE bool descriptionGetter_impl(JSContext* cx,
-                                                  const CallArgs& args);
-  static MOZ_MUST_USE bool descriptionGetter(JSContext* cx, unsigned argc,
-                                             Value* vp);
+  [[nodiscard]] static bool descriptionGetter_impl(JSContext* cx,
+                                                   const CallArgs& args);
+  [[nodiscard]] static bool descriptionGetter(JSContext* cx, unsigned argc,
+                                              Value* vp);
 
   static const JSPropertySpec properties[];
   static const JSFunctionSpec methods[];
