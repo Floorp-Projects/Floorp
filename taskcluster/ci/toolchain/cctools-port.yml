@@ -11,6 +11,7 @@ job-defaults:
         fetch:
             - cctools-port
             - libtapi
+            - ldid
 
 linux64-cctools-port-clang-11:
     treeherder:
