@@ -557,13 +557,12 @@ bool ScopeContext::effectiveScopePrivateFieldCacheHas(
 }
 
 bool CompilationInput::initScriptSource(JSContext* cx) {
-  ScriptSource* ss = cx->new_<ScriptSource>();
-  if (!ss) {
+  source = do_AddRef(cx->new_<ScriptSource>());
+  if (!source) {
     return false;
   }
-  setSource(ss);
 
-  return ss->initFromOptions(cx, options);
+  return source->initFromOptions(cx, options);
 }
 
 bool CompilationInput::initForStandaloneFunctionInNonSyntacticScope(
@@ -848,10 +847,11 @@ static bool InstantiateAtoms(JSContext* cx, CompilationInput& input,
 
 static bool InstantiateScriptSourceObject(JSContext* cx,
                                           CompilationInput& input,
+                                          const CompilationStencil& stencil,
                                           CompilationGCOutput& gcOutput) {
-  MOZ_ASSERT(input.source());
+  MOZ_ASSERT(stencil.source);
 
-  gcOutput.sourceObject = ScriptSourceObject::create(cx, input.source());
+  gcOutput.sourceObject = ScriptSourceObject::create(cx, stencil.source.get());
   if (!gcOutput.sourceObject) {
     return false;
   }
@@ -1322,7 +1322,7 @@ bool CompilationStencil::instantiateBaseStencilAfterPreparation(
   if (isInitialParse) {
     const CompilationStencil& initialStencil = stencil.asCompilationStencil();
 
-    if (!InstantiateScriptSourceObject(cx, input, gcOutput)) {
+    if (!InstantiateScriptSourceObject(cx, input, initialStencil, gcOutput)) {
       return false;
     }
 
@@ -1508,7 +1508,7 @@ bool CompilationStencil::serializeStencils(JSContext* cx,
   }
 
   // Linearize the encoder, return empty buffer on failure.
-  res = encoder.linearize(buf, input.source());
+  res = encoder.linearize(buf, source.get());
   if (res.isErr()) {
     MOZ_ASSERT(cx->isThrowingOutOfMemory());
     buf.clear();
