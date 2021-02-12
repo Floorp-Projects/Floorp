@@ -20,6 +20,8 @@
 #include "SurfaceFlags.h"
 #include "qcms.h"
 
+enum class CMSMode : int32_t;
+
 namespace mozilla {
 
 namespace Telemetry {
@@ -567,7 +569,7 @@ class Decoder {
   uint8_t* mImageData;  // Pointer to image data in BGRA/X
   uint32_t mImageDataLength;
 
-  uint32_t mCMSMode;
+  CMSMode mCMSMode;
 
  private:
   RefPtr<RasterImage> mImage;
