@@ -5276,7 +5276,7 @@ var gCSSProperties = {
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     initial_values: ["top"],
-    other_values: ["bottom", "left", "right", "top-outside", "bottom-outside"],
+    other_values: ["bottom"],
     invalid_values: [],
   },
   "caret-color": {
@@ -11691,6 +11691,22 @@ function get_computed_value(cs, property) {
     return results.join(" ; ");
   }
   return cs.getPropertyValue(property);
+}
+
+const kNonStandardCaptionSideValues = [
+  "right",
+  "left",
+  "top-outside",
+  "bottom-outside",
+];
+if (IsCSSPropertyPrefEnabled("layout.css.caption-side-non-standard.enabled")) {
+  gCSSProperties["caption-side"].other_values.push(
+    ...kNonStandardCaptionSideValues
+  );
+} else {
+  gCSSProperties["caption-side"].invalid_values.push(
+    ...kNonStandardCaptionSideValues
+  );
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.individual-transform.enabled")) {
