@@ -12,9 +12,9 @@
 #define js_StableStringChars_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_INIT_OUTSIDE_CTOR, MOZ_STACK_CLASS, MOZ_MUST_USE
-#include "mozilla/Maybe.h"  // mozilla::Maybe
-#include "mozilla/Range.h"  // mozilla::Range
+#include "mozilla/Attributes.h"  // MOZ_INIT_OUTSIDE_CTOR, MOZ_STACK_CLASS
+#include "mozilla/Maybe.h"       // mozilla::Maybe
+#include "mozilla/Range.h"       // mozilla::Range
 
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint8_t

@@ -8,7 +8,7 @@
 #define frontend_SwitchEmitter_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS, MOZ_MUST_USE
+#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS
 #include "mozilla/Maybe.h"       // mozilla::Maybe
 
 #include <stddef.h>  // size_t

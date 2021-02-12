@@ -7,7 +7,7 @@
 #ifndef frontend_FunctionEmitter_h
 #define frontend_FunctionEmitter_h
 
-#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS, MOZ_MUST_USE
+#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS
 
 #include <stdint.h>  // uint16_t, uint32_t
 

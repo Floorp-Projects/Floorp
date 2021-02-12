@@ -7,7 +7,6 @@
 /* Public and friend stream APIs for external use. */
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT{,_IF}
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
 #include <stdint.h>  // uint32_t, uintptr_t
 

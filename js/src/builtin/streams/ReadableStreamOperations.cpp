@@ -9,7 +9,6 @@
 #include "builtin/streams/ReadableStreamOperations.h"
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT{,_IF}
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
 #include "builtin/Array.h"                // js::NewDenseFullyAllocatedArray
 #include "builtin/Promise.h"              // js::RejectPromiseWithPendingError

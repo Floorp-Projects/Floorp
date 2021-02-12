@@ -9,8 +9,6 @@
 #ifndef builtin_streams_WritableStreamDefaultWriter_h
 #define builtin_streams_WritableStreamDefaultWriter_h
 
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
-
 #include "jstypes.h"          // JS_PUBLIC_API
 #include "js/Class.h"         // JSClass, js::ClassSpec
 #include "js/Value.h"         // JS::{,Object,Undefined}Value

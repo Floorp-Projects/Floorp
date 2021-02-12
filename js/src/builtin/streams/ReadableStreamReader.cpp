@@ -9,7 +9,6 @@
 #include "builtin/streams/ReadableStreamReader-inl.h"
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT{,_IF}
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
 #include "jsfriendapi.h"  // JS_ReportErrorNumberASCII
 

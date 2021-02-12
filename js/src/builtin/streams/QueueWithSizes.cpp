@@ -9,7 +9,6 @@
 #include "builtin/streams/QueueWithSizes-inl.h"
 
 #include "mozilla/Assertions.h"     // MOZ_ASSERT
-#include "mozilla/Attributes.h"     // MOZ_MUST_USE
 #include "mozilla/FloatingPoint.h"  // mozilla::Is{Infinite,NaN}
 
 #include "jsapi.h"  // JS_ReportErrorNumberASCII

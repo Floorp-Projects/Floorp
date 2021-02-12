@@ -10,7 +10,6 @@
 #define builtin_streams_QueueWithSizes_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
 #include "jstypes.h"        // JS_PUBLIC_API
 #include "js/RootingAPI.h"  // JS::{,Mutable}Handle

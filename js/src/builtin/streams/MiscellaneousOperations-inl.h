@@ -12,7 +12,6 @@
 #include "builtin/streams/MiscellaneousOperations.h"
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
 #include "js/Promise.h"        // JS::{Resolve,Reject}Promise
 #include "js/RootingAPI.h"     // JS::Rooted, JS::{,Mutable}Handle

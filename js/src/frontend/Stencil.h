@@ -8,7 +8,6 @@
 #define frontend_Stencil_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
 #include "mozilla/Maybe.h"       // mozilla::{Maybe, Nothing}
 #include "mozilla/Range.h"       // mozilla::Range
 #include "mozilla/Span.h"        // mozilla::Span

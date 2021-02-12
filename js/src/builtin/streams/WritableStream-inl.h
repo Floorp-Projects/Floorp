@@ -12,7 +12,6 @@
 #include "builtin/streams/WritableStream.h"
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
