@@ -122,73 +122,25 @@ void swgl_drawSpanRGBA8() {
             return;
         }
 
-        int layer0 = swgl_textureLayerOffset(sColor0, vYuvLayers.x);
-        vec2 uv0 = swgl_linearQuantize(sColor0, vUv_Y);
-        vec2 min_uv0 = swgl_linearQuantize(sColor0, vUvBounds_Y.xy);
-        vec2 max_uv0 = swgl_linearQuantize(sColor0, vUvBounds_Y.zw);
-        vec2 step_uv0 = swgl_linearQuantizeStep(sColor0, swgl_interpStep(vUv_Y));
-
-        int layer1 = swgl_textureLayerOffset(sColor1, vYuvLayers.y);
-        vec2 uv1 = swgl_linearQuantize(sColor1, vUv_U);
-        vec2 min_uv1 = swgl_linearQuantize(sColor1, vUvBounds_U.xy);
-        vec2 max_uv1 = swgl_linearQuantize(sColor1, vUvBounds_U.zw);
-        vec2 step_uv1 = swgl_linearQuantizeStep(sColor1, swgl_interpStep(vUv_U));
-
-        int layer2 = swgl_textureLayerOffset(sColor2, vYuvLayers.z);
-        vec2 uv2 = swgl_linearQuantize(sColor2, vUv_V);
-        vec2 min_uv2 = swgl_linearQuantize(sColor2, vUvBounds_V.xy);
-        vec2 max_uv2 = swgl_linearQuantize(sColor2, vUvBounds_V.zw);
-        vec2 step_uv2 = swgl_linearQuantizeStep(sColor2, swgl_interpStep(vUv_V));
-
-        while (swgl_SpanLength > 0) {
-            swgl_commitTextureLinearYUV(sColor0, clamp(uv0, min_uv0, max_uv0), layer0,
-                                        sColor1, clamp(uv1, min_uv1, max_uv1), layer1,
-                                        sColor2, clamp(uv2, min_uv2, max_uv2), layer2,
-                                        vYuvColorSpace, vRescaleFactor);
-            uv0 += step_uv0;
-            uv1 += step_uv1;
-            uv2 += step_uv2;
-        }
+        swgl_commitTextureLinearYUV(sColor0, vUv_Y, vUvBounds_Y, vYuvLayers.x,
+                                    sColor1, vUv_U, vUvBounds_U, vYuvLayers.y,
+                                    sColor2, vUv_V, vUvBounds_V, vYuvLayers.z,
+                                    vYuvColorSpace, vRescaleFactor);
     } else if (vFormat == YUV_FORMAT_NV12) {
         if (!swgl_isTextureLinear(sColor0) || !swgl_isTextureLinear(sColor1)) {
             return;
         }
 
-        int layer0 = swgl_textureLayerOffset(sColor0, vYuvLayers.x);
-        vec2 uv0 = swgl_linearQuantize(sColor0, vUv_Y);
-        vec2 min_uv0 = swgl_linearQuantize(sColor0, vUvBounds_Y.xy);
-        vec2 max_uv0 = swgl_linearQuantize(sColor0, vUvBounds_Y.zw);
-        vec2 step_uv0 = swgl_linearQuantizeStep(sColor0, swgl_interpStep(vUv_Y));
-
-        int layer1 = swgl_textureLayerOffset(sColor1, vYuvLayers.y);
-        vec2 uv1 = swgl_linearQuantize(sColor1, vUv_U);
-        vec2 min_uv1 = swgl_linearQuantize(sColor1, vUvBounds_U.xy);
-        vec2 max_uv1 = swgl_linearQuantize(sColor1, vUvBounds_U.zw);
-        vec2 step_uv1 = swgl_linearQuantizeStep(sColor1, swgl_interpStep(vUv_U));
-
-        while (swgl_SpanLength > 0) {
-            swgl_commitTextureLinearYUV(sColor0, clamp(uv0, min_uv0, max_uv0), layer0,
-                                        sColor1, clamp(uv1, min_uv1, max_uv1), layer1,
-                                        vYuvColorSpace, vRescaleFactor);
-            uv0 += step_uv0;
-            uv1 += step_uv1;
-        }
+        swgl_commitTextureLinearYUV(sColor0, vUv_Y, vUvBounds_Y, vYuvLayers.x,
+                                    sColor1, vUv_U, vUvBounds_U, vYuvLayers.y,
+                                    vYuvColorSpace, vRescaleFactor);
     } else if (vFormat == YUV_FORMAT_INTERLEAVED) {
         if (!swgl_isTextureLinear(sColor0)) {
             return;
         }
 
-        int layer0 = swgl_textureLayerOffset(sColor0, vYuvLayers.x);
-        vec2 uv0 = swgl_linearQuantize(sColor0, vUv_Y);
-        vec2 min_uv0 = swgl_linearQuantize(sColor0, vUvBounds_Y.xy);
-        vec2 max_uv0 = swgl_linearQuantize(sColor0, vUvBounds_Y.zw);
-        vec2 step_uv0 = swgl_linearQuantizeStep(sColor0, swgl_interpStep(vUv_Y));
-
-        while (swgl_SpanLength > 0) {
-            swgl_commitTextureLinearYUV(sColor0, clamp(uv0, min_uv0, max_uv0), layer0,
-                                        vYuvColorSpace, vRescaleFactor);
-            uv0 += step_uv0;
-        }
+        swgl_commitTextureLinearYUV(sColor0, vUv_Y, vUvBounds_Y, vYuvLayers.x,
+                                    vYuvColorSpace, vRescaleFactor);
     }
 }
 #endif
