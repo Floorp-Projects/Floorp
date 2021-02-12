@@ -58,8 +58,8 @@ class ErrorReportMixin : public StrictModeGetter {
   //   * offset is uint32_t if methods ending with "At" is called
   //   * offset is NoOffset if methods ending with "NoOffset" is called
   //   * offset is Current otherwise
-  virtual MOZ_MUST_USE bool computeErrorMetadata(ErrorMetadata* err,
-                                                 const ErrorOffset& offset) = 0;
+  [[nodiscard]] virtual bool computeErrorMetadata(
+      ErrorMetadata* err, const ErrorOffset& offset) = 0;
 
   // ==== error ====
   //

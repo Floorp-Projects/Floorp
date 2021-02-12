@@ -109,14 +109,14 @@ struct CountType {
 
   // Implement the 'count' method for counts returned by this CountType
   // instance's 'newCount' method.
-  virtual MOZ_MUST_USE bool count(CountBase& count,
-                                  mozilla::MallocSizeOf mallocSizeOf,
-                                  const Node& node) = 0;
+  [[nodiscard]] virtual bool count(CountBase& count,
+                                   mozilla::MallocSizeOf mallocSizeOf,
+                                   const Node& node) = 0;
 
   // Implement the 'report' method for counts returned by this CountType
   // instance's 'newCount' method.
-  virtual MOZ_MUST_USE bool report(JSContext* cx, CountBase& count,
-                                   MutableHandleValue report) = 0;
+  [[nodiscard]] virtual bool report(JSContext* cx, CountBase& count,
+                                    MutableHandleValue report) = 0;
 };
 
 using CountTypePtr = js::UniquePtr<CountType>;

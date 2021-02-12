@@ -84,7 +84,7 @@ enum class UnhandledRejectionBehavior { Ignore, Report };
  * 0. The sense of "react" here is the sense of the term as defined by Web IDL:
  *    https://heycam.github.io/webidl/#dfn-perform-steps-once-promise-is-settled
  */
-extern MOZ_MUST_USE bool ReactToUnwrappedPromise(
+[[nodiscard]] extern bool ReactToUnwrappedPromise(
     JSContext* cx, JS::Handle<PromiseObject*> unwrappedPromise,
     JS::Handle<JSObject*> onFulfilled_, JS::Handle<JSObject*> onRejected_,
     UnhandledRejectionBehavior behavior);
@@ -178,9 +178,9 @@ struct PromiseReactionRecordBuilder {
   // Some reaction records refer to internal resolution or rejection functions
   // that are not naturally represented as debuggee JavaScript functions. In
   // this case, resolve and reject may be nullptr.
-  virtual MOZ_MUST_USE bool then(JSContext* cx, JS::Handle<JSObject*> resolve,
-                                 JS::Handle<JSObject*> reject,
-                                 JS::Handle<JSObject*> result) = 0;
+  [[nodiscard]] virtual bool then(JSContext* cx, JS::Handle<JSObject*> resolve,
+                                  JS::Handle<JSObject*> reject,
+                                  JS::Handle<JSObject*> result) = 0;
 
   // A reaction record created when one native promise is resolved to another.
   // The 'promise' argument is the promise that will be settled in the same way
@@ -188,7 +188,7 @@ struct PromiseReactionRecordBuilder {
   //
   // Note that promise may not be same-compartment with cx. This function
   // presents the promise exactly as it appears in the reaction record.
-  virtual MOZ_MUST_USE bool direct(
+  [[nodiscard]] virtual bool direct(
       JSContext* cx, JS::Handle<PromiseObject*> unwrappedPromise) = 0;
 
   // A reaction record that resumes an asynchronous function suspended at an
@@ -197,7 +197,7 @@ struct PromiseReactionRecordBuilder {
   //
   // Note that generator may not be same-compartment with cx. This function
   // presents the generator exactly as it appears in the reaction record.
-  virtual MOZ_MUST_USE bool asyncFunction(
+  [[nodiscard]] virtual bool asyncFunction(
       JSContext* cx,
       JS::Handle<AsyncFunctionGeneratorObject*> unwrappedGenerator) = 0;
 
@@ -207,7 +207,7 @@ struct PromiseReactionRecordBuilder {
   //
   // Note that generator may not be same-compartment with cx. This function
   // presents the generator exactly as it appears in the reaction record.
-  virtual MOZ_MUST_USE bool asyncGenerator(
+  [[nodiscard]] virtual bool asyncGenerator(
       JSContext* cx, JS::Handle<AsyncGeneratorObject*> unwrappedGenerator) = 0;
 };
 

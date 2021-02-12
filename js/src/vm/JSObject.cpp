@@ -1469,7 +1469,7 @@ bool js::ObjectMayBeSwapped(const JSObject* obj) {
   return clasp->isProxy() || clasp->isDOMClass();
 }
 
-static MOZ_MUST_USE bool CopyProxyValuesBeforeSwap(
+[[nodiscard]] static bool CopyProxyValuesBeforeSwap(
     JSContext* cx, ProxyObject* proxy, MutableHandleValueVector values) {
   MOZ_ASSERT(values.empty());
 

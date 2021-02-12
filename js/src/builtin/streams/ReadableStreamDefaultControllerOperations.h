@@ -23,23 +23,23 @@ class ReadableStream;
 class ReadableStreamController;
 class ReadableStreamDefaultController;
 
-extern MOZ_MUST_USE bool ReadableStreamDefaultControllerEnqueue(
+[[nodiscard]] extern bool ReadableStreamDefaultControllerEnqueue(
     JSContext* cx,
     JS::Handle<ReadableStreamDefaultController*> unwrappedController,
     JS::Handle<JS::Value> chunk);
 
-extern MOZ_MUST_USE bool ReadableStreamControllerError(
+[[nodiscard]] extern bool ReadableStreamControllerError(
     JSContext* cx, JS::Handle<ReadableStreamController*> unwrappedController,
     JS::Handle<JS::Value> e);
 
-extern MOZ_MUST_USE bool ReadableStreamDefaultControllerClose(
+[[nodiscard]] extern bool ReadableStreamDefaultControllerClose(
     JSContext* cx,
     JS::Handle<ReadableStreamDefaultController*> unwrappedController);
 
-extern MOZ_MUST_USE double ReadableStreamControllerGetDesiredSizeUnchecked(
+[[nodiscard]] extern double ReadableStreamControllerGetDesiredSizeUnchecked(
     ReadableStreamController* controller);
 
-extern MOZ_MUST_USE bool ReadableStreamControllerCallPullIfNeeded(
+[[nodiscard]] extern bool ReadableStreamControllerCallPullIfNeeded(
     JSContext* cx, JS::Handle<ReadableStreamController*> unwrappedController);
 
 extern void ReadableStreamControllerClearAlgorithms(
@@ -56,13 +56,13 @@ enum class SourceAlgorithms {
   Tee,
 };
 
-extern MOZ_MUST_USE bool SetUpReadableStreamDefaultController(
+[[nodiscard]] extern bool SetUpReadableStreamDefaultController(
     JSContext* cx, JS::Handle<ReadableStream*> stream,
     SourceAlgorithms sourceAlgorithms, JS::Handle<JS::Value> underlyingSource,
     JS::Handle<JS::Value> pullMethod, JS::Handle<JS::Value> cancelMethod,
     double highWaterMark, JS::Handle<JS::Value> size);
 
-extern MOZ_MUST_USE bool
+[[nodiscard]] extern bool
 SetUpReadableStreamDefaultControllerFromUnderlyingSource(
     JSContext* cx, JS::Handle<ReadableStream*> stream,
     JS::Handle<JS::Value> underlyingSource, double highWaterMark,

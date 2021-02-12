@@ -408,7 +408,7 @@ class WritableStream : public NativeObject {
     setFixedSlot(Slot_PendingAbortRequestReason, JS::UndefinedValue());
   }
 
-  static MOZ_MUST_USE WritableStream* create(
+  [[nodiscard]] static WritableStream* create(
       JSContext* cx, void* nsISupportsObject_alreadyAddreffed = nullptr,
       JS::Handle<JSObject*> proto = nullptr);
 

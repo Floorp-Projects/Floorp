@@ -8,7 +8,7 @@
 #define debugger_Environment_h
 
 #include "mozilla/Assertions.h"  // for AssertionConditionType, MOZ_ASSERT
-#include "mozilla/Attributes.h"  // for MOZ_MUST_USE
+#include "mozilla/Attributes.h"  // [[nodiscard]] for
 #include "mozilla/Maybe.h"       // for Maybe
 
 #include "jstypes.h"            // for JS_PUBLIC_API
@@ -57,19 +57,19 @@ class DebuggerEnvironment : public NativeObject {
   bool isDebuggee() const;
   bool isOptimized() const;
 
-  static MOZ_MUST_USE bool getNames(JSContext* cx,
-                                    HandleDebuggerEnvironment environment,
-                                    MutableHandle<IdVector> result);
-  static MOZ_MUST_USE bool find(JSContext* cx,
-                                HandleDebuggerEnvironment environment,
-                                HandleId id,
-                                MutableHandleDebuggerEnvironment result);
-  static MOZ_MUST_USE bool getVariable(JSContext* cx,
-                                       HandleDebuggerEnvironment environment,
-                                       HandleId id, MutableHandleValue result);
-  static MOZ_MUST_USE bool setVariable(JSContext* cx,
-                                       HandleDebuggerEnvironment environment,
-                                       HandleId id, HandleValue value);
+  [[nodiscard]] static bool getNames(JSContext* cx,
+                                     HandleDebuggerEnvironment environment,
+                                     MutableHandle<IdVector> result);
+  [[nodiscard]] static bool find(JSContext* cx,
+                                 HandleDebuggerEnvironment environment,
+                                 HandleId id,
+                                 MutableHandleDebuggerEnvironment result);
+  [[nodiscard]] static bool getVariable(JSContext* cx,
+                                        HandleDebuggerEnvironment environment,
+                                        HandleId id, MutableHandleValue result);
+  [[nodiscard]] static bool setVariable(JSContext* cx,
+                                        HandleDebuggerEnvironment environment,
+                                        HandleId id, HandleValue value);
 
   bool isInstance() const;
   Debugger* owner() const;
@@ -88,7 +88,7 @@ class DebuggerEnvironment : public NativeObject {
 
   bool requireDebuggee(JSContext* cx) const;
 
-  static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
+  [[nodiscard]] static bool construct(JSContext* cx, unsigned argc, Value* vp);
 
   struct CallData;
 };

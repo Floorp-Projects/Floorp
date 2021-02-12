@@ -140,7 +140,7 @@ JS_PUBLIC_API bool JS::IsReadableStreamDefaultReader(JSObject* obj) {
 }
 
 template <class T>
-static MOZ_MUST_USE T* APIUnwrapAndDowncast(JSContext* cx, JSObject* obj) {
+[[nodiscard]] static T* APIUnwrapAndDowncast(JSContext* cx, JSObject* obj) {
   cx->check(obj);
   return UnwrapAndDowncastObject<T>(cx, obj);
 }

@@ -113,9 +113,9 @@ class SavedFrame : public NativeObject {
 
  private:
   static SavedFrame* create(JSContext* cx);
-  static MOZ_MUST_USE bool finishSavedFrameInit(JSContext* cx,
-                                                HandleObject ctor,
-                                                HandleObject proto);
+  [[nodiscard]] static bool finishSavedFrameInit(JSContext* cx,
+                                                 HandleObject ctor,
+                                                 HandleObject proto);
   void initFromLookup(JSContext* cx, Handle<Lookup> lookup);
   void initSource(JSAtom* source);
   void initSourceId(uint32_t id);

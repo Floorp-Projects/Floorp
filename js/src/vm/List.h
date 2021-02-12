@@ -33,7 +33,7 @@ class ListObject : public NativeObject {
  public:
   static const JSClass class_;
 
-  inline static MOZ_MUST_USE ListObject* create(JSContext* cx);
+  [[nodiscard]] inline static ListObject* create(JSContext* cx);
 
   uint32_t length() const { return getDenseInitializedLength(); }
 
@@ -49,7 +49,7 @@ class ListObject : public NativeObject {
   /**
    * Add an element to the end of the list. Returns false on OOM.
    */
-  inline MOZ_MUST_USE bool append(JSContext* cx, HandleValue value);
+  [[nodiscard]] inline bool append(JSContext* cx, HandleValue value);
 
   /**
    * Adds |value| and |size| elements to a list consisting of (value, size)
@@ -60,8 +60,8 @@ class ListObject : public NativeObject {
    * (You *could* use this on any list of even length without issue, but it's
    * hard to imagine realistic situations where you'd want to...)
    */
-  inline MOZ_MUST_USE bool appendValueAndSize(JSContext* cx, HandleValue value,
-                                              double size);
+  [[nodiscard]] inline bool appendValueAndSize(JSContext* cx, HandleValue value,
+                                               double size);
 
   /**
    * Remove and return the first element of the list.

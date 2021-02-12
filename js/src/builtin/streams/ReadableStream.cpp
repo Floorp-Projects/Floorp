@@ -219,8 +219,8 @@ bool ReadableStream::constructor(JSContext* cx, unsigned argc, JS::Value* vp) {
 /**
  * Streams spec, 3.2.5.1. get locked
  */
-static MOZ_MUST_USE bool ReadableStream_locked(JSContext* cx, unsigned argc,
-                                               JS::Value* vp) {
+[[nodiscard]] static bool ReadableStream_locked(JSContext* cx, unsigned argc,
+                                                JS::Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1: If ! IsReadableStream(this) is false, throw a TypeError exception.
@@ -238,8 +238,8 @@ static MOZ_MUST_USE bool ReadableStream_locked(JSContext* cx, unsigned argc,
 /**
  * Streams spec, 3.2.5.2. cancel ( reason )
  */
-static MOZ_MUST_USE bool ReadableStream_cancel(JSContext* cx, unsigned argc,
-                                               JS::Value* vp) {
+[[nodiscard]] static bool ReadableStream_cancel(JSContext* cx, unsigned argc,
+                                                JS::Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1: If ! IsReadableStream(this) is false, return a promise rejected
@@ -276,8 +276,8 @@ static MOZ_MUST_USE bool ReadableStream_cancel(JSContext* cx, unsigned argc,
 /**
  * Streams spec, 3.2.5.4. getReader({ mode } = {})
  */
-static MOZ_MUST_USE bool ReadableStream_getReader(JSContext* cx, unsigned argc,
-                                                  JS::Value* vp) {
+[[nodiscard]] static bool ReadableStream_getReader(JSContext* cx, unsigned argc,
+                                                   JS::Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Implicit in the spec: Argument defaults and destructuring.

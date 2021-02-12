@@ -38,7 +38,7 @@ namespace js {
  * If the signal is a wrapper, it will be unwrapped, so the result might not be
  * an object from the currently active compartment.
  */
-inline MOZ_MUST_USE JSObject* UnwrapSignalFromPipeToState(
+[[nodiscard]] inline JSObject* UnwrapSignalFromPipeToState(
     JSContext* cx, JS::Handle<PipeToState*> pipeToState) {
   cx->check(pipeToState);
 

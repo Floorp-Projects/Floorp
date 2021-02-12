@@ -452,12 +452,10 @@ enum class AssembleResult {
   OutOfMemory,
 };
 
-static MOZ_MUST_USE AssembleResult Assemble(JSContext* cx,
-                                            RegExpCompiler* compiler,
-                                            RegExpCompileData* data,
-                                            MutableHandleRegExpShared re,
-                                            HandleAtom pattern, Zone* zone,
-                                            bool useNativeCode, bool isLatin1) {
+[[nodiscard]] static AssembleResult Assemble(
+    JSContext* cx, RegExpCompiler* compiler, RegExpCompileData* data,
+    MutableHandleRegExpShared re, HandleAtom pattern, Zone* zone,
+    bool useNativeCode, bool isLatin1) {
   // Because we create a StackMacroAssembler, this function is not allowed
   // to GC. If needed, we allocate and throw errors in the caller.
   Maybe<jit::JitContext> jctx;

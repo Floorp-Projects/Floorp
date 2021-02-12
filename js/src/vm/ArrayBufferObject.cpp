@@ -135,8 +135,8 @@ int32_t js::LiveMappedBufferCount() { return liveBufferCount; }
 
 bool js::ArrayBufferObject::supportLargeBuffers = false;
 
-static MOZ_MUST_USE bool CheckArrayBufferTooLarge(JSContext* cx,
-                                                  uint64_t nbytes) {
+[[nodiscard]] static bool CheckArrayBufferTooLarge(JSContext* cx,
+                                                   uint64_t nbytes) {
   // Refuse to allocate too large buffers.
   if (MOZ_UNLIKELY(nbytes > ArrayBufferObject::maxBufferByteLength())) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,

@@ -26,7 +26,7 @@ class WeakCollectionObject : public NativeObject {
     return map ? map->sizeOfIncludingThis(aMallocSizeOf) : 0;
   }
 
-  static MOZ_MUST_USE bool nondeterministicGetKeys(
+  [[nodiscard]] static bool nondeterministicGetKeys(
       JSContext* cx, Handle<WeakCollectionObject*> obj,
       MutableHandleObject ret);
 
@@ -45,22 +45,22 @@ class WeakMapObject : public WeakCollectionObject {
   static const JSPropertySpec properties[];
   static const JSFunctionSpec methods[];
 
-  static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
+  [[nodiscard]] static bool construct(JSContext* cx, unsigned argc, Value* vp);
 
-  static MOZ_MUST_USE MOZ_ALWAYS_INLINE bool is(HandleValue v);
+  [[nodiscard]] static MOZ_ALWAYS_INLINE bool is(HandleValue v);
 
-  static MOZ_MUST_USE MOZ_ALWAYS_INLINE bool has_impl(JSContext* cx,
-                                                      const CallArgs& args);
-  static MOZ_MUST_USE bool has(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE MOZ_ALWAYS_INLINE bool get_impl(JSContext* cx,
-                                                      const CallArgs& args);
-  static MOZ_MUST_USE bool get(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE MOZ_ALWAYS_INLINE bool delete_impl(JSContext* cx,
-                                                         const CallArgs& args);
-  static MOZ_MUST_USE bool delete_(JSContext* cx, unsigned argc, Value* vp);
-  static MOZ_MUST_USE MOZ_ALWAYS_INLINE bool set_impl(JSContext* cx,
-                                                      const CallArgs& args);
-  static MOZ_MUST_USE bool set(JSContext* cx, unsigned argc, Value* vp);
+  [[nodiscard]] static MOZ_ALWAYS_INLINE bool has_impl(JSContext* cx,
+                                                       const CallArgs& args);
+  [[nodiscard]] static bool has(JSContext* cx, unsigned argc, Value* vp);
+  [[nodiscard]] static MOZ_ALWAYS_INLINE bool get_impl(JSContext* cx,
+                                                       const CallArgs& args);
+  [[nodiscard]] static bool get(JSContext* cx, unsigned argc, Value* vp);
+  [[nodiscard]] static MOZ_ALWAYS_INLINE bool delete_impl(JSContext* cx,
+                                                          const CallArgs& args);
+  [[nodiscard]] static bool delete_(JSContext* cx, unsigned argc, Value* vp);
+  [[nodiscard]] static MOZ_ALWAYS_INLINE bool set_impl(JSContext* cx,
+                                                       const CallArgs& args);
+  [[nodiscard]] static bool set(JSContext* cx, unsigned argc, Value* vp);
 };
 
 }  // namespace js

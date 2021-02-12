@@ -258,8 +258,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   AbstractScopePtr innermostScope() const;
   ScopeIndex innermostScopeIndex() const;
 
-  MOZ_ALWAYS_INLINE MOZ_MUST_USE bool makeAtomIndex(TaggedParserAtomIndex atom,
-                                                    GCThingIndex* indexp) {
+  [[nodiscard]] MOZ_ALWAYS_INLINE bool makeAtomIndex(TaggedParserAtomIndex atom,
+                                                     GCThingIndex* indexp) {
     MOZ_ASSERT(perScriptData().atomIndices());
     AtomIndexMap::AddPtr p = perScriptData().atomIndices()->lookupForAdd(atom);
     if (p) {
@@ -625,14 +625,14 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] bool emitIf(TernaryNode* ifNode);
   [[nodiscard]] bool emitWith(BinaryNode* withNode);
 
-  MOZ_NEVER_INLINE MOZ_MUST_USE bool emitLabeledStatement(
+  [[nodiscard]] MOZ_NEVER_INLINE bool emitLabeledStatement(
       const LabeledStatement* labeledStmt);
-  MOZ_NEVER_INLINE MOZ_MUST_USE bool emitLexicalScope(
+  [[nodiscard]] MOZ_NEVER_INLINE bool emitLexicalScope(
       LexicalScopeNode* lexicalScope);
   [[nodiscard]] bool emitLexicalScopeBody(
       ParseNode* body, EmitLineNumberNote emitLineNote = EMIT_LINENOTE);
-  MOZ_NEVER_INLINE MOZ_MUST_USE bool emitSwitch(SwitchStatement* switchStmt);
-  MOZ_NEVER_INLINE MOZ_MUST_USE bool emitTry(TryNode* tryNode);
+  [[nodiscard]] MOZ_NEVER_INLINE bool emitSwitch(SwitchStatement* switchStmt);
+  [[nodiscard]] MOZ_NEVER_INLINE bool emitTry(TryNode* tryNode);
 
   [[nodiscard]] bool emitGoSub(JumpList* jump);
 
@@ -768,7 +768,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] bool emitSequenceExpr(
       ListNode* node, ValueUsage valueUsage = ValueUsage::WantValue);
 
-  MOZ_NEVER_INLINE MOZ_MUST_USE bool emitIncOrDec(UnaryNode* incDec);
+  [[nodiscard]] MOZ_NEVER_INLINE bool emitIncOrDec(UnaryNode* incDec);
 
   [[nodiscard]] bool emitConditionalExpression(
       ConditionalExpression& conditional,

@@ -207,8 +207,8 @@ class MOZ_RAII AutoSuppressAllocationMetadataBuilder {
 // may be the passed pointer, relocated by GC. If no GC could occur, it's just
 // passed through. We root nothing unless necessary.
 template <typename T>
-static MOZ_ALWAYS_INLINE MOZ_MUST_USE T* SetNewObjectMetadata(JSContext* cx,
-                                                              T* obj) {
+[[nodiscard]] static MOZ_ALWAYS_INLINE T* SetNewObjectMetadata(JSContext* cx,
+                                                               T* obj) {
   MOZ_ASSERT(!cx->realm()->hasObjectPendingMetadata());
 
   // The metadata builder is invoked for each object created on the active
