@@ -533,7 +533,20 @@ bool ParserAtomsTable::isIndex(TaggedParserAtomIndex index,
 }
 
 uint32_t ParserAtomsTable::length(TaggedParserAtomIndex index) const {
-  return getParserAtom(index)->length();
+  if (index.isParserAtomIndex()) {
+    return getParserAtom(index.toParserAtomIndex())->length();
+  }
+
+  if (index.isWellKnownAtomId()) {
+    return getWellKnown(index.toWellKnownAtomId())->length();
+  }
+
+  if (index.isLength1StaticParserString()) {
+    return 1;
+  }
+
+  MOZ_ASSERT(index.isLength2StaticParserString());
+  return 2;
 }
 
 bool ParserAtomsTable::toNumber(JSContext* cx, TaggedParserAtomIndex index,
