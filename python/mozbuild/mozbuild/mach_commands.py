@@ -10,6 +10,7 @@ import json
 import logging
 import operator
 import os
+import platform
 import re
 import shutil
 import subprocess
@@ -1683,7 +1684,6 @@ class MachDebug(MachCommandBase):
 
     def _environment_pretty(self, out, verbose):
         state_dir = self._mach_context.state_dir
-        import platform
 
         print("platform:\n\t%s" % platform.platform(), file=out)
         print("python version:\n\t%s" % sys.version, file=out)
@@ -2143,6 +2143,10 @@ class CreateMachEnvironment(MachCommandBase):
                     "collected. Continuing."
                 )
             print("Python 3 mach environment created.")
+            if platform.system() == "Darwin" and platform.machine() == "arm64":
+                # Skip the creation of a python2 virtualenv on arm64 mac because
+                # of https://github.com/pypa/virtualenv/issues/2023
+                return
             python2, _ = find_python2_executable()
             if not python2:
                 print(
