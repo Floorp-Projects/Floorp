@@ -1015,7 +1015,7 @@ class ConfigureSandbox(dict):
 
         def wrap(function):
             def wrapper(*args, **kwargs):
-                if "env" not in kwargs:
+                if kwargs.get("env") is None:
                     kwargs["env"] = dict(self._environ)
                 # Subprocess on older Pythons can't handle unicode keys or
                 # values in environment dicts while subprocess on newer Pythons
