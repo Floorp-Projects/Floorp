@@ -16,6 +16,7 @@ CROSSTOOLS_CCTOOLS_DIR=$CROSSTOOLS_SOURCE_DIR/cctools
 CROSSTOOLS_BUILD_DIR=$WORKSPACE/cctools
 LIBTAPI_SOURCE_DIR=$MOZ_FETCHES_DIR/apple-libtapi
 LIBTAPI_BUILD_DIR=$WORKSPACE/libtapi-build
+LDID_SOURCE_DIR=$MOZ_FETCHES_DIR/ldid
 CLANG_DIR=$MOZ_FETCHES_DIR/clang
 
 # Create our directories
@@ -76,6 +77,11 @@ perl -pi -e 's/(LIBTOOLIZE -c)/\1 -f/' autogen.sh
 
 # Build cctools
 make -j `nproc --all` install
+
+# Build ldid
+cd $LDID_SOURCE_DIR
+make -j `nproc --all` install INSTALLPREFIX=$CROSSTOOLS_BUILD_DIR LDFLAGS="-Wl,-Bstatic -lcrypto -Wl,-Bdynamic -ldl -pthread"
+
 strip $CROSSTOOLS_BUILD_DIR/bin/*
 # cctools-port doesn't include dsymutil but clang will need to find it.
 cp $CLANG_DIR/bin/dsymutil $CROSSTOOLS_BUILD_DIR/bin/x86_64-apple-darwin-dsymutil

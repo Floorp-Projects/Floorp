@@ -300,7 +300,7 @@ cctools-port:
     fetch:
         type: git
         repo: https://github.com/tpoechtrager/cctools-port
-        revision: 43f32a4c61b5ba7fde011e816136c550b1b3146f
+        revision: 30518813875aed656aa7f18b6d485feee25f8f87
 
 libtapi:
     description: libtapi source code
@@ -308,6 +308,13 @@ libtapi:
         type: git
         repo: https://github.com/tpoechtrager/apple-libtapi
         revision: b4f141a16c7c82f75973429c92242a8c7de3ddb1
+
+ldid:
+    description: ldid source code
+    fetch:
+        type: git
+        repo: https://github.com/tpoechtrager/ldid
+        revision: 4bf8f4d60384a0693dbbe2084ce62a35bfeb87ab
 
 libdmg-hfsplus:
     description: libdmg-hfsplug source code
