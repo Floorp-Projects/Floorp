@@ -930,6 +930,7 @@ class RaptorOutput(PerftestOutput):
                 elif "motionmark" in test["measurements"]:
                     subtests, vals = self.parseMotionmarkOutput(test)
                 elif "speedometer" in test["measurements"]:
+                    # this includes stylebench
                     subtests, vals = self.parseSpeedometerOutput(test)
                 elif "sunspider" in test["measurements"]:
                     subtests, vals = self.parseSunspiderOutput(test)
@@ -1553,7 +1554,8 @@ class BrowsertimeOutput(PerftestOutput):
 
             elif "benchmark" in test["type"]:
                 subtests = None
-                if "speedometer" in test["name"]:
+                if "speedometer" in test["measurements"]:
+                    # this includes stylebench
                     subtests, vals = self.parseSpeedometerOutput(test)
                 if "ares6" in test["name"]:
                     subtests, vals = self.parseAresSixOutput(test)
