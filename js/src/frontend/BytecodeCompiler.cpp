@@ -823,51 +823,31 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
 }
 
 template <typename Unit>
-static bool ParseModuleToStencilImpl(JSContext* cx, CompilationStencil& stencil,
-                                     SourceText<Unit>& srcBuf) {
+static UniquePtr<CompilationStencil> ParseModuleToStencilImpl(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    SourceText<Unit>& srcBuf) {
   MOZ_ASSERT(srcBuf.get());
+
+  Rooted<UniquePtr<frontend::CompilationStencil>> stencil(
+      cx, cx->new_<frontend::CompilationStencil>(cx, options));
+  if (!stencil) {
+    return nullptr;
+  }
+
+  if (!stencil->input.initForModule(cx)) {
+    return nullptr;
+  }
 
   AutoAssertReportedException assertException(cx);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  ModuleCompiler<Unit> compiler(cx, allocScope, stencil.input.options, stencil,
-                                srcBuf);
-  if (!compiler.compile(cx, stencil)) {
-    return false;
+  ModuleCompiler<Unit> compiler(cx, allocScope, stencil->input.options,
+                                *stencil, srcBuf);
+  if (!compiler.compile(cx, *stencil)) {
+    return nullptr;
   }
 
   assertException.reset();
-  return true;
-}
-
-bool frontend::ParseModuleToStencil(JSContext* cx, CompilationStencil& stencil,
-                                    SourceText<char16_t>& srcBuf) {
-  return ParseModuleToStencilImpl(cx, stencil, srcBuf);
-}
-
-bool frontend::ParseModuleToStencil(JSContext* cx, CompilationStencil& stencil,
-                                    SourceText<Utf8Unit>& srcBuf) {
-  return ParseModuleToStencilImpl(cx, stencil, srcBuf);
-}
-
-template <typename Unit>
-static UniquePtr<CompilationStencil> ParseModuleToStencilImpl(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    SourceText<Unit>& srcBuf) {
-  Rooted<UniquePtr<frontend::CompilationStencil>> stencil(
-      cx, js_new<frontend::CompilationStencil>(cx, options));
-  if (!stencil) {
-    ReportOutOfMemory(cx);
-    return nullptr;
-  }
-
-  if (!stencil.get()->input.initForModule(cx)) {
-    return nullptr;
-  }
-
-  if (!ParseModuleToStencilImpl(cx, *stencil, srcBuf)) {
-    return nullptr;
-  }
 
   return std::move(stencil.get());
 }
@@ -897,17 +877,14 @@ static ModuleObject* CompileModuleImpl(
   CompileOptions options(cx, optionsInput);
   options.setModule();
 
-  Rooted<CompilationStencil> stencil(cx, CompilationStencil(cx, options));
-  if (!stencil.get().input.initForModule(cx)) {
-    return nullptr;
-  }
-
-  if (!ParseModuleToStencil(cx, stencil.get(), srcBuf)) {
+  Rooted<UniquePtr<CompilationStencil>> stencil(
+      cx, ParseModuleToStencil(cx, options, srcBuf));
+  if (!stencil) {
     return nullptr;
   }
 
   Rooted<CompilationGCOutput> gcOutput(cx);
-  if (!InstantiateStencils(cx, stencil.get(), gcOutput.get())) {
+  if (!InstantiateStencils(cx, *stencil, gcOutput.get())) {
     return nullptr;
   }
 
