@@ -81,9 +81,7 @@ GN_DIRS["../../../../third_party/libwebrtc"].gn_target = "//:webrtc"
 GN_DIRS["../../../../third_party/libwebrtc"].sandbox_vars["COMPILE_FLAGS"] = {
     "WARNINGS_AS_ERRORS": []
 }
-GN_DIRS["../../../../third_party/libwebrtc"].sandbox_vars[
-    "FINAL_LIBRARY"
-] = "webrtc"
+GN_DIRS["../../../../third_party/libwebrtc"].sandbox_vars["FINAL_LIBRARY"] = "webrtc"
 GN_DIRS[
     "../../../../third_party/libwebrtc"
 ].non_unified_sources += webrtc_non_unified_sources
