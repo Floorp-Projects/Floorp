@@ -10,6 +10,7 @@
 #include "nsTouchBarInputIcon.h"
 
 #include "mozilla/dom/Document.h"
+#include "mozilla/widget/IconLoader.h"
 #include "nsCocoaUtils.h"
 #include "nsComputedDOMStyle.h"
 #include "nsContentUtils.h"
