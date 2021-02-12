@@ -181,6 +181,7 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void emitPushArrayAsArguments(Register tmpArgc, Register srcBaseAndArgc,
                                 Register scratch, size_t argvSrcOffset);
   void emitPushArguments(LApplyArgsGeneric* apply, Register extraStackSpace);
+  void emitPushArguments(LApplyArgsObj* apply, Register extraStackSpace);
   void emitPushArguments(LApplyArrayGeneric* apply, Register extraStackSpace);
   void emitPushArguments(LConstructArrayGeneric* construct,
                          Register extraStackSpace);

@@ -1252,6 +1252,38 @@ class LApplyArgsGeneric
   const LDefinition* getTempStackCounter() { return getTemp(1); }
 };
 
+class LApplyArgsObj
+    : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES + 2, 2> {
+ public:
+  LIR_HEADER(ApplyArgsObj)
+
+  LApplyArgsObj(const LAllocation& func, const LAllocation& argsObj,
+                const LBoxAllocation& thisv, const LDefinition& tmpObjReg,
+                const LDefinition& tmpCopy)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, func);
+    setOperand(1, argsObj);
+    setBoxOperand(ThisIndex, thisv);
+    setTemp(0, tmpObjReg);
+    setTemp(1, tmpCopy);
+  }
+
+  MApplyArgsObj* mir() const { return mir_->toApplyArgsObj(); }
+
+  bool hasSingleTarget() const { return getSingleTarget() != nullptr; }
+  WrappedFunction* getSingleTarget() const { return mir()->getSingleTarget(); }
+
+  const LAllocation* getFunction() { return getOperand(0); }
+  const LAllocation* getArgsObj() { return getOperand(1); }
+  // All registers are calltemps. argc is mapped to the same register as
+  // ArgsObj. argc becomes live as ArgsObj is dying.
+  const LAllocation* getArgc() { return getOperand(1); }
+  static const size_t ThisIndex = 2;
+
+  const LDefinition* getTempObject() { return getTemp(0); }
+  const LDefinition* getTempStackCounter() { return getTemp(1); }
+};
+
 class LApplyArrayGeneric
     : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES + 2, 2> {
  public:

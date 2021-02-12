@@ -2533,6 +2533,40 @@ class MApplyArgs : public MTernaryInstruction,
   bool possiblyCalls() const override { return true; }
 };
 
+class MApplyArgsObj
+    : public MTernaryInstruction,
+      public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>, BoxPolicy<2>>::Data {
+  WrappedFunction* target_;
+  bool maybeCrossRealm_ = true;
+  bool ignoresReturnValue_ = false;
+
+  MApplyArgsObj(WrappedFunction* target, MDefinition* fun, MDefinition* argsObj,
+                MDefinition* thisArg)
+      : MTernaryInstruction(classOpcode, fun, argsObj, thisArg),
+        target_(target) {
+    MOZ_ASSERT(argsObj->type() == MIRType::Object);
+    setResultType(MIRType::Value);
+    setBailoutKind(BailoutKind::TooManyArguments);
+  }
+
+ public:
+  INSTRUCTION_HEADER(ApplyArgsObj)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, getFunction), (1, getArgsObj), (2, getThis))
+
+  WrappedFunction* getSingleTarget() const { return target_; }
+
+  bool maybeCrossRealm() const { return maybeCrossRealm_; }
+  void setNotCrossRealm() { maybeCrossRealm_ = false; }
+
+  bool ignoresReturnValue() const { return ignoresReturnValue_; }
+  void setIgnoresReturnValue() { ignoresReturnValue_ = true; }
+
+  bool isConstructing() const { return false; }
+
+  bool possiblyCalls() const override { return true; }
+};
+
 // fun.apply(fn, array)
 class MApplyArray : public MTernaryInstruction,
                     public MixPolicy<ObjectPolicy<0>, BoxPolicy<2>>::Data {
