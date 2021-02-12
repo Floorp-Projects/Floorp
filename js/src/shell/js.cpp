@@ -5432,7 +5432,9 @@ static bool DumpStencil(JSContext* cx,
                         const JS::ReadOnlyCompileOptions& options,
                         const Unit* units, size_t length,
                         js::frontend::ParseGoal goal) {
-  Rooted<UniquePtr<frontend::CompilationStencil>> stencil(cx);
+  Rooted<frontend::CompilationInput> input(cx,
+                                           frontend::CompilationInput(options));
+  UniquePtr<frontend::CompilationStencil> stencil;
 
   JS::SourceText<Unit> srcBuf;
   if (!srcBuf.init(cx, units, length, JS::SourceOwnership::Borrowed)) {
@@ -5440,10 +5442,10 @@ static bool DumpStencil(JSContext* cx,
   }
 
   if (goal == frontend::ParseGoal::Script) {
-    stencil = frontend::CompileGlobalScriptToStencil(cx, options, srcBuf,
+    stencil = frontend::CompileGlobalScriptToStencil(cx, input.get(), srcBuf,
                                                      ScopeKind::Global);
   } else {
-    stencil = frontend::ParseModuleToStencil(cx, options, srcBuf);
+    stencil = frontend::ParseModuleToStencil(cx, input.get(), srcBuf);
   }
 
   if (!stencil) {
@@ -5608,9 +5610,11 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
             return false;
           }
 
-          Rooted<UniquePtr<frontend::CompilationStencil>> stencil(cx);
-          if (!Smoosh::tryCompileGlobalScriptToStencil(cx, options, srcBuf,
-                                                       stencil.get())) {
+          Rooted<frontend::CompilationInput> input(
+              cx, frontend::CompilationInput(options));
+          UniquePtr<frontend::CompilationStencil> stencil;
+          if (!Smoosh::tryCompileGlobalScriptToStencil(cx, input.get(), srcBuf,
+                                                       stencil)) {
             return false;
           }
           if (!stencil) {
@@ -5653,21 +5657,21 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
     return true;
   }
 
-  js::Rooted<frontend::CompilationStencil> stencil(
-      cx, js::frontend::CompilationStencil(cx, options));
+  Rooted<frontend::CompilationInput> input(cx,
+                                           frontend::CompilationInput(options));
   if (goal == frontend::ParseGoal::Script) {
-    if (!stencil.get().input.initForGlobal(cx)) {
+    if (!input.get().initForGlobal(cx)) {
       return false;
     }
   } else {
-    if (!stencil.get().input.initForModule(cx)) {
+    if (!input.get().initForModule(cx)) {
       return false;
     }
   }
+  frontend::CompilationStencil stencil(input.get());
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::CompilationState compilationState(cx, allocScope, options,
-                                              stencil.get());
+  frontend::CompilationState compilationState(cx, allocScope, options, stencil);
   if (!compilationState.init(cx)) {
     return false;
   }
@@ -5675,14 +5679,14 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
   if (isAscii) {
     const Latin1Char* latin1 = stableChars.latin1Range().begin().get();
     auto utf8 = reinterpret_cast<const mozilla::Utf8Unit*>(latin1);
-    if (!DumpAST<mozilla::Utf8Unit>(cx, options, utf8, length, stencil.get(),
+    if (!DumpAST<mozilla::Utf8Unit>(cx, options, utf8, length, stencil,
                                     compilationState, goal)) {
       return false;
     }
   } else {
     MOZ_ASSERT(stableChars.isTwoByte());
     const char16_t* chars = stableChars.twoByteRange().begin().get();
-    if (!DumpAST<char16_t>(cx, options, chars, length, stencil.get(),
+    if (!DumpAST<char16_t>(cx, options, chars, length, stencil,
                            compilationState, goal)) {
       return false;
     }
@@ -5735,22 +5739,22 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
   const char16_t* chars = stableChars.twoByteRange().begin().get();
   size_t length = scriptContents->length();
 
-  js::Rooted<frontend::CompilationStencil> stencil(
-      cx, js::frontend::CompilationStencil(cx, options));
-  if (!stencil.get().input.initForGlobal(cx)) {
+  Rooted<frontend::CompilationInput> input(cx,
+                                           frontend::CompilationInput(options));
+  if (!input.get().initForGlobal(cx)) {
     return false;
   }
+  frontend::CompilationStencil stencil(input.get());
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::CompilationState compilationState(cx, allocScope, options,
-                                              stencil.get());
+  frontend::CompilationState compilationState(cx, allocScope, options, stencil);
   if (!compilationState.init(cx)) {
     return false;
   }
 
   Parser<frontend::SyntaxParseHandler, char16_t> parser(
       cx, options, chars, length,
-      /* foldConstants = */ false, stencil.get(), compilationState,
+      /* foldConstants = */ false, stencil, compilationState,
       /* syntaxParser = */ nullptr);
   if (!parser.checkOptions()) {
     return false;

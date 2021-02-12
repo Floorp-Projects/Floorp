@@ -496,9 +496,6 @@ struct BaseCompilationStencil {
 
   BaseCompilationStencil() = default;
 
-  // We need a move-constructor to work with Rooted.
-  BaseCompilationStencil(BaseCompilationStencil&& other) = default;
-
   bool prepareStorageFor(JSContext* cx, CompilationState& compilationState) {
     // NOTE: At this point CompilationState shouldn't be finished, and
     // BaseCompilationStencil.scriptData field should be empty.
@@ -546,7 +543,7 @@ struct CompilationStencil : public BaseCompilationStencil {
 
   // Input data to the compile that will be needed for instantiation. This may
   // include GC pointers depending on what sort of compile is performed.
-  CompilationInput input;
+  CompilationInput& input;
 
   // Module metadata if this is a module compile.
   UniquePtr<StencilModuleMetadata> moduleMetadata;
@@ -570,8 +567,8 @@ struct CompilationStencil : public BaseCompilationStencil {
   // End of fields.
 
   // Construct a CompilationStencil
-  CompilationStencil(JSContext* cx, const JS::ReadOnlyCompileOptions& options)
-      : alloc(LifoAllocChunkSize), input(options) {}
+  explicit CompilationStencil(CompilationInput& input)
+      : alloc(LifoAllocChunkSize), input(input) {}
 
   [[nodiscard]] static bool instantiateBaseStencilAfterPreparation(
       JSContext* cx, CompilationInput& input,
@@ -591,18 +588,9 @@ struct CompilationStencil : public BaseCompilationStencil {
                                          const JS::TranscodeRange& range,
                                          bool* succeededOut = nullptr);
 
-  // Move constructor is necessary to use Rooted, but must be explicit in
-  // order to steal the LifoAlloc data
-  CompilationStencil(CompilationStencil&& other) noexcept
-      : BaseCompilationStencil(std::move(other)),
-        alloc(LifoAllocChunkSize),
-        input(std::move(other.input)) {
-    // Steal the data from the LifoAlloc.
-    alloc.steal(&other.alloc);
-  }
-
   // To avoid any misuses, make sure this is neither copyable or assignable.
   CompilationStencil(const CompilationStencil&) = delete;
+  CompilationStencil(CompilationStencil&&) = delete;
   CompilationStencil& operator=(const CompilationStencil&) = delete;
   CompilationStencil& operator=(CompilationStencil&&) = delete;
 
@@ -625,8 +613,6 @@ struct CompilationStencil : public BaseCompilationStencil {
 
   RewindToken getRewindToken(CompilationState& state);
   void rewind(CompilationState& state, const RewindToken& pos);
-
-  void trace(JSTracer* trc);
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump() const;

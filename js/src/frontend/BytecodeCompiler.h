@@ -122,10 +122,9 @@ ModuleObject* CompileModule(JSContext* cx,
 // Parse a module of the given source.  This is an internal API; if you want to
 // compile a module as a user, use CompileModule above.
 UniquePtr<CompilationStencil> ParseModuleToStencil(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-    JS::SourceText<char16_t>& srcBuf);
+    JSContext* cx, CompilationInput& input, JS::SourceText<char16_t>& srcBuf);
 UniquePtr<CompilationStencil> ParseModuleToStencil(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JSContext* cx, CompilationInput& input,
     JS::SourceText<mozilla::Utf8Unit>& srcBuf);
 
 //
