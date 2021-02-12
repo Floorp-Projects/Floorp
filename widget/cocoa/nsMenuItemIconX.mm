@@ -64,10 +64,6 @@ void nsMenuItemIconX::Destroy() {
     mIconLoader->Destroy();
     mIconLoader = nullptr;
   }
-  if (mIconLoaderHelper) {
-    mIconLoaderHelper->Destroy();
-    mIconLoaderHelper = nullptr;
-  }
   mMenuObject = nullptr;
   mNativeMenuItem = nil;
 }
@@ -92,15 +88,12 @@ nsresult nsMenuItemIconX::SetupIcon() {
   }
 
   if (!mIconLoader) {
-    mIconLoaderHelper = new IconLoaderHelperCocoa(this, kIconSize, kIconSize);
-    mIconLoader = new IconLoader(mIconLoaderHelper, mImageRegionRect);
-    if (!mIconLoader) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    mIconLoader = new IconLoader(this, mImageRegionRect);
   }
   if (!mSetIcon) {
     // Load placeholder icon.
-    [mNativeMenuItem setImage:mIconLoaderHelper->GetNativeIconImage()];
+    NSSize iconSize = NSMakeSize(kIconSize, kIconSize);
+    [mNativeMenuItem setImage:[MOZIconHelper placeholderIconWithSize:iconSize]];
   }
 
   rv = mIconLoader->LoadIcon(iconURI, mContent);
@@ -209,32 +202,28 @@ nsresult nsMenuItemIconX::GetIconURI(nsIURI** aIconURI) {
 }
 
 //
-// mozilla::widget::IconLoaderListenerCocoa
+// mozilla::widget::IconLoader::Listener
 //
 
-nsresult nsMenuItemIconX::OnComplete() {
-  if (!mIconLoaderHelper) {
-    return NS_ERROR_FAILURE;
-  }
+nsresult nsMenuItemIconX::OnComplete(imgIContainer* aImage, const nsIntRect& aRect) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
 
-  NSImage* image = mIconLoaderHelper->GetNativeIconImage();
   if (!mNativeMenuItem) {
-    mIconLoaderHelper->Destroy();
     mIconLoader->Destroy();
     return NS_ERROR_FAILURE;
   }
 
-  if (!image) {
-    [mNativeMenuItem setImage:nil];
-    return NS_OK;
-  }
-
+  NSImage* image = [MOZIconHelper iconImageFromImageContainer:aImage
+                                                     withSize:NSMakeSize(kIconSize, kIconSize)
+                                                      subrect:aRect
+                                                  scaleFactor:0.0f];
   [mNativeMenuItem setImage:image];
   if (mMenuObject) {
     mMenuObject->IconUpdated();
   }
 
-  mIconLoaderHelper->Destroy();
   mIconLoader->Destroy();
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT
 }
