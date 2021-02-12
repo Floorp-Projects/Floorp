@@ -84,25 +84,22 @@ template <typename Unit>
 static JSScript* CompileSourceBufferAndStartIncrementalEncoding(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     SourceText<Unit>& srcBuf) {
-  ScopeKind scopeKind =
-      options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
-
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  Rooted<frontend::CompilationStencil> stencil(
-      cx, frontend::CompilationStencil(cx, options));
-  if (!stencil.get().input.initForGlobal(cx)) {
-    return nullptr;
-  }
-  if (!frontend::CompileGlobalScriptToStencil(cx, stencil.get(), srcBuf,
-                                              scopeKind)) {
+  ScopeKind scopeKind =
+      options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
+
+  Rooted<UniquePtr<frontend::CompilationStencil>> stencil(
+      cx,
+      frontend::CompileGlobalScriptToStencil(cx, options, srcBuf, scopeKind));
+  if (!stencil) {
     return nullptr;
   }
 
   Rooted<frontend::CompilationGCOutput> gcOutput(cx);
-  if (!frontend::InstantiateStencils(cx, stencil.get(), gcOutput.get())) {
+  if (!frontend::InstantiateStencils(cx, *stencil, gcOutput.get())) {
     return nullptr;
   }
 
@@ -115,8 +112,8 @@ static JSScript* CompileSourceBufferAndStartIncrementalEncoding(
 
   UniquePtr<XDRIncrementalStencilEncoder> xdrEncoder;
 
-  if (!stencil.get().input.source()->xdrEncodeInitialStencil(cx, stencil.get(),
-                                                             xdrEncoder)) {
+  if (!stencil->input.source()->xdrEncodeInitialStencil(cx, *stencil,
+                                                        xdrEncoder)) {
     return nullptr;
   }
 
