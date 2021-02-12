@@ -2624,12 +2624,9 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
       masm.q15MulrSatInt16x8(rhs, lhsDest);
       break;
 #  ifdef ENABLE_WASM_SIMD_WORMHOLE
-    case wasm::SimdOp::MozWHSELFTEST: {
-      static const int8_t mask[16] = {0xD, 0xE, 0xA, 0xD, 0xD, 0,   0,   0xD,
-                                      0xC, 0xA, 0xF, 0xE, 0xB, 0xA, 0xB, 0xE};
-      masm.loadConstantSimd128(SimdConstant::CreateX16(mask), lhsDest);
+    case wasm::SimdOp::MozWHSELFTEST:
+      masm.loadConstantSimd128(wasm::WormholeSignature(), lhsDest);
       break;
-    }
     case wasm::SimdOp::MozWHPMADDUBSW:
       masm.vpmaddubsw(rhs, lhsDest, lhsDest);
       break;
