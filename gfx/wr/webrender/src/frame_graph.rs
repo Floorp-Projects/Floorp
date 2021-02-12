@@ -543,7 +543,7 @@ impl FrameGraphBuilder {
             // information to the GPU cache, if appropriate.
             let (target_rect, target_index) = task.get_target_rect();
 
-            task.kind.write_gpu_blocks(
+            task.write_gpu_blocks(
                 target_rect,
                 target_index,
                 gpu_cache,
