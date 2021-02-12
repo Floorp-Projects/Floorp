@@ -375,7 +375,8 @@ void BlobURLInputStream::RetrieveBlobData(const MutexAutoLock& aProofOfLock) {
     if (!BlobURLProtocolHandler::GetDataEntry(
             mBlobURLSpec, getter_AddRefs(blobImpl), loadingPrincipal,
             triggeringPrincipal, loadInfo->GetOriginAttributes(),
-            agentClusterId, true /* AlsoIfRevoked */)) {
+            loadInfo->GetInnerWindowID(), agentClusterId,
+            true /* AlsoIfRevoked */)) {
       NS_WARNING("Failed to get data entry principal. URL revoked?");
       return;
     }
@@ -407,7 +408,8 @@ void BlobURLInputStream::RetrieveBlobData(const MutexAutoLock& aProofOfLock) {
   contentChild
       ->SendBlobURLDataRequest(mBlobURLSpec, triggeringPrincipal,
                                loadingPrincipal,
-                               loadInfo->GetOriginAttributes(), agentClusterId)
+                               loadInfo->GetOriginAttributes(),
+                               loadInfo->GetInnerWindowID(), agentClusterId)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [self](const BlobURLDataRequestResult& aResult) {

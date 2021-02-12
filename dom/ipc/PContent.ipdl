@@ -1721,6 +1721,7 @@ parent:
                              nsIPrincipal aTriggeringPrincipal,
                              nsIPrincipal aLoadingPrincipal,
                              OriginAttributes aOriginAttributes,
+                             uint64_t aInnerWindowId,
                              nsID? aAgentClusterId)
       returns (BlobURLDataRequestResult aResult);
 
