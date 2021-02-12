@@ -47,6 +47,9 @@ extern JSAtom* Atomize(
     js::PinningBehavior pin = js::DoNotPinAtom,
     const mozilla::Maybe<uint32_t>& indexValue = mozilla::Nothing());
 
+extern JSAtom* Atomize(JSContext* cx, HashNumber hash, const char* bytes,
+                       size_t length, PinningBehavior pin);
+
 template <typename CharT>
 extern JSAtom* AtomizeChars(JSContext* cx, const CharT* chars, size_t length,
                             js::PinningBehavior pin = js::DoNotPinAtom);
