@@ -472,30 +472,8 @@ const ParserAtom* WellKnownParserAtoms::getWellKnown(
   return (&abort)[int32_t(atomId)];
 }
 
-/* static */
-const ParserAtom* WellKnownParserAtoms::getLength1Static(
-    Length1StaticParserString s) {
-  return &WellKnownParserAtoms::rom_.length1Table[size_t(s)];
-}
-
-/* static */
-const ParserAtom* WellKnownParserAtoms::getLength2Static(
-    Length2StaticParserString s) {
-  return &WellKnownParserAtoms::rom_.length2Table[size_t(s)];
-}
-
 const ParserAtom* ParserAtomsTable::getWellKnown(WellKnownAtomId atomId) const {
   return wellKnownTable_.getWellKnown(atomId);
-}
-
-const ParserAtom* ParserAtomsTable::getLength1Static(
-    Length1StaticParserString s) const {
-  return WellKnownParserAtoms::getLength1Static(s);
-}
-
-const ParserAtom* ParserAtomsTable::getLength2Static(
-    Length2StaticParserString s) const {
-  return WellKnownParserAtoms::getLength2Static(s);
 }
 
 ParserAtom* ParserAtomsTable::getParserAtom(ParserAtomIndex index) const {
