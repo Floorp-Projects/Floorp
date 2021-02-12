@@ -406,12 +406,12 @@ class nsWindow final : public nsBaseWidget {
     GTK_DECORATION_CLIENT,  // CSD without shadows
     GTK_DECORATION_NONE,    // WM does not support CSD at all
     GTK_DECORATION_UNKNOWN
-  } CSDSupportLevel;
+  } GtkWindowDecoration;
   /**
    * Get the support of Client Side Decoration by checking
    * the XDG_CURRENT_DESKTOP environment variable.
    */
-  static CSDSupportLevel GetSystemCSDSupportLevel();
+  static GtkWindowDecoration GetSystemGtkWindowDecoration();
 
   static bool HideTitlebarByDefault();
   static bool GetTopLevelWindowActiveState(nsIFrame* aFrame);
@@ -563,7 +563,7 @@ class nsWindow final : public nsBaseWidget {
 
   // Window titlebar rendering mode, GTK_DECORATION_NONE if it's disabled
   // for this window.
-  CSDSupportLevel mCSDSupportLevel;
+  GtkWindowDecoration mGtkWindowDecoration;
   // Use dedicated GdkWindow for mContainer
   bool mDrawToContainer;
   // If true, draw our own window titlebar.
@@ -712,7 +712,7 @@ class nsWindow final : public nsBaseWidget {
   RefPtr<mozilla::widget::IMContextWrapper> mIMContext;
 
   mozilla::UniquePtr<mozilla::CurrentX11TimeGetter> mCurrentTimeGetter;
-  static CSDSupportLevel sCSDSupportLevel;
+  static GtkWindowDecoration sGtkWindowDecoration;
 
   static bool sTransparentMainWindow;
 };
