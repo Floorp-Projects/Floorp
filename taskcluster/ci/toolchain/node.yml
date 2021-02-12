@@ -26,7 +26,10 @@ macosx64-node-10:
         symbol: TM(node-10)
     run:
         arguments: ['macosx64', '10']
-        toolchain-alias: macosx64-node
+        toolchain-alias:
+            - macosx64-node
+            # There isn't an arm64-native node yet, so use the x86_64 one.
+            - macosx64-aarch64-node
 
 win64-node-10:
     treeherder:
