@@ -212,11 +212,6 @@ section:not(.active) {
   margin-bottom: 10px;
 }
 
-#ping-source-picker > div > :is(input[type="radio"], label),
-#current-ping-picker > :is(input[type="checkbox"], label) {
-  vertical-align: middle;
-}
-
 #ping-source-archive-container.disabled {
   opacity: 0.5;
 }

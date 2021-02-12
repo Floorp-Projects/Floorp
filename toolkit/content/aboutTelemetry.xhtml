@@ -87,19 +87,19 @@
       <div id="ping-picker" class="hidden">
         <div id="ping-source-picker">
           <h4 class="title" data-l10n-id="about-telemetry-ping-data-source"></h4>
-          <div>
+          <label class="radio-container-with-text">
             <input type="radio" id="ping-source-current" name="choose-ping-source" value="current" checked="checked" />
-            <label for="ping-source-current" data-l10n-id="about-telemetry-show-current-data"></label>
-          </div>
-          <div id="ping-source-archive-container">
+            <span data-l10n-id="about-telemetry-show-current-data"></span>
+          </label>
+          <label id="ping-source-archive-container" class="radio-container-with-text">
             <input type="radio" id="ping-source-archive" name="choose-ping-source" value="archive" />
-            <label for="ping-source-archive" data-l10n-id="about-telemetry-show-archived-ping-data"></label>
-          </div>
+            <span data-l10n-id="about-telemetry-show-archived-ping-data"></span>
+          </label>
         </div>
-        <div id="current-ping-picker">
+        <label id="current-ping-picker" class="toggle-container-with-text">
           <input id="show-subsession-data" type="checkbox" checked="checked" />
-		  <label for="show-subsession-data" data-l10n-id="about-telemetry-show-subsession-data"></label>
-        </div>
+          <span data-l10n-id="about-telemetry-show-subsession-data"></span>
+        </label>
         <div id="archived-ping-picker">
           <h4 class="title" data-l10n-id="about-telemetry-choose-ping"></h4>
           <div>
