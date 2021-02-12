@@ -11,6 +11,7 @@
 #include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
+#include "nsIContentPolicy.h"
 
 using namespace mozilla;
 
@@ -18,9 +19,7 @@ namespace mozilla::widget {
 
 NS_IMPL_ISUPPORTS(IconLoader, imgINotificationObserver)
 
-IconLoader::IconLoader(Listener* aListener)
-    : mContentType(nsIContentPolicy::TYPE_INTERNAL_IMAGE),
-      mListener(aListener) {}
+IconLoader::IconLoader(Listener* aListener) : mListener(aListener) {}
 
 IconLoader::~IconLoader() { Destroy(); }
 
@@ -60,13 +59,17 @@ nsresult IconLoader::LoadIcon(nsIURI* aIconURI, nsINode* aNode,
   if (aIsInternalIcon) {
     rv = loader->LoadImage(
         aIconURI, nullptr, nullptr, nullptr, 0, loadGroup, this, nullptr,
-        nullptr, nsIRequest::LOAD_NORMAL, nullptr, mContentType, u""_ns,
+        nullptr, nsIRequest::LOAD_NORMAL, nullptr,
+        nsIContentPolicy::TYPE_INTERNAL_IMAGE, u""_ns,
         /* aUseUrgentStartForChannel */ false, /* aLinkPreload */ false,
         getter_AddRefs(mIconRequest));
   } else {
+    // TODO: nsIContentPolicy::TYPE_INTERNAL_IMAGE may not be the correct
+    // policy. See bug 1691868 for more details.
     rv = loader->LoadImage(
         aIconURI, nullptr, nullptr, aNode->NodePrincipal(), 0, loadGroup, this,
-        aNode, document, nsIRequest::LOAD_NORMAL, nullptr, mContentType, u""_ns,
+        aNode, document, nsIRequest::LOAD_NORMAL, nullptr,
+        nsIContentPolicy::TYPE_INTERNAL_IMAGE, u""_ns,
         /* aUseUrgentStartForChannel */ false,
         /* aLinkPreload */ false, getter_AddRefs(mIconRequest));
   }

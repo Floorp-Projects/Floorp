@@ -44,7 +44,6 @@ static const uint32_t kIconSize = 16;
 nsMenuItemIconX::nsMenuItemIconX(nsMenuObjectX* aMenuItem, nsIContent* aContent,
                                  NSMenuItem* aNativeMenuItem)
     : mContent(aContent),
-      mContentType(nsIContentPolicy::TYPE_INTERNAL_IMAGE),
       mMenuObject(aMenuItem),
       mSetIcon(false),
       mNativeMenuItem(aNativeMenuItem) {
@@ -160,11 +159,6 @@ nsresult nsMenuItemIconX::GetIconURI(nsIURI** aIconURI) {
       return NS_ERROR_FAILURE;
     }
   } else {
-    uint64_t dummy = 0;
-    nsCOMPtr<nsIPrincipal> triggeringPrincipal = mContent->NodePrincipal();
-    nsContentUtils::GetContentPolicyTypeForUIImageLoading(
-        mContent, getter_AddRefs(triggeringPrincipal), mContentType, &dummy);
-
     // If this menu item shouldn't have an icon, the string will be empty,
     // and NS_NewURI will fail.
     rv = NS_NewURI(getter_AddRefs(iconURI), imageURIString);
