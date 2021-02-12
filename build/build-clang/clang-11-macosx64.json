@@ -15,7 +15,6 @@
     "ld": "{MOZ_FETCHES_DIR}/clang/bin/clang",
     "patches": [
       "static-llvm-symbolizer.patch",
-      "rename_gcov_flush_clang_11.patch",
       "compiler-rt-cross-compile.patch",
       "compiler-rt-no-codesign.patch"
     ]
