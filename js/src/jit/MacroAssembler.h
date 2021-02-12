@@ -4206,8 +4206,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void loadArgumentsObjectLength(Register obj, Register output, Label* fail);
 
-  void branchArgumentsObjectHasOverridenIterator(Register obj, Register temp,
-                                                 Label* label);
+  void branchTestArgumentsObjectFlags(Register obj, Register temp,
+                                      uint32_t flags, Condition cond,
+                                      Label* label);
 
   void typedArrayElementSize(Register obj, Register output);
   void branchIfClassIsNotTypedArray(Register clasp, Label* notTypedArray);

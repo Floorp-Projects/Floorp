@@ -4283,15 +4283,17 @@ void MacroAssembler::loadArgumentsObjectLength(Register obj, Register output,
   rshift32(Imm32(ArgumentsObject::PACKED_BITS_COUNT), output);
 }
 
-void MacroAssembler::branchArgumentsObjectHasOverridenIterator(Register obj,
-                                                               Register temp,
-                                                               Label* label) {
+void MacroAssembler::branchTestArgumentsObjectFlags(Register obj, Register temp,
+                                                    uint32_t flags,
+                                                    Condition cond,
+                                                    Label* label) {
+  MOZ_ASSERT((flags & ~ArgumentsObject::PACKED_BITS_MASK) == 0);
+
   // Get initial length value.
   unboxInt32(Address(obj, ArgumentsObject::getInitialLengthSlotOffset()), temp);
 
-  // Ensure no overridden iterator.
-  branchTest32(Assembler::NonZero, temp,
-               Imm32(ArgumentsObject::ITERATOR_OVERRIDDEN_BIT), label);
+  // Test flags.
+  branchTest32(cond, temp, Imm32(flags), label);
 }
 
 static constexpr bool ValidateSizeRange(Scalar::Type from, Scalar::Type to) {

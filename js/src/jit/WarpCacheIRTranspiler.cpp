@@ -951,11 +951,11 @@ bool WarpCacheIRTranspiler::emitGuardArrayIsPacked(ObjOperandId arrayId) {
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitGuardArgumentsObjectNotOverriddenIterator(
-    ObjOperandId objId) {
+bool WarpCacheIRTranspiler::emitGuardArgumentsObjectFlags(ObjOperandId objId,
+                                                          uint8_t flags) {
   MDefinition* obj = getOperand(objId);
 
-  auto* ins = MGuardArgumentsObjectNotOverriddenIterator::New(alloc(), obj);
+  auto* ins = MGuardArgumentsObjectFlags::New(alloc(), obj, flags);
   add(ins);
 
   setOperand(objId, ins);

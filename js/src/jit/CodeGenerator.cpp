@@ -7265,13 +7265,14 @@ void CodeGenerator::visitArgumentsObjectLength(LArgumentsObjectLength* lir) {
   bailoutFrom(&bail, lir->snapshot());
 }
 
-void CodeGenerator::visitGuardArgumentsObjectNotOverriddenIterator(
-    LGuardArgumentsObjectNotOverriddenIterator* lir) {
+void CodeGenerator::visitGuardArgumentsObjectFlags(
+    LGuardArgumentsObjectFlags* lir) {
   Register argsObj = ToRegister(lir->getArgsObject());
   Register temp = ToRegister(lir->temp());
 
   Label bail;
-  masm.branchArgumentsObjectHasOverridenIterator(argsObj, temp, &bail);
+  masm.branchTestArgumentsObjectFlags(argsObj, temp, lir->mir()->flags(),
+                                      Assembler::NonZero, &bail);
   bailoutFrom(&bail, lir->snapshot());
 }
 
