@@ -40,7 +40,7 @@ class IconLoaderHelperWin final : public mozilla::widget::IconLoader::Helper {
   // before the listener goes away.
   explicit IconLoaderHelperWin(IconLoaderListenerWin* aLoadListener);
 
-  NS_DECL_ISUPPORTS
+  NS_INLINE_DECL_REFCOUNTING(mozilla::widget::IconLoaderHelperWin)
 
   nsresult OnComplete(imgIContainer* aImage, const nsIntRect& aRect) override;
 

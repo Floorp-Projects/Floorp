@@ -33,15 +33,10 @@ class IconLoader : public imgINotificationObserver {
    * Helper needs to implement the OnComplete method in order to handle the
    * imgIContainer of the loaded icon.
    */
-  class Helper : public nsISupports {
+  class Helper {
    public:
-    // Helper needs to implement nsISupports in order for its subclasses to
-    // participate in cycle collection
     virtual nsresult OnComplete(imgIContainer* aContainer,
                                 const nsIntRect& aRect) = 0;
-
-   protected:
-    virtual ~Helper() = default;
   };
 
   // Create the loader.
