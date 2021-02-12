@@ -136,6 +136,20 @@ const SET_USAGE_PREF_BUTTONS = [
   "library-button",
 ];
 
+// Buttons that, when clicked, increase a counter. The convention
+// is that the preference is named:
+//
+// browser.engagement.<button id>.used-count
+//
+// and doesn't have a default value.
+const SET_USAGECOUNT_PREF_BUTTONS = [
+  "pageAction-panel-copyURL",
+  "pageAction-panel-emailLink",
+  "pageAction-panel-pinTab",
+  "pageAction-panel-screenshots_mozilla_org",
+  "pageAction-panel-shareURL",
+];
+
 function telemetryId(widgetId, obscureAddons = true) {
   // Add-on IDs need to be obscured.
   function addonId(id) {
@@ -828,7 +842,10 @@ let BrowserUsageTelemetry = {
     if (item && source) {
       let scalar = `browser.ui.interaction.${source.replace("-", "_")}`;
       Services.telemetry.keyedScalarAdd(scalar, telemetryId(item), 1);
-
+      if (SET_USAGECOUNT_PREF_BUTTONS.includes(item)) {
+        let pref = `browser.engagement.${item}.used-count`;
+        Services.prefs.setIntPref(pref, Services.prefs.getIntPref(pref, 0) + 1);
+      }
       if (SET_USAGE_PREF_BUTTONS.includes(item)) {
         Services.prefs.setBoolPref(`browser.engagement.${item}.has-used`, true);
       }
