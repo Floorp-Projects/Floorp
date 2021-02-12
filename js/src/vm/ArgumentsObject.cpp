@@ -99,6 +99,7 @@ void ArgumentsObject::MaybeForwardToCallObject(AbstractFramePtr frame,
     for (PositionalFormalParameterIter fi(script); fi; fi++) {
       if (fi.closedOver()) {
         data->args[fi.argumentSlot()] = MagicEnvSlotValue(fi.location().slot());
+        obj->markArgumentForwarded();
       }
     }
   }
@@ -117,6 +118,7 @@ void ArgumentsObject::MaybeForwardToCallObject(jit::JitFrameLayout* frame,
     for (PositionalFormalParameterIter fi(script); fi; fi++) {
       if (fi.closedOver()) {
         data->args[fi.argumentSlot()] = MagicEnvSlotValue(fi.location().slot());
+        obj->markArgumentForwarded();
       }
     }
   }
