@@ -310,7 +310,8 @@ static SystemTimeConverter<guint32>& TimeConverter() {
   return sTimeConverterSingleton;
 }
 
-nsWindow::CSDSupportLevel nsWindow::sCSDSupportLevel = GTK_DECORATION_UNKNOWN;
+nsWindow::GtkWindowDecoration nsWindow::sGtkWindowDecoration =
+    GTK_DECORATION_UNKNOWN;
 bool nsWindow::sTransparentMainWindow = false;
 static bool sIgnoreChangedSettings = false;
 
@@ -542,7 +543,7 @@ nsWindow::nsWindow() {
   mLastScrollEventTime = GDK_CURRENT_TIME;
 
   mPendingConfigures = 0;
-  mCSDSupportLevel = GTK_DECORATION_NONE;
+  mGtkWindowDecoration = GTK_DECORATION_NONE;
   mDrawToContainer = false;
   mDrawInTitlebar = false;
   mTitlebarBackdropState = false;
@@ -1073,7 +1074,7 @@ void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints) {
 
 void nsWindow::AddCSDDecorationSize(int* aWidth, int* aHeight) {
   if (mSizeState == nsSizeMode_Normal &&
-      mCSDSupportLevel == GTK_DECORATION_CLIENT && mDrawInTitlebar) {
+      mGtkWindowDecoration == GTK_DECORATION_CLIENT && mDrawInTitlebar) {
     GtkBorder decorationSize = GetCSDDecorationSize(!mIsTopLevel);
     *aWidth += decorationSize.left + decorationSize.right;
     *aHeight += decorationSize.top + decorationSize.bottom;
@@ -1083,7 +1084,7 @@ void nsWindow::AddCSDDecorationSize(int* aWidth, int* aHeight) {
 #ifdef MOZ_WAYLAND
 bool nsWindow::GetCSDDecorationOffset(int* aDx, int* aDy) {
   if (mSizeState == nsSizeMode_Normal &&
-      mCSDSupportLevel == GTK_DECORATION_CLIENT && mDrawInTitlebar) {
+      mGtkWindowDecoration == GTK_DECORATION_CLIENT && mDrawInTitlebar) {
     GtkBorder decorationSize = GetCSDDecorationSize(!mIsTopLevel);
     *aDx = decorationSize.left;
     *aDy = decorationSize.top;
@@ -2314,7 +2315,7 @@ LayoutDeviceIntRect nsWindow::GetClientBounds() {
 void nsWindow::UpdateClientOffsetFromFrameExtents() {
   AUTO_PROFILER_LABEL("nsWindow::UpdateClientOffsetFromFrameExtents", OTHER);
 
-  if (mCSDSupportLevel == GTK_DECORATION_CLIENT && mDrawInTitlebar) {
+  if (mGtkWindowDecoration == GTK_DECORATION_CLIENT && mDrawInTitlebar) {
     return;
   }
 
@@ -3218,7 +3219,7 @@ void nsWindow::OnSizeAllocate(GtkAllocation* aAllocation) {
   // is enabled. In either cases (Wayland or system titlebar is off on X11)
   // we don't get _NET_FRAME_EXTENTS X11 property notification so we derive
   // it from mContainer position.
-  if (mCSDSupportLevel == GTK_DECORATION_CLIENT) {
+  if (mGtkWindowDecoration == GTK_DECORATION_CLIENT) {
     if (!mIsX11Display || (mIsX11Display && mDrawInTitlebar)) {
       UpdateClientOffsetFromCSDWindow();
     }
@@ -4227,7 +4228,7 @@ void nsWindow::OnScaleChanged(GtkAllocation* aAllocation) {
   // is enabled. In ither cases (Wayland or system titlebar is off on X11)
   // we don't get _NET_FRAME_EXTENTS X11 property notification so we derive
   // it from mContainer position.
-  if (mCSDSupportLevel == GTK_DECORATION_CLIENT) {
+  if (mGtkWindowDecoration == GTK_DECORATION_CLIENT) {
     if (!mIsX11Display || (mIsX11Display && mDrawInTitlebar)) {
       UpdateClientOffsetFromCSDWindow();
     }
@@ -4421,7 +4422,7 @@ bool nsWindow::IsToplevelWindowTransparent() {
         // Enable transparent toplevel window if we can draw main window
         // without system titlebar as Gtk+ themes use titlebar round corners.
         sTransparentMainWindow =
-            GetSystemCSDSupportLevel() != GTK_DECORATION_NONE;
+            GetSystemGtkWindowDecoration() != GTK_DECORATION_NONE;
       }
     }
     transparencyConfigured = true;
@@ -4623,7 +4624,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
       if (mWindowType == eWindowType_toplevel ||
           mWindowType == eWindowType_dialog) {
-        mCSDSupportLevel = GetSystemCSDSupportLevel();
+        mGtkWindowDecoration = GetSystemGtkWindowDecoration();
       }
 
       // Don't use transparency for PictureInPicture windows.
@@ -4812,7 +4813,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
        */
       GtkStyleContext* style = gtk_widget_get_style_context(mShell);
       mDrawToContainer = !mIsX11Display ||
-                         (mCSDSupportLevel == GTK_DECORATION_CLIENT) ||
+                         (mGtkWindowDecoration == GTK_DECORATION_CLIENT) ||
                          gtk_style_context_has_class(style, "csd");
       eventWidget = (mDrawToContainer) ? container : mShell;
 
@@ -7672,22 +7673,22 @@ nsresult nsWindow::SetNonClientMargins(LayoutDeviceIntMargin& aMargins) {
 }
 
 void nsWindow::SetDrawsInTitlebar(bool aState) {
-  LOG(("nsWindow::SetDrawsInTitlebar() [%p] State %d mCSDSupportLevel %d\n",
-       (void*)this, aState, (int)mCSDSupportLevel));
+  LOG(("nsWindow::SetDrawsInTitlebar() [%p] State %d mGtkWindowDecoration %d\n",
+       (void*)this, aState, (int)mGtkWindowDecoration));
 
   if (mIsPIPWindow && aState == mDrawInTitlebar) {
     gtk_window_set_decorated(GTK_WINDOW(mShell), !aState);
     return;
   }
 
-  if (!mShell || mCSDSupportLevel == GTK_DECORATION_NONE ||
+  if (!mShell || mGtkWindowDecoration == GTK_DECORATION_NONE ||
       aState == mDrawInTitlebar) {
     return;
   }
 
-  if (mCSDSupportLevel == GTK_DECORATION_SYSTEM) {
+  if (mGtkWindowDecoration == GTK_DECORATION_SYSTEM) {
     SetWindowDecoration(aState ? eBorderStyle_border : mBorderStyle);
-  } else if (mCSDSupportLevel == GTK_DECORATION_CLIENT) {
+  } else if (mGtkWindowDecoration == GTK_DECORATION_CLIENT) {
     LOG(("    Using CSD mode\n"));
 
     /* Window manager does not support GDK_DECOR_BORDER,
@@ -8027,39 +8028,39 @@ nsresult nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
   return NS_OK;
 }
 
-nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel() {
-  if (sCSDSupportLevel != GTK_DECORATION_UNKNOWN) {
-    return sCSDSupportLevel;
+nsWindow::GtkWindowDecoration nsWindow::GetSystemGtkWindowDecoration() {
+  if (sGtkWindowDecoration != GTK_DECORATION_UNKNOWN) {
+    return sGtkWindowDecoration;
   }
 
   // Allow MOZ_GTK_TITLEBAR_DECORATION to override our heuristics
   const char* decorationOverride = getenv("MOZ_GTK_TITLEBAR_DECORATION");
   if (decorationOverride) {
     if (strcmp(decorationOverride, "none") == 0) {
-      sCSDSupportLevel = GTK_DECORATION_NONE;
+      sGtkWindowDecoration = GTK_DECORATION_NONE;
     } else if (strcmp(decorationOverride, "client") == 0) {
-      sCSDSupportLevel = GTK_DECORATION_CLIENT;
+      sGtkWindowDecoration = GTK_DECORATION_CLIENT;
     } else if (strcmp(decorationOverride, "system") == 0) {
-      sCSDSupportLevel = GTK_DECORATION_SYSTEM;
+      sGtkWindowDecoration = GTK_DECORATION_SYSTEM;
     }
-    return sCSDSupportLevel;
+    return sGtkWindowDecoration;
   }
 
-  // nsWindow::GetSystemCSDSupportLevel can be called from various threads
+  // nsWindow::GetSystemGtkWindowDecoration can be called from various threads
   // so we can't use gfxPlatformGtk here.
   if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
-    sCSDSupportLevel = GTK_DECORATION_CLIENT;
-    return sCSDSupportLevel;
+    sGtkWindowDecoration = GTK_DECORATION_CLIENT;
+    return sGtkWindowDecoration;
   }
 
   // GTK_CSD forces CSD mode - use also CSD because window manager
   // decorations does not work with CSD.
   // We check GTK_CSD as well as gtk_window_should_use_csd() does.
-  if (sCSDSupportLevel == GTK_DECORATION_SYSTEM) {
+  if (sGtkWindowDecoration == GTK_DECORATION_SYSTEM) {
     const char* csdOverride = getenv("GTK_CSD");
     if (csdOverride && atoi(csdOverride)) {
-      sCSDSupportLevel = GTK_DECORATION_CLIENT;
-      return sCSDSupportLevel;
+      sGtkWindowDecoration = GTK_DECORATION_CLIENT;
+      return sGtkWindowDecoration;
     }
   }
 
@@ -8067,47 +8068,47 @@ nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel() {
   if (currentDesktop) {
     // GNOME Flashback (fallback)
     if (strstr(currentDesktop, "GNOME-Flashback:GNOME") != nullptr) {
-      sCSDSupportLevel = GTK_DECORATION_SYSTEM;
+      sGtkWindowDecoration = GTK_DECORATION_SYSTEM;
       // Pop Linux Bug 1629198
     } else if (strstr(currentDesktop, "pop:GNOME") != nullptr) {
-      sCSDSupportLevel = GTK_DECORATION_CLIENT;
+      sGtkWindowDecoration = GTK_DECORATION_CLIENT;
       // gnome-shell
     } else if (strstr(currentDesktop, "GNOME") != nullptr) {
-      sCSDSupportLevel = GTK_DECORATION_SYSTEM;
+      sGtkWindowDecoration = GTK_DECORATION_SYSTEM;
     } else if (strstr(currentDesktop, "XFCE") != nullptr) {
-      sCSDSupportLevel = GTK_DECORATION_CLIENT;
+      sGtkWindowDecoration = GTK_DECORATION_CLIENT;
     } else if (strstr(currentDesktop, "X-Cinnamon") != nullptr) {
-      sCSDSupportLevel = GTK_DECORATION_SYSTEM;
+      sGtkWindowDecoration = GTK_DECORATION_SYSTEM;
       // KDE Plasma
     } else if (strstr(currentDesktop, "KDE") != nullptr) {
-      sCSDSupportLevel = GTK_DECORATION_CLIENT;
+      sGtkWindowDecoration = GTK_DECORATION_CLIENT;
     } else if (strstr(currentDesktop, "Enlightenment") != nullptr) {
-      sCSDSupportLevel = GTK_DECORATION_CLIENT;
+      sGtkWindowDecoration = GTK_DECORATION_CLIENT;
     } else if (strstr(currentDesktop, "LXDE") != nullptr) {
-      sCSDSupportLevel = GTK_DECORATION_CLIENT;
+      sGtkWindowDecoration = GTK_DECORATION_CLIENT;
     } else if (strstr(currentDesktop, "openbox") != nullptr) {
-      sCSDSupportLevel = GTK_DECORATION_CLIENT;
+      sGtkWindowDecoration = GTK_DECORATION_CLIENT;
     } else if (strstr(currentDesktop, "i3") != nullptr) {
-      sCSDSupportLevel = GTK_DECORATION_NONE;
+      sGtkWindowDecoration = GTK_DECORATION_NONE;
     } else if (strstr(currentDesktop, "MATE") != nullptr) {
-      sCSDSupportLevel = GTK_DECORATION_CLIENT;
+      sGtkWindowDecoration = GTK_DECORATION_CLIENT;
       // Ubuntu Unity
     } else if (strstr(currentDesktop, "Unity") != nullptr) {
-      sCSDSupportLevel = GTK_DECORATION_SYSTEM;
+      sGtkWindowDecoration = GTK_DECORATION_SYSTEM;
       // Elementary OS
     } else if (strstr(currentDesktop, "Pantheon") != nullptr) {
-      sCSDSupportLevel = GTK_DECORATION_SYSTEM;
+      sGtkWindowDecoration = GTK_DECORATION_SYSTEM;
     } else if (strstr(currentDesktop, "LXQt") != nullptr) {
-      sCSDSupportLevel = GTK_DECORATION_SYSTEM;
+      sGtkWindowDecoration = GTK_DECORATION_SYSTEM;
     } else if (strstr(currentDesktop, "Deepin") != nullptr) {
-      sCSDSupportLevel = GTK_DECORATION_CLIENT;
+      sGtkWindowDecoration = GTK_DECORATION_CLIENT;
     } else {
-      sCSDSupportLevel = GTK_DECORATION_CLIENT;
+      sGtkWindowDecoration = GTK_DECORATION_CLIENT;
     }
   } else {
-    sCSDSupportLevel = GTK_DECORATION_CLIENT;
+    sGtkWindowDecoration = GTK_DECORATION_CLIENT;
   }
-  return sCSDSupportLevel;
+  return sGtkWindowDecoration;
 }
 
 bool nsWindow::TitlebarUseShapeMask() {
@@ -8144,7 +8145,8 @@ bool nsWindow::HideTitlebarByDefault() {
 
     // Don't hide titlebar when it's disabled on current desktop.
     const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
-    if (!currentDesktop || GetSystemCSDSupportLevel() == GTK_DECORATION_NONE) {
+    if (!currentDesktop ||
+        GetSystemGtkWindowDecoration() == GTK_DECORATION_NONE) {
       return false;
     }
 
