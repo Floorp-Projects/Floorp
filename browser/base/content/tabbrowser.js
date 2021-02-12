@@ -290,6 +290,7 @@
     set selectedTab(val) {
       if (
         gSharedTabWarning.willShowSharedTabWarning(val) ||
+        document.documentElement.hasAttribute("window-modal-open") ||
         (gNavToolbox.collapsed && !this._allowTabChange)
       ) {
         return;
