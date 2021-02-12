@@ -9,7 +9,6 @@
 #include "imgINotificationObserver.h"
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
-#include "nsIContentPolicy.h"
 #include "nsISupports.h"
 
 class nsIURI;
@@ -57,7 +56,6 @@ class IconLoader : public imgINotificationObserver {
   virtual ~IconLoader();
 
  private:
-  nsContentPolicyType mContentType;
   RefPtr<imgRequestProxy> mIconRequest;
 
   // The listener, which is notified when loading completes.

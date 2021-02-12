@@ -51,7 +51,6 @@ class nsMenuItemIconX : public mozilla::widget::IconLoader::Listener {
 
  protected:
   nsCOMPtr<nsIContent> mContent;
-  nsContentPolicyType mContentType;
   nsMenuObjectX* mMenuObject;  // [weak]
   nsIntRect mImageRegionRect;
   bool mSetIcon;
