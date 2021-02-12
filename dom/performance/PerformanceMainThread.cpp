@@ -95,9 +95,11 @@ PerformanceMainThread::PerformanceMainThread(nsPIDOMWindowInner* aWindow,
     : Performance(aWindow, aPrincipal),
       mDOMTiming(aDOMTiming),
       mChannel(aChannel),
-      mCrossOriginIsolated(aWindow->AsGlobal()->CrossOriginIsolated()),
-      mEventCounts(new class EventCounts(GetParentObject())) {
+      mCrossOriginIsolated(aWindow->AsGlobal()->CrossOriginIsolated()) {
   MOZ_ASSERT(aWindow, "Parent window object should be provided");
+  if (StaticPrefs::dom_enable_event_timing()) {
+    mEventCounts = new class EventCounts(GetParentObject());
+  }
   CreateNavigationTimingEntry();
 }
 
@@ -483,7 +485,10 @@ bool PerformanceMainThread::CrossOriginIsolated() const {
   return mCrossOriginIsolated;
 }
 
-EventCounts* PerformanceMainThread::EventCounts() { return mEventCounts; }
+EventCounts* PerformanceMainThread::EventCounts() {
+  MOZ_ASSERT(StaticPrefs::dom_enable_event_timing());
+  return mEventCounts;
+}
 
 void PerformanceMainThread::GetEntries(
     nsTArray<RefPtr<PerformanceEntry>>& aRetval) {
@@ -585,6 +590,15 @@ mozilla::PresShell* PerformanceMainThread::GetPresShell() {
 }
 
 void PerformanceMainThread::IncEventCount(const nsAtom* aType) {
+  MOZ_ASSERT(StaticPrefs::dom_enable_event_timing());
+
+  // This occurs when the pref was false when the performance
+  // object was first created, and became true later. It's
+  // okay to return early because eventCounts is not exposed.
+  if (!mEventCounts) {
+    return;
+  }
+
   ErrorResult rv;
   uint64_t count = EventCounts_Binding::MaplikeHelpers::Get(
       mEventCounts, nsDependentAtomString(aType), rv);
