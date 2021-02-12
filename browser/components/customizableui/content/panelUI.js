@@ -333,6 +333,8 @@ const PanelUI = {
       case "ViewShowing":
         if (aEvent.target == this.whatsNewPanel) {
           this.onWhatsNewPanelShowing();
+        } else if (aEvent.target == this.libraryView) {
+          this.onLibraryShowing(this.libraryView);
         }
         break;
     }
@@ -608,6 +610,19 @@ const PanelUI = {
     );
   },
 
+  onLibraryShowing(libraryPanel) {
+    // While we support this panel for both Proton and non-Proton versions
+    // of the AppMenu, we only want to show icons for the non-Proton
+    // version. When Proton ships and we remove the non-Proton variant,
+    // we can remove the subviewbutton-iconic classes from the markup.
+    if (PanelUI.protonAppMenuEnabled) {
+      let toolbarbuttons = libraryPanel.querySelectorAll("toolbarbutton");
+      for (let toolbarbutton of toolbarbuttons) {
+        toolbarbutton.classList.remove("subviewbutton-iconic");
+      }
+    }
+  },
+
   /**
    * NB: The enable- and disableSingleSubviewPanelAnimations methods only
    * affect the hiding/showing animations of single-subview panels (tempPanel
@@ -693,7 +708,16 @@ const PanelUI = {
       if (node.id) {
         button.id = "appMenu_" + node.id;
       }
-      button.setAttribute("class", "subviewbutton subviewbutton-iconic");
+
+      button.classList.add("subviewbutton");
+
+      // While we support this panel for both Proton and non-Proton versions
+      // of the AppMenu, we only want to show icons for the non-Proton
+      // version. When Proton ships and we remove the non-Proton variant,
+      // we can remove the subviewbutton-iconic classes.
+      if (!PanelUI.protonAppMenuEnabled) {
+        button.classList.add("subviewbutton-iconic");
+      }
       fragment.appendChild(button);
     }
     items.appendChild(fragment);
