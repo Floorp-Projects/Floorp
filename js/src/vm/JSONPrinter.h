@@ -14,8 +14,6 @@
 #include "js/TypeDecls.h"
 #include "vm/Printer.h"
 
-struct DtoaState;
-
 namespace js {
 
 class JSONPrinter {
@@ -24,19 +22,12 @@ class JSONPrinter {
   bool indent_;
   bool first_;
   GenericPrinter& out_;
-  DtoaState* dtoaState_;
 
   void indent();
 
  public:
   explicit JSONPrinter(GenericPrinter& out, bool indent = true)
-      : indentLevel_(0),
-        indent_(indent),
-        first_(true),
-        out_(out),
-        dtoaState_(nullptr) {}
-
-  ~JSONPrinter();
+      : indentLevel_(0), indent_(indent), first_(true), out_(out) {}
 
   void setIndentLevel(int indentLevel) { indentLevel_ = indentLevel; }
 
