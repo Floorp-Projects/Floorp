@@ -109,6 +109,17 @@ const CustomizableWidgets = [
       let document = panelview.ownerDocument;
       let window = document.defaultView;
 
+      // While we support this panel for both Proton and non-Proton versions
+      // of the AppMenu, we only want to show icons for the non-Proton
+      // version. When Proton ships and we remove the non-Proton variant,
+      // we can remove the subviewbutton-iconic classes from the markup.
+      if (window.PanelUI.protonAppMenuEnabled) {
+        let toolbarbuttons = panelview.querySelectorAll("toolbarbutton");
+        for (let toolbarbutton of toolbarbuttons) {
+          toolbarbutton.classList.remove("subviewbutton-iconic");
+        }
+      }
+
       PanelMultiView.getViewNode(
         document,
         "appMenuRecentlyClosedTabs"

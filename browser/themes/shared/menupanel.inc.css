@@ -4,6 +4,7 @@
 
 /* Menu panel and palette styles */
 
+@supports not -moz-bool-pref("browser.proton.appmenu.enabled") {
 #appMenu-new-window-button {
   list-style-image: url(chrome://browser/skin/new-window.svg);
 }
@@ -177,3 +178,26 @@ toolbarpaletteitem[place="palette"] > #bookmarks-menu-button,
 #appMenu-library-downloads-show-button {
   list-style-image: url("chrome://browser/skin/folder.svg");
 }
+} /** END not Proton **/
+
+@supports -moz-bool-pref("browser.proton.appmenu.enabled") {
+/**
+ * These are placeholder icons until we get the proper Proton
+ * assets for zoom/fullscreen.
+ */
+#appMenu-zoomEnlarge-button2 {
+  list-style-image: url(chrome://browser/skin/zoom-in.svg);
+}
+
+#appMenu-zoomReduce-button2 {
+  list-style-image: url(chrome://browser/skin/zoom-out.svg);
+}
+
+#appMenu-fullscreen-button2 {
+  list-style-image: url(chrome://browser/skin/fullscreen.svg);
+}
+
+#appMenu-fullscreen-button2[checked] {
+  list-style-image: url(chrome://browser/skin/fullscreen-exit.svg);
+}
+} /** END Proton **/
