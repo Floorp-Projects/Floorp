@@ -45,8 +45,7 @@ class IconLoader : public imgINotificationObserver {
     virtual ~Helper() = default;
   };
 
-  IconLoader(Helper* aHelper, nsINode* aContent,
-             const nsIntRect& aImageRegionRect);
+  IconLoader(Helper* aHelper, const nsIntRect& aImageRegionRect);
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -57,9 +56,8 @@ class IconLoader : public imgINotificationObserver {
   // The request may not complete until after LoadIcon returns.
   // If aIsInternalIcon is true, the document and principal will not be
   // used when loading.
-  nsresult LoadIcon(nsIURI* aIconURI, bool aIsInternalIcon = false);
-
-  void ReleaseJSObjects() { mContent = nullptr; }
+  nsresult LoadIcon(nsIURI* aIconURI, nsINode* aNode,
+                    bool aIsInternalIcon = false);
 
   void Destroy();
 
@@ -69,7 +67,6 @@ class IconLoader : public imgINotificationObserver {
  private:
   nsresult OnFrameComplete(imgIRequest* aRequest);
 
-  nsCOMPtr<nsINode> mContent;
   nsContentPolicyType mContentType;
   RefPtr<imgRequestProxy> mIconRequest;
   nsIntRect mImageRegionRect;

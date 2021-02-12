@@ -83,7 +83,7 @@ nsresult nsTouchBarInputIcon::SetupIcon(nsCOMPtr<nsIURI> aIconURI) {
     // We ask only for the HiDPI images since all Touch Bars are Retina
     // displays and we have no need for icons @1x.
     mIconLoaderHelper = new IconLoaderHelperCocoa(this, kIconSize, kIconSize, kHiDPIScalingFactor);
-    mIconLoader = new IconLoader(mIconLoaderHelper, mDocument, mImageRegionRect);
+    mIconLoader = new IconLoader(mIconLoaderHelper, mImageRegionRect);
     if (!mIconLoader) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -96,7 +96,7 @@ nsresult nsTouchBarInputIcon::SetupIcon(nsCOMPtr<nsIURI> aIconURI) {
     [mPopoverItem setCollapsedRepresentationImage:mIconLoaderHelper->GetNativeIconImage()];
   }
 
-  nsresult rv = mIconLoader->LoadIcon(aIconURI, true /* aIsInternalIcon */);
+  nsresult rv = mIconLoader->LoadIcon(aIconURI, mDocument, true /* aIsInternalIcon */);
   if (NS_FAILED(rv)) {
     // There is no icon for this menu item, as an error occurred while loading it.
     // An icon might have been set earlier or the place holder icon may have
@@ -113,12 +113,7 @@ nsresult nsTouchBarInputIcon::SetupIcon(nsCOMPtr<nsIURI> aIconURI) {
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-void nsTouchBarInputIcon::ReleaseJSObjects() {
-  if (mIconLoader) {
-    mIconLoader->ReleaseJSObjects();
-  }
-  mDocument = nil;
-}
+void nsTouchBarInputIcon::ReleaseJSObjects() { mDocument = nil; }
 
 //
 // mozilla::widget::IconLoaderListenerCocoa

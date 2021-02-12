@@ -91,7 +91,7 @@ nsresult nsMenuItemIconX::SetupIcon() {
 
   if (!mIconLoader) {
     mIconLoaderHelper = new IconLoaderHelperCocoa(this, kIconSize, kIconSize);
-    mIconLoader = new IconLoader(mIconLoaderHelper, mContent, mImageRegionRect);
+    mIconLoader = new IconLoader(mIconLoaderHelper, mImageRegionRect);
     if (!mIconLoader) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -101,7 +101,7 @@ nsresult nsMenuItemIconX::SetupIcon() {
     [mNativeMenuItem setImage:mIconLoaderHelper->GetNativeIconImage()];
   }
 
-  rv = mIconLoader->LoadIcon(iconURI);
+  rv = mIconLoader->LoadIcon(iconURI, mContent);
   if (NS_FAILED(rv)) {
     // There is no icon for this menu item, as an error occurred while loading it.
     // An icon might have been set earlier or the place holder icon may have
