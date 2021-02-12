@@ -1892,7 +1892,8 @@ AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectIterator(
     MOZ_ASSERT(args->is<UnmappedArgumentsObject>());
     writer.guardClass(objId, GuardClassKind::UnmappedArguments);
   }
-  writer.guardArgumentsObjectNotOverriddenIterator(objId);
+  uint32_t flags = ArgumentsObject::ITERATOR_OVERRIDDEN_BIT;
+  writer.guardArgumentsObjectFlags(objId, flags);
 
   ObjOperandId iterId = writer.loadObject(&iterator.toObject());
   writer.loadObjectResult(iterId);
