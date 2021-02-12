@@ -33,8 +33,7 @@ textarea {
   resize: none;
 }
 
-input[type="text"],
-input[type="checkbox"] {
+input[type="text"] {
   margin-inline-start: 0;
 }
 
@@ -45,13 +44,5 @@ input[type="checkbox"] {
 
 #options > li,
 #email {
-  margin-top: 14px;
-}
-
-.checkbox-with-label {
-  display: flex;
-}
-
-.checkbox-with-label > label {
-  margin-block: auto;
+  margin-top: 11px;
 }
