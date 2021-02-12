@@ -233,7 +233,6 @@ class SmokeTest {
     }
 
     @Test
-    @Ignore("To be re-implemented in https://github.com/mozilla-mobile/fenix/issues/17798")
     // Verifies the Synced tabs menu opens from a tab's 3 dot menu
     fun openMainMenuSyncedTabsItemTest() {
         homeScreen {

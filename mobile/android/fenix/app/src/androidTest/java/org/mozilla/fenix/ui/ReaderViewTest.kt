@@ -31,7 +31,6 @@ import org.mozilla.fenix.ui.robots.mDevice
  *
  */
 
-@Ignore("Temp disable - reader view page detection issues: https://github.com/mozilla-mobile/fenix/issues/9688 ")
 class ReaderViewTest {
     private lateinit var mockWebServer: MockWebServer
     private var readerViewNotification: ViewVisibilityIdlingResource? = null
@@ -105,45 +104,46 @@ class ReaderViewTest {
 
     @Test
     fun verifyReaderViewToggle() {
-        // New three-dot menu design does not have readerview
+        // New three-dot menu design does not have readerview appearance menu item
+        val readerViewPage =
+            TestAssetHelper.getLoremIpsumAsset(mockWebServer)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(readerViewPage.url) {
+            mDevice.waitForIdle()
+        }
+
+        readerViewNotification = ViewVisibilityIdlingResource(
+            activityIntentTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
+            View.VISIBLE
+        )
+
+        IdlingRegistry.getInstance().register(readerViewNotification)
+
+        navigationToolbar {
+            verifyReaderViewDetected(true)
+            toggleReaderView()
+            mDevice.waitForIdle()
+        }
+
         if (!FeatureFlags.toolbarMenuFeature) {
-            val readerViewPage =
-                TestAssetHelper.getLoremIpsumAsset(mockWebServer)
-
-            navigationToolbar {
-            }.enterURLAndEnterToBrowser(readerViewPage.url) {
-                mDevice.waitForIdle()
-            }
-
-            readerViewNotification = ViewVisibilityIdlingResource(
-                activityIntentTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
-                View.VISIBLE
-            )
-
-            IdlingRegistry.getInstance().register(readerViewNotification)
-
-            navigationToolbar {
-                verifyReaderViewDetected(true)
-                toggleReaderView()
-                mDevice.waitForIdle()
-            }
-
             browserScreen {
                 verifyPageContent(estimatedReadingTime)
             }.openThreeDotMenu {
                 verifyReaderViewAppearance(true)
             }.closeBrowserMenuToBrowser { }
-
-            navigationToolbar {
-                toggleReaderView()
-                mDevice.waitForIdle()
-            }.openThreeDotMenu {
-                verifyReaderViewAppearance(false)
-            }.close { }
         }
+
+        navigationToolbar {
+            toggleReaderView()
+            mDevice.waitForIdle()
+        }.openThreeDotMenu {
+            verifyReaderViewAppearance(false)
+        }.close { }
     }
 
     @Test
+    @Ignore("To be re-implemented in https://github.com/mozilla-mobile/fenix/issues/17971")
     fun verifyReaderViewAppearanceFontToggle() {
         val readerViewPage =
             TestAssetHelper.getLoremIpsumAsset(mockWebServer)
@@ -184,6 +184,7 @@ class ReaderViewTest {
     }
 
     @Test
+    @Ignore("To be re-implemented in https://github.com/mozilla-mobile/fenix/issues/17971")
     fun verifyReaderViewAppearanceFontSizeToggle() {
         val readerViewPage =
             TestAssetHelper.getLoremIpsumAsset(mockWebServer)
@@ -230,6 +231,7 @@ class ReaderViewTest {
     }
 
     @Test
+    @Ignore("To be re-implemented in https://github.com/mozilla-mobile/fenix/issues/17971")
     fun verifyReaderViewAppearanceColorSchemeChange() {
         val readerViewPage =
             TestAssetHelper.getLoremIpsumAsset(mockWebServer)
