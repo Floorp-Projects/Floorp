@@ -58,7 +58,7 @@ LexerTransition<nsIconDecoder::State> nsIconDecoder::ReadHeader(
   // premultiplied, so we can't support the surface flags with icons right now.
   SurfacePipeFlags pipeFlags = SurfacePipeFlags();
   if (transform) {
-    if (mCMSMode == eCMSMode_All) {
+    if (mCMSMode == CMSMode::All) {
       mTransform = GetCMSsRGBTransform(format);
     }
 

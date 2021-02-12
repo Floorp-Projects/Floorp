@@ -308,7 +308,7 @@ nsresult nsPNGDecoder::InitInternal() {
 
 #ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED
   // Ignore unused chunks
-  if (mCMSMode == eCMSMode_Off || IsMetadataDecode()) {
+  if (mCMSMode == CMSMode::Off || IsMetadataDecode()) {
     png_set_keep_unknown_chunks(mPNG, 1, color_chunks, 2);
   }
 
@@ -584,7 +584,7 @@ void nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr) {
   uint32_t intent = -1;
   bool sRGBTag = false;
   if (!decoder->IsMetadataDecode()) {
-    if (decoder->mCMSMode != eCMSMode_Off) {
+    if (decoder->mCMSMode != CMSMode::Off) {
       intent = gfxPlatform::GetRenderingIntent();
       uint32_t pIntent =
           decoder->ReadColorProfile(png_ptr, info_ptr, color_type, &sRGBTag);
@@ -597,7 +597,7 @@ void nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr) {
       png_set_gray_to_rgb(png_ptr);
 
       // only do gamma correction if CMS isn't entirely disabled
-      if (decoder->mCMSMode != eCMSMode_Off) {
+      if (decoder->mCMSMode != CMSMode::Off) {
         PNGDoGammaCorrection(png_ptr, info_ptr);
       }
     }
@@ -685,8 +685,8 @@ void nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr) {
     decoder->mTransform = qcms_transform_create(decoder->mInProfile, inType,
                                                 decoder->GetCMSOutputProfile(),
                                                 outType, (qcms_intent)intent);
-  } else if ((sRGBTag && decoder->mCMSMode == eCMSMode_TaggedOnly) ||
-             decoder->mCMSMode == eCMSMode_All) {
+  } else if ((sRGBTag && decoder->mCMSMode == CMSMode::TaggedOnly) ||
+             decoder->mCMSMode == CMSMode::All) {
     // If the transform happens with SurfacePipe, it will be in RGBA if we
     // have an alpha channel, because the swizzle and premultiplication
     // happens after color management. Otherwise it will be in OS_RGBA because

@@ -828,7 +828,7 @@ nsresult nsXPLookAndFeel::GetColorValue(ColorID aID,
     // the traversal.
     if (!mozilla::ServoStyleSet::IsInServoTraversal()) {
       MOZ_ASSERT(NS_IsMainThread());
-      if (gfxPlatform::GetCMSMode() == eCMSMode_All &&
+      if (gfxPlatform::GetCMSMode() == CMSMode::All &&
           !IsSpecialColor(aID, aResult)) {
         qcms_transform* transform = gfxPlatform::GetCMSInverseRGBTransform();
         if (transform) {
