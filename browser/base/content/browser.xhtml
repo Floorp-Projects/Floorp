@@ -1629,6 +1629,17 @@
     </panelview>
   </html:template>
 
+  <html:dialog id="window-modal-dialog" style="visibility: hidden; height: 0; width: 0"/>
+  <html:template id="window-modal-dialog-template">
+    <vbox class="dialogTemplate dialogOverlay" align="center" topmost="true">
+      <hbox class="dialogBox">
+        <browser class="dialogFrame"
+                 autoscroll="false"
+                 disablehistory="true"/>
+      </hbox>
+    </vbox>
+  </html:template>
+
   <!-- Temporary wrapper until we move away from XUL flex to allow a negative
        margin-top to slide the toolbox off screen in fullscreen layout.-->
   <box>
