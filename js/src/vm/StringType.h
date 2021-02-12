@@ -51,7 +51,6 @@ namespace frontend {
 class ParserAtomsTable;
 class TaggedParserAtomIndex;
 class WellKnownParserAtoms;
-class WellKnownParserAtoms_ROM;
 struct CompilationAtomCache;
 
 }  // namespace frontend
@@ -1269,7 +1268,6 @@ class StaticStrings {
   friend class js::frontend::ParserAtomsTable;
   friend class js::frontend::TaggedParserAtomIndex;
   friend class js::frontend::WellKnownParserAtoms;
-  friend class js::frontend::WellKnownParserAtoms_ROM;
   friend struct js::frontend::CompilationAtomCache;
 
  private:
