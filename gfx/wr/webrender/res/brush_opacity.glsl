@@ -9,7 +9,6 @@
 
 // Interpolated UV coordinates to sample.
 varying vec2 v_uv;
-varying vec2 v_local_pos;
 
 // Normalized bounds of the source image in the texture, adjusted to avoid
 // sampling artifacts.
@@ -49,10 +48,6 @@ void brush_vs(
 
     v_uv_sample_bounds = vec4(uv0 + vec2(0.5), uv1 - vec2(0.5)) / texture_size.xyxy;
 
-    #ifdef WR_FEATURE_ANTIALIASING
-        v_local_pos = vi.local_pos;
-    #endif
-
     v_opacity = float(prim_user_data.y) / 65536.0;
 }
 #endif
@@ -69,15 +64,15 @@ Fragment brush_fs() {
 
     float alpha = v_opacity;
 
-    #ifdef WR_FEATURE_ANTIALIASING
-        alpha *= init_transform_fs(v_local_pos);
+    #ifdef WR_FEATURE_ALPHA_PASS
+        alpha *= antialias_brush();
     #endif
 
     // Pre-multiply the contribution of the opacity factor.
     return Fragment(alpha * color);
 }
 
-#if defined(SWGL) && !defined(WR_FEATURE_DUAL_SOURCE_BLENDING)
+#if defined(SWGL_DRAW_SPAN) && !defined(WR_FEATURE_DUAL_SOURCE_BLENDING)
 void swgl_drawSpanRGBA8() {
     if (!swgl_isTextureRGBA8(sColor0)) {
         return;
@@ -86,27 +81,18 @@ void swgl_drawSpanRGBA8() {
     float perspective_divisor = mix(swgl_forceScalar(gl_FragCoord.w), 1.0, v_perspective);
     vec2 uv = v_uv * perspective_divisor;
 
-    #ifndef WR_FEATURE_ANTIALIASING
     if (swgl_allowTextureNearest(sColor0, uv)) {
         swgl_commitTextureNearestColorRGBA8(sColor0, uv, v_uv_sample_bounds, v_opacity, 0);
         return;
     }
-    #endif
 
     uv = swgl_linearQuantize(sColor0, uv);
     vec2 min_uv = swgl_linearQuantize(sColor0, v_uv_sample_bounds.xy);
     vec2 max_uv = swgl_linearQuantize(sColor0, v_uv_sample_bounds.zw);
     vec2 step_uv = swgl_linearQuantizeStep(sColor0, swgl_interpStep(v_uv)) * perspective_divisor;
 
-    #ifdef WR_FEATURE_ANTIALIASING
-    float aa_range = compute_aa_range(v_local_pos);
-    #endif
     while (swgl_SpanLength > 0) {
         float alpha = v_opacity;
-        #ifdef WR_FEATURE_ANTIALIASING
-            alpha *= init_transform_fs_noperspective(v_local_pos, aa_range);
-            v_local_pos += swgl_interpStep(v_local_pos);
-        #endif
         swgl_commitTextureLinearColorRGBA8(sColor0, clamp(uv, min_uv, max_uv), alpha, 0);
         uv += step_uv;
     }

@@ -119,7 +119,7 @@ void main(void) {
     write_output(alpha * texture(sColor0, uv));
 }
 
-#ifdef SWGL
+#ifdef SWGL_DRAW_SPAN
 void swgl_drawSpanRGBA8() {
     if (!swgl_isTextureRGBA8(sColor0) || !swgl_isTextureLinear(sColor0)) {
         return;

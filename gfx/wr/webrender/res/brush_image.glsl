@@ -6,10 +6,6 @@
 
 #include shared,prim_shared,brush
 
-#ifdef WR_FEATURE_ALPHA_PASS
-varying vec2 v_local_pos;
-#endif
-
 // Interpolated UV coordinates to sample.
 varying vec2 v_uv;
 
@@ -270,8 +266,6 @@ void brush_vs(
             v_mask_swizzle = vec2(0.0);
             v_color = vec4(1.0);
     }
-
-    v_local_pos = vi.local_pos;
 #endif
 }
 #endif
@@ -324,7 +318,7 @@ Fragment brush_fs() {
 
 #ifdef WR_FEATURE_ALPHA_PASS
     #ifdef WR_FEATURE_ANTIALIASING
-        float alpha = init_transform_fs(v_local_pos);
+        float alpha = antialias_brush();
     #else
         float alpha = 1.0;
     #endif
@@ -345,7 +339,7 @@ Fragment brush_fs() {
     return frag;
 }
 
-#if defined(SWGL) && (!defined(WR_FEATURE_ALPHA_PASS) || !defined(WR_FEATURE_DUAL_SOURCE_BLENDING))
+#if defined(SWGL_DRAW_SPAN) && (!defined(WR_FEATURE_ALPHA_PASS) || !defined(WR_FEATURE_DUAL_SOURCE_BLENDING))
 void swgl_drawSpanRGBA8() {
     if (!swgl_isTextureRGBA8(sColor0) || !swgl_isTextureLinear(sColor0)) {
         return;
@@ -364,7 +358,6 @@ void swgl_drawSpanRGBA8() {
     #ifndef WR_FEATURE_REPETITION
         vec2 uv = v_uv * perspective_divisor + v_uv_bounds.xy;
 
-        #ifndef WR_FEATURE_ANTIALIASING
         if (swgl_allowTextureNearest(sColor0, uv)) {
             #ifdef WR_FEATURE_ALPHA_PASS
             if (v_color != vec4(1.0)) {
@@ -375,7 +368,6 @@ void swgl_drawSpanRGBA8() {
             swgl_commitTextureNearestRGBA8(sColor0, uv, v_uv_sample_bounds, layer);
             return;
         }
-        #endif
 
         uv = swgl_linearQuantize(sColor0, uv);
         vec2 min_uv = swgl_linearQuantize(sColor0, v_uv_sample_bounds.xy);
@@ -384,20 +376,9 @@ void swgl_drawSpanRGBA8() {
     #endif
 
     #ifdef WR_FEATURE_ALPHA_PASS
-        #ifdef WR_FEATURE_ANTIALIASING
-        {
-        #else
         if (v_color != vec4(1.0)) {
-        #endif
-            #ifdef WR_FEATURE_ANTIALIASING
-            float aa_range = compute_aa_range(v_local_pos);
-            #endif
             while (swgl_SpanLength > 0) {
                 vec4 color = v_color;
-                #ifdef WR_FEATURE_ANTIALIASING
-                    color *= init_transform_fs_noperspective(v_local_pos, aa_range);
-                    v_local_pos += swgl_interpStep(v_local_pos);
-                #endif
                 #ifdef WR_FEATURE_REPETITION
                     vec2 repeated_uv = compute_repeated_uvs(perspective_divisor);
                     vec2 uv = clamp(repeated_uv, v_uv_sample_bounds.xy, v_uv_sample_bounds.zw);

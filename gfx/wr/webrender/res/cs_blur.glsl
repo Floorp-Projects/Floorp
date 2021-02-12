@@ -175,7 +175,7 @@ void main(void) {
     oFragColor = vec4(avg_color);
 }
 
-#ifdef SWGL
+#ifdef SWGL_DRAW_SPAN
     #ifdef WR_FEATURE_COLOR_TARGET
 void swgl_drawSpanRGBA8() {
     if (!swgl_isTextureRGBA8(sColor0)) {
