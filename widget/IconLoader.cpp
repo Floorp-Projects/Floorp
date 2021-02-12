@@ -16,7 +16,7 @@ using namespace mozilla;
 
 namespace mozilla::widget {
 
-NS_IMPL_CYCLE_COLLECTION(mozilla::widget::IconLoader, mHelper)
+NS_IMPL_CYCLE_COLLECTION(mozilla::widget::IconLoader)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(mozilla::widget::IconLoader)
   NS_INTERFACE_MAP_ENTRY(imgINotificationObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -37,9 +37,7 @@ void IconLoader::Destroy() {
     mIconRequest->CancelAndForgetObserver(NS_BINDING_ABORTED);
     mIconRequest = nullptr;
   }
-  if (mHelper) {
-    mHelper = nullptr;
-  }
+  mHelper = nullptr;
 }
 
 nsresult IconLoader::LoadIcon(nsIURI* aIconURI, nsINode* aNode,
@@ -128,7 +126,9 @@ void IconLoader::Notify(imgIRequest* aRequest, int32_t aType,
     aRequest->GetImage(getter_AddRefs(image));
     MOZ_ASSERT(image);
 
-    mHelper->OnComplete(image, mImageRegionRect);
+    if (mHelper) {
+      mHelper->OnComplete(image, mImageRegionRect);
+    }
     return;
   }
 

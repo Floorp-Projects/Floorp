@@ -61,9 +61,11 @@ nsMenuItemIconX::~nsMenuItemIconX() {
 // are still outstanding).  mMenuObjectX owns our mNativeMenuItem.
 void nsMenuItemIconX::Destroy() {
   if (mIconLoader) {
+    mIconLoader->Destroy();
     mIconLoader = nullptr;
   }
   if (mIconLoaderHelper) {
+    mIconLoaderHelper->Destroy();
     mIconLoaderHelper = nullptr;
   }
   mMenuObject = nullptr;
@@ -218,6 +220,7 @@ nsresult nsMenuItemIconX::OnComplete() {
   NSImage* image = mIconLoaderHelper->GetNativeIconImage();
   if (!mNativeMenuItem) {
     mIconLoaderHelper->Destroy();
+    mIconLoader->Destroy();
     return NS_ERROR_FAILURE;
   }
 
@@ -232,5 +235,6 @@ nsresult nsMenuItemIconX::OnComplete() {
   }
 
   mIconLoaderHelper->Destroy();
+  mIconLoader->Destroy();
   return NS_OK;
 }
