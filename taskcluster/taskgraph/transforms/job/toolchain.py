@@ -60,7 +60,7 @@ toolchain_run_schema = Schema(
             "toolchain-alias",
             description="An alias that can be used instead of the real toolchain job name in "
             "fetch stanzas for jobs.",
-        ): text_type,
+        ): Any(text_type, [text_type]),
         # Base work directory used to set up the task.
         Optional("workdir"): text_type,
     }

@@ -228,8 +228,12 @@ def use_fetches(config, jobs):
             label = job["label"]
             get_attribute(artifact_names, label, run, "toolchain-artifact")
             value = run.get("{}-alias".format(config.kind))
-            if value:
-                aliases["{}-{}".format(config.kind, value)] = label
+            if not value:
+                value = []
+            elif isinstance(value, text_type):
+                value = [value]
+            for alias in value:
+                aliases["{}-{}".format(config.kind, alias)] = label
 
     for task in config.kind_dependencies_tasks.values():
         if task.kind in ("fetch", "toolchain"):
@@ -240,8 +244,12 @@ def use_fetches(config, jobs):
                 "{kind}-artifact".format(kind=task.kind),
             )
             value = task.attributes.get("{}-alias".format(task.kind))
-            if value:
-                aliases["{}-{}".format(task.kind, value)] = task.label
+            if not value:
+                value = []
+            elif isinstance(value, text_type):
+                value = [value]
+            for alias in value:
+                aliases["{}-{}".format(task.kind, alias)] = task.label
 
     artifact_prefixes = {}
     for job in order_tasks(config, jobs):
