@@ -586,8 +586,6 @@ void CompilationInput::trace(JSTracer* trc) {
 
 void CompilationAtomCache::trace(JSTracer* trc) { atoms_.trace(trc); }
 
-void CompilationStencil::trace(JSTracer* trc) { input.trace(trc); }
-
 void CompilationGCOutput::trace(JSTracer* trc) {
   TraceNullableRoot(trc, &script, "compilation-gc-output-script");
   TraceNullableRoot(trc, &module, "compilation-gc-output-module");

@@ -91,9 +91,11 @@ static JSScript* CompileSourceBufferAndStartIncrementalEncoding(
   ScopeKind scopeKind =
       options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
 
-  Rooted<UniquePtr<frontend::CompilationStencil>> stencil(
-      cx,
-      frontend::CompileGlobalScriptToStencil(cx, options, srcBuf, scopeKind));
+  Rooted<frontend::CompilationInput> input(cx,
+                                           frontend::CompilationInput(options));
+  UniquePtr<frontend::CompilationStencil> stencil =
+      frontend::CompileGlobalScriptToStencil(cx, input.get(), srcBuf,
+                                             scopeKind);
   if (!stencil) {
     return nullptr;
   }
@@ -191,23 +193,23 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
   using frontend::Parser;
 
   CompileOptions options(cx);
-  Rooted<frontend::CompilationStencil> stencil(
-      cx, frontend::CompilationStencil(cx, options));
-  if (!stencil.get().input.initForGlobal(cx)) {
+  Rooted<frontend::CompilationInput> input(cx,
+                                           frontend::CompilationInput(options));
+  if (!input.get().initForGlobal(cx)) {
     return false;
   }
+  frontend::CompilationStencil stencil(input.get());
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::CompilationState compilationState(cx, allocScope, options,
-                                              stencil.get());
+  frontend::CompilationState compilationState(cx, allocScope, options, stencil);
   if (!compilationState.init(cx)) {
     return false;
   }
 
   JS::AutoSuppressWarningReporter suppressWarnings(cx);
   Parser<FullParseHandler, char16_t> parser(cx, options, chars.get(), length,
-                                            /* foldConstants = */ true,
-                                            stencil.get(), compilationState,
+                                            /* foldConstants = */ true, stencil,
+                                            compilationState,
                                             /* syntaxParser = */ nullptr);
   if (!parser.checkOptions() || !parser.parse()) {
     // We ran into an error. If it was because we ran out of source, we

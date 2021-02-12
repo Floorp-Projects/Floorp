@@ -582,9 +582,10 @@ void ParseTask::trace(JSTracer* trc) {
   scripts.trace(trc);
   sourceObjects.trace(trc);
 
-  if (stencil_) {
-    stencil_->trace(trc);
+  if (stencilInput_) {
+    stencilInput_->trace(trc);
   }
+
   gcOutput_.trace(trc);
   gcOutputForDelazification_.trace(trc);
 }
@@ -677,8 +678,13 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
 
   ScopeKind scopeKind =
       options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
-  stencil_ =
-      frontend::CompileGlobalScriptToStencil(cx, options, data, scopeKind);
+
+  stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
+
+  if (stencilInput_) {
+    stencil_ = frontend::CompileGlobalScriptToStencil(cx, *stencilInput_, data,
+                                                      scopeKind);
+  }
 
   if (stencil_) {
     if (!frontend::PrepareForInstantiate(cx, *stencil_, gcOutput_)) {
@@ -740,7 +746,11 @@ void ModuleParseTask<Unit>::parse(JSContext* cx) {
 
   options.setModule();
 
-  stencil_ = frontend::ParseModuleToStencil(cx, options, data);
+  stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
+
+  if (stencilInput_) {
+    stencil_ = frontend::ParseModuleToStencil(cx, *stencilInput_, data);
+  }
 
   if (stencil_) {
     if (!frontend::PrepareForInstantiate(cx, *stencil_, gcOutput_)) {
@@ -770,30 +780,30 @@ void ScriptDecodeTask::parse(JSContext* cx) {
 
   if (options.useStencilXDR) {
     // The buffer contains stencil.
-    Rooted<UniquePtr<frontend::CompilationStencil>> stencil(
-        cx, js_new<frontend::CompilationStencil>(cx, options));
-    if (!stencil) {
-      ReportOutOfMemory(cx);
+
+    stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
+    if (!stencilInput_) {
+      return;
+    }
+    if (!stencilInput_->initForGlobal(cx)) {
       return;
     }
 
-    XDRStencilDecoder decoder(cx, &stencil.get()->input.options, range);
-    if (!stencil.get()->input.initForGlobal(cx)) {
+    stencil_ = cx->make_unique<frontend::CompilationStencil>(*stencilInput_);
+    if (!stencil_) {
       return;
     }
 
-    XDRResult res = decoder.codeStencils(*stencil);
+    XDRStencilDecoder decoder(cx, &options, range);
+    XDRResult res = decoder.codeStencils(*stencil_);
     if (!res.isOk()) {
+      stencil_.reset();
       return;
     }
 
-    stencil_ = std::move(stencil.get());
-
-    if (stencil_) {
-      if (!frontend::PrepareForInstantiate(cx, *stencil_, gcOutput_,
-                                           &gcOutputForDelazification_)) {
-        stencil_ = nullptr;
-      }
+    if (!frontend::PrepareForInstantiate(cx, *stencil_, gcOutput_,
+                                         &gcOutputForDelazification_)) {
+      stencil_.reset();
     }
 
     if (options.useOffThreadParseGlobal) {

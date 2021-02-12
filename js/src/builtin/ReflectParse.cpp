@@ -3850,33 +3850,33 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
   options.allowHTMLComments = target == ParseGoal::Script;
   mozilla::Range<const char16_t> chars = linearChars.twoByteRange();
 
-  Rooted<CompilationStencil> stencil(cx, CompilationStencil(cx, options));
+  Rooted<CompilationInput> input(cx, CompilationInput(options));
   if (target == ParseGoal::Script) {
-    if (!stencil.get().input.initForGlobal(cx)) {
+    if (!input.get().initForGlobal(cx)) {
       return false;
     }
   } else {
-    if (!stencil.get().input.initForModule(cx)) {
+    if (!input.get().initForModule(cx)) {
       return false;
     }
   }
+  CompilationStencil stencil(input.get());
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::CompilationState compilationState(cx, allocScope, options,
-                                              stencil.get());
+  frontend::CompilationState compilationState(cx, allocScope, options, stencil);
   if (!compilationState.init(cx)) {
     return false;
   }
 
   Parser<FullParseHandler, char16_t> parser(
       cx, options, chars.begin().get(), chars.length(),
-      /* foldConstants = */ false, stencil.get(), compilationState,
+      /* foldConstants = */ false, stencil, compilationState,
       /* syntaxParser = */ nullptr);
   if (!parser.checkOptions()) {
     return false;
   }
 
-  if (!compilationState.finish(cx, stencil.get())) {
+  if (!compilationState.finish(cx, stencil)) {
     return false;
   }
 
@@ -3898,7 +3898,7 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
     uint32_t len = chars.length();
     SourceExtent extent =
         SourceExtent::makeGlobalExtent(len, options.lineno, options.column);
-    ModuleSharedContext modulesc(cx, stencil.get(), builder, extent);
+    ModuleSharedContext modulesc(cx, stencil, builder, extent);
     pn = parser.moduleBody(&modulesc);
     if (!pn) {
       return false;
@@ -3907,7 +3907,7 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
     pn = pn->as<ModuleNode>().body();
   }
 
-  if (!compilationState.finish(cx, stencil.get())) {
+  if (!compilationState.finish(cx, stencil)) {
     return false;
   }
 

@@ -551,7 +551,7 @@ void ReportSmooshCompileError(JSContext* cx, ErrorMetadata&& metadata,
 
 /* static */
 bool Smoosh::tryCompileGlobalScriptToStencil(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JSContext* cx, CompilationInput& input,
     JS::SourceText<mozilla::Utf8Unit>& srcBuf,
     UniquePtr<CompilationStencil>& stencilOut) {
   // FIXME: check info members and return with *unimplemented = true
@@ -561,7 +561,7 @@ bool Smoosh::tryCompileGlobalScriptToStencil(
   size_t length = srcBuf.length();
 
   SmooshCompileOptions compileOptions;
-  compileOptions.no_script_rval = options.noScriptRval;
+  compileOptions.no_script_rval = input.options.noScriptRval;
 
   SmooshResult result = smoosh_run(bytes, length, &compileOptions);
   AutoFreeSmooshResult afsr(&result);
@@ -583,21 +583,20 @@ bool Smoosh::tryCompileGlobalScriptToStencil(
     return true;
   }
 
-  Rooted<UniquePtr<frontend::CompilationStencil>> stencil(
-      cx, js_new<frontend::CompilationStencil>(cx, options));
-  if (!stencil) {
-    ReportOutOfMemory(cx);
+  if (!input.initForGlobal(cx)) {
     return false;
   }
 
-  if (!stencil->input.initForGlobal(cx)) {
+  UniquePtr<frontend::CompilationStencil> stencil(
+      cx->new_<frontend::CompilationStencil>(input));
+  if (!stencil) {
     return false;
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
 
   Vector<TaggedParserAtomIndex> allAtoms(cx);
-  CompilationState compilationState(cx, allocScope, options, *stencil);
+  CompilationState compilationState(cx, allocScope, input.options, *stencil);
   if (!ConvertAtoms(cx, result, compilationState, allAtoms)) {
     return false;
   }
@@ -659,7 +658,7 @@ bool Smoosh::tryCompileGlobalScriptToStencil(
   }
 
   // Success!
-  stencilOut = std::move(stencil.get());
+  stencilOut = std::move(stencil);
   return true;
 }
 

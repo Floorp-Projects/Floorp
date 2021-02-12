@@ -49,11 +49,11 @@ template <typename Unit>
 class StandaloneFunctionCompiler;
 
 extern UniquePtr<CompilationStencil> CompileGlobalScriptToStencil(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-    JS::SourceText<char16_t>& srcBuf, ScopeKind scopeKind);
+    JSContext* cx, CompilationInput& input, JS::SourceText<char16_t>& srcBuf,
+    ScopeKind scopeKind);
 
 extern UniquePtr<CompilationStencil> CompileGlobalScriptToStencil(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JSContext* cx, CompilationInput& input,
     JS::SourceText<mozilla::Utf8Unit>& srcBuf, ScopeKind scopeKind);
 
 // Perform some operation to reduce the time taken by instantiation.

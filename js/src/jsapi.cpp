@@ -5779,18 +5779,18 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptMaybeStencil(
 
   // The buffer contains stencil.
 
-  Rooted<frontend::CompilationStencil> stencil(
-      cx, frontend::CompilationStencil(cx, options));
+  Rooted<frontend::CompilationInput> input(cx,
+                                           frontend::CompilationInput(options));
+  frontend::CompilationStencil stencil(input.get());
 
-  JS::TranscodeResult res =
-      DecodeStencil(cx, buffer, stencil.get(), cursorIndex);
+  JS::TranscodeResult res = DecodeStencil(cx, buffer, stencil, cursorIndex);
   if (res != JS::TranscodeResult_Ok) {
     return res;
   }
 
   Rooted<frontend::CompilationGCOutput> gcOutput(cx);
   Rooted<frontend::CompilationGCOutput> gcOutputForDelazification(cx);
-  if (!frontend::InstantiateStencils(cx, stencil.get(), gcOutput.get(),
+  if (!frontend::InstantiateStencils(cx, stencil, gcOutput.get(),
                                      gcOutputForDelazification.address())) {
     return JS::TranscodeResult_Throw;
   }
@@ -5824,24 +5824,23 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
     size_t cursorIndex) {
   MOZ_DIAGNOSTIC_ASSERT(options.useStencilXDR);
 
-  Rooted<frontend::CompilationStencil> stencil(
-      cx, frontend::CompilationStencil(cx, options));
+  Rooted<frontend::CompilationInput> input(cx,
+                                           frontend::CompilationInput(options));
+  frontend::CompilationStencil stencil(input.get());
 
-  JS::TranscodeResult res =
-      DecodeStencil(cx, buffer, stencil.get(), cursorIndex);
+  JS::TranscodeResult res = DecodeStencil(cx, buffer, stencil, cursorIndex);
   if (res != JS::TranscodeResult_Ok) {
     return res;
   }
 
   UniquePtr<XDRIncrementalStencilEncoder> xdrEncoder;
-  if (!stencil.get().input.source()->xdrEncodeStencils(cx, stencil.get(),
-                                                       xdrEncoder)) {
+  if (!input.get().source()->xdrEncodeStencils(cx, stencil, xdrEncoder)) {
     return JS::TranscodeResult_Throw;
   }
 
   Rooted<frontend::CompilationGCOutput> gcOutput(cx);
   Rooted<frontend::CompilationGCOutput> gcOutputForDelazification(cx);
-  if (!frontend::InstantiateStencils(cx, stencil.get(), gcOutput.get(),
+  if (!frontend::InstantiateStencils(cx, stencil, gcOutput.get(),
                                      gcOutputForDelazification.address())) {
     return JS::TranscodeResult_Throw;
   }
