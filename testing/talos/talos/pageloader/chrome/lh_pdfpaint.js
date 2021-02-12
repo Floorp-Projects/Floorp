@@ -5,6 +5,12 @@ function _pdfPaintHandler() {
   content.window.addEventListener(
     "pagerendered",
     e => {
+      if (e.detail.pageNumber !== 1) {
+        sendAsyncMessage("PageLoader:Error", {
+          msg: `Error: Expected page 1 got ${e.detail.pageNumber}`,
+        });
+        return;
+      }
       sendAsyncMessage("PageLoader:LoadEvent", {
         time: e.detail.timestamp,
         name: "pdfpaint",
@@ -15,7 +21,7 @@ function _pdfPaintHandler() {
 }
 
 addEventListener(
-  "load",
+  "DOMContentLoaded",
   // eslint-disable-next-line no-undef
   contentLoadHandlerCallback(_pdfPaintHandler),
   true
