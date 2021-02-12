@@ -625,8 +625,14 @@ static bool HasUnpairedSurrogate(mozilla::Range<const char16_t> chars) {
 }
 
 bool ParserAtomsTable::isModuleExportName(TaggedParserAtomIndex index) const {
-  const ParserAtom* name = getParserAtom(index);
-  return name->hasLatin1Chars() || !HasUnpairedSurrogate(name->twoByteRange());
+  if (index.isParserAtomIndex()) {
+    const ParserAtom* name = getParserAtom(index.toParserAtomIndex());
+    return name->hasLatin1Chars() ||
+           !HasUnpairedSurrogate(name->twoByteRange());
+  }
+
+  // Well-known/length-1/length-2 are ASCII.
+  return true;
 }
 
 bool ParserAtomsTable::isIndex(TaggedParserAtomIndex index,
