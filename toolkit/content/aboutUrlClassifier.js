@@ -34,21 +34,21 @@ var Search = {
 
     let fragment = document.createDocumentFragment();
     featureNames.forEach(featureName => {
-      let div = document.createElement("div");
-      fragment.appendChild(div);
+      let container = document.createElement("label");
+      container.className = "toggle-container-with-text";
+      fragment.appendChild(container);
 
       let checkbox = document.createElement("input");
       checkbox.id = "feature_" + featureName;
       checkbox.type = "checkbox";
       checkbox.checked = true;
-      div.appendChild(checkbox);
+      container.appendChild(checkbox);
 
-      let label = document.createElement("label");
-      label.for = checkbox.id;
-      div.appendChild(label);
+      let span = document.createElement("span");
+      container.appendChild(span);
 
       let text = document.createTextNode(featureName);
-      label.appendChild(text);
+      span.appendChild(text);
     });
 
     let list = document.getElementById("search-features");
@@ -608,7 +608,7 @@ var Debug = {
     let modules = document.getElementById("log-modules");
     let sbModules = document.getElementById("sb-log-modules");
     for (let module of this.modules) {
-      let container = document.createElement("div");
+      let container = document.createElement("label");
       container.className = "toggle-container-with-text";
       sbModules.appendChild(container);
 
@@ -621,10 +621,9 @@ var Debug = {
       });
       container.appendChild(chk, modules);
 
-      let label = document.createElement("label");
-      label.for = chk.id;
-      label.appendChild(document.createTextNode(module));
-      container.appendChild(label, modules);
+      let span = document.createElement("span");
+      span.appendChild(document.createTextNode(module));
+      container.appendChild(span, modules);
     }
 
     this.modules.map(logModuleUpdate);
