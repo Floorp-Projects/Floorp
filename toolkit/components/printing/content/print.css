@@ -45,9 +45,11 @@ body[loading] #print {
   align-items: center;
 }
 
-.cols-2 > .col:nth-child(1) {
-  flex: 0 0 2em;
-  text-align: center;
+#scale .row.cols-2,
+#more-settings-options > .row.cols-2 {
+  /* The margin-block of the checkboxes/radiobuttons
+     already provide the needed vertical spacing. */
+  margin-block: 0;
 }
 
 .header-container {
@@ -115,10 +117,6 @@ input[type="text"] {
   padding: 2px;
   padding-inline-start: 4px;
   outline: none !important;
-}
-
-.cols-2 > input {
-  flex: none;
 }
 
 .toggle-group-label {
@@ -258,6 +256,11 @@ input[type="number"]:invalid {
 
 #percent-scale {
   margin-inline-start: 4px;
+}
+
+#percent-scale:disabled {
+  /* Let clicks on the disabled input select the radio button */
+  pointer-events: none;
 }
 
 input[type="number"].photon-number {
