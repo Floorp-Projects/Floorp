@@ -104,9 +104,7 @@ add_task(async function test_remove_all_dialog_l10n() {
     ok(!dialog.hidden);
     let title = dialog.shadowRoot.querySelector(".title");
     let message = dialog.shadowRoot.querySelector(".message");
-    let label = dialog.shadowRoot.querySelector(
-      "label[for='confirmation-checkbox']"
-    );
+    let label = dialog.shadowRoot.querySelector(".checkbox-text");
     let cancelButton = dialog.shadowRoot.querySelector(".cancel-button");
     let removeAllButton = dialog.shadowRoot.querySelector(".confirm-button");
     await content.document.l10n.translateElements([
@@ -250,9 +248,7 @@ add_task(async function test_remove_all_dialog_remove_logins() {
     );
     let title = dialog.shadowRoot.querySelector(".title");
     let message = dialog.shadowRoot.querySelector(".message");
-    let label = dialog.shadowRoot.querySelector(
-      "label[for='confirmation-checkbox']"
-    );
+    let label = dialog.shadowRoot.querySelector(".checkbox-text");
     let cancelButton = dialog.shadowRoot.querySelector(".cancel-button");
     let removeAllButton = dialog.shadowRoot.querySelector(".confirm-button");
 
