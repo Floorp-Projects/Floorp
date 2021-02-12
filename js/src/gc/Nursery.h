@@ -35,7 +35,8 @@
   _(MarkRuntime, "mkRntm")                    \
   _(MarkDebugger, "mkDbgr")                   \
   _(SweepCaches, "swpCch")                    \
-  _(CollectToFP, "collct")                    \
+  _(CollectToObjFP, "colObj")                 \
+  _(CollectToStrFP, "colStr")                 \
   _(ObjectsTenuredCallback, "tenCB")          \
   _(Sweep, "sweep")                           \
   _(UpdateJitActivations, "updtIn")           \
@@ -694,9 +695,13 @@ class Nursery {
   void doPretenuring(JSRuntime* rt, JS::GCReason reason,
                      bool highPromotionRate);
 
-  // Move the object at |src| in the Nursery to an already-allocated cell
-  // |dst| in Tenured.
-  void collectToFixedPoint(TenuringTracer& trc);
+  // Move all objects and everything they can reach to the tenured heap.
+  void collectToObjectFixedPoint(TenuringTracer& mover);
+
+  // Move all strings and all strings they can reach to the tenured heap, and
+  // additionally do any fixups for when strings are pointing into memory that
+  // was deduplicated.
+  void collectToStringFixedPoint(TenuringTracer& mover);
 
   // The dependent string chars needs to be relocated if the base which it's
   // using chars from has been deduplicated.
