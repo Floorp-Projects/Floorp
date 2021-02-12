@@ -177,7 +177,7 @@ static qcms_transform* gCMSRGBATransform = nullptr;
 static qcms_transform* gCMSBGRATransform = nullptr;
 
 static bool gCMSInitialized = false;
-static eCMSMode gCMSMode = eCMSMode_Off;
+static CMSMode gCMSMode = CMSMode::Off;
 
 static void ShutdownCMS();
 
@@ -2021,11 +2021,11 @@ bool gfxPlatform::OffMainThreadCompositingEnabled() {
   return UsesOffMainThreadCompositing();
 }
 
-eCMSMode gfxPlatform::GetCMSMode() {
+CMSMode gfxPlatform::GetCMSMode() {
   if (!gCMSInitialized) {
     int32_t mode = StaticPrefs::gfx_color_management_mode();
-    if (mode >= 0 && mode < eCMSMode_AllCount) {
-      gCMSMode = static_cast<eCMSMode>(mode);
+    if (mode >= 0 && mode < int32_t(CMSMode::AllCount)) {
+      gCMSMode = CMSMode(mode);
     }
 
     bool enableV4 = StaticPrefs::gfx_color_management_enablev4();
@@ -2037,7 +2037,7 @@ eCMSMode gfxPlatform::GetCMSMode() {
   return gCMSMode;
 }
 
-void gfxPlatform::SetCMSModeOverride(eCMSMode aMode) {
+void gfxPlatform::SetCMSModeOverride(CMSMode aMode) {
   MOZ_ASSERT(gCMSInitialized);
   gCMSMode = aMode;
 }
@@ -2283,7 +2283,7 @@ static void ShutdownCMS() {
   }
 
   // Reset the state variables
-  gCMSMode = eCMSMode_Off;
+  gCMSMode = CMSMode::Off;
   gCMSInitialized = false;
 }
 
