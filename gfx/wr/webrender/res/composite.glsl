@@ -12,7 +12,7 @@ flat varying vec3 vYuvOffsetVector;
 flat varying float vYuvCoefficient;
 flat varying int vYuvFormat;
 flat varying vec3 vYuvLayers;
-#ifdef SWGL
+#ifdef SWGL_DRAW_SPAN
 flat varying int vYuvColorSpace;
 flat varying int vRescaleFactor;
 #endif
@@ -69,7 +69,7 @@ void main(void) {
     vYuvFormat = yuv_format;
     vYuvLayers = aTextureLayers.xyz;
 
-#ifdef SWGL
+#ifdef SWGL_DRAW_SPAN
     // swgl_commitTextureLinearYUV needs to know the color space specifier and
     // also needs to know how many bits of scaling are required to normalize
     // HDR textures.
@@ -157,7 +157,7 @@ void main(void) {
     write_output(color);
 }
 
-#ifdef SWGL
+#ifdef SWGL_DRAW_SPAN
 void swgl_drawSpanRGBA8() {
 #ifdef WR_FEATURE_YUV
     if (vYuvFormat == YUV_FORMAT_PLANAR) {

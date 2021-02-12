@@ -6,10 +6,6 @@
 
 #include shared,prim_shared,brush,yuv
 
-#ifdef WR_FEATURE_ALPHA_PASS
-varying vec2 vLocalPos;
-#endif
-
 flat varying vec3 vYuvLayers;
 
 varying vec2 vUv_Y;
@@ -26,7 +22,7 @@ flat varying mat3 vYuvColorMatrix;
 flat varying vec3 vYuvOffsetVector;
 flat varying int vFormat;
 
-#ifdef SWGL
+#ifdef SWGL_DRAW_SPAN
 flat varying int vYuvColorSpace;
 flat varying int vRescaleFactor;
 #endif
@@ -65,16 +61,12 @@ void brush_vs(
     vYuvOffsetVector = get_yuv_offset_vector(prim.color_space);
     vFormat = prim.yuv_format;
 
-#ifdef SWGL
+#ifdef SWGL_DRAW_SPAN
     // swgl_commitTextureLinearYUV needs to know the color space specifier and
     // also needs to know how many bits of scaling are required to normalize
     // HDR textures.
     vYuvColorSpace = prim.color_space;
     vRescaleFactor = int(log2(prim.coefficient));
-#endif
-
-#ifdef WR_FEATURE_ALPHA_PASS
-    vLocalPos = vi.local_pos;
 #endif
 
     if (vFormat == YUV_FORMAT_PLANAR) {
@@ -117,13 +109,13 @@ Fragment brush_fs() {
     );
 
 #ifdef WR_FEATURE_ALPHA_PASS
-    color *= init_transform_fs(vLocalPos);
+    color *= antialias_brush();
 #endif
 
     return Fragment(color);
 }
 
-#ifdef SWGL
+#ifdef SWGL_DRAW_SPAN
 void swgl_drawSpanRGBA8() {
     if (vFormat == YUV_FORMAT_PLANAR) {
         if (!swgl_isTextureLinear(sColor0) || !swgl_isTextureLinear(sColor1) || !swgl_isTextureLinear(sColor2)) {
@@ -147,24 +139,6 @@ void swgl_drawSpanRGBA8() {
         vec2 min_uv2 = swgl_linearQuantize(sColor2, vUvBounds_V.xy);
         vec2 max_uv2 = swgl_linearQuantize(sColor2, vUvBounds_V.zw);
         vec2 step_uv2 = swgl_linearQuantizeStep(sColor2, swgl_interpStep(vUv_V));
-
-        #ifdef WR_FEATURE_ALPHA_PASS
-        if (has_valid_transform_bounds()) {
-            float aa_range = compute_aa_range(vLocalPos);
-            while (swgl_SpanLength > 0) {
-                float alpha = init_transform_fs_noperspective(vLocalPos, aa_range);
-                vLocalPos += swgl_interpStep(vLocalPos);
-                swgl_commitTextureLinearColorYUV(sColor0, clamp(uv0, min_uv0, max_uv0), layer0,
-                                                 sColor1, clamp(uv1, min_uv1, max_uv1), layer1,
-                                                 sColor2, clamp(uv2, min_uv2, max_uv2), layer2,
-                                                 vYuvColorSpace, vRescaleFactor, alpha);
-                uv0 += step_uv0;
-                uv1 += step_uv1;
-                uv2 += step_uv2;
-            }
-            return;
-        }
-        #endif
 
         while (swgl_SpanLength > 0) {
             swgl_commitTextureLinearYUV(sColor0, clamp(uv0, min_uv0, max_uv0), layer0,
@@ -192,22 +166,6 @@ void swgl_drawSpanRGBA8() {
         vec2 max_uv1 = swgl_linearQuantize(sColor1, vUvBounds_U.zw);
         vec2 step_uv1 = swgl_linearQuantizeStep(sColor1, swgl_interpStep(vUv_U));
 
-        #ifdef WR_FEATURE_ALPHA_PASS
-        if (has_valid_transform_bounds()) {
-            float aa_range = compute_aa_range(vLocalPos);
-            while (swgl_SpanLength > 0) {
-                float alpha = init_transform_fs_noperspective(vLocalPos, aa_range);
-                vLocalPos += swgl_interpStep(vLocalPos);
-                swgl_commitTextureLinearColorYUV(sColor0, clamp(uv0, min_uv0, max_uv0), layer0,
-                                                 sColor1, clamp(uv1, min_uv1, max_uv1), layer1,
-                                                 vYuvColorSpace, vRescaleFactor, alpha);
-                uv0 += step_uv0;
-                uv1 += step_uv1;
-            }
-            return;
-        }
-        #endif
-
         while (swgl_SpanLength > 0) {
             swgl_commitTextureLinearYUV(sColor0, clamp(uv0, min_uv0, max_uv0), layer0,
                                         sColor1, clamp(uv1, min_uv1, max_uv1), layer1,
@@ -225,20 +183,6 @@ void swgl_drawSpanRGBA8() {
         vec2 min_uv0 = swgl_linearQuantize(sColor0, vUvBounds_Y.xy);
         vec2 max_uv0 = swgl_linearQuantize(sColor0, vUvBounds_Y.zw);
         vec2 step_uv0 = swgl_linearQuantizeStep(sColor0, swgl_interpStep(vUv_Y));
-
-        #ifdef WR_FEATURE_ALPHA_PASS
-        if (has_valid_transform_bounds()) {
-            float aa_range = compute_aa_range(vLocalPos);
-            while (swgl_SpanLength > 0) {
-                float alpha = init_transform_fs_noperspective(vLocalPos, aa_range);
-                vLocalPos += swgl_interpStep(vLocalPos);
-                swgl_commitTextureLinearColorYUV(sColor0, clamp(uv0, min_uv0, max_uv0), layer0,
-                                                 vYuvColorSpace, vRescaleFactor, alpha);
-                uv0 += step_uv0;
-            }
-            return;
-        }
-        #endif
 
         while (swgl_SpanLength > 0) {
             swgl_commitTextureLinearYUV(sColor0, clamp(uv0, min_uv0, max_uv0), layer0,

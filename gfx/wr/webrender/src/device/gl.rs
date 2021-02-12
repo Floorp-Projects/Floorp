@@ -988,6 +988,9 @@ pub struct Capabilities {
     /// Whether clip-masking is supported natively by the GL implementation
     /// rather than emulated in shaders.
     pub uses_native_clip_mask: bool,
+    /// Whether anti-aliasing is supported natively by the GL implementation
+    /// rather than emulated in shaders.
+    pub uses_native_antialiasing: bool,
     /// The name of the renderer, as reported by GL
     pub renderer_name: String,
 }
@@ -1651,6 +1654,10 @@ impl Device {
         // clip-masking.
         let uses_native_clip_mask = is_software_webrender;
 
+        // SWGL uses swgl_antiAlias() instead of implementing anti-aliasing in shaders.
+        // As above, this allows bypassing certain alpha-pass variants.
+        let uses_native_antialiasing = is_software_webrender;
+
         let mut requires_batched_texture_uploads = None;
         if is_software_webrender {
             // No benefit to batching texture uploads with swgl.
@@ -1701,6 +1708,7 @@ impl Device {
                 requires_batched_texture_uploads,
                 supports_r8_texture_upload,
                 uses_native_clip_mask,
+                uses_native_antialiasing,
                 renderer_name,
             },
 

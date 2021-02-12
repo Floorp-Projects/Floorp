@@ -14,7 +14,6 @@ flat varying float v_gradient_repeat;
 varying vec2 v_pos;
 
 #ifdef WR_FEATURE_ALPHA_PASS
-varying vec2 v_local_pos;
 flat varying vec2 v_tile_repeat;
 #endif
 
@@ -50,7 +49,6 @@ void write_gradient_vertex(
 
 #ifdef WR_FEATURE_ALPHA_PASS
     v_tile_repeat = tile_repeat;
-    v_local_pos = vi.local_pos;
 #endif
 }
 #endif //WR_VERTEX_SHADER
