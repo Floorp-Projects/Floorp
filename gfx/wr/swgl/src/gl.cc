@@ -3270,6 +3270,13 @@ static inline vec3 set_lum_sat(vec3 base, vec3 sref, vec3 lref, Float alpha) {
   return set_lum(diff * ssat * recip_or(sbase, 0.0f), lref, alpha);
 }
 
+// Flags the reflect the current blend-stage clipping to be applied.
+enum SWGLClipFlag {
+  SWGL_CLIP_FLAG_MASK = 1 << 0,
+  SWGL_CLIP_FLAG_AA = 1 << 1,
+};
+static int swgl_ClipFlags = 0;
+
 // A pointer into the color buffer for the start of the span.
 static void* swgl_SpanBuf = nullptr;
 // A pointer into the clip mask for the start of the span.
@@ -3289,17 +3296,63 @@ static ALWAYS_INLINE WideRGBA8 expand_clip_mask(UNUSED uint32_t* buf,
 // pointer into the clip mask can be generated from the start of the clip mask
 // span.
 template <typename P>
-static ALWAYS_INLINE auto load_clip_mask(P* buf, int span)
-    -> decltype(expand_clip_mask(buf, 0)) {
-  uint8_t* maskBuf = &swgl_ClipMaskBuf[buf - (P*)swgl_SpanBuf];
-  return expand_clip_mask(buf, unpack(load_span<PackedR8>(maskBuf, span)));
+static ALWAYS_INLINE uint8_t* get_clip_mask(P* buf) {
+  return &swgl_ClipMaskBuf[buf - (P*)swgl_SpanBuf];
 }
 
+template <typename P>
+static ALWAYS_INLINE auto load_clip_mask(P* buf, int span)
+    -> decltype(expand_clip_mask(buf, 0)) {
+  return expand_clip_mask(
+      buf, unpack(load_span<PackedR8>(get_clip_mask(buf), span)));
+}
+
+// Temporarily removes masking from the blend stage, assuming the caller will
+// handle it.
+static ALWAYS_INLINE void override_clip_mask() {
+  blend_key = BlendKey(blend_key - MASK_BLEND_KEY_NONE);
+}
+
+// Restores masking to the blend stage, assuming it was previously overridden.
+static ALWAYS_INLINE void restore_clip_mask() {
+  blend_key = BlendKey(MASK_BLEND_KEY_NONE + blend_key);
+}
+
+// A pointer to the start of the opaque destination region of the span for AA.
 static const uint8_t* swgl_OpaqueStart = nullptr;
+// The size, in bytes, of the opaque region.
 static uint32_t swgl_OpaqueSize = 0;
+// AA coverage distance offsets for the left and right edges.
 static Float swgl_LeftAADist = 0.0f;
 static Float swgl_RightAADist = 0.0f;
+// AA coverage slope values used for accumulating coverage for each step.
 static Float swgl_AASlope = 0.0f;
+
+// Get the amount of pixels we need to process before the start of the opaque
+// region.
+template <typename P>
+static ALWAYS_INLINE int get_aa_opaque_start(P* buf) {
+  return max(int((P*)swgl_OpaqueStart - buf), 0);
+}
+
+// Assuming we are already in the opaque part of the span, return the remaining
+// size of the opaque part.
+template <typename P>
+static ALWAYS_INLINE int get_aa_opaque_size(P* buf) {
+  return max(int((P*)&swgl_OpaqueStart[swgl_OpaqueSize] - buf), 0);
+}
+
+// Temporarily removes anti-aliasing from the blend stage, assuming the caller
+// will handle it.
+static ALWAYS_INLINE void override_aa() {
+  blend_key = BlendKey(blend_key - AA_BLEND_KEY_NONE);
+}
+
+// Restores anti-aliasing to the blend stage, assuming it was previously
+// overridden.
+static ALWAYS_INLINE void restore_aa() {
+  blend_key = BlendKey(AA_BLEND_KEY_NONE + blend_key);
+}
 
 static ALWAYS_INLINE WideRGBA8 blend_pixels(uint32_t* buf, PackedRGBA8 pdst,
                                             WideRGBA8 src, int span = 4) {
@@ -3747,10 +3800,11 @@ struct ClipRect {
           intersect(swgl_ClipMaskBounds);
           // Modify the blend key so that it will use the clip mask while
           // blending.
-          blend_key = BlendKey(MASK_BLEND_KEY_NONE + blend_key);
+          restore_clip_mask();
         }
         if (swgl_ClipFlags & SWGL_CLIP_FLAG_AA) {
-          blend_key = BlendKey(AA_BLEND_KEY_NONE + blend_key);
+          // Modify the blend key so that it will use AA while blending.
+          restore_aa();
         }
       }
     } else {
@@ -4221,7 +4275,7 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint16_t z,
       ctx->shaded_pixels += span.len();
       // Advance color/depth buffer pointers to the start of the span.
       P* buf = fbuf + span.start;
-      // Check if the we will need to use depth-buffer or discard on this span.
+      // Check if we will need to use depth-buffer or discard on this span.
       DepthRun* depth =
           depthtex.buf != nullptr && depthtex.cleared() ? fdepth : nullptr;
       DepthCursor cursor;
