@@ -2867,8 +2867,8 @@ bool JSRuntime::initSelfHosting(JSContext* cx) {
   //       below.
   {
     Rooted<frontend::CompilationGCOutput> output(cx);
-    if (!frontend::CompilationStencil::instantiateStencils(cx, *stencil,
-                                                           output.get())) {
+    if (!frontend::CompilationStencil::instantiateStencils(
+            cx, input.get(), *stencil, output.get())) {
       return false;
     }
 

@@ -258,8 +258,9 @@ static UniquePtr<CompilationStencil> CompileGlobalScriptToStencilImpl(
   SourceExtent extent = SourceExtent::makeGlobalExtent(
       srcBuf.length(), input.options.lineno, input.options.column);
 
-  frontend::GlobalSharedContext globalsc(
-      cx, scopeKind, *stencil, compiler.compilationState().directives, extent);
+  frontend::GlobalSharedContext globalsc(cx, scopeKind, input.options, *stencil,
+                                         compiler.compilationState().directives,
+                                         extent);
 
   if (!compiler.compileScriptToStencil(cx, *stencil, &globalsc)) {
     return nullptr;
@@ -283,13 +284,14 @@ UniquePtr<CompilationStencil> frontend::CompileGlobalScriptToStencil(
 }
 
 bool frontend::InstantiateStencils(
-    JSContext* cx, CompilationStencil& stencil, CompilationGCOutput& gcOutput,
+    JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
+    CompilationGCOutput& gcOutput,
     CompilationGCOutput* gcOutputForDelazification) {
   {
     AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
-    if (!CompilationStencil::instantiateStencils(cx, stencil, gcOutput,
+    if (!CompilationStencil::instantiateStencils(cx, input, stencil, gcOutput,
                                                  gcOutputForDelazification)) {
       return false;
     }
@@ -302,7 +304,7 @@ bool frontend::InstantiateStencils(
     }
 
     Rooted<JSScript*> script(cx, gcOutput.script);
-    if (!stencil.input.options.hideScriptFromDebugger) {
+    if (!input.options.hideScriptFromDebugger) {
       DebugAPI::onNewScript(cx, script);
     }
   }
@@ -310,12 +312,13 @@ bool frontend::InstantiateStencils(
   return true;
 }
 bool frontend::PrepareForInstantiate(
-    JSContext* cx, CompilationStencil& stencil, CompilationGCOutput& gcOutput,
+    JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
+    CompilationGCOutput& gcOutput,
     CompilationGCOutput* gcOutputForDelazification) {
   AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
                                      JS::ProfilingCategoryPair::JS_Parsing);
 
-  return CompilationStencil::prepareForInstantiate(cx, stencil, gcOutput,
+  return CompilationStencil::prepareForInstantiate(cx, input, stencil, gcOutput,
                                                    gcOutputForDelazification);
 }
 
@@ -331,7 +334,7 @@ static JSScript* CompileGlobalScriptImpl(
   }
 
   Rooted<frontend::CompilationGCOutput> gcOutput(cx);
-  if (!InstantiateStencils(cx, *stencil, gcOutput.get())) {
+  if (!InstantiateStencils(cx, input.get(), *stencil, gcOutput.get())) {
     return nullptr;
   }
 
@@ -385,7 +388,7 @@ static JSScript* CompileEvalScriptImpl(
   }
 
   Rooted<frontend::CompilationGCOutput> gcOutput(cx);
-  if (!InstantiateStencils(cx, stencil, gcOutput.get())) {
+  if (!InstantiateStencils(cx, input.get(), stencil, gcOutput.get())) {
     return nullptr;
   }
 
@@ -689,7 +692,7 @@ bool frontend::ModuleCompiler<Unit>::compile(JSContext* cx,
   uint32_t len = this->sourceBuffer_.length();
   SourceExtent extent =
       SourceExtent::makeGlobalExtent(len, options.lineno, options.column);
-  ModuleSharedContext modulesc(cx, stencil, builder, extent);
+  ModuleSharedContext modulesc(cx, options, stencil, builder, extent);
 
   ParseNode* pn = parser->moduleBody(&modulesc);
   if (!pn) {
@@ -803,7 +806,8 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
                    .functionFlags.isAsmJSNative());
   }
 
-  if (!CompilationStencil::instantiateStencils(cx, stencil, gcOutput)) {
+  if (!CompilationStencil::instantiateStencils(cx, compilationState_.input,
+                                               stencil, gcOutput)) {
     return false;
   }
 
@@ -881,7 +885,7 @@ static ModuleObject* CompileModuleImpl(
   }
 
   Rooted<CompilationGCOutput> gcOutput(cx);
-  if (!InstantiateStencils(cx, *stencil, gcOutput.get())) {
+  if (!InstantiateStencils(cx, input.get(), *stencil, gcOutput.get())) {
     return nullptr;
   }
 
@@ -913,34 +917,33 @@ void frontend::FillCompileOptionsForLazyFunction(JS::CompileOptions& options,
 
 template <typename Unit>
 static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
+                                             CompilationInput& input,
                                              CompilationStencil& stencil,
-                                             Handle<BaseScript*> lazy,
                                              const Unit* units, size_t length) {
-  MOZ_ASSERT(cx->compartment() == lazy->compartment());
+  MOZ_ASSERT(cx->compartment() == input.lazy->compartment());
   MOZ_ASSERT(!stencil.isInitialStencil());
 
   // We can only compile functions whose parents have previously been
   // compiled, because compilation requires full information about the
   // function's immediately enclosing scope.
-  MOZ_ASSERT(lazy->isReadyForDelazification());
+  MOZ_ASSERT(input.lazy->isReadyForDelazification());
 
   AutoAssertReportedException assertException(cx);
 
-  Rooted<JSFunction*> fun(cx, lazy->function());
+  Rooted<JSFunction*> fun(cx, input.lazy->function());
 
   InheritThis inheritThis = fun->isArrow() ? InheritThis::Yes : InheritThis::No;
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::CompilationState compilationState(cx, allocScope, stencil.input,
-                                              stencil);
+  frontend::CompilationState compilationState(cx, allocScope, input, stencil);
   if (!compilationState.init(cx, inheritThis)) {
     return false;
   }
 
-  Parser<FullParseHandler, Unit> parser(
-      cx, stencil.input.options, units, length,
-      /* foldConstants = */ true, stencil, compilationState,
-      /* syntaxParser = */ nullptr);
+  Parser<FullParseHandler, Unit> parser(cx, input.options, units, length,
+                                        /* foldConstants = */ true, stencil,
+                                        compilationState,
+                                        /* syntaxParser = */ nullptr);
   if (!parser.checkOptions()) {
     return false;
   }
@@ -948,9 +951,9 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
   AutoGeckoProfilerEntry pseudoFrame(cx, "script delazify",
                                      JS::ProfilingCategoryPair::JS_Parsing);
 
-  FunctionNode* pn =
-      parser.standaloneLazyFunction(fun, lazy->toStringStart(), lazy->strict(),
-                                    lazy->generatorKind(), lazy->asyncKind());
+  FunctionNode* pn = parser.standaloneLazyFunction(
+      fun, input.lazy->toStringStart(), input.lazy->strict(),
+      input.lazy->generatorKind(), input.lazy->asyncKind());
   if (!pn) {
     return false;
   }
@@ -967,8 +970,8 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
 
   // NOTE: Only allow relazification if there was no lazy PrivateScriptData.
   // This excludes non-leaf functions and all script class constructors.
-  bool hadLazyScriptData = lazy->hasPrivateScriptData();
-  bool isRelazifiableAfterDelazify = lazy->isRelazifiableAfterDelazify();
+  bool hadLazyScriptData = input.lazy->hasPrivateScriptData();
+  bool isRelazifiableAfterDelazify = input.lazy->isRelazifiableAfterDelazify();
   if (isRelazifiableAfterDelazify && !hadLazyScriptData) {
     compilationState.scriptData[CompilationStencil::TopLevelIndex]
         .setAllowRelazify();
@@ -983,26 +986,28 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
 }
 
 [[nodiscard]] bool frontend::CompileLazyFunctionToStencil(
-    JSContext* cx, CompilationStencil& stencil, JS::Handle<BaseScript*> lazy,
+    JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
     const char16_t* units, size_t length) {
-  return CompileLazyFunctionToStencilImpl(cx, stencil, lazy, units, length);
+  return CompileLazyFunctionToStencilImpl(cx, input, stencil, units, length);
 }
 
 [[nodiscard]] bool frontend::CompileLazyFunctionToStencil(
-    JSContext* cx, CompilationStencil& stencil, JS::Handle<BaseScript*> lazy,
+    JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
     const mozilla::Utf8Unit* units, size_t length) {
-  return CompileLazyFunctionToStencilImpl(cx, stencil, lazy, units, length);
+  return CompileLazyFunctionToStencilImpl(cx, input, stencil, units, length);
 }
 
 bool frontend::InstantiateStencilsForDelazify(JSContext* cx,
+                                              CompilationInput& input,
                                               CompilationStencil& stencil) {
   AutoAssertReportedException assertException(cx);
 
   mozilla::DebugOnly<uint32_t> lazyFlags =
-      static_cast<uint32_t>(stencil.input.lazy->immutableFlags());
+      static_cast<uint32_t>(input.lazy->immutableFlags());
 
   Rooted<CompilationGCOutput> gcOutput(cx);
-  if (!CompilationStencil::instantiateStencils(cx, stencil, gcOutput.get())) {
+  if (!CompilationStencil::instantiateStencils(cx, input, stencil,
+                                               gcOutput.get())) {
     return false;
   }
 

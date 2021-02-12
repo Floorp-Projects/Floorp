@@ -531,10 +531,6 @@ struct CompilationStencil : public BaseCompilationStencil {
   // live until the stencil is released.
   LifoAlloc alloc;
 
-  // Input data to the compile that will be needed for instantiation. This may
-  // include GC pointers depending on what sort of compile is performed.
-  CompilationInput& input;
-
   // The source text holder for the script. This may be an empty placeholder if
   // the code will fully parsed and options indicate the source will never be
   // needed again.
@@ -563,18 +559,20 @@ struct CompilationStencil : public BaseCompilationStencil {
 
   // Construct a CompilationStencil
   explicit CompilationStencil(CompilationInput& input)
-      : alloc(LifoAllocChunkSize), input(input), source(input.source) {}
+      : alloc(LifoAllocChunkSize), source(input.source) {}
 
   [[nodiscard]] static bool instantiateBaseStencilAfterPreparation(
       JSContext* cx, CompilationInput& input,
       const BaseCompilationStencil& stencil, CompilationGCOutput& gcOutput);
 
   [[nodiscard]] static bool prepareForInstantiate(
-      JSContext* cx, CompilationStencil& stencil, CompilationGCOutput& gcOutput,
+      JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
+      CompilationGCOutput& gcOutput,
       CompilationGCOutput* gcOutputForDelazification = nullptr);
 
   [[nodiscard]] static bool instantiateStencils(
-      JSContext* cx, CompilationStencil& stencil, CompilationGCOutput& gcOutput,
+      JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
+      CompilationGCOutput& gcOutput,
       CompilationGCOutput* gcOutputForDelazification = nullptr);
 
   [[nodiscard]] bool serializeStencils(JSContext* cx, CompilationInput& input,

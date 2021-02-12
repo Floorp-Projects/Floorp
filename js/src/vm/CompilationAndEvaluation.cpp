@@ -101,7 +101,8 @@ static JSScript* CompileSourceBufferAndStartIncrementalEncoding(
   }
 
   Rooted<frontend::CompilationGCOutput> gcOutput(cx);
-  if (!frontend::InstantiateStencils(cx, *stencil, gcOutput.get())) {
+  if (!frontend::InstantiateStencils(cx, input.get(), *stencil,
+                                     gcOutput.get())) {
     return nullptr;
   }
 

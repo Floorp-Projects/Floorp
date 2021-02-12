@@ -196,8 +196,10 @@ class SharedContext {
   }
 
  public:
-  SharedContext(JSContext* cx, Kind kind, CompilationStencil& stencil,
-                Directives directives, SourceExtent extent);
+  SharedContext(JSContext* cx, Kind kind,
+                const JS::ReadOnlyCompileOptions& options,
+                CompilationStencil& stencil, Directives directives,
+                SourceExtent extent);
 
   IMMUTABLE_FLAG_GETTER_SETTER(isForEval, IsForEval)
   IMMUTABLE_FLAG_GETTER_SETTER(isModule, IsModule)
@@ -280,6 +282,7 @@ class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext {
   GlobalScope::ParserData* bindings;
 
   GlobalSharedContext(JSContext* cx, ScopeKind scopeKind,
+                      const JS::ReadOnlyCompileOptions& options,
                       CompilationStencil& stencil, Directives directives,
                       SourceExtent extent);
 
@@ -308,9 +311,10 @@ enum class HasHeritage { No, Yes };
 
 class SuspendableContext : public SharedContext {
  public:
-  SuspendableContext(JSContext* cx, Kind kind, CompilationStencil& stencil,
-                     Directives directives, SourceExtent extent,
-                     bool isGenerator, bool isAsync);
+  SuspendableContext(JSContext* cx, Kind kind,
+                     const JS::ReadOnlyCompileOptions& options,
+                     CompilationStencil& stencil, Directives directives,
+                     SourceExtent extent, bool isGenerator, bool isAsync);
 
   IMMUTABLE_FLAG_GETTER_SETTER(isAsync, IsAsync)
   IMMUTABLE_FLAG_GETTER_SETTER(isGenerator, IsGenerator)

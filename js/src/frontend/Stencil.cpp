@@ -989,7 +989,7 @@ static bool InstantiateScopes(JSContext* cx, CompilationInput& input,
 // Instantiate js::BaseScripts from ScriptStencils for inner functions of the
 // compilation. Note that standalone functions and functions being delazified
 // are handled below with other top-levels.
-static bool InstantiateScriptStencils(JSContext* cx,
+static bool InstantiateScriptStencils(JSContext* cx, CompilationInput& input,
                                       const CompilationStencil& stencil,
                                       CompilationGCOutput& gcOutput) {
   MOZ_ASSERT(stencil.isInitialStencil());
@@ -1011,8 +1011,8 @@ static bool InstantiateScriptStencils(JSContext* cx,
         continue;
       }
 
-      RootedScript script(cx,
-                          JSScript::fromStencil(cx, stencil, gcOutput, index));
+      RootedScript script(
+          cx, JSScript::fromStencil(cx, input, stencil, gcOutput, index));
       if (!script) {
         return false;
       }
@@ -1025,7 +1025,7 @@ static bool InstantiateScriptStencils(JSContext* cx,
       MOZ_ASSERT(fun->isAsmJSNative());
     } else {
       MOZ_ASSERT(fun->isIncomplete());
-      if (!CreateLazyScript(cx, stencil.input, stencil, gcOutput, scriptStencil,
+      if (!CreateLazyScript(cx, input, stencil, gcOutput, scriptStencil,
                             *scriptExtra, index, fun)) {
         return false;
       }
@@ -1068,9 +1068,8 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
     return true;
   }
 
-  MOZ_ASSERT(&stencil.asCompilationStencil().input == &input);
   gcOutput.script =
-      JSScript::fromStencil(cx, stencil.asCompilationStencil(), gcOutput,
+      JSScript::fromStencil(cx, input, stencil.asCompilationStencil(), gcOutput,
                             CompilationStencil::TopLevelIndex);
   if (!gcOutput.script) {
     return false;
@@ -1242,17 +1241,17 @@ static void FunctionsFromExistingLazy(CompilationInput& input,
 
 /* static */
 bool CompilationStencil::instantiateStencils(
-    JSContext* cx, CompilationStencil& stencil, CompilationGCOutput& gcOutput,
+    JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
+    CompilationGCOutput& gcOutput,
     CompilationGCOutput* gcOutputForDelazification) {
   if (!stencil.preparationIsPerformed) {
-    if (!prepareForInstantiate(cx, stencil, gcOutput,
+    if (!prepareForInstantiate(cx, input, stencil, gcOutput,
                                gcOutputForDelazification)) {
       return false;
     }
   }
 
-  if (!instantiateBaseStencilAfterPreparation(cx, stencil.input, stencil,
-                                              gcOutput)) {
+  if (!instantiateBaseStencilAfterPreparation(cx, input, stencil, gcOutput)) {
     return false;
   }
 
@@ -1260,7 +1259,7 @@ bool CompilationStencil::instantiateStencils(
     MOZ_ASSERT(gcOutputForDelazification);
 
     CompilationAtomCache::AtomCacheVector reusableAtomCache;
-    stencil.input.atomCache.releaseBuffer(reusableAtomCache);
+    input.atomCache.releaseBuffer(reusableAtomCache);
 
     size_t numDelazifications =
         stencil.delazificationSet->delazifications.length();
@@ -1280,7 +1279,7 @@ bool CompilationStencil::instantiateStencils(
       }
 
       Rooted<CompilationInput> delazificationInput(
-          cx, CompilationInput(stencil.input.options));
+          cx, CompilationInput(input.options));
       delazificationInput.get().initFromLazy(lazy);
 
       delazificationInput.get().atomCache.stealBuffer(reusableAtomCache);
@@ -1298,7 +1297,7 @@ bool CompilationStencil::instantiateStencils(
       delazificationInput.get().atomCache.releaseBuffer(reusableAtomCache);
     }
 
-    stencil.input.atomCache.stealBuffer(reusableAtomCache);
+    input.atomCache.stealBuffer(reusableAtomCache);
   }
 
   return true;
@@ -1367,8 +1366,7 @@ bool CompilationStencil::instantiateBaseStencilAfterPreparation(
 
   // Phase 4: Instantiate (inner) BaseScripts.
   if (isInitialParse) {
-    MOZ_ASSERT(&stencil.asCompilationStencil().input == &input);
-    if (!InstantiateScriptStencils(cx, stencil.asCompilationStencil(),
+    if (!InstantiateScriptStencils(cx, input, stencil.asCompilationStencil(),
                                    gcOutput)) {
       return false;
     }
@@ -1436,7 +1434,8 @@ bool StencilDelazificationSet::buildDelazificationIndices(
 
 /* static */
 bool CompilationStencil::prepareForInstantiate(
-    JSContext* cx, CompilationStencil& stencil, CompilationGCOutput& gcOutput,
+    JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
+    CompilationGCOutput& gcOutput,
     CompilationGCOutput* gcOutputForDelazification) {
   stencil.preparationIsPerformed = true;
 
@@ -1485,7 +1484,7 @@ bool CompilationStencil::prepareForInstantiate(
   }
 
   // The `atomCache` is used for the base and delazification stencils.
-  return stencil.input.atomCache.allocate(cx, maxParserAtomDataLength);
+  return input.atomCache.allocate(cx, maxParserAtomDataLength);
 }
 
 bool CompilationStencil::serializeStencils(JSContext* cx,
