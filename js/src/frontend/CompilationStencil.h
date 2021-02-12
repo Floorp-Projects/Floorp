@@ -204,7 +204,7 @@ struct CompilationInput {
 
   BaseScript* lazy = nullptr;
 
-  RefPtr<ScriptSource> source_;
+  RefPtr<ScriptSource> source;
 
   //  * If the target is Global, null.
   //  * If the target is SelfHosting, an empty global scope.
@@ -300,15 +300,6 @@ struct CompilationInput {
       return enclosingScope;
     }
     return nullptr;
-  }
-
-  ScriptSource* source() { return source_.get(); }
-  void setSource(ScriptSource* ss) { source_ = do_AddRef(ss); }
-
-  template <typename Unit>
-  [[nodiscard]] bool assignSource(JSContext* cx,
-                                  JS::SourceText<Unit>& sourceBuffer) {
-    return source()->assignSource(cx, options, sourceBuffer);
   }
 
   void trace(JSTracer* trc);
@@ -545,6 +536,11 @@ struct CompilationStencil : public BaseCompilationStencil {
   // include GC pointers depending on what sort of compile is performed.
   CompilationInput& input;
 
+  // The source text holder for the script. This may be an empty placeholder if
+  // the code will fully parsed and options indicate the source will never be
+  // needed again.
+  RefPtr<ScriptSource> source;
+
   // Module metadata if this is a module compile.
   UniquePtr<StencilModuleMetadata> moduleMetadata;
 
@@ -568,7 +564,7 @@ struct CompilationStencil : public BaseCompilationStencil {
 
   // Construct a CompilationStencil
   explicit CompilationStencil(CompilationInput& input)
-      : alloc(LifoAllocChunkSize), input(input) {}
+      : alloc(LifoAllocChunkSize), input(input), source(input.source) {}
 
   [[nodiscard]] static bool instantiateBaseStencilAfterPreparation(
       JSContext* cx, CompilationInput& input,
