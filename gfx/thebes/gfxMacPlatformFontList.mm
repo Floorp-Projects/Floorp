@@ -1222,7 +1222,9 @@ static gfxFontFamily* CreateFamilyForSystemFont(NSFont* aFont, const nsACString&
 const CGFloat kTextDisplayCrossover = 20.0;  // use text family below this size
 
 void gfxMacPlatformFontList::InitSystemFontNames() {
-  mUseSizeSensitiveSystemFont = true;
+  // On Catalina+, the system font uses optical sizing rather than individual
+  // faces, so we don't need to look for a separate display-sized face.
+  mUseSizeSensitiveSystemFont = !nsCocoaFeatures::OnCatalinaOrLater();
 
   // text font family
   NSFont* sys = [NSFont systemFontOfSize:0.0];
@@ -1243,7 +1245,7 @@ void gfxMacPlatformFontList::InitSystemFontNames() {
     }
   }
 
-  // display font family, if on OSX 10.11
+  // display font family, if on OSX 10.11 - 10.14
   if (mUseSizeSensitiveSystemFont) {
     NSFont* displaySys = [NSFont systemFontOfSize:128.0];
     NSString* displayFamilyName = GetRealFamilyName(displaySys);
@@ -1252,16 +1254,6 @@ void gfxMacPlatformFontList::InitSystemFontNames() {
     } else {
       nsCocoaUtils::GetStringForNSString(displayFamilyName, familyName);
       CopyUTF16toUTF8(familyName, mSystemDisplayFontFamilyName);
-      if (nsCocoaFeatures::OnCatalinaOrLater()) {
-        // This will probably never be used, as Catalina has an optically-sized system font
-        // rather than separate text and display faces.
-        RefPtr<gfxFontFamily> fam = CreateFamilyForSystemFont(sys, mSystemDisplayFontFamilyName);
-        if (fam) {
-          nsAutoCString key;
-          GenerateFontListKey(mSystemDisplayFontFamilyName, key);
-          mFontFamilies.Put(key, std::move(fam));
-        }
-      }
     }
   }
 
