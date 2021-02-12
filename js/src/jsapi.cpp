@@ -5749,15 +5749,16 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScript(
 
 static JS::TranscodeResult DecodeStencil(JSContext* cx,
                                          JS::TranscodeBuffer& buffer,
+                                         frontend::CompilationInput& input,
                                          frontend::CompilationStencil& stencil,
                                          size_t cursorIndex) {
-  XDRStencilDecoder decoder(cx, &stencil.input.options, buffer, cursorIndex);
+  XDRStencilDecoder decoder(cx, &input.options, buffer, cursorIndex);
 
-  if (!stencil.input.initForGlobal(cx)) {
+  if (!input.initForGlobal(cx)) {
     return JS::TranscodeResult_Throw;
   }
 
-  XDRResult res = decoder.codeStencils(stencil);
+  XDRResult res = decoder.codeStencils(input, stencil);
   if (res.isErr()) {
     return res.unwrapErr();
   }
@@ -5783,7 +5784,8 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptMaybeStencil(
                                            frontend::CompilationInput(options));
   frontend::CompilationStencil stencil(input.get());
 
-  JS::TranscodeResult res = DecodeStencil(cx, buffer, stencil, cursorIndex);
+  JS::TranscodeResult res =
+      DecodeStencil(cx, buffer, input.get(), stencil, cursorIndex);
   if (res != JS::TranscodeResult_Ok) {
     return res;
   }
@@ -5828,13 +5830,15 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
                                            frontend::CompilationInput(options));
   frontend::CompilationStencil stencil(input.get());
 
-  JS::TranscodeResult res = DecodeStencil(cx, buffer, stencil, cursorIndex);
+  JS::TranscodeResult res =
+      DecodeStencil(cx, buffer, input.get(), stencil, cursorIndex);
   if (res != JS::TranscodeResult_Ok) {
     return res;
   }
 
   UniquePtr<XDRIncrementalStencilEncoder> xdrEncoder;
-  if (!stencil.source->xdrEncodeStencils(cx, stencil, xdrEncoder)) {
+  if (!stencil.source->xdrEncodeStencils(cx, input.get(), stencil,
+                                         xdrEncoder)) {
     return JS::TranscodeResult_Throw;
   }
 

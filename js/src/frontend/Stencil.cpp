@@ -1489,6 +1489,7 @@ bool CompilationStencil::prepareForInstantiate(
 }
 
 bool CompilationStencil::serializeStencils(JSContext* cx,
+                                           CompilationInput& input,
                                            JS::TranscodeBuffer& buf,
                                            bool* succeededOut) {
   if (succeededOut) {
@@ -1496,7 +1497,7 @@ bool CompilationStencil::serializeStencils(JSContext* cx,
   }
   XDRIncrementalStencilEncoder encoder(cx);
 
-  XDRResult res = encoder.codeStencil(*this);
+  XDRResult res = encoder.codeStencil(input, *this);
   if (res.isErr()) {
     if (res.unwrapErr() & JS::TranscodeResult_Failure) {
       buf.clear();
@@ -1522,6 +1523,7 @@ bool CompilationStencil::serializeStencils(JSContext* cx,
 }
 
 bool CompilationStencil::deserializeStencils(JSContext* cx,
+                                             CompilationInput& input,
                                              const JS::TranscodeRange& range,
                                              bool* succeededOut) {
   if (succeededOut) {
@@ -1530,7 +1532,7 @@ bool CompilationStencil::deserializeStencils(JSContext* cx,
   MOZ_ASSERT(parserAtomData.empty());
   XDRStencilDecoder decoder(cx, &input.options, range);
 
-  XDRResult res = decoder.codeStencils(*this);
+  XDRResult res = decoder.codeStencils(input, *this);
   if (res.isErr()) {
     if (res.unwrapErr() & JS::TranscodeResult_Failure) {
       return true;

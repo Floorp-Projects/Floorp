@@ -4999,7 +4999,7 @@ static bool CompileStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
 
   /* Serialize the stencil to XDR. */
   JS::TranscodeBuffer xdrBytes;
-  if (!stencil->serializeStencils(cx, xdrBytes)) {
+  if (!stencil->serializeStencils(cx, input.get(), xdrBytes)) {
     return false;
   }
 
@@ -5052,7 +5052,7 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   /* Deserialize the stencil from XDR. */
   JS::TranscodeRange xdrRange(src->dataPointer(), src->byteLength().get());
   bool succeeded = false;
-  if (!stencil.deserializeStencils(cx, xdrRange, &succeeded)) {
+  if (!stencil.deserializeStencils(cx, input.get(), xdrRange, &succeeded)) {
     return false;
   }
   if (!succeeded) {
