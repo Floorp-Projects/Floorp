@@ -10,8 +10,8 @@
 #include "mozilla/InitializedOnce.h"
 #include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/quota/DirectoryLock.h"
+#include "mozilla/dom/quota/OriginMetadata.h"
 #include "mozilla/dom/quota/OriginScope.h"
-#include "mozilla/dom/quota/QuotaInfo.h"
 
 namespace mozilla::dom::quota {
 
@@ -189,7 +189,10 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
   quota::OriginMetadata OriginMetadata() const override {
     MOZ_DIAGNOSTIC_ASSERT(!mGroup.IsEmpty());
 
-    return quota::OriginMetadata{mGroup, nsCString(Origin())};
+    // We pass empty suffix to OringinMetadata for now (it's safe because it
+    // isn't used at the moment).
+    // XXX Add mSuffix to DirectoryLockImpl and use it here.
+    return quota::OriginMetadata{""_ns, mGroup, nsCString(Origin())};
   }
 
   const nsACString& Origin() const override {

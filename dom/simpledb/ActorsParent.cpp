@@ -346,7 +346,7 @@ class OpenOp final : public ConnectionOperationBase,
   const SDBRequestOpenParams mParams;
   RefPtr<DirectoryLock> mDirectoryLock;
   nsCOMPtr<nsIFileStream> mFileStream;
-  quota::QuotaInfo mQuotaInfo;
+  quota::OriginMetadata mOriginMetadata;
   State mState;
   bool mFileStreamOpen;
 
@@ -1111,14 +1111,15 @@ nsresult OpenOp::Open() {
   const PrincipalInfo& principalInfo = GetConnection()->GetPrincipalInfo();
 
   if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
-    mQuotaInfo = QuotaManager::GetInfoForChrome();
+    mOriginMetadata = QuotaManager::GetInfoForChrome();
   } else {
     MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
 
     SDB_TRY_INSPECT(const auto& principal,
                     PrincipalInfoToPrincipal(principalInfo));
 
-    SDB_TRY_UNWRAP(mQuotaInfo, QuotaManager::GetInfoFromPrincipal(principal));
+    SDB_TRY_UNWRAP(mOriginMetadata,
+                   QuotaManager::GetInfoFromPrincipal(principal));
   }
 
   mState = State::FinishOpen;
@@ -1133,7 +1134,7 @@ nsresult OpenOp::FinishOpen() {
 
   if (gOpenConnections) {
     for (const auto& connection : *gOpenConnections) {
-      if (connection->Origin() == mQuotaInfo.mOrigin &&
+      if (connection->Origin() == mOriginMetadata.mOrigin &&
           connection->Name() == mParams.name()) {
         return NS_ERROR_STORAGE_BUSY;
       }
@@ -1175,14 +1176,14 @@ nsresult OpenOp::OpenDirectory() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::FinishOpen ||
              mState == State::QuotaManagerPending);
-  MOZ_ASSERT(!mQuotaInfo.mOrigin.IsEmpty());
+  MOZ_ASSERT(!mOriginMetadata.mOrigin.IsEmpty());
   MOZ_ASSERT(!mDirectoryLock);
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
   MOZ_ASSERT(QuotaManager::Get());
 
   RefPtr<DirectoryLock> directoryLock =
       QuotaManager::Get()->CreateDirectoryLock(
-          GetConnection()->GetPersistenceType(), mQuotaInfo,
+          GetConnection()->GetPersistenceType(), mOriginMetadata,
           mozilla::dom::quota::Client::SDB,
           /* aExclusive */ false);
 
@@ -1201,8 +1202,9 @@ nsresult OpenOp::SendToIOThread() {
     return NS_ERROR_FAILURE;
   }
 
-  mFileStream = new FileStream(GetConnection()->GetPersistenceType(),
-                               mQuotaInfo, mozilla::dom::quota::Client::SDB);
+  mFileStream =
+      new FileStream(GetConnection()->GetPersistenceType(), mOriginMetadata,
+                     mozilla::dom::quota::Client::SDB);
 
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
@@ -1240,13 +1242,13 @@ nsresult OpenOp::DatabaseWork() {
         this]()
            -> mozilla::Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult> {
         if (persistenceType == PERSISTENCE_TYPE_PERSISTENT) {
-          SDB_TRY_RETURN(
-              quotaManager->EnsurePersistentOriginIsInitialized(mQuotaInfo));
+          SDB_TRY_RETURN(quotaManager->EnsurePersistentOriginIsInitialized(
+              mOriginMetadata));
         }
 
         SDB_TRY(quotaManager->EnsureTemporaryStorageIsInitialized());
         SDB_TRY_RETURN(quotaManager->EnsureTemporaryOriginIsInitialized(
-            persistenceType, mQuotaInfo));
+            persistenceType, mOriginMetadata));
       }()
                   .map([](const auto& res) { return res.first; })));
 
@@ -1344,7 +1346,7 @@ void OpenOp::GetResponse(SDBRequestResponse& aResponse) {
 void OpenOp::OnSuccess() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(NS_SUCCEEDED(ResultCode()));
-  MOZ_ASSERT(!mQuotaInfo.mOrigin.IsEmpty());
+  MOZ_ASSERT(!mOriginMetadata.mOrigin.IsEmpty());
   MOZ_ASSERT(mDirectoryLock);
   MOZ_ASSERT(mFileStream);
   MOZ_ASSERT(mFileStreamOpen);
@@ -1356,7 +1358,7 @@ void OpenOp::OnSuccess() {
   mFileStream.swap(fileStream);
   mFileStreamOpen = false;
 
-  GetConnection()->OnOpen(mQuotaInfo.mOrigin, mParams.name(),
+  GetConnection()->OnOpen(mOriginMetadata.mOrigin, mParams.name(),
                           directoryLock.forget(), fileStream.forget());
 }
 

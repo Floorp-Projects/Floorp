@@ -350,9 +350,9 @@ Context::QuotaInitRunnable::Run() {
       nsCOMPtr<nsIPrincipal> principal = mManager->GetManagerId().Principal();
       DebugOnly res =
           QuotaManager::GetInfoFromPrincipal(principal)
-              .andThen([&self = *this](quota::QuotaInfo&& quotaInfo) {
-                static_cast<quota::QuotaInfo&>(self.mQuotaInfo) =
-                    std::move(quotaInfo);
+              .andThen([&self = *this](quota::OriginMetadata&& originMetadata) {
+                static_cast<quota::OriginMetadata&>(self.mQuotaInfo) =
+                    std::move(originMetadata);
 
                 self.mState = STATE_CREATE_QUOTA_MANAGER;
                 MOZ_ALWAYS_SUCCEEDS(self.mInitiatingEventTarget->Dispatch(

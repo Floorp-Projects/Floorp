@@ -20,9 +20,9 @@
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/dom/quota/InitializationTypes.h"
+#include "mozilla/dom/quota/OriginMetadata.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
-#include "mozilla/dom/quota/QuotaInfo.h"
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
@@ -227,18 +227,18 @@ class QuotaManager final : public BackgroundThreadObject {
 
   nsresult RestoreDirectoryMetadata2(nsIFile* aDirectory, bool aPersistent);
 
-  struct GetDirectoryResultWithQuotaInfo {
+  struct GetDirectoryResultWithOriginMetadata {
     int64_t mTimestamp;
     bool mPersisted;
-    QuotaInfo mQuotaInfo;
+    OriginMetadata mOriginMetadata;
   };
 
-  Result<GetDirectoryResultWithQuotaInfo, nsresult>
-  GetDirectoryMetadataWithQuotaInfo2(nsIFile* aDirectory);
+  Result<GetDirectoryResultWithOriginMetadata, nsresult>
+  GetDirectoryMetadataWithOriginMetadata2(nsIFile* aDirectory);
 
-  Result<GetDirectoryResultWithQuotaInfo, nsresult>
-  GetDirectoryMetadataWithQuotaInfo2WithRestore(nsIFile* aDirectory,
-                                                bool aPersistent);
+  Result<GetDirectoryResultWithOriginMetadata, nsresult>
+  GetDirectoryMetadataWithOriginMetadata2WithRestore(nsIFile* aDirectory,
+                                                     bool aPersistent);
 
   // This is the main entry point into the QuotaManager API.
   // Any storage API implementation (quota client) that participates in
@@ -301,13 +301,13 @@ class QuotaManager final : public BackgroundThreadObject {
   // Returns a pair of an nsIFile object referring to the directory, and a bool
   // indicating whether the directory was newly created.
   Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
-  EnsurePersistentOriginIsInitialized(const QuotaInfo& aQuotaInfo);
+  EnsurePersistentOriginIsInitialized(const OriginMetadata& aOriginMetadata);
 
   // Returns a pair of an nsIFile object referring to the directory, and a bool
   // indicating whether the directory was newly created.
   Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
   EnsureTemporaryOriginIsInitialized(PersistenceType aPersistenceType,
-                                     const QuotaInfo& aQuotaInfo);
+                                     const OriginMetadata& aOriginMetadata);
 
   nsresult EnsureTemporaryStorageIsInitialized();
 
@@ -392,13 +392,13 @@ class QuotaManager final : public BackgroundThreadObject {
 
   static bool IsPrincipalInfoValid(const PrincipalInfo& aPrincipalInfo);
 
-  static QuotaInfo GetInfoFromValidatedPrincipalInfo(
+  static OriginMetadata GetInfoFromValidatedPrincipalInfo(
       const PrincipalInfo& aPrincipalInfo);
 
   static nsAutoCString GetOriginFromValidatedPrincipalInfo(
       const PrincipalInfo& aPrincipalInfo);
 
-  static Result<QuotaInfo, nsresult> GetInfoFromPrincipal(
+  static Result<OriginMetadata, nsresult> GetInfoFromPrincipal(
       nsIPrincipal* aPrincipal);
 
   static Result<nsAutoCString, nsresult> GetOriginFromPrincipal(
@@ -409,7 +409,7 @@ class QuotaManager final : public BackgroundThreadObject {
 
   static nsLiteralCString GetOriginForChrome();
 
-  static QuotaInfo GetInfoForChrome();
+  static OriginMetadata GetInfoForChrome();
 
   static bool IsOriginInternal(const nsACString& aOrigin);
 
