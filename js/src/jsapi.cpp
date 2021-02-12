@@ -5834,7 +5834,7 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
   }
 
   UniquePtr<XDRIncrementalStencilEncoder> xdrEncoder;
-  if (!input.get().source()->xdrEncodeStencils(cx, stencil, xdrEncoder)) {
+  if (!stencil.source->xdrEncodeStencils(cx, stencil, xdrEncoder)) {
     return JS::TranscodeResult_Throw;
   }
 

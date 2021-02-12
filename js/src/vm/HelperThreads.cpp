@@ -2098,8 +2098,7 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
 
     if (parseTask->stencil_.get()) {
       auto* stencil = parseTask->stencil_.get();
-      if (!stencil->input.source()->xdrEncodeStencils(cx, *stencil,
-                                                      xdrEncoder)) {
+      if (!stencil->source->xdrEncodeStencils(cx, *stencil, xdrEncoder)) {
         return nullptr;
       }
     }

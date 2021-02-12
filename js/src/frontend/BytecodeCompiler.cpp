@@ -116,13 +116,13 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
   [[nodiscard]] bool createSourceAndParser(JSContext* cx,
                                            CompilationStencil& stencil);
 
-  void assertSourceAndParserCreated(CompilationInput& compilationInput) const {
-    MOZ_ASSERT(compilationInput.source() != nullptr);
+  void assertSourceAndParserCreated(CompilationStencil& stencil) const {
+    MOZ_ASSERT(stencil.source != nullptr);
     MOZ_ASSERT(parser.isSome());
   }
 
-  void assertSourceParserAndScriptCreated(CompilationInput& compilationInput) {
-    assertSourceAndParserCreated(compilationInput);
+  void assertSourceParserAndScriptCreated(CompilationStencil& stencil) {
+    assertSourceAndParserCreated(stencil);
   }
 
   [[nodiscard]] bool emplaceEmitter(CompilationStencil& stencil,
@@ -202,7 +202,7 @@ static bool TrySmoosh(JSContext* cx, CompilationInput& input,
     return true;
   }
 
-  return stencilOut->input.assignSource(cx, srcBuf);
+  return stencilOut->source->assignSource(cx, input.options, srcBuf);
 }
 
 static bool TrySmoosh(JSContext* cx, CompilationInput& input,
@@ -298,7 +298,7 @@ bool frontend::InstantiateStencils(
 
   // Enqueue an off-thread source compression task after finishing parsing.
   if (!cx->isHelperThreadContext()) {
-    if (!stencil.input.source()->tryCompressOffThread(cx)) {
+    if (!stencil.source->tryCompressOffThread(cx)) {
       return false;
     }
 
@@ -532,7 +532,7 @@ AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx,
 template <typename Unit>
 bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
     JSContext* cx, CompilationStencil& stencil) {
-  if (!stencil.input.assignSource(cx, sourceBuffer_)) {
+  if (!stencil.source->assignSource(cx, stencil.input.options, sourceBuffer_)) {
     return false;
   }
 
@@ -551,7 +551,7 @@ bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
                  sourceBuffer_.length(),
                  /* foldConstants = */ true, stencil, compilationState_,
                  syntaxParser.ptrOr(nullptr));
-  parser->ss = stencil.input.source();
+  parser->ss = stencil.source.get();
   return parser->checkOptions();
 }
 
@@ -601,7 +601,7 @@ void frontend::SourceAwareCompiler<Unit>::handleParseFailure(
 template <typename Unit>
 bool frontend::ScriptCompiler<Unit>::compileScriptToStencil(
     JSContext* cx, CompilationStencil& stencil, SharedContext* sc) {
-  assertSourceParserAndScriptCreated(stencil.input);
+  assertSourceParserAndScriptCreated(stencil);
 
   TokenStreamPosition startPosition(parser->tokenStream);
 
@@ -725,7 +725,7 @@ FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
     JSContext* cx, CompilationStencil& stencil, FunctionSyntaxKind syntaxKind,
     GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
     const Maybe<uint32_t>& parameterListEnd) {
-  assertSourceAndParserCreated(stencil.input);
+  assertSourceAndParserCreated(stencil);
 
   TokenStreamPosition startPosition(parser->tokenStream);
   CompilationStencil::RewindToken startObj =
@@ -813,7 +813,7 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
 
   // Enqueue an off-thread source compression task after finishing parsing.
   if (!cx->isHelperThreadContext()) {
-    if (!stencil.input.source()->tryCompressOffThread(cx)) {
+    if (!stencil.source->tryCompressOffThread(cx)) {
       return false;
     }
   }
@@ -1066,7 +1066,7 @@ static JSFunction* CompileStandaloneFunction(
   // interpreted script.
   if (gcOutput.get().script) {
     if (parameterListEnd) {
-      input.get().source()->setParameterListEnd(*parameterListEnd);
+      stencil.source->setParameterListEnd(*parameterListEnd);
     }
 
     MOZ_ASSERT(!cx->isHelperThreadContext());

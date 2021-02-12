@@ -412,9 +412,8 @@ XDRResult XDRState<mode>::codeStencil(frontend::CompilationStencil& stencil) {
   // the header data until the `linearize` call, but still prepend it to final
   // buffer before giving to the caller.
   if (mode == XDR_DECODE) {
-    RefPtr<ScriptSource> source;
-    MOZ_TRY(XDRStencilHeader(this, &stencil.input.options, source, &nchunks()));
-    stencil.input.setSource(source);
+    MOZ_TRY(XDRStencilHeader(this, &stencil.input.options, stencil.source,
+                             &nchunks()));
   }
 
   MOZ_TRY(XDRParserAtomTable(this, stencil));

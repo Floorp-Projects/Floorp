@@ -114,8 +114,7 @@ static JSScript* CompileSourceBufferAndStartIncrementalEncoding(
 
   UniquePtr<XDRIncrementalStencilEncoder> xdrEncoder;
 
-  if (!stencil->input.source()->xdrEncodeInitialStencil(cx, *stencil,
-                                                        xdrEncoder)) {
+  if (!stencil->source->xdrEncodeInitialStencil(cx, *stencil, xdrEncoder)) {
     return nullptr;
   }
 
