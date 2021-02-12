@@ -2612,7 +2612,7 @@ nsPrefBranch::AddObserverImpl(const nsACString& aDomain, nsIObserver* aObserver,
       NS_WARNING("Ignoring duplicate observer.");
       delete pCallback;
     } else {
-      p.Insert(pCallback);
+      p.Insert(UniquePtr<PrefCallback>{pCallback});
 
       // We must pass a fully qualified preference name to the callback
       // aDomain == nullptr is the only possible failure, and we trapped it with

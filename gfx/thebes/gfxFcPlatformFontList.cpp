@@ -1593,7 +1593,7 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
       // Add new family record if one doesn't already exist.
       faceListPtr = faces.WithEntryHandle(keyName, [&](auto&& faceList) {
         if (!faceList) {
-          faceList.Insert(new FaceInitArray);
+          faceList.Insert(MakeUnique<FaceInitArray>());
           FontVisibility visibility =
               aAppFont ? FontVisibility::Base : GetVisibilityForFamily(keyName);
           families.AppendElement(fontlist::Family::InitData(
@@ -1652,7 +1652,7 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
 
       faces.WithEntryHandle(keyName, [&](auto&& faceList) {
         if (!faceList) {
-          faceList.Insert(new FaceInitArray);
+          faceList.Insert(MakeUnique<FaceInitArray>());
           FontVisibility visibility =
               aAppFont ? FontVisibility::Base : GetVisibilityForFamily(keyName);
           families.AppendElement(fontlist::Family::InitData(

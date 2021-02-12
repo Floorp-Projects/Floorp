@@ -85,7 +85,7 @@ void BroadcastChannelService::RegisterActor(
       mAgents.WithEntryHandle(aOriginChannelKey, [](auto&& entry) {
         return entry
             .OrInsertWith(
-                [] { return new nsTArray<BroadcastChannelParent*>(); })
+                [] { return MakeUnique<nsTArray<BroadcastChannelParent*>>(); })
             .get();
       });
 

@@ -312,12 +312,13 @@ class MOZ_NON_MEMMOVABLE Heap : public js::HeapBase<T, Heap<T>> {
   explicit Heap(const T& p) { init(p); }
 
   /*
-   * For Heap, move semantics are equivalent to copy semantics. In C++, a
-   * copy constructor taking const-ref is the way to get a single function
-   * that will be used for both lvalue and rvalue copies, so we can simply
-   * omit the rvalue variant.
+   * For Heap, move semantics are equivalent to copy semantics. However, we want
+   * the copy constructor to be explicit, and an explicit move constructor
+   * breaks common usage of move semantics, so we need to define both, even
+   * though they are equivalent.
    */
   explicit Heap(const Heap<T>& other) { init(other.ptr); }
+  Heap(Heap<T>&& other) { init(other.ptr); }
 
   Heap& operator=(Heap<T>&& other) {
     set(other.unbarrieredGet());

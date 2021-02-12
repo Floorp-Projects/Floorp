@@ -187,7 +187,7 @@ void ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
                 nsLayoutUtils::RegisterImageRequestIfAnimated(
                     presContext, aRequest, nullptr);
               }
-              return new FrameSet();
+              return MakeUnique<FrameSet>();
             })
             .get();
       });
@@ -197,7 +197,7 @@ void ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
         return entry
             .OrInsertWith([=]() {
               aFrame->SetHasImageRequest(true);
-              return new RequestSet();
+              return MakeUnique<RequestSet>();
             })
             .get();
       });
@@ -442,7 +442,7 @@ already_AddRefed<imgRequestProxy> ImageLoader::LoadImage(
     return nullptr;
   }
   sImages->WithEntryHandle(request, [](auto&& entry) {
-    entry.OrInsertWith([] { return new ImageTableEntry(); });
+    entry.OrInsertWith([] { return MakeUnique<ImageTableEntry>(); });
   });
   return request.forget();
 }
