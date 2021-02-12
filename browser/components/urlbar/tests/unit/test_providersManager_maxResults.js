@@ -15,8 +15,8 @@ add_task(async function test_maxResults() {
       )
     );
   }
-  let providerName = registerBasicTestProvider(matches);
-  let context = createContext(undefined, { providers: [providerName] });
+  let provider = registerBasicTestProvider(matches);
+  let context = createContext(undefined, { providers: [provider.name] });
   let controller = UrlbarTestUtils.newMockController();
 
   async function test_count(count) {

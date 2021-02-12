@@ -1314,10 +1314,11 @@ function add_resultBuckets_task({
   let func = async () => {
     info(`Running resultBuckest test: ${testName}`);
     setResultBuckets(resultBuckets);
-    let providerName = registerBasicTestProvider(providerResults);
-    let context = createContext("foo", { providers: [providerName] });
+    let provider = registerBasicTestProvider(providerResults);
+    let context = createContext("foo", { providers: [provider.name] });
     let controller = UrlbarTestUtils.newMockController();
     await UrlbarProvidersManager.startQuery(context, controller);
+    UrlbarProvidersManager.unregisterProvider(provider);
     let expectedResults = expectedResultIndexes.map(i => providerResults[i]);
     Assert.deepEqual(context.results, expectedResults);
     setResultBuckets(null);

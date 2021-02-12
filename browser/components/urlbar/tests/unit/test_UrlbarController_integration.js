@@ -45,8 +45,8 @@ add_task(async function setup() {
 });
 
 add_task(async function test_basic_search() {
-  let providerName = registerBasicTestProvider([match]);
-  const context = createContext(TEST_URL, { providers: [providerName] });
+  let provider = registerBasicTestProvider([match]);
+  const context = createContext(TEST_URL, { providers: [provider.name] });
 
   let startedPromise = promiseControllerNotification(
     controller,
@@ -74,11 +74,11 @@ add_task(async function test_basic_search() {
 
 add_task(async function test_cancel_search() {
   let providerCanceledDeferred = PromiseUtils.defer();
-  let providerName = registerBasicTestProvider(
+  let provider = registerBasicTestProvider(
     [match],
     providerCanceledDeferred.resolve
   );
-  const context = createContext(TEST_URL, { providers: [providerName] });
+  const context = createContext(TEST_URL, { providers: [provider.name] });
 
   let startedPromise = promiseControllerNotification(
     controller,
