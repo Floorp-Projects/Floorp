@@ -1970,6 +1970,11 @@ SI I32 clamp(I32 a, I32 minVal, I32 maxVal) {
   return if_then_else(a > maxVal, maxVal, a);
 }
 
+SI vec3 clamp(vec3 a, Float minVal, Float maxVal) {
+  return vec3(clamp(a.x, minVal, maxVal), clamp(a.y, minVal, maxVal),
+              clamp(a.z, minVal, maxVal));
+}
+
 SI vec3 clamp(vec3 a, vec3 minVal, vec3 maxVal) {
   return vec3(clamp(a.x, minVal.x, maxVal.x), clamp(a.y, minVal.y, maxVal.y),
               clamp(a.z, minVal.z, maxVal.z));
