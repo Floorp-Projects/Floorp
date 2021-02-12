@@ -865,9 +865,10 @@ class JSLinearString : public JSString {
 
   /*
    * Returns true if this string's characters store an unsigned 32-bit
-   * integer value, initializing *indexp to that value if so.  (Thus if
-   * calling isIndex returns true, js::IndexToString(cx, *indexp) will be a
-   * string equal to this string.)
+   * integer value, initializing *indexp to that value if so.
+   * Leading '0' isn't allowed except 0 itself.
+   * (Thus if calling isIndex returns true, js::IndexToString(cx, *indexp) will
+   * be a string equal to this string.)
    */
   bool isIndex(uint32_t* indexp) const {
     MOZ_ASSERT(JSString::isLinear());
@@ -1236,6 +1237,9 @@ MOZ_ALWAYS_INLINE JSAtom* JSLinearString::morphAtomizedStringIntoPermanentAtom(
 
 namespace js {
 
+// Returns true if the characters of `s` store an unsigned 32-bit integer value,
+// initializing `*indexp` to that value if so.
+// Leading '0' isn't allowed except 0 itself.
 template <typename CharT>
 bool CheckStringIsIndex(const CharT* s, size_t length, uint32_t* indexp);
 
