@@ -5690,15 +5690,22 @@ void CodeGenerator::emitPushArguments(LApplyArgsGeneric* apply,
   masm.pushValue(ToValue(apply, LApplyArgsGeneric::ThisIndex));
 }
 
-void CodeGenerator::emitPushElementsAsArguments(Register tmpArgc,
-                                                Register elementsAndArgc,
-                                                Register extraStackSpace) {
-  // Pushes |tmpArgc| number of elements stored in |elementsAndArgc| onto the
-  // stack. |extraStackSpace| is used as a temp register within this function,
-  // but must be restored before returning.
-  // On exit, |tmpArgc| is written to |elementsAndArgc|, so we can keep using
-  // |tmpArgc| as a scratch register. And |elementsAndArgc| is from now on the
-  // register holding the arguments count.
+void CodeGenerator::emitPushArrayAsArguments(Register tmpArgc,
+                                             Register srcBaseAndArgc,
+                                             Register scratch,
+                                             size_t argvSrcOffset) {
+  // Preconditions:
+  // 1. |tmpArgc| * sizeof(Value) bytes have been allocated at the top of
+  //    the stack to hold arguments.
+  // 2. |srcBaseAndArgc| + |srcOffset| points to an array of |tmpArgc| values.
+  //
+  // Postconditions:
+  // 1. The arguments at |srcBaseAndArgc| + |srcOffset| have been copied into
+  //    the allocated space.
+  // 2. |srcBaseAndArgc| now contains the original value of |tmpArgc|.
+  //
+  // |scratch| is used as a temp register within this function. It is
+  // restored before returning.
 
   Label noCopy, epilogue;
 
@@ -5709,10 +5716,10 @@ void CodeGenerator::emitPushElementsAsArguments(Register tmpArgc,
   // no values.
   size_t argvDstOffset = 0;
 
-  Register argvSrcBase = elementsAndArgc;  // Elements value
+  Register argvSrcBase = srcBaseAndArgc;
 
-  masm.push(extraStackSpace);
-  Register copyreg = extraStackSpace;
+  masm.push(scratch);
+  Register copyreg = scratch;
   argvDstOffset += sizeof(void*);
 
   masm.push(tmpArgc);
@@ -5720,19 +5727,20 @@ void CodeGenerator::emitPushElementsAsArguments(Register tmpArgc,
   argvDstOffset += sizeof(void*);
 
   // Copy
-  emitCopyValuesForApply(argvSrcBase, argvIndex, copyreg, 0, argvDstOffset);
+  emitCopyValuesForApply(argvSrcBase, argvIndex, copyreg, argvSrcOffset,
+                         argvDstOffset);
 
   // Restore.
-  masm.pop(elementsAndArgc);
-  masm.pop(extraStackSpace);
+  masm.pop(srcBaseAndArgc);  // srcBaseAndArgc now contains argc.
+  masm.pop(scratch);
   masm.jump(&epilogue);
 
   // Clear argc if we skipped the copy step.
   masm.bind(&noCopy);
-  masm.movePtr(ImmPtr(0), elementsAndArgc);
+  masm.movePtr(ImmWord(0), srcBaseAndArgc);
 
   // Join with all arguments copied and the extra stack usage computed.
-  // Note, "elements" has become "argc".
+  // Note, "srcBase" has become "argc".
   masm.bind(&epilogue);
 }
 
@@ -5754,7 +5762,9 @@ void CodeGenerator::emitPushArguments(LApplyArrayGeneric* apply,
   emitAllocateSpaceForApply(tmpArgc, extraStackSpace);
 
   // After this call "elements" has become "argc".
-  emitPushElementsAsArguments(tmpArgc, elementsAndArgc, extraStackSpace);
+  size_t elementsOffset = 0;
+  emitPushArrayAsArguments(tmpArgc, elementsAndArgc, extraStackSpace,
+                           elementsOffset);
 
   // Push |this|.
   masm.addPtr(Imm32(sizeof(Value)), extraStackSpace);
@@ -5782,7 +5792,9 @@ void CodeGenerator::emitPushArguments(LConstructArrayGeneric* construct,
 
   // After this call "elements" has become "argc" and "newTarget" has become
   // "extraStackSpace".
-  emitPushElementsAsArguments(tmpArgc, elementsAndArgc, extraStackSpace);
+  size_t elementsOffset = 0;
+  emitPushArrayAsArguments(tmpArgc, elementsAndArgc, extraStackSpace,
+                           elementsOffset);
 
   // Push |this|.
   masm.addPtr(Imm32(sizeof(Value)), extraStackSpace);
