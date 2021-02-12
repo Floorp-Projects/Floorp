@@ -414,3 +414,12 @@ DIRS += [
     "/third_party/libwebrtc/video/video_stream_encoder_impl_gn",
     "/third_party/libwebrtc/webrtc_gn"
 ]
+
+if CONFIG["OS_TARGET"] == "Darwin":
+
+    DIRS += [
+        "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_objc_gn",
+        "/third_party/libwebrtc/rtc_base/system/cocoa_threading_gn",
+        "/third_party/libwebrtc/sdk/base_objc_gn",
+        "/third_party/libwebrtc/sdk/helpers_objc_gn"
+    ]
