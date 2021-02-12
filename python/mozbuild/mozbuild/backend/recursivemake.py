@@ -1062,6 +1062,7 @@ class RecursiveMakeBackend(MakeBackend):
 
         suffix_map = {
             ".c": "UNIFIED_CSRCS",
+            ".m": "UNIFIED_CMSRCS",
             ".mm": "UNIFIED_CMMSRCS",
             ".cpp": "UNIFIED_CPPSRCS",
         }
