@@ -2323,6 +2323,7 @@ class JSScript : public js::BaseScript {
   }
 
   bool formalIsAliased(unsigned argSlot);
+  bool anyFormalIsAliased();
   bool formalLivesInArgumentsObject(unsigned argSlot);
 
   // See comment above 'debugMode' in Realm.h for explanation of

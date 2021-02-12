@@ -1001,6 +1001,7 @@ class MInstruction : public MDefinition, public InlineListNode<MInstruction> {
   MDefinition* foldsToStore(TempAllocator& alloc);
 
   void setResumePoint(MResumePoint* resumePoint);
+  void stealResumePoint(MInstruction* other);
 
   void moveResumePointAsEntry();
   void clearResumePoint();
