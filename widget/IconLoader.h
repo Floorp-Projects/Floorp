@@ -27,23 +27,19 @@ namespace mozilla::widget {
 
 class IconLoader : public imgINotificationObserver {
  public:
-  /**
-   * IconLoader itself is cross-platform, but each platform needs to supply
-   * it with a Helper that does the platform-specific conversion work. The
-   * Helper needs to implement the OnComplete method in order to handle the
-   * imgIContainer of the loaded icon.
-   */
-  class Helper {
+  // This is the interface that our listeners need to implement so that they can
+  // be notified when the icon is loaded.
+  class Listener {
    public:
     virtual nsresult OnComplete(imgIContainer* aContainer,
                                 const nsIntRect& aRect) = 0;
   };
 
   // Create the loader.
-  // aHelper will be notified when the load is complete.
-  // The loader does not keep an owning reference to the helper. Call Destroy
-  // before the helper goes away.
-  IconLoader(Helper* aHelper, const nsIntRect& aImageRegionRect);
+  // aListener will be notified when the load is complete.
+  // The loader does not keep an owning reference to the listener. Call Destroy
+  // before the listener goes away.
+  IconLoader(Listener* aListener, const nsIntRect& aImageRegionRect);
 
  public:
   NS_DECL_ISUPPORTS
@@ -69,11 +65,11 @@ class IconLoader : public imgINotificationObserver {
   nsIntRect mImageRegionRect;
   bool mLoadedIcon;
 
-  // The helper, which is notified when loading completes.
+  // The listener, which is notified when loading completes.
   // Can be null, after a call to Destroy.
   // This is a non-owning reference and needs to be cleared with a call to
-  // Destroy before the helper goes away.
-  Helper* mHelper;
+  // Destroy before the listener goes away.
+  Listener* mListener;
 };
 
 }  // namespace mozilla::widget

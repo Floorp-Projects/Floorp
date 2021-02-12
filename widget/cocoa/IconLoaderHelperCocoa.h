@@ -30,10 +30,10 @@ class IconLoaderListenerCocoa {
 };
 
 /**
- * This is a Helper used with mozilla::widget::IconLoader that implements the
+ * This is a helper used with mozilla::widget::IconLoader that implements the
  * macOS-specific functionality for converting a loaded icon into an NSImage*.
  */
-class IconLoaderHelperCocoa final : public mozilla::widget::IconLoader::Helper {
+class IconLoaderHelperCocoa final : public IconLoader::Listener {
  public:
   // Create the helper and install aLoadListener as a listener.
   // The helper does not keep a strong reference to the listener. Call Destroy
