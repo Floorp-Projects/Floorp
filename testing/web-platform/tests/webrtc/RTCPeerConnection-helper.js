@@ -242,7 +242,8 @@ async function waitForIceGatheringState(pc, wantedStates) {
 async function listenForSSRCs(t, receiver) {
   while (true) {
     const ssrcs = receiver.getSynchronizationSources();
-    if (Array.isArray(ssrcs) && ssrcs.length > 0) {
+    assert_true(Array.isArray(ssrcs));
+    if (ssrcs.length > 0) {
       return ssrcs;
     }
     await new Promise(r => t.step_timeout(r, 0));
