@@ -341,8 +341,7 @@ struct MOZ_RAII CompilationState {
   size_t nonLazyFunctionCount = 0;
 
   CompilationState(JSContext* cx, LifoAllocScope& frontendAllocScope,
-                   const JS::ReadOnlyCompileOptions& options,
-                   CompilationStencil& stencil);
+                   CompilationInput& input, CompilationStencil& stencil);
 
   bool init(JSContext* cx, InheritThis inheritThis = InheritThis::No,
             JSObject* enclosingEnv = nullptr) {

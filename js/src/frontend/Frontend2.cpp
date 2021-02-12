@@ -313,7 +313,7 @@ bool ConvertRegExpData(JSContext* cx, const SmooshResult& result,
 
     mozilla::Range<const char16_t> range(pattern.get(), length);
 
-    TokenStreamAnyChars ts(cx, stencil.input.options,
+    TokenStreamAnyChars ts(cx, compilationState.input.options,
                            /* smg = */ nullptr);
 
     // See Parser<FullParseHandler, Unit>::newRegExp.
@@ -431,7 +431,7 @@ bool ConvertScriptStencil(JSContext* cx, const SmooshResult& result,
                           ScriptIndex scriptIndex) {
   using ImmutableFlags = js::ImmutableScriptFlagsEnum;
 
-  const JS::ReadOnlyCompileOptions& options = stencil.input.options;
+  const JS::ReadOnlyCompileOptions& options = compilationState.input.options;
 
   ScriptStencil& script = compilationState.scriptData[scriptIndex];
   ScriptStencilExtra& scriptExtra = compilationState.scriptExtra[scriptIndex];
@@ -596,7 +596,7 @@ bool Smoosh::tryCompileGlobalScriptToStencil(
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
 
   Vector<TaggedParserAtomIndex> allAtoms(cx);
-  CompilationState compilationState(cx, allocScope, input.options, *stencil);
+  CompilationState compilationState(cx, allocScope, input, *stencil);
   if (!ConvertAtoms(cx, result, compilationState, allAtoms)) {
     return false;
   }

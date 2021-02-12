@@ -5671,7 +5671,8 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
   frontend::CompilationStencil stencil(input.get());
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::CompilationState compilationState(cx, allocScope, options, stencil);
+  frontend::CompilationState compilationState(cx, allocScope, input.get(),
+                                              stencil);
   if (!compilationState.init(cx)) {
     return false;
   }
@@ -5747,7 +5748,8 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
   frontend::CompilationStencil stencil(input.get());
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::CompilationState compilationState(cx, allocScope, options, stencil);
+  frontend::CompilationState compilationState(cx, allocScope, input.get(),
+                                              stencil);
   if (!compilationState.init(cx)) {
     return false;
   }
