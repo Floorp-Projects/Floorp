@@ -983,7 +983,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   static bool IsDXP016Blocked();
 
   RefPtr<gfxASurface> mScreenReferenceSurface;
-  nsCOMPtr<nsIObserver> mSRGBOverrideObserver;
   RefPtr<mozilla::layers::MemoryPressureObserver> mMemoryPressureObserver;
 
   // The preferred draw target backend to use for canvas
