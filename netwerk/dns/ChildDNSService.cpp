@@ -138,7 +138,8 @@ nsresult ChildDNSService::AsyncResolveInternal(
                         aOriginAttributes, flags, originalListenerAddr, key);
     mPendingRequests.WithEntryHandle(key, [&](auto&& entry) {
       entry
-          .OrInsertWith([] { return new nsTArray<RefPtr<DNSRequestSender>>(); })
+          .OrInsertWith(
+              [] { return MakeUnique<nsTArray<RefPtr<DNSRequestSender>>>(); })
           ->AppendElement(sender);
     });
   }

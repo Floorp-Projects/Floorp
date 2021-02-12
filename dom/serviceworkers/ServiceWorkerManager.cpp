@@ -548,7 +548,8 @@ RefPtr<GenericErrorResultPromise> ServiceWorkerManager::StartControllingClient(
 
         aRegistrationInfo->StartControllingClient();
 
-        entry.Insert(new ControlledClientData(clientHandle, aRegistrationInfo));
+        entry.Insert(
+            MakeUnique<ControlledClientData>(clientHandle, aRegistrationInfo));
 
         clientHandle->OnDetach()->Then(
             GetMainThreadSerialEventTarget(), __func__,
@@ -1911,7 +1912,8 @@ void ServiceWorkerManager::AddScopeAndRegistration(
   auto* const data =
       swm->mRegistrationInfos.WithEntryHandle(scopeKey, [](auto&& entry) {
         return entry
-            .OrInsertWith([] { return new RegistrationDataPerPrincipal(); })
+            .OrInsertWith(
+                [] { return MakeUnique<RegistrationDataPerPrincipal>(); })
             .get();
       });
 

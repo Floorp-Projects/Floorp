@@ -756,7 +756,8 @@ nsRadioGroupStruct* DocumentOrShadowRoot::GetRadioGroup(
 nsRadioGroupStruct* DocumentOrShadowRoot::GetOrCreateRadioGroup(
     const nsAString& aName) {
   return mRadioGroups.WithEntryHandle(aName, [](auto&& entry) {
-    return entry.OrInsertWith([] { return new nsRadioGroupStruct(); }).get();
+    return entry.OrInsertWith([] { return MakeUnique<nsRadioGroupStruct>(); })
+        .get();
   });
 }
 

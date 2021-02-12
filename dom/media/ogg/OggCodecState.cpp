@@ -1712,8 +1712,8 @@ bool SkeletonState::DecodeFisbone(ogg_packet* aPacket) {
               entry.OrInsertWith([i, msgHead, msgProbe]() {
                 uint32_t nameLen =
                     strlen(kFieldTypeMaps[i].mPatternToRecognize);
-                return new nsCString(msgHead + nameLen,
-                                     msgProbe - msgHead - nameLen);
+                return MakeUnique<nsCString>(msgHead + nameLen,
+                                             msgProbe - msgHead - nameLen);
               });
             });
             isContentTypeParsed = i == 0 ? true : isContentTypeParsed;
@@ -1735,7 +1735,7 @@ bool SkeletonState::DecodeFisbone(ogg_packet* aPacket) {
       // mMsgFieldStore has an entry for serialno already.
       return false;
     }
-    entry.Insert(field.release());
+    entry.Insert(std::move(field));
     return true;
   });
 }

@@ -243,7 +243,8 @@ void nsFrameMessageManager::AddMessageListener(const nsAString& aMessageName,
       mListeners.WithEntryHandle(aMessageName, [](auto&& entry) {
         return entry
             .OrInsertWith([] {
-              return new nsAutoTObserverArray<nsMessageListenerInfo, 1>();
+              return MakeUnique<
+                  nsAutoTObserverArray<nsMessageListenerInfo, 1>>();
             })
             .get();
       });
@@ -317,7 +318,8 @@ void nsFrameMessageManager::AddWeakMessageListener(
       mListeners.WithEntryHandle(aMessageName, [](auto&& entry) {
         return entry
             .OrInsertWith([] {
-              return new nsAutoTObserverArray<nsMessageListenerInfo, 1>();
+              return MakeUnique<
+                  nsAutoTObserverArray<nsMessageListenerInfo, 1>>();
             })
             .get();
       });
