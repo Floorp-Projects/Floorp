@@ -78,23 +78,28 @@ uint32_t wasm::ObservedCPUFeatures() {
 #endif
 }
 
-FeatureArgs FeatureArgs::build(JSContext* cx) {
+FeatureArgs FeatureArgs::build(JSContext* cx, const FeatureOptions& options) {
   FeatureArgs features;
+  // See comments in WasmConstants.h regarding the meaning of the wormhole
+  // options.
+  bool wormholeOverride =
+      wasm::SimdWormholeAvailable(cx) && options.simdWormhole;
   features.sharedMemory =
       wasm::ThreadsAvailable(cx) ? Shareable::True : Shareable::False;
   features.refTypes = wasm::ReftypesAvailable(cx);
   features.functionReferences = wasm::FunctionReferencesAvailable(cx);
   features.gcTypes = wasm::GcTypesAvailable(cx);
   features.multiValue = wasm::MultiValuesAvailable(cx);
-  features.v128 = wasm::SimdAvailable(cx);
+  features.v128 = wasm::SimdAvailable(cx) || wormholeOverride;
   features.hugeMemory = wasm::IsHugeMemoryEnabled();
-  features.simdWormhole = wasm::SimdWormholeAvailable(cx);
+  features.simdWormhole = wormholeOverride;
   features.exceptions = wasm::ExceptionsAvailable(cx);
   return features;
 }
 
 SharedCompileArgs CompileArgs::build(JSContext* cx,
-                                     ScriptedCaller&& scriptedCaller) {
+                                     ScriptedCaller&& scriptedCaller,
+                                     const FeatureOptions& options) {
   bool baseline = BaselineAvailable(cx);
   bool ion = IonAvailable(cx);
   bool cranelift = CraneliftAvailable(cx);
@@ -141,7 +146,7 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
   target->craneliftEnabled = cranelift;
   target->debugEnabled = debug;
   target->forceTiering = forceTiering;
-  target->features = FeatureArgs::build(cx);
+  target->features = FeatureArgs::build(cx, options);
 
   Log(cx, "available wasm compilers: tier1=%s tier2=%s",
       baseline ? "baseline" : "none",

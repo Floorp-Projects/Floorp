@@ -210,8 +210,9 @@ static int testWasmFuzz(const uint8_t* buf, size_t size) {
     currentIndex += moduleLen;
 
     ScriptedCaller scriptedCaller;
+    FeatureOptions options;
     SharedCompileArgs compileArgs =
-        CompileArgs::build(gCx, std::move(scriptedCaller));
+        CompileArgs::build(gCx, std::move(scriptedCaller), options);
     if (!compileArgs) {
       return 0;
     }

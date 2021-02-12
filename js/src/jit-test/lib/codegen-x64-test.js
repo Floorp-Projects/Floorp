@@ -12,6 +12,10 @@
 //
 // The testers additionally take an optional options bag with the following optional
 // entries:
+//  features: if present, an object to pass as the last argument to functions
+//            that compile wasm bytecode
+//  instanceBox: if present, an object with a `value` property that will receive
+//               the constructed instance
 //  no_prefix: if true, do not add a prefix string (normally the end of the prologue)
 //  no_suffix: if true, do not add a suffix string (normally the start of the epilogue)
 //  memory: if present, add a memory of length given by this property
@@ -140,7 +144,7 @@ function codegenTestX64_unit_v128(inputs, options = {}) {
 function codegenTestX64_adhoc(module_text, export_name, expected, options = {}) {
     assertEq(hasDisassembler(), true);
 
-    let ins = wasmEvalText(module_text);
+    let ins = wasmEvalText(module_text, {}, options.features);
     if (options.instanceBox)
         options.instanceBox.value = ins;
     let output = wasmDis(ins.exports[export_name], "ion", true);

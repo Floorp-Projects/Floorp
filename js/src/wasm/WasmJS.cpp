@@ -409,9 +409,23 @@ bool wasm::SimdAvailable(JSContext* cx) {
          (BaselineAvailable(cx) || IonAvailable(cx) || CraneliftAvailable(cx));
 }
 
+#ifdef ENABLE_WASM_SIMD_WORMHOLE
+static bool IsSimdPrivilegedContext(JSContext* cx) {
+  // We need the appropriate test here, TBD
+  return false;
+}
+#endif
+
 bool wasm::SimdWormholeAvailable(JSContext* cx) {
-  return WasmSimdWormholeFlag(cx) && SimdAvailable(cx) &&
+#ifdef ENABLE_WASM_SIMD_WORMHOLE
+  // Do not check SimdAvailable(): if the wormhole is available, requesting it
+  // will force-enable SIMD.  But we must check whether we can have SIMD at all.
+  return js::jit::JitSupportsWasmSimd() &&
+         (WasmSimdWormholeFlag(cx) || IsSimdPrivilegedContext(cx)) &&
          (IonAvailable(cx) || BaselineAvailable(cx)) && !CraneliftAvailable(cx);
+#else
+  return false;
+#endif
 }
 
 bool wasm::ThreadsAvailable(JSContext* cx) {
@@ -743,11 +757,47 @@ static bool DescribeScriptedCaller(JSContext* cx, ScriptedCaller* caller,
   return true;
 }
 
+// Parse the options bag that is optionally passed to functions that compile
+// wasm.  This is for internal experimentation purposes.  See comments about the
+// SIMD wormhole in WasmConstants.h.
+
+static bool ParseCompileOptions(JSContext* cx, HandleValue maybeOptions,
+                                FeatureOptions* options) {
+  if (WasmSimdWormholeFlag(cx)) {
+    if (maybeOptions.isObject()) {
+      RootedValue wormholeVal(cx);
+      RootedObject obj(cx, &maybeOptions.toObject());
+      if (!JS_GetProperty(cx, obj, "simdWormhole", &wormholeVal)) {
+        return false;
+      }
+      if (wormholeVal.isBoolean()) {
+        options->simdWormhole = wormholeVal.toBoolean();
+      }
+    }
+  }
+  return true;
+}
+
+static SharedCompileArgs InitCompileArgs(JSContext* cx,
+                                         HandleValue maybeOptions,
+                                         const char* introducer) {
+  ScriptedCaller scriptedCaller;
+  if (!DescribeScriptedCaller(cx, &scriptedCaller, introducer)) {
+    return nullptr;
+  }
+
+  FeatureOptions options;
+  if (!ParseCompileOptions(cx, maybeOptions, &options)) {
+    return nullptr;
+  }
+  return CompileArgs::build(cx, std::move(scriptedCaller), options);
+}
+
 // ============================================================================
 // Testing / Fuzzing support
 
 bool wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code,
-                HandleObject importObj,
+                HandleObject importObj, HandleValue maybeOptions,
                 MutableHandleWasmInstanceObject instanceObj) {
   if (!GlobalObject::ensureConstructor(cx, cx->global(), JSProto_WebAssembly)) {
     return false;
@@ -764,13 +814,8 @@ bool wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code,
     return false;
   }
 
-  ScriptedCaller scriptedCaller;
-  if (!DescribeScriptedCaller(cx, &scriptedCaller, "wasm_eval")) {
-    return false;
-  }
-
   SharedCompileArgs compileArgs =
-      CompileArgs::build(cx, std::move(scriptedCaller));
+      InitCompileArgs(cx, maybeOptions, "wasm_eval");
   if (!compileArgs) {
     return false;
   }
@@ -1517,16 +1562,6 @@ static bool GetBufferSource(JSContext* cx, JSObject* obj, unsigned errorNumber,
   return true;
 }
 
-static SharedCompileArgs InitCompileArgs(JSContext* cx,
-                                         const char* introducer) {
-  ScriptedCaller scriptedCaller;
-  if (!DescribeScriptedCaller(cx, &scriptedCaller, introducer)) {
-    return nullptr;
-  }
-
-  return CompileArgs::build(cx, std::move(scriptedCaller));
-}
-
 static bool ReportCompileWarnings(JSContext* cx,
                                   const UniqueCharsVector& warnings) {
   // Avoid spamming the console.
@@ -1574,7 +1609,8 @@ bool WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  SharedCompileArgs compileArgs = InitCompileArgs(cx, "WebAssembly.Module");
+  SharedCompileArgs compileArgs =
+      InitCompileArgs(cx, callArgs.get(1), "WebAssembly.Module");
   if (!compileArgs) {
     return false;
   }
@@ -3754,8 +3790,8 @@ struct CompileBufferTask : PromiseHelperTask {
   CompileBufferTask(JSContext* cx, Handle<PromiseObject*> promise)
       : PromiseHelperTask(cx, promise), instantiate(false) {}
 
-  bool init(JSContext* cx, const char* introducer) {
-    compileArgs = InitCompileArgs(cx, introducer);
+  bool init(JSContext* cx, HandleValue maybeOptions, const char* introducer) {
+    compileArgs = InitCompileArgs(cx, maybeOptions, introducer);
     if (!compileArgs) {
       return false;
     }
@@ -3828,12 +3864,12 @@ static bool WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  CallArgs callArgs = CallArgsFromVp(argc, vp);
+
   auto task = cx->make_unique<CompileBufferTask>(cx, promise);
-  if (!task || !task->init(cx, "WebAssembly.compile")) {
+  if (!task || !task->init(cx, callArgs.get(1), "WebAssembly.compile")) {
     return false;
   }
-
-  CallArgs callArgs = CallArgsFromVp(argc, vp);
 
   if (!GetBufferSource(cx, callArgs, "WebAssembly.compile", &task->bytecode)) {
     return RejectWithPendingException(cx, promise, callArgs);
@@ -3892,7 +3928,7 @@ static bool WebAssembly_instantiate(JSContext* cx, unsigned argc, Value* vp) {
     }
   } else {
     auto task = cx->make_unique<CompileBufferTask>(cx, promise, importObj);
-    if (!task || !task->init(cx, "WebAssembly.instantiate")) {
+    if (!task || !task->init(cx, callArgs.get(2), "WebAssembly.instantiate")) {
       return false;
     }
 
@@ -3918,8 +3954,10 @@ static bool WebAssembly_validate(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  FeatureOptions options;
+  ParseCompileOptions(cx, callArgs.get(1), &options);
   UniqueChars error;
-  bool validated = Validate(cx, *bytecode, &error);
+  bool validated = Validate(cx, *bytecode, options, &error);
 
   // If the reason for validation failure was OOM (signalled by null error
   // message), report out-of-memory so that validate's return is always
@@ -4407,7 +4445,8 @@ static bool ResolveResponse(JSContext* cx, CallArgs callArgs,
   const char* introducer = instantiate ? "WebAssembly.instantiateStreaming"
                                        : "WebAssembly.compileStreaming";
 
-  SharedCompileArgs compileArgs = InitCompileArgs(cx, introducer);
+  SharedCompileArgs compileArgs =
+      InitCompileArgs(cx, callArgs.get(instantiate ? 2 : 1), introducer);
   if (!compileArgs) {
     return false;
   }

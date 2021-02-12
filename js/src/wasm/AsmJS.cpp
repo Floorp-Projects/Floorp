@@ -2110,7 +2110,10 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
       }
     }
 
-    SharedCompileArgs args = CompileArgs::build(cx_, std::move(scriptedCaller));
+    // The default options are fine for asm.js
+    FeatureOptions options;
+    SharedCompileArgs args =
+        CompileArgs::build(cx_, std::move(scriptedCaller), options);
     if (!args) {
       return nullptr;
     }
