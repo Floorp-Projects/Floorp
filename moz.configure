@@ -276,6 +276,7 @@ def bootstrap_toolchain_tasks(host_or_target):
             ("x86_64", "GNU", "Linux"): "linux64",
             ("aarch64", "GNU", "Linux"): "linux64-aarch64",
             ("x86_64", "OSX", "Darwin"): "macosx64",
+            ("aarch64", "OSX", "Darwin"): "macosx64-aarch64",
             ("x86_64", "WINNT", "WINNT"): "win64",
         }.get((host_or_target.cpu, host_or_target.os, host_or_target.kernel))
         if prefix:
