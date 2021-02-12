@@ -93,7 +93,9 @@ async function gInit(perfFront, pageContext, openRemoteDevTools) {
   const supportedFeatures = await perfFront.getSupportedFeatures();
 
   const l10n = new FluentL10n();
-  await l10n.init(["devtools/client/perftools.ftl"]);
+  await l10n.init(["devtools/client/perftools.ftl"], {
+    setAttributesOnDocument: true,
+  });
 
   // Do some initialization, especially with privileged things that are part of the
   // the browser.
