@@ -57,7 +57,7 @@
       <ul>
         <li>¿Pue ser que\'l sirvidor tea sufriendo una demanda alta o una cayida temporal? Volvi tentalo dempués.</li>
         <li>¿Nun yes a restolar per otros sitios? Comprueba la conexón del preséu a la rede.</li>
-        <li>¿El preséu ta protexíu por un tornafuéu o proxy? Unos axustes incorreutos puen interfirir col restolar de la web.</li>
+        <li>¿El preséu ta protexíu por un tornafuéu o proxy? Unos axustes incorreutos puen afeutar al restolar de la web.</li>
         <li>¿Entá tienes problemes? Consulta al to alministrador de redes o fornidor d\'internet pa más asistencia.</li>
       </ul>]]></string>
 
@@ -187,7 +187,7 @@
     <string name="mozac_browser_errorpages_file_not_found_title">Nun s\'atopó\'l ficheru</string>
 
     <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
-        <li>¿Pue ser que l\'elementu se renomare, desaniciare o moviere?</li>
+        <li>¿Pue ser que l\'elementu se renomare, quitare o moviere?</li>
         <li>¿La direición tien dalguna falta u otru fallu tipográficu?</li>
         <li>¿Tienes abondos permisos p\'acceder al elementu solicitáu?</li>
       </ul>]]></string>
@@ -196,7 +196,7 @@
     <string name="mozac_browser_errorpages_file_access_denied_title">Ñegóse l\'accesu al ficheru</string>
 
     <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
-        <li>Seique se desaniciare, moviere o los permisos del ficheru eviten l\'accesu a elli.</li>
+        <li>Seique se quitare, moviere o los permisos del ficheru eviten l\'accesu a elli.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
