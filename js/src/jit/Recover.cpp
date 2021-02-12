@@ -887,7 +887,7 @@ RArgumentsLength::RArgumentsLength(CompactBufferReader& reader) {}
 bool RArgumentsLength::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedValue result(cx);
 
-  result.setInt32(iter.readOuterNumActualArgs());
+  result.setInt32(iter.frame()->numActualArgs());
 
   iter.storeInstructionResult(result);
   return true;
@@ -1945,5 +1945,27 @@ bool RBigIntAsUintN::recover(JSContext* cx, SnapshotIterator& iter) const {
   }
 
   iter.storeInstructionResult(JS::BigIntValue(result));
+  return true;
+}
+
+bool MCreateArgumentsObject::writeRecoverData(
+    CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_CreateArgumentsObject));
+  return true;
+}
+
+RCreateArgumentsObject::RCreateArgumentsObject(CompactBufferReader& reader) {}
+
+bool RCreateArgumentsObject::recover(JSContext* cx,
+                                     SnapshotIterator& iter) const {
+  RootedObject callObject(cx, &iter.read().toObject());
+  RootedObject result(
+      cx, ArgumentsObject::createForIon(cx, iter.frame(), callObject));
+  if (!result) {
+    return false;
+  }
+
+  iter.storeInstructionResult(JS::ObjectValue(*result));
   return true;
 }

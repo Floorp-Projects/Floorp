@@ -1255,6 +1255,11 @@ static bool IsArgumentsObjectEscaped(MInstruction* ins) {
       case MDefinition::Opcode::LoadArgumentsObjectArg:
         break;
 
+      // This instruction is a no-op used to test that scalar replacement
+      // is working as expected.
+      case MDefinition::Opcode::AssertRecoveredOnBailout:
+        break;
+
       default:
         JitSpewDef(JitSpew_Escape, "is escaped by\n", def);
         return true;
@@ -1285,6 +1290,7 @@ class ArgumentsReplacer : public MDefinitionVisitorDefaultNoop {
   }
 
   bool run();
+  void assertSuccess();
 };
 
 // Replacing the arguments object is simpler than replacing an object
@@ -1320,8 +1326,13 @@ bool ArgumentsReplacer::run() {
     }
   }
 
-  MOZ_ASSERT(!args_->hasLiveDefUses());
+  assertSuccess();
   return true;
+}
+
+void ArgumentsReplacer::assertSuccess() {
+  MOZ_ASSERT(args_->canRecoverOnBailout());
+  MOZ_ASSERT(!args_->hasLiveDefUses());
 }
 
 void ArgumentsReplacer::visitGuardToClass(MGuardToClass* ins) {

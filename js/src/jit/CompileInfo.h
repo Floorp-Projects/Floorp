@@ -303,10 +303,11 @@ class CompileInfo {
       return SlotObservableKind::NotObservable;
     }
 
-    // The arguments object is observable and not recoverable.
+    // The arguments object is observable. If it does not escape, it can
+    // be recovered.
     if (hasArguments() && slot == argsObjSlot()) {
       MOZ_ASSERT(funMaybeLazy());
-      return SlotObservableKind::ObservableNotRecoverable;
+      return SlotObservableKind::ObservableRecoverable;
     }
 
     MOZ_ASSERT(slot == returnValueSlot());
