@@ -3,13 +3,15 @@ if (!wasmIsSupported())
 
 load(libdir + "asserts.js");
 
-function wasmEvalText(str, imports) {
+// "options" is an extension to facilitate the SIMD wormhole
+
+function wasmEvalText(str, imports, options) {
     let binary = wasmTextToBinary(str);
-    let valid = WebAssembly.validate(binary);
+    let valid = WebAssembly.validate(binary, options);
 
     let m;
     try {
-        m = new WebAssembly.Module(binary);
+        m = new WebAssembly.Module(binary, options);
         assertEq(valid, true);
     } catch(e) {
         if (!e.toString().match(/out of memory/))

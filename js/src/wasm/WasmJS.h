@@ -167,7 +167,7 @@ bool ExceptionsAvailable(JSContext* cx);
 // and links the module's imports with the given import object.
 
 [[nodiscard]] bool Eval(JSContext* cx, Handle<TypedArrayObject*> code,
-                        HandleObject importObj,
+                        HandleObject importObj, HandleValue maybeOptions,
                         MutableHandleWasmInstanceObject instanceObj);
 
 // Extracts the various imports from the given import object into the given

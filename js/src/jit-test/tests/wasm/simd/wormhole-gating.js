@@ -13,7 +13,9 @@ if (wasmSimdWormholeEnabled()) {
 (module
   (memory (export "mem") 1)
   (func (export "SELFTEST")
-    (v128.store (i32.const 0) (${wormhole_op(WORMHOLE_SELFTEST)} (v128.const i32x4 0 0 0 0) (v128.const i32x4 0 0 0 0)))))`);
+    (v128.store (i32.const 0) (${wormhole_op(WORMHOLE_SELFTEST)} (v128.const i32x4 0 0 0 0) (v128.const i32x4 0 0 0 0)))))`,
+                           {},
+                           {simdWormhole:true});
     ins.exports.SELFTEST();
     let mem = new Uint8Array(ins.exports.mem.buffer);
     let ans = [0xD, 0xE, 0xA, 0xD, 0xD, 0, 0, 0xD, 0xC, 0xA, 0xF, 0xE, 0xB, 0xA, 0xB, 0xE];

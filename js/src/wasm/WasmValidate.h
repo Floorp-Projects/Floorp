@@ -953,7 +953,7 @@ void ConvertMemoryPagesToBytes(Limits* memory);
 //  - otherwise, there was a legitimate error described by *error
 
 [[nodiscard]] bool Validate(JSContext* cx, const ShareableBytes& bytecode,
-                            UniqueChars* error);
+                            const FeatureOptions& options, UniqueChars* error);
 
 }  // namespace wasm
 }  // namespace js

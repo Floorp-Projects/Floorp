@@ -27,8 +27,10 @@ bool wasm::Context::ensureTypeContext(JSContext* cx) {
   if (typeContext) {
     return true;
   }
-  typeContext =
-      js::MakeUnique<TypeContext>(FeatureArgs::build(cx), TypeDefVector());
+  // Default options should be OK here
+  FeatureOptions options;
+  typeContext = js::MakeUnique<TypeContext>(FeatureArgs::build(cx, options),
+                                            TypeDefVector());
   return !!typeContext;
 }
 

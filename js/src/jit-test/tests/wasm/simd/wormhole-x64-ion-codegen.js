@@ -15,7 +15,7 @@ codegenTestX64_adhoc(
      (${wormhole_op(WORMHOLE_PMADDUBSW)} (local.get 0) (local.get 1))))`,
     'PMADDUBSW',
     '66 0f 38 04 c1            pmaddubsw %xmm1, %xmm0',
-    {instanceBox});
+    {instanceBox, features:{simdWormhole:true}});
 
 var ins = instanceBox.value;
 var mem8 = new Uint8Array(ins.exports.mem.buffer);
@@ -39,7 +39,7 @@ codegenTestX64_adhoc(
      (${wormhole_op(WORMHOLE_PMADDWD)} (local.get 0) (local.get 1))))`,
     'PMADDWD',
     '66 0f f5 c1               pmaddwd %xmm1, %xmm0',
-    {instanceBox});
+    {instanceBox, features:{simdWormhole:true}});
 
 var ins = instanceBox.value;
 var mem16 = new Int16Array(ins.exports.mem.buffer);

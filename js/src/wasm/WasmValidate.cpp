@@ -3387,10 +3387,10 @@ bool wasm::DecodeModuleTail(Decoder& d, ModuleEnvironment* env) {
 // Validate algorithm.
 
 bool wasm::Validate(JSContext* cx, const ShareableBytes& bytecode,
-                    UniqueChars* error) {
+                    const FeatureOptions& options, UniqueChars* error) {
   Decoder d(bytecode.bytes, 0, error);
 
-  FeatureArgs features = FeatureArgs::build(cx);
+  FeatureArgs features = FeatureArgs::build(cx, options);
   ModuleEnvironment env(features);
   if (!DecodeModuleEnvironment(d, &env)) {
     return false;
