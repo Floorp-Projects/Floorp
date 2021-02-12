@@ -2164,7 +2164,7 @@ bool BaselineCacheIRCompiler::updateArgc(CallFlags flags, Register argcReg,
       masm.loadPtr(Address(scratch, NativeObject::offsetOfElements()), scratch);
       masm.load32(Address(scratch, ObjectElements::offsetOfLength()), scratch);
     } break;
-    case CallFlags::FunApplyArgs: {
+    case CallFlags::FunApplyMagicArgs: {
       // The length of |arguments| is stored in the baseline frame.
       Address numActualArgsAddr(BaselineFrameReg,
                                 BaselineFrame::offsetOfNumActualArgs());
@@ -2200,8 +2200,8 @@ void BaselineCacheIRCompiler::pushArguments(Register argcReg,
     case CallFlags::FunCall:
       pushFunCallArguments(argcReg, calleeReg, scratch, scratch2, isJitCall);
       break;
-    case CallFlags::FunApplyArgs:
-      pushFunApplyArgs(argcReg, calleeReg, scratch, scratch2, isJitCall);
+    case CallFlags::FunApplyMagicArgs:
+      pushFunApplyMagicArgs(argcReg, calleeReg, scratch, scratch2, isJitCall);
       break;
     case CallFlags::FunApplyArray:
       pushArrayArguments(argcReg, scratch, scratch2, isJitCall,
@@ -2368,11 +2368,11 @@ void BaselineCacheIRCompiler::pushFunCallArguments(Register argcReg,
   masm.bind(&done);
 }
 
-void BaselineCacheIRCompiler::pushFunApplyArgs(Register argcReg,
-                                               Register calleeReg,
-                                               Register scratch,
-                                               Register scratch2,
-                                               bool isJitCall) {
+void BaselineCacheIRCompiler::pushFunApplyMagicArgs(Register argcReg,
+                                                    Register calleeReg,
+                                                    Register scratch,
+                                                    Register scratch2,
+                                                    bool isJitCall) {
   // Push the caller's arguments onto the stack.
 
   // Find the start of the caller's arguments.

@@ -8221,7 +8221,7 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
 
   CallFlags::ArgFormat format = CallFlags::Standard;
   if (args_[1].isMagic(JS_OPTIMIZED_ARGUMENTS) && !script_->needsArgsObj()) {
-    format = CallFlags::FunApplyArgs;
+    format = CallFlags::FunApplyMagicArgs;
   } else if (args_[1].isObject() && args_[1].toObject().is<ArrayObject>() &&
              args_[1].toObject().as<ArrayObject>().length() <=
                  JIT_ARGS_LENGTH_MAX) {
@@ -8245,7 +8245,7 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
 
   ValOperandId argValId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
-  if (format == CallFlags::FunApplyArgs) {
+  if (format == CallFlags::FunApplyMagicArgs) {
     writer.guardMagicValue(argValId, JS_OPTIMIZED_ARGUMENTS);
     writer.guardFrameHasNoArgumentsObject();
   } else {
