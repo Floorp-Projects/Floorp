@@ -239,7 +239,7 @@ void WebrtcAudioConduit::InsertAudioLevelForContributingSource(
 
   webrtc::RtpPacketInfos infos({webrtc::RtpPacketInfo(
       mRecvSSRC, {aCsrcSource}, aRtpTimestamp,
-      aHasAudioLevel ? absl::optional(aAudioLevel) : absl::nullopt,
+      aHasAudioLevel ? absl::optional<uint8_t>(aAudioLevel) : absl::nullopt,
       absl::nullopt, aTimestamp)});
 
   mRecvStream->InsertAudioLevelForContributingSource(infos);
