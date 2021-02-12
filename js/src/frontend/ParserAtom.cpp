@@ -776,10 +776,31 @@ UniqueChars ToPrintableStringImpl(JSContext* cx, mozilla::Range<CharT> str,
 
 UniqueChars ParserAtomsTable::toPrintableString(
     JSContext* cx, TaggedParserAtomIndex index) const {
-  const auto* atom = getParserAtom(index);
-  return atom->hasLatin1Chars()
-             ? ToPrintableStringImpl(cx, atom->latin1Range())
-             : ToPrintableStringImpl(cx, atom->twoByteRange());
+  if (index.isParserAtomIndex()) {
+    const auto* atom = getParserAtom(index.toParserAtomIndex());
+    return atom->hasLatin1Chars()
+               ? ToPrintableStringImpl(cx, atom->latin1Range())
+               : ToPrintableStringImpl(cx, atom->twoByteRange());
+  }
+
+  if (index.isWellKnownAtomId()) {
+    const auto* atom = getWellKnown(index.toWellKnownAtomId());
+    MOZ_ASSERT(atom->hasLatin1Chars());
+    return ToPrintableStringImpl(cx, atom->latin1Range());
+  }
+
+  if (index.isLength1StaticParserString()) {
+    char content[1];
+    getLength1Content(index.toLength1StaticParserString(), content);
+    return ToPrintableStringImpl(
+        cx, mozilla::Range(reinterpret_cast<const Latin1Char*>(content), 1));
+  }
+
+  MOZ_ASSERT(index.isLength2StaticParserString());
+  char content[2];
+  getLength2Content(index.toLength2StaticParserString(), content);
+  return ToPrintableStringImpl(
+      cx, mozilla::Range(reinterpret_cast<const Latin1Char*>(content), 2));
 }
 
 UniqueChars ParserAtomsTable::toQuotedString(
