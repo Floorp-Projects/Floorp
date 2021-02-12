@@ -784,12 +784,19 @@ element.findClosest = function(startNode, selector) {
  *     The DOM element to generate the identifier for.
  *
  * @return {object} The ContentDOMReference ElementIdentifier for the DOM
- *     element augmented with a Marionette WebElement reference.
+ *     element augmented with a Marionette WebElement reference, and some
+ *     additional properties.
  */
 element.getElementId = function(el) {
-  const id = ContentDOMReference.get(el);
   const webEl = WebElement.from(el);
+
+  const id = ContentDOMReference.get(el);
+  const browsingContext = BrowsingContext.get(id.browsingContextId);
+
   id.webElRef = webEl.toJSON();
+  id.browserId = browsingContext.browserId;
+  id.isTopLevel = !browsingContext.parent;
+
   return id;
 };
 
@@ -816,8 +823,20 @@ element.getElementId = function(el) {
  *     active document.
  */
 element.resolveElement = function(id, win) {
-  // Don't allow elements whose browsing context differs from the current one.
-  if (id.browsingContextId != win?.browsingContext.id) {
+  let sameBrowsingContext;
+  if (id.isTopLevel) {
+    // Cross-group navigations cause a swap of the current top-level browsing
+    // context. The only unique identifier is the browser id the browsing
+    // context actually lives in. If it's equal also treat the browsing context
+    // as the same (bug 1690308).
+    // If the element's browsing context is a top-level browsing context,
+    sameBrowsingContext = id.browserId == win?.browsingContext.browserId;
+  } else {
+    // For non top-level browsing contexts check for equality directly.
+    sameBrowsingContext = id.browsingContextId == win?.browsingContext.id;
+  }
+
+  if (!sameBrowsingContext) {
     throw new error.NoSuchElementError(
       `Web element reference not seen before: ${JSON.stringify(id.webElRef)}`
     );
