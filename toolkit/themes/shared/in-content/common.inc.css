@@ -549,11 +549,12 @@ html|input[type="checkbox"] {
   padding: 1px;
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 2px;
-  margin: 0;
-  margin-inline-end: 10px;
+  margin-block: 3px; /* extend the vertical clicktarget */
+  margin-inline: 0 10px;
   background-color: var(--in-content-button-background);
   background-position: center;
   background-repeat: no-repeat;
+  flex-shrink: 0; /* avoid shrinking inside flex container */
 }
 
 xul|checkbox:not([disabled="true"]):hover > xul|*.checkbox-check,
@@ -600,6 +601,7 @@ xul|richlistitem > xul|*.checkbox-check {
   margin: 3px 6px;
 }
 
+html|*.radio-container-with-text,
 html|*.toggle-container-with-text {
   display: flex;
   align-items: center;
@@ -617,10 +619,11 @@ xul|*.radio-check {
   height: 20px;
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 100%;
-  margin: 0;
-  margin-inline-end: 10px;
+  margin-block: 3px; /* extend the vertical clicktarget */
+  margin-inline: 0 10px;
   background-color: var(--in-content-button-background);
   background-position: center;
+  flex-shrink: 0; /* avoid shrinking inside flex container */
 }
 
 html|input[type="radio"]:enabled:hover,
