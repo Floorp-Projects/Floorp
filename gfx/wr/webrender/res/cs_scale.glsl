@@ -47,20 +47,7 @@ void main(void) {
 
 #ifdef SWGL_DRAW_SPAN
 void swgl_drawSpanRGBA8() {
-    if (!swgl_isTextureRGBA8(sColor0)) {
-        return;
-    }
-
-    int layer = swgl_textureLayerOffset(sColor0, vUvLayer);
-    vec2 uv = swgl_linearQuantize(sColor0, vUv);
-    vec2 min_uv = swgl_linearQuantize(sColor0, vUvRect.xy);
-    vec2 max_uv = swgl_linearQuantize(sColor0, vUvRect.zw);
-    vec2 step_uv = swgl_linearQuantizeStep(sColor0, swgl_interpStep(vUv));
-
-    while (swgl_SpanLength > 0) {
-        swgl_commitTextureLinearRGBA8(sColor0, clamp(uv, min_uv, max_uv), layer);
-        uv += step_uv;
-    }
+    swgl_commitTextureLinearRGBA8(sColor0, vUv, vUvRect, vUvLayer);
 }
 #endif
 

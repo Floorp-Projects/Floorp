@@ -74,28 +74,10 @@ Fragment brush_fs() {
 
 #if defined(SWGL_DRAW_SPAN) && !defined(WR_FEATURE_DUAL_SOURCE_BLENDING)
 void swgl_drawSpanRGBA8() {
-    if (!swgl_isTextureRGBA8(sColor0)) {
-        return;
-    }
-
     float perspective_divisor = mix(swgl_forceScalar(gl_FragCoord.w), 1.0, v_perspective);
     vec2 uv = v_uv * perspective_divisor;
 
-    if (swgl_allowTextureNearest(sColor0, uv)) {
-        swgl_commitTextureNearestColorRGBA8(sColor0, uv, v_uv_sample_bounds, v_opacity, 0);
-        return;
-    }
-
-    uv = swgl_linearQuantize(sColor0, uv);
-    vec2 min_uv = swgl_linearQuantize(sColor0, v_uv_sample_bounds.xy);
-    vec2 max_uv = swgl_linearQuantize(sColor0, v_uv_sample_bounds.zw);
-    vec2 step_uv = swgl_linearQuantizeStep(sColor0, swgl_interpStep(v_uv)) * perspective_divisor;
-
-    while (swgl_SpanLength > 0) {
-        float alpha = v_opacity;
-        swgl_commitTextureLinearColorRGBA8(sColor0, clamp(uv, min_uv, max_uv), alpha, 0);
-        uv += step_uv;
-    }
+    swgl_commitTextureLinearColorRGBA8(sColor0, uv, v_uv_sample_bounds, v_opacity, 0.0);
 }
 #endif
 
