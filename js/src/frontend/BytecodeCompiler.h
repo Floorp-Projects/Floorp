@@ -195,6 +195,12 @@ bool IsIdentifierNameOrPrivateName(JSLinearString* str);
 bool IsIdentifier(const Latin1Char* chars, size_t length);
 bool IsIdentifier(const char16_t* chars, size_t length);
 
+/*
+ * ASCII variant with known length.
+ */
+bool IsIdentifierASCII(char c);
+bool IsIdentifierASCII(char c1, char c2);
+
 bool IsIdentifierNameOrPrivateName(const Latin1Char* chars, size_t length);
 bool IsIdentifierNameOrPrivateName(const char16_t* chars, size_t length);
 
