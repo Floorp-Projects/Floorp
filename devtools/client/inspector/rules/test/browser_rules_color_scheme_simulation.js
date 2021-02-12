@@ -68,7 +68,6 @@ add_task(async function() {
   const iframeEl = await getNodeFrontInFrame("html", "iframe", inspector);
   await selectNode(iframeEl, inspector);
 
-  // This fails when Fission is enabled. See Bug 1678945.
   ok(
     iframeHasDarkSchemeStyling(),
     "The simulation is also applied on the remote iframe"
