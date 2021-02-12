@@ -5,10 +5,23 @@
 
 #include "ScrollbarUtil.h"
 
+#include "mozilla/Maybe.h"
 #include "mozilla/RelativeLuminanceUtils.h"
 #include "mozilla/StaticPrefs_widget.h"
+#include "nsLayoutUtils.h"
 #include "nsNativeTheme.h"
 #include "nsNativeBasicTheme.h"
+
+using mozilla::ComputedStyle;
+using mozilla::EventStates;
+using mozilla::Maybe;
+using mozilla::Nothing;
+using mozilla::RelativeLuminanceUtils;
+using mozilla::Some;
+using mozilla::StyleAppearance;
+using mozilla::StyleScrollbarWidth;
+
+namespace StaticPrefs = mozilla::StaticPrefs;
 
 /*static*/
 bool ScrollbarUtil::IsScrollbarWidthThin(ComputedStyle* aStyle) {
