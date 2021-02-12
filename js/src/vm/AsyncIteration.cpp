@@ -28,7 +28,7 @@ using namespace js;
 
 // ES2019 draft rev 49b781ec80117b60f73327ef3054703a3111e40c
 // 6.2.3.1.1 Await Fulfilled Functions
-MOZ_MUST_USE bool js::AsyncGeneratorAwaitedFulfilled(
+[[nodiscard]] bool js::AsyncGeneratorAwaitedFulfilled(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     HandleValue value) {
   return AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Normal, value);
@@ -36,7 +36,7 @@ MOZ_MUST_USE bool js::AsyncGeneratorAwaitedFulfilled(
 
 // ES2019 draft rev 49b781ec80117b60f73327ef3054703a3111e40c
 // 6.2.3.1.2 Await Rejected Functions
-MOZ_MUST_USE bool js::AsyncGeneratorAwaitedRejected(
+[[nodiscard]] bool js::AsyncGeneratorAwaitedRejected(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     HandleValue reason) {
   return AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Throw, reason);
@@ -44,7 +44,7 @@ MOZ_MUST_USE bool js::AsyncGeneratorAwaitedRejected(
 
 // ES2019 draft rev 49b781ec80117b60f73327ef3054703a3111e40c
 // 25.5.3.7 AsyncGeneratorYield, step 8.e.
-MOZ_MUST_USE bool js::AsyncGeneratorYieldReturnAwaitedFulfilled(
+[[nodiscard]] bool js::AsyncGeneratorYieldReturnAwaitedFulfilled(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     HandleValue value) {
   return AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Return, value);
@@ -52,7 +52,7 @@ MOZ_MUST_USE bool js::AsyncGeneratorYieldReturnAwaitedFulfilled(
 
 // ES2019 draft rev 49b781ec80117b60f73327ef3054703a3111e40c
 // 25.5.3.7 AsyncGeneratorYield, step 8.c.
-MOZ_MUST_USE bool js::AsyncGeneratorYieldReturnAwaitedRejected(
+[[nodiscard]] bool js::AsyncGeneratorYieldReturnAwaitedRejected(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     HandleValue reason) {
   return AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Throw, reason);
@@ -237,7 +237,7 @@ AsyncGeneratorRequest* AsyncGeneratorObject::createRequest(
   return request;
 }
 
-/* static */ MOZ_MUST_USE bool AsyncGeneratorObject::enqueueRequest(
+/* static */ [[nodiscard]] bool AsyncGeneratorObject::enqueueRequest(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     Handle<AsyncGeneratorRequest*> request) {
   if (asyncGenObj->isSingleQueue()) {
@@ -372,7 +372,7 @@ static MOZ_MUST_USE bool AsyncGeneratorYield(
 // 25.5.3.7 AsyncGeneratorYield, steps 5-6, 9.
 //
 // Note: Execution context switching is handled in generator.
-MOZ_MUST_USE bool js::AsyncGeneratorResume(
+[[nodiscard]] bool js::AsyncGeneratorResume(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     CompletionKind completionKind, HandleValue argument) {
   MOZ_ASSERT(!asyncGenObj->isClosed(),

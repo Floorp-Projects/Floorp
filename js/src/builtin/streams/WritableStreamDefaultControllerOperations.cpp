@@ -231,7 +231,7 @@ bool js::WritableStreamControllerStartFailedHandler(JSContext* cx,
  * Note: All arguments must be same-compartment with cx.  WritableStream
  * controllers are always created in the same compartment as the stream.
  */
-MOZ_MUST_USE bool js::SetUpWritableStreamDefaultController(
+[[nodiscard]] bool js::SetUpWritableStreamDefaultController(
     JSContext* cx, Handle<WritableStream*> stream,
     SinkAlgorithms sinkAlgorithms, Handle<Value> underlyingSink,
     Handle<Value> writeMethod, Handle<Value> closeMethod,
@@ -349,7 +349,7 @@ MOZ_MUST_USE bool js::SetUpWritableStreamDefaultController(
  *      SetUpWritableStreamDefaultControllerFromUnderlyingSink( stream,
  *          underlyingSink, highWaterMark, sizeAlgorithm )
  */
-MOZ_MUST_USE bool js::SetUpWritableStreamDefaultControllerFromUnderlyingSink(
+[[nodiscard]] bool js::SetUpWritableStreamDefaultControllerFromUnderlyingSink(
     JSContext* cx, Handle<WritableStream*> stream, Handle<Value> underlyingSink,
     double highWaterMark, Handle<Value> sizeAlgorithm) {
   cx->check(stream);
@@ -603,7 +603,7 @@ static MOZ_MUST_USE bool WritableStreamDefaultControllerProcessIfNeeded(
  * Streams spec, 4.8.9.
  *      WritableStreamDefaultControllerAdvanceQueueIfNeeded ( controller )
  */
-MOZ_MUST_USE bool WritableStreamDefaultControllerAdvanceQueueIfNeeded(
+[[nodiscard]] bool WritableStreamDefaultControllerAdvanceQueueIfNeeded(
     JSContext* cx,
     Handle<WritableStreamDefaultController*> unwrappedController) {
   // Step 2: If controller.[[started]] is false, return.

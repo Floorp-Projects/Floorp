@@ -47,7 +47,7 @@ class FixedLengthVector {
   //
   // If the allocation fails, this returns false and sets the
   // pending exception on the given context.
-  MOZ_MUST_USE bool allocateUninitialized(JSContext* cx, size_t length) {
+  [[nodiscard]] bool allocateUninitialized(JSContext* cx, size_t length) {
     MOZ_ASSERT(!initialized());
 
     length_ = length;
@@ -63,7 +63,7 @@ class FixedLengthVector {
   //
   // If the allocation fails, this returns false and sets the
   // pending exception on the given context.
-  MOZ_MUST_USE bool allocate(JSContext* cx, size_t length) {
+  [[nodiscard]] bool allocate(JSContext* cx, size_t length) {
     if (!allocateUninitialized(cx, length)) {
       return false;
     }

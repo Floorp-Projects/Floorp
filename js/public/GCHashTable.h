@@ -358,7 +358,7 @@ class MutableWrappedPtrOperations<JS::GCHashSet<Args...>, Wrapper>
 
   void clear() { set().clear(); }
   void clearAndCompact() { set().clearAndCompact(); }
-  MOZ_MUST_USE bool reserve(uint32_t len) { return set().reserve(len); }
+  [[nodiscard]] bool reserve(uint32_t len) { return set().reserve(len); }
   void remove(Ptr p) { set().remove(p); }
   void remove(const Lookup& l) { set().remove(l); }
   AddPtr lookupForAdd(const Lookup& l) { return set().lookupForAdd(l); }

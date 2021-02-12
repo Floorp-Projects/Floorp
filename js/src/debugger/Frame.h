@@ -226,8 +226,8 @@ class DebuggerFrame : public NativeObject {
    * association while the call is on the stack, and the relationships are easy
    * to discern.
    */
-  MOZ_MUST_USE bool setGeneratorInfo(JSContext* cx,
-                                     Handle<AbstractGeneratorObject*> genObj);
+  [[nodiscard]] bool setGeneratorInfo(JSContext* cx,
+                                      Handle<AbstractGeneratorObject*> genObj);
 
   /*
    * Undo the effects of a prior call to setGenerator.
@@ -273,9 +273,9 @@ class DebuggerFrame : public NativeObject {
 
   struct CallData;
 
-  MOZ_MUST_USE bool incrementStepperCounter(JSContext* cx,
-                                            AbstractFramePtr referent);
-  MOZ_MUST_USE bool incrementStepperCounter(JSContext* cx, JSScript* script);
+  [[nodiscard]] bool incrementStepperCounter(JSContext* cx,
+                                             AbstractFramePtr referent);
+  [[nodiscard]] bool incrementStepperCounter(JSContext* cx, JSScript* script);
   void decrementStepperCounter(JSFreeOp* fop, JSScript* script);
   void decrementStepperCounter(JSFreeOp* fop, AbstractFramePtr referent);
 
@@ -289,7 +289,7 @@ class DebuggerFrame : public NativeObject {
   void terminate(JSFreeOp* fop, AbstractFramePtr frame);
   void suspend(JSFreeOp* fop);
 
-  MOZ_MUST_USE bool replaceFrameIterData(JSContext* cx, const FrameIter&);
+  [[nodiscard]] bool replaceFrameIterData(JSContext* cx, const FrameIter&);
 
   class GeneratorInfo;
   inline GeneratorInfo* generatorInfo() const;

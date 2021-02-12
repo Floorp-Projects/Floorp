@@ -187,7 +187,7 @@ class PromiseObject : public NativeObject {
     return resolutionTime() - allocationTime();
   }
 
-  MOZ_MUST_USE bool dependentPromises(
+  [[nodiscard]] bool dependentPromises(
       JSContext* cx, JS::MutableHandle<GCVector<Value>> values);
 
   // Return the process-unique ID of this promise. Only used by the debugger.
@@ -206,7 +206,7 @@ class PromiseObject : public NativeObject {
   // false. If a builder call returns false, iteration stops, and this function
   // returns false; the build should set an error on 'cx' as appropriate.
   // Otherwise, this function returns true.
-  MOZ_MUST_USE bool forEachReactionRecord(
+  [[nodiscard]] bool forEachReactionRecord(
       JSContext* cx, PromiseReactionRecordBuilder& builder);
 
   bool isUnhandled() {

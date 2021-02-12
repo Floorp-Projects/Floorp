@@ -30,7 +30,7 @@
 
 namespace js {
 
-MOZ_MUST_USE inline bool SafeAdd(int32_t one, int32_t two, int32_t* res) {
+[[nodiscard]] inline bool SafeAdd(int32_t one, int32_t two, int32_t* res) {
 #if BUILTIN_CHECKED_ARITHMETIC_SUPPORTED(__builtin_sadd_overflow)
   // Using compiler's builtin function.
   return !__builtin_sadd_overflow(one, two, res);
@@ -43,7 +43,7 @@ MOZ_MUST_USE inline bool SafeAdd(int32_t one, int32_t two, int32_t* res) {
 #endif
 }
 
-MOZ_MUST_USE inline bool SafeSub(int32_t one, int32_t two, int32_t* res) {
+[[nodiscard]] inline bool SafeSub(int32_t one, int32_t two, int32_t* res) {
 #if BUILTIN_CHECKED_ARITHMETIC_SUPPORTED(__builtin_ssub_overflow)
   return !__builtin_ssub_overflow(one, two, res);
 #else
@@ -53,7 +53,7 @@ MOZ_MUST_USE inline bool SafeSub(int32_t one, int32_t two, int32_t* res) {
 #endif
 }
 
-MOZ_MUST_USE inline bool SafeMul(int32_t one, int32_t two, int32_t* res) {
+[[nodiscard]] inline bool SafeMul(int32_t one, int32_t two, int32_t* res) {
 #if BUILTIN_CHECKED_ARITHMETIC_SUPPORTED(__builtin_smul_overflow)
   return !__builtin_smul_overflow(one, two, res);
 #else
@@ -63,7 +63,7 @@ MOZ_MUST_USE inline bool SafeMul(int32_t one, int32_t two, int32_t* res) {
 #endif
 }
 
-MOZ_MUST_USE inline bool SafeMul(uint64_t one, uint64_t two, uint64_t* res) {
+[[nodiscard]] inline bool SafeMul(uint64_t one, uint64_t two, uint64_t* res) {
 #if BUILTIN_CHECKED_ARITHMETIC_SUPPORTED(__builtin_mul_overflow)
   return !__builtin_mul_overflow(one, two, res);
 #else

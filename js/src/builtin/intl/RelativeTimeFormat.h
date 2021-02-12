@@ -76,7 +76,7 @@ namespace intl {
 
 using FieldType = js::ImmutablePropertyNamePtr JSAtomState::*;
 
-MOZ_MUST_USE bool FormattedRelativeTimeToParts(
+[[nodiscard]] bool FormattedRelativeTimeToParts(
     JSContext* cx, const UFormattedValue* formattedValue, double timeValue,
     FieldType relativeTimeUnit, MutableHandleValue result);
 

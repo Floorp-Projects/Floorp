@@ -132,9 +132,9 @@ const char* ClassName() {
 }
 
 template <class T, class ErrorCallback>
-MOZ_MUST_USE T* UnwrapAndTypeCheckValueSlowPath(JSContext* cx,
-                                                HandleValue value,
-                                                ErrorCallback throwTypeError) {
+[[nodiscard]] T* UnwrapAndTypeCheckValueSlowPath(JSContext* cx,
+                                                 HandleValue value,
+                                                 ErrorCallback throwTypeError) {
   JSObject* obj = nullptr;
   if (value.isObject()) {
     obj = &value.toObject();
@@ -156,7 +156,7 @@ MOZ_MUST_USE T* UnwrapAndTypeCheckValueSlowPath(JSContext* cx,
 }
 
 template <class ErrorCallback>
-MOZ_MUST_USE JSObject* UnwrapAndTypeCheckValueSlowPath(
+[[nodiscard]] JSObject* UnwrapAndTypeCheckValueSlowPath(
     JSContext* cx, HandleValue value, const JSClass* clasp,
     ErrorCallback throwTypeError) {
   JSObject* obj = nullptr;
@@ -403,8 +403,8 @@ inline MOZ_MUST_USE T* UnwrapInternalSlot(JSContext* cx,
  * DANGER: The result may not be same-compartment with `cx`.
  */
 template <class T>
-MOZ_MUST_USE T* UnwrapCalleeSlot(JSContext* cx, CallArgs& args,
-                                 size_t extendedSlot) {
+[[nodiscard]] T* UnwrapCalleeSlot(JSContext* cx, CallArgs& args,
+                                  size_t extendedSlot) {
   JSFunction& func = args.callee().as<JSFunction>();
   return UnwrapAndDowncastValue<T>(cx, func.getExtendedSlot(extendedSlot));
 }

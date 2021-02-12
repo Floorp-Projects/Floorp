@@ -220,8 +220,8 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
    * listed, then it is skipped. Otherwise an intelligent name is guessed to
    * assign to the function's displayAtom field.
    */
-  MOZ_MUST_USE bool resolveFun(FunctionNode* funNode,
-                               TaggedParserAtomIndex* retId) {
+  [[nodiscard]] bool resolveFun(FunctionNode* funNode,
+                                TaggedParserAtomIndex* retId) {
     MOZ_ASSERT(funNode != nullptr);
 
     FunctionBox* funbox = funNode->funbox();
@@ -340,7 +340,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
   }
 
  public:
-  MOZ_MUST_USE bool visitFunction(FunctionNode* pn) {
+  [[nodiscard]] bool visitFunction(FunctionNode* pn) {
     TaggedParserAtomIndex savedPrefix = prefix_;
     TaggedParserAtomIndex newPrefix;
     if (!resolveFun(pn, &newPrefix)) {
@@ -362,14 +362,14 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
   }
 
   // Skip this type of node. It never contains functions.
-  MOZ_MUST_USE bool visitCallSiteObj(CallSiteNode* callSite) {
+  [[nodiscard]] bool visitCallSiteObj(CallSiteNode* callSite) {
     // This node only contains internal strings or undefined and an array -- no
     // user-controlled expressions.
     return true;
   }
 
   // Skip walking the list of string parts, which never contains functions.
-  MOZ_MUST_USE bool visitTaggedTemplateExpr(BinaryNode* taggedTemplate) {
+  [[nodiscard]] bool visitTaggedTemplateExpr(BinaryNode* taggedTemplate) {
     ParseNode* tag = taggedTemplate->left();
 
     // The leading expression, e.g. |tag| in |tag`foo`|,
@@ -410,7 +410,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
 
  private:
   // Speed hack: this type of node can't contain functions, so skip walking it.
-  MOZ_MUST_USE bool internalVisitSpecList(ListNode* pn) {
+  [[nodiscard]] bool internalVisitSpecList(ListNode* pn) {
     // Import/export spec lists contain import/export specs containing only
     // pairs of names or strings. Alternatively, an export spec list may
     // contain a single export batch specifier.
@@ -444,11 +444,11 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
   }
 
  public:
-  MOZ_MUST_USE bool visitImportSpecList(ListNode* pn) {
+  [[nodiscard]] bool visitImportSpecList(ListNode* pn) {
     return internalVisitSpecList(pn);
   }
 
-  MOZ_MUST_USE bool visitExportSpecList(ListNode* pn) {
+  [[nodiscard]] bool visitExportSpecList(ListNode* pn) {
     return internalVisitSpecList(pn);
   }
 
@@ -461,7 +461,7 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
   /*
    * Resolve names for all anonymous functions in the given ParseNode tree.
    */
-  MOZ_MUST_USE bool visit(ParseNode* pn) {
+  [[nodiscard]] bool visit(ParseNode* pn) {
     // Push pn to the parse node stack.
     if (nparents_ >= MaxParents) {
       // Silently skip very deeply nested functions.

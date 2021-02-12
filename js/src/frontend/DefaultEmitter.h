@@ -55,8 +55,8 @@ class MOZ_STACK_CLASS DefaultEmitter {
  public:
   explicit DefaultEmitter(BytecodeEmitter* bce);
 
-  MOZ_MUST_USE bool prepareForDefault();
-  MOZ_MUST_USE bool emitEnd();
+  [[nodiscard]] bool prepareForDefault();
+  [[nodiscard]] bool emitEnd();
 };
 
 } /* namespace frontend */

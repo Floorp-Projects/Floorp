@@ -193,23 +193,23 @@ class MOZ_STACK_CLASS TryEmitter {
  public:
   TryEmitter(BytecodeEmitter* bce, Kind kind, ControlKind controlKind);
 
-  MOZ_MUST_USE bool emitTry();
-  MOZ_MUST_USE bool emitCatch();
+  [[nodiscard]] bool emitTry();
+  [[nodiscard]] bool emitCatch();
 
   // If `finallyPos` is specified, it's an offset of the finally block's
   // "{" character in the source code text, to improve line:column number in
   // the error reporting.
   // For non-syntactic try-catch-finally, `finallyPos` can be omitted.
-  MOZ_MUST_USE bool emitFinally(
+  [[nodiscard]] bool emitFinally(
       const mozilla::Maybe<uint32_t>& finallyPos = mozilla::Nothing());
 
-  MOZ_MUST_USE bool emitEnd();
+  [[nodiscard]] bool emitEnd();
 
  private:
-  MOZ_MUST_USE bool emitTryEnd();
-  MOZ_MUST_USE bool emitCatchEnd();
-  MOZ_MUST_USE bool emitFinallyEnd();
-  MOZ_MUST_USE bool instrumentEntryPoint();
+  [[nodiscard]] bool emitTryEnd();
+  [[nodiscard]] bool emitCatchEnd();
+  [[nodiscard]] bool emitFinallyEnd();
+  [[nodiscard]] bool instrumentEntryPoint();
 };
 
 } /* namespace frontend */

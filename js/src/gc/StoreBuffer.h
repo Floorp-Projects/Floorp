@@ -180,7 +180,7 @@ class StoreBuffer {
           nonStringHead_(nullptr),
           owner_(owner) {}
 
-    MOZ_MUST_USE bool init();
+    [[nodiscard]] bool init();
 
     void clear();
 
@@ -217,7 +217,7 @@ class StoreBuffer {
     explicit GenericBuffer(StoreBuffer* owner)
         : storage_(nullptr), owner_(owner) {}
 
-    MOZ_MUST_USE bool init();
+    [[nodiscard]] bool init();
 
     void clear() {
       if (storage_) {
@@ -475,7 +475,7 @@ class StoreBuffer {
 #endif
 
   explicit StoreBuffer(JSRuntime* rt, const Nursery& nursery);
-  MOZ_MUST_USE bool enable();
+  [[nodiscard]] bool enable();
 
   void disable();
   bool isEnabled() const { return enabled_; }

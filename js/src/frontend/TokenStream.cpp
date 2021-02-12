@@ -620,7 +620,7 @@ void TokenStreamAnyChars::reportErrorNoOffsetVA(unsigned errorNumber,
 #  define fast_getc getc
 #endif
 
-MOZ_MUST_USE MOZ_ALWAYS_INLINE bool
+[[nodiscard]] MOZ_ALWAYS_INLINE bool
 TokenStreamAnyChars::internalUpdateLineInfoForEOL(uint32_t lineStartOffset) {
   prevLinebase = linebase;
   linebase = lineStartOffset;
@@ -1137,7 +1137,7 @@ TokenStreamChars<Utf8Unit, AnyCharsAccess>::badStructurallyValidCodePoint(
 }
 
 template <class AnyCharsAccess>
-MOZ_MUST_USE bool
+[[nodiscard]] bool
 TokenStreamChars<Utf8Unit, AnyCharsAccess>::getNonAsciiCodePointDontNormalize(
     Utf8Unit lead, char32_t* codePoint) {
   auto onBadLeadUnit = [this, &lead]() { this->badLeadUnit(lead); };
@@ -1910,7 +1910,7 @@ bool GeneralTokenStreamChars<Unit, AnyCharsAccess>::matchUnicodeEscapeIdent(
 }
 
 template <typename Unit, class AnyCharsAccess>
-MOZ_MUST_USE bool
+[[nodiscard]] bool
 TokenStreamSpecific<Unit, AnyCharsAccess>::matchIdentifierStart(
     IdentifierEscapes* sawEscape) {
   int32_t unit = getCodeUnit();
@@ -1966,7 +1966,7 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getDirectives(
   return res;
 }
 
-MOZ_MUST_USE bool TokenStreamCharsShared::copyCharBufferTo(
+[[nodiscard]] bool TokenStreamCharsShared::copyCharBufferTo(
     JSContext* cx, UniquePtr<char16_t[], JS::FreePolicy>* destination) {
   size_t length = charBuffer.length();
 
@@ -1981,7 +1981,7 @@ MOZ_MUST_USE bool TokenStreamCharsShared::copyCharBufferTo(
 }
 
 template <typename Unit, class AnyCharsAccess>
-MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getDirective(
+[[nodiscard]] bool TokenStreamSpecific<Unit, AnyCharsAccess>::getDirective(
     bool isMultiline, bool shouldWarnDeprecated, const char* directive,
     uint8_t directiveLength, const char* errorMsgPragma,
     UniquePtr<char16_t[], JS::FreePolicy>* destination) {
@@ -2202,7 +2202,7 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::putIdentInCharBuffer(
 }
 
 template <typename Unit, class AnyCharsAccess>
-MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::identifierName(
+[[nodiscard]] bool TokenStreamSpecific<Unit, AnyCharsAccess>::identifierName(
     TokenStart start, const Unit* identStart, IdentifierEscapes escaping,
     Modifier modifier, NameVisibility visibility, TokenKind* out) {
   // Run the bad-token code for every path out of this function except the
@@ -2414,7 +2414,7 @@ void SourceUnits<Utf8Unit>::consumeRestOfSingleLineComment() {
 }
 
 template <typename Unit, class AnyCharsAccess>
-MOZ_MUST_USE MOZ_ALWAYS_INLINE bool
+[[nodiscard]] MOZ_ALWAYS_INLINE bool
 TokenStreamSpecific<Unit, AnyCharsAccess>::matchInteger(
     IsIntegerUnit isIntegerUnit, int32_t* nextUnit) {
   int32_t unit = getCodeUnit();
@@ -2426,7 +2426,7 @@ TokenStreamSpecific<Unit, AnyCharsAccess>::matchInteger(
 }
 
 template <typename Unit, class AnyCharsAccess>
-MOZ_MUST_USE MOZ_ALWAYS_INLINE bool
+[[nodiscard]] MOZ_ALWAYS_INLINE bool
 TokenStreamSpecific<Unit, AnyCharsAccess>::matchIntegerAfterFirstDigit(
     IsIntegerUnit isIntegerUnit, int32_t* nextUnit) {
   int32_t unit;
@@ -2454,7 +2454,7 @@ TokenStreamSpecific<Unit, AnyCharsAccess>::matchIntegerAfterFirstDigit(
 }
 
 template <typename Unit, class AnyCharsAccess>
-MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::decimalNumber(
+[[nodiscard]] bool TokenStreamSpecific<Unit, AnyCharsAccess>::decimalNumber(
     int32_t unit, TokenStart start, const Unit* numStart, Modifier modifier,
     TokenKind* out) {
   // Run the bad-token code for every path out of this function except the
@@ -2557,7 +2557,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::decimalNumber(
 }
 
 template <typename Unit, class AnyCharsAccess>
-MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::regexpLiteral(
+[[nodiscard]] bool TokenStreamSpecific<Unit, AnyCharsAccess>::regexpLiteral(
     TokenStart start, TokenKind* out) {
   MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == Unit('/'));
   this->charBuffer.clear();
@@ -2684,7 +2684,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::regexpLiteral(
 }
 
 template <typename Unit, class AnyCharsAccess>
-MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::bigIntLiteral(
+[[nodiscard]] bool TokenStreamSpecific<Unit, AnyCharsAccess>::bigIntLiteral(
     TokenStart start, Modifier modifier, TokenKind* out) {
   MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == toUnit('n'));
   MOZ_ASSERT(this->sourceUnits.offset() > start.offset());
@@ -2740,7 +2740,7 @@ void GeneralTokenStreamChars<Unit,
 }
 
 template <typename Unit, class AnyCharsAccess>
-MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
+[[nodiscard]] bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
     TokenKind* const ttp, const Modifier modifier) {
   // Assume we'll fail: success cases will overwrite this.
 #ifdef DEBUG

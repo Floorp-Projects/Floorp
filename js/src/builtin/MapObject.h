@@ -49,7 +49,7 @@ class HashableValue {
 
   HashableValue() : value(UndefinedValue()) {}
 
-  MOZ_MUST_USE bool setValue(JSContext* cx, HandleValue v);
+  [[nodiscard]] bool setValue(JSContext* cx, HandleValue v);
   HashNumber hash(const mozilla::HashCodeScrambler& hcs) const;
   bool operator==(const HashableValue& other) const;
   HashableValue trace(JSTracer* trc) const;
@@ -71,7 +71,7 @@ template <typename Wrapper>
 class MutableWrappedPtrOperations<HashableValue, Wrapper>
     : public WrappedPtrOperations<HashableValue, Wrapper> {
  public:
-  MOZ_MUST_USE bool setValue(JSContext* cx, HandleValue v) {
+  [[nodiscard]] bool setValue(JSContext* cx, HandleValue v) {
     return static_cast<Wrapper*>(this)->get().setValue(cx, v);
   }
 };

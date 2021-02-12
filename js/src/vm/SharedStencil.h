@@ -227,7 +227,7 @@ class ScriptFlagBase {
   ScriptFlagBase() = default;
   explicit ScriptFlagBase(uint32_t rawFlags) : flags_(rawFlags) {}
 
-  MOZ_MUST_USE bool hasFlag(EnumType flag) const {
+  [[nodiscard]] bool hasFlag(EnumType flag) const {
     return flags_ & static_cast<uint32_t>(flag);
   }
   void setFlag(EnumType flag) { flags_ |= static_cast<uint32_t>(flag); }

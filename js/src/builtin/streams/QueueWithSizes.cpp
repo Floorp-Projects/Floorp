@@ -44,9 +44,9 @@ using JS::Value;
 /**
  * Streams spec, 6.2.1. DequeueValue ( container ) nothrow
  */
-MOZ_MUST_USE bool js::DequeueValue(JSContext* cx,
-                                   Handle<StreamController*> unwrappedContainer,
-                                   MutableHandle<Value> chunk) {
+[[nodiscard]] bool js::DequeueValue(
+    JSContext* cx, Handle<StreamController*> unwrappedContainer,
+    MutableHandle<Value> chunk) {
   // Step 1: Assert: container has [[queue]] and [[queueTotalSize]] internal
   //         slots (implicit).
   // Step 2: Assert: queue is not empty.
@@ -108,7 +108,7 @@ void js::DequeueValue(StreamController* unwrappedContainer, JSContext* cx) {
 /**
  * Streams spec, 6.2.2. EnqueueValueWithSize ( container, value, size ) throws
  */
-MOZ_MUST_USE bool js::EnqueueValueWithSize(
+[[nodiscard]] bool js::EnqueueValueWithSize(
     JSContext* cx, Handle<StreamController*> unwrappedContainer,
     Handle<Value> value, Handle<Value> sizeVal) {
   cx->check(value, sizeVal);
@@ -156,8 +156,8 @@ MOZ_MUST_USE bool js::EnqueueValueWithSize(
 /**
  * Streams spec, 6.2.4. ResetQueue ( container ) nothrow
  */
-MOZ_MUST_USE bool js::ResetQueue(JSContext* cx,
-                                 Handle<StreamController*> unwrappedContainer) {
+[[nodiscard]] bool js::ResetQueue(
+    JSContext* cx, Handle<StreamController*> unwrappedContainer) {
   // Step 1: Assert: container has [[queue]] and [[queueTotalSize]] internal
   //         slots (implicit).
   // Step 2: Set container.[[queue]] to a new empty List.

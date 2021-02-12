@@ -650,8 +650,8 @@ class GCSchedulingTunables {
   size_t mallocThresholdBase() const { return mallocThresholdBase_; }
   double mallocGrowthFactor() const { return mallocGrowthFactor_; }
 
-  MOZ_MUST_USE bool setParameter(JSGCParamKey key, uint32_t value,
-                                 const AutoLockGC& lock);
+  [[nodiscard]] bool setParameter(JSGCParamKey key, uint32_t value,
+                                  const AutoLockGC& lock);
   void resetParameter(JSGCParamKey key, const AutoLockGC& lock);
 
  private:

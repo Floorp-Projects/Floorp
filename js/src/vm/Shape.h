@@ -1090,8 +1090,8 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   }
 
   template <typename T>
-  MOZ_MUST_USE ShapeTable* ensureTableForDictionary(JSContext* cx,
-                                                    const T& nogc) {
+  [[nodiscard]] ShapeTable* ensureTableForDictionary(JSContext* cx,
+                                                     const T& nogc) {
     MOZ_ASSERT(inDictionary());
     if (ShapeTable* table = maybeTable(nogc)) {
       return table;
