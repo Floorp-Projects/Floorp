@@ -41,14 +41,14 @@
 
     <template id="scale-template">
       <div role="radiogroup" aria-labelledby="scale-label">
-        <div class="row cols-2">
+        <label class="row cols-2">
           <input type="radio" name="scale-choice" id="fit-choice" value="fit" checked>
-          <label for="fit-choice" data-l10n-id="printui-scale-fit-to-page-width" class="col"></label>
-        </div>
-        <div class="row cols-2">
+          <span data-l10n-id="printui-scale-fit-to-page-width" class="col"></span>
+        </label>
+        <label class="row cols-2" for="percent-scale-choice">
           <input type="radio" name="scale-choice" id="percent-scale-choice">
           <span class="col">
-            <label id="percent-scale-label" for="percent-scale-choice" data-l10n-id="printui-scale-pcent"></label>
+            <span id="percent-scale-label" data-l10n-id="printui-scale-pcent"></span>
             <!-- Note that here and elsewhere, we're setting aria-errormessage
                  attributes to a list of all possible errors. The a11y APIs
                  will filter this down to visible items only. -->
@@ -59,7 +59,7 @@
               aria-errormessage="error-invalid-scale"
               disabled required>
           </span>
-        </div>
+        </label>
         <p id="error-invalid-scale" hidden data-l10n-id="printui-error-invalid-scale" class="error-message" role="alert"></p>
       </div>
     </template>
@@ -195,18 +195,18 @@
 
             <section id="more-settings-options" class="section-block">
               <label class="block-label" data-l10n-id="printui-options"></label>
-              <div id="headers-footers" class="row cols-2">
+              <label id="headers-footers" class="row cols-2">
                 <input is="setting-checkbox" id="headers-footers-enabled" data-setting-name="printFootersHeaders">
-                <label for="headers-footers-enabled" data-l10n-id="printui-headers-footers-checkbox"></label>
-              </div>
-              <div id="backgrounds" class="row cols-2">
+                <span data-l10n-id="printui-headers-footers-checkbox"></span>
+              </label>
+              <label id="backgrounds" class="row cols-2">
                 <input is="setting-checkbox" id="backgrounds-enabled" data-setting-name="printBackgrounds">
-                <label for="backgrounds-enabled" data-l10n-id="printui-backgrounds-checkbox"></label>
-              </div>
-              <div id="print-selection-container" class="row cols-2" hidden>
+                <span data-l10n-id="printui-backgrounds-checkbox"></span>
+              </label>
+              <label id="print-selection-container" class="row cols-2" hidden>
                 <input is="setting-checkbox" id="print-selection-enabled" data-setting-name="printSelectionOnly">
-                <label for="print-selection-enabled" data-l10n-id="printui-selection-checkbox"></label>
-              </div>
+                <span data-l10n-id="printui-selection-checkbox"></span>
+              </label>
             </section>
 
           </details>
