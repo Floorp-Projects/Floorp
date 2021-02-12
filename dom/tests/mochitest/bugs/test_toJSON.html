@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=760851
 
   function checkAttributesMatch(obj, jsonObj) {
     // EventCounts isn't going to converted to a JSON string
-    if (obj instanceof EventCounts) {
+    if ('EventCounts' in window && obj instanceof EventCounts) {
       return;
     }
     if (typeof(obj) !== "object") {
