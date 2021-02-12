@@ -3112,6 +3112,10 @@ class MCreateArgumentsObject : public MUnaryInstruction,
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
   bool possiblyCalls() const override { return true; }
+
+  [[nodiscard]] bool writeRecoverData(
+      CompactBufferWriter& writer) const override;
+  bool canRecoverOnBailout() const override { return true; }
 };
 
 class MGetArgumentsObjectArg : public MUnaryInstruction,

@@ -467,7 +467,7 @@ class SnapshotIterator {
     return snapshot_.numAllocationsRead() < numAllocations();
   }
 
-  int32_t readOuterNumActualArgs() const;
+  JitFrameLayout* frame() { return fp_; };
 
   // Used by recover instruction to store the value back into the instruction
   // results array.
