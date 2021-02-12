@@ -9,7 +9,6 @@
 #include "builtin/streams/WritableStreamDefaultWriter-inl.h"
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
 #include "jsapi.h"  // JS_ReportErrorASCII, JS_ReportErrorNumberASCII
 
@@ -59,9 +58,10 @@ using js::WritableStreamDefaultWriterWrite;
  * Stream spec, 4.5.3. new WritableStreamDefaultWriter(stream)
  * Steps 3-9.
  */
-MOZ_MUST_USE WritableStreamDefaultWriter* js::CreateWritableStreamDefaultWriter(
-    JSContext* cx, Handle<WritableStream*> unwrappedStream,
-    Handle<JSObject*> proto /* = nullptr */) {
+[[nodiscard]] WritableStreamDefaultWriter*
+js::CreateWritableStreamDefaultWriter(JSContext* cx,
+                                      Handle<WritableStream*> unwrappedStream,
+                                      Handle<JSObject*> proto /* = nullptr */) {
   Rooted<WritableStreamDefaultWriter*> writer(
       cx, NewObjectWithClassProto<WritableStreamDefaultWriter>(cx, proto));
   if (!writer) {
@@ -257,9 +257,9 @@ bool WritableStreamDefaultWriter::constructor(JSContext* cx, unsigned argc,
 /**
  * Streams spec, 4.5.4.1. get closed
  */
-static MOZ_MUST_USE bool WritableStreamDefaultWriter_closed(JSContext* cx,
-                                                            unsigned argc,
-                                                            Value* vp) {
+[[nodiscard]] static bool WritableStreamDefaultWriter_closed(JSContext* cx,
+                                                             unsigned argc,
+                                                             Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1: If ! IsWritableStreamDefaultWriter(this) is false, return a promise
@@ -284,9 +284,9 @@ static MOZ_MUST_USE bool WritableStreamDefaultWriter_closed(JSContext* cx,
 /**
  * Streams spec, 4.5.4.2. get desiredSize
  */
-static MOZ_MUST_USE bool WritableStreamDefaultWriter_desiredSize(JSContext* cx,
-                                                                 unsigned argc,
-                                                                 Value* vp) {
+[[nodiscard]] static bool WritableStreamDefaultWriter_desiredSize(JSContext* cx,
+                                                                  unsigned argc,
+                                                                  Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1: If ! IsWritableStreamDefaultWriter(this) is false, throw a
@@ -321,9 +321,9 @@ static MOZ_MUST_USE bool WritableStreamDefaultWriter_desiredSize(JSContext* cx,
 /**
  * Streams spec, 4.5.4.3. get ready
  */
-static MOZ_MUST_USE bool WritableStreamDefaultWriter_ready(JSContext* cx,
-                                                           unsigned argc,
-                                                           Value* vp) {
+[[nodiscard]] static bool WritableStreamDefaultWriter_ready(JSContext* cx,
+                                                            unsigned argc,
+                                                            Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1: If ! IsWritableStreamDefaultWriter(this) is false, return a promise
@@ -348,9 +348,9 @@ static MOZ_MUST_USE bool WritableStreamDefaultWriter_ready(JSContext* cx,
 /**
  * Streams spec, 4.5.4.4. abort(reason)
  */
-static MOZ_MUST_USE bool WritableStreamDefaultWriter_abort(JSContext* cx,
-                                                           unsigned argc,
-                                                           Value* vp) {
+[[nodiscard]] static bool WritableStreamDefaultWriter_abort(JSContext* cx,
+                                                            unsigned argc,
+                                                            Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1: If ! IsWritableStreamDefaultWriter(this) is false, return a promise
@@ -385,9 +385,9 @@ static MOZ_MUST_USE bool WritableStreamDefaultWriter_abort(JSContext* cx,
 /**
  * Streams spec, 4.5.4.5. close()
  */
-static MOZ_MUST_USE bool WritableStreamDefaultWriter_close(JSContext* cx,
-                                                           unsigned argc,
-                                                           Value* vp) {
+[[nodiscard]] static bool WritableStreamDefaultWriter_close(JSContext* cx,
+                                                            unsigned argc,
+                                                            Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1: If ! IsWritableStreamDefaultWriter(this) is false, return a promise
@@ -435,9 +435,9 @@ static MOZ_MUST_USE bool WritableStreamDefaultWriter_close(JSContext* cx,
 /**
  * Streams spec, 4.5.4.6. releaseLock()
  */
-static MOZ_MUST_USE bool WritableStreamDefaultWriter_releaseLock(JSContext* cx,
-                                                                 unsigned argc,
-                                                                 Value* vp) {
+[[nodiscard]] static bool WritableStreamDefaultWriter_releaseLock(JSContext* cx,
+                                                                  unsigned argc,
+                                                                  Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1: If ! IsWritableStreamDefaultWriter(this) is false, return a promise
@@ -480,9 +480,9 @@ static MOZ_MUST_USE bool WritableStreamDefaultWriter_releaseLock(JSContext* cx,
 /**
  * Streams spec, 4.5.4.7. write(chunk)
  */
-static MOZ_MUST_USE bool WritableStreamDefaultWriter_write(JSContext* cx,
-                                                           unsigned argc,
-                                                           Value* vp) {
+[[nodiscard]] static bool WritableStreamDefaultWriter_write(JSContext* cx,
+                                                            unsigned argc,
+                                                            Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1: If ! IsWritableStreamDefaultWriter(this) is false, return a promise

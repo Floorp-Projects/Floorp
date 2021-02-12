@@ -344,18 +344,10 @@
     }
 
     _initCurrentPage() {
-      if (this.onFirstPage) {
-        this.canRewind = false;
-        this.setAttribute("firstpage", "true");
-        if (AppConstants.platform == "linux") {
-          this.getButton("back").setAttribute("hidden", "true");
-        }
-      } else {
-        this.canRewind = true;
-        this.setAttribute("firstpage", "false");
-        if (AppConstants.platform == "linux") {
-          this.getButton("back").setAttribute("hidden", "false");
-        }
+      this.canRewind = !this.onFirstPage;
+      this.setAttribute("firstpage", String(this.onFirstPage));
+      if (AppConstants.platform == "linux") {
+        this.getButton("back").hidden = this.onFirstPage;
       }
 
       if (this.onLastPage) {

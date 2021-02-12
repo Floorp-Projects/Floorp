@@ -8,7 +8,7 @@
 #define frontend_SwitchEmitter_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS, MOZ_MUST_USE
+#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS
 #include "mozilla/Maybe.h"       // mozilla::Maybe
 
 #include <stddef.h>  // size_t
@@ -252,12 +252,12 @@ class MOZ_STACK_CLASS SwitchEmitter {
     explicit TableGenerator(BytecodeEmitter* bce) : bce_(bce) {}
 
     void setInvalid() { valid_ = false; }
-    MOZ_MUST_USE bool isValid() const { return valid_; }
-    MOZ_MUST_USE bool isInvalid() const { return !valid_; }
+    [[nodiscard]] bool isValid() const { return valid_; }
+    [[nodiscard]] bool isInvalid() const { return !valid_; }
 
     // Add the given number to the table.  The number is the value of
     // `expr` for `case expr:` syntax.
-    MOZ_MUST_USE bool addNumber(int32_t caseValue);
+    [[nodiscard]] bool addNumber(int32_t caseValue);
 
     // Finish generating the table.
     // `caseCount` should be the number of cases in the switch statement,
@@ -433,31 +433,32 @@ class MOZ_STACK_CLASS SwitchEmitter {
   //   switchPos
   //
   // Can be Nothing() if not available.
-  MOZ_MUST_USE bool emitDiscriminant(const mozilla::Maybe<uint32_t>& switchPos);
+  [[nodiscard]] bool emitDiscriminant(
+      const mozilla::Maybe<uint32_t>& switchPos);
 
   // `caseCount` should be the number of cases in the switch statement,
   // excluding the default case.
-  MOZ_MUST_USE bool validateCaseCount(uint32_t caseCount);
+  [[nodiscard]] bool validateCaseCount(uint32_t caseCount);
 
   // `bindings` is a lexical scope for the entire switch, in case there's
   // let/const effectively directly under case or default blocks.
-  MOZ_MUST_USE bool emitLexical(LexicalScope::ParserData* bindings);
+  [[nodiscard]] bool emitLexical(LexicalScope::ParserData* bindings);
 
-  MOZ_MUST_USE bool emitCond();
-  MOZ_MUST_USE bool emitTable(const TableGenerator& tableGen);
+  [[nodiscard]] bool emitCond();
+  [[nodiscard]] bool emitTable(const TableGenerator& tableGen);
 
-  MOZ_MUST_USE bool prepareForCaseValue();
-  MOZ_MUST_USE bool emitCaseJump();
+  [[nodiscard]] bool prepareForCaseValue();
+  [[nodiscard]] bool emitCaseJump();
 
-  MOZ_MUST_USE bool emitCaseBody();
-  MOZ_MUST_USE bool emitCaseBody(int32_t caseValue,
-                                 const TableGenerator& tableGen);
-  MOZ_MUST_USE bool emitDefaultBody();
-  MOZ_MUST_USE bool emitEnd();
+  [[nodiscard]] bool emitCaseBody();
+  [[nodiscard]] bool emitCaseBody(int32_t caseValue,
+                                  const TableGenerator& tableGen);
+  [[nodiscard]] bool emitDefaultBody();
+  [[nodiscard]] bool emitEnd();
 
  private:
-  MOZ_MUST_USE bool emitCaseOrDefaultJump(uint32_t caseIndex, bool isDefault);
-  MOZ_MUST_USE bool emitImplicitDefault();
+  [[nodiscard]] bool emitCaseOrDefaultJump(uint32_t caseIndex, bool isDefault);
+  [[nodiscard]] bool emitImplicitDefault();
 };
 
 } /* namespace frontend */

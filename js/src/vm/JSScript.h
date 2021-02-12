@@ -364,7 +364,7 @@ struct SourceTypeTraits<char16_t> {
 };
 
 // Synchronously compress the source of |script|, for testing purposes.
-extern MOZ_MUST_USE bool SynchronouslyCompressSource(
+[[nodiscard]] extern bool SynchronouslyCompressSource(
     JSContext* cx, JS::Handle<BaseScript*> script);
 
 // Retrievable source can be retrieved using the source hook (and therefore
@@ -616,8 +616,8 @@ class ScriptSource {
       js_delete(this);
     }
   }
-  MOZ_MUST_USE bool initFromOptions(JSContext* cx,
-                                    const JS::ReadOnlyCompileOptions& options);
+  [[nodiscard]] bool initFromOptions(JSContext* cx,
+                                     const JS::ReadOnlyCompileOptions& options);
 
   /**
    * The minimum script length (in code units) necessary for a script to be
@@ -642,9 +642,9 @@ class ScriptSource {
 
   // Assign source data from |srcBuf| to this recently-created |ScriptSource|.
   template <typename Unit>
-  MOZ_MUST_USE bool assignSource(JSContext* cx,
-                                 const JS::ReadOnlyCompileOptions& options,
-                                 JS::SourceText<Unit>& srcBuf);
+  [[nodiscard]] bool assignSource(JSContext* cx,
+                                  const JS::ReadOnlyCompileOptions& options,
+                                  JS::SourceText<Unit>& srcBuf);
 
   bool hasSourceText() const {
     return hasUncompressedSource() || hasCompressedSource();
@@ -850,8 +850,8 @@ class ScriptSource {
   JSLinearString* substringDontDeflate(JSContext* cx, size_t start,
                                        size_t stop);
 
-  MOZ_MUST_USE bool appendSubstring(JSContext* cx, js::StringBuffer& buf,
-                                    size_t start, size_t stop);
+  [[nodiscard]] bool appendSubstring(JSContext* cx, js::StringBuffer& buf,
+                                     size_t start, size_t stop);
 
   void setParameterListEnd(uint32_t parameterListEnd) {
     parameterListEnd_ = parameterListEnd;
@@ -870,24 +870,25 @@ class ScriptSource {
   // double-check their own understandings of the |data| state transition being
   // performed.
   template <typename Unit>
-  MOZ_MUST_USE bool setUncompressedSourceHelper(JSContext* cx,
-                                                EntryUnits<Unit>&& source,
-                                                size_t length,
-                                                SourceRetrievable retrievable);
+  [[nodiscard]] bool setUncompressedSourceHelper(JSContext* cx,
+                                                 EntryUnits<Unit>&& source,
+                                                 size_t length,
+                                                 SourceRetrievable retrievable);
 
  public:
   // Initialize a fresh |ScriptSource| with unretrievable, uncompressed source.
   template <typename Unit>
-  MOZ_MUST_USE bool initializeUnretrievableUncompressedSource(
+  [[nodiscard]] bool initializeUnretrievableUncompressedSource(
       JSContext* cx, EntryUnits<Unit>&& source, size_t length);
 
   // Set the retrieved source for a |ScriptSource| whose source was recorded as
   // missing but retrievable.
   template <typename Unit>
-  MOZ_MUST_USE bool setRetrievedSource(JSContext* cx, EntryUnits<Unit>&& source,
-                                       size_t length);
+  [[nodiscard]] bool setRetrievedSource(JSContext* cx,
+                                        EntryUnits<Unit>&& source,
+                                        size_t length);
 
-  MOZ_MUST_USE bool tryCompressOffThread(JSContext* cx);
+  [[nodiscard]] bool tryCompressOffThread(JSContext* cx);
 
   // *Trigger* the conversion of this ScriptSource from containing uncompressed
   // |Unit|-encoded source to containing compressed source.  Conversion may not
@@ -905,7 +906,7 @@ class ScriptSource {
   // Initialize a fresh ScriptSource as containing unretrievable compressed
   // source of the indicated original encoding.
   template <typename Unit>
-  MOZ_MUST_USE bool initializeWithUnretrievableCompressedSource(
+  [[nodiscard]] bool initializeWithUnretrievableCompressedSource(
       JSContext* cx, UniqueChars&& raw, size_t rawLength, size_t sourceLength);
 
  private:
@@ -963,22 +964,22 @@ class ScriptSource {
   // we'd need template function partial specialization to hold XDRMode
   // constant while varying Unit, so that idea's no dice.
   template <XDRMode mode>
-  MOZ_MUST_USE XDRResult xdrUnretrievableUncompressedSource(
+  [[nodiscard]] XDRResult xdrUnretrievableUncompressedSource(
       XDRState<mode>* xdr, uint8_t sourceCharSize, uint32_t uncompressedLength);
 
  public:
   const char* filename() const {
     return filename_ ? filename_.ref().chars() : nullptr;
   }
-  MOZ_MUST_USE bool setFilename(JSContext* cx, const char* filename);
-  MOZ_MUST_USE bool setFilename(JSContext* cx, UniqueChars&& filename);
+  [[nodiscard]] bool setFilename(JSContext* cx, const char* filename);
+  [[nodiscard]] bool setFilename(JSContext* cx, UniqueChars&& filename);
 
   const char* introducerFilename() const {
     return introducerFilename_ ? introducerFilename_.ref().chars() : filename();
   }
-  MOZ_MUST_USE bool setIntroducerFilename(JSContext* cx, const char* filename);
-  MOZ_MUST_USE bool setIntroducerFilename(JSContext* cx,
-                                          UniqueChars&& filename);
+  [[nodiscard]] bool setIntroducerFilename(JSContext* cx, const char* filename);
+  [[nodiscard]] bool setIntroducerFilename(JSContext* cx,
+                                           UniqueChars&& filename);
 
   bool hasIntroductionType() const { return introductionType_; }
   const char* introductionType() const {
@@ -989,14 +990,14 @@ class ScriptSource {
   uint32_t id() const { return id_; }
 
   // Display URLs
-  MOZ_MUST_USE bool setDisplayURL(JSContext* cx, const char16_t* url);
-  MOZ_MUST_USE bool setDisplayURL(JSContext* cx, UniqueTwoByteChars&& url);
+  [[nodiscard]] bool setDisplayURL(JSContext* cx, const char16_t* url);
+  [[nodiscard]] bool setDisplayURL(JSContext* cx, UniqueTwoByteChars&& url);
   bool hasDisplayURL() const { return displayURL_.isSome(); }
   const char16_t* displayURL() { return displayURL_.ref().chars(); }
 
   // Source maps
-  MOZ_MUST_USE bool setSourceMapURL(JSContext* cx, const char16_t* url);
-  MOZ_MUST_USE bool setSourceMapURL(JSContext* cx, UniqueTwoByteChars&& url);
+  [[nodiscard]] bool setSourceMapURL(JSContext* cx, const char16_t* url);
+  [[nodiscard]] bool setSourceMapURL(JSContext* cx, UniqueTwoByteChars&& url);
   bool hasSourceMapURL() const { return sourceMapURL_.isSome(); }
   const char16_t* sourceMapURL() { return sourceMapURL_.ref().chars(); }
 
@@ -1062,24 +1063,24 @@ class ScriptSource {
   static void codeRetrievable(ScriptSource* ss);
 
   template <typename Unit, XDRMode mode>
-  static MOZ_MUST_USE XDRResult codeUncompressedData(XDRState<mode>* const xdr,
-                                                     ScriptSource* const ss);
+  [[nodiscard]] static XDRResult codeUncompressedData(XDRState<mode>* const xdr,
+                                                      ScriptSource* const ss);
 
   template <typename Unit, XDRMode mode>
-  static MOZ_MUST_USE XDRResult codeCompressedData(XDRState<mode>* const xdr,
-                                                   ScriptSource* const ss);
+  [[nodiscard]] static XDRResult codeCompressedData(XDRState<mode>* const xdr,
+                                                    ScriptSource* const ss);
 
   template <typename Unit, XDRMode mode>
   static void codeRetrievableData(ScriptSource* ss);
 
   template <XDRMode mode>
-  static MOZ_MUST_USE XDRResult xdrData(XDRState<mode>* const xdr,
-                                        ScriptSource* const ss);
+  [[nodiscard]] static XDRResult xdrData(XDRState<mode>* const xdr,
+                                         ScriptSource* const ss);
 
  public:
   template <XDRMode mode>
-  static MOZ_MUST_USE XDRResult
-  XDR(XDRState<mode>* xdr, const JS::ReadOnlyCompileOptions* maybeOptions,
+  [[nodiscard]] static XDRResult XDR(
+      XDRState<mode>* xdr, const JS::ReadOnlyCompileOptions* maybeOptions,
       RefPtr<ScriptSource>& source);
 };
 
@@ -1344,11 +1345,11 @@ class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
   static PrivateScriptData* new_(JSContext* cx, uint32_t ngcthings);
 
   template <XDRMode mode>
-  static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
-                                    js::HandleScript script,
-                                    js::HandleScriptSourceObject sourceObject,
-                                    js::HandleScope scriptEnclosingScope,
-                                    js::HandleObject funOrMod);
+  [[nodiscard]] static XDRResult XDR(js::XDRState<mode>* xdr,
+                                     js::HandleScript script,
+                                     js::HandleScriptSourceObject sourceObject,
+                                     js::HandleScope scriptEnclosingScope,
+                                     js::HandleObject funOrMod);
 
   // Clone src script data into dst script.
   static bool Clone(JSContext* cx, js::HandleScript src, js::HandleScript dst,
@@ -1580,8 +1581,8 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   uint32_t toStringEnd() const { return extent_.toStringEnd; }
   SourceExtent extent() const { return extent_; }
 
-  MOZ_MUST_USE bool appendSourceDataForToString(JSContext* cx,
-                                                js::StringBuffer& buf);
+  [[nodiscard]] bool appendSourceDataForToString(JSContext* cx,
+                                                 js::StringBuffer& buf);
 
   uint32_t lineno() const { return extent_.lineno; }
   uint32_t column() const { return extent_.column; }
@@ -1590,12 +1591,12 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   ImmutableScriptFlags immutableFlags() const { return immutableFlags_; }
 
   // ImmutableFlags accessors.
-  MOZ_MUST_USE bool hasFlag(ImmutableFlags flag) const {
+  [[nodiscard]] bool hasFlag(ImmutableFlags flag) const {
     return immutableFlags_.hasFlag(flag);
   }
 
   // MutableFlags accessors.
-  MOZ_MUST_USE bool hasFlag(MutableFlags flag) const {
+  [[nodiscard]] bool hasFlag(MutableFlags flag) const {
     return mutableFlags_.hasFlag(flag);
   }
   void setFlag(MutableFlags flag, bool b = true) {

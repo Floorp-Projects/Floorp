@@ -7,8 +7,8 @@
 #ifndef frontend_ObjectEmitter_h
 #define frontend_ObjectEmitter_h
 
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE, MOZ_STACK_CLASS, MOZ_ALWAYS_INLINE, MOZ_RAII
-#include "mozilla/Maybe.h"  // Maybe
+#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS, MOZ_ALWAYS_INLINE, MOZ_RAII
+#include "mozilla/Maybe.h"       // Maybe
 
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint32_t
@@ -195,62 +195,62 @@ class MOZ_STACK_CLASS PropertyEmitter {
   //   ^
   //   |
   //   keyPos
-  MOZ_MUST_USE bool prepareForProtoValue(
+  [[nodiscard]] bool prepareForProtoValue(
       const mozilla::Maybe<uint32_t>& keyPos);
-  MOZ_MUST_USE bool emitMutateProto();
+  [[nodiscard]] bool emitMutateProto();
 
   // { ...obj }
   //   ^
   //   |
   //   spreadPos
-  MOZ_MUST_USE bool prepareForSpreadOperand(
+  [[nodiscard]] bool prepareForSpreadOperand(
       const mozilla::Maybe<uint32_t>& spreadPos);
-  MOZ_MUST_USE bool emitSpread();
+  [[nodiscard]] bool emitSpread();
 
   // { key: value }
   //   ^
   //   |
   //   keyPos
-  MOZ_MUST_USE bool prepareForPropValue(const mozilla::Maybe<uint32_t>& keyPos,
-                                        Kind kind = Kind::Prototype);
+  [[nodiscard]] bool prepareForPropValue(const mozilla::Maybe<uint32_t>& keyPos,
+                                         Kind kind = Kind::Prototype);
 
   // { 1: value }
   //   ^
   //   |
   //   keyPos
-  MOZ_MUST_USE bool prepareForIndexPropKey(
+  [[nodiscard]] bool prepareForIndexPropKey(
       const mozilla::Maybe<uint32_t>& keyPos, Kind kind = Kind::Prototype);
-  MOZ_MUST_USE bool prepareForIndexPropValue();
+  [[nodiscard]] bool prepareForIndexPropValue();
 
   // { [ key ]: value }
   //   ^
   //   |
   //   keyPos
-  MOZ_MUST_USE bool prepareForComputedPropKey(
+  [[nodiscard]] bool prepareForComputedPropKey(
       const mozilla::Maybe<uint32_t>& keyPos, Kind kind = Kind::Prototype);
-  MOZ_MUST_USE bool prepareForComputedPropValue();
+  [[nodiscard]] bool prepareForComputedPropValue();
 
-  MOZ_MUST_USE bool emitInitHomeObject();
+  [[nodiscard]] bool emitInitHomeObject();
 
   // @param key
   //        Property key
-  MOZ_MUST_USE bool emitInit(AccessorType accessorType,
-                             TaggedParserAtomIndex key);
+  [[nodiscard]] bool emitInit(AccessorType accessorType,
+                              TaggedParserAtomIndex key);
 
-  MOZ_MUST_USE bool emitInitIndexOrComputed(AccessorType accessorType);
+  [[nodiscard]] bool emitInitIndexOrComputed(AccessorType accessorType);
 
  private:
-  MOZ_MUST_USE MOZ_ALWAYS_INLINE bool prepareForProp(
+  [[nodiscard]] MOZ_ALWAYS_INLINE bool prepareForProp(
       const mozilla::Maybe<uint32_t>& keyPos, bool isStatic, bool isComputed);
 
   // @param op
   //        Opcode for initializing property
   // @param key
   //        Atom of the property if the property key is not computed
-  MOZ_MUST_USE bool emitInit(JSOp op, TaggedParserAtomIndex key);
-  MOZ_MUST_USE bool emitInitIndexOrComputed(JSOp op);
+  [[nodiscard]] bool emitInit(JSOp op, TaggedParserAtomIndex key);
+  [[nodiscard]] bool emitInitIndexOrComputed(JSOp op);
 
-  MOZ_MUST_USE bool emitPopClassConstructor();
+  [[nodiscard]] bool emitPopClassConstructor();
 };
 
 // Class for emitting bytecode for object literal.
@@ -390,11 +390,11 @@ class MOZ_STACK_CLASS ObjectEmitter : public PropertyEmitter {
  public:
   explicit ObjectEmitter(BytecodeEmitter* bce);
 
-  MOZ_MUST_USE bool emitObject(size_t propertyCount);
+  [[nodiscard]] bool emitObject(size_t propertyCount);
   // Same as `emitObject()`, but start with an empty template object already on
   // the stack.
-  MOZ_MUST_USE bool emitObjectWithTemplateOnStack();
-  MOZ_MUST_USE bool emitEnd();
+  [[nodiscard]] bool emitObjectWithTemplateOnStack();
+  [[nodiscard]] bool emitEnd();
 };
 
 // Save and restore the strictness.
@@ -763,30 +763,30 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
   //        Statically inferred name of the class (only for anonymous classes)
   // @param hasNameOnStack
   //        If true the name is on the stack (only for anonymous classes)
-  MOZ_MUST_USE bool emitClass(TaggedParserAtomIndex name,
-                              TaggedParserAtomIndex nameForAnonymousClass,
-                              bool hasNameOnStack);
-  MOZ_MUST_USE bool emitDerivedClass(
+  [[nodiscard]] bool emitClass(TaggedParserAtomIndex name,
+                               TaggedParserAtomIndex nameForAnonymousClass,
+                               bool hasNameOnStack);
+  [[nodiscard]] bool emitDerivedClass(
       TaggedParserAtomIndex name, TaggedParserAtomIndex nameForAnonymousClass,
       bool hasNameOnStack);
 
   // @param needsHomeObject
   //        True if the constructor contains `super.foo`
-  MOZ_MUST_USE bool emitInitConstructor(bool needsHomeObject);
+  [[nodiscard]] bool emitInitConstructor(bool needsHomeObject);
 
-  MOZ_MUST_USE bool prepareForMemberInitializers(size_t numInitializers,
-                                                 bool isStatic);
-  MOZ_MUST_USE bool prepareForMemberInitializer();
-  MOZ_MUST_USE bool emitMemberInitializerHomeObject(bool isStatic);
-  MOZ_MUST_USE bool emitStoreMemberInitializer();
-  MOZ_MUST_USE bool emitMemberInitializersEnd();
+  [[nodiscard]] bool prepareForMemberInitializers(size_t numInitializers,
+                                                  bool isStatic);
+  [[nodiscard]] bool prepareForMemberInitializer();
+  [[nodiscard]] bool emitMemberInitializerHomeObject(bool isStatic);
+  [[nodiscard]] bool emitStoreMemberInitializer();
+  [[nodiscard]] bool emitMemberInitializersEnd();
 
-  MOZ_MUST_USE bool emitBinding();
+  [[nodiscard]] bool emitBinding();
 
-  MOZ_MUST_USE bool emitEnd(Kind kind);
+  [[nodiscard]] bool emitEnd(Kind kind);
 
  private:
-  MOZ_MUST_USE bool initProtoAndCtor();
+  [[nodiscard]] bool initProtoAndCtor();
 };
 
 } /* namespace frontend */

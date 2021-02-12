@@ -12,7 +12,7 @@
 #include "js/shadow/String.h"  // JS::shadow::String
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_ALWAYS_INLINE, MOZ_MUST_USE
+#include "mozilla/Attributes.h"  // MOZ_ALWAYS_INLINE
 #include "mozilla/Likely.h"      // MOZ_LIKELY
 
 #include <algorithm>  // std::copy_n
@@ -193,9 +193,9 @@ MOZ_ALWAYS_INLINE void LossyCopyLinearStringChars(char* dest, JSLinearString* s,
  * This function is fallible.  If you already have a linear string, use the
  * infallible |JS::CopyLinearStringChars| above instead.
  */
-inline MOZ_MUST_USE bool CopyStringChars(JSContext* cx, char16_t* dest,
-                                         JSString* s, size_t len,
-                                         size_t start = 0) {
+[[nodiscard]] inline bool CopyStringChars(JSContext* cx, char16_t* dest,
+                                          JSString* s, size_t len,
+                                          size_t start = 0) {
   JSLinearString* linear = StringToLinearString(cx, s);
   if (!linear) {
     return false;
@@ -212,9 +212,9 @@ inline MOZ_MUST_USE bool CopyStringChars(JSContext* cx, char16_t* dest,
  * This function is fallible.  If you already have a linear string, use the
  * infallible |JS::LossyCopyLinearStringChars| above instead.
  */
-inline MOZ_MUST_USE bool LossyCopyStringChars(JSContext* cx, char* dest,
-                                              JSString* s, size_t len,
-                                              size_t start = 0) {
+[[nodiscard]] inline bool LossyCopyStringChars(JSContext* cx, char* dest,
+                                               JSString* s, size_t len,
+                                               size_t start = 0) {
   JSLinearString* linear = StringToLinearString(cx, s);
   if (!linear) {
     return false;

@@ -685,7 +685,7 @@ enum class DisassembleSkeptically { No, Yes };
 /*
  * Disassemblers, for debugging only.
  */
-extern MOZ_MUST_USE bool Disassemble(
+[[nodiscard]] extern bool Disassemble(
     JSContext* cx, JS::Handle<JSScript*> script, bool lines, Sprinter* sp,
     DisassembleSkeptically skeptically = DisassembleSkeptically::No);
 
@@ -694,7 +694,7 @@ unsigned Disassemble1(JSContext* cx, JS::Handle<JSScript*> script,
 
 #endif
 
-extern MOZ_MUST_USE bool DumpRealmPCCounts(JSContext* cx);
+[[nodiscard]] extern bool DumpRealmPCCounts(JSContext* cx);
 
 }  // namespace js
 

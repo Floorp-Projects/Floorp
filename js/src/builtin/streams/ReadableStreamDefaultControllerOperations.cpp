@@ -9,7 +9,6 @@
 #include "builtin/streams/ReadableStreamDefaultControllerOperations.h"
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT{,_IF}
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
 #include "jsfriendapi.h"  // js::AssertSameCompartment
 
@@ -128,7 +127,7 @@ static bool ReadableStreamControllerShouldCallPull(
  * Streams spec, 3.13.3.
  *      ReadableByteStreamControllerCallPullIfNeeded ( controller )
  */
-MOZ_MUST_USE bool js::ReadableStreamControllerCallPullIfNeeded(
+[[nodiscard]] bool js::ReadableStreamControllerCallPullIfNeeded(
     JSContext* cx, Handle<ReadableStreamController*> unwrappedController) {
   // Step 1: Let shouldPull be
   //         ! ReadableStreamDefaultControllerShouldCallPull(controller).
@@ -330,7 +329,7 @@ void js::ReadableStreamControllerClearAlgorithms(
 /**
  * Streams spec, 3.10.5. ReadableStreamDefaultControllerClose ( controller )
  */
-MOZ_MUST_USE bool js::ReadableStreamDefaultControllerClose(
+[[nodiscard]] bool js::ReadableStreamDefaultControllerClose(
     JSContext* cx,
     Handle<ReadableStreamDefaultController*> unwrappedController) {
   // Step 1: Let stream be controller.[[controlledReadableStream]].
@@ -363,7 +362,7 @@ MOZ_MUST_USE bool js::ReadableStreamDefaultControllerClose(
  * Streams spec, 3.10.6.
  *      ReadableStreamDefaultControllerEnqueue ( controller, chunk )
  */
-MOZ_MUST_USE bool js::ReadableStreamDefaultControllerEnqueue(
+[[nodiscard]] bool js::ReadableStreamDefaultControllerEnqueue(
     JSContext* cx, Handle<ReadableStreamDefaultController*> unwrappedController,
     Handle<Value> chunk) {
   AssertSameCompartment(cx, chunk);
@@ -446,7 +445,7 @@ MOZ_MUST_USE bool js::ReadableStreamDefaultControllerEnqueue(
  * Streams spec, 3.10.7. ReadableStreamDefaultControllerError ( controller, e )
  * Streams spec, 3.13.11. ReadableByteStreamControllerError ( controller, e )
  */
-MOZ_MUST_USE bool js::ReadableStreamControllerError(
+[[nodiscard]] bool js::ReadableStreamControllerError(
     JSContext* cx, Handle<ReadableStreamController*> unwrappedController,
     Handle<Value> e) {
   MOZ_ASSERT(!cx->isExceptionPending());
@@ -492,7 +491,7 @@ MOZ_MUST_USE bool js::ReadableStreamControllerError(
  * Streams spec 3.13.14.
  *      ReadableByteStreamControllerGetDesiredSize ( controller )
  */
-MOZ_MUST_USE double js::ReadableStreamControllerGetDesiredSizeUnchecked(
+[[nodiscard]] double js::ReadableStreamControllerGetDesiredSizeUnchecked(
     ReadableStreamController* controller) {
   // Steps 1-4 done at callsites, so only assert that they have been done.
 #if DEBUG
@@ -539,7 +538,7 @@ MOZ_MUST_USE double js::ReadableStreamControllerGetDesiredSizeUnchecked(
  * Note: All arguments must be same-compartment with cx. ReadableStream
  * controllers are always created in the same compartment as the stream.
  */
-MOZ_MUST_USE bool js::SetUpReadableStreamDefaultController(
+[[nodiscard]] bool js::SetUpReadableStreamDefaultController(
     JSContext* cx, Handle<ReadableStream*> stream,
     SourceAlgorithms sourceAlgorithms, Handle<Value> underlyingSource,
     Handle<Value> pullMethod, Handle<Value> cancelMethod, double highWaterMark,
@@ -637,7 +636,7 @@ MOZ_MUST_USE bool js::SetUpReadableStreamDefaultController(
  *      SetUpReadableStreamDefaultControllerFromUnderlyingSource( stream,
  *          underlyingSource, highWaterMark, sizeAlgorithm )
  */
-MOZ_MUST_USE bool js::SetUpReadableStreamDefaultControllerFromUnderlyingSource(
+[[nodiscard]] bool js::SetUpReadableStreamDefaultControllerFromUnderlyingSource(
     JSContext* cx, Handle<ReadableStream*> stream,
     Handle<Value> underlyingSource, double highWaterMark,
     Handle<Value> sizeAlgorithm) {

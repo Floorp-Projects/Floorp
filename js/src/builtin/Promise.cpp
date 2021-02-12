@@ -318,7 +318,7 @@ class MutableWrappedPtrOperations<PromiseCombinatorElements, Wrapper>
     elements().setElementNeedsWrapping = needsWrapping;
   }
 
-  MOZ_MUST_USE bool pushUndefined(JSContext* cx) {
+  [[nodiscard]] bool pushUndefined(JSContext* cx) {
     // Helper for the AutoRealm we need to work with |array|. We mostly do this
     // for performance; we could go ahead and do the define via a cross-
     // compartment proxy instead...
@@ -342,7 +342,8 @@ class MutableWrappedPtrOperations<PromiseCombinatorElements, Wrapper>
   // Promise.all/allSettled/any function, which isn't necessarily the same
   // compartment as unwrappedArray as explained in NewPromiseCombinatorElements.
   // So before storing |val| we may need to enter unwrappedArray's compartment.
-  MOZ_MUST_USE bool setElement(JSContext* cx, uint32_t index, HandleValue val) {
+  [[nodiscard]] bool setElement(JSContext* cx, uint32_t index,
+                                HandleValue val) {
     // The index is guaranteed to be initialized to `undefined`.
     MOZ_ASSERT(unwrappedArray()->getDenseElement(index).isUndefined());
 
@@ -587,7 +588,7 @@ static bool MaybeGetAndClearExceptionAndStack(JSContext* cx,
   return GetAndClearExceptionAndStack(cx, rval, stack);
 }
 
-static MOZ_MUST_USE bool RunRejectFunction(
+[[nodiscard]] static bool RunRejectFunction(
     JSContext* cx, HandleObject onRejectedFunc, HandleValue result,
     HandleObject promiseObj, HandleSavedFrame unwrappedRejectionStack,
     UnhandledRejectionBehavior behavior);
@@ -864,7 +865,7 @@ static bool ResolvePromiseFunction(JSContext* cx, unsigned argc, Value* vp);
 static bool RejectPromiseFunction(JSContext* cx, unsigned argc, Value* vp);
 
 // ES2016, 25.4.1.3.
-static MOZ_MUST_USE MOZ_ALWAYS_INLINE bool CreateResolvingFunctions(
+[[nodiscard]] static MOZ_ALWAYS_INLINE bool CreateResolvingFunctions(
     JSContext* cx, HandleObject promise, MutableHandleObject resolveFn,
     MutableHandleObject rejectFn) {
   HandlePropertyName funName = cx->names().empty;
@@ -914,12 +915,12 @@ static bool IsSettledMaybeWrappedPromise(JSObject* promise) {
 }
 
 // ES2016, 25.4.1.7.
-static MOZ_MUST_USE bool RejectMaybeWrappedPromise(
+[[nodiscard]] static bool RejectMaybeWrappedPromise(
     JSContext* cx, HandleObject promiseObj, HandleValue reason,
     HandleSavedFrame unwrappedRejectionStack);
 
 // ES2016, 25.4.1.7.
-static MOZ_MUST_USE bool RejectPromiseInternal(
+[[nodiscard]] static bool RejectPromiseInternal(
     JSContext* cx, Handle<PromiseObject*> promise, HandleValue reason,
     HandleSavedFrame unwrappedRejectionStack = nullptr);
 
@@ -966,15 +967,15 @@ static bool RejectPromiseFunction(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static MOZ_MUST_USE bool FulfillMaybeWrappedPromise(JSContext* cx,
-                                                    HandleObject promiseObj,
-                                                    HandleValue value_);
+[[nodiscard]] static bool FulfillMaybeWrappedPromise(JSContext* cx,
+                                                     HandleObject promiseObj,
+                                                     HandleValue value_);
 
-static MOZ_MUST_USE bool EnqueuePromiseResolveThenableJob(
+[[nodiscard]] static bool EnqueuePromiseResolveThenableJob(
     JSContext* cx, HandleValue promiseToResolve, HandleValue thenable,
     HandleValue thenVal);
 
-static MOZ_MUST_USE bool EnqueuePromiseResolveThenableBuiltinJob(
+[[nodiscard]] static bool EnqueuePromiseResolveThenableBuiltinJob(
     JSContext* cx, HandleObject promiseToResolve, HandleObject thenable);
 
 static bool Promise_then_impl(JSContext* cx, HandleValue promiseVal,
@@ -982,9 +983,9 @@ static bool Promise_then_impl(JSContext* cx, HandleValue promiseVal,
                               MutableHandleValue rval, bool rvalUsed);
 
 // ES2016, 25.4.1.3.2, steps 6-13.
-static MOZ_MUST_USE bool ResolvePromiseInternal(JSContext* cx,
-                                                HandleObject promise,
-                                                HandleValue resolutionVal) {
+[[nodiscard]] static bool ResolvePromiseInternal(JSContext* cx,
+                                                 HandleObject promise,
+                                                 HandleValue resolutionVal) {
   cx->check(promise, resolutionVal);
   MOZ_ASSERT(!IsSettledMaybeWrappedPromise(promise));
 
@@ -1126,7 +1127,7 @@ static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp);
  * targetState - The PromiseState this reaction job targets. This decides
  *               whether the onFulfilled or onRejected handler is called.
  */
-MOZ_MUST_USE static bool EnqueuePromiseReactionJob(
+[[nodiscard]] static bool EnqueuePromiseReactionJob(
     JSContext* cx, HandleObject reactionObj, HandleValue handlerArg_,
     JS::PromiseState targetState) {
   MOZ_ASSERT(targetState == JS::PromiseState::Fulfilled ||
@@ -1259,10 +1260,10 @@ MOZ_MUST_USE static bool EnqueuePromiseReactionJob(
   return cx->runtime()->enqueuePromiseJob(cx, job, promise, global);
 }
 
-static MOZ_MUST_USE bool TriggerPromiseReactions(JSContext* cx,
-                                                 HandleValue reactionsVal,
-                                                 JS::PromiseState state,
-                                                 HandleValue valueOrReason);
+[[nodiscard]] static bool TriggerPromiseReactions(JSContext* cx,
+                                                  HandleValue reactionsVal,
+                                                  JS::PromiseState state,
+                                                  HandleValue valueOrReason);
 
 // ES2016, Commoned-out implementation of 25.4.1.4. and 25.4.1.7.
 //
@@ -1270,7 +1271,7 @@ static MOZ_MUST_USE bool TriggerPromiseReactions(JSContext* cx,
 // which is only used for debugging purposes.
 // It allows callers to to pass in the stack of some exception which
 // triggered the rejection of the promise.
-static MOZ_MUST_USE bool ResolvePromise(
+[[nodiscard]] static bool ResolvePromise(
     JSContext* cx, Handle<PromiseObject*> promise, HandleValue valueOrReason,
     JS::PromiseState state,
     HandleSavedFrame unwrappedRejectionStack = nullptr) {
@@ -1313,7 +1314,7 @@ static MOZ_MUST_USE bool ResolvePromise(
 }
 
 // ES2016, 25.4.1.7.
-static MOZ_MUST_USE bool RejectPromiseInternal(
+[[nodiscard]] static bool RejectPromiseInternal(
     JSContext* cx, Handle<PromiseObject*> promise, HandleValue reason,
     HandleSavedFrame unwrappedRejectionStack) {
   return ResolvePromise(cx, promise, reason, JS::PromiseState::Rejected,
@@ -1321,9 +1322,9 @@ static MOZ_MUST_USE bool RejectPromiseInternal(
 }
 
 // ES2016, 25.4.1.4.
-static MOZ_MUST_USE bool FulfillMaybeWrappedPromise(JSContext* cx,
-                                                    HandleObject promiseObj,
-                                                    HandleValue value_) {
+[[nodiscard]] static bool FulfillMaybeWrappedPromise(JSContext* cx,
+                                                     HandleObject promiseObj,
+                                                     HandleValue value_) {
   Rooted<PromiseObject*> promise(cx);
   RootedValue value(cx, value_);
 
@@ -1349,7 +1350,7 @@ static MOZ_MUST_USE bool FulfillMaybeWrappedPromise(JSContext* cx,
 
 static bool GetCapabilitiesExecutor(JSContext* cx, unsigned argc, Value* vp);
 static bool PromiseConstructor(JSContext* cx, unsigned argc, Value* vp);
-static MOZ_MUST_USE PromiseObject* CreatePromiseObjectInternal(
+[[nodiscard]] static PromiseObject* CreatePromiseObjectInternal(
     JSContext* cx, HandleObject proto = nullptr, bool protoIsWrapped = false,
     bool informDebugger = true);
 
@@ -1358,7 +1359,7 @@ enum GetCapabilitiesExecutorSlots {
   GetCapabilitiesExecutorSlots_Reject
 };
 
-static MOZ_MUST_USE PromiseObject*
+[[nodiscard]] static PromiseObject*
 CreatePromiseObjectWithoutResolutionFunctions(JSContext* cx) {
   PromiseObject* promise = CreatePromiseObjectInternal(cx);
   if (!promise) {
@@ -1369,7 +1370,7 @@ CreatePromiseObjectWithoutResolutionFunctions(JSContext* cx) {
   return promise;
 }
 
-static MOZ_MUST_USE PromiseObject* CreatePromiseWithDefaultResolutionFunctions(
+[[nodiscard]] static PromiseObject* CreatePromiseWithDefaultResolutionFunctions(
     JSContext* cx, MutableHandleObject resolve, MutableHandleObject reject) {
   // ES2016, 25.4.3.1., as if called with GetCapabilitiesExecutor as the
   // executor argument.
@@ -1396,7 +1397,7 @@ static MOZ_MUST_USE PromiseObject* CreatePromiseWithDefaultResolutionFunctions(
 }
 
 // ES2016, 25.4.1.5.
-static MOZ_MUST_USE bool NewPromiseCapability(
+[[nodiscard]] static bool NewPromiseCapability(
     JSContext* cx, HandleObject C, MutableHandle<PromiseCapability> capability,
     bool canOmitResolutionFunctions) {
   RootedValue cVal(cx, ObjectValue(*C));
@@ -1511,7 +1512,7 @@ static bool GetCapabilitiesExecutor(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 // ES2016, 25.4.1.7.
-static MOZ_MUST_USE bool RejectMaybeWrappedPromise(
+[[nodiscard]] static bool RejectMaybeWrappedPromise(
     JSContext* cx, HandleObject promiseObj, HandleValue reason_,
     HandleSavedFrame unwrappedRejectionStack) {
   Rooted<PromiseObject*> promise(cx);
@@ -1610,10 +1611,10 @@ static bool ForEachReaction(JSContext* cx, HandleValue reactionsVal, F f) {
 }
 
 // ES2016, 25.4.1.8.
-static MOZ_MUST_USE bool TriggerPromiseReactions(JSContext* cx,
-                                                 HandleValue reactionsVal,
-                                                 JS::PromiseState state,
-                                                 HandleValue valueOrReason) {
+[[nodiscard]] static bool TriggerPromiseReactions(JSContext* cx,
+                                                  HandleValue reactionsVal,
+                                                  JS::PromiseState state,
+                                                  HandleValue valueOrReason) {
   MOZ_ASSERT(state == JS::PromiseState::Fulfilled ||
              state == JS::PromiseState::Rejected);
 
@@ -1622,15 +1623,15 @@ static MOZ_MUST_USE bool TriggerPromiseReactions(JSContext* cx,
   });
 }
 
-static MOZ_MUST_USE bool RunFulfillFunction(JSContext* cx,
-                                            HandleObject onFulfilledFunc,
-                                            HandleValue result,
-                                            HandleObject promiseObj);
+[[nodiscard]] static bool RunFulfillFunction(JSContext* cx,
+                                             HandleObject onFulfilledFunc,
+                                             HandleValue result,
+                                             HandleObject promiseObj);
 
 // Implements PromiseReactionJob optimized for the case when the reaction
 // handler is one of the default resolving functions as created by the
 // CreateResolvingFunctions abstract operation.
-static MOZ_MUST_USE bool DefaultResolvingPromiseReactionJob(
+[[nodiscard]] static bool DefaultResolvingPromiseReactionJob(
     JSContext* cx, Handle<PromiseReactionRecord*> reaction) {
   MOZ_ASSERT(reaction->targetState() != JS::PromiseState::Pending);
 
@@ -1682,7 +1683,7 @@ static MOZ_MUST_USE bool DefaultResolvingPromiseReactionJob(
                            reaction->unhandledRejectionBehavior());
 }
 
-static MOZ_MUST_USE bool AsyncFunctionPromiseReactionJob(
+[[nodiscard]] static bool AsyncFunctionPromiseReactionJob(
     JSContext* cx, Handle<PromiseReactionRecord*> reaction) {
   MOZ_ASSERT(reaction->isAsyncFunction());
 
@@ -1702,7 +1703,7 @@ static MOZ_MUST_USE bool AsyncFunctionPromiseReactionJob(
   return AsyncFunctionAwaitedRejected(cx, generator, argument);
 }
 
-static MOZ_MUST_USE bool AsyncGeneratorPromiseReactionJob(
+[[nodiscard]] static bool AsyncGeneratorPromiseReactionJob(
     JSContext* cx, Handle<PromiseReactionRecord*> reaction) {
   MOZ_ASSERT(reaction->isAsyncGenerator());
 
@@ -1986,7 +1987,7 @@ static bool PromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp) {
   return Call(cx, rejectVal, UndefinedHandleValue, rval, &rval);
 }
 
-static MOZ_MUST_USE bool OriginalPromiseThenWithoutSettleHandlers(
+[[nodiscard]] static bool OriginalPromiseThenWithoutSettleHandlers(
     JSContext* cx, Handle<PromiseObject*> promise,
     Handle<PromiseObject*> promiseToResolve);
 
@@ -2052,7 +2053,7 @@ static bool PromiseResolveBuiltinThenableJob(JSContext* cx, unsigned argc,
  * thenable_ - The thenable to resolve the Promise with.
  * thenVal - The `then` function to invoke with the `thenable` as the receiver.
  */
-static MOZ_MUST_USE bool EnqueuePromiseResolveThenableJob(
+[[nodiscard]] static bool EnqueuePromiseResolveThenableJob(
     JSContext* cx, HandleValue promiseToResolve_, HandleValue thenable_,
     HandleValue thenVal) {
   // Need to re-root these to enable wrapping them below.
@@ -2120,7 +2121,7 @@ static MOZ_MUST_USE bool EnqueuePromiseResolveThenableJob(
  * promiseToResolve - The promise to resolve, obviously.
  * thenable - The thenable to resolve the Promise with.
  */
-static MOZ_MUST_USE bool EnqueuePromiseResolveThenableBuiltinJob(
+[[nodiscard]] static bool EnqueuePromiseResolveThenableBuiltinJob(
     JSContext* cx, HandleObject promiseToResolve, HandleObject thenable) {
   cx->check(promiseToResolve, thenable);
   MOZ_ASSERT(promiseToResolve->is<PromiseObject>());
@@ -2145,11 +2146,11 @@ static MOZ_MUST_USE bool EnqueuePromiseResolveThenableBuiltinJob(
                                           incumbentGlobal);
 }
 
-static MOZ_MUST_USE bool AddDummyPromiseReactionForDebugger(
+[[nodiscard]] static bool AddDummyPromiseReactionForDebugger(
     JSContext* cx, Handle<PromiseObject*> promise,
     HandleObject dependentPromise);
 
-static MOZ_MUST_USE bool AddPromiseReaction(
+[[nodiscard]] static bool AddPromiseReaction(
     JSContext* cx, Handle<PromiseObject*> promise,
     Handle<PromiseReactionRecord*> reaction);
 
@@ -2224,7 +2225,7 @@ static void ClearResolutionFunctionSlots(JSFunction* resolutionFun) {
 }
 
 // ES2016, 25.4.3.1. steps 3-7.
-static MOZ_MUST_USE MOZ_ALWAYS_INLINE PromiseObject*
+[[nodiscard]] static MOZ_ALWAYS_INLINE PromiseObject*
 CreatePromiseObjectInternal(JSContext* cx, HandleObject proto /* = nullptr */,
                             bool protoIsWrapped /* = false */,
                             bool informDebugger /* = true */) {
@@ -2486,22 +2487,22 @@ class MOZ_STACK_CLASS PromiseForOfIterator : public JS::ForOfIterator {
   }
 };
 
-static MOZ_MUST_USE bool PerformPromiseAll(
+[[nodiscard]] static bool PerformPromiseAll(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
     Handle<PromiseCapability> resultCapability, HandleValue promiseResolve,
     bool* done);
 
-static MOZ_MUST_USE bool PerformPromiseAllSettled(
+[[nodiscard]] static bool PerformPromiseAllSettled(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
     Handle<PromiseCapability> resultCapability, HandleValue promiseResolve,
     bool* done);
 
-static MOZ_MUST_USE bool PerformPromiseAny(
+[[nodiscard]] static bool PerformPromiseAny(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
     Handle<PromiseCapability> resultCapability, HandleValue promiseResolve,
     bool* done);
 
-static MOZ_MUST_USE bool PerformPromiseRace(
+[[nodiscard]] static bool PerformPromiseRace(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
     Handle<PromiseCapability> resultCapability, HandleValue promiseResolve,
     bool* done);
@@ -2519,8 +2520,8 @@ enum class CombinatorKind { All, AllSettled, Any, Race };
 // https://tc39.es/proposal-promise-any/
 //
 // Promise.any ( iterable )
-static MOZ_MUST_USE bool CommonPromiseCombinator(JSContext* cx, CallArgs& args,
-                                                 CombinatorKind kind) {
+[[nodiscard]] static bool CommonPromiseCombinator(JSContext* cx, CallArgs& args,
+                                                  CombinatorKind kind) {
   HandleValue iterable = args.get(0);
 
   // Step 2 (moved from NewPromiseCapability, step 1).
@@ -2653,11 +2654,11 @@ static bool Promise_static_all(JSContext* cx, unsigned argc, Value* vp) {
   return CommonPromiseCombinator(cx, args, CombinatorKind::All);
 }
 
-static MOZ_MUST_USE bool PerformPromiseThen(
+[[nodiscard]] static bool PerformPromiseThen(
     JSContext* cx, Handle<PromiseObject*> promise, HandleValue onFulfilled_,
     HandleValue onRejected_, Handle<PromiseCapability> resultCapability);
 
-static MOZ_MUST_USE bool PerformPromiseThenWithoutSettleHandlers(
+[[nodiscard]] static bool PerformPromiseThenWithoutSettleHandlers(
     JSContext* cx, Handle<PromiseObject*> promise,
     Handle<PromiseObject*> promiseToResolve,
     Handle<PromiseCapability> resultCapability);
@@ -2670,7 +2671,7 @@ static bool PromiseAllResolveElementFunction(JSContext* cx, unsigned argc,
                                              Value* vp);
 
 // Unforgeable version of ES2016, 25.4.4.1.
-MOZ_MUST_USE JSObject* js::GetWaitForAllPromise(
+[[nodiscard]] JSObject* js::GetWaitForAllPromise(
     JSContext* cx, JS::HandleObjectVector promises) {
 #ifdef DEBUG
   for (size_t i = 0, len = promises.length(); i < len; i++) {
@@ -2796,10 +2797,10 @@ MOZ_MUST_USE JSObject* js::GetWaitForAllPromise(
   return resultCapability.promise();
 }
 
-static MOZ_MUST_USE bool RunFulfillFunction(JSContext* cx,
-                                            HandleObject onFulfilledFunc,
-                                            HandleValue result,
-                                            HandleObject promiseObj) {
+[[nodiscard]] static bool RunFulfillFunction(JSContext* cx,
+                                             HandleObject onFulfilledFunc,
+                                             HandleValue result,
+                                             HandleObject promiseObj) {
   cx->check(onFulfilledFunc);
   cx->check(result);
   cx->check(promiseObj);
@@ -2830,7 +2831,7 @@ static MOZ_MUST_USE bool RunFulfillFunction(JSContext* cx,
   return true;
 }
 
-static MOZ_MUST_USE bool RunRejectFunction(
+[[nodiscard]] static bool RunRejectFunction(
     JSContext* cx, HandleObject onRejectedFunc, HandleValue result,
     HandleObject promiseObj, HandleSavedFrame unwrappedRejectionStack,
     UnhandledRejectionBehavior behavior) {
@@ -2879,7 +2880,7 @@ static MOZ_MUST_USE bool RunRejectFunction(
   return true;
 }
 
-static MOZ_MUST_USE JSObject* CommonStaticResolveRejectImpl(
+[[nodiscard]] static JSObject* CommonStaticResolveRejectImpl(
     JSContext* cx, HandleValue thisVal, HandleValue argVal,
     ResolutionMode mode);
 
@@ -2894,7 +2895,7 @@ static bool IsPromiseSpecies(JSContext* cx, JSFunction* species);
 // https://tc39.es/proposal-promise-any/
 // Runtime Semantics: PerformPromiseAny, steps 6-8.
 template <typename T>
-static MOZ_MUST_USE bool CommonPerformPromiseCombinator(
+[[nodiscard]] static bool CommonPerformPromiseCombinator(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
     HandleObject resultPromise, HandleValue promiseResolve, bool* done,
     bool resolveReturnsUndefined, T getResolveAndReject) {
@@ -3177,7 +3178,7 @@ static MOZ_MUST_USE bool CommonPerformPromiseCombinator(
 
 // Create the elements for the Promise combinators Promise.all and
 // Promise.allSettled.
-static MOZ_MUST_USE bool NewPromiseCombinatorElements(
+[[nodiscard]] static bool NewPromiseCombinatorElements(
     JSContext* cx, Handle<PromiseCapability> resultCapability,
     MutableHandle<PromiseCombinatorElements> elements) {
   // We have to be very careful about which compartments we create things for
@@ -3229,7 +3230,7 @@ static MOZ_MUST_USE bool NewPromiseCombinatorElements(
 }
 
 // Retrieve the combinator elements from the data holder.
-static MOZ_MUST_USE bool GetPromiseCombinatorElements(
+[[nodiscard]] static bool GetPromiseCombinatorElements(
     JSContext* cx, Handle<PromiseCombinatorDataHolder*> data,
     MutableHandle<PromiseCombinatorElements> elements) {
   bool needsWrapping = false;
@@ -3310,7 +3311,7 @@ static bool PromiseCombinatorElementFunctionAlreadyCalled(
 
 // ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 // 25.6.4.1.1 PerformPromiseAll (iteratorRecord, constructor, resultCapability)
-static MOZ_MUST_USE bool PerformPromiseAll(
+[[nodiscard]] static bool PerformPromiseAll(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
     Handle<PromiseCapability> resultCapability, HandleValue promiseResolve,
     bool* done) {
@@ -3447,7 +3448,7 @@ static bool Promise_static_race(JSContext* cx, unsigned argc, Value* vp) {
 
 // ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 // 25.6.4.3.1 PerformPromiseRace (iteratorRecord, constructor, resultCapability)
-static MOZ_MUST_USE bool PerformPromiseRace(
+[[nodiscard]] static bool PerformPromiseRace(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
     Handle<PromiseCapability> resultCapability, HandleValue promiseResolve,
     bool* done) {
@@ -3502,7 +3503,7 @@ static bool Promise_static_allSettled(JSContext* cx, unsigned argc, Value* vp) {
 // 25.6.4.2 Promise.allSettled ( iterable )
 //
 // PerformPromiseAllSettled ( iteratorRecord, constructor, resultCapability )
-static MOZ_MUST_USE bool PerformPromiseAllSettled(
+[[nodiscard]] static bool PerformPromiseAllSettled(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
     Handle<PromiseCapability> resultCapability, HandleValue promiseResolve,
     bool* done) {
@@ -3713,7 +3714,7 @@ static void ThrowAggregateError(JSContext* cx,
 // https://tc39.es/proposal-promise-any/
 //
 // PerformPromiseAny ( iteratorRecord, constructor, resultCapability )
-static MOZ_MUST_USE bool PerformPromiseAny(
+[[nodiscard]] static bool PerformPromiseAny(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
     Handle<PromiseCapability> resultCapability, HandleValue promiseResolve,
     bool* done) {
@@ -3919,7 +3920,7 @@ static void ThrowAggregateError(JSContext* cx,
 // 25.6.4.4 Promise.reject ( r )
 // 25.6.4.5 Promise.resolve ( x )
 // 25.6.4.5.1 PromiseResolve ( C, x )
-static MOZ_MUST_USE JSObject* CommonStaticResolveRejectImpl(
+[[nodiscard]] static JSObject* CommonStaticResolveRejectImpl(
     JSContext* cx, HandleValue thisVal, HandleValue argVal,
     ResolutionMode mode) {
   // Steps 1-2 of Promise.reject and Promise.resolve.
@@ -3996,9 +3997,9 @@ static MOZ_MUST_USE JSObject* CommonStaticResolveRejectImpl(
   return promise;
 }
 
-MOZ_MUST_USE JSObject* js::PromiseResolve(JSContext* cx,
-                                          HandleObject constructor,
-                                          HandleValue value) {
+[[nodiscard]] JSObject* js::PromiseResolve(JSContext* cx,
+                                           HandleObject constructor,
+                                           HandleValue value) {
   RootedValue C(cx, ObjectValue(*constructor));
   return CommonStaticResolveRejectImpl(cx, C, value, ResolveMode);
 }
@@ -4286,10 +4287,10 @@ static bool PromiseThenNewPromiseCapability(
 }
 
 // ES2016, 25.4.5.3., steps 3-5.
-MOZ_MUST_USE PromiseObject* js::OriginalPromiseThen(JSContext* cx,
-                                                    HandleObject promiseObj,
-                                                    HandleObject onFulfilled,
-                                                    HandleObject onRejected) {
+[[nodiscard]] PromiseObject* js::OriginalPromiseThen(JSContext* cx,
+                                                     HandleObject promiseObj,
+                                                     HandleObject onFulfilled,
+                                                     HandleObject onRejected) {
   cx->check(promiseObj);
   cx->check(onFulfilled);
   cx->check(onRejected);
@@ -4330,7 +4331,7 @@ MOZ_MUST_USE PromiseObject* js::OriginalPromiseThen(JSContext* cx,
   return newPromise;
 }
 
-static MOZ_MUST_USE bool OriginalPromiseThenWithoutSettleHandlers(
+[[nodiscard]] static bool OriginalPromiseThenWithoutSettleHandlers(
     JSContext* cx, Handle<PromiseObject*> promise,
     Handle<PromiseObject*> promiseToResolve) {
   cx->check(promise);
@@ -4348,11 +4349,11 @@ static MOZ_MUST_USE bool OriginalPromiseThenWithoutSettleHandlers(
                                                  resultCapability);
 }
 
-static MOZ_MUST_USE bool PerformPromiseThenWithReaction(
+[[nodiscard]] static bool PerformPromiseThenWithReaction(
     JSContext* cx, Handle<PromiseObject*> promise,
     Handle<PromiseReactionRecord*> reaction);
 
-MOZ_MUST_USE bool js::ReactToUnwrappedPromise(
+[[nodiscard]] bool js::ReactToUnwrappedPromise(
     JSContext* cx, Handle<PromiseObject*> unwrappedPromise,
     HandleObject onFulfilled_, HandleObject onRejected_,
     UnhandledRejectionBehavior behavior) {
@@ -4432,7 +4433,7 @@ static bool OriginalPromiseThenBuiltin(JSContext* cx, HandleValue promiseVal,
   return true;
 }
 
-MOZ_MUST_USE bool js::RejectPromiseWithPendingError(
+[[nodiscard]] bool js::RejectPromiseWithPendingError(
     JSContext* cx, Handle<PromiseObject*> promise) {
   cx->check(promise);
 
@@ -4453,7 +4454,7 @@ MOZ_MUST_USE bool js::RejectPromiseWithPendingError(
 // js/src/builtin/AsyncFunction.cpp, to call Promise internal functions.
 
 // ES 2018 draft 14.6.11 and 14.7.14 step 1.
-MOZ_MUST_USE PromiseObject* js::CreatePromiseObjectForAsync(JSContext* cx) {
+[[nodiscard]] PromiseObject* js::CreatePromiseObjectForAsync(JSContext* cx) {
   // Step 1.
   PromiseObject* promise = CreatePromiseObjectWithoutResolutionFunctions(cx);
   if (!promise) {
@@ -4469,7 +4470,7 @@ bool js::IsPromiseForAsyncFunctionOrGenerator(JSObject* promise) {
          PromiseHasAnyFlag(promise->as<PromiseObject>(), PROMISE_FLAG_ASYNC);
 }
 
-static MOZ_MUST_USE PromiseObject* CreatePromiseObjectForAsyncGenerator(
+[[nodiscard]] static PromiseObject* CreatePromiseObjectForAsyncGenerator(
     JSContext* cx) {
   PromiseObject* promise = CreatePromiseObjectWithoutResolutionFunctions(cx);
   if (!promise) {
@@ -4482,9 +4483,9 @@ static MOZ_MUST_USE PromiseObject* CreatePromiseObjectForAsyncGenerator(
 
 // ES2019 draft rev 7428c89bef626548084cd4e697a19ece7168f24c
 // 25.7.5.1 AsyncFunctionStart, steps 3.f-g.
-MOZ_MUST_USE bool js::AsyncFunctionThrown(JSContext* cx,
-                                          Handle<PromiseObject*> resultPromise,
-                                          HandleValue reason) {
+[[nodiscard]] bool js::AsyncFunctionThrown(JSContext* cx,
+                                           Handle<PromiseObject*> resultPromise,
+                                           HandleValue reason) {
   if (resultPromise->state() != JS::PromiseState::Pending) {
     // OOM after resolving promise.
     // Report a warning and ignore the result.
@@ -4501,7 +4502,7 @@ MOZ_MUST_USE bool js::AsyncFunctionThrown(JSContext* cx,
 
 // ES2019 draft rev 7428c89bef626548084cd4e697a19ece7168f24c
 // 25.7.5.1 AsyncFunctionStart, steps 3.d-e, 3.g.
-MOZ_MUST_USE bool js::AsyncFunctionReturned(
+[[nodiscard]] bool js::AsyncFunctionReturned(
     JSContext* cx, Handle<PromiseObject*> resultPromise, HandleValue value) {
   return ResolvePromiseInternal(cx, resultPromise, value);
 }
@@ -4511,10 +4512,11 @@ MOZ_MUST_USE bool js::AsyncFunctionReturned(
 // Helper function that performs 6.2.3.1 Await(promise) steps 2 and 9.
 // The same steps are also used in a few other places in the spec.
 template <typename T>
-static MOZ_MUST_USE bool InternalAwait(JSContext* cx, HandleValue value,
-                                       HandleObject resultPromise,
-                                       PromiseHandler onFulfilled,
-                                       PromiseHandler onRejected, T extraStep) {
+[[nodiscard]] static bool InternalAwait(JSContext* cx, HandleValue value,
+                                        HandleObject resultPromise,
+                                        PromiseHandler onFulfilled,
+                                        PromiseHandler onRejected,
+                                        T extraStep) {
   // Step 2: Let promise be ? PromiseResolve(%Promise%, « value »).
   RootedObject promise(cx, PromiseObject::unforgeableResolve(cx, value));
   if (!promise) {
@@ -4551,7 +4553,7 @@ static MOZ_MUST_USE bool InternalAwait(JSContext* cx, HandleValue value,
 //
 // 6.2.3.1 Await(promise) steps 2-10 when the running execution context is
 // evaluating an `await` expression in an async function.
-MOZ_MUST_USE JSObject* js::AsyncFunctionAwait(
+[[nodiscard]] JSObject* js::AsyncFunctionAwait(
     JSContext* cx, Handle<AsyncFunctionGeneratorObject*> genObj,
     HandleValue value) {
   auto extra = [&](Handle<PromiseReactionRecord*> reaction) {
@@ -4567,7 +4569,7 @@ MOZ_MUST_USE JSObject* js::AsyncFunctionAwait(
 
 // 6.2.3.1 Await(promise) steps 2-10 when the running execution context is
 // evaluating an `await` expression in an async generator.
-MOZ_MUST_USE bool js::AsyncGeneratorAwait(
+[[nodiscard]] bool js::AsyncGeneratorAwait(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     HandleValue value) {
   auto extra = [&](Handle<PromiseReactionRecord*> reaction) {
@@ -4787,12 +4789,12 @@ bool js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args,
 
 enum class ResumeNextKind { Enqueue, Reject, Resolve };
 
-static MOZ_MUST_USE bool AsyncGeneratorResumeNext(
+[[nodiscard]] static bool AsyncGeneratorResumeNext(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator, ResumeNextKind kind,
     HandleValue valueOrException = UndefinedHandleValue, bool done = false);
 
 // 25.5.3.3 AsyncGeneratorResolve ( generator, value, done )
-MOZ_MUST_USE bool js::AsyncGeneratorResolve(
+[[nodiscard]] bool js::AsyncGeneratorResolve(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj, HandleValue value,
     bool done) {
   return AsyncGeneratorResumeNext(cx, asyncGenObj, ResumeNextKind::Resolve,
@@ -4800,7 +4802,7 @@ MOZ_MUST_USE bool js::AsyncGeneratorResolve(
 }
 
 // 25.5.3.4 AsyncGeneratorReject ( generator, exception )
-MOZ_MUST_USE bool js::AsyncGeneratorReject(
+[[nodiscard]] bool js::AsyncGeneratorReject(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     HandleValue exception) {
   return AsyncGeneratorResumeNext(cx, asyncGenObj, ResumeNextKind::Reject,
@@ -4811,7 +4813,7 @@ MOZ_MUST_USE bool js::AsyncGeneratorReject(
 // 25.5.3.3 AsyncGeneratorResolve ( generator, value, done )
 // 25.5.3.4 AsyncGeneratorReject ( generator, exception )
 // 25.5.3.5 AsyncGeneratorResumeNext ( generator )
-static MOZ_MUST_USE bool AsyncGeneratorResumeNext(
+[[nodiscard]] static bool AsyncGeneratorResumeNext(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator, ResumeNextKind kind,
     HandleValue valueOrException_ /* = UndefinedHandleValue */,
     bool done /* = false */) {
@@ -5035,11 +5037,11 @@ static MOZ_MUST_USE bool AsyncGeneratorResumeNext(
 }
 
 // 25.5.3.6 AsyncGeneratorEnqueue ( generator, completion )
-MOZ_MUST_USE bool js::AsyncGeneratorEnqueue(JSContext* cx,
-                                            HandleValue asyncGenVal,
-                                            CompletionKind completionKind,
-                                            HandleValue completionValue,
-                                            MutableHandleValue result) {
+[[nodiscard]] bool js::AsyncGeneratorEnqueue(JSContext* cx,
+                                             HandleValue asyncGenVal,
+                                             CompletionKind completionKind,
+                                             HandleValue completionValue,
+                                             MutableHandleValue result) {
   // Step 1 (implicit).
 
   // Step 3.
@@ -5266,7 +5268,7 @@ bool js::Promise_then(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 // ES2016, 25.4.5.3.1.
-static MOZ_MUST_USE bool PerformPromiseThen(
+[[nodiscard]] static bool PerformPromiseThen(
     JSContext* cx, Handle<PromiseObject*> promise, HandleValue onFulfilled_,
     HandleValue onRejected_, Handle<PromiseCapability> resultCapability) {
   // Step 1 (implicit).
@@ -5295,7 +5297,7 @@ static MOZ_MUST_USE bool PerformPromiseThen(
   return PerformPromiseThenWithReaction(cx, promise, reaction);
 }
 
-static MOZ_MUST_USE bool PerformPromiseThenWithoutSettleHandlers(
+[[nodiscard]] static bool PerformPromiseThenWithoutSettleHandlers(
     JSContext* cx, Handle<PromiseObject*> promise,
     Handle<PromiseObject*> promiseToResolve,
     Handle<PromiseCapability> resultCapability) {
@@ -5323,7 +5325,7 @@ static MOZ_MUST_USE bool PerformPromiseThenWithoutSettleHandlers(
 
 // https://tc39.github.io/ecma262/#sec-performpromisethen
 // 25.6.5.4.1 PerformPromiseThen steps 8-11.
-static MOZ_MUST_USE bool PerformPromiseThenWithReaction(
+[[nodiscard]] static bool PerformPromiseThenWithReaction(
     JSContext* cx, Handle<PromiseObject*> unwrappedPromise,
     Handle<PromiseReactionRecord*> reaction) {
   // Step 8: If promise.[[PromiseState]] is "pending", then
@@ -5382,7 +5384,7 @@ static MOZ_MUST_USE bool PerformPromiseThenWithReaction(
   return true;
 }
 
-static MOZ_MUST_USE bool AddPromiseReaction(
+[[nodiscard]] static bool AddPromiseReaction(
     JSContext* cx, Handle<PromiseObject*> unwrappedPromise,
     Handle<PromiseReactionRecord*> reaction) {
   MOZ_RELEASE_ASSERT(reaction->is<PromiseReactionRecord>());
@@ -5456,7 +5458,7 @@ static MOZ_MUST_USE bool AddPromiseReaction(
   return true;
 }
 
-static MOZ_MUST_USE bool AddDummyPromiseReactionForDebugger(
+[[nodiscard]] static bool AddDummyPromiseReactionForDebugger(
     JSContext* cx, Handle<PromiseObject*> promise,
     HandleObject dependentPromise) {
   if (promise->state() != JS::PromiseState::Pending) {
@@ -5695,7 +5697,7 @@ void PromiseObject::copyUserInteractionFlagsFrom(PromiseObject& rhs) {
 //
 // Currently we only support skipping jobs when the async function is resumed
 // at least once.
-static MOZ_MUST_USE bool IsTopMostAsyncFunctionCall(JSContext* cx) {
+[[nodiscard]] static bool IsTopMostAsyncFunctionCall(JSContext* cx) {
   FrameIter iter(cx);
 
   // The current frame should be the async function.
@@ -5760,8 +5762,8 @@ static MOZ_MUST_USE bool IsTopMostAsyncFunctionCall(JSContext* cx) {
   return false;
 }
 
-MOZ_MUST_USE bool js::CanSkipAwait(JSContext* cx, HandleValue val,
-                                   bool* canSkip) {
+[[nodiscard]] bool js::CanSkipAwait(JSContext* cx, HandleValue val,
+                                    bool* canSkip) {
   if (!cx->canSkipEnqueuingJobs) {
     *canSkip = false;
     return true;
@@ -5808,8 +5810,8 @@ MOZ_MUST_USE bool js::CanSkipAwait(JSContext* cx, HandleValue val,
   return true;
 }
 
-MOZ_MUST_USE bool js::ExtractAwaitValue(JSContext* cx, HandleValue val,
-                                        MutableHandleValue resolved) {
+[[nodiscard]] bool js::ExtractAwaitValue(JSContext* cx, HandleValue val,
+                                         MutableHandleValue resolved) {
 // Ensure all callers of this are jumping past the
 // extract if it's not possible to extract.
 #ifdef DEBUG

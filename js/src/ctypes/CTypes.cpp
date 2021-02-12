@@ -1851,8 +1851,8 @@ static bool VariadicArgumentTypeError(JSContext* cx, uint32_t index,
   return false;
 }
 
-MOZ_MUST_USE JSObject* GetThisObject(JSContext* cx, const CallArgs& args,
-                                     const char* msg) {
+[[nodiscard]] JSObject* GetThisObject(JSContext* cx, const CallArgs& args,
+                                      const char* msg) {
   if (!args.thisv().isObject()) {
     IncompatibleThisProto(cx, msg, args.thisv());
     return nullptr;
@@ -4111,9 +4111,9 @@ static void BuildTypeSource(JSContext* cx, JSObject* typeObj_, bool makeShort,
 // resulting string can ImplicitConvert successfully if passed to another data
 // constructor. (This is important when called recursively, since fields of
 // structs and arrays are converted with ImplicitConvert.)
-static MOZ_MUST_USE bool BuildDataSource(JSContext* cx, HandleObject typeObj,
-                                         void* data, bool isImplicit,
-                                         AutoString& result) {
+[[nodiscard]] static bool BuildDataSource(JSContext* cx, HandleObject typeObj,
+                                          void* data, bool isImplicit,
+                                          AutoString& result) {
   TypeCode type = CType::GetTypeCode(typeObj);
   switch (type) {
     case TYPE_bool:

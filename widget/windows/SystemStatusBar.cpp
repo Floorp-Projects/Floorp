@@ -7,41 +7,45 @@
 #include <strsafe.h>
 #include "SystemStatusBar.h"
 
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/widget/IconLoader.h"
 #include "nsComputedDOMStyle.h"
 #include "nsIContentPolicy.h"
+#include "nsISupports.h"
 #include "nsMenuFrame.h"
 #include "nsMenuPopupFrame.h"
 #include "nsXULPopupManager.h"
-#include "IconLoaderHelperWin.h"
 #include "nsIDocShell.h"
 #include "nsDocShell.h"
+#include "nsWindowGfx.h"
 
 namespace mozilla::widget {
 
 using mozilla::LinkedListElement;
 using mozilla::dom::Element;
-using mozilla::widget::IconLoaderListenerWin;
 
 class StatusBarEntry final : public LinkedListElement<RefPtr<StatusBarEntry>>,
-                             public IconLoaderListenerWin {
+                             public IconLoader::Listener,
+                             public nsISupports {
  public:
   explicit StatusBarEntry(Element* aMenu);
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(StatusBarEntry)
   nsresult Init();
+  void Destroy();
+
   LRESULT OnMessage(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
   const Element* GetMenu() { return mMenu; };
 
-  nsresult OnComplete();
+  nsresult OnComplete(imgIContainer* aImage) override;
 
  private:
   ~StatusBarEntry();
   RefPtr<mozilla::widget::IconLoader> mIconLoader;
-  RefPtr<mozilla::widget::IconLoaderHelperWin> mIconLoaderHelper;
   RefPtr<Element> mMenu;
   NOTIFYICONDATAW mIconData;
   boolean mInitted;
@@ -50,11 +54,10 @@ class StatusBarEntry final : public LinkedListElement<RefPtr<StatusBarEntry>>,
 NS_IMPL_CYCLE_COLLECTION_CLASS(StatusBarEntry)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(StatusBarEntry)
-  tmp->OnComplete();
+  tmp->Destroy();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(StatusBarEntry)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIconLoader)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIconLoaderHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMenu)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -86,8 +89,16 @@ StatusBarEntry::~StatusBarEntry() {
   if (!mInitted) {
     return;
   }
+  Destroy();
   ::Shell_NotifyIconW(NIM_DELETE, &mIconData);
   VERIFY(::DestroyWindow(mIconData.hWnd));
+}
+
+void StatusBarEntry::Destroy() {
+  if (mIconLoader) {
+    mIconLoader->Destroy();
+    mIconLoader = nullptr;
+  }
 }
 
 nsresult StatusBarEntry::Init() {
@@ -131,12 +142,10 @@ nsresult StatusBarEntry::Init() {
     if (NS_FAILED(rv)) return rv;
   }
 
-  mIconLoaderHelper = new IconLoaderHelperWin(this);
-  nsIntRect rect;
-  mIconLoader = new IconLoader(mIconLoaderHelper, mMenu, rect);
+  mIconLoader = new IconLoader(this);
 
   if (iconURI) {
-    rv = mIconLoader->LoadIcon(iconURI);
+    rv = mIconLoader->LoadIcon(iconURI, mMenu);
   }
 
   HWND iconWindow;
@@ -154,7 +163,7 @@ nsresult StatusBarEntry::Init() {
   ::SetWindowLongPtr(iconWindow, GWLP_USERDATA, (LONG_PTR)this);
 
   mIconData.hWnd = iconWindow;
-  mIconData.hIcon = mIconLoaderHelper->GetNativeIconImage();
+  mIconData.hIcon = ::LoadIcon(::GetModuleHandle(NULL), IDI_APPLICATION);
 
   nsAutoString labelAttr;
   mMenu->GetAttr(kNameSpaceID_None, nsGkAtoms::label, labelAttr);
@@ -171,20 +180,27 @@ nsresult StatusBarEntry::Init() {
   return NS_OK;
 }
 
-nsresult StatusBarEntry::OnComplete() {
+nsresult StatusBarEntry::OnComplete(imgIContainer* aImage) {
+  NS_ENSURE_ARG_POINTER(aImage);
+
   RefPtr<StatusBarEntry> kungFuDeathGrip = this;
-  mIconData.hIcon = mIconLoaderHelper->GetNativeIconImage();
+
+  nsresult rv = nsWindowGfx::CreateIcon(
+      aImage, false, LayoutDeviceIntPoint(),
+      nsWindowGfx::GetIconMetrics(nsWindowGfx::kRegularIcon), &mIconData.hIcon);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   ::Shell_NotifyIconW(NIM_MODIFY, &mIconData);
 
+  if (mIconData.hIcon) {
+    ::DestroyIcon(mIconData.hIcon);
+    mIconData.hIcon = nullptr;
+  }
+
   // To simplify things, we won't react to CSS changes to update the icon
-  // with this implementation. We can get rid of the IconLoader and Helper
-  // at this point, which will also free the allocated HICON.
-  mIconLoaderHelper->Destroy();
-  mIconLoader->ReleaseJSObjects();
+  // with this implementation. We can get rid of the IconLoader at this point.
   mIconLoader->Destroy();
   mIconLoader = nullptr;
-  mIconLoaderHelper = nullptr;
   return NS_OK;
 }
 

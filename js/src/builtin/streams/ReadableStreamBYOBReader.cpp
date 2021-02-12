@@ -12,8 +12,6 @@
  * don't actually test fully-constructed byte streams/BYOB readers, pass.  🙄
  */
 
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
-
 #include "jsapi.h"  // JS_ReportErrorNumberASCII
 
 #include "builtin/streams/ReadableStream.h"  // js::ReadableStream
@@ -28,7 +26,7 @@ using JS::Handle;
  * Stream spec, 3.7.3. new ReadableStreamBYOBReader ( stream )
  * Steps 2-5.
  */
-MOZ_MUST_USE JSObject* js::CreateReadableStreamBYOBReader(
+[[nodiscard]] JSObject* js::CreateReadableStreamBYOBReader(
     JSContext* cx, Handle<ReadableStream*> unwrappedStream,
     ForAuthorCodeBool forAuthorCode, Handle<JSObject*> proto /* = nullptr */) {
   // Step 2: If ! IsReadableByteStreamController(

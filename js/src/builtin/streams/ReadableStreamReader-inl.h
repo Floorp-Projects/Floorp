@@ -10,7 +10,6 @@
 #include "builtin/streams/ReadableStreamReader.h"
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
 #include "jsfriendapi.h"  // JS_IsDeadWrapper
 
@@ -26,7 +25,7 @@ namespace js {
 /**
  * Returns the stream associated with the given reader.
  */
-inline MOZ_MUST_USE ReadableStream* UnwrapStreamFromReader(
+[[nodiscard]] inline ReadableStream* UnwrapStreamFromReader(
     JSContext* cx, JS::Handle<ReadableStreamReader*> reader) {
   MOZ_ASSERT(reader->hasStream());
   return UnwrapInternalSlot<ReadableStream>(cx, reader,
@@ -42,13 +41,13 @@ inline MOZ_MUST_USE ReadableStream* UnwrapStreamFromReader(
  * If the reader is a wrapper, it will be unwrapped, so the result might not be
  * an object from the currently active compartment.
  */
-inline MOZ_MUST_USE ReadableStreamReader* UnwrapReaderFromStream(
+[[nodiscard]] inline ReadableStreamReader* UnwrapReaderFromStream(
     JSContext* cx, JS::Handle<ReadableStream*> stream) {
   return UnwrapInternalSlot<ReadableStreamReader>(cx, stream,
                                                   ReadableStream::Slot_Reader);
 }
 
-inline MOZ_MUST_USE ReadableStreamReader* UnwrapReaderFromStreamNoThrow(
+[[nodiscard]] inline ReadableStreamReader* UnwrapReaderFromStreamNoThrow(
     ReadableStream* stream) {
   JSObject* readerObj =
       &stream->getFixedSlot(ReadableStream::Slot_Reader).toObject();

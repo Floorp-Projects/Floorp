@@ -29,14 +29,14 @@ class FutexThread {
   friend class AutoLockFutexAPI;
 
  public:
-  static MOZ_MUST_USE bool initialize();
+  [[nodiscard]] static bool initialize();
   static void destroy();
 
   static void lock();
   static void unlock();
 
   FutexThread();
-  MOZ_MUST_USE bool initInstance();
+  [[nodiscard]] bool initInstance();
   void destroyInstance();
 
   // Parameters to notify().
@@ -62,9 +62,9 @@ class FutexThread {
   // wait.
   //
   // wait() will not wake up spuriously.
-  MOZ_MUST_USE WaitResult
-  wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
-       const mozilla::Maybe<mozilla::TimeDuration>& timeout);
+  [[nodiscard]] WaitResult wait(
+      JSContext* cx, js::UniqueLock<js::Mutex>& locked,
+      const mozilla::Maybe<mozilla::TimeDuration>& timeout);
 
   // Notify the thread this is associated with.
   //
@@ -122,12 +122,12 @@ class FutexThread {
 };
 
 // Go to sleep if the int32_t value at the given address equals `value`.
-MOZ_MUST_USE FutexThread::WaitResult atomics_wait_impl(
+[[nodiscard]] FutexThread::WaitResult atomics_wait_impl(
     JSContext* cx, SharedArrayRawBuffer* sarb, size_t byteOffset, int32_t value,
     const mozilla::Maybe<mozilla::TimeDuration>& timeout);
 
 // Go to sleep if the int64_t value at the given address equals `value`.
-MOZ_MUST_USE FutexThread::WaitResult atomics_wait_impl(
+[[nodiscard]] FutexThread::WaitResult atomics_wait_impl(
     JSContext* cx, SharedArrayRawBuffer* sarb, size_t byteOffset, int64_t value,
     const mozilla::Maybe<mozilla::TimeDuration>& timeout);
 
@@ -135,8 +135,8 @@ MOZ_MUST_USE FutexThread::WaitResult atomics_wait_impl(
 // all.  The return value is nonnegative and is the number of waiters woken.  If
 // the number of waiters woken exceeds INT64_MAX then this never returns.  If
 // `count` is nonnegative then the return value is never greater than `count`.
-MOZ_MUST_USE int64_t atomics_notify_impl(SharedArrayRawBuffer* sarb,
-                                         size_t byteOffset, int64_t count);
+[[nodiscard]] int64_t atomics_notify_impl(SharedArrayRawBuffer* sarb,
+                                          size_t byteOffset, int64_t count);
 
 } /* namespace js */
 

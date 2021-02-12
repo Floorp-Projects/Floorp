@@ -130,7 +130,7 @@ class SharedArrayRawBuffer {
 
   uint32_t refcount() const { return refcount_; }
 
-  MOZ_MUST_USE bool addReference();
+  [[nodiscard]] bool addReference();
   void dropReference();
 
   static int32_t liveBuffers();
@@ -236,8 +236,8 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared {
   size_t wasmMappedSize() const { return rawBufferObject()->mappedSize(); }
 
  private:
-  MOZ_MUST_USE bool acceptRawBuffer(SharedArrayRawBuffer* buffer,
-                                    BufferSize length);
+  [[nodiscard]] bool acceptRawBuffer(SharedArrayRawBuffer* buffer,
+                                     BufferSize length);
   void dropRawBuffer();
 };
 

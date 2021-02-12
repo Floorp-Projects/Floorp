@@ -200,7 +200,7 @@ class Nursery {
   explicit Nursery(gc::GCRuntime* gc);
   ~Nursery();
 
-  MOZ_MUST_USE bool init(AutoLockGCBgAlloc& lock);
+  [[nodiscard]] bool init(AutoLockGCBgAlloc& lock);
 
   // Number of allocated (ready to use) chunks.
   unsigned allocatedChunkCount() const { return chunks_.length(); }
@@ -306,7 +306,7 @@ class Nursery {
   // If the thing at |*ref| in the Nursery has been forwarded, set |*ref| to
   // the new location and return true. Otherwise return false and leave
   // |*ref| unset.
-  MOZ_ALWAYS_INLINE MOZ_MUST_USE static bool getForwardedPointer(
+  [[nodiscard]] MOZ_ALWAYS_INLINE static bool getForwardedPointer(
       js::gc::Cell** ref);
 
   // Forward a slots/elements pointer stored in an Ion frame.
@@ -320,7 +320,7 @@ class Nursery {
   // Register a malloced buffer that is held by a nursery object, which
   // should be freed at the end of a minor GC. Buffers are unregistered when
   // their owning objects are tenured.
-  MOZ_MUST_USE bool registerMallocedBuffer(void* buffer, size_t nbytes);
+  [[nodiscard]] bool registerMallocedBuffer(void* buffer, size_t nbytes);
 
   // Mark a malloced buffer as no longer needing to be freed.
   void removeMallocedBuffer(void* buffer, size_t nbytes) {
@@ -340,13 +340,13 @@ class Nursery {
     mallocedBuffers.remove(buffer);
   }
 
-  MOZ_MUST_USE bool addedUniqueIdToCell(gc::Cell* cell) {
+  [[nodiscard]] bool addedUniqueIdToCell(gc::Cell* cell) {
     MOZ_ASSERT(IsInsideNursery(cell));
     MOZ_ASSERT(isEnabled());
     return cellsWithUid_.append(cell);
   }
 
-  MOZ_MUST_USE bool queueDictionaryModeObjectToSweep(NativeObject* obj);
+  [[nodiscard]] bool queueDictionaryModeObjectToSweep(NativeObject* obj);
 
   size_t sizeOfMallocedBuffers(mozilla::MallocSizeOf mallocSizeOf) const {
     size_t total = 0;
@@ -665,8 +665,8 @@ class Nursery {
 
   // Allocate the next chunk, or the first chunk for initialization.
   // Callers will probably want to call setCurrentChunk(0) next.
-  MOZ_MUST_USE bool allocateNextChunk(unsigned chunkno,
-                                      AutoLockGCBgAlloc& lock);
+  [[nodiscard]] bool allocateNextChunk(unsigned chunkno,
+                                       AutoLockGCBgAlloc& lock);
 
   MOZ_ALWAYS_INLINE uintptr_t currentEnd() const;
 

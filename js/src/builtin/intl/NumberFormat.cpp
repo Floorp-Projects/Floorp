@@ -1016,11 +1016,11 @@ class NumberFormatFields {
  public:
   explicit NumberFormatFields(JSContext* cx) : fields_(cx) {}
 
-  MOZ_MUST_USE bool append(FieldType type, int32_t begin, int32_t end);
+  [[nodiscard]] bool append(FieldType type, int32_t begin, int32_t end);
 
-  MOZ_MUST_USE ArrayObject* toArray(JSContext* cx,
-                                    JS::HandleString overallResult,
-                                    FieldType unitType);
+  [[nodiscard]] ArrayObject* toArray(JSContext* cx,
+                                     JS::HandleString overallResult,
+                                     FieldType unitType);
 };
 
 bool NumberFormatFields::append(FieldType type, int32_t begin, int32_t end) {

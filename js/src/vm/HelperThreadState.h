@@ -188,7 +188,7 @@ class GlobalHelperThreadState {
   void finish();
   void finishThreads();
 
-  MOZ_MUST_USE bool ensureContextList(size_t count);
+  [[nodiscard]] bool ensureContextList(size_t count);
   JSContext* getFirstUnusedContext(AutoLockHelperThreadState& locked);
   void destroyHelperContexts(AutoLockHelperThreadState& lock);
 
@@ -447,7 +447,7 @@ class HelperThread {
 
  public:
   HelperThread();
-  MOZ_MUST_USE bool init();
+  [[nodiscard]] bool init();
 
   ThreadId threadId() { return thread.get_id(); }
 

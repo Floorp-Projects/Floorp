@@ -9,7 +9,6 @@
 #include "builtin/streams/MiscellaneousOperations.h"
 
 #include "mozilla/Assertions.h"     // MOZ_ASSERT
-#include "mozilla/Attributes.h"     // MOZ_MUST_USE
 #include "mozilla/FloatingPoint.h"  // mozilla::IsNaN
 
 #include "jsapi.h"  // JS_ReportErrorNumberASCII
@@ -31,7 +30,7 @@ using JS::MutableHandle;
 using JS::ToNumber;
 using JS::Value;
 
-MOZ_MUST_USE js::PromiseObject* js::PromiseRejectedWithPendingError(
+[[nodiscard]] js::PromiseObject* js::PromiseRejectedWithPendingError(
     JSContext* cx) {
   Rooted<Value> exn(cx);
   if (!cx->isExceptionPending() || !GetAndClearException(cx, &exn)) {
@@ -57,7 +56,7 @@ MOZ_MUST_USE js::PromiseObject* js::PromiseRejectedWithPendingError(
  * caller's responsibility to make sure that later, when the algorithm is
  * "performed", the appropriate steps are carried out.
  */
-MOZ_MUST_USE bool js::CreateAlgorithmFromUnderlyingMethod(
+[[nodiscard]] bool js::CreateAlgorithmFromUnderlyingMethod(
     JSContext* cx, Handle<Value> underlyingObject,
     const char* methodNameForErrorMessage, Handle<PropertyName*> methodName,
     MutableHandle<Value> method) {
@@ -112,9 +111,9 @@ MOZ_MUST_USE bool js::CreateAlgorithmFromUnderlyingMethod(
  * Streams spec, 6.3.2. InvokeOrNoop ( O, P, args )
  * As it happens, all callers pass exactly one argument.
  */
-MOZ_MUST_USE bool js::InvokeOrNoop(JSContext* cx, Handle<Value> O,
-                                   Handle<PropertyName*> P, Handle<Value> arg,
-                                   MutableHandle<Value> rval) {
+[[nodiscard]] bool js::InvokeOrNoop(JSContext* cx, Handle<Value> O,
+                                    Handle<PropertyName*> P, Handle<Value> arg,
+                                    MutableHandle<Value> rval) {
   cx->check(O, P, arg);
 
   // Step 1: Assert: O is not undefined.
@@ -140,7 +139,7 @@ MOZ_MUST_USE bool js::InvokeOrNoop(JSContext* cx, Handle<Value> O,
 /**
  * Streams spec, 6.3.7. ValidateAndNormalizeHighWaterMark ( highWaterMark )
  */
-MOZ_MUST_USE bool js::ValidateAndNormalizeHighWaterMark(
+[[nodiscard]] bool js::ValidateAndNormalizeHighWaterMark(
     JSContext* cx, Handle<Value> highWaterMarkVal, double* highWaterMark) {
   // Step 1: Set highWaterMark to ? ToNumber(highWaterMark).
   if (!ToNumber(cx, highWaterMarkVal, highWaterMark)) {
@@ -169,8 +168,8 @@ MOZ_MUST_USE bool js::ValidateAndNormalizeHighWaterMark(
  * WritableStreamDefaultControllerGetChunkSize where this value is used, we
  * check for undefined and behave as if we had "made" an "algorithm" for it.
  */
-MOZ_MUST_USE bool js::MakeSizeAlgorithmFromSizeFunction(JSContext* cx,
-                                                        Handle<Value> size) {
+[[nodiscard]] bool js::MakeSizeAlgorithmFromSizeFunction(JSContext* cx,
+                                                         Handle<Value> size) {
   cx->check(size);
 
   // Step 1: If size is undefined, return an algorithm that returns 1.

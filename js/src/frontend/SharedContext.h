@@ -187,7 +187,7 @@ class SharedContext {
   // Alias enum into SharedContext
   using ImmutableFlags = ImmutableScriptFlagsEnum;
 
-  MOZ_MUST_USE bool hasFlag(ImmutableFlags flag) const {
+  [[nodiscard]] bool hasFlag(ImmutableFlags flag) const {
     return immutableFlags_.hasFlag(flag);
   }
   void setFlag(ImmutableFlags flag, bool b = true) {
@@ -476,7 +476,7 @@ class FunctionBox : public SuspendableContext {
     }
   }
 
-  MOZ_MUST_USE bool setAsmJSModule(const JS::WasmModule* module);
+  [[nodiscard]] bool setAsmJSModule(const JS::WasmModule* module);
   bool isAsmJSModule() const { return flags_.isAsmJSNative(); }
 
   bool hasEnclosingScopeIndex() const { return enclosingScopeIndex_.isSome(); }

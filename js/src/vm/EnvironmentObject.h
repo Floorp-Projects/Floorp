@@ -1192,46 +1192,46 @@ ModuleObject* GetModuleObjectForScript(JSScript* script);
 
 ModuleEnvironmentObject* GetModuleEnvironmentForScript(JSScript* script);
 
-MOZ_MUST_USE bool GetThisValueForDebuggerFrameMaybeOptimizedOut(
+[[nodiscard]] bool GetThisValueForDebuggerFrameMaybeOptimizedOut(
     JSContext* cx, AbstractFramePtr frame, jsbytecode* pc,
     MutableHandleValue res);
-MOZ_MUST_USE bool GetThisValueForDebuggerSuspendedGeneratorMaybeOptimizedOut(
+[[nodiscard]] bool GetThisValueForDebuggerSuspendedGeneratorMaybeOptimizedOut(
     JSContext* cx, AbstractGeneratorObject& genObj, JSScript* script,
     MutableHandleValue res);
 
-MOZ_MUST_USE bool CheckVarNameConflict(
+[[nodiscard]] bool CheckVarNameConflict(
     JSContext* cx, Handle<LexicalEnvironmentObject*> lexicalEnv,
     HandlePropertyName name);
 
-MOZ_MUST_USE bool CheckCanDeclareGlobalBinding(JSContext* cx,
-                                               Handle<GlobalObject*> global,
-                                               HandlePropertyName name,
-                                               bool isFunction);
+[[nodiscard]] bool CheckCanDeclareGlobalBinding(JSContext* cx,
+                                                Handle<GlobalObject*> global,
+                                                HandlePropertyName name,
+                                                bool isFunction);
 
-MOZ_MUST_USE bool CheckLexicalNameConflict(
+[[nodiscard]] bool CheckLexicalNameConflict(
     JSContext* cx, Handle<LexicalEnvironmentObject*> lexicalEnv,
     HandleObject varObj, HandlePropertyName name);
 
-MOZ_MUST_USE bool CheckGlobalDeclarationConflicts(
+[[nodiscard]] bool CheckGlobalDeclarationConflicts(
     JSContext* cx, HandleScript script,
     Handle<LexicalEnvironmentObject*> lexicalEnv, HandleObject varObj);
 
-MOZ_MUST_USE bool GlobalOrEvalDeclInstantiation(JSContext* cx,
-                                                HandleObject envChain,
-                                                HandleScript script,
-                                                GCThingIndex lastFun);
+[[nodiscard]] bool GlobalOrEvalDeclInstantiation(JSContext* cx,
+                                                 HandleObject envChain,
+                                                 HandleScript script,
+                                                 GCThingIndex lastFun);
 
-MOZ_MUST_USE bool InitFunctionEnvironmentObjects(JSContext* cx,
-                                                 AbstractFramePtr frame);
+[[nodiscard]] bool InitFunctionEnvironmentObjects(JSContext* cx,
+                                                  AbstractFramePtr frame);
 
-MOZ_MUST_USE bool PushVarEnvironmentObject(JSContext* cx, HandleScope scope,
-                                           AbstractFramePtr frame);
+[[nodiscard]] bool PushVarEnvironmentObject(JSContext* cx, HandleScope scope,
+                                            AbstractFramePtr frame);
 
-MOZ_MUST_USE bool GetFrameEnvironmentAndScope(JSContext* cx,
-                                              AbstractFramePtr frame,
-                                              jsbytecode* pc,
-                                              MutableHandleObject env,
-                                              MutableHandleScope scope);
+[[nodiscard]] bool GetFrameEnvironmentAndScope(JSContext* cx,
+                                               AbstractFramePtr frame,
+                                               jsbytecode* pc,
+                                               MutableHandleObject env,
+                                               MutableHandleScope scope);
 
 void GetSuspendedGeneratorEnvironmentAndScope(AbstractGeneratorObject& genObj,
                                               JSScript* script,

@@ -113,8 +113,8 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
   }
 
   // Call this before calling compile{Global,Eval}Script.
-  MOZ_MUST_USE bool createSourceAndParser(JSContext* cx,
-                                          CompilationStencil& stencil);
+  [[nodiscard]] bool createSourceAndParser(JSContext* cx,
+                                           CompilationStencil& stencil);
 
   void assertSourceAndParserCreated(CompilationInput& compilationInput) const {
     MOZ_ASSERT(compilationInput.source() != nullptr);
@@ -125,9 +125,9 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
     assertSourceAndParserCreated(compilationInput);
   }
 
-  MOZ_MUST_USE bool emplaceEmitter(CompilationStencil& stencil,
-                                   Maybe<BytecodeEmitter>& emitter,
-                                   SharedContext* sharedContext) {
+  [[nodiscard]] bool emplaceEmitter(CompilationStencil& stencil,
+                                    Maybe<BytecodeEmitter>& emitter,
+                                    SharedContext* sharedContext) {
     return EmplaceEmitter(stencil, compilationState_, emitter,
                           EitherParser(parser.ptr()), sharedContext);
   }
@@ -1037,13 +1037,13 @@ static bool CompileLazyFunctionToStencilImpl(JSContext* cx,
   return true;
 }
 
-MOZ_MUST_USE bool frontend::CompileLazyFunctionToStencil(
+[[nodiscard]] bool frontend::CompileLazyFunctionToStencil(
     JSContext* cx, CompilationStencil& stencil, JS::Handle<BaseScript*> lazy,
     const char16_t* units, size_t length) {
   return CompileLazyFunctionToStencilImpl(cx, stencil, lazy, units, length);
 }
 
-MOZ_MUST_USE bool frontend::CompileLazyFunctionToStencil(
+[[nodiscard]] bool frontend::CompileLazyFunctionToStencil(
     JSContext* cx, CompilationStencil& stencil, JS::Handle<BaseScript*> lazy,
     const mozilla::Utf8Unit* units, size_t length) {
   return CompileLazyFunctionToStencilImpl(cx, stencil, lazy, units, length);

@@ -60,8 +60,8 @@ class ProxyObject : public JSObject {
              ->reservedSlots;
   }
 
-  MOZ_MUST_USE bool initExternalValueArrayAfterSwap(JSContext* cx,
-                                                    HandleValueVector values);
+  [[nodiscard]] bool initExternalValueArrayAfterSwap(JSContext* cx,
+                                                     HandleValueVector values);
 
   const Value& private_() const { return GetProxyPrivate(this); }
   const Value& expando() const { return GetProxyExpando(this); }

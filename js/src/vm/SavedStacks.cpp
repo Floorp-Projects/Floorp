@@ -684,9 +684,9 @@ JS_FRIEND_API JSObject* GetFirstSubsumedSavedFrame(
                               skippedAsync);
 }
 
-static MOZ_MUST_USE bool SavedFrame_checkThis(JSContext* cx, CallArgs& args,
-                                              const char* fnName,
-                                              MutableHandleObject frame) {
+[[nodiscard]] static bool SavedFrame_checkThis(JSContext* cx, CallArgs& args,
+                                               const char* fnName,
+                                               MutableHandleObject frame) {
   const Value& thisValue = args.thisv();
 
   if (!thisValue.isObject()) {

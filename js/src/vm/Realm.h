@@ -262,7 +262,7 @@ class ObjectRealm {
   explicit ObjectRealm(JS::Zone* zone);
   ~ObjectRealm();
 
-  MOZ_MUST_USE bool init(JSContext* cx);
+  [[nodiscard]] bool init(JSContext* cx);
 
   void finishRoots();
   void trace(JSTracer* trc);
@@ -468,7 +468,7 @@ class JS::Realm : public JS::shadow::Realm {
   Realm(JS::Compartment* comp, const JS::RealmOptions& options);
   ~Realm();
 
-  MOZ_MUST_USE bool init(JSContext* cx, JSPrincipals* principals);
+  [[nodiscard]] bool init(JSContext* cx, JSPrincipals* principals);
   void destroy(JSFreeOp* fop);
   void clearTables();
 
@@ -577,7 +577,7 @@ class JS::Realm : public JS::shadow::Realm {
 #endif
 
   // Add a name to [[VarNames]].  Reports OOM on failure.
-  MOZ_MUST_USE bool addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name);
+  [[nodiscard]] bool addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name);
   void tracekWeakVarNames(JSTracer* trc);
 
   void removeFromVarNames(JS::Handle<JSAtom*> name) { varNames_.remove(name); }

@@ -75,7 +75,7 @@ fuzzy-if(skiaContent,0-1,0-80) == percent-1g.html percent-1-ref.html
 == abspos-1g.html abspos-1-ref.html
 # Origin can use "top" "right" etc.
 == origin-name-1a.html origin-name-1-ref.html
-== origin-name-1b.html origin-name-1-ref.html
+fuzzy-if(webrender,0-1,0-19) == origin-name-1b.html origin-name-1-ref.html
 == origin-name-2a.html origin-name-2-ref.html
 == origin-name-2b.html origin-name-2-ref.html
 fuzzy-if(skiaContent,0-1,0-350) == origin-name-2c.html origin-name-2-ref.html

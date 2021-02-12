@@ -111,7 +111,7 @@ class NurseryAwareHashMap {
            nurseryEntries.sizeOfIncludingThis(mallocSizeOf);
   }
 
-  MOZ_MUST_USE bool put(const Key& k, const Value& v) {
+  [[nodiscard]] bool put(const Key& k, const Value& v) {
     auto p = map.lookupForAdd(k);
     if (p) {
       if (!JS::GCPolicy<Key>::isTenured(k) ||

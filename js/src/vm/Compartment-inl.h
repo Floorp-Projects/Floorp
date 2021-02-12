@@ -132,9 +132,9 @@ const char* ClassName() {
 }
 
 template <class T, class ErrorCallback>
-MOZ_MUST_USE T* UnwrapAndTypeCheckValueSlowPath(JSContext* cx,
-                                                HandleValue value,
-                                                ErrorCallback throwTypeError) {
+[[nodiscard]] T* UnwrapAndTypeCheckValueSlowPath(JSContext* cx,
+                                                 HandleValue value,
+                                                 ErrorCallback throwTypeError) {
   JSObject* obj = nullptr;
   if (value.isObject()) {
     obj = &value.toObject();
@@ -156,7 +156,7 @@ MOZ_MUST_USE T* UnwrapAndTypeCheckValueSlowPath(JSContext* cx,
 }
 
 template <class ErrorCallback>
-MOZ_MUST_USE JSObject* UnwrapAndTypeCheckValueSlowPath(
+[[nodiscard]] JSObject* UnwrapAndTypeCheckValueSlowPath(
     JSContext* cx, HandleValue value, const JSClass* clasp,
     ErrorCallback throwTypeError) {
   JSObject* obj = nullptr;
@@ -191,8 +191,9 @@ MOZ_MUST_USE JSObject* UnwrapAndTypeCheckValueSlowPath(
  * in fact throw a TypeError (or OOM trying).
  */
 template <class T, class ErrorCallback>
-inline MOZ_MUST_USE T* UnwrapAndTypeCheckValue(JSContext* cx, HandleValue value,
-                                               ErrorCallback throwTypeError) {
+[[nodiscard]] inline T* UnwrapAndTypeCheckValue(JSContext* cx,
+                                                HandleValue value,
+                                                ErrorCallback throwTypeError) {
   cx->check(value);
 
   static_assert(!std::is_convertible_v<T*, Wrapper*>,
@@ -216,7 +217,7 @@ inline MOZ_MUST_USE T* UnwrapAndTypeCheckValue(JSContext* cx, HandleValue value,
  * in fact throw a TypeError (or OOM trying).
  */
 template <class ErrorCallback>
-inline MOZ_MUST_USE JSObject* UnwrapAndTypeCheckValue(
+[[nodiscard]] inline JSObject* UnwrapAndTypeCheckValue(
     JSContext* cx, HandleValue value, const JSClass* clasp,
     ErrorCallback throwTypeError) {
   cx->check(value);
@@ -239,9 +240,9 @@ inline MOZ_MUST_USE JSObject* UnwrapAndTypeCheckValue(
  * or isn't an instance of the expected type.
  */
 template <class T>
-inline MOZ_MUST_USE T* UnwrapAndTypeCheckThis(JSContext* cx,
-                                              const CallArgs& args,
-                                              const char* methodName) {
+[[nodiscard]] inline T* UnwrapAndTypeCheckThis(JSContext* cx,
+                                               const CallArgs& args,
+                                               const char* methodName) {
   HandleValue thisv = args.thisv();
   return UnwrapAndTypeCheckValue<T>(cx, thisv, [cx, methodName, thisv] {
     JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
@@ -260,9 +261,10 @@ inline MOZ_MUST_USE T* UnwrapAndTypeCheckThis(JSContext* cx,
  * object, cannot be unwrapped, or isn't an instance of the expected type.
  */
 template <class T>
-inline MOZ_MUST_USE T* UnwrapAndTypeCheckArgument(JSContext* cx, CallArgs& args,
-                                                  const char* methodName,
-                                                  int argIndex) {
+[[nodiscard]] inline T* UnwrapAndTypeCheckArgument(JSContext* cx,
+                                                   CallArgs& args,
+                                                   const char* methodName,
+                                                   int argIndex) {
   HandleValue val = args.get(argIndex);
   return UnwrapAndTypeCheckValue<T>(cx, val, [cx, val, methodName, argIndex] {
     ToCStringBuf cbuf;
@@ -288,7 +290,7 @@ inline MOZ_MUST_USE T* UnwrapAndTypeCheckArgument(JSContext* cx, CallArgs& args,
  * known to have been an object of class T, or a wrapper to a T, at some point.
  */
 template <class T>
-inline MOZ_MUST_USE T* UnwrapAndDowncastObject(JSContext* cx, JSObject* obj) {
+[[nodiscard]] inline T* UnwrapAndDowncastObject(JSContext* cx, JSObject* obj) {
   static_assert(!std::is_convertible_v<T*, Wrapper*>,
                 "T can't be a Wrapper type; this function discards wrappers");
 
@@ -323,9 +325,9 @@ inline MOZ_MUST_USE T* UnwrapAndDowncastObject(JSContext* cx, JSObject* obj) {
  * known to have had class |clasp|, or been a wrapper to such an object, at some
  * point.
  */
-inline MOZ_MUST_USE JSObject* UnwrapAndDowncastObject(JSContext* cx,
-                                                      JSObject* obj,
-                                                      const JSClass* clasp) {
+[[nodiscard]] inline JSObject* UnwrapAndDowncastObject(JSContext* cx,
+                                                       JSObject* obj,
+                                                       const JSClass* clasp) {
   if (IsProxy(obj)) {
     if (JS_IsDeadWrapper(obj)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
@@ -350,8 +352,8 @@ inline MOZ_MUST_USE JSObject* UnwrapAndDowncastObject(JSContext* cx,
  * Unwrap a value of a known type. See UnwrapAndDowncastObject.
  */
 template <class T>
-inline MOZ_MUST_USE T* UnwrapAndDowncastValue(JSContext* cx,
-                                              const Value& value) {
+[[nodiscard]] inline T* UnwrapAndDowncastValue(JSContext* cx,
+                                               const Value& value) {
   return UnwrapAndDowncastObject<T>(cx, &value.toObject());
 }
 
@@ -359,9 +361,9 @@ inline MOZ_MUST_USE T* UnwrapAndDowncastValue(JSContext* cx,
  * Unwrap an object of a known (but not compile-time-known) class.  See
  * UnwrapAndDowncastObject.
  */
-inline MOZ_MUST_USE JSObject* UnwrapAndDowncastValue(JSContext* cx,
-                                                     const Value& value,
-                                                     const JSClass* clasp) {
+[[nodiscard]] inline JSObject* UnwrapAndDowncastValue(JSContext* cx,
+                                                      const Value& value,
+                                                      const JSClass* clasp) {
   return UnwrapAndDowncastObject(cx, &value.toObject(), clasp);
 }
 
@@ -384,9 +386,9 @@ inline MOZ_MUST_USE JSObject* UnwrapAndDowncastValue(JSContext* cx,
  * DANGER: The result may not be same-compartment with either `cx` or `obj`.
  */
 template <class T>
-inline MOZ_MUST_USE T* UnwrapInternalSlot(JSContext* cx,
-                                          Handle<NativeObject*> unwrappedObj,
-                                          uint32_t slot) {
+[[nodiscard]] inline T* UnwrapInternalSlot(JSContext* cx,
+                                           Handle<NativeObject*> unwrappedObj,
+                                           uint32_t slot) {
   static_assert(!std::is_convertible_v<T*, Wrapper*>,
                 "T can't be a Wrapper type; this function discards wrappers");
 
@@ -403,8 +405,8 @@ inline MOZ_MUST_USE T* UnwrapInternalSlot(JSContext* cx,
  * DANGER: The result may not be same-compartment with `cx`.
  */
 template <class T>
-MOZ_MUST_USE T* UnwrapCalleeSlot(JSContext* cx, CallArgs& args,
-                                 size_t extendedSlot) {
+[[nodiscard]] T* UnwrapCalleeSlot(JSContext* cx, CallArgs& args,
+                                  size_t extendedSlot) {
   JSFunction& func = args.callee().as<JSFunction>();
   return UnwrapAndDowncastValue<T>(cx, func.getExtendedSlot(extendedSlot));
 }

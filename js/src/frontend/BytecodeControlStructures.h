@@ -8,7 +8,6 @@
 #define frontend_BytecodeControlStructures_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
 #include "mozilla/Maybe.h"       // mozilla::Maybe
 
 #include <stdint.h>  // int32_t, uint32_t
@@ -61,7 +60,7 @@ class BreakableControl : public NestableControl {
 
   BreakableControl(BytecodeEmitter* bce, StatementKind kind);
 
-  MOZ_MUST_USE bool patchBreaks(BytecodeEmitter* bce);
+  [[nodiscard]] bool patchBreaks(BytecodeEmitter* bce);
 };
 template <>
 inline bool NestableControl::is<BreakableControl>() const {
@@ -124,16 +123,16 @@ class LoopControl : public BreakableControl {
 
   BytecodeOffset headOffset() const { return head_.offset; }
 
-  MOZ_MUST_USE bool emitContinueTarget(BytecodeEmitter* bce);
+  [[nodiscard]] bool emitContinueTarget(BytecodeEmitter* bce);
 
   // `nextPos` is the offset in the source code for the character that
   // corresponds to the next instruction after JSOp::LoopHead.
   // Can be Nothing() if not available.
-  MOZ_MUST_USE bool emitLoopHead(BytecodeEmitter* bce,
-                                 const mozilla::Maybe<uint32_t>& nextPos);
+  [[nodiscard]] bool emitLoopHead(BytecodeEmitter* bce,
+                                  const mozilla::Maybe<uint32_t>& nextPos);
 
-  MOZ_MUST_USE bool emitLoopEnd(BytecodeEmitter* bce, JSOp op,
-                                TryNoteKind tryNoteKind);
+  [[nodiscard]] bool emitLoopEnd(BytecodeEmitter* bce, JSOp op,
+                                 TryNoteKind tryNoteKind);
 };
 template <>
 inline bool NestableControl::is<LoopControl>() const {
