@@ -791,8 +791,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
  public:
   bool isExceptionPending() const { return throwing; }
 
-  MOZ_MUST_USE
-  bool getPendingException(JS::MutableHandleValue rval);
+  [[nodiscard]] bool getPendingException(JS::MutableHandleValue rval);
 
   js::SavedFrame* getPendingExceptionStack();
 

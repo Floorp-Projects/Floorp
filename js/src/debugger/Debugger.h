@@ -8,7 +8,7 @@
 #define debugger_Debugger_h
 
 #include "mozilla/Assertions.h"        // for MOZ_ASSERT_HELPER1
-#include "mozilla/Attributes.h"        // for MOZ_MUST_USE, MOZ_RAII
+#include "mozilla/Attributes.h"        // [[nodiscard]] for, MOZ_RAII
 #include "mozilla/DoublyLinkedList.h"  // for DoublyLinkedListElement
 #include "mozilla/HashTable.h"         // for HashSet, DefaultHasher (ptr only)
 #include "mozilla/LinkedList.h"        // for LinkedList (ptr only)
@@ -419,7 +419,7 @@ class MOZ_RAII EvalOptions {
   ~EvalOptions() = default;
   const char* filename() const { return filename_.get(); }
   unsigned lineno() const { return lineno_; }
-  MOZ_MUST_USE bool setFilename(JSContext* cx, const char* filename);
+  [[nodiscard]] bool setFilename(JSContext* cx, const char* filename);
   void setLineno(unsigned lineno) { lineno_ = lineno; }
 };
 
@@ -477,7 +477,7 @@ class MOZ_RAII DebuggerList {
   DebuggerList(JSContext* cx, HookIsEnabledFun hookIsEnabled)
       : debuggers(cx), hookIsEnabled(hookIsEnabled) {}
 
-  MOZ_MUST_USE bool init(JSContext* cx);
+  [[nodiscard]] bool init(JSContext* cx);
 
   bool empty() { return debuggers.empty(); }
 
@@ -488,7 +488,7 @@ class MOZ_RAII DebuggerList {
   void dispatchQuietHook(JSContext* cx, FireHookFun fireHook);
 
   template <typename FireHookFun /* bool (Debugger*, ResumeMode&, MutableHandleValue) */>
-  MOZ_MUST_USE bool dispatchResumptionHook(JSContext* cx,
+  [[nodiscard]] bool dispatchResumptionHook(JSContext* cx,
                                            AbstractFramePtr frame,
                                            FireHookFun fireHook);
 };
@@ -641,9 +641,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
 
   static const size_t DEFAULT_MAX_LOG_LENGTH = 5000;
 
-  MOZ_MUST_USE bool appendAllocationSite(JSContext* cx, HandleObject obj,
-                                         HandleSavedFrame frame,
-                                         mozilla::TimeStamp when);
+  [[nodiscard]] bool appendAllocationSite(JSContext* cx, HandleObject obj,
+                                          HandleSavedFrame frame,
+                                          mozilla::TimeStamp when);
 
   /*
    * Recompute the set of debuggee zones based on the set of debuggee globals.
@@ -662,7 +662,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * debuggee's compartment. The given debuggee global must be observed by at
    * least one Debugger that is tracking allocations.
    */
-  static MOZ_MUST_USE bool addAllocationsTracking(
+  [[nodiscard]] static bool addAllocationsTracking(
       JSContext* cx, Handle<GlobalObject*> debuggee);
 
   /*
@@ -675,7 +675,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   /*
    * Add or remove allocations tracking for all debuggees.
    */
-  MOZ_MUST_USE bool addAllocationsTrackingForAllDebuggees(JSContext* cx);
+  [[nodiscard]] bool addAllocationsTrackingForAllDebuggees(JSContext* cx);
   void removeAllocationsTrackingForAllDebuggees();
 
   /*
@@ -786,7 +786,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
 
   enum class FromSweep { No, Yes };
 
-  MOZ_MUST_USE bool addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> obj);
+  [[nodiscard]] bool addDebuggeeGlobal(JSContext* cx,
+                                       Handle<GlobalObject*> obj);
   void removeDebuggeeGlobal(JSFreeOp* fop, GlobalObject* global,
                             WeakGlobalObjectSet::Enum* debugEnum,
                             FromSweep fromSweep);
@@ -817,12 +818,11 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    *     anything else - Make a new TypeError the pending exception and
    *         attempt to handle it with the uncaught exception handler.
    */
-  MOZ_MUST_USE bool processHandlerResult(JSContext* cx, bool success,
-                                         HandleValue rv, AbstractFramePtr frame,
-                                         jsbytecode* pc, ResumeMode& resultMode,
-                                         MutableHandleValue vp);
+  [[nodiscard]] bool processHandlerResult(
+      JSContext* cx, bool success, HandleValue rv, AbstractFramePtr frame,
+      jsbytecode* pc, ResumeMode& resultMode, MutableHandleValue vp);
 
-  MOZ_MUST_USE bool processParsedHandlerResult(
+  [[nodiscard]] bool processParsedHandlerResult(
       JSContext* cx, AbstractFramePtr frame, jsbytecode* pc, bool success,
       ResumeMode resumeMode, HandleValue value, ResumeMode& resultMode,
       MutableHandleValue vp);
@@ -831,16 +831,16 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * Given a resumption return value from a hook, parse and validate it based
    * on the given frame, and split the result into a ResumeMode and Value.
    */
-  MOZ_MUST_USE bool prepareResumption(JSContext* cx, AbstractFramePtr frame,
-                                      jsbytecode* pc, ResumeMode& resumeMode,
-                                      MutableHandleValue vp);
+  [[nodiscard]] bool prepareResumption(JSContext* cx, AbstractFramePtr frame,
+                                       jsbytecode* pc, ResumeMode& resumeMode,
+                                       MutableHandleValue vp);
 
   /**
    * If there is a pending exception and a handler, call the handler with the
    * exception so that it can attempt to resolve the error.
    */
-  MOZ_MUST_USE bool callUncaughtExceptionHandler(JSContext* cx,
-                                                 MutableHandleValue vp);
+  [[nodiscard]] bool callUncaughtExceptionHandler(JSContext* cx,
+                                                  MutableHandleValue vp);
 
   /**
    * If the context has a pending exception, report it to the current global.
@@ -851,7 +851,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * Call the uncaught exception handler if there is one, returning true
    * if it handled the error, or false otherwise.
    */
-  MOZ_MUST_USE bool handleUncaughtException(JSContext* cx);
+  [[nodiscard]] bool handleUncaughtException(JSContext* cx);
 
   GlobalObject* unwrapDebuggeeArgument(JSContext* cx, const Value& v);
 
@@ -866,17 +866,17 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   template <typename F>
   void forEachWeakMap(const F& f);
 
-  static MOZ_MUST_USE bool getHookImpl(JSContext* cx, const CallArgs& args,
-                                       Debugger& dbg, Hook which);
-  static MOZ_MUST_USE bool setHookImpl(JSContext* cx, const CallArgs& args,
-                                       Debugger& dbg, Hook which);
+  [[nodiscard]] static bool getHookImpl(JSContext* cx, const CallArgs& args,
+                                        Debugger& dbg, Hook which);
+  [[nodiscard]] static bool setHookImpl(JSContext* cx, const CallArgs& args,
+                                        Debugger& dbg, Hook which);
 
-  static MOZ_MUST_USE bool getGarbageCollectionHook(JSContext* cx,
-                                                    const CallArgs& args,
-                                                    Debugger& dbg);
-  static MOZ_MUST_USE bool setGarbageCollectionHook(JSContext* cx,
-                                                    const CallArgs& args,
-                                                    Debugger& dbg);
+  [[nodiscard]] static bool getGarbageCollectionHook(JSContext* cx,
+                                                     const CallArgs& args,
+                                                     Debugger& dbg);
+  [[nodiscard]] static bool setGarbageCollectionHook(JSContext* cx,
+                                                     const CallArgs& args,
+                                                     Debugger& dbg);
 
   static bool isCompilableUnit(JSContext* cx, unsigned argc, Value* vp);
   static bool recordReplayProcessKind(JSContext* cx, unsigned argc, Value* vp);
@@ -940,12 +940,12 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * compute it ourselves from |frame|.
    */
   using DebuggerFrameVector = GCVector<DebuggerFrame*>;
-  static MOZ_MUST_USE bool getDebuggerFrames(
+  [[nodiscard]] static bool getDebuggerFrames(
       AbstractFramePtr frame, MutableHandle<DebuggerFrameVector> frames);
 
  public:
   // Public for DebuggerScript::setBreakpoint.
-  static MOZ_MUST_USE bool ensureExecutionObservabilityOfScript(
+  [[nodiscard]] static bool ensureExecutionObservabilityOfScript(
       JSContext* cx, JSScript* script);
 
   // Whether the Debugger instance needs to observe all non-AOT JS
@@ -964,17 +964,17 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   IsObserving observesNativeCalls() const;
 
  private:
-  static MOZ_MUST_USE bool ensureExecutionObservabilityOfFrame(
+  [[nodiscard]] static bool ensureExecutionObservabilityOfFrame(
       JSContext* cx, AbstractFramePtr frame);
-  static MOZ_MUST_USE bool ensureExecutionObservabilityOfRealm(
+  [[nodiscard]] static bool ensureExecutionObservabilityOfRealm(
       JSContext* cx, JS::Realm* realm);
 
   static bool hookObservesAllExecution(Hook which);
 
-  MOZ_MUST_USE bool updateObservesAllExecutionOnDebuggees(
+  [[nodiscard]] bool updateObservesAllExecutionOnDebuggees(
       JSContext* cx, IsObserving observing);
-  MOZ_MUST_USE bool updateObservesCoverageOnDebuggees(JSContext* cx,
-                                                      IsObserving observing);
+  [[nodiscard]] bool updateObservesCoverageOnDebuggees(JSContext* cx,
+                                                       IsObserving observing);
   void updateObservesAsmJSOnDebuggees(IsObserving observing);
 
   JSObject* getHook(Hook hook) const;
@@ -990,12 +990,12 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
                                 FireHookFun fireHook);
   template <
       typename HookIsEnabledFun /* bool (Debugger*) */, typename FireHookFun /* bool (Debugger*, ResumeMode&, MutableHandleValue) */>
-  static MOZ_MUST_USE bool dispatchResumptionHook(
+  [[nodiscard]] static bool dispatchResumptionHook(
       JSContext* cx, AbstractFramePtr frame, HookIsEnabledFun hookIsEnabled,
       FireHookFun fireHook);
 
   template <typename RunImpl /* bool () */>
-  MOZ_MUST_USE bool enterDebuggerHook(JSContext* cx, RunImpl runImpl) {
+  [[nodiscard]] bool enterDebuggerHook(JSContext* cx, RunImpl runImpl) {
     if (!isHookCallAllowed(cx)) {
       return true;
     }
@@ -1016,20 +1016,21 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
     return true;
   }
 
-  MOZ_MUST_USE bool fireDebuggerStatement(JSContext* cx, ResumeMode& resumeMode,
-                                          MutableHandleValue vp);
-  MOZ_MUST_USE bool fireExceptionUnwind(JSContext* cx, HandleValue exc,
-                                        ResumeMode& resumeMode,
-                                        MutableHandleValue vp);
-  MOZ_MUST_USE bool fireEnterFrame(JSContext* cx, ResumeMode& resumeMode,
-                                   MutableHandleValue vp);
-  MOZ_MUST_USE bool fireNativeCall(JSContext* cx, const CallArgs& args,
-                                   CallReason reason, ResumeMode& resumeMode,
-                                   MutableHandleValue vp);
-  MOZ_MUST_USE bool fireNewGlobalObject(JSContext* cx,
-                                        Handle<GlobalObject*> global);
-  MOZ_MUST_USE bool firePromiseHook(JSContext* cx, Hook hook,
-                                    HandleObject promise);
+  [[nodiscard]] bool fireDebuggerStatement(JSContext* cx,
+                                           ResumeMode& resumeMode,
+                                           MutableHandleValue vp);
+  [[nodiscard]] bool fireExceptionUnwind(JSContext* cx, HandleValue exc,
+                                         ResumeMode& resumeMode,
+                                         MutableHandleValue vp);
+  [[nodiscard]] bool fireEnterFrame(JSContext* cx, ResumeMode& resumeMode,
+                                    MutableHandleValue vp);
+  [[nodiscard]] bool fireNativeCall(JSContext* cx, const CallArgs& args,
+                                    CallReason reason, ResumeMode& resumeMode,
+                                    MutableHandleValue vp);
+  [[nodiscard]] bool fireNewGlobalObject(JSContext* cx,
+                                         Handle<GlobalObject*> global);
+  [[nodiscard]] bool firePromiseHook(JSContext* cx, Hook hook,
+                                     HandleObject promise);
 
   DebuggerScript* newVariantWrapper(JSContext* cx,
                                     Handle<DebuggerScriptReferent> referent) {
@@ -1075,22 +1076,22 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * Receive a "new script" event from the engine. A new script was compiled
    * or deserialized.
    */
-  MOZ_MUST_USE bool fireNewScript(
+  [[nodiscard]] bool fireNewScript(
       JSContext* cx, Handle<DebuggerScriptReferent> scriptReferent);
 
   /*
    * Receive a "garbage collection" event from the engine. A GC cycle with the
    * given data was recently completed.
    */
-  MOZ_MUST_USE bool fireOnGarbageCollectionHook(
+  [[nodiscard]] bool fireOnGarbageCollectionHook(
       JSContext* cx, const JS::dbg::GarbageCollectionEvent::Ptr& gcData);
 
   inline Breakpoint* firstBreakpoint() const;
 
-  static MOZ_MUST_USE bool replaceFrameGuts(JSContext* cx,
-                                            AbstractFramePtr from,
-                                            AbstractFramePtr to,
-                                            ScriptFrameIter& iter);
+  [[nodiscard]] static bool replaceFrameGuts(JSContext* cx,
+                                             AbstractFramePtr from,
+                                             AbstractFramePtr to,
+                                             ScriptFrameIter& iter);
 
  public:
   Debugger(JSContext* cx, NativeObject* dbg);
@@ -1134,10 +1135,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * or create a Debugger.Environment object for the given Env. On success,
    * store the Environment object in *vp and return true.
    */
-  MOZ_MUST_USE bool wrapEnvironment(JSContext* cx, Handle<Env*> env,
-                                    MutableHandleValue vp);
-  MOZ_MUST_USE bool wrapEnvironment(JSContext* cx, Handle<Env*> env,
-                                    MutableHandleDebuggerEnvironment result);
+  [[nodiscard]] bool wrapEnvironment(JSContext* cx, Handle<Env*> env,
+                                     MutableHandleValue vp);
+  [[nodiscard]] bool wrapEnvironment(JSContext* cx, Handle<Env*> env,
+                                     MutableHandleDebuggerEnvironment result);
 
   /*
    * Like cx->compartment()->wrap(cx, vp), but for the debugger realm.
@@ -1159,10 +1160,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * unaccessible uninitialized binding, this produces a plain object of the
    * form { uninitialized: true }.
    */
-  MOZ_MUST_USE bool wrapDebuggeeValue(JSContext* cx, MutableHandleValue vp);
-  MOZ_MUST_USE bool wrapDebuggeeObject(JSContext* cx, HandleObject obj,
-                                       MutableHandleDebuggerObject result);
-  MOZ_MUST_USE bool wrapNullableDebuggeeObject(
+  [[nodiscard]] bool wrapDebuggeeValue(JSContext* cx, MutableHandleValue vp);
+  [[nodiscard]] bool wrapDebuggeeObject(JSContext* cx, HandleObject obj,
+                                        MutableHandleDebuggerObject result);
+  [[nodiscard]] bool wrapNullableDebuggeeObject(
       JSContext* cx, HandleObject obj, MutableHandleDebuggerObject result);
 
   /*
@@ -1192,10 +1193,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * debugger compartment--mirror symmetry. But compartment wrapping always
    * happens in the target compartment--rotational symmetry.)
    */
-  MOZ_MUST_USE bool unwrapDebuggeeValue(JSContext* cx, MutableHandleValue vp);
-  MOZ_MUST_USE bool unwrapDebuggeeObject(JSContext* cx,
-                                         MutableHandleObject obj);
-  MOZ_MUST_USE bool unwrapPropertyDescriptor(
+  [[nodiscard]] bool unwrapDebuggeeValue(JSContext* cx, MutableHandleValue vp);
+  [[nodiscard]] bool unwrapDebuggeeObject(JSContext* cx,
+                                          MutableHandleObject obj);
+  [[nodiscard]] bool unwrapPropertyDescriptor(
       JSContext* cx, HandleObject obj, MutableHandle<PropertyDescriptor> desc);
 
   /*
@@ -1205,14 +1206,14 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * `iter` points to, a new Frame object is created, and `iter`'s private
    * data is copied into it.
    */
-  MOZ_MUST_USE bool getFrame(JSContext* cx, const FrameIter& iter,
-                             MutableHandleValue vp);
-  MOZ_MUST_USE bool getFrame(JSContext* cx, MutableHandleDebuggerFrame result);
-  MOZ_MUST_USE bool getFrame(JSContext* cx, const FrameIter& iter,
-                             MutableHandleDebuggerFrame result);
-  MOZ_MUST_USE bool getFrame(JSContext* cx,
-                             Handle<AbstractGeneratorObject*> genObj,
-                             MutableHandleDebuggerFrame result);
+  [[nodiscard]] bool getFrame(JSContext* cx, const FrameIter& iter,
+                              MutableHandleValue vp);
+  [[nodiscard]] bool getFrame(JSContext* cx, MutableHandleDebuggerFrame result);
+  [[nodiscard]] bool getFrame(JSContext* cx, const FrameIter& iter,
+                              MutableHandleDebuggerFrame result);
+  [[nodiscard]] bool getFrame(JSContext* cx,
+                              Handle<AbstractGeneratorObject*> genObj,
+                              MutableHandleDebuggerFrame result);
 
   /*
    * Return the Debugger.Script object for |script|, or create a new one if
@@ -1583,7 +1584,7 @@ bool Debugger::observesGlobal(GlobalObject* global) const {
   return debuggees.has(debuggee);
 }
 
-MOZ_MUST_USE bool ReportObjectRequired(JSContext* cx);
+[[nodiscard]] bool ReportObjectRequired(JSContext* cx);
 
 JSObject* IdVectorToArray(JSContext* cx, Handle<IdVector> ids);
 bool IsInterpretedNonSelfHostedFunction(JSFunction* fun);

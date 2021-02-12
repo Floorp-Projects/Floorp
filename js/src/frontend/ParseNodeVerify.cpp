@@ -24,7 +24,7 @@ class ParseNodeVerifier : public ParseNodeVisitor<ParseNodeVerifier> {
   ParseNodeVerifier(JSContext* cx, const LifoAlloc& alloc)
       : Base(cx), alloc_(alloc) {}
 
-  MOZ_MUST_USE bool visit(ParseNode* pn) {
+  [[nodiscard]] bool visit(ParseNode* pn) {
     // pn->size() asserts that pn->pn_kind is valid, so we don't redundantly
     // assert that here.
     JS_PARSE_NODE_ASSERT(alloc_.contains(pn),

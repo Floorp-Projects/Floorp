@@ -2041,19 +2041,19 @@ extern JS_PUBLIC_API JSString* JS_AtomizeAndPinUCString(JSContext* cx,
 extern JS_PUBLIC_API bool JS_CompareStrings(JSContext* cx, JSString* str1,
                                             JSString* str2, int32_t* result);
 
-extern JS_PUBLIC_API MOZ_MUST_USE bool JS_StringEqualsAscii(
+[[nodiscard]] extern JS_PUBLIC_API bool JS_StringEqualsAscii(
     JSContext* cx, JSString* str, const char* asciiBytes, bool* match);
 
 // Same as above, but when the length of asciiBytes (excluding the
 // trailing null, if any) is known.
-extern JS_PUBLIC_API MOZ_MUST_USE bool JS_StringEqualsAscii(
+[[nodiscard]] extern JS_PUBLIC_API bool JS_StringEqualsAscii(
     JSContext* cx, JSString* str, const char* asciiBytes, size_t length,
     bool* match);
 
 template <size_t N>
-MOZ_MUST_USE bool JS_StringEqualsLiteral(JSContext* cx, JSString* str,
-                                         const char (&asciiBytes)[N],
-                                         bool* match) {
+[[nodiscard]] bool JS_StringEqualsLiteral(JSContext* cx, JSString* str,
+                                          const char (&asciiBytes)[N],
+                                          bool* match) {
   MOZ_ASSERT(asciiBytes[N - 1] == '\0');
   return JS_StringEqualsAscii(cx, str, asciiBytes, N - 1, match);
 }
@@ -2221,10 +2221,10 @@ JS_PUBLIC_API size_t JS_GetStringEncodingLength(JSContext* cx, JSString* str);
  * length parameter, the string will be cut and only length bytes will be
  * written into the buffer.
  */
-MOZ_MUST_USE JS_PUBLIC_API bool JS_EncodeStringToBuffer(JSContext* cx,
-                                                        JSString* str,
-                                                        char* buffer,
-                                                        size_t length);
+[[nodiscard]] JS_PUBLIC_API bool JS_EncodeStringToBuffer(JSContext* cx,
+                                                         JSString* str,
+                                                         char* buffer,
+                                                         size_t length);
 
 /**
  * Encode as many scalar values of the string as UTF-8 as can fit
@@ -2798,7 +2798,7 @@ namespace JS {
  * Wasm module or memory is created in this process, or else this function will
  * fail.
  */
-extern JS_PUBLIC_API MOZ_MUST_USE bool DisableWasmHugeMemory();
+[[nodiscard]] extern JS_PUBLIC_API bool DisableWasmHugeMemory();
 
 /**
  * If a large allocation fails when calling pod_{calloc,realloc}CanGC, the JS

@@ -199,7 +199,7 @@ class MallocAllocPolicy : public AllocPolicyBase {
  public:
   void reportAllocOverflow() const {}
 
-  MOZ_MUST_USE bool checkSimulatedOOM() const { return true; }
+  [[nodiscard]] bool checkSimulatedOOM() const { return true; }
 };
 
 } /* namespace js */

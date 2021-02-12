@@ -10,7 +10,7 @@
 #ifndef nsMenuItemIconX_h_
 #define nsMenuItemIconX_h_
 
-#include "IconLoaderHelperCocoa.h"
+#include "mozilla/widget/IconLoader.h"
 
 class nsIconLoaderService;
 class nsIURI;
@@ -21,10 +21,12 @@ class nsMenuObjectX;
 
 #import <Cocoa/Cocoa.h>
 
-class nsMenuItemIconX : public mozilla::widget::IconLoaderListenerCocoa {
+class nsMenuItemIconX : public mozilla::widget::IconLoader::Listener {
  public:
   nsMenuItemIconX(nsMenuObjectX* aMenuItem, nsIContent* aContent,
                   NSMenuItem* aNativeMenuItem);
+
+  NS_INLINE_DECL_REFCOUNTING(nsMenuItemIconX)
 
  private:
   virtual ~nsMenuItemIconX();
@@ -43,13 +45,12 @@ class nsMenuItemIconX : public mozilla::widget::IconLoaderListenerCocoa {
   // this from happening.  See bug 499600.
   void Destroy();
 
-  // Implements this method for mozilla::widget::IconLoaderListenerCocoa.
+  // Implements this method for mozilla::widget::IconLoader::Listener.
   // Called once the icon load is complete.
-  nsresult OnComplete();
+  nsresult OnComplete(imgIContainer* aImage) override;
 
  protected:
   nsCOMPtr<nsIContent> mContent;
-  nsContentPolicyType mContentType;
   nsMenuObjectX* mMenuObject;  // [weak]
   nsIntRect mImageRegionRect;
   bool mSetIcon;
@@ -57,7 +58,6 @@ class nsMenuItemIconX : public mozilla::widget::IconLoaderListenerCocoa {
   // The icon loader object should never outlive its creating nsMenuItemIconX
   // object.
   RefPtr<mozilla::widget::IconLoader> mIconLoader;
-  RefPtr<mozilla::widget::IconLoaderHelperCocoa> mIconLoaderHelper;
 };
 
 #endif  // nsMenuItemIconX_h_

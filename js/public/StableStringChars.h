@@ -12,9 +12,9 @@
 #define js_StableStringChars_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_INIT_OUTSIDE_CTOR, MOZ_STACK_CLASS, MOZ_MUST_USE
-#include "mozilla/Maybe.h"  // mozilla::Maybe
-#include "mozilla/Range.h"  // mozilla::Range
+#include "mozilla/Attributes.h"  // MOZ_INIT_OUTSIDE_CTOR, MOZ_STACK_CLASS
+#include "mozilla/Maybe.h"       // mozilla::Maybe
+#include "mozilla/Range.h"       // mozilla::Range
 
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint8_t
@@ -60,10 +60,10 @@ class MOZ_STACK_CLASS JS_FRIEND_API AutoStableStringChars final {
   explicit AutoStableStringChars(JSContext* cx)
       : s_(cx), state_(Uninitialized) {}
 
-  MOZ_MUST_USE bool init(JSContext* cx, JSString* s);
+  [[nodiscard]] bool init(JSContext* cx, JSString* s);
 
   /* Like init(), but Latin1 chars are inflated to TwoByte. */
-  MOZ_MUST_USE bool initTwoByte(JSContext* cx, JSString* s);
+  [[nodiscard]] bool initTwoByte(JSContext* cx, JSString* s);
 
   bool isLatin1() const { return state_ == Latin1; }
   bool isTwoByte() const { return state_ == TwoByte; }

@@ -12,7 +12,6 @@
 #include "builtin/streams/MiscellaneousOperations.h"
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
 #include "js/Promise.h"        // JS::{Resolve,Reject}Promise
 #include "js/RootingAPI.h"     // JS::Rooted, JS::{,Mutable}Handle
@@ -34,10 +33,10 @@ namespace js {
  * There must be 0-2 |args| arguments, all convertible to JS::Handle<JS::Value>.
  */
 template <class... Args>
-inline MOZ_MUST_USE JSObject* PromiseCall(JSContext* cx,
-                                          JS::Handle<JS::Value> F,
-                                          JS::Handle<JS::Value> V,
-                                          Args&&... args) {
+[[nodiscard]] inline JSObject* PromiseCall(JSContext* cx,
+                                           JS::Handle<JS::Value> F,
+                                           JS::Handle<JS::Value> V,
+                                           Args&&... args) {
   cx->check(F);
   cx->check(V);
   cx->check(args...);
@@ -64,7 +63,7 @@ inline MOZ_MUST_USE JSObject* PromiseCall(JSContext* cx,
 /**
  * Resolve the unwrapped promise |unwrappedPromise| with |value|.
  */
-inline MOZ_MUST_USE bool ResolveUnwrappedPromiseWithValue(
+[[nodiscard]] inline bool ResolveUnwrappedPromiseWithValue(
     JSContext* cx, JSObject* unwrappedPromise, JS::Handle<JS::Value> value) {
   cx->check(value);
 
@@ -79,7 +78,7 @@ inline MOZ_MUST_USE bool ResolveUnwrappedPromiseWithValue(
 /**
  * Resolve the unwrapped promise |unwrappedPromise| with |undefined|.
  */
-inline MOZ_MUST_USE bool ResolveUnwrappedPromiseWithUndefined(
+[[nodiscard]] inline bool ResolveUnwrappedPromiseWithUndefined(
     JSContext* cx, JSObject* unwrappedPromise) {
   return ResolveUnwrappedPromiseWithValue(cx, unwrappedPromise,
                                           JS::UndefinedHandleValue);
@@ -89,7 +88,7 @@ inline MOZ_MUST_USE bool ResolveUnwrappedPromiseWithUndefined(
  * Reject the unwrapped promise |unwrappedPromise| with |error|, overwriting
  * |*unwrappedPromise| with its wrapped form.
  */
-inline MOZ_MUST_USE bool RejectUnwrappedPromiseWithError(
+[[nodiscard]] inline bool RejectUnwrappedPromiseWithError(
     JSContext* cx, JS::MutableHandle<JSObject*> unwrappedPromise,
     JS::Handle<JS::Value> error) {
   cx->check(error);
@@ -104,7 +103,7 @@ inline MOZ_MUST_USE bool RejectUnwrappedPromiseWithError(
 /**
  * Reject the unwrapped promise |unwrappedPromise| with |error|.
  */
-inline MOZ_MUST_USE bool RejectUnwrappedPromiseWithError(
+[[nodiscard]] inline bool RejectUnwrappedPromiseWithError(
     JSContext* cx, JSObject* unwrappedPromise, JS::Handle<JS::Value> error) {
   JS::Rooted<JSObject*> promise(cx, unwrappedPromise);
   return RejectUnwrappedPromiseWithError(cx, &promise, error);

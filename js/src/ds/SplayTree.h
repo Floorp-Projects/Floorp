@@ -87,7 +87,7 @@ class SplayTree {
     return false;
   }
 
-  MOZ_MUST_USE bool insert(const T& v) {
+  [[nodiscard]] bool insert(const T& v) {
     Node* element = allocateNode(v);
     if (!element) {
       return false;

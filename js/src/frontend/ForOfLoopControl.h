@@ -7,8 +7,7 @@
 #ifndef frontend_ForOfLoopControl_h
 #define frontend_ForOfLoopControl_h
 
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
-#include "mozilla/Maybe.h"       // mozilla::Maybe
+#include "mozilla/Maybe.h"  // mozilla::Maybe
 
 #include <stdint.h>  // int32_t, uint32_t
 
@@ -73,17 +72,17 @@ class ForOfLoopControl : public LoopControl {
   ForOfLoopControl(BytecodeEmitter* bce, int32_t iterDepth,
                    bool allowSelfHosted, IteratorKind iterKind);
 
-  MOZ_MUST_USE bool emitBeginCodeNeedingIteratorClose(BytecodeEmitter* bce);
-  MOZ_MUST_USE bool emitEndCodeNeedingIteratorClose(BytecodeEmitter* bce);
+  [[nodiscard]] bool emitBeginCodeNeedingIteratorClose(BytecodeEmitter* bce);
+  [[nodiscard]] bool emitEndCodeNeedingIteratorClose(BytecodeEmitter* bce);
 
-  MOZ_MUST_USE bool emitIteratorCloseInInnermostScopeWithTryNote(
+  [[nodiscard]] bool emitIteratorCloseInInnermostScopeWithTryNote(
       BytecodeEmitter* bce,
       CompletionKind completionKind = CompletionKind::Normal);
-  MOZ_MUST_USE bool emitIteratorCloseInScope(
+  [[nodiscard]] bool emitIteratorCloseInScope(
       BytecodeEmitter* bce, EmitterScope& currentScope,
       CompletionKind completionKind = CompletionKind::Normal);
 
-  MOZ_MUST_USE bool emitPrepareForNonLocalJumpFromScope(
+  [[nodiscard]] bool emitPrepareForNonLocalJumpFromScope(
       BytecodeEmitter* bce, EmitterScope& currentScope, bool isTarget,
       BytecodeOffset* tryNoteStart);
 };

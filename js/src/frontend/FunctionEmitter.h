@@ -7,7 +7,7 @@
 #ifndef frontend_FunctionEmitter_h
 #define frontend_FunctionEmitter_h
 
-#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS, MOZ_MUST_USE
+#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS
 
 #include <stdint.h>  // uint16_t, uint32_t
 
@@ -121,27 +121,27 @@ class MOZ_STACK_CLASS FunctionEmitter {
   FunctionEmitter(BytecodeEmitter* bce, FunctionBox* funbox,
                   FunctionSyntaxKind syntaxKind, IsHoisted isHoisted);
 
-  MOZ_MUST_USE bool prepareForNonLazy();
-  MOZ_MUST_USE bool emitNonLazyEnd();
+  [[nodiscard]] bool prepareForNonLazy();
+  [[nodiscard]] bool emitNonLazyEnd();
 
-  MOZ_MUST_USE bool emitLazy();
+  [[nodiscard]] bool emitLazy();
 
-  MOZ_MUST_USE bool emitAgain();
+  [[nodiscard]] bool emitAgain();
 
-  MOZ_MUST_USE bool emitAsmJSModule();
+  [[nodiscard]] bool emitAsmJSModule();
 
  private:
   // Emit the function declaration, expression, method etc.
   // This leaves function object on the stack for expression etc,
   // and doesn't for declaration.
-  MOZ_MUST_USE bool emitFunction();
+  [[nodiscard]] bool emitFunction();
 
   // Helper methods used by emitFunction for each case.
   // `index` is the object index of the function.
-  MOZ_MUST_USE bool emitNonHoisted(GCThingIndex index);
-  MOZ_MUST_USE bool emitHoisted(GCThingIndex index);
-  MOZ_MUST_USE bool emitTopLevelFunction(GCThingIndex index);
-  MOZ_MUST_USE bool emitNewTargetForArrow();
+  [[nodiscard]] bool emitNonHoisted(GCThingIndex index);
+  [[nodiscard]] bool emitHoisted(GCThingIndex index);
+  [[nodiscard]] bool emitTopLevelFunction(GCThingIndex index);
+  [[nodiscard]] bool emitNewTargetForArrow();
 };
 
 // Class for emitting function script.
@@ -246,15 +246,15 @@ class MOZ_STACK_CLASS FunctionScriptEmitter {
         paramStart_(paramStart),
         bodyEnd_(bodyEnd) {}
 
-  MOZ_MUST_USE bool prepareForParameters();
-  MOZ_MUST_USE bool prepareForBody();
-  MOZ_MUST_USE bool emitEndBody();
+  [[nodiscard]] bool prepareForParameters();
+  [[nodiscard]] bool prepareForBody();
+  [[nodiscard]] bool emitEndBody();
 
   // Generate the ScriptStencil using the bytecode emitter data.
-  MOZ_MUST_USE bool intoStencil();
+  [[nodiscard]] bool intoStencil();
 
  private:
-  MOZ_MUST_USE bool emitExtraBodyVarScope();
+  [[nodiscard]] bool emitExtraBodyVarScope();
 };
 
 // Class for emitting function parameters.
@@ -406,30 +406,30 @@ class MOZ_STACK_CLASS FunctionParamsEmitter {
 
   // paramName is used only when there's at least one expression in the
   // paramerters (funbox_->hasParameterExprs == true).
-  MOZ_MUST_USE bool emitSimple(TaggedParserAtomIndex paramName);
+  [[nodiscard]] bool emitSimple(TaggedParserAtomIndex paramName);
 
-  MOZ_MUST_USE bool prepareForDefault();
-  MOZ_MUST_USE bool emitDefaultEnd(TaggedParserAtomIndex paramName);
+  [[nodiscard]] bool prepareForDefault();
+  [[nodiscard]] bool emitDefaultEnd(TaggedParserAtomIndex paramName);
 
-  MOZ_MUST_USE bool prepareForDestructuring();
-  MOZ_MUST_USE bool emitDestructuringEnd();
+  [[nodiscard]] bool prepareForDestructuring();
+  [[nodiscard]] bool emitDestructuringEnd();
 
-  MOZ_MUST_USE bool prepareForDestructuringDefaultInitializer();
-  MOZ_MUST_USE bool prepareForDestructuringDefault();
-  MOZ_MUST_USE bool emitDestructuringDefaultEnd();
+  [[nodiscard]] bool prepareForDestructuringDefaultInitializer();
+  [[nodiscard]] bool prepareForDestructuringDefault();
+  [[nodiscard]] bool emitDestructuringDefaultEnd();
 
-  MOZ_MUST_USE bool emitRest(TaggedParserAtomIndex paramName);
+  [[nodiscard]] bool emitRest(TaggedParserAtomIndex paramName);
 
-  MOZ_MUST_USE bool prepareForDestructuringRest();
-  MOZ_MUST_USE bool emitDestructuringRestEnd();
+  [[nodiscard]] bool prepareForDestructuringRest();
+  [[nodiscard]] bool emitDestructuringRestEnd();
 
  private:
-  MOZ_MUST_USE bool prepareForInitializer();
-  MOZ_MUST_USE bool emitInitializerEnd();
+  [[nodiscard]] bool prepareForInitializer();
+  [[nodiscard]] bool emitInitializerEnd();
 
-  MOZ_MUST_USE bool emitRestArray();
+  [[nodiscard]] bool emitRestArray();
 
-  MOZ_MUST_USE bool emitAssignment(TaggedParserAtomIndex paramName);
+  [[nodiscard]] bool emitAssignment(TaggedParserAtomIndex paramName);
 };
 
 } /* namespace frontend */

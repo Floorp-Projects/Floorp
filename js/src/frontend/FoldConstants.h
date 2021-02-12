@@ -32,15 +32,15 @@ class ParserAtomsTable;
 //    if (!FoldConstants(cx, parserAtoms, &pn, parser)) {
 //        return false;
 //    }
-extern MOZ_MUST_USE bool FoldConstants(JSContext* cx,
-                                       ParserAtomsTable& parserAtoms,
-                                       ParseNode** pnp,
-                                       FullParseHandler* handler);
+[[nodiscard]] extern bool FoldConstants(JSContext* cx,
+                                        ParserAtomsTable& parserAtoms,
+                                        ParseNode** pnp,
+                                        FullParseHandler* handler);
 
-inline MOZ_MUST_USE bool FoldConstants(JSContext* cx,
-                                       ParserAtomsTable& parserAtoms,
-                                       typename SyntaxParseHandler::Node* pnp,
-                                       SyntaxParseHandler* handler) {
+[[nodiscard]] inline bool FoldConstants(JSContext* cx,
+                                        ParserAtomsTable& parserAtoms,
+                                        typename SyntaxParseHandler::Node* pnp,
+                                        SyntaxParseHandler* handler) {
   return true;
 }
 

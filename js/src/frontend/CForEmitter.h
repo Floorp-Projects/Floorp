@@ -7,7 +7,7 @@
 #ifndef frontend_CForEmitter_h
 #define frontend_CForEmitter_h
 
-#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS, MOZ_MUST_USE
+#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS
 #include "mozilla/Maybe.h"       // mozilla::Maybe
 
 #include <stdint.h>  // uint32_t
@@ -162,12 +162,12 @@ class MOZ_STACK_CLASS CForEmitter {
   //   forPos
   //
   // Can be Nothing() if not available.
-  MOZ_MUST_USE bool emitInit(const mozilla::Maybe<uint32_t>& initPos);
-  MOZ_MUST_USE bool emitCond(const mozilla::Maybe<uint32_t>& condPos);
-  MOZ_MUST_USE bool emitBody(Cond cond);
-  MOZ_MUST_USE bool emitUpdate(Update update,
-                               const mozilla::Maybe<uint32_t>& updatePos);
-  MOZ_MUST_USE bool emitEnd(const mozilla::Maybe<uint32_t>& forPos);
+  [[nodiscard]] bool emitInit(const mozilla::Maybe<uint32_t>& initPos);
+  [[nodiscard]] bool emitCond(const mozilla::Maybe<uint32_t>& condPos);
+  [[nodiscard]] bool emitBody(Cond cond);
+  [[nodiscard]] bool emitUpdate(Update update,
+                                const mozilla::Maybe<uint32_t>& updatePos);
+  [[nodiscard]] bool emitEnd(const mozilla::Maybe<uint32_t>& forPos);
 };
 
 } /* namespace frontend */

@@ -8,7 +8,6 @@
 #define frontend_Stencil_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
 #include "mozilla/Maybe.h"       // mozilla::{Maybe, Nothing}
 #include "mozilla/Range.h"       // mozilla::Range
 #include "mozilla/Span.h"        // mozilla::Span
@@ -220,8 +219,8 @@ class BigIntStencil {
  public:
   BigIntStencil() = default;
 
-  MOZ_MUST_USE bool init(JSContext* cx, LifoAlloc& alloc,
-                         const Vector<char16_t, 32>& buf);
+  [[nodiscard]] bool init(JSContext* cx, LifoAlloc& alloc,
+                          const Vector<char16_t, 32>& buf);
 
   BigInt* createBigInt(JSContext* cx) const {
     mozilla::Range<const char16_t> source(source_.data(), source_.size());
@@ -411,9 +410,9 @@ class ScopeStencil {
       BaseParserScopeData* baseData) const;
 
   template <typename SpecificEnvironmentType>
-  MOZ_MUST_USE bool createSpecificShape(JSContext* cx, ScopeKind kind,
-                                        BaseScopeData* scopeData,
-                                        MutableHandleShape shape) const;
+  [[nodiscard]] bool createSpecificShape(JSContext* cx, ScopeKind kind,
+                                         BaseScopeData* scopeData,
+                                         MutableHandleShape shape) const;
 
   template <typename SpecificScopeType, typename SpecificEnvironmentType>
   Scope* createSpecificScope(JSContext* cx, CompilationAtomCache& atomCache,

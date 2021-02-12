@@ -221,9 +221,9 @@ class MOZ_STACK_CLASS LanguageTag final {
 
   void performComplexLanguageMappings();
   void performComplexRegionMappings();
-  MOZ_MUST_USE bool performVariantMappings(JSContext* cx);
+  [[nodiscard]] bool performVariantMappings(JSContext* cx);
 
-  MOZ_MUST_USE bool updateGrandfatheredMappings(JSContext* cx);
+  [[nodiscard]] bool updateGrandfatheredMappings(JSContext* cx);
 
   static const char* replaceTransformExtensionType(
       mozilla::Span<const char> key, mozilla::Span<const char> type);
@@ -714,22 +714,22 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(LanguageTagParser::TokenKind)
  * Parse a string as a standalone |language| tag. If |str| is a standalone
  * language tag, store it in |result| and return true. Otherwise return false.
  */
-MOZ_MUST_USE bool ParseStandaloneLanguageTag(JS::Handle<JSLinearString*> str,
-                                             LanguageSubtag& result);
+[[nodiscard]] bool ParseStandaloneLanguageTag(JS::Handle<JSLinearString*> str,
+                                              LanguageSubtag& result);
 
 /**
  * Parse a string as a standalone |script| tag. If |str| is a standalone script
  * tag, store it in |result| and return true. Otherwise return false.
  */
-MOZ_MUST_USE bool ParseStandaloneScriptTag(JS::Handle<JSLinearString*> str,
-                                           ScriptSubtag& result);
+[[nodiscard]] bool ParseStandaloneScriptTag(JS::Handle<JSLinearString*> str,
+                                            ScriptSubtag& result);
 
 /**
  * Parse a string as a standalone |region| tag. If |str| is a standalone region
  * tag, store it in |result| and return true. Otherwise return false.
  */
-MOZ_MUST_USE bool ParseStandaloneRegionTag(JS::Handle<JSLinearString*> str,
-                                           RegionSubtag& result);
+[[nodiscard]] bool ParseStandaloneRegionTag(JS::Handle<JSLinearString*> str,
+                                            RegionSubtag& result);
 
 /**
  * Parse a string as an ISO-639 language code. Return |nullptr| in the result if
@@ -757,7 +757,7 @@ class UnicodeExtensionKeyword final {
   void trace(JSTracer* trc);
 };
 
-extern MOZ_MUST_USE bool ApplyUnicodeExtensionToTag(
+[[nodiscard]] extern bool ApplyUnicodeExtensionToTag(
     JSContext* cx, LanguageTag& tag,
     JS::HandleVector<UnicodeExtensionKeyword> keywords);
 

@@ -277,7 +277,7 @@ inline bool TokenKindIsAssignment(TokenKind tt) {
   return TokenKind::AssignmentStart <= tt && tt <= TokenKind::AssignmentLast;
 }
 
-inline MOZ_MUST_USE bool TokenKindIsKeyword(TokenKind tt) {
+[[nodiscard]] inline bool TokenKindIsKeyword(TokenKind tt) {
   return (TokenKind::KeywordFirst <= tt && tt <= TokenKind::KeywordLast) ||
          (TokenKind::KeywordBinOpFirst <= tt &&
           tt <= TokenKind::KeywordBinOpLast) ||
@@ -285,37 +285,37 @@ inline MOZ_MUST_USE bool TokenKindIsKeyword(TokenKind tt) {
           tt <= TokenKind::KeywordUnOpLast);
 }
 
-inline MOZ_MUST_USE bool TokenKindIsContextualKeyword(TokenKind tt) {
+[[nodiscard]] inline bool TokenKindIsContextualKeyword(TokenKind tt) {
   return TokenKind::ContextualKeywordFirst <= tt &&
          tt <= TokenKind::ContextualKeywordLast;
 }
 
-inline MOZ_MUST_USE bool TokenKindIsFutureReservedWord(TokenKind tt) {
+[[nodiscard]] inline bool TokenKindIsFutureReservedWord(TokenKind tt) {
   return TokenKind::FutureReservedKeywordFirst <= tt &&
          tt <= TokenKind::FutureReservedKeywordLast;
 }
 
-inline MOZ_MUST_USE bool TokenKindIsStrictReservedWord(TokenKind tt) {
+[[nodiscard]] inline bool TokenKindIsStrictReservedWord(TokenKind tt) {
   return TokenKind::StrictReservedKeywordFirst <= tt &&
          tt <= TokenKind::StrictReservedKeywordLast;
 }
 
-inline MOZ_MUST_USE bool TokenKindIsReservedWordLiteral(TokenKind tt) {
+[[nodiscard]] inline bool TokenKindIsReservedWordLiteral(TokenKind tt) {
   return TokenKind::ReservedWordLiteralFirst <= tt &&
          tt <= TokenKind::ReservedWordLiteralLast;
 }
 
-inline MOZ_MUST_USE bool TokenKindIsReservedWord(TokenKind tt) {
+[[nodiscard]] inline bool TokenKindIsReservedWord(TokenKind tt) {
   return TokenKindIsKeyword(tt) || TokenKindIsFutureReservedWord(tt) ||
          TokenKindIsReservedWordLiteral(tt);
 }
 
-inline MOZ_MUST_USE bool TokenKindIsPossibleIdentifier(TokenKind tt) {
+[[nodiscard]] inline bool TokenKindIsPossibleIdentifier(TokenKind tt) {
   return tt == TokenKind::Name || TokenKindIsContextualKeyword(tt) ||
          TokenKindIsStrictReservedWord(tt);
 }
 
-inline MOZ_MUST_USE bool TokenKindIsPossibleIdentifierName(TokenKind tt) {
+[[nodiscard]] inline bool TokenKindIsPossibleIdentifierName(TokenKind tt) {
   return TokenKindIsPossibleIdentifier(tt) || TokenKindIsReservedWord(tt);
 }
 

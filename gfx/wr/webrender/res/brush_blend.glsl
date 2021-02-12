@@ -30,7 +30,6 @@
 
 // Interpolated UV coordinates to sample.
 varying vec2 v_uv;
-varying vec2 v_local_pos;
 
 // Normalized bounds of the source image in the texture, adjusted to avoid
 // sampling artifacts.
@@ -78,8 +77,6 @@ void brush_vs(
     v_perspective = perspective_interpolate;
 
     v_uv_sample_bounds = vec4(uv0 + vec2(0.5), uv1 - vec2(0.5)) * inv_texture_size.xyxy;
-
-    v_local_pos = vi.local_pos;
 
     float lumR = 0.2126;
     float lumG = 0.7152;
@@ -155,7 +152,7 @@ void brush_vs(
 
 #ifdef WR_FRAGMENT_SHADER
 vec3 Contrast(vec3 Cs, float amount) {
-    return Cs.rgb * amount - 0.5 * amount + 0.5;
+    return clamp(Cs.rgb * amount - 0.5 * amount + 0.5, 0.0, 1.0);
 }
 
 vec3 Invert(vec3 Cs, float amount) {
@@ -292,10 +289,10 @@ Fragment brush_fs() {
     }
 
     #ifdef WR_FEATURE_ALPHA_PASS
-        alpha *= init_transform_fs(v_local_pos);
-        // Pre-multiply the alpha into the output value.
+        alpha *= antialias_brush();
     #endif
 
+    // Pre-multiply the alpha into the output value.
     return Fragment(alpha * vec4(color, 1.0));
 }
 #endif

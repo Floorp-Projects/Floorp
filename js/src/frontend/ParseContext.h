@@ -141,7 +141,7 @@ class ParseContext : public Nestable<ParseContext> {
 
     uint32_t id() const { return id_; }
 
-    MOZ_MUST_USE bool init(ParseContext* pc) {
+    [[nodiscard]] bool init(ParseContext* pc) {
       if (id_ == UINT32_MAX) {
         pc->errorReporter_.errorNoOffset(JSMSG_NEED_DIET, js_script_str);
         return false;
@@ -166,22 +166,22 @@ class ParseContext : public Nestable<ParseContext> {
       return declared_->lookupForAdd(name);
     }
 
-    MOZ_MUST_USE bool addDeclaredName(ParseContext* pc, AddDeclaredNamePtr& p,
-                                      TaggedParserAtomIndex name,
-                                      DeclarationKind kind, uint32_t pos,
-                                      ClosedOver closedOver = ClosedOver::No) {
+    [[nodiscard]] bool addDeclaredName(ParseContext* pc, AddDeclaredNamePtr& p,
+                                       TaggedParserAtomIndex name,
+                                       DeclarationKind kind, uint32_t pos,
+                                       ClosedOver closedOver = ClosedOver::No) {
       return maybeReportOOM(
           pc, declared_->add(p, name, DeclaredNameInfo(kind, pos, closedOver)));
     }
 
     // Add a FunctionBox as a possible candidate for Annex B.3.3 semantics.
-    MOZ_MUST_USE bool addPossibleAnnexBFunctionBox(ParseContext* pc,
-                                                   FunctionBox* funbox);
+    [[nodiscard]] bool addPossibleAnnexBFunctionBox(ParseContext* pc,
+                                                    FunctionBox* funbox);
 
     // Check if the candidate function boxes for Annex B.3.3 should in
     // fact get Annex B semantics. Checked on Scope exit.
-    MOZ_MUST_USE bool propagateAndMarkAnnexBFunctionBoxes(ParseContext* pc,
-                                                          ParserBase* parser);
+    [[nodiscard]] bool propagateAndMarkAnnexBFunctionBoxes(ParseContext* pc,
+                                                           ParserBase* parser);
 
     // Add and remove catch parameter names. Used to implement the odd
     // semantics of catch bodies.
@@ -382,7 +382,7 @@ class ParseContext : public Nestable<ParseContext> {
                ErrorReporter& errorReporter, CompilationState& compilationState,
                Directives* newDirectives, bool isFull);
 
-  MOZ_MUST_USE bool init();
+  [[nodiscard]] bool init();
 
   SharedContext* sc() { return sc_; }
 
@@ -450,14 +450,14 @@ class ParseContext : public Nestable<ParseContext> {
 
   // Return Err(true) if we have encountered at least one loop,
   // Err(false) otherwise.
-  MOZ_MUST_USE inline JS::Result<Ok, BreakStatementError> checkBreakStatement(
+  [[nodiscard]] inline JS::Result<Ok, BreakStatementError> checkBreakStatement(
       TaggedParserAtomIndex label);
 
   enum class ContinueStatementError {
     NotInALoop,
     LabelNotFound,
   };
-  MOZ_MUST_USE inline JS::Result<Ok, ContinueStatementError>
+  [[nodiscard]] inline JS::Result<Ok, ContinueStatementError>
   checkContinueStatement(TaggedParserAtomIndex label);
 
   // True if we are at the topmost level of a entire script or function body.
@@ -580,14 +580,13 @@ class ParseContext : public Nestable<ParseContext> {
   bool declareTopLevelDotGeneratorName();
 
  private:
-  MOZ_MUST_USE bool isVarRedeclaredInInnermostScope(
+  [[nodiscard]] bool isVarRedeclaredInInnermostScope(
       TaggedParserAtomIndex name, ParserBase* parser, DeclarationKind kind,
       mozilla::Maybe<DeclarationKind>* out);
 
-  MOZ_MUST_USE bool isVarRedeclaredInEval(TaggedParserAtomIndex name,
-                                          ParserBase* parser,
-                                          DeclarationKind kind,
-                                          mozilla::Maybe<DeclarationKind>* out);
+  [[nodiscard]] bool isVarRedeclaredInEval(
+      TaggedParserAtomIndex name, ParserBase* parser, DeclarationKind kind,
+      mozilla::Maybe<DeclarationKind>* out);
 
   enum DryRunOption { NotDryRun, DryRunInnermostScopeOnly };
   template <DryRunOption dryRunOption>

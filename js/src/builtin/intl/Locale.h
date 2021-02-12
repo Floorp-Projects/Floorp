@@ -47,14 +47,14 @@ class LocaleObject : public NativeObject {
   static const ClassSpec classSpec_;
 };
 
-extern MOZ_MUST_USE bool intl_ValidateAndCanonicalizeLanguageTag(JSContext* cx,
-                                                                 unsigned argc,
-                                                                 Value* vp);
+[[nodiscard]] extern bool intl_ValidateAndCanonicalizeLanguageTag(JSContext* cx,
+                                                                  unsigned argc,
+                                                                  Value* vp);
 
-extern MOZ_MUST_USE bool intl_TryValidateAndCanonicalizeLanguageTag(
+[[nodiscard]] extern bool intl_TryValidateAndCanonicalizeLanguageTag(
     JSContext* cx, unsigned argc, Value* vp);
 
-extern MOZ_MUST_USE bool intl_ValidateAndCanonicalizeUnicodeExtensionType(
+[[nodiscard]] extern bool intl_ValidateAndCanonicalizeUnicodeExtensionType(
     JSContext* cx, unsigned argc, Value* vp);
 
 }  // namespace js

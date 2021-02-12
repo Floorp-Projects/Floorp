@@ -1023,11 +1023,11 @@ inline bool FreezeObject(JSContext* cx, HandleObject obj) {
 extern bool TestIntegrityLevel(JSContext* cx, HandleObject obj,
                                IntegrityLevel level, bool* resultp);
 
-extern MOZ_MUST_USE JSObject* SpeciesConstructor(
+[[nodiscard]] extern JSObject* SpeciesConstructor(
     JSContext* cx, HandleObject obj, HandleObject defaultCtor,
     bool (*isDefaultSpecies)(JSContext*, JSFunction*));
 
-extern MOZ_MUST_USE JSObject* SpeciesConstructor(
+[[nodiscard]] extern JSObject* SpeciesConstructor(
     JSContext* cx, HandleObject obj, JSProtoKey ctorKey,
     bool (*isDefaultSpecies)(JSContext*, JSFunction*));
 

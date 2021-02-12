@@ -86,10 +86,6 @@ linux64-base-toolchains/debug:
             - linux64-sccache
             - linux64-nasm-2.14.02
             - linux64-node
-            # `fix-stacks` is needed because xpcshell self tests run as part of
-            # the build step. Once bug 1614626 moves them to the xpcshell task,
-            # this dependency can be removed.
-            - linux64-fix-stacks
 
 linux64-base-toolchains-clang/opt:
     description: "Linux64 base toolchains clang Opt"
@@ -165,7 +161,3 @@ linux64-base-toolchains-clang/debug:
             - linux64-dump-syms
             - linux64-nasm-2.14.02
             - linux64-node
-            # `fix-stacks` is needed because xpcshell self tests run as part of
-            # the build step. Once bug 1614626 moves them to the xpcshell task,
-            # this dependency can be removed.
-            - linux64-fix-stacks

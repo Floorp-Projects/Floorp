@@ -267,8 +267,8 @@ struct ShellContext {
 
 extern ShellContext* GetShellContext(JSContext* cx);
 
-extern MOZ_MUST_USE bool PrintStackTrace(JSContext* cx,
-                                         JS::Handle<JSObject*> stackObj);
+[[nodiscard]] extern bool PrintStackTrace(JSContext* cx,
+                                          JS::Handle<JSObject*> stackObj);
 
 extern JSObject* CreateScriptPrivate(JSContext* cx,
                                      HandleString path = nullptr);

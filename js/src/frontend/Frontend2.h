@@ -55,10 +55,10 @@ void InitSmoosh();
 
 // Use the SmooshMonkey frontend to parse and free the generated AST. Returns
 // true if no error were detected while parsing.
-MOZ_MUST_USE bool SmooshParseScript(JSContext* cx, const uint8_t* bytes,
-                                    size_t length);
-MOZ_MUST_USE bool SmooshParseModule(JSContext* cx, const uint8_t* bytes,
-                                    size_t length);
+[[nodiscard]] bool SmooshParseScript(JSContext* cx, const uint8_t* bytes,
+                                     size_t length);
+[[nodiscard]] bool SmooshParseModule(JSContext* cx, const uint8_t* bytes,
+                                     size_t length);
 
 }  // namespace frontend
 

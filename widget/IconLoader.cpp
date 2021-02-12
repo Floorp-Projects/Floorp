@@ -7,31 +7,19 @@
 #include "gfxPlatform.h"
 #include "imgIContainer.h"
 #include "imgLoader.h"
+#include "imgRequestProxy.h"
 #include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
+#include "nsIContentPolicy.h"
 
 using namespace mozilla;
 
-using mozilla::gfx::SourceSurface;
-
 namespace mozilla::widget {
 
-NS_IMPL_CYCLE_COLLECTION(mozilla::widget::IconLoader, mContent, mHelper)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(mozilla::widget::IconLoader)
-  NS_INTERFACE_MAP_ENTRY(imgINotificationObserver)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-NS_IMPL_CYCLE_COLLECTING_ADDREF(mozilla::widget::IconLoader)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(mozilla::widget::IconLoader)
+NS_IMPL_ISUPPORTS(IconLoader, imgINotificationObserver)
 
-IconLoader::IconLoader(Helper* aHelper, nsINode* aContent,
-                       const nsIntRect& aImageRegionRect)
-    : mContent(aContent),
-      mContentType(nsIContentPolicy::TYPE_INTERNAL_IMAGE),
-      mImageRegionRect(aImageRegionRect),
-      mLoadedIcon(false),
-      mHelper(aHelper) {}
+IconLoader::IconLoader(Listener* aListener) : mListener(aListener) {}
 
 IconLoader::~IconLoader() { Destroy(); }
 
@@ -40,25 +28,22 @@ void IconLoader::Destroy() {
     mIconRequest->CancelAndForgetObserver(NS_BINDING_ABORTED);
     mIconRequest = nullptr;
   }
-  if (mHelper) {
-    mHelper = nullptr;
-  }
+  mListener = nullptr;
 }
 
-nsresult IconLoader::LoadIcon(nsIURI* aIconURI, bool aIsInternalIcon) {
+nsresult IconLoader::LoadIcon(nsIURI* aIconURI, nsINode* aNode,
+                              bool aIsInternalIcon) {
   if (mIconRequest) {
     // Another icon request is already in flight.  Kill it.
     mIconRequest->Cancel(NS_BINDING_ABORTED);
     mIconRequest = nullptr;
   }
 
-  mLoadedIcon = false;
-
-  if (!mContent) {
+  if (!aNode) {
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<mozilla::dom::Document> document = mContent->OwnerDoc();
+  RefPtr<mozilla::dom::Document> document = aNode->OwnerDoc();
 
   nsCOMPtr<nsILoadGroup> loadGroup = document->GetDocumentLoadGroup();
   if (!loadGroup) {
@@ -74,14 +59,18 @@ nsresult IconLoader::LoadIcon(nsIURI* aIconURI, bool aIsInternalIcon) {
   if (aIsInternalIcon) {
     rv = loader->LoadImage(
         aIconURI, nullptr, nullptr, nullptr, 0, loadGroup, this, nullptr,
-        nullptr, nsIRequest::LOAD_NORMAL, nullptr, mContentType, u""_ns,
+        nullptr, nsIRequest::LOAD_NORMAL, nullptr,
+        nsIContentPolicy::TYPE_INTERNAL_IMAGE, u""_ns,
         /* aUseUrgentStartForChannel */ false, /* aLinkPreload */ false,
         getter_AddRefs(mIconRequest));
   } else {
+    // TODO: nsIContentPolicy::TYPE_INTERNAL_IMAGE may not be the correct
+    // policy. See bug 1691868 for more details.
     rv = loader->LoadImage(
-        aIconURI, nullptr, nullptr, mContent->NodePrincipal(), 0, loadGroup,
-        this, mContent, document, nsIRequest::LOAD_NORMAL, nullptr,
-        mContentType, u""_ns, /* aUseUrgentStartForChannel */ false,
+        aIconURI, nullptr, nullptr, aNode->NodePrincipal(), 0, loadGroup, this,
+        aNode, document, nsIRequest::LOAD_NORMAL, nullptr,
+        nsIContentPolicy::TYPE_INTERNAL_IMAGE, u""_ns,
+        /* aUseUrgentStartForChannel */ false,
         /* aLinkPreload */ false, getter_AddRefs(mIconRequest));
   }
   if (NS_FAILED(rv)) {
@@ -120,17 +109,13 @@ void IconLoader::Notify(imgIRequest* aRequest, int32_t aType,
   }
 
   if (aType == imgINotificationObserver::FRAME_COMPLETE) {
-    nsresult rv = OnFrameComplete(aRequest);
-
-    if (NS_FAILED(rv)) {
-      return;
-    }
-
     nsCOMPtr<imgIContainer> image;
     aRequest->GetImage(getter_AddRefs(image));
     MOZ_ASSERT(image);
 
-    mHelper->OnComplete(image, mImageRegionRect);
+    if (mListener) {
+      mListener->OnComplete(image);
+    }
     return;
   }
 
@@ -140,42 +125,6 @@ void IconLoader::Notify(imgIRequest* aRequest, int32_t aType,
       mIconRequest = nullptr;
     }
   }
-}
-
-nsresult IconLoader::OnFrameComplete(imgIRequest* aRequest) {
-  if (aRequest != mIconRequest) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Only support one frame.
-  if (mLoadedIcon) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<imgIContainer> imageContainer;
-  aRequest->GetImage(getter_AddRefs(imageContainer));
-  if (!imageContainer) {
-    return NS_ERROR_FAILURE;
-  }
-
-  int32_t origWidth = 0, origHeight = 0;
-  imageContainer->GetWidth(&origWidth);
-  imageContainer->GetHeight(&origHeight);
-
-  // If the image region is invalid, don't draw the image to almost match
-  // the behavior of other platforms.
-  if (!mImageRegionRect.IsEmpty() && (mImageRegionRect.XMost() > origWidth ||
-                                      mImageRegionRect.YMost() > origHeight)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (mImageRegionRect.IsEmpty()) {
-    mImageRegionRect.SetRect(0, 0, origWidth, origHeight);
-  }
-
-  mLoadedIcon = true;
-
-  return NS_OK;
 }
 
 }  // namespace mozilla::widget

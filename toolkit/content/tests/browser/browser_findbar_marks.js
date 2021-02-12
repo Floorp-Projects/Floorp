@@ -8,19 +8,8 @@ const TEST_PAGE_URI =
 
 let gUpdateCount = 0;
 
-add_task(async function test_findmarks() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    TEST_PAGE_URI
-  );
-
-  // Open the findbar so that the content scroll size can be measured.
-  await promiseFindFinished(gBrowser, "s");
-
-  let browser = tab.linkedBrowser;
-  let scrollMaxY = await SpecialPowers.spawn(browser, [], () => {
-    return content.scrollMaxY;
-  });
+function initForBrowser(browser) {
+  gUpdateCount = 0;
 
   browser.sendMessageToActor(
     "Finder:EnableMarkTesting",
@@ -43,6 +32,33 @@ add_task(async function test_findmarks() {
     { capture: true },
     checkFn
   );
+
+  return () => {
+    browser.sendMessageToActor(
+      "Finder:EnableMarkTesting",
+      { enable: false },
+      "Finder"
+    );
+
+    endFn();
+  };
+}
+
+add_task(async function test_findmarks() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    TEST_PAGE_URI
+  );
+
+  // Open the findbar so that the content scroll size can be measured.
+  await promiseFindFinished(gBrowser, "s");
+
+  let browser = tab.linkedBrowser;
+  let scrollMaxY = await SpecialPowers.spawn(browser, [], () => {
+    return content.scrollMaxY;
+  });
+
+  let endFn = initForBrowser(browser);
 
   // For the first value, get the numbers and ensure that they are approximately
   // in the right place. Later tests should give the same values.
@@ -71,13 +87,41 @@ add_task(async function test_findmarks() {
 
   endFn();
 
-  browser.sendMessageToActor(
-    "Finder:EnableMarkTesting",
-    { enable: false },
-    "Finder"
+  gBrowser.removeTab(tab);
+});
+
+// This test verifies what happens when scroll marks are visible and the window is resized.
+add_task(async function test_found_resize() {
+  let window2 = await BrowserTestUtils.openNewBrowserWindow({});
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    window2.gBrowser,
+    TEST_PAGE_URI
   );
 
-  gBrowser.removeTab(tab);
+  let browser = tab.linkedBrowser;
+  let endFn = initForBrowser(browser);
+
+  await promiseFindFinished(window2.gBrowser, "tex", true);
+  let values = await getMarks(browser, true);
+
+  let resizePromise = BrowserTestUtils.waitForContentEvent(
+    browser,
+    "resize",
+    true
+  );
+  window2.resizeTo(outerWidth - 100, outerHeight - 80);
+  await resizePromise;
+
+  // Some number of extra scrollbar adjustment and painting events can occur
+  // when resizing the window, so don't use an exact match for the count.
+  let resizedValues = await getMarks(browser, true);
+  SimpleTest.isfuzzy(resizedValues[0], values[0], 2, "first value");
+  SimpleTest.ok(resizedValues[1] - 50 > values[1], "second value");
+  SimpleTest.ok(resizedValues[2] - 50 > values[2], "third value");
+
+  endFn();
+
+  await BrowserTestUtils.closeWindow(window2);
 });
 
 // Returns the scroll marks that should have been assigned
@@ -110,7 +154,7 @@ async function getMarks(browser, increase) {
 }
 
 async function doAndVerifyFind(browser, text, increase, expectedMarks) {
-  await promiseFindFinished(gBrowser, text, true);
+  await promiseFindFinished(browser.getTabBrowser(), text, true);
   return verifyFind(browser, text, increase, expectedMarks);
 }
 

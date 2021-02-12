@@ -286,12 +286,12 @@ class AsyncGeneratorObject;
 extern const JSClass AsyncGeneratorFunctionClass;
 
 // Resume the async generator when the `await` operand fulfills to `value`.
-MOZ_MUST_USE bool AsyncGeneratorAwaitedFulfilled(
+[[nodiscard]] bool AsyncGeneratorAwaitedFulfilled(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     HandleValue value);
 
 // Resume the async generator when the `await` operand rejects with `reason`.
-MOZ_MUST_USE bool AsyncGeneratorAwaitedRejected(
+[[nodiscard]] bool AsyncGeneratorAwaitedRejected(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     HandleValue reason);
 
@@ -299,10 +299,10 @@ MOZ_MUST_USE bool AsyncGeneratorAwaitedRejected(
 // AsyncGenerator#return, when the async generator was still executing.
 // Split into two functions depending on whether the awaited value was
 // fulfilled or rejected.
-MOZ_MUST_USE bool AsyncGeneratorYieldReturnAwaitedFulfilled(
+[[nodiscard]] bool AsyncGeneratorYieldReturnAwaitedFulfilled(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     HandleValue value);
-MOZ_MUST_USE bool AsyncGeneratorYieldReturnAwaitedRejected(
+[[nodiscard]] bool AsyncGeneratorYieldReturnAwaitedRejected(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     HandleValue reason);
 
@@ -478,7 +478,7 @@ class AsyncGeneratorObject : public AbstractGeneratorObject {
   void setAwaitingReturn() { setState(State_AwaitingReturn); }
   void setCompleted() { setState(State_Completed); }
 
-  static MOZ_MUST_USE bool enqueueRequest(
+  [[nodiscard]] static bool enqueueRequest(
       JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
       Handle<AsyncGeneratorRequest*> request);
 
@@ -562,7 +562,7 @@ class AsyncFromSyncIteratorObject : public NativeObject {
   const Value& nextMethod() const { return getFixedSlot(Slot_NextMethod); }
 };
 
-MOZ_MUST_USE bool AsyncGeneratorResume(
+[[nodiscard]] bool AsyncGeneratorResume(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     CompletionKind completionKind, HandleValue argument);
 

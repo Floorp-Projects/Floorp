@@ -243,8 +243,8 @@ class FunctionCompiler {
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
   }
 
-  MOZ_MUST_USE bool init(const char* name, unsigned nargs,
-                         const char* const* argnames) {
+  [[nodiscard]] bool init(const char* name, unsigned nargs,
+                          const char* const* argnames) {
     if (!funStr_.ensureTwoByteChars()) {
       return false;
     }
@@ -294,7 +294,7 @@ class FunctionCompiler {
   }
 
   template <typename Unit>
-  inline MOZ_MUST_USE bool addFunctionBody(const SourceText<Unit>& srcBuf) {
+  [[nodiscard]] inline bool addFunctionBody(const SourceText<Unit>& srcBuf) {
     return funStr_.append(srcBuf.get(), srcBuf.length());
   }
 

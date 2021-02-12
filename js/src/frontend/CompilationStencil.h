@@ -306,8 +306,8 @@ struct CompilationInput {
   void setSource(ScriptSource* ss) { source_ = do_AddRef(ss); }
 
   template <typename Unit>
-  MOZ_MUST_USE bool assignSource(JSContext* cx,
-                                 JS::SourceText<Unit>& sourceBuffer) {
+  [[nodiscard]] bool assignSource(JSContext* cx,
+                                  JS::SourceText<Unit>& sourceBuffer) {
     return source()->assignSource(cx, options, sourceBuffer);
   }
 
@@ -573,23 +573,23 @@ struct CompilationStencil : public BaseCompilationStencil {
   CompilationStencil(JSContext* cx, const JS::ReadOnlyCompileOptions& options)
       : alloc(LifoAllocChunkSize), input(options) {}
 
-  static MOZ_MUST_USE bool instantiateBaseStencilAfterPreparation(
+  [[nodiscard]] static bool instantiateBaseStencilAfterPreparation(
       JSContext* cx, CompilationInput& input,
       const BaseCompilationStencil& stencil, CompilationGCOutput& gcOutput);
 
-  static MOZ_MUST_USE bool prepareForInstantiate(
+  [[nodiscard]] static bool prepareForInstantiate(
       JSContext* cx, CompilationStencil& stencil, CompilationGCOutput& gcOutput,
       CompilationGCOutput* gcOutputForDelazification = nullptr);
 
-  static MOZ_MUST_USE bool instantiateStencils(
+  [[nodiscard]] static bool instantiateStencils(
       JSContext* cx, CompilationStencil& stencil, CompilationGCOutput& gcOutput,
       CompilationGCOutput* gcOutputForDelazification = nullptr);
 
-  MOZ_MUST_USE bool serializeStencils(JSContext* cx, JS::TranscodeBuffer& buf,
-                                      bool* succeededOut = nullptr);
-  MOZ_MUST_USE bool deserializeStencils(JSContext* cx,
-                                        const JS::TranscodeRange& range,
-                                        bool* succeededOut = nullptr);
+  [[nodiscard]] bool serializeStencils(JSContext* cx, JS::TranscodeBuffer& buf,
+                                       bool* succeededOut = nullptr);
+  [[nodiscard]] bool deserializeStencils(JSContext* cx,
+                                         const JS::TranscodeRange& range,
+                                         bool* succeededOut = nullptr);
 
   // Move constructor is necessary to use Rooted, but must be explicit in
   // order to steal the LifoAlloc data
@@ -660,7 +660,7 @@ struct StencilDelazificationSet {
   ScriptIndexVector delazificationIndices;
   CompilationAtomCache::AtomCacheVector delazificationAtomCache;
 
-  MOZ_MUST_USE bool buildDelazificationIndices(
+  [[nodiscard]] bool buildDelazificationIndices(
       JSContext* cx, const CompilationStencil& stencil);
 };
 

@@ -1236,18 +1236,18 @@ class ListNode : public ParseNode {
 #endif
   ;
 
-  MOZ_MUST_USE bool hasTopLevelFunctionDeclarations() const {
+  [[nodiscard]] bool hasTopLevelFunctionDeclarations() const {
     MOZ_ASSERT(isKind(ParseNodeKind::StatementList));
     return xflags & hasTopLevelFunctionDeclarationsBit;
   }
 
-  MOZ_MUST_USE bool emittedTopLevelFunctionDeclarations() const {
+  [[nodiscard]] bool emittedTopLevelFunctionDeclarations() const {
     MOZ_ASSERT(isKind(ParseNodeKind::StatementList));
     MOZ_ASSERT(hasTopLevelFunctionDeclarations());
     return xflags & emittedTopLevelFunctionDeclarationsBit;
   }
 
-  MOZ_MUST_USE bool hasNonConstInitializer() const {
+  [[nodiscard]] bool hasNonConstInitializer() const {
     MOZ_ASSERT(isKind(ParseNodeKind::ArrayExpr) ||
                isKind(ParseNodeKind::ObjectExpr));
     return xflags & hasNonConstInitializerBit;
@@ -1424,7 +1424,7 @@ class ListNode : public ParseNode {
   };
 
 #ifdef DEBUG
-  MOZ_MUST_USE bool contains(ParseNode* target) const {
+  [[nodiscard]] bool contains(ParseNode* target) const {
     MOZ_ASSERT(target);
     for (ParseNode* node : contents()) {
       if (target == node) {

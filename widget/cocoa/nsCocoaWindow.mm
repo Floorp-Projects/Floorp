@@ -42,6 +42,7 @@
 
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"

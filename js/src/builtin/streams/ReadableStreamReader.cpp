@@ -9,7 +9,6 @@
 #include "builtin/streams/ReadableStreamReader-inl.h"
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT{,_IF}
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
 #include "jsfriendapi.h"  // JS_ReportErrorNumberASCII
 
@@ -50,7 +49,7 @@ using js::UnwrapStreamFromReader;
 /**
  * Streams spec, 3.8.3. ReadableStreamReaderGenericCancel ( reader, reason )
  */
-MOZ_MUST_USE JSObject* js::ReadableStreamReaderGenericCancel(
+[[nodiscard]] JSObject* js::ReadableStreamReaderGenericCancel(
     JSContext* cx, Handle<ReadableStreamReader*> unwrappedReader,
     Handle<Value> reason) {
   // Step 1: Let stream be reader.[[ownerReadableStream]].
@@ -69,7 +68,7 @@ MOZ_MUST_USE JSObject* js::ReadableStreamReaderGenericCancel(
  * Streams spec, 3.8.4.
  *      ReadableStreamReaderGenericInitialize ( reader, stream )
  */
-MOZ_MUST_USE bool js::ReadableStreamReaderGenericInitialize(
+[[nodiscard]] bool js::ReadableStreamReaderGenericInitialize(
     JSContext* cx, Handle<ReadableStreamReader*> reader,
     Handle<ReadableStream*> unwrappedStream, ForAuthorCodeBool forAuthorCode) {
   cx->check(reader);
@@ -150,7 +149,7 @@ MOZ_MUST_USE bool js::ReadableStreamReaderGenericInitialize(
 /**
  * Streams spec, 3.8.5. ReadableStreamReaderGenericRelease ( reader )
  */
-MOZ_MUST_USE bool js::ReadableStreamReaderGenericRelease(
+[[nodiscard]] bool js::ReadableStreamReaderGenericRelease(
     JSContext* cx, Handle<ReadableStreamReader*> unwrappedReader) {
   // Step 1: Assert: reader.[[ownerReadableStream]] is not undefined.
   Rooted<ReadableStream*> unwrappedStream(
@@ -228,7 +227,7 @@ MOZ_MUST_USE bool js::ReadableStreamReaderGenericRelease(
  * Streams spec, 3.8.7.
  *      ReadableStreamDefaultReaderRead ( reader [, forAuthorCode ] )
  */
-MOZ_MUST_USE PromiseObject* js::ReadableStreamDefaultReaderRead(
+[[nodiscard]] PromiseObject* js::ReadableStreamDefaultReaderRead(
     JSContext* cx, Handle<ReadableStreamDefaultReader*> unwrappedReader) {
   // Step 1: If forAuthorCode was not passed, set it to false (implicit).
 

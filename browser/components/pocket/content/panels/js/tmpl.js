@@ -239,7 +239,7 @@ templates['signupstoryboard_shell'] = template({"1":function(depth0,helpers,part
     + alias3(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/signup?utm_campaign="
     + alias3(((helper = (helper = helpers.utmCampaign || (depth0 != null ? depth0.utmCampaign : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"utmCampaign","hash":{},"data":data}) : helper)))
-    + "&utm_source=button_variant&force=email&tv=panel_control&src=extension&s=ffi&t=signupemail&v="
+    + "&utm_source=button_variant&tv=panel_control&src=extension&s=ffi&t=signupemail&v="
     + alias3(((helper = (helper = helpers.variant || (depth0 != null ? depth0.variant : depth0)) != null ? helper : alias1),(typeof helper === alias2 ? helper.call(depth0,{"name":"variant","hash":{},"data":data}) : helper)))
     + "\" target=\"_blank\" class=\"btn signup-btn-email signup-btn-initstate\">Sign up</a>\n        </p>\n";
 },"12":function(depth0,helpers,partials,data) {

@@ -9,7 +9,6 @@
 #include "builtin/streams/PipeToState-inl.h"
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
 #include "mozilla/Maybe.h"  // mozilla::Maybe, mozilla::Nothing, mozilla::Some
 
 #include "jsapi.h"  // JS_ReportErrorNumberASCII
@@ -96,8 +95,8 @@ static bool WritableAndNotClosing(const WritableStream* unwrappedDest) {
          WritableStreamCloseQueuedOrInFlight(unwrappedDest);
 }
 
-static MOZ_MUST_USE bool Finalize(JSContext* cx, Handle<PipeToState*> state,
-                                  Handle<Maybe<Value>> error) {
+[[nodiscard]] static bool Finalize(JSContext* cx, Handle<PipeToState*> state,
+                                   Handle<Maybe<Value>> error) {
   cx->check(state);
   cx->check(error);
 
@@ -131,7 +130,7 @@ static MOZ_MUST_USE bool Finalize(JSContext* cx, Handle<PipeToState*> state,
   return PromiseObject::resolve(cx, promise, UndefinedHandleValue);
 }
 
-static MOZ_MUST_USE bool Finalize(JSContext* cx, unsigned argc, Value* vp) {
+[[nodiscard]] static bool Finalize(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   Rooted<PipeToState*> state(cx, TargetFromHandler<PipeToState>(args));
@@ -157,9 +156,9 @@ static MOZ_MUST_USE bool Finalize(JSContext* cx, unsigned argc, Value* vp) {
 //   e. Upon fulfillment of p, finalize, passing along originalError if it was
 //      given.
 //   f. Upon rejection of p with reason newError, finalize with newError.
-static MOZ_MUST_USE bool ActAndFinalize(JSContext* cx,
-                                        Handle<PipeToState*> state,
-                                        Handle<Maybe<Value>> error) {
+[[nodiscard]] static bool ActAndFinalize(JSContext* cx,
+                                         Handle<PipeToState*> state,
+                                         Handle<Maybe<Value>> error) {
   // Step d: Let p be the result of performing action.
   Rooted<JSObject*> p(cx);
   switch (state->shutdownAction()) {
@@ -290,8 +289,8 @@ static MOZ_MUST_USE bool ActAndFinalize(JSContext* cx,
   return JS::AddPromiseReactions(cx, p, onFulfilled, onRejected);
 }
 
-static MOZ_MUST_USE bool ActAndFinalize(JSContext* cx, unsigned argc,
-                                        Value* vp) {
+[[nodiscard]] static bool ActAndFinalize(JSContext* cx, unsigned argc,
+                                         Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   Rooted<PipeToState*> state(cx, TargetFromHandler<PipeToState>(args));
@@ -314,7 +313,7 @@ static MOZ_MUST_USE bool ActAndFinalize(JSContext* cx, unsigned argc,
 
 // Shutdown with an action: if any of the above requirements ask to shutdown
 // with an action action, optionally with an error originalError, then:
-static MOZ_MUST_USE bool ShutdownWithAction(
+[[nodiscard]] static bool ShutdownWithAction(
     JSContext* cx, Handle<PipeToState*> state,
     PipeToState::ShutdownAction action, Handle<Maybe<Value>> originalError) {
   cx->check(state);
@@ -381,8 +380,8 @@ static MOZ_MUST_USE bool ShutdownWithAction(
 
 // Shutdown: if any of the above requirements or steps ask to shutdown,
 // optionally with an error error, then:
-static MOZ_MUST_USE bool Shutdown(JSContext* cx, Handle<PipeToState*> state,
-                                  Handle<Maybe<Value>> error) {
+[[nodiscard]] static bool Shutdown(JSContext* cx, Handle<PipeToState*> state,
+                                   Handle<Maybe<Value>> error) {
   cx->check(state);
   cx->check(error);
 
@@ -443,7 +442,7 @@ static MOZ_MUST_USE bool Shutdown(JSContext* cx, Handle<PipeToState*> state,
  * "a. Errors must be propagated forward: if source.[[state]] is or becomes
  * 'errored', then..."
  */
-static MOZ_MUST_USE bool OnSourceErrored(
+[[nodiscard]] static bool OnSourceErrored(
     JSContext* cx, Handle<PipeToState*> state,
     Handle<ReadableStream*> unwrappedSource) {
   cx->check(state);
@@ -510,9 +509,9 @@ static MOZ_MUST_USE bool OnSourceErrored(
  * "b. Errors must be propagated backward: if dest.[[state]] is or becomes
  * 'errored', then..."
  */
-static MOZ_MUST_USE bool OnDestErrored(JSContext* cx,
-                                       Handle<PipeToState*> state,
-                                       Handle<WritableStream*> unwrappedDest) {
+[[nodiscard]] static bool OnDestErrored(JSContext* cx,
+                                        Handle<PipeToState*> state,
+                                        Handle<WritableStream*> unwrappedDest) {
   cx->check(state);
 
   Rooted<Maybe<Value>> storedError(cx, Some(unwrappedDest->storedError()));
@@ -554,8 +553,8 @@ static MOZ_MUST_USE bool OnDestErrored(JSContext* cx,
  * "c. Closing must be propagated forward: if source.[[state]] is or becomes
  * 'closed', then..."
  */
-static MOZ_MUST_USE bool OnSourceClosed(JSContext* cx,
-                                        Handle<PipeToState*> state) {
+[[nodiscard]] static bool OnSourceClosed(JSContext* cx,
+                                         Handle<PipeToState*> state) {
   cx->check(state);
 
   Rooted<Maybe<Value>> noError(cx, Nothing());
@@ -593,8 +592,8 @@ static MOZ_MUST_USE bool OnSourceClosed(JSContext* cx,
  * ! WritableStreamCloseQueuedOrInFlight(dest) is true or dest.[[state]] is
  * 'closed', then..."
  */
-static MOZ_MUST_USE bool OnDestClosed(JSContext* cx,
-                                      Handle<PipeToState*> state) {
+[[nodiscard]] static bool OnDestClosed(JSContext* cx,
+                                       Handle<PipeToState*> state) {
   cx->check(state);
 
   // i. Assert: no chunks have been read or written.
@@ -658,7 +657,7 @@ static MOZ_MUST_USE bool OnDestClosed(JSContext* cx,
  * applied in order.", as applied at the very start of piping, before any reads
  * from source or writes to dest have been triggered.
  */
-static MOZ_MUST_USE bool SourceOrDestErroredOrClosed(
+[[nodiscard]] static bool SourceOrDestErroredOrClosed(
     JSContext* cx, Handle<PipeToState*> state,
     Handle<ReadableStream*> unwrappedSource,
     Handle<WritableStream*> unwrappedDest, bool* erroredOrClosed) {
@@ -696,8 +695,8 @@ static MOZ_MUST_USE bool SourceOrDestErroredOrClosed(
   return true;
 }
 
-static MOZ_MUST_USE bool OnSourceClosed(JSContext* cx, unsigned argc,
-                                        Value* vp) {
+[[nodiscard]] static bool OnSourceClosed(JSContext* cx, unsigned argc,
+                                         Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   Rooted<PipeToState*> state(cx, TargetFromHandler<PipeToState>(args));
@@ -711,8 +710,8 @@ static MOZ_MUST_USE bool OnSourceClosed(JSContext* cx, unsigned argc,
   return true;
 }
 
-static MOZ_MUST_USE bool OnSourceErrored(JSContext* cx, unsigned argc,
-                                         Value* vp) {
+[[nodiscard]] static bool OnSourceErrored(JSContext* cx, unsigned argc,
+                                          Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   Rooted<PipeToState*> state(cx, TargetFromHandler<PipeToState>(args));
@@ -731,7 +730,8 @@ static MOZ_MUST_USE bool OnSourceErrored(JSContext* cx, unsigned argc,
   return true;
 }
 
-static MOZ_MUST_USE bool OnDestClosed(JSContext* cx, unsigned argc, Value* vp) {
+[[nodiscard]] static bool OnDestClosed(JSContext* cx, unsigned argc,
+                                       Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   Rooted<PipeToState*> state(cx, TargetFromHandler<PipeToState>(args));
@@ -745,8 +745,8 @@ static MOZ_MUST_USE bool OnDestClosed(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static MOZ_MUST_USE bool OnDestErrored(JSContext* cx, unsigned argc,
-                                       Value* vp) {
+[[nodiscard]] static bool OnDestErrored(JSContext* cx, unsigned argc,
+                                        Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   Rooted<PipeToState*> state(cx, TargetFromHandler<PipeToState>(args));
@@ -778,8 +778,8 @@ static inline JSObject* GetClosedPromise(
   return unwrappedAccessor->closedPromise();
 }
 
-static MOZ_MUST_USE bool ReadFromSource(JSContext* cx,
-                                        Handle<PipeToState*> state);
+[[nodiscard]] static bool ReadFromSource(JSContext* cx,
+                                         Handle<PipeToState*> state);
 
 static bool ReadFulfilled(JSContext* cx, Handle<PipeToState*> state,
                           Handle<JSObject*> result) {
@@ -880,8 +880,8 @@ static bool ReadFulfilled(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool ReadFromSource(JSContext* cx, unsigned argc, Value* vp);
 
-static MOZ_MUST_USE bool ReadFromSource(JSContext* cx,
-                                        Handle<PipeToState*> state) {
+[[nodiscard]] static bool ReadFromSource(JSContext* cx,
+                                         Handle<PipeToState*> state) {
   cx->check(state);
 
   MOZ_ASSERT(!state->hasPendingRead(),
@@ -1034,9 +1034,9 @@ static bool ReadFromSource(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static MOZ_MUST_USE bool StartPiping(JSContext* cx, Handle<PipeToState*> state,
-                                     Handle<ReadableStream*> unwrappedSource,
-                                     Handle<WritableStream*> unwrappedDest) {
+[[nodiscard]] static bool StartPiping(JSContext* cx, Handle<PipeToState*> state,
+                                      Handle<ReadableStream*> unwrappedSource,
+                                      Handle<WritableStream*> unwrappedDest) {
   cx->check(state);
 
   // "Shutdown must stop activity: if shuttingDown becomes true, the user agent
@@ -1111,8 +1111,8 @@ static MOZ_MUST_USE bool StartPiping(JSContext* cx, Handle<PipeToState*> state,
  *                                            preventCancel[, signal] )
  * Step 14.1 abortAlgorithm.
  */
-static MOZ_MUST_USE bool PerformAbortAlgorithm(JSContext* cx,
-                                               Handle<PipeToState*> state) {
+[[nodiscard]] static bool PerformAbortAlgorithm(JSContext* cx,
+                                                Handle<PipeToState*> state) {
   cx->check(state);
 
   // Step 14.1: Let abortAlgorithm be the following steps:

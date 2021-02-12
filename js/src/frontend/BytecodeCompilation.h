@@ -8,7 +8,7 @@
 #define frontend_BytecodeCompilation_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE, MOZ_STACK_CLASS
+#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS
 #include "mozilla/Maybe.h"       // mozilla::Maybe, mozilla::Nothing
 #include "mozilla/Utf8.h"        // mozilla::Utf8Unit
 
@@ -99,11 +99,11 @@ extern JSScript* CompileEvalScript(JSContext* cx,
 extern void FillCompileOptionsForLazyFunction(JS::CompileOptions& options,
                                               Handle<BaseScript*> lazy);
 
-extern MOZ_MUST_USE bool CompileLazyFunctionToStencil(
+[[nodiscard]] extern bool CompileLazyFunctionToStencil(
     JSContext* cx, CompilationStencil& stencil, JS::Handle<BaseScript*> lazy,
     const char16_t* units, size_t length);
 
-extern MOZ_MUST_USE bool CompileLazyFunctionToStencil(
+[[nodiscard]] extern bool CompileLazyFunctionToStencil(
     JSContext* cx, CompilationStencil& stencil, JS::Handle<BaseScript*> lazy,
     const mozilla::Utf8Unit* units, size_t length);
 

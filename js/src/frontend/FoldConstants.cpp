@@ -44,7 +44,7 @@ struct FoldInfo {
 // Don't use ReplaceNode directly, because we want the constant folder to keep
 // the attributes isInParens and isDirectRHSAnonFunction of the old node being
 // replaced.
-inline MOZ_MUST_USE bool TryReplaceNode(ParseNode** pnp, ParseNode* pn) {
+[[nodiscard]] inline bool TryReplaceNode(ParseNode** pnp, ParseNode* pn) {
   // convenience check: can call TryReplaceNode(pnp, alloc_parsenode())
   // directly, without having to worry about alloc returning null.
   if (!pn) {

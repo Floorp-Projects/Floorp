@@ -538,8 +538,6 @@ bool nsXPLookAndFeel::IsSpecialColor(ColorID aID, nscolor& aColor) {
 }
 
 bool nsXPLookAndFeel::ColorIsNotCSSAccessible(ColorID aID) {
-  bool result = false;
-
   switch (aID) {
     case ColorID::WindowBackground:
     case ColorID::WindowForeground:
@@ -570,13 +568,12 @@ bool nsXPLookAndFeel::ColorIsNotCSSAccessible(ColorID aID) {
     case ColorID::IMESelectedConvertedTextForeground:
     case ColorID::IMESelectedConvertedTextUnderline:
     case ColorID::SpellCheckerUnderline:
-      result = true;
-      break;
+      return true;
     default:
       break;
   }
 
-  return result;
+  return false;
 }
 
 nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID) {
@@ -705,6 +702,7 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID) {
     case ColorID::MozButtonhoverface:
       result = NS_RGB(0xF0, 0xF0, 0xF0);
       break;
+    case ColorID::MozGtkButtonactivetext:
     case ColorID::MozButtonhovertext:
       result = NS_RGB(0x00, 0x00, 0x00);
       break;
@@ -721,7 +719,6 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID) {
       result = NS_RGB(0x00, 0x00, 0x00);
       break;
     case ColorID::MozOddtreerow:
-    case ColorID::MozGtkButtonactivetext:
       result = NS_RGB(0xFF, 0xFF, 0xFF);
       break;
     case ColorID::MozMacChromeActive:
@@ -900,9 +897,7 @@ nsresult nsXPLookAndFeel::GetColorValue(ColorID aID,
   }
 #endif  // DEBUG_SYSTEM_COLOR_USE
 
-  if (aUseStandinsForNativeColors &&
-      (ColorIsNotCSSAccessible(aID) ||
-       !nsContentUtils::UseStandinsForNativeColors())) {
+  if (aUseStandinsForNativeColors && ColorIsNotCSSAccessible(aID)) {
     aUseStandinsForNativeColors = false;
   }
 
@@ -947,13 +942,12 @@ nsresult nsXPLookAndFeel::GetColorValue(ColorID aID,
     return NS_OK;
   }
 
-  if (StaticPrefs::ui_use_native_colors() && aUseStandinsForNativeColors) {
+  if (aUseStandinsForNativeColors) {
     aResult = GetStandinForNativeColor(aID);
     return NS_OK;
   }
 
-  if (StaticPrefs::ui_use_native_colors() &&
-      NS_SUCCEEDED(NativeGetColor(aID, aResult))) {
+  if (NS_SUCCEEDED(NativeGetColor(aID, aResult))) {
     if (!mozilla::ServoStyleSet::IsInServoTraversal()) {
       MOZ_ASSERT(NS_IsMainThread());
       if ((gfxPlatform::GetCMSMode() == eCMSMode_All) &&
