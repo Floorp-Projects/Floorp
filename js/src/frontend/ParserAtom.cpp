@@ -570,23 +570,17 @@ UniqueChars ToPrintableStringImpl(JSContext* cx, mozilla::Range<CharT> str,
 UniqueChars ParserAtomsTable::toPrintableString(
     JSContext* cx, TaggedParserAtomIndex index) const {
   const auto* atom = getParserAtom(index);
-  size_t length = atom->length();
   return atom->hasLatin1Chars()
-             ? ToPrintableStringImpl(
-                   cx, mozilla::Range(atom->latin1Chars(), length))
-             : ToPrintableStringImpl(
-                   cx, mozilla::Range(atom->twoByteChars(), length));
+             ? ToPrintableStringImpl(cx, atom->latin1Range())
+             : ToPrintableStringImpl(cx, atom->twoByteRange());
 }
 
 UniqueChars ParserAtomsTable::toQuotedString(
     JSContext* cx, TaggedParserAtomIndex index) const {
   const auto* atom = getParserAtom(index);
-  size_t length = atom->length();
   return atom->hasLatin1Chars()
-             ? ToPrintableStringImpl(
-                   cx, mozilla::Range(atom->latin1Chars(), length), '\"')
-             : ToPrintableStringImpl(
-                   cx, mozilla::Range(atom->twoByteChars(), length), '\"');
+             ? ToPrintableStringImpl(cx, atom->latin1Range(), '\"')
+             : ToPrintableStringImpl(cx, atom->twoByteRange(), '\"');
 }
 
 JSAtom* ParserAtomsTable::toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
