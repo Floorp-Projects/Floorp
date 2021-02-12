@@ -1435,7 +1435,7 @@ class Datastore final
   nsTArray<LSItemInfo> mOrderedItems;
   nsTArray<int64_t> mPendingUsageDeltas;
   DatastoreWriteOptimizer mWriteOptimizer;
-  const GroupAndOrigin mGroupAndOrigin;
+  const OriginMetadata mOriginMetadata;
   const uint32_t mPrivateBrowsingId;
   int64_t mUsage;
   int64_t mUpdateBatchUsage;
@@ -1447,7 +1447,7 @@ class Datastore final
 
  public:
   // Created by PrepareDatastoreOp.
-  Datastore(const GroupAndOrigin& aGroupAndOrigin, uint32_t aPrivateBrowsingId,
+  Datastore(const OriginMetadata& aOriginMetadata, uint32_t aPrivateBrowsingId,
             int64_t aUsage, int64_t aSizeOfKeys, int64_t aSizeOfItems,
             RefPtr<DirectoryLock>&& aDirectoryLock,
             RefPtr<Connection>&& aConnection,
@@ -1461,7 +1461,7 @@ class Datastore final
     return ToMaybeRef(mDirectoryLock.get());
   }
 
-  const nsCString& Origin() const { return mGroupAndOrigin.mOrigin; }
+  const nsCString& Origin() const { return mOriginMetadata.mOrigin; }
 
   uint32_t PrivateBrowsingId() const { return mPrivateBrowsingId; }
 
@@ -2563,15 +2563,15 @@ class QuotaClient final : public mozilla::dom::quota::Client {
   Type GetType() override;
 
   Result<UsageInfo, nsresult> InitOrigin(PersistenceType aPersistenceType,
-                                         const GroupAndOrigin& aGroupAndOrigin,
+                                         const OriginMetadata& aOriginMetadata,
                                          const AtomicBool& aCanceled) override;
 
   nsresult InitOriginWithoutTracking(PersistenceType aPersistenceType,
-                                     const GroupAndOrigin& aGroupAndOrigin,
+                                     const OriginMetadata& aOriginMetadata,
                                      const AtomicBool& aCanceled) override;
 
   Result<UsageInfo, nsresult> GetUsageForOrigin(
-      PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+      PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
       const AtomicBool& aCanceled) override;
 
   nsresult AboutToClearOrigins(
@@ -4229,7 +4229,7 @@ void ConnectionThread::Shutdown() {
  * Datastore
  ******************************************************************************/
 
-Datastore::Datastore(const GroupAndOrigin& aGroupAndOrigin,
+Datastore::Datastore(const OriginMetadata& aOriginMetadata,
                      uint32_t aPrivateBrowsingId, int64_t aUsage,
                      int64_t aSizeOfKeys, int64_t aSizeOfItems,
                      RefPtr<DirectoryLock>&& aDirectoryLock,
@@ -4241,7 +4241,7 @@ Datastore::Datastore(const GroupAndOrigin& aGroupAndOrigin,
       mConnection(std::move(aConnection)),
       mQuotaObject(std::move(aQuotaObject)),
       mOrderedItems(std::move(aOrderedItems)),
-      mGroupAndOrigin(aGroupAndOrigin),
+      mOriginMetadata(aOriginMetadata),
       mPrivateBrowsingId(aPrivateBrowsingId),
       mUsage(aUsage),
       mUpdateBatchUsage(-1),
@@ -4859,7 +4859,7 @@ bool Datastore::HasOtherProcessObservers(Database* aDatabase) {
   }
 
   nsTArray<NotNull<Observer*>>* array;
-  if (!gObservers->Get(mGroupAndOrigin.mOrigin, &array)) {
+  if (!gObservers->Get(mOriginMetadata.mOrigin, &array)) {
     return false;
   }
 
@@ -4889,7 +4889,7 @@ void Datastore::NotifyOtherProcessObservers(Database* aDatabase,
   }
 
   nsTArray<NotNull<Observer*>>* array;
-  if (!gObservers->Get(mGroupAndOrigin.mOrigin, &array)) {
+  if (!gObservers->Get(mOriginMetadata.mOrigin, &array)) {
     return;
   }
 
@@ -4969,7 +4969,7 @@ void Datastore::Stringify(nsACString& aResult) const {
   aResult.Append(kQuotaGenericDelimiter);
 
   aResult.AppendLiteral("Origin:");
-  aResult.Append(AnonymizedOriginString(mGroupAndOrigin.mOrigin));
+  aResult.Append(AnonymizedOriginString(mOriginMetadata.mOrigin));
   aResult.Append(kQuotaGenericDelimiter);
 
   aResult.AppendLiteral("PrivateBrowsingId:");
@@ -5036,7 +5036,7 @@ void Datastore::ConnectionClosedCallback() {
     QuotaManager* quotaManager = QuotaManager::Get();
     MOZ_ASSERT(quotaManager);
 
-    quotaManager->ResetUsageForClient(PERSISTENCE_TYPE_DEFAULT, mGroupAndOrigin,
+    quotaManager->ResetUsageForClient(PERSISTENCE_TYPE_DEFAULT, mOriginMetadata,
                                       mozilla::dom::quota::Client::LS);
   }
 
@@ -5058,7 +5058,7 @@ void Datastore::CleanupMetadata() {
   AssertIsOnBackgroundThread();
 
   MOZ_ASSERT(gDatastores);
-  const DebugOnly<bool> removed = gDatastores->Remove(mGroupAndOrigin.mOrigin);
+  const DebugOnly<bool> removed = gDatastores->Remove(mOriginMetadata.mOrigin);
   MOZ_ASSERT(removed);
 
   QuotaManager::GetRef().MaybeRecordShutdownStep(quota::Client::LS,
@@ -8048,7 +8048,7 @@ mozilla::dom::quota::Client::Type QuotaClient::GetType() {
 }
 
 Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
-    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
     const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aPersistenceType == PERSISTENCE_TYPE_DEFAULT);
@@ -8058,7 +8058,7 @@ Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
 
   LS_TRY_INSPECT(const auto& directory,
                  quotaManager->GetDirectoryForOrigin(aPersistenceType,
-                                                     aGroupAndOrigin.mOrigin));
+                                                     aOriginMetadata.mOrigin));
 
   MOZ_ASSERT(directory);
 
@@ -8103,7 +8103,7 @@ Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
   LS_TRY_INSPECT(
       const UsageInfo& res,
       ([fileExists, usageFileExists, &file, &usageFile, &usageJournalFile,
-        &aGroupAndOrigin]() -> Result<UsageInfo, nsresult> {
+        &aOriginMetadata]() -> Result<UsageInfo, nsresult> {
         if (fileExists) {
           LS_TRY_RETURN(
               // To simplify control flow, we call LoadUsageFile unconditionally
@@ -8111,12 +8111,12 @@ Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
               // is false.
               LoadUsageFile(*usageFile)
                   .orElse([&file, &usageFile, &usageJournalFile,
-                           &aGroupAndOrigin](
+                           &aOriginMetadata](
                               const nsresult) -> Result<UsageInfo, nsresult> {
                     LS_TRY_INSPECT(
                         const auto& connection,
                         CreateStorageConnection(
-                            *file, *usageFile, aGroupAndOrigin.mOrigin, [] {}));
+                            *file, *usageFile, aOriginMetadata.mOrigin, [] {}));
 
                     LS_TRY_INSPECT(
                         const int64_t& usage,
@@ -8181,7 +8181,7 @@ Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
 }
 
 nsresult QuotaClient::InitOriginWithoutTracking(
-    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
     const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
 
@@ -8194,7 +8194,7 @@ nsresult QuotaClient::InitOriginWithoutTracking(
 }
 
 Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
-    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
     const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aPersistenceType == PERSISTENCE_TYPE_DEFAULT);
@@ -8206,7 +8206,7 @@ Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
   MOZ_ASSERT(quotaManager);
 
   return quotaManager->GetUsageForClient(PERSISTENCE_TYPE_DEFAULT,
-                                         aGroupAndOrigin, Client::LS);
+                                         aOriginMetadata, Client::LS);
 }
 
 nsresult QuotaClient::AboutToClearOrigins(

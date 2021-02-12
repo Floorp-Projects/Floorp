@@ -26,8 +26,8 @@ using mozilla::dom::quota::Client;
 using mozilla::dom::quota::CloneFileAndAppend;
 using mozilla::dom::quota::DatabaseUsageType;
 using mozilla::dom::quota::GetDirEntryKind;
-using mozilla::dom::quota::GroupAndOrigin;
 using mozilla::dom::quota::nsIFileKind;
+using mozilla::dom::quota::OriginMetadata;
 using mozilla::dom::quota::PERSISTENCE_TYPE_DEFAULT;
 using mozilla::dom::quota::PersistenceType;
 using mozilla::dom::quota::QuotaManager;
@@ -125,9 +125,9 @@ Result<UsageInfo, nsresult> GetBodyUsage(nsIFile& aMorgueDir,
 }
 
 Result<int64_t, nsresult> LockedGetPaddingSizeFromDB(
-    nsIFile& aDir, const GroupAndOrigin& aGroupAndOrigin) {
+    nsIFile& aDir, const OriginMetadata& aOriginMetadata) {
   QuotaInfo quotaInfo;
-  static_cast<GroupAndOrigin&>(quotaInfo) = aGroupAndOrigin;
+  static_cast<OriginMetadata&>(quotaInfo) = aOriginMetadata;
   // quotaInfo.mDirectoryLockId must be -1 (which is default for new QuotaInfo)
   // because this method should only be called from QuotaClient::InitOrigin
   // (via QuotaClient::GetUsageForOriginInternal) when the temporary storage
@@ -184,16 +184,16 @@ CacheQuotaClient* CacheQuotaClient::Get() {
 CacheQuotaClient::Type CacheQuotaClient::GetType() { return DOMCACHE; }
 
 Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
-    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
     const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
 
-  return GetUsageForOriginInternal(aPersistenceType, aGroupAndOrigin, aCanceled,
+  return GetUsageForOriginInternal(aPersistenceType, aOriginMetadata, aCanceled,
                                    /* aInitializing*/ true);
 }
 
 nsresult CacheQuotaClient::InitOriginWithoutTracking(
-    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
     const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
 
@@ -206,11 +206,11 @@ nsresult CacheQuotaClient::InitOriginWithoutTracking(
 }
 
 Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOrigin(
-    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
     const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
 
-  return GetUsageForOriginInternal(aPersistenceType, aGroupAndOrigin, aCanceled,
+  return GetUsageForOriginInternal(aPersistenceType, aOriginMetadata, aCanceled,
                                    /* aInitializing*/ false);
 }
 
@@ -366,7 +366,7 @@ CacheQuotaClient::~CacheQuotaClient() {
 }
 
 Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOriginInternal(
-    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
     const AtomicBool& aCanceled, const bool aInitializing) {
   AssertIsOnIOThread();
 
@@ -375,7 +375,7 @@ Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOriginInternal(
 
   CACHE_TRY_INSPECT(
       const auto& dir,
-      qm->GetDirectoryForOrigin(aPersistenceType, aGroupAndOrigin.mOrigin));
+      qm->GetDirectoryForOrigin(aPersistenceType, aOriginMetadata.mOrigin));
 
   CACHE_TRY(
       dir->Append(NS_LITERAL_STRING_FROM_CSTRING(DOMCACHE_DIRECTORY_NAME)));
@@ -383,7 +383,7 @@ Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOriginInternal(
   CACHE_TRY_INSPECT(
       const auto& maybePaddingSize,
       ([this, &dir, aInitializing,
-        &aGroupAndOrigin]() -> Result<Maybe<int64_t>, nsresult> {
+        &aOriginMetadata]() -> Result<Maybe<int64_t>, nsresult> {
         // If the temporary file still exists after locking, it means the
         // previous action failed, so restore the padding file.
         MutexAutoLock lock(mDirPaddingFileMutex);
@@ -400,7 +400,7 @@ Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOriginInternal(
         }
 
         if (aInitializing) {
-          CACHE_TRY_RETURN(LockedGetPaddingSizeFromDB(*dir, aGroupAndOrigin)
+          CACHE_TRY_RETURN(LockedGetPaddingSizeFromDB(*dir, aOriginMetadata)
                                .map(Some<int64_t>));
         }
 
@@ -414,7 +414,7 @@ Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOriginInternal(
       }()));
 
   if (!maybePaddingSize) {
-    return qm->GetUsageForClient(PERSISTENCE_TYPE_DEFAULT, aGroupAndOrigin,
+    return qm->GetUsageForClient(PERSISTENCE_TYPE_DEFAULT, aOriginMetadata,
                                  Client::DOMCACHE);
   }
 

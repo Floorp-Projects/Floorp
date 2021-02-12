@@ -193,12 +193,12 @@ void DirectoryLockImpl::AcquireImmediately() {
 
 RefPtr<ClientDirectoryLock> DirectoryLockImpl::Specialize(
     PersistenceType aPersistenceType,
-    const quota::GroupAndOrigin& aGroupAndOrigin,
+    const quota::OriginMetadata& aOriginMetadata,
     Client::Type aClientType) const {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_INVALID);
-  MOZ_ASSERT(!aGroupAndOrigin.mGroup.IsEmpty());
-  MOZ_ASSERT(!aGroupAndOrigin.mOrigin.IsEmpty());
+  MOZ_ASSERT(!aOriginMetadata.mGroup.IsEmpty());
+  MOZ_ASSERT(!aOriginMetadata.mOrigin.IsEmpty());
   MOZ_ASSERT(aClientType < Client::TypeMax());
   MOZ_ASSERT(!mOpenListener);
   MOZ_ASSERT(mBlockedOn.IsEmpty());
@@ -209,7 +209,7 @@ RefPtr<ClientDirectoryLock> DirectoryLockImpl::Specialize(
 
   RefPtr<DirectoryLockImpl> lock = Create(
       mQuotaManager, Nullable<PersistenceType>(aPersistenceType),
-      aGroupAndOrigin.mGroup, OriginScope::FromOrigin(aGroupAndOrigin.mOrigin),
+      aOriginMetadata.mGroup, OriginScope::FromOrigin(aOriginMetadata.mOrigin),
       Nullable<Client::Type>(aClientType),
       /* aExclusive */ false, mInternal, ShouldUpdateLockIdTableFlag::Yes);
   if (NS_WARN_IF(!Overlaps(*lock))) {
