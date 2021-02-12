@@ -13,6 +13,16 @@ var { PromptUtils } = ChromeUtils.import(
   "resource://gre/modules/SharedPromptUtils.jsm"
 );
 
+const {
+  // MODAL_TYPE_TAB, // currently not read in this file.
+  MODAL_TYPE_CONTENT,
+  MODAL_TYPE_WINDOW,
+  MODAL_TYPE_INTERNAL_WINDOW,
+} = Ci.nsIPrompt;
+
+const COMMON_DIALOG = "chrome://global/content/commonDialog.xhtml";
+const SELECT_DIALOG = "chrome://global/content/selectDialog.xhtml";
+
 function Prompter() {
   // Note that EmbedPrompter clones this implementation.
 }
@@ -967,6 +977,14 @@ class ModalPrompter {
       this.browsingContext = browsingContext;
     }
 
+    if (
+      domWin &&
+      (!modalType || modalType == MODAL_TYPE_WINDOW) &&
+      !this.browsingContext?.isContent
+    ) {
+      modalType = MODAL_TYPE_INTERNAL_WINDOW;
+    }
+
     // Use given modal type or fallback to default
     this.modalType = modalType || ModalPrompter.defaultModalType;
 
@@ -982,19 +1000,42 @@ class ModalPrompter {
 
   set modalType(modalType) {
     // Setting modal type window is always allowed
-    if (modalType == Ci.nsIPrompt.MODAL_TYPE_WINDOW) {
+    if (modalType == MODAL_TYPE_WINDOW) {
       this._modalType = modalType;
       return;
     }
 
-    // We can't use content / tab prompts if we don't have a suitable parent.
-    if (!this.browsingContext?.isContent) {
-      modalType = Ci.nsIPrompt.MODAL_TYPE_WINDOW;
-
-      Cu.reportError(
-        "Prompter: Browser not available. Falling back to window prompt."
-      );
+    // For content prompts for non-content windows, use window prompts:
+    if (modalType == MODAL_TYPE_CONTENT && !this.browsingContext?.isContent) {
+      this._modalType = MODAL_TYPE_WINDOW;
+      return;
     }
+
+    // We can't use content / tab prompts if we don't have a suitable parent.
+    if (
+      !this.browsingContext?.isContent &&
+      modalType != MODAL_TYPE_INTERNAL_WINDOW
+    ) {
+      // Only show this error if we're not about to fall back again and show a different one.
+      if (this.browsingContext?.associatedWindow?.gDialogBox) {
+        Cu.reportError(
+          "Prompter: Browser not available. Falling back to internal window prompt."
+        );
+      }
+      modalType = MODAL_TYPE_INTERNAL_WINDOW;
+    }
+
+    if (
+      modalType == MODAL_TYPE_INTERNAL_WINDOW &&
+      (this.browsingContext?.isContent ||
+        !this.browsingContext?.associatedWindow?.gDialogBox)
+    ) {
+      Cu.reportError(
+        "Prompter: internal dialogs not available in this context. Falling back to window prompt."
+      );
+      modalType = MODAL_TYPE_WINDOW;
+    }
+
     this._modalType = modalType;
   }
 
@@ -1031,17 +1072,22 @@ class ModalPrompter {
       return args;
     }
 
+    if (this._modalType == MODAL_TYPE_INTERNAL_WINDOW) {
+      await this.openInternalWindowPrompt(
+        this.browsingContext.associatedWindow,
+        args
+      );
+      return args;
+    }
+
     // Select prompts are not part of CommonDialog
     // and thus not supported as tab or content prompts yet. See Bug 1622817.
     // Once they are integrated this override should be removed.
-    if (
-      args.promptType == "select" &&
-      this.modalType !== Ci.nsIPrompt.MODAL_TYPE_WINDOW
-    ) {
+    if (args.promptType == "select" && this.modalType !== MODAL_TYPE_WINDOW) {
       Cu.reportError(
         "Prompter: 'select' prompts do not support tab/content prompting. Falling back to window prompt."
       );
-      args.modalType = Ci.nsIPrompt.MODAL_TYPE_WINDOW;
+      args.modalType = MODAL_TYPE_WINDOW;
     } else {
       args.modalType = this.modalType;
     }
@@ -1082,7 +1128,7 @@ class ModalPrompter {
       args.inPermitUnload = inPermitUnload;
       let eventDetail = Cu.cloneInto(
         {
-          tabPrompt: this.modalType != Ci.nsIPrompt.MODAL_TYPE_WINDOW,
+          tabPrompt: this.modalType != MODAL_TYPE_WINDOW,
           inPermitUnload,
         },
         this.browsingContext.window
@@ -1164,9 +1210,6 @@ class ModalPrompter {
    * @param {Object} args - Prompt options and return values.
    */
   openWindowPrompt(parentWindow = null, args) {
-    const COMMON_DIALOG = "chrome://global/content/commonDialog.xhtml";
-    const SELECT_DIALOG = "chrome://global/content/selectDialog.xhtml";
-
     let uri = args.promptType == "select" ? SELECT_DIALOG : COMMON_DIALOG;
     let propBag = PromptUtils.objectToPropBag(args);
     Services.ww.openWindow(
@@ -1176,6 +1219,17 @@ class ModalPrompter {
       "centerscreen,chrome,modal,titlebar",
       propBag
     );
+    PromptUtils.propBagToObject(propBag, args);
+  }
+
+  async openInternalWindowPrompt(parentWindow, args) {
+    if (!parentWindow?.gDialogBox || !ModalPrompter.windowPromptSubDialog) {
+      this.openWindowPrompt(parentWindow, args);
+      return;
+    }
+    let propBag = PromptUtils.objectToPropBag(args);
+    let uri = args.promptType == "select" ? SELECT_DIALOG : COMMON_DIALOG;
+    await parentWindow.gDialogBox.open(uri, propBag);
     PromptUtils.propBagToObject(propBag, args);
   }
 
@@ -1671,7 +1725,14 @@ XPCOMUtils.defineLazyPreferenceGetter(
   ModalPrompter,
   "defaultModalType",
   "prompts.defaultModalType",
-  Ci.nsIPrompt.MODAL_TYPE_WINDOW
+  MODAL_TYPE_WINDOW
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  ModalPrompter,
+  "windowPromptSubDialog",
+  "prompts.windowPromptSubDialog",
+  false
 );
 
 function AuthPromptAdapterFactory() {}
