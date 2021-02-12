@@ -7,7 +7,6 @@
 #ifndef vm_DataViewObject_h
 #define vm_DataViewObject_h
 
-#include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
 
 #include "gc/Barrier.h"

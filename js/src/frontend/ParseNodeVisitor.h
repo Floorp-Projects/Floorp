@@ -8,7 +8,6 @@
 #define frontend_ParseNodeVisitor_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
 
 #include "jsfriendapi.h"
 

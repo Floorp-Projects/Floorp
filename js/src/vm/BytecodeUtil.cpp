@@ -12,7 +12,6 @@
 
 #define __STDC_FORMAT_MACROS
 
-#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ReverseIterator.h"
 #include "mozilla/Sprintf.h"

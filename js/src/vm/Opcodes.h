@@ -8,8 +8,6 @@
 #ifndef vm_Opcodes_h
 #define vm_Opcodes_h
 
-#include "mozilla/Attributes.h"
-
 #include <stddef.h>
 
 #include "vm/WellKnownAtom.h"  // js_*_str

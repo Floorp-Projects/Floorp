@@ -7,8 +7,6 @@
 #ifndef builtin_intl_DateTimeFormat_h
 #define builtin_intl_DateTimeFormat_h
 
-#include "mozilla/Attributes.h"
-
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/SelfHostingDefines.h"
 #include "js/Class.h"

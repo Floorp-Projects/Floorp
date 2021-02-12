@@ -8,7 +8,6 @@
 #define debugger_Object_h
 
 #include "mozilla/Assertions.h"  // for AssertionConditionType, MOZ_ASSERT
-#include "mozilla/Attributes.h"  // [[nodiscard]] for
 #include "mozilla/Maybe.h"       // for Maybe
 #include "mozilla/Range.h"       // for Range
 #include "mozilla/Result.h"      // for Result

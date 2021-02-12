@@ -19,7 +19,6 @@
 #ifndef wasm_context_h
 #define wasm_context_h
 
-#include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 #include "jstypes.h"
 #include "js/UniquePtr.h"

@@ -19,8 +19,6 @@
 #ifndef wasm_ion_compile_h
 #define wasm_ion_compile_h
 
-#include "mozilla/Attributes.h"
-
 #include "wasm/WasmGenerator.h"
 
 namespace js {

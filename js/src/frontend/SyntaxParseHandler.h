@@ -8,7 +8,6 @@
 #define frontend_SyntaxParseHandler_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"  // mozilla::Maybe
 
 #include <string.h>
