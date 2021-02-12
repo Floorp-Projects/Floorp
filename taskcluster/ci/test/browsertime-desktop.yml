@@ -131,6 +131,7 @@ browsertime-benchmark:
         - ares6
         - [motionmark-animometer, mm-a]
         - [motionmark-htmlsuite, mm-h]
+        - [stylebench, sb]
     variants: ["fission"]
     apps: ["firefox"]
     treeherder-symbol: Btime()
