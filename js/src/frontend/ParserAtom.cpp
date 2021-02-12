@@ -728,11 +728,37 @@ bool ParserAtomsTable::toNumber(JSContext* cx, TaggedParserAtomIndex index,
 
 UniqueChars ParserAtomsTable::toNewUTF8CharsZ(
     JSContext* cx, TaggedParserAtomIndex index) const {
-  const auto* atom = getParserAtom(index);
+  if (index.isParserAtomIndex()) {
+    const auto* atom = getParserAtom(index.toParserAtomIndex());
+    return UniqueChars(
+        atom->hasLatin1Chars()
+            ? JS::CharsToNewUTF8CharsZ(cx, atom->latin1Range()).c_str()
+            : JS::CharsToNewUTF8CharsZ(cx, atom->twoByteRange()).c_str());
+  }
+
+  if (index.isWellKnownAtomId()) {
+    const auto* atom = getWellKnown(index.toWellKnownAtomId());
+    MOZ_ASSERT(atom->hasLatin1Chars());
+    return UniqueChars(
+        JS::CharsToNewUTF8CharsZ(cx, atom->latin1Range()).c_str());
+  }
+
+  if (index.isLength1StaticParserString()) {
+    char content[1];
+    getLength1Content(index.toLength1StaticParserString(), content);
+    return UniqueChars(
+        JS::CharsToNewUTF8CharsZ(
+            cx, mozilla::Range(reinterpret_cast<const Latin1Char*>(content), 1))
+            .c_str());
+  }
+
+  MOZ_ASSERT(index.isLength2StaticParserString());
+  char content[2];
+  getLength2Content(index.toLength2StaticParserString(), content);
   return UniqueChars(
-      atom->hasLatin1Chars()
-          ? JS::CharsToNewUTF8CharsZ(cx, atom->latin1Range()).c_str()
-          : JS::CharsToNewUTF8CharsZ(cx, atom->twoByteRange()).c_str());
+      JS::CharsToNewUTF8CharsZ(
+          cx, mozilla::Range(reinterpret_cast<const Latin1Char*>(content), 2))
+          .c_str());
 }
 
 template <typename CharT>
