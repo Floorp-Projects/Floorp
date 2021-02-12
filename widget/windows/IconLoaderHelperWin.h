@@ -33,7 +33,7 @@ class IconLoaderListenerWin : public nsISupports {
  * This is a Helper used with mozilla::widget::IconLoader that implements the
  * Windows-specific functionality for converting a loaded icon into an HICON.
  */
-class IconLoaderHelperWin final : public mozilla::widget::IconLoader::Helper {
+class IconLoaderHelperWin final : public IconLoader::Listener {
  public:
   // Create the helper and install aLoadListener as a listener.
   // The helper does not keep a strong reference to the listener. Call Destroy
