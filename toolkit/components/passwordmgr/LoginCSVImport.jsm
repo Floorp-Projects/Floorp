@@ -143,6 +143,10 @@ class LoginCSVImport {
     try {
       csvString = await OS.File.read(filePath, { encoding: "utf-8" });
     } catch (ex) {
+      TelemetryStopwatch.cancelKeyed(
+        "FX_MIGRATION_LOGINS_IMPORT_MS",
+        LoginCSVImport.MIGRATION_HISTOGRAM_KEY
+      );
       Cu.reportError(ex);
       throw new ImportFailedException(
         ImportFailedErrorType.FILE_PERMISSIONS_ERROR
@@ -177,6 +181,10 @@ class LoginCSVImport {
       }
     }
     if (fieldsInFile.size === 0) {
+      TelemetryStopwatch.cancelKeyed(
+        "FX_MIGRATION_LOGINS_IMPORT_MS",
+        LoginCSVImport.MIGRATION_HISTOGRAM_KEY
+      );
       throw new ImportFailedException(ImportFailedErrorType.FILE_FORMAT_ERROR);
     }
     if (
