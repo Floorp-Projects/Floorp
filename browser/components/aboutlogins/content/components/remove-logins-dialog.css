@@ -53,7 +53,7 @@
   font-size: 1.25em;
 }
 
-label[for="confirmation-checkbox"] {
+.checkbox-text {
   font-size: 1.25em;
 }
 
@@ -96,9 +96,9 @@ label[for="confirmation-checkbox"] {
 }
 
 .checkbox-wrapper {
-  display: flex;
   grid-area: 3 / 2 / 4 / 8;
   align-self: first baseline;
+  justify-self: start;
 }
 
 .warning-icon {
