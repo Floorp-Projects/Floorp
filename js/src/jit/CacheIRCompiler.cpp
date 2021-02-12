@@ -3651,8 +3651,8 @@ bool CacheIRCompiler::emitGuardArrayIsPacked(ObjOperandId arrayId) {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardArgumentsObjectNotOverriddenIterator(
-    ObjOperandId objId) {
+bool CacheIRCompiler::emitGuardArgumentsObjectFlags(ObjOperandId objId,
+                                                    uint8_t flags) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch(allocator, masm);
@@ -3662,8 +3662,8 @@ bool CacheIRCompiler::emitGuardArgumentsObjectNotOverriddenIterator(
     return false;
   }
 
-  masm.branchArgumentsObjectHasOverridenIterator(obj, scratch,
-                                                 failure->label());
+  masm.branchTestArgumentsObjectFlags(obj, scratch, flags, Assembler::NonZero,
+                                      failure->label());
   return true;
 }
 

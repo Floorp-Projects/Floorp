@@ -302,13 +302,13 @@ void LIRGenerator::visitArgumentsObjectLength(MArgumentsObjectLength* ins) {
   define(lir, ins);
 }
 
-void LIRGenerator::visitGuardArgumentsObjectNotOverriddenIterator(
-    MGuardArgumentsObjectNotOverriddenIterator* ins) {
+void LIRGenerator::visitGuardArgumentsObjectFlags(
+    MGuardArgumentsObjectFlags* ins) {
   MDefinition* argsObj = ins->getArgsObject();
   MOZ_ASSERT(argsObj->type() == MIRType::Object);
 
-  auto* lir = new (alloc())
-      LGuardArgumentsObjectNotOverriddenIterator(useRegister(argsObj), temp());
+  auto* lir =
+      new (alloc()) LGuardArgumentsObjectFlags(useRegister(argsObj), temp());
   assignSnapshot(lir, ins->bailoutKind());
   add(lir, ins);
   redefine(ins, argsObj);

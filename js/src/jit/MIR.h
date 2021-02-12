@@ -3185,32 +3185,36 @@ class MArgumentsObjectLength : public MUnaryInstruction,
   }
 };
 
-// Guard that the |ArgumentsObject::ITERATOR_OVERRIDDEN_BIT| flag isn't set.
-class MGuardArgumentsObjectNotOverriddenIterator
-    : public MUnaryInstruction,
-      public SingleObjectPolicy::Data {
-  explicit MGuardArgumentsObjectNotOverriddenIterator(MDefinition* argsObj)
-      : MUnaryInstruction(classOpcode, argsObj) {
+// Guard that the given flags are not set on the arguments object.
+class MGuardArgumentsObjectFlags : public MUnaryInstruction,
+                                   public SingleObjectPolicy::Data {
+  explicit MGuardArgumentsObjectFlags(MDefinition* argsObj, uint32_t flags)
+      : MUnaryInstruction(classOpcode, argsObj), flags_(flags) {
     setResultType(MIRType::Object);
     setMovable();
     setGuard();
   }
 
+  uint8_t flags_;
+
  public:
-  INSTRUCTION_HEADER(GuardArgumentsObjectNotOverriddenIterator)
+  INSTRUCTION_HEADER(GuardArgumentsObjectFlags)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, getArgsObject))
 
+  uint8_t flags() const { return flags_; }
+
   bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isGuardArgumentsObjectFlags() ||
+        ins->toGuardArgumentsObjectFlags()->flags() != flags()) {
+      return false;
+    }
     return congruentIfOperandsEqual(ins);
   }
 
   AliasSet getAliasSet() const override {
-    // Even though the "iterator" property is lazily resolved, it acts similar
-    // to a normal property load, so we can treat this operation like any other
-    // property read.
-    return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
-                          AliasSet::DynamicSlot);
+    // The flags are packed with the length in a fixed private slot.
+    return AliasSet::Load(AliasSet::FixedSlot);
   }
 };
 

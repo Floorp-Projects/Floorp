@@ -651,12 +651,13 @@
   args:
     array: ObjId
 
-- name: GuardArgumentsObjectNotOverriddenIterator
+- name: GuardArgumentsObjectFlags
   shared: true
   transpile: true
   cost_estimate: 1
   args:
     obj: ObjId
+    flags: ByteImm
 
 - name: LoadObject
   shared: true
