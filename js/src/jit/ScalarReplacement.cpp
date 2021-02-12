@@ -1340,9 +1340,10 @@ void ArgumentsReplacer::visitGuardToClass(MGuardToClass* ins) {
 
 void ArgumentsReplacer::visitGetArgumentsObjectArg(
     MGetArgumentsObjectArg* ins) {
-  // There is only one possible arguments object.
-  // TODO: support inlining.
-  MOZ_ASSERT(ins->getArgsObject() == args_);
+  // Skip other arguments objects.
+  if (ins->getArgsObject() != args_) {
+    return;
+  }
 
   // We don't support setting arguments in IsArgumentsObjectEscaped,
   // so we can load the argument from the frame without worrying
@@ -1360,9 +1361,10 @@ void ArgumentsReplacer::visitGetArgumentsObjectArg(
 
 void ArgumentsReplacer::visitLoadArgumentsObjectArg(
     MLoadArgumentsObjectArg* ins) {
-  // There is only one possible arguments object.
-  // TODO: support inlining.
-  MOZ_ASSERT(ins->getArgsObject() == args_);
+  // Skip other arguments objects.
+  if (ins->getArgsObject() != args_) {
+    return;
+  }
 
   MDefinition* index = ins->index();
 
@@ -1391,9 +1393,10 @@ void ArgumentsReplacer::visitLoadArgumentsObjectArg(
 
 void ArgumentsReplacer::visitArgumentsObjectLength(
     MArgumentsObjectLength* ins) {
-  // There is only one possible arguments object.
-  // TODO: support inlining.
-  MOZ_ASSERT(ins->getArgsObject() == args_);
+  // Skip other arguments objects.
+  if (ins->getArgsObject() != args_) {
+    return;
+  }
 
   auto* length = MArgumentsLength::New(alloc());
   ins->block()->insertBefore(ins, length);
