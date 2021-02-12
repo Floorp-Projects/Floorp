@@ -75,6 +75,7 @@ class BlobURLProtocolHandler final : public nsIProtocolHandler,
                            nsIPrincipal* aLoadingPrincipal,
                            nsIPrincipal* aTriggeringPrincipal,
                            const OriginAttributes& aOriginAttributes,
+                           uint64_t aInnerWindowId,
                            const Maybe<nsID>& blobAgentClusterId,
                            bool aAlsoIfRevoked = false);
 
