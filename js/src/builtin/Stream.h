@@ -20,15 +20,15 @@ class PromiseObject;
 class ReadableByteStreamController;
 class ReadableStreamController;
 
-extern MOZ_MUST_USE bool ReadableByteStreamControllerClearPendingPullIntos(
+[[nodiscard]] extern bool ReadableByteStreamControllerClearPendingPullIntos(
     JSContext* cx,
     JS::Handle<ReadableByteStreamController*> unwrappedController);
 
-extern MOZ_MUST_USE bool ReadableByteStreamControllerClose(
+[[nodiscard]] extern bool ReadableByteStreamControllerClose(
     JSContext* cx,
     JS::Handle<ReadableByteStreamController*> unwrappedController);
 
-extern MOZ_MUST_USE PromiseObject* ReadableStreamControllerPullSteps(
+[[nodiscard]] extern PromiseObject* ReadableStreamControllerPullSteps(
     JSContext* cx, JS::Handle<ReadableStreamController*> unwrappedController);
 
 }  // namespace js

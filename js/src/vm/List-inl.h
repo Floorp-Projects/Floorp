@@ -94,9 +94,9 @@ namespace js {
 /**
  * Stores an empty ListObject in the given fixed slot of |obj|.
  */
-inline MOZ_MUST_USE bool StoreNewListInFixedSlot(JSContext* cx,
-                                                 JS::Handle<NativeObject*> obj,
-                                                 uint32_t slot) {
+[[nodiscard]] inline bool StoreNewListInFixedSlot(JSContext* cx,
+                                                  JS::Handle<NativeObject*> obj,
+                                                  uint32_t slot) {
   AutoRealm ar(cx, obj);
   ListObject* list = ListObject::create(cx);
   if (!list) {
@@ -111,7 +111,7 @@ inline MOZ_MUST_USE bool StoreNewListInFixedSlot(JSContext* cx,
  * Given an object |obj| whose fixed slot |slot| contains a ListObject, append
  * |toAppend| to that list.
  */
-inline MOZ_MUST_USE bool AppendToListInFixedSlot(
+[[nodiscard]] inline bool AppendToListInFixedSlot(
     JSContext* cx, JS::Handle<NativeObject*> obj, uint32_t slot,
     JS::Handle<JSObject*> toAppend) {
   JS::Rooted<ListObject*> list(

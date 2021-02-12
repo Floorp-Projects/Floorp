@@ -757,7 +757,7 @@ class UnicodeExtensionKeyword final {
   void trace(JSTracer* trc);
 };
 
-extern MOZ_MUST_USE bool ApplyUnicodeExtensionToTag(
+[[nodiscard]] extern bool ApplyUnicodeExtensionToTag(
     JSContext* cx, LanguageTag& tag,
     JS::HandleVector<UnicodeExtensionKeyword> keywords);
 

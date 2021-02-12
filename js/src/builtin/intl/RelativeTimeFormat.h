@@ -69,8 +69,8 @@ class RelativeTimeFormatObject : public NativeObject {
  * Usage: formatted = intl_FormatRelativeTime(relativeTimeFormat, t,
  *                                            unit, numeric, formatToParts)
  */
-extern MOZ_MUST_USE bool intl_FormatRelativeTime(JSContext* cx, unsigned argc,
-                                                 JS::Value* vp);
+[[nodiscard]] extern bool intl_FormatRelativeTime(JSContext* cx, unsigned argc,
+                                                  JS::Value* vp);
 
 namespace intl {
 

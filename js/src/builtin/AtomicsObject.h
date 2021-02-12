@@ -29,7 +29,7 @@ class FutexThread {
   friend class AutoLockFutexAPI;
 
  public:
-  static MOZ_MUST_USE bool initialize();
+  [[nodiscard]] static bool initialize();
   static void destroy();
 
   static void lock();

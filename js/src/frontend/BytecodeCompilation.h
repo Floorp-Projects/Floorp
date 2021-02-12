@@ -99,11 +99,11 @@ extern JSScript* CompileEvalScript(JSContext* cx,
 extern void FillCompileOptionsForLazyFunction(JS::CompileOptions& options,
                                               Handle<BaseScript*> lazy);
 
-extern MOZ_MUST_USE bool CompileLazyFunctionToStencil(
+[[nodiscard]] extern bool CompileLazyFunctionToStencil(
     JSContext* cx, CompilationStencil& stencil, JS::Handle<BaseScript*> lazy,
     const char16_t* units, size_t length);
 
-extern MOZ_MUST_USE bool CompileLazyFunctionToStencil(
+[[nodiscard]] extern bool CompileLazyFunctionToStencil(
     JSContext* cx, CompilationStencil& stencil, JS::Handle<BaseScript*> lazy,
     const mozilla::Utf8Unit* units, size_t length);
 

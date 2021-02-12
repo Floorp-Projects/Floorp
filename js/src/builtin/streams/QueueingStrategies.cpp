@@ -39,11 +39,11 @@ using JS::Value;
 /**
  * ECMA-262 7.3.4 CreateDataProperty(O, P, V)
  */
-static MOZ_MUST_USE bool CreateDataProperty(JSContext* cx,
-                                            Handle<JSObject*> obj,
-                                            Handle<PropertyName*> key,
-                                            Handle<Value> value,
-                                            ObjectOpResult& result) {
+[[nodiscard]] static bool CreateDataProperty(JSContext* cx,
+                                             Handle<JSObject*> obj,
+                                             Handle<PropertyName*> key,
+                                             Handle<Value> value,
+                                             ObjectOpResult& result) {
   Rooted<jsid> id(cx, js::NameToId(key));
   Rooted<JS::PropertyDescriptor> desc(cx);
   desc.setDataDescriptor(value, JSPROP_ENUMERATE);

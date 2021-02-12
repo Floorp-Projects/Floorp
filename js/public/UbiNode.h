@@ -294,7 +294,7 @@ class BaseStackFrame {
   // simplifies the principals check into the boolean isSystem() state. This
   // is fine because we only expose JS::ubi::Stack to devtools and chrome
   // code, and not to the web platform.
-  virtual MOZ_MUST_USE bool constructSavedFrameStack(
+  [[nodiscard]] virtual bool constructSavedFrameStack(
       JSContext* cx, MutableHandleObject outSavedFrameStack) const = 0;
 
   // Trace the concrete implementation of JS::ubi::StackFrame.

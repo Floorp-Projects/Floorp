@@ -28,7 +28,7 @@ namespace js {
 /**
  * Returns the stream associated with the given reader.
  */
-inline MOZ_MUST_USE WritableStream* UnwrapStreamFromWriter(
+[[nodiscard]] inline WritableStream* UnwrapStreamFromWriter(
     JSContext* cx, JS::Handle<WritableStreamDefaultWriter*> unwrappedWriter) {
   MOZ_ASSERT(unwrappedWriter->hasStream());
   return UnwrapInternalSlot<WritableStream>(

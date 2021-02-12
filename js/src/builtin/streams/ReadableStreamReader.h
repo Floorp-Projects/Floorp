@@ -117,25 +117,25 @@ class ReadableStreamDefaultReader : public ReadableStreamReader {
   static const JSClass protoClass_;
 };
 
-extern MOZ_MUST_USE ReadableStreamDefaultReader*
+[[nodiscard]] extern ReadableStreamDefaultReader*
 CreateReadableStreamDefaultReader(JSContext* cx,
                                   JS::Handle<ReadableStream*> unwrappedStream,
                                   ForAuthorCodeBool forAuthorCode,
                                   JS::Handle<JSObject*> proto = nullptr);
 
-extern MOZ_MUST_USE JSObject* ReadableStreamReaderGenericCancel(
+[[nodiscard]] extern JSObject* ReadableStreamReaderGenericCancel(
     JSContext* cx, JS::Handle<ReadableStreamReader*> unwrappedReader,
     JS::Handle<JS::Value> reason);
 
-extern MOZ_MUST_USE bool ReadableStreamReaderGenericInitialize(
+[[nodiscard]] extern bool ReadableStreamReaderGenericInitialize(
     JSContext* cx, JS::Handle<ReadableStreamReader*> reader,
     JS::Handle<ReadableStream*> unwrappedStream,
     ForAuthorCodeBool forAuthorCode);
 
-extern MOZ_MUST_USE bool ReadableStreamReaderGenericRelease(
+[[nodiscard]] extern bool ReadableStreamReaderGenericRelease(
     JSContext* cx, JS::Handle<ReadableStreamReader*> unwrappedReader);
 
-extern MOZ_MUST_USE PromiseObject* ReadableStreamDefaultReaderRead(
+[[nodiscard]] extern PromiseObject* ReadableStreamDefaultReaderRead(
     JSContext* cx, JS::Handle<ReadableStreamDefaultReader*> unwrappedReader);
 
 }  // namespace js
@@ -147,7 +147,7 @@ inline bool JSObject::is<js::ReadableStreamReader>() const {
 
 namespace js {
 
-extern MOZ_MUST_USE JSObject* CreateReadableStreamBYOBReader(
+[[nodiscard]] extern JSObject* CreateReadableStreamBYOBReader(
     JSContext* cx, JS::Handle<ReadableStream*> unwrappedStream,
     ForAuthorCodeBool forAuthorCode, JS::Handle<JSObject*> proto = nullptr);
 

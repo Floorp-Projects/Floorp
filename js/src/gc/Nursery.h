@@ -306,7 +306,7 @@ class Nursery {
   // If the thing at |*ref| in the Nursery has been forwarded, set |*ref| to
   // the new location and return true. Otherwise return false and leave
   // |*ref| unset.
-  MOZ_ALWAYS_INLINE MOZ_MUST_USE static bool getForwardedPointer(
+  [[nodiscard]] MOZ_ALWAYS_INLINE static bool getForwardedPointer(
       js::gc::Cell** ref);
 
   // Forward a slots/elements pointer stored in an Ion frame.

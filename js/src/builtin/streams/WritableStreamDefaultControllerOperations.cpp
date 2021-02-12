@@ -129,7 +129,7 @@ bool js::WritableStreamControllerErrorSteps(
 
 /*** 4.8. Writable stream default controller abstract operations ************/
 
-static MOZ_MUST_USE bool WritableStreamDefaultControllerAdvanceQueueIfNeeded(
+[[nodiscard]] static bool WritableStreamDefaultControllerAdvanceQueueIfNeeded(
     JSContext* cx,
     Handle<WritableStreamDefaultController*> unwrappedController);
 
@@ -595,7 +595,7 @@ bool js::WritableStreamDefaultControllerWrite(
       cx, unwrappedController);
 }
 
-static MOZ_MUST_USE bool WritableStreamDefaultControllerProcessIfNeeded(
+[[nodiscard]] static bool WritableStreamDefaultControllerProcessIfNeeded(
     JSContext* cx,
     Handle<WritableStreamDefaultController*> unwrappedController);
 
@@ -663,7 +663,7 @@ bool js::WritableStreamDefaultControllerErrorIfNeeded(
 
 // 4.8.11 step 5: Let sinkClosePromise be the result of performing
 //                controller.[[closeAlgorithm]].
-static MOZ_MUST_USE JSObject* PerformCloseAlgorithm(
+[[nodiscard]] static JSObject* PerformCloseAlgorithm(
     JSContext* cx,
     Handle<WritableStreamDefaultController*> unwrappedController) {
   // 4.8.3 step 5: Let closeAlgorithm be
@@ -710,7 +710,7 @@ static MOZ_MUST_USE JSObject* PerformCloseAlgorithm(
 
 // 4.8.12 step 3: Let sinkWritePromise be the result of performing
 //                controller.[[writeAlgorithm]], passing in chunk.
-static MOZ_MUST_USE JSObject* PerformWriteAlgorithm(
+[[nodiscard]] static JSObject* PerformWriteAlgorithm(
     JSContext* cx, Handle<WritableStreamDefaultController*> unwrappedController,
     Handle<Value> chunk) {
   cx->check(chunk);
@@ -769,8 +769,8 @@ static MOZ_MUST_USE JSObject* PerformWriteAlgorithm(
  * Streams spec, 4.8.11 step 7:
  * Upon fulfillment of sinkClosePromise,
  */
-static MOZ_MUST_USE bool WritableStreamCloseHandler(JSContext* cx,
-                                                    unsigned argc, Value* vp) {
+[[nodiscard]] static bool WritableStreamCloseHandler(JSContext* cx,
+                                                     unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   Rooted<WritableStream*> unwrappedStream(
@@ -789,9 +789,9 @@ static MOZ_MUST_USE bool WritableStreamCloseHandler(JSContext* cx,
  * Streams spec, 4.8.11 step 8:
  * Upon rejection of sinkClosePromise with reason reason,
  */
-static MOZ_MUST_USE bool WritableStreamCloseFailedHandler(JSContext* cx,
-                                                          unsigned argc,
-                                                          Value* vp) {
+[[nodiscard]] static bool WritableStreamCloseFailedHandler(JSContext* cx,
+                                                           unsigned argc,
+                                                           Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   Rooted<WritableStream*> unwrappedStream(
@@ -812,8 +812,8 @@ static MOZ_MUST_USE bool WritableStreamCloseFailedHandler(JSContext* cx,
  * Streams spec, 4.8.12 step 4:
  * Upon fulfillment of sinkWritePromise,
  */
-static MOZ_MUST_USE bool WritableStreamWriteHandler(JSContext* cx,
-                                                    unsigned argc, Value* vp) {
+[[nodiscard]] static bool WritableStreamWriteHandler(JSContext* cx,
+                                                     unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   Rooted<WritableStream*> unwrappedStream(
@@ -866,9 +866,9 @@ static MOZ_MUST_USE bool WritableStreamWriteHandler(JSContext* cx,
  * Streams spec, 4.8.12 step 5:
  * Upon rejection of sinkWritePromise with reason,
  */
-static MOZ_MUST_USE bool WritableStreamWriteFailedHandler(JSContext* cx,
-                                                          unsigned argc,
-                                                          Value* vp) {
+[[nodiscard]] static bool WritableStreamWriteFailedHandler(JSContext* cx,
+                                                           unsigned argc,
+                                                           Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   Rooted<WritableStream*> unwrappedStream(

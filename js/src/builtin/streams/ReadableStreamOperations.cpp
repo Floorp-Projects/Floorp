@@ -77,7 +77,7 @@ using JS::Value;
  * arguments: sourceAlgorithms, underlyingSource, pullMethod, cancelMethod.
  * See the comment on SetUpReadableStreamDefaultController.
  */
-static MOZ_MUST_USE ReadableStream* CreateReadableStream(
+[[nodiscard]] static ReadableStream* CreateReadableStream(
     JSContext* cx, SourceAlgorithms sourceAlgorithms,
     Handle<Value> underlyingSource,
     Handle<Value> pullMethod = UndefinedHandleValue,

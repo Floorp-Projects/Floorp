@@ -1526,22 +1526,22 @@ using CharBuffer = Vector<char16_t, 32>;
  * Append the provided code point (in the range [U+0000, U+10FFFF], surrogate
  * code points included) to the buffer.
  */
-extern MOZ_MUST_USE bool AppendCodePointToCharBuffer(CharBuffer& charBuffer,
-                                                     uint32_t codePoint);
+[[nodiscard]] extern bool AppendCodePointToCharBuffer(CharBuffer& charBuffer,
+                                                      uint32_t codePoint);
 
 /**
  * Accumulate the range of UTF-16 text (lone surrogates permitted, because JS
  * allows them in source text) into |charBuffer|.  Normalize '\r', '\n', and
  * "\r\n" into '\n'.
  */
-extern MOZ_MUST_USE bool FillCharBufferFromSourceNormalizingAsciiLineBreaks(
+[[nodiscard]] extern bool FillCharBufferFromSourceNormalizingAsciiLineBreaks(
     CharBuffer& charBuffer, const char16_t* cur, const char16_t* end);
 
 /**
  * Accumulate the range of previously-validated UTF-8 text into |charBuffer|.
  * Normalize '\r', '\n', and "\r\n" into '\n'.
  */
-extern MOZ_MUST_USE bool FillCharBufferFromSourceNormalizingAsciiLineBreaks(
+[[nodiscard]] extern bool FillCharBufferFromSourceNormalizingAsciiLineBreaks(
     CharBuffer& charBuffer, const mozilla::Utf8Unit* cur,
     const mozilla::Utf8Unit* end);
 
@@ -1571,7 +1571,7 @@ class TokenStreamCharsShared {
    * (The code point's exact value might not be used, however, if subsequent
    * code observes that |unit| is part of a LineTerminatorSequence.)
    */
-  static constexpr MOZ_ALWAYS_INLINE MOZ_MUST_USE bool isAsciiCodePoint(
+  [[nodiscard]] static constexpr MOZ_ALWAYS_INLINE bool isAsciiCodePoint(
       int32_t unit) {
     return mozilla::IsAscii(static_cast<char32_t>(unit));
   }
@@ -2718,7 +2718,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
   // Eol is actually created, just a Eol TokenKind is returned, and
   // currentToken() shouldn't be consulted.  (This is the only place Eol
   // is produced.)
-  MOZ_ALWAYS_INLINE MOZ_MUST_USE bool peekTokenSameLine(
+  [[nodiscard]] MOZ_ALWAYS_INLINE bool peekTokenSameLine(
       TokenKind* ttp, Modifier modifier = SlashIsDiv) {
     TokenStreamAnyChars& anyChars = anyCharsAccess();
     const Token& curr = anyChars.currentToken();

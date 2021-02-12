@@ -76,8 +76,8 @@ class NumberFormatObject : public NativeObject {
  *
  * Usage: numberFormat = intl_NumberFormat(locales, options)
  */
-extern MOZ_MUST_USE bool intl_NumberFormat(JSContext* cx, unsigned argc,
-                                           Value* vp);
+[[nodiscard]] extern bool intl_NumberFormat(JSContext* cx, unsigned argc,
+                                            Value* vp);
 
 /**
  * Returns the numbering system type identifier per Unicode
@@ -86,8 +86,8 @@ extern MOZ_MUST_USE bool intl_NumberFormat(JSContext* cx, unsigned argc,
  *
  * Usage: defaultNumberingSystem = intl_numberingSystem(locale)
  */
-extern MOZ_MUST_USE bool intl_numberingSystem(JSContext* cx, unsigned argc,
-                                              Value* vp);
+[[nodiscard]] extern bool intl_numberingSystem(JSContext* cx, unsigned argc,
+                                               Value* vp);
 
 /**
  * Returns a string representing the number x according to the effective
@@ -98,8 +98,8 @@ extern MOZ_MUST_USE bool intl_numberingSystem(JSContext* cx, unsigned argc,
  * Usage: formatted = intl_FormatNumber(numberFormat, x, formatToParts,
  *                                      unitStyle)
  */
-extern MOZ_MUST_USE bool intl_FormatNumber(JSContext* cx, unsigned argc,
-                                           Value* vp);
+[[nodiscard]] extern bool intl_FormatNumber(JSContext* cx, unsigned argc,
+                                            Value* vp);
 
 #if DEBUG || MOZ_SYSTEM_ICU
 /**
@@ -107,9 +107,9 @@ extern MOZ_MUST_USE bool intl_FormatNumber(JSContext* cx, unsigned argc,
  *
  * Usage: units = intl_availableMeasurementUnits()
  */
-extern MOZ_MUST_USE bool intl_availableMeasurementUnits(JSContext* cx,
-                                                        unsigned argc,
-                                                        Value* vp);
+[[nodiscard]] extern bool intl_availableMeasurementUnits(JSContext* cx,
+                                                         unsigned argc,
+                                                         Value* vp);
 #endif
 
 namespace intl {

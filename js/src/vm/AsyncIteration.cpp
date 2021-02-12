@@ -314,7 +314,7 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 
 // ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
 // 25.5.3.2 AsyncGeneratorStart
-static MOZ_MUST_USE bool AsyncGeneratorReturned(
+[[nodiscard]] static bool AsyncGeneratorReturned(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     HandleValue value) {
   // Step 5.d.
@@ -329,7 +329,7 @@ static MOZ_MUST_USE bool AsyncGeneratorReturned(
 
 // ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
 // 25.5.3.2 AsyncGeneratorStart
-static MOZ_MUST_USE bool AsyncGeneratorThrown(
+[[nodiscard]] static bool AsyncGeneratorThrown(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj) {
   // Step 5.d.
   asyncGenObj->setCompleted();
@@ -352,7 +352,7 @@ static MOZ_MUST_USE bool AsyncGeneratorThrown(
 // ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
 // 25.5.3.7 AsyncGeneratorYield (partially)
 // Most steps are done in generator.
-static MOZ_MUST_USE bool AsyncGeneratorYield(
+[[nodiscard]] static bool AsyncGeneratorYield(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     HandleValue value) {
   // Step 5 is done in bytecode.

@@ -573,15 +573,15 @@ struct CompilationStencil : public BaseCompilationStencil {
   CompilationStencil(JSContext* cx, const JS::ReadOnlyCompileOptions& options)
       : alloc(LifoAllocChunkSize), input(options) {}
 
-  static MOZ_MUST_USE bool instantiateBaseStencilAfterPreparation(
+  [[nodiscard]] static bool instantiateBaseStencilAfterPreparation(
       JSContext* cx, CompilationInput& input,
       const BaseCompilationStencil& stencil, CompilationGCOutput& gcOutput);
 
-  static MOZ_MUST_USE bool prepareForInstantiate(
+  [[nodiscard]] static bool prepareForInstantiate(
       JSContext* cx, CompilationStencil& stencil, CompilationGCOutput& gcOutput,
       CompilationGCOutput* gcOutputForDelazification = nullptr);
 
-  static MOZ_MUST_USE bool instantiateStencils(
+  [[nodiscard]] static bool instantiateStencils(
       JSContext* cx, CompilationStencil& stencil, CompilationGCOutput& gcOutput,
       CompilationGCOutput* gcOutputForDelazification = nullptr);
 

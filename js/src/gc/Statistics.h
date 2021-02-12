@@ -150,7 +150,7 @@ struct Statistics {
   using PhaseKindTimes =
       EnumeratedArray<PhaseKind, PhaseKind::LIMIT, TimeDuration>;
 
-  static MOZ_MUST_USE bool initialize();
+  [[nodiscard]] static bool initialize();
 
   explicit Statistics(gc::GCRuntime* gc);
   ~Statistics();

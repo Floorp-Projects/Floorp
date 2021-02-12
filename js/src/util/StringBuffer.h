@@ -201,7 +201,7 @@ class StringBuffer {
   }
   [[nodiscard]] bool append(char c) { return append(Latin1Char(c)); }
 
-  inline MOZ_MUST_USE bool append(const char16_t* begin, const char16_t* end);
+  [[nodiscard]] inline bool append(const char16_t* begin, const char16_t* end);
 
   [[nodiscard]] bool append(const char16_t* chars, size_t len) {
     return append(chars, chars + len);
@@ -231,12 +231,12 @@ class StringBuffer {
                       : twoByteChars().appendN(c, n);
   }
 
-  inline MOZ_MUST_USE bool append(JSString* str);
-  inline MOZ_MUST_USE bool append(JSLinearString* str);
-  inline MOZ_MUST_USE bool appendSubstring(JSString* base, size_t off,
-                                           size_t len);
-  inline MOZ_MUST_USE bool appendSubstring(JSLinearString* base, size_t off,
-                                           size_t len);
+  [[nodiscard]] inline bool append(JSString* str);
+  [[nodiscard]] inline bool append(JSLinearString* str);
+  [[nodiscard]] inline bool appendSubstring(JSString* base, size_t off,
+                                            size_t len);
+  [[nodiscard]] inline bool appendSubstring(JSLinearString* base, size_t off,
+                                            size_t len);
   [[nodiscard]] bool append(const frontend::ParserAtomsTable& parserAtoms,
                             frontend::TaggedParserAtomIndex atom);
 
