@@ -19,6 +19,8 @@ body {
 }
 
 #refreshDiv {
+  display: flex;
+  align-items: center;
   justify-content: flex-end;
   margin-bottom: 0.5em;
 }
