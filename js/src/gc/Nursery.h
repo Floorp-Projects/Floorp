@@ -122,8 +122,6 @@ class TenuringTracer final : public GenericTracer {
   gc::RelocationOverlay** objTail;
   gc::StringRelocationOverlay* stringHead;
   gc::StringRelocationOverlay** stringTail;
-  gc::RelocationOverlay* bigIntHead;
-  gc::RelocationOverlay** bigIntTail;
 
   TenuringTracer(JSRuntime* rt, Nursery* nursery);
 
@@ -156,7 +154,6 @@ class TenuringTracer final : public GenericTracer {
  private:
   inline void insertIntoObjectFixupList(gc::RelocationOverlay* entry);
   inline void insertIntoStringFixupList(gc::StringRelocationOverlay* entry);
-  inline void insertIntoBigIntFixupList(gc::RelocationOverlay* entry);
 
   template <typename T>
   inline T* allocTenured(JS::Zone* zone, gc::AllocKind kind);

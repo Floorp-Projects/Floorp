@@ -760,9 +760,7 @@ js::TenuringTracer::TenuringTracer(JSRuntime* rt, Nursery* nursery)
       objHead(nullptr),
       objTail(&objHead),
       stringHead(nullptr),
-      stringTail(&stringHead),
-      bigIntHead(nullptr),
-      bigIntTail(&bigIntHead) {}
+      stringTail(&stringHead) {}
 
 inline double js::Nursery::calcPromotionRate(bool* validForTenuring) const {
   double used = double(previousGC.nurseryUsedBytes);
