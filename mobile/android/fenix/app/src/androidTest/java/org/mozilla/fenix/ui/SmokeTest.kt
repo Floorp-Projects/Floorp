@@ -14,6 +14,7 @@ import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
@@ -198,6 +199,7 @@ class SmokeTest {
 
     @Test
     // Verifies the list of items in a tab's 3 dot menu
+    @Ignore("To be re-implemented with the three dot menu changes https://github.com/mozilla-mobile/fenix/issues/17870")
     fun verifyPageMainMenuItemsTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
@@ -231,6 +233,7 @@ class SmokeTest {
     }
 
     @Test
+    @Ignore("To be re-implemented in https://github.com/mozilla-mobile/fenix/issues/17798")
     // Verifies the Synced tabs menu opens from a tab's 3 dot menu
     fun openMainMenuSyncedTabsItemTest() {
         homeScreen {
@@ -362,6 +365,7 @@ class SmokeTest {
 
     @Test
     // Turns ETP toggle off from Settings and verifies the ETP shield is not displayed in the nav bar
+    @Ignore("To be re-implemented with the three dot menu changes https://github.com/mozilla-mobile/fenix/issues/17870")
     fun verifyETPShieldNotDisplayedIfOFFGlobally() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
@@ -537,6 +541,7 @@ class SmokeTest {
 
     @Test
     // Saves a login, then changes it and verifies the update
+    @Ignore("To be re-implemented with the three dot menu changes https://github.com/mozilla-mobile/fenix/issues/17870")
     fun updateSavedLoginTest() {
         val saveLoginTest =
             TestAssetHelper.getSaveLoginAsset(mockWebServer)
@@ -600,6 +605,7 @@ class SmokeTest {
     }
 
     @Test
+    @Ignore("To be re-implemented in https://github.com/mozilla-mobile/fenix/issues/17799")
     // Installs uBlock add-on and checks that the app doesn't crash while loading pages with trackers
     fun noCrashWithAddonInstalledTest() {
         // setting ETP to Strict mode to test it works with add-ons
@@ -1107,6 +1113,7 @@ class SmokeTest {
     }
 
     @Test
+    @Ignore("To be re-implemented in https://github.com/mozilla-mobile/fenix/issues/17799")
     fun mainMenuInstallPWATest() {
         val pwaPage = "https://rpappalax.github.io/testapp/"
 
@@ -1123,6 +1130,7 @@ class SmokeTest {
     }
 
     @Test
+    @Ignore("To be re-implemented in https://github.com/mozilla-mobile/fenix/issues/17971")
     // Verifies that reader mode is detected and the custom appearance controls are displayed
     fun verifyReaderViewAppearanceUI() {
         val readerViewPage =

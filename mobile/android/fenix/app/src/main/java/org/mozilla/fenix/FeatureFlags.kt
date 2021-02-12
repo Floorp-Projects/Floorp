@@ -30,4 +30,9 @@ object FeatureFlags {
      * Enables WebAuthn support.
      */
     val webAuthFeature = Config.channel.isNightlyOrDebug
+
+    /**
+     * Shows new three-dot toolbar menu design.
+     */
+    val toolbarMenuFeature = Config.channel.isDebug
 }

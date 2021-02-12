@@ -31,6 +31,7 @@ interface ToolbarMenu {
         object Bookmarks : Item()
         object History : Item()
         object Downloads : Item()
+        object NewTab : Item()
     }
 
     val menuBuilder: BrowserMenuBuilder

@@ -38,6 +38,7 @@ import androidx.test.uiautomator.Until
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.allOf
 import org.junit.Assert.assertTrue
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.click
@@ -124,21 +125,33 @@ class ThreeDotMenuMainRobot {
     fun verifyShareTabsOverlay() = assertShareTabsOverlay()
 
     fun verifyThreeDotMainMenuItems() {
-        verifyAddOnsButton()
-        verifyDownloadsButton()
-        verifyHistoryButton()
-        verifyBookmarksButton()
-        verifySyncedTabsButton()
-        verifySettingsButton()
-        verifyFindInPageButton()
-        verifyAddFirefoxHome()
-        verifyAddToMobileHome()
-        verifyDesktopSite()
-        verifySaveCollection()
-        verifyAddBookmarkButton()
-        verifyShareButton()
-        verifyForwardButton()
-        verifyRefreshButton()
+        if (FeatureFlags.toolbarMenuFeature) {
+            verifyDownloadsButton()
+            verifyHistoryButton()
+            verifyBookmarksButton()
+            verifySettingsButton()
+            verifyDesktopSite()
+            verifySaveCollection()
+            verifyShareButton()
+            verifyForwardButton()
+            verifyRefreshButton()
+        } else {
+            verifyAddOnsButton()
+            verifyDownloadsButton()
+            verifyHistoryButton()
+            verifyBookmarksButton()
+            verifySyncedTabsButton()
+            verifySettingsButton()
+            verifyFindInPageButton()
+            verifyAddFirefoxHome()
+            verifyAddToMobileHome()
+            verifyDesktopSite()
+            verifySaveCollection()
+            verifyAddBookmarkButton()
+            verifyShareButton()
+            verifyForwardButton()
+            verifyRefreshButton()
+        }
     }
 
     private fun assertShareTabsOverlay() {
@@ -390,7 +403,8 @@ private fun assertSettingsButton() = settingsButton()
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     .check(matches(isCompletelyDisplayed()))
 
-private fun addOnsButton() = onView(allOf(withText("Add-ons")))
+private val addOnsText = if (FeatureFlags.toolbarMenuFeature) "Extensions" else "Add-ons"
+private fun addOnsButton() = onView(allOf(withText(addOnsText)))
 private fun assertAddOnsButton() {
     onView(withId(R.id.mozac_browser_menu_menuView)).perform(swipeDown())
     addOnsButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))

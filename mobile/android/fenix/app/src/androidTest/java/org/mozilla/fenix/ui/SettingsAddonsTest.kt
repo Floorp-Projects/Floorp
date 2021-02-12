@@ -79,19 +79,23 @@ class SettingsAddonsTest {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val addonName = "uBlock Origin"
 
-        navigationToolbar {
-        }.openNewTabAndEnterToBrowser(defaultWebPage.url) {
-        }.openThreeDotMenu {
-        }.openAddonsManagerMenu {
-            addonsListIdlingResource =
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.add_ons_list), 1)
-            IdlingRegistry.getInstance().register(addonsListIdlingResource!!)
-            clickInstallAddon(addonName)
-            verifyAddonPrompt(addonName)
-            cancelInstallAddon()
-            clickInstallAddon(addonName)
-            acceptInstallAddon()
-            verifyDownloadAddonPrompt(addonName, activityTestRule)
+        navigationToolbar {}
+            .openNewTabAndEnterToBrowser(defaultWebPage.url) {}
+            .openThreeDotMenu {}
+            .openAddonsManagerMenu {
+                addonsListIdlingResource =
+                    RecyclerViewIdlingResource(
+                        activityTestRule.activity.findViewById(R.id.add_ons_list),
+                        1
+                    )
+                IdlingRegistry.getInstance().register(addonsListIdlingResource!!)
+                clickInstallAddon(addonName)
+                verifyAddonPrompt(addonName)
+                cancelInstallAddon()
+                clickInstallAddon(addonName)
+                acceptInstallAddon()
+
+                verifyDownloadAddonPrompt(addonName, activityTestRule)
         }
     }
 

@@ -12,6 +12,7 @@ import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -54,42 +55,68 @@ class ThreeDotMenuMainTest {
 
     @Test
     fun threeDotMenuItemsTest() {
-        homeScreen {
-        }.openThreeDotMenu {
-            verifySettingsButton()
-            verifyBookmarksButton()
-            verifyHistoryButton()
-            verifyHelpButton()
-            verifyWhatsNewButton()
-        }.openSettings {
-            verifySettingsView()
-        }.goBack {
-        }.openThreeDotMenu {
-        }.openHelp {
-            verifyHelpUrl()
-        }.openTabDrawer {
-            closeTab()
+        if (FeatureFlags.toolbarMenuFeature) {
+            homeScreen {
+            }.openThreeDotMenu {
+            }.openHistory {
+                verifyHistoryMenuView()
+            }.goBackToBrowser {}
+
+            homeScreen {
+            }.openThreeDotMenu {
+            }.openBookmarks {
+                verifyBookmarksMenuView()
+            }.closeMenu {}
+
+            homeScreen {
+            }.openThreeDotMenu {
+                verifySettingsButton()
+                verifyBookmarksButton()
+                verifyHistoryButton()
+            }.openSettings {
+                verifySettingsView()
+            }.goBack {
+            }.openThreeDotMenu {
+            }.goBack {}
+        } else {
+            homeScreen {
+            }.openThreeDotMenu {
+                verifySettingsButton()
+                verifyBookmarksButton()
+                verifyHistoryButton()
+                verifyHelpButton()
+                verifyWhatsNewButton()
+            }.openSettings {
+                verifySettingsView()
+            }.goBack {
+            }.openThreeDotMenu {
+            }.openHelp {
+                verifyHelpUrl()
+            }.openTabDrawer {
+                closeTab()
+            }
+
+            homeScreen {
+            }.openThreeDotMenu {
+            }.openWhatsNew {
+                verifyWhatsNewURL()
+            }.openTabDrawer {
+                closeTab()
+            }
+
+            homeScreen {
+            }.openThreeDotMenu {
+            }.openBookmarks {
+                verifyBookmarksMenuView()
+            }.closeMenu {
+            }
+
+            homeScreen {
+            }.openThreeDotMenu {
+            }.openHistory {
+                verifyHistoryMenuView()
+            }
         }
 
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openWhatsNew {
-            verifyWhatsNewURL()
-        }.openTabDrawer {
-            closeTab()
-        }
-
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openBookmarks {
-            verifyBookmarksMenuView()
-        }.closeMenu {
-        }
-
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openHistory {
-            verifyHistoryMenuView()
-        }
     }
 }
