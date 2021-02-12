@@ -159,19 +159,71 @@ void ParserAtom::dumpCharsNoQuote(js::GenericPrinter& out) const {
 }
 
 void ParserAtomsTable::dump(TaggedParserAtomIndex index) const {
-  if (!index) {
-    js::Fprinter out(stderr);
-    out.put("#<null>");
+  if (index.isParserAtomIndex()) {
+    getParserAtom(index.toParserAtomIndex())->dump();
     return;
   }
-  const auto* atom = getParserAtom(index);
-  atom->dump();
+
+  if (index.isWellKnownAtomId()) {
+    getWellKnown(index.toWellKnownAtomId())->dump();
+    return;
+  }
+
+  if (index.isLength1StaticParserString()) {
+    char content[1];
+    getLength1Content(index.toLength1StaticParserString(), content);
+    js::Fprinter out(stderr);
+    out.put("\"");
+    out.putChar(content[0]);
+    out.put("\"\n");
+    return;
+  }
+
+  if (index.isLength2StaticParserString()) {
+    char content[2];
+    getLength2Content(index.toLength2StaticParserString(), content);
+    js::Fprinter out(stderr);
+    out.put("\"");
+    out.putChar(content[0]);
+    out.putChar(content[1]);
+    out.put("\"\n");
+    return;
+  }
+
+  MOZ_ASSERT(index.isNull());
+  js::Fprinter out(stderr);
+  out.put("#<null>");
 }
 
 void ParserAtomsTable::dumpCharsNoQuote(js::GenericPrinter& out,
                                         TaggedParserAtomIndex index) const {
-  const auto* atom = getParserAtom(index);
-  atom->dumpCharsNoQuote(out);
+  if (index.isParserAtomIndex()) {
+    getParserAtom(index.toParserAtomIndex())->dumpCharsNoQuote(out);
+    return;
+  }
+
+  if (index.isWellKnownAtomId()) {
+    getWellKnown(index.toWellKnownAtomId())->dumpCharsNoQuote(out);
+    return;
+  }
+
+  if (index.isLength1StaticParserString()) {
+    char content[1];
+    getLength1Content(index.toLength1StaticParserString(), content);
+    out.putChar(content[0]);
+    return;
+  }
+
+  if (index.isLength2StaticParserString()) {
+    char content[2];
+    getLength2Content(index.toLength2StaticParserString(), content);
+    out.putChar(content[0]);
+    out.putChar(content[1]);
+    return;
+  }
+
+  MOZ_ASSERT(index.isNull());
+  out.put("#<null>");
 }
 
 #endif
