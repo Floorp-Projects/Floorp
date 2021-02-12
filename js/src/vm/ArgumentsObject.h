@@ -282,8 +282,9 @@ class ArgumentsObject : public NativeObject {
    */
   static bool getArgumentsIterator(JSContext* cx, MutableHandleValue val);
 
-  /* True iff any element has been assigned or its attributes
-   * changed. */
+  /* True iff any element has been assigned, deleted, or had its
+   * attributes changed.
+   */
   bool hasOverriddenElement() const {
     const Value& v = getFixedSlot(INITIAL_LENGTH_SLOT);
     return v.toInt32() & ELEMENT_OVERRIDDEN_BIT;
@@ -314,13 +315,17 @@ class ArgumentsObject : public NativeObject {
     if (i >= initialLength()) {
       return false;
     }
-    return maybeRareData() &&
-           maybeRareData()->isElementDeleted(initialLength(), i);
+    bool result = maybeRareData() &&
+                  maybeRareData()->isElementDeleted(initialLength(), i);
+    MOZ_ASSERT_IF(result, hasOverriddenElement());
+    return result;
   }
 
   bool isAnyElementDeleted() const {
-    return maybeRareData() &&
-           maybeRareData()->isAnyElementDeleted(initialLength());
+    bool result = maybeRareData() &&
+                  maybeRareData()->isAnyElementDeleted(initialLength());
+    MOZ_ASSERT_IF(result, hasOverriddenElement());
+    return result;
   }
 
   bool markElementDeleted(JSContext* cx, uint32_t i);
