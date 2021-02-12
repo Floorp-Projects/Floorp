@@ -18,11 +18,11 @@ namespace mozilla::widget {
 
 NS_IMPL_ISUPPORTS(IconLoader, imgINotificationObserver)
 
-IconLoader::IconLoader(Helper* aHelper, const nsIntRect& aImageRegionRect)
+IconLoader::IconLoader(Listener* aListener, const nsIntRect& aImageRegionRect)
     : mContentType(nsIContentPolicy::TYPE_INTERNAL_IMAGE),
       mImageRegionRect(aImageRegionRect),
       mLoadedIcon(false),
-      mHelper(aHelper) {}
+      mListener(aListener) {}
 
 IconLoader::~IconLoader() { Destroy(); }
 
@@ -31,7 +31,7 @@ void IconLoader::Destroy() {
     mIconRequest->CancelAndForgetObserver(NS_BINDING_ABORTED);
     mIconRequest = nullptr;
   }
-  mHelper = nullptr;
+  mListener = nullptr;
 }
 
 nsresult IconLoader::LoadIcon(nsIURI* aIconURI, nsINode* aNode,
@@ -120,8 +120,8 @@ void IconLoader::Notify(imgIRequest* aRequest, int32_t aType,
     aRequest->GetImage(getter_AddRefs(image));
     MOZ_ASSERT(image);
 
-    if (mHelper) {
-      mHelper->OnComplete(image, mImageRegionRect);
+    if (mListener) {
+      mListener->OnComplete(image, mImageRegionRect);
     }
     return;
   }
