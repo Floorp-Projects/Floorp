@@ -9,7 +9,7 @@
 
 #include <functional>
 #include <stdint.h>
-#include "mozilla/dom/quota/QuotaInfo.h"
+#include "mozilla/dom/quota/OriginMetadata.h"
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"
@@ -29,7 +29,8 @@ static const Namespace INVALID_NAMESPACE = NUMBER_OF_NAMESPACES;
 typedef int64_t CacheId;
 static const CacheId INVALID_CACHE_ID = -1;
 
-struct QuotaInfo : quota::QuotaInfo {
+// XXX Rename to OriginMetadata.
+struct QuotaInfo : quota::OriginMetadata {
   nsCOMPtr<nsIFile> mDir;
   int64_t mDirectoryLockId = -1;
 };

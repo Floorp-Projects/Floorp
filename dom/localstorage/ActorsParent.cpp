@@ -1187,7 +1187,7 @@ class Connection final : public CachingDatabaseConnection {
   nsCOMPtr<nsITimer> mFlushTimer;
   UniquePtr<ArchivedOriginScope> mArchivedOriginScope;
   ConnectionWriteOptimizer mWriteOptimizer;
-  const QuotaInfo mQuotaInfo;
+  const OriginMetadata mOriginMetadata;
   nsString mDirectoryPath;
   /**
    * Propagated from PrepareDatastoreOp. PrepareDatastoreOp may defer the
@@ -1220,7 +1220,7 @@ class Connection final : public CachingDatabaseConnection {
     return mArchivedOriginScope.get();
   }
 
-  const nsCString& Origin() const { return mQuotaInfo.mOrigin; }
+  const nsCString& Origin() const { return mOriginMetadata.mOrigin; }
 
   const nsString& DirectoryPath() const { return mDirectoryPath; }
 
@@ -1276,7 +1276,8 @@ class Connection final : public CachingDatabaseConnection {
 
  private:
   // Only created by ConnectionThread.
-  Connection(ConnectionThread* aConnectionThread, const QuotaInfo& aQuotaInfo,
+  Connection(ConnectionThread* aConnectionThread,
+             const OriginMetadata& aOriginMetadata,
              UniquePtr<ArchivedOriginScope>&& aArchivedOriginScope,
              bool aDatabaseWasNotAvailable);
 
@@ -1301,16 +1302,16 @@ class Connection final : public CachingDatabaseConnection {
  */
 class Connection::InitTemporaryOriginHelper final : public Runnable {
   mozilla::Monitor mMonitor;
-  const QuotaInfo mQuotaInfo;
+  const OriginMetadata mOriginMetadata;
   nsString mOriginDirectoryPath;
   nsresult mIOThreadResultCode;
   bool mWaiting;
 
  public:
-  explicit InitTemporaryOriginHelper(const QuotaInfo& aQuotaInfo)
+  explicit InitTemporaryOriginHelper(const OriginMetadata& aOriginMetadata)
       : Runnable("dom::localstorage::Connection::InitTemporaryOriginHelper"),
         mMonitor("InitTemporaryOriginHelper::mMonitor"),
-        mQuotaInfo(aQuotaInfo),
+        mOriginMetadata(aOriginMetadata),
         mIOThreadResultCode(NS_OK),
         mWaiting(true) {
     AssertIsOnGlobalConnectionThread();
@@ -1372,7 +1373,7 @@ class ConnectionThread final {
   void AssertIsOnConnectionThread();
 
   already_AddRefed<Connection> CreateConnection(
-      const QuotaInfo& aQuotaInfo,
+      const OriginMetadata& aOriginMetadata,
       UniquePtr<ArchivedOriginScope>&& aArchivedOriginScope,
       bool aDatabaseWasNotAvailable);
 
@@ -2157,7 +2158,7 @@ class PrepareDatastoreOp
   LoadDataOp* mLoadDataOp;
   nsDataHashtable<nsStringHashKey, LSValue> mValues;
   nsTArray<LSItemInfo> mOrderedItems;
-  QuotaInfo mQuotaInfo;
+  OriginMetadata mOriginMetadata;
   nsCString mMainThreadOrigin;
   nsString mDatabaseFilePath;
   uint32_t mPrivateBrowsingId;
@@ -2194,14 +2195,14 @@ class PrepareDatastoreOp
   bool OriginIsKnown() const {
     MOZ_ASSERT(IsOnOwningThread() || IsOnIOThread());
 
-    return !mQuotaInfo.mOrigin.IsEmpty();
+    return !mOriginMetadata.mOrigin.IsEmpty();
   }
 
   const nsCString& Origin() const {
     MOZ_ASSERT(IsOnOwningThread() || IsOnIOThread());
     MOZ_ASSERT(OriginIsKnown());
 
-    return mQuotaInfo.mOrigin;
+    return mOriginMetadata.mOrigin;
   }
 
   void Invalidate() {
@@ -3761,13 +3762,13 @@ ConnectionDatastoreOperationBase::Run() {
  ******************************************************************************/
 
 Connection::Connection(ConnectionThread* aConnectionThread,
-                       const QuotaInfo& aQuotaInfo,
+                       const OriginMetadata& aOriginMetadata,
                        UniquePtr<ArchivedOriginScope>&& aArchivedOriginScope,
                        bool aDatabaseWasNotAvailable)
     : mConnectionThread(aConnectionThread),
       mQuotaClient(QuotaClient::GetInstance()),
       mArchivedOriginScope(std::move(aArchivedOriginScope)),
-      mQuotaInfo(aQuotaInfo),
+      mOriginMetadata(aOriginMetadata),
       mDatabaseWasNotAvailable(aDatabaseWasNotAvailable),
       mHasCreatedDatabase(false),
       mFlushScheduled(false)
@@ -3778,8 +3779,8 @@ Connection::Connection(ConnectionThread* aConnectionThread,
 #endif
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(!aQuotaInfo.mGroup.IsEmpty());
-  MOZ_ASSERT(!aQuotaInfo.mOrigin.IsEmpty());
+  MOZ_ASSERT(!aOriginMetadata.mGroup.IsEmpty());
+  MOZ_ASSERT(!aOriginMetadata.mOrigin.IsEmpty());
 }
 
 Connection::~Connection() {
@@ -3896,7 +3897,7 @@ nsresult Connection::EnsureStorageConnection() {
   }
 
   RefPtr<InitTemporaryOriginHelper> helper =
-      new InitTemporaryOriginHelper(mQuotaInfo);
+      new InitTemporaryOriginHelper(mOriginMetadata);
 
   LS_TRY_INSPECT(const auto& originDirectoryPath,
                  helper->BlockAndReturnOriginDirectoryPath());
@@ -4077,7 +4078,7 @@ nsresult Connection::InitTemporaryOriginHelper::RunOnIOThread() {
   LS_TRY_INSPECT(const auto& directoryEntry,
                  quotaManager
                      ->EnsureTemporaryOriginIsInitialized(
-                         PERSISTENCE_TYPE_DEFAULT, mQuotaInfo)
+                         PERSISTENCE_TYPE_DEFAULT, mOriginMetadata)
                      .map([](const auto& res) { return res.first; }));
 
   LS_TRY(directoryEntry->GetPath(mOriginDirectoryPath));
@@ -4203,17 +4204,17 @@ void ConnectionThread::AssertIsOnConnectionThread() {
 }
 
 already_AddRefed<Connection> ConnectionThread::CreateConnection(
-    const QuotaInfo& aQuotaInfo,
+    const OriginMetadata& aOriginMetadata,
     UniquePtr<ArchivedOriginScope>&& aArchivedOriginScope,
     bool aDatabaseWasNotAvailable) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(!aQuotaInfo.mOrigin.IsEmpty());
-  MOZ_ASSERT(!mConnections.GetWeak(aQuotaInfo.mOrigin));
+  MOZ_ASSERT(!aOriginMetadata.mOrigin.IsEmpty());
+  MOZ_ASSERT(!mConnections.GetWeak(aOriginMetadata.mOrigin));
 
   RefPtr<Connection> connection =
-      new Connection(this, aQuotaInfo, std::move(aArchivedOriginScope),
+      new Connection(this, aOriginMetadata, std::move(aArchivedOriginScope),
                      aDatabaseWasNotAvailable);
-  mConnections.Put(aQuotaInfo.mOrigin, RefPtr{connection});
+  mConnections.Put(aOriginMetadata.mOrigin, RefPtr{connection});
 
   return connection.forget();
 }
@@ -6462,17 +6463,17 @@ nsresult PrepareDatastoreOp::Start() {
       commonParams.storagePrincipalInfo();
 
   if (storagePrincipalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
-    mQuotaInfo = QuotaManager::GetInfoForChrome();
+    mOriginMetadata = QuotaManager::GetInfoForChrome();
   } else {
     MOZ_ASSERT(storagePrincipalInfo.type() ==
                PrincipalInfo::TContentPrincipalInfo);
 
-    QuotaInfo quotaInfo =
+    OriginMetadata originMetadata =
         QuotaManager::GetInfoFromValidatedPrincipalInfo(storagePrincipalInfo);
 
-    mQuotaInfo.mSuffix = std::move(quotaInfo.mSuffix);
-    mQuotaInfo.mGroup = std::move(quotaInfo.mGroup);
-    mMainThreadOrigin = std::move(quotaInfo.mOrigin);
+    mOriginMetadata.mSuffix = std::move(originMetadata.mSuffix);
+    mOriginMetadata.mGroup = std::move(originMetadata.mGroup);
+    mMainThreadOrigin = std::move(originMetadata.mOrigin);
   }
 
   mState = State::Nesting;
@@ -6529,7 +6530,7 @@ nsresult PrepareDatastoreOp::CheckExistingOperations() {
   // However, the methods OriginIsKnown and Origin can be called at any time.
   // So we have to make sure the member variable is set on the same thread as
   // those methods are called.
-  mQuotaInfo.mOrigin = mMainThreadOrigin;
+  mOriginMetadata.mOrigin = mMainThreadOrigin;
 
   MOZ_ASSERT(OriginIsKnown());
 
@@ -6673,7 +6674,8 @@ nsresult PrepareDatastoreOp::OpenDirectory() {
   MOZ_ASSERT(QuotaManager::Get());
 
   mPendingDirectoryLock = QuotaManager::Get()->CreateDirectoryLock(
-      PERSISTENCE_TYPE_DEFAULT, mQuotaInfo, mozilla::dom::quota::Client::LS,
+      PERSISTENCE_TYPE_DEFAULT, mOriginMetadata,
+      mozilla::dom::quota::Client::LS,
       /* aExclusive */ false);
 
   mNestedState = NestedState::DirectoryOpenPending;
@@ -6742,8 +6744,9 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
   // memory.
   LS_TRY(quotaManager->EnsureTemporaryStorageIsInitialized());
 
-  const UsageInfo usageInfo = quotaManager->GetUsageForClient(
-      PERSISTENCE_TYPE_DEFAULT, mQuotaInfo, mozilla::dom::quota::Client::LS);
+  const UsageInfo usageInfo =
+      quotaManager->GetUsageForClient(PERSISTENCE_TYPE_DEFAULT, mOriginMetadata,
+                                      mozilla::dom::quota::Client::LS);
 
   const bool hasUsage = usageInfo.DatabaseUsage().isSome();
   MOZ_ASSERT(usageInfo.FileUsage().isNothing());
@@ -6775,7 +6778,7 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
         if (hasDataForMigration) {
           LS_TRY_RETURN(quotaManager
                             ->EnsureTemporaryOriginIsInitialized(
-                                PERSISTENCE_TYPE_DEFAULT, mQuotaInfo)
+                                PERSISTENCE_TYPE_DEFAULT, mOriginMetadata)
                             .map([](const auto& res) { return res.first; }));
         }
 
@@ -6784,7 +6787,7 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
                           PERSISTENCE_TYPE_DEFAULT, Origin()));
 
         quotaManager->EnsureQuotaForOrigin(PERSISTENCE_TYPE_DEFAULT,
-                                           mQuotaInfo);
+                                           mOriginMetadata);
 
         return directoryEntry;
       }()));
@@ -7046,7 +7049,7 @@ nsresult PrepareDatastoreOp::VerifyDatabaseInformation(
 
 already_AddRefed<QuotaObject> PrepareDatastoreOp::GetQuotaObject() {
   MOZ_ASSERT(IsOnOwningThread() || IsOnIOThread());
-  MOZ_ASSERT(!mQuotaInfo.mGroup.IsEmpty());
+  MOZ_ASSERT(!mOriginMetadata.mGroup.IsEmpty());
   MOZ_ASSERT(OriginIsKnown());
   MOZ_ASSERT(!mDatabaseFilePath.IsEmpty());
 
@@ -7054,12 +7057,12 @@ already_AddRefed<QuotaObject> PrepareDatastoreOp::GetQuotaObject() {
   MOZ_ASSERT(quotaManager);
 
   RefPtr<QuotaObject> quotaObject = quotaManager->GetQuotaObject(
-      PERSISTENCE_TYPE_DEFAULT, mQuotaInfo, mozilla::dom::quota::Client::LS,
-      mDatabaseFilePath, mUsage);
+      PERSISTENCE_TYPE_DEFAULT, mOriginMetadata,
+      mozilla::dom::quota::Client::LS, mDatabaseFilePath, mUsage);
 
   if (!quotaObject) {
     LS_WARNING("Failed to get quota object for group (%s) and origin (%s)!",
-               mQuotaInfo.mGroup.get(), Origin().get());
+               mOriginMetadata.mGroup.get(), Origin().get());
   }
 
   return quotaObject.forget();
@@ -7081,7 +7084,7 @@ nsresult PrepareDatastoreOp::BeginLoadData() {
   }
 
   mConnection = gConnectionThread->CreateConnection(
-      mQuotaInfo, std::move(mArchivedOriginScope),
+      mOriginMetadata, std::move(mArchivedOriginScope),
       /* aDatabaseWasNotAvailable */ false);
   MOZ_ASSERT(mConnection);
 
@@ -7205,7 +7208,7 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
         }
 
         mConnection = gConnectionThread->CreateConnection(
-            mQuotaInfo, std::move(mArchivedOriginScope),
+            mOriginMetadata, std::move(mArchivedOriginScope),
             /* aDatabaseWasNotAvailable */ true);
         MOZ_ASSERT(mConnection);
       }
@@ -7218,7 +7221,7 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
     }
 
     mDatastore = new Datastore(
-        mQuotaInfo, mPrivateBrowsingId, mUsage, mSizeOfKeys, mSizeOfItems,
+        mOriginMetadata, mPrivateBrowsingId, mUsage, mSizeOfKeys, mSizeOfItems,
         std::move(mDirectoryLock), std::move(mConnection),
         std::move(quotaObject), mValues, std::move(mOrderedItems));
 
