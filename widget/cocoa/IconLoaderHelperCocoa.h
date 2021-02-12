@@ -10,6 +10,19 @@
 
 #include "mozilla/widget/IconLoader.h"
 
+@interface MOZIconHelper : NSObject
+
+// Returns an autoreleased empty NSImage.
++ (NSImage*)placeholderIconWithSize:(NSSize)aSize;
+
+// Returns an autoreleased NSImage.
++ (NSImage*)iconImageFromImageContainer:(imgIContainer*)aImage
+                               withSize:(NSSize)aSize
+                                subrect:(const nsIntRect&)aSubRect
+                            scaleFactor:(CGFloat)aScaleFactor;
+
+@end
+
 namespace mozilla::widget {
 
 /**
