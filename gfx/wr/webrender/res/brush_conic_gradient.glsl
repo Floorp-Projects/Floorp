@@ -91,7 +91,7 @@ Fragment brush_fs() {
     vec4 color = sample_gradient(get_gradient_offset());
 
 #ifdef WR_FEATURE_ALPHA_PASS
-    color *= antialias_brush();
+    color *= init_transform_fs(v_local_pos);
 #endif
 
     return Fragment(color);
