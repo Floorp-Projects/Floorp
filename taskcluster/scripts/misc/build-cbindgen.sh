@@ -25,15 +25,21 @@ if [ -n "$TOOLTOOL_MANIFEST" ]; then
 fi
 
 # OSX cross builds are a bit harder
-if [ "$TARGET" == "x86_64-apple-darwin" ]; then
+case "$TARGET" in
+*-apple-darwin)
   export PATH="$MOZ_FETCHES_DIR/llvm-dsymutil/bin:$PATH"
   export PATH="$MOZ_FETCHES_DIR/cctools/bin:$PATH"
   export RUSTFLAGS="-C linker=$GECKO_PATH/taskcluster/scripts/misc/osx-cross-linker"
-elif [ "$TARGET" == "x86_64-unknown-linux-gnu" ]; then
+  if test "$TARGET" = "aarch64-apple-darwin"; then
+    export SDK_VER=11.0
+  fi
+  ;;
+x86_64-unknown-linux-gnu)
   export CC="$MOZ_FETCHES_DIR/clang/bin/clang"
   export CFLAGS_x86_64_unknown_linux_gnu="--sysroot=$MOZ_FETCHES_DIR/sysroot"
   export RUSTFLAGS="-C linker=$CC -C link-arg=--sysroot=$MOZ_FETCHES_DIR/sysroot"
-fi
+  ;;
+esac
 
 export PATH="$(cd $MOZ_FETCHES_DIR && pwd)/rustc/bin:$PATH"
 
