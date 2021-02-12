@@ -1120,11 +1120,11 @@ nsresult Dashboard::TestNewConnection(ConnectionData* aConnectionData) {
     AutoTArray<nsCString, 1> socketTypes = {connectionData->mProtocol};
     rv = gSocketTransportService->CreateTransport(
         socketTypes, connectionData->mHost, connectionData->mPort, nullptr,
-        getter_AddRefs(connectionData->mSocket));
+        nullptr, getter_AddRefs(connectionData->mSocket));
   } else {
     rv = gSocketTransportService->CreateTransport(
         nsTArray<nsCString>(), connectionData->mHost, connectionData->mPort,
-        nullptr, getter_AddRefs(connectionData->mSocket));
+        nullptr, nullptr, getter_AddRefs(connectionData->mSocket));
   }
   if (NS_FAILED(rv)) {
     return rv;

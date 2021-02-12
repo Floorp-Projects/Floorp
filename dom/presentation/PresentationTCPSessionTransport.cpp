@@ -170,7 +170,7 @@ PresentationTCPSessionTransport::BuildTCPReceiverTransport(
     return NS_ERROR_NOT_AVAILABLE;
   }
   rv = sts->CreateTransport(nsTArray<nsCString>(), serverHost, serverPort,
-                            nullptr, getter_AddRefs(mTransport));
+                            nullptr, nullptr, getter_AddRefs(mTransport));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

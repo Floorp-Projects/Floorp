@@ -210,5 +210,10 @@ MockedSocketTransport::GetQoSBits(uint8_t*) { return NS_ERROR_NOT_IMPLEMENTED; }
 NS_IMETHODIMP
 MockedSocketTransport::SetQoSBits(uint8_t) { return NS_ERROR_NOT_IMPLEMENTED; }
 
+NS_IMETHODIMP
+MockedSocketTransport::GetRetryDnsIfPossible(bool*) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 }  // namespace dom
 }  // namespace mozilla

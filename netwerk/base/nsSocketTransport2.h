@@ -127,7 +127,7 @@ class nsSocketTransport final : public nsASocketHandler,
   // given type(s) to the given host or proxy.
   nsresult Init(const nsTArray<nsCString>& socketTypes, const nsACString& host,
                 uint16_t port, const nsACString& hostRoute, uint16_t portRoute,
-                nsIProxyInfo* proxyInfo);
+                nsIProxyInfo* proxyInfo, nsIDNSRecord* dnsRecord);
 
   // this method instructs the socket transport to use an already connected
   // socket with the given address.
@@ -461,6 +461,9 @@ class nsSocketTransport final : public nsASocketHandler,
   // Whether the port remapping has already been applied.  We definitely want to
   // prevent duplicate calls in case of chaining remapping.
   bool mPortRemappingApplied = false;
+
+  bool mExternalDNSResolution = false;
+  bool mRetryDnsIfPossible = false;
 };
 
 }  // namespace net

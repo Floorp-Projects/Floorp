@@ -131,7 +131,7 @@ TEST(TestBind, MainTest)
   for (int32_t tried = 0; tried < 100; tried++) {
     nsCOMPtr<nsISocketTransport> client;
     rv = sts->CreateTransport(nsTArray<nsCString>(), "127.0.0.1"_ns, serverPort,
-                              nullptr, getter_AddRefs(client));
+                              nullptr, nullptr, getter_AddRefs(client));
     ASSERT_TRUE(NS_SUCCEEDED(rv));
 
     // Bind to a port. It's possible that we are binding to a port that is

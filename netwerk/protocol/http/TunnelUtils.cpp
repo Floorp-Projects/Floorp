@@ -1182,7 +1182,7 @@ bool SpdyConnectTransaction::MapStreamToHttpConnection(
   TimeDuration rtt = TimeStamp::Now() - mTimestampSyn;
   DebugOnly<nsresult> rv = mTunneledConn->Init(
       aConnInfo, gHttpHandler->ConnMgr()->MaxRequestDelay(), mTunnelTransport,
-      mTunnelStreamIn, mTunnelStreamOut, true, callbacks,
+      mTunnelStreamIn, mTunnelStreamOut, true, NS_OK, callbacks,
       PR_MillisecondsToInterval(static_cast<uint32_t>(rtt.ToMilliseconds())));
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   if (mForcePlainText) {
@@ -2145,6 +2145,11 @@ SocketTransportShim::GetQoSBits(uint8_t* aQoSBits) {
 NS_IMETHODIMP
 SocketTransportShim::SetQoSBits(uint8_t aQoSBits) {
   return mWrapped->SetQoSBits(aQoSBits);
+}
+
+NS_IMETHODIMP
+SocketTransportShim::GetRetryDnsIfPossible(bool* aRetry) {
+  return mWrapped->GetRetryDnsIfPossible(aRetry);
 }
 
 NS_IMPL_ISUPPORTS(TLSFilterTransaction, nsITimerCallback, nsINamed)

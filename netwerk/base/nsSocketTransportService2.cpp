@@ -944,20 +944,23 @@ NS_IMETHODIMP
 nsSocketTransportService::CreateTransport(const nsTArray<nsCString>& types,
                                           const nsACString& host, int32_t port,
                                           nsIProxyInfo* proxyInfo,
+                                          nsIDNSRecord* dnsRecord,
                                           nsISocketTransport** result) {
-  return CreateRoutedTransport(types, host, port, ""_ns, 0, proxyInfo, result);
+  return CreateRoutedTransport(types, host, port, ""_ns, 0, proxyInfo,
+                               dnsRecord, result);
 }
 
 NS_IMETHODIMP
 nsSocketTransportService::CreateRoutedTransport(
     const nsTArray<nsCString>& types, const nsACString& host, int32_t port,
     const nsACString& hostRoute, int32_t portRoute, nsIProxyInfo* proxyInfo,
-    nsISocketTransport** result) {
+    nsIDNSRecord* dnsRecord, nsISocketTransport** result) {
   NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_TRUE(port >= 0 && port <= 0xFFFF, NS_ERROR_ILLEGAL_VALUE);
 
   RefPtr<nsSocketTransport> trans = new nsSocketTransport();
-  nsresult rv = trans->Init(types, host, port, hostRoute, portRoute, proxyInfo);
+  nsresult rv = trans->Init(types, host, port, hostRoute, portRoute, proxyInfo,
+                            dnsRecord);
   if (NS_FAILED(rv)) {
     return rv;
   }

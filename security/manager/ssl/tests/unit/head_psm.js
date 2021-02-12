@@ -523,7 +523,13 @@ async function asyncConnectTo(
     let sts = Cc["@mozilla.org/network/socket-transport-service;1"].getService(
       Ci.nsISocketTransportService
     );
-    this.transport = sts.createTransport(["ssl"], host, REMOTE_PORT, null);
+    this.transport = sts.createTransport(
+      ["ssl"],
+      host,
+      REMOTE_PORT,
+      null,
+      null
+    );
     if (aEchConfig) {
       this.transport.setEchConfig(atob(aEchConfig));
     }

@@ -61,7 +61,7 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   [[nodiscard]] virtual nsresult Init(
       nsHttpConnectionInfo* info, uint16_t maxHangTime, nsISocketTransport*,
       nsIAsyncInputStream*, nsIAsyncOutputStream*, bool connectedTransport,
-      nsIInterfaceRequestor*, PRIntervalTime) = 0;
+      nsresult status, nsIInterfaceRequestor*, PRIntervalTime) = 0;
 
   // Activate causes the given transaction to be processed on this
   // connection.  It fails if there is already an existing transaction unless
@@ -161,6 +161,7 @@ class HttpConnectionBase : public nsSupportsWeakReference {
 
   nsTArray<HttpTrafficCategory> mTrafficCategory;
   PRIntervalTime mRtt;
+  nsresult mErrorBeforeConnect = NS_OK;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpConnectionBase, HTTPCONNECTIONBASE_IID)
@@ -168,7 +169,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpConnectionBase, HTTPCONNECTIONBASE_IID)
 #define NS_DECL_HTTPCONNECTIONBASE                                             \
   [[nodiscard]] nsresult Init(                                                 \
       nsHttpConnectionInfo*, uint16_t, nsISocketTransport*,                    \
-      nsIAsyncInputStream*, nsIAsyncOutputStream*, bool,                       \
+      nsIAsyncInputStream*, nsIAsyncOutputStream*, bool, nsresult,             \
       nsIInterfaceRequestor*, PRIntervalTime) override;                        \
   [[nodiscard]] nsresult Activate(nsAHttpTransaction*, uint32_t, int32_t)      \
       override;                                                                \
