@@ -3293,27 +3293,33 @@ void ServiceWorkerManager::ScheduleUpdateTimer(nsIPrincipal* aPrincipal,
     return;
   }
 
-  nsCOMPtr<nsITimer>& timer = data->mUpdateTimers.GetOrInsert(aScope);
-  if (timer) {
-    // There is already a timer scheduled.  In this case just use the original
-    // schedule time.  We don't want to push it out to a later time since that
-    // could allow updates to be starved forever if events are continuously
-    // fired.
-    return;
-  }
+  data->mUpdateTimers.WithEntryHandle(
+      aScope, [&aPrincipal, &aScope](auto&& entry) {
+        if (entry) {
+          // In case there is already a timer scheduled, just use the original
+          // schedule time.  We don't want to push it out to a later time since
+          // that could allow updates to be starved forever if events are
+          // continuously fired.
+          return;
+        }
 
-  nsCOMPtr<nsITimerCallback> callback =
-      new UpdateTimerCallback(aPrincipal, aScope);
+        nsCOMPtr<nsITimerCallback> callback =
+            new UpdateTimerCallback(aPrincipal, aScope);
 
-  const uint32_t UPDATE_DELAY_MS = 1000;
+        const uint32_t UPDATE_DELAY_MS = 1000;
 
-  rv = NS_NewTimerWithCallback(getter_AddRefs(timer), callback, UPDATE_DELAY_MS,
-                               nsITimer::TYPE_ONE_SHOT);
+        nsCOMPtr<nsITimer> timer;
 
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    data->mUpdateTimers.Remove(aScope);  // another lookup, but very rare
-    return;
-  }
+        const nsresult rv =
+            NS_NewTimerWithCallback(getter_AddRefs(timer), callback,
+                                    UPDATE_DELAY_MS, nsITimer::TYPE_ONE_SHOT);
+
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return;
+        }
+
+        entry.Insert(std::move(timer));
+      });
 }
 
 void ServiceWorkerManager::UpdateTimerFired(nsIPrincipal* aPrincipal,
