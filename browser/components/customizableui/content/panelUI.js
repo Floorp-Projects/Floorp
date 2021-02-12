@@ -862,9 +862,12 @@ const PanelUI = {
 
   get addonNotificationContainer() {
     if (!this._addonNotificationContainer) {
+      let bannerID = this.protonAppMenuEnabled
+        ? "appMenu-proton-addon-banners"
+        : "appMenu-addon-banners";
       this._addonNotificationContainer = PanelMultiView.getViewNode(
         document,
-        "appMenu-addon-banners"
+        bannerID
       );
     }
 
