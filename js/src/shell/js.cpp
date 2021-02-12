@@ -5608,11 +5608,13 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
             return false;
           }
 
-          bool unimplemented;
-          Rooted<UniquePtr<frontend::CompilationStencil>> stencil(
-              cx, Smoosh::compileGlobalScriptToStencil(cx, options, srcBuf,
-                                                       &unimplemented));
+          Rooted<UniquePtr<frontend::CompilationStencil>> stencil(cx);
+          if (!Smoosh::tryCompileGlobalScriptToStencil(cx, options, srcBuf,
+                                                       stencil.get())) {
+            return false;
+          }
           if (!stencil) {
+            JS_ReportErrorASCII(cx, "SmooshMonkey failed to parse");
             return false;
           }
 

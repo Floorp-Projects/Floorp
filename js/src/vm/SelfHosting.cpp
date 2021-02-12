@@ -2800,19 +2800,20 @@ bool JSRuntime::initSelfHosting(JSContext* cx) {
   CompileOptions options(cx);
   FillSelfHostingCompileOptions(options);
 
-  Rooted<UniquePtr<frontend::CompilationStencil>> stencil(
-      cx, MakeUnique<frontend::CompilationStencil>(cx, options));
-  if (!stencil.get()) {
-    return false;
-  }
-
-  if (!stencil->input.initForSelfHostingGlobal(cx)) {
-    return false;
-  }
+  Rooted<UniquePtr<frontend::CompilationStencil>> stencil(cx);
 
   // Try initializing from Stencil XDR.
   bool decodeOk = false;
   if (selfHostedXDR.length() > 0) {
+    stencil = MakeUnique<frontend::CompilationStencil>(cx, options);
+    if (!stencil.get()) {
+      return false;
+    }
+
+    if (!stencil->input.initForSelfHostingGlobal(cx)) {
+      return false;
+    }
+
     if (!stencil->deserializeStencils(cx, selfHostedXDR, &decodeOk)) {
       return false;
     }
@@ -2839,8 +2840,9 @@ bool JSRuntime::initSelfHosting(JSContext* cx) {
       return false;
     }
 
-    if (!frontend::CompileGlobalScriptToStencil(cx, *stencil, srcBuf,
-                                                ScopeKind::Global)) {
+    stencil = frontend::CompileGlobalScriptToStencil(cx, options, srcBuf,
+                                                     ScopeKind::Global);
+    if (!stencil) {
       return false;
     }
 

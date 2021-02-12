@@ -4988,19 +4988,16 @@ static bool CompileStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   /* TODO: StencilXDR - Add option to select between full and syntax parse. */
   options.setForceFullParse();
 
-  Rooted<frontend::CompilationStencil> stencil(
-      cx, frontend::CompilationStencil(cx, options));
-  if (!stencil.get().input.initForGlobal(cx)) {
-    return false;
-  }
-  if (!frontend::CompileGlobalScriptToStencil(cx, stencil.get(), srcBuf,
-                                              ScopeKind::Global)) {
+  Rooted<UniquePtr<frontend::CompilationStencil>> stencil(
+      cx, frontend::CompileGlobalScriptToStencil(cx, options, srcBuf,
+                                                 ScopeKind::Global));
+  if (!stencil) {
     return false;
   }
 
   /* Serialize the stencil to XDR. */
   JS::TranscodeBuffer xdrBytes;
-  if (!stencil.get().serializeStencils(cx, xdrBytes)) {
+  if (!stencil->serializeStencils(cx, xdrBytes)) {
     return false;
   }
 

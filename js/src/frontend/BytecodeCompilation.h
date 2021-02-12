@@ -48,15 +48,6 @@ class ModuleCompiler;
 template <typename Unit>
 class StandaloneFunctionCompiler;
 
-extern bool CompileGlobalScriptToStencil(JSContext* cx,
-                                         CompilationStencil& stencil,
-                                         JS::SourceText<char16_t>& srcBuf,
-                                         ScopeKind scopeKind);
-
-extern bool CompileGlobalScriptToStencil(
-    JSContext* cx, CompilationStencil& stencil,
-    JS::SourceText<mozilla::Utf8Unit>& srcBuf, ScopeKind scopeKind);
-
 extern UniquePtr<CompilationStencil> CompileGlobalScriptToStencil(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<char16_t>& srcBuf, ScopeKind scopeKind);
