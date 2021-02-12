@@ -264,12 +264,7 @@
         // give focus to the first focusable element in the dialog
         let focusedElt = document.commandDispatcher.focusedElement;
         if (!focusedElt) {
-          Services.focus.moveFocus(
-            window,
-            null,
-            Services.focus.MOVEFOCUS_FORWARD,
-            Services.focus.FLAG_NOPARENTFRAME
-          );
+          document.commandDispatcher.advanceFocusIntoSubtree(this);
 
           focusedElt = document.commandDispatcher.focusedElement;
           if (focusedElt) {
@@ -278,12 +273,7 @@
               focusedElt.localName == "tab" ||
               focusedElt.getAttribute("noinitialfocus") == "true"
             ) {
-              Services.focus.moveFocus(
-                window,
-                focusedElt,
-                Services.focus.MOVEFOCUS_FORWARD,
-                Services.focus.FLAG_NOPARENTFRAME
-              );
+              document.commandDispatcher.advanceFocusIntoSubtree(focusedElt);
               focusedElt = document.commandDispatcher.focusedElement;
               if (focusedElt) {
                 if (focusedElt == initialFocusedElt) {

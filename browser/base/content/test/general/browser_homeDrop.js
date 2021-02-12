@@ -20,13 +20,7 @@ add_task(async function() {
   ok(homeButton, "home button present");
 
   async function drop(dragData, homepage) {
-    let setHomepageDialogPromise = BrowserTestUtils.promiseAlertDialogOpen(
-      "accept"
-    );
-    let setHomepagePromise = TestUtils.waitForPrefChange(
-      HOMEPAGE_PREF,
-      newVal => newVal == homepage
-    );
+    let setHomepageDialogPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
 
     EventUtils.synthesizeDrop(
       dragSrcElement,
@@ -35,18 +29,33 @@ add_task(async function() {
       "copy",
       window
     );
-
     // Ensure dnd suppression is cleared.
     EventUtils.synthesizeMouseAtCenter(homeButton, { type: "mouseup" }, window);
 
-    await setHomepageDialogPromise;
+    let setHomepageDialog = await setHomepageDialogPromise;
     ok(true, "dialog appeared in response to home button drop");
 
-    await setHomepagePromise;
+    let setHomepagePromise = new Promise(function(resolve) {
+      let observer = {
+        QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
+        observe(subject, topic, data) {
+          is(topic, "nsPref:changed", "observed correct topic");
+          is(data, HOMEPAGE_PREF, "observed correct data");
+          let modified = Services.prefs.getStringPref(HOMEPAGE_PREF);
+          is(modified, homepage, "homepage is set correctly");
+          Services.prefs.removeObserver(HOMEPAGE_PREF, observer);
 
-    let modified = Services.prefs.getStringPref(HOMEPAGE_PREF);
-    is(modified, homepage, "homepage is set correctly");
-    Services.prefs.setStringPref(HOMEPAGE_PREF, "about:mozilla;");
+          Services.prefs.setStringPref(HOMEPAGE_PREF, "about:mozilla;");
+
+          resolve();
+        },
+      };
+      Services.prefs.addObserver(HOMEPAGE_PREF, observer);
+    });
+
+    setHomepageDialog.document.getElementById("commonDialog").acceptDialog();
+
+    await setHomepagePromise;
   }
 
   function dropInvalidURI() {
