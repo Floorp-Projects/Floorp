@@ -37,60 +37,10 @@ extern void DestroyDtoaState(DtoaState* state);
  */
 double js_strtod_harder(DtoaState* state, const char* s00, char** se);
 
-/*
- * Modes for converting floating-point numbers to strings.
- *
- * Some of the modes can round-trip; this means that if the number is converted
- * to a string using one of these mode and then converted back to a number, the
- * result will be identical to the original number (except that, due to ECMA, -0
- * will get converted to +0).  These round-trip modes return the minimum number
- * of significand digits that permit the round trip.
- *
- * Some of the modes take an integer parameter <precision>.
- */
-/* NB: Keep this in sync with number_constants[]. */
-typedef enum JSDToStrMode {
-  DTOSTR_STANDARD, /* Either fixed or exponential format; round-trip */
-  DTOSTR_STANDARD_EXPONENTIAL, /* Always exponential format; round-trip */
-  DTOSTR_FIXED,       /* Round to <precision> digits after the decimal point;
-                         exponential if number is large */
-  DTOSTR_EXPONENTIAL, /* Always exponential format; <precision> significant
-                         digits */
-  DTOSTR_PRECISION    /* Either fixed or exponential format; <precision>
-                         significant digits */
-} JSDToStrMode;
-
 /* Maximum number of characters (including trailing null) that a DTOSTR_STANDARD
  * or DTOSTR_STANDARD_EXPONENTIAL conversion can produce.  This maximum is
  * reached for a number like -0.0000012345678901234567. */
 #define DTOSTR_STANDARD_BUFFER_SIZE 26
-
-/* Maximum number of characters (including trailing null) that one of the other
- * conversions can produce.  This maximum is reached for TO_FIXED, which can
- * generate up to 21 digits before the decimal point. */
-#define DTOSTR_VARIABLE_BUFFER_SIZE(precision)    \
-  ((precision) + 24 > DTOSTR_STANDARD_BUFFER_SIZE \
-       ? (precision) + 24                         \
-       : DTOSTR_STANDARD_BUFFER_SIZE)
-
-/*
- * DO NOT USE THIS FUNCTION IF YOU CAN AVOID IT.  js::NumberToCString() is a
- * better function to use.
- *
- * Convert dval according to the given mode and return a pointer to the
- * resulting ASCII string.  If mode == DTOSTR_STANDARD and precision == 0 it's
- * equivalent to ToString() as specified by ECMA-262-5 section 9.8.1, but it
- * doesn't handle integers specially so should be avoided in that case (that's
- * why js::NumberToCString() is better).
- *
- * The result is held somewhere in buffer, but not necessarily at the
- * beginning.  The size of buffer is given in bufferSize, and must be at least
- * as large as given by the above macros.
- *
- * Return nullptr if out of memory.
- */
-char* js_dtostr(DtoaState* state, char* buffer, size_t bufferSize,
-                JSDToStrMode mode, int precision, double dval);
 
 /*
  * DO NOT USE THIS FUNCTION IF YOU CAN AVOID IT.  js::NumberToCString() is a
