@@ -311,18 +311,23 @@ def verify_toolchain_alias(task, taskgraph, scratch_pad, graph_config, parameter
         return
     attributes = task.attributes
     if "toolchain-alias" in attributes:
-        key = attributes["toolchain-alias"]
-        if key in scratch_pad:
-            raise Exception(
-                "Duplicate toolchain-alias in tasks "
-                "`{}`and `{}`: {}".format(
-                    task.label,
-                    scratch_pad[key],
-                    key,
+        keys = attributes["toolchain-alias"]
+        if not keys:
+            keys = []
+        elif isinstance(keys, six.text_type):
+            keys = [keys]
+        for key in keys:
+            if key in scratch_pad:
+                raise Exception(
+                    "Duplicate toolchain-alias in tasks "
+                    "`{}`and `{}`: {}".format(
+                        task.label,
+                        scratch_pad[key],
+                        key,
+                    )
                 )
-            )
-        else:
-            scratch_pad[key] = task.label
+            else:
+                scratch_pad[key] = task.label
 
 
 @verifications.add("optimized_task_graph")
