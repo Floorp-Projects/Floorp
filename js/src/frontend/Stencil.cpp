@@ -1825,7 +1825,7 @@ void frontend::DumpTaggedParserAtomIndex(
     json.property("tag", "Length1Static");
     auto index = taggedIndex.toLength1StaticParserString();
     GenericPrinter& out = json.beginStringProperty("atom");
-    WellKnownParserAtoms::getLength1Static(index)->dumpCharsNoQuote(out);
+    ParserAtomsTable::dumpCharsNoQuote(out, index);
     json.endString();
     return;
   }
@@ -1834,7 +1834,7 @@ void frontend::DumpTaggedParserAtomIndex(
     json.property("tag", "Length2Static");
     auto index = taggedIndex.toLength2StaticParserString();
     GenericPrinter& out = json.beginStringProperty("atom");
-    WellKnownParserAtoms::getLength2Static(index)->dumpCharsNoQuote(out);
+    ParserAtomsTable::dumpCharsNoQuote(out, index);
     json.endString();
     return;
   }
@@ -1889,13 +1889,13 @@ void frontend::DumpTaggedParserAtomIndexNoQuote(
 
   if (taggedIndex.isLength1StaticParserString()) {
     auto index = taggedIndex.toLength1StaticParserString();
-    WellKnownParserAtoms::getLength1Static(index)->dumpCharsNoQuote(out);
+    ParserAtomsTable::dumpCharsNoQuote(out, index);
     return;
   }
 
   if (taggedIndex.isLength2StaticParserString()) {
     auto index = taggedIndex.toLength2StaticParserString();
-    WellKnownParserAtoms::getLength2Static(index)->dumpCharsNoQuote(out);
+    ParserAtomsTable::dumpCharsNoQuote(out, index);
     return;
   }
 
