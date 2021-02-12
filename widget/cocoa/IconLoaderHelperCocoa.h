@@ -35,6 +35,9 @@ class IconLoaderListenerCocoa {
  */
 class IconLoaderHelperCocoa final : public mozilla::widget::IconLoader::Helper {
  public:
+  // Create the helper and install aLoadListener as a listener.
+  // The helper does not keep a strong reference to the listener. Call Destroy
+  // before the listener goes away.
   IconLoaderHelperCocoa(mozilla::widget::IconLoaderListenerCocoa* aLoadListener,
                         uint32_t aIconHeight, uint32_t aIconWidth, CGFloat aScaleFactor = 0.0f);
 
@@ -60,7 +63,12 @@ class IconLoaderHelperCocoa final : public mozilla::widget::IconLoader::Helper {
   ~IconLoaderHelperCocoa();
 
  private:
-  RefPtr<mozilla::widget::IconLoaderListenerCocoa> mLoadListener;
+  // The listener, which is notified when loading completes.
+  // Can be null, after a call to Destroy.
+  // This is a non-owning reference and needs to be cleared with a call to
+  // Destroy before the listener goes away.
+  IconLoaderListenerCocoa* mLoadListener;
+
   uint32_t mIconHeight;
   uint32_t mIconWidth;
   CGFloat mScaleFactor;
