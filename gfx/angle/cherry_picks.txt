@@ -1,4 +1,15 @@
-commit 9ee445bf28419a05d19cfc9caccc0e1c795c6149
+commit 3778168311ca10e8d57b3bce16bfcbc0f5b0dd01
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Thu Feb 11 17:34:00 2021 -0800
+
+    Don't assert for non-sampleable non-ms sources in blitRenderbufferRect if we can CopySubResource.
+    
+    In Firefox, we can have a source from DirectComposition without
+    D3D11_BIND_SHADER_RESOURCE. This is fine so long as our formats etc
+    match enough to hit the CopySubResource path.
+    Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1692355
+
+commit f96c68edb00194eebccd998cfd4ceb7207810092
 Author: Jeff Gilbert <jdashg@gmail.com>
 Date:   Wed Feb 3 18:50:38 2021 -0800
 
@@ -6,13 +17,13 @@ Date:   Wed Feb 3 18:50:38 2021 -0800
     
     Build system logic is really hard to handle when vendoring into Gecko for Firefox.
 
-commit 00fc0892abedd5d5f0a7167ddf4431f7bb727486
+commit 2a40d0f143e00c46db28c664678529a36daf4e41
 Author: Jeff Gilbert <jdashg@gmail.com>
 Date:   Mon Feb 1 17:35:56 2021 -0800
 
     Build fixes needed by Gecko.
 
-commit 43dc75e84ad5d0b8255c3dcfec2efa2a3d017827
+commit 226aa28ce47cf20769f8f27f23255ca1eca83942
 Author: Jeff Muizelaar <jrmuizel@gmail.com>
 Date:   Mon Nov 9 17:09:12 2020 -0500
 
@@ -20,7 +31,7 @@ Date:   Mon Nov 9 17:09:12 2020 -0500
     
     This lets us run WebRender on devices that only support D3D 10.0
 
-commit fffb2aa74832466f2433acb3f05a0b498f0a6350
+commit c0645aac0a4b4ad6bc9691ce381e5043115737b5
 Author: Jeff Muizelaar <jrmuizel@gmail.com>
 Date:   Wed May 6 14:04:42 2020 -0400
 
