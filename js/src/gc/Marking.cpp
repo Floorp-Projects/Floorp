@@ -3586,12 +3586,14 @@ JS::BigInt* js::TenuringTracer::moveToTenured(JS::BigInt* src) {
   return dst;
 }
 
-void js::Nursery::collectToFixedPoint(TenuringTracer& mover) {
+void js::Nursery::collectToObjectFixedPoint(TenuringTracer& mover) {
   for (RelocationOverlay* p = mover.objHead; p; p = p->next()) {
     auto* obj = static_cast<JSObject*>(p->forwardingAddress());
     mover.traceObject(obj);
   }
+}
 
+void js::Nursery::collectToStringFixedPoint(TenuringTracer& mover) {
   for (StringRelocationOverlay* p = mover.stringHead; p; p = p->next()) {
     auto* tenuredStr = static_cast<JSString*>(p->forwardingAddress());
     // To ensure the NON_DEDUP_BIT was reset properly.
