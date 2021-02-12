@@ -18,10 +18,8 @@ namespace mozilla::widget {
 
 NS_IMPL_ISUPPORTS(IconLoader, imgINotificationObserver)
 
-IconLoader::IconLoader(Listener* aListener, const nsIntRect& aImageRegionRect)
+IconLoader::IconLoader(Listener* aListener)
     : mContentType(nsIContentPolicy::TYPE_INTERNAL_IMAGE),
-      mImageRegionRect(aImageRegionRect),
-      mLoadedIcon(false),
       mListener(aListener) {}
 
 IconLoader::~IconLoader() { Destroy(); }
@@ -41,8 +39,6 @@ nsresult IconLoader::LoadIcon(nsIURI* aIconURI, nsINode* aNode,
     mIconRequest->Cancel(NS_BINDING_ABORTED);
     mIconRequest = nullptr;
   }
-
-  mLoadedIcon = false;
 
   if (!aNode) {
     return NS_ERROR_FAILURE;
@@ -110,18 +106,12 @@ void IconLoader::Notify(imgIRequest* aRequest, int32_t aType,
   }
 
   if (aType == imgINotificationObserver::FRAME_COMPLETE) {
-    nsresult rv = OnFrameComplete(aRequest);
-
-    if (NS_FAILED(rv)) {
-      return;
-    }
-
     nsCOMPtr<imgIContainer> image;
     aRequest->GetImage(getter_AddRefs(image));
     MOZ_ASSERT(image);
 
     if (mListener) {
-      mListener->OnComplete(image, mImageRegionRect);
+      mListener->OnComplete(image);
     }
     return;
   }
@@ -132,42 +122,6 @@ void IconLoader::Notify(imgIRequest* aRequest, int32_t aType,
       mIconRequest = nullptr;
     }
   }
-}
-
-nsresult IconLoader::OnFrameComplete(imgIRequest* aRequest) {
-  if (aRequest != mIconRequest) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Only support one frame.
-  if (mLoadedIcon) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<imgIContainer> imageContainer;
-  aRequest->GetImage(getter_AddRefs(imageContainer));
-  if (!imageContainer) {
-    return NS_ERROR_FAILURE;
-  }
-
-  int32_t origWidth = 0, origHeight = 0;
-  imageContainer->GetWidth(&origWidth);
-  imageContainer->GetHeight(&origHeight);
-
-  // If the image region is invalid, don't draw the image to almost match
-  // the behavior of other platforms.
-  if (!mImageRegionRect.IsEmpty() && (mImageRegionRect.XMost() > origWidth ||
-                                      mImageRegionRect.YMost() > origHeight)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (mImageRegionRect.IsEmpty()) {
-    mImageRegionRect.SetRect(0, 0, origWidth, origHeight);
-  }
-
-  mLoadedIcon = true;
-
-  return NS_OK;
 }
 
 }  // namespace mozilla::widget
