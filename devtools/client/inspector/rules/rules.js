@@ -49,12 +49,6 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "COLOR_SCHEMES",
-  "devtools/client/inspector/rules/constants",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "StyleInspectorMenu",
   "devtools/client/inspector/shared/style-inspector-menu"
 );
@@ -157,7 +151,10 @@ function CssRuleView(inspector, document, store) {
   this._onTogglePseudoClassPanel = this._onTogglePseudoClassPanel.bind(this);
   this._onTogglePseudoClass = this._onTogglePseudoClass.bind(this);
   this._onToggleClassPanel = this._onToggleClassPanel.bind(this);
-  this._onToggleColorSchemeSimulation = this._onToggleColorSchemeSimulation.bind(
+  this._onToggleLightColorSchemeSimulation = this._onToggleLightColorSchemeSimulation.bind(
+    this
+  );
+  this._onToggleDarkColorSchemeSimulation = this._onToggleDarkColorSchemeSimulation.bind(
     this
   );
   this._onTogglePrintSimulation = this._onTogglePrintSimulation.bind(this);
@@ -179,8 +176,11 @@ function CssRuleView(inspector, document, store) {
   this.pseudoClassToggle = doc.getElementById("pseudo-class-panel-toggle");
   this.classPanel = doc.getElementById("ruleview-class-panel");
   this.classToggle = doc.getElementById("class-panel-toggle");
-  this.colorSchemeSimulationButton = doc.getElementById(
-    "color-scheme-simulation-toggle"
+  this.colorSchemeLightSimulationButton = doc.getElementById(
+    "color-scheme-simulation-light-toggle"
+  );
+  this.colorSchemeDarkSimulationButton = doc.getElementById(
+    "color-scheme-simulation-dark-toggle"
   );
   this.printSimulationButton = doc.getElementById("print-simulation-toggle");
 
@@ -528,10 +528,16 @@ CssRuleView.prototype = {
         "devtools.inspector.color-scheme-simulation.enabled"
       )
     ) {
-      this.colorSchemeSimulationButton.removeAttribute("hidden");
-      this.colorSchemeSimulationButton.addEventListener(
+      this.colorSchemeLightSimulationButton.removeAttribute("hidden");
+      this.colorSchemeDarkSimulationButton.removeAttribute("hidden");
+
+      this.colorSchemeLightSimulationButton.addEventListener(
         "click",
-        this._onToggleColorSchemeSimulation
+        this._onToggleLightColorSchemeSimulation
+      );
+      this.colorSchemeDarkSimulationButton.addEventListener(
+        "click",
+        this._onToggleDarkColorSchemeSimulation
       );
     }
   },
@@ -840,17 +846,22 @@ CssRuleView.prototype = {
       this._highlighters = null;
     }
 
-    // Clean-up for print simulation.
-    this.colorSchemeSimulationButton.removeEventListener(
+    // Clean-up for simulations.
+    this.colorSchemeLightSimulationButton.removeEventListener(
       "click",
-      this._onToggleColorSchemeSimulation
+      this._onToggleLightColorSchemeSimulation
+    );
+    this.colorSchemeDarkSimulationButton.removeEventListener(
+      "click",
+      this._onToggleDarkColorSchemeSimulation
     );
     this.printSimulationButton.removeEventListener(
       "click",
       this._onTogglePrintSimulation
     );
 
-    this.colorSchemeSimulationButton = null;
+    this.colorSchemeLightSimulationButton = null;
+    this.colorSchemeDarkSimulationButton = null;
     this.printSimulationButton = null;
 
     this.tooltips.destroy();
@@ -1743,22 +1754,45 @@ CssRuleView.prototype = {
     }
   },
 
-  async _onToggleColorSchemeSimulation() {
-    const currentState = this.colorSchemeSimulationButton.getAttribute("state");
-    const index = COLOR_SCHEMES.indexOf(currentState);
-    const nextState = COLOR_SCHEMES[(index + 1) % COLOR_SCHEMES.length];
+  async _onToggleLightColorSchemeSimulation() {
+    const shouldSimulateLightScheme = this.colorSchemeLightSimulationButton.classList.toggle(
+      "checked"
+    );
 
-    if (nextState) {
-      this.colorSchemeSimulationButton.setAttribute("state", nextState);
-    } else {
-      this.colorSchemeSimulationButton.removeAttribute("state");
+    const darkColorSchemeEnabled = this.colorSchemeDarkSimulationButton.classList.contains(
+      "checked"
+    );
+    if (shouldSimulateLightScheme && darkColorSchemeEnabled) {
+      this.colorSchemeDarkSimulationButton.classList.toggle("checked");
     }
 
     this.currentTarget.reconfigure({
       options: {
-        colorSchemeSimulation: nextState,
+        colorSchemeSimulation: shouldSimulateLightScheme ? "light" : null,
       },
     });
+    // Refresh the current element's rules in the panel.
+    this.refreshPanel();
+  },
+
+  async _onToggleDarkColorSchemeSimulation() {
+    const shouldSimulateDarkScheme = this.colorSchemeDarkSimulationButton.classList.toggle(
+      "checked"
+    );
+
+    const lightColorSchemeEnabled = this.colorSchemeLightSimulationButton.classList.contains(
+      "checked"
+    );
+    if (shouldSimulateDarkScheme && lightColorSchemeEnabled) {
+      this.colorSchemeLightSimulationButton.classList.toggle("checked");
+    }
+
+    this.currentTarget.reconfigure({
+      options: {
+        colorSchemeSimulation: shouldSimulateDarkScheme ? "dark" : null,
+      },
+    });
+    // Refresh the current element's rules in the panel.
     this.refreshPanel();
   },
 
