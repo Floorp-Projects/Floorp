@@ -15,6 +15,7 @@ void GetObjCExceptionInfo(void* inException, nsACString& outString) {
 
   NSString* name = [e name];
   NSString* reason = [e reason];
+  NSArray* stackAddresses = [e callStackReturnAddresses];
 
   nsAutoString nameStr;
   nsAutoString reasonStr;
@@ -26,4 +27,9 @@ void GetObjCExceptionInfo(void* inException, nsACString& outString) {
   AppendUTF16toUTF8(nameStr, outString);
   outString.AppendLiteral(": ");
   AppendUTF16toUTF8(reasonStr, outString);
+  outString.AppendLiteral("\n\nThrown at stack:\n");
+  for (NSNumber* address in stackAddresses) {
+    outString.AppendPrintf("0x%lx\n", [address unsignedIntegerValue]);
+  }
+  outString.AppendLiteral("\n");
 }
