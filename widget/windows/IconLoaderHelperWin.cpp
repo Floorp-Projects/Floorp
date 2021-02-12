@@ -14,6 +14,7 @@
 #include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
+#include "nsISupports.h"
 #include "nsNameSpaceManager.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
@@ -29,13 +30,7 @@ using mozilla::widget::IconLoaderListenerWin;
 
 namespace mozilla::widget {
 
-NS_IMPL_CYCLE_COLLECTION(IconLoaderHelperWin, mLoadListener)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IconLoaderHelperWin)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(IconLoaderHelperWin)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(IconLoaderHelperWin)
+NS_IMPL_ISUPPORTS0(IconLoaderHelperWin)
 
 IconLoaderHelperWin::IconLoaderHelperWin(IconLoaderListenerWin* aListener)
     : mLoadListener(aListener) {
