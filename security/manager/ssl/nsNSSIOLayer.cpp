@@ -2720,7 +2720,7 @@ static nsresult nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
     return NS_ERROR_FAILURE;
   }
 
-#ifdef __arm__
+#if defined(__arm__) && not defined(__ARM_FEATURE_CRYPTO)
   unsigned int enabledCiphers = 0;
   std::vector<uint16_t> ciphers(SSL_GetNumImplementedCiphers());
 
@@ -2732,10 +2732,11 @@ static nsresult nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
     return NS_ERROR_FAILURE;
   }
 
-  // On ARM, prefer (TLS_CHACHA20_POLY1305_SHA256) over AES. However,
-  // it may be disabled. If enabled, it will either be element [0] or [1]*.
-  // If [0], we're done. If [1], swap it with [0] (TLS_AES_128_GCM_SHA256).
-  // * (assuming the compile-time order remains unchanged)
+  // On ARM, prefer (TLS_CHACHA20_POLY1305_SHA256) over AES when hardware
+  // support for AES isn't available. However, it may be disabled. If enabled,
+  // it will either be element [0] or [1]*. If [0], we're done. If [1], swap it
+  // with [0] (TLS_AES_128_GCM_SHA256).
+  // *(assuming the compile-time order remains unchanged)
   if (enabledCiphers > 1) {
     if (ciphers[0] != TLS_CHACHA20_POLY1305_SHA256 &&
         ciphers[1] == TLS_CHACHA20_POLY1305_SHA256) {
