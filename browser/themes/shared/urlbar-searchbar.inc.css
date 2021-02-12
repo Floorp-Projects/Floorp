@@ -16,6 +16,16 @@
   --urlbar-icon-padding: 6px;
 }
 
+@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+/* Override this value in the default dark theme. This value should be moved
+    to default-theme/manifest.json when the Proton prefs are removed. */
+:root[lwt-default-theme-in-dark-mode] {
+  --lwt-toolbar-field-border-color: transparent !important;
+}
+/* TODO: Bug 1692046: Add --lwt-toolbar-field-background-color override for
+  [lwt-default-theme-in-dark-mode]. */
+}
+
 :root[uidensity=compact] {
   /* 24x24 box - 16x16 image = 8x8 padding, 4 on each side */
   --urlbar-icon-padding: 4px;
@@ -45,7 +55,26 @@
   background-clip: padding-box;
   border: 1px solid @fieldBorderColor@;
   border-radius: var(--toolbarbutton-border-radius);
+}
+
+
+@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+#urlbar-background,
+#searchbar {
+  border-color: transparent;
+}
+
+#urlbar:not([open]) > #urlbar-background,
+#searchbar {
+  background-color: var(--toolbar-field-non-lwt-bgcolor, Field);
+}
+}
+
+@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+#urlbar-background,
+#searchbar {
   box-shadow: 0 1px 4px rgba(0,0,0,.05);
+}
 }
 
 #urlbar-input-container,
@@ -66,10 +95,12 @@
   outline: none;
 }
 
+@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
 #urlbar:not([focused="true"]):hover > #urlbar-background,
 #searchbar:not(:focus-within):hover {
   border-color: @fieldHoverBorderColor@;
   box-shadow: 0 1px 6px rgba(0,0,0,.1);
+}
 }
 
 #urlbar[focused="true"] > #urlbar-background,

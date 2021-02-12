@@ -6,6 +6,22 @@
    preffed on.  The bulk of the styling is here in the shared file, but
    there are overrides for each platform in their compacttheme.css files. */
 
+@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+/* Override these values in the light/dark themes. These values should be
+    moved to those themes' manifest.json files when the Proton prefs are
+    removed. */
+:root {
+  --lwt-toolbar-field-border-color: transparent !important;
+}
+
+:root:-moz-lwtheme-darktext {
+  --lwt-toolbar-field-background-color: #F0F0F4 !important;
+}
+
+/* TODO: Bug 1692046: Add brighttext --lwt-toolbar-field-background-color
+    override. */
+}
+
 :root:-moz-lwtheme-brighttext {
   /* !important to override LightweightThemeConsumer.jsm */
   --autocomplete-popup-background: #2A2A2E !important;
