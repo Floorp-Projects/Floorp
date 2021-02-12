@@ -63,7 +63,6 @@ gtest:
             windows7-32-shippable.*: 3
             windows10-64-shippable.*: 3
             windows10-64-asan.*: 3
-            linux.*64-ccov.*/opt: 3
             default: default
 
 jittest:
