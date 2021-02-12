@@ -461,6 +461,27 @@ void LIRGenerator::visitApplyArgs(MApplyArgs* apply) {
   assignSafepoint(lir, apply);
 }
 
+void LIRGenerator::visitApplyArgsObj(MApplyArgsObj* apply) {
+  MOZ_ASSERT(apply->getFunction()->type() == MIRType::Object);
+
+  // Assert if the return value is already erased.
+  static_assert(CallTempReg2 != JSReturnReg_Type);
+  static_assert(CallTempReg2 != JSReturnReg_Data);
+
+  LApplyArgsObj* lir = new (alloc()) LApplyArgsObj(
+      useFixedAtStart(apply->getFunction(), CallTempReg3),
+      useFixedAtStart(apply->getArgsObj(), CallTempReg0),
+      useBoxFixedAtStart(apply->getThis(), CallTempReg4, CallTempReg5),
+      tempFixed(CallTempReg1),   // object register
+      tempFixed(CallTempReg2));  // stack counter register
+
+  // Bailout is needed in the case of too many values in the arguments array.
+  assignSnapshot(lir, apply->bailoutKind());
+
+  defineReturn(lir, apply);
+  assignSafepoint(lir, apply);
+}
+
 void LIRGenerator::visitApplyArray(MApplyArray* apply) {
   MOZ_ASSERT(apply->getFunction()->type() == MIRType::Object);
 

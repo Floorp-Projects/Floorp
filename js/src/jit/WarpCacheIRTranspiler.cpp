@@ -243,6 +243,8 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
                                       CallFlags flags, CallKind kind);
   [[nodiscard]] bool emitFunApplyMagicArgs(WrappedFunction* wrappedTarget,
                                            CallFlags flags);
+  [[nodiscard]] bool emitFunApplyArgsObj(WrappedFunction* wrappedTarget,
+                                         CallFlags flags);
 
   MDefinition* convertWasmArg(MDefinition* arg, wasm::ValType::Kind kind);
 
@@ -3970,6 +3972,12 @@ bool WarpCacheIRTranspiler::updateCallInfo(MDefinition* callee,
         callInfo_->removeArg(0);
       }
       break;
+    case CallFlags::FunApplyArgsObj:
+      MOZ_ASSERT(!callInfo_->constructing());
+      MOZ_ASSERT(callInfo_->argFormat() == CallInfo::ArgFormat::Standard);
+
+      callInfo_->setArgFormat(CallInfo::ArgFormat::FunApplyArgsObj);
+      break;
     case CallFlags::FunApplyMagicArgs:
       MOZ_ASSERT(!callInfo_->constructing());
       MOZ_ASSERT(callInfo_->argFormat() == CallInfo::ArgFormat::Standard);
@@ -4114,6 +4122,9 @@ bool WarpCacheIRTranspiler::emitCallFunction(
     case CallInfo::ArgFormat::FunApplyMagicArgs: {
       return emitFunApplyMagicArgs(wrappedTarget, flags);
     }
+    case CallInfo::ArgFormat::FunApplyArgsObj: {
+      return emitFunApplyArgsObj(wrappedTarget, flags);
+    }
   }
   MOZ_CRASH("unreachable");
 }
@@ -4131,6 +4142,31 @@ bool WarpCacheIRTranspiler::emitFunApplyMagicArgs(
 
   MApplyArgs* apply =
       MApplyArgs::New(alloc(), wrappedTarget, argFunc, numArgs, argThis);
+
+  if (flags.isSameRealm()) {
+    apply->setNotCrossRealm();
+  }
+  if (callInfo_->ignoresReturnValue()) {
+    apply->setIgnoresReturnValue();
+  }
+
+  addEffectful(apply);
+  pushResult(apply);
+
+  return resumeAfter(apply);
+}
+
+bool WarpCacheIRTranspiler::emitFunApplyArgsObj(WrappedFunction* wrappedTarget,
+                                                CallFlags flags) {
+  MOZ_ASSERT(!callInfo_->constructing());
+  MOZ_ASSERT(!builder_->inlineCallInfo());
+
+  MDefinition* callee = callInfo_->thisArg();
+  MDefinition* thisArg = callInfo_->getArg(0);
+  MDefinition* argsObj = callInfo_->getArg(1);
+
+  MApplyArgsObj* apply =
+      MApplyArgsObj::New(alloc(), wrappedTarget, callee, argsObj, thisArg);
 
   if (flags.isSameRealm()) {
     apply->setNotCrossRealm();

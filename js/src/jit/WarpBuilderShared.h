@@ -51,6 +51,7 @@ class MOZ_STACK_CLASS CallInfo {
     Standard,
     Array,
     FunApplyMagicArgs,
+    FunApplyArgsObj,
   };
 
  private:
