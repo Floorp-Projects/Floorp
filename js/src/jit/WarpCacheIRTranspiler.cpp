@@ -241,8 +241,8 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
                                       Int32OperandId argcId,
                                       mozilla::Maybe<ObjOperandId> thisObjId,
                                       CallFlags flags, CallKind kind);
-  [[nodiscard]] bool emitFunApplyArgs(WrappedFunction* wrappedTarget,
-                                      CallFlags flags);
+  [[nodiscard]] bool emitFunApplyMagicArgs(WrappedFunction* wrappedTarget,
+                                           CallFlags flags);
 
   MDefinition* convertWasmArg(MDefinition* arg, wasm::ValType::Kind kind);
 
@@ -3970,7 +3970,7 @@ bool WarpCacheIRTranspiler::updateCallInfo(MDefinition* callee,
         callInfo_->removeArg(0);
       }
       break;
-    case CallFlags::FunApplyArgs:
+    case CallFlags::FunApplyMagicArgs:
       MOZ_ASSERT(!callInfo_->constructing());
       MOZ_ASSERT(callInfo_->argFormat() == CallInfo::ArgFormat::Standard);
 
@@ -3986,7 +3986,7 @@ bool WarpCacheIRTranspiler::updateCallInfo(MDefinition* callee,
         callInfo_->setCallee(argFunc);
         callInfo_->setThis(argThis);
       } else {
-        callInfo_->setArgFormat(CallInfo::ArgFormat::FunApplyArgs);
+        callInfo_->setArgFormat(CallInfo::ArgFormat::FunApplyMagicArgs);
       }
       break;
     case CallFlags::FunApplyArray: {
@@ -4111,15 +4111,15 @@ bool WarpCacheIRTranspiler::emitCallFunction(
 
       return resumeAfter(call);
     }
-    case CallInfo::ArgFormat::FunApplyArgs: {
-      return emitFunApplyArgs(wrappedTarget, flags);
+    case CallInfo::ArgFormat::FunApplyMagicArgs: {
+      return emitFunApplyMagicArgs(wrappedTarget, flags);
     }
   }
   MOZ_CRASH("unreachable");
 }
 
-bool WarpCacheIRTranspiler::emitFunApplyArgs(WrappedFunction* wrappedTarget,
-                                             CallFlags flags) {
+bool WarpCacheIRTranspiler::emitFunApplyMagicArgs(
+    WrappedFunction* wrappedTarget, CallFlags flags) {
   MOZ_ASSERT(!callInfo_->constructing());
   MOZ_ASSERT(!builder_->inlineCallInfo());
 
