@@ -5792,7 +5792,7 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptMaybeStencil(
 
   Rooted<frontend::CompilationGCOutput> gcOutput(cx);
   Rooted<frontend::CompilationGCOutput> gcOutputForDelazification(cx);
-  if (!frontend::InstantiateStencils(cx, stencil, gcOutput.get(),
+  if (!frontend::InstantiateStencils(cx, input.get(), stencil, gcOutput.get(),
                                      gcOutputForDelazification.address())) {
     return JS::TranscodeResult_Throw;
   }
@@ -5844,7 +5844,7 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
 
   Rooted<frontend::CompilationGCOutput> gcOutput(cx);
   Rooted<frontend::CompilationGCOutput> gcOutputForDelazification(cx);
-  if (!frontend::InstantiateStencils(cx, stencil, gcOutput.get(),
+  if (!frontend::InstantiateStencils(cx, input.get(), stencil, gcOutput.get(),
                                      gcOutputForDelazification.address())) {
     return JS::TranscodeResult_Throw;
   }

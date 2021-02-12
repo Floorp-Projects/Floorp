@@ -687,7 +687,8 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
   }
 
   if (stencil_) {
-    if (!frontend::PrepareForInstantiate(cx, *stencil_, gcOutput_)) {
+    if (!frontend::PrepareForInstantiate(cx, *stencilInput_, *stencil_,
+                                         gcOutput_)) {
       stencil_ = nullptr;
     }
   }
@@ -702,8 +703,8 @@ bool ParseTask::instantiateStencils(JSContext* cx) {
     return false;
   }
 
-  bool result = frontend::InstantiateStencils(cx, *stencil_, gcOutput_,
-                                              &gcOutputForDelazification_);
+  bool result = frontend::InstantiateStencils(
+      cx, *stencilInput_, *stencil_, gcOutput_, &gcOutputForDelazification_);
 
   // Whatever happens to the top-level script compilation (even if it fails),
   // we must finish initializing the SSO.  This is because there may be valid
@@ -753,7 +754,8 @@ void ModuleParseTask<Unit>::parse(JSContext* cx) {
   }
 
   if (stencil_) {
-    if (!frontend::PrepareForInstantiate(cx, *stencil_, gcOutput_)) {
+    if (!frontend::PrepareForInstantiate(cx, *stencilInput_, *stencil_,
+                                         gcOutput_)) {
       stencil_ = nullptr;
     }
   }
@@ -801,7 +803,8 @@ void ScriptDecodeTask::parse(JSContext* cx) {
       return;
     }
 
-    if (!frontend::PrepareForInstantiate(cx, *stencil_, gcOutput_,
+    if (!frontend::PrepareForInstantiate(cx, *stencilInput_, *stencil_,
+                                         gcOutput_,
                                          &gcOutputForDelazification_)) {
       stencil_.reset();
     }
