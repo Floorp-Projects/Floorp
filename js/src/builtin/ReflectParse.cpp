@@ -291,7 +291,7 @@ class NodeBuilder {
         callbacks(cx),
         userv(c) {}
 
-  MOZ_MUST_USE bool init(HandleObject userobj = nullptr) {
+  [[nodiscard]] bool init(HandleObject userobj = nullptr) {
     if (src) {
       if (!atomValue(src, &srcval)) {
         return false;
@@ -345,9 +345,9 @@ class NodeBuilder {
   }
 
  private:
-  MOZ_MUST_USE bool callbackHelper(HandleValue fun, const InvokeArgs& args,
-                                   size_t i, TokenPos* pos,
-                                   MutableHandleValue dst) {
+  [[nodiscard]] bool callbackHelper(HandleValue fun, const InvokeArgs& args,
+                                    size_t i, TokenPos* pos,
+                                    MutableHandleValue dst) {
     // The end of the implementation of callback(). All arguments except
     // loc have already been stored in range [0, i).
     if (saveLoc) {
@@ -363,9 +363,9 @@ class NodeBuilder {
   // that convert to HandleValue, so this isn't as template-y as it seems,
   // just variadic.
   template <typename... Arguments>
-  MOZ_MUST_USE bool callbackHelper(HandleValue fun, const InvokeArgs& args,
-                                   size_t i, HandleValue head,
-                                   Arguments&&... tail) {
+  [[nodiscard]] bool callbackHelper(HandleValue fun, const InvokeArgs& args,
+                                    size_t i, HandleValue head,
+                                    Arguments&&... tail) {
     // Recursive loop to store the arguments into args. This eventually
     // bottoms out in a call to the non-template callbackHelper() above.
     args[i].set(head);
@@ -377,7 +377,7 @@ class NodeBuilder {
   //     bool callback(HandleValue fun, HandleValue... args, TokenPos* pos,
   //                   MutableHandleValue dst);
   template <typename... Arguments>
-  MOZ_MUST_USE bool callback(HandleValue fun, Arguments&&... args) {
+  [[nodiscard]] bool callback(HandleValue fun, Arguments&&... args) {
     InvokeArgs iargs(cx);
     if (!iargs.init(cx, sizeof...(args) - 2 + size_t(saveLoc))) {
       return false;
@@ -395,7 +395,7 @@ class NodeBuilder {
     return v.isMagic(JS_SERIALIZE_NO_NODE) ? JS::UndefinedHandleValue : v;
   }
 
-  MOZ_MUST_USE bool atomValue(const char* s, MutableHandleValue dst) {
+  [[nodiscard]] bool atomValue(const char* s, MutableHandleValue dst) {
     /*
      * Bug 575416: instead of Atomize, lookup constant atoms in tbl file
      */
@@ -408,7 +408,7 @@ class NodeBuilder {
     return true;
   }
 
-  MOZ_MUST_USE bool newObject(MutableHandleObject dst) {
+  [[nodiscard]] bool newObject(MutableHandleObject dst) {
     RootedPlainObject nobj(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!nobj) {
       return false;
@@ -418,12 +418,12 @@ class NodeBuilder {
     return true;
   }
 
-  MOZ_MUST_USE bool newArray(NodeVector& elts, MutableHandleValue dst);
+  [[nodiscard]] bool newArray(NodeVector& elts, MutableHandleValue dst);
 
-  MOZ_MUST_USE bool createNode(ASTType type, TokenPos* pos,
-                               MutableHandleObject dst);
+  [[nodiscard]] bool createNode(ASTType type, TokenPos* pos,
+                                MutableHandleObject dst);
 
-  MOZ_MUST_USE bool newNodeHelper(HandleObject obj, MutableHandleValue dst) {
+  [[nodiscard]] bool newNodeHelper(HandleObject obj, MutableHandleValue dst) {
     // The end of the implementation of newNode().
     MOZ_ASSERT(obj);
     dst.setObject(*obj);
@@ -431,8 +431,8 @@ class NodeBuilder {
   }
 
   template <typename... Arguments>
-  MOZ_MUST_USE bool newNodeHelper(HandleObject obj, const char* name,
-                                  HandleValue value, Arguments&&... rest) {
+  [[nodiscard]] bool newNodeHelper(HandleObject obj, const char* name,
+                                   HandleValue value, Arguments&&... rest) {
     // Recursive loop to define properties. Note that the newNodeHelper()
     // call below passes two fewer arguments than we received, as we omit
     // `name` and `value`. This eventually bottoms out in a call to the
@@ -449,15 +449,15 @@ class NodeBuilder {
   //                  {const char *name0, HandleValue value0,}...
   //                  MutableHandleValue dst);
   template <typename... Arguments>
-  MOZ_MUST_USE bool newNode(ASTType type, TokenPos* pos, Arguments&&... args) {
+  [[nodiscard]] bool newNode(ASTType type, TokenPos* pos, Arguments&&... args) {
     RootedObject node(cx);
     return createNode(type, pos, &node) &&
            newNodeHelper(node, std::forward<Arguments>(args)...);
   }
 
-  MOZ_MUST_USE bool listNode(ASTType type, const char* propName,
-                             NodeVector& elts, TokenPos* pos,
-                             MutableHandleValue dst) {
+  [[nodiscard]] bool listNode(ASTType type, const char* propName,
+                              NodeVector& elts, TokenPos* pos,
+                              MutableHandleValue dst) {
     RootedValue array(cx);
     if (!newArray(elts, &array)) {
       return false;
@@ -471,8 +471,8 @@ class NodeBuilder {
     return newNode(type, pos, propName, array, dst);
   }
 
-  MOZ_MUST_USE bool defineProperty(HandleObject obj, const char* name,
-                                   HandleValue val) {
+  [[nodiscard]] bool defineProperty(HandleObject obj, const char* name,
+                                    HandleValue val) {
     MOZ_ASSERT_IF(val.isMagic(), val.whyMagic() == JS_SERIALIZE_NO_NODE);
 
     /*
@@ -490,9 +490,9 @@ class NodeBuilder {
     return DefineDataProperty(cx, obj, atom->asPropertyName(), optVal);
   }
 
-  MOZ_MUST_USE bool newNodeLoc(TokenPos* pos, MutableHandleValue dst);
+  [[nodiscard]] bool newNodeLoc(TokenPos* pos, MutableHandleValue dst);
 
-  MOZ_MUST_USE bool setNodeLoc(HandleObject node, TokenPos* pos);
+  [[nodiscard]] bool setNodeLoc(HandleObject node, TokenPos* pos);
 
  public:
   /*
@@ -508,236 +508,239 @@ class NodeBuilder {
    * misc nodes
    */
 
-  MOZ_MUST_USE bool program(NodeVector& elts, TokenPos* pos,
-                            MutableHandleValue dst);
+  [[nodiscard]] bool program(NodeVector& elts, TokenPos* pos,
+                             MutableHandleValue dst);
 
-  MOZ_MUST_USE bool literal(HandleValue val, TokenPos* pos,
-                            MutableHandleValue dst);
+  [[nodiscard]] bool literal(HandleValue val, TokenPos* pos,
+                             MutableHandleValue dst);
 
-  MOZ_MUST_USE bool identifier(HandleValue name, TokenPos* pos,
-                               MutableHandleValue dst);
+  [[nodiscard]] bool identifier(HandleValue name, TokenPos* pos,
+                                MutableHandleValue dst);
 
-  MOZ_MUST_USE bool function(ASTType type, TokenPos* pos, HandleValue id,
-                             NodeVector& args, NodeVector& defaults,
-                             HandleValue body, HandleValue rest,
-                             GeneratorStyle generatorStyle, bool isAsync,
-                             bool isExpression, MutableHandleValue dst);
+  [[nodiscard]] bool function(ASTType type, TokenPos* pos, HandleValue id,
+                              NodeVector& args, NodeVector& defaults,
+                              HandleValue body, HandleValue rest,
+                              GeneratorStyle generatorStyle, bool isAsync,
+                              bool isExpression, MutableHandleValue dst);
 
-  MOZ_MUST_USE bool variableDeclarator(HandleValue id, HandleValue init,
-                                       TokenPos* pos, MutableHandleValue dst);
+  [[nodiscard]] bool variableDeclarator(HandleValue id, HandleValue init,
+                                        TokenPos* pos, MutableHandleValue dst);
 
-  MOZ_MUST_USE bool switchCase(HandleValue expr, NodeVector& elts,
-                               TokenPos* pos, MutableHandleValue dst);
-
-  MOZ_MUST_USE bool catchClause(HandleValue var, HandleValue body,
+  [[nodiscard]] bool switchCase(HandleValue expr, NodeVector& elts,
                                 TokenPos* pos, MutableHandleValue dst);
 
-  MOZ_MUST_USE bool prototypeMutation(HandleValue val, TokenPos* pos,
-                                      MutableHandleValue dst);
-  MOZ_MUST_USE bool propertyInitializer(HandleValue key, HandleValue val,
-                                        PropKind kind, bool isShorthand,
-                                        bool isMethod, TokenPos* pos,
-                                        MutableHandleValue dst);
+  [[nodiscard]] bool catchClause(HandleValue var, HandleValue body,
+                                 TokenPos* pos, MutableHandleValue dst);
+
+  [[nodiscard]] bool prototypeMutation(HandleValue val, TokenPos* pos,
+                                       MutableHandleValue dst);
+  [[nodiscard]] bool propertyInitializer(HandleValue key, HandleValue val,
+                                         PropKind kind, bool isShorthand,
+                                         bool isMethod, TokenPos* pos,
+                                         MutableHandleValue dst);
 
   /*
    * statements
    */
 
-  MOZ_MUST_USE bool blockStatement(NodeVector& elts, TokenPos* pos,
-                                   MutableHandleValue dst);
-
-  MOZ_MUST_USE bool expressionStatement(HandleValue expr, TokenPos* pos,
-                                        MutableHandleValue dst);
-
-  MOZ_MUST_USE bool emptyStatement(TokenPos* pos, MutableHandleValue dst);
-
-  MOZ_MUST_USE bool ifStatement(HandleValue test, HandleValue cons,
-                                HandleValue alt, TokenPos* pos,
-                                MutableHandleValue dst);
-
-  MOZ_MUST_USE bool breakStatement(HandleValue label, TokenPos* pos,
-                                   MutableHandleValue dst);
-
-  MOZ_MUST_USE bool continueStatement(HandleValue label, TokenPos* pos,
-                                      MutableHandleValue dst);
-
-  MOZ_MUST_USE bool labeledStatement(HandleValue label, HandleValue stmt,
-                                     TokenPos* pos, MutableHandleValue dst);
-
-  MOZ_MUST_USE bool throwStatement(HandleValue arg, TokenPos* pos,
-                                   MutableHandleValue dst);
-
-  MOZ_MUST_USE bool returnStatement(HandleValue arg, TokenPos* pos,
+  [[nodiscard]] bool blockStatement(NodeVector& elts, TokenPos* pos,
                                     MutableHandleValue dst);
 
-  MOZ_MUST_USE bool forStatement(HandleValue init, HandleValue test,
-                                 HandleValue update, HandleValue stmt,
-                                 TokenPos* pos, MutableHandleValue dst);
+  [[nodiscard]] bool expressionStatement(HandleValue expr, TokenPos* pos,
+                                         MutableHandleValue dst);
 
-  MOZ_MUST_USE bool forInStatement(HandleValue var, HandleValue expr,
-                                   HandleValue stmt, TokenPos* pos,
-                                   MutableHandleValue dst);
+  [[nodiscard]] bool emptyStatement(TokenPos* pos, MutableHandleValue dst);
 
-  MOZ_MUST_USE bool forOfStatement(HandleValue var, HandleValue expr,
-                                   HandleValue stmt, TokenPos* pos,
-                                   MutableHandleValue dst);
-
-  MOZ_MUST_USE bool withStatement(HandleValue expr, HandleValue stmt,
-                                  TokenPos* pos, MutableHandleValue dst);
-
-  MOZ_MUST_USE bool whileStatement(HandleValue test, HandleValue stmt,
-                                   TokenPos* pos, MutableHandleValue dst);
-
-  MOZ_MUST_USE bool doWhileStatement(HandleValue stmt, HandleValue test,
-                                     TokenPos* pos, MutableHandleValue dst);
-
-  MOZ_MUST_USE bool switchStatement(HandleValue disc, NodeVector& elts,
-                                    bool lexical, TokenPos* pos,
-                                    MutableHandleValue dst);
-
-  MOZ_MUST_USE bool tryStatement(HandleValue body, HandleValue handler,
-                                 HandleValue finally, TokenPos* pos,
+  [[nodiscard]] bool ifStatement(HandleValue test, HandleValue cons,
+                                 HandleValue alt, TokenPos* pos,
                                  MutableHandleValue dst);
 
-  MOZ_MUST_USE bool debuggerStatement(TokenPos* pos, MutableHandleValue dst);
+  [[nodiscard]] bool breakStatement(HandleValue label, TokenPos* pos,
+                                    MutableHandleValue dst);
 
-  MOZ_MUST_USE bool importDeclaration(NodeVector& elts, HandleValue moduleSpec,
+  [[nodiscard]] bool continueStatement(HandleValue label, TokenPos* pos,
+                                       MutableHandleValue dst);
+
+  [[nodiscard]] bool labeledStatement(HandleValue label, HandleValue stmt,
                                       TokenPos* pos, MutableHandleValue dst);
 
-  MOZ_MUST_USE bool importSpecifier(HandleValue importName,
-                                    HandleValue bindingName, TokenPos* pos,
+  [[nodiscard]] bool throwStatement(HandleValue arg, TokenPos* pos,
                                     MutableHandleValue dst);
 
-  MOZ_MUST_USE bool importNamespaceSpecifier(HandleValue bindingName,
-                                             TokenPos* pos,
-                                             MutableHandleValue dst);
+  [[nodiscard]] bool returnStatement(HandleValue arg, TokenPos* pos,
+                                     MutableHandleValue dst);
 
-  MOZ_MUST_USE bool exportDeclaration(HandleValue decl, NodeVector& elts,
-                                      HandleValue moduleSpec,
-                                      HandleValue isDefault, TokenPos* pos,
-                                      MutableHandleValue dst);
+  [[nodiscard]] bool forStatement(HandleValue init, HandleValue test,
+                                  HandleValue update, HandleValue stmt,
+                                  TokenPos* pos, MutableHandleValue dst);
 
-  MOZ_MUST_USE bool exportSpecifier(HandleValue bindingName,
-                                    HandleValue exportName, TokenPos* pos,
+  [[nodiscard]] bool forInStatement(HandleValue var, HandleValue expr,
+                                    HandleValue stmt, TokenPos* pos,
                                     MutableHandleValue dst);
 
-  MOZ_MUST_USE bool exportNamespaceSpecifier(HandleValue exportName,
-                                             TokenPos* pos,
-                                             MutableHandleValue dst);
+  [[nodiscard]] bool forOfStatement(HandleValue var, HandleValue expr,
+                                    HandleValue stmt, TokenPos* pos,
+                                    MutableHandleValue dst);
 
-  MOZ_MUST_USE bool exportBatchSpecifier(TokenPos* pos, MutableHandleValue dst);
+  [[nodiscard]] bool withStatement(HandleValue expr, HandleValue stmt,
+                                   TokenPos* pos, MutableHandleValue dst);
 
-  MOZ_MUST_USE bool classDefinition(bool expr, HandleValue name,
-                                    HandleValue heritage, HandleValue block,
+  [[nodiscard]] bool whileStatement(HandleValue test, HandleValue stmt,
                                     TokenPos* pos, MutableHandleValue dst);
-  MOZ_MUST_USE bool classMembers(NodeVector& members, MutableHandleValue dst);
-  MOZ_MUST_USE bool classMethod(HandleValue name, HandleValue body,
-                                PropKind kind, bool isStatic, TokenPos* pos,
-                                MutableHandleValue dst);
-  MOZ_MUST_USE bool classField(HandleValue name, HandleValue initializer,
-                               TokenPos* pos, MutableHandleValue dst);
+
+  [[nodiscard]] bool doWhileStatement(HandleValue stmt, HandleValue test,
+                                      TokenPos* pos, MutableHandleValue dst);
+
+  [[nodiscard]] bool switchStatement(HandleValue disc, NodeVector& elts,
+                                     bool lexical, TokenPos* pos,
+                                     MutableHandleValue dst);
+
+  [[nodiscard]] bool tryStatement(HandleValue body, HandleValue handler,
+                                  HandleValue finally, TokenPos* pos,
+                                  MutableHandleValue dst);
+
+  [[nodiscard]] bool debuggerStatement(TokenPos* pos, MutableHandleValue dst);
+
+  [[nodiscard]] bool importDeclaration(NodeVector& elts, HandleValue moduleSpec,
+                                       TokenPos* pos, MutableHandleValue dst);
+
+  [[nodiscard]] bool importSpecifier(HandleValue importName,
+                                     HandleValue bindingName, TokenPos* pos,
+                                     MutableHandleValue dst);
+
+  [[nodiscard]] bool importNamespaceSpecifier(HandleValue bindingName,
+                                              TokenPos* pos,
+                                              MutableHandleValue dst);
+
+  [[nodiscard]] bool exportDeclaration(HandleValue decl, NodeVector& elts,
+                                       HandleValue moduleSpec,
+                                       HandleValue isDefault, TokenPos* pos,
+                                       MutableHandleValue dst);
+
+  [[nodiscard]] bool exportSpecifier(HandleValue bindingName,
+                                     HandleValue exportName, TokenPos* pos,
+                                     MutableHandleValue dst);
+
+  [[nodiscard]] bool exportNamespaceSpecifier(HandleValue exportName,
+                                              TokenPos* pos,
+                                              MutableHandleValue dst);
+
+  [[nodiscard]] bool exportBatchSpecifier(TokenPos* pos,
+                                          MutableHandleValue dst);
+
+  [[nodiscard]] bool classDefinition(bool expr, HandleValue name,
+                                     HandleValue heritage, HandleValue block,
+                                     TokenPos* pos, MutableHandleValue dst);
+  [[nodiscard]] bool classMembers(NodeVector& members, MutableHandleValue dst);
+  [[nodiscard]] bool classMethod(HandleValue name, HandleValue body,
+                                 PropKind kind, bool isStatic, TokenPos* pos,
+                                 MutableHandleValue dst);
+  [[nodiscard]] bool classField(HandleValue name, HandleValue initializer,
+                                TokenPos* pos, MutableHandleValue dst);
 
   /*
    * expressions
    */
 
-  MOZ_MUST_USE bool binaryExpression(BinaryOperator op, HandleValue left,
-                                     HandleValue right, TokenPos* pos,
-                                     MutableHandleValue dst);
-
-  MOZ_MUST_USE bool unaryExpression(UnaryOperator op, HandleValue expr,
-                                    TokenPos* pos, MutableHandleValue dst);
-
-  MOZ_MUST_USE bool assignmentExpression(AssignmentOperator op, HandleValue lhs,
-                                         HandleValue rhs, TokenPos* pos,
-                                         MutableHandleValue dst);
-
-  MOZ_MUST_USE bool updateExpression(HandleValue expr, bool incr, bool prefix,
-                                     TokenPos* pos, MutableHandleValue dst);
-
-  MOZ_MUST_USE bool logicalExpression(ParseNodeKind pnk, HandleValue left,
+  [[nodiscard]] bool binaryExpression(BinaryOperator op, HandleValue left,
                                       HandleValue right, TokenPos* pos,
                                       MutableHandleValue dst);
 
-  MOZ_MUST_USE bool conditionalExpression(HandleValue test, HandleValue cons,
-                                          HandleValue alt, TokenPos* pos,
+  [[nodiscard]] bool unaryExpression(UnaryOperator op, HandleValue expr,
+                                     TokenPos* pos, MutableHandleValue dst);
+
+  [[nodiscard]] bool assignmentExpression(AssignmentOperator op,
+                                          HandleValue lhs, HandleValue rhs,
+                                          TokenPos* pos,
                                           MutableHandleValue dst);
 
-  MOZ_MUST_USE bool sequenceExpression(NodeVector& elts, TokenPos* pos,
+  [[nodiscard]] bool updateExpression(HandleValue expr, bool incr, bool prefix,
+                                      TokenPos* pos, MutableHandleValue dst);
+
+  [[nodiscard]] bool logicalExpression(ParseNodeKind pnk, HandleValue left,
+                                       HandleValue right, TokenPos* pos,
                                        MutableHandleValue dst);
 
-  MOZ_MUST_USE bool newExpression(HandleValue callee, NodeVector& args,
-                                  TokenPos* pos, MutableHandleValue dst);
+  [[nodiscard]] bool conditionalExpression(HandleValue test, HandleValue cons,
+                                           HandleValue alt, TokenPos* pos,
+                                           MutableHandleValue dst);
 
-  MOZ_MUST_USE bool callExpression(HandleValue callee, NodeVector& args,
-                                   TokenPos* pos, MutableHandleValue dst,
-                                   bool isOptional = false);
+  [[nodiscard]] bool sequenceExpression(NodeVector& elts, TokenPos* pos,
+                                        MutableHandleValue dst);
 
-  MOZ_MUST_USE bool memberExpression(bool computed, HandleValue expr,
-                                     HandleValue member, TokenPos* pos,
-                                     MutableHandleValue dst,
-                                     bool isOptional = false);
-
-  MOZ_MUST_USE bool arrayExpression(NodeVector& elts, TokenPos* pos,
-                                    MutableHandleValue dst);
-
-  MOZ_MUST_USE bool templateLiteral(NodeVector& elts, TokenPos* pos,
-                                    MutableHandleValue dst);
-
-  MOZ_MUST_USE bool taggedTemplate(HandleValue callee, NodeVector& args,
+  [[nodiscard]] bool newExpression(HandleValue callee, NodeVector& args,
                                    TokenPos* pos, MutableHandleValue dst);
 
-  MOZ_MUST_USE bool callSiteObj(NodeVector& raw, NodeVector& cooked,
-                                TokenPos* pos, MutableHandleValue dst);
+  [[nodiscard]] bool callExpression(HandleValue callee, NodeVector& args,
+                                    TokenPos* pos, MutableHandleValue dst,
+                                    bool isOptional = false);
 
-  MOZ_MUST_USE bool spreadExpression(HandleValue expr, TokenPos* pos,
+  [[nodiscard]] bool memberExpression(bool computed, HandleValue expr,
+                                      HandleValue member, TokenPos* pos,
+                                      MutableHandleValue dst,
+                                      bool isOptional = false);
+
+  [[nodiscard]] bool arrayExpression(NodeVector& elts, TokenPos* pos,
                                      MutableHandleValue dst);
 
-  MOZ_MUST_USE bool optionalExpression(HandleValue expr, TokenPos* pos,
-                                       MutableHandleValue dst);
-
-  MOZ_MUST_USE bool deleteOptionalExpression(HandleValue expr, TokenPos* pos,
-                                             MutableHandleValue dst);
-
-  MOZ_MUST_USE bool computedName(HandleValue name, TokenPos* pos,
-                                 MutableHandleValue dst);
-
-  MOZ_MUST_USE bool objectExpression(NodeVector& elts, TokenPos* pos,
+  [[nodiscard]] bool templateLiteral(NodeVector& elts, TokenPos* pos,
                                      MutableHandleValue dst);
 
-  MOZ_MUST_USE bool thisExpression(TokenPos* pos, MutableHandleValue dst);
-
-  MOZ_MUST_USE bool yieldExpression(HandleValue arg, YieldKind kind,
+  [[nodiscard]] bool taggedTemplate(HandleValue callee, NodeVector& args,
                                     TokenPos* pos, MutableHandleValue dst);
 
-  MOZ_MUST_USE bool metaProperty(HandleValue meta, HandleValue property,
+  [[nodiscard]] bool callSiteObj(NodeVector& raw, NodeVector& cooked,
                                  TokenPos* pos, MutableHandleValue dst);
 
-  MOZ_MUST_USE bool callImportExpression(HandleValue ident, HandleValue arg,
-                                         TokenPos* pos, MutableHandleValue dst);
+  [[nodiscard]] bool spreadExpression(HandleValue expr, TokenPos* pos,
+                                      MutableHandleValue dst);
 
-  MOZ_MUST_USE bool super(TokenPos* pos, MutableHandleValue dst);
+  [[nodiscard]] bool optionalExpression(HandleValue expr, TokenPos* pos,
+                                        MutableHandleValue dst);
+
+  [[nodiscard]] bool deleteOptionalExpression(HandleValue expr, TokenPos* pos,
+                                              MutableHandleValue dst);
+
+  [[nodiscard]] bool computedName(HandleValue name, TokenPos* pos,
+                                  MutableHandleValue dst);
+
+  [[nodiscard]] bool objectExpression(NodeVector& elts, TokenPos* pos,
+                                      MutableHandleValue dst);
+
+  [[nodiscard]] bool thisExpression(TokenPos* pos, MutableHandleValue dst);
+
+  [[nodiscard]] bool yieldExpression(HandleValue arg, YieldKind kind,
+                                     TokenPos* pos, MutableHandleValue dst);
+
+  [[nodiscard]] bool metaProperty(HandleValue meta, HandleValue property,
+                                  TokenPos* pos, MutableHandleValue dst);
+
+  [[nodiscard]] bool callImportExpression(HandleValue ident, HandleValue arg,
+                                          TokenPos* pos,
+                                          MutableHandleValue dst);
+
+  [[nodiscard]] bool super(TokenPos* pos, MutableHandleValue dst);
 
   /*
    * declarations
    */
 
-  MOZ_MUST_USE bool variableDeclaration(NodeVector& elts, VarDeclKind kind,
-                                        TokenPos* pos, MutableHandleValue dst);
+  [[nodiscard]] bool variableDeclaration(NodeVector& elts, VarDeclKind kind,
+                                         TokenPos* pos, MutableHandleValue dst);
 
   /*
    * patterns
    */
 
-  MOZ_MUST_USE bool arrayPattern(NodeVector& elts, TokenPos* pos,
-                                 MutableHandleValue dst);
-
-  MOZ_MUST_USE bool objectPattern(NodeVector& elts, TokenPos* pos,
+  [[nodiscard]] bool arrayPattern(NodeVector& elts, TokenPos* pos,
                                   MutableHandleValue dst);
 
-  MOZ_MUST_USE bool propertyPattern(HandleValue key, HandleValue patt,
-                                    bool isShorthand, TokenPos* pos,
-                                    MutableHandleValue dst);
+  [[nodiscard]] bool objectPattern(NodeVector& elts, TokenPos* pos,
+                                   MutableHandleValue dst);
+
+  [[nodiscard]] bool propertyPattern(HandleValue key, HandleValue patt,
+                                     bool isShorthand, TokenPos* pos,
+                                     MutableHandleValue dst);
 };
 
 } /* anonymous namespace */

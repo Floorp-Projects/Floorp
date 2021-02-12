@@ -220,8 +220,8 @@ class BigIntStencil {
  public:
   BigIntStencil() = default;
 
-  MOZ_MUST_USE bool init(JSContext* cx, LifoAlloc& alloc,
-                         const Vector<char16_t, 32>& buf);
+  [[nodiscard]] bool init(JSContext* cx, LifoAlloc& alloc,
+                          const Vector<char16_t, 32>& buf);
 
   BigInt* createBigInt(JSContext* cx) const {
     mozilla::Range<const char16_t> source(source_.data(), source_.size());
@@ -411,9 +411,9 @@ class ScopeStencil {
       BaseParserScopeData* baseData) const;
 
   template <typename SpecificEnvironmentType>
-  MOZ_MUST_USE bool createSpecificShape(JSContext* cx, ScopeKind kind,
-                                        BaseScopeData* scopeData,
-                                        MutableHandleShape shape) const;
+  [[nodiscard]] bool createSpecificShape(JSContext* cx, ScopeKind kind,
+                                         BaseScopeData* scopeData,
+                                         MutableHandleShape shape) const;
 
   template <typename SpecificScopeType, typename SpecificEnvironmentType>
   Scope* createSpecificScope(JSContext* cx, CompilationAtomCache& atomCache,

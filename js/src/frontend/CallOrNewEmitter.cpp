@@ -43,7 +43,7 @@ bool CallOrNewEmitter::emitNameCallee(TaggedParserAtomIndex name) {
   return true;
 }
 
-MOZ_MUST_USE PropOpEmitter& CallOrNewEmitter::prepareForPropCallee(
+[[nodiscard]] PropOpEmitter& CallOrNewEmitter::prepareForPropCallee(
     bool isSuperProp) {
   MOZ_ASSERT(state_ == State::Start);
 
@@ -56,7 +56,7 @@ MOZ_MUST_USE PropOpEmitter& CallOrNewEmitter::prepareForPropCallee(
   return *poe_;
 }
 
-MOZ_MUST_USE ElemOpEmitter& CallOrNewEmitter::prepareForElemCallee(
+[[nodiscard]] ElemOpEmitter& CallOrNewEmitter::prepareForElemCallee(
     bool isSuperElem, bool isPrivate) {
   MOZ_ASSERT(state_ == State::Start);
 

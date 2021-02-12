@@ -192,9 +192,9 @@ class SourceText final {
   /**
    * Initialize this using source units transferred out of |data|.
    */
-  MOZ_MUST_USE bool init(JSContext* cx,
-                         js::UniquePtr<Unit[], JS::FreePolicy> data,
-                         size_t dataLength) {
+  [[nodiscard]] bool init(JSContext* cx,
+                          js::UniquePtr<Unit[], JS::FreePolicy> data,
+                          size_t dataLength) {
     return init(cx, data.release(), dataLength, SourceOwnership::TakeOwnership);
   }
 
@@ -210,9 +210,9 @@ class SourceText final {
   template <typename Char,
             typename = std::enable_if_t<std::is_same_v<Char, CharT> &&
                                         !std::is_same_v<Char, Unit>>>
-  MOZ_MUST_USE bool init(JSContext* cx,
-                         js::UniquePtr<Char[], JS::FreePolicy> data,
-                         size_t dataLength) {
+  [[nodiscard]] bool init(JSContext* cx,
+                          js::UniquePtr<Char[], JS::FreePolicy> data,
+                          size_t dataLength) {
     return init(cx, data.release(), dataLength, SourceOwnership::TakeOwnership);
   }
 

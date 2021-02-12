@@ -3800,7 +3800,7 @@ void JSObject::traceChildren(JSTracer* trc) {
 }
 
 // ES 2016 7.3.20.
-MOZ_MUST_USE JSObject* js::SpeciesConstructor(
+[[nodiscard]] JSObject* js::SpeciesConstructor(
     JSContext* cx, HandleObject obj, HandleObject defaultCtor,
     bool (*isDefaultSpecies)(JSContext*, JSFunction*)) {
   // Step 1 (implicit).
@@ -3867,7 +3867,7 @@ MOZ_MUST_USE JSObject* js::SpeciesConstructor(
   return nullptr;
 }
 
-MOZ_MUST_USE JSObject* js::SpeciesConstructor(
+[[nodiscard]] JSObject* js::SpeciesConstructor(
     JSContext* cx, HandleObject obj, JSProtoKey ctorKey,
     bool (*isDefaultSpecies)(JSContext*, JSFunction*)) {
   RootedObject defaultCtor(cx,

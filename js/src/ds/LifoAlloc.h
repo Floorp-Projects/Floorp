@@ -597,7 +597,7 @@ class LifoAlloc {
   }
 
   // Check for space in unused chunks or allocate a new unused chunk.
-  MOZ_MUST_USE bool ensureUnusedApproximateColdPath(size_t n, size_t total);
+  [[nodiscard]] bool ensureUnusedApproximateColdPath(size_t n, size_t total);
 
  public:
   explicit LifoAlloc(size_t defaultChunkSize)
@@ -1021,7 +1021,7 @@ class LifoAllocPolicy {
   template <typename T>
   void free_(T* p, size_t numElems) {}
   void reportAllocOverflow() const {}
-  MOZ_MUST_USE bool checkSimulatedOOM() const {
+  [[nodiscard]] bool checkSimulatedOOM() const {
     return fb == Infallible || !js::oom::ShouldFailWithOOM();
   }
 };

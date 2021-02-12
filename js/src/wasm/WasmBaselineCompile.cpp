@@ -1853,9 +1853,9 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
   using LocalVector = Vector<Local, 16, SystemAllocPolicy>;
 
   // Initialize `localInfo` based on the types of `locals` and `args`.
-  MOZ_MUST_USE bool setupLocals(const ValTypeVector& locals,
-                                const ArgTypeVector& args, bool debugEnabled,
-                                LocalVector* localInfo) {
+  [[nodiscard]] bool setupLocals(const ValTypeVector& locals,
+                                 const ArgTypeVector& args, bool debugEnabled,
+                                 LocalVector* localInfo) {
     if (!localInfo->reserve(locals.length())) {
       return false;
     }
@@ -4933,7 +4933,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     return Stk::StackResult(result.type(), offs);
   }
 
-  MOZ_MUST_USE bool pushResults(ResultType type, StackHeight resultsBase) {
+  [[nodiscard]] bool pushResults(ResultType type, StackHeight resultsBase) {
     if (type.empty()) {
       return true;
     }
@@ -4995,7 +4995,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     return true;
   }
 
-  MOZ_MUST_USE bool pushBlockResults(ResultType type) {
+  [[nodiscard]] bool pushBlockResults(ResultType type) {
     return pushResults(type, controlItem().stackHeight);
   }
 
@@ -5003,7 +5003,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   // block with a control-flow join (loops) or split (if) to shuffle the
   // fallthrough block parameters into the locations expected by the
   // continuation.
-  MOZ_MUST_USE bool topBlockParams(ResultType type) {
+  [[nodiscard]] bool topBlockParams(ResultType type) {
     // This function should only be called when entering a block with a
     // control-flow join at the entry, where there are no live temporaries in
     // the current block.
@@ -5018,7 +5018,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   // is taken, the stack results will be shuffled down into place.  For br_if
   // that has fallthrough, the parameters for the untaken branch flow through to
   // the continuation.
-  MOZ_MUST_USE bool topBranchParams(ResultType type, StackHeight* height) {
+  [[nodiscard]] bool topBranchParams(ResultType type, StackHeight* height) {
     if (type.empty()) {
       *height = fr.stackHeight();
       return true;
@@ -5967,8 +5967,8 @@ class BaseCompiler final : public BaseCompilerInterface {
         desc, instanceArg, builtin.identity, builtin.failureMode);
   }
 
-  MOZ_MUST_USE bool pushCallResults(const FunctionCall& call, ResultType type,
-                                    const StackResultsLoc& loc) {
+  [[nodiscard]] bool pushCallResults(const FunctionCall& call, ResultType type,
+                                     const StackResultsLoc& loc) {
 #if defined(JS_CODEGEN_ARM)
     // pushResults currently bypasses special case code in captureReturnedFxx()
     // that converts GPR results to FPR results for systemABI+softFP.  If we
@@ -8053,8 +8053,8 @@ class BaseCompiler final : public BaseCompilerInterface {
   // Lhs "when applicable".
 
   template <typename Cond, typename Lhs, typename Rhs>
-  MOZ_MUST_USE bool jumpConditionalWithResults(BranchState* b, Cond cond,
-                                               Lhs lhs, Rhs rhs) {
+  [[nodiscard]] bool jumpConditionalWithResults(BranchState* b, Cond cond,
+                                                Lhs lhs, Rhs rhs) {
     if (b->hasBlockResults()) {
       StackHeight resultsBase(0);
       if (!topBranchParams(b->resultType, &resultsBase)) {
@@ -8086,11 +8086,11 @@ class BaseCompiler final : public BaseCompilerInterface {
   // then the compiler MUST instead call resetLatentOp() to reset the state.
 
   template <typename Cond>
-  MOZ_MUST_USE bool sniffConditionalControlCmp(Cond compareOp,
-                                               ValType operandType);
-  MOZ_MUST_USE bool sniffConditionalControlEqz(ValType operandType);
+  [[nodiscard]] bool sniffConditionalControlCmp(Cond compareOp,
+                                                ValType operandType);
+  [[nodiscard]] bool sniffConditionalControlEqz(ValType operandType);
   void emitBranchSetup(BranchState* b);
-  MOZ_MUST_USE bool emitBranchPerform(BranchState* b);
+  [[nodiscard]] bool emitBranchPerform(BranchState* b);
 
   //////////////////////////////////////////////////////////////////////
 
@@ -8154,18 +8154,18 @@ class BaseCompiler final : public BaseCompilerInterface {
   template <bool isSetLocal>
   [[nodiscard]] bool emitSetOrTeeLocal(uint32_t slot);
 
-  MOZ_MUST_USE bool endBlock(ResultType type);
-  MOZ_MUST_USE bool endIfThen(ResultType type);
-  MOZ_MUST_USE bool endIfThenElse(ResultType type);
+  [[nodiscard]] bool endBlock(ResultType type);
+  [[nodiscard]] bool endIfThen(ResultType type);
+  [[nodiscard]] bool endIfThenElse(ResultType type);
 #ifdef ENABLE_WASM_EXCEPTIONS
-  MOZ_MUST_USE bool endTryCatch(ResultType type);
+  [[nodiscard]] bool endTryCatch(ResultType type);
 #endif
 
   void doReturn(ContinuationKind kind);
   void pushReturnValueOfCall(const FunctionCall& call, MIRType type);
 
-  MOZ_MUST_USE bool pushStackResultsForCall(const ResultType& type, RegPtr temp,
-                                            StackResultsLoc* loc);
+  [[nodiscard]] bool pushStackResultsForCall(const ResultType& type,
+                                             RegPtr temp, StackResultsLoc* loc);
   void popStackResultsAfterCall(const StackResultsLoc& results,
                                 uint32_t stackArgBytes);
 

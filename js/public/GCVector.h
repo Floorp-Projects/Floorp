@@ -66,11 +66,11 @@ class GCVector {
   const T& back() const { return vector.back(); }
 
   bool initCapacity(size_t cap) { return vector.initCapacity(cap); }
-  MOZ_MUST_USE bool reserve(size_t req) { return vector.reserve(req); }
+  [[nodiscard]] bool reserve(size_t req) { return vector.reserve(req); }
   void shrinkBy(size_t amount) { return vector.shrinkBy(amount); }
   void shrinkTo(size_t newLen) { return vector.shrinkTo(newLen); }
-  MOZ_MUST_USE bool growBy(size_t amount) { return vector.growBy(amount); }
-  MOZ_MUST_USE bool resize(size_t newLen) { return vector.resize(newLen); }
+  [[nodiscard]] bool growBy(size_t amount) { return vector.growBy(amount); }
+  [[nodiscard]] bool resize(size_t newLen) { return vector.resize(newLen); }
 
   void clear() { return vector.clear(); }
   void clearAndFree() { return vector.clearAndFree(); }
@@ -92,7 +92,7 @@ class GCVector {
   }
 
   template <typename... Args>
-  MOZ_MUST_USE bool emplaceBack(Args&&... args) {
+  [[nodiscard]] bool emplaceBack(Args&&... args) {
     return vector.emplaceBack(std::forward<Args>(args)...);
   }
 
@@ -118,25 +118,25 @@ class GCVector {
   }
 
   template <typename U>
-  MOZ_MUST_USE bool appendAll(const U& aU) {
+  [[nodiscard]] bool appendAll(const U& aU) {
     return vector.append(aU.begin(), aU.end());
   }
   template <typename T2, size_t MinInlineCapacity2, typename AllocPolicy2>
-  MOZ_MUST_USE bool appendAll(
+  [[nodiscard]] bool appendAll(
       GCVector<T2, MinInlineCapacity2, AllocPolicy2>&& aU) {
     return vector.appendAll(aU.begin(), aU.end());
   }
 
-  MOZ_MUST_USE bool appendN(const T& val, size_t count) {
+  [[nodiscard]] bool appendN(const T& val, size_t count) {
     return vector.appendN(val, count);
   }
 
   template <typename U>
-  MOZ_MUST_USE bool append(const U* aBegin, const U* aEnd) {
+  [[nodiscard]] bool append(const U* aBegin, const U* aEnd) {
     return vector.append(aBegin, aEnd);
   }
   template <typename U>
-  MOZ_MUST_USE bool append(const U* aBegin, size_t aLength) {
+  [[nodiscard]] bool append(const U* aBegin, size_t aLength) {
     return vector.append(aBegin, aLength);
   }
 
@@ -255,32 +255,34 @@ class MutableWrappedPtrOperations<JS::GCVector<T, Capacity, AllocPolicy>,
     return JS::MutableHandle<T>::fromMarkedLocation(&vec().operator[](aIndex));
   }
 
-  MOZ_MUST_USE bool initCapacity(size_t aRequest) {
+  [[nodiscard]] bool initCapacity(size_t aRequest) {
     return vec().initCapacity(aRequest);
   }
-  MOZ_MUST_USE bool reserve(size_t aRequest) { return vec().reserve(aRequest); }
+  [[nodiscard]] bool reserve(size_t aRequest) {
+    return vec().reserve(aRequest);
+  }
   void shrinkBy(size_t aIncr) { vec().shrinkBy(aIncr); }
-  MOZ_MUST_USE bool growBy(size_t aIncr) { return vec().growBy(aIncr); }
-  MOZ_MUST_USE bool resize(size_t aNewLength) {
+  [[nodiscard]] bool growBy(size_t aIncr) { return vec().growBy(aIncr); }
+  [[nodiscard]] bool resize(size_t aNewLength) {
     return vec().resize(aNewLength);
   }
-  MOZ_MUST_USE bool growByUninitialized(size_t aIncr) {
+  [[nodiscard]] bool growByUninitialized(size_t aIncr) {
     return vec().growByUninitialized(aIncr);
   }
   void infallibleGrowByUninitialized(size_t aIncr) {
     vec().infallibleGrowByUninitialized(aIncr);
   }
-  MOZ_MUST_USE bool resizeUninitialized(size_t aNewLength) {
+  [[nodiscard]] bool resizeUninitialized(size_t aNewLength) {
     return vec().resizeUninitialized(aNewLength);
   }
   void clear() { vec().clear(); }
   void clearAndFree() { vec().clearAndFree(); }
   template <typename U>
-  MOZ_MUST_USE bool append(U&& aU) {
+  [[nodiscard]] bool append(U&& aU) {
     return vec().append(std::forward<U>(aU));
   }
   template <typename... Args>
-  MOZ_MUST_USE bool emplaceBack(Args&&... aArgs) {
+  [[nodiscard]] bool emplaceBack(Args&&... aArgs) {
     return vec().emplaceBack(std::forward<Args>(aArgs)...);
   }
   template <typename... Args>
@@ -288,18 +290,18 @@ class MutableWrappedPtrOperations<JS::GCVector<T, Capacity, AllocPolicy>,
     vec().infallibleEmplaceBack(std::forward<Args>(args)...);
   }
   template <typename U>
-  MOZ_MUST_USE bool appendAll(U&& aU) {
+  [[nodiscard]] bool appendAll(U&& aU) {
     return vec().appendAll(aU);
   }
-  MOZ_MUST_USE bool appendN(const T& aT, size_t aN) {
+  [[nodiscard]] bool appendN(const T& aT, size_t aN) {
     return vec().appendN(aT, aN);
   }
   template <typename U>
-  MOZ_MUST_USE bool append(const U* aBegin, const U* aEnd) {
+  [[nodiscard]] bool append(const U* aBegin, const U* aEnd) {
     return vec().append(aBegin, aEnd);
   }
   template <typename U>
-  MOZ_MUST_USE bool append(const U* aBegin, size_t aLength) {
+  [[nodiscard]] bool append(const U* aBegin, size_t aLength) {
     return vec().append(aBegin, aLength);
   }
   template <typename U>

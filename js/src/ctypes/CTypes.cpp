@@ -1851,8 +1851,8 @@ static bool VariadicArgumentTypeError(JSContext* cx, uint32_t index,
   return false;
 }
 
-MOZ_MUST_USE JSObject* GetThisObject(JSContext* cx, const CallArgs& args,
-                                     const char* msg) {
+[[nodiscard]] JSObject* GetThisObject(JSContext* cx, const CallArgs& args,
+                                      const char* msg) {
   if (!args.thisv().isObject()) {
     IncompatibleThisProto(cx, msg, args.thisv());
     return nullptr;

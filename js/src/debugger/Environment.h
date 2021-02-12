@@ -48,12 +48,12 @@ class DebuggerEnvironment : public NativeObject {
 
   DebuggerEnvironmentType type() const;
   mozilla::Maybe<ScopeKind> scopeKind() const;
-  MOZ_MUST_USE bool getParent(JSContext* cx,
-                              MutableHandleDebuggerEnvironment result) const;
-  MOZ_MUST_USE bool getObject(JSContext* cx,
-                              MutableHandleDebuggerObject result) const;
-  MOZ_MUST_USE bool getCalleeScript(JSContext* cx,
-                                    MutableHandleDebuggerScript result) const;
+  [[nodiscard]] bool getParent(JSContext* cx,
+                               MutableHandleDebuggerEnvironment result) const;
+  [[nodiscard]] bool getObject(JSContext* cx,
+                               MutableHandleDebuggerObject result) const;
+  [[nodiscard]] bool getCalleeScript(JSContext* cx,
+                                     MutableHandleDebuggerScript result) const;
   bool isDebuggee() const;
   bool isOptimized() const;
 

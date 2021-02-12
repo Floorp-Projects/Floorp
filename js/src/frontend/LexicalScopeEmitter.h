@@ -83,11 +83,11 @@ class MOZ_STACK_CLASS LexicalScopeEmitter {
   // Returns the scope object for non-empty scope.
   const EmitterScope& emitterScope() const { return *emitterScope_; }
 
-  MOZ_MUST_USE bool emitScope(ScopeKind kind,
-                              LexicalScope::ParserData* bindings);
-  MOZ_MUST_USE bool emitEmptyScope();
+  [[nodiscard]] bool emitScope(ScopeKind kind,
+                               LexicalScope::ParserData* bindings);
+  [[nodiscard]] bool emitEmptyScope();
 
-  MOZ_MUST_USE bool emitEnd();
+  [[nodiscard]] bool emitEnd();
 };
 
 } /* namespace frontend */

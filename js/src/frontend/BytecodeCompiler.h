@@ -145,32 +145,32 @@ UniquePtr<CompilationStencil> ParseModuleToStencil(
 //     Function("/*", "*/x) {")
 //     Function("x){ if (3", "return x;}")
 //
-MOZ_MUST_USE JSFunction* CompileStandaloneFunction(
+[[nodiscard]] JSFunction* CompileStandaloneFunction(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<char16_t>& srcBuf,
     const mozilla::Maybe<uint32_t>& parameterListEnd,
     frontend::FunctionSyntaxKind syntaxKind);
 
-MOZ_MUST_USE JSFunction* CompileStandaloneGenerator(
+[[nodiscard]] JSFunction* CompileStandaloneGenerator(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<char16_t>& srcBuf,
     const mozilla::Maybe<uint32_t>& parameterListEnd,
     frontend::FunctionSyntaxKind syntaxKind);
 
-MOZ_MUST_USE JSFunction* CompileStandaloneAsyncFunction(
+[[nodiscard]] JSFunction* CompileStandaloneAsyncFunction(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<char16_t>& srcBuf,
     const mozilla::Maybe<uint32_t>& parameterListEnd,
     frontend::FunctionSyntaxKind syntaxKind);
 
-MOZ_MUST_USE JSFunction* CompileStandaloneAsyncGenerator(
+[[nodiscard]] JSFunction* CompileStandaloneAsyncGenerator(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<char16_t>& srcBuf,
     const mozilla::Maybe<uint32_t>& parameterListEnd,
     frontend::FunctionSyntaxKind syntaxKind);
 
 // Compile a single function in given enclosing non-syntactic scope.
-MOZ_MUST_USE JSFunction* CompileStandaloneFunctionInNonSyntacticScope(
+[[nodiscard]] JSFunction* CompileStandaloneFunctionInNonSyntacticScope(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<char16_t>& srcBuf,
     const mozilla::Maybe<uint32_t>& parameterListEnd,
