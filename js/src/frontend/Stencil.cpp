@@ -1793,25 +1793,20 @@ void frontend::DumpTaggedParserAtomIndex(
         json.property("atom", "");
         break;
 
-#  define CASE_(_, name, _2)                                  \
-    case WellKnownAtomId::name: {                             \
-      GenericPrinter& out = json.beginStringProperty("atom"); \
-      WellKnownParserAtoms::rom_.name.dumpCharsNoQuote(out);  \
-      json.endString();                                       \
-      break;                                                  \
-    }
+#  define CASE_(_, name, _2) case WellKnownAtomId::name:
         FOR_EACH_NONTINY_COMMON_PROPERTYNAME(CASE_)
 #  undef CASE_
 
-#  define CASE_(name, _)                                      \
-    case WellKnownAtomId::name: {                             \
-      GenericPrinter& out = json.beginStringProperty("atom"); \
-      WellKnownParserAtoms::rom_.name.dumpCharsNoQuote(out);  \
-      json.endString();                                       \
-      break;                                                  \
-    }
+#  define CASE_(name, _) case WellKnownAtomId::name:
         JS_FOR_EACH_PROTOTYPE(CASE_)
 #  undef CASE_
+
+        {
+          GenericPrinter& out = json.beginStringProperty("atom");
+          ParserAtomsTable::dumpCharsNoQuote(out, index);
+          json.endString();
+          break;
+        }
 
       default:
         // This includes tiny WellKnownAtomId atoms, which is invalid.
@@ -1863,21 +1858,18 @@ void frontend::DumpTaggedParserAtomIndexNoQuote(
         out.put("#<zero-length name>");
         break;
 
-#  define CASE_(_, name, _2)                                 \
-    case WellKnownAtomId::name: {                            \
-      WellKnownParserAtoms::rom_.name.dumpCharsNoQuote(out); \
-      break;                                                 \
-    }
+#  define CASE_(_, name, _2) case WellKnownAtomId::name:
         FOR_EACH_NONTINY_COMMON_PROPERTYNAME(CASE_)
 #  undef CASE_
 
-#  define CASE_(name, _)                                     \
-    case WellKnownAtomId::name: {                            \
-      WellKnownParserAtoms::rom_.name.dumpCharsNoQuote(out); \
-      break;                                                 \
-    }
+#  define CASE_(name, _) case WellKnownAtomId::name:
         JS_FOR_EACH_PROTOTYPE(CASE_)
 #  undef CASE_
+
+        {
+          ParserAtomsTable::dumpCharsNoQuote(out, index);
+          break;
+        }
 
       default:
         // This includes tiny WellKnownAtomId atoms, which is invalid.

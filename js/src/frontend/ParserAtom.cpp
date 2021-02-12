@@ -6,6 +6,8 @@
 
 #include "frontend/ParserAtom.h"
 
+#include "mozilla/TextUtils.h"  // mozilla::IsAscii
+
 #include <memory>  // std::uninitialized_fill_n
 #include <type_traits>
 
@@ -166,7 +168,11 @@ void ParserAtomsTable::dump(TaggedParserAtomIndex index) const {
   }
 
   if (index.isWellKnownAtomId()) {
-    getWellKnown(index.toWellKnownAtomId())->dump();
+    const auto& info = GetWellKnownAtomInfo(index.toWellKnownAtomId());
+    js::Fprinter out(stderr);
+    out.put("\"");
+    out.put(info.content, info.length);
+    out.put("\"");
     return;
   }
 
@@ -204,7 +210,7 @@ void ParserAtomsTable::dumpCharsNoQuote(js::GenericPrinter& out,
   }
 
   if (index.isWellKnownAtomId()) {
-    getWellKnown(index.toWellKnownAtomId())->dumpCharsNoQuote(out);
+    dumpCharsNoQuote(out, index.toWellKnownAtomId());
     return;
   }
 
@@ -220,6 +226,13 @@ void ParserAtomsTable::dumpCharsNoQuote(js::GenericPrinter& out,
 
   MOZ_ASSERT(index.isNull());
   out.put("#<null>");
+}
+
+/* static */
+void ParserAtomsTable::dumpCharsNoQuote(js::GenericPrinter& out,
+                                        WellKnownAtomId id) {
+  const auto& info = GetWellKnownAtomInfo(id);
+  out.put(info.content, info.length);
 }
 
 /* static */
@@ -891,16 +904,17 @@ TaggedParserAtomIndex WellKnownParserAtoms::lookupChar16Seq(
 }
 
 bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserAtom** name,
+                                      const WellKnownAtomInfo& info,
                                       const ParserAtom& romEntry,
                                       TaggedParserAtomIndex index) {
   MOZ_ASSERT(name != nullptr);
 
-  unsigned int len = romEntry.length();
-  const Latin1Char* str = romEntry.latin1Chars();
+  unsigned int len = info.length;
+  const Latin1Char* str = reinterpret_cast<const Latin1Char*>(info.content);
 
   // Well-known atoms are all currently ASCII with length <= MaxWellKnownLength.
   MOZ_ASSERT(len <= MaxWellKnownLength);
-  MOZ_ASSERT(romEntry.isAscii());
+  MOZ_ASSERT(mozilla::IsAscii(mozilla::Span(info.content, len)));
 
   // Strings matched by lookupTinyIndex are stored in static table and aliases
   // should be initialized directly in WellKnownParserAtoms::init.
@@ -909,10 +923,10 @@ bool WellKnownParserAtoms::initSingle(JSContext* cx, const ParserAtom** name,
              "the wrong CommonPropertyNames.h list?");
 
   InflatedChar16Sequence<Latin1Char> seq(str, len);
-  SpecificParserAtomLookup<Latin1Char> lookup(seq, romEntry.hash());
+  SpecificParserAtomLookup<Latin1Char> lookup(seq, info.hash);
 
   // Save name for returning after moving entry into set.
-  if (!wellKnownMap_.putNew(lookup, &romEntry, index)) {
+  if (!wellKnownMap_.putNew(lookup, &info, index)) {
     js::ReportOutOfMemory(cx);
     return false;
   }
@@ -941,17 +955,17 @@ bool WellKnownParserAtoms::init(JSContext* cx) {
   // Initialize the named fields to point to entries in the ROM. This also adds
   // the atom to the lookup HashMap. The HashMap is used for dynamic lookups
   // later and does not change once this init method is complete.
-#define COMMON_NAME_INIT_(_, NAME, _2)                         \
-  if (!initSingle(cx, &(NAME), rom_.NAME,                      \
-                  TaggedParserAtomIndex::WellKnown::NAME())) { \
-    return false;                                              \
+#define COMMON_NAME_INIT_(_, NAME, _2)                                      \
+  if (!initSingle(cx, &(NAME), GetWellKnownAtomInfo(WellKnownAtomId::NAME), \
+                  rom_.NAME, TaggedParserAtomIndex::WellKnown::NAME())) {   \
+    return false;                                                           \
   }
   FOR_EACH_NONTINY_COMMON_PROPERTYNAME(COMMON_NAME_INIT_)
 #undef COMMON_NAME_INIT_
-#define COMMON_NAME_INIT_(NAME, _)                             \
-  if (!initSingle(cx, &(NAME), rom_.NAME,                      \
-                  TaggedParserAtomIndex::WellKnown::NAME())) { \
-    return false;                                              \
+#define COMMON_NAME_INIT_(NAME, _)                                          \
+  if (!initSingle(cx, &(NAME), GetWellKnownAtomInfo(WellKnownAtomId::NAME), \
+                  rom_.NAME, TaggedParserAtomIndex::WellKnown::NAME())) {   \
+    return false;                                                           \
   }
   JS_FOR_EACH_PROTOTYPE(COMMON_NAME_INIT_)
 #undef COMMON_NAME_INIT_
