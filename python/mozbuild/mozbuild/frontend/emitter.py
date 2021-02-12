@@ -1103,7 +1103,7 @@ class TreeMetadataEmitter(LoggingMixin):
         varmap = dict(
             SOURCES=(Sources, GeneratedSources, all_suffixes),
             HOST_SOURCES=(HostSources, HostGeneratedSources, [".c", ".mm", ".cpp"]),
-            UNIFIED_SOURCES=(UnifiedSources, None, [".c", ".mm", ".cpp"]),
+            UNIFIED_SOURCES=(UnifiedSources, None, [".c", ".mm", ".m", ".cpp"]),
         )
         # Only include a WasmSources or WasmGeneratedSources context if there
         # are any WASM_SOURCES. (This is going to matter later because we inject
