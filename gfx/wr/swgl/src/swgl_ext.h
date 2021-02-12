@@ -96,22 +96,10 @@ static ALWAYS_INLINE auto swgl_forceScalar(T v) -> decltype(force_scalar(v)) {
     swgl_SpanLength -= swgl_StepSize;     \
   } while (0)
 
-static ALWAYS_INLINE WideRGBA8 pack_pixels_RGBA8(Float alpha) {
-  I32 i = round_pixel(alpha);
-  HalfRGBA8 c = packRGBA8(zipLow(i, i), zipHigh(i, i));
-  return combine(zipLow(c, c), zipHigh(c, c));
-}
-
-static ALWAYS_INLINE WideRGBA8 pack_pixels_RGBA8(float alpha) {
-  I32 i = round_pixel(alpha);
-  HalfRGBA8 c = packRGBA8(i, i);
-  return combine(c, c);
-}
-
 // Commit a single chunk of a color scaled by an alpha weight
 #define swgl_commitColor(format, color, alpha)                    \
-  swgl_commitChunk(format, muldiv255(pack_pixels_##format(color), \
-                                     pack_pixels_##format(alpha)))
+  swgl_commitChunk(format, muldiv256(pack_pixels_##format(color), \
+                                     pack_pixels_##format(alpha, 256.0f)))
 #define swgl_commitColorRGBA8(color, alpha) \
   swgl_commitColor(RGBA8, color, alpha)
 #define swgl_commitColorR8(color, alpha) swgl_commitColor(R8, color, alpha)
@@ -134,7 +122,8 @@ static ALWAYS_INLINE bool swgl_isTextureR8(S s) {
 // Returns the offset into the texture buffer for the given layer index. If not
 // a texture array or 3D texture, this will always access the first layer.
 template <typename S>
-static ALWAYS_INLINE int swgl_textureLayerOffset(S s, float layer) {
+static ALWAYS_INLINE int swgl_textureLayerOffset(UNUSED S s,
+                                                 UNUSED float layer) {
   return 0;
 }
 
@@ -171,9 +160,9 @@ static ALWAYS_INLINE T swgl_linearQuantizeStep(S s, T p) {
 
 // Commit a single chunk from a linear texture fetch that is scaled by a color
 #define swgl_commitTextureLinearColor(format, s, p, color, ...)     \
-  swgl_commitChunk(format, muldiv255(textureLinearUnpacked##format( \
+  swgl_commitChunk(format, muldiv256(textureLinearUnpacked##format( \
                                          s, ivec2(p), __VA_ARGS__), \
-                                     pack_pixels_##format(color)))
+                                     pack_pixels_##format(color, 256.0f)))
 #define swgl_commitTextureLinearColorRGBA8(s, p, color, ...) \
   swgl_commitTextureLinearColor(RGBA8, s, p, color, __VA_ARGS__)
 #define swgl_commitTextureLinearColorR8(s, p, color, ...) \
@@ -230,7 +219,7 @@ static ALWAYS_INLINE PackedRGBA8 convertYUV(int colorSpace, U16 y, U16 u,
 // Helper functions to sample from planar YUV textures before converting to RGB
 template <typename S0>
 static inline PackedRGBA8 sampleYUV(S0 sampler0, vec2 uv0, int layer0,
-                                    int colorSpace, int rescaleFactor) {
+                                    int colorSpace, UNUSED int rescaleFactor) {
   ivec2 i0(uv0);
   switch (sampler0->format) {
     case TextureFormat::RGBA8: {
@@ -252,15 +241,15 @@ template <typename S0, typename C>
 static inline WideRGBA8 sampleColorYUV(S0 sampler0, vec2 uv0, int layer0,
                                        int colorSpace, int rescaleFactor,
                                        C color) {
-  return muldiv255(
+  return muldiv256(
       unpack(sampleYUV(sampler0, uv0, layer0, colorSpace, rescaleFactor)),
-      pack_pixels_RGBA8(color));
+      pack_pixels_RGBA8(color, 256.0f));
 }
 
 template <typename S0, typename S1>
 static inline PackedRGBA8 sampleYUV(S0 sampler0, vec2 uv0, int layer0,
                                     S1 sampler1, vec2 uv1, int layer1,
-                                    int colorSpace, int rescaleFactor) {
+                                    int colorSpace, UNUSED int rescaleFactor) {
   ivec2 i0(uv0);
   ivec2 i1(uv1);
   switch (sampler1->format) {
@@ -287,9 +276,9 @@ static inline WideRGBA8 sampleColorYUV(S0 sampler0, vec2 uv0, int layer0,
                                        S1 sampler1, vec2 uv1, int layer1,
                                        int colorSpace, int rescaleFactor,
                                        C color) {
-  return muldiv255(unpack(sampleYUV(sampler0, uv0, layer0, sampler1, uv1,
+  return muldiv256(unpack(sampleYUV(sampler0, uv0, layer0, sampler1, uv1,
                                     layer1, colorSpace, rescaleFactor)),
-                   pack_pixels_RGBA8(color));
+                   pack_pixels_RGBA8(color, 256.0f));
 }
 
 template <typename S0, typename S1, typename S2>
@@ -336,10 +325,10 @@ static inline WideRGBA8 sampleColorYUV(S0 sampler0, vec2 uv0, int layer0,
                                        S2 sampler2, vec2 uv2, int layer2,
                                        int colorSpace, int rescaleFactor,
                                        C color) {
-  return muldiv255(
+  return muldiv256(
       unpack(sampleYUV(sampler0, uv0, layer0, sampler1, uv1, layer1, sampler2,
                        uv2, layer2, colorSpace, rescaleFactor)),
-      pack_pixels_RGBA8(color));
+      pack_pixels_RGBA8(color, 256.0f));
 }
 
 // Commit a single chunk of a YUV surface represented by multiple planar
@@ -362,7 +351,7 @@ static ALWAYS_INLINE WideRGBA8 applyColor(WideRGBA8 src, NoColor) {
 }
 
 static ALWAYS_INLINE WideRGBA8 applyColor(WideRGBA8 src, WideRGBA8 color) {
-  return muldiv255(src, color);
+  return muldiv256(src, color);
 }
 
 static ALWAYS_INLINE PackedRGBA8 applyColor(PackedRGBA8 src, NoColor) {
@@ -370,7 +359,7 @@ static ALWAYS_INLINE PackedRGBA8 applyColor(PackedRGBA8 src, NoColor) {
 }
 
 static ALWAYS_INLINE PackedRGBA8 applyColor(PackedRGBA8 src, WideRGBA8 color) {
-  return pack(muldiv255(unpack(src), color));
+  return pack(muldiv256(unpack(src), color));
 }
 
 // Samples an axis-aligned span of on a single row of a texture using 1:1
@@ -469,7 +458,7 @@ static void blendTextureNearestRGBA8(S sampler, const ivec2_scalar& i, int span,
 
 #define swgl_commitTextureNearestColor(format, s, p, uv_rect, color, ...) \
   swgl_commitTextureNearest(format, s, p, uv_rect,                        \
-                            pack_pixels_##format(color), __VA_ARGS__)
+                            pack_pixels_##format(color, 256.0f), __VA_ARGS__)
 #define swgl_commitTextureNearestColorRGBA8(s, p, uv_rect, color, ...) \
   swgl_commitTextureNearestColor(RGBA8, s, p, uv_rect, color, __VA_ARGS__)
 #define swgl_commitTextureNearestColorR8(s, p, uv_rect, color, ...) \
@@ -554,24 +543,50 @@ static inline WideRGBA8 sampleGradient(sampler2D sampler, int address,
 
 // Variant that allows specifying a color multiplier of the gradient result.
 #define swgl_commitGradientColorRGBA8(sampler, address, entry, color)        \
-  swgl_commitChunk(RGBA8, muldiv255(sampleGradient(sampler, address, entry), \
-                                    pack_pixels_RGBA8(color)))
+  swgl_commitChunk(RGBA8, muldiv256(sampleGradient(sampler, address, entry), \
+                                    pack_pixels_RGBA8(color, 256.0f)))
 
 // Extension to set a clip mask image to be sampled during blending. The offset
 // specifies the positioning of the clip mask image relative to the viewport
 // origin. The bounding box specifies the rectangle relative to the clip mask's
-// origin that constrains sampling within the clip mask.
+// origin that constrains sampling within the clip mask. Blending must be
+// enabled for this to work.
+enum SWGLClipFlag {
+  SWGL_CLIP_FLAG_MASK = 1 << 0,
+  SWGL_CLIP_FLAG_AA = 1 << 1,
+};
+static int swgl_ClipFlags = 0;
 static sampler2D swgl_ClipMask = nullptr;
 static IntPoint swgl_ClipMaskOffset = {0, 0};
 static IntRect swgl_ClipMaskBounds = {0, 0, 0, 0};
 #define swgl_clipMask(mask, offset, bb_origin, bb_size)        \
   do {                                                         \
     if (bb_size != vec2_scalar(0.0f, 0.0f)) {                  \
+      swgl_ClipFlags |= SWGL_CLIP_FLAG_MASK;                   \
       swgl_ClipMask = mask;                                    \
       swgl_ClipMaskOffset = make_ivec2(offset);                \
       swgl_ClipMaskBounds =                                    \
           IntRect(make_ivec2(bb_origin), make_ivec2(bb_size)); \
     }                                                          \
+  } while (0)
+
+// Extension to enable anti-aliasing for the given edges of a quad.
+// Blending must be enable for this to work.
+static int swgl_AAEdgeMask = 0;
+
+static ALWAYS_INLINE int calcAAEdgeMask(bool on) { return on ? 0xF : 0; }
+static ALWAYS_INLINE int calcAAEdgeMask(int mask) { return mask; }
+static ALWAYS_INLINE int calcAAEdgeMask(bvec4_scalar mask) {
+  return (mask.x ? 1 : 0) | (mask.y ? 2 : 0) | (mask.z ? 4 : 0) |
+         (mask.w ? 8 : 0);
+}
+
+#define swgl_antiAlias(edges)                \
+  do {                                       \
+    swgl_AAEdgeMask = calcAAEdgeMask(edges); \
+    if (swgl_AAEdgeMask) {                   \
+      swgl_ClipFlags |= SWGL_CLIP_FLAG_AA;   \
+    }                                        \
   } while (0)
 
 // Dispatch helper used by the GLSL translator to swgl_drawSpan functions.
