@@ -33,7 +33,7 @@ export class InfoGroupContainer extends HTMLElement {
     // Hiding all the certificzte contents except for the first tab that is
     // selected and shown by default
     if (i !== 0) {
-      this.infoGroupsContainers[i].setAttribute("hidden", true);
+      this.infoGroupsContainers[i].hidden = true;
     }
     this.infoGroupsContainers[i].classList.add("info-groups");
 
