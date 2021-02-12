@@ -55,7 +55,9 @@ nsresult IconLoaderHelperWin::OnComplete(imgIContainer* aImage,
       &mNativeIconImage);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mLoadListener->OnComplete();
+  if (mLoadListener) {
+    mLoadListener->OnComplete();
+  }
   return NS_OK;
 }
 
@@ -71,9 +73,7 @@ void IconLoaderHelperWin::Destroy() {
     ::DestroyIcon(mNativeIconImage);
     mNativeIconImage = nullptr;
   }
-  if (mLoadListener) {
-    mLoadListener = nullptr;
-  }
+  mLoadListener = nullptr;
 }
 
 }  // namespace mozilla::widget
