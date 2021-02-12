@@ -57,7 +57,7 @@ void MarkPagesInUseSoft(void* region, size_t length);
 // and should be paged in and out normally. This may be a no-op on some
 // platforms. Callers must check the result, false could mean that the pages
 // are not available.  May make pages read/write.
-MOZ_MUST_USE bool MarkPagesInUseHard(void* region, size_t length);
+[[nodiscard]] bool MarkPagesInUseHard(void* region, size_t length);
 
 // Returns #(hard faults) + #(soft faults)
 size_t GetPageFaultCount();

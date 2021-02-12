@@ -700,7 +700,7 @@ class NonLocalExitControl {
 
   NonLocalExitControl(const NonLocalExitControl&) = delete;
 
-  MOZ_MUST_USE bool leaveScope(EmitterScope* scope);
+  [[nodiscard]] bool leaveScope(EmitterScope* scope);
 
  public:
   NonLocalExitControl(BytecodeEmitter* bce, Kind kind)
@@ -719,9 +719,9 @@ class NonLocalExitControl {
     bce_->bytecodeSection().setStackDepth(savedDepth_);
   }
 
-  MOZ_MUST_USE bool prepareForNonLocalJump(NestableControl* target);
+  [[nodiscard]] bool prepareForNonLocalJump(NestableControl* target);
 
-  MOZ_MUST_USE bool prepareForNonLocalJumpToOutermost() {
+  [[nodiscard]] bool prepareForNonLocalJumpToOutermost() {
     return prepareForNonLocalJump(nullptr);
   }
 };
@@ -4913,7 +4913,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitTry(TryNode* tryNode) {
   return true;
 }
 
-MOZ_MUST_USE bool BytecodeEmitter::emitGoSub(JumpList* jump) {
+[[nodiscard]] bool BytecodeEmitter::emitGoSub(JumpList* jump) {
   // Emit the following:
   //
   //     False

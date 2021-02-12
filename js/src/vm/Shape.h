@@ -1009,10 +1009,10 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   static MOZ_ALWAYS_INLINE Shape* search(JSContext* cx, Shape* start, jsid id);
 
   template <MaybeAdding Adding = MaybeAdding::NotAdding>
-  static inline MOZ_MUST_USE bool search(JSContext* cx, Shape* start, jsid id,
-                                         const AutoKeepShapeCaches&,
-                                         Shape** pshape, ShapeTable** ptable,
-                                         ShapeTable::Entry** pentry);
+  [[nodiscard]] static inline bool search(JSContext* cx, Shape* start, jsid id,
+                                          const AutoKeepShapeCaches&,
+                                          Shape** pshape, ShapeTable** ptable,
+                                          ShapeTable::Entry** pentry);
 
   static inline Shape* searchNoHashify(Shape* start, jsid id);
 
@@ -1053,7 +1053,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
 
   bool makeOwnBaseShape(JSContext* cx);
 
-  MOZ_ALWAYS_INLINE MOZ_MUST_USE bool maybeCreateCacheForLookup(JSContext* cx);
+  [[nodiscard]] MOZ_ALWAYS_INLINE bool maybeCreateCacheForLookup(JSContext* cx);
 
   MOZ_ALWAYS_INLINE void updateDictionaryTable(ShapeTable* table,
                                                ShapeTable::Entry* entry,
@@ -1090,8 +1090,8 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   }
 
   template <typename T>
-  MOZ_MUST_USE ShapeTable* ensureTableForDictionary(JSContext* cx,
-                                                    const T& nogc) {
+  [[nodiscard]] ShapeTable* ensureTableForDictionary(JSContext* cx,
+                                                     const T& nogc) {
     MOZ_ASSERT(inDictionary());
     if (ShapeTable* table = maybeTable(nogc)) {
       return table;

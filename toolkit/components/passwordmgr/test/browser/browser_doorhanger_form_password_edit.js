@@ -555,14 +555,18 @@ async function openAndVerifyDoorhanger(browser, type, expected) {
   await checkDoorhangerUsernamePassword(expected.username, expected.password);
 
   let notificationElement = PopupNotifications.panel.childNodes[0];
-  let toggleCheckboxHidden = notificationElement
-    .querySelector("#password-notification-visibilityToggle")
-    .getAttribute("hidden");
+  let checkbox = notificationElement.querySelector(
+    "#password-notification-visibilityToggle"
+  );
 
   if (expected.toggle == "visible") {
-    todo(!toggleCheckboxHidden, "Toggle checkbox visible as expected");
+    // Bug 1692284
+    // ok(BrowserTestUtils.is_visible(checkbox), "Toggle checkbox visible as expected");
   } else if (expected.toggle == "hidden") {
-    todo(toggleCheckboxHidden, "Toggle checkbox hidden as expected");
+    ok(
+      BrowserTestUtils.is_hidden(checkbox),
+      "Toggle checkbox hidden as expected"
+    );
   } else {
     info("Not checking toggle checkbox visibility");
   }

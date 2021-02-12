@@ -33,7 +33,7 @@ struct JS_PUBLIC_API BackEdge {
 
   BackEdge() : predecessor_(), name_(nullptr) {}
 
-  MOZ_MUST_USE bool init(const Node& predecessor, Edge& edge) {
+  [[nodiscard]] bool init(const Node& predecessor, Edge& edge) {
     MOZ_ASSERT(!predecessor_);
     MOZ_ASSERT(!name_);
 
@@ -281,7 +281,7 @@ struct JS_PUBLIC_API ShortestPaths {
    * the given target, in which case `func` will not be invoked.
    */
   template <class Func>
-  MOZ_MUST_USE bool forEachPath(const Node& target, Func func) {
+  [[nodiscard]] bool forEachPath(const Node& target, Func func) {
     MOZ_ASSERT(targets_.has(target));
 
     auto ptr = paths_.lookup(target);

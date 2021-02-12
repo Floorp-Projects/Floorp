@@ -76,7 +76,7 @@ class Thread {
   // result in the value being copied, which may not be the intended behavior.
   // See the comment below on ThreadTrampoline::args for an explanation.
   template <typename F, typename... Args>
-  MOZ_MUST_USE bool init(F&& f, Args&&... args) {
+  [[nodiscard]] bool init(F&& f, Args&&... args) {
     MOZ_RELEASE_ASSERT(id_ == ThreadId());
     using Trampoline = detail::ThreadTrampoline<F, Args...>;
     auto trampoline =
@@ -133,8 +133,8 @@ class Thread {
   Options options_;
 
   // Dispatch to per-platform implementation of thread creation.
-  MOZ_MUST_USE bool create(THREAD_RETURN_TYPE(THREAD_CALL_API* aMain)(void*),
-                           void* aArg);
+  [[nodiscard]] bool create(THREAD_RETURN_TYPE(THREAD_CALL_API* aMain)(void*),
+                            void* aArg);
 
   // An internal version of JS_IsInitialized() that returns whether SpiderMonkey
   // is currently initialized or is in the process of being initialized.

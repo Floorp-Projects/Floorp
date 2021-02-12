@@ -185,7 +185,7 @@ class ArgumentsObject : public NativeObject {
 
   RareArgumentsData* maybeRareData() const { return data()->rareData; }
 
-  MOZ_MUST_USE bool createRareData(JSContext* cx);
+  [[nodiscard]] bool createRareData(JSContext* cx);
 
   RareArgumentsData* getOrCreateRareData(JSContext* cx) {
     if (!data()->rareData && !createRareData(cx)) {

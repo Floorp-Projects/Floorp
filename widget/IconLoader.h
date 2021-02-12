@@ -9,8 +9,6 @@
 #include "imgINotificationObserver.h"
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsIContentPolicy.h"
 #include "nsISupports.h"
 
 class nsIURI;
@@ -28,38 +26,29 @@ namespace mozilla::widget {
 
 class IconLoader : public imgINotificationObserver {
  public:
-  /**
-   * IconLoader itself is cross-platform, but each platform needs to supply
-   * it with a Helper that does the platform-specific conversion work. The
-   * Helper needs to implement the OnComplete method in order to handle the
-   * imgIContainer of the loaded icon.
-   */
-  class Helper : public nsISupports {
+  // This is the interface that our listeners need to implement so that they can
+  // be notified when the icon is loaded.
+  class Listener {
    public:
-    // Helper needs to implement nsISupports in order for its subclasses to
-    // participate in cycle collection
-    virtual nsresult OnComplete(imgIContainer* aContainer,
-                                const nsIntRect& aRect) = 0;
-
-   protected:
-    virtual ~Helper() = default;
+    virtual nsresult OnComplete(imgIContainer* aContainer) = 0;
   };
 
-  IconLoader(Helper* aHelper, nsINode* aContent,
-             const nsIntRect& aImageRegionRect);
+  // Create the loader.
+  // aListener will be notified when the load is complete.
+  // The loader does not keep an owning reference to the listener. Call Destroy
+  // before the listener goes away.
+  explicit IconLoader(Listener* aListener);
 
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_IMGINOTIFICATIONOBSERVER
-  NS_DECL_CYCLE_COLLECTION_CLASS(IconLoader)
 
   // LoadIcon will start a load request for the icon.
   // The request may not complete until after LoadIcon returns.
   // If aIsInternalIcon is true, the document and principal will not be
   // used when loading.
-  nsresult LoadIcon(nsIURI* aIconURI, bool aIsInternalIcon = false);
-
-  void ReleaseJSObjects() { mContent = nullptr; }
+  nsresult LoadIcon(nsIURI* aIconURI, nsINode* aNode,
+                    bool aIsInternalIcon = false);
 
   void Destroy();
 
@@ -67,14 +56,13 @@ class IconLoader : public imgINotificationObserver {
   virtual ~IconLoader();
 
  private:
-  nsresult OnFrameComplete(imgIRequest* aRequest);
-
-  nsCOMPtr<nsINode> mContent;
-  nsContentPolicyType mContentType;
   RefPtr<imgRequestProxy> mIconRequest;
-  nsIntRect mImageRegionRect;
-  bool mLoadedIcon;
-  RefPtr<Helper> mHelper;
+
+  // The listener, which is notified when loading completes.
+  // Can be null, after a call to Destroy.
+  // This is a non-owning reference and needs to be cleared with a call to
+  // Destroy before the listener goes away.
+  Listener* mListener;
 };
 
 }  // namespace mozilla::widget

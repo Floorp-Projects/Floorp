@@ -69,14 +69,14 @@ class RelativeTimeFormatObject : public NativeObject {
  * Usage: formatted = intl_FormatRelativeTime(relativeTimeFormat, t,
  *                                            unit, numeric, formatToParts)
  */
-extern MOZ_MUST_USE bool intl_FormatRelativeTime(JSContext* cx, unsigned argc,
-                                                 JS::Value* vp);
+[[nodiscard]] extern bool intl_FormatRelativeTime(JSContext* cx, unsigned argc,
+                                                  JS::Value* vp);
 
 namespace intl {
 
 using FieldType = js::ImmutablePropertyNamePtr JSAtomState::*;
 
-MOZ_MUST_USE bool FormattedRelativeTimeToParts(
+[[nodiscard]] bool FormattedRelativeTimeToParts(
     JSContext* cx, const UFormattedValue* formattedValue, double timeValue,
     FieldType relativeTimeUnit, MutableHandleValue result);
 

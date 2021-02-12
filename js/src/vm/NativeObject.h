@@ -372,8 +372,8 @@ class ObjectElements {
 
   static void PrepareForPreventExtensions(JSContext* cx, NativeObject* obj);
   static void PreventExtensions(NativeObject* obj);
-  static MOZ_MUST_USE bool FreezeOrSeal(JSContext* cx, HandleNativeObject obj,
-                                        IntegrityLevel level);
+  [[nodiscard]] static bool FreezeOrSeal(JSContext* cx, HandleNativeObject obj,
+                                         IntegrityLevel level);
 
   bool isSealed() const { return flags & SEALED; }
 
@@ -633,8 +633,8 @@ class NativeObject : public JSObject {
    */
   bool ensureSlotsForDictionaryObject(JSContext* cx, uint32_t span);
 
-  static MOZ_MUST_USE bool toDictionaryMode(JSContext* cx,
-                                            HandleNativeObject obj);
+  [[nodiscard]] static bool toDictionaryMode(JSContext* cx,
+                                             HandleNativeObject obj);
 
  private:
   inline void setEmptyDynamicSlots(uint32_t dictonarySlotSpan);
@@ -744,15 +744,15 @@ class NativeObject : public JSObject {
   }
   inline void initEmptyDynamicSlots();
 
-  static MOZ_MUST_USE bool generateOwnShape(JSContext* cx,
-                                            HandleNativeObject obj,
-                                            Shape* newShape = nullptr) {
+  [[nodiscard]] static bool generateOwnShape(JSContext* cx,
+                                             HandleNativeObject obj,
+                                             Shape* newShape = nullptr) {
     return replaceWithNewEquivalentShape(cx, obj, obj->lastProperty(),
                                          newShape);
   }
 
-  static MOZ_MUST_USE bool reshapeForShadowedProp(JSContext* cx,
-                                                  HandleNativeObject obj);
+  [[nodiscard]] static bool reshapeForShadowedProp(JSContext* cx,
+                                                   HandleNativeObject obj);
   static bool clearFlag(JSContext* cx, HandleNativeObject obj,
                         BaseShape::Flag flag);
 
@@ -988,11 +988,11 @@ class NativeObject : public JSObject {
       JSSetterOp setter, unsigned attrs, ShapeTable* table,
       ShapeTable::Entry* entry, const AutoKeepShapeCaches& keep);
 
-  static MOZ_MUST_USE bool fillInAfterSwap(JSContext* cx,
-                                           HandleNativeObject obj,
-                                           NativeObject* old,
-                                           HandleValueVector values,
-                                           void* priv);
+  [[nodiscard]] static bool fillInAfterSwap(JSContext* cx,
+                                            HandleNativeObject obj,
+                                            NativeObject* old,
+                                            HandleValueVector values,
+                                            void* priv);
 
  public:
   // Return true if this object has been converted from shared-immutable
@@ -1326,8 +1326,8 @@ class NativeObject : public JSObject {
   // This runs write barriers but does not update types. `end - begin` must
   // return the size of the range, which must be >= 0 and fit in an int32_t.
   template <typename Iter>
-  inline MOZ_MUST_USE bool initDenseElementsFromRange(JSContext* cx, Iter begin,
-                                                      Iter end);
+  [[nodiscard]] inline bool initDenseElementsFromRange(JSContext* cx,
+                                                       Iter begin, Iter end);
 
   inline void moveDenseElements(uint32_t dstStart, uint32_t srcStart,
                                 uint32_t count);

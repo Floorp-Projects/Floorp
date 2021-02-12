@@ -926,9 +926,9 @@ enum class CompileUtf8 {
   DontInflate,
 };
 
-static MOZ_MUST_USE bool RunFile(JSContext* cx, const char* filename,
-                                 FILE* file, CompileUtf8 compileMethod,
-                                 bool compileOnly) {
+[[nodiscard]] static bool RunFile(JSContext* cx, const char* filename,
+                                  FILE* file, CompileUtf8 compileMethod,
+                                  bool compileOnly) {
   SkipUTF8BOM(file);
 
   int64_t t1 = PRMJ_Now();
@@ -997,8 +997,8 @@ static MOZ_MUST_USE bool RunFile(JSContext* cx, const char* filename,
   return true;
 }
 
-static MOZ_MUST_USE bool RunModule(JSContext* cx, const char* filename,
-                                   bool compileOnly) {
+[[nodiscard]] static bool RunModule(JSContext* cx, const char* filename,
+                                    bool compileOnly) {
   ShellContext* sc = GetShellContext(cx);
 
   RootedString path(cx, JS_NewStringCopyZ(cx, filename));
@@ -1410,9 +1410,9 @@ static bool AddIntlExtras(JSContext* cx, unsigned argc, Value* vp) {
 }
 #endif  // JS_HAS_INTL_API
 
-static MOZ_MUST_USE bool EvalUtf8AndPrint(JSContext* cx, const char* bytes,
-                                          size_t length, int lineno,
-                                          bool compileOnly) {
+[[nodiscard]] static bool EvalUtf8AndPrint(JSContext* cx, const char* bytes,
+                                           size_t length, int lineno,
+                                           bool compileOnly) {
   // Eval.
   JS::CompileOptions options(cx);
   options.setIntroductionType("js shell interactive")
@@ -1452,8 +1452,8 @@ static MOZ_MUST_USE bool EvalUtf8AndPrint(JSContext* cx, const char* bytes,
   return true;
 }
 
-static MOZ_MUST_USE bool ReadEvalPrintLoop(JSContext* cx, FILE* in,
-                                           bool compileOnly) {
+[[nodiscard]] static bool ReadEvalPrintLoop(JSContext* cx, FILE* in,
+                                            bool compileOnly) {
   ShellContext* sc = GetShellContext(cx);
   int lineno = 1;
   bool hitEOF = false;
@@ -1559,8 +1559,8 @@ static void ReportCantOpenErrorUnknownEncoding(JSContext* cx,
                              filename, strerror(errno));
 }
 
-static MOZ_MUST_USE bool Process(JSContext* cx, const char* filename,
-                                 bool forceTTY, FileKind kind) {
+[[nodiscard]] static bool Process(JSContext* cx, const char* filename,
+                                  bool forceTTY, FileKind kind) {
   FILE* file;
   if (forceTTY || !filename || strcmp(filename, "-") == 0) {
     file = stdin;
@@ -3169,8 +3169,8 @@ static bool PCToLine(JSContext* cx, unsigned argc, Value* vp) {
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
 
-static MOZ_MUST_USE bool SrcNotes(JSContext* cx, HandleScript script,
-                                  Sprinter* sp) {
+[[nodiscard]] static bool SrcNotes(JSContext* cx, HandleScript script,
+                                   Sprinter* sp) {
   if (!sp->put("\nSource notes:\n") ||
       !sp->jsprintf("%4s %4s %6s %5s %6s %-10s %s\n", "ofs", "line", "column",
                     "pc", "delta", "desc", "args") ||
@@ -3282,8 +3282,8 @@ static const char* TryNoteName(TryNoteKind kind) {
   MOZ_CRASH("Bad TryNoteKind");
 }
 
-static MOZ_MUST_USE bool TryNotes(JSContext* cx, HandleScript script,
-                                  Sprinter* sp) {
+[[nodiscard]] static bool TryNotes(JSContext* cx, HandleScript script,
+                                   Sprinter* sp) {
   if (!sp->put(
           "\nException table:\nkind               stack    start      end\n")) {
     return false;
@@ -3298,8 +3298,8 @@ static MOZ_MUST_USE bool TryNotes(JSContext* cx, HandleScript script,
   return true;
 }
 
-static MOZ_MUST_USE bool ScopeNotes(JSContext* cx, HandleScript script,
-                                    Sprinter* sp) {
+[[nodiscard]] static bool ScopeNotes(JSContext* cx, HandleScript script,
+                                     Sprinter* sp) {
   if (!sp->put("\nScope notes:\n   index   parent    start      end\n")) {
     return false;
   }
@@ -3330,8 +3330,8 @@ static MOZ_MUST_USE bool ScopeNotes(JSContext* cx, HandleScript script,
   return true;
 }
 
-static MOZ_MUST_USE bool GCThings(JSContext* cx, HandleScript script,
-                                  Sprinter* sp) {
+[[nodiscard]] static bool GCThings(JSContext* cx, HandleScript script,
+                                   Sprinter* sp) {
   if (!sp->put("\nGC things:\n   index   type       value\n")) {
     return false;
   }
@@ -3447,10 +3447,10 @@ static MOZ_MUST_USE bool GCThings(JSContext* cx, HandleScript script,
   return true;
 }
 
-static MOZ_MUST_USE bool DisassembleScript(JSContext* cx, HandleScript script,
-                                           HandleFunction fun, bool lines,
-                                           bool recursive, bool sourceNotes,
-                                           bool gcThings, Sprinter* sp) {
+[[nodiscard]] static bool DisassembleScript(JSContext* cx, HandleScript script,
+                                            HandleFunction fun, bool lines,
+                                            bool recursive, bool sourceNotes,
+                                            bool gcThings, Sprinter* sp) {
   if (fun) {
     if (!sp->put("flags:")) {
       return false;
@@ -4130,9 +4130,9 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
       .setIteratorHelpersEnabled(enableIteratorHelpers);
 }
 
-static MOZ_MUST_USE bool CheckRealmOptions(JSContext* cx,
-                                           JS::RealmOptions& options,
-                                           JSPrincipals* principals) {
+[[nodiscard]] static bool CheckRealmOptions(JSContext* cx,
+                                            JS::RealmOptions& options,
+                                            JSPrincipals* principals) {
   JS::RealmCreationOptions& creationOptions = options.creationOptions();
   if (creationOptions.compartmentSpecifier() !=
       JS::CompartmentSpecifier::ExistingCompartment) {
@@ -5206,8 +5206,8 @@ class XDRBufferObject : public NativeObject {
   static const JSClassOps classOps_;
   static const JSClass class_;
 
-  inline static MOZ_MUST_USE XDRBufferObject* create(JSContext* cx,
-                                                     JS::TranscodeBuffer&& buf);
+  [[nodiscard]] inline static XDRBufferObject* create(
+      JSContext* cx, JS::TranscodeBuffer&& buf);
 
   JS::TranscodeBuffer* data() const {
     Value value = getReservedSlot(VECTOR_SLOT);
@@ -10369,7 +10369,7 @@ static bool OptionFailure(const char* option, const char* str) {
   return false;
 }
 
-static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
+[[nodiscard]] static bool ProcessArgs(JSContext* cx, OptionParser* op) {
   ShellContext* sc = GetShellContext(cx);
 
 #ifdef JS_ENABLE_SMOOSH
@@ -11052,7 +11052,7 @@ static void SetWorkerContextOptions(JSContext* cx) {
   JS_SetNativeStackQuota(cx, gMaxStackSize);
 }
 
-static MOZ_MUST_USE bool PrintUnhandledRejection(
+[[nodiscard]] static bool PrintUnhandledRejection(
     JSContext* cx, Handle<PromiseObject*> promise) {
   RootedValue reason(cx, promise->reason());
   RootedObject site(cx, promise->resolutionSite());
@@ -11092,7 +11092,7 @@ static MOZ_MUST_USE bool PrintUnhandledRejection(
   return true;
 }
 
-static MOZ_MUST_USE bool ReportUnhandledRejections(JSContext* cx) {
+[[nodiscard]] static bool ReportUnhandledRejections(JSContext* cx) {
   ShellContext* sc = GetShellContext(cx);
   if (!sc->trackUnhandledRejections) {
     return true;

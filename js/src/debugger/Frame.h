@@ -7,7 +7,7 @@
 #ifndef debugger_Frame_h
 #define debugger_Frame_h
 
-#include "mozilla/Attributes.h"  // for MOZ_MUST_USE
+#include "mozilla/Attributes.h"  // [[nodiscard]] for
 #include "mozilla/Maybe.h"       // for Maybe
 #include "mozilla/Range.h"       // for Range
 #include "mozilla/Result.h"      // for Result
@@ -151,42 +151,42 @@ class DebuggerFrame : public NativeObject {
                                const FrameIter* maybeIter,
                                Handle<AbstractGeneratorObject*> maybeGenerator);
 
-  static MOZ_MUST_USE bool getArguments(JSContext* cx,
-                                        HandleDebuggerFrame frame,
-                                        MutableHandleDebuggerArguments result);
-  static MOZ_MUST_USE bool getCallee(JSContext* cx, HandleDebuggerFrame frame,
-                                     MutableHandleDebuggerObject result);
-  static MOZ_MUST_USE bool getIsConstructing(JSContext* cx,
-                                             HandleDebuggerFrame frame,
-                                             bool& result);
-  static MOZ_MUST_USE bool getEnvironment(
+  [[nodiscard]] static bool getArguments(JSContext* cx,
+                                         HandleDebuggerFrame frame,
+                                         MutableHandleDebuggerArguments result);
+  [[nodiscard]] static bool getCallee(JSContext* cx, HandleDebuggerFrame frame,
+                                      MutableHandleDebuggerObject result);
+  [[nodiscard]] static bool getIsConstructing(JSContext* cx,
+                                              HandleDebuggerFrame frame,
+                                              bool& result);
+  [[nodiscard]] static bool getEnvironment(
       JSContext* cx, HandleDebuggerFrame frame,
       MutableHandleDebuggerEnvironment result);
-  static MOZ_MUST_USE bool getOffset(JSContext* cx, HandleDebuggerFrame frame,
-                                     size_t& result);
-  static MOZ_MUST_USE bool getOlder(JSContext* cx, HandleDebuggerFrame frame,
-                                    MutableHandleDebuggerFrame result);
-  static MOZ_MUST_USE bool getAsyncPromise(JSContext* cx,
-                                           HandleDebuggerFrame frame,
-                                           MutableHandleDebuggerObject result);
-  static MOZ_MUST_USE bool getOlderSavedFrame(JSContext* cx,
-                                              HandleDebuggerFrame frame,
-                                              MutableHandleSavedFrame result);
-  static MOZ_MUST_USE bool getThis(JSContext* cx, HandleDebuggerFrame frame,
-                                   MutableHandleValue result);
+  [[nodiscard]] static bool getOffset(JSContext* cx, HandleDebuggerFrame frame,
+                                      size_t& result);
+  [[nodiscard]] static bool getOlder(JSContext* cx, HandleDebuggerFrame frame,
+                                     MutableHandleDebuggerFrame result);
+  [[nodiscard]] static bool getAsyncPromise(JSContext* cx,
+                                            HandleDebuggerFrame frame,
+                                            MutableHandleDebuggerObject result);
+  [[nodiscard]] static bool getOlderSavedFrame(JSContext* cx,
+                                               HandleDebuggerFrame frame,
+                                               MutableHandleSavedFrame result);
+  [[nodiscard]] static bool getThis(JSContext* cx, HandleDebuggerFrame frame,
+                                    MutableHandleValue result);
   static DebuggerFrameType getType(HandleDebuggerFrame frame);
   static DebuggerFrameImplementation getImplementation(
       HandleDebuggerFrame frame);
-  static MOZ_MUST_USE bool setOnStepHandler(JSContext* cx,
-                                            HandleDebuggerFrame frame,
-                                            OnStepHandler* handler);
+  [[nodiscard]] static bool setOnStepHandler(JSContext* cx,
+                                             HandleDebuggerFrame frame,
+                                             OnStepHandler* handler);
 
-  static MOZ_MUST_USE JS::Result<Completion> eval(
+  [[nodiscard]] static JS::Result<Completion> eval(
       JSContext* cx, HandleDebuggerFrame frame,
       mozilla::Range<const char16_t> chars, HandleObject bindings,
       const EvalOptions& options);
 
-  static MOZ_MUST_USE DebuggerFrame* check(JSContext* cx, HandleValue thisv);
+  [[nodiscard]] static DebuggerFrame* check(JSContext* cx, HandleValue thisv);
 
   bool isOnStack() const;
 
@@ -226,8 +226,8 @@ class DebuggerFrame : public NativeObject {
    * association while the call is on the stack, and the relationships are easy
    * to discern.
    */
-  MOZ_MUST_USE bool setGeneratorInfo(JSContext* cx,
-                                     Handle<AbstractGeneratorObject*> genObj);
+  [[nodiscard]] bool setGeneratorInfo(JSContext* cx,
+                                      Handle<AbstractGeneratorObject*> genObj);
 
   /*
    * Undo the effects of a prior call to setGenerator.
@@ -266,16 +266,16 @@ class DebuggerFrame : public NativeObject {
   static void finalize(JSFreeOp* fop, JSObject* obj);
 
   static AbstractFramePtr getReferent(HandleDebuggerFrame frame);
-  static MOZ_MUST_USE bool requireScriptReferent(JSContext* cx,
-                                                 HandleDebuggerFrame frame);
+  [[nodiscard]] static bool requireScriptReferent(JSContext* cx,
+                                                  HandleDebuggerFrame frame);
 
-  static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
+  [[nodiscard]] static bool construct(JSContext* cx, unsigned argc, Value* vp);
 
   struct CallData;
 
-  MOZ_MUST_USE bool incrementStepperCounter(JSContext* cx,
-                                            AbstractFramePtr referent);
-  MOZ_MUST_USE bool incrementStepperCounter(JSContext* cx, JSScript* script);
+  [[nodiscard]] bool incrementStepperCounter(JSContext* cx,
+                                             AbstractFramePtr referent);
+  [[nodiscard]] bool incrementStepperCounter(JSContext* cx, JSScript* script);
   void decrementStepperCounter(JSFreeOp* fop, JSScript* script);
   void decrementStepperCounter(JSFreeOp* fop, AbstractFramePtr referent);
 
@@ -289,7 +289,7 @@ class DebuggerFrame : public NativeObject {
   void terminate(JSFreeOp* fop, AbstractFramePtr frame);
   void suspend(JSFreeOp* fop);
 
-  MOZ_MUST_USE bool replaceFrameIterData(JSContext* cx, const FrameIter&);
+  [[nodiscard]] bool replaceFrameIterData(JSContext* cx, const FrameIter&);
 
   class GeneratorInfo;
   inline GeneratorInfo* generatorInfo() const;

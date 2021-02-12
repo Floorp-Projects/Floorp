@@ -92,7 +92,7 @@ namespace js {
 
 extern MOZ_COLD void ReportOutOfMemory(JSContext* cx);
 
-/* Different signature because the return type has MOZ_MUST_USE_TYPE. */
+/* Different signature because the return type has [[nodiscard]]_TYPE. */
 extern MOZ_COLD mozilla::GenericErrorResult<OOM> ReportOutOfMemoryResult(
     JSContext* cx);
 
@@ -647,7 +647,7 @@ struct JSRuntime {
   void getUnclonedSelfHostedValue(js::PropertyName* name, JS::Value* vp);
   JSFunction* getUnclonedSelfHostedFunction(js::PropertyName* name);
 
-  MOZ_MUST_USE bool createJitRuntime(JSContext* cx);
+  [[nodiscard]] bool createJitRuntime(JSContext* cx);
   js::jit::JitRuntime* jitRuntime() const { return jitRuntime_.ref(); }
   bool hasJitRuntime() const { return !!jitRuntime_; }
 

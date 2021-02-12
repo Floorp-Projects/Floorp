@@ -1656,7 +1656,7 @@ ScriptSourceObject* ScriptSourceObject::unwrappedCanonical() const {
   return &UncheckedUnwrap(obj)->as<ScriptSourceObject>();
 }
 
-static MOZ_MUST_USE bool MaybeValidateFilename(
+[[nodiscard]] static bool MaybeValidateFilename(
     JSContext* cx, HandleScriptSourceObject sso,
     const ReadOnlyCompileOptions& options) {
   // When parsing off-thread we want to do filename validation on the main
@@ -2276,7 +2276,7 @@ JSLinearString* ScriptSource::functionBodyString(JSContext* cx) {
 }
 
 template <typename Unit>
-MOZ_MUST_USE bool ScriptSource::setUncompressedSourceHelper(
+[[nodiscard]] bool ScriptSource::setUncompressedSourceHelper(
     JSContext* cx, EntryUnits<Unit>&& source, size_t length,
     SourceRetrievable retrievable) {
   auto& cache = cx->runtime()->sharedImmutableStrings();
@@ -2299,9 +2299,9 @@ MOZ_MUST_USE bool ScriptSource::setUncompressedSourceHelper(
 }
 
 template <typename Unit>
-MOZ_MUST_USE bool ScriptSource::setRetrievedSource(JSContext* cx,
-                                                   EntryUnits<Unit>&& source,
-                                                   size_t length) {
+[[nodiscard]] bool ScriptSource::setRetrievedSource(JSContext* cx,
+                                                    EntryUnits<Unit>&& source,
+                                                    size_t length) {
   MOZ_ASSERT(data.is<Retrievable<Unit>>(),
              "retrieved source can only overwrite the corresponding "
              "retrievable source");
@@ -2382,7 +2382,7 @@ void ScriptSource::triggerConvertToCompressedSource(
 }
 
 template <typename Unit>
-MOZ_MUST_USE bool ScriptSource::initializeWithUnretrievableCompressedSource(
+[[nodiscard]] bool ScriptSource::initializeWithUnretrievableCompressedSource(
     JSContext* cx, UniqueChars&& compressed, size_t rawLength,
     size_t sourceLength) {
   MOZ_ASSERT(data.is<Missing>(), "shouldn't be double-initializing");
@@ -2471,7 +2471,7 @@ ScriptSource::~ScriptSource() {
   MOZ_ASSERT(!xdrEncoder_);
 }
 
-static MOZ_MUST_USE bool reallocUniquePtr(UniqueChars& unique, size_t size) {
+[[nodiscard]] static bool reallocUniquePtr(UniqueChars& unique, size_t size) {
   auto newPtr = static_cast<char*>(js_realloc(unique.get(), size));
   if (!newPtr) {
     return false;
@@ -2784,7 +2784,7 @@ bool ScriptSource::xdrFinalizeEncoder(JSContext* cx,
 }
 
 template <typename Unit>
-MOZ_MUST_USE bool ScriptSource::initializeUnretrievableUncompressedSource(
+[[nodiscard]] bool ScriptSource::initializeUnretrievableUncompressedSource(
     JSContext* cx, EntryUnits<Unit>&& source, size_t length) {
   MOZ_ASSERT(data.is<Missing>(), "must be initializing a fresh ScriptSource");
   return setUncompressedSourceHelper(cx, std::move(source), length,

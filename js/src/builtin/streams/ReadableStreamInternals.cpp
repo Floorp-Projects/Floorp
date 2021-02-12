@@ -9,7 +9,6 @@
 #include "builtin/streams/ReadableStreamInternals.h"
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT{,_IF}
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
 #include <stdint.h>  // uint32_t
 
@@ -67,7 +66,7 @@ using js::ReadableStream;
  * places as the standard, but the effect is the same. See the comment on
  * `ReadableStreamReader::forAuthorCode()`.
  */
-MOZ_MUST_USE js::PromiseObject* js::ReadableStreamAddReadOrReadIntoRequest(
+[[nodiscard]] js::PromiseObject* js::ReadableStreamAddReadOrReadIntoRequest(
     JSContext* cx, Handle<ReadableStream*> unwrappedStream) {
   // Step 1: Assert: ! IsReadableStream{BYOB,Default}Reader(stream.[[reader]])
   //         is true.
@@ -119,7 +118,7 @@ static bool ReturnUndefined(JSContext* cx, unsigned argc, Value* vp) {
 /**
  * Streams spec, 3.5.3. ReadableStreamCancel ( stream, reason )
  */
-MOZ_MUST_USE JSObject* js::ReadableStreamCancel(
+[[nodiscard]] JSObject* js::ReadableStreamCancel(
     JSContext* cx, Handle<ReadableStream*> unwrappedStream,
     Handle<Value> reason) {
   AssertSameCompartment(cx, reason);
@@ -174,7 +173,7 @@ MOZ_MUST_USE JSObject* js::ReadableStreamCancel(
 /**
  * Streams spec, 3.5.4. ReadableStreamClose ( stream )
  */
-MOZ_MUST_USE bool js::ReadableStreamCloseInternal(
+[[nodiscard]] bool js::ReadableStreamCloseInternal(
     JSContext* cx, Handle<ReadableStream*> unwrappedStream) {
   // Step 1: Assert: stream.[[state]] is "readable".
   MOZ_ASSERT(unwrappedStream->readable());
@@ -250,7 +249,7 @@ MOZ_MUST_USE bool js::ReadableStreamCloseInternal(
  * Streams spec, 3.5.5. ReadableStreamCreateReadResult ( value, done,
  *                                                       forAuthorCode )
  */
-MOZ_MUST_USE PlainObject* js::ReadableStreamCreateReadResult(
+[[nodiscard]] PlainObject* js::ReadableStreamCreateReadResult(
     JSContext* cx, Handle<Value> value, bool done,
     ForAuthorCodeBool forAuthorCode) {
   // Step 1: Let prototype be null.
@@ -285,7 +284,7 @@ MOZ_MUST_USE PlainObject* js::ReadableStreamCreateReadResult(
 /**
  * Streams spec, 3.5.6. ReadableStreamError ( stream, e )
  */
-MOZ_MUST_USE bool js::ReadableStreamErrorInternal(
+[[nodiscard]] bool js::ReadableStreamErrorInternal(
     JSContext* cx, Handle<ReadableStream*> unwrappedStream, Handle<Value> e) {
   // Step 1: Assert: ! IsReadableStream(stream) is true (implicit).
 
@@ -383,7 +382,7 @@ MOZ_MUST_USE bool js::ReadableStreamErrorInternal(
  *      ReadableStreamFulfillReadRequest ( stream, chunk, done )
  * These two spec functions are identical in our implementation.
  */
-MOZ_MUST_USE bool js::ReadableStreamFulfillReadOrReadIntoRequest(
+[[nodiscard]] bool js::ReadableStreamFulfillReadOrReadIntoRequest(
     JSContext* cx, Handle<ReadableStream*> unwrappedStream, Handle<Value> chunk,
     bool done) {
   cx->check(chunk);
@@ -452,7 +451,7 @@ uint32_t js::ReadableStreamGetNumReadRequests(ReadableStream* stream) {
 /**
  * Streams spec 3.5.12. ReadableStreamHasDefaultReader ( stream )
  */
-MOZ_MUST_USE bool js::ReadableStreamHasDefaultReader(
+[[nodiscard]] bool js::ReadableStreamHasDefaultReader(
     JSContext* cx, Handle<ReadableStream*> unwrappedStream, bool* result) {
   // Step 1: Let reader be stream.[[reader]].
   // Step 2: If reader is undefined, return false.

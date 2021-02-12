@@ -294,7 +294,7 @@ class BaseStackFrame {
   // simplifies the principals check into the boolean isSystem() state. This
   // is fine because we only expose JS::ubi::Stack to devtools and chrome
   // code, and not to the web platform.
-  virtual MOZ_MUST_USE bool constructSavedFrameStack(
+  [[nodiscard]] virtual bool constructSavedFrameStack(
       JSContext* cx, MutableHandleObject outSavedFrameStack) const = 0;
 
   // Trace the concrete implementation of JS::ubi::StackFrame.
@@ -430,7 +430,7 @@ class StackFrame {
   StackFrame parent() const { return base()->parent(); }
   bool isSystem() const { return base()->isSystem(); }
   bool isSelfHosted(JSContext* cx) const { return base()->isSelfHosted(cx); }
-  MOZ_MUST_USE bool constructSavedFrameStack(
+  [[nodiscard]] bool constructSavedFrameStack(
       JSContext* cx, MutableHandleObject outSavedFrameStack) const {
     return base()->constructSavedFrameStack(cx, outSavedFrameStack);
   }
@@ -463,7 +463,7 @@ class ConcreteStackFrame<void> : public BaseStackFrame {
 
   uint64_t identifier() const override { return 0; }
   void trace(JSTracer* trc) override {}
-  MOZ_MUST_USE bool constructSavedFrameStack(
+  [[nodiscard]] bool constructSavedFrameStack(
       JSContext* cx, MutableHandleObject out) const override {
     out.set(nullptr);
     return true;
@@ -485,7 +485,7 @@ class ConcreteStackFrame<void> : public BaseStackFrame {
   }
 };
 
-MOZ_MUST_USE JS_PUBLIC_API bool ConstructSavedFrameStackSlow(
+[[nodiscard]] JS_PUBLIC_API bool ConstructSavedFrameStackSlow(
     JSContext* cx, JS::ubi::StackFrame& frame,
     MutableHandleObject outSavedFrameStack);
 
@@ -998,15 +998,15 @@ class MOZ_STACK_CLASS JS_PUBLIC_API RootList {
            bool wantNames = false);
 
   // Find all GC roots.
-  MOZ_MUST_USE bool init();
+  [[nodiscard]] bool init();
   // Find only GC roots in the provided set of |JS::Compartment|s. Note: it's
   // important to take a CompartmentSet and not a RealmSet: objects in
   // same-compartment realms can reference each other directly, without going
   // through CCWs, so if we used a RealmSet here we would miss edges.
-  MOZ_MUST_USE bool init(CompartmentSet& debuggees);
+  [[nodiscard]] bool init(CompartmentSet& debuggees);
   // Find only GC roots in the given Debugger object's set of debuggee
   // compartments.
-  MOZ_MUST_USE bool init(HandleObject debuggees);
+  [[nodiscard]] bool init(HandleObject debuggees);
 
   // Returns true if the RootList has been initialized successfully, false
   // otherwise.
@@ -1015,7 +1015,7 @@ class MOZ_STACK_CLASS JS_PUBLIC_API RootList {
   // Explicitly add the given Node as a root in this RootList. If wantNames is
   // true, you must pass an edgeName. The RootList does not take ownership of
   // edgeName.
-  MOZ_MUST_USE bool addRoot(Node node, const char16_t* edgeName = nullptr);
+  [[nodiscard]] bool addRoot(Node node, const char16_t* edgeName = nullptr);
 };
 
 /*** Concrete classes for ubi::Node referent types ****************************/

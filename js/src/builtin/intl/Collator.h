@@ -63,8 +63,8 @@ class CollatorObject : public NativeObject {
  *
  * Usage: collator = intl_Collator(locales, options)
  */
-extern MOZ_MUST_USE bool intl_Collator(JSContext* cx, unsigned argc,
-                                       JS::Value* vp);
+[[nodiscard]] extern bool intl_Collator(JSContext* cx, unsigned argc,
+                                        JS::Value* vp);
 
 /**
  * Returns an array with the collation type identifiers per Unicode
@@ -74,8 +74,8 @@ extern MOZ_MUST_USE bool intl_Collator(JSContext* cx, unsigned argc,
  *
  * Usage: collations = intl_availableCollations(locale)
  */
-extern MOZ_MUST_USE bool intl_availableCollations(JSContext* cx, unsigned argc,
-                                                  JS::Value* vp);
+[[nodiscard]] extern bool intl_availableCollations(JSContext* cx, unsigned argc,
+                                                   JS::Value* vp);
 
 /**
  * Compares x and y (which must be String values), and returns a number less
@@ -87,8 +87,8 @@ extern MOZ_MUST_USE bool intl_availableCollations(JSContext* cx, unsigned argc,
  *
  * Usage: result = intl_CompareStrings(collator, x, y)
  */
-extern MOZ_MUST_USE bool intl_CompareStrings(JSContext* cx, unsigned argc,
-                                             JS::Value* vp);
+[[nodiscard]] extern bool intl_CompareStrings(JSContext* cx, unsigned argc,
+                                              JS::Value* vp);
 
 /**
  * Returns true if the given locale sorts upper-case before lower-case
@@ -96,8 +96,8 @@ extern MOZ_MUST_USE bool intl_CompareStrings(JSContext* cx, unsigned argc,
  *
  * Usage: result = intl_isUpperCaseFirst(locale)
  */
-extern MOZ_MUST_USE bool intl_isUpperCaseFirst(JSContext* cx, unsigned argc,
-                                               JS::Value* vp);
+[[nodiscard]] extern bool intl_isUpperCaseFirst(JSContext* cx, unsigned argc,
+                                                JS::Value* vp);
 
 }  // namespace js
 

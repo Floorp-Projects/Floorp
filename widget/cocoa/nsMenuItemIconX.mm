@@ -21,6 +21,7 @@
 #  endif
 #endif
 
+#include "MOZIconHelper.h"
 #include "mozilla/dom/Document.h"
 #include "nsCocoaUtils.h"
 #include "nsComputedDOMStyle.h"
@@ -37,14 +38,12 @@ using namespace mozilla;
 
 using mozilla::dom::Element;
 using mozilla::widget::IconLoader;
-using mozilla::widget::IconLoaderHelperCocoa;
 
 static const uint32_t kIconSize = 16;
 
 nsMenuItemIconX::nsMenuItemIconX(nsMenuObjectX* aMenuItem, nsIContent* aContent,
                                  NSMenuItem* aNativeMenuItem)
     : mContent(aContent),
-      mContentType(nsIContentPolicy::TYPE_INTERNAL_IMAGE),
       mMenuObject(aMenuItem),
       mSetIcon(false),
       mNativeMenuItem(aNativeMenuItem) {
@@ -61,10 +60,8 @@ nsMenuItemIconX::~nsMenuItemIconX() {
 // are still outstanding).  mMenuObjectX owns our mNativeMenuItem.
 void nsMenuItemIconX::Destroy() {
   if (mIconLoader) {
+    mIconLoader->Destroy();
     mIconLoader = nullptr;
-  }
-  if (mIconLoaderHelper) {
-    mIconLoaderHelper = nullptr;
   }
   mMenuObject = nullptr;
   mNativeMenuItem = nil;
@@ -90,18 +87,15 @@ nsresult nsMenuItemIconX::SetupIcon() {
   }
 
   if (!mIconLoader) {
-    mIconLoaderHelper = new IconLoaderHelperCocoa(this, kIconSize, kIconSize);
-    mIconLoader = new IconLoader(mIconLoaderHelper, mContent, mImageRegionRect);
-    if (!mIconLoader) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    mIconLoader = new IconLoader(this);
   }
   if (!mSetIcon) {
     // Load placeholder icon.
-    [mNativeMenuItem setImage:mIconLoaderHelper->GetNativeIconImage()];
+    NSSize iconSize = NSMakeSize(kIconSize, kIconSize);
+    [mNativeMenuItem setImage:[MOZIconHelper placeholderIconWithSize:iconSize]];
   }
 
-  rv = mIconLoader->LoadIcon(iconURI);
+  rv = mIconLoader->LoadIcon(iconURI, mContent);
   if (NS_FAILED(rv)) {
     // There is no icon for this menu item, as an error occurred while loading it.
     // An icon might have been set earlier or the place holder icon may have
@@ -165,11 +159,6 @@ nsresult nsMenuItemIconX::GetIconURI(nsIURI** aIconURI) {
       return NS_ERROR_FAILURE;
     }
   } else {
-    uint64_t dummy = 0;
-    nsCOMPtr<nsIPrincipal> triggeringPrincipal = mContent->NodePrincipal();
-    nsContentUtils::GetContentPolicyTypeForUIImageLoading(
-        mContent, getter_AddRefs(triggeringPrincipal), mContentType, &dummy);
-
     // If this menu item shouldn't have an icon, the string will be empty,
     // and NS_NewURI will fail.
     rv = NS_NewURI(getter_AddRefs(iconURI), imageURIString);
@@ -207,30 +196,28 @@ nsresult nsMenuItemIconX::GetIconURI(nsIURI** aIconURI) {
 }
 
 //
-// mozilla::widget::IconLoaderListenerCocoa
+// mozilla::widget::IconLoader::Listener
 //
 
-nsresult nsMenuItemIconX::OnComplete() {
-  if (!mIconLoaderHelper) {
-    return NS_ERROR_FAILURE;
-  }
+nsresult nsMenuItemIconX::OnComplete(imgIContainer* aImage) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
 
-  NSImage* image = mIconLoaderHelper->GetNativeIconImage();
   if (!mNativeMenuItem) {
-    mIconLoaderHelper->Destroy();
+    mIconLoader->Destroy();
     return NS_ERROR_FAILURE;
   }
 
-  if (!image) {
-    [mNativeMenuItem setImage:nil];
-    return NS_OK;
-  }
-
+  NSImage* image = [MOZIconHelper iconImageFromImageContainer:aImage
+                                                     withSize:NSMakeSize(kIconSize, kIconSize)
+                                                      subrect:mImageRegionRect
+                                                  scaleFactor:0.0f];
   [mNativeMenuItem setImage:image];
   if (mMenuObject) {
     mMenuObject->IconUpdated();
   }
 
-  mIconLoaderHelper->Destroy();
+  mIconLoader->Destroy();
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT
 }

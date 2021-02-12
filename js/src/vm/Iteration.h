@@ -412,8 +412,8 @@ class RegExpStringIteratorObject : public NativeObject {
 RegExpStringIteratorObject* NewRegExpStringIteratorTemplate(JSContext* cx);
 RegExpStringIteratorObject* NewRegExpStringIterator(JSContext* cx);
 
-MOZ_MUST_USE bool EnumerateProperties(JSContext* cx, HandleObject obj,
-                                      MutableHandleIdVector props);
+[[nodiscard]] bool EnumerateProperties(JSContext* cx, HandleObject obj,
+                                       MutableHandleIdVector props);
 
 PropertyIteratorObject* LookupInIteratorCache(JSContext* cx, HandleObject obj);
 

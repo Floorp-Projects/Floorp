@@ -650,8 +650,8 @@ class InterpreterFrame {
 
   // Copy values from this frame into a private Array, owned by the
   // GeneratorObject, for suspending.
-  MOZ_MUST_USE inline bool saveGeneratorSlots(JSContext* cx, unsigned nslots,
-                                              ArrayObject* dest) const;
+  [[nodiscard]] inline bool saveGeneratorSlots(JSContext* cx, unsigned nslots,
+                                               ArrayObject* dest) const;
 
   // Copy values from the Array into this stack frame, for resuming.
   inline void restoreGeneratorSlots(ArrayObject* src);

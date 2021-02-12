@@ -12,9 +12,9 @@
 
 #import <Cocoa/Cocoa.h>
 
+#include "mozilla/widget/IconLoader.h"
 #include "nsTouchBarInput.h"
 #include "nsTouchBarNativeAPIDefines.h"
-#include "IconLoaderHelperCocoa.h"
 
 using namespace mozilla::dom;
 
@@ -26,10 +26,12 @@ namespace mozilla::dom {
 class Document;
 }
 
-class nsTouchBarInputIcon : public mozilla::widget::IconLoaderListenerCocoa {
+class nsTouchBarInputIcon : public mozilla::widget::IconLoader::Listener {
  public:
   explicit nsTouchBarInputIcon(RefPtr<Document> aDocument,
                                TouchBarInput* aInput, NSTouchBarItem* aItem);
+
+  NS_INLINE_DECL_REFCOUNTING(nsTouchBarInputIcon)
 
  private:
   virtual ~nsTouchBarInputIcon();
@@ -39,9 +41,9 @@ class nsTouchBarInputIcon : public mozilla::widget::IconLoaderListenerCocoa {
   // be no icon, in which case it clears any existing icon but still succeeds.
   nsresult SetupIcon(nsCOMPtr<nsIURI> aIconURI);
 
-  // Implements this method for mozilla::widget::IconLoaderListenerCocoa.
+  // Implements this method for mozilla::widget::IconLoader::Listener.
   // Called once the icon load is complete.
-  nsresult OnComplete();
+  nsresult OnComplete(imgIContainer* aImage) override;
 
   // Unless we take precautions, we may outlive the object that created us
   // (mTouchBar, which owns our native menu item (mTouchBarInput)).
@@ -65,7 +67,6 @@ class nsTouchBarInputIcon : public mozilla::widget::IconLoaderListenerCocoa {
   // The icon loader object should never outlive its creating
   // nsTouchBarInputIcon object.
   RefPtr<mozilla::widget::IconLoader> mIconLoader;
-  RefPtr<mozilla::widget::IconLoaderHelperCocoa> mIconLoaderHelper;
 };
 
 #endif  // nsTouchBarInputIcon_h_

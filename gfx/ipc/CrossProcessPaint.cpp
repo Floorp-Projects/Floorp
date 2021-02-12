@@ -298,6 +298,8 @@ RefPtr<CrossProcessPaint::ResolvePromise> CrossProcessPaint::Start(
   resolver->QueueDependencies(rootFragment.mDependencies);
   resolver->mReceivedFragments.Put(dom::TabId(0), std::move(rootFragment));
 
+  resolver->MaybeResolve();
+
   return promise;
 }
 
@@ -361,6 +363,11 @@ void CrossProcessPaint::QueueDependencies(
     dom::ContentParentId cpId = cpm->GetTabProcessId(dependency);
     RefPtr<dom::BrowserParent> browser =
         cpm->GetBrowserParentByProcessAndTabId(cpId, dependency);
+    if (!browser) {
+      CPP_LOG("Skipping dependency %" PRIu64 "with no current BrowserParent.\n",
+              (uint64_t)dependency);
+      continue;
+    }
     RefPtr<dom::WindowGlobalParent> wgp =
         browser->GetBrowsingContext()->GetCurrentWindowGlobal();
 

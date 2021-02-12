@@ -102,8 +102,8 @@ class DebugScript {
    *
    * Only incrementing is fallible, as it could allocate a DebugScript.
    */
-  static MOZ_MUST_USE bool incrementStepperCount(JSContext* cx,
-                                                 JSScript* script);
+  [[nodiscard]] static bool incrementStepperCount(JSContext* cx,
+                                                  JSScript* script);
   static void decrementStepperCount(JSFreeOp* fop, JSScript* script);
 
   /*
@@ -112,8 +112,8 @@ class DebugScript {
    *
    * Only incrementing is fallible, as it could allocate a DebugScript.
    */
-  static MOZ_MUST_USE bool incrementGeneratorObserverCount(JSContext* cx,
-                                                           JSScript* script);
+  [[nodiscard]] static bool incrementGeneratorObserverCount(JSContext* cx,
+                                                            JSScript* script);
   static void decrementGeneratorObserverCount(JSFreeOp* fop, JSScript* script);
 };
 

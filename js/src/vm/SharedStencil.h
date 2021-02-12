@@ -9,7 +9,6 @@
 
 #include "mozilla/Assertions.h"     // MOZ_ASSERT, MOZ_CRASH
 #include "mozilla/Atomics.h"        // mozilla::{Atomic, SequentiallyConsistent}
-#include "mozilla/Attributes.h"     // MOZ_MUST_USE
 #include "mozilla/CheckedInt.h"     // mozilla::CheckedInt
 #include "mozilla/HashFunctions.h"  // mozilla::HahNumber, mozilla::HashBytes
 #include "mozilla/HashTable.h"      // mozilla::HashSet
@@ -227,7 +226,7 @@ class ScriptFlagBase {
   ScriptFlagBase() = default;
   explicit ScriptFlagBase(uint32_t rawFlags) : flags_(rawFlags) {}
 
-  MOZ_MUST_USE bool hasFlag(EnumType flag) const {
+  [[nodiscard]] bool hasFlag(EnumType flag) const {
     return flags_ & static_cast<uint32_t>(flag);
   }
   void setFlag(EnumType flag) { flags_ |= static_cast<uint32_t>(flag); }

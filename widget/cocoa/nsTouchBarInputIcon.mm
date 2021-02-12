@@ -9,6 +9,7 @@
 
 #include "nsTouchBarInputIcon.h"
 
+#include "MOZIconHelper.h"
 #include "mozilla/dom/Document.h"
 #include "nsCocoaUtils.h"
 #include "nsComputedDOMStyle.h"
@@ -20,7 +21,6 @@
 
 using namespace mozilla;
 using mozilla::widget::IconLoader;
-using mozilla::widget::IconLoaderHelperCocoa;
 
 static const uint32_t kIconSize = 16;
 static const CGFloat kHiDPIScalingFactor = 2.0f;
@@ -53,10 +53,8 @@ nsTouchBarInputIcon::~nsTouchBarInputIcon() {
 void nsTouchBarInputIcon::Destroy() {
   ReleaseJSObjects();
   if (mIconLoader) {
+    mIconLoader->Destroy();
     mIconLoader = nullptr;
-  }
-  if (mIconLoaderHelper) {
-    mIconLoaderHelper = nullptr;
   }
 
   mButton = nil;
@@ -79,23 +77,19 @@ nsresult nsTouchBarInputIcon::SetupIcon(nsCOMPtr<nsIURI> aIconURI) {
   }
 
   if (!mIconLoader) {
-    // We ask only for the HiDPI images since all Touch Bars are Retina
-    // displays and we have no need for icons @1x.
-    mIconLoaderHelper = new IconLoaderHelperCocoa(this, kIconSize, kIconSize, kHiDPIScalingFactor);
-    mIconLoader = new IconLoader(mIconLoaderHelper, mDocument, mImageRegionRect);
-    if (!mIconLoader) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    mIconLoader = new IconLoader(this);
   }
 
   if (!mSetIcon) {
     // Load placeholder icon.
-    [mButton setImage:mIconLoaderHelper->GetNativeIconImage()];
-    [mShareScrubber setButtonImage:mIconLoaderHelper->GetNativeIconImage()];
-    [mPopoverItem setCollapsedRepresentationImage:mIconLoaderHelper->GetNativeIconImage()];
+    NSSize iconSize = NSMakeSize(kIconSize, kIconSize);
+    NSImage* placeholder = [MOZIconHelper placeholderIconWithSize:iconSize];
+    [mButton setImage:placeholder];
+    [mShareScrubber setButtonImage:placeholder];
+    [mPopoverItem setCollapsedRepresentationImage:placeholder];
   }
 
-  nsresult rv = mIconLoader->LoadIcon(aIconURI, true /* aIsInternalIcon */);
+  nsresult rv = mIconLoader->LoadIcon(aIconURI, mDocument, true /* aIsInternalIcon */);
   if (NS_FAILED(rv)) {
     // There is no icon for this menu item, as an error occurred while loading it.
     // An icon might have been set earlier or the place holder icon may have
@@ -112,27 +106,27 @@ nsresult nsTouchBarInputIcon::SetupIcon(nsCOMPtr<nsIURI> aIconURI) {
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-void nsTouchBarInputIcon::ReleaseJSObjects() {
-  if (mIconLoader) {
-    mIconLoader->ReleaseJSObjects();
-  }
-  mDocument = nil;
-}
+void nsTouchBarInputIcon::ReleaseJSObjects() { mDocument = nil; }
 
 //
-// mozilla::widget::IconLoaderListenerCocoa
+// mozilla::widget::IconLoader::Listener
 //
 
-nsresult nsTouchBarInputIcon::OnComplete() {
-  if (!mIconLoaderHelper) {
-    return NS_ERROR_FAILURE;
-  }
+nsresult nsTouchBarInputIcon::OnComplete(imgIContainer* aImage) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
 
-  NSImage* image = mIconLoaderHelper->GetNativeIconImage();
+  // We ask only for the HiDPI images since all Touch Bars are Retina
+  // displays and we have no need for icons @1x.
+  NSImage* image = [MOZIconHelper iconImageFromImageContainer:aImage
+                                                     withSize:NSMakeSize(kIconSize, kIconSize)
+                                                      subrect:mImageRegionRect
+                                                  scaleFactor:kHiDPIScalingFactor];
   [mButton setImage:image];
   [mShareScrubber setButtonImage:image];
   [mPopoverItem setCollapsedRepresentationImage:image];
 
-  mIconLoaderHelper->Destroy();
+  mIconLoader->Destroy();
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT
 }

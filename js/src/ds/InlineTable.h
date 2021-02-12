@@ -91,7 +91,7 @@ class InlineTable : private AllocPolicy {
 
   bool usingTable() const { return inlNext_ > InlineEntries; }
 
-  MOZ_MUST_USE bool switchToTable() {
+  [[nodiscard]] bool switchToTable() {
     MOZ_ASSERT(inlNext_ == InlineEntries);
 
     table_.clear();
@@ -109,8 +109,7 @@ class InlineTable : private AllocPolicy {
     return true;
   }
 
-  MOZ_NEVER_INLINE
-  MOZ_MUST_USE bool switchAndAdd(const InlineEntry& entry) {
+  [[nodiscard]] MOZ_NEVER_INLINE bool switchAndAdd(const InlineEntry& entry) {
     if (!switchToTable()) {
       return false;
     }
@@ -288,8 +287,8 @@ class InlineTable : private AllocPolicy {
   }
 
   template <typename KeyInput, typename... Args>
-  MOZ_ALWAYS_INLINE MOZ_MUST_USE bool add(AddPtr& p, KeyInput&& key,
-                                          Args&&... args) {
+  [[nodiscard]] MOZ_ALWAYS_INLINE bool add(AddPtr& p, KeyInput&& key,
+                                           Args&&... args) {
     MOZ_ASSERT(!p);
     MOZ_ASSERT(keyNonZero(key));
 
@@ -447,7 +446,7 @@ class InlineMap {
       this->value = std::forward<ValueInput>(value);
     }
 
-    MOZ_MUST_USE bool moveTo(Map& map) {
+    [[nodiscard]] bool moveTo(Map& map) {
       return map.putNew(std::move(key), std::move(value));
     }
   };
@@ -520,14 +519,14 @@ class InlineMap {
   AddPtr lookupForAdd(const Lookup& l) { return impl_.lookupForAdd(l); }
 
   template <typename KeyInput, typename ValueInput>
-  MOZ_ALWAYS_INLINE MOZ_MUST_USE bool add(AddPtr& p, KeyInput&& key,
-                                          ValueInput&& value) {
+  [[nodiscard]] MOZ_ALWAYS_INLINE bool add(AddPtr& p, KeyInput&& key,
+                                           ValueInput&& value) {
     return impl_.add(p, std::forward<KeyInput>(key),
                      std::forward<ValueInput>(value));
   }
 
   template <typename KeyInput, typename ValueInput>
-  MOZ_MUST_USE bool put(KeyInput&& key, ValueInput&& value) {
+  [[nodiscard]] bool put(KeyInput&& key, ValueInput&& value) {
     AddPtr p = lookupForAdd(key);
     if (p) {
       p->value() = std::forward<ValueInput>(value);
@@ -562,7 +561,7 @@ class InlineSet {
       this->key = std::forward<TInput>(key);
     }
 
-    MOZ_MUST_USE bool moveTo(Set& set) { return set.putNew(std::move(key)); }
+    [[nodiscard]] bool moveTo(Set& set) { return set.putNew(std::move(key)); }
   };
 
   class Entry {
@@ -625,12 +624,12 @@ class InlineSet {
   AddPtr lookupForAdd(const Lookup& l) { return impl_.lookupForAdd(l); }
 
   template <typename TInput>
-  MOZ_ALWAYS_INLINE MOZ_MUST_USE bool add(AddPtr& p, TInput&& key) {
+  [[nodiscard]] MOZ_ALWAYS_INLINE bool add(AddPtr& p, TInput&& key) {
     return impl_.add(p, std::forward<TInput>(key));
   }
 
   template <typename TInput>
-  MOZ_MUST_USE bool put(TInput&& key) {
+  [[nodiscard]] bool put(TInput&& key) {
     AddPtr p = lookupForAdd(key);
     return p ? true : add(p, std::forward<TInput>(key));
   }

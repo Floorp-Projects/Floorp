@@ -17,14 +17,14 @@ extern const JSClass ReflectClass;
 
 namespace js {
 
-extern MOZ_MUST_USE bool Reflect_getPrototypeOf(JSContext* cx, unsigned argc,
-                                                Value* vp);
+[[nodiscard]] extern bool Reflect_getPrototypeOf(JSContext* cx, unsigned argc,
+                                                 Value* vp);
 
-extern MOZ_MUST_USE bool Reflect_isExtensible(JSContext* cx, unsigned argc,
-                                              Value* vp);
+[[nodiscard]] extern bool Reflect_isExtensible(JSContext* cx, unsigned argc,
+                                               Value* vp);
 
-extern MOZ_MUST_USE bool Reflect_ownKeys(JSContext* cx, unsigned argc,
-                                         Value* vp);
+[[nodiscard]] extern bool Reflect_ownKeys(JSContext* cx, unsigned argc,
+                                          Value* vp);
 
 }  // namespace js
 

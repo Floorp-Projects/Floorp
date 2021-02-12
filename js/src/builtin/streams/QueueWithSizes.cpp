@@ -9,7 +9,6 @@
 #include "builtin/streams/QueueWithSizes-inl.h"
 
 #include "mozilla/Assertions.h"     // MOZ_ASSERT
-#include "mozilla/Attributes.h"     // MOZ_MUST_USE
 #include "mozilla/FloatingPoint.h"  // mozilla::Is{Infinite,NaN}
 
 #include "jsapi.h"  // JS_ReportErrorNumberASCII
@@ -44,9 +43,9 @@ using JS::Value;
 /**
  * Streams spec, 6.2.1. DequeueValue ( container ) nothrow
  */
-MOZ_MUST_USE bool js::DequeueValue(JSContext* cx,
-                                   Handle<StreamController*> unwrappedContainer,
-                                   MutableHandle<Value> chunk) {
+[[nodiscard]] bool js::DequeueValue(
+    JSContext* cx, Handle<StreamController*> unwrappedContainer,
+    MutableHandle<Value> chunk) {
   // Step 1: Assert: container has [[queue]] and [[queueTotalSize]] internal
   //         slots (implicit).
   // Step 2: Assert: queue is not empty.
@@ -108,7 +107,7 @@ void js::DequeueValue(StreamController* unwrappedContainer, JSContext* cx) {
 /**
  * Streams spec, 6.2.2. EnqueueValueWithSize ( container, value, size ) throws
  */
-MOZ_MUST_USE bool js::EnqueueValueWithSize(
+[[nodiscard]] bool js::EnqueueValueWithSize(
     JSContext* cx, Handle<StreamController*> unwrappedContainer,
     Handle<Value> value, Handle<Value> sizeVal) {
   cx->check(value, sizeVal);
@@ -156,8 +155,8 @@ MOZ_MUST_USE bool js::EnqueueValueWithSize(
 /**
  * Streams spec, 6.2.4. ResetQueue ( container ) nothrow
  */
-MOZ_MUST_USE bool js::ResetQueue(JSContext* cx,
-                                 Handle<StreamController*> unwrappedContainer) {
+[[nodiscard]] bool js::ResetQueue(
+    JSContext* cx, Handle<StreamController*> unwrappedContainer) {
   // Step 1: Assert: container has [[queue]] and [[queueTotalSize]] internal
   //         slots (implicit).
   // Step 2: Set container.[[queue]] to a new empty List.

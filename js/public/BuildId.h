@@ -12,8 +12,6 @@
 #ifndef js_BuildId_h
 #define js_BuildId_h
 
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
-
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/Vector.h"  // js::Vector
@@ -57,7 +55,7 @@ extern JS_PUBLIC_API void SetProcessBuildIdOp(BuildIdOp buildIdOp);
  * on having consistent buildId *and* on the CPU supporting features identical
  * to those in play when the cached data was computed.
  */
-extern MOZ_MUST_USE JS_PUBLIC_API bool GetOptimizedEncodingBuildId(
+[[nodiscard]] extern JS_PUBLIC_API bool GetOptimizedEncodingBuildId(
     BuildIdCharVector* buildId);
 
 /**
@@ -76,7 +74,7 @@ extern MOZ_MUST_USE JS_PUBLIC_API bool GetOptimizedEncodingBuildId(
  * Embedders should use this function to tag transcoded bytecode.
  * See Transcoding.h.
  */
-extern MOZ_MUST_USE JS_PUBLIC_API bool GetScriptTranscodingBuildId(
+[[nodiscard]] extern JS_PUBLIC_API bool GetScriptTranscodingBuildId(
     BuildIdCharVector* buildId);
 
 }  // namespace JS

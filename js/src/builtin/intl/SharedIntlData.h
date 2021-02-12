@@ -235,9 +235,9 @@ class SharedIntlData {
    * Sets |supported| to true if |locale| is supported by the requested Intl
    * service constructor. Otherwise sets |supported| to false.
    */
-  MOZ_MUST_USE bool isSupportedLocale(JSContext* cx, SupportedLocaleKind kind,
-                                      JS::Handle<JSString*> locale,
-                                      bool* supported);
+  [[nodiscard]] bool isSupportedLocale(JSContext* cx, SupportedLocaleKind kind,
+                                       JS::Handle<JSString*> locale,
+                                       bool* supported);
 
  private:
   /**
