@@ -21,7 +21,7 @@ vec2 clamp_rect(vec2 pt, RectWithSize rect) {
     return clamp(pt, rect.p0, rect.p0 + rect.size);
 }
 
-#ifndef SWGL
+#ifndef SWGL_CLIP_MASK
 // TODO: convert back to RectWithEndPoint if driver issues are resolved, if ever.
 flat varying vec4 vClipMaskUvBounds;
 // XY and W are homogeneous coordinates, Z is the layer index
@@ -159,20 +159,41 @@ vec2 intersect_lines(vec2 p0, vec2 p1, vec2 p2, vec2 p3) {
 VertexInfo write_transform_vertex(RectWithSize local_segment_rect,
                                   RectWithSize local_prim_rect,
                                   RectWithSize local_clip_rect,
-                                  vec4 clip_edge_mask,
+                                  int edge_flags,
                                   float z,
                                   Transform transform,
                                   PictureTask task) {
     // Calculate a clip rect from local_rect + local clip
     RectWithEndpoint clip_rect = to_rect_with_endpoint(local_clip_rect);
     RectWithEndpoint segment_rect = to_rect_with_endpoint(local_segment_rect);
+
+#ifdef SWGL_ANTIALIAS
+    // Check if the bounds are smaller than the unmodified segment rect. If so,
+    // it is safe to enable AA on those edges.
+    bvec4 clipped = bvec4(greaterThan(clip_rect.p0, segment_rect.p0),
+                          lessThan(clip_rect.p1, segment_rect.p1));
+    swgl_antiAlias(edge_flags | (clipped.x ? 1 : 0) | (clipped.y ? 2 : 0) |
+                   (clipped.z ? 4 : 0) | (clipped.w ? 8 : 0));
+#endif
+
     segment_rect.p0 = clamp(segment_rect.p0, clip_rect.p0, clip_rect.p1);
     segment_rect.p1 = clamp(segment_rect.p1, clip_rect.p0, clip_rect.p1);
 
-    // Calculate a clip rect from local_rect + local clip
+#ifdef SWGL_ANTIALIAS
+    // Trim the segment geometry to the clipped bounds.
+    local_segment_rect = to_rect_with_size(segment_rect);
+#else
     RectWithEndpoint prim_rect = to_rect_with_endpoint(local_prim_rect);
     prim_rect.p0 = clamp(prim_rect.p0, clip_rect.p0, clip_rect.p1);
     prim_rect.p1 = clamp(prim_rect.p1, clip_rect.p0, clip_rect.p1);
+
+    // Select between the segment and prim edges based on edge mask
+    bvec4 clip_edge_mask = notEqual(edge_flags & ivec4(1, 2, 4, 8), ivec4(0));
+    init_transform_vs(mix(
+        vec4(prim_rect.p0, prim_rect.p1),
+        vec4(segment_rect.p0, segment_rect.p1),
+        clip_edge_mask
+    ));
 
     // As this is a transform shader, extrude by 2 (local space) pixels
     // in each direction. This gives enough space around the edge to
@@ -185,9 +206,10 @@ VertexInfo write_transform_vertex(RectWithSize local_segment_rect,
 
     // Only extrude along edges where we are going to apply AA.
     float extrude_amount = 2.0;
-    vec4 extrude_distance = vec4(extrude_amount) * clip_edge_mask;
+    vec4 extrude_distance = mix(vec4(0.0), vec4(extrude_amount), clip_edge_mask);
     local_segment_rect.p0 -= extrude_distance.xy;
     local_segment_rect.size += extrude_distance.xy + extrude_distance.zw;
+#endif
 
     // Select the corner of the local rect that we are processing.
     vec2 local_pos = local_segment_rect.p0 + local_segment_rect.size * aPosition.xy;
@@ -195,7 +217,7 @@ VertexInfo write_transform_vertex(RectWithSize local_segment_rect,
     // Convert the world positions to device pixel space.
     vec2 task_offset = task.common_data.task_rect.p0 - task.content_origin;
 
-    // Transform the current vertex to the world cpace.
+    // Transform the current vertex to world space.
     vec4 world_pos = transform.m * vec4(local_pos, 0.0, 1.0);
     vec4 final_pos = vec4(
         world_pos.xy * task.device_pixel_scale + task_offset * world_pos.w,
@@ -204,12 +226,6 @@ VertexInfo write_transform_vertex(RectWithSize local_segment_rect,
     );
 
     gl_Position = uTransform * final_pos;
-
-    init_transform_vs(mix(
-        vec4(prim_rect.p0, prim_rect.p1),
-        vec4(segment_rect.p0, segment_rect.p1),
-        clip_edge_mask
-    ));
 
     VertexInfo vi = VertexInfo(
         local_pos,
@@ -220,7 +236,7 @@ VertexInfo write_transform_vertex(RectWithSize local_segment_rect,
 }
 
 void write_clip(vec4 world_pos, ClipArea area, PictureTask task) {
-#ifdef SWGL
+#ifdef SWGL_CLIP_MASK
     swgl_clipMask(
         sClipMask,
         (task.common_data.task_rect.p0 - task.content_origin) - (area.common_data.task_rect.p0 - area.screen_origin),
@@ -259,7 +275,7 @@ struct Fragment {
 };
 
 float do_clip() {
-#ifdef SWGL
+#ifdef SWGL_CLIP_MASK
     // SWGL relies on builtin clip-mask support to do this more efficiently,
     // so no clipping is required here.
     return 1.0;

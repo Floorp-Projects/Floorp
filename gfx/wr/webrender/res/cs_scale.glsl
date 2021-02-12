@@ -45,7 +45,7 @@ void main(void) {
     oFragColor = TEX_SAMPLE(sColor0, vec3(st, vUvLayer));
 }
 
-#ifdef SWGL
+#ifdef SWGL_DRAW_SPAN
 void swgl_drawSpanRGBA8() {
     if (!swgl_isTextureRGBA8(sColor0)) {
         return;

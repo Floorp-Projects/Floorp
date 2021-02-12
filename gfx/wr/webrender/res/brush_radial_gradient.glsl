@@ -89,35 +89,18 @@ Fragment brush_fs() {
     vec4 color = sample_gradient(get_gradient_offset());
 
 #ifdef WR_FEATURE_ALPHA_PASS
-    color *= init_transform_fs(v_local_pos);
+    color *= antialias_brush();
 #endif
 
     return Fragment(color);
 }
 
-#ifdef SWGL
+#ifdef SWGL_DRAW_SPAN
 void swgl_drawSpanRGBA8() {
     int address = swgl_validateGradient(sGpuCache, get_gpu_cache_uv(v_gradient_address), int(GRADIENT_ENTRIES + 2.0));
     if (address < 0) {
         return;
     }
-#ifdef WR_FEATURE_ALPHA_PASS
-    if (has_valid_transform_bounds()) {
-        // If there is a transform, need to anti-alias the result.
-        float aa_range = compute_aa_range(v_local_pos);
-        while (swgl_SpanLength > 0) {
-            float alpha = init_transform_fs_noperspective(v_local_pos, aa_range);
-            v_local_pos += swgl_interpStep(v_local_pos);
-            float offset = get_gradient_offset();
-            // Handle both repeating and clamped gradients.
-            offset -= floor(offset) * v_gradient_repeat;
-            float entry = clamp_gradient_entry(offset);
-            swgl_commitGradientColorRGBA8(sGpuCache, address, entry, alpha);
-            v_pos += swgl_interpStep(v_pos);
-        }
-        return;
-    }
-#endif
     if (v_gradient_repeat != 0.0) {
         // The gradient repeats, so use fract() on the offset.
         while (swgl_SpanLength > 0) {
