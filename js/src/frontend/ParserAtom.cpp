@@ -697,11 +697,33 @@ uint32_t ParserAtomsTable::length(TaggedParserAtomIndex index) const {
 
 bool ParserAtomsTable::toNumber(JSContext* cx, TaggedParserAtomIndex index,
                                 double* result) const {
-  const auto* atom = getParserAtom(index);
-  size_t len = atom->length();
-  return atom->hasLatin1Chars()
-             ? CharsToNumber(cx, atom->latin1Chars(), len, result)
-             : CharsToNumber(cx, atom->twoByteChars(), len, result);
+  if (index.isParserAtomIndex()) {
+    const auto* atom = getParserAtom(index.toParserAtomIndex());
+    size_t len = atom->length();
+    return atom->hasLatin1Chars()
+               ? CharsToNumber(cx, atom->latin1Chars(), len, result)
+               : CharsToNumber(cx, atom->twoByteChars(), len, result);
+  }
+
+  if (index.isWellKnownAtomId()) {
+    const auto* atom = getWellKnown(index.toWellKnownAtomId());
+    size_t len = atom->length();
+    MOZ_ASSERT(atom->hasLatin1Chars());
+    return CharsToNumber(cx, atom->latin1Chars(), len, result);
+  }
+
+  if (index.isLength1StaticParserString()) {
+    char content[1];
+    getLength1Content(index.toLength1StaticParserString(), content);
+    return CharsToNumber(cx, reinterpret_cast<const Latin1Char*>(content), 1,
+                         result);
+  }
+
+  MOZ_ASSERT(index.isLength2StaticParserString());
+  char content[2];
+  getLength2Content(index.toLength2StaticParserString(), content);
+  return CharsToNumber(cx, reinterpret_cast<const Latin1Char*>(content), 2,
+                       result);
 }
 
 UniqueChars ParserAtomsTable::toNewUTF8CharsZ(
