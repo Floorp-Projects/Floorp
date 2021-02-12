@@ -3851,9 +3851,10 @@ bool JSScript::fullyInitFromStencil(
 }
 
 JSScript* JSScript::fromStencil(JSContext* cx,
-                                const js::frontend::CompilationStencil& stencil,
+                                frontend::CompilationInput& input,
+                                const frontend::CompilationStencil& stencil,
                                 frontend::CompilationGCOutput& gcOutput,
-                                const js::frontend::ScriptIndex scriptIndex) {
+                                frontend::ScriptIndex scriptIndex) {
   js::frontend::ScriptStencil& scriptStencil = stencil.scriptData[scriptIndex];
   js::frontend::ScriptStencilExtra& scriptExtra =
       stencil.scriptExtra[scriptIndex];
@@ -3873,7 +3874,7 @@ JSScript* JSScript::fromStencil(JSContext* cx,
     return nullptr;
   }
 
-  if (!fullyInitFromStencil(cx, stencil.input, stencil, gcOutput, script,
+  if (!fullyInitFromStencil(cx, input, stencil, gcOutput, script,
                             scriptIndex)) {
     return nullptr;
   }
