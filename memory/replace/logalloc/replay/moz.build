@@ -44,7 +44,19 @@ if CONFIG["MOZ_DMD"] or CONFIG["MOZ_PHC"]:
             "/mozglue/misc/StackWalk.h",
         ]
 
-if not CONFIG["MOZ_REPLACE_MALLOC_STATIC"]:
+if CONFIG["MOZ_REPLACE_MALLOC_STATIC"]:
+    UNIFIED_SOURCES += [
+        "/mfbt/double-conversion/double-conversion/bignum-dtoa.cc",
+        "/mfbt/double-conversion/double-conversion/bignum.cc",
+        "/mfbt/double-conversion/double-conversion/cached-powers.cc",
+        "/mfbt/double-conversion/double-conversion/double-to-string.cc",
+        "/mfbt/double-conversion/double-conversion/fast-dtoa.cc",
+        "/mfbt/double-conversion/double-conversion/fixed-dtoa.cc",
+        "/mfbt/double-conversion/double-conversion/string-to-double.cc",
+        "/mfbt/double-conversion/double-conversion/strtod.cc",
+        "/mozglue/misc/Printf.cpp",
+    ]
+else:
     SOURCES += [
         "../FdPrintf.cpp",
     ]
