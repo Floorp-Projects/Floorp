@@ -463,7 +463,7 @@ static intptr_t GetSerialNumber(void* aPtr, bool aCreate) {
           "it.");
     }
 
-    auto& record = entry.Insert(new SerialNumberRecord());
+    auto& record = entry.Insert(MakeUnique<SerialNumberRecord>());
     WalkTheStackSavingLocations(record->allocationStack);
     if (gLogJSStacks) {
       record->SaveJSStack();

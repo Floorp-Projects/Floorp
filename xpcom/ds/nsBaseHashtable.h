@@ -74,6 +74,7 @@ class nsBaseHashtableET : public KeyClass {
   typedef typename KeyClass::KeyTypePointer KeyTypePointer;
 
   explicit nsBaseHashtableET(KeyTypePointer aKey);
+  nsBaseHashtableET(KeyTypePointer aKey, const DataType& aData);
   nsBaseHashtableET(KeyTypePointer aKey, DataType&& aData);
   nsBaseHashtableET(nsBaseHashtableET<KeyClass, DataType>&& aToMove);
   ~nsBaseHashtableET() = default;
@@ -210,7 +211,7 @@ class nsBaseHashtable
    */
   void Put(KeyType aKey, const UserDataType& aData) {
     WithEntryHandle(aKey, [&aData](auto entryHandle) {
-      entryHandle.InsertOrUpdate(aData);
+      entryHandle.InsertOrUpdate(Converter::Wrap(aData));
     });
   }
 
@@ -220,7 +221,7 @@ class nsBaseHashtable
       if (!maybeEntryHandle) {
         return false;
       }
-      maybeEntryHandle->InsertOrUpdate(aData);
+      maybeEntryHandle->InsertOrUpdate(Converter::Wrap(aData));
       return true;
     });
   }
@@ -232,7 +233,7 @@ class nsBaseHashtable
    */
   void Put(KeyType aKey, UserDataType&& aData) {
     WithEntryHandle(aKey, [&aData](auto entryHandle) {
-      entryHandle.InsertOrUpdate(std::move(aData));
+      entryHandle.InsertOrUpdate(Converter::Wrap(std::move(aData)));
     });
   }
 
@@ -242,7 +243,7 @@ class nsBaseHashtable
       if (!maybeEntryHandle) {
         return false;
       }
-      maybeEntryHandle->InsertOrUpdate(std::move(aData));
+      maybeEntryHandle->InsertOrUpdate(Converter::Wrap(std::move(aData)));
       return true;
     });
   }
@@ -400,6 +401,9 @@ class nsBaseHashtable
    * place, which should be used if the provision of the value is not trivial
    * (e.g. allocates a heap object). Finally, there's InsertOrUpdate that
    * handles both existing and non-existing entries.
+   *
+   * Note that all functions of EntryHandle only deal with DataType, not with
+   * UserDataType.
    */
   class EntryHandle : protected nsTHashtable<EntryType>::EntryHandle {
    public:
@@ -424,12 +428,13 @@ class nsBaseHashtable
      * Inserts a new entry with the handle's key and the value passed to this
      * function.
      *
+     * \tparam U DataType must be constructible from U
      * \pre !HasEntry()
      * \post HasEntry()
      */
     template <typename U>
     DataType& Insert(U&& aData) {
-      Base::InsertInternal(Converter::Wrap(std::forward<U>(aData)));
+      Base::InsertInternal(std::forward<U>(aData));
       return Data();
     }
 
@@ -438,6 +443,7 @@ class nsBaseHashtable
      * the value passed to this function. The value is not consumed if no insert
      * takes place.
      *
+     * \tparam U DataType must be constructible from U
      * \post HasEntry()
      */
     template <typename U>
@@ -453,6 +459,7 @@ class nsBaseHashtable
      * the result of the functor passed to this function. The functor is not
      * called if no insert takes place.
      *
+     * \tparam F must return a value that DataType is constructible from
      * \post HasEntry()
      */
     template <typename F>
@@ -467,12 +474,13 @@ class nsBaseHashtable
      * Updates the entry with the handle's key by the value passed to this
      * function.
      *
+     * \tparam U DataType must be assignable from U
      * \pre HasEntry()
      */
     template <typename U>
     DataType& Update(U&& aData) {
       MOZ_RELEASE_ASSERT(HasEntry());
-      Data() = Converter::Wrap(std::forward<U>(aData));
+      Data() = std::forward<U>(aData);
       return Data();
     }
 
@@ -480,6 +488,8 @@ class nsBaseHashtable
      * If an entry with the handle's key already exists, updates its value by
      * the value passed to this function. The value is not consumed if no update
      * takes place.
+     *
+     * \tparam U DataType must be assignable from U
      */
     template <typename U>
     void OrUpdate(U&& aData) {
@@ -492,6 +502,8 @@ class nsBaseHashtable
      * If an entry with the handle's key already exists, updates its value by
      * the the result of the functor passed to this function. The functor is not
      * called if no update takes place.
+     *
+     * \tparam F must return a value that DataType is assignable from
      */
     template <typename F>
     void OrUpdateWith(F&& aFunc) {
@@ -505,6 +517,7 @@ class nsBaseHashtable
      * value passed to this function. Otherwise, it updates the entry by the
      * value passed to this function.
      *
+     * \tparam U DataType must be constructible and assignable from U
      * \post HasEntry()
      */
     template <typename U>
@@ -666,6 +679,11 @@ class nsBaseHashtable
 template <class KeyClass, class DataType>
 nsBaseHashtableET<KeyClass, DataType>::nsBaseHashtableET(KeyTypePointer aKey)
     : KeyClass(aKey), mData() {}
+
+template <class KeyClass, class DataType>
+nsBaseHashtableET<KeyClass, DataType>::nsBaseHashtableET(KeyTypePointer aKey,
+                                                         const DataType& aData)
+    : KeyClass(aKey), mData(aData) {}
 
 template <class KeyClass, class DataType>
 nsBaseHashtableET<KeyClass, DataType>::nsBaseHashtableET(KeyTypePointer aKey,

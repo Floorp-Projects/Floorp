@@ -325,7 +325,7 @@ void nsMutationReceiver::ContentRemoved(nsIContent* aChild,
                 return entry
                     .OrInsertWith([&isNewEntry] {
                       isNewEntry = true;
-                      return new nsCOMArray<nsMutationReceiver>();
+                      return MakeUnique<nsCOMArray<nsMutationReceiver>>();
                     })
                     .get();
               });
@@ -1041,8 +1041,9 @@ void nsAutoMutationBatch::Done() {
         auto* const transientReceivers =
             ob->mTransientReceivers.WithEntryHandle(removed, [](auto&& entry) {
               return entry
-                  .OrInsertWith(
-                      [] { return new nsCOMArray<nsMutationReceiver>(); })
+                  .OrInsertWith([] {
+                    return MakeUnique<nsCOMArray<nsMutationReceiver>>();
+                  })
                   .get();
             });
         for (uint32_t k = 0; k < allObservers.Length(); ++k) {
