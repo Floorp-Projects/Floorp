@@ -173,7 +173,16 @@ class SessionUseCases(
                 return
             }
 
-            store.state.findTabOrCustomTab(session.id)
+            invoke(session.id)
+        }
+
+        /**
+         * Stops the current URL of the provided session from loading.
+         *
+         * @param sessionId the ID of the session for which loading should be stopped.
+         */
+        operator fun invoke(sessionId: String) {
+            store.state.findTabOrCustomTab(sessionId)
                 ?.engineState
                 ?.engineSession
                 ?.stopLoading()
@@ -219,8 +228,15 @@ class SessionUseCases(
                 return
             }
 
+            invoke(session.id)
+        }
+
+        /**
+         * Navigates forward in the history of the provided session.
+         */
+        operator fun invoke(sessionId: String) {
             store.dispatch(EngineAction.GoForwardAction(
-                session.id
+                sessionId
             ))
         }
     }
@@ -293,8 +309,15 @@ class SessionUseCases(
                 return
             }
 
+            invoke(enable, session.id)
+        }
+
+        /**
+         * Requests the desktop version of the provides session and reloads the page.
+         */
+        operator fun invoke(enable: Boolean, sessionId: String) {
             store.dispatch(EngineAction.ToggleDesktopModeAction(
-                session.id,
+                sessionId,
                 enable
             ))
         }

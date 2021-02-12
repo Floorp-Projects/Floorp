@@ -45,6 +45,7 @@ class SessionUseCasesTest {
         whenever(selectedSession.id).thenReturn(selectedSessionId)
         whenever(sessionManager.selectedSessionOrThrow).thenReturn(selectedSession)
         whenever(sessionManager.selectedSession).thenReturn(selectedSession)
+        whenever(sessionManager.findSessionById(selectedSessionId)).thenReturn(selectedSession)
     }
 
     @Test
@@ -136,6 +137,9 @@ class SessionUseCasesTest {
 
         useCases.stopLoading(selectedSession)
         verify(engineSession, times(2)).stopLoading()
+
+        useCases.stopLoading(selectedSession.id)
+        verify(engineSession, times(3)).stopLoading()
     }
 
     @Test
@@ -148,6 +152,9 @@ class SessionUseCasesTest {
 
         useCases.goBack()
         verify(store, times(2)).dispatch(EngineAction.GoBackAction(selectedSessionId))
+
+        useCases.goBack(selectedSession.id)
+        verify(store, times(3)).dispatch(EngineAction.GoBackAction(selectedSessionId))
     }
 
     @Test
@@ -160,6 +167,9 @@ class SessionUseCasesTest {
 
         useCases.goForward()
         verify(store, times(2)).dispatch(EngineAction.GoForwardAction(selectedSessionId))
+
+        useCases.goForward(selectedSession.id)
+        verify(store, times(3)).dispatch(EngineAction.GoForwardAction(selectedSessionId))
     }
 
     @Test
@@ -187,6 +197,12 @@ class SessionUseCasesTest {
 
         useCases.requestDesktopSite(false)
         verify(store).dispatch(EngineAction.ToggleDesktopModeAction(selectedSessionId, false))
+
+        useCases.requestDesktopSite(true, selectedSessionId)
+        verify(store, times(2)).dispatch(EngineAction.ToggleDesktopModeAction(selectedSessionId, true))
+
+        useCases.requestDesktopSite(false, selectedSessionId)
+        verify(store, times(2)).dispatch(EngineAction.ToggleDesktopModeAction(selectedSessionId, false))
     }
 
     @Test
