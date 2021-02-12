@@ -521,6 +521,7 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
 
   // Holds the CompilationStencil generated for the script compilation or
   // decoding task.
+  UniquePtr<frontend::CompilationInput> stencilInput_;
   UniquePtr<frontend::CompilationStencil> stencil_;
 
   frontend::CompilationGCOutput gcOutput_;

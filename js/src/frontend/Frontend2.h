@@ -28,6 +28,7 @@ class ScriptSourceObject;
 
 namespace frontend {
 
+struct CompilationInput;
 struct CompilationStencil;
 struct CompilationGCOutput;
 struct CompilationState;
@@ -37,7 +38,7 @@ struct CompilationState;
 class Smoosh {
  public:
   static bool tryCompileGlobalScriptToStencil(
-      JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+      JSContext* cx, CompilationInput& input,
       JS::SourceText<mozilla::Utf8Unit>& srcBuf,
       UniquePtr<CompilationStencil>& stencilOut);
 };

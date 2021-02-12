@@ -4988,9 +4988,11 @@ static bool CompileStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   /* TODO: StencilXDR - Add option to select between full and syntax parse. */
   options.setForceFullParse();
 
-  Rooted<UniquePtr<frontend::CompilationStencil>> stencil(
-      cx, frontend::CompileGlobalScriptToStencil(cx, options, srcBuf,
-                                                 ScopeKind::Global));
+  Rooted<frontend::CompilationInput> input(cx,
+                                           frontend::CompilationInput(options));
+  UniquePtr<frontend::CompilationStencil> stencil =
+      frontend::CompileGlobalScriptToStencil(cx, input.get(), srcBuf,
+                                             ScopeKind::Global);
   if (!stencil) {
     return false;
   }
@@ -5040,16 +5042,17 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   options.setFileAndLine(filename, lineno);
   options.setForceFullParse();
 
-  Rooted<frontend::CompilationStencil> stencil(
-      cx, frontend::CompilationStencil(cx, options));
-  if (!stencil.get().input.initForGlobal(cx)) {
+  Rooted<frontend::CompilationInput> input(cx,
+                                           frontend::CompilationInput(options));
+  if (!input.get().initForGlobal(cx)) {
     return false;
   }
+  frontend::CompilationStencil stencil(input.get());
 
   /* Deserialize the stencil from XDR. */
   JS::TranscodeRange xdrRange(src->dataPointer(), src->byteLength().get());
   bool succeeded = false;
-  if (!stencil.get().deserializeStencils(cx, xdrRange, &succeeded)) {
+  if (!stencil.deserializeStencils(cx, xdrRange, &succeeded)) {
     return false;
   }
   if (!succeeded) {
@@ -5061,7 +5064,7 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   Rooted<frontend::CompilationGCOutput> output(cx);
   Rooted<frontend::CompilationGCOutput> outputForDelazification(cx);
   if (!frontend::CompilationStencil::instantiateStencils(
-          cx, stencil.get(), output.get(), outputForDelazification.address())) {
+          cx, stencil, output.get(), outputForDelazification.address())) {
     return false;
   }
 

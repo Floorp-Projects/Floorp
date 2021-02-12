@@ -175,7 +175,7 @@ class MOZ_STACK_CLASS frontend::ScriptCompiler
 };
 
 #ifdef JS_ENABLE_SMOOSH
-static bool TrySmoosh(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+static bool TrySmoosh(JSContext* cx, CompilationInput& input,
                       JS::SourceText<mozilla::Utf8Unit>& srcBuf,
                       UniquePtr<CompilationStencil>& stencilOut) {
   MOZ_ASSERT(!stencilOut);
@@ -185,8 +185,7 @@ static bool TrySmoosh(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
   }
 
   JSRuntime* rt = cx->runtime();
-  if (!Smoosh::tryCompileGlobalScriptToStencil(cx, options, srcBuf,
-                                               stencilOut)) {
+  if (!Smoosh::tryCompileGlobalScriptToStencil(cx, input, srcBuf, stencilOut)) {
     return false;
   }
 
@@ -206,7 +205,7 @@ static bool TrySmoosh(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
   return stencilOut->input.assignSource(cx, srcBuf);
 }
 
-static bool TrySmoosh(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+static bool TrySmoosh(JSContext* cx, CompilationInput& input,
                       JS::SourceText<char16_t>& srcBuf,
                       UniquePtr<CompilationStencil>& stencilOut) {
   MOZ_ASSERT(!stencilOut);
@@ -216,39 +215,39 @@ static bool TrySmoosh(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
 
 template <typename Unit>
 static UniquePtr<CompilationStencil> CompileGlobalScriptToStencilImpl(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    JS::SourceText<Unit>& srcBuf, ScopeKind scopeKind) {
-  Rooted<UniquePtr<frontend::CompilationStencil>> stencil(cx);
+    JSContext* cx, CompilationInput& input, JS::SourceText<Unit>& srcBuf,
+    ScopeKind scopeKind) {
+  UniquePtr<frontend::CompilationStencil> stencil;
 
 #ifdef JS_ENABLE_SMOOSH
-  if (!TrySmoosh(cx, options, srcBuf, stencil.get())) {
+  if (!TrySmoosh(cx, input, srcBuf, stencil)) {
     return nullptr;
   }
   if (stencil) {
-    return std::move(stencil.get());
+    return stencil;
   }
 #endif  // JS_ENABLE_SMOOSH
 
-  stencil = cx->make_unique<frontend::CompilationStencil>(cx, options);
-  if (!stencil) {
-    return nullptr;
-  }
-
-  if (options.selfHostingMode) {
-    if (!stencil->input.initForSelfHostingGlobal(cx)) {
+  if (input.options.selfHostingMode) {
+    if (!input.initForSelfHostingGlobal(cx)) {
       return nullptr;
     }
   } else {
-    if (!stencil->input.initForGlobal(cx)) {
+    if (!input.initForGlobal(cx)) {
       return nullptr;
     }
+  }
+
+  stencil = cx->make_unique<frontend::CompilationStencil>(input);
+  if (!stencil) {
+    return nullptr;
   }
 
   AutoAssertReportedException assertException(cx);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::ScriptCompiler<Unit> compiler(
-      cx, allocScope, stencil->input.options, *stencil, srcBuf);
+  frontend::ScriptCompiler<Unit> compiler(cx, allocScope, input.options,
+                                          *stencil, srcBuf);
   if (!compiler.init(cx)) {
     return nullptr;
   }
@@ -258,8 +257,7 @@ static UniquePtr<CompilationStencil> CompileGlobalScriptToStencilImpl(
   }
 
   SourceExtent extent = SourceExtent::makeGlobalExtent(
-      srcBuf.length(), stencil->input.options.lineno,
-      stencil->input.options.column);
+      srcBuf.length(), input.options.lineno, input.options.column);
 
   frontend::GlobalSharedContext globalsc(
       cx, scopeKind, *stencil, compiler.compilationState().directives, extent);
@@ -270,19 +268,19 @@ static UniquePtr<CompilationStencil> CompileGlobalScriptToStencilImpl(
 
   assertException.reset();
 
-  return std::move(stencil.get());
+  return stencil;
 }
 
 UniquePtr<CompilationStencil> frontend::CompileGlobalScriptToStencil(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    JS::SourceText<char16_t>& srcBuf, ScopeKind scopeKind) {
-  return CompileGlobalScriptToStencilImpl(cx, options, srcBuf, scopeKind);
+    JSContext* cx, CompilationInput& input, JS::SourceText<char16_t>& srcBuf,
+    ScopeKind scopeKind) {
+  return CompileGlobalScriptToStencilImpl(cx, input, srcBuf, scopeKind);
 }
 
 UniquePtr<CompilationStencil> frontend::CompileGlobalScriptToStencil(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    JS::SourceText<Utf8Unit>& srcBuf, ScopeKind scopeKind) {
-  return CompileGlobalScriptToStencilImpl(cx, options, srcBuf, scopeKind);
+    JSContext* cx, CompilationInput& input, JS::SourceText<Utf8Unit>& srcBuf,
+    ScopeKind scopeKind) {
+  return CompileGlobalScriptToStencilImpl(cx, input, srcBuf, scopeKind);
 }
 
 bool frontend::InstantiateStencils(
@@ -326,8 +324,9 @@ template <typename Unit>
 static JSScript* CompileGlobalScriptImpl(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<Unit>& srcBuf, ScopeKind scopeKind) {
-  Rooted<UniquePtr<CompilationStencil>> stencil(
-      cx, CompileGlobalScriptToStencil(cx, options, srcBuf, scopeKind));
+  Rooted<CompilationInput> input(cx, CompilationInput(options));
+  UniquePtr<CompilationStencil> stencil =
+      CompileGlobalScriptToStencil(cx, input.get(), srcBuf, scopeKind);
   if (!stencil) {
     return nullptr;
   }
@@ -359,35 +358,35 @@ static JSScript* CompileEvalScriptImpl(
     JS::Handle<JSObject*> enclosingEnv) {
   AutoAssertReportedException assertException(cx);
 
-  Rooted<CompilationStencil> stencil(cx, CompilationStencil(cx, options));
-  if (!stencil.get().input.initForEval(cx, enclosingScope)) {
+  Rooted<CompilationInput> input(cx, CompilationInput(options));
+  if (!input.get().initForEval(cx, enclosingScope)) {
     return nullptr;
   }
+  CompilationStencil stencil(input.get());
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
 
-  frontend::ScriptCompiler<Unit> compiler(
-      cx, allocScope, stencil.get().input.options, stencil.get(), srcBuf);
+  frontend::ScriptCompiler<Unit> compiler(cx, allocScope, options, stencil,
+                                          srcBuf);
   if (!compiler.init(cx, InheritThis::Yes, enclosingEnv)) {
     return nullptr;
   }
 
-  if (!compiler.createSourceAndParser(cx, stencil.get())) {
+  if (!compiler.createSourceAndParser(cx, stencil)) {
     return nullptr;
   }
 
   uint32_t len = srcBuf.length();
   SourceExtent extent =
-      SourceExtent::makeGlobalExtent(len, stencil.get().input.options.lineno,
-                                     stencil.get().input.options.column);
-  frontend::EvalSharedContext evalsc(cx, stencil.get(),
-                                     compiler.compilationState(), extent);
-  if (!compiler.compileScriptToStencil(cx, stencil.get(), &evalsc)) {
+      SourceExtent::makeGlobalExtent(len, options.lineno, options.column);
+  frontend::EvalSharedContext evalsc(cx, stencil, compiler.compilationState(),
+                                     extent);
+  if (!compiler.compileScriptToStencil(cx, stencil, &evalsc)) {
     return nullptr;
   }
 
   Rooted<frontend::CompilationGCOutput> gcOutput(cx);
-  if (!InstantiateStencils(cx, stencil.get(), gcOutput.get())) {
+  if (!InstantiateStencils(cx, stencil, gcOutput.get())) {
     return nullptr;
   }
 
@@ -824,44 +823,41 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
 
 template <typename Unit>
 static UniquePtr<CompilationStencil> ParseModuleToStencilImpl(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    SourceText<Unit>& srcBuf) {
+    JSContext* cx, CompilationInput& input, SourceText<Unit>& srcBuf) {
   MOZ_ASSERT(srcBuf.get());
 
-  Rooted<UniquePtr<frontend::CompilationStencil>> stencil(
-      cx, cx->new_<frontend::CompilationStencil>(cx, options));
-  if (!stencil) {
+  if (!input.initForModule(cx)) {
     return nullptr;
   }
 
-  if (!stencil->input.initForModule(cx)) {
+  UniquePtr<frontend::CompilationStencil> stencil(
+      cx->new_<frontend::CompilationStencil>(input));
+  if (!stencil) {
     return nullptr;
   }
 
   AutoAssertReportedException assertException(cx);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  ModuleCompiler<Unit> compiler(cx, allocScope, stencil->input.options,
-                                *stencil, srcBuf);
+  ModuleCompiler<Unit> compiler(cx, allocScope, input.options, *stencil,
+                                srcBuf);
   if (!compiler.compile(cx, *stencil)) {
     return nullptr;
   }
 
   assertException.reset();
 
-  return std::move(stencil.get());
+  return stencil;
 }
 
 UniquePtr<CompilationStencil> frontend::ParseModuleToStencil(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    SourceText<char16_t>& srcBuf) {
-  return ParseModuleToStencilImpl(cx, options, srcBuf);
+    JSContext* cx, CompilationInput& input, SourceText<char16_t>& srcBuf) {
+  return ParseModuleToStencilImpl(cx, input, srcBuf);
 }
 
 UniquePtr<CompilationStencil> frontend::ParseModuleToStencil(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    SourceText<Utf8Unit>& srcBuf) {
-  return ParseModuleToStencilImpl(cx, options, srcBuf);
+    JSContext* cx, CompilationInput& input, SourceText<Utf8Unit>& srcBuf) {
+  return ParseModuleToStencilImpl(cx, input, srcBuf);
 }
 
 template <typename Unit>
@@ -877,8 +873,9 @@ static ModuleObject* CompileModuleImpl(
   CompileOptions options(cx, optionsInput);
   options.setModule();
 
-  Rooted<UniquePtr<CompilationStencil>> stencil(
-      cx, ParseModuleToStencil(cx, options, srcBuf));
+  Rooted<CompilationInput> input(cx, CompilationInput(options));
+  UniquePtr<CompilationStencil> stencil =
+      ParseModuleToStencil(cx, input.get(), srcBuf);
   if (!stencil) {
     return nullptr;
   }
@@ -1026,41 +1023,41 @@ static JSFunction* CompileStandaloneFunction(
     FunctionAsyncKind asyncKind, HandleScope enclosingScope = nullptr) {
   AutoAssertReportedException assertException(cx);
 
-  Rooted<CompilationStencil> stencil(cx, CompilationStencil(cx, options));
+  Rooted<CompilationInput> input(cx, CompilationInput(options));
   if (enclosingScope) {
-    if (!stencil.get().input.initForStandaloneFunctionInNonSyntacticScope(
+    if (!input.get().initForStandaloneFunctionInNonSyntacticScope(
             cx, enclosingScope)) {
       return nullptr;
     }
   } else {
-    if (!stencil.get().input.initForStandaloneFunction(cx)) {
+    if (!input.get().initForStandaloneFunction(cx)) {
       return nullptr;
     }
   }
+  CompilationStencil stencil(input.get());
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   InheritThis inheritThis = (syntaxKind == FunctionSyntaxKind::Arrow)
                                 ? InheritThis::Yes
                                 : InheritThis::No;
-  StandaloneFunctionCompiler<char16_t> compiler(
-      cx, allocScope, stencil.get().input.options, stencil.get(), srcBuf);
+  StandaloneFunctionCompiler<char16_t> compiler(cx, allocScope, options,
+                                                stencil, srcBuf);
   if (!compiler.init(cx, inheritThis)) {
     return nullptr;
   }
 
-  if (!compiler.createSourceAndParser(cx, stencil.get())) {
+  if (!compiler.createSourceAndParser(cx, stencil)) {
     return nullptr;
   }
 
-  FunctionNode* parsedFunction =
-      compiler.parse(cx, stencil.get(), syntaxKind, generatorKind, asyncKind,
-                     parameterListEnd);
+  FunctionNode* parsedFunction = compiler.parse(
+      cx, stencil, syntaxKind, generatorKind, asyncKind, parameterListEnd);
   if (!parsedFunction) {
     return nullptr;
   }
 
   Rooted<CompilationGCOutput> gcOutput(cx);
-  if (!compiler.compile(cx, stencil.get(), parsedFunction, gcOutput.get())) {
+  if (!compiler.compile(cx, stencil, parsedFunction, gcOutput.get())) {
     return nullptr;
   }
 
@@ -1069,7 +1066,7 @@ static JSFunction* CompileStandaloneFunction(
   // interpreted script.
   if (gcOutput.get().script) {
     if (parameterListEnd) {
-      stencil.get().input.source()->setParameterListEnd(*parameterListEnd);
+      input.get().source()->setParameterListEnd(*parameterListEnd);
     }
 
     MOZ_ASSERT(!cx->isHelperThreadContext());
