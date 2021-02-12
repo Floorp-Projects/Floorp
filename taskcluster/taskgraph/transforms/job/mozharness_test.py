@@ -369,7 +369,10 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
     elif is_bitbar:
         py_binary = "python3" if py_3 else "python"
         mh_command = ["bash", "./{}".format(bitbar_script)]
-    elif is_macosx and "macosx1014-64" in test["test-platform"]:
+    elif is_macosx and (
+        "macosx1014-64" in test["test-platform"]
+        or "macosx1100-64" in test["test-platform"]
+    ):
         py_binary = "/usr/local/bin/{}".format("python3" if py_3 else "python2")
         mh_command = [
             py_binary,
