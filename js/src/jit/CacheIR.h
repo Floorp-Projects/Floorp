@@ -316,6 +316,7 @@ class CallFlags {
     Spread,
     FunCall,
     FunApplyMagicArgs,
+    FunApplyArgsObj,
     FunApplyArray,
     LastArgFormat = FunApplyArray
   };
@@ -464,6 +465,7 @@ inline int32_t GetIndexOfArgument(ArgumentKind kind, CallFlags flags,
     case CallFlags::Unknown:
     case CallFlags::FunCall:
     case CallFlags::FunApplyMagicArgs:
+    case CallFlags::FunApplyArgsObj:
     case CallFlags::FunApplyArray:
       MOZ_CRASH("Currently unreachable");
       break;

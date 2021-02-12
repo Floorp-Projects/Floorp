@@ -8216,7 +8216,17 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
   }
 
   CallFlags::ArgFormat format = CallFlags::Standard;
-  if (args_[1].isMagic(JS_OPTIMIZED_ARGUMENTS) && !script_->needsArgsObj()) {
+  if (args_[1].isObject() && args_[1].toObject().is<ArgumentsObject>()) {
+    Rooted<ArgumentsObject*> argsObj(
+        cx_, &args_[1].toObject().as<ArgumentsObject>());
+    if (argsObj->hasOverriddenElement() || argsObj->anyArgIsForwarded() ||
+        argsObj->hasOverriddenLength() ||
+        argsObj->initialLength() > JIT_ARGS_LENGTH_MAX) {
+      return AttachDecision::NoAction;
+    }
+    format = CallFlags::FunApplyArgsObj;
+  } else if (args_[1].isMagic(JS_OPTIMIZED_ARGUMENTS) &&
+             !script_->needsArgsObj()) {
     format = CallFlags::FunApplyMagicArgs;
   } else if (args_[1].isObject() && args_[1].toObject().is<ArrayObject>() &&
              args_[1].toObject().as<ArrayObject>().length() <=
@@ -8241,7 +8251,19 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
 
   ValOperandId argValId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
-  if (format == CallFlags::FunApplyMagicArgs) {
+
+  if (format == CallFlags::FunApplyArgsObj) {
+    ObjOperandId argObjId = writer.guardToObject(argValId);
+    if (args_[1].toObject().is<MappedArgumentsObject>()) {
+      writer.guardClass(argObjId, GuardClassKind::MappedArguments);
+    } else {
+      MOZ_ASSERT(args_[1].toObject().is<UnmappedArgumentsObject>());
+      writer.guardClass(argObjId, GuardClassKind::UnmappedArguments);
+    }
+    uint8_t flags = ArgumentsObject::ELEMENT_OVERRIDDEN_BIT |
+                    ArgumentsObject::FORWARDED_ARGUMENTS_BIT;
+    writer.guardArgumentsObjectFlags(argObjId, flags);
+  } else if (format == CallFlags::FunApplyMagicArgs) {
     writer.guardMagicValue(argValId, JS_OPTIMIZED_ARGUMENTS);
     writer.guardFrameHasNoArgumentsObject();
   } else {
