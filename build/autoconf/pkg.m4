@@ -20,6 +20,13 @@ AC_DEFUN([PKG_CHECK_MODULES],
      if $PKG_CONFIG --atleast-pkgconfig-version $PKG_CONFIG_MIN_VERSION; then
         AC_MSG_CHECKING(for $2)
 
+        if test -n "$PKG_CONFIG_SYSROOT_DIR"; then
+            export PKG_CONFIG_SYSROOT_DIR
+        fi
+        if test -n "$PKG_CONFIG_LIBDIR"; then
+            export PKG_CONFIG_LIBDIR
+        fi
+
         if $PKG_CONFIG --exists "$2" ; then
             AC_MSG_RESULT(yes)
             succeeded=yes
