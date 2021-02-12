@@ -40,10 +40,7 @@ class IconLoaderHelperWin final : public mozilla::widget::IconLoader::Helper {
   // before the listener goes away.
   explicit IconLoaderHelperWin(IconLoaderListenerWin* aLoadListener);
 
-  // IconLoaderHelperWin needs to implement nsISupports in order for its
-  // subclasses to participate in cycle collection.
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(IconLoaderHelperWin)
+  NS_DECL_ISUPPORTS
 
   nsresult OnComplete(imgIContainer* aImage, const nsIntRect& aRect) override;
 
