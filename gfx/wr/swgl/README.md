@@ -59,6 +59,29 @@ the edge ends on that vertex. The easiest way to understand this ordering
 is that for a rectangle (x0,y0,x1,y1) then the edge Nth edge bit corresponds
 to the edge where Nth coordinate in the rectangle is constant.
 
+```
+swgl_commitTextureLinearRGBA8(sampler, vec2 uv, vec4 uv_bounds, float layer);
+swgl_commitTextureLinearR8(sampler, vec2 uv, vec4 uv_bounds, float layer);
+
+swgl_commitTextureLinearColorRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color, float layer);
+swgl_commitTextureLinearColorR8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color, float layer);
+
+swgl_commitTextureLinearChunkRGBA8(sampler, vec2 uv, int layerOffset);
+swgl_commitTextureLinearChunkColorRGBA8(sampler, vec2 uv, vec4 color, int layerOffset);
+```
+
+Samples and commits an entire span of texture starting at the given uv and
+within the supplied uv bounds from the given layer. The color variations
+also accept a supplied color that modulates the result.
+
+The RGBA8 versions may only be used to commit within swgl_drawSpanRGBA8, and
+the R8 versions may only be used to commit within swgl_drawSpanR8.
+
+The chunk variations only commit a single chunk rather than an entire span. The
+uv coordinates must be clamped beforehand and then scaled appropriately with
+swgl_linearQuantize. The layer offset must be resolved to a linear offset with
+with swgl_textureLayerOffset.
+
 SWGL tries to use an anti-aliasing method that is reasonably close to WR's
 signed-distance field approximation. WR would normally try to discern the
 2D local-space coordinates of a given destination pixel relative to the

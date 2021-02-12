@@ -73,6 +73,9 @@ struct VertexShaderImpl {
   }
 };
 
+// The number of pixels in a step.
+enum : int32_t { swgl_StepSize = 4 };
+
 struct FragmentShaderImpl {
   typedef void (*InitSpanFunc)(FragmentShaderImpl*, const void* interps,
                                const void* step);
@@ -117,8 +120,6 @@ struct FragmentShaderImpl {
   uint8_t* swgl_OutR8 = nullptr;
   // The remaining number of pixels in the span.
   int32_t swgl_SpanLength = 0;
-  // The number of pixels in a step.
-  enum : int32_t { swgl_StepSize = 4 };
 
   ALWAYS_INLINE void step_fragcoord(int steps = 4) { gl_FragCoord.x += steps; }
 
