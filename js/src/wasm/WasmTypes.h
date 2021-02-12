@@ -1093,6 +1093,17 @@ enum ModuleKind { Wasm, AsmJS };
 
 enum class Shareable { False, True };
 
+// Describes per-compilation settings that are controlled by an options bag
+// passed to compilation and validation functions.  (Nonstandard extension
+// available under prefs.)
+
+struct FeatureOptions {
+  FeatureOptions() : simdWormhole(false) {}
+
+  // May be set if javascript.options.wasm_simd_wormhole==true.
+  bool simdWormhole;
+};
+
 // Describes the features that control wasm compilation.
 
 struct FeatureArgs {
@@ -1110,7 +1121,7 @@ struct FeatureArgs {
   FeatureArgs& operator=(const FeatureArgs&) = default;
   FeatureArgs(FeatureArgs&&) = default;
 
-  static FeatureArgs build(JSContext* cx);
+  static FeatureArgs build(JSContext* cx, const FeatureOptions& options);
 
   FeatureArgs withRefTypes(bool refTypes) const {
     FeatureArgs features = *this;
