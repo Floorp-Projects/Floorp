@@ -5690,6 +5690,35 @@ void CodeGenerator::emitPushArguments(LApplyArgsGeneric* apply,
   masm.pushValue(ToValue(apply, LApplyArgsGeneric::ThisIndex));
 }
 
+void CodeGenerator::emitPushArguments(LApplyArgsObj* apply,
+                                      Register extraStackSpace) {
+  // argc and argsObj are mapped to the same calltemp register.
+  MOZ_ASSERT(apply->getArgsObj() == apply->getArgc());
+
+  Register tmpArgc = ToRegister(apply->getTempObject());
+  Register argsObj = ToRegister(apply->getArgsObj());
+
+  // Load argc into tmpArgc.
+  Address lengthAddr(argsObj, ArgumentsObject::getInitialLengthSlotOffset());
+  masm.unboxInt32(lengthAddr, tmpArgc);
+  masm.rshift32(Imm32(ArgumentsObject::PACKED_BITS_COUNT), tmpArgc);
+
+  // Allocate space on the stack for arguments. This modifies extraStackSpace.
+  emitAllocateSpaceForApply(tmpArgc, extraStackSpace);
+
+  // Load arguments data
+  masm.loadPrivate(Address(argsObj, ArgumentsObject::getDataSlotOffset()),
+                   argsObj);
+  size_t argsSrcOffset = ArgumentsData::offsetOfArgs();
+
+  // This is the end of the lifetime of argsObj.
+  // After this call, the argsObj register holds the argument count instead.
+  emitPushArrayAsArguments(tmpArgc, argsObj, extraStackSpace, argsSrcOffset);
+
+  masm.addPtr(Imm32(sizeof(Value)), extraStackSpace);
+  masm.pushValue(ToValue(apply, LApplyArgsObj::ThisIndex));
+}
+
 void CodeGenerator::emitPushArrayAsArguments(Register tmpArgc,
                                              Register srcBaseAndArgc,
                                              Register scratch,
@@ -5810,16 +5839,17 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
   Register objreg = ToRegister(apply->getTempObject());
   Register extraStackSpace = ToRegister(apply->getTempStackCounter());
 
-  // Holds the function nargs, computed in the invoker or (for ApplyArray and
-  // ConstructArray) in the argument pusher.
+  // Holds the function nargs, computed in the invoker or (for ApplyArray,
+  // ConstructArray, or ApplyArgsObj) in the argument pusher.
   Register argcreg = ToRegister(apply->getArgc());
 
   // Copy the arguments of the current function.
   //
-  // In the case of ApplyArray and ConstructArray, also compute argc: the argc
-  // register and the elements register are the same; argc must not be
-  // referenced before the call to emitPushArguments() and elements must not be
-  // referenced after it returns.
+  // In the case of ApplyArray, ConstructArray, or ApplyArgsObj, also
+  // compute argc. The argc register and the elements/argsObj register
+  // are the same; argc must not be referenced before the call to
+  // emitPushArguments() and elements/argsObj must not be referenced
+  // after it returns.
   //
   // In the case of ConstructArray, also overwrite newTarget with
   // extraStackSpace; newTarget must not be referenced after this point.
@@ -5982,6 +6012,18 @@ void CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric* apply) {
 
   // Ensure that we have a reasonable number of arguments.
   bailoutCmp32(Assembler::Above, argcreg, Imm32(JIT_ARGS_LENGTH_MAX), snapshot);
+
+  emitApplyGeneric(apply);
+}
+
+void CodeGenerator::visitApplyArgsObj(LApplyArgsObj* apply) {
+  Register argsObj = ToRegister(apply->getArgsObj());
+  Register temp = ToRegister(apply->getTempObject());
+
+  Label bail;
+  masm.loadArgumentsObjectLength(argsObj, temp, &bail);
+  masm.branch32(Assembler::Above, temp, Imm32(JIT_ARGS_LENGTH_MAX), &bail);
+  bailoutFrom(&bail, apply->snapshot());
 
   emitApplyGeneric(apply);
 }
