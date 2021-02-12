@@ -751,8 +751,12 @@ impl SwCompositeThread {
             if let Some(band) = current_job.take_band() {
                 return Some((current_job, band));
             }
-            self.current_job
-                .compare_and_swap(current_job_ptr, ptr::null_mut(), Ordering::Relaxed);
+            let _ = self.current_job.compare_exchange(
+                current_job_ptr,
+                ptr::null_mut(),
+                Ordering::Relaxed,
+                Ordering::Relaxed,
+            );
         }
         return None;
     }
