@@ -5,17 +5,13 @@
 @import url("chrome://global/skin/in-content/info-pages.css");
 
 .major-section {
-  margin-top: 2em;
-  margin-bottom: 1em;
+  margin-block: 2em 1em;
   font-size: large;
   text-align: start;
   font-weight: bold;
 }
 
-#provider-table > tbody > tr >  td:last-child {
-  text-align: center;
-}
-
+#provider-table > tbody > tr >  td:last-child,
 #cache-table > tbody > tr >  td:last-child {
   text-align: center;
 }
@@ -29,7 +25,6 @@
 }
 
 button {
-  margin-inline-start: 0;
-  margin-inline-end: 8px;
+  margin-inline: 0 8px;
   padding: 3px;
 }
