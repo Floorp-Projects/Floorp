@@ -136,6 +136,28 @@ browsertime-benchmark:
     apps: ["firefox"]
     treeherder-symbol: Btime()
 
+browsertime-tp6-live:
+    description: "Raptor (browsertime) tp6 on live-sites"
+    raptor-test: tp6
+    raptor-subtests:
+        - [cnn-ampstories, cnn-amp]
+    tier: 2
+    apps: ["firefox"]
+    variants: []
+    pageload: "cold"
+    treeherder-symbol: Btime-live(tp6)
+    run-on-projects:
+        by-pageload:
+            cold:
+                by-test-platform:
+                    windows7-32.*/opt: []
+                    macosx.*64(?:-qr)?/opt: []
+                    (linux|windows10|macos)(?!.*shippable).*: []
+                    default: ["autoland"]
+    mozharness:
+        extra-options:
+            - --chimera
+
 browsertime-tp6-profiling:
     description: "Raptor (browsertime) tp6 page-load tests with Gecko Profiling"
     raptor-test: tp6
