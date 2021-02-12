@@ -1,2 +1,2 @@
-import "./basic.css" assert { type: "css" };
+import "./basic.css";
 postMessage("Unexpectedly loaded");
