@@ -9,8 +9,6 @@
 #ifndef builtin_streams_ReadableStreamOperations_h
 #define builtin_streams_ReadableStreamOperations_h
 
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
-
 #include "js/RootingAPI.h"  // JS::Handle
 #include "js/Value.h"       // JS::Value
 

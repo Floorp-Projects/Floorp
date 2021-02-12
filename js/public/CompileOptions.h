@@ -52,7 +52,6 @@
 #ifndef js_CompileOptions_h
 #define js_CompileOptions_h
 
-#include "mozilla/Attributes.h"       // MOZ_MUST_USE
 #include "mozilla/MemoryReporting.h"  // mozilla::MallocSizeOf
 
 #include <stddef.h>  // size_t

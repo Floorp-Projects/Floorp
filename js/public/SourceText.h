@@ -48,7 +48,7 @@
 #define js_SourceText_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_COLD, MOZ_IS_CLASS_INIT, MOZ_MUST_USE
+#include "mozilla/Attributes.h"  // MOZ_COLD, MOZ_IS_CLASS_INIT
 #include "mozilla/Likely.h"      // MOZ_UNLIKELY
 #include "mozilla/Utf8.h"        // mozilla::Utf8Unit
 

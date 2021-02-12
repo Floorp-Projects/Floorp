@@ -12,8 +12,6 @@
  * don't actually test fully-constructed byte streams/BYOB readers, pass.  🙄
  */
 
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
-
 #include "jsapi.h"  // JS_ReportErrorNumberASCII
 
 #include "builtin/streams/ReadableStream.h"  // js::ReadableStream

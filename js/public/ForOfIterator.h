@@ -12,7 +12,7 @@
 #ifndef js_ForOfIterator_h
 #define js_ForOfIterator_h
 
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE, MOZ_STACK_CLASS
+#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS
 
 #include <stdint.h>  // UINT32_MAX, uint32_t
 

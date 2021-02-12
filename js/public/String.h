@@ -12,7 +12,7 @@
 #include "js/shadow/String.h"  // JS::shadow::String
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_ALWAYS_INLINE, MOZ_MUST_USE
+#include "mozilla/Attributes.h"  // MOZ_ALWAYS_INLINE
 #include "mozilla/Likely.h"      // MOZ_LIKELY
 
 #include <algorithm>  // std::copy_n

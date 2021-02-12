@@ -7,7 +7,7 @@
 #ifndef frontend_DefaultEmitter_h
 #define frontend_DefaultEmitter_h
 
-#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS, MOZ_MUST_USE
+#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS
 #include "mozilla/Maybe.h"       // Maybe
 
 #include "frontend/IfEmitter.h"  // IfEmitter

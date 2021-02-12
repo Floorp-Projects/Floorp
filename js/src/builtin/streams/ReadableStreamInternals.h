@@ -9,8 +9,6 @@
 #ifndef builtin_streams_ReadableStreamInternals_h
 #define builtin_streams_ReadableStreamInternals_h
 
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
-
 #include "jstypes.h"                               // JS_PUBLIC_API
 #include "builtin/streams/ReadableStreamReader.h"  // js::ForAuthorCodeBool
 #include "js/RootingAPI.h"                         // JS::Handle

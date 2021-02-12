@@ -10,7 +10,6 @@
 #include "builtin/streams/ReadableStreamReader.h"
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
 #include "jsfriendapi.h"  // JS_IsDeadWrapper
 

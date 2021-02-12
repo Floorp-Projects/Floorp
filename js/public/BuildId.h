@@ -12,8 +12,6 @@
 #ifndef js_BuildId_h
 #define js_BuildId_h
 
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE
-
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/Vector.h"  // js::Vector

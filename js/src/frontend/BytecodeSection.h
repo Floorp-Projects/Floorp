@@ -7,7 +7,7 @@
 #ifndef frontend_BytecodeSection_h
 #define frontend_BytecodeSection_h
 
-#include "mozilla/Attributes.h"  // MOZ_MUST_USE, MOZ_STACK_CLASS
+#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS
 #include "mozilla/Maybe.h"       // mozilla::Maybe
 #include "mozilla/Span.h"        // mozilla::Span
 
