@@ -12,6 +12,8 @@
 
 #include <stddef.h>
 
+#include "vm/WellKnownAtom.h"  // js_*_str
+
 // clang-format off
 /*
  * [SMDOC] Bytecode Definitions

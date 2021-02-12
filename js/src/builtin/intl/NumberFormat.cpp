@@ -49,6 +49,7 @@
 #include "vm/SelfHosting.h"
 #include "vm/Stack.h"
 #include "vm/StringType.h"
+#include "vm/WellKnownAtom.h"  // js_*_str
 
 #include "vm/JSObject-inl.h"
 

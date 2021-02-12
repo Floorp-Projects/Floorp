@@ -65,13 +65,14 @@
 #include "vm/BytecodeUtil.h"  // JOF_*, IsArgOp, IsLocalOp, SET_UINT24, SET_ICINDEX, BytecodeFallsThrough, BytecodeIsJumpTarget
 #include "vm/FunctionPrefixKind.h"  // FunctionPrefixKind
 #include "vm/GeneratorObject.h"     // AbstractGeneratorObject
-#include "vm/JSAtom.h"              // JSAtom, js_*_str
+#include "vm/JSAtom.h"              // JSAtom
 #include "vm/JSContext.h"           // JSContext
 #include "vm/JSFunction.h"          // JSFunction,
 #include "vm/JSScript.h"  // JSScript, ScriptSourceObject, MemberInitializers, BaseScript
 #include "vm/Opcodes.h"        // JSOp, JSOpLength_*
 #include "vm/SharedStencil.h"  // ScopeNote
 #include "vm/ThrowMsgKind.h"   // ThrowMsgKind
+#include "vm/WellKnownAtom.h"  // js_*_str
 #include "wasm/AsmJS.h"        // IsAsmJSModule
 
 #include "vm/JSObject-inl.h"  // JSObject

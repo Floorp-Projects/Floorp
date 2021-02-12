@@ -29,6 +29,7 @@
 #include "util/Text.h"
 #include "vm/JSContext.h"
 #include "vm/SymbolType.h"
+#include "vm/WellKnownAtom.h"  // js_*_str
 #include "vm/Xdr.h"
 
 #include "gc/AtomMarking-inl.h"
@@ -212,14 +213,6 @@ inline JSAtom* js::AtomStateEntry::asPtr(JSContext* cx) const {
 UniqueChars js::AtomToPrintableString(JSContext* cx, JSAtom* atom) {
   return QuoteString(cx, atom);
 }
-
-#define DEFINE_PROTO_STRING(name, clasp) const char js_##name##_str[] = #name;
-JS_FOR_EACH_PROTOTYPE(DEFINE_PROTO_STRING)
-#undef DEFINE_PROTO_STRING
-
-#define CONST_CHAR_STR(idpart, id, text) const char js_##idpart##_str[] = text;
-FOR_EACH_COMMON_PROPERTYNAME(CONST_CHAR_STR)
-#undef CONST_CHAR_STR
 
 // Use a low initial capacity for the permanent atoms table to avoid penalizing
 // runtimes that create a small number of atoms.

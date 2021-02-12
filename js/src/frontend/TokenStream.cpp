@@ -49,6 +49,7 @@
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
+#include "vm/WellKnownAtom.h"  // js_*_str
 
 using mozilla::AsciiAlphanumericToNumber;
 using mozilla::AssertedCast;

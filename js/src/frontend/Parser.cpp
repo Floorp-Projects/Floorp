@@ -62,6 +62,7 @@
 #include "vm/RegExpObject.h"
 #include "vm/SelfHosting.h"
 #include "vm/StringType.h"
+#include "vm/WellKnownAtom.h"  // js_*_str
 #include "wasm/AsmJS.h"
 
 #include "frontend/ParseContext-inl.h"

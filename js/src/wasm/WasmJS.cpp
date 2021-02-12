@@ -48,7 +48,8 @@
 #include "vm/PlainObject.h"    // js::PlainObject
 #include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/StringType.h"
-#include "vm/Warnings.h"  // js::WarnNumberASCII
+#include "vm/Warnings.h"       // js::WarnNumberASCII
+#include "vm/WellKnownAtom.h"  // js_*_str
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCompile.h"

@@ -19,6 +19,7 @@
 #include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/Realm.h"
 #include "vm/SelfHosting.h"
+#include "vm/WellKnownAtom.h"  // js_*_str
 
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
