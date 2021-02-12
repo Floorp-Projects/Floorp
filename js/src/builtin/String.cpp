@@ -58,7 +58,8 @@
 #include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
 #include "vm/SelfHosting.h"
-#include "vm/ToSource.h"  // js::ValueToSource
+#include "vm/ToSource.h"       // js::ValueToSource
+#include "vm/WellKnownAtom.h"  // js_*_str
 
 #include "vm/InlineCharBuffer-inl.h"
 #include "vm/Interpreter-inl.h"

@@ -44,6 +44,7 @@
 #include "vm/Shape.h"
 #include "vm/ToSource.h"  // js::ValueToSource
 #include "vm/TypedArrayObject.h"
+#include "vm/WellKnownAtom.h"  // js_*_str
 #include "vm/WrapperObject.h"
 
 #include "vm/ArgumentsObject-inl.h"

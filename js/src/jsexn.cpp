@@ -54,6 +54,7 @@
 #include "vm/Stack.h"
 #include "vm/StringType.h"
 #include "vm/SymbolType.h"
+#include "vm/WellKnownAtom.h"  // js_*_str
 
 #include "vm/ErrorObject-inl.h"
 #include "vm/JSContext-inl.h"

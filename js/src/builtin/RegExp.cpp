@@ -21,6 +21,7 @@
 #include "vm/JSContext.h"
 #include "vm/RegExpStatics.h"
 #include "vm/SelfHosting.h"
+#include "vm/WellKnownAtom.h"  // js_*_str
 
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/JSObject-inl.h"

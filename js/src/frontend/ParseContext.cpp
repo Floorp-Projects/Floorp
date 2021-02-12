@@ -9,6 +9,8 @@
 #include "frontend/CompilationStencil.h"  // ScopeContext
 #include "frontend/Parser.h"              // ParserBase
 #include "js/friend/ErrorMessages.h"      // JSMSG_*
+#include "vm/WellKnownAtom.h"             // js_*_str
+
 #include "vm/EnvironmentObject-inl.h"
 
 using mozilla::Maybe;

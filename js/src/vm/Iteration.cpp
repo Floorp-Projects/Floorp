@@ -41,6 +41,7 @@
 #include "vm/NativeObject.h"  // js::PlainObject
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
+#include "vm/WellKnownAtom.h"  // js_*_str
 
 #include "vm/Compartment-inl.h"
 #include "vm/JSScript-inl.h"

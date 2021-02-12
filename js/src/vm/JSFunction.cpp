@@ -63,6 +63,7 @@
 #include "vm/Shape.h"
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/StringObject.h"
+#include "vm/WellKnownAtom.h"  // js_*_str
 #include "vm/WrapperObject.h"
 #include "vm/Xdr.h"
 #include "wasm/AsmJS.h"
