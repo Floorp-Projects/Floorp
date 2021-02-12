@@ -123,7 +123,9 @@ nsresult IconLoaderHelperCocoa::OnComplete(imgIContainer* aImage, const nsIntRec
   [placeholderImage release];
   placeholderImage = nil;
 
-  mLoadListener->OnComplete();
+  if (mLoadListener) {
+    mLoadListener->OnComplete();
+  }
 
   return NS_OK;
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT
@@ -136,6 +138,7 @@ void IconLoaderHelperCocoa::Destroy() {
     [mNativeIconImage release];
     mNativeIconImage = nil;
   }
+  mLoadListener = nullptr;
 }
 
 }  // namespace mozilla::widget
