@@ -258,7 +258,7 @@ void DesktopDeviceInfoImpl::InitializeWindowList() {
       _snprintf_s(idStr, sizeof(idStr), sizeof(idStr) - 1, "%ld",
                   pWinDevice->getScreenId());
 #else
-      snprintf(idStr, sizeof(idStr), "%ld", pWinDevice->getScreenId());
+      SprintfLiteral(idStr, "%ld", pWinDevice->getScreenId());
 #endif
       pWinDevice->setUniqueIdName(idStr);
       desktop_window_list_[pWinDevice->getScreenId()] = pWinDevice;
