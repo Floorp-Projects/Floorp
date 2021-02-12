@@ -30,7 +30,6 @@ def load_commands():
                     "script": props["script"],
                     "parser": props.get("parser"),
                     "parse_known": props.get("parse_known", False),
-                    "py3only": props.get("py3only", False),
                     "help": props.get("help"),
                     "virtualenv": props.get("virtualenv", True),
                     "install": props.get("install", []),
@@ -95,8 +94,7 @@ def create_complete_parser():
     for command in commands:
         props = commands[command]
 
-        if (props["virtualenv"] and
-            (not props["py3only"] or sys.version_info.major == 3)):
+        if props["virtualenv"]:
             setup_virtualenv(None, False, props)
 
         subparser = import_command('wpt', command, props)[1]
