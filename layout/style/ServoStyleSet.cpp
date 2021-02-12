@@ -528,12 +528,6 @@ ServoStyleSet::ResolveInheritingAnonymousBoxStyle(PseudoStyleType aType,
 already_AddRefed<ComputedStyle>
 ServoStyleSet::ResolveNonInheritingAnonymousBoxStyle(PseudoStyleType aType) {
   MOZ_ASSERT(PseudoStyle::IsNonInheritingAnonBox(aType));
-  MOZ_ASSERT(aType != PseudoStyleType::pageContent,
-             "If pageContent ends up non-inheriting, check "
-             "whether we need to do anything to move the "
-             "@page handling from ResolveInheritingAnonymousBoxStyle to "
-             "ResolveNonInheritingAnonymousBoxStyle");
-
   nsCSSAnonBoxes::NonInheriting type =
       nsCSSAnonBoxes::NonInheritingTypeForPseudoType(aType);
   RefPtr<ComputedStyle>& cache = mNonInheritingComputedStyles[type];

@@ -399,16 +399,6 @@ void PrintedSheetFrame::ComputePagesPerSheetOriginAndScale() {
   mPD->mPagesPerSheetScale = scale;
 }
 
-void PrintedSheetFrame::AppendDirectlyOwnedAnonBoxes(
-    nsTArray<OwnedAnonBox>& aResult) {
-  MOZ_ASSERT(mFrames.FirstChild() && mFrames.FirstChild()->IsPageFrame(),
-             "PrintedSheetFrame must have a nsPageFrame child");
-  // Only append the first child; all our children are expected to be
-  // continuations of each other, and our anon box handling always walks
-  // continuations.
-  aResult.AppendElement(mFrames.FirstChild());
-}
-
 #ifdef DEBUG_FRAME_DUMP
 nsresult PrintedSheetFrame::GetFrameName(nsAString& aResult) const {
   return MakeFrameName(u"PrintedSheet"_ns, aResult);

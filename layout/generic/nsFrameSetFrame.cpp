@@ -315,8 +315,7 @@ void nsHTMLFramesetFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   mNonBlankChildCount = mChildCount;
   // add blank frames for frameset cells that had no content provided
   for (int blankX = mChildCount; blankX < numCells; blankX++) {
-    RefPtr<ComputedStyle> pseudoComputedStyle;
-    pseudoComputedStyle =
+    RefPtr<ComputedStyle> pseudoComputedStyle =
         presShell->StyleSet()->ResolveNonInheritingAnonymousBoxStyle(
             PseudoStyleType::framesetBlank);
 
