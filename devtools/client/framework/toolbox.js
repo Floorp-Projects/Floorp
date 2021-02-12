@@ -3742,8 +3742,6 @@ Toolbox.prototype = {
       { onAvailable: this._onResourceAvailable }
     );
 
-    this.targetList.destroy();
-
     // Unregister buttons listeners
     this.toolbarButtons.forEach(button => {
       if (typeof button.teardown == "function") {
@@ -3805,6 +3803,12 @@ Toolbox.prototype = {
             // This is done after other destruction tasks since it may tear down
             // fronts and the debugger transport which earlier destroy methods may
             // require to complete.
+            //
+            // For similar reasons, only destroy the target-list after every
+            // other outstanding cleanup is done. Destroying the target list
+            // will lead to destroy frame targets which can temporarily make
+            // some fronts unresponsive and block the cleanup.
+            this.targetList.destroy();
             return this.target.destroy();
           }, console.error)
           .then(() => {
