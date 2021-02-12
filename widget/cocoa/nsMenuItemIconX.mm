@@ -21,6 +21,7 @@
 #  endif
 #endif
 
+#include "MOZIconHelper.h"
 #include "mozilla/dom/Document.h"
 #include "nsCocoaUtils.h"
 #include "nsComputedDOMStyle.h"
@@ -37,7 +38,6 @@ using namespace mozilla;
 
 using mozilla::dom::Element;
 using mozilla::widget::IconLoader;
-using mozilla::widget::IconLoaderHelperCocoa;
 
 static const uint32_t kIconSize = 16;
 

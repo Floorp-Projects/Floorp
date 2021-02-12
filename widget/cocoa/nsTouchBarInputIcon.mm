@@ -9,8 +9,8 @@
 
 #include "nsTouchBarInputIcon.h"
 
+#include "MOZIconHelper.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/widget/IconLoader.h"
 #include "nsCocoaUtils.h"
 #include "nsComputedDOMStyle.h"
 #include "nsContentUtils.h"
@@ -21,7 +21,6 @@
 
 using namespace mozilla;
 using mozilla::widget::IconLoader;
-using mozilla::widget::IconLoaderHelperCocoa;
 
 static const uint32_t kIconSize = 16;
 static const CGFloat kHiDPIScalingFactor = 2.0f;

@@ -35,7 +35,7 @@ EXPORTS.mozilla.widget += [
 
 UNIFIED_SOURCES += [
     "GfxInfo.mm",
-    "IconLoaderHelperCocoa.mm",
+    "MOZIconHelper.mm",
     "NativeKeyBindings.mm",
     "NativeMenuSupport.mm",
     "nsAppShell.mm",
