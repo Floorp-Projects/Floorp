@@ -777,7 +777,6 @@ class ParserAtomsTable {
   const ParserAtom* getLength1Static(Length1StaticParserString s) const;
   const ParserAtom* getLength2Static(Length2StaticParserString s) const;
   ParserAtom* getParserAtom(ParserAtomIndex index) const;
-  const ParserAtom* getParserAtom(TaggedParserAtomIndex index) const;
 
  public:
   const ParserAtomVector& entries() const { return entries_; }
