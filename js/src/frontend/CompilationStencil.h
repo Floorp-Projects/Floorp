@@ -577,9 +577,10 @@ struct CompilationStencil : public BaseCompilationStencil {
       JSContext* cx, CompilationStencil& stencil, CompilationGCOutput& gcOutput,
       CompilationGCOutput* gcOutputForDelazification = nullptr);
 
-  [[nodiscard]] bool serializeStencils(JSContext* cx, JS::TranscodeBuffer& buf,
+  [[nodiscard]] bool serializeStencils(JSContext* cx, CompilationInput& input,
+                                       JS::TranscodeBuffer& buf,
                                        bool* succeededOut = nullptr);
-  [[nodiscard]] bool deserializeStencils(JSContext* cx,
+  [[nodiscard]] bool deserializeStencils(JSContext* cx, CompilationInput& input,
                                          const JS::TranscodeRange& range,
                                          bool* succeededOut = nullptr);
 

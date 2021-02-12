@@ -475,7 +475,8 @@ class XDRState : public XDRCoderBase {
 
   XDRResult codeModuleObject(MutableHandleModuleObject modp);
   XDRResult codeScript(MutableHandleScript scriptp);
-  XDRResult codeStencil(frontend::CompilationStencil& stencil);
+  XDRResult codeStencil(frontend::CompilationInput& input,
+                        frontend::CompilationStencil& stencil);
   XDRResult codeFunctionStencil(frontend::BaseCompilationStencil& stencil);
 };
 
@@ -556,7 +557,8 @@ class XDRStencilDecoder : public XDRDecoderBase {
   bool hasOptions() const override { return true; }
   const JS::ReadOnlyCompileOptions& options() override { return *options_; }
 
-  XDRResult codeStencils(frontend::CompilationStencil& stencil);
+  XDRResult codeStencils(frontend::CompilationInput& input,
+                         frontend::CompilationStencil& stencil);
 
  private:
   const JS::ReadOnlyCompileOptions* options_;
@@ -639,7 +641,8 @@ class XDRIncrementalStencilEncoder : public XDREncoder {
 
   XDRResult linearize(JS::TranscodeBuffer& buffer, js::ScriptSource* ss);
 
-  XDRResult codeStencils(frontend::CompilationStencil& stencil);
+  XDRResult codeStencils(frontend::CompilationInput& input,
+                         frontend::CompilationStencil& stencil);
 
  private:
   void switchToBuffer(XDRBuffer<XDR_ENCODE>* target) { buf = target; }
