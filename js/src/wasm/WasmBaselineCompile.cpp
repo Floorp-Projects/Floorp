@@ -14495,7 +14495,7 @@ bool BaseCompiler::emitVectorShuffle() {
   bool emitShuffle = true;
 
 #  ifdef ENABLE_WASM_SIMD_WORMHOLE
-  if (moduleEnv_.features.simdWormhole && IsWormholeTrigger(shuffleMask)) {
+  if (moduleEnv_.simdWormholeEnabled() && IsWormholeTrigger(shuffleMask)) {
     emitShuffle = false;
     switch (shuffleMask.bytes[15]) {
       case 0:

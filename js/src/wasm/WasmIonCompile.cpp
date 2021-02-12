@@ -4325,7 +4325,7 @@ static bool EmitShuffleSimd128(FunctionCompiler& f) {
   }
 
 #  ifdef ENABLE_WASM_SIMD_WORMHOLE
-  if (f.moduleEnv().features.simdWormhole && IsWormholeTrigger(control)) {
+  if (f.moduleEnv().simdWormholeEnabled() && IsWormholeTrigger(control)) {
     switch (control.bytes[15]) {
       case 0:
         f.iter().setResult(
