@@ -2138,18 +2138,13 @@ AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectArg(
   }
   auto* args = &obj->as<ArgumentsObject>();
 
-  // No elements must have been overriden.
+  // No elements must have been overridden or deleted.
   if (args->hasOverriddenElement()) {
     return AttachDecision::NoAction;
   }
 
   // Check bounds.
   if (index >= args->initialLength()) {
-    return AttachDecision::NoAction;
-  }
-
-  // Ensure no elements were ever deleted.
-  if (args->isAnyElementDeleted()) {
     return AttachDecision::NoAction;
   }
 
