@@ -260,18 +260,11 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
   }
 
   static const CommonNameInfo cachedNames[] = {
-#define COMMON_NAME_INFO(idpart, id, text) \
-  {js_##idpart##_str, sizeof(text) - 1},
-      FOR_EACH_COMMON_PROPERTYNAME(COMMON_NAME_INFO)
-#undef COMMON_NAME_INFO
-#define COMMON_NAME_INFO(name, clasp) {js_##name##_str, sizeof(#name) - 1},
-          JS_FOR_EACH_PROTOTYPE(COMMON_NAME_INFO)
-#undef COMMON_NAME_INFO
 #define COMMON_NAME_INFO(name) {#name, sizeof(#name) - 1},
-              JS_FOR_EACH_WELL_KNOWN_SYMBOL(COMMON_NAME_INFO)
+      JS_FOR_EACH_WELL_KNOWN_SYMBOL(COMMON_NAME_INFO)
 #undef COMMON_NAME_INFO
 #define COMMON_NAME_INFO(name) {"Symbol." #name, sizeof("Symbol." #name) - 1},
-                  JS_FOR_EACH_WELL_KNOWN_SYMBOL(COMMON_NAME_INFO)
+          JS_FOR_EACH_WELL_KNOWN_SYMBOL(COMMON_NAME_INFO)
 #undef COMMON_NAME_INFO
   };
 
@@ -282,6 +275,16 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
 
   ImmutablePropertyNamePtr* names =
       reinterpret_cast<ImmutablePropertyNamePtr*>(commonNames.ref());
+  for (size_t i = 0; i < uint32_t(WellKnownAtomId::Limit); i++) {
+    const auto& info = wellKnownAtomInfos[i];
+    JSAtom* atom = Atomize(cx, info.hash, info.content, info.length, PinAtom);
+    if (!atom) {
+      return false;
+    }
+    names->init(atom->asPropertyName());
+    names++;
+  }
+
   for (const auto& cachedName : cachedNames) {
     JSAtom* atom = Atomize(cx, cachedName.str, cachedName.length, PinAtom);
     if (!atom) {
@@ -1063,6 +1066,18 @@ JSAtom* js::Atomize(JSContext* cx, const char* bytes, size_t length,
                     PinningBehavior pin, const Maybe<uint32_t>& indexValue) {
   const Latin1Char* chars = reinterpret_cast<const Latin1Char*>(bytes);
   return AtomizeAndCopyChars(cx, chars, length, pin, indexValue);
+}
+
+JSAtom* js::Atomize(JSContext* cx, HashNumber hash, const char* bytes,
+                    size_t length, PinningBehavior pin) {
+  const Latin1Char* chars = reinterpret_cast<const Latin1Char*>(bytes);
+  if (JSAtom* s = cx->staticStrings().lookup(chars, length)) {
+    return s;
+  }
+
+  AtomHasher::Lookup lookup(hash, chars, length);
+  return AtomizeAndCopyCharsFromLookup(cx, chars, length, lookup, pin,
+                                       Nothing());
 }
 
 template <typename CharT>
