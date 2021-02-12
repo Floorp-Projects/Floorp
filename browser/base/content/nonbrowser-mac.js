@@ -41,7 +41,6 @@ function nonBrowserWindowStartup() {
     "charsetMenu",
     "View:PageSource",
     "View:FullScreen",
-    "enterFullScreenItem",
     "viewHistorySidebar",
     "Browser:AddBookmarkAs",
     "Browser:BookmarkAllTabs",
