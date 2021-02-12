@@ -715,8 +715,6 @@ class WellKnownParserAtoms {
   }
 
   const ParserAtom* getWellKnown(WellKnownAtomId atomId) const;
-  static const ParserAtom* getLength1Static(Length1StaticParserString s);
-  static const ParserAtom* getLength2Static(Length2StaticParserString s);
 };
 
 bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
@@ -774,8 +772,6 @@ class ParserAtomsTable {
 
  private:
   const ParserAtom* getWellKnown(WellKnownAtomId atomId) const;
-  const ParserAtom* getLength1Static(Length1StaticParserString s) const;
-  const ParserAtom* getLength2Static(Length2StaticParserString s) const;
   ParserAtom* getParserAtom(ParserAtomIndex index) const;
 
  public:
