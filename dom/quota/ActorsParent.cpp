@@ -1283,7 +1283,7 @@ class QuotaUsageRequestBase : public NormalOriginOperationBase,
 
   mozilla::Result<UsageInfo, nsresult> GetUsageForOrigin(
       QuotaManager& aQuotaManager, PersistenceType aPersistenceType,
-      const GroupAndOrigin& aGroupAndOrigin);
+      const OriginMetadata& aOriginMetadata);
 
   // Subclasses use this override to set the IPDL response value.
   virtual void GetResponse(UsageRequestResponse& aResponse) = 0;
@@ -1291,7 +1291,7 @@ class QuotaUsageRequestBase : public NormalOriginOperationBase,
  private:
   mozilla::Result<UsageInfo, nsresult> GetUsageForOriginEntries(
       QuotaManager& aQuotaManager, PersistenceType aPersistenceType,
-      const GroupAndOrigin& aGroupAndOrigin, nsIFile& aDirectory,
+      const OriginMetadata& aOriginMetadata, nsIFile& aDirectory,
       bool aInitialized);
 
   void SendResults() override;
@@ -1786,20 +1786,20 @@ bool IsTempMetadata(const nsAString& aFileName) {
 
 // Return whether the group was actually updated.
 Result<bool, nsresult> MaybeUpdateGroupForOrigin(
-    GroupAndOrigin& aGroupAndOrigin) {
+    OriginMetadata& aOriginMetadata) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   bool updated = false;
 
-  if (aGroupAndOrigin.mOrigin.EqualsLiteral(kChromeOrigin)) {
-    if (!aGroupAndOrigin.mGroup.EqualsLiteral(kChromeOrigin)) {
-      aGroupAndOrigin.mGroup.AssignLiteral(kChromeOrigin);
+  if (aOriginMetadata.mOrigin.EqualsLiteral(kChromeOrigin)) {
+    if (!aOriginMetadata.mGroup.EqualsLiteral(kChromeOrigin)) {
+      aOriginMetadata.mGroup.AssignLiteral(kChromeOrigin);
       updated = true;
     }
   } else {
     OriginAttributes originAttributes;
     nsCString originNoSuffix;
-    QM_TRY(OkIf(originAttributes.PopulateFromOrigin(aGroupAndOrigin.mOrigin,
+    QM_TRY(OkIf(originAttributes.PopulateFromOrigin(aOriginMetadata.mOrigin,
                                                     originNoSuffix)),
            Err(NS_ERROR_FAILURE));
 
@@ -1818,8 +1818,8 @@ Result<bool, nsresult> MaybeUpdateGroupForOrigin(
 
     const nsCString upToDateGroup = baseDomain + suffix;
 
-    if (aGroupAndOrigin.mGroup != upToDateGroup) {
-      aGroupAndOrigin.mGroup = upToDateGroup;
+    if (aOriginMetadata.mGroup != upToDateGroup) {
+      aOriginMetadata.mGroup = upToDateGroup;
       updated = true;
 
 #ifdef QM_PRINCIPALINFO_VERIFICATION_ENABLED
@@ -3055,7 +3055,7 @@ bool QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate) {
                  "Deleted itself!");
 
       quotaManager->LockedRemoveQuotaForOrigin(lock->GetPersistenceType(),
-                                               lock->GroupAndOrigin());
+                                               lock->OriginMetadata());
     }
 
     // We unlocked and relocked several times so we need to recompute all the
@@ -3285,7 +3285,7 @@ void QuotaManager::RegisterDirectoryLock(DirectoryLockImpl& aLock) {
 
       if (!IsShuttingDown()) {
         UpdateOriginAccessTime(aLock.GetPersistenceType(),
-                               aLock.GroupAndOrigin());
+                               aLock.OriginMetadata());
       }
     }
 
@@ -3323,7 +3323,7 @@ void QuotaManager::UnregisterDirectoryLock(DirectoryLockImpl& aLock) {
 
       if (!IsShuttingDown()) {
         UpdateOriginAccessTime(aLock.GetPersistenceType(),
-                               aLock.GroupAndOrigin());
+                               aLock.OriginMetadata());
       }
     }
   }
@@ -3472,7 +3472,7 @@ uint64_t QuotaManager::CollectOriginsForEviction(
     for (const auto& originInfo : inactiveOrigins) {
       auto lock = DirectoryLockImpl::CreateForEviction(
           WrapNotNullUnchecked(this), originInfo->mGroupInfo->mPersistenceType,
-          GroupAndOrigin{originInfo->mGroupInfo->mGroup, originInfo->mOrigin});
+          OriginMetadata{originInfo->mGroupInfo->mGroup, originInfo->mOrigin});
 
       lock->AcquireImmediately();
 
@@ -3768,7 +3768,7 @@ void QuotaManager::Shutdown() {
 }
 
 void QuotaManager::InitQuotaForOrigin(PersistenceType aPersistenceType,
-                                      const GroupAndOrigin& aGroupAndOrigin,
+                                      const OriginMetadata& aOriginMetadata,
                                       const ClientUsageArray& aClientUsages,
                                       uint64_t aUsageBytes, int64_t aAccessTime,
                                       bool aPersisted) {
@@ -3778,29 +3778,29 @@ void QuotaManager::InitQuotaForOrigin(PersistenceType aPersistenceType,
   MutexAutoLock lock(mQuotaMutex);
 
   RefPtr<GroupInfo> groupInfo =
-      LockedGetOrCreateGroupInfo(aPersistenceType, aGroupAndOrigin.mGroup);
+      LockedGetOrCreateGroupInfo(aPersistenceType, aOriginMetadata.mGroup);
 
   groupInfo->LockedAddOriginInfo(MakeNotNull<RefPtr<OriginInfo>>(
-      groupInfo, aGroupAndOrigin.mOrigin, aClientUsages, aUsageBytes,
+      groupInfo, aOriginMetadata.mOrigin, aClientUsages, aUsageBytes,
       aAccessTime, aPersisted,
       /* aDirectoryExists */ true));
 }
 
 void QuotaManager::EnsureQuotaForOrigin(PersistenceType aPersistenceType,
-                                        const GroupAndOrigin& aGroupAndOrigin) {
+                                        const OriginMetadata& aOriginMetadata) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
 
   MutexAutoLock lock(mQuotaMutex);
 
   RefPtr<GroupInfo> groupInfo =
-      LockedGetOrCreateGroupInfo(aPersistenceType, aGroupAndOrigin.mGroup);
+      LockedGetOrCreateGroupInfo(aPersistenceType, aOriginMetadata.mGroup);
 
   RefPtr<OriginInfo> originInfo =
-      groupInfo->LockedGetOriginInfo(aGroupAndOrigin.mOrigin);
+      groupInfo->LockedGetOriginInfo(aOriginMetadata.mOrigin);
   if (!originInfo) {
     groupInfo->LockedAddOriginInfo(MakeNotNull<RefPtr<OriginInfo>>(
-        groupInfo, aGroupAndOrigin.mOrigin, ClientUsageArray(),
+        groupInfo, aOriginMetadata.mOrigin, ClientUsageArray(),
         /* aUsageBytes */ 0,
         /* aAccessTime */ PR_Now(), /* aPersisted */ false,
         /* aDirectoryExists */ false));
@@ -3808,7 +3808,7 @@ void QuotaManager::EnsureQuotaForOrigin(PersistenceType aPersistenceType,
 }
 
 void QuotaManager::NoteOriginDirectoryCreated(
-    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
     bool aPersisted, int64_t& aTimestamp) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
@@ -3818,10 +3818,10 @@ void QuotaManager::NoteOriginDirectoryCreated(
   MutexAutoLock lock(mQuotaMutex);
 
   RefPtr<GroupInfo> groupInfo =
-      LockedGetOrCreateGroupInfo(aPersistenceType, aGroupAndOrigin.mGroup);
+      LockedGetOrCreateGroupInfo(aPersistenceType, aOriginMetadata.mGroup);
 
   RefPtr<OriginInfo> originInfo =
-      groupInfo->LockedGetOriginInfo(aGroupAndOrigin.mOrigin);
+      groupInfo->LockedGetOriginInfo(aOriginMetadata.mOrigin);
   if (originInfo) {
     originInfo->mPersisted = aPersisted;
     originInfo->mDirectoryExists = true;
@@ -3829,7 +3829,7 @@ void QuotaManager::NoteOriginDirectoryCreated(
   } else {
     timestamp = PR_Now();
     groupInfo->LockedAddOriginInfo(MakeNotNull<RefPtr<OriginInfo>>(
-        groupInfo, aGroupAndOrigin.mOrigin, ClientUsageArray(),
+        groupInfo, aOriginMetadata.mOrigin, ClientUsageArray(),
         /* aUsageBytes */ 0,
         /* aAccessTime */ timestamp, aPersisted, /* aDirectoryExists */ true));
   }
@@ -3838,7 +3838,7 @@ void QuotaManager::NoteOriginDirectoryCreated(
 }
 
 void QuotaManager::DecreaseUsageForOrigin(PersistenceType aPersistenceType,
-                                          const GroupAndOrigin& aGroupAndOrigin,
+                                          const OriginMetadata& aOriginMetadata,
                                           Client::Type aClientType,
                                           int64_t aSize) {
   MOZ_ASSERT(!NS_IsMainThread());
@@ -3847,7 +3847,7 @@ void QuotaManager::DecreaseUsageForOrigin(PersistenceType aPersistenceType,
   MutexAutoLock lock(mQuotaMutex);
 
   GroupInfoPair* pair;
-  if (!mGroupInfoPairs.Get(aGroupAndOrigin.mGroup, &pair)) {
+  if (!mGroupInfoPairs.Get(aOriginMetadata.mGroup, &pair)) {
     return;
   }
 
@@ -3857,14 +3857,14 @@ void QuotaManager::DecreaseUsageForOrigin(PersistenceType aPersistenceType,
   }
 
   RefPtr<OriginInfo> originInfo =
-      groupInfo->LockedGetOriginInfo(aGroupAndOrigin.mOrigin);
+      groupInfo->LockedGetOriginInfo(aOriginMetadata.mOrigin);
   if (originInfo) {
     originInfo->LockedDecreaseUsage(aClientType, aSize);
   }
 }
 
 void QuotaManager::ResetUsageForClient(PersistenceType aPersistenceType,
-                                       const GroupAndOrigin& aGroupAndOrigin,
+                                       const OriginMetadata& aOriginMetadata,
                                        Client::Type aClientType) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
@@ -3872,7 +3872,7 @@ void QuotaManager::ResetUsageForClient(PersistenceType aPersistenceType,
   MutexAutoLock lock(mQuotaMutex);
 
   GroupInfoPair* pair;
-  if (!mGroupInfoPairs.Get(aGroupAndOrigin.mGroup, &pair)) {
+  if (!mGroupInfoPairs.Get(aOriginMetadata.mGroup, &pair)) {
     return;
   }
 
@@ -3882,14 +3882,14 @@ void QuotaManager::ResetUsageForClient(PersistenceType aPersistenceType,
   }
 
   RefPtr<OriginInfo> originInfo =
-      groupInfo->LockedGetOriginInfo(aGroupAndOrigin.mOrigin);
+      groupInfo->LockedGetOriginInfo(aOriginMetadata.mOrigin);
   if (originInfo) {
     originInfo->LockedResetUsageForClient(aClientType);
   }
 }
 
 UsageInfo QuotaManager::GetUsageForClient(PersistenceType aPersistenceType,
-                                          const GroupAndOrigin& aGroupAndOrigin,
+                                          const OriginMetadata& aOriginMetadata,
                                           Client::Type aClientType) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
@@ -3897,7 +3897,7 @@ UsageInfo QuotaManager::GetUsageForClient(PersistenceType aPersistenceType,
   MutexAutoLock lock(mQuotaMutex);
 
   GroupInfoPair* pair;
-  if (!mGroupInfoPairs.Get(aGroupAndOrigin.mGroup, &pair)) {
+  if (!mGroupInfoPairs.Get(aOriginMetadata.mGroup, &pair)) {
     return UsageInfo{};
   }
 
@@ -3907,7 +3907,7 @@ UsageInfo QuotaManager::GetUsageForClient(PersistenceType aPersistenceType,
   }
 
   RefPtr<OriginInfo> originInfo =
-      groupInfo->LockedGetOriginInfo(aGroupAndOrigin.mOrigin);
+      groupInfo->LockedGetOriginInfo(aOriginMetadata.mOrigin);
   if (!originInfo) {
     return UsageInfo{};
   }
@@ -3916,7 +3916,7 @@ UsageInfo QuotaManager::GetUsageForClient(PersistenceType aPersistenceType,
 }
 
 void QuotaManager::UpdateOriginAccessTime(
-    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin) {
+    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
   MOZ_ASSERT(!IsShuttingDown());
@@ -3924,7 +3924,7 @@ void QuotaManager::UpdateOriginAccessTime(
   MutexAutoLock lock(mQuotaMutex);
 
   GroupInfoPair* pair;
-  if (!mGroupInfoPairs.Get(aGroupAndOrigin.mGroup, &pair)) {
+  if (!mGroupInfoPairs.Get(aOriginMetadata.mGroup, &pair)) {
     return;
   }
 
@@ -3934,7 +3934,7 @@ void QuotaManager::UpdateOriginAccessTime(
   }
 
   RefPtr<OriginInfo> originInfo =
-      groupInfo->LockedGetOriginInfo(aGroupAndOrigin.mOrigin);
+      groupInfo->LockedGetOriginInfo(aOriginMetadata.mOrigin);
   if (originInfo) {
     int64_t timestamp = PR_Now();
     originInfo->LockedUpdateAccessTime(timestamp);
@@ -3942,7 +3942,7 @@ void QuotaManager::UpdateOriginAccessTime(
     MutexAutoUnlock autoUnlock(mQuotaMutex);
 
     auto op = MakeRefPtr<SaveOriginAccessTimeOp>(
-        aPersistenceType, aGroupAndOrigin.mOrigin, timestamp);
+        aPersistenceType, aOriginMetadata.mOrigin, timestamp);
 
     RegisterNormalOriginOp(*op);
 
@@ -4009,18 +4009,18 @@ nsresult QuotaManager::LoadQuota() {
 
           const PersistenceType persistenceType = maybePersistenceType.value();
 
-          GroupAndOrigin groupAndOrigin;
+          OriginMetadata originMetadata;
 
           QM_TRY_UNWRAP(
-              groupAndOrigin.mOrigin,
+              originMetadata.mOrigin,
               MOZ_TO_RESULT_INVOKE_TYPED(nsCString, stmt, GetUTF8String, 1));
 
           QM_TRY_UNWRAP(
-              groupAndOrigin.mGroup,
+              originMetadata.mGroup,
               MOZ_TO_RESULT_INVOKE_TYPED(nsCString, stmt, GetUTF8String, 2));
 
           QM_TRY_INSPECT(const bool& updated,
-                         MaybeUpdateGroupForOrigin(groupAndOrigin));
+                         MaybeUpdateGroupForOrigin(originMetadata));
 
           Unused << updated;
 
@@ -4051,7 +4051,7 @@ nsresult QuotaManager::LoadQuota() {
           if (accessed) {
             QM_TRY_INSPECT(
                 const auto& directory,
-                GetDirectoryForOrigin(persistenceType, groupAndOrigin.mOrigin));
+                GetDirectoryForOrigin(persistenceType, originMetadata.mOrigin));
 
             QM_TRY_INSPECT(const bool& exists,
                            MOZ_TO_RESULT_INVOKE(directory, Exists));
@@ -4077,16 +4077,16 @@ nsresult QuotaManager::LoadQuota() {
             QM_TRY(OkIf(persisted == metadata.mPersisted),
                    Err(NS_ERROR_FAILURE));
 
-            QM_TRY(OkIf(groupAndOrigin.mGroup == metadata.mQuotaInfo.mGroup),
+            QM_TRY(OkIf(originMetadata.mGroup == metadata.mQuotaInfo.mGroup),
                    Err(NS_ERROR_FAILURE));
 
-            QM_TRY(OkIf(groupAndOrigin.mOrigin == metadata.mQuotaInfo.mOrigin),
+            QM_TRY(OkIf(originMetadata.mOrigin == metadata.mQuotaInfo.mOrigin),
                    Err(NS_ERROR_FAILURE));
 
-            QM_TRY(InitializeOrigin(persistenceType, groupAndOrigin,
+            QM_TRY(InitializeOrigin(persistenceType, originMetadata,
                                     lastAccessTime, persisted, directory));
           } else {
-            InitQuotaForOrigin(persistenceType, groupAndOrigin, clientUsages,
+            InitQuotaForOrigin(persistenceType, originMetadata, clientUsages,
                                usage, lastAccessTime, persisted);
           }
 
@@ -4262,7 +4262,7 @@ void QuotaManager::UnloadQuota() {
 }
 
 already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
-    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
     Client::Type aClientType, nsIFile* aFile, int64_t aFileSize,
     int64_t* aFileSizeOut /* = nullptr */) {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
@@ -4282,7 +4282,7 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
   {
     QM_TRY_INSPECT(
         const auto& directory,
-        GetDirectoryForOrigin(aPersistenceType, aGroupAndOrigin.mOrigin),
+        GetDirectoryForOrigin(aPersistenceType, aOriginMetadata.mOrigin),
         nullptr);
 
     nsAutoString clientType;
@@ -4321,7 +4321,7 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
     MutexAutoLock lock(mQuotaMutex);
 
     GroupInfoPair* pair;
-    if (!mGroupInfoPairs.Get(aGroupAndOrigin.mGroup, &pair)) {
+    if (!mGroupInfoPairs.Get(aOriginMetadata.mGroup, &pair)) {
       return nullptr;
     }
 
@@ -4332,7 +4332,7 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
     }
 
     RefPtr<OriginInfo> originInfo =
-        groupInfo->LockedGetOriginInfo(aGroupAndOrigin.mOrigin);
+        groupInfo->LockedGetOriginInfo(aOriginMetadata.mOrigin);
 
     if (!originInfo) {
       return nullptr;
@@ -4367,7 +4367,7 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
 }
 
 already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
-    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
     Client::Type aClientType, const nsAString& aPath, int64_t aFileSize,
     int64_t* aFileSizeOut /* = nullptr */) {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
@@ -4378,7 +4378,7 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
 
   QM_TRY_INSPECT(const auto& file, QM_NewLocalFile(aPath), nullptr);
 
-  return GetQuotaObject(aPersistenceType, aGroupAndOrigin, aClientType, file,
+  return GetQuotaObject(aPersistenceType, aOriginMetadata, aClientType, file,
                         aFileSize, aFileSizeOut);
 }
 
@@ -4399,25 +4399,25 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
     MOZ_DIAGNOSTIC_ASSERT(directoryLock->ShouldUpdateLockIdTable());
 
     const PersistenceType persistenceType = directoryLock->GetPersistenceType();
-    const GroupAndOrigin& groupAndOrigin = directoryLock->GroupAndOrigin();
+    const OriginMetadata& originMetadata = directoryLock->OriginMetadata();
     const Client::Type clientType = directoryLock->ClientType();
 
     lock.reset();
 
-    return GetQuotaObject(persistenceType, groupAndOrigin, clientType, aPath);
+    return GetQuotaObject(persistenceType, originMetadata, clientType, aPath);
   }
 
   MOZ_CRASH("Getting quota object for an unregistered directory lock?");
 }
 
 Nullable<bool> QuotaManager::OriginPersisted(
-    const GroupAndOrigin& aGroupAndOrigin) {
+    const OriginMetadata& aOriginMetadata) {
   AssertIsOnIOThread();
 
   MutexAutoLock lock(mQuotaMutex);
 
   RefPtr<OriginInfo> originInfo =
-      LockedGetOriginInfo(PERSISTENCE_TYPE_DEFAULT, aGroupAndOrigin);
+      LockedGetOriginInfo(PERSISTENCE_TYPE_DEFAULT, aOriginMetadata);
   if (originInfo) {
     return Nullable<bool>(originInfo->LockedPersisted());
   }
@@ -4425,13 +4425,13 @@ Nullable<bool> QuotaManager::OriginPersisted(
   return Nullable<bool>();
 }
 
-void QuotaManager::PersistOrigin(const GroupAndOrigin& aGroupAndOrigin) {
+void QuotaManager::PersistOrigin(const OriginMetadata& aOriginMetadata) {
   AssertIsOnIOThread();
 
   MutexAutoLock lock(mQuotaMutex);
 
   RefPtr<OriginInfo> originInfo =
-      LockedGetOriginInfo(PERSISTENCE_TYPE_DEFAULT, aGroupAndOrigin);
+      LockedGetOriginInfo(PERSISTENCE_TYPE_DEFAULT, aOriginMetadata);
   if (originInfo && !originInfo->LockedPersisted()) {
     originInfo->LockedPersist();
   }
@@ -4577,7 +4577,7 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
 
   struct RenameAndInitInfo {
     nsCOMPtr<nsIFile> mOriginDirectory;
-    GroupAndOrigin mGroupAndOrigin;
+    OriginMetadata mOriginMetadata;
     int64_t mTimestamp;
     bool mPersisted;
   };
@@ -4682,7 +4682,7 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
       QM_TRY(([&directory, &info, this,
                aPersistenceType]() -> Result<Ok, nsresult> {
                const auto originDirName =
-                   MakeSanitizedOriginString(info.mGroupAndOrigin.mOrigin);
+                   MakeSanitizedOriginString(info.mOriginMetadata.mOrigin);
 
                // Check if targetDirectory exist.
                QM_TRY_INSPECT(const auto& targetDirectory,
@@ -4699,7 +4699,7 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
 
                QM_TRY(info.mOriginDirectory->RenameTo(nullptr, originDirName));
 
-               QM_TRY(InitializeOrigin(aPersistenceType, info.mGroupAndOrigin,
+               QM_TRY(InitializeOrigin(aPersistenceType, info.mOriginMetadata,
                                        info.mTimestamp, info.mPersisted,
                                        targetDirectory));
 
@@ -4721,7 +4721,7 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
 }
 
 nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
-                                        const GroupAndOrigin& aGroupAndOrigin,
+                                        const OriginMetadata& aOriginMetadata,
                                         int64_t aAccessTime, bool aPersisted,
                                         nsIFile* aDirectory) {
   AssertIsOnIOThread();
@@ -4751,7 +4751,7 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
               }
 
               QM_TRY(
-                  ([this, &file, trackQuota, aPersistenceType, &aGroupAndOrigin,
+                  ([this, &file, trackQuota, aPersistenceType, &aOriginMetadata,
                     &clientUsages]() -> Result<Ok, nsresult> {
                     QM_TRY_INSPECT(const auto& leafName,
                                    MOZ_TO_RESULT_INVOKE_TYPED(
@@ -4776,7 +4776,7 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
                           QM_TRY_INSPECT(
                               const auto& usageInfo,
                               (*mClients)[clientType]->InitOrigin(
-                                  aPersistenceType, aGroupAndOrigin,
+                                  aPersistenceType, aOriginMetadata,
                                   /* aCanceled */ Atomic<bool>(false)));
 
                           MOZ_ASSERT(!clientUsages[clientType]);
@@ -4800,10 +4800,10 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
                                         leafName +
                                         u" reported negative usage for group "_ns +
                                         NS_ConvertUTF8toUTF16(
-                                            aGroupAndOrigin.mGroup) +
+                                            aOriginMetadata.mGroup) +
                                         u", origin "_ns +
                                         NS_ConvertUTF8toUTF16(
-                                            aGroupAndOrigin.mOrigin))
+                                            aOriginMetadata.mOrigin))
                                         .get());
                               }
 #endif
@@ -4812,7 +4812,7 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
                         } else {
                           QM_TRY((*mClients)[clientType]
                                      ->InitOriginWithoutTracking(
-                                         aPersistenceType, aGroupAndOrigin,
+                                         aPersistenceType, aOriginMetadata,
                                          /* aCanceled */ Atomic<bool>(false)));
                         }
 
@@ -4876,7 +4876,7 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
 
     QM_TRY(OkIf(usage.isValid()), NS_ERROR_FAILURE);
 
-    InitQuotaForOrigin(aPersistenceType, aGroupAndOrigin, clientUsages,
+    InitQuotaForOrigin(aPersistenceType, aOriginMetadata, clientUsages,
                        usage.value(), aAccessTime, aPersisted);
   }
 
@@ -5903,12 +5903,12 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
 }
 
 RefPtr<ClientDirectoryLock> QuotaManager::CreateDirectoryLock(
-    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
     Client::Type aClientType, bool aExclusive) {
   AssertIsOnOwningThread();
 
   return DirectoryLockImpl::Create(WrapNotNullUnchecked(this), aPersistenceType,
-                                   aGroupAndOrigin, aClientType, aExclusive);
+                                   aOriginMetadata, aClientType, aExclusive);
 }
 
 RefPtr<UniversalDirectoryLock> QuotaManager::CreateDirectoryLockInternal(
@@ -6229,7 +6229,7 @@ uint64_t QuotaManager::GetGroupUsage(const nsACString& aGroup) {
   return usage;
 }
 
-uint64_t QuotaManager::GetOriginUsage(const GroupAndOrigin& aGroupAndOrigin) {
+uint64_t QuotaManager::GetOriginUsage(const OriginMetadata& aOriginMetadata) {
   AssertIsOnIOThread();
 
   uint64_t usage = 0;
@@ -6238,12 +6238,12 @@ uint64_t QuotaManager::GetOriginUsage(const GroupAndOrigin& aGroupAndOrigin) {
     MutexAutoLock lock(mQuotaMutex);
 
     GroupInfoPair* pair;
-    if (mGroupInfoPairs.Get(aGroupAndOrigin.mGroup, &pair)) {
+    if (mGroupInfoPairs.Get(aOriginMetadata.mGroup, &pair)) {
       for (const PersistenceType type : kBestEffortPersistenceTypes) {
         RefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(type);
         if (groupInfo) {
           RefPtr<OriginInfo> originInfo =
-              groupInfo->LockedGetOriginInfo(aGroupAndOrigin.mOrigin);
+              groupInfo->LockedGetOriginInfo(aOriginMetadata.mOrigin);
           if (originInfo) {
             AssertNoOverflow(usage, originInfo->LockedUsage());
             usage += originInfo->LockedUsage();
@@ -6565,12 +6565,12 @@ uint64_t QuotaManager::LockedCollectOriginsForEviction(
 }
 
 void QuotaManager::LockedRemoveQuotaForOrigin(
-    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin) {
+    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata) {
   mQuotaMutex.AssertCurrentThreadOwns();
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
 
   GroupInfoPair* pair;
-  if (!mGroupInfoPairs.Get(aGroupAndOrigin.mGroup, &pair)) {
+  if (!mGroupInfoPairs.Get(aOriginMetadata.mGroup, &pair)) {
     return;
   }
 
@@ -6578,13 +6578,13 @@ void QuotaManager::LockedRemoveQuotaForOrigin(
 
   if (RefPtr<GroupInfo> groupInfo =
           pair->LockedGetGroupInfo(aPersistenceType)) {
-    groupInfo->LockedRemoveOriginInfo(aGroupAndOrigin.mOrigin);
+    groupInfo->LockedRemoveOriginInfo(aOriginMetadata.mOrigin);
 
     if (!groupInfo->LockedHasOriginInfos()) {
       pair->LockedClearGroupInfo(aPersistenceType);
 
       if (!pair->LockedHasGroupInfos()) {
-        mGroupInfoPairs.Remove(aGroupAndOrigin.mGroup);
+        mGroupInfoPairs.Remove(aOriginMetadata.mGroup);
       }
     }
   }
@@ -6612,15 +6612,15 @@ already_AddRefed<GroupInfo> QuotaManager::LockedGetOrCreateGroupInfo(
 }
 
 already_AddRefed<OriginInfo> QuotaManager::LockedGetOriginInfo(
-    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin) {
+    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata) {
   mQuotaMutex.AssertCurrentThreadOwns();
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
 
   GroupInfoPair* pair;
-  if (mGroupInfoPairs.Get(aGroupAndOrigin.mGroup, &pair)) {
+  if (mGroupInfoPairs.Get(aOriginMetadata.mGroup, &pair)) {
     RefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(aPersistenceType);
     if (groupInfo) {
-      return groupInfo->LockedGetOriginInfo(aGroupAndOrigin.mOrigin);
+      return groupInfo->LockedGetOriginInfo(aOriginMetadata.mOrigin);
     }
   }
 
@@ -8031,12 +8031,12 @@ void QuotaUsageRequestBase::Init(Quota& aQuota) {
 
 Result<UsageInfo, nsresult> QuotaUsageRequestBase::GetUsageForOrigin(
     QuotaManager& aQuotaManager, PersistenceType aPersistenceType,
-    const GroupAndOrigin& aGroupAndOrigin) {
+    const OriginMetadata& aOriginMetadata) {
   AssertIsOnIOThread();
 
   QM_TRY_INSPECT(const auto& directory,
                  aQuotaManager.GetDirectoryForOrigin(aPersistenceType,
-                                                     aGroupAndOrigin.mOrigin));
+                                                     aOriginMetadata.mOrigin));
 
   QM_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(directory, Exists));
 
@@ -8049,18 +8049,18 @@ Result<UsageInfo, nsresult> QuotaUsageRequestBase::GetUsageForOrigin(
   bool initialized;
 
   if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
-    initialized = aQuotaManager.IsOriginInitialized(aGroupAndOrigin.mOrigin);
+    initialized = aQuotaManager.IsOriginInitialized(aOriginMetadata.mOrigin);
   } else {
     initialized = aQuotaManager.IsTemporaryStorageInitialized();
   }
 
   return GetUsageForOriginEntries(aQuotaManager, aPersistenceType,
-                                  aGroupAndOrigin, *directory, initialized);
+                                  aOriginMetadata, *directory, initialized);
 }
 
 Result<UsageInfo, nsresult> QuotaUsageRequestBase::GetUsageForOriginEntries(
     QuotaManager& aQuotaManager, PersistenceType aPersistenceType,
-    const GroupAndOrigin& aGroupAndOrigin, nsIFile& aDirectory,
+    const OriginMetadata& aOriginMetadata, nsIFile& aDirectory,
     const bool aInitialized) {
   AssertIsOnIOThread();
 
@@ -8093,9 +8093,9 @@ Result<UsageInfo, nsresult> QuotaUsageRequestBase::GetUsageForOriginEntries(
             QM_TRY_INSPECT(
                 const auto& usageInfo,
                 aInitialized ? client->GetUsageForOrigin(
-                                   aPersistenceType, aGroupAndOrigin, mCanceled)
+                                   aPersistenceType, aOriginMetadata, mCanceled)
                              : client->InitOrigin(aPersistenceType,
-                                                  aGroupAndOrigin, mCanceled));
+                                                  aOriginMetadata, mCanceled));
             return oldUsageInfo + usageInfo;
           }
 
@@ -8370,7 +8370,7 @@ nsresult GetOriginUsageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
 
   AUTO_PROFILER_LABEL("GetOriginUsageOp::DoDirectoryWork", OTHER);
 
-  const GroupAndOrigin groupAndOrigin = {mGroup,
+  const OriginMetadata originMetadata = {mGroup,
                                          nsCString{mOriginScope.GetOrigin()}};
 
   if (mFromMemory) {
@@ -8381,7 +8381,7 @@ nsresult GetOriginUsageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
 
     // Get cached usage (the method doesn't have to stat any files). File usage
     // is not tracked in memory separately, so just add to the total usage.
-    mUsage = aQuotaManager.GetOriginUsage(groupAndOrigin);
+    mUsage = aQuotaManager.GetOriginUsage(originMetadata);
 
     return NS_OK;
   }
@@ -8391,7 +8391,7 @@ nsresult GetOriginUsageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   // Add all the persistent/temporary/default storage files we care about.
   for (const PersistenceType type : kAllPersistenceTypes) {
     auto usageInfoOrErr =
-        GetUsageForOrigin(aQuotaManager, type, groupAndOrigin);
+        GetUsageForOrigin(aQuotaManager, type, originMetadata);
     if (NS_WARN_IF(usageInfoOrErr.isErr())) {
       return usageInfoOrErr.unwrapErr();
     }
@@ -9090,7 +9090,7 @@ nsresult PersistedOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   AUTO_PROFILER_LABEL("PersistedOp::DoDirectoryWork", OTHER);
 
   Nullable<bool> persisted = aQuotaManager.OriginPersisted(
-      GroupAndOrigin{mGroup, nsCString{mOriginScope.GetOrigin()}});
+      OriginMetadata{mGroup, nsCString{mOriginScope.GetOrigin()}});
 
   if (!persisted.IsNull()) {
     mPersisted = persisted.Value();

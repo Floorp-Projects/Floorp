@@ -57,12 +57,12 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
   static RefPtr<ClientDirectoryLock> Create(
       MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
       PersistenceType aPersistenceType,
-      const quota::GroupAndOrigin& aGroupAndOrigin, Client::Type aClientType,
+      const quota::OriginMetadata& aOriginMetadata, Client::Type aClientType,
       bool aExclusive) {
     return Create(std::move(aQuotaManager),
                   Nullable<PersistenceType>(aPersistenceType),
-                  aGroupAndOrigin.mGroup,
-                  OriginScope::FromOrigin(aGroupAndOrigin.mOrigin),
+                  aOriginMetadata.mGroup,
+                  OriginScope::FromOrigin(aOriginMetadata.mOrigin),
                   Nullable<Client::Type>(aClientType), aExclusive, false,
                   ShouldUpdateLockIdTableFlag::Yes);
   }
@@ -70,14 +70,14 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
   static RefPtr<OriginDirectoryLock> CreateForEviction(
       MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
       PersistenceType aPersistenceType,
-      const quota::GroupAndOrigin& aGroupAndOrigin) {
+      const quota::OriginMetadata& aOriginMetadata) {
     MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_INVALID);
-    MOZ_ASSERT(!aGroupAndOrigin.mOrigin.IsEmpty());
+    MOZ_ASSERT(!aOriginMetadata.mOrigin.IsEmpty());
 
     return Create(std::move(aQuotaManager),
                   Nullable<PersistenceType>(aPersistenceType),
-                  aGroupAndOrigin.mGroup,
-                  OriginScope::FromOrigin(aGroupAndOrigin.mOrigin),
+                  aOriginMetadata.mGroup,
+                  OriginScope::FromOrigin(aOriginMetadata.mOrigin),
                   Nullable<Client::Type>(),
                   /* aExclusive */ true, /* aInternal */ true,
                   ShouldUpdateLockIdTableFlag::No);
@@ -173,7 +173,7 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
 
   RefPtr<ClientDirectoryLock> Specialize(
       PersistenceType aPersistenceType,
-      const quota::GroupAndOrigin& aGroupAndOrigin,
+      const quota::OriginMetadata& aOriginMetadata,
       Client::Type aClientType) const override;
 
   void Log() const override;
@@ -186,10 +186,10 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
     return mPersistenceType.Value();
   }
 
-  quota::GroupAndOrigin GroupAndOrigin() const override {
+  quota::OriginMetadata OriginMetadata() const override {
     MOZ_DIAGNOSTIC_ASSERT(!mGroup.IsEmpty());
 
-    return quota::GroupAndOrigin{mGroup, nsCString(Origin())};
+    return quota::OriginMetadata{mGroup, nsCString(Origin())};
   }
 
   const nsACString& Origin() const override {

@@ -43,17 +43,17 @@ class FileQuotaStream : public FileStreamBase {
 
  protected:
   FileQuotaStream(PersistenceType aPersistenceType,
-                  const GroupAndOrigin& aGroupAndOrigin,
+                  const OriginMetadata& aOriginMetadata,
                   Client::Type aClientType)
       : mPersistenceType(aPersistenceType),
-        mGroupAndOrigin(aGroupAndOrigin),
+        mOriginMetadata(aOriginMetadata),
         mClientType(aClientType) {}
 
   // nsFileStreamBase override
   virtual nsresult DoOpen() override;
 
   PersistenceType mPersistenceType;
-  GroupAndOrigin mGroupAndOrigin;
+  OriginMetadata mOriginMetadata;
   Client::Type mClientType;
   RefPtr<QuotaObject> mQuotaObject;
 };
@@ -67,9 +67,9 @@ class FileQuotaStreamWithWrite : public FileQuotaStream<FileStreamBase> {
 
  protected:
   FileQuotaStreamWithWrite(PersistenceType aPersistenceType,
-                           const GroupAndOrigin& aGroupAndOrigin,
+                           const OriginMetadata& aOriginMetadata,
                            Client::Type aClientType)
-      : FileQuotaStream<FileStreamBase>(aPersistenceType, aGroupAndOrigin,
+      : FileQuotaStream<FileStreamBase>(aPersistenceType, aOriginMetadata,
                                         aClientType) {}
 };
 
@@ -79,9 +79,9 @@ class FileInputStream : public FileQuotaStream<nsFileInputStream> {
                                        FileQuotaStream<nsFileInputStream>)
 
   FileInputStream(PersistenceType aPersistenceType,
-                  const GroupAndOrigin& aGroupAndOrigin,
+                  const OriginMetadata& aOriginMetadata,
                   Client::Type aClientType)
-      : FileQuotaStream<nsFileInputStream>(aPersistenceType, aGroupAndOrigin,
+      : FileQuotaStream<nsFileInputStream>(aPersistenceType, aOriginMetadata,
                                            aClientType) {}
 
  private:
@@ -94,10 +94,10 @@ class FileOutputStream : public FileQuotaStreamWithWrite<nsFileOutputStream> {
       FileOutputStream, FileQuotaStreamWithWrite<nsFileOutputStream>);
 
   FileOutputStream(PersistenceType aPersistenceType,
-                   const GroupAndOrigin& aGroupAndOrigin,
+                   const OriginMetadata& aOriginMetadata,
                    Client::Type aClientType)
       : FileQuotaStreamWithWrite<nsFileOutputStream>(
-            aPersistenceType, aGroupAndOrigin, aClientType) {}
+            aPersistenceType, aOriginMetadata, aClientType) {}
 
  private:
   virtual ~FileOutputStream() { Close(); }
@@ -109,26 +109,26 @@ class FileStream : public FileQuotaStreamWithWrite<nsFileStream> {
                                        FileQuotaStreamWithWrite<nsFileStream>)
 
   FileStream(PersistenceType aPersistenceType,
-             const GroupAndOrigin& aGroupAndOrigin, Client::Type aClientType)
+             const OriginMetadata& aOriginMetadata, Client::Type aClientType)
       : FileQuotaStreamWithWrite<nsFileStream>(aPersistenceType,
-                                               aGroupAndOrigin, aClientType) {}
+                                               aOriginMetadata, aClientType) {}
 
  private:
   virtual ~FileStream() { Close(); }
 };
 
 Result<NotNull<RefPtr<FileInputStream>>, nsresult> CreateFileInputStream(
-    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
     Client::Type aClientType, nsIFile* aFile, int32_t aIOFlags = -1,
     int32_t aPerm = -1, int32_t aBehaviorFlags = 0);
 
 Result<NotNull<RefPtr<FileOutputStream>>, nsresult> CreateFileOutputStream(
-    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
     Client::Type aClientType, nsIFile* aFile, int32_t aIOFlags = -1,
     int32_t aPerm = -1, int32_t aBehaviorFlags = 0);
 
 Result<NotNull<RefPtr<FileStream>>, nsresult> CreateFileStream(
-    PersistenceType aPersistenceType, const GroupAndOrigin& aGroupAndOrigin,
+    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
     Client::Type aClientType, nsIFile* aFile, int32_t aIOFlags = -1,
     int32_t aPerm = -1, int32_t aBehaviorFlags = 0);
 
