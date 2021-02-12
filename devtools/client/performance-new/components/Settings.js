@@ -154,7 +154,7 @@ const threadColumns = [
     {
       name: "ImgDecoder",
       id: "img-decoder",
-      l10nId: "perftools-thread-dns-resolver",
+      l10nId: "perftools-thread-img-decoder",
     },
     {
       name: "DNS Resolver",
