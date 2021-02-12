@@ -573,6 +573,9 @@ html|input[type="checkbox"]:checked {
   color: white;
   background-color: var(--blue-60);
   border-color: transparent;
+
+  /* Style the button also when printing with "Print Backgrounds" unchecked */
+  color-adjust: exact;
 }
 
 xul|checkbox[checked] > xul|*.checkbox-check {
@@ -637,6 +640,9 @@ xul|*.radio-check[selected] {
   color: white;
   background-color: var(--blue-60);
   border-color: transparent;
+
+  /* Style the button also when printing with "Print Backgrounds" unchecked */
+  color-adjust: exact;
 }
 
 html|input[type="radio"]:checked {
