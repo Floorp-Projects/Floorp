@@ -281,14 +281,14 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
         )
         val browserToolbarController = DefaultBrowserToolbarController(
             store = store,
+            tabsUseCases = requireComponents.useCases.tabsUseCases,
             activity = activity,
             navController = findNavController(),
             metrics = requireComponents.analytics.metrics,
             readerModeController = readerMenuController,
-            sessionManager = requireComponents.core.sessionManager,
             engineView = engineView,
             homeViewModel = homeViewModel,
-            customTabSession = customTabSessionId?.let { sessionManager.findSessionById(it) },
+            customTabSessionId = customTabSessionId,
             onTabCounterClicked = {
                 thumbnailsFeature.get()?.requestScreenshot()
                 findNavController().nav(

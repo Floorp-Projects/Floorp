@@ -5,11 +5,14 @@
 package org.mozilla.fenix.components.toolbar
 
 import androidx.navigation.NavController
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
+import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
+import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.mozilla.fenix.HomeActivity
@@ -22,7 +25,6 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeScreenViewModel
 
@@ -41,20 +43,20 @@ interface BrowserToolbarController {
 
 class DefaultBrowserToolbarController(
     private val store: BrowserStore,
+    private val tabsUseCases: TabsUseCases,
     private val activity: HomeActivity,
     private val navController: NavController,
     private val metrics: MetricController,
     private val readerModeController: ReaderModeController,
-    private val sessionManager: SessionManager,
     private val engineView: EngineView,
     private val homeViewModel: HomeScreenViewModel,
-    private val customTabSession: Session?,
+    private val customTabSessionId: String?,
     private val onTabCounterClicked: () -> Unit,
-    private val onCloseTab: (Session) -> Unit
+    private val onCloseTab: (SessionState) -> Unit
 ) : BrowserToolbarController {
 
     private val currentSession
-        get() = customTabSession ?: sessionManager.selectedSession
+        get() = store.state.findCustomTabOrSelectedTab(customTabSessionId)
 
     override fun handleToolbarPaste(text: String) {
         navController.nav(
@@ -112,18 +114,16 @@ class DefaultBrowserToolbarController(
                 metrics.track(
                     Event.TabCounterMenuItemTapped(Event.TabCounterMenuItemTapped.Item.CLOSE_TAB)
                 )
-                sessionManager.selectedSession?.let {
+                store.state.selectedTab?.let {
                     // When closing the last tab we must show the undo snackbar in the home fragment
-                    if (sessionManager.sessionsOfType(it.private).count() == 1) {
+                    if (store.state.getNormalOrPrivateTabs(it.content.private).count() == 1) {
                         homeViewModel.sessionToDelete = it.id
                         navController.navigate(
                             BrowserFragmentDirections.actionGlobalHome()
                         )
                     } else {
                         onCloseTab.invoke(it)
-                        // The removeTab use case does not currently select a parent session, so
-                        // we are using sessionManager.remove
-                        sessionManager.remove(it, selectParentIfExists = true)
+                        tabsUseCases.removeTab(it.id, selectParentIfExists = true)
                     }
                 }
             }

@@ -15,17 +15,19 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.top.sites.TopSitesUseCases
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.ui.tabcounter.TabCounterMenu
@@ -61,16 +63,10 @@ class DefaultBrowserToolbarControllerTest {
     private lateinit var onTabCounterClicked: () -> Unit
 
     @RelaxedMockK
-    private lateinit var onCloseTab: (Session) -> Unit
-
-    @RelaxedMockK
-    private lateinit var sessionManager: SessionManager
+    private lateinit var onCloseTab: (SessionState) -> Unit
 
     @MockK(relaxUnitFun = true)
     private lateinit var engineView: EngineView
-
-    @MockK
-    private lateinit var currentSession: Session
 
     @RelaxedMockK
     private lateinit var metrics: MetricController
@@ -80,6 +76,9 @@ class DefaultBrowserToolbarControllerTest {
 
     @RelaxedMockK
     private lateinit var sessionUseCases: SessionUseCases
+
+    @RelaxedMockK
+    private lateinit var tabsUseCases: TabsUseCases
 
     @RelaxedMockK
     private lateinit var browserAnimator: BrowserAnimator
@@ -103,12 +102,9 @@ class DefaultBrowserToolbarControllerTest {
         every { activity.components.useCases.sessionUseCases } returns sessionUseCases
         every { activity.components.useCases.searchUseCases } returns searchUseCases
         every { activity.components.useCases.topSitesUseCase } returns topSitesUseCase
-        every { sessionManager.selectedSession } returns currentSession
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.browserFragment
         }
-        every { currentSession.id } returns "1"
-        every { currentSession.private } returns false
 
         val onComplete = slot<() -> Unit>()
         every { browserAnimator.captureEngineViewAndDrawStatically(capture(onComplete)) } answers { onComplete.captured.invoke() }
@@ -248,14 +244,6 @@ class DefaultBrowserToolbarControllerTest {
     @Test
     fun handleToolbarCloseTabPressWithLastPrivateSession() {
         val item = TabCounterMenu.Item.CloseTab
-        val sessions = listOf(
-            mockk<Session> {
-                every { private } returns true
-            }
-        )
-
-        every { currentSession.private } returns true
-        every { sessionManager.sessions } returns sessions
 
         val controller = createController()
         controller.handleTabCounterItemInteraction(item)
@@ -269,11 +257,13 @@ class DefaultBrowserToolbarControllerTest {
     fun handleToolbarCloseTabPress() {
         val item = TabCounterMenu.Item.CloseTab
 
-        every { sessionManager.sessions } returns emptyList()
+        val testTab = createTab("https://www.firefox.com")
+        store.dispatch(TabListAction.AddTabAction(testTab)).joinBlocking()
+        store.dispatch(TabListAction.SelectTabAction(testTab.id)).joinBlocking()
 
         val controller = createController()
         controller.handleTabCounterItemInteraction(item)
-        verify { sessionManager.remove(currentSession, selectParentIfExists = true) }
+        verify { tabsUseCases.removeTab(testTab.id, selectParentIfExists = true) }
     }
 
     @Test
@@ -324,17 +314,17 @@ class DefaultBrowserToolbarControllerTest {
 
     private fun createController(
         activity: HomeActivity = this.activity,
-        customTabSession: Session? = null
+        customTabSessionId: String? = null
     ) = DefaultBrowserToolbarController(
         store = store,
+        tabsUseCases = tabsUseCases,
         activity = activity,
         navController = navController,
         metrics = metrics,
         engineView = engineView,
         homeViewModel = homeViewModel,
-        customTabSession = customTabSession,
+        customTabSessionId = customTabSessionId,
         readerModeController = readerModeController,
-        sessionManager = sessionManager,
         onTabCounterClicked = onTabCounterClicked,
         onCloseTab = onCloseTab
     )
