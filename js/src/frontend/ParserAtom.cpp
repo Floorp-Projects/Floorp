@@ -561,12 +561,52 @@ bool ParserAtomsTable::isPrivateName(TaggedParserAtomIndex index) const {
 
 bool ParserAtomsTable::isExtendedUnclonedSelfHostedFunctionName(
     TaggedParserAtomIndex index) const {
-  const auto* atom = getParserAtom(index);
-  if (atom->length() < 2) {
+  if (index.isParserAtomIndex()) {
+    const auto* atom = getParserAtom(index.toParserAtomIndex());
+    if (atom->length() < 2) {
+      return false;
+    }
+
+    return atom->charAt(0) == ExtendedUnclonedSelfHostedFunctionNamePrefix;
+  }
+
+  if (index.isWellKnownAtomId()) {
+    switch (index.toWellKnownAtomId()) {
+      case WellKnownAtomId::ArrayBufferSpecies:
+      case WellKnownAtomId::ArraySpecies:
+      case WellKnownAtomId::ArrayValues:
+      case WellKnownAtomId::RegExpFlagsGetter:
+      case WellKnownAtomId::RegExpToString:
+        MOZ_ASSERT(getWellKnown(index.toWellKnownAtomId())->charAt(0) ==
+                   ExtendedUnclonedSelfHostedFunctionNamePrefix);
+        return true;
+      default: {
+#ifdef DEBUG
+        const auto* atom = getWellKnown(index.toWellKnownAtomId());
+        MOZ_ASSERT(atom->length() == 0 ||
+                   atom->charAt(0) !=
+                       ExtendedUnclonedSelfHostedFunctionNamePrefix);
+#endif
+        break;
+      }
+    }
     return false;
   }
 
-  return atom->charAt(0) == ExtendedUnclonedSelfHostedFunctionNamePrefix;
+  // Length-1/2 shouldn't be used for extented uncloned self-hosted
+  // function name, and this query shouldn't be used for them.
+#ifdef DEBUG
+  if (index.isLength1StaticParserString()) {
+    char content[1];
+    getLength1Content(index.toLength1StaticParserString(), content);
+    MOZ_ASSERT(content[0] != ExtendedUnclonedSelfHostedFunctionNamePrefix);
+  } else {
+    char content[2];
+    getLength2Content(index.toLength2StaticParserString(), content);
+    MOZ_ASSERT(content[0] != ExtendedUnclonedSelfHostedFunctionNamePrefix);
+  }
+#endif
+  return false;
 }
 
 static bool HasUnpairedSurrogate(mozilla::Range<const char16_t> chars) {
