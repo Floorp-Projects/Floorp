@@ -9,7 +9,6 @@
 #ifndef vm_RegExpObject_h
 #define vm_RegExpObject_h
 
-#include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 
 #include "builtin/SelfHostingDefines.h"

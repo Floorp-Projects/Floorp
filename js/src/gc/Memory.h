@@ -7,8 +7,6 @@
 #ifndef gc_Memory_h
 #define gc_Memory_h
 
-#include "mozilla/Attributes.h"
-
 #include <stddef.h>
 
 namespace js {

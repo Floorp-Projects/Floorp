@@ -21,7 +21,6 @@
 #ifndef jstypes_h
 #define jstypes_h
 
-#include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Types.h"
 

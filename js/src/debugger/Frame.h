@@ -7,10 +7,9 @@
 #ifndef debugger_Frame_h
 #define debugger_Frame_h
 
-#include "mozilla/Attributes.h"  // [[nodiscard]] for
-#include "mozilla/Maybe.h"       // for Maybe
-#include "mozilla/Range.h"       // for Range
-#include "mozilla/Result.h"      // for Result
+#include "mozilla/Maybe.h"   // for Maybe
+#include "mozilla/Range.h"   // for Range
+#include "mozilla/Result.h"  // for Result
 
 #include <stddef.h>  // for size_t
 

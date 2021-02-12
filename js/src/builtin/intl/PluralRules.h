@@ -7,8 +7,6 @@
 #ifndef builtin_intl_PluralRules_h
 #define builtin_intl_PluralRules_h
 
-#include "mozilla/Attributes.h"
-
 #include "builtin/SelfHostingDefines.h"
 #include "js/Class.h"
 #include "js/RootingAPI.h"

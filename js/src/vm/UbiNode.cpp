@@ -7,7 +7,6 @@
 #include "js/UbiNode.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Range.h"
 
 #include <algorithm>

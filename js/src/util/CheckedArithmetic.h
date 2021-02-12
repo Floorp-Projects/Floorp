@@ -7,7 +7,6 @@
 #ifndef util_CheckedArithmetic_h
 #define util_CheckedArithmetic_h
 
-#include "mozilla/Attributes.h"
 #include "mozilla/Compiler.h"
 #include "mozilla/MathAlgorithms.h"
 

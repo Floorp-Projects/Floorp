@@ -8,7 +8,7 @@
 #define debugger_Debugger_h
 
 #include "mozilla/Assertions.h"        // for MOZ_ASSERT_HELPER1
-#include "mozilla/Attributes.h"        // [[nodiscard]] for, MOZ_RAII
+#include "mozilla/Attributes.h"        // for MOZ_RAII
 #include "mozilla/DoublyLinkedList.h"  // for DoublyLinkedListElement
 #include "mozilla/HashTable.h"         // for HashSet, DefaultHasher (ptr only)
 #include "mozilla/LinkedList.h"        // for LinkedList (ptr only)
