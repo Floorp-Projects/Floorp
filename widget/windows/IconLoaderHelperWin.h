@@ -35,8 +35,10 @@ class IconLoaderListenerWin : public nsISupports {
  */
 class IconLoaderHelperWin final : public mozilla::widget::IconLoader::Helper {
  public:
-  explicit IconLoaderHelperWin(
-      mozilla::widget::IconLoaderListenerWin* aLoadListener);
+  // Create the helper and install aLoadListener as a listener.
+  // The helper does not keep a strong reference to the listener. Call Destroy
+  // before the listener goes away.
+  explicit IconLoaderHelperWin(IconLoaderListenerWin* aLoadListener);
 
   // IconLoaderHelperWin needs to implement nsISupports in order for its
   // subclasses to participate in cycle collection.
@@ -61,7 +63,12 @@ class IconLoaderHelperWin final : public mozilla::widget::IconLoader::Helper {
   ~IconLoaderHelperWin();
 
  private:
-  RefPtr<mozilla::widget::IconLoaderListenerWin> mLoadListener;
+  // The listener, which is notified when loading completes.
+  // Can be null, after a call to Destroy.
+  // This is a non-owning reference and needs to be cleared with a call to
+  // Destroy before the listener goes away.
+  IconLoaderListenerWin* mLoadListener;
+
   HICON mNativeIconImage;
 };
 
