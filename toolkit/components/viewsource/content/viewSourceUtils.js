@@ -31,6 +31,14 @@ var gViewSourceUtils = {
   },
 
   /**
+   * Get the ViewSourcePage actor.
+   * @param object An object with `browsingContext` field
+   */
+  getPageActor({ browsingContext }) {
+    return browsingContext.currentWindowGlobal.getActor("ViewSourcePage");
+  },
+
+  /**
    * Opens the view source window.
    *
    * @param aArgs (required)
