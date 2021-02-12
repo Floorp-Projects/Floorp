@@ -189,9 +189,6 @@ tr:not(.deleted) > .cell-value {
   /* Make the radiobutton's text wrap to a new line along with
      the radiobutton itself, when space is constrained. */
   display: inline-block;
-  /* margin-block to apply some spacing between the radio buttons
-     when the labels are wrapping. */
-  margin-block: 2px;
   margin-inline-end: 30px;
 }
 
