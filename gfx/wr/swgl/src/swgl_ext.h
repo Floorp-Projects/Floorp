@@ -2,72 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-static ALWAYS_INLINE void commit_span(uint32_t* buf, WideRGBA8 r) {
-  unaligned_store(buf, pack(r));
-}
-
-static ALWAYS_INLINE WideRGBA8 blend_span(uint32_t* buf, WideRGBA8 r) {
-  return blend_pixels(buf, unaligned_load<PackedRGBA8>(buf), r);
-}
-
-static ALWAYS_INLINE void commit_span(uint32_t* buf, PackedRGBA8 r) {
-  unaligned_store(buf, r);
-}
-
-static ALWAYS_INLINE PackedRGBA8 blend_span(uint32_t* buf, PackedRGBA8 r) {
-  return pack(blend_span(buf, unpack(r)));
-}
-
-template <bool BLEND>
-static inline void commit_solid_span(uint32_t* buf, WideRGBA8 r, int len) {
-  for (uint32_t* end = &buf[len & ~3]; buf < end; buf += 4) {
-    commit_span(buf, blend_span(buf, r));
-  }
-  len &= 3;
-  if (len > 0) {
-    partial_store_span(
-        buf,
-        pack(blend_pixels(buf, partial_load_span<PackedRGBA8>(buf, len), r,
-                          len)),
-        len);
-  }
-}
-
-template <>
-ALWAYS_INLINE void commit_solid_span<false>(uint32_t* buf, WideRGBA8 r,
-                                            int len) {
-  fill_n(buf, len, bit_cast<U32>(pack(r)).x);
-}
-
-static ALWAYS_INLINE void commit_span(uint8_t* buf, WideR8 r) {
-  unaligned_store(buf, pack(r));
-}
-
-static ALWAYS_INLINE WideR8 blend_span(uint8_t* buf, WideR8 r) {
-  return blend_pixels(buf, unpack(unaligned_load<PackedR8>(buf)), r);
-}
-
-template <bool BLEND>
-static inline void commit_solid_span(uint8_t* buf, WideR8 r, int len) {
-  for (uint8_t* end = &buf[len]; buf < end; buf += 4) {
-    commit_span(buf, blend_span(buf, r));
-  }
-}
-
-template <>
-ALWAYS_INLINE void commit_solid_span<false>(uint8_t* buf, WideR8 r, int len) {
-  fill_n((uint32_t*)buf, len / 4, bit_cast<uint32_t>(pack(r)));
-}
-
-template <bool BLEND, typename P, typename R>
-static ALWAYS_INLINE void commit_blend_span(P* buf, R r) {
-  if (BLEND) {
-    commit_span(buf, blend_span(buf, r));
-  } else {
-    commit_span(buf, r);
-  }
-}
-
 template <typename V>
 static ALWAYS_INLINE WideRGBA8 pack_span(uint32_t*, const V& v,
                                          float scale = 255.0f) {
@@ -85,6 +19,162 @@ static ALWAYS_INLINE WideR8 pack_span(uint8_t*, C c, float scale = 255.0f) {
 
 static ALWAYS_INLINE WideR8 pack_span(uint8_t*) { return pack_pixels_R8(); }
 
+// Helper functions to apply a color modulus when available.
+struct NoColor {};
+
+template <typename P>
+static ALWAYS_INLINE P applyColor(P src, NoColor) {
+  return src;
+}
+
+template <typename P>
+static ALWAYS_INLINE P applyColor(P src, P color) {
+  return muldiv256(src, color);
+}
+
+static ALWAYS_INLINE PackedRGBA8 applyColor(PackedRGBA8 src, WideRGBA8 color) {
+  return pack(muldiv256(unpack(src), color));
+}
+
+static ALWAYS_INLINE PackedR8 applyColor(PackedR8 src, WideR8 color) {
+  return pack(muldiv256(unpack(src), color));
+}
+
+// Packs a color on a scale of 0..256 rather than 0..255 to allow faster scale
+// math with muldiv256. Note that this can cause a slight rounding difference in
+// the result versus the 255 scale.
+template <typename P, typename C>
+static ALWAYS_INLINE auto packColor(P* buf, C color) {
+  return pack_span(buf, color, 256.0f);
+}
+
+template <typename P>
+static ALWAYS_INLINE NoColor packColor(UNUSED P* buf, NoColor noColor) {
+  return noColor;
+}
+
+static ALWAYS_INLINE void commit_span(uint32_t* buf, WideRGBA8 r) {
+  unaligned_store(buf, pack(r));
+}
+
+static ALWAYS_INLINE WideRGBA8 blend_span(uint32_t* buf, WideRGBA8 r) {
+  return blend_pixels(buf, unaligned_load<PackedRGBA8>(buf), r);
+}
+
+static ALWAYS_INLINE WideRGBA8 blend_span(uint32_t* buf, WideRGBA8 r, int len) {
+  return blend_pixels(buf, partial_load_span<PackedRGBA8>(buf, len), r, len);
+}
+
+static ALWAYS_INLINE void commit_span(uint32_t* buf, PackedRGBA8 r) {
+  unaligned_store(buf, r);
+}
+
+static ALWAYS_INLINE PackedRGBA8 blend_span(uint32_t* buf, PackedRGBA8 r) {
+  return pack(blend_span(buf, unpack(r)));
+}
+
+static ALWAYS_INLINE void commit_span(uint8_t* buf, WideR8 r) {
+  unaligned_store(buf, pack(r));
+}
+
+static ALWAYS_INLINE WideR8 blend_span(uint8_t* buf, WideR8 r) {
+  return blend_pixels(buf, unpack(unaligned_load<PackedR8>(buf)), r);
+}
+
+static ALWAYS_INLINE WideR8 blend_span(uint8_t* buf, WideR8 r, int len) {
+  return blend_pixels(buf, unpack(partial_load_span<PackedR8>(buf, len)), r,
+                      len);
+}
+
+template <typename P, typename R>
+static ALWAYS_INLINE void commit_blend_solid_span(P* buf, R r, int len) {
+  for (P* end = &buf[len & ~3]; buf < end; buf += 4) {
+    commit_span(buf, blend_span(buf, r));
+  }
+  len &= 3;
+  if (len > 0) {
+    partial_store_span(buf, pack(blend_span(buf, r, len)), len);
+  }
+}
+
+template <bool BLEND>
+static void commit_solid_span(uint32_t* buf, WideRGBA8 r, int len) {
+  commit_blend_solid_span(buf, r, len);
+}
+
+template <>
+ALWAYS_INLINE void commit_solid_span<false>(uint32_t* buf, WideRGBA8 r,
+                                            int len) {
+  fill_n(buf, len, bit_cast<U32>(pack(r)).x);
+}
+
+template <bool BLEND>
+static void commit_solid_span(uint8_t* buf, WideR8 r, int len) {
+  commit_blend_solid_span(buf, r, len);
+}
+
+template <>
+ALWAYS_INLINE void commit_solid_span<false>(uint8_t* buf, WideR8 r, int len) {
+  PackedR8 p = pack(r);
+  fill_n((uint32_t*)buf, len / 4, bit_cast<uint32_t>(p));
+  buf += len & ~3;
+  len &= 3;
+  if (len > 0) {
+    partial_store_span(buf, p, len);
+  }
+}
+
+// When using a solid color with clip masking, the cost of loading the clip mask
+// in the blend stage exceeds the cost of processing the color. Here we handle
+// the entire span of clip mask texture before the blend stage to more
+// efficiently process it and modulate it with color without incurring blend
+// stage overheads.
+template <typename P, typename C>
+static void commit_masked_solid_span(P* buf, C color, int len) {
+  override_clip_mask();
+  uint8_t* mask = get_clip_mask(buf);
+  for (P* end = &buf[len]; buf < end; buf += 4, mask += 4) {
+    commit_span(
+        buf,
+        blend_span(buf,
+                   applyColor(expand_clip_mask(
+                                  buf, unpack(unaligned_load<PackedR8>(mask))),
+                              color)));
+  }
+  restore_clip_mask();
+}
+
+// When using a solid color with anti-aliasing, most of the solid span will not
+// benefit from anti-aliasing in the opaque region. We only want to apply the AA
+// blend stage in the non-opaque start and end of the span where AA is needed.
+template <typename P, typename R>
+static ALWAYS_INLINE void commit_aa_solid_span(P* buf, R r, int len) {
+  if (int start = min((get_aa_opaque_start(buf) + 3) & ~3, len)) {
+    commit_solid_span<true>(buf, r, start);
+    buf += start;
+    len -= start;
+  }
+  if (int opaque = min((get_aa_opaque_size(buf) + 3) & ~3, len)) {
+    override_aa();
+    commit_solid_span<true>(buf, r, opaque);
+    restore_aa();
+    buf += opaque;
+    len -= opaque;
+  }
+  if (len > 0) {
+    commit_solid_span<true>(buf, r, len);
+  }
+}
+
+template <bool BLEND, typename P, typename R>
+static ALWAYS_INLINE void commit_blend_span(P* buf, R r) {
+  if (BLEND) {
+    commit_span(buf, blend_span(buf, r));
+  } else {
+    commit_span(buf, r);
+  }
+}
+
 // Forces a value with vector run-class to have scalar run-class.
 template <typename T>
 static ALWAYS_INLINE auto swgl_forceScalar(T v) -> decltype(force_scalar(v)) {
@@ -97,19 +187,31 @@ static ALWAYS_INLINE auto swgl_forceScalar(T v) -> decltype(force_scalar(v)) {
 // Pseudo-intrinsic that accesses the interpolation step for a given varying
 #define swgl_interpStep(v) (interp_step.v)
 
-// Commit an entire span of a solid color
-#define swgl_commitSolid(format, v)                            \
-  do {                                                         \
-    auto packed_color = pack_span(swgl_Out##format, (v));      \
-    if (blend_key) {                                           \
-      commit_solid_span<true>(swgl_Out##format, packed_color,  \
-                              swgl_SpanLength);                \
-    } else {                                                   \
-      commit_solid_span<false>(swgl_Out##format, packed_color, \
-                               swgl_SpanLength);               \
-    }                                                          \
-    swgl_Out##format += swgl_SpanLength;                       \
-    swgl_SpanLength = 0;                                       \
+// Commit an entire span of a solid color. This dispatches to clip-masked and
+// anti-aliased fast-paths as appropriate.
+#define swgl_commitSolid(format, v)                                \
+  do {                                                             \
+    if (blend_key) {                                               \
+      if (swgl_ClipFlags & SWGL_CLIP_FLAG_MASK) {                  \
+        commit_masked_solid_span(swgl_Out##format,                 \
+                                 packColor(swgl_Out##format, (v)), \
+                                 swgl_SpanLength);                 \
+      } else if (swgl_ClipFlags & SWGL_CLIP_FLAG_AA) {             \
+        commit_aa_solid_span(swgl_Out##format,                     \
+                             pack_span(swgl_Out##format, (v)),     \
+                             swgl_SpanLength);                     \
+      } else {                                                     \
+        commit_solid_span<true>(swgl_Out##format,                  \
+                                pack_span(swgl_Out##format, (v)),  \
+                                swgl_SpanLength);                  \
+      }                                                            \
+    } else {                                                       \
+      commit_solid_span<false>(swgl_Out##format,                   \
+                               pack_span(swgl_Out##format, (v)),   \
+                               swgl_SpanLength);                   \
+    }                                                              \
+    swgl_Out##format += swgl_SpanLength;                           \
+    swgl_SpanLength = 0;                                           \
   } while (0)
 #define swgl_commitSolidRGBA8(v) swgl_commitSolid(RGBA8, v)
 #define swgl_commitSolidR8(v) swgl_commitSolid(R8, v)
@@ -174,37 +276,6 @@ static ALWAYS_INLINE T swgl_linearQuantize(S s, T p) {
 template <typename S, typename T>
 static ALWAYS_INLINE T swgl_linearQuantizeStep(S s, T p) {
   return samplerScale(s, p) * swgl_LinearQuantizeScale;
-}
-
-// Helper functions to apply a color modulus when available.
-struct NoColor {};
-
-template <typename P>
-static ALWAYS_INLINE P applyColor(P src, NoColor) {
-  return src;
-}
-
-template <typename P>
-static ALWAYS_INLINE P applyColor(P src, P color) {
-  return muldiv256(src, color);
-}
-
-static ALWAYS_INLINE PackedRGBA8 applyColor(PackedRGBA8 src, WideRGBA8 color) {
-  return pack(muldiv256(unpack(src), color));
-}
-
-static ALWAYS_INLINE PackedR8 applyColor(PackedR8 src, WideR8 color) {
-  return pack(muldiv256(unpack(src), color));
-}
-
-template <typename P, typename C>
-static ALWAYS_INLINE auto packColor(P* buf, C color) {
-  return pack_span(buf, color, 256.0f);
-}
-
-template <typename P>
-static ALWAYS_INLINE NoColor packColor(UNUSED P* buf, NoColor noColor) {
-  return noColor;
 }
 
 template <typename S>
@@ -319,9 +390,7 @@ static int blendTextureNearest(S sampler, vec2 uv, int span,
     if (BLEND) {
       auto src = applyColor(
           unpack(partial_load_span<packed_type>(&row[curX], n)), color);
-      auto r =
-          blend_pixels(buf, partial_load_span<packed_type>(buf, n), src, n);
-      partial_store_span(buf, pack(r), n);
+      partial_store_span(buf, pack(blend_span(buf, src, n)), n);
     } else {
       auto src =
           applyColor(partial_load_span<packed_type>(&row[curX], n), color);
@@ -716,11 +785,6 @@ static inline WideRGBA8 sampleGradient(sampler2D sampler, int address,
 // origin. The bounding box specifies the rectangle relative to the clip mask's
 // origin that constrains sampling within the clip mask. Blending must be
 // enabled for this to work.
-enum SWGLClipFlag {
-  SWGL_CLIP_FLAG_MASK = 1 << 0,
-  SWGL_CLIP_FLAG_AA = 1 << 1,
-};
-static int swgl_ClipFlags = 0;
 static sampler2D swgl_ClipMask = nullptr;
 static IntPoint swgl_ClipMaskOffset = {0, 0};
 static IntRect swgl_ClipMaskBounds = {0, 0, 0, 0};
