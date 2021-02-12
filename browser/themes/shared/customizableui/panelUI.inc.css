@@ -35,6 +35,19 @@
   --panelview-toolbarbutton-hover-color: inherit;
   --panelview-toolbarbutton-active-bgcolor: var(--arrowpanel-dimmed-further);
   --panelview-toolbarbutton-active-color: inherit;
+  --panel-banner-item-color: black;
+  --panel-banner-item-background-color: hsla(96,65%,75%,.5);
+  --panel-banner-item-hover-bgcolor: hsla(96,65%,75%,.8);
+  --panel-banner-item-active-bgcolor: hsl(96,65%,75%);
+  --panel-banner-item-update-supported-bgcolor: #74BF43;
+  --panel-banner-item-update-unsupported-bgcolor: #FFE900;
+}
+
+:root[lwt-popup-brighttext] {
+  --panel-banner-item-color: @appmenuWarningColorBrightText@;
+  --panel-banner-item-background-color: rgba(48,230,11,.1);
+  --panel-banner-item-hover-bgcolor: rgba(48,230,11,.15);
+  --panel-banner-item-active-bgcolor: rgba(48,230,11,.2);
 }
 
 @supports -moz-bool-pref("browser.proton.appmenu.enabled") {
@@ -43,7 +56,20 @@
   --panelview-toolbarbutton-hover-color: #FFFFFF;
   --panelview-toolbarbutton-active-bgcolor: #053E94;
   --panelview-toolbarbutton-active-color: #FFFFFF;
+  --panel-banner-item-color: rgba(8,64,63,1);
+  --panel-banner-item-background-color: rgba(209,255,238,1);
 
+  /**
+   * --panel-banner-item-hover-bgcolor, --panel-banner-item-active-bgcolor
+   * and --panel-banner-item-update-unsupported-bgcolor are temporary
+   * colours until the right ones are determined, which is tracked by
+   * bug 1692040.
+   */
+  --panel-banner-item-hover-bgcolor: hsla(96,65%,75%,.8);
+  --panel-banner-item-active-bgcolor: hsl(96,65%,75%);
+  --panel-banner-item-update-unsupported-bgcolor: #FFE900;
+
+  --panel-banner-item-update-supported-bgcolor: rgba(0,135,135,1);
   --arrowpanel-menuitem-margin: 0 8px;
   --arrowpanel-menuitem-padding: 8px 12px;
   --arrowpanel-menuitem-border-radius: 4px;
@@ -54,6 +80,17 @@
   --panelview-toolbarbutton-hover-color: #FFFFFF;
   --panelview-toolbarbutton-active-bgcolor: #008DEB;
   --panelview-toolbarbutton-active-color: #FFFFFF;
+
+  /**
+   * --panel-banner-item-color, --panel-banner-item-background-color,
+   * --panel-banner-item-hover-bgcolor and --panel-banner-item-active-bgcolor
+   * are temporary colours until the right ones are determined, which is
+   * tracked by bug 1692040.
+   */
+  --panel-banner-item-color: @appmenuWarningColorBrightText@;
+  --panel-banner-item-background-color: rgba(48,230,11,.1);
+  --panel-banner-item-hover-bgcolor: rgba(48,230,11,.15);
+  --panel-banner-item-active-bgcolor: rgba(48,230,11,.2);
 }
 
 } /*** END proton ***/
@@ -119,23 +156,40 @@
   background: #FFE900 url(chrome://browser/skin/update-badge.svg) no-repeat center;
 }
 
+@supports -moz-bool-pref("browser.proton.appmenu.enabled") {
+.panel-banner-item[notificationid="update-available"] > .toolbarbutton-icon,
+.panel-banner-item[notificationid="update-downloading"] > .toolbarbutton-icon,
+.panel-banner-item[notificationid="update-manual"] > .toolbarbutton-icon,
+.panel-banner-item[notificationid="update-other-instance"] > .toolbarbutton-icon,
+.panel-banner-item[notificationid="update-restart"] > .toolbarbutton-icon {
+  background: var(--panel-banner-item-update-supported-bgcolor) url(chrome://browser/skin/update-badge.svg) no-repeat center;
+  border-radius: 50%;
+}
+
+.panel-banner-item[notificationid="update-unsupported"] > .toolbarbutton-icon {
+  background: var(--panel-banner-item-update-unsupported-bgcolor) url(chrome://browser/skin/update-badge.svg) no-repeat center;
+  border-radius: 50%;
+}
+}
+
+@supports not -moz-bool-pref("browser.proton.appmenu.enabled") {
 .panel-banner-item[notificationid="update-available"]::after,
 .panel-banner-item[notificationid="update-downloading"]::after,
 .panel-banner-item[notificationid="update-manual"]::after,
 .panel-banner-item[notificationid="update-other-instance"]::after,
 .panel-banner-item[notificationid="update-restart"]::after {
-  background: #74BF43 url(chrome://browser/skin/update-badge.svg) no-repeat center;
+  background: var(--panel-banner-item-update-supported-bgcolor) url(chrome://browser/skin/update-badge.svg) no-repeat center;
   border-radius: 50%;
 }
 
 .panel-banner-item[notificationid="update-unsupported"]::after {
-  background: #FFE900 url(chrome://browser/skin/update-badge.svg) no-repeat center;
+  background: var(--panel-banner-item-update-unsupported-bgcolor) url(chrome://browser/skin/update-badge.svg) no-repeat center;
   border-radius: 50%;
 }
-
 .panel-banner-item[notificationid^=update] {
   list-style-image: url(chrome://branding/content/icon16.png);
 }
+} /** END not Proton **/
 
 #PanelUI-menu-button[badge-status="addon-alert"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
 #PanelUI-menu-button[badge-status="fxa-needs-authentication"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
@@ -562,6 +616,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   background-color: @appmenuWarningBackgroundColorActive@;
 }
 
+.panel-banner-item > .toolbarbutton-icon,
 .addon-banner-item > .toolbarbutton-icon {
   width: 16px;
   height: 16px;
@@ -591,6 +646,19 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   -moz-box-orient: horizontal;
 }
 
+@supports -moz-bool-pref("browser.proton.appmenu.enabled") {
+.addon-banner-item,
+.panel-banner-item {
+  margin: 8px;
+  padding: 8px;
+  min-height: unset;
+  border-radius: 4px;
+  -moz-box-align: start;
+}
+
+} /** END Proton **/
+
+@supports not -moz-bool-pref("browser.proton.appmenu.enabled") {
 .panel-banner-item {
   border-block: 1px solid var(--panel-separator-color);
   padding-inline-start: 12px;
@@ -609,14 +677,11 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   width: 0; /* Fancy cropping solution for flexbox. */
 }
 
-.panel-banner-item > .toolbarbutton-icon {
-  width: 16px;
-}
-
 #appMenu-addon-banners:not(:empty) ~ #appMenu-fxa-status,
 .panel-banner-item:not([hidden]) + #appMenu-fxa-status {
   margin-top: 6px;
 }
+} /** END not Proton **/
 
 /* FxAccount indicator bits. */
 
@@ -1039,31 +1104,17 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
 }
 
 .panel-banner-item {
-  color: black !important /* !important overrides the toolbarbutton:hover default style on Linux */;
-  background-color: hsla(96,65%,75%,.5);
+  color: var(--panel-banner-item-color) !important /* !important overrides the toolbarbutton:hover default style on Linux */;
+  background-color: var(--panel-banner-item-background-color);
 }
 
 .panel-banner-item:not([disabled]):focus,
 .panel-banner-item:not([disabled]):hover {
-  background-color: hsla(96,65%,75%,.8);
+  background-color: var(--panel-banner-item-hover-bgcolor);
 }
 
 .panel-banner-item:not([disabled]):hover:active {
-  background-color: hsl(96,65%,75%);
-}
-
-:root[lwt-popup-brighttext] .panel-banner-item:not([disabled]) {
-  background-color: rgba(48,230,11,.1);
-  color: @appmenuWarningColorBrightText@ !important;
-}
-
-:root[lwt-popup-brighttext] .panel-banner-item:not([disabled]):focus,
-:root[lwt-popup-brighttext] .panel-banner-item:not([disabled]):hover {
-  background-color: rgba(48,230,11,.15);
-}
-
-:root[lwt-popup-brighttext] .panel-banner-item:not([disabled]):active {
-  background-color: rgba(48,230,11,.2);
+  background-color: var(--panel-banner-item-active-bgcolor);
 }
 
 .panel-banner-item[notificationid="update-unsupported"] {
@@ -1769,9 +1820,11 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 }
 
 @media (min-resolution: 1.1dppx) {
-  .panel-banner-item[notificationid^=update] {
-    list-style-image: url(chrome://branding/content/icon32.png);
-  }
+  @supports not -moz-bool-pref("browser.proton.appmenu.enabled") {
+    .panel-banner-item[notificationid^=update] {
+      list-style-image: url(chrome://branding/content/icon32.png);
+    }
+  } /** END not Proton **/
 
   #panic-button-success-icon,
   #PanelUI-panic-timeframe-icon {
