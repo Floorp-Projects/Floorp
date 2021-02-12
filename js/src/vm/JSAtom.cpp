@@ -12,6 +12,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/EndianUtils.h"
+#include "mozilla/HashFunctions.h"  // mozilla::HashStringKnownLength
 #include "mozilla/RangedPtr.h"
 #include "mozilla/Unused.h"
 
@@ -223,11 +224,6 @@ MOZ_ALWAYS_INLINE AtomSet::Ptr js::FrozenAtomSet::readonlyThreadsafeLookup(
   return mSet->readonlyThreadsafeLookup(l);
 }
 
-struct CommonNameInfo {
-  const char* str;
-  size_t length;
-};
-
 bool JSRuntime::initializeAtoms(JSContext* cx) {
   MOZ_ASSERT(!atoms_);
   MOZ_ASSERT(!permanentAtomsDuringInit_);
@@ -259,11 +255,17 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
     return false;
   }
 
-  static const CommonNameInfo cachedNames[] = {
-#define COMMON_NAME_INFO(name) {#name, sizeof(#name) - 1},
+  static const WellKnownAtomInfo symbolInfo[] = {
+#define COMMON_NAME_INFO(NAME)  \
+  {uint32_t(sizeof(#NAME) - 1), \
+   mozilla::HashStringKnownLength(#NAME, sizeof(#NAME) - 1), #NAME},
       JS_FOR_EACH_WELL_KNOWN_SYMBOL(COMMON_NAME_INFO)
 #undef COMMON_NAME_INFO
-#define COMMON_NAME_INFO(name) {"Symbol." #name, sizeof("Symbol." #name) - 1},
+#define COMMON_NAME_INFO(NAME)                                  \
+  {uint32_t(sizeof("Symbol." #NAME) - 1),                       \
+   mozilla::HashStringKnownLength("Symbol." #NAME,              \
+                                  sizeof("Symbol." #NAME) - 1), \
+   "Symbol." #NAME},
           JS_FOR_EACH_WELL_KNOWN_SYMBOL(COMMON_NAME_INFO)
 #undef COMMON_NAME_INFO
   };
@@ -285,8 +287,8 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
     names++;
   }
 
-  for (const auto& cachedName : cachedNames) {
-    JSAtom* atom = Atomize(cx, cachedName.str, cachedName.length, PinAtom);
+  for (const auto& info : symbolInfo) {
+    JSAtom* atom = Atomize(cx, info.hash, info.content, info.length, PinAtom);
     if (!atom) {
       return false;
     }
