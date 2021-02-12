@@ -153,6 +153,11 @@ inline bool IsIdentifierStart(char16_t ch) {
   return CharInfo(ch).isUnicodeIDStart();
 }
 
+inline bool IsIdentifierStartASCII(char ch) {
+  MOZ_ASSERT(uint8_t(ch) < 128);
+  return js_isidstart[uint8_t(ch)];
+}
+
 bool IsIdentifierStartNonBMP(uint32_t codePoint);
 
 inline bool IsIdentifierStart(uint32_t codePoint) {
@@ -179,6 +184,11 @@ inline bool IsIdentifierPart(char16_t ch) {
   }
 
   return CharInfo(ch).isUnicodeIDContinue();
+}
+
+inline bool IsIdentifierPartASCII(char ch) {
+  MOZ_ASSERT(uint8_t(ch) < 128);
+  return js_isident[uint8_t(ch)];
 }
 
 bool IsIdentifierPartNonBMP(uint32_t codePoint);

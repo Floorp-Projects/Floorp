@@ -521,10 +521,29 @@ void ParserAtomsTable::markUsedByStencil(TaggedParserAtomIndex index) const {
 }
 
 bool ParserAtomsTable::isIdentifier(TaggedParserAtomIndex index) const {
-  const auto* atom = getParserAtom(index);
-  return atom->hasLatin1Chars()
-             ? IsIdentifier(atom->latin1Chars(), atom->length())
-             : IsIdentifier(atom->twoByteChars(), atom->length());
+  if (index.isParserAtomIndex()) {
+    const auto* atom = getParserAtom(index.toParserAtomIndex());
+    return atom->hasLatin1Chars()
+               ? IsIdentifier(atom->latin1Chars(), atom->length())
+               : IsIdentifier(atom->twoByteChars(), atom->length());
+  }
+
+  if (index.isWellKnownAtomId()) {
+    const auto* atom = getWellKnown(index.toWellKnownAtomId());
+    MOZ_ASSERT(atom->hasLatin1Chars());
+    return IsIdentifier(atom->latin1Chars(), atom->length());
+  }
+
+  if (index.isLength1StaticParserString()) {
+    char content[1];
+    getLength1Content(index.toLength1StaticParserString(), content);
+    return IsIdentifierASCII(content[0]);
+  }
+
+  MOZ_ASSERT(index.isLength2StaticParserString());
+  char content[2];
+  getLength2Content(index.toLength2StaticParserString(), content);
+  return IsIdentifierASCII(content[0], content[1]);
 }
 
 bool ParserAtomsTable::isPrivateName(TaggedParserAtomIndex index) const {
