@@ -50,7 +50,7 @@
     <!-- Content description announcement when exiting multiselect mode in tab tray -->
     <string name="tab_tray_exit_multiselect_content_description">Colesti del mou d\'esbilla múltiple</string>
     <!-- Content description announcement when entering multiselect mode in tab tray -->
-    <string name="tab_tray_enter_multiselect_content_description">Entresti nel mou d\'esbilla múltiple, esbilla les llingüetes pa guardar nuna coleición</string>
+    <string name="tab_tray_enter_multiselect_content_description">Entresti nel mou d\'esbilla múltiple, esbilla les llingüetes pa guardales nuna coleición</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ta producíu por Mozilla.</string>
@@ -110,7 +110,7 @@
     <string name="home_screen_shortcut_open_new_private_tab_2">Llingüeta privada nueva</string>
 
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">Sitios destacaos</string>
+    <string name="home_screen_top_sites_heading">Sitios principales</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -301,7 +301,7 @@
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Cuenta de Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
-    <string name="preferences_account_sync_error">Reconéutate pa siguir cola sincronización</string>
+    <string name="preferences_account_sync_error">Volvi conectate pa siguir cola sincronización</string>
     <!-- Preference for language -->
     <string name="preferences_language">Llingua</string>
     <!-- Preference for data collection -->
@@ -454,7 +454,7 @@
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Aniciar sesión pa reconectar</string>
     <!-- Preference for removing FxA account -->
-    <string name="preferences_sync_remove_account">Desaniciar la cuenta</string>
+    <string name="preferences_sync_remove_account">Quitar la cuenta</string>
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
@@ -482,6 +482,11 @@
     <!-- Gestures Preferences-->
     <!-- Preferences for using pull to refresh in a webpage -->
     <string name="preference_gestures_website_pull_to_refresh">Arrastrar p\'abaxo p\'anovar</string>
+
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Desplazase p\'anubrir la barra de ferramientes</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Eslizar pa un llau pa cambiar de llingüeta</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -565,6 +570,8 @@
 
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Amestar una llingüeta</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Amestar una llingüeta privada</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">En privao</string>
     <!-- Text shown as the title of the open tab tray -->
@@ -592,7 +599,7 @@
     <!-- Content description for tabs tray multiselect menu -->
     <string name="tab_tray_multiselect_menu_content_description">Menú de llingüetes abiertes</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
-    <string name="remove_tab_from_collection">Desaniciar la llingüeta de la coleición</string>
+    <string name="remove_tab_from_collection">Quitar la llingüeta de la coleición</string>
     <!-- Text for button to enter multiselect mode in tabs tray -->
     <string name="tabs_tray_select_tabs">Esbillar llingüetes</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -631,7 +638,7 @@
 	<!-- Text for the menu button to rename a top site -->
 	<string name="rename_top_site">Renomar</string>
 	<!-- Text for the menu button to remove a top site -->
-	<string name="remove_top_site">Desaniciar</string>
+	<string name="remove_top_site">Quitar</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Desaniciar del historial</string>
@@ -687,14 +694,14 @@
 
 
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
-    <string name="download_delete_multiple_items_snackbar_1">Desaniciáronse les descargues</string>
+    <string name="download_delete_multiple_items_snackbar_1">Quitáronse les descargues</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
-    <string name="download_delete_single_item_snackbar">Desanicióse %1$s</string>
+    <string name="download_delete_single_item_snackbar">Quitóse %1$s</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">Descargues esbillaes: %1$d</string>
     <!-- Text for the button to remove a single download item -->
-    <string name="download_delete_item_1">Desaniciar</string>
+    <string name="download_delete_item_1">Quitar</string>
 
 
     <!-- Crashes -->
@@ -952,7 +959,7 @@
     <!-- Text shown in snackbar action for viewing bookmarks -->
     <string name="snackbar_message_bookmarks_view">Ver</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">¡Amestóse a los sitios destacaos!</string>
+    <string name="snackbar_added_to_top_sites">¡Amestóse a los sitios principales!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Zarróse la llingüeta privada</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -962,7 +969,7 @@
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">DESFACER</string>
     <!-- Text shown in snackbar when user removes a top site -->
-    <string name="snackbar_top_site_removed">Desanicióse\'l sitiu</string>
+    <string name="snackbar_top_site_removed">Quitóse\'l sitiu</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_undo">Desfacer</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
@@ -1123,7 +1130,7 @@
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">La sincronización ta activada</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
-    <string name="onboarding_firefox_account_automatic_signin_failed">Fallu al aniciar sesión</string>
+    <string name="onboarding_firefox_account_automatic_signin_failed">Hebo un fallu al aniciar sesión</string>
 
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_2">Privacidá automática</string>
@@ -1197,7 +1204,7 @@ en llinia y con nós.</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Escanéu d\'un códigu</string>
     <!-- Instructions on how to access pairing -->
-    <string name="sign_in_instructions"><![CDATA[Nun ordenador abri Firefox y vete a <b>https://firefox.com/pair</b>]]></string>
+    <string name="sign_in_instructions"><![CDATA[Nun ordenador, abri Firefox y vete a <b>https://firefox.com/pair</b>]]></string>
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">Escaniar</string>
     <!-- Text shown for settings option for sign with pairing -->
@@ -1270,7 +1277,7 @@ en llinia y con nós.</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Criptomineros</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Buelgues</string>
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Xeneradores de buelgues</string>
     <string name="enhanced_tracking_protection_blocked">Blóquiase</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Permítese</string>
@@ -1287,7 +1294,7 @@ en llinia y con nós.</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_description">Evita que los scripts maliciosos consigan accesu al preséu pa minar divises dixitales.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_fingerprinters_title">Buelgues</string>
+    <string name="etp_fingerprinters_title">Xeneradores de buelgues</string>
 
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_description">Evita la recoyida de datos identificables de forma esclusiva del preséu que puen usase pa rastrexar.</string>
@@ -1405,7 +1412,7 @@ en llinia y con nós.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Los anicios de sesión y contraseñes d\'estos sitios nun van guardase.</string>
     <!-- Text on button to remove all saved login exceptions -->
-    <string name="preferences_passwords_exceptions_remove_all">Desaniciar toles esceiciones</string>
+    <string name="preferences_passwords_exceptions_remove_all">Quitar toles esceiciones</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Buscar anicios de sesión</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1560,11 +1567,11 @@ en llinia y con nós.</string>
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">Nun hai nenguna</string>
     <!-- Label for the Pocket default top site -->
-    <string name="pocket_top_articles">Artículos destacaos</string>
+    <string name="pocket_top_articles">Artículos principales</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">¿De xuru que quies desaniciar esti marcador?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">Amestar a los sitios destacaos</string>
+    <string name="browser_menu_add_to_top_sites">Amestar a los sitios principales</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Cola verificación de: %1$s</string>
@@ -1615,9 +1622,9 @@ en llinia y con nós.</string>
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_title">Algamóse la llende de sitios destacaos</string>
+    <string name="top_sites_max_limit_title">Algamóse la llende de sitios principales</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content_2">P\'amestar un sitiu destacáu nuevu, desanicia otru. Ten primíu\'l sitiu y esbilla desaniciar.</string>
+    <string name="top_sites_max_limit_content_2">P\'amestar un sitiu principal nuevu, quita otru. Ten primíu\'l sitiu y esbilla quitar.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Val, entendílo</string>
 
@@ -1627,14 +1634,14 @@ en llinia y con nós.</string>
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Nome</string>
 	<!-- Hint for renaming title of a top site -->
-	<string name="top_site_name_hint">Nome del sitiu destacáu</string>
+	<string name="top_site_name_hint">Nome del sitiu principal</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">Aceutar</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Encaboxar</string>
 
     <!-- Content description for close button in collection placeholder. -->
-    <string name="remove_home_collection_placeholder_content_description">Desaniciar</string>
+    <string name="remove_home_collection_placeholder_content_description">Quitar</string>
 
     <!-- Deprecated: text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
