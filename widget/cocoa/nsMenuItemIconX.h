@@ -47,7 +47,7 @@ class nsMenuItemIconX : public mozilla::widget::IconLoader::Listener {
 
   // Implements this method for mozilla::widget::IconLoader::Listener.
   // Called once the icon load is complete.
-  nsresult OnComplete(imgIContainer* aImage, const nsIntRect& aRect) override;
+  nsresult OnComplete(imgIContainer* aImage) override;
 
  protected:
   nsCOMPtr<nsIContent> mContent;

@@ -41,7 +41,7 @@ class StatusBarEntry final : public LinkedListElement<RefPtr<StatusBarEntry>>,
   LRESULT OnMessage(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
   const Element* GetMenu() { return mMenu; };
 
-  nsresult OnComplete(imgIContainer* aImage, const nsIntRect& aRect) override;
+  nsresult OnComplete(imgIContainer* aImage) override;
 
  private:
   ~StatusBarEntry();
@@ -142,8 +142,7 @@ nsresult StatusBarEntry::Init() {
     if (NS_FAILED(rv)) return rv;
   }
 
-  nsIntRect rect;
-  mIconLoader = new IconLoader(this, rect);
+  mIconLoader = new IconLoader(this);
 
   if (iconURI) {
     rv = mIconLoader->LoadIcon(iconURI, mMenu);
@@ -181,8 +180,7 @@ nsresult StatusBarEntry::Init() {
   return NS_OK;
 }
 
-nsresult StatusBarEntry::OnComplete(imgIContainer* aImage,
-                                    const nsIntRect& aRect) {
+nsresult StatusBarEntry::OnComplete(imgIContainer* aImage) {
   NS_ENSURE_ARG_POINTER(aImage);
 
   RefPtr<StatusBarEntry> kungFuDeathGrip = this;

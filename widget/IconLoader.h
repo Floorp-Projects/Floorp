@@ -31,15 +31,14 @@ class IconLoader : public imgINotificationObserver {
   // be notified when the icon is loaded.
   class Listener {
    public:
-    virtual nsresult OnComplete(imgIContainer* aContainer,
-                                const nsIntRect& aRect) = 0;
+    virtual nsresult OnComplete(imgIContainer* aContainer) = 0;
   };
 
   // Create the loader.
   // aListener will be notified when the load is complete.
   // The loader does not keep an owning reference to the listener. Call Destroy
   // before the listener goes away.
-  IconLoader(Listener* aListener, const nsIntRect& aImageRegionRect);
+  explicit IconLoader(Listener* aListener);
 
  public:
   NS_DECL_ISUPPORTS
@@ -58,12 +57,8 @@ class IconLoader : public imgINotificationObserver {
   virtual ~IconLoader();
 
  private:
-  nsresult OnFrameComplete(imgIRequest* aRequest);
-
   nsContentPolicyType mContentType;
   RefPtr<imgRequestProxy> mIconRequest;
-  nsIntRect mImageRegionRect;
-  bool mLoadedIcon;
 
   // The listener, which is notified when loading completes.
   // Can be null, after a call to Destroy.
