@@ -767,11 +767,13 @@
   background-image: url("chrome://devtools/skin/images/rules-view-print-simulation.svg");
 }
 
-#color-scheme-simulation-light-toggle:before {
+#color-scheme-simulation-light-toggle::before {
   background-image: url("chrome://devtools/skin/images/rules-view-light-mode-simulation.svg");
+  -moz-context-properties: fill, stroke;
+  stroke: currentColor;
 }
 
-#color-scheme-simulation-dark-toggle:before {
+#color-scheme-simulation-dark-toggle::before {
   background-image: url("chrome://devtools/skin/images/rules-view-dark-mode-simulation.svg");
 }
 
