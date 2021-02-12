@@ -132,6 +132,7 @@ namespace jit {
   _(AtomicIsLockFree)          \
   _(BigIntAsIntN)              \
   _(BigIntAsUintN)             \
+  _(CreateArgumentsObject)     \
   _(AssertRecoveredOnBailout)
 
 class RResumePoint;
@@ -865,6 +866,14 @@ class RBigIntAsIntN final : public RInstruction {
 class RBigIntAsUintN final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(BigIntAsUintN, 2)
+
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
+};
+
+class RCreateArgumentsObject final : public RInstruction {
+ public:
+  RINSTRUCTION_HEADER_NUM_OP_(CreateArgumentsObject, 1)
 
   [[nodiscard]] bool recover(JSContext* cx,
                              SnapshotIterator& iter) const override;
