@@ -6,12 +6,12 @@
 #ifndef ScrollbarUtil_h
 #define ScrollbarUtil_h
 
-#include "nsLayoutUtils.h"
+#include "nsITheme.h"
 #include "nsNativeTheme.h"
 
 class ScrollbarUtil {
  public:
-  static bool IsScrollbarWidthThin(ComputedStyle* aStyle);
+  static bool IsScrollbarWidthThin(mozilla::ComputedStyle* aStyle);
   static bool IsScrollbarWidthThin(nsIFrame* aFrame);
 
   // Returns the style for custom scrollbar if the scrollbar part frame should
@@ -19,17 +19,17 @@ class ScrollbarUtil {
   //
   // Optionally the caller can pass a pointer to aDarkScrollbar for whether
   // custom scrollbar may be drawn due to dark background.
-  static ComputedStyle* GetCustomScrollbarStyle(nsIFrame* aFrame,
-                                                bool* aDarkScrollbar = nullptr);
+  static mozilla::ComputedStyle* GetCustomScrollbarStyle(
+      nsIFrame* aFrame, bool* aDarkScrollbar = nullptr);
 
   static nscolor GetScrollbarButtonColor(nscolor aTrackColor,
-                                         EventStates aStates);
+                                         mozilla::EventStates aStates);
   static nscolor GetScrollbarArrowColor(nscolor aButtonColor);
   static nscolor GetScrollbarTrackColor(nsIFrame* aFrame);
   static nscolor GetScrollbarThumbColor(nsIFrame* aFrame,
-                                        EventStates aEventStates);
-  static Maybe<nsITheme::Transparency> GetScrollbarPartTransparency(
-      nsIFrame* aFrame, StyleAppearance aAppearance);
+                                        mozilla::EventStates aEventStates);
+  static mozilla::Maybe<nsITheme::Transparency> GetScrollbarPartTransparency(
+      nsIFrame* aFrame, mozilla::StyleAppearance aAppearance);
 
  protected:
   ScrollbarUtil() = default;
