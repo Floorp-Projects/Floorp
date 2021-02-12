@@ -10,23 +10,11 @@ COMPILE_FLAGS["OS_INCLUDES"] = []
 AllowCompilerWarnings()
 
 DEFINES["ABSL_ALLOCATOR_NOTHROW"] = "1"
-DEFINES["CR_SYSROOT_HASH"] = "5f64b417e1018dcf8fcc81dc2714e0f264b9b911"
-DEFINES["USE_AURA"] = "1"
-DEFINES["USE_GLIB"] = "1"
-DEFINES["USE_NSS_CERTS"] = "1"
-DEFINES["USE_OZONE"] = "1"
-DEFINES["USE_UDEV"] = True
-DEFINES["USE_X11"] = "1"
 DEFINES["WEBRTC_ENABLE_PROTOBUF"] = "0"
 DEFINES["WEBRTC_LIBRARY_IMPL"] = True
-DEFINES["WEBRTC_LINUX"] = True
 DEFINES["WEBRTC_MOZILLA_BUILD"] = True
 DEFINES["WEBRTC_NON_STATIC_TRACE_EVENT_HANDLERS"] = "0"
 DEFINES["WEBRTC_POSIX"] = True
-DEFINES["_FILE_OFFSET_BITS"] = "64"
-DEFINES["_GNU_SOURCE"] = True
-DEFINES["_LARGEFILE64_SOURCE"] = True
-DEFINES["_LARGEFILE_SOURCE"] = True
 DEFINES["__STDC_CONSTANT_MACROS"] = True
 DEFINES["__STDC_FORMAT_MACROS"] = True
 
@@ -39,12 +27,6 @@ LOCAL_INCLUDES += [
     "/ipc/glue",
     "/third_party/libwebrtc/",
     "/third_party/libwebrtc/third_party/abseil-cpp/"
-]
-
-OS_LIBS += [
-    "atomic",
-    "dl",
-    "rt"
 ]
 
 UNIFIED_SOURCES += [
@@ -62,5 +44,33 @@ if CONFIG["MOZ_DEBUG"] == "1":
 
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
     DEFINES["_DEBUG"] = True
+
+if CONFIG["OS_TARGET"] == "Darwin":
+
+    DEFINES["CR_XCODE_VERSION"] = "1240"
+    DEFINES["WEBRTC_MAC"] = True
+    DEFINES["_LIBCPP_HAS_NO_ALIGNED_ALLOCATION"] = True
+    DEFINES["__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES"] = "0"
+
+if CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["CR_SYSROOT_HASH"] = "5f64b417e1018dcf8fcc81dc2714e0f264b9b911"
+    DEFINES["USE_AURA"] = "1"
+    DEFINES["USE_GLIB"] = "1"
+    DEFINES["USE_NSS_CERTS"] = "1"
+    DEFINES["USE_OZONE"] = "1"
+    DEFINES["USE_UDEV"] = True
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_LINUX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+    DEFINES["_GNU_SOURCE"] = True
+    DEFINES["_LARGEFILE64_SOURCE"] = True
+    DEFINES["_LARGEFILE_SOURCE"] = True
+
+    OS_LIBS += [
+        "atomic",
+        "dl",
+        "rt"
+    ]
 
 Library("video_stream_encoder_create_gn")
