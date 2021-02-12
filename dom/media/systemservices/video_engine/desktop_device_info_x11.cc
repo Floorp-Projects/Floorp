@@ -32,8 +32,7 @@ void DesktopDeviceInfoX11::MultiMonitorScreenshare() {
     desktop_device_info->setDeviceName("Primary Monitor");
 
     char idStr[64];
-    snprintf(idStr, sizeof(idStr), "%" PRIdPTR,
-             desktop_device_info->getScreenId());
+    SprintfLiteral(idStr, "%" PRIdPTR, desktop_device_info->getScreenId());
     desktop_device_info->setUniqueIdName(idStr);
     desktop_display_list_[desktop_device_info->getScreenId()] =
         desktop_device_info;
