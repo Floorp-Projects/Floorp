@@ -88,7 +88,7 @@ nsresult nsMenuItemIconX::SetupIcon() {
   }
 
   if (!mIconLoader) {
-    mIconLoader = new IconLoader(this, mImageRegionRect);
+    mIconLoader = new IconLoader(this);
   }
   if (!mSetIcon) {
     // Load placeholder icon.
@@ -205,7 +205,7 @@ nsresult nsMenuItemIconX::GetIconURI(nsIURI** aIconURI) {
 // mozilla::widget::IconLoader::Listener
 //
 
-nsresult nsMenuItemIconX::OnComplete(imgIContainer* aImage, const nsIntRect& aRect) {
+nsresult nsMenuItemIconX::OnComplete(imgIContainer* aImage) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
 
   if (!mNativeMenuItem) {
@@ -215,7 +215,7 @@ nsresult nsMenuItemIconX::OnComplete(imgIContainer* aImage, const nsIntRect& aRe
 
   NSImage* image = [MOZIconHelper iconImageFromImageContainer:aImage
                                                      withSize:NSMakeSize(kIconSize, kIconSize)
-                                                      subrect:aRect
+                                                      subrect:mImageRegionRect
                                                   scaleFactor:0.0f];
   [mNativeMenuItem setImage:image];
   if (mMenuObject) {
