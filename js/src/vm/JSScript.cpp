@@ -2690,7 +2690,8 @@ void ScriptSource::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
 }
 
 bool ScriptSource::xdrEncodeInitialStencil(
-    JSContext* cx, frontend::CompilationStencil& stencil,
+    JSContext* cx, frontend::CompilationInput& input,
+    frontend::CompilationStencil& stencil,
     UniquePtr<XDRIncrementalStencilEncoder>& xdrEncoder) {
   // Encoding failures are reported by the xdrFinalizeEncoder function.
   if (containsAsmJS()) {
@@ -2706,7 +2707,7 @@ bool ScriptSource::xdrEncodeInitialStencil(
   AutoIncrementalTimer timer(cx->realm()->timers.xdrEncodingTime);
   auto failureCase = mozilla::MakeScopeExit([&] { xdrEncoder.reset(nullptr); });
 
-  XDRResult res = xdrEncoder->codeStencil(stencil);
+  XDRResult res = xdrEncoder->codeStencil(input, stencil);
   if (res.isErr()) {
     // On encoding failure, let failureCase destroy encoder and return true
     // to avoid failing any currently executing script.
@@ -2722,9 +2723,10 @@ bool ScriptSource::xdrEncodeInitialStencil(
 }
 
 bool ScriptSource::xdrEncodeStencils(
-    JSContext* cx, frontend::CompilationStencil& stencil,
+    JSContext* cx, frontend::CompilationInput& input,
+    frontend::CompilationStencil& stencil,
     UniquePtr<XDRIncrementalStencilEncoder>& xdrEncoder) {
-  if (!xdrEncodeInitialStencil(cx, stencil, xdrEncoder)) {
+  if (!xdrEncodeInitialStencil(cx, input, stencil, xdrEncoder)) {
     return false;
   }
 

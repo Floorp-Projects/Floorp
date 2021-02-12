@@ -2816,7 +2816,8 @@ bool JSRuntime::initSelfHosting(JSContext* cx) {
       return false;
     }
 
-    if (!stencil->deserializeStencils(cx, selfHostedXDR, &decodeOk)) {
+    if (!stencil->deserializeStencils(cx, input.get(), selfHostedXDR,
+                                      &decodeOk)) {
       return false;
     }
   }
@@ -2851,7 +2852,7 @@ bool JSRuntime::initSelfHosting(JSContext* cx) {
     // Serialize the stencil to XDR.
     if (selfHostedXDRWriter) {
       JS::TranscodeBuffer xdrBuffer;
-      if (!stencil->serializeStencils(cx, xdrBuffer)) {
+      if (!stencil->serializeStencils(cx, input.get(), xdrBuffer)) {
         return false;
       }
 

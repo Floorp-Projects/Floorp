@@ -795,7 +795,7 @@ void ScriptDecodeTask::parse(JSContext* cx) {
     }
 
     XDRStencilDecoder decoder(cx, &options, range);
-    XDRResult res = decoder.codeStencils(*stencil_);
+    XDRResult res = decoder.codeStencils(*stencilInput_, *stencil_);
     if (!res.isOk()) {
       stencil_.reset();
       return;
@@ -2096,9 +2096,10 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
 
     UniquePtr<XDRIncrementalStencilEncoder> xdrEncoder;
 
-    if (parseTask->stencil_.get()) {
+    if (parseTask->stencil_) {
       auto* stencil = parseTask->stencil_.get();
-      if (!stencil->source->xdrEncodeStencils(cx, *stencil, xdrEncoder)) {
+      if (!stencil->source->xdrEncodeStencils(cx, *parseTask->stencilInput_,
+                                              *stencil, xdrEncoder)) {
         return nullptr;
       }
     }
