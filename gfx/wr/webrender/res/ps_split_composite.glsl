@@ -119,16 +119,30 @@ void main(void) {
     write_output(alpha * texture(sColor0, uv));
 }
 
-#ifdef SWGL_DRAW_SPAN
+#ifdef SWGL
 void swgl_drawSpanRGBA8() {
-    if (!swgl_isTextureLinear(sColor0)) {
+    if (!swgl_isTextureRGBA8(sColor0) || !swgl_isTextureLinear(sColor0)) {
         return;
     }
 
     float perspective_divisor = mix(swgl_forceScalar(gl_FragCoord.w), 1.0, vPerspective);
+
     vec2 uv = vUv * perspective_divisor;
 
-    swgl_commitTextureLinearRGBA8(sColor0, uv, vUvSampleBounds, 0.0);
+    if (swgl_allowTextureNearest(sColor0, uv)) {
+        swgl_commitTextureNearestRGBA8(sColor0, uv, vUvSampleBounds, 0);
+        return;
+    }
+
+    uv = swgl_linearQuantize(sColor0, uv);
+    vec2 min_uv = swgl_linearQuantize(sColor0, vUvSampleBounds.xy);
+    vec2 max_uv = swgl_linearQuantize(sColor0, vUvSampleBounds.zw);
+    vec2 step_uv = swgl_linearQuantizeStep(sColor0, swgl_interpStep(vUv)) * perspective_divisor;
+
+    while (swgl_SpanLength > 0) {
+        swgl_commitTextureLinearRGBA8(sColor0, clamp(uv, min_uv, max_uv), 0);
+        uv += step_uv;
+    }
 }
 #endif
 

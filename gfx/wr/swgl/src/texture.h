@@ -470,7 +470,7 @@ SI T samplerScale(S sampler, T P) {
 }
 
 template <typename T>
-SI T samplerScale(UNUSED sampler2DRect sampler, T P) {
+SI T samplerScale(sampler2DRect sampler, T P) {
   return P;
 }
 
