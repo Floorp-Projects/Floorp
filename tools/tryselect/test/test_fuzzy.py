@@ -37,7 +37,7 @@ def test_query_paths(run_mach, capfd):
 
 @pytest.mark.skipif(os.name == "nt", reason="fzf not installed on host")
 def test_query(run_mach, capfd):
-    cmd = ["try", "fuzzy", "--no-push", "-q", "'source-test-python-taskgraph-tests-py2"]
+    cmd = ["try", "fuzzy", "--no-push", "-q", "'source-test-python-taskgraph-tests-py3"]
     assert run_mach(cmd) == 0
 
     output = capfd.readouterr().out
@@ -46,7 +46,7 @@ def test_query(run_mach, capfd):
     # Should only ever mach one task exactly.
     expected = """
     "tasks": [
-        "source-test-python-taskgraph-tests-py2"
+        "source-test-python-taskgraph-tests-py3"
     ]""".lstrip()
 
     assert expected in output
