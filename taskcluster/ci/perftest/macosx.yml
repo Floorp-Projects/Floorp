@@ -114,7 +114,8 @@ livesites:
         cron: true
     perftest:
         - [cloudflare, netwerk/test/perf/perftest_http3_cloudflareblog.js]
-        - [fb-scroll, netwerk/test/perf/perftest_http3_facebook_scroll.js]
+        # broken: bug 1678588
+        # - [fb-scroll, netwerk/test/perf/perftest_http3_facebook_scroll.js]
         - [g-image, netwerk/test/perf/perftest_http3_google_image.js]
         - [g-search, netwerk/test/perf/perftest_http3_google_search.js]
         - [lq-fetch, netwerk/test/perf/perftest_http3_lucasquicfetch.js]
@@ -130,7 +131,8 @@ livesites:
                 navigationTiming: {}
                 pageTimings: {}
                 timeToContentfulPaint: {}
-            fb-scroll: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint, requestsPerSecond]
+            # broken: bug 1678588
+            # fb-scroll: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint, requestsPerSecond]
             g-image: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint, imagesPerSecond, imageLoadTime]
             g-search: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint]
             lq-fetch: [navigationTiming, pageTimings, resources, timeToContentfulPaint, resourceLoadTime, imagesLoaded, imagesMissed]
@@ -157,11 +159,12 @@ livesites:
                 - ["25s", browsertime.waitTime=25000]
                 - ["35s", browsertime.waitTime=35000]
                 - ["60s", browsertime.waitTime=60000]
-            fb-scroll:
-                - ["10s", browsertime.waitTime=10000]
-                - ["25s", browsertime.waitTime=25000]
-                - ["35s", browsertime.waitTime=35000]
-                - ["60s", browsertime.waitTime=60000]
+            # broken: bug 1678588
+            # fb-scroll:
+            #     - ["10s", browsertime.waitTime=10000]
+            #     - ["25s", browsertime.waitTime=25000]
+            #     - ["35s", browsertime.waitTime=35000]
+            #     - ["60s", browsertime.waitTime=60000]
             g-search:
                 - ["10s", browsertime.waitTime=10000]
                 - ["25s", browsertime.waitTime=25000]
