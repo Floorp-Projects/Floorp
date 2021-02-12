@@ -91,8 +91,7 @@ h2 {
 }
 
 .perf-settings-thread-label {
-  display: flex;
-  margin: 15px 0;
+  margin: 12px 0;
 }
 
 .perf-settings-text-label {
@@ -108,17 +107,10 @@ h2 {
   margin: 1.3em 0;
 }
 
-.perf-settings-checkbox-and-name {
-  display: flex;
-}
-
-.perf-settings-checkbox {
-  align-self: flex-start;
-}
-
 .perf-settings-feature-title {
   font-size: 13px;
-  margin: 0.2em 0 0 30px;
+  margin-block: 0.2em 0;
+  margin-inline: 30px 0;
   line-height: 1.6;
   opacity: 0.8;
 }
@@ -166,21 +158,15 @@ h2 {
 }
 
 .perf-settings-dir-list-button-group input[type=button] {
-  margin-left: 0;
+  margin-inline-start: 0;
 }
 
 .perf-presets-input-container {
-  height: 20px;
-  display: flex;
-}
-
-.perf-presets-input {
-  width: 15px;
-  margin: 0 10px;
+  height: 26px;
 }
 
 .pref-preset-text-label {
-  height: 20px;
+  height: 26px;
   display: flex;
   align-items: center;
 }
@@ -188,7 +174,7 @@ h2 {
 .perf-presets-description {
   font-size: 13px;
   color: var(--in-content-deemphasized-text);
-  margin: 5px 0;
+  margin: 2px 0;
 }
 
 .perf-presets-label {
@@ -203,6 +189,5 @@ h2 {
 
 .perf-back-button {
   /* Remove the inherited margins */
-  margin-left: 0;
-  margin-right: 0;
+  margin-inline: 0;
 }
