@@ -4,9 +4,6 @@
 
 "use strict";
 
-// An array of the possible color schemes that can be emulated.
-exports.COLOR_SCHEMES = [null, "dark", "light"];
-
 // Compatibility tooltip message id shared between the
 // models/text-property.js and the tooltip tests
 exports.COMPATIBILITY_TOOLTIP_MESSAGE = {
