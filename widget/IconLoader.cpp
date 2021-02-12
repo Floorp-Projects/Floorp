@@ -16,7 +16,7 @@ using namespace mozilla;
 
 namespace mozilla::widget {
 
-NS_IMPL_CYCLE_COLLECTION(mozilla::widget::IconLoader, mContent, mHelper)
+NS_IMPL_CYCLE_COLLECTION(mozilla::widget::IconLoader, mHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(mozilla::widget::IconLoader)
   NS_INTERFACE_MAP_ENTRY(imgINotificationObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -24,10 +24,8 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(mozilla::widget::IconLoader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(mozilla::widget::IconLoader)
 
-IconLoader::IconLoader(Helper* aHelper, nsINode* aContent,
-                       const nsIntRect& aImageRegionRect)
-    : mContent(aContent),
-      mContentType(nsIContentPolicy::TYPE_INTERNAL_IMAGE),
+IconLoader::IconLoader(Helper* aHelper, const nsIntRect& aImageRegionRect)
+    : mContentType(nsIContentPolicy::TYPE_INTERNAL_IMAGE),
       mImageRegionRect(aImageRegionRect),
       mLoadedIcon(false),
       mHelper(aHelper) {}
@@ -44,7 +42,8 @@ void IconLoader::Destroy() {
   }
 }
 
-nsresult IconLoader::LoadIcon(nsIURI* aIconURI, bool aIsInternalIcon) {
+nsresult IconLoader::LoadIcon(nsIURI* aIconURI, nsINode* aNode,
+                              bool aIsInternalIcon) {
   if (mIconRequest) {
     // Another icon request is already in flight.  Kill it.
     mIconRequest->Cancel(NS_BINDING_ABORTED);
@@ -53,11 +52,11 @@ nsresult IconLoader::LoadIcon(nsIURI* aIconURI, bool aIsInternalIcon) {
 
   mLoadedIcon = false;
 
-  if (!mContent) {
+  if (!aNode) {
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<mozilla::dom::Document> document = mContent->OwnerDoc();
+  RefPtr<mozilla::dom::Document> document = aNode->OwnerDoc();
 
   nsCOMPtr<nsILoadGroup> loadGroup = document->GetDocumentLoadGroup();
   if (!loadGroup) {
@@ -78,9 +77,9 @@ nsresult IconLoader::LoadIcon(nsIURI* aIconURI, bool aIsInternalIcon) {
         getter_AddRefs(mIconRequest));
   } else {
     rv = loader->LoadImage(
-        aIconURI, nullptr, nullptr, mContent->NodePrincipal(), 0, loadGroup,
-        this, mContent, document, nsIRequest::LOAD_NORMAL, nullptr,
-        mContentType, u""_ns, /* aUseUrgentStartForChannel */ false,
+        aIconURI, nullptr, nullptr, aNode->NodePrincipal(), 0, loadGroup, this,
+        aNode, document, nsIRequest::LOAD_NORMAL, nullptr, mContentType, u""_ns,
+        /* aUseUrgentStartForChannel */ false,
         /* aLinkPreload */ false, getter_AddRefs(mIconRequest));
   }
   if (NS_FAILED(rv)) {
