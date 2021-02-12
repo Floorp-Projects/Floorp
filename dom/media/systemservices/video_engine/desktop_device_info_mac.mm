@@ -36,7 +36,7 @@ void DesktopDeviceInfoMac::MultiMonitorScreenshare() {
     desktop_device_info->setDeviceName("Primary Monitor");
 
     char idStr[64];
-    snprintf(idStr, sizeof(idStr), "%" PRIdPTR, desktop_device_info->getScreenId());
+    SprintfLiteral(idStr, "%" PRIdPTR, desktop_device_info->getScreenId());
     desktop_device_info->setUniqueIdName(idStr);
     desktop_display_list_[desktop_device_info->getScreenId()] = desktop_device_info;
   }
@@ -54,12 +54,12 @@ void DesktopDeviceInfoMac::MultiMonitorScreenshare() {
         desktop_device_info->setDeviceName("Primary Monitor");
       } else {
         char nameStr[64];
-        snprintf(nameStr, sizeof(nameStr), "Screen %" PRIdPTR, i + 1);
+        SprintfLiteral(nameStr, "Screen %" PRIdPTR, i + 1);
         desktop_device_info->setDeviceName(nameStr);
       }
 
       char idStr[64];
-      snprintf(idStr, sizeof(idStr), "%" PRIdPTR, desktop_device_info->getScreenId());
+      SprintfLiteral(idStr, "%" PRIdPTR, desktop_device_info->getScreenId());
       desktop_device_info->setUniqueIdName(idStr);
       desktop_display_list_[desktop_device_info->getScreenId()] = desktop_device_info;
     }
