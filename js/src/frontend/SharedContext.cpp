@@ -39,20 +39,20 @@ SharedContext::SharedContext(JSContext* cx, Kind kind,
       localStrict(false),
       hasExplicitUseStrict_(false),
       isScriptExtraFieldCopiedToStencil(false) {
+  // Note: This is a mix of transitive and non-transitive options.
+  const JS::ReadOnlyCompileOptions& options = stencil.input.options;
+
   // Compute the script kind "input" flags.
   if (kind == Kind::FunctionBox) {
     setFlag(ImmutableFlags::IsFunction);
   } else if (kind == Kind::Module) {
-    MOZ_ASSERT(!stencil.input.options.nonSyntacticScope);
+    MOZ_ASSERT(!options.nonSyntacticScope);
     setFlag(ImmutableFlags::IsModule);
   } else if (kind == Kind::Eval) {
     setFlag(ImmutableFlags::IsForEval);
   } else {
     MOZ_ASSERT(kind == Kind::Global);
   }
-
-  // Note: This is a mix of transitive and non-transitive options.
-  const JS::ReadOnlyCompileOptions& options = stencil.input.options;
 
   // Initialize the transitive "input" flags. These are applied to all
   // SharedContext in this compilation and generally cannot be determined from

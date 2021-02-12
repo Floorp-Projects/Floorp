@@ -201,9 +201,10 @@ PerHandlerParser<ParseHandler>::PerHandlerParser(
     CompilationStencil& stencil, CompilationState& compilationState,
     void* internalSyntaxParser)
     : ParserBase(cx, options, foldConstants, stencil, compilationState),
-      handler_(cx, compilationState.allocScope.alloc(), stencil.input.lazy),
+      handler_(cx, compilationState.allocScope.alloc(),
+               compilationState.input.lazy),
       internalSyntaxParser_(internalSyntaxParser) {
-  MOZ_ASSERT(stencil.isInitialStencil() == !stencil.input.lazy);
+  MOZ_ASSERT(stencil.isInitialStencil() == !compilationState.input.lazy);
 }
 
 template <class ParseHandler, typename Unit>
@@ -857,7 +858,7 @@ bool PerHandlerParser<ParseHandler>::
       //   After closed-over-bindings are snapshotted in the handler,
       //   remove this.
       auto parserAtom = this->parserAtoms().internJSAtom(
-          cx_, this->getCompilationStencil().input.atomCache, name);
+          cx_, this->getCompilationState().input.atomCache, name);
       if (!parserAtom) {
         return false;
       }
@@ -1486,7 +1487,7 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
     return true;
   }
 
-  if (!this->stencil_.input.options.privateClassFields) {
+  if (!this->compilationState_.input.options.privateClassFields) {
     return true;
   }
 
@@ -1581,7 +1582,7 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
 
 #ifdef DEBUG
   if (evalpc.superScopeNeedsHomeObject() &&
-      this->stencil_.input.enclosingScope) {
+      this->compilationState_.input.enclosingScope) {
     // If superScopeNeedsHomeObject_ is set and we are an entry-point
     // ParseContext, then we must be emitting an eval script, and the
     // outer function must already be marked as needing a home object
@@ -2757,7 +2758,7 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
   TaggedParserAtomIndex displayAtom;
   if (fun->displayAtom()) {
     displayAtom = this->parserAtoms().internJSAtom(
-        cx_, this->stencil_.input.atomCache, fun->displayAtom());
+        cx_, this->compilationState_.input.atomCache, fun->displayAtom());
     if (!displayAtom) {
       return false;
     }
@@ -3258,7 +3259,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
   TaggedParserAtomIndex displayAtom;
   if (fun->displayAtom()) {
     displayAtom = this->parserAtoms().internJSAtom(
-        cx_, this->stencil_.input.atomCache, fun->displayAtom());
+        cx_, this->compilationState_.input.atomCache, fun->displayAtom());
     if (!displayAtom) {
       return null();
     }

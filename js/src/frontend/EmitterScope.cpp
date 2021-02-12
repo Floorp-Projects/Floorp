@@ -49,7 +49,7 @@ bool EmitterScope::checkEnvironmentChainLength(BytecodeEmitter* bce) {
   uint32_t hops;
   if (EmitterScope* emitterScope = enclosing(&bce)) {
     hops = emitterScope->environmentChainLength_;
-  } else if (bce->stencil.input.enclosingScope) {
+  } else if (bce->compilationState.input.enclosingScope) {
     hops =
         bce->compilationState.scopeContext.enclosingScopeEnvironmentChainLength;
   } else {
@@ -173,11 +173,12 @@ NameLocation EmitterScope::searchAndCache(BytecodeEmitter* bce,
   // If the name is not found in the current compilation, walk the Scope
   // chain encompassing the compilation.
   if (!loc) {
-    MOZ_ASSERT(bce->stencil.input.lazy);
+    MOZ_ASSERT(bce->compilationState.input.lazy);
     inCurrentScript = false;
     loc = Some(
         bce->compilationState.scopeContext.searchInDelazificationEnclosingScope(
-            bce->cx, bce->stencil.input, bce->parserAtoms(), name, hops));
+            bce->cx, bce->compilationState.input, bce->parserAtoms(), name,
+            hops));
   }
 
   // Each script has its own frame. A free name that is accessed
@@ -491,7 +492,7 @@ bool EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* funbox) {
   } else if (funbox->isStandalone) {
     // If the function is standalone, the enclosing scope is either an empty
     // global or non-syntactic scope, and there's no static bindings.
-    if (bce->stencil.input.target ==
+    if (bce->compilationState.input.target ==
         CompilationInput::CompilationTarget::
             StandaloneFunctionInNonSyntacticScope) {
       fallbackFreeNameLocation_ = Some(NameLocation::Dynamic());

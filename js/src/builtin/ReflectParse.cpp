@@ -3358,7 +3358,7 @@ bool ASTSerializer::literal(ParseNode* pn, MutableHandleValue dst) {
     case ParseNodeKind::RegExpExpr: {
       RegExpObject* re = pn->as<RegExpLiteral>().create(
           cx, parser->parserAtoms(),
-          parser->getCompilationStencil().input.atomCache,
+          parser->getCompilationState().input.atomCache,
           parser->getCompilationStencil());
       if (!re) {
         return false;
@@ -3863,7 +3863,8 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
   CompilationStencil stencil(input.get());
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::CompilationState compilationState(cx, allocScope, options, stencil);
+  frontend::CompilationState compilationState(cx, allocScope, input.get(),
+                                              stencil);
   if (!compilationState.init(cx)) {
     return false;
   }

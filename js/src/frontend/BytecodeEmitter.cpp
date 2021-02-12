@@ -9003,7 +9003,7 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
   }
 
   // JSOp::Object may only be used by (top-level) run-once scripts.
-  MOZ_ASSERT_IF(singleton, stencil.input.options.isRunOnce);
+  MOZ_ASSERT_IF(singleton, sc->isTopLevelContext() && sc->treatAsRunOnce());
 
   JSOp op = singleton ? JSOp::Object : JSOp::NewObject;
   if (!emitGCIndexOp(op, index)) {
