@@ -510,9 +510,9 @@ bool ParserAtomsTable::isIdentifier(TaggedParserAtomIndex index) const {
   }
 
   if (index.isWellKnownAtomId()) {
-    const auto* atom = getWellKnown(index.toWellKnownAtomId());
-    MOZ_ASSERT(atom->hasLatin1Chars());
-    return IsIdentifier(atom->latin1Chars(), atom->length());
+    const auto& info = GetWellKnownAtomInfo(index.toWellKnownAtomId());
+    return IsIdentifier(reinterpret_cast<const Latin1Char*>(info.content),
+                        info.length);
   }
 
   if (index.isLength1StaticParserString()) {
@@ -557,15 +557,19 @@ bool ParserAtomsTable::isExtendedUnclonedSelfHostedFunctionName(
       case WellKnownAtomId::ArraySpecies:
       case WellKnownAtomId::ArrayValues:
       case WellKnownAtomId::RegExpFlagsGetter:
-      case WellKnownAtomId::RegExpToString:
-        MOZ_ASSERT(getWellKnown(index.toWellKnownAtomId())->charAt(0) ==
+      case WellKnownAtomId::RegExpToString: {
+#ifdef DEBUG
+        const auto& info = GetWellKnownAtomInfo(index.toWellKnownAtomId());
+        MOZ_ASSERT(info.content[0] ==
                    ExtendedUnclonedSelfHostedFunctionNamePrefix);
+#endif
         return true;
+      }
       default: {
 #ifdef DEBUG
-        const auto* atom = getWellKnown(index.toWellKnownAtomId());
-        MOZ_ASSERT(atom->length() == 0 ||
-                   atom->charAt(0) !=
+        const auto& info = GetWellKnownAtomInfo(index.toWellKnownAtomId());
+        MOZ_ASSERT(info.length == 0 ||
+                   info.content[0] !=
                        ExtendedUnclonedSelfHostedFunctionNamePrefix);
 #endif
         break;
@@ -634,8 +638,8 @@ bool ParserAtomsTable::isIndex(TaggedParserAtomIndex index,
   if (index.isWellKnownAtomId()) {
 #ifdef DEBUG
     // Well-known atom shouldn't start with digit.
-    const auto* atom = getWellKnown(index.toWellKnownAtomId());
-    MOZ_ASSERT(atom->length() == 0 || !mozilla::IsAsciiDigit(atom->charAt(0)));
+    const auto& info = GetWellKnownAtomInfo(index.toWellKnownAtomId());
+    MOZ_ASSERT(info.length == 0 || !mozilla::IsAsciiDigit(info.content[0]));
 #endif
     return false;
   }
@@ -670,7 +674,8 @@ uint32_t ParserAtomsTable::length(TaggedParserAtomIndex index) const {
   }
 
   if (index.isWellKnownAtomId()) {
-    return getWellKnown(index.toWellKnownAtomId())->length();
+    const auto& info = GetWellKnownAtomInfo(index.toWellKnownAtomId());
+    return info.length;
   }
 
   if (index.isLength1StaticParserString()) {
@@ -692,10 +697,9 @@ bool ParserAtomsTable::toNumber(JSContext* cx, TaggedParserAtomIndex index,
   }
 
   if (index.isWellKnownAtomId()) {
-    const auto* atom = getWellKnown(index.toWellKnownAtomId());
-    size_t len = atom->length();
-    MOZ_ASSERT(atom->hasLatin1Chars());
-    return CharsToNumber(cx, atom->latin1Chars(), len, result);
+    const auto& info = GetWellKnownAtomInfo(index.toWellKnownAtomId());
+    return CharsToNumber(cx, reinterpret_cast<const Latin1Char*>(info.content),
+                         info.length, result);
   }
 
   if (index.isLength1StaticParserString()) {
@@ -723,10 +727,13 @@ UniqueChars ParserAtomsTable::toNewUTF8CharsZ(
   }
 
   if (index.isWellKnownAtomId()) {
-    const auto* atom = getWellKnown(index.toWellKnownAtomId());
-    MOZ_ASSERT(atom->hasLatin1Chars());
+    const auto& info = GetWellKnownAtomInfo(index.toWellKnownAtomId());
     return UniqueChars(
-        JS::CharsToNewUTF8CharsZ(cx, atom->latin1Range()).c_str());
+        JS::CharsToNewUTF8CharsZ(
+            cx,
+            mozilla::Range(reinterpret_cast<const Latin1Char*>(info.content),
+                           info.length))
+            .c_str());
   }
 
   if (index.isLength1StaticParserString()) {
@@ -770,9 +777,10 @@ UniqueChars ParserAtomsTable::toPrintableString(
   }
 
   if (index.isWellKnownAtomId()) {
-    const auto* atom = getWellKnown(index.toWellKnownAtomId());
-    MOZ_ASSERT(atom->hasLatin1Chars());
-    return ToPrintableStringImpl(cx, atom->latin1Range());
+    const auto& info = GetWellKnownAtomInfo(index.toWellKnownAtomId());
+    return ToPrintableStringImpl(
+        cx, mozilla::Range(reinterpret_cast<const Latin1Char*>(info.content),
+                           info.length));
   }
 
   if (index.isLength1StaticParserString()) {
@@ -799,9 +807,12 @@ UniqueChars ParserAtomsTable::toQuotedString(
   }
 
   if (index.isWellKnownAtomId()) {
-    const auto* atom = getWellKnown(index.toWellKnownAtomId());
-    MOZ_ASSERT(atom->hasLatin1Chars());
-    return ToPrintableStringImpl(cx, atom->latin1Range(), '\"');
+    const auto& info = GetWellKnownAtomInfo(index.toWellKnownAtomId());
+    return ToPrintableStringImpl(
+        cx,
+        mozilla::Range(reinterpret_cast<const Latin1Char*>(info.content),
+                       info.length),
+        '\"');
   }
 
   if (index.isLength1StaticParserString()) {
@@ -856,10 +867,8 @@ bool ParserAtomsTable::appendTo(StringBuffer& buffer,
   }
 
   if (index.isWellKnownAtomId()) {
-    const auto* atom = getWellKnown(index.toWellKnownAtomId());
-    size_t length = atom->length();
-    MOZ_ASSERT(atom->hasLatin1Chars());
-    return buffer.append(atom->latin1Chars(), length);
+    const auto& info = GetWellKnownAtomInfo(index.toWellKnownAtomId());
+    return buffer.append(info.content, info.length);
   }
 
   if (index.isLength1StaticParserString()) {
