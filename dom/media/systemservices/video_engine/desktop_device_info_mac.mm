@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "modules/desktop_capture/mac/desktop_device_info_mac.h"
+#include "desktop_device_info_mac.h"
+#include "mozilla/Sprintf.h"
 #include <AppKit/AppKit.h>
 #include <Cocoa/Cocoa.h>
 #include <unistd.h>
