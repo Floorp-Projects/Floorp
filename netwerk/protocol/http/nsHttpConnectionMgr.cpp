@@ -1504,7 +1504,6 @@ nsresult nsHttpConnectionMgr::DispatchTransaction(ConnectionEntry* ent,
          "Connection host = %s\n",
          trans->ConnectionInfo()->Origin(), conn->ConnectionInfo()->Origin()));
     rv = conn->Activate(trans, caps, priority);
-    MOZ_ASSERT(NS_SUCCEEDED(rv), "SPDY Cannot Fail Dispatch");
     if (NS_SUCCEEDED(rv) && !trans->GetPendingTime().IsNull()) {
       if (conn->UsingSpdy()) {
         AccumulateTimeDelta(Telemetry::TRANSACTION_WAIT_TIME_SPDY,
@@ -1732,7 +1731,7 @@ nsresult nsHttpConnectionMgr::CreateTransport(
   // The socket stream holds the reference to the half open
   // socket - so if the stream fails to init the half open
   // will go away.
-  nsresult rv = sock->SetupPrimaryStreams();
+  nsresult rv = sock->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (pendingTransInfo) {

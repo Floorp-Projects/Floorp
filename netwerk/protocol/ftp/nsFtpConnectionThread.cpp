@@ -1367,7 +1367,7 @@ nsFtpState::R_pasv() {
     }
 
     rv = sts->CreateTransport(nsTArray<nsCString>(), host, port,
-                              mChannel->ProxyInfo(),
+                              mChannel->ProxyInfo(), nullptr,
                               getter_AddRefs(strans));  // the data socket
     if (NS_FAILED(rv)) return FTP_ERROR;
     mDataTransport = strans;

@@ -66,6 +66,7 @@ add_test(function test_sockets() {
     [],
     "127.0.0.1",
     gServerSocket.port,
+    null,
     null
   );
   let listener = {
