@@ -52,7 +52,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
-#include "mozilla/dom/HTMLTextAreaElement.h"
+#include "mozilla/dom/HTMLMarqueeElement.h"
 #include <stdint.h>
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Telemetry.h"
@@ -1022,11 +1022,33 @@ nscoord nsHTMLScrollFrame::GetIntrinsicVScrollbarWidth(
   return vScrollbarPrefSize.width;
 }
 
+// Legacy, this sucks!
+static bool IsMarqueeScrollbox(const nsIFrame& aScrollFrame) {
+  if (!aScrollFrame.GetContent()) {
+    return false;
+  }
+  if (MOZ_LIKELY(!aScrollFrame.GetContent()->IsInUAWidget())) {
+    return false;
+  }
+  MOZ_ASSERT(aScrollFrame.GetParent() &&
+             aScrollFrame.GetParent()->GetContent());
+  return aScrollFrame.GetParent() &&
+         HTMLMarqueeElement::FromNodeOrNull(
+             aScrollFrame.GetParent()->GetContent());
+}
+
 /* virtual */
 nscoord nsHTMLScrollFrame::GetMinISize(gfxContext* aRenderingContext) {
-  nscoord result = StyleDisplay()->IsContainSize()
-                       ? 0
-                       : mHelper.mScrolledFrame->GetMinISize(aRenderingContext);
+  nscoord result = [&] {
+    if (StyleDisplay()->IsContainSize()) {
+      return 0;
+    }
+    if (MOZ_UNLIKELY(IsMarqueeScrollbox(*this))) {
+      return 0;
+    }
+    return mHelper.mScrolledFrame->GetMinISize(aRenderingContext);
+  }();
+
   DISPLAY_MIN_INLINE_SIZE(this, result);
   return result + GetIntrinsicVScrollbarWidth(aRenderingContext);
 }
