@@ -6004,6 +6004,13 @@
   value: false
   mirror: always
 
+# Whether non-standard caption-side values are enabled
+- name: layout.css.caption-side-non-standard.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Whether Constructable Stylesheets are enabled in script.
 - name: layout.css.constructable-stylesheets.enabled
   type: bool
