@@ -491,28 +491,6 @@ ParserAtom* ParserAtomsTable::getParserAtom(ParserAtomIndex index) const {
   return entries_[index];
 }
 
-const ParserAtom* ParserAtomsTable::getParserAtom(
-    TaggedParserAtomIndex index) const {
-  if (index.isParserAtomIndex()) {
-    return getParserAtom(index.toParserAtomIndex());
-  }
-
-  if (index.isWellKnownAtomId()) {
-    return getWellKnown(index.toWellKnownAtomId());
-  }
-
-  if (index.isLength1StaticParserString()) {
-    return getLength1Static(index.toLength1StaticParserString());
-  }
-
-  if (index.isLength2StaticParserString()) {
-    return getLength2Static(index.toLength2StaticParserString());
-  }
-
-  MOZ_ASSERT(index.isNull());
-  return nullptr;
-}
-
 void ParserAtomsTable::markUsedByStencil(TaggedParserAtomIndex index) const {
   if (!index.isParserAtomIndex()) {
     return;
