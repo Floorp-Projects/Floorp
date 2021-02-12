@@ -96,6 +96,7 @@ function startClient(port) {
     ["ssl"],
     "127.0.0.1",
     port,
+    null,
     null
   );
   let input;

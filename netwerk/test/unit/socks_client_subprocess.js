@@ -59,7 +59,7 @@ async function launchConnection(
     -1,
     null
   );
-  let trans = sts.createTransport([], dest_host, dest_port, pi);
+  let trans = sts.createTransport([], dest_host, dest_port, pi, null);
   let input = trans.openInputStream(0, 0, 0);
   let output = trans.openOutputStream(0, 0, 0);
   input = await waitForStream(input, Ci.nsIAsyncInputStream);

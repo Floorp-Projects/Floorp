@@ -90,11 +90,12 @@ HttpConnectionUDP::~HttpConnectionUDP() {
 nsresult HttpConnectionUDP::Init(
     nsHttpConnectionInfo* info, uint16_t maxHangTime,
     nsISocketTransport* transport, nsIAsyncInputStream* instream,
-    nsIAsyncOutputStream* outstream, bool connectedTransport,
+    nsIAsyncOutputStream* outstream, bool connectedTransport, nsresult status,
     nsIInterfaceRequestor* callbacks, PRIntervalTime rtt) {
   LOG1(("HttpConnectionUDP::Init this=%p sockettransport=%p", this, transport));
   NS_ENSURE_ARG_POINTER(info);
   NS_ENSURE_TRUE(!mConnInfo, NS_ERROR_ALREADY_INITIALIZED);
+  MOZ_ASSERT(NS_SUCCEEDED(status) || !connectedTransport);
 
   mConnectedTransport = connectedTransport;
   mConnInfo = info;
@@ -103,28 +104,37 @@ nsresult HttpConnectionUDP::Init(
   mLastWriteTime = mLastReadTime = PR_IntervalNow();
   mRtt = rtt;
 
-  mSocketTransport = transport;
-  mSocketIn = instream;
-  mSocketOut = outstream;
+  mErrorBeforeConnect = status;
+  if (NS_FAILED(mErrorBeforeConnect)) {
+    MOZ_ASSERT(!mConnectedTransport);
+    // See explanation for non-strictness of this operation in
+    // SetSecurityCallbacks.
+    mCallbacks = new nsMainThreadPtrHolder<nsIInterfaceRequestor>(
+        "HttpConnectionUDP::mCallbacks", callbacks, false);
+  } else {
+    mSocketTransport = transport;
+    mSocketIn = instream;
+    mSocketOut = outstream;
 
-  MOZ_ASSERT(mConnInfo->IsHttp3());
-  mHttp3Session = new Http3Session();
-  nsresult rv = mHttp3Session->Init(mConnInfo, mSocketTransport, this);
-  if (NS_FAILED(rv)) {
-    LOG(
-        ("HttpConnectionUDP::Init mHttp3Session->Init failed "
-         "[this=%p rv=%x]\n",
-         this, static_cast<uint32_t>(rv)));
-    return rv;
+    MOZ_ASSERT(mConnInfo->IsHttp3());
+    mHttp3Session = new Http3Session();
+    nsresult rv = mHttp3Session->Init(mConnInfo, mSocketTransport, this);
+    if (NS_FAILED(rv)) {
+      LOG(
+          ("HttpConnectionUDP::Init mHttp3Session->Init failed "
+           "[this=%p rv=%x]\n",
+           this, static_cast<uint32_t>(rv)));
+      return rv;
+    }
+
+    // See explanation for non-strictness of this operation in
+    // SetSecurityCallbacks.
+    mCallbacks = new nsMainThreadPtrHolder<nsIInterfaceRequestor>(
+        "HttpConnectionUDP::mCallbacks", callbacks, false);
+
+    mSocketTransport->SetEventSink(this, nullptr);
+    mSocketTransport->SetSecurityCallbacks(this);
   }
-
-  // See explanation for non-strictness of this operation in
-  // SetSecurityCallbacks.
-  mCallbacks = new nsMainThreadPtrHolder<nsIInterfaceRequestor>(
-      "HttpConnectionUDP::mCallbacks", callbacks, false);
-
-  mSocketTransport->SetEventSink(this, nullptr);
-  mSocketTransport->SetSecurityCallbacks(this);
 
   return NS_OK;
 }
@@ -140,7 +150,7 @@ nsresult HttpConnectionUDP::Activate(nsAHttpTransaction* trans, uint32_t caps,
     // For QUIC we have HttpConnecitonUDP before the actual connection
     // has been establish so wait for TLS handshake to be finished before
     // we mark the connection 'experienced'.
-    if (!mExperienced && mHttp3Session->IsConnected()) {
+    if (!mExperienced && mHttp3Session && mHttp3Session->IsConnected()) {
       mExperienced = true;
     }
     if (mBootstrappedTimingsSet) {
@@ -164,6 +174,12 @@ nsresult HttpConnectionUDP::Activate(nsAHttpTransaction* trans, uint32_t caps,
   // Connection failures are Activated() just like regular transacions.
   // If we don't have a confirmation of a connected socket then test it
   // with a write() to get relevant error code.
+  if (NS_FAILED(mErrorBeforeConnect)) {
+    CloseTransaction(nullptr, mErrorBeforeConnect);
+    trans->Close(mErrorBeforeConnect);
+    gHttpHandler->ExcludeHttp3(mConnInfo);
+    return mErrorBeforeConnect;
+  }
   if (!mConnectedTransport) {
     uint32_t count;
     nsresult rv = NS_OK;
@@ -175,6 +191,7 @@ nsresult HttpConnectionUDP::Activate(nsAHttpTransaction* trans, uint32_t caps,
            this, static_cast<uint32_t>(rv)));
       mSocketOut->AsyncWait(nullptr, 0, 0, nullptr);
       CloseTransaction(mHttp3Session, rv);
+      gHttpHandler->ExcludeHttp3(mConnInfo);
       trans->Close(rv);
       return rv;
     }

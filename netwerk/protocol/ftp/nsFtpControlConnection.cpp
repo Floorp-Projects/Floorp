@@ -94,6 +94,7 @@ nsresult nsFtpControlConnection::Connect(nsIProxyInfo* proxyInfo,
   if (NS_FAILED(rv)) return rv;
 
   rv = sts->CreateTransport(nsTArray<nsCString>(), mHost, mPort, proxyInfo,
+                            nullptr,
                             getter_AddRefs(mSocket));  // the command transport
   if (NS_FAILED(rv)) return rv;
 

@@ -270,9 +270,9 @@ var _attemptTransport = async function(settings) {
 var _attemptConnect = async function({ host, port, encryption }) {
   let s;
   if (encryption) {
-    s = socketTransportService.createTransport(["ssl"], host, port, null);
+    s = socketTransportService.createTransport(["ssl"], host, port, null, null);
   } else {
-    s = socketTransportService.createTransport([], host, port, null);
+    s = socketTransportService.createTransport([], host, port, null, null);
   }
 
   // Force disabling IPV6 if we aren't explicitely connecting to an IPv6 address

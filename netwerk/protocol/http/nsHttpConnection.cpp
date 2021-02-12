@@ -169,11 +169,12 @@ nsHttpConnection::~nsHttpConnection() {
 nsresult nsHttpConnection::Init(
     nsHttpConnectionInfo* info, uint16_t maxHangTime,
     nsISocketTransport* transport, nsIAsyncInputStream* instream,
-    nsIAsyncOutputStream* outstream, bool connectedTransport,
+    nsIAsyncOutputStream* outstream, bool connectedTransport, nsresult status,
     nsIInterfaceRequestor* callbacks, PRIntervalTime rtt) {
   LOG1(("nsHttpConnection::Init this=%p sockettransport=%p", this, transport));
   NS_ENSURE_ARG_POINTER(info);
   NS_ENSURE_TRUE(!mConnInfo, NS_ERROR_ALREADY_INITIALIZED);
+  MOZ_ASSERT(NS_SUCCEEDED(status) || !connectedTransport);
 
   mConnectedTransport = connectedTransport;
   mConnInfo = info;
@@ -192,8 +193,11 @@ nsresult nsHttpConnection::Init(
   mCallbacks = new nsMainThreadPtrHolder<nsIInterfaceRequestor>(
       "nsHttpConnection::mCallbacks", callbacks, false);
 
-  mSocketTransport->SetEventSink(this, nullptr);
-  mSocketTransport->SetSecurityCallbacks(this);
+  mErrorBeforeConnect = status;
+  if (NS_SUCCEEDED(mErrorBeforeConnect)) {
+    mSocketTransport->SetEventSink(this, nullptr);
+    mSocketTransport->SetSecurityCallbacks(this);
+  }
 
   return NS_OK;
 }
@@ -747,15 +751,18 @@ nsresult nsHttpConnection::Activate(nsAHttpTransaction* trans, uint32_t caps,
   // Connection failures are Activated() just like regular transacions.
   // If we don't have a confirmation of a connected socket then test it
   // with a write() to get relevant error code.
+  if (NS_FAILED(mErrorBeforeConnect)) {
+    mSocketOutCondition = mErrorBeforeConnect;
+    mTransaction = trans;
+    CloseTransaction(mTransaction, mSocketOutCondition);
+    return mSocketOutCondition;
+  }
+
   if (!mConnectedTransport) {
-    if (NS_FAILED(mErrorBeforeConnect)) {
-      mSocketOutCondition = mErrorBeforeConnect;
-    } else {
-      uint32_t count;
-      mSocketOutCondition = NS_ERROR_FAILURE;
-      if (mSocketOut) {
-        mSocketOutCondition = mSocketOut->Write("", 0, &count);
-      }
+    uint32_t count;
+    mSocketOutCondition = NS_ERROR_FAILURE;
+    if (mSocketOut) {
+      mSocketOutCondition = mSocketOut->Write("", 0, &count);
     }
     if (NS_FAILED(mSocketOutCondition) &&
         mSocketOutCondition != NS_BASE_STREAM_WOULD_BLOCK) {

@@ -302,7 +302,7 @@ void WebrtcTCPSocket::OpenWithoutHttpProxy(nsIProxyInfo* aSocksProxyInfo) {
 
   nsCOMPtr<nsISocketTransportService> sts =
       do_GetService("@mozilla.org/network/socket-transport-service;1");
-  rv = sts->CreateTransport(socketTypes, host, port, aSocksProxyInfo,
+  rv = sts->CreateTransport(socketTypes, host, port, aSocksProxyInfo, nullptr,
                             getter_AddRefs(mTransport));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     CloseWithReason(rv);

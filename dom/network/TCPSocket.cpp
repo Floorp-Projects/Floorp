@@ -252,8 +252,9 @@ nsresult TCPSocket::Init() {
     socketTypes.AppendElement("starttls"_ns);
   }
   nsCOMPtr<nsISocketTransport> transport;
-  nsresult rv = sts->CreateTransport(socketTypes, NS_ConvertUTF16toUTF8(mHost),
-                                     mPort, nullptr, getter_AddRefs(transport));
+  nsresult rv =
+      sts->CreateTransport(socketTypes, NS_ConvertUTF16toUTF8(mHost), mPort,
+                           nullptr, nullptr, getter_AddRefs(transport));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return InitWithUnconnectedTransport(transport);

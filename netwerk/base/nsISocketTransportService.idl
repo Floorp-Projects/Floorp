@@ -5,6 +5,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIDNSRecord;
 interface nsIFile;
 interface nsISocketTransport;
 interface nsIProxyInfo;
@@ -46,6 +47,8 @@ interface nsISocketTransportService : nsISupports
      *        specifies the transport-layer proxy type to use.  null if no
      *        proxy.  used for communicating information about proxies like
      *        SOCKS (which are transparent to upper protocols).
+     * @param aDnsRecord
+     *        the dns record to be used for the connection
      *
      * @see nsIProxiedProtocolHandler
      * @see nsIProtocolProxyService::GetProxyInfo
@@ -55,7 +58,8 @@ interface nsISocketTransportService : nsISupports
     nsISocketTransport createTransport(in Array<ACString> aSocketTypes,
                                        in AUTF8String aHost,
                                        in long aPort,
-                                       in nsIProxyInfo aProxyInfo);
+                                       in nsIProxyInfo aProxyInfo,
+                                       in nsIDNSRecord dnsRecord);
 
     /**
      * Create a transport built on a Unix domain socket, connecting to the
@@ -153,5 +157,6 @@ interface nsIRoutedSocketTransportService : nsISocketTransportService
                                              in long aPort, // origin
                                              in AUTF8String aHostRoute,
                                              in long aPortRoute,
-                                             in nsIProxyInfo aProxyInfo);
+                                             in nsIProxyInfo aProxyInfo,
+                                             in nsIDNSRecord aDnsRecord);
 };

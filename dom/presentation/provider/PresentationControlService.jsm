@@ -220,6 +220,7 @@ PresentationControlService.prototype = {
           ["ssl"],
           aDeviceInfo.address,
           aDeviceInfo.port,
+          null,
           null
         );
       } else {
@@ -227,6 +228,7 @@ PresentationControlService.prototype = {
           [],
           aDeviceInfo.address,
           aDeviceInfo.port,
+          null,
           null
         );
       }

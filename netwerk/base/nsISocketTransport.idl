@@ -340,4 +340,12 @@ interface nsISocketTransport : nsITransport
      * this socket will be closed when the last private window is closed.
      */
     [noscript] void setIsPrivate(in boolean isPrivate);
+
+    /**
+     * If DNS is performed externally, this flag informs the caller that it may
+     * retry connecting with a different DNS configuration (e.g. different IP
+     * family preference). The flag is set only if a network error is encounder,
+     * e.g. NS_ERROR_CONNECTION_REFUSED, NS_ERROR_RESET, etc.
+     */
+    readonly attribute boolean retryDnsIfPossible;
 };

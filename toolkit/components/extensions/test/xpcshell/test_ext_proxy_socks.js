@@ -390,7 +390,7 @@ class SocksTestClient {
       null
     );
 
-    this.trans = sts.createTransport([], dest.host, dest.port, pi);
+    this.trans = sts.createTransport([], dest.host, dest.port, pi, null);
     this.input = this.trans.openInputStream(
       Ci.nsITransport.OPEN_BLOCKING,
       0,
