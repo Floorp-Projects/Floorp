@@ -184,17 +184,6 @@ static void ShutdownCMS();
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/SourceSurfaceCairo.h"
 
-/* Class to listen for pref changes so that chrome code can dynamically
-   force sRGB as an output profile. See Bug #452125. */
-class SRGBOverrideObserver final : public nsIObserver,
-                                   public nsSupportsWeakReference {
-  ~SRGBOverrideObserver() = default;
-
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-};
-
 /// This override of the LogForwarder, initially used for the critical graphics
 /// errors, is sending the log to the crash annotations as well, but only
 /// if the capacity set with the method below is >= 2.  We always retain the
@@ -405,8 +394,6 @@ void CrashStatsLogForwarder::CrashAction(LogReason aReason) {
   }
 }
 
-NS_IMPL_ISUPPORTS(SRGBOverrideObserver, nsIObserver, nsISupportsWeakReference)
-
 #define GFX_DOWNLOADABLE_FONTS_ENABLED "gfx.downloadable_fonts.enabled"
 
 #define GFX_PREF_FALLBACK_USE_CMAPS \
@@ -424,26 +411,7 @@ NS_IMPL_ISUPPORTS(SRGBOverrideObserver, nsIObserver, nsISupportsWeakReference)
 
 #define BIDI_NUMERAL_PREF "bidi.numeral"
 
-#define GFX_PREF_CMS_FORCE_SRGB "gfx.color_management.force_srgb"
-
 #define FONT_VARIATIONS_PREF "layout.css.font-variations.enabled"
-
-NS_IMETHODIMP
-SRGBOverrideObserver::Observe(nsISupports* aSubject, const char* aTopic,
-                              const char16_t* someData) {
-  NS_ASSERTION(NS_strcmp(someData, (u"" GFX_PREF_CMS_FORCE_SRGB)) == 0,
-               "Restarting CMS on wrong pref!");
-  ShutdownCMS();
-  // Update current cms profile.
-  gfxPlatform::CreateCMSOutputProfile();
-  // FIXME(aosmond): This is also racy for the transforms but the pref is only
-  // used for dev purposes. It can be made a static pref in a followup once the
-  // dependency on it is removed from the gtest suite (see bug 1620600).
-  gfxPlatform::GetCMSRGBTransform();
-  gfxPlatform::GetCMSRGBATransform();
-  gfxPlatform::GetCMSBGRATransform();
-  return NS_OK;
-}
 
 static const char* kObservedPrefs[] = {"gfx.downloadable_fonts.",
                                        "gfx.font_rendering.", BIDI_NUMERAL_PREF,
@@ -1027,13 +995,6 @@ void gfxPlatform::Init() {
     MOZ_CRASH("Could not initialize gfxFontCache");
   }
 
-  /* Create and register our CMS Override observer. */
-  gPlatform->mSRGBOverrideObserver = new SRGBOverrideObserver();
-  Preferences::AddWeakObserver(gPlatform->mSRGBOverrideObserver,
-                               GFX_PREF_CMS_FORCE_SRGB);
-
-  Preferences::RegisterPrefixCallbacks(FontPrefChanged, kObservedPrefs);
-
   GLContext::PlatformStartup();
 
   Preferences::RegisterCallbackAndCall(RecordingPrefChanged,
@@ -1278,13 +1239,6 @@ void gfxPlatform::Shutdown() {
 
   // Free the various non-null transforms and loaded profiles
   ShutdownCMS();
-
-  /* Unregister our CMS Override callback. */
-  NS_ASSERTION(gPlatform->mSRGBOverrideObserver,
-               "mSRGBOverrideObserver has alreay gone");
-  Preferences::RemoveObserver(gPlatform->mSRGBOverrideObserver,
-                              GFX_PREF_CMS_FORCE_SRGB);
-  gPlatform->mSRGBOverrideObserver = nullptr;
 
   Preferences::UnregisterPrefixCallbacks(FontPrefChanged, kObservedPrefs);
 
@@ -2166,7 +2120,7 @@ void gfxPlatform::CreateCMSOutputProfile() {
        of this preference, which means nsIPrefBranch::GetBoolPref will
        typically throw (and leave its out-param untouched).
      */
-    if (Preferences::GetBool(GFX_PREF_CMS_FORCE_SRGB, false)) {
+    if (StaticPrefs::gfx_color_management_force_srgb()) {
       gCMSOutputProfile = GetCMSsRGBProfile();
     }
 
