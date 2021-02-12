@@ -163,9 +163,7 @@ pub struct PictureTask {
     pub pic_index: PictureIndex,
     pub can_merge: bool,
     pub content_origin: DevicePoint,
-    pub uv_rect_handle: GpuCacheHandle,
     pub surface_spatial_node_index: SpatialNodeIndex,
-    pub uv_rect_kind: UvRectKind,
     pub device_pixel_scale: DevicePixelScale,
     /// A bitfield that describes which dirty regions should be included
     /// in batches built for this picture task.
@@ -180,9 +178,7 @@ pub struct PictureTask {
 pub struct BlurTask {
     pub blur_std_deviation: f32,
     pub target_kind: RenderTargetKind,
-    pub uv_rect_handle: GpuCacheHandle,
     pub blur_region: DeviceIntSize,
-    pub uv_rect_kind: UvRectKind,
 }
 
 impl BlurTask {
@@ -218,7 +214,6 @@ impl BlurTask {
 pub struct ScalingTask {
     pub target_kind: RenderTargetKind,
     pub image: Option<ImageCacheKey>,
-    pub uv_rect_kind: UvRectKind,
     pub padding: DeviceIntSideOffsets,
 }
 
@@ -293,8 +288,6 @@ pub enum SvgFilterInfo {
 pub struct SvgFilterTask {
     pub info: SvgFilterInfo,
     pub extra_gpu_cache_handle: Option<GpuCacheHandle>,
-    pub uv_rect_handle: GpuCacheHandle,
-    pub uv_rect_kind: UvRectKind,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -305,10 +298,6 @@ pub struct ReadbackTask {
     // If this is None, there is no readback surface available
     // and this is a dummy (empty) readback.
     pub readback_origin: Option<DevicePoint>,
-    // UV rect of the readback rect within the readback task area
-    pub uv_rect_kind: UvRectKind,
-    // GPU cache handle that provides uv_rect_kind to shaders
-    pub uv_rect_handle: GpuCacheHandle,
 }
 
 #[derive(Debug)]
@@ -393,7 +382,6 @@ impl RenderTaskKind {
         unclipped_size: DeviceSize,
         pic_index: PictureIndex,
         content_origin: DevicePoint,
-        uv_rect_kind: UvRectKind,
         surface_spatial_node_index: SpatialNodeIndex,
         device_pixel_scale: DevicePixelScale,
         vis_mask: PrimitiveVisibilityMask,
@@ -409,8 +397,6 @@ impl RenderTaskKind {
             pic_index,
             content_origin,
             can_merge,
-            uv_rect_handle: GpuCacheHandle::new(),
-            uv_rect_kind,
             surface_spatial_node_index,
             device_pixel_scale,
             vis_mask,
@@ -435,13 +421,10 @@ impl RenderTaskKind {
 
     pub fn new_readback(
         readback_origin: Option<DevicePoint>,
-        uv_rect_kind: UvRectKind,
     ) -> Self {
         RenderTaskKind::Readback(
             ReadbackTask {
                 readback_origin,
-                uv_rect_kind,
-                uv_rect_handle: GpuCacheHandle::new(),
             }
         )
     }
@@ -691,54 +674,8 @@ impl RenderTaskKind {
 
     pub fn write_gpu_blocks(
         &mut self,
-        target_rect: DeviceIntRect,
-        target_index: RenderTargetIndex,
         gpu_cache: &mut GpuCache,
     ) {
-        profile_scope!("write_gpu_blocks");
-
-        let (cache_handle, uv_rect_kind) = match self {
-            RenderTaskKind::HorizontalBlur(ref mut info) |
-            RenderTaskKind::VerticalBlur(ref mut info) => {
-                (&mut info.uv_rect_handle, info.uv_rect_kind)
-            }
-            RenderTaskKind::Picture(ref mut info) => {
-                (&mut info.uv_rect_handle, info.uv_rect_kind)
-            }
-            RenderTaskKind::SvgFilter(ref mut info) => {
-                (&mut info.uv_rect_handle, info.uv_rect_kind)
-            }
-            RenderTaskKind::Readback(ref mut info) => {
-                (&mut info.uv_rect_handle, info.uv_rect_kind)
-            }
-            RenderTaskKind::Scaling(..) |
-            RenderTaskKind::Blit(..) |
-            RenderTaskKind::ClipRegion(..) |
-            RenderTaskKind::Border(..) |
-            RenderTaskKind::CacheMask(..) |
-            RenderTaskKind::Gradient(..) |
-            RenderTaskKind::LineDecoration(..) => {
-                return;
-            }
-            #[cfg(test)]
-            RenderTaskKind::Test(..) => {
-                return;
-            }
-        };
-
-        if let Some(mut request) = gpu_cache.request(cache_handle) {
-            let p0 = target_rect.min().to_f32();
-            let p1 = target_rect.max().to_f32();
-            let image_source = ImageSource {
-                p0,
-                p1,
-                texture_layer: target_index.0 as f32,
-                user_data: [0.0; 3],
-                uv_rect_kind,
-            };
-            image_source.write_gpu_blocks(&mut request);
-        }
-
         if let RenderTaskKind::SvgFilter(ref mut filter_task) = self {
             match filter_task.info {
                 SvgFilterInfo::ColorMatrix(ref matrix) => {
@@ -819,6 +756,13 @@ pub struct RenderTask {
     //           frame_graph / render_task source files are unified / cleaned up.
     pub free_after: PassId,
     pub render_on: PassId,
+
+    /// The gpu cache handle for the render task's destination rect.
+    ///
+    /// Will be set to None if the render task is cached, in which case the texture cache
+    /// manages the handle.
+    uv_rect_handle: Option<GpuCacheHandle>,
+    uv_rect_kind: UvRectKind,
 }
 
 impl RenderTask {
@@ -834,6 +778,8 @@ impl RenderTask {
             kind,
             free_after: PassId::MAX,
             render_on: PassId::MIN,
+            uv_rect_handle: Some(GpuCacheHandle::new()),
+            uv_rect_kind: UvRectKind::Rect,
         }
     }
 
@@ -847,6 +793,11 @@ impl RenderTask {
         )
     }
 
+    pub fn with_uv_rect_kind(mut self, uv_rect_kind: UvRectKind) -> Self {
+        self.uv_rect_kind = uv_rect_kind;
+        self
+    }
+
     #[cfg(test)]
     pub fn new_test(
         location: RenderTaskLocation,
@@ -858,6 +809,8 @@ impl RenderTask {
             kind: RenderTaskKind::Test(target),
             free_after: PassId::MAX,
             render_on: PassId::MIN,
+            uv_rect_handle: None,
+            uv_rect_kind: UvRectKind::Rect,
         }
     }
 
@@ -973,11 +926,9 @@ impl RenderTask {
                 RenderTaskKind::VerticalBlur(BlurTask {
                     blur_std_deviation: adjusted_blur_std_deviation.height,
                     target_kind,
-                    uv_rect_handle: GpuCacheHandle::new(),
                     blur_region,
-                    uv_rect_kind,
                 }),
-            ));
+            ).with_uv_rect_kind(uv_rect_kind));
             rg_builder.add_dependency(blur_task_v, downscaling_src_task_id);
 
             let task_id = rg_builder.add().init(RenderTask::new_dynamic(
@@ -985,11 +936,9 @@ impl RenderTask {
                 RenderTaskKind::HorizontalBlur(BlurTask {
                     blur_std_deviation: adjusted_blur_std_deviation.width,
                     target_kind,
-                    uv_rect_handle: GpuCacheHandle::new(),
                     blur_region,
-                    uv_rect_kind,
                 }),
-            ));
+            ).with_uv_rect_kind(uv_rect_kind));
             rg_builder.add_dependency(task_id, blur_task_v);
 
             task_id
@@ -1035,10 +984,9 @@ impl RenderTask {
                 RenderTaskKind::Scaling(ScalingTask {
                     target_kind,
                     image,
-                    uv_rect_kind,
                     padding,
                 }),
-            )
+            ).with_uv_rect_kind(uv_rect_kind)
         );
 
         if let Some(child_id) = child {
@@ -1368,11 +1316,9 @@ impl RenderTask {
             target_size,
             RenderTaskKind::SvgFilter(SvgFilterTask {
                 extra_gpu_cache_handle: None,
-                uv_rect_handle: GpuCacheHandle::new(),
-                uv_rect_kind,
                 info,
             }),
-        ));
+        ).with_uv_rect_kind(uv_rect_kind));
 
         for child_id in tasks {
             rg_builder.add_dependency(task_id, child_id);
@@ -1382,72 +1328,16 @@ impl RenderTask {
     }
 
     pub fn uv_rect_kind(&self) -> UvRectKind {
-        match self.kind {
-            RenderTaskKind::CacheMask(..) |
-            RenderTaskKind::Readback(..) => {
-                unreachable!("bug: unexpected render task");
-            }
-
-            RenderTaskKind::Picture(ref task) => {
-                task.uv_rect_kind
-            }
-
-            RenderTaskKind::VerticalBlur(ref task) |
-            RenderTaskKind::HorizontalBlur(ref task) => {
-                task.uv_rect_kind
-            }
-
-            RenderTaskKind::Scaling(ref task) => {
-                task.uv_rect_kind
-            }
-
-            RenderTaskKind::SvgFilter(ref task) => {
-                task.uv_rect_kind
-            }
-
-            RenderTaskKind::ClipRegion(..) |
-            RenderTaskKind::Border(..) |
-            RenderTaskKind::Gradient(..) |
-            RenderTaskKind::LineDecoration(..) |
-            RenderTaskKind::Blit(..) => {
-                UvRectKind::Rect
-            }
-
-            #[cfg(test)]
-            RenderTaskKind::Test(..) => {
-                unreachable!("Unexpected render task");
-            }
-        }
+        self.uv_rect_kind
     }
 
     pub fn get_texture_address(&self, gpu_cache: &GpuCache) -> GpuCacheAddress {
-        match self.kind {
-            RenderTaskKind::Picture(ref info) => {
-                gpu_cache.get_address(&info.uv_rect_handle)
-            }
-            RenderTaskKind::VerticalBlur(ref info) |
-            RenderTaskKind::HorizontalBlur(ref info) => {
-                gpu_cache.get_address(&info.uv_rect_handle)
-            }
-            RenderTaskKind::SvgFilter(ref info) => {
-                gpu_cache.get_address(&info.uv_rect_handle)
-            }
-            RenderTaskKind::Readback(ref info) => {
-                gpu_cache.get_address(&info.uv_rect_handle)
-            }
-            RenderTaskKind::ClipRegion(..) |
-            RenderTaskKind::Scaling(..) |
-            RenderTaskKind::Blit(..) |
-            RenderTaskKind::Border(..) |
-            RenderTaskKind::CacheMask(..) |
-            RenderTaskKind::Gradient(..) |
-            RenderTaskKind::LineDecoration(..) => {
-                panic!("texture handle not supported for this task kind");
-            }
-            #[cfg(test)]
-            RenderTaskKind::Test(..) => {
-                panic!("RenderTask tests aren't expected to exercise this code");
-            }
+        if let Some(handle) = self.uv_rect_handle {
+            gpu_cache.get_address(&handle)
+        } else {
+            // The task is cached, so the uv_rect_handle is managed by the
+            // texture cache.
+            panic!("texture handle not supported for this task kind");
         }
     }
 
@@ -1572,5 +1462,44 @@ impl RenderTask {
 
         pt.end_level();
         true
+    }
+
+    pub fn write_gpu_blocks(
+        &mut self,
+        target_rect: DeviceIntRect,
+        target_index: RenderTargetIndex,
+        gpu_cache: &mut GpuCache,
+    ) {
+        profile_scope!("write_gpu_blocks");
+
+        self.kind.write_gpu_blocks(gpu_cache);
+
+        // We already earlied out above in all non-cached render-tasks.
+        let cache_handle = if let Some(handle) = &mut self.uv_rect_handle {
+            handle
+        } else {
+            return;
+        };
+
+        if let Some(mut request) = gpu_cache.request(cache_handle) {
+            let p0 = target_rect.min().to_f32();
+            let p1 = target_rect.max().to_f32();
+            let image_source = ImageSource {
+                p0,
+                p1,
+                texture_layer: target_index.0 as f32,
+                user_data: [0.0; 3],
+                uv_rect_kind: self.uv_rect_kind,
+            };
+            image_source.write_gpu_blocks(&mut request);
+        }
+    }
+
+    /// Called by the render task cache.
+    ///
+    /// Tells the render task that it is cached (which means its gpu cache
+    /// handle is managed by the texture cache).
+    pub fn mark_cached(&mut self) {
+        self.uv_rect_handle = None;
     }
 }

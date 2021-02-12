@@ -238,6 +238,8 @@ impl RenderTaskCache {
             // to draw this into the texture cache.
             let render_task_id = f(rg_builder)?;
 
+            rg_builder.get_task_mut(render_task_id).mark_cached();
+
             cache_entry.user_data = user_data;
             cache_entry.is_opaque = is_opaque;
             cache_entry.render_task_id = Some(render_task_id);
