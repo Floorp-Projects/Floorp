@@ -8,7 +8,7 @@
 #define frontend_ParserAtom_h
 
 #include "mozilla/DebugOnly.h"      // mozilla::DebugOnly
-#include "mozilla/HashFunctions.h"  // HashString
+#include "mozilla/HashFunctions.h"  // mozilla::HashString
 #include "mozilla/Range.h"          // mozilla::Range
 #include "mozilla/Span.h"           // mozilla::Span
 #include "mozilla/Variant.h"        // mozilla::Variant
@@ -19,7 +19,8 @@
 #include "js/UniquePtr.h"         // js::UniquePtr
 #include "js/Vector.h"            // Vector
 #include "vm/CommonPropertyNames.h"
-#include "vm/StringType.h"  // CompareChars, StringEqualsAscii
+#include "vm/StringType.h"     // CompareChars, StringEqualsAscii
+#include "vm/WellKnownAtom.h"  // WellKnownAtomId, WellKnownAtomInfo
 
 namespace js {
 
@@ -35,22 +36,6 @@ template <typename CharT>
 class SpecificParserAtomLookup;
 
 class ParserAtomsTable;
-
-// An index to map WellKnownParserAtoms to cx->names().
-// This is consistent across multiple compilation.
-//
-// GetWellKnownAtom in ParserAtom.cpp relies on the fact that
-// JSAtomState fields and this enum variants use the same order.
-enum class WellKnownAtomId : uint32_t {
-#define ENUM_ENTRY_(_, NAME, _2) NAME,
-  FOR_EACH_COMMON_PROPERTYNAME(ENUM_ENTRY_)
-#undef ENUM_ENTRY_
-
-#define ENUM_ENTRY_(NAME, _) NAME,
-      JS_FOR_EACH_PROTOTYPE(ENUM_ENTRY_)
-#undef ENUM_ENTRY_
-          Limit,
-};
 
 // These types correspond into indices in the StaticStrings arrays.
 enum class Length1StaticParserString : uint8_t;
@@ -506,6 +491,7 @@ class ParserAtomLookup {
   HashNumber hash() const { return hash_; }
 
   virtual bool equalsEntry(const ParserAtom* entry) const = 0;
+  virtual bool equalsEntry(const WellKnownAtomInfo* info) const = 0;
 };
 
 struct ParserAtomLookupHasher {
@@ -514,6 +500,15 @@ struct ParserAtomLookupHasher {
   static inline HashNumber hash(const Lookup& l) { return l.hash(); }
   static inline bool match(const ParserAtom* entry, const Lookup& l) {
     return l.equalsEntry(entry);
+  }
+};
+
+struct WellKnownAtomInfoHasher {
+  using Lookup = ParserAtomLookup;
+
+  static inline HashNumber hash(const Lookup& l) { return l.hash(); }
+  static inline bool match(const WellKnownAtomInfo* info, const Lookup& l) {
+    return l.equalsEntry(info);
   }
 };
 
@@ -684,6 +679,7 @@ class WellKnownParserAtoms {
   JS_FOR_EACH_PROTOTYPE(PROPERTYNAME_FIELD_)
 #undef PROPERTYNAME_FIELD_
 
+ public:
   // The ParserAtom of all well-known and tiny ParserAtoms are generated at
   // compile-time into a ROM that is computed using constexpr. This results in
   // the data being in the .rodata section of binary and easily shared by
@@ -692,12 +688,13 @@ class WellKnownParserAtoms {
 
   // Common property and prototype names are tracked in a hash table. This table
   // does not key for any items already in a direct-indexing tiny atom table.
-  using EntryMap = HashMap<const ParserAtom*, TaggedParserAtomIndex,
-                           ParserAtomLookupHasher, js::SystemAllocPolicy>;
+  using EntryMap = HashMap<const WellKnownAtomInfo*, TaggedParserAtomIndex,
+                           WellKnownAtomInfoHasher, js::SystemAllocPolicy>;
   EntryMap wellKnownMap_;
 
   bool initSingle(JSContext* cx, const ParserAtom** name,
-                  const ParserAtom& romEntry, TaggedParserAtomIndex index);
+                  const WellKnownAtomInfo& info, const ParserAtom& romEntry,
+                  TaggedParserAtomIndex index);
 
  public:
   bool init(JSContext* cx);
@@ -804,6 +801,7 @@ class ParserAtomsTable {
   void dumpCharsNoQuote(js::GenericPrinter& out,
                         TaggedParserAtomIndex index) const;
 
+  static void dumpCharsNoQuote(js::GenericPrinter& out, WellKnownAtomId id);
   static void dumpCharsNoQuote(js::GenericPrinter& out,
                                Length1StaticParserString index);
   static void dumpCharsNoQuote(js::GenericPrinter& out,
@@ -858,6 +856,21 @@ class SpecificParserAtomLookup : public ParserAtomLookup {
 
   virtual bool equalsEntry(const ParserAtom* entry) const override {
     return entry->equalsSeq<CharT>(hash_, seq_);
+  }
+
+  virtual bool equalsEntry(const WellKnownAtomInfo* info) const override {
+    // Compare hashes first.
+    if (info->hash != hash_) {
+      return false;
+    }
+
+    InflatedChar16Sequence<CharT> seq = seq_;
+    for (uint32_t i = 0; i < info->length; i++) {
+      if (!seq.hasMore() || char16_t(info->content[i]) != seq.next()) {
+        return false;
+      }
+    }
+    return !seq.hasMore();
   }
 };
 
