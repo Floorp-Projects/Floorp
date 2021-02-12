@@ -264,33 +264,49 @@ def bootstrap(value):
         return True
 
 
-@depends(host, when=bootstrap)
-@imports("os")
-@imports(_from="mozbuild.toolchains", _import="toolchain_task_definitions")
-@imports(_from="__builtin__", _import="Exception")
-def bootstrap_toolchain_tasks(host):
-    prefix = {
-        ("x86_64", "GNU", "Linux"): "linux64",
-        ("x86_64", "OSX", "Darwin"): "macosx64",
-        ("x86_64", "WINNT", "WINNT"): "win64",
-    }.get((host.cpu, host.os, host.kernel))
-    if prefix:
-        try:
-            return namespace(prefix=prefix, tasks=toolchain_task_definitions())
-        except Exception:
-            return None
+@template
+def bootstrap_toolchain_tasks(host_or_target):
+    @depends(host_or_target, when=bootstrap)
+    @imports("os")
+    @imports(_from="mozbuild.toolchains", _import="toolchain_task_definitions")
+    @imports(_from="__builtin__", _import="Exception")
+    def bootstrap_toolchain_tasks(host_or_target):
+        prefix = {
+            ("x86", "GNU", "Linux"): "linux32",
+            ("x86_64", "GNU", "Linux"): "linux64",
+            ("aarch64", "GNU", "Linux"): "linux64-aarch64",
+            ("x86_64", "OSX", "Darwin"): "macosx64",
+            ("x86_64", "WINNT", "WINNT"): "win64",
+        }.get((host_or_target.cpu, host_or_target.os, host_or_target.kernel))
+        if prefix:
+            try:
+                return namespace(prefix=prefix, tasks=toolchain_task_definitions())
+            except Exception:
+                return None
+
+    return bootstrap_toolchain_tasks
+
+
+host_bootstrap_toolchain_tasks = bootstrap_toolchain_tasks(host)
+target_bootstrap_toolchain_tasks = bootstrap_toolchain_tasks(target)
 
 
 @template
-def bootstrap_search_path(*path_parts, **kwargs):
+def bootstrap_path(*path_parts, **kwargs):
     when = kwargs.pop("when", None)
+    context = kwargs.pop("context", host)
     if kwargs:
-        configure_error("bootstrap_search_path only takes `when` as keyword argument")
+        configure_error(
+            "bootstrap_path only takes `when` or `context` as keyword arguments"
+        )
+
+    bootstrap_toolchain_tasks = {
+        host: host_bootstrap_toolchain_tasks,
+        target: target_bootstrap_toolchain_tasks,
+    }[context]
 
     @depends(
         bootstrap,
-        bootstrap_search_path_order,
-        original_path,
         toolchains_base_dir,
         bootstrap_toolchain_tasks,
         shell,
@@ -302,25 +318,25 @@ def bootstrap_search_path(*path_parts, **kwargs):
     @imports(_from="mozbuild.util", _import="ensureParentDir")
     @imports(_from="__builtin__", _import="open")
     @imports(_from="__builtin__", _import="Exception")
-    def bootstrap_search_path(
-        bootstrap, order, original_path, toolchains_base_dir, tasks, shell, build_env
-    ):
+    def bootstrap_path(bootstrap, toolchains_base_dir, tasks, shell, build_env):
         def try_bootstrap(exists):
+            if not tasks:
+                return False
             label = "toolchain-{}-{}".format(
                 tasks.prefix, path_parts[0].replace("_", "-")
             )
             task = tasks.tasks.get(label)
             if not task:
-                return
+                return False
             task_index = task.optimization.get("index-search")
             if not task_index:
-                return
+                return False
             task_index = task_index[0].split(".")[-1]
             artifact = task.attributes["toolchain-artifact"]
             # `mach artifact toolchain` doesn't support authentication for
             # private artifacts.
             if not artifact.startswith("public/"):
-                return
+                return False
             index_file = os.path.join(toolchains_base_dir, "indices", path_parts[0])
             try:
                 with open(index_file) as fh:
@@ -328,7 +344,7 @@ def bootstrap_search_path(*path_parts, **kwargs):
             except Exception:
                 index = None
             if index == task_index and exists:
-                return
+                return True
             log.info(
                 "%s bootstrapped toolchain in %s",
                 "Updating" if exists else "Installing",
@@ -350,15 +366,38 @@ def bootstrap_search_path(*path_parts, **kwargs):
             ensureParentDir(index_file)
             with open(index_file, "w") as fh:
                 fh.write(task_index)
+            return True
 
         path = os.path.join(toolchains_base_dir, *path_parts)
         exists = os.path.exists(path)
-        if bootstrap and tasks and (exists or bootstrap == "install"):
+        if bootstrap and (exists or bootstrap == "install"):
             try:
-                try_bootstrap(exists)
+                if not try_bootstrap(exists):
+                    # If there aren't toolchain artifacts to use for this build,
+                    # don't return a path.
+                    return None
             except Exception as e:
                 log.error("%s", e)
                 die("If you can't fix the above, retry with --disable-bootstrap.")
+        # We re-test whether the path exists because it may have been created by
+        # try_bootstrap. Automation will not have gone through the bootstrap
+        # process, but we want to return the path if it exists.
+        if os.path.exists(path):
+            return path
+
+    return bootstrap_path
+
+
+@template
+def bootstrap_search_path(*path_parts, **kwargs):
+    @depends(
+        bootstrap_path(*path_parts, **kwargs),
+        bootstrap_search_path_order,
+        original_path,
+    )
+    def bootstrap_search_path(path, order, original_path):
+        if not path:
+            return original_path
         if order == "prepend":
             return [path] + original_path
         return original_path + [path]

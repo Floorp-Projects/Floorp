@@ -19,6 +19,41 @@ def pkg_config_version(pkg_config):
     return Version(check_cmd_output(pkg_config, "--version").rstrip())
 
 
+@depends(sysroot_path, multiarch_dir, when=pkg_config)
+@imports(_from="os", _import="environ")
+def pkg_config_vars(sysroot_path, multiarch_dir):
+    if sysroot_path:
+        return namespace(
+            PKG_CONFIG_SYSROOT_DIR=sysroot_path,
+            PKG_CONFIG_LIBDIR=":".join(
+                os.path.join(sysroot_path, d)
+                for d in (
+                    "usr/lib/pkgconfig",
+                    "usr/lib/{}/pkgconfig".format(multiarch_dir),
+                    "usr/share/pkgconfig",
+                )
+            ),
+        )
+
+
+@depends(pkg_config_vars)
+@imports(_from="os", _import="environ")
+def pkg_config_env(vars):
+    if vars:
+        env = dict(environ)
+        env["PKG_CONFIG_SYSROOT_DIR"] = vars.PKG_CONFIG_SYSROOT_DIR
+        env["PKG_CONFIG_LIBDIR"] = vars.PKG_CONFIG_LIBDIR
+        return env
+
+
+set_config("PKG_CONFIG_SYSROOT_DIR", pkg_config_vars.PKG_CONFIG_SYSROOT_DIR)
+set_config("PKG_CONFIG_LIBDIR", pkg_config_vars.PKG_CONFIG_LIBDIR)
+add_old_configure_assignment(
+    "PKG_CONFIG_SYSROOT_DIR", pkg_config_vars.PKG_CONFIG_SYSROOT_DIR
+)
+add_old_configure_assignment("PKG_CONFIG_LIBDIR", pkg_config_vars.PKG_CONFIG_LIBDIR)
+
+
 # Locates the given module using pkg-config.
 # - `var` determines the name of variables to set when the package is found.
 #   <var>_CFLAGS and <var>_LIBS are set with corresponding values.
@@ -31,8 +66,6 @@ def pkg_config_version(pkg_config):
 #   will not result in an error or logged message, and any error message
 #   will be returned to the caller.
 #   Returns `True` when the package description is fulfilled.
-
-
 @template
 def pkg_check_modules(var, package_desc, when=always, allow_missing=False, config=True):
     if isinstance(package_desc, (tuple, list)):
@@ -59,15 +92,25 @@ def pkg_check_modules(var, package_desc, when=always, allow_missing=False, confi
                 min_version,
             )
 
-    @depends(pkg_config, package_desc, allow_missing, when=when_and_compile_environment)
+    @depends(
+        pkg_config,
+        pkg_config_env,
+        package_desc,
+        allow_missing,
+        when=when_and_compile_environment,
+    )
     @imports("sys")
     @imports(_from="mozbuild.configure.util", _import="LineIO")
-    def package(pkg_config, package_desc, allow_missing):
+    def package(pkg_config, env, package_desc, allow_missing):
         # package_desc may start as a depends function, so we can't use
         # @checking here.
         log.info("checking for %s... " % package_desc)
         retcode, stdout, stderr = get_cmd_output(
-            pkg_config, "--errors-to-stdout", "--print-errors", package_desc
+            pkg_config,
+            "--errors-to-stdout",
+            "--print-errors",
+            package_desc,
+            env=env,
         )
         if retcode == 0:
             log.info("yes")
@@ -79,16 +122,16 @@ def pkg_check_modules(var, package_desc, when=always, allow_missing=False, confi
         if not allow_missing:
             sys.exit(1)
 
-    @depends(pkg_config, package_desc, when=package)
+    @depends(pkg_config, pkg_config_env, package_desc, when=package)
     @checking("%s_CFLAGS" % var, callback=lambda t: " ".join(t))
-    def pkg_cflags(pkg_config, package_desc):
-        flags = check_cmd_output(pkg_config, "--cflags", package_desc)
+    def pkg_cflags(pkg_config, env, package_desc):
+        flags = check_cmd_output(pkg_config, "--cflags", package_desc, env=env)
         return tuple(flags.split())
 
-    @depends(pkg_config, package_desc, when=package)
+    @depends(pkg_config, pkg_config_env, package_desc, when=package)
     @checking("%s_LIBS" % var, callback=lambda t: " ".join(t))
-    def pkg_libs(pkg_config, package_desc):
-        libs = check_cmd_output(pkg_config, "--libs", package_desc)
+    def pkg_libs(pkg_config, env, package_desc):
+        libs = check_cmd_output(pkg_config, "--libs", package_desc, env=env)
         # Remove evil flags like -Wl,--export-dynamic
         return tuple(libs.replace("-Wl,--export-dynamic", "").split())
 
