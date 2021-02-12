@@ -46,6 +46,10 @@
 ///   other brush types don't use it.
 ///
 
+#if (defined(WR_FEATURE_ALPHA_PASS) || defined(WR_FEATURE_ANTIALIASING)) && !defined(SWGL_ANTIALIAS)
+varying vec2 v_local_pos;
+#endif
+
 #ifdef WR_VERTEX_SHADER
 
 void brush_vs(
@@ -133,17 +137,15 @@ void brush_shader_main_vs(
         //           items. For now, just ensure it has no
         //           effect. We can tidy this up as we move
         //           more items to be brush shaders.
-#ifdef WR_FEATURE_ALPHA_PASS
+#if defined(WR_FEATURE_ALPHA_PASS) && !defined(SWGL_ANTIALIAS)
         init_transform_vs(vec4(vec2(-1.0e16), vec2(1.0e16)));
 #endif
     } else {
-        bvec4 edge_mask = notEqual(edge_flags & ivec4(1, 2, 4, 8), ivec4(0));
-
         vi = write_transform_vertex(
             segment_rect,
             ph.local_rect,
             ph.local_clip_rect,
-            mix(vec4(0.0), vec4(1.0), edge_mask),
+            edge_flags,
             ph.z,
             transform,
             pic_task
@@ -160,7 +162,7 @@ void brush_shader_main_vs(
     // the opaque version if only the clip-mask is required. In
     // that case the opaque vertex shader must still write out
     // the clip information, which is cheap to do for SWGL.
-#if defined(WR_FEATURE_ALPHA_PASS) || defined(SWGL)
+#if defined(WR_FEATURE_ALPHA_PASS) || defined(SWGL_CLIP_MASK)
     write_clip(
         vi.world_pos,
         clip_area,
@@ -181,6 +183,10 @@ void brush_shader_main_vs(
         brush_flags,
         segment_data
     );
+
+#if (defined(WR_FEATURE_ALPHA_PASS) || defined(WR_FEATURE_ANTIALIASING)) && !defined(SWGL_ANTIALIAS)
+    v_local_pos = vi.local_pos;
+#endif
 }
 
 #ifndef WR_VERTEX_SHADER_MAIN_FUNCTION
@@ -203,6 +209,12 @@ void main(void) {
 #endif // WR_VERTEX_SHADER
 
 #ifdef WR_FRAGMENT_SHADER
+
+#if (defined(WR_FEATURE_ALPHA_PASS) || defined(WR_FEATURE_ANTIALIASING)) && !defined(SWGL_ANTIALIAS)
+    #define antialias_brush() init_transform_fs(v_local_pos)
+#else
+    #define antialias_brush() 1.0
+#endif
 
 Fragment brush_fs();
 
