@@ -424,6 +424,7 @@ if (is_mac) {
     if (rtc_use_metal_rendering) {
       defines = [ "RTC_SUPPORTS_METAL" ]
     }
+    cflags = [ "-fobjc-arc" ]
   }
 }
 
