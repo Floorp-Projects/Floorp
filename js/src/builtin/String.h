@@ -7,8 +7,6 @@
 #ifndef builtin_String_h
 #define builtin_String_h
 
-#include "mozilla/Attributes.h"
-
 #include "NamespaceImports.h"
 
 #include "js/RootingAPI.h"

@@ -7,8 +7,6 @@
 #ifndef frontend_UsedNameTracker_h
 #define frontend_UsedNameTracker_h
 
-#include "mozilla/Attributes.h"
-
 #include "frontend/ParserAtom.h"                   // TaggedParserAtomIndex
 #include "frontend/TaggedParserAtomIndexHasher.h"  // TaggedParserAtomIndexHasher
 #include "frontend/Token.h"

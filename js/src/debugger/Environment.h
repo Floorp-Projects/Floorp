@@ -8,7 +8,6 @@
 #define debugger_Environment_h
 
 #include "mozilla/Assertions.h"  // for AssertionConditionType, MOZ_ASSERT
-#include "mozilla/Attributes.h"  // [[nodiscard]] for
 #include "mozilla/Maybe.h"       // for Maybe
 
 #include "jstypes.h"            // for JS_PUBLIC_API

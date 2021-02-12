@@ -12,7 +12,6 @@
 #ifndef frontend_EitherParser_h
 #define frontend_EitherParser_h
 
-#include "mozilla/Attributes.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/Utf8.h"
 #include "mozilla/Variant.h"

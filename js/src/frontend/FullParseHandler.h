@@ -7,7 +7,6 @@
 #ifndef frontend_FullParseHandler_h
 #define frontend_FullParseHandler_h
 
-#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"  // mozilla::Maybe
 #include "mozilla/PodOperations.h"
 

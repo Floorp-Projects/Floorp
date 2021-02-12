@@ -7,8 +7,6 @@
 #ifndef builtin_intl_DisplayNames_h
 #define builtin_intl_DisplayNames_h
 
-#include "mozilla/Attributes.h"
-
 #include <stddef.h>
 #include <stdint.h>
 

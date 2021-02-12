@@ -20,7 +20,6 @@
 #define wasm_process_h
 
 #include "mozilla/Atomics.h"
-#include "mozilla/Attributes.h"
 
 namespace js {
 namespace wasm {

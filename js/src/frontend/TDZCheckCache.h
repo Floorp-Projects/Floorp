@@ -7,7 +7,6 @@
 #ifndef frontend_TDZCheckCache_h
 #define frontend_TDZCheckCache_h
 
-#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 
 #include "ds/Nestable.h"

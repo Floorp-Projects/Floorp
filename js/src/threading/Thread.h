@@ -8,7 +8,6 @@
 #define threading_Thread_h
 
 #include "mozilla/Atomics.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Tuple.h"
 

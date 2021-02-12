@@ -7,10 +7,8 @@
 #ifndef frontend_BytecodeCompilation_h
 #define frontend_BytecodeCompilation_h
 
-#include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS
-#include "mozilla/Maybe.h"       // mozilla::Maybe, mozilla::Nothing
-#include "mozilla/Utf8.h"        // mozilla::Utf8Unit
+#include "mozilla/Maybe.h"  // mozilla::Maybe, mozilla::Nothing
+#include "mozilla/Utf8.h"   // mozilla::Utf8Unit
 
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint32_t

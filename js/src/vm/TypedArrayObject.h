@@ -7,7 +7,6 @@
 #ifndef vm_TypedArrayObject_h
 #define vm_TypedArrayObject_h
 
-#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TextUtils.h"
 
