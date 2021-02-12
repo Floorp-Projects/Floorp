@@ -9,7 +9,6 @@
 #include "imgINotificationObserver.h"
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
-#include "nsCycleCollectionParticipant.h"
 #include "nsIContentPolicy.h"
 #include "nsISupports.h"
 
@@ -52,9 +51,8 @@ class IconLoader : public imgINotificationObserver {
   IconLoader(Helper* aHelper, const nsIntRect& aImageRegionRect);
 
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_IMGINOTIFICATIONOBSERVER
-  NS_DECL_CYCLE_COLLECTION_CLASS(IconLoader)
 
   // LoadIcon will start a load request for the icon.
   // The request may not complete until after LoadIcon returns.
