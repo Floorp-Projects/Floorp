@@ -40,6 +40,7 @@ playback_settings = [
 
 whitelist_live_site_tests = [
     "booking-sf",
+    "cnn-ampstories",
     "discord",
     "expedia",
     "fashionbeans",

@@ -166,6 +166,7 @@ raptor-fetch-chromium:
 
 browsertime:
     - browsertime-tp6
+    - browsertime-tp6-live
     - browsertime-benchmark
     - browsertime-tp6-profiling
 
