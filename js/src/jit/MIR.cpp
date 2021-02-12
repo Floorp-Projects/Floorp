@@ -426,6 +426,14 @@ void MInstruction::setResumePoint(MResumePoint* resumePoint) {
   resumePoint_->setInstruction(this);
 }
 
+void MInstruction::stealResumePoint(MInstruction* other) {
+  MResumePoint* resumePoint = other->resumePoint_;
+  other->resumePoint_ = nullptr;
+
+  resumePoint->resetInstruction();
+  setResumePoint(resumePoint);
+}
+
 void MInstruction::moveResumePointAsEntry() {
   MOZ_ASSERT(isNop());
   block()->clearEntryResumePoint();

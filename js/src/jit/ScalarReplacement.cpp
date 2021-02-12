@@ -13,6 +13,7 @@
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
+#include "vm/ArgumentsObject.h"
 
 #include "vm/JSObject-inl.h"
 
@@ -1249,10 +1250,19 @@ static bool IsArgumentsObjectEscaped(MInstruction* ins) {
         break;
       }
 
+      case MDefinition::Opcode::GuardArgumentsObjectFlags: {
+        if (IsArgumentsObjectEscaped(def->toInstruction())) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+        break;
+      }
+
       // This is a replaceable consumer.
       case MDefinition::Opcode::ArgumentsObjectLength:
       case MDefinition::Opcode::GetArgumentsObjectArg:
       case MDefinition::Opcode::LoadArgumentsObjectArg:
+      case MDefinition::Opcode::ApplyArgsObj:
         break;
 
       // This instruction is a no-op used to test that scalar replacement
@@ -1279,9 +1289,11 @@ class ArgumentsReplacer : public MDefinitionVisitorDefaultNoop {
   TempAllocator& alloc() { return graph_.alloc(); }
 
   void visitGuardToClass(MGuardToClass* ins);
+  void visitGuardArgumentsObjectFlags(MGuardArgumentsObjectFlags* ins);
   void visitGetArgumentsObjectArg(MGetArgumentsObjectArg* ins);
   void visitLoadArgumentsObjectArg(MLoadArgumentsObjectArg* ins);
   void visitArgumentsObjectLength(MArgumentsObjectLength* ins);
+  void visitApplyArgsObj(MApplyArgsObj* ins);
 
  public:
   ArgumentsReplacer(MIRGenerator* mir, MIRGraph& graph, MInstruction* args)
@@ -1341,6 +1353,43 @@ void ArgumentsReplacer::visitGuardToClass(MGuardToClass* ins) {
     return;
   }
   MOZ_ASSERT(ins->isArgumentsObjectClass());
+
+  // Replace the guard with the args object.
+  ins->replaceAllUsesWith(args_);
+
+  // Remove the guard.
+  ins->block()->discard(ins);
+}
+
+void ArgumentsReplacer::visitGuardArgumentsObjectFlags(
+    MGuardArgumentsObjectFlags* ins) {
+  // Skip other arguments objects.
+  if (ins->getArgsObject() != args_) {
+    return;
+  }
+
+#ifdef DEBUG
+  // Each *_OVERRIDDEN_BIT can only be set by setting or deleting a
+  // property of the args object. We have already determined that the
+  // args object doesn't escape, so its properties can't be mutated.
+  //
+  // FORWARDED_ARGUMENTS_BIT is set if any argument is closed over,
+  // which is an immutable property of the script. Because we are
+  // replacing the args object for a known script, we can check the
+  // flag once, which is done when we first attach the CacheIR, and
+  // rely on it.  (Note that this wouldn't be true if we didn't know
+  // the origin of args_, because it could be passed in from another
+  // function.)
+  uint32_t supportedBits = ArgumentsObject::LENGTH_OVERRIDDEN_BIT |
+                           ArgumentsObject::ITERATOR_OVERRIDDEN_BIT |
+                           ArgumentsObject::ELEMENT_OVERRIDDEN_BIT |
+                           ArgumentsObject::CALLEE_OVERRIDDEN_BIT |
+                           ArgumentsObject::FORWARDED_ARGUMENTS_BIT;
+
+  MOZ_ASSERT((ins->flags() & ~supportedBits) == 0);
+  MOZ_ASSERT_IF(ins->flags() & ArgumentsObject::FORWARDED_ARGUMENTS_BIT,
+                !args_->block()->info().anyFormalIsAliased());
+#endif
 
   // Replace the guard with the args object.
   ins->replaceAllUsesWith(args_);
@@ -1414,6 +1463,32 @@ void ArgumentsReplacer::visitArgumentsObjectLength(
   ins->replaceAllUsesWith(length);
 
   // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
+void ArgumentsReplacer::visitApplyArgsObj(MApplyArgsObj* ins) {
+  // Skip other arguments objects.
+  if (ins->getArgsObj() != args_) {
+    return;
+  }
+
+  auto* numArgs = MArgumentsLength::New(alloc());
+  ins->block()->insertBefore(ins, numArgs);
+
+  // TODO: Should we rename MApplyArgs?
+  auto* apply = MApplyArgs::New(alloc(), ins->getSingleTarget(),
+                                ins->getFunction(), numArgs, ins->getThis());
+  if (!ins->maybeCrossRealm()) {
+    apply->setNotCrossRealm();
+  }
+  if (ins->ignoresReturnValue()) {
+    apply->setIgnoresReturnValue();
+  }
+
+  ins->block()->insertBefore(ins, apply);
+  ins->replaceAllUsesWith(apply);
+
+  apply->stealResumePoint(ins);
   ins->block()->discard(ins);
 }
 

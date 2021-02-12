@@ -4867,6 +4867,19 @@ bool JSScript::formalIsAliased(unsigned argSlot) {
   MOZ_CRASH("Argument slot not found");
 }
 
+bool JSScript::anyFormalIsAliased() {
+  if (functionHasParameterExprs()) {
+    return false;
+  }
+
+  for (PositionalFormalParameterIter fi(this); fi; fi++) {
+    if (fi.closedOver()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool JSScript::formalLivesInArgumentsObject(unsigned argSlot) {
   return argsObjAliasesFormals() && !formalIsAliased(argSlot);
 }
