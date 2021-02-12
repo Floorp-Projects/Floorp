@@ -14,6 +14,15 @@
 #include "js/ProtoKey.h"             // JS_FOR_EACH_PROTOTYPE
 #include "vm/CommonPropertyNames.h"  // FOR_EACH_COMMON_PROPERTYNAME
 
+/* Well-known predefined C strings. */
+#define DECLARE_CONST_CHAR_STR(IDPART, _, TEXT) extern char js_##IDPART##_str[];
+FOR_EACH_COMMON_PROPERTYNAME(DECLARE_CONST_CHAR_STR)
+#undef DECLARE_CONST_CHAR_STR
+
+#define DECLARE_PROTO_STR(NAME, _) extern char js_##NAME##_str[];
+JS_FOR_EACH_PROTOTYPE(DECLARE_PROTO_STR)
+#undef DECLARE_PROTO_STR
+
 namespace js {
 
 // An index for well-known atoms.

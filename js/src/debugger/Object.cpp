@@ -51,7 +51,7 @@
 #include "vm/GlobalObject.h"             // for JSObject::is, GlobalObject
 #include "vm/Instrumentation.h"          // for RealmInstrumentation
 #include "vm/Interpreter.h"              // for Call
-#include "vm/JSAtom.h"                   // for Atomize, js_apply_str
+#include "vm/JSAtom.h"                   // for Atomize
 #include "vm/JSContext.h"                // for JSContext, ReportValueError
 #include "vm/JSFunction.h"               // for JSFunction
 #include "vm/JSScript.h"                 // for JSScript
@@ -68,6 +68,7 @@
 #include "vm/Shape.h"                    // for Shape
 #include "vm/Stack.h"                    // for InvokeArgs
 #include "vm/StringType.h"               // for JSAtom, PropertyName
+#include "vm/WellKnownAtom.h"            // for js_apply_str
 #include "vm/WrapperObject.h"            // for JSObject::is, WrapperObject
 
 #include "vm/Compartment-inl.h"  // for Compartment::wrap

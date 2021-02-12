@@ -63,8 +63,9 @@
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/Realm.h"
 #include "vm/Shape.h"
-#include "vm/StringType.h"  // StringToNewUTF8CharsZ
-#include "vm/ToSource.h"    // js::ValueToSource
+#include "vm/StringType.h"     // StringToNewUTF8CharsZ
+#include "vm/ToSource.h"       // js::ValueToSource
+#include "vm/WellKnownAtom.h"  // js_*_str
 
 #include "vm/Compartment-inl.h"
 #include "vm/JSObject-inl.h"
