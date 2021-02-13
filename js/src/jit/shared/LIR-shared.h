@@ -5979,6 +5979,16 @@ class LNonNegativeIntPtrToInt32 : public LInstructionHelper<1, 1, 0> {
   }
 };
 
+class LIntPtrToDouble : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(IntPtrToDouble)
+
+  explicit LIntPtrToDouble(const LAllocation& input)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, input);
+  }
+};
+
 class LAdjustDataViewLength : public LInstructionHelper<1, 1, 0> {
  public:
   LIR_HEADER(AdjustDataViewLength)
