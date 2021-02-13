@@ -4339,6 +4339,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void loadArrayBufferViewLengthInt32(Register obj, Register output,
                                       Label* fail);
 
+  void loadArrayBufferByteLengthIntPtr(Register obj, Register output);
   void loadArrayBufferViewByteOffsetIntPtr(Register obj, Register output);
   void loadArrayBufferViewLengthIntPtr(Register obj, Register output);
 
