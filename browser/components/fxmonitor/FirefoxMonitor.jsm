@@ -368,7 +368,7 @@ this.FirefoxMonitor = {
     pnContent.appendChild(panelUI.box);
     pn.appendChild(pnContent);
     pn.setAttribute("id", `${this.kNotificationID}-notification`);
-    pn.setAttribute("hidden", "true");
+    pn.hidden = true;
     parentElt.appendChild(pn);
     this.panelUIsByWindow.set(win, panelUI);
     return panelUI;

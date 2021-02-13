@@ -189,7 +189,7 @@ class _ToolbarBadgeHub {
           "id",
           "toolbarbutton-notification-description"
         );
-        descriptionEl.setAttribute("hidden", true);
+        descriptionEl.hidden = true;
         document.l10n.setAttributes(
           descriptionEl,
           message.content.badgeDescription.string_id

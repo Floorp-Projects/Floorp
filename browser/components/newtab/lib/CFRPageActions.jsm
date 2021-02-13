@@ -420,19 +420,16 @@ class PageAction {
           args: { total: users },
         })
       );
-      footerUsers.removeAttribute("hidden");
+      footerUsers.hidden = false;
     } else {
       // Prevent whitespace around empty label from affecting other spacing
-      footerUsers.setAttribute("hidden", true);
+      footerUsers.hidden = true;
       footerUsers.removeAttribute("value");
     }
 
     // Spacer pushes the link to the opposite end when there's other content
-    if (rating || users) {
-      footerSpacer.removeAttribute("hidden");
-    } else {
-      footerSpacer.setAttribute("hidden", true);
-    }
+
+    footerSpacer.hidden = !rating && !users;
   }
 
   _createElementAndAppend({ type, id }, parent) {

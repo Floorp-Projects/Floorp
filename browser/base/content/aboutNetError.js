@@ -180,9 +180,7 @@ function disallowCertOverridesIfNeeded() {
   // host and the cert is bad (STS Spec section 7.3) or if the
   // certerror is in a frame (bug 633691).
   if (cssClass == "badStsCert" || window != top) {
-    document
-      .getElementById("exceptionDialogButton")
-      .setAttribute("hidden", "true");
+    document.getElementById("exceptionDialogButton").hidden = true;
   }
   if (cssClass == "badStsCert") {
     document.getElementById("badStsCertExplanation").removeAttribute("hidden");
