@@ -410,7 +410,7 @@ void nsGIFDecoder2::ConvertColormap(uint32_t* aColormap, uint32_t aColors) {
   }
 
   // Apply CMS transformation if enabled and available
-  if (mCMSMode == CMSMode::All) {
+  if (mCMSMode == eCMSMode_All) {
     qcms_transform* transform = GetCMSsRGBTransform(SurfaceFormat::R8G8B8);
     if (transform) {
       qcms_transform_data(transform, aColormap, aColormap, aColors);

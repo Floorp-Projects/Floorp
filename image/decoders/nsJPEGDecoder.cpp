@@ -283,7 +283,7 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
           return Transition::TerminateFailure();
       }
 
-      if (mCMSMode != CMSMode::Off) {
+      if (mCMSMode != eCMSMode_Off) {
         if ((mInProfile = GetICCProfile(mInfo)) != nullptr &&
             GetCMSOutputProfile()) {
           uint32_t profileSpace = qcms_profile_get_color_space(mInProfile);
@@ -326,7 +326,7 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
                                                GetCMSOutputProfile(),
                                                outputType, (qcms_intent)intent);
           }
-        } else if (mCMSMode == CMSMode::All) {
+        } else if (mCMSMode == eCMSMode_All) {
           mTransform = GetCMSsRGBTransform(SurfaceFormat::OS_RGBX);
         }
       }
