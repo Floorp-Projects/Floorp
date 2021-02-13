@@ -404,7 +404,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
   },
 
   hideButton() {
-    this._downloadButton.hidden = true;
+    this._downloadButton.setAttribute("hidden", "true");
   },
 
   lastEstimatedSecondsLeft: Infinity,

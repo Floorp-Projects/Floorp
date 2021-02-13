@@ -1195,10 +1195,16 @@ var ViewMenu = {
       splitter = null;
     }
 
-    const isChecked = element.getAttribute("checked") == "true";
-    column.hidden = !isChecked;
-    if (splitter) {
-      splitter.hidden = !isChecked;
+    if (element.getAttribute("checked") == "true") {
+      column.setAttribute("hidden", "false");
+      if (splitter) {
+        splitter.removeAttribute("hidden");
+      }
+    } else {
+      column.setAttribute("hidden", "true");
+      if (splitter) {
+        splitter.setAttribute("hidden", "true");
+      }
     }
   },
 

@@ -18,7 +18,7 @@ add_task(async function() {
   let popupSet = document.getElementById("mainPopupSet");
   gLazyArea = document.createXULElement("panel");
   gLazyArea.id = kLazyAreaId;
-  gLazyArea.hidden = true;
+  gLazyArea.setAttribute("hidden", "true");
   popupSet.appendChild(gLazyArea);
   CustomizableUI.registerArea(kLazyAreaId, {
     type: CustomizableUI.TYPE_MENU_PANEL,
