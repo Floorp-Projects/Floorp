@@ -74,11 +74,11 @@ class SystemFontListEntry;
     }                                             \
   } while (0)
 
-enum class CMSMode : int32_t {
-  Off = 0,         // No color management
-  All = 1,         // Color manage everything
-  TaggedOnly = 2,  // Color manage tagged Images Only
-  AllCount = 3
+enum eCMSMode {
+  eCMSMode_Off = 0,         // No color management
+  eCMSMode_All = 1,         // Color manage everything
+  eCMSMode_TaggedOnly = 2,  // Color manage tagged Images Only
+  eCMSMode_AllCount = 3
 };
 
 enum eGfxLog {
@@ -530,12 +530,12 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   /**
    * Are we going to try color management?
    */
-  static CMSMode GetCMSMode();
+  static eCMSMode GetCMSMode();
 
   /**
    * Used only for testing. Override the pref setting.
    */
-  static void SetCMSModeOverride(CMSMode aMode);
+  static void SetCMSModeOverride(eCMSMode aMode);
 
   /**
    * Determines the rendering intent for color management.
@@ -983,6 +983,7 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   static bool IsDXP016Blocked();
 
   RefPtr<gfxASurface> mScreenReferenceSurface;
+  nsCOMPtr<nsIObserver> mSRGBOverrideObserver;
   RefPtr<mozilla::layers::MemoryPressureObserver> mMemoryPressureObserver;
 
   // The preferred draw target backend to use for canvas
