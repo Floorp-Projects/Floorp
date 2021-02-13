@@ -4332,12 +4332,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
       JS::ExpandoAndGeneration* expandoAndGeneration, uint64_t generation,
       Label* fail);
 
-  void loadArrayBufferByteLengthInt32(Register obj, Register output,
-                                      Label* fail);
-  void loadArrayBufferViewByteOffsetInt32(Register obj, Register output,
-                                          Label* fail);
-  void loadArrayBufferViewLengthInt32(Register obj, Register output,
-                                      Label* fail);
+  void guardNonNegativeIntPtrToInt32(Register reg, Label* fail);
 
   void loadArrayBufferByteLengthIntPtr(Register obj, Register output);
   void loadArrayBufferViewByteOffsetIntPtr(Register obj, Register output);

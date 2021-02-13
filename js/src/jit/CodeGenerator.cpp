@@ -1269,15 +1269,8 @@ void CodeGenerator::visitNonNegativeIntPtrToInt32(
   Register output = ToRegister(lir->output());
   MOZ_ASSERT(ToRegister(lir->input()) == output);
 
-#  ifdef DEBUG
-  Label ok;
-  masm.branchPtr(Assembler::NotSigned, output, output, &ok);
-  masm.assumeUnreachable("Unexpected negative value");
-  masm.bind(&ok);
-#  endif
-
   Label bail;
-  masm.branchPtr(Assembler::Above, output, Imm32(INT32_MAX), &bail);
+  masm.guardNonNegativeIntPtrToInt32(output, &bail);
   bailoutFrom(&bail, lir->snapshot());
 #else
   MOZ_CRASH("Not used on 32-bit platforms");
