@@ -15,7 +15,6 @@ py2commands="
     awsy-test
     firefox-ui-functional
     jsshell-bench
-    marionette-test
     mozharness
     raptor
     raptor-test
