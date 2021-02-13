@@ -4156,7 +4156,7 @@
   mirror: always
 
 # 0 = Off, 1 = Full, 2 = Tagged Images Only.
-# See eCMSMode in gfx/thebes/gfxPlatform.h.
+# See CMSMode in gfx/thebes/gfxPlatform.h.
 - name: gfx.color_management.mode
   type: RelaxedAtomicInt32
   value: 2
