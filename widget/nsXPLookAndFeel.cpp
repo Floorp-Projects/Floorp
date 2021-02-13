@@ -509,12 +509,10 @@ nsXPLookAndFeel::~nsXPLookAndFeel() {
   sInstance = nullptr;
 }
 
-static bool IsSpecialColor(LookAndFeel::ColorID aID, nscolor aColor) {
-  using ColorID = LookAndFeel::ColorID;
-
+bool nsXPLookAndFeel::IsSpecialColor(ColorID aID, nscolor& aColor) {
   switch (aID) {
     case ColorID::TextSelectForeground:
-      return aColor == NS_DONT_CHANGE_COLOR;
+      return (aColor == NS_DONT_CHANGE_COLOR);
     case ColorID::IMESelectedRawTextBackground:
     case ColorID::IMESelectedConvertedTextBackground:
     case ColorID::IMERawInputBackground:
@@ -530,19 +528,16 @@ static bool IsSpecialColor(LookAndFeel::ColorID aID, nscolor aColor) {
     case ColorID::SpellCheckerUnderline:
       return NS_IS_SELECTION_SPECIAL_COLOR(aColor);
     default:
-      break;
+      /*
+       * In GetColor(), every color that is not a special color is color
+       * corrected. Use false to make other colors color corrected.
+       */
+      return false;
   }
-  /*
-   * In GetColor(), every color that is not a special color is color
-   * corrected. Use false to make other colors color corrected.
-   */
   return false;
 }
 
-// Returns whether there is a CSS color name for this color.
-static bool ColorIsCSSAccessible(LookAndFeel::ColorID aID) {
-  using ColorID = LookAndFeel::ColorID;
-
+bool nsXPLookAndFeel::ColorIsNotCSSAccessible(ColorID aID) {
   switch (aID) {
     case ColorID::WindowBackground:
     case ColorID::WindowForeground:
@@ -573,209 +568,338 @@ static bool ColorIsCSSAccessible(LookAndFeel::ColorID aID) {
     case ColorID::IMESelectedConvertedTextForeground:
     case ColorID::IMESelectedConvertedTextUnderline:
     case ColorID::SpellCheckerUnderline:
-      return false;
+      return true;
     default:
       break;
   }
 
-  return true;
+  return false;
 }
 
 nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID) {
+  nscolor result = NS_RGB(0xFF, 0xFF, 0xFF);
+
   // The stand-in colors are taken from the Windows 7 Aero theme
   // except Mac-specific colors which are taken from Mac OS 10.7.
-
-#define COLOR(name_, r, g, b) \
-  case ColorID::name_:        \
-    return NS_RGB(r, g, b);
-
   switch (aID) {
     // CSS 2 colors:
-    COLOR(Activeborder, 0xB4, 0xB4, 0xB4)
-    COLOR(Activecaption, 0x99, 0xB4, 0xD1)
-    COLOR(Appworkspace, 0xAB, 0xAB, 0xAB)
-    COLOR(Background, 0x00, 0x00, 0x00)
-    COLOR(Buttonface, 0xF0, 0xF0, 0xF0)
-    COLOR(Buttonhighlight, 0xFF, 0xFF, 0xFF)
-    COLOR(Buttonshadow, 0xA0, 0xA0, 0xA0)
-    COLOR(Buttontext, 0x00, 0x00, 0x00)
-    COLOR(Captiontext, 0x00, 0x00, 0x00)
-    COLOR(Graytext, 0x6D, 0x6D, 0x6D)
-    COLOR(Highlight, 0x33, 0x99, 0xFF)
-    COLOR(Highlighttext, 0xFF, 0xFF, 0xFF)
-    COLOR(Inactiveborder, 0xF4, 0xF7, 0xFC)
-    COLOR(Inactivecaption, 0xBF, 0xCD, 0xDB)
-    COLOR(Inactivecaptiontext, 0x43, 0x4E, 0x54)
-    COLOR(Infobackground, 0xFF, 0xFF, 0xE1)
-    COLOR(Infotext, 0x00, 0x00, 0x00)
-    COLOR(Menu, 0xF0, 0xF0, 0xF0)
-    COLOR(Menutext, 0x00, 0x00, 0x00)
-    COLOR(Scrollbar, 0xC8, 0xC8, 0xC8)
-    COLOR(Threeddarkshadow, 0x69, 0x69, 0x69)
-    COLOR(Threedface, 0xF0, 0xF0, 0xF0)
-    COLOR(Threedhighlight, 0xFF, 0xFF, 0xFF)
-    COLOR(Threedlightshadow, 0xE3, 0xE3, 0xE3)
-    COLOR(Threedshadow, 0xA0, 0xA0, 0xA0)
-    COLOR(Window, 0xFF, 0xFF, 0xFF)
-    COLOR(Windowframe, 0x64, 0x64, 0x64)
-    COLOR(Windowtext, 0x00, 0x00, 0x00)
-    COLOR(MozButtondefault, 0x69, 0x69, 0x69)
-    COLOR(Field, 0xFF, 0xFF, 0xFF)
-    COLOR(Fieldtext, 0x00, 0x00, 0x00)
-    COLOR(MozDialog, 0xF0, 0xF0, 0xF0)
-    COLOR(MozDialogtext, 0x00, 0x00, 0x00)
-    COLOR(MozColheadertext, 0x00, 0x00, 0x00)
-    COLOR(MozColheaderhovertext, 0x00, 0x00, 0x00)
-    COLOR(MozDragtargetzone, 0xFF, 0xFF, 0xFF)
-    COLOR(MozCellhighlight, 0xF0, 0xF0, 0xF0)
-    COLOR(MozCellhighlighttext, 0x00, 0x00, 0x00)
-    COLOR(MozHtmlCellhighlight, 0x33, 0x99, 0xFF)
-    COLOR(MozHtmlCellhighlighttext, 0xFF, 0xFF, 0xFF)
-    COLOR(MozButtonhoverface, 0xF0, 0xF0, 0xF0)
-    COLOR(MozGtkButtonactivetext, 0x00, 0x00, 0x00)
-    COLOR(MozButtonhovertext, 0x00, 0x00, 0x00)
-    COLOR(MozMenuhover, 0x33, 0x99, 0xFF)
-    COLOR(MozMenuhovertext, 0x00, 0x00, 0x00)
-    COLOR(MozMenubartext, 0x00, 0x00, 0x00)
-    COLOR(MozMenubarhovertext, 0x00, 0x00, 0x00)
-    COLOR(MozOddtreerow, 0xFF, 0xFF, 0xFF)
-    COLOR(MozMacChromeActive, 0xB2, 0xB2, 0xB2)
-    COLOR(MozMacChromeInactive, 0xE1, 0xE1, 0xE1)
-    COLOR(MozMacFocusring, 0x60, 0x9D, 0xD7)
-    COLOR(MozMacMenuselect, 0x38, 0x75, 0xD7)
-    COLOR(MozMacMenushadow, 0xA3, 0xA3, 0xA3)
-    COLOR(MozMacMenutextdisable, 0x88, 0x88, 0x88)
-    COLOR(MozMacMenutextselect, 0xFF, 0xFF, 0xFF)
-    COLOR(MozMacDisabledtoolbartext, 0x3F, 0x3F, 0x3F)
-    COLOR(MozMacSecondaryhighlight, 0xD4, 0xD4, 0xD4)
-    COLOR(MozMacVibrancyLight, 0xf7, 0xf7, 0xf7)
-    COLOR(MozMacVibrantTitlebarLight, 0xf7, 0xf7, 0xf7)
-    COLOR(MozMacVibrancyDark, 0x28, 0x28, 0x28)
-    COLOR(MozMacVibrantTitlebarDark, 0x28, 0x28, 0x28)
-    COLOR(MozMacMenupopup, 0xe6, 0xe6, 0xe6)
-    COLOR(MozMacMenuitem, 0xe6, 0xe6, 0xe6)
-    COLOR(MozMacActiveMenuitem, 0x0a, 0x64, 0xdc)
-    COLOR(MozMacSourceList, 0xf7, 0xf7, 0xf7)
-    COLOR(MozMacSourceListSelection, 0xc8, 0xc8, 0xc8)
-    COLOR(MozMacActiveSourceListSelection, 0x0a, 0x64, 0xdc)
-    COLOR(MozMacTooltip, 0xf7, 0xf7, 0xf7)
-    // Seems to be the default color (hardcoded because of bug 1065998)
-    COLOR(MozWinAccentcolor, 0x9E, 0x9E, 0x9E)
-    COLOR(MozWinAccentcolortext, 0x00, 0x00, 0x00)
-    COLOR(MozWinMediatext, 0xFF, 0xFF, 0xFF)
-    COLOR(MozWinCommunicationstext, 0xFF, 0xFF, 0xFF)
-    COLOR(MozNativehyperlinktext, 0x00, 0x66, 0xCC)
-    COLOR(MozComboboxtext, 0x00, 0x00, 0x00)
-    COLOR(MozCombobox, 0xFF, 0xFF, 0xFF)
-    default:
+    case ColorID::Activeborder:
+      result = NS_RGB(0xB4, 0xB4, 0xB4);
       break;
-  }
-  return NS_RGB(0xFF, 0xFF, 0xFF);
-}
-
-// Uncomment the #define below if you want to debug system color use in a skin
-// that uses them.  When set, it will make all system color pairs that are
-// appropriate for foreground/background pairing the same.  This means if the
-// skin is using system colors correctly you will not be able to see *any* text.
-//
-// #define DEBUG_SYSTEM_COLOR_USE
-
-#ifdef DEBUG_SYSTEM_COLOR_USE
-static nsresult SystemColorUseDebuggingColor(LookAndFeel::ColorID aID,
-                                             nscolor& aResult) {
-  using ColorID = LookAndFeel::ColorID;
-
-  switch (aID) {
-      // css2  http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
     case ColorID::Activecaption:
-      // active window caption background
-    case ColorID::Captiontext:
-      // text in active window caption
-      aResult = NS_RGB(0xff, 0x00, 0x00);
+      result = NS_RGB(0x99, 0xB4, 0xD1);
       break;
-
-    case ColorID::Highlight:
-      // background of selected item
-    case ColorID::Highlighttext:
-      // text of selected item
-      aResult = NS_RGB(0xff, 0xff, 0x00);
+    case ColorID::Appworkspace:
+      result = NS_RGB(0xAB, 0xAB, 0xAB);
       break;
-
-    case ColorID::Inactivecaption:
-      // inactive window caption
-    case ColorID::Inactivecaptiontext:
-      // text in inactive window caption
-      aResult = NS_RGB(0x66, 0x66, 0x00);
+    case ColorID::Background:
+      result = NS_RGB(0x00, 0x00, 0x00);
       break;
-
-    case ColorID::Infobackground:
-      // tooltip background color
-    case ColorID::Infotext:
-      // tooltip text color
-      aResult = NS_RGB(0x00, 0xff, 0x00);
-      break;
-
-    case ColorID::Menu:
-      // menu background
-    case ColorID::Menutext:
-      // menu text
-      aResult = NS_RGB(0x00, 0xff, 0xff);
-      break;
-
-    case ColorID::Threedface:
     case ColorID::Buttonface:
-      // 3-D face color
+      result = NS_RGB(0xF0, 0xF0, 0xF0);
+      break;
+    case ColorID::Buttonhighlight:
+      result = NS_RGB(0xFF, 0xFF, 0xFF);
+      break;
+    case ColorID::Buttonshadow:
+      result = NS_RGB(0xA0, 0xA0, 0xA0);
+      break;
     case ColorID::Buttontext:
-      // text on push buttons
-      aResult = NS_RGB(0x00, 0x66, 0x66);
+      result = NS_RGB(0x00, 0x00, 0x00);
       break;
-
+    case ColorID::Captiontext:
+      result = NS_RGB(0x00, 0x00, 0x00);
+      break;
+    case ColorID::Graytext:
+      result = NS_RGB(0x6D, 0x6D, 0x6D);
+      break;
+    case ColorID::Highlight:
+      result = NS_RGB(0x33, 0x99, 0xFF);
+      break;
+    case ColorID::Highlighttext:
+      result = NS_RGB(0xFF, 0xFF, 0xFF);
+      break;
+    case ColorID::Inactiveborder:
+      result = NS_RGB(0xF4, 0xF7, 0xFC);
+      break;
+    case ColorID::Inactivecaption:
+      result = NS_RGB(0xBF, 0xCD, 0xDB);
+      break;
+    case ColorID::Inactivecaptiontext:
+      result = NS_RGB(0x43, 0x4E, 0x54);
+      break;
+    case ColorID::Infobackground:
+      result = NS_RGB(0xFF, 0xFF, 0xE1);
+      break;
+    case ColorID::Infotext:
+      result = NS_RGB(0x00, 0x00, 0x00);
+      break;
+    case ColorID::Menu:
+      result = NS_RGB(0xF0, 0xF0, 0xF0);
+      break;
+    case ColorID::Menutext:
+      result = NS_RGB(0x00, 0x00, 0x00);
+      break;
+    case ColorID::Scrollbar:
+      result = NS_RGB(0xC8, 0xC8, 0xC8);
+      break;
+    case ColorID::Threeddarkshadow:
+      result = NS_RGB(0x69, 0x69, 0x69);
+      break;
+    case ColorID::Threedface:
+      result = NS_RGB(0xF0, 0xF0, 0xF0);
+      break;
+    case ColorID::Threedhighlight:
+      result = NS_RGB(0xFF, 0xFF, 0xFF);
+      break;
+    case ColorID::Threedlightshadow:
+      result = NS_RGB(0xE3, 0xE3, 0xE3);
+      break;
+    case ColorID::Threedshadow:
+      result = NS_RGB(0xA0, 0xA0, 0xA0);
+      break;
     case ColorID::Window:
+      result = NS_RGB(0xFF, 0xFF, 0xFF);
+      break;
+    case ColorID::Windowframe:
+      result = NS_RGB(0x64, 0x64, 0x64);
+      break;
     case ColorID::Windowtext:
-      aResult = NS_RGB(0x00, 0x00, 0xff);
+      result = NS_RGB(0x00, 0x00, 0x00);
       break;
-
-      // from the CSS3 working draft (not yet finalized)
-      // http://www.w3.org/tr/2000/wd-css3-userint-20000216.html#color
-
+    case ColorID::MozButtondefault:
+      result = NS_RGB(0x69, 0x69, 0x69);
+      break;
     case ColorID::Field:
+      result = NS_RGB(0xFF, 0xFF, 0xFF);
+      break;
     case ColorID::Fieldtext:
-      aResult = NS_RGB(0xff, 0x00, 0xff);
+      result = NS_RGB(0x00, 0x00, 0x00);
       break;
-
     case ColorID::MozDialog:
-    case ColorID::MozDialogtext:
-      aResult = NS_RGB(0x66, 0x00, 0x66);
+      result = NS_RGB(0xF0, 0xF0, 0xF0);
       break;
-
+    case ColorID::MozDialogtext:
+    case ColorID::MozColheadertext:
+    case ColorID::MozColheaderhovertext:
+      result = NS_RGB(0x00, 0x00, 0x00);
+      break;
+    case ColorID::MozDragtargetzone:
+      result = NS_RGB(0xFF, 0xFF, 0xFF);
+      break;
+    case ColorID::MozCellhighlight:
+      result = NS_RGB(0xF0, 0xF0, 0xF0);
+      break;
+    case ColorID::MozCellhighlighttext:
+      result = NS_RGB(0x00, 0x00, 0x00);
+      break;
+    case ColorID::MozHtmlCellhighlight:
+      result = NS_RGB(0x33, 0x99, 0xFF);
+      break;
+    case ColorID::MozHtmlCellhighlighttext:
+      result = NS_RGB(0xFF, 0xFF, 0xFF);
+      break;
+    case ColorID::MozButtonhoverface:
+      result = NS_RGB(0xF0, 0xF0, 0xF0);
+      break;
+    case ColorID::MozGtkButtonactivetext:
+    case ColorID::MozButtonhovertext:
+      result = NS_RGB(0x00, 0x00, 0x00);
+      break;
+    case ColorID::MozMenuhover:
+      result = NS_RGB(0x33, 0x99, 0xFF);
+      break;
+    case ColorID::MozMenuhovertext:
+      result = NS_RGB(0x00, 0x00, 0x00);
+      break;
+    case ColorID::MozMenubartext:
+      result = NS_RGB(0x00, 0x00, 0x00);
+      break;
+    case ColorID::MozMenubarhovertext:
+      result = NS_RGB(0x00, 0x00, 0x00);
+      break;
+    case ColorID::MozOddtreerow:
+      result = NS_RGB(0xFF, 0xFF, 0xFF);
+      break;
+    case ColorID::MozMacChromeActive:
+      result = NS_RGB(0xB2, 0xB2, 0xB2);
+      break;
+    case ColorID::MozMacChromeInactive:
+      result = NS_RGB(0xE1, 0xE1, 0xE1);
+      break;
+    case ColorID::MozMacFocusring:
+      result = NS_RGB(0x60, 0x9D, 0xD7);
+      break;
+    case ColorID::MozMacMenuselect:
+      result = NS_RGB(0x38, 0x75, 0xD7);
+      break;
+    case ColorID::MozMacMenushadow:
+      result = NS_RGB(0xA3, 0xA3, 0xA3);
+      break;
+    case ColorID::MozMacMenutextdisable:
+      result = NS_RGB(0x88, 0x88, 0x88);
+      break;
+    case ColorID::MozMacMenutextselect:
+      result = NS_RGB(0xFF, 0xFF, 0xFF);
+      break;
+    case ColorID::MozMacDisabledtoolbartext:
+      result = NS_RGB(0x3F, 0x3F, 0x3F);
+      break;
+    case ColorID::MozMacSecondaryhighlight:
+      result = NS_RGB(0xD4, 0xD4, 0xD4);
+      break;
+    case ColorID::MozMacVibrancyLight:
+    case ColorID::MozMacVibrantTitlebarLight:
+      result = NS_RGB(0xf7, 0xf7, 0xf7);
+      break;
+    case ColorID::MozMacVibrancyDark:
+    case ColorID::MozMacVibrantTitlebarDark:
+      result = NS_RGB(0x28, 0x28, 0x28);
+      break;
+    case ColorID::MozMacMenupopup:
+      result = NS_RGB(0xe6, 0xe6, 0xe6);
+      break;
+    case ColorID::MozMacMenuitem:
+      result = NS_RGB(0xe6, 0xe6, 0xe6);
+      break;
+    case ColorID::MozMacActiveMenuitem:
+      result = NS_RGB(0x0a, 0x64, 0xdc);
+      break;
+    case ColorID::MozMacSourceList:
+      result = NS_RGB(0xf7, 0xf7, 0xf7);
+      break;
+    case ColorID::MozMacSourceListSelection:
+      result = NS_RGB(0xc8, 0xc8, 0xc8);
+      break;
+    case ColorID::MozMacActiveSourceListSelection:
+      result = NS_RGB(0x0a, 0x64, 0xdc);
+      break;
+    case ColorID::MozMacTooltip:
+      result = NS_RGB(0xf7, 0xf7, 0xf7);
+      break;
+    case ColorID::MozWinAccentcolor:
+      // Seems to be the default color (hardcoded because of bug 1065998)
+      result = NS_RGB(0x9E, 0x9E, 0x9E);
+      break;
+    case ColorID::MozWinAccentcolortext:
+      result = NS_RGB(0x00, 0x00, 0x00);
+      break;
+    case ColorID::MozWinMediatext:
+      result = NS_RGB(0xFF, 0xFF, 0xFF);
+      break;
+    case ColorID::MozWinCommunicationstext:
+      result = NS_RGB(0xFF, 0xFF, 0xFF);
+      break;
+    case ColorID::MozNativehyperlinktext:
+      result = NS_RGB(0x00, 0x66, 0xCC);
+      break;
+    case ColorID::MozComboboxtext:
+      result = NS_RGB(0x00, 0x00, 0x00);
+      break;
+    case ColorID::MozCombobox:
+      result = NS_RGB(0xFF, 0xFF, 0xFF);
+      break;
     default:
-      return NS_ERROR_NOT_AVAILABLE;
+      break;
   }
 
-  return NS_OK;
+  return result;
 }
-#endif
 
+//
 // All these routines will return NS_OK if they have a value,
 // in which case the nsLookAndFeel should use that value;
 // otherwise we'll return NS_ERROR_NOT_AVAILABLE, in which case, the
 // platform-specific nsLookAndFeel should use its own values instead.
+//
 nsresult nsXPLookAndFeel::GetColorValue(ColorID aID,
                                         bool aUseStandinsForNativeColors,
                                         nscolor& aResult) {
-  if (!sInitialized) {
-    Init();
-  }
+  if (!sInitialized) Init();
+
+    // define DEBUG_SYSTEM_COLOR_USE if you want to debug system color
+    // use in a skin that uses them.  When set, it will make all system
+    // color pairs that are appropriate for foreground/background
+    // pairing the same.  This means if the skin is using system colors
+    // correctly you will not be able to see *any* text.
+#undef DEBUG_SYSTEM_COLOR_USE
 
 #ifdef DEBUG_SYSTEM_COLOR_USE
-  if (NS_SUCCEEDED(SystemColorUseDebuggingColor(aID, aResult))) {
-    return NS_OK;
-  }
-#endif
+  {
+    nsresult rv = NS_OK;
+    switch (aID) {
+        // css2  http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
+      case ColorID::Activecaption:
+        // active window caption background
+      case ColorID::Captiontext:
+        // text in active window caption
+        aResult = NS_RGB(0xff, 0x00, 0x00);
+        break;
 
-  // We only use standins for colors that we can access via CSS.
-  aUseStandinsForNativeColors =
-      aUseStandinsForNativeColors && ColorIsCSSAccessible(aID);
+      case ColorID::Highlight:
+        // background of selected item
+      case ColorID::Highlighttext:
+        // text of selected item
+        aResult = NS_RGB(0xff, 0xff, 0x00);
+        break;
+
+      case ColorID::Inactivecaption:
+        // inactive window caption
+      case ColorID::Inactivecaptiontext:
+        // text in inactive window caption
+        aResult = NS_RGB(0x66, 0x66, 0x00);
+        break;
+
+      case ColorID::Infobackground:
+        // tooltip background color
+      case ColorID::Infotext:
+        // tooltip text color
+        aResult = NS_RGB(0x00, 0xff, 0x00);
+        break;
+
+      case ColorID::Menu:
+        // menu background
+      case ColorID::Menutext:
+        // menu text
+        aResult = NS_RGB(0x00, 0xff, 0xff);
+        break;
+
+      case ColorID::Threedface:
+      case ColorID::Buttonface:
+        // 3-D face color
+      case ColorID::Buttontext:
+        // text on push buttons
+        aResult = NS_RGB(0x00, 0x66, 0x66);
+        break;
+
+      case ColorID::Window:
+      case ColorID::Windowtext:
+        aResult = NS_RGB(0x00, 0x00, 0xff);
+        break;
+
+        // from the CSS3 working draft (not yet finalized)
+        // http://www.w3.org/tr/2000/wd-css3-userint-20000216.html#color
+
+      case ColorID::Field:
+      case ColorID::Fieldtext:
+        aResult = NS_RGB(0xff, 0x00, 0xff);
+        break;
+
+      case ColorID::MozDialog:
+      case ColorID::MozDialogtext:
+        aResult = NS_RGB(0x66, 0x00, 0x66);
+        break;
+
+      default:
+        rv = NS_ERROR_NOT_AVAILABLE;
+    }
+    if (NS_SUCCEEDED(rv)) return rv;
+  }
+#endif  // DEBUG_SYSTEM_COLOR_USE
+
+  if (aUseStandinsForNativeColors && ColorIsNotCSSAccessible(aID)) {
+    aUseStandinsForNativeColors = false;
+  }
 
   if (!aUseStandinsForNativeColors && IS_COLOR_CACHED(aID)) {
     aResult = sCachedColors[uint32_t(aID)];
@@ -824,23 +948,24 @@ nsresult nsXPLookAndFeel::GetColorValue(ColorID aID,
   }
 
   if (NS_SUCCEEDED(NativeGetColor(aID, aResult))) {
-    if (gfxPlatform::GetCMSMode() == CMSMode::All &&
-        !IsSpecialColor(aID, aResult)) {
-      qcms_transform* transform = gfxPlatform::GetCMSInverseRGBTransform();
-      if (transform) {
-        uint8_t color[4];
-        color[0] = NS_GET_R(aResult);
-        color[1] = NS_GET_G(aResult);
-        color[2] = NS_GET_B(aResult);
-        color[3] = NS_GET_A(aResult);
-        qcms_transform_data(transform, color, color, 1);
-        aResult = NS_RGBA(color[0], color[1], color[2], color[3]);
+    if (!mozilla::ServoStyleSet::IsInServoTraversal()) {
+      MOZ_ASSERT(NS_IsMainThread());
+      if ((gfxPlatform::GetCMSMode() == eCMSMode_All) &&
+          !IsSpecialColor(aID, aResult)) {
+        qcms_transform* transform = gfxPlatform::GetCMSInverseRGBTransform();
+        if (transform) {
+          uint8_t color[4];
+          color[0] = NS_GET_R(aResult);
+          color[1] = NS_GET_G(aResult);
+          color[2] = NS_GET_B(aResult);
+          color[3] = NS_GET_A(aResult);
+          qcms_transform_data(transform, color, color, 1);
+          aResult = NS_RGBA(color[0], color[1], color[2], color[3]);
+        }
       }
-    }
 
-    // NOTE: Servo holds a lock and the main thread is paused, so writing to the
-    // global cache here is fine.
-    CACHE_COLOR(aID, aResult);
+      CACHE_COLOR(aID, aResult);
+    }
     return NS_OK;
   }
 
