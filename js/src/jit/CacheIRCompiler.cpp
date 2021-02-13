@@ -3171,6 +3171,20 @@ bool CacheIRCompiler::emitLoadArrayBufferByteLengthInt32Result(
   return true;
 }
 
+bool CacheIRCompiler::emitLoadArrayBufferByteLengthDoubleResult(
+    ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  ScratchDoubleScope fpscratch(masm);
+  masm.loadArrayBufferByteLengthIntPtr(obj, scratch);
+  masm.convertIntPtrToDouble(scratch, fpscratch);
+  masm.boxDouble(fpscratch, output.valueReg(), fpscratch);
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadTypedArrayLengthInt32Result(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
