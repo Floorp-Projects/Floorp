@@ -112,7 +112,7 @@ async function runExceptionThrownTest(
     is(typeof details, "object", "Got expected 'exceptionDetails' property");
     ok(
       timestamp >= timeBefore && timestamp <= timeAfter,
-      "Got valid timestamp"
+      `Timestamp ${timestamp} in expected range [${timeBefore} - ${timeAfter}]`
     );
   });
 

@@ -176,9 +176,11 @@ async function runConsoleTest(client, eventCount, callback, options = {}) {
 
   // Check basic details for consoleAPICalled events
   consoleAPIentries.forEach(({ payload }) => {
+    const timestamp = payload.timestamp;
+
     ok(
-      payload.timestamp >= timeBefore && payload.timestamp <= timeAfter,
-      "Got valid timestamp"
+      timestamp >= timeBefore && timestamp <= timeAfter,
+      `Timestamp ${timestamp} in expected range [${timeBefore} - ${timeAfter}]`
     );
   });
 
