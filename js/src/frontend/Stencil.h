@@ -7,11 +7,12 @@
 #ifndef frontend_Stencil_h
 #define frontend_Stencil_h
 
-#include "mozilla/Assertions.h"  // MOZ_ASSERT
-#include "mozilla/Maybe.h"       // mozilla::{Maybe, Nothing}
-#include "mozilla/Range.h"       // mozilla::Range
-#include "mozilla/Span.h"        // mozilla::Span
-#include "mozilla/Variant.h"     // mozilla::Variant
+#include "mozilla/Assertions.h"       // MOZ_ASSERT
+#include "mozilla/Maybe.h"            // mozilla::{Maybe, Nothing}
+#include "mozilla/MemoryReporting.h"  // mozilla::MallocSizeOf
+#include "mozilla/Range.h"            // mozilla::Range
+#include "mozilla/Span.h"             // mozilla::Span
+#include "mozilla/Variant.h"          // mozilla::Variant
 
 #include <stddef.h>  // size_t
 #include <stdint.h>  // char16_t, uint8_t, uint16_t, uint32_t
@@ -594,6 +595,16 @@ class StencilModuleMetadata {
 
   bool initModule(JSContext* cx, CompilationAtomCache& atomCache,
                   JS::Handle<ModuleObject*> module) const;
+
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+    return mallocSizeOf(this) +
+           requestedModules.sizeOfExcludingThis(mallocSizeOf) +
+           importEntries.sizeOfExcludingThis(mallocSizeOf) +
+           localExportEntries.sizeOfExcludingThis(mallocSizeOf) +
+           indirectExportEntries.sizeOfExcludingThis(mallocSizeOf) +
+           starExportEntries.sizeOfExcludingThis(mallocSizeOf) +
+           functionDecls.sizeOfExcludingThis(mallocSizeOf);
+  }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump() const;
