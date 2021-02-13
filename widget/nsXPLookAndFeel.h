@@ -103,10 +103,12 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
   static void IntPrefChanged(nsLookAndFeelIntPref* data);
   static void FloatPrefChanged(nsLookAndFeelFloatPref* data);
   static void ColorPrefChanged(unsigned int index, const char* prefName);
-  static nscolor GetStandinForNativeColor(ColorID);
   void InitFromPref(nsLookAndFeelIntPref* aPref);
   void InitFromPref(nsLookAndFeelFloatPref* aPref);
   void InitColorFromPref(int32_t aIndex);
+  bool IsSpecialColor(ColorID aID, nscolor& aColor);
+  bool ColorIsNotCSSAccessible(ColorID aID);
+  nscolor GetStandinForNativeColor(ColorID aID);
   void RecordTelemetry();
   virtual void RecordLookAndFeelSpecificTelemetry() {}
 
