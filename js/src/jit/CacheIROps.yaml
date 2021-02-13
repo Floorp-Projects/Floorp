@@ -985,6 +985,13 @@
   args:
     obj: ObjId
 
+- name: TypedArrayByteOffsetDoubleResult
+  shared: true
+  transpile: false
+  cost_estimate: 1
+  args:
+    obj: ObjId
+
 - name: TypedArrayElementSizeResult
   shared: true
   transpile: true
