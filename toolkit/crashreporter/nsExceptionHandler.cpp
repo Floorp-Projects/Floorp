@@ -859,12 +859,12 @@ static void AnnotateMemoryStatus(AnnotationWriter& aWriter) {
   // read it.
 
   // The buffer in which we're going to load the entire file.
-  // A typical size for /proc/meminfo is 1kb, so 10kB should
+  // A typical size for /proc/meminfo is 1KiB, so 4KiB should
   // be large enough until further notice.
-  const size_t BUFFER_SIZE_BYTES = 10000;
+  const size_t BUFFER_SIZE_BYTES = 4096;
   char buffer[BUFFER_SIZE_BYTES];
-  ssize_t bufferLen = 0;
 
+  size_t bufferLen = 0;
   {
     // Read and load into memory.
     int fd = sys_open("/proc/meminfo", O_RDONLY, /* chmod */ 0);
@@ -874,10 +874,25 @@ static void AnnotateMemoryStatus(AnnotationWriter& aWriter) {
     }
     auto Guard = MakeScopeExit([fd]() { mozilla::Unused << sys_close(fd); });
 
-    if ((bufferLen = sys_read(fd, buffer, BUFFER_SIZE_BYTES)) <= 0) {
-      // Cannot read for some reason. Let's give up.
-      return;
-    }
+    ssize_t bytesRead = 0;
+    do {
+      if ((bytesRead = sys_read(fd, buffer + bufferLen,
+                                BUFFER_SIZE_BYTES - bufferLen)) < 0) {
+        if ((errno == EAGAIN) || (errno == EINTR)) {
+          continue;
+        }
+
+        // Cannot read for some reason. Let's give up.
+        return;
+      }
+
+      bufferLen += bytesRead;
+
+      if (bufferLen == BUFFER_SIZE_BYTES) {
+        // The file is too large, bail out
+        return;
+      }
+    } while (bytesRead != 0);
   }
 
   // Each line of /proc/meminfo looks like
