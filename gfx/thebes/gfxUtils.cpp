@@ -1464,7 +1464,7 @@ DeviceColor ToDeviceColor(const sRGBColor& aColor) {
   // need to return the same object from all return points in this function. We
   // could declare a local Color variable and use that, but we might as well
   // just use aColor.
-  if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
+  if (gfxPlatform::GetCMSMode() == CMSMode::All) {
     qcms_transform* transform = gfxPlatform::GetCMSRGBTransform();
     if (transform) {
       return gfxPlatform::TransformPixel(aColor, transform);

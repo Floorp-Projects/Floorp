@@ -318,10 +318,10 @@ struct StyleRGBA;
 namespace gfx {
 
 /**
- * If the CMS mode is eCMSMode_All, these functions transform the passed
- * color to a device color using the transform returened by gfxPlatform::
- * GetCMSRGBTransform().  If the CMS mode is some other value, the color is
- * returned unchanged (other than a type change to Moz2D Color, if
+ * If the CMS mode is CMSMode::All, these functions transform the passed
+ * color to a device color using the transform returned by
+ * gfxPlatform::GetCMSRGBTransform().  If the CMS mode is some other value, the
+ * color is returned unchanged (other than a type change to Moz2D Color, if
  * applicable).
  */
 DeviceColor ToDeviceColor(const sRGBColor& aColor);
