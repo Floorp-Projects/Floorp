@@ -40,6 +40,15 @@ class DownloadStorage(context: Context) {
     }
 
     /**
+     * Returns a [List] of all the [DownloadState] instances.
+     */
+    suspend fun getDownloadsList(): List<DownloadState> {
+        return downloadDao.getDownloadsList().map { entity ->
+            entity.toDownloadState()
+        }
+    }
+
+    /**
      * Returns all saved [DownloadState] instances as a [DataSource.Factory].
      */
     fun getDownloadsPaged(): DataSource.Factory<Int, DownloadState> = downloadDao

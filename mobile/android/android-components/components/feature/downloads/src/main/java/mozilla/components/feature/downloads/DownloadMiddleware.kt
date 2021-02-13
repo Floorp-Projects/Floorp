@@ -12,7 +12,6 @@ import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.InternalCoroutinesApi
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.DownloadAction
@@ -102,12 +101,10 @@ class DownloadMiddleware(
     }
 
     private fun restoreDownloads(store: Store<BrowserState, BrowserAction>) = scope.launch {
-        downloadStorage.getDownloads().collect { downloads ->
-            downloads.forEach { download ->
-                if (!store.state.downloads.containsKey(download.id) && !download.private) {
-                    store.dispatch(DownloadAction.RestoreDownloadStateAction(download))
-                    logger.debug("Download restored from the storage ${download.fileName}")
-                }
+        downloadStorage.getDownloadsList().forEach { download ->
+            if (!store.state.downloads.containsKey(download.id) && !download.private) {
+                store.dispatch(DownloadAction.RestoreDownloadStateAction(download))
+                logger.debug("Download restored from the storage ${download.fileName}")
             }
         }
     }

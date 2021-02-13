@@ -11,7 +11,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
@@ -120,7 +119,7 @@ class DownloadMiddlewareTest {
     }
 
     @Test
-    fun `only restarted downloads MUST not be passed to the downloadStorage`() = runBlockingTest {
+    fun `restarted downloads MUST not be passed to the downloadStorage`() = runBlockingTest {
         val applicationContext: Context = mock()
         val downloadStorage: DownloadStorage = mock()
         val downloadMiddleware = DownloadMiddleware(
@@ -272,11 +271,7 @@ class DownloadMiddlewareTest {
         )
 
         val download = DownloadState("https://mozilla.org/download")
-        whenever(downloadStorage.getDownloads()).thenReturn(
-            flow {
-                emit(listOf(download))
-            }
-        )
+        whenever(downloadStorage.getDownloadsList()).thenReturn(listOf(download))
 
         assertTrue(store.state.downloads.isEmpty())
 
@@ -305,11 +300,7 @@ class DownloadMiddlewareTest {
         )
 
         val download = DownloadState("https://mozilla.org/download", private = true)
-        whenever(downloadStorage.getDownloads()).thenReturn(
-            flow {
-                emit(listOf(download))
-            }
-        )
+        whenever(downloadStorage.getDownloadsList()).thenReturn(listOf(download))
 
         assertTrue(store.state.downloads.isEmpty())
 

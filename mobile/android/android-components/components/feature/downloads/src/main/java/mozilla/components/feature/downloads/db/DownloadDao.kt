@@ -13,7 +13,7 @@ import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Internal dao for accessing and modifying sitePermissions in the database.
+ * Internal dao for accessing and modifying Downloads in the database.
  */
 @Dao
 internal interface DownloadDao {
@@ -26,6 +26,9 @@ internal interface DownloadDao {
 
     @Query("SELECT * FROM downloads ORDER BY created_at DESC")
     fun getDownloads(): Flow<List<DownloadEntity>>
+
+    @Query("SELECT * FROM downloads ORDER BY created_at DESC")
+    suspend fun getDownloadsList(): List<DownloadEntity>
 
     @Delete
     suspend fun delete(entity: DownloadEntity)
