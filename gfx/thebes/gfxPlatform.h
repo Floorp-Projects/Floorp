@@ -74,11 +74,11 @@ class SystemFontListEntry;
     }                                             \
   } while (0)
 
-enum eCMSMode {
-  eCMSMode_Off = 0,         // No color management
-  eCMSMode_All = 1,         // Color manage everything
-  eCMSMode_TaggedOnly = 2,  // Color manage tagged Images Only
-  eCMSMode_AllCount = 3
+enum class CMSMode : int32_t {
+  Off = 0,         // No color management
+  All = 1,         // Color manage everything
+  TaggedOnly = 2,  // Color manage tagged Images Only
+  AllCount = 3
 };
 
 enum eGfxLog {
@@ -530,12 +530,12 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   /**
    * Are we going to try color management?
    */
-  static eCMSMode GetCMSMode();
+  static CMSMode GetCMSMode();
 
   /**
    * Used only for testing. Override the pref setting.
    */
-  static void SetCMSModeOverride(eCMSMode aMode);
+  static void SetCMSModeOverride(CMSMode aMode);
 
   /**
    * Determines the rendering intent for color management.
