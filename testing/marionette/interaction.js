@@ -198,7 +198,7 @@ async function webdriverClickElement(el, a11y) {
 
   // step 10
   // if the click causes navigation, the post-navigation checks are
-  // handled by navigate.js
+  // handled by the load listener in listener.js
 }
 
 async function chromeClick(el, a11y) {

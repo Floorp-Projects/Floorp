@@ -185,6 +185,7 @@ class TCPConnection {
     this.lastID = 0;
 
     this.driver = driverFactory();
+    this.driver.init();
   }
 
   /**
@@ -193,6 +194,7 @@ class TCPConnection {
    */
   onClosed() {
     this.driver.deleteSession();
+    this.driver.uninit();
     if (this.onclose) {
       this.onclose(this);
     }

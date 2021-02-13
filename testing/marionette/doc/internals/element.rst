@@ -1,9 +1,9 @@
 element module
 ==============
 
-element.ReferenceStore
-----------------------
-.. js:autoclass:: element.ReferenceStore
+element.Store
+-------------
+.. js:autoclass:: element.Store
   :members:
 
 element.find
