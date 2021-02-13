@@ -717,7 +717,7 @@ LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadBitfields(
     mBytesPerColor = (mH.mBIHSize == InfoHeaderLength::WIN_V2) ? 3 : 4;
   }
 
-  if (mCMSMode != CMSMode::Off) {
+  if (mCMSMode != eCMSMode_Off) {
     switch (mH.mCsType) {
       case InfoColorSpace::EMBEDDED:
         return SeekColorProfile(aLength);
