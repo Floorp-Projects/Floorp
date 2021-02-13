@@ -85,7 +85,7 @@ function nonBrowserWindowStartup() {
 
     // Also hide the window-list separator.
     element = document.getElementById("sep-window-list");
-    element.hidden = true;
+    element.setAttribute("hidden", "true");
 
     // Setup the dock menu.
     let dockMenuElement = document.getElementById("menu_mac_dockmenu");

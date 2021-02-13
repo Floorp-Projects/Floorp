@@ -719,9 +719,13 @@ class nsContextMenu {
 
     // Hide menu entries for images, show otherwise
     if (this.inFrame) {
-      this.viewFrameSourceElement.hidden = !BrowserUtils.mimeTypeIsTextBased(
-        this.target.ownerDocument.contentType
-      );
+      if (
+        BrowserUtils.mimeTypeIsTextBased(this.target.ownerDocument.contentType)
+      ) {
+        this.viewFrameSourceElement.removeAttribute("hidden");
+      } else {
+        this.viewFrameSourceElement.setAttribute("hidden", "true");
+      }
     }
 
     // BiDi UI
