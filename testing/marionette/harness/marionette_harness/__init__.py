@@ -15,6 +15,7 @@ from .marionette_test import (
     skip,
     skip_if_chrome,
     skip_if_desktop,
+    skip_if_framescript,
     SkipTest,
     skip_unless_browser_pref,
     skip_unless_protocol,
