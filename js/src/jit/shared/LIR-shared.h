@@ -4049,11 +4049,11 @@ class LGetNextEntryForIterator : public LInstructionHelper<1, 2, 3> {
   const LDefinition* temp2() { return getTemp(2); }
 };
 
-class LArrayBufferByteLengthInt32 : public LInstructionHelper<1, 1, 0> {
+class LArrayBufferByteLength : public LInstructionHelper<1, 1, 0> {
  public:
-  LIR_HEADER(ArrayBufferByteLengthInt32)
+  LIR_HEADER(ArrayBufferByteLength)
 
-  explicit LArrayBufferByteLengthInt32(const LAllocation& obj)
+  explicit LArrayBufferByteLength(const LAllocation& obj)
       : LInstructionHelper(classOpcode) {
     setOperand(0, obj);
   }
