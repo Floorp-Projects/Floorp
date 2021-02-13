@@ -1601,10 +1601,13 @@ bool WarpCacheIRTranspiler::emitLoadArrayBufferByteLengthInt32Result(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
 
-  auto* length = MArrayBufferByteLengthInt32::New(alloc(), obj);
+  auto* length = MArrayBufferByteLength::New(alloc(), obj);
   add(length);
 
-  pushResult(length);
+  auto* lengthInt32 = MNonNegativeIntPtrToInt32::New(alloc(), length);
+  add(lengthInt32);
+
+  pushResult(lengthInt32);
   return true;
 }
 

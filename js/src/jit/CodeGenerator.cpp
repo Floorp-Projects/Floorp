@@ -7898,16 +7898,10 @@ void CodeGenerator::visitWasmStoreSlotI64(LWasmStoreSlotI64* ins) {
   masm.store64(value, addr);
 }
 
-void CodeGenerator::visitArrayBufferByteLengthInt32(
-    LArrayBufferByteLengthInt32* lir) {
+void CodeGenerator::visitArrayBufferByteLength(LArrayBufferByteLength* lir) {
   Register obj = ToRegister(lir->object());
   Register out = ToRegister(lir->output());
-
-  Label bail;
-  masm.loadArrayBufferByteLengthInt32(obj, out, &bail);
-  if (bail.used()) {
-    bailoutFrom(&bail, lir->snapshot());
-  }
+  masm.loadArrayBufferByteLengthIntPtr(obj, out);
 }
 
 void CodeGenerator::visitArrayBufferViewLength(LArrayBufferViewLength* lir) {

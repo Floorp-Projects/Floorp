@@ -2965,16 +2965,12 @@ void LIRGenerator::visitGetNextEntryForIterator(MGetNextEntryForIterator* ins) {
   define(lir, ins);
 }
 
-void LIRGenerator::visitArrayBufferByteLengthInt32(
-    MArrayBufferByteLengthInt32* ins) {
+void LIRGenerator::visitArrayBufferByteLength(MArrayBufferByteLength* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
-  MOZ_ASSERT(ins->type() == MIRType::Int32);
+  MOZ_ASSERT(ins->type() == MIRType::IntPtr);
 
-  auto* lir = new (alloc())
-      LArrayBufferByteLengthInt32(useRegisterAtStart(ins->object()));
-#ifdef JS_64BIT
-  assignSnapshot(lir, ins->bailoutKind());
-#endif
+  auto* lir =
+      new (alloc()) LArrayBufferByteLength(useRegisterAtStart(ins->object()));
   define(lir, ins);
 }
 
