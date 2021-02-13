@@ -15,7 +15,6 @@ from marionette_driver.marionette import Alert
 from marionette_harness import (
     MarionetteTestCase,
     run_if_manage_instance,
-    skip_if_framescript,
     skip_unless_browser_pref,
     WindowManagerMixin,
 )
@@ -912,7 +911,6 @@ class TestPageLoadStrategy(BaseNavigationTestCase):
 
         super(TestPageLoadStrategy, self).tearDown()
 
-    @skip_if_framescript("Bug 1675173: Won't be fixed for framescript mode")
     def test_none(self):
         self.marionette.delete_session()
         self.marionette.start_session({"pageLoadStrategy": "none"})
