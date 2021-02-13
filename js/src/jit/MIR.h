@@ -7387,7 +7387,7 @@ class MArrayBufferViewByteOffset : public MUnaryInstruction,
                                    public SingleObjectPolicy::Data {
   explicit MArrayBufferViewByteOffset(MDefinition* obj)
       : MUnaryInstruction(classOpcode, obj) {
-    setResultType(MIRType::Int32);
+    setResultType(MIRType::IntPtr);
     setMovable();
   }
 
