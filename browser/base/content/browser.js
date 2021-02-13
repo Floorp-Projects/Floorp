@@ -1181,7 +1181,7 @@ var gPopupBlockerObserver = {
         blockedPopupAllowSite.removeAttribute("block");
       }
     } catch (e) {
-      blockedPopupAllowSite.setAttribute("hidden", "true");
+      blockedPopupAllowSite.hidden = true;
     }
 
     if (PrivateBrowsingUtils.isWindowPrivate(window)) {
@@ -1205,7 +1205,7 @@ var gPopupBlockerObserver = {
     let blockedPopupsSeparator = document.getElementById(
       "blockedPopupsSeparator"
     );
-    blockedPopupsSeparator.setAttribute("hidden", true);
+    blockedPopupsSeparator.hidden = true;
 
     browser.popupBlocker.getBlockedPopups().then(blockedPopups => {
       let foundUsablePopupURI = false;
@@ -8404,9 +8404,7 @@ var RestoreLastSessionObserver = {
       Services.obs.addObserver(this, "sessionstore-last-session-cleared", true);
       goSetCommandEnabled("Browser:RestoreLastSession", true);
     } else if (SessionStore.willAutoRestore) {
-      document
-        .getElementById("Browser:RestoreLastSession")
-        .setAttribute("hidden", true);
+      document.getElementById("Browser:RestoreLastSession").hidden = true;
     }
   },
 
