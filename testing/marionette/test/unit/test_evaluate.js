@@ -65,7 +65,6 @@ const domElId = { id: 1, browsingContextId: 4, webElRef: domWebEl.toJSON() };
 const svgElId = { id: 2, browsingContextId: 5, webElRef: svgWebEl.toJSON() };
 const xulElId = { id: 3, browsingContextId: 6, webElRef: xulWebEl.toJSON() };
 
-const seenEls = new element.Store();
 const elementIdCache = new element.ReferenceStore();
 
 add_test(function test_toJSON_types() {
@@ -80,11 +79,6 @@ add_test(function test_toJSON_types() {
 
   // collections
   deepEqual([], evaluate.toJSON([]));
-
-  // elements
-  ok(evaluate.toJSON(domEl, seenEls) instanceof WebElement);
-  ok(evaluate.toJSON(svgEl, seenEls) instanceof WebElement);
-  ok(evaluate.toJSON(xulEl, seenEls) instanceof WebElement);
 
   // toJSON
   equal(
@@ -129,31 +123,6 @@ add_test(function test_toJSON_sequences() {
     null,
     true,
     [],
-    domEl,
-    {
-      toJSON() {
-        return "foo";
-      },
-    },
-    { bar: "baz" },
-  ];
-  const actual = evaluate.toJSON(input, seenEls);
-
-  equal(null, actual[0]);
-  equal(true, actual[1]);
-  deepEqual([], actual[2]);
-  ok(actual[3] instanceof WebElement);
-  equal("foo", actual[4]);
-  deepEqual({ bar: "baz" }, actual[5]);
-
-  run_next_test();
-});
-
-add_test(function test_toJSON_sequences_ReferenceStore() {
-  const input = [
-    null,
-    true,
-    [],
     domWebEl,
     {
       toJSON() {
@@ -186,33 +155,6 @@ add_test(function test_toJSON_sequences_ReferenceStore() {
 });
 
 add_test(function test_toJSON_objects() {
-  const input = {
-    null: null,
-    boolean: true,
-    array: [],
-    webElement: domEl,
-    elementId: domElId,
-    toJSON: {
-      toJSON() {
-        return "foo";
-      },
-    },
-    object: { bar: "baz" },
-  };
-  const actual = evaluate.toJSON(input, seenEls);
-
-  equal(null, actual.null);
-  equal(true, actual.boolean);
-  deepEqual([], actual.array);
-  ok(actual.webElement instanceof WebElement);
-  ok(actual.elementId instanceof WebElement);
-  equal("foo", actual.toJSON);
-  deepEqual({ bar: "baz" }, actual.object);
-
-  run_next_test();
-});
-
-add_test(function test_toJSON_objects_ReferenceStore() {
   const input = {
     null: null,
     boolean: true,
@@ -266,37 +208,7 @@ add_test(function test_fromJSON_ReferenceStore() {
   deepEqual(webEl, domWebEl);
   deepEqual(elementIdCache.get(webEl), domElId);
 
-  // Store doesn't contain ElementIdentifiers
-  Assert.throws(
-    () => evaluate.fromJSON(domElId, seenEls),
-    /TypeError/,
-    "Expected element.ReferenceStore"
-  );
-
   elementIdCache.clear();
-
-  run_next_test();
-});
-
-add_test(function test_fromJSON_Store() {
-  // Pass-through WebElements without adding it to the element store
-  let webEl = evaluate.fromJSON(domWebEl.toJSON());
-  deepEqual(webEl, domWebEl);
-  ok(!seenEls.has(domWebEl));
-
-  // Find element in the element store
-  webEl = seenEls.add(domEl);
-  const el = evaluate.fromJSON(webEl.toJSON(), seenEls);
-  deepEqual(el, domEl);
-
-  // Reference store doesn't contain web elements
-  Assert.throws(
-    () => evaluate.fromJSON(domWebEl.toJSON(), elementIdCache),
-    /TypeError/,
-    "Expected element.Store"
-  );
-
-  seenEls.clear();
 
   run_next_test();
 });

@@ -68,9 +68,10 @@ const XUL_SELECTED_ELS = new Set([
  * web element reference for every element representing the same element
  * is the same.
  *
- * The {@link element.Store} provides a mapping between web element
- * references and DOM elements for each browsing context.  It also provides
- * functionality for looking up and retrieving elements.
+ * The {@link element.ReferenceStore} provides a mapping between web element
+ * references and the ContentDOMReference of DOM elements for each browsing
+ * context.  It also provides functionality for looking up and retrieving
+ * elements.
  *
  * @namespace
  */
@@ -88,167 +89,6 @@ element.Strategy = {
 };
 
 /**
- * Stores known/seen elements and their associated web element
- * references.
- *
- * Elements are added by calling {@link #add()} or {@link addAll()},
- * and may be queried by their web element reference using {@link get()}.
- *
- * @class
- * @memberof element
- */
-element.Store = class {
-  constructor() {
-    this.els = {};
-  }
-
-  clear() {
-    this.els = {};
-  }
-
-  /**
-   * Make a collection of elements seen.
-   *
-   * The order of the returned web element references is guaranteed to
-   * match that of the collection passed in.
-   *
-   * @param {NodeList} els
-   *     Sequence of elements to add to set of seen elements.
-   *
-   * @return {Array.<WebElement>}
-   *     List of the web element references associated with each element
-   *     from <var>els</var>.
-   */
-  addAll(els) {
-    let add = this.add.bind(this);
-    return [...els].map(add);
-  }
-
-  /**
-   * Make an element seen.
-   *
-   * @param {(Element|WindowProxy|XULElement)} el
-   *    Element to add to set of seen elements.
-   *
-   * @return {WebElement}
-   *     Web element reference associated with element.
-   *
-   * @throws {TypeError}
-   *     If <var>el</var> is not an {@link Element} or a {@link XULElement}.
-   */
-  add(el) {
-    const isDOMElement = element.isDOMElement(el);
-    const isDOMWindow = element.isDOMWindow(el);
-    const isXULElement = element.isXULElement(el);
-    const context = element.isInXULDocument(el) ? "chrome" : "content";
-
-    if (!(isDOMElement || isDOMWindow || isXULElement)) {
-      throw new TypeError(
-        "Expected an element or WindowProxy, " + pprint`got: ${el}`
-      );
-    }
-
-    for (let i in this.els) {
-      let foundEl;
-      try {
-        foundEl = this.els[i].get();
-      } catch (e) {}
-
-      if (foundEl) {
-        if (new XPCNativeWrapper(foundEl) == new XPCNativeWrapper(el)) {
-          return WebElement.fromUUID(i, context);
-        }
-
-        // cleanup reference to gc'd element
-      } else {
-        delete this.els[i];
-      }
-    }
-
-    let webEl = WebElement.from(el);
-    this.els[webEl.uuid] = Cu.getWeakReference(el);
-    return webEl;
-  }
-
-  /**
-   * Determine if the provided web element reference has been seen
-   * before/is in the element store.
-   *
-   * Unlike when getting the element, a staleness check is not
-   * performed.
-   *
-   * @param {WebElement} webEl
-   *     Element's associated web element reference.
-   *
-   * @return {boolean}
-   *     True if element is in the store, false otherwise.
-   *
-   * @throws {TypeError}
-   *     If <var>webEl</var> is not a {@link WebElement}.
-   */
-  has(webEl) {
-    if (!(webEl instanceof WebElement)) {
-      throw new TypeError(pprint`Expected web element, got: ${webEl}`);
-    }
-    return Object.keys(this.els).includes(webEl.uuid);
-  }
-
-  /**
-   * Retrieve a DOM {@link Element} or a {@link XULElement} by its
-   * unique {@link WebElement} reference.
-   *
-   * @param {WebElement} webEl
-   *     Web element reference to find the associated {@link Element}
-   *     of.
-   * @param {WindowProxy} win
-   *     Current window global, which may differ from the associated
-   *     window global of <var>el</var>.
-   *
-   * @returns {(Element|XULElement)}
-   *     Element associated with reference.
-   *
-   * @throws {TypeError}
-   *     If <var>webEl</var> is not a {@link WebElement}.
-   * @throws {NoSuchElementError}
-   *     If the web element reference <var>uuid</var> has not been
-   *     seen before.
-   * @throws {StaleElementReferenceError}
-   *     If the element has gone stale, indicating it is no longer
-   *     attached to the DOM, or its node document is no longer the
-   *     active document.
-   */
-  get(webEl, win) {
-    if (!(webEl instanceof WebElement)) {
-      throw new TypeError(pprint`Expected web element, got: ${webEl}`);
-    }
-    if (!this.has(webEl)) {
-      throw new error.NoSuchElementError(
-        "Web element reference not seen before: " + webEl.uuid
-      );
-    }
-
-    let el;
-    let ref = this.els[webEl.uuid];
-    try {
-      el = ref.get();
-    } catch (e) {
-      delete this.els[webEl.uuid];
-    }
-
-    if (element.isStale(el, win)) {
-      throw new error.StaleElementReferenceError(
-        pprint`The element reference of ${el || webEl.uuid} is stale; ` +
-          "either the element is no longer attached to the DOM, " +
-          "it is not in the current frame context, " +
-          "or the document has been refreshed"
-      );
-    }
-
-    return el;
-  }
-};
-
-/**
  * Stores known/seen web element references and their associated
  * ContentDOMReference ElementIdentifiers.
  *
@@ -260,7 +100,6 @@ element.Store = class {
  *   webElRef: {element-6066-11e4-a52e-4f735466cecf: <uuid>} }
  *
  * For use in parent process in conjunction with ContentDOMReference in content.
- * Implements all `element.Store` methods for duck typing.
  *
  * @class
  * @memberof element
