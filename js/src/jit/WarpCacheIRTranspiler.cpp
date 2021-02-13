@@ -3326,10 +3326,13 @@ bool WarpCacheIRTranspiler::emitTypedArrayByteOffsetInt32Result(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
 
-  auto* ins = MArrayBufferViewByteOffset::New(alloc(), obj);
-  add(ins);
+  auto* byteOffset = MArrayBufferViewByteOffset::New(alloc(), obj);
+  add(byteOffset);
 
-  pushResult(ins);
+  auto* byteOffsetInt32 = MNonNegativeIntPtrToInt32::New(alloc(), byteOffset);
+  add(byteOffsetInt32);
+
+  pushResult(byteOffsetInt32);
   return true;
 }
 
