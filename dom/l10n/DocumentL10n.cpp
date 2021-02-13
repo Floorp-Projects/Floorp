@@ -8,6 +8,7 @@
 #include "nsIContentSink.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentL10nBinding.h"
+#include "mozilla/Telemetry.h"
 
 using namespace mozilla::dom;
 
@@ -29,6 +30,8 @@ NS_IMPL_RELEASE_INHERITED(DocumentL10n, DOMLocalization)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DocumentL10n)
 NS_INTERFACE_MAP_END_INHERITING(DOMLocalization)
+
+bool DocumentL10n::mIsFirstBrowserWindow = true;
 
 /* static */
 RefPtr<DocumentL10n> DocumentL10n::Create(Document* aDocument,
@@ -101,6 +104,7 @@ void DocumentL10n::TriggerInitialTranslation() {
   if (mState >= DocumentL10nState::InitialTranslationTriggered) {
     return;
   }
+  mInitialTranslationStart = mozilla::TimeStamp::NowUnfuzzed();
 
   AutoAllowLegacyScriptExecution exemption;
 
@@ -241,6 +245,41 @@ already_AddRefed<Promise> DocumentL10n::TranslateDocument(ErrorResult& aRv) {
   return promise.forget();
 }
 
+void DocumentL10n::MaybeRecordTelemetry() {
+  mozilla::TimeStamp initialTranslationEnd = mozilla::TimeStamp::NowUnfuzzed();
+
+  nsAutoString documentURI;
+  ErrorResult rv;
+  rv = mDocument->GetDocumentURI(documentURI);
+  if (rv.Failed()) {
+    return;
+  }
+
+  nsCString key;
+
+  if (documentURI.Find("chrome://browser/content/browser.xhtml") == 0) {
+    if (mIsFirstBrowserWindow) {
+      key = "browser_first_window";
+      mIsFirstBrowserWindow = false;
+    } else {
+      key = "browser_new_window";
+    }
+  } else if (documentURI.Find("about:home") == 0) {
+    key = "about:home";
+  } else if (documentURI.Find("about:newtab") == 0) {
+    key = "about:newtab";
+  } else if (documentURI.Find("about:preferences") == 0) {
+    key = "about:preferences";
+  } else {
+    return;
+  }
+
+  mozilla::TimeDuration totalTime(initialTranslationEnd -
+                                  mInitialTranslationStart);
+  Accumulate(Telemetry::L10N_DOCUMENT_INITIAL_TRANSLATION_TIME_US, key,
+             totalTime.ToMicroseconds());
+}
+
 void DocumentL10n::InitialTranslationCompleted(bool aL10nCached) {
   if (mState >= DocumentL10nState::Ready) {
     return;
@@ -252,6 +291,8 @@ void DocumentL10n::InitialTranslationCompleted(bool aL10nCached) {
   }
 
   mState = DocumentL10nState::Ready;
+
+  MaybeRecordTelemetry();
 
   mDocument->InitialTranslationCompleted(aL10nCached);
 
