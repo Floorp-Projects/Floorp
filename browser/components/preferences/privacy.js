@@ -1478,7 +1478,7 @@ var gPrivacyPane = {
         this._updateSanitizeSettingsButton();
       }
     } else {
-      clearDataSettings.setAttribute("hidden", "true");
+      clearDataSettings.hidden = true;
     }
   },
 
@@ -2423,7 +2423,7 @@ var gPrivacyPane = {
     if (url) {
       el.setAttribute("href", url);
     } else {
-      el.setAttribute("hidden", "true");
+      el.hidden = true;
     }
   },
 

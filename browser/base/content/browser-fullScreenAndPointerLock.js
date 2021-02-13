@@ -90,7 +90,7 @@ var PointerlockFsWarning = {
       ".pointerlockfswarning-domain-text"
     );
     if (!host) {
-      textElem.setAttribute("hidden", true);
+      textElem.hidden = true;
     } else {
       textElem.removeAttribute("hidden");
       // Document's principal's URI has a host. Display a warning including it.
@@ -135,7 +135,7 @@ var PointerlockFsWarning = {
     this._element
       .querySelector(".pointerlockfswarning-domain-text")
       .removeAttribute("data-l10n-id");
-    this._element.setAttribute("hidden", true);
+    this._element.hidden = true;
     // Remove all event listeners
     this._element.removeEventListener("transitionend", this);
     window.removeEventListener("mousemove", this, true);
@@ -231,7 +231,7 @@ var PointerlockFsWarning = {
       }
       case "transitionend": {
         if (this._state == "hiding") {
-          this._element.setAttribute("hidden", true);
+          this._element.hidden = true;
         }
         break;
       }

@@ -2948,7 +2948,7 @@
           }
         } else {
           if (tab.hidden) {
-            tab.setAttribute("hidden", "true");
+            tab.hidden = true;
             hiddenTabs.set(tab, tabData.extData && tabData.extData.hiddenBy);
           }
 
