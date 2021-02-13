@@ -7699,11 +7699,7 @@ AttachDecision CallIRGenerator::tryAttachTypedArrayByteOffset(
   MOZ_ASSERT(args_[0].isObject());
   MOZ_ASSERT(args_[0].toObject().is<TypedArrayObject>());
 
-  // For now only optimize when the result fits in an int32.
   auto* tarr = &args_[0].toObject().as<TypedArrayObject>();
-  if (tarr->byteOffset().get() > INT32_MAX) {
-    return AttachDecision::NoAction;
-  }
 
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
@@ -7712,7 +7708,11 @@ AttachDecision CallIRGenerator::tryAttachTypedArrayByteOffset(
 
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   ObjOperandId objArgId = writer.guardToObject(argId);
-  writer.typedArrayByteOffsetInt32Result(objArgId);
+  if (tarr->byteOffset().get() <= INT32_MAX) {
+    writer.typedArrayByteOffsetInt32Result(objArgId);
+  } else {
+    writer.typedArrayByteOffsetDoubleResult(objArgId);
+  }
   writer.returnFromIC();
 
   trackAttached("TypedArrayByteOffset");
