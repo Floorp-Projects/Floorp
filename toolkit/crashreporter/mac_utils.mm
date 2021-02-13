@@ -17,16 +17,10 @@ void GetObjCExceptionInfo(void* inException, nsACString& outString) {
   NSString* reason = [e reason];
   NSArray* stackAddresses = [e callStackReturnAddresses];
 
-  nsAutoString nameStr;
-  nsAutoString reasonStr;
-
-  mozilla::Unused << mozilla::CopyCocoaStringToXPCOMString(name, nameStr);
-  mozilla::Unused << mozilla::CopyCocoaStringToXPCOMString(reason, reasonStr);
-
   outString.AssignLiteral("\nObj-C Exception data:\n");
-  AppendUTF16toUTF8(nameStr, outString);
+  outString.Append([name UTF8String]);
   outString.AppendLiteral(": ");
-  AppendUTF16toUTF8(reasonStr, outString);
+  outString.Append([reason UTF8String]);
   outString.AppendLiteral("\n\nThrown at stack:\n");
   for (NSNumber* address in stackAddresses) {
     outString.AppendPrintf("0x%lx\n", [address unsignedIntegerValue]);
