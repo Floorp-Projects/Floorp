@@ -1754,12 +1754,6 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArrayLength(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
-  // For now only optimize when the result fits in an int32.
-  auto* tarr = &obj->as<TypedArrayObject>();
-  if (tarr->length().get() > INT32_MAX) {
-    return AttachDecision::NoAction;
-  }
-
   if (mode_ != ICState::Mode::Specialized) {
     return AttachDecision::NoAction;
   }
@@ -1782,11 +1776,17 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArrayLength(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
+  auto* tarr = &obj->as<TypedArrayObject>();
+
   maybeEmitIdGuard(id);
   // Emit all the normal guards for calling this native, but specialize
   // callNativeGetterResult.
   EmitCallGetterResultGuards(writer, obj, holder, shape, objId, mode_);
-  writer.loadTypedArrayLengthInt32Result(objId);
+  if (tarr->length().get() <= INT32_MAX) {
+    writer.loadTypedArrayLengthInt32Result(objId);
+  } else {
+    writer.loadTypedArrayLengthDoubleResult(objId);
+  }
   writer.returnFromIC();
 
   trackAttached("TypedArrayLength");
@@ -7754,11 +7754,7 @@ AttachDecision CallIRGenerator::tryAttachTypedArrayLength(
 
   MOZ_ASSERT(args_[0].toObject().is<TypedArrayObject>());
 
-  // For now only optimize when the result fits in an int32.
   auto* tarr = &args_[0].toObject().as<TypedArrayObject>();
-  if (tarr->length().get() > INT32_MAX) {
-    return AttachDecision::NoAction;
-  }
 
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
@@ -7772,7 +7768,11 @@ AttachDecision CallIRGenerator::tryAttachTypedArrayLength(
     writer.guardIsNotProxy(objArgId);
   }
 
-  writer.loadTypedArrayLengthInt32Result(objArgId);
+  if (tarr->length().get() <= INT32_MAX) {
+    writer.loadTypedArrayLengthInt32Result(objArgId);
+  } else {
+    writer.loadTypedArrayLengthDoubleResult(objArgId);
+  }
   writer.returnFromIC();
 
   trackAttached("TypedArrayLength");

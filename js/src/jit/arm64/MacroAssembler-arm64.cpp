@@ -1790,6 +1790,10 @@ void MacroAssembler::convertInt64ToFloat32(Register64 src, FloatRegister dest) {
   Scvtf(ARMFPRegister(dest, 32), ARMRegister(src.reg, 64));
 }
 
+void MacroAssembler::convertIntPtrToDouble(Register src, FloatRegister dest) {
+  convertInt64ToDouble(Register64(src), dest);
+}
+
 // ========================================================================
 // Primitive atomic operations.
 

@@ -5789,6 +5789,10 @@ void MacroAssembler::convertInt64ToDouble(Register64 src, FloatRegister dest) {
   addDouble(scratchDouble, dest);
 }
 
+void MacroAssembler::convertIntPtrToDouble(Register src, FloatRegister dest) {
+  convertInt32ToDouble(src, dest);
+}
+
 extern "C" {
 extern MOZ_EXPORT int64_t __aeabi_idivmod(int, int);
 extern MOZ_EXPORT int64_t __aeabi_uidivmod(int, int);
