@@ -78,12 +78,7 @@ class DocumentL10n final : public DOMLocalization {
 
   DocumentL10nState GetState() { return mState; };
 
-  void MaybeRecordTelemetry();
-
   bool mBlockingLayout = false;
-
-  mozilla::TimeStamp mInitialTranslationStart;
-  static bool mIsFirstBrowserWindow;
 };
 
 }  // namespace dom
