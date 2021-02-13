@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DocumentL10n Telemetry</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  "use strict";
+  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+  const { BrowserTestUtils } = ChromeUtils.import(
+    "resource://testing-common/BrowserTestUtils.jsm"
+  );
+
+  SimpleTest.waitForExplicitFinish();
+
+  function countValues(snapshot, key) {
+    if (!snapshot.hasOwnProperty(key)) {
+      return 0;
+    }
+    let values = snapshot[key].values;
+    return Object.values(values).reduce((sum, n) => sum + n, 0);
+  }
+
+  (async function() {
+      let histogram = Services.telemetry
+          .getKeyedHistogramById("L10N_DOCUMENT_INITIAL_TRANSLATION_TIME_US");
+      let snapshot = histogram.snapshot();
+
+      // In some cases the test runs before first window is localized.
+      // We just want to ensure that:
+      //   1) We didn't register more than 1 first window telemetry
+      //   2) If we register it, the next one will be `new_window`.
+      let firstWindowCount = countValues(snapshot, "browser_first_window");
+      is(firstWindowCount < 2, true);
+
+      histogram.clear();
+
+      // Open a new window
+      let win = await BrowserTestUtils.openNewBrowserWindow({
+        waitForTabURL: "about:blank",
+      });
+
+      snapshot = histogram.snapshot();
+      if (firstWindowCount == 0) {
+        is(countValues(snapshot, "browser_new_window"), 0);
+        is(countValues(snapshot, "browser_first_window"), 1);
+      } else {
+        is(countValues(snapshot, "browser_new_window"), 1);
+        is(countValues(snapshot, "browser_first_window"), 0);
+      }
+
+      // Open preferences in a new tab
+      let tab = BrowserTestUtils.addTab(
+          win.gBrowser,
+          "about:preferences"
+      );
+      await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+
+      snapshot = histogram.snapshot();
+
+      is(countValues(snapshot, "about:preferences"), 1);
+
+      await BrowserTestUtils.closeWindow(win);
+
+      SimpleTest.finish();
+  })();
+  </script>
+</head>
+<body>
+</body>
+</html>
