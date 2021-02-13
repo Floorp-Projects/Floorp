@@ -1698,6 +1698,10 @@ void MacroAssembler::convertInt64ToFloat32(Register64 input,
   freeStack(2 * sizeof(intptr_t));
 }
 
+void MacroAssembler::convertIntPtrToDouble(Register src, FloatRegister dest) {
+  convertInt32ToDouble(src, dest);
+}
+
 void MacroAssembler::PushBoxed(FloatRegister reg) { Push(reg); }
 
 CodeOffset MacroAssembler::moveNearAddressWithPatch(Register dest) {

@@ -1790,6 +1790,13 @@
   args:
     obj: ObjId
 
+- name: LoadTypedArrayLengthDoubleResult
+  shared: true
+  transpile: false
+  cost_estimate: 1
+  args:
+    obj: ObjId
+
 - name: LoadStringCharResult
   shared: false
   transpile: true

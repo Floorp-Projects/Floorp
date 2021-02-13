@@ -161,6 +161,10 @@ void MacroAssemblerMIPS64Compat::convertInt32ToFloat32(const Address& src,
   as_cvtsw(dest, dest);
 }
 
+void MacroAssembler::convertIntPtrToDouble(Register src, FloatRegister dest) {
+  convertInt64ToDouble(Register64(src), dest);
+}
+
 void MacroAssemblerMIPS64Compat::movq(Register rs, Register rd) {
   ma_move(rd, rs);
 }

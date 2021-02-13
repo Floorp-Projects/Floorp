@@ -2796,4 +2796,8 @@ void MacroAssembler::convertInt64ToDouble(Register64 src, FloatRegister dest) {
   addDouble(ScratchDoubleReg, dest);
 }
 
+void MacroAssembler::convertIntPtrToDouble(Register src, FloatRegister dest) {
+  convertInt32ToDouble(src, dest);
+}
+
 //}}} check_macroassembler_style
