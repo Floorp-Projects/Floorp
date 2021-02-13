@@ -1244,11 +1244,9 @@ bool CompilationStencil::instantiateStencils(
     JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
     CompilationGCOutput& gcOutput,
     CompilationGCOutput* gcOutputForDelazification) {
-  if (!stencil.preparationIsPerformed) {
-    if (!prepareForInstantiate(cx, input, stencil, gcOutput,
-                               gcOutputForDelazification)) {
-      return false;
-    }
+  if (!prepareForInstantiate(cx, input, stencil, gcOutput,
+                             gcOutputForDelazification)) {
+    return false;
   }
 
   if (!instantiateBaseStencilAfterPreparation(cx, input, stencil, gcOutput)) {
@@ -1396,10 +1394,8 @@ bool StencilDelazificationSet::buildDelazificationIndices(
   // Standalone-functions are not supported by XDR.
   MOZ_ASSERT(!stencil.scriptData[0].isFunction());
 
-  // If no delazifications, we are done.
-  if (delazifications.empty()) {
-    return true;
-  }
+  MOZ_ASSERT(!delazifications.empty());
+  MOZ_ASSERT(delazificationIndices.empty());
 
   if (!delazificationIndices.resize(delazifications.length())) {
     ReportOutOfMemory(cx);
@@ -1415,6 +1411,16 @@ bool StencilDelazificationSet::buildDelazificationIndices(
     const auto& delazification = delazifications[i];
     auto key = delazification.functionKey;
     keyToIndex.putNewInfallible(key, i);
+
+    if (maxScriptDataLength < delazification.scriptData.size()) {
+      maxScriptDataLength = delazification.scriptData.size();
+    }
+    if (maxScopeDataLength < delazification.scopeData.size()) {
+      maxScopeDataLength = delazification.scopeData.size();
+    }
+    if (maxParserAtomDataLength < delazification.parserAtomData.size()) {
+      maxParserAtomDataLength = delazification.parserAtomData.size();
+    }
   }
 
   MOZ_ASSERT(keyToIndex.count() == delazifications.length());
@@ -1437,49 +1443,26 @@ bool CompilationStencil::prepareForInstantiate(
     JSContext* cx, CompilationInput& input, CompilationStencil& stencil,
     CompilationGCOutput& gcOutput,
     CompilationGCOutput* gcOutputForDelazification) {
-  stencil.preparationIsPerformed = true;
-
   size_t maxParserAtomDataLength = stencil.parserAtomData.size();
-  size_t maxScriptDataLength = 0;
-  size_t maxScopeDataLength = 0;
 
   // Reserve the `gcOutput` vectors.
-  if (!gcOutput.functions.reserve(stencil.scriptData.size())) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-  if (!gcOutput.scopes.reserve(stencil.scopeData.size())) {
-    ReportOutOfMemory(cx);
+  if (!gcOutput.ensureReserved(cx, stencil.scriptData.size(),
+                               stencil.scopeData.size())) {
     return false;
   }
 
   // Reserve the `gcOutputForDelazification` vectors.
-  if (stencil.delazificationSet) {
+  if (auto* data = stencil.delazificationSet.get()) {
+    MOZ_ASSERT(data->hasDelazificationIndices());
     MOZ_ASSERT(gcOutputForDelazification);
 
-    for (auto& delazification : stencil.delazificationSet->delazifications) {
-      if (maxParserAtomDataLength < delazification.parserAtomData.size()) {
-        maxParserAtomDataLength = delazification.parserAtomData.size();
-      }
-      if (maxScriptDataLength < delazification.scriptData.size()) {
-        maxScriptDataLength = delazification.scriptData.size();
-      }
-      if (maxScopeDataLength < delazification.scopeData.size()) {
-        maxScopeDataLength = delazification.scopeData.size();
-      }
-    }
-
-    if (!gcOutputForDelazification->functions.reserve(maxScriptDataLength)) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-    if (!gcOutputForDelazification->scopes.reserve(maxScopeDataLength)) {
-      ReportOutOfMemory(cx);
+    if (!gcOutputForDelazification->ensureReserved(
+            cx, data->maxScriptDataLength, data->maxScopeDataLength)) {
       return false;
     }
 
-    if (!stencil.delazificationSet->buildDelazificationIndices(cx, stencil)) {
-      return false;
+    if (data->maxParserAtomDataLength > maxParserAtomDataLength) {
+      maxParserAtomDataLength = data->maxParserAtomDataLength;
     }
   }
 
