@@ -134,10 +134,9 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
 
   bool canHandleParseFailure(const Directives& newDirectives);
 
-  void handleParseFailure(CompilationStencil& stencil,
-                          const Directives& newDirectives,
+  void handleParseFailure(const Directives& newDirectives,
                           TokenStreamPosition& startPosition,
-                          CompilationStencil::RewindToken& startObj);
+                          CompilationState::RewindToken& startObj);
 
  public:
   frontend::CompilationState& compilationState() { return compilationState_; };
@@ -584,14 +583,13 @@ bool frontend::SourceAwareCompiler<Unit>::canHandleParseFailure(
 
 template <typename Unit>
 void frontend::SourceAwareCompiler<Unit>::handleParseFailure(
-    CompilationStencil& stencil, const Directives& newDirectives,
-    TokenStreamPosition& startPosition,
-    CompilationStencil::RewindToken& startObj) {
+    const Directives& newDirectives, TokenStreamPosition& startPosition,
+    CompilationState::RewindToken& startObj) {
   MOZ_ASSERT(canHandleParseFailure(newDirectives));
 
   // Rewind to starting position to retry.
   parser->tokenStream.rewind(startPosition);
-  stencil.rewind(compilationState_, startObj);
+  compilationState_.rewind(startObj);
 
   // Assignment must be monotonic to prevent reparsing iloops
   MOZ_ASSERT_IF(compilationState_.directives.strict(), newDirectives.strict());
@@ -731,8 +729,7 @@ FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
   assertSourceAndParserCreated(stencil);
 
   TokenStreamPosition startPosition(parser->tokenStream);
-  CompilationStencil::RewindToken startObj =
-      stencil.getRewindToken(compilationState_);
+  CompilationState::RewindToken startObj = compilationState_.getRewindToken();
 
   // Speculatively parse using the default directives implied by the context.
   // If a directive is encountered (e.g., "use strict") that changes how the
@@ -754,7 +751,7 @@ FunctionNode* frontend::StandaloneFunctionCompiler<Unit>::parse(
       return nullptr;
     }
 
-    handleParseFailure(stencil, newDirectives, startPosition, startObj);
+    handleParseFailure(newDirectives, startPosition, startObj);
   }
 
   return fn;
