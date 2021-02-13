@@ -31,7 +31,6 @@ linux1804-64/opt:
         - awsy
         - desktop-screenshot-capture
         - linux1804-tests
-        - marionette-framescript
         - marionette-headless
         - mochitest-headless
         - mochitest-webgpu
@@ -52,7 +51,6 @@ linux1804-64-shippable/opt:
         - awsy
         - desktop-screenshot-capture
         - linux1804-tests
-        - marionette-framescript
         - marionette-headless
         - mochitest-headless
         - mochitest-webgpu
@@ -183,7 +181,6 @@ windows7-32/opt:
     test-sets:
         - awsy
         - desktop-screenshot-capture
-        - marionette-framescript
         - windows-reftest-gpu
         - windows-talos
         - windows-tests
@@ -198,7 +195,6 @@ windows7-32-shippable/opt:
     test-sets:
         - awsy
         - desktop-screenshot-capture
-        - marionette-framescript
         - windows-reftest-gpu
         - windows-talos
         - windows-tests
@@ -255,7 +251,6 @@ windows10-64/opt:
         - awsy
         - desktop-screenshot-capture
         - windows-talos
-        - marionette-framescript
         - windows-tests
         - windows10-tests
         - web-platform-tests
@@ -283,7 +278,6 @@ windows10-64-shippable/opt:
         - awsy
         - desktop-screenshot-capture
         - windows-talos
-        - marionette-framescript
         - windows-tests
         - windows10-tests
         - web-platform-tests
@@ -381,7 +375,6 @@ macosx1014-64-qr/opt:
     test-sets:
         - macosx1014-64-qr-tests
         - desktop-screenshot-capture
-        - marionette-framescript
         - web-platform-tests
         - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
@@ -394,7 +387,6 @@ macosx1014-64-shippable-qr/opt:
         - awsy
         - browsertime
         - desktop-screenshot-capture
-        - marionette-framescript
         - raptor-chrome
         - raptor-chromium
         - raptor-firefox

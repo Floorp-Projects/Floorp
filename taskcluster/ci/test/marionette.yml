@@ -43,21 +43,6 @@ marionette:
     instance-size: default
     chunks: 1
 
-marionette-framescript:
-    description: "Marionette unittest run with its JSWindowActors disabled"
-    treeherder-symbol: MnFr
-    max-run-time: 5400
-    instance-size: default
-    tier: 2
-    run-on-projects:
-        # Platforms for which we release geckodriver
-        by-test-platform:
-            (linux|windows|macos)(?!.*shippable).*: built-projects
-            default: []
-    mozharness:
-        extra-options:
-            - --disable-actors
-
 marionette-headless:
     description: "Marionette headless unittest run"
     treeherder-symbol: MnH
