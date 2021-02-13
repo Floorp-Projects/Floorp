@@ -17,16 +17,17 @@
 #include "frontend/BytecodeSection.h"      // EmitScriptThingsVector
 #include "frontend/CompilationStencil.h"  // CompilationStencil, CompilationGCOutput
 #include "frontend/SharedContext.h"
-#include "gc/AllocKind.h"    // gc::AllocKind
-#include "gc/Rooting.h"      // RootedAtom
-#include "gc/Tracer.h"       // TraceNullableRoot
-#include "js/CallArgs.h"     // JSNative
-#include "js/GCAPI.h"        // JS::AutoCheckCannotGC
-#include "js/RootingAPI.h"   // Rooted
-#include "js/Transcoding.h"  // JS::TranscodeBuffer
-#include "js/Value.h"        // ObjectValue
-#include "js/WasmModule.h"   // JS::WasmModule
-#include "vm/BindingKind.h"  // BindingKind
+#include "gc/AllocKind.h"               // gc::AllocKind
+#include "gc/Rooting.h"                 // RootedAtom
+#include "gc/Tracer.h"                  // TraceNullableRoot
+#include "js/CallArgs.h"                // JSNative
+#include "js/experimental/JSStencil.h"  // JS::Stencil
+#include "js/GCAPI.h"                   // JS::AutoCheckCannotGC
+#include "js/RootingAPI.h"              // Rooted
+#include "js/Transcoding.h"             // JS::TranscodeBuffer
+#include "js/Value.h"                   // ObjectValue
+#include "js/WasmModule.h"              // JS::WasmModule
+#include "vm/BindingKind.h"             // BindingKind
 #include "vm/EnvironmentObject.h"
 #include "vm/GeneratorAndAsyncKind.h"  // GeneratorKind, FunctionAsyncKind
 #include "vm/JSContext.h"              // JSContext
@@ -2830,4 +2831,80 @@ void CompilationState::rewind(const CompilationState::RewindToken& pos) {
     MOZ_ASSERT(asmJS.count() == pos.asmJSCount);
   }
   scriptData.shrinkTo(pos.scriptDataLength);
+}
+
+void JS::StencilAddRef(JS::Stencil* stencil) { stencil->refCount++; }
+void JS::StencilRelease(JS::Stencil* stencil) {
+  MOZ_RELEASE_ASSERT(stencil->refCount > 0);
+  stencil->refCount--;
+  if (stencil->refCount == 0) {
+    js_delete(stencil);
+  }
+}
+
+already_AddRefed<JS::Stencil> JS::CompileGlobalScriptToStencil(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    SourceText<mozilla::Utf8Unit>& srcBuf) {
+  ScopeKind scopeKind =
+      options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
+
+  Rooted<CompilationInput> input(cx, CompilationInput(options));
+  auto stencil = js::frontend::CompileGlobalScriptToStencil(cx, input.get(),
+                                                            srcBuf, scopeKind);
+  if (!stencil) {
+    return nullptr;
+  }
+
+  // Convert the UniquePtr to a RefPtr and increment the count (to 1).
+  return do_AddRef(stencil.release());
+}
+
+JSScript* JS::InstantiateGlobalStencil(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    RefPtr<JS::Stencil> stencil) {
+  Rooted<CompilationInput> input(cx, CompilationInput(options));
+  Rooted<CompilationGCOutput> gcOutput(cx);
+  if (!InstantiateStencils(cx, input.get(), *stencil, gcOutput.get())) {
+    return nullptr;
+  }
+
+  return gcOutput.get().script;
+}
+
+JS::TranscodeResult JS::EncodeStencil(JSContext* cx,
+                                      const JS::ReadOnlyCompileOptions& options,
+                                      RefPtr<JS::Stencil> stencil,
+                                      TranscodeBuffer& buffer) {
+  Rooted<CompilationInput> input(cx, CompilationInput(options));
+  XDRIncrementalStencilEncoder encoder(cx);
+  XDRResult res = encoder.codeStencil(input.get(), *stencil);
+  if (res.isErr()) {
+    return res.unwrapErr();
+  }
+  res = encoder.linearize(buffer, stencil->source.get());
+  if (res.isErr()) {
+    return res.unwrapErr();
+  }
+  return TranscodeResult_Ok;
+}
+
+JS::TranscodeResult JS::DecodeStencil(JSContext* cx,
+                                      const JS::ReadOnlyCompileOptions& options,
+                                      const JS::TranscodeRange& range,
+                                      RefPtr<JS::Stencil>& stencilOut) {
+  Rooted<CompilationInput> input(cx, CompilationInput(options));
+  if (!input.get().initForGlobal(cx)) {
+    return TranscodeResult_Throw;
+  }
+  UniquePtr<JS::Stencil> stencil(MakeUnique<CompilationStencil>(input.get()));
+  if (!stencil) {
+    return TranscodeResult_Throw;
+  }
+  XDRStencilDecoder decoder(cx, &options, range);
+  XDRResult res = decoder.codeStencils(input.get(), *stencil);
+  if (res.isErr()) {
+    return res.unwrapErr();
+  }
+  stencilOut = do_AddRef(stencil.release());
+  return TranscodeResult_Ok;
 }

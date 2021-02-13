@@ -9,7 +9,8 @@
 
 #include "mozilla/AlreadyAddRefed.h"  // already_AddRefed
 #include "mozilla/Assertions.h"       // MOZ_ASSERT
-#include "mozilla/Attributes.h"
+#include "mozilla/Atomics.h"          // mozilla::Atomic
+#include "mozilla/Attributes.h"       // MOZ_RAII
 #include "mozilla/HashTable.h"        // mozilla::HashMap
 #include "mozilla/Maybe.h"            // mozilla::Maybe
 #include "mozilla/MemoryReporting.h"  // mozilla::MallocSizeOf
@@ -579,6 +580,16 @@ struct CompilationStencil : public BaseCompilationStencil {
   static constexpr ScriptIndex TopLevelIndex = ScriptIndex(0);
 
   static constexpr size_t LifoAllocChunkSize = 512;
+
+  // The lifetime of this CompilationStencil may be managed by stack allocation,
+  // UniquePtr<T>, or RefPtr<T>. If a RefPtr is used, this ref-count will track
+  // the lifetime, otherwise it is ignored.
+  //
+  // NOTE: Internal code and public APIs use a mix of these different allocation
+  //       modes.
+  //
+  // See: JS::StencilAddRef/Release
+  mutable mozilla::Atomic<uintptr_t> refCount{0};
 
   // This holds allocations that do not require destructors to be run but are
   // live until the stencil is released.
