@@ -637,11 +637,6 @@ max-width: ${width}px; max-height: ${height}px`;
 
       browser.changeRemoteness({ remoteType });
       browser.construct();
-
-      // XXX: This appears to be working fine as is, should we be reinitializing
-      // something here? If so, what? The listener.js framescript is registered
-      // on the reftest.xhtml chrome window (which shouldn't be changing?), and
-      // driver.js uses the global message manager to listen for messages.
     }
   }
 
