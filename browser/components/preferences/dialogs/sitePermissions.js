@@ -228,8 +228,8 @@ var gSitePermissionsManager = {
     }
 
     if (this._currentDefaultPermissionsState === null) {
-      this._checkbox.setAttribute("hidden", true);
-      this._permissionsDisableDescription.setAttribute("hidden", true);
+      this._checkbox.hidden = true;
+      this._permissionsDisableDescription.hidden = true;
     } else if (this._currentDefaultPermissionsState == SitePermissions.BLOCK) {
       this._checkbox.checked = true;
     } else {

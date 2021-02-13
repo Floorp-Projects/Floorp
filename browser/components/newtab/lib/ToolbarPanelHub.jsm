@@ -502,13 +502,13 @@ class _ToolbarPanelHub {
   _showElement(document, id, string_id) {
     const el = PanelMultiView.getViewNode(document, id);
     document.l10n.setAttributes(el, string_id);
-    el.removeAttribute("hidden");
+    el.hidden = false;
   }
 
   _hideElement(document, id) {
     const el = PanelMultiView.getViewNode(document, id);
     if (el) {
-      el.setAttribute("hidden", true);
+      el.hidden = true;
     }
   }
 

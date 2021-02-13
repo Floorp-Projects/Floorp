@@ -502,10 +502,10 @@ var gSync = {
 
     fxaMenuPanel.removeAttribute("title");
     cadButtonEl.setAttribute("disabled", true);
-    syncNowButtonEl.setAttribute("hidden", true);
+    syncNowButtonEl.hidden = true;
     fxaMenuAccountButtonEl.classList.remove("subviewbutton-nav");
     fxaMenuAccountButtonEl.removeAttribute("closemenu");
-    syncPrefsButtonEl.setAttribute("hidden", true);
+    syncPrefsButtonEl.hidden = true;
     syncSetupButtonEl.removeAttribute("hidden");
 
     if (state.status === UIState.STATUS_NOT_CONFIGURED) {
@@ -547,7 +547,7 @@ var gSync = {
       if (state.syncEnabled) {
         syncNowButtonEl.removeAttribute("hidden");
         syncPrefsButtonEl.removeAttribute("hidden");
-        syncSetupButtonEl.setAttribute("hidden", true);
+        syncSetupButtonEl.hidden = true;
       }
 
       fxaMenuAccountButtonEl.classList.add("subviewbutton-nav");
