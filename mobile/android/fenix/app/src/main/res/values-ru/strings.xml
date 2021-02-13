@@ -138,6 +138,8 @@
     <string name="browser_menu_edit_bookmark">Изменить закладку</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Дополнения</string>
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string name="browser_menu_extensions">Расширения</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Дополнения отсутствуют</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -540,6 +542,10 @@
     <string name="library_desktop_bookmarks_unfiled">Другие закладки</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">История</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">Новая вкладка</string>
+    <!-- Option in Library to find text in page -->
+    <string name="library_find_in_page">Найти на странице</string>
     <!-- Option in Library to open Synced Tabs page -->
     <string name="library_synced_tabs">Облачные вкладки</string>
     <!-- Option in Library to open Reading List -->

@@ -129,6 +129,8 @@
     <string name="browser_menu_edit_bookmark">Uredi zabilješku</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Dodaci</string>
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string name="browser_menu_extensions">Proširenja</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Ovdje nema dodataka</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -530,6 +532,10 @@
     <string name="library_desktop_bookmarks_unfiled">Druge zabilješke</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Povijest</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">Nova kartica</string>
+    <!-- Option in Library to find text in page -->
+    <string name="library_find_in_page">Pronađi na stranici</string>
     <!-- Option in Library to open Synced Tabs page -->
     <string name="library_synced_tabs">Sinkronizirane kartice</string>
     <!-- Option in Library to open Reading List -->

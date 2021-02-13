@@ -128,6 +128,8 @@
     <string name="browser_menu_edit_bookmark">Modifitgar il segnapagina</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Supplements</string>
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string name="browser_menu_extensions">Extensiuns</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Nagins supplements qua</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -523,6 +525,10 @@
     <string name="library_desktop_bookmarks_unfiled">Auters segnapaginas</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Cronologia</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">Nov tab</string>
+    <!-- Option in Library to find text in page -->
+    <string name="library_find_in_page">Tschertgar en la pagina</string>
     <!-- Option in Library to open Synced Tabs page -->
     <string name="library_synced_tabs">Tabs sincronisads</string>
     <!-- Option in Library to open Reading List -->

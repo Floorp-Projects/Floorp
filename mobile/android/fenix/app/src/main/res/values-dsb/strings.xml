@@ -130,6 +130,8 @@
     <string name="browser_menu_edit_bookmark">Cytańske znamje wobźěłaś</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Dodanki</string>
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string name="browser_menu_extensions">Rozšyrjenja</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Žedne dodanki how</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -527,6 +529,10 @@
     <string name="library_desktop_bookmarks_unfiled">Druge cytańske znamjenja</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Historija</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">Nowy rejtarik</string>
+    <!-- Option in Library to find text in page -->
+    <string name="library_find_in_page">Na boku pytaś</string>
     <!-- Option in Library to open Synced Tabs page -->
     <string name="library_synced_tabs">Synchronizěrowane rejtariki</string>
     <!-- Option in Library to open Reading List -->

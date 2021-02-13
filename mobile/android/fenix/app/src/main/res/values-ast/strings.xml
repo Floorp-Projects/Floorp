@@ -697,6 +697,8 @@
     <string name="download_delete_multiple_items_snackbar_1">Quitáronse les descargues</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
     <string name="download_delete_single_item_snackbar">Quitóse %1$s</string>
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message_1">Nun hai ficheros baxaos</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">Descargues esbillaes: %1$d</string>
