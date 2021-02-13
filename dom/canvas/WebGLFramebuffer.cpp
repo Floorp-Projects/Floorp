@@ -101,18 +101,23 @@ bool WebGLFBAttachPoint::IsComplete(WebGLContext* webgl,
   const auto& tex = Texture();
   if (tex) {
     // ES 3.0 spec, pg 213 has giant blocks of text that bake down to requiring
-    // that attached tex images are within the valid mip-levels of the texture.
-    // While it draws distinction to only test non-immutable textures, that's
-    // because immutable textures are *always* texture-complete. We need to
-    // check immutable textures though, because checking completeness is also
-    // when we zero invalidated/no-data tex images.
+    // that attached *non-immutable* tex images are within the valid mip-levels
+    // of the texture. We still need to check immutable textures though, because
+    // checking completeness is also when we zero invalidated/no-data tex
+    // images.
     const auto attachedMipLevel = MipLevel();
 
     const bool withinValidMipLevels = [&]() {
       const bool ensureInit = false;
       const auto texCompleteness = tex->CalcCompletenessInfo(ensureInit);
-      if (!texCompleteness)  // OOM
-        return false;
+      if (!texCompleteness) return false;  // OOM
+
+      if (tex->Immutable()) {
+        // Immutable textures can attach a level that's not valid for sampling.
+        // It still has to exist though!
+        return attachedMipLevel < tex->ImmutableLevelCount();
+      }
+
       if (!texCompleteness->levels) return false;
 
       const auto baseLevel = tex->BaseMipmapLevel();
