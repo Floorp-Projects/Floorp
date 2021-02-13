@@ -5411,7 +5411,7 @@ static bool DumpAST(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     ModuleBuilder builder(cx, &parser);
 
     SourceExtent extent = SourceExtent::makeGlobalExtent(length);
-    ModuleSharedContext modulesc(cx, options, stencil, builder, extent);
+    ModuleSharedContext modulesc(cx, options, builder, extent);
     pn = parser.moduleBody(&modulesc);
   }
 
