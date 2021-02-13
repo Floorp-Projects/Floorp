@@ -52,7 +52,7 @@ add_task(async function show_pointerlock_warning_escape() {
     let warningHiddenPromise = BrowserTestUtils.waitForAttribute(
       "hidden",
       warning,
-      "true"
+      ""
     );
 
     is(warning.innerText, expectedWarningText, "Warning text");
