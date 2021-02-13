@@ -513,6 +513,11 @@ XDRResult XDRStencilDecoder::codeStencils(
       MOZ_TRY(codeFunctionStencil(delazification));
     }
 
+    // NOTE: This also computes the `max*DataLength` values.
+    if (!delazificationSet->buildDelazificationIndices(cx(), stencil)) {
+      return fail(JS::TranscodeResult_Throw);
+    }
+
     stencil.delazificationSet = std::move(delazificationSet);
   }
 
