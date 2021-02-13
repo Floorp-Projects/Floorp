@@ -592,8 +592,19 @@ void ParseTask::trace(JSTracer* trc) {
 
 size_t ParseTask::sizeOfExcludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
+  size_t stencilInputSize =
+      stencilInput_ ? stencilInput_->sizeOfIncludingThis(mallocSizeOf) : 0;
+  size_t stencilSize =
+      stencil_ ? stencil_->sizeOfIncludingThis(mallocSizeOf) : 0;
+
+  // TODO: 'errors' requires adding support to `CompileError`. They are not
+  // common though.
+
   return options.sizeOfExcludingThis(mallocSizeOf) +
-         errors.sizeOfExcludingThis(mallocSizeOf);
+         scripts.sizeOfExcludingThis(mallocSizeOf) +
+         sourceObjects.sizeOfExcludingThis(mallocSizeOf) + stencilInputSize +
+         stencilSize + gcOutput_.sizeOfExcludingThis(mallocSizeOf) +
+         gcOutputForDelazification_.sizeOfExcludingThis(mallocSizeOf);
 }
 
 void ParseTask::runHelperThreadTask(AutoLockHelperThreadState& locked) {
