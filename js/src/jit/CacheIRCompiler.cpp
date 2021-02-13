@@ -3166,7 +3166,8 @@ bool CacheIRCompiler::emitLoadArrayBufferByteLengthInt32Result(
     return false;
   }
 
-  masm.loadArrayBufferByteLengthInt32(obj, scratch, failure->label());
+  masm.loadArrayBufferByteLengthIntPtr(obj, scratch);
+  masm.guardNonNegativeIntPtrToInt32(scratch, failure->label());
   masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   return true;
 }
@@ -3196,7 +3197,8 @@ bool CacheIRCompiler::emitLoadTypedArrayLengthInt32Result(ObjOperandId objId) {
     return false;
   }
 
-  masm.loadArrayBufferViewLengthInt32(obj, scratch, failure->label());
+  masm.loadArrayBufferViewLengthIntPtr(obj, scratch);
+  masm.guardNonNegativeIntPtrToInt32(scratch, failure->label());
   masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   return true;
 }
@@ -3990,7 +3992,8 @@ bool CacheIRCompiler::emitTypedArrayByteOffsetInt32Result(ObjOperandId objId) {
     return false;
   }
 
-  masm.loadArrayBufferViewByteOffsetInt32(obj, scratch, failure->label());
+  masm.loadArrayBufferViewByteOffsetIntPtr(obj, scratch);
+  masm.guardNonNegativeIntPtrToInt32(scratch, failure->label());
   masm.tagValue(JSVAL_TYPE_INT32, scratch, output.valueReg());
   return true;
 }
