@@ -63,7 +63,11 @@ function getHostString() {
 
 function onClickSeeDetails() {
   let details = document.getElementById("errorDescriptionContainer");
-  details.hidden = !details.hidden;
+  if (details.hidden) {
+    details.removeAttribute("hidden");
+  } else {
+    details.setAttribute("hidden", "true");
+  }
 }
 
 function initPage() {

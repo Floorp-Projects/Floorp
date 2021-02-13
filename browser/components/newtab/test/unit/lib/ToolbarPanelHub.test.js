@@ -314,11 +314,11 @@ describe("ToolbarPanelHub", () => {
     it("should unhide appmenu button on _showAppmenuButton()", async () => {
       await instance._showAppmenuButton(fakeWindow);
 
-      assert.equal(fakeElementById.hidden, false);
+      assert.calledWith(fakeElementById.removeAttribute, "hidden");
     });
     it("should hide appmenu button on _hideAppmenuButton()", () => {
       instance._hideAppmenuButton(fakeWindow);
-      assert.equal(fakeElementById.hidden, true);
+      assert.calledWith(fakeElementById.setAttribute, "hidden", true);
     });
     it("should not do anything if the window is closed", () => {
       instance._hideAppmenuButton(fakeWindow, true);
@@ -334,11 +334,11 @@ describe("ToolbarPanelHub", () => {
     it("should unhide toolbar button on _showToolbarButton()", async () => {
       await instance._showToolbarButton(fakeWindow);
 
-      assert.equal(fakeElementById.hidden, false);
+      assert.calledWith(fakeElementById.removeAttribute, "hidden");
     });
     it("should hide toolbar button on _hideToolbarButton()", () => {
       instance._hideToolbarButton(fakeWindow);
-      assert.equal(fakeElementById.hidden, true);
+      assert.calledWith(fakeElementById.setAttribute, "hidden", true);
     });
   });
   describe("#renderMessages", () => {

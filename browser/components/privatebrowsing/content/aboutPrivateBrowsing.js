@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", function() {
   });
 
   function hideSearchBanner() {
-    privateSearchBanner.hidden = true;
+    privateSearchBanner.setAttribute("hidden", "true");
     document.body.classList.remove("showBanner");
     RPMSendAsyncMessage("SearchBannerDismissed");
   }

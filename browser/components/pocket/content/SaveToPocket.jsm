@@ -179,7 +179,7 @@ var PocketPageAction = {
     for (let win of browserWindows()) {
       let doc = win.document;
       let pocketButton = doc.getElementById("pocket-button");
-      pocketButton.hidden = true;
+      pocketButton.setAttribute("hidden", "true");
     }
 
     this.pageAction.remove();

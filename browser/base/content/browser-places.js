@@ -691,9 +691,11 @@ HistoryMenu.prototype = {
   },
 
   toggleHiddenTabs() {
-    const isShown =
-      window.gBrowser && gBrowser.visibleTabs.length < gBrowser.tabs.length;
-    this.hiddenTabsMenu.hidden = !isShown;
+    if (window.gBrowser && gBrowser.visibleTabs.length < gBrowser.tabs.length) {
+      this.hiddenTabsMenu.removeAttribute("hidden");
+    } else {
+      this.hiddenTabsMenu.setAttribute("hidden", "true");
+    }
   },
 
   toggleRecentlyClosedTabs: function HM_toggleRecentlyClosedTabs() {
@@ -784,11 +786,11 @@ HistoryMenu.prototype = {
     }
 
     if (!PlacesUIUtils.shouldShowTabsFromOtherComputersMenuitem()) {
-      this.syncTabsMenuitem.hidden = true;
+      this.syncTabsMenuitem.setAttribute("hidden", true);
       return;
     }
 
-    this.syncTabsMenuitem.hidden = false;
+    this.syncTabsMenuitem.setAttribute("hidden", false);
   },
 
   _onPopupShowing: function HM__onPopupShowing(aEvent) {

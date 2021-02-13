@@ -192,7 +192,7 @@ class AboutReaderParent extends JSWindowActorParent {
       button.setAttribute("aria-label", closeText);
 
       menuitem.setAttribute("label", closeText);
-      menuitem.hidden = false;
+      menuitem.setAttribute("hidden", false);
       menuitem.setAttribute(
         "accesskey",
         gStringBundle.GetStringFromName("readerView.close.accesskey")
@@ -209,7 +209,7 @@ class AboutReaderParent extends JSWindowActorParent {
       button.setAttribute("aria-label", enterText);
 
       menuitem.setAttribute("label", enterText);
-      menuitem.hidden = !browser.isArticle;
+      menuitem.setAttribute("hidden", !browser.isArticle);
       menuitem.setAttribute(
         "accesskey",
         gStringBundle.GetStringFromName("readerView.enter.accesskey")

@@ -191,7 +191,7 @@ var gPermissionPanel = {
     this._initializePopup();
 
     // Remove the reload hint that we show after a user has cleared a permission.
-    this._permissionReloadHint.hidden = true;
+    this._permissionReloadHint.setAttribute("hidden", "true");
 
     // Update the popup strings
     this._refreshPermissionPopup();
@@ -363,7 +363,7 @@ var gPermissionPanel = {
 
   onLocationChange() {
     if (this._popupInitialized && this._permissionPopup.state != "closed") {
-      this._permissionReloadHint.hidden = true;
+      this._permissionReloadHint.setAttribute("hidden", "true");
     }
   },
 
@@ -779,7 +779,7 @@ var gPermissionPanel = {
         browser
       );
 
-      this._permissionReloadHint.hidden = false;
+      this._permissionReloadHint.removeAttribute("hidden");
       PanelView.forNode(
         this._permissionPopupMainView
       ).descriptionHeightWorkaround();
