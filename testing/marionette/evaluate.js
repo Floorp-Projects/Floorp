@@ -177,18 +177,17 @@ evaluate.sandbox = function(
 };
 
 /**
- * Convert any web elements in arbitrary objects to DOM elements by
- * looking them up in the seen element store. For ElementIdentifiers a new
- * entry in the seen element reference store gets added when running in the
+ * Convert any web elements in arbitrary objects to a ContentDOMReference by
+ * looking them up in the seen element reference store. For ElementIdentifiers a
+ * new entry in the seen element reference store gets added when running in the
  * parent process, otherwise ContentDOMReference is used to retrieve the DOM
  * node.
  *
  * @param {Object} obj
  *     Arbitrary object containing web elements or ElementIdentifiers.
- * @param {(element.Store|element.ReferenceStore)=} seenEls
+ * @param {element.ReferenceStore=} seenEls
  *     Known element store to look up web elements from. If `seenEls` is an
- *     instance of `element.ReferenceStore`, return WebElement. If `seenEls`
- *     is an instance of `element.Store`, return Element. If `seenEls` is
+ *     instance of `element.ReferenceStore`, return WebElement. If `seenEls` is
  *     `undefined` the Element from the ContentDOMReference cache is returned
  *     when executed in the child process, in the parent process the WebElement
  *     is passed-through.
@@ -200,12 +199,12 @@ evaluate.sandbox = function(
  *     replaced by DOM elements.
  *
  * @throws {NoSuchElementError}
- *     If `seenEls` is an `element.Store` and the web element reference has not
- *     been seen before.
+ *     If `seenEls` is an `element.ReferenceStore` and the web element reference
+ *     has not been seen before.
  * @throws {StaleElementReferenceError}
- *     If `seenEls` is an `element.ReferenceStore` or `element.Store` and the
- *     element has gone stale, indicating it is no longer attached to the DOM,
- *     or its node document is no longer the active document.
+ *     If `seenEls` is an `element.ReferenceStore` and the element has gone
+ *     stale, indicating it is no longer attached to the DOM, or its node
+ *     document is no longer the active document.
  */
 evaluate.fromJSON = function(obj, seenEls = undefined, win = undefined) {
   switch (typeof obj) {
@@ -233,18 +232,6 @@ evaluate.fromJSON = function(obj, seenEls = undefined, win = undefined) {
           return element.resolveElement(obj, win);
         }
         throw new TypeError("seenEls is not an instance of ReferenceStore");
-
-        // WebElement and Store (used by framescript)
-      } else if (WebElement.isReference(obj)) {
-        const webEl = WebElement.fromJSON(obj);
-        if (seenEls instanceof element.Store) {
-          // Child: Get web element from the store
-          return seenEls.get(webEl, win);
-        } else if (!seenEls) {
-          // Parent: No conversion. Just return the web element
-          return webEl;
-        }
-        throw new TypeError("seenEls is not an instance of Store");
       }
 
       // arbitrary objects
@@ -267,8 +254,8 @@ evaluate.fromJSON = function(obj, seenEls = undefined, win = undefined) {
  * - Collections, such as `Array<`, `NodeList`, `HTMLCollection`
  *   et al. are expanded to arrays and then recursed.
  *
- * - Elements that are not known web elements are added to the `seenEls` element
- *   store, or the ContentDOMReference registry. Once known, the elements'
+ * - Elements that are not known web elements are added to the
+ *   ContentDOMReference registry. Once known, the elements'
  *   associated web element representation is returned.
  *
  * - WebElements are transformed to the corresponding ElementIdentifier
@@ -284,7 +271,7 @@ evaluate.fromJSON = function(obj, seenEls = undefined, win = undefined) {
  * @param {Object} obj
  *     Object to be marshaled.
  *
- * @param {(element.Store|element.ReferenceStore)=} seenEls
+ * @param {element.ReferenceStore=} seenEls
  *     Element store to use for lookup of web element references.
  *
  * @return {Object}
@@ -317,31 +304,18 @@ evaluate.toJSON = function(obj, seenEls) {
     // WebElement
   } else if (WebElement.isReference(obj)) {
     // Parent: Convert to ElementIdentifier for use in child actor
-    if (seenEls instanceof element.ReferenceStore) {
-      return seenEls.get(WebElement.fromJSON(obj));
-    }
-
-    return obj;
+    return seenEls.get(WebElement.fromJSON(obj));
 
     // ElementIdentifier
   } else if (WebElement.isReference(obj.webElRef)) {
     // Parent: Pass-through ElementIdentifiers to the child
-    if (seenEls instanceof element.ReferenceStore) {
-      return obj;
-    }
-
-    // Parent: Otherwise return the web element
-    return WebElement.fromJSON(obj.webElRef);
+    return obj;
 
     // Element (HTMLElement, SVGElement, XULElement, et al.)
   } else if (element.isElement(obj)) {
     // Parent
     if (seenEls instanceof element.ReferenceStore) {
       throw new TypeError(`ReferenceStore can't be used with Element`);
-
-      // Child: Add element to the Store, return as WebElement
-    } else if (seenEls instanceof element.Store) {
-      return seenEls.add(obj);
     }
 
     // If no storage has been specified assume we are in a child process.
