@@ -1741,57 +1741,16 @@ void MacroAssembler::setIsDefinitelyTypedArrayConstructor(Register obj,
   bind(&done);
 }
 
-void MacroAssembler::loadArrayBufferByteLengthInt32(Register obj,
-                                                    Register output,
-                                                    Label* fail) {
-  loadArrayBufferByteLengthIntPtr(obj, output);
-
-  if (fail && ArrayBufferObject::maxBufferByteLength() > INT32_MAX) {
-    branchPtr(Assembler::Above, output, Imm32(INT32_MAX), fail);
-    return;
-  }
-
+void MacroAssembler::guardNonNegativeIntPtrToInt32(Register reg, Label* fail) {
 #ifdef DEBUG
   Label ok;
-  branchPtr(Assembler::BelowOrEqual, output, Imm32(INT32_MAX), &ok);
-  assumeUnreachable("Expecting length to fit in int32");
+  branchPtr(Assembler::NotSigned, reg, reg, &ok);
+  assumeUnreachable("Unexpected negative value");
   bind(&ok);
 #endif
-}
 
-void MacroAssembler::loadArrayBufferViewByteOffsetInt32(Register obj,
-                                                        Register output,
-                                                        Label* fail) {
-  loadArrayBufferViewByteOffsetIntPtr(obj, output);
-
-  if (fail && ArrayBufferObject::maxBufferByteLength() > INT32_MAX) {
-    branchPtr(Assembler::Above, output, Imm32(INT32_MAX), fail);
-    return;
-  }
-
-#ifdef DEBUG
-  Label ok;
-  branchPtr(Assembler::BelowOrEqual, output, Imm32(INT32_MAX), &ok);
-  assumeUnreachable("Expecting offset to fit in int32");
-  bind(&ok);
-#endif
-}
-
-void MacroAssembler::loadArrayBufferViewLengthInt32(Register obj,
-                                                    Register output,
-                                                    Label* fail) {
-  loadArrayBufferViewLengthIntPtr(obj, output);
-
-  if (fail && ArrayBufferObject::maxBufferByteLength() > INT32_MAX) {
-    branchPtr(Assembler::Above, output, Imm32(INT32_MAX), fail);
-    return;
-  }
-
-#ifdef DEBUG
-  Label ok;
-  branchPtr(Assembler::BelowOrEqual, output, Imm32(INT32_MAX), &ok);
-  assumeUnreachable("Expecting length to fit in int32");
-  bind(&ok);
+#ifdef JS_64BIT
+  branchPtr(Assembler::Above, reg, Imm32(INT32_MAX), fail);
 #endif
 }
 
