@@ -95,7 +95,7 @@ void Decoder::SetSurfaceFlags(SurfaceFlags aSurfaceFlags) {
   MOZ_ASSERT(!mInitialized);
   mSurfaceFlags = aSurfaceFlags;
   if (mSurfaceFlags & SurfaceFlags::NO_COLORSPACE_CONVERSION) {
-    mCMSMode = eCMSMode_Off;
+    mCMSMode = CMSMode::Off;
   }
 }
 
