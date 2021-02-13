@@ -231,14 +231,6 @@ class MarionetteBranch extends Branch {
   get recommendedPrefs() {
     return this.get("prefs.recommended", true);
   }
-
-  /**
-   * Temporary preference to enable the usage of the JSWindowActor
-   * implementation for commands that already support Fission.
-   */
-  get useActors() {
-    return this.get("actors.enabled", true);
-  }
 }
 
 /** Reads a JSON serialised blob stored in the environment. */

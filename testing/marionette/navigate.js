@@ -16,7 +16,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   EventDispatcher:
     "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
   Log: "chrome://marionette/content/log.js",
-  MarionettePrefs: "chrome://marionette/content/prefs.js",
   modal: "chrome://marionette/content/modal.js",
   PageLoadStrategy: "chrome://marionette/content/capabilities.js",
   TimedPromise: "chrome://marionette/content/sync.js",
@@ -252,7 +251,7 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
   const onTimer = timer => {
     // In the case when a document has a beforeunload handler
     // registered, the currently active command will return immediately
-    // due to the modal dialog observer in proxy.js.
+    // due to the modal dialog observer.
     //
     // Otherwise the timeout waiting for the document to start
     // navigating is increased by 5000 ms to ensure a possible load
@@ -277,19 +276,11 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
     }
   };
 
-  const onNavigation = ({ json }, message) => {
-    let data = MarionettePrefs.useActors ? message : json;
-
-    if (MarionettePrefs.useActors) {
-      // Only care about navigation events from the actor of the current frame.
-      // Bug 1674329: Always use the currently active browsing context,
-      // and not the original one to not cause hangs for remoteness changes.
-      if (data.browsingContext != browsingContextFn()) {
-        return;
-      }
-    } else if (
-      data.browsingContext.browserId != browsingContextFn().browserId
-    ) {
+  const onNavigation = (eventName, data) => {
+    // Only care about navigation events from the actor of the current frame.
+    // Bug 1674329: Always use the currently active browsing context,
+    // and not the original one to not cause hangs for remoteness changes.
+    if (data.browsingContext != browsingContextFn()) {
       return;
     }
 
@@ -350,15 +341,7 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
     "browsing-context-discarded"
   );
 
-  if (MarionettePrefs.useActors) {
-    EventDispatcher.on("page-load", onNavigation);
-  } else {
-    driver.mm.addMessageListener(
-      "Marionette:NavigationEvent",
-      onNavigation,
-      true
-    );
-  }
+  EventDispatcher.on("page-load", onNavigation);
 
   return new TimedPromise(
     async (resolve, reject) => {
@@ -401,14 +384,6 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
     driver.dialogObserver?.remove(onDialogOpened);
     unloadTimer?.cancel();
 
-    if (MarionettePrefs.useActors) {
-      EventDispatcher.off("page-load", onNavigation);
-    } else {
-      driver.mm.removeMessageListener(
-        "Marionette:NavigationEvent",
-        onNavigation,
-        true
-      );
-    }
+    EventDispatcher.off("page-load", onNavigation);
   });
 };
