@@ -29,7 +29,6 @@
 namespace js {
 namespace frontend {
 
-struct CompilationStencil;
 struct CompilationState;
 class ParseContext;
 class ScriptStencil;
@@ -141,8 +140,6 @@ class SharedContext {
   JSContext* const cx_;
 
  protected:
-  CompilationStencil& stencil_;
-
   // See: BaseScript::immutableFlags_
   ImmutableScriptFlags immutableFlags_ = {};
 
@@ -198,8 +195,7 @@ class SharedContext {
  public:
   SharedContext(JSContext* cx, Kind kind,
                 const JS::ReadOnlyCompileOptions& options,
-                CompilationStencil& stencil, Directives directives,
-                SourceExtent extent);
+                Directives directives, SourceExtent extent);
 
   IMMUTABLE_FLAG_GETTER_SETTER(isForEval, IsForEval)
   IMMUTABLE_FLAG_GETTER_SETTER(isModule, IsModule)
@@ -233,8 +229,6 @@ class SharedContext {
   inline EvalSharedContext* asEvalContext();
 
   bool isTopLevelContext() const { return !isFunction(); }
-
-  CompilationStencil& stencil() const { return stencil_; }
 
   ThisBinding thisBinding() const { return thisBinding_; }
   bool hasFunctionThisBinding() const {
@@ -283,8 +277,7 @@ class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext {
 
   GlobalSharedContext(JSContext* cx, ScopeKind scopeKind,
                       const JS::ReadOnlyCompileOptions& options,
-                      CompilationStencil& stencil, Directives directives,
-                      SourceExtent extent);
+                      Directives directives, SourceExtent extent);
 
   ScopeKind scopeKind() const { return scopeKind_; }
 };
@@ -298,8 +291,8 @@ class MOZ_STACK_CLASS EvalSharedContext : public SharedContext {
  public:
   EvalScope::ParserData* bindings;
 
-  EvalSharedContext(JSContext* cx, CompilationStencil& stencil,
-                    CompilationState& compilationState, SourceExtent extent);
+  EvalSharedContext(JSContext* cx, CompilationState& compilationState,
+                    SourceExtent extent);
 };
 
 inline EvalSharedContext* SharedContext::asEvalContext() {
@@ -313,8 +306,8 @@ class SuspendableContext : public SharedContext {
  public:
   SuspendableContext(JSContext* cx, Kind kind,
                      const JS::ReadOnlyCompileOptions& options,
-                     CompilationStencil& stencil, Directives directives,
-                     SourceExtent extent, bool isGenerator, bool isAsync);
+                     Directives directives, SourceExtent extent,
+                     bool isGenerator, bool isAsync);
 
   IMMUTABLE_FLAG_GETTER_SETTER(isAsync, IsAsync)
   IMMUTABLE_FLAG_GETTER_SETTER(isGenerator, IsGenerator)
@@ -422,11 +415,11 @@ class FunctionBox : public SuspendableContext {
 
   // End of fields.
 
-  FunctionBox(JSContext* cx, SourceExtent extent, CompilationStencil& stencil,
+  FunctionBox(JSContext* cx, SourceExtent extent,
               CompilationState& compilationState, Directives directives,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
-              TaggedParserAtomIndex atom, FunctionFlags flags,
-              ScriptIndex index);
+              bool isInitialCompilation, TaggedParserAtomIndex atom,
+              FunctionFlags flags, ScriptIndex index);
 
   ScriptStencil& functionStencil() const;
   ScriptStencilExtra& functionExtraStencil() const;

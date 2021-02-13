@@ -257,7 +257,7 @@ static UniquePtr<CompilationStencil> CompileGlobalScriptToStencilImpl(
   SourceExtent extent = SourceExtent::makeGlobalExtent(
       srcBuf.length(), input.options.lineno, input.options.column);
 
-  frontend::GlobalSharedContext globalsc(cx, scopeKind, input.options, *stencil,
+  frontend::GlobalSharedContext globalsc(cx, scopeKind, input.options,
                                          compiler.compilationState().directives,
                                          extent);
 
@@ -380,8 +380,7 @@ static JSScript* CompileEvalScriptImpl(
   uint32_t len = srcBuf.length();
   SourceExtent extent =
       SourceExtent::makeGlobalExtent(len, options.lineno, options.column);
-  frontend::EvalSharedContext evalsc(cx, stencil, compiler.compilationState(),
-                                     extent);
+  frontend::EvalSharedContext evalsc(cx, compiler.compilationState(), extent);
   if (!compiler.compileScriptToStencil(cx, stencil, &evalsc)) {
     return nullptr;
   }
@@ -690,7 +689,7 @@ bool frontend::ModuleCompiler<Unit>::compile(JSContext* cx,
   uint32_t len = this->sourceBuffer_.length();
   SourceExtent extent =
       SourceExtent::makeGlobalExtent(len, options.lineno, options.column);
-  ModuleSharedContext modulesc(cx, options, stencil, builder, extent);
+  ModuleSharedContext modulesc(cx, options, builder, extent);
 
   ParseNode* pn = parser->moduleBody(&modulesc);
   if (!pn) {

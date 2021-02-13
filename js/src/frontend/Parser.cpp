@@ -274,7 +274,9 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     return nullptr;
   }
 
-  if (this->stencil_.isInitialStencil()) {
+  bool isInitialStencil = this->stencil_.isInitialStencil();
+
+  if (isInitialStencil) {
     if (!compilationState_.scriptExtra.emplaceBack()) {
       js::ReportOutOfMemory(cx_);
       return nullptr;
@@ -293,8 +295,8 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    * function.
    */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
-      cx_, extent, stencil_, compilationState_, inheritedDirectives,
-      generatorKind, asyncKind, explicitName, flags, index);
+      cx_, extent, compilationState_, inheritedDirectives, generatorKind,
+      asyncKind, isInitialStencil, explicitName, flags, index);
   if (!funbox) {
     ReportOutOfMemory(cx_);
     return nullptr;
@@ -362,8 +364,8 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
   SourceExtent extent = SourceExtent::makeGlobalExtent(
       /* len = */ 0, options().lineno, options().column);
   Directives directives(options().forceStrictMode());
-  GlobalSharedContext globalsc(cx_, ScopeKind::Global, options(),
-                               this->stencil_, directives, extent);
+  GlobalSharedContext globalsc(cx_, ScopeKind::Global, options(), directives,
+                               extent);
   SourceParseContext globalpc(this, &globalsc, /* newDirectives = */ nullptr);
   if (!globalpc.init()) {
     return null();
