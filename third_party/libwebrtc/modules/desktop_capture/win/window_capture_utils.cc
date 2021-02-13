@@ -205,7 +205,7 @@ BOOL CALLBACK FilterUncapturableWindows(HWND hwnd, LPARAM param) {
   window.id = reinterpret_cast<WindowId>(hwnd);
 
   DWORD pid;
-  GetWindowThreadProcessId(hwd, &pid);
+  GetWindowThreadProcessId(hwnd, &pid);
   window.pid = static_cast<pid_t>(pid);
 
   // Truncate the title if it's longer than 500 characters.
