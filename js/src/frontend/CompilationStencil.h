@@ -305,6 +305,13 @@ struct CompilationInput {
   void trace(JSTracer* trc);
 };
 
+// AsmJS scripts are very rare on-average, so we use a HashMap to associate data
+// with a ScriptStencil. The ScriptStencil has a flag to indicate if we need to
+// even do this lookup.
+using StencilAsmJSContainer =
+    HashMap<ScriptIndex, RefPtr<const JS::WasmModule>,
+            mozilla::DefaultHasher<ScriptIndex>, js::SystemAllocPolicy>;
+
 struct MOZ_RAII CompilationState {
   // Until we have dealt with Atoms in the front end, we need to hold
   // onto them.
@@ -330,6 +337,10 @@ struct MOZ_RAII CompilationState {
   Vector<BaseParserScopeData*, 0, js::SystemAllocPolicy> scopeNames;
   Vector<TaggedScriptThingIndex, 0, js::SystemAllocPolicy> gcThingData;
 
+  // Accumulate asmJS modules here and then transfer to the stencil during the
+  // `finish` method.
+  StencilAsmJSContainer asmJS;
+
   // Table of parser atoms for this compilation.
   ParserAtomsTable parserAtoms;
 
@@ -340,6 +351,8 @@ struct MOZ_RAII CompilationState {
   // BaseCompilationStencil.prepareStorageFor *before* start emitting bytecode.
   size_t nonLazyFunctionCount = 0;
 
+  // End of fields.
+
   CompilationState(JSContext* cx, LifoAllocScope& frontendAllocScope,
                    CompilationInput& input, CompilationStencil& stencil);
 
@@ -347,6 +360,19 @@ struct MOZ_RAII CompilationState {
             JSObject* enclosingEnv = nullptr) {
     return scopeContext.init(cx, input, parserAtoms, inheritThis, enclosingEnv);
   }
+
+  // Track the state of key allocations and roll them back as parts of parsing
+  // get retried. This ensures iteration during stencil instantiation does not
+  // encounter discarded frontend state.
+  struct RewindToken {
+    // Temporarily share this token struct with CompilationState.
+    size_t scriptDataLength = 0;
+
+    size_t asmJSCount = 0;
+  };
+
+  RewindToken getRewindToken();
+  void rewind(const RewindToken& pos);
 
   bool finish(JSContext* cx, CompilationStencil& stencil);
 
@@ -437,13 +463,6 @@ struct SharedDataContainer {
   void dumpFields(js::JSONPrinter& json) const;
 #endif
 };
-
-// AsmJS scripts are very rare on-average, so we use a HashMap to associate data
-// with a ScriptStencil. The ScriptStencil has a flag to indicate if we need to
-// even do this lookup.
-using StencilAsmJSContainer =
-    HashMap<ScriptIndex, RefPtr<const JS::WasmModule>,
-            mozilla::DefaultHasher<ScriptIndex>, js::SystemAllocPolicy>;
 
 // The top level struct of stencil.
 struct BaseCompilationStencil {
@@ -594,19 +613,6 @@ struct CompilationStencil : public BaseCompilationStencil {
   void setFunctionKey(BaseScript* lazy) {
     functionKey = toFunctionKey(lazy->extent());
   }
-
-  // Track the state of key allocations and roll them back as parts of parsing
-  // get retried. This ensures iteration during stencil instantiation does not
-  // encounter discarded frontend state.
-  struct RewindToken {
-    // Temporarily share this token struct with CompilationState.
-    size_t scriptDataLength = 0;
-
-    size_t asmJSCount = 0;
-  };
-
-  RewindToken getRewindToken(CompilationState& state);
-  void rewind(CompilationState& state, const RewindToken& pos);
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump() const;
