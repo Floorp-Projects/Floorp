@@ -82,10 +82,10 @@ async function runContentEventFiredTest(client, expectedEventCount, callback) {
     },
   });
 
-  const timeStart = Date.now() / 1000;
+  const timeBefore = Date.now() / 1000;
   await callback();
   const domContentEventFiredEvents = await history.record();
-  const timeEnd = Date.now() / 1000;
+  const timeAfter = Date.now() / 1000;
 
   is(
     domContentEventFiredEvents.length,
@@ -98,7 +98,7 @@ async function runContentEventFiredTest(client, expectedEventCount, callback) {
 
   const timestamp = domContentEventFiredEvents[0].payload.timestamp;
   ok(
-    timestamp >= timeStart && timestamp <= timeEnd,
-    `Timestamp in expected range [${timeStart} - ${timeEnd}]`
+    timestamp >= timeBefore && timestamp <= timeAfter,
+    `Timestamp ${timestamp} in expected range [${timeBefore} - ${timeAfter}]`
   );
 }
