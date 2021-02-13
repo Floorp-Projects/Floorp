@@ -149,6 +149,7 @@ class WebGLTexture final : public WebGLContextBoundObject,
   // -
 
   const auto& Immutable() const { return mImmutable; }
+  const auto& ImmutableLevelCount() const { return mImmutableLevelCount; }
   const auto& BaseMipmapLevel() const { return mBaseMipmapLevel; }
   const auto& FaceCount() const { return mFaceCount; }
 
