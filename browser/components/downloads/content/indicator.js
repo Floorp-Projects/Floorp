@@ -154,7 +154,7 @@ const DownloadsButton = {
     let button = this._placeholder;
     if (this.autoHideDownloadsButton && button && button.closest("toolbar")) {
       DownloadsPanel.hidePanel();
-      button.setAttribute("hidden", "true");
+      button.hidden = true;
       this._navBar.removeAttribute("downloadsbuttonshown");
     }
   },
@@ -450,7 +450,7 @@ const DownloadsIndicatorView = {
 
     setTimeout(() => {
       requestAnimationFrame(() => {
-        notifier.setAttribute("hidden", "true");
+        notifier.hidden = true;
         notifier.removeAttribute("notification");
         notifier.style.transform = "";
         anchor.removeAttribute("notification");

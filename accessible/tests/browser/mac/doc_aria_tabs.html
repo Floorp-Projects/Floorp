@@ -58,7 +58,7 @@
       // Hide all tab panels
       grandparent
         .querySelectorAll('[role="tabpanel"]')
-        .forEach(p => p.setAttribute("hidden", true));
+        .forEach(p => (p.hidden = true));
 
       // Show the selected panel
       grandparent.parentNode
