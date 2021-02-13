@@ -191,7 +191,7 @@ arguments[0](4);
         )
 
     # Functions defined in higher privilege scopes, such as the privileged
-    # content frame script listener.js runs in, cannot be accessed from
+    # JSWindowActor child runs in, cannot be accessed from
     # content.  This tests that it is possible to introspect the objects on
     # `arguments` without getting permission defined errors.  This is made
     # possible because the last argument is always the callback/complete
