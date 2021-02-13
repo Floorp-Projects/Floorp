@@ -152,8 +152,8 @@ void SVGUtils::ScheduleReflowSVG(nsIFrame* aFrame) {
   // If this is triggered, the callers should be fixed to call us before
   // ReflowSVG is called. If we try to mark dirty bits on frames while we're
   // in the process of removing them, things will get messed up.
-  NS_ASSERTION(!OuterSVGIsCallingReflowSVG(aFrame),
-               "Do not call under ISVGDisplayableFrame::ReflowSVG!");
+  MOZ_ASSERT(!OuterSVGIsCallingReflowSVG(aFrame),
+             "Do not call under ISVGDisplayableFrame::ReflowSVG!");
 
   // We don't call SVGObserverUtils::InvalidateRenderingObservers here because
   // we should only be called under InvalidateAndScheduleReflowSVG (which

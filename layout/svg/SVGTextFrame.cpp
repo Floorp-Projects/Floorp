@@ -2875,7 +2875,7 @@ void SVGTextFrame::ScheduleReflowSVGNonDisplayText(IntrinsicDirty aReason) {
   // and for that ancestor (or some further ancestor) to be marked as
   // a root to reflow.  We choose the closest ancestor frame that is not
   // NS_FRAME_IS_NONDISPLAY and which is either an outer SVG frame or a
-  // non-SVG frame.  (We don't consider displayed SVG frame ancestors toerh
+  // non-SVG frame.  (We don't consider displayed SVG frame ancestors other
   // than SVGOuterSVGFrame, since calling FrameNeedsReflow on those other
   // SVG frames would do a bunch of unnecessary work on the SVG frames up to
   // the SVGOuterSVGFrame.)
@@ -3294,8 +3294,8 @@ nsIFrame* SVGTextFrame::GetFrameForPoint(const gfxPoint& aPoint) {
 }
 
 void SVGTextFrame::ReflowSVG() {
-  NS_ASSERTION(SVGUtils::OuterSVGIsCallingReflowSVG(this),
-               "This call is probaby a wasteful mistake");
+  MOZ_ASSERT(SVGUtils::OuterSVGIsCallingReflowSVG(this),
+             "This call is probaby a wasteful mistake");
 
   MOZ_ASSERT(!HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
              "ReflowSVG mechanism not designed for this");
