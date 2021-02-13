@@ -268,12 +268,6 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
                                          nsAtom* aAttribute);
 
   /**
-   * Schedules mPositions to be recomputed and the covered region to be
-   * updated.
-   */
-  void NotifyGlyphMetricsChange();
-
-  /**
    * Calls ScheduleReflowSVGNonDisplayText if this is a non-display frame,
    * and SVGUtils::ScheduleReflowSVG otherwise.
    */
@@ -382,6 +376,12 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
    * Performs the actual work of reflowing the anonymous block child.
    */
   void DoReflow();
+
+  /**
+   * Schedules mPositions to be recomputed and the covered region to be
+   * updated.
+   */
+  void NotifyGlyphMetricsChange();
 
   /**
    * Recomputes mPositions by calling DoGlyphPositioning if this information

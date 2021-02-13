@@ -483,17 +483,23 @@ void SVGTextPathObserver::OnRenderingChange() {
   MOZ_ASSERT(frame->GetContent()->IsSVGElement(nsGkAtoms::textPath),
              "expected frame for a <textPath> element");
 
-  // Repaint asynchronously text in case the path frame is being torn down
-  frame->PresContext()->RestyleManager()->PostRestyleEvent(
-      frame->GetContent()->AsElement(), RestyleHint{0},
-      nsChangeHint_RepaintFrame);
-
-  nsIFrame* text =
-      nsLayoutUtils::GetClosestFrameOfType(frame, LayoutFrameType::SVGText);
+  auto* text = static_cast<SVGTextFrame*>(
+      nsLayoutUtils::GetClosestFrameOfType(frame, LayoutFrameType::SVGText));
   MOZ_ASSERT(text, "expected to find an ancestor SVGTextFrame");
   if (text) {
-    // This also does async work.
-    static_cast<SVGTextFrame*>(text)->NotifyGlyphMetricsChange();
+    text->AddStateBits(NS_STATE_SVG_TEXT_CORRESPONDENCE_DIRTY |
+                       NS_STATE_SVG_POSITIONING_DIRTY);
+
+    if (SVGUtils::OuterSVGIsCallingReflowSVG(text)) {
+      text->AddStateBits(NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
+      if (text->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
+        text->ReflowSVGNonDisplayText();
+      } else {
+        text->ReflowSVG();
+      }
+    } else {
+      text->ScheduleReflowSVG();
+    }
   }
 }
 
