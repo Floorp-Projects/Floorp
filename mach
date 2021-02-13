@@ -13,7 +13,6 @@
 # Commands that are to be run with Python 2.
 py2commands="
     awsy-test
-    firefox-ui-functional
     jsshell-bench
     mozharness
     raptor
