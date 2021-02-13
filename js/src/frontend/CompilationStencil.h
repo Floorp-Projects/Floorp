@@ -10,9 +10,10 @@
 #include "mozilla/AlreadyAddRefed.h"  // already_AddRefed
 #include "mozilla/Assertions.h"       // MOZ_ASSERT
 #include "mozilla/Attributes.h"
-#include "mozilla/HashTable.h"  // mozilla::HashMap
-#include "mozilla/Maybe.h"      // mozilla::Maybe
-#include "mozilla/RefPtr.h"     // RefPtr
+#include "mozilla/HashTable.h"        // mozilla::HashMap
+#include "mozilla/Maybe.h"            // mozilla::Maybe
+#include "mozilla/MemoryReporting.h"  // mozilla::MallocSizeOf
+#include "mozilla/RefPtr.h"           // RefPtr
 #include "mozilla/Span.h"
 
 #include "builtin/ModuleObject.h"
@@ -183,6 +184,10 @@ struct CompilationAtomCache {
   void releaseBuffer(AtomCacheVector& atoms);
 
   void trace(JSTracer* trc);
+
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+    return atoms_.sizeOfExcludingThis(mallocSizeOf);
+  }
 };
 
 // Input of the compilation, including source and enclosing context.
@@ -303,6 +308,15 @@ struct CompilationInput {
   }
 
   void trace(JSTracer* trc);
+
+  // Size of dynamic data. Note that GC data is counted by GC and not here. We
+  // also ignore ScriptSource which is a shared RefPtr.
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+    return atomCache.sizeOfExcludingThis(mallocSizeOf);
+  }
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+    return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
+  }
 };
 
 // AsmJS scripts are very rare on-average, so we use a HashMap to associate data
@@ -457,6 +471,19 @@ struct SharedDataContainer {
   bool addAndShare(JSContext* cx, ScriptIndex index,
                    js::SharedImmutableScriptData* data);
 
+  // Dynamic memory associated with this container. Does not include the
+  // SharedImmutableScriptData since we are not the unique owner of it.
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+    if (isVector()) {
+      return asVector()->sizeOfIncludingThis(mallocSizeOf);
+    }
+    if (isMap()) {
+      return asMap()->shallowSizeOfIncludingThis(mallocSizeOf);
+    }
+    MOZ_ASSERT(isSingle());
+    return 0;
+  }
+
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump() const;
   void dump(js::JSONPrinter& json) const;
@@ -530,6 +557,13 @@ struct BaseCompilationStencil {
 
   inline CompilationStencil& asCompilationStencil();
   inline const CompilationStencil& asCompilationStencil() const;
+
+  // Size of dynamic allocations. Note that data in Spans are not owned by us
+  // and instead accounted for in by their backing storage (eg LifoAlloc or XDR
+  // buffer).
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+    return sharedData.sizeOfExcludingThis(mallocSizeOf);
+  }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump() const;
@@ -614,6 +648,11 @@ struct CompilationStencil : public BaseCompilationStencil {
     functionKey = toFunctionKey(lazy->extent());
   }
 
+  inline size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+    return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
+  }
+
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dump() const;
   void dump(js::JSONPrinter& json) const;
@@ -645,7 +684,29 @@ struct StencilDelazificationSet {
 
   [[nodiscard]] bool buildDelazificationIndices(
       JSContext* cx, const CompilationStencil& stencil);
+
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+    return mallocSizeOf(this) +
+           delazifications.sizeOfExcludingThis(mallocSizeOf) +
+           delazificationIndices.sizeOfExcludingThis(mallocSizeOf);
+  }
 };
+
+// Size of dynamic data. Ignores Spans (unless their contents are in the
+// LifoAlloc) and RefPtrs since we are not the unique owner.
+inline size_t CompilationStencil::sizeOfExcludingThis(
+    mozilla::MallocSizeOf mallocSizeOf) const {
+  size_t moduleMetadataSize =
+      moduleMetadata ? moduleMetadata->sizeOfIncludingThis(mallocSizeOf) : 0;
+  size_t delazificationSetSize =
+      delazificationSet ? delazificationSet->sizeOfIncludingThis(mallocSizeOf)
+                        : 0;
+
+  return alloc.sizeOfExcludingThis(mallocSizeOf) + moduleMetadataSize +
+         asmJS.shallowSizeOfExcludingThis(mallocSizeOf) +
+         delazificationSetSize +
+         BaseCompilationStencil::sizeOfExcludingThis(mallocSizeOf);
+}
 
 // The output of GC allocation from stencil.
 struct CompilationGCOutput {
@@ -670,6 +731,12 @@ struct CompilationGCOutput {
   ScriptSourceObject* sourceObject = nullptr;
 
   CompilationGCOutput() = default;
+
+  // Size of dynamic data. Note that GC data is counted by GC and not here.
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+    return functions.sizeOfExcludingThis(mallocSizeOf) +
+           scopes.sizeOfExcludingThis(mallocSizeOf);
+  }
 
   void trace(JSTracer* trc);
 };
