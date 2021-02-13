@@ -4336,7 +4336,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                           Label* fail);
   void loadArrayBufferViewLengthInt32(Register obj, Register output,
                                       Label* fail);
-  void loadArrayBufferViewLengthPtr(Register obj, Register output);
+
+  void loadArrayBufferViewLengthIntPtr(Register obj, Register output);
 
  private:
   void isCallableOrConstructor(bool isCallable, Register obj, Register output,
