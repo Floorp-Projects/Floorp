@@ -3716,7 +3716,7 @@ bool CacheIRCompiler::emitLoadTypedArrayElementExistsResult(
   Label outOfBounds, done;
 
   // Bounds check.
-  masm.loadArrayBufferViewLengthPtr(obj, scratch);
+  masm.loadArrayBufferViewLengthIntPtr(obj, scratch);
   masm.branchPtr(Assembler::BelowOrEqual, scratch, index, &outOfBounds);
   EmitStoreBoolean(masm, true, output);
   masm.jump(&done);
@@ -5042,7 +5042,7 @@ bool CacheIRCompiler::emitStoreTypedArrayElement(ObjOperandId objId,
   // Bounds check.
   Label done;
   Register spectreTemp = scratch2 ? scratch2->get() : spectreScratch->get();
-  masm.loadArrayBufferViewLengthPtr(obj, scratch1);
+  masm.loadArrayBufferViewLengthIntPtr(obj, scratch1);
   masm.spectreBoundsCheckPtr(index, scratch1, spectreTemp,
                              handleOOB ? &done : failure->label());
 
@@ -5135,7 +5135,7 @@ bool CacheIRCompiler::emitLoadTypedArrayElementResult(
 
   // Bounds check.
   Label outOfBounds;
-  masm.loadArrayBufferViewLengthPtr(obj, scratch1);
+  masm.loadArrayBufferViewLengthIntPtr(obj, scratch1);
   masm.spectreBoundsCheckPtr(index, scratch1, scratch2,
                              handleOOB ? &outOfBounds : failure->label());
 
@@ -5201,7 +5201,7 @@ static void EmitDataViewBoundsCheck(MacroAssembler& masm, size_t byteSize,
                                     Register obj, Register offset,
                                     Register scratch, Label* fail) {
   // Ensure both offset < length and offset + (byteSize - 1) < length.
-  masm.loadArrayBufferViewLengthPtr(obj, scratch);
+  masm.loadArrayBufferViewLengthIntPtr(obj, scratch);
   if (byteSize == 1) {
     masm.spectreBoundsCheckPtr(offset, scratch, InvalidReg, fail);
   } else {
@@ -7542,7 +7542,7 @@ bool CacheIRCompiler::emitAtomicsCompareExchangeResult(
   MOZ_ASSERT(isBaseline(), "Can't use FailurePath with AutoCallVM in Ion ICs");
 
   // Bounds check.
-  masm.loadArrayBufferViewLengthPtr(obj, scratch);
+  masm.loadArrayBufferViewLengthIntPtr(obj, scratch);
   masm.spectreBoundsCheckPtr(index, scratch, spectreTemp, failure->label());
 
   // Atomic operations are highly platform-dependent, for example x86/x64 has
@@ -7612,7 +7612,7 @@ bool CacheIRCompiler::emitAtomicsReadModifyWriteResult(
   }
 
   // Bounds check.
-  masm.loadArrayBufferViewLengthPtr(obj, scratch);
+  masm.loadArrayBufferViewLengthIntPtr(obj, scratch);
   masm.spectreBoundsCheckPtr(index, scratch, spectreTemp, failure->label());
 
   // See comment in emitAtomicsCompareExchange for why we use an ABI call.
@@ -7667,7 +7667,7 @@ bool CacheIRCompiler::emitAtomicsReadModifyWriteResult64(
   MOZ_ASSERT(isBaseline(), "Can't use FailurePath with AutoCallVM in Ion ICs");
 
   // Bounds check.
-  masm.loadArrayBufferViewLengthPtr(obj, scratch);
+  masm.loadArrayBufferViewLengthIntPtr(obj, scratch);
   masm.spectreBoundsCheckPtr(index, scratch, spectreTemp, failure->label());
 
   // See comment in emitAtomicsCompareExchange for why we use a VM call.
@@ -7801,7 +7801,7 @@ bool CacheIRCompiler::emitAtomicsLoadResult(ObjOperandId objId,
   MOZ_ASSERT(isBaseline(), "Can't use FailurePath with AutoCallVM in Ion ICs");
 
   // Bounds check.
-  masm.loadArrayBufferViewLengthPtr(obj, scratch);
+  masm.loadArrayBufferViewLengthIntPtr(obj, scratch);
   masm.spectreBoundsCheckPtr(index, scratch, spectreTemp, failure->label());
 
   // Atomic operations are highly platform-dependent, for example x86/arm32 has
@@ -7873,7 +7873,7 @@ bool CacheIRCompiler::emitAtomicsStoreResult(ObjOperandId objId,
   }
 
   // Bounds check.
-  masm.loadArrayBufferViewLengthPtr(obj, scratch);
+  masm.loadArrayBufferViewLengthIntPtr(obj, scratch);
   masm.spectreBoundsCheckPtr(index, scratch, spectreTemp, failure->label());
 
   if (!Scalar::isBigIntType(elementType)) {
