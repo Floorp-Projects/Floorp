@@ -2301,6 +2301,15 @@ void LIRGenerator::visitNonNegativeIntPtrToInt32(
 #endif
 }
 
+void LIRGenerator::visitIntPtrToDouble(MIntPtrToDouble* ins) {
+  MDefinition* input = ins->input();
+  MOZ_ASSERT(input->type() == MIRType::IntPtr);
+  MOZ_ASSERT(ins->type() == MIRType::Double);
+
+  auto* lir = new (alloc()) LIntPtrToDouble(useRegister(input));
+  define(lir, ins);
+}
+
 void LIRGenerator::visitAdjustDataViewLength(MAdjustDataViewLength* ins) {
   MDefinition* input = ins->input();
   MOZ_ASSERT(input->type() == MIRType::IntPtr);

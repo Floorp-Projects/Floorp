@@ -1284,6 +1284,12 @@ void CodeGenerator::visitNonNegativeIntPtrToInt32(
 #endif
 }
 
+void CodeGenerator::visitIntPtrToDouble(LIntPtrToDouble* lir) {
+  Register input = ToRegister(lir->input());
+  FloatRegister output = ToFloatRegister(lir->output());
+  masm.convertIntPtrToDouble(input, output);
+}
+
 void CodeGenerator::visitAdjustDataViewLength(LAdjustDataViewLength* lir) {
   Register output = ToRegister(lir->output());
   MOZ_ASSERT(ToRegister(lir->input()) == output);
