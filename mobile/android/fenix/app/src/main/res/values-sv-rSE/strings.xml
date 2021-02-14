@@ -30,7 +30,7 @@
     <string name="open_tab_tray_plural">%1$s öppna flikar. Tryck för att växla mellan flikar.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
-    <string name="tab_tray_multi_select_title">%1$d markerad</string>
+    <string name="tab_tray_multi_select_title">%1$d markerade</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
     <string name="tab_tray_add_new_collection">Lägg till ny samling</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
@@ -749,7 +749,7 @@
     <string name="download_empty_message_1">Inga nedladdade filer</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
-    <string name="download_multi_select_title">%1$d markerad</string>
+    <string name="download_multi_select_title">%1$d markerade</string>
 
     <!-- History overflow menu open in new tab button -->
     <string name="download_menu_open">Öppen</string>
