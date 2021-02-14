@@ -11,7 +11,6 @@ from marionette_driver.keys import Keys
 
 from marionette_harness import (
     MarionetteTestCase,
-    skip_if_framescript,
     WindowManagerMixin,
 )
 
@@ -88,9 +87,6 @@ class TestSendkeysMenupopup(WindowManagerMixin, MarionetteTestCase):
         self.testwindow_el.send_keys(Keys.ESCAPE)
         self.wait_for_context_menu_closed()
 
-    @skip_if_framescript(
-        "Bug 1675173: Interactability is only checked with actors enabled"
-    )
     def test_sendkeys_closed_menu(self):
         # send_keys should throw for the menupopup if the contextmenu is closed.
         with self.assertRaises(errors.ElementNotInteractableException):
@@ -100,9 +96,6 @@ class TestSendkeysMenupopup(WindowManagerMixin, MarionetteTestCase):
         with self.assertRaises(errors.ElementNotInteractableException):
             self.menuitem_el.send_keys(Keys.ESCAPE)
 
-    @skip_if_framescript(
-        "Bug 1675173: Interactability is only checked with actors enabled"
-    )
     def test_sendkeys_hidden_disabled_menuitem(self):
         self.open_context_menu()
 
