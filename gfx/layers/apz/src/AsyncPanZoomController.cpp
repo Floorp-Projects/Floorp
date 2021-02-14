@@ -922,7 +922,7 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(
   }
 
   HitTestingTreeNodeAutoLock node;
-  GetApzcTreeManager()->FindScrollThumbNode(aDragMetrics, node);
+  GetApzcTreeManager()->FindScrollThumbNode(aDragMetrics, mLayersId, node);
   if (!node) {
     APZC_LOG("%p unable to find scrollthumb node with viewid %" PRIu64 "\n",
              this, aDragMetrics.mViewId);

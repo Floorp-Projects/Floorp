@@ -105,8 +105,8 @@ void HitTestingTreeNode::SetScrollbarData(
 }
 
 bool HitTestingTreeNode::MatchesScrollDragMetrics(
-    const AsyncDragMetrics& aDragMetrics) const {
-  return IsScrollThumbNode() &&
+    const AsyncDragMetrics& aDragMetrics, LayersId aLayersId) const {
+  return IsScrollThumbNode() && mLayersId == aLayersId &&
          mScrollbarData.mDirection == aDragMetrics.mDirection &&
          mScrollbarData.mTargetViewId == aDragMetrics.mViewId;
 }
