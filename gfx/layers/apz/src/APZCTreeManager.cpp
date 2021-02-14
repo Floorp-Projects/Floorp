@@ -2972,7 +2972,7 @@ void APZCTreeManager::AddInputBlockCallback(uint64_t aInputBlockId,
 }
 
 void APZCTreeManager::FindScrollThumbNode(
-    const AsyncDragMetrics& aDragMetrics,
+    const AsyncDragMetrics& aDragMetrics, LayersId aLayersId,
     HitTestingTreeNodeAutoLock& aOutThumbNode) {
   if (!aDragMetrics.mDirection) {
     // The AsyncDragMetrics has not been initialized yet - there will be
@@ -2983,8 +2983,8 @@ void APZCTreeManager::FindScrollThumbNode(
   RecursiveMutexAutoLock lock(mTreeLock);
 
   RefPtr<HitTestingTreeNode> result = DepthFirstSearch<ReverseIterator>(
-      mRootNode.get(), [&aDragMetrics](HitTestingTreeNode* aNode) {
-        return aNode->MatchesScrollDragMetrics(aDragMetrics);
+      mRootNode.get(), [&aDragMetrics, &aLayersId](HitTestingTreeNode* aNode) {
+        return aNode->MatchesScrollDragMetrics(aDragMetrics, aLayersId);
       });
   if (result) {
     aOutThumbNode.Initialize(lock, result.forget(), mTreeLock);
