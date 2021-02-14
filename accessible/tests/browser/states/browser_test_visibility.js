@@ -11,6 +11,9 @@ loadScripts(
   { name: "states.js", dir: MOCHITESTS_DIR }
 );
 
+// Temporary debug logging for bug 1652192.
+EventsLogger.enabled = true;
+
 async function runTest(browser, accDoc) {
   let getAcc = id => findAccessibleChildByID(accDoc, id);
 
