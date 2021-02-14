@@ -407,8 +407,6 @@ action.PointerType.get = function(str) {
  * Input state associated with current session.  This is a map between
  * input ID and the device state for that input source, with one entry
  * for each active input source.
- *
- * Re-initialized in listener.js.
  */
 action.inputStateMap = new Map();
 
@@ -416,8 +414,6 @@ action.inputStateMap = new Map();
  * List of {@link action.Action} associated with current session.  Used to
  * manage dispatching events when resetting the state of the input sources.
  * Reset operations are assumed to be idempotent.
- *
- * Re-initialized in listener.js
  */
 action.inputsToCancel = [];
 

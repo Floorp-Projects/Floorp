@@ -69,12 +69,3 @@ disabling auto-updates, Telemetry, and first-run UX.
 The user preference file takes presedence over the recommended
 preferences, meaning any user-defined preference value will not be
 overridden.
-
-
-`marionette.contentListener`
-----------------------------
-
-Used internally in Marionette for determining whether content scripts
-can safely be reused.  Should not be tweaked manually.
-
-This preference is scheduled for removal.

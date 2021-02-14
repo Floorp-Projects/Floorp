@@ -704,7 +704,7 @@ function isObjectEmpty(obj) {
   return isObject(obj) && Object.keys(obj).length === 0;
 }
 
-// Services.dirsvc is not accessible from content frame scripts,
+// Services.dirsvc is not accessible from JSWindowActor child,
 // but we should not panic about that.
 function maybeProfile() {
   try {
