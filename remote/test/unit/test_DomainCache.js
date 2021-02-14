@@ -4,10 +4,10 @@
 "use strict";
 
 const { Domain } = ChromeUtils.import(
-  "chrome://remote/content/domains/Domain.jsm"
+  "chrome://remote/content/cdp/domains/Domain.jsm"
 );
 const { DomainCache } = ChromeUtils.import(
-  "chrome://remote/content/domains/DomainCache.jsm"
+  "chrome://remote/content/cdp/domains/DomainCache.jsm"
 );
 
 class MockSession {

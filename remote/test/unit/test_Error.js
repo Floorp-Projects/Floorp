@@ -8,7 +8,7 @@ const {
   RemoteAgentError,
   UnknownMethodError,
   UnsupportedError,
-} = ChromeUtils.import("chrome://remote/content/Error.jsm");
+} = ChromeUtils.import("chrome://remote/content/cdp/Error.jsm");
 
 add_test(function test_RemoteAgentError_ctor() {
   const e1 = new RemoteAgentError();
