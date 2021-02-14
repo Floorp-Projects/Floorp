@@ -165,8 +165,6 @@ browser.Context = class {
     // Used to set curFrameId upon new session
     this.newSession = true;
 
-    this.seenEls = new element.Store();
-
     // A reference to the tab corresponding to the current window handle,
     // if any.  Specifically, this.tab refers to the last tab that Marionette
     // switched to in this browser window. Note that this may not equal the
