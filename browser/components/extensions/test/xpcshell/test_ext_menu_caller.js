@@ -50,5 +50,4 @@ add_task(async function test_create_menu_ext_error() {
   equal(frame.source, fileName, "Frame source");
   equal(frame.line, 9, "Frame line");
   equal(frame.column, 23, "Frame column");
-  equal(frame.functionDisplayName, "background/<", "Frame function name");
 });
