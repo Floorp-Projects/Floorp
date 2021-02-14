@@ -9,7 +9,7 @@ const { RemoteAgent } = ChromeUtils.import(
   "chrome://remote/content/components/RemoteAgent.jsm"
 );
 const { RemoteAgentError } = ChromeUtils.import(
-  "chrome://remote/content/Error.jsm"
+  "chrome://remote/content/cdp/Error.jsm"
 );
 
 const TIMEOUT_MULTIPLIER = SpecialPowers.isDebugBuild ? 4 : 1;

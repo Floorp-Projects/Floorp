@@ -4,7 +4,7 @@
 "use strict";
 
 const { Session } = ChromeUtils.import(
-  "chrome://remote/content/sessions/Session.jsm"
+  "chrome://remote/content/cdp/sessions/Session.jsm"
 );
 
 const connection = {

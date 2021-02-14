@@ -11,7 +11,7 @@ Services.scriptloader.loadSubScript(
 );
 
 const { Input: I } = ChromeUtils.import(
-  "chrome://remote/content/domains/parent/Input.jsm"
+  "chrome://remote/content/cdp/domains/parent/Input.jsm"
 );
 
 const { alt, ctrl, meta, shift } = I.Modifier;

@@ -4,7 +4,7 @@
 "use strict";
 
 const { Connection } = ChromeUtils.import(
-  "chrome://remote/content/Connection.jsm"
+  "chrome://remote/content/cdp/Connection.jsm"
 );
 
 add_test(function test_Connection_splitMethod() {

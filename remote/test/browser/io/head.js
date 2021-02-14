@@ -11,7 +11,7 @@ Services.scriptloader.loadSubScript(
 );
 
 const { streamRegistry } = ChromeUtils.import(
-  "chrome://remote/content/domains/parent/IO.jsm"
+  "chrome://remote/content/cdp/domains/parent/IO.jsm"
 );
 
 async function registerFileStream(contents, options = {}) {

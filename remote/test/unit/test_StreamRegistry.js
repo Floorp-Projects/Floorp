@@ -10,7 +10,7 @@ const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { StreamRegistry } = ChromeUtils.import(
-  "chrome://remote/content/StreamRegistry.jsm"
+  "chrome://remote/content/cdp/StreamRegistry.jsm"
 );
 
 add_test(function test_constructor() {
