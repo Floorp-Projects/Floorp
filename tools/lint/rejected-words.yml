@@ -282,7 +282,7 @@ avoid-blacklist-and-whitelist:
         - python/mozbuild/mozbuild/configure/options.py
         - python/mozbuild/mozbuild/vendor/moz_yaml.py
         - python/mozbuild/mozbuild/vendor/vendor_rust.py
-        - remote/Protocol.jsm
+        - remote/cdp/Protocol.jsm
         - security/certverifier/NSSCertDBTrustDomain.cpp
         - security/certverifier/TrustOverrideUtils.h
         - security/manager/ssl/DataStorageList.h
