@@ -118,17 +118,12 @@ Attr* nsDOMAttributeMap::GetAttribute(mozilla::dom::NodeInfo* aNodeInfo) {
 
   nsAttrKey attr(aNodeInfo->NamespaceID(), aNodeInfo->NameAtom());
 
-  RefPtr<Attr>& entryValue = mAttributeCache.GetOrInsert(attr);
-  Attr* node = entryValue;
-  if (!node) {
+  return mAttributeCache.GetOrInsertWith(attr, [&] {
     // Newly inserted entry!
     RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
     auto* nim = ni->NodeInfoManager();
-    entryValue = new (nim) Attr(this, ni.forget(), u""_ns);
-    node = entryValue;
-  }
-
-  return node;
+    return new (nim) Attr(this, ni.forget(), u""_ns);
+  });
 }
 
 Attr* nsDOMAttributeMap::NamedGetter(const nsAString& aAttrName, bool& aFound) {
