@@ -895,25 +895,26 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   nsIntSize CSSToDevIntPixelsForBaseWindow(nsIntSize aCSSSize,
                                            nsIBaseWindow* aWindow);
 
-  void SetFocusedElement(mozilla::dom::Element* aElement,
-                         uint32_t aFocusMethod = 0, bool aNeedsFocus = false,
-                         bool aWillShowOutline = false) override;
+  virtual void SetFocusedElement(mozilla::dom::Element* aElement,
+                                 uint32_t aFocusMethod = 0,
+                                 bool aNeedsFocus = false) override;
 
-  uint32_t GetFocusMethod() override;
+  virtual uint32_t GetFocusMethod() override;
 
-  bool ShouldShowFocusRing() override;
+  virtual bool ShouldShowFocusRing() override;
 
-  void SetKeyboardIndicators(UIStateChangeType aShowFocusRings) override;
+  virtual void SetKeyboardIndicators(
+      UIStateChangeType aShowFocusRings) override;
 
  public:
-  already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() override;
+  virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() override;
 
  protected:
   void NotifyWindowIDDestroyed(const char* aTopic);
 
   void ClearStatus();
 
-  void UpdateParentTarget() override;
+  virtual void UpdateParentTarget() override;
 
   void InitializeShowFocusRings();
 

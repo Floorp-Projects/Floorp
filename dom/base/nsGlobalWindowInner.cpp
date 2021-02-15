@@ -4341,8 +4341,7 @@ void nsGlobalWindowInner::StopVRActivity() {
 
 void nsGlobalWindowInner::SetFocusedElement(Element* aElement,
                                             uint32_t aFocusMethod,
-                                            bool aNeedsFocus,
-                                            bool aWillShowOutline) {
+                                            bool aNeedsFocus) {
   if (aElement && aElement->GetComposedDoc() != mDoc) {
     NS_WARNING("Trying to set focus to a node from a wrong document");
     return;
@@ -4352,16 +4351,12 @@ void nsGlobalWindowInner::SetFocusedElement(Element* aElement,
     NS_ASSERTION(!aElement, "Trying to focus cleaned up window!");
     aElement = nullptr;
     aNeedsFocus = false;
-    aWillShowOutline = false;
   }
   if (mFocusedElement != aElement) {
     UpdateCanvasFocus(false, aElement);
     mFocusedElement = aElement;
-    // TODO: Maybe this should be set on refocus too?
     mFocusMethod = aFocusMethod & FOCUSMETHOD_MASK;
   }
-
-  mFocusedElementShowedOutlines = aWillShowOutline;
 
   if (mFocusedElement) {
     // if a node was focused by a keypress, turn on focus rings for the
@@ -4371,9 +4366,7 @@ void nsGlobalWindowInner::SetFocusedElement(Element* aElement,
     }
   }
 
-  if (aNeedsFocus) {
-    mNeedsFocus = aNeedsFocus;
-  }
+  if (aNeedsFocus) mNeedsFocus = aNeedsFocus;
 }
 
 uint32_t nsGlobalWindowInner::GetFocusMethod() { return mFocusMethod; }
