@@ -13,8 +13,7 @@
  * See devtools/docs/backend/actor-hierarchy.md for more details.
  */
 
-var {
-  BrowsingContextTargetActor,
+const {
   browsingContextTargetPrototype,
 } = require("devtools/server/actors/targets/browsing-context");
 
@@ -27,29 +26,10 @@ const TargetActorMixin = require("devtools/server/actors/targets/target-actor-mi
  * Protocol.js expects only the prototype object, and does not maintain the prototype
  * chain when it constructs the ActorClass. For this reason we are using `extend` to
  * maintain the properties of BrowsingContextTargetActor.prototype
+ *
+ * Target actor for a frame / docShell in the content process.
  */
 const frameTargetPrototype = extend({}, browsingContextTargetPrototype);
-
-/**
- * Target actor for a frame / docShell in the content process.
- *
- * @param connection DevToolsServerConnection
- *        The conection to the client.
- * @param docShell nsIDocShell
- *        The |docShell| for the debugged frame.
- * @param options Object
- *        See BrowsingContextTargetActor.initialize doc.
- */
-frameTargetPrototype.initialize = function(connection, docShell, options) {
-  BrowsingContextTargetActor.prototype.initialize.call(
-    this,
-    connection,
-    docShell,
-    options
-  );
-
-  this.traits.reconfigure = false;
-};
 
 Object.defineProperty(frameTargetPrototype, "title", {
   get: function() {
