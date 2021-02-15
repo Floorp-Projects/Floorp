@@ -116,12 +116,22 @@ class PlacesObserver extends Observer {
       guid,
       title,
       url,
+      isRemovedFromStore,
       isTagging,
       type,
     } of events) {
       switch (type) {
         case "history-cleared":
           this.dispatch({ type: at.PLACES_HISTORY_CLEARED });
+          break;
+        case "page-removed":
+          if (isRemovedFromStore) {
+            this.dispatch({ type: at.PLACES_LINKS_CHANGED });
+            this.dispatch({
+              type: at.PLACES_LINK_DELETED,
+              data: { url },
+            });
+          }
           break;
         case "bookmark-added":
           // Skips items that are not bookmarks (like folders), about:* pages or
@@ -192,7 +202,7 @@ class PlacesFeed {
       .getService(Ci.nsINavBookmarksService)
       .addObserver(this.bookmarksObserver, true);
     PlacesUtils.observers.addListener(
-      ["bookmark-added", "bookmark-removed", "history-cleared"],
+      ["bookmark-added", "bookmark-removed", "history-cleared", "page-removed"],
       this.placesObserver.handlePlacesEvent
     );
 
@@ -236,7 +246,7 @@ class PlacesFeed {
     PlacesUtils.history.removeObserver(this.historyObserver);
     PlacesUtils.bookmarks.removeObserver(this.bookmarksObserver);
     PlacesUtils.observers.removeListener(
-      ["bookmark-added", "bookmark-removed", "history-cleared"],
+      ["bookmark-added", "bookmark-removed", "history-cleared", "page-removed"],
       this.placesObserver.handlePlacesEvent
     );
     Services.obs.removeObserver(this, LINK_BLOCKED_EVENT);

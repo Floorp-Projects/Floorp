@@ -261,18 +261,37 @@ this.history = class extends ExtensionAPI {
               fire.sync(data);
             };
             const historyClearedListener = events => {
-              fire.sync({ allHistory: true, urls: [] });
+              const removedURLs = [];
+
+              for (const event of events) {
+                switch (event.type) {
+                  case "history-cleared": {
+                    fire.sync({ allHistory: true, urls: [] });
+                    break;
+                  }
+                  case "page-removed": {
+                    if (!event.isPartialVisistsRemoval) {
+                      removedURLs.push(event.url);
+                    }
+                    break;
+                  }
+                }
+              }
+
+              if (removedURLs.length) {
+                fire.sync({ allHistory: false, urls: removedURLs });
+              }
             };
 
             getHistoryObserver().on("visitRemoved", listener);
             PlacesUtils.observers.addListener(
-              ["history-cleared"],
+              ["history-cleared", "page-removed"],
               historyClearedListener
             );
             return () => {
               getHistoryObserver().off("visitRemoved", listener);
               PlacesUtils.observers.removeListener(
-                ["history-cleared"],
+                ["history-cleared", "page-removed"],
                 historyClearedListener
               );
             };

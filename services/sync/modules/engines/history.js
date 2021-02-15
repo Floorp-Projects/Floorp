@@ -526,7 +526,7 @@ HistoryTracker.prototype = {
       this.handlePlacesEvents.bind(this)
     );
     PlacesObservers.addListener(
-      ["page-visited", "history-cleared"],
+      ["page-visited", "history-cleared", "page-removed"],
       this._placesObserver
     );
   },
@@ -536,7 +536,7 @@ HistoryTracker.prototype = {
     PlacesUtils.history.removeObserver(this);
     if (this._placesObserver) {
       PlacesObservers.removeListener(
-        ["page-visited", "history-cleared"],
+        ["page-visited", "history-cleared", "page-removed"],
         this._placesObserver
       );
     }
@@ -548,7 +548,7 @@ HistoryTracker.prototype = {
   ]),
 
   async onDeleteAffectsGUID(uri, guid, reason, source, increment) {
-    if (this.ignoreAll || reason == Ci.nsINavHistoryObserver.REASON_EXPIRED) {
+    if (this.ignoreAll || reason === PlacesVisitRemoved.REASON_EXPIRED) {
       return;
     }
     this._log.trace(source + ": " + uri.spec + ", reason " + reason);
@@ -613,6 +613,22 @@ HistoryTracker.prototype = {
           // pages are tracked, so the deletions will not be propagated.
           // See Bug 578694.
           this.score += SCORE_INCREMENT_XLARGE;
+          break;
+        }
+        case "page-removed": {
+          if (event.reason === PlacesVisitRemoved.REASON_EXPIRED) {
+            return;
+          }
+
+          this._log.trace(
+            "page-removed: " + event.url + ", reason " + event.reason
+          );
+          const added = await this.addChangedID(event.pageGuid);
+          if (added) {
+            this.score += event.isRemovedFromStore
+              ? SCORE_INCREMENT_XLARGE
+              : SCORE_INCREMENT_SMALL;
+          }
           break;
         }
       }
