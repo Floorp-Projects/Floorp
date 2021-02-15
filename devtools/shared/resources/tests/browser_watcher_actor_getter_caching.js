@@ -38,6 +38,15 @@ add_task(async function() {
     "breakpoint-list"
   );
 
+  info(
+    "Check that getTargetConfigurationActor does not create duplicate actors"
+  );
+  testActorGetter(
+    watcherFront,
+    () => watcherFront.getTargetConfigurationActor(),
+    "target-configuration"
+  );
+
   targetList.destroy();
   await client.waitForRequestsToSettle();
   await client.close();

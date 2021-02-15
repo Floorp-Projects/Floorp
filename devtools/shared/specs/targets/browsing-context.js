@@ -42,12 +42,15 @@ types.addDictType("browsingContextTarget.reload", {
   force: "boolean",
 });
 
+// @backward-compat { version 87 } See backward-compat note for `reconfigure`.
 types.addDictType("browsingContextTarget.reconfigure", {
-  javascriptEnabled: "nullable:boolean",
   cacheDisabled: "nullable:boolean",
   colorSchemeSimulation: "nullable:string",
-  serviceWorkersTestingEnabled: "nullable:boolean",
+  javascriptEnabled: "nullable:boolean",
+  paintFlashing: "nullable:boolean",
   printSimulationEnabled: "nullable:boolean",
+  restoreFocus: "nullable:boolean",
+  serviceWorkersTestingEnabled: "nullable:boolean",
 });
 
 const browsingContextTargetSpecPrototype = {
@@ -90,6 +93,10 @@ const browsingContextTargetSpecPrototype = {
       },
       response: {},
     },
+    // @backward-compat { version 87 } Starting with version 87, targets which
+    // support the watcher will rely on the configuration actor to update their
+    // configuration flags. However we need to keep this request until all
+    // browsing context targets support the watcher (eg webextensions).
     reconfigure: {
       request: {
         options: Option(0, "browsingContextTarget.reconfigure"),
