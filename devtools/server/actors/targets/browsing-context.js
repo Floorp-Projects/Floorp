@@ -241,6 +241,16 @@ const browsingContextTargetPrototype = {
    *        The |docShell| for the debugged frame.
    * @param options Object
    *        Object with following attributes:
+   *        - isTopLevelTarget Boolean
+   *          Should be set to true for all top-level targets. A top level target
+   *          is the topmost target of a DevTools "session". For instance for a local
+   *          tab toolbox, the FrameTargetActor for the content page is the top level target.
+   *          For the Multiprocess Browser Toolbox, the parent process target is the top level
+   *          target.
+   *          At the moment this only impacts the BrowsingContextTarget `reconfigure`
+   *          implementation. But for server-side target switching this flag will be exposed
+   *          to the client and should be available for all target actor classes. It will be
+   *          used to detect target switching. (Bug 1644397)
    *        - followWindowGlobalLifeCycle Boolean
    *          If true, the target actor will only inspect the current WindowGlobal (and its children windows).
    *          But won't inspect next document loaded in the same BrowsingContext.
@@ -264,6 +274,7 @@ const browsingContextTargetPrototype = {
 
     this.followWindowGlobalLifeCycle = options.followWindowGlobalLifeCycle;
     this.doNotFireFrameUpdates = options.doNotFireFrameUpdates;
+    this.isTopLevelTarget = !!options.isTopLevelTarget;
 
     // A map of actor names to actor instances provided by extensions.
     this._extraActors = {};
