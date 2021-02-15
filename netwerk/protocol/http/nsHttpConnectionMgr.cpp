@@ -803,15 +803,16 @@ void nsHttpConnectionMgr::UpdateCoalescingForNewConn(
         "UpdateCoalescingForNewConn() registering newConn %p %s under key %s\n",
         newConn, newConn->ConnectionInfo()->HashKey().get(),
         ent->mCoalescingKeys[i].get()));
-    nsTArray<nsWeakPtr>* listOfWeakConns =
-        mCoalescingHash.Get(ent->mCoalescingKeys[i]);
-    if (!listOfWeakConns) {
-      LOG(("UpdateCoalescingForNewConn() need new list element\n"));
-      listOfWeakConns = new nsTArray<nsWeakPtr>(1);
-      mCoalescingHash.Put(ent->mCoalescingKeys[i], listOfWeakConns);
-    }
-    listOfWeakConns->AppendElement(
-        do_GetWeakReference(static_cast<nsISupportsWeakReference*>(newConn)));
+
+    mCoalescingHash
+        .GetOrInsertWith(
+            ent->mCoalescingKeys[i],
+            [] {
+              LOG(("UpdateCoalescingForNewConn() need new list element\n"));
+              return MakeUnique<nsTArray<nsWeakPtr>>(1);
+            })
+        ->AppendElement(do_GetWeakReference(
+            static_cast<nsISupportsWeakReference*>(newConn)));
   }
 
   // this is a new connection that can be coalesced onto. hooray!
@@ -3343,13 +3344,11 @@ void nsHttpConnectionMgr::RegisterOriginCoalescingKey(HttpConnectionBase* conn,
 
   nsCString newKey;
   BuildOriginFrameHashKey(newKey, ci, host, port);
-  nsTArray<nsWeakPtr>* listOfWeakConns = mCoalescingHash.Get(newKey);
-  if (!listOfWeakConns) {
-    listOfWeakConns = new nsTArray<nsWeakPtr>(1);
-    mCoalescingHash.Put(newKey, listOfWeakConns);
-  }
-  listOfWeakConns->AppendElement(
-      do_GetWeakReference(static_cast<nsISupportsWeakReference*>(conn)));
+  mCoalescingHash
+      .GetOrInsertWith(newKey,
+                       [] { return MakeUnique<nsTArray<nsWeakPtr>>(1); })
+      ->AppendElement(
+          do_GetWeakReference(static_cast<nsISupportsWeakReference*>(conn)));
 
   LOG(
       ("nsHttpConnectionMgr::RegisterOriginCoalescingKey "
