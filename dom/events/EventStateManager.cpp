@@ -681,15 +681,17 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       }
       [[fallthrough]];
     case ePointerMove: {
+      if (!mInTouchDrag &&
+          mouseEvent->mInputSource != dom::MouseEvent_Binding::MOZ_SOURCE_PEN &&
+          mouseEvent->mReason != WidgetMouseEvent::eSynthesized) {
+        GenerateDragGesture(aPresContext, mouseEvent);
+      }
       // on the Mac, GenerateDragGesture() may not return until the drag
       // has completed and so |aTargetFrame| may have been deleted (moving
       // a bookmark, for example).  If this is the case, however, we know
       // that ClearFrameRefs() has been called and it cleared out
       // |mCurrentTarget|. As a result, we should pass |mCurrentTarget|
       // into UpdateCursor().
-      if (!mInTouchDrag) {
-        GenerateDragGesture(aPresContext, mouseEvent);
-      }
       UpdateCursor(aPresContext, aEvent, mCurrentTarget, aStatus);
 
       UpdateLastRefPointOfMouseEvent(mouseEvent);
