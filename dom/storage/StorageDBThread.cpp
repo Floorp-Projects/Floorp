@@ -304,7 +304,7 @@ void StorageDBThread::SyncPreload(LocalStorageCacheBridge* aCache,
   // need to be flushed first.
   // Schedule preload for this cache as the first operation.
   nsresult rv =
-      InsertDBOp(new DBOperation(DBOperation::opPreloadUrgent, aCache));
+      InsertDBOp(MakeUnique<DBOperation>(DBOperation::opPreloadUrgent, aCache));
 
   // LoadWait exits after LoadDone of the cache has been called.
   if (NS_SUCCEEDED(rv)) {
@@ -330,11 +330,9 @@ void StorageDBThread::GetOriginsHavingData(nsTArray<nsCString>* aOrigins) {
   }
 }
 
-nsresult StorageDBThread::InsertDBOp(StorageDBThread::DBOperation* aOperation) {
+nsresult StorageDBThread::InsertDBOp(
+    UniquePtr<StorageDBThread::DBOperation> aOperation) {
   MonitorAutoLock monitor(mThreadObserver->GetMonitor());
-
-  // Sentinel to don't forget to delete the operation when we exit early.
-  UniquePtr<StorageDBThread::DBOperation> opScope(aOperation);
 
   if (NS_FAILED(mStatus)) {
     MonitorAutoUnlock unlock(mThreadObserver->GetMonitor());
@@ -377,13 +375,10 @@ nsresult StorageDBThread::InsertDBOp(StorageDBThread::DBOperation* aOperation) {
     case DBOperation::opGetUsage:
       if (aOperation->Type() == DBOperation::opPreloadUrgent) {
         SetHigherPriority();  // Dropped back after urgent preload execution
-        mPreloads.InsertElementAt(0, aOperation);
+        mPreloads.InsertElementAt(0, aOperation.release());
       } else {
-        mPreloads.AppendElement(aOperation);
+        mPreloads.AppendElement(aOperation.release());
       }
-
-      // DB operation adopted, don't delete it.
-      Unused << opScope.release();
 
       // Immediately start executing this.
       monitor.Notify();
@@ -392,10 +387,7 @@ nsresult StorageDBThread::InsertDBOp(StorageDBThread::DBOperation* aOperation) {
     default:
       // Update operations are first collected, coalesced and then flushed
       // after a short time.
-      mPendingTasks.Add(aOperation);
-
-      // DB operation adopted, don't delete it.
-      Unused << opScope.release();
+      mPendingTasks.Add(std::move(aOperation));
 
       ScheduleFlush();
       break;
@@ -1308,14 +1300,13 @@ bool StorageDBThread::PendingOperations::CheckForCoalesceOpportunity(
 }
 
 void StorageDBThread::PendingOperations::Add(
-    StorageDBThread::DBOperation* aOperation) {
+    UniquePtr<StorageDBThread::DBOperation> aOperation) {
   // Optimize: when a key to remove has never been written to disk
   // just bypass this operation.  A key is new when an operation scheduled
   // to write it to the database is of type opAddItem.
-  if (CheckForCoalesceOpportunity(aOperation, DBOperation::opAddItem,
+  if (CheckForCoalesceOpportunity(aOperation.get(), DBOperation::opAddItem,
                                   DBOperation::opRemoveItem)) {
     mUpdates.Remove(aOperation->Target());
-    delete aOperation;
     return;
   }
 
@@ -1323,7 +1314,7 @@ void StorageDBThread::PendingOperations::Add(
   // written to disk, keep type of the operation to store it at opAddItem.
   // This allows optimization to just forget adding a new key when
   // it is removed from the storage before flush.
-  if (CheckForCoalesceOpportunity(aOperation, DBOperation::opAddItem,
+  if (CheckForCoalesceOpportunity(aOperation.get(), DBOperation::opAddItem,
                                   DBOperation::opUpdateItem)) {
     aOperation->mType = DBOperation::opAddItem;
   }
@@ -1332,7 +1323,7 @@ void StorageDBThread::PendingOperations::Add(
   // remove/set/remove on a previously existing key we have to change
   // opAddItem to opUpdateItem on the new operation when there is opRemoveItem
   // pending for the key.
-  if (CheckForCoalesceOpportunity(aOperation, DBOperation::opRemoveItem,
+  if (CheckForCoalesceOpportunity(aOperation.get(), DBOperation::opRemoveItem,
                                   DBOperation::opAddItem)) {
     aOperation->mType = DBOperation::opUpdateItem;
   }
@@ -1344,7 +1335,7 @@ void StorageDBThread::PendingOperations::Add(
     case DBOperation::opUpdateItem:
     case DBOperation::opRemoveItem:
       // Override any existing operation for the target (=scope+key).
-      mUpdates.Put(aOperation->Target(), aOperation);
+      mUpdates.Put(aOperation->Target(), std::move(aOperation));
       break;
 
       // Clear operations
@@ -1381,14 +1372,14 @@ void StorageDBThread::PendingOperations::Add(
         iter.Remove();
       }
 
-      mClears.Put(aOperation->Target(), aOperation);
+      mClears.Put(aOperation->Target(), std::move(aOperation));
       break;
 
     case DBOperation::opClearAll:
       // Drop simply everything, this is a super-operation.
       mUpdates.Clear();
       mClears.Clear();
-      mClears.Put(aOperation->Target(), aOperation);
+      mClears.Put(aOperation->Target(), std::move(aOperation));
       break;
 
     default:

@@ -210,7 +210,7 @@ AsyncBindingParams::BindByName(const nsACString& aName, nsIVariant* aValue) {
   RefPtr<Variant_base> variant = convertVariantToStorageVariant(aValue);
   if (!variant) return NS_ERROR_UNEXPECTED;
 
-  mNamedParameters.Put(aName, variant);
+  mNamedParameters.Put(aName, nsCOMPtr<nsIVariant>{variant});
   return NS_OK;
 }
 
