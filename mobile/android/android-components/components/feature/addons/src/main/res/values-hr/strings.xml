@@ -49,7 +49,7 @@
     <!-- Description for history permission. -->
     <string name="mozac_feature_addons_permissions_history_description">Pristupi povijesti pregledavanja</string>
     <!-- Description for management permission. -->
-    <string name="mozac_feature_addons_permissions_management_description">Prati upotrebu dodataka i upravljaj motivima</string>
+    <string name="mozac_feature_addons_permissions_management_description">Prati upotrebu dodataka i upravljaj temama</string>
     <!-- Description for native_messaging permission. -->
     <string name="mozac_feature_addons_permissions_native_messaging_description">Razmijeni poruke s drugim programima</string>
     <!-- Description for notifications permission. -->
