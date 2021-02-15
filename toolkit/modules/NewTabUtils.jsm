@@ -599,13 +599,7 @@ var PlacesProvider = {
       this.handlePlacesEvents.bind(this)
     );
     PlacesObservers.addListener(
-      [
-        "page-visited",
-        "page-title-changed",
-        "history-cleared",
-        "pages-rank-changed",
-        "page-removed",
-      ],
+      ["page-visited", "page-title-changed", "pages-rank-changed"],
       this._placesObserver
     );
   },
@@ -707,53 +701,26 @@ var PlacesProvider = {
       switch (event.type) {
         case "page-visited": {
           if (event.visitCount == 1 && event.lastKnownTitle) {
-            this.onTitleChanged(
-              event.url,
-              event.lastKnownTitle,
-              event.pageGuid
-            );
+            this._callObservers("onLinkChanged", {
+              url: event.url,
+              title: event.lastKnownTitle,
+            });
           }
           break;
         }
         case "page-title-changed": {
-          this.onTitleChanged(event.url, event.title, event.pageGuid);
-          break;
-        }
-        case "history-cleared": {
-          this.onClearHistory();
+          this._callObservers("onLinkChanged", {
+            url: event.url,
+            title: event.title,
+          });
           break;
         }
         case "pages-rank-changed": {
-          this.onManyFrecenciesChanged();
-          break;
-        }
-        case "page-removed": {
-          if (event.isRemovedFromStore) {
-            this.onDeleteURI(event.url, event.pageGuid, event.reason);
-          }
+          this._callObservers("onManyLinksChanged");
           break;
         }
       }
     }
-  },
-
-  onDeleteURI: function PlacesProvider_onDeleteURI(aURI, aGUID, aReason) {
-    // let observers remove sensetive data associated with deleted visit
-    this._callObservers("onDeleteURI", {
-      url: aURI.spec,
-    });
-  },
-
-  onClearHistory() {
-    this._callObservers("onClearHistory");
-  },
-
-  onManyFrecenciesChanged() {
-    this._callObservers("onManyLinksChanged");
-  },
-
-  onTitleChanged(url, title, guid) {
-    this._callObservers("onLinkChanged", { url, title });
   },
 
   _callObservers: function PlacesProvider__callObservers(aMethodName, aArg) {
@@ -2378,7 +2345,6 @@ var NewTabUtils = {
   allPages: AllPages,
   pinnedLinks: PinnedLinks,
   blockedLinks: BlockedLinks,
-  placesProvider: PlacesProvider,
   activityStreamLinks: ActivityStreamLinks,
   activityStreamProvider: ActivityStreamProvider,
 };
