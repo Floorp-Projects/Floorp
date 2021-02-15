@@ -683,8 +683,7 @@ TYPED_TEST_P(BaseHashtableTest, MaybeGet) {
   EXPECT_EQ(data.CharRef()->GetChar(), 42u);
 }
 
-TYPED_TEST_P(BaseHashtableTest, GetOrInsert) {
-  // The GetOrInsert function can't support non-default-constructible DataType.
+TYPED_TEST_P(BaseHashtableTest, GetOrInsert_Default) {
   if constexpr (std::is_default_constructible_v<typename TypeParam::DataType>) {
     auto table = MakeEmptyBaseHashtable<TypeParam>();
 
@@ -694,6 +693,48 @@ TYPED_TEST_P(BaseHashtableTest, GetOrInsert) {
     data = typename TypeParam::DataType(MakeRefPtr<TestUniCharRefCounted>(
         42, TypeParam::kExpectedAddRefCnt_GetOrInsert));
   }
+}
+
+TYPED_TEST_P(BaseHashtableTest, GetOrInsert_NonDefault) {
+  auto table = MakeEmptyBaseHashtable<TypeParam>();
+
+  typename TypeParam::DataType& data = table.GetOrInsert(
+      1, typename TypeParam::DataType{MakeRefPtr<TestUniCharRefCounted>(42)});
+  EXPECT_NE(data.CharRef(), nullptr);
+}
+
+TYPED_TEST_P(BaseHashtableTest, GetOrInsert_NonDefault_AlreadyPresent) {
+  auto table = MakeEmptyBaseHashtable<TypeParam>();
+
+  typename TypeParam::DataType& data1 = table.GetOrInsert(
+      1, typename TypeParam::DataType{MakeRefPtr<TestUniCharRefCounted>(42)});
+  TestUniCharRefCounted* const address = data1.CharRef();
+  typename TypeParam::DataType& data2 = table.GetOrInsert(
+      1,
+      typename TypeParam::DataType{MakeRefPtr<TestUniCharRefCounted>(42, 1)});
+  EXPECT_EQ(&data1, &data2);
+  EXPECT_EQ(address, data2.CharRef());
+}
+
+TYPED_TEST_P(BaseHashtableTest, GetOrInsertWith) {
+  auto table = MakeEmptyBaseHashtable<TypeParam>();
+
+  typename TypeParam::DataType& data = table.GetOrInsertWith(1, [] {
+    return typename TypeParam::DataType{MakeRefPtr<TestUniCharRefCounted>(42)};
+  });
+  EXPECT_NE(data.CharRef(), nullptr);
+}
+
+TYPED_TEST_P(BaseHashtableTest, GetOrInsertWith_AlreadyPresent) {
+  auto table = MakeEmptyBaseHashtable<TypeParam>();
+
+  table.GetOrInsertWith(1, [] {
+    return typename TypeParam::DataType{MakeRefPtr<TestUniCharRefCounted>(42)};
+  });
+  table.GetOrInsertWith(1, [] {
+    ADD_FAILURE();
+    return typename TypeParam::DataType{MakeRefPtr<TestUniCharRefCounted>(42)};
+  });
 }
 
 TYPED_TEST_P(BaseHashtableTest, Put) {
@@ -950,10 +991,12 @@ TYPED_TEST_P(BaseHashtableTest, MarkImmutable) {
 REGISTER_TYPED_TEST_CASE_P(
     BaseHashtableTest, Contains, GetGeneration, SizeOfExcludingThis,
     SizeOfIncludingThis, Count, IsEmpty, Get_OutputParam, Get, MaybeGet,
-    GetOrInsert, Put, Put_Fallible, Put_Rvalue, Put_Rvalue_Fallible,
-    Remove_OutputParam, Remove, GetAndRemove, RemoveIf, Lookup, Lookup_Remove,
-    WithEntryHandle_NoOp, WithEntryHandle_NotFound_OrInsert,
-    WithEntryHandle_NotFound_OrInsertFrom,
+    GetOrInsert_Default, GetOrInsert_NonDefault,
+    GetOrInsert_NonDefault_AlreadyPresent, GetOrInsertWith,
+    GetOrInsertWith_AlreadyPresent, Put, Put_Fallible, Put_Rvalue,
+    Put_Rvalue_Fallible, Remove_OutputParam, Remove, GetAndRemove, RemoveIf,
+    Lookup, Lookup_Remove, WithEntryHandle_NoOp,
+    WithEntryHandle_NotFound_OrInsert, WithEntryHandle_NotFound_OrInsertFrom,
     WithEntryHandle_NotFound_OrInsertFrom_Exists,
     WithEntryHandle_NotFound_OrRemove, WithEntryHandle_NotFound_OrRemove_Exists,
     Iter, ConstIter, begin_end, cbegin_cend, Clear, ShallowSizeOfExcludingThis,

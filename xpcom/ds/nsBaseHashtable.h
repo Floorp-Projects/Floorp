@@ -189,19 +189,30 @@ class nsBaseHashtable
   }
 
   /**
-   * Add key to the table if not already present, and return a reference to its
-   * value.  If key is not already in the table then the value is default
-   * constructed.
+   * Add aKey to the table if not already present, and return a reference to its
+   * value.  If aKey is not already in the table then the a default-constructed
+   * or the provided value aData is used.
    *
-   * This function can only be used if DataType is default-constructible. Use
-   * WithEntryHandle with non-default-constructible DataType for now.
-   *
-   * TODO: Add a function GetOrInsertWith that will use a function for
-   *       DataType construction.
+   * If the arguments are non-trivial to provide, consider using GetOrInsertWith
+   * instead.
    */
-  DataType& GetOrInsert(const KeyType& aKey) {
-    EntryType* ent = this->PutEntry(aKey);
-    return ent->mData;
+  template <typename... Args>
+  DataType& GetOrInsert(const KeyType& aKey, Args&&... aArgs) {
+    return WithEntryHandle(aKey, [&](auto entryHandle) -> DataType& {
+      return entryHandle.OrInsert(std::forward<Args>(aArgs)...);
+    });
+  }
+
+  /**
+   * Add aKey to the table if not already present, and return a reference to its
+   * value.  If aKey is not already in the table then the value is
+   * constructed using the given factory.
+   */
+  template <typename F>
+  DataType& GetOrInsertWith(const KeyType& aKey, F&& aFunc) {
+    return WithEntryHandle(aKey, [&aFunc](auto entryHandle) -> DataType& {
+      return entryHandle.OrInsertWith(std::forward<F>(aFunc));
+    });
   }
 
   /**
@@ -428,13 +439,13 @@ class nsBaseHashtable
      * Inserts a new entry with the handle's key and the value passed to this
      * function.
      *
-     * \tparam U DataType must be constructible from U
+     * \tparam Args DataType must be constructible from Args
      * \pre !HasEntry()
      * \post HasEntry()
      */
-    template <typename U>
-    DataType& Insert(U&& aData) {
-      Base::InsertInternal(std::forward<U>(aData));
+    template <typename... Args>
+    DataType& Insert(Args&&... aArgs) {
+      Base::InsertInternal(std::forward<Args>(aArgs)...);
       return Data();
     }
 
@@ -443,13 +454,13 @@ class nsBaseHashtable
      * the value passed to this function. The value is not consumed if no insert
      * takes place.
      *
-     * \tparam U DataType must be constructible from U
+     * \tparam Args DataType must be constructible from Args
      * \post HasEntry()
      */
-    template <typename U>
-    DataType& OrInsert(U&& aData) {
+    template <typename... Args>
+    DataType& OrInsert(Args&&... aArgs) {
       if (!HasEntry()) {
-        return Insert(std::forward<U>(aData));
+        return Insert(std::forward<Args>(aArgs)...);
       }
       return Data();
     }
