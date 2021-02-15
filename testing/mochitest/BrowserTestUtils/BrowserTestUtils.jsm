@@ -943,13 +943,23 @@ var BrowserTestUtils = {
    *        resolve when the first "domwindowopened" notification is seen.
    *        The promise will be resolved once the new window's document has been
    *        loaded.
+   *
+   * @param {function} checkFn (optional)
+   *        Called with the nsIDOMWindow object as argument, should return true
+   *        if the event is the expected one, or false if it should be ignored
+   *        and observing should continue. If not specified, the first window
+   *        resolves the returned promise.
+   *
    * @return {Promise}
    *         A Promise which resolves when a "domwindowopened" notification
    *         has been fired by the window watcher.
    */
-  domWindowOpenedAndLoaded(win) {
-    return this.domWindowOpened(win, async win => {
-      await this.waitForEvent(win, "load");
+  domWindowOpenedAndLoaded(win, checkFn) {
+    return this.domWindowOpened(win, async observedWin => {
+      await this.waitForEvent(observedWin, "load");
+      if (checkFn && !(await checkFn(observedWin))) {
+        return false;
+      }
       return true;
     });
   },
@@ -2269,7 +2279,7 @@ var BrowserTestUtils = {
       // The test listens for the "load" event which guarantees that the alert
       // class has already been added (it is added when "DOMContentLoaded" is
       // fired).
-      win = await this.domWindowOpenedAndLoaded(null, async win => {
+      win = await this.domWindowOpenedAndLoaded(null, win => {
         return win.document.documentURI === uri;
       });
     }
