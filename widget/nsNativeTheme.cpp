@@ -265,13 +265,8 @@ bool nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext,
     }
   }
 
-  return (aAppearance == StyleAppearance::NumberInput ||
-          aAppearance == StyleAppearance::Button ||
-          aAppearance == StyleAppearance::Textfield ||
-          aAppearance == StyleAppearance::Textarea ||
-          aAppearance == StyleAppearance::Listbox ||
-          aAppearance == StyleAppearance::Menulist ||
-          aAppearance == StyleAppearance::MenulistButton) &&
+  return nsLayoutUtils::AuthorSpecifiedBorderBackgroundDisablesTheming(
+             aAppearance) &&
          aFrame->GetContent()->IsHTMLElement() &&
          aPresContext->HasAuthorSpecifiedRules(
              aFrame, NS_AUTHOR_SPECIFIED_BORDER_OR_BACKGROUND);
