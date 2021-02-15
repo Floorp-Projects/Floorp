@@ -508,7 +508,7 @@ CssRuleView.prototype = {
    */
   async _initSimulationFeatures() {
     // @backward-compat { version 87 } Print & color scheme simulations should
-    // now be set using reconfigure.
+    // now be set using updateConfiguration (formerly target::reconfigure).
     if (!this.currentTarget.getTrait("reconfigureSupportsSimulationFeatures")) {
       return;
     }
@@ -1766,10 +1766,8 @@ CssRuleView.prototype = {
       this.colorSchemeDarkSimulationButton.classList.toggle("checked");
     }
 
-    this.currentTarget.reconfigure({
-      options: {
-        colorSchemeSimulation: shouldSimulateLightScheme ? "light" : null,
-      },
+    this.inspector.toolbox.targetList.updateConfiguration({
+      colorSchemeSimulation: shouldSimulateLightScheme ? "light" : null,
     });
     // Refresh the current element's rules in the panel.
     this.refreshPanel();
@@ -1787,10 +1785,8 @@ CssRuleView.prototype = {
       this.colorSchemeLightSimulationButton.classList.toggle("checked");
     }
 
-    this.currentTarget.reconfigure({
-      options: {
-        colorSchemeSimulation: shouldSimulateDarkScheme ? "dark" : null,
-      },
+    this.inspector.toolbox.targetList.updateConfiguration({
+      colorSchemeSimulation: shouldSimulateDarkScheme ? "dark" : null,
     });
     // Refresh the current element's rules in the panel.
     this.refreshPanel();
@@ -1798,10 +1794,8 @@ CssRuleView.prototype = {
 
   async _onTogglePrintSimulation() {
     const enabled = this.printSimulationButton.classList.toggle("checked");
-    this.currentTarget.reconfigure({
-      options: {
-        printSimulationEnabled: enabled,
-      },
+    this.inspector.toolbox.targetList.updateConfiguration({
+      printSimulationEnabled: enabled,
     });
     // Refresh the current element's rules in the panel.
     this.refreshPanel();

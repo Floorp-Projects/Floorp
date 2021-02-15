@@ -18,6 +18,11 @@ class BrowsingContextTargetFront extends TargetMixin(
   constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);
 
+    // For targets which support the Watcher and configuration actor, the status
+    // for the `javascriptEnabled` setting will be available on the configuration
+    // front, and the target will only be used to read the initial value.
+    // For other targets, _javascriptEnabled will be updated everytime
+    // `reconfigure` is called.
     // Note: this property is marked as private but is accessed by the
     // TargetList to provide the "isJavascriptEnabled" wrapper. It should NOT be
     // used anywhere else.

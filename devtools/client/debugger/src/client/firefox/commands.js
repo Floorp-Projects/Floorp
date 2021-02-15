@@ -184,10 +184,8 @@ function removeXHRBreakpoint(path: string, method: string) {
 }
 
 export function toggleJavaScriptEnabled(enabled: Boolean) {
-  return currentTarget().reconfigure({
-    options: {
-      javascriptEnabled: enabled,
-    },
+  return targetList.updateConfiguration({
+    javascriptEnabled: enabled,
   });
 }
 
