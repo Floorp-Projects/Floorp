@@ -85,7 +85,17 @@ class LegacyWorkersWatcher {
       return;
     }
 
-    const { workers } = await front.listWorkers();
+    let workers;
+    try {
+      ({ workers } = await front.listWorkers());
+    } catch (e) {
+      // Workers may be added/removed at anytime so that listWorkers request
+      // can be spawn during a toolbox destroy sequence and easily fail
+      if (front.isDestroyed()) {
+        return;
+      }
+      throw e;
+    }
 
     // Fetch the list of already existing worker targets for this process target front.
     const existingTargets = this.targetsByProcess.get(targetFront);
