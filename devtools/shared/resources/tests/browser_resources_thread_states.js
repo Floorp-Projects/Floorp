@@ -10,17 +10,28 @@ const {
 } = require("devtools/shared/resources/resource-watcher");
 
 const BREAKPOINT_TEST_URL = URL_ROOT_SSL + "breakpoint_document.html";
+const REMOTE_IFRAME_URL =
+  "https://example.org/document-builder.sjs?html=" +
+  encodeURIComponent("<script>debugger;</script>");
 
 add_task(async function() {
+  // Check hitting the "debugger;" statement before and after calling
+  // watchResource(THREAD_TYPES). Both should break. First will
+  // be a cached resource and second will be a live one.
   await checkBreakpointBeforeWatchResources();
-
   await checkBreakpointAfterWatchResources();
 
+  // Check setting a real breakpoint on a given line
   await checkRealBreakpoint();
 
+  // Check the "pause on exception" setting
   await checkPauseOnException();
 
+  // Check an edge case where spamming setBreakpoints calls causes issues
   await checkSetBeforeWatch();
+
+  // Check debugger statement for (remote) iframes
+  await checkDebuggerStatementInIframes();
 });
 
 async function checkBreakpointBeforeWatchResources() {
@@ -399,6 +410,95 @@ async function checkSetBeforeWatch() {
       },
     },
   });
+
+  await threadFront.resume();
+
+  await waitFor(
+    () => availableResources.length == 1,
+    "Wait until we receive the resumed event"
+  );
+
+  const resumed = availableResources.pop();
+
+  assertResumedResource(resumed);
+
+  targetList.destroy();
+  await client.close();
+}
+
+async function checkDebuggerStatementInIframes() {
+  info("Check whether ResourceWatcher gets breakpoint for (remote) iframes");
+
+  const tab = await addTab(BREAKPOINT_TEST_URL);
+
+  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+    tab
+  );
+
+  info("Call watchResources");
+  const availableResources = [];
+  await resourceWatcher.watchResources([ResourceWatcher.TYPES.THREAD_STATE], {
+    onAvailable: resources => availableResources.push(...resources),
+  });
+
+  is(
+    availableResources.length,
+    0,
+    "Got no THREAD_STATE when calling watchResources"
+  );
+
+  info("Inject the iframe with an inline 'debugger' statement");
+  // Note that we do not wait for the resolution of spawn as it will be paused
+  SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [REMOTE_IFRAME_URL],
+    async function(url) {
+      const iframe = content.document.createElement("iframe");
+      iframe.src = url;
+      content.document.body.appendChild(iframe);
+    }
+  );
+
+  await waitFor(
+    () => availableResources.length == 1,
+    "Got the THREAD_STATE related to the iframe's debugger statement"
+  );
+  const threadState = availableResources.pop();
+
+  assertPausedResource(threadState, {
+    state: "paused",
+    why: {
+      type: "debuggerStatement",
+    },
+    frame: {
+      type: "global",
+      asyncCause: null,
+      state: "on-stack",
+      // this: object actor's form referring to `this` variable
+      displayName: "(global)",
+      // arguments: []
+      where: {
+        line: 1,
+        column: 0,
+      },
+    },
+  });
+
+  const iframeTarget = threadState.targetFront;
+  if (isFissionEnabled()) {
+    is(
+      iframeTarget.url,
+      REMOTE_IFRAME_URL,
+      "With fission, the pause is from the iframe's target"
+    );
+  } else {
+    is(
+      iframeTarget,
+      targetList.targetFront,
+      "Without fission, the pause is from the top level target"
+    );
+  }
+  const { threadFront } = iframeTarget;
 
   await threadFront.resume();
 
