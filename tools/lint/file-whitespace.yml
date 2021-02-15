@@ -21,7 +21,6 @@ file-whitespace:
         - devtools/client/inspector/markup/test
         - devtools/client/inspector/rules/test
         - devtools/client/inspector/test
-        - devtools/client/shared/test/doc_inline-debugger-statement.html
         # Excluded because tests were failing unexpectedly
         - devtools/client/styleeditor/test/sync_with_csp.css
         - devtools/client/webconsole/test/browser/test-message-categories-css-parser.css

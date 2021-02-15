@@ -522,6 +522,24 @@ function TargetMixin(parentClass) {
         );
       }
       this.threadFront = await this.getFront("thread");
+
+      // Avoid attaching if the thread actor was already attached on target creation from the server side.
+      // This doesn't include:
+      // * targets that aren't yet supported by the Watcher (like web extensions),
+      // * workers, which still use a unique codepath for thread actor attach
+      // * all targets when connecting to an older server
+      // @backward-compat { version 87 } If all targets are supported by watcher actor, and workers no longer use
+      //                                 its unique attach sequence, we can assume the thread front is always attached.
+      const isAttached =
+        this.getTrait("supportsThreadActorIsAttached") &&
+        (await this.threadFront.isAttached());
+      if (isAttached) {
+        // If the Thread actor has already been attached from the server side
+        // by the Watcher Actor, we still have to pass options that aren't yet managed via
+        // the Watcher actor's addWatcherDataEntry codepath (bug 1687261).
+        await this.threadFront.reconfigure(options);
+        return this.threadFront;
+      }
       if (
         this.isDestroyedOrBeingDestroyed() ||
         this.threadFront.isDestroyed()
