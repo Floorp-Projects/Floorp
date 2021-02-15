@@ -38,10 +38,6 @@ add_task(async function test_remove_many() {
       hasBookmark,
       // `true` once `onResult` has been called for this page
       onResultCalled: false,
-      // `true` once `onDeleteVisits` has been called for this page
-      onDeleteVisitsCalled: false,
-      // `true` once `onDeleteURI` has been called for this page
-      onDeleteURICalled: false,
       // `true` once page-removed for store has been fired for this page
       pageRemovedFromStore: false,
       // `true` once page-removed for all visits has been fired for this page
@@ -81,37 +77,6 @@ add_task(async function test_remove_many() {
   }
 
   let onPageRankingChanged = false;
-  let observer = {
-    onBeginUpdateBatch() {},
-    onEndUpdateBatch() {},
-    onVisits(aVisits) {
-      Assert.ok(false, "Unexpected call to onVisits " + aVisits.length);
-    },
-    onDeleteURI(aURI) {
-      let origin = pages.find(x => x.uri.spec == aURI.spec);
-      Assert.ok(origin);
-      Assert.ok(
-        !origin.hasBookmark,
-        "Observing onDeleteURI on a page without a bookmark"
-      );
-      Assert.ok(
-        !origin.onDeleteURICalled,
-        "Observing onDeleteURI for the first time"
-      );
-      origin.onDeleteURICalled = true;
-    },
-    onDeleteVisits(aURI) {
-      let origin = pages.find(x => x.uri.spec == aURI.spec);
-      Assert.ok(origin);
-      Assert.ok(
-        !origin.onDeleteVisitsCalled,
-        "Observing onDeleteVisits for the first time"
-      );
-      origin.onDeleteVisitsCalled = true;
-    },
-  };
-  PlacesUtils.history.addObserver(observer);
-
   const placesEventListener = events => {
     for (const event of events) {
       switch (event.type) {
@@ -181,7 +146,6 @@ add_task(async function test_remove_many() {
 
   Assert.ok(removed, "Something was removed");
 
-  PlacesUtils.history.removeObserver(observer);
   PlacesObservers.removeListener(
     [
       "page-title-changed",
