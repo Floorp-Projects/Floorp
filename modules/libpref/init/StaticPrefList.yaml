@@ -9062,7 +9062,7 @@
 # The tab modal print dialog is currently only for early beta or nightly.
 - name: print.tab_modal.enabled
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Whether the pages per sheet print setting is enabled.
