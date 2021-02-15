@@ -73,8 +73,8 @@ SessionStorageManagerBase::GetOriginRecord(
   OriginKeyHashTable* table;
   if (!mOATable.Get(aOriginAttrs, &table)) {
     if (aMakeIfNeeded) {
-      table =
-          mOATable.Put(aOriginAttrs, MakeUnique<OriginKeyHashTable>()).get();
+      table = new OriginKeyHashTable();
+      mOATable.Put(aOriginAttrs, table);
     } else {
       return nullptr;
     }
@@ -83,13 +83,13 @@ SessionStorageManagerBase::GetOriginRecord(
   OriginRecord* originRecord;
   if (!table->Get(aOriginKey, &originRecord)) {
     if (aMakeIfNeeded) {
-      auto newOriginRecord = MakeUnique<OriginRecord>();
+      originRecord = new OriginRecord();
       if (aCloneFrom) {
-        newOriginRecord->mCache = aCloneFrom->Clone();
+        originRecord->mCache = aCloneFrom->Clone();
       } else {
-        newOriginRecord->mCache = new SessionStorageCache();
+        originRecord->mCache = new SessionStorageCache();
       }
-      originRecord = table->Put(aOriginKey, std::move(newOriginRecord)).get();
+      table->Put(aOriginKey, originRecord);
     } else {
       return nullptr;
     }

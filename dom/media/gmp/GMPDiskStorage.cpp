@@ -119,7 +119,7 @@ class GMPDiskStorage : public GMPStorage {
         continue;
       }
 
-      mRecords.Put(recordName, MakeUnique<Record>(filename, recordName));
+      mRecords.Put(recordName, new Record(filename, recordName));
     }
 
     return NS_OK;
@@ -127,24 +127,17 @@ class GMPDiskStorage : public GMPStorage {
 
   GMPErr Open(const nsCString& aRecordName) override {
     MOZ_ASSERT(!IsOpen(aRecordName));
-
-    Record* const record =
-        mRecords.WithEntryHandle(aRecordName, [&](auto&& entry) -> Record* {
-          if (!entry) {
-            // New file.
-            nsAutoString filename;
-            nsresult rv = GetUnusedFilename(aRecordName, filename);
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              return nullptr;
-            }
-            return entry.Insert(MakeUnique<Record>(filename, aRecordName))
-                .get();
-          }
-
-          return entry.Data().get();
-        });
-    if (!record) {
-      return GMPGenericErr;
+    nsresult rv;
+    Record* record = nullptr;
+    if (!mRecords.Get(aRecordName, &record)) {
+      // New file.
+      nsAutoString filename;
+      rv = GetUnusedFilename(aRecordName, filename);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return GMPGenericErr;
+      }
+      record = new Record(filename, aRecordName);
+      mRecords.Put(aRecordName, record);
     }
 
     MOZ_ASSERT(record);
@@ -153,8 +146,7 @@ class GMPDiskStorage : public GMPStorage {
       return GMPRecordInUse;
     }
 
-    nsresult rv =
-        OpenStorageFile(record->mFilename, ReadWrite, &record->mFileDesc);
+    rv = OpenStorageFile(record->mFilename, ReadWrite, &record->mFileDesc);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return GMPGenericErr;
     }

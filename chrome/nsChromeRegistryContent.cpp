@@ -60,13 +60,13 @@ void nsChromeRegistryContent::RegisterPackage(const ChromePackage& aPackage) {
     if (NS_FAILED(rv)) return;
   }
 
-  UniquePtr<PackageEntry> entry = MakeUnique<PackageEntry>();
+  PackageEntry* entry = new PackageEntry;
   entry->flags = aPackage.flags;
   entry->contentBaseURI = content;
   entry->localeBaseURI = locale;
   entry->skinBaseURI = skin;
 
-  mPackagesHash.Put(aPackage.package, std::move(entry));
+  mPackagesHash.Put(aPackage.package, entry);
 }
 
 void nsChromeRegistryContent::RegisterSubstitution(

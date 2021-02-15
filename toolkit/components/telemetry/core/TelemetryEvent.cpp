@@ -30,13 +30,11 @@
 #include "TelemetryEventData.h"
 #include "TelemetryScalar.h"
 
-using mozilla::MakeUnique;
 using mozilla::Maybe;
 using mozilla::StaticAutoPtr;
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
 using mozilla::TimeStamp;
-using mozilla::UniquePtr;
 using mozilla::Telemetry::ChildEventData;
 using mozilla::Telemetry::EventExtraEntry;
 using mozilla::Telemetry::LABELS_TELEMETRY_EVENT_RECORDING_ERROR;
@@ -375,10 +373,12 @@ bool IsExpired(const EventKey& key) { return key.id == kExpiredEventId; }
 
 EventRecordArray* GetEventRecordsForProcess(const StaticMutexAutoLock& lock,
                                             ProcessID processType) {
-  return gEventRecords
-      .GetOrInsertWith(uint32_t(processType),
-                       [] { return MakeUnique<EventRecordArray>(); })
-      .get();
+  EventRecordArray* eventRecords = nullptr;
+  if (!gEventRecords.Get(uint32_t(processType), &eventRecords)) {
+    eventRecords = new EventRecordArray();
+    gEventRecords.Put(uint32_t(processType), eventRecords);
+  }
+  return eventRecords;
 }
 
 EventKey* GetEventKey(const StaticMutexAutoLock& lock,
@@ -539,8 +539,7 @@ void RegisterEvents(const StaticMutexAutoLock& lock, const nsACString& category,
     gDynamicEventInfo->AppendElement(eventInfos[i]);
     uint32_t eventId =
         eventExpired[i] ? kExpiredEventId : gDynamicEventInfo->Length() - 1;
-    gEventNameIDMap.Put(eventName,
-                        UniquePtr<EventKey>{new EventKey{eventId, true}});
+    gEventNameIDMap.Put(eventName, new EventKey{eventId, true});
   }
 
   // If it is a builtin, add the category name in order to enable it later.
@@ -709,8 +708,7 @@ void TelemetryEvent::InitializeGlobalState(bool aCanRecordBase,
       eventId = kExpiredEventId;
     }
 
-    gEventNameIDMap.Put(UniqueEventName(info),
-                        UniquePtr<EventKey>{new EventKey{eventId, false}});
+    gEventNameIDMap.Put(UniqueEventName(info), new EventKey{eventId, false});
     gCategoryNames.PutEntry(info.common_info.category());
   }
 
@@ -1291,7 +1289,7 @@ nsresult TelemetryEvent::CreateSnapshots(uint32_t aDataset, bool aClear,
       gEventRecords.Clear();
       for (auto& pair : leftovers) {
         gEventRecords.Put(pair.first,
-                          MakeUnique<EventRecordArray>(std::move(pair.second)));
+                          new EventRecordArray(std::move(pair.second)));
       }
       leftovers.Clear();
     }

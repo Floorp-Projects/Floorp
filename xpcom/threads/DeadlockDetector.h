@@ -159,7 +159,7 @@ class DeadlockDetector {
    */
   void Add(const T* aResource) {
     PRAutoLock _(mLock);
-    mOrdering.Put(aResource, MakeUnique<OrderingEntry>(aResource));
+    mOrdering.Put(aResource, new OrderingEntry(aResource));
   }
 
   void Remove(const T* aResource) {

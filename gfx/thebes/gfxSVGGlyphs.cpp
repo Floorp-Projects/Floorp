@@ -107,28 +107,23 @@ gfxSVGGlyphsDocument* gfxSVGGlyphs::FindOrCreateGlyphsDocument(
     return nullptr;
   }
 
-  return mGlyphDocs.WithEntryHandle(
-      entry->mDocOffset, [&](auto&& glyphDocsEntry) -> gfxSVGGlyphsDocument* {
-        if (!glyphDocsEntry) {
-          unsigned int length;
-          const uint8_t* data =
-              (const uint8_t*)hb_blob_get_data(mSVGData, &length);
-          if (entry->mDocOffset > 0 && uint64_t(mHeader->mDocIndexOffset) +
-                                               entry->mDocOffset +
-                                               entry->mDocLength <=
-                                           length) {
-            return glyphDocsEntry
-                .Insert(MakeUnique<gfxSVGGlyphsDocument>(
-                    data + mHeader->mDocIndexOffset + entry->mDocOffset,
-                    entry->mDocLength, this))
-                .get();
-          }
+  gfxSVGGlyphsDocument* result = mGlyphDocs.Get(entry->mDocOffset);
 
-          return nullptr;
-        }
+  if (!result) {
+    unsigned int length;
+    const uint8_t* data = (const uint8_t*)hb_blob_get_data(mSVGData, &length);
+    if (entry->mDocOffset > 0 && uint64_t(mHeader->mDocIndexOffset) +
+                                         entry->mDocOffset +
+                                         entry->mDocLength <=
+                                     length) {
+      result = new gfxSVGGlyphsDocument(
+          data + mHeader->mDocIndexOffset + entry->mDocOffset,
+          entry->mDocLength, this);
+      mGlyphDocs.Put(entry->mDocOffset, result);
+    }
+  }
 
-        return glyphDocsEntry.Data().get();
-      });
+  return result;
 }
 
 nsresult gfxSVGGlyphsDocument::SetupPresentation() {

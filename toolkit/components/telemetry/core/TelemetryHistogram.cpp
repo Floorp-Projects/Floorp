@@ -35,10 +35,8 @@ using base::CountHistogram;
 using base::FlagHistogram;
 using base::LinearHistogram;
 using mozilla::MakeTuple;
-using mozilla::MakeUnique;
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
-using mozilla::UniquePtr;
 using mozilla::Telemetry::HistogramAccumulation;
 using mozilla::Telemetry::HistogramCount;
 using mozilla::Telemetry::HistogramID;
@@ -981,6 +979,7 @@ Histogram::Histogram(HistogramID histogramId, const HistogramInfo& info,
     return;
   }
 
+  base::Histogram* h;
   const int bucketsOffset = gHistogramBucketLowerBoundIndex[histogramId];
 
   if (info.is_single_store()) {
@@ -989,9 +988,8 @@ Histogram::Histogram(HistogramID histogramId, const HistogramInfo& info,
     for (uint32_t i = 0; i < info.store_count; i++) {
       auto store = nsDependentCString(
           &gHistogramStringTable[gHistogramStoresTable[info.store_index + i]]);
-      mStorage.Put(store, UniquePtr<base::Histogram>(
-                              internal_CreateBaseHistogramInstance(
-                                  info, bucketsOffset)));
+      h = internal_CreateBaseHistogramInstance(info, bucketsOffset);
+      mStorage.Put(store, h);
     }
   }
 }
@@ -1133,7 +1131,7 @@ KeyedHistogram::KeyedHistogram(HistogramID id, const HistogramInfo& info,
     for (uint32_t i = 0; i < info.store_count; i++) {
       auto store = nsDependentCString(
           &gHistogramStringTable[gHistogramStoresTable[info.store_index + i]]);
-      mStorage.Put(store, MakeUnique<KeyedHistogramMapType>());
+      mStorage.Put(store, new KeyedHistogramMapType);
     }
   }
 }
@@ -1167,16 +1165,16 @@ nsresult KeyedHistogram::GetHistogram(const nsCString& aStore,
   }
 
   int bucketsOffset = gHistogramBucketLowerBoundIndex[mId];
-  auto h = UniquePtr<base::Histogram>{
-      internal_CreateBaseHistogramInstance(mHistogramInfo, bucketsOffset)};
+  base::Histogram* h =
+      internal_CreateBaseHistogramInstance(mHistogramInfo, bucketsOffset);
   if (!h) {
     return NS_ERROR_FAILURE;
   }
 
   h->ClearFlags(base::Histogram::kUmaTargetedHistogramFlag);
-  *histogram = h.get();
+  *histogram = h;
 
-  bool inserted = histogramMap->Put(key, std::move(h), mozilla::fallible);
+  bool inserted = histogramMap->Put(key, h, mozilla::fallible);
   if (MOZ_UNLIKELY(!inserted)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

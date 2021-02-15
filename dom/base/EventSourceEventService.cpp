@@ -201,11 +201,11 @@ EventSourceEventService::AddListener(uint64_t aInnerWindowID,
   }
   ++mCountListeners;
 
-  WindowListener* listener =
-      mWindows
-          .GetOrInsertWith(aInnerWindowID,
-                           [] { return MakeUnique<WindowListener>(); })
-          .get();
+  WindowListener* listener = mWindows.Get(aInnerWindowID);
+  if (!listener) {
+    listener = new WindowListener();
+    mWindows.Put(aInnerWindowID, listener);
+  }
 
   listener->mListeners.AppendElement(aListener);
 

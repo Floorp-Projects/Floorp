@@ -59,6 +59,14 @@ class nsClassHashtable : public nsBaseHashtable<KeyClass, mozilla::UniquePtr<T>,
   UserDataType LookupOrAdd(KeyType aKey, Args&&... aConstructionArgs);
 
   /**
+   * Looks up aKey in the hash table. If it doesn't exist a new object of
+   * KeyClass will be created (using the factory function provided, whose return
+   * value must be convertible to UniquePtr<T>) and then returned.
+   */
+  template <typename Factory>
+  UserDataType LookupOrAddFromFactory(KeyType aKey, const Factory& aFactory);
+
+  /**
    * @copydoc nsBaseHashtable::Get
    * @param aData if the key doesn't exist, pData will be set to nullptr.
    */
@@ -69,6 +77,16 @@ class nsClassHashtable : public nsBaseHashtable<KeyClass, mozilla::UniquePtr<T>,
    * @returns nullptr if the key is not present.
    */
   UserDataType Get(KeyType aKey) const;
+
+  // For now, overload Put, rather than hiding it.
+  using base_type::Put;
+
+  template <typename U, typename = std::enable_if_t<std::is_base_of_v<T, U>>>
+  void Put(KeyType aKey, mozilla::UniquePtr<U>&& aData);
+
+  template <typename U, typename = std::enable_if_t<std::is_base_of_v<T, U>>>
+  [[nodiscard]] bool Put(KeyType aKey, mozilla::UniquePtr<U>&& aData,
+                         const mozilla::fallible_t&);
 };
 
 template <typename K, typename T>
@@ -94,13 +112,21 @@ template <class KeyClass, class T>
 template <typename... Args>
 T* nsClassHashtable<KeyClass, T>::LookupOrAdd(KeyType aKey,
                                               Args&&... aConstructionArgs) {
-  return this
-      ->GetOrInsertWith(std::move(aKey),
-                        [&] {
-                          return mozilla::MakeUnique<T>(
-                              std::forward<Args>(aConstructionArgs)...);
-                        })
-      .get();
+  return LookupOrAddFromFactory(std::move(aKey), [&] {
+    return mozilla::MakeUnique<T>(std::forward<Args>(aConstructionArgs)...);
+  });
+}
+
+template <class KeyClass, class T>
+template <typename Factory>
+T* nsClassHashtable<KeyClass, T>::LookupOrAddFromFactory(
+    KeyType aKey, const Factory& aFactory) {
+  auto count = this->Count();
+  typename base_type::EntryType* ent = this->PutEntry(aKey);
+  if (count != this->Count()) {
+    ent->SetData(aFactory());
+  }
+  return ent->GetData().get();
 }
 
 template <class KeyClass, class T>
@@ -130,6 +156,31 @@ T* nsClassHashtable<KeyClass, T>::Get(KeyType aKey) const {
   }
 
   return ent->GetData().get();
+}
+
+template <class KeyClass, class T>
+template <typename U, typename>
+void nsClassHashtable<KeyClass, T>::Put(KeyType aKey,
+                                        mozilla::UniquePtr<U>&& aData) {
+  if (!Put(aKey, std::move(aData), mozilla::fallible)) {
+    NS_ABORT_OOM(this->mTable.EntrySize() * this->mTable.EntryCount());
+  }
+}
+
+template <class KeyClass, class T>
+template <typename U, typename>
+bool nsClassHashtable<KeyClass, T>::Put(KeyType aKey,
+                                        mozilla::UniquePtr<U>&& aData,
+                                        const mozilla::fallible_t&) {
+  typename base_type::EntryType* ent = this->PutEntry(aKey, mozilla::fallible);
+
+  if (!ent) {
+    return false;
+  }
+
+  ent->SetData(std::move(aData));
+
+  return true;
 }
 
 #endif  // nsClassHashtable_h__

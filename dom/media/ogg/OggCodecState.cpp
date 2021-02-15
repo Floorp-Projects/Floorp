@@ -31,9 +31,9 @@ extern LazyLogModule gMediaDecoderLog;
 using media::TimeUnit;
 
 /** Decoder base class for Ogg-encapsulated streams. */
-UniquePtr<OggCodecState> OggCodecState::Create(
-    rlbox_sandbox_ogg* aSandbox, tainted_opaque_ogg<ogg_page*> aPage,
-    uint32_t aSerial) {
+OggCodecState* OggCodecState::Create(rlbox_sandbox_ogg* aSandbox,
+                                     tainted_opaque_ogg<ogg_page*> aPage,
+                                     uint32_t aSerial) {
   NS_ASSERTION(sandbox_invoke(*aSandbox, ogg_page_bos, aPage)
                    .unverified_safe_because(RLBOX_SAFE_DEBUG_ASSERTION),
                "Only call on BOS page!");
@@ -69,12 +69,8 @@ UniquePtr<OggCodecState> OggCodecState::Create(
     // Can't use MakeUnique here, OggCodecState is protected.
     codecState.reset(new OggCodecState(aSandbox, aPage, aSerial, false));
   }
-
-  if (!codecState->OggCodecState::InternalInit()) {
-    codecState.reset();
-  }
-
-  return codecState;
+  return codecState->OggCodecState::InternalInit() ? codecState.release()
+                                                   : nullptr;
 }
 
 OggCodecState::OggCodecState(rlbox_sandbox_ogg* aSandbox,
@@ -1563,7 +1559,7 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket) {
 
   int32_t keyPointsRead = keyPoints->Length();
   if (keyPointsRead > 0) {
-    mIndex.Put(serialno, std::move(keyPoints));
+    mIndex.Put(serialno, keyPoints.release());
   }
 
   LOG(LogLevel::Debug, ("Loaded %d keypoints for Skeleton on stream %u",

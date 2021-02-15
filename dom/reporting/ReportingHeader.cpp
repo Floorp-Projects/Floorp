@@ -195,7 +195,7 @@ void ReportingHeader::ReportingFromChannel(nsIHttpChannel* aChannel) {
   }
 
   // Here we override the previous data.
-  mOrigins.Put(origin, std::move(client));
+  mOrigins.Put(origin, client.release());
 
   MaybeCreateCleanupTimer();
 }

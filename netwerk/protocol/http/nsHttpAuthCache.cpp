@@ -122,15 +122,14 @@ nsresult nsHttpAuthCache::SetAuthEntry(const char* scheme, const char* host,
 
   if (!node) {
     // create a new entry node and set the given entry
-    auto node = UniquePtr<nsHttpAuthNode>(new nsHttpAuthNode);
-    LOG(("  new nsHttpAuthNode %p for key='%s'", node.get(), key.get()));
+    node = new nsHttpAuthNode();
+    LOG(("  new nsHttpAuthNode %p for key='%s'", node, key.get()));
     rv = node->SetAuthEntry(path, realm, creds, challenge, ident, metadata);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    mDB.Put(key, std::move(node));
-    return NS_OK;
+    if (NS_FAILED(rv))
+      delete node;
+    else
+      mDB.Put(key, node);
+    return rv;
   }
 
   return node->SetAuthEntry(path, realm, creds, challenge, ident, metadata);

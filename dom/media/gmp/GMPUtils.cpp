@@ -150,10 +150,9 @@ bool GMPInfoFileParser::Init(nsIFile* aInfoFile) {
     ToLowerCase(key);
     key.Trim(" ");
 
-    auto value = MakeUnique<nsCString>(Substring(line, colon + 1));
+    nsCString* value = new nsCString(Substring(line, colon + 1));
     value->Trim(" ");
-    mValues.Put(key,
-                std::move(value));  // Hashtable assumes ownership of value.
+    mValues.Put(key, value);  // Hashtable assumes ownership of value.
   }
 
   return true;
