@@ -60,6 +60,11 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "Services",
   "resource://gre/modules/Services.jsm"
 );
@@ -1223,14 +1228,12 @@ var DownloadObserver = {
  */
 var DownloadHistoryObserver = function(aList) {
   this._list = aList;
+  PlacesUtils.history.addObserver(this);
 
   const placesObserver = new PlacesWeakCallbackWrapper(
     this.handlePlacesEvents.bind(this)
   );
-  PlacesObservers.addListener(
-    ["history-cleared", "page-removed"],
-    placesObserver
-  );
+  PlacesObservers.addListener(["history-cleared"], placesObserver);
 };
 
 DownloadHistoryObserver.prototype = {
@@ -1239,6 +1242,8 @@ DownloadHistoryObserver.prototype = {
    */
   _list: null,
 
+  QueryInterface: ChromeUtils.generateQI(["nsINavHistoryObserver"]),
+
   handlePlacesEvents(events) {
     for (const event of events) {
       switch (event.type) {
@@ -1246,17 +1251,20 @@ DownloadHistoryObserver.prototype = {
           this._list.removeFinished();
           break;
         }
-        case "page-removed": {
-          if (event.isRemovedFromStore) {
-            this._list.removeFinished(
-              download => event.url === download.source.url
-            );
-          }
-          break;
-        }
       }
     }
   },
+
+  // nsINavHistoryObserver
+  onDeleteURI: function DL_onDeleteURI(aURI, aGUID) {
+    this._list.removeFinished(download =>
+      aURI.equals(NetUtil.newURI(download.source.url))
+    );
+  },
+
+  onBeginUpdateBatch() {},
+  onEndUpdateBatch() {},
+  onDeleteVisits() {},
 };
 
 /**

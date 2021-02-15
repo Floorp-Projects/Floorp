@@ -7,8 +7,12 @@
 /**
  * What this is aimed to test:
  *
- * Expiring a full page should fire an page-removed event notification.
+ * Expiring a full page should fire an onDeleteURI notification.
  */
+
+var hs = Cc["@mozilla.org/browser/nav-history-service;1"].getService(
+  Ci.nsINavHistoryService
+);
 
 var tests = [
   {
@@ -40,7 +44,7 @@ var tests = [
   },
 ];
 
-add_task(async () => {
+add_task(async function test_notifications_onDeleteURI() {
   // Set interval to a large value so we don't expire on it.
   setInterval(3600); // 1h
 
@@ -72,27 +76,24 @@ add_task(async () => {
     }
 
     // Observe history.
-    const listener = events => {
-      for (const event of events) {
-        Assert.equal(event.type, "page-removed");
-
-        if (!event.isRemovedFromStore) {
-          continue;
-        }
-
+    let historyObserver = {
+      onBeginUpdateBatch: function PEX_onBeginUpdateBatch() {},
+      onEndUpdateBatch: function PEX_onEndUpdateBatch() {},
+      onDeleteURI(aURI, aGUID, aReason) {
         currentTest.receivedNotifications++;
         // Check this uri was not bookmarked.
-        Assert.equal(currentTest.bookmarks.indexOf(event.url), -1);
-        do_check_valid_places_guid(event.pageGuid);
-        Assert.equal(event.reason, PlacesVisitRemoved.REASON_EXPIRED);
-      }
+        Assert.equal(currentTest.bookmarks.indexOf(aURI.spec), -1);
+        do_check_valid_places_guid(aGUID);
+        Assert.equal(aReason, Ci.nsINavHistoryObserver.REASON_EXPIRED);
+      },
+      onDeleteVisits() {},
     };
-    PlacesObservers.addListener(["page-removed"], listener);
+    hs.addObserver(historyObserver);
 
     // Expire now.
     await promiseForceExpirationStep(-1);
 
-    PlacesObservers.removeListener(["page-removed"], listener);
+    hs.removeObserver(historyObserver, false);
 
     Assert.equal(
       currentTest.receivedNotifications,
