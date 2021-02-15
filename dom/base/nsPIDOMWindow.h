@@ -481,10 +481,22 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
    * DO NOT CALL EITHER OF THESE METHODS DIRECTLY. USE THE FOCUS MANAGER
    * INSTEAD.
    */
-  inline mozilla::dom::Element* GetFocusedElement() const;
+  mozilla::dom::Element* GetFocusedElement() const {
+    return mFocusedElement.get();
+  }
+
   virtual void SetFocusedElement(mozilla::dom::Element* aElement,
                                  uint32_t aFocusMethod = 0,
-                                 bool aNeedsFocus = false) = 0;
+                                 bool aNeedsFocus = false,
+                                 bool aWillShowOutline = false) = 0;
+  /**
+   * Get whether the focused element did show outlines when it was focused.
+   *
+   * Only for the focus manager. Returns false if there was no focused element.
+   */
+  bool FocusedElementShowedOutline() const {
+    return mFocusedElementShowedOutlines;
+  }
 
   /**
    * Retrieves the method that was used to focus the current node.
@@ -668,6 +680,8 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   // Set to true once we've sent the (chrome|content)-document-global-created
   // notification.
   bool mHasNotifiedGlobalCreated;
+
+  bool mFocusedElementShowedOutlines = false;
 
   uint32_t mMarkedCCGeneration;
 
@@ -938,9 +952,17 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
    * INSTEAD.
    */
   inline mozilla::dom::Element* GetFocusedElement() const;
+
   virtual void SetFocusedElement(mozilla::dom::Element* aElement,
                                  uint32_t aFocusMethod = 0,
-                                 bool aNeedsFocus = false) = 0;
+                                 bool aNeedsFocus = false,
+                                 bool aWillShowOutline = false) = 0;
+  /**
+   * Get whether the focused element did show outlines when it was focused.
+   *
+   * Only for the focus manager. Returns false if there was no focused element.
+   */
+  bool FocusedElementShowedOutline() const;
 
   /**
    * Retrieves the method that was used to focus the current node.
