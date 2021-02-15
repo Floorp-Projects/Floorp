@@ -235,8 +235,6 @@ class Database final : public nsIObserver, public nsSupportsWeakReference {
    */
   void Shutdown();
 
-  bool IsShutdownStarted() const;
-
   /**
    * Ensure the favicons database file exists.
    *
