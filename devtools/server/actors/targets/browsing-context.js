@@ -289,7 +289,6 @@ const browsingContextTargetPrototype = {
     this.watchNewDocShells = false;
 
     this.traits = {
-      reconfigure: true,
       // Supports frame listing via `listFrames` request and `frameUpdate` events
       // as well as frame switching via `switchToFrame` request
       frames: true,
