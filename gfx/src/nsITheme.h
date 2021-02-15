@@ -107,8 +107,8 @@ class nsITheme : public nsISupports {
     LayoutDeviceIntCoord mVertical;
     LayoutDeviceIntCoord mHorizontal;
   };
-  virtual ScrollbarSizes GetScrollbarSizes(
-      nsPresContext*, StyleScrollbarWidth, Overlay) = 0;
+  virtual ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
+                                           Overlay) = 0;
 
   /**
    * Return the border for the widget, in device pixels.

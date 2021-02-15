@@ -86,9 +86,8 @@ class nsCSSBorderRenderer final {
   friend class nsDisplayButtonForeground;
 
  public:
-  nsCSSBorderRenderer(nsPresContext* aPresContext,
-                      DrawTarget* aDrawTarget, const Rect& aDirtyRect,
-                      Rect& aOuterRect,
+  nsCSSBorderRenderer(nsPresContext* aPresContext, DrawTarget* aDrawTarget,
+                      const Rect& aDirtyRect, Rect& aOuterRect,
                       const mozilla::StyleBorderStyle* aBorderStyles,
                       const Float* aBorderWidths, RectCornerRadii& aBorderRadii,
                       const nscolor* aBorderColors, bool aBackfaceIsVisible,

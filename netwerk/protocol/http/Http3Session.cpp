@@ -1126,10 +1126,10 @@ void Http3Session::Close(nsresult aReason) {
     CloseInternal(false);
   } else {
     mError = aReason;
-    // If necko closes connection, this will map to the "closing" key and the value
-    // HTTP3_TELEMETRY_APP_NECKO.
-    Telemetry::Accumulate(Telemetry::HTTP3_CONNECTION_CLOSE_CODE, "app_closing"_ns,
-                          HTTP3_TELEMETRY_APP_NECKO);
+    // If necko closes connection, this will map to the "closing" key and the
+    // value HTTP3_TELEMETRY_APP_NECKO.
+    Telemetry::Accumulate(Telemetry::HTTP3_CONNECTION_CLOSE_CODE,
+                          "app_closing"_ns, HTTP3_TELEMETRY_APP_NECKO);
     CloseInternal(true);
   }
 
@@ -1653,19 +1653,19 @@ const uint32_t HTTP3_TELEMETRY_APP_QPACK_START = 19;
 const uint32_t HTTP3_TELEMETRY_APP_UNKNOWN_3 = 22;
 
 uint64_t GetAppErrorCodeForTelemetry(uint64_t error) {
-      if (error < 0x100) {
-          return HTTP3_TELEMETRY_APP_UNKNOWN_1;
-      }
-      if (error <= 0x110) {
-        return error - 0x100 + HTTP3_TELEMETRY_APP_START;
-      }
-      if (error < 0x200) {
-        return HTTP3_TELEMETRY_APP_UNKNOWN_2;
-      }
-      if (error <= 0x202) {
-        return error - 0x200 + HTTP3_TELEMETRY_APP_QPACK_START;
-      }
-      return HTTP3_TELEMETRY_APP_UNKNOWN_3;
+  if (error < 0x100) {
+    return HTTP3_TELEMETRY_APP_UNKNOWN_1;
+  }
+  if (error <= 0x110) {
+    return error - 0x100 + HTTP3_TELEMETRY_APP_START;
+  }
+  if (error < 0x200) {
+    return HTTP3_TELEMETRY_APP_UNKNOWN_2;
+  }
+  if (error <= 0x202) {
+    return error - 0x200 + HTTP3_TELEMETRY_APP_QPACK_START;
+  }
+  return HTTP3_TELEMETRY_APP_UNKNOWN_3;
 }
 
 void Http3Session::CloseConnectionTelemetry(CloseError& aError, bool aClosing) {
@@ -1705,8 +1705,7 @@ void Http3Session::CloseConnectionTelemetry(CloseError& aError, bool aClosing) {
 
   key.Append(aClosing ? "_closing"_ns : "_closed"_ns);
 
-  Telemetry::Accumulate(Telemetry::HTTP3_CONNECTION_CLOSE_CODE,
-                        key, value);
+  Telemetry::Accumulate(Telemetry::HTTP3_CONNECTION_CLOSE_CODE, key, value);
 
   Http3Stats stats;
   mHttp3Connection->GetStats(&stats);

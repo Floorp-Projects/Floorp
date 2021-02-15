@@ -762,7 +762,8 @@ nsresult TRR::FollowCname(nsIChannel* aChannel) {
       auto rcode = mPacket->GetRCode();
       if (rcode.isOk() && rcode.unwrap() != 0) {
         RecordReason(nsHostRecord::TRR_RCODE_FAIL);
-      } else if (rv == NS_ERROR_UNKNOWN_HOST || rv == NS_ERROR_DEFINITIVE_UNKNOWN_HOST) {
+      } else if (rv == NS_ERROR_UNKNOWN_HOST ||
+                 rv == NS_ERROR_DEFINITIVE_UNKNOWN_HOST) {
         RecordReason(nsHostRecord::TRR_NO_ANSWERS);
       } else {
         RecordReason(nsHostRecord::TRR_DECODE_FAILED);
@@ -803,7 +804,8 @@ nsresult TRR::On200Response(nsIChannel* aChannel) {
     auto rcode = mPacket->GetRCode();
     if (rcode.isOk() && rcode.unwrap() != 0) {
       RecordReason(nsHostRecord::TRR_RCODE_FAIL);
-    } else if (rv == NS_ERROR_UNKNOWN_HOST || rv == NS_ERROR_DEFINITIVE_UNKNOWN_HOST) {
+    } else if (rv == NS_ERROR_UNKNOWN_HOST ||
+               rv == NS_ERROR_DEFINITIVE_UNKNOWN_HOST) {
       RecordReason(nsHostRecord::TRR_NO_ANSWERS);
     } else {
       RecordReason(nsHostRecord::TRR_DECODE_FAILED);
