@@ -1371,23 +1371,6 @@ SearchService.prototype = {
   async _checkWebExtensionEngines() {
     logConsole.debug("Running check on WebExtension engines");
 
-    let fixupEngines = Services.prefs.getBoolPref(
-      "browser.search.fixupEngines",
-      true
-    );
-
-    let self = this;
-
-    async function safeRemoveEngine(engine) {
-      if (fixupEngines) {
-        try {
-          await self.removeEngine(engine);
-        } catch (ex) {
-          logConsole.error(ex);
-        }
-      }
-    }
-
     for (let engine of this._engines.values()) {
       if (
         engine.isAppProvided ||
@@ -1409,8 +1392,6 @@ SearchService.prototype = {
           engine._extensionID,
           1
         );
-
-        safeRemoveEngine(engine);
       } else if (!addon.isActive) {
         logConsole.debug(
           `Add-on ${engine._extensionID} for search engine ${engine.name} is not active!`
@@ -1420,8 +1401,6 @@ SearchService.prototype = {
           engine._extensionID,
           2
         );
-
-        safeRemoveEngine(engine);
       } else {
         let policy = await this._getExtensionPolicy(engine._extensionID);
         let providerSettings =
