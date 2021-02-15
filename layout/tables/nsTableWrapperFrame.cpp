@@ -297,28 +297,46 @@ nscoord nsTableWrapperFrame::GetPrefISize(gfxContext* aRenderingContext) {
   return maxISize;
 }
 
-nscoord nsTableWrapperFrame::ChildShrinkWrapISize(
-    gfxContext* aRenderingContext, nsIFrame* aChildFrame, WritingMode aWM,
-    LogicalSize aCBSize, nscoord aAvailableISize,
+nscoord nsTableWrapperFrame::InnerTableShrinkWrapISize(
+    gfxContext* aRenderingContext, nsTableFrame* aTableFrame, WritingMode aWM,
+    const LogicalSize& aCBSize, nscoord aAvailableISize,
     const StyleSizeOverrides& aSizeOverrides, ComputeSizeFlags aFlags) const {
-  AutoMaybeDisableFontInflation an(aChildFrame);
+  MOZ_ASSERT(InnerTableFrame() == aTableFrame);
+
+  AutoMaybeDisableFontInflation an(aTableFrame);
 
   Maybe<LogicalMargin> collapseBorder;
   Maybe<LogicalMargin> collapsePadding;
-  if (aChildFrame == InnerTableFrame()) {
-    InnerTableFrame()->GetCollapsedBorderPadding(collapseBorder,
-                                                 collapsePadding);
-  }
+  aTableFrame->GetCollapsedBorderPadding(collapseBorder, collapsePadding);
 
-  SizeComputationInput offsets(aChildFrame, aRenderingContext, aWM,
-                               aCBSize.ISize(aWM), collapseBorder,
-                               collapsePadding);
-  LogicalSize marginSize = offsets.ComputedLogicalMargin(aWM).Size(aWM);
-  LogicalSize bpSize = offsets.ComputedLogicalBorderPadding(aWM).Size(aWM);
+  SizeComputationInput input(aTableFrame, aRenderingContext, aWM,
+                             aCBSize.ISize(aWM), collapseBorder,
+                             collapsePadding);
+  LogicalSize marginSize(aWM);  // Inner table doesn't have any margin
+  LogicalSize bpSize = input.ComputedLogicalBorderPadding(aWM).Size(aWM);
 
   auto size =
-      aChildFrame->ComputeSize(aRenderingContext, aWM, aCBSize, aAvailableISize,
+      aTableFrame->ComputeSize(aRenderingContext, aWM, aCBSize, aAvailableISize,
                                marginSize, bpSize, aSizeOverrides, aFlags);
+  return size.mLogicalSize.ISize(aWM) + bpSize.ISize(aWM);
+}
+
+nscoord nsTableWrapperFrame::CaptionShrinkWrapISize(
+    gfxContext* aRenderingContext, nsIFrame* aCaptionFrame, WritingMode aWM,
+    const LogicalSize& aCBSize, nscoord aAvailableISize,
+    ComputeSizeFlags aFlags) const {
+  MOZ_ASSERT(aCaptionFrame == mCaptionFrames.FirstChild());
+
+  AutoMaybeDisableFontInflation an(aCaptionFrame);
+
+  SizeComputationInput input(aCaptionFrame, aRenderingContext, aWM,
+                             aCBSize.ISize(aWM));
+  LogicalSize marginSize = input.ComputedLogicalMargin(aWM).Size(aWM);
+  LogicalSize bpSize = input.ComputedLogicalBorderPadding(aWM).Size(aWM);
+
+  auto size = aCaptionFrame->ComputeSize(aRenderingContext, aWM, aCBSize,
+                                         aAvailableISize, marginSize, bpSize,
+                                         {}, aFlags);
   return size.mLogicalSize.ISize(aWM) + marginSize.ISize(aWM) +
          bpSize.ISize(aWM);
 }
@@ -356,26 +374,26 @@ LogicalSize nsTableWrapperFrame::ComputeAutoSize(
   Maybe<StyleCaptionSide> captionSide = GetCaptionSide();
   nscoord inlineSize;
   if (!captionSide) {
-    inlineSize =
-        ChildShrinkWrapISize(aRenderingContext, InnerTableFrame(), aWM, aCBSize,
-                             kidAvailableISize, aSizeOverrides, flags);
+    inlineSize = InnerTableShrinkWrapISize(aRenderingContext, InnerTableFrame(),
+                                           aWM, aCBSize, kidAvailableISize,
+                                           aSizeOverrides, flags);
   } else if (*captionSide == StyleCaptionSide::Left ||
              *captionSide == StyleCaptionSide::Right) {
-    nscoord capISize = ChildShrinkWrapISize(
-        aRenderingContext, mCaptionFrames.FirstChild(), aWM, aCBSize,
-        kidAvailableISize, aSizeOverrides, flags);
-    inlineSize = capISize +
-                 ChildShrinkWrapISize(aRenderingContext, InnerTableFrame(), aWM,
-                                      aCBSize, kidAvailableISize - capISize,
-                                      aSizeOverrides, flags);
+    nscoord capISize =
+        CaptionShrinkWrapISize(aRenderingContext, mCaptionFrames.FirstChild(),
+                               aWM, aCBSize, kidAvailableISize, flags);
+    inlineSize =
+        capISize + InnerTableShrinkWrapISize(
+                       aRenderingContext, InnerTableFrame(), aWM, aCBSize,
+                       kidAvailableISize - capISize, aSizeOverrides, flags);
   } else if (*captionSide == StyleCaptionSide::Top ||
              *captionSide == StyleCaptionSide::Bottom) {
-    inlineSize =
-        ChildShrinkWrapISize(aRenderingContext, InnerTableFrame(), aWM, aCBSize,
-                             kidAvailableISize, aSizeOverrides, flags);
+    inlineSize = InnerTableShrinkWrapISize(aRenderingContext, InnerTableFrame(),
+                                           aWM, aCBSize, kidAvailableISize,
+                                           aSizeOverrides, flags);
     nscoord capISize =
-        ChildShrinkWrapISize(aRenderingContext, mCaptionFrames.FirstChild(),
-                             aWM, aCBSize, inlineSize, aSizeOverrides, flags);
+        CaptionShrinkWrapISize(aRenderingContext, mCaptionFrames.FirstChild(),
+                               aWM, aCBSize, inlineSize, flags);
     if (capISize > inlineSize) {
       inlineSize = capISize;
     }
@@ -383,12 +401,12 @@ LogicalSize nsTableWrapperFrame::ComputeAutoSize(
     MOZ_ASSERT(*captionSide == StyleCaptionSide::TopOutside ||
                    *captionSide == StyleCaptionSide::BottomOutside,
                "unexpected caption-side");
-    inlineSize =
-        ChildShrinkWrapISize(aRenderingContext, InnerTableFrame(), aWM, aCBSize,
-                             kidAvailableISize, aSizeOverrides, flags);
-    nscoord capISize = ChildShrinkWrapISize(
-        aRenderingContext, mCaptionFrames.FirstChild(), aWM, aCBSize,
-        kidAvailableISize, aSizeOverrides, flags);
+    inlineSize = InnerTableShrinkWrapISize(aRenderingContext, InnerTableFrame(),
+                                           aWM, aCBSize, kidAvailableISize,
+                                           aSizeOverrides, flags);
+    nscoord capISize =
+        CaptionShrinkWrapISize(aRenderingContext, mCaptionFrames.FirstChild(),
+                               aWM, aCBSize, kidAvailableISize, flags);
     if (capISize > inlineSize) {
       inlineSize = capISize;
     }
