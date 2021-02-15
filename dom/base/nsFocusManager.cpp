@@ -862,7 +862,6 @@ nsresult nsFocusManager::ContentRemoved(Document* aDocument,
   Element* content = window->GetFocusedElement();
   if (content &&
       nsContentUtils::ContentIsHostIncludingDescendantOf(content, aContent)) {
-    bool shouldShowFocusRing = window->ShouldShowFocusRing();
     window->SetFocusedElement(nullptr);
 
     // if this window is currently focused, clear the global focused
@@ -920,8 +919,8 @@ nsresult nsFocusManager::ContentRemoved(Document* aDocument,
       }
     }
 
-    NotifyFocusStateChange(content, nullptr, shouldShowFocusRing, 0,
-                           /* aGettingFocus = */ false);
+    NotifyFocusStateChange(content, nullptr, 0, /* aGettingFocus = */ false,
+                           false);
   }
 
   return NS_OK;
@@ -1039,8 +1038,7 @@ void nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow,
   RefPtr<PresShell> presShell = focusedDocShell->GetPresShell();
 
   if (oldFocusedElement && oldFocusedElement->IsInComposedDoc()) {
-    NotifyFocusStateChange(oldFocusedElement, nullptr,
-                           mFocusedWindow->ShouldShowFocusRing(), 0, false);
+    NotifyFocusStateChange(oldFocusedElement, nullptr, 0, false, false);
     window->UpdateCommands(u"focus"_ns, nullptr, 0);
 
     if (presShell) {
@@ -1226,10 +1224,10 @@ static bool ShouldMatchFocusVisible(
 }
 
 /* static */
-void nsFocusManager::NotifyFocusStateChange(
-    Element* aElement, Element* aElementToFocus,
-    bool aWindowShouldShowFocusRing, int32_t aFlags, bool aGettingFocus,
-    const Maybe<BlurredElementInfo>& aBlurredElementInfo) {
+void nsFocusManager::NotifyFocusStateChange(Element* aElement,
+                                            Element* aElementToFocus,
+                                            int32_t aFlags, bool aGettingFocus,
+                                            bool aShouldShowFocusRing) {
   MOZ_ASSERT_IF(aElementToFocus, !aGettingFocus);
   nsIContent* commonAncestor = nullptr;
   if (aElementToFocus) {
@@ -1239,8 +1237,7 @@ void nsFocusManager::NotifyFocusStateChange(
 
   if (aGettingFocus) {
     EventStates eventStateToAdd = NS_EVENT_STATE_FOCUS;
-    if (aWindowShouldShowFocusRing ||
-        ShouldMatchFocusVisible(*aElement, aFlags, aBlurredElementInfo)) {
+    if (aShouldShowFocusRing) {
       eventStateToAdd |= NS_EVENT_STATE_FOCUSRING;
     }
     aElement->AddStates(eventStateToAdd);
@@ -2178,7 +2175,6 @@ bool nsFocusManager::BlurImpl(BrowsingContext* aBrowsingContextToClear,
   // now adjust the actual focus, by clearing the fields in the focus manager
   // and in the window.
   mFocusedElement = nullptr;
-  bool shouldShowFocusRing = window->ShouldShowFocusRing();
   if (aBrowsingContextToClear) {
     nsPIDOMWindowOuter* windowToClear = aBrowsingContextToClear->GetDOMWindow();
     if (windowToClear) {
@@ -2193,8 +2189,7 @@ bool nsFocusManager::BlurImpl(BrowsingContext* aBrowsingContextToClear,
       element && element->IsInComposedDoc() && !IsNonFocusableRoot(element);
   if (element) {
     if (sendBlurEvent) {
-      NotifyFocusStateChange(element, aElementToFocus, shouldShowFocusRing, 0,
-                             false);
+      NotifyFocusStateChange(element, aElementToFocus, 0, false, false);
     }
 
     bool windowBeingLowered = !aBrowsingContextToClear &&
@@ -2470,9 +2465,11 @@ void nsFocusManager::Focus(
                           !IsNonFocusableRoot(aElement);
     nsPresContext* presContext = presShell->GetPresContext();
     if (sendFocusEvent) {
-      NotifyFocusStateChange(aElement, nullptr, aWindow->ShouldShowFocusRing(),
-                             aFlags, /* aGettingFocus = */ true,
-                             aBlurredElementInfo);
+      const bool shouldShowFocusRing =
+          aWindow->ShouldShowFocusRing() ||
+          ShouldMatchFocusVisible(*aElement, aFlags, aBlurredElementInfo);
+      NotifyFocusStateChange(aElement, nullptr, aFlags,
+                             /* aGettingFocus = */ true, shouldShowFocusRing);
 
       // if this is an object/plug-in/remote browser, focus its widget.  Note
       // that we might no longer be in the same document, due to the events we
