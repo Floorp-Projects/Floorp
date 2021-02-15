@@ -483,12 +483,6 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
   if (!(c)) return false; \
   break
 
-#ifdef ENABLE_WASM_SIMD_EXPERIMENTAL
-#  define CHECK_SIMD_EXPERIMENTAL() (void)(0)
-#else
-#  define CHECK_SIMD_EXPERIMENTAL() return iter.unrecognizedOpcode(&op)
-#endif
-
   while (true) {
     OpBytes op;
     if (!iter.readOp(&op)) {
@@ -1550,7 +1544,6 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
   MOZ_CRASH("unreachable");
 
 #undef CHECK
-#undef CHECK_SIMD_EXPERIMENTAL
 }
 
 bool wasm::ValidateFunctionBody(const ModuleEnvironment& env,
