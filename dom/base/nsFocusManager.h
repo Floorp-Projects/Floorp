@@ -747,9 +747,10 @@ class nsFocusManager final : public nsIFocusManager,
   // information could be wrong.
   //
   // aShouldShowFocusRing is only relevant if aGettingFocus is true.
-  static void NotifyFocusStateChange(
-      mozilla::dom::Element* aElement, mozilla::dom::Element* aElementToFocus,
-      int32_t aFlags, bool aGettingFocus, bool aShouldShowFocusRing);
+  static void NotifyFocusStateChange(mozilla::dom::Element* aElement,
+                                     mozilla::dom::Element* aElementToFocus,
+                                     int32_t aFlags, bool aGettingFocus,
+                                     bool aShouldShowFocusRing);
 
   void SetFocusedWindowInternal(nsPIDOMWindowOuter* aWindow);
 
