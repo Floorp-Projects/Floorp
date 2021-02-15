@@ -128,6 +128,48 @@ function getInflatedMarkerData(thread) {
 }
 
 /**
+ * Applies the marker schema to create individual objects for each marker, then
+ * keeps only the network markers that match the profiler tests.
+ *
+ * @param {Object} thread The thread from a profile.
+ * @return {InflatedMarker[]} The filtered network markers.
+ */
+function getInflatedNetworkMarkers(thread) {
+  const markers = getInflatedMarkerData(thread);
+  return markers.filter(
+    m =>
+      m.data &&
+      m.data.type === "Network" &&
+      // We filter out network markers that aren't related to the test, to
+      // avoid intermittents.
+      m.data.URI.includes("/browser/tools/profiler/")
+  );
+}
+
+/**
+ * From a list of network markers, this returns pairs of start/stop markers.
+ * If a stop marker can't be found for a start marker, this will return an array
+ * of only 1 element.
+ *
+ * @param {InflatedMarker[]} networkMarkers Network markers
+ * @return {InflatedMarker[][]} Pairs of network markers
+ */
+function getPairsOfNetworkMarkers(allNetworkMarkers) {
+  // For each 'start' marker we want to find the 'stop' or 'redirect' marker
+  // with the same id.
+  // Note: the algorithm we use here to match markers is very crude and would
+  // be too slow for the real product, but because it is very simple it's good
+  // for a test. Also the logic will be compatible with future marker sets.
+  // Because we only have a few markers the performance is good enough in this
+  // case.
+  return allNetworkMarkers
+    .filter(({ data }) => data.status === "STATUS_START")
+    .map(startMarker =>
+      allNetworkMarkers.filter(({ data }) => data.id === startMarker.data.id)
+    );
+}
+
+/**
  * It can be helpful to force the profiler to collect a JavaScript sample. This
  * function spins on a while loop until at least one more sample is collected.
  *
@@ -219,6 +261,27 @@ function getSchema(profile, name) {
     console.error("Child process schema", subprocess.meta.markerSchema);
   }
   throw new Error(`Could not find a schema for "${name}".`);
+}
+
+/**
+ * This escapes all characters that have a special meaning in RegExps.
+ * This was stolen from https://github.com/sindresorhus/escape-string-regexp and
+ * so it is licence MIT and:
+ * Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com).
+ * See the full license in https://raw.githubusercontent.com/sindresorhus/escape-string-regexp/main/license.
+ * @param {string} string The string to be escaped
+ * @returns {string} The result
+ */
+function escapeStringRegexp(string) {
+  if (typeof string !== "string") {
+    throw new TypeError("Expected a string");
+  }
+
+  // Escape characters with special meaning either inside or outside character
+  // sets.  Use a simple backslash escape when it’s always valid, and a `\xnn`
+  // escape when the simpler form would be disallowed by Unicode patterns’
+  // stricter grammar.
+  return string.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&").replace(/-/g, "\\x2d");
 }
 
 /** ------ Assertions helper ------ */
