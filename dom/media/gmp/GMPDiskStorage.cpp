@@ -119,7 +119,7 @@ class GMPDiskStorage : public GMPStorage {
         continue;
       }
 
-      mRecords.Put(recordName, new Record(filename, recordName));
+      mRecords.Put(recordName, MakeUnique<Record>(filename, recordName));
     }
 
     return NS_OK;

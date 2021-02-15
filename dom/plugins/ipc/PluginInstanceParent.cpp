@@ -2082,7 +2082,8 @@ void PluginInstanceParent::SubclassPluginWindow(HWND aWnd) {
     mPluginWndProc = nullptr;
     // Note sPluginInstanceList wil delete 'this' if we do not remove
     // it on shutdown.
-    sPluginInstanceList->Put((void*)mPluginHWND, this);
+    sPluginInstanceList->Put((void*)mPluginHWND,
+                             UniquePtr<PluginInstanceParent>(this));
     return;
   }
 

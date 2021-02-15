@@ -38,7 +38,8 @@ already_AddRefed<nsIErrorService> nsErrorService::GetOrCreate() {
 NS_IMETHODIMP
 nsErrorService::RegisterErrorStringBundle(int16_t aErrorModule,
                                           const char* aStringBundleURL) {
-  mErrorStringBundleURLMap.Put(aErrorModule, new nsCString(aStringBundleURL));
+  mErrorStringBundleURLMap.Put(aErrorModule,
+                               MakeUnique<nsCString>(aStringBundleURL));
   return NS_OK;
 }
 

@@ -510,9 +510,9 @@ nsresult OggDemuxer::ReadMetadata() {
         // We've not encountered a stream with this serial number before. Create
         // an OggCodecState to demux it, and map that to the OggCodecState
         // in mCodecStates.
-        OggCodecState* codecState =
-            OggCodecState::Create(mSandbox.get(), page.to_opaque(), serial);
-        mCodecStore.Add(serial, codecState);
+        OggCodecState* const codecState = mCodecStore.Add(
+            serial,
+            OggCodecState::Create(mSandbox.get(), page.to_opaque(), serial));
         bitstreams.AppendElement(codecState);
         serials.AppendElement(serial);
       }
@@ -685,7 +685,7 @@ bool OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime) {
 
   OggCodecState* state;
 
-  mCodecStore.Add(serial, codecState.release());
+  mCodecStore.Add(serial, std::move(codecState));
   state = mCodecStore.Get(serial);
 
   NS_ENSURE_TRUE(state != nullptr, false);
