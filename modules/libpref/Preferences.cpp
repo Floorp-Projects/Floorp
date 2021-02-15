@@ -2583,7 +2583,7 @@ nsPrefBranch::GetChildList(const char* aStartingAt,
 NS_IMETHODIMP
 nsPrefBranch::AddObserverImpl(const nsACString& aDomain, nsIObserver* aObserver,
                               bool aHoldWeak) {
-  PrefCallback* pCallback;
+  UniquePtr<PrefCallback> pCallback;
 
   NS_ENSURE_ARG(aObserver);
 
@@ -2600,26 +2600,25 @@ nsPrefBranch::AddObserverImpl(const nsACString& aDomain, nsIObserver* aObserver,
     }
 
     // Construct a PrefCallback with a weak reference to the observer.
-    pCallback = new PrefCallback(prefName, weakRefFactory, this);
+    pCallback = MakeUnique<PrefCallback>(prefName, weakRefFactory, this);
 
   } else {
     // Construct a PrefCallback with a strong reference to the observer.
-    pCallback = new PrefCallback(prefName, aObserver, this);
+    pCallback = MakeUnique<PrefCallback>(prefName, aObserver, this);
   }
 
-  mObservers.WithEntryHandle(pCallback, [&](auto&& p) {
+  mObservers.WithEntryHandle(pCallback.get(), [&](auto&& p) {
     if (p) {
       NS_WARNING("Ignoring duplicate observer.");
-      delete pCallback;
     } else {
-      p.Insert(UniquePtr<PrefCallback>{pCallback});
-
       // We must pass a fully qualified preference name to the callback
       // aDomain == nullptr is the only possible failure, and we trapped it with
       // NS_ENSURE_ARG above.
-      Preferences::RegisterCallback(NotifyObserver, prefName, pCallback,
+      Preferences::RegisterCallback(NotifyObserver, prefName, pCallback.get(),
                                     Preferences::PrefixMatch,
                                     /* isPriority */ false);
+
+      p.Insert(std::move(pCallback));
     }
   });
 
