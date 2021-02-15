@@ -745,11 +745,10 @@ class nsFocusManager final : public nsIFocusManager,
   // to be an explicit argument instead of just passing in the window and asking
   // it whether it should show focus rings: in the losing focus case that
   // information could be wrong.
-  //
-  // aShouldShowFocusRing is only relevant if aGettingFocus is true.
   static void NotifyFocusStateChange(
       mozilla::dom::Element* aElement, mozilla::dom::Element* aElementToFocus,
-      int32_t aFlags, bool aGettingFocus, bool aShouldShowFocusRing);
+      bool aWindowShouldShowFocusRing, int32_t aFlags, bool aGettingFocus,
+      const mozilla::Maybe<BlurredElementInfo>& = mozilla::Nothing());
 
   void SetFocusedWindowInternal(nsPIDOMWindowOuter* aWindow);
 
