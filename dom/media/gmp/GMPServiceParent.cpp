@@ -1093,20 +1093,24 @@ nsresult GeckoMediaPluginServiceParent::GetNodeId(
     // name, so that if the same origin pair is opened for the same GMP in this
     // session, it gets the same node id.
     const uint32_t pbHash = AddToHash(HashString(aGMPName), hash);
-    nsCString* salt = nullptr;
-    if (!(salt = mTempNodeIds.Get(pbHash))) {
-      // No salt stored, generate and temporarily store some for this id.
-      nsAutoCString newSalt;
-      rv = GenerateRandomPathName(newSalt, NodeIdSaltLength);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+    return mTempNodeIds.WithEntryHandle(pbHash, [&](auto&& entry) {
+      if (!entry) {
+        // No salt stored, generate and temporarily store some for this id.
+        nsAutoCString newSalt;
+        rv = GenerateRandomPathName(newSalt, NodeIdSaltLength);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+        auto salt = MakeUnique<nsCString>(newSalt);
+
+        mPersistentStorageAllowed.Put(*salt, false);
+
+        entry.Insert(std::move(salt));
       }
-      salt = new nsCString(newSalt);
-      mTempNodeIds.Put(pbHash, salt);
-      mPersistentStorageAllowed.Put(*salt, false);
-    }
-    aOutId = *salt;
-    return NS_OK;
+
+      aOutId = *entry.Data();
+      return NS_OK;
+    });
   }
 
   // Otherwise, try to see if we've previously generated and stored salt
