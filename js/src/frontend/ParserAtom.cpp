@@ -124,8 +124,6 @@ template <typename CharT, typename SeqCharT>
 
 JSAtom* ParserAtom::instantiate(JSContext* cx, ParserAtomIndex index,
                                 CompilationAtomCache& atomCache) const {
-  MOZ_ASSERT(!isWellKnownOrStatic());
-
   JSAtom* atom;
   if (hasLatin1Chars()) {
     atom = AtomizeChars(cx, hash(), latin1Chars(), length());
