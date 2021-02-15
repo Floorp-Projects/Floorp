@@ -1464,7 +1464,7 @@ TEST(Hashtables, ClassHashtable_LookupOrAdd_NotPresent)
   EXPECT_EQ(42u, entry->GetChar());
 }
 
-TEST(Hashtables, ClassHashtable_LookupOrAddFromFactory_Present)
+TEST(Hashtables, ClassHashtable_GetOrInsertWith_Present)
 {
   nsClassHashtable<nsCStringHashKey, TestUniChar> EntToUniClass(ENTITY_COUNT);
 
@@ -1473,17 +1473,17 @@ TEST(Hashtables, ClassHashtable_LookupOrAddFromFactory_Present)
                       mozilla::MakeUnique<TestUniCharDerived>(entity.mUnicode));
   }
 
-  auto* entry = EntToUniClass.LookupOrAddFromFactory(
+  const auto& entry = EntToUniClass.GetOrInsertWith(
       "uml"_ns, [] { return mozilla::MakeUnique<TestUniCharDerived>(42); });
   EXPECT_EQ(168u, entry->GetChar());
 }
 
-TEST(Hashtables, ClassHashtable_LookupOrAddFromFactory_NotPresent)
+TEST(Hashtables, ClassHashtable_GetOrInsertWith_NotPresent)
 {
   nsClassHashtable<nsCStringHashKey, TestUniChar> EntToUniClass(ENTITY_COUNT);
 
   // This is going to insert a TestUniCharDerived.
-  auto* entry = EntToUniClass.LookupOrAddFromFactory(
+  const auto& entry = EntToUniClass.GetOrInsertWith(
       "uml"_ns, [] { return mozilla::MakeUnique<TestUniCharDerived>(42); });
   EXPECT_EQ(42u, entry->GetChar());
 }
