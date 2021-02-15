@@ -4212,21 +4212,8 @@ static bool ThrowOutOfMemory(JSContext* cx, unsigned argc, Value* vp) {
 static bool ReportLargeAllocationFailure(JSContext* cx, unsigned argc,
                                          Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-
-  size_t bytes = JSRuntime::LARGE_ALLOCATION;
-  if (args.length() >= 1) {
-    if (!args[0].isInt32()) {
-      RootedObject callee(cx, &args.callee());
-      ReportUsageErrorASCII(cx, callee,
-                            "First argument must be an integer if specified.");
-      return false;
-    }
-    bytes = args[0].toInt32();
-  }
-
-  void* buf = cx->runtime()->onOutOfMemoryCanGC(AllocFunction::Malloc,
-                                                js::MallocArena, bytes);
-
+  void* buf = cx->runtime()->onOutOfMemoryCanGC(
+      AllocFunction::Malloc, js::MallocArena, JSRuntime::LARGE_ALLOCATION);
   js_free(buf);
   args.rval().setUndefined();
   return true;
@@ -7006,7 +6993,7 @@ gc::ZealModeHelpText),
 "  Throw out of memory exception, for OOM handling testing."),
 
     JS_FN_HELP("reportLargeAllocationFailure", ReportLargeAllocationFailure, 0, 0,
-"reportLargeAllocationFailure([bytes])",
+"reportLargeAllocationFailure()",
 "  Call the large allocation failure callback, as though a large malloc call failed,\n"
 "  then return undefined. In Gecko, this sends a memory pressure notification, which\n"
 "  can free up some memory."),
