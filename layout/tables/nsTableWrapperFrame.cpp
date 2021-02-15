@@ -621,12 +621,6 @@ void nsTableWrapperFrame::CreateReflowInputForInnerTable(
     availBSize = std::max(0, availBSize - areaOccupiedByCaption.BSize(wm));
   }
   const LogicalSize availSize(wm, aAvailISize, availBSize);
-  aChildRI.emplace(aPresContext, aOuterRI, aTableFrame, availSize, Nothing(),
-                   ReflowInput::InitFlag::CallerWillInit);
-
-  Maybe<LogicalMargin> collapseBorder;
-  Maybe<LogicalMargin> collapsePadding;
-  aTableFrame->GetCollapsedBorderPadding(collapseBorder, collapsePadding);
 
   // For inner table frames, the containing block is the same as for the outer
   // table frame.
@@ -646,7 +640,33 @@ void nsTableWrapperFrame::CreateReflowInputForInnerTable(
                                           areaOccupiedByCaption.BSize(wm));
     }
   }
-  aChildRI->Init(aPresContext, cbSize, collapseBorder, collapsePadding);
+
+  if (!aTableFrame->IsBorderCollapse()) {
+    aChildRI.emplace(aPresContext, aOuterRI, aTableFrame, availSize, cbSize);
+    return;
+  }
+
+  Maybe<LogicalMargin> borderPadding;
+  Maybe<LogicalMargin> padding;
+  {
+    // Compute inner table frame's border & padding because we may need to
+    // reduce the size for inner table's size overrides. We won't waste time if
+    // they are not used, because we can use them directly by passing them into
+    // ReflowInput::Init().
+    Maybe<LogicalMargin> collapseBorder;
+    Maybe<LogicalMargin> collapsePadding;
+    aTableFrame->GetCollapsedBorderPadding(collapseBorder, collapsePadding);
+    SizeComputationInput input(aTableFrame, aOuterRI.mRenderingContext, wm,
+                               cbSize->ISize(wm), collapseBorder,
+                               collapsePadding);
+    borderPadding.emplace(input.ComputedLogicalBorderPadding(wm));
+    padding.emplace(input.ComputedLogicalPadding(wm));
+  }
+
+  aChildRI.emplace(aPresContext, aOuterRI, aTableFrame, availSize, Nothing(),
+                   ReflowInput::InitFlag::CallerWillInit);
+  aChildRI->Init(aPresContext, cbSize, Some(*borderPadding - *padding),
+                 padding);
 }
 
 void nsTableWrapperFrame::CreateReflowInputForCaption(
