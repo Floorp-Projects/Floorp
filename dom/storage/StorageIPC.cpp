@@ -1463,12 +1463,11 @@ mozilla::ipc::IPCResult RecvPBackgroundLocalStorageCacheConstructor(
     gLocalStorageCacheParents = new LocalStorageCacheParentHashtable();
   }
 
-  nsTArray<LocalStorageCacheParent*>* array;
-  if (!gLocalStorageCacheParents->Get(aOriginKey, &array)) {
-    array = new nsTArray<LocalStorageCacheParent*>();
-    gLocalStorageCacheParents->Put(aOriginKey, array);
-  }
-  array->AppendElement(actor);
+  gLocalStorageCacheParents
+      ->GetOrInsertWith(
+          aOriginKey,
+          [] { return MakeUnique<nsTArray<LocalStorageCacheParent*>>(); })
+      ->AppendElement(actor);
 
   // We are currently trusting the content process not to lie to us.  It is
   // future work to consult the ClientManager to determine whether this is a

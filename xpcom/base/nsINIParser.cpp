@@ -199,28 +199,29 @@ nsresult nsINIParser::SetString(const char* aSection, const char* aKey,
     return NS_ERROR_INVALID_ARG;
   }
 
-  INIValue* v;
-  if (!mSections.Get(aSection, &v)) {
-    v = new INIValue(aKey, aValue);
-
-    mSections.Put(aSection, v);
-    return NS_OK;
-  }
-
-  // Check whether this key has already been specified; overwrite
-  // if so, or append if not.
-  while (v) {
-    if (!strcmp(aKey, v->key)) {
-      v->SetValue(aValue);
-      break;
+  mSections.WithEntryHandle(aSection, [&](auto&& entry) {
+    if (!entry) {
+      entry.Insert(MakeUnique<INIValue>(aKey, aValue));
+      return;
     }
-    if (!v->next) {
-      v->next = MakeUnique<INIValue>(aKey, aValue);
-      break;
+
+    INIValue* v = entry.Data().get();
+
+    // Check whether this key has already been specified; overwrite
+    // if so, or append if not.
+    while (v) {
+      if (!strcmp(aKey, v->key)) {
+        v->SetValue(aValue);
+        break;
+      }
+      if (!v->next) {
+        v->next = MakeUnique<INIValue>(aKey, aValue);
+        break;
+      }
+      v = v->next.get();
     }
-    v = v->next.get();
-  }
-  NS_ASSERTION(v, "v should never be null coming out of this loop");
+    NS_ASSERTION(v, "v should never be null coming out of this loop");
+  });
 
   return NS_OK;
 }
