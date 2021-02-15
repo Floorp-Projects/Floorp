@@ -570,8 +570,8 @@ Result<Ok, nsresult> ScriptPreloader::InitCacheInternal(
         script->mReadyToExecute = true;
       }
 
-      const auto& cachePath = script->mCachePath;
-      mScripts.Put(cachePath, std::move(script));
+      mScripts.Put(script->mCachePath, script.get());
+      Unused << script.release();
     }
 
     if (buf.error()) {

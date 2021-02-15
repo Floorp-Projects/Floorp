@@ -186,7 +186,7 @@ void TableUpdateV4::NewPrefixes(int32_t aSize, const nsACString& aPrefixes) {
          aPrefixes.Length() / aSize));
   }
 
-  mPrefixesMap.Put(aSize, MakeUnique<nsCString>(aPrefixes));
+  mPrefixesMap.Put(aSize, new nsCString(aPrefixes));
 }
 
 nsresult TableUpdateV4::NewRemovalIndices(const uint32_t* aIndices,

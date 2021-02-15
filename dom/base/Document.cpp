@@ -933,8 +933,8 @@ nsresult ExternalResourceMap::AddExternalResource(nsIURI* aURI,
     }
   }
 
-  ExternalResource* newResource =
-      mMap.Put(aURI, MakeUnique<ExternalResource>()).get();
+  ExternalResource* newResource = new ExternalResource();
+  mMap.Put(aURI, newResource);
 
   newResource->mDocument = doc;
   newResource->mViewer = aViewer;

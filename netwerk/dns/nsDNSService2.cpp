@@ -1418,10 +1418,13 @@ nsDNSService::ReportFailedSVCDomainName(const nsACString& aOwnerName,
                                         const nsACString& aSVCDomainName) {
   MutexAutoLock lock(mLock);
 
-  mFailedSVCDomainNames
-      .GetOrInsertWith(aOwnerName,
-                       [] { return MakeUnique<nsTArray<nsCString>>(1); })
-      ->AppendElement(aSVCDomainName);
+  nsTArray<nsCString>* failedList = mFailedSVCDomainNames.Get(aOwnerName);
+  if (!failedList) {
+    failedList = new nsTArray<nsCString>(1);
+    mFailedSVCDomainNames.Put(aOwnerName, failedList);
+  }
+
+  failedList->AppendElement(aSVCDomainName);
   return NS_OK;
 }
 

@@ -7626,14 +7626,8 @@ nsresult DatabaseConnection::UpdateRefcountFunction::ProcessValue(
     const int64_t id = file.FileInfo().Id();
     MOZ_ASSERT(id > 0);
 
-    const auto entry =
-        WrapNotNull(mFileInfoEntries
-                        .GetOrInsertWith(id,
-                                         [&file] {
-                                           return MakeUnique<FileInfoEntry>(
-                                               file.FileInfoPtr());
-                                         })
-                        .get());
+    const auto entry = WrapNotNull(mFileInfoEntries.LookupOrAddFromFactory(
+        id, [&file] { return MakeUnique<FileInfoEntry>(file.FileInfoPtr()); }));
 
     if (mInSavepoint) {
       mSavepointEntriesIndex.Put(id, entry);
@@ -7885,26 +7879,29 @@ uint64_t ConnectionPool::Start(
 
   const uint64_t transactionId = ++mNextTransactionId;
 
-  // To avoid always acquiring a lock, we don't use WithEntryHandle here, which
-  // would require a lock in any case.
   DatabaseInfo* dbInfo = mDatabases.Get(aDatabaseId);
 
   const bool databaseInfoIsNew = !dbInfo;
 
   if (databaseInfoIsNew) {
+    dbInfo = new DatabaseInfo(this, aDatabaseId);
+
     MutexAutoLock lock(mDatabasesMutex);
 
-    dbInfo =
-        mDatabases.Put(aDatabaseId, MakeUnique<DatabaseInfo>(this, aDatabaseId))
-            .get();
+    mDatabases.Put(aDatabaseId, dbInfo);
   }
 
-  MOZ_ASSERT(!mTransactions.Contains(transactionId));
-  auto& transactionInfo = *mTransactions.Put(
-      transactionId, MakeUnique<TransactionInfo>(
-                         *dbInfo, aBackgroundChildLoggingId, aDatabaseId,
-                         transactionId, aLoggingSerialNumber, aObjectStoreNames,
-                         aIsWriteTransaction, aTransactionOp));
+  auto& transactionInfo = [&]() -> TransactionInfo& {
+    auto* transactionInfo = new TransactionInfo(
+        *dbInfo, aBackgroundChildLoggingId, aDatabaseId, transactionId,
+        aLoggingSerialNumber, aObjectStoreNames, aIsWriteTransaction,
+        aTransactionOp);
+
+    MOZ_ASSERT(!mTransactions.Get(transactionId));
+    mTransactions.Put(transactionId, transactionInfo);
+
+    return *transactionInfo;
+  }();
 
   if (aIsWriteTransaction) {
     MOZ_ASSERT(dbInfo->mWriteTransactionCount < UINT32_MAX);
@@ -16776,13 +16773,10 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
     info->mLiveDatabases.AppendElement(
         WrapNotNullUnchecked(mDatabase.unsafeGetRawPtr()));
   } else {
-    // XXX Maybe use GetOrInsertWith above, to avoid a second lookup here?
-    info = gLiveDatabaseHashtable
-               ->Put(mDatabaseId,
-                     MakeUnique<DatabaseActorInfo>(
-                         mMetadata.clonePtr(),
-                         WrapNotNullUnchecked(mDatabase.unsafeGetRawPtr())))
-               .get();
+    info = new DatabaseActorInfo(
+        mMetadata.clonePtr(),
+        WrapNotNullUnchecked(mDatabase.unsafeGetRawPtr()));
+    gLiveDatabaseHashtable->Put(mDatabaseId, info);
   }
 
   // Balanced in Database::CleanupMetadata().

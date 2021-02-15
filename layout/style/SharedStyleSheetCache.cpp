@@ -479,8 +479,7 @@ void SharedStyleSheetCache::InsertIntoCompleteCacheIfNeeded(
     }
 
     mCompleteSheets.Put(
-        key, CompleteSheet{aData.mExpirationTime, std::move(counters),
-                           std::move(sheet)});
+        key, {aData.mExpirationTime, std::move(counters), std::move(sheet)});
   }
 }
 

@@ -145,7 +145,7 @@ class EMEDecryptor : public MediaDataDecoder,
       return;
     }
 
-    mDecrypts.Put(aSample, MakeUnique<DecryptPromiseRequestHolder>());
+    mDecrypts.Put(aSample, new DecryptPromiseRequestHolder());
     mProxy->Decrypt(aSample)
         ->Then(mThread, __func__, this, &EMEDecryptor::Decrypted,
                &EMEDecryptor::Decrypted)

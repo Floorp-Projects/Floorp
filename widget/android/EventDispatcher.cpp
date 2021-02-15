@@ -868,10 +868,11 @@ nsresult EventDispatcher::IterateEvents(JSContext* aCx, JS::HandleValue aEvents,
 
 nsresult EventDispatcher::RegisterEventLocked(
     const nsAString& aEvent, nsIAndroidEventListener* aListener) {
-  ListenersList* list =
-      mListenersMap
-          .GetOrInsertWith(aEvent, [] { return MakeUnique<ListenersList>(); })
-          .get();
+  ListenersList* list = mListenersMap.Get(aEvent);
+  if (!list) {
+    list = new ListenersList();
+    mListenersMap.Put(aEvent, list);
+  }
 
 #ifdef DEBUG
   for (ssize_t i = 0; i < list->listeners.Count(); i++) {

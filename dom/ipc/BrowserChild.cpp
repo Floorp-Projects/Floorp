@@ -1552,10 +1552,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealMouseMoveEvent(
     mToBeDispatchedMouseData.Push(dispatchData.release());
 
     // Put new data to replace the old one in the hash table.
-    CoalescedMouseData* newData =
-        mCoalescedMouseData
-            .Put(aEvent.pointerId, MakeUnique<CoalescedMouseData>())
-            .get();
+    CoalescedMouseData* newData = new CoalescedMouseData();
+    mCoalescedMouseData.Put(aEvent.pointerId, newData);
     newData->Coalesce(aEvent, aGuid, aInputBlockId);
 
     // Dispatch all pending mouse events.

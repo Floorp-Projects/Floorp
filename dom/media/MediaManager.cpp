@@ -2763,12 +2763,11 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
 
             // Add a WindowID cross-reference so OnNavigation can tear
             // things down
-            nsTArray<nsString>* const array =
-                self->mCallIds
-                    .GetOrInsertWith(
-                        windowID,
-                        [] { return MakeUnique<nsTArray<nsString>>(); })
-                    .get();
+            nsTArray<nsString>* array;
+            if (!self->mCallIds.Get(windowID, &array)) {
+              array = new nsTArray<nsString>();
+              self->mCallIds.Put(windowID, array);
+            }
             array->AppendElement(callID);
 
             nsCOMPtr<nsIObserverService> obs = services::GetObserverService();

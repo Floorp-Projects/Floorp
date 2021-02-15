@@ -36,8 +36,8 @@ void ChildProcessChannelListener::OnChannelReady(
     aResolver(rv);
   } else {
     mChannelArgs.Put(aIdentifier,
-                     CallbackArgs{aLoadState, std::move(aStreamFilterEndpoints),
-                                  aTiming, std::move(aResolver)});
+                     {aLoadState, std::move(aStreamFilterEndpoints), aTiming,
+                      std::move(aResolver)});
   }
 }
 

@@ -662,10 +662,9 @@ nsresult NativeFileWatcherIOTask::AddPathRunnableMethod(
   nsresult rv = AddDirectoryToWatchList(resourceDesc.get());
   if (NS_SUCCEEDED(rv)) {
     // Add the resource pointer to both indexes.
-    mWatchedResourcesByHandle.Put(
-        resHandle, mWatchedResourcesByPath
-                       .Put(wrappedParameters->mPath, std::move(resourceDesc))
-                       .get());
+    WatchedResourceDescriptor* resource = resourceDesc.release();
+    mWatchedResourcesByPath.Put(wrappedParameters->mPath, resource);
+    mWatchedResourcesByHandle.Put(resHandle, resource);
 
     // Dispatch the success callback.
     nsresult rv = ReportSuccess(wrappedParameters->mSuccessCallbackHandle,
@@ -1096,13 +1095,15 @@ void NativeFileWatcherIOTask::AppendCallbacksToHashtables(
     const nsMainThreadPtrHandle<nsINativeFileWatcherCallback>& aOnChangeHandle,
     const nsMainThreadPtrHandle<nsINativeFileWatcherErrorCallback>&
         aOnErrorHandle) {
-  ChangeCallbackArray* const callbacksArray =
-      mChangeCallbacksTable
-          .GetOrInsertWith(aPath,
-                           [] { return MakeUnique<ChangeCallbackArray>(); })
-          .get();
+  // First check to see if we've got an entry already.
+  ChangeCallbackArray* callbacksArray = mChangeCallbacksTable.Get(aPath);
+  if (!callbacksArray) {
+    // We don't have an entry. Create an array and put it into the hash table.
+    callbacksArray = new ChangeCallbackArray();
+    mChangeCallbacksTable.Put(aPath, callbacksArray);
+  }
 
-  // Now we do have an entry for that path. Check to see if the callback is
+  // We do have an entry for that path. Check to see if the callback is
   // already there.
   ChangeCallbackArray::index_type changeCallbackIndex =
       callbacksArray->IndexOf(aOnChangeHandle);
@@ -1113,11 +1114,12 @@ void NativeFileWatcherIOTask::AppendCallbacksToHashtables(
   }
 
   // Same thing for the error callback.
-  ErrorCallbackArray* const errorCallbacksArray =
-      mErrorCallbacksTable
-          .GetOrInsertWith(aPath,
-                           [] { return MakeUnique<ErrorCallbackArray>(); })
-          .get();
+  ErrorCallbackArray* errorCallbacksArray = mErrorCallbacksTable.Get(aPath);
+  if (!errorCallbacksArray) {
+    // We don't have an entry. Create an array and put it into the hash table.
+    errorCallbacksArray = new ErrorCallbackArray();
+    mErrorCallbacksTable.Put(aPath, errorCallbacksArray);
+  }
 
   ErrorCallbackArray::index_type errorCallbackIndex =
       errorCallbacksArray->IndexOf(aOnErrorHandle);

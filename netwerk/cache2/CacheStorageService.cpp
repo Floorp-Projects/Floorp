@@ -1192,11 +1192,8 @@ void CacheStorageService::RecordMemoryOnlyEntry(CacheEntry* aEntry,
       return;
     }
 
-    entries =
-        sGlobalEntryTables
-            ->Put(memoryStorageID,
-                  MakeUnique<CacheEntryTable>(CacheEntryTable::MEMORY_ONLY))
-            .get();
+    entries = new CacheEntryTable(CacheEntryTable::MEMORY_ONLY);
+    sGlobalEntryTables->Put(memoryStorageID, entries);
     LOG(("  new memory-only storage table for %s", memoryStorageID.get()));
   }
 
@@ -1563,17 +1560,13 @@ nsresult CacheStorageService::AddStorageEntry(
     NS_ENSURE_FALSE(mShutdown, NS_ERROR_NOT_INITIALIZED);
 
     // Ensure storage table
-    CacheEntryTable* const entries =
-        sGlobalEntryTables
-            ->GetOrInsertWith(
-                aContextKey,
-                [&aContextKey] {
-                  LOG(("  new storage entries table for context '%s'",
-                       aContextKey.BeginReading()));
-                  return MakeUnique<CacheEntryTable>(
-                      CacheEntryTable::ALL_ENTRIES);
-                })
-            .get();
+    CacheEntryTable* entries;
+    if (!sGlobalEntryTables->Get(aContextKey, &entries)) {
+      entries = new CacheEntryTable(CacheEntryTable::ALL_ENTRIES);
+      sGlobalEntryTables->Put(aContextKey, entries);
+      LOG(("  new storage entries table for context '%s'",
+           aContextKey.BeginReading()));
+    }
 
     bool entryExists = entries->Get(entryKey, getter_AddRefs(entry));
 
