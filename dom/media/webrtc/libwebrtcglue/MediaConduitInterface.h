@@ -240,7 +240,7 @@ class MediaSessionConduit {
 };
 
 // Wrap the webrtc.org Call class adding mozilla add/ref support.
-class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
+class WebRtcCallWrapper {
  public:
   typedef webrtc::Call::Config Config;
 
@@ -279,6 +279,8 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
     return new WebRtcCallWrapper(std::move(aCall));
   }
 
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRtcCallWrapper)
+
   // Don't allow copying/assigning.
   WebRtcCallWrapper(const WebRtcCallWrapper&) = delete;
   void operator=(const WebRtcCallWrapper&) = delete;
@@ -287,8 +289,6 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
     MOZ_ASSERT(NS_IsMainThread());
     return mCall.get();
   }
-
-  virtual ~WebRtcCallWrapper() = default;
 
   bool UnsetRemoteSSRC(uint32_t ssrc) {
     MOZ_ASSERT(TaskQueueWrapper::GetMainWorker()->IsCurrent());
@@ -340,7 +340,8 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
     return mTimestampMaker;
   }
 
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(WebRtcCallWrapper)
+ protected:
+  virtual ~WebRtcCallWrapper() { MOZ_ASSERT(!mCall); }
 
  private:
   WebRtcCallWrapper(RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory,
