@@ -31,6 +31,7 @@
 #include "nsVariant.h"
 #include "TelemetryScalarData.h"
 
+using mozilla::MakeUnique;
 using mozilla::Nothing;
 using mozilla::Preferences;
 using mozilla::Some;
@@ -1499,7 +1500,6 @@ nsresult internal_GetScalarByEnum(const StaticMutexAutoLock& lock,
   }
 
   ScalarBase* scalar = nullptr;
-  ScalarStorageMapType* scalarStorage = nullptr;
   // Initialize the scalar storage to the parent storage. This will get
   // set to the child storage if needed.
   uint32_t storageId = static_cast<uint32_t>(aProcessStorage);
@@ -1512,10 +1512,11 @@ nsresult internal_GetScalarByEnum(const StaticMutexAutoLock& lock,
 
   // Get the process-specific storage or create one if it's not
   // available.
-  if (!processStorage.Get(storageId, &scalarStorage)) {
-    scalarStorage = new ScalarStorageMapType();
-    processStorage.Put(storageId, scalarStorage);
-  }
+  ScalarStorageMapType* const scalarStorage =
+      processStorage
+          .GetOrInsertWith(storageId,
+                           [] { return MakeUnique<ScalarStorageMapType>(); })
+          .get();
 
   // Check if the scalar is already allocated in the parent or in the child
   // storage.
@@ -1783,7 +1784,6 @@ nsresult internal_GetKeyedScalarByEnum(const StaticMutexAutoLock& lock,
   }
 
   KeyedScalar* scalar = nullptr;
-  KeyedScalarStorageMapType* scalarStorage = nullptr;
   // Initialize the scalar storage to the parent storage. This will get
   // set to the child storage if needed.
   uint32_t storageId = static_cast<uint32_t>(aProcessStorage);
@@ -1796,10 +1796,11 @@ nsresult internal_GetKeyedScalarByEnum(const StaticMutexAutoLock& lock,
 
   // Get the process-specific storage or create one if it's not
   // available.
-  if (!processStorage.Get(storageId, &scalarStorage)) {
-    scalarStorage = new KeyedScalarStorageMapType();
-    processStorage.Put(storageId, scalarStorage);
-  }
+  KeyedScalarStorageMapType* const scalarStorage =
+      processStorage
+          .GetOrInsertWith(
+              storageId, [] { return MakeUnique<KeyedScalarStorageMapType>(); })
+          .get();
 
   if (scalarStorage->Get(aId.id, &scalar)) {
     *aRet = scalar;

@@ -56,15 +56,14 @@ void FileSystemSecurity::GrantAccessToContentProcess(
   MOZ_ASSERT(NS_IsMainThread());
   mozilla::ipc::AssertIsInMainProcess();
 
-  nsTArray<nsString>* paths;
-  if (!mPaths.Get(aId, &paths)) {
-    paths = new nsTArray<nsString>();
-    mPaths.Put(aId, paths);
-  } else if (paths->Contains(aDirectoryPath)) {
-    return;
-  }
+  mPaths.WithEntryHandle(aId, [&](auto&& entry) {
+    if (entry && entry.Data()->Contains(aDirectoryPath)) {
+      return;
+    }
 
-  paths->AppendElement(aDirectoryPath);
+    entry.OrInsertWith([] { return MakeUnique<nsTArray<nsString>>(); })
+        ->AppendElement(aDirectoryPath);
+  });
 }
 
 void FileSystemSecurity::Forget(ContentParentId aId) {

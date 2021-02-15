@@ -369,22 +369,25 @@ WebSocketEventService::AddListener(uint64_t aInnerWindowID,
 
   ++mCountListeners;
 
-  WindowListener* listener = mWindows.Get(aInnerWindowID);
-  if (!listener) {
-    listener = new WindowListener();
+  mWindows
+      .GetOrInsertWith(
+          aInnerWindowID,
+          [&] {
+            auto listener = MakeUnique<WindowListener>();
 
-    if (IsChildProcess()) {
-      PWebSocketEventListenerChild* actor =
-          gNeckoChild->SendPWebSocketEventListenerConstructor(aInnerWindowID);
+            if (IsChildProcess()) {
+              PWebSocketEventListenerChild* actor =
+                  gNeckoChild->SendPWebSocketEventListenerConstructor(
+                      aInnerWindowID);
 
-      listener->mActor = static_cast<WebSocketEventListenerChild*>(actor);
-      MOZ_ASSERT(listener->mActor);
-    }
+              listener->mActor =
+                  static_cast<WebSocketEventListenerChild*>(actor);
+              MOZ_ASSERT(listener->mActor);
+            }
 
-    mWindows.Put(aInnerWindowID, listener);
-  }
-
-  listener->mListeners.AppendElement(aListener);
+            return listener;
+          })
+      ->mListeners.AppendElement(aListener);
 
   return NS_OK;
 }

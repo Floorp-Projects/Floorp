@@ -3212,11 +3212,12 @@ bool RecvPBackgroundLSObserverConstructor(PBackgroundLSObserverParent* aActor,
 
   const auto notNullObserver = WrapNotNull(observer.get());
 
-  nsTArray<NotNull<Observer*>>* array;
-  if (!gObservers->Get(notNullObserver->Origin(), &array)) {
-    array = new nsTArray<NotNull<Observer*>>();
-    gObservers->Put(notNullObserver->Origin(), array);
-  }
+  nsTArray<NotNull<Observer*>>* const array =
+      gObservers
+          ->GetOrInsertWith(
+              notNullObserver->Origin(),
+              [] { return MakeUnique<nsTArray<NotNull<Observer*>>>(); })
+          .get();
   array->AppendElement(notNullObserver);
 
   if (RefPtr<Datastore> datastore = GetDatastore(observer->Origin())) {

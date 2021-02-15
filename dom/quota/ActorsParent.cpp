@@ -3278,21 +3278,20 @@ void QuotaManager::RegisterDirectoryLock(DirectoryLockImpl& aLock) {
     DirectoryLockTable& directoryLockTable =
         GetDirectoryLockTable(aLock.GetPersistenceType());
 
-    nsTArray<NotNull<DirectoryLockImpl*>>* array;
-    if (!directoryLockTable.Get(aLock.Origin(), &array)) {
-      array = new nsTArray<NotNull<DirectoryLockImpl*>>();
-      directoryLockTable.Put(aLock.Origin(), array);
-
-      if (!IsShuttingDown()) {
-        UpdateOriginAccessTime(aLock.GetPersistenceType(),
-                               aLock.OriginMetadata());
-      }
-    }
-
     // XXX It seems that the contents of the array are never actually used, we
     // just use that like an inefficient use counter. Can't we just change
     // DirectoryLockTable to a nsDataHashtable<nsCStringHashKey, uint32_t>?
-    array->AppendElement(WrapNotNullUnchecked(&aLock));
+    directoryLockTable
+        .GetOrInsertWith(
+            aLock.Origin(),
+            [this, &aLock] {
+              if (!IsShuttingDown()) {
+                UpdateOriginAccessTime(aLock.GetPersistenceType(),
+                                       aLock.OriginMetadata());
+              }
+              return MakeUnique<nsTArray<NotNull<DirectoryLockImpl*>>>();
+            })
+        ->AppendElement(WrapNotNullUnchecked(&aLock));
   }
 
   aLock.SetRegistered(true);
@@ -6610,12 +6609,10 @@ already_AddRefed<GroupInfo> QuotaManager::LockedGetOrCreateGroupInfo(
   mQuotaMutex.AssertCurrentThreadOwns();
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
 
-  GroupInfoPair* pair;
-  if (!mGroupInfoPairs.Get(aGroup, &pair)) {
-    pair = new GroupInfoPair();
-    mGroupInfoPairs.Put(aGroup, pair);
-    // The hashtable is now responsible to delete the GroupInfoPair.
-  }
+  GroupInfoPair* const pair =
+      mGroupInfoPairs
+          .GetOrInsertWith(aGroup, [] { return MakeUnique<GroupInfoPair>(); })
+          .get();
 
   RefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(aPersistenceType);
   if (!groupInfo) {

@@ -672,11 +672,12 @@ void FileHandleThreadPool::Enqueue(FileHandle* aFileHandle,
   const nsAString& fileName = mutableFile->FileName();
   bool modeIsWrite = aFileHandle->Mode() == FileMode::Readwrite;
 
-  DirectoryInfo* directoryInfo;
-  if (!mDirectoryInfos.Get(directoryId, &directoryInfo)) {
-    directoryInfo = new DirectoryInfo(this);
-    mDirectoryInfos.Put(directoryId, directoryInfo);
-  }
+  DirectoryInfo* directoryInfo =
+      mDirectoryInfos
+          .GetOrInsertWith(
+              directoryId,
+              [&] { return UniquePtr<DirectoryInfo>(new DirectoryInfo(this)); })
+          .get();
 
   FileHandleQueue* existingFileHandleQueue =
       directoryInfo->GetFileHandleQueue(aFileHandle);
