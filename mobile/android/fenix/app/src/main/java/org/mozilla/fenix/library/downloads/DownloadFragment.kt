@@ -25,6 +25,7 @@ import mozilla.components.browser.state.state.BrowserState
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
+import mozilla.components.feature.downloads.DownloadsUseCases
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.HomeActivity
@@ -50,6 +51,7 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
     private lateinit var metrics: MetricController
     private var undoScope: CoroutineScope? = null
     private var pendingDownloadDeletionJob: (suspend () -> Unit)? = null
+    private lateinit var downloadsUseCases: DownloadsUseCases
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -59,6 +61,7 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
         val view = inflater.inflate(R.layout.fragment_downloads, container, false)
 
         val items = provideDownloads(requireComponents.core.store.state)
+        downloadsUseCases = requireContext().components.useCases.downloadUseCases
 
         downloadStore = StoreProvider.get(this) {
             DownloadFragmentStore(
@@ -85,6 +88,10 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
         return view
     }
 
+    /**
+     * Returns a list of available downloads to be displayed to the user.
+     * Downloads must be COMPLETED and existent on disk.
+     */
     @VisibleForTesting
     internal fun provideDownloads(state: BrowserState): List<DownloadItem> {
         return state.downloads.values
@@ -128,9 +135,7 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
                 setPositiveButton(R.string.delete_browsing_data_prompt_allow) { dialog: DialogInterface, _ ->
                     // Use fragment's lifecycle; the view may be gone by the time dialog is interacted with.
                     lifecycleScope.launch(IO) {
-                        context.let {
-                            it.components.useCases.downloadUseCases.removeAllDownloads()
-                        }
+                        downloadsUseCases.removeAllDownloads()
                         updatePendingDownloadToDelete(downloadStore.state.items.toSet())
                         launch(Dispatchers.Main) {
                             showSnackBar(
@@ -146,6 +151,11 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
         }
     }
 
+    /**
+     * Schedules [items] for deletion.
+     * Note: When tapping on a download item's "trash" button
+     * (itemView.overflow_menu) this [items].size() will be 1.
+     */
     private fun deleteDownloadItems(items: Set<DownloadItem>) {
         metrics.track(Event.DownloadsItemDeleted)
 
@@ -155,10 +165,10 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
             requireView(),
             getMultiSelectSnackBarMessage(items),
             getString(R.string.bookmark_undo_deletion),
-            {
+            onCancel = {
                 undoPendingDeletion(items)
             },
-            getDeleteDownloadItemsOperation(items)
+            operation = getDeleteDownloadItemsOperation(downloadsUseCases, items)
         )
     }
 
@@ -210,6 +220,9 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
         else -> super.onOptionsItemSelected(item)
     }
 
+    /**
+     * Provides a message to the Undo snackbar.
+     */
     private fun getMultiSelectSnackBarMessage(downloadItems: Set<DownloadItem>): String {
         return if (downloadItems.size > 1) {
             getString(R.string.download_delete_multiple_items_snackbar_1)
@@ -246,14 +259,18 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
         metrics.track(Event.DownloadsItemOpened)
     }
 
-    private fun getDeleteDownloadItemsOperation(items: Set<DownloadItem>): (suspend () -> Unit) {
+    /**
+     * Launches the coroutine to delete the provided [items].
+     */
+    private fun getDeleteDownloadItemsOperation(
+        downloadUseCases: DownloadsUseCases,
+        items: Set<DownloadItem>
+    ): (suspend () -> Unit) {
         return {
             CoroutineScope(IO).launch {
                 downloadStore.dispatch(DownloadFragmentAction.EnterDeletionMode)
-                context?.let {
-                    for (item in items) {
-                        it.components.useCases.downloadUseCases.removeDownload(item.id)
-                    }
+                for (item in items) {
+                    downloadUseCases.removeDownload(item.id)
                 }
                 downloadStore.dispatch(DownloadFragmentAction.ExitDeletionMode)
                 pendingDownloadDeletionJob = null
@@ -261,8 +278,14 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
         }
     }
 
+    /**
+     * Queues the [getDeleteDownloadItemsOperation] job in [pendingDownloadDeletionJob] in case
+     * the user exits the fragment and we need to quickly execute the queued deletion.
+     * And adds the [items] to be deleted to the list of [DownloadFragmentStore.pendingDeletionIds],
+     * which is used to determine what items to show and what items to hide from the user.
+     */
     private fun updatePendingDownloadToDelete(items: Set<DownloadItem>) {
-        pendingDownloadDeletionJob = getDeleteDownloadItemsOperation(items)
+        pendingDownloadDeletionJob = getDeleteDownloadItemsOperation(downloadsUseCases, items)
         val ids = items.map { item -> item.id }.toSet()
         downloadStore.dispatch(DownloadFragmentAction.AddPendingDeletionSet(ids))
     }
@@ -273,6 +296,9 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
         downloadStore.dispatch(DownloadFragmentAction.UndoPendingDeletionSet(ids))
     }
 
+    /**
+     * Executes pending job(s) when leaving [DownloadFragment].
+     */
     private fun invokePendingDeletion() {
         pendingDownloadDeletionJob?.let {
             viewLifecycleOwner.lifecycleScope.launch {
