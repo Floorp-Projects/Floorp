@@ -60,24 +60,6 @@ class nsTrimInt64HashKey : public PLDHashEntryHdr {
   const int64_t mValue;
 };
 
-// Declare methods for implementing nsINavBookmarkObserver
-// and nsINavHistoryObserver (some methods, such as BeginUpdateBatch overlap)
-#define NS_DECL_BOOKMARK_HISTORY_OBSERVER_BASE(...)                    \
-  NS_DECL_NSINAVBOOKMARKOBSERVER                                       \
-  NS_IMETHOD OnDeleteURI(nsIURI* aURI, const nsACString& aGUID,        \
-                         uint16_t aReason) __VA_ARGS__;                \
-  NS_IMETHOD OnDeleteVisits(nsIURI* aURI, bool aPartialRemoval,        \
-                            const nsACString& aGUID, uint16_t aReason, \
-                            uint32_t aTransitionType) __VA_ARGS__;
-
-// The internal version is used by query nodes.
-#define NS_DECL_BOOKMARK_HISTORY_OBSERVER_INTERNAL \
-  NS_DECL_BOOKMARK_HISTORY_OBSERVER_BASE()
-
-// The external version is used by results.
-#define NS_DECL_BOOKMARK_HISTORY_OBSERVER_EXTERNAL(...) \
-  NS_DECL_BOOKMARK_HISTORY_OBSERVER_BASE(__VA_ARGS__)
-
 // nsNavHistoryResult
 //
 //    nsNavHistory creates this object and fills in mChildren (by getting
@@ -104,7 +86,7 @@ class nsNavHistoryResult final
   NS_DECL_NSINAVHISTORYRESULT
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsNavHistoryResult,
                                            nsINavHistoryResult)
-  NS_DECL_BOOKMARK_HISTORY_OBSERVER_EXTERNAL(override)
+  NS_DECL_NSINAVBOOKMARKOBSERVER;
 
   void AddHistoryObserver(nsNavHistoryQueryResultNode* aNode);
   void AddBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNode,
@@ -687,7 +669,7 @@ class nsNavHistoryQueryResultNode final
 
   virtual nsresult OpenContainer() override;
 
-  NS_DECL_BOOKMARK_HISTORY_OBSERVER_INTERNAL
+  NS_DECL_NSINAVBOOKMARKOBSERVER;
 
   nsresult OnItemAdded(int64_t aItemId, int64_t aParentId, int32_t aIndex,
                        uint16_t aItemType, nsIURI* aURI, PRTime aDateAdded,
@@ -706,6 +688,12 @@ class nsNavHistoryQueryResultNode final
   nsresult OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle,
                           const nsACString& aGUID);
   nsresult OnClearHistory();
+  nsresult OnPageRemovedFromStore(nsIURI* aURI, const nsACString& aGUID,
+                                  uint16_t aReason);
+  nsresult OnPageRemovedVisits(nsIURI* aURI, bool aPartialRemoval,
+                               const nsACString& aGUID, uint16_t aReason,
+                               uint32_t aTransitionType);
+
   virtual void OnRemoving() override;
 
  public:

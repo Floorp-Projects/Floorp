@@ -66,7 +66,6 @@ add_task(async function test_removeVisitsByFilter() {
           // `true` if there is a bookmark for this URI, i.e. of the page
           // should not be entirely removed.
           hasBookmark,
-          onDeleteURI: null,
         },
       };
       visits.push(visit);
@@ -141,22 +140,6 @@ add_task(async function test_removeVisitsByFilter() {
         uriDeletePromises.set(removedItems[i].uri.spec, PromiseUtils.defer());
       }
     }
-
-    let observer = {
-      deferred: PromiseUtils.defer(),
-      onBeginUpdateBatch() {},
-      onEndUpdateBatch() {},
-      onDeleteURI(aURI) {
-        info("onDeleteURI " + aURI.spec);
-        let deferred = uriDeletePromises.get(aURI.spec);
-        Assert.ok(!!deferred, "Observing onDeleteURI");
-        deferred.resolve();
-      },
-      onDeleteVisits(aURI) {
-        // Not sure we can test anything.
-      },
-    };
-    PlacesUtils.history.addObserver(observer);
 
     const placesEventListener = events => {
       for (const event of events) {
@@ -262,7 +245,6 @@ add_task(async function test_removeVisitsByFilter() {
     await Promise.all(Array.from(uriDeletePromises.values()));
     info("Checking frecency change promises.");
     await Promise.all(rankingChangePromises);
-    PlacesUtils.history.removeObserver(observer);
     PlacesObservers.removeListener(
       ["page-title-changed", "history-cleared", "pages-rank-changed"],
       placesEventListener
