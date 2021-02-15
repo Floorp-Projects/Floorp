@@ -881,12 +881,8 @@ nsresult nsHostResolver::GetHostRecord(const nsACString& host,
   MutexAutoLock lock(mLock);
   nsHostKey key(host, aTrrServer, type, flags, af, pb, originSuffix);
 
-  RefPtr<nsHostRecord>& entry = mRecordDB.GetOrInsert(key);
-  if (!entry) {
-    entry = InitRecord(key);
-  }
-
-  RefPtr<nsHostRecord> rec = entry;
+  RefPtr<nsHostRecord> rec =
+      mRecordDB.GetOrInsertWith(key, [&] { return InitRecord(key); });
   if (rec->IsAddrRecord()) {
     RefPtr<AddrHostRecord> addrRec = do_QueryObject(rec);
     if (addrRec->addr) {
@@ -1027,12 +1023,9 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
       return NS_OK;
     }
 
-    RefPtr<nsHostRecord>& entry = mRecordDB.GetOrInsert(key);
-    if (!entry) {
-      entry = InitRecord(key);
-    }
+    RefPtr<nsHostRecord> rec =
+        mRecordDB.GetOrInsertWith(key, [&] { return InitRecord(key); });
 
-    RefPtr<nsHostRecord> rec = entry;
     RefPtr<AddrHostRecord> addrRec = do_QueryObject(rec);
     MOZ_ASSERT(rec, "Record should not be null");
     MOZ_ASSERT((IS_ADDR_TYPE(type) && rec->IsAddrRecord() && addrRec) ||

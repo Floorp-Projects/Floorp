@@ -405,10 +405,8 @@ already_AddRefed<DocGroup> BrowsingContextGroup::AddDocument(
     const nsACString& aKey, Document* aDocument) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<DocGroup>& docGroup = mDocGroups.GetOrInsert(aKey);
-  if (!docGroup) {
-    docGroup = DocGroup::Create(this, aKey);
-  }
+  RefPtr<DocGroup>& docGroup = mDocGroups.GetOrInsertWith(
+      aKey, [&] { return DocGroup::Create(this, aKey); });
 
   docGroup->AddDocument(aDocument);
   return do_AddRef(docGroup);
