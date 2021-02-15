@@ -78,7 +78,7 @@ void PointerEventHandler::UpdateActivePointerState(WidgetMouseEvent* aEvent,
       // In this case we have to know information about available mouse pointers
       sActivePointersIds->Put(
           aEvent->pointerId,
-          MakeUnique<PointerInfo>(false, aEvent->mInputSource, true, nullptr));
+          new PointerInfo(false, aEvent->mInputSource, true, nullptr));
 
       MaybeCacheSpoofedPointerID(aEvent->mInputSource, aEvent->pointerId);
       break;
@@ -90,7 +90,7 @@ void PointerEventHandler::UpdateActivePointerState(WidgetMouseEvent* aEvent,
         // nullptr, not sure if this also happens on real usage.
         sActivePointersIds->Put(
             pointerEvent->pointerId,
-            MakeUnique<PointerInfo>(
+            new PointerInfo(
                 true, pointerEvent->mInputSource, pointerEvent->mIsPrimary,
                 aTargetContent ? aTargetContent->OwnerDoc() : nullptr));
         MaybeCacheSpoofedPointerID(pointerEvent->mInputSource,
@@ -109,8 +109,8 @@ void PointerEventHandler::UpdateActivePointerState(WidgetMouseEvent* aEvent,
             MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
           sActivePointersIds->Put(
               pointerEvent->pointerId,
-              MakeUnique<PointerInfo>(false, pointerEvent->mInputSource,
-                                      pointerEvent->mIsPrimary, nullptr));
+              new PointerInfo(false, pointerEvent->mInputSource,
+                              pointerEvent->mIsPrimary, nullptr));
         } else {
           sActivePointersIds->Remove(pointerEvent->pointerId);
         }
@@ -149,13 +149,12 @@ void PointerEventHandler::RequestPointerCaptureById(uint32_t aPointerId,
 void PointerEventHandler::SetPointerCaptureById(uint32_t aPointerId,
                                                 Element* aElement) {
   MOZ_ASSERT(aElement);
-  sPointerCaptureList->WithEntryHandle(aPointerId, [&](auto&& entry) {
-    if (entry) {
-      entry.Data()->mPendingElement = aElement;
-    } else {
-      entry.Insert(MakeUnique<PointerCaptureInfo>(aElement));
-    }
-  });
+  PointerCaptureInfo* pointerCaptureInfo = GetPointerCaptureInfo(aPointerId);
+  if (pointerCaptureInfo) {
+    pointerCaptureInfo->mPendingElement = aElement;
+  } else {
+    sPointerCaptureList->Put(aPointerId, new PointerCaptureInfo(aElement));
+  }
 }
 
 /* static */

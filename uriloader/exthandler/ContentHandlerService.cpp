@@ -229,7 +229,7 @@ NS_IMETHODIMP ContentHandlerService::GetTypeFromExtension(
   mHandlerServiceChild->SendGetTypeFromExtension(nsCString(aFileExtension),
                                                  &type);
   _retval.Assign(type);
-  mExtToTypeMap.Put(nsCString(aFileExtension), MakeUnique<nsCString>(type));
+  mExtToTypeMap.Put(nsCString(aFileExtension), new nsCString(type));
 
   return NS_OK;
 }

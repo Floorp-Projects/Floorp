@@ -150,46 +150,50 @@ nsresult nsWindowBase::SynthesizeNativeTouchPoint(
   uint32_t pressure = (uint32_t)ceil(aPointerPressure * 1024);
 
   // If we already know about this pointer id get it's record
-  return mActivePointers.WithEntryHandle(aPointerId, [&](auto&& entry) {
-    POINTER_FLAGS flags;
+  PointerInfo* info = mActivePointers.Get(aPointerId);
 
-    // We know about this pointer, send an update
-    if (entry) {
-      flags = POINTER_FLAG_UPDATE;
-      if (hover) {
-        flags |= POINTER_FLAG_INRANGE;
-      } else if (contact) {
-        flags |= POINTER_FLAG_INCONTACT | POINTER_FLAG_INRANGE;
-      } else if (remove) {
-        flags = POINTER_FLAG_UP;
-        // Remove the pointer from our tracking list. This is UniquePtr wrapped,
-        // so shouldn't leak.
-        entry.Remove();
-      }
+  // We know about this pointer, send an update
+  if (info) {
+    POINTER_FLAGS flags = POINTER_FLAG_UPDATE;
+    if (hover) {
+      flags |= POINTER_FLAG_INRANGE;
+    } else if (contact) {
+      flags |= POINTER_FLAG_INCONTACT | POINTER_FLAG_INRANGE;
+    } else if (remove) {
+      flags = POINTER_FLAG_UP;
+      // Remove the pointer from our tracking list. This is nsAutPtr wrapped,
+      // so shouldn't leak.
+      mActivePointers.Remove(aPointerId);
+    }
 
-      if (cancel) {
-        flags |= POINTER_FLAG_CANCELED;
-      }
-    } else {
-      // Missing init state, error out
-      if (remove || cancel) {
-        return NS_ERROR_INVALID_ARG;
-      }
-
-      // Create a new pointer
-      flags = POINTER_FLAG_INRANGE;
-      if (contact) {
-        flags |= POINTER_FLAG_INCONTACT | POINTER_FLAG_DOWN;
-      }
-
-      entry.Insert(MakeUnique<PointerInfo>(aPointerId, aPoint));
+    if (cancel) {
+      flags |= POINTER_FLAG_CANCELED;
     }
 
     return !InjectTouchPoint(aPointerId, aPoint, flags, pressure,
                              aPointerOrientation)
                ? NS_ERROR_UNEXPECTED
                : NS_OK;
-  });
+  }
+
+  // Missing init state, error out
+  if (remove || cancel) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // Create a new pointer
+  info = new PointerInfo(aPointerId, aPoint);
+
+  POINTER_FLAGS flags = POINTER_FLAG_INRANGE;
+  if (contact) {
+    flags |= POINTER_FLAG_INCONTACT | POINTER_FLAG_DOWN;
+  }
+
+  mActivePointers.Put(aPointerId, info);
+  return !InjectTouchPoint(aPointerId, aPoint, flags, pressure,
+                           aPointerOrientation)
+             ? NS_ERROR_UNEXPECTED
+             : NS_OK;
 }
 
 nsresult nsWindowBase::ClearNativeTouchSequence(nsIObserver* aObserver) {

@@ -3212,12 +3212,11 @@ bool RecvPBackgroundLSObserverConstructor(PBackgroundLSObserverParent* aActor,
 
   const auto notNullObserver = WrapNotNull(observer.get());
 
-  nsTArray<NotNull<Observer*>>* const array =
-      gObservers
-          ->GetOrInsertWith(
-              notNullObserver->Origin(),
-              [] { return MakeUnique<nsTArray<NotNull<Observer*>>>(); })
-          .get();
+  nsTArray<NotNull<Observer*>>* array;
+  if (!gObservers->Get(notNullObserver->Origin(), &array)) {
+    array = new nsTArray<NotNull<Observer*>>();
+    gObservers->Put(notNullObserver->Origin(), array);
+  }
   array->AppendElement(notNullObserver);
 
   if (RefPtr<Datastore> datastore = GetDatastore(observer->Origin())) {
@@ -7253,19 +7252,22 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
 
   mDatastoreId = ++gLastDatastoreId;
 
+  auto preparedDatastore = MakeUnique<PreparedDatastore>(
+      mDatastore, mContentParentId, Origin(), mDatastoreId,
+      /* aForPreload */ mForPreload);
+
   if (!gPreparedDatastores) {
     gPreparedDatastores = new PreparedDatastoreHashtable();
   }
-  const auto& preparedDatastore = gPreparedDatastores->Put(
-      mDatastoreId, MakeUnique<PreparedDatastore>(
-                        mDatastore, mContentParentId, Origin(), mDatastoreId,
-                        /* aForPreload */ mForPreload));
+  gPreparedDatastores->Put(mDatastoreId, preparedDatastore.get());
 
   if (mInvalidated) {
     preparedDatastore->Invalidate();
   }
 
   mPreparedDatastoreRegistered.Flip();
+
+  Unused << preparedDatastore.release();
 
   if (mForPreload) {
     LSRequestPreloadDatastoreResponse preloadDatastoreResponse;

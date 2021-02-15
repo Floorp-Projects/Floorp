@@ -1865,9 +1865,8 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
         nsAutoCString token{tokenSubstring};
         int32_t index = token.Find(";");
         if (index != kNotFound) {
-          mAltSvcMappingTemptativeMap.Put(
-              Substring(token, 0, index),
-              MakeUnique<nsCString>(Substring(token, index + 1)));
+          auto* map = new nsCString(Substring(token, index + 1));
+          mAltSvcMappingTemptativeMap.Put(Substring(token, 0, index), map);
         }
       }
     }

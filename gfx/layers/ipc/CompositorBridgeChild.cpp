@@ -415,10 +415,9 @@ mozilla::ipc::IPCResult CompositorBridgeChild::RecvSharedCompositorFrameMetrics(
     const mozilla::ipc::SharedMemoryBasic::Handle& metrics,
     const CrossProcessMutexHandle& handle, const LayersId& aLayersId,
     const uint32_t& aAPZCId) {
-  auto data =
-      MakeUnique<SharedFrameMetricsData>(metrics, handle, aLayersId, aAPZCId);
-  const auto& viewID = data->GetViewID();
-  mFrameMetricsTable.Put(viewID, std::move(data));
+  SharedFrameMetricsData* data =
+      new SharedFrameMetricsData(metrics, handle, aLayersId, aAPZCId);
+  mFrameMetricsTable.Put(data->GetViewID(), data);
   return IPC_OK();
 }
 
