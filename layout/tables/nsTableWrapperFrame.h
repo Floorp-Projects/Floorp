@@ -227,13 +227,25 @@ class nsTableWrapperFrame : public nsContainerFrame {
                           mozilla::LogicalPoint& aOrigin,
                           mozilla::WritingMode aWM);
 
+  // Returns the area occupied by the caption within our content box depending
+  // on the caption side.
+  //
+  // @param aCaptionMarginBoxSize the caption's margin-box size in our
+  //        writing-mode.
+  mozilla::LogicalSize GetAreaOccupiedByCaption(
+      mozilla::StyleCaptionSide,
+      const mozilla::LogicalSize& aCaptionMarginBoxSize) const;
+
   // Create and init the child reflow input, using passed-in aChildRI, so that
   // caller can use it after we return.
+  //
+  // @param aAreaOccupiedByCaption the value computed by
+  //        GetAreaOccupiedByCaption() if we have a caption.
   void CreateReflowInputForInnerTable(
       nsPresContext* aPresContext, nsTableFrame* aTableFrame,
       const ReflowInput& aOuterRI, Maybe<ReflowInput>& aChildRI,
       const nscoord aAvailISize,
-      const mozilla::Maybe<mozilla::LogicalSize>& aContainingBlockSize =
+      const mozilla::Maybe<mozilla::LogicalSize>& aAreaOccupiedByCaption =
           mozilla::Nothing()) const;
   void CreateReflowInputForCaption(nsPresContext* aPresContext,
                                    nsIFrame* aCaptionFrame,
