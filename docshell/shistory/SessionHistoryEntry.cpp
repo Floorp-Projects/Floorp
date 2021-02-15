@@ -15,6 +15,8 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/PresState.h"
 #include "mozilla/Tuple.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/CSPMessageUtils.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/nsCSPContext.h"
@@ -1353,16 +1355,21 @@ void IPDLParamTraits<dom::SessionHistoryInfo>::Write(
     NS_ENSURE_SUCCESS_VOID(aParam.mStateData->GetFormatVersion(&version));
     Get<0>(*stateData) = version;
 
-    JSStructuredCloneData& data = aParam.mStateData->Data();
-    auto iter = data.Start();
-    bool success;
-    Get<1>(*stateData).data().data = data.Borrow(iter, data.Size(), &success);
-    if (NS_WARN_IF(!success)) {
-      return;
+    IToplevelProtocol* topLevel = aActor->ToplevelProtocol();
+    MOZ_RELEASE_ASSERT(topLevel->GetProtocolId() == PContentMsgStart);
+    if (topLevel->GetSide() == ChildSide) {
+      auto* contentChild = static_cast<dom::ContentChild*>(topLevel);
+      if (NS_WARN_IF(!aParam.mStateData->BuildClonedMessageDataForChild(
+              contentChild, Get<1>(*stateData)))) {
+        return;
+      }
+    } else {
+      auto* contentParent = static_cast<dom::ContentParent*>(topLevel);
+      if (NS_WARN_IF(!aParam.mStateData->BuildClonedMessageDataForParent(
+              contentParent, Get<1>(*stateData)))) {
+        return;
+      }
     }
-    MOZ_ASSERT(aParam.mStateData->PortIdentifiers().IsEmpty() &&
-               aParam.mStateData->BlobImpls().IsEmpty() &&
-               aParam.mStateData->InputStreams().IsEmpty());
   }
 
   WriteIPDLParam(aMsg, aActor, aParam.mURI);
