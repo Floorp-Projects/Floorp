@@ -96,6 +96,7 @@ typedef void* EGLSurface;
 typedef void* (*PFNEGLGETPROCADDRESS)(const char*);
 
 #define EGL_NO_CONTEXT nullptr
+#define EGL_NO_SURFACE nullptr
 #define EGL_FALSE 0
 #define EGL_TRUE 1
 #define EGL_BLUE_SIZE 0x3022
@@ -104,6 +105,7 @@ typedef void* (*PFNEGLGETPROCADDRESS)(const char*);
 #define EGL_NONE 0x3038
 #define EGL_VENDOR 0x3053
 #define EGL_CONTEXT_CLIENT_VERSION 0x3098
+#define EGL_OPENGL_API 0x30A2
 #define EGL_DEVICE_EXT 0x322C
 #define EGL_DRM_DEVICE_FILE_EXT 0x3233
 
@@ -415,17 +417,15 @@ static bool get_gles_status(EGLDisplay dpy,
   PFNEGLCHOOSECONFIGPROC eglChooseConfig =
       cast<PFNEGLCHOOSECONFIGPROC>(eglGetProcAddress("eglChooseConfig"));
 
+  typedef EGLBoolean (*PFNEGLBINDAPIPROC)(EGLint api);
+  PFNEGLBINDAPIPROC eglBindAPI =
+      cast<PFNEGLBINDAPIPROC>(eglGetProcAddress("eglBindAPI"));
+
   typedef EGLContext (*PFNEGLCREATECONTEXTPROC)(
       EGLDisplay dpy, EGLConfig config, EGLContext share_context,
       EGLint const* attrib_list);
   PFNEGLCREATECONTEXTPROC eglCreateContext =
       cast<PFNEGLCREATECONTEXTPROC>(eglGetProcAddress("eglCreateContext"));
-
-  typedef EGLSurface (*PFNEGLCREATEPBUFFERSURFACEPROC)(
-      EGLDisplay dpy, EGLConfig config, EGLint const* attrib_list);
-  PFNEGLCREATEPBUFFERSURFACEPROC eglCreatePbufferSurface =
-      cast<PFNEGLCREATEPBUFFERSURFACEPROC>(
-          eglGetProcAddress("eglCreatePbufferSurface"));
 
   typedef EGLBoolean (*PFNEGLMAKECURRENTPROC)(
       EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLContext context);
@@ -444,15 +444,42 @@ static bool get_gles_status(EGLDisplay dpy,
       cast<PFNEGLQUERYDISPLAYATTRIBEXTPROC>(
           eglGetProcAddress("eglQueryDisplayAttribEXT"));
 
-  if (!eglChooseConfig || !eglCreateContext || !eglCreatePbufferSurface ||
-      !eglMakeCurrent) {
-    record_error("libEGL missing methods for GLES test");
+  if (!eglChooseConfig || !eglCreateContext || !eglMakeCurrent) {
+    record_warning("libEGL missing methods for GL test");
     return false;
   }
 
   typedef GLubyte* (*PFNGLGETSTRING)(GLenum);
   PFNGLGETSTRING glGetString =
       cast<PFNGLGETSTRING>(eglGetProcAddress("glGetString"));
+
+  EGLint config_attrs[] = {EGL_RED_SIZE,  8, EGL_GREEN_SIZE, 8,
+                           EGL_BLUE_SIZE, 8, EGL_NONE};
+
+  EGLConfig config;
+  EGLint num_config;
+  if (eglChooseConfig(dpy, config_attrs, &config, 1, &num_config) ==
+      EGL_FALSE) {
+    record_warning("eglChooseConfig returned an error");
+    return false;
+  }
+
+  if (eglBindAPI(EGL_OPENGL_API) == EGL_FALSE) {
+    record_warning("eglBindAPI returned an error");
+    return false;
+  }
+
+  EGLint ctx_attrs[] = {EGL_NONE};
+  EGLContext ectx = eglCreateContext(dpy, config, EGL_NO_CONTEXT, ctx_attrs);
+  if (!ectx) {
+    record_warning("eglCreateContext returned an error");
+    return false;
+  }
+
+  if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ectx) == EGL_FALSE) {
+    record_warning("eglMakeCurrent returned an error");
+    return false;
+  }
 
   // Implementations disagree about whether eglGetProcAddress or dlsym
   // should be used for getting functions from the actual API, see
@@ -471,20 +498,10 @@ static bool get_gles_status(EGLDisplay dpy,
     glGetString = cast<PFNGLGETSTRING>(dlsym(libgl, "glGetString"));
     if (!glGetString) {
       dlclose(libgl);
-      record_error("libGL or libGLESv2 glGetString missing");
+      record_warning("libEGL, libGL and libGLESv2 are missing glGetString");
       return false;
     }
   }
-
-  EGLint config_attrs[] = {EGL_RED_SIZE,  8, EGL_GREEN_SIZE, 8,
-                           EGL_BLUE_SIZE, 8, EGL_NONE};
-  EGLConfig config;
-  EGLint num_config;
-  eglChooseConfig(dpy, config_attrs, &config, 1, &num_config);
-  EGLint ctx_attrs[] = {EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE};
-  EGLContext ectx = eglCreateContext(dpy, config, EGL_NO_CONTEXT, ctx_attrs);
-  EGLSurface pbuf = eglCreatePbufferSurface(dpy, config, nullptr);
-  eglMakeCurrent(dpy, pbuf, pbuf, ectx);
 
   const GLubyte* versionString = glGetString(GL_VERSION);
   const GLubyte* vendorString = glGetString(GL_VENDOR);
@@ -494,7 +511,11 @@ static bool get_gles_status(EGLDisplay dpy,
     record_value("VENDOR\n%s\nRENDERER\n%s\nVERSION\n%s\nTFP\nTRUE\n",
                  vendorString, rendererString, versionString);
   } else {
-    record_error("libGLESv2 glGetString returned null");
+    record_warning("EGL glGetString returned null");
+    if (libgl) {
+      dlclose(libgl);
+    }
+    return false;
   }
 
   if (eglQueryDeviceStringEXT) {
@@ -538,7 +559,7 @@ static bool get_egl_status(EGLNativeDisplayType native_dpy, bool gles_test,
 
   if (!eglGetProcAddress) {
     dlclose(libegl);
-    record_error("no eglGetProcAddress");
+    record_warning("no eglGetProcAddress");
     return false;
   }
 
@@ -557,7 +578,7 @@ static bool get_egl_status(EGLNativeDisplayType native_dpy, bool gles_test,
 
   if (!eglGetDisplay || !eglInitialize || !eglTerminate) {
     dlclose(libegl);
-    record_error("libEGL missing methods");
+    record_warning("libEGL missing methods");
     return false;
   }
 
@@ -1147,20 +1168,22 @@ static void get_wayland_screen_info(struct wl_display* dpy) {
   wl_registry_destroy(info.registry);
 }
 
-static bool wayland_egltest() {
+static void wayland_egltest() {
   // NOTE: returns false to fall back to X11 when the Wayland socket doesn't
   // exist but fails with record_error if something actually went wrong
   struct wl_display* dpy = wl_display_connect(nullptr);
   if (!dpy) {
-    return false;
+    record_error("Could not connect to wayland socket");
+    return;
   }
 
-  get_egl_status((EGLNativeDisplayType)dpy, true, false);
+  if (!get_egl_status((EGLNativeDisplayType)dpy, true, false)) {
+    record_error("EGL test failed");
+  }
   get_wayland_screen_info(dpy);
 
   wl_display_disconnect(dpy);
   record_value("TEST_TYPE\nEGL\n");
-  return true;
 }
 #endif
 
@@ -1176,21 +1199,19 @@ int childgltest() {
   // Get a list of all GPUs from the PCI bus.
   int pci_count = get_pci_status();
 
-  bool result = false;
 #ifdef MOZ_WAYLAND
   if (!IsWaylandDisabled()) {
-    result = wayland_egltest();
-  }
+    wayland_egltest();
+  } else
 #endif
+  {
 #ifdef MOZ_X11
-  // TODO: --display command line argument is not properly handled
-  if (!result) {
-    result = x11_egltest(pci_count);
-  }
-  if (!result) {
-    glxtest();
-  }
+    // TODO: --display command line argument is not properly handled
+    if (!x11_egltest(pci_count)) {
+      glxtest();
+    }
 #endif
+  }
 
   // Finally write buffered data to the pipe.
   record_flush();
