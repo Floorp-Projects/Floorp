@@ -292,7 +292,7 @@
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">Alatna traka</string>
     <!-- Preference for changing default theme to dark or light mode -->
-    <string name="preferences_theme">Motiv</string>
+    <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home">Početna</string>
     <!-- Preference for gestures based actions -->
@@ -501,7 +501,7 @@
     <string name="preference_auto_battery_theme">Postavljeno u postavkama za štednju baterije</string>
 
     <!-- Preference for using following device theme -->
-    <string name="preference_follow_device_theme">Slijedi motiv uređaja</string>
+    <string name="preference_follow_device_theme">Slijedi temu uređaja</string>
 
     <!-- Gestures Preferences-->
     <!-- Preferences for using pull to refresh in a webpage -->
@@ -1239,16 +1239,16 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Odaberi modus</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Štedi energiju i zaštiti oči pomoću tamnog motiva.</string>
+    <string name="onboarding_theme_picker_description1">Štedi energiju i zaštiti oči pomoću tamne teme.</string>
 
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automatski</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_summary">Prilagođava se postavkama uređaja</string>
     <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Tamni motiv</string>
+    <string name="onboarding_theme_dark_title">Tamna tema</string>
     <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Svijetli motiv</string>
+    <string name="onboarding_theme_light_title">Svijetla tema</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Kartice su poslane!</string>

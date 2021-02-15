@@ -30,7 +30,7 @@
     <string name="open_tab_tray_plural">%1$s llingüetes abiertes. Toca pa cambiar a otra.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
-    <string name="tab_tray_multi_select_title">%1$d esbillaes</string>
+    <string name="tab_tray_multi_select_title">%1$d na esbilla</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
     <string name="tab_tray_add_new_collection">Coleición nueva</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
@@ -44,13 +44,16 @@
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
     <string name="tab_tray_collection_button_multiselect_content_description">Guardar les llingüetes esbillaes nuna coleición</string>
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
-    <string name="tab_tray_item_selected_multiselect_content_description">Esbillóse %1$s</string>
+    <string name="tab_tray_item_selected_multiselect_content_description">%1$s na esbilla</string>
     <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
-    <string name="tab_tray_item_unselected_multiselect_content_description">Deseleicionóse %1$s</string>
+    <string name="tab_tray_item_unselected_multiselect_content_description">%1$s fuera de la esbilla</string>
     <!-- Content description announcement when exiting multiselect mode in tab tray -->
     <string name="tab_tray_exit_multiselect_content_description">Colesti del mou d\'esbilla múltiple</string>
     <!-- Content description announcement when entering multiselect mode in tab tray -->
     <string name="tab_tray_enter_multiselect_content_description">Entresti nel mou d\'esbilla múltiple, esbilla les llingüetes pa guardales nuna coleición</string>
+
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">Na esbilla</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ta producíu por Mozilla.</string>
@@ -507,6 +510,8 @@
     <string name="library_desktop_bookmarks_unfiled">Otros marcadores</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Historial</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">Llingüeta nueva</string>
     <!-- Option in Library to open Synced Tabs page -->
     <string name="library_synced_tabs">Llingüetes sincronizaes</string>
     <!-- Option in Library to open Reading List -->
@@ -720,6 +725,9 @@
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">Restaurar la llingüeta</string>
 
+    <!-- Bookmarks -->
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">Menú de los marcadores</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">¿De xuru que quies desaniciar esta carpeta?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
@@ -1488,6 +1496,9 @@ en llinia y con nós.</string>
 
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Últimu usu</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Menú pa ordenar los anicios sesión</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Amestar un motor de busca</string>

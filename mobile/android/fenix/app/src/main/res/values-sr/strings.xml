@@ -128,6 +128,8 @@
     <string name="browser_menu_edit_bookmark">Уреди забелешку</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Додаци</string>
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string name="browser_menu_extensions">Проширења</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Овде нема додатака</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -529,6 +531,10 @@
     <string name="library_desktop_bookmarks_unfiled">Остале забелешке</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Историјат</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">Нови језичак</string>
+    <!-- Option in Library to find text in page -->
+    <string name="library_find_in_page">Пронађи на страници</string>
     <!-- Option in Library to open Synced Tabs page -->
     <string name="library_synced_tabs">Синхронизовани језичци</string>
     <!-- Option in Library to open Reading List -->
