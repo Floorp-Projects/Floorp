@@ -556,9 +556,7 @@ enum class AudioInputType { Unknown, Voice };
  *   API, we have to do block processing at 128 frames per block, we need to
  *   keep a little spill buffer to store the extra frames.
  */
-class AudioCallbackDriver : public GraphDriver,
-                            public MixerCallbackReceiver
-{
+class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
   using IterationResult = GraphInterface::IterationResult;
   enum class FallbackDriverState;
   class FallbackWrapper;

@@ -616,8 +616,8 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
     }
 
     if (!useOop) {
-      notLost.inProcess = HostWebGLContext::Create({this, nullptr},
-                                                   initDesc, &notLost.info);
+      notLost.inProcess =
+          HostWebGLContext::Create({this, nullptr}, initDesc, &notLost.info);
       return Ok();
     }
 
@@ -632,14 +632,13 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
     }
 
     RefPtr<dom::WebGLChild> outOfProcess = new dom::WebGLChild(*this);
-    outOfProcess = static_cast<dom::WebGLChild*>(
-        cbc->SendPWebGLConstructor(outOfProcess));
+    outOfProcess =
+        static_cast<dom::WebGLChild*>(cbc->SendPWebGLConstructor(outOfProcess));
     if (!outOfProcess) {
       return Err("SendPWebGLConstructor failed");
     }
 
-    if (!outOfProcess->SendInitialize(
-            initDesc, &notLost.info)) {
+    if (!outOfProcess->SendInitialize(initDesc, &notLost.info)) {
       return Err("WebGL actor Initialize failed");
     }
 

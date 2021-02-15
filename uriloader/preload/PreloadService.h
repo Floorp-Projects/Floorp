@@ -103,8 +103,7 @@ class PreloadService {
       const nsAString& aAs, const nsAString& aType, const nsAString& aCharset,
       const nsAString& aSrcset, const nsAString& aSizes,
       const nsAString& aIntegrity, const nsAString& aCORS,
-      const nsAString& aReferrerPolicy,
-      bool aFromHeader);
+      const nsAString& aReferrerPolicy, bool aFromHeader);
 
  private:
   nsRefPtrHashtable<PreloadHashKey, PreloaderBase> mPreloads;

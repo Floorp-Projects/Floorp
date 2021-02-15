@@ -20,19 +20,18 @@ template <typename MethodT, MethodT Method>
 size_t IdByMethod() = delete;
 
 #define DEFINE_METHOD_DISPATCHER(_ID, _METHOD)                    \
-  template <>                                                            \
-  class WebGLMethodDispatcher<_ID>                                       \
-      : public MethodDispatcher<WebGLMethodDispatcher, _ID,              \
+  template <>                                                     \
+  class WebGLMethodDispatcher<_ID>                                \
+      : public MethodDispatcher<WebGLMethodDispatcher, _ID,       \
                                 decltype(&_METHOD), &_METHOD> {}; \
-  template <>                                                            \
-  inline size_t IdByMethod<decltype(&_METHOD), &_METHOD>() {             \
-    return _ID;                                                          \
+  template <>                                                     \
+  inline size_t IdByMethod<decltype(&_METHOD), &_METHOD>() {      \
+    return _ID;                                                   \
   }
 
 // Defines each method the WebGLMethodDispatcher handles.  The COUNTER value
 // is used as a cross-process ID for each of the methods.
-#define DEFINE_ASYNC(_METHOD) \
-  DEFINE_METHOD_DISPATCHER(__COUNTER__, _METHOD)
+#define DEFINE_ASYNC(_METHOD) DEFINE_METHOD_DISPATCHER(__COUNTER__, _METHOD)
 
 DEFINE_ASYNC(HostWebGLContext::CreateBuffer)
 DEFINE_ASYNC(HostWebGLContext::CreateFramebuffer)

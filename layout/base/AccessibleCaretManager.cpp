@@ -1496,8 +1496,7 @@ void AccessibleCaretManager::DispatchCaretStateChangedEvent(
 }
 
 AccessibleCaretManager::Carets::Carets(UniquePtr<AccessibleCaret> aFirst,
-           UniquePtr<AccessibleCaret> aSecond)
-        : mFirst{std::move(aFirst)}, mSecond{std::move(aSecond)} {}
-
+                                       UniquePtr<AccessibleCaret> aSecond)
+    : mFirst{std::move(aFirst)}, mSecond{std::move(aSecond)} {}
 
 }  // namespace mozilla
