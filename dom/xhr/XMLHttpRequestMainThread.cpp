@@ -1073,9 +1073,9 @@ bool XMLHttpRequestMainThread::IsSafeHeader(
       return false;
     }
   }
-  const char* kCrossOriginSafeHeaders[] = {"cache-control", "content-language",
-                                           "content-type",  "expires",
-                                           "last-modified", "pragma"};
+  const char* kCrossOriginSafeHeaders[] = {
+      "cache-control", "content-language", "content-type", "content-length",
+      "expires",       "last-modified",    "pragma"};
   for (uint32_t i = 0; i < ArrayLength(kCrossOriginSafeHeaders); ++i) {
     if (aHeader.LowerCaseEqualsASCII(kCrossOriginSafeHeaders[i])) {
       return true;
