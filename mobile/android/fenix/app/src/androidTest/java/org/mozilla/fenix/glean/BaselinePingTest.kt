@@ -152,7 +152,7 @@ class BaselinePingTest {
             .click()
 
         // Validate the received data.
-        val baselinePing = waitForPingContent("baseline", "background")!!
+        val baselinePing = waitForPingContent("baseline", "inactive")!!
 
         val metrics = baselinePing.getJSONObject("metrics")
 
