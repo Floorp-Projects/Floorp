@@ -4393,12 +4393,6 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
   if (!(c)) return false; \
   break
 
-#ifdef ENABLE_WASM_SIMD_EXPERIMENTAL
-#  define CHECK_SIMD_EXPERIMENTAL() (void)(0)
-#else
-#  define CHECK_SIMD_EXPERIMENTAL() return f.iter().unrecognizedOpcode(&op)
-#endif
-
   while (true) {
     if (!f.mirGen().ensureBallast()) {
       return false;
@@ -5476,7 +5470,6 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
   MOZ_CRASH("unreachable");
 
 #undef CHECK
-#undef CHECK_SIMD_EXPERIMENTAL
 }
 
 bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,

@@ -14711,12 +14711,6 @@ bool BaseCompiler::emitBody() {
     } while (0)
 #endif
 
-#ifdef ENABLE_WASM_SIMD_EXPERIMENTAL
-#  define CHECK_SIMD_EXPERIMENTAL() (void)(0)
-#else
-#  define CHECK_SIMD_EXPERIMENTAL() break
-#endif
-
 #define CHECK(E) \
   if (!(E)) return false
 #define NEXT()           \
@@ -16175,7 +16169,6 @@ bool BaseCompiler::emitBody() {
 #undef NEXT
 #undef CHECK_NEXT
 #undef CHECK_POINTER_COUNT
-#undef CHECK_SIMD_EXPERIMENTAL
 #undef dispatchBinary
 #undef dispatchUnary
 #undef dispatchComparison
