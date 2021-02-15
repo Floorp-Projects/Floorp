@@ -191,8 +191,6 @@ var DownloadCache = {
       return this._initializePromise;
     }
     this._initializePromise = (async () => {
-      PlacesUtils.history.addObserver(this, true);
-
       const placesObserver = new PlacesWeakCallbackWrapper(
         this.handlePlacesEvents.bind(this)
       );
@@ -326,10 +324,7 @@ var DownloadCache = {
     }
   },
 
-  QueryInterface: ChromeUtils.generateQI([
-    "nsINavHistoryObserver",
-    "nsISupportsWeakReference",
-  ]),
+  QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference"]),
 
   handlePlacesEvents(events) {
     for (const event of events) {
@@ -347,14 +342,6 @@ var DownloadCache = {
       }
     }
   },
-
-  // nsINavHistoryObserver
-  onDeleteURI(uri) {
-    this._data.delete(uri.spec);
-  },
-  onBeginUpdateBatch() {},
-  onEndUpdateBatch() {},
-  onDeleteVisits() {},
 };
 
 /**

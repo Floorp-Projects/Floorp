@@ -39,33 +39,8 @@ add_task(async function test_remove_single() {
     }
 
     let shouldRemove = !options.addBookmark;
-    let observer;
     let placesEventListener;
     let promiseObserved = new Promise((resolve, reject) => {
-      observer = {
-        onBeginUpdateBatch() {},
-        onEndUpdateBatch() {},
-        onDeleteURI(aURI) {
-          try {
-            Assert.ok(shouldRemove, "Observing onDeleteURI");
-            Assert.equal(
-              aURI.spec,
-              uri.spec,
-              "Observing effect on the right uri"
-            );
-          } finally {
-            resolve();
-          }
-        },
-        onDeleteVisits(aURI) {
-          Assert.equal(
-            aURI.spec,
-            uri.spec,
-            "Observing onDeleteVisits on the right uri"
-          );
-        },
-      };
-
       placesEventListener = events => {
         for (const event of events) {
           switch (event.type) {
@@ -105,7 +80,6 @@ add_task(async function test_remove_single() {
         }
       };
     });
-    PlacesUtils.history.addObserver(observer);
     PlacesObservers.addListener(
       [
         "page-title-changed",
@@ -138,7 +112,6 @@ add_task(async function test_remove_single() {
     }
 
     await promiseObserved;
-    PlacesUtils.history.removeObserver(observer);
     PlacesObservers.removeListener(
       [
         "page-title-changed",
