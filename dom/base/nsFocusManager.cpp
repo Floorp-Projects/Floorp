@@ -1164,12 +1164,20 @@ nsFocusManager::BlurredElementInfo::~BlurredElementInfo() = default;
 
 // https://drafts.csswg.org/selectors-4/#the-focus-visible-pseudo
 static bool ShouldMatchFocusVisible(
-    const Element& aElement, int32_t aFocusFlags,
-    const Maybe<nsFocusManager::BlurredElementInfo>& aBlurredElementInfo) {
+    nsPIDOMWindowOuter* aWindow, const Element& aElement,
+    int32_t aFocusFlags,
+    const Maybe<nsFocusManager::BlurredElementInfo>& aBlurredElementInfo,
+    bool aIsRefocus, bool aRefocusedElementUsedToShowOutline) {
   // If we were explicitly requested to show the ring, do it.
   if (aFocusFlags & nsIFocusManager::FLAG_SHOWRING) {
     return true;
   }
+
+  if (aWindow->ShouldShowFocusRing()) {
+    // The window decision also trumps any other heuristic.
+    return true;
+  }
+
   // Any element which supports keyboard input (such as an input element, or any
   // other element which may trigger a virtual keyboard to be shown on focus if
   // a physical keyboard is not present) should always match :focus-visible when
@@ -1201,6 +1209,12 @@ static bool ShouldMatchFocusVisible(
       // Conversely, if the active element does not match :focus-visible, and a
       // script causes focus to move elsewhere, the newly focused element should
       // not match :focus-visible.
+      //
+      // There's an special-case here. If this is a refocus, we just keep the
+      // outline as it was before, the focus isn't moving after all.
+      if (aIsRefocus) {
+        return aRefocusedElementUsedToShowOutline;
+      }
       return !aBlurredElementInfo || aBlurredElementInfo->mHadRing;
     case InputContextAction::CAUSE_MOUSE:
     case InputContextAction::CAUSE_TOUCH:
@@ -2452,22 +2466,24 @@ void nsFocusManager::Focus(
     mFocusedElement = aElement;
 
     nsIContent* focusedNode = aWindow->GetFocusedElement();
-    bool isRefocus = focusedNode && focusedNode == aElement;
+    const bool sendFocusEvent = aElement && aElement->IsInComposedDoc() &&
+                                !IsNonFocusableRoot(aElement);
+    const bool isRefocus = focusedNode && focusedNode == aElement;
+    const bool shouldShowFocusRing =
+        sendFocusEvent &&
+        ShouldMatchFocusVisible(
+            aWindow, *aElement, aFlags, aBlurredElementInfo, isRefocus,
+            isRefocus && aWindow->FocusedElementShowedOutline());
 
-    aWindow->SetFocusedElement(aElement, focusMethod);
+    aWindow->SetFocusedElement(aElement, focusMethod, false,
+                               shouldShowFocusRing);
 
     // if the focused element changed, scroll it into view
     if (aElement && aFocusChanged) {
       ScrollIntoView(presShell, aElement, aFlags);
     }
-
-    bool sendFocusEvent = aElement && aElement->IsInComposedDoc() &&
-                          !IsNonFocusableRoot(aElement);
     nsPresContext* presContext = presShell->GetPresContext();
     if (sendFocusEvent) {
-      const bool shouldShowFocusRing =
-          aWindow->ShouldShowFocusRing() ||
-          ShouldMatchFocusVisible(*aElement, aFlags, aBlurredElementInfo);
       NotifyFocusStateChange(aElement, nullptr, aFlags,
                              /* aGettingFocus = */ true, shouldShowFocusRing);
 
