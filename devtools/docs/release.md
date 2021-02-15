@@ -20,7 +20,7 @@ The `webidl-deprecated-list.js` file will be used to avoid calling deprecated ge
 
 ## Remove backwards compatibility code
 
-In order to accomodate connecting to older server, we sometimes need to introduce specific branches in the code. At the moment, we only support connecting to server 2 versions older than the client (e.g. if the client is 87, we support connecting to 86 and 85).
+In order to accommodate connecting to older server, we sometimes need to introduce specific branches in the code. At the moment, we only support connecting to server 2 versions older than the client (e.g. if the client is 87, we support connecting to 86 and 85).
 This means that on each release there's an opportunity to cleanup backward compatibility code that was introduced for server we don't have to support anymore. If I go back to my example with the 87 client, we can remove any backward-compatibility code that was added in 85.
 
 Luckily, when adding compatibility code, we also add comments that follow a specific pattern: `@backward-compat { version XX }`, where `XX` is the version number the code is supporting.
