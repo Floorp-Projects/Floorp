@@ -724,13 +724,10 @@ void nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& aCx,
     return;
   }
 
-  KnownModule* km;
-
-  km = mKnownModules.Get(hash);
-  if (!km) {
-    km = new KnownModule(fl);
-    mKnownModules.Put(hash, km);
-  }
+  KnownModule* const km =
+      mKnownModules
+          .GetOrInsertWith(hash, [&] { return MakeUnique<KnownModule>(fl); })
+          .get();
 
   void* place = mArena.Allocate(sizeof(nsCID));
   nsID* permanentCID = static_cast<nsID*>(place);

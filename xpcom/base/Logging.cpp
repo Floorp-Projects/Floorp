@@ -533,13 +533,13 @@ class LogModuleManager {
 
   LogModule* CreateOrGetModule(const char* aName) {
     OffTheBooksMutexAutoLock guard(mModulesLock);
-    LogModule* module = nullptr;
-    if (!mModules.Get(aName, &module)) {
-      module = new LogModule(aName, LogLevel::Disabled);
-      mModules.Put(aName, module);
-    }
-
-    return module;
+    return mModules
+        .GetOrInsertWith(aName,
+                         [&] {
+                           return UniquePtr<LogModule>(
+                               new LogModule{aName, LogLevel::Disabled});
+                         })
+        .get();
   }
 
   void Print(const char* aName, LogLevel aLevel, const char* aFmt,
