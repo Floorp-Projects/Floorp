@@ -582,6 +582,16 @@ class TargetList extends EventEmitter {
     return this._isDestroyed;
   }
 
+  /**
+   * Check if JavaScript is currently enabled.
+   * TODO: This API is temporarily on the TargetList but should move to a
+   * command as soon as https://bugzilla.mozilla.org/show_bug.cgi?id=1691681
+   * lands.
+   */
+  isJavascriptEnabled() {
+    return !!this.targetFront._javascriptEnabled;
+  }
+
   destroy() {
     this.stopListening();
     this._createListeners.off();
