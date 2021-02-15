@@ -1000,12 +1000,6 @@ Inspector.prototype = {
         );
         panel = new LayoutView(this, this.panelWin);
         break;
-      case "newruleview":
-        const RulesView = this.browserRequire(
-          "devtools/client/inspector/rules/new-rules"
-        );
-        panel = new RulesView(this, this.panelWin);
-        break;
       case "ruleview":
         const {
           RuleViewTool,
@@ -1101,15 +1095,6 @@ Inspector.prototype = {
       id: "animationinspector",
       title: INSPECTOR_L10N.getStr("inspector.sidebar.animationInspectorTitle"),
     });
-
-    if (
-      Services.prefs.getBoolPref("devtools.inspector.new-rulesview.enabled")
-    ) {
-      sidebarPanels.push({
-        id: "newruleview",
-        title: INSPECTOR_L10N.getStr("inspector.sidebar.ruleViewTitle"),
-      });
-    }
 
     for (const { id, title } of sidebarPanels) {
       // The Computed panel is not a React-based panel. We pick its element container from
