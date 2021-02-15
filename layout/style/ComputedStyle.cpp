@@ -245,11 +245,16 @@ nsChangeHint ComputedStyle::CalcStyleDifference(const ComputedStyle& aNewStyle,
   }
 
   if (HasAuthorSpecifiedBorderOrBackground() !=
-          aNewStyle.HasAuthorSpecifiedBorderOrBackground() &&
-      StyleDisplay()->HasAppearance()) {
-    // A background-specified change may cause padding to change, so we may need
-    // to reflow.  We use the same hint here as we do for "appearance" changes.
-    hint |= nsChangeHint_AllReflowHints | nsChangeHint_RepaintFrame;
+      aNewStyle.HasAuthorSpecifiedBorderOrBackground()) {
+    const StyleAppearance appearance = StyleDisplay()->EffectiveAppearance();
+    if (appearance != StyleAppearance::None &&
+        nsLayoutUtils::AuthorSpecifiedBorderBackgroundDisablesTheming(
+            appearance)) {
+      // A background-specified change may cause padding to change, so we may
+      // need to reflow.  We use the same hint here as we do for "appearance"
+      // changes.
+      hint |= nsChangeHint_AllReflowHints | nsChangeHint_RepaintFrame;
+    }
   }
 
   MOZ_ASSERT(NS_IsHintSubset(hint, nsChangeHint_AllHints),
