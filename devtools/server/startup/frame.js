@@ -80,7 +80,12 @@ try {
         const { docShell } = chromeGlobal;
         // For a script loaded via loadFrameScript, the global is the content
         // message manager.
-        actor = new FrameTargetActor(conn, docShell);
+        // All FrameTarget actors created via the framescript are top-level
+        // targets. Non top-level FrameTarget actors are all created by the
+        // DevToolsFrameChild actor.
+        actor = new FrameTargetActor(conn, docShell, {
+          isTopLevelTarget: true,
+        });
       }
       actor.manage(actor);
 
