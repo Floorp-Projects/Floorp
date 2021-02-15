@@ -471,43 +471,41 @@ class Connector {
     };
 
     // Reconfigures the tab and waits for the target to finish navigating.
-    const reconfigureTabAndWaitForNavigation = options => {
-      options.performReload = true;
+    const reconfigureTabAndReload = async options => {
       const navigationFinished = waitForNavigation();
-      return reconfigureTab(options).then(() => navigationFinished);
+      await reconfigureTab(options);
+      await this.toolbox.target.reload();
+      await navigationFinished;
     };
+
     switch (type) {
       case ACTIVITY_TYPE.RELOAD.WITH_CACHE_DEFAULT:
-        return reconfigureTabAndWaitForNavigation({}).then(standBy);
+        return reconfigureTabAndReload({}).then(standBy);
       case ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED:
         this.currentActivity = ACTIVITY_TYPE.ENABLE_CACHE;
         this.currentTarget.once("will-navigate", () => {
           this.currentActivity = type;
         });
-        return reconfigureTabAndWaitForNavigation({
+        return reconfigureTabAndReload({
           cacheDisabled: false,
-          performReload: true,
         }).then(standBy);
       case ACTIVITY_TYPE.RELOAD.WITH_CACHE_DISABLED:
         this.currentActivity = ACTIVITY_TYPE.DISABLE_CACHE;
         this.currentTarget.once("will-navigate", () => {
           this.currentActivity = type;
         });
-        return reconfigureTabAndWaitForNavigation({
+        return reconfigureTabAndReload({
           cacheDisabled: true,
-          performReload: true,
         }).then(standBy);
       case ACTIVITY_TYPE.ENABLE_CACHE:
         this.currentActivity = type;
         return reconfigureTab({
           cacheDisabled: false,
-          performReload: false,
         }).then(standBy);
       case ACTIVITY_TYPE.DISABLE_CACHE:
         this.currentActivity = type;
         return reconfigureTab({
           cacheDisabled: true,
-          performReload: false,
         }).then(standBy);
     }
     this.currentActivity = ACTIVITY_TYPE.NONE;
