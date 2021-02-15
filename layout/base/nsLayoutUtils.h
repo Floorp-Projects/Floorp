@@ -915,6 +915,13 @@ class nsLayoutUtils {
       const nsTextFrame* aFrame1, const nsTextFrame* aFrame2);
 
   /**
+   * Whether author-specified borders / backgrounds disable theming for a given
+   * appearance value.
+   */
+  static bool AuthorSpecifiedBorderBackgroundDisablesTheming(
+      mozilla::StyleAppearance);
+
+  /**
    * Transforms a list of CSSPoints from aFromFrame to aToFrame, taking into
    * account all relevant transformations on the frames up to (but excluding)
    * their nearest common ancestor.
