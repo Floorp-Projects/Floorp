@@ -578,6 +578,62 @@ interface nsINavHistoryObserver : nsISupports
    * ahead and update UI, etc.
    */
   void onEndUpdateBatch();
+
+  /**
+   * Removed by the user.
+   */
+  const unsigned short REASON_DELETED = 0;
+  /**
+   * Removed by automatic expiration.
+   */
+  const unsigned short REASON_EXPIRED = 1;
+
+  /**
+   * This page and all of its visits are being deleted. Note: the page may not
+   * necessarily have actually existed for this function to be called.
+   *
+   * Delete notifications are only 99.99% accurate. Batch delete operations
+   * must be done in two steps, so first come notifications, then a bulk
+   * delete. If there is some error in the middle (for example, out of memory)
+   * then you'll get a notification and it won't get deleted. There's no easy
+   * way around this.
+   *
+   * @param aURI
+   *        The URI that was deleted.
+   * @param aGUID
+   *        The unique ID associated with the page.
+   * @param aReason
+   *        Indicates the reason for the removal.  see REASON_* constants.
+   */
+  void onDeleteURI(in nsIURI aURI,
+                   in ACString aGUID,
+                   in unsigned short aReason);
+
+  /**
+   * Called when some visits of an history entry are expired.
+   *
+   * @param aURI
+   *        The page whose visits have been expired.
+   * @param aPartialRemoval
+   *        Set to true if only some of the visits for the page have been removed.
+   * @param aGUID
+   *        The unique ID associated with the page.
+   *
+   * @note: when all visits for a page are expired and also the full page entry
+   *        is expired, you will only get an onDeleteURI notification.  If a
+   *        page entry is removed, then you can be sure that we don't have
+   *        anymore visits for it.
+   * @param aReason
+   *        Indicates the reason for the removal.  see REASON_* constants.
+   * @param aTransitionType
+   *        If it's a valid TRANSITION_* value, all visits of the specified type
+   *        have been removed.
+   */
+  void onDeleteVisits(in nsIURI aURI,
+                      in boolean aPartialRemoval,
+                      in ACString aGUID,
+                      in unsigned short aReason,
+                      in unsigned long aTransitionType);
 };
 
 

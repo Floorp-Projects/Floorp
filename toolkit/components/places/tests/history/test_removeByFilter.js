@@ -58,12 +58,15 @@ add_task(async function test_removeByFilter() {
     await checkBeforeRemove();
 
     // Take care of any observers (due to bookmarks)
-    let { placesEventListener, promiseObserved } = getObserverPromise(
+    let { observer, placesEventListener, promiseObserved } = getObserverPromise(
       bookmarkedUri
     );
+    if (observer) {
+      PlacesUtils.history.addObserver(observer, false);
+    }
     if (placesEventListener) {
       PlacesObservers.addListener(
-        ["page-title-changed", "history-cleared", "page-removed"],
+        ["page-title-changed", "history-cleared"],
         placesEventListener
       );
     }
@@ -88,10 +91,14 @@ add_task(async function test_removeByFilter() {
     }
     await checkAfterRemove();
     await promiseObserved;
-    if (placesEventListener) {
+    if (observer) {
+      PlacesUtils.history.removeObserver(observer);
+      // Remove the added bookmarks as they interfere with following tests
       await PlacesUtils.bookmarks.eraseEverything();
+    }
+    if (placesEventListener) {
       PlacesObservers.removeListener(
-        ["page-title-changed", "history-cleared", "page-removed"],
+        ["page-title-changed", "history-cleared"],
         placesEventListener
       );
     }
@@ -449,10 +456,43 @@ add_task(async function test_chunking() {
 
 function getObserverPromise(bookmarkedUri) {
   if (!bookmarkedUri) {
-    return { promiseObserved: Promise.resolve() };
+    return { observer: null, promiseObserved: Promise.resolve() };
   }
+  let observer;
   let placesEventListener;
   let promiseObserved = new Promise((resolve, reject) => {
+    observer = {
+      onBeginUpdateBatch() {},
+      onEndUpdateBatch() {},
+      onDeleteURI(aURI) {
+        try {
+          Assert.notEqual(
+            aURI.spec,
+            bookmarkedUri,
+            "Bookmarked URI should not be deleted"
+          );
+        } finally {
+          resolve();
+        }
+      },
+      onDeleteVisits(aURI, aPartialRemoval) {
+        try {
+          Assert.equal(
+            aPartialRemoval,
+            false,
+            "Observing onDeleteVisits deletes all visits"
+          );
+          Assert.equal(
+            aURI.spec,
+            bookmarkedUri,
+            "Bookmarked URI should have all visits removed but not the page itself"
+          );
+        } finally {
+          resolve();
+        }
+      },
+    };
+
     placesEventListener = events => {
       for (const event of events) {
         switch (event.type) {
@@ -464,31 +504,9 @@ function getObserverPromise(bookmarkedUri) {
             reject(new Error("Unexpected history-cleared event happens"));
             break;
           }
-          case "page-removed": {
-            if (event.isRemovedFromStore) {
-              Assert.notEqual(
-                event.url,
-                bookmarkedUri,
-                "Bookmarked URI should not be deleted"
-              );
-            } else {
-              Assert.equal(
-                event.isPartialVisistsRemoval,
-                false,
-                "Observing page-removed deletes all visits"
-              );
-              Assert.equal(
-                event.url,
-                bookmarkedUri,
-                "Bookmarked URI should have all visits removed but not the page itself"
-              );
-            }
-            resolve();
-            break;
-          }
         }
       }
     };
   });
-  return { placesEventListener, promiseObserved };
+  return { observer, placesEventListener, promiseObserved };
 }

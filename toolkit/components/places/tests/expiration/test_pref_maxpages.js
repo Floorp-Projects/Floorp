@@ -84,23 +84,23 @@ add_task(async function test_pref_maxpages() {
       await PlacesTestUtils.addVisits({ uri: uri(page), visitDate: now-- });
     }
 
-    const listener = events => {
-      for (const event of events) {
-        print("page-removed " + event.url);
-        Assert.equal(event.type, "page-removed");
-        Assert.ok(event.isRemovedFromStore);
-        Assert.equal(event.reason, PlacesVisitRemoved.REASON_EXPIRED);
-        currentTest.receivedNotifications++;
-      }
+    // Observe history.
+    let historyObserver = new NavHistoryObserver();
+    historyObserver.onDeleteURI = aURI => {
+      print("onDeleteURI " + aURI.spec);
+      currentTest.receivedNotifications++;
     };
-    PlacesObservers.addListener(["page-removed"], listener);
+    historyObserver.onDeleteVisits = (aURI, aPartialRemoval) => {
+      print("onDeleteVisits " + aURI.spec + " " + aPartialRemoval);
+    };
+    PlacesUtils.history.addObserver(historyObserver);
 
     setMaxPages(currentTest.maxPages);
 
     // Expire now.
     await promiseForceExpirationStep(-1);
 
-    PlacesObservers.removeListener(["page-removed"], listener);
+    PlacesUtils.history.removeObserver(historyObserver, false);
 
     Assert.equal(
       currentTest.receivedNotifications,
