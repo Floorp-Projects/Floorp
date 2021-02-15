@@ -723,7 +723,6 @@ bool ChunkPool::isSorted() const {
 }
 
 #ifdef DEBUG
-
 bool ChunkPool::contains(TenuredChunk* chunk) const {
   verify();
   for (TenuredChunk* cursor = head_; cursor; cursor = cursor->info.next) {
@@ -745,48 +744,6 @@ bool ChunkPool::verify() const {
   MOZ_ASSERT(count_ == count);
   return true;
 }
-
-void GCRuntime::verifyAllChunks() {
-  AutoLockGC lock(this);
-  fullChunks(lock).verifyChunks();
-  availableChunks(lock).verifyChunks();
-  emptyChunks(lock).verifyChunks();
-}
-
-void ChunkPool::verifyChunks() const {
-  for (TenuredChunk* chunk = head_; chunk; chunk = chunk->info.next) {
-    chunk->verify();
-  }
-}
-
-void TenuredChunk::verify() const {
-  size_t freeCount = 0;
-  size_t freeCommittedCount = 0;
-  for (size_t i = 0; i < ArenasPerChunk; ++i) {
-    if (decommittedArenas[i]) {
-      // Free but not committed.
-      freeCount++;
-      continue;
-    }
-
-    if (!arenas[i].allocated()) {
-      // Free and committed.
-      freeCount++;
-      freeCommittedCount++;
-    }
-  }
-
-  MOZ_ASSERT(freeCount == info.numArenasFree);
-  MOZ_ASSERT(freeCommittedCount == info.numArenasFreeCommitted);
-
-  size_t freeListCount = 0;
-  for (Arena* arena = info.freeArenasHead; arena; arena = arena->next) {
-    freeListCount++;
-  }
-
-  MOZ_ASSERT(freeListCount == info.numArenasFreeCommitted);
-}
-
 #endif
 
 void ChunkPool::Iter::next() {
@@ -895,31 +852,16 @@ bool TenuredChunk::decommitOneFreeArena(GCRuntime* gc, AutoLockGC& lock) {
 }
 
 void TenuredChunk::decommitFreeArenasWithoutUnlocking(const AutoLockGC& lock) {
-  info.freeArenasHead = nullptr;
-  Arena** freeCursor = &info.freeArenasHead;
-
   for (size_t i = 0; i < ArenasPerChunk; ++i) {
-    Arena* arena = &arenas[i];
-    if (decommittedArenas[i] || arena->allocated()) {
+    if (decommittedArenas[i] || arenas[i].allocated()) {
       continue;
     }
 
-    if (js::oom::ShouldFailWithOOM() ||
-        !MarkPagesUnusedSoft(arena, ArenaSize)) {
-      *freeCursor = arena;
-      freeCursor = &arena->next;
-      continue;
+    if (MarkPagesUnusedSoft(&arenas[i], ArenaSize)) {
+      info.numArenasFreeCommitted--;
+      decommittedArenas[i] = true;
     }
-
-    info.numArenasFreeCommitted--;
-    decommittedArenas[i] = true;
   }
-
-  *freeCursor = nullptr;
-
-#ifdef DEBUG
-  verify();
-#endif
 }
 
 void TenuredChunk::updateChunkListAfterAlloc(GCRuntime* gc,
@@ -5649,10 +5591,6 @@ void GCRuntime::beginSweepPhase(JS::GCReason reason, AutoGCSession& session) {
   MOZ_ASSERT(!markOnBackgroundThreadDuringSweeping);
 
   releaseHeldRelocatedArenas();
-
-#ifdef DEBUG
-  verifyAllChunks();
-#endif
 
 #ifdef JS_GC_ZEAL
   computeNonIncrementalMarkingForValidation(session);
