@@ -88,9 +88,9 @@ async function testFullpageClipboardScrollbar(hud) {
   const command = `:screenshot --fullpage --clipboard ${dpr}`;
   await executeScreenshotClipboardCommand(hud, command);
   const contentSize = await getContentSize();
-  const scrollbarSize = await getScrollbarSize();
   const imgSize = await getImageSizeFromClipboard();
 
+  const scrollbarSize = await getScrollbarSize();
   is(
     imgSize.width,
     contentSize.innerWidth +
@@ -132,6 +132,7 @@ async function createScrollbarOverflow() {
   // change System Preferences -> General -> Show scroll bars to Always.
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.document.body.classList.add("overflow");
+    return content.windowUtils.flushLayoutWithoutThrottledAnimations();
   });
 
   // Let's wait for next tick so scrollbars have the time to be rendered
