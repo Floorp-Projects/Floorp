@@ -552,6 +552,7 @@ already_AddRefed<InternalHeaders> InternalHeaders::CORSHeaders(
     } else if (entry.mName.EqualsIgnoreCase("cache-control") ||
                entry.mName.EqualsIgnoreCase("content-language") ||
                entry.mName.EqualsIgnoreCase("content-type") ||
+               entry.mName.EqualsIgnoreCase("content-length") ||
                entry.mName.EqualsIgnoreCase("expires") ||
                entry.mName.EqualsIgnoreCase("last-modified") ||
                entry.mName.EqualsIgnoreCase("pragma") ||
