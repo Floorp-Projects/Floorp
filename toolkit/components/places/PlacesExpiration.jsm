@@ -628,6 +628,14 @@ nsPlacesExpiration.prototype = {
     // Dispatch expiration notifications to history.
     if (wholeEntry) {
       notify(observers, "onDeleteURI", [uri, guid, reason]);
+      PlacesObservers.notifyListeners([
+        new PlacesVisitRemoved({
+          url: uri.spec,
+          pageGuid: guid,
+          reason: PlacesVisitRemoved.REASON_EXPIRED,
+          isRemovedFromStore: true,
+        }),
+      ]);
     } else {
       notify(observers, "onDeleteVisits", [
         uri,
