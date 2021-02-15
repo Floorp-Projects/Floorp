@@ -40,6 +40,10 @@ function startProfiler(callersSettings) {
   );
 }
 
+function startProfilerForMarkerTests() {
+  startProfiler({ features: ["threads", "nostacksampling"] });
+}
+
 /**
  * This is a helper function be able to run `await wait(500)`. Unfortunately
  * this is needed as the act of collecting functions relies on the periodic
