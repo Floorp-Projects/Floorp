@@ -206,16 +206,17 @@ function waitForNavigation(target) {
   });
 }
 
-function toggleCache(toolbox, disabled) {
-  const options = { cacheDisabled: disabled, performReload: true };
+async function toggleCache(toolbox, disabled) {
+  const options = { cacheDisabled: disabled };
   const navigationFinished = waitForNavigation(toolbox.target);
 
   // Disable the cache for any toolbox that it is opened from this point on.
   Services.prefs.setBoolPref("devtools.cache.disabled", disabled);
 
-  return toolbox.targetList
-    .updateConfiguration(options)
-    .then(() => navigationFinished);
+  await toolbox.targetList.updateConfiguration(options);
+  await toolbox.target.reload();
+
+  await navigationFinished;
 }
 
 /**

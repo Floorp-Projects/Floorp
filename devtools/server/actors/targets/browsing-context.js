@@ -1275,14 +1275,8 @@ const browsingContextTargetPrototype = {
     if (typeof options.restoreFocus == "boolean") {
       this._restoreFocus = options.restoreFocus;
     }
-    // Reload if:
-    //  - there's an explicit `performReload` flag and it's true
-    //  - there's no `performReload` flag, but it makes sense to do so
-    const hasExplicitReloadFlag = "performReload" in options;
-    if (
-      (hasExplicitReloadFlag && options.performReload) ||
-      (!hasExplicitReloadFlag && reload)
-    ) {
+
+    if (reload) {
       this.reload();
     }
   },
