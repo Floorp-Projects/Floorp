@@ -52,7 +52,6 @@ function StyleInspectorMenu(view, { isRuleView = false } = {}) {
   this.styleWindow = this.view.styleWindow || this.view.doc.defaultView;
   this.isRuleView = isRuleView;
 
-  this._onAddNewRule = this._onAddNewRule.bind(this);
   this._onCopy = this._onCopy.bind(this);
   this._onCopyColor = this._onCopyColor.bind(this);
   this._onCopyImageDataUrl = this._onCopyImageDataUrl.bind(this);
@@ -248,9 +247,7 @@ StyleInspectorMenu.prototype = {
         "styleinspector.contextmenu.addNewRule"
       ),
       accesskey: STYLE_INSPECTOR_L10N.getStr(addRuleAccessKey),
-      click: () => {
-        this._onAddNewRule();
-      },
+      click: () => this.view._onAddRule(),
       visible: this.isRuleView,
       disabled: !this.isRuleView || this.inspector.selection.isAnonymousNode(),
     });
@@ -421,15 +418,6 @@ StyleInspectorMenu.prototype = {
   },
 
   /**
-   * Add a new rule to the current element.
-   */
-  async _onAddNewRule() {
-    this.view.isNewRulesView
-      ? await this.view.onAddRule()
-      : this.view._onAddRule();
-  },
-
-  /**
    * Copy the rule source location of the current clicked node.
    */
   _onCopyLocation: function() {
@@ -479,10 +467,7 @@ StyleInspectorMenu.prototype = {
    */
   _onCopyRule: function() {
     const node = this._getClickedNode();
-    const elementStyle = this.view.isNewRulesView
-      ? this.view.elementStyle
-      : this.view._elementStyle;
-    const rule = getRuleFromNode(node, elementStyle);
+    const rule = getRuleFromNode(node, this.view._elementStyle);
     clipboardHelper.copyString(rule.stringifyRule());
   },
 

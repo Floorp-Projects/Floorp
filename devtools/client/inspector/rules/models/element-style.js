@@ -74,17 +74,6 @@ class ElementStyle {
     if (!("disabled" in this.store)) {
       this.store.disabled = new WeakMap();
     }
-
-    this.onRefresh = this.onRefresh.bind(this);
-
-    if (this.ruleView.isNewRulesView) {
-      this.pageStyle.on("stylesheet-updated", this.onRefresh);
-      this.ruleView.inspector.styleChangeTracker.on(
-        "style-changed",
-        this.onRefresh
-      );
-      this.ruleView.selection.on("pseudoclass", this.onRefresh);
-    }
   }
 
   get unusedCssEnabled() {
@@ -111,15 +100,6 @@ class ElementStyle {
       }
 
       rule.destroy();
-    }
-
-    if (this.ruleView.isNewRulesView) {
-      this.pageStyle.off("stylesheet-updated", this.onRefresh);
-      this.ruleView.inspector.styleChangeTracker.off(
-        "style-changed",
-        this.onRefresh
-      );
-      this.ruleView.selection.off("pseudoclass", this.onRefresh);
     }
   }
 
@@ -171,10 +151,6 @@ class ElementStyle {
         this.onRuleUpdated();
 
         this._sortRulesForPseudoElement();
-
-        if (this.ruleView.isNewRulesView) {
-          this.subscribeRulesToLocationChange();
-        }
 
         // We're done with the previous list of rules.
         for (const r of existingRules) {
@@ -776,15 +752,6 @@ class ElementStyle {
   }
 
   /**
-   * Subscribes all the rules to location changes.
-   */
-  subscribeRulesToLocationChange() {
-    for (const rule of this.rules) {
-      rule.subscribeToLocationChange();
-    }
-  }
-
-  /**
    * Toggles the enabled state of the given CSS declaration.
    *
    * @param  {String} ruleId
@@ -848,24 +815,6 @@ class ElementStyle {
   getVariable(name, pseudo = "") {
     const variables = this.variablesMap.get(pseudo);
     return variables ? variables.get(name) : null;
-  }
-
-  /**
-   * Handler for "stylesheet-updated", "style-changed" and "pseudoclass" events.
-   * Refreshes the list of rules on the page.
-   */
-  async onRefresh() {
-    // Repopulate the element style once the current modifications are done.
-    const promises = [];
-    for (const rule of this.rules) {
-      if (rule._applyingModifications) {
-        promises.push(rule._applyingModifications);
-      }
-    }
-
-    await Promise.all(promises);
-    await this.populate();
-    this._changed();
   }
 }
 
