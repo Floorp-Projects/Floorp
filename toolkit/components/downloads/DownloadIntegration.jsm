@@ -1233,7 +1233,10 @@ var DownloadHistoryObserver = function(aList) {
   const placesObserver = new PlacesWeakCallbackWrapper(
     this.handlePlacesEvents.bind(this)
   );
-  PlacesObservers.addListener(["history-cleared"], placesObserver);
+  PlacesObservers.addListener(
+    ["history-cleared", "page-removed"],
+    placesObserver
+  );
 };
 
 DownloadHistoryObserver.prototype = {
@@ -1249,6 +1252,14 @@ DownloadHistoryObserver.prototype = {
       switch (event.type) {
         case "history-cleared": {
           this._list.removeFinished();
+          break;
+        }
+        case "page-removed": {
+          if (event.isRemovedFromStore) {
+            this._list.removeFinished(
+              download => event.url === download.source.url
+            );
+          }
           break;
         }
       }

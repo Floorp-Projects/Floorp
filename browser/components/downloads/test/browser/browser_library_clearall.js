@@ -50,15 +50,19 @@ async function testClearingDownloads(clearCallback) {
   await promiseLength;
 
   let receivedNotifications = [];
-  let promiseNotification = PlacesTestUtils.waitForNotification(
-    "onDeleteURI",
-    uri => {
-      if (DOWNLOAD_DATA.includes(uri.spec)) {
-        receivedNotifications.push(uri.spec);
+  const promiseNotification = PlacesTestUtils.waitForNotification(
+    "page-removed",
+    events => {
+      for (const { url, isRemovedFromStore } of events) {
+        Assert.ok(isRemovedFromStore);
+
+        if (DOWNLOAD_DATA.includes(url)) {
+          receivedNotifications.push(url);
+        }
       }
       return receivedNotifications.length == DOWNLOAD_DATA.length;
     },
-    "history"
+    "places"
   );
 
   promiseLength = waitForChildrenLength(listbox, 0);
