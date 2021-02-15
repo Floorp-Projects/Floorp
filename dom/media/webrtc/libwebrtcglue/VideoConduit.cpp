@@ -1471,28 +1471,27 @@ MediaConduitErrorCode WebrtcVideoConduit::ReceivedRTPPacket(
       // we "switch" here immediately, but buffer until the queue is released
       mRecvSSRC = header.ssrc;
 
-      // Ensure lamba captures refs
-      NS_DispatchToMainThread(NS_NewRunnableFunction(
-          "WebrtcVideoConduit::SetRemoteSSRC",
-          [this, self = RefPtr<WebrtcVideoConduit>(this),
-           ssrc = header.ssrc]() mutable {
-            // TODO: This is problematic with rtx enabled, we don't know if
-            // new ssrc is for rtx or not. This is fixed in a later patch in
-            // this series.
-            SetRemoteSSRC(
-                ssrc, 0);  // this will likely re-create the VideoReceiveStream
-            // We want to unblock the queued packets on the original thread
-            mStsThread->Dispatch(NS_NewRunnableFunction(
-                "WebrtcVideoConduit::QueuedPacketsHandler",
-                [this, self = RefPtr<WebrtcVideoConduit>(this),
-                 ssrc]() mutable {
-                  if (ssrc != mRecvSSRC) {
-                    // this is an intermediate switch; another is in-flight
-                    return;
-                  }
-                  mRtpPacketQueue.DequeueAll(this);
-                }));
-          }));
+      InvokeAsync(GetMainThreadSerialEventTarget(), __func__,
+                  [this, self = RefPtr<WebrtcVideoConduit>(this),
+                   ssrc = header.ssrc]() mutable {
+                    // TODO: This is problematic with rtx
+                    // enabled, we don't know if new ssrc is for
+                    // rtx or not. This will likely re-create the
+                    // VideoReceiveStream
+                    SetRemoteSSRC(ssrc, 0);
+                    return GenericPromise::CreateAndResolve(true, __func__);
+                  })
+          ->Then(mStsThread, __func__,
+                 [this, self = RefPtr<WebrtcVideoConduit>(this),
+                  ssrc = header.ssrc]() mutable {
+                   // We want to unblock the queued packets on the original
+                   // thread
+                   if (ssrc != mRecvSSRC) {
+                     // this is an intermediate switch; another is in-flight
+                     return;
+                   }
+                   mRtpPacketQueue.DequeueAll(this);
+                 });
       return kMediaConduitNoError;
     }
   }
