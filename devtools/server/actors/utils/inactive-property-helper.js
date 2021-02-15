@@ -374,6 +374,26 @@ class InactivePropertyHelper {
         msgId: "inactive-css-not-table",
         numFixProps: 1,
       },
+      // scroll-padding-* properties used on non-scrollable elements.
+      {
+        invalidProperties: [
+          "scroll-padding",
+          "scroll-padding-top",
+          "scroll-padding-right",
+          "scroll-padding-bottom",
+          "scroll-padding-left",
+          "scroll-padding-block",
+          "scroll-padding-block-end",
+          "scroll-padding-block-start",
+          "scroll-padding-inline",
+          "scroll-padding-inline-end",
+          "scroll-padding-inline-start",
+        ],
+        when: () => !this.isScrollContainer,
+        fixId: "inactive-scroll-padding-when-not-scroll-container-fix",
+        msgId: "inactive-scroll-padding-when-not-scroll-container",
+        numFixProps: 1,
+      },
     ];
   }
 
@@ -791,6 +811,24 @@ class InactivePropertyHelper {
    */
   get isFloated() {
     return this.style && this.style.cssFloat !== "none";
+  }
+
+  /**
+   * Check if the current node is scrollable
+   */
+  get isScrollContainer() {
+    // If `overflow` doesn't contain the values `visible` or `clip`, it is a scroll container.
+    // While `hidden` doesn't allow scrolling via a user interaction, the element can
+    // still be scrolled programmatically.
+    // See https://www.w3.org/TR/css-overflow-3/#overflow-properties.
+    const overflow = computedStyle(this.node).overflow;
+    // `overflow` is a shorthand for `overflow-x` and `overflow-y`
+    // (and with that also for `overflow-inline` and `overflow-block`),
+    // so may hold two values.
+    const overflowValues = overflow.split(" ");
+    return !(
+      overflowValues.includes("visible") || overflowValues.includes("clip")
+    );
   }
 
   /**
