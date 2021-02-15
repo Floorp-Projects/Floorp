@@ -611,6 +611,7 @@ var PlacesProvider = {
         "page-title-changed",
         "history-cleared",
         "pages-rank-changed",
+        "page-removed",
       ],
       this._placesObserver
     );
@@ -746,6 +747,12 @@ var PlacesProvider = {
         }
         case "pages-rank-changed": {
           this.onManyFrecenciesChanged();
+          break;
+        }
+        case "page-removed": {
+          if (event.isRemovedFromStore) {
+            this.onDeleteURI(event.url, event.pageGuid, event.reason);
+          }
           break;
         }
       }

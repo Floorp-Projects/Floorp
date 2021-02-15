@@ -19,6 +19,7 @@
 #include "nsQueryObject.h"
 #include "mozilla/dom/PlacesObservers.h"
 #include "mozilla/dom/PlacesVisit.h"
+#include "mozilla/dom/PlacesVisitRemoved.h"
 #include "mozilla/dom/PlacesVisitTitle.h"
 
 #include "nsCycleCollectionParticipant.h"
@@ -3513,6 +3514,7 @@ void nsNavHistoryResult::StopObserving() {
       mIsHistoryObserver = false;
     }
     events.AppendElement(PlacesEventType::History_cleared);
+    events.AppendElement(PlacesEventType::Page_removed);
   }
   if (mIsHistoryDetailsObserver) {
     events.AppendElement(PlacesEventType::Page_visited);
@@ -3548,6 +3550,7 @@ void nsNavHistoryResult::AddHistoryObserver(
 
     AutoTArray<PlacesEventType, 3> events;
     events.AppendElement(PlacesEventType::History_cleared);
+    events.AppendElement(PlacesEventType::Page_removed);
     if (!mIsHistoryDetailsObserver) {
       events.AppendElement(PlacesEventType::Page_visited);
       events.AppendElement(PlacesEventType::Page_title_changed);
@@ -4201,6 +4204,29 @@ void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
       }
       case PlacesEventType::History_cleared: {
         ENUMERATE_HISTORY_OBSERVERS(OnClearHistory());
+        break;
+      }
+      case PlacesEventType::Page_removed: {
+        const PlacesVisitRemoved* removeEvent = event->AsPlacesVisitRemoved();
+        if (NS_WARN_IF(!removeEvent)) {
+          continue;
+        }
+
+        nsCOMPtr<nsIURI> uri;
+        MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), removeEvent->mUrl));
+        if (!uri) {
+          continue;
+        }
+
+        if (removeEvent->mIsRemovedFromStore) {
+          ENUMERATE_HISTORY_OBSERVERS(
+              OnDeleteURI(uri, removeEvent->mPageGuid, removeEvent->mReason));
+        } else {
+          ENUMERATE_HISTORY_OBSERVERS(
+              OnDeleteVisits(uri, removeEvent->mIsPartialVisistsRemoval,
+                             removeEvent->mPageGuid, removeEvent->mReason,
+                             removeEvent->mTransitionType));
+        }
         break;
       }
       default: {

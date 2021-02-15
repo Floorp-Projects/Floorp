@@ -122,7 +122,10 @@ var PageThumbs = {
       this._placesObserver = new PlacesWeakCallbackWrapper(
         this.handlePlacesEvents.bind(this)
       );
-      PlacesObservers.addListener(["history-cleared"], this._placesObserver);
+      PlacesObservers.addListener(
+        ["history-cleared", "page-removed"],
+        this._placesObserver
+      );
 
       // Migrate the underlying storage, if needed.
       PageThumbsStorageMigrator.migrate();
@@ -135,6 +138,12 @@ var PageThumbs = {
       switch (event.type) {
         case "history-cleared": {
           PageThumbsStorage.wipe();
+          break;
+        }
+        case "page-removed": {
+          if (event.isRemovedFromStore) {
+            PageThumbsStorage.remove(event.url);
+          }
           break;
         }
       }

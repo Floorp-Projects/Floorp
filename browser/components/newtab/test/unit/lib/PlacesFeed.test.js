@@ -127,7 +127,12 @@ describe("PlacesFeed", () => {
       );
       assert.calledWith(
         global.PlacesUtils.observers.addListener,
-        ["bookmark-added", "bookmark-removed", "history-cleared"],
+        [
+          "bookmark-added",
+          "bookmark-removed",
+          "history-cleared",
+          "page-removed",
+        ],
         feed.placesObserver.handlePlacesEvent
       );
       assert.calledWith(global.Services.obs.addObserver, feed, BLOCKED_EVENT);
@@ -149,7 +154,12 @@ describe("PlacesFeed", () => {
       );
       assert.calledWith(
         global.PlacesUtils.observers.removeListener,
-        ["bookmark-added", "bookmark-removed", "history-cleared"],
+        [
+          "bookmark-added",
+          "bookmark-removed",
+          "history-cleared",
+          "page-removed",
+        ],
         feed.placesObserver.handlePlacesEvent
       );
       assert.calledWith(
@@ -752,16 +762,6 @@ describe("PlacesFeed", () => {
     it("should have a QueryInterface property", () => {
       assert.property(observer, "QueryInterface");
     });
-    describe("#onDeleteURI", () => {
-      it("should dispatch a PLACES_LINK_DELETED action with the right url", async () => {
-        await observer.onDeleteURI({ spec: "foo.com" });
-
-        assert.calledWith(dispatch, {
-          type: at.PLACES_LINK_DELETED,
-          data: { url: "foo.com" },
-        });
-      });
-    });
     describe("Other empty methods (to keep code coverage happy)", () => {
       it("should have a various empty functions for xpconnect happiness", () => {
         observer.onBeginUpdateBatch();
@@ -847,6 +847,23 @@ describe("PlacesFeed", () => {
         const args = [{ type: "history-cleared" }];
         await observer.handlePlacesEvent(args);
         assert.calledWith(dispatch, { type: at.PLACES_HISTORY_CLEARED });
+      });
+    });
+
+    describe("#page-removed", () => {
+      it("should dispatch a PLACES_LINK_DELETED action with the right url", async () => {
+        const args = [
+          {
+            type: "page-removed",
+            url: "foo.com",
+            isRemovedFromStore: true,
+          },
+        ];
+        await observer.handlePlacesEvent(args);
+        assert.calledWith(dispatch, {
+          type: at.PLACES_LINK_DELETED,
+          data: { url: "foo.com" },
+        });
       });
     });
 
