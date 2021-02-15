@@ -10,6 +10,8 @@ const { BrowserTestUtils } = ChromeUtils.import(
 );
 
 const BASE_URL = "http://example.com/browser/tools/profiler/tests/browser/";
+const BASE_URL_HTTPS =
+  "https://example.com/browser/tools/profiler/tests/browser/";
 
 registerCleanupFunction(() => {
   if (Services.profiler.IsActive()) {
