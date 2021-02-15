@@ -28,6 +28,8 @@ add_task(async function() {
         is(Services.focus.focusedWindow, win, "New window should be focused");
       }
 
+      info("re-focusing the original window");
+
       {
         let focusBack = BrowserTestUtils.waitForEvent(window, "focus", true);
         window.focus();
@@ -35,9 +37,12 @@ add_task(async function() {
         is(Services.focus.focusedWindow, window, "should focus back");
       }
 
+      info("Clicking on the second link.");
+
       {
         let focus = BrowserTestUtils.waitForEvent(win, "focus", true);
         await BrowserTestUtils.synthesizeMouseAtCenter("#link-2", {}, browser);
+        info("Waiting for re-focus of the opened window.");
         await focus;
       }
 
