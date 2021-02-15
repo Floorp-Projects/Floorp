@@ -618,11 +618,9 @@ OptionsPanel.prototype = {
   _disableJSClicked: function(event) {
     const checked = event.target.checked;
 
-    const options = {
+    this.toolbox.targetList.updateConfiguration({
       javascriptEnabled: !checked,
-    };
-
-    this.target.reconfigure({ options });
+    });
   },
 
   destroy: function() {

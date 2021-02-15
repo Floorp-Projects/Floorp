@@ -261,6 +261,7 @@ export type TargetList = {
   unwatchTargets: (Array<string>, Function, Function) => void,
   getAllTargets: (Array<string>) => Array<Target>,
   targetFront: Target,
+  updateConfiguration: Object => Promise<*>,
   hasTargetWatcherSupport: string => boolean,
   watcherFront: WatcherFront,
   TYPES: {

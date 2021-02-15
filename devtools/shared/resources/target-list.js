@@ -583,6 +583,16 @@ class TargetList extends EventEmitter {
   }
 
   /**
+   * Update the DevTools configuration on the server.
+   * TODO: This API is temporarily on the TargetList but should move to a
+   * command as soon as https://bugzilla.mozilla.org/show_bug.cgi?id=1691681
+   * lands.
+   */
+  async updateConfiguration(configuration) {
+    await this.targetFront.reconfigure({ options: configuration });
+  }
+
+  /**
    * Check if JavaScript is currently enabled.
    * TODO: This API is temporarily on the TargetList but should move to a
    * command as soon as https://bugzilla.mozilla.org/show_bug.cgi?id=1691681
