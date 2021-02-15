@@ -139,14 +139,6 @@ search-results-help-link = Need help? Visit <a data-l10n-name="url">{ -brand-sho
 
 startup-header = Startup
 
-# { -brand-short-name } will be 'Firefox Developer Edition',
-# since this setting is only exposed in Firefox Developer Edition
-separate-profile-mode =
-    .label = Allow { -brand-short-name } and Firefox to run at the same time
-use-firefox-sync = Tip: This uses separate profiles. Use { -sync-brand-short-name } to share data between them.
-get-started-not-logged-in = Sign in to { -sync-brand-short-name }…
-get-started-configured = Open { -sync-brand-short-name } preferences
-
 always-check-default =
     .label = Always check if { -brand-short-name } is your default browser
     .accesskey = y
