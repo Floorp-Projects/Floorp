@@ -216,7 +216,7 @@ class StorageDBThread final {
 
     // Method responsible for coalescing redundant update operations with the
     // same |Target()| or clear operations with the same or matching |Origin()|
-    void Add(DBOperation* aOperation);
+    void Add(UniquePtr<DBOperation> aOperation);
 
     // True when there are some scheduled operations to flush on disk
     bool HasTasks() const;
@@ -330,7 +330,7 @@ class StorageDBThread final {
 
   virtual void AsyncPreload(LocalStorageCacheBridge* aCache,
                             bool aPriority = false) {
-    InsertDBOp(new DBOperation(
+    InsertDBOp(MakeUnique<DBOperation>(
         aPriority ? DBOperation::opPreloadUrgent : DBOperation::opPreload,
         aCache));
   }
@@ -339,45 +339,46 @@ class StorageDBThread final {
                            bool aForce = false);
 
   virtual void AsyncGetUsage(StorageUsageBridge* aUsage) {
-    InsertDBOp(new DBOperation(DBOperation::opGetUsage, aUsage));
+    InsertDBOp(MakeUnique<DBOperation>(DBOperation::opGetUsage, aUsage));
   }
 
   virtual nsresult AsyncAddItem(LocalStorageCacheBridge* aCache,
                                 const nsAString& aKey,
                                 const nsAString& aValue) {
     return InsertDBOp(
-        new DBOperation(DBOperation::opAddItem, aCache, aKey, aValue));
+        MakeUnique<DBOperation>(DBOperation::opAddItem, aCache, aKey, aValue));
   }
 
   virtual nsresult AsyncUpdateItem(LocalStorageCacheBridge* aCache,
                                    const nsAString& aKey,
                                    const nsAString& aValue) {
-    return InsertDBOp(
-        new DBOperation(DBOperation::opUpdateItem, aCache, aKey, aValue));
+    return InsertDBOp(MakeUnique<DBOperation>(DBOperation::opUpdateItem, aCache,
+                                              aKey, aValue));
   }
 
   virtual nsresult AsyncRemoveItem(LocalStorageCacheBridge* aCache,
                                    const nsAString& aKey) {
-    return InsertDBOp(new DBOperation(DBOperation::opRemoveItem, aCache, aKey));
+    return InsertDBOp(
+        MakeUnique<DBOperation>(DBOperation::opRemoveItem, aCache, aKey));
   }
 
   virtual nsresult AsyncClear(LocalStorageCacheBridge* aCache) {
-    return InsertDBOp(new DBOperation(DBOperation::opClear, aCache));
+    return InsertDBOp(MakeUnique<DBOperation>(DBOperation::opClear, aCache));
   }
 
   virtual void AsyncClearAll() {
-    InsertDBOp(new DBOperation(DBOperation::opClearAll));
+    InsertDBOp(MakeUnique<DBOperation>(DBOperation::opClearAll));
   }
 
   virtual void AsyncClearMatchingOrigin(const nsACString& aOriginNoSuffix) {
-    InsertDBOp(
-        new DBOperation(DBOperation::opClearMatchingOrigin, aOriginNoSuffix));
+    InsertDBOp(MakeUnique<DBOperation>(DBOperation::opClearMatchingOrigin,
+                                       aOriginNoSuffix));
   }
 
   virtual void AsyncClearMatchingOriginAttributes(
       const OriginAttributesPattern& aPattern) {
-    InsertDBOp(new DBOperation(DBOperation::opClearMatchingOriginAttributes,
-                               aPattern));
+    InsertDBOp(MakeUnique<DBOperation>(
+        DBOperation::opClearMatchingOriginAttributes, aPattern));
   }
 
   virtual void AsyncFlush();
@@ -443,7 +444,7 @@ class StorageDBThread final {
 
   // Helper to direct an operation to one of the arrays above;
   // also checks IsOriginClearPending for preloads
-  nsresult InsertDBOp(DBOperation* aOperation);
+  nsresult InsertDBOp(UniquePtr<DBOperation> aOperation);
 
   // Opens the database, first thing we do after start of the thread.
   nsresult OpenDatabaseConnection();

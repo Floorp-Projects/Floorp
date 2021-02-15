@@ -19,7 +19,7 @@ namespace mozilla {
 class OggCodecStore {
  public:
   OggCodecStore();
-  void Add(uint32_t serial, OggCodecState* codecState);
+  OggCodecState* Add(uint32_t serial, UniquePtr<OggCodecState> codecState);
   bool Contains(uint32_t serial);
   OggCodecState* Get(uint32_t serial);
   bool IsKnownStream(uint32_t aSerial);

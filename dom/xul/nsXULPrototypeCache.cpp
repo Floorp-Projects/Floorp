@@ -194,7 +194,7 @@ nsresult nsXULPrototypeCache::PutScript(nsIURI* aURI,
   }
 #endif
 
-  mScriptTable.Put(aURI, aScriptObject);
+  mScriptTable.Put(aURI, JS::Heap<JSScript*>{aScriptObject});
 
   return NS_OK;
 }

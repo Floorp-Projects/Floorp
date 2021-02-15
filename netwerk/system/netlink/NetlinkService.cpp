@@ -768,8 +768,8 @@ void NetlinkService::OnLinkMessage(struct nlmsghdr* aNlh) {
     if (!linkInfo) {
       LOG(("Creating new link [index=%u, name=%s, flags=%u, type=%u]",
            linkIndex, linkName.get(), link->GetFlags(), link->GetType()));
-      linkInfo = new LinkInfo(std::move(link));
-      mLinks.Put(linkIndex, linkInfo);
+      linkInfo =
+          mLinks.Put(linkIndex, MakeUnique<LinkInfo>(std::move(link))).get();
     } else {
       LOG(("Updating link [index=%u, name=%s, flags=%u, type=%u]", linkIndex,
            linkName.get(), link->GetFlags(), link->GetType()));
@@ -1049,7 +1049,7 @@ void NetlinkService::OnNeighborMessage(struct nlmsghdr* aNlh) {
       neigh->GetAsString(neighDbgStr);
       LOG(("Adding neighbor: %s", neighDbgStr.get()));
     }
-    linkInfo->mNeighbors.Put(key, neigh.release());
+    linkInfo->mNeighbors.Put(key, std::move(neigh));
   } else {
     if (LOG_ENABLED()) {
       nsAutoCString neighDbgStr;

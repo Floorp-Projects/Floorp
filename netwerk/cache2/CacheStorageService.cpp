@@ -1192,8 +1192,11 @@ void CacheStorageService::RecordMemoryOnlyEntry(CacheEntry* aEntry,
       return;
     }
 
-    entries = new CacheEntryTable(CacheEntryTable::MEMORY_ONLY);
-    sGlobalEntryTables->Put(memoryStorageID, entries);
+    entries =
+        sGlobalEntryTables
+            ->Put(memoryStorageID,
+                  MakeUnique<CacheEntryTable>(CacheEntryTable::MEMORY_ONLY))
+            .get();
     LOG(("  new memory-only storage table for %s", memoryStorageID.get()));
   }
 

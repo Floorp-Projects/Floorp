@@ -12,9 +12,10 @@ namespace mozilla {
 
 OggCodecStore::OggCodecStore() : mMonitor("CodecStore") {}
 
-void OggCodecStore::Add(uint32_t serial, OggCodecState* codecState) {
+OggCodecState* OggCodecStore::Add(uint32_t serial,
+                                  UniquePtr<OggCodecState> codecState) {
   MonitorAutoLock mon(mMonitor);
-  mCodecStates.Put(serial, codecState);
+  return mCodecStates.Put(serial, std::move(codecState)).get();
 }
 
 bool OggCodecStore::Contains(uint32_t serial) {

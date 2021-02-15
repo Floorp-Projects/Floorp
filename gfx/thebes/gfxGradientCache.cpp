@@ -132,20 +132,17 @@ class GradientCache final : public nsExpirationTracker<GradientCacheData, 4> {
     return gradient;
   }
 
-  // Returns true if we successfully register the gradient in the cache, false
-  // otherwise.
-  bool RegisterEntry(GradientCacheData* aValue) {
-    nsresult rv = AddObject(aValue);
+  void RegisterEntry(UniquePtr<GradientCacheData> aValue) {
+    nsresult rv = AddObject(aValue.get());
     if (NS_FAILED(rv)) {
       // We are OOM, and we cannot track this object. We don't want stall
       // entries in the hash table (since the expiration tracker is responsible
       // for removing the cache entries), so we avoid putting that entry in the
-      // table, which is a good things considering we are short on memory
+      // table, which is a good thing considering we are short on memory
       // anyway, we probably don't want to retain things.
-      return false;
+      return;
     }
-    mHashEntries.Put(aValue->mKey, aValue);
-    return true;
+    mHashEntries.Put(aValue->mKey, std::move(aValue));
   }
 
  protected:
@@ -190,11 +187,8 @@ already_AddRefed<GradientStops> gfxGradientCache::GetOrCreateGradientStops(
     if (!gs) {
       return nullptr;
     }
-    GradientCacheData* cached = new GradientCacheData(
-        gs, GradientCacheKey(aStops, aExtend, aDT->GetBackendType()));
-    if (!gGradientCache->RegisterEntry(cached)) {
-      delete cached;
-    }
+    gGradientCache->RegisterEntry(MakeUnique<GradientCacheData>(
+        gs, GradientCacheKey(aStops, aExtend, aDT->GetBackendType())));
   }
   return gs.forget();
 }

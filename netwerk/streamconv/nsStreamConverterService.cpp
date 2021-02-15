@@ -197,7 +197,7 @@ nsresult nsStreamConverterService::FindConverter(
   for (auto iter = mAdjacencyList.Iter(); !iter.Done(); iter.Next()) {
     const nsACString& key = iter.Key();
     MOZ_ASSERT(iter.UserData(), "no data in the table iteration");
-    lBFSTable.Put(key, new BFSTableData(key));
+    lBFSTable.Put(key, mozilla::MakeUnique<BFSTableData>(key));
   }
 
   NS_ASSERTION(lBFSTable.Count() == vertexCount,
