@@ -105,10 +105,20 @@
         for (let i = 0; i < rc; i++) {
           selection.select(0);
           let node = tree.selectedNode;
-          let promiseDeleted = PlacesTestUtils.waitForNotification("onDeleteURI",
-            uri => uri.spec == node.uri, "history");
+
+          const promiseRemoved = PlacesTestUtils.waitForNotification(
+            "page-removed",
+            events => events[0].url === node.uri,
+            "places"
+          );
+
           tree.controller.remove();
-          await promiseDeleted;
+
+          const removeEvents = await promiseRemoved;
+          ok(
+            removeEvents[0].isRemovedFromStore,
+            "isRemovedFromStore should be true"
+          );
           ok(treeView.treeIndexForNode(node) == -1, node.uri + " removed.");
           is(treeView.rowCount, rc - i - 1, "Rows count decreased");
         }

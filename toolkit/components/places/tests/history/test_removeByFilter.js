@@ -66,7 +66,7 @@ add_task(async function test_removeByFilter() {
     }
     if (placesEventListener) {
       PlacesObservers.addListener(
-        ["page-title-changed", "history-cleared"],
+        ["page-title-changed", "history-cleared", "page-removed"],
         placesEventListener
       );
     }
@@ -98,7 +98,7 @@ add_task(async function test_removeByFilter() {
     }
     if (placesEventListener) {
       PlacesObservers.removeListener(
-        ["page-title-changed", "history-cleared"],
+        ["page-title-changed", "history-cleared", "page-removed"],
         placesEventListener
       );
     }
@@ -502,6 +502,28 @@ function getObserverPromise(bookmarkedUri) {
           }
           case "history-cleared": {
             reject(new Error("Unexpected history-cleared event happens"));
+            break;
+          }
+          case "page-removed": {
+            if (event.isRemovedFromStore) {
+              Assert.notEqual(
+                event.url,
+                bookmarkedUri,
+                "Bookmarked URI should not be deleted"
+              );
+            } else {
+              Assert.equal(
+                event.isPartialVisistsRemoval,
+                false,
+                "Observing page-removed deletes all visits"
+              );
+              Assert.equal(
+                event.url,
+                bookmarkedUri,
+                "Bookmarked URI should have all visits removed but not the page itself"
+              );
+            }
+            resolve();
             break;
           }
         }
