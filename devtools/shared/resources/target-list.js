@@ -589,7 +589,12 @@ class TargetList extends EventEmitter {
    * lands.
    */
   async updateConfiguration(configuration) {
-    await this.targetFront.reconfigure({ options: configuration });
+    if (this.hasTargetWatcherSupport("target-configuration")) {
+      const targetConfigurationFront = await this.watcherFront.getTargetConfigurationActor();
+      await targetConfigurationFront.updateConfiguration(configuration);
+    } else {
+      await this.targetFront.reconfigure({ options: configuration });
+    }
   }
 
   /**
@@ -598,8 +603,15 @@ class TargetList extends EventEmitter {
    * command as soon as https://bugzilla.mozilla.org/show_bug.cgi?id=1691681
    * lands.
    */
-  isJavascriptEnabled() {
-    return !!this.targetFront._javascriptEnabled;
+  async isJavascriptEnabled(configuration) {
+    if (this.hasTargetWatcherSupport("target-configuration")) {
+      const targetConfigurationFront = await this.watcherFront.getTargetConfigurationActor();
+      return targetConfigurationFront.configuration.javascriptEnabled;
+    }
+
+    // For targets which don't support the Watcher + configuration actor, the
+    // javascriptEnabled setting can be read on the target front.
+    return this.targetFront._javascriptEnabled;
   }
 
   destroy() {

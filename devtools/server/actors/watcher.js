@@ -45,6 +45,12 @@ loader.lazyRequireGetter(
   "devtools/server/actors/breakpoint-list",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "TargetConfigurationActor",
+  "devtools/server/actors/target-configuration",
+  true
+);
 
 exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   /**
@@ -156,6 +162,12 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
         // the TargetList to retrieve the Breakpoints front should still be careful to check
         // that the Watcher is available
         "set-breakpoints": true,
+        // @backward-compat { version 87 } Starting with FF87, if the watcher is
+        // supported, the TargetConfiguration actor can be used to set configuration
+        // flags which impact BrowsingContext targets.
+        // When removing this trait, consumers should still check that the Watcher is
+        // available.
+        "target-configuration": true,
       },
     };
   },
@@ -472,6 +484,19 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   },
 
   /**
+   * Returns the configuration actor.
+   *
+   * @return {Object} actor
+   *        The configuration actor.
+   */
+  getTargetConfigurationActor() {
+    if (!this._configurationListActor) {
+      this._configurationListActor = new TargetConfigurationActor(this);
+    }
+    return this._configurationListActor;
+  },
+
+  /**
    * Server internal API, called by other actors, but not by the client.
    * Used to agrement some new entries for a given data type (watchers target, resources,
    * breakpoints,...)
@@ -535,5 +560,15 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     if (targetActor) {
       targetActor.removeWatcherDataEntry(type, entries);
     }
+  },
+
+  /**
+   * Retrieve the current watched data for the provided type.
+   *
+   * @param {String} type
+   *        Data type to retrieve.
+   */
+  getWatchedData(type) {
+    return this.watchedData?.[type];
   },
 });

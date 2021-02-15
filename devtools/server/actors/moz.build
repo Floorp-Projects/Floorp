@@ -61,6 +61,7 @@ DevToolsModules(
     "style-rule.js",
     "style-sheet.js",
     "style-sheets.js",
+    "target-configuration.js",
     "thread.js",
     "watcher.js",
     "webbrowser.js",

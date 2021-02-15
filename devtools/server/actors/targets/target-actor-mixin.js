@@ -58,6 +58,16 @@ module.exports = function(targetType, targetActorSpec, implementation) {
             )
           );
         }
+      } else if (type == "target-configuration") {
+        // Only BrowsingContextTargetActor implements updateTargetConfiguration,
+        // skip this data entry update for other targets.
+        if (typeof this.updateTargetConfiguration == "function") {
+          const options = {};
+          for (const { key, value } of entries) {
+            options[key] = value;
+          }
+          this.updateTargetConfiguration(options);
+        }
       }
     },
 
@@ -68,6 +78,8 @@ module.exports = function(targetType, targetActorSpec, implementation) {
         for (const { location } of entries) {
           this.threadActor.removeBreakpoint(location);
         }
+      } else if (type == "target-configuration") {
+        // configuration data entries are always added/updated, never removed.
       }
 
       return Promise.resolve();
