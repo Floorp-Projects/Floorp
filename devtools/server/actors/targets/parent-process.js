@@ -71,7 +71,13 @@ parentProcessTargetPrototype.initialize = function(connection, window) {
   BrowsingContextTargetActor.prototype.initialize.call(
     this,
     connection,
-    window.docShell
+    window.docShell,
+    {
+      // This BrowsingContextTargetActor is special and will stay alive as long
+      // as the toolbox/client is alive. It is the original top level target for
+      // the BrowserToolbox and isTopLevelTarget will always be true here.
+      isTopLevelTarget: true,
+    }
   );
 
   // This creates a Debugger instance for chrome debugging all globals.
