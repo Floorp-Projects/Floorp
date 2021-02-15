@@ -87,13 +87,32 @@ add_task(async function test_remove_single() {
               }
               break;
             }
+            case "page-removed": {
+              Assert.equal(
+                event.isRemovedFromStore,
+                shouldRemove,
+                "Observe page-removed event with right removal type"
+              );
+              Assert.equal(
+                event.url,
+                uri.spec,
+                "Observing effect on the right uri"
+              );
+              resolve();
+              break;
+            }
           }
         }
       };
     });
     PlacesUtils.history.addObserver(observer);
     PlacesObservers.addListener(
-      ["page-title-changed", "history-cleared", "pages-rank-changed"],
+      [
+        "page-title-changed",
+        "history-cleared",
+        "pages-rank-changed",
+        "page-removed",
+      ],
       placesEventListener
     );
 
@@ -121,7 +140,12 @@ add_task(async function test_remove_single() {
     await promiseObserved;
     PlacesUtils.history.removeObserver(observer);
     PlacesObservers.removeListener(
-      ["page-title-changed", "history-cleared", "pages-rank-changed"],
+      [
+        "page-title-changed",
+        "history-cleared",
+        "pages-rank-changed",
+        "page-removed",
+      ],
       placesEventListener
     );
 

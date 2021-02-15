@@ -95,12 +95,24 @@ add_task(async function test_pref_maxpages() {
     };
     PlacesUtils.history.addObserver(historyObserver);
 
+    const listener = events => {
+      for (const event of events) {
+        print("page-removed " + event.url);
+        Assert.equal(event.type, "page-removed");
+        Assert.ok(event.isRemovedFromStore);
+        Assert.equal(event.reason, PlacesVisitRemoved.REASON_EXPIRED);
+        currentTest.receivedNotifications++;
+      }
+    };
+    PlacesObservers.addListener(["page-removed"], listener);
+
     setMaxPages(currentTest.maxPages);
 
     // Expire now.
     await promiseForceExpirationStep(-1);
 
     PlacesUtils.history.removeObserver(historyObserver, false);
+    PlacesObservers.removeListener(["page-removed"], listener);
 
     Assert.equal(
       currentTest.receivedNotifications,
