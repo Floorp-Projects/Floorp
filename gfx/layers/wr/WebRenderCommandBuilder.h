@@ -136,15 +136,15 @@ class WebRenderCommandBuilder final {
       frame->AddProperty(WebRenderUserDataProperty::Key(), userDataTable);
     }
 
-    RefPtr<WebRenderUserData>& data = userDataTable->GetOrInsert(
-        WebRenderUserDataKey(aItem->GetPerFrameKey(), T::Type()));
-    if (!data) {
-      data = new T(GetRenderRootStateManager(), aItem);
-      mWebRenderUserDatas.PutEntry(data);
-      if (aOutIsRecycled) {
-        *aOutIsRecycled = false;
-      }
-    }
+    RefPtr<WebRenderUserData>& data = userDataTable->GetOrInsertWith(
+        WebRenderUserDataKey(aItem->GetPerFrameKey(), T::Type()), [&] {
+          auto data = MakeRefPtr<T>(GetRenderRootStateManager(), aItem);
+          mWebRenderUserDatas.PutEntry(data);
+          if (aOutIsRecycled) {
+            *aOutIsRecycled = false;
+          }
+          return data;
+        });
 
     MOZ_ASSERT(data);
     MOZ_ASSERT(data->GetType() == T::Type());

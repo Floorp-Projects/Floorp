@@ -856,10 +856,8 @@ nsresult DNSPacket::DecodeInternal(
 
     auto parseRecord = [&]() {
       LOG(("Parsing additional record type: %u", type));
-      auto& entry = aAdditionalRecords.GetOrInsert(qname);
-      if (!entry) {
-        entry.reset(new DOHresp());
-      }
+      auto& entry = aAdditionalRecords.GetOrInsertWith(
+          qname, [] { return MakeUnique<DOHresp>(); });
 
       switch (type) {
         case TRRTYPE_A:

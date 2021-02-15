@@ -92,12 +92,8 @@ class SubstitutingProtocolHandler {
 
  private:
   struct SubstitutionEntry {
-    SubstitutionEntry() : flags(0) {}
-
-    ~SubstitutionEntry() = default;
-
     nsCOMPtr<nsIURI> baseURI;
-    uint32_t flags;
+    uint32_t flags = 0;
   };
 
   // Notifies all observers that a new substitution from |aRoot| to

@@ -484,9 +484,7 @@ nsresult SubstitutingProtocolHandler::SetSubstitutionWithFlags(
 
     {
       AutoWriteLock lock(mSubstitutionsLock);
-      SubstitutionEntry& entry = mSubstitutions.GetOrInsert(root);
-      entry.baseURI = baseURI;
-      entry.flags = flags;
+      mSubstitutions.Put(root, SubstitutionEntry{baseURI, flags});
     }
 
     return SendSubstitution(root, baseURI, flags);
@@ -504,9 +502,7 @@ nsresult SubstitutingProtocolHandler::SetSubstitutionWithFlags(
 
   {
     AutoWriteLock lock(mSubstitutionsLock);
-    SubstitutionEntry& entry = mSubstitutions.GetOrInsert(root);
-    entry.baseURI = newBaseURI;
-    entry.flags = flags;
+    mSubstitutions.Put(root, SubstitutionEntry{newBaseURI, flags});
   }
 
   return SendSubstitution(root, newBaseURI, flags);
