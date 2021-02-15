@@ -392,18 +392,9 @@ Database::GetProfileBeforeChangePhase() {
 
 Database::~Database() = default;
 
-bool Database::IsShutdownStarted() const {
-  if (!mConnectionShutdown) {
-    // We have already broken the cycle between `this` and
-    // `mConnectionShutdown`.
-    return true;
-  }
-  return mConnectionShutdown->IsStarted();
-}
-
 already_AddRefed<mozIStorageAsyncStatement> Database::GetAsyncStatement(
     const nsACString& aQuery) {
-  if (IsShutdownStarted() || NS_FAILED(EnsureConnection())) {
+  if (PlacesShutdownBlocker::sIsStarted || NS_FAILED(EnsureConnection())) {
     return nullptr;
   }
 
@@ -413,7 +404,7 @@ already_AddRefed<mozIStorageAsyncStatement> Database::GetAsyncStatement(
 
 already_AddRefed<mozIStorageStatement> Database::GetStatement(
     const nsACString& aQuery) {
-  if (IsShutdownStarted()) {
+  if (PlacesShutdownBlocker::sIsStarted) {
     return nullptr;
   }
   if (NS_IsMainThread()) {
@@ -440,7 +431,7 @@ already_AddRefed<nsIAsyncShutdownClient> Database::GetConnectionShutdown() {
 
 // static
 already_AddRefed<Database> Database::GetDatabase() {
-  if (PlacesShutdownBlocker::IsStarted()) {
+  if (PlacesShutdownBlocker::sIsStarted) {
     return nullptr;
   }
   return GetSingleton();
@@ -493,7 +484,7 @@ nsresult Database::EnsureConnection() {
     return NS_OK;
   }
   // Don't try to create a database too late.
-  if (IsShutdownStarted()) {
+  if (PlacesShutdownBlocker::sIsStarted) {
     return NS_ERROR_FAILURE;
   }
 
@@ -2398,7 +2389,7 @@ Database::Observe(nsISupports* aSubject, const char* aTopic,
   MOZ_ASSERT(NS_IsMainThread());
   if (strcmp(aTopic, TOPIC_PROFILE_CHANGE_TEARDOWN) == 0) {
     // Tests simulating shutdown may cause multiple notifications.
-    if (IsShutdownStarted()) {
+    if (PlacesShutdownBlocker::sIsStarted) {
       return NS_OK;
     }
 
@@ -2432,7 +2423,7 @@ Database::Observe(nsISupports* aSubject, const char* aTopic,
     // to simulate Places shutdown out of the normal shutdown path.
 
     // Tests simulating shutdown may cause re-entrance.
-    if (IsShutdownStarted()) {
+    if (PlacesShutdownBlocker::sIsStarted) {
       return NS_OK;
     }
 
