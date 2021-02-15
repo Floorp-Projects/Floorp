@@ -111,7 +111,6 @@ class ChunkPool {
  public:
   bool contains(TenuredChunk* chunk) const;
   bool verify() const;
-  void verifyChunks() const;
 #endif
 
  public:
@@ -519,9 +518,6 @@ class GCRuntime {
   NonEmptyChunksIter allNonEmptyChunks(const AutoLockGC& lock) {
     return NonEmptyChunksIter(availableChunks(lock), fullChunks(lock));
   }
-#ifdef DEBUG
-  void verifyAllChunks();
-#endif
 
   TenuredChunk* getOrAllocChunk(AutoLockGCBgAlloc& lock);
   void recycleChunk(TenuredChunk* chunk, const AutoLockGC& lock);

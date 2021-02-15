@@ -263,8 +263,6 @@ class alignas(ArenaSize) Arena {
     hasDelayedGrayMarking_ = 0;
     nextDelayedMarkingArena_ = 0;
     bufferedCells_ = nullptr;
-
-    MOZ_ASSERT(!allocated());
   }
 
   // Return an allocated arena to its unallocated state.
@@ -654,10 +652,6 @@ class TenuredChunk : public TenuredChunkBase {
 
   /* Unlink and return the freeArenasHead. */
   Arena* fetchNextFreeArena(GCRuntime* gc);
-
-#ifdef DEBUG
-  void verify() const;
-#endif
 
  private:
   /* Search for a decommitted arena to allocate. */

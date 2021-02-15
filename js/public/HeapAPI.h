@@ -98,7 +98,7 @@ struct TenuredChunkInfo {
   TenuredChunk* prev = nullptr;
 
  public:
-  /* List of free committed arenas, linked together with arena.next. */
+  /* Free arenas are linked together with arena.next. */
   Arena* freeArenasHead;
 
   /*
