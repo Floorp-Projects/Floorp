@@ -30,8 +30,8 @@ class WebGLParent : public PWebGLParent, public SupportsWeakPtr {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebGLParent, override);
   using OtherSideActor = WebGLChild;
 
-  mozilla::ipc::IPCResult RecvInitialize(
-      const webgl::InitContextDesc&, webgl::InitContextResult* out);
+  mozilla::ipc::IPCResult RecvInitialize(const webgl::InitContextDesc&,
+                                         webgl::InitContextResult* out);
 
   WebGLParent();  // For IPDL
 

@@ -801,8 +801,10 @@ nsNativeThemeAndroid::GetMinimumWidgetSize(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-auto nsNativeThemeAndroid::GetScrollbarSizes(
-    nsPresContext* aPresContext, StyleScrollbarWidth aWidth, Overlay aOverlay) -> ScrollbarSizes {
+auto nsNativeThemeAndroid::GetScrollbarSizes(nsPresContext* aPresContext,
+                                             StyleScrollbarWidth aWidth,
+                                             Overlay aOverlay)
+    -> ScrollbarSizes {
   int32_t size = kMinimumAndroidWidgetSize * int32_t(GetDPIRatio(aPresContext));
   return {size, size};
 }

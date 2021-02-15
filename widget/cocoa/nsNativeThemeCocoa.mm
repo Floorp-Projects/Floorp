@@ -3388,7 +3388,8 @@ bool nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* 
   return false;
 }
 
-auto nsNativeThemeCocoa::GetScrollbarSizes(nsPresContext* aPresContext, StyleScrollbarWidth aWidth, Overlay aOverlay) -> ScrollbarSizes {
+auto nsNativeThemeCocoa::GetScrollbarSizes(nsPresContext* aPresContext, StyleScrollbarWidth aWidth,
+                                           Overlay aOverlay) -> ScrollbarSizes {
   auto size = ScrollbarDrawingMac::GetScrollbarSize(aWidth, aOverlay == Overlay::Yes);
   if (IsHiDPIContext(aPresContext->DeviceContext())) {
     size *= 2;

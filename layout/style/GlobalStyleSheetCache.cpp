@@ -389,16 +389,16 @@ void GlobalStyleSheetCache::InitSharedSheetsInParent() {
   // Normally calling ToShared on UA sheets should not fail.  It happens
   // in practice in odd cases that seem like corrupted installations; see bug
   // 1621773.  On failure, return early and fall back to non-shared sheets.
-#define STYLE_SHEET(identifier_, url_, shared_)                         \
-  if (shared_) {                                                        \
-    StyleSheet* sheet = identifier_##Sheet();                           \
-    size_t i = size_t(UserAgentStyleSheetID::identifier_);              \
-    URLExtraData::sShared[i] = sheet->URLData();                        \
-    header->mSheets[i] = sheet->ToShared(builder.get(), message);       \
-    if (!header->mSheets[i]) {                                          \
-      CrashReporter::AppendAppNotesToCrashReport("\n"_ns + message);    \
-      return;                                                           \
-    }                                                                   \
+#define STYLE_SHEET(identifier_, url_, shared_)                      \
+  if (shared_) {                                                     \
+    StyleSheet* sheet = identifier_##Sheet();                        \
+    size_t i = size_t(UserAgentStyleSheetID::identifier_);           \
+    URLExtraData::sShared[i] = sheet->URLData();                     \
+    header->mSheets[i] = sheet->ToShared(builder.get(), message);    \
+    if (!header->mSheets[i]) {                                       \
+      CrashReporter::AppendAppNotesToCrashReport("\n"_ns + message); \
+      return;                                                        \
+    }                                                                \
   }
 #include "mozilla/UserAgentStyleSheetList.h"
 #undef STYLE_SHEET

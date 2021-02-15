@@ -141,8 +141,7 @@ AudioStream::AudioStream(DataSource& aSource)
       mDataSource(aSource),
       mPrefillQuirk(false),
       mAudioThreadId(0),
-      mSandboxed(CubebUtils::SandboxEnabled()) {
-}
+      mSandboxed(CubebUtils::SandboxEnabled()) {}
 
 AudioStream::~AudioStream() {
   LOG("deleted, state %d", mState);

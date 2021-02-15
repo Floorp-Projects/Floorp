@@ -71,7 +71,8 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
     MutexAutoLock lock(mMutex);
     return mOriginAttributes;
   }
-  const OriginAttributes& GetOriginAttributes(MutexAutoLock& aProofOfLock) const {
+  const OriginAttributes& GetOriginAttributes(
+      MutexAutoLock& aProofOfLock) const {
     return mOriginAttributes;
   }
   void SetOriginAttributes(const OriginAttributes& aOriginAttributes);

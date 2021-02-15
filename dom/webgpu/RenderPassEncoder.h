@@ -70,9 +70,8 @@ class RenderPassEncoder final : public ObjectBase,
   void DrawIndirect(const Buffer& aIndirectBuffer, uint64_t aIndirectOffset);
   void DrawIndexedIndirect(const Buffer& aIndirectBuffer,
                            uint64_t aIndirectOffset);
-  void SetViewport(float x, float y,
-                   float width, float height,
-                   float minDepth, float maxDepth);
+  void SetViewport(float x, float y, float width, float height, float minDepth,
+                   float maxDepth);
   void SetScissorRect(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
   void SetBlendColor(const dom::DoubleSequenceOrGPUColorDict& color);
   void SetStencilReference(uint32_t reference);

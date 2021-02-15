@@ -164,9 +164,12 @@ void LocationBase::SetURI(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
       // closely-related enough, though in practice we currently throw for other
       // reasons as well.
       //
-      // [1]: https://html.spec.whatwg.org/multipage/browsing-the-web.html#javascript-protocol
-      // [2]: https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate
-      // [3]: https://html.spec.whatwg.org/multipage/browsers.html#allowed-to-navigate
+      // [1]:
+      // https://html.spec.whatwg.org/multipage/browsing-the-web.html#javascript-protocol
+      // [2]:
+      // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate
+      // [3]:
+      // https://html.spec.whatwg.org/multipage/browsers.html#allowed-to-navigate
       return;
     }
     aRv.Throw(rv);

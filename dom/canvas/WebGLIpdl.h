@@ -24,9 +24,9 @@ class RaiiShmem final {
 
  public:
   /// Returns zeroed data.
-  static RaiiShmem Alloc(mozilla::ipc::IProtocol* const allocator,
-                         const size_t size,
-                         const mozilla::ipc::SharedMemory::SharedMemoryType type) {
+  static RaiiShmem Alloc(
+      mozilla::ipc::IProtocol* const allocator, const size_t size,
+      const mozilla::ipc::SharedMemory::SharedMemoryType type) {
     mozilla::ipc::Shmem shmem;
     if (!allocator->AllocShmem(size, type, &shmem)) return {};
     return {allocator, shmem};

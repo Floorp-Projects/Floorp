@@ -399,9 +399,9 @@ inline nsIURI* StyleCssUrl::GetURI() const {
     nsDependentCSubstring serialization = SpecifiedSerialization();
     // https://drafts.csswg.org/css-values-4/#url-empty:
     //
-    //     If the value of the url() is the empty string (like url("") or url()),
-    //     the url must resolve to an invalid resource (similar to what the url
-    //     about:invalid does).
+    //     If the value of the url() is the empty string (like url("") or
+    //     url()), the url must resolve to an invalid resource (similar to what
+    //     the url about:invalid does).
     //
     if (!serialization.IsEmpty()) {
       RefPtr<nsIURI> resolved;

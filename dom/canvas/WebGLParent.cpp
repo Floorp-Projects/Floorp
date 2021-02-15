@@ -15,10 +15,8 @@
 namespace mozilla::dom {
 
 mozilla::ipc::IPCResult WebGLParent::RecvInitialize(
-    const webgl::InitContextDesc& desc,
-    webgl::InitContextResult* const out) {
-  mHost = HostWebGLContext::Create(
-      {nullptr, this}, desc, out);
+    const webgl::InitContextDesc& desc, webgl::InitContextResult* const out) {
+  mHost = HostWebGLContext::Create({nullptr, this}, desc, out);
 
   if (!mHost && !out->error.size()) {
     return IPC_FAIL(this, "Abnormally failed to create HostWebGLContext.");

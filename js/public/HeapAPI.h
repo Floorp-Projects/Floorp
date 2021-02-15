@@ -159,7 +159,7 @@ static_assert(CalculatedChunkPadSize * CHAR_BIT < BitsPerArenaWithHeaders,
 #ifdef JS_GC_SMALL_CHUNK_SIZE
 #  define EXPECTED_ARENA_COUNT 63
 #else
-# define EXPECTED_ARENA_COUNT 252
+#  define EXPECTED_ARENA_COUNT 252
 #endif
 static_assert(ArenasPerChunk == EXPECTED_ARENA_COUNT,
               "Do not accidentally change our heap's density.");
