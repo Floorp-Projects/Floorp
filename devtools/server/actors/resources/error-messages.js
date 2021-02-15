@@ -30,7 +30,7 @@ const PLATFORM_SPECIFIC_CATEGORIES = [
 ];
 
 class ErrorMessageWatcher extends nsIConsoleListenerWatcher {
-  shouldHandleMessage(targetActor, message) {
+  shouldHandleMessage(targetActor, message, isCachedMessage = false) {
     // The listener we use can be called either with a nsIConsoleMessage or a nsIScriptError.
     // In this file, we only want to handle nsIScriptError.
     if (
@@ -43,9 +43,11 @@ class ErrorMessageWatcher extends nsIConsoleListenerWatcher {
       return false;
     }
 
-    // Process targets listen for everything but messages from private windows
     if (this.isProcessTarget(targetActor)) {
-      return !message.isFromPrivateWindow;
+      // Process targets can still receive error messages that are cloned from
+      // content processes (when "devtools.browsertoolbox.fission" is false).
+      // In such case, we don't want to display cached messages from private windows.
+      return !isCachedMessage || !message.isFromPrivateWindow;
     }
 
     if (!message.innerWindowID) {
