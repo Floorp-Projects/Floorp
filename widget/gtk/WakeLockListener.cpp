@@ -482,11 +482,12 @@ nsresult WakeLockListener::Callback(const nsAString& topic,
       !topic.Equals(u"video-playing"_ns))
     return NS_OK;
 
-  WakeLockTopic* topicLock = mTopics.Get(topic);
-  if (!topicLock) {
-    topicLock = new WakeLockTopic(topic, mConnection);
-    mTopics.Put(topic, topicLock);
-  }
+  WakeLockTopic* const topicLock =
+      mTopics
+          .GetOrInsertWith(
+              topic,
+              [&] { return MakeUnique<WakeLockTopic>(topic, mConnection); })
+          .get();
 
   // Treat "locked-background" the same as "unlocked" on desktop linux.
   bool shouldLock = state.EqualsLiteral("locked-foreground");

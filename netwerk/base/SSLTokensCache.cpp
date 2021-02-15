@@ -205,17 +205,20 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
     return rv;
   }
 
-  TokenCacheRecord* rec = nullptr;
+  TokenCacheRecord* const rec =
+      gInstance->mTokenCacheRecords.WithEntryHandle(aKey, [&](auto&& entry) {
+        if (!entry) {
+          auto rec = MakeUnique<TokenCacheRecord>();
+          rec->mKey = aKey;
+          gInstance->mExpirationArray.AppendElement(rec.get());
+          entry.Insert(std::move(rec));
+        } else {
+          gInstance->mCacheSize -= entry.Data()->Size();
+          entry.Data()->Reset();
+        }
 
-  if (!gInstance->mTokenCacheRecords.Get(aKey, &rec)) {
-    rec = new TokenCacheRecord();
-    rec->mKey = aKey;
-    gInstance->mTokenCacheRecords.Put(aKey, rec);
-    gInstance->mExpirationArray.AppendElement(rec);
-  } else {
-    gInstance->mCacheSize -= rec->Size();
-    rec->Reset();
-  }
+        return entry.Data().get();
+      });
 
   rec->mExpirationTime = aExpirationTime;
   MOZ_ASSERT(rec->mToken.IsEmpty());

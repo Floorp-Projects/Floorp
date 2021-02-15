@@ -101,21 +101,22 @@ void AsyncImagePipelineManager::AddPipeline(const wr::PipelineId& aPipelineId,
   if (mDestroyed) {
     return;
   }
-  uint64_t id = wr::AsUint64(aPipelineId);
 
-  PipelineTexturesHolder* holder =
-      mPipelineTexturesHolders.Get(wr::AsUint64(aPipelineId));
-  if (holder) {
-    // This could happen during tab move between different windows.
-    // Previously removed holder could be still alive for waiting destroyed.
-    MOZ_ASSERT(holder->mDestroyedEpoch.isSome());
-    holder->mDestroyedEpoch = Nothing();  // Revive holder
-    holder->mWrBridge = aWrBridge;
-    return;
-  }
-  holder = new PipelineTexturesHolder();
-  holder->mWrBridge = aWrBridge;
-  mPipelineTexturesHolders.Put(id, holder);
+  mPipelineTexturesHolders.WithEntryHandle(
+      wr::AsUint64(aPipelineId), [&](auto&& holder) {
+        if (holder) {
+          // This could happen during tab move between different windows.
+          // Previously removed holder could be still alive for waiting
+          // destroyed.
+          MOZ_ASSERT(holder.Data()->mDestroyedEpoch.isSome());
+          holder.Data()->mDestroyedEpoch = Nothing();  // Revive holder
+          holder.Data()->mWrBridge = aWrBridge;
+          return;
+        }
+
+        holder.Insert(MakeUnique<PipelineTexturesHolder>())->mWrBridge =
+            aWrBridge;
+      });
 }
 
 void AsyncImagePipelineManager::RemovePipeline(

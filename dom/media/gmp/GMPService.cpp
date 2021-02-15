@@ -430,15 +430,16 @@ void GeckoMediaPluginService::ConnectCrashHelper(uint32_t aPluginId,
   if (!aHelper) {
     return;
   }
+
   MutexAutoLock lock(mMutex);
-  nsTArray<RefPtr<GMPCrashHelper>>* helpers;
-  if (!mPluginCrashHelpers.Get(aPluginId, &helpers)) {
-    helpers = new nsTArray<RefPtr<GMPCrashHelper>>();
-    mPluginCrashHelpers.Put(aPluginId, helpers);
-  } else if (helpers->Contains(aHelper)) {
-    return;
-  }
-  helpers->AppendElement(aHelper);
+  mPluginCrashHelpers.WithEntryHandle(aPluginId, [&](auto&& entry) {
+    if (!entry) {
+      entry.Insert(MakeUnique<nsTArray<RefPtr<GMPCrashHelper>>>());
+    } else if (entry.Data()->Contains(aHelper)) {
+      return;
+    }
+    entry.Data()->AppendElement(aHelper);
+  });
 }
 
 void GeckoMediaPluginService::DisconnectCrashHelper(GMPCrashHelper* aHelper) {

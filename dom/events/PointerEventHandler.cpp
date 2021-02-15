@@ -149,12 +149,13 @@ void PointerEventHandler::RequestPointerCaptureById(uint32_t aPointerId,
 void PointerEventHandler::SetPointerCaptureById(uint32_t aPointerId,
                                                 Element* aElement) {
   MOZ_ASSERT(aElement);
-  PointerCaptureInfo* pointerCaptureInfo = GetPointerCaptureInfo(aPointerId);
-  if (pointerCaptureInfo) {
-    pointerCaptureInfo->mPendingElement = aElement;
-  } else {
-    sPointerCaptureList->Put(aPointerId, new PointerCaptureInfo(aElement));
-  }
+  sPointerCaptureList->WithEntryHandle(aPointerId, [&](auto&& entry) {
+    if (entry) {
+      entry.Data()->mPendingElement = aElement;
+    } else {
+      entry.Insert(MakeUnique<PointerCaptureInfo>(aElement));
+    }
+  });
 }
 
 /* static */
