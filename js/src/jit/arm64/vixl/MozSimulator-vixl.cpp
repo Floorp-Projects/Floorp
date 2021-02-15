@@ -210,6 +210,13 @@ Simulator* Simulator::Create() {
 
 
 void Simulator::Destroy(Simulator* sim) {
+#ifdef JS_CACHE_SIMULATOR_ARM64
+  if (sim) {
+    js::jit::AutoLockSimulatorCache alsc;
+    SimulatorProcess::unregisterSimulator(sim);
+  }
+#endif
+
   js_delete(sim);
 }
 
