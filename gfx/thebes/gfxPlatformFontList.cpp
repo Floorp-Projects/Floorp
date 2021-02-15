@@ -1069,6 +1069,9 @@ gfxFont* gfxPlatformFontList::GlobalFontFallback(
             if (hasColorGlyph == PrefersColor(aPresentation)) {
               return font;
             }
+            // If we don't use this font, we need to touch its refcount
+            // to trigger gfxFontCache expiration tracking.
+            RefPtr<gfxFont> autoRefDeref(font);
           }
         }
         rejectedFallbackVisibility = aMatchedFamily.mShared->Visibility();
@@ -1083,6 +1086,7 @@ gfxFont* gfxPlatformFontList::GlobalFontFallback(
             if (hasColorGlyph == PrefersColor(aPresentation)) {
               return font;
             }
+            RefPtr<gfxFont> autoRefDeref(font);
           }
         }
         rejectedFallbackVisibility = aMatchedFamily.mUnshared->Visibility();

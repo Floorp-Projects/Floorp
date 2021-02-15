@@ -3155,11 +3155,17 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
 
   // Used to remember the first "candidate" font that would provide a fallback
   // text-style rendering if no color glyph can be found.
+  // If we decide NOT to return this font, we must AddRef/Release it to ensure
+  // that it goes into the global font cache as a candidate for deletion.
+  // This is done for us by CheckCandidate, but any code path that returns
+  // WITHOUT calling CheckCandidate needs to handle it explicitly.
   gfxFont* candidateFont = nullptr;
   FontMatchType candidateMatchType;
 
   // Handle a candidate font that could support the character, returning true
   // if we should go ahead and return |f|, false to continue searching.
+  // If there is already a saved candidate font, and the new candidate is
+  // accepted, we AddRef/Release the existing candidate so it won't leak.
   auto CheckCandidate = [&](gfxFont* f, FontMatchType t) -> bool {
     // If no preference, then just accept the font.
     if (presentation == eFontPresentation::Any ||
@@ -3329,6 +3335,7 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
       // set their emoji font preference to a monochrome font like Symbola.
       // So the font.name-list.emoji preference takes precedence over the
       // Unicode presentation style here.
+      RefPtr<gfxFont> autoRefDeref(candidateFont);
       *aMatchType = FontMatchType::Kind::kPrefsFallback;
       return font;
     }
