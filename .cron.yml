@@ -304,7 +304,6 @@ jobs:
           target-tasks-method: l10n_bump
       run-on-projects:
           - mozilla-central
-          - mozilla-beta
       when:
           - {hour: 18, minute: 45}
 
