@@ -91,7 +91,7 @@ const ExperimentFakes = {
       branch: {
         slug: "treatment",
         feature: {
-          featureId: "aboutwelcome",
+          featureId: "test-feature",
           enabled: true,
           value: { title: "hello" },
         },
@@ -118,13 +118,13 @@ const ExperimentFakes = {
         {
           slug: "control",
           ratio: 1,
-          feature: { featureId: "aboutwelcome", enabled: true, value: null },
+          feature: { featureId: "test-feature", enabled: true, value: null },
         },
         {
           slug: "treatment",
           ratio: 1,
           feature: {
-            featureId: "aboutwelcome",
+            featureId: "test-feature",
             enabled: true,
             value: { title: "hello" },
           },
