@@ -34,7 +34,6 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["FileReader"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   PageThumbUtils: "resource://gre/modules/PageThumbUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
@@ -117,7 +116,6 @@ var PageThumbs = {
   init: function PageThumbs_init() {
     if (!this._initialized) {
       this._initialized = true;
-      PlacesUtils.history.addObserver(PageThumbsHistoryObserver, true);
 
       this._placesObserver = new PlacesWeakCallbackWrapper(
         this.handlePlacesEvents.bind(this)
@@ -886,18 +884,3 @@ var PageThumbsWorker = new BasePromiseWorker(
 // As the PageThumbsWorker performs I/O, we can receive instances of
 // OS.File.Error, so we need to install a decoder.
 PageThumbsWorker.ExceptionHandlers["OS.File.Error"] = OS.File.Error.fromMsg;
-
-var PageThumbsHistoryObserver = {
-  onDeleteURI(aURI, aGUID) {
-    PageThumbsStorage.remove(aURI.spec);
-  },
-
-  onBeginUpdateBatch() {},
-  onEndUpdateBatch() {},
-  onDeleteVisits() {},
-
-  QueryInterface: ChromeUtils.generateQI([
-    "nsINavHistoryObserver",
-    "nsISupportsWeakReference",
-  ]),
-};

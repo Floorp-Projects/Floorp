@@ -729,20 +729,6 @@ NavBookmarkObserver.prototype = {
 };
 
 /**
- * Generic nsINavHistoryObserver that doesn't implement anything, but provides
- * dummy methods to prevent errors about an object not having a certain method.
- */
-function NavHistoryObserver() {}
-
-NavHistoryObserver.prototype = {
-  onBeginUpdateBatch() {},
-  onEndUpdateBatch() {},
-  onDeleteURI() {},
-  onDeleteVisits() {},
-  QueryInterface: ChromeUtils.generateQI(["nsINavHistoryObserver"]),
-};
-
-/**
  * Generic nsINavHistoryResultObserver that doesn't implement anything, but
  * provides dummy methods to prevent errors about an object not having a certain
  * method.

@@ -587,12 +587,6 @@ var BlockedLinks = {
  */
 var PlacesProvider = {
   /**
-   * A count of how many batch updates are under way (batches may be nested, so
-   * we keep a counter instead of a simple bool).
-   **/
-  _batchProcessingDepth: 0,
-
-  /**
    * Set this to change the maximum number of links the provider will provide.
    */
   maxNumLinks: HISTORY_RESULTS_LIMIT,
@@ -601,7 +595,6 @@ var PlacesProvider = {
    * Must be called before the provider is used.
    */
   init: function PlacesProvider_init() {
-    PlacesUtils.history.addObserver(this, true);
     this._placesObserver = new PlacesWeakCallbackWrapper(
       this.handlePlacesEvents.bind(this)
     );
@@ -709,22 +702,7 @@ var PlacesProvider = {
 
   _observers: [],
 
-  /**
-   * Called by the history service.
-   */
-  onBeginUpdateBatch() {
-    this._batchProcessingDepth += 1;
-  },
-
-  onEndUpdateBatch() {
-    this._batchProcessingDepth -= 1;
-  },
-
   handlePlacesEvents(aEvents) {
-    if (this._batchProcessingDepth) {
-      return;
-    }
-
     for (let event of aEvents) {
       switch (event.type) {
         case "page-visited": {
@@ -789,11 +767,6 @@ var PlacesProvider = {
       }
     }
   },
-
-  QueryInterface: ChromeUtils.generateQI([
-    "nsINavHistoryObserver",
-    "nsISupportsWeakReference",
-  ]),
 };
 
 /**

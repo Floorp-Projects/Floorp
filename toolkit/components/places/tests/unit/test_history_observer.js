@@ -2,36 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Generic nsINavHistoryObserver that doesn't implement anything, but provides
- * dummy methods to prevent errors about an object not having a certain method.
- */
-function NavHistoryObserver() {}
-NavHistoryObserver.prototype = {
-  onBeginUpdateBatch() {},
-  onEndUpdateBatch() {},
-  onDeleteURI() {},
-  onDeleteVisits() {},
-  QueryInterface: ChromeUtils.generateQI(["nsINavHistoryObserver"]),
-};
-
-/**
- * Registers a one-time history observer for and calls the callback
- * when the specified nsINavHistoryObserver method is called.
- * Returns a promise that is resolved when the callback returns.
- */
-function onNotify(callback) {
-  return new Promise(resolve => {
-    let obs = new NavHistoryObserver();
-    obs[callback.name] = function() {
-      PlacesUtils.history.removeObserver(this);
-      callback.apply(this, arguments);
-      resolve();
-    };
-    PlacesUtils.history.addObserver(obs);
-  });
-}
-
-/**
  * Registers a one-time places observer for 'page-visited',
  * which resolves a promise on being called.
  */
