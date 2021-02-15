@@ -1115,13 +1115,13 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   bool IsInModalState();
 
-  void SetFocusedElement(mozilla::dom::Element* aElement,
-                         uint32_t aFocusMethod = 0, bool aNeedsFocus = false,
-                         bool aWillShowOutline = false) override;
+  virtual void SetFocusedElement(mozilla::dom::Element* aElement,
+                                 uint32_t aFocusMethod = 0,
+                                 bool aNeedsFocus = false) override;
 
-  uint32_t GetFocusMethod() override;
+  virtual uint32_t GetFocusMethod() override;
 
-  bool ShouldShowFocusRing() override;
+  virtual bool ShouldShowFocusRing() override;
 
   // Inner windows only.
   void UpdateCanvasFocus(bool aFocusChanged, nsIContent* aNewContent);
@@ -1397,7 +1397,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   uint32_t mSerial;
 #endif
 
-  // the method that was used to focus mFocusedElement
+  // the method that was used to focus mFocusedNode
   uint32_t mFocusMethod;
 
   // The current idle request callback handle
