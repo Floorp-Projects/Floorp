@@ -872,6 +872,10 @@ void TenuredChunk::init(GCRuntime* gc) {
    */
   decommitAllArenas();
 
+#ifdef DEBUG
+  verify();
+#endif
+
   /* The rest of info fields are initialized in pickChunk. */
 }
 
