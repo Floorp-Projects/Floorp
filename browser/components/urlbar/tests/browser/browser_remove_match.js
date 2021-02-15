@@ -14,9 +14,9 @@ add_task(async function test_remove_history() {
   });
 
   let promiseVisitRemoved = PlacesTestUtils.waitForNotification(
-    "onDeleteURI",
-    uri => uri.spec == TEST_URL,
-    "history"
+    "page-removed",
+    events => events[0].url === TEST_URL,
+    "places"
   );
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -32,7 +32,13 @@ add_task(async function test_remove_history() {
   EventUtils.synthesizeKey("KEY_ArrowDown");
   Assert.equal(UrlbarTestUtils.getSelectedRowIndex(window), 1);
   EventUtils.synthesizeKey("KEY_Delete", { shiftKey: true });
-  await promiseVisitRemoved;
+
+  const removeEvents = await promiseVisitRemoved;
+  Assert.ok(
+    removeEvents[0].isRemovedFromStore,
+    "isRemovedFromStore should be true"
+  );
+
   await TestUtils.waitForCondition(
     () => UrlbarTestUtils.getResultCount(window) == expectedResultCount,
     "Waiting for the result to disappear"

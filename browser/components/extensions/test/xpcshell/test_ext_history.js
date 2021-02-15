@@ -32,12 +32,7 @@ add_task(async function test_delete() {
           "onVisitRemoved received an empty urls array"
         );
       } else {
-        browser.test.assertEq(
-          1,
-          data.urls.length,
-          "onVisitRemoved received one URL"
-        );
-        removedUrls.push(data.urls[0]);
+        removedUrls.push(...data.urls);
       }
     });
 

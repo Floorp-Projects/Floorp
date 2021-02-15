@@ -196,7 +196,10 @@ var DownloadCache = {
       const placesObserver = new PlacesWeakCallbackWrapper(
         this.handlePlacesEvents.bind(this)
       );
-      PlacesObservers.addListener(["history-cleared"], placesObserver);
+      PlacesObservers.addListener(
+        ["history-cleared", "page-removed"],
+        placesObserver
+      );
 
       let pageAnnos = await PlacesUtils.history.fetchAnnotatedPages([
         METADATA_ANNO,
@@ -333,6 +336,12 @@ var DownloadCache = {
       switch (event.type) {
         case "history-cleared": {
           this._data.clear();
+          break;
+        }
+        case "page-removed": {
+          if (event.isRemovedFromStore) {
+            this._data.delete(event.url);
+          }
           break;
         }
       }
