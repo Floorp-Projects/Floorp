@@ -64,12 +64,6 @@ class PlacesShutdownBlocker : public nsIAsyncShutdownBlocker,
 
   already_AddRefed<nsIAsyncShutdownClient> GetClient();
 
-  /**
-   * `true` if we have not started shutdown, i.e.  if
-   * `BlockShutdown()` hasn't been called yet, false otherwise.
-   */
-  static bool IsStarted() { return sIsStarted; }
-
   // The current state, used internally and for forensics/debugging purposes.
   // Not all the states make sense for all the derived classes.
   enum States {
@@ -97,6 +91,8 @@ class PlacesShutdownBlocker : public nsIAsyncShutdownBlocker,
   };
   States State() { return mState; }
 
+  static Atomic<bool> sIsStarted;
+
  protected:
   // The blocker name, also used as barrier name.
   nsString mName;
@@ -111,8 +107,6 @@ class PlacesShutdownBlocker : public nsIAsyncShutdownBlocker,
   // give the instances of `PlacesShutdownBlocker` unique names.
   uint16_t mCounter;
   static uint16_t sCounter;
-
-  static Atomic<bool> sIsStarted;
 
   virtual ~PlacesShutdownBlocker() = default;
 };
