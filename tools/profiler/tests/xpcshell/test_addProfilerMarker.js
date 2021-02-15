@@ -85,7 +85,7 @@ add_task(async () => {
     return;
   }
 
-  startProfiler();
+  startProfilerForMarkerTests();
   startTime = Cu.now();
   while (Cu.now() < startTime + 1) {
     // Busy wait for 1ms to ensure the intentionally set start time of markers
