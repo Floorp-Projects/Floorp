@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* globals Assert */
+
 /**
  * This file contains utilities that can be shared between xpcshell tests and mochitests.
  */
@@ -218,3 +220,175 @@ function getSchema(profile, name) {
   }
   throw new Error(`Could not find a schema for "${name}".`);
 }
+
+/** ------ Assertions helper ------ */
+/**
+ * This assert helper function makes it easy to check a lot of properties in an
+ * object. We augment Assert.jsm to make it easier to use.
+ */
+Object.assign(Assert, {
+  /*
+   * It checks if the properties on the right are all present in the object on
+   * the left. Note that the object might still have other properties (see
+   * objectContainsOnly below if you want the stricter form).
+   *
+   * The basic form does basic equality on each expected property:
+   *
+   * Assert.objectContains(fixture, {
+   *   foo: "foo",
+   *   bar: 1,
+   *   baz: true,
+   * });
+   *
+   * But it also has a more powerful form with expectations. The available
+   * expectations are:
+   * - any(): this only checks for the existence of the property, not its value
+   * - number(), string(), boolean(), bigint(), function(), symbol(), object():
+   *   this checks if the value is of this type
+   * - objectContains(expected): this applies Assert.objectContains()
+   *   recursively on this property.
+   * - stringContains(needle): this checks if the expected value is included in
+   *   the property value.
+   * - stringMatches(regexp): this checks if the property value matches this
+   *   regexp. The regexp can be passed as a string, to be dynamically built.
+   *
+   * example:
+   *
+   * Assert.objectContains(fixture, {
+   *   name: Expect.stringMatches(`Load \\d+:.*${url}`),
+   *   data: Expect.objectContains({
+   *     status: "STATUS_STOP",
+   *     URI: Expect.stringContains("https://"),
+   *     requestMethod: "GET",
+   *     contentType: Expect.string(),
+   *     startTime: Expect.number(),
+   *     cached: Expect.boolean(),
+   *   }),
+   * });
+   *
+   * Each expectation will translate into one or more Assert call. Therefore if
+   * one expectation fails, this will be clearly visible in the test output.
+   *
+   * Expectations can also be normal functions, for example:
+   *
+   * Assert.objectContains(fixture, {
+   *   number: value => Assert.greater(value, 5)
+   * });
+   *
+   * Note that you'll need to use Assert inside this function.
+   */
+  objectContains(object, properties) {
+    // Basic tests: we don't want to run other assertions if these tests fail.
+    if (typeof object !== "object") {
+      this.ok(
+        false,
+        `The first parameter should be an object, but found: ${object}.`
+      );
+      return;
+    }
+
+    if (typeof properties !== "object") {
+      this.ok(
+        false,
+        `The second parameter should be an object, but found: ${properties}.`
+      );
+      return;
+    }
+
+    for (const key of Object.keys(properties)) {
+      const expected = properties[key];
+      if (!(key in object)) {
+        this.ok(false, `The object should contain the property ${key}`);
+        continue;
+      }
+
+      if (typeof expected === "function") {
+        // This is a function, so let's call it.
+        expected(
+          object[key],
+          `The object should contain the property "${key}" with an expected value and type.`
+        );
+      } else {
+        // Otherwise, we check for equality.
+        this.equal(
+          object[key],
+          properties[key],
+          `The object should contain the property "${key}" with an expected value.`
+        );
+      }
+    }
+  },
+
+  /**
+   * This is very similar to the previous `objectContains`, but this also looks
+   * at the number of the objects' properties. Thus this will fail if the
+   * objects don't have the same properties exactly.
+   */
+  objectContainsOnly(object, properties) {
+    // Basic tests: we don't want to run other assertions if these tests fail.
+    if (typeof object !== "object") {
+      this.ok(
+        false,
+        `The first parameter should be an object but found: ${object}.`
+      );
+      return;
+    }
+
+    if (typeof properties !== "object") {
+      this.ok(
+        false,
+        `The second parameter should be an object but found: ${properties}.`
+      );
+      return;
+    }
+
+    this.equal(
+      Object.keys(object).length,
+      Object.keys(properties).length,
+      "The 2 objects should have the same number of properties."
+    );
+    this.objectContains(object, properties);
+  },
+});
+
+const Expect = {
+  any: () => actual => {} /* We don't check anything more than the presence of this property. */,
+};
+
+/* These functions are part of the Assert object, and we want to reuse them. */
+[
+  "stringContains",
+  "stringMatches",
+  "objectContains",
+  "objectContainsOnly",
+].forEach(
+  assertChecker =>
+    (Expect[assertChecker] = expected => (actual, ...moreArgs) =>
+      Assert[assertChecker](actual, expected, ...moreArgs))
+);
+
+/* These functions will only check for the type. */
+[
+  "number",
+  "string",
+  "boolean",
+  "bigint",
+  "symbol",
+  "object",
+  "function",
+].forEach(type => (Expect[type] = makeTypeChecker(type)));
+
+function makeTypeChecker(type) {
+  return (...unexpectedArgs) => {
+    if (unexpectedArgs.length) {
+      throw new Error(
+        "Type checkers expectations aren't expecting any argument."
+      );
+    }
+    return (actual, message) => {
+      const isCorrect = typeof actual === type;
+      Assert.report(!isCorrect, actual, type, message, "has type");
+    };
+  };
+}
+/* ------ End of assertion helper ------ */
