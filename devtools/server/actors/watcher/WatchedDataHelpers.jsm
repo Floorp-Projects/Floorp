@@ -15,6 +15,7 @@ var EXPORTED_SYMBOLS = ["WatchedDataHelpers"];
 const SUPPORTED_DATA = {
   BREAKPOINTS: "breakpoints",
   RESOURCES: "resources",
+  TARGET_CONFIGURATION: "target-configuration",
   TARGETS: "targets",
 };
 
@@ -52,6 +53,11 @@ const DATA_KEY_FUNCTION = {
     }
     return `${sourceUrl}:${sourceId}:${line}:${column}`;
   },
+  [SUPPORTED_DATA.TARGET_CONFIGURATION]: function({ key }) {
+    // Configuration data entries are { key, value } objects, `key` can be used
+    // as the unique identifier for the entry.
+    return key;
+  },
 };
 
 function idFunction(v) {
@@ -80,11 +86,17 @@ const WatchedDataHelpers = {
     const toBeAdded = [];
     const keyFunction = DATA_KEY_FUNCTION[type] || idFunction;
     for (const entry of entries) {
-      const alreadyExists = watchedData[type].some(existingEntry => {
+      const existingIndex = watchedData[type].findIndex(existingEntry => {
         return keyFunction(existingEntry) === keyFunction(entry);
       });
-      if (!alreadyExists) {
+      if (existingIndex === -1) {
+        // New entry.
         toBeAdded.push(entry);
+      } else {
+        // Existing entry, update the value. This is relevant if the data-entry
+        // is not a primitive data-type, and the value can change for the same
+        // key.
+        watchedData[type][existingIndex] = entry;
       }
     }
     watchedData[type].push(...toBeAdded);

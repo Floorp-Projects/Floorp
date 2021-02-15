@@ -1023,7 +1023,7 @@ const browsingContextTargetPrototype = {
     // Firefox shutdown.
     if (this.docShell) {
       this._unwatchDocShell(this.docShell);
-      this._restoreDocumentSettings();
+      this._restoreTargetConfiguration();
     }
     this._unwatchDocshells();
 
@@ -1181,21 +1181,6 @@ const browsingContextTargetPrototype = {
   },
 
   /**
-   * Reconfigure options.
-   */
-  reconfigure(request) {
-    const options = request.options || {};
-
-    if (!this.docShell) {
-      // The browsing context is already closed.
-      return {};
-    }
-    this._toggleDevToolsSettings(options);
-
-    return {};
-  },
-
-  /**
    * Ensure that CSS error reporting is enabled.
    */
   async ensureCSSErrorReportingEnabled(request) {
@@ -1235,9 +1220,33 @@ const browsingContextTargetPrototype = {
   },
 
   /**
-   * Handle logic to enable/disable JS/cache/Service Worker testing.
+   * For browsing-context targets which can't use the watcher configuration
+   * actor (eg webextension targets), the client directly calls `reconfigure`.
+   * Once all targets support the watcher, this method can be removed.
    */
-  _toggleDevToolsSettings(options) {
+  reconfigure(request) {
+    const options = request.options || {};
+    return this.updateTargetConfiguration(options);
+  },
+
+  /**
+   * Apply target-specific options.
+   *
+   * This will be called by the watcher when the DevTools target-configuration
+   * is updated, or when a target is created via JSWindowActors.
+   */
+  updateTargetConfiguration(options = {}) {
+    if (!this.docShell) {
+      // The browsing context is already closed.
+      return;
+    }
+
+    if (!this.isTopLevelTarget) {
+      // DevTools target options should only apply to the top target and be
+      // propagated through the browsing context tree via the platform.
+      return;
+    }
+
     // Wait a tick so that the response packet can be dispatched before the
     // subsequent navigation event packet.
     let reload = false;
@@ -1282,10 +1291,10 @@ const browsingContextTargetPrototype = {
   },
 
   /**
-   * Opposite of the _toggleDevToolsSettings method, that reset document state
-   * when closing the toolbox.
+   * Opposite of the updateTargetConfiguration method, that resets document
+   * state when closing the toolbox.
    */
-  _restoreDocumentSettings() {
+  _restoreTargetConfiguration() {
     this._restoreJavascript();
     this._setCacheDisabled(false);
     this._setServiceWorkersTestingEnabled(false);

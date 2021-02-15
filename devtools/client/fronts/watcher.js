@@ -88,6 +88,16 @@ class WatcherFront extends FrontClassWithSpec(watcherSpec) {
   }
 
   /**
+   * Memoized getter for the "target-configuration" actor
+   */
+  async getTargetConfigurationActor() {
+    if (!this._targetConfigurationActor) {
+      this._targetConfigurationActor = await super.getTargetConfigurationActor();
+    }
+    return this._targetConfigurationActor;
+  }
+
+  /**
    * For a given BrowsingContext ID, return the already existing BrowsingContextTargetFront
    */
   async getBrowsingContextTarget(id) {
