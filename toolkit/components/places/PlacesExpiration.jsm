@@ -399,6 +399,24 @@ const EXPIRATION_QUERIES = {
   },
 };
 
+/**
+ * Sends a bookmarks notification through the given observers.
+ *
+ * @param observers
+ *        array of nsINavBookmarkObserver objects.
+ * @param notification
+ *        the notification name.
+ * @param args
+ *        array of arguments to pass to the notification.
+ */
+function notify(observers, notification, args = []) {
+  for (let observer of observers) {
+    try {
+      observer[notification](...args);
+    } catch (ex) {}
+  }
+}
+
 function nsPlacesExpiration() {
   // Allows other components to easily access getPagesLimit.
   this.wrappedJSObject = this;
@@ -593,6 +611,8 @@ nsPlacesExpiration.prototype = {
     let mostRecentExpiredVisit = row.getResultByName(
       "most_recent_expired_visit"
     );
+    let reason = Ci.nsINavHistoryObserver.REASON_EXPIRED;
+    let observers = PlacesUtils.history.getObservers();
 
     if (mostRecentExpiredVisit) {
       let days = parseInt(
@@ -606,16 +626,17 @@ nsPlacesExpiration.prototype = {
     }
 
     // Dispatch expiration notifications to history.
-    const isRemovedFromStore = !!wholeEntry;
-    PlacesObservers.notifyListeners([
-      new PlacesVisitRemoved({
-        url: uri.spec,
-        pageGuid: guid,
-        reason: PlacesVisitRemoved.REASON_EXPIRED,
-        isRemovedFromStore,
-        isPartialVisistsRemoval: !isRemovedFromStore && visitDate > 0,
-      }),
-    ]);
+    if (wholeEntry) {
+      notify(observers, "onDeleteURI", [uri, guid, reason]);
+    } else {
+      notify(observers, "onDeleteVisits", [
+        uri,
+        visitDate > 0,
+        guid,
+        reason,
+        0,
+      ]);
+    }
   },
 
   _shuttingDown: false,
