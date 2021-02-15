@@ -533,12 +533,26 @@ Result<bool, nsresult> MaybeCreateOrUpgradeCache(
 nsresult InvalidateCache(mozIStorageConnection& aConnection) {
   AssertIsOnIOThread();
 
-  mozStorageTransaction transaction(
-      &aConnection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
+  static constexpr auto kDeleteCacheQuery = "DELETE FROM origin;"_ns;
+  static constexpr auto kSetInvalidFlagQuery = "UPDATE cache SET valid = 0"_ns;
 
-  QM_TRY(aConnection.ExecuteSimpleSQL("DELETE FROM origin;"_ns));
-  QM_TRY(aConnection.ExecuteSimpleSQL("UPDATE cache SET valid = 0"_ns));
-  QM_TRY(transaction.Commit());
+  // XXX Use QM_TRY_OR_WARN here in/after Bug 1686191.
+  QM_TRY(([&]() -> Result<Ok, nsresult> {
+    mozStorageTransaction transaction(
+        &aConnection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+    QM_TRY(aConnection.ExecuteSimpleSQL(kDeleteCacheQuery));
+    QM_TRY(aConnection.ExecuteSimpleSQL(kSetInvalidFlagQuery));
+    QM_TRY(transaction.Commit());
+
+    return Ok{};
+  }()
+                       .orElse([&](const nsresult rv) -> Result<Ok, nsresult> {
+                         QM_TRY(aConnection.ExecuteSimpleSQL(
+                             kSetInvalidFlagQuery));
+
+                         return Ok{};
+                       })));
 
   return NS_OK;
 }
