@@ -1,6 +1,6 @@
 
-"core" ping
-============
+"core" ping (obsolete)
+======================
 
 This mobile-specific ping is intended to provide the most critical
 data in a concise format, allowing for frequent uploads.

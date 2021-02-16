@@ -1,6 +1,6 @@
 
-"deletion" ping
-===============
+"deletion" ping (obsolete)
+==========================
 
 This ping is generated when a user turns off FHR upload from the Preferences panel, changing the related ``datareporting.healthreport.uploadEnabled`` preference. This requests that all associated data from that user be deleted.
 
