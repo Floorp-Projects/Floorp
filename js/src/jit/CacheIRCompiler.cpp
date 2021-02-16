@@ -3186,7 +3186,8 @@ bool CacheIRCompiler::emitLoadArrayBufferByteLengthDoubleResult(
   return true;
 }
 
-bool CacheIRCompiler::emitLoadTypedArrayLengthInt32Result(ObjOperandId objId) {
+bool CacheIRCompiler::emitLoadArrayBufferViewLengthInt32Result(
+    ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   Register obj = allocator.useRegister(masm, objId);
@@ -3203,7 +3204,8 @@ bool CacheIRCompiler::emitLoadTypedArrayLengthInt32Result(ObjOperandId objId) {
   return true;
 }
 
-bool CacheIRCompiler::emitLoadTypedArrayLengthDoubleResult(ObjOperandId objId) {
+bool CacheIRCompiler::emitLoadArrayBufferViewLengthDoubleResult(
+    ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   Register obj = allocator.useRegister(masm, objId);
@@ -3980,7 +3982,8 @@ bool CacheIRCompiler::emitIsCrossRealmArrayConstructorResult(
   return true;
 }
 
-bool CacheIRCompiler::emitTypedArrayByteOffsetInt32Result(ObjOperandId objId) {
+bool CacheIRCompiler::emitArrayBufferViewByteOffsetInt32Result(
+    ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   AutoOutputRegister output(*this);
@@ -3998,7 +4001,8 @@ bool CacheIRCompiler::emitTypedArrayByteOffsetInt32Result(ObjOperandId objId) {
   return true;
 }
 
-bool CacheIRCompiler::emitTypedArrayByteOffsetDoubleResult(ObjOperandId objId) {
+bool CacheIRCompiler::emitArrayBufferViewByteOffsetDoubleResult(
+    ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   AutoOutputRegister output(*this);

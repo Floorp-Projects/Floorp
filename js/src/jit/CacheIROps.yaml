@@ -978,14 +978,14 @@
   args:
     obj: ObjId
 
-- name: TypedArrayByteOffsetInt32Result
+- name: ArrayBufferViewByteOffsetInt32Result
   shared: true
   transpile: true
   cost_estimate: 1
   args:
     obj: ObjId
 
-- name: TypedArrayByteOffsetDoubleResult
+- name: ArrayBufferViewByteOffsetDoubleResult
   shared: true
   transpile: true
   cost_estimate: 1
@@ -1804,14 +1804,14 @@
   args:
     obj: ObjId
 
-- name: LoadTypedArrayLengthInt32Result
+- name: LoadArrayBufferViewLengthInt32Result
   shared: true
   transpile: true
   cost_estimate: 1
   args:
     obj: ObjId
 
-- name: LoadTypedArrayLengthDoubleResult
+- name: LoadArrayBufferViewLengthDoubleResult
   shared: true
   transpile: true
   cost_estimate: 1
