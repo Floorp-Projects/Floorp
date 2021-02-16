@@ -14,6 +14,16 @@ const { ClientEnvironment } = ChromeUtils.import(
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
+// Experiment store caches in prefs Enrollments for fast sync access
+function cleanupStorePrefCache() {
+  const SYNC_DATA_PREF_BRANCH = "nimbus.syncdatastore.";
+  try {
+    Services.prefs.deleteBranch(SYNC_DATA_PREF_BRANCH);
+  } catch (e) {
+    // Expected if nothing is cached
+  }
+}
+
 /**
  * The normal case: Enrollment of a new experiment
  */
@@ -71,6 +81,7 @@ add_task(
  * - slug conflict
  * - group conflict
  */
+
 add_task(async function test_failure_name_conflict() {
   const manager = ExperimentFakes.manager();
   const sandbox = sinon.createSandbox();
@@ -200,8 +211,9 @@ add_task(async function test_sampling_check() {
 });
 
 add_task(async function enroll_in_reference_aw_experiment() {
-  const SYNC_DATA_PREF = "messaging-system.syncdatastore.data";
-  Services.prefs.clearUserPref(SYNC_DATA_PREF);
+  cleanupStorePrefCache();
+
+  const SYNC_DATA_PREF_BRANCH = "nimbus.syncdatastore.";
   let dir = await OS.File.getCurrentDirectory();
   let src = OS.Path.join(dir, "reference_aboutwelcome_experiment_content.json");
   let bytes = await OS.File.read(src);
@@ -222,7 +234,9 @@ add_task(async function enroll_in_reference_aw_experiment() {
   await manager.enroll(recipe);
 
   Assert.ok(manager.store.get("reference-aw"), "Successful onboarding");
-  let prefValue = Services.prefs.getStringPref(SYNC_DATA_PREF);
+  let prefValue = Services.prefs.getStringPref(
+    `${SYNC_DATA_PREF_BRANCH}aboutwelcome`
+  );
   Assert.ok(
     prefValue,
     "aboutwelcome experiment enrollment should be stored to prefs"
