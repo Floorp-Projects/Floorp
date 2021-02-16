@@ -972,19 +972,6 @@ set_define("U_USING_ICU_NAMESPACE", "0", when="--with-intl-api")
 set_define("U_STATIC_IMPLEMENTATION", True, when=depends(system_icu)(lambda x: not x))
 
 
-@depends(yasm, gnu_as, target, compile_environment)
-def can_build_data_file(yasm, gnu_as, target, compile_environment):
-    if not compile_environment or (
-        target.kernel == "WINNT" and target.cpu == "aarch64"
-    ):
-        return
-    if not yasm and not gnu_as:
-        die(
-            "Building ICU requires either yasm or a GNU assembler. If you do not have "
-            "either of those available for this platform you must use --without-intl-api"
-        )
-
-
 # Initial support for WebAssembly JS-API Type Reflections
 # =======================================================
 
