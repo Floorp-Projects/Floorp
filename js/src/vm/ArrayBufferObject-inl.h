@@ -44,7 +44,7 @@ inline bool ArrayBufferObjectMaybeShared::isPreparedForAsmJS() const {
   if (this->is<ArrayBufferObject>()) {
     return this->as<ArrayBufferObject>().isPreparedForAsmJS();
   }
-  return this->as<SharedArrayBufferObject>().isPreparedForAsmJS();
+  return false;
 }
 
 inline bool ArrayBufferObjectMaybeShared::isWasm() const {
