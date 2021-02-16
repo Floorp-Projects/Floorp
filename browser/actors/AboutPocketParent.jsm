@@ -90,12 +90,6 @@ class AboutPocketParent extends JSWindowActorParent {
         );
         break;
       }
-      case "PKT_expandSavePanel": {
-        this.browsingContext.topChromeWindow?.pktUI.expandSavePanel(
-          message.data.payload
-        );
-        break;
-      }
       case "PKT_getTags": {
         this.sendResponseMessageToPanel(
           "PKT_getTags",

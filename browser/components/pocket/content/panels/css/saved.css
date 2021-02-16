@@ -26,6 +26,7 @@
     padding: 0;
     position: relative;
     text-align: center;
+    overflow: hidden;
 }
 .pkt_ext_cf:after {
     content: " ";
@@ -106,9 +107,9 @@
     width: 100%;
 }
 .pkt_ext_containersaved .pkt_ext_detail {
-    max-height: 0;
     opacity: 0;
     position: relative;
+    padding-bottom: 1.25em;
 }
 .pkt_ext_container_detailactive .pkt_ext_initload {
     opacity: 0;
@@ -180,6 +181,9 @@
     top: 2.7em;
     text-align: start;
     visibility: hidden;
+}
+.pkt_ext_container_finalerrorstate {
+    max-height: 133px;
 }
 .pkt_ext_container_finalerrorstate .pkt_ext_errordetail {
     display: block;
@@ -347,7 +351,7 @@
     border-radius: 2px;
     font-size: 16px;
     clear: both;
-    margin: 1.25em 1em;
+    margin: 0 1em;
     padding: 0;
     display: flex;
 }
@@ -749,65 +753,6 @@
     color: #bbb;
 }
 
-/*=Overflow mode
---------------------------------------------------------------------------------------- */
-.pkt_ext_saved_overflow .pkt_ext_logo {
-    float: none;
-    margin: 0.5em auto 0;
-}
-.pkt_ext_saved_overflow .pkt_ext_initload {
-    top: -8px;
-}
-.pkt_ext_saved_overflow .pkt_ext_loadingspinner {
-    top: 10em;
-}
-.pkt_ext_saved_overflow .pkt_ext_topdetail {
-    float: none;
-    margin: 0 auto;
-    padding: 0 1em;
-}
-.pkt_ext_saved_overflow h2 {
-    margin-bottom: 0.5em;
-    margin-top: 0;
-    text-align: center;
-}
-.pkt_ext_saved_overflow .pkt_ext_item_actions ul {
-    display: inline-block;
-    width: auto;
-}
-.pkt_ext_saved_overflow .pkt_ext_item_actions li {
-    float: none;
-    padding-inline: 1em;
-    text-align: center;
-}
-.pkt_ext_saved_overflow .pkt_ext_item_actions .pkt_ext_removeitem,
-.pkt_ext_saved_overflow .pkt_ext_item_actions .pkt_ext_openpocket {
-    float: none;
-    text-align: center;
-    padding-inline: 0;
-}
-.pkt_ext_saved_overflow .pkt_ext_item_actions .pkt_ext_actions_separator {
-    display: none;
-}
-.pkt_ext_saved_overflow .pkt_ext_tag_detail {
-    margin-top: 0;
-}
-.pkt_ext_saved_overflow .pkt_ext_suggestedtag_detail,
-.pkt_ext_saved_overflow .pkt_ext_suggestedtag_detailshown {
-    top: 14.75em;
-}
-.pkt_ext_saved_overflow .pkt_ext_edit_msg {
-    top: 16em;
-}
-.pkt_ext_container_finalerrorstate.pkt_ext_saved_overflow .pkt_ext_errordetail {
-    box-sizing: border-box;
-    inset-inline-start: 0;
-    padding-inline: 1em;
-    text-align: center;
-    top: 8.3em;
-    width: 100%;
-}
-
 /*=Language overrides
 --------------------------------------------------------------------------------------- */
 .pkt_ext_saved_es .pkt_ext_btn {
@@ -905,9 +850,7 @@ button {
 .pkt_ext_subshell {
     display: none;
     border-top: 1px solid #c1c1c1;
-    position: fixed;
     background: #ebebeb;
-    bottom: 0;
     width: 100%;
 }
 

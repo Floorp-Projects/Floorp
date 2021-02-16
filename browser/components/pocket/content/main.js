@@ -79,10 +79,20 @@ var pktUI = (function() {
   let _titleToSave = "";
   let _urlToSave = "";
 
-  var overflowMenuWidth = 230;
-  var overflowMenuHeight = 475;
-  var savePanelWidth = 350;
-  var savePanelHeights = { collapsed: 153, expanded: 272 };
+  // Initial sizes are only here to help visual load jank before the panel is ready.
+  const initialPanelSize = {
+    signup: {
+      control: { height: 442, width: 300 },
+      variant_a: { height: 408, width: 300 },
+      variant_b: { height: 383, width: 300 },
+      variant_c: { height: 424, width: 300 },
+      button_variant: { height: 388, width: 300 },
+    },
+    saved: {
+      control: { height: 133, width: 350 },
+    },
+  };
+
   var onSaveRecsEnabledPref;
   var onSaveRecsLocalesPref;
 
@@ -150,30 +160,12 @@ var pktUI = (function() {
 
     // Control: Show panel as normal
     getFirefoxAccountSignedInUser(function(userdata) {
-      var startheight = 490;
-      var inOverflowMenu = isInOverflowMenu();
       var controlvariant = pktApi.getSignupPanelTabTestVariant() == "control";
-      var loggedOutVariant = Services.prefs.getCharPref(
-        "extensions.pocket.loggedOutVariant"
-      );
-
-      if (inOverflowMenu) {
-        startheight = overflowMenuHeight;
-      } else {
-        startheight = 460;
-        if (loggedOutVariant === "button_variant") {
-          startheight = 406;
-        }
-      }
-      if (!controlvariant) {
-        startheight = 427;
-      }
-      var variant;
-      if (inOverflowMenu) {
-        variant = "overflow";
-      } else {
-        variant = "storyboard_lm";
-      }
+      var variant = "storyboard_lm";
+      const loggedOutVariant =
+        Services.prefs.getCharPref("extensions.pocket.loggedOutVariant") ||
+        "control";
+      const sizes = initialPanelSize.signup[loggedOutVariant];
 
       showPanel(
         "about:pocket-signup?pockethost=" +
@@ -184,14 +176,9 @@ var pktUI = (function() {
           variant +
           "&controlvariant=" +
           controlvariant +
-          "&inoverflowmenu=" +
-          inOverflowMenu +
           "&locale=" +
           getUILocale(),
-        {
-          width: inOverflowMenu ? overflowMenuWidth : 300,
-          height: startheight,
-        }
+        sizes
       );
     });
   }
@@ -217,16 +204,9 @@ var pktUI = (function() {
    * Show the logged-out state / sign-up panel
    */
   function saveAndShowConfirmation() {
-    var inOverflowMenu = isInOverflowMenu();
-    var startheight =
-      pktApi.isPremiumUser() && isValidURL()
-        ? savePanelHeights.expanded
-        : savePanelHeights.collapsed;
-    if (inOverflowMenu) {
-      startheight = overflowMenuHeight;
-    }
-
     getFirefoxAccountSignedInUser(function(userdata) {
+      const variant = "control";
+      const sizes = initialPanelSize.saved[variant];
       showPanel(
         "about:pocket-saved?pockethost=" +
           Services.prefs.getCharPref("extensions.pocket.site") +
@@ -234,14 +214,9 @@ var pktUI = (function() {
           (pktApi.isPremiumUser() ? "1" : "0") +
           "&fxasignedin=" +
           (typeof userdata == "object" && userdata !== null ? "1" : "0") +
-          "&inoverflowmenu=" +
-          inOverflowMenu +
           "&locale=" +
           getUILocale(),
-        {
-          width: inOverflowMenu ? overflowMenuWidth : savePanelWidth,
-          height: startheight,
-        }
+        sizes
       );
     });
   }
@@ -254,6 +229,11 @@ var pktUI = (function() {
     _panelId += 1;
     url += "&panelId=" + _panelId;
 
+    resizePanel({
+      width: options.width,
+      height: options.height,
+    });
+
     // We don't have to hide and show the panel again if it's already shown
     // as if the user tries to click again on the toolbar button the overlay
     // will close instead of the button will be clicked
@@ -261,11 +241,6 @@ var pktUI = (function() {
 
     // Load the iframe
     iframe.setAttribute("src", url);
-
-    resizePanel({
-      width: options.width,
-      height: options.height,
-    });
   }
 
   function onShowSignup() {
@@ -413,21 +388,12 @@ var pktUI = (function() {
    *  height: ,
    * }
    */
-  function resizePanel(options) {
+  function resizePanel(options = {}) {
     var iframe = getPanelFrame();
 
     // Set an explicit size, panel will adapt.
     iframe.style.width = options.width + "px";
     iframe.style.height = options.height + "px";
-  }
-
-  function expandSavePanel(data) {
-    if (!isInOverflowMenu()) {
-      resizePanel({
-        width: savePanelWidth,
-        height: savePanelHeights.expanded,
-      });
-    }
   }
 
   // -- Browser Navigation -- //
@@ -569,10 +535,6 @@ var pktUI = (function() {
     return photonPageActionPanelFrame;
   }
 
-  function isInOverflowMenu() {
-    return false;
-  }
-
   function isValidURL() {
     return (
       typeof _urlToSave !== "undefined" &&
@@ -613,7 +575,6 @@ var pktUI = (function() {
     tryToSaveUrl,
     tryToSaveCurrentPage,
     resizePanel,
-    expandSavePanel,
     closePanel,
   };
 })();

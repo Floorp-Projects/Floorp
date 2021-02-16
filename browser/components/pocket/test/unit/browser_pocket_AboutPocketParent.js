@@ -26,7 +26,6 @@ function test_runner(test) {
           onOpenTabWithUrl: sandbox.spy(),
           onOpenTabWithPocketUrl: sandbox.spy(),
           resizePanel: sandbox.spy(),
-          expandSavePanel: sandbox.spy(),
           getPanelFrame: () => ({ setAttribute: () => {} }),
         },
       },
@@ -279,34 +278,6 @@ test_runner(
       sendResponseMessageToPanel.firstCall.args,
       ["PKT_resizePanel", 1],
       "Should fire sendResponseMessageToPanel with proper args from PKT_resizePanel"
-    );
-  }
-);
-
-test_runner(
-  async function test_AboutPocketParent_receiveMessage_PKT_expandSavePanel({
-    sandbox,
-  }) {
-    await aboutPocketParent.receiveMessage({
-      name: "PKT_expandSavePanel",
-      data: {
-        payload: { foo: 1 },
-      },
-    });
-
-    const {
-      expandSavePanel,
-    } = aboutPocketParent.browsingContext.topChromeWindow.pktUI;
-    const { args } = expandSavePanel.firstCall;
-
-    Assert.ok(
-      expandSavePanel.calledOnce,
-      "Should fire expandSavePanel once with PKT_expandSavePanel"
-    );
-    Assert.deepEqual(
-      args,
-      [{ foo: 1 }],
-      "Should fire expandSavePanel with proper args from PKT_expandSavePanel"
     );
   }
 );

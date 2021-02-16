@@ -19,13 +19,13 @@ var PKT_SAVED_OVERLAY = function(options) {
   this.closeValid = true;
   this.mouseInside = false;
   this.autocloseTimer = null;
-  this.inoverflowmenu = false;
   this.dictJSON = {};
   this.autocloseTimerEnabled = false;
   this.autocloseTiming = 4500;
   this.autocloseTimingFinalState = 2000;
   this.mouseInside = false;
   this.userTags = [];
+  this.tagsDropdownOpen = false;
   this.cxt_suggested_available = 0;
   this.cxt_entered = 0;
   this.cxt_suggested = 0;
@@ -309,8 +309,10 @@ var PKT_SAVED_OVERLAY = function(options) {
         myself.checkPlaceholderStatus();
       },
       onShowDropdown() {
-        $(".pkt_ext_item_recs").hide(); // hide recs when tag input begins
-        thePKT_SAVED.sendMessage("PKT_expandSavePanel");
+        myself.tagsDropdownOpen = true;
+      },
+      onHideDropdown() {
+        myself.tagsDropdownOpen = false;
       },
     });
     $("body").on("keydown", function(e) {
@@ -540,27 +542,9 @@ var PKT_SAVED_OVERLAY = function(options) {
       // so we can just use the first item's value for all.
       const model = data.recommendations[0].experiment;
       const renderedRecs = Handlebars.templates.item_recs(data);
-
-      // Resize popover to accomodate recs:
-      thePKT_SAVED.sendMessage(
-        "PKT_resizePanel",
-        {
-          width: 350,
-          height: this.premiumStatus ? 535 : 424, // TODO: Dynamic height based on number of recs
-        },
-        () => {
-          // Recs are fixed positioned at the bottom of the container,
-          // so if we show recs before height is updated,
-          // it shows recs above main saved message. sendMessage is not sync.
-          // This can cause a flash of recs at the top of the doorhanger as the page loads.
-          // So instead we update and show the recs only when the height is done.
-          // This way we don't get the flash of recs.
-          $("body").addClass("recs_enabled");
-          $(".pkt_ext_subshell").show();
-          $(".pkt_ext_item_recs").append(renderedRecs);
-        }
-      );
-
+      $("body").addClass("recs_enabled");
+      $(".pkt_ext_subshell").show();
+      $(".pkt_ext_item_recs").append(renderedRecs);
       $(".pkt_ext_item_recs_link").click(function(e) {
         e.preventDefault();
         const url = $(this).attr("href");
@@ -631,11 +615,6 @@ PKT_SAVED_OVERLAY.prototype = {
     // set host
     this.dictJSON.pockethost = this.pockethost;
 
-    // extra modifier class for collapsed state
-    if (this.inoverflowmenu) {
-      $("body").addClass("pkt_ext_saved_overflow");
-    }
-
     // extra modifier class for language
     if (this.locale) {
       $("body").addClass("pkt_ext_saved_" + this.locale);
@@ -681,6 +660,7 @@ PKT_SAVED.prototype = {
     }
     this.panelId = pktPanelMessaging.panelIdFromURL(window.location.href);
     this.overlay = new PKT_SAVED_OVERLAY();
+    this.setupMutationObserver();
 
     this.inited = true;
   },
@@ -691,6 +671,42 @@ PKT_SAVED.prototype = {
 
   sendMessage(messageId, payload, callback) {
     pktPanelMessaging.sendMessage(messageId, this.panelId, payload, callback);
+  },
+
+  setupMutationObserver() {
+    // Select the node that will be observed for mutations
+    const targetNode = document.body;
+
+    // Options for the observer (which mutations to observe)
+    const config = { attributes: false, childList: true, subtree: true };
+
+    // Callback function to execute when mutations are observed
+    const callback = (mutationList, observer) => {
+      mutationList.forEach(mutation => {
+        switch (mutation.type) {
+          case "childList": {
+            /* One or more children have been added to and/or removed
+               from the tree.
+               (See mutation.addedNodes and mutation.removedNodes.) */
+            let clientHeight = document.body.clientHeight;
+            if (this.overlay.tagsDropdownOpen) {
+              clientHeight = Math.max(clientHeight, 252);
+            }
+            thePKT_SAVED.sendMessage("PKT_resizePanel", {
+              width: document.body.clientWidth,
+              height: clientHeight,
+            });
+            break;
+          }
+        }
+      });
+    };
+
+    // Create an observer instance linked to the callback function
+    const observer = new MutationObserver(callback);
+
+    // Start observing the target node for configured mutations
+    observer.observe(targetNode, config);
   },
 
   create() {
@@ -706,12 +722,6 @@ PKT_SAVED.prototype = {
     var host = window.location.href.match(/pockethost=([\w|\.]*)&?/);
     if (host && host.length > 1) {
       myself.overlay.pockethost = host[1];
-    }
-    var inoverflowmenu = window.location.href.match(
-      /inoverflowmenu=([\w|\.]*)&?/
-    );
-    if (inoverflowmenu && inoverflowmenu.length > 1) {
-      myself.overlay.inoverflowmenu = inoverflowmenu[1] == "true";
     }
     var locale = window.location.href.match(/locale=([\w|\.]*)&?/);
     if (locale && locale.length > 1) {
