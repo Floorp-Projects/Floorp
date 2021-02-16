@@ -22,14 +22,11 @@
 // These headers are also safe to include unconditionally, with empty macros if
 // MOZ_GECKO_PROFILER is not set.
 #include "mozilla/BaseProfilerCounts.h"
+#include "mozilla/BaseProfilerMarkers.h"
 #include "mozilla/BaseProfilerState.h"
-
-// BaseProfilerMarkers.h is #included in the middle of this header!
-// #include "mozilla/BaseProfilerMarkers.h"
 
 #ifndef MOZ_GECKO_PROFILER
 
-#  include "mozilla/BaseProfilerMarkers.h"
 #  include "mozilla/UniquePtr.h"
 
 // This file can be #included unconditionally. However, everything within this
@@ -398,10 +395,6 @@ MFBT_API Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
 
 }  // namespace baseprofiler
 }  // namespace mozilla
-
-// BaseProfilerMarkers.h requires some stuff from this header.
-// TODO: Move common stuff to shared header, and move this #include to the top.
-#  include "mozilla/BaseProfilerMarkers.h"
 
 namespace mozilla {
 namespace baseprofiler {

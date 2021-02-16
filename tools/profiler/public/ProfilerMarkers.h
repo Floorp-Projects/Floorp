@@ -47,11 +47,7 @@
 
 #else  // ndef MOZ_GECKO_PROFILER
 
-namespace mozilla {
-class ProfileChunkedBuffer;
-}
-
-bool profiler_can_accept_markers();
+// Forward-declaration. TODO: Move to more common header, see bug 1681416.
 bool profiler_capture_backtrace_into(
     mozilla::ProfileChunkedBuffer& aChunkedBuffer,
     mozilla::StackCaptureOptions aCaptureOptions);

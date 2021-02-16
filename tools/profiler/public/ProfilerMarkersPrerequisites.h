@@ -17,6 +17,8 @@
 
 #ifdef MOZ_GECKO_PROFILER
 
+#  include "mozilla/ProfilerState.h"
+
 namespace geckoprofiler::markers {
 
 // Default marker payload types, with no extra information, not even a marker
