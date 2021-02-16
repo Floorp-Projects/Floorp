@@ -8,13 +8,12 @@
 #ifndef frontend_ObjLiteral_h
 #define frontend_ObjLiteral_h
 
+#include "mozilla/BloomFilter.h"  // mozilla::BitBloomFilter
 #include "mozilla/EndianUtils.h"
 #include "mozilla/EnumSet.h"
-#include "mozilla/HashTable.h"  // HashSet
 #include "mozilla/Span.h"
 
 #include "frontend/ParserAtom.h"  // ParserAtomsTable, TaggedParserAtomIndex
-#include "frontend/TaggedParserAtomIndexHasher.h"  // TaggedParserAtomIndexHasher
 #include "js/AllocPolicy.h"
 #include "js/GCPolicyAPI.h"
 #include "js/Value.h"
@@ -290,6 +289,7 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
 
   using CodeVector = typename ObjLiteralWriterBase::CodeVector;
 
+  bool checkForDuplicatedNames(JSContext* cx);
   mozilla::Span<const uint8_t> getCode() const { return code_; }
   ObjLiteralFlags getFlags() const { return flags_; }
   uint32_t getPropertyCount() const { return propertyCount_; }
@@ -304,14 +304,16 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
       return true;
     }
 
-    auto p = propNames_.lookupForAdd(propName);
-    if (!p) {
-      if (!propNames_.add(p, propName)) {
-        js::ReportOutOfMemory(cx);
-        return false;
-      }
+    // OK to early return if we've already discovered a potential duplicate.
+    if (mightContainDuplicatePropertyNames_) {
+      return true;
+    }
+
+    // Check bloom filter for duplicate, and add if not already represented.
+    if (propNamesFilter_.mightContain(propName.rawData())) {
+      mightContainDuplicatePropertyNames_ = true;
     } else {
-      flags_ += ObjLiteralFlag::HasIndexOrDuplicatePropName;
+      propNamesFilter_.add(propName.rawData());
     }
     return true;
   }
@@ -383,12 +385,24 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
 #endif
 
  private:
+  // Set to true if we've found possible duplicate names while building.
+  // This field is placed next to `flags_` field, to reduce padding.
+  bool mightContainDuplicatePropertyNames_ = false;
+
   ObjLiteralFlags flags_;
   ObjLiteralKey nextKey_;
   uint32_t propertyCount_ = 0;
-  mozilla::HashSet<frontend::TaggedParserAtomIndex,
-                   frontend::TaggedParserAtomIndexHasher>
-      propNames_;
+
+  // Duplicate property names detection is performed in the following way:
+  //   * while emitting code, add each property names with
+  //     `propNamesFilter_`
+  //   * if possible duplicate property name is detected, set
+  //     `mightContainDuplicatePropertyNames_` to true
+  //   * in `checkForDuplicatedNames` method,
+  //     if `mightContainDuplicatePropertyNames_` is true,
+  //     check the duplicate property names with `HashSet`, and if it exists,
+  //     set HasIndexOrDuplicatePropName flag.
+  mozilla::BitBloomFilter<12, frontend::TaggedParserAtomIndex> propNamesFilter_;
 };
 
 struct ObjLiteralReaderBase {
