@@ -62,8 +62,8 @@ uint32_t ProxyAccessibleWrap::ChildCount() const {
   return Proxy()->ChildrenCount();
 }
 
-Accessible* ProxyAccessibleWrap::GetChildAt(uint32_t aIndex) const {
-  ProxyAccessible* child = Proxy()->ChildAt(aIndex);
+ProxyAccessible* child = Proxy()->ChildAt(aIndex);
+Accessible* ProxyAccessibleWrap::LocalChildAt(uint32_t aIndex) const {
   return child ? WrapperFor(child) : nullptr;
 }
 

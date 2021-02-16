@@ -68,7 +68,7 @@ bool FocusManager::IsFocusWithin(const Accessible* aContainer) const {
   while (child) {
     if (child == aContainer) return true;
 
-    child = child->Parent();
+    child = child->LocalParent();
   }
   return false;
 }
@@ -82,19 +82,19 @@ FocusManager::FocusDisposition FocusManager::IsInOrContainsFocus(
   if (focus == aAccessible) return eFocused;
 
   // If contains the focus.
-  Accessible* child = focus->Parent();
+  Accessible* child = focus->LocalParent();
   while (child) {
     if (child == aAccessible) return eContainsFocus;
 
-    child = child->Parent();
+    child = child->LocalParent();
   }
 
   // If contained by focus.
-  child = aAccessible->Parent();
+  child = aAccessible->LocalParent();
   while (child) {
     if (child == focus) return eContainedByFocus;
 
-    child = child->Parent();
+    child = child->LocalParent();
   }
 
   return eNone;
@@ -286,8 +286,8 @@ void FocusManager::ProcessFocusEvent(AccEvent* aEvent) {
   if (target->IsARIARole(nsGkAtoms::menuitem)) {
     // The focus was moved into menu.
     Accessible* ARIAMenubar = nullptr;
-    for (Accessible* parent = target->Parent(); parent;
-         parent = parent->Parent()) {
+    for (Accessible* parent = target->LocalParent(); parent;
+         parent = parent->LocalParent()) {
       if (parent->IsARIARole(nsGkAtoms::menubar)) {
         ARIAMenubar = parent;
         break;

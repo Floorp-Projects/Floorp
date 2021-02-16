@@ -45,7 +45,7 @@ class XULTreeAccessible : public AccessibleWrap {
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
                                    EWhichChildAtPoint aWhichChild) override;
 
-  virtual Accessible* GetChildAt(uint32_t aIndex) const override;
+  virtual Accessible* LocalChildAt(uint32_t aIndex) const override;
   virtual uint32_t ChildCount() const override;
   virtual Relation RelationByType(RelationType aType) const override;
 

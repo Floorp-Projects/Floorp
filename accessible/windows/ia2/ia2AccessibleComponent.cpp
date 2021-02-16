@@ -55,7 +55,7 @@ ia2AccessibleComponent::get_locationInParent(long* aX, long* aY) {
   // The coordinates of the returned position are relative to this object's
   // parent or relative to the screen on which this object is rendered if it
   // has no parent.
-  if (!acc->Parent()) {
+  if (!acc->LocalParent()) {
     *aX = rect.X();
     *aY = rect.Y();
     return S_OK;
@@ -63,7 +63,7 @@ ia2AccessibleComponent::get_locationInParent(long* aX, long* aY) {
 
   // The coordinates of the bounding box are given relative to the parent's
   // coordinate system.
-  nsIntRect parentRect = acc->Parent()->Bounds();
+  nsIntRect parentRect = acc->LocalParent()->Bounds();
   *aX = rect.X() - parentRect.X();
   *aY = rect.Y() - parentRect.Y();
   return S_OK;

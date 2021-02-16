@@ -26,11 +26,11 @@ bool TextPoint::operator<(const TextPoint& aPoint) const {
   AutoTArray<Accessible*, 30> parents1, parents2;
   do {
     parents1.AppendElement(p1);
-    p1 = p1->Parent();
+    p1 = p1->LocalParent();
   } while (p1);
   do {
     parents2.AppendElement(p2);
-    p2 = p2->Parent();
+    p2 = p2->LocalParent();
   } while (p2);
 
   // Find where the parent chain differs
@@ -48,7 +48,7 @@ bool TextPoint::operator<(const TextPoint& aPoint) const {
     // is mContainer's ancestor that is the child of aPoint.mContainer.
     // We compare its end offset in aPoint.mContainer with aPoint.mOffset.
     Accessible* child = parents1.ElementAt(pos1 - 1);
-    MOZ_ASSERT(child->Parent() == aPoint.mContainer);
+    MOZ_ASSERT(child->LocalParent() == aPoint.mContainer);
     return child->EndOffset() < static_cast<uint32_t>(aPoint.mOffset);
   }
 
@@ -58,7 +58,7 @@ bool TextPoint::operator<(const TextPoint& aPoint) const {
     // is aPoint.mContainer's ancestor that is the child of mContainer.
     // We compare its start offset in mContainer with mOffset.
     Accessible* child = parents2.ElementAt(pos2 - 1);
-    MOZ_ASSERT(child->Parent() == mContainer);
+    MOZ_ASSERT(child->LocalParent() == mContainer);
     return static_cast<uint32_t>(mOffset) < child->StartOffset();
   }
 
@@ -83,7 +83,7 @@ void TextRange::EmbeddedChildren(nsTArray<Accessible*>* aChildren) const {
     int32_t startIdx = mStartContainer->GetChildIndexAtOffset(mStartOffset);
     int32_t endIdx = mStartContainer->GetChildIndexAtOffset(mEndOffset);
     for (int32_t idx = startIdx; idx <= endIdx; idx++) {
-      Accessible* child = mStartContainer->GetChildAt(idx);
+      Accessible* child = mStartContainer->LocalChildAt(idx);
       if (!child->IsText()) {
         aChildren->AppendElement(child);
       }
@@ -106,7 +106,7 @@ void TextRange::EmbeddedChildren(nsTArray<Accessible*>* aChildren) const {
     uint32_t childCount = parent->ChildCount();
     for (uint32_t childIdx = child->IndexInParent(); childIdx < childCount;
          childIdx++) {
-      Accessible* next = parent->GetChildAt(childIdx);
+      Accessible* next = parent->LocalChildAt(childIdx);
       if (!next->IsText()) {
         aChildren->AppendElement(next);
       }
@@ -117,7 +117,7 @@ void TextRange::EmbeddedChildren(nsTArray<Accessible*>* aChildren) const {
   int32_t endIdx = parents2[pos2 - 1]->IndexInParent();
   int32_t childIdx = parents1[pos1 - 1]->IndexInParent() + 1;
   for (; childIdx < endIdx; childIdx++) {
-    Accessible* next = container->GetChildAt(childIdx);
+    Accessible* next = container->LocalChildAt(childIdx);
     if (!next->IsText()) {
       aChildren->AppendElement(next);
     }
@@ -129,7 +129,7 @@ void TextRange::EmbeddedChildren(nsTArray<Accessible*>* aChildren) const {
     Accessible* child = parents2[idx - 1];
     int32_t endIdx = child->IndexInParent();
     for (int32_t childIdx = 0; childIdx < endIdx; childIdx++) {
-      Accessible* next = parent->GetChildAt(childIdx);
+      Accessible* next = parent->LocalChildAt(childIdx);
       if (!next->IsText()) {
         aChildren->AppendElement(next);
       }
@@ -143,10 +143,10 @@ void TextRange::Text(nsAString& aText) const {
       mStartOffset - mStartContainer->GetChildOffset(current);
 
   while (current && TextInternal(aText, current, startIntlOffset)) {
-    current = current->Parent();
+    current = current->LocalParent();
     if (!current) break;
 
-    current = current->NextSibling();
+    current = current->LocalNextSibling();
   }
 }
 
@@ -441,7 +441,7 @@ bool TextRange::TextInternal(nsAString& aText, Accessible* aCurrent,
                              uint32_t aStartIntlOffset) const {
   bool moveNext = true;
   int32_t endIntlOffset = -1;
-  if (aCurrent->Parent() == mEndContainer &&
+  if (aCurrent->LocalParent() == mEndContainer &&
       mEndContainer->GetChildAtOffset(mEndOffset) == aCurrent) {
     uint32_t currentStartOffset = mEndContainer->GetChildOffset(aCurrent);
     endIntlOffset = mEndOffset - currentStartOffset;
@@ -456,12 +456,12 @@ bool TextRange::TextInternal(nsAString& aText, Accessible* aCurrent,
     if (!moveNext) return false;
   }
 
-  Accessible* next = aCurrent->FirstChild();
+  Accessible* next = aCurrent->LocalFirstChild();
   if (next) {
     if (!TextInternal(aText, next, 0)) return false;
   }
 
-  next = aCurrent->NextSibling();
+  next = aCurrent->LocalNextSibling();
   if (next) {
     if (!TextInternal(aText, next, 0)) return false;
   }
@@ -491,11 +491,11 @@ Accessible* TextRange::CommonParent(Accessible* aAcc1, Accessible* aAcc2,
   Accessible* p2 = aAcc2;
   do {
     aParents1->AppendElement(p1);
-    p1 = p1->Parent();
+    p1 = p1->LocalParent();
   } while (p1);
   do {
     aParents2->AppendElement(p2);
-    p2 = p2->Parent();
+    p2 = p2->LocalParent();
   } while (p2);
 
   // Find where the parent chain differs

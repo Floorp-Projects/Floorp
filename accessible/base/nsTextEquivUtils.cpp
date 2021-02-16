@@ -158,7 +158,7 @@ nsresult nsTextEquivUtils::AppendFromAccessibleChildren(
 
   uint32_t childCount = aAccessible->ChildCount();
   for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
-    Accessible* child = aAccessible->GetChildAt(childIdx);
+    Accessible* child = aAccessible->LocalChildAt(childIdx);
     rv = AppendFromAccessible(child, aString);
     NS_ENSURE_SUCCESS(rv, rv);
   }

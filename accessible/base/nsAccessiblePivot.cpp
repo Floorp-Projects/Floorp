@@ -419,7 +419,7 @@ bool nsAccessiblePivot::IsDescendantOf(Accessible* aAccessible,
   Accessible* accessible = aAccessible;
   do {
     if (accessible == aAncestor) return true;
-  } while ((accessible = accessible->Parent()));
+  } while ((accessible = accessible->LocalParent()));
 
   return false;
 }

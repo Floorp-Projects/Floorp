@@ -35,7 +35,7 @@ AccIterator::~AccIterator() {
 
 Accessible* AccIterator::Next() {
   while (mState) {
-    Accessible* child = mState->mParent->GetChildAt(mState->mIndex++);
+    Accessible* child = mState->mParent->LocalChildAt(mState->mIndex++);
     if (!child) {
       IteratorState* tmp = mState;
       mState = mState->mParentState;
@@ -136,7 +136,7 @@ Accessible* HTMLLabelIterator::Next() {
   // Go up tree to get a name of ancestor label if there is one (an ancestor
   // <label> implicitly points to us). Don't go up farther than form or
   // document.
-  Accessible* walkUp = mAcc->Parent();
+  Accessible* walkUp = mAcc->LocalParent();
   while (walkUp && !walkUp->IsDoc()) {
     nsIContent* walkUpEl = walkUp->GetContent();
     if (IsLabel(walkUp) &&
@@ -147,7 +147,7 @@ Accessible* HTMLLabelIterator::Next() {
 
     if (walkUpEl->IsHTMLElement(nsGkAtoms::form)) break;
 
-    walkUp = walkUp->Parent();
+    walkUp = walkUp->LocalParent();
   }
 
   return nullptr;

@@ -41,12 +41,12 @@ role HTMLImageMapAccessible::NativeRole() const { return roles::IMAGE_MAP; }
 uint32_t HTMLImageMapAccessible::AnchorCount() { return ChildCount(); }
 
 Accessible* HTMLImageMapAccessible::AnchorAt(uint32_t aAnchorIndex) {
-  return GetChildAt(aAnchorIndex);
+  return LocalChildAt(aAnchorIndex);
 }
 
 already_AddRefed<nsIURI> HTMLImageMapAccessible::AnchorURIAt(
     uint32_t aAnchorIndex) const {
-  Accessible* area = GetChildAt(aAnchorIndex);
+  Accessible* area = LocalChildAt(aAnchorIndex);
   if (!area) return nullptr;
 
   nsIContent* linkContent = area->GetContent();

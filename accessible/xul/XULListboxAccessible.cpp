@@ -133,7 +133,7 @@ Accessible* XULListboxAccessible::CellAt(uint32_t aRowIndex,
   Accessible* row = mDoc->GetAccessible(element);
   NS_ENSURE_TRUE(row, nullptr);
 
-  return row->GetChildAt(aColumnIndex);
+  return row->LocalChildAt(aColumnIndex);
 }
 
 bool XULListboxAccessible::IsColSelected(uint32_t aColIdx) {
@@ -502,4 +502,6 @@ void XULListitemAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
 ////////////////////////////////////////////////////////////////////////////////
 // XULListitemAccessible: Widgets
 
-Accessible* XULListitemAccessible::ContainerWidget() const { return Parent(); }
+Accessible* XULListitemAccessible::ContainerWidget() const {
+  return LocalParent();
+}

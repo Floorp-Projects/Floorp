@@ -90,7 +90,7 @@ class AccessibleWrap : public Accessible {
 
  private:
   virtual AccessibleWrap* WrapperParent() {
-    return static_cast<AccessibleWrap*>(Parent());
+    return static_cast<AccessibleWrap*>(LocalParent());
   }
 
   virtual bool WrapperRangeInfo(double* aCurVal, double* aMinVal,

@@ -35,7 +35,7 @@ int32_t AccessibleOrProxy::IndexInParent() const {
 
 AccessibleOrProxy AccessibleOrProxy::Parent() const {
   if (IsAccessible()) {
-    return AsAccessible()->Parent();
+    return AsAccessible()->LocalParent();
   }
 
   ProxyAccessible* proxy = AsProxy();

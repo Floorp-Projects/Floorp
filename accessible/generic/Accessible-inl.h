@@ -109,10 +109,10 @@ inline bool Accessible::InsertAfter(Accessible* aNewChild,
                                     Accessible* aRefChild) {
   MOZ_ASSERT(aNewChild, "No new child to insert");
 
-  if (aRefChild && aRefChild->Parent() != this) {
+  if (aRefChild && aRefChild->LocalParent() != this) {
 #ifdef A11Y_LOG
     logging::TreeInfo("broken accessible tree", 0, "parent", this,
-                      "prev sibling parent", aRefChild->Parent(), "child",
+                      "prev sibling parent", aRefChild->LocalParent(), "child",
                       aNewChild, nullptr);
     if (logging::IsEnabled(logging::eVerbose)) {
       logging::Tree("TREE", "Document tree", mDoc);

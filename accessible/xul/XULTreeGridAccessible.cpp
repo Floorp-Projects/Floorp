@@ -117,9 +117,9 @@ void XULTreeGridAccessible::ColDescription(uint32_t aColIdx,
                                            nsString& aDescription) {
   aDescription.Truncate();
 
-  Accessible* treeColumns = Accessible::GetChildAt(0);
+  Accessible* treeColumns = Accessible::LocalChildAt(0);
   if (treeColumns) {
-    Accessible* treeColumnItem = treeColumns->GetChildAt(aColIdx);
+    Accessible* treeColumnItem = treeColumns->LocalChildAt(aColIdx);
     if (treeColumnItem) treeColumnItem->Name(aDescription);
   }
 }
@@ -277,7 +277,7 @@ Accessible* XULTreeGridRowAccessible::ChildAtPoint(
   return GetCellAccessible(cellInfo.mCol);
 }
 
-Accessible* XULTreeGridRowAccessible::GetChildAt(uint32_t aIndex) const {
+Accessible* XULTreeGridRowAccessible::LocalChildAt(uint32_t aIndex) const {
   if (IsDefunct()) return nullptr;
 
   RefPtr<nsTreeColumn> column = nsCoreUtils::GetSensibleColumnAt(mTree, aIndex);
@@ -483,7 +483,7 @@ bool XULTreeGridCellAccessible::DoAction(uint8_t aIndex) const {
 // XULTreeGridCellAccessible: TableCell
 
 TableAccessible* XULTreeGridCellAccessible::Table() const {
-  Accessible* grandParent = mParent->Parent();
+  Accessible* grandParent = mParent->LocalParent();
   if (grandParent) return grandParent->AsTable();
 
   return nullptr;
@@ -630,7 +630,7 @@ Accessible* XULTreeGridCellAccessible::GetSiblingAtOffset(
 
   if (!columnAtOffset) return nullptr;
 
-  RefPtr<XULTreeItemAccessibleBase> rowAcc = do_QueryObject(Parent());
+  RefPtr<XULTreeItemAccessibleBase> rowAcc = do_QueryObject(LocalParent());
   return rowAcc->GetCellAccessible(columnAtOffset);
 }
 

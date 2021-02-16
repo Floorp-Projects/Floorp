@@ -69,7 +69,7 @@ void DocAccessibleChildBase::SerializeTree(Accessible* aRoot,
 #endif
 
   for (uint32_t i = 0; i < childCount; i++) {
-    SerializeTree(aRoot->GetChildAt(i), aTree);
+    SerializeTree(aRoot->LocalChildAt(i), aTree);
   }
 }
 
@@ -85,7 +85,7 @@ void DocAccessibleChildBase::InsertIntoIpcTree(Accessible* aParent,
 }
 
 void DocAccessibleChildBase::ShowEvent(AccShowEvent* aShowEvent) {
-  Accessible* parent = aShowEvent->Parent();
+  Accessible* parent = aShowEvent->LocalParent();
   uint64_t parentID =
       parent->IsDoc() ? 0 : reinterpret_cast<uint64_t>(parent->UniqueID());
   uint32_t idxInParent = aShowEvent->GetAccessible()->IndexInParent();

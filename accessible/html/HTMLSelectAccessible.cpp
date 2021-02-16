@@ -171,7 +171,7 @@ uint64_t HTMLSelectOptionAccessible::NativeState() const {
     // visibility implementation unless they get reimplemented in layout
     state &= ~states::OFFSCREEN;
     // <select> is not collapsed: compare bounds to calculate OFFSCREEN
-    Accessible* listAcc = Parent();
+    Accessible* listAcc = LocalParent();
     if (listAcc) {
       nsIntRect optionRect = Bounds();
       nsIntRect listRect = listAcc->Bounds();
@@ -234,8 +234,10 @@ void HTMLSelectOptionAccessible::SetSelected(bool aSelect) {
 // HTMLSelectOptionAccessible: Widgets
 
 Accessible* HTMLSelectOptionAccessible::ContainerWidget() const {
-  Accessible* parent = Parent();
-  if (parent && parent->IsHTMLOptGroup()) parent = parent->Parent();
+  Accessible* parent = LocalParent();
+  if (parent && parent->IsHTMLOptGroup()) {
+    parent = parent->LocalParent();
+  }
 
   return parent && parent->IsListControl() ? parent : nullptr;
 }
@@ -459,7 +461,7 @@ nsRect HTMLComboboxListAccessible::RelativeBounds(
     nsIFrame** aBoundingFrame) const {
   *aBoundingFrame = nullptr;
 
-  Accessible* comboAcc = Parent();
+  Accessible* comboAcc = LocalParent();
   if (!comboAcc) return nsRect();
 
   if (0 == (comboAcc->State() & states::COLLAPSED)) {

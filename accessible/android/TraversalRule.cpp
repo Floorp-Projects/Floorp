@@ -79,14 +79,14 @@ bool TraversalRule::IsSingleLineage(Accessible* aAccessible) {
       case 0:
         return true;
       case 1:
-        child = child->FirstChild();
+        child = child->LocalFirstChild();
         break;
       case 2:
         if (Accessible* bullet =
-                child->Parent()->IsHTMLListItem()
-                    ? child->Parent()->AsHTMLListItem()->Bullet()
+                child->LocalParent()->IsHTMLListItem()
+                    ? child->LocalParent()->AsHTMLListItem()->Bullet()
                     : nullptr) {
-          child = bullet->NextSibling();
+          child = bullet->LocalNextSibling();
         } else {
           return false;
         }
@@ -100,14 +100,14 @@ bool TraversalRule::IsSingleLineage(Accessible* aAccessible) {
 }
 
 bool TraversalRule::IsListItemBullet(const Accessible* aAccessible) {
-  Accessible* parent = aAccessible->Parent();
+  Accessible* parent = aAccessible->LocalParent();
   return parent && parent->IsHTMLListItem() &&
          parent->AsHTMLListItem()->Bullet() == aAccessible;
 }
 
 bool TraversalRule::IsFlatSubtree(const Accessible* aAccessible) {
-  for (auto child = aAccessible->FirstChild(); child;
-       child = child->NextSibling()) {
+  for (auto child = aAccessible->LocalFirstChild(); child;
+       child = child->LocalNextSibling()) {
     roles::Role role = child->Role();
     if (role == roles::TEXT_LEAF || role == roles::STATICTEXT) {
       continue;

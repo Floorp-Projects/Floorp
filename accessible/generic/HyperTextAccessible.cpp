@@ -292,7 +292,7 @@ void HyperTextAccessible::TextSubstring(int32_t aStartOffset,
     int32_t childOffset = GetChildOffset(startChildIdx);
     if (childOffset == -1) return;
 
-    Accessible* child = GetChildAt(startChildIdx);
+    Accessible* child = LocalChildAt(startChildIdx);
     child->AppendTextTo(aText, startOffset - childOffset,
                         endOffset - startOffset);
     return;
@@ -301,19 +301,19 @@ void HyperTextAccessible::TextSubstring(int32_t aStartOffset,
   int32_t startChildOffset = GetChildOffset(startChildIdx);
   if (startChildOffset == -1) return;
 
-  Accessible* startChild = GetChildAt(startChildIdx);
+  Accessible* startChild = LocalChildAt(startChildIdx);
   startChild->AppendTextTo(aText, startOffset - startChildOffset);
 
   for (int32_t childIdx = startChildIdx + 1; childIdx < endChildIdx;
        childIdx++) {
-    Accessible* child = GetChildAt(childIdx);
+    Accessible* child = LocalChildAt(childIdx);
     child->AppendTextTo(aText);
   }
 
   int32_t endChildOffset = GetChildOffset(endChildIdx);
   if (endChildOffset == -1) return;
 
-  Accessible* endChild = GetChildAt(endChildIdx);
+  Accessible* endChild = LocalChildAt(endChildIdx);
   endChild->AppendTextTo(aText, 0, endOffset - endChildOffset);
 }
 
@@ -406,7 +406,7 @@ uint32_t HyperTextAccessible::TransformOffset(Accessible* aDescendant,
   uint32_t offset = aOffset;
   Accessible* descendant = aDescendant;
   while (descendant) {
-    Accessible* parent = descendant->Parent();
+    Accessible* parent = descendant->LocalParent();
     if (parent == this) return GetChildOffset(descendant) + offset;
 
     // This offset no longer applies because the passed-in text object is not
@@ -422,8 +422,9 @@ uint32_t HyperTextAccessible::TransformOffset(Accessible* aDescendant,
       // for a list when it should return the list bullet.
       // We manually set the offset so the error doesn't propagate up.
       if (offset == 0 && parent && parent->IsHTMLListItem() &&
-          descendant->PrevSibling() && descendant->PrevSibling()->GetFrame() &&
-          descendant->PrevSibling()->GetFrame()->IsBulletFrame()) {
+          descendant->LocalPrevSibling() &&
+          descendant->LocalPrevSibling()->GetFrame() &&
+          descendant->LocalPrevSibling()->GetFrame()->IsBulletFrame()) {
         offset = 0;
       } else {
         offset = (offset > 0 || descendant->IndexInParent() > 0) ? 1 : 0;
@@ -455,7 +456,7 @@ DOMPoint HyperTextAccessible::OffsetToDOMPoint(int32_t aOffset) const {
   int32_t childIdx = GetChildIndexAtOffset(aOffset);
   if (childIdx == -1) return DOMPoint();
 
-  Accessible* child = GetChildAt(childIdx);
+  Accessible* child = LocalChildAt(childIdx);
   int32_t innerOffset = aOffset - GetChildOffset(childIdx);
 
   // A text leaf case.
@@ -509,7 +510,7 @@ uint32_t HyperTextAccessible::FindOffset(uint32_t aOffset,
       return DOMPointToOffset(text->GetNode(), 0, aDirection == eDirNext);
     }
 
-    child = text->GetChildAt(childIdx);
+    child = text->LocalChildAt(childIdx);
 
     // HTML list items may need special processing because PeekOffset doesn't
     // work with list bullets.
@@ -1264,7 +1265,7 @@ int32_t HyperTextAccessible::GetLevelInternal() {
 void HyperTextAccessible::SetMathMLXMLRoles(
     nsIPersistentProperties* aAttributes) {
   // Add MathML xmlroles based on the position inside the parent.
-  Accessible* parent = Parent();
+  Accessible* parent = LocalParent();
   if (parent) {
     switch (parent->Role()) {
       case roles::MATHML_CELL:
@@ -1284,10 +1285,10 @@ void HyperTextAccessible::SetMathMLXMLRoles(
             nsEmbellishData embellishData;
             mathMLFrame->GetEmbellishData(embellishData);
             if (NS_MATHML_EMBELLISH_IS_FENCE(embellishData.flags)) {
-              if (!PrevSibling()) {
+              if (!LocalPrevSibling()) {
                 nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::xmlroles,
                                        nsGkAtoms::open_fence);
-              } else if (!NextSibling()) {
+              } else if (!LocalNextSibling()) {
                 nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::xmlroles,
                                        nsGkAtoms::close_fence);
               }
@@ -1542,7 +1543,7 @@ nsIntRect HyperTextAccessible::TextBounds(int32_t aStartOffset,
   int32_t offset1 = startOffset - prevOffset;
 
   while (childIdx < static_cast<int32_t>(ChildCount())) {
-    nsIFrame* frame = GetChildAt(childIdx++)->GetFrame();
+    nsIFrame* frame = LocalChildAt(childIdx++)->GetFrame();
     if (!frame) {
       MOZ_ASSERT_UNREACHABLE("No frame for a child!");
       continue;
@@ -1585,7 +1586,7 @@ already_AddRefed<TextEditor> HyperTextAccessible::GetEditor() const {
   if (!mContent->HasFlag(NODE_IS_EDITABLE)) {
     // If we're inside an editable container, then return that container's
     // editor
-    Accessible* ancestor = Parent();
+    Accessible* ancestor = LocalParent();
     while (ancestor) {
       HyperTextAccessible* hyperText = ancestor->AsHyperText();
       if (hyperText) {
@@ -1594,7 +1595,7 @@ already_AddRefed<TextEditor> HyperTextAccessible::GetEditor() const {
         return hyperText->GetEditor();
       }
 
-      ancestor = ancestor->Parent();
+      ancestor = ancestor->LocalParent();
     }
 
     return nullptr;
@@ -2037,8 +2038,9 @@ void HyperTextAccessible::RangeByChild(Accessible* aChild,
 
   Accessible* child = aChild;
   Accessible* parent = nullptr;
-  while ((parent = child->Parent()) && !(ht = parent->AsHyperText()))
+  while ((parent = child->LocalParent()) && !(ht = parent->AsHyperText())) {
     child = parent;
+  }
 
   // If no text then return collapsed text range, otherwise return a range
   // containing the text enclosed by the given child.
@@ -2057,7 +2059,9 @@ void HyperTextAccessible::RangeAtPoint(int32_t aX, int32_t aY,
   if (!child) return;
 
   Accessible* parent = nullptr;
-  while ((parent = child->Parent()) && !parent->IsHyperText()) child = parent;
+  while ((parent = child->LocalParent()) && !parent->IsHyperText()) {
+    child = parent;
+  }
 
   // Return collapsed text range for the point.
   if (parent) {
@@ -2122,7 +2126,7 @@ Relation HyperTextAccessible::RelationByType(RelationType aType) const {
   switch (aType) {
     case RelationType::NODE_CHILD_OF:
       if (HasOwnContent() && mContent->IsMathMLElement()) {
-        Accessible* parent = Parent();
+        Accessible* parent = LocalParent();
         if (parent) {
           nsIContent* parentContent = parent->GetContent();
           if (parentContent &&
@@ -2135,8 +2139,8 @@ Relation HyperTextAccessible::RelationByType(RelationType aType) const {
       break;
     case RelationType::NODE_PARENT_OF:
       if (HasOwnContent() && mContent->IsMathMLElement(nsGkAtoms::mroot_)) {
-        Accessible* base = GetChildAt(0);
-        Accessible* index = GetChildAt(1);
+        Accessible* base = LocalChildAt(0);
+        Accessible* index = LocalChildAt(1);
         if (base && index) {
           // Append the <mroot> children in the order index, base.
           rel.AppendTarget(index);
@@ -2252,7 +2256,7 @@ int32_t HyperTextAccessible::GetChildIndexAtOffset(uint32_t aOffset) const {
 
   uint32_t childCount = ChildCount();
   while (mOffsets.Length() < childCount) {
-    Accessible* child = GetChildAt(mOffsets.Length());
+    Accessible* child = LocalChildAt(mOffsets.Length());
     lastOffset += nsAccUtils::TextLength(child);
     mOffsets.AppendElement(lastOffset);
     if (aOffset < lastOffset) return mOffsets.Length() - 1;
