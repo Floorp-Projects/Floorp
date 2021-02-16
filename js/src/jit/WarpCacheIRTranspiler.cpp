@@ -3367,6 +3367,48 @@ bool WarpCacheIRTranspiler::emitArrayBufferViewByteOffsetDoubleResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitTypedArrayByteLengthInt32Result(
+    ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* length = MArrayBufferViewLength::New(alloc(), obj);
+  add(length);
+
+  auto* lengthInt32 = MNonNegativeIntPtrToInt32::New(alloc(), length);
+  add(lengthInt32);
+
+  auto* size = MTypedArrayElementSize::New(alloc(), obj);
+  add(size);
+
+  auto* mul = MMul::New(alloc(), lengthInt32, size, MIRType::Int32);
+  mul->setCanBeNegativeZero(false);
+  add(mul);
+
+  pushResult(mul);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitTypedArrayByteLengthDoubleResult(
+    ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* length = MArrayBufferViewLength::New(alloc(), obj);
+  add(length);
+
+  auto* lengthDouble = MIntPtrToDouble::New(alloc(), length);
+  add(lengthDouble);
+
+  auto* size = MTypedArrayElementSize::New(alloc(), obj);
+  add(size);
+
+  auto* mul = MMul::New(alloc(), lengthDouble, size, MIRType::Double);
+  mul->setCanBeNegativeZero(false);
+  add(mul);
+
+  pushResult(mul);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitTypedArrayElementSizeResult(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
