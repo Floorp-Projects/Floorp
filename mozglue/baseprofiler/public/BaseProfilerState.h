@@ -1,0 +1,366 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// The Gecko Profiler is an always-on profiler that takes fast and low overhead
+// samples of the program execution using only userspace functionality for
+// portability. The goal of this module is to provide performance data in a
+// generic cross-platform way without requiring custom tools or kernel support.
+//
+// Samples are collected to form a timeline with optional timeline event
+// (markers) used for filtering. The samples include both native stacks and
+// platform-independent "label stack" frames.
+
+#ifndef BaseProfilerState_h
+#define BaseProfilerState_h
+
+// This header contains most functions that give information about the Base
+// Profiler: Whether it is active or not, paused, the selected features, and
+// some generic process and thread information.
+// It is safe to include unconditionally, but uses of structs and functions must
+// be guarded by `#ifdef MOZ_GECKO_PROFILER`.
+
+#ifndef MOZ_GECKO_PROFILER
+
+#  define AUTO_PROFILER_STATS(name)
+
+#else  // !MOZ_GECKO_PROFILER
+
+#  include "mozilla/Atomics.h"
+#  include "mozilla/Maybe.h"
+
+#  include <stdint.h>
+#  include <string>
+
+namespace mozilla {
+
+namespace baseprofiler {
+
+// Uncomment the following line to display profiler runtime statistics at
+// shutdown.
+// #  define PROFILER_RUNTIME_STATS
+
+#  ifdef PROFILER_RUNTIME_STATS
+// This class gathers durations and displays some basic stats when destroyed.
+// It is intended to be used as a static variable (see `AUTO_PROFILER_STATS`
+// below), to display stats at the end of the program.
+class StaticBaseProfilerStats {
+ public:
+  explicit StaticBaseProfilerStats(const char* aName) : mName(aName) {}
+
+  ~StaticBaseProfilerStats() {
+    // Using unsigned long long for computations and printfs.
+    using ULL = unsigned long long;
+    ULL n = static_cast<ULL>(mNumberDurations);
+    if (n != 0) {
+      ULL sumNs = static_cast<ULL>(mSumDurationsNs);
+      printf(
+          "[%d] Profiler stats `%s`: %llu ns / %llu = %llu ns, max %llu ns\n",
+          profiler_current_process_id(), mName, sumNs, n, sumNs / n,
+          static_cast<ULL>(mLongestDurationNs));
+    } else {
+      printf("[%d] Profiler stats `%s`: (nothing)\n",
+             profiler_current_process_id(), mName);
+    }
+  }
+
+  void AddDurationFrom(TimeStamp aStart) {
+    DurationNs duration = static_cast<DurationNs>(
+        (TimeStamp::NowUnfuzzed() - aStart).ToMicroseconds() * 1000 + 0.5);
+    mSumDurationsNs += duration;
+    ++mNumberDurations;
+    // Update mLongestDurationNs if this one is longer.
+    for (;;) {
+      DurationNs longest = mLongestDurationNs;
+      if (MOZ_LIKELY(longest >= duration)) {
+        // This duration is not the longest, nothing to do.
+        break;
+      }
+      if (MOZ_LIKELY(mLongestDurationNs.compareExchange(longest, duration))) {
+        // Successfully updated `mLongestDurationNs` with the new value.
+        break;
+      }
+      // Otherwise someone else just updated `mLongestDurationNs`, we need to
+      // try again by looping.
+    }
+  }
+
+ private:
+  using DurationNs = uint64_t;
+  using Count = uint32_t;
+
+  Atomic<DurationNs> mSumDurationsNs{0};
+  Atomic<DurationNs> mLongestDurationNs{0};
+  Atomic<Count> mNumberDurations{0};
+  const char* mName;
+};
+
+// RAII object that measure its scoped lifetime duration and reports it to a
+// `StaticBaseProfilerStats`.
+class MOZ_RAII AutoProfilerStats {
+ public:
+  explicit AutoProfilerStats(StaticBaseProfilerStats& aStats)
+      : mStats(aStats), mStart(TimeStamp::NowUnfuzzed()) {}
+
+  ~AutoProfilerStats() { mStats.AddDurationFrom(mStart); }
+
+ private:
+  StaticBaseProfilerStats& mStats;
+  TimeStamp mStart;
+};
+
+// Macro that should be used to collect basic statistics from measurements of
+// block durations, from where this macro is, until the end of its enclosing
+// scope. The name is used in the static variable name and when displaying stats
+// at the end of the program; Another location could use the same name but their
+// stats will not be combined, so use different name if these locations should
+// be distinguished.
+#    define AUTO_PROFILER_STATS(name)                                      \
+      static ::mozilla::baseprofiler::StaticBaseProfilerStats sStat##name( \
+          #name);                                                          \
+      ::mozilla::baseprofiler::AutoProfilerStats autoStat##name(sStat##name);
+
+#  else  // PROFILER_RUNTIME_STATS
+
+#    define AUTO_PROFILER_STATS(name)
+
+#  endif  // PROFILER_RUNTIME_STATS else
+
+//---------------------------------------------------------------------------
+// Profiler features
+//---------------------------------------------------------------------------
+
+// Higher-order macro containing all the feature info in one place. Define
+// |MACRO| appropriately to extract the relevant parts. Note that the number
+// values are used internally only and so can be changed without consequence.
+// Any changes to this list should also be applied to the feature list in
+// toolkit/components/extensions/schemas/geckoProfiler.json.
+#  define BASE_PROFILER_FOR_EACH_FEATURE(MACRO)                                \
+    MACRO(0, "java", Java, "Profile Java code, Android only")                  \
+                                                                               \
+    MACRO(1, "js", JS,                                                         \
+          "Get the JS engine to expose the JS stack to the profiler")          \
+                                                                               \
+    /* The DevTools profiler doesn't want the native addresses. */             \
+    MACRO(2, "leaf", Leaf, "Include the C++ leaf node if not stackwalking")    \
+                                                                               \
+    MACRO(3, "mainthreadio", MainThreadIO, "Add main thread file I/O")         \
+                                                                               \
+    MACRO(4, "fileio", FileIO,                                                 \
+          "Add file I/O from all profiled threads, implies mainthreadio")      \
+                                                                               \
+    MACRO(5, "fileioall", FileIOAll,                                           \
+          "Add file I/O from all threads, implies fileio")                     \
+                                                                               \
+    MACRO(6, "noiostacks", NoIOStacks,                                         \
+          "File I/O markers do not capture stacks, to reduce overhead")        \
+                                                                               \
+    MACRO(7, "screenshots", Screenshots,                                       \
+          "Take a snapshot of the window on every composition")                \
+                                                                               \
+    MACRO(8, "seqstyle", SequentialStyle,                                      \
+          "Disable parallel traversal in styling")                             \
+                                                                               \
+    MACRO(9, "stackwalk", StackWalk,                                           \
+          "Walk the C++ stack, not available on all platforms")                \
+                                                                               \
+    MACRO(10, "tasktracer", TaskTracer,                                        \
+          "Start profiling with feature TaskTracer")                           \
+                                                                               \
+    MACRO(11, "threads", Threads, "Profile the registered secondary threads")  \
+                                                                               \
+    MACRO(12, "jstracer", JSTracer, "Enable tracing of the JavaScript engine") \
+                                                                               \
+    MACRO(13, "jsallocations", JSAllocations,                                  \
+          "Have the JavaScript engine track allocations")                      \
+                                                                               \
+    MACRO(14, "nostacksampling", NoStackSampling,                              \
+          "Disable all stack sampling: Cancels \"js\", \"leaf\", "             \
+          "\"stackwalk\" and labels")                                          \
+                                                                               \
+    MACRO(15, "preferencereads", PreferenceReads,                              \
+          "Track when preferences are read")                                   \
+                                                                               \
+    MACRO(16, "nativeallocations", NativeAllocations,                          \
+          "Collect the stacks from a smaller subset of all native "            \
+          "allocations, biasing towards collecting larger allocations")        \
+                                                                               \
+    MACRO(17, "ipcmessages", IPCMessages,                                      \
+          "Have the IPC layer track cross-process messages")                   \
+                                                                               \
+    MACRO(18, "audiocallbacktracing", AudioCallbackTracing,                    \
+          "Audio callback tracing")                                            \
+                                                                               \
+    MACRO(19, "cpu", CPUUtilization, "CPU utilization")
+
+struct ProfilerFeature {
+#  define DECLARE(n_, str_, Name_, desc_)                     \
+    static constexpr uint32_t Name_ = (1u << n_);             \
+    static constexpr bool Has##Name_(uint32_t aFeatures) {    \
+      return aFeatures & Name_;                               \
+    }                                                         \
+    static constexpr void Set##Name_(uint32_t& aFeatures) {   \
+      aFeatures |= Name_;                                     \
+    }                                                         \
+    static constexpr void Clear##Name_(uint32_t& aFeatures) { \
+      aFeatures &= ~Name_;                                    \
+    }
+
+  // Define a bitfield constant, a getter, and two setters for each feature.
+  BASE_PROFILER_FOR_EACH_FEATURE(DECLARE)
+
+#  undef DECLARE
+};
+
+namespace detail {
+
+// RacyFeatures is only defined in this header file so that its methods can
+// be inlined into profiler_is_active(). Please do not use anything from the
+// detail namespace outside the profiler.
+
+// Within the profiler's code, the preferred way to check profiler activeness
+// and features is via ActivePS(). However, that requires locking gPSMutex.
+// There are some hot operations where absolute precision isn't required, so we
+// duplicate the activeness/feature state in a lock-free manner in this class.
+class RacyFeatures {
+ public:
+  MFBT_API static void SetActive(uint32_t aFeatures);
+
+  MFBT_API static void SetInactive();
+
+  MFBT_API static void SetPaused();
+
+  MFBT_API static void SetUnpaused();
+
+  MFBT_API static void SetSamplingPaused();
+
+  MFBT_API static void SetSamplingUnpaused();
+
+  MFBT_API static bool IsActive();
+
+  MFBT_API static bool IsActiveWithFeature(uint32_t aFeature);
+
+  // True if profiler is active, and not fully paused.
+  // Note that periodic sampling *could* be paused!
+  MFBT_API static bool IsActiveAndUnpaused();
+
+  // True if profiler is active, and sampling is not paused (though generic
+  // `SetPaused()` or specific `SetSamplingPaused()`).
+  MFBT_API static bool IsActiveAndSamplingUnpaused();
+
+ private:
+  static constexpr uint32_t Active = 1u << 31;
+  static constexpr uint32_t Paused = 1u << 30;
+  static constexpr uint32_t SamplingPaused = 1u << 29;
+
+// Ensure Active/Paused don't overlap with any of the feature bits.
+#  define NO_OVERLAP(n_, str_, Name_, desc_)                \
+    static_assert(ProfilerFeature::Name_ != SamplingPaused, \
+                  "bad feature value");
+
+  BASE_PROFILER_FOR_EACH_FEATURE(NO_OVERLAP);
+
+#  undef NO_OVERLAP
+
+  // We combine the active bit with the feature bits so they can be read or
+  // written in a single atomic operation.
+  // TODO: Could this be MFBT_DATA for better inlining optimization?
+  static Atomic<uint32_t, MemoryOrdering::Relaxed> sActiveAndFeatures;
+};
+
+MFBT_API bool IsThreadBeingProfiled();
+
+}  // namespace detail
+
+//---------------------------------------------------------------------------
+// Get information from the profiler
+//---------------------------------------------------------------------------
+
+// Is the profiler active? Note: the return value of this function can become
+// immediately out-of-date. E.g. the profile might be active but then
+// profiler_stop() is called immediately afterward. One common and reasonable
+// pattern of usage is the following:
+//
+//   if (profiler_is_active()) {
+//     ExpensiveData expensiveData = CreateExpensiveData();
+//     PROFILER_OPERATION(expensiveData);
+//   }
+//
+// where PROFILER_OPERATION is a no-op if the profiler is inactive. In this
+// case the profiler_is_active() check is just an optimization -- it prevents
+// us calling CreateExpensiveData() unnecessarily in most cases, but the
+// expensive data will end up being created but not used if another thread
+// stops the profiler between the CreateExpensiveData() and PROFILER_OPERATION
+// calls.
+inline bool profiler_is_active() {
+  return baseprofiler::detail::RacyFeatures::IsActive();
+}
+
+// Same as profiler_is_active(), but with the same extra checks that determine
+// if the profiler would currently store markers. So this should be used before
+// doing some potentially-expensive work that's used in a marker. E.g.:
+//
+//   if (profiler_can_accept_markers()) {
+//     BASE_PROFILER_MARKER(name, OTHER, SomeMarkerType, expensivePayload);
+//   }
+inline bool profiler_can_accept_markers() {
+  return baseprofiler::detail::RacyFeatures::IsActiveAndUnpaused();
+}
+
+// Is the profiler active, and is the current thread being profiled?
+// (Same caveats and recommented usage as profiler_is_active().)
+inline bool profiler_thread_is_being_profiled() {
+  return profiler_is_active() && baseprofiler::detail::IsThreadBeingProfiled();
+}
+
+// Is the profiler active and paused? Returns false if the profiler is inactive.
+MFBT_API bool profiler_is_paused();
+
+// Is the profiler active and sampling is paused? Returns false if the profiler
+// is inactive.
+MFBT_API bool profiler_is_sampling_paused();
+
+// Is the current thread sleeping?
+MFBT_API bool profiler_thread_is_sleeping();
+
+// Get all the features supported by the profiler that are accepted by
+// profiler_start(). The result is the same whether the profiler is active or
+// not.
+MFBT_API uint32_t profiler_get_available_features();
+
+// Check if a profiler feature (specified via the ProfilerFeature type) is
+// active. Returns false if the profiler is inactive. Note: the return value
+// can become immediately out-of-date, much like the return value of
+// profiler_is_active().
+MFBT_API bool profiler_feature_active(uint32_t aFeature);
+
+// Get the current process's ID.
+MFBT_API int profiler_current_process_id();
+
+// Get the current thread's ID.
+MFBT_API int profiler_current_thread_id();
+
+// Statically initialized to 0, then set once from profiler_init(), which should
+// be called from the main thread before any other use of the profiler.
+extern MFBT_DATA int scProfilerMainThreadId;
+
+inline int profiler_main_thread_id() { return scProfilerMainThreadId; }
+
+inline bool profiler_is_main_thread() {
+  return profiler_current_thread_id() == profiler_main_thread_id();
+}
+
+// Returns true if any of the profiler mutexes are currently locked *on the
+// current thread*. This may be used by re-entrant code that may call profiler
+// functions while the same of a different profiler mutex is locked, which could
+// deadlock.
+bool profiler_is_locked_on_current_thread();
+
+}  // namespace baseprofiler
+}  // namespace mozilla
+
+#endif  // !MOZ_GECKO_PROFILER
+
+#endif  // BaseProfilerState_h
