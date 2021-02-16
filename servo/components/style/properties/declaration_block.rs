@@ -837,7 +837,6 @@ impl PropertyDeclarationBlock {
                         custom_properties.as_ref(),
                         QuirksMode::NoQuirks,
                         device,
-                        &mut Default::default()
                     )
                     .to_css(dest)
             },
