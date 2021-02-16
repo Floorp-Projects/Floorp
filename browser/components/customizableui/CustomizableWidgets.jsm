@@ -201,6 +201,7 @@ const CustomizableWidgets = [
       let footer;
       while (--elementCount >= 0) {
         let element = body.children[elementCount];
+        CustomizableUI.addShortcut(element);
         element.classList.add("subviewbutton");
         if (element.classList.contains("restoreallitem")) {
           footer = element;
