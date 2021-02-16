@@ -352,10 +352,6 @@ ArrayBufferObject& js::AsArrayBuffer(JSObject* obj) {
   return obj->as<ArrayBufferObject>();
 }
 
-bool js::IsArrayBufferMaybeShared(HandleValue v) {
-  return v.isObject() && v.toObject().is<ArrayBufferObjectMaybeShared>();
-}
-
 bool js::IsArrayBufferMaybeShared(JSObject* obj) {
   return obj->is<ArrayBufferObjectMaybeShared>();
 }

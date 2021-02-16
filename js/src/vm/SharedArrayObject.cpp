@@ -418,19 +418,6 @@ bool js::IsSharedArrayBuffer(HandleValue v) {
   return v.isObject() && v.toObject().is<SharedArrayBufferObject>();
 }
 
-bool js::IsSharedArrayBuffer(HandleObject o) {
-  return o->is<SharedArrayBufferObject>();
-}
-
-bool js::IsSharedArrayBuffer(JSObject* o) {
-  return o->is<SharedArrayBufferObject>();
-}
-
-SharedArrayBufferObject& js::AsSharedArrayBuffer(HandleObject obj) {
-  MOZ_ASSERT(IsSharedArrayBuffer(obj));
-  return obj->as<SharedArrayBufferObject>();
-}
-
 JS_FRIEND_API size_t JS::GetSharedArrayBufferByteLength(JSObject* obj) {
   auto* aobj = obj->maybeUnwrapAs<SharedArrayBufferObject>();
   return aobj ? aobj->byteLength().get() : 0;
