@@ -13,7 +13,7 @@
 namespace mozilla {
 
 nsresult CopyCocoaStringToXPCOMString(NSString* aFrom, nsAString& aTo) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSUInteger len = [aFrom length];
   if (len > std::numeric_limits<nsAString::size_type>::max()) {
@@ -28,7 +28,7 @@ nsresult CopyCocoaStringToXPCOMString(NSString* aFrom, nsAString& aTo) {
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 }  // namespace Mozilla

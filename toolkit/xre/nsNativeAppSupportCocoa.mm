@@ -64,7 +64,7 @@ NS_IMETHODIMP nsNativeAppSupportCocoa::Start(bool* _retval) {
   int major, minor, bugfix;
   nsCocoaFeatures::GetSystemVersion(major, minor, bugfix);
 
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   // Check that the OS version is supported, if not return false,
   // which will make the browser quit.  In principle we could display an
@@ -80,12 +80,12 @@ NS_IMETHODIMP nsNativeAppSupportCocoa::Start(bool* _retval) {
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP
 nsNativeAppSupportCocoa::ReOpen() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (!mCanShowUI) return NS_ERROR_FAILURE;
 
@@ -157,7 +157,7 @@ nsNativeAppSupportCocoa::ReOpen() {
   }  // got window mediator
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 #pragma mark -

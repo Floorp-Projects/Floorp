@@ -31,7 +31,7 @@ NS_IMETHODIMP nsLocalHandlerAppMac::GetName(nsAString& aName) {
  */
 NS_IMETHODIMP
 nsLocalHandlerAppMac::LaunchWithURI(nsIURI* aURI, mozilla::dom::BrowsingContext* aBrowsingContext) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   nsresult rv;
   nsCOMPtr<nsILocalFileMac> lfm(do_QueryInterface(mExecutable, &rv));
@@ -74,5 +74,5 @@ nsLocalHandlerAppMac::LaunchWithURI(nsIURI* aURI, mozilla::dom::BrowsingContext*
 
   return err != noErr ? NS_ERROR_FAILURE : NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }

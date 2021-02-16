@@ -21,7 +21,7 @@ const CFStringRef kCFURLQuarantinePropertiesKey = CFSTR("NSURLQuarantineProperti
 namespace CocoaFileUtils {
 
 nsresult RevealFileInFinder(CFURLRef url) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (NS_WARN_IF(!url)) return NS_ERROR_INVALID_ARG;
 
@@ -32,11 +32,11 @@ nsresult RevealFileInFinder(CFURLRef url) {
 
   return (success ? NS_OK : NS_ERROR_FAILURE);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 nsresult OpenURL(CFURLRef url) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (NS_WARN_IF(!url)) return NS_ERROR_INVALID_ARG;
 
@@ -46,11 +46,11 @@ nsresult OpenURL(CFURLRef url) {
 
   return (success ? NS_OK : NS_ERROR_FAILURE);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 nsresult GetFileCreatorCode(CFURLRef url, OSType* creatorCode) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (NS_WARN_IF(!url) || NS_WARN_IF(!creatorCode)) return NS_ERROR_INVALID_ARG;
 
@@ -75,11 +75,11 @@ nsresult GetFileCreatorCode(CFURLRef url, OSType* creatorCode) {
   *creatorCode = [creatorNum unsignedLongValue];
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 nsresult SetFileCreatorCode(CFURLRef url, OSType creatorCode) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (NS_WARN_IF(!url)) return NS_ERROR_INVALID_ARG;
 
@@ -93,11 +93,11 @@ nsresult SetFileCreatorCode(CFURLRef url, OSType creatorCode) {
   [ap release];
   return (success ? NS_OK : NS_ERROR_FAILURE);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 nsresult GetFileTypeCode(CFURLRef url, OSType* typeCode) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (NS_WARN_IF(!url) || NS_WARN_IF(!typeCode)) return NS_ERROR_INVALID_ARG;
 
@@ -122,11 +122,11 @@ nsresult GetFileTypeCode(CFURLRef url, OSType* typeCode) {
   *typeCode = [typeNum unsignedLongValue];
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 nsresult SetFileTypeCode(CFURLRef url, OSType typeCode) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (NS_WARN_IF(!url)) return NS_ERROR_INVALID_ARG;
 
@@ -139,7 +139,7 @@ nsresult SetFileTypeCode(CFURLRef url, OSType typeCode) {
   [ap release];
   return (success ? NS_OK : NS_ERROR_FAILURE);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 // Can be called off of the main thread.

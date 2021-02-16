@@ -4723,7 +4723,7 @@ nsresult TextInputHandlerBase::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardL
                                                         uint32_t aModifierFlags,
                                                         const nsAString& aCharacters,
                                                         const nsAString& aUnmodifiedCharacters) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   static const uint32_t sModifierFlagMap[][2] = {
       {nsIWidget::CAPS_LOCK, NSEventModifierFlagCapsLock},
@@ -4779,7 +4779,7 @@ nsresult TextInputHandlerBase::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardL
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NSInteger TextInputHandlerBase::GetWindowLevel() {
@@ -4811,7 +4811,7 @@ NSInteger TextInputHandlerBase::GetWindowLevel() {
 
 NS_IMETHODIMP
 TextInputHandlerBase::AttachNativeKeyEvent(WidgetKeyboardEvent& aKeyEvent) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   // Don't try to replace a native event if one already exists.
   // OS X doesn't have an OS modifier, can't make a native event.
@@ -4831,7 +4831,7 @@ TextInputHandlerBase::AttachNativeKeyEvent(WidgetKeyboardEvent& aKeyEvent) {
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 bool TextInputHandlerBase::SetSelection(NSRange& aRange) {

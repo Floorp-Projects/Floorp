@@ -208,11 +208,11 @@ NS_IMPL_ISUPPORTS(OSXNotificationCenter, nsIAlertsService, nsIAlertsIconData, ns
                   nsIAlertNotificationImageListener)
 
 nsresult OSXNotificationCenter::Init() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   return (!!NSClassFromString(@"NSUserNotification")) ? NS_OK : NS_ERROR_FAILURE;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP
@@ -247,7 +247,7 @@ NS_IMETHODIMP
 OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification* aAlert,
                                              nsIObserver* aAlertListener, uint32_t aIconSize,
                                              const uint8_t* aIconData) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NS_ENSURE_ARG(aAlert);
 
@@ -378,18 +378,18 @@ OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification* aAlert,
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP
 OSXNotificationCenter::CloseAlert(const nsAString& aAlertName) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSString* alertName = nsCocoaUtils::ToNSString(aAlertName);
   CloseAlertCocoaString(alertName);
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 void OSXNotificationCenter::CloseAlertCocoaString(NSString* aAlertName) {
@@ -499,7 +499,7 @@ void OSXNotificationCenter::ShowPendingNotification(OSXNotificationInfo* osxni) 
 
 NS_IMETHODIMP
 OSXNotificationCenter::OnImageMissing(nsISupports* aUserData) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   OSXNotificationInfo* osxni = static_cast<OSXNotificationInfo*>(aUserData);
   if (osxni->mPendingNotification) {
@@ -509,12 +509,12 @@ OSXNotificationCenter::OnImageMissing(nsISupports* aUserData) {
   }
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP
 OSXNotificationCenter::OnImageReady(nsISupports* aUserData, imgIRequest* aRequest) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   nsCOMPtr<imgIContainer> image;
   nsresult rv = aRequest->GetImage(getter_AddRefs(image));
@@ -536,7 +536,7 @@ OSXNotificationCenter::OnImageReady(nsISupports* aUserData, imgIRequest* aReques
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 // nsIAlertsDoNotDisturb
@@ -550,23 +550,23 @@ OSXNotificationCenter::SetManualDoNotDisturb(bool aDoNotDisturb) {
 
 NS_IMETHODIMP
 OSXNotificationCenter::GetSuppressForScreenSharing(bool* aRetVal) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN
 
   NS_ENSURE_ARG(aRetVal);
   *aRetVal = mSuppressForScreenSharing;
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE)
 }
 
 NS_IMETHODIMP
 OSXNotificationCenter::SetSuppressForScreenSharing(bool aSuppress) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN
 
   mSuppressForScreenSharing = aSuppress;
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE)
 }
 
 }  // namespace mozilla
