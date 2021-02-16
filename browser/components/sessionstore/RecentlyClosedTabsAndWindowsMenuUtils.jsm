@@ -230,6 +230,13 @@ function createEntry(
     );
   }
 
+  if (aIndex == 0) {
+    element.setAttribute(
+      "key",
+      "key_undoClose" + (aIsWindowsFragment ? "Window" : "Tab")
+    );
+  }
+
   aFragment.appendChild(element);
 }
 
