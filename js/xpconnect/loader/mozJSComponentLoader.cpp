@@ -1312,7 +1312,7 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
       return NS_ERROR_UNEXPECTED;
     }
 
-    mLocations.Put(newEntry->resolvedURL, new nsCString(info.Key()));
+    mLocations.Put(newEntry->resolvedURL, MakeUnique<nsCString>(info.Key()));
 
     RootedValue exception(aCx);
     {
@@ -1364,7 +1364,7 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
 
   // Cache this module for later
   if (newEntry) {
-    mImports.Put(info.Key(), newEntry.release());
+    mImports.Put(info.Key(), std::move(newEntry));
   }
 
   return NS_OK;
