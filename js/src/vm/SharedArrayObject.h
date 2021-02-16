@@ -242,10 +242,6 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared {
 };
 
 bool IsSharedArrayBuffer(HandleValue v);
-bool IsSharedArrayBuffer(HandleObject o);
-bool IsSharedArrayBuffer(JSObject* o);
-
-SharedArrayBufferObject& AsSharedArrayBuffer(HandleObject o);
 
 using RootedSharedArrayBufferObject = Rooted<SharedArrayBufferObject*>;
 using HandleSharedArrayBufferObject = Handle<SharedArrayBufferObject*>;
