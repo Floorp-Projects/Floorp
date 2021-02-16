@@ -77,7 +77,6 @@ exports.menuitems = [
     keyId: "toggleToolbox",
     checkbox: true,
   },
-  { id: "menu_devtools_separator", separator: true },
   {
     id: "menu_devtools_remotedebugging",
     l10nKey: "devtoolsRemoteDebugging",
@@ -162,7 +161,6 @@ exports.menuitems = [
     },
     checkbox: true,
   },
-  { separator: true, id: "devToolsEndSeparator" },
   {
     id: "extensionsForDevelopers",
     l10nKey: "extensionsForDevelopersCmd",

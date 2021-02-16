@@ -158,7 +158,7 @@ function insertToolMenuElements(doc, toolDefinition, prevDef) {
     const menuitem = doc.getElementById("menuitem_" + prevDef.id);
     ref = menuitem?.nextSibling ? menuitem.nextSibling : null;
   } else {
-    ref = doc.getElementById("menu_devtools_separator");
+    ref = doc.getElementById("menu_devtools_remotedebugging");
   }
 
   if (ref) {
@@ -215,7 +215,7 @@ function addAllToolsToMenu(doc) {
     fragMenuItems.appendChild(elements.menuitem);
   }
 
-  const mps = doc.getElementById("menu_devtools_separator");
+  const mps = doc.getElementById("menu_devtools_remotedebugging");
   if (mps) {
     mps.parentNode.insertBefore(fragMenuItems, mps);
   }
