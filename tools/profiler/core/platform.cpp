@@ -1843,6 +1843,13 @@ static void MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
                 !profilingStackFrame.pc(),
             &profilingStackFrame ==
                 &profilingStack.frames[profilingStack.stackSize() - 1]);
+        if (aIsSynchronous && profilingStackFrame.categoryPair() ==
+                                  JS::ProfilingCategoryPair::PROFILER) {
+          // For stacks captured synchronously (ie. marker stacks), stop
+          // walking the stack as soon as we enter the profiler category,
+          // to avoid showing profiler internal code in marker stacks.
+          return;
+        }
         aCollector.CollectProfilingStackFrame(profilingStackFrame);
       }
       profilingStackIndex++;
