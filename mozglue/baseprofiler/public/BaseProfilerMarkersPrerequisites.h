@@ -29,6 +29,7 @@ enum class StackCaptureOptions {
 #  include "BaseProfilingCategory.h"
 #  include "mozilla/Maybe.h"
 #  include "mozilla/ProfileChunkedBuffer.h"
+#  include "mozilla/BaseProfilerState.h"
 #  include "mozilla/TimeStamp.h"
 #  include "mozilla/UniquePtr.h"
 #  include "mozilla/Variant.h"
@@ -39,9 +40,6 @@ enum class StackCaptureOptions {
 #  include <type_traits>
 #  include <utility>
 #  include <vector>
-
-// TODO: Move common stuff to shared header instead.
-#  include "BaseProfiler.h"
 
 namespace mozilla {
 
