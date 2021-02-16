@@ -72,7 +72,7 @@ class AccessibleOrProxy {
    */
   AccessibleOrProxy ChildAt(uint32_t aIdx) const {
     if (IsProxy()) {
-      return AsProxy()->ChildAt(aIdx);
+      return AsProxy()->RemoteChildAt(aIdx);
     }
 
     ProxyAccessible* childDoc = RemoteChildDoc();
@@ -88,7 +88,7 @@ class AccessibleOrProxy {
    */
   AccessibleOrProxy FirstChild() {
     if (IsProxy()) {
-      return AsProxy()->FirstChild();
+      return AsProxy()->RemoteFirstChild();
     }
 
     ProxyAccessible* childDoc = RemoteChildDoc();
@@ -104,7 +104,7 @@ class AccessibleOrProxy {
    */
   AccessibleOrProxy LastChild() {
     if (IsProxy()) {
-      return AsProxy()->LastChild();
+      return AsProxy()->RemoteLastChild();
     }
 
     ProxyAccessible* childDoc = RemoteChildDoc();
@@ -120,7 +120,7 @@ class AccessibleOrProxy {
    */
   AccessibleOrProxy NextSibling() {
     if (IsProxy()) {
-      return AsProxy()->NextSibling();
+      return AsProxy()->RemoteNextSibling();
     }
 
     return AsAccessible()->LocalNextSibling();
@@ -131,7 +131,7 @@ class AccessibleOrProxy {
    */
   AccessibleOrProxy PrevSibling() {
     if (IsProxy()) {
-      return AsProxy()->PrevSibling();
+      return AsProxy()->RemotePrevSibling();
     }
 
     return AsAccessible()->LocalPrevSibling();

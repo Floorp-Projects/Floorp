@@ -62,8 +62,8 @@ uint32_t ProxyAccessibleWrap::ChildCount() const {
   return Proxy()->ChildrenCount();
 }
 
-ProxyAccessible* child = Proxy()->ChildAt(aIndex);
 Accessible* ProxyAccessibleWrap::LocalChildAt(uint32_t aIndex) const {
+  ProxyAccessible* child = Proxy()->RemoteChildAt(aIndex);
   return child ? WrapperFor(child) : nullptr;
 }
 
@@ -150,7 +150,8 @@ void ProxyAccessibleWrap::Paste() {
 role ProxyAccessibleWrap::WrapperRole() { return Proxy()->Role(); }
 
 AccessibleWrap* ProxyAccessibleWrap::WrapperParent() {
-  return Proxy()->Parent() ? WrapperFor(Proxy()->Parent()) : nullptr;
+  return Proxy()->RemoteParent() ? WrapperFor(Proxy()->RemoteParent())
+                                 : nullptr;
 }
 
 bool ProxyAccessibleWrap::WrapperRangeInfo(double* aCurVal, double* aMinVal,

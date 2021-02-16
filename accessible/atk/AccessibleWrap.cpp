@@ -799,10 +799,13 @@ gint getIndexInParentCB(AtkObject* aAtkObj) {
   // We don't use Accessible::IndexInParent() because we don't include text
   // leaf nodes as children in ATK.
   if (ProxyAccessible* proxy = GetProxy(aAtkObj)) {
-    if (ProxyAccessible* parent = proxy->Parent())
+    if (ProxyAccessible* parent = proxy->RemoteParent()) {
       return parent->IndexOfEmbeddedChild(proxy);
+    }
 
-    if (proxy->OuterDocOfRemoteBrowser()) return 0;
+    if (proxy->OuterDocOfRemoteBrowser()) {
+      return 0;
+    }
 
     return -1;
   }
