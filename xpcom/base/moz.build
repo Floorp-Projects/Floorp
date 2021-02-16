@@ -31,6 +31,9 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
         "nsIMacPreferencesReader.idl",
         "nsIMacUtils.idl",
     ]
+    EXPORTS += [
+        "nsObjCExceptions.h",
+    ]
     EXPORTS.mozilla += [
         "MacHelpers.h",
         "MacStringHelpers.h",
@@ -40,6 +43,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
         "MacHelpers.mm",
         "MacStringHelpers.mm",
         "nsMacPreferencesReader.mm",
+        "nsObjCExceptions.mm",
     ]
 
 XPIDL_MODULE = "xpcom_base"
@@ -82,7 +86,6 @@ EXPORTS += [
     "nsMaybeWeakPtr.h",
     "nsMemory.h",
     "nsMemoryReporterManager.h",
-    "nsObjCExceptions.h",
     "nsQueryObject.h",
     "nsSystemInfo.h",
     "nsTraceRefcnt.h",
