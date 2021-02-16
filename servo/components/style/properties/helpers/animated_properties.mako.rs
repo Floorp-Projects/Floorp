@@ -367,7 +367,6 @@ impl AnimationValue {
                 }
             },
             PropertyDeclaration::WithVariables(ref declaration) => {
-                let mut cache = Default::default();
                 let substituted = {
                     let custom_properties =
                         extra_custom_properties.or_else(|| context.style().custom_properties());
@@ -377,7 +376,6 @@ impl AnimationValue {
                         custom_properties,
                         context.quirks_mode,
                         context.device(),
-                        &mut cache,
                     )
                 };
                 return AnimationValue::from_declaration(
