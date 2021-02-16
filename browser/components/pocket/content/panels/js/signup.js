@@ -19,7 +19,6 @@ var PKT_SIGNUP_OVERLAY = function(options) {
   this.mouseInside = false;
   this.autocloseTimer = null;
   this.variant = "";
-  this.inoverflowmenu = false;
   this.controlvariant;
   this.pockethost = "getpocket.com";
   this.loggedOutVariant = "control";
@@ -107,12 +106,6 @@ PKT_SIGNUP_OVERLAY.prototype = {
     if (host && host.length > 1) {
       this.pockethost = host[1];
     }
-    var inoverflowmenu = window.location.href.match(
-      /inoverflowmenu=([\w|\.]*)&?/
-    );
-    if (inoverflowmenu && inoverflowmenu.length > 1) {
-      this.inoverflowmenu = inoverflowmenu[1] == "true";
-    }
     var locale = window.location.href.match(/locale=([\w|\.]*)&?/);
     if (locale && locale.length > 1) {
       this.locale = locale[1].toLowerCase();
@@ -131,11 +124,6 @@ PKT_SIGNUP_OVERLAY.prototype = {
     this.dictJSON.showlearnmore = true;
     this.dictJSON.utmCampaign = "logged_out_save_test";
     this.dictJSON.utmSource = "control";
-
-    // extra modifier class for collapsed state
-    if (this.inoverflowmenu) {
-      $("body").addClass("pkt_ext_signup_overflow");
-    }
 
     // extra modifier class for language
     if (this.locale) {
@@ -198,12 +186,45 @@ PKT_SIGNUP.prototype = {
     }
     this.panelId = pktPanelMessaging.panelIdFromURL(window.location.href);
     this.overlay = new PKT_SIGNUP_OVERLAY();
+    this.setupMutationObserver();
 
     this.inited = true;
   },
 
   sendMessage(messageId, payload, callback) {
     pktPanelMessaging.sendMessage(messageId, this.panelId, payload, callback);
+  },
+
+  setupMutationObserver() {
+    // Select the node that will be observed for mutations
+    const targetNode = document.body;
+
+    // Options for the observer (which mutations to observe)
+    const config = { attributes: false, childList: true, subtree: true };
+
+    // Callback function to execute when mutations are observed
+    const callback = (mutationList, observer) => {
+      mutationList.forEach(mutation => {
+        switch (mutation.type) {
+          case "childList": {
+            /* One or more children have been added to and/or removed
+               from the tree.
+               (See mutation.addedNodes and mutation.removedNodes.) */
+            thePKT_SIGNUP.sendMessage("PKT_resizePanel", {
+              width: document.body.clientWidth,
+              height: document.body.clientHeight,
+            });
+            break;
+          }
+        }
+      });
+    };
+
+    // Create an observer instance linked to the callback function
+    const observer = new MutationObserver(callback);
+
+    // Start observing the target node for configured mutations
+    observer.observe(targetNode, config);
   },
 
   create() {

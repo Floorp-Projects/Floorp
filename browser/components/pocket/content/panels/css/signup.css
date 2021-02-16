@@ -24,6 +24,7 @@
     padding: 0;
     position: relative;
     text-align: center;
+    overflow: hidden;
 }
 .pkt_ext_containersignup_inactive {
     animation: pkt_ext_hide 0.3s ease-out;
@@ -110,6 +111,10 @@
 }
 .pkt_ext_containersignup .pkt_ext_learnmoreinactive {
     visibility: hidden;
+}
+.pkt_ext_signupdetail,
+.los_variant_bottom {
+    overflow: hidden;
 }
 .pkt_ext_signupdetail h4 {
     font-size: 12px;
@@ -338,29 +343,6 @@
     color: rgba(255,255,255,0.6);
 }
 
-/*=Overflow mode
---------------------------------------------------------------------------------------- */
-.pkt_ext_signup_overflow .pkt_ext_tagline {
-    margin-bottom: 1em;
-    padding: 0 1em;
-}
-.pkt_ext_signup_overflow .pkt_ext_introimg {
-    background-size: 200px 98px;
-    height: 98px;
-    width: 200px;
-}
-.pkt_ext_signup_overflow .signup-btn-firefox,
-.pkt_ext_containersignup .signup-btn-tryitnow,
-.pkt_ext_signup_overflow .signup-btn-email {
-    font-size: 14px;
-    min-width: 12.6em;
-    padding-inline: 0.75em;
-}
-.pkt_ext_signup_overflow .signup-btn-tryitnow .text,
-.pkt_ext_signup_overflow .signup-btn-firefox .text {
-    padding-inline: 0;
-}
-
 /*=Language overrides
 --------------------------------------------------------------------------------------- */
 .pkt_ext_signup_de .pkt_ext_introstoryone_img {
@@ -446,7 +428,7 @@
 
 .los_variant_bottom {
     text-align: start;
-    padding: 26px 22px;
+    padding: 26px 22px 0;
 }
 
 .los_variant_a .los_variant_bottom {
