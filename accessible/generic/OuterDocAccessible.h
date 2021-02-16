@@ -59,7 +59,7 @@ class OuterDocAccessible final : public AccessibleWrap {
 
 #if defined(XP_WIN)
   virtual uint32_t ChildCount() const override;
-  virtual Accessible* GetChildAt(uint32_t aIndex) const override;
+  virtual Accessible* LocalChildAt(uint32_t aIndex) const override;
 #endif  // defined(XP_WIN)
 
  protected:

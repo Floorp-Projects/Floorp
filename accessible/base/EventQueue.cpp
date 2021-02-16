@@ -63,7 +63,7 @@ bool EventQueue::PushNameOrDescriptionChange(Accessible* aTarget) {
   // Only continue traversing up the tree if it's possible that the parent
   // Accessible's name (or an Accessible being labelled by this Accessible or
   // an ancestor) can depend on this Accessible's name.
-  Accessible* parent = aTarget->Parent();
+  Accessible* parent = aTarget->LocalParent();
   while (parent &&
          nsTextEquivUtils::HasNameRule(parent, eNameFromSubtreeIfReqRule)) {
     // Test possible name dependent parent.
@@ -98,7 +98,7 @@ bool EventQueue::PushNameOrDescriptionChange(Accessible* aTarget) {
       }
     }
 
-    parent = parent->Parent();
+    parent = parent->LocalParent();
   }
   return pushed;
 }

@@ -171,7 +171,7 @@ bool NotificationController::QueueMutationEvent(AccTreeMutationEvent* aEvent) {
   // existing one to the end of the queue if the container already has a
   // reorder event.
   Accessible* target = aEvent->GetAccessible();
-  Accessible* container = aEvent->GetAccessible()->Parent();
+  Accessible* container = aEvent->GetAccessible()->LocalParent();
   RefPtr<AccReorderEvent> reorder;
   if (!container->ReorderEventTarget()) {
     reorder = new AccReorderEvent(container);
@@ -228,7 +228,7 @@ bool NotificationController::QueueMutationEvent(AccTreeMutationEvent* aEvent) {
       mutEvent->IsHide()) {
     AccHideEvent* prevHide = downcast_accEvent(prevEvent);
     AccTextChangeEvent* prevTextChange = prevHide->mTextChangeEvent;
-    if (prevTextChange && prevHide->Parent() == mutEvent->Parent()) {
+    if (prevTextChange && prevHide->LocalParent() == mutEvent->LocalParent()) {
       if (prevHide->mNextSibling == target) {
         target->AppendTextTo(prevTextChange->mModifiedText);
         prevHide->mTextChangeEvent.swap(mutEvent->mTextChangeEvent);
@@ -248,7 +248,7 @@ bool NotificationController::QueueMutationEvent(AccTreeMutationEvent* aEvent) {
              prevEvent->GetEventType() == nsIAccessibleEvent::EVENT_SHOW) {
     AccShowEvent* prevShow = downcast_accEvent(prevEvent);
     AccTextChangeEvent* prevTextChange = prevShow->mTextChangeEvent;
-    if (prevTextChange && prevShow->Parent() == target->Parent()) {
+    if (prevTextChange && prevShow->LocalParent() == target->LocalParent()) {
       int32_t index = target->IndexInParent();
       int32_t prevIndex = prevShow->GetAccessible()->IndexInParent();
       if (prevIndex + 1 == index) {
@@ -329,7 +329,7 @@ void NotificationController::CoalesceMutationEvents() {
           break;
         }
 
-        Accessible* parent = acc->Parent();
+        Accessible* parent = acc->LocalParent();
         if (parent->ReorderEventTarget()) {
           AccReorderEvent* reorder = downcast_accEvent(
               mMutationMap.GetEvent(parent, EventMap::ReorderEvent));
@@ -370,7 +370,7 @@ void NotificationController::CoalesceMutationEvents() {
         acc = parent;
       }
     } else if (eventType == nsIAccessibleEvent::EVENT_SHOW) {
-      Accessible* parent = event->GetAccessible()->Parent();
+      Accessible* parent = event->GetAccessible()->LocalParent();
       while (parent) {
         if (parent->IsDoc()) {
           break;
@@ -383,14 +383,14 @@ void NotificationController::CoalesceMutationEvents() {
           break;
         }
 
-        parent = parent->Parent();
+        parent = parent->LocalParent();
       }
     } else {
       MOZ_ASSERT(eventType == nsIAccessibleEvent::EVENT_HIDE,
                  "mutation event list has an invalid event");
 
       AccHideEvent* hideEvent = downcast_accEvent(event);
-      Accessible* parent = hideEvent->Parent();
+      Accessible* parent = hideEvent->LocalParent();
       while (parent) {
         if (parent->IsDoc()) {
           break;
@@ -410,7 +410,7 @@ void NotificationController::CoalesceMutationEvents() {
           }
         }
 
-        parent = parent->Parent();
+        parent = parent->LocalParent();
       }
     }
 
@@ -528,7 +528,7 @@ void NotificationController::ProcessMutationEvents() {
       continue;
     }
 
-    Accessible* parent = event->GetAccessible()->Parent();
+    Accessible* parent = event->GetAccessible()->LocalParent();
     showEvents.GetOrInsert(parent).AppendElement(event);
   }
 
@@ -893,7 +893,7 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
         continue;
       }
 
-      Accessible* parent = childDoc->Parent();
+      Accessible* parent = childDoc->LocalParent();
       DocAccessibleChild* parentIPCDoc = mDocument->IPCDoc();
       MOZ_DIAGNOSTIC_ASSERT(parentIPCDoc);
       uint64_t id = reinterpret_cast<uintptr_t>(parent->UniqueID());

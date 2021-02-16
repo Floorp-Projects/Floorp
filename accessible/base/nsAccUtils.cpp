@@ -75,7 +75,7 @@ int32_t nsAccUtils::GetDefaultLevel(const Accessible* aAccessible) {
   if (role == roles::OUTLINEITEM) return 1;
 
   if (role == roles::ROW) {
-    Accessible* parent = aAccessible->Parent();
+    Accessible* parent = aAccessible->LocalParent();
     // It is a row inside flatten treegrid. Group level is always 1 until it
     // is overriden by aria-level attribute.
     if (parent && parent->Role() == roles::TREE_TABLE) return 1;
@@ -239,7 +239,7 @@ Accessible* nsAccUtils::GetSelectableContainer(Accessible* aAccessible,
   if (!(aState & states::SELECTABLE)) return nullptr;
 
   Accessible* parent = aAccessible;
-  while ((parent = parent->Parent()) && !parent->IsSelect()) {
+  while ((parent = parent->LocalParent()) && !parent->IsSelect()) {
     if (parent->Role() == roles::PANE) return nullptr;
   }
   return parent;
@@ -253,14 +253,14 @@ bool nsAccUtils::IsDOMAttrTrue(const Accessible* aAccessible, nsAtom* aAttr) {
 
 Accessible* nsAccUtils::TableFor(Accessible* aRow) {
   if (aRow) {
-    Accessible* table = aRow->Parent();
+    Accessible* table = aRow->LocalParent();
     if (table) {
       roles::Role tableRole = table->Role();
       const nsRoleMapEntry* roleMapEntry = table->ARIARoleMap();
       if (tableRole == roles::GROUPING ||  // if there's a rowgroup.
           (table->IsGenericHyperText() && !roleMapEntry &&
            !table->IsTable())) {  // or there is a wrapping text container
-        table = table->Parent();
+        table = table->LocalParent();
         if (table) tableRole = table->Role();
       }
 
@@ -284,7 +284,7 @@ HyperTextAccessible* nsAccUtils::GetTextContainer(nsINode* aNode) {
     HyperTextAccessible* textAcc = accessible->AsHyperText();
     if (textAcc) return textAcc;
 
-    accessible = accessible->Parent();
+    accessible = accessible->LocalParent();
   } while (accessible);
 
   return nullptr;
@@ -344,7 +344,7 @@ void nsAccUtils::ConvertScreenCoordsTo(int32_t* aX, int32_t* aY,
 }
 
 nsIntPoint nsAccUtils::GetScreenCoordsForParent(Accessible* aAccessible) {
-  Accessible* parent = aAccessible->Parent();
+  Accessible* parent = aAccessible->LocalParent();
   if (!parent) return nsIntPoint(0, 0);
 
   nsIFrame* parentFrame = parent->GetFrame();
@@ -381,7 +381,7 @@ bool nsAccUtils::IsTextInterfaceSupportCorrect(Accessible* aAccessible) {
   bool foundText = false;
   uint32_t childCount = aAccessible->ChildCount();
   for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
-    Accessible* child = aAccessible->GetChildAt(childIdx);
+    Accessible* child = aAccessible->LocalChildAt(childIdx);
     if (child->IsText()) {
       foundText = true;
       break;

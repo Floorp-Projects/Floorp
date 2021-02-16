@@ -65,7 +65,7 @@ class XULTreeGridAccessible : public XULTreeAccessible, public TableAccessible {
  */
 class XULTreeGridRowAccessible final : public XULTreeItemAccessibleBase {
  public:
-  using Accessible::GetChildAt;
+  using Accessible::LocalChildAt;
 
   XULTreeGridRowAccessible(nsIContent* aContent, DocAccessible* aDoc,
                            Accessible* aParent, dom::XULTreeElement* aTree,
@@ -83,7 +83,7 @@ class XULTreeGridRowAccessible final : public XULTreeItemAccessibleBase {
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
                                    EWhichChildAtPoint aWhichChild) override;
 
-  virtual Accessible* GetChildAt(uint32_t aIndex) const override;
+  virtual Accessible* LocalChildAt(uint32_t aIndex) const override;
   virtual uint32_t ChildCount() const override;
 
   // XULTreeItemAccessibleBase

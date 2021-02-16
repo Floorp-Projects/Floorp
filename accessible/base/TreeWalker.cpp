@@ -120,7 +120,7 @@ bool TreeWalker::Seek(nsIContent* aChildNode) {
       MOZ_ASSERT(
           !(mFlags & eScoped),
           "Walker should not be scoped when seeking into relocated children");
-      if (child->Parent() != mContext) {
+      if (child->LocalParent() != mContext) {
         return false;
       }
 

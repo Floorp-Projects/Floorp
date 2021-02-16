@@ -299,9 +299,9 @@ using namespace mozilla::a11y;
     // We do this only with XUL menuitems that conform to the native theme, and
     // not with aria menu items that might have a pseudo element or something.
     if (acc->ChildCount() == 1 &&
-        acc->FirstChild()->Role() == roles::STATICTEXT) {
+        acc->LocalFirstChild()->Role() == roles::STATICTEXT) {
       nsAutoString marker;
-      acc->FirstChild()->Name(marker);
+      acc->LocalFirstChild()->Name(marker);
       if (marker.Length() == 1) {
         return nsCocoaUtils::ToNSString(marker);
       }

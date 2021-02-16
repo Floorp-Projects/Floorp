@@ -94,7 +94,7 @@ HTMLTableCellAccessible::NativeAttributes() {
   // from abbr DOM attribute.
   nsAutoString abbrText;
   if (ChildCount() == 1) {
-    Accessible* abbr = FirstChild();
+    Accessible* abbr = LocalFirstChild();
     if (abbr->IsAbbreviation()) {
       nsIContent* firstChildNode = abbr->GetContent()->GetFirstChild();
       if (firstChildNode) {
@@ -143,7 +143,7 @@ GroupPos HTMLTableCellAccessible::GroupPosition() {
 
 TableAccessible* HTMLTableCellAccessible::Table() const {
   Accessible* parent = const_cast<HTMLTableCellAccessible*>(this);
-  while ((parent = parent->Parent())) {
+  while ((parent = parent->LocalParent())) {
     if (parent->IsTable()) return parent->AsTable();
   }
 
@@ -798,7 +798,9 @@ nsTableWrapperFrame* HTMLTableAccessible::GetTableWrapperFrame() const {
 
 Relation HTMLCaptionAccessible::RelationByType(RelationType aType) const {
   Relation rel = HyperTextAccessible::RelationByType(aType);
-  if (aType == RelationType::LABEL_FOR) rel.AppendTarget(Parent());
+  if (aType == RelationType::LABEL_FOR) {
+    rel.AppendTarget(LocalParent());
+  }
 
   return rel;
 }

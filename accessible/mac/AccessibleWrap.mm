@@ -171,7 +171,7 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       Accessible* acc = aEvent->GetAccessible();
       // If there is a text input ancestor, use it as the event source.
       while (acc && GetTypeFromRole(acc->Role()) != [mozTextAccessible class]) {
-        acc = acc->Parent();
+        acc = acc->LocalParent();
       }
       eventTarget = acc ? acc : aEvent->GetAccessible();
       break;

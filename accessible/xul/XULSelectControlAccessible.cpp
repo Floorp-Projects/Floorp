@@ -106,7 +106,7 @@ uint32_t XULSelectControlAccessible::SelectedItemCount() {
 }
 
 bool XULSelectControlAccessible::AddItemToSelection(uint32_t aIndex) {
-  Accessible* item = GetChildAt(aIndex);
+  Accessible* item = LocalChildAt(aIndex);
   if (!item || !item->GetContent()) return false;
 
   nsCOMPtr<nsIDOMXULSelectControlItemElement> itemElm =
@@ -134,7 +134,7 @@ bool XULSelectControlAccessible::AddItemToSelection(uint32_t aIndex) {
 }
 
 bool XULSelectControlAccessible::RemoveItemFromSelection(uint32_t aIndex) {
-  Accessible* item = GetChildAt(aIndex);
+  Accessible* item = LocalChildAt(aIndex);
   if (!item || !item->GetContent()) return false;
 
   nsCOMPtr<nsIDOMXULSelectControlItemElement> itemElm =
@@ -162,7 +162,7 @@ bool XULSelectControlAccessible::RemoveItemFromSelection(uint32_t aIndex) {
 }
 
 bool XULSelectControlAccessible::IsItemSelected(uint32_t aIndex) {
-  Accessible* item = GetChildAt(aIndex);
+  Accessible* item = LocalChildAt(aIndex);
   if (!item || !item->GetContent()) return false;
 
   nsCOMPtr<nsIDOMXULSelectControlItemElement> itemElm =

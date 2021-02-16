@@ -340,9 +340,11 @@ bool XULTreeAccessible::SelectAll() {
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeAccessible: Accessible implementation
 
-Accessible* XULTreeAccessible::GetChildAt(uint32_t aIndex) const {
+Accessible* XULTreeAccessible::LocalChildAt(uint32_t aIndex) const {
   uint32_t childCount = Accessible::ChildCount();
-  if (aIndex < childCount) return Accessible::GetChildAt(aIndex);
+  if (aIndex < childCount) {
+    return Accessible::LocalChildAt(aIndex);
+  }
 
   return GetTreeItemAccessible(aIndex - childCount);
 }
@@ -855,7 +857,7 @@ Accessible* XULTreeItemAccessibleBase::GetSiblingAtOffset(
     int32_t aOffset, nsresult* aError) const {
   if (aError) *aError = NS_OK;  // fail peacefully
 
-  return mParent->GetChildAt(IndexInParent() + aOffset);
+  return mParent->LocalChildAt(IndexInParent() + aOffset);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -986,7 +988,7 @@ Accessible* XULTreeColumAccessible::GetSiblingAtOffset(int32_t aOffset,
       int32_t rowCount = 0;
       treeView->GetRowCount(&rowCount);
       if (rowCount > 0 && aOffset <= rowCount) {
-        XULTreeAccessible* treeAcc = Parent()->AsXULTree();
+        XULTreeAccessible* treeAcc = LocalParent()->AsXULTree();
 
         if (treeAcc) return treeAcc->GetTreeItemAccessible(aOffset - 1);
       }

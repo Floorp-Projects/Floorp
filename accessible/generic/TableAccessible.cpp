@@ -75,7 +75,7 @@ bool TableAccessible::IsProbablyLayoutTable() {
   }
 
   // Check for legitimate data table elements.
-  Accessible* caption = thisacc->FirstChild();
+  Accessible* caption = thisacc->LocalFirstChild();
   if (caption && caption->IsHTMLCaption() && caption->HasChildren()) {
     RETURN_LAYOUT_ANSWER(false,
                          "Not empty caption -- legitimate table structures");
@@ -135,7 +135,7 @@ bool TableAccessible::IsProbablyLayoutTable() {
                   }
                 }
                 if (cell->ChildCount() == 1 &&
-                    cell->FirstChild()->IsAbbreviation()) {
+                    cell->LocalFirstChild()->IsAbbreviation()) {
                   RETURN_LAYOUT_ANSWER(
                       false, "has abbr -- legitimate table structures");
                 }
@@ -198,7 +198,7 @@ bool TableAccessible::IsProbablyLayoutTable() {
   nscolor rowColor = 0;
   nscolor prevRowColor;
   for (auto childIdx = 0U; childIdx < childCount; childIdx++) {
-    Accessible* child = thisacc->GetChildAt(childIdx);
+    Accessible* child = thisacc->LocalChildAt(childIdx);
     if (child->IsHTMLTableRow()) {
       prevRowColor = rowColor;
       nsIFrame* rowFrame = child->GetFrame();

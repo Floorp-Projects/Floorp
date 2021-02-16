@@ -167,7 +167,7 @@ class HyperTextAccessible : public AccessibleWrap {
     int32_t childIdx = GetChildIndexAtOffset(aOffset);
     if (childIdx == -1) return false;
 
-    Accessible* child = GetChildAt(childIdx);
+    Accessible* child = LocalChildAt(childIdx);
     child->AppendTextTo(aChar, aOffset - GetChildOffset(childIdx), 1);
 
     if (aStartOffset && aEndOffset) {
@@ -260,7 +260,7 @@ class HyperTextAccessible : public AccessibleWrap {
    * @param  aOffset  [in] the given text offset
    */
   Accessible* GetChildAtOffset(uint32_t aOffset) const {
-    return GetChildAt(GetChildIndexAtOffset(aOffset));
+    return LocalChildAt(GetChildIndexAtOffset(aOffset));
   }
 
   /**

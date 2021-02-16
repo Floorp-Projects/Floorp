@@ -115,8 +115,8 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
       continue;
     }
 
-    for (Accessible* acc = visibleAcc; acc && acc != docAcc->Parent();
-         acc = acc->Parent()) {
+    for (Accessible* acc = visibleAcc; acc && acc != docAcc->LocalParent();
+         acc = acc->LocalParent()) {
       if (inViewAccs.Contains(acc->UniqueID())) {
         break;
       }
@@ -222,8 +222,8 @@ void DocAccessibleWrap::CacheFocusPath(AccessibleWrap* aAccessible) {
   if (IPCAccessibilityActive()) {
     DocAccessibleChild* ipcDoc = IPCDoc();
     nsTArray<BatchData> cacheData;
-    for (AccessibleWrap* acc = aAccessible; acc && acc != this->Parent();
-         acc = static_cast<AccessibleWrap*>(acc->Parent())) {
+    for (AccessibleWrap* acc = aAccessible; acc && acc != this->LocalParent();
+         acc = static_cast<AccessibleWrap*>(acc->LocalParent())) {
       nsAutoString name;
       acc->Name(name);
       nsAutoString textValue;
@@ -247,8 +247,8 @@ void DocAccessibleWrap::CacheFocusPath(AccessibleWrap* aAccessible) {
   } else if (RefPtr<SessionAccessibility> sessionAcc =
                  SessionAccessibility::GetInstanceFor(this)) {
     nsTArray<AccessibleWrap*> accessibles;
-    for (AccessibleWrap* acc = aAccessible; acc && acc != this->Parent();
-         acc = static_cast<AccessibleWrap*>(acc->Parent())) {
+    for (AccessibleWrap* acc = aAccessible; acc && acc != this->LocalParent();
+         acc = static_cast<AccessibleWrap*>(acc->LocalParent())) {
       accessibles.AppendElement(acc);
       mFocusPath.Put(acc->UniqueID(), RefPtr{acc});
     }

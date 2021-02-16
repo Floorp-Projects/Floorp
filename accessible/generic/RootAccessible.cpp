@@ -501,7 +501,7 @@ void RootAccessible::HandlePopupShownEvent(Accessible* aAccessible) {
 
   if (role == roles::COMBOBOX_LIST) {
     // Fire expanded state change event for comboboxes and autocompeletes.
-    Accessible* combobox = aAccessible->Parent();
+    Accessible* combobox = aAccessible->LocalParent();
     if (!combobox) return;
 
     if (combobox->IsCombobox() || combobox->IsAutoComplete()) {
@@ -550,7 +550,7 @@ void RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode) {
 
     uint32_t childCount = popupContainer->ChildCount();
     for (uint32_t idx = 0; idx < childCount; idx++) {
-      Accessible* child = popupContainer->GetChildAt(idx);
+      Accessible* child = popupContainer->LocalChildAt(idx);
       if (child->IsAutoCompletePopup()) {
         popup = child;
         break;

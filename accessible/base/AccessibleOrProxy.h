@@ -80,7 +80,7 @@ class AccessibleOrProxy {
       return childDoc;
     }
 
-    return AsAccessible()->GetChildAt(aIdx);
+    return AsAccessible()->LocalChildAt(aIdx);
   }
 
   /**
@@ -96,7 +96,7 @@ class AccessibleOrProxy {
       return childDoc;
     }
 
-    return AsAccessible()->FirstChild();
+    return AsAccessible()->LocalFirstChild();
   }
 
   /**
@@ -112,7 +112,7 @@ class AccessibleOrProxy {
       return childDoc;
     }
 
-    return AsAccessible()->LastChild();
+    return AsAccessible()->LocalLastChild();
   }
 
   /**
@@ -123,7 +123,7 @@ class AccessibleOrProxy {
       return AsProxy()->NextSibling();
     }
 
-    return AsAccessible()->NextSibling();
+    return AsAccessible()->LocalNextSibling();
   }
 
   /**
@@ -134,7 +134,7 @@ class AccessibleOrProxy {
       return AsProxy()->PrevSibling();
     }
 
-    return AsAccessible()->PrevSibling();
+    return AsAccessible()->LocalPrevSibling();
   }
 
   role Role() const {
