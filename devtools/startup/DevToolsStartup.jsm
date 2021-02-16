@@ -613,16 +613,8 @@ DevToolsStartup.prototype = {
     // menu. We skip menu elements, because the menu panel has no way
     // of dealing with those right now.
     const doc = subview.ownerDocument;
-
     const menu = doc.getElementById("menuWebDeveloperPopup");
-
     const itemsToDisplay = [...menu.children];
-    // Hardcode the addition of the "work offline" menuitem at the bottom:
-    itemsToDisplay.push({
-      localName: "menuseparator",
-      getAttribute: () => {},
-    });
-    itemsToDisplay.push(doc.getElementById("goOfflineMenuitem"));
 
     CustomizableUI.clearSubview(subview);
     CustomizableUI.fillSubviewFromMenuItems(itemsToDisplay, subview);
