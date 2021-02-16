@@ -38,10 +38,10 @@
 #include "SQLCollations.h"
 #include "FileSystemModule.h"
 #include "mozStorageHelper.h"
-#include "GeckoProfiler.h"
 
 #include "mozilla/Logging.h"
 #include "mozilla/Printf.h"
+#include "mozilla/ProfilerLabels.h"
 #include "nsProxyRelease.h"
 #include "nsURLHelper.h"
 

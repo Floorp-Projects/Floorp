@@ -10,7 +10,6 @@
 #include <stack>                  // for stack
 #include "BasicContainerLayer.h"  // for BasicContainerLayer
 #include "BasicLayersImpl.h"      // for ToData, BasicReadbackLayer, etc
-#include "GeckoProfiler.h"        // for AUTO_PROFILER_LABEL
 #include "ImageContainer.h"       // for ImageFactory
 #include "Layers.h"               // for Layer, ContainerLayer, etc
 #include "ReadbackLayer.h"        // for ReadbackLayer
@@ -29,6 +28,7 @@
 #include "gfxUtils.h"            // for gfxUtils
 #include "gfx2DGlue.h"           // for thebes --> moz2d transition
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/StaticPrefs_nglayout.h"
 #include "mozilla/WidgetUtils.h"    // for ScreenRotation
 #include "mozilla/gfx/2D.h"         // for DrawTarget

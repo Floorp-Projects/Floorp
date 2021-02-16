@@ -9,6 +9,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/dom/Document.h"
 #include "nsGfxCIID.h"
@@ -18,7 +19,6 @@
 #include "nsCOMArray.h"
 #include "nsXULPopupManager.h"
 #include "nsPresContext.h"
-#include "GeckoProfiler.h"
 #include "nsRefreshDriver.h"
 #include "nsContentUtils.h"  // for nsAutoScriptBlocker
 #include "nsLayoutUtils.h"

@@ -11,6 +11,7 @@
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/gfx/Types.h"
+#include "mozilla/ProfilerLabels.h"
 
 namespace mozilla {
 namespace layers {

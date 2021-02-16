@@ -38,7 +38,8 @@
 #include "nsPoint.h"          // for nsPoint
 #include "nsTArray.h"         // for nsTArray, nsTArray_Impl, etc
 #include "TreeTraversal.h"    // for ForEachNode
-#include "GeckoProfiler.h"
+#include "mozilla/ProfilerLabels.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/AsyncCompositionManager.h"
 

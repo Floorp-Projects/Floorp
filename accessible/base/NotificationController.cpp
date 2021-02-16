@@ -7,7 +7,6 @@
 
 #include "DocAccessible-inl.h"
 #include "DocAccessibleChild.h"
-#include "GeckoProfiler.h"
 #include "nsEventShell.h"
 #include "TextLeafAccessible.h"
 #include "TextUpdater.h"
@@ -15,6 +14,7 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/Telemetry.h"
 
 using namespace mozilla;

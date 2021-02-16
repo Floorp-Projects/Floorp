@@ -78,10 +78,11 @@
 #include "mozilla/ContentEvents.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "nsCycleCollectionNoteRootCallback.h"
-#include "GeckoProfiler.h"
 #include "mozilla/IdleTaskRunner.h"
 #include "nsViewManager.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/ProfilerLabels.h"
+#include "mozilla/ProfilerMarkers.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

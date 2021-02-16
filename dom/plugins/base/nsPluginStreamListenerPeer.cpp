@@ -23,10 +23,10 @@
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 #include "nsPluginNativeWindow.h"
-#include "GeckoProfiler.h"
 #include "nsPluginInstanceOwner.h"
 #include "nsDataHashtable.h"
 #include "mozilla/NullPrincipal.h"
+#include "mozilla/ProfilerLabels.h"
 
 // nsPluginStreamListenerPeer
 

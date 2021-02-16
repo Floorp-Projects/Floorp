@@ -87,8 +87,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/LookAndFeel.h"
-
-#include "GeckoProfiler.h"
+#include "mozilla/ProfilerLabels.h"
 
 #ifdef DEBUG
 #  undef NOISY_REFLOW

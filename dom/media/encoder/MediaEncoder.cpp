@@ -9,7 +9,6 @@
 #include "AudioNodeEngine.h"
 #include "AudioNodeTrack.h"
 #include "DriftCompensation.h"
-#include "GeckoProfiler.h"
 #include "MediaDecoder.h"
 #include "MediaTrackGraphImpl.h"
 #include "MediaTrackListener.h"
@@ -22,6 +21,7 @@
 #include "mozilla/gfx/Point.h"  // IntSize
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TaskQueue.h"

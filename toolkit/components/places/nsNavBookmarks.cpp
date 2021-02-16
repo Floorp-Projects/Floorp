@@ -15,13 +15,12 @@
 #include "nsPrintfCString.h"
 #include "nsQueryObject.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/storage.h"
 #include "mozilla/dom/PlacesBookmarkAddition.h"
 #include "mozilla/dom/PlacesBookmarkRemoved.h"
 #include "mozilla/dom/PlacesObservers.h"
 #include "mozilla/dom/PlacesVisit.h"
-
-#include "GeckoProfiler.h"
 
 using namespace mozilla;
 

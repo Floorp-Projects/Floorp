@@ -8,6 +8,8 @@
 
 #include "GLContext.h"
 #include "GLContextProvider.h"
+#include "mozilla/ProfilerLabels.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/CompositionRecorder.h"

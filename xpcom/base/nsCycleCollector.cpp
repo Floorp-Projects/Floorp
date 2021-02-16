@@ -165,7 +165,6 @@
 
 #include <utility>
 
-#include "GeckoProfiler.h"
 #include "js/SliceBudget.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoGlobalTimelineMarker.h"
@@ -174,6 +173,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/MruCache.h"
 #include "mozilla/PoisonIOInterposer.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/SegmentedVector.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/ThreadLocal.h"

@@ -9,9 +9,9 @@
 #include <windows.h>
 #include <psapi.h>
 
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/Unused.h"
 #include "nsWindowsHelpers.h"
-#include "GeckoProfiler.h"
 
 namespace {
 

@@ -13,13 +13,13 @@
 
 #include "BasicImplData.h"    // for BasicImplData
 #include "BasicLayersImpl.h"  // for ToData
-#include "GeckoProfiler.h"    // for AUTO_PROFILER_LABEL
 #include "Layers.h"           // for PaintedLayer, Layer, etc
 #include "PaintThread.h"
 #include "gfx2DGlue.h"
 #include "gfxPlatform.h"         // for gfxPlatform
 #include "gfxUtils.h"            // for gfxUtils
 #include "mozilla/ArrayUtils.h"  // for ArrayLength
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/gfx/BasePoint.h"  // for BasePoint
 #include "mozilla/gfx/BaseRect.h"   // for BaseRect

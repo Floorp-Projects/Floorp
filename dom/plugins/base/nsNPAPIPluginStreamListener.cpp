@@ -13,6 +13,7 @@
 #include "nsNPAPIPlugin.h"
 #include "nsPluginLogging.h"
 #include "nsPluginStreamListenerPeer.h"
+#include "mozilla/ProfilerLabels.h"
 
 #include <stdint.h>
 #include <algorithm>

@@ -20,13 +20,13 @@
 #include "mozilla/layers/Effects.h"      // for EffectChain
 #include "mozilla/layers/LayerManagerCompositeUtils.h"
 #include "mozilla/mozalloc.h"  // for operator delete
+#include "mozilla/ProfilerLabels.h"
 #include "nsAString.h"
 #include "mozilla/RefPtr.h"   // for nsRefPtr
 #include "nsISupportsImpl.h"  // for MOZ_COUNT_CTOR, etc
 #include "nsMathUtils.h"      // for NS_lround
 #include "nsString.h"         // for nsAutoCString
 #include "TextRenderer.h"
-#include "GeckoProfiler.h"
 
 namespace mozilla {
 namespace layers {

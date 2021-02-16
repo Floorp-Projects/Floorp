@@ -27,10 +27,11 @@
 #include "nsThreadUtils.h"
 #include "mozilla/ArenaAllocatorExtensions.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/ProfilerLabels.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/Services.h"
 #include "mozilla/SimpleEnumerator.h"
 
-#include "GeckoProfiler.h"
 #include "ManifestParser.h"
 #include "nsSimpleEnumerator.h"
 

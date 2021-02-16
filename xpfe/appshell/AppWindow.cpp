@@ -11,13 +11,13 @@
 #include <algorithm>
 
 // Helper classes
-#include "GeckoProfiler.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsWidgetsCID.h"
 #include "nsThreadUtils.h"
 #include "nsNetCID.h"
 #include "nsQueryObject.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/Sprintf.h"
 
 // Interfaces needed to be included

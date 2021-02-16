@@ -11,8 +11,8 @@
 #include "base/message_loop.h"
 #include "base/histogram.h"
 #include "base/win_util.h"
+#include "mozilla/ProfilerLabels.h"
 #include "WinUtils.h"
-#include "GeckoProfiler.h"
 
 using base::Time;
 

@@ -18,8 +18,8 @@
 #include "base/time.h"
 #include "nsDependentSubstring.h"
 #include "event.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/UniquePtr.h"
-#include "GeckoProfiler.h"
 
 // This macro checks that the _EVENT_SIZEOF_* constants defined in
 // ipc/chromiume/src/third_party/<platform>/event2/event-config.h are correct.

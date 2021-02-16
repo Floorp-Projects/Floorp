@@ -91,8 +91,8 @@
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/XULFrameElement.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
+#include "mozilla/ProfilerLabels.h"
 #include "nsGenericHTMLFrameElement.h"
-#include "GeckoProfiler.h"
 
 #include "jsapi.h"
 #include "mozilla/dom/HTMLIFrameElement.h"
