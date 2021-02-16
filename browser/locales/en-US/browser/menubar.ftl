@@ -310,6 +310,12 @@ menu-help-taskmanager =
 menu-help-feedback-page =
     .label = Submit Feedback…
     .accesskey = S
+menu-help-safe-mode-without-addons =
+    .label = Restart With Add-ons Disabled…
+    .accesskey = R
+menu-help-safe-mode-with-addons =
+    .label = Restart With Add-ons Enabled
+    .accesskey = R
 # Label of the Help menu item. Either this or
 # menu-help-notdeceptive is shown.
 menu-help-report-deceptive-site =
