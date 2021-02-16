@@ -11,51 +11,6 @@ Before following these 32-bit-Firefox-specific instructions, follow
 the :ref:`Building Firefox On Linux` instructions to ensure that
 your machine can do a normal build.
 
-Instructions for Fedora 20 and 19
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-are installed.
-
-.. code::
-
-   sudo yum install \
-     ccache cmake gcc gcc-c++ glibc-devel.i686 \
-     libstdc++-devel libstdc++-devel.i686 \
-     gtk2-devel.i686 gtk+-devel.i686 gtk+extra-devel.i686 \
-     glib-devel.i686 glib2-devel.i686 \
-     dbus-devel.i686 dbus-glib-devel.i686 \
-     alsa-lib-devel.i686 yasm-devel.i686 \
-     libxml2-devel.i686 zlib-devel.i686 \
-     freetype-devel.i686 \
-     atk-devel.i686 pango-devel.i686 fontconfig-devel.i686 \
-     cairo-devel.i686 gdk-pixbuf2-devel.i686 \
-     libX11-devel.i686 libXt-devel.i686 libXext-devel.i686 \
-     libXrender-devel.i686 libXau-devel.i686 libxcb-devel.i686 \
-     pulseaudio-libs-devel.i686 harfbuzz-devel.i686 \
-     mesa-libGL-devel.i686 libXxf86vm-devel.i686 \
-     libXfixes-devel.i686 libdrm-devel-2.4.49-2.fc19.i686 \
-     mesa-libEGL-devel libXdamage-devel.i686 libXcomposite-devel.i686
-
-
-.. code::
-
-   # Flags set for targeting x86.
-   export CROSS_COMPILE=1
-   export PKG_CONFIG_PATH=/usr/lib/pkgconfig
-
-   CC="ccache gcc -m32"
-   CXX="ccache g++ -m32"
-   AR=ar
-   ac_add_options --target=i686-pc-linux
-
-   # Normal build flags.  These make a debug browser build.
-   ac_add_options --enable-application=browser
-   mk_add_options MOZ_MAKE_FLAGS="-s -j6"
-   mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../ff-dbg
-
-   ac_add_options --enable-debug
-   ac_add_options --disable-optimize
-
 Instructions for Ubuntu 19.10
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
