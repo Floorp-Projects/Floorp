@@ -3086,16 +3086,8 @@ nsChangeHint nsStyleUI::CalcDifference(const nsStyleUI& aNewData) const {
     hint |= NS_STYLE_HINT_VISUAL;
   }
 
-  if (mUserInput != aNewData.mUserInput) {
-    if (StyleUserInput::None == mUserInput ||
-        StyleUserInput::None == aNewData.mUserInput) {
-      hint |= nsChangeHint_ReconstructFrame;
-    } else {
-      hint |= nsChangeHint_NeutralChange;
-    }
-  }
-
-  if (mUserFocus != aNewData.mUserFocus || mInert != aNewData.mInert) {
+  if (mUserFocus != aNewData.mUserFocus || mInert != aNewData.mInert ||
+      mUserInput != aNewData.mUserInput) {
     hint |= nsChangeHint_NeutralChange;
   }
 
