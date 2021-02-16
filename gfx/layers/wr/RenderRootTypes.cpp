@@ -80,6 +80,7 @@ bool ReadScrollUpdates(const IPC::Message* aMsg, PickleIterator* aIter,
 
 void IPDLParamTraits<mozilla::layers::TransactionData>::Write(
     IPC::Message* aMsg, IProtocol* aActor, paramType&& aParam) {
+  WriteIPDLParam(aMsg, aActor, aParam.mIdNamespace);
   WriteIPDLParam(aMsg, aActor, aParam.mCommands);
   WriteIPDLParam(aMsg, aActor, aParam.mResourceUpdates);
   WriteIPDLParam(aMsg, aActor, aParam.mSmallShmems);
@@ -91,7 +92,8 @@ void IPDLParamTraits<mozilla::layers::TransactionData>::Write(
 bool IPDLParamTraits<mozilla::layers::TransactionData>::Read(
     const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
     paramType* aResult) {
-  if (ReadIPDLParam(aMsg, aIter, aActor, &aResult->mCommands) &&
+  if (ReadIPDLParam(aMsg, aIter, aActor, &aResult->mIdNamespace) &&
+      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mCommands) &&
       ReadIPDLParam(aMsg, aIter, aActor, &aResult->mResourceUpdates) &&
       ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSmallShmems) &&
       ReadIPDLParam(aMsg, aIter, aActor, &aResult->mLargeShmems) &&
