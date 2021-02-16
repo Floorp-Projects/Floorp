@@ -123,8 +123,7 @@ class PerformanceMainThread final : public Performance,
 
   const bool mCrossOriginIsolated;
 
-  AutoTArray<RefPtr<PerformanceEventTiming>, kDefaultEventTimingBufferSize>
-      mEventTimingEntries;
+  nsTArray<RefPtr<PerformanceEventTiming>> mEventTimingEntries;
 
   AutoCleanLinkedList<RefPtr<PerformanceEventTiming>>
       mPendingEventTimingEntries;
