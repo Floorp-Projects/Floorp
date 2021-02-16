@@ -73,6 +73,7 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation) {
     return;
   }
 
+  AUTO_PROFILER_LABEL("ProfilerIOInterposeObserver", PROFILER);
   const bool doCaptureStack = !(features & ProfilerFeature::NoIOStacks);
   if (IsMainThread()) {
     // This is the main thread.

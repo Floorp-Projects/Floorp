@@ -367,6 +367,7 @@ static void AllocCallback(void* aPtr, size_t aReqSize) {
   // The next part of the function requires allocations, so block the memory
   // hooks from recursing on any new allocations coming in.
   AutoBlockIntercepts block(threadIntercept.ref());
+  AUTO_PROFILER_LABEL("AllocCallback", PROFILER);
 
   // Perform a bernoulli trial, which will return true or false based on its
   // configured probability. It takes into account the byte size so that
@@ -412,6 +413,7 @@ static void FreeCallback(void* aPtr) {
   // The next part of the function requires allocations, so block the memory
   // hooks from recursing on any new allocations coming in.
   AutoBlockIntercepts block(threadIntercept.ref());
+  AUTO_PROFILER_LABEL("FreeCallback", PROFILER);
 
   // Perform a bernoulli trial, which will return true or false based on its
   // configured probability. It takes into account the byte size so that
