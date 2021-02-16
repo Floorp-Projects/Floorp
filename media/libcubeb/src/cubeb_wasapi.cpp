@@ -1340,7 +1340,7 @@ void wasapi_destroy(cubeb * context);
 
 HRESULT register_notification_client(cubeb_stream * stm)
 {
-  assert(stm->device_enumerator);
+  XASSERT(stm->device_enumerator);
 
   stm->notification_client.reset(new wasapi_endpoint_notification_client(stm->reconfigure_event, stm->role));
 
@@ -1348,7 +1348,6 @@ HRESULT register_notification_client(cubeb_stream * stm)
   if (FAILED(hr)) {
     LOG("Could not register endpoint notification callback: %lx", hr);
     stm->notification_client = nullptr;
-    stm->device_enumerator = nullptr;
   }
 
   return hr;
@@ -1356,18 +1355,12 @@ HRESULT register_notification_client(cubeb_stream * stm)
 
 HRESULT unregister_notification_client(cubeb_stream * stm)
 {
-  XASSERT(stm);
-  HRESULT hr;
+  XASSERT(stm->device_enumerator);
 
-  if (!stm->device_enumerator) {
-    return S_OK;
-  }
-
-  hr = stm->device_enumerator->UnregisterEndpointNotificationCallback(stm->notification_client.get());
+  HRESULT hr = stm->device_enumerator->UnregisterEndpointNotificationCallback(stm->notification_client.get());
   if (FAILED(hr)) {
     // We can't really do anything here, we'll probably leak the
-    // notification client, but we can at least release the enumerator.
-    stm->device_enumerator = nullptr;
+    // notification client.
     return S_OK;
   }
 
