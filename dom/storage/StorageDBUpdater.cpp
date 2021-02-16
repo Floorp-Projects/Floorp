@@ -228,10 +228,6 @@ StripOriginAddonId::OnFunctionCall(mozIStorageValueArray* aFunctionArguments,
   return NS_OK;
 }
 
-}  // namespace
-
-namespace StorageDBUpdater {
-
 nsresult CreateSchema1Tables(mozIStorageConnection* aWorkerConnection) {
   nsresult rv;
 
@@ -247,6 +243,66 @@ nsresult CreateSchema1Tables(mozIStorageConnection* aWorkerConnection) {
   rv = aWorkerConnection->ExecuteSimpleSQL(
       nsLiteralCString("CREATE UNIQUE INDEX IF NOT EXISTS origin_key_index"
                        " ON webappsstore2(originAttributes, originKey, key)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult TablesExist(mozIStorageConnection* aWorkerConnection,
+                     bool* aWebappsstore2Exists, bool* aWebappsstoreExists,
+                     bool* aMoz_webappsstoreExists) {
+  nsresult rv =
+      aWorkerConnection->TableExists("webappsstore2"_ns, aWebappsstore2Exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aWorkerConnection->TableExists("webappsstore"_ns, aWebappsstoreExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aWorkerConnection->TableExists("moz_webappsstore"_ns,
+                                      aMoz_webappsstoreExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult CreateCurrentSchemaOnEmptyTableInternal(
+    mozIStorageConnection* aWorkerConnection) {
+  nsresult rv = CreateSchema1Tables(aWorkerConnection);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aWorkerConnection->SetSchemaVersion(CURRENT_SCHEMA_VERSION);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+}  // namespace
+
+namespace StorageDBUpdater {
+
+nsresult CreateCurrentSchema(mozIStorageConnection* aConnection) {
+  mozStorageTransaction transaction(aConnection, false);
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  {
+    int32_t schemaVer;
+    nsresult rv = aConnection->GetSchemaVersion(&schemaVer);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    MOZ_DIAGNOSTIC_ASSERT(0 == schemaVer);
+
+    bool webappsstore2Exists, webappsstoreExists, moz_webappsstoreExists;
+    rv = TablesExist(aConnection, &webappsstore2Exists, &webappsstoreExists,
+                     &moz_webappsstoreExists);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    MOZ_DIAGNOSTIC_ASSERT(!webappsstore2Exists && !webappsstoreExists &&
+                          !moz_webappsstoreExists);
+  }
+#endif
+
+  nsresult rv = CreateCurrentSchemaOnEmptyTableInternal(aConnection);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -284,15 +340,8 @@ nsresult Update(mozIStorageConnection* aWorkerConnection) {
   switch (schemaVer) {
     case 0: {
       bool webappsstore2Exists, webappsstoreExists, moz_webappsstoreExists;
-
-      rv = aWorkerConnection->TableExists("webappsstore2"_ns,
-                                          &webappsstore2Exists);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = aWorkerConnection->TableExists("webappsstore"_ns,
-                                          &webappsstoreExists);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = aWorkerConnection->TableExists("moz_webappsstore"_ns,
-                                          &moz_webappsstoreExists);
+      rv = TablesExist(aWorkerConnection, &webappsstore2Exists,
+                       &webappsstoreExists, &moz_webappsstoreExists);
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (!webappsstore2Exists && !webappsstoreExists &&
@@ -301,10 +350,12 @@ nsresult Update(mozIStorageConnection* aWorkerConnection) {
         // schema table and break to the next version to update to, i.e. bypass
         // update from the old version.
 
-        rv = CreateSchema1Tables(aWorkerConnection);
-        NS_ENSURE_SUCCESS(rv, rv);
+        // XXX What does "break to the next version to update to" mean here? It
+        // seems to refer to the 'break' statement below, but that breaks out of
+        // the 'switch' statement and continues with committing the transaction.
+        // Either this is wrong, or the comment above is misleading.
 
-        rv = aWorkerConnection->SetSchemaVersion(CURRENT_SCHEMA_VERSION);
+        rv = CreateCurrentSchemaOnEmptyTableInternal(aWorkerConnection);
         NS_ENSURE_SUCCESS(rv, rv);
 
         break;

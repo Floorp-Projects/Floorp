@@ -5492,7 +5492,7 @@ QuotaManager::CreateLocalStorageArchiveConnectionFromWebAppsStore() const {
       MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>, ss,
                                  OpenUnsharedDatabase, lsArchiveFile));
 
-  QM_TRY(StorageDBUpdater::Update(lsArchiveConnection));
+  QM_TRY(StorageDBUpdater::CreateCurrentSchema(lsArchiveConnection));
 
   return lsArchiveConnection;
 }
@@ -5556,6 +5556,10 @@ QuotaManager::CreateLocalStorageArchiveConnection() const {
               return Err(rv);
             }));
 
+    // XXX Similarly to CreateShadowStorageConnection, this might or might not
+    // deal with a fresh database file. It might be better to call
+    // StorageDBUpdater::CreateCurrentSchema if removed is true (and in that
+    // case we don't need a orElse part).
     QM_TRY(ToResult(StorageDBUpdater::Update(connection))
                .orElse([&removed, &connection, &lsArchiveFile,
                         &ss](const nsresult rv) -> Result<Ok, nsresult> {
@@ -5570,7 +5574,7 @@ QuotaManager::CreateLocalStorageArchiveConnection() const {
                                      nsCOMPtr<mozIStorageConnection>, ss,
                                      OpenUnsharedDatabase, lsArchiveFile));
 
-                   QM_TRY(StorageDBUpdater::Update(connection));
+                   QM_TRY(StorageDBUpdater::CreateCurrentSchema(connection));
 
                    return Ok{};
                  }
