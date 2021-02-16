@@ -53,7 +53,7 @@ namespace mozilla {
  */
 
 template <unsigned KeySize, class T>
-class BloomFilter {
+class CountingBloomFilter {
   /*
    * A counting Bloom filter with 8-bit counters.  For now we assume
    * that having two hash functions is enough, but we may revisit that
@@ -103,7 +103,7 @@ class BloomFilter {
    * rates for larger N.
    */
  public:
-  BloomFilter() {
+  CountingBloomFilter() {
     static_assert(KeySize <= kKeyShift, "KeySize too big");
 
     // Should we have a custom operator new using calloc instead and
@@ -169,12 +169,12 @@ class BloomFilter {
 };
 
 template <unsigned KeySize, class T>
-inline void BloomFilter<KeySize, T>::clear() {
+inline void CountingBloomFilter<KeySize, T>::clear() {
   memset(mCounters, 0, kArraySize);
 }
 
 template <unsigned KeySize, class T>
-inline void BloomFilter<KeySize, T>::add(uint32_t aHash) {
+inline void CountingBloomFilter<KeySize, T>::add(uint32_t aHash) {
   uint8_t& slot1 = firstSlot(aHash);
   if (MOZ_LIKELY(!full(slot1))) {
     ++slot1;
@@ -186,13 +186,13 @@ inline void BloomFilter<KeySize, T>::add(uint32_t aHash) {
 }
 
 template <unsigned KeySize, class T>
-MOZ_ALWAYS_INLINE void BloomFilter<KeySize, T>::add(const T* aValue) {
+MOZ_ALWAYS_INLINE void CountingBloomFilter<KeySize, T>::add(const T* aValue) {
   uint32_t hash = aValue->hash();
   return add(hash);
 }
 
 template <unsigned KeySize, class T>
-inline void BloomFilter<KeySize, T>::remove(uint32_t aHash) {
+inline void CountingBloomFilter<KeySize, T>::remove(uint32_t aHash) {
   // If the slots are full, we don't know whether we bumped them to be
   // there when we added or not, so just leave them full.
   uint8_t& slot1 = firstSlot(aHash);
@@ -206,20 +206,21 @@ inline void BloomFilter<KeySize, T>::remove(uint32_t aHash) {
 }
 
 template <unsigned KeySize, class T>
-MOZ_ALWAYS_INLINE void BloomFilter<KeySize, T>::remove(const T* aValue) {
+MOZ_ALWAYS_INLINE void CountingBloomFilter<KeySize, T>::remove(
+    const T* aValue) {
   uint32_t hash = aValue->hash();
   remove(hash);
 }
 
 template <unsigned KeySize, class T>
-MOZ_ALWAYS_INLINE bool BloomFilter<KeySize, T>::mightContain(
+MOZ_ALWAYS_INLINE bool CountingBloomFilter<KeySize, T>::mightContain(
     uint32_t aHash) const {
   // Check that all the slots for this hash contain something
   return firstSlot(aHash) && secondSlot(aHash);
 }
 
 template <unsigned KeySize, class T>
-MOZ_ALWAYS_INLINE bool BloomFilter<KeySize, T>::mightContain(
+MOZ_ALWAYS_INLINE bool CountingBloomFilter<KeySize, T>::mightContain(
     const T* aValue) const {
   uint32_t hash = aValue->hash();
   return mightContain(hash);
