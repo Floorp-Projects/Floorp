@@ -132,7 +132,6 @@ CanvasRenderingContextHelper::CreateContextHelper(
       Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_USED, 1);
 
       ret = new ClientWebGLContext(/*webgl2:*/ false);
-      if (!ret) return nullptr;
 
       break;
 
@@ -140,7 +139,6 @@ CanvasRenderingContextHelper::CreateContextHelper(
       Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_USED, 1);
 
       ret = new ClientWebGLContext(/*webgl2:*/ true);
-      if (!ret) return nullptr;
 
       break;
 
@@ -149,7 +147,6 @@ CanvasRenderingContextHelper::CreateContextHelper(
       // Telemetry::Accumulate(Telemetry::CANVAS_WEBGPU_USED, 1);
 
       ret = new webgpu::CanvasContext();
-      if (!ret) return nullptr;
 
       break;
 
