@@ -262,7 +262,6 @@ nsresult NS_GetAccessibilityService(nsIAccessibilityService** aResult) {
   }
 
   xpcAccessibilityService* service = new xpcAccessibilityService();
-  NS_ENSURE_TRUE(service, NS_ERROR_OUT_OF_MEMORY);
   xpcAccessibilityService::gXPCAccessibilityService = service;
   NS_ADDREF(*aResult = service);
 
