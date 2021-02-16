@@ -1080,6 +1080,10 @@ function buildHelpMenu() {
     "feedbackPage"
   ).disabled = !Services.policies.isAllowed("feedbackCommands");
 
+  document.getElementById(
+    "helpSafeMode"
+  ).disabled = !Services.policies.isAllowed("safeMode");
+
   let supportMenu = Services.policies.getSupportMenu();
   if (supportMenu) {
     let menuitem = document.getElementById("helpPolicySupport");
