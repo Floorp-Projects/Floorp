@@ -127,6 +127,8 @@
     <string name="browser_menu_edit_bookmark">Redakti legosignon</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Aldonaĵoj</string>
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string name="browser_menu_extensions">Etendaĵoj</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Neniu aldonaĵo estas ĉi tie</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -527,6 +529,10 @@
     <string name="library_desktop_bookmarks_unfiled">Aliaj legosignoj</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Historio</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">Nova langeto</string>
+    <!-- Option in Library to find text in page -->
+    <string name="library_find_in_page">Serĉi en la paĝo</string>
     <!-- Option in Library to open Synced Tabs page -->
     <string name="library_synced_tabs">Spegulitaj langetoj</string>
     <!-- Option in Library to open Reading List -->
@@ -1096,6 +1102,8 @@
 
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Permesoj por retejoj</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Elŝutoj</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Forigi retumajn datumojn</string>
     <!-- Title for the Delete browsing data on quit preference -->
@@ -1218,8 +1226,7 @@
     <string name="onboarding_privacy_notice_header">Via privateco</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">Ni kreis %s por doni al vi la eblon plene  regi kion vi dividas
-en la reto kaj kion vi dividas kun ni.</string>
+    <string name="onboarding_privacy_notice_description2">Ni kreis %s por doni al vi la eblon plene regi kion vi dividas en la reto kaj kion vi dividas kun ni.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Legu nian rimarkon pri privateco</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->

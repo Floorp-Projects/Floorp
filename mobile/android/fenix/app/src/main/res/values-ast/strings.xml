@@ -181,7 +181,7 @@
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
-    <string name="unknown_scheme_error_message">Nun pue conectase porque nun se reconoz l\'esquema de la URL.</string>
+    <string name="unknown_scheme_error_message">Nun ye posible conectase porque nun se reconoz l\'esquema de la URL.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -1207,7 +1207,7 @@ en llinia y con nós.</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
     <string name="sync_sent_tab_snackbar">¡Unvióse la llingüeta!</string>
     <!-- Text shown in snackbar when sharing tabs failed  -->
-    <string name="sync_sent_tab_error_snackbar">Nun pue unviase</string>
+    <string name="sync_sent_tab_error_snackbar">Nun ye posible unviar</string>
     <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
     <string name="sync_sent_tab_error_snackbar_action">RETENTAR</string>
 

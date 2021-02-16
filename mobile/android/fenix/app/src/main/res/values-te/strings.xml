@@ -507,6 +507,8 @@
     <!-- Option in Library to open History page -->
     <string name="library_history">చరిత్ర</string>
 
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">కొత్త ట్యాబు</string>
     <!-- Option in Library to open Synced Tabs page -->
     <string name="library_synced_tabs">సింకైన ట్యాబులు</string>
     <!-- Option in Library to open Reading List -->
