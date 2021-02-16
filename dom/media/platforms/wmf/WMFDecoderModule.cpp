@@ -58,7 +58,8 @@ static Atomic<bool> sUsableVPXMFT(false);
 
 /* static */
 already_AddRefed<PlatformDecoderModule> WMFDecoderModule::Create() {
-  return MakeAndAddRef<WMFDecoderModule>();
+  RefPtr<WMFDecoderModule> wmf = new WMFDecoderModule();
+  return wmf.forget();
 }
 
 WMFDecoderModule::~WMFDecoderModule() {

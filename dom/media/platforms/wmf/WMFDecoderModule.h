@@ -47,6 +47,7 @@ class WMFDecoderModule : public PlatformDecoderModule {
   static bool HasMP3();
 
  private:
+  WMFDecoderModule() = default;
   virtual ~WMFDecoderModule();
 
   bool mWMFInitialized = false;
