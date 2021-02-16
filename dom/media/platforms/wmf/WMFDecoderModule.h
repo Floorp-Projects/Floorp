@@ -50,6 +50,8 @@ class WMFDecoderModule : public PlatformDecoderModule {
   WMFDecoderModule() = default;
   virtual ~WMFDecoderModule();
 
+  void ReportUsageForTelemetry() const;
+
   bool mWMFInitialized = false;
 };
 
