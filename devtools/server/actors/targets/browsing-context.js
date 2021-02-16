@@ -237,10 +237,20 @@ const browsingContextTargetPrototype = {
    *
    * @param connection DevToolsServerConnection
    *        The conection to the client.
-   * @param docShell nsIDocShell
-   *        The |docShell| for the debugged frame.
    * @param options Object
    *        Object with following attributes:
+   *        - docShell nsIDocShell
+   *          The |docShell| for the debugged frame.
+   *        - doNotFireFrameUpdates Boolean
+   *          If true, omit emitting `frameUpdate` events. This is only useful
+   *          for the top level target, in order to populate the toolbox iframe selector dropdown.
+   *          But we can avoid sending these RDP messages for any additional remote target.
+   *        - followWindowGlobalLifeCycle Boolean
+   *          If true, the target actor will only inspect the current WindowGlobal (and its children windows).
+   *          But won't inspect next document loaded in the same BrowsingContext.
+   *          The actor will behave more like a WindowGlobalTarget rather than a BrowsingContextTarget.
+   *          We may eventually switch everything to this, i.e. uses only WindowGlobalTarget.
+   *          But for now, we restrict this behavior to remoted iframes.
    *        - isTopLevelTarget Boolean
    *          Should be set to true for all top-level targets. A top level target
    *          is the topmost target of a DevTools "session". For instance for a local
@@ -251,18 +261,16 @@ const browsingContextTargetPrototype = {
    *          implementation. But for server-side target switching this flag will be exposed
    *          to the client and should be available for all target actor classes. It will be
    *          used to detect target switching. (Bug 1644397)
-   *        - followWindowGlobalLifeCycle Boolean
-   *          If true, the target actor will only inspect the current WindowGlobal (and its children windows).
-   *          But won't inspect next document loaded in the same BrowsingContext.
-   *          The actor will behave more like a WindowGlobalTarget rather than a BrowsingContextTarget.
-   *          We may eventually switch everything to this, i.e. uses only WindowGlobalTarget.
-   *          But for now, we restrict this behavior to remoted iframes.
-   *        - doNotFireFrameUpdates Boolean
-   *          If true, omit emitting `frameUpdate` events. This is only useful
-   *          for the top level target, in order to populate the toolbox iframe selector dropdown.
-   *          But we can avoid sending these RDP messages for any additional remote target.
    */
-  initialize: function(connection, docShell, options = {}) {
+  initialize: function(
+    connection,
+    {
+      docShell,
+      doNotFireFrameUpdates,
+      followWindowGlobalLifeCycle,
+      isTopLevelTarget,
+    }
+  ) {
     Actor.prototype.initialize.call(this, connection);
 
     if (!docShell) {
@@ -272,9 +280,9 @@ const browsingContextTargetPrototype = {
     }
     this.docShell = docShell;
 
-    this.followWindowGlobalLifeCycle = options.followWindowGlobalLifeCycle;
-    this.doNotFireFrameUpdates = options.doNotFireFrameUpdates;
-    this.isTopLevelTarget = !!options.isTopLevelTarget;
+    this.followWindowGlobalLifeCycle = followWindowGlobalLifeCycle;
+    this.doNotFireFrameUpdates = doNotFireFrameUpdates;
+    this.isTopLevelTarget = !!isTopLevelTarget;
 
     // A map of actor names to actor instances provided by extensions.
     this._extraActors = {};

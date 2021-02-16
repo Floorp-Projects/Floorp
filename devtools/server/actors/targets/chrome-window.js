@@ -53,16 +53,19 @@ const chromeWindowTargetPrototype = extend({}, browsingContextTargetPrototype);
  *        The connection to the client.
  * @param window DOMWindow
  *        The window.
+ * @param {Object} options
+ *        - isTopLevelTarget: {Boolean} flag to indicate if this is the top
+ *          level target of the DevTools session
  */
-chromeWindowTargetPrototype.initialize = function(connection, window) {
-  BrowsingContextTargetActor.prototype.initialize.call(
-    this,
-    connection,
-    window.docShell,
-    {
-      isTopLevelTarget: true,
-    }
-  );
+chromeWindowTargetPrototype.initialize = function(
+  connection,
+  window,
+  { isTopLevelTarget }
+) {
+  BrowsingContextTargetActor.prototype.initialize.call(this, connection, {
+    docShell: window.docShell,
+    isTopLevelTarget,
+  });
 };
 
 // Bug 1266561: This setting is mysteriously named, we should split up the
