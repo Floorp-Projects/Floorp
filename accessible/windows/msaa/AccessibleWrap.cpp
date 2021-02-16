@@ -684,7 +684,6 @@ AccessibleEnumerator::Next(unsigned long celt, VARIANT FAR* rgvar,
 STDMETHODIMP
 AccessibleEnumerator::Clone(IEnumVARIANT FAR* FAR* ppenum) {
   *ppenum = new AccessibleEnumerator(*this);
-  if (!*ppenum) return E_OUTOFMEMORY;
   NS_ADDREF(*ppenum);
   return S_OK;
 }

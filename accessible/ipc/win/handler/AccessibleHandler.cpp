@@ -63,9 +63,6 @@ AccessibleHandler::Create(IUnknown* aOuter, REFIID aIid, void** aOutInterface) {
 
   HRESULT hr;
   RefPtr<AccessibleHandler> handler(new AccessibleHandler(aOuter, &hr));
-  if (!handler) {
-    return E_OUTOFMEMORY;
-  }
   if (FAILED(hr)) {
     return hr;
   }
