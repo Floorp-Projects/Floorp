@@ -241,8 +241,6 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared {
   void dropRawBuffer();
 };
 
-bool IsSharedArrayBuffer(HandleValue v);
-
 using RootedSharedArrayBufferObject = Rooted<SharedArrayBufferObject*>;
 using HandleSharedArrayBufferObject = Handle<SharedArrayBufferObject*>;
 using MutableHandleSharedArrayBufferObject =

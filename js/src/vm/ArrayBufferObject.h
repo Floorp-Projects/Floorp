@@ -502,19 +502,6 @@ bool CreateWasmBuffer(JSContext* cx, wasm::MemoryKind memKind,
                       const wasm::Limits& memory,
                       MutableHandleArrayBufferObjectMaybeShared buffer);
 
-/*
- * Tests for ArrayBufferObject, like obj->is<ArrayBufferObject>().
- */
-bool IsArrayBuffer(HandleValue v);
-bool IsArrayBuffer(JSObject* obj);
-ArrayBufferObject& AsArrayBuffer(JSObject* obj);
-
-/*
- * Ditto for ArrayBufferObjectMaybeShared.
- */
-bool IsArrayBufferMaybeShared(JSObject* obj);
-ArrayBufferObjectMaybeShared& AsArrayBufferMaybeShared(JSObject* obj);
-
 // Per-compartment table that manages the relationship between array buffers
 // and the views that use their storage.
 class InnerViewTable {
