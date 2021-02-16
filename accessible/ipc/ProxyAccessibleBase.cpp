@@ -138,7 +138,7 @@ void ProxyAccessibleBase<Derived>::SetParent(Derived* aParent) {
 }
 
 template <class Derived>
-Derived* ProxyAccessibleBase<Derived>::Parent() const {
+Derived* ProxyAccessibleBase<Derived>::RemoteParent() const {
   if (mParent == kNoParent) {
     return nullptr;
   }

@@ -47,34 +47,35 @@ class ProxyAccessibleBase {
   }
 
   uint32_t ChildrenCount() const { return mChildren.Length(); }
-  Derived* ChildAt(uint32_t aIdx) const { return mChildren[aIdx]; }
-  Derived* FirstChild() const {
+  Derived* RemoteChildAt(uint32_t aIdx) const { return mChildren[aIdx]; }
+  Derived* RemoteFirstChild() const {
     return mChildren.Length() ? mChildren[0] : nullptr;
   }
-  Derived* LastChild() const {
+  Derived* RemoteLastChild() const {
     return mChildren.Length() ? mChildren[mChildren.Length() - 1] : nullptr;
   }
-  Derived* PrevSibling() const {
+  Derived* RemotePrevSibling() const {
     int32_t idx = IndexInParent();
     if (idx == -1) {
       return nullptr;  // No parent.
     }
-    return idx > 0 ? Parent()->mChildren[idx - 1] : nullptr;
+    return idx > 0 ? RemoteParent()->mChildren[idx - 1] : nullptr;
   }
-  Derived* NextSibling() const {
+  Derived* RemoteNextSibling() const {
     int32_t idx = IndexInParent();
     if (idx == -1) {
       return nullptr;  // No parent.
     }
     MOZ_ASSERT(idx >= 0);
     size_t newIdx = idx + 1;
-    return newIdx < Parent()->mChildren.Length() ? Parent()->mChildren[newIdx]
-                                                 : nullptr;
+    return newIdx < RemoteParent()->mChildren.Length()
+               ? RemoteParent()->mChildren[newIdx]
+               : nullptr;
   }
 
   // XXX evaluate if this is fast enough.
   int32_t IndexInParent() const {
-    Derived* parent = Parent();
+    Derived* parent = RemoteParent();
     if (!parent) {
       return -1;
     }
@@ -97,7 +98,7 @@ class ProxyAccessibleBase {
   /**
    * Return the proxy for the parent of the wrapped accessible.
    */
-  Derived* Parent() const;
+  Derived* RemoteParent() const;
 
   Accessible* OuterDocOfRemoteBrowser() const;
 

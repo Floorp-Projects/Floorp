@@ -21,7 +21,7 @@ int32_t AccessibleOrProxy::IndexInParent() const {
     return -1;
   }
 
-  if (proxy->Parent()) {
+  if (proxy->RemoteParent()) {
     return proxy->IndexInParent();
   }
 
@@ -43,7 +43,7 @@ AccessibleOrProxy AccessibleOrProxy::Parent() const {
     return nullptr;
   }
 
-  if (ProxyAccessible* parent = proxy->Parent()) {
+  if (ProxyAccessible* parent = proxy->RemoteParent()) {
     return parent;
   }
 
