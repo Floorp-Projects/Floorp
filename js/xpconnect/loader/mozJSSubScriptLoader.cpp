@@ -26,6 +26,8 @@
 
 #include "mozilla/ContentPrincipal.h"
 #include "mozilla/dom/ScriptLoader.h"
+#include "mozilla/ProfilerLabels.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/ScriptPreloader.h"
 #include "mozilla/SystemPrincipal.h"
 #include "mozilla/scache/StartupCache.h"
@@ -34,7 +36,6 @@
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "nsContentUtils.h"
 #include "nsString.h"
-#include "GeckoProfiler.h"
 
 using namespace mozilla::scache;
 using namespace JS;

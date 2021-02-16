@@ -8,7 +8,6 @@
 
 #include "jsfriendapi.h"
 
-#include "GeckoProfiler.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsJSNPRuntime.h"
@@ -31,6 +30,7 @@
 #include "js/TracingAPI.h"
 #include "js/Wrapper.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/ScriptSettings.h"
 

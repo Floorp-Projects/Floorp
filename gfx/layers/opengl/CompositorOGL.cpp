@@ -20,6 +20,7 @@
 #include "gfxUtils.h"               // for gfxUtils, etc
 #include "mozilla/ArrayUtils.h"     // for ArrayLength
 #include "mozilla/Preferences.h"    // for Preferences
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StaticPrefs_nglayout.h"
@@ -65,8 +66,6 @@
 #  include "mozilla/java/GeckoSurfaceTextureWrappers.h"
 #  include "mozilla/layers/AndroidHardwareBuffer.h"
 #endif
-
-#include "GeckoProfiler.h"
 
 namespace mozilla {
 

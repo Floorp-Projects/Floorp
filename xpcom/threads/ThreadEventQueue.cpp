@@ -7,13 +7,13 @@
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/EventQueue.h"
 
-#include "GeckoProfiler.h"
 #include "LeakRefPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIThreadInternal.h"
 #include "nsThreadUtils.h"
 #include "nsThread.h"
 #include "ThreadEventTarget.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/TaskController.h"
 
 using namespace mozilla;

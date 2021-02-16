@@ -48,8 +48,8 @@
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ProfilerLabels.h"
 
-#include "GeckoProfiler.h"
 #include "nsXULPrototypeCache.h"
 #include "nsXULElement.h"
 #include "mozilla/CycleCollectedJSContext.h"

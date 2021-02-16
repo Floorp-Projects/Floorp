@@ -24,8 +24,8 @@
 #include "imgIContainer.h"
 #include "imgINotificationObserver.h"
 #include "Image.h"
-#include "GeckoProfiler.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "mozilla/layers/WebRenderUserData.h"
 

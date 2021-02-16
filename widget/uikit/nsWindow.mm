@@ -32,11 +32,10 @@
 #include "nsTArray.h"
 
 #include "mozilla/BasicEvents.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/MouseEventBinding.h"
-
-#include "GeckoProfiler.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

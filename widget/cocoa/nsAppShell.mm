@@ -11,7 +11,6 @@
 #import <Cocoa/Cocoa.h>
 
 #include "CustomCocoaEvents.h"
-#include "GeckoProfiler.h"
 #include "mozilla/WidgetTraceEvent.h"
 #include "nsAppShell.h"
 #include "gfxPlatform.h"

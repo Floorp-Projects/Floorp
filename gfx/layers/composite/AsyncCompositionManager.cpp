@@ -9,6 +9,7 @@
 #include "LayerManagerComposite.h"  // for LayerManagerComposite, etc
 #include "Layers.h"                 // for Layer, ContainerLayer, etc
 #include "gfxPoint.h"               // for gfxPoint, gfxSize
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/ServoBindings.h"  // for Servo_AnimationValue_GetOpacity, etc
 #include "mozilla/ScopeExit.h"      // for MakeScopeExit
 #include "mozilla/StaticPrefs_apz.h"
@@ -44,7 +45,6 @@
 #  include "mozilla/layers/UiCompositorControllerParent.h"
 #  include "mozilla/widget/AndroidCompositorWidget.h"
 #endif
-#include "GeckoProfiler.h"
 #include "FrameUniformityData.h"
 #include "TreeTraversal.h"  // for ForEachNode, BreadthFirstSearch
 #include "VsyncSource.h"

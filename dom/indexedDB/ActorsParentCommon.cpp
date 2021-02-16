@@ -20,7 +20,6 @@
 #include <algorithm>
 #include <numeric>
 #include <type_traits>
-#include "GeckoProfiler.h"
 #include "MainThreadUtils.h"
 #include "SafeRefPtr.h"
 #include "js/RootingAPI.h"
@@ -33,6 +32,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/JSObjectHolder.h"
 #include "mozilla/NullPrincipal.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPtr.h"

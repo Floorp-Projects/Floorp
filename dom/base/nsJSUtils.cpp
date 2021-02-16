@@ -14,7 +14,6 @@
 #include "nsJSUtils.h"
 
 #include <utility>
-#include "GeckoProfiler.h"
 #include "MainThreadUtils.h"
 #include "js/ComparisonOperators.h"
 #include "js/CompilationAndEvaluation.h"
@@ -32,6 +31,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/fallible.h"
+#include "mozilla/ProfilerLabels.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsGlobalWindowInner.h"

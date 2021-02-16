@@ -6,7 +6,6 @@
 
 #include "WindowDestroyedEvent.h"
 
-#include "GeckoProfiler.h"
 #include "nsJSUtils.h"
 #include "jsapi.h"
 #include "js/Wrapper.h"
@@ -19,6 +18,7 @@
 #include "xpcpublic.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Components.h"
+#include "mozilla/ProfilerLabels.h"
 
 namespace mozilla {
 

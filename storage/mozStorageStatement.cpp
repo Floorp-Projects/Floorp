@@ -22,10 +22,10 @@
 #include "mozStorageStatementParams.h"
 #include "mozStorageStatementRow.h"
 #include "mozStorageStatement.h"
-#include "GeckoProfiler.h"
 
 #include "mozilla/Logging.h"
 #include "mozilla/Printf.h"
+#include "mozilla/ProfilerLabels.h"
 
 extern mozilla::LazyLogModule gStorageLog;
 

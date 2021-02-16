@@ -18,10 +18,10 @@
 #include "gfxPattern.h"
 #include "gfxPlatform.h"
 
-#include "GeckoProfiler.h"
 #include "gfx2DGlue.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/gfx/DrawTargetTiled.h"
+#include "mozilla/ProfilerLabels.h"
 #include <algorithm>
 #include "TextDrawTarget.h"
 

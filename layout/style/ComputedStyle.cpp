@@ -23,12 +23,12 @@
 
 #include "nsCOMPtr.h"
 
-#include "GeckoProfiler.h"
 #include "mozilla/dom/Document.h"
 #include "nsPrintfCString.h"
 #include "RubyUtils.h"
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfilerLabels.h"
 
 #include "mozilla/ReflowInput.h"
 #include "nsLayoutUtils.h"

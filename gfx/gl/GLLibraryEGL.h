@@ -20,6 +20,10 @@
 #include <memory>
 #include <unordered_map>
 
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/ProfilerLabels.h"
+#endif
+
 #if defined(MOZ_X11)
 #  define EGL_DEFAULT_DISPLAY ((EGLNativeDisplayType)mozilla::DefaultXDisplay())
 #else

@@ -13,7 +13,6 @@
 #include "SharedPrefMap.h"
 
 #include "base/basictypes.h"
-#include "GeckoProfiler.h"
 #include "MainThreadUtils.h"
 #include "mozilla/ArenaAllocatorExtensions.h"
 #include "mozilla/ArenaAllocator.h"
@@ -28,6 +27,8 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfilerLabels.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/ScopeExit.h"

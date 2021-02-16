@@ -6,13 +6,13 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Utf8.h"
 
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
-#include "GeckoProfiler.h"
 
 #include "nsLocalFile.h"
 #include "nsLocalFileCommon.h"

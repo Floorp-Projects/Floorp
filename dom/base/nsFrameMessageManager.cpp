@@ -14,7 +14,7 @@
 #include <utility>
 #include "ContentChild.h"
 #include "ErrorList.h"
-#include "GeckoProfiler.h"
+#include "mozilla/ProfilerLabels.h"
 #include "base/process_util.h"
 #include "chrome/common/ipc_channel.h"
 #include "js/CompilationAndEvaluation.h"

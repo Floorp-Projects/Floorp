@@ -11,10 +11,10 @@
 #include "mozilla/Attributes.h"
 #include "nsISystemProxySettings.h"
 #include "mozilla/Components.h"
+#include "mozilla/ProfilerLabels.h"
 #include "nsPrintfCString.h"
 #include "nsNetCID.h"
 #include "nsThreadUtils.h"
-#include "GeckoProfiler.h"
 #include "prnetdb.h"
 #include "ProxyUtils.h"
 

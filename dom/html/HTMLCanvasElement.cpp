@@ -34,6 +34,7 @@
 #include "mozilla/layers/WebRenderUserData.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/webgpu/CanvasContext.h"
 #include "nsAttrValueInlines.h"

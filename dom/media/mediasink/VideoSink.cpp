@@ -12,11 +12,11 @@
 
 #include "VideoSink.h"
 
-#include "GeckoProfiler.h"
 #include "MediaQueue.h"
 #include "VideoUtils.h"
 
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkerTypes.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_media.h"

@@ -13,7 +13,6 @@
 
 #include "ActiveLayerTracker.h"
 #include "BasicLayers.h"
-#include "GeckoProfiler.h"
 #include "ImageContainer.h"
 #include "ImageLayers.h"
 #include "LayerTreeInvalidation.h"
@@ -37,6 +36,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/PerfStats.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/ReverseIterator.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"

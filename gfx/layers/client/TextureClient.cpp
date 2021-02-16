@@ -9,7 +9,6 @@
 #include <stdint.h>  // for uint8_t, uint32_t, etc
 
 #include "BufferTexture.h"
-#include "GeckoProfiler.h"
 #include "IPDLActor.h"
 #include "ImageContainer.h"  // for PlanarYCbCrData, etc
 #include "Layers.h"          // for Layer, etc
@@ -19,6 +18,7 @@
 #include "gfxUtils.h"     // for gfxUtils::GetAsLZ4Base64Str
 #include "mozilla/Atomics.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"

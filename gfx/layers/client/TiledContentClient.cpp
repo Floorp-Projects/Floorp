@@ -8,12 +8,12 @@
 #include <math.h>  // for ceil, ceilf, floor
 #include <algorithm>
 #include "ClientTiledPaintedLayer.h"  // for ClientTiledPaintedLayer
-#include "GeckoProfiler.h"            // for AUTO_PROFILER_LABEL
 #include "ClientLayerManager.h"       // for ClientLayerManager
 #include "gfxContext.h"               // for gfxContext, etc
 #include "gfxPlatform.h"              // for gfxPlatform
 #include "gfxRect.h"                  // for gfxRect
 #include "mozilla/MathAlgorithms.h"   // for Abs
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/gfx/Point.h"        // for IntSize
 #include "mozilla/gfx/Rect.h"         // for Rect
 #include "mozilla/gfx/Tools.h"        // for BytesPerPixel

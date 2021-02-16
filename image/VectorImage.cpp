@@ -5,7 +5,6 @@
 
 #include "VectorImage.h"
 
-#include "GeckoProfiler.h"
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "gfxDrawable.h"
@@ -23,6 +22,7 @@
 #include "mozilla/layers/LayerManager.h"
 #include "mozilla/PendingAnimationTracker.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SVGObserverUtils.h"  // for SVGRenderingObserver
 #include "mozilla/Tuple.h"

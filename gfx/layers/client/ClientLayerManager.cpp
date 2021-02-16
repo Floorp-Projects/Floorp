@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ClientLayerManager.h"
-#include "GeckoProfiler.h"       // for AUTO_PROFILER_LABEL
 #include "gfxEnv.h"              // for gfxEnv
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc
 #include "mozilla/Hal.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"

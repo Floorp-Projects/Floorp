@@ -17,7 +17,6 @@
 
 #include "gfxUtils.h"
 
-#include "GeckoProfiler.h"
 #include "MainThreadUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -27,6 +26,7 @@
 #include "mozilla/layers/SourceSurfaceVolatileData.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_image.h"
 #include "nsMargin.h"

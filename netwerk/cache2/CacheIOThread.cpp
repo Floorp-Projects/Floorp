@@ -15,10 +15,10 @@
 #include "nsThreadUtils.h"
 #include "mozilla/EventQueue.h"
 #include "mozilla/IOInterposer.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryHistogramEnums.h"
-#include "GeckoProfiler.h"
 
 #ifdef XP_WIN
 #  include <windows.h>

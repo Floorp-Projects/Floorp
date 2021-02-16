@@ -13,6 +13,7 @@
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_apz.h"
@@ -31,8 +32,6 @@
 #include "InputData.h"
 #include "nsAppRunner.h"
 #include <algorithm>
-
-#include "GeckoProfiler.h"
 
 #include "prlink.h"
 #include "nsGTKToolkit.h"

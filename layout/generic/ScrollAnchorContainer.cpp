@@ -6,9 +6,9 @@
 
 #include "ScrollAnchorContainer.h"
 
-#include "GeckoProfiler.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/ToString.h"
 #include "nsBlockFrame.h"

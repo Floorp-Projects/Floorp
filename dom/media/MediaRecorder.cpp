@@ -9,7 +9,6 @@
 #include "AudioNodeEngine.h"
 #include "AudioNodeTrack.h"
 #include "DOMMediaStream.h"
-#include "GeckoProfiler.h"
 #include "MediaDecoder.h"
 #include "MediaEncoder.h"
 #include "MediaTrackGraphImpl.h"

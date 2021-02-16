@@ -7,7 +7,6 @@
 #include "nsISupports.h"
 #include "SapiService.h"
 #include "nsServiceManagerUtils.h"
-#include "GeckoProfiler.h"
 #include "nsEscape.h"
 #include "nsXULAppAPI.h"
 
@@ -15,6 +14,7 @@
 #include "mozilla/dom/nsSynthVoiceRegistry.h"
 #include "mozilla/dom/nsSpeechTask.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/StaticPrefs_media.h"
 
 namespace mozilla {

@@ -35,7 +35,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "AudioChannelService.h"
-#include "GeckoProfiler.h"
+#include "mozilla/ProfilerLabels.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
