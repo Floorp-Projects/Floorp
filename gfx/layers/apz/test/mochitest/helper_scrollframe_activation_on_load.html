@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html>
+<html id="root-element">
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
 -->
@@ -51,10 +51,51 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
       // all scrollframes then we expect there to be a child.
       var rcd = findRcdNode(apzcTree);
       ok(rcd != null, "found the RCD node");
-      if (getHitTestConfig().activateAllScrollFrames) {
+
+      // For reference when I run this test locally when I modified it to
+      // handle activateAllScrollFrames I got the following values:
+      // rootElement.clientWidth 1280
+      // rootElement.clientHeight 863
+      // rootDisplayPort: {"x":0,"y":0,"w":1280,"h":3200} non wr
+      // rootDisplayPort: {"x":0,"y":0,"w":1280,"h":1792} wr
+      // At this time activateAllScrollFrames is only active with wr fission:
+      // div displayPort: {"x":0,"y":0,"w":50,"h":50} wr fission
+      // theDiv.clientWidth: 50 wr fission
+      // theDiv.clientHeight: 50 wr fission
+
+      let config = getHitTestConfig();
+
+      let heightMultiplier = SpecialPowers.getCharPref("apz.y_stationary_size_multiplier");
+      if (config.isWebRender) {
+        // With WebRender, the effective height multiplier can be reduced
+        // for alignment reasons. The reduction should be no more than a
+        // factor of two.
+        heightMultiplier /= 2;
+      }
+      info("effective displayport height multipler is " + heightMultiplier);
+
+      let rootDisplayPort = getLastContentDisplayportFor('root-element');
+      let rootElement = document.getElementById('root-element');
+      info("rootDisplayPort is " + JSON.stringify(rootDisplayPort));
+      info("rootElement.clientWidth " + rootElement.clientWidth +
+           " rootElement.clientHeight " + rootElement.clientHeight);
+      ok(rootDisplayPort.w >= rootElement.clientWidth, "rootDisplayPort should be at least as wide as page");
+      ok(rootDisplayPort.h >= heightMultiplier * rootElement.clientHeight,
+        "rootDisplayPort should be at least as tall as page times heightMultiplier");
+
+      let displayPort = getLastContentDisplayportFor('thediv');
+      if (config.activateAllScrollFrames) {
         is(rcd.children.length, 1, "expected one child on the RCD");
+        let theDiv = document.getElementById("thediv");
+        ok(displayPort != null, "should have displayPort");
+        info("div displayPort: " + JSON.stringify(displayPort));
+        info("div width: " + theDiv.clientWidth);
+        info("div height: " + theDiv.clientHeight);
+        ok(displayPort.w <= theDiv.clientWidth + 1, "displayPort w should have empty margins");
+        ok(displayPort.h <= theDiv.clientHeight + 1, "displayPort h should have empty margins");
       } else {
         is(rcd.children.length, 0, "expected no children on the RCD");
+        ok(displayPort == null, "should not have displayPort");
       }
     }
     waitUntilApzStable()
@@ -65,7 +106,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
 </head>
 <body>
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151663">Mozilla Bug 1151663</a>
-  <div style="height: 50px; width: 50px; overflow: scroll">
+  <div id="thediv" style="height: 50px; width: 50px; overflow: scroll">
     <!-- Put enough content into the subframe to make it have a nonzero scroll range -->
     <div style="height: 100px; width: 50px"></div>
   </div>
