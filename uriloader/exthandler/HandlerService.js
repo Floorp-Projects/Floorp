@@ -269,6 +269,64 @@ HandlerService.prototype = {
           }
         }
       },
+      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1526890 for context.
+      "secure-mail": () => {
+        const kSubstitutions = new Map([
+          [
+            "http://compose.mail.yahoo.co.jp/ym/Compose?To=%s",
+            "https://mail.yahoo.co.jp/compose/?To=%s",
+          ],
+          [
+            "http://www.inbox.lv/rfc2368/?value=%s",
+            "https://mail.inbox.lv/compose?to=%s",
+          ],
+          [
+            "http://poczta.interia.pl/mh/?mailto=%s",
+            "https://poczta.interia.pl/mh/?mailto=%s",
+          ],
+          [
+            "http://win.mail.ru/cgi-bin/sentmsg?mailto=%s",
+            "https://e.mail.ru/cgi-bin/sentmsg?mailto=%s",
+          ],
+        ]);
+
+        function maybeReplaceURL(app) {
+          if (app instanceof Ci.nsIWebHandlerApp) {
+            let { uriTemplate } = app;
+            let sub = kSubstitutions.get(uriTemplate);
+            if (sub) {
+              app.uriTemplate = sub;
+              return true;
+            }
+          }
+          return false;
+        }
+        let mailHandler = gExternalProtocolService.getProtocolHandlerInfo(
+          "mailto"
+        );
+        if (this.exists(mailHandler)) {
+          this.fillHandlerInfo(mailHandler, "");
+          let handlers = mailHandler.possibleApplicationHandlers;
+          let shouldStore = false;
+          for (let i = handlers.length - 1; i >= 0; i--) {
+            let app = handlers.queryElementAt(i, Ci.nsIHandlerApp);
+            // Note: will evaluate the RHS because it's a binary rather than
+            // logical or.
+            shouldStore |= maybeReplaceURL(app);
+          }
+          // Then check the preferred handler.
+          if (mailHandler.preferredApplicationHandler) {
+            shouldStore |= maybeReplaceURL(
+              mailHandler.preferredApplicationHandler
+            );
+          }
+          // Then store, if we changed anything. Note that store() handles
+          // duplicates, so we don't have to.
+          if (shouldStore) {
+            this.store(mailHandler);
+          }
+        }
+      },
     };
     let migrationsToRun = Services.prefs.getCharPref(
       "browser.handlers.migrations",
