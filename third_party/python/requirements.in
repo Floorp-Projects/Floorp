@@ -32,7 +32,7 @@ json-e==2.7.0
 mozilla-version==0.3.4
 pathlib2==2.3.2
 pathspec==0.8
-pip-tools==5.3.1
+pip-tools==5.5.0
 ply==3.10
 pyasn1==0.4.8
 pyflakes==2.2.0
