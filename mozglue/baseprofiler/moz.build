@@ -82,6 +82,7 @@ EXPORTS.mozilla += [
     "public/BaseProfileJSONWriter.h",
     "public/BaseProfilerCounts.h",
     "public/BaseProfilerDetail.h",
+    "public/BaseProfilerLabels.h",
     "public/BaseProfilerMarkers.h",
     "public/BaseProfilerMarkersDetail.h",
     "public/BaseProfilerMarkersPrerequisites.h",
