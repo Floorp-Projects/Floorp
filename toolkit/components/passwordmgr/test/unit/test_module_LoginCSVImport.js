@@ -153,15 +153,36 @@ add_task(async function test_import_lacking_username_column() {
 });
 
 /**
- * Ensure that an import fails if there are two headings that map to one login field.
+ * Ensure that an import fails if there are two columns that map to one login field.
  */
-add_task(async function test_import_with_duplicate_columns() {
+add_task(async function test_import_with_duplicate_fields() {
   // Two origin columns (url & login_uri).
   // One row has different values and the other has the same.
   let csvFilePath = await setupCsv([
     "url,login_uri,username,login_password",
     "https://example.com/path,https://example.com,john@example.com,azerty",
     "https://mozilla.org,https://mozilla.org,jdoe@example.com,qwerty",
+  ]);
+
+  await Assert.rejects(
+    LoginCSVImport.importFromCSV(csvFilePath),
+    /CONFLICTING_VALUES_ERROR/,
+    "Check that the errorType is file format error"
+  );
+
+  LoginTestUtils.checkLogins(
+    [],
+    "Check that no login was added from a file with duplicated columns"
+  );
+});
+
+/**
+ * Ensure that an import fails if there are two identical columns.
+ */
+add_task(async function test_import_with_duplicate_columns() {
+  let csvFilePath = await setupCsv([
+    "url,username,password,password",
+    "https://example.com/path,john@example.com,azerty,12345",
   ]);
 
   await Assert.rejects(
