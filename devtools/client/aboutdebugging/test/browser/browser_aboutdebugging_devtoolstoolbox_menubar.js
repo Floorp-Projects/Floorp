@@ -32,14 +32,6 @@ add_task(async function() {
   const toolbox = getToolbox(devtoolsWindow);
   await toolbox.selectTool("inspector");
 
-  info("Click on the console item");
-  const onConsoleLoaded = toolbox.once("webconsole-ready");
-  const webconsoleMenuItem = rootDocument.getElementById("menuitem_webconsole");
-  webconsoleMenuItem.click();
-
-  info("Wait until about:devtools-toolbox switches to the console");
-  await onConsoleLoaded;
-
   info("Force to select about:debugging page");
   await updateSelectedTab(gBrowser, tab, window.AboutDebugging.store);
 
