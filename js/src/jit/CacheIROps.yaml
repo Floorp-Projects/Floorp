@@ -999,6 +999,13 @@
   args:
     obj: ObjId
 
+- name: GuardHasAttachedArrayBuffer
+  shared: true
+  transpile: true
+  cost_estimate: 2
+  args:
+    obj: ObjId
+
 - name: FinishBoundFunctionInitResult
   shared: true
   transpile: true

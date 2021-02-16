@@ -4116,6 +4116,20 @@ class LTypedArrayElementSize : public LInstructionHelper<1, 1, 0> {
   const LAllocation* object() { return getOperand(0); }
 };
 
+class LGuardHasAttachedArrayBuffer : public LInstructionHelper<0, 1, 1> {
+ public:
+  LIR_HEADER(GuardHasAttachedArrayBuffer)
+
+  LGuardHasAttachedArrayBuffer(const LAllocation& obj, const LDefinition& temp)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, obj);
+    setTemp(0, temp);
+  }
+
+  const LAllocation* object() { return getOperand(0); }
+  const LDefinition* temp() { return getTemp(0); }
+};
+
 // Double to IntPtr, eligible for accessing into a TypedArray or DataView. If
 // the index isn't exactly representable as an IntPtr, depending on the
 // supportOOB flag on the MIR instruction, either bail out or produce an IntPtr

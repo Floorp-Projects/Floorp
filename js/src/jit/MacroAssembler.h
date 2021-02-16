@@ -4215,6 +4215,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void typedArrayElementSize(Register obj, Register output);
   void branchIfClassIsNotTypedArray(Register clasp, Label* notTypedArray);
 
+  void branchIfHasDetachedArrayBuffer(Register obj, Register temp,
+                                      Label* label);
+
   void branchIfNativeIteratorNotReusable(Register ni, Label* notReusable);
 
   void iteratorMore(Register obj, ValueOperand output, Register temp);

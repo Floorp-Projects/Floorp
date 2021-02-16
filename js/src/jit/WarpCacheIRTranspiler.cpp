@@ -3378,6 +3378,17 @@ bool WarpCacheIRTranspiler::emitTypedArrayElementSizeResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardHasAttachedArrayBuffer(
+    ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* ins = MGuardHasAttachedArrayBuffer::New(alloc(), obj);
+  add(ins);
+
+  setOperand(objId, ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitIsTypedArrayConstructorResult(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
