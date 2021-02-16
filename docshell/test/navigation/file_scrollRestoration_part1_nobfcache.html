@@ -1,0 +1,63 @@
+<html>
+  <head>
+    <script>
+      var oldHistoryObject = null;
+      var bc = new BroadcastChannel("bug1155730_part1");
+      bc.onmessage = (msgEvent) => {
+        var msg = msgEvent.data;
+        var command = msg.command;
+        if (command == "test") {
+          var currentCase = msg.currentCase;
+          test(currentCase);
+        }
+      }
+
+      function test(currentCase) {
+        var assertIs = [];
+        var assertOk = [];
+        var assertIsNot = [];
+        switch (currentCase) {
+          case 1: {
+            assertOk.push([history.scrollRestoration, "History object has scrollRestoration property."]);
+            assertIs.push([history.scrollRestoration, "auto", "history.scrollRestoration's default value should be 'auto'."]);
+            history.scrollRestoration = "foobar";
+            assertIs.push([history.scrollRestoration, "auto", "Invalid enum value should not change the value of an attribute."]);
+            history.scrollRestoration = "manual";
+            assertIs.push([history.scrollRestoration, "manual", "Valid enum value should change the value of an attribute."]);
+            history.scrollRestoration = "auto";
+            assertIs.push([history.scrollRestoration, "auto", "Valid enum value should change the value of an attribute."]);
+            bc.postMessage({command: "asserts", currentCase, assertIs, assertOk});
+            document.getElementById("bottom").scrollIntoView();
+            window.location.reload(false);
+            break;
+          }
+          case 2: {
+            assertIsNot.push([Math.round(window.scrollY), 0, "Should have restored scrolling."]);
+            assertIs.push([history.scrollRestoration, "auto", "Should have the same scrollRestoration as before reload."]);
+            history.scrollRestoration = "manual";
+            bc.postMessage({command: "asserts", currentCase, assertIs, assertIsNot});
+            window.location.reload(false);
+            break;
+          }
+          case 3: {
+            assertIs.push([window.scrollY, 0, "Should not have restored scrolling."]);
+            assertIs.push([history.scrollRestoration, "manual", "Should have the same scrollRestoration as before reload."]);
+            bc.postMessage({command: "asserts", currentCase, assertIs});
+            bc.close();
+            window.close();
+            break;
+          }
+        }
+      }
+      window.onpageshow = (event) => {
+        bc.postMessage({command: "pageshow", persisted: event.persisted});
+      }
+    </script>
+  </head>
+  <body>
+  <div style="border: 1px solid black; height: 5000px;">
+  &nbsp;</div>
+  <div id="bottom">Hello world</div>
+  <a href="#hash" name="hash">hash</a>
+  </body>
+</html>
