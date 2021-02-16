@@ -1395,13 +1395,19 @@ void nsNativeBasicTheme::PaintAutoStyleOutline(nsIFrame* aFrame,
                            StrokeOptions(width));
   }
 
+  nsPresContext* pc = aFrame->PresContext();
+  const nscoord offset = aFrame->StyleOutline()->mOutlineOffset.ToAppUnits();
+  const Float devPixelOffset = pc->AppUnitsToFloatDevPixels(offset);
+
   RectCornerRadii innerRadii;
-  nsCSSRendering::ComputePixelRadii(
-      cssRadii, aFrame->PresContext()->AppUnitsPerDevPixel(), &innerRadii);
+  nsCSSRendering::ComputePixelRadii(cssRadii, pc->AppUnitsPerDevPixel(),
+                                    &innerRadii);
 
   RectCornerRadii outerRadii;
-  Float borderSizes[4] = {halfWidth, halfWidth, halfWidth, halfWidth};
-  nsCSSBorderRenderer::ComputeOuterRadii(innerRadii, borderSizes, &outerRadii);
+  const Float widths[4] = {
+      halfWidth + devPixelOffset, halfWidth + devPixelOffset,
+      halfWidth + devPixelOffset, halfWidth + devPixelOffset};
+  nsCSSBorderRenderer::ComputeOuterRadii(innerRadii, widths, &outerRadii);
   RefPtr<Path> path =
       MakePathForRoundedRect(*aDt, rect.ToUnknownRect(), outerRadii);
   aDt->Stroke(path, ColorPattern(ToDeviceColor(innerColor)),
