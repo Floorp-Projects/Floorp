@@ -435,7 +435,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
       // has no routing ID), but we only emit a profiler marker for messages
       // with a routing ID, so there's no conflict here.
       AddIPCProfilerMarker(m, other_pid_, MessageDirection::eReceiving,
-                           MessagePhase::TransferStart);
+                           MessagePhase::TransferEnd);
 
 #ifdef IPC_MESSAGE_DEBUG_EXTRA
       DLOG(INFO) << "received message on channel @" << this << " with type "
