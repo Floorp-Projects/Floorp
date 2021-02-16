@@ -38,6 +38,11 @@ permalink: /changelog/
 * **service-sync-autofill**
   * Refactors `AutofillCreditCardsAddressesStorage` from **browser-storage-sync** into its own component. [#9801](https://github.com/mozilla-mobile/android-components/issues/9801)
 
+* **service-firefox-accounts**,**browser-storage-sync**,**service-nimbus**,**service-sync-logins**
+  * Due to a temporary build issue in the Application Services project, it is not currently
+  possible to run some service-related unittests on a Windows host. [#9731](https://github.com/mozilla-mobile/android-components/pull/9731)
+    * Work on restoring this capability will be tracked in [application-services#3917](https://github.com/mozilla/application-services/issues/3917).
+
 # 73.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v72.0.0...v73.0.0)

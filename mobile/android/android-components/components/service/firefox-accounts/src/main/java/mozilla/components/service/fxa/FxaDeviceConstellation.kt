@@ -9,8 +9,8 @@ import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.withContext
-import mozilla.appservices.fxaclient.FirefoxAccount
-import mozilla.appservices.fxaclient.FxaException
+import mozilla.appservices.fxaclient.PersistedFirefoxAccount as FirefoxAccount
+import mozilla.appservices.fxaclient.FxaErrorException as FxaException
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceConstellation

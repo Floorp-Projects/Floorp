@@ -173,7 +173,7 @@ val accountEventsObserver = object : AccountEventsObserver {
     override fun onEvents(event: List<AccountEvent>) {
         // device received some commands; for example, here's how you can process incoming Send Tab commands:
         commands
-            .filter { it is AccountEvent.IncomingDeviceCommand }
+            .filter { it is AccountEvent.CommandReceived }
             .map { it.command }
             .filter { it is DeviceCommandIncoming.TabReceived }
             .forEach {

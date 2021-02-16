@@ -12,9 +12,10 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.runBlocking
-import mozilla.appservices.fxaclient.FxaException
+import mozilla.appservices.fxaclient.FxaErrorException as FxaException
 import mozilla.appservices.fxaclient.IncomingDeviceCommand
 import mozilla.appservices.fxaclient.TabHistoryEntry
+import mozilla.appservices.fxaclient.SendTabPayload
 import mozilla.appservices.syncmanager.DeviceSettings
 import mozilla.components.concept.sync.AccountEvent
 import mozilla.components.concept.sync.AccountEventsObserver
@@ -52,7 +53,9 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
 import mozilla.appservices.fxaclient.AccountEvent as ASAccountEvent
 import mozilla.appservices.fxaclient.Device as NativeDevice
-import mozilla.appservices.fxaclient.FirefoxAccount as NativeFirefoxAccount
+import mozilla.appservices.fxaclient.DeviceType as NativeDeviceType
+import mozilla.appservices.fxaclient.DevicePushSubscription as NativeDevicePushSubscription
+import mozilla.appservices.fxaclient.PersistedFirefoxAccount as NativeFirefoxAccount
 import mozilla.appservices.syncmanager.DeviceType as RustDeviceType
 
 @ExperimentalCoroutinesApi
@@ -99,10 +102,10 @@ class FxaDeviceConstellationTest {
             constellation.finalizeDevice(it, config)
             when (expectedFinalizeAction(it)) {
                 FxaDeviceConstellation.DeviceFinalizeAction.Initialize -> {
-                    verify(account).initializeDevice("test name", NativeDevice.Type.TABLET, setOf(mozilla.appservices.fxaclient.Device.Capability.SEND_TAB))
+                    verify(account).initializeDevice("test name", NativeDeviceType.TABLET, setOf(mozilla.appservices.fxaclient.DeviceCapability.SEND_TAB))
                 }
                 FxaDeviceConstellation.DeviceFinalizeAction.EnsureCapabilities -> {
-                    verify(account).ensureCapabilities(setOf(mozilla.appservices.fxaclient.Device.Capability.SEND_TAB))
+                    verify(account).ensureCapabilities(setOf(mozilla.appservices.fxaclient.DeviceCapability.SEND_TAB))
                 }
                 FxaDeviceConstellation.DeviceFinalizeAction.None -> {
                     verifyZeroInteractions(account)
@@ -187,8 +190,8 @@ class FxaDeviceConstellationTest {
         val testDevice1 = testDevice("test1", false)
         val testTab1 = TabHistoryEntry("Hello", "http://world.com/1")
         `when`(account.handlePushMessage("raw events payload")).thenReturn(arrayOf(
-            ASAccountEvent.IncomingDeviceCommand(
-                command = IncomingDeviceCommand.TabReceived(testDevice1, arrayOf(testTab1))
+            ASAccountEvent.CommandReceived(
+                command = IncomingDeviceCommand.TabReceived(testDevice1, SendTabPayload(listOf(testTab1), "flowid", "streamid"))
             )
         ))
         assertTrue(constellation.processRawEvent("raw events payload"))
@@ -211,7 +214,7 @@ class FxaDeviceConstellationTest {
 
     @Test
     fun `send command to device will report exceptions`() = runBlocking(coroutinesTestRule.testDispatcher) {
-        val exception = FxaException.Unspecified("")
+        val exception = FxaException.Other("")
         val exceptionCaptor = argumentCaptor<SendCommandException>()
         doAnswer { throw exception }.`when`(account).sendSingleTab(any(), any(), any())
 
@@ -340,7 +343,7 @@ class FxaDeviceConstellationTest {
 
         // Some commands.
         `when`(account.pollDeviceCommands()).thenReturn(arrayOf(
-            IncomingDeviceCommand.TabReceived(null, emptyArray())
+            IncomingDeviceCommand.TabReceived(null, SendTabPayload(emptyList(), "", ""))
         ))
         assertTrue(constellation.pollForCommands())
 
@@ -356,7 +359,7 @@ class FxaDeviceConstellationTest {
 
         // Zero tabs from a single device.
         `when`(account.pollDeviceCommands()).thenReturn(arrayOf(
-            IncomingDeviceCommand.TabReceived(testDevice1, emptyArray())
+            IncomingDeviceCommand.TabReceived(testDevice1, SendTabPayload(emptyList(), "", ""))
         ))
         assertTrue(constellation.pollForCommands())
 
@@ -368,7 +371,7 @@ class FxaDeviceConstellationTest {
 
         // Single tab from a single device.
         `when`(account.pollDeviceCommands()).thenReturn(arrayOf(
-            IncomingDeviceCommand.TabReceived(testDevice2, arrayOf(testTab1))
+            IncomingDeviceCommand.TabReceived(testDevice2, SendTabPayload(listOf(testTab1), "", ""))
         ))
         assertTrue(constellation.pollForCommands())
 
@@ -378,7 +381,7 @@ class FxaDeviceConstellationTest {
 
         // Multiple tabs from a single device.
         `when`(account.pollDeviceCommands()).thenReturn(arrayOf(
-            IncomingDeviceCommand.TabReceived(testDevice2, arrayOf(testTab1, testTab3))
+            IncomingDeviceCommand.TabReceived(testDevice2, SendTabPayload(listOf(testTab1, testTab3), "", ""))
         ))
         assertTrue(constellation.pollForCommands())
 
@@ -388,8 +391,8 @@ class FxaDeviceConstellationTest {
 
         // Multiple tabs received from multiple devices.
         `when`(account.pollDeviceCommands()).thenReturn(arrayOf(
-            IncomingDeviceCommand.TabReceived(testDevice2, arrayOf(testTab1, testTab2)),
-            IncomingDeviceCommand.TabReceived(testDevice1, arrayOf(testTab3))
+            IncomingDeviceCommand.TabReceived(testDevice2, SendTabPayload(listOf(testTab1, testTab2), "", "")),
+            IncomingDeviceCommand.TabReceived(testDevice1, SendTabPayload(listOf(testTab3), "", ""))
         ))
         assertTrue(constellation.pollForCommands())
 
@@ -445,12 +448,12 @@ class FxaDeviceConstellationTest {
         return NativeDevice(
             id = id,
             displayName = "testName",
-            deviceType = NativeDevice.Type.MOBILE,
+            deviceType = NativeDeviceType.MOBILE,
             isCurrentDevice = current,
             lastAccessTime = 123L,
             capabilities = listOf(),
             pushEndpointExpired = expired,
-            pushSubscription = if (subscribed) NativeDevice.PushSubscription("http://endpoint.com", "pk", "auth key") else null
+            pushSubscription = if (subscribed) NativeDevicePushSubscription("http://endpoint.com", "pk", "auth key") else null
         )
     }
 

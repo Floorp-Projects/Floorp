@@ -7,6 +7,9 @@ package mozilla.components.service.fxa
 import mozilla.appservices.fxaclient.AccessTokenInfo
 import mozilla.appservices.fxaclient.AccountEvent
 import mozilla.appservices.fxaclient.Device
+import mozilla.appservices.fxaclient.DeviceType as RustDeviceType
+import mozilla.appservices.fxaclient.DeviceCapability as RustDeviceCapability
+import mozilla.appservices.fxaclient.DevicePushSubscription as RustDevicePushSubscription
 import mozilla.appservices.fxaclient.IncomingDeviceCommand
 import mozilla.appservices.fxaclient.MigrationState
 import mozilla.appservices.fxaclient.Profile
@@ -94,35 +97,39 @@ fun Profile.into(): mozilla.components.concept.sync.Profile {
     return mozilla.components.concept.sync.Profile(
         uid = this.uid,
         email = this.email,
-        avatar = this.avatar?.let {
+        avatar = this.avatar.let {
             Avatar(
                 url = it,
-                isDefault = this.avatarDefault
+                isDefault = this.isDefaultAvatar
             )
         },
         displayName = this.displayName
     )
 }
 
-internal fun Device.Type.into(): DeviceType {
+internal fun RustDeviceType.into(): DeviceType {
     return when (this) {
-        Device.Type.DESKTOP -> DeviceType.DESKTOP
-        Device.Type.MOBILE -> DeviceType.MOBILE
-        Device.Type.TABLET -> DeviceType.TABLET
-        Device.Type.TV -> DeviceType.TV
-        Device.Type.VR -> DeviceType.VR
-        Device.Type.UNKNOWN -> DeviceType.UNKNOWN
+        RustDeviceType.DESKTOP -> DeviceType.DESKTOP
+        RustDeviceType.MOBILE -> DeviceType.MOBILE
+        RustDeviceType.TABLET -> DeviceType.TABLET
+        RustDeviceType.TV -> DeviceType.TV
+        RustDeviceType.VR -> DeviceType.VR
+        RustDeviceType.UNKNOWN -> DeviceType.UNKNOWN
     }
 }
 
-fun DeviceType.into(): Device.Type {
+/**
+ * Convert between the native-code DeviceType data class
+ * and the one from the corresponding a-c concept.
+ */
+fun DeviceType.into(): RustDeviceType {
     return when (this) {
-        DeviceType.DESKTOP -> Device.Type.DESKTOP
-        DeviceType.MOBILE -> Device.Type.MOBILE
-        DeviceType.TABLET -> Device.Type.TABLET
-        DeviceType.TV -> Device.Type.TV
-        DeviceType.VR -> Device.Type.VR
-        DeviceType.UNKNOWN -> Device.Type.UNKNOWN
+        DeviceType.DESKTOP -> RustDeviceType.DESKTOP
+        DeviceType.MOBILE -> RustDeviceType.MOBILE
+        DeviceType.TABLET -> RustDeviceType.TABLET
+        DeviceType.TV -> RustDeviceType.TV
+        DeviceType.VR -> RustDeviceType.VR
+        DeviceType.UNKNOWN -> RustDeviceType.UNKNOWN
     }
 }
 
@@ -141,27 +148,43 @@ fun DeviceType.intoSyncType(): mozilla.appservices.syncmanager.DeviceType {
     }
 }
 
-fun DeviceCapability.into(): Device.Capability {
+/**
+ * Convert between the native-code DeviceCapability data class
+ * and the one from the corresponding a-c concept.
+ */
+fun DeviceCapability.into(): RustDeviceCapability {
     return when (this) {
-        DeviceCapability.SEND_TAB -> Device.Capability.SEND_TAB
+        DeviceCapability.SEND_TAB -> RustDeviceCapability.SEND_TAB
     }
 }
 
-fun Device.Capability.into(): DeviceCapability {
+/**
+ * Convert between the a-c concept DeviceCapability class and the corresponding
+ * native-code DeviceCapability data class.
+ */
+fun RustDeviceCapability.into(): DeviceCapability {
     return when (this) {
-        Device.Capability.SEND_TAB -> DeviceCapability.SEND_TAB
+        RustDeviceCapability.SEND_TAB -> DeviceCapability.SEND_TAB
     }
 }
 
-fun mozilla.components.concept.sync.DevicePushSubscription.into(): Device.PushSubscription {
-    return Device.PushSubscription(
+/**
+ * Convert between the a-c concept DevicePushSubscription class and the corresponding
+ * native-code DevicePushSubscription data class.
+ */
+fun mozilla.components.concept.sync.DevicePushSubscription.into(): RustDevicePushSubscription {
+    return RustDevicePushSubscription(
         endpoint = this.endpoint,
         authKey = this.authKey,
         publicKey = this.publicKey
     )
 }
 
-fun Device.PushSubscription.into(): mozilla.components.concept.sync.DevicePushSubscription {
+/**
+ * Convert between the native-code DevicePushSubscription data class
+ * and the one from the corresponding a-c concept.
+ */
+fun RustDevicePushSubscription.into(): mozilla.components.concept.sync.DevicePushSubscription {
     return mozilla.components.concept.sync.DevicePushSubscription(
         endpoint = this.endpoint,
         authKey = this.authKey,
@@ -211,7 +234,7 @@ fun mozilla.components.concept.sync.TabData.into(): TabHistoryEntry {
 
 fun AccountEvent.into(): mozilla.components.concept.sync.AccountEvent {
     return when (this) {
-        is AccountEvent.IncomingDeviceCommand ->
+        is AccountEvent.CommandReceived ->
             mozilla.components.concept.sync.AccountEvent.DeviceCommandIncoming(command = this.command.into())
         is AccountEvent.ProfileUpdated ->
             mozilla.components.concept.sync.AccountEvent.ProfileUpdated
@@ -235,8 +258,8 @@ fun IncomingDeviceCommand.into(): mozilla.components.concept.sync.DeviceCommandI
 
 fun IncomingDeviceCommand.TabReceived.into(): mozilla.components.concept.sync.DeviceCommandIncoming.TabReceived {
     return mozilla.components.concept.sync.DeviceCommandIncoming.TabReceived(
-        from = this.from?.into(),
-        entries = this.entries.map { it.into() }
+        from = this.sender?.into(),
+        entries = this.payload.entries.map { it.into() }
     )
 }
 

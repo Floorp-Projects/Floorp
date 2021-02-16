@@ -29,7 +29,7 @@ import org.mozilla.experiments.nimbus.AvailableRandomizationUnits
 import org.mozilla.experiments.nimbus.EnrolledExperiment
 import org.mozilla.experiments.nimbus.EnrollmentChangeEvent
 import org.mozilla.experiments.nimbus.EnrollmentChangeEventType
-import org.mozilla.experiments.nimbus.ErrorException
+import org.mozilla.experiments.nimbus.NimbusErrorException
 import org.mozilla.experiments.nimbus.NimbusClient
 import org.mozilla.experiments.nimbus.NimbusClientInterface
 import org.mozilla.experiments.nimbus.RemoteSettingsConfig
@@ -298,9 +298,9 @@ class Nimbus(
         try {
             nimbus.fetchExperiments()
             notifyObservers { onExperimentsFetched() }
-        } catch (e: ErrorException.RequestError) {
+        } catch (e: NimbusErrorException.RequestError) {
             logger.info("Error fetching experiments from endpoint: $e")
-        } catch (e: ErrorException.ResponseError) {
+        } catch (e: NimbusErrorException.ResponseError) {
             logger.info("Error fetching experiments from endpoint: $e")
         }
     }
@@ -318,7 +318,7 @@ class Nimbus(
             nimbus.applyPendingExperiments().also(::recordExperimentTelemetryEvents)
             // Get the experiments to record in telemetry
             postEnrolmentCalculation()
-        } catch (e: ErrorException.InvalidExperimentFormat) {
+        } catch (e: NimbusErrorException.InvalidExperimentFormat) {
             logger.info("Invalid experiment format: $e")
         }
     }
