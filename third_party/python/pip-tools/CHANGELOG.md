@@ -1,3 +1,42 @@
+# 5.5.0 (2020-12-31)
+
+Features:
+- Add Python 3.9 support
+([1222](https://github.com/jazzband/pip-tools/pull/1222)). Thanks @jdufresne
+- Improve formatting of long "via" annotations
+([1237](https://github.com/jazzband/pip-tools/pull/1237)). Thanks @jdufresne
+- Add `--verbose` and `--quiet` options to `pip-sync`
+([1241](https://github.com/jazzband/pip-tools/pull/1241)). Thanks @jdufresne
+- Add `--no-allow-unsafe` option to `pip-compile`
+([1265](https://github.com/jazzband/pip-tools/pull/1265)). Thanks @jdufresne
+
+Bug Fixes:
+- Restore `PIP_EXISTS_ACTION` environment variable to its previous state
+when resolve dependencies in `pip-compile`
+([1255](https://github.com/jazzband/pip-tools/pull/1255)). Thanks @jdufresne
+
+Dependencies:
+- Remove `six` dependency in favor `pip`'s vendored `six`
+([1240](https://github.com/jazzband/pip-tools/pull/1240)). Thanks @jdufresne
+
+Improved Documentation:
+- Add `pip-requirements.el` (for Emacs) to useful tools to `README`
+([#1244](https://github.com/jazzband/pip-tools/pull/1244)). Thanks @jdufresne
+- Add supported Python versions to `README`
+([#1246](https://github.com/jazzband/pip-tools/pull/1246)). Thanks @jdufresne
+
+# 5.4.0 (2020-11-21)
+
+Features:
+- Add `pip>=20.3` support
+([1216](https://github.com/jazzband/pip-tools/pull/1216)). Thanks @atugushev and @AndydeCleyre
+- Exclude `--no-reuse-hashes` option from «command to run» header
+([1197](https://github.com/jazzband/pip-tools/pull/1197)). Thanks @graingert
+
+Dependencies:
+- Bump `pip` minimum version to `>= 20.1`
+([1191](https://github.com/jazzband/pip-tools/pull/1191)). Thanks @atugushev and @AndydeCleyre
+
 # 5.3.1 (2020-07-31)
 
 Bug Fixes:

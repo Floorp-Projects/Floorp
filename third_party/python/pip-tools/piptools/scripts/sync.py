@@ -39,19 +39,10 @@ DEFAULT_REQUIREMENTS_FILE = "requirements.txt"
     "--find-links",
     multiple=True,
     help="Look for archives in this directory or on this HTML page",
-    envvar="PIP_FIND_LINKS",
 )
+@click.option("-i", "--index-url", help="Change index URL (defaults to PyPI)")
 @click.option(
-    "-i",
-    "--index-url",
-    help="Change index URL (defaults to PyPI)",
-    envvar="PIP_INDEX_URL",
-)
-@click.option(
-    "--extra-index-url",
-    multiple=True,
-    help="Add additional index URL to search",
-    envvar="PIP_EXTRA_INDEX_URL",
+    "--extra-index-url", multiple=True, help="Add additional index URL to search"
 )
 @click.option(
     "--trusted-host",
@@ -63,7 +54,8 @@ DEFAULT_REQUIREMENTS_FILE = "requirements.txt"
     is_flag=True,
     help="Ignore package index (only looking at --find-links URLs instead)",
 )
-@click.option("-q", "--quiet", default=False, is_flag=True, help="Give less output")
+@click.option("-v", "--verbose", count=True, help="Show more output")
+@click.option("-q", "--quiet", count=True, help="Give less output")
 @click.option(
     "--user", "user_only", is_flag=True, help="Restrict attention to user directory"
 )
@@ -84,6 +76,7 @@ def cli(
     extra_index_url,
     trusted_host,
     no_index,
+    verbose,
     quiet,
     user_only,
     cert,
@@ -92,6 +85,8 @@ def cli(
     pip_args,
 ):
     """Synchronize virtual environment with requirements.txt."""
+    log.verbosity = verbose - quiet
+
     if not src_files:
         if os.path.exists(DEFAULT_REQUIREMENTS_FILE):
             src_files = (DEFAULT_REQUIREMENTS_FILE,)
@@ -132,22 +127,24 @@ def cli(
     installed_dists = get_installed_distributions(skip=[], user_only=user_only)
     to_install, to_uninstall = sync.diff(requirements, installed_dists)
 
-    install_flags = _compose_install_flags(
-        finder,
-        no_index=no_index,
-        index_url=index_url,
-        extra_index_url=extra_index_url,
-        trusted_host=trusted_host,
-        find_links=find_links,
-        user_only=user_only,
-        cert=cert,
-        client_cert=client_cert,
-    ) + shlex.split(pip_args or "")
+    install_flags = (
+        _compose_install_flags(
+            finder,
+            no_index=no_index,
+            index_url=index_url,
+            extra_index_url=extra_index_url,
+            trusted_host=trusted_host,
+            find_links=find_links,
+            user_only=user_only,
+            cert=cert,
+            client_cert=client_cert,
+        )
+        + shlex.split(pip_args or "")
+    )
     sys.exit(
         sync.sync(
             to_install,
             to_uninstall,
-            verbose=(not quiet),
             dry_run=dry_run,
             install_flags=install_flags,
             ask=ask,
@@ -185,15 +182,15 @@ def _compose_install_flags(
     else:
         result.append("--no-index")
 
-    for extra_index in extra_index_url or []:
+    for extra_index in extra_index_url:
         result.extend(["--extra-index-url", extra_index])
 
     # Build --trusted-hosts
-    for host in itertools.chain(trusted_host or [], finder.trusted_hosts):
+    for host in itertools.chain(trusted_host, finder.trusted_hosts):
         result.extend(["--trusted-host", host])
 
     # Build --find-links
-    for link in itertools.chain(find_links or [], finder.find_links):
+    for link in itertools.chain(find_links, finder.find_links):
         result.extend(["--find-links", link])
 
     # Build format controls --no-binary/--only-binary

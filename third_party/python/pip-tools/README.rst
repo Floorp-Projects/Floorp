@@ -1,4 +1,4 @@
-|jazzband| |pypi| |pyversions| |buildstatus-travis| |buildstatus-appveyor| |codecov|
+|jazzband| |pypi| |pyversions| |buildstatus-gha| |codecov|
 
 ==================================
 pip-tools = pip-compile + pip-sync
@@ -10,12 +10,9 @@ even when you've pinned them.  You do pin them, right? (In building your Python 
 .. image:: https://github.com/jazzband/pip-tools/raw/master/img/pip-tools-overview.png
    :alt: pip-tools overview for phase II
 
-.. |buildstatus-travis| image:: https://img.shields.io/travis/jazzband/pip-tools/master.svg?logo=travis
-   :alt: Travis CI build status
-   :target: https://travis-ci.org/jazzband/pip-tools
-.. |buildstatus-appveyor| image:: https://img.shields.io/appveyor/ci/jazzband/pip-tools/master.svg?logo=appveyor
-   :alt: AppVeyor build status
-   :target: https://ci.appveyor.com/project/jazzband/pip-tools
+.. |buildstatus-gha| image:: https://github.com/jazzband/pip-tools/workflows/CI/badge.svg
+   :alt: GitHub Actions build status
+   :target: https://github.com/jazzband/pip-tools/actions?query=workflow%3ACI
 .. |codecov| image:: https://codecov.io/gh/jazzband/pip-tools/branch/master/graph/badge.svg
    :alt: Coverage
    :target: https://codecov.io/gh/jazzband/pip-tools
@@ -82,10 +79,14 @@ If you have a ``setup.py`` with ``install_requires=['django']``, then run
     #
     #    pip-compile
     #
-    asgiref==3.2.3            # via django
-    django==3.0.3             # via my_django_project (setup.py)
-    pytz==2019.3              # via django
-    sqlparse==0.3.0           # via django
+    asgiref==3.2.3
+        # via django
+    django==3.0.3
+        # via my_django_project (setup.py)
+    pytz==2019.3
+        # via django
+    sqlparse==0.3.0
+        # via django
 
 ``pip-compile`` will produce your ``requirements.txt``, with all the Django
 dependencies (and all underlying dependencies) pinned.
@@ -112,10 +113,14 @@ Now, run ``pip-compile requirements.in``:
     #
     #    pip-compile requirements.in
     #
-    asgiref==3.2.3            # via django
-    django==3.0.3             # via -r requirements.in
-    pytz==2019.3              # via django
-    sqlparse==0.3.0           # via django
+    asgiref==3.2.3
+        # via django
+    django==3.0.3
+        # via -r requirements.in
+    pytz==2019.3
+        # via django
+    sqlparse==0.3.0
+        # via django
 
 And it will produce your ``requirements.txt``, with all the Django dependencies
 (and all underlying dependencies) pinned.
@@ -228,10 +233,14 @@ generated at the top of requirements files by setting the
     #
     #    ./pipcompilewrapper
     #
-    asgiref==3.2.3            # via django
-    django==3.0.3             # via -r requirements.in
-    pytz==2019.3              # via django
-    sqlparse==0.3.0           # via django
+    asgiref==3.2.3
+        # via django
+    django==3.0.3
+        # via -r requirements.in
+    pytz==2019.3
+        # via django
+    sqlparse==0.3.0
+        # via django
 
 Workflow for layered requirements
 ---------------------------------
@@ -270,8 +279,10 @@ First, compile ``requirements.txt`` as usual:
     #
     #    pip-compile
     #
-    django==2.1.15            # via -r requirements.in
-    pytz==2019.3              # via django
+    django==2.1.15
+        # via -r requirements.in
+    pytz==2019.3
+        # via django
 
 
 Now compile the dev requirements and the ``requirements.txt`` file is used as
@@ -286,10 +297,18 @@ a constraint:
     #
     #    pip-compile dev-requirements.in
     #
-    django-debug-toolbar==2.2  # via -r dev-requirements.in
-    django==2.1.15            # via -c requirements.txt, django-debug-toolbar
-    pytz==2019.3              # via -c requirements.txt, django
-    sqlparse==0.3.0           # via django-debug-toolbar
+    django-debug-toolbar==2.2
+        # via -r dev-requirements.in
+    django==2.1.15
+        # via
+        #   -c requirements.txt
+        #   django-debug-toolbar
+    pytz==2019.3
+        # via
+        #   -c requirements.txt
+        #   django
+    sqlparse==0.3.0
+        # via django-debug-toolbar
 
 As you can see above, even though a ``2.2`` release of Django is available, the
 dev requirements only include a ``2.1`` version of Django because they were
@@ -437,10 +456,12 @@ Other useful tools
 
   * `requirements.txt.vim`_ for Vim.
   * `Python extension for VS Code`_ for VS Code.
+  * `pip-requirements.el`_ for Emacs.
 
 .. _pipdeptree: https://github.com/naiquevin/pipdeptree
 .. _requirements.txt.vim: https://github.com/raimon49/requirements.txt.vim
 .. _Python extension for VS Code: https://marketplace.visualstudio.com/items?itemName=ms-python.python
+.. _pip-requirements.el: https://github.com/Wilfred/pip-requirements.el
 
 
 Deprecations
@@ -451,16 +472,26 @@ This section lists ``pip-tools`` features that are currently deprecated.
 - ``--index/--no-index`` command-line options, use instead
   ``--emit-index-url/--no-emit-index-url`` (since 5.2.0).
 
+- In future versions, the ``--allow-unsafe`` behavior will be enabled by
+  default. Use ``--no-allow-unsafe`` to keep the old behavior. It is
+  recommended to pass the ``--allow-unsafe`` now to adapt to the upcoming
+  change.
+
 Versions and compatibility
 ==========================
 
-The table below summarizes the latest ``pip-tools`` versions with the required ``pip``
-versions.
+The table below summarizes the latest ``pip-tools`` versions with the required
+``pip`` and Python versions. Generally, ``pip-tools`` supports the same Python
+versions as the required ``pip`` versions.
 
-+-----------+-----------------+
-| pip-tools | pip             |
-+===========+=================+
-| 4.5.x     | 8.1.3 - 20.0.x  |
-+-----------+-----------------+
-| 5.x       | 20.0.x - 20.1.x |
-+-----------+-----------------+
++---------------+----------------+----------------+
+| pip-tools     | pip            | Python         |
++===============+================+================+
+| 4.5.*         | 8.1.3 - 20.0.2 | 2.7, 3.5 - 3.8 |
++---------------+----------------+----------------+
+| 5.0.0 - 5.3.0 | 20.0 - 20.1.1  | 2.7, 3.5 - 3.8 |
++---------------+----------------+----------------+
+| 5.4.0         | 20.1 - 20.3.*  | 2.7, 3.5 - 3.8 |
++---------------+----------------+----------------+
+| >= 5.5.0      | 20.1 - 20.3.*  | 2.7, 3.5 - 3.9 |
++---------------+----------------+----------------+

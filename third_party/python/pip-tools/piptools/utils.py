@@ -5,14 +5,13 @@ import sys
 from collections import OrderedDict
 from itertools import chain
 
-import six
 from click.utils import LazyFile
 from pip._internal.req.constructors import install_req_from_line
 from pip._internal.utils.misc import redact_auth_from_url
 from pip._internal.vcs import is_url
-from six.moves import shlex_quote
+from pip._vendor import six
+from pip._vendor.six.moves import shlex_quote
 
-from ._compat import PIP_VERSION
 from .click import style
 
 UNSAFE_PACKAGES = {"setuptools", "distribute", "pip"}
@@ -24,6 +23,7 @@ COMPILE_EXCLUDE_OPTIONS = {
     "--upgrade-package",
     "--verbose",
     "--cache-dir",
+    "--no-reuse-hashes",
 }
 
 
@@ -100,8 +100,8 @@ def format_specifier(ireq):
     InstallRequirements to the terminal.
     """
     # TODO: Ideally, this is carried over to the pip library itself
-    specs = ireq.specifier._specs if ireq.req is not None else []
-    specs = sorted(specs, key=lambda x: x._spec[1])
+    specs = ireq.specifier if ireq.req is not None else []
+    specs = sorted(specs, key=lambda x: x.version)
     return ",".join(str(s) for s in specs) or "<any>"
 
 
@@ -125,11 +125,11 @@ def is_pinned_requirement(ireq):
     if ireq.editable:
         return False
 
-    if ireq.req is None or len(ireq.specifier._specs) != 1:
+    if ireq.req is None or len(ireq.specifier) != 1:
         return False
 
-    op, version = next(iter(ireq.specifier._specs))._spec
-    return (op == "==" or op == "===") and not version.endswith(".*")
+    spec = next(iter(ireq.specifier))
+    return spec.operator in {"==", "==="} and not spec.version.endswith(".*")
 
 
 def as_tuple(ireq):
@@ -141,7 +141,7 @@ def as_tuple(ireq):
         raise TypeError("Expected a pinned InstallRequirement, got {}".format(ireq))
 
     name = key_from_ireq(ireq)
-    version = next(iter(ireq.specifier._specs))._spec[1]
+    version = next(iter(ireq.specifier)).version
     extras = tuple(sorted(ireq.extras))
     return name, version, extras
 
@@ -262,7 +262,7 @@ def fs_str(string):
     if isinstance(string, str):
         return string
     if isinstance(string, bytes):
-        raise AssertionError
+        raise TypeError("fs_str() argument must not be bytes")
     return string.encode(_fs_encoding)
 
 
@@ -276,11 +276,7 @@ def get_hashes_from_ireq(ireq):
     in the requirement options.
     """
     result = []
-    if PIP_VERSION[:2] <= (20, 0):
-        ireq_hashes = ireq.options.get("hashes", {})
-    else:
-        ireq_hashes = ireq.hash_options
-    for algorithm, hexdigests in ireq_hashes.items():
+    for algorithm, hexdigests in ireq.hash_options.items():
         for hash_ in hexdigests:
             result.append("{}:{}".format(algorithm, hash_))
     return result
@@ -319,9 +315,6 @@ def get_compile_command(click_ctx):
     for option_name, value in click_ctx.params.items():
         option = compile_options[option_name]
 
-        # Get the latest option name (usually it'll be a long name)
-        option_long_name = option.opts[-1]
-
         # Collect variadic args separately, they will be added
         # at the end of the command later
         if option.nargs < 0:
@@ -331,6 +324,9 @@ def get_compile_command(click_ctx):
                 right_args.append("--")
             right_args.extend([shlex_quote(force_text(val)) for val in value])
             continue
+
+        # Get the latest option name (usually it'll be a long name)
+        option_long_name = option.opts[-1]
 
         # Exclude one-off options (--upgrade/--upgrade-package/--rebuild/...)
         # or options that don't change compile behaviour (--verbose/--dry-run/...)

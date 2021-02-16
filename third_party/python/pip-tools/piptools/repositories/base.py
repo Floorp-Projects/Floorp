@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
 
-from six import add_metaclass
+from pip._vendor.six import add_metaclass
 
 
 @add_metaclass(ABCMeta)
@@ -12,6 +12,8 @@ class BaseRepository(object):
     def clear_caches(self):
         """Should clear any caches used by the implementation."""
 
+    @abstractmethod
+    @contextmanager
     def freshen_build_caches(self):
         """Should start with fresh build/source caches."""
 
