@@ -44,7 +44,7 @@ static MtransportTestUtils* test_utils;
 
 namespace {
 
-class FakeAudioTrack : public mozilla::ProcessedMediaTrack {
+class FakeAudioTrack : public ProcessedMediaTrack {
  public:
   FakeAudioTrack()
       : ProcessedMediaTrack(44100, MediaSegment::AUDIO, nullptr),
@@ -61,7 +61,7 @@ class FakeAudioTrack : public mozilla::ProcessedMediaTrack {
   void QueueSetAutoend(bool) override {}
 
   void Suspend() override {
-    mozilla::MutexAutoLock lock(mMutex);
+    MutexAutoLock lock(mMutex);
     if (mSuspended) {
       return;
     }
@@ -71,7 +71,7 @@ class FakeAudioTrack : public mozilla::ProcessedMediaTrack {
   }
 
   void Resume() override {
-    mozilla::MutexAutoLock lock(mMutex);
+    MutexAutoLock lock(mMutex);
     if (!mSuspended) {
       return;
     }
@@ -83,14 +83,14 @@ class FakeAudioTrack : public mozilla::ProcessedMediaTrack {
   }
 
   void AddListener(MediaTrackListener* aListener) override {
-    mozilla::MutexAutoLock lock(mMutex);
+    MutexAutoLock lock(mMutex);
     MOZ_ASSERT(!mListener);
     mListener = aListener;
   }
 
   RefPtr<GenericPromise> RemoveListener(
       MediaTrackListener* aListener) override {
-    mozilla::MutexAutoLock lock(mMutex);
+    MutexAutoLock lock(mMutex);
     MOZ_ASSERT(mListener == aListener);
     mListener = nullptr;
     return GenericPromise::CreateAndResolve(true, __func__);
@@ -101,7 +101,7 @@ class FakeAudioTrack : public mozilla::ProcessedMediaTrack {
   uint32_t NumberOfChannels() const override { return NUM_CHANNELS; }
 
  private:
-  mozilla::Mutex mMutex;
+  Mutex mMutex;
   MediaTrackListener* mListener = nullptr;
   bool mSuspended = true;
   nsCOMPtr<nsITimer> mTimer;
@@ -111,7 +111,7 @@ class FakeAudioTrack : public mozilla::ProcessedMediaTrack {
   static const int NUM_CHANNELS = 2;
   static void FakeAudioTrackGenerateData(nsITimer* timer, void* closure) {
     auto t = static_cast<FakeAudioTrack*>(closure);
-    mozilla::MutexAutoLock lock(t->mMutex);
+    MutexAutoLock lock(t->mMutex);
     if (t->mSuspended) {
       return;
     }
@@ -119,8 +119,7 @@ class FakeAudioTrack : public mozilla::ProcessedMediaTrack {
     CheckedInt<size_t> bufferSize(sizeof(int16_t));
     bufferSize *= NUM_CHANNELS;
     bufferSize *= AUDIO_BUFFER_SIZE;
-    RefPtr<mozilla::SharedBuffer> samples =
-        mozilla::SharedBuffer::Create(bufferSize);
+    RefPtr<SharedBuffer> samples = SharedBuffer::Create(bufferSize);
     int16_t* data = reinterpret_cast<int16_t*>(samples->Data());
     for (int i = 0; i < (AUDIO_BUFFER_SIZE * NUM_CHANNELS); i++) {
       // saw tooth audio sample
@@ -128,7 +127,7 @@ class FakeAudioTrack : public mozilla::ProcessedMediaTrack {
       t->mCount++;
     }
 
-    mozilla::AudioSegment segment;
+    AudioSegment segment;
     AutoTArray<const int16_t*, 1> channels;
     channels.AppendElement(data);
     segment.AppendFrames(samples.forget(), channels, AUDIO_BUFFER_SIZE,
@@ -266,8 +265,8 @@ class TestAgent {
         call_(WebRtcCallWrapper::Create(dom::RTCStatsTimestampMaker(),
                                         aModuleThread, aAudioStateConfig,
                                         aAudioDecoderFactory, aTrials)),
-        audio_conduit_(mozilla::AudioSessionConduit::Create(
-            call_, test_utils->sts_target())),
+        audio_conduit_(
+            AudioSessionConduit::Create(call_, test_utils->sts_target())),
         audio_pipeline_(),
         transport_(new LoopbackTransport) {}
 
@@ -341,14 +340,14 @@ class TestAgent {
   }
 
  protected:
-  mozilla::AudioCodecConfig audio_config_;
+  AudioCodecConfig audio_config_;
   RefPtr<WebRtcCallWrapper> call_;
-  RefPtr<mozilla::MediaSessionConduit> audio_conduit_;
+  RefPtr<MediaSessionConduit> audio_conduit_;
   RefPtr<FakeAudioTrack> audio_track_;
   // TODO(bcampen@mozilla.com): Right now this does not let us test RTCP in
   // both directions; only the sender's RTCP is sent, but the receiver should
   // be sending it too.
-  RefPtr<mozilla::MediaPipeline> audio_pipeline_;
+  RefPtr<MediaPipeline> audio_pipeline_;
   RefPtr<LoopbackTransport> transport_;
 };
 
@@ -360,10 +359,10 @@ class TestAgentSend : public TestAgent {
                 webrtc::WebRtcKeyValueConfig* aTrials)
       : TestAgent(aModuleThread, aAudioStateConfig, aAudioDecoderFactory,
                   aTrials) {
-    mozilla::MediaConduitErrorCode err =
-        static_cast<mozilla::AudioSessionConduit*>(audio_conduit_.get())
+    MediaConduitErrorCode err =
+        static_cast<AudioSessionConduit*>(audio_conduit_.get())
             ->ConfigureSendMediaCodec(&audio_config_);
-    EXPECT_EQ(mozilla::kMediaConduitNoError, err);
+    EXPECT_EQ(kMediaConduitNoError, err);
 
     audio_track_ = new FakeAudioTrack();
   }
@@ -371,10 +370,9 @@ class TestAgentSend : public TestAgent {
   virtual void CreatePipeline(const std::string& aTransportId) {
     std::string test_pc;
 
-    RefPtr<MediaPipelineTransmit> audio_pipeline =
-        new mozilla::MediaPipelineTransmit(test_pc, transport_, nullptr,
-                                           test_utils->sts_target(), false,
-                                           audio_conduit_);
+    RefPtr<MediaPipelineTransmit> audio_pipeline = new MediaPipelineTransmit(
+        test_pc, transport_, nullptr, test_utils->sts_target(), false,
+        audio_conduit_);
 
     audio_pipeline->SetSendTrack(audio_track_);
     audio_pipeline->Start();
@@ -393,22 +391,22 @@ class TestAgentReceive : public TestAgent {
                    webrtc::WebRtcKeyValueConfig* aTrials)
       : TestAgent(aModuleThread, aAudioStateConfig, aAudioDecoderFactory,
                   aTrials) {
-    std::vector<UniquePtr<mozilla::AudioCodecConfig>> codecs;
+    std::vector<UniquePtr<AudioCodecConfig>> codecs;
     codecs.emplace_back(new AudioCodecConfig(audio_config_));
 
-    mozilla::MediaConduitErrorCode err =
-        static_cast<mozilla::AudioSessionConduit*>(audio_conduit_.get())
+    MediaConduitErrorCode err =
+        static_cast<AudioSessionConduit*>(audio_conduit_.get())
             ->ConfigureRecvMediaCodecs(codecs);
-    EXPECT_EQ(mozilla::kMediaConduitNoError, err);
+    EXPECT_EQ(kMediaConduitNoError, err);
   }
 
   virtual void CreatePipeline(const std::string& aTransportId) {
     std::string test_pc;
 
-    audio_pipeline_ = new mozilla::MediaPipelineReceiveAudio(
+    audio_pipeline_ = new MediaPipelineReceiveAudio(
         test_pc, transport_, nullptr, test_utils->sts_target(),
-        static_cast<mozilla::AudioSessionConduit*>(audio_conduit_.get()),
-        nullptr, PRINCIPAL_HANDLE_NONE);
+        static_cast<AudioSessionConduit*>(audio_conduit_.get()), nullptr,
+        PRINCIPAL_HANDLE_NONE);
 
     audio_pipeline_->Start();
 
@@ -582,7 +580,7 @@ class MediaPipelineTest : public ::testing::Test {
 class MediaPipelineFilterTest : public ::testing::Test {
  public:
   bool Filter(MediaPipelineFilter& filter, uint32_t ssrc, uint8_t payload_type,
-              const mozilla::Maybe<std::string>& mid = mozilla::Nothing()) {
+              const Maybe<std::string>& mid = Nothing()) {
     webrtc::RTPHeader header;
     header.ssrc = ssrc;
     header.payloadType = payload_type;
