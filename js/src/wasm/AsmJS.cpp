@@ -6729,20 +6729,25 @@ static bool ValidateConstant(JSContext* cx, const AsmJSGlobal& global,
 static bool CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata,
                         HandleValue bufferVal,
                         MutableHandle<ArrayBufferObject*> buffer) {
+  if (!bufferVal.isObject()) {
+    return LinkFail(cx, "buffer must be an object");
+  }
+  JSObject* bufferObj = &bufferVal.toObject();
+
   if (metadata.memoryUsage == MemoryUsage::Shared) {
-    if (!IsSharedArrayBuffer(bufferVal)) {
+    if (!bufferObj->is<SharedArrayBufferObject>()) {
       return LinkFail(
           cx, "shared views can only be constructed onto SharedArrayBuffer");
     }
     return LinkFail(cx, "Unable to prepare SharedArrayBuffer for asm.js use");
   }
 
-  if (!IsArrayBuffer(bufferVal)) {
+  if (!bufferObj->is<ArrayBufferObject>()) {
     return LinkFail(cx,
                     "unshared views can only be constructed onto ArrayBuffer");
   }
 
-  buffer.set(&bufferVal.toObject().as<ArrayBufferObject>());
+  buffer.set(&bufferObj->as<ArrayBufferObject>());
 
   // Do not assume the buffer's length fits within the wasm heap limit, so do
   // not call ByteLength32().
