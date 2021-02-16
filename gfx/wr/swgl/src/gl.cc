@@ -3231,7 +3231,7 @@ static ALWAYS_INLINE VectorType<T, N> inversesqrt(VectorType<T, N> v) {
 // the pixel data. 0 alpha is treated as transparent black.
 static ALWAYS_INLINE WideRGBA32F unpremultiply(WideRGBA32F v) {
   Float a = recip_or((Float){v[3], v[7], v[11], v[15]}, 0.0f);
-  return v * combine(a.xxxx, a.yyyy, a.zzzz, a.wwww);
+  return v * a.xxxxyyyyzzzzwwww;
 }
 
 // Packed RGBA32F data is AoS in BGRA order. Transpose it to SoA and swizzle to
@@ -4105,6 +4105,7 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint16_t z,
                                    const ClipRect& clipRect) {
   // Only triangles and convex quads supported.
   assert(nump == 3 || nump == 4);
+
   Point2D l0, r0, l1, r1;
   int l0i, r0i, l1i, r1i;
   {
