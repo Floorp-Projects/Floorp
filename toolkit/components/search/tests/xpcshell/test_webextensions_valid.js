@@ -178,13 +178,17 @@ add_task(async function test_extension_no_longer_specifies_engine() {
   }, 4);
 });
 
-add_task(async function test_disabled_extension() {
+add_task(async function test_disabled_extension_pref_disabled() {
+  Services.prefs.setBoolPref("browser.search.fixupEngines", false);
   await check_with_extension(
     async () => {
       await extension.addon.disable();
     },
     2,
     async () => {
+      let engine = Services.search.getEngineByName("Example");
+      Assert.ok(engine, "Should have kept the engine");
+
       extension.addon.enable();
       await extension.awaitStartup();
       await AddonTestUtils.waitForSearchProviderStartup(extension);
@@ -192,15 +196,53 @@ add_task(async function test_disabled_extension() {
   );
 });
 
-add_task(async function test_missing_extension() {
+add_task(async function test_disabled_extension() {
+  Services.prefs.clearUserPref("browser.search.fixupEngines");
+  await check_with_extension(
+    async () => {
+      await extension.addon.disable();
+    },
+    2,
+    async () => {
+      let engine = Services.search.getEngineByName("Example");
+      Assert.ok(!engine, "Should have removed the engine");
+
+      extension.addon.enable();
+      await extension.awaitStartup();
+      await AddonTestUtils.waitForSearchProviderStartup(extension);
+    }
+  );
+});
+
+add_task(async function test_missing_extension_pref_disabled() {
+  Services.prefs.setBoolPref("browser.search.fixupEngines", false);
   await check_with_extension(
     async () => {
       await extension.unload();
     },
     1,
-    async engine => {
+    async () => {
+      let engine = Services.search.getEngineByName("Example");
+      Assert.ok(engine, "Should have kept the engine");
+
       // Make the test harness happy.
       await Services.search.removeEngine(engine);
+    },
+    true
+  );
+});
+
+add_task(async function test_missing_extension() {
+  Services.prefs.clearUserPref("browser.search.fixupEngines");
+  await check_with_extension(
+    async () => {
+      await extension.unload();
+    },
+    1,
+    async () => {
+      // Make the test harness happy.
+      let engine = Services.search.getEngineByName("Example");
+      Assert.ok(!engine, "Should have removed the engine");
     },
     true
   );
