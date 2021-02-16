@@ -14,6 +14,7 @@ import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.base.crash.CrashReporting
+import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -43,7 +44,8 @@ class PictureInPictureFeature(
 
         val session = store.state.findTabOrCustomTabOrSelectedTab(tabId)
         val fullScreenMode = session?.content?.fullScreen == true
-        return fullScreenMode && try {
+        val contentIsPlaying = session?.mediaSessionState?.playbackState == MediaSession.PlaybackState.PLAYING
+        return fullScreenMode && contentIsPlaying && try {
             enterPipModeCompat()
         } catch (e: IllegalStateException) {
             // On certain Samsung devices, if accessibility mode is enabled, this will throw an
