@@ -34,6 +34,15 @@
       </menugroup>
       <menuseparator id="context-sep-navigation"/>
       <menuseparator id="page-menu-separator"/>
+      <menuitem id="context-viewsource-goToLine"
+                oncommand="gViewSourceUtils.getPageActor(gContextMenu.browser).promptAndGoToLine()"/>
+      <menuitem id="context-viewsource-wrapLongLines"
+                type="checkbox"
+                oncommand="gViewSourceUtils.getPageActor(gContextMenu.browser).sendAsyncMessage('ViewSource:ToggleWrapping');"/>
+      <menuitem id="context-viewsource-highlightSyntax"
+                type="checkbox"
+                oncommand="gViewSourceUtils.getPageActor(gContextMenu.browser).sendAsyncMessage('ViewSource:ToggleSyntaxHighlighting');"/>
+      <menuseparator id="context-sep-viewsource-commands"/>
       <menuitem id="spell-no-suggestions"
                 disabled="true"
                 label="&spellNoSuggestions.label;"/>

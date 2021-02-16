@@ -140,6 +140,20 @@ class ViewSourcePageParent extends JSWindowActorParent {
   }
 
   /**
+   * @return {boolean} the wrapping state
+   */
+  queryIsWrapping() {
+    return this.sendQuery("ViewSource:IsWrapping");
+  }
+
+  /**
+   * @return {boolean} the syntax highlighting state
+   */
+  queryIsSyntaxHighlighting() {
+    return this.sendQuery("ViewSource:IsSyntaxHighlighting");
+  }
+
+  /**
    * Update the wrapping pref based on the child's current state.
    * @param state
    *        Whether wrapping is currently enabled in the child.
