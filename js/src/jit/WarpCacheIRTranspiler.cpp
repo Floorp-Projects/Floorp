@@ -1625,7 +1625,7 @@ bool WarpCacheIRTranspiler::emitLoadArrayBufferByteLengthDoubleResult(
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitLoadTypedArrayLengthInt32Result(
+bool WarpCacheIRTranspiler::emitLoadArrayBufferViewLengthInt32Result(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
 
@@ -1643,7 +1643,7 @@ bool WarpCacheIRTranspiler::emitLoadTypedArrayLengthInt32Result(
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitLoadTypedArrayLengthDoubleResult(
+bool WarpCacheIRTranspiler::emitLoadArrayBufferViewLengthDoubleResult(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
 
@@ -3339,7 +3339,7 @@ bool WarpCacheIRTranspiler::emitIsTypedArrayResult(ObjOperandId objId,
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitTypedArrayByteOffsetInt32Result(
+bool WarpCacheIRTranspiler::emitArrayBufferViewByteOffsetInt32Result(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
 
@@ -3353,7 +3353,7 @@ bool WarpCacheIRTranspiler::emitTypedArrayByteOffsetInt32Result(
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitTypedArrayByteOffsetDoubleResult(
+bool WarpCacheIRTranspiler::emitArrayBufferViewByteOffsetDoubleResult(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
 
