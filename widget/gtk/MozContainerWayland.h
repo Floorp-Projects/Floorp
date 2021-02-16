@@ -37,9 +37,9 @@ struct MozContainerWayland {
   int subsurface_dx, subsurface_dy;
   struct wl_egl_window* eglwindow;
   struct wl_callback* frame_callback_handler;
-  gboolean opaque_region_updates;
+  gboolean opaque_region_needs_updates;
   gboolean opaque_region_subtract_corners;
-  gboolean opaque_region_fullscreen;
+  gboolean opaque_region_used;
   gboolean surface_needs_clear;
   gboolean ready_to_draw;
   gboolean before_first_size_alloc;
