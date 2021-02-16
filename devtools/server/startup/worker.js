@@ -43,7 +43,7 @@ this.rpc = function(method, ...params) {
       })
     );
   });
-};
+}.bind(this);
 
 loadSubScript("resource://devtools/shared/worker/loader.js");
 
