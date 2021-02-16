@@ -15,6 +15,10 @@ menubar {
   font: menu;
 }
 
+menuitem {
+  padding: 4px 6px;
+}
+
 menu,
 menuitem,
 menucaption {
@@ -39,13 +43,6 @@ menuitem[_moz-menuactive="true"] {
 
 menuitem[customoptionstyling="true"] {
   appearance: none;
-}
-
-menuitem[customoptionstyling="true"][_moz-menuactive="true"] {
-  /* -moz-menuhovertext and -moz-menuhover only apply
-     when -moz-appearance is set to menuitem. */
-  color: highlighttext;
-  background-color: highlight;
 }
 
 menu[disabled="true"],

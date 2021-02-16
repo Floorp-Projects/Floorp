@@ -12,7 +12,7 @@ panel {
   border: 1px solid ThreeDShadow;
   padding: 0;
   min-width: 1px;
-  background: Menu;
+  background-color: Menu;
   color: MenuText;
 }
 
