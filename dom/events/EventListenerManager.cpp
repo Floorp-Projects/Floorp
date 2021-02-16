@@ -1032,10 +1032,8 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
   RefPtr<ScriptFetchOptions> fetchOptions = new ScriptFetchOptions(
       CORS_NONE, aElement->OwnerDoc()->GetReferrerPolicy(), aElement,
       aElement->OwnerDoc()->NodePrincipal());
-  NS_ENSURE_TRUE(fetchOptions, NS_ERROR_OUT_OF_MEMORY);
 
   RefPtr<EventScript> eventScript = new EventScript(fetchOptions, uri);
-  NS_ENSURE_TRUE(eventScript, NS_ERROR_OUT_OF_MEMORY);
 
   JS::CompileOptions options(cx);
   // Use line 0 to make the function body starts from line 1.

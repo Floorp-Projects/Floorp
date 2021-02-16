@@ -49,9 +49,6 @@ nsresult txResultStringComparator::createSortableValue(Expr* aExpr,
                                                        txIEvalContext* aContext,
                                                        txObject*& aResult) {
   UniquePtr<StringValue> val(new StringValue);
-  if (!val) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   if (!mCollation) return NS_ERROR_FAILURE;
 
@@ -148,9 +145,6 @@ nsresult txResultNumberComparator::createSortableValue(Expr* aExpr,
                                                        txIEvalContext* aContext,
                                                        txObject*& aResult) {
   UniquePtr<NumberValue> numval(new NumberValue);
-  if (!numval) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   RefPtr<txAExprResult> exprRes;
   nsresult rv = aExpr->evaluate(aContext, getter_AddRefs(exprRes));
