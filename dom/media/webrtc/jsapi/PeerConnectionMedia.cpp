@@ -659,8 +659,12 @@ nsresult PeerConnectionMedia::AddTransceiver(
     webrtc::WebRtcKeyValueConfig* aTrials,
     RefPtr<TransceiverImpl>* aTransceiverImpl) {
   if (!mCall) {
-    mCall = WebRtcCallWrapper::Create(mParent->GetTimestampMaker(),
-                                      aSharedWebrtcState, aTrials);
+    mCall = WebRtcCallWrapper::Create(
+        mParent->GetTimestampMaker(),
+        MakeUnique<media::ShutdownBlockingTicket>(
+            u"WebRtcCallWrapper shutdown blocker"_ns,
+            NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__),
+        aSharedWebrtcState, aTrials);
   }
 
   RefPtr<TransceiverImpl> transceiver = new TransceiverImpl(

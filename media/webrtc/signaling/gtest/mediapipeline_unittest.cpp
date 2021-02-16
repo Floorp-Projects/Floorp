@@ -262,9 +262,12 @@ class TestAgent {
             webrtc::AudioDecoderFactory* aAudioDecoderFactory,
             webrtc::WebRtcKeyValueConfig* aTrials)
       : audio_config_(109, "opus", 48000, 2, false),
-        call_(WebRtcCallWrapper::Create(dom::RTCStatsTimestampMaker(),
-                                        aModuleThread, aAudioStateConfig,
-                                        aAudioDecoderFactory, aTrials)),
+        call_(WebRtcCallWrapper::Create(
+            dom::RTCStatsTimestampMaker(),
+            MakeUnique<media::ShutdownBlockingTicket>(
+                u"WebRtcCallWrapper shutdown blocker"_ns,
+                NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__),
+            aModuleThread, aAudioStateConfig, aAudioDecoderFactory, aTrials)),
         audio_conduit_(
             AudioSessionConduit::Create(call_, test_utils->sts_target())),
         audio_pipeline_(),
