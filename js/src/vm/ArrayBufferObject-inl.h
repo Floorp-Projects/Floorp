@@ -54,13 +54,6 @@ inline bool ArrayBufferObjectMaybeShared::isWasm() const {
   return this->as<SharedArrayBufferObject>().isWasm();
 }
 
-inline ArrayBufferObjectMaybeShared& AsAnyArrayBuffer(HandleValue val) {
-  if (val.toObject().is<ArrayBufferObject>()) {
-    return val.toObject().as<ArrayBufferObject>();
-  }
-  return val.toObject().as<SharedArrayBufferObject>();
-}
-
 }  // namespace js
 
 #endif  // vm_ArrayBufferObject_inl_h
