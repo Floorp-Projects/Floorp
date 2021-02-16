@@ -30,7 +30,7 @@ static id<mozAccessible, mozView> getNativeViewFromRootAccessible(
 @implementation mozRootAccessible
 
 - (id)initWithAccessible:(mozilla::a11y::AccessibleOrProxy)aAccOrProxy {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   MOZ_ASSERT(!aAccOrProxy.IsProxy(), "mozRootAccessible is never a proxy");
 
@@ -38,7 +38,7 @@ static id<mozAccessible, mozView> getNativeViewFromRootAccessible(
 
   return [super initWithAccessible:aAccOrProxy];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (NSNumber*)moxMain {
@@ -51,13 +51,13 @@ static id<mozAccessible, mozView> getNativeViewFromRootAccessible(
 
 // return the AXParent that our parallell NSView tells us about.
 - (id)moxUnignoredParent {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   // If there is no represented view (eg. headless), this will return nil.
   return [[self representedView]
       accessibilityAttributeValue:NSAccessibilityParentAttribute];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (BOOL)hasRepresentedView {
@@ -66,14 +66,14 @@ static id<mozAccessible, mozView> getNativeViewFromRootAccessible(
 
 // this will return our parallell NSView. see mozDocAccessible.h
 - (id)representedView {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   MOZ_ASSERT(mParallelView,
              "root accessible does not have a native parallel view.");
 
   return mParallelView;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (BOOL)isRoot {

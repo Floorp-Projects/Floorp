@@ -33,14 +33,6 @@ void nsObjCExceptionLog(NSException* aException);
 // suppress compiler warnings. This allows us to avoid having to refactor code
 // to get scoping right when wrapping an entire method.
 
-#define NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL @try {
-#define NS_OBJC_END_TRY_ABORT_BLOCK_NIL \
-  }                                     \
-  @catch (NSException * _exn) {         \
-    nsObjCExceptionLog(_exn);           \
-  }                                     \
-  return nil;
-
 #define NS_OBJC_BEGIN_TRY_BLOCK_RETURN @try {
 #define NS_OBJC_END_TRY_BLOCK_RETURN(_rv) \
   }                                       \

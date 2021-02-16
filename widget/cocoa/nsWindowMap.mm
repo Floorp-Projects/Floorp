@@ -27,25 +27,25 @@
 @implementation WindowDataMap
 
 + (WindowDataMap*)sharedWindowDataMap {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   static WindowDataMap* sWindowMap = nil;
   if (!sWindowMap) sWindowMap = [[WindowDataMap alloc] init];
 
   return sWindowMap;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (id)init {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if ((self = [super init])) {
     mWindowMap = [[NSMutableDictionary alloc] initWithCapacity:10];
   }
   return self;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (void)dealloc {
@@ -70,11 +70,11 @@
 }
 
 - (id)dataForWindow:(NSWindow*)inWindow {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   return [mWindowMap objectForKey:[self keyForWindow:inWindow]];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (void)setData:(id)inData forWindow:(NSWindow*)inWindow {
@@ -94,11 +94,11 @@
 }
 
 - (NSString*)keyForWindow:(NSWindow*)inWindow {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   return [NSString stringWithFormat:@"%p", inWindow];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 @end
@@ -111,7 +111,7 @@
 @implementation TopLevelWindowData
 
 - (id)initWithWindow:(NSWindow*)inWindow {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if ((self = [super init])) {
     [[NSNotificationCenter defaultCenter] addObserver:self
@@ -141,7 +141,7 @@
   }
   return self;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (void)dealloc {

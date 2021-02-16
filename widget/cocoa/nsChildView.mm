@@ -2175,7 +2175,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
 
 // initWithFrame:geckoChild:
 - (id)initWithFrame:(NSRect)inFrame geckoChild:(nsChildView*)inChild {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if ((self = [super initWithFrame:inFrame])) {
     mGeckoChild = inChild;
@@ -2269,7 +2269,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
 
   return self;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (NSTextInputContext*)inputContext {
@@ -2361,12 +2361,12 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
 }
 
 - (NSString*)description {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   return [NSString stringWithFormat:@"ChildView %p, gecko child %p, frame %@", self, mGeckoChild,
                                     NSStringFromRect([self frame])];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 // Make the origin of this view the topLeft corner (gecko origin) rather
@@ -3373,7 +3373,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
 }
 
 - (NSMenu*)menuForEvent:(NSEvent*)theEvent {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (!mGeckoChild) return nil;
 
@@ -3410,7 +3410,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
   // responded to the eContextMenu event by putting up a fake context menu.
   return nil;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (void)convertCocoaMouseWheelEvent:(NSEvent*)aMouseEvent
@@ -3544,12 +3544,12 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
 }
 
 - (NSArray*)validAttributesForMarkedText {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NS_ENSURE_TRUE(mTextInputHandler, [NSArray array]);
   return mTextInputHandler->GetValidAttributesForMarkedText();
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (void)insertText:(id)aString replacementRange:(NSRange)replacementRange {
@@ -4531,7 +4531,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
 // and HTML to system services.
 
 - (id)validRequestorForSendType:(NSString*)sendType returnType:(NSString*)returnType {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   // sendType contains the type of data that the service would like this
   // application to send to it.  sendType is nil if the service is not
@@ -4582,7 +4582,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
 
   return result;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (BOOL)writeSelectionToPasteboard:(NSPasteboard*)pboard types:(NSArray*)types {
@@ -4813,7 +4813,7 @@ nsresult nsChildView::GetSelectionAsPlaintext(nsAString& aResult) {
 }
 
 - (id)accessibilityAttributeValue:(NSString*)attribute {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (!mozilla::a11y::ShouldA11yBeEnabled()) return [super accessibilityAttributeValue:attribute];
 
@@ -4829,7 +4829,7 @@ nsresult nsChildView::GetSelectionAsPlaintext(nsAString& aResult) {
 
   return [accessible accessibilityAttributeValue:attribute];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 #endif /* ACCESSIBILITY */
