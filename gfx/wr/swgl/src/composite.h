@@ -674,17 +674,143 @@ static inline V8<int16_t> textureLinearRowPairedR8(S sampler, S sampler2,
   return abcdxyzwl;
 }
 
+// Casting to int loses some precision while stepping that can offset the
+// image, so shift the values by some extra bits of precision to minimize
+// this. We support up to 16 bits of image size, 7 bits of quantization,
+// and 1 bit for sign, which leaves 8 bits left for extra precision.
+const int STEP_BITS = 8;
+
+// Optimized version of textureLinearPackedR8 for Y R8 texture with
+// half-resolution paired U/V R8 textures. This allows us to more efficiently
+// pack YUV samples into vectors to substantially reduce math operations even
+// further.
+template <YUVColorSpace COLOR_SPACE>
+static inline void upscaleYUV42R8(uint32_t* dest, int span,
+                                  sampler2D_impl sampler[3], I32 yU,
+                                  int32_t yDU, int32_t yOffsetV,
+                                  int32_t yStrideV, int16_t yFracV, I32 cU,
+                                  int32_t cDU, int32_t cOffsetV,
+                                  int32_t cStrideV, int16_t cFracV) {
+  // As much as possible try to utilize the fact that we're only using half
+  // the UV samples to combine Y and UV samples into single vectors. Here we
+  // need to initialize several useful vector quantities for stepping fractional
+  // offsets. For the UV samples, we take the average of the first+second and
+  // third+fourth samples in a chunk which conceptually correspond to offsets
+  // 0.5 and 1.5 (in 0..2 range). This allows us to reconstruct intermediate
+  // samples 0.25, 0.75, 1.25, and 1.75 later. X fraction is shifted over into
+  // the top 7 bits of an unsigned short so that we can mask off the exact
+  // fractional bits we need to blend merely by right shifting them into
+  // position.
+  cU = (cU.xzxz + cU.ywyw) >> 1;
+  auto ycFracX = CONVERT(combine(yU, cU), V8<uint16_t>)
+                 << (16 - (STEP_BITS + 7));
+  auto ycFracDX = combine(I16(yDU), I16(cDU)) << (16 - (STEP_BITS + 7));
+  auto ycFracV = combine(I16(yFracV), I16(cFracV));
+  I32 yI = yU >> (STEP_BITS + 7);
+  I32 cI = cU >> (STEP_BITS + 7);
+  uint8_t* yRow = (uint8_t*)sampler[0].buf + yOffsetV;
+  uint8_t* cRow1 = (uint8_t*)sampler[1].buf + cOffsetV;
+  uint8_t* cRow2 = (uint8_t*)sampler[2].buf + cOffsetV;
+  // Load initial combined YUV samples for each row and blend them.
+  auto ycSrc0 =
+      CONVERT(combine(unaligned_load<V4<uint8_t>>(&yRow[yI.x]),
+                      combine(unaligned_load<V2<uint8_t>>(&cRow1[cI.x]),
+                              unaligned_load<V2<uint8_t>>(&cRow2[cI.x]))),
+              V8<int16_t>);
+  auto ycSrc1 = CONVERT(
+      combine(unaligned_load<V4<uint8_t>>(&yRow[yI.x + yStrideV]),
+              combine(unaligned_load<V2<uint8_t>>(&cRow1[cI.x + cStrideV]),
+                      unaligned_load<V2<uint8_t>>(&cRow2[cI.x + cStrideV]))),
+      V8<int16_t>);
+  auto ycSrc = ycSrc0 + (((ycSrc1 - ycSrc0) * ycFracV) >> 7);
+
+  // Here we shift in results from the next sample while caching results from
+  // the previous sample. This allows us to reduce the multiplications in the
+  // inner loop down to only two since we just need to blend the new samples
+  // horizontally and then vertically once each.
+  for (uint32_t* end = dest + span; dest < end; dest += 4) {
+    yU += yDU;
+    I32 yIn = yU >> (STEP_BITS + 7);
+    cU += cDU;
+    I32 cIn = cU >> (STEP_BITS + 7);
+    // Load combined YUV samples for the next chunk on each row and blend them.
+    auto ycSrc0n =
+        CONVERT(combine(unaligned_load<V4<uint8_t>>(&yRow[yIn.x]),
+                        combine(unaligned_load<V2<uint8_t>>(&cRow1[cIn.x]),
+                                unaligned_load<V2<uint8_t>>(&cRow2[cIn.x]))),
+                V8<int16_t>);
+    auto ycSrc1n = CONVERT(
+        combine(unaligned_load<V4<uint8_t>>(&yRow[yIn.x + yStrideV]),
+                combine(unaligned_load<V2<uint8_t>>(&cRow1[cIn.x + cStrideV]),
+                        unaligned_load<V2<uint8_t>>(&cRow2[cIn.x + cStrideV]))),
+        V8<int16_t>);
+    auto ycSrcn = ycSrc0n + (((ycSrc1n - ycSrc0n) * ycFracV) >> 7);
+
+    // The source samples for the chunk may not match the actual tap offsets.
+    // Since we're upscaling, we know the tap offsets fall within all the
+    // samples in a 4-wide chunk. Since we can't rely on PSHUFB or similar,
+    // instead we do laborious shuffling here for the Y samples and then the UV
+    // samples.
+    auto yshuf = lowHalf(ycSrc);
+    auto yshufn =
+        SHUFFLE(yshuf, yIn.x == yI.w ? lowHalf(ycSrcn).yyyy : lowHalf(ycSrcn),
+                1, 2, 3, 4);
+    if (yI.y == yI.x) {
+      yshuf = yshuf.xxyz;
+      yshufn = yshufn.xxyz;
+    }
+    if (yI.z == yI.y) {
+      yshuf = yshuf.xyyz;
+      yshufn = yshufn.xyyz;
+    }
+    if (yI.w == yI.z) {
+      yshuf = yshuf.xyzz;
+      yshufn = yshufn.xyzz;
+    }
+
+    auto cshuf = highHalf(ycSrc);
+    auto cshufn =
+        SHUFFLE(cshuf, cIn.x == cI.y ? highHalf(ycSrcn).yyww : highHalf(ycSrcn),
+                1, 4, 3, 6);
+    if (cI.y == cI.x) {
+      cshuf = cshuf.xxzz;
+      cshufn = cshufn.xxzz;
+    }
+
+    // After shuffling, combine the Y and UV samples back into a single vector
+    // for blending. Shift X fraction into position as unsigned to mask off top
+    // bits and get rid of low bits to avoid multiplication overflow.
+    auto yuvPx = combine(yshuf, cshuf);
+    yuvPx += ((combine(yshufn, cshufn) - yuvPx) *
+              bit_cast<V8<int16_t>>(ycFracX >> (16 - 7))) >>
+             7;
+
+    // Cache the new samples as the current samples on the next iteration.
+    ycSrc = ycSrcn;
+    ycFracX += ycFracDX;
+    yI = yIn;
+    cI = cIn;
+
+    // De-interleave the Y and UV results. We need to average the UV results
+    // to produce values for intermediate samples. Taps for UV were collected at
+    // offsets 0.5 and 1.5, such that if we take a quarter of the difference
+    // (1.5-0.5)/4, subtract it from even samples, and add it to odd samples,
+    // we can estimate samples 0.25, 0.75, 1.25, and 1.75.
+    auto yPx = SHUFFLE(yuvPx, yuvPx, 0, 0, 1, 1, 2, 2, 3, 3);
+    auto uvPx = SHUFFLE(yuvPx, yuvPx, 4, 6, 4, 6, 5, 7, 5, 7) +
+                ((SHUFFLE(yuvPx, yuvPx, 4, 6, 5, 7, 4, 6, 5, 7) -
+                  SHUFFLE(yuvPx, yuvPx, 5, 7, 4, 6, 5, 7, 4, 6)) >>
+                 2);
+
+    unaligned_store(dest, YUVConverter<COLOR_SPACE>::convert(yPx, uvPx));
+  }
+}
+
 template <YUVColorSpace COLOR_SPACE>
 static void linear_row_yuv(uint32_t* dest, int span, const vec2_scalar& srcUV,
                            float srcDU, const vec2_scalar& chromaUV,
                            float chromaDU, sampler2D_impl sampler[3],
                            int colorDepth) {
-  // Casting to int loses some precision while stepping that can offset the
-  // image, so shift the values by some extra bits of precision to minimize
-  // this. We support up to 16 bits of image size, 7 bits of quantization,
-  // and 1 bit for sign, which leaves 8 bits left for extra precision.
-  const int STEP_BITS = 8;
-
   // Calculate varying and constant interp data for Y plane.
   I32 yU = cast(init_interp(srcUV.x, srcDU) * (1 << STEP_BITS));
   int32_t yV = int32_t(srcUV.y);
@@ -717,12 +843,13 @@ static void linear_row_yuv(uint32_t* dest, int span, const vec2_scalar& srcUV,
       partial_store_span(dest, rgb, span);
     }
   } else if (sampler[0].format == TextureFormat::R16) {
-    // Sample each YUV plane, rescale it to fit in low 8 bits of word, and then
-    // transform them by the appropriate color space.
+    // Sample each YUV plane, rescale it to fit in low 8 bits of word, and
+    // then transform them by the appropriate color space.
     assert(colorDepth > 8);
-    // Need to right shift the sample by the amount of bits over 8 it occupies.
-    // On output from textureLinearUnpackedR16, we have lost 1 bit of precision
-    // at the low end already, hence 1 is subtracted from the color depth.
+    // Need to right shift the sample by the amount of bits over 8 it
+    // occupies. On output from textureLinearUnpackedR16, we have lost 1 bit
+    // of precision at the low end already, hence 1 is subtracted from the
+    // color depth.
     int rescaleBits = (colorDepth - 1) - 8;
     for (; span >= 4; span -= 4) {
       auto yPx =
@@ -774,9 +901,45 @@ static void linear_row_yuv(uint32_t* dest, int span, const vec2_scalar& srcUV,
     int32_t cStrideV =
         cV >= 0 && cV < int32_t(sampler[1].height) - 1 ? sampler[1].stride : 0;
 
+    // If we're sampling the UV planes at half the resolution of the Y plane,
+    // then try to use half resolution fast-path.
+    if (yDU >= cDU && yDU <= (4 << (STEP_BITS + 7)) &&
+        cDU <= (2 << (STEP_BITS + 7))) {
+      // Ensure that samples don't fall outside of the valid bounds of each
+      // planar texture. Step until the initial X coordinates are positive.
+      for (; (yU.x < 0 || cU.x < 0) && span >= 4; span -= 4) {
+        auto yPx = textureLinearRowR8(&sampler[0], yU >> STEP_BITS, yOffsetV,
+                                      yStrideV, yFracV);
+        auto uvPx =
+            textureLinearRowPairedR8(&sampler[1], &sampler[2], cU >> STEP_BITS,
+                                     cOffsetV, cStrideV, cFracV);
+        unaligned_store(dest, YUVConverter<COLOR_SPACE>::convert(yPx, uvPx));
+        dest += 4;
+        yU += yDU;
+        cU += cDU;
+      }
+      // Calculate the number of aligned chunks that we can step inside the
+      // bounds of each planar texture without overreading.
+      int inside = min(
+          min((((int(sampler[0].width) - 4) << (STEP_BITS + 7)) - yU.x) / yDU,
+              (((int(sampler[1].width) - 4) << (STEP_BITS + 7)) - cU.x) / cDU) *
+              4,
+          span & ~3);
+      if (inside > 0) {
+        upscaleYUV42R8<COLOR_SPACE>(dest, inside, sampler, yU, yDU, yOffsetV,
+                                    yStrideV, yFracV, cU, cDU, cOffsetV,
+                                    cStrideV, cFracV);
+        span -= inside;
+        dest += inside;
+        yU += (inside / 4) * yDU;
+        cU += (inside / 4) * cDU;
+      }
+      // If there are any remaining chunks that weren't inside, handle them
+      // below.
+    }
     for (; span >= 4; span -= 4) {
-      // Sample each YUV plane and then transform them by the appropriate color
-      // space.
+      // Sample each YUV plane and then transform them by the appropriate
+      // color space.
       auto yPx = textureLinearRowR8(&sampler[0], yU >> STEP_BITS, yOffsetV,
                                     yStrideV, yFracV);
       auto uvPx =
