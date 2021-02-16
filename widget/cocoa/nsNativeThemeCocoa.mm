@@ -429,7 +429,7 @@ static bool IsInSourceList(nsIFrame* aFrame) {
 NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeCocoa, nsNativeTheme, nsITheme)
 
 nsNativeThemeCocoa::nsNativeThemeCocoa() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   kMaxFocusRingWidth = 7;
 
@@ -484,11 +484,11 @@ nsNativeThemeCocoa::nsNativeThemeCocoa() {
 
   mCellDrawView = [[CellDrawView alloc] init];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 nsNativeThemeCocoa::~nsNativeThemeCocoa() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   [mMeterBarCell release];
   [mProgressBarCell release];
@@ -503,7 +503,7 @@ nsNativeThemeCocoa::~nsNativeThemeCocoa() {
   [mComboBoxCell release];
   [mCellDrawView release];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 // Limit on the area of the target rect (in pixels^2) in
@@ -554,7 +554,7 @@ static void DrawCellWithScaling(NSCell* cell, CGContextRef cgContext, const HIRe
                                 NSControlSize controlSize, NSSize naturalSize, NSSize minimumSize,
                                 const float marginSet[][3][4], NSView* view,
                                 BOOL mirrorHorizontal) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   NSRect drawRect =
       NSMakeRect(destRect.origin.x, destRect.origin.y, destRect.size.width, destRect.size.height);
@@ -660,7 +660,7 @@ static void DrawCellWithScaling(NSCell* cell, CGContextRef cgContext, const HIRe
   CGContextFillRect(cgContext, destRect);
 #endif
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 struct CellRenderSettings {
@@ -734,7 +734,7 @@ static NSControlSize FindControlSize(CGFloat size, const CGFloat* sizes, CGFloat
 static void DrawCellWithSnapping(NSCell* cell, CGContextRef cgContext, const HIRect& destRect,
                                  const CellRenderSettings settings, float verticalAlignFactor,
                                  NSView* view, BOOL mirrorHorizontal, float snapTolerance = 2.0f) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   const float rectWidth = destRect.size.width, rectHeight = destRect.size.height;
   const NSSize* sizes = settings.naturalSizes;
@@ -792,7 +792,7 @@ static void DrawCellWithSnapping(NSCell* cell, CGContextRef cgContext, const HIR
   DrawCellWithScaling(cell, cgContext, drawRect, controlSize, sizes[sizeIndex], minimumSize,
                       settings.margins, view, mirrorHorizontal);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 @interface NSWindow (CoreUIRendererPrivate)
@@ -925,7 +925,7 @@ static NSCellStateValue CellStateForCheckboxOrRadioState(
 void nsNativeThemeCocoa::DrawCheckboxOrRadio(CGContextRef cgContext, bool inCheckbox,
                                              const HIRect& inBoxRect,
                                              const CheckboxOrRadioParams& aParams) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   NSButtonCell* cell = inCheckbox ? mCheckboxCell : mRadioButtonCell;
   ApplyControlParamsToNSCell(aParams.controlParams, cell);
@@ -943,7 +943,7 @@ void nsNativeThemeCocoa::DrawCheckboxOrRadio(CGContextRef cgContext, bool inChec
   DrawCellWithSnapping(cell, cgContext, drawRect, inCheckbox ? checkboxSettings : radioSettings,
                        aParams.verticalAlignFactor, mCellDrawView, NO);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 static const CellRenderSettings searchFieldSettings = {{
@@ -1010,7 +1010,7 @@ nsNativeThemeCocoa::SearchFieldParams nsNativeThemeCocoa::ComputeSearchFieldPara
 
 void nsNativeThemeCocoa::DrawSearchField(CGContextRef cgContext, const HIRect& inBoxRect,
                                          const SearchFieldParams& aParams) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   NSSearchFieldCell* cell = aParams.insideToolbar ? mToolbarSearchFieldCell : mSearchFieldCell;
   [cell setEnabled:!aParams.disabled];
@@ -1023,7 +1023,7 @@ void nsNativeThemeCocoa::DrawSearchField(CGContextRef cgContext, const HIRect& i
   DrawCellWithSnapping(cell, cgContext, inBoxRect, searchFieldSettings, aParams.verticalAlignFactor,
                        mCellDrawView, aParams.rtl);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 static const NSSize kCheckmarkSize = NSMakeSize(11, 11);
@@ -1076,7 +1076,7 @@ nsNativeThemeCocoa::MenuIconParams nsNativeThemeCocoa::ComputeMenuIconParams(
 
 void nsNativeThemeCocoa::DrawMenuIcon(CGContextRef cgContext, const CGRect& aRect,
                                       const MenuIconParams& aParams) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   NSSize size = GetMenuIconSize(aParams.icon);
 
@@ -1107,7 +1107,7 @@ void nsNativeThemeCocoa::DrawMenuIcon(CGContextRef cgContext, const CGRect& aRec
   CGContextFillRect(cgContext, drawRect);
 #endif
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 nsNativeThemeCocoa::MenuItemParams nsNativeThemeCocoa::ComputeMenuItemParams(
@@ -1227,44 +1227,44 @@ static const CellRenderSettings pushButtonSettings = {{
 
 void nsNativeThemeCocoa::DrawRoundedBezelPushButton(CGContextRef cgContext, const HIRect& inBoxRect,
                                                     ControlParams aControlParams) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   ApplyControlParamsToNSCell(aControlParams, mPushButtonCell);
   [mPushButtonCell setBezelStyle:NSRoundedBezelStyle];
   DrawCellWithSnapping(mPushButtonCell, cgContext, inBoxRect, pushButtonSettings, 0.5f,
                        mCellDrawView, aControlParams.rtl, 1.0f);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 void nsNativeThemeCocoa::DrawSquareBezelPushButton(CGContextRef cgContext, const HIRect& inBoxRect,
                                                    ControlParams aControlParams) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   ApplyControlParamsToNSCell(aControlParams, mPushButtonCell);
   [mPushButtonCell setBezelStyle:NSShadowlessSquareBezelStyle];
   DrawCellWithScaling(mPushButtonCell, cgContext, inBoxRect, NSControlSizeRegular, NSZeroSize,
                       NSMakeSize(14, 0), NULL, mCellDrawView, aControlParams.rtl);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 void nsNativeThemeCocoa::DrawHelpButton(CGContextRef cgContext, const HIRect& inBoxRect,
                                         ControlParams aControlParams) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   ApplyControlParamsToNSCell(aControlParams, mHelpButtonCell);
   DrawCellWithScaling(mHelpButtonCell, cgContext, inBoxRect, NSControlSizeRegular, NSZeroSize,
                       kHelpButtonSize, NULL, mCellDrawView,
                       false);  // Don't mirror icon in RTL.
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 void nsNativeThemeCocoa::DrawDisclosureButton(CGContextRef cgContext, const HIRect& inBoxRect,
                                               ControlParams aControlParams,
                                               NSCellStateValue aCellState) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   ApplyControlParamsToNSCell(aControlParams, mDisclosureButtonCell);
   [mDisclosureButtonCell setState:aCellState];
@@ -1272,11 +1272,11 @@ void nsNativeThemeCocoa::DrawDisclosureButton(CGContextRef cgContext, const HIRe
                       kDisclosureButtonSize, NULL, mCellDrawView,
                       false);  // Don't mirror icon in RTL.
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 void nsNativeThemeCocoa::DrawFocusOutline(CGContextRef cgContext, const HIRect& inBoxRect) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
   NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
   [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext
                                                                                   flipped:YES]];
@@ -1286,7 +1286,7 @@ void nsNativeThemeCocoa::DrawFocusOutline(CGContextRef cgContext, const HIRect& 
   CGContextRestoreGState(cgContext);
   [NSGraphicsContext setCurrentContext:savedContext];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 typedef void (*RenderHIThemeControlFunction)(CGContextRef cgContext, const HIRect& aRenderRect,
@@ -1383,7 +1383,7 @@ void nsNativeThemeCocoa::DrawHIThemeButton(CGContextRef cgContext, const HIRect&
                                            ThemeButtonKind aKind, ThemeButtonValue aValue,
                                            ThemeDrawState aState, ThemeButtonAdornment aAdornment,
                                            const ControlParams& aParams) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   HIThemeButtonDrawInfo bdi;
   bdi.version = 0;
@@ -1408,7 +1408,7 @@ void nsNativeThemeCocoa::DrawHIThemeButton(CGContextRef cgContext, const HIRect&
   CGContextFillRect(cgContext, inBoxRect);
 #endif
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 void nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, const HIRect& inBoxRect,
@@ -1490,7 +1490,7 @@ nsNativeThemeCocoa::TreeHeaderCellParams nsNativeThemeCocoa::ComputeTreeHeaderCe
 
 void nsNativeThemeCocoa::DrawTreeHeaderCell(CGContextRef cgContext, const HIRect& inBoxRect,
                                             const TreeHeaderCellParams& aParams) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   HIThemeButtonDrawInfo bdi;
   bdi.version = 0;
@@ -1543,7 +1543,7 @@ void nsNativeThemeCocoa::DrawTreeHeaderCell(CGContextRef cgContext, const HIRect
   CGContextFillRect(cgContext, inBoxRect);
 #endif
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 static const CellRenderSettings dropdownSettings = {{
@@ -1594,7 +1594,7 @@ static const CellRenderSettings editableMenulistSettings = {{
 
 void nsNativeThemeCocoa::DrawDropdown(CGContextRef cgContext, const HIRect& inBoxRect,
                                       const DropdownParams& aParams) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   [mDropdownCell setPullsDown:aParams.pullsDown];
   NSCell* cell = aParams.editable ? (NSCell*)mComboBoxCell : (NSCell*)mDropdownCell;
@@ -1612,7 +1612,7 @@ void nsNativeThemeCocoa::DrawDropdown(CGContextRef cgContext, const HIRect& inBo
   DrawCellWithSnapping(cell, cgContext, inBoxRect, settings, 0.5f, mCellDrawView,
                        aParams.controlParams.rtl);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 static const CellRenderSettings spinnerSettings = {
@@ -1664,17 +1664,17 @@ HIThemeButtonDrawInfo nsNativeThemeCocoa::SpinButtonDrawInfo(ThemeButtonKind aKi
 
 void nsNativeThemeCocoa::DrawSpinButtons(CGContextRef cgContext, const HIRect& inBoxRect,
                                          const SpinButtonParams& aParams) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   HIThemeButtonDrawInfo bdi = SpinButtonDrawInfo(kThemeIncDecButton, aParams);
   HIThemeDrawButton(&inBoxRect, &bdi, cgContext, HITHEME_ORIENTATION, NULL);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 void nsNativeThemeCocoa::DrawSpinButton(CGContextRef cgContext, const HIRect& inBoxRect,
                                         SpinButton aDrawnButton, const SpinButtonParams& aParams) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   HIThemeButtonDrawInfo bdi = SpinButtonDrawInfo(kThemeIncDecButtonMini, aParams);
 
@@ -1699,12 +1699,12 @@ void nsNativeThemeCocoa::DrawSpinButton(CGContextRef cgContext, const HIRect& in
 
   CGContextRestoreGState(cgContext);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 void nsNativeThemeCocoa::DrawTextBox(CGContextRef cgContext, const HIRect& inBoxRect,
                                      TextBoxParams aParams) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   SetCGContextFillColor(cgContext, sRGBColor(1.0, 1.0, 1.0, 1.0));
   CGContextFillRect(cgContext, inBoxRect);
@@ -1740,7 +1740,7 @@ void nsNativeThemeCocoa::DrawTextBox(CGContextRef cgContext, const HIRect& inBox
 
   HIThemeDrawFrame(&drawRect, &fdi, cgContext, HITHEME_ORIENTATION);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 static const CellRenderSettings progressSettings[2][2] = {
@@ -1832,7 +1832,7 @@ nsNativeThemeCocoa::ProgressParams nsNativeThemeCocoa::ComputeProgressParams(
 
 void nsNativeThemeCocoa::DrawProgress(CGContextRef cgContext, const HIRect& inBoxRect,
                                       const ProgressParams& aParams) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   NSProgressBarCell* cell = mProgressBarCell;
 
@@ -1847,7 +1847,7 @@ void nsNativeThemeCocoa::DrawProgress(CGContextRef cgContext, const HIRect& inBo
                        progressSettings[aParams.horizontal][aParams.indeterminate],
                        aParams.verticalAlignFactor, mCellDrawView, aParams.rtl);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 static const CellRenderSettings meterSetting = {{
@@ -1895,7 +1895,7 @@ nsNativeThemeCocoa::MeterParams nsNativeThemeCocoa::ComputeMeterParams(nsIFrame*
 
 void nsNativeThemeCocoa::DrawMeter(CGContextRef cgContext, const HIRect& inBoxRect,
                                    const MeterParams& aParams) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK
 
   NSLevelIndicatorCell* cell = mMeterBarCell;
 
@@ -1957,12 +1957,12 @@ void nsNativeThemeCocoa::DrawMeter(CGContextRef cgContext, const HIRect& inBoxRe
 
   CGContextRestoreGState(cgContext);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK
+  NS_OBJC_END_TRY_IGNORE_BLOCK
 }
 
 void nsNativeThemeCocoa::DrawTabPanel(CGContextRef cgContext, const HIRect& inBoxRect,
                                       bool aIsInsideActiveWindow) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   HIThemeTabPaneDrawInfo tpdi;
 
@@ -1974,7 +1974,7 @@ void nsNativeThemeCocoa::DrawTabPanel(CGContextRef cgContext, const HIRect& inBo
 
   HIThemeDrawTabPane(&inBoxRect, &tpdi, cgContext, HITHEME_ORIENTATION);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 Maybe<nsNativeThemeCocoa::ScaleParams> nsNativeThemeCocoa::ComputeHTMLScaleParams(
@@ -2002,7 +2002,7 @@ Maybe<nsNativeThemeCocoa::ScaleParams> nsNativeThemeCocoa::ComputeHTMLScaleParam
 
 void nsNativeThemeCocoa::DrawScale(CGContextRef cgContext, const HIRect& inBoxRect,
                                    const ScaleParams& aParams) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   HIThemeTrackDrawInfo tdi;
 
@@ -2032,7 +2032,7 @@ void nsNativeThemeCocoa::DrawScale(CGContextRef cgContext, const HIRect& inBoxRe
 
   HIThemeDrawTrack(&tdi, NULL, cgContext, HITHEME_ORIENTATION);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 nsIFrame* nsNativeThemeCocoa::SeparatorResponsibility(nsIFrame* aBefore, nsIFrame* aAfter) {
@@ -2274,7 +2274,7 @@ static void DrawNativeTitlebarToolbarWithSquareCorners(CGContextRef aContext, co
 
 void nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inBoxRect,
                                             const UnifiedToolbarParams& aParams) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   CGContextSaveGState(cgContext);
   CGContextClipToRect(cgContext, inBoxRect);
@@ -2287,12 +2287,12 @@ void nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect
 
   CGContextRestoreGState(cgContext);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 void nsNativeThemeCocoa::DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRect,
                                        bool aIsMain) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (inBoxRect.size.height < 2.0f) return;
 
@@ -2319,7 +2319,7 @@ void nsNativeThemeCocoa::DrawStatusBar(CGContextRef cgContext, const HIRect& inB
 
   CGContextRestoreGState(cgContext);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 void nsNativeThemeCocoa::DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
@@ -2340,7 +2340,7 @@ static void RenderResizer(CGContextRef cgContext, const HIRect& aRenderRect, voi
 }
 
 void nsNativeThemeCocoa::DrawResizer(CGContextRef cgContext, const HIRect& aRect, bool aIsRTL) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   HIThemeGrowBoxDrawInfo drawInfo;
   drawInfo.version = 0;
@@ -2351,7 +2351,7 @@ void nsNativeThemeCocoa::DrawResizer(CGContextRef cgContext, const HIRect& aRect
 
   RenderTransformedHIThemeControl(cgContext, aRect, RenderResizer, &drawInfo, aIsRTL);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 static const sRGBColor kMultilineTextFieldTopBorderColor(0.4510, 0.4510, 0.4510, 1.0);

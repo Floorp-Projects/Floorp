@@ -740,7 +740,7 @@ void nsLookAndFeel::EnsureInit() {
   }
   mInitialized = true;
 
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK
 
   nscolor color;
 
@@ -802,5 +802,5 @@ void nsLookAndFeel::EnsureInit() {
 
   RecordTelemetry();
 
-  NS_OBJC_END_TRY_ABORT_BLOCK
+  NS_OBJC_END_TRY_IGNORE_BLOCK
 }

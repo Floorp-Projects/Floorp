@@ -122,7 +122,7 @@ nsresult nsOSXSystemProxySettings::Init() {
 }
 
 nsOSXSystemProxySettings::~nsOSXSystemProxySettings() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   [mProxyDict release];
 
@@ -137,16 +137,16 @@ nsOSXSystemProxySettings::~nsOSXSystemProxySettings() {
     CFRelease(mSystemDynamicStore);
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 void nsOSXSystemProxySettings::ProxyHasChanged() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   [mProxyDict release];
   mProxyDict = (NSDictionary*)SCDynamicStoreCopyProxies(mSystemDynamicStore);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 nsresult nsOSXSystemProxySettings::FindSCProxyPort(const nsACString& aScheme,

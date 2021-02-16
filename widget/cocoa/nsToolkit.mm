@@ -62,7 +62,7 @@ void nsToolkit::PostSleepWakeNotification(const char* aNotification) {
 // http://developer.apple.com/documentation/DeviceDrivers/Conceptual/IOKitFundamentals/PowerMgmt/chapter_10_section_3.html
 static void ToolkitSleepWakeCallback(void* refCon, io_service_t service, natural_t messageType,
                                      void* messageArgument) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   switch (messageType) {
     case kIOMessageSystemWillSleep:
@@ -86,7 +86,7 @@ static void ToolkitSleepWakeCallback(void* refCon, io_service_t service, natural
       break;
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 nsresult nsToolkit::RegisterForSleepWakeNotifications() {
@@ -112,7 +112,7 @@ nsresult nsToolkit::RegisterForSleepWakeNotifications() {
 }
 
 void nsToolkit::RemoveSleepWakeNotifications() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (mSleepWakeNotificationRLS) {
     ::IODeregisterForSystemPower(&mPowerNotifier);
@@ -122,7 +122,7 @@ void nsToolkit::RemoveSleepWakeNotifications() {
     mSleepWakeNotificationRLS = nullptr;
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 // Cocoa Firefox's use of custom context menus requires that we explicitly
@@ -133,7 +133,7 @@ void nsToolkit::RemoveSleepWakeNotifications() {
 // dismiss a context menu when a mouseDown happens in another process (bmo
 // bug 339945).
 void nsToolkit::MonitorAllProcessMouseEvents() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   // Don't do this for apps that use native context menus.
 #ifdef MOZ_USE_NATIVE_POPUP_WINDOWS
@@ -181,18 +181,18 @@ void nsToolkit::MonitorAllProcessMouseEvents() {
                                       }];
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 void nsToolkit::StopMonitoringAllProcessMouseEvents() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (mAllProcessMouseMonitor != nil) {
     [NSEvent removeMonitor:mAllProcessMouseMonitor];
     mAllProcessMouseMonitor = nil;
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 // Return the nsToolkit instance.  If a toolkit does not yet exist, then one

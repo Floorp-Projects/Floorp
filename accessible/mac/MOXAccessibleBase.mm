@@ -221,7 +221,7 @@ mozilla::LogModule* GetMacAccessibilityLog() {
 }
 
 - (void)accessibilitySetValue:(id)value forAttribute:(NSString*)attribute {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if ([self isExpired]) {
     return;
@@ -249,7 +249,7 @@ mozilla::LogModule* GetMacAccessibilityLog() {
     }
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 - (NSArray*)accessibilityActionNames {
@@ -275,7 +275,7 @@ mozilla::LogModule* GetMacAccessibilityLog() {
 }
 
 - (void)accessibilityPerformAction:(NSString*)action {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if ([self isExpired]) {
     return;
@@ -291,7 +291,7 @@ mozilla::LogModule* GetMacAccessibilityLog() {
     }
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 - (NSString*)accessibilityActionDescription:(NSString*)action {
