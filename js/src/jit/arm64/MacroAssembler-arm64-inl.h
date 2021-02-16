@@ -441,6 +441,10 @@ void MacroAssembler::mul32(Register src1, Register src2, Register dest,
   }
 }
 
+void MacroAssembler::mulPtr(Register rhs, Register srcDest) {
+  Mul(ARMRegister(srcDest, 64), ARMRegister(srcDest, 64), ARMRegister(rhs, 64));
+}
+
 void MacroAssembler::mul64(Imm64 imm, const Register64& dest) {
   vixl::UseScratchRegisterScope temps(this);
   const ARMRegister scratch64 = temps.AcquireX();
