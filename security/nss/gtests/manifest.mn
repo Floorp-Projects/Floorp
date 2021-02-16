@@ -41,6 +41,7 @@ certdb_gtest: common
 certhigh_gtest: common
 cryptohi_gtest: common
 der_gtest: common
+freebl_gtest: common
 pk11_gtest: common pkcs11testmodule
 smime_gtest: common
 softoken_gtest: common
