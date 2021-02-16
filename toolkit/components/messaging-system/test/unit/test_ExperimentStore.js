@@ -1,6 +1,6 @@
 "use strict";
 
-const SYNC_DATA_PREF_BRANCH = "nimbus.syncdatastore.";
+const SYNC_DATA_PREF = "messaging-system.syncdatastore.data";
 
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/MSTestUtils.jsm"
@@ -16,15 +16,6 @@ add_task(async function test_sharedDataMap_key() {
   // where we store experiments
   Assert.ok(store._sharedDataKey, "Make sure it's defined");
 });
-
-// Experiment store caches in prefs Enrollments for fast sync access
-function cleanupStorePrefCache() {
-  try {
-    Services.prefs.deleteBranch(SYNC_DATA_PREF_BRANCH);
-  } catch (e) {
-    // Expected if nothing is cached
-  }
-}
 
 add_task(async function test_usageBeforeInitialization() {
   const store = ExperimentFakes.store();
@@ -75,7 +66,7 @@ add_task(async function test_event_updates_main() {
   await store.init();
 
   // Set update cb
-  store.on(`update:${experiment.branch.feature.featureId}`, updateEventCbStub);
+  store.on("update:aboutwelcome", updateEventCbStub);
 
   store.addExperiment(experiment);
   store.updateExperiment("foo", { active: false });
@@ -218,8 +209,7 @@ add_task(async function test_updateExperiment() {
 });
 
 add_task(async function test_sync_access_before_init() {
-  cleanupStorePrefCache();
-
+  Services.prefs.clearUserPref(SYNC_DATA_PREF);
   let store = ExperimentFakes.store();
 
   Assert.equal(store.getAll().length, 0, "Start with an empty store");
@@ -230,31 +220,23 @@ add_task(async function test_sync_access_before_init() {
   await store.init();
   store.addExperiment(syncAccessExp);
 
-  let prefValue;
-  try {
-    prefValue = JSON.parse(
-      Services.prefs.getStringPref(`${SYNC_DATA_PREF_BRANCH}newtab`)
-    );
-  } catch (e) {
-    Assert.ok(false, "Failed to parse pref value");
-  }
+  let prefValue = JSON.parse(Services.prefs.getStringPref(SYNC_DATA_PREF));
 
-  Assert.ok(prefValue, "Parsed stored experiment");
-  Assert.equal(prefValue.slug, syncAccessExp.slug, "Got back the experiment");
+  Assert.ok(Object.keys(prefValue).length === 1, "Parsed stored experiment");
+  Assert.equal(
+    prefValue.foo.slug,
+    syncAccessExp.slug,
+    "Got back the experiment"
+  );
 
   // New un-initialized store that should read the pref value
   store = ExperimentFakes.store();
 
-  Assert.equal(
-    store.getExperimentForFeature("newtab").slug,
-    "foo",
-    "Returns experiment from pref"
-  );
+  Assert.equal(store.getAll().length, 1, "Returns experiment from pref");
 });
 
 add_task(async function test_sync_access_update() {
-  cleanupStorePrefCache();
-
+  Services.prefs.clearUserPref(SYNC_DATA_PREF);
   let store = ExperimentFakes.store();
   let experiment = ExperimentFakes.experiment("foo", {
     feature: { featureId: "aboutwelcome", enabled: true },
@@ -271,19 +253,14 @@ add_task(async function test_sync_access_update() {
   });
 
   store = ExperimentFakes.store();
-  let cachedExperiment = store.getExperimentForFeature("aboutwelcome");
+  let experiments = store.getAll();
 
-  Assert.ok(cachedExperiment, "Got back 1 experiment");
-  Assert.equal(
-    cachedExperiment.branch.feature.value,
-    "bar",
-    "Got updated value"
-  );
+  Assert.equal(experiments.length, 1, "Got back 1 experiment");
+  Assert.equal(experiments[0].branch.feature.value, "bar", "Got updated value");
 });
 
 add_task(async function test_sync_features_only() {
-  cleanupStorePrefCache();
-
+  Services.prefs.clearUserPref(SYNC_DATA_PREF);
   let store = ExperimentFakes.store();
   let experiment = ExperimentFakes.experiment("foo", {
     feature: { featureId: "cfr", enabled: true },
@@ -298,8 +275,7 @@ add_task(async function test_sync_features_only() {
 });
 
 add_task(async function test_sync_access_unenroll() {
-  cleanupStorePrefCache();
-
+  Services.prefs.clearUserPref(SYNC_DATA_PREF);
   let store = ExperimentFakes.store();
   let experiment = ExperimentFakes.experiment("foo", {
     feature: { featureId: "aboutwelcome", enabled: true },
@@ -318,11 +294,10 @@ add_task(async function test_sync_access_unenroll() {
 });
 
 add_task(async function test_sync_access_unenroll_2() {
-  cleanupStorePrefCache();
-
+  Services.prefs.clearUserPref(SYNC_DATA_PREF);
   let store = ExperimentFakes.store();
   let experiment1 = ExperimentFakes.experiment("foo", {
-    feature: { featureId: "newtab", enabled: true },
+    feature: { featureId: "aboutwelcome", enabled: true },
   });
   let experiment2 = ExperimentFakes.experiment("bar", {
     feature: { featureId: "aboutwelcome", enabled: true },
@@ -335,39 +310,24 @@ add_task(async function test_sync_access_unenroll_2() {
 
   Assert.equal(store.getAll().length, 2, "2/2 experiments");
 
-  let other_store = ExperimentFakes.store();
-
-  Assert.ok(
-    other_store.getExperimentForFeature("aboutwelcome"),
-    "Fetches experiment from pref cache even before init (aboutwelcome)"
-  );
-
   store.updateExperiment("bar", { active: false });
-
-  Assert.ok(
-    other_store.getExperimentForFeature("newtab").slug,
-    "Fetches experiment from pref cache even before init (newtab)"
-  );
-  Assert.ok(
-    !other_store.getExperimentForFeature("aboutwelcome")?.slug,
-    "Experiment was updated and should not be found"
+  let other_store = ExperimentFakes.store();
+  Assert.equal(
+    other_store.getAll().length,
+    1,
+    "Unenrolled from 1/2 experiments"
   );
 
   store.updateExperiment("foo", { active: false });
-  Assert.ok(
-    !other_store.getExperimentForFeature("newtab")?.slug,
+  Assert.equal(
+    other_store.getAll().length,
+    0,
     "Unenrolled from 2/2 experiments"
   );
 
   Assert.equal(
-    Services.prefs.getStringPref(`${SYNC_DATA_PREF_BRANCH}newtab`, "").length,
-    0,
-    "Cleared pref 1"
-  );
-  Assert.equal(
-    Services.prefs.getStringPref(`${SYNC_DATA_PREF_BRANCH}aboutwelcome`, "")
-      .length,
-    0,
-    "Cleared pref 2"
+    Services.prefs.getStringPref(SYNC_DATA_PREF),
+    "{}",
+    "Empty store"
   );
 });
