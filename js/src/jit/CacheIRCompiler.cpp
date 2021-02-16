@@ -4016,6 +4016,48 @@ bool CacheIRCompiler::emitArrayBufferViewByteOffsetDoubleResult(
   return true;
 }
 
+bool CacheIRCompiler::emitTypedArrayByteLengthInt32Result(ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
+  AutoScratchRegister scratch2(allocator, masm);
+  Register obj = allocator.useRegister(masm, objId);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.loadArrayBufferViewLengthIntPtr(obj, scratch1);
+  masm.guardNonNegativeIntPtrToInt32(scratch1, failure->label());
+  masm.typedArrayElementSize(obj, scratch2);
+
+  masm.branchMul32(Assembler::Overflow, scratch2.get(), scratch1,
+                   failure->label());
+
+  masm.tagValue(JSVAL_TYPE_INT32, scratch1, output.valueReg());
+  return true;
+}
+
+bool CacheIRCompiler::emitTypedArrayByteLengthDoubleResult(ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
+  AutoScratchRegister scratch2(allocator, masm);
+  Register obj = allocator.useRegister(masm, objId);
+
+  masm.loadArrayBufferViewLengthIntPtr(obj, scratch1);
+  masm.typedArrayElementSize(obj, scratch2);
+  masm.mulPtr(scratch2, scratch1);
+
+  ScratchDoubleScope fpscratch(masm);
+  masm.convertIntPtrToDouble(scratch1, fpscratch);
+  masm.boxDouble(fpscratch, output.valueReg(), fpscratch);
+  return true;
+}
+
 bool CacheIRCompiler::emitTypedArrayElementSizeResult(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 

@@ -1761,7 +1761,9 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArray(HandleObject obj,
   }
 
   bool isLength = JSID_IS_ATOM(id, cx_->names().length);
-  if (!isLength && !JSID_IS_ATOM(id, cx_->names().byteOffset)) {
+  bool isByteOffset = JSID_IS_ATOM(id, cx_->names().byteOffset);
+  if (!isLength && !isByteOffset &&
+      !JSID_IS_ATOM(id, cx_->names().byteLength)) {
     return AttachDecision::NoAction;
   }
 
@@ -1778,8 +1780,12 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArray(HandleObject obj,
     if (!TypedArrayObject::isOriginalLengthGetter(fun.native())) {
       return AttachDecision::NoAction;
     }
-  } else {
+  } else if (isByteOffset) {
     if (!TypedArrayObject::isOriginalByteOffsetGetter(fun.native())) {
+      return AttachDecision::NoAction;
+    }
+  } else {
+    if (!TypedArrayObject::isOriginalByteLengthGetter(fun.native())) {
       return AttachDecision::NoAction;
     }
   }
@@ -1797,13 +1803,20 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArray(HandleObject obj,
       writer.loadArrayBufferViewLengthDoubleResult(objId);
     }
     trackAttached("TypedArrayLength");
-  } else {
+  } else if (isByteOffset) {
     if (tarr->byteOffset().get() <= INT32_MAX) {
       writer.arrayBufferViewByteOffsetInt32Result(objId);
     } else {
       writer.arrayBufferViewByteOffsetDoubleResult(objId);
     }
     trackAttached("TypedArrayByteOffset");
+  } else {
+    if (tarr->byteLength().get() <= INT32_MAX) {
+      writer.typedArrayByteLengthInt32Result(objId);
+    } else {
+      writer.typedArrayByteLengthDoubleResult(objId);
+    }
+    trackAttached("TypedArrayByteLength");
   }
   writer.returnFromIC();
 

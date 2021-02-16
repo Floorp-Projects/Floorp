@@ -992,6 +992,20 @@
   args:
     obj: ObjId
 
+- name: TypedArrayByteLengthInt32Result
+  shared: true
+  transpile: true
+  cost_estimate: 2
+  args:
+    obj: ObjId
+
+- name: TypedArrayByteLengthDoubleResult
+  shared: true
+  transpile: true
+  cost_estimate: 2
+  args:
+    obj: ObjId
+
 - name: TypedArrayElementSizeResult
   shared: true
   transpile: true
