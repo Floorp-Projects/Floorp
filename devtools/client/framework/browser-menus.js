@@ -269,9 +269,11 @@ function addTopLevelItems(doc) {
   // There is still "Page Source" menuitem hardcoded into browser.xhtml. Instead
   // of manually inserting everything around it, move it to the expected
   // position.
-  const pageSource = doc.getElementById("menu_pageSource");
-  const endSeparator = doc.getElementById("devToolsEndSeparator");
-  menu.insertBefore(pageSource, endSeparator);
+  const pageSourceMenu = doc.getElementById("menu_pageSource");
+  const extensionsForDevelopersMenu = doc.getElementById(
+    "menu_extensionsForDevelopers"
+  );
+  menu.insertBefore(pageSourceMenu, extensionsForDevelopersMenu);
 }
 
 /**
