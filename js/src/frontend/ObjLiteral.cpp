@@ -7,22 +7,25 @@
 
 #include "frontend/ObjLiteral.h"
 
+#include "mozilla/HashTable.h"  // mozilla::HashSet
+
 #include "NamespaceImports.h"  // ValueVector
 
 #include "builtin/Array.h"                // NewDenseCopiedArray
 #include "frontend/CompilationStencil.h"  // frontend::CompilationAtomCache
 #include "frontend/ParserAtom.h"          // frontend::ParserAtomTable
-#include "gc/AllocKind.h"                 // gc::AllocKind
-#include "gc/Rooting.h"                   // RootedPlainObject
-#include "js/Id.h"                        // INT_TO_JSID
-#include "js/RootingAPI.h"                // Rooted
-#include "js/TypeDecls.h"                 // RootedId, RootedValue
-#include "vm/JSAtom.h"                    // JSAtom
-#include "vm/JSONPrinter.h"               // js::JSONPrinter
-#include "vm/NativeObject.h"              // NativeDefineDataProperty
-#include "vm/ObjectGroup.h"               // TenuredObject
-#include "vm/PlainObject.h"               // PlainObject
-#include "vm/Printer.h"                   // js::Fprinter
+#include "frontend/TaggedParserAtomIndexHasher.h"  // TaggedParserAtomIndexHasher
+#include "gc/AllocKind.h"                          // gc::AllocKind
+#include "gc/Rooting.h"                            // RootedPlainObject
+#include "js/Id.h"                                 // INT_TO_JSID
+#include "js/RootingAPI.h"                         // Rooted
+#include "js/TypeDecls.h"                          // RootedId, RootedValue
+#include "vm/JSAtom.h"                             // JSAtom
+#include "vm/JSONPrinter.h"                        // js::JSONPrinter
+#include "vm/NativeObject.h"                       // NativeDefineDataProperty
+#include "vm/ObjectGroup.h"                        // TenuredObject
+#include "vm/PlainObject.h"                        // PlainObject
+#include "vm/Printer.h"                            // js::Fprinter
 
 #include "gc/ObjectKind-inl.h"    // gc::GetGCObjectKind
 #include "vm/JSAtom-inl.h"        // AtomToId
@@ -30,6 +33,50 @@
 #include "vm/NativeObject-inl.h"  // AddDataPropertyNonDelegate
 
 namespace js {
+
+bool ObjLiteralWriter::checkForDuplicatedNames(JSContext* cx) {
+  if (!mightContainDuplicatePropertyNames_) {
+    return true;
+  }
+
+  // If possible duplicate property names are detected by bloom-filter,
+  // check again with hash-set.
+
+  mozilla::HashSet<frontend::TaggedParserAtomIndex,
+                   frontend::TaggedParserAtomIndexHasher>
+      propNameSet;
+
+  if (!propNameSet.reserve(propertyCount_)) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+
+  ObjLiteralReader reader(getCode());
+
+  while (true) {
+    ObjLiteralInsn insn;
+    if (!reader.readInsn(&insn)) {
+      break;
+    }
+
+    if (insn.getKey().isArrayIndex()) {
+      continue;
+    }
+
+    auto propName = insn.getKey().getAtomIndex();
+
+    auto p = propNameSet.lookupForAdd(propName);
+    if (p) {
+      flags_ += ObjLiteralFlag::HasIndexOrDuplicatePropName;
+      break;
+    }
+
+    // Already reserved above and doesn't fail.
+    MOZ_ALWAYS_TRUE(propNameSet.add(p, propName));
+  }
+
+  return true;
+}
 
 static void InterpretObjLiteralValue(
     JSContext* cx, const frontend::CompilationAtomCache& atomCache,
