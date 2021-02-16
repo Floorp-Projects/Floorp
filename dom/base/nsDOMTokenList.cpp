@@ -73,7 +73,7 @@ void nsDOMTokenList::RemoveDuplicates(const nsAttrValue* aAttr) {
     return;
   }
 
-  BloomFilter<8, nsAtom> filter;
+  CountingBloomFilter<8, nsAtom> filter;
   AtomArray* array = aAttr->GetAtomArrayValue();
   for (uint32_t i = 0; i < array->Length(); i++) {
     nsAtom* atom = array->ElementAt(i);

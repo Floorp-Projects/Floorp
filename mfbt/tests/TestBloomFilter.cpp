@@ -6,11 +6,12 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/BloomFilter.h"
+#include "mozilla/UniquePtr.h"
 
 #include <stddef.h>
 #include <stdio.h>
 
-using mozilla::BloomFilter;
+using mozilla::CountingBloomFilter;
 
 class FilterChecker {
  public:
@@ -23,7 +24,8 @@ class FilterChecker {
 };
 
 int main() {
-  BloomFilter<12, FilterChecker>* filter = new BloomFilter<12, FilterChecker>();
+  const mozilla::UniquePtr filter =
+      mozilla::MakeUnique<CountingBloomFilter<12, FilterChecker>>();
   MOZ_RELEASE_ASSERT(filter);
 
   FilterChecker one(1);
