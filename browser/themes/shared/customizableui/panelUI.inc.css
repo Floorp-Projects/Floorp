@@ -2382,8 +2382,8 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   position: relative; /* Ensure there is a stacking context for the dropdown arrow. */
   width: 100%;
   min-height: 24px;
-  background-color: #EDEDF0;
-  color: inherit !important;
+  background-color: #ededf0;
+  color: #0c0c0d !important;
   border: 1px solid transparent;
   border-radius: 2px;
   font-weight: 400;
