@@ -3329,12 +3329,14 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
   // 2. search pref fonts
   gfxFont* font = WhichPrefFontSupportsChar(aCh, aNextCh, presentation);
   if (font) {
-    if (PrefersColor(presentation)) {
-      // For emoji, always accept the font from preferences even if it isn't
-      // actually a color-emoji font, as some users may explicitly choose to
-      // set their emoji font preference to a monochrome font like Symbola.
-      // So the font.name-list.emoji preference takes precedence over the
-      // Unicode presentation style here.
+    if (PrefersColor(presentation) &&
+        Preferences::HasUserValue("font.name-list.emoji")) {
+      // For emoji, always accept the font from preferences if it's explicitly
+      // user-set, even if it isn't actually a color-emoji font, as some users
+      // may want to set their emoji font preference to a monochrome font like
+      // Symbola.
+      // So a user-provided font.name-list.emoji preference takes precedence
+      // over the Unicode presentation style here.
       RefPtr<gfxFont> autoRefDeref(candidateFont);
       *aMatchType = FontMatchType::Kind::kPrefsFallback;
       return font;
