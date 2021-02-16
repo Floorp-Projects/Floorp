@@ -177,12 +177,12 @@ OSXNotificationInfo::~OSXNotificationInfo() {
 }
 
 static id<FakeNSUserNotificationCenter> GetNotificationCenter() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   Class c = NSClassFromString(@"NSUserNotificationCenter");
   return [c performSelector:@selector(defaultUserNotificationCenter)];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 OSXNotificationCenter::OSXNotificationCenter() {

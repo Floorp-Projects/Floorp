@@ -49,14 +49,14 @@ static const nsCursor sCustomCursor = eCursorCount;
 @implementation nsCursorManager
 
 + (nsCursorManager*)sharedInstance {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (!gInstance) {
     gInstance = [[nsCursorManager alloc] init];
   }
   return gInstance;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 + (void)dispose {
@@ -69,7 +69,7 @@ static const nsCursor sCustomCursor = eCursorCount;
 }
 
 + (nsMacCursor*)createCursor:(enum nsCursor)aCursor {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   switch (aCursor) {
     SEL cursorSelector;
@@ -183,18 +183,18 @@ static const nsCursor sCustomCursor = eCursorCount;
       return [nsMacCursor cursorWithCursor:[NSCursor arrowCursor] type:aCursor];
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (id)init {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if ((self = [super init])) {
     mCursors = [[NSMutableDictionary alloc] initWithCapacity:25];
   }
   return self;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (nsresult)setCursor:(enum nsCursor)aCursor {
@@ -291,7 +291,7 @@ static const nsCursor sCustomCursor = eCursorCount;
 }
 
 - (nsMacCursor*)getCursor:(enum nsCursor)aCursor {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   nsMacCursor* result = [mCursors objectForKey:[NSNumber numberWithInt:aCursor]];
   if (!result) {
@@ -300,7 +300,7 @@ static const nsCursor sCustomCursor = eCursorCount;
   }
   return result;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (void)dealloc {

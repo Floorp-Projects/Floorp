@@ -455,7 +455,7 @@ nsresult nsMenuX::GetEnabled(bool* aIsEnabled) {
 }
 
 GeckoNSMenu* nsMenuX::CreateMenuWithGeckoString(nsString& menuTitle) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSString* title = [NSString stringWithCharacters:(UniChar*)menuTitle.get()
                                             length:menuTitle.Length()];
@@ -473,7 +473,7 @@ GeckoNSMenu* nsMenuX::CreateMenuWithGeckoString(nsString& menuTitle) {
 
   return myMenu;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 void nsMenuX::LoadMenuItem(nsIContent* inMenuItemContent) {
@@ -761,7 +761,7 @@ nsresult nsMenuX::SetupIcon() {
 @implementation MenuDelegate
 
 - (id)initWithGeckoMenu:(nsMenuX*)geckoMenu {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if ((self = [super init])) {
     NS_ASSERTION(geckoMenu,
@@ -770,7 +770,7 @@ nsresult nsMenuX::SetupIcon() {
   }
   return self;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (void)menu:(NSMenu*)menu willHighlightItem:(NSMenuItem*)item {
@@ -870,7 +870,7 @@ static NSMutableDictionary* gShadowKeyEquivDB = nil;
 @implementation KeyEquivDBItem
 
 - (id)initWithItem:(NSMenuItem*)aItem table:(NSMapTable*)aTable {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (!gShadowKeyEquivDB) {
     gShadowKeyEquivDB = [[NSMutableDictionary alloc] init];
@@ -886,7 +886,7 @@ static NSMutableDictionary* gShadowKeyEquivDB = nil;
   }
   return self;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (void)dealloc {

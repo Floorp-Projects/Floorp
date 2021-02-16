@@ -54,14 +54,14 @@ static nsIContent* sQuitItemContent = nullptr;
 @implementation ApplicationMenuDelegate
 
 - (id)initWithApplicationMenu:(nsMenuBarX*)aApplicationMenu {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if ((self = [super init])) {
     mApplicationMenu = aApplicationMenu;
   }
   return self;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (void)menuWillOpen:(NSMenu*)menu {
@@ -524,7 +524,7 @@ void nsMenuBarX::AquifyMenuBar() {
 // for creating menu items destined for the Application menu
 NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString& nodeID,
                                                 SEL action, int tag, NativeMenuItemTarget* target) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   RefPtr<mozilla::dom::Document> doc = inMenu->Content()->GetUncomposedDoc();
   if (!doc) {
@@ -599,7 +599,7 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString
 
   return newMenuItem;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 // build the Application menu shared by all menu bars

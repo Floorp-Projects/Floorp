@@ -47,7 +47,7 @@ using namespace mozilla::a11y;
 @implementation mozAccessible
 
 - (id)initWithAccessible:(AccessibleOrProxy)aAccOrProxy {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
   MOZ_ASSERT(!aAccOrProxy.IsNull(), "Cannot init mozAccessible with null");
   if ((self = [super init])) {
     mGeckoAccessible = aAccOrProxy;
@@ -56,7 +56,7 @@ using namespace mozilla::a11y;
 
   return self;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (void)dealloc {
@@ -100,12 +100,12 @@ using namespace mozilla::a11y;
 }
 
 - (id)childAt:(uint32_t)i {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   AccessibleOrProxy child = mGeckoAccessible.ChildAt(i);
   return !child.IsNull() ? GetNativeFromGeckoAccessible(child) : nil;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 static const uint64_t kCachedStates =
@@ -299,7 +299,7 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
 }
 
 - (id<mozAccessible>)moxParent {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
   if ([self isExpired]) {
     return nil;
   }
@@ -329,7 +329,7 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
 
   return GetObjectOrRepresentedView(nativeParent);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 // gets all our native children lazily, including those that are ignored.
@@ -616,7 +616,7 @@ struct RoleDescrComparator {
 }
 
 - (NSString*)moxTitle {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   // In some special cases we provide the name in the label (AXDescription).
   if ([self providesLabelNotTitle]) {
@@ -632,11 +632,11 @@ struct RoleDescrComparator {
 
   return nsCocoaUtils::ToNSString(title);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (id)moxValue {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   nsAutoString value;
   if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
@@ -647,11 +647,11 @@ struct RoleDescrComparator {
 
   return nsCocoaUtils::ToNSString(value);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (NSString*)moxHelp {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   // What needs to go here is actually the accDescription of an item.
   // The MSAA acc_help method has nothing to do with this one.
@@ -664,11 +664,11 @@ struct RoleDescrComparator {
 
   return nsCocoaUtils::ToNSString(helpText);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (NSWindow*)moxWindow {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   // Get a pointer to the native window (NSWindow) we reside in.
   NSWindow* nativeWindow = nil;
@@ -686,7 +686,7 @@ struct RoleDescrComparator {
   MOZ_ASSERT(nativeWindow, "Couldn't get native window");
   return nativeWindow;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (NSNumber*)moxEnabled {
@@ -844,7 +844,7 @@ struct RoleDescrComparator {
 
 #ifndef RELEASE_OR_BETA
 - (NSString*)moxMozDebugDescription {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSMutableString* domInfo = [NSMutableString string];
   if (NSString* tagName = utils::GetAccAttr(self, "tag")) {
@@ -865,7 +865,7 @@ struct RoleDescrComparator {
                                     NSStringFromClass([self class]), self,
                                     [self moxRole], domInfo];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 #endif
 
