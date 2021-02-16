@@ -21,17 +21,6 @@
 
 void nsObjCExceptionLog(NSException* aException);
 
-#define NS_OBJC_TRY_EXPR_ABORT(_e)  \
-  ({                                \
-    typeof(_e) _tmp;                \
-    @try {                          \
-      _tmp = (_e);                  \
-    } @catch (NSException * _exn) { \
-      nsObjCExceptionLog(_exn);     \
-    }                               \
-    _tmp;                           \
-  })
-
 // For wrapping blocks of Obj-C calls. Does not actually terminate.
 #define NS_OBJC_BEGIN_TRY_ABORT_BLOCK @try {
 #define NS_OBJC_END_TRY_ABORT_BLOCK \
