@@ -8879,7 +8879,7 @@ static inline bool ShouldEscape(nsIContent* aParent) {
       nsGkAtoms::style,     nsGkAtoms::script,  nsGkAtoms::xmp,
       nsGkAtoms::iframe,    nsGkAtoms::noembed, nsGkAtoms::noframes,
       nsGkAtoms::plaintext, nsGkAtoms::noscript};
-  static mozilla::CountingBloomFilter<12, nsAtom> sFilter;
+  static mozilla::BitBloomFilter<12, nsAtom> sFilter;
   static bool sInitialized = false;
   if (!sInitialized) {
     sInitialized = true;
