@@ -535,10 +535,6 @@ RefPtr<StyleSheet> GlobalStyleSheetCache::LoadSheet(
 
   if (!gCSSLoader) {
     gCSSLoader = new Loader;
-    if (!gCSSLoader) {
-      ErrorLoadingSheet(aURI, "no Loader", eCrash);
-      return nullptr;
-    }
   }
 
   // Note: The parallel parsing code assume that UA sheets are always loaded

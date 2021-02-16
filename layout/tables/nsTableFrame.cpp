@@ -6314,7 +6314,6 @@ bool BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect) {
 
   Reset();
   mBlockDirInfo = new BCBlockDirSeg[mDamageArea.ColCount() + 1];
-  if (!mBlockDirInfo) return false;
   return true;
 }
 

@@ -1872,7 +1872,6 @@ nsTableRowGroupFrame::FrameCursorData* nsTableRowGroupFrame::SetupRowCursor() {
   }
 
   FrameCursorData* data = new FrameCursorData();
-  if (!data) return nullptr;
   SetProperty(RowCursorProperty(), data);
   AddStateBits(NS_ROWGROUP_HAS_ROW_CURSOR);
   return data;
