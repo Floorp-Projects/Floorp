@@ -371,7 +371,7 @@ AttachDecision GetPropIRGenerator::tryAttachStub() {
     ObjOperandId objId = writer.guardToObject(valId);
     if (nameOrSymbol) {
       TRY_ATTACH(tryAttachObjectLength(obj, objId, id));
-      TRY_ATTACH(tryAttachTypedArrayLength(obj, objId, id));
+      TRY_ATTACH(tryAttachTypedArray(obj, objId, id));
       TRY_ATTACH(tryAttachNative(obj, objId, id, receiverId));
       TRY_ATTACH(tryAttachModuleNamespace(obj, objId, id));
       TRY_ATTACH(tryAttachWindowProxy(obj, objId, id));
@@ -1743,13 +1743,9 @@ AttachDecision GetPropIRGenerator::tryAttachObjectLength(HandleObject obj,
   return AttachDecision::NoAction;
 }
 
-AttachDecision GetPropIRGenerator::tryAttachTypedArrayLength(HandleObject obj,
-                                                             ObjOperandId objId,
-                                                             HandleId id) {
-  if (!JSID_IS_ATOM(id, cx_->names().length)) {
-    return AttachDecision::NoAction;
-  }
-
+AttachDecision GetPropIRGenerator::tryAttachTypedArray(HandleObject obj,
+                                                       ObjOperandId objId,
+                                                       HandleId id) {
   if (!obj->is<TypedArrayObject>()) {
     return AttachDecision::NoAction;
   }
@@ -1763,6 +1759,11 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArrayLength(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
+  bool isLength = JSID_IS_ATOM(id, cx_->names().length);
+  if (!isLength && !JSID_IS_ATOM(id, cx_->names().byteOffset)) {
+    return AttachDecision::NoAction;
+  }
+
   RootedShape shape(cx_);
   RootedNativeObject holder(cx_);
   NativeGetPropCacheability type =
@@ -1772,8 +1773,14 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArrayLength(HandleObject obj,
   }
 
   JSFunction& fun = shape->getterValue().toObject().as<JSFunction>();
-  if (!TypedArrayObject::isOriginalLengthGetter(fun.native())) {
-    return AttachDecision::NoAction;
+  if (isLength) {
+    if (!TypedArrayObject::isOriginalLengthGetter(fun.native())) {
+      return AttachDecision::NoAction;
+    }
+  } else {
+    if (!TypedArrayObject::isOriginalByteOffsetGetter(fun.native())) {
+      return AttachDecision::NoAction;
+    }
   }
 
   auto* tarr = &obj->as<TypedArrayObject>();
@@ -1782,14 +1789,23 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArrayLength(HandleObject obj,
   // Emit all the normal guards for calling this native, but specialize
   // callNativeGetterResult.
   EmitCallGetterResultGuards(writer, obj, holder, shape, objId, mode_);
-  if (tarr->length().get() <= INT32_MAX) {
-    writer.loadTypedArrayLengthInt32Result(objId);
+  if (isLength) {
+    if (tarr->length().get() <= INT32_MAX) {
+      writer.loadTypedArrayLengthInt32Result(objId);
+    } else {
+      writer.loadTypedArrayLengthDoubleResult(objId);
+    }
+    trackAttached("TypedArrayLength");
   } else {
-    writer.loadTypedArrayLengthDoubleResult(objId);
+    if (tarr->byteOffset().get() <= INT32_MAX) {
+      writer.typedArrayByteOffsetInt32Result(objId);
+    } else {
+      writer.typedArrayByteOffsetDoubleResult(objId);
+    }
+    trackAttached("TypedArrayByteOffset");
   }
   writer.returnFromIC();
 
-  trackAttached("TypedArrayLength");
   return AttachDecision::Attach;
 }
 
