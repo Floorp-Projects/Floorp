@@ -77,7 +77,7 @@ ScreenHelperCocoa::~ScreenHelperCocoa() {
 }
 
 static already_AddRefed<Screen> MakeScreen(NSScreen* aScreen) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   DesktopToLayoutDeviceScale contentsScaleFactor(nsCocoaUtils::GetBackingScaleFactor(aScreen));
   CSSToLayoutDeviceScale defaultCssScaleFactor(contentsScaleFactor.scale);
@@ -105,7 +105,7 @@ static already_AddRefed<Screen> MakeScreen(NSScreen* aScreen) {
                                      defaultCssScaleFactor, dpi);
   return screen.forget();
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nullptr);
+  NS_OBJC_END_TRY_BLOCK_RETURN(nullptr);
 }
 
 void ScreenHelperCocoa::RefreshScreens() {

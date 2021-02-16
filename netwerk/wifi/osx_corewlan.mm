@@ -17,7 +17,7 @@
 #include "nsWifiAccessPoint.h"
 
 nsresult GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint>& accessPoints) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   accessPoints.Clear();
 
@@ -101,5 +101,5 @@ nsresult GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint>& accessPoints) {
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NS_ERROR_NOT_AVAILABLE);
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_NOT_AVAILABLE);
 }

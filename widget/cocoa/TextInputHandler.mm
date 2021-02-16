@@ -1700,7 +1700,7 @@ TextInputHandler::TextInputHandler(nsChildView* aWidget, NSView<mozView>* aNativ
 TextInputHandler::~TextInputHandler() { [mView uninstallTextInputHandler]; }
 
 bool TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent, uint32_t aUniqueId) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (Destroyed()) {
     MOZ_LOG(gLog, LogLevel::Info,
@@ -1855,7 +1855,7 @@ bool TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent, uint32_t aUniqu
   MOZ_LOG(gLog, LogLevel::Info, (""));
   return currentKeyEvent->IsDefaultPrevented();
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
+  NS_OBJC_END_TRY_BLOCK_RETURN(false);
 }
 
 void TextInputHandler::HandleKeyUpEvent(NSEvent* aNativeEvent) {
@@ -2453,7 +2453,7 @@ void TextInputHandler::InsertText(NSAttributedString* aAttrString, NSRange* aRep
 }
 
 bool TextInputHandler::HandleCommand(Command aCommand) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (Destroyed()) {
     return false;
@@ -2843,7 +2843,7 @@ bool TextInputHandler::HandleCommand(Command aCommand) {
 
   return false;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
+  NS_OBJC_END_TRY_BLOCK_RETURN(false);
 }
 
 bool TextInputHandler::DoCommandBySelector(const char* aSelector) {
@@ -3383,7 +3383,7 @@ TextRangeType IMEInputHandler::ConvertToTextRangeType(uint32_t aUnderlineStyle,
 }
 
 uint32_t IMEInputHandler::GetRangeCount(NSAttributedString* aAttrString) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   // Iterate through aAttrString for the NSUnderlineStyleAttributeName and
   // count the different segments adjusting limitRange as we go.
@@ -3406,7 +3406,7 @@ uint32_t IMEInputHandler::GetRangeCount(NSAttributedString* aAttrString) {
 
   return count;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
+  NS_OBJC_END_TRY_BLOCK_RETURN(0);
 }
 
 already_AddRefed<mozilla::TextRangeArray> IMEInputHandler::CreateTextRangeArray(
@@ -3525,7 +3525,7 @@ bool IMEInputHandler::DispatchCompositionStartEvent() {
 bool IMEInputHandler::DispatchCompositionChangeEvent(const nsString& aText,
                                                      NSAttributedString* aAttrString,
                                                      NSRange& aSelectedRange) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   MOZ_LOG(gLog, LogLevel::Info,
           ("%p IMEInputHandler::DispatchCompositionChangeEvent, "
@@ -3592,11 +3592,11 @@ bool IMEInputHandler::DispatchCompositionChangeEvent(const nsString& aText,
   // FYI: compositionstart may cause committing composition by the webapp.
   return mIsIMEComposing;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
+  NS_OBJC_END_TRY_BLOCK_RETURN(false);
 }
 
 bool IMEInputHandler::DispatchCompositionCommitEvent(const nsAString* aCommitString) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   MOZ_LOG(gLog, LogLevel::Info,
           ("%p IMEInputHandler::DispatchCompositionCommitEvent, "
@@ -3659,7 +3659,7 @@ bool IMEInputHandler::DispatchCompositionCommitEvent(const nsAString* aCommitStr
 
   return true;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
+  NS_OBJC_END_TRY_BLOCK_RETURN(false);
 }
 
 bool IMEInputHandler::MaybeDispatchCurrentKeydownEvent(bool aIsProcessedByIME) {
@@ -3737,7 +3737,7 @@ bool IMEInputHandler::MaybeDispatchCurrentKeydownEvent(bool aIsProcessedByIME) {
 
   return true;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
+  NS_OBJC_END_TRY_BLOCK_RETURN(false);
 }
 
 void IMEInputHandler::InsertTextAsCommittingComposition(NSAttributedString* aAttrString,
@@ -4067,7 +4067,7 @@ NSRange IMEInputHandler::MarkedRange() {
 }
 
 NSRange IMEInputHandler::SelectedRange() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   MOZ_LOG(gLog, LogLevel::Info,
           ("%p IMEInputHandler::SelectedRange, Destroyed()=%s, mSelectedRange={ "
@@ -4106,11 +4106,11 @@ NSRange IMEInputHandler::SelectedRange() {
 
   return mRangeForWritingMode;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(mSelectedRange);
+  NS_OBJC_END_TRY_BLOCK_RETURN(mSelectedRange);
 }
 
 bool IMEInputHandler::DrawsVerticallyForCharacterAtIndex(uint32_t aCharIndex) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (Destroyed()) {
     return false;
@@ -4137,11 +4137,11 @@ bool IMEInputHandler::DrawsVerticallyForCharacterAtIndex(uint32_t aCharIndex) {
 
   return mWritingMode.IsVertical();
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
+  NS_OBJC_END_TRY_BLOCK_RETURN(false);
 }
 
 NSRect IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange, NSRange* aActualRange) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   MOZ_LOG(gLog, LogLevel::Info,
           ("%p IMEInputHandler::FirstRectForCharacterRange, Destroyed()=%s, "
@@ -4239,11 +4239,11 @@ NSRect IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange, NSRange* aAc
 
   return rect;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSMakeRect(0.0, 0.0, 0.0, 0.0));
+  NS_OBJC_END_TRY_BLOCK_RETURN(NSMakeRect(0.0, 0.0, 0.0, 0.0));
 }
 
 NSUInteger IMEInputHandler::CharacterIndexForPoint(NSPoint& aPoint) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   MOZ_LOG(gLog, LogLevel::Info,
           ("%p IMEInputHandler::CharacterIndexForPoint, aPoint={ x=%f, y=%f }", this, aPoint.x,
@@ -4269,7 +4269,7 @@ NSUInteger IMEInputHandler::CharacterIndexForPoint(NSPoint& aPoint) {
 
   return queryCharAtPointEvent.mReply->StartOffset();
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSNotFound);
+  NS_OBJC_END_TRY_BLOCK_RETURN(NSNotFound);
 }
 
 extern "C" {
@@ -4503,7 +4503,7 @@ bool IMEInputHandler::IsFocused() {
   return [window firstResponder] == mView && [window isKeyWindow] &&
          [[NSApplication sharedApplication] isActive];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
+  NS_OBJC_END_TRY_BLOCK_RETURN(false);
 }
 
 bool IMEInputHandler::IsIMEOpened() {
@@ -4783,7 +4783,7 @@ nsresult TextInputHandlerBase::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardL
 }
 
 NSInteger TextInputHandlerBase::GetWindowLevel() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   MOZ_LOG(
       gLog, LogLevel::Info,
@@ -4806,7 +4806,7 @@ NSInteger TextInputHandlerBase::GetWindowLevel() {
 
   return windowLevel;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSNormalWindowLevel);
+  NS_OBJC_END_TRY_BLOCK_RETURN(NSNormalWindowLevel);
 }
 
 NS_IMETHODIMP
