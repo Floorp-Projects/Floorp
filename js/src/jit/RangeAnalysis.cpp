@@ -1792,9 +1792,10 @@ void MLoadDataViewElement::computeRange(TempAllocator& alloc) {
 }
 
 void MArrayLength::computeRange(TempAllocator& alloc) {
-  // Array lengths can go up to UINT32_MAX. We do a dynamic check and we have to
-  // return the range pre-bailouts, so use UINT32_MAX.
-  setRange(Range::NewUInt32Range(alloc, 0, UINT32_MAX));
+  // Array lengths can go up to UINT32_MAX. We will bail out if the array
+  // length > INT32_MAX.
+  MOZ_ASSERT(type() == MIRType::Int32);
+  setRange(Range::NewUInt32Range(alloc, 0, INT32_MAX));
 }
 
 void MInitializedLength::computeRange(TempAllocator& alloc) {
@@ -1856,9 +1857,16 @@ void MInt32ToIntPtr::computeRange(TempAllocator& alloc) {
   setRange(new (alloc) Range(input()));
 }
 
+void MNonNegativeIntPtrToInt32::computeRange(TempAllocator& alloc) {
+  // We will bail out if the IntPtr value > INT32_MAX.
+  setRange(Range::NewUInt32Range(alloc, 0, INT32_MAX));
+}
+
 void MArrayPush::computeRange(TempAllocator& alloc) {
-  // MArrayPush returns the new array length.
-  setRange(Range::NewUInt32Range(alloc, 0, UINT32_MAX));
+  // MArrayPush returns the new array length. It bails out if the new length
+  // doesn't fit in an Int32.
+  MOZ_ASSERT(type() == MIRType::Int32);
+  setRange(Range::NewUInt32Range(alloc, 0, INT32_MAX));
 }
 
 void MMathFunction::computeRange(TempAllocator& alloc) {
