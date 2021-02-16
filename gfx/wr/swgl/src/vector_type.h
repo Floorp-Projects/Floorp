@@ -319,11 +319,20 @@ struct VectorType {
 #  define yyyy swizzle(1, 1, 1, 1)
 #  define zzzz swizzle(2, 2, 2, 2)
 #  define wwww swizzle(3, 3, 3, 3)
+#  define xxyy swizzle(0, 0, 1, 1)
+#  define xxzz swizzle(0, 0, 2, 2)
+#  define yyww swizzle(1, 1, 3, 3)
+#  define zzww swizzle(2, 2, 3, 3)
 #  define xyxy swizzle(0, 1, 0, 1)
+#  define xzxz swizzle(0, 2, 0, 2)
+#  define ywyw swizzle(1, 3, 1, 3)
 #  define zwzw swizzle(2, 3, 2, 3)
 #  define zwxy swizzle(2, 3, 0, 1)
 #  define zyxw swizzle(2, 1, 0, 3)
+#  define xxyz swizzle(0, 0, 1, 2)
+#  define xyyz swizzle(0, 1, 1, 2)
 #  define xyzz swizzle(0, 1, 2, 2)
+#  define xzyw swizzle(0, 2, 1, 3)
 #  define yzwx swizzle(1, 2, 3, 0)
 #  define wxyz swizzle(3, 0, 1, 2)
 #  define xxxxyyyy XXXXYYYY()
@@ -405,6 +414,16 @@ template <typename T, int N>
 SI VectorType<T, N * 4> combine(VectorType<T, N> a, VectorType<T, N> b,
                                 VectorType<T, N> c, VectorType<T, N> d) {
   return combine(combine(a, b), combine(c, d));
+}
+
+template <typename T, int N>
+SI VectorType<T, N> combineLow(VectorType<T, N> a, VectorType<T, N> b) {
+  return combine(lowHalf(a), lowHalf(b));
+}
+
+template <typename T, int N>
+SI VectorType<T, N> combineHigh(VectorType<T, N> a, VectorType<T, N> b) {
+  return combine(highHalf(a), highHalf(b));
 }
 
 template <typename T>
