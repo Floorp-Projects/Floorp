@@ -316,7 +316,7 @@ static CFArrayRef GetMIMETypesHandledByApp(FSRef* aAppRef) {
 nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
                                                  const nsACString& aFileExt, bool* aFound,
                                                  nsIMIMEInfo** aMIMEInfo) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSNULL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
   MOZ_ASSERT(XRE_IsParentProcess());
 
   *aFound = false;
