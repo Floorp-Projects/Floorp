@@ -1,0 +1,57 @@
+<html>
+  <head>
+    <script>
+      var bc = new BroadcastChannel("bug1155730_part2");
+      bc.onmessage = (msgEvent) => {
+        var msg = msgEvent.data;
+        var command = msg.command;
+        if (command == "test") {
+          var currentCase = msg.currentCase;
+          test(currentCase);
+        }
+      }
+
+      function test(currentCase) {
+        var assertIs = [];
+        var assertIsNot = [];
+        switch (currentCase) {
+          case 1: {
+            history.scrollRestoration = "manual";
+            document.getElementById("bottom").scrollIntoView();
+            window.location.href = "file_scrollRestoration_navigate.html";
+            break;
+          }
+          case 2: {
+            assertIsNot.push([Math.round(window.scrollY), 0, "Should have kept the old scroll position."]);
+            assertIs.push([history.scrollRestoration, "manual", "Should have the same scrollRestoration as before reload."]);
+            bc.postMessage({command: "asserts", currentCase, assertIs, assertIsNot, assert2: "assert2"});
+            window.scrollTo(0, 0);
+            window.location.hash = "hash";
+            bc.postMessage({command: "nextCase"});
+            requestAnimationFrame(() => {
+              test(currentCase + 1);
+            });
+            break;
+          }
+          case 3: {
+            assertIsNot.push([Math.round(window.scrollY), 0, "Should have scrolled to #hash."]);
+            assertIs.push([history.scrollRestoration, "manual", "Should have the same scrollRestoration mode as before fragment navigation."]);
+            bc.postMessage({command: "asserts", currentCase, assertIs, assertIsNot});
+            bc.close();
+            window.close();
+            break;
+          }
+        }
+      }
+      window.onpageshow = (event) => {
+        bc.postMessage({command: "pageshow", persisted: event.persisted});
+      }
+    </script>
+  </head>
+  <body>
+  <div style="border: 1px solid black; height: 5000px;">
+  &nbsp;</div>
+  <div id="bottom">Hello world</div>
+  <a href="#hash" name="hash">hash</a>
+  </body>
+</html>
