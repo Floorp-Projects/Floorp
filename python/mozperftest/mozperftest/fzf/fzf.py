@@ -93,7 +93,13 @@ def select(test_objects):
         return f"[{flavor}] {path.name} in {location}"
 
     candidate_tasks = [_display(t) for t in test_objects]
-    fzf_bin = find_executable("fzf", str(Path(get_state_dir(), "fzf", "bin")))
+
+    fzf_bin = find_executable(
+        "fzf", str(Path(get_state_dir(), "fzf", "bin"))
+    ) or find_executable("fzf")
+    if not fzf_bin:
+        raise AssertionError("Unable to find fzf")
+
     key_shortcuts = [k + ":" + v for k, v in fzf_shortcuts.items()]
 
     base_cmd = [
