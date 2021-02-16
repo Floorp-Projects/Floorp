@@ -548,6 +548,11 @@ if mozinfo.isWin:
         log = get_logger()
         file_name = os.path.join(dump_directory, str(uuid.uuid4()) + ".dmp")
 
+        if not os.path.exists(dump_directory):
+            # `kernal32.CreateFileW` can fail to create the dmp file if the dump
+            # directory was deleted or doesn't exist (error code 3).
+            os.makedirs(dump_directory)
+
         if mozinfo.info["bits"] != ctypes.sizeof(ctypes.c_voidp) * 8 and utility_path:
             # We're not going to be able to write a minidump with ctypes if our
             # python process was compiled for a different architecture than

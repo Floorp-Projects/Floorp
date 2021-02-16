@@ -165,7 +165,7 @@ class TTest(object):
                     shutil.copy(origin, dest)
 
             # Run the test
-            timeout = test_config.get("timeout", 7200)  # 2 hours default
+            timeout = test_config.get("timeout", 600)  # 10 minutes default
             if setup.gecko_profile:
                 # When profiling, give the browser some extra time
                 # to dump the profile.
