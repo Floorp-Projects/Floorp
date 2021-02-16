@@ -18,6 +18,16 @@
 
 void nsObjCExceptionLog(NSException* aException);
 
+// For wrapping blocks of Obj-C calls which are not expected to throw exception.
+// Causes a MOZ_CRASH if an Obj-C exception is encountered.
+#define NS_OBJC_BEGIN_TRY_ABORT_BLOCK @try {
+#define NS_OBJC_END_TRY_ABORT_BLOCK                            \
+  }                                                            \
+  @catch (NSException * _exn) {                                \
+    nsObjCExceptionLog(_exn);                                  \
+    MOZ_CRASH("Encountered unexpected Objective C exception"); \
+  }
+
 // For wrapping blocks of Obj-C calls. Logs the exception and moves on.
 #define NS_OBJC_BEGIN_TRY_IGNORE_BLOCK @try {
 #define NS_OBJC_END_TRY_IGNORE_BLOCK \
