@@ -1163,6 +1163,7 @@ pkix_CacheCert_Add(
 {
         PKIX_List *cachedKeys = NULL;
         PKIX_List *cachedValues = NULL;
+        PKIX_List *cachedCerts = NULL;
         PKIX_PL_Date *cacheValidUntilDate = NULL;
         PKIX_PL_X500Name *subject = NULL;
         PKIX_Error *cachedCertError = NULL;
@@ -1219,9 +1220,12 @@ pkix_CacheCert_Add(
                 plContext),
                 PKIX_LISTAPPENDITEMFAILED);
 
+        PKIX_DUPLICATE(certs, &cachedCerts, plContext,
+                PKIX_OBJECTDUPLICATELISTFAILED);
+
         PKIX_CHECK(PKIX_List_AppendItem
                 (cachedValues,
-                (PKIX_PL_Object *)certs,
+                (PKIX_PL_Object *)cachedCerts,
                 plContext),
                 PKIX_LISTAPPENDITEMFAILED);
 
@@ -1243,6 +1247,7 @@ cleanup:
         PKIX_DECREF(subject);
         PKIX_DECREF(cachedKeys);
         PKIX_DECREF(cachedValues);
+        PKIX_DECREF(cachedCerts);
         PKIX_DECREF(cacheValidUntilDate);
         PKIX_DECREF(cachedCertError);
 
