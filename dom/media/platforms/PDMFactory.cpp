@@ -491,8 +491,7 @@ void PDMFactory::CreateContentPDMs() {
 
 #ifdef XP_WIN
   if (StaticPrefs::media_wmf_enabled() && !IsWin7AndPre2000Compatible()) {
-    RefPtr<WMFDecoderModule> m = MakeAndAddRef<WMFDecoderModule>();
-    if (!StartupPDM(m.forget())) {
+    if (!CreateAndStartupPDM<WMFDecoderModule>()) {
       mFailureFlags += DecoderDoctorDiagnostics::Flags::WMFFailedToLoad;
     }
   } else if (StaticPrefs::media_decoder_doctor_wmf_disabled_is_failure()) {
@@ -537,8 +536,7 @@ void PDMFactory::CreateContentPDMs() {
 void PDMFactory::CreateDefaultPDMs() {
 #ifdef XP_WIN
   if (StaticPrefs::media_wmf_enabled() && !IsWin7AndPre2000Compatible()) {
-    RefPtr<WMFDecoderModule> m = MakeAndAddRef<WMFDecoderModule>();
-    if (!StartupPDM(m.forget())) {
+    if (!CreateAndStartupPDM<WMFDecoderModule>()) {
       mFailureFlags += DecoderDoctorDiagnostics::Flags::WMFFailedToLoad;
     }
   } else if (StaticPrefs::media_decoder_doctor_wmf_disabled_is_failure()) {
