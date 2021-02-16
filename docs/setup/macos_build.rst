@@ -2,476 +2,158 @@ Building Firefox On macOS
 =========================
 
 This document will help you get set up to build Firefox on your own
-computer. Getting set up won't be difficult, but it can take a while -
-we need to download a lot of bytes! Even on a fast connection, this can
-take ten to fifteen minutes of work, spread out over an hour or two.
+computer. Getting set up can take a while - we need to download a
+lot of bytes! Even on a fast connection, this can take ten to fifteen
+minutes of work, spread out over an hour or two.
 
-The details are further down this page, but this quick-start guide
-should get you up and running:
+Requirements
+------------
 
-.. rubric:: Quick start (Try this first!)
-   :name: Quick_start_Try_this_first!
+-  **Processor:** Intel CPUs are supported (ARM is possible if you follow
+   `these technical instructions <https://wiki.mozilla.org/Build/Firefox_For_Apple_Arm>`_).
+-  **Memory:** 4GB RAM minimum, 8GB+ recommended.
+-  **Disk Space:** At least 30GB of free disk space.
+-  **Operating System:** macOS 10.12 or later. It is advisable to
+   upgrade to the latest “point” release.
 
-.. rubric:: Prerequisites
-   :name: Prerequisites
 
-You will need:
-
--  an Apple ID to download and install Apple-distributed developer tools
-   mentioned below
--  from 5 minutes to 1 hour to download and install Xcode, which is
-   large
--  download and install a local copy of specific macOS SDK version
-
-You will need administrator permissions on your machine to install these
-prerequisites. (You can verify that you have these permissions in System
-Preferences -> Users & Groups.)
-
-See :ref:`1.1 Install Xcode and Xcode command line tools <xcode>` and :ref:`1.2
-Get the local macOS SDK <macossdk>` for more information on how to
-install these prerequisites.
-
-.. rubric:: Getting the source
-   :name: Getting_the_source
-   :class: heading-tertiary
-
-Firstly you need to prepare a directory and get the bootstrap script
-that will do the rest:
-
-.. code-block:: shell
-
-    # the bootstrap script needs this directory, but you can choose a different target directory for the Mozilla code later
-    cd ~ && mkdir -p src && cd src
-
-    # download the bootstrap script
-    curl https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py -o bootstrap.py
-
-If you don't have Python 3.6 or later or Mercurial installed, see :ref:`2.1a Install
-dependencies via Homebrew <#install-via-homebrew>` for more information on how
-to do so. Then in your terminal from above start the bootstrapper like this:
-
-.. code-block:: shell
-
-    python3 bootstrap.py
-
-... and follow the prompts. This will use mercurial to checkout the
-source code. If you prefer to work with git, use this command instead:
-
-.. code-block:: shell
-
-    python3 bootstrap.py --vcs=git
-
-If you don't have `Homebrew <https://brew.sh/>`_ or
-`Ports <https://www.macports.org/>`__ installed - software package
-managers that will let us install some programs we'll need - you'll be
-asked to pick one. Either will work, but most Mozilla developers use
-Homebrew.
-
-If you don't let the ``bootstrap.py`` script clone the source for you
-make sure you do it manually afterward before moving onto the next step.
-
-.. rubric:: Build Firefox!
-   :name: Build_Firefox!
-   :class: heading-tertiary highlight-spanned
-
-Now we tie it all together.
-
-In your terminal window, ``cd`` to your Mozilla source directory chosen
-before and type:
-
-.. code-block:: shell
-
-    # create a minimal build options file
-    echo "ac_add_options --with-macos-sdk=$HOME/SDK-archive/MacOSX10.12.sdk" >> mozconfig
-
-    ./mach bootstrap
-
-    ./mach build
-
-The ``./mach bootstrap`` step is a catch-all for any dependencies not
-covered in this documentation. If you are working on Firefox frontends
-or building Firefox without any changes, select :ref:`Artifact Builds
-<Understanding Artifact Builds>` in
-the first question in ``./mach bootstrap``.  Artifact builds will
-complete more quickly!  Artifact builds are unsuitable for those working
-on C++ code.
-
-You’re on your way. Don’t be discouraged if this takes a while; it takes
-some time even on the fastest modern machines and as much as two hours
-or more on older hardware. Firefox is pretty big, because the Web is
-big.
-
-.. rubric:: Now the Fun Starts
-   :name: Now_the_Fun_Starts
-   :class: heading-tertiary
-
-You have the code, you’ve compiled Firefox. Fire it up with
-``./mach run`` and you’re ready to start hacking.
-
-Build steps (details)
+1. System preparation
 ---------------------
 
-Building on macOS is divided into the following steps:
+1.1. Install Brew
+~~~~~~~~~~~~~~~~~
 
-#. Install Apple-distributed developer tools - Xcode, Xcode cli tools
-   and macOS SDK locally
-#. Install supplementary build tools
-#. Obtain a copy of the Mozilla source code
-#. Configure the Mozilla source tree to suit your needs
-#. Build Firefox
+Mozilla's source tree requires a number of third-party tools.
+You will need to install `Homebrew <https://brew.sh/>`__ so that we
+can automatically fetch the tools we need.
 
+1.2. Install Xcode
+~~~~~~~~~~~~~~~~~~
 
-.. _xcode:
-
-1.1 Install Xcode and Xcode command line tools
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You first need to install Xcode, for which you have two options but both
-require you to sign in with an Apple ID:
-
--  From Apple Developer Download page - `direct
-   link <https://developer.apple.com/download/release/>`__. Install the
-   latest **release** (non-beta) version of Xcode, open ``Xcode.xip``,
-   and then **before** **running the extracted Xcode.app, move it from
-   the download folder to /Applications**. (Running it from another
-   location may screw up various build paths, homebrew builds, etc. Fix
-   by running ``sudo xcode-select -switch /Applications/Xcode.app`` )
--  From the Mac App Store - `direct
-   link <https://apps.apple.com/us/app/xcode>`__.
-
-Open /Applications/Xcode.app and let it do its initial first run and
-setup stuff.
-
-Install the Xcode command line tools by
-running ``xcode-select --install`` in your terminal.
-
-.. _macossdk:
-
-1.2 Get the local macOS SDK
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Firefox currently requires a local copy of macOS 10.12 SDK to build (all
-your other apps will still use your more recent version of this SDK,
-most probably matching your macOS version).
-
-There are various issues when building the Mozilla source code with
-other SDKs and that's why we recommend this specific version.
-
-To get the 10.12 SDK, first download Xcode 8.2 from the `More
-Downloads for Apple
-Developers <https://developer.apple.com/download/more/>`__ page. Once
-downloaded, mount the .dmg file. Then in the Terminal run the following:
+Install Xcode from the App Store.
+Once done, finalize the installation in your terminal:
 
 .. code-block:: shell
 
-    mkdir -p $HOME/SDK-archive
-    cp -a /Volumes/Xcode/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk $HOME/SDK-archive/MacOSX10.12.sdk
+    sudo xcode-select --switch /Applications/Xcode.app
+    sudo xcodebuild -license
 
-2. Install supplementary build tools
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Mozilla's source tree requires a number of third-party tools and
-applications to build it. You will need to install these before you can
-build anything.
-
-You have the choice of how to install all these components. You can use
-a package manager like Homebrew or Ports. Or, you can obtain, compile,
-and install them individually. For simplicity and to save your time,
-using a package manager is recommended. The following sections describe
-how to install the packages using existing package managers. Choose
-whatever package manager you prefer.
-
-.. _install-via-homebrew:
-
-2.1a Install dependencies via Homebrew
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-`Homebrew <http://brew.sh/>`__ is "the missing package manager for
-macOS." It provides a simple command-line interface to install packages,
-typically by compiling them from source.
-
-The first step is to install Homebrew. See https://brew.sh/
-
-Once you have Homebrew installed, you'll need to run the following:
-
-.. code-block:: shell
-
-    brew install yasm mercurial gawk ccache python
-
-Python 2 is never necessary solely to build Firefox, but it is still required
-for some development tasks (including testing and pushing to ``try``). If your
-system does not already have a Python 2 installed, you can use ``brew`` to
-install one:
-
-.. code-block:: shell
-
-    brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/86a44a0a552c673a05f11018459c9f5faae3becc/Formula/python@2.rb
-
-2.1b Install Dependencies via MacPorts
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-MacPorts is a package manager for macOS. If you are running Homebrew,
-you can ignore this section.
-
-To install MacPorts, go to their `install
-page <http://www.macports.org/install.php>`_, download the .dmg for
-your platform, and install it. If you already have MacPorts installed,
-ensure it is up to date by running:
-
-.. code::
-
-    sudo port selfupdate
-    sudo port sync
-
-The first of these commands will ask for your root password.
-
-Common errors include:
-
--  ``sudo`` doesn't accept a blank password: create a password for your
-   account in System Preferences.
--  ``port`` command not found: add it to your path (see the
-   troubleshooting section below).
-
-Use MacPorts to install the packages needed for building Firefox:
-
-.. code::
-
-    sudo port install libidl yasm python27 py27-gnureadline
-
-You'll then see lots of output as MacPorts builds and installs these
-packages and their dependencies -- it takes a while, so go grab a cup of
-coffee.
-
-**Note:** By default, this will install Python 2.7, which in turn will
-pull in all of the X11 libraries, which may take a while to build. You
-don't need any of those to build Firefox; you may want to consider
-adding +no\_tkinter to the install line to build a python without
-support for the X11 UI packages. This should result in a much faster
-install.
-
-**Note:** With older versions of Xcode (eg 6.4) you may need to use
-MacPorts to get the proper version of clang, such as clang-3.6 or later.
-See bugs in Core, Build Config referring to clang.
-
-2.2 Install Mercurial
+1.3 Install Mercurial
 ~~~~~~~~~~~~~~~~~~~~~
 
-Mozilla's source code is hosted in Mercurial repositories. You use
-Mercurial to interact with these repositories. There are many ways to
-install Mercurial on macOS:
-
-1. Install `official builds from
-   Selenic <http://mercurial.selenic.com/>`_
-
-2. Install via Homebrew:
+Mozilla's source code is hosted in Mercurial repositories. You will
+need Mercurial to download and update the code. Additionally, we'll
+put user-wide python package installations on the ``$PATH``, so that
+both ``hg`` and ``moz-phab`` will be easily accessible:
 
 .. code-block:: shell
 
-       brew install mercurial
+    echo "export PATH=\"$(python3 -m site --user-base)/bin:$PATH\"" >> ~/.zshenv
+    python3 -m pip install --user mercurial
 
-3. Install via MacPorts:
-
-.. code-block:: shell
-
-       sudo port install mercurial
-
-4. Install via Pip:
-
-.. code-block:: shell
-
-       easy_install pip && pip install mercurial
-
-Once you have installed Mercurial, test it by running:
+Now, restart your shell so that the ``PATH`` change took effect.
+You can test that Mercurial is installed by running:
 
 .. code-block:: shell
 
     hg version
 
-If this works, congratulations! You'll want to configure your Mercurial
-settings to match other developers. See :ref:`Getting Mozilla Source Code
-Using Mercurial <Mercurial Overview>`.
+.. note::
 
-If this fails with the error "``ValueError: unknown locale: UTF-8``",
-then see the
-`workarounds <http://www.selenic.com/mercurial/wiki/index.cgi/UnixInstall#head-1c10f216d5b9ccdcb2613ea37d407eb45f22a394>`_
-on the Mercurial wiki's Unix Install page.
+    If you're using a shell other than ``zsh``, you'll need to manually add Python's
+    ``bin`` directory to your ``PATH``, as your shell probably won't pick up our
+    changes in ``~/.zshenv``.
 
-When trying to clone a repository you may get an HTTP 500 error
-(internal server error). This seems to be due to something that Mac
-Mercurial sends to the server (it's been observed both with MacPort and
-selenic.com Mercurial binaries). Try restarting your shell, your
-computer, or reinstall Mercurial (in that order), then report back here
-what worked, please.
+2. Bootstrap a copy of the Firefox source code
+----------------------------------------------
 
-3. Obtain a copy of the Mozilla source code
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You may want to read :ref:`Getting Mozilla Source Code
-Using Mercurial <Mercurial Overview>` for the
-complete instructions.
-
-If you are interested in Firefox development only then run the following
-command, which will create a new directory, ``mozilla-central``, in the
-current one with the contents of the remote repository.
-
-Below command will take many minutes to run, as it will be copying a
-couple hundred megabytes of data over the internet.
-
-.. code::
-
-    hg clone https://hg.mozilla.org/mozilla-central/
-    cd mozilla-central
-
-(If you are building Firefox for Android, you should now return to the
-`Android build instructions <https://wiki.mozilla.org/Mobile/Fennec/Android#Mac_OS_X>`_.)
-
-4. Configure the build options
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In your checked out source tree create a new file, ``mozconfig``, which
-will contain your build options. For more on this file, see :ref:`Configuring Build Options`.
-
-To get started quickly, create the file with the following contents:
-
-.. code::
-
-    # Define where build files should go. This places them in the directory
-    # "obj-ff-dbg" under the current source directory
-    mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-ff-dbg
-
-    # Enable debug builds
-    ac_add_options --enable-debug
-
-    # Use the local copy of specific version of macOS SDK compatible with Mozilla source code
-    ac_add_options --with-macos-sdk=$HOME/SDK-archive/MacOSX10.12.sdk
-
-Firefox no longer builds with gcc 4.8 or earlier, but the build system
-should automatically select clang if it is available in the PATH. If
-that is not the case, you need to set CC and CXX. For instance, if you
-installed Clang 9 via Homebrew, then you need to have this in your
-``mozconfig``:
-
-.. code::
-
-    CC=clang-9
-    CXX=clang++-9
-
-5. Build
-~~~~~~~~
-
-Once you have your ``mozconfig`` file in place, you should be able to
-build!
+Now that your system is ready, we can download the source code and have Firefox
+automatically download the other dependencies it needs. The below command
+will download a lot of data (years of Firefox history!) then guide you through
+the interactive setup process.
 
 .. code-block:: shell
 
+    curl https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py -O
+    python3 bootstrap.py
+
+.. note::
+
+    In general, the Firefox workflow works best with Mercurial. However,
+    if you'd prefer to use ``git``, you can grab the source code in
+    "git" form by running the bootstrap script with the ``vcs`` parameter:
+
+    .. code-block:: shell
+
+         python3 bootstrap.py --vcs=git
+
+    This uses `Git Cinnabar <https://github.com/glandium/git-cinnabar/>`_ under the hood.
+
+Choosing a build type
+~~~~~~~~~~~~~~~~~~~~~
+
+If you aren't modifying the Firefox backend, then then select one of the
+:ref:`Artifact Mode <Understanding Artifact Builds>` options. If you are
+building Firefox for Android, you should also see the :ref:`GeckoView Contributor Guide`.
+
+3. Build
+--------
+
+Now that your system is bootstrapped, you should be able to build!
+
+.. code-block:: shell
+
+    rm bootstrap.py
+    cd mozilla-unified
     ./mach build
-
-If the build step works, you should be able to find the built
-application inside ``obj-ff-dbg/dist/``. If building the browser with
-``--enable-debug``, the name of the application is ``NightlyDebug.app``.
-To launch the application, try running the following:
-
-.. code-block:: shell
-
     ./mach run
 
-**Note:** The compiled application may also be named after the branch
-you're building; for example, if you changed these instructions to fetch
-the ``mozilla-1.9.2`` branch, the application will be named
-``Namoroka.app`` or ``NamorokaDebug.app``.
+🎉 Congratulations! You've built your own home-grown Firefox!
 
-Hardware requirements
----------------------
+Now the fun starts
+------------------
 
-There are no specific hardware requirements, provided that the hardware
-accommodates all of the `software <#Software_Requirements>`_ required
-to build Firefox. Firefox can take a long time to build, so more CPU,
-more RAM and lots of fast disk space are always recommended.
-
--  **Processor:** Intel CPUs are required. Building for PowerPC chips is
-   not supported.
--  **Memory:** 2GB RAM minimum, 8GB recommended.
--  **Disk Space:** At least 30GB of free disk space.
-
-Software requirements
----------------------
-
--  **Operating System:** macOS 10.12 or later. It is advisable to
-   upgrade to the latest “point” release by running Software Update,
-   found in the Apple menu. You will need administrative privileges to
-   set up your development environment
--  **Development Environment:** Xcode. You can obtain this from the App
-   Store.
--  **Package Management:** Either Homebrew or
-   `MacPorts <http://www.macports.org/>`_.
-
-These options are specific to Mozilla builds for macOS. For a more
-general overview of build options and the ``mozconfig`` file, see
-:ref:`Configuring Build Options`.
-
--  **Compiler:** Firefox releases are no longer built with gcc-4.8 or
-   earlier. A recent copy of clang is needed.
-
-   -  There are some options on where to get clang:
-
-      -  Newer versions of Xcode.
-      -  Following the instructions in the `clang
-         website <http://clang.llvm.org/get_started.html>`__ for
-         information on how to get it.
-      -  Using some of the package managers (see above).
-
-   -  Once clang is installed, make sure it is on the PATH and configure
-      should use it.
-
-The following options, specified with ``ac_add_options``, are lines that
-are intended to be added to your ``mozconfig`` file.
-
--  **macOS SDK:** This selects the version of the system headers and
-   libraries to build against, ensuring that the product you build will
-   be able to run on older systems with less complete APIs available.
-   Selecting an SDK with this option overrides the default headers and
-   libraries in ``/usr/include``, ``/usr/lib``, and ``/System/Library``.
-
-   .. code-block:: shell
-
-         ac_add_options --with-macos-sdk=/path/to/SDK
-
-   Official trunk builds use `MacOSX10.12.sdk`. Check
-   `build/macosx/universal/mozconfig.common <https://searchfox.org/mozilla-central/source/build/macosx/cross-mozconfig.common>`__
-   for the SDK version used for official builds of any particular source
-   release.
-
-   Applications built against a particular SDK will usually run on
-   earlier versions of macOS as long as they are careful not to use
-   features or frameworks only available on later versions. Note that
-   some frameworks (notably AppKit) behave differently at runtime
-   depending on which SDK was used at build time. This may be the source
-   of bugs that only appear on certain platforms or in certain builds.
-
-For macOS builds, defines are set up as follows:
-
--  ``XP_MACOSX`` is defined
--  ``XP_UNIX`` is defined
--  ``XP_MAC`` is **not** defined. ``XP_MAC`` is obsolete and has been
-   removed from the source tree (see {{ Bug(281889) }}). It was used for
-   CFM (non-Mach-O) builds for the classic (pre-X) Mac OS.
-
-This requires care when writing code for Unix platforms that exclude
-Mac:
-
-.. code-block:: shell
-
-    #if defined(XP_UNIX) && !defined(XP_MACOSX)
+Time to start hacking! You should join us on `Matrix <https://chat.mozilla.org/>`_,
+say hello in the `Introduction channel
+<https://chat.mozilla.org/#/room/#introduction:mozilla.org>`_, and `find a bug to
+start working on <https://codetribute.mozilla.org/>`_.
+See the :ref:`Firefox Contributors' Quick Reference` to learn how to test your changes,
+send patches to Mozilla, update your source code locally, and more.
 
 Troubleshooting
 ---------------
 
--  **If configure (or generally building with clang) fails with
-   ``fatal error: 'stdio.h' file not found``:** Make sure the Xcode
-   command line tools are installed by running.
-   ``xcode-select --install``.
--  **For inexplicable errors in the configure phase:** Review all
-   modifications of your PATH in .bash\_profile, .bash\_rc or whatever
-   configuration file you're using for your chosen shell. Removing all
-   modifications and then re-adding them one-by-one can narrow down
-   problems.
+macOS SDK is unsupported
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. only:: comment
+
+    If you are editing this section to bump the SDK and Xcode version, I'd recommend
+    following the steps to ensure that they're not obsolete. Apple doesn't guarantee
+    the structure of Xcode, so the SDK could be moved to a different location or
+    stored differently.
+
+If the SDK included with your Xcode installation is not supported by Firefox,
+you'll need to manually install one that is compatible.
+We're currently using the 10.12 SDK on our build servers, so that's the one that you
+should install:
+
+1. Go to the `More Downloads for Apple Developers <https://developer.apple.com/download/more/>`_ page
+   and download Xcode 8.2.
+2. Once downloaded, extract ``Xcode_8.2.xip``.
+3. In your terminal, copy the SDK from the installer:
+
+.. code-block:: shell
+
+    mkdir -p ~/.mozbuild/macos-sdk
+    # This assumes that Xcode is in your "Downloads" folder
+    cp -aH ~/Downloads/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk ~/.mozbuild/macos-sdk/
+
+4. Finally, inform the Firefox build about this SDK by creating (or editing) a file called ``mozconfig`` file
+   in the Firefox source code directory. Add the following line:
+
+.. code-block::
+
+    ac_add_options --with-macos-sdk=$HOME/.mozbuild/macos-sdk/MacOSX10.12.sdk
+
+5. Now, you should be able to successfully run ``./mach build``.
