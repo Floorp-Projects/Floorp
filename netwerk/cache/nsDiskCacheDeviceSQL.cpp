@@ -1263,7 +1263,7 @@ nsresult nsOfflineCacheDevice::InitActiveCaches() {
     statement->GetUTF8String(1, clientID);
 
     mActiveCaches.PutEntry(clientID);
-    mActiveCachesByGroup.Put(group, new nsCString(clientID));
+    mActiveCachesByGroup.Put(group, MakeUnique<nsCString>(clientID));
 
     rv = statement->ExecuteStep(&hasRows);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2536,7 +2536,7 @@ nsresult nsOfflineCacheDevice::ActivateCache(const nsACString& group,
 
   if (!clientID.IsEmpty()) {
     mActiveCaches.PutEntry(clientID);
-    mActiveCachesByGroup.Put(group, new nsCString(clientID));
+    mActiveCachesByGroup.Put(group, MakeUnique<nsCString>(clientID));
   }
 
   return NS_OK;

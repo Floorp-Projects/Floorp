@@ -530,11 +530,12 @@ static void AddDataEntryInternal(const nsACString& aURI, T aObject,
     gDataTable = new nsClassHashtable<nsCStringHashKey, mozilla::dom::DataInfo>;
   }
 
-  mozilla::dom::DataInfo* info =
-      new mozilla::dom::DataInfo(aObject, aPrincipal, aAgentClusterId);
-  BlobURLsReporter::GetJSStackForBlob(info);
+  mozilla::UniquePtr<mozilla::dom::DataInfo> info =
+      mozilla::MakeUnique<mozilla::dom::DataInfo>(aObject, aPrincipal,
+                                                  aAgentClusterId);
+  BlobURLsReporter::GetJSStackForBlob(info.get());
 
-  gDataTable->Put(aURI, info);
+  gDataTable->Put(aURI, std::move(info));
 }
 
 void BlobURLProtocolHandler::Init(void) {

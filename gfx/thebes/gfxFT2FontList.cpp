@@ -638,8 +638,9 @@ void gfxFT2FontList::CollectInitData(const FontListEntry& aFLE,
   BuildKeyNameFromFontName(key);
   auto faceList = mFaceInitData.Get(key);
   if (!faceList) {
-    faceList = new nsTArray<fontlist::Face::InitData>;
-    mFaceInitData.Put(key, faceList);
+    faceList =
+        mFaceInitData.Put(key, MakeUnique<nsTArray<fontlist::Face::InitData>>())
+            .get();
     mFamilyInitData.AppendElement(
         fontlist::Family::InitData{key, aFLE.familyName()});
   }
@@ -1735,7 +1736,7 @@ gfxFontEntry* gfxFT2FontList::LookupLocalFont(const nsACString& aFontName,
 
     // if so, iterate over faces in this family to see if there is a match
     if (family.Equals(fullNameFamily, nsCaseInsensitiveCStringComparator)) {
-      nsTArray<RefPtr<gfxFontEntry> >& fontList = fontFamily->GetFontList();
+      nsTArray<RefPtr<gfxFontEntry>>& fontList = fontFamily->GetFontList();
       int index, len = fontList.Length();
       for (index = 0; index < len; index++) {
         gfxFontEntry* fe = fontList[index];

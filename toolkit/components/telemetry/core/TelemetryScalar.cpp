@@ -38,6 +38,7 @@ using mozilla::Some;
 using mozilla::StaticAutoPtr;
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
+using mozilla::UniquePtr;
 using mozilla::Telemetry::DynamicScalarDefinition;
 using mozilla::Telemetry::KeyedScalarAction;
 using mozilla::Telemetry::ProcessID;
@@ -1130,7 +1131,7 @@ ScalarResult KeyedScalar::GetScalarForKey(const StaticMutexAutoLock& locker,
     return ScalarResult::InvalidType;
   }
 
-  mScalarKeys.Put(utf8Key, scalar);
+  mScalarKeys.Put(utf8Key, UniquePtr<ScalarBase>(scalar));
 
   *aRet = scalar;
   return ScalarResult::Ok;
@@ -1547,7 +1548,7 @@ nsresult internal_GetScalarByEnum(const StaticMutexAutoLock& lock,
     return NS_ERROR_INVALID_ARG;
   }
 
-  scalarStorage->Put(aId.id, scalar);
+  scalarStorage->Put(aId.id, UniquePtr<ScalarBase>(scalar));
   *aRet = scalar;
   return NS_OK;
 }
@@ -1822,7 +1823,7 @@ nsresult internal_GetKeyedScalarByEnum(const StaticMutexAutoLock& lock,
     return NS_ERROR_INVALID_ARG;
   }
 
-  scalarStorage->Put(aId.id, scalar);
+  scalarStorage->Put(aId.id, UniquePtr<KeyedScalar>(scalar));
   *aRet = scalar;
   return NS_OK;
 }
