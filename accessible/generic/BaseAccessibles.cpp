@@ -118,7 +118,7 @@ const Accessible* LinkableAccessible::ActionWalk(
   // on non accessible node in parent chain but this node is skipped when tree
   // is traversed.
   const Accessible* walkUpAcc = this;
-  while ((walkUpAcc = walkUpAcc->Parent()) && !walkUpAcc->IsDoc()) {
+  while ((walkUpAcc = walkUpAcc->LocalParent()) && !walkUpAcc->IsDoc()) {
     if (walkUpAcc->LinkState() & states::LINKED) {
       if (aIsLink) {
         *aIsLink = true;

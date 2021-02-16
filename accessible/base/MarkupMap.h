@@ -531,8 +531,9 @@ MARKUPMAP(
       // native HTML table row class doesn't work. Refer to
       // CreateAccessibleByFrameType dual logic.
       Accessible* table = aContext->IsTable() ? aContext : nullptr;
-      if (!table && aContext->Parent() && aContext->Parent()->IsTable()) {
-        table = aContext->Parent();
+      if (!table && aContext->LocalParent() &&
+          aContext->LocalParent()->IsTable()) {
+        table = aContext->LocalParent();
       }
       if (table) {
         nsIContent* parentContent = aElement->GetParent();

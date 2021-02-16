@@ -422,7 +422,7 @@ nsresult ARIAGridAccessible::SetARIASelected(Accessible* aAccessible,
   // siblings cells.
   if (role == roles::GRID_CELL || role == roles::ROWHEADER ||
       role == roles::COLUMNHEADER) {
-    Accessible* row = aAccessible->Parent();
+    Accessible* row = aAccessible->LocalParent();
 
     if (row && row->Role() == roles::ROW && nsAccUtils::IsARIASelected(row)) {
       rv = SetARIASelected(row, false, false);
@@ -535,7 +535,7 @@ uint32_t ARIAGridCellAccessible::ColIdx() const {
   int32_t indexInRow = IndexInParent();
   uint32_t colIdx = 0;
   for (int32_t idx = 0; idx < indexInRow; idx++) {
-    Accessible* cell = row->GetChildAt(idx);
+    Accessible* cell = row->LocalChildAt(idx);
     if (cell->IsTableCell()) {
       colIdx += cell->AsTableCell()->ColExtent();
     }
@@ -563,7 +563,7 @@ void ARIAGridCellAccessible::ApplyARIAState(uint64_t* aState) const {
   if (*aState & states::SELECTED) return;
 
   // Check aria-selected="true" on the row.
-  Accessible* row = Parent();
+  Accessible* row = LocalParent();
   if (!row || row->Role() != roles::ROW) return;
 
   nsIContent* rowContent = row->GetContent();
@@ -591,7 +591,7 @@ ARIAGridCellAccessible::NativeAttributes() {
   int32_t colIdx = 0, colCount = 0;
   uint32_t childCount = thisRow->ChildCount();
   for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
-    Accessible* child = thisRow->GetChildAt(childIdx);
+    Accessible* child = thisRow->LocalChildAt(childIdx);
     if (child == this) colIdx = colCount;
 
     roles::Role role = child->Role();

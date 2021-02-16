@@ -165,8 +165,8 @@ HyperTextAccessible* Pivot::SearchForText(Accessible* aAnchor, bool aBackward) {
   while (true) {
     Accessible* child = nullptr;
 
-    while ((child = (aBackward ? accessible->LastChild()
-                               : accessible->FirstChild()))) {
+    while ((child = (aBackward ? accessible->LocalLastChild()
+                               : accessible->LocalFirstChild()))) {
       accessible = child;
       if (child->IsHyperText()) {
         return child->AsHyperText();
@@ -192,8 +192,8 @@ HyperTextAccessible* Pivot::SearchForText(Accessible* aAnchor, bool aBackward) {
         break;
       }
 
-      sibling = aBackward ? temp->PrevSibling() : temp->NextSibling();
-    } while ((temp = temp->Parent()));
+      sibling = aBackward ? temp->LocalPrevSibling() : temp->LocalNextSibling();
+    } while ((temp = temp->LocalParent()));
 
     if (!sibling) {
       break;
@@ -247,9 +247,9 @@ Accessible* Pivot::NextText(Accessible* aAnchor, int32_t* aStartOffset,
 
   // if we're starting on a text leaf, translate the offsets to the
   // HyperTextAccessible parent and start from there.
-  if (aAnchor->IsTextLeaf() && aAnchor->Parent() &&
-      aAnchor->Parent()->IsHyperText()) {
-    HyperTextAccessible* text = aAnchor->Parent()->AsHyperText();
+  if (aAnchor->IsTextLeaf() && aAnchor->LocalParent() &&
+      aAnchor->LocalParent()->IsHyperText()) {
+    HyperTextAccessible* text = aAnchor->LocalParent()->AsHyperText();
     tempPosition = text;
     int32_t childOffset = text->GetChildOffset(aAnchor);
     if (tempEnd == -1) {
@@ -282,8 +282,9 @@ Accessible* Pivot::NextText(Accessible* aAnchor, int32_t* aStartOffset,
     // starting on a text leaf), start the text movement from the end of that
     // node, otherwise we just default to 0.
     if (tempEnd == -1) {
-      tempEnd =
-          text == curPosition->Parent() ? text->GetChildOffset(curPosition) : 0;
+      tempEnd = text == curPosition->LocalParent()
+                    ? text->GetChildOffset(curPosition)
+                    : 0;
     }
 
     // If there's no more text on the current node, try to find the next text
@@ -298,7 +299,7 @@ Accessible* Pivot::NextText(Accessible* aAnchor, int32_t* aStartOffset,
       // offset. Otherwise, do a forward search for the next node to land on
       // (we don't do this in the first case because we don't want to go to the
       // subtree).
-      Accessible* sibling = tempPosition->NextSibling();
+      Accessible* sibling = tempPosition->LocalNextSibling();
       if (tempPosition->IsLink()) {
         if (sibling && sibling->IsLink()) {
           tempStart = tempEnd = -1;
@@ -306,7 +307,7 @@ Accessible* Pivot::NextText(Accessible* aAnchor, int32_t* aStartOffset,
         } else {
           tempStart = tempPosition->StartOffset();
           tempEnd = tempPosition->EndOffset();
-          tempPosition = tempPosition->Parent();
+          tempPosition = tempPosition->LocalParent();
         }
       } else {
         tempPosition = SearchForText(tempPosition, false);
@@ -386,9 +387,9 @@ Accessible* Pivot::PrevText(Accessible* aAnchor, int32_t* aStartOffset,
 
   // if we're starting on a text leaf, translate the offsets to the
   // HyperTextAccessible parent and start from there.
-  if (aAnchor->IsTextLeaf() && aAnchor->Parent() &&
-      aAnchor->Parent()->IsHyperText()) {
-    HyperTextAccessible* text = aAnchor->Parent()->AsHyperText();
+  if (aAnchor->IsTextLeaf() && aAnchor->LocalParent() &&
+      aAnchor->LocalParent()->IsHyperText()) {
+    HyperTextAccessible* text = aAnchor->LocalParent()->AsHyperText();
     tempPosition = text;
     int32_t childOffset = text->GetChildOffset(aAnchor);
     if (tempStart == -1) {
@@ -422,7 +423,7 @@ Accessible* Pivot::PrevText(Accessible* aAnchor, int32_t* aStartOffset,
     // starting on a text leaf), start the text movement from the end offset
     // of that node. Otherwise we just default to the last offset in the parent.
     if (tempStart == -1) {
-      if (tempPosition != curPosition && text == curPosition->Parent()) {
+      if (tempPosition != curPosition && text == curPosition->LocalParent()) {
         tempStart = text->GetChildOffset(curPosition) +
                     nsAccUtils::TextLength(curPosition);
       } else {
@@ -442,7 +443,7 @@ Accessible* Pivot::PrevText(Accessible* aAnchor, int32_t* aStartOffset,
       // offset. Otherwise, do a forward search for the next node to land on
       // (we don't do this in the first case because we don't want to go to the
       // subtree).
-      Accessible* sibling = tempPosition->PrevSibling();
+      Accessible* sibling = tempPosition->LocalPrevSibling();
       if (tempPosition->IsLink()) {
         if (sibling && sibling->IsLink()) {
           HyperTextAccessible* siblingText = sibling->AsHyperText();
@@ -452,7 +453,7 @@ Accessible* Pivot::PrevText(Accessible* aAnchor, int32_t* aStartOffset,
         } else {
           tempStart = tempPosition->StartOffset();
           tempEnd = tempPosition->EndOffset();
-          tempPosition = tempPosition->Parent();
+          tempPosition = tempPosition->LocalParent();
         }
       } else {
         HyperTextAccessible* tempText = SearchForText(tempPosition, true);

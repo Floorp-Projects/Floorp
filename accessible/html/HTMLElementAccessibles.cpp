@@ -160,7 +160,7 @@ HTMLSummaryAccessible* HTMLSummaryAccessible::FromDetails(Accessible* details) {
     // Iterate through the children of our details accessible to locate main
     // summary. This iteration includes the anonymous summary if the details
     // element was not explicitly created with one.
-    Accessible* child = details->GetChildAt(i);
+    Accessible* child = details->LocalChildAt(i);
     auto* summary =
         mozilla::dom::HTMLSummaryElement::FromNodeOrNull(child->GetContent());
     if (summary && summary->IsMainSummary()) {

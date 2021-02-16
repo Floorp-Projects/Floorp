@@ -88,10 +88,12 @@ class HTMLSelectOptionAccessible : public HyperTextAccessibleWrap {
    */
   Accessible* GetSelect() const {
     Accessible* parent = mParent;
-    if (parent && parent->IsHTMLOptGroup()) parent = parent->Parent();
+    if (parent && parent->IsHTMLOptGroup()) {
+      parent = parent->LocalParent();
+    }
 
     if (parent && parent->IsListControl()) {
-      Accessible* combobox = parent->Parent();
+      Accessible* combobox = parent->LocalParent();
       return combobox && combobox->IsCombobox() ? combobox : mParent;
     }
 
@@ -103,10 +105,12 @@ class HTMLSelectOptionAccessible : public HyperTextAccessibleWrap {
    */
   Accessible* GetCombobox() const {
     Accessible* parent = mParent;
-    if (parent && parent->IsHTMLOptGroup()) parent = parent->Parent();
+    if (parent && parent->IsHTMLOptGroup()) {
+      parent = parent->LocalParent();
+    }
 
     if (parent && parent->IsListControl()) {
-      Accessible* combobox = parent->Parent();
+      Accessible* combobox = parent->LocalParent();
       return combobox && combobox->IsCombobox() ? combobox : nullptr;
     }
 

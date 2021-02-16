@@ -661,7 +661,7 @@ void logging::TreeInfo(const char* aMsg, uint32_t aExtraFlags,
     MsgBegin("TREE", "%s; doc: %p", aMsg, aParent->Document());
     AccessibleInfo("container", aParent);
     for (uint32_t idx = 0; idx < aParent->ChildCount(); idx++) {
-      AccessibleInfo("child", aParent->GetChildAt(idx));
+      AccessibleInfo("child", aParent->LocalChildAt(idx));
     }
     MsgEnd();
   }
@@ -678,9 +678,9 @@ void logging::Tree(const char* aTitle, const char* aMsgText, Accessible* aRoot,
         aPrefixFunc ? aPrefixFunc(aGetTreePrefixData, root) : "";
     printf("%s", NS_ConvertUTF16toUTF8(level).get());
     logging::AccessibleInfo(prefix, root);
-    if (root->FirstChild() && !root->FirstChild()->IsDoc()) {
+    if (root->LocalFirstChild() && !root->LocalFirstChild()->IsDoc()) {
       level.AppendLiteral(u"  ");
-      root = root->FirstChild();
+      root = root->LocalFirstChild();
       continue;
     }
     int32_t idxInParent = root != aRoot && root->mParent
@@ -692,7 +692,7 @@ void logging::Tree(const char* aTitle, const char* aMsgText, Accessible* aRoot,
       root = root->mParent->mChildren.ElementAt(idxInParent + 1);
       continue;
     }
-    while (root != aRoot && (root = root->Parent())) {
+    while (root != aRoot && (root = root->LocalParent())) {
       level.Cut(0, 2);
       int32_t idxInParent = !root->IsDoc() && root->mParent
                                 ? root->mParent->mChildren.IndexOf(root)

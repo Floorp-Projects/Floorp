@@ -35,7 +35,7 @@ void TextUpdater::Run(DocAccessible* aDocument, TextLeafAccessible* aTextLeaf,
 
 void TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
                            uint32_t aSkipStart) {
-  Accessible* parent = mTextLeaf->Parent();
+  Accessible* parent = mTextLeaf->LocalParent();
   if (!parent) return;
 
   mHyperText = parent->AsHyperText();

@@ -23,7 +23,7 @@ Accessible* EmbeddedObjCollector::GetAccessibleAt(uint32_t aIndex) {
 Accessible* EmbeddedObjCollector::EnsureNGetObject(uint32_t aIndex) {
   uint32_t childCount = mRoot->ChildCount();
   while (mRootChildIdx < childCount) {
-    Accessible* child = mRoot->GetChildAt(mRootChildIdx++);
+    Accessible* child = mRoot->LocalChildAt(mRootChildIdx++);
     if (child->IsText()) continue;
 
     AppendObject(child);
@@ -36,7 +36,7 @@ Accessible* EmbeddedObjCollector::EnsureNGetObject(uint32_t aIndex) {
 int32_t EmbeddedObjCollector::EnsureNGetIndex(Accessible* aAccessible) {
   uint32_t childCount = mRoot->ChildCount();
   while (mRootChildIdx < childCount) {
-    Accessible* child = mRoot->GetChildAt(mRootChildIdx++);
+    Accessible* child = mRoot->LocalChildAt(mRootChildIdx++);
     if (child->IsText()) continue;
 
     AppendObject(child);

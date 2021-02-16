@@ -104,8 +104,8 @@ AccTextChangeEvent::AccTextChangeEvent(Accessible* aAccessible, int32_t aStart,
 AccHideEvent::AccHideEvent(Accessible* aTarget, bool aNeedsShutdown)
     : AccMutationEvent(::nsIAccessibleEvent::EVENT_HIDE, aTarget),
       mNeedsShutdown(aNeedsShutdown) {
-  mNextSibling = mAccessible->NextSibling();
-  mPrevSibling = mAccessible->PrevSibling();
+  mNextSibling = mAccessible->LocalNextSibling();
+  mPrevSibling = mAccessible->LocalPrevSibling();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

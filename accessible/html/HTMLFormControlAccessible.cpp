@@ -449,7 +449,7 @@ nsresult HTMLFileInputAccessible::HandleAccEvent(AccEvent* aEvent) {
                 event->GetState() == states::REQUIRED ||
                 event->GetState() == states::HASPOPUP ||
                 event->GetState() == states::INVALID)) {
-    Accessible* button = GetChildAt(0);
+    Accessible* button = LocalChildAt(0);
     if (button && button->Role() == roles::PUSHBUTTON) {
       RefPtr<AccStateChangeEvent> childEvent = new AccStateChangeEvent(
           button, event->GetState(), event->IsStateEnabled(),
@@ -469,7 +469,7 @@ Accessible* HTMLFileInputAccessible::CurrentItem() const {
 
   // The HTML file input itself gets DOM focus, not the button inside it.
   // For a11y, we want the button to get focus.
-  Accessible* button = FirstChild();
+  Accessible* button = LocalFirstChild();
   if (!button) {
     MOZ_ASSERT_UNREACHABLE("File input doesn't contain a button");
     return nullptr;
@@ -633,7 +633,7 @@ Relation HTMLLegendAccessible::RelationByType(RelationType aType) const {
   Relation rel = HyperTextAccessibleWrap::RelationByType(aType);
   if (aType != RelationType::LABEL_FOR) return rel;
 
-  Accessible* groupbox = Parent();
+  Accessible* groupbox = LocalParent();
   if (groupbox && groupbox->Role() == roles::GROUPING)
     rel.AppendTarget(groupbox);
 
@@ -691,7 +691,7 @@ Relation HTMLFigcaptionAccessible::RelationByType(RelationType aType) const {
   Relation rel = HyperTextAccessibleWrap::RelationByType(aType);
   if (aType != RelationType::LABEL_FOR) return rel;
 
-  Accessible* figure = Parent();
+  Accessible* figure = LocalParent();
   if (figure && figure->GetContent()->NodeInfo()->Equals(
                     nsGkAtoms::figure, mContent->GetNameSpaceID())) {
     rel.AppendTarget(figure);

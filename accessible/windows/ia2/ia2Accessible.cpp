@@ -175,7 +175,7 @@ ia2Accessible::role(long* aRole) {
   // the IA2 role a ROLE_OUTLINEITEM.
   MOZ_ASSERT(!acc->IsProxy());
   if (geckoRole == roles::ROW) {
-    Accessible* xpParent = acc->Parent();
+    Accessible* xpParent = acc->LocalParent();
     if (xpParent && xpParent->Role() == roles::TREE_TABLE)
       *aRole = ROLE_SYSTEM_OUTLINEITEM;
   }
@@ -461,7 +461,7 @@ ia2Accessible::get_accessibleWithCaret(IUnknown** aAccessible,
     return S_FALSE;
 
   Accessible* child = accWithCaret;
-  while (!child->IsDoc() && child != acc) child = child->Parent();
+  while (!child->IsDoc() && child != acc) child = child->LocalParent();
 
   if (child != acc) return S_FALSE;
 

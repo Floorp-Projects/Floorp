@@ -111,7 +111,7 @@ class ARIAGridCellAccessible : public HyperTextAccessibleWrap,
    * Return a containing row.
    */
   Accessible* Row() const {
-    Accessible* row = Parent();
+    Accessible* row = LocalParent();
     return row && row->IsTableRow() ? row : nullptr;
   }
 

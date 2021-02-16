@@ -77,7 +77,7 @@ uint64_t XULMenuitemAccessible::NativeState() const {
 
     // Is collapsed?
     bool isCollapsed = false;
-    Accessible* parent = Parent();
+    Accessible* parent = LocalParent();
     if (parent && parent->State() & states::INVISIBLE) isCollapsed = true;
 
     if (isSelected) {
@@ -86,7 +86,7 @@ uint64_t XULMenuitemAccessible::NativeState() const {
       // Selected and collapsed?
       if (isCollapsed) {
         // Set selected option offscreen/invisible according to combobox state
-        Accessible* grandParent = parent->Parent();
+        Accessible* grandParent = parent->LocalParent();
         if (!grandParent) return state;
         NS_ASSERTION(grandParent->IsCombobox(),
                      "grandparent of combobox listitem is not combobox");
@@ -145,7 +145,7 @@ KeyBinding XULMenuitemAccessible::AccessKey() const {
 
   uint32_t modifierKey = 0;
 
-  Accessible* parentAcc = Parent();
+  Accessible* parentAcc = LocalParent();
   if (parentAcc) {
     if (parentAcc->NativeRole() == roles::MENUBAR) {
       // If top level menu item, add Alt+ or whatever modifier text to string
@@ -369,7 +369,7 @@ uint64_t XULMenupopupAccessible::NativeState() const {
   bool isActive =
       mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::menuactive);
   if (!isActive) {
-    Accessible* parent = Parent();
+    Accessible* parent = LocalParent();
     if (parent) {
       nsIContent* parentContent = parent->GetContent();
       if (parentContent && parentContent->IsElement())
@@ -411,7 +411,7 @@ role XULMenupopupAccessible::NativeRole() const {
 
     if (mParent->Role() == roles::PUSHBUTTON) {
       // Some widgets like the search bar have several popups, owned by buttons.
-      Accessible* grandParent = mParent->Parent();
+      Accessible* grandParent = mParent->LocalParent();
       if (grandParent && grandParent->IsAutoComplete())
         return roles::COMBOBOX_LIST;
     }
@@ -454,7 +454,7 @@ Accessible* XULMenupopupAccessible::ContainerWidget() const {
 
     nsMenuParent* menuParent = menuFrame->GetMenuParent();
     if (!menuParent)  // menulist or menubutton
-      return menuPopup->Parent();
+      return menuPopup->LocalParent();
 
     if (menuParent->IsMenuBar()) {  // menubar menu
       nsMenuBarFrame* menuBarFrame = static_cast<nsMenuBarFrame*>(menuParent);

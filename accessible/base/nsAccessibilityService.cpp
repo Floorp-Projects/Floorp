@@ -1011,7 +1011,7 @@ Accessible* nsAccessibilityService::CreateAccessible(nsINode* aNode,
 
       } else if (roleMapEntry->IsOfType(eTableRow)) {
         if (aContext->IsTable() ||
-            (aContext->Parent() && aContext->Parent()->IsTable())) {
+            (aContext->LocalParent() && aContext->LocalParent()->IsTable())) {
           newAcc = new ARIARowAccessible(content, document);
         }
 
@@ -1347,8 +1347,10 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       // Accessible HTML table row may be a child of tbody/tfoot/thead of
       // accessible HTML table or a direct child of accessible of HTML table.
       Accessible* table = aContext->IsTable() ? aContext : nullptr;
-      if (!table && aContext->Parent() && aContext->Parent()->IsTable())
-        table = aContext->Parent();
+      if (!table && aContext->LocalParent() &&
+          aContext->LocalParent()->IsTable()) {
+        table = aContext->LocalParent();
+      }
 
       if (table) {
         nsIContent* parentContent =

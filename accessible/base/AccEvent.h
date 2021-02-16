@@ -243,7 +243,7 @@ class AccMutationEvent : public AccTreeMutationEvent {
       : AccTreeMutationEvent(aEventType, aTarget) {
     // Don't coalesce these since they are coalesced by reorder event. Coalesce
     // contained text change events.
-    mParent = mAccessible->Parent();
+    mParent = mAccessible->LocalParent();
   }
   virtual ~AccMutationEvent() {}
 
@@ -257,7 +257,7 @@ class AccMutationEvent : public AccTreeMutationEvent {
   bool IsShow() const { return mEventType == nsIAccessibleEvent::EVENT_SHOW; }
   bool IsHide() const { return mEventType == nsIAccessibleEvent::EVENT_HIDE; }
 
-  Accessible* Parent() const { return mParent; }
+  Accessible* LocalParent() const { return mParent; }
 
  protected:
   nsCOMPtr<nsINode> mNode;

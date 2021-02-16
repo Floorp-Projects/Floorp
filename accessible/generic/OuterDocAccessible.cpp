@@ -85,7 +85,7 @@ Accessible* OuterDocAccessible::ChildAtPoint(int32_t aX, int32_t aY,
 
   // Always return the inner doc as direct child accessible unless bounds
   // outside of it.
-  Accessible* child = GetChildAt(0);
+  Accessible* child = LocalChildAt(0);
   NS_ENSURE_TRUE(child, nullptr);
 
   if (aWhichChild == eDeepestChild) {
@@ -224,8 +224,8 @@ uint32_t OuterDocAccessible::ChildCount() const {
   return result;
 }
 
-Accessible* OuterDocAccessible::GetChildAt(uint32_t aIndex) const {
-  Accessible* result = AccessibleWrap::GetChildAt(aIndex);
+Accessible* OuterDocAccessible::LocalChildAt(uint32_t aIndex) const {
+  Accessible* result = AccessibleWrap::LocalChildAt(aIndex);
   if (result || aIndex) {
     return result;
   }

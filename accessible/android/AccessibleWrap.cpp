@@ -367,7 +367,7 @@ void AccessibleWrap::NavigateText(int32_t aGranularity, int32_t aStartOffset,
   }
 
   if (newAnchor && (start != aStartOffset || end != aEndOffset)) {
-    if (IsTextLeaf() && newAnchor == Parent()) {
+    if (IsTextLeaf() && newAnchor == LocalParent()) {
       // For paragraphs, divs, spans, etc., we put a11y focus on the text leaf
       // node instead of the HyperTextAccessible. However, Pivot will always
       // return a HyperTextAccessible. Android doesn't support text navigation
@@ -856,7 +856,7 @@ mozilla::java::GeckoBundle::LocalRef AccessibleWrap::ToBundle(
     auto childCount = ChildCount();
     nsTArray<int32_t> children(childCount);
     for (uint32_t i = 0; i < childCount; i++) {
-      auto child = static_cast<AccessibleWrap*>(GetChildAt(i));
+      auto child = static_cast<AccessibleWrap*>(LocalChildAt(i));
       children.AppendElement(child->VirtualViewID());
     }
 
@@ -914,7 +914,7 @@ bool AccessibleWrap::HandleLiveRegionEvent(AccEvent* aEvent) {
   if (atomic.EqualsIgnoreCase("true")) {
     Accessible* atomicAncestor = nullptr;
     for (Accessible* parent = announcementTarget; parent;
-         parent = parent->Parent()) {
+         parent = parent->LocalParent()) {
       dom::Element* element = parent->Elm();
       if (element &&
           element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_atomic,

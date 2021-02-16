@@ -33,7 +33,7 @@ class ProxyAccessibleWrap : public AccessibleWrap {
 
   virtual uint32_t ChildCount() const override;
 
-  virtual Accessible* GetChildAt(uint32_t aIndex) const override;
+  virtual Accessible* LocalChildAt(uint32_t aIndex) const override;
 
   virtual ENameValueFlag Name(nsString& aName) const override;
 
