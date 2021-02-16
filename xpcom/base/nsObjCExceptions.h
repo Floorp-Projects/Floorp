@@ -41,14 +41,6 @@ void nsObjCExceptionLog(NSException* aException);
   }                                     \
   return nil;
 
-#define NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSNULL @try {
-#define NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL \
-  }                                        \
-  @catch (NSException * _exn) {            \
-    nsObjCExceptionLog(_exn);              \
-  }                                        \
-  return nullptr;
-
 #define NS_OBJC_BEGIN_TRY_BLOCK_RETURN @try {
 #define NS_OBJC_END_TRY_BLOCK_RETURN(_rv) \
   }                                       \

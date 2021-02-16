@@ -617,7 +617,7 @@ nsIWidget* nsCocoaWindow::GetSheetWindowParent(void) {
 }
 
 void* nsCocoaWindow::GetNativeData(uint32_t aDataType) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSNULL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   void* retVal = nullptr;
 
@@ -660,7 +660,7 @@ void* nsCocoaWindow::GetNativeData(uint32_t aDataType) {
 
   return retVal;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nullptr);
 }
 
 bool nsCocoaWindow::IsVisible() const {
