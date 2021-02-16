@@ -13,6 +13,7 @@
 #include "jsapi/PeerConnectionCtx.h"
 #include "jsapi/RTCStatsReport.h"
 #include "MediaConduitErrors.h"
+#include "mozilla/media/MediaUtils.h"
 #include "mozilla/RefCounted.h"
 #include "TaskQueueWrapper.h"
 #include "VideoTypes.h"
@@ -246,15 +247,18 @@ class WebRtcCallWrapper {
 
   static RefPtr<WebRtcCallWrapper> Create(
       const dom::RTCStatsTimestampMaker& aTimestampMaker,
+      UniquePtr<media::ShutdownBlockingTicket> aShutdownTicket,
       SharedWebrtcState* aSharedState, webrtc::WebRtcKeyValueConfig* aTrials) {
     auto current = TaskQueueWrapper::MainAsCurrent();
-    return Create(aTimestampMaker, aSharedState->GetModuleThread(),
+    return Create(aTimestampMaker, std::move(aShutdownTicket),
+                  aSharedState->GetModuleThread(),
                   aSharedState->mAudioStateConfig,
                   aSharedState->mAudioDecoderFactory, aTrials);
   }
 
   static RefPtr<WebRtcCallWrapper> Create(
       const dom::RTCStatsTimestampMaker& aTimestampMaker,
+      UniquePtr<media::ShutdownBlockingTicket> aShutdownTicket,
       webrtc::SharedModuleThread* aModuleThread,
       const webrtc::AudioState::Config& aAudioStateConfig,
       webrtc::AudioDecoderFactory* aAudioDecoderFactory,
@@ -272,7 +276,8 @@ class WebRtcCallWrapper {
     return new WebRtcCallWrapper(
         aAudioDecoderFactory, std::move(videoBitrateAllocatorFactory),
         WrapUnique(webrtc::Call::Create(config, aModuleThread)),
-        std::move(eventLog), std::move(taskQueueFactory), aTimestampMaker);
+        std::move(eventLog), std::move(taskQueueFactory), aTimestampMaker,
+        std::move(aShutdownTicket));
   }
 
   static RefPtr<WebRtcCallWrapper> Create(UniquePtr<webrtc::Call> aCall) {
@@ -317,11 +322,13 @@ class WebRtcCallWrapper {
 
   // Allow destroying the Call instance on the Call worker thread.
   //
+  // Note that shutdown is blocked until the Call instance is destroyed.
+  //
   // This CallWrapper is designed to be sharable, and is held by several objects
   // that are cycle-collectable. TaskQueueWrapper that the Call instances use
   // for worker threads are based off SharedThreadPools, and will block
   // xpcom-shutdown-threads until destroyed. The Call instance however will hold
-  // on to its worker threads until destroyed itself.
+  // on to its worker threads until destruction.
   //
   // If the last ref to this CallWrapper is held to cycle collector shutdown we
   // end up in a deadlock where cycle collector shutdown is required to destroy
@@ -334,6 +341,7 @@ class WebRtcCallWrapper {
     MOZ_ASSERT(NS_IsMainThread());
     auto current = TaskQueueWrapper::MainAsCurrent();
     mCall = nullptr;
+    mShutdownTicket = nullptr;
   }
 
   const dom::RTCStatsTimestampMaker& GetTimestampMaker() const {
@@ -350,8 +358,10 @@ class WebRtcCallWrapper {
                     UniquePtr<webrtc::Call> aCall,
                     UniquePtr<webrtc::RtcEventLog> aEventLog,
                     UniquePtr<webrtc::TaskQueueFactory> aTaskQueueFactory,
-                    const dom::RTCStatsTimestampMaker& aTimestampMaker)
+                    const dom::RTCStatsTimestampMaker& aTimestampMaker,
+                    UniquePtr<media::ShutdownBlockingTicket> aShutdownTicket)
       : mTimestampMaker(aTimestampMaker),
+        mShutdownTicket(std::move(aShutdownTicket)),
         mAudioDecoderFactory(std::move(aAudioDecoderFactory)),
         mVideoBitrateAllocatorFactory(std::move(aVideoBitrateAllocatorFactory)),
         mEventLog(std::move(aEventLog)),
@@ -367,6 +377,7 @@ class WebRtcCallWrapper {
   // collisions.
   std::set<MediaSessionConduit*> mConduits;
   dom::RTCStatsTimestampMaker mTimestampMaker;
+  UniquePtr<media::ShutdownBlockingTicket> mShutdownTicket;
 
  public:
   const RefPtr<webrtc::AudioDecoderFactory> mAudioDecoderFactory;
