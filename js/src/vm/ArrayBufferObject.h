@@ -159,7 +159,6 @@ using MutableHandleArrayBufferObjectMaybeShared =
  */
 class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   static bool byteLengthGetterImpl(JSContext* cx, const CallArgs& args);
-  static bool fun_slice_impl(JSContext* cx, const CallArgs& args);
 
  public:
   static const uint8_t DATA_SLOT = 0;
@@ -196,11 +195,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
       (NativeObject::MAX_FIXED_SLOTS - RESERVED_SLOTS) * sizeof(JS::Value);
 
  public:
-  enum OwnsState {
-    DoesntOwnData = 0,
-    OwnsData = 1,
-  };
-
   enum BufferKind {
     /** Inline data kept in the repurposed slots of this ArrayBufferObject. */
     INLINE_DATA = 0b000,
@@ -339,11 +333,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   static bool byteLengthGetter(JSContext* cx, unsigned argc, Value* vp);
 
-  static bool fun_slice(JSContext* cx, unsigned argc, Value* vp);
-
   static bool fun_isView(JSContext* cx, unsigned argc, Value* vp);
-
-  static bool fun_species(JSContext* cx, unsigned argc, Value* vp);
 
   static bool class_constructor(JSContext* cx, unsigned argc, Value* vp);
 
