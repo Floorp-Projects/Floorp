@@ -563,15 +563,24 @@ var DownloadsPanel = {
     }
 
     DownloadsCommon.log("Opening downloads panel popup.");
-    PanelMultiView.openPopup(
-      this.panel,
-      anchor,
-      "bottomcenter topright",
-      0,
-      0,
-      false,
-      null
-    ).catch(Cu.reportError);
+
+    // Delay displaying the panel because this function will sometimes be
+    // called while another window is closing (like the window for selecting
+    // whether to save or open the file), and that would cause the panel to
+    // close immediately.
+    setTimeout(
+      () =>
+        PanelMultiView.openPopup(
+          this.panel,
+          anchor,
+          "bottomcenter topright",
+          0,
+          0,
+          false,
+          null
+        ).catch(Cu.reportError),
+      0
+    );
   },
 };
 
