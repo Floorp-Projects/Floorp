@@ -9,6 +9,7 @@ const taLargeLength = new Uint8Array(bufferLarge);
 
 const dvSmall = new DataView(bufferSmall);
 const dvLargeOffset = new DataView(bufferLarge, 5 * gb);
+const dvLargeLength = new DataView(bufferLarge);
 
 const ArrayBufferByteLength = getSelfHostedValue("ArrayBufferByteLength");
 const TypedArrayByteOffset = getSelfHostedValue("TypedArrayByteOffset");
@@ -52,3 +53,12 @@ function testDataViewByteOffsetInt32() {
     }
 }
 testDataViewByteOffsetInt32();
+
+function testDataViewByteLengthInt32() {
+    var arr = [dvLargeLength, dvSmall];
+    for (var i = 0; i < 2000; i++) {
+        var idx = +(i < 1900); // First 1 then 0.
+        assertEq(arr[idx].byteLength, idx === 0 ? 6 * gb : 8);
+    }
+}
+testDataViewByteLengthInt32();
