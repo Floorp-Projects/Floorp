@@ -148,7 +148,7 @@ Tools.inspector = {
     const ctrlShiftC = "Ctrl+Shift+" + l10n("inspector.commandkey");
     return l10n("inspector.tooltip2", ctrlShiftC);
   },
-  inMenu: true,
+  inMenu: false,
 
   preventClosingOnKey: true,
   // preventRaisingOnKey is used to keep the focus on the content window for shortcuts
@@ -182,7 +182,7 @@ Tools.webConsole = {
         l10n("webconsole.commandkey")
     );
   },
-  inMenu: true,
+  inMenu: false,
 
   preventClosingOnKey: true,
   onkey: function(panel, toolbox) {
@@ -217,7 +217,7 @@ Tools.jsdebugger = {
         l10n("jsdebugger.commandkey2")
     );
   },
-  inMenu: true,
+  inMenu: false,
   isTargetSupported: function() {
     return true;
   },
@@ -241,7 +241,7 @@ Tools.styleEditor = {
       "Shift+" + functionkey(l10n("styleeditor.commandkey"))
     );
   },
-  inMenu: true,
+  inMenu: false,
   isTargetSupported: function(target) {
     return target.hasActor("styleSheets");
   },
@@ -265,7 +265,7 @@ Tools.performance = {
     );
   },
   accesskey: l10n("performance.accesskey"),
-  inMenu: true,
+  inMenu: false,
 };
 
 function switchPerformancePanel() {
@@ -348,7 +348,7 @@ Tools.netMonitor = {
         l10n("netmonitor.commandkey")
     );
   },
-  inMenu: true,
+  inMenu: false,
 
   isTargetSupported: function(target) {
     return target.getTrait("networkMonitor") && !target.isWorkerTarget;
@@ -375,7 +375,7 @@ Tools.storage = {
       "Shift+" + functionkey(l10n("storage.commandkey"))
     );
   },
-  inMenu: true,
+  inMenu: false,
 
   isTargetSupported: function(target) {
     return target.hasActor("storage");
@@ -402,7 +402,7 @@ Tools.dom = {
         l10n("dom.commandkey")
     );
   },
-  inMenu: true,
+  inMenu: false,
 
   isTargetSupported: function(target) {
     return true;
@@ -429,7 +429,7 @@ Tools.accessibility = {
       "Shift+" + functionkey(l10n("accessibilityF12.commandkey"))
     );
   },
-  inMenu: true,
+  inMenu: false,
 
   isTargetSupported(target) {
     return target.hasActor("accessibility");
@@ -449,7 +449,7 @@ Tools.application = {
   label: l10n("application.label"),
   panelLabel: l10n("application.panellabel"),
   tooltip: l10n("application.tooltip"),
-  inMenu: true,
+  inMenu: false,
 
   isTargetSupported: function(target) {
     return target.hasActor("manifest");
