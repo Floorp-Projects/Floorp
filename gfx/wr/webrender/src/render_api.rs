@@ -941,9 +941,6 @@ pub enum DebugCommand {
     /// Causes the scene builder to pause for a given amount of milliseconds each time it
     /// processes a transaction.
     SimulateLongSceneBuild(u32),
-    /// Causes the low priority scene builder to pause for a given amount of milliseconds
-    /// each time it processes a transaction.
-    SimulateLongLowPrioritySceneBuild(u32),
     /// Set an override tile size to use for picture caches
     SetPictureTileSize(Option<DeviceIntSize>),
 }
