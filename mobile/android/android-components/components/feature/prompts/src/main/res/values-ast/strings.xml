@@ -29,7 +29,7 @@
     <!-- Error text displayed underneath the password field when it is in an error case -->
     <string name="mozac_feature_prompt_error_empty_password">El campu Contraseña nun ha tar baleru</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause">Nun pue guardase l\'aniciu de sesión</string>
+    <string name="mozac_feature_prompt_error_unknown_cause">Nun ye posible guardar l\'aniciu de sesión</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
     <string name="mozac_feature_prompt_login_save_headline">¿Guardar esti aniciu de sesión?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->

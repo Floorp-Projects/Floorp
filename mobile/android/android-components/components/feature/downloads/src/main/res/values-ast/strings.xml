@@ -17,7 +17,7 @@
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
     <string name="mozac_feature_downloads_dialog_cancel">Encaboxar</string>
     <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
-    <string name="mozac_feature_downloads_file_not_supported2">%1$s nun pue baxar esta triba de ficheru</string>
+    <string name="mozac_feature_downloads_file_not_supported2">%1$s nun pue baxar esti tipu de ficheru</string>
 
     <!-- Message that appears when the downloaded file could not be opened-->
     <string name="mozac_feature_downloads_could_not_open_file">Nun pudo abrise\'l ficheru</string>
@@ -41,5 +41,5 @@
     <!-- Title for the third party download app chooser dialog -->
     <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">Completar l\'aición col usu de:</string>
     <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
-    <string name="mozac_feature_downloads_unable_to_open_third_party_app">Nun pue abrise %1$s</string>
+    <string name="mozac_feature_downloads_unable_to_open_third_party_app">Nun ye posible abrir %1$s</string>
 </resources>
