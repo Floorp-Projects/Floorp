@@ -602,13 +602,13 @@ nsresult GfxInfo::GetFeatureStatusImpl(
 #ifdef NIGHTLY_BUILD
       // On Nightly enable Webrender on all Adreno 4xx GPUs
       isUnblocked |= gpu.Find("Adreno (TM) 4", /*ignoreCase*/ true) >= 0;
-
-      // On Nightly enable Webrender on all Mali-Txxx GPUs
-      isUnblocked |= gpu.Find("Mali-T", /*ignoreCase*/ true) >= 0;
 #endif
       // Enable Webrender on all Adreno 5xx and 6xx GPUs
       isUnblocked |= gpu.Find("Adreno (TM) 5", /*ignoreCase*/ true) >= 0 ||
                      gpu.Find("Adreno (TM) 6", /*ignoreCase*/ true) >= 0;
+
+      // Enable Webrender on all Mali-Txxx GPUs
+      isUnblocked |= gpu.Find("Mali-T", /*ignoreCase*/ true) >= 0;
 
       // Enable Webrender on all Mali-Gxx GPUs...
       isUnblocked |= gpu.Find("Mali-G", /*ignoreCase*/ true) >= 0 &&
