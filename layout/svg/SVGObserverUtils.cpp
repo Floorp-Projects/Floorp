@@ -490,7 +490,7 @@ void SVGTextPathObserver::OnRenderingChange() {
     text->AddStateBits(NS_STATE_SVG_TEXT_CORRESPONDENCE_DIRTY |
                        NS_STATE_SVG_POSITIONING_DIRTY);
 
-    if (SVGUtils::AnyOuterSVGIsCallingReflowSVG(text)) {
+    if (SVGUtils::OuterSVGIsCallingReflowSVG(text)) {
       text->AddStateBits(NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
       if (text->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
         text->ReflowSVGNonDisplayText();

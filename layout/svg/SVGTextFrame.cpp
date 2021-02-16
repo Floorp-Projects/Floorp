@@ -3294,7 +3294,7 @@ nsIFrame* SVGTextFrame::GetFrameForPoint(const gfxPoint& aPoint) {
 }
 
 void SVGTextFrame::ReflowSVG() {
-  MOZ_ASSERT(SVGUtils::AnyOuterSVGIsCallingReflowSVG(this),
+  MOZ_ASSERT(SVGUtils::OuterSVGIsCallingReflowSVG(this),
              "This call is probaby a wasteful mistake");
 
   MOZ_ASSERT(!HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
