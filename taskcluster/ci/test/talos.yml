@@ -65,6 +65,7 @@ talos-bcv:
                     webrender-sw: ['trunk']
                     default: []
             windows7-32.*: []
+            windows10-64-qr.*: []
             (linux|windows10|macos)(?!.*shippable)(?!.*-qr).*: []
             default: ['mozilla-beta', 'trunk']
     max-run-time: 1800
