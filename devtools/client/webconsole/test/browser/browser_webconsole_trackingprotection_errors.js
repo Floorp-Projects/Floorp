@@ -189,7 +189,7 @@ add_task(async function testForeignCookiePartitionedMessage() {
     findMessage(
       hud,
       `Partitioned cookie or storage access was provided to ${PARTITIONED_URL} because it is ` +
-        `loaded in the third-party context and storage partitioning is enabled.`
+        `loaded in the third-party context and dynamic state partitioning is enabled.`
     )
   );
   await testLearnMoreClickOpenNewTab(
