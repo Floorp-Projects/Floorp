@@ -22,24 +22,46 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const IS_MAIN_PROCESS =
   Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
 
-const SYNC_DATA_PREF = "messaging-system.syncdatastore.data";
+const SYNC_DATA_PREF_BRANCH = "nimbus.syncdatastore.";
 let tryJSONParse = data => {
   try {
     return JSON.parse(data);
   } catch (e) {}
 
-  return {};
+  return null;
 };
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "syncDataStore",
-  SYNC_DATA_PREF,
-  {},
-  // aOnUpdate
-  (data, prev, latest) => tryJSONParse(latest),
-  // aTransform
-  tryJSONParse
-);
+XPCOMUtils.defineLazyGetter(this, "syncDataStore", () => {
+  // Pref name changed in bug 1691516 and we want to clear the old pref for users
+  const previousPrefName = "messaging-system.syncdatastore.data";
+  try {
+    if (IS_MAIN_PROCESS) {
+      Services.prefs.clearUserPref(previousPrefName);
+    }
+  } catch (e) {}
+
+  let prefBranch = Services.prefs.getBranch(SYNC_DATA_PREF_BRANCH);
+  return {
+    get(featureId) {
+      try {
+        return tryJSONParse(prefBranch.getStringPref(featureId, ""));
+      } catch (e) {
+        /* This is expected if we don't have anything stored */
+      }
+
+      return null;
+    },
+    set(featureId, value) {
+      try {
+        prefBranch.setStringPref(featureId, JSON.stringify(value));
+      } catch (e) {
+        Cu.reportError(e);
+      }
+    },
+    delete(featureId) {
+      prefBranch.clearUserPref(featureId);
+    },
+  };
+});
 
 const DEFAULT_STORE_ID = "ExperimentStoreData";
 // Experiment feature configs that should be saved to prefs for
@@ -61,11 +83,14 @@ class ExperimentStore extends SharedDataMap {
    * @memberof ExperimentStore
    */
   getExperimentForFeature(featureId) {
-    return this.getAllActive().find(
-      experiment =>
-        experiment.featureIds?.includes(featureId) ||
-        // Supports <v1.3.0, which was when .featureIds was added
-        experiment.branch?.feature?.featureId === featureId
+    return (
+      this.getAllActive().find(
+        experiment =>
+          experiment.featureIds?.includes(featureId) ||
+          // Supports <v1.3.0, which was when .featureIds was added
+          experiment.branch?.feature?.featureId === featureId
+        // Default to the pref store if data is not yet ready
+      ) || syncDataStore.get(featureId)
     );
   }
 
@@ -90,7 +115,7 @@ class ExperimentStore extends SharedDataMap {
   getAll() {
     let data = [];
     try {
-      data = Object.values(this._data || syncDataStore);
+      data = Object.values(this._data || {});
     } catch (e) {
       Cu.reportError(e);
     }
@@ -132,19 +157,14 @@ class ExperimentStore extends SharedDataMap {
    * @param {Enrollment} experiment
    */
   _updateSyncStore(experiment) {
-    if (SYNC_ACCESS_FEATURES.includes(experiment.branch.feature?.featureId)) {
+    let featureId = experiment.branch.feature?.featureId;
+    if (SYNC_ACCESS_FEATURES.includes(featureId)) {
       if (!experiment.active) {
-        // Remove experiments on un-enroll, otherwise nothing to do
-        if (syncDataStore[experiment.slug]) {
-          delete syncDataStore[experiment.slug];
-        }
+        // Remove experiments on un-enroll, no need to check if it exists
+        syncDataStore.delete(featureId);
       } else {
-        syncDataStore[experiment.slug] = experiment;
+        syncDataStore.set(featureId, experiment);
       }
-      Services.prefs.setStringPref(
-        SYNC_DATA_PREF,
-        JSON.stringify(syncDataStore)
-      );
     }
   }
 
