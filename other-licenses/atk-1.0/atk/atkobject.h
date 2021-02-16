@@ -20,13 +20,13 @@
 #ifndef __ATK_OBJECT_H__
 #define __ATK_OBJECT_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 #include <glib-object.h>
 #include <atk/atkstate.h>
 #include <atk/atkrelationtype.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 /*
  * AtkObject represents the minimum information all accessible objects
