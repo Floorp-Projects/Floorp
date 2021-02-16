@@ -10,6 +10,7 @@ This page will help you get set up to build Firefox on your own machine.
 
 .. toctree::
    :caption: Setting Up Your Machine
+   :maxdepth: 1
 
    windows_build
    macos_build
