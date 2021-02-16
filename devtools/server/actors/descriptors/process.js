@@ -74,7 +74,12 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
       // Create the target actor for the parent process, which is in the same process
       // as this target. Because we are in the same process, we have a true actor that
       // should be managed by the ProcessDescriptorActor.
-      targetActor = new ParentProcessTargetActor(this.conn);
+      targetActor = new ParentProcessTargetActor(this.conn, {
+        // This BrowsingContextTargetActor is special and will stay alive as long
+        // as the toolbox/client is alive. It is the original top level target for
+        // the BrowserToolbox and isTopLevelTarget should always be true here.
+        isTopLevelTarget: true,
+      });
       // this is a special field that only parent process with a browsing context
       // have, as they are the only processes at the moment that have child
       // browsing contexts

@@ -46,11 +46,20 @@ const parentProcessTargetPrototype = extend({}, browsingContextTargetPrototype);
  *
  * @param connection DevToolsServerConnection
  *        The connection to the client.
- * @param window Window object (optional)
+ * @param window {Window} object (optional)
  *        If the upper class already knows against which window the actor should attach,
  *        it is passed as a constructor argument here.
+ * @param {Object} options
+ *        - isTopLevelTarget: {Boolean} flag to indicate if this is the top
+ *          level target of the DevTools session
+ *        - window: {Window} If the upper class already knows against which
+ *          window the actor should attach, it is passed as a constructor
+ *          argument here.
  */
-parentProcessTargetPrototype.initialize = function(connection, window) {
+parentProcessTargetPrototype.initialize = function(
+  connection,
+  { isTopLevelTarget, window }
+) {
   // Defines the default docshell selected for the target actor
   if (!window) {
     window = Services.wm.getMostRecentWindow(DevToolsServer.chromeWindowType);
@@ -68,17 +77,10 @@ parentProcessTargetPrototype.initialize = function(connection, window) {
     window = Services.appShell.hiddenDOMWindow;
   }
 
-  BrowsingContextTargetActor.prototype.initialize.call(
-    this,
-    connection,
-    window.docShell,
-    {
-      // This BrowsingContextTargetActor is special and will stay alive as long
-      // as the toolbox/client is alive. It is the original top level target for
-      // the BrowserToolbox and isTopLevelTarget will always be true here.
-      isTopLevelTarget: true,
-    }
-  );
+  BrowsingContextTargetActor.prototype.initialize.call(this, connection, {
+    docShell: window.docShell,
+    isTopLevelTarget,
+  });
 
   // This creates a Debugger instance for chrome debugging all globals.
   this.makeDebugger = makeDebugger.bind(null, {

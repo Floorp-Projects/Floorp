@@ -333,7 +333,9 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
       this._chromeWindowActorPool = new Pool(this.conn, "chrome-window");
     }
 
-    const actor = new ChromeWindowTargetActor(this.conn, window);
+    const actor = new ChromeWindowTargetActor(this.conn, window, {
+      isTopLevelTarget: true,
+    });
     actor.parentID = this.actorID;
     this._chromeWindowActorPool.manage(actor);
 
