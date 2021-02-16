@@ -839,11 +839,7 @@ struct QueueParamTraits<UniquePtr<T>> {
       return QueueStatus::kSuccess;
     }
 
-    T* obj = nullptr;
-    obj = new T();
-    if (!obj) {
-      return QueueStatus::kOOMError;
-    }
+    T* obj = new T();
     aArg->reset(obj);
     return aConsumerView.ReadParam(obj);
   }
