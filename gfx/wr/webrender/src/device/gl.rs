@@ -1635,12 +1635,12 @@ impl Device {
         // from a non-zero offset within a PBO to fail. See bug 1603783.
         let supports_nonzero_pbo_offsets = !is_macos;
 
-        let is_mali_g = renderer_name.starts_with("Mali-G");
+        let is_mali = renderer_name.starts_with("Mali");
 
-        // On Mali-Gxx there is a driver bug when rendering partial updates to
+        // On Mali-Gxx and Txxx there is a driver bug when rendering partial updates to
         // offscreen render targets, so we must ensure we render to the entire target.
         // See bug 1663355.
-        let supports_render_target_partial_update = !is_mali_g;
+        let supports_render_target_partial_update = !is_mali;
 
         let supports_shader_storage_object = match gl.get_type() {
             // see https://www.g-truc.net/post-0734.html
@@ -1657,6 +1657,8 @@ impl Device {
         // SWGL uses swgl_antiAlias() instead of implementing anti-aliasing in shaders.
         // As above, this allows bypassing certain alpha-pass variants.
         let uses_native_antialiasing = is_software_webrender;
+
+        let is_mali_g = renderer_name.starts_with("Mali-G");
 
         let mut requires_batched_texture_uploads = None;
         if is_software_webrender {
