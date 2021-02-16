@@ -13,7 +13,6 @@ var EXPORTED_SYMBOLS = ["ViewSourcePageChild"];
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["NodeFilter"]);
 
-const NS_XHTML = "http://www.w3.org/1999/xhtml";
 const BUNDLE_URL = "chrome://global/locale/viewSource.properties";
 
 // These are markers used to delimit the selection during processing. They
@@ -36,37 +35,6 @@ let gNeedsDrawSelection = false;
  */
 let gInitialLineNumber = -1;
 
-/**
- * In-page context menu items that are injected after page load.
- */
-let gContextMenuItems = [
-  {
-    id: "goToLine",
-    accesskey: true,
-    handler(actor) {
-      actor.sendAsyncMessage("ViewSource:PromptAndGoToLine");
-    },
-  },
-  {
-    id: "wrapLongLines",
-    get checked() {
-      return Services.prefs.getBoolPref("view_source.wrap_long_lines");
-    },
-    handler(actor) {
-      actor.toggleWrapping();
-    },
-  },
-  {
-    id: "highlightSyntax",
-    get checked() {
-      return Services.prefs.getBoolPref("view_source.syntax_highlight");
-    },
-    handler(actor) {
-      actor.toggleSyntaxHighlighting();
-    },
-  },
-];
-
 class ViewSourcePageChild extends JSWindowActorChild {
   constructor() {
     super();
@@ -85,9 +53,22 @@ class ViewSourcePageChild extends JSWindowActorChild {
   }
 
   receiveMessage(msg) {
-    if (msg.name == "ViewSource:GoToLine") {
-      this.goToLine(msg.data.lineNumber);
+    switch (msg.name) {
+      case "ViewSource:GoToLine":
+        this.goToLine(msg.data.lineNumber);
+        break;
+      case "ViewSource:IsWrapping":
+        return this.isWrapping;
+      case "ViewSource:IsSyntaxHighlighting":
+        return this.isSyntaxHighlighting;
+      case "ViewSource:ToggleWrapping":
+        this.toggleWrapping();
+        break;
+      case "ViewSource:ToggleSyntaxHighlighting":
+        this.toggleSyntaxHighlighting();
+        break;
     }
+    return undefined;
   }
 
   /**
@@ -128,20 +109,9 @@ class ViewSourcePageChild extends JSWindowActorChild {
    * This handler is for click events from:
    *   * error page content, which can show up if the user attempts to view the
    *     source of an attack page.
-   *   * in-page context menu actions
    */
   onClick(event) {
     let target = event.originalTarget;
-    // Check for content menu actions
-    if (target.id) {
-      gContextMenuItems.forEach(itemSpec => {
-        if (itemSpec.id !== target.id) {
-          return;
-        }
-        itemSpec.handler(this);
-        event.stopPropagation();
-      });
-    }
 
     // Don't trust synthetic events
     if (!event.isTrusted || event.target.localName != "button") {
@@ -180,10 +150,6 @@ class ViewSourcePageChild extends JSWindowActorChild {
     if (gInitialLineNumber >= 0) {
       this.goToLine(gInitialLineNumber);
       gInitialLineNumber = -1;
-    }
-
-    if (this.document.body) {
-      this.injectContextMenu();
     }
   }
 
@@ -381,6 +347,20 @@ class ViewSourcePageChild extends JSWindowActorChild {
   }
 
   /**
+   * @return {boolean} whether the "wrap" class exists on the document body.
+   */
+  get isWrapping() {
+    return this.document.body.classList.contains("wrap");
+  }
+
+  /**
+   * @return {boolean} whether the "highlight" class exists on the document body.
+   */
+  get isSyntaxHighlighting() {
+    return this.document.body.classList.contains("highlight");
+  }
+
+  /**
    * Toggles the "wrap" class on the document body, which sets whether
    * or not long lines are wrapped.  Notifies parent to update the pref.
    */
@@ -499,57 +479,5 @@ class ViewSourcePageChild extends JSWindowActorChild {
     findInst.wrapFind = wrapFind;
     findInst.findBackwards = findBackwards;
     findInst.searchString = searchString;
-  }
-
-  /**
-   * Add context menu items for view source specific actions.
-   */
-  injectContextMenu() {
-    let doc = this.document;
-
-    let menu = doc.createElementNS(NS_XHTML, "menu");
-    menu.setAttribute("type", "context");
-    menu.setAttribute("id", "actions");
-    doc.body.appendChild(menu);
-    doc.body.setAttribute("contextmenu", "actions");
-
-    gContextMenuItems.forEach(itemSpec => {
-      let item = doc.createElementNS(NS_XHTML, "menuitem");
-      item.setAttribute("id", itemSpec.id);
-      let labelName = `context_${itemSpec.id}_label`;
-      let label = this.bundle.GetStringFromName(labelName);
-      item.setAttribute("label", label);
-      if ("checked" in itemSpec) {
-        item.setAttribute("type", "checkbox");
-      }
-      if (itemSpec.accesskey) {
-        let accesskeyName = `context_${itemSpec.id}_accesskey`;
-        item.setAttribute(
-          "accesskey",
-          this.bundle.GetStringFromName(accesskeyName)
-        );
-      }
-      menu.appendChild(item);
-    });
-
-    this.updateContextMenu();
-  }
-
-  /**
-   * Update state of checkbox-style context menu items.
-   */
-  updateContextMenu() {
-    let doc = this.document;
-    gContextMenuItems.forEach(itemSpec => {
-      if (!("checked" in itemSpec)) {
-        return;
-      }
-      let item = doc.getElementById(itemSpec.id);
-      if (itemSpec.checked) {
-        item.setAttribute("checked", true);
-      } else {
-        item.removeAttribute("checked");
-      }
-    });
   }
 }

@@ -18,70 +18,84 @@ add_task(async function() {
   await exercisePrefs(htmlURL, true);
 });
 
-async function removeChecked(browser, id) {
-  await SpecialPowers.spawn(browser, [id], async function(id) {
-    let item = content.document.getElementById(id);
-    if (item.getAttribute("checked") == "false") {
-      item.removeAttribute("checked");
-    }
-  });
+async function openContextMenu(browser) {
+  const contextMenu = document.getElementById("contentAreaContextMenu");
+  const popupShownPromise = BrowserTestUtils.waitForEvent(
+    contextMenu,
+    "popupshown"
+  );
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "html",
+    { type: "contextmenu", button: 2 },
+    browser
+  );
+  await popupShownPromise;
 }
 
-async function hasAttribute(browser, id, attribute) {
-  return SpecialPowers.spawn(browser, [{ id, attribute }], async function(arg) {
-    let item = content.document.getElementById(arg.id);
-    return item.hasAttribute(arg.attribute);
-  });
+async function closeContextMenu() {
+  const contextMenu = document.getElementById("contentAreaContextMenu");
+  const popupHiddenPromise = BrowserTestUtils.waitForEvent(
+    contextMenu,
+    "popuphidden"
+  );
+  contextMenu.hidePopup();
+  await popupHiddenPromise;
+}
+
+function getAttribute(id, attribute) {
+  let item = document.getElementById(id);
+  return item.getAttribute(attribute);
 }
 
 var exercisePrefs = async function(source, highlightable) {
   let tab = await openDocument(source);
   let browser = tab.linkedBrowser;
 
-  const wrapMenuItem = "wrapLongLines";
-  const syntaxMenuItem = "highlightSyntax";
-
-  // Strip checked="false" attributes, since we're not interested in them.
-  await removeChecked(browser, wrapMenuItem);
-  await removeChecked(browser, syntaxMenuItem);
+  const wrapMenuItem = "context-viewsource-wrapLongLines";
+  const syntaxMenuItem = "context-viewsource-highlightSyntax";
 
   // Test the default states of these menu items.
+  await checkStyle(browser, "-moz-tab-size", 4);
+  await openContextMenu(browser);
+  await checkStyle(browser, "white-space", "pre");
+  await checkHighlight(browser, highlightable);
   is(
-    await hasAttribute(browser, wrapMenuItem, "checked"),
-    false,
+    getAttribute(wrapMenuItem, "checked"),
+    "false",
     "Wrap menu item not checked by default"
   );
   is(
-    await hasAttribute(browser, syntaxMenuItem, "checked"),
-    true,
+    getAttribute(syntaxMenuItem, "checked"),
+    "true",
     "Syntax menu item checked by default"
   );
-
-  await checkStyle(browser, "-moz-tab-size", 4);
-  await checkStyle(browser, "white-space", "pre");
+  await closeContextMenu();
 
   // Next, test that the Wrap Long Lines menu item works.
   let prefReady = waitForPrefChange("view_source.wrap_long_lines");
-  await simulateClick(browser, wrapMenuItem);
-  is(
-    await hasAttribute(browser, wrapMenuItem, "checked"),
-    true,
-    "Wrap menu item checked"
-  );
+  await openContextMenu(browser);
+  simulateClick(wrapMenuItem);
+  await closeContextMenu();
+  await openContextMenu(browser);
+  await checkStyle(browser, "white-space", "pre-wrap");
+  is(getAttribute(wrapMenuItem, "checked"), "true", "Wrap menu item checked");
   await prefReady;
   is(
     SpecialPowers.getBoolPref("view_source.wrap_long_lines"),
     true,
     "Wrap pref set"
   );
-
-  await checkStyle(browser, "white-space", "pre-wrap");
+  await closeContextMenu();
 
   prefReady = waitForPrefChange("view_source.wrap_long_lines");
-  await simulateClick(browser, wrapMenuItem);
+  await openContextMenu(browser);
+  simulateClick(wrapMenuItem);
+  await closeContextMenu();
+  await openContextMenu(browser);
+  await checkStyle(browser, "white-space", "pre");
   is(
-    await hasAttribute(browser, wrapMenuItem, "checked"),
-    false,
+    getAttribute(wrapMenuItem, "checked"),
+    "false",
     "Wrap menu item unchecked"
   );
   await prefReady;
@@ -90,14 +104,18 @@ var exercisePrefs = async function(source, highlightable) {
     false,
     "Wrap pref set"
   );
-  await checkStyle(browser, "white-space", "pre");
+  await closeContextMenu();
 
   // Check that the Syntax Highlighting menu item works.
   prefReady = waitForPrefChange("view_source.syntax_highlight");
-  await simulateClick(browser, syntaxMenuItem);
+  await openContextMenu(browser);
+  simulateClick(syntaxMenuItem);
+  await closeContextMenu();
+  await openContextMenu(browser);
+  await checkHighlight(browser, false);
   is(
-    await hasAttribute(browser, syntaxMenuItem, "checked"),
-    false,
+    getAttribute(syntaxMenuItem, "checked"),
+    "false",
     "Syntax menu item unchecked"
   );
   await prefReady;
@@ -106,13 +124,17 @@ var exercisePrefs = async function(source, highlightable) {
     false,
     "Syntax highlighting pref set"
   );
-  await checkHighlight(browser, false);
+  await closeContextMenu();
 
   prefReady = waitForPrefChange("view_source.syntax_highlight");
-  simulateClick(browser, syntaxMenuItem);
+  await openContextMenu(browser);
+  simulateClick(syntaxMenuItem);
+  await closeContextMenu();
+  await openContextMenu(browser);
+  await checkHighlight(browser, highlightable);
   is(
-    await hasAttribute(browser, syntaxMenuItem, "checked"),
-    true,
+    getAttribute(syntaxMenuItem, "checked"),
+    "true",
     "Syntax menu item checked"
   );
   await prefReady;
@@ -121,7 +143,7 @@ var exercisePrefs = async function(source, highlightable) {
     true,
     "Syntax highlighting pref set"
   );
-  await checkHighlight(browser, highlightable);
+  await closeContextMenu();
   gBrowser.removeTab(tab);
 
   // Open a new view-source window to check that the prefs are obeyed.
@@ -132,45 +154,27 @@ var exercisePrefs = async function(source, highlightable) {
   tab = await openDocument(source);
   browser = tab.linkedBrowser;
 
-  // Strip checked="false" attributes, since we're not interested in them.
-  await removeChecked(browser, wrapMenuItem);
-  await removeChecked(browser, syntaxMenuItem);
-
-  is(
-    await hasAttribute(browser, wrapMenuItem, "checked"),
-    true,
-    "Wrap menu item checked"
-  );
-  is(
-    await hasAttribute(browser, syntaxMenuItem, "checked"),
-    false,
-    "Syntax menu item unchecked"
-  );
   await checkStyle(browser, "-moz-tab-size", 2);
+  await openContextMenu(browser);
   await checkStyle(browser, "white-space", "pre-wrap");
   await checkHighlight(browser, false);
+  is(getAttribute(wrapMenuItem, "checked"), "true", "Wrap menu item checked");
+  is(
+    getAttribute(syntaxMenuItem, "checked"),
+    "false",
+    "Syntax menu item unchecked"
+  );
 
   SpecialPowers.clearUserPref("view_source.tab_size");
   SpecialPowers.clearUserPref("view_source.wrap_long_lines");
   SpecialPowers.clearUserPref("view_source.syntax_highlight");
 
+  await closeContextMenu();
   gBrowser.removeTab(tab);
 };
 
-// Simulate a menu item click, including toggling the checked state.
-// This saves us from opening the menu and trying to click on the item,
-// which doesn't work on Mac OS X.
-async function simulateClick(browser, id) {
-  return SpecialPowers.spawn(browser, [id], async function(id) {
-    let item = content.document.getElementById(id);
-    if (item.hasAttribute("checked")) {
-      item.removeAttribute("checked");
-    } else {
-      item.setAttribute("checked", "true");
-    }
-
-    item.click();
-  });
+function simulateClick(id) {
+  document.getElementById(id).click();
 }
 
 var checkStyle = async function(browser, styleProperty, expected) {
