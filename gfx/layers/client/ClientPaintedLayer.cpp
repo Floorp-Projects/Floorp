@@ -7,7 +7,6 @@
 #include "ClientPaintedLayer.h"
 #include "ClientTiledPaintedLayer.h"    // for ClientTiledPaintedLayer
 #include <stdint.h>                     // for uint32_t
-#include "GeckoProfiler.h"              // for AUTO_PROFILER_LABEL
 #include "client/ClientLayerManager.h"  // for ClientLayerManager, etc
 #include "gfxContext.h"                 // for gfxContext
 #include "gfx2DGlue.h"
@@ -22,6 +21,7 @@
 #include "mozilla/gfx/Types.h"   // for Float, etc
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfilerLabels.h"
 #include "nsCOMPtr.h"         // for already_AddRefed
 #include "nsISupportsImpl.h"  // for Layer::AddRef, etc
 #include "nsRect.h"           // for mozilla::gfx::IntRect

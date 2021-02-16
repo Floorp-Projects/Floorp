@@ -24,9 +24,9 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "gfxFontConstants.h"
-#include "GeckoProfiler.h"
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/Telemetry.h"
 

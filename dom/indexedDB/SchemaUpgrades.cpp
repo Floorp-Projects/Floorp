@@ -22,7 +22,6 @@
 #include <type_traits>
 #include <utility>
 #include "ErrorList.h"
-#include "GeckoProfiler.h"
 #include "MainThreadUtils.h"
 #include "SafeRefPtr.h"
 #include "js/RootingAPI.h"
@@ -52,6 +51,7 @@
 #include "mozilla/fallible.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/mozalloc.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/storage/Variant.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"

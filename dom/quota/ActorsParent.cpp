@@ -29,7 +29,6 @@
 #include <utility>
 #include "DirectoryLockImpl.h"
 #include "ErrorList.h"
-#include "GeckoProfiler.h"
 #include "MainThreadUtils.h"
 #include "mozIStorageAsyncConnection.h"
 #include "mozIStorageConnection.h"
@@ -53,6 +52,7 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"

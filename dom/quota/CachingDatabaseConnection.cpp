@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/quota/CachingDatabaseConnection.h"
 
-#include "GeckoProfiler.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/ipc/BackgroundParent.h"
 
 namespace mozilla::dom::quota {

@@ -45,7 +45,7 @@
 #include "mozilla/WeakPtr.h"
 
 #ifdef MOZ_WIDGET_ANDROID
-#  include "GeckoProfiler.h"
+#  include "mozilla/ProfilerLabels.h"
 #endif
 
 namespace mozilla {

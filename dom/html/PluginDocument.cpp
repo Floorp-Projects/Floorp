@@ -15,8 +15,8 @@
 #include "nsContentPolicyUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ProfilerLabels.h"
 #include "nsObjectLoadingContent.h"
-#include "GeckoProfiler.h"
 
 namespace mozilla::dom {
 

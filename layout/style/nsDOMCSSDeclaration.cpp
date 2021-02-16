@@ -9,6 +9,7 @@
 #include "nsDOMCSSDeclaration.h"
 
 #include "mozilla/DeclarationBlock.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/Rule.h"
 #include "mozilla/dom/CSS2PropertiesBinding.h"

@@ -7,11 +7,11 @@
 
 #include "AudioChannelFormat.h"
 #include "DriftCompensation.h"
-#include "GeckoProfiler.h"
 #include "MediaTrackGraph.h"
 #include "MediaTrackListener.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Logging.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/RollingMean.h"
 #include "VideoUtils.h"
 #include "mozilla/Telemetry.h"

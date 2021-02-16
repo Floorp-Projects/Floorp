@@ -9,7 +9,6 @@
 #include <type_traits>
 
 #include "BackgroundChildImpl.h"
-#include "GeckoProfiler.h"
 #include "IDBDatabase.h"
 #include "IDBEvents.h"
 #include "IDBFactory.h"
@@ -41,6 +40,7 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/TaskQueue.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"

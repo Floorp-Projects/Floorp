@@ -24,6 +24,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/CycleCollectedJSContext.h"  // for nsAutoMicroTask
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfilerLabels.h"
 #include "nsPluginInstanceOwner.h"
 
 #include "nsPluginsDir.h"

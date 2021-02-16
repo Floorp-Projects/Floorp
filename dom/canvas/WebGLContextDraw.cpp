@@ -5,10 +5,10 @@
 
 #include "WebGLContext.h"
 
-#include "GeckoProfiler.h"
 #include "MozFramebuffer.h"
 #include "GLContext.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsPrintfCString.h"
 #include "WebGLBuffer.h"

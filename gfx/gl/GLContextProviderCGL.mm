@@ -16,7 +16,7 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "prenv.h"
 #include "prlink.h"
-#include "GeckoProfiler.h"
+#include "mozilla/ProfilerLabels.h"
 #include "MozFramebuffer.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/widget/CompositorWidget.h"

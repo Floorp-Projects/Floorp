@@ -12,6 +12,7 @@
 
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/mscom/EnsureMTA.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsReadableUtils.h"
@@ -23,7 +24,6 @@
 #include "nsToolkit.h"
 #include "WinUtils.h"
 #include "nsPIDOMWindow.h"
-#include "GeckoProfiler.h"
 
 using mozilla::IsWin8OrLater;
 using mozilla::MakeUnique;

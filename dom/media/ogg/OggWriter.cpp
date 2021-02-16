@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "OggWriter.h"
 #include "prtime.h"
-#include "GeckoProfiler.h"
+#include "mozilla/ProfilerLabels.h"
 
 #define LOG(args, ...)
 

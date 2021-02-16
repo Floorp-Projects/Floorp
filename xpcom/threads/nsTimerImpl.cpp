@@ -8,12 +8,12 @@
 
 #include <utility>
 
-#include "GeckoProfiler.h"
 #include "TimerThread.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Sprintf.h"
 #include "nsThreadManager.h"

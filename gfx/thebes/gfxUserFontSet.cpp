@@ -5,12 +5,12 @@
 
 #include "mozilla/Logging.h"
 
-#include "GeckoProfiler.h"
 #include "gfxUserFontSet.h"
 #include "gfxPlatform.h"
 #include "gfxFontConstants.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/Telemetry.h"

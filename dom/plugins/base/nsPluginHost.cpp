@@ -13,7 +13,6 @@
 #include <cstdlib>
 #include <new>
 #include <utility>
-#include "GeckoProfiler.h"
 #include "ReferrerInfo.h"
 #include "js/RootingAPI.h"
 #include "mozilla/ArrayIterator.h"
@@ -25,6 +24,7 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/PluginLibrary.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/Services.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPtr.h"

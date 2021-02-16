@@ -17,6 +17,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/ProfilerLabels.h"
 
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"

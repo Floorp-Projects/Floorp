@@ -14,7 +14,6 @@
 #include "Diagnostics.h"
 #include "FPSCounter.h"           // for FPSState, FPSCounter
 #include "FrameMetrics.h"         // for FrameMetrics
-#include "GeckoProfiler.h"        // for profiler_*
 #include "ImageLayerComposite.h"  // for ImageLayerComposite
 #include "Layers.h"               // for Layer, ContainerLayer, etc
 #include "LayerScope.h"           // for LayerScope Tool
@@ -33,7 +32,8 @@
 #include "gfxRect.h"             // for gfxRect
 #include "gfxUtils.h"            // for frame color util
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc
-#include "mozilla/RefPtr.h"      // for RefPtr, already_AddRefed
+#include "mozilla/ProfilerLabels.h"
+#include "mozilla/RefPtr.h"  // for RefPtr, already_AddRefed
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/gfx/2D.h"             // for DrawTarget
@@ -72,7 +72,6 @@
 #  include "mozilla/Unused.h"
 #  include "ScopedGLHelpers.h"
 #endif
-#include "GeckoProfiler.h"
 #include "TextRenderer.h"  // for TextRenderer
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "TreeTraversal.h"  // for ForEachNode

@@ -33,7 +33,6 @@
 #include "nsEnumeratorUtils.h"
 #include "nsReadableUtils.h"
 
-#include "GeckoProfiler.h"
 #include "SpecialSystemDirectory.h"
 
 #include "mozilla/dom/ScriptSettings.h"
@@ -46,6 +45,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/XREAppData.h"
 #include "nsPrintfCString.h"

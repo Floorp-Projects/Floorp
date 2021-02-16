@@ -12,10 +12,10 @@
 
 // global includes
 #include "ErrorList.h"
-#include "GeckoProfiler.h"
 #include "js/StructuredClone.h"
 #include "mozIStorageConnection.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/ProfilerLabels.h"
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsLiteralString.h"

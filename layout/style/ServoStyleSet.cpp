@@ -15,6 +15,7 @@
 #include "mozilla/Keyframe.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoStyleRuleMap.h"
@@ -51,7 +52,6 @@
 #include "nsPrintfCString.h"
 #include "gfxUserFontSet.h"
 #include "nsWindowSizes.h"
-#include "GeckoProfiler.h"
 
 namespace mozilla {
 

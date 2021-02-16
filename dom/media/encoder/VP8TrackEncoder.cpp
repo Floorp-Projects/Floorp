@@ -6,7 +6,6 @@
 #include "VP8TrackEncoder.h"
 
 #include "DriftCompensation.h"
-#include "GeckoProfiler.h"
 #include "ImageToI420.h"
 #include "mozilla/gfx/2D.h"
 #include "prsystem.h"
@@ -18,6 +17,7 @@
 #include "mozilla/media/MediaUtils.h"
 #include "mozilla/dom/ImageUtils.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
+#include "mozilla/ProfilerLabels.h"
 
 namespace mozilla {
 

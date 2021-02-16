@@ -67,6 +67,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ProcessHangMonitor.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Unused.h"
@@ -74,7 +75,6 @@
 #include "nsGlobalWindow.h"
 #include "nsAboutProtocolUtils.h"
 
-#include "GeckoProfiler.h"
 #include "NodeUbiReporting.h"
 #include "nsIInputStream.h"
 #include "nsJSPrincipals.h"

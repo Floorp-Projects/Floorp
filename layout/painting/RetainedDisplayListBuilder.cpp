@@ -18,6 +18,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/DisplayPortUtils.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ProfilerLabels.h"
 
 /**
  * Code for doing display list building for a modified subset of the window,
