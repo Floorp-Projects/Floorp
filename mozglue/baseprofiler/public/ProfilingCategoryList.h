@@ -115,6 +115,9 @@
     SUBCATEGORY(MEDIA, MEDIA_CUBEB, "Cubeb") \
     SUBCATEGORY(MEDIA, MEDIA_PLAYBACK, "Playback") \
     SUBCATEGORY(MEDIA, MEDIA_RT, "Real-time rendering") \
+  END_CATEGORY \
+  BEGIN_CATEGORY(PROFILER, "Profiler", "lightred") \
+    SUBCATEGORY(PROFILER, PROFILER, "Other") \
   END_CATEGORY
 
 // clang-format on

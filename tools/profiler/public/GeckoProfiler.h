@@ -659,6 +659,7 @@ class MOZ_RAII AutoProfileRunnable {
       return;
     }
 
+    AUTO_PROFILER_LABEL("AutoProfileRunnable", PROFILER);
     AUTO_PROFILER_STATS(AUTO_PROFILE_RUNNABLE);
     profiler_add_marker("Runnable", ::mozilla::baseprofiler::category::OTHER,
                         MarkerTiming::IntervalUntilNowFrom(mStartTime),

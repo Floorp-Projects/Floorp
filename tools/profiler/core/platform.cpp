@@ -5511,6 +5511,7 @@ bool profiler_capture_backtrace_into(ProfileChunkedBuffer& aChunkedBuffer,
 
 UniquePtr<ProfileChunkedBuffer> profiler_capture_backtrace() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
+  AUTO_PROFILER_LABEL("profiler_capture_backtrace", PROFILER);
 
   // Quick is-active check before allocating a buffer.
   if (!profiler_is_active()) {
