@@ -93,7 +93,7 @@ already_AddRefed<DrawTarget> PrintTargetCG::GetReferenceDrawTarget() {
 
 nsresult PrintTargetCG::BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName,
                                       int32_t aStartPage, int32_t aEndPage) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   // Print Core of Application Service sent print job with names exceeding
   // 255 bytes. This is a workaround until fix it.
@@ -121,16 +121,16 @@ nsresult PrintTargetCG::BeginPrinting(const nsAString& aTitle, const nsAString& 
 
   return status == noErr ? NS_OK : NS_ERROR_ABORT;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 nsresult PrintTargetCG::EndPrinting() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   ::PMSessionEndDocumentNoDialog(mPrintSession);
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 nsresult PrintTargetCG::AbortPrinting() {
@@ -141,7 +141,7 @@ nsresult PrintTargetCG::AbortPrinting() {
 }
 
 nsresult PrintTargetCG::BeginPage() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   PMSessionError(mPrintSession);
   OSStatus status = ::PMSessionBeginPageNoDialog(mPrintSession, mPageFormat, NULL);
@@ -176,11 +176,11 @@ nsresult PrintTargetCG::BeginPage() {
 
   return PrintTarget::BeginPage();
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 nsresult PrintTargetCG::EndPage() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   cairo_surface_finish(mCairoSurface);
   mCairoSurface = nullptr;
@@ -192,7 +192,7 @@ nsresult PrintTargetCG::EndPage() {
 
   return PrintTarget::EndPage();
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 }  // namespace gfx

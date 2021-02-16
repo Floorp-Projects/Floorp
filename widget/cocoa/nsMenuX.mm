@@ -151,7 +151,7 @@ nsMenuX::~nsMenuX() {
 
 nsresult nsMenuX::Create(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner,
                          nsIContent* aContent) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   mContent = aContent;
   if (mContent->IsElement()) {
@@ -202,11 +202,11 @@ nsresult nsMenuX::Create(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOw
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 nsresult nsMenuX::AddMenuItem(nsMenuItemX* aMenuItem) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (!aMenuItem) {
     return NS_ERROR_INVALID_ARG;
@@ -235,7 +235,7 @@ nsresult nsMenuX::AddMenuItem(nsMenuItemX* aMenuItem) {
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 nsMenuX* nsMenuX::AddMenu(UniquePtr<nsMenuX> aMenu) {
@@ -313,7 +313,7 @@ nsMenuObjectX* nsMenuX::GetVisibleItemAt(uint32_t aPos) {
 }
 
 nsresult nsMenuX::RemoveAll() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (mNativeMenu) {
     // clear command id's
@@ -332,7 +332,7 @@ nsresult nsMenuX::RemoveAll() {
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 nsEventStatus nsMenuX::MenuOpened() {

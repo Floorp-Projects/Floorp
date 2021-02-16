@@ -335,7 +335,7 @@ nsresult nsChildView::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 void nsChildView::TearDownView() {
@@ -617,7 +617,7 @@ void nsChildView::Enable(bool aState) {}
 bool nsChildView::IsEnabled() const { return true; }
 
 void nsChildView::SetFocus(Raise, mozilla::dom::CallerType aCallerType) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSWindow* window = [mView window];
   if (window) [window makeFirstResponder:mView];
@@ -870,7 +870,7 @@ nsresult nsChildView::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
 nsresult nsChildView::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
                                                  uint32_t aNativeMessage, uint32_t aModifierFlags,
                                                  nsIObserver* aObserver) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   AutoObserverNotifier notifier(aObserver, "mouseevent");
 
@@ -918,13 +918,13 @@ nsresult nsChildView::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
   [NSApp sendEvent:event];
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 nsresult nsChildView::SynthesizeNativeMouseScrollEvent(
     mozilla::LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage, double aDeltaX, double aDeltaY,
     double aDeltaZ, uint32_t aModifierFlags, uint32_t aAdditionalFlags, nsIObserver* aObserver) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   AutoObserverNotifier notifier(aObserver, "mousescrollevent");
 
@@ -969,13 +969,13 @@ nsresult nsChildView::SynthesizeNativeMouseScrollEvent(
   CFRelease(cgEvent);
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 nsresult nsChildView::SynthesizeNativeTouchPoint(
     uint32_t aPointerId, TouchPointerState aPointerState, mozilla::LayoutDeviceIntPoint aPoint,
     double aPointerPressure, uint32_t aPointerOrientation, nsIObserver* aObserver) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   AutoObserverNotifier notifier(aObserver, "touchpoint");
 
@@ -995,7 +995,7 @@ nsresult nsChildView::SynthesizeNativeTouchPoint(
   DispatchTouchInput(inputToDispatch);
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 bool nsChildView::SendEventToNativeMenuSystem(NSEvent* aEvent) {
@@ -1040,7 +1040,7 @@ void nsChildView::PostHandleKeyEvent(mozilla::WidgetKeyboardEvent* aEvent) {
 
 // Used for testing native menu system structure and event handling.
 nsresult nsChildView::ActivateNativeMenuItemAt(const nsAString& indexString) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSString* locationString =
       [NSString stringWithCharacters:reinterpret_cast<const unichar*>(indexString.BeginReading())
@@ -1060,12 +1060,12 @@ nsresult nsChildView::ActivateNativeMenuItemAt(const nsAString& indexString) {
   }
   return NS_ERROR_FAILURE;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 // Used for testing native menu system structure and event handling.
 nsresult nsChildView::ForceUpdateNativeMenuAt(const nsAString& indexString) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   nsCocoaWindow* widget = GetAppWindowWidget();
   if (widget) {
@@ -1079,7 +1079,7 @@ nsresult nsChildView::ForceUpdateNativeMenuAt(const nsAString& indexString) {
   }
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 #pragma mark -
@@ -1400,12 +1400,12 @@ nsresult nsChildView::SetTitle(const nsAString& title) {
 }
 
 nsresult nsChildView::GetAttention(int32_t aCycleCount) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   [NSApp requestUserAttention:NSInformationalRequest];
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 /* static */
@@ -4681,7 +4681,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
 }
 
 nsresult nsChildView::GetSelectionAsPlaintext(nsAString& aResult) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (!nsClipboard::sSelectionCache) {
     MOZ_ASSERT(aResult.IsEmpty());
@@ -4707,7 +4707,7 @@ nsresult nsChildView::GetSelectionAsPlaintext(nsAString& aResult) {
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 #pragma mark -

@@ -138,7 +138,7 @@ void AccessibleWrap::Shutdown() {
 }
 
 nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   nsresult rv = Accessible::HandleAccEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -273,7 +273,7 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 bool AccessibleWrap::ApplyPostFilter(const EWhichPostFilter& aSearchKey,

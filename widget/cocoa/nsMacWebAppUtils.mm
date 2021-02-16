@@ -20,7 +20,7 @@ NS_IMPL_ISUPPORTS(nsMacWebAppUtils, nsIMacWebAppUtils)
 
 NS_IMETHODIMP nsMacWebAppUtils::PathForAppWithIdentifier(const nsAString& bundleIdentifier,
                                                          nsAString& outPath) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   outPath.Truncate();
 
@@ -40,11 +40,11 @@ NS_IMETHODIMP nsMacWebAppUtils::PathForAppWithIdentifier(const nsAString& bundle
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP nsMacWebAppUtils::LaunchAppWithIdentifier(const nsAString& bundleIdentifier) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   nsAutoreleasePool localPool;
 
@@ -61,11 +61,11 @@ NS_IMETHODIMP nsMacWebAppUtils::LaunchAppWithIdentifier(const nsAString& bundleI
 
   return success ? NS_OK : NS_ERROR_FAILURE;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP nsMacWebAppUtils::TrashApp(const nsAString& path, nsITrashAppCallback* aCallback) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (NS_WARN_IF(!aCallback)) {
     return NS_ERROR_INVALID_ARG;
@@ -86,5 +86,5 @@ NS_IMETHODIMP nsMacWebAppUtils::TrashApp(const nsAString& path, nsITrashAppCallb
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }

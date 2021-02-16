@@ -246,7 +246,7 @@ NSString* nsDragService::GetFilePath(NSPasteboardItem* item) {
 nsresult nsDragService::InvokeDragSessionImpl(nsIArray* aTransferableArray,
                                               const Maybe<CSSIntRegion>& aRegion,
                                               uint32_t aActionType) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (!gLastDragView) {
     // gLastDragView is non-null between -[ChildView mouseDown:] and -[ChildView mouseUp:].
@@ -320,12 +320,12 @@ nsresult nsDragService::InvokeDragSessionImpl(nsIArray* aTransferableArray,
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP
 nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (!aTransferable) return NS_ERROR_FAILURE;
 
@@ -487,12 +487,12 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
   }
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP
 nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   *_retval = false;
 
@@ -548,12 +548,12 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP
 nsDragService::GetNumDropItems(uint32_t* aNumItems) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   *aNumItems = 0;
 
@@ -570,7 +570,7 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems) {
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP
@@ -634,7 +634,7 @@ void nsDragService::DragMovedWithView(NSDraggingSession* aSession, NSPoint aPoin
 
 NS_IMETHODIMP
 nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (mNativeDragView) {
     [mNativeDragView release];
@@ -651,5 +651,5 @@ nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
   mDataItems = nullptr;
   return rv;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }

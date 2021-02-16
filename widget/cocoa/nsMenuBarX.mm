@@ -227,7 +227,7 @@ bool nsMenuBarX::MenuContainsAppMenu() {
 }
 
 nsresult nsMenuBarX::InsertMenuAtIndex(nsMenuX* aMenu, uint32_t aIndex) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   // If we've only yet created a fallback global Application menu (using
   // ContructFallbackNativeMenus()), destroy it before recreating it properly.
@@ -262,7 +262,7 @@ nsresult nsMenuBarX::InsertMenuAtIndex(nsMenuX* aMenu, uint32_t aIndex) {
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 void nsMenuBarX::RemoveMenuAtIndex(uint32_t aIndex) {
@@ -418,7 +418,7 @@ void nsMenuBarX::SetSystemHelpMenu() {
 }
 
 nsresult nsMenuBarX::Paint() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   // Don't try to optimize anything in this painting by checking
   // sLastGeckoMenuBarPainted because the menubar can be manipulated by
@@ -444,7 +444,7 @@ nsresult nsMenuBarX::Paint() {
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 /* static */
@@ -604,7 +604,7 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString
 
 // build the Application menu shared by all menu bars
 nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   // At this point, the application menu is the application menu from
   // the nib in cocoa widgets. We do not have a way to create an application
@@ -792,7 +792,7 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
 
   return (sApplicationMenu) ? NS_OK : NS_ERROR_FAILURE;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 void nsMenuBarX::SetParent(nsIWidget* aParent) { mParentWindow = aParent; }

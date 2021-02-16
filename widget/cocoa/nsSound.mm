@@ -22,18 +22,18 @@ nsSound::~nsSound() {}
 
 NS_IMETHODIMP
 nsSound::Beep() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSBeep();
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP
 nsSound::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* context, nsresult aStatus,
                           uint32_t dataLen, const uint8_t* data) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSData* value = [NSData dataWithBytes:data length:dataLen];
 
@@ -45,7 +45,7 @@ nsSound::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* context, nsresu
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP
