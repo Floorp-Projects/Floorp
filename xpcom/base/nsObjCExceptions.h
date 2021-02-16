@@ -21,33 +21,6 @@
 
 void nsObjCExceptionLog(NSException* aException);
 
-#define NS_OBJC_TRY(_e, _fail)    \
-  @try {                          \
-    _e;                           \
-  } @catch (NSException * _exn) { \
-    nsObjCExceptionLog(_exn);     \
-    _fail;                        \
-  }
-
-#define NS_OBJC_TRY_EXPR(_e, _fail) \
-  ({                                \
-    typeof(_e) _tmp;                \
-    @try {                          \
-      _tmp = (_e);                  \
-    } @catch (NSException * _exn) { \
-      nsObjCExceptionLog(_exn);     \
-      _fail;                        \
-    }                               \
-    _tmp;                           \
-  })
-
-#define NS_OBJC_TRY_EXPR_NULL(_e) NS_OBJC_TRY_EXPR(_e, 0)
-
-#define NS_OBJC_TRY_IGNORE(_e) NS_OBJC_TRY(_e, )
-
-// To reduce code size the abort versions do not reuse above macros. This allows
-// catch blocks to only contain one call.
-
 #define NS_OBJC_TRY_ABORT(_e)     \
   @try {                          \
     _e;                           \
