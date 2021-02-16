@@ -891,7 +891,7 @@ AccessibleWrap::accNavigate(
     case NAVDIR_FIRSTCHILD:
       if (IsProxy()) {
         if (!nsAccUtils::MustPrune(Proxy())) {
-          navAccessible = WrapperFor(Proxy()->FirstChild());
+          navAccessible = WrapperFor(Proxy()->RemoteFirstChild());
         }
       } else {
         if (!nsAccUtils::MustPrune(this)) navAccessible = LocalFirstChild();
@@ -900,19 +900,19 @@ AccessibleWrap::accNavigate(
     case NAVDIR_LASTCHILD:
       if (IsProxy()) {
         if (!nsAccUtils::MustPrune(Proxy())) {
-          navAccessible = WrapperFor(Proxy()->LastChild());
+          navAccessible = WrapperFor(Proxy()->RemoteLastChild());
         }
       } else {
         if (!nsAccUtils::MustPrune(this)) navAccessible = LocalLastChild();
       }
       break;
     case NAVDIR_NEXT:
-      navAccessible =
-          IsProxy() ? WrapperFor(Proxy()->NextSibling()) : LocalNextSibling();
+      navAccessible = IsProxy() ? WrapperFor(Proxy()->RemoteNextSibling())
+                                : LocalNextSibling();
       break;
     case NAVDIR_PREVIOUS:
-      navAccessible =
-          IsProxy() ? WrapperFor(Proxy()->PrevSibling()) : LocalPrevSibling();
+      navAccessible = IsProxy() ? WrapperFor(Proxy()->RemotePrevSibling())
+                                : LocalPrevSibling();
       break;
     case NAVDIR_DOWN:
     case NAVDIR_LEFT:

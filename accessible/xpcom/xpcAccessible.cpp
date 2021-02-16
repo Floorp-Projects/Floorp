@@ -51,7 +51,7 @@ xpcAccessible::GetNextSibling(nsIAccessible** aNextSibling) {
   ProxyAccessible* proxy = IntlGeneric().AsProxy();
   NS_ENSURE_STATE(proxy);
 
-  NS_IF_ADDREF(*aNextSibling = ToXPC(proxy->NextSibling()));
+  NS_IF_ADDREF(*aNextSibling = ToXPC(proxy->RemoteNextSibling()));
   return *aNextSibling ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -71,7 +71,7 @@ xpcAccessible::GetPreviousSibling(nsIAccessible** aPreviousSibling) {
   ProxyAccessible* proxy = IntlGeneric().AsProxy();
   NS_ENSURE_STATE(proxy);
 
-  NS_IF_ADDREF(*aPreviousSibling = ToXPC(proxy->PrevSibling()));
+  NS_IF_ADDREF(*aPreviousSibling = ToXPC(proxy->RemotePrevSibling()));
   return *aPreviousSibling ? NS_OK : NS_ERROR_FAILURE;
 }
 

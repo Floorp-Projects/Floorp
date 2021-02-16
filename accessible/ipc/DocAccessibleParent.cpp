@@ -98,7 +98,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvShowEvent(
     return IPC_OK();
   }
 
-  ProxyAccessible* target = parent->ChildAt(newChildIdx);
+  ProxyAccessible* target = parent->RemoteChildAt(newChildIdx);
   ProxyShowHideEvent(target, parent, true, aFromUser);
 
   if (!nsCoreUtils::AccEventObserversExist()) {
@@ -193,7 +193,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvHideEvent(
     return IPC_OK();
   }
 
-  ProxyAccessible* parent = root->Parent();
+  ProxyAccessible* parent = root->RemoteParent();
   ProxyShowHideEvent(root, parent, false, aFromUser);
 
   RefPtr<xpcAccHideEvent> event = nullptr;
@@ -201,9 +201,9 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvHideEvent(
     uint32_t type = nsIAccessibleEvent::EVENT_HIDE;
     xpcAccessibleGeneric* xpcAcc = GetXPCAccessible(root);
     xpcAccessibleGeneric* xpcParent = GetXPCAccessible(parent);
-    ProxyAccessible* next = root->NextSibling();
+    ProxyAccessible* next = root->RemoteNextSibling();
     xpcAccessibleGeneric* xpcNext = next ? GetXPCAccessible(next) : nullptr;
-    ProxyAccessible* prev = root->PrevSibling();
+    ProxyAccessible* prev = root->RemotePrevSibling();
     xpcAccessibleGeneric* xpcPrev = prev ? GetXPCAccessible(prev) : nullptr;
     xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
     nsINode* node = nullptr;
@@ -601,14 +601,14 @@ ipc::IPCResult DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
   // OuterDocAccessibles are expected to only have a document as a child.
   // However for compatibility we tolerate replacing one document with another
   // here.
-  if (outerDoc->ChildrenCount() > 1 ||
-      (outerDoc->ChildrenCount() == 1 && !outerDoc->ChildAt(0)->IsDoc())) {
+  if (outerDoc->ChildrenCount() > 1 || (outerDoc->ChildrenCount() == 1 &&
+                                        !outerDoc->RemoteChildAt(0)->IsDoc())) {
     return IPC_FAIL(this, "binding to proxy that can't be a outerDoc!");
   }
 
   if (outerDoc->ChildrenCount() == 1) {
-    MOZ_ASSERT(outerDoc->ChildAt(0)->AsDoc());
-    outerDoc->ChildAt(0)->AsDoc()->Unbind();
+    MOZ_ASSERT(outerDoc->RemoteChildAt(0)->AsDoc());
+    outerDoc->RemoteChildAt(0)->AsDoc()->Unbind();
   }
 
   aChildDoc->SetParent(outerDoc);

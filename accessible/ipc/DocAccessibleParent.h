@@ -184,10 +184,10 @@ class DocAccessibleParent : public ProxyAccessible,
    * notifies the main process a child document has been removed.
    */
   void RemoveChildDoc(DocAccessibleParent* aChildDoc) {
-    ProxyAccessible* parent = aChildDoc->Parent();
+    ProxyAccessible* parent = aChildDoc->RemoteParent();
     MOZ_ASSERT(parent);
     if (parent) {
-      aChildDoc->Parent()->ClearChildDoc(aChildDoc);
+      aChildDoc->RemoteParent()->ClearChildDoc(aChildDoc);
     }
     DebugOnly<bool> result = mChildDocs.RemoveElement(aChildDoc->mActorID);
     aChildDoc->mParentDoc = kNoParentDoc;
