@@ -42,6 +42,7 @@
 #include "wasm/WasmInstance.h"
 
 #include "jit/MacroAssembler-inl.h"
+#include "vm/ArrayBufferObject-inl.h"
 #include "vm/BytecodeUtil-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/JSContext-inl.h"
@@ -373,6 +374,7 @@ AttachDecision GetPropIRGenerator::tryAttachStub() {
       TRY_ATTACH(tryAttachObjectLength(obj, objId, id));
       TRY_ATTACH(tryAttachTypedArray(obj, objId, id));
       TRY_ATTACH(tryAttachDataView(obj, objId, id));
+      TRY_ATTACH(tryAttachArrayBufferMaybeShared(obj, objId, id));
       TRY_ATTACH(tryAttachNative(obj, objId, id, receiverId));
       TRY_ATTACH(tryAttachModuleNamespace(obj, objId, id));
       TRY_ATTACH(tryAttachWindowProxy(obj, objId, id));
@@ -1891,6 +1893,60 @@ AttachDecision GetPropIRGenerator::tryAttachDataView(HandleObject obj,
   }
   writer.returnFromIC();
 
+  return AttachDecision::Attach;
+}
+
+AttachDecision GetPropIRGenerator::tryAttachArrayBufferMaybeShared(
+    HandleObject obj, ObjOperandId objId, HandleId id) {
+  if (!obj->is<ArrayBufferObjectMaybeShared>()) {
+    return AttachDecision::NoAction;
+  }
+  auto* buf = &obj->as<ArrayBufferObjectMaybeShared>();
+
+  if (mode_ != ICState::Mode::Specialized) {
+    return AttachDecision::NoAction;
+  }
+
+  // Receiver should be the object.
+  if (isSuper()) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!JSID_IS_ATOM(id, cx_->names().byteLength)) {
+    return AttachDecision::NoAction;
+  }
+
+  RootedShape shape(cx_);
+  RootedNativeObject holder(cx_);
+  NativeGetPropCacheability type =
+      CanAttachNativeGetProp(cx_, obj, id, &holder, &shape, pc_);
+  if (type != CanAttachNativeGetter) {
+    return AttachDecision::NoAction;
+  }
+
+  auto& fun = shape->getterValue().toObject().as<JSFunction>();
+  if (buf->is<ArrayBufferObject>()) {
+    if (!ArrayBufferObject::isOriginalByteLengthGetter(fun.native())) {
+      return AttachDecision::NoAction;
+    }
+  } else {
+    if (!SharedArrayBufferObject::isOriginalByteLengthGetter(fun.native())) {
+      return AttachDecision::NoAction;
+    }
+  }
+
+  maybeEmitIdGuard(id);
+  // Emit all the normal guards for calling this native, but specialize
+  // callNativeGetterResult.
+  EmitCallGetterResultGuards(writer, obj, holder, shape, objId, mode_);
+  if (buf->byteLength().get() <= INT32_MAX) {
+    writer.loadArrayBufferByteLengthInt32Result(objId);
+  } else {
+    writer.loadArrayBufferByteLengthDoubleResult(objId);
+  }
+  writer.returnFromIC();
+
+  trackAttached("ArrayBufferMaybeSharedByteLength");
   return AttachDecision::Attach;
 }
 
