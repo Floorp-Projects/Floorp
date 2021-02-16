@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/RandomNum.h"
+#include <vector>
 
 /*
 
@@ -37,16 +38,20 @@ static uint64_t getRandomUint64OrDie() {
 }
 
 static void TestRandomUint64() {
-  uint64_t randomsList[NUM_RANDOMS_TO_GENERATE];
+  // The allocator uses RandomNum.h too, but its initialization path allocates
+  // memory. While the allocator itself handles the situation, we can't, so
+  // we make sure to use an allocation before getting a Random number ourselves.
+  std::vector<uint64_t> randomsList;
+  randomsList.reserve(NUM_RANDOMS_TO_GENERATE);
 
   for (uint8_t i = 0; i < NUM_RANDOMS_TO_GENERATE; ++i) {
     uint64_t randomNum = getRandomUint64OrDie();
 
-    for (uint8_t j = 0; j < i; ++j) {
-      MOZ_RELEASE_ASSERT(randomNum != randomsList[j]);
+    for (uint64_t num : randomsList) {
+      MOZ_RELEASE_ASSERT(randomNum != num);
     }
 
-    randomsList[i] = randomNum;
+    randomsList.push_back(randomNum);
   }
 }
 
