@@ -48,7 +48,7 @@ def gen_h(fd, protocol_file):
     fd.write("#define _MacSelectorMap_H_\n")
     fd.write("\n@class NSDictionary;\n")
     fd.write("\nnamespace mozilla {\nnamespace a11y {\nnamespace mac {\n\n")
-    for name, text in sections:
+    for name, _ in sections:
         fd.write("NSDictionary* %s();\n\n" % name)
     fd.write("}\n}\n}\n")
     fd.write("\n#endif\n")
