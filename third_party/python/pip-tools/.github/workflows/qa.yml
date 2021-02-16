@@ -12,6 +12,7 @@ jobs:
     name: ${{ matrix.toxenv }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         toxenv:
           - checkqa

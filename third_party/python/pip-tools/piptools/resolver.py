@@ -2,11 +2,11 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import copy
-import os
 from functools import partial
 from itertools import chain, count, groupby
 
 from pip._internal.req.constructors import install_req_from_line
+from pip._internal.req.req_tracker import update_env_context_manager
 
 from . import click
 from .logging import log
@@ -156,38 +156,35 @@ class Resolver(object):
             self.repository.clear_caches()
 
         # Ignore existing packages
-        os.environ[str("PIP_EXISTS_ACTION")] = str(
-            "i"
-        )  # NOTE: str() wrapping necessary for Python 2/3 compat
-        for current_round in count(start=1):  # pragma: no branch
-            if current_round > max_rounds:
-                raise RuntimeError(
-                    "No stable configuration of concrete packages "
-                    "could be found for the given constraints after "
-                    "{max_rounds} rounds of resolving.\n"
-                    "This is likely a bug.".format(max_rounds=max_rounds)
-                )
+        # NOTE: str() wrapping necessary for Python 2/3 compat
+        with update_env_context_manager(PIP_EXISTS_ACTION=str("i")):
+            for current_round in count(start=1):  # pragma: no branch
+                if current_round > max_rounds:
+                    raise RuntimeError(
+                        "No stable configuration of concrete packages "
+                        "could be found for the given constraints after "
+                        "{max_rounds} rounds of resolving.\n"
+                        "This is likely a bug.".format(max_rounds=max_rounds)
+                    )
 
-            log.debug("")
-            log.debug(magenta("{:^60}".format("ROUND {}".format(current_round))))
-            has_changed, best_matches = self._resolve_one_round()
-            log.debug("-" * 60)
-            log.debug(
-                "Result of round {}: {}".format(
-                    current_round, "not stable" if has_changed else "stable, done"
-                )
-            )
-            if not has_changed:
-                break
-
-            # If a package version (foo==2.0) was built in a previous round,
-            # and in this round a different version of foo needs to be built
-            # (i.e. foo==1.0), the directory will exist already, which will
-            # cause a pip build failure.  The trick is to start with a new
-            # build cache dir for every round, so this can never happen.
-            self.repository.freshen_build_caches()
-
-        del os.environ["PIP_EXISTS_ACTION"]
+                log.debug("")
+                log.debug(magenta("{:^60}".format("ROUND {}".format(current_round))))
+                # If a package version (foo==2.0) was built in a previous round,
+                # and in this round a different version of foo needs to be built
+                # (i.e. foo==1.0), the directory will exist already, which will
+                # cause a pip build failure.  The trick is to start with a new
+                # build cache dir for every round, so this can never happen.
+                with self.repository.freshen_build_caches():
+                    has_changed, best_matches = self._resolve_one_round()
+                    log.debug("-" * 60)
+                    log.debug(
+                        "Result of round {}: {}".format(
+                            current_round,
+                            "not stable" if has_changed else "stable, done",
+                        )
+                    )
+                if not has_changed:
+                    break
 
         # Only include hard requirements and not pip constraints
         results = {req for req in best_matches if not req.constraint}

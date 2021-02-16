@@ -10,6 +10,7 @@ from contextlib import contextmanager
 from shutil import rmtree
 
 from pip._internal.cache import WheelCache
+from pip._internal.cli.progress_bars import BAR_TYPES
 from pip._internal.commands import create_command
 from pip._internal.models.index import PackageIndex, PyPI
 from pip._internal.models.link import Link
@@ -23,7 +24,7 @@ from pip._internal.utils.temp_dir import TempDirectory, global_tempdir_manager
 from pip._internal.utils.urls import path_to_url, url_to_path
 from pip._vendor.requests import RequestException
 
-from .._compat import BAR_TYPES, PIP_VERSION, TemporaryDirectory, contextlib
+from .._compat import PIP_VERSION, TemporaryDirectory, contextlib, makedirs
 from ..click import progressbar
 from ..exceptions import NoCandidateFound
 from ..logging import log
@@ -57,7 +58,12 @@ class PyPIRepository(BaseRepository):
         # General options (find_links, index_url, extra_index_url, trusted_host,
         # and pre) are deferred to pip.
         self.command = create_command("install")
-        self.options, _ = self.command.parse_args(pip_args)
+        extra_pip_args = (
+            []
+            if PIP_VERSION[:2] <= (20, 2)
+            else ["--use-deprecated", "legacy-resolver"]
+        )
+        self.options, _ = self.command.parse_args(pip_args + extra_pip_args)
         if self.options.cache_dir:
             self.options.cache_dir = normalize_path(self.options.cache_dir)
 
@@ -81,13 +87,16 @@ class PyPIRepository(BaseRepository):
         self._dependencies_cache = {}
 
         # Setup file paths
-        self.freshen_build_caches()
+        self._build_dir = None
+        self._source_dir = None
         self._cache_dir = normalize_path(cache_dir)
         self._download_dir = fs_str(os.path.join(self._cache_dir, "pkgs"))
-        self._wheel_download_dir = fs_str(os.path.join(self._cache_dir, "wheels"))
+        if PIP_VERSION[:2] <= (20, 2):
+            self._wheel_download_dir = fs_str(os.path.join(self._cache_dir, "wheels"))
 
         self._setup_logging()
 
+    @contextmanager
     def freshen_build_caches(self):
         """
         Start with fresh build/source caches.  Will remove any old build
@@ -95,18 +104,26 @@ class PyPIRepository(BaseRepository):
         """
         self._build_dir = TemporaryDirectory(fs_str("build"))
         self._source_dir = TemporaryDirectory(fs_str("source"))
+        try:
+            yield
+        finally:
+            self._build_dir.cleanup()
+            self._build_dir = None
+            self._source_dir.cleanup()
+            self._source_dir = None
 
     @property
     def build_dir(self):
-        return self._build_dir.name
+        return self._build_dir.name if self._build_dir else None
 
     @property
     def source_dir(self):
-        return self._source_dir.name
+        return self._source_dir.name if self._source_dir else None
 
     def clear_caches(self):
         rmtree(self._download_dir, ignore_errors=True)
-        rmtree(self._wheel_download_dir, ignore_errors=True)
+        if PIP_VERSION[:2] <= (20, 2):
+            rmtree(self._wheel_download_dir, ignore_errors=True)
 
     def find_all_candidates(self, req_name):
         if req_name not in self._available_candidates_cache:
@@ -152,7 +169,7 @@ class PyPIRepository(BaseRepository):
         with get_requirement_tracker() as req_tracker, TempDirectory(
             kind="resolver"
         ) as temp_dir, indent_log():
-            preparer = self.command.make_requirement_preparer(
+            preparer_kwargs = dict(
                 temp_build_dir=temp_dir,
                 options=self.options,
                 req_tracker=req_tracker,
@@ -160,8 +177,10 @@ class PyPIRepository(BaseRepository):
                 finder=self.finder,
                 use_user_site=False,
                 download_dir=download_dir,
-                wheel_download_dir=self._wheel_download_dir,
             )
+            if PIP_VERSION[:2] <= (20, 2):
+                preparer_kwargs["wheel_download_dir"] = self._wheel_download_dir
+            preparer = self.command.make_requirement_preparer(**preparer_kwargs)
 
             reqset = RequirementSet()
             if PIP_VERSION[:2] <= (20, 1):
@@ -185,10 +204,10 @@ class PyPIRepository(BaseRepository):
             if not ireq.prepared:
                 # If still not prepared, e.g. a constraint, do enough to assign
                 # the ireq a name:
-                resolver._get_abstract_dist_for(ireq)
-
-            if PIP_VERSION[:2] <= (20, 0):
-                reqset.cleanup_files()
+                if PIP_VERSION[:2] <= (20, 2):
+                    resolver._get_abstract_dist_for(ireq)
+                else:
+                    resolver._get_dist_for(ireq)
 
         return set(results)
 
@@ -210,8 +229,8 @@ class PyPIRepository(BaseRepository):
         if ireq not in self._dependencies_cache:
             if ireq.editable and (ireq.source_dir and os.path.exists(ireq.source_dir)):
                 # No download_dir for locally available editable requirements.
-                # If a download_dir is passed, pip will  unnecessarely
-                # archive the entire source directory
+                # If a download_dir is passed, pip will unnecessarily archive
+                # the entire source directory
                 download_dir = None
             elif ireq.link and ireq.link.is_vcs:
                 # No download_dir for VCS sources.  This also works around pip
@@ -219,27 +238,15 @@ class PyPIRepository(BaseRepository):
                 download_dir = None
             else:
                 download_dir = self._get_download_path(ireq)
-                if not os.path.isdir(download_dir):
-                    os.makedirs(download_dir)
-            if not os.path.isdir(self._wheel_download_dir):
-                os.makedirs(self._wheel_download_dir)
+                makedirs(download_dir, exist_ok=True)
+            if PIP_VERSION[:2] <= (20, 2):
+                makedirs(self._wheel_download_dir, exist_ok=True)
 
             with global_tempdir_manager():
                 wheel_cache = WheelCache(self._cache_dir, self.options.format_control)
-                prev_tracker = os.environ.get("PIP_REQ_TRACKER")
-                try:
-                    self._dependencies_cache[ireq] = self.resolve_reqs(
-                        download_dir, ireq, wheel_cache
-                    )
-                finally:
-                    if "PIP_REQ_TRACKER" in os.environ:
-                        if prev_tracker:
-                            os.environ["PIP_REQ_TRACKER"] = prev_tracker
-                        else:
-                            del os.environ["PIP_REQ_TRACKER"]
-
-                    if PIP_VERSION[:2] <= (20, 0):
-                        wheel_cache.cleanup()
+                self._dependencies_cache[ireq] = self.resolve_reqs(
+                    download_dir, ireq, wheel_cache
+                )
 
         return self._dependencies_cache[ireq]
 
@@ -335,7 +342,7 @@ class PyPIRepository(BaseRepository):
         if not is_pinned_requirement(ireq):
             raise TypeError("Expected pinned requirement, got {}".format(ireq))
 
-        log.debug("{}".format(ireq.name))
+        log.debug(ireq.name)
 
         with log.indentation():
             hashes = self._get_hashes_from_pypi(ireq)

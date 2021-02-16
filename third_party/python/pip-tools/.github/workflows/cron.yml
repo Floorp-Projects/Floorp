@@ -10,17 +10,19 @@ jobs:
     name: ${{ matrix.os }} / ${{ matrix.python-version }} / ${{ matrix.pip-version }}
     runs-on: ${{ matrix.os }}-latest
     strategy:
+      fail-fast: false
       matrix:
         os:
           - Ubuntu
           - Windows
           - MacOS
         python-version:
-          - 3.8
+          - 3.9
           - 2.7
           - 3.5
           - 3.6
           - 3.7
+          - 3.8
         pip-version:
           - master
     env:
@@ -44,6 +46,7 @@ jobs:
     name: ${{ matrix.os }} / ${{ matrix.python-version }} / ${{ matrix.pip-version }}
     runs-on: ${{ matrix.os }}-latest
     strategy:
+      fail-fast: false
       matrix:
         os:
           - Ubuntu
