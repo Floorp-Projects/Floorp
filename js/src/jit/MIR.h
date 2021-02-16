@@ -3703,6 +3703,8 @@ class MNonNegativeIntPtrToInt32 : public MUnaryInstruction,
   INSTRUCTION_HEADER(NonNegativeIntPtrToInt32)
   TRIVIAL_NEW_WRAPPERS
 
+  void computeRange(TempAllocator& alloc) override;
+
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins);
   }
