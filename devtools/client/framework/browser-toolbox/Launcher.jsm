@@ -163,7 +163,6 @@ BrowserToolboxLauncher.prototype = {
       "devtools.debugger.chrome-debugging-websocket"
     );
     const socketOptions = {
-      hidden: true,
       portOrPath: -1,
       webSocket: chromeDebuggingWebSocket,
     };
