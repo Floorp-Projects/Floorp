@@ -45,6 +45,15 @@ function testTypedArrayLengthInt32() {
 }
 testTypedArrayLengthInt32();
 
+function testTypedArrayByteLengthInt32() {
+    var arr = [taLargeLength, taSmall];
+    for (var i = 0; i < 2000; i++) {
+        var idx = +(i < 1900); // First 1 then 0.
+        assertEq(arr[idx].byteLength, idx === 0 ? 6 * gb : 8);
+    }
+}
+testTypedArrayByteLengthInt32();
+
 function testDataViewByteOffsetInt32() {
     var arr = [dvLargeOffset, dvSmall];
     for (var i = 0; i < 2000; i++) {
