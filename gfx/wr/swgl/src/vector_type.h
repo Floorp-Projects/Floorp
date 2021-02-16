@@ -348,6 +348,10 @@ struct VectorType {
   VectorType<T, 8> XXYYZZWW() const {
     return swizzle(0, 0, 1, 1).combine(swizzle(2, 2, 3, 3));
   }
+#  define xxxxyyyyzzzzwwww XXXXYYYYZZZZWWWW()
+  VectorType<T, 16> XXXXYYYYZZZZWWWW() {
+    return XXXXYYYY().combine(ZZZZWWWW());
+  }
 };
 
 template <typename T>
@@ -366,6 +370,11 @@ struct VectorType<T, 2> {
     v.data = data;
     return v;
   }
+
+  VectorType operator&(VectorType x) const { return wrap(data & x.data); }
+  VectorType operator&(T x) const { return wrap(data & x); }
+  VectorType operator|(VectorType x) const { return wrap(data | x.data); }
+  VectorType operator|(T x) const { return wrap(data | x); }
 };
 
 #  define CONVERT(vector, type) ((type)(vector))

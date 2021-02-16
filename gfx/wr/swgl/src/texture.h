@@ -488,10 +488,10 @@ SI auto computeRow(S sampler, I i, int32_t zoffset, size_t margin = 1)
 }
 
 // Compute clamped offset of second row for linear interpolation from first row
-template <typename S>
-SI I32 computeNextRowOffset(S sampler, ivec2 i) {
-  return (i.y >= 0 && i.y < int32_t(sampler->height) - 1) &
-         I32(sampler->stride);
+template <typename S, typename I>
+SI auto computeNextRowOffset(S sampler, I i) -> decltype(i.x) {
+  return if_then_else(i.y >= 0 && i.y < int32_t(sampler->height) - 1,
+                      sampler->stride, 0);
 }
 
 // Convert X coordinate to a 2^7 scale fraction for interpolation
@@ -502,7 +502,8 @@ SI I16 computeFracX(S sampler, ivec2 i, ivec2 frac) {
 }
 
 // Convert Y coordinate to a 2^7 scale fraction for interpolation
-SI I16 computeFracY(ivec2 frac) { return CONVERT(frac.y & 0x7F, I16); }
+SI I16 computeFracNoClamp(I32 frac) { return CONVERT(frac & 0x7F, I16); }
+SI I16 computeFracY(ivec2 frac) { return computeFracNoClamp(frac.y); }
 
 struct WidePlanarRGBA8 {
   V8<uint16_t> rg;

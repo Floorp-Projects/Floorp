@@ -302,6 +302,8 @@ static ALWAYS_INLINE bool matchTextureFormat(S s, UNUSED uint8_t* buf) {
   return swgl_isTextureR8(s);
 }
 
+// Quantizes the UVs to the 2^7 scale needed for calculating fractional offsets
+// for linear sampling.
 #define LINEAR_QUANTIZE_UV(sampler, uv, uv_step, uv_rect, min_uv, max_uv,   \
                            uv_z, zoffset)                                   \
   uv = swgl_linearQuantize(sampler, uv);                                    \
@@ -313,21 +315,227 @@ static ALWAYS_INLINE bool matchTextureFormat(S s, UNUSED uint8_t* buf) {
       swgl_linearQuantize(sampler, vec2_scalar{uv_rect.z, uv_rect.w});      \
   int zoffset = swgl_textureLayerOffset(sampler, uv_z);
 
+// Implements the fallback linear filter that can deal with clamping and
+// arbitrary scales.
 template <bool BLEND, typename S, typename C, typename P>
-static int blendTextureLinear(S sampler, vec2 uv, int span,
-                              const vec4_scalar& uv_rect, C color, P* buf,
-                              float z = 0) {
-  if (!matchTextureFormat(sampler, buf)) {
-    return 0;
-  }
-  LINEAR_QUANTIZE_UV(sampler, uv, uv_step, uv_rect, min_uv, max_uv, z, zoffset);
-  P* end = buf + span;
-  for (; buf < end; buf += swgl_StepSize, uv += uv_step) {
+static void blendTextureLinearFallback(S sampler, vec2 uv, int span,
+                                       vec2_scalar uv_step, vec2_scalar min_uv,
+                                       vec2_scalar max_uv, C color, P* buf,
+                                       int zoffset) {
+  for (P* end = buf + span; buf < end; buf += swgl_StepSize, uv += uv_step) {
     commit_blend_span<BLEND>(
         buf,
         applyColor(textureLinearUnpacked(
                        buf, sampler, ivec2(clamp(uv, min_uv, max_uv)), zoffset),
                    color));
+  }
+}
+
+static ALWAYS_INLINE U64 castForShuffle(V16<int16_t> r) {
+  return bit_cast<U64>(r);
+}
+static ALWAYS_INLINE U16 castForShuffle(V4<int16_t> r) {
+  return bit_cast<U16>(r);
+}
+
+static ALWAYS_INLINE V16<int16_t> applyFracX(V16<int16_t> r, I16 fracx) {
+  return r * fracx.xxxxyyyyzzzzwwww;
+}
+static ALWAYS_INLINE V4<int16_t> applyFracX(V4<int16_t> r, I16 fracx) {
+  return r * fracx;
+}
+
+// Implements a faster linear filter that works with axis-aligned constant Y but
+// scales less than 1, i.e. upscaling. In this case we can optimize for the
+// constant Y fraction as well as load all chunks from memory in a single tap
+// for each row.
+template <bool BLEND, typename S, typename C, typename P>
+static void blendTextureLinearUpscale(S sampler, vec2 uv, int span,
+                                      vec2_scalar uv_step, vec2_scalar min_uv,
+                                      vec2_scalar max_uv, C color, P* buf,
+                                      int zoffset) {
+  typedef VectorType<uint8_t, 4 * sizeof(P)> packed_type;
+  typedef VectorType<uint16_t, 4 * sizeof(P)> unpacked_type;
+  typedef VectorType<int16_t, 4 * sizeof(P)> signed_unpacked_type;
+
+  ivec2 i(clamp(uv, min_uv, max_uv));
+  ivec2 frac = i;
+  i >>= 7;
+  P* row0 =
+      (P*)sampler->buf + computeRow(sampler, ivec2_scalar(0, i.y.x), zoffset);
+  P* row1 = row0 + computeNextRowOffset(sampler, ivec2_scalar(0, i.y.x));
+  I16 fracx = computeFracX(sampler, i, frac);
+  int16_t fracy = computeFracY(frac).x;
+  auto src0 =
+      CONVERT(unaligned_load<packed_type>(&row0[i.x.x]), signed_unpacked_type);
+  auto src1 =
+      CONVERT(unaligned_load<packed_type>(&row1[i.x.x]), signed_unpacked_type);
+  auto src = castForShuffle(src0 + (((src1 - src0) * fracy) >> 7));
+
+  // We attempt to sample ahead by one chunk and interpolate it with the current
+  // one. However, due to the complication of upscaling, we may not necessarily
+  // shift in all the next set of samples.
+  for (P* end = buf + span; buf < end; buf += 4) {
+    uv.x += uv_step.x;
+    I32 ixn = cast(uv.x);
+    I16 fracn = computeFracNoClamp(ixn);
+    ixn >>= 7;
+    auto src0n = CONVERT(unaligned_load<packed_type>(&row0[ixn.x]),
+                         signed_unpacked_type);
+    auto src1n = CONVERT(unaligned_load<packed_type>(&row1[ixn.x]),
+                         signed_unpacked_type);
+    auto srcn = castForShuffle(src0n + (((src1n - src0n) * fracy) >> 7));
+
+    // Since we're upscaling, we know that a source pixel has a larger footprint
+    // than the destination pixel, and thus all the source pixels needed for
+    // this chunk will fall within a single chunk of texture data. However,
+    // since the source pixels don't map 1:1 with destination pixels, we need to
+    // shift the source pixels over based on their offset from the start of the
+    // chunk. This could conceivably be optimized better with usage of PSHUFB or
+    // VTBL instructions However, since PSHUFB requires SSSE3, instead we resort
+    // to masking in the correct pixels to avoid having to index into memory.
+    // For the last sample to interpolate with, we need to potentially shift in
+    // a sample from the next chunk over in the case the samples fill out an
+    // entire chunk.
+    auto shuf = src;
+    auto shufn = SHUFFLE(src, ixn.x == i.x.w ? srcn.yyyy : srcn, 1, 2, 3, 4);
+    if (i.x.y == i.x.x) {
+      shuf = shuf.xxyz;
+      shufn = shufn.xxyz;
+    }
+    if (i.x.z == i.x.y) {
+      shuf = shuf.xyyz;
+      shufn = shufn.xyyz;
+    }
+    if (i.x.w == i.x.z) {
+      shuf = shuf.xyzz;
+      shufn = shufn.xyzz;
+    }
+
+    // Convert back to a signed unpacked type so that we can interpolate the
+    // final result.
+    auto interp = bit_cast<signed_unpacked_type>(shuf);
+    auto interpn = bit_cast<signed_unpacked_type>(shufn);
+    interp += applyFracX(interpn - interp, fracx) >> 7;
+
+    commit_blend_span<BLEND>(
+        buf, applyColor(bit_cast<unpacked_type>(interp), color));
+
+    i.x = ixn;
+    fracx = fracn;
+    src = srcn;
+  }
+}
+
+// This is the fastest variant of the linear filter that still provides
+// filtering. In cases where there is no scaling required, but we have a
+// subpixel offset that forces us to blend in neighboring pixels, we can
+// optimize away most of the memory loads and shuffling that is required by the
+// fallback filter.
+template <bool BLEND, typename S, typename C, typename P>
+static void blendTextureLinearFast(S sampler, vec2 uv, int span,
+                                   vec2_scalar min_uv, vec2_scalar max_uv,
+                                   C color, P* buf, int zoffset) {
+  typedef VectorType<uint8_t, 4 * sizeof(P)> packed_type;
+  typedef VectorType<uint16_t, 4 * sizeof(P)> unpacked_type;
+  typedef VectorType<int16_t, 4 * sizeof(P)> signed_unpacked_type;
+
+  ivec2 i(clamp(uv, min_uv, max_uv));
+  ivec2 frac = i;
+  i >>= 7;
+  P* row0 = (P*)sampler->buf + computeRow(sampler, force_scalar(i), zoffset);
+  P* row1 = row0 + computeNextRowOffset(sampler, force_scalar(i));
+  int16_t fracx = computeFracX(sampler, i, frac).x;
+  int16_t fracy = computeFracY(frac).x;
+  auto src0 = CONVERT(unaligned_load<packed_type>(row0), signed_unpacked_type);
+  auto src1 = CONVERT(unaligned_load<packed_type>(row1), signed_unpacked_type);
+  auto src = castForShuffle(src0 + (((src1 - src0) * fracy) >> 7));
+
+  // Since there is no scaling, we sample ahead by one chunk and interpolate it
+  // with the current one. We can then reuse this value on the next iteration.
+  for (P* end = buf + span; buf < end; buf += 4) {
+    row0 += 4;
+    row1 += 4;
+    auto src0n =
+        CONVERT(unaligned_load<packed_type>(row0), signed_unpacked_type);
+    auto src1n =
+        CONVERT(unaligned_load<packed_type>(row1), signed_unpacked_type);
+    auto srcn = castForShuffle(src0n + (((src1n - src0n) * fracy) >> 7));
+
+    // For the last sample to interpolate with, we need to potentially shift in
+    // a sample from the next chunk over since the samples fill out an entire
+    // chunk.
+    auto interp = bit_cast<signed_unpacked_type>(src);
+    auto interpn =
+        bit_cast<signed_unpacked_type>(SHUFFLE(src, srcn, 1, 2, 3, 4));
+    interp += ((interpn - interp) * fracx) >> 7;
+
+    commit_blend_span<BLEND>(
+        buf, applyColor(bit_cast<unpacked_type>(interp), color));
+
+    src = srcn;
+  }
+}
+
+enum LinearFilter {
+  // No linear filter is needed.
+  LINEAR_FILTER_NEAREST = 0,
+  // The most general linear filter that handles clamping and varying scales.
+  LINEAR_FILTER_FALLBACK,
+  // A linear filter optimized for axis-aligned upscaling.
+  LINEAR_FILTER_UPSCALE,
+  // A linear filter with no scaling but with subpixel offset.
+  LINEAR_FILTER_FAST
+};
+
+// Dispatches to an appropriate linear filter depending on the selected filter.
+template <bool BLEND, typename S, typename C, typename P>
+static int blendTextureLinear(S sampler, vec2 uv, int span,
+                              const vec4_scalar& uv_rect, C color, P* buf,
+                              LinearFilter filter, float z = 0) {
+  if (!matchTextureFormat(sampler, buf)) {
+    return 0;
+  }
+  LINEAR_QUANTIZE_UV(sampler, uv, uv_step, uv_rect, min_uv, max_uv, z, zoffset);
+  P* end = buf + span;
+  if (filter != LINEAR_FILTER_FALLBACK) {
+    // If we're not using the fallback, then Y is constant across the entire
+    // row. We just need to ensure that we handle any samples that might pull
+    // data from before the start of the row and require clamping.
+    float beforeDist = max(0.0f, min_uv.x) - uv.x.x;
+    if (beforeDist > 0) {
+      int before = clamp(int(ceil(beforeDist / uv_step.x)) * swgl_StepSize, 0,
+                         int(end - buf));
+      blendTextureLinearFallback<BLEND>(sampler, uv, before, uv_step, min_uv,
+                                        max_uv, color, buf, zoffset);
+      buf += before;
+      uv.x += (before / swgl_StepSize) * uv_step.x;
+    }
+    // We need to check how many samples we can take from inside the row without
+    // requiring clamping. In case the filter oversamples the row by a step, we
+    // subtract off a step from the width to leave some room.
+    float insideDist =
+        min(max_uv.x, float((int(sampler->width) - swgl_StepSize) << 7)) -
+        uv.x.x;
+    if (insideDist >= uv_step.x) {
+      int inside =
+          clamp(int(insideDist / uv_step.x) * swgl_StepSize, 0, int(end - buf));
+      if (filter == LINEAR_FILTER_FAST) {
+        blendTextureLinearFast<BLEND>(sampler, uv, inside, min_uv, max_uv,
+                                      color, buf, zoffset);
+      } else {
+        blendTextureLinearUpscale<BLEND>(sampler, uv, inside, uv_step, min_uv,
+                                         max_uv, color, buf, zoffset);
+      }
+      buf += inside;
+      uv.x += (inside / swgl_StepSize) * uv_step.x;
+    }
+  }
+  // If the fallback filter was requested, or if there are any samples left that
+  // may be outside the row and require clamping, then handle that with here.
+  if (buf < end) {
+    blendTextureLinearFallback<BLEND>(sampler, uv, int(end - buf), uv_step,
+                                      min_uv, max_uv, color, buf, zoffset);
   }
   return span;
 }
@@ -409,12 +617,12 @@ static int blendTextureNearest(S sampler, vec2 uv, int span,
 }
 
 // Helper function to decide whether we can safely apply 1:1 nearest filtering
-// without diverging too much from the linear filter
+// without diverging too much from the linear filter.
 template <typename S, typename T>
-static inline bool allowTextureNearest(S sampler, T P, int span) {
+static inline LinearFilter needsTextureLinear(S sampler, T P, int span) {
   // First verify if the row Y doesn't change across samples
   if (P.y.x != P.y.y) {
-    return false;
+    return LINEAR_FILTER_FALLBACK;
   }
   P = samplerScale(sampler, P);
   // We need to verify that the pixel step reasonably approximates stepping
@@ -422,12 +630,26 @@ static inline bool allowTextureNearest(S sampler, T P, int span) {
   // that the margin of error is no more than approximately 2^-7.
   span &= ~(128 - 1);
   span += 128;
-  return round((P.x.y - P.x.x) * span) == span &&
-         // Also verify that we're reasonably close to the center of a texel
-         // so that it doesn't look that much different than if a linear filter
-         // was used.
-         (int(P.x.x * 4.0f + 0.5f) & 3) == 2 &&
-         (int(P.y.x * 4.0f + 0.5f) & 3) == 2;
+  float dx = P.x.y - P.x.x;
+  if (round(dx * span) != span) {
+    // If the source region is smaller than the destination, then we can use the
+    // upscaling filter since row Y is constant.
+    return dx >= 0 && dx <= 1 ? LINEAR_FILTER_UPSCALE : LINEAR_FILTER_FALLBACK;
+  }
+  // Also verify that we're reasonably close to the center of a texel
+  // so that it doesn't look that much different than if a linear filter
+  // was used.
+  if ((int(P.x.x * 4.0f + 0.5f) & 3) != 2 ||
+      (int(P.y.x * 4.0f + 0.5f) & 3) != 2) {
+    // The source and destination regions are the same, but there is a
+    // significant subpixel offset. We can use a faster linear filter to deal
+    // with the offset in this case.
+    return LINEAR_FILTER_FAST;
+  }
+  // Otherwise, we have a constant 1:1 step and we're stepping reasonably close
+  // to the center of each pixel, so it's safe to disable the linear filter and
+  // use nearest.
+  return LINEAR_FILTER_NEAREST;
 }
 
 // Commit a single chunk from a linear texture fetch
@@ -435,24 +657,24 @@ static inline bool allowTextureNearest(S sampler, T P, int span) {
   do {                                                                     \
     auto packed_color = packColor(swgl_Out##format, color);                \
     int drawn = 0;                                                         \
-    if (allowTextureNearest(s, p, swgl_SpanLength)) {                      \
+    if (LinearFilter filter = needsTextureLinear(s, p, swgl_SpanLength)) { \
       if (blend_key) {                                                     \
-        drawn = blendTextureNearest<true>(s, p, swgl_SpanLength, uv_rect,  \
-                                          packed_color, swgl_Out##format,  \
-                                          __VA_ARGS__);                    \
+        drawn = blendTextureLinear<true>(s, p, swgl_SpanLength, uv_rect,   \
+                                         packed_color, swgl_Out##format,   \
+                                         filter, __VA_ARGS__);             \
       } else {                                                             \
-        drawn = blendTextureNearest<false>(s, p, swgl_SpanLength, uv_rect, \
-                                           packed_color, swgl_Out##format, \
-                                           __VA_ARGS__);                   \
+        drawn = blendTextureLinear<false>(s, p, swgl_SpanLength, uv_rect,  \
+                                          packed_color, swgl_Out##format,  \
+                                          filter, __VA_ARGS__);            \
       }                                                                    \
     } else if (blend_key) {                                                \
-      drawn = blendTextureLinear<true>(s, p, swgl_SpanLength, uv_rect,     \
-                                       packed_color, swgl_Out##format,     \
-                                       __VA_ARGS__);                       \
-    } else {                                                               \
-      drawn = blendTextureLinear<false>(s, p, swgl_SpanLength, uv_rect,    \
+      drawn = blendTextureNearest<true>(s, p, swgl_SpanLength, uv_rect,    \
                                         packed_color, swgl_Out##format,    \
                                         __VA_ARGS__);                      \
+    } else {                                                               \
+      drawn = blendTextureNearest<false>(s, p, swgl_SpanLength, uv_rect,   \
+                                         packed_color, swgl_Out##format,   \
+                                         __VA_ARGS__);                     \
     }                                                                      \
     swgl_Out##format += drawn;                                             \
     swgl_SpanLength -= drawn;                                              \

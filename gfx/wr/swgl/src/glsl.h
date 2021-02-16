@@ -125,6 +125,7 @@ struct vec4;
 struct ivec2;
 
 SI int32_t if_then_else(int32_t c, int32_t t, int32_t e) { return c ? t : e; }
+SI int32_t if_then_else(bool c, int32_t t, int32_t e) { return c ? t : e; }
 
 SI float if_then_else(int32_t c, float t, float e) { return c ? t : e; }
 
@@ -1189,6 +1190,8 @@ struct bvec4_scalar {
         return z;
       case W:
         return w;
+      default:
+        UNREACHABLE;
     }
   }
   bool sel(XYZW c1) { return select(c1); }
@@ -1220,6 +1223,8 @@ struct bvec4 {
         return z;
       case W:
         return w;
+      default:
+        UNREACHABLE;
     }
   }
   Bool sel(XYZW c1) { return select(c1); }
