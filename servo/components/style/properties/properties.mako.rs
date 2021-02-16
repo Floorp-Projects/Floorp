@@ -29,11 +29,11 @@ use crate::context::QuirksMode;
 use crate::logical_geometry::WritingMode;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use crate::computed_value_flags::*;
-use crate::hash::FxHashMap;
 use crate::media_queries::Device;
 use crate::parser::ParserContext;
 use crate::properties::longhands::system_font::SystemFont;
 use crate::selector_parser::PseudoElement;
+use selectors::parser::SelectorParseErrorKind;
 #[cfg(feature = "servo")] use servo_config::prefs;
 use style_traits::{CssWriter, KeywordsCollectFn, ParseError, ParsingMode};
 use style_traits::{SpecifiedValueInfo, StyleParseErrorKind, ToCss};
@@ -1636,40 +1636,22 @@ impl ToCss for UnparsedValue {
     }
 }
 
-/// A simple cache for properties that come from a shorthand and have variable
-/// references.
-///
-/// This cache works because of the fact that you can't have competing values
-/// for a given longhand coming from the same shorthand.
-pub type ShorthandsWithPropertyReferencesCache = FxHashMap<LonghandId, PropertyDeclaration>;
-
 impl UnparsedValue {
-    fn substitute_variables<'cache>(
+    fn substitute_variables(
         &self,
         longhand_id: LonghandId,
         custom_properties: Option<<&Arc<crate::custom_properties::CustomPropertiesMap>>,
         quirks_mode: QuirksMode,
         device: &Device,
-        shorthand_cache: &'cache mut ShorthandsWithPropertyReferencesCache,
-    ) -> Cow<'cache, PropertyDeclaration> {
+    ) -> PropertyDeclaration {
         let invalid_at_computed_value_time = || {
             let keyword = if longhand_id.inherited() {
                 CSSWideKeyword::Inherit
             } else {
                 CSSWideKeyword::Initial
             };
-            Cow::Owned(PropertyDeclaration::css_wide_keyword(longhand_id, keyword))
+            PropertyDeclaration::css_wide_keyword(longhand_id, keyword)
         };
-
-        if self.from_shorthand.is_some() {
-            if shorthand_cache.contains_key(&longhand_id) {
-                // FIXME: This double lookup should be avoidable, but rustc
-                // doesn't like that, see:
-                //
-                // https://github.com/rust-lang/rust/issues/82146
-                return Cow::Borrowed(&shorthand_cache[&longhand_id]);
-            }
-        }
 
         let css = match crate::custom_properties::substitute(
             &self.css,
@@ -1705,59 +1687,53 @@ impl UnparsedValue {
         let mut input = Parser::new(&mut input);
         input.skip_whitespace();  // Unnecessary for correctness, but may help try() rewind less.
         if let Ok(keyword) = input.try_parse(CSSWideKeyword::parse) {
-            return Cow::Owned(PropertyDeclaration::css_wide_keyword(longhand_id, keyword));
+            return PropertyDeclaration::css_wide_keyword(longhand_id, keyword);
         }
 
-        let shorthand = match self.from_shorthand {
-            None => {
-                return match input.parse_entirely(|input| longhand_id.parse_value(&context, input)) {
-                    Ok(decl) => Cow::Owned(decl),
-                    Err(..) => invalid_at_computed_value_time(),
+        let declaration = input.parse_entirely(|input| {
+            match self.from_shorthand {
+                None => longhand_id.parse_value(&context, input),
+                Some(ShorthandId::All) => {
+                    // No need to parse the 'all' shorthand as anything other
+                    // than a CSS-wide keyword, after variable substitution.
+                    Err(input.new_custom_error(SelectorParseErrorKind::UnexpectedIdent("all".into())))
                 }
-            },
-            Some(shorthand) => shorthand,
-        };
-
-        match shorthand {
-            ShorthandId::All => {
-                // No need to parse the 'all' shorthand as anything other
-                // than a CSS-wide keyword, after variable substitution.
-                return invalid_at_computed_value_time();
-            }
-            % for shorthand in data.shorthands_except_all():
-            ShorthandId::${shorthand.camel_case} => {
-                let longhands = match input.parse_entirely(|input| shorthands::${shorthand.ident}::parse_value(&context, input)) {
-                    Ok(l) => l,
-                    _ => return invalid_at_computed_value_time(),
-                };
-
-                <% seen = set() %>
-                % for property in shorthand.sub_properties:
-                // When animating logical properties, we end up
-                // physicalizing the value during the animation, but the
-                // value still comes from the logical shorthand.
-                //
-                // So we need to handle the physical properties too.
-                % for prop in property.all_physical_mapped_properties(data) + [property]:
-                % if prop.ident not in seen:
-                    shorthand_cache.insert(
-                        LonghandId::${prop.camel_case},
-                        PropertyDeclaration::${prop.camel_case}(
-                            longhands.${property.ident}
-                            % if prop.ident != property.ident:
-                            .clone()
+                % for shorthand in data.shorthands_except_all():
+                Some(ShorthandId::${shorthand.camel_case}) => {
+                    shorthands::${shorthand.ident}::parse_value(&context, input)
+                    .map(|longhands| {
+                        match longhand_id {
+                            <% seen = set() %>
+                            % for property in shorthand.sub_properties:
+                            // When animating logical properties, we end up
+                            // physicalizing the value during the animation, but
+                            // the value still comes from the logical shorthand.
+                            //
+                            // So we need to handle the physical properties too.
+                            % for prop in [property] + property.all_physical_mapped_properties(data):
+                            % if prop.camel_case not in seen:
+                            LonghandId::${prop.camel_case} => {
+                                PropertyDeclaration::${prop.camel_case}(
+                                    longhands.${property.ident}
+                                )
+                            }
+                            <% seen.add(prop.camel_case) %>
                             % endif
-                        )
-                    );
-                % endif
-                <% seen.add(prop.ident) %>
-                % endfor
+                            % endfor
+                            % endfor
+                            <% del seen %>
+                            _ => unreachable!()
+                        }
+                    })
+                }
                 % endfor
             }
-            % endfor
-        }
+        });
 
-        Cow::Borrowed(&shorthand_cache[&longhand_id])
+        match declaration {
+            Ok(decl) => decl,
+            Err(..) => invalid_at_computed_value_time(),
+        }
     }
 }
 
