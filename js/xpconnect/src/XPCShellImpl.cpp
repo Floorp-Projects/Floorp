@@ -14,7 +14,6 @@
 #include "js/Printf.h"
 #include "js/PropertySpec.h"
 #include "js/SourceText.h"  // JS::SourceText
-#include "gfxPlatform.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/IOInterposer.h"
@@ -1305,10 +1304,6 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
 #ifdef MOZ_CODE_COVERAGE
     CodeCoverageHandler::Init();
 #endif
-
-    // Ensure gfxPlatform is initialized to make sure CMS state some test want
-    // to use is set up.
-    gfxPlatform::GetPlatform();
 
     {
       if (!glob) {
