@@ -160,4 +160,77 @@ add_task(async function test_check_restrictions() {
   );
 
   Assert.ok(!schemeData.testreallydeleteme, "No entry for reallydeleteme");
+  await deleteHandlerStore();
+});
+
+add_task(async function test_migrations() {
+  const kTestData = [
+    ["A", "http://compose.mail.yahoo.co.jp/ym/Compose?To=%s"],
+    ["B", "http://www.inbox.lv/rfc2368/?value=%s"],
+    ["C", "http://poczta.interia.pl/mh/?mailto=%s"],
+    ["D", "http://win.mail.ru/cgi-bin/sentmsg?mailto=%s"],
+  ];
+  // Set up the test handlers. This doesn't use prefs like the previous test,
+  // because we now refuse to import insecure handler prefs. They can only
+  // exist if they were added into the handler store before this restriction
+  // was created (bug 1526890).
+  gHandlerService.wrappedJSObject._injectDefaultProtocolHandlers();
+  let handler = gExternalProtocolService.getProtocolHandlerInfo("mailto");
+  while (handler.possibleApplicationHandlers.length) {
+    handler.possibleApplicationHandlers.removeElementAt(0);
+  }
+  for (let [name, uriTemplate] of kTestData) {
+    let app = Cc["@mozilla.org/uriloader/web-handler-app;1"].createInstance(
+      Ci.nsIWebHandlerApp
+    );
+    app.uriTemplate = uriTemplate;
+    app.name = name;
+    handler.possibleApplicationHandlers.appendElement(app);
+  }
+  gHandlerService.store(handler);
+
+  // Now migrate them:
+  Services.prefs.setCharPref("browser.handlers.migrations", "blah,secure-mail");
+  gHandlerService.wrappedJSObject._migrateProtocolHandlersIfNeeded();
+
+  // Now check the result:
+  handler = gExternalProtocolService.getProtocolHandlerInfo("mailto");
+
+  let expectedURIs = new Set([
+    "https://mail.yahoo.co.jp/compose/?To=%s",
+    "https://mail.inbox.lv/compose?to=%s",
+    "https://poczta.interia.pl/mh/?mailto=%s",
+    "https://e.mail.ru/cgi-bin/sentmsg?mailto=%s",
+  ]);
+
+  let possibleApplicationHandlers = Array.from(
+    handler.possibleApplicationHandlers.enumerate(Ci.nsIWebHandlerApp)
+  );
+  // Set iterators are stable to deletion, so this works:
+  for (let expected of expectedURIs) {
+    for (let app of possibleApplicationHandlers) {
+      if (app instanceof Ci.nsIWebHandlerApp && app.uriTemplate == expected) {
+        Assert.ok(true, "Found handler with URI " + expected);
+        // ... even when we remove items.
+        expectedURIs.delete(expected);
+        break;
+      }
+    }
+  }
+  Assert.equal(expectedURIs.size, 0, "Should have seen all the expected URIs.");
+
+  for (let app of possibleApplicationHandlers) {
+    if (app instanceof Ci.nsIWebHandlerApp) {
+      Assert.ok(
+        !kTestData.some(n => n[1] == app.uriTemplate),
+        "Should not be any of the original handlers"
+      );
+    }
+  }
+
+  Assert.ok(
+    !handler.preferredApplicationHandler,
+    "Shouldn't have preferred handler initially."
+  );
+  await deleteHandlerStore();
 });
