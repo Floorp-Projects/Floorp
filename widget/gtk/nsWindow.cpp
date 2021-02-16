@@ -7221,7 +7221,9 @@ gboolean WindowDragMotionHandler(GtkWidget* aWidget,
                                  nsWaylandDragContext* aWaylandDragContext,
                                  gint aX, gint aY, guint aTime) {
   RefPtr<nsWindow> window = get_window_for_gtk_widget(aWidget);
-  if (!window) return FALSE;
+  if (!window) {
+    return FALSE;
+  }
 
   // figure out which internal widget this drag motion actually happened on
   nscoord retx = 0;
@@ -7235,7 +7237,7 @@ gboolean WindowDragMotionHandler(GtkWidget* aWidget,
     innerMostWindow = window;
   }
 
-  LOGDRAG(("nsWindow drag-motion signal for %p\n", (void*)innerMostWindow));
+  LOGDRAG(("WindowDragMotionHandler nsWindow %p\n", (void*)innerMostWindow));
 
   LayoutDeviceIntPoint point = window->GdkPointToDevicePixels({retx, rety});
 
@@ -7251,8 +7253,13 @@ static gboolean drag_motion_event_cb(GtkWidget* aWidget,
 }
 
 void WindowDragLeaveHandler(GtkWidget* aWidget) {
+  LOGDRAG(("WindowDragLeaveHandler()\n"));
+
   RefPtr<nsWindow> window = get_window_for_gtk_widget(aWidget);
-  if (!window) return;
+  if (!window) {
+    LOGDRAG(("    Failed - can't find nsWindow!\n"));
+    return;
+  }
 
   RefPtr<nsDragService> dragService = nsDragService::GetInstance();
 
@@ -7263,6 +7270,7 @@ void WindowDragLeaveHandler(GtkWidget* aWidget) {
     // drag-failed signal on the source widget, but the leave message goes
     // via the X server, and so doesn't get processed at least until the
     // event loop runs again.
+    LOGDRAG(("    Failed - GetMostRecentDestWindow()!\n"));
     return;
   }
 
@@ -7271,11 +7279,12 @@ void WindowDragLeaveHandler(GtkWidget* aWidget) {
     // When the drag moves between widgets, GTK can send leave signal for
     // the old widget after the motion or drop signal for the new widget.
     // We'll send the leave event when the motion or drop event is run.
+    LOGDRAG(("    Failed - GetMozContainerWidget()!\n"));
     return;
   }
 
-  LOGDRAG(("nsWindow drag-leave signal for %p\n", (void*)mostRecentDragWindow));
-
+  LOGDRAG(
+      ("WindowDragLeaveHandler nsWindow %p\n", (void*)mostRecentDragWindow));
   dragService->ScheduleLeaveEvent();
 }
 
@@ -7303,7 +7312,7 @@ gboolean WindowDragDropHandler(GtkWidget* aWidget, GdkDragContext* aDragContext,
     innerMostWindow = window;
   }
 
-  LOGDRAG(("nsWindow drag-drop signal for %p\n", (void*)innerMostWindow));
+  LOGDRAG(("WindowDragDropHandler nsWindow %p\n", (void*)innerMostWindow));
 
   LayoutDeviceIntPoint point = window->GdkPointToDevicePixels({retx, rety});
 

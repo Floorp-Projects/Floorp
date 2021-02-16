@@ -72,7 +72,13 @@ enum {
   MOZ_GTK_DRAG_RESULT_ERROR
 };
 
-static LazyLogModule sDragLm("nsDragService");
+#undef LOG
+#ifdef MOZ_LOGGING
+extern mozilla::LazyLogModule gWidgetDragLog;
+#  define LOG(args) MOZ_LOG(gWidgetDragLog, mozilla::LogLevel::Debug, args)
+#else
+#  define LOG(args)
+#endif
 
 // data used for synthetic periodic motion events sent to the source widget
 // grabbing real events for the drag.
@@ -143,7 +149,7 @@ nsDragService::nsDragService()
   }
 
   // set up our logging module
-  MOZ_LOG(sDragLm, LogLevel::Debug, ("nsDragService::nsDragService"));
+  LOG(("nsDragService::nsDragService"));
   mCanDrop = false;
   mTargetDragDataReceived = false;
   mTargetDragData = 0;
@@ -151,7 +157,7 @@ nsDragService::nsDragService()
 }
 
 nsDragService::~nsDragService() {
-  MOZ_LOG(sDragLm, LogLevel::Debug, ("nsDragService::~nsDragService"));
+  LOG(("nsDragService::~nsDragService"));
   if (mTaskSource) g_source_remove(mTaskSource);
 }
 
@@ -178,8 +184,7 @@ NS_IMETHODIMP
 nsDragService::Observe(nsISupports* aSubject, const char* aTopic,
                        const char16_t* aData) {
   if (!nsCRT::strcmp(aTopic, "quit-application")) {
-    MOZ_LOG(sDragLm, LogLevel::Debug,
-            ("nsDragService::Observe(\"quit-application\")"));
+    LOG(("nsDragService::Observe(\"quit-application\")"));
     if (mHiddenWidget) {
       gtk_widget_destroy(mHiddenWidget);
       mHiddenWidget = 0;
@@ -304,7 +309,7 @@ nsDragService::InvokeDragSession(
     nsICookieJarSettings* aCookieJarSettings, nsIArray* aArrayTransferables,
     uint32_t aActionType,
     nsContentPolicyType aContentPolicyType = nsIContentPolicy::TYPE_OTHER) {
-  MOZ_LOG(sDragLm, LogLevel::Debug, ("nsDragService::InvokeDragSession"));
+  LOG(("nsDragService::InvokeDragSession"));
 
   // If the previous source drag has not yet completed, signal handlers need
   // to be removed from sGrabWidget and dragend needs to be dispatched to
@@ -443,14 +448,13 @@ bool nsDragService::SetAlphaPixmap(SourceSurface* aSurface,
 
 NS_IMETHODIMP
 nsDragService::StartDragSession() {
-  MOZ_LOG(sDragLm, LogLevel::Debug, ("nsDragService::StartDragSession"));
+  LOG(("nsDragService::StartDragSession"));
   return nsBaseDragService::StartDragSession();
 }
 
 NS_IMETHODIMP
 nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
-  MOZ_LOG(sDragLm, LogLevel::Debug,
-          ("nsDragService::EndDragSession %d", aDoneDrag));
+  LOG(("nsDragService::EndDragSession %d", aDoneDrag));
 
   if (sGrabWidget) {
     g_signal_handlers_disconnect_by_func(
@@ -483,14 +487,14 @@ nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
 // nsIDragSession
 NS_IMETHODIMP
 nsDragService::SetCanDrop(bool aCanDrop) {
-  MOZ_LOG(sDragLm, LogLevel::Debug, ("nsDragService::SetCanDrop %d", aCanDrop));
+  LOG(("nsDragService::SetCanDrop %d", aCanDrop));
   mCanDrop = aCanDrop;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDragService::GetCanDrop(bool* aCanDrop) {
-  MOZ_LOG(sDragLm, LogLevel::Debug, ("nsDragService::GetCanDrop"));
+  LOG(("nsDragService::GetCanDrop"));
   *aCanDrop = mCanDrop;
   return NS_OK;
 }
@@ -560,10 +564,11 @@ static void GetTextUriListItem(const char* data, uint32_t datalen,
 
 NS_IMETHODIMP
 nsDragService::GetNumDropItems(uint32_t* aNumItems) {
-  MOZ_LOG(sDragLm, LogLevel::Debug, ("nsDragService::GetNumDropItems"));
+  LOG(("nsDragService::GetNumDropItems"));
 
   if (!mTargetWidget) {
-    MOZ_LOG(sDragLm, LogLevel::Debug, ("*** warning: GetNumDropItems \
+    LOG(
+        ("*** warning: GetNumDropItems \
                called without a valid target widget!\n"));
     *aNumItems = 0;
     return NS_OK;
@@ -581,19 +586,20 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems) {
     } else
       *aNumItems = 1;
   }
-  MOZ_LOG(sDragLm, LogLevel::Debug, ("%d items", *aNumItems));
+  LOG(("%d items", *aNumItems));
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
-  MOZ_LOG(sDragLm, LogLevel::Debug, ("nsDragService::GetData %d", aItemIndex));
+  LOG(("nsDragService::GetData %d", aItemIndex));
 
   // make sure that we have a transferable
   if (!aTransferable) return NS_ERROR_INVALID_ARG;
 
   if (!mTargetWidget) {
-    MOZ_LOG(sDragLm, LogLevel::Debug, ("*** warning: GetData \
+    LOG(
+        ("*** warning: GetData \
                called without a valid target widget!\n"));
     return NS_ERROR_FAILURE;
   }
@@ -608,29 +614,27 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
   bool isList = IsTargetContextList();
 
   if (isList) {
-    MOZ_LOG(sDragLm, LogLevel::Debug, ("it's a list..."));
+    LOG(("it's a list..."));
     // find a matching flavor
     for (uint32_t i = 0; i < flavors.Length(); ++i) {
       nsCString& flavorStr = flavors[i];
-      MOZ_LOG(sDragLm, LogLevel::Debug, ("flavor is %s\n", flavorStr.get()));
+      LOG(("flavor is %s\n", flavorStr.get()));
       // get the item with the right index
       nsCOMPtr<nsITransferable> item =
           do_QueryElementAt(mSourceDataItems, aItemIndex);
       if (!item) continue;
 
       nsCOMPtr<nsISupports> data;
-      MOZ_LOG(sDragLm, LogLevel::Debug,
-              ("trying to get transfer data for %s\n", flavorStr.get()));
+      LOG(("trying to get transfer data for %s\n", flavorStr.get()));
       rv = item->GetTransferData(flavorStr.get(), getter_AddRefs(data));
       if (NS_FAILED(rv)) {
-        MOZ_LOG(sDragLm, LogLevel::Debug, ("failed.\n"));
+        LOG(("failed.\n"));
         continue;
       }
-      MOZ_LOG(sDragLm, LogLevel::Debug, ("succeeded.\n"));
+      LOG(("succeeded.\n"));
       rv = aTransferable->SetTransferData(flavorStr.get(), data);
       if (NS_FAILED(rv)) {
-        MOZ_LOG(sDragLm, LogLevel::Debug,
-                ("fail to set transfer data into transferable!\n"));
+        LOG(("fail to set transfer data into transferable!\n"));
         continue;
       }
       // ok, we got the data
@@ -646,18 +650,17 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
   for (uint32_t i = 0; i < flavors.Length(); ++i) {
     nsCString& flavorStr = flavors[i];
     GdkAtom gdkFlavor = gdk_atom_intern(flavorStr.get(), FALSE);
-    MOZ_LOG(sDragLm, LogLevel::Debug,
-            ("looking for data in type %s, gdk flavor %p\n", flavorStr.get(),
-             gdkFlavor));
+    LOG(("looking for data in type %s, gdk flavor %p\n", flavorStr.get(),
+         gdkFlavor));
     bool dataFound = false;
     if (gdkFlavor) {
       GetTargetDragData(gdkFlavor);
     }
     if (mTargetDragData) {
-      MOZ_LOG(sDragLm, LogLevel::Debug, ("dataFound = true\n"));
+      LOG(("dataFound = true\n"));
       dataFound = true;
     } else {
-      MOZ_LOG(sDragLm, LogLevel::Debug, ("dataFound = false\n"));
+      LOG(("dataFound = false\n"));
 
       // Dragging and dropping from the file manager would cause us
       // to parse the source text as a nsIFile URL.
@@ -708,21 +711,19 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
       // on the clipboard first, try again with text/plain. If that
       // is present, convert it to unicode.
       if (flavorStr.EqualsLiteral(kUnicodeMime)) {
-        MOZ_LOG(sDragLm, LogLevel::Debug,
-                ("we were looking for text/unicode... \
-                       trying with text/plain;charset=utf-8\n"));
+        LOG(
+            ("we were looking for text/unicode... \
+             trying with text/plain;charset=utf-8\n"));
         gdkFlavor = gdk_atom_intern(gTextPlainUTF8Type, FALSE);
         GetTargetDragData(gdkFlavor);
         if (mTargetDragData) {
-          MOZ_LOG(sDragLm, LogLevel::Debug, ("Got textplain data\n"));
+          LOG(("Got textplain data\n"));
           const char* castedText = reinterpret_cast<char*>(mTargetDragData);
           char16_t* convertedText = nullptr;
           NS_ConvertUTF8toUTF16 ucs2string(castedText, mTargetDragDataLen);
           convertedText = ToNewUnicode(ucs2string, mozilla::fallible);
           if (convertedText) {
-            MOZ_LOG(sDragLm, LogLevel::Debug,
-                    ("successfully converted plain text \
-                               to unicode.\n"));
+            LOG(("successfully converted plain text to unicode.\n"));
             // out with the old, in with the new
             g_free(mTargetDragData);
             mTargetDragData = convertedText;
@@ -730,22 +731,20 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
             dataFound = true;
           }  // if plain text data on clipboard
         } else {
-          MOZ_LOG(sDragLm, LogLevel::Debug,
-                  ("we were looking for text/unicode... \
+          LOG(
+              ("we were looking for text/unicode... \
                            trying again with text/plain\n"));
           gdkFlavor = gdk_atom_intern(kTextMime, FALSE);
           GetTargetDragData(gdkFlavor);
           if (mTargetDragData) {
-            MOZ_LOG(sDragLm, LogLevel::Debug, ("Got textplain data\n"));
+            LOG(("Got textplain data\n"));
             const char* castedText = reinterpret_cast<char*>(mTargetDragData);
             char16_t* convertedText = nullptr;
             uint32_t convertedTextLen = 0;
             UTF8ToNewUTF16(castedText, mTargetDragDataLen, &convertedText,
                            &convertedTextLen);
             if (convertedText) {
-              MOZ_LOG(sDragLm, LogLevel::Debug,
-                      ("successfully converted plain text \
-                                   to unicode.\n"));
+              LOG(("successfully converted plain text to unicode.\n"));
               // out with the old, in with the new
               g_free(mTargetDragData);
               mTargetDragData = convertedText;
@@ -760,13 +759,13 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
       // it on the clipboard, try again with text/uri-list, and then
       // _NETSCAPE_URL
       if (flavorStr.EqualsLiteral(kURLMime)) {
-        MOZ_LOG(sDragLm, LogLevel::Debug,
-                ("we were looking for text/x-moz-url...\
+        LOG(
+            ("we were looking for text/x-moz-url...\
                        trying again with text/uri-list\n"));
         gdkFlavor = gdk_atom_intern(gTextUriListType, FALSE);
         GetTargetDragData(gdkFlavor);
         if (mTargetDragData) {
-          MOZ_LOG(sDragLm, LogLevel::Debug, ("Got text/uri-list data\n"));
+          LOG(("Got text/uri-list data\n"));
           const char* data = reinterpret_cast<char*>(mTargetDragData);
           char16_t* convertedText = nullptr;
           uint32_t convertedTextLen = 0;
@@ -775,8 +774,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
                              &convertedText, &convertedTextLen);
 
           if (convertedText) {
-            MOZ_LOG(sDragLm, LogLevel::Debug, ("successfully converted \
-                               _NETSCAPE_URL to unicode.\n"));
+            LOG(("successfully converted _NETSCAPE_URL to unicode.\n"));
             // out with the old, in with the new
             g_free(mTargetDragData);
             mTargetDragData = convertedText;
@@ -784,25 +782,24 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
             dataFound = true;
           }
         } else {
-          MOZ_LOG(sDragLm, LogLevel::Debug,
-                  ("failed to get text/uri-list data\n"));
+          LOG(("failed to get text/uri-list data\n"));
         }
         if (!dataFound) {
-          MOZ_LOG(sDragLm, LogLevel::Debug,
-                  ("we were looking for text/x-moz-url...\
+          LOG(
+              ("we were looking for text/x-moz-url...\
                            trying again with _NETSCAP_URL\n"));
           gdkFlavor = gdk_atom_intern(gMozUrlType, FALSE);
           GetTargetDragData(gdkFlavor);
           if (mTargetDragData) {
-            MOZ_LOG(sDragLm, LogLevel::Debug, ("Got _NETSCAPE_URL data\n"));
+            LOG(("Got _NETSCAPE_URL data\n"));
             const char* castedText = reinterpret_cast<char*>(mTargetDragData);
             char16_t* convertedText = nullptr;
             uint32_t convertedTextLen = 0;
             UTF8ToNewUTF16(castedText, mTargetDragDataLen, &convertedText,
                            &convertedTextLen);
             if (convertedText) {
-              MOZ_LOG(sDragLm, LogLevel::Debug,
-                      ("successfully converted _NETSCAPE_URL \
+              LOG(
+                  ("successfully converted _NETSCAPE_URL \
                                    to unicode.\n"));
               // out with the old, in with the new
               g_free(mTargetDragData);
@@ -811,8 +808,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
               dataFound = true;
             }
           } else {
-            MOZ_LOG(sDragLm, LogLevel::Debug,
-                    ("failed to get _NETSCAPE_URL data\n"));
+            LOG(("failed to get _NETSCAPE_URL data\n"));
           }
         }
       }
@@ -835,7 +831,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
           getter_AddRefs(genericDataWrapper));
       aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper);
       // we found one, get out of this loop!
-      MOZ_LOG(sDragLm, LogLevel::Debug, ("dataFound and converted!\n"));
+      LOG(("dataFound and converted!\n"));
       break;
     }
   }
@@ -845,16 +841,18 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
 
 NS_IMETHODIMP
 nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
-  MOZ_LOG(sDragLm, LogLevel::Debug,
-          ("nsDragService::IsDataFlavorSupported %s", aDataFlavor));
-  if (!_retval) return NS_ERROR_INVALID_ARG;
+  LOG(("nsDragService::IsDataFlavorSupported %s", aDataFlavor));
+  if (!_retval) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   // set this to no by default
   *_retval = false;
 
   // check to make sure that we have a drag object set, here
   if (!mTargetWidget) {
-    MOZ_LOG(sDragLm, LogLevel::Debug, ("*** warning: IsDataFlavorSupported \
+    LOG(
+        ("*** warning: IsDataFlavorSupported \
                called without a valid target widget!\n"));
     return NS_OK;
   }
@@ -864,7 +862,7 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
   // if it is, just look in the internal data since we are the source
   // for it.
   if (isList) {
-    MOZ_LOG(sDragLm, LogLevel::Debug, ("It's a list.."));
+    LOG(("It's a list.."));
     uint32_t numDragItems = 0;
     // if we don't have mDataItems we didn't start this drag so it's
     // an external client trying to fool us.
@@ -877,10 +875,9 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
         nsTArray<nsCString> flavors;
         currItem->FlavorsTransferableCanExport(flavors);
         for (uint32_t i = 0; i < flavors.Length(); ++i) {
-          MOZ_LOG(sDragLm, LogLevel::Debug,
-                  ("checking %s against %s\n", flavors[i].get(), aDataFlavor));
+          LOG(("checking %s against %s\n", flavors[i].get(), aDataFlavor));
           if (flavors[i].Equals(aDataFlavor)) {
-            MOZ_LOG(sDragLm, LogLevel::Debug, ("boioioioiooioioioing!\n"));
+            LOG(("boioioioiooioioioing!\n"));
             *_retval = true;
           }
         }
@@ -906,24 +903,25 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
     GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
     gchar* name = nullptr;
     name = gdk_atom_name(atom);
-    MOZ_LOG(sDragLm, LogLevel::Debug,
-            ("checking %s against %s\n", name, aDataFlavor));
+    LOG(("checking %s against %s\n", name, aDataFlavor));
     if (name && (strcmp(name, aDataFlavor) == 0)) {
-      MOZ_LOG(sDragLm, LogLevel::Debug, ("good!\n"));
+      LOG(("good!\n"));
       *_retval = true;
     }
     // check for automatic text/uri-list -> text/x-moz-url mapping
     if (!*_retval && name && (strcmp(name, gTextUriListType) == 0) &&
         (strcmp(aDataFlavor, kURLMime) == 0 ||
          strcmp(aDataFlavor, kFileMime) == 0)) {
-      MOZ_LOG(sDragLm, LogLevel::Debug, ("good! ( it's text/uri-list and \
+      LOG(
+          ("good! ( it's text/uri-list and \
                    we're checking against text/x-moz-url )\n"));
       *_retval = true;
     }
     // check for automatic _NETSCAPE_URL -> text/x-moz-url mapping
     if (!*_retval && name && (strcmp(name, gMozUrlType) == 0) &&
         (strcmp(aDataFlavor, kURLMime) == 0)) {
-      MOZ_LOG(sDragLm, LogLevel::Debug, ("good! ( it's _NETSCAPE_URL and \
+      LOG(
+          ("good! ( it's _NETSCAPE_URL and \
                    we're checking against text/x-moz-url )\n"));
       *_retval = true;
     }
@@ -931,8 +929,8 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
     if (!*_retval && name && (strcmp(name, kTextMime) == 0) &&
         ((strcmp(aDataFlavor, kUnicodeMime) == 0) ||
          (strcmp(aDataFlavor, kFileMime) == 0))) {
-      MOZ_LOG(sDragLm, LogLevel::Debug,
-              ("good! ( it's text plain and we're checking \
+      LOG(
+          ("good! ( it's text plain and we're checking \
                    against text/unicode or application/x-moz-file)\n"));
       *_retval = true;
     }
@@ -951,8 +949,7 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
 }
 
 void nsDragService::ReplyToDragMotion(GdkDragContext* aDragContext) {
-  MOZ_LOG(sDragLm, LogLevel::Debug,
-          ("nsDragService::ReplyToDragMotion %d", mCanDrop));
+  LOG(("nsDragService::ReplyToDragMotion %d", mCanDrop));
 
   GdkDragAction action = (GdkDragAction)0;
   if (mCanDrop) {
@@ -978,8 +975,7 @@ void nsDragService::ReplyToDragMotion(GdkDragContext* aDragContext) {
 
 #ifdef MOZ_WAYLAND
 void nsDragService::ReplyToDragMotion(nsWaylandDragContext* aDragContext) {
-  MOZ_LOG(sDragLm, LogLevel::Debug,
-          ("nsDragService::ReplyToDragMotion %d", mCanDrop));
+  LOG(("nsDragService::ReplyToDragMotion %d", mCanDrop));
 
   GdkDragAction action = (GdkDragAction)0;
   if (mCanDrop) {
@@ -1009,7 +1005,7 @@ void nsDragService::TargetDataReceived(GtkWidget* aWidget,
                                        gint aY,
                                        GtkSelectionData* aSelectionData,
                                        guint aInfo, guint32 aTime) {
-  MOZ_LOG(sDragLm, LogLevel::Debug, ("nsDragService::TargetDataReceived"));
+  LOG(("nsDragService::TargetDataReceived"));
   TargetResetData();
 
   mTargetDragDataReceived = true;
@@ -1034,9 +1030,8 @@ void nsDragService::TargetDataReceived(GtkWidget* aWidget,
 
     mCachedData.Put(flavor, std::move(copy));
   } else {
-    MOZ_LOG(sDragLm, LogLevel::Debug,
-            ("Failed to get data.  selection data len was %d\n",
-             mTargetDragDataLen));
+    LOG(("Failed to get data.  selection data len was %d\n",
+         mTargetDragDataLen));
 
     mCachedData.Put(flavor, nsTArray<uint8_t>());
   }
@@ -1092,10 +1087,9 @@ bool nsDragService::IsTargetContextList(void) {
 #define NS_DND_TIMEOUT 500000
 
 void nsDragService::GetTargetDragData(GdkAtom aFlavor) {
-  MOZ_LOG(sDragLm, LogLevel::Debug, ("getting data flavor %p\n", aFlavor));
-  MOZ_LOG(sDragLm, LogLevel::Debug,
-          ("mLastWidget is %p and mLastContext is %p\n", mTargetWidget.get(),
-           mTargetDragContext.get()));
+  LOG(("getting data flavor %p\n", aFlavor));
+  LOG(("mLastWidget is %p and mLastContext is %p\n", mTargetWidget.get(),
+       mTargetDragContext.get()));
   // reset our target data areas
   TargetResetData();
 
@@ -1110,9 +1104,8 @@ void nsDragService::GetTargetDragData(GdkAtom aFlavor) {
     // very often.
     if (nsTArray<uint8_t>* cached = mCachedData.GetValue(flavor)) {
       mTargetDragDataLen = cached->Length();
-      MOZ_LOG(sDragLm, LogLevel::Debug,
-              ("Using cached data for %s, length is %d", flavor.get(),
-               mTargetDragDataLen));
+      LOG(("Using cached data for %s, length is %d", flavor.get(),
+           mTargetDragDataLen));
 
       if (mTargetDragDataLen) {
         mTargetDragData = g_malloc(mTargetDragDataLen);
@@ -1125,11 +1118,11 @@ void nsDragService::GetTargetDragData(GdkAtom aFlavor) {
 
     gtk_drag_get_data(mTargetWidget, mTargetDragContext, aFlavor, mTargetTime);
 
-    MOZ_LOG(sDragLm, LogLevel::Debug, ("about to start inner iteration."));
+    LOG(("about to start inner iteration."));
     PRTime entryTime = PR_Now();
     while (!mTargetDragDataReceived && mDoingDrag) {
       // check the number of iterations
-      MOZ_LOG(sDragLm, LogLevel::Debug, ("doing iteration...\n"));
+      LOG(("doing iteration...\n"));
       PR_Sleep(20 * PR_TicksPerSecond() / 1000); /* sleep for 20 ms/iteration */
       if (PR_Now() - entryTime > NS_DND_TIMEOUT) break;
       gtk_main_iteration();
@@ -1142,7 +1135,7 @@ void nsDragService::GetTargetDragData(GdkAtom aFlavor) {
     mTargetDragDataReceived = true;
   }
 #endif
-  MOZ_LOG(sDragLm, LogLevel::Debug, ("finished inner iteration\n"));
+  LOG(("finished inner iteration\n"));
 }
 
 void nsDragService::TargetResetData(void) {
@@ -1175,8 +1168,7 @@ GtkTargetList* nsDragService::GetSourceList(void) {
         (GtkTargetEntry*)g_malloc(sizeof(GtkTargetEntry));
     listTarget->target = g_strdup(gMimeListType);
     listTarget->flags = 0;
-    MOZ_LOG(sDragLm, LogLevel::Debug,
-            ("automatically adding target %s\n", listTarget->target));
+    LOG(("automatically adding target %s\n", listTarget->target));
     targetArray.AppendElement(listTarget);
 
     // check what flavours are supported so we can decide what other
@@ -1194,8 +1186,7 @@ GtkTargetList* nsDragService::GetSourceList(void) {
           listTarget = (GtkTargetEntry*)g_malloc(sizeof(GtkTargetEntry));
           listTarget->target = g_strdup(gTextUriListType);
           listTarget->flags = 0;
-          MOZ_LOG(sDragLm, LogLevel::Debug,
-                  ("automatically adding target %s\n", listTarget->target));
+          LOG(("automatically adding target %s\n", listTarget->target));
           targetArray.AppendElement(listTarget);
         }
       }
@@ -1212,8 +1203,7 @@ GtkTargetList* nsDragService::GetSourceList(void) {
             (GtkTargetEntry*)g_malloc(sizeof(GtkTargetEntry));
         target->target = g_strdup(flavorStr.get());
         target->flags = 0;
-        MOZ_LOG(sDragLm, LogLevel::Debug,
-                ("adding target %s\n", target->target));
+        LOG(("adding target %s\n", target->target));
         targetArray.AppendElement(target);
 
         // If there is a file, add the text/uri-list type.
@@ -1222,8 +1212,7 @@ GtkTargetList* nsDragService::GetSourceList(void) {
               (GtkTargetEntry*)g_malloc(sizeof(GtkTargetEntry));
           urilistTarget->target = g_strdup(gTextUriListType);
           urilistTarget->flags = 0;
-          MOZ_LOG(sDragLm, LogLevel::Debug,
-                  ("automatically adding target %s\n", urilistTarget->target));
+          LOG(("automatically adding target %s\n", urilistTarget->target));
           targetArray.AppendElement(urilistTarget);
         }
         // Check to see if this is text/unicode.
@@ -1235,17 +1224,14 @@ GtkTargetList* nsDragService::GetSourceList(void) {
               (GtkTargetEntry*)g_malloc(sizeof(GtkTargetEntry));
           plainUTF8Target->target = g_strdup(gTextPlainUTF8Type);
           plainUTF8Target->flags = 0;
-          MOZ_LOG(
-              sDragLm, LogLevel::Debug,
-              ("automatically adding target %s\n", plainUTF8Target->target));
+          LOG(("automatically adding target %s\n", plainUTF8Target->target));
           targetArray.AppendElement(plainUTF8Target);
 
           GtkTargetEntry* plainTarget =
               (GtkTargetEntry*)g_malloc(sizeof(GtkTargetEntry));
           plainTarget->target = g_strdup(kTextMime);
           plainTarget->flags = 0;
-          MOZ_LOG(sDragLm, LogLevel::Debug,
-                  ("automatically adding target %s\n", plainTarget->target));
+          LOG(("automatically adding target %s\n", plainTarget->target));
           targetArray.AppendElement(plainTarget);
         }
         // Check to see if this is the x-moz-url type.
@@ -1256,8 +1242,7 @@ GtkTargetList* nsDragService::GetSourceList(void) {
               (GtkTargetEntry*)g_malloc(sizeof(GtkTargetEntry));
           urlTarget->target = g_strdup(gMozUrlType);
           urlTarget->flags = 0;
-          MOZ_LOG(sDragLm, LogLevel::Debug,
-                  ("automatically adding target %s\n", urlTarget->target));
+          LOG(("automatically adding target %s\n", urlTarget->target));
           targetArray.AppendElement(urlTarget);
         }
         // XdndDirectSave
@@ -1266,9 +1251,7 @@ GtkTargetList* nsDragService::GetSourceList(void) {
               (GtkTargetEntry*)g_malloc(sizeof(GtkTargetEntry));
           directsaveTarget->target = g_strdup(gXdndDirectSaveType);
           directsaveTarget->flags = 0;
-          MOZ_LOG(
-              sDragLm, LogLevel::Debug,
-              ("automatically adding target %s\n", directsaveTarget->target));
+          LOG(("automatically adding target %s\n", directsaveTarget->target));
           targetArray.AppendElement(directsaveTarget);
         }
       }
@@ -1305,8 +1288,7 @@ GtkTargetList* nsDragService::GetSourceList(void) {
 
 void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
                                          gint aResult) {
-  MOZ_LOG(sDragLm, LogLevel::Debug,
-          ("SourceEndDragSession result %d\n", aResult));
+  LOG(("SourceEndDragSession result %d\n", aResult));
 
   // this just releases the list of data items that we provide
   mSourceDataItems = nullptr;
@@ -1328,8 +1310,7 @@ void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
       gint scale = mozilla::widget::ScreenHelperGTK::GetGTKMonitorScaleFactor();
       gdk_display_get_pointer(display, nullptr, &x, &y, nullptr);
       SetDragEndPoint(LayoutDeviceIntPoint(x * scale, y * scale));
-      MOZ_LOG(sDragLm, LogLevel::Debug,
-              ("guess drag end point %d %d\n", x * scale, y * scale));
+      LOG(("guess drag end point %d %d\n", x * scale, y * scale));
     }
   }
 
@@ -1378,14 +1359,14 @@ void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
         gchar* name = gdk_atom_name(atom);
         if (name && (strcmp(name, gTabDropType) == 0)) {
           isWaylandTabDrop = true;
-          MOZ_LOG(sDragLm, LogLevel::Debug, ("is wayland tab drop\n"));
+          LOG(("is wayland tab drop\n"));
           break;
         }
       }
     }
 #endif
     if (aResult != MOZ_GTK_DRAG_RESULT_NO_TARGET && !isWaylandTabDrop) {
-      MOZ_LOG(sDragLm, LogLevel::Debug, ("drop is user chancelled\n"));
+      LOG(("drop is user chancelled\n"));
       mUserCancelled = true;
     }
   }
@@ -1453,19 +1434,19 @@ static void CreateURIList(nsIArray* aItems, nsACString& aURIList) {
 void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
                                   GtkSelectionData* aSelectionData,
                                   guint32 aTime) {
-  MOZ_LOG(sDragLm, LogLevel::Debug, ("nsDragService::SourceDataGet"));
+  LOG(("nsDragService::SourceDataGet"));
   GdkAtom target = gtk_selection_data_get_target(aSelectionData);
   gchar* typeName = gdk_atom_name(target);
   if (!typeName) {
-    MOZ_LOG(sDragLm, LogLevel::Debug, ("failed to get atom name.\n"));
+    LOG(("failed to get atom name.\n"));
     return;
   }
 
-  MOZ_LOG(sDragLm, LogLevel::Debug, ("Type is %s\n", typeName));
+  LOG(("Type is %s\n", typeName));
   auto freeTypeName = mozilla::MakeScopeExit([&] { g_free(typeName); });
   // check to make sure that we have data items to return.
   if (!mSourceDataItems) {
-    MOZ_LOG(sDragLm, LogLevel::Debug, ("Failed to get our data items\n"));
+    LOG(("Failed to get our data items\n"));
     return;
   }
 
@@ -1524,8 +1505,7 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
       nsCString fullpath(gfullpath);
       g_free(gfullpath);
 
-      MOZ_LOG(sDragLm, LogLevel::Debug,
-              ("XdndDirectSave filepath is %s\n", fullpath.get()));
+      LOG(("XdndDirectSave filepath is %s\n", fullpath.get()));
 
       // If there is no hostname in the URI, NULL will be stored.
       // We should not accept uris with from a different host.
@@ -1538,8 +1518,7 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
         if (NS_SUCCEEDED(
                 infoService->GetPropertyAsACString(u"host"_ns, host))) {
           if (!host.Equals(hostname)) {
-            MOZ_LOG(sDragLm, LogLevel::Debug,
-                    ("ignored drag because of different host.\n"));
+            LOG(("ignored drag because of different host.\n"));
 
             // Special error code "F" for this case.
             gtk_selection_data_set(aSelectionData, target, 8, (guchar*)"F", 1);
@@ -1720,7 +1699,7 @@ void nsDragService::SetDragIcon(GdkDragContext* aContext) {
 
 static void invisibleSourceDragBegin(GtkWidget* aWidget,
                                      GdkDragContext* aContext, gpointer aData) {
-  MOZ_LOG(sDragLm, LogLevel::Debug, ("invisibleSourceDragBegin"));
+  LOG(("invisibleSourceDragBegin"));
   nsDragService* dragService = (nsDragService*)aData;
 
   dragService->SourceBeginDrag(aContext);
@@ -1732,7 +1711,7 @@ static void invisibleSourceDragDataGet(GtkWidget* aWidget,
                                        GtkSelectionData* aSelectionData,
                                        guint aInfo, guint32 aTime,
                                        gpointer aData) {
-  MOZ_LOG(sDragLm, LogLevel::Debug, ("invisibleSourceDragDataGet"));
+  LOG(("invisibleSourceDragDataGet"));
   nsDragService* dragService = (nsDragService*)aData;
   dragService->SourceDataGet(aWidget, aContext, aSelectionData, aTime);
 }
@@ -1740,7 +1719,7 @@ static void invisibleSourceDragDataGet(GtkWidget* aWidget,
 static gboolean invisibleSourceDragFailed(GtkWidget* aWidget,
                                           GdkDragContext* aContext,
                                           gint aResult, gpointer aData) {
-  MOZ_LOG(sDragLm, LogLevel::Debug, ("invisibleSourceDragFailed %i", aResult));
+  LOG(("invisibleSourceDragFailed %i", aResult));
   nsDragService* dragService = (nsDragService*)aData;
   // End the drag session now (rather than waiting for the drag-end signal)
   // so that operations performed on dropEffect == none can start immediately
@@ -1755,7 +1734,7 @@ static gboolean invisibleSourceDragFailed(GtkWidget* aWidget,
 
 static void invisibleSourceDragEnd(GtkWidget* aWidget, GdkDragContext* aContext,
                                    gpointer aData) {
-  MOZ_LOG(sDragLm, LogLevel::Debug, ("invisibleSourceDragEnd"));
+  LOG(("invisibleSourceDragEnd"));
   nsDragService* dragService = (nsDragService*)aData;
 
   // The drag has ended.  Release the hostages!
@@ -1895,8 +1874,7 @@ gboolean nsDragService::TaskDispatchCallback(gpointer data) {
 
 gboolean nsDragService::RunScheduledTask() {
   if (mTargetWindow && mTargetWindow != mPendingWindow) {
-    MOZ_LOG(sDragLm, LogLevel::Debug,
-            ("nsDragService: dispatch drag leave (%p)\n", mTargetWindow.get()));
+    LOG(("nsDragService: dispatch drag leave (%p)\n", mTargetWindow.get()));
     mTargetWindow->DispatchDragEvent(eDragExit, mTargetWindowPoint, 0);
 
     if (!mSourceNode) {
