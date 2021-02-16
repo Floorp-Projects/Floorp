@@ -251,7 +251,6 @@ static nsresult InitOperators(void) {
                 if (!gOperatorArray) {
                   if (0 == gOperatorCount) return NS_ERROR_UNEXPECTED;
                   gOperatorArray = new OperatorData[gOperatorCount];
-                  if (!gOperatorArray) return NS_ERROR_OUT_OF_MEMORY;
                 }
                 operatorData = &gOperatorArray[index];
               } else {
