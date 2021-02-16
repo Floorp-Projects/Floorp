@@ -338,6 +338,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   static bool class_constructor(JSContext* cx, unsigned argc, Value* vp);
 
+  static bool isOriginalByteLengthGetter(Native native) {
+    return native == byteLengthGetter;
+  }
+
   static ArrayBufferObject* createForContents(JSContext* cx, BufferSize nbytes,
                                               BufferContents contents);
 
