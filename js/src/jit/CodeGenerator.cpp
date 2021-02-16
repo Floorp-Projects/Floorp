@@ -7924,6 +7924,16 @@ void CodeGenerator::visitTypedArrayElementSize(LTypedArrayElementSize* lir) {
   masm.typedArrayElementSize(obj, out);
 }
 
+void CodeGenerator::visitGuardHasAttachedArrayBuffer(
+    LGuardHasAttachedArrayBuffer* lir) {
+  Register obj = ToRegister(lir->object());
+  Register temp = ToRegister(lir->temp());
+
+  Label bail;
+  masm.branchIfHasDetachedArrayBuffer(obj, temp, &bail);
+  bailoutFrom(&bail, lir->snapshot());
+}
+
 class OutOfLineGuardNumberToIntPtrIndex
     : public OutOfLineCodeBase<CodeGenerator> {
   LGuardNumberToIntPtrIndex* lir_;

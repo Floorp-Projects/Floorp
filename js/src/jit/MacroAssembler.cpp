@@ -4351,6 +4351,32 @@ void MacroAssembler::branchIfClassIsNotTypedArray(Register clasp,
             notTypedArray);
 }
 
+void MacroAssembler::branchIfHasDetachedArrayBuffer(Register obj, Register temp,
+                                                    Label* label) {
+  // Inline implementation of ArrayBufferViewObject::hasDetachedBuffer().
+
+  // Load obj->elements in temp.
+  loadPtr(Address(obj, NativeObject::offsetOfElements()), temp);
+
+  // Shared buffers can't be detached.
+  Label done;
+  branchTest32(Assembler::NonZero,
+               Address(temp, ObjectElements::offsetOfFlags()),
+               Imm32(ObjectElements::SHARED_MEMORY), &done);
+
+  // An ArrayBufferView with a null buffer has never had its buffer exposed to
+  // become detached.
+  fallibleUnboxObject(Address(obj, ArrayBufferViewObject::bufferOffset()), temp,
+                      &done);
+
+  // Load the ArrayBuffer flags and branch if the detached flag is set.
+  unboxInt32(Address(temp, ArrayBufferObject::offsetOfFlagsSlot()), temp);
+  branchTest32(Assembler::NonZero, temp, Imm32(ArrayBufferObject::DETACHED),
+               label);
+
+  bind(&done);
+}
+
 void MacroAssembler::branchIfNativeIteratorNotReusable(Register ni,
                                                        Label* notReusable) {
   // See NativeIterator::isReusable.

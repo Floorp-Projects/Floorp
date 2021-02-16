@@ -228,7 +228,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     KIND_MASK = 0b111
   };
 
- protected:
+ public:
   enum ArrayBufferFlags {
     // The flags also store the BufferKind
     BUFFER_KIND_MASK = BufferKind::KIND_MASK,
@@ -250,6 +250,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
                 "self-hosted code with burned-in constants must use the "
                 "correct DETACHED bit value");
 
+ protected:
   enum class FillContents { Zero, Uninitialized };
 
   template <FillContents FillType>
@@ -391,6 +392,9 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   static constexpr size_t offsetOfByteLengthSlot() {
     return getFixedSlotOffset(BYTE_LENGTH_SLOT);
+  }
+  static constexpr size_t offsetOfFlagsSlot() {
+    return getFixedSlotOffset(FLAGS_SLOT);
   }
 
  private:

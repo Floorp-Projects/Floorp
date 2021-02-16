@@ -3007,6 +3007,17 @@ void LIRGenerator::visitTypedArrayElementSize(MTypedArrayElementSize* ins) {
          ins);
 }
 
+void LIRGenerator::visitGuardHasAttachedArrayBuffer(
+    MGuardHasAttachedArrayBuffer* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+
+  auto* lir = new (alloc())
+      LGuardHasAttachedArrayBuffer(useRegister(ins->object()), temp());
+  assignSnapshot(lir, ins->bailoutKind());
+  add(lir, ins);
+  redefine(ins, ins->object());
+}
+
 void LIRGenerator::visitGuardNumberToIntPtrIndex(
     MGuardNumberToIntPtrIndex* ins) {
   MDefinition* input = ins->input();
