@@ -1877,10 +1877,12 @@ nsresult gfxDWriteFontList::GetFontSubstitutes() {
       }
       if (SharedFontList()->FindFamily(actualFontName,
                                        /*aPrimaryNameOnly*/ true)) {
-        mSubstitutions.Put(substituteName, new nsCString(actualFontName));
-      } else if (mSubstitutions.Get(actualFontName)) {
         mSubstitutions.Put(substituteName,
-                           new nsCString(*mSubstitutions.Get(actualFontName)));
+                           MakeUnique<nsCString>(actualFontName));
+      } else if (mSubstitutions.Get(actualFontName)) {
+        mSubstitutions.Put(
+            substituteName,
+            MakeUnique<nsCString>(*mSubstitutions.Get(actualFontName)));
       } else {
         mNonExistingFonts.AppendElement(substituteName);
       }
@@ -1926,7 +1928,8 @@ void gfxDWriteFontList::GetDirectWriteSubstitutes() {
       BuildKeyNameFromFontName(actualFontName);
       if (SharedFontList()->FindFamily(actualFontName,
                                        /*aPrimaryNameOnly*/ true)) {
-        mSubstitutions.Put(substituteName, new nsCString(actualFontName));
+        mSubstitutions.Put(substituteName,
+                           MakeUnique<nsCString>(actualFontName));
       } else {
         mNonExistingFonts.AppendElement(substituteName);
       }

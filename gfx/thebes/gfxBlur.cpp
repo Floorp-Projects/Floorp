@@ -373,20 +373,17 @@ class BlurCache final : public nsExpirationTracker<BlurCacheData, 4> {
     return blur;
   }
 
-  // Returns true if we successfully register the blur in the cache, false
-  // otherwise.
-  bool RegisterEntry(BlurCacheData* aValue) {
-    nsresult rv = AddObject(aValue);
+  void RegisterEntry(UniquePtr<BlurCacheData> aValue) {
+    nsresult rv = AddObject(aValue.get());
     if (NS_FAILED(rv)) {
       // We are OOM, and we cannot track this object. We don't want stall
       // entries in the hash table (since the expiration tracker is responsible
       // for removing the cache entries), so we avoid putting that entry in the
-      // table, which is a good things considering we are short on memory
+      // table, which is a good thing considering we are short on memory
       // anyway, we probably don't want to retain things.
-      return false;
+      return;
     }
-    mHashEntries.Put(aValue->mKey, aValue);
-    return true;
+    mHashEntries.Put(aValue->mKey, std::move(aValue));
   }
 
  protected:
@@ -446,13 +443,10 @@ static void CacheBlur(DrawTarget* aDT, const IntSize& aMinSize,
                       const RectCornerRadii* aCornerRadii,
                       const sRGBColor& aShadowColor,
                       const IntMargin& aBlurMargin, SourceSurface* aBoxShadow) {
-  BlurCacheKey key(aMinSize, aBlurRadius, aCornerRadii, aShadowColor,
-                   aDT->GetBackendType());
-  BlurCacheData* data =
-      new BlurCacheData(aBoxShadow, aBlurMargin, std::move(key));
-  if (!gBlurCache->RegisterEntry(data)) {
-    delete data;
-  }
+  gBlurCache->RegisterEntry(MakeUnique<BlurCacheData>(
+      aBoxShadow, aBlurMargin,
+      BlurCacheKey(aMinSize, aBlurRadius, aCornerRadii, aShadowColor,
+                   aDT->GetBackendType())));
 }
 
 // Blurs a small surface and creates the colored box shadow.
@@ -1001,11 +995,9 @@ static void CacheInsetBlur(const IntSize& aMinOuterSize,
   BlurCacheKey key(aMinOuterSize, aMinInnerSize, aBlurRadius, aCornerRadii,
                    aShadowColor, isInsetBlur, aBackendType);
   IntMargin blurMargin(0, 0, 0, 0);
-  BlurCacheData* data =
-      new BlurCacheData(aBoxShadow, blurMargin, std::move(key));
-  if (!gBlurCache->RegisterEntry(data)) {
-    delete data;
-  }
+
+  gBlurCache->RegisterEntry(
+      MakeUnique<BlurCacheData>(aBoxShadow, blurMargin, std::move(key)));
 }
 
 already_AddRefed<SourceSurface> gfxAlphaBoxBlur::GetInsetBlur(

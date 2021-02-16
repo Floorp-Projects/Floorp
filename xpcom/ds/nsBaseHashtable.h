@@ -216,45 +216,29 @@ class nsBaseHashtable
   }
 
   /**
-   * Put a new value for the associated key
-   * @param aKey the key to put
-   * @param aData the new data
+   * If it does not yet, inserts a new entry with the handle's key and the
+   * value passed to this function. Otherwise, it updates the entry by the
+   * value passed to this function.
+   *
+   * \tparam U DataType must be implicitly convertible (and assignable) from U
+   * \post HasEntry()
+   * \param aKey the key to put
+   * \param aData the new data
    */
-  void Put(KeyType aKey, const UserDataType& aData) {
-    WithEntryHandle(aKey, [&aData](auto entryHandle) {
-      entryHandle.InsertOrUpdate(Converter::Wrap(aData));
+  template <typename U>
+  DataType& Put(KeyType aKey, U&& aData) {
+    return WithEntryHandle(aKey, [&aData](auto entryHandle) -> DataType& {
+      return entryHandle.InsertOrUpdate(std::forward<U>(aData));
     });
   }
 
-  [[nodiscard]] bool Put(KeyType aKey, const UserDataType& aData,
-                         const fallible_t& aFallible) {
+  template <typename U>
+  [[nodiscard]] bool Put(KeyType aKey, U&& aData, const fallible_t& aFallible) {
     return WithEntryHandle(aKey, aFallible, [&aData](auto maybeEntryHandle) {
       if (!maybeEntryHandle) {
         return false;
       }
-      maybeEntryHandle->InsertOrUpdate(Converter::Wrap(aData));
-      return true;
-    });
-  }
-
-  /**
-   * Put a new value for the associated key
-   * @param aKey the key to put
-   * @param aData the new data
-   */
-  void Put(KeyType aKey, UserDataType&& aData) {
-    WithEntryHandle(aKey, [&aData](auto entryHandle) {
-      entryHandle.InsertOrUpdate(Converter::Wrap(std::move(aData)));
-    });
-  }
-
-  [[nodiscard]] bool Put(KeyType aKey, UserDataType&& aData,
-                         const fallible_t& aFallible) {
-    return WithEntryHandle(aKey, aFallible, [&aData](auto maybeEntryHandle) {
-      if (!maybeEntryHandle) {
-        return false;
-      }
-      maybeEntryHandle->InsertOrUpdate(Converter::Wrap(std::move(aData)));
+      maybeEntryHandle->InsertOrUpdate(std::forward<U>(aData));
       return true;
     });
   }
@@ -470,7 +454,7 @@ class nsBaseHashtable
      * the result of the functor passed to this function. The functor is not
      * called if no insert takes place.
      *
-     * \tparam F must return a value that DataType is constructible from
+     * \tparam F must return a value that is implicitly convertible to DataType
      * \post HasEntry()
      */
     template <typename F>
@@ -528,7 +512,7 @@ class nsBaseHashtable
      * value passed to this function. Otherwise, it updates the entry by the
      * value passed to this function.
      *
-     * \tparam U DataType must be constructible and assignable from U
+     * \tparam U DataType must be implicitly convertible (and assignable) from U
      * \post HasEntry()
      */
     template <typename U>

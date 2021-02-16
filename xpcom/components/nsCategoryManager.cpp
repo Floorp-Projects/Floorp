@@ -512,9 +512,11 @@ void nsCategoryManager::AddCategoryEntry(const nsACString& aCategoryName,
 
     if (!category) {
       // That category doesn't exist yet; let's make it.
-      category = CategoryNode::Create(&mArena);
-
-      mTable.Put(MaybeStrdup(aCategoryName, &mArena), category);
+      category =
+          mTable
+              .Put(MaybeStrdup(aCategoryName, &mArena),
+                   UniquePtr<CategoryNode>{CategoryNode::Create(&mArena)})
+              .get();
     }
   }
 

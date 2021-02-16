@@ -23,6 +23,7 @@
 #include <numeric>
 
 using mozilla::MakeRefPtr;
+using mozilla::MakeUnique;
 using mozilla::UniquePtr;
 
 namespace TestHashtables {
@@ -401,32 +402,32 @@ struct NonDefaultConstructible_NonDefaultConstructible {
   using DataType = NonDefaultConstructible;
   using UserDataType = NonDefaultConstructible;
 
-  static constexpr uint32_t kExpectedAddRefCnt_Contains = 3;
-  static constexpr uint32_t kExpectedAddRefCnt_GetGeneration = 3;
+  static constexpr uint32_t kExpectedAddRefCnt_Contains = 2;
+  static constexpr uint32_t kExpectedAddRefCnt_GetGeneration = 2;
   static constexpr uint32_t kExpectedAddRefCnt_SizeOfExcludingThis = 3;
   static constexpr uint32_t kExpectedAddRefCnt_SizeOfIncludingThis = 3;
-  static constexpr uint32_t kExpectedAddRefCnt_Count = 3;
-  static constexpr uint32_t kExpectedAddRefCnt_IsEmpty = 3;
-  static constexpr uint32_t kExpectedAddRefCnt_Get_OutputParam = 6;
-  static constexpr uint32_t kExpectedAddRefCnt_MaybeGet = 6;
-  static constexpr uint32_t kExpectedAddRefCnt_Put = 3;
-  static constexpr uint32_t kExpectedAddRefCnt_Put_Fallible = 3;
-  static constexpr uint32_t kExpectedAddRefCnt_Put_Rvalue = 3;
-  static constexpr uint32_t kExpectedAddRefCnt_Put_Rvalue_Fallible = 3;
-  static constexpr uint32_t kExpectedAddRefCnt_Remove = 3;
-  static constexpr uint32_t kExpectedAddRefCnt_GetAndRemove = 4;
-  static constexpr uint32_t kExpectedAddRefCnt_RemoveIf = 3;
-  static constexpr uint32_t kExpectedAddRefCnt_Lookup = 3;
-  static constexpr uint32_t kExpectedAddRefCnt_Lookup_Remove = 3;
-  static constexpr uint32_t kExpectedAddRefCnt_Iter = 3;
-  static constexpr uint32_t kExpectedAddRefCnt_ConstIter = 3;
-  static constexpr uint32_t kExpectedAddRefCnt_begin_end = 3;
-  static constexpr uint32_t kExpectedAddRefCnt_cbegin_cend = 3;
-  static constexpr uint32_t kExpectedAddRefCnt_Clear = 3;
-  static constexpr uint32_t kExpectedAddRefCnt_ShallowSizeOfExcludingThis = 3;
-  static constexpr uint32_t kExpectedAddRefCnt_ShallowSizeOfIncludingThis = 3;
-  static constexpr uint32_t kExpectedAddRefCnt_SwapElements = 3;
-  static constexpr uint32_t kExpectedAddRefCnt_MarkImmutable = 3;
+  static constexpr uint32_t kExpectedAddRefCnt_Count = 2;
+  static constexpr uint32_t kExpectedAddRefCnt_IsEmpty = 2;
+  static constexpr uint32_t kExpectedAddRefCnt_Get_OutputParam = 5;
+  static constexpr uint32_t kExpectedAddRefCnt_MaybeGet = 5;
+  static constexpr uint32_t kExpectedAddRefCnt_Put = 2;
+  static constexpr uint32_t kExpectedAddRefCnt_Put_Fallible = 2;
+  static constexpr uint32_t kExpectedAddRefCnt_Put_Rvalue = 2;
+  static constexpr uint32_t kExpectedAddRefCnt_Put_Rvalue_Fallible = 2;
+  static constexpr uint32_t kExpectedAddRefCnt_Remove = 2;
+  static constexpr uint32_t kExpectedAddRefCnt_GetAndRemove = 3;
+  static constexpr uint32_t kExpectedAddRefCnt_RemoveIf = 2;
+  static constexpr uint32_t kExpectedAddRefCnt_Lookup = 2;
+  static constexpr uint32_t kExpectedAddRefCnt_Lookup_Remove = 2;
+  static constexpr uint32_t kExpectedAddRefCnt_Iter = 2;
+  static constexpr uint32_t kExpectedAddRefCnt_ConstIter = 2;
+  static constexpr uint32_t kExpectedAddRefCnt_begin_end = 2;
+  static constexpr uint32_t kExpectedAddRefCnt_cbegin_cend = 2;
+  static constexpr uint32_t kExpectedAddRefCnt_Clear = 2;
+  static constexpr uint32_t kExpectedAddRefCnt_ShallowSizeOfExcludingThis = 2;
+  static constexpr uint32_t kExpectedAddRefCnt_ShallowSizeOfIncludingThis = 2;
+  static constexpr uint32_t kExpectedAddRefCnt_SwapElements = 2;
+  static constexpr uint32_t kExpectedAddRefCnt_MarkImmutable = 2;
 };
 
 struct NonDefaultConstructible_MovingNonDefaultConstructible {
@@ -1162,8 +1163,8 @@ TEST(Hashtables, ClassHashtable_RangeBasedFor)
   nsClassHashtable<nsCStringHashKey, TestUniChar> EntToUniClass(ENTITY_COUNT);
 
   for (auto& entity : gEntities) {
-    auto* temp = new TestUniChar(entity.mUnicode);
-    EntToUniClass.Put(nsDependentCString(entity.mStr), temp);
+    EntToUniClass.Put(nsDependentCString(entity.mStr),
+                      MakeUnique<TestUniChar>(entity.mUnicode));
   }
 
   // const range-based for

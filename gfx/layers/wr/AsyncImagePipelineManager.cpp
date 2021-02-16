@@ -162,10 +162,10 @@ void AsyncImagePipelineManager::AddAsyncImagePipeline(
   MOZ_ASSERT(aImageHost);
   uint64_t id = wr::AsUint64(aPipelineId);
 
-  MOZ_ASSERT(!mAsyncImagePipelines.Get(id));
-  AsyncImagePipeline* holder = new AsyncImagePipeline();
+  MOZ_ASSERT(!mAsyncImagePipelines.Contains(id));
+  auto holder = MakeUnique<AsyncImagePipeline>();
   holder->mImageHost = aImageHost;
-  mAsyncImagePipelines.Put(id, holder);
+  mAsyncImagePipelines.Put(id, std::move(holder));
   AddPipeline(aPipelineId, /* aWrBridge */ nullptr);
 }
 

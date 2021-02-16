@@ -222,11 +222,11 @@ Result<Ok, nsresult> SharedMap::MaybeRebuild() {
     // indicate memory corruption, and are fatal.
     MOZ_RELEASE_ASSERT(!buffer.error());
 
-    // Note: Order of evaluation of function arguments is not guaranteed, so we
-    // can't use entry.release() in place of entry.get() without entry->Name()
-    // sometimes resulting in a null dereference.
-    mEntries.Put(entry->Name(), entry.get());
-    Unused << entry.release();
+    // Note: While the order of evaluation of the arguments to Put doesn't
+    // matter for this (the actual move will only happen within Put), to be
+    // clear about this, we call entry->Name() before calling Put.
+    const auto& name = entry->Name();
+    mEntries.Put(name, std::move(entry));
   }
 
   return Ok();
