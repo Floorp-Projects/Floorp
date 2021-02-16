@@ -17,9 +17,11 @@
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/UniquePtr.h"
+#include "MediaEventSource.h"
 #include "nsCOMPtr.h"
 #include "nsIAsyncShutdown.h"
 #include "nsISupportsImpl.h"
+#include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 
 class nsIEventTarget;
@@ -150,7 +152,8 @@ class Refcountable<bool> : public RefcountableBase {
   bool mValue;
 };
 
-/* Async shutdown helpers
+/*
+ * Async shutdown helpers
  */
 
 nsCOMPtr<nsIAsyncShutdownClient> GetShutdownBarrier();
@@ -160,7 +163,7 @@ nsCOMPtr<nsIAsyncShutdownClient> MustGetShutdownBarrier();
 
 class ShutdownBlocker : public nsIAsyncShutdownBlocker {
  public:
-  ShutdownBlocker(const nsString& aName) : mName(aName) {}
+  ShutdownBlocker(nsString aName) : mName(std::move(aName)) {}
 
   NS_IMETHOD
   BlockShutdown(nsIAsyncShutdownClient* aProfileBeforeChange) override = 0;
@@ -180,15 +183,31 @@ class ShutdownBlocker : public nsIAsyncShutdownBlocker {
   const nsString mName;
 };
 
-class ShutdownTicket final {
- public:
-  explicit ShutdownTicket(nsIAsyncShutdownBlocker* aBlocker)
-      : mBlocker(aBlocker) {}
-  NS_INLINE_DECL_REFCOUNTING(ShutdownTicket)
- private:
-  ~ShutdownTicket() { GetShutdownBarrier()->RemoveBlocker(mBlocker); }
+namespace {
+class RefCountedTicket;
+}
 
-  nsCOMPtr<nsIAsyncShutdownBlocker> mBlocker;
+/**
+ * A convenience class representing a "ticket" that keeps the process from
+ * shutting down until it is destructed. It does this by blocking
+ * xpcom-will-shutdown. Constructed and destroyed on any thread.
+ */
+class ShutdownBlockingTicket final {
+  RefPtr<RefCountedTicket> mTicket;
+
+ public:
+  /**
+   * Construct with an arbitrary name, __FILE__ and __LINE__.
+   * Note that __FILE__ needs to be made wide, typically through
+   * NS_LITERAL_STRING_FROM_CSTRING(__FILE__).
+   */
+  ShutdownBlockingTicket(nsString aName, nsString aFileName, int32_t aLineNr);
+  ~ShutdownBlockingTicket();
+
+  /**
+   * MediaEvent that gets notified once upon xpcom-will-shutdown.
+   */
+  MediaEventSource<void>& ShutdownEvent();
 };
 
 /**
