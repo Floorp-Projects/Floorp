@@ -7444,6 +7444,30 @@ bool CacheIRCompiler::emitCallRegExpTesterResult(ObjOperandId regexpId,
   return true;
 }
 
+bool CacheIRCompiler::emitRegExpFlagResult(ObjOperandId regexpId,
+                                           int32_t flagsMask) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register regexp = allocator.useRegister(masm, regexpId);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  Address flagsAddr(
+      regexp, NativeObject::getFixedSlotOffset(RegExpObject::flagsSlot()));
+  masm.unboxInt32(flagsAddr, scratch);
+
+  Label ifFalse, done;
+  masm.branchTest32(Assembler::Zero, scratch, Imm32(flagsMask), &ifFalse);
+  masm.moveValue(BooleanValue(true), output.valueReg());
+  masm.jump(&done);
+
+  masm.bind(&ifFalse);
+  masm.moveValue(BooleanValue(false), output.valueReg());
+
+  masm.bind(&done);
+  return true;
+}
+
 bool CacheIRCompiler::emitCallSubstringKernelResult(StringOperandId strId,
                                                     Int32OperandId beginId,
                                                     Int32OperandId lengthId) {

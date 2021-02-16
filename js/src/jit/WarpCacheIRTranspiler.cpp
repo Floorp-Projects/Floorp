@@ -214,6 +214,8 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
 
   MInstruction* addBoundsCheck(MDefinition* index, MDefinition* length);
 
+  [[nodiscard]] MInstruction* convertToBoolean(MDefinition* input);
+
   bool emitAddAndStoreSlotShared(MAddAndStoreSlot::Kind kind,
                                  ObjOperandId objId, uint32_t offsetOffset,
                                  ValOperandId rhsId, uint32_t newShapeOffset);
@@ -3179,6 +3181,36 @@ bool WarpCacheIRTranspiler::emitCallRegExpTesterResult(
   return resumeAfter(tester);
 }
 
+MInstruction* WarpCacheIRTranspiler::convertToBoolean(MDefinition* input) {
+  // Convert to bool with the '!!' idiom.
+  auto* resultInverted = MNot::New(alloc(), input);
+  add(resultInverted);
+  auto* result = MNot::New(alloc(), resultInverted);
+  add(result);
+
+  return result;
+}
+
+bool WarpCacheIRTranspiler::emitRegExpFlagResult(ObjOperandId regexpId,
+                                                 int32_t flagsMask) {
+  MDefinition* regexp = getOperand(regexpId);
+
+  auto* flags = MLoadFixedSlot::New(alloc(), regexp, RegExpObject::flagsSlot());
+  flags->setResultType(MIRType::Int32);
+  add(flags);
+
+  auto* mask = MConstant::New(alloc(), Int32Value(flagsMask));
+  add(mask);
+
+  auto* maskedFlag = MBitAnd::New(alloc(), flags, mask, MIRType::Int32);
+  add(maskedFlag);
+
+  auto* result = convertToBoolean(maskedFlag);
+
+  pushResult(result);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitCallSubstringKernelResult(
     StringOperandId strId, Int32OperandId beginId, Int32OperandId lengthId) {
   MDefinition* str = getOperand(strId);
@@ -3853,11 +3885,7 @@ bool WarpCacheIRTranspiler::emitBigIntAsUintNResult(Int32OperandId bitsId,
 bool WarpCacheIRTranspiler::emitLoadValueTruthyResult(ValOperandId inputId) {
   MDefinition* input = getOperand(inputId);
 
-  // Convert to bool with the '!!' idiom.
-  auto* resultInverted = MNot::New(alloc(), input);
-  add(resultInverted);
-  auto* result = MNot::New(alloc(), resultInverted);
-  add(result);
+  auto* result = convertToBoolean(input);
 
   pushResult(result);
   return true;

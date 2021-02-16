@@ -1289,6 +1289,8 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
   AttachDecision tryAttachArrayBufferMaybeShared(HandleObject obj,
                                                  ObjOperandId objId,
                                                  HandleId id);
+  AttachDecision tryAttachRegExp(HandleObject obj, ObjOperandId objId,
+                                 HandleId id);
   AttachDecision tryAttachModuleNamespace(HandleObject obj, ObjOperandId objId,
                                           HandleId id);
   AttachDecision tryAttachWindowProxy(HandleObject obj, ObjOperandId objId,
