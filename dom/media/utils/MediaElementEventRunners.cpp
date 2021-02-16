@@ -109,12 +109,18 @@ NS_IMETHODIMP nsTimeupdateRunner::Run() {
   if (IsCancelled() || !ShouldDispatchTimeupdate()) {
     return NS_OK;
   }
-  // TODO (bug 1688128) : update time after we dispatch the event. Although
-  // current behavior matches the spec closely, but doing that would avoid the
-  // issue where timeupdate event listener takes lots of time and then we end
-  // up spending all time handling just timeupdate events.
-  mElement->UpdateLastTimeupdateDispatchTime();
-  return DispatchEvent(mEventName);
+  // After dispatching `timeupdate`, if the timeupdate event listener takes lots
+  // of time then we end up spending all time handling just timeupdate events.
+  // The spec is vague in this situation, so we choose to update time after we
+  // dispatch the event in order to solve that issue.
+  nsresult rv = DispatchEvent(mEventName);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOG_EVENT(LogLevel::Debug,
+              ("%p Failed to dispatch 'timeupdate'", mElement.get()));
+  } else {
+    mElement->UpdateLastTimeupdateDispatchTime();
+  }
+  return rv;
 }
 
 bool nsTimeupdateRunner::ShouldDispatchTimeupdate() const {
