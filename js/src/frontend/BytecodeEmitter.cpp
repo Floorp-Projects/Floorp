@@ -13,6 +13,7 @@
 #include "mozilla/Casting.h"    // mozilla::AssertedCast
 #include "mozilla/DebugOnly.h"  // mozilla::DebugOnly
 #include "mozilla/FloatingPoint.h"  // mozilla::NumberEqualsInt32, mozilla::NumberIsInt32
+#include "mozilla/HashTable.h"      // mozilla::HashSet
 #include "mozilla/Maybe.h"          // mozilla::{Maybe,Nothing,Some}
 #include "mozilla/PodOperations.h"  // mozilla::PodCopy
 #include "mozilla/Sprintf.h"        // SprintfLiteral
@@ -54,10 +55,11 @@
 #include "frontend/PropOpEmitter.h"  // PropOpEmitter
 #include "frontend/SourceNotes.h"    // SrcNote, SrcNoteType, SrcNoteWriter
 #include "frontend/SwitchEmitter.h"  // SwitchEmitter
-#include "frontend/TDZCheckCache.h"  // TDZCheckCache
-#include "frontend/TryEmitter.h"     // TryEmitter
-#include "frontend/WhileEmitter.h"   // WhileEmitter
-#include "js/CompileOptions.h"       // TransitiveCompileOptions, CompileOptions
+#include "frontend/TaggedParserAtomIndexHasher.h"  // TaggedParserAtomIndexHasher
+#include "frontend/TDZCheckCache.h"                // TDZCheckCache
+#include "frontend/TryEmitter.h"                   // TryEmitter
+#include "frontend/WhileEmitter.h"                 // WhileEmitter
+#include "js/CompileOptions.h"  // TransitiveCompileOptions, CompileOptions
 #include "js/friend/ErrorMessages.h"      // JSMSG_*
 #include "js/friend/StackLimits.h"        // CheckRecursionLimit
 #include "util/StringBuffer.h"            // StringBuffer
@@ -8966,6 +8968,16 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
                                                  bool useObjLiteralValues) {
   ObjLiteralWriter writer;
 
+#ifdef DEBUG
+  // In self-hosted JS, we check duplication only on debug build.
+  mozilla::Maybe<mozilla::HashSet<frontend::TaggedParserAtomIndex,
+                                  frontend::TaggedParserAtomIndexHasher>>
+      selfHostedPropNames;
+  if (emitterMode == BytecodeEmitter::SelfHosting) {
+    selfHostedPropNames.emplace();
+  }
+#endif
+
   writer.beginObject(flags);
   bool singleton = flags.contains(ObjLiteralFlag::Singleton);
 
@@ -8974,8 +8986,23 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
     ParseNode* key = prop->left();
 
     if (key->is<NameNode>()) {
-      if (!writer.setPropName(cx, parserAtoms(), key->as<NameNode>().atom())) {
-        return false;
+      if (emitterMode == BytecodeEmitter::SelfHosting) {
+        auto propName = key->as<NameNode>().atom();
+#ifdef DEBUG
+        // Self-hosted JS shouldn't contain duplicate properties.
+        auto p = selfHostedPropNames->lookupForAdd(propName);
+        MOZ_ASSERT(!p);
+        if (!selfHostedPropNames->add(p, propName)) {
+          js::ReportOutOfMemory(cx);
+          return false;
+        }
+#endif
+        writer.setPropNameNoDuplicateCheck(parserAtoms(), propName);
+      } else {
+        if (!writer.setPropName(cx, parserAtoms(),
+                                key->as<NameNode>().atom())) {
+          return false;
+        }
       }
     } else {
       double numValue = key->as<NumericLiteral>().value();
