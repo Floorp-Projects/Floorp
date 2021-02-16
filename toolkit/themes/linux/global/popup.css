@@ -20,6 +20,7 @@ panel {
 
 panel[type="arrow"] {
   appearance: none;
+  background-color: transparent;
 }
 
 panel[type="arrow"][side="top"],
