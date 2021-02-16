@@ -148,6 +148,8 @@ class TestTabModalAlerts(BaseAlertTestCase):
         alert1.send_keys("foo")
         alert1.accept()
 
+        self.wait_for_alert()
+
         alert2 = self.marionette.switch_to_alert()
         alert2.send_keys("bar")
         alert2.accept()
