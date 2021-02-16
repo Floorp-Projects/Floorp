@@ -705,7 +705,9 @@ nsAppShell::Run(void) {
   // We use the native Gecko event loop in content processes.
   nsresult rv = NS_OK;
   if (XRE_UseNativeEventProcessing()) {
-    NS_OBJC_TRY_ABORT([NSApp run]);
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+    [NSApp run];
+    NS_OBJC_END_TRY_ABORT_BLOCK;
   } else {
     rv = nsBaseAppShell::Run();
   }

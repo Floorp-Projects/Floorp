@@ -21,13 +21,6 @@
 
 void nsObjCExceptionLog(NSException* aException);
 
-#define NS_OBJC_TRY_ABORT(_e)     \
-  @try {                          \
-    _e;                           \
-  } @catch (NSException * _exn) { \
-    nsObjCExceptionLog(_exn);     \
-  }
-
 #define NS_OBJC_TRY_EXPR_ABORT(_e)  \
   ({                                \
     typeof(_e) _tmp;                \
