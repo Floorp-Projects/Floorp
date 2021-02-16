@@ -12,6 +12,7 @@ panel {
   appearance: auto;
   -moz-default-appearance: menupopup;
   min-width: 1px;
+  background-color: Menu;
   color: MenuText;
 }
 
