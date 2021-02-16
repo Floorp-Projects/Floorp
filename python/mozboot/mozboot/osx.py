@@ -176,9 +176,9 @@ this bootstrap again.
 class OSXBootstrapper(BaseBootstrapper):
 
     INSTALL_PYTHON_GUIDANCE = (
-        "See https://firefox-source-docs.mozilla.org/setup/macos_build.html"
-        "#install-via-homebrew for guidance on how to install Python on your "
-        "system."
+        "See https://firefox-source-docs.mozilla.org/setup/macos_build.html "
+        "for guidance on how to prepare your system to build Firefox. Perhaps "
+        "you need to update Xcode, or install Python using brew?"
     )
 
     def __init__(self, version, **kwargs):
