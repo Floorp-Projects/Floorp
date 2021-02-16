@@ -65,7 +65,7 @@ loader.lazyRequireGetter(
 exports.menuitems = [
   {
     id: "menu_devToolbox",
-    l10nKey: "devToolboxMenuItem",
+    l10nKey: "webDeveloperToolsMenu",
     async oncommand(event) {
       try {
         const window = event.target.ownerDocument.defaultView;
@@ -164,8 +164,8 @@ exports.menuitems = [
   },
   { separator: true, id: "devToolsEndSeparator" },
   {
-    id: "getMoreDevtools",
-    l10nKey: "getMoreDevtoolsCmd",
+    id: "extensionsForDevelopers",
+    l10nKey: "extensionsForDevelopersCmd",
     oncommand(event) {
       openDocLink(
         "https://addons.mozilla.org/firefox/collections/mozilla/webdeveloper/"
