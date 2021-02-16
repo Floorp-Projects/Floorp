@@ -70,6 +70,8 @@ using NumArgStateVector =
 #if defined(XP_WIN)
 #  define TYPE_WSTRING 12
 #endif
+#define TYPE_SCHAR 14
+#define TYPE_UCHAR 15
 #define TYPE_UNKNOWN 20
 
 #define FLAG_LEFT 0x1
@@ -534,6 +536,10 @@ static bool BuildArgArray(const char* fmt, va_list ap, NumArgStateVector& nas) {
     if (c == 'h') {
       nas[cn].type = TYPE_SHORT;
       c = *p++;
+      if (c == 'h') {
+        nas[cn].type = TYPE_SCHAR;
+        c = *p++;
+      }
     } else if (c == 'L') {
       nas[cn].type = TYPE_LONGLONG;
       c = *p++;
@@ -651,6 +657,8 @@ static bool BuildArgArray(const char* fmt, va_list ap, NumArgStateVector& nas) {
     VARARGS_ASSIGN(nas[cn].ap, ap);
 
     switch (nas[cn].type) {
+      case TYPE_SCHAR:
+      case TYPE_UCHAR:
       case TYPE_SHORT:
       case TYPE_USHORT:
       case TYPE_INTN:
@@ -830,6 +838,10 @@ bool mozilla::PrintfTarget::vprint(const char* fmt, va_list ap) {
     if (c == 'h') {
       type = TYPE_SHORT;
       c = *fmt++;
+      if (c == 'h') {
+        type = TYPE_SCHAR;
+        c = *fmt++;
+      }
     } else if (c == 'L') {
       type = TYPE_LONGLONG;
       c = *fmt++;
@@ -900,8 +912,18 @@ bool mozilla::PrintfTarget::vprint(const char* fmt, va_list ap) {
 
       fetch_and_convert:
         switch (type) {
+          case TYPE_SCHAR:
+            u.l = (signed char)va_arg(ap, int);
+            if (u.l < 0) {
+              u.l = -u.l;
+              flags |= FLAG_NEG;
+            }
+            goto do_long;
+          case TYPE_UCHAR:
+            u.l = (unsigned char)va_arg(ap, unsigned int);
+            goto do_long;
           case TYPE_SHORT:
-            u.l = va_arg(ap, int);
+            u.l = (short)va_arg(ap, int);
             if (u.l < 0) {
               u.l = -u.l;
               flags |= FLAG_NEG;
@@ -1087,6 +1109,8 @@ bool mozilla::PrintfTarget::print(const char* format, ...) {
 #undef TYPE_POINTER
 #undef TYPE_WSTRING
 #undef TYPE_UNKNOWN
+#undef TYPE_SCHAR
+#undef TYPE_UCHAR
 
 #undef FLAG_LEFT
 #undef FLAG_SIGNED
