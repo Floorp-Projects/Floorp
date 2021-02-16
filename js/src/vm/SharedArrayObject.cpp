@@ -172,6 +172,10 @@ void SharedArrayRawBuffer::dropReference() {
   UnmapBufferMemory(basePointer(), mappedSizeWithHeader);
 }
 
+static bool IsSharedArrayBuffer(HandleValue v) {
+  return v.isObject() && v.toObject().is<SharedArrayBufferObject>();
+}
+
 MOZ_ALWAYS_INLINE bool SharedArrayBufferObject::byteLengthGetterImpl(
     JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(IsSharedArrayBuffer(args.thisv()));
@@ -413,10 +417,6 @@ const JSClass SharedArrayBufferObject::protoClass_ = {
     "SharedArrayBuffer.prototype",
     JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer), JS_NULL_CLASS_OPS,
     &SharedArrayBufferObjectClassSpec};
-
-bool js::IsSharedArrayBuffer(HandleValue v) {
-  return v.isObject() && v.toObject().is<SharedArrayBufferObject>();
-}
 
 JS_FRIEND_API size_t JS::GetSharedArrayBufferByteLength(JSObject* obj) {
   auto* aobj = obj->maybeUnwrapAs<SharedArrayBufferObject>();

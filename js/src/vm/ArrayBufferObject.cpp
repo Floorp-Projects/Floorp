@@ -341,24 +341,8 @@ const JSClass ArrayBufferObject::protoClass_ = {
     "ArrayBuffer.prototype", JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer),
     JS_NULL_CLASS_OPS, &ArrayBufferObjectClassSpec};
 
-bool js::IsArrayBuffer(HandleValue v) {
+static bool IsArrayBuffer(HandleValue v) {
   return v.isObject() && v.toObject().is<ArrayBufferObject>();
-}
-
-bool js::IsArrayBuffer(JSObject* obj) { return obj->is<ArrayBufferObject>(); }
-
-ArrayBufferObject& js::AsArrayBuffer(JSObject* obj) {
-  MOZ_ASSERT(IsArrayBuffer(obj));
-  return obj->as<ArrayBufferObject>();
-}
-
-bool js::IsArrayBufferMaybeShared(JSObject* obj) {
-  return obj->is<ArrayBufferObjectMaybeShared>();
-}
-
-ArrayBufferObjectMaybeShared& js::AsArrayBufferMaybeShared(JSObject* obj) {
-  MOZ_ASSERT(IsArrayBufferMaybeShared(obj));
-  return obj->as<ArrayBufferObjectMaybeShared>();
 }
 
 MOZ_ALWAYS_INLINE bool ArrayBufferObject::byteLengthGetterImpl(
@@ -1438,7 +1422,7 @@ ArrayBufferObject::extractStructuredCloneContents(
 /* static */
 void ArrayBufferObject::addSizeOfExcludingThis(
     JSObject* obj, mozilla::MallocSizeOf mallocSizeOf, JS::ClassInfo* info) {
-  ArrayBufferObject& buffer = AsArrayBuffer(obj);
+  auto& buffer = obj->as<ArrayBufferObject>();
   switch (buffer.bufferKind()) {
     case INLINE_DATA:
       // Inline data's size should be reported by this object's size-class
@@ -1898,8 +1882,8 @@ JS_FRIEND_API void JS::GetArrayBufferLengthAndData(JSObject* obj,
                                                    size_t* length,
                                                    bool* isSharedMemory,
                                                    uint8_t** data) {
-  MOZ_ASSERT(IsArrayBuffer(obj));
-  *length = AsArrayBuffer(obj).byteLength().get();
-  *data = AsArrayBuffer(obj).dataPointer();
+  auto& aobj = obj->as<ArrayBufferObject>();
+  *length = aobj.byteLength().get();
+  *data = aobj.dataPointer();
   *isSharedMemory = false;
 }

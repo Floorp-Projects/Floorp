@@ -131,7 +131,7 @@ bool ArrayBufferViewObject::init(JSContext* cx,
     size_t viewByteOffset = byteOffset.get();
     size_t bufferByteLength = buffer->byteLength().get();
     // Unwraps are safe: both are for the pointer value.
-    MOZ_ASSERT_IF(IsArrayBuffer(buffer),
+    MOZ_ASSERT_IF(buffer->is<ArrayBufferObject>(),
                   buffer->dataPointerEither().unwrap(/*safe*/) <=
                       dataPointerEither().unwrap(/*safe*/));
     MOZ_ASSERT(bufferByteLength - viewByteOffset >= viewByteLength);
