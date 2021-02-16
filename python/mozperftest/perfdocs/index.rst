@@ -10,6 +10,7 @@ mozperftest
    running
    writing
    developing
+   vision
 
 The following documents all testing we have for mozperftest.
 If the owner does not specify the Usage and Description, it's marked N/A.
