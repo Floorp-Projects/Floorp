@@ -9,13 +9,17 @@
 
 #include "mozilla/java/GeckoSurfaceTextureWrappers.h"
 #include "mozilla/layers/TextureHostOGL.h"
-#include "RenderTextureHost.h"
+#include "RenderTextureHostSWGL.h"
 
 namespace mozilla {
 
+namespace gfx {
+class DataSourceSurface;
+}
+
 namespace wr {
 
-class RenderAndroidSurfaceTextureHost final : public RenderTextureHost {
+class RenderAndroidSurfaceTextureHost final : public RenderTextureHostSWGL {
  public:
   explicit RenderAndroidSurfaceTextureHost(
       const java::GeckoSurfaceTexture::GlobalRef& aSurfTex, gfx::IntSize aSize,
@@ -33,9 +37,24 @@ class RenderAndroidSurfaceTextureHost final : public RenderTextureHost {
   void NotifyForUse() override;
   void NotifyNotUsed() override;
 
+  // RenderTextureHostSWGL
+  gfx::SurfaceFormat GetFormat() const override;
+  gfx::ColorDepth GetColorDepth() const override {
+    return gfx::ColorDepth::COLOR_8;
+  }
+  size_t GetPlaneCount() const override { return 1; }
+  bool MapPlane(RenderCompositor* aCompositor, uint8_t aChannelIndex,
+                PlaneInfo& aPlaneInfo) override;
+  void UnmapPlanes() override;
+  gfx::YUVColorSpace GetYUVColorSpace() const override {
+    return gfx::YUVColorSpace::UNKNOWN;
+  }
+
  private:
   virtual ~RenderAndroidSurfaceTextureHost();
   bool EnsureAttachedToGLContext();
+
+  already_AddRefed<gfx::DataSourceSurface> ReadTexImage();
 
   enum PrepareStatus {
     STATUS_NONE,
@@ -55,6 +74,8 @@ class RenderAndroidSurfaceTextureHost final : public RenderTextureHost {
   bool mAttachedToGLContext;
 
   RefPtr<gl::GLContext> mGL;
+
+  RefPtr<gfx::DataSourceSurface> mReadback;
 };
 
 }  // namespace wr

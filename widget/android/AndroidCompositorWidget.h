@@ -6,10 +6,9 @@
 #ifndef mozilla_widget_AndroidCompositorWidget_h
 #define mozilla_widget_AndroidCompositorWidget_h
 
+#include "AndroidNativeWindow.h"
 #include "GLDefs.h"
 #include "mozilla/widget/InProcessCompositorWidget.h"
-
-struct ANativeWindow;
 
 namespace mozilla {
 namespace widget {
@@ -24,6 +23,16 @@ class AndroidCompositorWidget final : public InProcessCompositorWidget {
  public:
   using InProcessCompositorWidget::InProcessCompositorWidget;
 
+  AndroidCompositorWidget(const layers::CompositorOptions& aOptions,
+                          nsBaseWidget* aWidget);
+
+  already_AddRefed<gfx::DrawTarget> StartRemoteDrawingInRegion(
+      LayoutDeviceIntRegion& aInvalidRegion,
+      layers::BufferMode* aBufferMode) override;
+  void EndRemoteDrawingInRegion(
+      gfx::DrawTarget* aDrawTarget,
+      const LayoutDeviceIntRegion& aInvalidRegion) override;
+
   AndroidCompositorWidget* AsAndroid() override { return this; }
 
   EGLNativeWindowType GetEGLNativeWindow();
@@ -32,6 +41,13 @@ class AndroidCompositorWidget final : public InProcessCompositorWidget {
   void SetPresentationEGLSurface(EGLSurface aVal);
 
   ANativeWindow* GetPresentationANativeWindow();
+
+ protected:
+  virtual ~AndroidCompositorWidget();
+
+  ANativeWindow* mNativeWindow;
+  ANativeWindow_Buffer mBuffer;
+  int32_t mFormat;
 };
 
 }  // namespace widget
