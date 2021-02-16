@@ -3089,8 +3089,7 @@ static void RemoveTruncatesOnOutput(MDefinition* truncated) {
   }
 }
 
-static void AdjustTruncatedInputs(TempAllocator& alloc,
-                                  MDefinition* truncated) {
+void RangeAnalysis::adjustTruncatedInputs(MDefinition* truncated) {
   MBasicBlock* block = truncated->block();
   for (size_t i = 0, e = truncated->numOperands(); i < e; i++) {
     TruncateKind kind = truncated->operandTruncateKind(i);
@@ -3108,10 +3107,11 @@ static void AdjustTruncatedInputs(TempAllocator& alloc,
     } else {
       MInstruction* op;
       if (kind == TruncateKind::TruncateAfterBailouts) {
-        op = MToNumberInt32::New(alloc, truncated->getOperand(i));
+        MOZ_ASSERT(!mir->outerInfo().hadEagerTruncationBailout());
+        op = MToNumberInt32::New(alloc(), truncated->getOperand(i));
         op->setBailoutKind(BailoutKind::EagerTruncation);
       } else {
-        op = MTruncateToInt32::New(alloc, truncated->getOperand(i));
+        op = MTruncateToInt32::New(alloc(), truncated->getOperand(i));
       }
 
       if (truncated->isPhi()) {
@@ -3148,10 +3148,10 @@ bool RangeAnalysis::canTruncate(MDefinition* def, TruncateKind kind) const {
     if (kind == TruncateKind::TruncateAfterBailouts) {
       return false;
     }
-    for (uint32_t i = 0; i < def->numOperands(); i++) {
-      if (def->operandTruncateKind(i) <= TruncateKind::TruncateAfterBailouts) {
-        return false;
-      }
+    // MDiv and MMod always require TruncateAfterBailout for their operands.
+    // See MDiv::operandTruncateKind and MMod::operandTruncateKind.
+    if (def->isDiv() || def->isMod()) {
+      return false;
     }
   }
 
@@ -3280,7 +3280,7 @@ bool RangeAnalysis::truncate() {
     MDefinition* def = worklist.popCopy();
     def->setNotInWorklist();
     RemoveTruncatesOnOutput(def);
-    AdjustTruncatedInputs(alloc(), def);
+    adjustTruncatedInputs(def);
   }
 
   return true;

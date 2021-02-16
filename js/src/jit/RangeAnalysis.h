@@ -126,6 +126,7 @@ class RangeAnalysis {
   [[nodiscard]] bool removeUnnecessaryBitops();
 
   bool canTruncate(MDefinition* def, TruncateKind kind) const;
+  void adjustTruncatedInputs(MDefinition* def);
 
   // Any iteration bounds discovered for loops in the graph.
   LoopIterationBoundVector loopIterationBounds;
