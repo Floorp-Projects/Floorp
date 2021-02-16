@@ -92,7 +92,7 @@ nsMenuX::nsMenuX()
       mNeedsRebuild(true),
       mConstructed(false),
       mVisible(true) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (!gMenuMethodsSwizzled) {
     nsToolkit::SwizzleMethods([NSMenu class], @selector(_addItem:toTable:),
@@ -119,11 +119,11 @@ nsMenuX::nsMenuX()
 
   MOZ_COUNT_CTOR(nsMenuX);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 nsMenuX::~nsMenuX() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   // Prevent the icon object from outliving us.
   if (mIcon) {
@@ -146,7 +146,7 @@ nsMenuX::~nsMenuX() {
 
   MOZ_COUNT_DTOR(nsMenuX);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 nsresult nsMenuX::Create(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner,
@@ -651,7 +651,7 @@ bool nsMenuX::IsXULHelpMenu(nsIContent* aMenuContent) {
 
 void nsMenuX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* aContent,
                                       nsAtom* aAttribute) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   // ignore the |open| attribute, which is by far the most common
   if (gConstructingMenu || (aAttribute == nsGkAtoms::open)) {
@@ -722,7 +722,7 @@ void nsMenuX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* aCon
     SetupIcon();
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 void nsMenuX::ObserveContentRemoved(dom::Document* aDocument, nsIContent* aContainer,
@@ -890,7 +890,7 @@ static NSMutableDictionary* gShadowKeyEquivDB = nil;
 }
 
 - (void)dealloc {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (mTables) {
     [mTables release];
@@ -900,7 +900,7 @@ static NSMutableDictionary* gShadowKeyEquivDB = nil;
   }
   [super dealloc];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 - (BOOL)hasTable:(NSMapTable*)aTable {
@@ -947,7 +947,7 @@ static NSMutableDictionary* gShadowKeyEquivDB = nil;
 @implementation NSMenu (MethodSwizzling)
 
 + (void)nsMenuX_NSMenu_addItem:(NSMenuItem*)aItem toTable:(NSMapTable*)aTable {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (aItem && aTable) {
     NSValue* key = [NSValue valueWithPointer:aItem];
@@ -963,7 +963,7 @@ static NSMutableDictionary* gShadowKeyEquivDB = nil;
     }
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 
   [self nsMenuX_NSMenu_addItem:aItem toTable:aTable];
 }
@@ -971,7 +971,7 @@ static NSMutableDictionary* gShadowKeyEquivDB = nil;
 + (void)nsMenuX_NSMenu_removeItem:(NSMenuItem*)aItem fromTable:(NSMapTable*)aTable {
   [self nsMenuX_NSMenu_removeItem:aItem fromTable:aTable];
 
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (aItem && aTable) {
     NSValue* key = [NSValue valueWithPointer:aItem];
@@ -983,7 +983,7 @@ static NSMutableDictionary* gShadowKeyEquivDB = nil;
     }
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 @end

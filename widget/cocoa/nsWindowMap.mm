@@ -49,16 +49,16 @@
 }
 
 - (void)dealloc {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   [mWindowMap release];
   [super dealloc];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 - (void)ensureDataForWindow:(NSWindow*)inWindow {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (!inWindow || [self dataForWindow:inWindow]) return;
 
@@ -66,7 +66,7 @@
   [self setData:windowData forWindow:inWindow];  // takes ownership
   [windowData release];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 - (id)dataForWindow:(NSWindow*)inWindow {
@@ -78,19 +78,19 @@
 }
 
 - (void)setData:(id)inData forWindow:(NSWindow*)inWindow {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   [mWindowMap setObject:inData forKey:[self keyForWindow:inWindow]];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 - (void)removeDataForWindow:(NSWindow*)inWindow {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   [mWindowMap removeObjectForKey:[self keyForWindow:inWindow]];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 - (NSString*)keyForWindow:(NSWindow*)inWindow {
@@ -145,12 +145,12 @@
 }
 
 - (void)dealloc {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [super dealloc];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 // As best I can tell, if the notification's object has a corresponding
@@ -163,7 +163,7 @@
 // For use with clients that (like Firefox) do use top-level widgets (and
 // have NSWindow delegates of class WindowDelegate).
 + (void)activateInWindow:(NSWindow*)aWindow {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   WindowDelegate* delegate = (WindowDelegate*)[aWindow delegate];
   if (!delegate || ![delegate isKindOfClass:[WindowDelegate class]]) return;
@@ -171,7 +171,7 @@
   if ([delegate toplevelActiveState]) return;
   [delegate sendToplevelActivateEvents];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 // See comments above activateInWindow:
@@ -183,7 +183,7 @@
 // For use with clients that (like Firefox) do use top-level widgets (and
 // have NSWindow delegates of class WindowDelegate).
 + (void)deactivateInWindow:(NSWindow*)aWindow {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   WindowDelegate* delegate = (WindowDelegate*)[aWindow delegate];
   if (!delegate || ![delegate isKindOfClass:[WindowDelegate class]]) return;
@@ -191,29 +191,29 @@
   if (![delegate toplevelActiveState]) return;
   [delegate sendToplevelDeactivateEvents];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 // For use with clients that (like Camino) don't use top-level widgets (and
 // don't have NSWindow delegates of class WindowDelegate).
 + (void)activateInWindowViews:(NSWindow*)aWindow {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   id firstResponder = [aWindow firstResponder];
   if ([firstResponder isKindOfClass:[ChildView class]]) [firstResponder viewsWindowDidBecomeKey];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 // For use with clients that (like Camino) don't use top-level widgets (and
 // don't have NSWindow delegates of class WindowDelegate).
 + (void)deactivateInWindowViews:(NSWindow*)aWindow {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   id firstResponder = [aWindow firstResponder];
   if ([firstResponder isKindOfClass:[ChildView class]]) [firstResponder viewsWindowDidResignKey];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 // We make certain exceptions for top-level windows in non-embedders (see
@@ -266,7 +266,7 @@
 }
 
 - (void)windowWillClose:(NSNotification*)inNotification {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   // postpone our destruction
   [[self retain] autorelease];
@@ -274,7 +274,7 @@
   // remove ourselves from the window map (which owns us)
   [[WindowDataMap sharedWindowDataMap] removeDataForWindow:[inNotification object]];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 @end

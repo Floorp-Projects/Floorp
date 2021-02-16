@@ -138,7 +138,7 @@ void mozilla::plugins::PluginUtilsOSX::Repaint(void* caLayer, nsIntRect aRect) {
 NPError mozilla::plugins::PluginUtilsOSX::ShowCocoaContextMenu(void* aMenu, int aX, int aY,
                                                                void* pluginModule,
                                                                RemoteProcessEvents remoteEvent) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   // Set the native cursor to the OS default (an arrow) before displaying the
   // context menu.  Otherwise (if the plugin has changed the cursor) it may
@@ -182,9 +182,9 @@ NPError mozilla::plugins::PluginUtilsOSX::ShowCocoaContextMenu(void* aMenu, int 
 }
 
 void mozilla::plugins::PluginUtilsOSX::InvokeNativeEventLoop() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
   ::CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.0, true);
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 #define UNDOCUMENTED_SESSION_CONSTANT ((int)-2)
@@ -198,7 +198,7 @@ static void* sApplicationInfoItem = NULL;
 }  // namespace mozilla
 
 bool mozilla::plugins::PluginUtilsOSX::SetProcessName(const char* aProcessName) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
   nsAutoreleasePool localPool;
 
   if (!aProcessName || strcmp(aProcessName, "") == 0) {

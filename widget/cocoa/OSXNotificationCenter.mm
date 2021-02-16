@@ -156,7 +156,7 @@ NS_IMPL_ISUPPORTS0(OSXNotificationInfo)
 
 OSXNotificationInfo::OSXNotificationInfo(NSString* name, nsIObserver* observer,
                                          const nsAString& alertCookie) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   NS_ASSERTION(name, "Cannot create OSXNotificationInfo without a name!");
   mName = [name retain];
@@ -164,16 +164,16 @@ OSXNotificationInfo::OSXNotificationInfo(NSString* name, nsIObserver* observer,
   mCookie = alertCookie;
   mPendingNotification = nil;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 OSXNotificationInfo::~OSXNotificationInfo() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   [mName release];
   [mPendingNotification release];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 static id<FakeNSUserNotificationCenter> GetNotificationCenter() {
@@ -186,22 +186,22 @@ static id<FakeNSUserNotificationCenter> GetNotificationCenter() {
 }
 
 OSXNotificationCenter::OSXNotificationCenter() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   mDelegate = [[mozNotificationCenterDelegate alloc] initWithOSXNC:this];
   GetNotificationCenter().delegate = mDelegate;
   mSuppressForScreenSharing = false;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 OSXNotificationCenter::~OSXNotificationCenter() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   [GetNotificationCenter() removeAllDeliveredNotifications];
   [mDelegate release];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 NS_IMPL_ISUPPORTS(OSXNotificationCenter, nsIAlertsService, nsIAlertsIconData, nsIAlertsDoNotDisturb,
@@ -393,7 +393,7 @@ OSXNotificationCenter::CloseAlert(const nsAString& aAlertName) {
 }
 
 void OSXNotificationCenter::CloseAlertCocoaString(NSString* aAlertName) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (!aAlertName) {
     return;  // Can't do anything without a name
@@ -424,13 +424,13 @@ void OSXNotificationCenter::CloseAlertCocoaString(NSString* aAlertName) {
     }
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 void OSXNotificationCenter::OnActivate(NSString* aAlertName,
                                        NSUserNotificationActivationType aActivationType,
                                        unsigned long long aAdditionalActionIndex) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (!aAlertName) {
     return;  // Can't do anything without a name
@@ -464,11 +464,11 @@ void OSXNotificationCenter::OnActivate(NSString* aAlertName,
     }
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 void OSXNotificationCenter::ShowPendingNotification(OSXNotificationInfo* osxni) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (osxni->mIconRequest) {
     osxni->mIconRequest->Cancel(NS_BINDING_ABORTED);
@@ -494,7 +494,7 @@ void OSXNotificationCenter::ShowPendingNotification(OSXNotificationInfo* osxni) 
   [osxni->mPendingNotification release];
   osxni->mPendingNotification = nil;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 NS_IMETHODIMP

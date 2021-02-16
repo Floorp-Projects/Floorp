@@ -60,11 +60,11 @@ using namespace mozilla::a11y;
 }
 
 - (void)dealloc {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   [super dealloc];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 #pragma mark - mozAccessible widget
@@ -1052,7 +1052,7 @@ struct RoleDescrComparator {
 }
 
 - (void)expire {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   [self invalidateState];
 
@@ -1060,7 +1060,7 @@ struct RoleDescrComparator {
 
   [self moxPostNotification:NSAccessibilityUIElementDestroyedNotification];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 - (BOOL)isExpired {

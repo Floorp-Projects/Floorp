@@ -59,7 +59,7 @@ nsDeviceContextSpecX::nsDeviceContextSpecX()
 }
 
 nsDeviceContextSpecX::~nsDeviceContextSpecX() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (mPrintSession) {
     ::PMRelease(mPrintSession);
@@ -71,7 +71,7 @@ nsDeviceContextSpecX::~nsDeviceContextSpecX() {
     ::PMRelease(mPrintSettings);
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 NS_IMPL_ISUPPORTS(nsDeviceContextSpecX, nsIDeviceContextSpec)
@@ -265,7 +265,7 @@ NS_IMETHODIMP nsDeviceContextSpecX::EndDocument() {
 
 void nsDeviceContextSpecX::GetPaperRect(double* aTop, double* aLeft, double* aBottom,
                                         double* aRight) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   PMRect paperRect;
   ::PMGetAdjustedPaperRect(mPageFormat, &paperRect);
@@ -275,7 +275,7 @@ void nsDeviceContextSpecX::GetPaperRect(double* aTop, double* aLeft, double* aBo
   *aBottom = paperRect.bottom;
   *aRight = paperRect.right;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 already_AddRefed<PrintTarget> nsDeviceContextSpecX::MakePrintTarget() {

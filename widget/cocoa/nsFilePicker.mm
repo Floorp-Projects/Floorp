@@ -49,7 +49,7 @@ NS_IMPL_ISUPPORTS(nsFilePicker, nsIFilePicker)
 // the pref. If the secret API was used once and things worked out it should
 // continue working for subsequent calls so the user is at no more risk.
 static void SetShowHiddenFileState(NSSavePanel* panel) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   bool show = false;
   if (NS_SUCCEEDED(Preferences::GetBool(kShowHiddenFilesPref, &show))) {
@@ -83,7 +83,7 @@ static void SetShowHiddenFileState(NSSavePanel* panel) {
     [showHiddenFilesInvocation invoke];
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 nsFilePicker::nsFilePicker() : mSelectedTypeIndex(0) {}
@@ -539,7 +539,7 @@ NSArray* nsFilePicker::GetFilterList() {
 // Sets the dialog title to whatever it should be.  If it fails, eh,
 // the OS will provide a sensible default.
 void nsFilePicker::SetDialogTitle(const nsString& inTitle, id aPanel) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   [aPanel setTitle:[NSString stringWithCharacters:(const unichar*)inTitle.get()
                                            length:inTitle.Length()]];
@@ -549,7 +549,7 @@ void nsFilePicker::SetDialogTitle(const nsString& inTitle, id aPanel) {
                                               length:mOkButtonLabel.Length()]];
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 // Converts path from an nsIFile into a NSString path

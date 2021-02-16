@@ -233,7 +233,7 @@ INIT_FAILURE:
 }
 
 - (void)createTimer {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (!mTimer) {
     mTimer = [[NSTimer scheduledTimerWithTimeInterval:0.25
@@ -243,11 +243,11 @@ INIT_FAILURE:
                                               repeats:YES] retain];
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 - (void)destroyTimer {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (mTimer) {
     [mTimer invalidate];
@@ -255,17 +255,17 @@ INIT_FAILURE:
     mTimer = nil;
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 - (void)advanceAnimatedCursor:(NSTimer*)aTimer {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if ([aTimer isValid]) {
     [self setFrame:[self getNextCursorFrame]];
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 - (void)setFrame:(int)aFrameIndex {
@@ -277,12 +277,12 @@ INIT_FAILURE:
 }
 
 - (void)dealloc {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   [self destroyTimer];
   [super dealloc];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 @end
@@ -330,13 +330,13 @@ INIT_FAILURE:
 }
 
 - (void)setFrame:(int)aFrameIndex {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   NSCursor* newCursor = [mFrames objectAtIndex:aFrameIndex];
   [newCursor set];
   mLastSetCocoaCursor = newCursor;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 - (int)numFrames {
@@ -356,12 +356,12 @@ INIT_FAILURE:
 }
 
 - (void)dealloc {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   [mFrames release];
   [super dealloc];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 @end

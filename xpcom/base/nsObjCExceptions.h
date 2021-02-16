@@ -13,26 +13,20 @@
 
 @class NSException;
 
-/* NOTE: Macros that claim to abort no longer abort, see bug 486574.
- */
-
 // See Mozilla bug 163260.
 // This file can only be included in an Objective-C context.
 
 void nsObjCExceptionLog(NSException* aException);
 
-// For wrapping blocks of Obj-C calls. Does not actually terminate.
-#define NS_OBJC_BEGIN_TRY_ABORT_BLOCK @try {
-#define NS_OBJC_END_TRY_ABORT_BLOCK \
-  }                                 \
-  @catch (NSException * _exn) {     \
-    nsObjCExceptionLog(_exn);       \
+// For wrapping blocks of Obj-C calls. Logs the exception and moves on.
+#define NS_OBJC_BEGIN_TRY_IGNORE_BLOCK @try {
+#define NS_OBJC_END_TRY_IGNORE_BLOCK \
+  }                                  \
+  @catch (NSException * _exn) {      \
+    nsObjCExceptionLog(_exn);        \
   }
 
-// Same as above ABORT_BLOCK but returns a value after the try/catch block to
-// suppress compiler warnings. This allows us to avoid having to refactor code
-// to get scoping right when wrapping an entire method.
-
+// Same as above IGNORE_BLOCK but returns a value after the try/catch block.
 #define NS_OBJC_BEGIN_TRY_BLOCK_RETURN @try {
 #define NS_OBJC_END_TRY_BLOCK_RETURN(_rv) \
   }                                       \
