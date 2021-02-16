@@ -7,17 +7,14 @@
 #ifndef BaseProfilingStack_h
 #define BaseProfilingStack_h
 
-#include "BaseProfilingCategory.h"
-
-#include "mozilla/Atomics.h"
-
-#include "BaseProfiler.h"
-
 #ifndef MOZ_GECKO_PROFILER
 #  error Do not #include this header when MOZ_GECKO_PROFILER is not #defined.
 #endif
 
-#include <algorithm>
+#include "BaseProfilingCategory.h"
+
+#include "mozilla/Atomics.h"
+
 #include <stdint.h>
 
 // This file defines the classes ProfilingStack and ProfilingStackFrame.

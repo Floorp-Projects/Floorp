@@ -20,14 +20,11 @@
 // empty macros if MOZ_GECKO_PROFILER is unset
 #include "BaseProfiler.h"
 #include "mozilla/ProfilerCounts.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/ProfilerState.h"
-
-// ProfilerMarkers.h is #included in the middle of this header!
-// #include "mozilla/ProfilerMarkers.h"
 
 #ifndef MOZ_GECKO_PROFILER
 
-#  include "mozilla/ProfilerMarkers.h"
 #  include "mozilla/UniquePtr.h"
 
 // This file can be #included unconditionally. However, everything within this
@@ -484,10 +481,6 @@ struct ProfilerBufferInfo {
 // status of the profiler, allowing the user to get a sense for how fast the
 // buffer is being written to, and how much data is visible.
 mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
-
-// ProfilerMarkers.h requires some stuff from this header.
-// TODO: Move common stuff to shared header, and move this #include to the top.
-#  include "mozilla/ProfilerMarkers.h"
 
 //---------------------------------------------------------------------------
 // Put profiling data into the profiler (labels and markers)
