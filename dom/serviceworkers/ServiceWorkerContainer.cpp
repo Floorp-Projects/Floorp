@@ -115,7 +115,6 @@ already_AddRefed<ServiceWorkerContainer> ServiceWorkerContainer::Create(
   } else {
     inner = new ServiceWorkerContainerImpl();
   }
-  NS_ENSURE_TRUE(inner, nullptr);
 
   RefPtr<ServiceWorkerContainer> ref =
       new ServiceWorkerContainer(aGlobal, inner.forget());
