@@ -443,6 +443,9 @@ class RefTest(object):
         # mid-test, the extra reflow that is triggered can disrupt the test.
         prefs["gfx.font_loader.delay"] = 0
         prefs["gfx.font_loader.interval"] = 0
+        # Ensure bundled fonts are activated, even if not enabled by default
+        # on the platform, so that tests can rely on them.
+        prefs["gfx.bundled-fonts.activate"] = 1
         # Disable dark scrollbars because it's semi-transparent.
         prefs["widget.disable-dark-scrollbar"] = True
         prefs["reftest.isCoverageBuild"] = mozinfo.info.get("ccov", False)
