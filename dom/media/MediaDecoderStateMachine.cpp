@@ -401,10 +401,9 @@ class MediaDecoderStateMachine::DormantState
     RefPtr<MediaDecoder::SeekPromise> x =
         mPendingSeek.mPromise.Ensure(__func__);
 
-    // Reset the decoding state for the video track to ensure
-    // that any queued video frames are released and don't
-    // consume video memory.
-    mMaster->ResetDecode(TrackInfo::kVideoTrack);
+    // Reset the decoding state to ensure that any queued video frames are
+    // released and don't consume video memory.
+    mMaster->ResetDecode();
 
     // No need to call StopMediaSink() here.
     // We will do it during seeking when exiting dormant.
