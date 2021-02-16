@@ -587,7 +587,7 @@ talos-webgl-profiling:
             .*-ccov.*/.*: []
             android.*: []
             windows7-32.*: []
-            default: ['webgl-ipc']
+            default: ['webgl-ipc-profiling']
     max-run-time: 1800
     mozharness:
         extra-options:
