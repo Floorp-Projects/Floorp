@@ -17,7 +17,7 @@ const PARTITIONED_URL =
 
 const STORAGE_ISOLATION_GROUP_LABEL =
   `Partitioned cookie or storage access was provided to “<URL>” because it is ` +
-  `loaded in the third-party context and storage partitioning is enabled.`;
+  `loaded in the third-party context and dynamic state partitioning is enabled.`;
 
 const COOKIE_BEHAVIOR_PREF = "network.cookie.cookieBehavior";
 const COOKIE_BEHAVIOR_PARTITION_FOREIGN = 5;
