@@ -76,7 +76,7 @@ class ModuleLoadCounter final {
 };
 
 class UntrustedModulesCollector {
-  static constexpr int kMaximumPendingQueries = 200;
+  static constexpr int kMaximumPendingQueries = 500;
   Vector<UntrustedModulesData> mData;
 
  public:
