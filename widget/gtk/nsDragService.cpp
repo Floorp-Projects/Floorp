@@ -1345,27 +1345,7 @@ void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
 
   } else {
     dropEffect = DRAGDROP_ACTION_NONE;
-
-    bool isWaylandTabDrop = false;
-#ifdef MOZ_WAYLAND
-    // Bug 1527976. Wayland protocol does not have any way how to handle
-    // MOZ_GTK_DRAG_RESULT_NO_TARGET drop result so consider all tab
-    // drops as not cancelled on wayland.
-    if (gfxPlatformGtk::GetPlatform()->IsWaylandDisplay() &&
-        aResult == MOZ_GTK_DRAG_RESULT_ERROR) {
-      for (GList* tmp = gdk_drag_context_list_targets(aContext); tmp;
-           tmp = tmp->next) {
-        GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
-        gchar* name = gdk_atom_name(atom);
-        if (name && (strcmp(name, gTabDropType) == 0)) {
-          isWaylandTabDrop = true;
-          LOG(("is wayland tab drop\n"));
-          break;
-        }
-      }
-    }
-#endif
-    if (aResult != MOZ_GTK_DRAG_RESULT_NO_TARGET && !isWaylandTabDrop) {
+    if (aResult != MOZ_GTK_DRAG_RESULT_NO_TARGET) {
       LOG(("drop is user chancelled\n"));
       mUserCancelled = true;
     }
@@ -1719,6 +1699,29 @@ static void invisibleSourceDragDataGet(GtkWidget* aWidget,
 static gboolean invisibleSourceDragFailed(GtkWidget* aWidget,
                                           GdkDragContext* aContext,
                                           gint aResult, gpointer aData) {
+#ifdef MOZ_WAYLAND
+  // Wayland and X11 uses different drag results here. When drag target is
+  // missing X11 passes GDK_DRAG_CANCEL_NO_TARGET
+  // (from gdk_dnd_handle_button_event()/gdkdnd-x11.c)
+  // as backend X11 has info about other application windows.
+  // Wayland does not have such info so it always passes
+  // GDK_DRAG_CANCEL_ERROR error code
+  // (see data_source_cancelled/gdkselection-wayland.c).
+  // Bug 1527976
+  if (gfxPlatformGtk::GetPlatform()->IsWaylandDisplay() &&
+      aResult == MOZ_GTK_DRAG_RESULT_ERROR) {
+    for (GList* tmp = gdk_drag_context_list_targets(aContext); tmp;
+         tmp = tmp->next) {
+      GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
+      gchar* name = gdk_atom_name(atom);
+      if (name && (strcmp(name, gTabDropType) == 0)) {
+        aResult = MOZ_GTK_DRAG_RESULT_NO_TARGET;
+        LOG(("invisibleSourceDragFailed: Wayland tab drop\n"));
+        break;
+      }
+    }
+  }
+#endif
   LOG(("invisibleSourceDragFailed %i", aResult));
   nsDragService* dragService = (nsDragService*)aData;
   // End the drag session now (rather than waiting for the drag-end signal)
