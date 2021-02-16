@@ -27,7 +27,7 @@ NS_IMETHODIMP nsMIMEInfoMac::GetDefaultDescription(nsAString& aDefaultDescriptio
 
 NS_IMETHODIMP
 nsMIMEInfoMac::LaunchWithFile(nsIFile* aFile) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   nsCOMPtr<nsIFile> application;
   nsresult rv;
@@ -73,11 +73,11 @@ nsMIMEInfoMac::LaunchWithFile(nsIFile* aFile) {
   }
   return app->LaunchWithDoc(aFile, false);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 nsresult nsMIMEInfoMac::LoadUriInternal(nsIURI* aURI) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NS_ENSURE_ARG_POINTER(aURI);
 
@@ -97,5 +97,5 @@ nsresult nsMIMEInfoMac::LoadUriInternal(nsIURI* aURI) {
 
   return rv;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }

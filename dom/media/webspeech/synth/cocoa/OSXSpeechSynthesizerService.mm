@@ -117,17 +117,17 @@ SpeechTaskCallback::~SpeechTaskCallback() {
 
 NS_IMETHODIMP
 SpeechTaskCallback::OnCancel() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   [mSpeechSynthesizer stopSpeaking];
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP
 SpeechTaskCallback::OnPause() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   [mSpeechSynthesizer pauseSpeakingAtBoundary:NSSpeechImmediateBoundary];
   if (!mTask) {
@@ -138,12 +138,12 @@ SpeechTaskCallback::OnPause() {
   mTask->DispatchPause(GetTimeDurationFromStart(), mCurrentIndex);
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP
 SpeechTaskCallback::OnResume() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   [mSpeechSynthesizer continueSpeaking];
   if (!mTask) {
@@ -154,19 +154,19 @@ SpeechTaskCallback::OnResume() {
   mTask->DispatchResume(GetTimeDurationFromStart(), mCurrentIndex);
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP
 SpeechTaskCallback::OnVolumeChanged(float aVolume) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   [mSpeechSynthesizer setObject:[NSNumber numberWithFloat:aVolume]
                     forProperty:NSSpeechVolumeProperty
                           error:nil];
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 float SpeechTaskCallback::GetTimeDurationFromStart() {
@@ -262,7 +262,7 @@ class EnumVoicesRunnable final : public Runnable {
 
 NS_IMETHODIMP
 EnumVoicesRunnable::Run() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   AutoTArray<OSXVoice, 64> list;
 
@@ -297,7 +297,7 @@ EnumVoicesRunnable::Run() {
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 StaticRefPtr<OSXSpeechSynthesizerService> OSXSpeechSynthesizerService::sSingleton;
@@ -336,7 +336,7 @@ bool OSXSpeechSynthesizerService::Init() {
 NS_IMETHODIMP
 OSXSpeechSynthesizerService::Speak(const nsAString& aText, const nsAString& aUri, float aVolume,
                                    float aRate, float aPitch, nsISpeechTask* aTask) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   MOZ_ASSERT(StringBeginsWith(aUri, u"urn:moz-tts:osx:"_ns),
              "OSXSpeechSynthesizerService doesn't allow this voice URI");
@@ -396,7 +396,7 @@ OSXSpeechSynthesizerService::Speak(const nsAString& aText, const nsAString& aUri
   aTask->DispatchStart();
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP

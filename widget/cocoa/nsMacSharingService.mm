@@ -99,7 +99,7 @@ static void SetStrAttribute(JSContext* aCx, JS::Rooted<JSObject*>& aObj, const c
 
 nsresult nsMacSharingService::GetSharingProviders(const nsAString& aPageUrl, JSContext* aCx,
                                                   JS::MutableHandleValue aResult) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   JS::Rooted<JSObject*> array(aCx, JS::NewArrayObject(aCx, 0));
   NSURL* url = [NSURL URLWithString:nsCocoaUtils::ToNSString(aPageUrl)];
@@ -125,12 +125,12 @@ nsresult nsMacSharingService::GetSharingProviders(const nsAString& aPageUrl, JSC
   aResult.setObject(*array);
 
   return NS_OK;
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP
 nsMacSharingService::OpenSharingPreferences() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSURL* prefPaneURL = [NSURL fileURLWithPath:extensionPrefPanePath isDirectory:YES];
   NSDictionary* args = @{
@@ -154,13 +154,13 @@ nsMacSharingService::OpenSharingPreferences() {
   [descriptor release];
 
   return NS_OK;
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP
 nsMacSharingService::ShareUrl(const nsAString& aServiceName, const nsAString& aPageUrl,
                               const nsAString& aPageTitle) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSString* serviceName = nsCocoaUtils::ToNSString(aServiceName);
   NSURL* pageUrl = [NSURL URLWithString:nsCocoaUtils::ToNSString(aPageUrl)];
@@ -198,5 +198,5 @@ nsMacSharingService::ShareUrl(const nsAString& aServiceName, const nsAString& aP
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }

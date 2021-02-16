@@ -90,7 +90,7 @@ static void ToolkitSleepWakeCallback(void* refCon, io_service_t service, natural
 }
 
 nsresult nsToolkit::RegisterForSleepWakeNotifications() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   IONotificationPortRef notifyPortRef;
 
@@ -108,7 +108,7 @@ nsresult nsToolkit::RegisterForSleepWakeNotifications() {
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 void nsToolkit::RemoveSleepWakeNotifications() {
@@ -227,7 +227,7 @@ nsToolkit* nsToolkit::GetToolkit() {
 // of its subclasses.
 nsresult nsToolkit::SwizzleMethods(Class aClass, SEL orgMethod, SEL posedMethod,
                                    bool classMethods) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   Method original = nil;
   Method posed = nil;
@@ -246,5 +246,5 @@ nsresult nsToolkit::SwizzleMethods(Class aClass, SEL orgMethod, SEL posedMethod,
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }

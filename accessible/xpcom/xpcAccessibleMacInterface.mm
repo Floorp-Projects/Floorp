@@ -44,7 +44,7 @@ xpcAccessibleMacInterface::xpcAccessibleMacInterface(AccessibleOrProxy aObj)
 
 NS_IMETHODIMP
 xpcAccessibleMacInterface::GetAttributeNames(nsTArray<nsString>& aAttributeNames) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN
 
   if (!mNativeObject || [mNativeObject isExpired]) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -58,12 +58,12 @@ xpcAccessibleMacInterface::GetAttributeNames(nsTArray<nsString>& aAttributeNames
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE)
 }
 
 NS_IMETHODIMP
 xpcAccessibleMacInterface::GetParameterizedAttributeNames(nsTArray<nsString>& aAttributeNames) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN
 
   if (!mNativeObject || [mNativeObject isExpired]) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -77,12 +77,12 @@ xpcAccessibleMacInterface::GetParameterizedAttributeNames(nsTArray<nsString>& aA
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE)
 }
 
 NS_IMETHODIMP
 xpcAccessibleMacInterface::GetActionNames(nsTArray<nsString>& aActionNames) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN
 
   if (!mNativeObject || [mNativeObject isExpired]) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -96,12 +96,12 @@ xpcAccessibleMacInterface::GetActionNames(nsTArray<nsString>& aActionNames) {
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE)
 }
 
 NS_IMETHODIMP
 xpcAccessibleMacInterface::PerformAction(const nsAString& aActionName) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN
 
   if (!mNativeObject || [mNativeObject isExpired]) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -112,13 +112,13 @@ xpcAccessibleMacInterface::PerformAction(const nsAString& aActionName) {
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE)
 }
 
 NS_IMETHODIMP
 xpcAccessibleMacInterface::GetAttributeValue(const nsAString& aAttributeName, JSContext* aCx,
                                              JS::MutableHandleValue aResult) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN
 
   if (!mNativeObject || [mNativeObject isExpired]) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -127,7 +127,7 @@ xpcAccessibleMacInterface::GetAttributeValue(const nsAString& aAttributeName, JS
   NSString* attribName = nsCocoaUtils::ToNSString(aAttributeName);
   return NSObjectToJsValue([mNativeObject accessibilityAttributeValue:attribName], aCx, aResult);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE)
 }
 
 NS_IMETHODIMP

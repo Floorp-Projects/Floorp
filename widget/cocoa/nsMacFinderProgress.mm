@@ -26,7 +26,7 @@ nsMacFinderProgress::~nsMacFinderProgress() {
 NS_IMETHODIMP
 nsMacFinderProgress::Init(const nsAString& path,
                           nsIMacFinderProgressCanceledCallback* cancellationCallback) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSURL* pathUrl = [NSURL
       fileURLWithPath:[NSString
@@ -57,12 +57,12 @@ nsMacFinderProgress::Init(const nsAString& path,
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP
 nsMacFinderProgress::UpdateProgress(uint64_t currentProgress, uint64_t totalProgress) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
   if (mProgress) {
     mProgress.totalUnitCount = totalProgress;
     mProgress.completedUnitCount = currentProgress;
@@ -70,12 +70,12 @@ nsMacFinderProgress::UpdateProgress(uint64_t currentProgress, uint64_t totalProg
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP
 nsMacFinderProgress::End() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (mProgress) {
     [mProgress unpublish];
@@ -83,5 +83,5 @@ nsMacFinderProgress::End() {
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }

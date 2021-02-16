@@ -29,7 +29,7 @@
 #define BRAND_BUNDLE_URL "chrome://branding/locale/brand.properties"
 
 nsresult GetDefaultBundleURL(const nsACString& aScheme, CFURLRef* aBundleURL) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   nsresult rv = NS_ERROR_NOT_AVAILABLE;
 
@@ -68,7 +68,7 @@ nsresult GetDefaultBundleURL(const nsACString& aScheme, CFURLRef* aBundleURL) {
 
   return rv;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 using mozilla::LogLevel;
@@ -127,7 +127,7 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char* aProtocolSche
 
 NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& aScheme,
                                                               nsAString& _retval) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   nsresult rv = NS_ERROR_NOT_AVAILABLE;
 
@@ -159,12 +159,12 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& 
 
   return rv;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP nsOSHelperAppService::IsCurrentAppOSDefaultForProtocol(const nsACString& aScheme,
                                                                      bool* _retval) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   nsresult rv = NS_ERROR_NOT_AVAILABLE;
 
@@ -185,12 +185,12 @@ NS_IMETHODIMP nsOSHelperAppService::IsCurrentAppOSDefaultForProtocol(const nsACS
 
   return rv;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 nsresult nsOSHelperAppService::GetFileTokenForPath(const char16_t* aPlatformAppPath,
                                                    nsIFile** aFile) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   nsresult rv;
   nsCOMPtr<nsILocalFileMac> localFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
@@ -238,7 +238,7 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const char16_t* aPlatformAppP
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 // Returns the MIME types an application bundle explicitly claims to handle.
@@ -554,7 +554,7 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
   mimeInfoMac.forget(aMIMEInfo);
   return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 NS_IMETHODIMP
