@@ -60,12 +60,12 @@ static const nsCursor sCustomCursor = eCursorCount;
 }
 
 + (void)dispose {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   [gInstance release];
   gInstance = nil;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 + (nsMacCursor*)createCursor:(enum nsCursor)aCursor {
@@ -304,7 +304,7 @@ static const nsCursor sCustomCursor = eCursorCount;
 }
 
 - (void)dealloc {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   [mCurrentMacCursor unset];
   [mCurrentMacCursor release];
@@ -312,7 +312,7 @@ static const nsCursor sCustomCursor = eCursorCount;
   NS_IF_RELEASE(sCursorImgContainer);
   [super dealloc];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 @end

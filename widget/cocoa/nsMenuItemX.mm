@@ -37,7 +37,7 @@ nsMenuItemX::nsMenuItemX() {
 }
 
 nsMenuItemX::~nsMenuItemX() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   // Prevent the icon object from outliving us.
   if (mIcon) {
@@ -57,7 +57,7 @@ nsMenuItemX::~nsMenuItemX() {
 
   MOZ_COUNT_DTOR(nsMenuItemX);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItemType aItemType,
@@ -233,7 +233,7 @@ void nsMenuItemX::UncheckRadioSiblings(nsIContent* inCheckedContent) {
 }
 
 void nsMenuItemX::SetKeyEquiv() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   // Set key shortcut and modifiers
   nsAutoString keyValue;
@@ -280,7 +280,7 @@ void nsMenuItemX::SetKeyEquiv() {
   // if the key was removed, clear the key
   [mNativeMenuItem setKeyEquivalent:@""];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 //
@@ -289,7 +289,7 @@ void nsMenuItemX::SetKeyEquiv() {
 
 void nsMenuItemX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* aContent,
                                           nsAtom* aAttribute) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (!aContent) {
     return;
@@ -348,7 +348,7 @@ void nsMenuItemX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* 
     }
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 bool IsMenuStructureElement(nsIContent* aContent) {

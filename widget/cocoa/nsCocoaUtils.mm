@@ -250,7 +250,7 @@ BOOL nsCocoaUtils::EventHasPhaseInformation(NSEvent* aEvent) {
 }
 
 void nsCocoaUtils::HideOSChromeOnScreen(bool aShouldHide) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   // Keep track of how many hiding requests have been made, so that they can
   // be nested.
@@ -264,7 +264,7 @@ void nsCocoaUtils::HideOSChromeOnScreen(bool aShouldHide) {
                         : NSApplicationPresentationHideDock | NSApplicationPresentationHideMenuBar;
   [NSApp setPresentationOptions:options];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 #define NS_APPSHELLSERVICE_CONTRACTID "@mozilla.org/appshell/appShellService;1"
@@ -299,7 +299,7 @@ nsIWidget* nsCocoaUtils::GetHiddenWindowWidget() {
 }
 
 void nsCocoaUtils::PrepareForNativeAppModalDialog() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   // Don't do anything if this is embedding. We'll assume that if there is no hidden
   // window we shouldn't do anything, and that should cover the embedding case.
@@ -330,11 +330,11 @@ void nsCocoaUtils::PrepareForNativeAppModalDialog() {
   [NSApp setMainMenu:newMenuBar];
   [newMenuBar release];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 void nsCocoaUtils::CleanUpAfterNativeAppModalDialog() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   // Don't do anything if this is embedding. We'll assume that if there is no hidden
   // window we shouldn't do anything, and that should cover the embedding case.
@@ -347,7 +347,7 @@ void nsCocoaUtils::CleanUpAfterNativeAppModalDialog() {
   else
     [WindowDelegate paintMenubarForWindow:mainWindow];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 static void data_ss_release_callback(void* aDataSourceSurface, const void* data, size_t size) {
@@ -564,7 +564,7 @@ nsresult nsCocoaUtils::CreateDualRepresentationNSImageFromImageContainer(imgICon
 
 // static
 void nsCocoaUtils::GetStringForNSString(const NSString* aSrc, nsAString& aDist) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (!aSrc) {
     aDist.Truncate();
@@ -575,7 +575,7 @@ void nsCocoaUtils::GetStringForNSString(const NSString* aSrc, nsAString& aDist) 
   [aSrc getCharacters:reinterpret_cast<unichar*>(aDist.BeginWriting())
                 range:NSMakeRange(0, [aSrc length])];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 // static
@@ -693,13 +693,13 @@ void nsCocoaUtils::InitNPCocoaEvent(NPCocoaEvent* aNPCocoaEvent) {
 
 // static
 void nsCocoaUtils::InitInputEvent(WidgetInputEvent& aInputEvent, NSEvent* aNativeEvent) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   aInputEvent.mModifiers = ModifiersForEvent(aNativeEvent);
   aInputEvent.mTime = PR_IntervalNow();
   aInputEvent.mTimeStamp = GetEventTimeStamp([aNativeEvent timestamp]);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 // static
@@ -831,7 +831,7 @@ bool nsCocoaUtils::HiDPIEnabled() {
 
 void nsCocoaUtils::GetCommandsFromKeyEvent(NSEvent* aEvent,
                                            nsTArray<KeyBindingsCommand>& aCommands) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   MOZ_ASSERT(aEvent);
 
@@ -845,7 +845,7 @@ void nsCocoaUtils::GetCommandsFromKeyEvent(NSEvent* aEvent,
   // This will trigger 0 - N calls to doCommandBySelector: and insertText:
   [sNativeKeyBindingsRecorder interpretKeyEvents:[NSArray arrayWithObject:aEvent]];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 @implementation NativeKeyBindingsRecorder

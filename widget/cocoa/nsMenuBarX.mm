@@ -78,15 +78,15 @@ nsMenuBarX::nsMenuBarX()
       mParentWindow(nullptr),
       mNeedsRebuild(false),
       mApplicationMenuDelegate(nil) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   mNativeMenu = [[GeckoNSMenu alloc] initWithTitle:@"MainMenuBar"];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 nsMenuBarX::~nsMenuBarX() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (nsMenuBarX::sLastGeckoMenuBarPainted == this) {
     nsMenuBarX::sLastGeckoMenuBarPainted = nullptr;
@@ -121,7 +121,7 @@ nsMenuBarX::~nsMenuBarX() {
 
   [mNativeMenu release];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 nsresult nsMenuBarX::Create(nsIWidget* aParent, Element* aContent) {
@@ -266,7 +266,7 @@ nsresult nsMenuBarX::InsertMenuAtIndex(nsMenuX* aMenu, uint32_t aIndex) {
 }
 
 void nsMenuBarX::RemoveMenuAtIndex(uint32_t aIndex) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (mMenuArray.Length() <= aIndex) {
     NS_ERROR("Attempting submenu removal with bad index!");
@@ -284,7 +284,7 @@ void nsMenuBarX::RemoveMenuAtIndex(uint32_t aIndex) {
 
   mMenuArray.RemoveElementAt(aIndex);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 void nsMenuBarX::ObserveAttributeChanged(mozilla::dom::Document* aDocument, nsIContent* aContent,
@@ -863,7 +863,7 @@ static BOOL gMenuItemsExecuteCommands = YES;
 
 // called when some menu item in this menu gets hit
 - (IBAction)menuItemHit:(id)sender {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (!gMenuItemsExecuteCommands) {
     return;
@@ -947,7 +947,7 @@ static BOOL gMenuItemsExecuteCommands = YES;
     }
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 @end
