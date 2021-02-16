@@ -140,6 +140,7 @@ EXPORTS.mozilla += [
     "public/ProfileJSONWriter.h",
     # vm/GeckoProfiler.h needs to include this and doesn't like #include "ProfilerCounts.h"
     "public/ProfilerCounts.h",
+    "public/ProfilerLabels.h",
     "public/ProfilerMarkers.h",
     "public/ProfilerMarkersDetail.h",
     "public/ProfilerMarkersPrerequisites.h",
