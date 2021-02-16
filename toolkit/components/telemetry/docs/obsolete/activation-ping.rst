@@ -1,6 +1,6 @@
 
-"activation" ping
-==================
+"activation" ping (obsolete)
+============================
 
 This mobile-specific ping is intendend to track activations of distributions of mobile products
 with a small error rate.
