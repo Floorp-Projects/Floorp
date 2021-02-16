@@ -797,7 +797,6 @@ pub struct RenderBackend {
     api_rx: Receiver<ApiMsg>,
     result_tx: Sender<ResultMsg>,
     scene_tx: Sender<SceneBuilderRequest>,
-    low_priority_scene_tx: Sender<SceneBuilderRequest>,
 
     default_device_pixel_ratio: f32,
 
@@ -836,7 +835,6 @@ impl RenderBackend {
         api_rx: Receiver<ApiMsg>,
         result_tx: Sender<ResultMsg>,
         scene_tx: Sender<SceneBuilderRequest>,
-        low_priority_scene_tx: Sender<SceneBuilderRequest>,
         default_device_pixel_ratio: f32,
         resource_cache: ResourceCache,
         notifier: Box<dyn RenderNotifier>,
@@ -851,7 +849,6 @@ impl RenderBackend {
             api_rx,
             result_tx,
             scene_tx,
-            low_priority_scene_tx,
             default_device_pixel_ratio,
             resource_cache,
             gpu_cache: GpuCache::new(),
@@ -1178,12 +1175,6 @@ impl RenderBackend {
                     }
                     DebugCommand::SimulateLongSceneBuild(time_ms) => {
                         let _ = self.scene_tx.send(SceneBuilderRequest::SimulateLongSceneBuild(time_ms));
-                        return RenderBackendStatus::Continue;
-                    }
-                    DebugCommand::SimulateLongLowPrioritySceneBuild(time_ms) => {
-                        let _ = self.low_priority_scene_tx.send(
-                            SceneBuilderRequest::SimulateLongLowPrioritySceneBuild(time_ms)
-                        );
                         return RenderBackendStatus::Continue;
                     }
                     DebugCommand::SetFlags(flags) => {

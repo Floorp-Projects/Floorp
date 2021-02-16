@@ -95,7 +95,6 @@ pub enum SceneBuilderRequest {
     GetGlyphIndices(GlyphIndexRequest),
     ClearNamespace(IdNamespace),
     SimulateLongSceneBuild(u32),
-    SimulateLongLowPrioritySceneBuild(u32),
     ExternalEvent(ExternalEvent),
     WakeUp,
     ShutDown(Option<Sender<()>>),
@@ -345,7 +344,6 @@ impl SceneBuilderThread {
                 Ok(SceneBuilderRequest::SimulateLongSceneBuild(time_ms)) => {
                     self.simulate_slow_ms = time_ms
                 }
-                Ok(SceneBuilderRequest::SimulateLongLowPrioritySceneBuild(_)) => {}
                 Ok(SceneBuilderRequest::ReportMemory(mut report, tx)) => {
                     (*report) += self.report_memory();
                     tx.send(report).unwrap();
@@ -794,7 +792,6 @@ impl SceneBuilderThread {
 pub struct LowPrioritySceneBuilderThread {
     pub rx: Receiver<SceneBuilderRequest>,
     pub tx: Sender<SceneBuilderRequest>,
-    pub simulate_slow_ms: u32,
 }
 
 impl LowPrioritySceneBuilderThread {
@@ -811,9 +808,6 @@ impl LowPrioritySceneBuilderThread {
                     self.tx.send(SceneBuilderRequest::ShutDown(sync)).unwrap();
                     break;
                 }
-                Ok(SceneBuilderRequest::SimulateLongLowPrioritySceneBuild(time_ms)) => {
-                    self.simulate_slow_ms = time_ms;
-                }
                 Ok(other) => {
                     self.tx.send(other).unwrap();
                 }
@@ -828,10 +822,6 @@ impl LowPrioritySceneBuilderThread {
         let is_low_priority = true;
         rasterize_blobs(&mut txn, is_low_priority);
         txn.blob_requests = Vec::new();
-
-        if self.simulate_slow_ms > 0 {
-            thread::sleep(Duration::from_millis(self.simulate_slow_ms as u64));
-        }
 
         txn
     }
