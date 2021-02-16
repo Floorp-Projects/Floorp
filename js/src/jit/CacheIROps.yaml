@@ -308,6 +308,14 @@
     input: StringId
     lastIndex: Int32Id
 
+- name: RegExpFlagResult
+  shared: true
+  transpile: true
+  cost_estimate: 2
+  args:
+    regexp: ObjId
+    flagsMask: Int32Imm
+
 - name: CallSubstringKernelResult
   shared: true
   transpile: true
