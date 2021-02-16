@@ -1683,6 +1683,10 @@ void BytecodeEmitter::reportError(const Maybe<uint32_t>& maybeOffset,
 
 bool BytecodeEmitter::addObjLiteralData(ObjLiteralWriter& writer,
                                         GCThingIndex* outIndex) {
+  if (!writer.checkForDuplicatedNames(cx)) {
+    return false;
+  }
+
   size_t len = writer.getCode().size();
   auto* code = stencil.alloc.newArrayUninitialized<uint8_t>(len);
   if (!code) {
