@@ -554,7 +554,7 @@ void nsRetrievalContextWayland::SetPrimaryDataOffer(
 
 void nsRetrievalContextWayland::AddDragAndDropDataOffer(
     wl_data_offer* aDropDataOffer) {
-  LOGCLIP(("nsRetrievalContextWayland::AddDragAndDropDataOffer %p\n",
+  LOGDRAG(("nsRetrievalContextWayland::AddDragAndDropDataOffer %p\n",
            aDropDataOffer));
 
   // Remove any existing D&D contexts.
@@ -564,7 +564,7 @@ void nsRetrievalContextWayland::AddDragAndDropDataOffer(
       g_hash_table_lookup(mActiveOffers, aDropDataOffer));
 #ifdef MOZ_LOGGING
   if (!dataOffer) {
-    LOGCLIP(("    We're missing stored Drag & Drop data offer!\n"));
+    LOGDRAG(("    We're missing stored Drag & Drop data offer!\n"));
   }
 #endif
   if (dataOffer) {
@@ -578,7 +578,7 @@ nsWaylandDragContext* nsRetrievalContextWayland::GetDragContext(void) {
 }
 
 void nsRetrievalContextWayland::ClearDragAndDropDataOffer(void) {
-  LOGCLIP(("nsRetrievalContextWayland::ClearDragAndDropDataOffer()\n"));
+  LOGDRAG(("nsRetrievalContextWayland::ClearDragAndDropDataOffer()\n"));
   mDragContext = nullptr;
 }
 
