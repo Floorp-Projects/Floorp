@@ -86,23 +86,46 @@ class TabDrawerRobot {
         mDevice.findObject(
             UiSelector().resourceId("org.mozilla.fenix.debug:id/mozac_browser_tabstray_close")
         ).waitForExists(waitingTime)
-        closeTabButton().click()
+
+        var retries = 0 // number of retries before failing, will stop at 2
+        do {
+            closeTabButton().click()
+            retries++
+        } while (mDevice.findObject(
+                UiSelector().resourceId("org.mozilla.fenix.debug:id/mozac_browser_tabstray_close")
+            ).exists() && retries < 3
+        )
     }
 
-    fun swipeTabRight(title: String) =
-        tab(title).perform(ViewActions.swipeRight())
+    fun swipeTabRight(title: String) {
+        var retries = 0 // number of retries before failing, will stop at 2
+        while (mDevice.findObject(UiSelector().text(title)).exists() && retries < 3) {
+            tab(title).perform(ViewActions.swipeRight())
+            retries++
+        }
+    }
 
-    fun swipeTabLeft(title: String) =
-        tab(title).perform(ViewActions.swipeLeft())
+    fun swipeTabLeft(title: String) {
+        var retries = 0 // number of retries before failing, will stop at 2
+        while (mDevice.findObject(UiSelector().text(title)).exists() && retries < 3) {
+            tab(title).perform(ViewActions.swipeLeft())
+            retries++
+        }
+    }
 
     fun closeTabViaXButton(title: String) {
-        val closeButton = onView(
-            allOf(
-                withId(R.id.mozac_browser_tabstray_close),
-                withContentDescription("Close tab $title")
+        mDevice.findObject(UiSelector().text(title)).waitForExists(waitingTime)
+        var retries = 0 // number of retries before failing, will stop at 2
+        do {
+            val closeButton = onView(
+                allOf(
+                    withId(R.id.mozac_browser_tabstray_close),
+                    withContentDescription("Close tab $title")
+                )
             )
-        )
-        closeButton.perform(click())
+            closeButton.perform(click())
+            retries++
+        } while (mDevice.findObject(UiSelector().text(title)).exists() && retries < 3)
     }
 
     fun verifySnackBarText(expectedText: String) {
