@@ -425,7 +425,7 @@ static void PrintViewHierarchy(NSView *view)
 
 // Return native data according to aDataType
 void* nsChildView::GetNativeData(uint32_t aDataType) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSNULL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   void* retVal = nullptr;
 
@@ -478,7 +478,7 @@ void* nsChildView::GetNativeData(uint32_t aDataType) {
 
   return retVal;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nullptr);
 }
 
 #pragma mark -
