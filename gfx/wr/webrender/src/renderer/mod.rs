@@ -1208,7 +1208,6 @@ impl Renderer {
             let lp_builder = LowPrioritySceneBuilderThread {
                 rx: low_priority_scene_rx,
                 tx: scene_tx.clone(),
-                simulate_slow_ms: 0,
             };
 
             thread::Builder::new().name(lp_scene_thread_name.clone()).spawn(move || {
@@ -1237,7 +1236,6 @@ impl Renderer {
         picture_tile_size.height = picture_tile_size.height.max(128).min(4096);
 
         let rb_scene_tx = scene_tx.clone();
-        let rb_low_priority_scene_tx = scene_tx.clone();
         let rb_font_instances = font_instances.clone();
         let enable_multithreading = options.enable_multithreading;
         thread::Builder::new().name(rb_thread_name.clone()).spawn(move || {
@@ -1267,7 +1265,6 @@ impl Renderer {
                 api_rx,
                 result_tx,
                 rb_scene_tx,
-                rb_low_priority_scene_tx,
                 device_pixel_ratio,
                 resource_cache,
                 backend_notifier,
@@ -1829,7 +1826,6 @@ impl Renderer {
             }
             DebugCommand::ClearCaches(_)
             | DebugCommand::SimulateLongSceneBuild(_)
-            | DebugCommand::SimulateLongLowPrioritySceneBuild(_)
             | DebugCommand::EnableNativeCompositor(_)
             | DebugCommand::SetBatchingLookback(_)
             | DebugCommand::EnableMultithreading(_) => {}
