@@ -50,14 +50,14 @@
 
 #include "MozContainer.h"
 
-#include <glib.h>
-#include <gtk/gtk.h>
-#include <gdk/gdkx.h>
-#include "nsWaylandDisplay.h"
-#include "gfxPlatformGtk.h"
-#include <wayland-egl.h>
-#include <stdio.h>
 #include <dlfcn.h>
+#include <glib.h>
+#include <stdio.h>
+#include <wayland-egl.h>
+
+#include "gfxPlatformGtk.h"
+#include "nsGtkUtils.h"
+#include "nsWaylandDisplay.h"
 
 #undef LOG
 #ifdef MOZ_LOGGING
@@ -167,8 +167,9 @@ void moz_container_wayland_init(MozContainerWayland* container) {
   container->eglwindow = nullptr;
   container->frame_callback_handler = nullptr;
   container->ready_to_draw = false;
-  container->opaque_region_updates = false;
+  container->opaque_region_needs_updates = false;
   container->opaque_region_subtract_corners = false;
+  container->opaque_region_used = false;
   container->surface_needs_clear = true;
   container->subsurface_dx = 0;
   container->subsurface_dy = 0;
@@ -213,9 +214,64 @@ static void moz_container_wayland_frame_callback_handler(
 static const struct wl_callback_listener moz_container_frame_listener = {
     moz_container_wayland_frame_callback_handler};
 
+static void after_frame_clock_after_paint(GdkFrameClock* clock,
+                                          MozContainer* container) {
+  struct wl_surface* surface = moz_container_wayland_surface_lock(container);
+  if (surface) {
+    wl_surface_commit(surface);
+    moz_container_wayland_surface_unlock(container, &surface);
+  }
+}
+
+static bool moz_gdk_wayland_window_add_frame_callback_surface_locked(
+    MozContainer* container) {
+  static auto sGdkWaylandWindowAddCallbackSurface =
+      (void (*)(GdkWindow*, struct wl_surface*))dlsym(
+          RTLD_DEFAULT, "gdk_wayland_window_add_frame_callback_surface");
+
+  if (!StaticPrefs::widget_wayland_opaque_region_enabled() ||
+      !sGdkWaylandWindowAddCallbackSurface) {
+    return false;
+  }
+
+  GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
+  MozContainerWayland* wl_container = &container->wl_container;
+
+  sGdkWaylandWindowAddCallbackSurface(window, wl_container->surface);
+
+  GdkFrameClock* frame_clock = gdk_window_get_frame_clock(window);
+  g_signal_connect_after(frame_clock, "after-paint",
+                         G_CALLBACK(after_frame_clock_after_paint), container);
+  return true;
+}
+
+static void moz_gdk_wayland_window_remove_frame_callback_surface_locked(
+    MozContainer* container) {
+  static auto sGdkWaylandWindowRemoveCallbackSurface =
+      (void (*)(GdkWindow*, struct wl_surface*))dlsym(
+          RTLD_DEFAULT, "gdk_wayland_window_remove_frame_callback_surface");
+
+  if (!sGdkWaylandWindowRemoveCallbackSurface) {
+    return;
+  }
+
+  GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
+  MozContainerWayland* wl_container = &container->wl_container;
+
+  sGdkWaylandWindowRemoveCallbackSurface(window, wl_container->surface);
+
+  GdkFrameClock* frame_clock = gdk_window_get_frame_clock(window);
+  g_signal_handlers_disconnect_by_func(
+      frame_clock, FuncToGpointer(after_frame_clock_after_paint), container);
+}
+
 static void moz_container_wayland_unmap_internal(MozContainer* container) {
   MozContainerWayland* wl_container = &container->wl_container;
   MutexAutoLock lock(*wl_container->container_lock);
+
+  if (wl_container->opaque_region_used) {
+    moz_gdk_wayland_window_remove_frame_callback_surface_locked(container);
+  }
 
   g_clear_pointer(&wl_container->eglwindow, wl_egl_window_destroy);
   g_clear_pointer(&wl_container->subsurface, wl_subsurface_destroy);
@@ -336,7 +392,12 @@ static void moz_container_wayland_set_opaque_region_locked(
     MozContainer* container) {
   MozContainerWayland* wl_container = &container->wl_container;
 
-  if (!wl_container->opaque_region_updates) {
+  if (!wl_container->opaque_region_needs_updates) {
+    return;
+  }
+
+  if (!wl_container->opaque_region_used) {
+    wl_container->opaque_region_needs_updates = false;
     return;
   }
 
@@ -348,6 +409,7 @@ static void moz_container_wayland_set_opaque_region_locked(
       wl_container->opaque_region_subtract_corners);
   wl_surface_set_opaque_region(wl_container->surface, region);
   wl_region_destroy(region);
+  wl_container->opaque_region_needs_updates = false;
 }
 
 static void moz_container_wayland_set_opaque_region(MozContainer* container) {
@@ -437,6 +499,9 @@ static bool moz_container_wayland_surface_create_locked(
   wl_surface_commit(wl_container->surface);
   wl_display_flush(WaylandDisplayGet()->GetDisplay());
 
+  wl_container->opaque_region_used =
+      moz_gdk_wayland_window_add_frame_callback_surface_locked(container);
+
   LOGWAYLAND(("    created surface %p ID %d\n", (void*)wl_container->surface,
               wl_proxy_get_id((struct wl_proxy*)wl_container->surface)));
   return true;
@@ -504,7 +569,7 @@ gboolean moz_container_wayland_surface_needs_clear(MozContainer* container) {
 void moz_container_wayland_update_opaque_region(MozContainer* container,
                                                 bool aSubtractCorners) {
   MozContainerWayland* wl_container = &container->wl_container;
-  wl_container->opaque_region_updates = true;
+  wl_container->opaque_region_needs_updates = true;
   wl_container->opaque_region_subtract_corners = aSubtractCorners;
 
   // When GL compositor / WebRender is used,
