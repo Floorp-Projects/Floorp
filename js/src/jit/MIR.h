@@ -7458,6 +7458,30 @@ class MTypedArrayElementSize : public MUnaryInstruction,
   void computeRange(TempAllocator& alloc) override;
 };
 
+// Guard an ArrayBufferView has an attached ArrayBuffer.
+class MGuardHasAttachedArrayBuffer : public MUnaryInstruction,
+                                     public SingleObjectPolicy::Data {
+  explicit MGuardHasAttachedArrayBuffer(MDefinition* obj)
+      : MUnaryInstruction(classOpcode, obj) {
+    setResultType(MIRType::Object);
+    setMovable();
+    setGuard();
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardHasAttachedArrayBuffer)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot);
+  }
+};
+
 // Convert a Double into an IntPtr value for accessing a TypedArray or DataView
 // element. If the input is non-finite, not an integer, negative, or outside the
 // IntPtr range, either bails out or produces a value which is known to trigger
