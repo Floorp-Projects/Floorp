@@ -16,6 +16,7 @@ function testBufferByteLengthInt32() {
     for (var i = 0; i < 2000; i++) {
         var idx = +(i < 1900); // First 1 then 0.
         assertEq(ArrayBufferByteLength(arr[idx]), idx === 0 ? 6 * gb : 8);
+        assertEq(arr[idx].byteLength, idx === 0 ? 6 * gb : 8);
     }
 }
 testBufferByteLengthInt32();
@@ -25,6 +26,7 @@ function testTypedArrayByteOffsetInt32() {
     for (var i = 0; i < 2000; i++) {
         var idx = +(i < 1900); // First 1 then 0.
         assertEq(TypedArrayByteOffset(arr[idx]), idx === 0 ? 5 * gb : 0);
+        assertEq(arr[idx].byteOffset, idx === 0 ? 5 * gb : 0);
     }
 }
 testTypedArrayByteOffsetInt32();
@@ -34,6 +36,7 @@ function testTypedArrayLengthInt32() {
     for (var i = 0; i < 2000; i++) {
         var idx = +(i < 1900); // First 1 then 0.
         assertEq(TypedArrayLength(arr[idx]), idx === 0 ? 6 * gb : 8);
+        assertEq(arr[idx].length, idx === 0 ? 6 * gb : 8);
     }
 }
 testTypedArrayLengthInt32();
