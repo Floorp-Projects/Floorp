@@ -11,6 +11,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
+using mozilla::BitBloomFilter;
 using mozilla::CountingBloomFilter;
 
 class FilterChecker {
@@ -23,7 +24,35 @@ class FilterChecker {
   uint32_t mHash;
 };
 
-int main() {
+void testBitBloomFilter() {
+  const mozilla::UniquePtr filter =
+      mozilla::MakeUnique<BitBloomFilter<12, FilterChecker>>();
+  MOZ_RELEASE_ASSERT(filter);
+
+  FilterChecker one(1);
+  FilterChecker two(0x20000);
+
+  filter->add(&one);
+  MOZ_RELEASE_ASSERT(filter->mightContain(&one), "Filter should contain 'one'");
+
+  MOZ_RELEASE_ASSERT(!filter->mightContain(&two),
+                     "Filter claims to contain 'two' when it should not");
+
+  // Test multiple addition
+  filter->add(&two);
+  MOZ_RELEASE_ASSERT(filter->mightContain(&two),
+                     "Filter should contain 'two' after 'two' is added");
+  filter->add(&two);
+  MOZ_RELEASE_ASSERT(filter->mightContain(&two),
+                     "Filter should contain 'two' after 'two' is added again");
+
+  filter->clear();
+
+  MOZ_RELEASE_ASSERT(!filter->mightContain(&one), "clear() failed to work");
+  MOZ_RELEASE_ASSERT(!filter->mightContain(&two), "clear() failed to work");
+}
+
+void testCountingBloomFilter() {
   const mozilla::UniquePtr filter =
       mozilla::MakeUnique<CountingBloomFilter<12, FilterChecker>>();
   MOZ_RELEASE_ASSERT(filter);
@@ -103,6 +132,11 @@ int main() {
 
   MOZ_RELEASE_ASSERT(!filter->mightContain(&multiple),
                      "clear() failed to work");
+}
+
+int main() {
+  testBitBloomFilter();
+  testCountingBloomFilter();
 
   return 0;
 }
