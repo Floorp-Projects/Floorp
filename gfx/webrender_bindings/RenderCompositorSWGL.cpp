@@ -218,6 +218,15 @@ RenderedFrameId RenderCompositorSWGL::EndFrame(
   return frameId;
 }
 
+bool RenderCompositorSWGL::RequestFullRender() {
+#ifdef MOZ_WIDGET_ANDROID
+  // XXX Add partial present support.
+  return true;
+#else
+  return false;
+#endif
+}
+
 void RenderCompositorSWGL::Pause() {}
 
 bool RenderCompositorSWGL::Resume() { return true; }

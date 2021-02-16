@@ -13,7 +13,8 @@
 #include "gfx2DGlue.h"             // for ContentForFormat, etc
 #include "mozilla/gfx/2D.h"        // for DataSourceSurface
 #include "mozilla/gfx/BaseSize.h"  // for BaseSize
-#include "mozilla/gfx/Logging.h"   // for gfxCriticalError
+#include "mozilla/gfx/gfxVars.h"
+#include "mozilla/gfx/Logging.h"  // for gfxCriticalError
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/webrender/RenderEGLImageTextureHost.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -671,8 +672,12 @@ void SurfaceTextureHost::PushResourceUpdates(
   auto method = aOp == TextureHost::ADD_IMAGE
                     ? &wr::TransactionBuilder::AddExternalImage
                     : &wr::TransactionBuilder::UpdateExternalImage;
-  auto imageType = wr::ExternalImageType::TextureHandle(
-      wr::ImageBufferKind::TextureExternal);
+
+  auto imageType = gfx::gfxVars::UseSoftwareWebRender()
+                       ? wr::ExternalImageType::TextureHandle(
+                             wr::ImageBufferKind::TextureRect)
+                       : wr::ExternalImageType::TextureHandle(
+                             wr::ImageBufferKind::TextureExternal);
 
   switch (GetFormat()) {
     case gfx::SurfaceFormat::R8G8B8X8:
@@ -700,17 +705,23 @@ void SurfaceTextureHost::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
                                           wr::ImageRendering aFilter,
                                           const Range<wr::ImageKey>& aImageKeys,
                                           PushDisplayItemFlagSet aFlags) {
+  bool preferCompositorSurface =
+      aFlags.contains(PushDisplayItemFlag::PREFER_COMPOSITOR_SURFACE);
+  bool supportsExternalCompositing = false;
+  if (gfx::gfxVars::UseSoftwareWebRender()) {
+    supportsExternalCompositing = true;
+  }
+
   switch (GetFormat()) {
     case gfx::SurfaceFormat::R8G8B8X8:
     case gfx::SurfaceFormat::R8G8B8A8:
     case gfx::SurfaceFormat::B8G8R8A8:
     case gfx::SurfaceFormat::B8G8R8X8: {
       MOZ_ASSERT(aImageKeys.length() == 1);
-      aBuilder.PushImage(
-          aBounds, aClip, true, aFilter, aImageKeys[0],
-          !(mFlags & TextureFlags::NON_PREMULTIPLIED),
-          wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
-          aFlags.contains(PushDisplayItemFlag::PREFER_COMPOSITOR_SURFACE));
+      aBuilder.PushImage(aBounds, aClip, true, aFilter, aImageKeys[0],
+                         !(mFlags & TextureFlags::NON_PREMULTIPLIED),
+                         wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
+                         preferCompositorSurface, supportsExternalCompositing);
       break;
     }
     default: {

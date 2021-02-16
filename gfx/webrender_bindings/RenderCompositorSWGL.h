@@ -37,6 +37,7 @@ class RenderCompositorSWGL : public RenderCompositor {
                         size_t aNumOpaqueRects) override;
 
   bool UsePartialPresent() override { return true; }
+  bool RequestFullRender() override;
 
   void Pause() override;
   bool Resume() override;
