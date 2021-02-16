@@ -7,7 +7,7 @@
 #import <Foundation/Foundation.h>
 
 bool nsUserIdleServiceX::PollIdleTime(uint32_t* aIdleTime) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   kern_return_t rval;
   mach_port_t masterPort;
@@ -54,7 +54,7 @@ bool nsUserIdleServiceX::PollIdleTime(uint32_t* aIdleTime) {
 
   return true;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
+  NS_OBJC_END_TRY_BLOCK_RETURN(false);
 }
 
 bool nsUserIdleServiceX::UsePollMode() { return true; }

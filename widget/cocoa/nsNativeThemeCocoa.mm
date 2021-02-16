@@ -2411,7 +2411,7 @@ static bool IsHiDPIContext(nsDeviceContext* aContext) {
 
 Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
     nsIFrame* aFrame, StyleAppearance aAppearance, const nsRect& aRect) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   // setup to draw into the correct port
   int32_t p2a = aFrame->PresContext()->AppUnitsPerDevPixel();
@@ -2778,7 +2778,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
 
   return Nothing();
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(Nothing());
+  NS_OBJC_END_TRY_BLOCK_RETURN(Nothing());
 }
 
 NS_IMETHODIMP
@@ -3201,7 +3201,7 @@ LayoutDeviceIntMargin nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aCont
                                                           StyleAppearance aAppearance) {
   LayoutDeviceIntMargin result;
 
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   switch (aAppearance) {
     case StyleAppearance::Button: {
@@ -3299,7 +3299,7 @@ LayoutDeviceIntMargin nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aCont
     result = result + result;  // doubled
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(result);
+  NS_OBJC_END_TRY_BLOCK_RETURN(result);
 }
 
 // Return false here to indicate that CSS padding values should be used. There is

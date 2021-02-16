@@ -178,7 +178,7 @@ NPError mozilla::plugins::PluginUtilsOSX::ShowCocoaContextMenu(void* aMenu, int 
 
   return NPERR_NO_ERROR;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NPERR_GENERIC_ERROR);
+  NS_OBJC_END_TRY_BLOCK_RETURN(NPERR_GENERIC_ERROR);
 }
 
 void mozilla::plugins::PluginUtilsOSX::InvokeNativeEventLoop() {
@@ -281,7 +281,7 @@ bool mozilla::plugins::PluginUtilsOSX::SetProcessName(const char* aProcessName) 
   }
 
   return true;
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
+  NS_OBJC_END_TRY_BLOCK_RETURN(false);
 }
 
 namespace mozilla {

@@ -646,7 +646,7 @@ bool nsLookAndFeel::SystemWantsDarkTheme() {
 }
 
 bool nsLookAndFeel::NativeGetFont(FontID aID, nsString& aFontName, gfxFontStyle& aFontStyle) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   // hack for now
   if (aID == FontID::Window || aID == FontID::Document) {
@@ -668,7 +668,7 @@ bool nsLookAndFeel::NativeGetFont(FontID aID, nsString& aFontName, gfxFontStyle&
 
   return true;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
+  NS_OBJC_END_TRY_BLOCK_RETURN(false);
 }
 
 mozilla::widget::LookAndFeelCache nsLookAndFeel::GetCacheImpl() {

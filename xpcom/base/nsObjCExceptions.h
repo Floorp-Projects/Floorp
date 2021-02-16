@@ -57,12 +57,12 @@ void nsObjCExceptionLog(NSException* aException);
   }                                          \
   return NS_ERROR_FAILURE;
 
-#define NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN @try {
-#define NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(_rv) \
-  }                                             \
-  @catch (NSException * _exn) {                 \
-    nsObjCExceptionLog(_exn);                   \
-  }                                             \
+#define NS_OBJC_BEGIN_TRY_BLOCK_RETURN @try {
+#define NS_OBJC_END_TRY_BLOCK_RETURN(_rv) \
+  }                                       \
+  @catch (NSException * _exn) {           \
+    nsObjCExceptionLog(_exn);             \
+  }                                       \
   return _rv;
 
 #endif  // nsObjCExceptions_h_
