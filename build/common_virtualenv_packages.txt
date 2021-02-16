@@ -11,11 +11,9 @@ mozilla.pth:third_party/python/appdirs
 mozilla.pth:third_party/python/atomicwrites
 mozilla.pth:third_party/python/attrs/src
 python2:mozilla.pth:third_party/python/backports
-mozilla.pth:third_party/python/biplist
 mozilla.pth:third_party/python/blessings
 mozilla.pth:third_party/python/Click
 mozilla.pth:third_party/python/compare-locales
-mozilla.pth:third_party/python/configobj
 mozilla.pth:third_party/python/cookies
 mozilla.pth:third_party/python/cram
 mozilla.pth:third_party/python/diskcache
