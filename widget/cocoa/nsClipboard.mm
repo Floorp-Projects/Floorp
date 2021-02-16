@@ -437,7 +437,7 @@ nsClipboard::SupportsFindClipboard(bool* _retval) {
 // and puts it into a dictionary which it returns.
 // static
 NSDictionary* nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (!aTransferable) {
     return nil;
@@ -637,7 +637,7 @@ NSDictionary* nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTran
 
   return pasteboardOutputDict;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 // aPasteboardType is being retained and needs to be released by the caller.

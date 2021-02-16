@@ -82,7 +82,7 @@ mozilla::LogModule* GetMacAccessibilityLog() {
 #pragma mark - mozAccessible/NSAccessibility
 
 - (NSArray*)accessibilityAttributeNames {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if ([self isExpired]) {
     return nil;
@@ -122,11 +122,11 @@ mozilla::LogModule* GetMacAccessibilityLog() {
 
   return attributes;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (id)accessibilityAttributeValue:(NSString*)attribute {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
   if ([self isExpired]) {
     return nil;
   }
@@ -190,7 +190,7 @@ mozilla::LogModule* GetMacAccessibilityLog() {
 
   return value;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (BOOL)accessibilityIsAttributeSettable:(NSString*)attribute {
@@ -253,7 +253,7 @@ mozilla::LogModule* GetMacAccessibilityLog() {
 }
 
 - (NSArray*)accessibilityActionNames {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if ([self isExpired]) {
     return nil;
@@ -271,7 +271,7 @@ mozilla::LogModule* GetMacAccessibilityLog() {
 
   return actionNames;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (void)accessibilityPerformAction:(NSString*)action {
@@ -295,15 +295,15 @@ mozilla::LogModule* GetMacAccessibilityLog() {
 }
 
 - (NSString*)accessibilityActionDescription:(NSString*)action {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
   // by default we return whatever the MacOS API know about.
   // if you have custom actions, override.
   return NSAccessibilityActionDescription(action);
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (NSArray*)accessibilityParameterizedAttributeNames {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if ([self isExpired]) {
     return nil;
@@ -327,12 +327,12 @@ mozilla::LogModule* GetMacAccessibilityLog() {
 
   return attributeNames;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (id)accessibilityAttributeValue:(NSString*)attribute
                      forParameter:(id)parameter {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if ([self isExpired]) {
     return nil;
@@ -369,19 +369,19 @@ mozilla::LogModule* GetMacAccessibilityLog() {
 
   return value;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (id)accessibilityHitTest:(NSPoint)point {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
   return [self moxHitTest:point];
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (id)accessibilityFocusedUIElement {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
   return [self moxFocusedUIElement];
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (BOOL)isAccessibilityElement {

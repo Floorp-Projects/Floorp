@@ -616,7 +616,7 @@ void nsCocoaUtils::NSRectToGeckoRect(const NSRect& aCocoaRect, nsIntRect& aOutGe
 
 // static
 NSEvent* nsCocoaUtils::MakeNewCocoaEventWithType(NSEventType aEventType, NSEvent* aEvent) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSEvent* newEvent = [NSEvent keyEventWithType:aEventType
                                        location:[aEvent locationInWindow]
@@ -630,14 +630,14 @@ NSEvent* nsCocoaUtils::MakeNewCocoaEventWithType(NSEventType aEventType, NSEvent
                                         keyCode:[aEvent keyCode]];
   return newEvent;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 // static
 NSEvent* nsCocoaUtils::MakeNewCococaEventFromWidgetEvent(const WidgetKeyboardEvent& aKeyEvent,
                                                          NSInteger aWindowNumber,
                                                          NSGraphicsContext* aContext) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSEventType eventType;
   if (aKeyEvent.mMessage == eKeyUp) {
@@ -683,7 +683,7 @@ NSEvent* nsCocoaUtils::MakeNewCococaEventFromWidgetEvent(const WidgetKeyboardEve
                          isARepeat:NO
                            keyCode:0];  // Native key code not currently needed
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 // static
@@ -1043,7 +1043,7 @@ uint32_t nsCocoaUtils::ConvertGeckoKeyCodeToMacCharCode(uint32_t aKeyCode) {
 NSMutableAttributedString* nsCocoaUtils::GetNSMutableAttributedString(
     const nsAString& aText, const nsTArray<mozilla::FontRange>& aFontRanges, const bool aIsVertical,
     const CGFloat aBackingScaleFactor) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN
 
   NSString* nsstr = nsCocoaUtils::ToNSString(aText);
   NSMutableAttributedString* attrStr =
@@ -1073,7 +1073,7 @@ NSMutableAttributedString* nsCocoaUtils::GetNSMutableAttributedString(
 
   return attrStr;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil)
 }
 
 TimeStamp nsCocoaUtils::GetEventTimeStamp(NSTimeInterval aEventTime) {

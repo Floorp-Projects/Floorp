@@ -826,7 +826,7 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal* aThread, bool aEventWasProc
 //
 // Constructs the AppShellDelegate object
 - (id)initWithAppShell:(nsAppShell*)aAppShell {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if ((self = [self init])) {
     mAppShell = aAppShell;
@@ -848,7 +848,7 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal* aThread, bool aEventWasProc
 
   return self;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (void)dealloc {

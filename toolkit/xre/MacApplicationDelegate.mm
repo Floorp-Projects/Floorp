@@ -233,7 +233,7 @@ void ProcessPendingGetURLAppleEvents() {
 
 // Create the menu that shows up in the Dock.
 - (NSMenu*)applicationDockMenu:(NSApplication*)sender {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   // Create the NSMenu that will contain the dock menu items.
   NSMenu* menu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
@@ -276,7 +276,7 @@ void ProcessPendingGetURLAppleEvents() {
 
   return menu;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (void)applicationWillFinishLaunching:(NSNotification*)notification {

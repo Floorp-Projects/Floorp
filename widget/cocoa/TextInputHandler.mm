@@ -3411,7 +3411,7 @@ uint32_t IMEInputHandler::GetRangeCount(NSAttributedString* aAttrString) {
 
 already_AddRefed<mozilla::TextRangeArray> IMEInputHandler::CreateTextRangeArray(
     NSAttributedString* aAttrString, NSRange& aSelectedRange) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   RefPtr<mozilla::TextRangeArray> textRangeArray = new mozilla::TextRangeArray();
 
@@ -3953,7 +3953,7 @@ void IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString, NSRange& aS
 
 NSAttributedString* IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange,
                                                                      NSRange* aActualRange) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   MOZ_LOG(gLog, LogLevel::Info,
           ("%p IMEInputHandler::GetAttributedSubstringFromRange, "
@@ -4040,7 +4040,7 @@ NSAttributedString* IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aR
   }
   return result;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 bool IMEInputHandler::HasMarkedText() {
@@ -4277,7 +4277,7 @@ extern NSString* NSTextInputReplacementRangeAttributeName;
 }
 
 NSArray* IMEInputHandler::GetValidAttributesForMarkedText() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   MOZ_LOG(gLog, LogLevel::Info, ("%p IMEInputHandler::GetValidAttributesForMarkedText", this));
 
@@ -4290,7 +4290,7 @@ NSArray* IMEInputHandler::GetValidAttributesForMarkedText() {
                                    NSMarkedClauseSegmentAttributeName,
                                    NSTextInputReplacementRangeAttributeName, nil];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 #pragma mark -

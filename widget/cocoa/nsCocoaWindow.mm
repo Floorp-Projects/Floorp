@@ -2672,7 +2672,7 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
 }
 
 - (id)initWithGeckoWindow:(nsCocoaWindow*)geckoWind {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   [super init];
   mGeckoWindow = geckoWind;
@@ -2680,7 +2680,7 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
   mHasEverBeenZoomed = false;
   return self;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (NSSize)windowWillResize:(NSWindow*)sender toSize:(NSSize)proposedFrameSize {
@@ -3435,7 +3435,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 }
 
 - (id)accessibilityAttributeValue:(NSString*)attribute {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   id retval = [super accessibilityAttributeValue:attribute];
 
@@ -3480,7 +3480,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 
   return retval;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (void)releaseJSObjects {
@@ -3563,7 +3563,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
                 styleMask:(NSUInteger)aStyle
                   backing:(NSBackingStoreType)aBufferingType
                     defer:(BOOL)aFlag {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   // We treat aChildViewRect as the rectangle that the window's main ChildView
   // should be sized to. Get the right frameRect for the requested child view
@@ -3602,7 +3602,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   }
   return self;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (void)dealloc {
@@ -3875,7 +3875,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
                 styleMask:(NSUInteger)styleMask
                   backing:(NSBackingStoreType)bufferingType
                     defer:(BOOL)deferCreation {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   mIsContextMenu = false;
   return [super initWithContentRect:contentRect
@@ -3883,7 +3883,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
                             backing:bufferingType
                               defer:deferCreation];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 // Override the private API _backdropBleedAmount. This determines how much the

@@ -93,7 +93,7 @@ nsFilePicker::~nsFilePicker() {}
 void nsFilePicker::InitNative(nsIWidget* aParent, const nsAString& aTitle) { mTitle = aTitle; }
 
 NSView* nsFilePicker::GetAccessoryView() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSView* accessoryView = [[[NSView alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)] autorelease];
 
@@ -177,7 +177,7 @@ NSView* nsFilePicker::GetAccessoryView() {
   [accessoryView addSubview:popupButton];
   return accessoryView;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 // Display the file dialog
@@ -497,7 +497,7 @@ int16_t nsFilePicker::PutLocalFile(nsIFile** outFile) {
 }
 
 NSArray* nsFilePicker::GetFilterList() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (!mFilters.Length()) {
     return nil;
@@ -533,7 +533,7 @@ NSArray* nsFilePicker::GetFilterList() {
   return
       [[[NSArray alloc] initWithArray:[filterString componentsSeparatedByString:@";"]] autorelease];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 // Sets the dialog title to whatever it should be.  If it fails, eh,
@@ -555,7 +555,7 @@ void nsFilePicker::SetDialogTitle(const nsString& inTitle, id aPanel) {
 // Converts path from an nsIFile into a NSString path
 // If it fails, returns an empty string.
 NSString* nsFilePicker::PanelDefaultDirectory() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSString* directory = nil;
   if (mDisplayDirectory) {
@@ -567,7 +567,7 @@ NSString* nsFilePicker::PanelDefaultDirectory() {
   }
   return directory;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 NS_IMETHODIMP nsFilePicker::GetFile(nsIFile** aFile) {

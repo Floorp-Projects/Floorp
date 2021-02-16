@@ -124,34 +124,34 @@
 @implementation nsMacCursor
 
 + (nsMacCursor*)cursorWithCursor:(NSCursor*)aCursor type:(nsCursor)aType {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   return [[[nsCocoaCursor alloc] initWithCursor:aCursor type:aType] autorelease];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 + (nsMacCursor*)cursorWithImageNamed:(NSString*)aCursorImage
                              hotSpot:(NSPoint)aPoint
                                 type:(nsCursor)aType {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   return [[[nsCocoaCursor alloc] initWithImageNamed:aCursorImage hotSpot:aPoint
                                                type:aType] autorelease];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 + (nsMacCursor*)cursorWithFrames:(NSArray*)aCursorFrames type:(nsCursor)aType {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   return [[[nsCocoaCursor alloc] initWithFrames:aCursorFrames type:aType] autorelease];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 + (NSCursor*)cocoaCursorWithImageNamed:(NSString*)imageName hotSpot:(NSPoint)aPoint {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   nsCOMPtr<nsIFile> resDir;
   nsAutoCString resPath;
@@ -196,7 +196,7 @@ INIT_FAILURE:
   [self release];
   return nil;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (BOOL)isSet {
@@ -290,7 +290,7 @@ INIT_FAILURE:
 @implementation nsCocoaCursor
 
 - (id)initWithFrames:(NSArray*)aCursorFrames type:(nsCursor)aType {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   self = [super init];
   NSEnumerator* it = [aCursorFrames objectEnumerator];
@@ -304,25 +304,25 @@ INIT_FAILURE:
   mType = aType;
   return self;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (id)initWithCursor:(NSCursor*)aCursor type:(nsCursor)aType {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSArray* frame = [NSArray arrayWithObjects:aCursor, nil];
   return [self initWithFrames:frame type:aType];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (id)initWithImageNamed:(NSString*)aCursorImage hotSpot:(NSPoint)aPoint type:(nsCursor)aType {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   return [self initWithCursor:[nsMacCursor cocoaCursorWithImageNamed:aCursorImage hotSpot:aPoint]
                          type:aType];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (BOOL)isSet {
@@ -348,11 +348,11 @@ INIT_FAILURE:
 }
 
 - (NSString*)description {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   return [mFrames description];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (void)dealloc {

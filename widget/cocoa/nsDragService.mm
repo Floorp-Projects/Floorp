@@ -58,7 +58,7 @@ nsDragService::~nsDragService() {}
 
 NSImage* nsDragService::ConstructDragImage(nsINode* aDOMNode, const Maybe<CSSIntRegion>& aRegion,
                                            NSPoint* aDragPoint) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(mNativeDragView);
 
@@ -89,12 +89,12 @@ NSImage* nsDragService::ConstructDragImage(nsINode* aDOMNode, const Maybe<CSSInt
 
   return image;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 NSImage* nsDragService::ConstructDragImage(nsINode* aDOMNode, const Maybe<CSSIntRegion>& aRegion,
                                            CSSIntPoint aPoint, LayoutDeviceIntRect* aDragRect) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(mNativeDragView);
 
@@ -172,7 +172,7 @@ NSImage* nsDragService::ConstructDragImage(nsINode* aDOMNode, const Maybe<CSSInt
 
   return [image autorelease];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 bool nsDragService::IsValidType(NSString* availableType, bool allowFileURL) {
@@ -195,7 +195,7 @@ bool nsDragService::IsValidType(NSString* availableType, bool allowFileURL) {
 
 NSString* nsDragService::GetStringForType(NSPasteboardItem* item, const NSString* type,
                                           bool allowFileURL) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSString* availableType = [item availableTypeFromArray:[NSArray arrayWithObjects:(id)type, nil]];
   if (availableType && IsValidType(availableType, allowFileURL)) {
@@ -204,11 +204,11 @@ NSString* nsDragService::GetStringForType(NSPasteboardItem* item, const NSString
 
   return nil;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 NSString* nsDragService::GetTitleForURL(NSPasteboardItem* item) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSString* name =
       GetStringForType(item, [UTIHelper stringFromPboardType:kPublicUrlNamePboardType]);
@@ -223,11 +223,11 @@ NSString* nsDragService::GetTitleForURL(NSPasteboardItem* item) {
 
   return nil;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 NSString* nsDragService::GetFilePath(NSPasteboardItem* item) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSString* urlString =
       GetStringForType(item, [UTIHelper stringFromPboardType:(NSString*)kUTTypeFileURL], true);
@@ -240,7 +240,7 @@ NSString* nsDragService::GetFilePath(NSPasteboardItem* item) {
 
   return nil;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 nsresult nsDragService::InvokeDragSessionImpl(nsIArray* aTransferableArray,
