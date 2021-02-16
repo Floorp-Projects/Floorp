@@ -1827,11 +1827,12 @@ AttachDecision GetPropIRGenerator::tryAttachDataView(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
-  if (!JSID_IS_ATOM(id, cx_->names().byteOffset)) {
+  bool isByteOffset = JSID_IS_ATOM(id, cx_->names().byteOffset);
+  if (!isByteOffset && !JSID_IS_ATOM(id, cx_->names().byteLength)) {
     return AttachDecision::NoAction;
   }
 
-  // byteOffset throws when the ArrayBuffer is detached.
+  // byteOffset and byteLength both throw when the ArrayBuffer is detached.
   if (dv->hasDetachedBuffer()) {
     return AttachDecision::NoAction;
   }
@@ -1845,8 +1846,14 @@ AttachDecision GetPropIRGenerator::tryAttachDataView(HandleObject obj,
   }
 
   auto& fun = shape->getterValue().toObject().as<JSFunction>();
-  if (!DataViewObject::isOriginalByteOffsetGetter(fun.native())) {
-    return AttachDecision::NoAction;
+  if (isByteOffset) {
+    if (!DataViewObject::isOriginalByteOffsetGetter(fun.native())) {
+      return AttachDecision::NoAction;
+    }
+  } else {
+    if (!DataViewObject::isOriginalByteLengthGetter(fun.native())) {
+      return AttachDecision::NoAction;
+    }
   }
 
   maybeEmitIdGuard(id);
@@ -1854,14 +1861,23 @@ AttachDecision GetPropIRGenerator::tryAttachDataView(HandleObject obj,
   // callNativeGetterResult.
   EmitCallGetterResultGuards(writer, obj, holder, shape, objId, mode_);
   writer.guardHasAttachedArrayBuffer(objId);
-  if (dv->byteOffset().get() <= INT32_MAX) {
-    writer.arrayBufferViewByteOffsetInt32Result(objId);
+  if (isByteOffset) {
+    if (dv->byteOffset().get() <= INT32_MAX) {
+      writer.arrayBufferViewByteOffsetInt32Result(objId);
+    } else {
+      writer.arrayBufferViewByteOffsetDoubleResult(objId);
+    }
+    trackAttached("DataViewByteOffset");
   } else {
-    writer.arrayBufferViewByteOffsetDoubleResult(objId);
+    if (dv->byteLength().get() <= INT32_MAX) {
+      writer.loadArrayBufferViewLengthInt32Result(objId);
+    } else {
+      writer.loadArrayBufferViewLengthDoubleResult(objId);
+    }
+    trackAttached("DataViewByteLength");
   }
   writer.returnFromIC();
 
-  trackAttached("DataViewByteOffset");
   return AttachDecision::Attach;
 }
 
