@@ -242,7 +242,7 @@ static void UpdatePanelFileTypes(NSOpenPanel* aPanel, NSArray* aFilters) {
 }
 
 - (void)menuChangedItem:(NSNotification*)aSender {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
   int32_t selectedItem = [mPopUpButton indexOfSelectedItem];
   if (selectedItem < 0) {
     return;
@@ -251,13 +251,13 @@ static void UpdatePanelFileTypes(NSOpenPanel* aPanel, NSArray* aFilters) {
   mFilePicker->SetFilterIndex(selectedItem);
   UpdatePanelFileTypes(mOpenPanel, mFilePicker->GetFilterList());
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN();
+  NS_OBJC_END_TRY_BLOCK_RETURN();
 }
 @end
 
 // Use OpenPanel to do a GetFile. Returns |returnOK| if the user presses OK in the dialog.
 int16_t nsFilePicker::GetLocalFiles(bool inAllowMultiple, nsCOMArray<nsIFile>& outFiles) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   int16_t retVal = (int16_t)returnCancel;
   NSOpenPanel* thePanel = [NSOpenPanel openPanel];
@@ -351,12 +351,12 @@ int16_t nsFilePicker::GetLocalFiles(bool inAllowMultiple, nsCOMArray<nsIFile>& o
 
   return retVal;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
+  NS_OBJC_END_TRY_BLOCK_RETURN(0);
 }
 
 // Use OpenPanel to do a GetFolder. Returns |returnOK| if the user presses OK in the dialog.
 int16_t nsFilePicker::GetLocalFolder(nsIFile** outFile) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
   NS_ASSERTION(outFile, "this protected member function expects a null initialized out pointer");
 
   int16_t retVal = (int16_t)returnCancel;
@@ -402,12 +402,12 @@ int16_t nsFilePicker::GetLocalFolder(nsIFile** outFile) {
 
   return retVal;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
+  NS_OBJC_END_TRY_BLOCK_RETURN(0);
 }
 
 // Returns |returnOK| if the user presses OK in the dialog.
 int16_t nsFilePicker::PutLocalFile(nsIFile** outFile) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
   NS_ASSERTION(outFile, "this protected member function expects a null initialized out pointer");
 
   int16_t retVal = returnCancel;
@@ -493,7 +493,7 @@ int16_t nsFilePicker::PutLocalFile(nsIFile** outFile) {
 
   return retVal;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
+  NS_OBJC_END_TRY_BLOCK_RETURN(0);
 }
 
 NSArray* nsFilePicker::GetFilterList() {

@@ -194,7 +194,7 @@ mozilla::LogModule* GetMacAccessibilityLog() {
 }
 
 - (BOOL)accessibilityIsAttributeSettable:(NSString*)attribute {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if ([self isExpired]) {
     return NO;
@@ -217,7 +217,7 @@ mozilla::LogModule* GetMacAccessibilityLog() {
     }
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
+  NS_OBJC_END_TRY_BLOCK_RETURN(NO);
 }
 
 - (void)accessibilitySetValue:(id)value forAttribute:(NSString*)attribute {
@@ -385,7 +385,7 @@ mozilla::LogModule* GetMacAccessibilityLog() {
 }
 
 - (BOOL)isAccessibilityElement {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if ([self isExpired]) {
     return YES;
@@ -398,7 +398,7 @@ mozilla::LogModule* GetMacAccessibilityLog() {
 
   return ![self moxIgnoreWithParent:parent];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
+  NS_OBJC_END_TRY_BLOCK_RETURN(NO);
 }
 
 - (BOOL)accessibilityNotifiesWhenDestroyed {

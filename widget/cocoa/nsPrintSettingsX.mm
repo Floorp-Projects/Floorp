@@ -93,7 +93,7 @@ static const KnownMonochromeSetting kKnownMonochromeSettings[] = {
 #undef DECLARE_KNOWN_MONOCHROME_SETTING
 
 NSPrintInfo* nsPrintSettingsX::CreateOrCopyPrintInfo(bool aWithScaling) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   // If we have a printInfo that came from the system print UI, use it so that
   // any printer-specific settings we don't know about will still be used.
@@ -224,7 +224,7 @@ NSPrintInfo* nsPrintSettingsX::CreateOrCopyPrintInfo(bool aWithScaling) {
 
   return printInfo;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nullptr);
+  NS_OBJC_END_TRY_BLOCK_RETURN(nullptr);
 }
 
 void nsPrintSettingsX::SetFromPrintInfo(NSPrintInfo* aPrintInfo, bool aAdoptPrintInfo) {

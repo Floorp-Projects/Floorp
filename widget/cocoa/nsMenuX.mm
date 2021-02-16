@@ -239,7 +239,7 @@ nsresult nsMenuX::AddMenuItem(nsMenuItemX* aMenuItem) {
 }
 
 nsMenuX* nsMenuX::AddMenu(UniquePtr<nsMenuX> aMenu) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   // aMenu transfers ownership to mMenuObjectsArray and becomes nullptr, so
   // we need to keep a raw pointer to access it conveniently.
@@ -261,7 +261,7 @@ nsMenuX* nsMenuX::AddMenu(UniquePtr<nsMenuX> aMenu) {
 
   return menu;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nullptr);
+  NS_OBJC_END_TRY_BLOCK_RETURN(nullptr);
 }
 
 // Includes all items, including hidden/collapsed ones
@@ -904,27 +904,27 @@ static NSMutableDictionary* gShadowKeyEquivDB = nil;
 }
 
 - (BOOL)hasTable:(NSMapTable*)aTable {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   return [mTables member:[NSValue valueWithPointer:aTable]] ? YES : NO;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
+  NS_OBJC_END_TRY_BLOCK_RETURN(NO);
 }
 
 // Does nothing if aTable (its index value) is already present in mTables.
 - (int)addTable:(NSMapTable*)aTable {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (aTable) {
     [mTables addObject:[NSValue valueWithPointer:aTable]];
   }
   return [mTables count];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
+  NS_OBJC_END_TRY_BLOCK_RETURN(0);
 }
 
 - (int)removeTable:(NSMapTable*)aTable {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if (aTable) {
     NSValue* objectToRemove = [mTables member:[NSValue valueWithPointer:aTable]];
@@ -934,7 +934,7 @@ static NSMutableDictionary* gShadowKeyEquivDB = nil;
   }
   return [mTables count];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
+  NS_OBJC_END_TRY_BLOCK_RETURN(0);
 }
 
 @end

@@ -218,12 +218,12 @@ void nsMenuBarX::ConstructFallbackNativeMenus() {
 uint32_t nsMenuBarX::GetMenuCount() { return mMenuArray.Length(); }
 
 bool nsMenuBarX::MenuContainsAppMenu() {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   return ([mNativeMenu numberOfItems] > 0 &&
           [[mNativeMenu itemAtIndex:0] submenu] == sApplicationMenu);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
+  NS_OBJC_END_TRY_BLOCK_RETURN(false);
 }
 
 nsresult nsMenuBarX::InsertMenuAtIndex(nsMenuX* aMenu, uint32_t aIndex) {
