@@ -829,6 +829,20 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateShadowStorageConnection(
 
   LS_TRY(SetShadowJournalMode(connection));
 
+  // XXX Depending on whether the *first* call to OpenUnsharedDatabase above
+  // failed, we (a) might or (b) might not be dealing with a fresh database
+  // here. This is confusing, since in a failure of case (a) we would do the
+  // same thing again. Probably, the control flow should be changed here so that
+  // it's clear we only delete & create a fresh database once. If we still have
+  // a failure then, we better give up. Or, if we really want to handle that,
+  // the number of 2 retries seems arbitrary, and we should better do this in
+  // some loop until a maximum number of retries is reached.
+  //
+  // Compare this with QuotaManager::CreateLocalStorageArchiveConnection, which
+  // actually tracks if the file was removed before, but it's also more
+  // complicated than it should be. Maybe these two methods can be merged (which
+  // would mean that a parameter must be added that indicates whether it's
+  // handling the shadow file or not).
   LS_TRY(ToResult(StorageDBUpdater::Update(connection))
              .orElse([&connection, &shadowFile,
                       &ss](const nsresult) -> Result<Ok, nsresult> {
@@ -842,7 +856,7 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateShadowStorageConnection(
 
                LS_TRY(SetShadowJournalMode(connection));
 
-               LS_TRY(StorageDBUpdater::Update(connection));
+               LS_TRY(StorageDBUpdater::CreateCurrentSchema(connection));
 
                return Ok{};
              }));
