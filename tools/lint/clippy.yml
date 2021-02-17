@@ -16,7 +16,6 @@ clippy:
         - js/src/frontend/smoosh/
         - js/src/rust/shared/
         - js/src/wasm/cranelift/
-        - media/audioipc/
         - modules/libpref/init/static_prefs/
         - mozglue/static/rust/
         - netwerk/base/mozurl/
@@ -89,9 +88,6 @@ clippy:
         - xpcom/rust/gkrust_utils/
         - netwerk/socket/neqo_glue/
         - dom/media/webrtc/transport/mdns_service/
-        - media/audioipc/client/
-        - media/audioipc/audioipc/
-        - media/audioipc/server/
         - tools/lint/test/files/clippy/
         - servo/components/hashglobe/
         - servo/ports/geckolib/
