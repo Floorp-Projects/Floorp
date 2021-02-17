@@ -270,7 +270,7 @@ void RDDParent::ActorDestroy(ActorDestroyReason aWhy) {
 
   // Wait until all RemoteDecoderManagerParent have closed.
   mShutdownBlockers.WaitUntilClear(10 * 1000 /* 10s timeout*/)
-      ->Then(GetCurrentSerialEventTarget(), __func__, [this]() {
+      ->Then(GetCurrentSerialEventTarget(), __func__, [&]() {
 
 #ifdef XP_WIN
         wmf::MFShutdown();

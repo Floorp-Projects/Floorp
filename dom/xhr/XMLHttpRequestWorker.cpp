@@ -8,6 +8,7 @@
 
 #include "nsIDOMEventListener.h"
 
+#include "GeckoProfiler.h"
 #include "jsapi.h"  // JS::RootedValueArray
 #include "jsfriendapi.h"
 #include "js/ArrayBuffer.h"  // JS::Is{,Detached}ArrayBufferObject
@@ -45,6 +46,7 @@
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
+
 namespace dom {
 
 /**
