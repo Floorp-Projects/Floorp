@@ -32,6 +32,23 @@ const fileBase = "test_empty_file.zip";
 const file = do_get_file("data/" + fileBase);
 const jarBase = "jar:" + Services.io.newFileURI(file).spec + "!";
 const tmpDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
+var copy;
+
+function setup() {
+  copy = tmpDir.clone();
+  copy.append("zzdxphd909dbc6r2bxtqss2m000017");
+  copy.append("zzdxphd909dbc6r2bxtqss2m000017");
+  copy.append(fileBase);
+  file.copyTo(copy.parent, copy.leafName);
+}
+
+setup();
+
+registerCleanupFunction(async () => {
+  try {
+    copy.remove(false);
+  } catch (e) {}
+});
 
 function Listener(callback) {
   this._callback = callback;
@@ -64,44 +81,73 @@ Listener.prototype = {
 };
 
 const TELEMETRY_EVENTS_FILTERS = {
-  category: "network.jar.channel",
-  method: "noData",
+  category: "zero_byte_load",
+  method: "load",
 };
 
-add_task(async function test_empty_jar_file() {
-  var copy = tmpDir.clone();
-  copy.append("zzdxphd909dbc6r2bxtqss2m000017");
-  copy.append("zzdxphd909dbc6r2bxtqss2m000017");
-  copy.append(fileBase);
-  file.copyTo(copy.parent, copy.leafName);
-
+function makeChan() {
   var uri = "jar:" + Services.io.newFileURI(copy).spec + "!/test.txt";
   var chan = NetUtil.newChannel({ uri, loadUsingSystemPrincipal: true });
+  return chan;
+}
 
-  Services.telemetry.setEventRecordingEnabled("network.jar.channel", true);
+add_task(async function test_empty_jar_file_async() {
+  var chan = makeChan();
+
+  Services.telemetry.setEventRecordingEnabled("zero_byte_load", true);
   Services.telemetry.clearEvents();
 
   await new Promise(resolve => {
     chan.asyncOpen(
       new Listener(function(l) {
         Assert.ok(chan.contentLength == 0);
-
         resolve();
       })
     );
   });
 
-  try {
-    copy.remove(false);
-  } catch (e) {}
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        category: "zero_byte_load",
+        method: "load",
+        object: "others",
+        value: null,
+        extra: {
+          sync: "false",
+          file_name: `${fileBase}!/test.txt`,
+          status: "NS_OK",
+        },
+      },
+    ],
+    TELEMETRY_EVENTS_FILTERS
+  );
+});
+
+add_task(async function test_empty_jar_file_sync() {
+  var chan = makeChan();
+
+  Services.telemetry.setEventRecordingEnabled("zero_byte_load", true);
+  Services.telemetry.clearEvents();
+
+  await new Promise(resolve => {
+    let stream = chan.open();
+    Assert.equal(stream.available(), 0);
+    resolve();
+  });
 
   TelemetryTestUtils.assertEvents(
     [
       {
-        category: "network.jar.channel",
-        method: "noData",
-        object: "onStop",
-        value: `${fileBase}!/test.txt`,
+        category: "zero_byte_load",
+        method: "load",
+        object: "others",
+        value: null,
+        extra: {
+          sync: "true",
+          file_name: `${fileBase}!/test.txt`,
+          status: "NS_OK",
+        },
       },
     ],
     TELEMETRY_EVENTS_FILTERS
