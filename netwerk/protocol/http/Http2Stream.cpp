@@ -1162,6 +1162,7 @@ void Http2Stream::Close(nsresult reason) {
   ClearPushSource();
 
   mTransaction->Close(reason);
+  mSession = nullptr;
 }
 
 void Http2Stream::SetResponseIsComplete() {
