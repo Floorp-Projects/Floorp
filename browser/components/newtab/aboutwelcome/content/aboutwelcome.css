@@ -493,12 +493,12 @@ body {
         background-color: initial; }
   .onboardingContainer .secondary-cta {
     display: flex;
-    align-items: end;
     flex-direction: row;
     justify-content: center;
     font-size: 14px; }
     .onboardingContainer .secondary-cta.top {
       justify-content: end;
+      align-items: end;
       padding-inline-end: 30px;
       padding-top: 4px; }
       @media (max-width: 610px) {
