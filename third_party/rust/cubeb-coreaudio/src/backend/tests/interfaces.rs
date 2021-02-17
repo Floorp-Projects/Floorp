@@ -532,16 +532,6 @@ fn test_ops_stream_stop() {
 }
 
 #[test]
-fn test_ops_stream_reset_default_device() {
-    test_default_output_stream_operation("stream: reset default device", |stream| {
-        assert_eq!(
-            unsafe { OPS.stream_reset_default_device.unwrap()(stream) },
-            ffi::CUBEB_ERROR_NOT_SUPPORTED
-        );
-    });
-}
-
-#[test]
 fn test_ops_stream_position() {
     test_default_output_stream_operation("stream: position", |stream| {
         let mut position = u64::max_value();

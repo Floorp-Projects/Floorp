@@ -45,7 +45,6 @@ pub trait ContextOps {
 pub trait StreamOps {
     fn start(&mut self) -> Result<()>;
     fn stop(&mut self) -> Result<()>;
-    fn reset_default_device(&mut self) -> Result<()>;
     fn position(&mut self) -> Result<u64>;
     fn latency(&mut self) -> Result<u32>;
     fn input_latency(&mut self) -> Result<u32>;

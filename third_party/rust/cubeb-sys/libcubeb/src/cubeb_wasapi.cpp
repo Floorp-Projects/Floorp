@@ -4,7 +4,7 @@
  * This program is made available under an ISC-style license.  See the
  * accompanying file LICENSE for details.
  */
-#define _WIN32_WINNT 0x0600
+#define _WIN32_WINNT 0x0603
 #define NOMINMAX
 
 #include <initguid.h>
@@ -779,12 +779,6 @@ hns_to_frames(cubeb_stream * stm, REFERENCE_TIME hns)
 }
 
 REFERENCE_TIME
-frames_to_hns(cubeb_stream * stm, uint32_t frames)
-{
-  return std::ceil(frames * 10000000.0 / get_rate(stm));
-}
-
-REFERENCE_TIME
 frames_to_hns(uint32_t rate, uint32_t frames)
 {
   return std::ceil(frames * 10000000.0 / rate);
@@ -867,7 +861,17 @@ refill(cubeb_stream * stm, void * input_buffer, long input_frames_count,
   return out_frames;
 }
 
-int wasapi_stream_reset_default_device(cubeb_stream * stm);
+int trigger_async_reconfigure(cubeb_stream * stm)
+{
+  XASSERT(stm && stm->reconfigure_event);
+  BOOL ok = SetEvent(stm->reconfigure_event);
+  if (!ok) {
+    LOG("SetEvent on reconfigure_event failed: %lx", GetLastError());
+    return CUBEB_ERROR;
+  }
+  return CUBEB_OK;
+}
+
 
 /* This helper grabs all the frames available from a capture client, put them in
  * linear_input_buffer. linear_input_buffer should be cleared before the
@@ -896,7 +900,7 @@ bool get_input_buffer(cubeb_stream * stm)
       // Application can recover from this error. More info
       // https://msdn.microsoft.com/en-us/library/windows/desktop/dd316605(v=vs.85).aspx
       LOG("Device invalidated error, reset default device");
-      wasapi_stream_reset_default_device(stm);
+      trigger_async_reconfigure(stm);
       return true;
     }
 
@@ -999,7 +1003,7 @@ bool get_output_buffer(cubeb_stream * stm, void *& buffer, size_t & frame_count)
       // Application can recover from this error. More info
       // https://msdn.microsoft.com/en-us/library/windows/desktop/dd316605(v=vs.85).aspx
       LOG("Device invalidated error, reset default device");
-      wasapi_stream_reset_default_device(stm);
+      trigger_async_reconfigure(stm);
       return true;
   }
 
@@ -1346,7 +1350,7 @@ void wasapi_destroy(cubeb * context);
 
 HRESULT register_notification_client(cubeb_stream * stm)
 {
-  assert(stm->device_enumerator);
+  XASSERT(stm->device_enumerator);
 
   stm->notification_client.reset(new wasapi_endpoint_notification_client(stm->reconfigure_event, stm->role));
 
@@ -1354,7 +1358,6 @@ HRESULT register_notification_client(cubeb_stream * stm)
   if (FAILED(hr)) {
     LOG("Could not register endpoint notification callback: %lx", hr);
     stm->notification_client = nullptr;
-    stm->device_enumerator = nullptr;
   }
 
   return hr;
@@ -1362,18 +1365,12 @@ HRESULT register_notification_client(cubeb_stream * stm)
 
 HRESULT unregister_notification_client(cubeb_stream * stm)
 {
-  XASSERT(stm);
-  HRESULT hr;
+  XASSERT(stm->device_enumerator);
 
-  if (!stm->device_enumerator) {
-    return S_OK;
-  }
-
-  hr = stm->device_enumerator->UnregisterEndpointNotificationCallback(stm->notification_client.get());
+  HRESULT hr = stm->device_enumerator->UnregisterEndpointNotificationCallback(stm->notification_client.get());
   if (FAILED(hr)) {
     // We can't really do anything here, we'll probably leak the
-    // notification client, but we can at least release the enumerator.
-    stm->device_enumerator = nullptr;
+    // notification client.
     return S_OK;
   }
 
@@ -1813,6 +1810,29 @@ handle_channel_layout(cubeb_stream * stm,  EDataFlow direction, com_heap_ptr<WAV
 }
 
 static bool
+initialize_iaudioclient2(com_ptr<IAudioClient> & audio_client)
+{
+  com_ptr<IAudioClient2> audio_client2;
+  audio_client->QueryInterface<IAudioClient2>(audio_client2.receive());
+  if (!audio_client2) {
+    LOG("Could not get IAudioClient2 interface, not setting AUDCLNT_STREAMOPTIONS_RAW.");
+    return CUBEB_OK;
+  }
+  AudioClientProperties properties = { 0 };
+  properties.cbSize = sizeof(AudioClientProperties);
+#ifndef __MINGW32__
+  properties.Options |= AUDCLNT_STREAMOPTIONS_RAW;
+#endif
+  HRESULT hr = audio_client2->SetClientProperties(&properties);
+  if (FAILED(hr)) {
+    LOG("IAudioClient2::SetClientProperties error: %lx", GetLastError());
+    return CUBEB_ERROR;
+  }
+  return CUBEB_OK;
+}
+
+// Not static to suppress a warning.
+/* static */ bool
 initialize_iaudioclient3(com_ptr<IAudioClient> & audio_client,
                          cubeb_stream * stm,
                          const com_heap_ptr<WAVEFORMATEX> & mix_format,
@@ -1835,7 +1855,7 @@ initialize_iaudioclient3(com_ptr<IAudioClient> & audio_client,
 
   // IAudioClient3 doesn't support AUDCLNT_STREAMFLAGS_NOPERSIST, and will return
   // AUDCLNT_E_INVALID_STREAM_FLAG. This is undocumented.
-  flags = flags ^ AUDCLNT_STREAMFLAGS_NOPERSIST;
+  flags = flags & ~AUDCLNT_STREAMFLAGS_NOPERSIST;
 
   // Some people have reported glitches with capture streams:
   // http://blog.nirbheek.in/2018/03/low-latency-audio-on-windows-with.html
@@ -2008,6 +2028,23 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
   com_heap_ptr<WAVEFORMATEX> mix_format(tmp);
 
   mix_format->wBitsPerSample = stm->bytes_per_sample * 8;
+  if (mix_format->wFormatTag == WAVE_FORMAT_PCM ||
+      mix_format->wFormatTag == WAVE_FORMAT_IEEE_FLOAT) {
+    switch (mix_format->wBitsPerSample) {
+    case 8:
+    case 16:
+      mix_format->wFormatTag = WAVE_FORMAT_PCM;
+      break;
+    case 32:
+      mix_format->wFormatTag = WAVE_FORMAT_IEEE_FLOAT;
+      break;
+    default:
+      LOG("%u bits per sample is incompatible with PCM wave formats",
+          mix_format->wBitsPerSample);
+      return CUBEB_ERROR;
+    }
+  }
+
   if (mix_format->wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
     WAVEFORMATEXTENSIBLE * format_pcm = reinterpret_cast<WAVEFORMATEXTENSIBLE *>(mix_format.get());
     format_pcm->SubFormat = stm->waveformatextensible_sub_format;
@@ -2032,7 +2069,13 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
       mix_params->format, mix_params->rate, mix_params->channels,
       mix_params->layout);
 
-  DWORD flags = AUDCLNT_STREAMFLAGS_NOPERSIST;
+
+  DWORD flags = 0;
+
+  bool is_persist = stream_params->prefs & CUBEB_STREAM_PREF_PERSIST;
+  if (!is_persist) {
+    flags |= AUDCLNT_STREAMFLAGS_NOPERSIST;
+  }
 
   // Check if a loopback device should be requested. Note that event callbacks
   // do not work with loopback devices, so only request these if not looping.
@@ -2057,9 +2100,11 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
   cubeb_device_info device_info;
   int rv = wasapi_create_device(stm->context, device_info, stm->device_enumerator.get(), device.get());
   if (rv == CUBEB_OK) {
-    const char* HANDSFREE_TAG = "BTHHFEENUM";
+    const char* HANDSFREE_TAG = "BTHHFENUM";
     size_t len = sizeof(HANDSFREE_TAG);
-    if (direction == eCapture && strncmp(device_info.group_id, HANDSFREE_TAG, len) == 0) {
+    if (direction == eCapture &&
+        strlen(device_info.group_id) >= len &&
+        strncmp(device_info.group_id, HANDSFREE_TAG, len) == 0) {
       // Rather high-latency to prevent constant under-runs in this particular
       // case of an input device using bluetooth handsfree.
       uint32_t default_period_frames = hns_to_frames(device_info.default_rate, default_period);
@@ -2080,6 +2125,13 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
     stm->input_bluetooth_handsfree = false;
     latency_hns = frames_to_hns(mix_params->rate, latency_frames);
     LOG("Could not get cubeb_device_info.");
+  }
+
+  if (stream_params->prefs & CUBEB_STREAM_PREF_RAW) {
+    if (initialize_iaudioclient2(audio_client) != CUBEB_OK) {
+      LOG("Can't initialize an IAudioClient2, error: %lx", GetLastError());
+      // This is not fatal.
+    }
   }
 
 #if 0 // See https://bugzilla.mozilla.org/show_bug.cgi?id=1590902
@@ -2131,7 +2183,7 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
 
 void wasapi_find_matching_output_device(cubeb_stream * stm) {
   HRESULT hr;
-  cubeb_device_info * input_device;
+  cubeb_device_info * input_device = nullptr;
   cubeb_device_collection collection;
 
   // Only try to match to an output device if the input device is a bluetooth
@@ -2153,6 +2205,9 @@ void wasapi_find_matching_output_device(cubeb_stream * stm) {
   }
 
   int rv = wasapi_enumerate_devices(stm->context, (cubeb_device_type)(CUBEB_DEVICE_TYPE_INPUT|CUBEB_DEVICE_TYPE_OUTPUT), &collection);
+  if (rv != CUBEB_OK) {
+    return;
+  }
 
   // Find the input device, and then find the output device with the same group
   // id and the same rate.
@@ -2166,11 +2221,13 @@ void wasapi_find_matching_output_device(cubeb_stream * stm) {
 
   for (uint32_t i = 0; i < collection.count; i++) {
     cubeb_device_info dev = collection.device[i];
-    if (dev.type == CUBEB_DEVICE_TYPE_OUTPUT &&
-        dev.group_id && !strcmp(dev.group_id, input_device->group_id) &&
+    if (dev.type == CUBEB_DEVICE_TYPE_OUTPUT && dev.group_id && input_device &&
+        !strcmp(dev.group_id, input_device->group_id) &&
         dev.default_rate == input_device->default_rate) {
-      LOG("Found matching device for %s: %s", input_device->friendly_name, dev.friendly_name);
-      stm->output_device_id = utf8_to_wstr(reinterpret_cast<char const *>(dev.devid));
+      LOG("Found matching device for %s: %s", input_device->friendly_name,
+          dev.friendly_name);
+      stm->output_device_id =
+          utf8_to_wstr(reinterpret_cast<char const *>(dev.devid));
     }
   }
 
@@ -2696,17 +2753,6 @@ int wasapi_stream_stop(cubeb_stream * stm)
   return CUBEB_OK;
 }
 
-int wasapi_stream_reset_default_device(cubeb_stream * stm)
-{
-  XASSERT(stm && stm->reconfigure_event);
-  BOOL ok = SetEvent(stm->reconfigure_event);
-  if (!ok) {
-    LOG("SetEvent on reconfigure_event failed: %lx", GetLastError());
-    return CUBEB_ERROR;
-  }
-  return CUBEB_OK;
-}
-
 int wasapi_stream_get_position(cubeb_stream * stm, uint64_t * position)
 {
   XASSERT(stm && position);
@@ -3206,7 +3252,6 @@ cubeb_ops const wasapi_ops = {
   /*.stream_destroy =*/ wasapi_stream_destroy,
   /*.stream_start =*/ wasapi_stream_start,
   /*.stream_stop =*/ wasapi_stream_stop,
-  /*.stream_reset_default_device =*/ wasapi_stream_reset_default_device,
   /*.stream_get_position =*/ wasapi_stream_get_position,
   /*.stream_get_latency =*/ wasapi_stream_get_latency,
   /*.stream_get_input_latency =*/ wasapi_stream_get_input_latency,

@@ -91,9 +91,6 @@ impl StreamOps for TestStream {
     fn stop(&mut self) -> Result<()> {
         Ok(())
     }
-    fn reset_default_device(&mut self) -> Result<()> {
-        Ok(())
-    }
     fn position(&mut self) -> Result<u64> {
         Ok(0u64)
     }
