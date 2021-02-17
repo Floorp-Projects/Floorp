@@ -951,16 +951,17 @@ AHostResolver::LookupStatus TRRService::CompleteLookup(
         mRetryConfirmInterval *= 2;
       }
     } else {
-      if (mMode != nsIDNSService::MODE_TRRONLY) {
-        // don't accumulate trronly data here since trronly failures are
-        // handled above by trying again, so counting the successes here would
-        // skew the numbers
-        Telemetry::Accumulate(Telemetry::DNS_TRR_NS_VERFIFIED2,
-                              TRRService::AutoDetectedKey(),
-                              (mConfirmationState == CONFIRM_OK));
-      }
       mRetryConfirmInterval = StaticPrefs::network_trr_retry_timeout_ms();
     }
+
+    if (mMode != nsIDNSService::MODE_TRRONLY) {
+      // don't accumulate trr-only data here since we only care about
+      // confirmation in trr-first mode
+      Telemetry::Accumulate(Telemetry::DNS_TRR_NS_VERFIFIED2,
+                            TRRService::AutoDetectedKey(),
+                            (mConfirmationState == CONFIRM_OK));
+    }
+
     return LOOKUP_OK;
   }
 
