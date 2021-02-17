@@ -589,11 +589,7 @@ mochitest-remote:
         name: mochitest-remote
     treeherder-symbol: M(remote)
     loopback-video: true
-    run-on-projects:
-        by-test-platform:
-            .*shippable.*: ["mozilla-central"]
-            (linux1804-64|windows7-32|windows10-64|macosx1014-64)(?:-qr)?/opt: ['integration']
-            default: ["trunk"]
+    # Bug 1600054: Remote Agent not Fission compatible
     fission-run-on-projects: []
     fission-tier: 2
     max-run-time: 5400
