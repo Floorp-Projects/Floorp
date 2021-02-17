@@ -1,1 +1,0 @@
-# Cubeb Audio Remoting Prototype
