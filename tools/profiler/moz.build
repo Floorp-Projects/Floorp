@@ -128,9 +128,6 @@ IPDL_SOURCES += [
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
-# GeckoProfiler.h and ProfilerCounts.h are the only code that's visible in
-# non-MOZ_GECKO_PROFILER builds, and they only contains no-op macros in that
-# case.
 EXPORTS += [
     "public/GeckoProfiler.h",
 ]
@@ -138,7 +135,6 @@ EXPORTS += [
 EXPORTS.mozilla += [
     "public/ProfileBufferEntrySerializationGeckoExtensions.h",
     "public/ProfileJSONWriter.h",
-    # vm/GeckoProfiler.h needs to include this and doesn't like #include "ProfilerCounts.h"
     "public/ProfilerCounts.h",
     "public/ProfilerLabels.h",
     "public/ProfilerMarkers.h",

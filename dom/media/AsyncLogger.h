@@ -15,6 +15,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/TimeStamp.h"
 #include "GeckoProfiler.h"
 #include "MPSCQueue.h"
 

@@ -21,6 +21,9 @@
 
 // These headers are also safe to include unconditionally, with empty macros if
 // MOZ_GECKO_PROFILER is not set.
+// If your file only uses particular APIs (e.g., only markers), please consider
+// including only the needed headers instead of this one, to reduce compilation
+// dependencies.
 #include "mozilla/BaseProfilerCounts.h"
 #include "mozilla/BaseProfilerLabels.h"
 #include "mozilla/BaseProfilerMarkers.h"
