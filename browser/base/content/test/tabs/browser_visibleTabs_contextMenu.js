@@ -48,10 +48,6 @@ add_task(async function test() {
     "Close Other Tabs is enabled on pinned tab"
   );
   ok(
-    document.getElementById("context_closeTabsToTheStart").disabled,
-    "Close Tabs To The Start is disabled on pinned tab"
-  );
-  ok(
     !document.getElementById("context_closeTabsToTheEnd").disabled,
     "Close Tabs To The End is enabled on pinned tab"
   );
@@ -61,10 +57,6 @@ add_task(async function test() {
   ok(
     document.getElementById("context_closeOtherTabs").disabled,
     "Close Other Tabs is disabled on single unpinned tab"
-  );
-  ok(
-    document.getElementById("context_closeTabsToTheStart").disabled,
-    "Close Tabs To The Start is disabled on single unpinned tab"
   );
   ok(
     document.getElementById("context_closeTabsToTheEnd").disabled,
@@ -80,10 +72,6 @@ add_task(async function test() {
   ok(
     !document.getElementById("context_closeOtherTabs").disabled,
     "Close Other Tabs is enabled on unpinned tab when there's another unpinned tab"
-  );
-  ok(
-    !document.getElementById("context_closeTabsToTheStart").disabled,
-    "Close Tabs To The Start is enabled on last unpinned tab when there's another unpinned tab"
   );
   ok(
     document.getElementById("context_closeTabsToTheEnd").disabled,
