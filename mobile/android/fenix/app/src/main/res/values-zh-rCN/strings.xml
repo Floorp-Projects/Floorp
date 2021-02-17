@@ -898,7 +898,7 @@
     <!-- Label that indicates that a permission must be blocked -->
     <string name="preference_option_phone_feature_blocked">阻止</string>
     <!-- Label that indicates that a permission must be allowed -->
-    <string name="preference_option_phone_feature_allowed">已允许</string>
+    <string name="preference_option_phone_feature_allowed">允许</string>
     <!--Label that indicates a permission is by the Android OS-->
     <string name="phone_feature_blocked_by_android">被 Android 阻止</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->

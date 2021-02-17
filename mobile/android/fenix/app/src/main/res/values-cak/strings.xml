@@ -135,6 +135,8 @@
 
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Taq tz\'aqat</string>
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string name="browser_menu_extensions">Taq k\'amal</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Majun tz\'aqat wakami</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -547,6 +549,10 @@
     <string name="library_desktop_bookmarks_unfiled">Ch\'aqa\' chik taq Yaketal</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Natab\'äl</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">K\'ak\'a\' ruwi\'</string>
+    <!-- Option in Library to find text in page -->
+    <string name="library_find_in_page">Tikanöx pa ruxaq</string>
     <!-- Option in Library to open Synced Tabs page -->
     <string name="library_synced_tabs">Ximon taq ruwi\'</string>
     <!-- Option in Library to open Reading List -->
@@ -1118,6 +1124,8 @@
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Taq ruya\'oj q\'ij ruxaq</string>
 
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Taq qasanïk</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Keyuj taq rutzij okem pa k\'amaya\'l</string>
     <!-- Title for the Delete browsing data on quit preference -->
@@ -1243,8 +1251,7 @@
 
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">Xqawachib\'ej %s richin nachajij ri nakomonij
-        pa k\'amab\'ey chuqa\' ri nakomonij qik\'in.</string>
+    <string name="onboarding_privacy_notice_description2">Xqawachib\'ej %s richin nachajij ri nakomonij pa k\'amab\'ey chuqa\' ri nakomonij qik\'in.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Tasik\'ij ri rutzijol qichinanem</string>
 

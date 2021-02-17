@@ -472,6 +472,8 @@
     <string name="library_desktop_bookmarks_unfiled">अन्य बुकमार्क</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">इतिहास</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">नया टैब</string>
     <!-- Option in Library to open Synced Tabs page -->
     <string name="library_synced_tabs">सिंक हुए टैब</string>
     <!-- Option in Library to open Reading List -->
@@ -627,6 +629,10 @@
     <string name="history_older">पुराना</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">यहां कोई इतिहास नहीं</string>
+
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">खोलें</string>
 
 
     <!-- Crashes -->
