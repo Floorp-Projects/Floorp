@@ -79,6 +79,14 @@
   border-bottom-style: none;
 }
 
+@supports -moz-bool-pref("browser.proton.toolbar.enabled") {
+/*** Adds padding to beginning of toolbar while making that space click the first button ***/
+#nav-bar-customization-target > toolbarbutton:first-child,
+#nav-bar-customization-target > toolbaritem:first-child > toolbarbutton {
+  padding-inline-start: var(--toolbar-start-end-padding);
+}
+} /*** END proton ***/
+
 :root[sessionrestored] #nav-bar:-moz-lwtheme {
   transition: @themeTransition@;
 }
@@ -88,8 +96,19 @@
 #PersonalToolbar {
   overflow: clip;
   max-height: 4em;
+}
+
+@supports not -moz-bool-pref("browser.proton.toolbar.enabled") {
+#PersonalToolbar {
   padding: 2px 6px;
 }
+} /*** END !proton ***/
+
+@supports -moz-bool-pref("browser.proton.toolbar.enabled") {
+#PersonalToolbar {
+  padding-inline: 2px;
+}
+} /*** END proton ***/
 
 :root[uidensity=compact] #PersonalToolbar {
   padding-inline: 2px;

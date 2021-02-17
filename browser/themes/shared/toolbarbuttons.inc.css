@@ -5,8 +5,9 @@
 :root {
   --toolbarbutton-hover-transition-duration: 150ms;
 
+  --toolbar-start-end-padding: 8px;
   --toolbarbutton-outer-padding: 2px;
-  --toolbarbutton-inner-padding: 6px;
+  --toolbarbutton-inner-padding: 8px;
 
   /* These hover and active colors should work on both light and dark
      backgrounds. We'll later set colors that cater for light and dark
@@ -21,7 +22,7 @@
 
   --toolbarseparator-color: var(--lwt-toolbar-vertical-separator, rgba(0,0,0,.3));
 
-  --bookmark-block-padding: 4px;
+  --bookmark-block-padding: 1px;
 
   /* This default value of --toolbarbutton-height is defined to prevent
      CSS errors for an invalid variable. The value should not get used,
@@ -39,7 +40,15 @@
 :root {
   --toolbarbutton-focus-outline: var(--focus-outline);
 }
-} /*** END !proton ***/
+} /*** END proton ***/
+@supports not -moz-bool-pref("browser.proton.toolbar.enabled") {
+:root {
+
+  --toolbarbutton-outer-padding: 2px;
+  --toolbarbutton-inner-padding: 6px;
+  --bookmark-block-padding: 4px;
+}
+} /** END !proton **/
 
 :root[uidensity=compact] {
   --toolbarbutton-outer-padding: 1px;
@@ -133,6 +142,7 @@ toolbar .toolbarbutton-1 {
   -moz-box-pack: center;
 }
 
+@supports not -moz-bool-pref("browser.proton.toolbar.enabled") {
 :root:not([uidensity=compact]) #PanelUI-button {
   padding-inline-start: 5px;
 }
@@ -140,6 +150,13 @@ toolbar .toolbarbutton-1 {
 :root:not([uidensity=compact]) #PanelUI-menu-button {
   padding-inline-end: 5px;
 }
+} /*** END !proton ***/
+@supports -moz-bool-pref("browser.proton.toolbar.enabled") {
+/*** Adds padding to end of toolbar while making that space click the first button ***/
+#PanelUI-menu-button {
+  padding-inline-end: var(--toolbar-start-end-padding);
+}
+} /*** END proton ***/
 
 toolbar .toolbarbutton-1 > menupopup {
   margin-top: -3px;
@@ -279,6 +296,7 @@ toolbar .toolbarbutton-1:-moz-focusring {
   outline: none;
 }
 
+@supports not -moz-bool-pref("browser.proton.toolbar.enabled") {
 :root:not([uidensity=compact]) #back-button {
   padding-block: 3px;
   padding-inline: 3px 0;
@@ -338,6 +356,7 @@ toolbar .toolbarbutton-1:-moz-focusring {
   background-color: var(--backbutton-active-background) !important;
   border-color: hsla(240,5%,5%,.40);
 }
+} /*** END !proton ***/
 
 /* bookmarks menu button */
 
