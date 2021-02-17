@@ -89,7 +89,7 @@ void main(void) {
 
     gl_Position = uTransform * final_pos;
 
-    vec2 texture_size = vec2(textureSize(sColor0, 0));
+    vec2 texture_size = vec2(TEX_SIZE(sColor0));
     vec2 uv0 = res.uv_rect.p0;
     vec2 uv1 = res.uv_rect.p1;
 

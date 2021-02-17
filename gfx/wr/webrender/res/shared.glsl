@@ -28,6 +28,26 @@
 #define TEX_SAMPLE(sampler, tex_coord) texture(sampler, tex_coord)
 #endif
 
+#if defined(WR_FEATURE_TEXTURE_EXTERNAL) && defined(PLATFORM_ANDROID)
+// On some Mali GPUs we have encountered crashes in glDrawElements when using
+// textureSize(samplerExternalOES) in a vertex shader without potentially
+// sampling from the texture. This tricks the driver in to thinking the texture
+// may be sampled from, avoiding the crash. See bug 1692848.
+uniform float u_mali_workaround_dummy;
+highp ivec2 textureSizeMaliWorkaround(samplerExternalOES sampler, int lod) {
+  // The uniform's default value is 0.0, so we'll never take this branch. If we
+  // used a constant instead of a uniform then the compiler would optimize this
+  // out, and the workaround wouldn't work.
+  if (u_mali_workaround_dummy != 0.0) {
+    return ivec2(texture(sampler, vec2(0.0, 0.0)).rr);
+  }
+  return textureSize(sampler, lod);
+}
+#define TEX_SIZE(sampler) textureSizeMaliWorkaround(sampler, 0)
+#else
+#define TEX_SIZE(sampler) textureSize(sampler, 0)
+#endif
+
 //======================================================================================
 // Vertex shader attributes and uniforms
 //======================================================================================

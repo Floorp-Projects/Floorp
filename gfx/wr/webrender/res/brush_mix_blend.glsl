@@ -62,7 +62,7 @@ void brush_vs(
     get_uv(
         prim_user_data.y,
         f,
-        textureSize(sColor0, 0).xy,
+        TEX_SIZE(sColor0).xy,
         1.0,
         v_backdrop_uv,
         v_backdrop_uv_sample_bounds
@@ -71,7 +71,7 @@ void brush_vs(
     get_uv(
         prim_user_data.z,
         f,
-        textureSize(sColor1, 0).xy,
+        TEX_SIZE(sColor1).xy,
         perspective_f,
         v_src_uv,
         v_src_uv_sample_bounds

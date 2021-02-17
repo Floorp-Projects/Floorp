@@ -53,7 +53,7 @@ void main(void) {
     vLocalPos = vi.local_pos;
     vClipMaskImageUv = (vi.local_pos.xy - cmi.tile_rect.p0 * vi.local_pos.w) / cmi.tile_rect.size;
 
-    vec2 texture_size = vec2(textureSize(sColor0, 0));
+    vec2 texture_size = vec2(TEX_SIZE(sColor0));
     vClipMaskUvRect = vec4(res.uv_rect.p0, res.uv_rect.p1 - res.uv_rect.p0) / texture_size.xyxy;
     // applying a half-texel offset to the UV boundaries to prevent linear samples from the outside
     vec4 inner_rect = vec4(res.uv_rect.p0, res.uv_rect.p1);
