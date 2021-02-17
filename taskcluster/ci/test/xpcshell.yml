@@ -97,3 +97,24 @@ xpcshell:
                     - android-emulator-linux
                     - linux64-node
                     - linux64-minidump-stackwalk
+
+xpcshell-apple-silicon:
+    description: "xpcshell apple silicon specific failures test run"
+    treeherder-symbol: X-f(AS)
+    run-on-projects: ["mozilla-central"]
+    chunks: 2
+    max-run-time: 2700
+    allow-software-gl-layers: false
+    tier: 3
+    mozharness:
+        script: desktop_unittest.py
+        chunked: true
+        config:
+            - unittests/mac_unittest.py
+        extra-options:
+            - --run-failures=apple_silicon
+    fetches:
+        toolchain:
+            - macosx64-node
+            - macosx64-minidump-stackwalk
+            - macosx64-fix-stacks
