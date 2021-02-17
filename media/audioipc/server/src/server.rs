@@ -505,11 +505,6 @@ impl CubebServer {
                 .map(|_| ClientMessage::StreamStopped)
                 .unwrap_or_else(error),
 
-            ServerMessage::StreamResetDefaultDevice(stm_tok) => try_stream!(self, stm_tok)
-                .reset_default_device()
-                .map(|_| ClientMessage::StreamDefaultDeviceReset)
-                .unwrap_or_else(error),
-
             ServerMessage::StreamGetPosition(stm_tok) => try_stream!(self, stm_tok)
                 .position()
                 .map(ClientMessage::StreamPosition)

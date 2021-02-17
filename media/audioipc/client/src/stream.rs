@@ -290,12 +290,6 @@ impl<'ctx> StreamOps for ClientStream<'ctx> {
         send_recv!(rpc, StreamStop(self.token) => StreamStopped)
     }
 
-    fn reset_default_device(&mut self) -> Result<()> {
-        assert_not_in_callback();
-        let rpc = self.context.rpc();
-        send_recv!(rpc, StreamResetDefaultDevice(self.token) => StreamDefaultDeviceReset)
-    }
-
     fn position(&mut self) -> Result<u64> {
         assert_not_in_callback();
         let rpc = self.context.rpc();
