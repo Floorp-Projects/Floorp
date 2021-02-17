@@ -761,16 +761,12 @@ nsresult nsMenuX::SetupIcon() {
 @implementation MenuDelegate
 
 - (id)initWithGeckoMenu:(nsMenuX*)geckoMenu {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
   if ((self = [super init])) {
     NS_ASSERTION(geckoMenu,
                  "Cannot initialize native menu delegate with NULL gecko menu! Will crash!");
     mGeckoMenu = geckoMenu;
   }
   return self;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (void)menu:(NSMenu*)menu willHighlightItem:(NSMenuItem*)item {
@@ -870,8 +866,6 @@ static NSMutableDictionary* gShadowKeyEquivDB = nil;
 @implementation KeyEquivDBItem
 
 - (id)initWithItem:(NSMenuItem*)aItem table:(NSMapTable*)aTable {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
   if (!gShadowKeyEquivDB) {
     gShadowKeyEquivDB = [[NSMutableDictionary alloc] init];
   }
@@ -885,13 +879,9 @@ static NSMutableDictionary* gShadowKeyEquivDB = nil;
     mItem = nil;
   }
   return self;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (void)dealloc {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
   if (mTables) {
     [mTables release];
   }
@@ -899,33 +889,21 @@ static NSMutableDictionary* gShadowKeyEquivDB = nil;
     [mItem release];
   }
   [super dealloc];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (BOOL)hasTable:(NSMapTable*)aTable {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
   return [mTables member:[NSValue valueWithPointer:aTable]] ? YES : NO;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // Does nothing if aTable (its index value) is already present in mTables.
 - (int)addTable:(NSMapTable*)aTable {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
   if (aTable) {
     [mTables addObject:[NSValue valueWithPointer:aTable]];
   }
   return [mTables count];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (int)removeTable:(NSMapTable*)aTable {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
   if (aTable) {
     NSValue* objectToRemove = [mTables member:[NSValue valueWithPointer:aTable]];
     if (objectToRemove) {
@@ -933,8 +911,6 @@ static NSMutableDictionary* gShadowKeyEquivDB = nil;
     }
   }
   return [mTables count];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 @end
@@ -947,8 +923,6 @@ static NSMutableDictionary* gShadowKeyEquivDB = nil;
 @implementation NSMenu (MethodSwizzling)
 
 + (void)nsMenuX_NSMenu_addItem:(NSMenuItem*)aItem toTable:(NSMapTable*)aTable {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
   if (aItem && aTable) {
     NSValue* key = [NSValue valueWithPointer:aItem];
     KeyEquivDBItem* shadowItem = [gShadowKeyEquivDB objectForKey:key];
@@ -963,15 +937,11 @@ static NSMutableDictionary* gShadowKeyEquivDB = nil;
     }
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-
   [self nsMenuX_NSMenu_addItem:aItem toTable:aTable];
 }
 
 + (void)nsMenuX_NSMenu_removeItem:(NSMenuItem*)aItem fromTable:(NSMapTable*)aTable {
   [self nsMenuX_NSMenu_removeItem:aItem fromTable:aTable];
-
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (aItem && aTable) {
     NSValue* key = [NSValue valueWithPointer:aItem];
@@ -982,8 +952,6 @@ static NSMutableDictionary* gShadowKeyEquivDB = nil;
       }
     }
   }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 @end

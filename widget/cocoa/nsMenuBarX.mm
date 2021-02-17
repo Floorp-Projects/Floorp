@@ -54,14 +54,10 @@ static nsIContent* sQuitItemContent = nullptr;
 @implementation ApplicationMenuDelegate
 
 - (id)initWithApplicationMenu:(nsMenuBarX*)aApplicationMenu {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
   if ((self = [super init])) {
     mApplicationMenu = aApplicationMenu;
   }
   return self;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (void)menuWillOpen:(NSMenu*)menu {
@@ -125,6 +121,8 @@ nsMenuBarX::~nsMenuBarX() {
 }
 
 nsresult nsMenuBarX::Create(nsIWidget* aParent, Element* aContent) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (!aParent) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -150,6 +148,8 @@ nsresult nsMenuBarX::Create(nsIWidget* aParent, Element* aContent) {
   static_cast<nsCocoaWindow*>(mParentWindow)->SetMenuBar(this);
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 void nsMenuBarX::ConstructNativeMenus() {
@@ -170,6 +170,8 @@ void nsMenuBarX::ConstructNativeMenus() {
 }
 
 void nsMenuBarX::ConstructFallbackNativeMenus() {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (sApplicationMenu) {
     // Menu has already been built.
     return;
@@ -213,6 +215,8 @@ void nsMenuBarX::ConstructFallbackNativeMenus() {
   [quitMenuItem setTag:eCommand_ID_Quit];
   [sApplicationMenu addItem:quitMenuItem];
   sApplicationMenuIsFallback = YES;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 uint32_t nsMenuBarX::GetMenuCount() { return mMenuArray.Length(); }
@@ -312,6 +316,8 @@ void nsMenuBarX::ObserveContentInserted(mozilla::dom::Document* aDocument, nsICo
 }
 
 void nsMenuBarX::ForceUpdateNativeMenuAt(const nsAString& indexString) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   NSString* locationString =
       [NSString stringWithCharacters:reinterpret_cast<const unichar*>(indexString.BeginReading())
                               length:indexString.Length()];
@@ -367,6 +373,8 @@ void nsMenuBarX::ForceUpdateNativeMenuAt(const nsAString& indexString) {
       }
     }
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // Calling this forces a full reload of the menu system, reloading all native
@@ -408,6 +416,8 @@ nsMenuX* nsMenuBarX::GetXULHelpMenu() {
 // Help menu if its label/title is "Help" -- i.e. if the menu is in English.
 // This resolves bugs 489196 and 539317.
 void nsMenuBarX::SetSystemHelpMenu() {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   nsMenuX* xulHelpMenu = GetXULHelpMenu();
   if (xulHelpMenu) {
     NSMenu* helpMenu = (NSMenu*)xulHelpMenu->NativeData();
@@ -415,6 +425,8 @@ void nsMenuBarX::SetSystemHelpMenu() {
       [NSApp setHelpMenu:helpMenu];
     }
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 nsresult nsMenuBarX::Paint() {
@@ -449,10 +461,14 @@ nsresult nsMenuBarX::Paint() {
 
 /* static */
 void nsMenuBarX::ResetNativeApplicationMenu() {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [sApplicationMenu removeAllItems];
   [sApplicationMenu release];
   sApplicationMenu = nil;
   sApplicationMenuIsFallback = NO;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 void nsMenuBarX::SetNeedsRebuild() { mNeedsRebuild = true; }
@@ -863,8 +879,6 @@ static BOOL gMenuItemsExecuteCommands = YES;
 
 // called when some menu item in this menu gets hit
 - (IBAction)menuItemHit:(id)sender {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
   if (!gMenuItemsExecuteCommands) {
     return;
   }
@@ -946,8 +960,6 @@ static BOOL gMenuItemsExecuteCommands = YES;
       menuItem->DoCommand();
     }
   }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 @end
