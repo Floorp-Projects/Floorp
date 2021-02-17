@@ -111,7 +111,6 @@ const AVAILABLE_SHIMS = [
   {
     id: "AdsByGoogle",
     platform: "all",
-    branches: ["nightly"],
     name: "Ads by Google",
     bug: "1629644",
     file: "empty-script.js",
@@ -121,7 +120,6 @@ const AVAILABLE_SHIMS = [
   {
     id: "BmAuth",
     platform: "all",
-    branches: ["nightly"],
     name: "BmAuth by 9c9media",
     bug: "1486337",
     file: "bmauth.js",
@@ -131,7 +129,6 @@ const AVAILABLE_SHIMS = [
   {
     id: "Eluminate",
     platform: "all",
-    branches: ["nightly"],
     name: "Eluminate",
     bug: "1503211",
     file: "eluminate.js",
@@ -165,7 +162,6 @@ const AVAILABLE_SHIMS = [
   {
     id: "GoogleAnalytics",
     platform: "all",
-    branches: ["nightly"],
     name: "Google Analytics",
     bug: "1493602",
     file: "google-analytics.js",
@@ -175,7 +171,6 @@ const AVAILABLE_SHIMS = [
   {
     id: "GoogleAnalyticsECommercePlugin",
     platform: "all",
-    branches: ["nightly"],
     name: "Google Analytics E-Commerce Plugin",
     bug: "1620533",
     file: "google-analytics-ecommerce-plugin.js",
@@ -185,7 +180,6 @@ const AVAILABLE_SHIMS = [
   {
     id: "GoogleAnalyticsTagManager",
     platform: "all",
-    branches: ["nightly"],
     name: "Google Analytics Tag Manager",
     bug: "1478593",
     file: "google-analytics-tag-manager.js",
@@ -195,7 +189,6 @@ const AVAILABLE_SHIMS = [
   {
     id: "GoogleAnalyticsLegacy",
     platform: "all",
-    branches: ["nightly"],
     name: "Legacy Google Analytics",
     bug: "1487072",
     file: "google-analytics-legacy.js",
@@ -205,7 +198,6 @@ const AVAILABLE_SHIMS = [
   {
     id: "GooglePublisherTags",
     platform: "all",
-    branches: ["nightly"],
     name: "Google Publisher Tags",
     bug: "1600538",
     file: "google-publisher-tags.js",
@@ -220,7 +212,6 @@ const AVAILABLE_SHIMS = [
   {
     id: "IMA3",
     platform: "all",
-    branches: ["nightly"],
     name: "IMA3",
     bug: "1487373",
     file: "empty-script.js",
@@ -230,7 +221,6 @@ const AVAILABLE_SHIMS = [
   {
     id: "Rambler",
     platform: "all",
-    branches: ["nightly"],
     name: "Rambler Authenticator",
     bug: "1606428",
     file: "rambler-authenticator.js",
@@ -241,7 +231,6 @@ const AVAILABLE_SHIMS = [
   {
     id: "RichRelevance",
     platform: "all",
-    branches: ["nightly"],
     name: "Rich Relevance",
     bug: "1449347",
     file: "rich-relevance.js",
