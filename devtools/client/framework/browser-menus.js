@@ -271,7 +271,7 @@ function addTopLevelItems(doc) {
   // position.
   const pageSourceMenu = doc.getElementById("menu_pageSource");
   const extensionsForDevelopersMenu = doc.getElementById(
-    "menu_extensionsForDevelopers"
+    "extensionsForDevelopers"
   );
   menu.insertBefore(pageSourceMenu, extensionsForDevelopersMenu);
 }
