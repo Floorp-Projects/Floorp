@@ -231,13 +231,29 @@ nsStandardURL::nsStandardURL(bool aSupportsFileURL, bool aTrackURL)
 #endif
 }
 
-// static
-void nsStandardURL::SanityCheck(const URLSegment& aSeg,
-                                const nsCString& aSpec) {
+static void CheckSegment(const nsStandardURL::URLSegment& aSeg,
+                         const nsCString& aSpec) {
   MOZ_RELEASE_ASSERT(aSeg.mLen >= -1);
-  MOZ_RELEASE_ASSERT(aSeg.mLen < 0 ||
-                     (aSeg.mPos + aSeg.mLen <= aSpec.Length() &&
-                      aSeg.mPos + aSeg.mLen >= aSeg.mPos));
+  if (aSeg.mLen < 0) {
+    return;
+  }
+  MOZ_RELEASE_ASSERT(aSeg.mPos + aSeg.mLen <= aSpec.Length());
+  MOZ_RELEASE_ASSERT(aSeg.mPos + aSeg.mLen >= aSeg.mPos);
+}
+
+void nsStandardURL::SanityCheck() {
+  CheckSegment(mScheme, mSpec);
+  CheckSegment(mAuthority, mSpec);
+  CheckSegment(mUsername, mSpec);
+  CheckSegment(mPassword, mSpec);
+  CheckSegment(mHost, mSpec);
+  CheckSegment(mPath, mSpec);
+  CheckSegment(mFilepath, mSpec);
+  CheckSegment(mDirectory, mSpec);
+  CheckSegment(mBasename, mSpec);
+  CheckSegment(mExtension, mSpec);
+  CheckSegment(mQuery, mSpec);
+  CheckSegment(mRef, mSpec);
 }
 
 nsStandardURL::~nsStandardURL() {
@@ -252,18 +268,7 @@ nsStandardURL::~nsStandardURL() {
   }
 #endif
 
-  SanityCheck(mScheme, mSpec);
-  SanityCheck(mAuthority, mSpec);
-  SanityCheck(mUsername, mSpec);
-  SanityCheck(mPassword, mSpec);
-  SanityCheck(mHost, mSpec);
-  SanityCheck(mPath, mSpec);
-  SanityCheck(mFilepath, mSpec);
-  SanityCheck(mDirectory, mSpec);
-  SanityCheck(mBasename, mSpec);
-  SanityCheck(mExtension, mSpec);
-  SanityCheck(mQuery, mSpec);
-  SanityCheck(mRef, mSpec);
+  SanityCheck();
 }
 
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
@@ -1605,6 +1610,7 @@ nsresult nsStandardURL::SetSpecWithEncoding(const nsACString& input,
     LOG((" ref       = (%u,%d)\n", mRef.mPos, mRef.mLen));
   }
 
+  SanityCheck();
   return rv;
 }
 
@@ -1631,6 +1637,8 @@ nsresult nsStandardURL::SetScheme(const nsACString& input) {
       StaticPrefs::network_standard_url_max_length()) {
     return NS_ERROR_MALFORMED_URI;
   }
+
+  auto onExitGuard = MakeScopeExit([&] { SanityCheck(); });
 
   InvalidateCache();
 
@@ -1671,6 +1679,7 @@ nsresult nsStandardURL::SetUserPass(const nsACString& input) {
     return NS_ERROR_MALFORMED_URI;
   }
 
+  auto onExitGuard = MakeScopeExit([&] { SanityCheck(); });
   InvalidateCache();
 
   NS_ASSERTION(mHost.mLen >= 0, "uninitialized");
@@ -1770,6 +1779,8 @@ nsresult nsStandardURL::SetUsername(const nsACString& input) {
     return NS_ERROR_MALFORMED_URI;
   }
 
+  auto onExitGuard = MakeScopeExit([&] { SanityCheck(); });
+
   InvalidateCache();
 
   // escape username if necessary
@@ -1822,6 +1833,8 @@ nsresult nsStandardURL::SetPassword(const nsACString& input) {
     }
     Unused << this;  // silence compiler -Wunused-lambda-capture
   });
+
+  auto onExitGuard = MakeScopeExit([&] { SanityCheck(); });
 
   LOG(("nsStandardURL::SetPassword [password=%s]\n", password.get()));
 
@@ -1941,6 +1954,8 @@ nsresult nsStandardURL::SetHostPort(const nsACString& aValue) {
     }
   }
 
+  auto onExitGuard = MakeScopeExit([&] { SanityCheck(); });
+
   nsresult rv = SetHost(Substring(start, iter));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2012,6 +2027,7 @@ nsresult nsStandardURL::SetHost(const nsACString& input) {
     return NS_ERROR_MALFORMED_URI;
   }
 
+  auto onExitGuard = MakeScopeExit([&] { SanityCheck(); });
   InvalidateCache();
 
   uint32_t len;
@@ -2092,6 +2108,8 @@ nsresult nsStandardURL::SetPort(int32_t port) {
     return NS_ERROR_UNEXPECTED;
   }
 
+  auto onExitGuard = MakeScopeExit([&] { SanityCheck(); });
+
   InvalidateCache();
   if (port == mDefaultPort) {
     port = -1;
@@ -2115,6 +2133,8 @@ void nsStandardURL::ReplacePortInSpec(int32_t aNewPort) {
   NS_ASSERTION(aNewPort != mDefaultPort || mDefaultPort == -1,
                "Caller should check its passed-in value and pass -1 instead of "
                "mDefaultPort, to avoid encoding default port into mSpec");
+
+  auto onExitGuard = MakeScopeExit([&] { SanityCheck(); });
 
   // Create the (possibly empty) string that we're planning to replace:
   nsAutoCString buf;
@@ -2146,6 +2166,7 @@ void nsStandardURL::ReplacePortInSpec(int32_t aNewPort) {
 nsresult nsStandardURL::SetPathQueryRef(const nsACString& input) {
   const nsPromiseFlatCString& path = PromiseFlatCString(input);
   LOG(("nsStandardURL::SetPathQueryRef [path=%s]\n", path.get()));
+  auto onExitGuard = MakeScopeExit([&] { SanityCheck(); });
 
   InvalidateCache();
 
@@ -2337,6 +2358,8 @@ nsresult nsStandardURL::CloneInternal(
 nsresult nsStandardURL::CopyMembers(
     nsStandardURL* source, nsStandardURL::RefHandlingEnum refHandlingMode,
     const nsACString& newRef, bool copyCached) {
+  auto onExitGuard = MakeScopeExit([&] { SanityCheck(); });
+
   mSpec = source->mSpec;
   mDefaultPort = source->mDefaultPort;
   mPort = source->mPort;
@@ -2760,6 +2783,7 @@ nsresult nsStandardURL::SetFilePath(const nsACString& input) {
   const char* filepath = flat.get();
 
   LOG(("nsStandardURL::SetFilePath [filepath=%s]\n", filepath));
+  auto onExitGuard = MakeScopeExit([&] { SanityCheck(); });
 
   // if there isn't a filepath, then there can't be anything
   // after the path either.  this url is likely uninitialized.
@@ -2852,6 +2876,7 @@ nsresult nsStandardURL::SetQueryWithEncoding(const nsACString& input,
   const char* query = flat.get();
 
   LOG(("nsStandardURL::SetQuery [query=%s]\n", query));
+  auto onExitGuard = MakeScopeExit([&] { SanityCheck(); });
 
   if (IsUTFEncoding(encoding)) {
     encoding = nullptr;
@@ -2933,6 +2958,7 @@ nsresult nsStandardURL::SetRef(const nsACString& input) {
   const char* ref = flat.get();
 
   LOG(("nsStandardURL::SetRef [ref=%s]\n", ref));
+  auto onExitGuard = MakeScopeExit([&] { SanityCheck(); });
 
   if (mPath.mLen < 0) {
     return SetPathQueryRef(flat);
@@ -2999,6 +3025,7 @@ nsresult nsStandardURL::SetFileNameInternal(const nsACString& input) {
   const char* filename = flat.get();
 
   LOG(("nsStandardURL::SetFileNameInternal [filename=%s]\n", filename));
+  auto onExitGuard = MakeScopeExit([&] { SanityCheck(); });
 
   if (mPath.mLen < 0) {
     return SetPathQueryRef(flat);
@@ -3091,6 +3118,7 @@ nsresult nsStandardURL::SetFileNameInternal(const nsACString& input) {
 }
 
 nsresult nsStandardURL::SetFileBaseNameInternal(const nsACString& input) {
+  auto onExitGuard = MakeScopeExit([&] { SanityCheck(); });
   nsAutoCString extension;
   nsresult rv = GetFileExtension(extension);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3106,6 +3134,7 @@ nsresult nsStandardURL::SetFileBaseNameInternal(const nsACString& input) {
 }
 
 nsresult nsStandardURL::SetFileExtensionInternal(const nsACString& input) {
+  auto onExitGuard = MakeScopeExit([&] { SanityCheck(); });
   nsAutoCString newFileName;
   nsresult rv = GetFileBaseName(newFileName);
   NS_ENSURE_SUCCESS(rv, rv);
