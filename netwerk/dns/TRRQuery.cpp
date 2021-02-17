@@ -162,10 +162,11 @@ nsresult TRRQuery::DispatchLookup(TRR* pushedTRR, bool aUseODoH) {
 
 AHostResolver::LookupStatus TRRQuery::CompleteLookup(
     nsHostRecord* rec, nsresult status, AddrInfo* aNewRRSet, bool pb,
-    const nsACString& aOriginsuffix, nsHostRecord::TRRSkippedReason aReason) {
+    const nsACString& aOriginsuffix, nsHostRecord::TRRSkippedReason aReason,
+    TRR* aTRRRequest) {
   if (rec != mRecord) {
     return mHostResolver->CompleteLookup(rec, status, aNewRRSet, pb,
-                                         aOriginsuffix, aReason);
+                                         aOriginsuffix, aReason, aTRRRequest);
   }
 
   RefPtr<AddrInfo> newRRSet(aNewRRSet);
@@ -270,7 +271,7 @@ AHostResolver::LookupStatus TRRQuery::CompleteLookup(
   }
 
   return mHostResolver->CompleteLookup(rec, status, newRRSet, pb, aOriginsuffix,
-                                       aReason);
+                                       aReason, aTRRRequest);
 }
 
 AHostResolver::LookupStatus TRRQuery::CompleteLookupByType(

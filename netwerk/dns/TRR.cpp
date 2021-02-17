@@ -633,7 +633,8 @@ void TRR::SaveAdditionalRecords(
     addrRec->mTrrStart = TimeStamp::Now();
     LOG(("Completing lookup for additional: %s", nsCString(iter.Key()).get()));
     (void)mHostResolver->CompleteLookup(hostRecord, NS_OK, ai, mPB,
-                                        mOriginSuffix, AddrHostRecord::TRR_OK);
+                                        mOriginSuffix, AddrHostRecord::TRR_OK,
+                                        this);
   }
 }
 
@@ -672,7 +673,7 @@ void TRR::StoreIPHintAsDNSRecord(const struct SVCB& aSVCBRecord) {
   addrRec->mTrrStart = TimeStamp::Now();
 
   (void)mHostResolver->CompleteLookup(hostRecord, NS_OK, ai, mPB, mOriginSuffix,
-                                      AddrHostRecord::TRR_OK);
+                                      AddrHostRecord::TRR_OK, this);
 }
 
 nsresult TRR::ReturnData(nsIChannel* aChannel) {
@@ -705,7 +706,7 @@ nsresult TRR::ReturnData(nsIChannel* aChannel) {
       return NS_ERROR_FAILURE;
     }
     (void)mHostResolver->CompleteLookup(mRec, NS_OK, ai, mPB, mOriginSuffix,
-                                        mTRRSkippedReason);
+                                        mTRRSkippedReason, this);
     mHostResolver = nullptr;
     mRec = nullptr;
   } else {
@@ -732,7 +733,7 @@ nsresult TRR::FailData(nsresult error) {
     RefPtr<AddrInfo> ai = new AddrInfo(mHost, mType, std::move(noAddresses));
 
     (void)mHostResolver->CompleteLookup(mRec, error, ai, mPB, mOriginSuffix,
-                                        mTRRSkippedReason);
+                                        mTRRSkippedReason, this);
   }
 
   mHostResolver = nullptr;
@@ -861,6 +862,8 @@ TRR::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
        mType, mFailed, (unsigned int)aStatusCode));
   nsCOMPtr<nsIChannel> channel;
   channel.swap(mChannel);
+
+  mChannelStatus = aStatusCode;
 
   {
     // Cancel the timer since we don't need it anymore.

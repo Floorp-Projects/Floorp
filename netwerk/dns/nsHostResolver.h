@@ -421,10 +421,11 @@ class AHostResolver {
     LOOKUP_RESOLVEAGAIN,
   };
 
-  virtual LookupStatus CompleteLookup(
-      nsHostRecord*, nsresult, mozilla::net::AddrInfo*, bool pb,
-      const nsACString& aOriginsuffix,
-      nsHostRecord::TRRSkippedReason aReason) = 0;
+  virtual LookupStatus CompleteLookup(nsHostRecord*, nsresult,
+                                      mozilla::net::AddrInfo*, bool pb,
+                                      const nsACString& aOriginsuffix,
+                                      nsHostRecord::TRRSkippedReason aReason,
+                                      mozilla::net::TRR*) = 0;
   virtual LookupStatus CompleteLookupByType(
       nsHostRecord*, nsresult, mozilla::net::TypeRecordResultType& aResult,
       uint32_t aTtl, bool pb) = 0;
@@ -551,7 +552,8 @@ class nsHostResolver : public nsISupports, public AHostResolver {
 
   LookupStatus CompleteLookup(nsHostRecord*, nsresult, mozilla::net::AddrInfo*,
                               bool pb, const nsACString& aOriginsuffix,
-                              nsHostRecord::TRRSkippedReason aReason) override;
+                              nsHostRecord::TRRSkippedReason aReason,
+                              mozilla::net::TRR* aTRRRequest) override;
   LookupStatus CompleteLookupByType(nsHostRecord*, nsresult,
                                     mozilla::net::TypeRecordResultType& aResult,
                                     uint32_t aTtl, bool pb) override;
