@@ -1221,6 +1221,12 @@ void AudioInputProcessing::End() {
   mSegment.Clear();
 }
 
+TrackTime AudioInputProcessing::NumBufferedFrames(
+    MediaTrackGraphImpl* aGraph) const {
+  MOZ_ASSERT(aGraph->OnGraphThread());
+  return mSegment.GetDuration();
+}
+
 void AudioInputTrack::Destroy() {
   MOZ_ASSERT(NS_IsMainThread());
   Maybe<CubebUtils::AudioDeviceID> id = Nothing();

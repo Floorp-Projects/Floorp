@@ -66,6 +66,11 @@ if CONFIG["MOZ_WEBM_ENCODER"]:
         "/gfx/2d/",
     ]
 
+if CONFIG["MOZ_WEBRTC"]:
+    UNIFIED_SOURCES += [
+        "TestAudioInputProcessing.cpp",
+    ]
+
 if CONFIG["OS_TARGET"] != "Android":
     UNIFIED_SOURCES += [
         "TestCDMStorage.cpp",
