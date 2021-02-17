@@ -54,14 +54,14 @@ static nsIContent* sQuitItemContent = nullptr;
 @implementation ApplicationMenuDelegate
 
 - (id)initWithApplicationMenu:(nsMenuBarX*)aApplicationMenu {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if ((self = [super init])) {
     mApplicationMenu = aApplicationMenu;
   }
   return self;
 
-  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (void)menuWillOpen:(NSMenu*)menu {
@@ -78,15 +78,15 @@ nsMenuBarX::nsMenuBarX()
       mParentWindow(nullptr),
       mNeedsRebuild(false),
       mApplicationMenuDelegate(nil) {
-  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   mNativeMenu = [[GeckoNSMenu alloc] initWithTitle:@"MainMenuBar"];
 
-  NS_OBJC_END_TRY_IGNORE_BLOCK;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 nsMenuBarX::~nsMenuBarX() {
-  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (nsMenuBarX::sLastGeckoMenuBarPainted == this) {
     nsMenuBarX::sLastGeckoMenuBarPainted = nullptr;
@@ -121,7 +121,7 @@ nsMenuBarX::~nsMenuBarX() {
 
   [mNativeMenu release];
 
-  NS_OBJC_END_TRY_IGNORE_BLOCK;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 nsresult nsMenuBarX::Create(nsIWidget* aParent, Element* aContent) {
@@ -218,16 +218,16 @@ void nsMenuBarX::ConstructFallbackNativeMenus() {
 uint32_t nsMenuBarX::GetMenuCount() { return mMenuArray.Length(); }
 
 bool nsMenuBarX::MenuContainsAppMenu() {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   return ([mNativeMenu numberOfItems] > 0 &&
           [[mNativeMenu itemAtIndex:0] submenu] == sApplicationMenu);
 
-  NS_OBJC_END_TRY_BLOCK_RETURN(false);
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 nsresult nsMenuBarX::InsertMenuAtIndex(nsMenuX* aMenu, uint32_t aIndex) {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // If we've only yet created a fallback global Application menu (using
   // ContructFallbackNativeMenus()), destroy it before recreating it properly.
@@ -262,11 +262,11 @@ nsresult nsMenuBarX::InsertMenuAtIndex(nsMenuX* aMenu, uint32_t aIndex) {
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 void nsMenuBarX::RemoveMenuAtIndex(uint32_t aIndex) {
-  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (mMenuArray.Length() <= aIndex) {
     NS_ERROR("Attempting submenu removal with bad index!");
@@ -284,7 +284,7 @@ void nsMenuBarX::RemoveMenuAtIndex(uint32_t aIndex) {
 
   mMenuArray.RemoveElementAt(aIndex);
 
-  NS_OBJC_END_TRY_IGNORE_BLOCK;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 void nsMenuBarX::ObserveAttributeChanged(mozilla::dom::Document* aDocument, nsIContent* aContent,
@@ -418,7 +418,7 @@ void nsMenuBarX::SetSystemHelpMenu() {
 }
 
 nsresult nsMenuBarX::Paint() {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // Don't try to optimize anything in this painting by checking
   // sLastGeckoMenuBarPainted because the menubar can be manipulated by
@@ -444,7 +444,7 @@ nsresult nsMenuBarX::Paint() {
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 /* static */
@@ -524,7 +524,7 @@ void nsMenuBarX::AquifyMenuBar() {
 // for creating menu items destined for the Application menu
 NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString& nodeID,
                                                 SEL action, int tag, NativeMenuItemTarget* target) {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   RefPtr<mozilla::dom::Document> doc = inMenu->Content()->GetUncomposedDoc();
   if (!doc) {
@@ -599,12 +599,12 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString
 
   return newMenuItem;
 
-  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // build the Application menu shared by all menu bars
 nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // At this point, the application menu is the application menu from
   // the nib in cocoa widgets. We do not have a way to create an application
@@ -792,7 +792,7 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu) {
 
   return (sApplicationMenu) ? NS_OK : NS_ERROR_FAILURE;
 
-  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 void nsMenuBarX::SetParent(nsIWidget* aParent) { mParentWindow = aParent; }
@@ -863,7 +863,7 @@ static BOOL gMenuItemsExecuteCommands = YES;
 
 // called when some menu item in this menu gets hit
 - (IBAction)menuItemHit:(id)sender {
-  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (!gMenuItemsExecuteCommands) {
     return;
@@ -947,7 +947,7 @@ static BOOL gMenuItemsExecuteCommands = YES;
     }
   }
 
-  NS_OBJC_END_TRY_IGNORE_BLOCK;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 @end

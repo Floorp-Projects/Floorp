@@ -37,7 +37,7 @@ nsMenuItemX::nsMenuItemX() {
 }
 
 nsMenuItemX::~nsMenuItemX() {
-  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // Prevent the icon object from outliving us.
   if (mIcon) {
@@ -57,12 +57,12 @@ nsMenuItemX::~nsMenuItemX() {
 
   MOZ_COUNT_DTOR(nsMenuItemX);
 
-  NS_OBJC_END_TRY_IGNORE_BLOCK;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItemType aItemType,
                              nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aNode) {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   mType = aItemType;
   mMenuParent = aParent;
@@ -130,11 +130,11 @@ nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItem
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 nsresult nsMenuItemX::SetChecked(bool aIsChecked) {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   mIsChecked = aIsChecked;
 
@@ -152,7 +152,7 @@ nsresult nsMenuItemX::SetChecked(bool aIsChecked) {
 
   return NS_OK;
 
-  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 EMenuItemType nsMenuItemX::GetMenuItemType() { return mType; }
@@ -233,7 +233,7 @@ void nsMenuItemX::UncheckRadioSiblings(nsIContent* inCheckedContent) {
 }
 
 void nsMenuItemX::SetKeyEquiv() {
-  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // Set key shortcut and modifiers
   nsAutoString keyValue;
@@ -280,7 +280,7 @@ void nsMenuItemX::SetKeyEquiv() {
   // if the key was removed, clear the key
   [mNativeMenuItem setKeyEquivalent:@""];
 
-  NS_OBJC_END_TRY_IGNORE_BLOCK;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 //
@@ -289,7 +289,7 @@ void nsMenuItemX::SetKeyEquiv() {
 
 void nsMenuItemX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* aContent,
                                           nsAtom* aAttribute) {
-  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (!aContent) {
     return;
@@ -348,7 +348,7 @@ void nsMenuItemX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* 
     }
   }
 
-  NS_OBJC_END_TRY_IGNORE_BLOCK;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 bool IsMenuStructureElement(nsIContent* aContent) {

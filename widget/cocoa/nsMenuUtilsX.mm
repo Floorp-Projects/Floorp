@@ -45,7 +45,7 @@ void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent) {
 }
 
 NSString* nsMenuUtilsX::GetTruncatedCocoaLabel(const nsString& itemLabel) {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // We want to truncate long strings to some reasonable pixel length but there is no
   // good API for doing that which works for all OS versions and architectures. For now
@@ -54,7 +54,7 @@ NSString* nsMenuUtilsX::GetTruncatedCocoaLabel(const nsString& itemLabel) {
   return [NSString stringWithCharacters:reinterpret_cast<const unichar*>(itemLabel.get())
                                  length:itemLabel.Length()];
 
-  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 uint8_t nsMenuUtilsX::GeckoModifiersForNodeAttribute(const nsString& modifiersAttribute) {
@@ -108,7 +108,7 @@ nsMenuBarX* nsMenuUtilsX::GetHiddenWindowMenuBar() {
 
 // It would be nice if we could localize these edit menu names.
 NSMenuItem* nsMenuUtilsX::GetStandardEditMenuItem() {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // In principle we should be able to allocate this once and then always
   // return the same object.  But weird interactions happen between native
@@ -176,7 +176,7 @@ NSMenuItem* nsMenuUtilsX::GetStandardEditMenuItem() {
 
   return standardEditMenuItem;
 
-  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 bool nsMenuUtilsX::NodeIsHiddenOrCollapsed(nsIContent* inContent) {
