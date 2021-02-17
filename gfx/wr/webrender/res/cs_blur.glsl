@@ -73,7 +73,7 @@ void main(void) {
     RectWithSize src_rect = src_task.task_rect;
     RectWithSize target_rect = blur_task.common_data.task_rect;
 
-    vec2 texture_size = vec2(textureSize(sColor0, 0).xy);
+    vec2 texture_size = vec2(TEX_SIZE(sColor0).xy);
 
     // Ensure that the support is an even number of pixels to simplify the
     // fragment shader logic.

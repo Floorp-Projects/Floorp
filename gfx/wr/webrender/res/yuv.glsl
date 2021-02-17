@@ -11,9 +11,9 @@
 #ifdef WR_VERTEX_SHADER
 
 #ifdef WR_FEATURE_TEXTURE_RECT
-    #define TEX_SIZE(sampler) vec2(1.0)
+    #define TEX_SIZE_YUV(sampler) vec2(1.0)
 #else
-    #define TEX_SIZE(sampler) vec2(textureSize(sampler, 0).xy)
+    #define TEX_SIZE_YUV(sampler) vec2(TEX_SIZE(sampler).xy)
 #endif
 
 #define YUV_COLOR_SPACE_REC601      0
