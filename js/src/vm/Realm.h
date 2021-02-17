@@ -27,7 +27,6 @@
 #include "vm/NativeObject.h"
 #include "vm/PlainObject.h"    // js::PlainObject
 #include "vm/PromiseLookup.h"  // js::PromiseLookup
-#include "vm/ReceiverGuard.h"
 #include "vm/RegExpShared.h"
 #include "vm/SavedStacks.h"
 #include "vm/Time.h"
@@ -207,16 +206,16 @@ class PropertyIteratorObject;
 
 struct IteratorHashPolicy {
   struct Lookup {
-    ReceiverGuard* guards;
-    size_t numGuards;
-    uint32_t key;
+    Shape** shapes;
+    size_t numShapes;
+    HashNumber shapesHash;
 
-    Lookup(ReceiverGuard* guards, size_t numGuards, uint32_t key)
-        : guards(guards), numGuards(numGuards), key(key) {
-      MOZ_ASSERT(numGuards > 0);
+    Lookup(Shape** shapes, size_t numShapes, HashNumber shapesHash)
+        : shapes(shapes), numShapes(numShapes), shapesHash(shapesHash) {
+      MOZ_ASSERT(numShapes > 0);
     }
   };
-  static HashNumber hash(const Lookup& lookup) { return lookup.key; }
+  static HashNumber hash(const Lookup& lookup) { return lookup.shapesHash; }
   static bool match(PropertyIteratorObject* obj, const Lookup& lookup);
 };
 
