@@ -985,7 +985,7 @@ abstract class AbstractFetchDownloadService : Service() {
         }
 
         private const val FILE_PROVIDER_EXTENSION = ".feature.downloads.fileprovider"
-        private const val CHUNK_SIZE = 4 * 1024
+        private const val CHUNK_SIZE = 32 * 1024
         private const val PARTIAL_CONTENT_STATUS = 206
         private const val OK_STATUS = 200
 
