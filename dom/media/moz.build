@@ -365,9 +365,9 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
         "!audioipc_server_ffi_generated.h",
     ]
 
-    CbindgenHeader("audioipc_client_ffi_generated.h", inputs=["/media/audioipc/client"])
+    CbindgenHeader("audioipc_client_ffi_generated.h", inputs=["/third_party/rust/audioipc-client"])
 
-    CbindgenHeader("audioipc_server_ffi_generated.h", inputs=["/media/audioipc/server"])
+    CbindgenHeader("audioipc_server_ffi_generated.h", inputs=["/third_party/rust/audioipc-server"])
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
