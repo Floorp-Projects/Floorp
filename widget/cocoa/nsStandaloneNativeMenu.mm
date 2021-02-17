@@ -80,6 +80,8 @@ nsStandaloneNativeMenu::MenuWillOpen(bool* aResult) {
 
 NS_IMETHODIMP
 nsStandaloneNativeMenu::GetNativeMenu(void** aVoidPointer) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (mMenu) {
     *aVoidPointer = mMenu->NativeData();
     [[(NSObject*)(*aVoidPointer) retain] autorelease];
@@ -87,6 +89,8 @@ nsStandaloneNativeMenu::GetNativeMenu(void** aVoidPointer) {
   }
   *aVoidPointer = nullptr;
   return NS_ERROR_NOT_INITIALIZED;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 NS_IMETHODIMP
@@ -122,6 +126,8 @@ nsStandaloneNativeMenu::ActivateNativeMenuItemAt(const nsAString& indexString) {
 
 NS_IMETHODIMP
 nsStandaloneNativeMenu::ForceUpdateNativeMenuAt(const nsAString& indexString) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (!mMenu) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -161,9 +167,13 @@ nsStandaloneNativeMenu::ForceUpdateNativeMenuAt(const nsAString& indexString) {
   }
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 void nsStandaloneNativeMenu::IconUpdated() {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (mContainerStatusBarItem) {
     NSImage* menuImage = [mMenu->NativeMenuItem() image];
     if (menuImage) {
@@ -171,6 +181,8 @@ void nsStandaloneNativeMenu::IconUpdated() {
     }
     [mContainerStatusBarItem setImage:menuImage];
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 void nsStandaloneNativeMenu::SetContainerStatusBarItem(NSStatusItem* aItem) {
