@@ -189,10 +189,10 @@ NSPrintInfo* nsPrintSettingsX::CreateOrCopyPrintInfo(bool aWithScaling) {
     case kDuplexNone:
       duplexSetting = kPMDuplexNone;
       break;
-    case kDuplexFlipOnSideEdge:
+    case kDuplexFlipOnLongEdge:
       duplexSetting = kPMDuplexNoTumble;
       break;
-    case kDuplexFlipOnTopEdge:
+    case kDuplexFlipOnShortEdge:
       duplexSetting = kPMDuplexTumble;
       break;
   }
@@ -313,10 +313,10 @@ void nsPrintSettingsX::SetFromPrintInfo(NSPrintInfo* aPrintInfo, bool aAdoptPrin
         mDuplex = kDuplexNone;
         break;
       case kPMDuplexNoTumble:
-        mDuplex = kDuplexFlipOnSideEdge;
+        mDuplex = kDuplexFlipOnLongEdge;
         break;
       case kPMDuplexTumble:
-        mDuplex = kDuplexFlipOnTopEdge;
+        mDuplex = kDuplexFlipOnShortEdge;
         break;
     }
   } else {
