@@ -193,6 +193,20 @@ jobs:
                 sha256: 9727dcb3d6b655e4f2a92110f5db076a490aa50b739804be239905ecff3aacc8
             patch: gdb-jessie.diff
 
+    deb8-python-cffi:
+        description: "python-cffi rebuild for python 3.6 in Debian jessie"
+        treeherder:
+            symbol: Deb8(python-cffi)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20140724T163954Z/pool/main/p/python-cffi/python-cffi_0.8.6-1.dsc
+                sha256: 26fc10c5f58dd0d9aa2ea3ec079a33a2591bac53493ec032b3f1bca68aa1f343
+            packages:
+                - deb8-dh-python
+                - deb8-python3.6
+                - deb8-python3-defaults
+
     deb8-python-psutil:
         description: "python-psutil rebuild for python 3.6 in Debian jessie"
         treeherder:
@@ -214,8 +228,8 @@ jobs:
         run:
             using: debian-package
             tarball:
-                url: https://github.com/indygreg/python-zstandard/archive/0.11.1.tar.gz
-                sha256: 2df90698e22f0da49cdd360438479f363e58eb8c3ac6e8bac84d831cf8e7baf4
+                url: https://github.com/indygreg/python-zstandard/releases/download/0.15.1/zstandard-0.15.1.tar.gz
+                sha256: cb7c6a6f7d62350b9f5539045da54422975630e34dd9069584cc776b9917115f
             name: python-zstandard
             patch: python-zstandard-jessie.diff
             packages:
@@ -231,10 +245,10 @@ jobs:
             using: debian-package
             dist: buster
             tarball:
-                url: https://github.com/indygreg/python-zstandard/archive/0.11.1.tar.gz
-                sha256: 2df90698e22f0da49cdd360438479f363e58eb8c3ac6e8bac84d831cf8e7baf4
+                url: https://github.com/indygreg/python-zstandard/releases/download/0.15.1/zstandard-0.15.1.tar.gz
+                sha256: cb7c6a6f7d62350b9f5539045da54422975630e34dd9069584cc776b9917115f
             name: python-zstandard
-            pre-build-command: debchange -v 0.11.1-1.deb10moz --distribution buster "Mozilla backport for buster"
+            patch: python-zstandard-buster.diff
 
     deb10-mmdebstrap:
         # Only a more recent version of mmdebstrap than what is in buster has the

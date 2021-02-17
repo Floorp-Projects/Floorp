@@ -16,8 +16,7 @@ pip install --upgrade pip==19.2.3
 hash -r
 pip install virtualenv==15.2.0
 
-pip install zstandard==0.13.0
-pip3 install zstandard==0.13.0
+pip3 install -r /setup/zstandard_requirements.txt
 
 pip install psutil==5.7.0
 pip3 install psutil==5.7.0
