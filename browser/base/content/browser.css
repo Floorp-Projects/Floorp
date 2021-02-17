@@ -373,16 +373,9 @@ toolbarpaletteitem {
 }
 
 %ifdef XP_MACOSX
-#titlebar-fullscreen-button {
-  appearance: auto;
-  -moz-default-appearance: -moz-mac-fullscreen-button;
-}
-
 /**
  * On macOS, the window caption buttons are on the left side of the window titlebar,
- * even when using the RTL UI direction. Similarly, the fullscreen button is on the
- * right side of the window titlebar, even when using the RTL UI direction. These
- * next rules enforce that ordering.
+ * even when using the RTL UI direction. These next rules enforce that ordering.
  */
 #titlebar-secondary-buttonbox:-moz-locale-dir(ltr) {
   -moz-box-ordinal-group: 1000;
