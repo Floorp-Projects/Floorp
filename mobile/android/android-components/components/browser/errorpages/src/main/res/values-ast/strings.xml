@@ -222,17 +222,17 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problema de sitiu con malware</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
-    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>Informóse de que %1$s ye un sitiu atacante y bloquióse según les tos preferencies de seguranza.</p>]]></string>
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>Informóse que %1$s ye un sitiu atacante y bloquióse según les tos preferencies de seguranza.</p>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Problema de sitiu indeseable</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
-    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>Informóse de que\'l sitiu en %1$s ta sirviendo software indeseable y bloquióse según les tos preferencies de seguranza.</p>]]></string>
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>Informóse que\'l sitiu de %1$s ta sirviendo software indeseable y bloquióse según les tos preferencies de seguranza.</p>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">Problema de sitiu peligrosu</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
-    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Informóse de que\'l sitiu en %1$s ye potencialmente peligrosu y bloquióse según les tos preferencies de seguranza.</p>]]></string>
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Informóse que\'l sitiu de %1$s ye potencialmente peligrosu y bloquióse según les tos preferencies de seguranza.</p>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Problema de sitiu engañosu</string>
