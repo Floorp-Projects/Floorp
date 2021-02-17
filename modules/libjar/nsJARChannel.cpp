@@ -18,8 +18,10 @@
 #include "nsIFileURL.h"
 
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/ErrorNames.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryComms.h"
 #include "private/pprio.h"
@@ -819,7 +821,8 @@ nsJARChannel::SetContentLength(int64_t aContentLength) {
   return NS_OK;
 }
 
-static void RecordZeroLengthEvent(const nsCString& aSpec) {
+static void RecordZeroLengthEvent(bool aIsSync, const nsCString& aSpec,
+                                  nsresult aStatus) {
   // The event can only hold 80 characters.
   // We only save the file name and path inside the jar.
   auto findFilenameStart = [](const nsCString& aSpec) -> uint32_t {
@@ -862,9 +865,13 @@ static void RecordZeroLengthEvent(const nsCString& aSpec) {
   }
 
   auto res = CopyableTArray<Telemetry::EventExtraEntry>{};
-  res.SetCapacity(2);
-  res.AppendElement(Telemetry::EventExtraEntry{"sync"_ns, "true"_ns});
+  res.SetCapacity(3);
+  res.AppendElement(
+      Telemetry::EventExtraEntry{"sync"_ns, aIsSync ? "true"_ns : "false"_ns});
   res.AppendElement(Telemetry::EventExtraEntry{"file_name"_ns, fileName});
+  nsAutoCString errorCString;
+  mozilla::GetErrorName(aStatus, errorCString);
+  res.AppendElement(Telemetry::EventExtraEntry{"status"_ns, errorCString});
   Telemetry::RecordEvent(eventType, Nothing{}, Some(res));
 }
 
@@ -875,6 +882,12 @@ nsJARChannel::Open(nsIInputStream** aStream) {
   nsresult rv =
       nsContentSecurityManager::doContentSecurityCheck(this, listener);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  auto recordEvent = MakeScopeExit([&] {
+    if (mContentLength <= 0 || NS_FAILED(rv)) {
+      RecordZeroLengthEvent(true, mSpec, rv);
+    }
+  });
 
   LOG(("nsJARChannel::Open [this=%p]\n", this));
 
@@ -899,9 +912,6 @@ nsJARChannel::Open(nsIInputStream** aStream) {
   input.forget(aStream);
   mOpened = true;
 
-  if (mContentLength <= 0) {
-    RecordZeroLengthEvent(mSpec);
-  }
   return NS_OK;
 }
 
@@ -1079,39 +1089,6 @@ nsJARChannel::OnStartRequest(nsIRequest* req) {
   return rv;
 }
 
-static void RecordEmptyFileEvent(const nsCString& aFileName) {
-  // Send Telemetry
-
-  // The event can only hold 80 characters.
-  // We only save the file name and path inside the jar.
-  auto findFilenameStart = [](const nsCString& aFileName) -> uint32_t {
-    int32_t pos = aFileName.Find("!/");
-    if (pos == kNotFound) {
-      MOZ_ASSERT(false, "This should not happen");
-      return 0;
-    }
-    int32_t from = aFileName.RFindChar('/', pos);
-    if (from == kNotFound) {
-      MOZ_ASSERT(false, "This should not happen");
-      return 0;
-    }
-    // Skip over the slash
-    from++;
-    return from;
-  };
-
-  // If for some reason we are unable to extract the filename we report the
-  // entire string, or 80 characters of it, to make sure we don't miss any
-  // events.
-  uint32_t from = findFilenameStart(aFileName);
-
-  Telemetry::SetEventRecordingEnabled("network.jar.channel"_ns, true);
-  Telemetry::EventID eventType =
-      Telemetry::EventID::NetworkJarChannel_Nodata_Onstop;
-  Telemetry::RecordEvent(eventType, mozilla::Some(Substring(aFileName, from)),
-                         Nothing{});
-}
-
 NS_IMETHODIMP
 nsJARChannel::OnStopRequest(nsIRequest* req, nsresult status) {
   LOG(("nsJARChannel::OnStopRequest [this=%p %s status=%" PRIx32 "]\n", this,
@@ -1120,8 +1097,8 @@ nsJARChannel::OnStopRequest(nsIRequest* req, nsresult status) {
   if (NS_SUCCEEDED(mStatus)) mStatus = status;
 
   if (mListener) {
-    if (NS_SUCCEEDED(status) && !mOnDataCalled) {
-      RecordEmptyFileEvent(mSpec);
+    if (!mOnDataCalled || NS_FAILED(status)) {
+      RecordZeroLengthEvent(false, mSpec, status);
     }
 
     mListener->OnStopRequest(this, status);
