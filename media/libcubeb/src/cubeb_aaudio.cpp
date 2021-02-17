@@ -1450,7 +1450,6 @@ const static struct cubeb_ops aaudio_ops = {
     /*.stream_destroy =*/aaudio_stream_destroy,
     /*.stream_start =*/aaudio_stream_start,
     /*.stream_stop =*/aaudio_stream_stop,
-    /*.stream_reset_default_device =*/NULL,
     /*.stream_get_position =*/aaudio_stream_get_position,
     /*.stream_get_latency =*/aaudio_stream_get_latency,
     /*.stream_get_input_latency =*/aaudio_stream_get_input_latency,

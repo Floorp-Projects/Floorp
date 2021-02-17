@@ -405,20 +405,6 @@ cubeb_stream_stop(cubeb_stream * stream)
 }
 
 int
-cubeb_stream_reset_default_device(cubeb_stream * stream)
-{
-  if (!stream) {
-    return CUBEB_ERROR_INVALID_PARAMETER;
-  }
-
-  if (!stream->context->ops->stream_reset_default_device) {
-    return CUBEB_ERROR_NOT_SUPPORTED;
-  }
-
-  return stream->context->ops->stream_reset_default_device(stream);
-}
-
-int
 cubeb_stream_get_position(cubeb_stream * stream, uint64_t * position)
 {
   if (!stream || !position) {
