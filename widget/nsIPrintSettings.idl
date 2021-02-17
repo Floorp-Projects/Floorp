@@ -88,15 +88,59 @@ interface nsIPrintSettings : nsISupports
   /**
    * Duplex printing options.
    *
-   * Note that other libraries refer to equivalent duplex settings
-   * using different terminology. The equivalent terms are listed
-   * above each value in a comma-separated list.
+   * Note that other libraries refer to equivalent duplex settings using
+   * various sets of terminology. This can be confusing and inconsistent both
+   * with other libraries, and with the behavior that these terms intend to describe.
+   *
+   * kDuplexNone is equivalent to Simplex. Thankfully, both of these terms are
+   * consistent with the behavior that they describe, which is to have single-sided
+   * printing per sheet.
+   *
+   * kDuplexFlipOnLongEdge is equivalent to the following platform-specific constants:
+   *   CUPS/macOS: NoTumble
+   *      Windows: DMDUP_VERTICAL
+   *          GTK: GTK_PRINT_DUPLEX_HORIZONTAL
+   *
+   * kDuplexFlipOnShortEdge is equivalent to the following platform-specific constants:
+   *   CUPS/macOS: Tumble
+   *      Windows: DMDUP_HORIZONTAL
+   *          GTK: GTK_PRINT_DUPLEX_VERTICAL
+   *
+   *
+   * Notice that the GTK and Windows constants have opposite meanings for
+   * VERTICAL and HORIZONTAL.
+   *
+   * To make matters more confusing, these platform-specific terms describe different
+   * behavior (from the user's perspective) depending on whether the sheet is in
+   * portrait vs. landscape orientation.
+   *
+   * For example, the generic term "tumble" describes behavior where a sheet flips over
+   * a binding on the top edge (like a calendar). This requires that the back side of
+   * the sheet is printed upside down with respect to the front side of the sheet,
+   * so that its content appears upright to the reader when they tumble-flip the
+   * sheet over the top-edge binding.
+   *
+   * However, the CUPS/macOS Tumble setting only inverts the back side of the
+   * sheet in portrait orientation. When you switch to landscape orientation, the
+   * Tumble setting behaves like a book-like sheet flip, where the front and back
+   * sides of the sheet are both printed upright with respect to each other.
+   *
+   * This is why it is more consistent and more clear to think of these terms
+   * with regard to sheets being bound on the long edge or the short edge.
+   *
+   * kDuplexFlipOnLongEdge  + Portrait  =     book-like flip (front/back same direction)
+   * kDuplexFlipOnLongEdge  + Landscape = calendar-like flip (front/back inverted)
+   *
+   * kDuplexFlipOnShortEdge + Portrait  = calendar-like flip (front/back inverted)
+   * kDuplexFlipOnShortEdge + Landscape =     book-like flip (front/back same direction)
+   *
+   * The long-edge and short-edge terminology unfortunately breaks down when printing
+   * with square sheet dimensions. Thankfully this edge case (hah) is quite uncommon,
+   * since most standard printing paper dimensions are not square. Such a paper size
+   * would even break the uniformly used portrait and landscape terminology.
    */
-  // Equivalent to: Simplex
   const short kDuplexNone = 0;
-  // Equivalent to: DMDUP_VERTICAL, NoTumble
   const short kDuplexFlipOnLongEdge = 1;
-  // Equivalent to: DMDUP_HORIZONTAL, Tumble
   const short kDuplexFlipOnShortEdge = 2;
 
   /**
