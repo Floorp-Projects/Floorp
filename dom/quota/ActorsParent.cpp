@@ -304,7 +304,7 @@ constexpr auto kSQLiteSuffix = u".sqlite"_ns;
 #define LS_ARCHIVE_FILE_NAME u"ls-archive.sqlite"
 #define LS_ARCHIVE_TMP_FILE_NAME u"ls-archive-tmp.sqlite"
 
-const uint32_t kLocalStorageArchiveVersion = 4;
+const int32_t kLocalStorageArchiveVersion = 4;
 
 const char kProfileDoChangeTopic[] = "profile-do-change";
 
@@ -628,10 +628,24 @@ Result<nsCOMPtr<nsIFile>, nsresult> GetLocalStorageArchiveTmpFile(
   return lsArchiveTmpFile;
 }
 
-nsresult InitializeLocalStorageArchive(mozIStorageConnection* aConnection,
-                                       uint32_t aVersion) {
+Result<bool, nsresult> IsLocalStorageArchiveInitialized(
+    mozIStorageConnection& aConnection) {
+  AssertIsOnIOThread();
+
+  QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE(aConnection, TableExists, "database"_ns));
+}
+
+nsresult InitializeLocalStorageArchive(mozIStorageConnection* aConnection) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aConnection);
+
+#ifdef DEBUG
+  {
+    QM_TRY_INSPECT(const auto& initialized,
+                   IsLocalStorageArchiveInitialized(*aConnection));
+    MOZ_ASSERT(!initialized);
+  }
+#endif
 
   QM_TRY(aConnection->ExecuteSimpleSQL(
       "CREATE TABLE database(version INTEGER NOT NULL DEFAULT 0);"_ns));
@@ -642,17 +656,10 @@ nsresult InitializeLocalStorageArchive(mozIStorageConnection* aConnection,
           nsCOMPtr<mozIStorageStatement>, aConnection, CreateStatement,
           "INSERT INTO database (version) VALUES (:version)"_ns));
 
-  QM_TRY(stmt->BindInt32ByName("version"_ns, aVersion));
+  QM_TRY(stmt->BindInt32ByName("version"_ns, 0));
   QM_TRY(stmt->Execute());
 
   return NS_OK;
-}
-
-Result<bool, nsresult> IsLocalStorageArchiveInitialized(
-    mozIStorageConnection& aConnection) {
-  AssertIsOnIOThread();
-
-  QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE(aConnection, TableExists, "database"_ns));
 }
 
 Result<int32_t, nsresult> LoadLocalStorageArchiveVersion(
@@ -669,16 +676,14 @@ Result<int32_t, nsresult> LoadLocalStorageArchiveVersion(
   QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 0));
 }
 
-/*
 nsresult SaveLocalStorageArchiveVersion(mozIStorageConnection* aConnection,
-                                        uint32_t aVersion) {
+                                        int32_t aVersion) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aConnection);
 
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = aConnection->CreateStatement(
-      "UPDATE database SET version = :version;"_ns,
-      getter_AddRefs(stmt));
+      "UPDATE database SET version = :version;"_ns, getter_AddRefs(stmt));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -695,7 +700,6 @@ nsresult SaveLocalStorageArchiveVersion(mozIStorageConnection* aConnection,
 
   return NS_OK;
 }
-*/
 
 template <typename FileFunc, typename DirectoryFunc>
 Result<mozilla::Ok, nsresult> CollectEachFileEntry(
@@ -5259,29 +5263,13 @@ nsresult QuotaManager::UpgradeStorageFrom2_2To2_3(
   return rv;
 }
 
-nsresult QuotaManager::MaybeRemoveLocalStorageDataAndArchive() {
+nsresult QuotaManager::MaybeRemoveLocalStorageDataAndArchive(
+    nsIFile& aLsArchiveFile) {
   AssertIsOnIOThread();
   MOZ_ASSERT(!CachedNextGenLocalStorageEnabled());
 
-  // Cleanup the tmp file first, if there's any.
-  {
-    QM_TRY_INSPECT(const auto& lsArchiveTmpFile,
-                   GetLocalStorageArchiveTmpFile(*mStoragePath));
-
-    QM_TRY_INSPECT(const bool& exists,
-                   MOZ_TO_RESULT_INVOKE(lsArchiveTmpFile, Exists));
-
-    if (exists) {
-      QM_TRY(lsArchiveTmpFile->Remove(false));
-    }
-  }
-
-  // Now check the real archive file.
-  QM_TRY_INSPECT(const auto& lsArchiveFile,
-                 GetLocalStorageArchiveFile(*mStoragePath));
-
   QM_TRY_INSPECT(const bool& exists,
-                 MOZ_TO_RESULT_INVOKE(lsArchiveFile, Exists));
+                 MOZ_TO_RESULT_INVOKE(aLsArchiveFile, Exists));
 
   if (!exists) {
     // If the ls archive doesn't exist then ls directories can't exist either.
@@ -5294,7 +5282,7 @@ nsresult QuotaManager::MaybeRemoveLocalStorageDataAndArchive() {
 
   // Finally remove the ls archive, so we don't have to check all origin
   // directories next time this method is called.
-  QM_TRY(lsArchiveFile->Remove(false));
+  QM_TRY(aLsArchiveFile.Remove(false));
 
   return NS_OK;
 }
@@ -5387,18 +5375,15 @@ nsresult QuotaManager::MaybeRemoveLocalStorageDirectories() {
   return NS_OK;
 }
 
-Result<nsCOMPtr<mozIStorageConnection>, nsresult>
-QuotaManager::CreateLocalStorageArchiveConnectionFromWebAppsStore() const {
+Result<Ok, nsresult> QuotaManager::CopyLocalStorageArchiveFromWebAppsStore(
+    nsIFile& aLsArchiveFile) const {
   AssertIsOnIOThread();
   MOZ_ASSERT(CachedNextGenLocalStorageEnabled());
-
-  QM_TRY_INSPECT(const auto& lsArchiveFile,
-                 GetLocalStorageArchiveFile(*mStoragePath));
 
 #ifdef DEBUG
   {
     QM_TRY_INSPECT(const bool& exists,
-                   MOZ_TO_RESULT_INVOKE(lsArchiveFile, Exists));
+                   MOZ_TO_RESULT_INVOKE(aLsArchiveFile, Exists));
     MOZ_ASSERT(!exists);
   }
 #endif
@@ -5473,12 +5458,23 @@ QuotaManager::CreateLocalStorageArchiveConnectionFromWebAppsStore() const {
     QM_TRY(lsArchiveTmpFile->MoveTo(nullptr,
                                     nsLiteralString(LS_ARCHIVE_FILE_NAME)));
 
-    QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>,
-                                             ss, OpenUnsharedDatabase,
-                                             lsArchiveFile));
+    return Ok{};
   }
 
   // If webappsstore database is not useable, just create an empty archive.
+  // XXX The code below should be removed and the caller should call us only
+  // when webappstore.sqlite exists. CreateWebAppsStoreConnection should be
+  // reworked to propagate database corruption instead of returning null
+  // connection.
+  // So, if there's no webappsstore.sqlite
+  // MaybeCreateOrUpgradeLocalStorageArchive will call
+  // CreateEmptyLocalStorageArchive instead of
+  // CopyLocalStorageArchiveFromWebAppsStore.
+  // If there's any corruption detected during
+  // MaybeCreateOrUpgradeLocalStorageArchive (including nested calls like
+  // CopyLocalStorageArchiveFromWebAppsStore and CreateWebAppsStoreConnection)
+  // EnsureStorageIsInitialized will fallback to
+  // CreateEmptyLocalStorageArchive.
 
   // Ensure the storage directory actually exists.
   QM_TRY_INSPECT(const auto& storageDirectory, QM_NewLocalFile(*mStoragePath));
@@ -5490,161 +5486,109 @@ QuotaManager::CreateLocalStorageArchiveConnectionFromWebAppsStore() const {
   QM_TRY_UNWRAP(
       auto lsArchiveConnection,
       MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>, ss,
-                                 OpenUnsharedDatabase, lsArchiveFile));
+                                 OpenUnsharedDatabase, &aLsArchiveFile));
 
   QM_TRY(StorageDBUpdater::CreateCurrentSchema(lsArchiveConnection));
 
-  return lsArchiveConnection;
+  return Ok{};
 }
 
-Result<std::pair<nsCOMPtr<mozIStorageConnection>, bool>, nsresult>
-QuotaManager::CreateLocalStorageArchiveConnection() const {
+Result<nsCOMPtr<mozIStorageConnection>, nsresult>
+QuotaManager::CreateLocalStorageArchiveConnection(
+    nsIFile& aLsArchiveFile) const {
   AssertIsOnIOThread();
   MOZ_ASSERT(CachedNextGenLocalStorageEnabled());
-
-  {
-    QM_TRY_INSPECT(const auto& lsArchiveTmpFile,
-                   GetLocalStorageArchiveTmpFile(*mStoragePath));
-
-    QM_TRY_INSPECT(const bool& exists,
-                   MOZ_TO_RESULT_INVOKE(lsArchiveTmpFile, Exists));
-
-    if (exists) {
-      QM_TRY(lsArchiveTmpFile->Remove(false));
-    }
-  }
-
-  // Check if the archive was already successfully created.
-  QM_TRY_INSPECT(const auto& lsArchiveFile,
-                 GetLocalStorageArchiveFile(*mStoragePath));
-
-  QM_TRY_INSPECT(const bool& exists,
-                 MOZ_TO_RESULT_INVOKE(lsArchiveFile, Exists));
-
-  if (exists) {
-    bool removed = false;
-
-    QM_TRY_INSPECT(const bool& isDirectory,
-                   MOZ_TO_RESULT_INVOKE(lsArchiveFile, IsDirectory));
-
-    if (isDirectory) {
-      QM_TRY(lsArchiveFile->Remove(true));
-
-      removed = true;
-    }
-
-    QM_TRY_INSPECT(const auto& ss, ToResultGet<nsCOMPtr<mozIStorageService>>(
-                                       MOZ_SELECT_OVERLOAD(do_GetService),
-                                       MOZ_STORAGE_SERVICE_CONTRACTID));
-
-    QM_TRY_UNWRAP(
-        auto connection,
-        MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>, ss,
-                                   OpenUnsharedDatabase, lsArchiveFile)
-            .orElse([&removed, &lsArchiveFile, &ss](const nsresult rv)
-                        -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
-              if (!removed && IsDatabaseCorruptionError(rv)) {
-                QM_TRY(lsArchiveFile->Remove(false));
-
-                removed = true;
-
-                QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(
-                    nsCOMPtr<mozIStorageConnection>, ss, OpenUnsharedDatabase,
-                    lsArchiveFile));
-              }
-
-              return Err(rv);
-            }));
-
-    // XXX Similarly to CreateShadowStorageConnection, this might or might not
-    // deal with a fresh database file. It might be better to call
-    // StorageDBUpdater::CreateCurrentSchema if removed is true (and in that
-    // case we don't need a orElse part).
-    QM_TRY(ToResult(StorageDBUpdater::Update(connection))
-               .orElse([&removed, &connection, &lsArchiveFile,
-                        &ss](const nsresult rv) -> Result<Ok, nsresult> {
-                 if (!removed) {
-                   QM_TRY(connection->Close());
-                   QM_TRY(lsArchiveFile->Remove(false));
-
-                   removed = true;
-
-                   QM_TRY_UNWRAP(connection,
-                                 MOZ_TO_RESULT_INVOKE_TYPED(
-                                     nsCOMPtr<mozIStorageConnection>, ss,
-                                     OpenUnsharedDatabase, lsArchiveFile));
-
-                   QM_TRY(StorageDBUpdater::CreateCurrentSchema(connection));
-
-                   return Ok{};
-                 }
-
-                 return Err(rv);
-               }));
-
-    return std::pair{std::move(connection), removed};
-  }
-
-  QM_TRY_RETURN(CreateLocalStorageArchiveConnectionFromWebAppsStore().map(
-      [](nsCOMPtr<mozIStorageConnection>&& connection) {
-        return std::pair{std::move(connection), true};
-      }));
-}
-
-nsresult QuotaManager::RecreateLocalStorageArchive(
-    nsCOMPtr<mozIStorageConnection>& aConnection) {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(CachedNextGenLocalStorageEnabled());
-
-  // Close local storage archive connection. We are going to remove underlying
-  // file.
-  QM_TRY(aConnection->Close());
-
-  QM_TRY(MaybeRemoveLocalStorageDirectories());
-
-  QM_TRY_INSPECT(const auto& lsArchiveFile,
-                 GetLocalStorageArchiveFile(*mStoragePath));
 
 #ifdef DEBUG
   {
     QM_TRY_INSPECT(const bool& exists,
-                   MOZ_TO_RESULT_INVOKE(lsArchiveFile, Exists));
+                   MOZ_TO_RESULT_INVOKE(aLsArchiveFile, Exists));
+    MOZ_ASSERT(exists);
+  }
+#endif
+
+  QM_TRY_INSPECT(const bool& isDirectory,
+                 MOZ_TO_RESULT_INVOKE(aLsArchiveFile, IsDirectory));
+
+  // A directory with the name of the archive file is treated as corruption
+  // (similarly as wrong content of the file).
+  QM_TRY(OkIf(!isDirectory), Err(NS_ERROR_FILE_CORRUPTED));
+
+  QM_TRY_INSPECT(const auto& ss, ToResultGet<nsCOMPtr<mozIStorageService>>(
+                                     MOZ_SELECT_OVERLOAD(do_GetService),
+                                     MOZ_STORAGE_SERVICE_CONTRACTID));
+
+  // This may return NS_ERROR_FILE_CORRUPTED too.
+  QM_TRY_UNWRAP(auto connection, MOZ_TO_RESULT_INVOKE_TYPED(
+                                     nsCOMPtr<mozIStorageConnection>, ss,
+                                     OpenUnsharedDatabase, &aLsArchiveFile));
+
+  // The legacy LS implementation removes the database and creates an empty one
+  // when the schema can't be updated. The same effect can be achieved here by
+  // mapping all errors to NS_ERROR_FILE_CORRUPTED. One such case is tested by
+  // sub test case 3 of dom/localstorage/test/unit/test_archive.js
+  QM_TRY(
+      ToResult(StorageDBUpdater::Update(connection))
+          .mapErr([](const nsresult rv) { return NS_ERROR_FILE_CORRUPTED; }));
+
+  return connection;
+}
+
+Result<nsCOMPtr<mozIStorageConnection>, nsresult>
+QuotaManager::RecopyLocalStorageArchiveFromWebAppsStore(
+    nsIFile& aLsArchiveFile) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(CachedNextGenLocalStorageEnabled());
+
+  QM_TRY(MaybeRemoveLocalStorageDirectories());
+
+#ifdef DEBUG
+  {
+    QM_TRY_INSPECT(const bool& exists,
+                   MOZ_TO_RESULT_INVOKE(aLsArchiveFile, Exists));
 
     MOZ_ASSERT(exists);
   }
 #endif
 
-  QM_TRY(lsArchiveFile->Remove(false));
+  QM_TRY(aLsArchiveFile.Remove(false));
 
-  QM_TRY_UNWRAP(aConnection,
-                CreateLocalStorageArchiveConnectionFromWebAppsStore());
+  QM_TRY(CopyLocalStorageArchiveFromWebAppsStore(aLsArchiveFile));
 
-  return NS_OK;
+  QM_TRY_UNWRAP(auto connection,
+                CreateLocalStorageArchiveConnection(aLsArchiveFile));
+
+  QM_TRY(InitializeLocalStorageArchive(connection));
+
+  return connection;
 }
 
-nsresult QuotaManager::DowngradeLocalStorageArchive(
-    nsCOMPtr<mozIStorageConnection>& aConnection) {
+Result<nsCOMPtr<mozIStorageConnection>, nsresult>
+QuotaManager::DowngradeLocalStorageArchive(nsIFile& aLsArchiveFile) {
   AssertIsOnIOThread();
   MOZ_ASSERT(CachedNextGenLocalStorageEnabled());
 
-  QM_TRY(RecreateLocalStorageArchive(aConnection));
+  QM_TRY_UNWRAP(auto connection,
+                RecopyLocalStorageArchiveFromWebAppsStore(aLsArchiveFile));
 
   QM_TRY(
-      InitializeLocalStorageArchive(aConnection, kLocalStorageArchiveVersion));
+      SaveLocalStorageArchiveVersion(connection, kLocalStorageArchiveVersion));
 
-  return NS_OK;
+  return connection;
 }
 
-nsresult QuotaManager::UpgradeLocalStorageArchiveFromLessThan4To4(
-    nsCOMPtr<mozIStorageConnection>& aConnection) {
+Result<nsCOMPtr<mozIStorageConnection>, nsresult>
+QuotaManager::UpgradeLocalStorageArchiveFromLessThan4To4(
+    nsIFile& aLsArchiveFile) {
   AssertIsOnIOThread();
   MOZ_ASSERT(CachedNextGenLocalStorageEnabled());
 
-  QM_TRY(RecreateLocalStorageArchive(aConnection));
+  QM_TRY_UNWRAP(auto connection,
+                RecopyLocalStorageArchiveFromWebAppsStore(aLsArchiveFile));
 
-  QM_TRY(InitializeLocalStorageArchive(aConnection, 4));
+  QM_TRY(SaveLocalStorageArchiveVersion(connection, 4));
 
-  return NS_OK;
+  return connection;
 }
 
 /*
@@ -5803,35 +5747,74 @@ nsresult QuotaManager::MaybeCreateOrUpgradeStorage(
   return NS_OK;
 }
 
-nsresult QuotaManager::MaybeInitializeOrUpgradeLocalStorageArchive() {
+nsresult QuotaManager::MaybeRemoveLocalStorageArchiveTmpFile() {
   AssertIsOnIOThread();
 
-  QM_TRY_UNWRAP((auto [connection, newlyCreatedOrRecreated]),
-                CreateLocalStorageArchiveConnection());
+  QM_TRY_INSPECT(const auto& lsArchiveTmpFile,
+                 GetLocalStorageArchiveTmpFile(*mStoragePath));
 
-  uint32_t version = 0;
+  QM_TRY_INSPECT(const bool& exists,
+                 MOZ_TO_RESULT_INVOKE(lsArchiveTmpFile, Exists));
 
-  if (!newlyCreatedOrRecreated) {
-    QM_TRY_INSPECT(const auto& initialized,
-                   IsLocalStorageArchiveInitialized(*connection));
-
-    if (initialized) {
-      QM_TRY_UNWRAP(version, LoadLocalStorageArchiveVersion(*connection));
-    }
+  if (exists) {
+    QM_TRY(lsArchiveTmpFile->Remove(false));
   }
 
+  return NS_OK;
+}
+
+Result<Ok, nsresult> QuotaManager::MaybeCreateOrUpgradeLocalStorageArchive(
+    nsIFile& aLsArchiveFile) {
+  AssertIsOnIOThread();
+
+  QM_TRY_INSPECT(
+      const bool& lsArchiveFileExisted,
+      ([this, &aLsArchiveFile]() -> Result<bool, nsresult> {
+        QM_TRY_INSPECT(const bool& exists,
+                       MOZ_TO_RESULT_INVOKE(aLsArchiveFile, Exists));
+
+        if (!exists) {
+          QM_TRY(CopyLocalStorageArchiveFromWebAppsStore(aLsArchiveFile));
+        }
+
+        return exists;
+      }()));
+
+  QM_TRY_UNWRAP(auto connection,
+                CreateLocalStorageArchiveConnection(aLsArchiveFile));
+
+  QM_TRY_INSPECT(const auto& initialized,
+                 IsLocalStorageArchiveInitialized(*connection));
+
+  if (!initialized) {
+    QM_TRY(InitializeLocalStorageArchive(connection));
+  }
+
+  QM_TRY_UNWRAP(int32_t version, LoadLocalStorageArchiveVersion(*connection));
+
   if (version > kLocalStorageArchiveVersion) {
-    QM_TRY(DowngradeLocalStorageArchive(connection));
+    // Close local storage archive connection. We are going to remove underlying
+    // file.
+    QM_TRY(connection->Close());
+
+    // This will wipe the archive and any migrated data and recopy the archive
+    // from webappsstore.sqlite.
+    QM_TRY_UNWRAP(connection, DowngradeLocalStorageArchive(aLsArchiveFile));
 
     QM_TRY_UNWRAP(version, LoadLocalStorageArchiveVersion(*connection));
 
     MOZ_ASSERT(version == kLocalStorageArchiveVersion);
   } else if (version != kLocalStorageArchiveVersion) {
-    if (newlyCreatedOrRecreated) {
+    // The version can be zero either when the archive didn't exist or it did
+    // exist, but the archive was created without any version information.
+    // We don't need to do any upgrades only if it didn't exist because existing
+    // archives without version information must be recopied to really fix bug
+    // 1542104. See also bug 1546305 which introduced archive versions.
+    if (!lsArchiveFileExisted) {
       MOZ_ASSERT(version == 0);
 
-      QM_TRY(InitializeLocalStorageArchive(connection,
-                                           kLocalStorageArchiveVersion));
+      QM_TRY(SaveLocalStorageArchiveVersion(connection,
+                                            kLocalStorageArchiveVersion));
     } else {
       static_assert(kLocalStorageArchiveVersion == 4,
                     "Upgrade function needed due to LocalStorage archive "
@@ -5839,15 +5822,22 @@ nsresult QuotaManager::MaybeInitializeOrUpgradeLocalStorageArchive() {
 
       while (version != kLocalStorageArchiveVersion) {
         if (version < 4) {
-          QM_TRY(UpgradeLocalStorageArchiveFromLessThan4To4(connection));
+          // Close local storage archive connection. We are going to remove
+          // underlying file.
+          QM_TRY(connection->Close());
+
+          // This won't do an "upgrade" in a normal sense. It will wipe the
+          // archive and any migrated data and recopy the archive from
+          // webappsstore.sqlite
+          QM_TRY_UNWRAP(connection, UpgradeLocalStorageArchiveFromLessThan4To4(
+                                        aLsArchiveFile));
         } /* else if (version == 4) {
           QM_TRY(UpgradeLocalStorageArchiveFrom4To5(connection));
         } */
         else {
-          QM_FAIL(NS_ERROR_FAILURE, []() {
+          QM_FAIL(Err(NS_ERROR_FAILURE), []() {
             QM_WARNING(
-                "Unable to initialize LocalStorage archive, no upgrade "
-                "path "
+                "Unable to initialize LocalStorage archive, no upgrade path "
                 "is available!");
           });
         }
@@ -5859,7 +5849,50 @@ nsresult QuotaManager::MaybeInitializeOrUpgradeLocalStorageArchive() {
     }
   }
 
-  return NS_OK;
+  // At this point, we have finished initializing the local storage archive, and
+  // can continue storage initialization. We don't know though if the actual
+  // data in the archive file is readable. We can't do a PRAGMA integrity_check
+  // here though, because that would be too heavyweight.
+
+  return Ok{};
+}
+
+Result<Ok, nsresult> QuotaManager::CreateEmptyLocalStorageArchive(
+    nsIFile& aLsArchiveFile) const {
+  AssertIsOnIOThread();
+
+  QM_TRY_INSPECT(const bool& exists,
+                 MOZ_TO_RESULT_INVOKE(aLsArchiveFile, Exists));
+
+  // If it exists, remove it. It might be a directory, so remove it recursively.
+  if (exists) {
+    QM_TRY(aLsArchiveFile.Remove(true));
+
+    // XXX If we crash right here, the next session will copy the archive from
+    // webappsstore.sqlite again!
+    // XXX Create a marker file before removing the archive which can be
+    // used in MaybeCreateOrUpgradeLocalStorageArchive to create an empty
+    // archive instead of recopying it from webapppstore.sqlite (in other
+    // words, finishing what was started here).
+  }
+
+  QM_TRY_INSPECT(const auto& ss, ToResultGet<nsCOMPtr<mozIStorageService>>(
+                                     MOZ_SELECT_OVERLOAD(do_GetService),
+                                     MOZ_STORAGE_SERVICE_CONTRACTID));
+
+  QM_TRY_UNWRAP(
+      const auto connection,
+      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>, ss,
+                                 OpenUnsharedDatabase, &aLsArchiveFile));
+
+  QM_TRY(StorageDBUpdater::CreateCurrentSchema(connection));
+
+  QM_TRY(InitializeLocalStorageArchive(connection));
+
+  QM_TRY(
+      SaveLocalStorageArchiveVersion(connection, kLocalStorageArchiveVersion));
+
+  return Ok{};
 }
 
 nsresult QuotaManager::EnsureStorageIsInitialized() {
@@ -5910,10 +5943,22 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
   // Check to make sure that the storage version is correct.
   QM_TRY(MaybeCreateOrUpgradeStorage(*connection));
 
+  QM_TRY(MaybeRemoveLocalStorageArchiveTmpFile());
+
+  QM_TRY_INSPECT(const auto& lsArchiveFile,
+                 GetLocalStorageArchiveFile(*mStoragePath));
+
   if (CachedNextGenLocalStorageEnabled()) {
-    QM_TRY(MaybeInitializeOrUpgradeLocalStorageArchive());
+    QM_TRY(MaybeCreateOrUpgradeLocalStorageArchive(*lsArchiveFile)
+               .orElse([&](const nsresult rv) -> Result<Ok, nsresult> {
+                 if (IsDatabaseCorruptionError(rv)) {
+                   QM_TRY_RETURN(
+                       CreateEmptyLocalStorageArchive(*lsArchiveFile));
+                 }
+                 return Err(rv);
+               }));
   } else {
-    QM_TRY(MaybeRemoveLocalStorageDataAndArchive());
+    QM_TRY(MaybeRemoveLocalStorageDataAndArchive(*lsArchiveFile));
   }
 
   QM_TRY_UNWRAP(mCacheUsable, MaybeCreateOrUpgradeCache(*connection));
