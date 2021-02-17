@@ -68,7 +68,7 @@ void nsMenuItemIconX::Destroy() {
 }
 
 nsresult nsMenuItemIconX::SetupIcon() {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // Still don't have one, then something is wrong, get out of here.
   if (!mNativeMenuItem) {
@@ -107,7 +107,7 @@ nsresult nsMenuItemIconX::SetupIcon() {
 
   return rv;
 
-  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 nsresult nsMenuItemIconX::GetIconURI(nsIURI** aIconURI) {
@@ -200,7 +200,7 @@ nsresult nsMenuItemIconX::GetIconURI(nsIURI** aIconURI) {
 //
 
 nsresult nsMenuItemIconX::OnComplete(imgIContainer* aImage) {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (!mNativeMenuItem) {
     mIconLoader->Destroy();
@@ -219,5 +219,5 @@ nsresult nsMenuItemIconX::OnComplete(imgIContainer* aImage) {
   mIconLoader->Destroy();
   return NS_OK;
 
-  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE)
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
