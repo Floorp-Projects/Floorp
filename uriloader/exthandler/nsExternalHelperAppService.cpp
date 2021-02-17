@@ -591,33 +591,12 @@ static const nsDefaultMimeTypeEntry nonDecodableExtensions[] = {
  * image/ mimetypes.
  */
 static const char* forcedExtensionMimetypes[] = {
-    // OpenDocument formats
-    "application/vnd.oasis.opendocument.text",
-    "application/vnd.oasis.opendocument.presentation",
-    "application/vnd.oasis.opendocument.spreadsheet",
-    "application/vnd.oasis.opendocument.graphics",
-
-    // Legacy Microsoft Office
-    "application/msword", "application/vnd.ms-powerpoint",
-    "application/vnd.ms-excel",
-
-    // Office Open XML
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-
     // Note: zip and json mimetypes are commonly used with a variety of
     // extensions; don't add them here. It's a similar story for text/xml,
     // but slightly worse because we can use it when sniffing for a mimetype
     // if one hasn't been provided, so don't re-add that here either.
-
-    APPLICATION_PDF,
-
-    APPLICATION_OGG,
-
-    APPLICATION_WASM,
-
-    TEXT_CALENDAR, TEXT_CSS, TEXT_VCARD};
+    APPLICATION_PDF, APPLICATION_OGG, APPLICATION_WASM,
+    TEXT_CALENDAR,   TEXT_CSS,        TEXT_VCARD};
 
 /**
  * Primary extensions of types whose descriptions should be overwritten.
