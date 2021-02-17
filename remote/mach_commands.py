@@ -405,6 +405,8 @@ class PuppeteerRunner(MozbuildObject):
         `extra_prefs`:
           Dictionary of extra preferences to write to the profile,
           before invoking npm.  Overrides default preferences.
+        `enable_webrender`:
+          Boolean to indicate whether to enable WebRender compositor in Gecko.
         `write_results`:
           Path to write the results json file
         `subset`
@@ -442,6 +444,9 @@ class PuppeteerRunner(MozbuildObject):
         if product == "firefox":
             env["BINARY"] = binary
             env["PUPPETEER_PRODUCT"] = "firefox"
+
+            env["MOZ_WEBRENDER"] = "%d" % params.get("enable_webrender", False)
+
         command = ["run", "unit", "--"] + mocha_options
 
         env["HEADLESS"] = str(params.get("headless", False))
@@ -518,6 +523,11 @@ def create_parser_puppeteer():
         help="Enable Fission (site isolation) in Gecko.",
     )
     p.add_argument(
+        "--enable-webrender",
+        action="store_true",
+        help="Enable the WebRender compositor in Gecko.",
+    )
+    p.add_argument(
         "-z", "--headless", action="store_true", help="Run browser in headless mode."
     )
     p.add_argument(
@@ -578,6 +588,7 @@ class PuppeteerTest(MachCommandBase):
         binary=None,
         ci=False,
         enable_fission=False,
+        enable_webrender=False,
         headless=False,
         extra_prefs=None,
         extra_options=None,
@@ -642,6 +653,7 @@ class PuppeteerTest(MachCommandBase):
         params = {
             "binary": binary,
             "headless": headless,
+            "enable_webrender": enable_webrender,
             "extra_prefs": prefs,
             "product": product,
             "extra_launcher_options": options,
