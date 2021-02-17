@@ -237,7 +237,6 @@ about-logins-error-message-duplicate-login-with-link = An entry for { $loginTitl
 # This is a generic error message.
 about-logins-error-message-default = An error occurred while trying to save this password.
 
-
 ## Login Export Dialog
 
 # Title of the file picker dialog

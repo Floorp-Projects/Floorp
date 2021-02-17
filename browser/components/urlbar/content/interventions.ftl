@@ -14,7 +14,7 @@ intervention-refresh-profile-confirm = Refresh { -brand-short-name }…
 
 ## These strings describe Interventions helping the user with the Firefox update
 ## process.
-
+##
 ## Shown when an update is available to download.
 
 intervention-update-ask = A new version of { -brand-short-name } is available.

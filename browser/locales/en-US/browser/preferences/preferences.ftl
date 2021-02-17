@@ -223,7 +223,6 @@ containers-remove-alert-msg =
 containers-remove-ok-button = Remove this Container
 containers-remove-cancel-button = Don’t remove this Container
 
-
 ## General Section - Language & Appearance
 
 language-and-appearance-header = Language and Appearance
@@ -626,6 +625,7 @@ home-prefs-recommended-by-header =
     .label = Recommended by { $provider }
 home-prefs-recommended-by-description-update = Exceptional content from across the web, curated by { $provider }
 home-prefs-recommended-by-description-new = Exceptional content curated by { $provider }, part of the { -brand-product-name } family
+
 ##
 
 home-prefs-recommended-by-learn-more = How it works
@@ -1140,6 +1140,7 @@ enhanced-tracking-protection-setting-strict =
 enhanced-tracking-protection-setting-custom =
   .label = Custom
   .accesskey = C
+
 ##
 
 content-blocking-etp-standard-desc = Balanced for protection and performance. Pages will load normally.
@@ -1375,6 +1376,7 @@ httpsonly-radio-disabled =
     .label = Don’t enable HTTPS-Only Mode
 
 ## The following strings are used in the Download section of settings
+
 desktop-folder-name = Desktop
 downloads-folder-name = Downloads
 choose-download-folder-title = Choose Download Folder:
