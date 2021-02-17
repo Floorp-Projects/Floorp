@@ -93,9 +93,10 @@ struct AspectRatio {
    *
    * @param aRatioDependentAxis  The ratio depenedent axis of the box.
    * @param aWM  The writing mode of the box.
-   * @param aRatioDetermingSize  The size on the ratio determining axis.
-   *                             Basically, we use this size and |mRatio| to
-   *                             compute the size on the ratio-dependent axis.
+   * @param aRatioDetermingSize  The content-box size on the ratio determining
+   *                             axis. Basically, we use this size and |mRatio|
+   *                             to compute the size on the ratio-dependent
+   *                             axis.
    * @param aContentBoxSizeToBoxSizingAdjust  The border padding box size
    *                                          adjustment. We need this because
    *                                          aspect-ratio should take the
