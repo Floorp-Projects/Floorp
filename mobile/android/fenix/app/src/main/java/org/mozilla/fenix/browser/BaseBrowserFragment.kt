@@ -318,17 +318,17 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
             }
         )
         val browserToolbarMenuController = DefaultBrowserToolbarMenuController(
+            store = store,
             activity = activity,
             navController = findNavController(),
             metrics = requireComponents.analytics.metrics,
             settings = context.settings(),
             readerModeController = readerMenuController,
-            sessionManager = requireComponents.core.sessionManager,
             sessionFeature = sessionFeature,
             findInPageLauncher = { findInPageIntegration.withFeature { it.launch() } },
             swipeRefresh = swipeRefresh,
             browserAnimator = browserAnimator,
-            customTabSession = customTabSessionId?.let { sessionManager.findSessionById(it) },
+            customTabSessionId = customTabSessionId,
             openInFenixIntent = openInFenixIntent,
             bookmarkTapped = { url: String, title: String ->
                 viewLifecycleOwner.lifecycleScope.launch {

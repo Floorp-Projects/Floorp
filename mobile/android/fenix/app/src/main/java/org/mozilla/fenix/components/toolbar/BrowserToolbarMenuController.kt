@@ -15,9 +15,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.prompt.ShareData
@@ -53,17 +54,17 @@ interface BrowserToolbarMenuController {
 
 @Suppress("LargeClass", "ForbiddenComment")
 class DefaultBrowserToolbarMenuController(
+    private val store: BrowserStore,
     private val activity: HomeActivity,
     private val navController: NavController,
     private val metrics: MetricController,
     private val settings: Settings,
     private val readerModeController: ReaderModeController,
     private val sessionFeature: ViewBoundFeatureWrapper<SessionFeature>,
-    private val sessionManager: SessionManager,
     private val findInPageLauncher: () -> Unit,
     private val browserAnimator: BrowserAnimator,
     private val swipeRefresh: SwipeRefreshLayout,
-    private val customTabSession: Session?,
+    private val customTabSessionId: String?,
     private val openInFenixIntent: Intent,
     private val bookmarkTapped: (String, String) -> Unit,
     private val scope: CoroutineScope,
@@ -73,7 +74,7 @@ class DefaultBrowserToolbarMenuController(
 ) : BrowserToolbarMenuController {
 
     private val currentSession
-        get() = customTabSession ?: sessionManager.selectedSession
+        get() = store.state.findCustomTabOrSelectedTab(customTabSessionId)
 
     // We hold onto a reference of the inner scope so that we can override this with the
     // TestCoroutineScope to ensure sequential execution. If we didn't have this, our tests
@@ -84,6 +85,7 @@ class DefaultBrowserToolbarMenuController(
     @Suppress("ComplexMethod", "LongMethod")
     override fun handleToolbarItemInteraction(item: ToolbarMenu.Item) {
         val sessionUseCases = activity.components.useCases.sessionUseCases
+        val customTabUseCases = activity.components.useCases.customTabsUseCases
         trackToolbarItemInteraction(item)
 
         Do exhaustive when (item) {
@@ -104,26 +106,27 @@ class DefaultBrowserToolbarMenuController(
                 }
             }
             is ToolbarMenu.Item.OpenInFenix -> {
-                // Stop the SessionFeature from updating the EngineView and let it release the session
-                // from the EngineView so that it can immediately be rendered by a different view once
-                // we switch to the actual browser.
-                sessionFeature.get()?.release()
+                customTabSessionId?.let {
+                    // Stop the SessionFeature from updating the EngineView and let it release the session
+                    // from the EngineView so that it can immediately be rendered by a different view once
+                    // we switch to the actual browser.
+                    sessionFeature.get()?.release()
 
-                // Strip the CustomTabConfig to turn this Session into a regular tab and then select it
-                customTabSession!!.customTabConfig = null
-                sessionManager.select(customTabSession)
+                    // Turn this Session into a regular tab and then select it
+                    customTabUseCases.migrate(customTabSessionId, select = true)
 
-                // Switch to the actual browser which should now display our new selected session
-                activity.startActivity(openInFenixIntent.apply {
-                    // We never want to launch the browser in the same task as the external app
-                    // activity. So we force a new task here. IntentReceiverActivity will do the
-                    // right thing and take care of routing to an already existing browser and avoid
-                    // cloning a new one.
-                    flags = flags or Intent.FLAG_ACTIVITY_NEW_TASK
-                })
+                    // Switch to the actual browser which should now display our new selected session
+                    activity.startActivity(openInFenixIntent.apply {
+                        // We never want to launch the browser in the same task as the external app
+                        // activity. So we force a new task here. IntentReceiverActivity will do the
+                        // right thing and take care of routing to an already existing browser and avoid
+                        // cloning a new one.
+                        flags = flags or Intent.FLAG_ACTIVITY_NEW_TASK
+                    })
 
-                // Close this activity (and the task) since it is no longer displaying any session
-                activity.finishAndRemoveTask()
+                    // Close this activity (and the task) since it is no longer displaying any session
+                    activity.finishAndRemoveTask()
+                }
             }
             is ToolbarMenu.Item.Quit -> {
                 // We need to show the snackbar while the browsing data is deleting (if "Delete
@@ -150,7 +153,7 @@ class DefaultBrowserToolbarMenuController(
                 val appLinksUseCases = activity.components.useCases.appLinksUseCases
                 val getRedirect = appLinksUseCases.appLinkRedirect
                 currentSession?.let {
-                    val redirect = getRedirect.invoke(it.url)
+                    val redirect = getRedirect.invoke(it.content.url)
                     redirect.appIntent?.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     appLinksUseCases.openAppLink.invoke(redirect.appIntent)
                 }
@@ -161,22 +164,26 @@ class DefaultBrowserToolbarMenuController(
                 if (item.viewHistory) {
                     navController.navigate(
                         BrowserFragmentDirections.actionGlobalTabHistoryDialogFragment(
-                            activeSessionId = customTabSession?.id
+                            activeSessionId = customTabSessionId
                         )
                     )
                 } else {
-                    sessionUseCases.goBack.invoke(currentSession)
+                    currentSession?.let {
+                        sessionUseCases.goBack.invoke(it.id)
+                    }
                 }
             }
             is ToolbarMenu.Item.Forward -> {
                 if (item.viewHistory) {
                     navController.navigate(
                         BrowserFragmentDirections.actionGlobalTabHistoryDialogFragment(
-                            activeSessionId = customTabSession?.id
+                            activeSessionId = customTabSessionId
                         )
                     )
                 } else {
-                    sessionUseCases.goForward.invoke(currentSession)
+                    currentSession?.let {
+                        sessionUseCases.goForward.invoke(it.id)
+                    }
                 }
             }
             is ToolbarMenu.Item.Reload -> {
@@ -186,15 +193,21 @@ class DefaultBrowserToolbarMenuController(
                     LoadUrlFlags.none()
                 }
 
-                sessionUseCases.reload.invoke(currentSession, flags = flags)
+                currentSession?.let {
+                    sessionUseCases.reload.invoke(it.id, flags = flags)
+                }
             }
-            is ToolbarMenu.Item.Stop -> sessionUseCases.stopLoading.invoke(currentSession)
+            is ToolbarMenu.Item.Stop -> {
+                currentSession?.let {
+                    sessionUseCases.stopLoading.invoke(it.id)
+                }
+            }
             is ToolbarMenu.Item.Share -> {
                 val directions = NavGraphDirections.actionGlobalShareFragment(
                     data = arrayOf(
                         ShareData(
                             url = getProperUrl(currentSession),
-                            title = currentSession?.title
+                            title = currentSession?.content?.title
                         )
                     ),
                     showPage = true
@@ -211,10 +224,14 @@ class DefaultBrowserToolbarMenuController(
                     BrowserFragmentDirections.actionBrowserFragmentToSyncedTabsFragment()
                 )
             }
-            is ToolbarMenu.Item.RequestDesktop -> sessionUseCases.requestDesktopSite.invoke(
-                item.isChecked,
-                currentSession
-            )
+            is ToolbarMenu.Item.RequestDesktop -> {
+                currentSession?.let {
+                    sessionUseCases.requestDesktopSite.invoke(
+                        item.isChecked,
+                        it.id
+                    )
+                }
+            }
             is ToolbarMenu.Item.AddToTopSites -> {
                 scope.launch {
                     val context = swipeRefresh.context
@@ -234,7 +251,7 @@ class DefaultBrowserToolbarMenuController(
                         ioScope.launch {
                             currentSession?.let {
                                 with(activity.components.useCases.topSitesUseCase) {
-                                    addPinnedSites(it.title, it.url)
+                                    addPinnedSites(it.content.title, it.content.url)
                                 }
                             }
                         }.join()
@@ -294,8 +311,8 @@ class DefaultBrowserToolbarMenuController(
                 }
             }
             is ToolbarMenu.Item.Bookmark -> {
-                sessionManager.selectedSession?.let {
-                    getProperUrl(it)?.let { url -> bookmarkTapped(url, it.title) }
+                store.state.selectedTab?.let {
+                    getProperUrl(it)?.let { url -> bookmarkTapped(url, it.content.title) }
                 }
             }
             is ToolbarMenu.Item.Bookmarks -> browserAnimator.captureEngineViewAndDrawStatically {
@@ -325,13 +342,13 @@ class DefaultBrowserToolbarMenuController(
         }
     }
 
-    private fun getProperUrl(currentSession: Session?): String? {
+    private fun getProperUrl(currentSession: SessionState?): String? {
         return currentSession?.id?.let {
             val currentTab = browserStore.state.findTab(it)
             if (currentTab?.readerState?.active == true) {
                 currentTab.readerState.activeUrl
             } else {
-                currentSession.url
+                currentSession.content.url
             }
         }
     }
