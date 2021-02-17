@@ -248,6 +248,44 @@ To run the tests:
 
 More tests can be `found in-tree <https://searchfox.org/mozilla-central/source/tools/lint/test>`_.
 
+Tracking fixed issues
+---------------------
+
+All the linters that provide ``fix support`` returns a dictionary instead of a list.
+
+``{"results":result,"fixed":fixed}``
+
+* results - All the linting errors it was not able to fix
+* fixed - Count of fixed errors (for ``fix=False`` this is 0)
+
+Some linters (example: `codespell <https://searchfox.org/mozilla-central/rev/0379f315c75a2875d716b4f5e1a18bf27188f1e6/tools/lint/spell/__init__.py#145-163>`_) might require two passes to count the number of fixed issues.
+Others might just need `some tuning <https://searchfox.org/mozilla-central/rev/0379f315c75a2875d716b4f5e1a18bf27188f1e6/tools/lint/file-whitespace/__init__.py#28,60,85,112>`_.
+
+For adding tests to check your fixed count, add a global variable ``fixed = 0``
+and write a function to add your test as mentioned under ``Automated testing`` section.
+
+
+Here's an example
+
+.. code-block:: python
+
+    fixed = 0
+
+
+    def test_lint_codespell_fix(lint, create_temp_file):
+    # Typo has been fixed in the contents to avoid triggering warning
+    # 'informations' ----> 'information'
+        contents = """This is a file with some typos and information.
+    But also testing false positive like optin (because this isn't always option)
+    or stuff related to our coding style like:
+    aparent (aParent).
+    but detects mistakes like mozilla
+    """.lstrip()
+
+        path = create_temp_file(contents, "ignore.rst")
+        lint([path], fix=True)
+
+        assert fixed == 2
 
 
 Bootstrapping Dependencies
