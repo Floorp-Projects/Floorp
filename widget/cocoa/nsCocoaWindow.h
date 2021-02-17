@@ -184,7 +184,6 @@ typedef struct _nsCocoaWindowList {
   CGFloat mUnifiedToolbarHeight;
   CGFloat mSheetAttachmentPosition;
   NSRect mWindowButtonsRect;
-  NSRect mFullScreenButtonRect;
 }
 - (void)setUnifiedToolbarHeight:(CGFloat)aHeight;
 - (CGFloat)unifiedToolbarHeight;
@@ -195,9 +194,7 @@ typedef struct _nsCocoaWindowList {
 - (void)setSheetAttachmentPosition:(CGFloat)aY;
 - (CGFloat)sheetAttachmentPosition;
 - (void)placeWindowButtons:(NSRect)aRect;
-- (void)placeFullScreenButton:(NSRect)aRect;
 - (NSPoint)windowButtonsPositionWithDefaultPosition:(NSPoint)aDefaultPosition;
-- (NSPoint)fullScreenButtonPositionWithDefaultPosition:(NSPoint)aDefaultPosition;
 - (void)windowMainStateChanged;
 @end
 
