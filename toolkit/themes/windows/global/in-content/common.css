@@ -54,3 +54,12 @@ html|button {
 xul|button > xul|*.button-box {
   padding-inline: 0;
 }
+
+@supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
+@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+  xul|menulist > xul|menupopup {
+    background-color: transparent;
+    border-color: transparent;
+  }
+}
+}
