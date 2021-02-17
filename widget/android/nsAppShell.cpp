@@ -401,7 +401,6 @@ nsAppShell::nsAppShell()
       GeckoThreadSupport::Init();
       GeckoAppShellSupport::Init();
       XPCOMEventTargetWrapper::Init();
-      mozilla::GeckoSystemStateListener::Init();
       mozilla::widget::Telemetry::Init();
       mozilla::widget::GeckoTelemetryDelegate::Init();
 
