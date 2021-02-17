@@ -48,10 +48,10 @@ printui-scale-pcent = Scale
 # Section title (noun) for the two-sided print options
 printui-two-sided-printing = Two-sided printing
 printui-two-sided-printing-off = Off
-# Flip the page on the side (like a book).
-printui-two-sided-printing-side-edge = Flip on side edge
-# Flip the page on the top (like a vertical calendar).
-printui-two-sided-printing-top-edge = Flip on top edge
+# Flip the sheet as if it were bound along its long edge.
+printui-two-sided-printing-long-edge = Flip on long edge
+# Flip the sheet as if it were bound along its short edge.
+printui-two-sided-printing-short-edge = Flip on short edge
 
 # Section title for miscellaneous print options
 printui-options = Options
