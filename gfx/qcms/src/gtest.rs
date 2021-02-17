@@ -884,4 +884,19 @@ mod test {
         xfm.apply(&mut data);
         assert_eq!(data, [4, 30, 80]);
     }
+    #[test]
+    fn D50() {
+        let p1 = crate::Profile::new_sRGB();
+        let p2 = crate::Profile::new_XYZD50();
+        let xfm = crate::Transform::new(
+            &p1,
+            &p2,
+            crate::DataType::RGB8,
+            crate::Intent::default(),
+        )
+        .unwrap();
+        let mut data = [4, 30, 80];
+        xfm.apply(&mut data);
+        assert_eq!(data, [4, 4, 15]);
+    }
 }

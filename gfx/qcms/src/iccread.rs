@@ -26,7 +26,7 @@ use std::{
     sync::Arc,
 };
 
-use crate::transform::{set_rgb_colorants, PrecacheOuput};
+use crate::{double_to_s15Fixed16Number, transform::{set_rgb_colorants, PrecacheOuput}};
 use crate::{matrix::Matrix, s15Fixed16Number, s15Fixed16Number_to_float, Intent, Intent::*};
 
 pub static SUPPORTS_ICCV4: AtomicBool = AtomicBool::new(cfg!(feature = "iccv4-enabled"));
@@ -932,6 +932,10 @@ fn curve_from_gamma(gamma: f32) -> Box<curveType> {
     Box::new(curveType::Curve(vec![float_to_u8Fixed8Number(gamma)]))
 }
 
+fn identity_curve() -> Box<curveType> {
+    Box::new(curveType::Curve(Vec::new()))
+}
+
 /* from lcms: cmsWhitePointFromTemp */
 /* tempK must be >= 4000. and <= 25000.
  * Invalid values of tempK will return
@@ -1029,6 +1033,29 @@ impl Profile {
         let table = build_sRGB_gamma_table(1024);
 
         Profile::new_rgb_with_table(D65, Rec709Primaries, &table).unwrap()
+    }
+
+    /// Create a new profile with D50 adopted white and identity transform functions
+    pub fn new_XYZD50() -> Box<Profile> {
+        let mut profile = profile_create();
+        profile.redColorant.X = double_to_s15Fixed16Number(1.);
+        profile.redColorant.Y = double_to_s15Fixed16Number(0.);
+        profile.redColorant.Z = double_to_s15Fixed16Number(0.);
+        profile.greenColorant.X = double_to_s15Fixed16Number(0.);
+        profile.greenColorant.Y = double_to_s15Fixed16Number(1.);
+        profile.greenColorant.Z = double_to_s15Fixed16Number(0.);
+        profile.blueColorant.X = double_to_s15Fixed16Number(0.);
+        profile.blueColorant.Y = double_to_s15Fixed16Number(0.);
+        profile.blueColorant.Z = double_to_s15Fixed16Number(1.);
+        profile.redTRC = Some(identity_curve());
+        profile.blueTRC = Some(identity_curve());
+        profile.greenTRC = Some(identity_curve());
+
+        profile.class_type = DISPLAY_DEVICE_PROFILE;
+        profile.rendering_intent = Perceptual;
+        profile.color_space = RGB_SIGNATURE;
+        profile.pcs = XYZ_TYPE;
+        profile
     }
 
     pub fn new_gray_with_gamma(gamma: f32) -> Box<Profile> {
