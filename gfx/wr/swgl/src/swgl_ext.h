@@ -767,16 +767,7 @@ static ALWAYS_INLINE PackedRGBA8 convertYUV(int colorSpace, U16 y, U16 u,
                                             U16 v) {
   auto yy = V8<int16_t>(zip(y, y));
   auto uv = V8<int16_t>(zip(u, v));
-  switch (colorSpace) {
-    case REC_601:
-      return YUVConverter<REC_601>::convert(yy, uv);
-    case REC_709:
-      return YUVConverter<REC_709>::convert(yy, uv);
-    case REC_2020:
-      return YUVConverter<REC_2020>::convert(yy, uv);
-    default:
-      return YUVConverter<IDENTITY>::convert(yy, uv);
-  }
+  return yuvMatrix[colorSpace].convert(yy, uv);
 }
 
 // Helper functions to sample from planar YUV textures before converting to RGB
