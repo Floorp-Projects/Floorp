@@ -136,10 +136,12 @@ add_task(async function test_failure_group_conflict() {
 
   // ensure .enroll chooses the special branch with the conflict
   sandbox.stub(manager, "chooseBranch").returns(newBranch);
-  await Assert.rejects(
-    manager.enroll(ExperimentFakes.recipe("bar", { branches: [newBranch] })),
-    /An experiment with a conflicting feature already exists/,
-    "should throw if there is a feature conflict"
+  Assert.equal(
+    await manager.enroll(
+      ExperimentFakes.recipe("bar", { branches: [newBranch] })
+    ),
+    null,
+    "should not enroll if there is a feature conflict"
   );
 
   Assert.equal(

@@ -115,6 +115,7 @@ class _RemoteSettingsExperimentLoader {
     }
     timerManager.unregisterTimer(TIMER_NAME);
     this._initialized = false;
+    this._updating = false;
   }
 
   async evaluateJexl(jexlString, customContext) {
