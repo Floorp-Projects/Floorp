@@ -795,3 +795,113 @@ double HTMLProgressAccessible::CurValue() const {
 bool HTMLProgressAccessible::SetCurValue(double aValue) {
   return false;  // progress meters are readonly.
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// HTMLMeterAccessible
+////////////////////////////////////////////////////////////////////////////////
+
+role HTMLMeterAccessible::NativeRole() const { return roles::METER; }
+
+bool HTMLMeterAccessible::IsWidget() const { return true; }
+
+void HTMLMeterAccessible::Value(nsString& aValue) const {
+  LeafAccessible::Value(aValue);
+  if (!aValue.IsEmpty()) {
+    return;
+  }
+
+  // If we did not get a value from the above LeafAccessible call,
+  // we should check to see if the meter has inner text.
+  // If it does, we'll use that as our value.
+  nsTextEquivUtils::AppendFromDOMChildren(mContent, &aValue);
+  aValue.CompressWhitespace();
+  if (!aValue.IsEmpty()) {
+    return;
+  }
+
+  // If no inner text is found, use curValue
+  double curValue = CurValue();
+  if (IsNaN(curValue)) {
+    return;
+  }
+
+  aValue.AppendFloat(curValue);
+}
+
+double HTMLMeterAccessible::MaxValue() const {
+  double max = LeafAccessible::MaxValue();
+  double min = MinValue();
+
+  if (!IsNaN(max)) {
+    return max > min ? max : min;
+  }
+
+  // If we didn't find a max value, check for the max attribute
+  nsAutoString strValue;
+  if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::max,
+                                     strValue)) {
+    nsresult result = NS_OK;
+    max = strValue.ToDouble(&result);
+    if (NS_SUCCEEDED(result)) {
+      return max > min ? max : min;
+    }
+  }
+
+  return 1 > min ? 1 : min;
+}
+
+double HTMLMeterAccessible::MinValue() const {
+  double min = LeafAccessible::MinValue();
+  if (!IsNaN(min)) {
+    return min;
+  }
+
+  nsAutoString strValue;
+  if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::min,
+                                     strValue)) {
+    nsresult result = NS_OK;
+    min = strValue.ToDouble(&result);
+    if (NS_SUCCEEDED(result)) {
+      return min;
+    }
+  }
+
+  return 0;
+}
+
+double HTMLMeterAccessible::CurValue() const {
+  double value = LeafAccessible::CurValue();
+  double minValue = MinValue();
+
+  if (IsNaN(value)) {
+    /* If we didn't find a value from the LeafAccessible call above, check
+     * for a value attribute */
+    nsAutoString attrValue;
+    if (!mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::value,
+                                        attrValue)) {
+      return minValue;
+    }
+
+    // If we find a value attribute, attempt to convert it to a double
+    nsresult error = NS_OK;
+    value = attrValue.ToDouble(&error);
+    if (NS_FAILED(error)) {
+      return minValue;
+    }
+  }
+
+  /* If we end up with a defined value, verify it falls between
+   * our established min/max. Otherwise, snap it to the nearest boundary. */
+  double maxValue = MaxValue();
+  if (value > maxValue) {
+    value = maxValue;
+  } else if (value < minValue) {
+    value = minValue;
+  }
+
+  return value;
+}
+
+bool HTMLMeterAccessible::SetCurValue(double aValue) {
+  return false;  // meters are readonly.
+}
