@@ -7708,6 +7708,18 @@
     "alert_emails": ["tdsmith@mozilla.com", "perf-telemetry-alerts@mozilla.com", "product-metrics-telemetry-alerts@mozilla.com"],
     "releaseChannelCollection": "opt-out"
   },
+  "FX_LAZYLOAD_IMAGE_PAGE_LOAD_MS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 10000,
+    "n_buckets": 100,
+    "description": "Firefox: Time taken to load a page that has at least one `loading='lazy'` image. (This metric includes both loads and reloads)",
+    "bug_numbers": [1692350],
+    "alert_emails": ["sefeng@mozilla.com", "perf-telemetry-alerts@mozilla.com"],
+    "releaseChannelCollection": "opt-out"
+  },
   "FX_PAGE_RELOAD_NORMAL_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
