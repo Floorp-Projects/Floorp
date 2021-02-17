@@ -407,7 +407,6 @@ UNIFIED_SOURCES += [
     "vm/PromiseLookup.cpp",
     "vm/ProxyObject.cpp",
     "vm/Realm.cpp",
-    "vm/ReceiverGuard.cpp",
     "vm/RegExpObject.cpp",
     "vm/RegExpStatics.cpp",
     "vm/Runtime.cpp",
