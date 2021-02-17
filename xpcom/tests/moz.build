@@ -24,7 +24,7 @@ test_progs = [
 ]
 SimplePrograms(test_progs)
 
-USE_LIBS += ["mozglue"]
+USE_LIBS += ["mfbt"]
 
 XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.ini"]
 
