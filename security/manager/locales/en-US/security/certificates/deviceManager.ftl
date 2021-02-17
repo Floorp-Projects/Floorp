@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ## Strings used for device manager
+
 devmgr =
     .title = Device Manager
     .style = width: 67em; height: 32em;
@@ -45,6 +46,7 @@ devmgr-button-disable-fips =
     .accesskey = F
 
 ## Strings used for load device
+
 load-device =
     .title = Load PKCS#11 Device Driver
 

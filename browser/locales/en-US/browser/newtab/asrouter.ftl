@@ -7,6 +7,7 @@
 cfr-doorhanger-extension-heading = Recommended Extension
 cfr-doorhanger-feature-heading = Recommended Feature
 cfr-doorhanger-pintab-heading = Try This: Pin Tab
+
 ##
 
 cfr-doorhanger-extension-sumo-link =
@@ -76,7 +77,6 @@ cfr-doorhanger-pintab-step3 = If the site has an update you’ll see a blue dot 
 
 cfr-doorhanger-pintab-animation-pause = Pause
 cfr-doorhanger-pintab-animation-resume = Resume
-
 
 ## Firefox Accounts Message
 
@@ -198,7 +198,6 @@ cfr-doorhanger-milestone-close-button = Close
   .accesskey = C
 
 ## What’s New Panel Content for Firefox 76
-
 ## Protections Dashboard message
 
 cfr-whatsnew-protections-header = Protections at a glance

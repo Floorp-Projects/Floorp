@@ -118,6 +118,7 @@ appmenu-reopen-all-tabs = Reopen All Tabs
 appmenu-reopen-all-windows = Reopen All Windows
 
 ## Help panel
+
 appmenu-help-header =
     .title = { -brand-shorter-name } Help
 appmenu-about =

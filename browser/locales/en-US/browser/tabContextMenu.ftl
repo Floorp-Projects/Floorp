@@ -59,6 +59,7 @@ tab-context-close-multiple-tabs =
 
 ## Variables:
 ##  $tabCount (Number): the number of tabs that are affected by the action.
+
 tab-context-undo-close-tabs =
     .label =
         { $tabCount ->

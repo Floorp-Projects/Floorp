@@ -20,6 +20,7 @@ origin-title = Origin: { $originTitle }
 ## Variables:
 ##  $name: the name of scope, active cache, waiting cache and the push end point.
 ##  $url: the url of script specification and current worker.
+
 scope = <strong>Scope:</strong> { $name }
 script-spec = <strong>Script Spec:</strong> <a data-l10n-name="link">{ $url }</a>
 current-worker-url = <strong>Current Worker URL:</strong> <a data-l10n-name="link">{ $url }</a>

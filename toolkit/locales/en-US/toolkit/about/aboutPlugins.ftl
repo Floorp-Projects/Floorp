@@ -15,6 +15,7 @@ deprecation-description = Missing something? Some plugins are no longer supporte
 ##   $pluginLibraries: the plugin library
 ##   $pluginFullPath: path of the plugin
 ##   $version: version of the plugin
+
 file-dd = <span data-l10n-name="file">File:</span> { $pluginLibraries }
 path-dd = <span data-l10n-name="path">Path:</span> { $pluginFullPath }
 version-dd = <span data-l10n-name="version">Version:</span> { $version }
@@ -23,6 +24,7 @@ version-dd = <span data-l10n-name="version">Version:</span> { $version }
 ##
 ## Variables:
 ##   $blockListState: show some special state of the plugin, such as blocked, outdated
+
 state-dd-enabled = <span data-l10n-name="state">State:</span> Enabled
 state-dd-enabled-block-list-state = <span data-l10n-name="state">State:</span> Enabled ({ $blockListState })
 state-dd-Disabled = <span data-l10n-name="state">State:</span> Disabled
