@@ -27,8 +27,13 @@ class HomeActivityTestRule(
     ActivityTestRule<HomeActivity>(HomeActivity::class.java, initialTouchMode, launchActivity) {
     override fun beforeActivityLaunched() {
         super.beforeActivityLaunched()
-        setLongTapTimeout()
+        setLongTapTimeout("3000")
         if (skipOnboarding) { skipOnboardingBeforeLaunch() }
+    }
+
+    override fun afterActivityFinished() {
+        super.afterActivityFinished()
+        setLongTapTimeout("400")
     }
 }
 
@@ -48,15 +53,20 @@ class HomeActivityIntentTestRule(
     IntentsTestRule<HomeActivity>(HomeActivity::class.java, initialTouchMode, launchActivity) {
     override fun beforeActivityLaunched() {
         super.beforeActivityLaunched()
-        setLongTapTimeout()
+        setLongTapTimeout("3000")
         if (skipOnboarding) { skipOnboardingBeforeLaunch() }
+    }
+
+    override fun afterActivityFinished() {
+        super.afterActivityFinished()
+        setLongTapTimeout("400")
     }
 }
 
 // changing the device preference for Touch and Hold delay, to avoid long-clicks instead of a single-click
-fun setLongTapTimeout() {
+fun setLongTapTimeout(delay: String) {
     val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-    mDevice.executeShellCommand("settings put secure long_press_timeout 3000")
+    mDevice.executeShellCommand("settings put secure long_press_timeout $delay")
 }
 
 private fun skipOnboardingBeforeLaunch() {
