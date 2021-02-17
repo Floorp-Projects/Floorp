@@ -4288,7 +4288,6 @@ bool WarpCacheIRTranspiler::emitFunApplyMagicArgs(
 bool WarpCacheIRTranspiler::emitFunApplyArgsObj(WrappedFunction* wrappedTarget,
                                                 CallFlags flags) {
   MOZ_ASSERT(!callInfo_->constructing());
-  MOZ_ASSERT(!builder_->inlineCallInfo());
 
   MDefinition* callee = callInfo_->thisArg();
   MDefinition* thisArg = callInfo_->getArg(0);
