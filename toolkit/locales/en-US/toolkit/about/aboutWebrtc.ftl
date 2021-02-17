@@ -18,6 +18,7 @@ about-webrtc-aec-logging-msg-label = AEC Logging
 about-webrtc-aec-logging-off-state-label = Start AEC Logging
 about-webrtc-aec-logging-on-state-label = Stop AEC Logging
 about-webrtc-aec-logging-on-state-msg = AEC logging active (speak with the caller for a few minutes and then stop the capture)
+
 ##
 
 # "PeerConnection" is a proper noun associated with the WebRTC module. "ID" is
@@ -37,6 +38,7 @@ about-webrtc-remote-sdp-heading-offer = Remote SDP (Offer)
 about-webrtc-remote-sdp-heading-answer = Remote SDP (Answer)
 about-webrtc-sdp-history-heading = SDP History
 about-webrtc-sdp-parsing-errors-heading = SDP Parsing Errors
+
 ##
 
 # "RTP" is an abbreviation for the Real-time Transport Protocol, an IETF
@@ -55,13 +57,11 @@ about-webrtc-ice-rollback-count-label = ICE rollbacks:
 about-webrtc-ice-pair-bytes-sent = Bytes sent:
 about-webrtc-ice-pair-bytes-received = Bytes received:
 about-webrtc-ice-component-id = Component ID
-##
 
 ## "Avg." is an abbreviation for Average. These are used as data labels.
 
 about-webrtc-avg-bitrate-label = Avg. bitrate:
 about-webrtc-avg-framerate-label = Avg. framerate:
-##
 
 ## These adjectives are used to label a line of statistics collected for a peer
 ## connection. The data represents either the local or remote end of the
@@ -69,6 +69,7 @@ about-webrtc-avg-framerate-label = Avg. framerate:
 
 about-webrtc-type-local = Local
 about-webrtc-type-remote = Remote
+
 ##
 
 # This adjective is used to label a table column. Cells in this column contain
@@ -102,6 +103,7 @@ about-webrtc-log-hide-msg = hide log
 
 about-webrtc-connection-open = [ { $browser-id } | { $id } ] { $url } { $now }
 about-webrtc-connection-closed = [ { $browser-id } | { $id } ] { $url } (closed) { $now }
+
 ##
 
 about-webrtc-local-candidate = Local Candidate
@@ -138,6 +140,7 @@ about-webrtc-last-frame-timestamp = Last Frame Reception Timestamp
 about-webrtc-local-receive-ssrc = Local Receiving SSRC
 # This is an SSRC on the remote side of the connection that is sending RTP
 about-webrtc-remote-send-ssrc = Remote Sending SSRC
+
 ##
 
 # An option whose value will not be displayed but instead noted as having been
@@ -188,6 +191,7 @@ about-webrtc-save-page-msg = page saved to: { $path }
 about-webrtc-debug-mode-off-state-msg = trace log can be found at: { $path }
 about-webrtc-debug-mode-on-state-msg = debug mode active, trace log at: { $path }
 about-webrtc-aec-logging-off-state-msg = captured log files can be found in: { $path }
+
 ##
 
 # This is the total number of packets received on the PeerConnection.
@@ -246,4 +250,5 @@ about-webrtc-sdp-set-at-timestamp-remote = Set Remote SDP at timestamp { NUMBER(
 #  $timestamp (Number) - The Unix Epoch time at which the SDP was set.
 #  $relative-timestamp (Number) - The timestamp relative to the timestamp of the earliest received SDP.
 about-webrtc-sdp-set-timestamp = Timestamp { NUMBER($timestamp, useGrouping: "false") } (+ { $relative-timestamp } ms)
+
 ##
