@@ -2993,7 +2993,6 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
 
 @interface NSView (FrameViewMethodSwizzling)
 - (NSPoint)FrameView__closeButtonOrigin;
-- (NSPoint)FrameView__fullScreenButtonOrigin;
 - (CGFloat)FrameView__titlebarHeight;
 @end
 
@@ -3003,15 +3002,6 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
   NSPoint defaultPosition = [self FrameView__closeButtonOrigin];
   if ([[self window] isKindOfClass:[ToolbarWindow class]]) {
     return [(ToolbarWindow*)[self window] windowButtonsPositionWithDefaultPosition:defaultPosition];
-  }
-  return defaultPosition;
-}
-
-- (NSPoint)FrameView__fullScreenButtonOrigin {
-  NSPoint defaultPosition = [self FrameView__fullScreenButtonOrigin];
-  if ([[self window] isKindOfClass:[ToolbarWindow class]]) {
-    return
-        [(ToolbarWindow*)[self window] fullScreenButtonPositionWithDefaultPosition:defaultPosition];
   }
   return defaultPosition;
 }
@@ -3026,11 +3016,7 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
     CGFloat frameHeight = [self frame].size.height;
     NSPoint pointAboveWindow = {0.0, frameHeight};
     CGFloat windowButtonY = [win windowButtonsPositionWithDefaultPosition:pointAboveWindow].y;
-    CGFloat fullScreenButtonY =
-        [win fullScreenButtonPositionWithDefaultPosition:pointAboveWindow].y;
-    CGFloat maxDistanceFromWindowTopToButtonBottom =
-        std::max(frameHeight - windowButtonY, frameHeight - fullScreenButtonY);
-    height = std::max(height, maxDistanceFromWindowTopToButtonBottom);
+    height = std::max(height, frameHeight - windowButtonY);
   }
   return height;
 }
@@ -3089,8 +3075,8 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
 @implementation BaseWindow
 
 // The frame of a window is implemented using undocumented NSView subclasses.
-// We offset the window buttons by overriding the methods _closeButtonOrigin
-// and _fullScreenButtonOrigin on these frame view classes. The class which is
+// We offset the window buttons by overriding the method _closeButtonOrigin on
+// these frame view classes. The class which is
 // used for a window is determined in the window's frameViewClassForStyleMask:
 // method, so this is where we make sure that we have swizzled the method on
 // all encountered classes.
@@ -3106,8 +3092,6 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
 
   static IMP our_closeButtonOrigin =
       class_getMethodImplementation([NSView class], @selector(FrameView__closeButtonOrigin));
-  static IMP our_fullScreenButtonOrigin =
-      class_getMethodImplementation([NSView class], @selector(FrameView__fullScreenButtonOrigin));
   static IMP our_titlebarHeight =
       class_getMethodImplementation([NSView class], @selector(FrameView__titlebarHeight));
 
@@ -3122,12 +3106,6 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
     if (_closeButtonOrigin && _closeButtonOrigin != our_closeButtonOrigin) {
       nsToolkit::SwizzleMethods(frameViewClass, @selector(_closeButtonOrigin),
                                 @selector(FrameView__closeButtonOrigin));
-    }
-    IMP _fullScreenButtonOrigin =
-        class_getMethodImplementation(frameViewClass, @selector(_fullScreenButtonOrigin));
-    if (_fullScreenButtonOrigin && _fullScreenButtonOrigin != our_fullScreenButtonOrigin) {
-      nsToolkit::SwizzleMethods(frameViewClass, @selector(_fullScreenButtonOrigin),
-                                @selector(FrameView__fullScreenButtonOrigin));
     }
 
     // Override _titlebarHeight so that the floating titlebar doesn't clip the bottom of the
@@ -3592,7 +3570,6 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
     mUnifiedToolbarHeight = 22.0f;
     mSheetAttachmentPosition = aChildViewRect.size.height;
     mWindowButtonsRect = NSZeroRect;
-    mFullScreenButtonRect = NSZeroRect;
 
     if ([self respondsToSelector:@selector(setTitlebarAppearsTransparent:)]) {
       [self setTitlebarAppearsTransparent:YES];
@@ -3774,21 +3751,6 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
       return NSMakePoint(0, [self frame].size.height);
     }
     return NSMakePoint(mWindowButtonsRect.origin.x, mWindowButtonsRect.origin.y);
-  }
-  return aDefaultPosition;
-}
-
-- (void)placeFullScreenButton:(NSRect)aRect {
-  if (!NSEqualRects(mFullScreenButtonRect, aRect)) {
-    mFullScreenButtonRect = aRect;
-    [self reflowTitlebarElements];
-  }
-}
-
-- (NSPoint)fullScreenButtonPositionWithDefaultPosition:(NSPoint)aDefaultPosition {
-  if ([self drawsContentsIntoWindowFrame] && !NSIsEmptyRect(mFullScreenButtonRect)) {
-    return NSMakePoint(std::min(mFullScreenButtonRect.origin.x, aDefaultPosition.x),
-                       std::min(mFullScreenButtonRect.origin.y, aDefaultPosition.y));
   }
   return aDefaultPosition;
 }
