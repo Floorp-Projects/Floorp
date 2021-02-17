@@ -21,7 +21,6 @@ UNIFIED_SOURCES += [
     "TestAudioCallbackDriver.cpp",
     "TestAudioCompactor.cpp",
     "TestAudioDriftCorrection.cpp",
-    "TestAudioInputProcessing.cpp",
     "TestAudioMixer.cpp",
     "TestAudioPacketizer.cpp",
     "TestAudioRingBuffer.cpp",
