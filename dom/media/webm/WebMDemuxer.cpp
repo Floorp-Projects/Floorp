@@ -983,6 +983,18 @@ media::TimeIntervals WebMDemuxer::GetBuffered() {
       }
       auto startTime = TimeUnit::FromNanoseconds(start);
       auto endTime = TimeUnit::FromNanoseconds(end);
+
+      if (startTime.IsNegative() || endTime.IsNegative()) {
+        // We can get timestamps that are conceptually valid, but become
+        // negative due to uint64 -> int64 conversion from TimeUnit. We should
+        // not get negative timestamps here, so guard against them.
+        WEBM_DEBUG(
+            "Invalid range %f-%f, likely result of uint64 -> int64 conversion. "
+            "Bailing early.",
+            startTime.ToSeconds(), endTime.ToSeconds());
+        break;
+      }
+
       WEBM_DEBUG("add range %f-%f", startTime.ToSeconds(), endTime.ToSeconds());
       buffered += media::TimeInterval(startTime, endTime);
     }
