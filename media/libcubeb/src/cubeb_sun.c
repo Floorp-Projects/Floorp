@@ -718,7 +718,6 @@ static struct cubeb_ops const sun_ops = {
   .stream_destroy = sun_stream_destroy,
   .stream_start = sun_stream_start,
   .stream_stop = sun_stream_stop,
-  .stream_reset_default_device = NULL,
   .stream_get_position = sun_stream_get_position,
   .stream_get_latency = sun_stream_get_latency,
   .stream_get_input_latency = NULL,
