@@ -4451,7 +4451,7 @@ void MacroAssembler::iteratorClose(Register obj, Register temp1, Register temp2,
         Address(temp1, NativeIterator::offsetOfFlagsAndCount()));
 
   // Reset property cursor.
-  loadPtr(Address(temp1, NativeIterator::offsetOfGuardsEnd()), temp2);
+  loadPtr(Address(temp1, NativeIterator::offsetOfShapesEnd()), temp2);
   storePtr(temp2, Address(temp1, NativeIterator::offsetOfPropertyCursor()));
 
   // Unlink from the iterator list.
