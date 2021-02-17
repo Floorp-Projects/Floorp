@@ -680,6 +680,7 @@ void TRRService::MaybeConfirm_locked() {
     LOG(("TRRService starting confirmation test %s %s\n", mPrivateURI.get(),
          mConfirmationNS.get()));
     mConfirmer = new TRR(this, mConfirmationNS, TRRTYPE_NS, ""_ns, false);
+    mConfirmer->SetTimeout(StaticPrefs::network_trr_confirmation_timeout_ms());
     DispatchTRRRequestInternal(mConfirmer, false);
   }
 }
