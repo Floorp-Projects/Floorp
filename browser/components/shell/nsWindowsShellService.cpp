@@ -35,8 +35,16 @@
 #include <propvarutil.h>
 #include <propkey.h>
 
+#ifdef __MINGW32__
+// MinGW-w64 headers are missing PropVariantToString.
+#  include <propsys.h>
+PSSTDAPI PropVariantToString(REFPROPVARIANT propvar, PWSTR psz, UINT cch);
+#endif
+
+#include <objbase.h>
 #include <shlobj.h>
 #include "WinUtils.h"
+#include "mozilla/widget/WinTaskbar.h"
 
 #include <mbstring.h>
 
@@ -619,6 +627,259 @@ nsWindowsShellService::CreateShortcut(nsIFile* aBinary,
   NS_ENSURE_HRESULT(hr, NS_ERROR_FAILURE);
 
   return NS_OK;
+}
+
+// Constructs a path to an installer-created shortcut, under a directory
+// specified by a CSIDL.
+static nsresult GetShortcutPath(int aCSIDL, /* out */ nsAutoString& aPath) {
+  wchar_t folderPath[MAX_PATH] = {};
+  HRESULT hr = SHGetFolderPathW(nullptr, aCSIDL, nullptr, SHGFP_TYPE_CURRENT,
+                                folderPath);
+  if (NS_WARN_IF(FAILED(hr))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  aPath.Assign(folderPath);
+  if (NS_WARN_IF(aPath.IsEmpty())) {
+    return NS_ERROR_FAILURE;
+  }
+  if (aPath[aPath.Length() - 1] != '\\') {
+    aPath.AppendLiteral("\\");
+  }
+  // NOTE: In the installer, shortcuts are named "${BrandShortName}.lnk".
+  // This is set from MOZ_APP_DISPLAYNAME in defines.nsi.in. (Except in dev
+  // edition where it's explicitly set to "Firefox Developer Edition" in
+  // branding.nsi, which matches MOZ_APP_DISPLAYNAME in aurora/configure.sh.)
+  //
+  // If this changes, we could expand this to check shortcuts_log.ini,
+  // which records the name of the shortcuts as created by the installer.
+  aPath.AppendLiteral(MOZ_APP_DISPLAYNAME ".lnk");
+
+  return NS_OK;
+}
+
+// Check if the instaler-created shortcut in the given location matches,
+// if so output its path
+//
+// NOTE: DO NOT USE if a false negative (mismatch) is unacceptable.
+// aExePath is compared directly to the path retrieved from the shortcut.
+// Due to the presence of symlinks or other filesystem issues, it's possible
+// for different paths to refer to the same file, which would cause the check
+// to fail.
+// This should rarely be an issue as we are most likely to be run from a path
+// written by the installer (shortcut, association, launch from installer),
+// which also wrote the shortcuts. But it is possible.
+//
+// aCSIDL   the CSIDL of the directory containing the shortcut to check.
+// aAUMID   the AUMID to check for
+// aExePath the target exe path to check for, should be a long path where
+//          possible
+// aShortcutPath outparam, set to matching shortcut path if NS_OK is returned.
+//
+// Returns
+//   NS_ERROR_FAILURE on errors before the shortcut was loaded
+//   NS_ERROR_FILE_NOT_FOUND if the shortcut doesn't exist
+//   NS_ERROR_FILE_ALREADY_EXISTS if the shortcut exists but doesn't match the
+//                                current app
+//   NS_OK if the shortcut matches
+static nsresult GetMatchingShortcut(int aCSIDL, const nsAutoString& aAUMID,
+                                    const wchar_t aExePath[MAXPATHLEN],
+                                    /* out */ nsAutoString& aShortcutPath) {
+  nsresult result = NS_ERROR_FAILURE;
+
+  nsAutoString path;
+  nsresult rv = GetShortcutPath(aCSIDL, path);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return result;
+  }
+
+  // Create a shell link object for loading the shortcut
+  RefPtr<IShellLinkW> link;
+  HRESULT hr = CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER,
+                                IID_IShellLinkW, getter_AddRefs(link));
+  if (NS_WARN_IF(FAILED(hr))) {
+    return result;
+  }
+
+  // Load
+  RefPtr<IPersistFile> persist;
+  hr = link->QueryInterface(IID_IPersistFile, getter_AddRefs(persist));
+  if (NS_WARN_IF(FAILED(hr))) {
+    return result;
+  }
+
+  hr = persist->Load(path.get(), STGM_READ);
+  if (FAILED(hr)) {
+    if (NS_WARN_IF(hr != HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))) {
+      // empty branch, result unchanged but warning issued
+    } else {
+      result = NS_ERROR_FILE_NOT_FOUND;
+    }
+    return result;
+  }
+  result = NS_ERROR_FILE_ALREADY_EXISTS;
+
+  // Check the AUMID
+  RefPtr<IPropertyStore> propStore;
+  hr = link->QueryInterface(IID_IPropertyStore, getter_AddRefs(propStore));
+  if (NS_WARN_IF(FAILED(hr))) {
+    return result;
+  }
+
+  PROPVARIANT pv;
+  hr = propStore->GetValue(PKEY_AppUserModel_ID, &pv);
+  if (NS_WARN_IF(FAILED(hr))) {
+    return result;
+  }
+
+  wchar_t storedAUMID[MAX_PATH];
+  hr = PropVariantToString(pv, storedAUMID, MAX_PATH);
+  PropVariantClear(&pv);
+  if (NS_WARN_IF(FAILED(hr))) {
+    return result;
+  }
+
+  if (!aAUMID.Equals(storedAUMID)) {
+    return result;
+  }
+
+  // Check the exe path
+  static_assert(MAXPATHLEN == MAX_PATH);
+  wchar_t storedExePath[MAX_PATH] = {};
+  // With no flags GetPath gets a long path
+  hr = link->GetPath(storedExePath, ArrayLength(storedExePath), nullptr, 0);
+  if (FAILED(hr) || hr == S_FALSE) {
+    return result;
+  }
+  // Case insensitive path comparison
+  if (wcsnicmp(storedExePath, aExePath, MAXPATHLEN) != 0) {
+    return result;
+  }
+
+  // Success, report the shortcut path
+  aShortcutPath.Assign(path);
+  result = NS_OK;
+
+  return result;
+}
+
+static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly) {
+  // This enum is likely only used for Windows telemetry, INT_MAX is chosen to
+  // avoid confusion with existing uses.
+  enum PINNEDLISTMODIFYCALLER { PLMC_INT_MAX = INT_MAX };
+
+  // The types below, and the idea of using IPinnedList3::Modify,
+  // are thanks to Gee Law <https://geelaw.blog/entries/msedge-pins/>
+  static constexpr GUID CLSID_TaskbandPin = {
+      0x90aa3a4e,
+      0x1cba,
+      0x4233,
+      {0xb8, 0xbb, 0x53, 0x57, 0x73, 0xd4, 0x84, 0x49}};
+
+  static constexpr GUID IID_IPinnedList3 = {
+      0x0dd79ae2,
+      0xd156,
+      0x45d4,
+      {0x9e, 0xeb, 0x3b, 0x54, 0x97, 0x69, 0xe9, 0x40}};
+
+  struct IPinnedList3Vtbl;
+  struct IPinnedList3 {
+    IPinnedList3Vtbl* vtbl;
+  };
+
+  typedef ULONG STDMETHODCALLTYPE ReleaseFunc(IPinnedList3 * that);
+  typedef HRESULT STDMETHODCALLTYPE ModifyFunc(
+      IPinnedList3 * that, PCIDLIST_ABSOLUTE unpin, PCIDLIST_ABSOLUTE pin,
+      PINNEDLISTMODIFYCALLER caller);
+
+  struct IPinnedList3Vtbl {
+    void* QueryInterface;  // 0
+    void* AddRef;          // 1
+    ReleaseFunc* Release;  // 2
+    void* Other[13];       // 3-15
+    ModifyFunc* Modify;    // 16
+  };
+
+  struct ILFreeDeleter {
+    void operator()(LPITEMIDLIST aPtr) {
+      if (aPtr) {
+        ILFree(aPtr);
+      }
+    }
+  };
+
+  // First available on 1809
+  if (!IsWin10Sep2018UpdateOrLater()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsAutoString aumid;
+  if (NS_WARN_IF(!mozilla::widget::WinTaskbar::GetAppUserModelID(aumid))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  wchar_t exePath[MAXPATHLEN] = {};
+  if (NS_WARN_IF(NS_FAILED(BinaryPath::GetLong(exePath)))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Try to find a shortcut matching the running app
+  nsAutoString shortcutPath;
+  int shortcutCSIDLs[] = {CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS,
+                          CSIDL_COMMON_DESKTOPDIRECTORY,
+                          CSIDL_DESKTOPDIRECTORY};
+  for (int i = 0; i < ArrayLength(shortcutCSIDLs); ++i) {
+    // GetMatchingShortcut may fail when the exe path doesn't match, even
+    // if it refers to the same file. This should be rare, and the worst
+    // outcome would be failure to pin, so the risk is acceptable.
+    nsresult rv =
+        GetMatchingShortcut(shortcutCSIDLs[i], aumid, exePath, shortcutPath);
+    if (NS_SUCCEEDED(rv)) {
+      break;
+    } else {
+      shortcutPath.Truncate();
+    }
+  }
+  if (shortcutPath.IsEmpty()) {
+    return NS_ERROR_FILE_NOT_FOUND;
+  }
+
+  mozilla::UniquePtr<__unaligned ITEMIDLIST, ILFreeDeleter> path(
+      ILCreateFromPathW(shortcutPath.get()));
+  if (NS_WARN_IF(!path)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  IPinnedList3* pinnedList = nullptr;
+  HRESULT hr =
+      CoCreateInstance(CLSID_TaskbandPin, nullptr, CLSCTX_INPROC_SERVER,
+                       IID_IPinnedList3, (void**)&pinnedList);
+  if (FAILED(hr) || !pinnedList) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (!aCheckOnly) {
+    hr =
+        pinnedList->vtbl->Modify(pinnedList, nullptr, path.get(), PLMC_INT_MAX);
+  }
+
+  pinnedList->vtbl->Release(pinnedList);
+
+  if (FAILED(hr)) {
+    return NS_ERROR_FAILURE;
+  } else {
+    return NS_OK;
+  }
+}
+
+NS_IMETHODIMP
+nsWindowsShellService::PinCurrentAppToTaskbar() {
+  return PinCurrentAppToTaskbarImpl(/* aCheckOnly */ false);
+}
+
+NS_IMETHODIMP
+nsWindowsShellService::CheckPinCurrentAppToTaskbar() {
+  return PinCurrentAppToTaskbarImpl(/* aCheckOnly */ true);
 }
 
 nsWindowsShellService::nsWindowsShellService() {}
