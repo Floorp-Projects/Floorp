@@ -48,7 +48,7 @@ PlainObject* js::CreateThisForFunction(JSContext* cx,
     if (!group) {
       return nullptr;
     }
-    js::gc::AllocKind allocKind = NewObjectGCKind(&PlainObject::class_);
+    js::gc::AllocKind allocKind = NewObjectGCKind();
     res = NewObjectWithGroup<PlainObject>(cx, group, allocKind, newKind);
   } else {
     res = NewBuiltinClassInstanceWithKind<PlainObject>(cx, newKind);

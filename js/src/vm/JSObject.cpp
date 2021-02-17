@@ -976,7 +976,7 @@ JSObject* js::NewObjectWithGroupCommon(JSContext* cx, HandleObjectGroup group,
 }
 
 bool js::NewObjectScriptedCall(JSContext* cx, MutableHandleObject pobj) {
-  gc::AllocKind allocKind = NewObjectGCKind(&PlainObject::class_);
+  gc::AllocKind allocKind = NewObjectGCKind();
   NewObjectKind newKind = GenericObject;
 
   JSObject* obj = NewBuiltinClassInstance<PlainObject>(cx, allocKind, newKind);
@@ -995,7 +995,7 @@ JSObject* js::CreateThis(JSContext* cx, const JSClass* newclasp,
           cx, callee, JSCLASS_CACHED_PROTO_KEY(newclasp), &proto)) {
     return nullptr;
   }
-  gc::AllocKind kind = NewObjectGCKind(newclasp);
+  gc::AllocKind kind = NewObjectGCKind();
   return NewObjectWithClassProto(cx, newclasp, proto, kind);
 }
 
