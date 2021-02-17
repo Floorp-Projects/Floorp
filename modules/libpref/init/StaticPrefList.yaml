@@ -8628,6 +8628,12 @@
   value: 30000
   mirror: always
 
+# The timeout of the TRR confirmation request
+- name: network.trr.confirmation_timeout_ms
+  type: RelaxedAtomicUint32
+  value: 6000
+  mirror: always
+
 # Whether to send the Accept-Language header for TRR requests
 - name: network.trr.send_accept-language_headers
   type: RelaxedAtomicBool
