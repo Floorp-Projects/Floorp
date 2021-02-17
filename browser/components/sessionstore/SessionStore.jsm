@@ -298,11 +298,6 @@ var SessionStore = {
     SessionStoreInternal.setTabState(aTab, aState);
   },
 
-  // Return whether a tab is restoring.
-  isTabRestoring(aTab) {
-    return TAB_STATE_FOR_BROWSER.has(aTab.linkedBrowser);
-  },
-
   getInternalObjectState(obj) {
     return SessionStoreInternal.getInternalObjectState(obj);
   },
@@ -1269,6 +1264,9 @@ var SessionStoreInternal = {
           let body = aBrowser.ownerGlobal
             ? aBrowser.ownerGlobal.document.body
             : listener._lastKnownBody;
+          let userContextId = aBrowser.contentPrincipal
+            ? aBrowser.contentPrincipal.originAttributes.userContextId
+            : listener._lastKnownUserContextId;
           // If aData.sHistoryNeeded we need to collect all session
           // history entries, because with SHIP this indicates that we
           // either saw 'DOMTitleChanged' in
@@ -1280,6 +1278,7 @@ var SessionStoreInternal = {
             uri,
             body,
             aBrowsingContext.sessionHistory,
+            userContextId,
             listener._sHistoryChanges && !aData.sHistoryNeeded
               ? listener._fromIdx
               : -1

@@ -42,8 +42,14 @@ var SessionHistory = Object.freeze({
     return SessionHistoryInternal.collect(docShell, aFromIdx);
   },
 
-  collectFromParent(uri, body, history, aFromIdx = -1) {
-    return SessionHistoryInternal.collectCommon(uri, body, history, aFromIdx);
+  collectFromParent(uri, body, history, userContextId, aFromIdx = -1) {
+    return SessionHistoryInternal.collectCommon(
+      uri,
+      body,
+      history,
+      userContextId,
+      aFromIdx
+    );
   },
 
   restore(docShell, tabData) {
@@ -97,16 +103,25 @@ var SessionHistoryInternal = {
    * @return An object reprereseting a partial global history update.
    */
   collect(docShell, aFromIdx = -1) {
+    let loadContext = docShell.QueryInterface(Ci.nsILoadContext);
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let uri = webNavigation.currentURI.displaySpec;
     let body = webNavigation.document.body;
     let history = webNavigation.sessionHistory;
-    return this.collectCommon(uri, body, history.legacySHistory, aFromIdx);
+    let userContextId = loadContext.originAttributes.userContextId;
+    return this.collectCommon(
+      uri,
+      body,
+      history.legacySHistory,
+      userContextId,
+      aFromIdx
+    );
   },
 
-  collectCommon(uri, body, shistory, aFromIdx) {
+  collectCommon(uri, body, shistory, userContextId, aFromIdx) {
     let data = {
       entries: [],
+      userContextId,
       requestedIndex: shistory.requestedIndex + 1,
     };
 
