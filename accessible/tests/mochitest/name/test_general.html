@@ -25,7 +25,7 @@
 
       // ////////////////////////////////////////////////////////////////////////
       // aria-labelledby
-    
+
       // Single relation. The value of 'aria-labelledby' contains the ID of
       // an element. Gets the name from text node of that element.
       testName("btn_labelledby_text", "text");
@@ -41,7 +41,7 @@
 
       // ////////////////////////////////////////////////////////////////////////
       // Name from subtree (single relation labelled_by).
-    
+
       // Gets the name from text nodes contained by nested elements
       testName("btn_labelledby_mixed", "nomore text");
 
@@ -182,6 +182,7 @@
       testName("ctrlvalue_slider:input", "foo 5 baz");
       testName("ctrlvalue_spinbutton:input", "foo 5 baz");
       testName("ctrlvalue_combobox:input", "foo 5 baz");
+      testName("ctrlvalue_meter:input", "foo 5 baz");
 
 
       // ///////////////////////////////////////////////////////////////////////
@@ -361,7 +362,7 @@
 
   <!-- the name from subtree, mixed/hidden content -->
   <span id="labelledby_mixed_hidden_child">
-    no<span>more 
+    no<span>more
       <span style="display: none;">hidden</span>
       text2
       <span style="visibility: hidden">hidden2</span>
@@ -583,6 +584,14 @@
     baz
   </label>
 
+  <input type="checkbox" id="ctrlvalue_meter:input">
+  <label for="ctrlvalue_meter:input">
+    foo
+    <meter>5</meter>
+    </div>
+    baz
+  </label>
+
   <!-- a label with a nested control in the start, middle and end -->
   <form>
     <!-- at the start (without and with whitespaces) -->
@@ -642,23 +651,23 @@
   <!-- placeholder  -->
   <input id="ph_password" type="password" value="" placeholder="a placeholder" />
   <input id="ph_text" type="text" placeholder="a placeholder" />
-  <textarea id="ph_textarea" cols="5" placeholder="a placeholder"></textarea>  
+  <textarea id="ph_textarea" cols="5" placeholder="a placeholder"></textarea>
 
   <!-- placeholder does not win -->
   <input id="ph_text2" type="text" aria-label="a label" placeholder="meh" />
-  <textarea id="ph_textarea2" cols="5" aria-labelledby="ph_text2" 
+  <textarea id="ph_textarea2" cols="5" aria-labelledby="ph_text2"
             placeholder="meh"></textarea>
 
   <label for="ph_text3">a label</label>
   <input id="ph_text3" placeholder="meh" />
 
-  <p>Image: 
+  <p>Image:
     <img id="img_eq" role="math" src="foo" alt="x^2 + y^2 + z^2">
     <input type="image"  id="input_img_eq" src="foo" alt="x^2 + y^2 + z^2">
   </p>
 
-  <p>Text: 
-    <span id="txt_eq" role="math" title="x^2 + y^2 + z^2">x<sup>2</sup> + 
+  <p>Text:
+    <span id="txt_eq" role="math" title="x^2 + y^2 + z^2">x<sup>2</sup> +
       y<sup>2</sup> + z<sup>2</sup></span>
 
   <!-- duplicate announcement -->

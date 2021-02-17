@@ -94,6 +94,7 @@ const ROLE_MATHML_STACK_LINE = nsIAccessibleRole.ROLE_MATHML_STACK_LINE;
 const ROLE_MENUBAR = nsIAccessibleRole.ROLE_MENUBAR;
 const ROLE_MENUITEM = nsIAccessibleRole.ROLE_MENUITEM;
 const ROLE_MENUPOPUP = nsIAccessibleRole.ROLE_MENUPOPUP;
+const ROLE_METER = nsIAccessibleRole.ROLE_METER;
 const ROLE_NAVIGATION = nsIAccessibleRole.ROLE_NAVIGATION;
 const ROLE_NON_NATIVE_DOCUMENT = nsIAccessibleRole.ROLE_NON_NATIVE_DOCUMENT;
 const ROLE_NOTHING = nsIAccessibleRole.ROLE_NOTHING;

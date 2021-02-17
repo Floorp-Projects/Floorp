@@ -291,6 +291,37 @@ class HTMLProgressAccessible : public LeafAccessible {
 };
 
 /**
+ * Accessible for HTML meter element.
+ */
+
+class HTMLMeterAccessible : public LeafAccessible {
+ public:
+  HTMLMeterAccessible(nsIContent* aContent, DocAccessible* aDoc)
+      : LeafAccessible(aContent, aDoc) {
+    // Ignore 'ValueChange' DOM event in lieu of @value attribute change
+    // notifications.
+    mStateFlags |= eHasNumericValue | eIgnoreDOMUIEvent;
+    mType = eProgressType;
+  }
+
+  // Accessible
+  virtual void Value(nsString& aValue) const override;
+  virtual mozilla::a11y::role NativeRole() const override;
+
+  // Value
+  virtual double MaxValue() const override;
+  virtual double MinValue() const override;
+  virtual double CurValue() const override;
+  virtual bool SetCurValue(double aValue) override;
+
+  // Widgets
+  virtual bool IsWidget() const override;
+
+ protected:
+  virtual ~HTMLMeterAccessible() {}
+};
+
+/**
  * Accessible for HTML date/time inputs.
  */
 template <a11y::role R>

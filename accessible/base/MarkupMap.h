@@ -560,3 +560,10 @@ MARKUPMAP(
       return new HTMLListAccessible(aElement, aContext->Document());
     },
     roles::LIST)
+
+MARKUPMAP(
+    meter,
+    [](Element* aElement, Accessible* aContext) -> Accessible* {
+      return new HTMLMeterAccessible(aElement, aContext->Document());
+    },
+    roles::METER)
