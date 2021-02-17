@@ -111,6 +111,16 @@ class nsTextEquivUtils {
   static nsresult AppendTextEquivFromTextContent(nsIContent* aContent,
                                                  nsAString* aString);
 
+  /**
+   * Iterates DOM children and calculates text equivalent from each child node.
+   * Then, appends found text to the given string.
+   *
+   * @param aContent      [in] the node to fetch DOM children from
+   * @param aString       [in, out] the string
+   */
+  static nsresult AppendFromDOMChildren(nsIContent* aContent,
+                                        nsAString* aString);
+
  private:
   /**
    * Iterates accessible children and calculates text equivalent from each
@@ -130,11 +140,6 @@ class nsTextEquivUtils {
    * Calculates text equivalent from the value of given accessible.
    */
   static nsresult AppendFromValue(Accessible* aAccessible, nsAString* aString);
-  /**
-   * Iterates DOM children and calculates text equivalent from each child node.
-   */
-  static nsresult AppendFromDOMChildren(nsIContent* aContent,
-                                        nsAString* aString);
 
   /**
    * Calculates text equivalent from the given DOM node and its subtree if

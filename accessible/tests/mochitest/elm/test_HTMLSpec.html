@@ -1102,8 +1102,10 @@
 
       // ////////////////////////////////////////////////////////////////////////
       // HTML:meter
-
-      todo(isAccessible("meter"), "meter element is not accessible");
+      obj = {
+        role: ROLE_METER
+      };
+      testElm("meter", obj);
 
       // ////////////////////////////////////////////////////////////////////////
       // HTML:nav

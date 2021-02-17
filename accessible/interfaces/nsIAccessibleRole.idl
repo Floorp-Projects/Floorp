@@ -1071,4 +1071,10 @@ interface nsIAccessibleRole : nsISupports
    */
   const unsigned long ROLE_LISTITEM_MARKER = 184;
 
+  /**
+   * Essentially, this is a progress bar with a contextually defined
+   * scale, ex. the strength of a password entered in an input.
+   */
+  const unsigned long ROLE_METER = 185;
+
 };

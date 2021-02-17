@@ -1077,7 +1077,13 @@ enum Role {
    */
   LISTITEM_MARKER = 184,
 
-  LAST_ROLE = LISTITEM_MARKER
+  /**
+   * Essentially, this is a progress bar with a contextually defined
+   * scale, ex. the strength of a password entered in an input.
+   */
+  METER = 185,
+
+  LAST_ROLE = METER
 };
 
 }  // namespace roles
