@@ -15,73 +15,22 @@ using namespace mozilla;
 
 namespace test {
 
-class MockChannelProxy : public webrtc::voe::ChannelProxy {
- public:
-  void SetSendAudioLevelIndicationStatus(bool enable, int id) override {
-    mSetSendAudioLevelIndicationStatusEnabled = enable;
-  }
-
-  void SetReceiveAudioLevelIndicationStatus(bool enable, int id,
-                                            bool isLevelSsrc = true) override {
-    mSetReceiveAudioLevelIndicationStatusEnabled = enable;
-  }
-
-  void SetReceiveCsrcAudioLevelIndicationStatus(bool enable, int id) override {
-    mSetReceiveCsrcAudioLevelIndicationStatusEnabled = enable;
-  }
-
-  void SetSendMIDStatus(bool enable, int id) override {
-    mSetSendMIDStatusEnabled = enable;
-  }
-
-  void RegisterTransport(Transport* transport) override {}
-
-  void SetRtcpEventObserver(webrtc::RtcpEventObserver* observer) override {}
-
-  bool mSetSendAudioLevelIndicationStatusEnabled;
-  bool mSetReceiveAudioLevelIndicationStatusEnabled;
-  bool mSetReceiveCsrcAudioLevelIndicationStatusEnabled;
-  bool mSetSendMIDStatusEnabled;
-};
-
-class AudioConduitWithMockChannelProxy : public WebrtcAudioConduit {
- public:
-  AudioConduitWithMockChannelProxy(RefPtr<WebRtcCallWrapper> aCall,
-                                   nsCOMPtr<nsISerialEventTarget> aStsThread)
-      : WebrtcAudioConduit(aCall, aStsThread) {}
-
-  MediaConduitErrorCode Init() override {
-    mRecvChannelProxy.reset(new MockChannelProxy);
-    mSendChannelProxy.reset(new MockChannelProxy);
-
-    return kMediaConduitNoError;
-  }
-
-  void DeleteChannels() override {
-    mRecvChannelProxy = nullptr;
-    mSendChannelProxy = nullptr;
-  }
-
-  const MockChannelProxy* GetRecvChannelProxy() {
-    return static_cast<MockChannelProxy*>(mRecvChannelProxy.get());
-  }
-
-  const MockChannelProxy* GetSendChannelProxy() {
-    return static_cast<MockChannelProxy*>(mSendChannelProxy.get());
-  }
-};
-
 class AudioConduitTest : public ::testing::Test {
  public:
-  AudioConduitTest() : mCall(new MockCall()) {
-    mAudioConduit = new AudioConduitWithMockChannelProxy(
-        WebRtcCallWrapper::Create(UniquePtr<MockCall>(mCall)),
-        GetCurrentSerialEventTarget());
-    mAudioConduit->Init();
+  AudioConduitTest()
+      : mCall(new MockCall()),
+        mCallWrapper(WebRtcCallWrapper::Create(UniquePtr<MockCall>(mCall))),
+        mAudioConduit(MakeRefPtr<WebrtcAudioConduit>(
+            mCallWrapper, GetCurrentSerialEventTarget())) {}
+
+  ~AudioConduitTest() override {
+    mAudioConduit->DeleteStreams();
+    mCallWrapper->Destroy();
   }
 
-  MockCall* mCall;
-  RefPtr<AudioConduitWithMockChannelProxy> mAudioConduit;
+  MockCall* const mCall;
+  const RefPtr<WebRtcCallWrapper> mCallWrapper;
+  const RefPtr<WebrtcAudioConduit> mAudioConduit;
 };
 
 TEST_F(AudioConduitTest, TestConfigureSendMediaCodec) {
@@ -118,16 +67,6 @@ TEST_F(AudioConduitTest, TestConfigureSendMediaCodec) {
   codecConfig = AudioCodecConfig(114, "", 48000, 2, false);
   ec = mAudioConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitMalformedArgument);
-
-  // long codec name
-  size_t longNameLength = WebrtcAudioConduit::CODEC_PLNAME_SIZE + 2;
-  char* longName = new char[longNameLength];
-  memset(longName, 'A', longNameLength - 2);
-  longName[longNameLength - 1] = 0;
-  codecConfig = AudioCodecConfig(114, longName, 48000, 2, false);
-  ec = mAudioConduit->ConfigureSendMediaCodec(&codecConfig);
-  ASSERT_EQ(ec, kMediaConduitMalformedArgument);
-  delete[] longName;
 }
 
 TEST_F(AudioConduitTest, TestConfigureSendOpusMono) {
@@ -495,17 +434,6 @@ TEST_F(AudioConduitTest, TestConfigureReceiveMediaCodecs) {
   codecs.emplace_back(new AudioCodecConfig(114, "opus", 48000, 42, false));
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitMalformedArgument);
-
-  // long codec name
-  codecs.clear();
-  size_t longNameLength = WebrtcAudioConduit::CODEC_PLNAME_SIZE + 2;
-  char* longName = new char[longNameLength];
-  memset(longName, 'A', longNameLength - 2);
-  longName[longNameLength - 1] = 0;
-  codecs.emplace_back(new AudioCodecConfig(100, longName, 48000, 42, false));
-  ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
-  ASSERT_EQ(ec, kMediaConduitMalformedArgument);
-  delete[] longName;
 }
 
 TEST_F(AudioConduitTest, TestConfigureReceiveOpusMono) {
@@ -756,8 +684,6 @@ TEST_F(AudioConduitTest, TestSetLocalRTPExtensions) {
   ASSERT_EQ(ec, kMediaConduitNoError);
   ASSERT_EQ(mCall->mAudioReceiveConfig.rtp.extensions.back().uri,
             webrtc::RtpExtension::kAudioLevelUri);
-  ASSERT_TRUE(mAudioConduit->GetRecvChannelProxy()
-                  ->mSetReceiveAudioLevelIndicationStatusEnabled);
 
   ec = mAudioConduit->SetLocalRTPExtensions(LocalDirection::kSend, extensions);
   ASSERT_EQ(ec, kMediaConduitNoError);
@@ -767,8 +693,6 @@ TEST_F(AudioConduitTest, TestSetLocalRTPExtensions) {
   ASSERT_EQ(ec, kMediaConduitNoError);
   ASSERT_EQ(mCall->mAudioSendConfig.rtp.extensions.back().uri,
             webrtc::RtpExtension::kAudioLevelUri);
-  ASSERT_TRUE(mAudioConduit->GetSendChannelProxy()
-                  ->mSetSendAudioLevelIndicationStatusEnabled);
 
   // Contributing sources audio level
   extensions.clear();
@@ -785,15 +709,13 @@ TEST_F(AudioConduitTest, TestSetLocalRTPExtensions) {
   ASSERT_EQ(ec, kMediaConduitNoError);
   ASSERT_EQ(mCall->mAudioReceiveConfig.rtp.extensions.back().uri,
             webrtc::RtpExtension::kCsrcAudioLevelUri);
-  ASSERT_TRUE(mAudioConduit->GetRecvChannelProxy()
-                  ->mSetReceiveCsrcAudioLevelIndicationStatusEnabled);
 
   ec = mAudioConduit->SetLocalRTPExtensions(LocalDirection::kSend, extensions);
   ASSERT_EQ(ec, kMediaConduitMalformedArgument);
 
-  // MId
+  // Mid
   extensions.clear();
-  extension.uri = webrtc::RtpExtension::kMIdUri;
+  extension.uri = webrtc::RtpExtension::kMidUri;
   extensions.emplace_back(extension);
 
   // We do not support configuring receiving MId, but do not return an error
@@ -808,8 +730,7 @@ TEST_F(AudioConduitTest, TestSetLocalRTPExtensions) {
   ec = mAudioConduit->StopTransmitting();
   ASSERT_EQ(ec, kMediaConduitNoError);
   ASSERT_EQ(mCall->mAudioSendConfig.rtp.extensions.back().uri,
-            webrtc::RtpExtension::kMIdUri);
-  ASSERT_TRUE(mAudioConduit->GetSendChannelProxy()->mSetSendMIDStatusEnabled);
+            webrtc::RtpExtension::kMidUri);
 }
 
 TEST_F(AudioConduitTest, TestSetSyncGroup) {
