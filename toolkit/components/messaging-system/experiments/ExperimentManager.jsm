@@ -214,9 +214,8 @@ class _ExperimentManager {
         `Skipping enrollment for "${slug}" because there is an existing experiment for its feature.`
       );
       this.sendFailureTelemetry("enrollFailed", slug, "feature-conflict");
-      throw new Error(
-        `An experiment with a conflicting feature already exists.`
-      );
+
+      return null;
     }
 
     /** @type {Enrollment} */
