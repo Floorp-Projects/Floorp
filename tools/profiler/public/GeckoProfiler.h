@@ -16,8 +16,11 @@
 #ifndef GeckoProfiler_h
 #define GeckoProfiler_h
 
-// everything in here is also safe to include unconditionally, and only defines
-// empty macros if MOZ_GECKO_PROFILER is unset
+// Everything in here is also safe to include unconditionally, and only defines
+// empty macros if MOZ_GECKO_PROFILER is unset.
+// If your file only uses particular APIs (e.g., only markers), please consider
+// including only the needed headers instead of this one, to reduce compilation
+// dependencies.
 #include "BaseProfiler.h"
 #include "mozilla/ProfilerCounts.h"
 #include "mozilla/ProfilerLabels.h"
@@ -55,7 +58,7 @@
 // This won't be used, it's just there to allow the empty definition of
 // `profiler_get_backtrace`.
 struct ProfilerBacktrace {};
-using UniqueProfilerBacktrace = mozilla::UniquePtr<int>;
+using UniqueProfilerBacktrace = mozilla::UniquePtr<ProfilerBacktrace>;
 
 // Get/Capture-backtrace functions can return nullptr or false, the result
 // should be fed to another empty macro or stub anyway.
@@ -63,6 +66,10 @@ using UniqueProfilerBacktrace = mozilla::UniquePtr<int>;
 static inline UniqueProfilerBacktrace profiler_get_backtrace() {
   return nullptr;
 }
+
+// This won't be used, it's just there to allow the empty definitions of
+// `profiler_capture_backtrace_into` and `profiler_capture_backtrace`.
+struct ProfileChunkedBuffer {};
 
 static inline bool profiler_capture_backtrace_into(
     mozilla::ProfileChunkedBuffer& aChunkedBuffer,
