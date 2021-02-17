@@ -24,6 +24,8 @@ ADD topsrcdir/taskcluster/docker/recipes/install-node.sh /build/install-node.sh
 # %include taskcluster/docker/recipes/install-mercurial.sh
 ADD topsrcdir/taskcluster/docker/recipes/install-mercurial.sh /build/install-mercurial.sh
 ADD system-setup.sh /tmp/system-setup.sh
+# %include build/zstandard_requirements.txt
+ADD topsrcdir/build/zstandard_requirements.txt /build/zstandard_requirements.txt
 # %include tools/lint/eslint/manifest.tt
 ADD topsrcdir/tools/lint/eslint/manifest.tt /tmp/eslint.tt
 # %include tools/lint/eslint/eslint-plugin-mozilla/manifest.tt

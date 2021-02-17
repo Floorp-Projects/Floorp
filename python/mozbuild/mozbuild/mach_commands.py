@@ -2114,10 +2114,6 @@ class CreateMachEnvironment(MachCommandBase):
         else:
             manager.build(sys.executable)
 
-        manager.install_pip_requirements(
-            os.path.join(self.topsrcdir, "build", "zstandard_requirements.txt")
-        )
-
         try:
             # `mach` can handle it perfectly fine if `psutil` is missing, so
             # there's no reason to freak out in this case.
@@ -2131,6 +2127,10 @@ class CreateMachEnvironment(MachCommandBase):
             )
 
         if not PY2:
+            manager.install_pip_requirements(
+                os.path.join(self.topsrcdir, "build", "zstandard_requirements.txt")
+            )
+
             # This can fail on some platforms. See
             # https://bugzilla.mozilla.org/show_bug.cgi?id=1660120
             try:

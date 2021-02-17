@@ -48,8 +48,7 @@ cd /build
 ###
 # zstandard
 ###
-pip install zstandard==0.13.0
-pip3 install zstandard==0.13.0
+pip3 install -r /build/zstandard_requirements.txt
 
 ###
 # ESLint Setup
