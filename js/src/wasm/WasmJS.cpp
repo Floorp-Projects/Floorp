@@ -412,15 +412,24 @@ bool wasm::SimdAvailable(JSContext* cx) {
 
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
 static bool IsSimdPrivilegedContext(JSContext* cx) {
-  // We need the appropriate test here, TBD
-  return false;
+  // This may be slightly more lenient than we want in an ideal world, but it
+  // remains safe.
+  return cx->realm() && cx->realm()->principals() &&
+         cx->realm()->principals()->isSystemOrAddonPrincipal();
 }
 #endif
 
 bool wasm::SimdWormholeAvailable(JSContext* cx) {
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
-  // Do not check SimdAvailable(): if the wormhole is available, requesting it
-  // will force-enable SIMD.  But we must check whether we can have SIMD at all.
+  // The #ifdef ensures that we only enable the wormhole on hardware that
+  // supports it and if SIMD support is compiled in.
+  //
+  // Next we must check that the CPU supports SIMD; it might not, even if SIMD
+  // is available.  Do this directly, not via WasmSimdFlag().
+  //
+  // Do not go via WasmSimdFlag() because we do not want to gate on
+  // j.o.wasm_simd.  If the wormhole is available, requesting it will
+  // force-enable SIMD.
   return js::jit::JitSupportsWasmSimd() &&
          (WasmSimdWormholeFlag(cx) || IsSimdPrivilegedContext(cx)) &&
          (IonAvailable(cx) || BaselineAvailable(cx)) && !CraneliftAvailable(cx);
