@@ -56,10 +56,13 @@
         run();
       }
     }
+    window.onpageshow = () => {
+      setTimeout(init);
+    }
 
     </script>
   </head>
-  <body onload="setTimeout(init);" onunload="">
+  <body>
     <iframe></iframe>
   </body>
 </html>
