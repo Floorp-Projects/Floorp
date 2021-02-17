@@ -535,16 +535,17 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
     }
   }
 
-  renderSecondaryCTA(className) {
+  renderSecondaryCTA(position) {
+    let targetElement = position ? `secondary_button_${position}` : `secondary_button`;
     return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: className ? `secondary-cta ${className}` : `secondary-cta`
+      className: position ? `secondary-cta ${position}` : "secondary-cta"
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
-      text: this.props.content.secondary_button.text
+      text: this.props.content[targetElement].text
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", null)), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
-      text: this.props.content.secondary_button.label
+      text: this.props.content[targetElement].label
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
       className: "secondary",
-      value: "secondary_button",
+      value: targetElement,
       onClick: this.handleAction
     })));
   }
@@ -671,12 +672,11 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
       content,
       topSites
     } = this.props;
-    const hasSecondaryTopCTA = content.secondary_button && content.secondary_button.position === "top";
     const showImportableSitesDisclaimer = content.tiles && content.tiles.type === "topsites" && topSites && topSites.showImportable;
     return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", {
       className: `screen ${this.props.id}`
-    }, hasSecondaryTopCTA ? this.renderSecondaryCTA("top") : null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: `brand-logo ${hasSecondaryTopCTA ? "cta-top" : ""}`
+    }, content.secondary_button_top ? this.renderSecondaryCTA("top") : null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: `brand-logo ${content.secondary_button_top ? "cta-top" : ""}`
     }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "welcome-text"
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_Zap__WEBPACK_IMPORTED_MODULE_2__["Zap"], {
@@ -690,7 +690,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
       className: "primary",
       value: "primary_button",
       onClick: this.handleAction
-    }))), content.secondary_button && content.secondary_button.position !== "top" ? this.renderSecondaryCTA() : null, content.help_text && content.help_text.position === "default" ? this.renderHelpText() : null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("nav", {
+    }))), content.secondary_button ? this.renderSecondaryCTA() : null, content.help_text && content.help_text.position === "default" ? this.renderHelpText() : null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("nav", {
       className: content.help_text && content.help_text.position === "footer" || showImportableSitesDisclaimer ? "steps has-helptext" : "steps",
       "data-l10n-id": "onboarding-welcome-steps-indicator",
       "data-l10n-args": `{"current": ${parseInt(this.props.order, 10) + 1}, "total": ${this.props.totalNumberOfScreens}}`
@@ -950,38 +950,46 @@ const DEFAULT_RTAMO_CONTENT = {
 const DEFAULT_WELCOME_CONTENT = {
   template: "multistage",
   screens: [{
-    id: "AW_GET_STARTED",
+    id: "AW_SET_DEFAULT",
     order: 0,
     content: {
       zap: true,
       title: {
-        string_id: "onboarding-multistage-welcome-header"
+        string_id: "onboarding-multistage-set-default-header"
       },
       subtitle: {
-        string_id: "onboarding-multistage-welcome-subtitle"
+        string_id: "onboarding-multistage-set-default-subtitle"
       },
       primary_button: {
         label: {
-          string_id: "onboarding-multistage-welcome-primary-button-label"
+          string_id: "onboarding-multistage-set-default-primary-button-label"
+        },
+        action: {
+          navigate: true,
+          type: "SET_DEFAULT_BROWSER"
+        }
+      },
+      secondary_button: {
+        label: {
+          string_id: "onboarding-multistage-set-default-secondary-button-label"
         },
         action: {
           navigate: true
         }
       },
-      secondary_button: {
+      secondary_button_top: {
         text: {
           string_id: "onboarding-multistage-welcome-secondary-button-text"
         },
         label: {
           string_id: "onboarding-multistage-welcome-secondary-button-label"
         },
-        position: "top",
         action: {
-          type: "SHOW_FIREFOX_ACCOUNTS",
-          addFlowParams: true,
           data: {
             entrypoint: "activity-stream-firstrun"
-          }
+          },
+          type: "SHOW_FIREFOX_ACCOUNTS",
+          addFlowParams: true
         }
       }
     }
