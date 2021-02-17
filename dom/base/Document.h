@@ -3739,7 +3739,7 @@ class Document : public nsINode,
   }
   DOMIntersectionObserver& EnsureLazyLoadImageObserver();
   DOMIntersectionObserver& EnsureLazyLoadImageObserverViewport();
-  void IncLazyLoadImageCount() { ++mLazyLoadImageCount; }
+  void IncLazyLoadImageCount();
   void DecLazyLoadImageCount() {
     MOZ_DIAGNOSTIC_ASSERT(mLazyLoadImageCount > 0);
     --mLazyLoadImageCount;
