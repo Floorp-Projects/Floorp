@@ -45,8 +45,10 @@ const TEST_MULTISTAGE_CONTENT = {
           },
         },
         secondary_button: {
+          label: "link",
+        },
+        secondary_button_top: {
           label: "link top",
-          position: "top",
           action: {
             type: "SHOW_FIREFOX_ACCOUNTS",
             data: { entrypoint: "test" },
@@ -72,7 +74,6 @@ const TEST_MULTISTAGE_CONTENT = {
         },
         secondary_button: {
           label: "link",
-          position: "bottom",
         },
       },
     },
@@ -292,8 +293,10 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
       "main.AW_STEP1",
       "h1.welcomeZap",
       "span.zap.short",
+      "div.secondary-cta",
       "div.secondary-cta.top",
-      "button.secondary",
+      "button[value='secondary_button']",
+      "button[value='secondary_button_top']",
       "label.theme",
       "input[type='radio']",
       "div.indicator.current",
@@ -310,7 +313,7 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
     [
       "div.onboardingContainer",
       "main.AW_STEP2",
-      "button.secondary",
+      "button[value='secondary_button']",
       "h1.welcomeZap",
       "span.zap.long",
       "div.tiles-container.info",
@@ -363,8 +366,10 @@ add_task(async function test_Multistage_About_Welcome_branches() {
       "main.AW_STEP1",
       "h1.welcomeZap",
       "span.zap.short",
+      "div.secondary-cta",
       "div.secondary-cta.top",
-      "button.secondary",
+      "button[value='secondary_button']",
+      "button[value='secondary_button_top']",
       "label.theme",
       "input[type='radio']",
       "div.indicator.current",
@@ -383,7 +388,7 @@ add_task(async function test_Multistage_About_Welcome_branches() {
       "main.AW_STEP2",
       "h1.welcomeZap",
       "span.zap.long",
-      "button.secondary",
+      "button[value='secondary_button']",
       "div.tiles-container.info",
     ],
     // Unexpected selectors:
@@ -431,8 +436,10 @@ add_task(async function test_Multistage_About_Welcome_navigation() {
     [
       "div.onboardingContainer",
       "main.AW_STEP1",
+      "div.secondary-cta",
       "div.secondary-cta.top",
-      "button.secondary",
+      "button[value='secondary_button']",
+      "button[value='secondary_button_top']",
       "div.indicator.current",
     ],
     // Unexpected selectors:
@@ -444,7 +451,11 @@ add_task(async function test_Multistage_About_Welcome_navigation() {
     browser,
     "multistage step 2",
     // Expected selectors:
-    ["div.onboardingContainer", "main.AW_STEP2", "button.secondary"],
+    [
+      "div.onboardingContainer",
+      "main.AW_STEP2",
+      "button[value='secondary_button']",
+    ],
     // Unexpected selectors:
     ["main.AW_STEP1", "main.AW_STEP3", "div.secondary-cta.top"]
   );
@@ -598,7 +609,7 @@ add_task(async function test_AWMultistage_Secondary_Open_URL_Action() {
     sandbox.restore();
   });
 
-  await onButtonClick(browser, "button.secondary");
+  await onButtonClick(browser, "button[value='secondary_button_top']");
   const { callCount } = aboutWelcomeActor.onContentMessage;
   ok(
     callCount >= 2,
@@ -649,8 +660,8 @@ add_task(async function test_AWMultistage_Secondary_Open_URL_Action() {
   );
   Assert.equal(
     eventCall.args[1].event_context.source,
-    "secondary_button",
-    "secondary button click source recorded in Telemetry"
+    "secondary_button_top",
+    "secondary_top button click source recorded in Telemetry"
   );
 });
 
@@ -741,7 +752,7 @@ add_task(async function test_AWMultistage_Import() {
     sandbox.restore();
   });
 
-  await onButtonClick(browser, "button.secondary");
+  await onButtonClick(browser, "button[value='secondary_button']");
   const { callCount } = aboutWelcomeActor.onContentMessage;
 
   let actionCall;

@@ -110,7 +110,7 @@ describe("MultiStageAboutWelcome module", () => {
   describe("WelcomeScreen component", () => {
     describe("get started screen", () => {
       const startScreen = DEFAULT_WELCOME_CONTENT.screens.find(screen => {
-        return screen.id === "AW_GET_STARTED";
+        return screen.id === "AW_SET_DEFAULT";
       });
 
       const GET_STARTED_SCREEN_PROPS = {
@@ -131,11 +131,13 @@ describe("MultiStageAboutWelcome module", () => {
         assert.ok(wrapper.exists());
       });
 
-      it("should have primary and secondary button in the rendered input", () => {
+      it("should have a primary, secondary and secondary.top button in the rendered input", () => {
         const wrapper = mount(<WelcomeScreen {...GET_STARTED_SCREEN_PROPS} />);
         assert.ok(wrapper.find(".primary"));
-        assert.isTrue(wrapper.find("div.secondary-cta").hasClass("top"));
-        assert.ok(wrapper.find(".secondary"));
+        assert.ok(wrapper.find(".secondary button[value='secondary_button']"));
+        assert.ok(
+          wrapper.find(".secondary button[value='secondary_button_top']")
+        );
       });
     });
     describe("theme screen", () => {
@@ -179,6 +181,36 @@ describe("MultiStageAboutWelcome module", () => {
         assert.strictEqual(
           selectedThemeInput.prop("value"),
           THEME_SCREEN_PROPS.activeTheme
+        );
+      });
+    });
+    describe("import screen", () => {
+      const IMPORT_SCREEN_PROPS = {
+        content: {
+          help_text: {
+            text: "test help text",
+            position: "default",
+          },
+        },
+      };
+      it("should render ImportScreen", () => {
+        const wrapper = mount(<WelcomeScreen {...IMPORT_SCREEN_PROPS} />);
+        assert.ok(wrapper.exists());
+      });
+      it("should have a help text in the rendered output", () => {
+        const wrapper = mount(<WelcomeScreen {...IMPORT_SCREEN_PROPS} />);
+        assert.equal(wrapper.find("p.helptext").text(), "test help text");
+      });
+      it("should not have a primary or secondary button", () => {
+        const wrapper = mount(<WelcomeScreen {...IMPORT_SCREEN_PROPS} />);
+        assert.isFalse(wrapper.find(".primary").exists());
+        assert.isFalse(
+          wrapper.find(".secondary button[value='secondary_button']").exists()
+        );
+        assert.isFalse(
+          wrapper
+            .find(".secondary button[value='secondary_button_top']")
+            .exists()
         );
       });
     });
