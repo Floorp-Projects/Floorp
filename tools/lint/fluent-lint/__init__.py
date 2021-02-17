@@ -39,11 +39,12 @@ class Linter(visitor.Visitor):
     https://www.projectfluent.org/python-fluent/fluent.syntax/stable/usage.html
     """
 
-    def __init__(self, path, config, exclusions, offsets_and_lines):
+    def __init__(self, path, config, exclusions, contents, offsets_and_lines):
         super().__init__()
         self.path = path
         self.config = config
         self.exclusions = exclusions
+        self.contents = contents
         self.offsets_and_lines = offsets_and_lines
 
         self.results = []
@@ -54,6 +55,38 @@ class Linter(visitor.Visitor):
         self.double_quote_re = re.compile(r"\"")
         self.ellipsis_re = re.compile(r"\.\.\.")
 
+        self.state = {
+            # The resource comment should be at the top of the page after the license.
+            "node_can_be_resource_comment": True,
+            # Group comments must be followed by a message. Two group comments are not
+            # allowed in a row.
+            "can_have_group_comment": True,
+        }
+
+        # Set this to true to debug print the root node's json. This is useful for
+        # writing new lint rules, or debugging existing ones.
+        self.debug_print_json = False
+
+    def generic_visit(self, node):
+        node_name = type(node).__name__
+        self.state["node_can_be_resource_comment"] = self.state[
+            "node_can_be_resource_comment"
+        ] and (
+            # This is the root node.
+            node_name == "Resource"
+            # Empty space is allowed.
+            or node_name == "Span"
+            # Comments are allowed
+            or node_name == "Comment"
+        )
+
+        if self.debug_print_json:
+            print(node.to_json())
+            # Only debug print the root node.
+            self.debug_print_json = False
+
+        super(Linter, self).generic_visit(node)
+
     def visit_Attribute(self, node):
         # Only visit values for Attribute nodes, the identifier comes from dom.
         super().generic_visit(node.value)
@@ -62,6 +95,11 @@ class Linter(visitor.Visitor):
         # We don't recurse into function references, the identifiers there are
         # allowed to be free form.
         pass
+
+    def visit_Message(self, node):
+        # There must be at least one message between group comments.
+        self.state["can_have_group_comment"] = True
+        super().generic_visit(node)
 
     def visit_Identifier(self, node):
         if (
@@ -109,6 +147,91 @@ class Linter(visitor.Visitor):
                     " instead of three periods",
                 )
 
+    def visit_ResourceComment(self, node):
+        # This node is a comment with: "###"
+        if not self.state["node_can_be_resource_comment"]:
+            self.add_error(
+                node,
+                "RC01",
+                "Resource comments (###) should be placed at the top of the file, just "
+                "after the license header. There should only be one resource comment "
+                "per file.",
+            )
+            return
+
+        lines_after = get_newlines_count_after(node.span, self.contents)
+        lines_before = get_newlines_count_before(node.span, self.contents)
+
+        if node.span.end == len(self.contents) - 1:
+            # This file only contains a resource comment.
+            return
+
+        if lines_after != 2:
+            self.add_error(
+                node,
+                "RC02",
+                "Resource comments (###) should be followed by one empty line.",
+            )
+            return
+
+        if lines_before != 2:
+            self.add_error(
+                node,
+                "RC03",
+                "Resource comments (###) should have one empty line above them.",
+            )
+            return
+
+    def visit_GroupComment(self, node):
+        # This node is a comment with: "##"
+
+        if not self.state["can_have_group_comment"]:
+            self.add_error(
+                node,
+                "GC04",
+                "Group comments (##) must be followed by at least one message. Make sure "
+                "that a single group comment with multiple pararaphs is not separated by "
+                "whitespace, as it will be interpreted as two different comments.",
+            )
+            return
+
+        self.state["can_have_group_comment"] = False
+
+        lines_after = get_newlines_count_after(node.span, self.contents)
+        lines_before = get_newlines_count_before(node.span, self.contents)
+
+        if node.span.end == len(self.contents) - 1:
+            # The group comment is the last thing in the file.
+
+            if node.content == "":
+                # Empty comments are allowed at the end of the file.
+                return
+
+            self.add_error(
+                node,
+                "GC01",
+                "Group comments (##) should not be at the end of the file, they should "
+                "always be above a message. Only an empty group comment is allowed at "
+                "the end of a file.",
+            )
+            return
+
+        if lines_after != 2:
+            self.add_error(
+                node,
+                "GC02",
+                "Group comments (##) should be followed by one empty line.",
+            )
+            return
+
+        if lines_before != 2:
+            self.add_error(
+                node,
+                "GC03",
+                "Group comments (##) should have an empty line before them.",
+            )
+            return
+
     def visit_VariableReference(self, node):
         # We don't recurse into variable references, the identifiers there are
         # allowed to be free form.
@@ -149,6 +272,30 @@ def get_offsets_and_lines(contents):
     return result
 
 
+def get_newlines_count_after(span, contents):
+    # Determine the number of newlines.
+    count = 0
+    for i in range(span.end, len(contents)):
+        assert contents[i] != "\r", "This linter does not handle \\r characters."
+        if contents[i] != "\n":
+            break
+        count += 1
+
+    return count
+
+
+def get_newlines_count_before(span, contents):
+    # Determine the range of newline characters.
+    count = 0
+    for i in range(span.start - 1, 0, -1):
+        assert contents[i] != "\r", "This linter does not handle \\r characters."
+        if contents[i] != "\n":
+            break
+        count += 1
+
+    return count
+
+
 def get_exclusions(root):
     with open(
         mozpath.join(root, "tools", "lint", "fluent-lint", "exclusions.yml")
@@ -167,7 +314,9 @@ def lint(paths, config, fix=None, **lintargs):
     results = []
     for path in files:
         contents = open(path, "r", encoding="utf-8").read()
-        linter = Linter(path, config, exclusions, get_offsets_and_lines(contents))
+        linter = Linter(
+            path, config, exclusions, contents, get_offsets_and_lines(contents)
+        )
         linter.visit(parse(contents))
         results.extend(linter.results)
     return results
