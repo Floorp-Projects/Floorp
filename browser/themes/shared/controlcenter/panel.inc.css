@@ -785,11 +785,6 @@ description#identity-popup-content-verifier,
 .permission-popup-permission-icon.in-use {
   -moz-context-properties: fill;
   fill: rgb(224, 41, 29);
-  animation: 1.5s ease permission-popup-permission-icon-in-use-blink infinite;
-}
-
-@keyframes permission-popup-permission-icon-in-use-blink {
-  50% { opacity: 0; }
 }
 
 .protections-popup-category-label,
