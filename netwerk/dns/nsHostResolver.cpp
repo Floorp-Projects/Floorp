@@ -754,7 +754,7 @@ void nsHostResolver::ClearPendingQueue(
       rec->Cancel();
       if (rec->IsAddrRecord()) {
         CompleteLookup(rec, NS_ERROR_ABORT, nullptr, rec->pb, rec->originSuffix,
-                       rec->mTRRTRRSkippedReason);
+                       rec->mTRRTRRSkippedReason, nullptr);
       } else {
         mozilla::net::TypeRecordResultType empty(Nothing{});
         CompleteLookupByType(rec, NS_ERROR_ABORT, empty, 0, rec->pb);
@@ -1865,7 +1865,8 @@ void nsHostResolver::AddToEvictionQ(nsHostRecord* rec) {
 // returns LOOKUP_RESOLVEAGAIN, but only if 'status' is not NS_ERROR_ABORT.
 nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
     nsHostRecord* rec, nsresult status, AddrInfo* aNewRRSet, bool pb,
-    const nsACString& aOriginsuffix, nsHostRecord::TRRSkippedReason aReason) {
+    const nsACString& aOriginsuffix, nsHostRecord::TRRSkippedReason aReason,
+    mozilla::net::TRR* aTRRRequest) {
   MutexAutoLock lock(mLock);
   MOZ_ASSERT(rec);
   MOZ_ASSERT(rec->pb == pb);
@@ -2231,9 +2232,9 @@ void nsHostResolver::ThreadFunc() {
     LOG1(("DNS lookup thread - lookup completed for host [%s]: %s.\n",
           rec->host.get(), ai ? "success" : "failure: unknown host"));
 
-    if (LOOKUP_RESOLVEAGAIN == CompleteLookup(rec, status, ai, rec->pb,
-                                              rec->originSuffix,
-                                              rec->mTRRTRRSkippedReason)) {
+    if (LOOKUP_RESOLVEAGAIN ==
+        CompleteLookup(rec, status, ai, rec->pb, rec->originSuffix,
+                       rec->mTRRTRRSkippedReason, nullptr)) {
       // leave 'rec' assigned and loop to make a renewed host resolve
       LOG(("DNS lookup thread - Re-resolving host [%s].\n", rec->host.get()));
     } else {
