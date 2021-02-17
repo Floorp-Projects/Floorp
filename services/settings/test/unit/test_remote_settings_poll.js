@@ -384,6 +384,11 @@ add_task(async function test_client_last_check_is_saved() {
 });
 add_task(clear_state);
 
+const TELEMETRY_EVENTS_FILTERS = {
+  category: "uptake.remotecontent.result",
+  method: "uptake",
+};
+
 add_task(async function test_age_of_data_is_reported_in_uptake_status() {
   await withFakeChannel("nightly", async () => {
     const serverTime = 1552323900000;
@@ -403,31 +408,34 @@ add_task(async function test_age_of_data_is_reported_in_uptake_status() {
 
     await RemoteSettings.pollChanges();
 
-    TelemetryTestUtils.assertEvents([
+    TelemetryTestUtils.assertEvents(
       [
-        "uptake.remotecontent.result",
-        "uptake",
-        "remotesettings",
-        UptakeTelemetry.STATUS.SUCCESS,
-        {
-          source: TELEMETRY_HISTOGRAM_POLL_KEY,
-          age: "3600",
-          trigger: "manual",
-        },
+        [
+          "uptake.remotecontent.result",
+          "uptake",
+          "remotesettings",
+          UptakeTelemetry.STATUS.SUCCESS,
+          {
+            source: TELEMETRY_HISTOGRAM_POLL_KEY,
+            age: "3600",
+            trigger: "manual",
+          },
+        ],
+        [
+          "uptake.remotecontent.result",
+          "uptake",
+          "remotesettings",
+          UptakeTelemetry.STATUS.SUCCESS,
+          {
+            source: TELEMETRY_HISTOGRAM_SYNC_KEY,
+            duration: () => true,
+            trigger: "manual",
+            timestamp: `"${recordsTimestamp}"`,
+          },
+        ],
       ],
-      [
-        "uptake.remotecontent.result",
-        "uptake",
-        "remotesettings",
-        UptakeTelemetry.STATUS.SUCCESS,
-        {
-          source: TELEMETRY_HISTOGRAM_SYNC_KEY,
-          duration: () => true,
-          trigger: "manual",
-          timestamp: `"${recordsTimestamp}"`,
-        },
-      ],
-    ]);
+      TELEMETRY_EVENTS_FILTERS
+    );
   });
 });
 add_task(clear_state);
@@ -454,30 +462,33 @@ add_task(
 
       await RemoteSettings.pollChanges();
 
-      TelemetryTestUtils.assertEvents([
+      TelemetryTestUtils.assertEvents(
         [
-          "uptake.remotecontent.result",
-          "uptake",
-          "remotesettings",
-          "success",
-          {
-            source: TELEMETRY_HISTOGRAM_POLL_KEY,
-            age: () => true,
-            trigger: "manual",
-          },
+          [
+            "uptake.remotecontent.result",
+            "uptake",
+            "remotesettings",
+            "success",
+            {
+              source: TELEMETRY_HISTOGRAM_POLL_KEY,
+              age: () => true,
+              trigger: "manual",
+            },
+          ],
+          [
+            "uptake.remotecontent.result",
+            "uptake",
+            "remotesettings",
+            "success",
+            {
+              source: TELEMETRY_HISTOGRAM_SYNC_KEY,
+              duration: v => v >= 1000,
+              trigger: "manual",
+            },
+          ],
         ],
-        [
-          "uptake.remotecontent.result",
-          "uptake",
-          "remotesettings",
-          "success",
-          {
-            source: TELEMETRY_HISTOGRAM_SYNC_KEY,
-            duration: v => v >= 1000,
-            trigger: "manual",
-          },
-        ],
-      ]);
+        TELEMETRY_EVENTS_FILTERS
+      );
     });
   }
 );

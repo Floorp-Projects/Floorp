@@ -30,6 +30,11 @@ const BinaryInputStream = CC(
   "setInputStream"
 );
 
+const TELEMETRY_EVENTS_FILTERS = {
+  category: "uptake.remotecontent.result",
+  method: "uptake",
+};
+
 let server;
 let client;
 let clientWithDump;
@@ -780,19 +785,22 @@ add_task(
     await withFakeChannel("nightly", async () => {
       await client.maybeSync(2000);
 
-      TelemetryTestUtils.assertEvents([
+      TelemetryTestUtils.assertEvents(
         [
-          "uptake.remotecontent.result",
-          "uptake",
-          "remotesettings",
-          UptakeTelemetry.STATUS.SUCCESS,
-          {
-            source: client.identifier,
-            duration: v => v > 0,
-            trigger: "manual",
-          },
+          [
+            "uptake.remotecontent.result",
+            "uptake",
+            "remotesettings",
+            UptakeTelemetry.STATUS.SUCCESS,
+            {
+              source: client.identifier,
+              duration: v => v > 0,
+              trigger: "manual",
+            },
+          ],
         ],
-      ]);
+        TELEMETRY_EVENTS_FILTERS
+      );
     });
   }
 );
@@ -910,20 +918,23 @@ add_task(async function test_telemetry_reports_error_name_as_event_nightly() {
       await client.maybeSync(2000);
     } catch (e) {}
 
-    TelemetryTestUtils.assertEvents([
+    TelemetryTestUtils.assertEvents(
       [
-        "uptake.remotecontent.result",
-        "uptake",
-        "remotesettings",
-        UptakeTelemetry.STATUS.UNKNOWN_ERROR,
-        {
-          source: client.identifier,
-          trigger: "manual",
-          duration: v => v >= 0,
-          errorName: "ThrownError",
-        },
+        [
+          "uptake.remotecontent.result",
+          "uptake",
+          "remotesettings",
+          UptakeTelemetry.STATUS.UNKNOWN_ERROR,
+          {
+            source: client.identifier,
+            trigger: "manual",
+            duration: v => v >= 0,
+            errorName: "ThrownError",
+          },
+        ],
       ],
-    ]);
+      TELEMETRY_EVENTS_FILTERS
+    );
   });
 
   client.db.list = backup;
