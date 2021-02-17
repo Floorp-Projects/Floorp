@@ -315,7 +315,7 @@ class Nimbus(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun applyPendingExperimentsOnThisThread() = withCatchAll {
         try {
-            nimbus.applyPendingExperiments()
+            nimbus.applyPendingExperiments().also(::recordExperimentTelemetryEvents)
             // Get the experiments to record in telemetry
             postEnrolmentCalculation()
         } catch (e: ErrorException.InvalidExperimentFormat) {
@@ -328,12 +328,6 @@ class Nimbus(
         nimbus.getActiveExperiments().let {
             if (it.any()) {
                 recordExperimentTelemetry(it)
-                // The current plan is to have the nimbus-sdk updateExperiments() function
-                // return a diff of the experiments that have been received, at which point we
-                // can emit the appropriate telemetry events and notify observers of just the
-                // diff. See also:
-                // https://github.com/mozilla/experimenter/issues/3588 and
-                // https://jira.mozilla.com/browse/SDK-6
                 notifyObservers { onUpdatesApplied(it) }
             }
         }
@@ -374,7 +368,9 @@ class Nimbus(
 
     override fun optOut(experimentId: String) {
         dbScope.launch {
-            withCatchAll { nimbus.optOut(experimentId) }
+            withCatchAll {
+                nimbus.optOut(experimentId).also(::recordExperimentTelemetryEvents)
+            }
         }
     }
 
@@ -396,7 +392,9 @@ class Nimbus(
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     internal fun optInWithBranch(experiment: String, branch: String) {
         dbScope.launch {
-            withCatchAll { nimbus.optInWithBranch(experiment, branch) }
+            withCatchAll {
+                nimbus.optInWithBranch(experiment, branch).also(::recordExperimentTelemetryEvents)
+            }
         }
     }
 
