@@ -79,13 +79,13 @@ add_task(async function testToggleDuplexWithPortraitOrientation() {
     await changeToOption(helper, 1);
     helper.assertSettingsMatch({
       orientation: Ci.nsIPrintSettings.kPortraitOrientation,
-      duplex: Ci.nsIPrintSettings.kDuplexFlipOnSideEdge,
+      duplex: Ci.nsIPrintSettings.kDuplexFlipOnLongEdge,
     });
 
     await changeToOption(helper, 2);
     helper.assertSettingsMatch({
       orientation: Ci.nsIPrintSettings.kPortraitOrientation,
-      duplex: Ci.nsIPrintSettings.kDuplexFlipOnTopEdge,
+      duplex: Ci.nsIPrintSettings.kDuplexFlipOnShortEdge,
     });
 
     await changeToOption(helper, 0);
@@ -136,13 +136,13 @@ add_task(async function testToggleDuplexWithLandscapeOrientation() {
     await changeToOption(helper, 1);
     helper.assertSettingsMatch({
       orientation: Ci.nsIPrintSettings.kLandscapeOrientation,
-      duplex: Ci.nsIPrintSettings.kDuplexFlipOnSideEdge,
+      duplex: Ci.nsIPrintSettings.kDuplexFlipOnLongEdge,
     });
 
     await changeToOption(helper, 2);
     helper.assertSettingsMatch({
       orientation: Ci.nsIPrintSettings.kLandscapeOrientation,
-      duplex: Ci.nsIPrintSettings.kDuplexFlipOnTopEdge,
+      duplex: Ci.nsIPrintSettings.kDuplexFlipOnShortEdge,
     });
 
     await changeToOption(helper, 0);
@@ -187,21 +187,21 @@ add_task(async function testSwitchOrientationWithDuplexEnabled() {
 
     await helper.assertSettingsMatch({
       orientation: Ci.nsIPrintSettings.kPortraitOrientation,
-      duplex: Ci.nsIPrintSettings.kDuplexFlipOnSideEdge,
+      duplex: Ci.nsIPrintSettings.kDuplexFlipOnLongEdge,
     });
 
     await helper.dispatchSettingsChange({ orientation: 1 });
     await helper.awaitAnimationFrame();
     await helper.assertSettingsMatch({
       orientation: Ci.nsIPrintSettings.kLandscapeOrientation,
-      duplex: Ci.nsIPrintSettings.kDuplexFlipOnSideEdge,
+      duplex: Ci.nsIPrintSettings.kDuplexFlipOnLongEdge,
     });
 
     await helper.dispatchSettingsChange({ orientation: 0 });
     await helper.awaitAnimationFrame();
     await helper.assertSettingsMatch({
       orientation: Ci.nsIPrintSettings.kPortraitOrientation,
-      duplex: Ci.nsIPrintSettings.kDuplexFlipOnSideEdge,
+      duplex: Ci.nsIPrintSettings.kDuplexFlipOnLongEdge,
     });
 
     await helper.closeDialog();

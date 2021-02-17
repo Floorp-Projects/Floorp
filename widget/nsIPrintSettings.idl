@@ -95,9 +95,9 @@ interface nsIPrintSettings : nsISupports
   // Equivalent to: Simplex
   const short kDuplexNone = 0;
   // Equivalent to: DMDUP_VERTICAL, NoTumble
-  const short kDuplexFlipOnSideEdge = 1;
+  const short kDuplexFlipOnLongEdge = 1;
   // Equivalent to: DMDUP_HORIZONTAL, Tumble
-  const short kDuplexFlipOnTopEdge = 2;
+  const short kDuplexFlipOnShortEdge = 2;
 
   /**
    * Get the page size in twips, considering the
