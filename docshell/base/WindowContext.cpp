@@ -260,11 +260,6 @@ bool WindowContext::CanSet(FieldIndex<IDX_IsLocalIP>, const bool& aValue,
   return CheckOnlyOwningProcessCanSet(aSource);
 }
 
-bool WindowContext::CanSet(FieldIndex<IDX_HadLazyLoadImage>, const bool& aValue,
-                           ContentParent* aSource) {
-  return IsTop() && CheckOnlyOwningProcessCanSet(aSource);
-}
-
 void WindowContext::DidSet(FieldIndex<IDX_SHEntryHasUserInteraction>,
                            bool aOldValue) {
   MOZ_ASSERT(
