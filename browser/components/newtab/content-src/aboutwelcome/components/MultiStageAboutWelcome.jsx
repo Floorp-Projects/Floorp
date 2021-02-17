@@ -209,18 +209,19 @@ export class WelcomeScreen extends React.PureComponent {
     }
   }
 
-  renderSecondaryCTA(className) {
+  renderSecondaryCTA(position) {
+    let targetElement = position
+      ? `secondary_button_${position}`
+      : `secondary_button`;
     return (
-      <div
-        className={className ? `secondary-cta ${className}` : `secondary-cta`}
-      >
-        <Localized text={this.props.content.secondary_button.text}>
+      <div className={position ? `secondary-cta ${position}` : "secondary-cta"}>
+        <Localized text={this.props.content[targetElement].text}>
           <span />
         </Localized>
-        <Localized text={this.props.content.secondary_button.label}>
+        <Localized text={this.props.content[targetElement].label}>
           <button
             className="secondary"
-            value="secondary_button"
+            value={targetElement}
             onClick={this.handleAction}
           />
         </Localized>
@@ -383,8 +384,6 @@ export class WelcomeScreen extends React.PureComponent {
 
   render() {
     const { content, topSites } = this.props;
-    const hasSecondaryTopCTA =
-      content.secondary_button && content.secondary_button.position === "top";
     const showImportableSitesDisclaimer =
       content.tiles &&
       content.tiles.type === "topsites" &&
@@ -393,8 +392,12 @@ export class WelcomeScreen extends React.PureComponent {
 
     return (
       <main className={`screen ${this.props.id}`}>
-        {hasSecondaryTopCTA ? this.renderSecondaryCTA("top") : null}
-        <div className={`brand-logo ${hasSecondaryTopCTA ? "cta-top" : ""}`} />
+        {content.secondary_button_top ? this.renderSecondaryCTA("top") : null}
+        <div
+          className={`brand-logo ${
+            content.secondary_button_top ? "cta-top" : ""
+          }`}
+        />
         <div className="welcome-text">
           <Zap hasZap={content.zap} text={content.title} />
           <Localized text={content.subtitle}>
@@ -413,9 +416,7 @@ export class WelcomeScreen extends React.PureComponent {
             />
           </Localized>
         </div>
-        {content.secondary_button && content.secondary_button.position !== "top"
-          ? this.renderSecondaryCTA()
-          : null}
+        {content.secondary_button ? this.renderSecondaryCTA() : null}
         {content.help_text && content.help_text.position === "default"
           ? this.renderHelpText()
           : null}
