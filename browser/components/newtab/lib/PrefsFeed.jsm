@@ -83,10 +83,7 @@ this.PrefsFeed = class PrefsFeed {
    * Handler for when experiment data updates.
    */
   onExperimentUpdated(event, reason) {
-    const value =
-      aboutNewTabFeature.getValue({
-        sendExposurePing: false,
-      }) || {};
+    const value = aboutNewTabFeature.getValue() || {};
     this.store.dispatch(
       ac.BroadcastToContent({
         type: at.PREF_CHANGED,
@@ -164,10 +161,7 @@ this.PrefsFeed = class PrefsFeed {
     });
 
     // Add experiment values and default values
-    values.featureConfig =
-      aboutNewTabFeature.getValue({
-        sendExposurePing: false,
-      }) || {};
+    values.featureConfig = aboutNewTabFeature.getValue() || {};
 
     this._setBoolPref(values, "newNewtabExperience.enabled", false);
     this._setBoolPref(values, "customizationMenu.enabled", false);

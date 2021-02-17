@@ -89,13 +89,13 @@ const ExperimentAPI = {
 
   /**
    * Returns an experiment, including all its metadata
-   * Sends exposure ping
+   * Sends exposure event
    *
    * @param {{slug?: string, featureId?: string}} options slug = An experiment identifier
    * or feature = a stable identifier for a type of experiment
    * @returns {{slug: string, active: bool}} A matching experiment if one is found.
    */
-  getExperiment({ slug, featureId, sendExposurePing } = {}) {
+  getExperiment({ slug, featureId, sendExposureEvent } = {}) {
     if (!slug && !featureId) {
       throw new Error(
         "getExperiment(options) must include a slug or a feature."
@@ -115,7 +115,7 @@ const ExperimentAPI = {
       return {
         slug: experimentData.slug,
         active: experimentData.active,
-        branch: this.activateBranch({ featureId, sendExposurePing }),
+        branch: this.activateBranch({ featureId, sendExposureEvent }),
       };
     }
 
@@ -124,7 +124,7 @@ const ExperimentAPI = {
 
   /**
    * Return experiment slug its status and the enrolled branch slug
-   * Does NOT send exposure ping because you only have access to the slugs
+   * Does NOT send exposure event because you only have access to the slugs
    */
   getExperimentMetaData({ slug, featureId }) {
     if (!slug && !featureId) {
@@ -156,10 +156,10 @@ const ExperimentAPI = {
 
   /**
    * Return FeatureConfig from first active experiment where it can be found
-   * @param {{slug: string, featureId: string, sendExposurePing: bool}}
+   * @param {{slug: string, featureId: string, sendExposureEvent: bool}}
    * @returns {Branch | null}
    */
-  activateBranch({ slug, featureId, sendExposurePing }) {
+  activateBranch({ slug, featureId, sendExposureEvent }) {
     let experiment = null;
     try {
       if (slug) {
@@ -175,7 +175,7 @@ const ExperimentAPI = {
       return null;
     }
 
-    if (sendExposurePing) {
+    if (sendExposureEvent) {
       this.recordExposureEvent({
         experimentSlug: experiment.slug,
         branchSlug: experiment.branch.slug,
@@ -345,16 +345,20 @@ class ExperimentFeature {
     });
   }
 
+  ready() {
+    return ExperimentAPI.ready();
+  }
+
   /**
    * Lookup feature in active experiments and return enabled.
    * By default, this will send an exposure event.
-   * @param {{sendExposurePing: boolean, defaultValue?: any}} options
+   * @param {{sendExposureEvent: boolean, defaultValue?: any}} options
    * @returns {obj} The feature value
    */
-  isEnabled({ sendExposurePing, defaultValue = null } = {}) {
+  isEnabled({ sendExposureEvent, defaultValue = null } = {}) {
     const branch = ExperimentAPI.activateBranch({
       featureId: this.featureId,
-      sendExposurePing,
+      sendExposureEvent,
     });
 
     // First, try to return an experiment value if it exists.
@@ -374,19 +378,26 @@ class ExperimentFeature {
   /**
    * Lookup feature in active experiments and return value.
    * By default, this will send an exposure event.
-   * @param {{sendExposurePing: boolean, defaultValue?: any}} options
+   * @param {{sendExposureEvent: boolean, defaultValue?: any}} options
    * @returns {obj} The feature value
    */
-  getValue({ sendExposurePing, defaultValue = null } = {}) {
+  getValue({ sendExposureEvent, defaultValue = null } = {}) {
     const branch = ExperimentAPI.activateBranch({
       featureId: this.featureId,
-      sendExposurePing,
+      sendExposureEvent,
     });
     if (branch?.feature?.value) {
       return branch.feature.value;
     }
 
     return this.defaultPrefValues.value || defaultValue;
+  }
+
+  recordExposureEvent() {
+    ExperimentAPI.activateBranch({
+      featureId: this.featureId,
+      sendExposureEvent: true,
+    });
   }
 
   onUpdate(callback) {

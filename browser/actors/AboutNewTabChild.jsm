@@ -18,6 +18,11 @@ const { PrivateBrowsingUtils } = ChromeUtils.import(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ExperimentFeature:
+    "resource://messaging-system/experiments/ExperimentAPI.jsm",
+});
+
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "ACTIVITY_STREAM_DEBUG",
@@ -26,10 +31,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 XPCOMUtils.defineLazyGetter(this, "awExperimentFeature", () => {
-  const { ExperimentFeature } = ChromeUtils.import(
-    "resource://messaging-system/experiments/ExperimentAPI.jsm"
-  );
   return new ExperimentFeature("aboutwelcome");
+});
+
+// Note: newtab feature info is currently being loaded in PrefsFeed.jsm,
+// But we're recording exposure events here.
+XPCOMUtils.defineLazyGetter(this, "newtabExperimentFeature", () => {
+  return new ExperimentFeature("newtab");
 });
 
 class AboutNewTabChild extends JSWindowActorChild {
@@ -83,6 +91,11 @@ class AboutNewTabChild extends JSWindowActorChild {
             PrivateBrowsingUtils.permanentPrivateBrowsing))
       ) {
         this.sendAsyncMessage("DefaultBrowserNotification");
+
+        // Send an exposure event to record when we have an experiment active
+        newtabExperimentFeature
+          .ready()
+          .then(() => newtabExperimentFeature.recordExposureEvent());
       }
     }
   }

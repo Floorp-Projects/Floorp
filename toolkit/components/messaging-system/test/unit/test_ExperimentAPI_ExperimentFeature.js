@@ -67,6 +67,39 @@ add_task(async function test_feature_manifest_is_valid() {
 /**
  * # ExperimentFeature.getValue
  */
+add_task(async function test_ExperimentFeature_ready() {
+  const { sandbox, manager } = await setupForExperimentFeature();
+
+  const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
+
+  const expected = ExperimentFakes.experiment("anexperiment", {
+    branch: {
+      slug: "treatment",
+      feature: {
+        featureId: "foo",
+        enabled: true,
+        value: { whoa: true },
+      },
+    },
+  });
+
+  manager.store.addExperiment(expected);
+
+  await featureInstance.ready();
+
+  Assert.deepEqual(
+    featureInstance.getValue(),
+    { whoa: true },
+    "should return getValue after waiting on ready"
+  );
+
+  Services.prefs.clearUserPref("testprefbranch.value");
+  sandbox.restore();
+});
+
+/**
+ * # ExperimentFeature.getValue
+ */
 add_task(async function test_ExperimentFeature_getValue() {
   const { sandbox } = await setupForExperimentFeature();
 
@@ -196,7 +229,7 @@ add_task(
 
     Assert.ok(exposureSpy.notCalled, "should emit exposure by default event");
 
-    featureInstance.isEnabled({ sendExposurePing: true });
+    featureInstance.isEnabled({ sendExposureEvent: true });
 
     Assert.ok(exposureSpy.calledOnce, "should emit exposure event");
 
@@ -225,12 +258,50 @@ add_task(async function test_ExperimentFeature_isEnabled_no_exposure() {
 
   const exposureSpy = sandbox.spy(ExperimentAPI, "recordExposureEvent");
 
-  const actual = featureInstance.isEnabled({ sendExposurePing: false });
+  const actual = featureInstance.isEnabled({ sendExposureEvent: false });
 
   Assert.deepEqual(actual, false, "should return feature as disabled");
   Assert.ok(
     exposureSpy.notCalled,
-    "should not emit an exposure event when options = { sendExposurePing: false}"
+    "should not emit an exposure event when options = { sendExposureEvent: false}"
+  );
+
+  sandbox.restore();
+});
+
+add_task(async function test_record_exposure_event() {
+  const { sandbox, manager } = await setupForExperimentFeature();
+
+  const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
+  const exposureSpy = sandbox.spy(ExperimentAPI, "recordExposureEvent");
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+
+  featureInstance.recordExposureEvent();
+
+  Assert.ok(
+    exposureSpy.notCalled,
+    "should not emit an exposure event when no experiment is active"
+  );
+
+  manager.store.addExperiment(
+    ExperimentFakes.experiment("blah", {
+      featureIds: ["foo"],
+      branch: {
+        slug: "treatment",
+        feature: {
+          featureId: "foo",
+          enabled: false,
+          value: null,
+        },
+      },
+    })
+  );
+
+  featureInstance.recordExposureEvent();
+
+  Assert.ok(
+    exposureSpy.calledOnce,
+    "should emit an exposure event when there is an experiment"
   );
 
   sandbox.restore();

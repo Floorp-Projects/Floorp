@@ -158,7 +158,7 @@ add_task(async function test_getExperiment_feature() {
 
   Assert.ok(exposureStub.notCalled, "Not called by default");
 
-  ExperimentAPI.getExperiment({ featureId: "cfr", sendExposurePing: true });
+  ExperimentAPI.getExperiment({ featureId: "cfr", sendExposureEvent: true });
 
   Assert.ok(exposureStub.calledOnce, "Called explicitly.");
 
@@ -409,7 +409,7 @@ add_task(async function test_activateBranch_activationEvent() {
     "Exposure is not sent by default by activateBranch"
   );
 
-  ExperimentAPI.activateBranch({ featureId: "green", sendExposurePing: true });
+  ExperimentAPI.activateBranch({ featureId: "green", sendExposureEvent: true });
 
   Assert.equal(stub.callCount, 1, "Called by doing activateBranch");
   Assert.deepEqual(
@@ -469,7 +469,7 @@ add_task(async function test_activateBranch_noActivationEvent() {
   // Call activateBranch to trigger an activation event
   ExperimentAPI.activateBranch({ featureId: "green" });
 
-  Assert.equal(stub.callCount, 0, "Not called: sendExposurePing is false");
+  Assert.equal(stub.callCount, 0, "Not called: sendExposureEvent is false");
   sandbox.restore();
 });
 
