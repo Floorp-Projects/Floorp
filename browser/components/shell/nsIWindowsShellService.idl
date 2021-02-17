@@ -12,4 +12,47 @@ interface nsIWindowsShellService : nsISupports
   void createShortcut(in nsIFile aBinary, in Array<AString> aArguments,
     in AString aDescription, in nsIFile aIconFile, in AString aAppUserModelId,
     in nsIFile aTarget);
+
+  /*
+   * Pin the current app to the taskbar
+   *
+   * This MUST only be used in response to an active request from the user.
+   *
+   * Uses an existing shortcut on the Desktop or Start Menu, which would have
+   * been created by the installer (for All Users or Current User), in order
+   * to ensure that the pin is associated with this executable and AUMID for
+   * proper launching and grouping.
+   *
+   * NOTE: This method probably shouldn't be used on the main thread, it
+   * performs blocking disk I/O.
+   *
+   * NOTE: It is possible for the shortcut match to fail even when a
+   * shortcut refers to the current executable, if the paths differ due
+   * to e.g. symlinks. This should be rare.
+   *
+   * This will definitely fail on an OS before Windows 10 build 1809
+   * (October 2018 Update).
+   *
+   * @throws NS_ERROR_NOT_AVAILABLE
+   *         if OS is not at least Windows 10 build 1809, or if creating the
+   *         Taskband Pin object fails
+   * @throws NS_ERROR_FILE_NOT_FOUND
+   *         if a shortcut matching this app's AUMID and exe path wasn't found
+   * @throws NS_ERROR_FAILURE
+   *         for unexpected errors
+   */
+  void pinCurrentAppToTaskbar();
+
+  /*
+   * Do a dry run of pinCurrentAppToTaskbar()
+   *
+   * This does all the same checks and setup, throws the same errors, but doesn't
+   * do the final step of creating the pin.
+   *
+   * NOTE: This method probably shouldn't be used on the main thread, it
+   * performs blocking disk I/O.
+   *
+   * @throws same as pinCurrentAppToTaskbar()
+   */
+  void checkPinCurrentAppToTaskbar();
 };
