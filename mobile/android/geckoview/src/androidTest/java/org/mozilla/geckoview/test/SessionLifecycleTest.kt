@@ -122,8 +122,38 @@ class SessionLifecycleTest : BaseSessionTest() {
         waitUntilCollected(createSession())
     }
 
+    // Waits for 4 requestAnimationFrame calls and computes rate
+    private fun computeRequestAnimationFrameRate(session: GeckoSession): Double {
+        return session.evaluateJS("""
+            new Promise(resolve => {
+                let start = 0;
+                let frames = 0;
+                const ITERATIONS = 4;
+                function raf() {
+                    if (frames === 0) {
+                        start = window.performance.now();
+                    }
+                    if (frames === ITERATIONS) {
+                        resolve((window.performance.now() - start) / ITERATIONS);
+                    }
+                    frames++;
+                    window.requestAnimationFrame(raf);
+                }
+                window.requestAnimationFrame(raf);
+            });
+        """) as Double
+    }
+
     @WithDisplay(width = 100, height = 100)
     @Test fun asyncScriptsSuspendedWhileInactive() {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "privacy.reduceTimerPrecision" to false,
+                // This makes the throttled frame rate 4 times faster than normal,
+                // so this test doesn't time out. Should still be significantly slower tha
+                // the active frame rate so we can measure the effects
+                "layout.throttled_frame_rate" to 4
+        ))
+
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
 
@@ -131,26 +161,38 @@ class SessionLifecycleTest : BaseSessionTest() {
 
         // Deactivate the GeckoSession and confirm that rAF/setTimeout/etc callbacks do not run
         mainSession.setActive(false)
-        mainSession.evaluateJS(
-            """function fail() {
-                 document.documentElement.style.backgroundColor = 'green';
-               }
-               requestAnimationFrame(fail);
-               setTimeout(fail, 1);
-               fetch("missing.html").catch(fail);""")
-        mainSession.waitForJS("new Promise(resolve => { resolve() })")
-        val isNotGreen = mainSession.evaluateJS("document.documentElement.style.backgroundColor !== 'green'") as Boolean
-        assertThat("requestAnimationFrame has not run yet", isNotGreen, equalTo(true))
-        assertThat("docShell shouldn't be active after calling setActive",
+        assertThat("docShell shouldn't be active after calling setActive(false)",
                 mainSession.active, equalTo(false))
+
+        mainSession.evaluateJS("""
+            function fail() {
+                document.documentElement.style.backgroundColor = 'green';
+            }
+            setTimeout(fail, 1);
+            fetch("missing.html").catch(fail);
+        """)
+
+        var rafRate = computeRequestAnimationFrameRate(mainSession)
+        assertThat("requestAnimationFrame should be called about once a second",
+            rafRate, greaterThan(500.0))
+        assertThat("requestAnimationFrame should be called about once a second",
+                rafRate, lessThan(10000.0))
+
+        val isNotGreen = mainSession.evaluateJS(
+                "document.documentElement.style.backgroundColor !== 'green'") as Boolean
+        assertThat("timeouts have not run yet", isNotGreen, equalTo(true))
 
         // Reactivate the GeckoSession and confirm that rAF/setTimeout/etc callbacks now run
         mainSession.setActive(true)
         assertThat("docShell should be active after calling setActive(true)",
                 mainSession.active, equalTo(true))
-        mainSession.waitForJS("new Promise(resolve => requestAnimationFrame(() => { resolve(); }))");
-        var isGreen = mainSession.evaluateJS("document.documentElement.style.backgroundColor === 'green'") as Boolean
-        assertThat("requestAnimationFrame has run", isGreen, equalTo(true))
+
+        // At 60fps, once a frame is about 16.6 ms
+        rafRate = computeRequestAnimationFrameRate(mainSession)
+        assertThat("requestAnimationFrame should be called about once a frame",
+                rafRate, lessThan(60.0))
+        assertThat("requestAnimationFrame should be called about once a frame",
+                rafRate, greaterThan(5.0))
     }
 
     private fun waitUntilCollected(ref: QueuedWeakReference<*>) {
