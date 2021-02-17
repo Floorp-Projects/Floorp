@@ -118,6 +118,7 @@ load 1236639.html
 test-pref(media.navigator.permission.disabled,true) test-pref(media.devices.insecure.enabled,true) test-pref(media.getusermedia.insecure.enabled,true) load 1388372.html
 load 1494073.html
 skip-if(Android) load 1526044.html # Bug 1528391
+load 1530897.webm
 skip-if(Android&&AndroidVersion<21) load encrypted-track-with-bad-sample-description-index.mp4 # Bug 1533211, unkip after bug 1550912
 load encrypted-track-without-tenc.mp4 # Bug 1533215
 asserts-if(Android,0-1) load encrypted-track-with-sample-missing-cenc-aux.mp4 # Bug 1533625, bug 1588967
