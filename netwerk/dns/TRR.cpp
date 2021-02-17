@@ -329,9 +329,10 @@ nsresult TRR::SendHTTPRequest() {
     addrRec->mTRRUsed = true;
   }
 
-  NS_NewTimerWithCallback(getter_AddRefs(mTimeout), this,
-                          gTRRService->GetRequestTimeout(),
-                          nsITimer::TYPE_ONE_SHOT);
+  NS_NewTimerWithCallback(
+      getter_AddRefs(mTimeout), this,
+      mTimeoutMs ? mTimeoutMs : gTRRService->GetRequestTimeout(),
+      nsITimer::TYPE_ONE_SHOT);
 
   mChannel = channel;
   return NS_OK;
