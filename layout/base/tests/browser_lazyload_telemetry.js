@@ -9,6 +9,12 @@ const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
+function pageLoadIsReported() {
+  const snapshot = Services.telemetry.getSnapshotForHistograms("main", false)
+    .parent;
+  return snapshot.FX_LAZYLOAD_IMAGE_PAGE_LOAD_MS;
+}
+
 function dataIsReported() {
   const snapshot = Services.telemetry.getSnapshotForHistograms("main", false)
     .content;
@@ -25,6 +31,7 @@ add_task(async function testTelemetryCollection() {
     .getHistogramById("LAZYLOAD_IMAGE_VIEWPORT_LOADING")
     .clear();
   Services.telemetry.getHistogramById("LAZYLOAD_IMAGE_VIEWPORT_LOADED").clear();
+  Services.telemetry.getHistogramById("FX_LAZYLOAD_IMAGE_PAGE_LOAD_MS").clear();
 
   const testTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -47,20 +54,21 @@ add_task(async function testTelemetryCollection() {
     }
   );
 
+  await BrowserTestUtils.waitForCondition(pageLoadIsReported);
+
   gBrowser.removeTab(testTab);
 
   await BrowserTestUtils.waitForCondition(dataIsReported);
 
-  const snapshot = Services.telemetry.getSnapshotForHistograms("main", false)
-    .content;
+  const snapshot = Services.telemetry.getSnapshotForHistograms("main", false);
 
   // Ensures we have 4 lazyload images.
-  is(snapshot.LAZYLOAD_IMAGE_TOTAL.values[4], 1, "total images");
+  is(snapshot.content.LAZYLOAD_IMAGE_TOTAL.values[4], 1, "total images");
   // All 4 images should be lazy-loaded.
-  is(snapshot.LAZYLOAD_IMAGE_STARTED.values[4], 1, "started to load");
+  is(snapshot.content.LAZYLOAD_IMAGE_STARTED.values[4], 1, "started to load");
   // The last image didn't reach to the viewport.
   is(
-    snapshot.LAZYLOAD_IMAGE_NOT_VIEWPORT.values[1],
+    snapshot.content.LAZYLOAD_IMAGE_NOT_VIEWPORT.values[1],
     1,
     "images didn't reach viewport"
   );
@@ -68,9 +76,13 @@ add_task(async function testTelemetryCollection() {
   // should be three. This includes all images except
   // the last one.
   is(
-    snapshot.LAZYLOAD_IMAGE_VIEWPORT_LOADING.sum +
-      snapshot.LAZYLOAD_IMAGE_VIEWPORT_LOADED.sum,
+    snapshot.content.LAZYLOAD_IMAGE_VIEWPORT_LOADING.sum +
+      snapshot.content.LAZYLOAD_IMAGE_VIEWPORT_LOADED.sum,
     3,
     "images reached viewport"
+  );
+  ok(
+    snapshot.parent.FX_LAZYLOAD_IMAGE_PAGE_LOAD_MS.sum > 0,
+    "lazyload image page load telemetry"
   );
 });

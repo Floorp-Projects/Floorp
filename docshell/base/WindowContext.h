@@ -82,7 +82,10 @@ class BrowsingContextGroup;
   FIELD(HasReportedShadowDOMUsage, bool)                               \
   /* Whether the principal of this window is for a local               \
    * IP address */                                                     \
-  FIELD(IsLocalIP, bool)
+  FIELD(IsLocalIP, bool)                                               \
+  /* Whether the corresponding document has `loading='lazy'`           \
+   * images; It won't become false if the image becomes non-lazy */    \
+  FIELD(HadLazyLoadImage, bool)
 
 class WindowContext : public nsISupports, public nsWrapperCache {
   MOZ_DECL_SYNCED_CONTEXT(WindowContext, MOZ_EACH_WC_FIELD)
@@ -175,6 +178,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
   bool CanShowPopup();
 
+  bool HadLazyLoadImage() const { return GetHadLazyLoadImage(); }
+
  protected:
   WindowContext(BrowsingContext* aBrowsingContext, uint64_t aInnerWindowId,
                 uint64_t aOuterWindowId, bool aInProcess,
@@ -260,6 +265,9 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   }
 
   bool CanSet(FieldIndex<IDX_IsLocalIP>, const bool& aValue,
+              ContentParent* aSource);
+
+  bool CanSet(FieldIndex<IDX_HadLazyLoadImage>, const bool& aValue,
               ContentParent* aSource);
 
   void DidSet(FieldIndex<IDX_HasReportedShadowDOMUsage>, bool aOldValue);
