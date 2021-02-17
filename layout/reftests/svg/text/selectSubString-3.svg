@@ -9,10 +9,12 @@
     </text>
   </g>
   <script>
-    onload = function() {
+    function f() {
       var text = document.getElementsByTagName("text")[0];
       text.selectSubString(0, 9);
       document.documentElement.removeAttribute("class");
     }
+
+    window.addEventListener("MozReftestInvalidate", f, false);
   </script>
 </svg>
