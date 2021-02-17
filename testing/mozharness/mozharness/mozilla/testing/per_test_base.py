@@ -172,7 +172,7 @@ class SingleTestMixin(object):
                 if file in all_disabled:
                     self.info("'%s' has been skipped on this platform." % file)
                 if os.environ.get("MOZHARNESS_TEST_PATHS", None) is not None:
-                    self.fatal("Per-test run could not find requested test '%s'" % file)
+                    self.info("Per-test run could not find requested test '%s'" % file)
                 continue
 
             if gpu and not self._is_gpu_suite(entry[1]):
@@ -283,7 +283,7 @@ class SingleTestMixin(object):
 
         if os.environ.get("MOZHARNESS_TEST_PATHS", None) is not None:
             for file in changed_files:
-                self.fatal(
+                self.info(
                     "Per-test run could not find requested web-platform test '%s'"
                     % file
                 )
