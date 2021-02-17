@@ -16,9 +16,9 @@ const { PreferenceRollouts } = ChromeUtils.import(
 
 // Test that a simple recipe rollsback as expected
 decorate_task(
-  PreferenceRollouts.withTestMock(),
   withStub(TelemetryEnvironment, "setExperimentInactive"),
   withSendEventSpy,
+  PreferenceRollouts.withTestMock(),
   async function simple_rollback(setExperimentInactiveStub, sendEventStub) {
     Services.prefs.getDefaultBranch("").setIntPref("test.pref1", 2);
     Services.prefs
@@ -129,8 +129,8 @@ decorate_task(
 
 // Test that a graduated rollout can't be rolled back
 decorate_task(
-  PreferenceRollouts.withTestMock(),
   withSendEventSpy,
+  PreferenceRollouts.withTestMock(),
   async function cant_rollback_graduated(sendEventStub) {
     Services.prefs.getDefaultBranch("").setIntPref("test.pref", 1);
     await PreferenceRollouts.add({
@@ -188,9 +188,9 @@ decorate_task(
 
 // Test that a rollback without a matching rollout does not send telemetry
 decorate_task(
-  PreferenceRollouts.withTestMock(),
   withSendEventSpy,
   withStub(Uptake, "reportRecipe"),
+  PreferenceRollouts.withTestMock(),
   async function rollback_without_rollout(sendEventStub, reportRecipeStub) {
     let recipe = { id: 1, arguments: { rolloutSlug: "missing-rollout" } };
 
@@ -210,9 +210,9 @@ decorate_task(
 
 // Test that rolling back an already rolled back recipe doesn't do anything
 decorate_task(
-  PreferenceRollouts.withTestMock(),
   withStub(TelemetryEnvironment, "setExperimentInactive"),
   withSendEventSpy,
+  PreferenceRollouts.withTestMock(),
   async function rollback_already_rolled_back(
     setExperimentInactiveStub,
     sendEventStub
@@ -308,10 +308,10 @@ decorate_task(PreferenceRollouts.withTestMock(), async function simple_rollback(
 
 // Test that a rollouts in the graduation set can't be rolled back
 decorate_task(
+  withSendEventSpy,
   PreferenceRollouts.withTestMock({
     graduationSet: new Set(["graduated-rollout"]),
   }),
-  withSendEventSpy,
   async function cant_rollback_graduation_set(sendEventStub) {
     Services.prefs.getDefaultBranch("").setIntPref("test.pref", 1);
 

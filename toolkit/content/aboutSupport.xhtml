@@ -320,6 +320,22 @@
         </tbody>
       </table>
 
+#ifdef MOZ_NORMANDY
+      <!-- - - - - - - - - - - - - - - - - - - - - -->
+
+      <h2 class="major-section" data-l10n-id="support-remote-features-title"/>
+
+      <table class="prefs-table">
+        <thead class="no-copy">
+          <th data-l10n-id="support-remote-features-name"/>
+          <th data-l10n-id="support-remote-features-status"/>
+        </thead>
+
+        <tbody id="remote-features-tbody">
+        </tbody>
+      </table>
+
+#endif
       <!-- - - - - - - - - - - - - - - - - - - - - -->
 
       <h2 class="major-section" data-l10n-id="processes-title" id="remote-processes"/>
@@ -528,6 +544,28 @@
         <tbody id="experimental-features-tbody">
         </tbody>
       </table>
+
+#endif
+#ifdef MOZ_NORMANDY
+      <!-- - - - - - - - - - - - - - - - - - - - - -->
+      <h2 class="major-section" data-l10n-id="support-remote-experiments-title"/>
+
+      <table class="prefs-table">
+        <thead class="no-copy">
+          <th data-l10n-id="support-remote-experiments-name"/>
+          <th data-l10n-id="support-remote-experiments-branch"/>
+        </thead>
+
+        <tbody id="remote-experiments-tbody">
+        </tbody>
+      </table>
+
+      <section id="about-studies-section" class="no-copy">
+        <p data-l10n-id="support-remote-experiments-see-about-studies">
+          <a data-l10n-name="support-about-studies-link" href="about:studies"></a>
+        </p>
+      </section>
+
 #endif
       <!-- - - - - - - - - - - - - - - - - - - - - -->
 

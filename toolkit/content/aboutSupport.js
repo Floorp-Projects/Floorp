@@ -1360,6 +1360,35 @@ var snapshotFormatters = {
       outerTBody.appendChild(detailRow);
     }
   },
+
+  normandy(data) {
+    if (!data) {
+      return;
+    }
+
+    const { prefStudies, addonStudies, prefRollouts } = data;
+    $.append(
+      $("remote-features-tbody"),
+      prefRollouts.map(({ slug, state }) =>
+        $.new("tr", [
+          $.new("td", [document.createTextNode(slug)]),
+          $.new("td", [document.createTextNode(state)]),
+        ])
+      )
+    );
+
+    $.append(
+      $("remote-experiments-tbody"),
+      [addonStudies, prefStudies]
+        .flat()
+        .map(({ userFacingName, branch }) =>
+          $.new("tr", [
+            $.new("td", [document.createTextNode(userFacingName)]),
+            $.new("td", [document.createTextNode(branch)]),
+          ])
+        )
+    );
+  },
 };
 
 var $ = document.getElementById.bind(document);
