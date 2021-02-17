@@ -513,13 +513,13 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       // gen5 (ironlake)
       APPEND_DEVICE(0x0042);
       APPEND_DEVICE(0x0046);
+#endif
 
       // cherryview
       APPEND_DEVICE(0x22b0);
       APPEND_DEVICE(0x22b1);
       APPEND_DEVICE(0x22b2);
       APPEND_DEVICE(0x22b3);
-#endif
 
       [[fallthrough]];
     case DeviceFamily::IntelModernRolloutWebRender:
@@ -610,7 +610,6 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x0d2b);
       APPEND_DEVICE(0x0d2e);
 
-#ifdef EARLY_BETA_OR_EARLIER
       // broxton (apollolake)
       APPEND_DEVICE(0x0a84);
       APPEND_DEVICE(0x1a84);
@@ -621,7 +620,7 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       // geminilake
       APPEND_DEVICE(0x3184);
       APPEND_DEVICE(0x3185);
-#endif
+
       // broadwell gt1 (gen8)
       APPEND_DEVICE(0x1602);
       APPEND_DEVICE(0x1606);
