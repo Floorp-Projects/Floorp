@@ -1116,12 +1116,7 @@ static void TestScan() {
 
 #endif /* SHOULD_TEST_SCANF_MACROS */
 
-#if defined(XP_WIN)
-int wmain()
-#else
-int main()
-#endif  // defined(XP_WIN)
-{
+int main() {
   TestPrint();
 #if SHOULD_TEST_SCANF_MACROS
   TestScan();

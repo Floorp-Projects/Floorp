@@ -43,7 +43,6 @@ if CONFIG["OS_ARCH"] == "WINNT":
 USE_LIBS += [
     "bspatch",
     "mar",
-    "mozglue",
     "updatecommon",
     "xz-embedded",
 ]
@@ -78,6 +77,13 @@ if have_progressui == 0:
     ]
 
 SOURCES += sorted(srcs)
+
+if CONFIG["MOZ_TSAN"]:
+    # Since mozglue is not linked to the updater,
+    # we need to include our own TSan suppression list.
+    SOURCES += [
+        "TsanOptions.cpp",
+    ]
 
 DEFINES["NS_NO_XPCOM"] = True
 DisableStlWrapping()
