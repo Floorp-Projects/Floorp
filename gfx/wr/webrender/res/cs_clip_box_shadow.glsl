@@ -77,7 +77,7 @@ void main(void) {
     vLayer = res.layer;
     vClipMode = float(bs_data.clip_mode);
 
-    vec2 texture_size = vec2(textureSize(sColor0, 0));
+    vec2 texture_size = vec2(TEX_SIZE(sColor0));
     vec2 local_pos = vi.local_pos.xy / vi.local_pos.w;
     vLocalPos = vi.local_pos;
 

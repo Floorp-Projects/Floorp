@@ -65,7 +65,7 @@ void brush_vs(
 #ifdef WR_FEATURE_TEXTURE_RECT
     vec2 texture_size = vec2(1, 1);
 #else
-    vec2 texture_size = vec2(textureSize(sColor0, 0));
+    vec2 texture_size = vec2(TEX_SIZE(sColor0));
 #endif
 
     ImageResource res = fetch_image_resource(specific_resource_address);

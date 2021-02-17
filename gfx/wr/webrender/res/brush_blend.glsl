@@ -67,7 +67,7 @@ void brush_vs(
     vec2 uv0 = res.uv_rect.p0;
     vec2 uv1 = res.uv_rect.p1;
 
-    vec2 inv_texture_size = vec2(1.0) / vec2(textureSize(sColor0, 0).xy);
+    vec2 inv_texture_size = vec2(1.0) / vec2(TEX_SIZE(sColor0).xy);
     vec2 f = (vi.local_pos - local_rect.p0) / local_rect.size;
     f = get_image_quad_uv(prim_user_data.x, f);
     vec2 uv = mix(uv0, uv1, f);

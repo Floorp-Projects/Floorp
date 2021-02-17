@@ -193,14 +193,23 @@ pub fn build_shader_prefix_string<F: FnMut(&str)>(
     };
     output(kind_string);
 
-    // detect if we're targeting macOS at build time
-    match std::env::var("CARGO_CFG_TARGET_OS") {
-        Ok(os) if os == "macos" => output("#define PLATFORM_MACOS\n"),
-        // if this is not called from build.rs (e.g. the gpu_cache_update shader)
-        // we want to use the runtime value
-        Err(_) if cfg!(target_os = "macos") => output("#define PLATFORM_MACOS\n"),
-        _ => {}
+    // detect which platform we're targeting
+    let is_macos = match std::env::var("CARGO_CFG_TARGET_OS") {
+        Ok(os) => os == "macos",
+        // if this is not called from build.rs (e.g. the gpu_cache_update shader or
+        // if the optimized shader pref is disabled) we want to use the runtime value
+        Err(_) => cfg!(target_os = "macos"),
+    };
+    let is_android = match std::env::var("CARGO_CFG_TARGET_OS") {
+        Ok(os) => os == "android",
+        Err(_) => cfg!(target_os = "android"),
+    };
+    if is_macos {
+        output("#define PLATFORM_MACOS\n");
+    } else if is_android {
+        output("#define PLATFORM_ANDROID\n");
     }
+
     // Define a constant for the vertex texture width.
     output("#define WR_MAX_VERTEX_TEXTURE_WIDTH ");
     output(&MAX_VERTEX_TEXTURE_WIDTH_STRING);

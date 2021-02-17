@@ -73,19 +73,19 @@ void brush_vs(
         ImageResource res_y = fetch_image_resource(prim_user_data.x);
         ImageResource res_u = fetch_image_resource(prim_user_data.y);
         ImageResource res_v = fetch_image_resource(prim_user_data.z);
-        write_uv_rect(res_y.uv_rect.p0, res_y.uv_rect.p1, f, TEX_SIZE(sColor0), vUv_Y, vUvBounds_Y);
-        write_uv_rect(res_u.uv_rect.p0, res_u.uv_rect.p1, f, TEX_SIZE(sColor1), vUv_U, vUvBounds_U);
-        write_uv_rect(res_v.uv_rect.p0, res_v.uv_rect.p1, f, TEX_SIZE(sColor2), vUv_V, vUvBounds_V);
+        write_uv_rect(res_y.uv_rect.p0, res_y.uv_rect.p1, f, TEX_SIZE_YUV(sColor0), vUv_Y, vUvBounds_Y);
+        write_uv_rect(res_u.uv_rect.p0, res_u.uv_rect.p1, f, TEX_SIZE_YUV(sColor1), vUv_U, vUvBounds_U);
+        write_uv_rect(res_v.uv_rect.p0, res_v.uv_rect.p1, f, TEX_SIZE_YUV(sColor2), vUv_V, vUvBounds_V);
         vYuvLayers = vec3(res_y.layer, res_u.layer, res_v.layer);
     } else if (vFormat == YUV_FORMAT_NV12) {
         ImageResource res_y = fetch_image_resource(prim_user_data.x);
         ImageResource res_u = fetch_image_resource(prim_user_data.y);
-        write_uv_rect(res_y.uv_rect.p0, res_y.uv_rect.p1,  f, TEX_SIZE(sColor0), vUv_Y, vUvBounds_Y);
-        write_uv_rect(res_u.uv_rect.p0, res_u.uv_rect.p1, f, TEX_SIZE(sColor1), vUv_U, vUvBounds_U);
+        write_uv_rect(res_y.uv_rect.p0, res_y.uv_rect.p1, f, TEX_SIZE_YUV(sColor0), vUv_Y, vUvBounds_Y);
+        write_uv_rect(res_u.uv_rect.p0, res_u.uv_rect.p1, f, TEX_SIZE_YUV(sColor1), vUv_U, vUvBounds_U);
         vYuvLayers = vec3(res_y.layer, res_u.layer, 0.0);
     } else if (vFormat == YUV_FORMAT_INTERLEAVED) {
         ImageResource res_y = fetch_image_resource(prim_user_data.x);
-        write_uv_rect(res_y.uv_rect.p0, res_y.uv_rect.p1, f, TEX_SIZE(sColor0), vUv_Y, vUvBounds_Y);
+        write_uv_rect(res_y.uv_rect.p0, res_y.uv_rect.p1, f, TEX_SIZE_YUV(sColor0), vUv_Y, vUvBounds_Y);
         vYuvLayers = vec3(res_y.layer, 0.0, 0.0);
     }
 }

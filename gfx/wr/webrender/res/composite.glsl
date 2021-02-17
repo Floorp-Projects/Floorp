@@ -81,7 +81,7 @@ void main(void) {
         aUvRect0.xy,
         aUvRect0.zw,
         uv,
-        TEX_SIZE(sColor0),
+        TEX_SIZE_YUV(sColor0),
         vUV_y,
         vUVBounds_y
     );
@@ -89,7 +89,7 @@ void main(void) {
         aUvRect1.xy,
         aUvRect1.zw,
         uv,
-        TEX_SIZE(sColor1),
+        TEX_SIZE_YUV(sColor1),
         vUV_u,
         vUVBounds_u
     );
@@ -97,7 +97,7 @@ void main(void) {
         aUvRect2.xy,
         aUvRect2.zw,
         uv,
-        TEX_SIZE(sColor2),
+        TEX_SIZE_YUV(sColor2),
         vUV_v,
         vUVBounds_v
     );
@@ -112,7 +112,7 @@ void main(void) {
     {
         // using an atlas, so UVs are in pixels, and need to be
         // normalized and clamped.
-        vec2 texture_size = TEX_SIZE(sColor0);
+        vec2 texture_size = TEX_SIZE_YUV(sColor0);
         vUVBounds += vec4(0.5, 0.5, -0.5, -0.5);
     #ifndef WR_FEATURE_TEXTURE_RECT
         vUv /= texture_size;

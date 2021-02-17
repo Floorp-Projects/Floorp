@@ -90,7 +90,7 @@ void main(void) {
 
     RenderTaskCommonData input_1_task;
     if (aFilterInputCount > 0) {
-        vec2 texture_size = vec2(textureSize(sColor0, 0).xy);
+        vec2 texture_size = vec2(TEX_SIZE(sColor0).xy);
         input_1_task = fetch_render_task_common_data(aFilterInput1TaskAddress);
         vInput1UvRect = compute_uv_rect(input_1_task, texture_size);
         vInput1Uv = compute_uv(input_1_task, texture_size);
@@ -98,7 +98,7 @@ void main(void) {
 
     RenderTaskCommonData input_2_task;
     if (aFilterInputCount > 1) {
-        vec2 texture_size = vec2(textureSize(sColor1, 0).xy);
+        vec2 texture_size = vec2(TEX_SIZE(sColor1).xy);
         input_2_task = fetch_render_task_common_data(aFilterInput2TaskAddress);
         vInput2UvRect = compute_uv_rect(input_2_task, texture_size);
         vInput2Uv = compute_uv(input_2_task, texture_size);
@@ -138,7 +138,7 @@ void main(void) {
             vFilterData0 = fetch_from_gpu_cache_1_direct(aFilterExtraDataAddress);
             break;
         case FILTER_OFFSET:
-            vec2 texture_size = vec2(textureSize(sColor0, 0).xy);
+            vec2 texture_size = vec2(TEX_SIZE(sColor0).xy);
             vFilterData0 = vec4(-filter_task.user_data.xy / texture_size, vec2(0.0));
 
             RectWithSize task_rect = input_1_task.task_rect;
