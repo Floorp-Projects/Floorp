@@ -17,8 +17,28 @@ const TEST_PATH =
   "http://example.net/browser/browser/" +
   "components/resistfingerprinting/test/browser/";
 
-var spoofedUserAgentNavigator;
-var spoofedUserAgentHeader;
+let expectedResults;
+
+let osVersion = Services.sysinfo.get("version");
+if (AppConstants.platform == "macosx") {
+  // Convert Darwin version to macOS version: 19.x.x -> 10.15 etc.
+  // https://en.wikipedia.org/wiki/Darwin_%28operating_system%29
+  let DarwinVersionParts = osVersion.split(".");
+  let DarwinMajorVersion = +DarwinVersionParts[0];
+  let macOsMinorVersion = DarwinMajorVersion - 4;
+  if (macOsMinorVersion > 15) {
+    macOsMinorVersion = 15;
+  }
+  osVersion = `10.${macOsMinorVersion}`;
+}
+
+const DEFAULT_APPVERSION = {
+  linux: "5.0 (X11)",
+  win: "5.0 (Windows)",
+  macosx: "5.0 (Macintosh)",
+  android: `5.0 (Android ${osVersion})`,
+  other: "5.0 (X11)",
+};
 
 const SPOOFED_APPNAME = "Netscape";
 
@@ -29,6 +49,21 @@ const SPOOFED_APPVERSION = {
   android: "5.0 (Android 9)",
   other: "5.0 (X11)",
 };
+
+let cpuArch = Services.sysinfo.get("arch");
+if (cpuArch == "x86-64") {
+  // Convert CPU arch "x86-64" to "x86_64" used in Linux and Android UAs.
+  cpuArch = "x86_64";
+}
+
+const DEFAULT_PLATFORM = {
+  linux: `Linux ${cpuArch}`,
+  win: "Win32",
+  macosx: "MacIntel",
+  android: `Linux ${cpuArch}`,
+  other: `Linux ${cpuArch}`,
+};
+
 const SPOOFED_PLATFORM = {
   linux: "Linux x86_64",
   win: "Win32",
@@ -36,6 +71,20 @@ const SPOOFED_PLATFORM = {
   android: "Linux aarch64",
   other: "Linux x86_64",
 };
+
+const WindowsOscpu =
+  cpuArch == "x86_64"
+    ? `Windows NT ${osVersion}; Win64; x64`
+    : `Windows NT ${osVersion}`;
+
+const DEFAULT_OSCPU = {
+  linux: `Linux ${cpuArch}`,
+  win: WindowsOscpu,
+  macosx: `Intel Mac OS X ${osVersion}`,
+  android: `Linux ${cpuArch}`,
+  other: `Linux ${cpuArch}`,
+};
+
 const SPOOFED_OSCPU = {
   linux: "Linux x86_64",
   win: "Windows NT 10.0; Win64; x64",
@@ -43,6 +92,15 @@ const SPOOFED_OSCPU = {
   android: "Linux aarch64",
   other: "Linux x86_64",
 };
+
+const DEFAULT_UA_OS = {
+  linux: `X11; Linux ${cpuArch}`,
+  win: WindowsOscpu,
+  macosx: `Macintosh; Intel Mac OS X ${osVersion}`,
+  android: `Android ${osVersion}; Mobile`,
+  other: `X11; Linux ${cpuArch}`,
+};
+
 const SPOOFED_UA_NAVIGATOR_OS = {
   linux: "X11; Linux x86_64",
   win: "Windows NT 10.0; Win64; x64",
@@ -80,8 +138,8 @@ async function testUserAgentHeader() {
 
   is(
     result,
-    spoofedUserAgentHeader,
-    "User Agent HTTP Header is correctly spoofed."
+    expectedResults.userAgentHeader,
+    `Checking ${expectedResults.testDesc} User Agent HTTP Header.`
   );
 
   BrowserTestUtils.removeTab(tab);
@@ -100,6 +158,8 @@ async function testNavigator() {
 
   result = JSON.parse(result);
 
+  let testDesc = expectedResults.testDesc;
+
   is(
     result.appName,
     SPOOFED_APPNAME,
@@ -107,30 +167,30 @@ async function testNavigator() {
   );
   is(
     result.appVersion,
-    SPOOFED_APPVERSION[AppConstants.platform],
-    "Navigator.appVersion is correctly spoofed."
+    expectedResults.appVersion,
+    `Checking ${testDesc} navigator.appVersion.`
   );
   is(
     result.platform,
-    SPOOFED_PLATFORM[AppConstants.platform],
-    "Navigator.platform is correctly spoofed."
+    expectedResults.platform,
+    `Checking ${testDesc} navigator.platform.`
   );
   is(
     result.userAgent,
-    spoofedUserAgentNavigator,
-    "Navigator.userAgent is correctly spoofed."
+    expectedResults.userAgentNavigator,
+    `Checking ${testDesc} navigator.userAgent.`
   );
   is(result.mimeTypesLength, 0, "Navigator.mimeTypes has a length of 0.");
   is(result.pluginsLength, 0, "Navigator.plugins has a length of 0.");
   is(
     result.oscpu,
-    SPOOFED_OSCPU[AppConstants.platform],
-    "Navigator.oscpu is correctly spoofed."
+    expectedResults.oscpu,
+    `Checking ${testDesc} navigator.oscpu.`
   );
   is(
     result.hardwareConcurrency,
-    SPOOFED_HW_CONCURRENCY,
-    "Navigator.hardwareConcurrency is correctly spoofed."
+    expectedResults.hardwareConcurrency,
+    `Checking ${testDesc} navigator.hardwareConcurrency.`
   );
 
   is(
@@ -190,6 +250,8 @@ async function testWorkerNavigator() {
 
   result = JSON.parse(result);
 
+  let testDesc = expectedResults.testDesc;
+
   is(
     result.appName,
     SPOOFED_APPNAME,
@@ -197,23 +259,23 @@ async function testWorkerNavigator() {
   );
   is(
     result.appVersion,
-    SPOOFED_APPVERSION[AppConstants.platform],
-    "Navigator.appVersion is correctly spoofed."
+    expectedResults.appVersion,
+    `Checking ${testDesc} navigator.appVersion.`
   );
   is(
     result.platform,
-    SPOOFED_PLATFORM[AppConstants.platform],
-    "Navigator.platform is correctly spoofed."
+    expectedResults.platform,
+    `Checking ${testDesc} navigator.platform.`
   );
   is(
     result.userAgent,
-    spoofedUserAgentNavigator,
-    "Navigator.userAgent is correctly spoofed."
+    expectedResults.userAgentNavigator,
+    `Checking ${testDesc} navigator.userAgent.`
   );
   is(
     result.hardwareConcurrency,
-    SPOOFED_HW_CONCURRENCY,
-    "Navigator.hardwareConcurrency is correctly spoofed."
+    expectedResults.hardwareConcurrency,
+    `Checking ${testDesc} navigator.hardwareConcurrency.`
   );
 
   is(
@@ -244,7 +306,35 @@ async function testWorkerNavigator() {
   }
 }
 
-add_task(async function setup() {
+add_task(async function setupDefaultUserAgent() {
+  let appVersion = parseInt(Services.appinfo.version);
+  let defaultUserAgent = `Mozilla/5.0 (${
+    DEFAULT_UA_OS[AppConstants.platform]
+  }; rv:${appVersion}.0) Gecko/20100101 Firefox/${appVersion}.0`;
+  expectedResults = {
+    testDesc: "default",
+    appVersion: DEFAULT_APPVERSION[AppConstants.platform],
+    hardwareConcurrency: navigator.hardwareConcurrency,
+    oscpu: DEFAULT_OSCPU[AppConstants.platform],
+    platform: DEFAULT_PLATFORM[AppConstants.platform],
+    userAgentNavigator: defaultUserAgent,
+    userAgentHeader: defaultUserAgent,
+  };
+});
+
+add_task(async function runDefaultNavigatorTest() {
+  await testNavigator();
+});
+
+add_task(async function runDefaultHTTPHeaderTest() {
+  await testUserAgentHeader();
+});
+
+add_task(async function runDefaultWorkerNavigatorTest() {
+  await testWorkerNavigator();
+});
+
+add_task(async function setupResistFingerprinting() {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.resistFingerprinting", true]],
   });
@@ -252,24 +342,34 @@ add_task(async function setup() {
   let appVersion = parseInt(Services.appinfo.version);
   let spoofedVersion = appVersion - ((appVersion - 78) % 13);
 
-  spoofedUserAgentNavigator = `Mozilla/5.0 (${
+  let spoofedUserAgentNavigator = `Mozilla/5.0 (${
     SPOOFED_UA_NAVIGATOR_OS[AppConstants.platform]
   }; rv:${spoofedVersion}.0) Gecko/20100101 Firefox/${spoofedVersion}.0`;
 
-  spoofedUserAgentHeader = `Mozilla/5.0 (${
+  let spoofedUserAgentHeader = `Mozilla/5.0 (${
     SPOOFED_UA_HTTPHEADER_OS[AppConstants.platform]
   }; rv:${spoofedVersion}.0) Gecko/20100101 Firefox/${spoofedVersion}.0`;
+
+  expectedResults = {
+    testDesc: "spoofed",
+    appVersion: SPOOFED_APPVERSION[AppConstants.platform],
+    hardwareConcurrency: SPOOFED_HW_CONCURRENCY,
+    oscpu: SPOOFED_OSCPU[AppConstants.platform],
+    platform: SPOOFED_PLATFORM[AppConstants.platform],
+    userAgentNavigator: spoofedUserAgentNavigator,
+    userAgentHeader: spoofedUserAgentHeader,
+  };
 });
 
-add_task(async function runNavigatorTest() {
+add_task(async function runSpoofedNavigatorTest() {
   await testNavigator();
 });
 
-add_task(async function runHTTPHeaderTest() {
+add_task(async function runSpoofedHTTPHeaderTest() {
   await testUserAgentHeader();
 });
 
-add_task(async function runWorkerNavigatorTest() {
+add_task(async function runSpoofedWorkerNavigatorTest() {
   await testWorkerNavigator();
 });
 
