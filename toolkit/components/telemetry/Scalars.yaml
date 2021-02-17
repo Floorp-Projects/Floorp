@@ -5651,11 +5651,12 @@ blocklist:
       - 1572711
       - 1607744
       - 1649960
+      - 1689274
     description: >
       Keep track of the last time the "addons" remotesetting blocklist has been successfully
       updated (as a datetime string in UTC format), set to "Missing Date" when the timestamp
       couldn't be retrieved.
-    expires: "88"
+    expires: "95"
     kind: string
     release_channel_collection: opt-out
     notification_emails:
@@ -5674,11 +5675,12 @@ blocklist:
     bug_numbers:
       - 1633466
       - 1649960
+      - 1689274
     description: >
       Keep track of the last time the "addons-bloomfilters" remotesetting blocklist has been successfully
       updated (as a datetime string in UTC format), set to "Missing Date" when the timestamp
       couldn't be retrieved.
-    expires: "88"
+    expires: "95"
     kind: string
     release_channel_collection: opt-out
     notification_emails:
@@ -5696,11 +5698,12 @@ blocklist:
       - 1572711
       - 1607744
       - 1649960
+      - 1689274
     description: >
       Keep track of the last time the "plugins" remotesetting blocklist has been successfully
       updated (as a datetime string in UTC format), set to "Missing Date" when the timestamp
       couldn't be retrieved.
-    expires: "88"
+    expires: "95"
     kind: string
     release_channel_collection: opt-out
     notification_emails:
@@ -5718,10 +5721,11 @@ blocklist:
     bug_numbers:
       - 1633466
       - 1649960
+      - 1689274
     description: >
       Keep track of whether the addons blocklist engine uses bloom filters (blocklist v3).
       If false, the blocklist v2 is used instead.
-    expires: "88"
+    expires: "95"
     kind: boolean
     release_channel_collection: opt-out
     notification_emails:
@@ -5738,12 +5742,13 @@ blocklist:
     bug_numbers:
       - 1633466
       - 1649960
+      - 1689274
     description: >
       Keep track of whether the bloomfilter-based blocklist engine uses stashes from the
       addons-bloomfilters collection, together with an infrequently updated base bloomfilter.
       If false, the latest (full) bloom filter is downloaded on every update of the addon blocklist.
       This metric is only meaningful if mlbf_enabled is true.
-    expires: "88"
+    expires: "95"
     kind: boolean
     release_channel_collection: opt-out
     notification_emails:
@@ -5760,12 +5765,13 @@ blocklist:
     bug_numbers:
       - 1633466
       - 1649960
+      - 1689274
     description: >
       Keep track of the generation time of the addon blocklist's bloom filter. This marks the
       point in time until which signed add-ons are recognized by the selected bloom filter from the
       addons-bloomfilters collection.
       The value is a datetime string in UTC format, or  "Missing Date" when unavailable.
-    expires: "88"
+    expires: "95"
     kind: string
     release_channel_collection: opt-out
     notification_emails:
@@ -5782,11 +5788,12 @@ blocklist:
     bug_numbers:
       - 1633466
       - 1649960
+      - 1689274
     description: >
       Keep track of the timestamp of the oldest stash of the addons blocklist.
       Only meaningful when mlbf_enabled and mlbf_stashes are true.
       The value is a datetime string in UTC format, or "Missing Date" when unavailable.
-    expires: "88"
+    expires: "95"
     kind: string
     release_channel_collection: opt-out
     notification_emails:
@@ -5803,11 +5810,12 @@ blocklist:
     bug_numbers:
       - 1633466
       - 1649960
+      - 1689274
     description: >
       Keep track of the timestamp of the most recent stash of the addons blocklist.
       Only meaningful when mlbf_enabled and mlbf_stashes are true.
       The value is a datetime string in UTC format, or "Missing Date" when unavailable.
-    expires: "88"
+    expires: "95"
     kind: string
     release_channel_collection: opt-out
     notification_emails:
