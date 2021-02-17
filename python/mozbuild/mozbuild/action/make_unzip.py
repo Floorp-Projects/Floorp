@@ -6,10 +6,11 @@ from __future__ import absolute_import, print_function
 
 import sys
 import subprocess
+import buildconfig
 
 
 def make_unzip(package):
-    subprocess.check_call(["unzip", package])
+    subprocess.check_call([buildconfig.substs["UNZIP"], package])
 
 
 def main(args):
