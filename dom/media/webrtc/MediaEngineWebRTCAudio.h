@@ -197,8 +197,6 @@ class AudioInputProcessing : public AudioDataListener {
 
   void End();
 
-  TrackTime NumBufferedFrames(MediaTrackGraphImpl* aGraph) const;
-
  private:
   ~AudioInputProcessing() = default;
   // This implements the processing algoritm to apply to the input (e.g. a
