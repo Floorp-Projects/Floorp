@@ -63,12 +63,16 @@ import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.search.SearchMigration
 import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.historymetadata.DefaultHistoryMetadataService
+import org.mozilla.fenix.historymetadata.HistoryMetadataMiddleware
+import org.mozilla.fenix.historymetadata.HistoryMetadataService
 import org.mozilla.fenix.media.MediaSessionService
 import org.mozilla.fenix.perf.StrictModeManager
 import org.mozilla.fenix.perf.lazyMonitored
@@ -206,6 +210,10 @@ class Core(
                 PromptMiddleware()
             )
 
+        if (FeatureFlags.historyMetadataFeature) {
+            middlewareList += HistoryMetadataMiddleware(historyMetadataService)
+        }
+
         BrowserStore(
             middleware = middlewareList + EngineMiddleware.create(engine)
         ).apply {
@@ -237,6 +245,15 @@ class Core(
      */
     val relationChecker: RelationChecker by lazyMonitored {
         StatementRelationChecker(StatementApi(client))
+    }
+
+    /**
+     * The [HistoryMetadataService] is used to record history metadata.
+     */
+    val historyMetadataService: HistoryMetadataService by lazyMonitored {
+        DefaultHistoryMetadataService(storage = historyStorage).apply {
+            cleanup(System.currentTimeMillis() - HISTORY_METADATA_MAX_AGE_IN_MS)
+        }
     }
 
     /**
@@ -424,5 +441,6 @@ class Core(
         private const val KEY_STORAGE_NAME = "core_prefs"
         private const val PASSWORDS_KEY = "passwords"
         private const val RECENTLY_CLOSED_MAX = 10
+        private const val HISTORY_METADATA_MAX_AGE_IN_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
     }
 }

@@ -206,7 +206,18 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     override fun onStop() {
         super.onStop()
         updateLastBrowseActivity()
+        if (FeatureFlags.historyMetadataFeature) {
+            updateHistoryMetadata()
+        }
         pwaOnboardingObserver?.stop()
+    }
+
+    private fun updateHistoryMetadata() {
+        getCurrentTab()?.let { tab ->
+            (tab as? TabSessionState)?.historyMetadata?.let {
+                requireComponents.core.historyMetadataService.updateMetadata(it, tab)
+            }
+        }
     }
 
     private fun subscribeToTabCollections() {

@@ -38,4 +38,9 @@ object FeatureFlags {
      * Enables the "recent" tabs feature in the home screen.
      */
     val showRecentTabsFeature = Config.channel.isNightlyOrDebug
+
+    /**
+     * Enables recording of history metadata.
+     */
+    val historyMetadataFeature = Config.channel.isDebug
 }
