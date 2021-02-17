@@ -103,7 +103,6 @@ add_task(async function test_enforce_useful_extension() {
     await testLinkWithoutExtension("image/png", true);
     await testLinkWithoutExtension("audio/ogg", true);
     await testLinkWithoutExtension("video/webm", true);
-    await testLinkWithoutExtension("application/msword", true);
     await testLinkWithoutExtension("application/pdf", true);
 
     await testLinkWithoutExtension("application/x-gobbledygook", false);
