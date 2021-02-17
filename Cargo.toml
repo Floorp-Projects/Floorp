@@ -33,8 +33,6 @@ exclude = [
   # be included in the top-level one.
   "gfx/wgpu",
   "gfx/wr",
-  "media/audioipc",
-  "media/cubeb-rs",
 
   # Excluded because they are used only as dependencies, not top-level targets,
   # so we don't need to vendor their dev-dependencies.
