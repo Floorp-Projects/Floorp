@@ -4,10 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsAlgorithm.h"
 #include "WebMBufferedParser.h"
-#include "nsThreadUtils.h"
+
 #include <algorithm>
+
+#include "mozilla/CheckedInt.h"
+#include "nsAlgorithm.h"
+#include "nsThreadUtils.h"
 
 extern mozilla::LazyLogModule gMediaDemuxerLog;
 #define WEBM_DEBUG(arg, ...)                          \
@@ -348,7 +351,13 @@ bool WebMBufferedState::CalculateBufferedForRange(int64_t aStartOffset,
   uint64_t frameDuration =
       mTimeMapping[end].mTimecode - mTimeMapping[end - 1].mTimecode;
   *aStartTime = mTimeMapping[start].mTimecode;
-  *aEndTime = mTimeMapping[end].mTimecode + frameDuration;
+  CheckedUint64 endTime{mTimeMapping[end].mTimecode};
+  endTime += frameDuration;
+  if (!endTime.isValid()) {
+    WEBM_DEBUG("End time overflow during CalculateBufferedForRange.");
+    return false;
+  }
+  *aEndTime = endTime.value();
   return true;
 }
 
