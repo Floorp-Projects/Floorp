@@ -1615,7 +1615,8 @@ MIRType TypeAnalyzer::guessPhiType(MPhi* phi) const {
 
     if (type == MIRType::None) {
       type = in->type();
-      if (in->canProduceFloat32()) {
+      if (in->canProduceFloat32() &&
+          !mir->outerInfo().hadSpeculativePhiBailout()) {
         convertibleToFloat32 = true;
       }
       continue;
