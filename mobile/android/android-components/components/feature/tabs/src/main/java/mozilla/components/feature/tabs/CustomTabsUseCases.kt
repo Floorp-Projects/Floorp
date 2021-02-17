@@ -64,6 +64,32 @@ class CustomTabsUseCases(
         }
     }
 
+    /**
+     * Use case for migrating a custom tab to a regular tab.
+     */
+    class MigrateCustomTabUseCase(
+        private val sessionManager: SessionManager
+    ) {
+        /**
+         * Migrates the custom tab with the given [customTabId] to a regular
+         * tab. This method has no effect if the custom tab does not exist.
+         *
+         * @param customTabId the custom tab to turn into a regular tab.
+         * @param select whether or not to select the regular tab, defaults to true.
+         */
+        operator fun invoke(customTabId: String, select: Boolean = true) {
+            val customTabSession = sessionManager.findSessionById(customTabId)
+            customTabSession?.let {
+                it.customTabConfig = null
+
+                if (select) {
+                    sessionManager.select(it)
+                }
+            }
+        }
+    }
+
     val add by lazy { AddCustomTabUseCase(sessionManager, loadUrlUseCase) }
     val remove by lazy { RemoveCustomTabUseCase(sessionManager) }
+    val migrate by lazy { MigrateCustomTabUseCase(sessionManager) }
 }
