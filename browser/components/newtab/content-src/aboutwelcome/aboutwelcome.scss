@@ -608,13 +608,13 @@ body {
 
   .secondary-cta {
     display: flex;
-    align-items: end;
     flex-direction: row;
     justify-content: center;
     font-size: 14px;
 
     &.top {
       justify-content: end;
+      align-items: end;
       padding-inline-end: 30px;
       padding-top: 4px;
 
