@@ -170,6 +170,7 @@ bool RenderTextureHostSWGL::LockSWGLCompositeSurface(
     case gfx::SurfaceFormat::B8G8R8X8:
       break;
     default:
+      gfxCriticalNote << "Unhandled external image format: " << GetFormat();
       MOZ_RELEASE_ASSERT(false, "Unhandled external image format");
       break;
   }
