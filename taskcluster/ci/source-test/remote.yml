@@ -37,7 +37,6 @@ job-defaults:
 
 puppeteer:
     description: Puppeteer tests against Firefox CDP-based remote protocol
-    run-on-projects: ["trunk"]
     treeherder:
         symbol: remote(pup)
     run:
