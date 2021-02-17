@@ -63,7 +63,6 @@ extern "C" {
     pub fn cubeb_stream_destroy(stream: *mut cubeb_stream);
     pub fn cubeb_stream_start(stream: *mut cubeb_stream) -> c_int;
     pub fn cubeb_stream_stop(stream: *mut cubeb_stream) -> c_int;
-    pub fn cubeb_stream_reset_default_device(stream: *mut cubeb_stream) -> c_int;
     pub fn cubeb_stream_get_position(stream: *mut cubeb_stream, position: *mut u64) -> c_int;
     pub fn cubeb_stream_get_latency(stream: *mut cubeb_stream, latency: *mut c_uint) -> c_int;
     pub fn cubeb_stream_get_input_latency(stream: *mut cubeb_stream, latency: *mut c_uint) -> c_int;

@@ -119,11 +119,6 @@ impl StreamRef {
         unsafe { call!(ffi::cubeb_stream_stop(self.as_ptr())) }
     }
 
-    /// Reset stream to the default device.
-    pub fn reset_default_device(&self) -> Result<()> {
-        unsafe { call!(ffi::cubeb_stream_reset_default_device(self.as_ptr())) }
-    }
-
     /// Get the current stream playback position.
     pub fn position(&self) -> Result<u64> {
         let mut position = 0u64;

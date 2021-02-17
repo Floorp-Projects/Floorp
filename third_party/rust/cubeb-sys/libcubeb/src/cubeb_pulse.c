@@ -1625,7 +1625,6 @@ static struct cubeb_ops const pulse_ops = {
   .stream_destroy = pulse_stream_destroy,
   .stream_start = pulse_stream_start,
   .stream_stop = pulse_stream_stop,
-  .stream_reset_default_device = NULL,
   .stream_get_position = pulse_stream_get_position,
   .stream_get_latency = pulse_stream_get_latency,
   .stream_get_input_latency = NULL,

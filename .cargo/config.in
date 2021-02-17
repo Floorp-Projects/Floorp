@@ -32,6 +32,16 @@ git = "https://github.com/mozilla/mp4parse-rust"
 replace-with = "vendored-sources"
 rev = "3011a2b923c8b0f1b392bcdd008cd8b95ffd846b"
 
+[source."https://github.com/mozilla/cubeb-pulse-rs"]
+git = "https://github.com/mozilla/cubeb-pulse-rs"
+replace-with = "vendored-sources"
+rev = "c87b50aebfa088c1ad30c74819d4e9829f88b2e3"
+
+[source."https://github.com/mozilla/cubeb-coreaudio-rs"]
+git = "https://github.com/mozilla/cubeb-coreaudio-rs"
+replace-with = "vendored-sources"
+rev = "3d071d733d13bde0af033e7973e53938b2ab53e6"
+
 [source."https://github.com/mozilla/application-services"]
 git = "https://github.com/mozilla/application-services"
 replace-with = "vendored-sources"
@@ -97,11 +107,6 @@ git = "https://github.com/gfx-rs/gfx"
 replace-with = "vendored-sources"
 rev = "1d14789011cb892f4c1a205d3f8a87d479c2e354"
 
-[source."https://github.com/djg/cubeb-pulse-rs"]
-git = "https://github.com/djg/cubeb-pulse-rs"
-replace-with = "vendored-sources"
-rev = "bf31534d08b2c16fb5e4c5834944ae3271efbd63"
-
 [source."https://github.com/badboy/failure"]
 git = "https://github.com/badboy/failure"
 replace-with = "vendored-sources"
@@ -116,11 +121,6 @@ rev = "f3cace4fb8b53db0849c62af4fa62bade5a620f7"
 git = "https://github.com/PLSysSec/lucet_sandbox_compiler"
 replace-with = "vendored-sources"
 rev = "cd07861d1c92147b35b538e6f94fde7d1986f9ad"
-
-[source."https://github.com/ChunMinChang/cubeb-coreaudio-rs"]
-git = "https://github.com/ChunMinChang/cubeb-coreaudio-rs"
-replace-with = "vendored-sources"
-rev = "1e1222d6213e28eabd7f4302d00765ae1153a31e"
 
 [source.crates-io]
 replace-with = "vendored-sources"

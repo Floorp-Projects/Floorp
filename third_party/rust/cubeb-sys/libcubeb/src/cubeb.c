@@ -60,6 +60,12 @@ int sun_init(cubeb ** context, char const * context_name);
 #if defined(USE_OPENSL)
 int opensl_init(cubeb ** context, char const * context_name);
 #endif
+#if defined(USE_OSS)
+int oss_init(cubeb ** context, char const * context_name);
+#endif
+#if defined(USE_AAUDIO)
+int aaudio_init(cubeb ** context, char const * context_name);
+#endif
 #if defined(USE_AUDIOTRACK)
 int audiotrack_init(cubeb ** context, char const * context_name);
 #endif
@@ -166,6 +172,14 @@ cubeb_init(cubeb ** context, char const * context_name, char const * backend_nam
 #if defined(USE_OPENSL)
       init_oneshot = opensl_init;
 #endif
+    } else if (!strcmp(backend_name, "oss")) {
+#if defined(USE_OSS)
+      init_oneshot = oss_init;
+#endif
+    } else if (!strcmp(backend_name, "aaudio")) {
+#if defined(USE_AAUDIO)
+      init_oneshot = aaudio_init;
+#endif
     } else if (!strcmp(backend_name, "audiotrack")) {
 #if defined(USE_AUDIOTRACK)
       init_oneshot = audiotrack_init;
@@ -200,6 +214,9 @@ cubeb_init(cubeb ** context, char const * context_name, char const * backend_nam
 #if defined(USE_ALSA)
     alsa_init,
 #endif
+#if defined (USE_OSS)
+    oss_init,
+#endif
 #if defined(USE_AUDIOUNIT_RUST)
     audiounit_rust_init,
 #endif
@@ -217,6 +234,11 @@ cubeb_init(cubeb ** context, char const * context_name, char const * backend_nam
 #endif
 #if defined(USE_OPENSL)
     opensl_init,
+#endif
+    // TODO: should probably be preferred over OpenSLES when available.
+    // Initialization will fail on old android devices.
+#if defined(USE_AAUDIO)
+    aaudio_init,
 #endif
 #if defined(USE_AUDIOTRACK)
     audiotrack_init,
@@ -380,20 +402,6 @@ cubeb_stream_stop(cubeb_stream * stream)
   }
 
   return stream->context->ops->stream_stop(stream);
-}
-
-int
-cubeb_stream_reset_default_device(cubeb_stream * stream)
-{
-  if (!stream) {
-    return CUBEB_ERROR_INVALID_PARAMETER;
-  }
-
-  if (!stream->context->ops->stream_reset_default_device) {
-    return CUBEB_ERROR_NOT_SUPPORTED;
-  }
-
-  return stream->context->ops->stream_reset_default_device(stream);
 }
 
 int

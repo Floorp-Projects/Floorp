@@ -57,8 +57,6 @@ pub struct Ops {
     pub stream_destroy: Option<unsafe extern "C" fn(stream: *mut ffi::cubeb_stream)>,
     pub stream_start: Option<unsafe extern "C" fn(stream: *mut ffi::cubeb_stream) -> c_int>,
     pub stream_stop: Option<unsafe extern "C" fn(stream: *mut ffi::cubeb_stream) -> c_int>,
-    pub stream_reset_default_device:
-        Option<unsafe extern "C" fn(stream: *mut ffi::cubeb_stream) -> c_int>,
     pub stream_get_position:
         Option<unsafe extern "C" fn(stream: *mut ffi::cubeb_stream, position: *mut u64) -> c_int>,
     pub stream_get_latency:

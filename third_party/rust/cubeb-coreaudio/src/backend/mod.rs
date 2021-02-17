@@ -3490,9 +3490,6 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
         );
         Ok(())
     }
-    fn reset_default_device(&mut self) -> Result<()> {
-        Err(Error::not_supported())
-    }
     fn position(&mut self) -> Result<u64> {
         let OutputCallbackTimingData {
             frames_queued,
