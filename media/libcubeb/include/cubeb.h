@@ -552,14 +552,6 @@ CUBEB_EXPORT int cubeb_stream_start(cubeb_stream * stream);
     @retval CUBEB_ERROR */
 CUBEB_EXPORT int cubeb_stream_stop(cubeb_stream * stream);
 
-/** Reset stream to the default device.
-    @param stream
-    @retval CUBEB_OK
-    @retval CUBEB_ERROR_INVALID_PARAMETER
-    @retval CUBEB_ERROR_NOT_SUPPORTED
-    @retval CUBEB_ERROR */
-CUBEB_EXPORT int cubeb_stream_reset_default_device(cubeb_stream * stream);
-
 /** Get the current stream playback position.
     @param stream
     @param position Playback position in frames.
