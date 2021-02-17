@@ -85,43 +85,36 @@ export const DEFAULT_WELCOME_CONTENT = {
   template: "multistage",
   screens: [
     {
-      id: "AW_SET_DEFAULT",
+      id: "AW_GET_STARTED",
       order: 0,
       content: {
         zap: true,
         title: {
-          string_id: "onboarding-multistage-set-default-header",
+          string_id: "onboarding-multistage-welcome-header",
         },
-        subtitle: { string_id: "onboarding-multistage-set-default-subtitle" },
+        subtitle: { string_id: "onboarding-multistage-welcome-subtitle" },
         primary_button: {
           label: {
-            string_id: "onboarding-multistage-set-default-primary-button-label",
+            string_id: "onboarding-multistage-welcome-primary-button-label",
           },
           action: {
             navigate: true,
-            type: "SET_DEFAULT_BROWSER",
           },
         },
         secondary_button: {
-          label: {
-            string_id:
-              "onboarding-multistage-set-default-secondary-button-label",
-          },
-          action: {
-            navigate: true,
-          },
-        },
-        secondary_button_top: {
           text: {
             string_id: "onboarding-multistage-welcome-secondary-button-text",
           },
           label: {
             string_id: "onboarding-multistage-welcome-secondary-button-label",
           },
+          position: "top",
           action: {
-            data: { entrypoint: "activity-stream-firstrun" },
             type: "SHOW_FIREFOX_ACCOUNTS",
             addFlowParams: true,
+            data: {
+              entrypoint: "activity-stream-firstrun",
+            },
           },
         },
       },
