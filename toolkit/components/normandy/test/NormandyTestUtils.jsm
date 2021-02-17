@@ -21,6 +21,7 @@ var EXPORTED_SYMBOLS = ["NormandyTestUtils"];
 // Factory IDs
 let _addonStudyFactoryId = 0;
 let _preferenceStudyFactoryId = 0;
+let _preferenceRolloutFactoryId = 0;
 
 let testGlobals = {};
 
@@ -39,10 +40,20 @@ const NormandyTestUtils = {
         }
       }
 
+      // Generate a slug from userFacingName
+      let {
+        userFacingName = `Test study ${_preferenceStudyFactoryId++}`,
+        slug,
+      } = attrs;
+      delete attrs.slug;
+      if (userFacingName && !slug) {
+        slug = userFacingName.replace(" ", "-").toLowerCase();
+      }
+
       return Object.assign(
         {
           recipeId: _addonStudyFactoryId++,
-          slug: "test-study",
+          slug,
           userFacingName: "Test study",
           userFacingDescription: "test description",
           branch: AddonStudies.NO_BRANCHES_MARKER,
@@ -112,6 +123,34 @@ const NormandyTestUtils = {
           experimentType: "exp",
           enrollmentId: NormandyUtils.generateUuid(),
           actionName: "PreferenceExperimentAction",
+        },
+        attrs,
+        {
+          preferences,
+        }
+      );
+    },
+
+    preferenceRolloutFactory(attrs = {}) {
+      const defaultPrefInfo = {
+        preferenceName: "test.rollout.{}",
+        value: true,
+        previousValue: false,
+      };
+      const preferences = (attrs.preferences ?? [{}]).map((override, idx) => ({
+        ...defaultPrefInfo,
+        preferenceName: defaultPrefInfo.preferenceName.replace(
+          "{}",
+          (idx + 1).toString()
+        ),
+        ...override,
+      }));
+
+      return Object.assign(
+        {
+          slug: `test-rollout-${_preferenceRolloutFactoryId++}`,
+          state: "active",
+          enrollmentId: NormandyUtils.generateUuid(),
         },
         attrs,
         {

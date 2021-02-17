@@ -401,3 +401,14 @@ support-printing-clear-settings-button = Clear saved print settings
 support-printing-modified-settings = Modified print settings
 support-printing-prefs-name = Name
 support-printing-prefs-value = Value
+
+## Normandy sections
+
+support-remote-experiments-title = Remote Experiments
+support-remote-experiments-name = Name
+support-remote-experiments-branch = Experiment Branch
+support-remote-experiments-see-about-studies = See <a data-l10n-name="support-about-studies-link">about:studies</a> for more information, including how to disable individual experiments or to disable { -brand-short-name } from running this type of experiment in the future.
+
+support-remote-features-title = Remote Features
+support-remote-features-name = Name
+support-remote-features-status = Status
