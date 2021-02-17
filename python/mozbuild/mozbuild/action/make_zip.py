@@ -6,10 +6,13 @@ from __future__ import absolute_import, print_function
 
 import sys
 import subprocess
+import buildconfig
 
 
 def make_zip(source, package):
-    subprocess.check_call(["zip", "-r9D", package, source, "-x", "\*/.mkdir.done"])
+    subprocess.check_call(
+        [buildconfig.substs["ZIP"], "-r9D", package, source, "-x", "\*/.mkdir.done"]
+    )
 
 
 def main(args):
