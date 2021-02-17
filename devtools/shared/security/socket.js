@@ -47,6 +47,13 @@ loader.lazyRequireGetter(
   "devtools/shared/security/auth",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "DevToolsSocketStatus",
+  "resource://devtools/shared/security/DevToolsSocketStatus.jsm",
+  true
+);
+
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 DevToolsUtils.defineLazyGetter(this, "nsFile", () => {
@@ -423,6 +430,11 @@ function _storeCertOverride(s, host, port) {
  *          encryption:
  *            Controls whether this listener's transport uses encryption.
  *            Defaults is false.
+ *          fromBrowserToolbox:
+ *            Should only be passed when opening a socket for a Browser Toolbox
+ *            session. This will skip notifying DevToolsSocketStatus
+ *            about the opened socket, to avoid triggering the visual cue in the
+ *            URL bar.
  *          portOrPath:
  *            The port or path to listen on.
  *            If given an integer, the port to listen on.  Use -1 to choose any available
@@ -441,6 +453,7 @@ function SocketListener(devToolsServer, socketOptions) {
       socketOptions.authenticator || new (Authenticators.get().Server)(),
     discoverable: !!socketOptions.discoverable,
     encryption: !!socketOptions.encryption,
+    fromBrowserToolbox: !!socketOptions.fromBrowserToolbox,
     portOrPath: socketOptions.portOrPath || null,
     webSocket: !!socketOptions.webSocket,
   };
@@ -459,6 +472,10 @@ SocketListener.prototype = {
 
   get encryption() {
     return this._socketOptions.encryption;
+  },
+
+  get fromBrowserToolbox() {
+    return this._socketOptions.fromBrowserToolbox;
   },
 
   get portOrPath() {
@@ -520,6 +537,9 @@ SocketListener.prototype = {
       dumpn("Socket listening on: " + (self.port || self.portOrPath));
     })()
       .then(() => {
+        if (!self.fromBrowserToolbox) {
+          DevToolsSocketStatus.notifySocketOpened();
+        }
         this._advertise();
       })
       .catch(e => {
@@ -580,6 +600,10 @@ SocketListener.prototype = {
     if (this._socket) {
       this._socket.close();
       this._socket = null;
+
+      if (!this.fromBrowserToolbox) {
+        DevToolsSocketStatus.notifySocketClosed();
+      }
     }
     this._devToolsServer.removeSocketListener(this);
   },
