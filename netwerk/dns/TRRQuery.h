@@ -31,10 +31,11 @@ class TRRQuery : public AHostResolver {
   AddrHostRecord::TRRSkippedReason mTRRAAAAFailReason =
       AddrHostRecord::TRR_UNSET;
 
-  virtual LookupStatus CompleteLookup(
-      nsHostRecord*, nsresult, mozilla::net::AddrInfo*, bool pb,
-      const nsACString& aOriginsuffix,
-      nsHostRecord::TRRSkippedReason aReason) override;
+  virtual LookupStatus CompleteLookup(nsHostRecord*, nsresult,
+                                      mozilla::net::AddrInfo*, bool pb,
+                                      const nsACString& aOriginsuffix,
+                                      nsHostRecord::TRRSkippedReason aReason,
+                                      TRR* aTRRRequest) override;
   virtual LookupStatus CompleteLookupByType(
       nsHostRecord*, nsresult, mozilla::net::TypeRecordResultType& aResult,
       uint32_t aTtl, bool pb) override;
