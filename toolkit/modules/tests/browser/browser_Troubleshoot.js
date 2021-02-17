@@ -16,6 +16,18 @@ const { Troubleshoot } = ChromeUtils.import(
 const { FeatureGate } = ChromeUtils.import(
   "resource://featuregates/FeatureGate.jsm"
 );
+const { PreferenceExperiments } = ChromeUtils.import(
+  "resource://normandy/lib/PreferenceExperiments.jsm"
+);
+const { PreferenceRollouts } = ChromeUtils.import(
+  "resource://normandy/lib/PreferenceRollouts.jsm"
+);
+const { AddonStudies } = ChromeUtils.import(
+  "resource://normandy/lib/AddonStudies.jsm"
+);
+const { NormandyTestUtils } = ChromeUtils.import(
+  "resource://testing-common/NormandyTestUtils.jsm"
+);
 
 function test() {
   waitForExplicitFinish();
@@ -143,6 +155,77 @@ var tests = [
       prefs.forEach(p => Services.prefs.deleteBranch(p));
       done();
     });
+  },
+
+  function normandy(done) {
+    const {
+      preferenceStudyFactory,
+      branchedAddonStudyFactory,
+      preferenceRolloutFactory,
+    } = NormandyTestUtils.factories;
+
+    NormandyTestUtils.decorate(
+      PreferenceExperiments.withMockExperiments([
+        preferenceStudyFactory({
+          userFacingName: "Test Pref Study B",
+          branch: "test-branch-pref",
+        }),
+        preferenceStudyFactory({
+          userFacingName: "Test Pref Study A",
+          branch: "test-branch-pref",
+        }),
+      ]),
+      AddonStudies.withStudies([
+        branchedAddonStudyFactory({
+          userFacingName: "Test Addon Study B",
+          branch: "test-branch-addon",
+        }),
+        branchedAddonStudyFactory({
+          userFacingName: "Test Addon Study A",
+          branch: "test-branch-addon",
+        }),
+      ]),
+      PreferenceRollouts.withTestMock({
+        rollouts: [
+          preferenceRolloutFactory({
+            statue: "ACTIVE",
+            slug: "test-pref-rollout-b",
+          }),
+          preferenceRolloutFactory({
+            statue: "ACTIVE",
+            slug: "test-pref-rollout-a",
+          }),
+        ],
+      }),
+      async function testNormandyInfoInTroubleshooting(
+        prefStudies,
+        addonStudies,
+        prefRollouts
+      ) {
+        await new Promise(resolve => {
+          Troubleshoot.snapshot(function(snapshot) {
+            let info = snapshot.normandy;
+            // The order should be flipped, since each category is sorted by slug.
+            Assert.deepEqual(
+              info.prefStudies,
+              [prefStudies[1], prefStudies[0]],
+              "prefs studies should exist in the right order"
+            );
+            Assert.deepEqual(
+              info.addonStudies,
+              [addonStudies[1], addonStudies[0]],
+              "addon studies should exist in the right order"
+            );
+            Assert.deepEqual(
+              info.prefRollouts,
+              [prefRollouts[1], prefRollouts[0]],
+              "pref rollouts should exist in the right order"
+            );
+            resolve();
+          });
+        });
+      }
+    )().then(done);
   },
 ];
 
@@ -985,6 +1068,45 @@ const SNAPSHOT_SCHEMA = {
         AppConstants.platform == "win" &&
         Services.prefs.getBoolPref("browser.enableAboutThirdParty"),
       type: "array",
+    },
+    normandy: {
+      type: "object",
+      required: AppConstants.MOZ_NORMANDY,
+      properties: {
+        addonStudies: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              userFacingName: { type: "string", required: true },
+              branch: { type: "string", required: true },
+            },
+          },
+          required: true,
+        },
+        prefRollouts: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              slug: { type: "string", required: true },
+              state: { type: "string", required: true },
+            },
+          },
+          required: true,
+        },
+        prefStudies: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              userFacingName: { type: "string", required: true },
+              branch: { type: "string", required: true },
+            },
+          },
+          required: true,
+        },
+      },
     },
   },
 };
