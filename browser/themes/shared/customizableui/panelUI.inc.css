@@ -106,6 +106,7 @@
 
 } /*** END proton ***/
 
+@supports not -moz-bool-pref("browser.proton.toolbar.enabled") {
 :root:not([uidensity=compact], [chromehidden~="toolbar"]) #PanelUI-button {
   margin-inline-start: 3px;
   border-inline-start: 1px solid;
@@ -126,6 +127,7 @@
     transparent calc(100% - 4px)
   );
 }
+} /*** END !proton ***/
 
 #PanelUI-menu-button[badge-status] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   display: -moz-box;
