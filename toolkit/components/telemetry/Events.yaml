@@ -2123,6 +2123,45 @@ network.jar.channel:
     extra_keys:
       spec: The path of the file being loaded.
 
+network.dns:
+  trrConfirmation:
+    objects: ["context"]
+    bug_numbers:
+      - 1691408
+    description: >
+      This telemetry records the status of the TRR confirmation across.
+      The value of the event is one of:
+        "ok"
+        "trying"
+    notification_emails:
+      - vgosu@mozilla.com
+      - necko@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - firefox
+    expiry_version: "never"
+    record_in_processes:
+      - main
+    extra_keys:
+      trigger: >
+        The reason why this confirmation was triggered.
+        Values: [cp-connectivity, pref-change, context-init, retry, failed-lookups]
+      contextReason: >
+        The cause of the current confirmation context.
+        Values: [success, pref-change, network-change, shutdown]
+      attemptCount: >
+        The number of NS requests that were issued for this confirmation.
+      results: >
+        String representation of the last 32 confirmation results.
+        Example: nnnnnnttttttttt indicates a number of network (n) failures
+        followed by timeouts (t).
+      networkID: >
+        The network ID for the recorded confirmation attempts
+      captivePortal: >
+        One of [unknown, not_captive, unlocked, locked]
+      time: >
+        Time from first confirmation attempt to event being recorded
+
 security:
   fissionPrincipals:
     objects: ["contentParent"]
