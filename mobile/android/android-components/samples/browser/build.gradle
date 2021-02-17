@@ -96,8 +96,10 @@ dependencies {
 
     implementation project(':lib-fetch-httpurlconnection')
     implementation project(":lib-crash")
+    implementation project(":lib-publicsuffixlist")
 
     implementation project(':feature-awesomebar')
+    implementation project(":feature-autofill")
     implementation project(':feature-app-links')
     implementation project(':feature-contextmenu')
     implementation project(':feature-customtabs')
@@ -120,6 +122,7 @@ dependencies {
     implementation project(':feature-addons')
 
     implementation project(':ui-autocomplete')
+    implementation project(':ui-tabcounter')
 
     // Add a dependency on service-glean to simplify the testing workflow
     // for engineers that want to test Gecko metrics exfiltrated via the Glean
@@ -132,7 +135,6 @@ dependencies {
     implementation project(':support-ktx')
     implementation project(':support-webextensions')
     implementation project(':support-rustlog')
-    implementation project(':ui-tabcounter')
 
     geckoNightlyImplementation project(':browser-engine-gecko-nightly')
     geckoBetaImplementation project(':browser-engine-gecko-beta')

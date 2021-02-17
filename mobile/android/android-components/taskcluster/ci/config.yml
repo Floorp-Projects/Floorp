@@ -39,6 +39,7 @@ treeherder:
         feature-accounts: feature-accounts
         feature-addons: feature-addons
         feature-app-links: feature-app-links
+        feature-autofill: feature-autofill
         feature-awesomebar: feature-awesomebar
         feature-containers: feature-containers
         feature-contextmenu: feature-contextmenu

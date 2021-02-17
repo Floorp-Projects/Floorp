@@ -128,6 +128,8 @@ _Combined components to implement feature-specific use cases._
 
 * 🔵 [**Accounts Push**](components/feature/accounts-push/README.md) - Feature of use cases for FxA Account that work with push support.
 
+* 🔴 [**Autofill**](components/feature/autofill/README.md) - A component that provides support for Android's Autofill framework.
+
 * 🔵 [**Awesomebar**](components/feature/awesomebar/README.md) - A component that connects a [concept-awesomebar](components/concept/awesomebar/README.md) implementation to a [concept-toolbar](components/concept/toolbar/README.md) implementation and provides implementations of various suggestion providers.
 
 * 🔴 [**Containers**](components/feature/containers/README.md) - A component for working with contextual identities also known as containers.
