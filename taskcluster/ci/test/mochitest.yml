@@ -161,6 +161,25 @@ mochitest-browser-chrome:
             default: default
     allow-software-gl-layers: false
 
+mochitest-browser-chrome-apple-silicon:
+    description: "Mochitest failures on apple silicon browser chrome run"
+    treeherder-symbol: M-f(ASbc)
+    schedules-component: mochitest-browser-chrome
+    suite:
+        name: mochitest-browser-chrome
+    loopback-video: true
+    allow-software-gl-layers: false
+    tier: 3
+    chunks: 2
+    max-run-time: 2700
+    e10s: true
+    run-on-projects: ['mozilla-central']
+    mozharness:
+        mochitest-flavor: browser
+        chunked: true
+        extra-options:
+            - --run-failures=apple_silicon
+
 browser-screenshots:
     description: "Browser Screenshots"
     suite:
@@ -372,6 +391,26 @@ mochitest-media:
             windows10-aarch64.*: 2
             android-hw.*: 1
             default: default
+
+mochitest-media-apple-silicon:
+    description: "Mochitest failures on apple silicon media run"
+    treeherder-symbol: M-f(ASmda)
+    schedules-component: mochitest-plain
+    suite:
+        name: mochitest-media
+    loopback-video: true
+    allow-software-gl-layers: false
+    run-on-projects: ['mozilla-central']
+    tier: 3
+    chunks: 2
+    max-run-time: 2700
+    e10s: true
+    mozharness:
+        mochitest-flavor: plain
+        chunked: true
+        extra-options:
+            - --setpref=webgl.out-of-process=false
+            - --run-failures=apple_silicon
 
 mochitest-plain-headless:
     description: "Mochitest plain headless run"

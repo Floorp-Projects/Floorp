@@ -390,6 +390,11 @@ windows-talos:
 
 # macOS
 
+macosx1100-64-qr-failures-tests:
+    - xpcshell-apple-silicon
+    - mochitest-media-apple-silicon
+    - mochitest-browser-chrome-apple-silicon
+
 macosx1014-64-tests:
     - crashtest
     - reftest
