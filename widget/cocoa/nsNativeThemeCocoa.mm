@@ -3491,11 +3491,6 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* 
       break;
     }
 
-    case StyleAppearance::MozMacFullscreenButton: {
-      *aIsOverridable = false;
-      break;
-    }
-
     case StyleAppearance::ProgressBar: {
       SInt32 barHeight = 0;
       ::GetThemeMetric(kThemeMetricNormalProgressBarThickness, &barHeight);
@@ -3676,7 +3671,6 @@ bool nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFra
     case StyleAppearance::Menuarrow:
     case StyleAppearance::Menuitem:
     case StyleAppearance::Menuseparator:
-    case StyleAppearance::MozMacFullscreenButton:
     case StyleAppearance::Tooltip:
 
     case StyleAppearance::Checkbox:
@@ -3863,8 +3857,6 @@ nsITheme::ThemeGeometryType nsNativeThemeCocoa::ThemeGeometryTypeForWidget(
       return eThemeGeometryTypeToolbox;
     case StyleAppearance::MozWindowButtonBox:
       return eThemeGeometryTypeWindowButtons;
-    case StyleAppearance::MozMacFullscreenButton:
-      return eThemeGeometryTypeFullscreenButton;
     case StyleAppearance::MozMacVibrancyLight:
       return eThemeGeometryTypeVibrancyLight;
     case StyleAppearance::MozMacVibrancyDark:

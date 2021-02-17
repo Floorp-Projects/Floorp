@@ -36,7 +36,6 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
     eThemeGeometryTypeToolbar,
     eThemeGeometryTypeToolbox,
     eThemeGeometryTypeWindowButtons,
-    eThemeGeometryTypeFullscreenButton,
     eThemeGeometryTypeMenu,
     eThemeGeometryTypeHighlightedMenuItem,
     eThemeGeometryTypeVibrancyLight,
