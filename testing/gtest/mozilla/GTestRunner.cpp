@@ -9,6 +9,7 @@
 #include "nsICrashReporter.h"
 #include "testing/TestHarness.h"
 #include "prenv.h"
+#include "gfxPlatform.h"
 #ifdef ANDROID
 #  include <android/log.h>
 #endif
@@ -124,6 +125,11 @@ int RunGTestFunc(int* argc, char** argv) {
   char* path = PR_GetEnv("MOZ_GTEST_CWD");
   chdir(path);
 #endif
+
+  // Ensure gfxPlatform is initialized to make sure CMS state some test want
+  // to use is set up.
+  gfxPlatform::GetPlatform();
+
   nsCOMPtr<nsICrashReporter> crashreporter;
   char* crashreporterStr = PR_GetEnv("MOZ_CRASHREPORTER");
   if (crashreporterStr && !strcmp(crashreporterStr, "1")) {
