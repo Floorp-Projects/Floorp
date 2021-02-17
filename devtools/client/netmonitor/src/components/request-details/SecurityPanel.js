@@ -152,22 +152,22 @@ const getCertificateLabel = securityInfo => {
 
   return {
     [SUBJECT_INFO_LABEL]: {
-      [CERT_DETAIL_COMMON_NAME_LABEL]: subject.commonName || NOT_AVAILABLE,
-      [CERT_DETAIL_ORG_LABEL]: subject.organization || NOT_AVAILABLE,
-      [CERT_DETAIL_ORG_UNIT_LABEL]: subject.organizationUnit || NOT_AVAILABLE,
+      [CERT_DETAIL_COMMON_NAME_LABEL]: subject?.commonName || NOT_AVAILABLE,
+      [CERT_DETAIL_ORG_LABEL]: subject?.organization || NOT_AVAILABLE,
+      [CERT_DETAIL_ORG_UNIT_LABEL]: subject?.organizationUnit || NOT_AVAILABLE,
     },
     [ISSUER_INFO_LABEL]: {
-      [CERT_DETAIL_COMMON_NAME_LABEL]: issuer.commonName || NOT_AVAILABLE,
-      [CERT_DETAIL_ORG_LABEL]: issuer.organization || NOT_AVAILABLE,
-      [CERT_DETAIL_ORG_UNIT_LABEL]: issuer.organizationUnit || NOT_AVAILABLE,
+      [CERT_DETAIL_COMMON_NAME_LABEL]: issuer?.commonName || NOT_AVAILABLE,
+      [CERT_DETAIL_ORG_LABEL]: issuer?.organization || NOT_AVAILABLE,
+      [CERT_DETAIL_ORG_UNIT_LABEL]: issuer?.organizationUnit || NOT_AVAILABLE,
     },
     [PERIOD_OF_VALIDITY_LABEL]: {
-      [BEGINS_LABEL]: validity.start || NOT_AVAILABLE,
-      [EXPIRES_LABEL]: validity.end || NOT_AVAILABLE,
+      [BEGINS_LABEL]: validity?.start || NOT_AVAILABLE,
+      [EXPIRES_LABEL]: validity?.end || NOT_AVAILABLE,
     },
     [FINGERPRINTS_LABEL]: {
-      [SHA256_FINGERPRINT_LABEL]: fingerprint.sha256 || NOT_AVAILABLE,
-      [SHA1_FINGERPRINT_LABEL]: fingerprint.sha1 || NOT_AVAILABLE,
+      [SHA256_FINGERPRINT_LABEL]: fingerprint?.sha256 || NOT_AVAILABLE,
+      [SHA1_FINGERPRINT_LABEL]: fingerprint?.sha1 || NOT_AVAILABLE,
     },
     [CERTIFICATE_TRANSPARENCY_LABEL]:
       securityInfo.certificateTransparency || NOT_AVAILABLE,
