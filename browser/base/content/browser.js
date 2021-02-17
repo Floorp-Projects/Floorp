@@ -579,10 +579,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "gProtonTabs",
   "browser.proton.tabs.enabled",
-  false,
-  (pref, oldValue, newValue) => {
-    document.documentElement.toggleAttribute("proton", newValue);
-  }
+  false
 );
 
 /* Import aboutWelcomeFeature from Nimbus Experiment API
