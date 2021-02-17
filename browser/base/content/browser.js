@@ -585,6 +585,15 @@ XPCOMUtils.defineLazyPreferenceGetter(
   }
 );
 
+/* Import aboutWelcomeFeature from Nimbus Experiment API
+   to access experiment values */
+XPCOMUtils.defineLazyGetter(this, "aboutWelcomeFeature", () => {
+  const { ExperimentFeature } = ChromeUtils.import(
+    "resource://messaging-system/experiments/ExperimentAPI.jsm"
+  );
+  return new ExperimentFeature("aboutwelcome");
+});
+
 customElements.setElementCreationCallback("translation-notification", () => {
   Services.scriptloader.loadSubScript(
     "chrome://browser/content/translation-notification.js",
@@ -2202,7 +2211,16 @@ var gBrowserInit = {
     let shouldRemoveFocusedAttribute = true;
 
     this._callWithURIToLoad(uriToLoad => {
-      if (isBlankPageURL(uriToLoad) || uriToLoad == "about:privatebrowsing") {
+      // Check if user is enrolled in an aboutWelcome experiment that has skipFocus
+      // property set to true, if yes remove focus from urlbar for about:welcome
+      const aboutWelcomeSkipUrlBarFocus =
+        uriToLoad == "about:welcome" &&
+        aboutWelcomeFeature.getValue()?.skipFocus;
+
+      if (
+        (isBlankPageURL(uriToLoad) && !aboutWelcomeSkipUrlBarFocus) ||
+        uriToLoad == "about:privatebrowsing"
+      ) {
         gURLBar.select();
         shouldRemoveFocusedAttribute = false;
         return;
