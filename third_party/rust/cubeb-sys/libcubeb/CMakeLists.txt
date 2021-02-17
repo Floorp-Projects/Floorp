@@ -35,7 +35,7 @@ if(BUILD_TESTS)
     if(NOT EXISTS "${PROJECT_SOURCE_DIR}/googletest/CMakeLists.txt")
       message(FATAL_ERROR "Could not find googletest: run\n\tgit submodule update --init --recursive\nin base git checkout")
     endif()
-    add_definitions(-DGTEST_HAS_TR1_TUPLE=0)
+    add_definitions(-DGTEST_HAS_TR1_TUPLE=0 -DGTEST_HAS_RTTI=0)
     set(gtest_force_shared_crt ON CACHE BOOL "")
     add_subdirectory(googletest)
   endif()
@@ -60,7 +60,10 @@ endif()
 set(CMAKE_CXX_WARNING_LEVEL 4)
 if(NOT MSVC)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unused-parameter")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unused-parameter")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unused-parameter -fno-exceptions -fno-rtti")
+else()
+  string(REPLACE "/GR" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}) # Disable RTTI
+  string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}) # Disable Exceptions
 endif()
 
 add_library(cubeb
@@ -197,6 +200,38 @@ if(USE_OPENSL)
     src/cubeb-jni.cpp)
   target_compile_definitions(cubeb PRIVATE USE_OPENSL)
   target_link_libraries(cubeb PRIVATE OpenSLES)
+endif()
+
+check_include_files(sys/soundcard.h HAVE_SYS_SOUNDCARD_H)
+if(HAVE_SYS_SOUNDCARD_H)
+  try_compile(USE_OSS "${PROJECT_BINARY_DIR}/compile_tests"
+    ${PROJECT_SOURCE_DIR}/cmake/compile_tests/oss_is_v4.c)
+  if(USE_OSS)
+    target_sources(cubeb PRIVATE
+      src/cubeb_oss.c)
+    target_compile_definitions(cubeb PRIVATE USE_OSS)
+    target_link_libraries(cubeb PRIVATE pthread)
+  endif()
+endif()
+
+check_include_files(aaudio/AAudio.h USE_AAUDIO)
+if(USE_AAUDIO)
+  target_sources(cubeb PRIVATE
+    src/cubeb_aaudio.cpp)
+  target_compile_definitions(cubeb PRIVATE USE_AAUDIO)
+
+  # set this definition to enable low latency mode. Possibly bad for battery
+  target_compile_definitions(cubeb PRIVATE CUBEB_AAUDIO_LOW_LATENCY)
+
+  # set this definition to enable power saving mode. Possibly resulting
+  # in high latency
+  # target_compile_definitions(cubeb PRIVATE CUBEB_AAUDIO_LOW_POWER_SAVING)
+
+  # set this mode to make the backend use an exclusive stream.
+  # will decrease latency.
+  # target_compile_definitions(cubeb PRIVATE CUBEB_AAUDIO_EXCLUSIVE_STREAM)
+
+  target_link_libraries(cubeb PRIVATE ${CMAKE_DL_LIBS})
 endif()
 
 check_include_files(android/log.h USE_AUDIOTRACK)

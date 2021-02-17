@@ -27,6 +27,7 @@
 #include "cubeb-sles.h"
 #include "cubeb_array_queue.h"
 #include "android/cubeb-output-latency.h"
+#include "cubeb_android.h"
 
 #if defined(__ANDROID__)
 #ifdef LOG
@@ -65,11 +66,6 @@
 
 #define DEFAULT_SAMPLE_RATE 48000
 #define DEFAULT_NUM_OF_FRAMES 480
-// If the latency requested is above this threshold, this stream is considered
-// intended for playback (vs. real-time). Tell Android it should favor saving
-// power over performance or latency.
-// This is around 100ms at 44100 or 48000
-#define POWERSAVE_LATENCY_FRAMES_THRESHOLD 4000
 
 static struct cubeb_ops const opensl_ops;
 
@@ -1702,7 +1698,7 @@ opensl_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
   assert(latency);
 
   uint32_t stream_latency_frames =
-    stm->user_output_rate * (stm->output_latency_ms / 1000);
+    stm->user_output_rate * stm->output_latency_ms / 1000;
 
   return stream_latency_frames + cubeb_resampler_latency(stm->resampler);
 }
@@ -1751,7 +1747,6 @@ static struct cubeb_ops const opensl_ops = {
   .stream_destroy = opensl_stream_destroy,
   .stream_start = opensl_stream_start,
   .stream_stop = opensl_stream_stop,
-  .stream_reset_default_device = NULL,
   .stream_get_position = opensl_stream_get_position,
   .stream_get_latency = opensl_stream_get_latency,
   .stream_get_input_latency = NULL,

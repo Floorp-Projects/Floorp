@@ -636,10 +636,6 @@ impl<'ctx> StreamOps for PulseStream<'ctx> {
         Ok(())
     }
 
-    fn reset_default_device(&mut self) -> Result<()> {
-        Err(not_supported())
-    }
-
     fn position(&mut self) -> Result<u64> {
         let in_thread = self.context.mainloop.in_thread();
 
