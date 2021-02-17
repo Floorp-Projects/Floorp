@@ -40,8 +40,6 @@ const DEFAULT_APPVERSION = {
   other: "5.0 (X11)",
 };
 
-const SPOOFED_APPNAME = "Netscape";
-
 const SPOOFED_APPVERSION = {
   linux: "5.0 (X11)",
   win: "5.0 (Windows)",
@@ -118,6 +116,7 @@ const SPOOFED_UA_HTTPHEADER_OS = {
 const SPOOFED_HW_CONCURRENCY = 2;
 
 const CONST_APPCODENAME = "Mozilla";
+const CONST_APPNAME = "Netscape";
 const CONST_PRODUCT = "Gecko";
 const CONST_PRODUCTSUB = "20100101";
 const CONST_VENDOR = "";
@@ -161,11 +160,6 @@ async function testNavigator() {
   let testDesc = expectedResults.testDesc;
 
   is(
-    result.appName,
-    SPOOFED_APPNAME,
-    "Navigator.appName is correctly spoofed."
-  );
-  is(
     result.appVersion,
     expectedResults.appVersion,
     `Checking ${testDesc} navigator.appVersion.`
@@ -197,6 +191,11 @@ async function testNavigator() {
     result.appCodeName,
     CONST_APPCODENAME,
     "Navigator.appCodeName reports correct constant value."
+  );
+  is(
+    result.appName,
+    CONST_APPNAME,
+    "Navigator.appName reports correct constant value."
   );
   is(
     result.product,
@@ -253,11 +252,6 @@ async function testWorkerNavigator() {
   let testDesc = expectedResults.testDesc;
 
   is(
-    result.appName,
-    SPOOFED_APPNAME,
-    "Navigator.appName is correctly spoofed."
-  );
-  is(
     result.appVersion,
     expectedResults.appVersion,
     `Checking ${testDesc} navigator.appVersion.`
@@ -282,6 +276,11 @@ async function testWorkerNavigator() {
     result.appCodeName,
     CONST_APPCODENAME,
     "Navigator.appCodeName reports correct constant value."
+  );
+  is(
+    result.appName,
+    CONST_APPNAME,
+    "Navigator.appName reports correct constant value."
   );
   is(
     result.product,
