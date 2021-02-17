@@ -472,32 +472,36 @@ class QuotaManager final : public BackgroundThreadObject {
 
   nsresult MaybeCreateOrUpgradeStorage(mozIStorageConnection& aConnection);
 
-  nsresult MaybeRemoveLocalStorageDataAndArchive();
+  nsresult MaybeRemoveLocalStorageArchiveTmpFile();
+
+  nsresult MaybeRemoveLocalStorageDataAndArchive(nsIFile& aLsArchiveFile);
 
   nsresult MaybeRemoveLocalStorageDirectories();
 
+  Result<Ok, nsresult> CopyLocalStorageArchiveFromWebAppsStore(
+      nsIFile& aLsArchiveFile) const;
+
   Result<nsCOMPtr<mozIStorageConnection>, nsresult>
-  CreateLocalStorageArchiveConnectionFromWebAppsStore() const;
+  CreateLocalStorageArchiveConnection(nsIFile& aLsArchiveFile) const;
 
-  // The second object in the pair is used to signal if the localStorage
-  // archive database was newly created or recreated.
-  Result<std::pair<nsCOMPtr<mozIStorageConnection>, bool>, nsresult>
-  CreateLocalStorageArchiveConnection() const;
+  Result<nsCOMPtr<mozIStorageConnection>, nsresult>
+  RecopyLocalStorageArchiveFromWebAppsStore(nsIFile& aLsArchiveFile);
 
-  nsresult RecreateLocalStorageArchive(
-      nsCOMPtr<mozIStorageConnection>& aConnection);
+  Result<nsCOMPtr<mozIStorageConnection>, nsresult>
+  DowngradeLocalStorageArchive(nsIFile& aLsArchiveFile);
 
-  nsresult DowngradeLocalStorageArchive(
-      nsCOMPtr<mozIStorageConnection>& aConnection);
-
-  nsresult UpgradeLocalStorageArchiveFromLessThan4To4(
-      nsCOMPtr<mozIStorageConnection>& aConnection);
-
-  nsresult MaybeInitializeOrUpgradeLocalStorageArchive();
+  Result<nsCOMPtr<mozIStorageConnection>, nsresult>
+  UpgradeLocalStorageArchiveFromLessThan4To4(nsIFile& aLsArchiveFile);
 
   /*
   nsresult UpgradeLocalStorageArchiveFrom4To5();
   */
+
+  Result<Ok, nsresult> MaybeCreateOrUpgradeLocalStorageArchive(
+      nsIFile& aLsArchiveFile);
+
+  Result<Ok, nsresult> CreateEmptyLocalStorageArchive(
+      nsIFile& aLsArchiveFile) const;
 
   nsresult InitializeRepository(PersistenceType aPersistenceType);
 
