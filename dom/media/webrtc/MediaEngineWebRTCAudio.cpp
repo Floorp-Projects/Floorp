@@ -1262,7 +1262,9 @@ AudioInputTrack* AudioInputTrack::Create(MediaTrackGraph* aGraph) {
 
 void AudioInputTrack::DestroyImpl() {
   ProcessedMediaTrack::DestroyImpl();
-  mInputProcessing->End();
+  if (mInputProcessing) {
+    mInputProcessing->End();
+  }
 }
 
 void AudioInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
