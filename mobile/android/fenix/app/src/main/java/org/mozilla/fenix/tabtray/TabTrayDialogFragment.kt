@@ -44,6 +44,9 @@ import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.showKeyboard
+import mozilla.components.support.utils.ext.bottom
+import mozilla.components.support.utils.ext.left
+import mozilla.components.support.utils.ext.right
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
@@ -244,13 +247,13 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
 
         view.tabLayout.setOnApplyWindowInsetsListener { v, insets ->
             v.updatePadding(
-                left = insets.systemWindowInsetLeft,
-                right = insets.systemWindowInsetRight,
-                bottom = insets.systemWindowInsetBottom
+                left = insets.left(),
+                right = insets.right(),
+                bottom = insets.bottom()
             )
 
             tabTrayView.view.tab_wrapper.updatePadding(
-                bottom = insets.systemWindowInsetBottom
+                bottom = insets.bottom()
             )
 
             insets
