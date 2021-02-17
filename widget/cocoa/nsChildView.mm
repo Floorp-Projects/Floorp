@@ -4396,6 +4396,22 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
+// Get the paste location from the low level pasteboard.
+static CFTypeRefPtr<CFURLRef> GetPasteLocation(NSPasteboard* aPasteboard) {
+  PasteboardRef pboardRef = nullptr;
+  PasteboardCreate((CFStringRef)[aPasteboard name], &pboardRef);
+  if (!pboardRef) {
+    return nullptr;
+  }
+
+  auto pasteBoard = CFTypeRefPtr<PasteboardRef>::WrapUnderCreateRule(pboardRef);
+  PasteboardSynchronize(pasteBoard.get());
+
+  CFURLRef urlRef = nullptr;
+  PasteboardCopyPasteLocation(pasteBoard.get(), &urlRef);
+  return CFTypeRefPtr<CFURLRef>::WrapUnderCreateRule(urlRef);
+}
+
 // NSPasteboardItemDataProvider
 - (void)pasteboard:(NSPasteboard*)aPasteboard
                   item:(NSPasteboardItem*)aItem
@@ -4460,39 +4476,23 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
           continue;
         }
 
-        // get paste location from low level pasteboard
-        PasteboardRef pboardRef = NULL;
-        PasteboardCreate((CFStringRef)[aPasteboard name], &pboardRef);
-        if (!pboardRef) {
+        CFTypeRefPtr<CFURLRef> url = GetPasteLocation(aPasteboard);
+        if (!url) {
           continue;
         }
 
-        PasteboardSynchronize(pboardRef);
-        CFURLRef urlRef = NULL;
-        PasteboardCopyPasteLocation(pboardRef, &urlRef);
-        if (!urlRef) {
-          CFRelease(pboardRef);
-          continue;
-        }
-
-        if (!NS_SUCCEEDED(macLocalFile->InitWithCFURL(urlRef))) {
+        if (!NS_SUCCEEDED(macLocalFile->InitWithCFURL(url.get()))) {
           NS_ERROR("failed InitWithCFURL");
-          CFRelease(urlRef);
-          CFRelease(pboardRef);
           continue;
         }
 
         if (!gDraggedTransferables) {
-          CFRelease(urlRef);
-          CFRelease(pboardRef);
           continue;
         }
 
         uint32_t transferableCount;
         nsresult rv = gDraggedTransferables->GetLength(&transferableCount);
         if (NS_FAILED(rv)) {
-          CFRelease(urlRef);
-          CFRelease(pboardRef);
           continue;
         }
 
@@ -4510,8 +4510,6 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
           nsCOMPtr<nsISupports> fileDataPrimitive;
           Unused << item->GetTransferData(kFilePromiseMime, getter_AddRefs(fileDataPrimitive));
         }
-        CFRelease(urlRef);
-        CFRelease(pboardRef);
 
         [aPasteboard setPropertyList:[pasteboardOutputDict valueForKey:curType] forType:curType];
       }
