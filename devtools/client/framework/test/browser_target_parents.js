@@ -83,8 +83,8 @@ add_task(async function() {
     workers.map(workerTargetFront => {
       is(
         workerTargetFront.descriptorFront,
-        null,
-        "For now, worker target don't have descriptor fronts (see bug 1573779)"
+        workerTargetFront,
+        "For now, worker descriptors and targets are the same object (see bug 1667404)"
       );
     })
   );

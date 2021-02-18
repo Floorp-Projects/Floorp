@@ -56,8 +56,8 @@ const LAST_HOST = "devtools.toolbox.host";
 const PREVIOUS_HOST = "devtools.toolbox.previousHost";
 let ID_COUNTER = 1;
 
-function ToolboxHostManager(target, hostType, hostOptions) {
-  this.target = target;
+function ToolboxHostManager(descriptor, hostType, hostOptions) {
+  this.descriptor = descriptor;
 
   this.frameId = ID_COUNTER++;
 
@@ -93,7 +93,7 @@ ToolboxHostManager.prototype = {
       10
     );
     const toolbox = new Toolbox(
-      this.target,
+      this.descriptor,
       toolId,
       this.host.type,
       this.host.frame.contentWindow,
@@ -181,7 +181,7 @@ ToolboxHostManager.prototype = {
     this.destroyHost();
     this.host = null;
     this.hostType = null;
-    this.target = null;
+    this.descriptor = null;
   },
 
   /**
@@ -201,8 +201,7 @@ ToolboxHostManager.prototype = {
     if (!Hosts[hostType]) {
       throw new Error("Unknown hostType: " + hostType);
     }
-
-    const newHost = new Hosts[hostType](this.target.localTab, options);
+    const newHost = new Hosts[hostType](this.descriptor.localTab, options);
     return newHost;
   },
 

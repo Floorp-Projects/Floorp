@@ -307,8 +307,7 @@ async function watchServiceWorkerTargets({
 }) {
   info("Create a target list for a tab target");
   const descriptor = await mainRoot.getTab({ tab });
-  const target = await descriptor.getTarget();
-  const targetList = new TargetList(mainRoot, target);
+  const targetList = new TargetList(descriptor);
 
   // Enable Service Worker listening.
   targetList.listenForServiceWorkers = true;
