@@ -82,15 +82,6 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
             },
         ],
         [
-            ["--use-yasm"],
-            {
-                "dest": "use_yasm",
-                "help": "use yasm instead of nasm",
-                "action": "store_true",
-                "default": False,
-            },
-        ],
-        [
             ["--branch"],
             {
                 "dest": "branch",
@@ -121,7 +112,6 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
             "upload_ssh_user": "ffxbld",
             "upload_ssh_host": "upload.ffxbld.productdelivery.prod.mozaws.net",
             "upload_path_base": "/tmp/openh264",
-            "use_yasm": False,
         }
         default_config.update(config)
 
@@ -228,9 +218,6 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
                 retval.append("NDK_TOOLCHAIN_VERSION=clang")
             if self.config["operating_system"] == "darwin":
                 retval.append("OS=darwin")
-
-        if self.config["use_yasm"]:
-            retval.append("ASM=yasm")
 
         if self._is_windows():
             retval.append("OS=msvc")
