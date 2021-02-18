@@ -91,15 +91,6 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
             },
         ],
         [
-            ["--avoid-avx2"],
-            {
-                "dest": "avoid_avx2",
-                "help": "Pass HAVE_AVX2='false' through to Make to support older nasm",
-                "action": "store_true",
-                "default": False,
-            },
-        ],
-        [
             ["--branch"],
             {
                 "dest": "branch",
@@ -213,9 +204,6 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
         retval = []
         if self.config["debug_build"]:
             retval.append("BUILDTYPE=Debug")
-
-        if self.config["avoid_avx2"]:
-            retval.append("HAVE_AVX2=false")
 
         if self.config["arch"] in ("x64", "aarch64"):
             retval.append("ENABLE64BIT=Yes")

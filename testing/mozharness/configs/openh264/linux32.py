@@ -19,7 +19,6 @@ config = {
     },
     "dump_syms_binary": "{}/dump_syms/dump_syms".format(os.environ["MOZ_FETCHES_DIR"]),
     "arch": "x86",
-    "avoid_avx2": True,
     "operating_system": "linux",
     "partial_env": {
         "PATH": (
