@@ -149,6 +149,7 @@ nsresult DnsAndConnectSocket::SetupDnsFlags() {
   LOG(("DnsAndConnectSocket::SetupDnsFlags [this=%p] ", this));
 
   uint32_t dnsFlags = 0;
+  bool disableIpv6ForBackup = false;
   if (mCaps & NS_HTTP_REFRESH_DNS) {
     dnsFlags = nsIDNSService::RESOLVE_BYPASS_CACHE;
   }
@@ -164,6 +165,13 @@ nsresult DnsAndConnectSocket::SetupDnsFlags() {
     }
     mPrimaryTransport.mRetryWithDifferentIPFamily = true;
     mBackupTransport.mRetryWithDifferentIPFamily = true;
+  } else if (gHttpHandler->FastFallbackToIPv4()) {
+    // For backup connections, we disable IPv6. That's because some users have
+    // broken IPv6 connectivity (leading to very long timeouts), and disabling
+    // IPv6 on the backup connection gives them a much better user experience
+    // with dual-stack hosts, though they still pay the 250ms delay for each new
+    // connection. This strategy is also known as "happy eyeballs".
+    disableIpv6ForBackup = true;
   }
 
   if (mEnt->mConnInfo->HasIPHintAddress()) {
@@ -202,6 +210,13 @@ nsresult DnsAndConnectSocket::SetupDnsFlags() {
 
   mPrimaryTransport.mDnsFlags = dnsFlags;
   mBackupTransport.mDnsFlags = dnsFlags;
+  if (disableIpv6ForBackup) {
+    mBackupTransport.mDnsFlags |= nsISocketTransport::DISABLE_IPV6;
+  }
+  NS_ASSERTION(
+      !( mBackupTransport.mDnsFlags & nsIDNSService::RESOLVE_DISABLE_IPV6) ||
+           !( mBackupTransport.mDnsFlags & nsIDNSService::RESOLVE_DISABLE_IPV4),
+      "Setting both RESOLVE_DISABLE_IPV6 and RESOLVE_DISABLE_IPV4");
   return NS_OK;
 }
 
