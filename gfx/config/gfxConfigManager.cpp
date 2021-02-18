@@ -7,7 +7,7 @@
 #include "mozilla/gfx/gfxConfigManager.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Services.h"
+#include "mozilla/Components.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "gfxConfig.h"
@@ -70,7 +70,7 @@ void gfxConfigManager::Init() {
 #endif
   mSafeMode = gfxPlatform::InSafeMode();
 
-  mGfxInfo = services::GetGfxInfo();
+  mGfxInfo = components::GfxInfo::Service();
 
   mFeatureWr = &gfxConfig::GetFeature(Feature::WEBRENDER);
   mFeatureWrQualified = &gfxConfig::GetFeature(Feature::WEBRENDER_QUALIFIED);

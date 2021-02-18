@@ -10,6 +10,7 @@
 #include "TheoraDecoder.h"
 #include "VPXDecoder.h"
 #include "VorbisDecoder.h"
+#include "mozilla/Components.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/java/HardwareCodecCapabilityUtilsWrappers.h"
 #include "nsIGfxInfo.h"
@@ -44,7 +45,7 @@ const nsCString TranslateMimeType(const nsACString& aMimeType) {
 }
 
 static bool GetFeatureStatus(int32_t aFeature) {
-  nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+  nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
   int32_t status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
   nsCString discardFailureId;
   if (!gfxInfo || NS_FAILED(gfxInfo->GetFeatureStatus(
