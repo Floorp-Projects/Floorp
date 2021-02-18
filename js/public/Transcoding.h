@@ -37,22 +37,30 @@ struct TranscodeSource final {
 
 using TranscodeSources = mozilla::Vector<TranscodeSource>;
 
-enum TranscodeResult : uint8_t {
+enum class TranscodeResult : uint8_t {
   // Successful encoding / decoding.
-  TranscodeResult_Ok = 0,
+  Ok = 0,
 
   // A warning message, is set to the message out-param.
-  TranscodeResult_Failure = 0x10,
-  TranscodeResult_Failure_BadBuildId = TranscodeResult_Failure | 0x1,
-  TranscodeResult_Failure_RunOnceNotSupported = TranscodeResult_Failure | 0x2,
-  TranscodeResult_Failure_AsmJSNotSupported = TranscodeResult_Failure | 0x3,
-  TranscodeResult_Failure_BadDecode = TranscodeResult_Failure | 0x4,
-  TranscodeResult_Failure_WrongCompileOption = TranscodeResult_Failure | 0x5,
-  TranscodeResult_Failure_NotInterpretedFun = TranscodeResult_Failure | 0x6,
+  Failure = 0x10,
+  Failure_BadBuildId = Failure | 0x1,
+  Failure_RunOnceNotSupported = Failure | 0x2,
+  Failure_AsmJSNotSupported = Failure | 0x3,
+  Failure_BadDecode = Failure | 0x4,
+  Failure_WrongCompileOption = Failure | 0x5,
+  Failure_NotInterpretedFun = Failure | 0x6,
 
   // There is a pending exception on the context.
-  TranscodeResult_Throw = 0x20
+  Throw = 0x20
 };
+
+inline bool IsTranscodeFailureResult(const TranscodeResult result) {
+  uint8_t raw_result = static_cast<uint8_t>(result);
+  uint8_t raw_failure = static_cast<uint8_t>(TranscodeResult::Failure);
+  TranscodeResult masked =
+      static_cast<TranscodeResult>(raw_result & raw_failure);
+  return masked == TranscodeResult::Failure;
+}
 
 static constexpr size_t BytecodeOffsetAlignment = 4;
 static_assert(BytecodeOffsetAlignment <= alignof(std::max_align_t),

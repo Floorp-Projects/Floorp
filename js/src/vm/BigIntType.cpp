@@ -3712,7 +3712,7 @@ XDRResult js::XDRBigInt(XDRState<mode>* xdr, MutableHandleBigInt bi) {
   uint32_t digitLength = length / sizeof(BigInt::Digit);
   auto buf = cx->make_pod_array<BigInt::Digit>(digitLength);
   if (!buf) {
-    return xdr->fail(JS::TranscodeResult_Throw);
+    return xdr->fail(JS::TranscodeResult::Throw);
   }
 
   if (mode == XDR_ENCODE) {
@@ -3725,7 +3725,7 @@ XDRResult js::XDRBigInt(XDRState<mode>* xdr, MutableHandleBigInt bi) {
     BigInt* res =
         BigInt::createUninitialized(cx, digitLength, sign, gc::TenuredHeap);
     if (!res) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
     std::uninitialized_copy_n(buf.get(), digitLength, res->digits().Elements());
     bi.set(res);

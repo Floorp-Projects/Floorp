@@ -1059,7 +1059,7 @@ XDRResult js::XDRScriptRegExpObject(XDRState<mode>* xdr,
     RegExpObject* reobj = RegExpObject::create(
         xdr->cx(), source, RegExpFlags(flags), TenuredObject);
     if (!reobj) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
 
     objp.set(reobj);
