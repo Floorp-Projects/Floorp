@@ -34,6 +34,7 @@ ODoH::Run() {
     if (NS_SUCCEEDED(gODoHService->UpdateODoHConfig())) {
       gODoHService->AppendPendingODoHRequest(this);
     } else {
+      RecordReason(nsHostRecord::ODOH_UPDATE_KEY_FAILED);
       FailData(NS_ERROR_FAILURE);
       return NS_OK;
     }
@@ -63,6 +64,46 @@ nsresult ODoH::CreateQueryURI(nsIURI** aOutURI) {
 
   dnsURI.forget(aOutURI);
   return NS_OK;
+}
+
+void ODoH::HandleTimeout() {
+  // If this request is still in the pending queue, it means we can't get the
+  // ODoHConfigs within the timeout.
+  if (gODoHService->RemovePendingODoHRequest(this)) {
+    RecordReason(nsHostRecord::ODOH_KEY_NOT_AVAILABLE);
+  }
+
+  TRR::HandleTimeout();
+}
+
+void ODoH::HandleEncodeError(nsresult aStatusCode) {
+  MOZ_ASSERT(NS_FAILED(aStatusCode));
+
+  DNSPacketStatus status = mPacket->PacketStatus();
+  MOZ_ASSERT(status != DNSPacketStatus::Success);
+
+  if (status == DNSPacketStatus::KeyNotAvailable) {
+    RecordReason(nsHostRecord::ODOH_KEY_NOT_AVAILABLE);
+  } else if (status == DNSPacketStatus::KeyNotUsable) {
+    RecordReason(nsHostRecord::ODOH_KEY_NOT_USABLE);
+  } else if (status == DNSPacketStatus::EncryptError) {
+    RecordReason(nsHostRecord::ODOH_ENCRYPTION_FAILED);
+  } else {
+    MOZ_ASSERT_UNREACHABLE("Unexpected status code.");
+  }
+}
+
+void ODoH::HandleDecodeError(nsresult aStatusCode) {
+  MOZ_ASSERT(NS_FAILED(aStatusCode));
+
+  DNSPacketStatus status = mPacket->PacketStatus();
+  MOZ_ASSERT(status != DNSPacketStatus::Success);
+
+  if (status == DNSPacketStatus::DecryptError) {
+    RecordReason(nsHostRecord::ODOH_DECRYPTION_FAILED);
+  }
+
+  TRR::HandleDecodeError(aStatusCode);
 }
 
 }  // namespace net

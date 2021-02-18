@@ -114,6 +114,9 @@ class TRR : public Runnable,
   virtual bool MaybeBlockRequest();
   virtual void RecordProcessingTime(nsIChannel* aChannel);
   virtual void ReportStatus(nsresult aStatusCode);
+  virtual void HandleTimeout();
+  virtual void HandleEncodeError(nsresult aStatusCode) {}
+  virtual void HandleDecodeError(nsresult aStatusCode);
   nsresult SendHTTPRequest();
   nsresult ReturnData(nsIChannel* aChannel);
 
