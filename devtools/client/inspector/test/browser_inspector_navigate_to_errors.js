@@ -13,12 +13,18 @@ const TEST_URL_4 = "data:text/html,<html><body>test-doc-4</body></html>";
 
 add_task(async function() {
   // Open the inspector on a valid URL
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL_1);
+  const { inspector } = await openInspectorForURL(TEST_URL_1);
 
   info("Navigate to closed port");
   await navigateTo(TEST_URL_2, { isErrorPage: true });
 
-  const documentURI = await testActor.eval("document.documentURI;");
+  const documentURI = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    () => {
+      return content.document.documentURI;
+    }
+  );
   ok(documentURI.startsWith("about:neterror"), "content is correct.");
 
   const hasPage = await getNodeFront("#test-doc-1", inspector);
