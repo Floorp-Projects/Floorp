@@ -121,8 +121,9 @@ for (let {function: numberFormatFunction, unwrap} of numberFormatFunctions) {
     }
 
     // Repeat the test from above, but also change Intl.NumberFormat[@@hasInstance]
-    // so it always returns |null|.
+    // so it always returns |true|.
     for (let thisValue of thisValues(Intl.NumberFormat).filter(IsObject)) {
+        let isPrototypeOf = Intl.NumberFormat.prototype.isPrototypeOf(thisValue);
         let hasInstanceCalled = false, symbolGetterCalled = false;
         Object.defineProperty(Intl.NumberFormat, Symbol.hasInstance, {
             value() {
@@ -143,8 +144,8 @@ for (let {function: numberFormatFunction, unwrap} of numberFormatFunctions) {
 
         delete Intl.NumberFormat[Symbol.hasInstance];
 
-        assertEq(hasInstanceCalled, unwrap);
-        assertEq(symbolGetterCalled, unwrap);
+        assertEq(hasInstanceCalled, false);
+        assertEq(symbolGetterCalled, unwrap && isPrototypeOf);
     }
 
     // Test with primitive values.

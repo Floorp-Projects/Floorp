@@ -40,9 +40,9 @@ enum class BuiltinObjectKind : uint8_t {
   RegExpPrototype,
   StringPrototype,
 
-  // Built-in Intl constructors.
-  DateTimeFormat,
-  NumberFormat,
+  // Built-in Intl prototypes.
+  DateTimeFormatPrototype,
+  NumberFormatPrototype,
 
   // Invalid placeholder.
   None,

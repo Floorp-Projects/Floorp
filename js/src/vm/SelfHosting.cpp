@@ -2206,6 +2206,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_Map_entries", MapObject::entries, 0, 0),
 
     JS_INLINABLE_FN("std_Object_create", obj_create, 2, 0, ObjectCreate),
+    JS_INLINABLE_FN("std_Object_isPrototypeOf", obj_isPrototypeOf, 1, 0,
+                    ObjectIsPrototypeOf),
     JS_FN("std_Object_propertyIsEnumerable", obj_propertyIsEnumerable, 1, 0),
     JS_FN("std_Object_toString", obj_toString, 0, 0),
     JS_FN("std_Object_setProto", obj_setProto, 1, 0),
