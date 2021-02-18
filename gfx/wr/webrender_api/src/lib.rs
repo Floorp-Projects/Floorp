@@ -159,7 +159,7 @@ impl Default for PipelineId {
 impl PipelineId {
     ///
     pub fn dummy() -> Self {
-        PipelineId(0, 0)
+        PipelineId(!0, !0)
     }
 }
 
