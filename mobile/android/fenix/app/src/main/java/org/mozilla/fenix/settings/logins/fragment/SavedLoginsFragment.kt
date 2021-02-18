@@ -150,6 +150,8 @@ class SavedLoginsFragment : Fragment() {
         toolbarChildContainer.visibility = View.GONE
         (activity as HomeActivity).getSupportActionBarAndInflateIfNecessary().setDisplayShowTitleEnabled(true)
         sortingStrategyMenu.menuController.dismiss()
+        sortLoginsMenuRoot.setOnClickListener(null)
+        setHasOptionsMenu(false)
 
         redirectToReAuth(listOf(R.id.loginDetailFragment), findNavController().currentDestination?.id)
         super.onPause()
