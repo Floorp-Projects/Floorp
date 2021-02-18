@@ -11,7 +11,7 @@
     static get markup() {
       return `
       <html:link rel="stylesheet" href="chrome://global/skin/global.css"/>
-      <vbox class="panel-arrowcontainer" style="display: none" flex="1">
+      <vbox class="panel-arrowcontainer" flex="1">
         <box class="panel-arrowbox" part="arrowbox">
           <image class="panel-arrow" part="arrow"/>
         </box>
@@ -59,7 +59,7 @@
 
     initialize() {
       // As an optimization, we don't slot contents if the panel is [hidden] in
-      // connectedCallback this means we can avoid running this code at startup
+      // connecetedCallack this means we can avoid running this code at startup
       // and only need to do it when a panel is about to be shown.
       // We then override the `hidden` setter and `removeAttribute` and call this
       // function if the node is about to be shown.
@@ -72,11 +72,6 @@
       } else {
         this.shadowRoot.appendChild(this.constructor.fragment);
       }
-    }
-
-    get _container() {
-      // Note that this might be a <slot>, for non-arrow panels.
-      return this.shadowRoot.lastElementChild;
     }
 
     get hidden() {
@@ -157,9 +152,6 @@
     }
 
     on_popupshowing(event) {
-      if (event.target == this) {
-        this._container.style.display = "";
-      }
       if (this.isArrowPanel && event.target == this) {
         var arrow = this.shadowRoot.querySelector(".panel-arrow");
         arrow.hidden = !this.isAnchored;
@@ -240,9 +232,6 @@
     }
 
     on_popuphidden(event) {
-      if (event.target == this) {
-        this._container.style.display = "none";
-      }
       if (this.isArrowPanel && event.target == this) {
         this.removeAttribute("panelopen");
         if (this.getAttribute("animate") != "false") {
