@@ -50,12 +50,16 @@ extern mozilla::LazyLogModule gHostResolverLog;
 NS_IMPL_ISUPPORTS(TRR, nsIHttpPushListener, nsIInterfaceRequestor,
                   nsIStreamListener, nsIRunnable)
 
+void TRR::HandleTimeout() {
+  mTimeout = nullptr;
+  RecordReason(nsHostRecord::TRR_TIMEOUT);
+  Cancel(NS_ERROR_NET_TIMEOUT_EXTERNAL);
+}
+
 NS_IMETHODIMP
 TRR::Notify(nsITimer* aTimer) {
   if (aTimer == mTimeout) {
-    mTimeout = nullptr;
-    RecordReason(nsHostRecord::TRR_TIMEOUT);
-    Cancel(NS_ERROR_NET_TIMEOUT_EXTERNAL);
+    HandleTimeout();
   } else {
     MOZ_CRASH("Unknown timer");
   }
@@ -216,7 +220,10 @@ nsresult TRR::SendHTTPRequest() {
   bool disableECS = StaticPrefs::network_trr_disable_ECS();
   nsresult rv =
       GetOrCreateDNSPacket()->EncodeRequest(body, mHost, mType, disableECS);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    HandleEncodeError(rv);
+    return rv;
+  }
 
   bool useGet = StaticPrefs::network_trr_useGET();
   nsCOMPtr<nsIURI> dnsURI;
@@ -750,6 +757,18 @@ nsresult TRR::FailData(nsresult error) {
   return NS_OK;
 }
 
+void TRR::HandleDecodeError(nsresult aStatusCode) {
+  auto rcode = mPacket->GetRCode();
+  if (rcode.isOk() && rcode.unwrap() != 0) {
+    RecordReason(nsHostRecord::TRR_RCODE_FAIL);
+  } else if (aStatusCode == NS_ERROR_UNKNOWN_HOST ||
+             aStatusCode == NS_ERROR_DEFINITIVE_UNKNOWN_HOST) {
+    RecordReason(nsHostRecord::TRR_NO_ANSWERS);
+  } else {
+    RecordReason(nsHostRecord::TRR_DECODE_FAILED);
+  }
+}
+
 nsresult TRR::FollowCname(nsIChannel* aChannel) {
   nsresult rv = NS_OK;
   nsAutoCString cname;
@@ -768,17 +787,8 @@ nsresult TRR::FollowCname(nsIChannel* aChannel) {
         cname, mType, mCname, StaticPrefs::network_trr_allow_rfc1918(), mDNS,
         mResult, additionalRecords, mTTL);
     if (NS_FAILED(rv)) {
-      LOG(("TRR::On200Response DohDecode %x\n", (int)rv));
-
-      auto rcode = mPacket->GetRCode();
-      if (rcode.isOk() && rcode.unwrap() != 0) {
-        RecordReason(nsHostRecord::TRR_RCODE_FAIL);
-      } else if (rv == NS_ERROR_UNKNOWN_HOST ||
-                 rv == NS_ERROR_DEFINITIVE_UNKNOWN_HOST) {
-        RecordReason(nsHostRecord::TRR_NO_ANSWERS);
-      } else {
-        RecordReason(nsHostRecord::TRR_DECODE_FAILED);
-      }
+      LOG(("TRR::FollowCname DohDecode %x\n", (int)rv));
+      HandleDecodeError(rv);
     }
   }
 
@@ -797,7 +807,9 @@ nsresult TRR::FollowCname(nsIChannel* aChannel) {
   LOG(("TRR::On200Response CNAME %s => %s (%u)\n", mHost.get(), mCname.get(),
        mCnameLoop));
   RefPtr<TRR> trr =
-      new TRR(mHostResolver, mRec, mCname, mType, mCnameLoop, mPB);
+      ResolverType() == DNSResolverType::ODoH
+          ? new ODoH(mHostResolver, mRec, mCname, mType, mCnameLoop, mPB)
+          : new TRR(mHostResolver, mRec, mCname, mType, mCnameLoop, mPB);
   if (!gTRRService) {
     return NS_ERROR_FAILURE;
   }
@@ -812,15 +824,7 @@ nsresult TRR::On200Response(nsIChannel* aChannel) {
       mResult, additionalRecords, mTTL);
   if (NS_FAILED(rv)) {
     LOG(("TRR::On200Response DohDecode %x\n", (int)rv));
-    auto rcode = mPacket->GetRCode();
-    if (rcode.isOk() && rcode.unwrap() != 0) {
-      RecordReason(nsHostRecord::TRR_RCODE_FAIL);
-    } else if (rv == NS_ERROR_UNKNOWN_HOST ||
-               rv == NS_ERROR_DEFINITIVE_UNKNOWN_HOST) {
-      RecordReason(nsHostRecord::TRR_NO_ANSWERS);
-    } else {
-      RecordReason(nsHostRecord::TRR_DECODE_FAILED);
-    }
+    HandleDecodeError(rv);
     return rv;
   }
   SaveAdditionalRecords(additionalRecords);
