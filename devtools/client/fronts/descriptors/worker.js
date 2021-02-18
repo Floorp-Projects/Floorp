@@ -18,6 +18,7 @@ class WorkerDescriptorFront extends TargetMixin(
 ) {
   constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);
+    this._client = client;
 
     this.traits = {};
 
@@ -27,6 +28,10 @@ class WorkerDescriptorFront extends TargetMixin(
     // So that we should destroy the target in order to significate that the target
     // is no longer debuggable.
     this.once("worker-close", this.destroy.bind(this));
+  }
+
+  get client() {
+    return this._client;
   }
 
   form(json) {
@@ -70,7 +75,7 @@ class WorkerDescriptorFront extends TargetMixin(
 
     this._attach = (async () => {
       if (this.isDestroyedOrBeingDestroyed()) {
-        return;
+        return this;
       }
 
       const response = await super.attach();
@@ -85,7 +90,7 @@ class WorkerDescriptorFront extends TargetMixin(
       this._url = response.url;
 
       if (this.isDestroyedOrBeingDestroyed()) {
-        return;
+        return this;
       }
 
       const workerTargetForm = await super.getTarget();
@@ -96,10 +101,11 @@ class WorkerDescriptorFront extends TargetMixin(
       this.targetForm.threadActor = workerTargetForm.threadActor;
 
       if (this.isDestroyedOrBeingDestroyed()) {
-        return;
+        return this;
       }
 
       await this.attachConsole();
+      return this;
     })();
     return this._attach;
   }

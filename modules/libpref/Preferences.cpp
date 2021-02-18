@@ -32,7 +32,6 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/Services.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticMutex.h"
@@ -2744,7 +2743,7 @@ nsresult nsPrefBranch::GetDefaultFromPropertiesFile(const char* aPrefName,
   }
 
   nsCOMPtr<nsIStringBundleService> bundleService =
-      services::GetStringBundleService();
+      components::StringBundle::Service();
   if (!bundleService) {
     return NS_ERROR_FAILURE;
   }

@@ -276,7 +276,7 @@ toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-b
   color: inherit;
   outline: var(--toolbarbutton-focus-outline);
   -moz-outline-radius: var(--toolbarbutton-border-radius);
-  outline-offset: unset;
+  outline-offset: calc(var(--focus-outline-width) * -1);
 }
 
 :root[uidensity=compact] .findbar-button:-moz-focusring,
@@ -284,7 +284,7 @@ toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-b
 :root[uidensity=compact] toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-icon,
 :root[uidensity=compact] toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-text,
 :root[uidensity=compact] toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-badge-stack {
-  outline-offset: -1px;
+  outline-offset: calc(var(--focus-outline-width) * -1 - 1px);
 }
 
 #PersonalToolbar .toolbarbutton-1:-moz-focusring,
@@ -331,7 +331,7 @@ toolbar .toolbarbutton-1:-moz-focusring {
 }
 
 :root[uidensity=touch] #back-button:-moz-focusring > .toolbarbutton-icon {
-  outline-offset: -2px;
+  outline-offset: calc(var(--focus-outline-width) * -1 - 2px);
 }
 
 :root[uidensity=touch] #back-button {

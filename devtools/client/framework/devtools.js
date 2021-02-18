@@ -595,7 +595,11 @@ DevTools.prototype = {
   },
 
   async createToolbox(target, toolId, hostType, hostOptions) {
-    const manager = new ToolboxHostManager(target, hostType, hostOptions);
+    const manager = new ToolboxHostManager(
+      target.descriptorFront,
+      hostType,
+      hostOptions
+    );
 
     const toolbox = await manager.create(toolId);
 

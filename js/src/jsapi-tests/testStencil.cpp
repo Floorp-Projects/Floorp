@@ -132,7 +132,7 @@ BEGIN_TEST(testStencil_Transcode) {
 
     // Encode Stencil to XDR
     JS::TranscodeResult res = JS::EncodeStencil(cx, options, stencil, buffer);
-    CHECK(res == JS::TranscodeResult_Ok);
+    CHECK(res == JS::TranscodeResult::Ok);
     CHECK(!buffer.empty());
 
     // Instantiate and Run
@@ -160,7 +160,7 @@ BEGIN_TEST(testStencil_Transcode) {
     JS::CompileOptions options(cx);
     RefPtr<JS::Stencil> stencil;
     JS::TranscodeResult res = JS::DecodeStencil(cx, options, range, stencil);
-    CHECK(res == JS::TranscodeResult_Ok);
+    CHECK(res == JS::TranscodeResult::Ok);
 
     // Instantiate and Run
     JS::RootedScript script(cx,

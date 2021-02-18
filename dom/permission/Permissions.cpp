@@ -12,7 +12,7 @@
 #include "mozilla/dom/PermissionsBinding.h"
 #include "mozilla/dom/PermissionStatus.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/Services.h"
+#include "mozilla/Components.h"
 #include "nsIPermissionManager.h"
 #include "PermissionUtils.h"
 
@@ -95,7 +95,8 @@ nsresult Permissions::RemovePermission(nsIPrincipal* aPrincipal,
                                        const nsACString& aPermissionType) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+  nsCOMPtr<nsIPermissionManager> permMgr =
+      components::PermissionManager::Service();
   if (NS_WARN_IF(!permMgr)) {
     return NS_ERROR_FAILURE;
   }
@@ -129,7 +130,8 @@ already_AddRefed<Promise> Permissions::Revoke(JSContext* aCx,
     return promise.forget();
   }
 
-  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+  nsCOMPtr<nsIPermissionManager> permMgr =
+      components::PermissionManager::Service();
   if (NS_WARN_IF(!permMgr)) {
     promise->MaybeReject(NS_ERROR_FAILURE);
     return promise.forget();

@@ -301,16 +301,12 @@ class UrlbarView {
    *   null if there is no such element.
    */
   getClosestSelectableElement(element) {
-    let row = element.closest(".urlbarView-row");
-    if (!row) {
-      return null;
-    }
-    let closest = row;
-    if (
-      row.result.type == UrlbarUtils.RESULT_TYPE.TIP ||
-      row.result.type == UrlbarUtils.RESULT_TYPE.DYNAMIC
-    ) {
-      closest = element.closest(SELECTABLE_ELEMENT_SELECTOR);
+    let closest = element.closest(SELECTABLE_ELEMENT_SELECTOR);
+    if (!closest) {
+      let row = element.closest(".urlbarView-row");
+      if (row && !row.querySelector(SELECTABLE_ELEMENT_SELECTOR)) {
+        closest = row;
+      }
     }
     return this._isElementVisible(closest) ? closest : null;
   }
@@ -635,9 +631,9 @@ class UrlbarView {
 
     if (!this.selectedElement && !this.oneOffSearchButtons.selectedButton) {
       if (firstResult.heuristic) {
-        // Select the heuristic result.  The heuristic may not be the first result
-        // added, which is why we do this check here when each result is added and
-        // not above.
+        // Select the heuristic result.  The heuristic may not be the first
+        // result added, which is why we do this check here when each result is
+        // added and not above.
         this._selectElement(this._getFirstSelectableElement(), {
           updateInput: false,
           setAccessibleFocus: this.controller._userSelectionBehavior == "arrow",
@@ -991,7 +987,7 @@ class UrlbarView {
     return item;
   }
 
-  _createRowContent(item) {
+  _createRowContent(item, result) {
     // The url is the only element that can wrap, thus all the other elements
     // are child of noWrap.
     let noWrap = this._createElement("span");
@@ -1049,6 +1045,22 @@ class UrlbarView {
     url.className = "urlbarView-url";
     item._content.appendChild(url);
     item._elements.set("url", url);
+
+    // Usually we create all child elements for the row regardless of whether
+    // the specific result will use them, but we don't expect the vast majority
+    // of results to have help URLs, so as an optimization, only create the help
+    // button if the result will use it.
+    if (result.payload.helpUrl) {
+      let helpButton = this._createElement("span");
+      helpButton.className = "urlbarView-help";
+      helpButton.setAttribute("role", "button");
+      if (result.payload.helpL10nId) {
+        helpButton.setAttribute("data-l10n-id", result.payload.helpL10nId);
+      }
+      item.appendChild(helpButton);
+      item._elements.set("helpButton", helpButton);
+      item._content.setAttribute("selectable", "true");
+    }
   }
 
   _createRowContentForTip(item) {
@@ -1079,7 +1091,7 @@ class UrlbarView {
     item._elements.set("tipButton", tipButton);
 
     let helpIcon = this._createElement("span");
-    helpIcon.className = "urlbarView-tip-help";
+    helpIcon.className = "urlbarView-help";
     helpIcon.setAttribute("role", "button");
     helpIcon.setAttribute("data-l10n-id", "urlbar-tip-help-icon");
     item._elements.set("helpButton", helpIcon);
@@ -1150,13 +1162,14 @@ class UrlbarView {
         (result.type == UrlbarUtils.RESULT_TYPE.DYNAMIC) ||
       (oldResultType == UrlbarUtils.RESULT_TYPE.DYNAMIC &&
         result.type == UrlbarUtils.RESULT_TYPE.DYNAMIC &&
-        oldResult.dynamicType != result.dynamicType);
+        oldResult.dynamicType != result.dynamicType) ||
+      !!result.payload.helpUrl != item._elements.has("helpButton");
 
     if (needsNewContent) {
-      if (item._content) {
-        item._content.remove();
-        item._elements.clear();
+      while (item.lastChild) {
+        item.lastChild.remove();
       }
+      item._elements.clear();
       item._content = this._createElement("span");
       item._content.className = "urlbarView-row-inner";
       item.appendChild(item._content);
@@ -1166,7 +1179,7 @@ class UrlbarView {
       } else if (item.result.type == UrlbarUtils.RESULT_TYPE.DYNAMIC) {
         this._createRowContentForDynamicType(item, result);
       } else {
-        this._createRowContent(item);
+        this._createRowContent(item, result);
       }
     }
 
@@ -1389,6 +1402,12 @@ class UrlbarView {
     } else {
       title.removeAttribute("dir");
     }
+
+    if (item._elements.has("helpButton")) {
+      item.setAttribute("has-help", "true");
+    } else {
+      item.removeAttribute("has-help");
+    }
   }
 
   _iconForResult(result, iconUrlOverride = null) {
@@ -1593,28 +1612,36 @@ class UrlbarView {
     }
   }
 
-  _selectElement(item, { updateInput = true, setAccessibleFocus = true } = {}) {
+  _selectElement(
+    element,
+    { updateInput = true, setAccessibleFocus = true } = {}
+  ) {
     if (this._selectedElement) {
       this._selectedElement.toggleAttribute("selected", false);
       this._selectedElement.removeAttribute("aria-selected");
     }
-    if (item) {
-      item.toggleAttribute("selected", true);
-      item.setAttribute("aria-selected", "true");
+    if (element) {
+      element.toggleAttribute("selected", true);
+      element.setAttribute("aria-selected", "true");
     }
-    this._setAccessibleFocus(setAccessibleFocus && item);
-    this._selectedElement = item;
+    this._setAccessibleFocus(setAccessibleFocus && element);
+    this._selectedElement = element;
 
-    let result = item?.closest(".urlbarView-row")?.result;
+    let result = element?.closest(".urlbarView-row")?.result;
     if (updateInput) {
-      this.input.setValueFromResult(result);
+      this.input.setValueFromResult({
+        result,
+        urlOverride: element?.classList?.contains("urlbarView-help")
+          ? result.payload.helpUrl
+          : null,
+      });
     } else {
       this.input.setResultForCurrentValue(result);
     }
 
     let provider = UrlbarProvidersManager.getProvider(result?.providerName);
     if (provider) {
-      provider.tryMethod("onSelection", result, item);
+      provider.tryMethod("onSelection", result, element);
     }
   }
 
@@ -1651,7 +1678,15 @@ class UrlbarView {
    *   The last selectable element in the view.
    */
   _getLastSelectableElement() {
-    let element = this._rows.lastElementChild;
+    let row = this._rows.lastElementChild;
+    if (!row) {
+      return null;
+    }
+    let selectables = row.querySelectorAll(SELECTABLE_ELEMENT_SELECTOR);
+    let element = selectables.length
+      ? selectables[selectables.length - 1]
+      : row;
+
     if (element && !this._isSelectableElement(element)) {
       element = this._getPreviousSelectableElement(element);
     }
@@ -1674,20 +1709,13 @@ class UrlbarView {
       return null;
     }
 
-    let next;
-    if (
-      row.result.type == UrlbarUtils.RESULT_TYPE.TIP ||
-      row.result.type == UrlbarUtils.RESULT_TYPE.DYNAMIC
-    ) {
-      let selectables = [...row.querySelectorAll(SELECTABLE_ELEMENT_SELECTOR)];
+    let next = row.nextElementSibling;
+    let selectables = [...row.querySelectorAll(SELECTABLE_ELEMENT_SELECTOR)];
+    if (selectables.length) {
       let index = selectables.indexOf(element);
-      if (index == selectables.length - 1) {
-        next = row.nextElementSibling;
-      } else {
+      if (index < selectables.length - 1) {
         next = selectables[index + 1];
       }
-    } else {
-      next = row.nextElementSibling;
     }
 
     if (next && !this._isSelectableElement(next)) {
@@ -1713,22 +1741,15 @@ class UrlbarView {
       return null;
     }
 
-    let previous;
-    if (
-      row.result.type == UrlbarUtils.RESULT_TYPE.TIP ||
-      row.result.type == UrlbarUtils.RESULT_TYPE.DYNAMIC
-    ) {
-      let selectables = [...row.querySelectorAll(SELECTABLE_ELEMENT_SELECTOR)];
+    let previous = row.previousElementSibling;
+    let selectables = [...row.querySelectorAll(SELECTABLE_ELEMENT_SELECTOR)];
+    if (selectables.length) {
       let index = selectables.indexOf(element);
-      if (index == 0 || !selectables.length) {
-        previous = row.previousElementSibling;
-      } else if (index < 0) {
+      if (index < 0) {
         previous = selectables[selectables.length - 1];
-      } else {
+      } else if (index > 0) {
         previous = selectables[index - 1];
       }
-    } else {
-      previous = row.previousElementSibling;
     }
 
     if (previous && !this._isSelectableElement(previous)) {

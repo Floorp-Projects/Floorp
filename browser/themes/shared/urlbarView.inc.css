@@ -88,12 +88,19 @@
 }
 
 .urlbarView-row {
+  display: flex;
+  flex-wrap: nowrap;
   fill: currentColor;
   fill-opacity: .6;
   padding-block: 3px;
 }
 
 .urlbarView-row-inner {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-grow: 1;
+  flex-shrink: 1;
+  overflow: hidden;
   border-radius: 2px;
   padding-inline-start: @urlbarViewItemInlinePadding@;
   padding-block: 6px;
@@ -107,8 +114,6 @@
   padding-block-start: 18px;
   /* Compensating for the 16px bottom margin on the tip elements. */
   padding-block-end: calc(18px - 16px);
-  /* Compensating for the 4px focus ring on tip buttons. */
-  padding-inline-end: calc(@urlbarViewItemInlinePadding@ + 4px);
 }
 
 .urlbarView-row-inner,
@@ -117,6 +122,16 @@
   flex-wrap: nowrap;
   align-items: end;
   justify-content: start;
+}
+
+.urlbarView-no-wrap {
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.urlbarView-url {
+  flex-grow: 1;
+  flex-shrink: 1;
 }
 
 .urlbarView[actionoverride] .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-no-wrap,
@@ -186,11 +201,13 @@
   direction: ltr !important;
 }
 
-.urlbarView-row:not([type=tip], [type=dynamic]):hover > .urlbarView-row-inner {
+.urlbarView-row:not([type=tip], [type=dynamic], [has-help]):hover > .urlbarView-row-inner,
+.urlbarView-row[has-help] > .urlbarView-row-inner:hover {
   background: var(--arrowpanel-dimmed);
 }
 
-.urlbarView-row:not([type=tip], [type=dynamic])[selected] > .urlbarView-row-inner {
+.urlbarView-row:not([type=tip], [type=dynamic])[selected] > .urlbarView-row-inner,
+.urlbarView-row-inner[selected] {
   background: var(--autocomplete-popup-highlight-background);
   color: var(--autocomplete-popup-highlight-color);
   fill-opacity: 1;
@@ -290,6 +307,36 @@
   stroke: #38383d; /* Grey-70 */
 }
 
+/* Help button */
+
+/* Help buttons are a standard Photon ghost buttons. */
+.urlbarView-help {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 16px;
+  min-width: 16px;
+  background-image: url("chrome://global/skin/icons/help.svg");
+  background-size: 16px;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding-inline: 8px;
+  margin-inline-start: 8px;
+  margin-inline-end: 4px;
+  -moz-context-properties: fill, fill-opacity;
+}
+
+.urlbarView-help[selected] {
+  box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
+}
+
+.urlbarView-help:hover {
+  background-color: var(--urlbarView-button-background-hover);
+}
+
+.urlbarView-help:hover:active {
+  background-color: var(--urlbarView-button-background-active);
+}
+
 /* Tip rows */
 
 .urlbarView-row[type=tip]:not(:last-child) {
@@ -315,34 +362,13 @@
    they all remain vertically aligned. */
 .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-favicon,
 .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-title,
-.urlbarView-tip-button,
-.urlbarView-tip-help {
+.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-help,
+.urlbarView-tip-button {
   margin-block-end: 16px;
 }
 
-/* The help icon is a standard Photon ghost button. */
-.urlbarView-tip-help {
-  min-width: 16px;
+.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-help {
   height: 32px;
-  background-image: url("chrome://global/skin/icons/help.svg");
-  background-size: 16px;
-  background-position: center;
-  background-repeat: no-repeat;
-  padding-inline: 8px;
-  margin-inline-start: 8px;
-  -moz-context-properties: fill, fill-opacity;
-}
-
-.urlbarView-tip-help[selected] {
-  box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
-}
-
-.urlbarView-tip-help:hover {
-  background-color: var(--urlbarView-button-background-hover);
-}
-
-.urlbarView-tip-help:hover:active {
-  background-color: var(--urlbarView-button-background-active);
 }
 
 /* The tip button is a Photon default button when unfocused and a
@@ -485,7 +511,9 @@
 }
 
 .urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-no-wrap >.urlbarView-action,
-.urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-url {
+.urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-url,
+.urlbarView-row-inner[selected] > .urlbarView-no-wrap >.urlbarView-action,
+.urlbarView-row-inner[selected] > .urlbarView-url {
   color: inherit;
 }
 

@@ -20,10 +20,19 @@
   --short-notification-gradient: #9059FF;
 }
 
+@supports not -moz-bool-pref("browser.proton.enabled") {
+  :root {
+    --focus-outline-width: 0;
+  }
+}
+
+/*** END !proton ***/
+
 @supports -moz-bool-pref("browser.proton.enabled") {
   :root {
+    --focus-outline-width: 2px;
     --focus-outline-color: currentColor;
-    --focus-outline: 2px solid var(--focus-outline-color);
+    --focus-outline: var(--focus-outline-width) solid var(--focus-outline-color);
   }
 
   @media not (prefers-contrast) {
@@ -35,7 +44,7 @@
       --focus-outline-color: #00DDFF;
     }
   }
-} /*** END !proton ***/
+} /*** END proton ***/
 
 :root[extradragspace][tabsintitlebar]:not([inFullscreen]) {
   --space-above-tabbar: 8px;

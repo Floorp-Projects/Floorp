@@ -2000,7 +2000,7 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv,
 
   // Get properties file bundle and extract status string.
   nsCOMPtr<nsIStringBundleService> stringService =
-      mozilla::services::GetStringBundleService();
+      mozilla::components::StringBundle::Service();
   if (stringService) {
     nsCOMPtr<nsIStringBundle> bundle;
     if (NS_SUCCEEDED(stringService->CreateBundle(

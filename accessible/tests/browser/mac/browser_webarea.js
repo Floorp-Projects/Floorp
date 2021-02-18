@@ -35,8 +35,14 @@ addAccessibleTask(`<title>webarea test</title>`, async (browser, accDoc) => {
   // event for the document. Otherwise, if the iframe loads after the
   // document, we'll get one AXLoadComplete event.
   let eventPromise = Promise.race([
-    waitForMacEvent("AXLayoutComplete"),
-    waitForMacEvent("AXLoadComplete"),
+    waitForMacEvent("AXLayoutComplete", (iface, data) => {
+      return (
+        iface.getAttributeValue("AXDescription") == "data:text/html,hello world"
+      );
+    }),
+    waitForMacEvent("AXLoadComplete", (iface, data) => {
+      return iface.getAttributeValue("AXDescription") == "webarea test";
+    }),
   ]);
   await SpecialPowers.spawn(browser, [], () => {
     const iframe = content.document.createElement("iframe");

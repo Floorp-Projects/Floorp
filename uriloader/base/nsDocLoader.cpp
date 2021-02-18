@@ -1179,7 +1179,7 @@ NS_IMETHODIMP nsDocLoader::OnStatus(nsIRequest* aRequest, nsresult aStatus,
     }
 
     nsCOMPtr<nsIStringBundleService> sbs =
-        mozilla::services::GetStringBundleService();
+        mozilla::components::StringBundle::Service();
     if (!sbs) return NS_ERROR_FAILURE;
     nsAutoString msg;
     nsresult rv = sbs->FormatStatusMessage(aStatus, aStatusArg, msg);

@@ -17,7 +17,7 @@ const DEFAULT_PROPS = {
     visibilityState: "visible",
   },
   dispatch: () => {},
-  Prefs: { values: {} },
+  Prefs: { values: { featureConfig: {} } },
 };
 
 describe("CollapsibleSection", () => {

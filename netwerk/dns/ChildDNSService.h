@@ -53,8 +53,9 @@ class ChildDNSService final : public nsPIDNSService, public nsIObserver {
       nsIDNSResolverInfo* aResolver, nsIDNSListener* aListener,
       nsresult aReason, const OriginAttributes& aOriginAttributes);
 
-  bool mFirstTime;
-  bool mDisablePrefetch;
+  bool mFirstTime = true;
+  bool mDisablePrefetch = false;
+  bool mODoHActivated = false;
 
   // We need to remember pending dns requests to be able to cancel them.
   nsClassHashtable<nsCStringHashKey, nsTArray<RefPtr<DNSRequestSender>>>

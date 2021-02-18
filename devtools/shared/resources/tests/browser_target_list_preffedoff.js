@@ -23,17 +23,17 @@ add_task(async function() {
   await pushPref("devtools.browsertoolbox.fission", false);
 
   // Test with Main process targets as top level target
-  await testPreffedOffMainProcess(mainRoot, mainProcess);
+  await testPreffedOffMainProcess(mainProcess);
 
   await client.close();
 });
 
-async function testPreffedOffMainProcess(mainRoot, mainProcess) {
+async function testPreffedOffMainProcess(mainProcess) {
   info(
     "Test TargetList when devtools's fission pref is false, via the parent process target"
   );
 
-  const targetList = new TargetList(mainRoot, mainProcess);
+  const targetList = new TargetList(mainProcess.descriptorFront);
   await targetList.startListening();
 
   // The API should only report the top level target,

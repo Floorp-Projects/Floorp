@@ -26,7 +26,7 @@ async function testSwitchToTarget(client) {
   const firstDescriptor = await mainRoot.getTab({ tab: gBrowser.selectedTab });
   const firstTarget = await firstDescriptor.getTarget();
 
-  const targetList = new TargetList(mainRoot, firstTarget);
+  const targetList = new TargetList(firstTarget.descriptorFront);
 
   await targetList.startListening();
 

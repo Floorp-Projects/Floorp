@@ -988,7 +988,7 @@ void nsPrintJob::GetDisplayTitleAndURL(Document& aDoc,
       } else {
         nsCOMPtr<nsIStringBundle> brandBundle;
         nsCOMPtr<nsIStringBundleService> svc =
-            mozilla::services::GetStringBundleService();
+            mozilla::components::StringBundle::Service();
         if (svc) {
           svc->CreateBundle("chrome://branding/locale/brand.properties",
                             getter_AddRefs(brandBundle));

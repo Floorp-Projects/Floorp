@@ -881,7 +881,7 @@
 
 #urlbar-zoom-button:-moz-focusring {
   outline: var(--toolbarbutton-focus-outline);
-  outline-offset: unset;
+  outline-offset: calc(var(--focus-outline-width) * -1);
   -moz-outline-radius: 1em;
 }
 

@@ -4949,15 +4949,9 @@ bool js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
                                constructing ? CONSTRUCT : NO_CONSTRUCT);
   }
 
-#ifdef DEBUG
   // The object must be an array with dense elements and no holes. Baseline's
   // optimized spread call stubs rely on this.
-  MOZ_ASSERT(!aobj->isIndexed());
-  MOZ_ASSERT(aobj->getDenseInitializedLength() == aobj->length());
-  for (size_t i = 0; i < aobj->length(); i++) {
-    MOZ_ASSERT(!aobj->getDenseElement(i).isMagic(JS_ELEMENTS_HOLE));
-  }
-#endif
+  MOZ_ASSERT(IsPackedArray(aobj));
 
   if (constructing) {
     if (!StackCheckIsConstructorCalleeNewTarget(cx, callee, newTarget)) {

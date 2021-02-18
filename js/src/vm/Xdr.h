@@ -182,7 +182,7 @@ class XDRCoderBase {
  protected:
   XDRCoderBase()
 #ifdef DEBUG
-      : resultCode_(JS::TranscodeResult_Ok)
+      : resultCode_(JS::TranscodeResult::Ok)
 #endif
   {
   }
@@ -192,7 +192,7 @@ class XDRCoderBase {
   // Record logical failures of XDR.
   JS::TranscodeResult resultCode() const { return resultCode_; }
   void setResultCode(JS::TranscodeResult code) {
-    MOZ_ASSERT(resultCode() == JS::TranscodeResult_Ok);
+    MOZ_ASSERT(resultCode() == JS::TranscodeResult::Ok);
     resultCode_ = code;
   }
   bool validateResultCode(JSContext* cx, JS::TranscodeResult code) const;
@@ -260,7 +260,7 @@ class XDRState : public XDRCoderBase {
   template <typename T = mozilla::Ok>
   XDRResultT<T> fail(JS::TranscodeResult code) {
 #ifdef DEBUG
-    MOZ_ASSERT(code != JS::TranscodeResult_Ok);
+    MOZ_ASSERT(code != JS::TranscodeResult::Ok);
     MOZ_ASSERT(validateResultCode(cx(), code));
     setResultCode(code);
 #endif
@@ -269,7 +269,7 @@ class XDRState : public XDRCoderBase {
 
   XDRResult align32() {
     if (!buf->align32()) {
-      return fail(JS::TranscodeResult_Throw);
+      return fail(JS::TranscodeResult::Throw);
     }
     return Ok();
   }
@@ -281,7 +281,7 @@ class XDRState : public XDRCoderBase {
   XDRResult readData(const uint8_t** pptr, size_t length) {
     const uint8_t* ptr = buf->read(length);
     if (!ptr) {
-      return fail(JS::TranscodeResult_Failure_BadDecode);
+      return fail(JS::TranscodeResult::Failure_BadDecode);
     }
     *pptr = ptr;
     return Ok();
@@ -295,7 +295,7 @@ class XDRState : public XDRCoderBase {
     MOZ_ASSERT(isAligned32());
     const uint8_t* ptr = buf->peek(sizeof(T));
     if (!ptr) {
-      return fail(JS::TranscodeResult_Failure_BadDecode);
+      return fail(JS::TranscodeResult::Failure_BadDecode);
     }
     *pptr = reinterpret_cast<const T*>(ptr);
     return Ok();
@@ -305,13 +305,13 @@ class XDRState : public XDRCoderBase {
     if (mode == XDR_ENCODE) {
       uint8_t* ptr = buf->write(sizeof(*n));
       if (!ptr) {
-        return fail(JS::TranscodeResult_Throw);
+        return fail(JS::TranscodeResult::Throw);
       }
       *ptr = *n;
     } else {
       const uint8_t* ptr = buf->read(sizeof(*n));
       if (!ptr) {
-        return fail(JS::TranscodeResult_Failure_BadDecode);
+        return fail(JS::TranscodeResult::Failure_BadDecode);
       }
       *n = *ptr;
     }
@@ -322,13 +322,13 @@ class XDRState : public XDRCoderBase {
     if (mode == XDR_ENCODE) {
       uint8_t* ptr = buf->write(sizeof(*n));
       if (!ptr) {
-        return fail(JS::TranscodeResult_Throw);
+        return fail(JS::TranscodeResult::Throw);
       }
       mozilla::LittleEndian::writeUint16(ptr, *n);
     } else {
       const uint8_t* ptr = buf->read(sizeof(*n));
       if (!ptr) {
-        return fail(JS::TranscodeResult_Failure_BadDecode);
+        return fail(JS::TranscodeResult::Failure_BadDecode);
       }
       *n = mozilla::LittleEndian::readUint16(ptr);
     }
@@ -339,13 +339,13 @@ class XDRState : public XDRCoderBase {
     if (mode == XDR_ENCODE) {
       uint8_t* ptr = buf->write(sizeof(*n));
       if (!ptr) {
-        return fail(JS::TranscodeResult_Throw);
+        return fail(JS::TranscodeResult::Throw);
       }
       mozilla::LittleEndian::writeUint32(ptr, *n);
     } else {
       const uint8_t* ptr = buf->read(sizeof(*n));
       if (!ptr) {
-        return fail(JS::TranscodeResult_Failure_BadDecode);
+        return fail(JS::TranscodeResult::Failure_BadDecode);
       }
       *n = mozilla::LittleEndian::readUint32(ptr);
     }
@@ -356,13 +356,13 @@ class XDRState : public XDRCoderBase {
     if (mode == XDR_ENCODE) {
       uint8_t* ptr = buf->write(sizeof(*n));
       if (!ptr) {
-        return fail(JS::TranscodeResult_Throw);
+        return fail(JS::TranscodeResult::Throw);
       }
       mozilla::LittleEndian::writeUint64(ptr, *n);
     } else {
       const uint8_t* ptr = buf->read(sizeof(*n));
       if (!ptr) {
-        return fail(JS::TranscodeResult_Failure_BadDecode);
+        return fail(JS::TranscodeResult::Failure_BadDecode);
       }
       *n = mozilla::LittleEndian::readUint64(ptr);
     }
@@ -412,7 +412,7 @@ class XDRState : public XDRCoderBase {
     if (actual != magic) {
       // Fail in debug, but only soft-fail in release
       MOZ_ASSERT(false, "Bad XDR marker");
-      return fail(JS::TranscodeResult_Failure_BadDecode);
+      return fail(JS::TranscodeResult::Failure_BadDecode);
     }
     return Ok();
   }
@@ -424,13 +424,13 @@ class XDRState : public XDRCoderBase {
     if (mode == XDR_ENCODE) {
       uint8_t* ptr = buf->write(len);
       if (!ptr) {
-        return fail(JS::TranscodeResult_Throw);
+        return fail(JS::TranscodeResult::Throw);
       }
       memcpy(ptr, bytes, len);
     } else {
       const uint8_t* ptr = buf->read(len);
       if (!ptr) {
-        return fail(JS::TranscodeResult_Failure_BadDecode);
+        return fail(JS::TranscodeResult::Failure_BadDecode);
       }
       memcpy(bytes, ptr, len);
     }

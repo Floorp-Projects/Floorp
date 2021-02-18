@@ -1311,7 +1311,7 @@ XDRResult js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj) {
     if (mode == XDR_ENCODE) {
       RootedArrayObject arr(cx, &obj->as<ArrayObject>());
       if (!GetScriptArrayObjectElements(arr, &values)) {
-        return xdr->fail(JS::TranscodeResult_Throw);
+        return xdr->fail(JS::TranscodeResult::Throw);
       }
     }
 
@@ -1322,7 +1322,7 @@ XDRResult js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj) {
     MOZ_TRY(xdr->codeUint32(&initialized));
     if (mode == XDR_DECODE &&
         !values.appendN(MagicValue(JS_ELEMENTS_HOLE), initialized)) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
 
     // Recursively copy dense elements.
@@ -1334,7 +1334,7 @@ XDRResult js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj) {
       obj.set(NewDenseCopiedArray(cx, values.length(), values.begin(),
                                   /* proto = */ nullptr, TenuredObject));
       if (!obj) {
-        return xdr->fail(JS::TranscodeResult_Throw);
+        return xdr->fail(JS::TranscodeResult::Throw);
       }
     }
 
@@ -1344,14 +1344,14 @@ XDRResult js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj) {
   // Code the properties in the object.
   Rooted<IdValueVector> properties(cx, IdValueVector(cx));
   if (mode == XDR_ENCODE && !GetScriptPlainObjectProperties(obj, &properties)) {
-    return xdr->fail(JS::TranscodeResult_Throw);
+    return xdr->fail(JS::TranscodeResult::Throw);
   }
 
   uint32_t nproperties = properties.length();
   MOZ_TRY(xdr->codeUint32(&nproperties));
 
   if (mode == XDR_DECODE && !properties.appendN(IdValuePair(), nproperties)) {
-    return xdr->fail(JS::TranscodeResult_Throw);
+    return xdr->fail(JS::TranscodeResult::Throw);
   }
 
   for (size_t i = 0; i < nproperties; i++) {
@@ -1365,7 +1365,7 @@ XDRResult js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj) {
 
     if (mode == XDR_DECODE) {
       if (!PrimitiveValueToId<CanGC>(cx, tmpIdValue, &tmpId)) {
-        return xdr->fail(JS::TranscodeResult_Throw);
+        return xdr->fail(JS::TranscodeResult::Throw);
       }
       properties[i].get().id = tmpId;
       properties[i].get().value = tmpValue;
@@ -1376,7 +1376,7 @@ XDRResult js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj) {
     obj.set(NewPlainObjectWithProperties(cx, properties.begin(),
                                          properties.length(), TenuredObject));
     if (!obj) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
   }
 

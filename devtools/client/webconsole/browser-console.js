@@ -45,7 +45,7 @@ class BrowserConsole extends WebConsole {
     super(null, iframeWindow, chromeWindow, true);
 
     this._browserConsoleTarget = target;
-    this._targetList = new TargetList(target.client.mainRoot, target);
+    this._targetList = new TargetList(target.descriptorFront);
     this._resourceWatcher = new ResourceWatcher(this._targetList);
     this._telemetry = new Telemetry();
     this._bcInitializer = null;

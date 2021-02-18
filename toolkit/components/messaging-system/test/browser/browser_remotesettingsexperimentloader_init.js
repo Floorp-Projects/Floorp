@@ -41,13 +41,14 @@ add_task(async function setup() {
 });
 
 add_task(async function test_double_feature_enrollment() {
-  let updateRecipesSpy = sinon.spy(
-    RemoteSettingsExperimentLoader,
-    "updateRecipes"
-  );
+  let sandbox = sinon.createSandbox();
   // We want to prevent this because it would start a recipe
   // update outside of our asserts
-  sinon.stub(RemoteSettingsExperimentLoader, "setTimer");
+  sandbox.stub(RemoteSettingsExperimentLoader, "setTimer");
+  let sendFailureTelemetryStub = sandbox.stub(
+    ExperimentManager,
+    "sendFailureTelemetry"
+  );
 
   for (let experiment of ExperimentManager.store.getAllActive()) {
     ExperimentManager.unenroll(experiment.slug, "cleanup");
@@ -56,8 +57,6 @@ add_task(async function test_double_feature_enrollment() {
   await BrowserTestUtils.waitForCondition(
     () => ExperimentManager.store.getAllActive().length === 0
   );
-
-  Assert.ok(ExperimentManager.store.getAllActive().length === 0);
 
   const recipe1 = ExperimentFakes.recipe("foo" + Date.now(), {
     bucketConfig: {
@@ -79,21 +78,26 @@ add_task(async function test_double_feature_enrollment() {
       randomizationUnit: "normandy_id",
     },
   });
+
   await rsClient.db.importChanges({}, 42, [recipe1, recipe2], {
     clear: true,
   });
 
   RemoteSettingsExperimentLoader.uninit();
-
+  let enrolledPromise = new Promise(resolve =>
+    ExperimentManager.store.on("update:test-feature", resolve)
+  );
   await RemoteSettingsExperimentLoader.init();
-
-  Assert.ok(ExperimentManager.store.getAllActive().length === 1);
-
-  Assert.ok(updateRecipesSpy.calledOnce, "called");
+  await enrolledPromise;
 
   Assert.ok(
     RemoteSettingsExperimentLoader._initialized,
     "It should initialize and process the recipes"
+  );
+
+  BrowserTestUtils.waitForCondition(
+    () => sendFailureTelemetryStub.calledOnce,
+    "Expected to fail one of the recipes"
   );
 
   for (let experiment of ExperimentManager.store.getAllActive()) {
@@ -105,6 +109,5 @@ add_task(async function test_double_feature_enrollment() {
   );
   await SpecialPowers.popPrefEnv();
   await rsClient.db.clear();
-  updateRecipesSpy.restore();
-  RemoteSettingsExperimentLoader.setTimer.restore();
+  sandbox.restore();
 });

@@ -11,6 +11,7 @@ function handleRequest(request, response)
                         origin,
                         false);
     response.setHeader("Access-Control-Allow-Credentials", "true", false);
+    response.setHeader("Access-Control-Allow-Methods", "XMETHOD", false);
     response.setHeader("Connection", "Keep-alive", false);
 
     response.bodyOutputStream.write(body, body.length);

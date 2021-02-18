@@ -1035,6 +1035,10 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbut
   scrollbar-width: var(--content-select-scrollbar-width, auto);
 }
 
+#ContentSelectDropdown > menupopup::part(arrowscrollbox) {
+  background-image: var(--content-select-background-image, none);
+}
+
 /* Indent options in optgroups */
 .contentSelectDropdown-ingroup .menu-iconic-text {
   padding-inline-start: 2em;

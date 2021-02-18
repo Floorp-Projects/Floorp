@@ -15,6 +15,7 @@
 #include "NSSErrorsService.h"
 #include "TunnelUtils.h"
 #include "base/basictypes.h"
+#include "mozilla/Components.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Tokenizer.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -289,7 +290,7 @@ nsresult nsHttpTransaction::Init(
 
   mTrafficCategory = trafficCategory;
 
-  mActivityDistributor = services::GetHttpActivityDistributor();
+  mActivityDistributor = components::HttpActivityDistributor::Service();
   if (!mActivityDistributor) {
     return NS_ERROR_NOT_AVAILABLE;
   }

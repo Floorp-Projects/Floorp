@@ -18,7 +18,7 @@
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
-#include "mozilla/Services.h"
+#include "mozilla/Components.h"
 #include "mozilla/Unused.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIPrincipal.h"
@@ -459,7 +459,7 @@ class StartUnregisterRunnable final : public Runnable {
     nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
 
     nsCOMPtr<nsIServiceWorkerManager> swm =
-        mozilla::services::GetServiceWorkerManager();
+        mozilla::components::ServiceWorkerManager::Service();
     if (!swm) {
       mPromise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__);
       return NS_OK;
@@ -545,7 +545,7 @@ void ServiceWorkerRegistrationMainThread::Unregister(
   }
 
   nsCOMPtr<nsIServiceWorkerManager> swm =
-      mozilla::services::GetServiceWorkerManager();
+      mozilla::components::ServiceWorkerManager::Service();
   if (!swm) {
     aFailureCB(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
     return;

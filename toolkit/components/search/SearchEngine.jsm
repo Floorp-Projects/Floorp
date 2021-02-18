@@ -792,7 +792,11 @@ class SearchEngine {
           }
 
           if (!contentType.startsWith("image/")) {
-            contentType = "image/x-icon";
+            logConsole.info(
+              "Unable to set icon, content type is not an image",
+              contentType
+            );
+            return;
           }
           let dataURL =
             "data:" +

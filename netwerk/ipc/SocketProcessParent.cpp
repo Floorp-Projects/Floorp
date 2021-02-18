@@ -10,6 +10,7 @@
 #include "CachePushChecker.h"
 #include "HttpTransactionParent.h"
 #include "SocketProcessHost.h"
+#include "mozilla/Components.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/ipc/FileDescriptorSetParent.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
@@ -22,6 +23,7 @@
 #include "mozilla/TelemetryIPC.h"
 #include "nsIAppStartup.h"
 #include "nsIHttpActivityObserver.h"
+#include "nsIObserverService.h"
 #include "nsNSSIOLayer.h"
 #include "PSMIPCCommon.h"
 #include "secerr.h"
@@ -275,7 +277,7 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvObserveHttpActivity(
     const uint32_t& aActivitySubtype, const PRTime& aTimestamp,
     const uint64_t& aExtraSizeData, const nsCString& aExtraStringData) {
   nsCOMPtr<nsIHttpActivityDistributor> activityDistributor =
-      services::GetHttpActivityDistributor();
+      components::HttpActivityDistributor::Service();
   MOZ_ASSERT(activityDistributor);
 
   Unused << activityDistributor->ObserveActivityWithArgs(
@@ -422,6 +424,18 @@ SocketProcessParent::RecvPRemoteLazyInputStreamConstructor(
     return IPC_FAIL_NO_REASON(this);
   }
 
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult SocketProcessParent::RecvODoHServiceActivated(
+    const bool& aActivated) {
+  nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+
+  if (observerService) {
+    observerService->NotifyObservers(nullptr, "odoh-service-activated",
+                                     aActivated ? u"true" : u"false");
+  }
   return IPC_OK();
 }
 
