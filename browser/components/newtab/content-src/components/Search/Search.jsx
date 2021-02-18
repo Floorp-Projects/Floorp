@@ -131,9 +131,8 @@ export class _Search extends React.PureComponent {
       .filter(v => v)
       .join(" ");
 
-    const isNewNewtabExperienceEnabled = this.props.Prefs.values[
-      "newNewtabExperience.enabled"
-    ];
+    const isNewNewtabExperienceEnabled = this.props.Prefs.values.featureConfig
+      .newNewtabExperienceEnabled;
 
     return (
       <div className={wrapperClassName}>
