@@ -217,8 +217,10 @@ class RemoveRenderer : public RendererEvent {
   layers::SynchronousTask* mTask;
 };
 
-TransactionBuilder::TransactionBuilder(bool aUseSceneBuilderThread)
-    : mUseSceneBuilderThread(aUseSceneBuilderThread) {
+TransactionBuilder::TransactionBuilder(WebRenderAPI* aApi,
+                                       bool aUseSceneBuilderThread)
+    : mUseSceneBuilderThread(aUseSceneBuilderThread),
+      mApiBackend(aApi->GetBackendType()) {
   mTxn = wr_transaction_new(mUseSceneBuilderThread);
 }
 
@@ -924,11 +926,14 @@ void WebRenderAPI::RunOnRenderThread(UniquePtr<RendererEvent> aEvent) {
   wr_api_send_external_event(mDocHandle, event);
 }
 
-DisplayListBuilder::DisplayListBuilder(PipelineId aId, size_t aCapacity,
+DisplayListBuilder::DisplayListBuilder(PipelineId aId,
+                                       WebRenderBackend aBackend,
+                                       size_t aCapacity,
                                        layers::DisplayItemCache* aCache)
     : mCurrentSpaceAndClipChain(wr::RootScrollNodeWithChain()),
       mActiveFixedPosTracker(nullptr),
       mPipelineId(aId),
+      mBackend(aBackend),
       mDisplayItemCache(aCache) {
   MOZ_COUNT_CTOR(DisplayListBuilder);
   mWrState = wr_state_new(aId, aCapacity);
