@@ -1592,8 +1592,6 @@ class PrintUIForm extends PrintUIControlMixin(HTMLFormElement) {
     this.querySelector("#system-print").hidden =
       AppConstants.platform === "win" && !settings.defaultSystemPrinter;
 
-    this.querySelector("#copies").hidden = settings.willSaveToFile;
-
     this.querySelector("#two-sided-printing").hidden = !settings.supportsDuplex;
   }
 
@@ -1895,6 +1893,29 @@ class OrientationInput extends PrintUIControlMixin(HTMLElement) {
   }
 }
 customElements.define("orientation-input", OrientationInput);
+
+class CopiesInput extends PrintUIControlMixin(HTMLElement) {
+  get templateId() {
+    return "copy-template";
+  }
+
+  initialize() {
+    super.initialize();
+    this._copiesSection = this.closest(".section-block");
+    this._copiesInput = this.querySelector("#copies-count");
+    this._copiesError = this.querySelector("#error-invalid-copies");
+  }
+
+  update(settings) {
+    this._copiesSection.hidden = settings.willSaveToFile;
+    this._copiesError.hidden = true;
+  }
+
+  handleEvent(e) {
+    this._copiesError.hidden = this._copiesInput.checkValidity();
+  }
+}
+customElements.define("copy-count-input", CopiesInput);
 
 class ScaleInput extends PrintUIControlMixin(HTMLElement) {
   get templateId() {
