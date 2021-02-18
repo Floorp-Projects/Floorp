@@ -13,7 +13,7 @@
 #include "nsIGfxInfo.h"
 #include "nsPersistentProperties.h"
 #include "nsServiceManagerUtils.h"
-#include "mozilla/Services.h"
+#include "mozilla/Components.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -26,7 +26,7 @@ already_AddRefed<nsIPersistentProperties>
 ApplicationAccessibleWrap::NativeAttributes() {
   RefPtr<nsPersistentProperties> attributes = new nsPersistentProperties();
 
-  nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+  nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
   if (gfxInfo) {
     bool isD2DEnabled = false;
     gfxInfo->GetD2DEnabled(&isD2DEnabled);

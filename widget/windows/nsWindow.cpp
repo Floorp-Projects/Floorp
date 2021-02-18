@@ -113,7 +113,7 @@
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "nsString.h"
-#include "mozilla/Services.h"
+#include "mozilla/Components.h"
 #include "nsNativeThemeWin.h"
 #include "nsWindowsDllInterceptor.h"
 #include "nsLayoutUtils.h"
@@ -5967,7 +5967,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_DISPLAYCHANGE: {
       ScreenHelperWin::RefreshScreens();
-      nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+      nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
       if (gfxInfo) {
         gfxInfo->RefreshMonitors();
       }
@@ -7531,7 +7531,7 @@ bool nsWindow::HasBogusPopupsDropShadowOnMultiMonitor() {
       // Otherwise check if Direct3D 9 may be used.
       if (gfxConfig::IsEnabled(gfx::Feature::HW_COMPOSITING) &&
           !gfxConfig::IsEnabled(gfx::Feature::OPENGL_COMPOSITING)) {
-        nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+        nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
         if (gfxInfo) {
           int32_t status;
           nsCString discardFailureId;
