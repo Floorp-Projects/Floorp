@@ -54,8 +54,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1173580
 <script type="application/javascript">
 
 // Scroll the mouse wheel over |element|.
-async function scrollWheelOver(element, waitForScroll) {
-  await promiseMoveMouseAndScrollWheelOver(element, 10, 10, waitForScroll);
+async function scrollWheelOver(element) {
+  await promiseMoveMouseAndScrollWheelOver(element, 10, 10, /* waitForScroll = */ false);
 }
 
 const DISPLAYPORT_EXPIRY = 100;
@@ -137,14 +137,18 @@ async function test() {
     "initially 'inner4' should not be active");
 
   // Scrolling over outer1 should activate outer1 directly, but not inner1.
-  await scrollWheelOver(document.getElementById("outer1"), true);
+  await scrollWheelOver(document.getElementById("outer1"));
+  await promiseAllPaintsDone();
+  await promiseApzRepaintsFlushed();
   ok(checkDirectActivation("outer1"),
     "scrolling 'outer1' should activate it directly");
   ok(checkInactive("inner1"),
     "scrolling 'outer1' should not cause 'inner1' to get activated");
 
   // Scrolling over inner2 should activate inner2 directly, but outer2 only ancestrally.
-  await scrollWheelOver(document.getElementById("inner2"), true);
+  await scrollWheelOver(document.getElementById("inner2"));
+  await promiseAllPaintsDone();
+  await promiseApzRepaintsFlushed();
   ok(checkDirectActivation("inner2"),
     "scrolling 'inner2' should cause it to be directly activated");
   ok(checkAncestorActivation("outer2"),
@@ -154,13 +158,17 @@ async function test() {
   // but with an iframe as the outer scrollable frame.
 
   // Scrolling over outer3 should activate outer3 directly, but not inner3.
-  await scrollWheelOver(outer3Doc.documentElement, true);
+  await scrollWheelOver(outer3Doc.documentElement);
+  await promiseAllPaintsDone();
+  await promiseApzRepaintsFlushed();
   ok(checkDirectActivation("outer3"), "scrolling 'outer3' should cause it to be directly activated");
   ok(checkInactive("inner3", outer3Doc),
     "scrolling 'outer3' should not cause 'inner3' to be activated");
 
   // Scrolling over inner4 should activate inner4 directly, but outer4 only ancestrally.
-  await scrollWheelOver(outer4Doc.getElementById("inner4"), true);
+  await scrollWheelOver(outer4Doc.getElementById("inner4"));
+  await promiseAllPaintsDone();
+  await promiseApzRepaintsFlushed();
   ok(checkDirectActivation("inner4", outer4Doc),
     "scrolling 'inner4' should cause it to be directly activated");
   ok(checkAncestorActivation("outer4"),
@@ -184,7 +192,7 @@ async function test() {
   // the displayport expiry gets triggered.
 
   // Expire displayport with scrolling on outer1
-  await scrollWheelOver(document.getElementById("outer1"), true);
+  await scrollWheelOver(document.getElementById("outer1"));
   await promiseAllPaintsDone();
   await promiseApzRepaintsFlushed();
   await SpecialPowers.promiseTimeout(DISPLAYPORT_EXPIRY);
@@ -193,7 +201,7 @@ async function test() {
   ok(checkInactive("inner1"), "inner1 is inactive after displayport expiry");
 
   // Expire displayport with scrolling on inner2
-  await scrollWheelOver(document.getElementById("inner2"), true);
+  await scrollWheelOver(document.getElementById("inner2"));
   await promiseAllPaintsDone();
   await promiseApzRepaintsFlushed();
   // Once the expiry elapses, it will trigger expiry on outer2, so we check
@@ -215,7 +223,7 @@ async function test() {
   // to restart the expiry timer because the displayport expiry got reset. There's
   // no good way that I can think of to deterministically avoid doing this.
   let inner3 = outer3Doc.getElementById("inner3");
-  await scrollWheelOver(inner3, false);
+  await scrollWheelOver(inner3);
   await promiseAllPaintsDone();
   await promiseApzRepaintsFlushed();
   let timerPromise = new Promise(resolve => {
@@ -244,7 +252,7 @@ async function test() {
 
   // Scroll outer4 and wait for the expiry. It should NOT get expired because
   // inner4 is still layerized
-  await scrollWheelOver(outer4Doc.documentElement, true);
+  await scrollWheelOver(outer4Doc.documentElement);
   await promiseAllPaintsDone();
   await promiseApzRepaintsFlushed();
   // Wait for the expiry to elapse
