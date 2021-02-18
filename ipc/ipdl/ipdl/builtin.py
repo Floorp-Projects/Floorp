@@ -61,7 +61,6 @@ HeaderIncludes = (
 CppIncludes = (
     "ipc/IPCMessageUtils.h",
     "nsIFile.h",
-    "GeckoProfiler.h",
     "mozilla/ipc/Endpoint.h",
     "mozilla/ipc/ProtocolMessageUtils.h",
     "mozilla/ipc/ProtocolUtils.h",
