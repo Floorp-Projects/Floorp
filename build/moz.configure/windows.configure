@@ -61,7 +61,6 @@ def windows_sdk_dir(value, host, compiler):
 
 @imports("os")
 @imports("re")
-@imports(_from="__builtin__", _import="sorted")
 @imports(_from="__builtin__", _import="Exception")
 def get_sdk_dirs(sdk, subdir):
     def get_dirs_containing(sdk, stem, subdir):
@@ -111,7 +110,6 @@ def valid_windows_sdk_dir_result(value):
 
 @depends(c_compiler, windows_sdk_dir, valid_windows_version, "WINDOWSSDKDIR")
 @checking("for Windows SDK", valid_windows_sdk_dir_result)
-@imports(_from="__builtin__", _import="sorted")
 @imports(_from="__builtin__", _import="Exception")
 @imports(_from="textwrap", _import="dedent")
 def valid_windows_sdk_dir(
@@ -196,7 +194,6 @@ def valid_ucrt_sdk_dir_result(value):
 @depends(windows_sdk_dir, "WINDOWSSDKDIR", c_compiler)
 @checking("for Universal CRT SDK", valid_ucrt_sdk_dir_result)
 @imports("os")
-@imports(_from="__builtin__", _import="sorted")
 @imports(_import="mozpack.path", _as="mozpath")
 def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env, compiler):
     # Ideally, we'd actually check for host/target ABI being MSVC, but

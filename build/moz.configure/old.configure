@@ -47,7 +47,6 @@ def old_configure(old_configure, build_project):
 @depends(prepare_mozconfig, old_configure_assignments)
 @imports(_from="__builtin__", _import="open")
 @imports(_from="__builtin__", _import="print")
-@imports(_from="__builtin__", _import="sorted")
 @imports(_from="mozbuild.shellutil", _import="quote")
 def prepare_configure(mozconfig, old_configure_assignments):
     with open("old-configure.vars", "w") as out:
