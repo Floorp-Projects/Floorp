@@ -2430,7 +2430,7 @@ mozilla::ipc::IPCResult ContentChild::RecvUpdateRequestedLocales(
 mozilla::ipc::IPCResult ContentChild::RecvAddPermission(
     const IPC::Permission& permission) {
   nsCOMPtr<nsIPermissionManager> permissionManagerIface =
-      services::GetPermissionManager();
+      components::PermissionManager::Service();
   PermissionManager* permissionManager =
       static_cast<PermissionManager*>(permissionManagerIface.get());
   MOZ_ASSERT(permissionManager,
@@ -2463,7 +2463,7 @@ mozilla::ipc::IPCResult ContentChild::RecvAddPermission(
 
 mozilla::ipc::IPCResult ContentChild::RecvRemoveAllPermissions() {
   nsCOMPtr<nsIPermissionManager> permissionManagerIface =
-      services::GetPermissionManager();
+      components::PermissionManager::Service();
   PermissionManager* permissionManager =
       static_cast<PermissionManager*>(permissionManagerIface.get());
   MOZ_ASSERT(permissionManager,

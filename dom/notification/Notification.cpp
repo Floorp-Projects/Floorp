@@ -1538,7 +1538,7 @@ NotificationPermission Notification::TestPermission(nsIPrincipal* aPrincipal) {
   uint32_t permission = nsIPermissionManager::UNKNOWN_ACTION;
 
   nsCOMPtr<nsIPermissionManager> permissionManager =
-      services::GetPermissionManager();
+      components::PermissionManager::Service();
   if (!permissionManager) {
     return NotificationPermission::Default;
   }
@@ -2223,7 +2223,7 @@ already_AddRefed<Notification> Notification::CreateAndShow(
 nsresult Notification::RemovePermission(nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(XRE_IsParentProcess());
   nsCOMPtr<nsIPermissionManager> permissionManager =
-      mozilla::services::GetPermissionManager();
+      mozilla::components::PermissionManager::Service();
   if (!permissionManager) {
     return NS_ERROR_FAILURE;
   }
