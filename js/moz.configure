@@ -183,7 +183,7 @@ def simulator(jit_enabled, simulator_enabled, target):
         if target.cpu != "x86_64":
             die("The %s simulator only works on x86-64." % sim_cpu)
 
-    return namespace(sim_cpu=True)
+    return namespace(**{sim_cpu: True})
 
 
 set_config("JS_SIMULATOR", depends_if(simulator)(lambda x: True))
