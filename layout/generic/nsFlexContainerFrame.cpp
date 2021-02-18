@@ -1662,12 +1662,14 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
         const auto cbWM = aAxisTracker.GetWritingMode();
         const auto itemWM = aFlexItem.GetWritingMode();
         const nscoord availISize = 0;  // for min-content size
+        StyleSizeOverrides sizeOverrides;
+        sizeOverrides.mStyleISize.emplace(StyleSize::Auto());
         const auto sizeInItemWM = aFlexItem.Frame()->ComputeSize(
             aItemReflowInput.mRenderingContext, itemWM,
             aItemReflowInput.mContainingBlockSize, availISize,
             aItemReflowInput.ComputedLogicalMargin(itemWM).Size(itemWM),
             aItemReflowInput.ComputedLogicalBorderPadding(itemWM).Size(itemWM),
-            {}, {ComputeSizeFlag::UseAutoISize, ComputeSizeFlag::ShrinkWrap});
+            sizeOverrides, {ComputeSizeFlag::ShrinkWrap});
 
         contentSizeSuggestion = aAxisTracker.MainComponent(
             sizeInItemWM.mLogicalSize.ConvertTo(cbWM, itemWM));
