@@ -220,14 +220,16 @@ class UnifiedBuildFinder(UnifiedFinder):
         if file1 and file2 and basename == "buildconfig.html":
             content1 = file1.open().readlines()
             content2 = file2.open().readlines()
-            # Copy everything from the first file up to the end of its <body>,
+            # Copy everything from the first file up to the end of its <div>,
             # insert a <hr> between the two files and copy the second file's
             # content beginning after its leading <h1>.
             return GeneratedFile(
                 b"".join(
-                    content1[: content1.index(b"</body>\n")]
-                    + [b"<hr> </hr>\n"]
-                    + content2[content2.index(b"<h1>Build Configuration</h1>\n") + 1 :]
+                    content1[: content1.index(b"    </div>\n")]
+                    + [b"      <hr> </hr>\n"]
+                    + content2[
+                        content2.index(b"      <h1>Build Configuration</h1>\n") + 1 :
+                    ]
                 )
             )
         elif file1 and file2 and basename == "install.rdf":
