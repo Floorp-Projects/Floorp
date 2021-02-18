@@ -58,6 +58,7 @@ namespace wr {
 class DisplayListBuilder;
 class RendererOGL;
 class RendererEvent;
+class WebRenderAPI;
 
 // This isn't part of WR's API, but we define it here to simplify layout's
 // logic and data plumbing.
@@ -91,7 +92,8 @@ struct WrHitResult {
 
 class TransactionBuilder final {
  public:
-  explicit TransactionBuilder(bool aUseSceneBuilderThread = true);
+  explicit TransactionBuilder(WebRenderAPI* aApi,
+                              bool aUseSceneBuilderThread = true);
 
   ~TransactionBuilder();
 
@@ -198,10 +200,12 @@ class TransactionBuilder final {
   void Clear();
 
   bool UseSceneBuilderThread() const { return mUseSceneBuilderThread; }
+  layers::WebRenderBackend GetBackendType() { return mApiBackend; }
   Transaction* Raw() { return mTxn; }
 
  protected:
   bool mUseSceneBuilderThread;
+  layers::WebRenderBackend mApiBackend;
   Transaction* mTxn;
 };
 
@@ -414,7 +418,9 @@ struct MOZ_STACK_CLASS StackingContextParams : public WrStackingContextParams {
 /// WebRenderFrameBuilder instead, so the interface may change a bit.
 class DisplayListBuilder final {
  public:
-  explicit DisplayListBuilder(wr::PipelineId aId, size_t aCapacity = 0,
+  explicit DisplayListBuilder(wr::PipelineId aId,
+                              layers::WebRenderBackend aBackend,
+                              size_t aCapacity = 0,
                               layers::DisplayItemCache* aCache = nullptr);
   DisplayListBuilder(DisplayListBuilder&&) = default;
 
@@ -649,6 +655,7 @@ class DisplayListBuilder final {
   }
 
   const wr::PipelineId& CurrentPipelineId() const { return mPipelineId; }
+  layers::WebRenderBackend GetBackendType() const { return mBackend; }
 
   // Checks to see if the innermost enclosing fixed pos item has the same
   // ASR. If so, it returns the scroll target for that fixed-pos item.
@@ -731,6 +738,7 @@ class DisplayListBuilder final {
   FixedPosScrollTargetTracker* mActiveFixedPosTracker;
 
   wr::PipelineId mPipelineId;
+  layers::WebRenderBackend mBackend;
   wr::LayoutSize mContentSize;
 
   nsTArray<wr::PipelineId> mRemotePipelineIds;
