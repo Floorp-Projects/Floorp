@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_GFX_RENDERSHAREDSURFACETEXTUREHOST_H
-#define MOZILLA_GFX_RENDERSHAREDSURFACETEXTUREHOST_H
+#ifndef MOZILLA_GFX_RENDERSHAREDSURFACETEXTUREHOSTSWGL_H
+#define MOZILLA_GFX_RENDERSHAREDSURFACETEXTUREHOSTSWGL_H
 
-#include "RenderTextureHost.h"
+#include "RenderTextureHostSWGL.h"
 
 namespace mozilla {
 namespace gfx {
@@ -21,25 +21,32 @@ namespace wr {
  * into the render texture cache by wrapping an existing surface wrapper. These
  * surfaces are backed by BGRA/X shared memory buffers.
  */
-class RenderSharedSurfaceTextureHost final : public RenderTextureHost {
+class RenderSharedSurfaceTextureHostSWGL final : public RenderTextureHostSWGL {
  public:
-  explicit RenderSharedSurfaceTextureHost(
+  explicit RenderSharedSurfaceTextureHostSWGL(
       gfx::SourceSurfaceSharedDataWrapper* aSurface);
 
-  wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
-                           wr::ImageRendering aRendering) override;
-  void Unlock() override;
-  size_t Bytes() override;
+  size_t GetPlaneCount() const override;
+
+  gfx::SurfaceFormat GetFormat() const override;
+
+  gfx::ColorDepth GetColorDepth() const override;
+
+  bool MapPlane(RenderCompositor* aCompositor, uint8_t aChannelIndex,
+                PlaneInfo& aPlaneInfo) override;
+
+  void UnmapPlanes() override;
+
+  size_t Bytes() override { return BytesFromPlanes(); }
 
  private:
-  virtual ~RenderSharedSurfaceTextureHost();
+  virtual ~RenderSharedSurfaceTextureHostSWGL();
 
   RefPtr<gfx::SourceSurfaceSharedDataWrapper> mSurface;
   gfx::DataSourceSurface::MappedSurface mMap;
-  bool mLocked;
 };
 
 }  // namespace wr
 }  // namespace mozilla
 
-#endif  // MOZILLA_GFX_RENDERSHAREDSURFACETEXTUREHOST_H
+#endif  // MOZILLA_GFX_RENDERSHAREDSURFACETEXTUREHOSTSWGL_H

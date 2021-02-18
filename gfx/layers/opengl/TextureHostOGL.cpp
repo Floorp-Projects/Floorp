@@ -673,7 +673,7 @@ void SurfaceTextureHost::PushResourceUpdates(
                     ? &wr::TransactionBuilder::AddExternalImage
                     : &wr::TransactionBuilder::UpdateExternalImage;
 
-  auto imageType = aResources.GetBackendType() == WebRenderBackend::SOFTWARE
+  auto imageType = gfx::gfxVars::UseSoftwareWebRender()
                        ? wr::ExternalImageType::TextureHandle(
                              wr::ImageBufferKind::TextureRect)
                        : wr::ExternalImageType::TextureHandle(
@@ -707,8 +707,10 @@ void SurfaceTextureHost::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
                                           PushDisplayItemFlagSet aFlags) {
   bool preferCompositorSurface =
       aFlags.contains(PushDisplayItemFlag::PREFER_COMPOSITOR_SURFACE);
-  bool supportsExternalCompositing =
-      SupportsExternalCompositing(aBuilder.GetBackendType());
+  bool supportsExternalCompositing = false;
+  if (gfx::gfxVars::UseSoftwareWebRender()) {
+    supportsExternalCompositing = true;
+  }
 
   switch (GetFormat()) {
     case gfx::SurfaceFormat::R8G8B8X8:
