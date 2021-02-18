@@ -339,8 +339,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
   size_t preallocate =
       mLastDisplayListSize < kMaxPrealloc ? mLastDisplayListSize : kMaxPrealloc;
 
-  wr::DisplayListBuilder builder(WrBridge()->GetPipeline(),
-                                 WrBridge()->WebRenderBackend(), preallocate,
+  wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), preallocate,
                                  &mDisplayItemCache);
 
   wr::IpcResourceUpdateQueue resourceUpdates(WrBridge());

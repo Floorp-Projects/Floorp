@@ -269,12 +269,11 @@ void GPUVideoTextureHost::PushDisplayItems(
                                                aFilter, aImageKeys, aFlags);
 }
 
-bool GPUVideoTextureHost::SupportsExternalCompositing(
-    WebRenderBackend aBackend) {
+bool GPUVideoTextureHost::SupportsExternalCompositing() {
   if (!EnsureWrappedTextureHost()) {
     return false;
   }
-  return EnsureWrappedTextureHost()->SupportsExternalCompositing(aBackend);
+  return EnsureWrappedTextureHost()->SupportsExternalCompositing();
 }
 
 void GPUVideoTextureHost::UnbindTextureSource() {

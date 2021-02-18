@@ -1795,7 +1795,7 @@ PWebRenderBridgeParent* CompositorBridgeParent::AllocPWebRenderBridgeParent(
     return mWrBridge;
   }
 
-  wr::TransactionBuilder txn(api);
+  wr::TransactionBuilder txn;
   txn.SetRootPipeline(aPipelineId);
   api->SendTransaction(txn);
 
