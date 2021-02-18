@@ -206,7 +206,7 @@ add_task(async function tip_onResultPicked_helpButton_url_mouse() {
       waitForFocus,
       value: "test",
     });
-    let helpButton = gURLBar.querySelector(".urlbarView-tip-help");
+    let helpButton = gURLBar.querySelector(".urlbarView-help");
     Assert.ok(helpButton);
     let loadedPromise = BrowserTestUtils.browserLoaded(
       gBrowser.selectedBrowser
