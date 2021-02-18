@@ -15,7 +15,7 @@ module.exports = async function({ targetList, targetFront, onAvailable }) {
   // the context of the browser toolbox as we inspect messages via the process
   // targets
   // Also ignore workers as they are not supported yet. (see bug 1592584)
-  const listenForFrames = targetList.targetFront.isLocalTab;
+  const listenForFrames = targetList.descriptorFront.isLocalTab;
   const isAllowed =
     targetFront.isTopLevel ||
     targetFront.targetType === targetList.TYPES.PROCESS ||

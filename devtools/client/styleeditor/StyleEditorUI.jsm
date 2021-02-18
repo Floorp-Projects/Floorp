@@ -1036,7 +1036,7 @@ StyleEditorUI.prototype = {
         if (!rule.matches) {
           cond.classList.add("media-condition-unmatched");
         }
-        if (this.currentTarget.isLocalTab) {
+        if (this._toolbox.descriptorFront.isLocalTab) {
           this._setConditionContents(cond, rule.conditionText);
         } else {
           cond.textContent = rule.conditionText;

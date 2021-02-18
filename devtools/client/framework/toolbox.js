@@ -1699,7 +1699,7 @@ Toolbox.prototype = {
    * the host changes.
    */
   _buildDockOptions: function() {
-    if (!this.target.isLocalTab) {
+    if (!this.descriptorFront.isLocalTab) {
       this.component.setDockOptionsEnabled(false);
       this.component.setCanCloseToolbox(false);
       return;
@@ -3258,7 +3258,7 @@ Toolbox.prototype = {
    *        The host type of the new host object
    */
   switchHost: function(hostType) {
-    if (hostType == this.hostType || !this.target.isLocalTab) {
+    if (hostType == this.hostType || !this.descriptorFront.isLocalTab) {
       return null;
     }
 
