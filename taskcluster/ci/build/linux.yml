@@ -1373,7 +1373,6 @@ linux64-aarch64/opt:
         tier: 2
     worker-type: b-linux
     worker:
-        docker-image: {in-tree: debian10-arm64-build}
         max-run-time: 7200
     run:
         using: mozharness
@@ -1401,6 +1400,7 @@ linux64-aarch64/opt:
             - linux64-sccache
             - linux64-node
             - linux64-lucetc
+            - linux64-aarch64-sysroot
             - wasi-sysroot
     optimization:
         skip-unless-expanded: null
