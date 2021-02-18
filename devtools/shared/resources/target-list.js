@@ -262,7 +262,7 @@ class TargetList extends EventEmitter {
       if (fissionBrowserToolboxEnabled) {
         types = TargetList.ALL_TYPES;
       }
-    } else if (this.targetFront.isLocalTab) {
+    } else if (this.descriptorFront.isLocalTab) {
       types = [TargetList.TYPES.FRAME];
     }
     if (this.listenForWorkers && !types.includes(TargetList.TYPES.WORKER)) {
