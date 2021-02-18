@@ -8,7 +8,6 @@
 LOCAL_INCLUDES += ["/xpcom/build"]
 
 BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
-MOCHITEST_CHROME_MANIFESTS += ["test/chrome.ini"]
 XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 
 JAR_MANIFESTS += ["jar.mn"]
