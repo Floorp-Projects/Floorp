@@ -8,7 +8,7 @@
 
 #include "mozilla/Base64.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Services.h"
+#include "mozilla/Components.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/PushManagerBinding.h"
 #include "mozilla/dom/PushSubscription.h"
@@ -38,7 +38,7 @@ namespace {
 nsresult GetPermissionState(nsIPrincipal* aPrincipal,
                             PushPermissionState& aState) {
   nsCOMPtr<nsIPermissionManager> permManager =
-      mozilla::services::GetPermissionManager();
+      mozilla::components::PermissionManager::Service();
 
   if (!permManager) {
     return NS_ERROR_FAILURE;
