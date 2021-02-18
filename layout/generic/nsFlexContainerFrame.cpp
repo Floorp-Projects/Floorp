@@ -3201,8 +3201,8 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
             availableFreeSpace -= sizeDelta;
 
             item.SetMainSize(item.MainSize() + sizeDelta);
-            FLEX_LOG("  child %p receives %d, for a total of %d", &item,
-                     sizeDelta, item.MainSize());
+            FLEX_LOG("  flex item %p receives %d, for a total of %d",
+                     item.Frame(), sizeDelta, item.MainSize());
           }
         }
 
