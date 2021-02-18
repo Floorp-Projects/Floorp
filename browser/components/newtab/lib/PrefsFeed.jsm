@@ -162,9 +162,6 @@ this.PrefsFeed = class PrefsFeed {
 
     // Add experiment values and default values
     values.featureConfig = aboutNewTabFeature.getValue() || {};
-
-    this._setBoolPref(values, "newNewtabExperience.enabled", false);
-    this._setBoolPref(values, "customizationMenu.enabled", false);
     this._setBoolPref(values, "logowordmark.alwaysVisible", false);
     this._setBoolPref(values, "feeds.section.topstories", false);
     this._setBoolPref(values, "discoverystream.enabled", false);

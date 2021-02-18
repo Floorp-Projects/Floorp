@@ -7,6 +7,9 @@ const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 const { actionCreators: ac, actionTypes: at } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
 );
@@ -20,12 +23,23 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/PlacesUtils.jsm"
 );
 
+XPCOMUtils.defineLazyGetter(this, "aboutNewTabFeature", () => {
+  const { ExperimentFeature } = ChromeUtils.import(
+    "resource://messaging-system/experiments/ExperimentAPI.jsm"
+  );
+
+  return new ExperimentFeature("newtab");
+});
+
 /*
  * Generators for built in sections, keyed by the pref name for their feed.
  * Built in sections may depend on options stored as serialised JSON in the pref
  * `${feed_pref_name}.options`.
  */
-const BUILT_IN_SECTIONS = {
+const BUILT_IN_SECTIONS = ({
+  newNewtabExperienceEnabled,
+  customizationMenuEnabled,
+}) => ({
   "feeds.section.topstories": options => ({
     id: "topstories",
     pref: {
@@ -35,12 +49,7 @@ const BUILT_IN_SECTIONS = {
       },
       descString: {
         id:
-          Services.prefs.getBoolPref(
-            "browser.newtabpage.activity-stream.newNewtabExperience.enabled"
-          ) ||
-          Services.prefs.getBoolPref(
-            "browser.newtabpage.activity-stream.customizationMenu.enabled"
-          )
+          newNewtabExperienceEnabled || customizationMenuEnabled
             ? "home-prefs-recommended-by-description-new"
             : "home-prefs-recommended-by-description-update",
         values: { provider: options.provider_name },
@@ -104,23 +113,13 @@ const BUILT_IN_SECTIONS = {
     pref: {
       titleString: {
         id:
-          Services.prefs.getBoolPref(
-            "browser.newtabpage.activity-stream.newNewtabExperience.enabled"
-          ) ||
-          Services.prefs.getBoolPref(
-            "browser.newtabpage.activity-stream.customizationMenu.enabled"
-          )
+          newNewtabExperienceEnabled || customizationMenuEnabled
             ? "home-prefs-recent-activity-header"
             : "home-prefs-highlights-header",
       },
       descString: {
         id:
-          Services.prefs.getBoolPref(
-            "browser.newtabpage.activity-stream.newNewtabExperience.enabled"
-          ) ||
-          Services.prefs.getBoolPref(
-            "browser.newtabpage.activity-stream.customizationMenu.enabled"
-          )
+          newNewtabExperienceEnabled || customizationMenuEnabled
             ? "home-prefs-recent-activity-description"
             : "home-prefs-highlights-description",
       },
@@ -152,12 +151,7 @@ const BUILT_IN_SECTIONS = {
     icon: "highlights",
     title: {
       id:
-        Services.prefs.getBoolPref(
-          "browser.newtabpage.activity-stream.newNewtabExperience.enabled"
-        ) ||
-        Services.prefs.getBoolPref(
-          "browser.newtabpage.activity-stream.customizationMenu.enabled"
-        )
+        newNewtabExperienceEnabled || customizationMenuEnabled
           ? "newtab-section-header-recent-activity"
           : "newtab-section-header-highlights",
     },
@@ -170,7 +164,7 @@ const BUILT_IN_SECTIONS = {
     },
     shouldSendImpressionStats: false,
   }),
-};
+});
 
 const SectionsManager = {
   ACTIONS_TO_PROXY: ["WEBEXT_CLICK", "WEBEXT_DISMISS"],
@@ -220,8 +214,9 @@ const SectionsManager = {
   sections: new Map(),
   async init(prefs = {}, storage) {
     this._storage = storage;
+    const featureConfig = aboutNewTabFeature.getValue() || {};
 
-    for (const feedPrefName of Object.keys(BUILT_IN_SECTIONS)) {
+    for (const feedPrefName of Object.keys(BUILT_IN_SECTIONS(featureConfig))) {
       const optionsPrefName = `${feedPrefName}.options`;
       await this.addBuiltInSection(feedPrefName, prefs[optionsPrefName]);
 
@@ -268,6 +263,7 @@ const SectionsManager = {
   async addBuiltInSection(feedPrefName, optionsPrefValue = "{}") {
     let options;
     let storedPrefs;
+    const featureConfig = aboutNewTabFeature.getValue() || {};
     try {
       options = JSON.parse(optionsPrefValue);
     } catch (e) {
@@ -280,7 +276,9 @@ const SectionsManager = {
       storedPrefs = {};
       Cu.reportError(`Problem getting stored prefs for ${feedPrefName}`);
     }
-    const defaultSection = BUILT_IN_SECTIONS[feedPrefName](options);
+    const defaultSection = BUILT_IN_SECTIONS(featureConfig)[feedPrefName](
+      options
+    );
     const section = Object.assign({}, defaultSection, {
       pref: Object.assign(
         {},

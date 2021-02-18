@@ -2,6 +2,7 @@
 
 const ABOUT_WELCOME_OVERRIDE_CONTENT_PREF =
   "browser.aboutwelcome.overrideContent";
+const ABOUT_WELCOME_FOCUS_PREF = "browser.aboutwelcome.skipFocus";
 
 const TEST_MULTISTAGE_JSON = {
   id: "multi-stage-welcome",
@@ -86,8 +87,9 @@ add_task(async function test_multistage_without_skipFocus() {
 
 add_task(async function test_multistage_with_skipFocus() {
   await setAboutWelcomeOverrideContent(
-    JSON.stringify({ ...TEST_MULTISTAGE_JSON, skipFocus: true })
+    JSON.stringify({ ...TEST_MULTISTAGE_JSON })
   );
+  await pushPrefs([ABOUT_WELCOME_FOCUS_PREF, true]);
   let win = await openAboutWelcomeBrowserWindow();
   Assert.ok(!win.gURLBar.focused, "Focus should not be on awesome bar");
   Assert.ok(

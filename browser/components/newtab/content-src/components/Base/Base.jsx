@@ -189,8 +189,8 @@ export class BaseContent extends React.PureComponent {
       !pocketEnabled &&
       filteredSections.filter(section => section.enabled).length === 0;
     const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
-    const customizationMenuEnabled = prefs["customizationMenu.enabled"];
-    const newNewtabExperienceEnabled = prefs["newNewtabExperience.enabled"];
+    const { customizationMenuEnabled, newNewtabExperienceEnabled } =
+      prefs.featureConfig || {};
     const canShowCustomizationMenu =
       customizationMenuEnabled || newNewtabExperienceEnabled;
     const showCustomizationMenu =
