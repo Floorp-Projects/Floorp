@@ -16,7 +16,7 @@
 #include "nsEnumeratorUtils.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/Services.h"
+#include "mozilla/Components.h"
 #include "WidgetUtils.h"
 #include "nsSimpleEnumerator.h"
 #include "nsThreadUtils.h"
@@ -173,7 +173,7 @@ nsBaseFilePicker::Open(nsIFilePickerShownCallback* aCallback) {
 NS_IMETHODIMP
 nsBaseFilePicker::AppendFilters(int32_t aFilterMask) {
   nsCOMPtr<nsIStringBundleService> stringService =
-      mozilla::services::GetStringBundleService();
+      mozilla::components::StringBundle::Service();
   if (!stringService) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIStringBundle> titleBundle, filterBundle;

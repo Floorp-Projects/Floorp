@@ -18,7 +18,7 @@
 #include "nsDocElementCreatedNotificationRunner.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/Services.h"
+#include "mozilla/Components.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIPrincipal.h"
 #include "nsIMultiPartChannel.h"
@@ -319,7 +319,7 @@ void MediaDocument::FormatStringFromName(const char* aName,
   if (!spoofLocale) {
     if (!mStringBundle) {
       nsCOMPtr<nsIStringBundleService> stringService =
-          mozilla::services::GetStringBundleService();
+          mozilla::components::StringBundle::Service();
       if (stringService) {
         stringService->CreateBundle(NSMEDIADOCUMENT_PROPERTIES_URI,
                                     getter_AddRefs(mStringBundle));
@@ -331,7 +331,7 @@ void MediaDocument::FormatStringFromName(const char* aName,
   } else {
     if (!mStringBundleEnglish) {
       nsCOMPtr<nsIStringBundleService> stringService =
-          mozilla::services::GetStringBundleService();
+          mozilla::components::StringBundle::Service();
       if (stringService) {
         stringService->CreateBundle(NSMEDIADOCUMENT_PROPERTIES_URI_en_US,
                                     getter_AddRefs(mStringBundleEnglish));

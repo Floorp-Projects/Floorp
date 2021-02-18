@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 
+#include "mozilla/Components.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
 
@@ -3295,7 +3296,7 @@ nsICollation* nsNavHistory::GetCollation() {
 nsIStringBundle* nsNavHistory::GetBundle() {
   if (!mBundle) {
     nsCOMPtr<nsIStringBundleService> bundleService =
-        services::GetStringBundleService();
+        components::StringBundle::Service();
     NS_ENSURE_TRUE(bundleService, nullptr);
     nsresult rv = bundleService->CreateBundle(
         "chrome://places/locale/places.properties", getter_AddRefs(mBundle));

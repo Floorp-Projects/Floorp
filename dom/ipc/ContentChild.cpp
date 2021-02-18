@@ -2337,7 +2337,7 @@ mozilla::ipc::IPCResult ContentChild::RecvAsyncMessage(
 mozilla::ipc::IPCResult ContentChild::RecvRegisterStringBundles(
     nsTArray<mozilla::dom::StringBundleDescriptor>&& aDescriptors) {
   nsCOMPtr<nsIStringBundleService> stringBundleService =
-      services::GetStringBundleService();
+      components::StringBundle::Service();
 
   for (auto& descriptor : aDescriptors) {
     stringBundleService->RegisterContentBundle(
