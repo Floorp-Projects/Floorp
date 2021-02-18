@@ -47,6 +47,7 @@ startup-timeline:
     - https://github.com/mozilla-mobile/fenix/issues/17972
   data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626
+    - https://github.com/mozilla-mobile/fenix/pull/18043#issue-575389284
   notification_emails:
     - perf-android-fe@mozilla.com
     - mcomella@mozilla.com

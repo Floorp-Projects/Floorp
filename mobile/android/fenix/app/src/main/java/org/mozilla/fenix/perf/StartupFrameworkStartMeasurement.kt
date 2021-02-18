@@ -54,20 +54,30 @@ internal class StartupFrameworkStartMeasurement(
         if (applicationInitNanos < 0) {
             telemetry.frameworkStartError.set(true)
         } else {
+            val clockTicksPerSecond = stat.clockTicksPerSecond.also {
+                // framework* is derived from the number of clock ticks per second. To ensure this
+                // value does not throw off our result, we capture it too.
+                telemetry.clockTicksPerSecond.add(it.toInt())
+            }
+
+            // In our brief analysis, clock ticks per second was overwhelmingly equal to 100. To make
+            // analysis easier in GLAM, we split the results into two separate metrics. See the
+            // metric descriptions for more details.
+            @Suppress("MagicNumber") // it's more confusing to separate the comment above from the value declaration.
+            val durationMetric =
+                if (clockTicksPerSecond == 100L) telemetry.frameworkPrimary else telemetry.frameworkSecondary
+
             try {
-                telemetry.frameworkStart.setRawNanos(getFrameworkStartNanos())
+                durationMetric.setRawNanos(getFrameworkStartNanos())
             } catch (e: FileNotFoundException) {
                 // Privacy managers can add hooks that block access to reading system /proc files.
                 // We want to catch these exception and report an error on accessing the file
                 // rather than an implementation error.
                 telemetry.frameworkStartReadError.set(true)
             }
-
-            // frameworkStart is derived from the number of clock ticks per second. To ensure this
-            // value does not throw off our result, we capture it too.
-            telemetry.clockTicksPerSecond.add(stat.clockTicksPerSecond.toInt())
         }
     }
+
     /**
      * @throws [java.io.FileNotFoundException]
      */

@@ -346,26 +346,34 @@ The following metrics are added to the ping:
 
 This ping is intended to provide an understanding of startup performance.
 
-The ping is intended to be captured by performance testing automation to
-report results there, in addition to user telemetry. We place these metrics
-into their own ping in order to isolate them and make this process easier.
+In addition to being captured on real devices, the ping data was prematurely
+optimized into this separate ping to be isolated from other metrics to be
+more easily captured by performance testing automation but that hasn't
+happened in practice. We would have removed it but implementation
+details don't make that possible:
+https://github.com/mozilla-mobile/fenix/issues/17972#issuecomment-781002987
 
+
+This ping includes the [client id](https://mozilla.github.io/glean/book/user/pings/index.html#the-client_info-section).
 
 **Data reviews for this ping:**
 
 - <https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626>
+- <https://github.com/mozilla-mobile/fenix/pull/18043#issue-575389284>
 
 **Bugs related to this ping:**
 
 - <https://github.com/mozilla-mobile/fenix/issues/8803>
+- <https://github.com/mozilla-mobile/fenix/issues/17972>
 
 The following metrics are added to the ping:
 
 | Name | Type | Description | Data reviews | Extras | Expiration | [Data Sensitivity](https://wiki.mozilla.org/Firefox/Data_Collection) |
 | --- | --- | --- | --- | --- | --- | --- |
 | startup.timeline.clock_ticks_per_second |[counter](https://mozilla.github.io/glean/book/user/metrics/counter.html) |The number of clock tick time units that occur in one second on this particular device. This value is expected to be used in conjunction with the `framework_start` metric.  |[1](https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626), [2](https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068)||2021-08-01 |1 |
-| startup.timeline.framework_start |[timespan](https://mozilla.github.io/glean/book/user/metrics/timespan.html) |The duration the Android framework takes to start before letting us run code in `*Application.init`. This is calculated from `appInitTimestamp - processStartTimestamp`. `processStartTimestamp` is derived from the clock tick time unit, which is expected to be less granular than nanoseconds. Therefore, we convert and round our timestamps to clock ticks before computing the difference and convert back to nanoseconds to report.  For debugging purposes, `clock_ticks_per_second`, which may vary between devices, is also reported as a metric  |[1](https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626), [2](https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068)||2021-08-01 |1 |
-| startup.timeline.framework_start_error |[boolean](https://mozilla.github.io/glean/book/user/metrics/boolean.html) |An error when attempting to record `framework_start` - the application init timestamp returned a negative value - which is likely indicative of a bug in the implementation.  |[1](https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626), [2](https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068)||2021-08-01 |1 |
+| startup.timeline.framework_primary |[timespan](https://mozilla.github.io/glean/book/user/metrics/timespan.html) |The duration the Android framework takes to start before letting us run code in `*Application.init` when this device has `clock_ticks_per_second` equal to 100: if it's not equal to 100, then this value is captured in `framework_secondary`. We split this into two metrics to make it easier to analyze in GLAM. We split on 100 because when we did our initial brief analysis - https://sql.telemetry.mozilla.org/queries/75591 - the results for clocks ticks were overwhelmingly 100.  The duration is calculated from `appInitTimestamp - processStartTimestamp`. `processStartTimestamp` is derived from the clock tick time unit, which is expected to be less granular than nanoseconds. Therefore, we convert and round our timestamps to clock ticks before computing the difference and convert back to nanoseconds to report.  For debugging purposes, `clock_ticks_per_second`, which may vary between devices, is also reported as a metric  |[1](https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626), [2](https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068), [3](https://github.com/mozilla-mobile/fenix/pull/18043#issue-575389284)||2021-08-01 |1 |
+| startup.timeline.framework_secondary |[timespan](https://mozilla.github.io/glean/book/user/metrics/timespan.html) |The duration the Android framework takes to start before letting us run code in `*Application.init` when this device has `clock_ticks_per_second` not equal to 100. For more details on this metric, see `framework_primary`  |[1](https://github.com/mozilla-mobile/fenix/pull/18043#issue-575389284)||2021-08-01 |1 |
+| startup.timeline.framework_start_error |[boolean](https://mozilla.github.io/glean/book/user/metrics/boolean.html) |An error when attempting to record `framework_primary/secondary` - the application init timestamp returned a negative value - which is likely indicative of a bug in the implementation.  |[1](https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626), [2](https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068)||2021-08-01 |1 |
 | startup.timeline.framework_start_read_error |[boolean](https://mozilla.github.io/glean/book/user/metrics/boolean.html) |An error when attempting to read stats from /proc pseudo-filesystem - privacy managers can block access to reading these files - the application will catch a file reading exception.  |[1](https://github.com/mozilla-mobile/fenix/pull/10481), [2](https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068)||2021-08-01 |1 |
 
 

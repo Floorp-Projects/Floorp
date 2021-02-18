@@ -3878,14 +3878,21 @@ addons:
     expires: "2021-04-01"
 
 startup.timeline:
-  framework_start:
+  framework_primary:
     send_in_pings:
       - startup-timeline
     type: timespan
-    time_unit: nanosecond
+    time_unit: millisecond
     description: |
       The duration the Android framework takes to start before letting us run
-      code in `*Application.init`. This is calculated from `appInitTimestamp -
+      code in `*Application.init` when this device has `clock_ticks_per_second`
+      equal to 100: if it's not equal to 100, then this value is captured in
+      `framework_secondary`. We split this into two metrics to make it easier
+      to analyze in GLAM. We split on 100 because when we did our initial brief
+      analysis - https://sql.telemetry.mozilla.org/queries/75591 - the results
+      for clocks ticks were overwhelmingly 100.
+
+      The duration is calculated from `appInitTimestamp -
       processStartTimestamp`. `processStartTimestamp` is derived from the clock
       tick time unit, which is expected to be less granular than nanoseconds.
       Therefore, we convert and round our timestamps to clock ticks before
@@ -3895,9 +3902,30 @@ startup.timeline:
       devices, is also reported as a metric
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/8803
+      - https://github.com/mozilla-mobile/fenix/issues/17972
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/9788#pullrequestreview-394228626
       - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
+      - https://github.com/mozilla-mobile/fenix/pull/18043#issue-575389284
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - perf-android-fe@mozilla.com
+      - mcomella@mozilla.com
+    expires: "2021-08-01"
+  framework_secondary:
+    send_in_pings:
+      - startup-timeline
+    type: timespan
+    time_unit: millisecond
+    description: |
+      The duration the Android framework takes to start before letting us run
+      code in `*Application.init` when this device has `clock_ticks_per_second`
+      not equal to 100. For more details on this metric, see `framework_primary`
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/17972
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18043#issue-575389284
     data_sensitivity:
       - technical
     notification_emails:
@@ -3909,9 +3937,9 @@ startup.timeline:
       - startup-timeline
     type: boolean
     description: |
-      An error when attempting to record `framework_start` - the application
-      init timestamp returned a negative value - which is likely indicative of a
-      bug in the implementation.
+      An error when attempting to record `framework_primary/secondary` - the
+      application init timestamp returned a negative value - which is likely
+      indicative of a bug in the implementation.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/8803
     data_reviews:
