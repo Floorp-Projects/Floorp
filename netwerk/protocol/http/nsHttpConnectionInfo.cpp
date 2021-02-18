@@ -138,11 +138,12 @@ void nsHttpConnectionInfo::BuildHashKey() {
   // byte 4 is I/. I is for insecure scheme on TLS for http:// uris
   // byte 5 is X/. X is for disallow_spdy flag
   // byte 6 is C/. C is for be Conservative
+  // byte 7 is B/. B is for allowing client certs on an anonymous channel
   // Note: when adding/removing fields from this list which do not have
   // corresponding data fields on the object itself, you may also need to
   // modify RebuildHashKey.
 
-  mHashKey.AssignLiteral(".......[tlsflags0x00000000]");
+  mHashKey.AssignLiteral("........[tlsflags0x00000000]");
 
   mHashKey.Append(keyHost);
   mHashKey.Append(':');
@@ -255,6 +256,7 @@ void nsHttpConnectionInfo::RebuildHashKey() {
   bool isInsecureScheme = GetInsecureScheme();
   bool isNoSpdy = GetNoSpdy();
   bool isBeConservative = GetBeConservative();
+  bool isAnonymousAllowClientCert = GetAnonymousAllowClientCert();
 
   BuildHashKey();
 
@@ -264,6 +266,7 @@ void nsHttpConnectionInfo::RebuildHashKey() {
   SetInsecureScheme(isInsecureScheme);
   SetNoSpdy(isNoSpdy);
   SetBeConservative(isBeConservative);
+  SetAnonymousAllowClientCert(isAnonymousAllowClientCert);
 }
 
 void nsHttpConnectionInfo::SetOriginServer(const nsACString& host,
@@ -298,6 +301,7 @@ already_AddRefed<nsHttpConnectionInfo> nsHttpConnectionInfo::Clone() const {
   clone->SetInsecureScheme(GetInsecureScheme());
   clone->SetNoSpdy(GetNoSpdy());
   clone->SetBeConservative(GetBeConservative());
+  clone->SetAnonymousAllowClientCert(GetAnonymousAllowClientCert());
   clone->SetTlsFlags(GetTlsFlags());
   clone->SetIsTrrServiceChannel(GetIsTrrServiceChannel());
   clone->SetTRRMode(GetTRRMode());
@@ -350,6 +354,7 @@ nsHttpConnectionInfo::CloneAndAdoptHTTPSSVCRecord(
   clone->SetInsecureScheme(GetInsecureScheme());
   clone->SetNoSpdy(GetNoSpdy());
   clone->SetBeConservative(GetBeConservative());
+  clone->SetAnonymousAllowClientCert(GetAnonymousAllowClientCert());
   clone->SetTlsFlags(GetTlsFlags());
   clone->SetIsTrrServiceChannel(GetIsTrrServiceChannel());
   clone->SetTRRMode(GetTRRMode());
@@ -385,6 +390,7 @@ void nsHttpConnectionInfo::SerializeHttpConnectionInfo(
   aArgs.insecureScheme() = aInfo->GetInsecureScheme();
   aArgs.noSpdy() = aInfo->GetNoSpdy();
   aArgs.beConservative() = aInfo->GetBeConservative();
+  aArgs.anonymousAllowClientCert() = aInfo->GetAnonymousAllowClientCert();
   aArgs.tlsFlags() = aInfo->GetTlsFlags();
   aArgs.isTrrServiceChannel() = aInfo->GetTRRMode();
   aArgs.trrMode() = aInfo->GetTRRMode();
@@ -429,6 +435,7 @@ nsHttpConnectionInfo::DeserializeHttpConnectionInfoCloneArgs(
   cinfo->SetInsecureScheme(aInfoArgs.insecureScheme());
   cinfo->SetNoSpdy(aInfoArgs.noSpdy());
   cinfo->SetBeConservative(aInfoArgs.beConservative());
+  cinfo->SetAnonymousAllowClientCert(aInfoArgs.anonymousAllowClientCert());
   cinfo->SetTlsFlags(aInfoArgs.tlsFlags());
   cinfo->SetIsTrrServiceChannel(aInfoArgs.isTrrServiceChannel());
   cinfo->SetTRRMode(static_cast<nsIRequest::TRRMode>(aInfoArgs.trrMode()));
@@ -453,6 +460,7 @@ void nsHttpConnectionInfo::CloneAsDirectRoute(nsHttpConnectionInfo** outCI) {
   clone->SetInsecureScheme(GetInsecureScheme());
   clone->SetNoSpdy(GetNoSpdy());
   clone->SetBeConservative(GetBeConservative());
+  clone->SetAnonymousAllowClientCert(GetAnonymousAllowClientCert());
   clone->SetTlsFlags(GetTlsFlags());
   clone->SetIsTrrServiceChannel(GetIsTrrServiceChannel());
   clone->SetTRRMode(GetTRRMode());
@@ -507,7 +515,7 @@ void nsHttpConnectionInfo::SetIPv6Disabled(bool aNoIPv6) {
 void nsHttpConnectionInfo::SetTlsFlags(uint32_t aTlsFlags) {
   mTlsFlags = aTlsFlags;
 
-  mHashKey.Replace(18, 8, nsPrintfCString("%08x", mTlsFlags));
+  mHashKey.Replace(19, 8, nsPrintfCString("%08x", mTlsFlags));
 }
 
 bool nsHttpConnectionInfo::UsingProxy() {
