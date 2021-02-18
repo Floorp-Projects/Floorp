@@ -31,7 +31,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/SandboxReporter.h"
 #include "mozilla/SandboxSettings.h"
-#include "mozilla/Services.h"
+#include "mozilla/Components.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/Unused.h"
@@ -137,7 +137,7 @@ static bool IsDisplayLocal() {
 }
 
 bool HasAtiDrivers() {
-  nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+  nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
   nsAutoString vendorID;
   static const Array<nsresult (nsIGfxInfo::*)(nsAString&), 2> kMethods = {
       &nsIGfxInfo::GetAdapterVendorID,

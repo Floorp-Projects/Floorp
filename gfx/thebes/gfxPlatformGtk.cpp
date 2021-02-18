@@ -26,6 +26,7 @@
 #include "gfxTextRun.h"
 #include "GLContextProvider.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/Components.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"
@@ -111,7 +112,7 @@ gfxPlatformGtk::gfxPlatformGtk() {
     useEGLOnX11 =
         StaticPrefs::gfx_prefer_x11_egl_AtStartup() || IsX11EGLEnvvarEnabled();
     if (useEGLOnX11) {
-      nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+      nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
       nsAutoString testType;
       gfxInfo->GetTestType(testType);
       // We can only use X11/EGL if we actually found the EGL library and
@@ -123,7 +124,7 @@ gfxPlatformGtk::gfxPlatformGtk() {
     if (IsWaylandDisplay() || useEGLOnX11) {
       gfxVars::SetUseEGL(true);
 
-      nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+      nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
       nsAutoCString drmRenderDevice;
       gfxInfo->GetDrmRenderDevice(drmRenderDevice);
       gfxVars::SetDrmRenderDevice(drmRenderDevice);
@@ -732,7 +733,7 @@ already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
   if (gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
     bool useGlxVsync = false;
 
-    nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+    nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
     nsString adapterDriverVendor;
     gfxInfo->GetAdapterDriverVendor(adapterDriverVendor);
 

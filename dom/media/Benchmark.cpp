@@ -13,6 +13,7 @@
 #include "VideoUtils.h"
 #include "WebMDemuxer.h"
 #include "mozilla/AbstractThread.h"
+#include "mozilla/Components.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/StaticMutex.h"
@@ -48,7 +49,7 @@ bool VP9Benchmark::ShouldRun() {
   return false;
 #else
 #  if defined(MOZ_APPLEMEDIA)
-  const nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+  const nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
   nsString vendorID, deviceID;
   gfxInfo->GetAdapterVendorID(vendorID);
   // We won't run the VP9 benchmark on mac using an Intel GPU as performance are
