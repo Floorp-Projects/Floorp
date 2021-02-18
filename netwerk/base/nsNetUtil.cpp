@@ -10,6 +10,7 @@
 #include "nsNetUtil.h"
 
 #include "mozilla/Atomics.h"
+#include "mozilla/Components.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/LoadContext.h"
 #include "mozilla/LoadInfo.h"
@@ -116,7 +117,7 @@ using mozilla::dom::ServiceWorkerDescriptor;
 #define MAX_RECURSION_COUNT 50
 
 already_AddRefed<nsIIOService> do_GetIOService(nsresult* error /* = 0 */) {
-  nsCOMPtr<nsIIOService> io = mozilla::services::GetIOService();
+  nsCOMPtr<nsIIOService> io = mozilla::components::IO::Service();
   if (error) *error = io ? NS_OK : NS_ERROR_FAILURE;
   return io.forget();
 }
@@ -1195,7 +1196,7 @@ void NS_GetReferrerFromChannel(nsIChannel* channel, nsIURI** referrer) {
 }
 
 already_AddRefed<nsINetUtil> do_GetNetUtil(nsresult* error /* = 0 */) {
-  nsCOMPtr<nsIIOService> io = mozilla::services::GetIOService();
+  nsCOMPtr<nsIIOService> io = mozilla::components::IO::Service();
   nsCOMPtr<nsINetUtil> util;
   if (io) util = do_QueryInterface(io);
 

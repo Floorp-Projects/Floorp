@@ -16,7 +16,7 @@
 #include <utility>
 
 #include "NullHttpTransaction.h"
-#include "mozilla/Services.h"
+#include "mozilla/Components.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
@@ -93,7 +93,7 @@ nsHttpConnectionMgr::~nsHttpConnectionMgr() {
 
 nsresult nsHttpConnectionMgr::EnsureSocketThreadTarget() {
   nsCOMPtr<nsIEventTarget> sts;
-  nsCOMPtr<nsIIOService> ioService = services::GetIOService();
+  nsCOMPtr<nsIIOService> ioService = components::IO::Service();
   if (ioService) {
     nsCOMPtr<nsISocketTransportService> realSTS =
         services::GetSocketTransportService();
