@@ -4924,6 +4924,10 @@ static bool IsArrayIteratorPrototypeOptimizable(JSContext* cx,
 }
 
 AttachDecision OptimizeSpreadCallIRGenerator::tryAttachArray() {
+  if (mode_ != ICState::Mode::Specialized) {
+    return AttachDecision::NoAction;
+  }
+
   // The value must be a packed array.
   if (!val_.isObject()) {
     return AttachDecision::NoAction;
