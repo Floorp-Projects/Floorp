@@ -624,6 +624,10 @@ skip script test262/intl402/Intl/getCanonicalLocales/preferred-variant.js
 skip script test262/intl402/Intl/getCanonicalLocales/preferred-grandfathered.js
 skip script test262/intl402/Intl/getCanonicalLocales/canonicalized-tags.js
 
+# https://bugzilla.mozilla.org/show_bug.cgi?id=
+skip script test262/intl402/NumberFormat/constructor-no-instanceof.js
+skip script test262/intl402/DateTimeFormat/constructor-no-instanceof.js
+
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
@@ -661,9 +665,6 @@ skip script test262/intl402/DisplayNames/locales-length-poison-throws.js
 # Tests not yet updated for https://github.com/tc39/ecma262/pull/2210
 skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/tonumber-value-detached-buffer.js
 skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/tonumber-value-detached-buffer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/BigInt/index-prop-desc.js
-skip script test262/built-ins/TypedArray/prototype/filter/BigInt/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArray/prototype/findIndex/BigInt/predicate-may-detach-buffer.js
 
 # Tests not yet updated for https://github.com/tc39/ecma262/pull/2216
 skip script test262/language/statements/class/constructor-inferred-observable-iteration.js
