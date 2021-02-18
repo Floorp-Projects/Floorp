@@ -64,6 +64,11 @@
       </div>
     </template>
 
+    <template id="copy-template">
+      <input id="copies-count" is="setting-number" data-setting-name="numCopies" min="1" max="10000" class="copy-count-input photon-number" aria-errormessage="error-invalid-copies" required>
+      <p id="error-invalid-copies" hidden data-l10n-id="printui-error-invalid-copies" class="error-message" role="alert"></p>
+    </template>
+
     <template id="margins-template">
       <label for="margins-picker" class="block-label" data-l10n-id="printui-margins"></label>
       <select is="margins-select" id="margins-picker" name="margin-type" class="row" data-setting-name="margins">
@@ -131,7 +136,7 @@
         <section id="settings">
           <section id="copies" class="section-block">
             <label for="copies-count" class="block-label" data-l10n-id="printui-copies-label"></label>
-            <input id="copies-count" is="setting-number" data-setting-name="numCopies" min="1" max="10000" class="copy-count-input photon-number" required>
+            <copy-count-input></copy-count-input>
           </section>
 
           <section id="orientation" class="section-block">
