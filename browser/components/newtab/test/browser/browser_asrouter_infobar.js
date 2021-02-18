@@ -83,3 +83,72 @@ add_task(async function react_to_trigger() {
     "Notification id should match"
   );
 });
+
+add_task(async function dismiss_telemetry() {
+  let message = {
+    ...(await CFRMessageProvider.getMessages()).find(
+      m => m.id === "INFOBAR_ACTION_86"
+    ),
+  };
+  message.content.type = "tab";
+
+  let dispatchStub = sinon.stub();
+  let infobar = InfoBar.showInfoBarMessage(
+    BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser,
+    message,
+    dispatchStub
+  );
+
+  // Remove any IMPRESSION pings
+  dispatchStub.reset();
+
+  let closeBtn = infobar.notification.querySelector(".messageCloseButton");
+  closeBtn.click();
+
+  await BrowserTestUtils.waitForCondition(
+    () => infobar.notification === null,
+    "Set to null by `removed` event"
+  );
+
+  Assert.equal(dispatchStub.callCount, 1, "Only called once");
+  Assert.equal(
+    dispatchStub.firstCall.args[0].data.event,
+    "DISMISSED",
+    "Called with dismissed"
+  );
+
+  // Remove DISMISSED ping
+  dispatchStub.reset();
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank"
+  );
+  infobar = InfoBar.showInfoBarMessage(
+    BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser,
+    message,
+    dispatchStub
+  );
+
+  await BrowserTestUtils.waitForCondition(
+    () => dispatchStub.callCount > 0,
+    "Wait for impression ping"
+  );
+
+  // Remove IMPRESSION ping
+  dispatchStub.reset();
+  BrowserTestUtils.removeTab(tab);
+
+  await BrowserTestUtils.waitForCondition(
+    () => infobar.notification === null,
+    "Set to null by `disconnect` event"
+  );
+
+  // Called by closing the tab and triggering "disconnect"
+  Assert.equal(dispatchStub.callCount, 1, "Only called once");
+  Assert.equal(
+    dispatchStub.firstCall.args[0].data.event,
+    "DISMISSED",
+    "Called with dismissed"
+  );
+});
