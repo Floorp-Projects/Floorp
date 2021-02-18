@@ -215,5 +215,8 @@ MockedSocketTransport::GetRetryDnsIfPossible(bool*) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+MockedSocketTransport::GetStatus(nsresult*) { return NS_ERROR_NOT_IMPLEMENTED; }
+
 }  // namespace dom
 }  // namespace mozilla

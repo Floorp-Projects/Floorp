@@ -2564,10 +2564,6 @@ nsSocketTransport::GetPeerAddr(NetAddr* addr) {
   // we can freely access mNetAddr from any thread without being
   // inside a critical section.
 
-  if (NS_FAILED(mCondition)) {
-    return mCondition;
-  }
-
   if (!mNetAddrIsSet) {
     SOCKET_LOG(
         ("nsSocketTransport::GetPeerAddr [this=%p state=%d] "
@@ -2586,10 +2582,6 @@ nsSocketTransport::GetSelfAddr(NetAddr* addr) {
   // so if we can verify that we are in the connected state, then
   // we can freely access mSelfAddr from any thread without being
   // inside a critical section.
-
-  if (NS_FAILED(mCondition)) {
-    return mCondition;
-  }
 
   if (!mSelfAddrIsSet) {
     SOCKET_LOG(
@@ -3371,6 +3363,14 @@ nsSocketTransport::ResolvedByTRR(bool* aResolvedByTRR) {
 NS_IMETHODIMP
 nsSocketTransport::GetRetryDnsIfPossible(bool* aRetryDns) {
   *aRetryDns = mRetryDnsIfPossible;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetStatus(nsresult* aStatus) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  *aStatus = mCondition;
   return NS_OK;
 }
 

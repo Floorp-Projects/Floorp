@@ -90,6 +90,12 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
   Unused << mSocketTransport->GetSecurityInfo(getter_AddRefs(info));
   mSocketControl = do_QueryObject(info);
 
+  nsresult status = NS_OK;
+  Unused << mSocketTransport->GetStatus(&status);
+  if (NS_FAILED(status)) {
+    return status;
+  }
+
   // Get the local and remote address neqo needs it.
   NetAddr selfAddr;
   nsresult rv = mSocketTransport->GetSelfAddr(&selfAddr);
