@@ -15,6 +15,7 @@
 #include "nsIConsoleService.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIContent.h"
+#include "mozilla/Components.h"
 #include "mozilla/dom/Document.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIScriptError.h"
@@ -400,7 +401,7 @@ AddonContentPolicy::ValidateAddonCSP(const nsAString& aPolicyString,
   // origin in order to operate correctly.
   nsAutoString url(u"moz-extension://");
   {
-    nsCOMPtr<nsIUUIDGenerator> uuidgen = services::GetUUIDGenerator();
+    nsCOMPtr<nsIUUIDGenerator> uuidgen = components::UUIDGenerator::Service();
     NS_ENSURE_TRUE(uuidgen, NS_ERROR_FAILURE);
 
     nsID id;
