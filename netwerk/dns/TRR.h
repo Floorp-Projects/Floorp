@@ -110,6 +110,10 @@ class TRR : public Runnable,
   virtual DNSPacket* GetOrCreateDNSPacket();
   virtual nsresult CreateQueryURI(nsIURI** aOutURI);
   virtual const char* ContentType() const { return "application/dns-message"; }
+  virtual DNSResolverType ResolverType() const { return DNSResolverType::TRR; }
+  virtual bool MaybeBlockRequest();
+  virtual void RecordProcessingTime(nsIChannel* aChannel);
+  virtual void ReportStatus(nsresult aStatusCode);
   nsresult SendHTTPRequest();
   nsresult ReturnData(nsIChannel* aChannel);
 
