@@ -238,6 +238,7 @@ ODoHService::OnLookupComplete(nsICancelable* aRequest, nsIDNSRecord* aRec,
     return NS_OK;
   }
 
+  mODoHConfigs.reset();
   mODoHConfigs.emplace(std::move(configs));
 
   if (!mPendingRequests.IsEmpty()) {
@@ -265,6 +266,14 @@ void ODoHService::AppendPendingODoHRequest(ODoH* aRequest) {
   MOZ_ASSERT_IF(XRE_IsSocketProcess(), NS_IsMainThread());
 
   mPendingRequests.AppendElement(aRequest);
+}
+
+bool ODoHService::RemovePendingODoHRequest(ODoH* aRequest) {
+  MOZ_ASSERT_IF(XRE_IsParentProcess() && gTRRService,
+                NS_IsMainThread() || gTRRService->IsOnTRRThread());
+  MOZ_ASSERT_IF(XRE_IsSocketProcess(), NS_IsMainThread());
+
+  return mPendingRequests.RemoveElement(aRequest);
 }
 
 }  // namespace net

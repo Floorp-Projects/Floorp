@@ -363,6 +363,7 @@ nsresult DNSPacket::EncodeRequest(nsCString& aBody, const nsACString& aHost,
     }
     if (labelLength > 63) {
       // too long label!
+      SetDNSPacketStatus(DNSPacketStatus::EncodeError);
       return NS_ERROR_ILLEGAL_VALUE;
     }
     if (labelLength > 0) {
@@ -416,6 +417,7 @@ nsresult DNSPacket::EncodeRequest(nsCString& aBody, const nsACString& aHost,
 
     // ADDRESS, minimum number of octets == nothing because zero bits
   }
+  SetDNSPacketStatus(DNSPacketStatus::Success);
   return NS_OK;
 }
 
@@ -982,8 +984,12 @@ nsresult DNSPacket::Decode(
     DOHresp& aResp, TypeRecordResultType& aTypeResult,
     nsClassHashtable<nsCStringHashKey, DOHresp>& aAdditionalRecords,
     uint32_t& aTTL) {
-  return DecodeInternal(aHost, aType, aCname, aAllowRFC1918, aResp, aTypeResult,
-                        aAdditionalRecords, aTTL, mResponse, mBodySize);
+  nsresult rv =
+      DecodeInternal(aHost, aType, aCname, aAllowRFC1918, aResp, aTypeResult,
+                     aAdditionalRecords, aTTL, mResponse, mBodySize);
+  SetDNSPacketStatus(NS_SUCCEEDED(rv) ? DNSPacketStatus::Success
+                                      : DNSPacketStatus::DecodeError);
+  return rv;
 }
 
 static SECItem* CreateRawConfig(const ObliviousDoHConfig& aConfig) {
@@ -1155,10 +1161,17 @@ nsresult ODoHDNSPacket::EncodeRequest(nsCString& aBody, const nsACString& aHost,
   nsAutoCString queryBody;
   nsresult rv = DNSPacket::EncodeRequest(queryBody, aHost, aType, aDisableECS);
   if (NS_FAILED(rv)) {
+    SetDNSPacketStatus(DNSPacketStatus::EncodeError);
     return rv;
   }
 
-  if (!gODoHService->ODoHConfigs() || gODoHService->ODoHConfigs()->IsEmpty()) {
+  if (!gODoHService->ODoHConfigs()) {
+    SetDNSPacketStatus(DNSPacketStatus::KeyNotAvailable);
+    return NS_ERROR_FAILURE;
+  }
+
+  if (gODoHService->ODoHConfigs()->IsEmpty()) {
+    SetDNSPacketStatus(DNSPacketStatus::KeyNotUsable);
     return NS_ERROR_FAILURE;
   }
 
@@ -1168,6 +1181,7 @@ nsresult ODoHDNSPacket::EncodeRequest(nsCString& aBody, const nsACString& aHost,
   ObliviousDoHMessage message;
   // The spec didn't recommand padding length for encryption, let's use 0 here.
   if (!EncryptDNSQuery(queryBody, 0, config, message)) {
+    SetDNSPacketStatus(DNSPacketStatus::EncryptError);
     return NS_ERROR_FAILURE;
   }
 
@@ -1185,6 +1199,7 @@ nsresult ODoHDNSPacket::EncodeRequest(nsCString& aBody, const nsACString& aHost,
       reinterpret_cast<const char*>(message.mEncryptedMessage.Elements()),
       messageLen);
 
+  SetDNSPacketStatus(DNSPacketStatus::Success);
   return NS_OK;
 }
 
@@ -1291,6 +1306,7 @@ nsresult ODoHDNSPacket::Decode(
   // records, but we only need to decrypt the response once.
   if (!mDecryptedResponseRange) {
     if (!DecryptDNSResponse()) {
+      SetDNSPacketStatus(DNSPacketStatus::DecryptError);
       return NS_ERROR_FAILURE;
     }
 
@@ -1299,6 +1315,7 @@ nsresult ODoHDNSPacket::Decode(
     index += 2;
 
     if (mBodySize < (index + responseLength)) {
+      SetDNSPacketStatus(DNSPacketStatus::DecryptError);
       return NS_ERROR_ILLEGAL_VALUE;
     }
 
@@ -1311,16 +1328,20 @@ nsresult ODoHDNSPacket::Decode(
 
     if (static_cast<unsigned int>(4 + responseLength + paddingLen) !=
         mBodySize) {
+      SetDNSPacketStatus(DNSPacketStatus::DecryptError);
       return NS_ERROR_ILLEGAL_VALUE;
     }
 
     mDecryptedResponseRange.emplace(range);
   }
 
-  return DecodeInternal(aHost, aType, aCname, aAllowRFC1918, aResp, aTypeResult,
-                        aAdditionalRecords, aTTL,
-                        &mResponse[mDecryptedResponseRange->mStart],
-                        mDecryptedResponseRange->mLength);
+  nsresult rv = DecodeInternal(aHost, aType, aCname, aAllowRFC1918, aResp,
+                               aTypeResult, aAdditionalRecords, aTTL,
+                               &mResponse[mDecryptedResponseRange->mStart],
+                               mDecryptedResponseRange->mLength);
+  SetDNSPacketStatus(NS_SUCCEEDED(rv) ? DNSPacketStatus::Success
+                                      : DNSPacketStatus::DecodeError);
+  return rv;
 }
 
 static bool CreateObliviousDoHMessage(const unsigned char* aData,
