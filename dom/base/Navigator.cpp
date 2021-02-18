@@ -953,7 +953,7 @@ void Navigator::CheckProtocolHandlerAllowed(const nsAString& aScheme,
   }
 
   nsCOMPtr<nsIProtocolHandler> handler;
-  nsCOMPtr<nsIIOService> io = services::GetIOService();
+  nsCOMPtr<nsIIOService> io = components::IO::Service();
   if (NS_FAILED(
           io->GetProtocolHandler(scheme.get(), getter_AddRefs(handler)))) {
     raisePermissionDeniedScheme();

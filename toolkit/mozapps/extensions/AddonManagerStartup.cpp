@@ -21,7 +21,6 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ResultExtensions.h"
-#include "mozilla/Services.h"
 #include "mozilla/URLPreloader.h"
 #include "mozilla/Unused.h"
 #include "mozilla/ErrorResult.h"
@@ -226,7 +225,7 @@ static bool ParseJSON(JSContext* cx, nsACString& jsonData,
 }
 
 static Result<nsCOMPtr<nsIZipReaderCache>, nsresult> GetJarCache() {
-  nsCOMPtr<nsIIOService> ios = services::GetIOService();
+  nsCOMPtr<nsIIOService> ios = components::IO::Service();
   NS_ENSURE_TRUE(ios, Err(NS_ERROR_FAILURE));
 
   nsCOMPtr<nsIProtocolHandler> jarProto;
