@@ -2048,7 +2048,7 @@ bool TypeAnalyzer::markPhiConsumers() {
 
     for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); ++phi) {
       MOZ_ASSERT(!phi->isInWorklist());
-      bool canConsumeFloat32 = true;
+      bool canConsumeFloat32 = !phi->isImplicitlyUsed();
       for (MUseDefIterator use(*phi); canConsumeFloat32 && use; use++) {
         MDefinition* usedef = use.def();
         canConsumeFloat32 &=

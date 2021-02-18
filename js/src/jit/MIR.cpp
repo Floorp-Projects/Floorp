@@ -66,6 +66,9 @@ static void ConvertDefinitionToDouble(TempAllocator& alloc, MDefinition* def,
 }
 
 static bool CheckUsesAreFloat32Consumers(const MInstruction* ins) {
+  if (ins->isImplicitlyUsed()) {
+    return false;
+  }
   bool allConsumerUses = true;
   for (MUseDefIterator use(ins); allConsumerUses && use; use++) {
     allConsumerUses &= use.def()->canConsumeFloat32(use.use());
