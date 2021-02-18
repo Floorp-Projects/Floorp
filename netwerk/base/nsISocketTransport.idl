@@ -348,4 +348,9 @@ interface nsISocketTransport : nsITransport
      * e.g. NS_ERROR_CONNECTION_REFUSED, NS_ERROR_RESET, etc.
      */
     readonly attribute boolean retryDnsIfPossible;
+
+    /**
+     * Return the current status of the socket.
+     */
+    [noscript] readonly attribute nsresult status;
 };
