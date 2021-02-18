@@ -6099,8 +6099,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
 
   const auto aspectRatio = GetAspectRatio();
   const bool isOrthogonal = aWM.IsOrthogonalTo(alignCB->GetWritingMode());
-  const bool isAutoISize =
-      styleISize.IsAuto() || aFlags.contains(ComputeSizeFlag::UseAutoISize);
+  const bool isAutoISize = styleISize.IsAuto();
   // Compute inline-axis size
   if (!isAutoISize) {
     auto iSizeResult =
@@ -6352,7 +6351,7 @@ LogicalSize nsIFrame::ComputeAutoSize(
   const auto& styleISize = aSizeOverrides.mStyleISize
                                ? *aSizeOverrides.mStyleISize
                                : StylePosition()->ISize(aWM);
-  if (styleISize.IsAuto() || aFlags.contains(ComputeSizeFlag::UseAutoISize)) {
+  if (styleISize.IsAuto()) {
     nscoord availBased =
         aAvailableISize - aMargin.ISize(aWM) - aBorderPadding.ISize(aWM);
     result.ISize(aWM) = ShrinkWidthToFit(aRenderingContext, availBased, aFlags);
