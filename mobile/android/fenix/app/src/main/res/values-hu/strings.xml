@@ -130,6 +130,8 @@
     <string name="browser_menu_edit_bookmark">Könyvjelző szerkesztése</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Kiegészítők</string>
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string name="browser_menu_extensions">Kiegészítők</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Nincsenek kiegészítők</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -532,6 +534,10 @@
     <string name="library_desktop_bookmarks_unfiled">Más könyvjelzők</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Előzmények</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">Új lap</string>
+    <!-- Option in Library to find text in page -->
+    <string name="library_find_in_page">Keresés az oldalon</string>
     <!-- Option in Library to open Synced Tabs page -->
     <string name="library_synced_tabs">Szinkronizált lapok</string>
     <!-- Option in Library to open Reading List -->

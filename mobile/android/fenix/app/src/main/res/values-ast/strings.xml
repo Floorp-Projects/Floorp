@@ -130,6 +130,8 @@
     <string name="browser_menu_bookmark">Amestar a marcadores</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Complementos</string>
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string name="browser_menu_extensions">Estensiones</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Equí nun hai complementos</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -289,6 +291,8 @@
     <string name="toast_override_fxa_sync_server_done">Modificóse\'l sirvidor de cuentes/sincronización de Firefox. Colando de l\'aplicación p\'aplicar los cambeos…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Cuenta</string>
+    <!-- Preference shown on banner to sign into account -->
+    <string name="preferences_sign_in">Aniciar sesión</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">Barra de ferramientes</string>
     <!-- Preference for changing default theme to dark or light mode -->
@@ -351,6 +355,8 @@
     <!-- Button caption to abort the add-on collection configuration -->
     <string name="customize_addon_collection_cancel">Encaboxar</string>
 
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Nome de la coleición</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Modificóse la coleición de complementos. L\'aplicación va zarrase p\'aplicar los cambeos…</string>
 
@@ -454,6 +460,8 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Activación de Sync</string>
 
+    <!-- Preference for account login -->
+    <string name="preferences_sync_sign_in">Aniciar sesión</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Aniciar sesión pa reconectar</string>
     <!-- Preference for removing FxA account -->
@@ -519,6 +527,8 @@
     <!-- Settings Page Title -->
     <string name="settings_title">Axustes</string>
 
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">Menú d\'un elementu del historial</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Zarrar</string>
 
@@ -1603,6 +1613,8 @@ en llinia y con nós.</string>
     <string name="saved_login_username_description">El campu de testu editable pal nome d\'usuariu del aniciu de sesión.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">El campu de testu editable pa la contraseña del aniciu de sesión.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Escartar los cambeos</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Edición</string>
     <!--  The error message in edit login view when password field is blank. -->
