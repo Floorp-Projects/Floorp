@@ -4423,17 +4423,6 @@ void nsWindow::DispatchPendingEvents() {
   }
 }
 
-bool nsWindow::DispatchPluginEvent(UINT aMessage, WPARAM aWParam,
-                                   LPARAM aLParam,
-                                   bool aDispatchPendingEvents) {
-  bool ret = nsWindowBase::DispatchPluginEvent(
-      WinUtils::InitMSG(aMessage, aWParam, aLParam, mWnd));
-  if (aDispatchPendingEvents && !Destroyed()) {
-    DispatchPendingEvents();
-  }
-  return ret;
-}
-
 void nsWindow::DispatchCustomEvent(const nsString& eventName) {
   if (Document* doc = GetDocument()) {
     if (nsPIDOMWindowOuter* win = doc->GetWindow()) {

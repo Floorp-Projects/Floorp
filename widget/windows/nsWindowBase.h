@@ -81,11 +81,6 @@ class nsWindowBase : public nsBaseWidget {
       mozilla::WidgetContentCommandEvent* aEvent) = 0;
 
   /*
-   * Default dispatch of a plugin event.
-   */
-  virtual bool DispatchPluginEvent(const MSG& aMsg);
-
-  /*
    * Touch input injection apis
    */
   virtual nsresult SynthesizeNativeTouchPoint(uint32_t aPointerId,
