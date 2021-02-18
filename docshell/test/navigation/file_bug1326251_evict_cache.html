@@ -4,19 +4,9 @@
     <meta charset="utf-8">
     <title>Bug 1326251</title>
     <script>
-      SpecialPowers.Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
-
       // Evict bfcache and then go back.
       async function evictCache() {
-        let shistory = SpecialPowers.wrap(window)
-                                    .docShell
-                                    .QueryInterface(SpecialPowers.Ci.nsIWebNavigation)
-                                    .sessionHistory;
-        if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
-          shistory.legacySHistory.evictAllContentViewers();
-        } else {
-          opener.evictAllContentViewers();
-        }
+        await SpecialPowers.evictAllContentViewers();
 
         history.back();
       }
