@@ -78,7 +78,19 @@ let alltests = [
     error:"XHR PREFLIGHT from cross-site secure server requiring certificate",
     withCredentials:"true",
     method:"XMETHOD"},
-    
+
+// repeat previous, withCredentials but using a weird method to force preflight
+// Set network.cors_preflight.allow_client_cert pref, that will allow cers on an
+// anonymous connection.
+// This should work since our preflight will work now.
+  { url:"https://requireclientcert.example.com/tests/dom/base/test/bug466080.sjs",
+    status_check:"==200",
+    error:"XHR PREFLIGHT from cross-site secure server requiring certificate",
+    withCredentials:"true",
+    method:"XMETHOD",
+    enableCertOnPreflight: true},
+
+  { cleanEnableCertOnPreflight: true},
 ];
 
 async function onWindowLoad() {
@@ -88,33 +100,44 @@ async function onWindowLoad() {
         document.getElementById("frame1").onload = () => { resolve(); };
     });
 
-    function runTest(test) {
-
-        var xhr =  new XMLHttpRequest();
-
-        var method = "GET";
-        if (test.method != null) { method = test.method; }
-        xhr.open(method, test.url);
-
-        xhr.withCredentials = test.withCredentials;
-
-        SpecialPowers.wrap(xhr).setRequestHeader("Connection", "Keep-Alive", false);
-
-        try {
-            xhr.send();
-        } catch(e) {
-        }
-
-        xhr.onloadend = function() {
-            var success = eval(xhr.status + test.status_check);
-            ok(success, test.error);
-
+    async function runTest(test) {
+        if (test.cleanEnableCertOnPreflight) {
+            await SpecialPowers.pushPrefEnv({"set": [["network.cors_preflight.allow_client_cert", false]]});
             if (alltests.length == 0) {
                 SimpleTest.finish();
             } else {
                 runTest(alltests.shift());
             }
-        };
+        } else {
+            if (test.enableCertOnPreflight != null) {
+                await SpecialPowers.pushPrefEnv({"set": [["network.cors_preflight.allow_client_cert", true]]});
+            }
+            var xhr =  new XMLHttpRequest();
+
+            var method = "GET";
+            if (test.method != null) { method = test.method; }
+            xhr.open(method, test.url);
+
+            xhr.withCredentials = test.withCredentials;
+
+            SpecialPowers.wrap(xhr).setRequestHeader("Connection", "Keep-Alive", false);
+
+            try {
+                xhr.send();
+            } catch(e) {
+            }
+
+            xhr.onloadend = function() {
+                var success = eval(xhr.status + test.status_check);
+                ok(success, test.error);
+
+                if (alltests.length == 0) {
+                    SimpleTest.finish();
+                } else {
+                    runTest(alltests.shift());
+                }
+            };
+        }
     }
 
     runTest(alltests.shift());
