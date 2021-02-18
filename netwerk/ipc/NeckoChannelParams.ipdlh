@@ -363,6 +363,7 @@ struct HttpConnectionInfoCloneArgs
   bool insecureScheme;
   bool noSpdy;
   bool beConservative;
+  bool anonymousAllowClientCert;
   uint32_t tlsFlags;
   bool isolated;
   bool isTrrServiceChannel;

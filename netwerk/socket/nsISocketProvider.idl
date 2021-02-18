@@ -111,4 +111,11 @@ interface nsISocketProvider : nsISupports
      * default is false.
      */
     const unsigned long BE_CONSERVATIVE = 1 << 3;
+
+    /**
+     * This is used for a temporary workaround for a web-compat issue. The flag is
+     * only set on CORS preflight request to allowed sending client certificates
+     * on a connection for an anonymous request.
+     */
+    const long ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT = 1 << 4;
 };

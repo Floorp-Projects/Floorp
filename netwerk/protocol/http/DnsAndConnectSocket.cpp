@@ -1057,6 +1057,13 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupStreams(
     tmpFlags |= nsISocketTransport::ANONYMOUS_CONNECT;
   }
 
+  // When we are making a speculative connection we do not propagate all flags
+  // in mCaps, so we need to query nsHttpConnectionInfo directly as well.
+  if ((dnsAndSock->mCaps & NS_HTTP_LOAD_ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT) ||
+      ci->GetAnonymousAllowClientCert()) {
+    tmpFlags |= nsISocketTransport::ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT;
+  }
+
   if (ci->GetPrivate()) {
     tmpFlags |= nsISocketTransport::NO_PERMANENT_STORAGE;
   }
