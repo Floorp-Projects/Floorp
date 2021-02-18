@@ -1138,7 +1138,7 @@ fuzzy-if(skiaContent,0-1,0-3) == 442542-1.html 442542-1-ref.html
 == 444375-1.html 444375-1-ref.html
 == 444928-1.html 444928-1-ref.html
 == 444928-2.html 444928-2-ref.html
-== 444928-3.html 444928-3-ref.html
+!= 444928-3.html 444928-3-notref.html
 random == 445004-1.html 445004-1-ref.html # bug 472268
 == 445142-1a.html 445142-1-ref.html
 == 445142-1b.html 445142-1-ref.html
