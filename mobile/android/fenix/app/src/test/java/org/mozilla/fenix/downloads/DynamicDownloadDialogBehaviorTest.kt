@@ -60,7 +60,7 @@ class DynamicDownloadDialogBehaviorTest {
     }
 
     @Test
-    fun `Behavior will snap the dialog up if it is more than 50% visible`() {
+    fun `Behavior will snap the dialog up if it is more than 50 percent visible`() {
         val behavior = spyk(DynamicDownloadDialogBehavior<View>(testContext, attrs = null,
         bottomToolbarHeight = 10f))
         every { behavior.shouldScroll } returns true

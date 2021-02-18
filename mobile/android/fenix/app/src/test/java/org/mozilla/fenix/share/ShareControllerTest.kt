@@ -361,12 +361,12 @@ class ShareControllerTest {
     }
 
     @Test
-    fun `getShareSubject will return "shareSubject" if that is non null`() {
+    fun `getShareSubject will return 'shareSubject' if that is non null`() {
         assertEquals(shareSubject, controller.getShareSubject())
     }
 
     @Test
-    fun `getShareSubject will return a concatenation of tab titles if "shareSubject" is null`() {
+    fun `getShareSubject will return a concatenation of tab titles if 'shareSubject' is null`() {
         val controller = DefaultShareController(
             context, null, shareData, sendTabUseCases, snackbar, navController,
             recentAppStorage, testCoroutineScope, testDispatcher, dismiss
