@@ -149,14 +149,14 @@ void wr_partial_present_compositor_set_buffer_damage_region(
 /* static */
 UniquePtr<RenderCompositor> RenderCompositor::Create(
     RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError) {
-  if (gfx::gfxVars::UseSoftwareWebRender()) {
+  if (aWidget->GetCompositorOptions().UseSoftwareWebRender()) {
 #ifdef XP_MACOSX
     // Mac uses NativeLayerCA
     if (!gfxPlatform::IsHeadless()) {
       return RenderCompositorNativeSWGL::Create(std::move(aWidget), aError);
     }
 #elif defined(XP_WIN)
-    if (StaticPrefs::gfx_webrender_software_d3d11_AtStartup() &&
+    if (aWidget->GetCompositorOptions().AllowSoftwareWebRenderD3D11() &&
         gfx::gfxConfig::IsEnabled(gfx::Feature::D3D11_COMPOSITING)) {
       UniquePtr<RenderCompositor> comp =
           RenderCompositorD3D11SWGL::Create(std::move(aWidget), aError);
