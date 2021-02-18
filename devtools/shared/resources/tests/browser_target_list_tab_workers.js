@@ -43,7 +43,7 @@ add_task(async function() {
   // It isn't clear if this assertion is meaningful?
   await target.attach();
 
-  const targetList = new TargetList(mainRoot, target);
+  const targetList = new TargetList(target.descriptorFront);
 
   // Workaround to allow listening for workers in the content toolbox
   // without the fission preferences

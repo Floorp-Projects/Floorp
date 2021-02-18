@@ -31,14 +31,14 @@ static JSScript* FreezeThaw(JSContext* cx, JS::CompileOptions& options,
   // freeze
   JS::TranscodeBuffer buffer;
   JS::TranscodeResult rs = JS::EncodeScript(cx, buffer, script);
-  if (rs != JS::TranscodeResult_Ok) {
+  if (rs != JS::TranscodeResult::Ok) {
     return nullptr;
   }
 
   // thaw
   JS::RootedScript script2(cx);
   rs = JS::DecodeScript(cx, options, buffer, &script2);
-  if (rs != JS::TranscodeResult_Ok) {
+  if (rs != JS::TranscodeResult::Ok) {
     return nullptr;
   }
   return script2;

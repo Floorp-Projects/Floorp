@@ -19,7 +19,6 @@
 #include "mozilla/Components.h"
 #include "mozilla/XREAppData.h"
 
-#include "mozilla/Services.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/Unused.h"
 #include "prtime.h"
@@ -49,7 +48,7 @@ nsresult ProfileResetCleanup(nsToolkitProfileService* aService,
 
   // Get the friendly name for the backup directory.
   nsCOMPtr<nsIStringBundleService> sbs =
-      mozilla::services::GetStringBundleService();
+      mozilla::components::StringBundle::Service();
   if (!sbs) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIStringBundle> sb;

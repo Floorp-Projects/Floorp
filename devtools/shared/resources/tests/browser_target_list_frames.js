@@ -34,8 +34,7 @@ async function testBrowserFrames(mainRoot) {
   info("Test TargetList against frames via the parent process target");
 
   const targetDescriptor = await mainRoot.getMainProcess();
-  const target = await targetDescriptor.getTarget();
-  const targetList = new TargetList(mainRoot, target);
+  const targetList = new TargetList(targetDescriptor);
   await targetList.startListening();
 
   // Very naive sanity check against getAllTargets([frame])
@@ -60,6 +59,7 @@ async function testBrowserFrames(mainRoot) {
 
   // Assert that watchTargets will call the create callback for all existing frames
   const targets = [];
+  const topLevelTarget = await targetDescriptor.getTarget();
   const onAvailable = ({ targetFront }) => {
     is(
       targetFront.targetType,
@@ -67,7 +67,9 @@ async function testBrowserFrames(mainRoot) {
       "We are only notified about frame targets"
     );
     ok(
-      targetFront == target ? targetFront.isTopLevel : !targetFront.isTopLevel,
+      targetFront == topLevelTarget
+        ? targetFront.isTopLevel
+        : !targetFront.isTopLevel,
       "isTopLevel property is correct"
     );
     targets.push(targetFront);
@@ -112,8 +114,7 @@ async function testTabFrames(mainRoot) {
   // Create a TargetList for a given test tab
   const tab = await addTab(FISSION_TEST_URL);
   const descriptor = await mainRoot.getTab({ tab });
-  const target = await descriptor.getTarget();
-  const targetList = new TargetList(mainRoot, target);
+  const targetList = new TargetList(descriptor);
 
   await targetList.startListening();
 
@@ -129,6 +130,7 @@ async function testTabFrames(mainRoot) {
 
   // Assert that watchTargets will call the create callback for all existing frames
   const targets = [];
+  const topLevelTarget = await descriptor.getTarget();
   const onAvailable = ({ targetFront }) => {
     is(
       targetFront.targetType,
@@ -136,7 +138,9 @@ async function testTabFrames(mainRoot) {
       "We are only notified about frame targets"
     );
     ok(
-      targetFront == target ? targetFront.isTopLevel : !targetFront.isTopLevel,
+      targetFront == topLevelTarget
+        ? targetFront.isTopLevel
+        : !targetFront.isTopLevel,
       "isTopLevel property is correct"
     );
     targets.push(targetFront);

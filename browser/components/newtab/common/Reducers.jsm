@@ -39,7 +39,7 @@ const INITIAL_STATE = {
   },
   Prefs: {
     initialized: false,
-    values: {},
+    values: { featureConfig: {} },
   },
   Dialog: {
     visible: false,

@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Components.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -243,7 +244,7 @@ bool nsHTTPSOnlyUtils::CouldBeHttpsOnlyError(nsIChannel* aChannel,
 bool nsHTTPSOnlyUtils::TestIfPrincipalIsExempt(nsIPrincipal* aPrincipal) {
   static nsCOMPtr<nsIPermissionManager> sPermMgr;
   if (!sPermMgr) {
-    sPermMgr = mozilla::services::GetPermissionManager();
+    sPermMgr = mozilla::components::PermissionManager::Service();
     mozilla::ClearOnShutdown(&sPermMgr);
   }
   NS_ENSURE_TRUE(sPermMgr, false);

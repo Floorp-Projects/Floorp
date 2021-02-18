@@ -153,19 +153,22 @@ var SelectParentHelper = {
       // Some webpages set the <select> backgroundColor to transparent,
       // but they don't intend to change the popup to transparent.
       // So we remove the backgroundColor and turn it into an image instead.
-      if (
-        customStylingEnabled &&
-        selectStyle["background-color"] != uaStyle["background-color"]
-      ) {
+      if (selectStyle["background-color"] != uaStyle["background-color"]) {
         // We intentionally use the parsed color to prevent color
         // values like `url(..)` being injected into the
         // `background-image` property.
         let parsedColor = sheet.cssRules[0].style["background-color"];
-        sheet.cssRules[0].style["background-color"] = "";
-        sheet.cssRules[0].style[
-          "background-image"
-        ] = `linear-gradient(${parsedColor}, ${parsedColor})`;
+        // The background color gets dropped unconditionally below.
+        sheet.cssRules[0].style.setProperty(
+          "--content-select-background-image",
+          `linear-gradient(${parsedColor}, ${parsedColor})`
+        );
         selectBackgroundSet = true;
+      }
+      if (addedRule) {
+        // Always drop the background color to avoid messing with the custom
+        // shadow on Windows 10 styling.
+        sheet.cssRules[0].style["background-color"] = "";
       }
       if (addedRule) {
         sheet.insertRule(

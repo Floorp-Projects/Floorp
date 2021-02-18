@@ -46,35 +46,21 @@ class TargetList extends EventEmitter {
    * @fires target-tread-wrong-order-on-resume : An event that is emitted when resuming
    *        the thread throws with the "wrongOrder" error.
    *
-   * @param {RootFront} rootFront
-   *        The root front.
-   * @param {TargetFront} targetFront
-   *        The top level target to debug. Note that in case of target switching,
-   *        this may be replaced by a new one over time.
+   * @param {DescriptorFront} descriptorFront
+   *        The context to inspector identified by this descriptor.
    */
-  constructor(rootFront, targetFront) {
+  constructor(descriptorFront) {
     super();
 
-    this.rootFront = rootFront;
-
-    // Once we have descriptor for all targets we create a toolbox for,
-    // we should try to only pass the descriptor to the Toolbox constructor,
-    // and, only receive the root and descriptor front as an argument to TargetList.
-    // Bug 1573779, we only miss descriptors for workers.
-    this.descriptorFront = targetFront.descriptorFront;
-
-    // Note that this is a public attribute, used outside of this class
-    // and helps knowing what is the current top level target we debug.
-    this.targetFront = targetFront;
-    targetFront.setTargetType(this.getTargetType(targetFront));
-    targetFront.setIsTopLevel(true);
+    this.descriptorFront = descriptorFront;
+    this.rootFront = descriptorFront.client.mainRoot;
 
     // Until Watcher actor notify about new top level target when navigating to another process
     // we have to manually switch to a new target from the client side
     this.onLocalTabRemotenessChange = this.onLocalTabRemotenessChange.bind(
       this
     );
-    if (this.descriptorFront?.isLocalTab) {
+    if (this.descriptorFront.isLocalTab) {
       this.descriptorFront.on(
         "remoteness-change",
         this.onLocalTabRemotenessChange
@@ -90,9 +76,6 @@ class TargetList extends EventEmitter {
     // `watchTargets`, whose initial value is a Set of the existing target fronts at the
     // time watchTargets is called.
     this._pendingWatchTargetInitialization = new Map();
-
-    // Add the top-level target to debug to the list of targets.
-    this._targets.add(targetFront);
 
     // Listeners for target creation and destruction
     this._createListeners = new EventEmitter();
@@ -249,11 +232,23 @@ class TargetList extends EventEmitter {
    *        but still register listeners set via Legacy Listeners.
    */
   async startListening({ onlyLegacy = false } = {}) {
+    // The first time we call this method, we pull the current top level target from the descriptor
+    if (!this.targetFront) {
+      // Note that this is a public attribute, used outside of this class
+      // and helps knowing what is the current top level target we debug.
+      this.targetFront = await this.descriptorFront.getTarget();
+      this.targetFront.setTargetType(this.getTargetType(this.targetFront));
+      this.targetFront.setIsTopLevel(true);
+
+      // Add the top-level target to the list of targets.
+      this._targets.add(this.targetFront);
+    }
+
     // Cache the Watcher once for all, the first time we call `startListening()`.
     // This `watcherFront` attribute may be then used in any function in TargetList or ResourceWatcher after this.
     if (!this.watcherFront) {
       // Bug 1675763: Watcher actor is not available in all situations yet.
-      const supportsWatcher = this.descriptorFront?.traits?.watcher;
+      const supportsWatcher = this.descriptorFront.traits?.watcher;
       if (supportsWatcher) {
         this.watcherFront = await this.descriptorFront.getWatcher();
       }
@@ -267,7 +262,7 @@ class TargetList extends EventEmitter {
       if (fissionBrowserToolboxEnabled) {
         types = TargetList.ALL_TYPES;
       }
-    } else if (this.targetFront.isLocalTab) {
+    } else if (this.descriptorFront.isLocalTab) {
       types = [TargetList.TYPES.FRAME];
     }
     if (this.listenForWorkers && !types.includes(TargetList.TYPES.WORKER)) {

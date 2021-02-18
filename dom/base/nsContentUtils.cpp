@@ -107,7 +107,6 @@
 #include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ScrollbarPreferences.h"
-#include "mozilla/Services.h"
 #include "mozilla/Span.h"
 #include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -870,7 +869,7 @@ void nsContentUtils::GetModifierSeparatorText(nsAString& text) {
 void nsContentUtils::InitializeModifierStrings() {
   // load the display strings for the keyboard accelerators
   nsCOMPtr<nsIStringBundleService> bundleService =
-      mozilla::services::GetStringBundleService();
+      mozilla::components::StringBundle::Service();
   nsCOMPtr<nsIStringBundle> bundle;
   DebugOnly<nsresult> rv = NS_OK;
   if (bundleService) {
@@ -3657,7 +3656,8 @@ static bool TestSitePerm(nsIPrincipal* aPrincipal, const nsACString& aType,
     return aPerm != nsIPermissionManager::ALLOW_ACTION;
   }
 
-  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+  nsCOMPtr<nsIPermissionManager> permMgr =
+      components::PermissionManager::Service();
   NS_ENSURE_TRUE(permMgr, false);
 
   uint32_t perm;

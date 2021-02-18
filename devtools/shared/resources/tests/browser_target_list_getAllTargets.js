@@ -33,8 +33,7 @@ add_task(async function() {
 
   info("Create a target list for the main process target");
   const targetDescriptor = await mainRoot.getMainProcess();
-  const target = await targetDescriptor.getTarget();
-  const targetList = new TargetList(mainRoot, target);
+  const targetList = new TargetList(targetDescriptor);
   await targetList.startListening();
 
   info("Check getAllTargets will throw when providing invalid arguments");

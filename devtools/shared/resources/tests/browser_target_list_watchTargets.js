@@ -33,8 +33,7 @@ async function testWatchTargets(mainRoot) {
   info("Test TargetList watchTargets function");
 
   const targetDescriptor = await mainRoot.getMainProcess();
-  const target = await targetDescriptor.getTarget();
-  const targetList = new TargetList(mainRoot, target);
+  const targetList = new TargetList(targetDescriptor);
 
   await targetList.startListening();
 
@@ -45,6 +44,7 @@ async function testWatchTargets(mainRoot) {
     "Check that onAvailable is called for processes already created *before* the call to watchTargets"
   );
   const targets = new Set();
+  const topLevelTarget = await targetDescriptor.getTarget();
   const onAvailable = ({ targetFront }) => {
     if (targets.has(targetFront)) {
       ok(false, "The same target is notified multiple times via onAvailable");
@@ -55,7 +55,9 @@ async function testWatchTargets(mainRoot) {
       "We are only notified about process targets"
     );
     ok(
-      targetFront == target ? targetFront.isTopLevel : !targetFront.isTopLevel,
+      targetFront == topLevelTarget
+        ? targetFront.isTopLevel
+        : !targetFront.isTopLevel,
       "isTopLevel property is correct"
     );
     targets.add(targetFront);
@@ -176,8 +178,7 @@ async function testContentProcessTarget(mainRoot) {
   info("Test TargetList watchTargets with a content process target");
 
   const processes = await mainRoot.listProcesses();
-  const target = await processes[1].getTarget();
-  const targetList = new TargetList(mainRoot, target);
+  const targetList = new TargetList(processes[1]);
 
   await targetList.startListening();
 
@@ -185,6 +186,7 @@ async function testContentProcessTarget(mainRoot) {
   // as listening for additional target is only enable for the parent process target.
   // See bug 1593928.
   const targets = new Set();
+  const topLevelTarget = await processes[1].getTarget();
   const onAvailable = ({ targetFront }) => {
     if (targets.has(targetFront)) {
       // This may fail if the top level target is reported by LegacyImplementation
@@ -196,7 +198,7 @@ async function testContentProcessTarget(mainRoot) {
       TargetList.TYPES.PROCESS,
       "We are only notified about process targets"
     );
-    is(targetFront, target, "This is the existing top level target");
+    is(targetFront, topLevelTarget, "This is the existing top level target");
     ok(
       targetFront.isTopLevel,
       "We are only notified about the top level target"
@@ -225,8 +227,7 @@ async function testThrowingInOnAvailable(mainRoot) {
   );
 
   const targetDescriptor = await mainRoot.getMainProcess();
-  const target = await targetDescriptor.getTarget();
-  const targetList = new TargetList(mainRoot, target);
+  const targetList = new TargetList(targetDescriptor);
 
   await targetList.startListening();
 

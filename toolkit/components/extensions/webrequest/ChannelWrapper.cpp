@@ -17,6 +17,7 @@
 
 #include "mozilla/AddonManagerWebAPI.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Components.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Unused.h"
@@ -987,7 +988,8 @@ void ChannelWrapper::GetUrlClassification(
 }
 
 bool ChannelWrapper::ThirdParty() const {
-  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
+  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+      components::ThirdPartyUtil::Service();
   if (NS_WARN_IF(!thirdPartyUtil)) {
     return true;
   }

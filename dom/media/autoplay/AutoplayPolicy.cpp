@@ -16,7 +16,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/MediaManager.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Services.h"
+#include "mozilla/Components.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindowInner.h"
@@ -340,7 +340,8 @@ uint32_t AutoplayPolicy::GetSiteAutoplayPermission(nsIPrincipal* aPrincipal) {
     return nsIPermissionManager::DENY_ACTION;
   }
 
-  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+  nsCOMPtr<nsIPermissionManager> permMgr =
+      components::PermissionManager::Service();
   if (!permMgr) {
     return nsIPermissionManager::DENY_ACTION;
   }

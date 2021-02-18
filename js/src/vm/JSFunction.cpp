@@ -574,7 +574,7 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
   if (mode == XDR_ENCODE) {
     fun = objp;
     if (!fun->isInterpreted() || fun->isBoundFunction()) {
-      return xdr->fail(JS::TranscodeResult_Failure_NotInterpretedFun);
+      return xdr->fail(JS::TranscodeResult::Failure_NotInterpretedFun);
     }
 
     if (fun->isGenerator()) {
@@ -622,7 +622,7 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
 
     RootedObject proto(cx);
     if (!GetFunctionPrototype(cx, generatorKind, asyncKind, &proto)) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
 
     gc::AllocKind allocKind = gc::AllocKind::FUNCTION;
@@ -636,13 +636,13 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
         FunctionFlags::MUTABLE_FLAGS | FunctionFlags::SELFHOSTLAZY |
         FunctionFlags::BOUND_FUN | FunctionFlags::WASM_JIT_ENTRY;
     if ((flags & UnsupportedFlags) != 0) {
-      return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
+      return xdr->fail(JS::TranscodeResult::Failure_BadDecode);
     }
 
     fun = NewFunctionWithProto(cx, nullptr, nargs, FunctionFlags(flags),
                                nullptr, atom, proto, allocKind, TenuredObject);
     if (!fun) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
     objp.set(fun);
   }

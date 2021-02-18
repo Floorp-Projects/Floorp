@@ -2427,10 +2427,10 @@ XDRResult js::XDRExportEntries(XDRState<mode>* xdr,
                                            importName, localName, lineNumber,
                                            columnNumber));
       if (!expObj) {
-        return xdr->fail(JS::TranscodeResult_Throw);
+        return xdr->fail(JS::TranscodeResult::Throw);
       }
       if (!expVec.append(expObj)) {
-        return xdr->fail(JS::TranscodeResult_Throw);
+        return xdr->fail(JS::TranscodeResult::Throw);
       }
     }
   }
@@ -2438,7 +2438,7 @@ XDRResult js::XDRExportEntries(XDRState<mode>* xdr,
   if (mode == XDR_DECODE) {
     RootedArrayObject expArr(cx, js::CreateArray(cx, expVec));
     if (!expArr) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
     vec.set(expArr);
   }
@@ -2467,7 +2467,7 @@ XDRResult js::XDRRequestedModuleObject(
     reqObj.set(RequestedModuleObject::create(cx, moduleSpecifier, lineNumber,
                                              columnNumber));
     if (!reqObj) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
   }
 
@@ -2501,7 +2501,7 @@ XDRResult js::XDRImportEntryObject(XDRState<mode>* xdr,
     impObj.set(ImportEntryObject::create(cx, moduleRequest, importName,
                                          localName, lineNumber, columnNumber));
     if (!impObj) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
   }
 
@@ -2556,7 +2556,7 @@ XDRResult js::XDRModuleObject(XDRState<mode>* xdr,
     enclosingScope.set(&cx->global()->emptyGlobalScope());
     module.set(ModuleObject::create(cx));
     if (!module) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
   }
 
@@ -2571,7 +2571,7 @@ XDRResult js::XDRModuleObject(XDRState<mode>* xdr,
   /* Environment Slot */
   if (mode == XDR_DECODE) {
     if (!ModuleObject::createEnvironment(cx, module)) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
   }
 
@@ -2592,14 +2592,14 @@ XDRResult js::XDRModuleObject(XDRState<mode>* xdr,
     MOZ_TRY(XDRRequestedModuleObject(xdr, &reqObj));
     if (mode == XDR_DECODE) {
       if (!reqVec.append(reqObj)) {
-        return xdr->fail(JS::TranscodeResult_Throw);
+        return xdr->fail(JS::TranscodeResult::Throw);
       }
     }
   }
   if (mode == XDR_DECODE) {
     RootedArrayObject reqArr(cx, js::CreateArray(cx, reqVec));
     if (!reqArr) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
     requestedModules.set(reqArr);
   }
@@ -2618,7 +2618,7 @@ XDRResult js::XDRModuleObject(XDRState<mode>* xdr,
     MOZ_TRY(XDRImportEntryObject(xdr, &impObj));
     if (mode == XDR_DECODE) {
       if (!impVec.append(impObj)) {
-        return xdr->fail(JS::TranscodeResult_Throw);
+        return xdr->fail(JS::TranscodeResult::Throw);
       }
     }
   }
@@ -2626,7 +2626,7 @@ XDRResult js::XDRModuleObject(XDRState<mode>* xdr,
   if (mode == XDR_DECODE) {
     RootedArrayObject impArr(cx, js::CreateArray(cx, impVec));
     if (!impArr) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
     importEntries.set(impArr);
   }
@@ -2651,7 +2651,7 @@ XDRResult js::XDRModuleObject(XDRState<mode>* xdr,
     if (mode == XDR_DECODE) {
       if (!GetFunctionDeclarations(module.get())->append(funIndex)) {
         ReportOutOfMemory(cx);
-        return xdr->fail(JS::TranscodeResult_Throw);
+        return xdr->fail(JS::TranscodeResult::Throw);
       }
     }
   }
@@ -2675,7 +2675,7 @@ XDRResult js::XDRModuleObject(XDRState<mode>* xdr,
   if (mode == XDR_DECODE) {
     Rooted<ListObject*> asyncParentModulesList(cx, ListObject::create(cx));
     if (!asyncParentModulesList) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
 
     module->initAsyncSlots(cx, isAsyncModule == 1, asyncParentModulesList);

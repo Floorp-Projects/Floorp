@@ -9,6 +9,7 @@
 #include "ClassifierDummyChannel.h"
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/Components.h"
 #include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/dom/WindowGlobalParent.h"
@@ -218,7 +219,8 @@ nsresult UrlClassifierCommon::SetBlockedContent(nsIChannel* channel,
   // to correct top-level window), we need to do this in the parent process
   // instead (find the top-level window in the parent and send an IPC to child
   // processes to report console).
-  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
+  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+      components::ThirdPartyUtil::Service();
   if (NS_WARN_IF(!thirdPartyUtil)) {
     return NS_OK;
   }
@@ -526,7 +528,7 @@ bool UrlClassifierCommon::IsAllowListed(nsIChannel* aChannel) {
          "check allowlisting test domain on channel %p",
          aChannel));
 
-    nsCOMPtr<nsIIOService> ios = services::GetIOService();
+    nsCOMPtr<nsIIOService> ios = components::IO::Service();
     if (NS_WARN_IF(!ios)) {
       return false;
     }

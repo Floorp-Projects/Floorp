@@ -342,18 +342,22 @@ AddrInfo::AddrInfo(const nsACString& host, const PRAddrInfo* prAddrInfo,
 }
 
 AddrInfo::AddrInfo(const nsACString& host, const nsACString& cname,
-                   unsigned int aTRR, nsTArray<NetAddr>&& addresses)
+                   DNSResolverType aResolverType, unsigned int aTRRType,
+                   nsTArray<NetAddr>&& addresses)
     : mHostName(host),
       mCanonicalName(cname),
-      mFromTRR(aTRR),
+      mResolverType(aResolverType),
+      mTRRType(aTRRType),
       mAddresses(std::move(addresses)) {}
 
-AddrInfo::AddrInfo(const nsACString& host, unsigned int aTRR,
-                   nsTArray<NetAddr>&& addresses, uint32_t aTTL)
+AddrInfo::AddrInfo(const nsACString& host, DNSResolverType aResolverType,
+                   unsigned int aTRRType, nsTArray<NetAddr>&& addresses,
+                   uint32_t aTTL)
     : ttl(aTTL),
       mHostName(host),
       mCanonicalName(),
-      mFromTRR(aTRR),
+      mResolverType(aResolverType),
+      mTRRType(aTRRType),
       mAddresses(std::move(addresses)) {}
 
 // deep copy constructor
@@ -361,7 +365,8 @@ AddrInfo::AddrInfo(const AddrInfo* src) {
   mHostName = src->mHostName;
   mCanonicalName = src->mCanonicalName;
   ttl = src->ttl;
-  mFromTRR = src->mFromTRR;
+  mResolverType = src->mResolverType;
+  mTRRType = src->mTRRType;
   mTrrFetchDuration = src->mTrrFetchDuration;
   mTrrFetchDurationNetworkOnly = src->mTrrFetchDurationNetworkOnly;
 

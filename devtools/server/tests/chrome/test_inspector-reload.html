@@ -29,7 +29,7 @@ addTest(async function setup() {
   gInspectee = doc;
   const walker = inspector.walker;
   gWalker = await inspector.getWalker();
-  gResourceWatcher = createResourceWatcher(target);
+  gResourceWatcher = await createResourceWatcher(target);
 
   ok(walker === gWalker, "getWalker() twice should return the same walker.");
   runNextTest();

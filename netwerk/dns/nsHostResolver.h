@@ -119,8 +119,13 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
     TRR_SERVER_RESPONSE_ERR = 27,  // Server responded with non-200 code
     TRR_RCODE_FAIL = 28,           // DNS response contains a non-NOERROR rcode
     TRR_NO_CONNECTIVITY = 29,      // Not confirmed because of no connectivity
-    TRR_NXDOMAIN = 30,       // DNS response contains NXDOMAIN rcode (0x03)
-    TRR_REQ_CANCELLED = 31,  // The request has been cancelled
+    TRR_NXDOMAIN = 30,            // DNS response contains NXDOMAIN rcode (0x03)
+    TRR_REQ_CANCELLED = 31,       // The request has been cancelled
+    ODOH_KEY_NOT_USABLE = 32,     // We don't have a valid ODoHConfig to use.
+    ODOH_UPDATE_KEY_FAILED = 33,  // Failed to update the ODoHConfigs.
+    ODOH_KEY_NOT_AVAILABLE = 34,  // ODoH requests timeout because of no key.
+    ODOH_ENCRYPTION_FAILED = 35,  // Failed to encrypt DNS packets.
+    ODOH_DECRYPTION_FAILED = 36,  // Failed to decrypt DNS packets.
   };
 
   // Records the first reason that caused TRR to be skipped or to fail.
@@ -288,9 +293,10 @@ class AddrHostRecord final : public nsHostRecord {
   mozilla::TimeDuration mTrrDuration;
   mozilla::TimeDuration mNativeDuration;
 
-  mozilla::Atomic<bool> mTRRUsed;  // TRR was used on this record
-  uint8_t mTRRSuccess;             // number of successful TRR responses
-  uint8_t mNativeSuccess;          // number of native lookup responses
+  // TRR or ODoH was used on this record
+  mozilla::Atomic<mozilla::net::DNSResolverType> mResolverType;
+  uint8_t mTRRSuccess;     // number of successful TRR responses
+  uint8_t mNativeSuccess;  // number of native lookup responses
 
   // clang-format off
   MOZ_ATOMIC_BITFIELDS(mAtomicBitfields, 8, (

@@ -139,10 +139,10 @@ export class _TopSites extends React.PureComponent {
     const { props } = this;
     const { editForm, showSearchShortcutsForm } = props.TopSites;
     const extraMenuOptions = ["AddTopSite"];
-    const newNewtabExperienceEnabled =
-      props.Prefs.values["newNewtabExperience.enabled"];
-    const customizationMenuEnabled =
-      props.Prefs.values["customizationMenu.enabled"];
+    const {
+      customizationMenuEnabled,
+      newNewtabExperienceEnabled,
+    } = props.Prefs.values.featureConfig;
     const colors = props.Prefs.values["newNewtabExperience.colors"];
 
     if (props.Prefs.values["improvesearch.topSiteSearchShortcuts"]) {
