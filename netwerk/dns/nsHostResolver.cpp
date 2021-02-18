@@ -412,9 +412,17 @@ void AddrHostRecord::ResolveComplete() {
   }
 
   if (mResolverType == DNSResolverType::ODoH) {
-    // TODO:
-    // 1. Put ODoH related probes here.
-    // 2. Consider adding the failed host name into a blocklist.
+    // XXX(kershaw): Consider adding the failed host name into a blocklist.
+    if (mTRRSuccess) {
+      uint32_t millis = static_cast<uint32_t>(mTrrDuration.ToMilliseconds());
+      Telemetry::Accumulate(Telemetry::DNS_ODOH_LOOKUP_TIME, millis);
+    }
+
+    if (nsHostResolver::Mode() == nsIDNSService::MODE_TRRFIRST) {
+      Telemetry::Accumulate(Telemetry::ODOH_SKIP_REASON_ODOH_FIRST,
+                            mTRRTRRSkippedReason);
+    }
+
     return;
   }
 
