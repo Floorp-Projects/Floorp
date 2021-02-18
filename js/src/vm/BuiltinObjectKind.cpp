@@ -37,9 +37,9 @@ static JSProtoKey ToProtoKey(BuiltinObjectKind kind) {
     case BuiltinObjectKind::StringPrototype:
       return JSProto_String;
 
-    case BuiltinObjectKind::DateTimeFormat:
+    case BuiltinObjectKind::DateTimeFormatPrototype:
       return JSProto_DateTimeFormat;
-    case BuiltinObjectKind::NumberFormat:
+    case BuiltinObjectKind::NumberFormatPrototype:
       return JSProto_NumberFormat;
 
     case BuiltinObjectKind::None:
@@ -64,9 +64,9 @@ static bool IsPrototype(BuiltinObjectKind kind) {
     case BuiltinObjectKind::StringPrototype:
       return true;
 
-    case BuiltinObjectKind::DateTimeFormat:
-    case BuiltinObjectKind::NumberFormat:
-      return false;
+    case BuiltinObjectKind::DateTimeFormatPrototype:
+    case BuiltinObjectKind::NumberFormatPrototype:
+      return true;
 
     case BuiltinObjectKind::None:
       break;
@@ -94,12 +94,6 @@ BuiltinObjectKind js::BuiltinConstructorForName(
   if (name == frontend::TaggedParserAtomIndex::WellKnown::SharedArrayBuffer()) {
     return BuiltinObjectKind::SharedArrayBuffer;
   }
-  if (name == frontend::TaggedParserAtomIndex::WellKnown::DateTimeFormat()) {
-    return BuiltinObjectKind::DateTimeFormat;
-  }
-  if (name == frontend::TaggedParserAtomIndex::WellKnown::NumberFormat()) {
-    return BuiltinObjectKind::NumberFormat;
-  }
   return BuiltinObjectKind::None;
 }
 
@@ -116,6 +110,12 @@ BuiltinObjectKind js::BuiltinPrototypeForName(
   }
   if (name == frontend::TaggedParserAtomIndex::WellKnown::String()) {
     return BuiltinObjectKind::StringPrototype;
+  }
+  if (name == frontend::TaggedParserAtomIndex::WellKnown::DateTimeFormat()) {
+    return BuiltinObjectKind::DateTimeFormatPrototype;
+  }
+  if (name == frontend::TaggedParserAtomIndex::WellKnown::NumberFormat()) {
+    return BuiltinObjectKind::NumberFormatPrototype;
   }
   return BuiltinObjectKind::None;
 }
@@ -161,10 +161,10 @@ const char* js::BuiltinObjectName(BuiltinObjectKind kind) {
     case BuiltinObjectKind::StringPrototype:
       return "String.prototype";
 
-    case BuiltinObjectKind::DateTimeFormat:
-      return "DateTimeFormat";
-    case BuiltinObjectKind::NumberFormat:
-      return "NumberFormat";
+    case BuiltinObjectKind::DateTimeFormatPrototype:
+      return "DateTimeFormat.prototype";
+    case BuiltinObjectKind::NumberFormatPrototype:
+      return "NumberFormat.prototype";
 
     case BuiltinObjectKind::None:
       break;

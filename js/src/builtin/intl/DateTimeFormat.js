@@ -154,7 +154,7 @@ function UnwrapDateTimeFormat(dtf) {
     if (IsObject(dtf) &&
         GuardToDateTimeFormat(dtf) === null &&
         !IsWrappedDateTimeFormat(dtf) &&
-        dtf instanceof GetBuiltinConstructor("DateTimeFormat"))
+        callFunction(std_Object_isPrototypeOf, GetBuiltinPrototype("DateTimeFormat"), dtf))
     {
         dtf = dtf[intlFallbackSymbol()];
     }
@@ -444,10 +444,8 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
     initializeIntlObject(dateTimeFormat, "DateTimeFormat", lazyDateTimeFormatData);
 
     // 12.2.1, steps 4-5.
-    // TODO: spec issue - The current spec doesn't have the IsObject check,
-    // which means |Intl.DateTimeFormat.call(null)| is supposed to throw here.
-    if (dateTimeFormat !== thisValue && IsObject(thisValue) &&
-        thisValue instanceof GetBuiltinConstructor("DateTimeFormat"))
+    if (dateTimeFormat !== thisValue &&
+        callFunction(std_Object_isPrototypeOf, GetBuiltinPrototype("DateTimeFormat"), thisValue))
     {
         _DefineDataProperty(thisValue, intlFallbackSymbol(), dateTimeFormat,
                             ATTR_NONENUMERABLE | ATTR_NONCONFIGURABLE | ATTR_NONWRITABLE);

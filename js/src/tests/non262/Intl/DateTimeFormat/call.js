@@ -71,6 +71,7 @@ for (let thisValue of thisValues()) {
 // Intl.DateTimeFormat uses the legacy Intl constructor compromise semantics.
 // - Test when InstanceofOperator(thisValue, %DateTimeFormat%) returns true.
 for (let thisValue of thisValues().filter(IsObject)) {
+    let isPrototypeOf = Intl.DateTimeFormat.prototype.isPrototypeOf(thisValue);
     let hasInstanceCalled = false;
     Object.defineProperty(Intl.DateTimeFormat, Symbol.hasInstance, {
         value() {
@@ -82,12 +83,13 @@ for (let thisValue of thisValues().filter(IsObject)) {
     let obj = Intl.DateTimeFormat.call(thisValue);
     delete Intl.DateTimeFormat[Symbol.hasInstance];
 
-    assertEq(Object.is(obj, thisValue), true);
-    assertEq(hasInstanceCalled, true);
-    assertEqArray(Object.getOwnPropertySymbols(thisValue), [intlFallbackSymbol]);
+    assertEq(Object.is(obj, thisValue), isPrototypeOf);
+    assertEq(hasInstanceCalled, false);
+    assertEqArray(Object.getOwnPropertySymbols(thisValue), isPrototypeOf ? [intlFallbackSymbol] : []);
 }
 // - Test when InstanceofOperator(thisValue, %DateTimeFormat%) returns false.
 for (let thisValue of thisValues().filter(IsObject)) {
+    let isPrototypeOf = Intl.DateTimeFormat.prototype.isPrototypeOf(thisValue);
     let hasInstanceCalled = false;
     Object.defineProperty(Intl.DateTimeFormat, Symbol.hasInstance, {
         value() {
@@ -99,10 +101,10 @@ for (let thisValue of thisValues().filter(IsObject)) {
     let obj = Intl.DateTimeFormat.call(thisValue);
     delete Intl.DateTimeFormat[Symbol.hasInstance];
 
-    assertEq(Object.is(obj, thisValue), false);
+    assertEq(Object.is(obj, thisValue), isPrototypeOf);
     assertEq(obj instanceof Intl.DateTimeFormat, true);
-    assertEq(hasInstanceCalled, true);
-    assertEqArray(Object.getOwnPropertySymbols(thisValue), []);
+    assertEq(hasInstanceCalled, false);
+    assertEqArray(Object.getOwnPropertySymbols(thisValue), isPrototypeOf ? [intlFallbackSymbol] : []);
 }
 // - Test with primitive values.
 for (let thisValue of thisValues().filter(IsPrimitive)) {
