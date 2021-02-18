@@ -294,11 +294,6 @@ const Types = (exports.__TypesForTests = [
     front: "devtools/client/fronts/targets/browsing-context",
   },
   {
-    types: ["chromeWindowTarget"],
-    spec: "devtools/shared/specs/targets/chrome-window",
-    front: null,
-  },
-  {
     types: ["contentProcessTarget"],
     spec: "devtools/shared/specs/targets/content-process",
     front: null,
