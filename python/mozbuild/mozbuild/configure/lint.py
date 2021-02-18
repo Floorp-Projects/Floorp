@@ -319,6 +319,11 @@ class LintSandbox(ConfigureSandbox):
             else:
                 what = _import.split(".")[0]
                 imports.add(what)
+            if _from == "__builtin__" and _import in glob["__builtins__"]:
+                e = NameError(
+                    "builtin '{}' doesn't need to be imported".format(_import)
+                )
+                self._raise_from(e, func)
         for instr in Bytecode(func):
             code = func.__code__
             if (

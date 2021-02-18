@@ -471,6 +471,25 @@ class TestLint(unittest.TestCase):
 
         self.assertEquals(str(e.exception), "global name 'unknown' is not defined")
 
+    def test_unnecessary_imports(self):
+        with self.assertRaisesFromLine(NameError, 3) as e:
+            with self.moz_configure(
+                """
+                option(env='FOO', help='foo')
+                @depends('FOO')
+                @imports(_from='__builtin__', _import='list')
+                def foo(value):
+                    if value:
+                        return list()
+                    return value
+            """
+            ):
+                self.lint_test()
+
+        self.assertEquals(
+            str(e.exception), "builtin 'list' doesn't need to be imported"
+        )
+
 
 if __name__ == "__main__":
     main()
