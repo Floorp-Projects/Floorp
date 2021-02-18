@@ -177,6 +177,8 @@ class LintSandbox(ConfigureSandbox):
                         continue
                     if instr.argval in self.BUILTINS:
                         continue
+                    if instr.argval in "namespace":
+                        continue
                     return True
         return False
 
