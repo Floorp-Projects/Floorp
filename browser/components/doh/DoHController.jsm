@@ -234,7 +234,9 @@ const DoHController = {
       return;
     }
 
-    Preferences.reset(NETWORK_TRR_MODE_PREF);
+    if (Preferences.get(NETWORK_TRR_MODE_PREF) !== 5) {
+      Preferences.reset(NETWORK_TRR_MODE_PREF);
+    }
     Preferences.reset(PREVIOUS_TRR_MODE_PREF);
   },
 
