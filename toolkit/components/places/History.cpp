@@ -25,7 +25,7 @@
 #include "mozilla/storage.h"
 #include "mozilla/dom/Link.h"
 #include "nsDocShellCID.h"
-#include "mozilla/Services.h"
+#include "mozilla/Components.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 #include "nsIWidget.h"
@@ -1667,7 +1667,7 @@ History* History::GetService() {
     return gService;
   }
 
-  nsCOMPtr<IHistory> service = services::GetHistory();
+  nsCOMPtr<IHistory> service = components::History::Service();
   if (service) {
     NS_ASSERTION(gService, "Our constructor was not run?!");
   }
