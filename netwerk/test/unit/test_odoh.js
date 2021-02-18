@@ -171,6 +171,7 @@ add_task(async function testODoHQueryA() {
   inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
   let answer = inRecord.getNextAddrAsString();
   Assert.equal(answer, expectedIP);
+  Assert.ok(dns.ODoHActivated);
 });
 
 add_task(async function testODoHQueryAAAA() {
@@ -199,4 +200,5 @@ add_task(async function testODoHQueryAAAA() {
   inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
   let answer = inRecord.getNextAddrAsString();
   Assert.equal(answer, expectedIP);
+  Assert.ok(dns.ODoHActivated);
 });

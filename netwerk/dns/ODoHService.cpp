@@ -5,11 +5,13 @@
 
 #include "ODoHService.h"
 
+#include "mozilla/net/SocketProcessChild.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "nsIDNSService.h"
 #include "nsIDNSByTypeRecord.h"
 #include "nsIOService.h"
+#include "nsIObserverService.h"
 #include "ODoH.h"
 #include "TRRService.h"
 #include "nsURLHelper.h"
@@ -240,6 +242,31 @@ ODoHService::OnLookupComplete(nsICancelable* aRequest, nsIDNSRecord* aRec,
 
   mODoHConfigs.reset();
   mODoHConfigs.emplace(std::move(configs));
+
+  // Let observers know whether ODoHService is activated or not.
+  bool hasODoHConfigs = !mODoHConfigs->IsEmpty();
+  auto task = [hasODoHConfigs]() {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (XRE_IsSocketProcess()) {
+      SocketProcessChild::GetSingleton()->SendODoHServiceActivated(
+          hasODoHConfigs);
+    }
+
+    nsCOMPtr<nsIObserverService> observerService =
+        mozilla::services::GetObserverService();
+
+    if (observerService) {
+      observerService->NotifyObservers(nullptr, "odoh-service-activated",
+                                       hasODoHConfigs ? u"true" : u"false");
+    }
+  };
+
+  if (NS_IsMainThread()) {
+    task();
+  } else {
+    NS_DispatchToMainThread(
+        NS_NewRunnableFunction("ODoHService::Activated", std::move(task)));
+  }
 
   if (!mPendingRequests.IsEmpty()) {
     nsTArray<RefPtr<ODoH>> requests = std::move(mPendingRequests);
