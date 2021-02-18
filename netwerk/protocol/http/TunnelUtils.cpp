@@ -2152,6 +2152,11 @@ SocketTransportShim::GetRetryDnsIfPossible(bool* aRetry) {
   return mWrapped->GetRetryDnsIfPossible(aRetry);
 }
 
+NS_IMETHODIMP
+SocketTransportShim::GetStatus(nsresult* aStatus) {
+  return mWrapped->GetStatus(aStatus);
+}
+
 NS_IMPL_ISUPPORTS(TLSFilterTransaction, nsITimerCallback, nsINamed)
 NS_IMPL_ISUPPORTS(SocketTransportShim, nsISocketTransport, nsITransport)
 NS_IMPL_ISUPPORTS(InputStreamShim, nsIInputStream, nsIAsyncInputStream)
