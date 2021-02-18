@@ -25,6 +25,7 @@
 #include "mozilla/dom/Document.h"
 
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
+#include "js/Transcoding.h"
 #include "MainThreadUtils.h"
 #include "nsDebug.h"
 #include "nsDirectoryServiceUtils.h"
@@ -1205,7 +1206,8 @@ JSScript* ScriptPreloader::CachedScript::GetJSScript(
   LOG(Info, "Decoding script %s on main thread...\n", mURL.get());
 
   JS::RootedScript script(cx);
-  if (JS::DecodeScript(cx, options, Range(), &script)) {
+  if (JS::DecodeScript(cx, options, Range(), &script) ==
+      JS::TranscodeResult_Ok) {
     mScript.Set(script);
 
     if (mCache.mSaveComplete) {
