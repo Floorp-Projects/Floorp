@@ -468,7 +468,7 @@ class DefaultSessionControlControllerTest {
                 )
             }
         } finally {
-            unmockkStatic(SearchState::class)
+            unmockkStatic("mozilla.components.browser.state.state.SearchStateKt")
         }
     }
 
