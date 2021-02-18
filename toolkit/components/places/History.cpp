@@ -1318,7 +1318,7 @@ History::History()
       mRecentlyVisitedURIs(RECENTLY_VISITED_URIS_SIZE) {
   NS_ASSERTION(!gService, "Ruh-roh!  This service has already been created!");
   if (XRE_IsParentProcess()) {
-    nsCOMPtr<nsIProperties> dirsvc = services::GetDirectoryService();
+    nsCOMPtr<nsIProperties> dirsvc = components::Directory::Service();
     bool haveProfile = false;
     MOZ_RELEASE_ASSERT(
         dirsvc &&
