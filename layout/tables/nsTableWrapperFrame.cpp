@@ -315,9 +315,23 @@ nscoord nsTableWrapperFrame::InnerTableShrinkWrapISize(
   LogicalSize marginSize(aWM);  // Inner table doesn't have any margin
   LogicalSize bpSize = input.ComputedLogicalBorderPadding(aWM).Size(aWM);
 
+  // We are computing inline-size, and as long as we've got a
+  // standards-compliant 'caption-side' value [1], the caption can only occupy
+  // area in the block-axis, so pass an empty caption area.
+  //
+  // [1] We're unsupporting our non-standards-compliant caption-side values via
+  // the preference layout.css.caption-side-non-standard.enabled.
+  //
+  // TODO: If we were to extend this function to return the shrink-wrap
+  // block-size as well, our caller needs to pass the area occupied by captions
+  // so that the block-size override can subtract the caption's block-size
+  // (Bug 1692116).
+  const LogicalSize areaOccupiedByCaption(aWM);
+  StyleSizeOverrides innerOverrides = ComputeSizeOverridesForInnerTable(
+      aTableFrame, aSizeOverrides, bpSize, areaOccupiedByCaption);
   auto size =
       aTableFrame->ComputeSize(aRenderingContext, aWM, aCBSize, aAvailableISize,
-                               marginSize, bpSize, aSizeOverrides, aFlags);
+                               marginSize, bpSize, innerOverrides, aFlags);
   return size.mLogicalSize.ISize(aWM) + bpSize.ISize(aWM);
 }
 
@@ -339,6 +353,91 @@ nscoord nsTableWrapperFrame::CaptionShrinkWrapISize(
                                          {}, aFlags);
   return size.mLogicalSize.ISize(aWM) + marginSize.ISize(aWM) +
          bpSize.ISize(aWM);
+}
+
+StyleSize nsTableWrapperFrame::ReduceStyleSizeBy(
+    const StyleSize& aStyleSize, const nscoord aAmountToReduce) const {
+  MOZ_ASSERT(aStyleSize.ConvertsToLength(), "Only handles 'Length' StyleSize!");
+  const nscoord size = std::max(0, aStyleSize.ToLength() - aAmountToReduce);
+  return StyleSize::LengthPercentage(LengthPercentage::FromAppUnits(size));
+}
+
+StyleSizeOverrides nsTableWrapperFrame::ComputeSizeOverridesForInnerTable(
+    const nsTableFrame* aTableFrame,
+    const StyleSizeOverrides& aWrapperSizeOverrides,
+    const LogicalSize& aBorderPadding,
+    const LogicalSize& aAreaOccupiedByCaption) const {
+  if (aWrapperSizeOverrides.mApplyOverridesVerbatim ||
+      !aWrapperSizeOverrides.HasAnyLengthOverrides()) {
+    // We are asked to apply the size overrides directly to the inner table, or
+    // there's no 'Length' size overrides. No need to tweak the size overrides.
+    return aWrapperSizeOverrides;
+  }
+
+  const auto wm = aTableFrame->GetWritingMode();
+  LogicalSize areaOccupied = aAreaOccupiedByCaption;
+  if (aTableFrame->StylePosition()->mBoxSizing == StyleBoxSizing::Content) {
+    // If the inner table frame has 'box-sizing: content', enlarge the occupied
+    // area by adding border & padding because they should also be subtracted
+    // from the size overrides.
+    areaOccupied += aBorderPadding;
+  }
+
+  StyleSizeOverrides innerSizeOverrides;
+  const auto& wrapperISize = aWrapperSizeOverrides.mStyleISize;
+  if (wrapperISize) {
+    MOZ_ASSERT(!wrapperISize->HasPercent(),
+               "Table doesn't support size overrides containing percentages!");
+    innerSizeOverrides.mStyleISize.emplace(
+        wrapperISize->ConvertsToLength()
+            ? ReduceStyleSizeBy(*wrapperISize, areaOccupied.ISize(wm))
+            : *wrapperISize);
+  }
+
+  const auto& wrapperBSize = aWrapperSizeOverrides.mStyleBSize;
+  if (wrapperBSize) {
+    MOZ_ASSERT(!wrapperBSize->HasPercent(),
+               "Table doesn't support size overrides containing percentages!");
+    innerSizeOverrides.mStyleBSize.emplace(
+        wrapperBSize->ConvertsToLength()
+            ? ReduceStyleSizeBy(*wrapperBSize, areaOccupied.BSize(wm))
+            : *wrapperBSize);
+  }
+
+  return innerSizeOverrides;
+}
+
+/* virtual */
+nsIFrame::SizeComputationResult nsTableWrapperFrame::ComputeSize(
+    gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
+    nscoord aAvailableISize, const LogicalSize& aMargin,
+    const LogicalSize& aBorderPadding, const StyleSizeOverrides& aSizeOverrides,
+    ComputeSizeFlags aFlags) {
+  auto result = nsContainerFrame::ComputeSize(
+      aRenderingContext, aWM, aCBSize, aAvailableISize, aMargin, aBorderPadding,
+      aSizeOverrides, aFlags);
+
+  if (aSizeOverrides.mApplyOverridesVerbatim &&
+      aSizeOverrides.HasAnyOverrides()) {
+    // We are asked to apply the size overrides directly to the inner table, but
+    // we still want ourselves to remain 'auto'-sized and shrink-wrapping our
+    // children's sizes. (Table wrapper frames always have 'auto' inline-size
+    // and block-size, since we don't inherit those properties from inner table,
+    // and authors can't target them with styling.)
+    auto size =
+        ComputeAutoSize(aRenderingContext, aWM, aCBSize, aAvailableISize,
+                        aMargin, aBorderPadding, aSizeOverrides, aFlags);
+    result.mLogicalSize.ISize(aWM) = size.ISize(aWM);
+
+    // FIXME: ComputeAutoSize() always returns unconstrained block-size. For
+    // now, we trust nsContainerSize::ComputeSize() to have given us the
+    // table-wrapper's block size. This value might come from aSizeOverrides,
+    // which makes it wrong if there's any caption in the block-axis or if the
+    // inner table has any non-zero border & padding with 'box-sizing:
+    // content-box'. (Bug 1692116)
+  }
+
+  return result;
 }
 
 /* virtual */
@@ -641,7 +740,10 @@ void nsTableWrapperFrame::CreateReflowInputForInnerTable(
     }
   }
 
-  if (!aTableFrame->IsBorderCollapse()) {
+  if (!aTableFrame->IsBorderCollapse() &&
+      !aOuterRI.mStyleSizeOverrides.HasAnyOverrides()) {
+    // We are not border-collapsed and not given any size overrides. It's
+    // sufficient to call the standard ReflowInput constructor.
     aChildRI.emplace(aPresContext, aOuterRI, aTableFrame, availSize, cbSize);
     return;
   }
@@ -663,8 +765,12 @@ void nsTableWrapperFrame::CreateReflowInputForInnerTable(
     padding.emplace(input.ComputedLogicalPadding(wm));
   }
 
+  StyleSizeOverrides innerOverrides = ComputeSizeOverridesForInnerTable(
+      aTableFrame, aOuterRI.mStyleSizeOverrides, borderPadding->Size(wm),
+      areaOccupiedByCaption);
+
   aChildRI.emplace(aPresContext, aOuterRI, aTableFrame, availSize, Nothing(),
-                   ReflowInput::InitFlag::CallerWillInit);
+                   ReflowInput::InitFlag::CallerWillInit, innerOverrides);
   aChildRI->Init(aPresContext, cbSize, Some(*borderPadding - *padding),
                  padding);
 }
