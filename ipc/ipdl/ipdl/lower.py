@@ -5407,6 +5407,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             send = ExprSelect(actor, "->", send.name)
 
         sendok = ExprVar("sendok__")
+        self.externalIncludes.add("mozilla/ProfilerMarkers.h")
         return (
             sendok,
             (
@@ -5587,6 +5588,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         )
 
     def profilerLabel(self, md):
+        self.externalIncludes.add("mozilla/ProfilerLabels.h")
         return StmtCode(
             """
             AUTO_PROFILER_LABEL("${name}::${msgname}", OTHER);
