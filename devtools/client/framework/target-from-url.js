@@ -133,23 +133,6 @@ async function _targetFromURL(client, id, type, chrome) {
       }
       throw ex;
     }
-  } else if (type == "window") {
-    // Fetch target for a remote window actor
-    DevToolsServer.allowChromeProcess = true;
-    try {
-      id = parseInt(id, 10);
-      if (isNaN(id)) {
-        throw new Error("targetFromURL, window requires id parameter");
-      }
-      front = await client.mainRoot.getWindow({
-        outerWindowID: id,
-      });
-    } catch (ex) {
-      if (ex.error == "notFound") {
-        throw new Error(`targetFromURL, window with id '${id}' doesn't exist`);
-      }
-      throw ex;
-    }
   } else {
     throw new Error(`targetFromURL, unsupported type '${type}' parameter`);
   }

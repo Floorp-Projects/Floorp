@@ -299,7 +299,6 @@ function TargetMixin(parentClass) {
         this.isAddon ||
         this.isContentProcess ||
         this.isParentProcess ||
-        this.isWindowTarget ||
         this._forceChrome
       );
     }
@@ -377,14 +376,6 @@ function TargetMixin(parentClass) {
         this.targetForm &&
         this.targetForm.actor &&
         this.targetForm.actor.match(/conn\d+\.parentProcessTarget\d+/)
-      );
-    }
-
-    get isWindowTarget() {
-      return !!(
-        this.targetForm &&
-        this.targetForm.actor &&
-        this.targetForm.actor.match(/conn\d+\.chromeWindowTarget\d+/)
       );
     }
 

@@ -44,15 +44,6 @@ const rootSpecPrototype = {
       },
     },
 
-    getWindow: {
-      request: {
-        outerWindowID: Option(0, "number"),
-      },
-      response: {
-        window: RetVal("browsingContextTarget"),
-      },
-    },
-
     listAddons: {
       request: {
         iconDataURL: Option(0, "boolean"),
