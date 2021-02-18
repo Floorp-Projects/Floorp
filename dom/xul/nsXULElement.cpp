@@ -160,6 +160,10 @@ nsXULElement* NS_NewBasicXULElement(
 /* static */
 nsXULElement* nsXULElement::Construct(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo) {
+  // NOTE: If you add elements here, you probably also want to change
+  // mozilla::dom::binding_detail::HTMLConstructor in BindingUtils.cpp to take
+  // them into account, otherwise you'll start getting "Illegal constructor"
+  // exceptions in chrome code.
   RefPtr<mozilla::dom::NodeInfo> nodeInfo = aNodeInfo;
   if (nodeInfo->Equals(nsGkAtoms::label) ||
       nodeInfo->Equals(nsGkAtoms::description)) {
