@@ -201,10 +201,12 @@ class Core(
         )
     }
 
+    @Suppress("Deprecation")
     private fun lookupSessionManager(): SessionManager {
         return sessionManager
     }
 
+    @Suppress("Deprecation")
     private fun findSessionById(tabId: String): Session? {
         return sessionManager.findSessionById(tabId)
     }
@@ -227,6 +229,7 @@ class Core(
      * sessions from the [SessionStorage], and with a default session (about:blank) in
      * case all sessions/tabs are closed.
      */
+    @Deprecated("Use browser store (for reading) and use cases (for writing) instead")
     val sessionManager by lazyMonitored {
         SessionManager(engine, store).also {
             // Install the "icons" WebExtension to automatically load icons for every visited website.

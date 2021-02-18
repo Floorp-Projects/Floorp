@@ -56,6 +56,7 @@ class Components(private val context: Context) {
     }
     val services by lazyMonitored { Services(context, backgroundServices.accountManager) }
     val core by lazyMonitored { Core(context, analytics.crashReporter, strictMode) }
+    @Suppress("Deprecation")
     val useCases by lazyMonitored {
         UseCases(
             context,
@@ -66,6 +67,7 @@ class Components(private val context: Context) {
             core.topSitesStorage
         )
     }
+    @Suppress("Deprecation")
     val intentProcessors by lazyMonitored {
         IntentProcessors(
             context,

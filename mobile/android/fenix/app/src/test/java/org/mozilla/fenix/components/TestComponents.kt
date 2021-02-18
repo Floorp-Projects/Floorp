@@ -16,6 +16,7 @@ class TestComponents(private val context: Context) : Components(context) {
     }
     override val services by lazy { Services(context, backgroundServices.accountManager) }
     override val core by lazy { TestCore(context, analytics.crashReporter) }
+    @Suppress("Deprecation")
     override val useCases by lazy {
         UseCases(
             context,
