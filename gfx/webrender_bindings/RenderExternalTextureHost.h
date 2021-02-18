@@ -8,7 +8,7 @@
 #define MOZILLA_GFX_RENDEREXTERNALTEXTUREHOST_H
 
 #include "mozilla/layers/TextureHostOGL.h"
-#include "RenderTextureHostSWGL.h"
+#include "RenderTextureHost.h"
 
 namespace mozilla {
 namespace wr {
@@ -19,7 +19,7 @@ namespace wr {
  * extension, which makes it possible to avoid some copies during texture
  * upload. This is especially helpful for high resolution video.
  */
-class RenderExternalTextureHost final : public RenderTextureHostSWGL {
+class RenderExternalTextureHost final : public RenderTextureHost {
  public:
   RenderExternalTextureHost(uint8_t* aBuffer,
                             const layers::BufferDescriptor& aDescriptor);
@@ -31,20 +31,6 @@ class RenderExternalTextureHost final : public RenderTextureHostSWGL {
   size_t Bytes() override {
     return mSize.width * mSize.height * BytesPerPixel(mFormat);
   }
-
-  // RenderTextureHostSWGL
-  size_t GetPlaneCount() const override;
-
-  gfx::SurfaceFormat GetFormat() const override;
-
-  gfx::ColorDepth GetColorDepth() const override;
-
-  gfx::YUVColorSpace GetYUVColorSpace() const override;
-
-  bool MapPlane(RenderCompositor* aCompositor, uint8_t aChannelIndex,
-                PlaneInfo& aPlaneInfo) override;
-
-  void UnmapPlanes() override;
 
  private:
   ~RenderExternalTextureHost();

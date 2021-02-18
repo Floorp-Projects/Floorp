@@ -139,13 +139,6 @@ class KnowsCompositor {
     return lock.ref().mTextureFactoryIdentifier.mUseCompositorWnd;
   }
 
-  WebRenderBackend WebRenderBackend() const {
-    auto lock = mData.Lock();
-    MOZ_ASSERT(lock.ref().mTextureFactoryIdentifier.mParentBackend ==
-               layers::LayersBackend::LAYERS_WR);
-    return lock.ref().mTextureFactoryIdentifier.mWebRenderBackend;
-  }
-
   bool UsingSoftwareWebRender() const {
     auto lock = mData.Lock();
     return lock.ref().mTextureFactoryIdentifier.mParentBackend ==
