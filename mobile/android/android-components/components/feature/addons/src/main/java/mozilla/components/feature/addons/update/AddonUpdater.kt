@@ -571,6 +571,8 @@ internal class AddonUpdaterWorker(
 
     @Suppress("OverridingDeprecatedMember")
     override val coroutineContext = Dispatchers.Main
+    @VisibleForTesting
+    internal var attemptScope = CoroutineScope(Dispatchers.IO)
 
     @Suppress("TooGenericExceptionCaught", "MaxLineLength")
     override suspend fun doWork(): Result {
@@ -634,8 +636,9 @@ internal class AddonUpdaterWorker(
         }
     }
 
-    private fun saveUpdateAttempt(extensionId: String, status: AddonUpdater.Status) {
-        CoroutineScope((Dispatchers.IO)).launch {
+    @VisibleForTesting
+    internal fun saveUpdateAttempt(extensionId: String, status: AddonUpdater.Status) {
+        attemptScope.launch {
             updateAttemptStorage.saveOrUpdate(AddonUpdater.UpdateAttempt(extensionId, Date(), status))
         }
     }
