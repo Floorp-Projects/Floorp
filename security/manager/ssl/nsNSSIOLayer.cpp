@@ -2548,7 +2548,8 @@ static PRFileDesc* nsSSLIOLayerImportFD(PRFileDesc* fd,
   uint32_t flags = 0;
   infoObject->GetProviderFlags(&flags);
   // Provide the client cert to HTTPS proxy no matter if it is anonymous.
-  if (flags & nsISocketProvider::ANONYMOUS_CONNECT && !haveHTTPSProxy) {
+  if (flags & nsISocketProvider::ANONYMOUS_CONNECT && !haveHTTPSProxy &&
+      !(flags & nsISocketProvider::ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT)) {
     SSL_GetClientAuthDataHook(sslSock, nullptr, infoObject);
   } else {
     SSL_GetClientAuthDataHook(
