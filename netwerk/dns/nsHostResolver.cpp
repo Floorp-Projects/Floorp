@@ -1919,7 +1919,7 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
   addrRec->mResolving--;
   LOG((
       "nsHostResolver::CompleteLookup %s %p %X resolver=%d stillResolving=%d\n",
-      addrRec->host.get(), aNewRRSet, (unsigned int)status, type,
+      addrRec->host.get(), aNewRRSet, (unsigned int)status, (int)type,
       int(addrRec->mResolving)));
 
   if (type != DNSResolverType::Native) {
