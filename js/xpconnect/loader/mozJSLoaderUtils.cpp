@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "js/Transcoding.h"
 #include "mozilla/scache/StartupCache.h"
 
 #include "jsapi.h"
@@ -14,6 +15,21 @@
 using namespace JS;
 using namespace mozilla::scache;
 using mozilla::UniquePtr;
+
+static nsresult HandleTranscodeResult(JSContext* cx,
+                                      JS::TranscodeResult result) {
+  if (result == JS::TranscodeResult::Ok) {
+    return NS_OK;
+  }
+
+  if (result == JS::TranscodeResult::Throw) {
+    JS_ClearPendingException(cx);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  MOZ_ASSERT(IsTranscodeFailureResult(result));
+  return NS_ERROR_FAILURE;
+}
 
 // We only serialize scripts with system principals. So we don't serialize the
 // principals when writing a script. Instead, when reading it back, we set the
@@ -35,17 +51,7 @@ nsresult ReadCachedScript(StartupCache* cache, nsACString& uri, JSContext* cx,
   JS::TranscodeBuffer buffer;
   buffer.replaceRawBuffer(reinterpret_cast<uint8_t*>(copy), len);
   JS::TranscodeResult code = JS::DecodeScript(cx, options, buffer, scriptp);
-  if (code == JS::TranscodeResult_Ok) {
-    return NS_OK;
-  }
-
-  if ((code & JS::TranscodeResult_Failure) != 0) {
-    return NS_ERROR_FAILURE;
-  }
-
-  MOZ_ASSERT((code & JS::TranscodeResult_Throw) != 0);
-  JS_ClearPendingException(cx);
-  return NS_ERROR_OUT_OF_MEMORY;
+  return HandleTranscodeResult(cx, code);
 }
 
 nsresult WriteCachedScript(StartupCache* cache, nsACString& uri, JSContext* cx,
@@ -55,13 +61,8 @@ nsresult WriteCachedScript(StartupCache* cache, nsACString& uri, JSContext* cx,
 
   JS::TranscodeBuffer buffer;
   JS::TranscodeResult code = JS::EncodeScript(cx, buffer, script);
-  if (code != JS::TranscodeResult_Ok) {
-    if ((code & JS::TranscodeResult_Failure) != 0) {
-      return NS_ERROR_FAILURE;
-    }
-    MOZ_ASSERT((code & JS::TranscodeResult_Throw) != 0);
-    JS_ClearPendingException(cx);
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (code != JS::TranscodeResult::Ok) {
+    return HandleTranscodeResult(cx, code);
   }
 
   size_t size = buffer.length();

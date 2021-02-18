@@ -40,7 +40,7 @@ bool XDRCoderBase::validateResultCode(JSContext* cx,
   if (cx->isHelperThreadContext()) {
     return true;
   }
-  return cx->isExceptionPending() == bool(code == JS::TranscodeResult_Throw);
+  return cx->isExceptionPending() == bool(code == JS::TranscodeResult::Throw);
 }
 #endif
 
@@ -69,7 +69,7 @@ XDRResult XDRState<mode>::codeChars(Utf8Unit* units, size_t count) {
   if (mode == XDR_ENCODE) {
     uint8_t* ptr = buf->write(count);
     if (!ptr) {
-      return fail(JS::TranscodeResult_Throw);
+      return fail(JS::TranscodeResult::Throw);
     }
 
     std::transform(units, units + count, ptr,
@@ -77,7 +77,7 @@ XDRResult XDRState<mode>::codeChars(Utf8Unit* units, size_t count) {
   } else {
     const uint8_t* ptr = buf->read(count);
     if (!ptr) {
-      return fail(JS::TranscodeResult_Failure_BadDecode);
+      return fail(JS::TranscodeResult::Failure_BadDecode);
     }
 
     std::transform(ptr, ptr + count, units,
@@ -97,7 +97,7 @@ XDRResult XDRState<mode>::codeChars(char16_t* chars, size_t nchars) {
   if (mode == XDR_ENCODE) {
     uint8_t* ptr = buf->write(nbytes);
     if (!ptr) {
-      return fail(JS::TranscodeResult_Throw);
+      return fail(JS::TranscodeResult::Throw);
     }
 
     // |mozilla::NativeEndian| correctly handles writing into unaligned |ptr|.
@@ -105,7 +105,7 @@ XDRResult XDRState<mode>::codeChars(char16_t* chars, size_t nchars) {
   } else {
     const uint8_t* ptr = buf->read(nbytes);
     if (!ptr) {
-      return fail(JS::TranscodeResult_Failure_BadDecode);
+      return fail(JS::TranscodeResult::Failure_BadDecode);
     }
 
     // |mozilla::NativeEndian| correctly handles reading from unaligned |ptr|.
@@ -136,7 +136,7 @@ static XDRResult XDRCodeCharsZ(XDRState<mode>* xdr,
     size_t lengthSizeT = std::char_traits<CharT>::length(chars);
     if (lengthSizeT > JSString::MAX_LENGTH) {
       ReportAllocationOverflow(xdr->cx());
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
     length = static_cast<uint32_t>(lengthSizeT);
   }
@@ -145,7 +145,7 @@ static XDRResult XDRCodeCharsZ(XDRState<mode>* xdr,
   if (mode == XDR_DECODE) {
     owned = xdr->cx()->template make_pod_array<CharT>(length + 1);
     if (!owned) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
     chars = owned.get();
   }
@@ -230,7 +230,7 @@ static XDRResult VersionCheck(XDRState<mode>* xdr, XDRFormatType formatType) {
   JS::BuildIdCharVector buildId;
   if (!GetScriptTranscodingBuildId(formatType, &buildId)) {
     ReportOutOfMemory(xdr->cx());
-    return xdr->fail(JS::TranscodeResult_Throw);
+    return xdr->fail(JS::TranscodeResult::Throw);
   }
   MOZ_ASSERT(!buildId.empty());
 
@@ -242,7 +242,7 @@ static XDRResult VersionCheck(XDRState<mode>* xdr, XDRFormatType formatType) {
   MOZ_TRY(xdr->codeUint32(&buildIdLength));
 
   if (mode == XDR_DECODE && buildIdLength != buildId.length()) {
-    return xdr->fail(JS::TranscodeResult_Failure_BadBuildId);
+    return xdr->fail(JS::TranscodeResult::Failure_BadBuildId);
   }
 
   if (mode == XDR_ENCODE) {
@@ -254,14 +254,14 @@ static XDRResult VersionCheck(XDRState<mode>* xdr, XDRFormatType formatType) {
     // buildId.
     if (!decodedBuildId.resize(buildIdLength)) {
       ReportOutOfMemory(xdr->cx());
-      return xdr->fail(JS::TranscodeResult_Throw);
+      return xdr->fail(JS::TranscodeResult::Throw);
     }
 
     MOZ_TRY(xdr->codeBytes(decodedBuildId.begin(), buildIdLength));
 
     // We do not provide binary compatibility with older scripts.
     if (!ArrayEqual(decodedBuildId.begin(), buildId.begin(), buildIdLength)) {
-      return xdr->fail(JS::TranscodeResult_Failure_BadBuildId);
+      return xdr->fail(JS::TranscodeResult::Failure_BadBuildId);
     }
   }
 
@@ -326,7 +326,7 @@ static XDRResult XDRParserAtomTable(XDRState<mode>* xdr,
 
   if (!xdr->frontendAtoms().allocate(xdr->cx(), xdr->stencilAlloc(),
                                      atomVectorLength)) {
-    return xdr->fail(JS::TranscodeResult_Throw);
+    return xdr->fail(JS::TranscodeResult::Throw);
   }
 
   uint32_t atomCount;
@@ -405,7 +405,7 @@ XDRResult XDRState<mode>::codeStencil(frontend::CompilationInput& input,
   // instructions.
   if (mode == XDR_ENCODE) {
     if (!!input.options.instrumentationKinds) {
-      return fail(JS::TranscodeResult_Failure);
+      return fail(JS::TranscodeResult::Failure);
     }
   }
 
@@ -468,7 +468,7 @@ XDRResult XDRIncrementalStencilEncoder::linearize(JS::TranscodeBuffer& buffer,
 
   // The accumlated transcode data can now be copied to the output buffer.
   if (!buffer.append(slices_.begin(), slices_.length())) {
-    return fail(JS::TranscodeResult_Throw);
+    return fail(JS::TranscodeResult::Throw);
   }
 
   return Ok();
@@ -492,12 +492,12 @@ XDRResult XDRStencilDecoder::codeStencils(
     auto delazificationSet = MakeUnique<frontend::StencilDelazificationSet>();
     if (!delazificationSet) {
       ReportOutOfMemory(cx());
-      return fail(JS::TranscodeResult_Throw);
+      return fail(JS::TranscodeResult::Throw);
     }
 
     if (!delazificationSet->delazifications.reserve(nchunks_ - 1)) {
       ReportOutOfMemory(cx());
-      return fail(JS::TranscodeResult_Throw);
+      return fail(JS::TranscodeResult::Throw);
     }
 
     for (size_t i = 1; i < nchunks_; i++) {
@@ -515,7 +515,7 @@ XDRResult XDRStencilDecoder::codeStencils(
 
     // NOTE: This also computes the `max*DataLength` values.
     if (!delazificationSet->buildDelazificationIndices(cx(), stencil)) {
-      return fail(JS::TranscodeResult_Throw);
+      return fail(JS::TranscodeResult::Throw);
     }
 
     stencil.delazificationSet = std::move(delazificationSet);
@@ -552,7 +552,7 @@ XDRResultT<bool> XDRIncrementalStencilEncoder::checkAlreadyCoded(
 
   if (!encodedFunctions_.add(p, key)) {
     ReportOutOfMemory(cx());
-    return fail<bool>(JS::TranscodeResult_Throw);
+    return fail<bool>(JS::TranscodeResult::Throw);
   }
 
   return false;
