@@ -13,7 +13,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/ThreadSafeWeakPtr.h"
 #include "mozilla/net/WebSocketChannel.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MessageEvent.h"
@@ -68,6 +67,7 @@
 #include "nsIWebSocketChannel.h"
 #include "nsIWebSocketListener.h"
 #include "nsProxyRelease.h"
+#include "nsWeakReference.h"
 #include "nsIWebSocketImpl.h"
 
 #define OPEN_EVENT_STRING u"open"_ns
@@ -83,14 +83,11 @@ namespace dom {
 class WebSocketImpl final : public nsIInterfaceRequestor,
                             public nsIWebSocketListener,
                             public nsIObserver,
-                            public SupportsThreadSafeWeakPtr<WebSocketImpl>,
+                            public nsSupportsWeakReference,
                             public nsIRequest,
                             public nsIEventTarget,
                             public nsIWebSocketImpl {
  public:
-  MOZ_DECLARE_THREADSAFEWEAKREFERENCE_TYPENAME(WebSocketImpl)
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(WebSocketImpl)
-
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIWEBSOCKETLISTENER
   NS_DECL_NSIOBSERVER
@@ -245,7 +242,8 @@ class WebSocketImpl final : public nsIInterfaceRequestor,
 };
 
 NS_IMPL_ISUPPORTS(WebSocketImpl, nsIInterfaceRequestor, nsIWebSocketListener,
-                  nsIObserver, nsIRequest, nsIEventTarget, nsIWebSocketImpl)
+                  nsIObserver, nsISupportsWeakReference, nsIRequest,
+                  nsIEventTarget, nsIWebSocketImpl)
 
 class CallDispatchConnectionCloseEvents final : public DiscardableRunnable {
  public:
