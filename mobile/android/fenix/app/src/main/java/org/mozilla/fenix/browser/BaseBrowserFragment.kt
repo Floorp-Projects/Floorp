@@ -458,9 +458,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
 
         downloadFeature.onDownloadStopped = { downloadState, _, downloadJobStatus ->
             // If the download is just paused, don't show any in-app notification
-            if (downloadJobStatus == DownloadState.Status.COMPLETED ||
-                downloadJobStatus == DownloadState.Status.FAILED
-            ) {
+            if (shouldShowCompletedDownloadDialog(downloadState, downloadJobStatus)) {
 
                 saveDownloadDialogState(
                     downloadState.sessionId,
@@ -488,16 +486,13 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                     onDismiss = { sharedViewModel.downloadDialogState.remove(downloadState.sessionId) }
                 )
 
-                // Don't show the dialog if we aren't in the tab that started the download
-                if (downloadState.sessionId == sessionManager.selectedSession?.id) {
-                    dynamicDownloadDialog.show()
-                    browserToolbarView.expand()
-                }
+                dynamicDownloadDialog.show()
+                browserToolbarView.expand()
             }
         }
 
         resumeDownloadDialogState(
-            sessionManager.selectedSession?.id,
+            getCurrentTab()?.id,
             store, view, context, toolbarHeight
         )
 
@@ -1152,7 +1147,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
         }
     }
 
-    private fun getCurrentTab(): SessionState? {
+    @VisibleForTesting
+    internal fun getCurrentTab(): SessionState? {
         return requireComponents.core.store.state.findCustomTabOrSelectedTab(customTabSessionId)
     }
 
@@ -1358,4 +1354,16 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
      */
     @VisibleForTesting
     internal fun getSwipeRefreshLayout() = swipeRefresh
+
+    @VisibleForTesting
+    internal fun shouldShowCompletedDownloadDialog(
+        downloadState: DownloadState,
+        status: DownloadState.Status
+    ): Boolean {
+
+        val isValidStatus = status in listOf(DownloadState.Status.COMPLETED, DownloadState.Status.FAILED)
+        val isSameTab = downloadState.sessionId == getCurrentTab()?.id ?: false
+
+        return isValidStatus && isSameTab
+    }
 }

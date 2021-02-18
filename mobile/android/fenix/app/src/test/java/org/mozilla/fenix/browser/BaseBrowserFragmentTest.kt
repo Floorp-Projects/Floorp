@@ -12,8 +12,12 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
+import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.session.behavior.EngineViewBrowserToolbarBehavior
@@ -110,6 +114,66 @@ class BaseBrowserFragmentTest {
         fragment.initializeEngineView(13)
 
         verify { (swipeRefreshLayout.layoutParams as CoordinatorLayout.LayoutParams).bottomMargin = 13 }
+    }
+
+    @Test
+    fun `WHEN status is equals to FAILED or COMPLETED and it is the same tab then shouldShowCompletedDownloadDialog will be true`() {
+        every { fragment.getCurrentTab() } returns createTab(id = "1", url = "")
+
+        val download = DownloadState(
+            url = "",
+            sessionId = "1"
+        )
+
+        val status = DownloadState.Status.values()
+            .filter { it == DownloadState.Status.COMPLETED && it == DownloadState.Status.FAILED }
+
+        status.forEach {
+            val result =
+                fragment.shouldShowCompletedDownloadDialog(download, it)
+
+            assertTrue(result)
+        }
+    }
+
+    @Test
+    fun `WHEN status is different from FAILED or COMPLETED then shouldShowCompletedDownloadDialog will be false`() {
+        every { fragment.getCurrentTab() } returns createTab(id = "1", url = "")
+
+        val download = DownloadState(
+            url = "",
+            sessionId = "1"
+        )
+
+        val status = DownloadState.Status.values()
+            .filter { it != DownloadState.Status.COMPLETED && it != DownloadState.Status.FAILED }
+
+        status.forEach {
+            val result =
+                fragment.shouldShowCompletedDownloadDialog(download, it)
+
+            assertFalse(result)
+        }
+    }
+
+    @Test
+    fun `WHEN the tab is different from the initial one then shouldShowCompletedDownloadDialog will be false`() {
+        every { fragment.getCurrentTab() } returns createTab(id = "1", url = "")
+
+        val download = DownloadState(
+            url = "",
+            sessionId = "2"
+        )
+
+        val status = DownloadState.Status.values()
+            .filter { it != DownloadState.Status.COMPLETED && it != DownloadState.Status.FAILED }
+
+        status.forEach {
+            val result =
+                fragment.shouldShowCompletedDownloadDialog(download, it)
+
+            assertFalse(result)
+        }
     }
 }
 
