@@ -10,8 +10,8 @@
 option("--disable-optimize", nargs="?", help="Disable optimizations via compiler flags")
 
 
-@depends("--enable-optimize", "--help")
-def moz_optimize(option, _):
+@depends("--enable-optimize")
+def moz_optimize(option):
     flags = None
 
     if len(option):

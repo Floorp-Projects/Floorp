@@ -1258,6 +1258,7 @@ class ConfigureSandbox(dict):
             __name__=self._paths[-1] if self._paths else "",
             os=self.OS,
             log=self.log_impl,
+            namespace=ReadOnlyNamespace,
         )
         if update_globals:
             update_globals(glob)
