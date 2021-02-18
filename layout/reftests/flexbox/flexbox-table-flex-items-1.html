@@ -8,7 +8,7 @@
   <title>CSS Flexbox Test: caption size test for table flex items</title>
   <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1334403">
   <link rel="help" href="https://drafts.csswg.org/css-align-3/#valdef-justify-self-normal">
-  <link rel="match" href="flexbox-table-flex-items-1.html">
+  <link rel="match" href="flexbox-table-flex-items-1-ref.html">
   <style type="text/css">
 * { vertical-align: top; }
 .flex {
@@ -55,18 +55,6 @@ i:nth-of-type(2) { width:20px; height:10px; }
 <div class="flex"><i></i><table cellpadding=0 cellspacing=0><caption class="hmaa"><x></x></caption><td><t></t></td></table><i></i></div>
 <div class="flex"><i></i><table cellpadding=0 cellspacing=0><caption class="vma10"><x></x></caption><td><t></t></td></table><i></i></div>
 <div class="flex"><i></i><table cellpadding=0 cellspacing=0><caption class="vmaa"><x></x></caption><td><t></t></td></table><i></i></div>
-
-<!-- for generating the result for the -ref file
-<script>
-let sizes = "let sizes = [\n";
-Array.prototype.slice.call(document.querySelectorAll('.flex > table > caption')).map((e) => {
-  let cs = window.getComputedStyle(e);
-  sizes += '  [ "' + cs.width +'", "' + cs.height + '" ],\n';
-});
-sizes += "];\n";
-console.log(sizes);
-</script>
--->
 
 </body>
 </html>
