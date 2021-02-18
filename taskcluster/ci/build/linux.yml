@@ -102,7 +102,6 @@ linux64-fuzzing/debug:
     worker:
         max-run-time: 5400
         env:
-            MOZ_LOW_PARALLELISM_BUILD: '1'
             PERFHERDER_EXTRA_OPTIONS: fuzzing
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
@@ -925,7 +924,6 @@ linux64-fuzzing-ccov/opt:
     worker:
         max-run-time: 5400
         env:
-            MOZ_LOW_PARALLELISM_BUILD: '1'
             PERFHERDER_EXTRA_OPTIONS: fuzzing-ccov
             ASAN_OPTIONS: "detect_leaks=0"
             RUSTC_BOOTSTRAP: '1'
@@ -1251,7 +1249,6 @@ linux64-ccov/opt:
               type: file
         max-run-time: 7200
         env:
-            MOZ_LOW_PARALLELISM_BUILD: '1'
             RUSTC_BOOTSTRAP: '1'
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
