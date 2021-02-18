@@ -906,7 +906,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvUpdateResources(
     return IPC_OK();
   }
 
-  wr::TransactionBuilder txn;
+  wr::TransactionBuilder txn(mApi);
   txn.SetLowPriority(!IsRootWebRenderBridgeParent());
 
   Unused << GetNextWrEpoch();
@@ -1141,7 +1141,7 @@ bool WebRenderBridgeParent::ProcessDisplayListData(
     DisplayListData& aDisplayList, wr::Epoch aWrEpoch,
     const TimeStamp& aTxnStartTime, bool aValidTransaction,
     bool aObserveLayersUpdate) {
-  wr::TransactionBuilder txn;
+  wr::TransactionBuilder txn(mApi);
   Maybe<wr::AutoTransactionSender> sender;
 
   // Note that this needs to happen before the display list transaction is
@@ -1251,7 +1251,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
 bool WebRenderBridgeParent::ProcessEmptyTransactionUpdates(
     TransactionData& aData, bool* aScheduleComposite) {
   *aScheduleComposite = false;
-  wr::TransactionBuilder txn;
+  wr::TransactionBuilder txn(mApi);
   txn.SetLowPriority(!IsRootWebRenderBridgeParent());
 
   if (!aData.mScrollUpdates.IsEmpty()) {
@@ -1404,7 +1404,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvParentCommands(
     return IPC_OK();
   }
 
-  wr::TransactionBuilder txn;
+  wr::TransactionBuilder txn(mApi);
   txn.SetLowPriority(!IsRootWebRenderBridgeParent());
   if (!ProcessWebRenderParentCommands(aCommands, txn)) {
     return IPC_FAIL(this, "Invalid parent command found");
@@ -1419,7 +1419,7 @@ bool WebRenderBridgeParent::ProcessWebRenderParentCommands(
     wr::TransactionBuilder& aTxn) {
   // Transaction for async image pipeline that uses ImageBridge always need to
   // be non low priority.
-  wr::TransactionBuilder txnForImageBridge;
+  wr::TransactionBuilder txnForImageBridge(mApi);
   wr::AutoTransactionSender sender(mApi, &txnForImageBridge);
 
   for (nsTArray<WebRenderParentCommand>::index_type i = 0;
@@ -1563,7 +1563,7 @@ void WebRenderBridgeParent::DisableNativeCompositor() {
 }
 
 void WebRenderBridgeParent::UpdateQualitySettings() {
-  wr::TransactionBuilder txn;
+  wr::TransactionBuilder txn(mApi);
   txn.UpdateQualitySettings(gfxVars::ForceSubpixelAAWherePossible());
   mApi->SendTransaction(txn);
 }
@@ -1807,7 +1807,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvClearCachedResources() {
   }
 
   // Clear resources
-  wr::TransactionBuilder txn;
+  wr::TransactionBuilder txn(mApi);
   txn.SetLowPriority(true);
   txn.ClearDisplayList(GetNextWrEpoch(), mPipelineId);
   txn.Notify(
@@ -1886,7 +1886,7 @@ void WebRenderBridgeParent::InvalidateRenderedFrame() {
     return;
   }
 
-  wr::TransactionBuilder fastTxn(/* aUseSceneBuilderThread */ false);
+  wr::TransactionBuilder fastTxn(mApi, /* aUseSceneBuilderThread */ false);
   fastTxn.InvalidateRenderedFrame();
   mApi->SendTransaction(fastTxn);
 }
@@ -2133,9 +2133,9 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
   // Ensure GenerateFrame is handled on the render backend thread rather
   // than going through the scene builder thread. That way we continue
   // generating frames with the old scene even during slow scene builds.
-  wr::TransactionBuilder fastTxn(false /* useSceneBuilderThread */);
+  wr::TransactionBuilder fastTxn(mApi, false /* useSceneBuilderThread */);
   // Handle transaction that is related to DisplayList.
-  wr::TransactionBuilder sceneBuilderTxn;
+  wr::TransactionBuilder sceneBuilderTxn(mApi);
   wr::AutoTransactionSender sender(mApi, &sceneBuilderTxn);
 
   mAsyncImageManager->SetCompositionInfo(start, mCompositionOpportunityId);
@@ -2436,7 +2436,7 @@ void WebRenderBridgeParent::ClearResources() {
 
   mAsyncImageManager->RemovePipeline(mPipelineId, wrEpoch);
 
-  wr::TransactionBuilder txn;
+  wr::TransactionBuilder txn(mApi);
   txn.SetLowPriority(true);
   txn.ClearDisplayList(wrEpoch, mPipelineId);
 
