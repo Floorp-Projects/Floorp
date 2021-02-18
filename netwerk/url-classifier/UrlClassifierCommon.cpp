@@ -528,7 +528,7 @@ bool UrlClassifierCommon::IsAllowListed(nsIChannel* aChannel) {
          "check allowlisting test domain on channel %p",
          aChannel));
 
-    nsCOMPtr<nsIIOService> ios = services::GetIOService();
+    nsCOMPtr<nsIIOService> ios = components::IO::Service();
     if (NS_WARN_IF(!ios)) {
       return false;
     }

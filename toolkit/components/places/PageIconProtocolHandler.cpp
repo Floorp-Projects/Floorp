@@ -6,7 +6,7 @@
 
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/Services.h"
+#include "mozilla/Components.h"
 #include "nsFaviconService.h"
 #include "nsIChannel.h"
 #include "nsIFaviconService.h"
@@ -56,7 +56,7 @@ NS_IMETHODIMP DefaultFaviconObserver::OnStopRequest(nsIRequest*, nsresult) {
 
 static nsresult MakeDefaultFaviconChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
                                           nsIChannel** aOutChannel) {
-  nsCOMPtr<nsIIOService> ios = mozilla::services::GetIOService();
+  nsCOMPtr<nsIIOService> ios = mozilla::components::IO::Service();
   nsCOMPtr<nsIChannel> chan;
   nsCOMPtr<nsIURI> defaultFaviconURI;
 
