@@ -87,7 +87,7 @@ class WebRenderTextureHost : public TextureHost {
                         const Range<wr::ImageKey>& aImageKeys,
                         PushDisplayItemFlagSet aFlags) override;
 
-  bool SupportsExternalCompositing() override;
+  bool SupportsExternalCompositing(WebRenderBackend aBackend) override;
 
   bool NeedsYFlip() const override;
 
