@@ -21,15 +21,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { FeatureGate } = ChromeUtils.import(
   "resource://featuregates/FeatureGate.jsm"
 );
-const { PreferenceExperiments: NormandyPreferenceStudies } = ChromeUtils.import(
-  "resource://normandy/lib/PreferenceExperiments.jsm"
-);
-const { AddonStudies: NormandyAddonStudies } = ChromeUtils.import(
-  "resource://normandy/lib/AddonStudies.jsm"
-);
-const { PreferenceRollouts: NormandyPreferenceRollouts } = ChromeUtils.import(
-  "resource://normandy/lib/PreferenceRollouts.jsm"
-);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser"]);
 
@@ -895,6 +886,16 @@ var dataProviders = {
     if (!AppConstants.MOZ_NORMANDY) {
       done();
     }
+
+    const {
+      PreferenceExperiments: NormandyPreferenceStudies,
+    } = ChromeUtils.import("resource://normandy/lib/PreferenceExperiments.jsm");
+    const { AddonStudies: NormandyAddonStudies } = ChromeUtils.import(
+      "resource://normandy/lib/AddonStudies.jsm"
+    );
+    const {
+      PreferenceRollouts: NormandyPreferenceRollouts,
+    } = ChromeUtils.import("resource://normandy/lib/PreferenceRollouts.jsm");
 
     // Get Normandy data in parallel, and sort each group by slug.
     const [addonStudies, prefRollouts, prefStudies] = await Promise.all(
