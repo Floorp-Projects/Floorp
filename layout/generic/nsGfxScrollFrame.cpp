@@ -4329,12 +4329,18 @@ bool ScrollFrameHelper::DecideScrollableLayer(
       !DisplayPortUtils::HasDisplayPort(content) &&
       nsLayoutUtils::AsyncPanZoomEnabled(mOuter) && WantAsyncScroll() &&
       aBuilder->IsPaintingToWindow() && aSetBase) {
+    // SetDisplayPortMargins calls TriggerDisplayPortExpiration which starts a
+    // display port expiry timer for display ports that do expire. However
+    // minimal display ports do not expire, so the display port has to be
+    // marked before the SetDisplayPortMargins call so the expiry timer
+    // doesn't get started.
+    content->SetProperty(nsGkAtoms::MinimalDisplayPort,
+                         reinterpret_cast<void*>(true));
+
     DisplayPortUtils::SetDisplayPortMargins(
         content, mOuter->PresShell(), DisplayPortMargins::Empty(content),
         DisplayPortUtils::ClearMinimalDisplayPortProperty::No, 0,
         DisplayPortUtils::RepaintMode::DoNotRepaint);
-    content->SetProperty(nsGkAtoms::MinimalDisplayPort,
-                         reinterpret_cast<void*>(true));
   }
 
   bool usingDisplayPort = DisplayPortUtils::HasDisplayPort(content);
