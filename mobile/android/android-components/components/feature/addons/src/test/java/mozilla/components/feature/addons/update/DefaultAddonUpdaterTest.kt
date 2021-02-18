@@ -17,6 +17,8 @@ import androidx.work.testing.WorkManagerTestInitHelper
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.engine.webextension.DisabledFlags
@@ -265,6 +267,8 @@ class DefaultAddonUpdaterTest {
     fun `unregisterForFutureUpdates - will remove scheduled work for future update`() {
         val frequency = Frequency(1, TimeUnit.DAYS)
         val updater = DefaultAddonUpdater(testContext, frequency)
+        updater.scope = CoroutineScope(Dispatchers.Main)
+
         val addonId = "addonId"
 
         updater.updateAttempStorage = mock()

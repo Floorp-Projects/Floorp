@@ -159,6 +159,8 @@ class DefaultAddonUpdater(
     private val logger = Logger("DefaultAddonUpdater")
 
     @VisibleForTesting
+    internal var scope = CoroutineScope(Dispatchers.IO)
+    @VisibleForTesting
     internal val updateStatusStorage = UpdateStatusStorage()
     internal var updateAttempStorage = UpdateAttemptStorage(applicationContext)
 
@@ -181,7 +183,7 @@ class DefaultAddonUpdater(
         WorkManager.getInstance(applicationContext)
             .cancelUniqueWork(getUniquePeriodicWorkName(addonId))
         logger.info("unregisterForFutureUpdates $addonId")
-        CoroutineScope(Dispatchers.IO).launch {
+        scope.launch {
             updateAttempStorage.remove(addonId)
         }
     }
