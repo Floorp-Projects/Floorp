@@ -28,7 +28,6 @@ import mozilla.components.support.base.utils.NamedThreadFactory
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
-import java.io.File
 import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
 
@@ -37,32 +36,39 @@ import kotlin.coroutines.CoroutineContext
  * in the Application's onCreate. It receives messages from a service and forwards them
  * to be decrypted and routed.
  *
- * <code>
- *     class Application {
- *          override fun onCreate() {
- *              val feature = AutoPushFeature(context, service, configuration)
- *              PushProvider.install(push)
- *          }
- *     }
- * </code>
+ * ```kotlin
+ * class Application {
+ *      override fun onCreate() {
+ *          val feature = AutoPushFeature(context, service, configuration)
+ *          PushProvider.install(push)
+ *      }
+ * }
+ * ```
  *
- * Listen for subscription information changes for each registered scope:
+ * Observe for subscription information changes for each registered scope:
  *
- * <code>
- *    feature.register(object: AutoPushFeature.Observer {
- *        override fun onSubscriptionChanged(scope: PushScope) { }
- *    })
- *    feature.subscribe("push_subscription_scope_id")
- * </code>
+ * ```kotlin
+ * feature.register(object: AutoPushFeature.Observer {
+ *     override fun onSubscriptionChanged(scope: PushScope) { }
+ * })
  *
- * Listen also for push messages:
+ * feature.subscribe("push_subscription_scope_id")
+ * ```
  *
- * <code>
- *    feature.register(object: AutoPushFeature.Observer {
- *        override fun onMessageReceived(scope: PushScope, message: ByteArray?) { }
- *     })
- * </code>
+ * You should also observe for push messages:
  *
+ * ```kotlin
+ * feature.register(object: AutoPushFeature.Observer {
+ *     override fun onMessageReceived(scope: PushScope, message: ByteArray?) { }
+ * })
+ * ```
+ *
+ * @param context the application [Context].
+ * @param service A [PushService] bridge that receives the encrypted push messages.
+ * @param config An instance of [PushConfig] to configure the feature.
+ * @param coroutineContext An instance of [CoroutineContext] used for executing async push tasks.
+ * @param connection An implementation of [PushConnection] to communicate with any native layer.
+ * @param crashReporter An optional instance of a [CrashReporting].
  */
 @Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
 class AutoPushFeature(
@@ -73,11 +79,11 @@ class AutoPushFeature(
         NamedThreadFactory("AutoPushFeature")
     ).asCoroutineDispatcher(),
     private val connection: PushConnection = RustPushConnection(
+        context = context,
         senderId = config.senderId,
         serverHost = config.serverHost,
         socketProtocol = config.protocol,
-        serviceType = config.serviceType,
-        databasePath = File(context.filesDir, DB_NAME).canonicalPath
+        serviceType = config.serviceType
     ),
     private val crashReporter: CrashReporting? = null
 ) : PushProcessor, Observable<AutoPushFeature.Observer> by ObserverRegistry() {
@@ -95,8 +101,8 @@ class AutoPushFeature(
 
     init {
         // If we have a token, initialize the rust component first.
-        prefToken?.let { token ->
-            coroutineScope.launch {
+        coroutineScope.launch {
+            prefToken?.let { token ->
                 logger.debug("Initializing native component with the cached token.")
 
                 connection.updateToken(token)
@@ -281,26 +287,24 @@ class AutoPushFeature(
      * Verifies status (active, expired) of the push subscriptions and then notifies observers.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun verifyActiveSubscriptions() {
+    internal suspend fun verifyActiveSubscriptions() {
         connection.ifInitialized {
-            coroutineScope.launchAndTry {
-                val subscriptionChanges = verifyConnection()
+            val subscriptionChanges = verifyConnection()
 
-                if (subscriptionChanges.isNotEmpty()) {
-                    logger.info("Subscriptions have changed; notifying observers..")
+            if (subscriptionChanges.isNotEmpty()) {
+                logger.info("Subscriptions have changed; notifying observers..")
 
-                    subscriptionChanges.forEach { sub ->
-                        notifyObservers { onSubscriptionChanged(sub.scope) }
-                    }
-                } else {
-                    logger.info("No change to subscriptions. Doing nothing.")
+                subscriptionChanges.forEach { sub ->
+                    notifyObservers { onSubscriptionChanged(sub.scope) }
                 }
+            } else {
+                logger.info("No change to subscriptions. Doing nothing.")
             }
         }
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun tryVerifySubscriptions() {
+    internal fun tryVerifySubscriptions() = coroutineScope.launch {
         logger.info("Trying to check validity of push subscriptions.")
 
         if (config.disableRateLimit || shouldVerifyNow()) {
@@ -349,7 +353,6 @@ class AutoPushFeature(
     companion object {
         internal const val PREFERENCE_NAME = "mozac_feature_push"
         internal const val PREF_TOKEN = "token"
-        internal const val DB_NAME = "push.sqlite"
 
         internal const val LAST_VERIFIED = "last_verified_push_connection"
         internal const val PERIODIC_INTERVAL_MILLISECONDS = 24 * 60 * 60 * 1000L // 24 hours

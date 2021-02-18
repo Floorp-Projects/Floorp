@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.push
 
+import android.content.Context
 import androidx.annotation.GuardedBy
 import androidx.annotation.VisibleForTesting
 import mozilla.appservices.push.BridgeType
@@ -13,6 +14,7 @@ import mozilla.appservices.push.PushManager
 import mozilla.appservices.push.PushSubscriptionChanged as SubscriptionChanged
 import mozilla.appservices.push.SubscriptionResponse
 import java.io.Closeable
+import java.io.File
 import java.util.Locale
 import java.util.UUID
 
@@ -103,10 +105,10 @@ interface PushConnection : Closeable {
  *
  * With this in mind, we decided to write our implementation to be a 1-1 mapping of the public API 'scope' to the
  * internal API 'channel ID' by generating a UUID from the scope value. This means that we have a reproducible way to
- * always retrieve the chid when the caller passes the scope to us.
+ * always retrieve the channel ID when the caller passes the scope to us.
  *
  * Some nuances are that we also need to provide the native API the same scope value along with the
- * scope-based chid value to satisfy the internal API requirements, at the cost of some noticeable duplication of
+ * scope-based channel ID value to satisfy the internal API requirements, at the cost of some noticeable duplication of
  * information, so that we can retrieve those values later; see [RustPushConnection.subscribe] and
  * [RustPushConnection.unsubscribe] implementations for details.
  *
@@ -115,12 +117,14 @@ interface PushConnection : Closeable {
  * receiver; see [RustPushConnection.decryptMessage] implementation for details.
  */
 internal class RustPushConnection(
-    private val databasePath: String,
+    context: Context,
     private val senderId: String,
     private val serverHost: String,
     private val socketProtocol: Protocol,
     private val serviceType: ServiceType
 ) : PushConnection {
+
+    private val databasePath by lazy { File(context.filesDir, DB_NAME).canonicalPath }
 
     @VisibleForTesting
     internal var api: PushAPI? = null
@@ -249,6 +253,10 @@ internal class RustPushConnection(
 
     @GuardedBy("this")
     override fun isInitialized() = synchronized(this) { api != null }
+
+    companion object {
+        internal const val DB_NAME = "push.sqlite"
+    }
 }
 
 /**

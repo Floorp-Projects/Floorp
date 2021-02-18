@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **feature-push**
+  * ⚠️ **This is a breaking change**: Removed `databasePath` from `RustPushConnection` constructor and added `context`. The file path is now queries lazily.
+
 # 73.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v72.0.0...v73.0.0)
@@ -46,12 +49,12 @@ permalink: /changelog/
 
 * **feature-webauthn**
   * 🆕 New component to enable support for WebAuthn specification with `WebAuthnFeature`.
-  
+
 * **feature-awesomebar**
   * added `SearchEngineSuggestionProvider` that offers suggestion(s) for search engines based on user search engine list
 
 * **browser-storage-sync**
-  * Added `AutofillCreditCardsAddressesStorage` implementation of the `CreditCardsAddressesStorage` interface back by the application-services' `autofill` library. 
+  * Added `AutofillCreditCardsAddressesStorage` implementation of the `CreditCardsAddressesStorage` interface back by the application-services' `autofill` library.
 
 * **concept-engine**
   * Added `defaultSettings: Settings?` parameter to registerTabHandler to supply a default Tracking Policy when opening a new extension tab.

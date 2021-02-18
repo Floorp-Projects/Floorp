@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.push
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.appservices.push.DispatchInfo
 import mozilla.appservices.push.KeyInfo
@@ -14,6 +15,7 @@ import mozilla.appservices.push.SubscriptionResponse
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.nullable
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -21,12 +23,14 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Ignore
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyString
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
+@RunWith(AndroidJUnit4::class)
 class RustPushConnectionTest {
 
     @Ignore("Requires push-forUnitTests; seems unnecessary to introduce it for this one test.")
@@ -277,7 +281,7 @@ class RustPushConnectionTest {
     }
 
     private fun createConnection() = RustPushConnection(
-        "/sdcard/",
+        testContext,
         "push-test",
         "push.mozilla.com",
         Protocol.HTTPS,
