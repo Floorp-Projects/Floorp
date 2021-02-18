@@ -12,13 +12,11 @@ const TEST_URL = "data:text/html;charset=utf-8,Actor caching test";
 add_task(async function() {
   info("Setup the test page with workers of all types");
   const client = await createLocalClient();
-  const mainRoot = client.mainRoot;
   const tab = await addTab(TEST_URL);
 
   info("Create a target list for a tab target");
-  const descriptor = await mainRoot.getTab({ tab });
-  const target = await descriptor.getTarget();
-  const targetList = new TargetList(mainRoot, target);
+  const descriptor = await client.mainRoot.getTab({ tab });
+  const targetList = new TargetList(descriptor);
   await targetList.startListening();
 
   const { watcherFront } = targetList;

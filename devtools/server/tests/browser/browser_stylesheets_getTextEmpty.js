@@ -18,7 +18,7 @@ add_task(async function() {
   } = require("devtools/shared/resources/resource-watcher");
   const { TargetList } = require("devtools/shared/resources/target-list");
 
-  const targetList = new TargetList(target.client.mainRoot, target);
+  const targetList = new TargetList(target.descriptorFront);
   await targetList.startListening();
   const resourceWatcher = new ResourceWatcher(targetList);
 

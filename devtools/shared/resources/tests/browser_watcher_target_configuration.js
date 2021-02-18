@@ -15,8 +15,7 @@ add_task(async function() {
 
   info("Create a target list for a tab target");
   const descriptor = await mainRoot.getTab({ tab });
-  const target = await descriptor.getTarget();
-  const targetList = new TargetList(mainRoot, target);
+  const targetList = new TargetList(descriptor);
   await targetList.startListening();
 
   const { watcherFront } = targetList;
