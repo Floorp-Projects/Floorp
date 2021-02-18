@@ -1,0 +1,103 @@
+name: Android build PR
+on: [pull_request]
+jobs:
+  run-build:
+    runs-on: ubuntu-20.04
+    if: github.repository != 'mozilla-mobile/fenix'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: "Clean & Assemble Debug"
+        uses: eskatos/gradle-command-action@v1
+        with:
+          wrapper-cache-enabled: true
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+          arguments: clean app:assembleDebug
+
+  run-testDebugUnitTest:
+    runs-on: ubuntu-20.04
+    if: github.repository != 'mozilla-mobile/fenix'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: "Test Debug Unit Tests"
+        uses: eskatos/gradle-command-action@v1
+        with:
+          wrapper-cache-enabled: true
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+          arguments: testDebugUnitTest
+
+  run-detekt:
+    runs-on: ubuntu-20.04
+    if: github.repository != 'mozilla-mobile/fenix'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: "Detekt"
+        uses: eskatos/gradle-command-action@v1
+        with:
+          wrapper-cache-enabled: true
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+          arguments: detekt
+      - name: Archive detekt results
+        uses: actions/upload-artifact@v2
+        with:
+          name: detekt report
+          path: build/reports/detekt.html
+
+  run-ktlint:
+    runs-on: ubuntu-20.04
+    if: github.repository != 'mozilla-mobile/fenix'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: "Ktlint"
+        uses: eskatos/gradle-command-action@v1
+        with:
+          wrapper-cache-enabled: true
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+          arguments: ktlint
+
+  run-lintDebug:
+    runs-on: ubuntu-20.04
+    if: github.repository != 'mozilla-mobile/fenix'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: "Lint Debug"
+        uses: eskatos/gradle-command-action@v1
+        with:
+          wrapper-cache-enabled: true
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+          arguments: lintDebug
+      - name: Archive lint results
+        uses: actions/upload-artifact@v2
+        with:
+          name: lintDebug report
+          path: app/build/reports/lint-results-debug.html
+
