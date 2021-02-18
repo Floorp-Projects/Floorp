@@ -32,21 +32,36 @@ class CompositorOptions {
   CompositorOptions()
       : mUseAPZ(false),
         mUseWebRender(false),
+        mUseSoftwareWebRender(false),
+        mAllowSoftwareWebRenderD3D11(false),
         mUseAdvancedLayers(false),
         mInitiallyPaused(false) {}
 
-  CompositorOptions(bool aUseAPZ, bool aUseWebRender)
+  CompositorOptions(bool aUseAPZ, bool aUseWebRender,
+                    bool aUseSoftwareWebRender)
       : mUseAPZ(aUseAPZ),
         mUseWebRender(aUseWebRender),
+        mUseSoftwareWebRender(aUseSoftwareWebRender),
+        mAllowSoftwareWebRenderD3D11(false),
         mUseAdvancedLayers(false),
-        mInitiallyPaused(false) {}
+        mInitiallyPaused(false) {
+    MOZ_ASSERT_IF(aUseSoftwareWebRender, aUseWebRender);
+  }
 
   bool UseAPZ() const { return mUseAPZ; }
   bool UseWebRender() const { return mUseWebRender; }
+  bool UseSoftwareWebRender() const { return mUseSoftwareWebRender; }
+  bool AllowSoftwareWebRenderD3D11() const {
+    return mAllowSoftwareWebRenderD3D11;
+  }
   bool UseAdvancedLayers() const { return mUseAdvancedLayers; }
   bool InitiallyPaused() const { return mInitiallyPaused; }
 
   void SetUseAPZ(bool aUseAPZ) { mUseAPZ = aUseAPZ; }
+
+  void SetAllowSoftwareWebRenderD3D11(bool aAllowSoftwareWebRenderD3D11) {
+    mAllowSoftwareWebRenderD3D11 = aAllowSoftwareWebRenderD3D11;
+  }
 
   void SetUseAdvancedLayers(bool aUseAdvancedLayers) {
     mUseAdvancedLayers = aUseAdvancedLayers;
@@ -58,6 +73,9 @@ class CompositorOptions {
 
   bool operator==(const CompositorOptions& aOther) const {
     return mUseAPZ == aOther.mUseAPZ && mUseWebRender == aOther.mUseWebRender &&
+           mUseSoftwareWebRender == aOther.mUseSoftwareWebRender &&
+           mAllowSoftwareWebRenderD3D11 ==
+               aOther.mAllowSoftwareWebRenderD3D11 &&
            mUseAdvancedLayers == aOther.mUseAdvancedLayers;
   }
 
@@ -66,6 +84,8 @@ class CompositorOptions {
  private:
   bool mUseAPZ;
   bool mUseWebRender;
+  bool mUseSoftwareWebRender;
+  bool mAllowSoftwareWebRenderD3D11;
   bool mUseAdvancedLayers;
   bool mInitiallyPaused;
 
