@@ -61,6 +61,7 @@ class NimbusTest {
         val enrolledExperiments = listOf(EnrolledExperiment(
             enrollmentId = "enrollment-id",
             slug = "test-experiment",
+            featureIds = listOf(),
             branchSlug = "test-branch",
             userFacingDescription = "A test experiment for testing experiments",
             userFacingName = "Test Experiment")
