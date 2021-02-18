@@ -1014,7 +1014,6 @@ void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame, DrawTarget* aDrawTarget,
   }
 }
 
-// TODO: Vertical.
 // TODO: Indeterminate state.
 void nsNativeBasicTheme::PaintProgress(
     nsIFrame* aFrame, DrawTarget* aDrawTarget, const LayoutDeviceRect& aRect,
@@ -1029,12 +1028,20 @@ void nsNativeBasicTheme::PaintProgress(
   const CSSCoord borderWidth = 1.0f;
   const CSSCoord radius = aIsMeter ? 5.0f : 2.0f;
 
-  // Center it vertically.
   LayoutDeviceRect rect(aRect);
-  const LayoutDeviceCoord height =
+  const LayoutDeviceCoord thickness =
       (aIsMeter ? kMeterHeight : kProgressbarHeight) * aDpiRatio;
-  rect.y += (rect.height - height) / 2;
-  rect.height = height;
+
+  const bool isHorizontal = !nsNativeTheme::IsVerticalProgress(aFrame);
+  if (isHorizontal) {
+    // Center it vertically.
+    rect.y += (rect.height - thickness) / 2;
+    rect.height = thickness;
+  } else {
+    // Center it horizontally.
+    rect.x += (rect.width - thickness) / 2;
+    rect.width = thickness;
+  }
 
   // This is the progress chunk, clip it to the right amount.
   if (!aBar) {
@@ -1053,10 +1060,16 @@ void nsNativeBasicTheme::PaintProgress(
       return progress->Value() / progress->Max();
     }();
     LayoutDeviceRect clipRect = rect;
-    double clipWidth = rect.width * position;
-    clipRect.width = clipWidth;
-    if (IsFrameRTL(aFrame)) {
-      clipRect.x += rect.width - clipWidth;
+    if (isHorizontal) {
+      double clipWidth = rect.width * position;
+      clipRect.width = clipWidth;
+      if (IsFrameRTL(aFrame)) {
+        clipRect.x += rect.width - clipWidth;
+      }
+    } else {
+      double clipHeight = rect.height * position;
+      clipRect.height = clipHeight;
+      clipRect.y += rect.height - clipHeight;
     }
     aDrawTarget->PushClipRect(clipRect.ToUnknownRect());
   }
