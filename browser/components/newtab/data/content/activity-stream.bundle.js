@@ -730,8 +730,10 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompo
     const pocketEnabled = prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"];
     const noSectionsEnabled = !prefs["feeds.topsites"] && !pocketEnabled && filteredSections.filter(section => section.enabled).length === 0;
     const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
-    const customizationMenuEnabled = prefs["customizationMenu.enabled"];
-    const newNewtabExperienceEnabled = prefs["newNewtabExperience.enabled"];
+    const {
+      customizationMenuEnabled,
+      newNewtabExperienceEnabled
+    } = prefs.featureConfig || {};
     const canShowCustomizationMenu = customizationMenuEnabled || newNewtabExperienceEnabled;
     const showCustomizationMenu = canShowCustomizationMenu && this.state.customizeMenuVisible;
     const enabledSections = {
@@ -4378,7 +4380,9 @@ class _ContextMenuItem extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Pure
     const {
       option
     } = this.props;
-    const isNewNewtabExperienceEnabled = this.props.Prefs.values["newNewtabExperience.enabled"];
+    const {
+      newNewtabExperienceEnabled
+    } = this.props.Prefs.values.featureConfig;
     return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("li", {
       role: "presentation",
       className: "context-menu-item"
@@ -4389,7 +4393,7 @@ class _ContextMenuItem extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Pure
       onKeyDown: this.onKeyDown,
       onKeyUp: this.onKeyUp,
       ref: option.first ? this.focusFirst : null
-    }, !isNewNewtabExperienceEnabled && option.icon && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
+    }, !newNewtabExperienceEnabled && option.icon && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
       className: `icon icon-spacer icon-${option.icon}`
     }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
       "data-l10n-id": option.string_id || option.id
@@ -5694,7 +5698,7 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_3___default.a.P
   }
 
   componentDidMount() {
-    if (!this.props.Prefs.values["newNewtabExperience.enabled"]) {
+    if (!this.props.Prefs.values.featureConfig.newNewtabExperienceEnabled) {
       this.contextMenuButtonRef.addEventListener("mouseenter", this.onMenuButtonMouseEnter);
       this.contextMenuButtonRef.addEventListener("mouseleave", this.onMenuButtonMouseLeave);
     }
@@ -5703,7 +5707,7 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_3___default.a.P
   componentWillUnmount() {
     this.props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this.enableOrDisableAnimation);
 
-    if (!this.props.Prefs.values["newNewtabExperience.enabled"]) {
+    if (!this.props.Prefs.values.featureConfig.newNewtabExperienceEnabled) {
       this.contextMenuButtonRef.removeEventListener("mouseenter", this.onMenuButtonMouseEnter);
       this.contextMenuButtonRef.removeEventListener("mouseleave", this.onMenuButtonMouseLeave);
     }
@@ -5750,7 +5754,7 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_3___default.a.P
     // state, probably displaying the error fallback, so we won't be able to
     // compute the height, and we don't want to persist the preference.
     // If props.collapsed is undefined handler shouldn't do anything.
-    if (this.props.Prefs.values["newNewtabExperience.enabled"] || !this.sectionBody || this.props.collapsed === undefined) {
+    if (this.props.Prefs.values.featureConfig.newNewtabExperienceEnabled || !this.sectionBody || this.props.collapsed === undefined) {
       return;
     }
 
@@ -5832,7 +5836,7 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_3___default.a.P
 
   render() {
     const isCollapsible = this.props.collapsed !== undefined;
-    const isNewNewtabExperienceEnabled = this.props.Prefs.values["newNewtabExperience.enabled"]; // If new new tab prefs are set to true, sections should not be
+    const isNewNewtabExperienceEnabled = this.props.Prefs.values.featureConfig.newNewtabExperienceEnabled; // If new new tab prefs are set to true, sections should not be
     // collapsible. Expand and make the section visible, if it has been
     // previously collapsed.
 
@@ -6118,7 +6122,7 @@ class _SectionMenu extends react__WEBPACK_IMPORTED_MODULE_2___default.a.PureComp
     const propOptions = props.isWebExtension ? [...WEBEXT_SECTION_MENU_OPTIONS] : [...DEFAULT_SECTION_MENU_OPTIONS]; // Remove Collapse/Expand related option if the `newNewtabExperience.enabled`
     // pref is set to true.
 
-    if (props.Prefs.values["newNewtabExperience.enabled"]) {
+    if (props.Prefs.values.featureConfig.newNewtabExperienceEnabled) {
       if (props.isWebExtension) {
         propOptions.splice(2, 2);
       } else {
@@ -8624,8 +8628,10 @@ class _TopSites extends react__WEBPACK_IMPORTED_MODULE_6___default.a.PureCompone
       showSearchShortcutsForm
     } = props.TopSites;
     const extraMenuOptions = ["AddTopSite"];
-    const newNewtabExperienceEnabled = props.Prefs.values["newNewtabExperience.enabled"];
-    const customizationMenuEnabled = props.Prefs.values["customizationMenu.enabled"];
+    const {
+      customizationMenuEnabled,
+      newNewtabExperienceEnabled
+    } = props.Prefs.values.featureConfig;
     const colors = props.Prefs.values["newNewtabExperience.colors"];
 
     if (props.Prefs.values["improvesearch.topSiteSearchShortcuts"]) {
@@ -10370,7 +10376,7 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureComponent
 
   render() {
     const wrapperClassName = ["search-wrapper", this.props.hide && "search-hidden", this.props.fakeFocus && "fake-focus"].filter(v => v).join(" ");
-    const isNewNewtabExperienceEnabled = this.props.Prefs.values["newNewtabExperience.enabled"];
+    const isNewNewtabExperienceEnabled = this.props.Prefs.values.featureConfig.newNewtabExperienceEnabled;
     return react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
       className: wrapperClassName
     }, this.props.showLogo && react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
@@ -14646,7 +14652,9 @@ const INITIAL_STATE = {
   },
   Prefs: {
     initialized: false,
-    values: {}
+    values: {
+      featureConfig: {}
+    }
   },
   Dialog: {
     visible: false,

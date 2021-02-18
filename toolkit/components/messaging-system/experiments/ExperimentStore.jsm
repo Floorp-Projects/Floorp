@@ -197,7 +197,7 @@ class ExperimentStore extends SharedDataMap {
     }
     const updatedExperiment = { ...oldProperties, ...newProperties };
     this.set(slug, updatedExperiment);
-    this._emitExperimentUpdates(updatedExperiment);
     this._updateSyncStore(updatedExperiment);
+    this._emitExperimentUpdates(updatedExperiment);
   }
 }

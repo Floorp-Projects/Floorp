@@ -17,18 +17,27 @@ const MANIFEST = {
     description: "The about:welcome page",
     enabledFallbackPref: "browser.aboutwelcome.enabled",
     variables: {
-      value: {
-        type: "json",
-        fallbackPref: "browser.aboutwelcome.overrideContent",
+      skipFocus: {
+        type: "boolean",
+        fallbackPref: "browser.aboutwelcome.skipFocus",
       },
     },
   },
   newtab: {
     description: "The about:newtab page",
     variables: {
-      value: {
-        type: "json",
-        fallbackPref: "browser.newtab.experiments.value",
+      newNewtabExperienceEnabled: {
+        type: "boolean",
+        fallbackPref:
+          "browser.newtabpage.activity-stream.newNewtabExperience.enabled",
+      },
+      customizationMenuEnabled: {
+        type: "boolean",
+        fallbackPref:
+          "browser.newtabpage.activity-stream.customizationMenu.enabled",
+      },
+      prefsButtonIcon: {
+        type: "string",
       },
     },
   },
@@ -317,12 +326,20 @@ class ExperimentFeature {
     }
     const variables = this.manifest?.variables || {};
 
-    // Add special default variable.
-    if (!variables.enabled) {
-      variables.enabled = {
-        type: "boolean",
-        fallbackPref: this.manifest?.enabledFallbackPref,
-      };
+    // Add special enabled flag
+    if (this.manifest?.enabledFallbackPref) {
+      XPCOMUtils.defineLazyPreferenceGetter(
+        this,
+        "enabled",
+        this.manifest?.enabledFallbackPref,
+        null,
+        () => {
+          ExperimentAPI._store._emitFeatureUpdate(
+            this.featureId,
+            "pref-updated"
+          );
+        }
+      );
     }
 
     Object.keys(variables).forEach(key => {
@@ -367,8 +384,8 @@ class ExperimentFeature {
     }
 
     // Then check the fallback pref, if it is defined
-    if (isBooleanValueDefined(this.defaultPrefValues.enabled)) {
-      return this.defaultPrefValues.enabled;
+    if (isBooleanValueDefined(this.enabled)) {
+      return this.enabled;
     }
 
     // Finally, return options.defaulValue if neither was found
@@ -390,7 +407,9 @@ class ExperimentFeature {
       return branch.feature.value;
     }
 
-    return this.defaultPrefValues.value || defaultValue;
+    return Object.keys(this.defaultPrefValues).length
+      ? this.defaultPrefValues
+      : defaultValue;
   }
 
   recordExposureEvent() {
