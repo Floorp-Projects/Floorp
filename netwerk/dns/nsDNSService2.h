@@ -103,6 +103,7 @@ class nsDNSService final : public nsPIDNSService,
   uint32_t mResCacheExpiration;
   uint32_t mResCacheGrace;
   bool mResolverPrefsUpdated;
+  bool mODoHActivated = false;
   nsClassHashtable<nsCStringHashKey, nsTArray<nsCString>> mFailedSVCDomainNames;
 };
 

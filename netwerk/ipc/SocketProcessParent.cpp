@@ -22,6 +22,7 @@
 #include "mozilla/TelemetryIPC.h"
 #include "nsIAppStartup.h"
 #include "nsIHttpActivityObserver.h"
+#include "nsIObserverService.h"
 #include "nsNSSIOLayer.h"
 #include "PSMIPCCommon.h"
 #include "secerr.h"
@@ -422,6 +423,18 @@ SocketProcessParent::RecvPRemoteLazyInputStreamConstructor(
     return IPC_FAIL_NO_REASON(this);
   }
 
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult SocketProcessParent::RecvODoHServiceActivated(
+    const bool& aActivated) {
+  nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+
+  if (observerService) {
+    observerService->NotifyObservers(nullptr, "odoh-service-activated",
+                                     aActivated ? u"true" : u"false");
+  }
   return IPC_OK();
 }
 

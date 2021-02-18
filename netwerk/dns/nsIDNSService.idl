@@ -243,6 +243,12 @@ interface nsIDNSService : nsISupports
      */
     readonly attribute AUTF8String myHostName;
 
+    /**
+     * Returns true when we have valid ODoHConfigs to encrypt/decrypt oblivious
+     * DNS packets.
+     */
+    readonly attribute boolean ODoHActivated;
+
     /*************************************************************************
      * Listed below are the various flags that may be OR'd together to form
      * the aFlags parameter passed to asyncResolve() and resolve().
