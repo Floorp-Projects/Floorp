@@ -213,42 +213,60 @@ async function test() {
   await promiseAllPaintsDone();
   ok(checkInactive("outer2"), "outer2 is inactive with inner2");
 
-  // Scroll on inner3. inner3 isn't layerized, and this will cause it to
-  // get layerized, but it will also trigger displayport expiration for inner3
-  // which will eventually trigger displayport expiration on inner3 and outer3.
-  // Note that the displayport expiration might actually happen before the wheel
-  // input is processed in the compositor (see bug 1246480 comment 3), and so
-  // we make sure not to wait for a scroll event here, since it may never fire.
-  // However, if we do get a scroll event while waiting for the expiry, we need
-  // to restart the expiry timer because the displayport expiry got reset. There's
-  // no good way that I can think of to deterministically avoid doing this.
-  let inner3 = outer3Doc.getElementById("inner3");
-  await scrollWheelOver(inner3);
-  await promiseAllPaintsDone();
-  await promiseApzRepaintsFlushed();
-  let timerPromise = new Promise(resolve => {
-    var timeoutTarget = function() {
-      inner3.removeEventListener("scroll", timeoutResetter);
-      resolve();
-    };
-    var timerId = setTimeout(timeoutTarget, DISPLAYPORT_EXPIRY);
-    var timeoutResetter = function() {
-      ok(true, "Got a scroll event; resetting timer...");
-      clearTimeout(timerId);
-      setTimeout(timeoutTarget, DISPLAYPORT_EXPIRY);
-      // by not updating timerId we ensure that this listener resets the timeout
-      // at most once.
-    };
-    inner3.addEventListener("scroll", timeoutResetter);
-  });
-  await timerPromise; // wait for the setTimeout to elapse
+  // We need to wrap the next bit in a loop and keep retrying until it
+  // succeeds. Let me explain why this is the best option at this time. Below
+  // we scroll over inner3, this triggers a 100 ms timer to expire it's display
+  // port. Then when it expires it schedules a paint and triggers another
+  // 100 ms timer on it's parent, outer3, to expire. The paint needs to happen
+  // before the timer fires because the paint is what updates
+  // mIsParentToActiveScrollFrames on outer3, and mIsParentToActiveScrollFrames
+  // being true blocks a display port from expiring. It was true because it
+  // contained inner3, but no longer. In real life the timer is 15000 ms so a
+  // paint will happen, but here in a test the timer is 100 ms so that paint
+  // can not happen in time. We could add some more complication to this code
+  // just for this test, or we could just loop here.
+  let itWorked = false;
+  while (!itWorked) {
+    // Scroll on inner3. inner3 isn't layerized, and this will cause it to
+    // get layerized, but it will also trigger displayport expiration for inner3
+    // which will eventually trigger displayport expiration on inner3 and outer3.
+    // Note that the displayport expiration might actually happen before the wheel
+    // input is processed in the compositor (see bug 1246480 comment 3), and so
+    // we make sure not to wait for a scroll event here, since it may never fire.
+    // However, if we do get a scroll event while waiting for the expiry, we need
+    // to restart the expiry timer because the displayport expiry got reset. There's
+    // no good way that I can think of to deterministically avoid doing this.
+    let inner3 = outer3Doc.getElementById("inner3");
+    await scrollWheelOver(inner3);
+    await promiseAllPaintsDone();
+    await promiseApzRepaintsFlushed();
+    let timerPromise = new Promise(resolve => {
+      var timeoutTarget = function() {
+        inner3.removeEventListener("scroll", timeoutResetter);
+        resolve();
+      };
+      var timerId = setTimeout(timeoutTarget, DISPLAYPORT_EXPIRY);
+      var timeoutResetter = function() {
+        ok(true, "Got a scroll event; resetting timer...");
+        clearTimeout(timerId);
+        setTimeout(timeoutTarget, DISPLAYPORT_EXPIRY);
+        // by not updating timerId we ensure that this listener resets the timeout
+        // at most once.
+      };
+      inner3.addEventListener("scroll", timeoutResetter);
+    });
+    await timerPromise; // wait for the setTimeout to elapse
 
-  await promiseAllPaintsDone();
-  ok(checkInactive("inner3", outer3Doc),
-    "inner3 is inactive after expiry");
-  await SpecialPowers.promiseTimeout(DISPLAYPORT_EXPIRY);
-  await promiseAllPaintsDone();
-  ok(checkInactive("outer3"), "outer3 is inactive after inner3 triggered expiry");
+    await promiseAllPaintsDone();
+    ok(checkInactive("inner3", outer3Doc),
+      "inner3 is inactive after expiry");
+    await SpecialPowers.promiseTimeout(DISPLAYPORT_EXPIRY);
+    await promiseAllPaintsDone();
+    if (checkInactive("outer3")) {
+      ok(true, "outer3 is inactive after inner3 triggered expiry");
+      itWorked = true;
+    }
+  }
 
   // Scroll outer4 and wait for the expiry. It should NOT get expired because
   // inner4 is still layerized
