@@ -1326,6 +1326,7 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
     }
 
     if (NS_FAILED(rv)) {
+      mLocations.Remove(newEntry->resolvedURL);
       if (!exception.isUndefined()) {
         // An exception was thrown during compilation. Propagate it
         // out to our caller so they can report it.
@@ -1358,6 +1359,7 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
   }
 
   if (exports && !JS_WrapObject(aCx, &exports)) {
+    mLocations.Remove(newEntry->resolvedURL);
     return NS_ERROR_FAILURE;
   }
   aModuleExports.set(exports);
