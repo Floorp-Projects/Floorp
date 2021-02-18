@@ -869,7 +869,7 @@ void nsContentUtils::GetModifierSeparatorText(nsAString& text) {
 void nsContentUtils::InitializeModifierStrings() {
   // load the display strings for the keyboard accelerators
   nsCOMPtr<nsIStringBundleService> bundleService =
-      mozilla::services::GetStringBundleService();
+      mozilla::components::StringBundle::Service();
   nsCOMPtr<nsIStringBundle> bundle;
   DebugOnly<nsresult> rv = NS_OK;
   if (bundleService) {

@@ -111,7 +111,7 @@ class BundleHelper {
   nsIStringBundle* GetOrCreateInternal() {
     if (!mBundle) {
       nsCOMPtr<nsIStringBundleService> bundleService =
-          mozilla::services::GetStringBundleService();
+          mozilla::components::StringBundle::Service();
       if (NS_WARN_IF(!bundleService)) {
         return nullptr;
       }

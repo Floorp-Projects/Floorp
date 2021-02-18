@@ -28,6 +28,7 @@
 #include "nsIXPConnect.h"
 #include "nsVariant.h"
 #include "nsTextNode.h"
+#include "mozilla/Components.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/XSLTProcessorBinding.h"
 
@@ -932,7 +933,7 @@ void txMozillaXSLTProcessor::reportError(nsresult aResult,
     mErrorText.Assign(aErrorText);
   } else {
     nsCOMPtr<nsIStringBundleService> sbs =
-        mozilla::services::GetStringBundleService();
+        mozilla::components::StringBundle::Service();
     if (sbs) {
       nsString errorText;
       sbs->FormatStatusMessage(aResult, u"", errorText);
