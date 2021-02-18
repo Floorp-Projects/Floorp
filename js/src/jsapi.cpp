@@ -5715,7 +5715,7 @@ JS_PUBLIC_API JS::TranscodeResult JS::EncodeScript(JSContext* cx,
   // but for consistency with `CopyScriptImpl` we always disallow.
   MOZ_ASSERT(!scriptArg->isFunction());
   if (scriptArg->treatAsRunOnce()) {
-    return JS::TranscodeResult_Failure_RunOnceNotSupported;
+    return JS::TranscodeResult::Failure_RunOnceNotSupported;
   }
 
   XDREncoder encoder(cx, buffer, buffer.length());
@@ -5726,7 +5726,7 @@ JS_PUBLIC_API JS::TranscodeResult JS::EncodeScript(JSContext* cx,
     return res.unwrapErr();
   }
   MOZ_ASSERT(!buffer.empty());
-  return JS::TranscodeResult_Ok;
+  return JS::TranscodeResult::Ok;
 }
 
 JS_PUBLIC_API JS::TranscodeResult JS::DecodeScript(
@@ -5737,14 +5737,14 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScript(
       cx, js::MakeUnique<XDRDecoder>(cx, &options, buffer, cursorIndex));
   if (!decoder) {
     ReportOutOfMemory(cx);
-    return JS::TranscodeResult_Throw;
+    return JS::TranscodeResult::Throw;
   }
   XDRResult res = decoder->codeScript(scriptp);
   MOZ_ASSERT(bool(scriptp) == res.isOk());
   if (res.isErr()) {
     return res.unwrapErr();
   }
-  return JS::TranscodeResult_Ok;
+  return JS::TranscodeResult::Ok;
 }
 
 static JS::TranscodeResult DecodeStencil(JSContext* cx,
@@ -5755,7 +5755,7 @@ static JS::TranscodeResult DecodeStencil(JSContext* cx,
   XDRStencilDecoder decoder(cx, &input.options, buffer, cursorIndex);
 
   if (!input.initForGlobal(cx)) {
-    return JS::TranscodeResult_Throw;
+    return JS::TranscodeResult::Throw;
   }
 
   XDRResult res = decoder.codeStencils(input, stencil);
@@ -5763,7 +5763,7 @@ static JS::TranscodeResult DecodeStencil(JSContext* cx,
     return res.unwrapErr();
   }
 
-  return JS::TranscodeResult_Ok;
+  return JS::TranscodeResult::Ok;
 }
 
 JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptMaybeStencil(
@@ -5786,7 +5786,7 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptMaybeStencil(
 
   JS::TranscodeResult res =
       DecodeStencil(cx, buffer, input.get(), stencil, cursorIndex);
-  if (res != JS::TranscodeResult_Ok) {
+  if (res != JS::TranscodeResult::Ok) {
     return res;
   }
 
@@ -5794,13 +5794,13 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptMaybeStencil(
   Rooted<frontend::CompilationGCOutput> gcOutputForDelazification(cx);
   if (!frontend::InstantiateStencils(cx, input.get(), stencil, gcOutput.get(),
                                      gcOutputForDelazification.address())) {
-    return JS::TranscodeResult_Throw;
+    return JS::TranscodeResult::Throw;
   }
 
   MOZ_ASSERT(gcOutput.get().script);
   scriptp.set(gcOutput.get().script);
 
-  return JS::TranscodeResult_Ok;
+  return JS::TranscodeResult::Ok;
 }
 
 JS_PUBLIC_API JS::TranscodeResult JS::DecodeScript(
@@ -5810,14 +5810,14 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScript(
       cx, js::MakeUnique<XDRDecoder>(cx, &options, range));
   if (!decoder) {
     ReportOutOfMemory(cx);
-    return JS::TranscodeResult_Throw;
+    return JS::TranscodeResult::Throw;
   }
   XDRResult res = decoder->codeScript(scriptp);
   MOZ_ASSERT(bool(scriptp) == res.isOk());
   if (res.isErr()) {
     return res.unwrapErr();
   }
-  return JS::TranscodeResult_Ok;
+  return JS::TranscodeResult::Ok;
 }
 
 JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
@@ -5832,21 +5832,21 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
 
   JS::TranscodeResult res =
       DecodeStencil(cx, buffer, input.get(), stencil, cursorIndex);
-  if (res != JS::TranscodeResult_Ok) {
+  if (res != JS::TranscodeResult::Ok) {
     return res;
   }
 
   UniquePtr<XDRIncrementalStencilEncoder> xdrEncoder;
   if (!stencil.source->xdrEncodeStencils(cx, input.get(), stencil,
                                          xdrEncoder)) {
-    return JS::TranscodeResult_Throw;
+    return JS::TranscodeResult::Throw;
   }
 
   Rooted<frontend::CompilationGCOutput> gcOutput(cx);
   Rooted<frontend::CompilationGCOutput> gcOutputForDelazification(cx);
   if (!frontend::InstantiateStencils(cx, input.get(), stencil, gcOutput.get(),
                                      gcOutputForDelazification.address())) {
-    return JS::TranscodeResult_Throw;
+    return JS::TranscodeResult::Throw;
   }
 
   MOZ_ASSERT(gcOutput.get().script);
@@ -5855,7 +5855,7 @@ JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
 
   scriptp.set(gcOutput.get().script);
 
-  return JS::TranscodeResult_Ok;
+  return JS::TranscodeResult::Ok;
 }
 
 JS_PUBLIC_API bool JS::FinishIncrementalEncoding(JSContext* cx,

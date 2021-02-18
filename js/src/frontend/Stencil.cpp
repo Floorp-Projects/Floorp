@@ -1482,11 +1482,11 @@ bool CompilationStencil::serializeStencils(JSContext* cx,
 
   XDRResult res = encoder.codeStencil(input, *this);
   if (res.isErr()) {
-    if (res.unwrapErr() & JS::TranscodeResult_Failure) {
+    if (JS::IsTranscodeFailureResult(res.unwrapErr())) {
       buf.clear();
       return true;
     }
-    MOZ_ASSERT(res.unwrapErr() == JS::TranscodeResult_Throw);
+    MOZ_ASSERT(res.unwrapErr() == JS::TranscodeResult::Throw);
 
     return false;
   }
@@ -1517,10 +1517,10 @@ bool CompilationStencil::deserializeStencils(JSContext* cx,
 
   XDRResult res = decoder.codeStencils(input, *this);
   if (res.isErr()) {
-    if (res.unwrapErr() & JS::TranscodeResult_Failure) {
+    if (JS::IsTranscodeFailureResult(res.unwrapErr())) {
       return true;
     }
-    MOZ_ASSERT(res.unwrapErr() == JS::TranscodeResult_Throw);
+    MOZ_ASSERT(res.unwrapErr() == JS::TranscodeResult::Throw);
 
     return false;
   }
@@ -2885,7 +2885,7 @@ JS::TranscodeResult JS::EncodeStencil(JSContext* cx,
   if (res.isErr()) {
     return res.unwrapErr();
   }
-  return TranscodeResult_Ok;
+  return TranscodeResult::Ok;
 }
 
 JS::TranscodeResult JS::DecodeStencil(JSContext* cx,
@@ -2894,11 +2894,11 @@ JS::TranscodeResult JS::DecodeStencil(JSContext* cx,
                                       RefPtr<JS::Stencil>& stencilOut) {
   Rooted<CompilationInput> input(cx, CompilationInput(options));
   if (!input.get().initForGlobal(cx)) {
-    return TranscodeResult_Throw;
+    return TranscodeResult::Throw;
   }
   UniquePtr<JS::Stencil> stencil(MakeUnique<CompilationStencil>(input.get()));
   if (!stencil) {
-    return TranscodeResult_Throw;
+    return TranscodeResult::Throw;
   }
   XDRStencilDecoder decoder(cx, &options, range);
   XDRResult res = decoder.codeStencils(input.get(), *stencil);
@@ -2906,5 +2906,5 @@ JS::TranscodeResult JS::DecodeStencil(JSContext* cx,
     return res.unwrapErr();
   }
   stencilOut = do_AddRef(stencil.release());
-  return TranscodeResult_Ok;
+  return TranscodeResult::Ok;
 }

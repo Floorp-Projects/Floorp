@@ -6,6 +6,7 @@
 
 /* High level class and public functions implementation. */
 
+#include "js/Transcoding.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Likely.h"
@@ -933,13 +934,14 @@ nsXPConnect::WriteScript(nsIObjectOutputStream* stream, JSContext* cx,
   TranscodeResult code;
   code = EncodeScript(cx, buffer, script);
 
-  if (code != TranscodeResult_Ok) {
-    if ((code & TranscodeResult_Failure) != 0) {
-      return NS_ERROR_FAILURE;
+  if (code != TranscodeResult::Ok) {
+    if (code == TranscodeResult::Throw) {
+      JS_ClearPendingException(cx);
+      return NS_ERROR_OUT_OF_MEMORY;
     }
-    MOZ_ASSERT((code & TranscodeResult_Throw) != 0);
-    JS_ClearPendingException(cx);
-    return NS_ERROR_OUT_OF_MEMORY;
+
+    MOZ_ASSERT(IsTranscodeFailureResult(code));
+    return NS_ERROR_FAILURE;
   }
 
   size_t size = buffer.length();
@@ -994,17 +996,16 @@ nsXPConnect::ReadScript(nsIObjectInputStream* stream, JSContext* cx,
     TranscodeResult code;
     Rooted<JSScript*> script(cx);
     code = DecodeScript(cx, options, buffer, &script);
-    if (code == TranscodeResult_Ok) {
+    if (code == TranscodeResult::Ok) {
       *scriptp = script.get();
-    }
-
-    if (code != TranscodeResult_Ok) {
-      if ((code & TranscodeResult_Failure) != 0) {
-        return NS_ERROR_FAILURE;
+    } else {
+      if (code == TranscodeResult::Throw) {
+        JS_ClearPendingException(cx);
+        return NS_ERROR_OUT_OF_MEMORY;
       }
-      MOZ_ASSERT((code & TranscodeResult_Throw) != 0);
-      JS_ClearPendingException(cx);
-      return NS_ERROR_OUT_OF_MEMORY;
+
+      MOZ_ASSERT(IsTranscodeFailureResult(code));
+      return NS_ERROR_FAILURE;
     }
   }
 

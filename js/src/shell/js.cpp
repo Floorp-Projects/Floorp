@@ -2141,43 +2141,43 @@ static bool CacheEntry_setBytecode(JSContext* cx, HandleObject cache,
 static bool ConvertTranscodeResultToJSException(JSContext* cx,
                                                 JS::TranscodeResult rv) {
   switch (rv) {
-    case JS::TranscodeResult_Ok:
+    case JS::TranscodeResult::Ok:
       return true;
 
     default:
       [[fallthrough]];
-    case JS::TranscodeResult_Failure:
+    case JS::TranscodeResult::Failure:
       MOZ_ASSERT(!cx->isExceptionPending());
       JS_ReportErrorASCII(cx, "generic warning");
       return false;
-    case JS::TranscodeResult_Failure_BadBuildId:
+    case JS::TranscodeResult::Failure_BadBuildId:
       MOZ_ASSERT(!cx->isExceptionPending());
       JS_ReportErrorASCII(cx, "the build-id does not match");
       return false;
-    case JS::TranscodeResult_Failure_RunOnceNotSupported:
+    case JS::TranscodeResult::Failure_RunOnceNotSupported:
       MOZ_ASSERT(!cx->isExceptionPending());
       JS_ReportErrorASCII(cx, "run-once script are not supported by XDR");
       return false;
-    case JS::TranscodeResult_Failure_AsmJSNotSupported:
+    case JS::TranscodeResult::Failure_AsmJSNotSupported:
       MOZ_ASSERT(!cx->isExceptionPending());
       JS_ReportErrorASCII(cx, "Asm.js is not supported by XDR");
       return false;
-    case JS::TranscodeResult_Failure_BadDecode:
+    case JS::TranscodeResult::Failure_BadDecode:
       MOZ_ASSERT(!cx->isExceptionPending());
       JS_ReportErrorASCII(cx, "XDR data corruption");
       return false;
-    case JS::TranscodeResult_Failure_WrongCompileOption:
+    case JS::TranscodeResult::Failure_WrongCompileOption:
       MOZ_ASSERT(!cx->isExceptionPending());
       JS_ReportErrorASCII(
           cx, "Compile options differs from Compile options of the encoding");
       return false;
-    case JS::TranscodeResult_Failure_NotInterpretedFun:
+    case JS::TranscodeResult::Failure_NotInterpretedFun:
       MOZ_ASSERT(!cx->isExceptionPending());
       JS_ReportErrorASCII(cx,
                           "Only interepreted functions are supported by XDR");
       return false;
 
-    case JS::TranscodeResult_Throw:
+    case JS::TranscodeResult::Throw:
       MOZ_ASSERT(cx->isExceptionPending());
       return false;
   }
