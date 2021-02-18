@@ -457,7 +457,7 @@ class WebConsoleUI {
 
     // Allow frame, but only in content toolbox, i.e. still ignore them in
     // the context of the browser toolbox as we inspect messages via the process targets
-    const listenForFrames = this.hud.targetList.targetFront.isLocalTab;
+    const listenForFrames = this.hud.targetList.descriptorFront.isLocalTab;
 
     const { TYPES } = this.hud.targetList;
     const isWorkerTarget =
