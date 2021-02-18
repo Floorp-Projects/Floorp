@@ -566,7 +566,7 @@ function eventQueue(aEventType) {
           continue;
         }
 
-        // Report an error if we hanlded not expected event of unique type
+        // Report an error if we handled not expected event of unique type
         // (i.e. event types are matched, targets differs).
         if (
           !checker.unexpected &&
@@ -1454,7 +1454,7 @@ function synthOpenComboboxKey(aID, aCheckerOrEventSeq) {
   this.__proto__ = new synthDownKey(aID, aCheckerOrEventSeq, { altKey: true });
 
   this.getID = function synthOpenComboboxKey_getID() {
-    return "open combobox (atl + down arrow) " + prettyName(aID);
+    return "open combobox (alt + down arrow) " + prettyName(aID);
   };
 }
 
