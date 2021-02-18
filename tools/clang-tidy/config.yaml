@@ -213,6 +213,11 @@ clang_checkers:
     reliability: high
   - name: readability-braces-around-statements
     reliability: high
+    config:
+      - key: ShortStatementLines
+        # Allow `if (foo) return;` without braces
+        # Still warns on `if (foo)\n return;`
+        value: 1
   - name: readability-const-return-type
     reliability: high
   # Note: this can be loosened up by using the ShortStatementLines option
