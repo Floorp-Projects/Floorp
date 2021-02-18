@@ -478,12 +478,18 @@
   margin-inline-end: 0;
   width: 16px;
 }
+
+:root[uidensity=touch] .tab-close-button {
+  width: 20px;
+}
 } /*** END proton ***/
 
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 :root[uidensity=touch] .tab-close-button {
   margin-inline-end: calc(-1 * var(--inline-tab-padding));
   padding: 10px calc(var(--inline-tab-padding) - 2px);
 }
+} /*** END !proton ***/
 
 @supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 .tab-label-container.proton {
